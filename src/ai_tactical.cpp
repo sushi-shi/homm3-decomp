@@ -325,20 +325,20 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
             first = 0;
         }
     }
-    // Mac 0x3d71c's total-value calls expand the existing ai_tactical.h
-    // group getters (+0x20/+0x24); preserve the same canonical access path
-    // in the ranged/retaliation gates above.
-    m_friendlyCombatValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
+    // Direct group fields: DC's four get_total_combat_value calls have no
+    // get_group/get_enemy_group calls (DC keeps 23 such calls elsewhere);
+    // the getters reorder each call's argument loads (97.57%).
+    m_friendlyCombatValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
                                                m_lowestDefense, 1);
-    m_awakeFriendlyValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
+    m_awakeFriendlyValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
                                                     m_lowestDefense, 0);
-    m_enemyCombatValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
+    m_enemyCombatValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
                                                  m_lowestDefense, 1);
-    m_awakeEnemyValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
+    m_awakeEnemyValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
                                                       m_lowestDefense, 0);
     if (m_friendlyCombatValue * 2 < m_enemyCombatValue
             && (g_game->m_setup.m_difficulty > 0
-                || g_combatManager->m_sideIsAi[getGroup()]))
+                || g_combatManager->m_sideIsAi[this->m_ourGroup]))
         m_killsOnly = 1;
     long high = m_awakeFriendlyValue;
     long low = m_awakeEnemyValue;

@@ -3200,7 +3200,9 @@ std::string hero::getMoraleDescription() const
     }
 
     if (m_owner >= 0) {
-        playerData& player = *getPlayer();
+        // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
+        // DC get_morale_description has no get_player call.
+        playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:2989 names town::HasBuilding here. Retail
@@ -3337,7 +3339,9 @@ std::string hero::getLuckDescription() const
     }
 
     if (m_owner >= 0) {
-        playerData& player = *getPlayer();
+        // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
+        // DC get_luck_description has no get_player call.
+        playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:3149 names town::HasBuilding here.
@@ -5144,15 +5148,20 @@ VA(0x004e2840, 0x1B5)
 MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8; size absorbs the
 // Mac 0x1034d8..0x103da8 expands the canonical reference readers before
 // copying/testing records. Keep that read boundary; mutations stay owned here.
+// The slot's record is bound once, at entry, ahead of the placement gate:
+// two getArtifact sites after the gate divide /Ob2's nested budget so the
+// bitset _Xran expansion starves (72.45%), one after it still does
+// (82.33%); the entry binding leaves the gate the whole budget (100%).
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
+    const type_artifact& current = getArtifact(TArtifactSlot(slot));
     if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
         return 0;
 
-    if (getArtifact(TArtifactSlot(slot)).m_artifactId == ARTIFACT_NONE)
+    if (current.m_artifactId == ARTIFACT_NONE)
         return heroFn004E2550(artifact, slot);
 
-    type_artifact displaced = getArtifact(TArtifactSlot(slot));
+    type_artifact displaced = current;
     removeArtifact(slot);
     unsigned char accepted;
     try {
@@ -5612,7 +5621,10 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
         luck++;
 
     if (m_owner >= 0) {
-        playerData& player = *getPlayer();
+        // Direct row, not getPlayer(): CodeWarrior emits a getPlayer call for
+        // that spelling, absent from Mac 0x1044f4 (which calls it at 17
+        // other sites); DC GetLuck has no get_player call either.
+        playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
@@ -6065,7 +6077,11 @@ int hero::getMobility(bool seaMovement) const
     if (m_owner >= 0 && m_owner < 6 && !g_game->isHuman(m_owner) &&
         g_game->m_setup.m_difficulty > 2) {
         mobility += 75;
-        if (getPlayer()->m_personality == AI_PERSONALITY_AGGRESSIVE)
+        // Not getPlayer(): Mac 0x105b9c indexes the row after isHuman with
+        // no owner guard, and CodeWarrior keeps a getPlayer call here while
+        // Mac retains its 17 real calls elsewhere; retail likewise has no
+        // guard after the isHuman call. DC GetMobility has no get_player.
+        if (g_game->m_players[m_owner].m_personality == AI_PERSONALITY_AGGRESSIVE)
             mobility += 50;
     }
     return mobility;
@@ -6074,9 +6090,11 @@ int hero::getMobility(bool seaMovement) const
 VA(0x004e4d90, 0x12)
 DC_ADDRESS(0x0d4d60, 0x50)
 MAC_ADDRESS(0x105be0, 0x38)
+// DC 5933 and Mac 0x105bf0 test the boat flag inline: Mac has no
+// predicate call where CodeWarrior would keep one for a hero.cpp helper.
 int hero::getMobility() const
 {
-    return getMobility(isOnBoat());
+    return getMobility((m_flags & 0x40000) != 0);
 }
 
 // Project-inferred operations shared by turn/campaign setup, prison release
@@ -6465,13 +6483,6 @@ long hero::getHitPointBonus(int creatureType) const
         && isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
         bonus += g_creatureTypeTraits[creatureType].m_hitPoints / 4;
     return bonus;
-}
-
-// Project-inferred names for the shared boat-bit predicate and mutation.
-// Playback uses only this mutation; live boarding/landing also charge movement.
-bool hero::isOnBoat() const
-{
-    return (m_flags & 0x40000) != 0;
 }
 
 // DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.

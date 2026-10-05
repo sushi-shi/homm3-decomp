@@ -287,11 +287,11 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 
 VA(0x0043d8b0, 0x135)
 DC_ADDRESS(0x043d9c, 0xe4)
-// Mac 0x49330/0x49388 expand getOwningSide before both cell side stores.
-// DC records hexcell& back_cell. Restoring that reference is byte-flat;
-// implicit byte-field conversions also leave the two full-word getter loads
-// where retail narrows them. Complete/Mac addAura precedes retaliation setup,
-// unlike the older DC order.
+// DC records hexcell& back_cell; restoring that reference is byte-flat.
+// Both side stores read m_combatSide directly: DC Init keeps its 14-byte Is
+// call but has no get_owning_side call, and retail narrows both loads to a
+// byte, which the int-returning getter's expansion does not (99.88%).
+// Complete/Mac addAura precedes retaliation setup, unlike the older DC order.
 MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
@@ -300,13 +300,13 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
-        cell->m_armySide = static_cast<signed char>(getOwningSide());
+        cell->m_armySide = static_cast<signed char>(m_combatSide);
         cell->m_armySlot = static_cast<signed char>(m_bitIndex);
         cell->m_partOfDouble = -1;
         if (is(creatureDoubleWide)) {
             hexcell& backCell =
                 g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
-            backCell.m_armySide = static_cast<signed char>(getOwningSide());
+            backCell.m_armySide = static_cast<signed char>(m_combatSide);
             backCell.m_armySlot = static_cast<signed char>(m_bitIndex);
             backCell.m_partOfDouble = m_facing != 0;
             cell->m_partOfDouble = m_facing == 0;
@@ -1650,19 +1650,17 @@ bool army::checkSpecialAttack(army* target)
 // cleared again.
 VA(0x004409c0, 0x1F9)
 DC_ADDRESS(0x0464e0, 0x178)
-MAC_ADDRESS(0x04c5ac, 0x258)  // MAC_ABSTRACTION_FROM(tokens1:dd679f8769cb,83.7662): restore canonical getOwningSide before markCreatureEffect (Mac 0x4c5d4 own-side load).
+MAC_ADDRESS(0x04c5ac, 0x258)
 void army::doFireShield(long damageAmount)
 {
     long side;
     int i;
     army* a;
     g_combatManager->resetLimitCreature();
-    // Retail captures the slot before expanding the side getter. This
-    // temporary recovers 99.9324%; the remaining two LEA/store operands
-    // commute the manager/slot bases inside markCreatureEffect. A named
-    // first-mark combatManager reference is byte-flat at the same score.
-    const int bitIndex = m_bitIndex;
-    g_combatManager->markCreatureEffect(getOwningSide(), bitIndex);
+    // Direct side read: DC DoFireShield has no get_owning_side call (DC
+    // keeps 30 such calls elsewhere); the getter plus a slot temporary
+    // reached only 99.93% with commuted LEA operands.
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     for (side = 0; side < 2; side++) {
         a = &g_combatManager->m_armies[side][0];
         for (i = g_combatManager->m_numArmies[side]; i-- > 0; a++) {
@@ -4558,9 +4556,6 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 VA(0x00446e30, 0x2E1)
 DC_ADDRESS(0x04ba88, 0x1fc)
 MAC_ADDRESS(0x05339c, 0x300)
-// Mac 0x53458..0x53464 expands getOwner: own-side+0xf4 followed by heroes
-// +0x53cc, matching the retained canonical body at 0x4e51c. Keep that upper
-// helper and its nested getOwningSide operation at both source uses.
 void army::newTurn()
 {
     if (m_resetThisRound != 0)
@@ -4573,19 +4568,17 @@ void army::newTurn()
     if (g_combatManager->m_creaturePlacement != 0)
         return;
     if (m_topCreatureDamage > 0) {
-        // Mac 0x53458..0x53474 loads/null-checks the owner once, then
-        // calls isWieldingArtifact with that same pointer. Capture it at
-        // the conditional boundary; the local name is inferred. Windows
-        // improves 96.68 -> 97.27, with all 43 blocks now the same size.
-        hero* owner;
+        // Not getOwner(): Mac 0x53458 reads the side's hero inline, while
+        // CodeWarrior keeps getOwner a call (as in Mac rangeAttack 0x4b668);
+        // DC NewTurn has no get_owner call either.
         if (m_creatureType == CREATURE_WIGHT
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
             || ((g_creatureTypeTraits[m_creatureType].m_attributes
                  & g_ctaAlive)
-                && (owner = getOwner()) != 0
-                && owner->isWieldingArtifact(
-                       ARTIFACT_ELIXIR_OF_LIFE))) {
+                && g_combatManager->m_heroes[m_combatSide] != 0
+                && g_combatManager->m_heroes[m_combatSide]
+                       ->isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))) {
             long heal = m_topCreatureDamage;
             long amount = heal > 50 ? 50 : heal;
             m_topCreatureDamage = heal - amount;
@@ -5099,7 +5092,6 @@ unsigned char army::unnamed447fe0()
 VA(0x00448260, 0x582)
 DC_ADDRESS(0x04c468, 0x30e)
 MAC_ADDRESS(0x0548f4, 0x4f0)
-// Mac 0x549a8 expands getOwningSide before the animation effect mark.
 void army::castSpell(long hex)
 {
     long originalFacing = m_facing;
@@ -5115,7 +5107,9 @@ void army::castSpell(long hex)
         if ((targetX < myX && m_facing == 1) || shouldTurn)
             turn(1);
         g_combatManager->resetLimitCreature();
-        g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+        // Direct side read: DC CastSpell has no get_owning_side call, and
+        // the getter's expansion swaps the mark's registers (99.89%).
+        g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
         g_combatManager->computeMaxExtent();
         long dx = targetX - myX;
         long dy = targetY - myY;

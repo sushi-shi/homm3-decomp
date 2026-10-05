@@ -830,8 +830,6 @@ public:
     // Project-inferred complete refresh and paired reward operations.
     // Native maxMobility/currMobility remain public.
     void refreshMovement();
-    // Project-inferred boat-state interface; the native flag word is public.
-    bool isOnBoat() const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     short getPrimarySkillTotal() const;
