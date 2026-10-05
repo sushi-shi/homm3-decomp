@@ -14,4 +14,6 @@ casts to enum types	32
 magic case labels	0
 unnamed domain compares	0
 view preprocessor artifacts	0
-per-TU preprocessor scaffolds	19
+per-TU preprocessor scaffolds	0
+sanctioned feature switches	60
+sanctioned feature local classes	1
