@@ -153,7 +153,7 @@ advmgr	?processRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.
 advmgr	?processSearch@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xec90	tokens1:5a9b8d82ab80
 advmgr	?processSelect@advManager@@QAEHABVmessage@@AAUtype_point@@AAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	tokens1:4fbd1bd00540
 advmgr	?processWaitingHover@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0xdeb0	tokens1:6d9ad428098a
-advmgr	?quickInfo@advManager@@QAEXHHH@Z	93.5571	93.5571	96.2393	0x137c0	tokens1:a4fcd466f403
+advmgr	?quickInfo@advManager@@QAEXHHH@Z	91.7696	91.7696	96.2393	0x137c0	tokens1:b149691958ca
 advmgr	?redrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420	tokens1:a30b828384a1
 advmgr	?reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80	tokens1:91a3afd58608
 advmgr	?saveGame@@YI_N_N@Z	100.0000	100.0000	100.0000	0x18160	tokens1:cdb609f79d37
@@ -163,7 +163,7 @@ advmgr	?seedTo@advManager@@QAEXUtype_point@@@Z	99.9219	100.0000	100.0000	0x194a0
 advmgr	?setEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x183d0	tokens1:71ec8212bfb8
 advmgr	?setHeroContext@advManager@@QAEXHH_N0@Z	100.0000	100.0000	100.0000	0x17b20	tokens1:8827e85085d9
 advmgr	?setInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	tokens1:90a20d4437f6
-advmgr	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	96.1616	96.1616	96.9535	0xb150	tokens1:74ef2550177a
+advmgr	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	96.2486	96.2486	96.9535	0xb150	tokens1:89fecf3f1a03
 advmgr	?setShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	100.0000	100.0000	100.0000	0xd8d0	tokens1:8ed9ffbc97e7
 advmgr	?setTownContext@advManager@@QAEXH_N0@Z	100.0000	100.0000	100.0000	0x17830	tokens1:eefb61512362
 advmgr	?setTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdb00	tokens1:88e3d60c814b
