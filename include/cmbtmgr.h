@@ -1101,7 +1101,7 @@ public:
     // DC LF_MFUNCTION records have no this type: these are static helpers.
     static TWallTargetId getTargetWallIndex(int gridIndex);
     static bool inCastle(int index);
-    static unsigned char leftOfMoat(int index);
+    static bool leftOfMoat(int index);
     static void getMissileStartingPosition(int armyType, int x, int y, int facing,
                                           int destX, int destY,
                                           const CSprite* missile, int* startX,
@@ -1157,13 +1157,13 @@ public:
     void checkApplyGoodMorale(int group, int index);
     void spellEffect(int effect, army* targetArmy, int delay,
                      bool doWince);
-    unsigned char shotIsNotOptimal(const army* attacker,
+    bool shotIsNotOptimal(const army* attacker,
                                    const army* defender) const;
     unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex) const;
     bool inLineOfSight(int sourceIndex, int destIndex) const;
-    unsigned char hexIsBlocked(int index) const;
-    unsigned char isInMoat(int hex, int* index);
+    bool hexIsBlocked(int index) const;
+    bool isInMoat(int hex, int* index);
 
 private:
     void loadIcons();
