@@ -218,3 +218,71 @@ fn installed_quest_pool_respects_template_combination_bans() {
         assert!(!available.contains(&54));
     }
 }
+
+#[test]
+#[ignore = "requires HOMM3_HOTA_DAT and HOMM3_HOTA_TERRAIN_PATTERNS (992 bytes at pinned DLL RVA 0x25f860)"]
+fn installed_terrain_catalog_admits_native_frames_and_expanded_transitions() {
+    use homm3_rmg::{
+        domain::Terrain,
+        line::Reflection,
+        rng::RetailRng,
+        terrain_rules::{BrushStrength, TerrainCatalog, TerrainShape, TerrainTransition},
+    };
+    let bytes = std::fs::read(std::env::var_os("HOMM3_HOTA_DAT").unwrap()).unwrap();
+    let patterns = std::fs::read(std::env::var_os("HOMM3_HOTA_TERRAIN_PATTERNS").unwrap()).unwrap();
+    let catalog =
+        TerrainCatalog::parse_hota181(Container::parse(&bytes).unwrap(), &patterns).unwrap();
+    assert_eq!(catalog.ruleset(), Ruleset::HotA181);
+    for terrain in [Terrain::Highlands, Terrain::Wasteland] {
+        assert_eq!(catalog.frame_count(terrain), Some(124));
+        for frame in 0..124 {
+            let tile = catalog
+                .parse_tile(terrain, frame, Reflection::default())
+                .unwrap();
+            assert_eq!(tile.is_special(), (102..118).contains(&frame));
+        }
+        assert!(catalog
+            .parse_tile(terrain, 124, Reflection::default())
+            .is_err());
+        let mut rng = RetailRng::new(1);
+        let fill = catalog
+            .select_base(
+                terrain,
+                BrushStrength::parse(8).unwrap(),
+                None,
+                &[],
+                &mut rng,
+            )
+            .unwrap();
+        assert_eq!(fill.frame(), 105); // 41 < 50; 102 + 18467 % 16.
+        assert_eq!(rng.draws(), 2);
+        let frames: Vec<_> = [6, 7, 8, 9, 10, 11, 12, 12]
+            .into_iter()
+            .map(|frame| {
+                catalog
+                    .parse_tile(terrain, frame, Reflection::default())
+                    .unwrap()
+            })
+            .collect();
+        let transition = TerrainTransition {
+            shape: TerrainShape::WestBlend,
+            reflection: Reflection {
+                flip_x: true,
+                flip_y: false,
+            },
+        };
+        let selected = catalog
+            .select_transition(terrain, transition, None, &frames, &mut rng)
+            .unwrap();
+        assert_eq!(selected.frame(), 13); // The last unused variant of this edge.
+        assert_eq!(selected.reflection(), transition.reflection);
+        assert_eq!(rng.draws(), 3);
+    }
+    for index in 0..10 {
+        let terrain = Terrain::parse(index).unwrap();
+        assert_eq!(
+            catalog.frame_count(terrain),
+            TerrainCatalog::complete().frame_count(terrain)
+        );
+    }
+}

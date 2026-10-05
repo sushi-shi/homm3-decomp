@@ -7,7 +7,8 @@ use crate::{
     raw,
     rng::{RetailRng, RngCheckpoint},
     terrain_rules::{
-        self, BrushStrength, TerrainRuleError, TerrainShape, TerrainTile, TerrainTransition,
+        self, BrushStrength, TerrainCatalog, TerrainRuleError, TerrainShape, TerrainTile,
+        TerrainTransition,
     },
 };
 use std::{collections::TryReserveError, error::Error, fmt};
@@ -15,6 +16,13 @@ use std::{collections::TryReserveError, error::Error, fmt};
 /// Terrain generation could not allocate its buffers or select a source frame.
 #[derive(Debug)]
 pub enum TerrainError {
+    /// The map and installed frame catalog belong to different generation rules.
+    Ruleset {
+        /// Map's generation rules.
+        requested: crate::rules::Ruleset,
+        /// Frame catalog's rules.
+        catalog: crate::rules::Ruleset,
+    },
     /// A source rule has no frame for the requested transition.
     Rule(TerrainRuleError),
     /// A reusable buffer could not grow.
@@ -23,6 +31,10 @@ pub enum TerrainError {
 impl fmt::Display for TerrainError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Ruleset { requested, catalog } => write!(
+                f,
+                "terrain catalog {catalog:?} does not match map rules {requested:?}"
+            ),
             Self::Rule(error) => error.fmt(f),
             Self::Allocation(error) => error.fmt(f),
         }
@@ -102,11 +114,21 @@ impl<'zones> PaintedTerrain<'zones, '_> {
 /// Owned map tiles and two bitsets, reused across all brushes and generations.
 #[derive(Default, Debug)]
 pub struct TerrainWorkspace {
+    catalog: TerrainCatalog,
     tiles: Vec<TerrainTile>,
     repair: OrderedCells,
     other: OrderedCells,
 }
 impl TerrainWorkspace {
+    /// Reusable painting storage using a shared, immutable frame catalog.
+    #[must_use]
+    pub fn with_catalog(catalog: TerrainCatalog) -> Self {
+        Self {
+            catalog,
+            ..Self::default()
+        }
+    }
+
     /// Paint underground rock, surface water, and then zones in source order.
     /// Consumes coverage so the stage cannot accidentally be painted twice.
     ///
@@ -122,6 +144,12 @@ impl TerrainWorkspace {
         rng: &mut RetailRng,
     ) -> Result<PaintedTerrain<'zones, 'tiles>, TerrainError> {
         let map = coverage.map();
+        if self.catalog.ruleset() != map.request().ruleset() {
+            return Err(TerrainError::Ruleset {
+                requested: map.request().ruleset(),
+                catalog: self.catalog.ruleset(),
+            });
+        }
         let side = map.raster().dimension();
         let plane = side * side;
         let count = map.raster().cells().len();
@@ -176,6 +204,7 @@ impl TerrainWorkspace {
         rng: &'a mut RetailRng,
     ) -> Brush<'a> {
         Brush {
+            catalog: &self.catalog,
             tiles: &mut self.tiles[start..start + side * side],
             side,
             terrain,
@@ -251,6 +280,7 @@ impl Axis {
 }
 
 pub(crate) struct Brush<'a> {
+    catalog: &'a TerrainCatalog,
     tiles: &'a mut [TerrainTile],
     side: usize,
     terrain: Terrain,
@@ -294,11 +324,27 @@ impl Brush<'_> {
         }
         strength
     }
+    fn neighbours(&self, index: usize) -> ([TerrainTile; 8], usize) {
+        let mut tiles = [self.tiles[index]; 8];
+        let mut count = 0;
+        if self.catalog.ruleset() == crate::rules::Ruleset::HotA181 {
+            for direction in 0..8 {
+                let (x, y) = direction_offset(direction);
+                if let Some(nearby) = self.offset(index, x, y) {
+                    tiles[count] = self.tiles[nearby];
+                    count += 1;
+                }
+            }
+        }
+        (tiles, count)
+    }
     fn base(&mut self, index: usize) -> Result<(), TerrainRuleError> {
-        self.tiles[index] = terrain_rules::select_base(
+        let (neighbours, count) = self.neighbours(index);
+        self.tiles[index] = self.catalog.select_base(
             self.terrain,
             self.strength(index, self.terrain),
             None,
+            &neighbours[..count],
             self.rng,
         )?;
         Ok(())
@@ -532,15 +578,23 @@ impl Brush<'_> {
             });
             let mut transition = terrain_rules::classify(&neighbours);
             self.refine_corner(index, &mut transition);
+            let (neighbours, count) = self.neighbours(index);
             self.tiles[index] = if transition.shape == TerrainShape::Fill {
-                terrain_rules::select_base(
+                self.catalog.select_base(
                     tile.terrain(),
                     self.strength(index, tile.terrain()),
                     Some(tile),
+                    &neighbours[..count],
                     self.rng,
                 )?
             } else {
-                terrain_rules::select_transition(tile.terrain(), transition, Some(tile), self.rng)?
+                self.catalog.select_transition(
+                    tile.terrain(),
+                    transition,
+                    Some(tile),
+                    &neighbours[..count],
+                    self.rng,
+                )?
             };
         }
         Ok(())

@@ -17,11 +17,17 @@
 //!   . . .  . . .  . e .  . e .
 //! ```
 
+mod catalog;
+#[cfg(test)]
+mod catalog_tests;
+pub use catalog::{TerrainCatalog, TerrainDataError, HOTA_PATTERN_COUNT};
+
 use crate::{
     domain::Terrain,
     line::{FrameRange, Reflection},
     raw,
     rng::RetailRng,
+    rules::Ruleset,
 };
 use std::{error::Error, fmt, num::NonZeroU32};
 
@@ -321,6 +327,7 @@ pub struct TerrainTile {
     terrain: Terrain,
     frame: u8,
     reflection: Reflection,
+    info: catalog::FrameInfo,
 }
 impl TerrainTile {
     /// Parse an existing tile's frame against its terrain table.
@@ -332,15 +339,7 @@ impl TerrainTile {
         frame: u8,
         reflection: Reflection,
     ) -> Result<Self, TerrainRuleError> {
-        require_frames(terrain)?;
-        if usize::from(frame) >= frame_count(terrain) {
-            return Err(TerrainRuleError::Frame { terrain, frame });
-        }
-        Ok(Self {
-            terrain,
-            frame,
-            reflection,
-        })
+        TerrainCatalog::complete().parse_tile(terrain, frame, reflection)
     }
     /// Terrain type.
     #[must_use]
@@ -360,20 +359,10 @@ impl TerrainTile {
     /// Whether the source frame is decorated.
     #[must_use]
     pub fn is_special(self) -> bool {
-        match raw::TERRAIN_RULES[self.terrain.index()] {
-            raw::TerrainRuleData::Pattern { entries, .. } => {
-                entries[usize::from(self.frame)].m_special != 0
-            }
-            raw::TerrainRuleData::Fixed => false,
-        }
+        self.info.special
     }
     fn shape(self) -> u32 {
-        match raw::TERRAIN_RULES[self.terrain.index()] {
-            raw::TerrainRuleData::Pattern { entries, .. } => {
-                entries[usize::from(self.frame)].m_transition
-            }
-            raw::TerrainRuleData::Fixed => raw::ROCK_FRAMES[usize::from(self.frame)].m_transition,
-        }
+        self.info.shape
     }
 }
 
@@ -470,13 +459,7 @@ const fn frame_count_index(index: usize) -> usize {
         raw::TerrainRuleData::Fixed => raw::ROCK_FRAMES.len(),
     }
 }
-fn require_frames(terrain: Terrain) -> Result<(), TerrainRuleError> {
-    if terrain.index() >= raw::TERRAIN_RULES.len() {
-        Err(TerrainRuleError::UnavailableTerrain(terrain))
-    } else {
-        Ok(())
-    }
-}
+#[cfg(test)]
 const fn frame_count(terrain: Terrain) -> usize {
     frame_count_index(terrain.index())
 }
@@ -532,35 +515,10 @@ pub fn select_base(
     old: Option<TerrainTile>,
     rng: &mut RetailRng,
 ) -> Result<TerrainTile, TerrainRuleError> {
-    require_frames(terrain)?;
-    if let Some(tile) =
-        old.filter(|tile| tile.terrain == terrain && tile.shape() == raw::SHAPE_FILL)
-    {
-        return Ok(TerrainTile {
-            reflection: Reflection::default(),
-            ..tile
-        });
-    }
-    let mut special = false;
-    if let raw::TerrainRuleData::Pattern { chance, .. } = raw::TERRAIN_RULES[terrain.index()] {
-        if RANGES[terrain.index()][raw::SHAPE_FILL as usize * 4 + 1].is_some() {
-            let percent = chance * strength.0 / raw::RMG_FULL_BRUSH_STRENGTH;
-            special = rng.draw() % 100 < percent;
-        }
-    }
-    let transition = TerrainTransition {
-        shape: TerrainShape::Fill,
-        reflection: Reflection::default(),
-    };
-    let frame = select_range(terrain, transition, usize::from(special), rng)?;
-    Ok(TerrainTile {
-        terrain,
-        frame,
-        reflection: transition.reflection,
-    })
+    TerrainCatalog::complete().select_base(terrain, strength, old, &[], rng)
 }
 
-/// Select a non-special transition, retaining an already matching frame.
+/// Select a Complete transition, retaining an already matching frame.
 ///
 /// # Errors
 /// Reports a transition that has no frame for this terrain/reflection.
@@ -570,57 +528,167 @@ pub fn select_transition(
     old: Option<TerrainTile>,
     rng: &mut RetailRng,
 ) -> Result<TerrainTile, TerrainRuleError> {
-    require_frames(terrain)?;
-    let fixed = matches!(
-        raw::TERRAIN_RULES[terrain.index()],
-        raw::TerrainRuleData::Fixed
-    );
-    let reflection = if fixed {
-        Reflection::default()
-    } else {
-        transition.reflection
-    };
-    let old = old.filter(|tile| tile.terrain == terrain && tile.shape() == transition.shape as u32);
-    let old = old.filter(|tile| {
-        if !fixed {
-            return true;
-        }
-        let entry = raw::ROCK_FRAMES[usize::from(tile.frame)];
-        (entry.m_flipX != 0) == transition.reflection.flip_x
-            && (entry.m_flipY != 0) == transition.reflection.flip_y
-    });
-    let key = transition.shape as usize * 4
-        + if fixed {
-            usize::from(transition.reflection.flip_x) * 2
-                + usize::from(transition.reflection.flip_y)
-        } else {
-            0
-        };
-    let frame = match old {
-        Some(tile) => tile.frame,
-        None => select_range(terrain, transition, key, rng)?,
-    };
-    Ok(TerrainTile {
-        terrain,
-        frame,
-        reflection,
-    })
+    TerrainCatalog::complete().select_transition(terrain, transition, old, &[], rng)
 }
-fn select_range(
-    terrain: Terrain,
-    transition: TerrainTransition,
-    key: usize,
-    rng: &mut RetailRng,
-) -> Result<u8, TerrainRuleError> {
-    let Some(range) = RANGES[terrain.index()][key] else {
-        // The original calls rand() before its empty-range division fault.
-        rng.draw();
-        return Err(TerrainRuleError::MissingRange {
+
+impl TerrainCatalog {
+    /// Validate a tile and retain its frame metadata without borrowing the catalog.
+    ///
+    /// # Errors
+    /// Rejects a terrain or frame absent from this catalog.
+    pub fn parse_tile(
+        &self,
+        terrain: Terrain,
+        frame: u8,
+        reflection: Reflection,
+    ) -> Result<TerrainTile, TerrainRuleError> {
+        Ok(TerrainTile {
             terrain,
-            transition,
+            frame,
+            reflection,
+            info: self.info(terrain, frame)?,
+        })
+    }
+
+    /// Select a fill, preserving an existing fill without any draw. Under
+    /// `HotA`, exclude frames used by supplied same-terrain neighbours when
+    /// any choices remain; supplying all eight existing neighbours reproduces
+    /// the painter's selection context. Complete ignores these neighbours.
+    ///
+    /// # Errors
+    /// Reports an unavailable terrain or an empty frame range.
+    pub fn select_base(
+        &self,
+        terrain: Terrain,
+        strength: BrushStrength,
+        old: Option<TerrainTile>,
+        neighbours: &[TerrainTile],
+        rng: &mut RetailRng,
+    ) -> Result<TerrainTile, TerrainRuleError> {
+        let chance = self.chance(terrain)?;
+        if let Some(tile) =
+            old.filter(|tile| tile.terrain == terrain && tile.shape() == raw::SHAPE_FILL)
+        {
+            return Ok(TerrainTile {
+                reflection: Reflection::default(),
+                ..tile
+            });
+        }
+        let mut special = false;
+        if let Some(chance) = chance {
+            if self
+                .range(terrain, raw::SHAPE_FILL as usize * 4 + 1)?
+                .is_some()
+            {
+                let percent = chance.wrapping_mul(strength.0) / raw::RMG_FULL_BRUSH_STRENGTH;
+                special = rng.draw() % 100 < percent;
+            }
+        }
+        let transition = TerrainTransition {
+            shape: TerrainShape::Fill,
+            reflection: Reflection::default(),
+        };
+        let frame =
+            self.select_range(terrain, transition, usize::from(special), neighbours, rng)?;
+        self.parse_tile(terrain, frame, transition.reflection)
+    }
+
+    /// Select a transition with the same versioned neighbour exclusion as fill
+    /// selection. Fixed rock frames keep Complete's embedded reflection rules.
+    ///
+    /// # Errors
+    /// Reports an unavailable terrain or an empty transition range.
+    pub fn select_transition(
+        &self,
+        terrain: Terrain,
+        transition: TerrainTransition,
+        old: Option<TerrainTile>,
+        neighbours: &[TerrainTile],
+        rng: &mut RetailRng,
+    ) -> Result<TerrainTile, TerrainRuleError> {
+        let fixed = self.chance(terrain)?.is_none();
+        let reflection = if fixed {
+            Reflection::default()
+        } else {
+            transition.reflection
+        };
+        let old =
+            old.filter(|tile| tile.terrain == terrain && tile.shape() == transition.shape as u32);
+        let old = old.filter(|tile| {
+            if !fixed {
+                return true;
+            }
+            let entry = raw::ROCK_FRAMES[usize::from(tile.frame)];
+            (entry.m_flipX != 0) == transition.reflection.flip_x
+                && (entry.m_flipY != 0) == transition.reflection.flip_y
         });
-    };
-    Ok(range.select(rng))
+        let key = transition.shape as usize * 4
+            + if fixed {
+                usize::from(transition.reflection.flip_x) * 2
+                    + usize::from(transition.reflection.flip_y)
+            } else {
+                0
+            };
+        let frame = match old {
+            Some(tile) => tile.frame,
+            None => self.select_range(terrain, transition, key, neighbours, rng)?,
+        };
+        self.parse_tile(terrain, frame, reflection)
+    }
+
+    fn select_range(
+        &self,
+        terrain: Terrain,
+        transition: TerrainTransition,
+        key: usize,
+        neighbours: &[TerrainTile],
+        rng: &mut RetailRng,
+    ) -> Result<u8, TerrainRuleError> {
+        let Some(range) = self.range(terrain, key)? else {
+            rng.draw(); // Native draw precedes the empty-range division fault.
+            return Err(TerrainRuleError::MissingRange {
+                terrain,
+                transition,
+            });
+        };
+        if self.ruleset() == Ruleset::Complete || terrain == Terrain::Rock {
+            return Ok(range.select(rng));
+        }
+        // RVA 0x1f2af0: duplicates exclude one frame only. If all are taken,
+        // restore the entire range. This is one biased modulo draw, never retries.
+        let mut available = [true; 256];
+        let first = range.first() as usize;
+        let count = range.count().get() as usize;
+        let mut remaining = count;
+        for tile in neighbours {
+            let frame = usize::from(tile.frame);
+            if tile.terrain == terrain
+                && (first..first + count).contains(&frame)
+                && available[frame]
+            {
+                available[frame] = false;
+                remaining -= 1;
+                if remaining == 0 {
+                    available.fill(true);
+                    remaining = count;
+                    break;
+                }
+            }
+        }
+        let mut pick = rng.draw() as usize % remaining;
+        for (frame, &allowed) in available.iter().enumerate().skip(first).take(count) {
+            if allowed {
+                if pick == 0 {
+                    return u8::try_from(frame).map_err(|_| TerrainRuleError::MissingRange {
+                        terrain,
+                        transition,
+                    });
+                }
+                pick -= 1;
+            }
+        }
+        unreachable!("selected available frame exists within the admitted range")
+    }
 }
 
 /// Priority-ordered classification under four reflections. A family tries all

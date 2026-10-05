@@ -551,3 +551,52 @@ installed Highlands/Wasteland frame data, painting hooks and the terrain
 post-pass. Generated water-zone placement/treasure defaults must be consumed by
 their placement stage. Whole-map HotA generation, output, HD/mirror completion,
 native whole-map replay, game loading and publication remain required.
+
+
+Terrain frame data now belongs to the shared immutable `TerrainCatalog`. Complete
+uses its canonical source tables; `parse_hota181` reads `terrainNN` HDAT records
+and an explicit 992-byte slice of the pinned DLL at RVA `0x25f860`. It validates
+all 124 shape/special entries and contiguous frame ranges, requires both new
+terrain records, preserves last-record replacement and the native unsigned
+probability calculation. Highlands/Wasteland probabilities come from HDAT's
+integer entry `min(1, count - 1)`; the installed records both supply 50. The
+binary table is not copied into a second hand-maintained Rust inventory.
+`TerrainTile` retains validated shape/special metadata, so expanded tiles never
+index Complete's arrays. Catalog clones share their immutable installed data.
+
+The existing brush now supplies its actual in-bounds neighbours to versioned
+base and transition selection. HotA's RVA `0x1f2af0` excludes used same-terrain
+frames, ignores duplicate exclusions, restores the full range when exhausted,
+and consumes exactly one biased modulo draw. Existing matching frames still
+skip selection; fixed rock artwork retains its ordinary embedded reflections.
+Complete's public selection helpers remain wrappers over the Complete catalog.
+`TerrainWorkspace::with_catalog` carries the catalog across later brushes and
+rejects a map/catalog rules mismatch before changing cells or RNG.
+
+Verification: 158 library tests, four layout integration tests, two documentation
+tests, library Clippy and the explicit installed-terrain test pass. The latter
+admits every new-terrain frame, checks special frames 102..117, an exact fill
+selection/draw count and exclusion of seven of eight edge variants. Malformed
+ranges/records, exhausted ranges, duplicate neighbours, old-frame preservation
+and unsigned probability behavior have focused synthetic tests. A temporary
+host harness compiles the recovered C++ `hotaSelectLeastRepeatedFrame` body and
+compares 10,000 fill/transition contexts against Rust; frames, final CRT state
+and draw counts all match. This is recovered-source helper verification, not a
+new HotA.dll execution or complete painted-map comparison. Artifacts are in
+ignored `build/hota-terrain-port/`; corpus SHA-256:
+`770706c6839fa11a1a83211eaec0775c558410b219669be3d83477fcd6bb7ed0`;
+compiled reference source SHA-256:
+`3a8fb49e14569a39136c66607c95d8859c480bf6bc84ab96ce26976e752cf44e`;
+extracted pattern bytes SHA-256:
+`d8ee75b2367bdc7059c92a4ba6693c388779a92f5c6350f7dc34f130485fbe96`.
+
+Complete replay remains 14 exact hotfix maps, seven exact retail maps and seven
+matching pre-existing coast faults. Runner SHA-256:
+`ce2baf19a1664f3d44af205e5a60d25b1d1de01ff489a0d547679955c524e38f`.
+HotA coverage/painting is still gated: saved centers and island coverage, brush
+strength 1, rock-block surface Dirt, ownership/bounds updates during the zone
+brush flush, the ordered unowned-water flood, guard caps, border/reachability
+flags, discarded unreachable ownership and final bounds/recentering must be
+integrated together. Resource IO must supply the pinned pattern slice when the
+full HotA assets/CLI path is admitted. The eight native phase captures retained
+from boundary verification are the next painted-map comparison target.
