@@ -64,13 +64,15 @@ def run(only_units: list[str] | None = None) -> DelinkResult:
     rc = labels_source.extract(only_units)   # src macros -> claim fragments
     if rc:
         raise RuntimeError("source label extraction failed; delinking stopped")
-    inventory = model.generate()
+    # One resolution serves the inventory and the data manifest: nothing in
+    # between (aliases, synthetic PDB) feeds back into the claim join.
+    inventory, resolved = model.generate_model()
     from homm3.delink import reloc_pairing
     aliases = reloc_pairing.write_aliases(reloc_pairing._STATE) \
         if reloc_pairing._STATE is not None else \
         common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
     pdb = synth_pdb.generate(inventory)
-    data_manifest.generate(model.resolve())
+    data_manifest.generate(resolved)
     data = data_manifest.OUTPUT
 
     if DELINK_DIR.exists():

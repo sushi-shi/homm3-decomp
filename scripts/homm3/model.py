@@ -600,6 +600,15 @@ def _collect_inventory():
 
 
 def generate() -> Path:
+    return generate_model()[0]
+
+
+def generate_model() -> tuple[Path, Model]:
+    """Write the synth-PDB inventory; return it with the resolved model.
+
+    The model is the one `resolve()` would return for the same inputs, so a
+    caller that needs both (delink) need not resolve the claim set twice.
+    """
     rows, skipped_targets = _collect_inventory()
     model = resolve(rows)
     serialize(model)
@@ -636,7 +645,7 @@ def generate() -> Path:
     if skipped_targets:
         print(f"  reloc targets outside .rdata/.data: {skipped_targets} "
               "skipped")
-    return OUT
+    return OUT, model
 
 
 def main(argv=None) -> int:
