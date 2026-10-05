@@ -571,15 +571,25 @@ impl<'a> PrototypeSource<'a> {
             }
         }
         for entry in &mut entries {
-            entry.preferred = (raw::eTerrainDirt..raw::eTerrainRock)
-                .filter_map(Terrain::parse)
-                .find(|&terrain| entry.prototype.recommends(terrain));
+            let terrain_count = match rules.ruleset() {
+                crate::rules::Ruleset::Complete => raw::eTerrainRock as usize,
+                crate::rules::Ruleset::HotA181 => rules.ruleset().terrain_count(),
+            };
+            entry.preferred = (0..terrain_count)
+                .filter_map(|index| {
+                    i32::try_from(index)
+                        .ok()
+                        .and_then(|value| Terrain::parse_for(value, rules.ruleset()))
+                })
+                .find(|&terrain| entry.prototype.recommends(terrain))
+                .filter(|&terrain| terrain != Terrain::Rock);
             entry.rule = entry.preferred.and_then(|terrain| {
-                rules.find(
-                    entry.prototype.kind.family().family(),
-                    entry.prototype.subtype,
-                    terrain,
-                )
+                let bucket = entry.prototype.kind.family();
+                let rule_type = match rules.ruleset() {
+                    crate::rules::Ruleset::Complete => bucket.family(),
+                    crate::rules::Ruleset::HotA181 => bucket,
+                };
+                rules.find(rule_type, entry.prototype.subtype, terrain)
             });
         }
         Ok(PrototypeCatalog {
@@ -588,6 +598,7 @@ impl<'a> PrototypeSource<'a> {
             offsets,
             version,
             behavior,
+            ruleset: rules.ruleset(),
         })
     }
 }
@@ -626,12 +637,13 @@ impl PreparedPrototype<'_> {
     pub const fn hotfix_admission(&self) -> Result<FootprintSize, PrototypeFault> {
         self.hotfix_admission
     }
-    /// First recommended dirt-through-water terrain, or no preference.
+    /// First recommended terrain admitted by the rule catalog, or no preference.
+    /// A first rock bit suppresses binding, including later terrain bits.
     #[must_use]
     pub const fn preferred(&self) -> Option<Terrain> {
         self.preferred
     }
-    /// Last matching placement rule.
+    /// Placement rule chosen by the catalog's versioned binding order.
     #[must_use]
     pub const fn rule(&self) -> Option<PlacementRuleId> {
         self.rule
@@ -672,6 +684,7 @@ pub struct PrototypeCatalog<'a> {
     offsets: [usize; KINDS + 1],
     version: MapVersion,
     behavior: Behavior,
+    ruleset: crate::rules::Ruleset,
 }
 
 /// Identity of a prepared prototype, stable for the lifetime of its catalog.
@@ -688,6 +701,11 @@ impl PrototypeId {
     }
 }
 impl PrototypeCatalog<'_> {
+    /// Generation rules used for preferred terrain and placement-rule binding.
+    #[must_use]
+    pub const fn ruleset(&self) -> crate::rules::Ruleset {
+        self.ruleset
+    }
     pub(crate) const fn owner(&self) -> OwnerId {
         self.owner
     }
@@ -912,6 +930,46 @@ mod tests {
             text.push_str("\r\n");
         }
         crate::traits::CreatureCatalog::parse(text.as_bytes()).unwrap()
+    }
+
+    #[test]
+    fn hota_binding_scans_expanded_masks_and_rock_stops_the_search() {
+        use crate::rules::Ruleset;
+        let bytes = table(&[row("monster.def", raw::MONSTER, 0)]);
+        let mut source =
+            PrototypeSource::parse(&bytes, |_| Ok::<_, Infallible>(Some(mask()))).unwrap();
+        // Test binding independently of objects.txt's versioned resource loader.
+        source.rows[0].recommended = (1 << 10) | (1 << 11);
+        let mut rows = vec![vec!["0".to_owned(); 22]; 2];
+        for (index, row) in rows.iter_mut().enumerate() {
+            row[0] = "rule".into();
+            row[3] = raw::MONSTER.to_string();
+            row[6] = "10".into();
+            row[16] = (100 + index).to_string();
+        }
+        let rule_bytes = format!(
+            "header\r\nheader\r\nheader\r\n{}\r\n",
+            rows.iter()
+                .map(|row| row.join("\t"))
+                .collect::<Vec<_>>()
+                .join("\r\n")
+        );
+        let rules =
+            PlacementRules::parse_for(rule_bytes.as_bytes(), Behavior::Hotfix, Ruleset::HotA181)
+                .unwrap();
+        let catalog = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        let entry = &catalog.entries()[0];
+        assert_eq!(entry.preferred(), Some(Terrain::Highlands));
+        assert_eq!(entry.rule().unwrap().index(), 0);
+        drop(catalog);
+        source.rows[0].recommended |= 1 << 9;
+        let catalog = source
+            .prepare(&rules, MapVersion::ShadowOfDeath, Behavior::Hotfix)
+            .unwrap();
+        assert_eq!(catalog.entries()[0].preferred(), None);
+        assert_eq!(catalog.entries()[0].rule(), None);
     }
 
     #[test]

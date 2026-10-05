@@ -2,10 +2,12 @@
 
 use crate::{
     behavior::Behavior, domain::Terrain, identity::OwnerId, object::ObjectKind, parse, raw,
+    rules::Ruleset,
 };
 use homm3_resource::{Field, Spreadsheet, SpreadsheetRow};
 use std::{collections::TryReserveError, error::Error, fmt};
 
+#[cfg(test)]
 const PREFIX: usize = raw::RMG_PLACEMENT_COLUMN_NEIGHBOUR_SCORES as usize;
 const FIRST_ROW: usize = raw::RMG_FIRST_DATA_ROW as usize;
 
@@ -30,7 +32,7 @@ pub struct PlacementRule {
     object: ObjectKind,
     subtype: i32,
     terrain: Terrain,
-    terrain_scores: [i32; raw::RMG_TERRAIN_COUNT as usize],
+    terrain_scores: Box<[i32]>,
 }
 impl PlacementRule {
     /// Original data-row ordinal, including skipped hotfix rows.
@@ -142,6 +144,7 @@ impl From<TryReserveError> for PlacementRuleError {
 #[derive(Debug)]
 pub struct PlacementRules {
     behavior: Behavior,
+    ruleset: Ruleset,
     owner: OwnerId,
     rules: Vec<PlacementRule>,
     scores: Vec<i32>,
@@ -164,14 +167,33 @@ impl PlacementRules {
     /// Reports malformed text, integer overflow, retail index faults, allocation failure
     /// or exhausted ownership tags.
     pub fn parse(bytes: &[u8], behavior: Behavior) -> Result<Self, PlacementRuleError> {
+        Self::parse_for(bytes, behavior, Ruleset::Complete)
+    }
+
+    /// Read the versioned terrain columns and neighbour matrices. `HotA` uses
+    /// columns 16 onward for additional terrains, followed by both matrices;
+    /// rock has no input column. Its native loader does not skip invalid rows.
+    ///
+    /// # Errors
+    /// Reports malformed input, unsafe native indexing, allocation failure or
+    /// exhausted ownership tags.
+    pub fn parse_for(
+        bytes: &[u8],
+        behavior: Behavior,
+        ruleset: Ruleset,
+    ) -> Result<Self, PlacementRuleError> {
+        let terrain_count = ruleset.terrain_count();
+        let prefix_count = 6 + terrain_count;
+        let skip_invalid = ruleset == Ruleset::Complete && behavior.is_hotfix();
         let sheet = Spreadsheet::parse(bytes).map_err(PlacementRuleError::Spreadsheet)?;
         let columns = sheet.rows().skip(FIRST_ROW).take_while(nonblank).count();
         let row_scores = columns.checked_mul(2).ok_or(PlacementRuleError::Capacity)?;
-        let required = PREFIX
+        let required = prefix_count
             .checked_add(row_scores)
             .ok_or(PlacementRuleError::Capacity)?;
         let mut result = Self {
             behavior,
+            ruleset,
             owner: OwnerId::new().ok_or(PlacementRuleError::IdentityExhausted)?,
             rules: Vec::new(),
             scores: Vec::new(),
@@ -181,7 +203,7 @@ impl PlacementRules {
         for (source_row, row) in sheet.rows().skip(FIRST_ROW).take(columns).enumerate() {
             let row_index = source_row + FIRST_ROW;
             if row.len() < required {
-                if behavior.is_hotfix() {
+                if skip_invalid {
                     continue;
                 }
                 return Err(PlacementRuleError::RetailShortRow {
@@ -190,7 +212,7 @@ impl PlacementRules {
                 });
             }
             let mut fields = row.cells();
-            let mut prefix = [None; PREFIX];
+            let mut prefix = vec![None; prefix_count];
             for (slot, field) in prefix.iter_mut().zip(fields.by_ref()) {
                 *slot = Some(field);
             }
@@ -204,10 +226,11 @@ impl PlacementRules {
             };
             let object = number(raw::RMG_PLACEMENT_COLUMN_OBJECT_TYPE)?;
             let terrain = number(raw::RMG_PLACEMENT_COLUMN_TERRAIN)?;
-            let (Some(object), Some(terrain)) =
-                (ObjectKind::parse(object), Terrain::parse(terrain))
-            else {
-                if behavior.is_hotfix() {
+            let (Some(object), Some(terrain)) = (
+                ObjectKind::parse(object),
+                Terrain::parse_for(terrain, ruleset),
+            ) else {
+                if skip_invalid {
                     continue;
                 }
                 return Err(PlacementRuleError::RetailIdentity {
@@ -216,7 +239,7 @@ impl PlacementRules {
                     terrain,
                 });
             };
-            let mut terrain_scores = [raw::RMG_PLACEMENT_INVALID; raw::RMG_TERRAIN_COUNT as usize];
+            let mut terrain_scores = vec![raw::RMG_PLACEMENT_INVALID; terrain_count];
             for (column, score) in (raw::RMG_PLACEMENT_COLUMN_TERRAIN_SCORES..).zip(
                 terrain_scores
                     .iter_mut()
@@ -224,21 +247,30 @@ impl PlacementRules {
             ) {
                 *score = number(column)?;
             }
+            for (terrain, score) in terrain_scores.iter_mut().enumerate().skip(10) {
+                *score =
+                    number(u32::try_from(6 + terrain).map_err(|_| PlacementRuleError::Capacity)?)?;
+            }
             result.scores.try_reserve(row_scores)?;
             for (offset, field) in fields.take(row_scores).enumerate() {
                 result
                     .scores
-                    .push(integer(field, row_index, PREFIX + offset)?);
+                    .push(integer(field, row_index, prefix_count + offset)?);
             }
             result.rules.push(PlacementRule {
                 source_row,
                 object,
                 terrain,
-                terrain_scores,
+                terrain_scores: terrain_scores.into_boxed_slice(),
                 subtype: number(raw::RMG_PLACEMENT_COLUMN_SUBTYPE)?,
             });
         }
         Ok(result)
+    }
+    /// Generation rules that own this table's column layout and binding policy.
+    #[must_use]
+    pub const fn ruleset(&self) -> Ruleset {
+        self.ruleset
     }
     /// Retained rules in source order.
     #[must_use]
@@ -268,7 +300,8 @@ impl PlacementRules {
             .then(|| self.rules.get(rule.index))
             .flatten()
     }
-    /// Bind the last matching rule. The caller supplies the prototype family.
+    /// Bind by type, subtype and preferred terrain: last match for Complete,
+    /// first match for `HotA`. The caller supplies the versioned prototype bucket.
     #[must_use]
     pub fn find(
         &self,
@@ -276,12 +309,14 @@ impl PlacementRules {
         subtype: i32,
         terrain: Terrain,
     ) -> Option<PlacementRuleId> {
-        self.rules
-            .iter()
-            .rposition(|rule| {
-                rule.object == family && rule.subtype == subtype && rule.terrain == terrain
-            })
-            .map(|index| self.id(index))
+        let matches = |rule: &PlacementRule| {
+            rule.object == family && rule.subtype == subtype && rule.terrain == terrain
+        };
+        let index = match self.ruleset {
+            Ruleset::Complete => self.rules.iter().rposition(matches),
+            Ruleset::HotA181 => self.rules.iter().position(matches),
+        };
+        index.map(|index| self.id(index))
     }
     /// Look up another retained rule using its original source column.
     #[must_use]
@@ -340,6 +375,49 @@ mod tests {
             text.push_str("\r\n");
         }
         text.into_bytes()
+    }
+
+    #[test]
+    fn hota_columns_skip_rock_and_first_binding_keeps_matrix_identity() {
+        let mut rows = vec![row(raw::TOWN, 0, 2), row(raw::TOWN, 1, 2)];
+        for fields in &mut rows {
+            fields.splice(PREFIX..PREFIX, ["101".into(), "202".into()]);
+            fields[raw::RMG_PLACEMENT_COLUMN_TERRAIN as usize] = "11".into();
+        }
+        let bytes = sheet(&rows);
+        let rules = PlacementRules::parse_for(&bytes, Behavior::Hotfix, Ruleset::HotA181).unwrap();
+        assert_eq!(rules.ruleset(), Ruleset::HotA181);
+        let id = rules.find(ObjectKind::TOWN, 0, Terrain::Wasteland).unwrap();
+        assert_eq!(id.index(), 0);
+        let rule = rules.get(id).unwrap();
+        assert_eq!(rule.terrain_score(Terrain::Water), Some(9));
+        assert_eq!(rule.terrain_score(Terrain::Rock), Some(-5000));
+        assert_eq!(rule.terrain_score(Terrain::Highlands), Some(101));
+        assert_eq!(rule.terrain_score(Terrain::Wasteland), Some(202));
+        let other = rules.iter().nth(1).unwrap().0;
+        assert_eq!(
+            rules.neighbour_score(id, other, NeighbourScore::Adjacent),
+            Some(1)
+        );
+        assert_eq!(
+            rules.neighbour_score(other, id, NeighbourScore::Blocked),
+            Some(1100)
+        );
+
+        rows[0].truncate(PREFIX + 4);
+        assert!(matches!(
+            PlacementRules::parse_for(&sheet(&rows), Behavior::Hotfix, Ruleset::HotA181),
+            Err(PlacementRuleError::RetailShortRow {
+                row: 3,
+                required: 22
+            })
+        ));
+        rows[0] = row(raw::ADVENTURE_OBJECT_TRAIT_COUNT, 0, 2);
+        rows[0].splice(PREFIX..PREFIX, ["0".into(), "0".into()]);
+        assert!(matches!(
+            PlacementRules::parse_for(&sheet(&rows), Behavior::Hotfix, Ruleset::HotA181),
+            Err(PlacementRuleError::RetailIdentity { row: 3, .. })
+        ));
     }
 
     #[test]

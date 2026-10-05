@@ -81,7 +81,7 @@ fn prepare(assets: Assets<'_>, case: usize, behavior: Behavior) -> PreparedGener
 }
 
 #[test]
-fn hota_request_cannot_silently_generate_with_complete_assets() {
+fn hota_inputs_cannot_silently_generate_with_complete_assets() {
     let Some(data) = std::env::var_os("HOMM3_RMG_DATA") else {
         eprintln!("skipping asset-backed admission: set HOMM3_RMG_DATA");
         return;
@@ -113,6 +113,31 @@ fn hota_request_cannot_silently_generate_with_complete_assets() {
             }
         );
         assert_eq!(failure.report.request().repaired_record(), record);
+
+        let rules =
+            PlacementRules::parse_for(b"header\r\nheader\r\nheader\r\n", RETAIL, Ruleset::HotA181)
+                .unwrap();
+        let assets = Assets {
+            placement: &rules,
+            ..retail
+        };
+        let request =
+            Request::parse(default_record(MapSize::Small, Levels::Surface), RETAIL).unwrap();
+        let Err(failure) = assets.prepare(request, 42) else {
+            panic!("Complete generation admitted HotA placement rules")
+        };
+        assert!(matches!(
+            failure.fault,
+            GenerationFault::UnsupportedRuleset(Ruleset::HotA181)
+        ));
+        assert_eq!(failure.report.stage(), Stage::Assets);
+        assert_eq!(
+            failure.report.rng(),
+            RngCheckpoint {
+                state: 42,
+                draws: 0
+            }
+        );
     });
 }
 

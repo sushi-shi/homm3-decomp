@@ -644,3 +644,46 @@ Next work is shared placement state, expanded terrain scoring and the ordered
 HotA connection/town/mine/road operations. Whole-map generation, versioned output,
 HD/mirror completion, native whole-map replay, game loading and publication
 remain required.
+
+`PlacementRules::parse_for` now reads the versioned `rand_trn.txt` layout in the
+shared catalog (recovered `readObjectPlacementRules`, DLL RVA `0x1f23f0`). Terrain
+scores use catalog-sized storage: columns 7..15 remain Dirt through Water, Rock
+is always -5000, columns 16..17 hold Highlands/Wasteland, and both neighbour
+matrices start at column 18 for HotA. Complete retains its existing parser entry
+point, columns, last-match rule selection and hotfix row-skipping policy. HotA
+reports unsafe short rows/identities instead of applying that Complete hotfix.
+Rule handles still own their catalog and source-column identity.
+
+Prototype rule binding now uses the rule catalog's generation version. HotA
+scans all twelve recommended bits, treats a first Rock bit as no binding, uses
+the existing prototype bucket without Complete's second alias lookup, and picks
+the first matching subtype. Prepared catalogs retain the ruleset; registration
+rejects a catalog from another ruleset, and full generation rejects HotA
+placement catalogs before constructor RNG draws while that pipeline is gated.
+This does not yet load HotA's expanded object masks or changed object traits:
+`PrototypeSource::parse` still reads Complete's resource format. The expanded
+mask binding test supplies the masks directly to isolate binding from resource
+loading. The installed HotA core archive cannot be read as the existing plain
+LOD directory; its object resources and versioned loader remain required work.
+
+Verification: 161 library tests and library Clippy pass. New tests cover both
+extra score columns, the omitted Rock column, matrix offsets, duplicate binding,
+HotA short-row/identity failures and the first-Rock-bit stopping rule. A temporary
+host harness compiles the recovered C++ loader body with spreadsheet/prototype
+adapters, then compares 200 generated tables (4,954 rows) with Rust. All terrain
+scores, both neighbour matrices and first-match subtype bindings agree. This is
+recovered-source verification, not an installed-data or native DLL comparison.
+Ignored artifacts are in `build/hota-placement-port/`; generated corpus SHA-256:
+`e13f09c8d98acc7cf6b89ed1afc21424193c714ef68109e024b8eab83fde0a54`;
+compiled reference source SHA-256:
+`083509b0ef9eaaaaf6dd123c39ab8baa3747fc9a25497fac37297596f9f8e95f`;
+comparison report SHA-256:
+`22f5aa6a08449938ad097cc318682da80696c17e42b11f47ceb786ed219b3682`.
+
+The installed Complete admission test also passes: both a HotA request and a
+HotA placement catalog fail at the asset boundary with the original seed and
+zero draws. Complete replay retains 14 exact hotfix maps, seven exact retail
+maps and seven matching pre-existing coast faults. Runner SHA-256:
+`27cf0dfa7abeeac4482678101227df0cd5e24f7517ffbae2784466db44f5af61`.
+Placement state, the frame-aware scorer, installed prototype loading, later
+HotA operations, output and full-map/native/game verification remain unfinished.
