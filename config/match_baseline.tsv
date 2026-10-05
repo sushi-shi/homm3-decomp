@@ -567,7 +567,7 @@ army	?getBerserkTargets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@st
 army	?getController@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690	tokens1:6b458a256c56
 army	?getControllingSide@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140	tokens1:104f842bbe88
 army	?getDefenseModifier@army@@QBEJXZ	100.0000	100.0000	100.0000	0x42660	tokens1:2d5a3faf3108
-army	?getEstimatedDamage@army@@QBEJPBV1@J_NJ@Z	98.5227	98.5227	98.5227	0x43e30	tokens1:af11769e6749
+army	?getEstimatedDamage@army@@QBEJPBV1@J_NJ@Z	100.0000	100.0000	100.0000	0x43e30	tokens1:d395a33403ef
 army	?getFireShieldStrength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130	tokens1:878a91c5fb4d
 army	?getLossCombatValue@army@@QBEJJJ_NJ0@Z	100.0000	100.0000	100.0000	0x42fd0	tokens1:ae4cbcd27c08
 army	?getMirrorEffect@army@@QBEHXZ	100.0000	100.0000	100.0000	0x487f0	tokens1:7d6e12424744

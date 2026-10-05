@@ -2970,41 +2970,16 @@ double army::computeDefenderDamageReduction(bool isShooting) const
     return reduction;
 }
 
-// RETAIL-ONLY: UNNAMED in the DC dump, the HD name map and IDA alike, and
-// its two callers are both in ai_tactical - get_attack_skill_value
-// (0x437800) and get_defense_skill_value (0x438910), each asking what a
-// hypothetical stack of ours would do to a target. Four stack arguments
-// (ret 0x10); it runs compute_attacker_bonus, then
-// ComputeAttackerDamageReduction, then the defender's own shield /
-// petrify / hero-defense-factor chain, and floors the answer at 1. It is
-// NOT DamageEnemy: that row takes (army*, int*, int*, bool) on the DC
-// roster and calls ComputeBaseDamage / adjust_damage / Damage, none of
-// which appear here. Name declared in army.h as a bootstrap invention.
-
-// THE DEFENDER'S WHOLE CHAIN IS ComputeDefenderDamageReduction INLINED,
-// which is what identifies the tail: the +0x208/+0x4bc and
-// +0x204/+0x4b8 shield pair, the +0x2b0 petrify halving and the
-// heroes[get_controlling_side()] defense factor arrive here in exactly
-// that body's order, including its inlined `1 - combatSide` hypnotize
-// flip. Retail keeps an out-of-line copy at 0x443d90 and expands it
-// here - /Ob2 on a same-TU body defined above the call site.
-
-// The attacker's two reductions are NOT symmetric, and the byte order
-// says why: ComputeAttackerDamageReduction is CALLED and multiplies
-// `reduction * amount` (the double is the left operand, the int is
-// filed into a temp and multiplied in), while the defender's inlined
-// factor multiplies `amount * factor` the other way round. Both
-// orientations are transcribed as retail has them.
-
-// `amount` is assigned back into its own parameter slot [ebp+0xc]
-// three times over, so the source updates the parameter rather than
-// introducing locals.
-// A 17-state original-damage capture family (two emitted objects) also
-// does not improve 98.5227%: int/long captures, const qualifiers, block
-// lifetimes and return-then-add all leave the add-register choice unresolved.
-// The natural `amount += attackerBonus(...) + defenderBonus(...)` grouping
-// also compiles to the same 98.5227% Windows body. Mac still retains the
-// defender-bonus call; keep both canonical calls while resolving allocation.
+// Complete-only damage estimate used by the two ai_tactical skill-value
+// helpers. Its original name is unknown; the DC DamageEnemy interface and
+// helper sequence describe a different operation.
+// Mac 0x4fdd0..0x4fde4 keeps the attacker-adjusted result separate while
+// passing the original amount to computeDefenderDamageBonuses. That result
+// continues through both reductions and the minimum-one clamp. VC6 reuses
+// the dead amount parameter's stack slot for this distinct value; the stores
+// alone do not prove assignments to the source parameter. This lifetime
+// model reproduces all 257 Windows bytes while retaining both bonus calls.
+// The two reduction products keep their evidenced operand orientation.
 VA(0x00443e30, 0x101)
 MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value
                        // functions) + arity ret 0x10, retail-only slot
@@ -3016,29 +2991,16 @@ long army::getEstimatedDamage(const army* target, long amount,
 {
     if (!target)
         return 0;
-    // Residual (98.5227%): ONE instruction pair. Retail accumulates
-    // INTO the call's return register (`add eax, ecx` /
-    // `mov [amount], eax`); our C2 loads `amount` into ECX and
-    // accumulates the other way (`add ecx, eax` / `mov [amount], ecx`).
-    // Everything else in the body is byte-identical and the remaining
-    // diff rows are reloc names on unclaimed rows. VC6 CANONICALISES
-    // this add, so the written operand order does not reach it - tried
-    // and rejected: `amount += compute_attacker_bonus(...)` (identical
-    // bytes) and a named `long bonus` local, which is strictly worse
-    // (it sinks the add past the ComputeAttackerDamageReduction call
-    // and spills the bonus to a stack slot first).
-    // Mac retains this defender-bonus call; VC6 expands its zero return.
-    amount = computeAttackerBonus(amount, ranged, const_cast<army*>(target),
-                                    0, distance)
-             + amount
-             + target->computeDefenderDamageBonuses(amount);
-    amount = static_cast<long>(
-        computeAttackerDamageReduction(target, ranged) * amount);
-    amount = static_cast<long>(
-        amount * target->computeDefenderDamageReduction(ranged));
-    if (amount <= 0)
-        amount = 1;
-    return amount;
+    long damage = amount + computeAttackerBonus(
+        amount, ranged, const_cast<army*>(target), 0, distance);
+    damage += target->computeDefenderDamageBonuses(amount);
+    damage = static_cast<long>(
+        computeAttackerDamageReduction(target, ranged) * damage);
+    damage = static_cast<long>(
+        damage * target->computeDefenderDamageReduction(ranged));
+    if (damage <= 0)
+        damage = 1;
+    return damage;
 }
 
 VA(0x00443f40, 0x14F)
