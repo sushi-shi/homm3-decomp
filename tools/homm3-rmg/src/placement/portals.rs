@@ -8,7 +8,7 @@ use crate::{
     domain::{Terrain, WorldPosition},
     geometry::{Point, ZoneId},
     object::ObjectKind,
-    prototype::{PrototypeCatalog, PrototypeId},
+    prototype::{PrototypeCatalog, PrototypeId, PrototypeRef},
     raw,
     rng::{RetailRng, RngCheckpoint},
     traits::CreatureCatalog,
@@ -360,6 +360,7 @@ fn indexed(
 ) -> Result<PrototypeId, ConnectionError> {
     catalog
         .at(family, index)
+        .map(PrototypeRef::id)
         .ok_or(ConnectionError::MissingPortalPrototype { family, index })
 }
 

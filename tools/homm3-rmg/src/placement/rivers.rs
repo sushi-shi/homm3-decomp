@@ -272,18 +272,14 @@ impl PlacementMap<'_, '_, '_> {
                 raw::RIVER_DELTA_LAND[cardinal]
             } as usize;
             let terrain = self.terrain.tiles()[inspected].terrain();
-            let family = ObjectKind::TERRAIN_RIVER_DELTA;
-            let Some((index, _)) = catalog
-                .family(family)
-                .iter()
-                .enumerate()
-                .filter(|(_, entry)| entry.prototype().recommends(terrain))
+            let Some(prototype) = catalog
+                .members(ObjectKind::TERRAIN_RIVER_DELTA)
+                .filter(|member| member.entry().prototype().recommends(terrain))
                 .nth(ordinal)
             else {
                 return Ok(());
             };
-            let prototype = catalog.at(family, index).unwrap();
-            let id = objects.create(catalog, prototype)?;
+            let id = objects.create(catalog, prototype.id())?;
             let (x, y) = raw::RIVER_DELTA_OFFSETS[cardinal];
             self.register_object(
                 objects,

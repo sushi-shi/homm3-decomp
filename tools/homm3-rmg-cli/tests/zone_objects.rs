@@ -6,7 +6,7 @@ use homm3_rmg::{
     object::ObjectKind,
     placement::{ObjectArena, PlacementError, PlacementMap, PlacementWorkspace},
     placement_rules::PlacementRules,
-    prototype::{PrototypeCatalog, PrototypeSource},
+    prototype::{PrototypeCatalog, PrototypeRef, PrototypeSource},
     raw,
     request::{default_record, Levels, MapSize, Request},
     rng::RetailRng,
@@ -106,7 +106,7 @@ fn snapshot(
             raw::SHIPYARD,
         ] {
             let kind = ObjectKind::parse(i32::try_from(family).unwrap()).unwrap();
-            let Some(prototype) = catalog.at(kind, 0) else {
+            let Some(prototype) = catalog.at(kind, 0).map(PrototypeRef::id) else {
                 continue;
             };
             for attempt in 0..2 {

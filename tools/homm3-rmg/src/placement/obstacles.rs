@@ -396,7 +396,8 @@ impl PlacementMap<'_, '_, '_> {
             scratch.candidates.clear();
             let mut total = 0_i32;
             for kind in DECORATION_KINDS {
-                for (ordinal, entry) in catalog.family(kind).iter().enumerate() {
+                for member in catalog.members(kind) {
+                    let (prototype, entry) = (member.id(), member.entry());
                     let Some(rule) = entry.rule() else {
                         continue;
                     };
@@ -408,7 +409,6 @@ impl PlacementMap<'_, '_, '_> {
                     {
                         continue;
                     }
-                    let prototype = catalog.at(kind, ordinal).unwrap();
                     let footprint = entry.image_mask().size()?;
                     // Put S under each blocked footprint cell. For a fully
                     // blocked 3x2 object, candidate anchors are S and each o:

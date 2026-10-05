@@ -10,7 +10,7 @@ use crate::{
     domain::WorldPosition,
     geometry::Point,
     object::ObjectKind,
-    prototype::{OutlineWorkspace, PreparedPrototype, PrototypeCatalog, PrototypeId},
+    prototype::{OutlineWorkspace, PreparedPrototype, PrototypeCatalog, PrototypeRef},
     raw,
     request::{MapVersion, Town, PLAYER_COUNT},
     rng::{RetailRng, RngCheckpoint},
@@ -271,10 +271,10 @@ impl PlacementMap<'_, '_, '_> {
         )?)
     }
 
-    fn town_prototype(
-        catalog: &PrototypeCatalog<'_>,
+    fn town_prototype<'c>(
+        catalog: &'c PrototypeCatalog<'_>,
         town: Town,
-    ) -> Result<PrototypeId, TownError> {
+    ) -> Result<PrototypeRef<'c>, TownError> {
         let kind = ObjectKind::TOWN;
         catalog
             .at(kind, town.index())
@@ -299,7 +299,7 @@ impl PlacementMap<'_, '_, '_> {
             return Ok(false);
         };
         let prototype = Self::town_prototype(catalog, town)?;
-        let entry = catalog.get(prototype).unwrap();
+        let entry = prototype.entry();
         self.towns.candidates.clear();
         let Some(bounds) = zone.bounds() else {
             return Ok(false);
@@ -401,7 +401,7 @@ impl PlacementMap<'_, '_, '_> {
             return self.try_primary_town(objects, catalog, current, Some(town), owner, fort, rng);
         }
         let prototype = Self::town_prototype(catalog, town)?;
-        let entry = catalog.get(prototype).unwrap();
+        let entry = prototype.entry();
         let size = entry.image_mask().size().map_err(PlacementError::from)?;
         let Some(bounds) = zone.bounds() else {
             return Ok(false);
@@ -452,19 +452,19 @@ impl PlacementMap<'_, '_, '_> {
         &mut self,
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
-        prototype: PrototypeId,
+        prototype: PrototypeRef<'_>,
         owner: Option<Player>,
         fort: Fort,
         rng: &mut RetailRng,
     ) -> Result<WorldPosition, TownError> {
         let id = self.claim_object_id()?;
-        let object = objects.create_town(catalog, prototype, id, owner, fort)?;
+        let object = objects.create_town(catalog, prototype.id(), id, owner, fort)?;
         let count =
             u32::try_from(self.towns.candidates.len()).map_err(|_| TownError::Arithmetic)?;
         let selected = rng.below(NonZeroU32::new(count).expect("caller found candidates")) as usize;
         let position = self.towns.candidates[selected];
         self.register_object(objects, catalog, object, position)?;
-        let entrance = entrance_position(catalog.get(prototype).unwrap().prototype(), position)?;
+        let entrance = entrance_position(prototype.entry().prototype(), position)?;
         self.append_road_target(entrance)?;
         self.open_entrance_approach(entrance)?;
         Ok(entrance)

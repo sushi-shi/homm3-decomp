@@ -197,7 +197,7 @@ fn check_empty_registered_list_admission(
     };
     let kind = ObjectKind::parse(i32::try_from(raw::TOWN).unwrap()).unwrap();
     let object = objects
-        .create(catalog, catalog.at(kind, 0).unwrap())
+        .create(catalog, catalog.at(kind, 0).unwrap().id())
         .unwrap();
     map.insert_object(
         objects,

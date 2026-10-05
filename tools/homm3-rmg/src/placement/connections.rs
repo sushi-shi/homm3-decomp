@@ -9,7 +9,7 @@ use crate::{
     domain::{Level, Terrain, WorldPosition},
     geometry::{GeometryError, Point, ZoneId},
     object::ObjectKind,
-    prototype::{PreparedPrototype, PrototypeCatalog, PrototypeId},
+    prototype::{PreparedPrototype, PrototypeCatalog, PrototypeRef},
     raw,
     rng::{RetailRng, RngCheckpoint},
     terrain::TerrainError,
@@ -489,11 +489,11 @@ impl PlacementMap<'_, '_, '_> {
 }
 
 // Whole-family selection performs its draw before the native zero-divisor fault.
-pub(super) fn draw_connection_prototype(
-    catalog: &PrototypeCatalog<'_>,
+pub(super) fn draw_connection_prototype<'c>(
+    catalog: &'c PrototypeCatalog<'_>,
     family: ObjectKind,
     rng: &mut RetailRng,
-) -> Result<PrototypeId, ConnectionError> {
+) -> Result<PrototypeRef<'c>, ConnectionError> {
     let draw = rng.draw();
     let count =
         u32::try_from(catalog.family(family).len()).map_err(|_| PlacementError::Arithmetic)?;

@@ -3,7 +3,10 @@ use super::{
     ObjectArena, ObjectId, ObjectPayload, PlacementError, TreasureGeneration,
     TreasureGenerationError, TreasureGroupWorkspace, TreasurePacking,
 };
-use crate::{geometry::ZoneId, object::ObjectKind, raw, rng::RetailRng, traits::ArtifactId};
+use crate::{
+    geometry::ZoneId, object::ObjectKind, prototype::PrototypeRef, raw, rng::RetailRng,
+    traits::ArtifactId,
+};
 
 impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     pub(super) fn complete_treasure(
@@ -47,7 +50,11 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
                             i32::try_from(artifact.index()).unwrap(),
                         )
                         .ok_or(TreasureGenerationError::MissingArtifact(artifact))?;
-                    objects.swap_prototype(object, self.ready.catalog.prototypes(), prototype)?;
+                    objects.swap_prototype(
+                        object,
+                        self.ready.catalog.prototypes(),
+                        prototype.id(),
+                    )?;
                     // Entrance type is cached in Rust, while native reads it from
                     // the first member's current prototype. Refresh only that cache;
                     // keep the old footprint, counts and distance state untouched.
@@ -169,7 +176,10 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .ok_or(PlacementError::UnknownPrototype(geometry.prototype()))?
             .prototype()
             .subtype();
-        let Some(prototype) = catalog.first_subtype(ObjectKind::BORDER_GUARD, color) else {
+        let Some(prototype) = catalog
+            .first_subtype(ObjectKind::BORDER_GUARD, color)
+            .map(PrototypeRef::id)
+        else {
             return Ok(false);
         };
         let origin = self.object_zone(object, objects)?;

@@ -102,7 +102,8 @@ fn group_ownership_rejects_copied_ids_and_other_group_disposal() {
                 crate::domain::Terrain::Dirt,
                 &mut RetailRng::new(1),
             )
-            .unwrap();
+            .unwrap()
+            .id();
         let object = arena.create(catalog, prototype).unwrap();
         let owner = OwnerId::new().unwrap();
         arena.claim_group(object, owner).unwrap();
@@ -132,7 +133,7 @@ fn group_ownership_rejects_copied_ids_and_other_group_disposal() {
 #[test]
 fn resolved_object_views_distinguish_unpositioned_retained_and_stale_records() {
     with_catalog(raw::RESOURCE, |catalog| {
-        let prototype = catalog.at(ObjectKind::RESOURCE, 0).unwrap();
+        let prototype = catalog.at(ObjectKind::RESOURCE, 0).unwrap().id();
         let mut objects = ObjectArena::default();
         assert!(matches!(
             objects.create_shipyard(catalog, prototype),

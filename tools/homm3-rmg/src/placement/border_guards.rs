@@ -74,13 +74,13 @@ impl PlacementMap<'_, '_, '_> {
         let Some(guard_prototype) = catalog.first_subtype(guard_kind, color) else {
             return Ok(BorderGuardPlacement::MissingGuardPrototype);
         };
-        let tent = objects.create(catalog, tent_prototype)?;
+        let tent = objects.create(catalog, tent_prototype.id())?;
         if !self.place_object_in_zone(tent, key_tent_zone, objects, catalog, rng)? {
             objects.discard_unplaced(tent)?;
             return Ok(BorderGuardPlacement::NotPlaced);
         }
         for _ in 0..count as u32 {
-            let guard = objects.create(catalog, guard_prototype)?;
+            let guard = objects.create(catalog, guard_prototype.id())?;
             let index = self.view().native_index(position)?;
             self.cells[index].clear_border();
             self.register_object(objects, catalog, guard, position)?;

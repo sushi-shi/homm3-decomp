@@ -221,7 +221,7 @@ impl PlacementMap<'_, '_, '_> {
         }
         let family = ObjectKind::SHIPYARD;
         let prototype = draw_connection_prototype(catalog, family, rng)?;
-        let entry = catalog.get(prototype).unwrap();
+        let entry = prototype.entry();
         self.connections.candidates.clear();
         let Some(bounds) = source.bounds() else {
             return Ok(false);
@@ -269,7 +269,7 @@ impl PlacementMap<'_, '_, '_> {
         ) else {
             return Ok(false);
         };
-        let object = objects.create_shipyard(catalog, prototype)?;
+        let object = objects.create_shipyard(catalog, prototype.id())?;
         let position = self.connections.candidates[rng.below(count) as usize];
         self.register_object(objects, catalog, object, position)?;
         let entrance = entrance_position(entry.prototype(), position)?;

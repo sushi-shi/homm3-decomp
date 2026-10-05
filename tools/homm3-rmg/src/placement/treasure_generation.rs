@@ -9,7 +9,7 @@ use crate::{
     hero::{HeroId, HeroPool},
     identity::OwnerId,
     object::ObjectKind,
-    prototype::PrototypeId,
+    prototype::{PrototypeId, PrototypeRef},
     raw,
     rng::RetailRng,
     traits::{ArtifactCatalog, SpellCatalog, SpellId},
@@ -210,7 +210,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .choose(def.kind(), def.subtype(), terrain, rng)
             .map(|prototype| SelectedTreasure {
                 definition,
-                prototype,
+                prototype: prototype.id(),
             }))
     }
     pub(super) fn require_arena(&self, objects: &ObjectArena) -> Result<(), PlacementError> {
@@ -325,7 +325,8 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
             .ready
             .catalog()
             .prototypes()
-            .choose(kind, 0, Terrain::Dirt, rng);
+            .choose(kind, 0, Terrain::Dirt, rng)
+            .map(PrototypeRef::id);
         let result = match prototype {
             Some(prototype) => self
                 .create(

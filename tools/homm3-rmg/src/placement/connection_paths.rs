@@ -286,7 +286,7 @@ impl PlacementMap<'_, '_, '_> {
                 let prototype = catalog
                     .choose(kind, i32::from(color.value()), Terrain::Dirt, rng)
                     .ok_or(ConnectionError::MissingBorderGuard(color))?;
-                let object = objects.create(catalog, prototype)?;
+                let object = objects.create(catalog, prototype.id())?;
                 self.cells[index].clear_border();
                 self.register_object(objects, catalog, object, position)?;
             }
