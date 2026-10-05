@@ -2106,7 +2106,7 @@ game	?setCannedRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xccf20	tokens1:25
 game	?setMapRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xccfb0	tokens1:35cf9ca12d0b
 game	?setMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0	tokens1:9e2990c94852
 game	?setPyramid@ExtraInfoUnion@@QAEX_NW4ESpellId@@@Z	100.0000	100.0000	100.0000	0xc2330	tokens1:21915f4dd9b4
-game	?setRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730	tokens1:586aced823d4
+game	?setRandomHeroArmies@game@@QAEXHH_N@Z	100.0000	100.0000	100.0000	0xc9730	tokens1:7c2a851bfce4
 game	?setSpecialRumour@game@@AAEXXZ	100.0000	100.0000	100.0000	0xcd170	tokens1:1c86d3cc9654
 game	?setWagon@ExtraInfoUnion@@QAEXW4EGameResource@@F@Z	0.0000	0.0000	100.0000	0xc2360	tokens1:13ba2fd57e1d
 game	?setWagon@ExtraInfoUnion@@QAEXW4TArtifact@@@Z	100.0000	100.0000	100.0000	0xc2390	tokens1:ddb3375e58f8
