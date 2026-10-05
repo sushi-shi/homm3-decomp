@@ -277,7 +277,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     tile.setLineType(m_lineType);
     refreshRmgLinePoint(m_painter, point);
 
-    s32 riverType = m_lineType;
+    s32 lineType = m_lineType;
     b8 matches[TILE_DIR_COUNT];
     u32 direction;
     {
@@ -287,7 +287,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
                                point.m_x, point.m_y, available);
         for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (available[direction])
-                matches[direction] = painter->getNeighbourLineType(point, direction) == riverType;
+                matches[direction] = painter->getNeighbourLineType(point, direction) == lineType;
             else
                 matches[direction] = 0;
         }
@@ -498,7 +498,7 @@ s32 TRmgTableTerrainRule::selectTransitionFrame(
     return oldFrame;
 }
 
-// by the call at 0x5b5f5b. All selector names are provisional retail roles.
+// paintTransitions calls this fastcall selector at 0x5b5f5b.
 s32 __fastcall selectTerrainTransition(
     const s32* neighbours, TRmgTerrainFlip* flip);
 
