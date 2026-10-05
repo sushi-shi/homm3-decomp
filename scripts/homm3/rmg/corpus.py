@@ -385,6 +385,7 @@ def status(args):
     segments += [dict(first=e['first'], count=e['count'],
                       source=f"{e['sampler']} seed {e['master_seed']:#x}") for e in extensions]
     with database(args.out) as db:
+        db.execute('BEGIN')  # one snapshot while a capture commits batches
         stored = db.execute('SELECT count(*) FROM requests').fetchone()[0]
         counts = {mode: dict(db.execute('SELECT outcome,count(*) FROM results WHERE mode=? '
                                        'GROUP BY outcome', (mode,))) for mode in MODES}
