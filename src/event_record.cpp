@@ -1440,7 +1440,7 @@ type_event_record* (*g_recordCreators[12])() = {
 VA(0x0049dac0, 0x19C)
 DC_ADDRESS(0x08ead0, 0xf4)
 MAC_ADDRESS(0x0c2fe8, 0x19c)
-unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
+bool game::loadRecordedEvents(TAbstractFile* infile, int version)
 {
     long count;
     if (infile->read(&count, sizeof(count)) != sizeof(count))
@@ -1467,7 +1467,7 @@ unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
 VA(0x0049dc60, 0x8C)
 DC_ADDRESS(0x08ebc4, 0x98)
 MAC_ADDRESS(0x0c3184, 0xf4)
-unsigned char game::saveRecordedEvents(TAbstractFile* outfile)
+bool game::saveRecordedEvents(TAbstractFile* outfile)
 {
     long count = m_eventRecords.size();
     outfile->write(&count, 4);
