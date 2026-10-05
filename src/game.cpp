@@ -6330,7 +6330,8 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     int i;
     unsigned char ucharBuffer;
     char boolBuffer;
-    char sbyteBuffer;
+    // DC NewSMapHeader::Save records sbyte_buffer as signed char.
+    signed char sbyteBuffer;
 
     if (outfile->write(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
@@ -7513,14 +7514,14 @@ void game::perDay()
 
 // Original: game::clear_recruits; game.cpp:8266
 // DC 8266/8290 and Mac 0xdeefc/0xdef98 place these two helpers between
-// perDay and setWeeklyRecruits. DC names the long loop index recruit and
-// the selected hero pointer old_hero.
+// perDay and setWeeklyRecruits. DC names the long loop index recruit,
+// THeroID hero_id and the selected hero pointer old_hero.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
 void game::clearRecruits(int* recruits)
 {
     for (long recruit = 0; recruit < 2; ++recruit) {
-        int heroId = recruits[recruit];
+        HeroId heroId = HeroId(recruits[recruit]);
         if (heroId >= 0) {
             hero* oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)

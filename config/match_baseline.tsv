@@ -2082,7 +2082,7 @@ game	?resize@?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@QAEXIAB
 game	?resize@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QAEXIABUtype_university@@@Z	100.0000	100.0000	100.0000	0xd4800	-
 game	?resize@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXIABVgenerator@@@Z	100.0000	100.0000	100.0000	0xd4500	-
 game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	100.0000	100.0000	100.0000	0xcf410	-
-game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	95.4451	95.4451	95.4451	0xc4f10	tokens1:cf89ee258fc7
+game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	95.4451	95.4451	95.4451	0xc4f10	tokens1:244f9a37988e
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140	tokens1:270814b07abd
 game	?save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0	tokens1:ccc683ca5891
 game	?save@game@@AAEHPAVTAbstractFile@@@Z	92.7954	92.8015	98.6650	0xbe3f0	tokens1:c06e5db19089
