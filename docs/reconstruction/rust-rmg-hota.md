@@ -94,9 +94,10 @@ because a partial implementation compiled.
 
 ## Current state
 
-The integration now exposes HotA's completed layout stage through the shared
-`LayoutWorkspace::generate_with_hints` API. Full-map generation remains gated;
-the next unfinished stage is boundaries, followed by painting and placement.
+The integration exposes HotA layout and boundary construction through the shared
+`LayoutWorkspace::generate_with_hints` and `BoundaryWorkspace::generate` APIs.
+Full-map generation remains gated; terrain coverage/painting and placement are
+not yet admitted.
 The checkpoints below record their own achieved scope and evidence in order.
 
 The isolated integration branch is `codex/rust-hota-rmg`. The first implementation
@@ -490,3 +491,63 @@ construction (irregular-edge limits, rock blocks, water zones and islands), then
 installed terrain-frame data and painting hooks. Town-query state must continue
 through those stages to later placement; serialization, HD/mirror completion,
 whole-map replay and game loading remain required.
+
+
+The shared boundary stage now admits HotA layouts. The Delaunay constructor uses
+HotA's enclosing square (-800..1100 instead of -200..400), including when workspace
+storage is reused across rulesets. The seven patched immediates in the recovered
+`rmg_support.cpp` constructor matter even on small maps: they change integer
+circumcenter rounding and the starting edge of some rings. The native comparisons
+below initially exposed those differences and now agree without polygon rotation
+or cell normalization.
+
+Irregular edges carry an owned, edge-local shape through the existing rasterizer:
+the shrunken-site quadrilateral, circle radius, nearest perpendicular crossings,
+sagitta/roughness limits and narrow/wide sign-selection rules follow RVAs
+`0x1ce000`, `0x1cacd0` and `0x1cadc0`. Empty ranges consume no CRT draw. Ordinary
+Complete boundaries and island strokes retain their existing midpoint policy.
+HotA's unclamped final-cell claim, first-cell preservation, straight-edge final
+paint flag, rejected outside-segment clips and asymmetric corner-walk conditions
+are part of the shared raster/clip methods.
+
+Radial construction uses the template's rock-block factor (or the underground
+four-radius default), distinguishes the probe size from the radial reach, and
+creates water zones only on a surface with water. Fresh temporary/water slots
+have no allowed towns and consume no constructor town draw; water creature
+preference is neutral. Directed connection policies survive into the boundary
+map, with fictive links excluded from HotA distance propagation. The map also
+owns the layout's hint solution and query counts for later town selection.
+Mirror requests use constructor-local planes here; copying and finishing the
+other half remain later work.
+
+Verification: 155 library tests, four layout integration tests, two documentation
+tests and library Clippy pass. Focused cases cover displacement draw/no-draw
+branches, owned endpoints, clipping/corner walks, fictive-distance behavior and
+retained query state. The installed-pack matrix completes boundaries for all
+2,399 admitted combinations (34 packs, eight mirror packs, all seven sizes,
+87,975,072 raster cells, 249 rock-block maps), without hint diagnostics. This is
+Rust execution coverage, not native proof for HD sizes or mirrors.
+
+Eight pinned HotA.dll executions agree on all 114 zones, every polygon point in
+order, every zone-distance entry, all 142,560 cell ownership/terrain-mark pairs,
+and the final boundary CRT state and draw count. Six are the layout captures
+above; two fresh runs add Sapphire 144 underground/no-water seed 19 (rock factor
+3.1) and Jebus Outcast 108 underground/no-water seed 23 (rock factor 3). The native
+`zones` phase is before painting, so this does not establish island inset,
+terrain-frame or painted-map parity. These executions remain no-HD, non-mirror,
+at most 144 tiles per side.
+
+Temporary stage probe, captures, comparison scripts and reports remain under
+ignored `build/hota-layout-native/`. Boundary report SHA-256:
+`f3c0923825525d932c0ecf878833f2614e488b14b2a65b817106b92b618c9668`.
+It includes the phase hashes, case counts and exact compared RNG endpoints.
+The Complete sample still gives 14 exact hotfix maps, seven exact retail maps
+and seven matching pre-existing coast faults. Updated replay runner SHA-256:
+`081f6920068709583e1cd67d5e9a9269fa0e6464ebee194a00fcecb20e13748c`.
+
+The admission boundary has moved to `BoundaryMap::prepare_terrain`, before RNG
+or workspace mutation. Next work is island coverage and saved zone centers,
+installed Highlands/Wasteland frame data, painting hooks and the terrain
+post-pass. Generated water-zone placement/treasure defaults must be consumed by
+their placement stage. Whole-map HotA generation, output, HD/mirror completion,
+native whole-map replay, game loading and publication remain required.

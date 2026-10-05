@@ -175,6 +175,7 @@ struct HalfEdge {
 /// Mutable Delaunay construction. Consume it to obtain a completed Voronoi view.
 #[derive(Debug)]
 pub struct Delaunay {
+    rules: crate::rules::Ruleset,
     edges: Vec<HalfEdge>,
     // Active edges retain C++ insertion/erasure order. Removed storage is not
     // reused during a build, so existing edge IDs never acquire a new identity.
@@ -197,7 +198,15 @@ impl Delaunay {
     /// # Errors
     /// Reports a failed storage reservation.
     pub fn new() -> Result<Self, GeometryError> {
+        Self::new_for(crate::rules::Ruleset::Complete)
+    }
+    /// Construct the versioned enclosing square, including expanded map support.
+    ///
+    /// # Errors
+    /// Reports a failed storage reservation.
+    pub fn new_for(rules: crate::rules::Ruleset) -> Result<Self, GeometryError> {
         let mut diagram = Self {
+            rules,
             edges: Vec::new(),
             order: Vec::new(),
             starting: EdgeId(0),
@@ -206,15 +215,30 @@ impl Delaunay {
         Ok(diagram)
     }
 
+    fn extent(&self) -> (i32, i32) {
+        match self.rules {
+            crate::rules::Ruleset::Complete => (-200, 400),
+            crate::rules::Ruleset::HotA181 => (-800, 1100),
+        }
+    }
+    pub(crate) fn reset_for(mut self, rules: crate::rules::Ruleset) -> Result<Self, GeometryError> {
+        self.rules = rules;
+        self.initialize()?;
+        Ok(self)
+    }
+
     fn initialize(&mut self) -> Result<(), GeometryError> {
         self.edges.clear();
         self.order.clear();
         self.edges.try_reserve(10)?;
         self.order.try_reserve(10)?;
-        let a = Point::new(-200, -200);
-        let b = Point::new(400, -200);
-        let c = Point::new(400, 400);
-        let d = Point::new(-200, 400);
+        // HotA patches every enclosing-coordinate immediate at HD 0x5fd3f5..
+        // 0x5fd543. Even small maps can change integer vertices and ring order.
+        let (low, high) = self.extent();
+        let a = Point::new(low, low);
+        let b = Point::new(high, low);
+        let c = Point::new(high, high);
+        let d = Point::new(low, high);
         let first = self.create(a, None, b, None)?;
         let second = self.create(b, None, c, None)?;
         let third = self.create(c, None, d, None)?;
@@ -319,7 +343,8 @@ impl Delaunay {
     }
 
     fn locate(&self, point: Point) -> Result<EdgeId, GeometryError> {
-        if !(-200..=400).contains(&point.x) || !(-200..=400).contains(&point.y) {
+        let (low, high) = self.extent();
+        if !(low..=high).contains(&point.x) || !(low..=high).contains(&point.y) {
             return Err(GeometryError::OutsideSubdivision(point));
         }
         let mut edge = self.starting;
@@ -449,6 +474,8 @@ pub struct Voronoi {
 /// One edge of the polygon surrounding a zone site.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BoundaryEdge {
+    /// Site enclosed by this polygon.
+    pub site: Point,
     /// Site across the boundary.
     pub opposite_site: Point,
     /// Zone across the boundary, absent for the enclosing or unowned sites.
@@ -489,6 +516,7 @@ impl Voronoi {
             let opposite = self.diagram.edge(edge.twin);
             current = (edge.next != first).then_some(edge.next);
             Some(BoundaryEdge {
+                site: edge.site,
                 opposite_site: opposite.site,
                 opposite_zone: opposite.zone,
                 vertex: edge.vertex,

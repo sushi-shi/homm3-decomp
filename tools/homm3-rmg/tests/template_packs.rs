@@ -2,6 +2,7 @@
 
 use homm3_rmg::{
     behavior::{Behavior, RetailProfile},
+    boundaries::BoundaryWorkspace,
     layout::{hints::ZoneSolution, LayoutWorkspace},
     request::{default_record, Levels, MapSize, Request, RequestOptions, Water},
     rng::RetailRng,
@@ -34,6 +35,9 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
     let mut hint_diagnostics = 0;
     let mut fatal_hints = 0;
     let mut layout_workspace = LayoutWorkspace::default();
+    let mut boundaries = BoundaryWorkspace::default();
+    let mut boundary_cells = 0;
+    let mut rock_maps = 0;
     let mut layouts = 0;
     let mut terrain_counts = [0_usize; 12];
     for path in &paths {
@@ -140,6 +144,25 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
                                         < request.constructor_parameters().levels.count() as usize
                                 );
                             }
+                            let map = boundaries.generate(layout, &mut rng).unwrap_or_else(|e| {
+                                panic!(
+                                    "{} {size:?} {levels:?} {humans}/{computers} {water:?}: {e}",
+                                    path.display()
+                                )
+                            });
+                            assert!(map.hints().unwrap().diagnostics().is_empty());
+                            assert_eq!(
+                                map.raster().cells().len(),
+                                size.dimension() as usize
+                                    * size.dimension() as usize
+                                    * request.constructor_parameters().levels.count() as usize
+                            );
+                            assert!(map.raster().cells().iter().all(|cell| cell
+                                .zone
+                                .is_none_or(|id| id.index() < map.zones().len())));
+                            boundary_cells += map.raster().cells().len();
+                            rock_maps +=
+                                usize::from(map.template().options().rock_blocks.is_some());
                             layouts += 1;
                         }
                     }
@@ -149,7 +172,7 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
     }
     assert_eq!(layouts, candidates);
     assert!(terrain_counts[10] > 0 && terrain_counts[11] > 0);
-    eprintln!("{layouts} completed layouts, terrain counts {terrain_counts:?}");
+    eprintln!("{layouts} completed layouts and boundaries, {boundary_cells} cells, {rock_maps} rock-block maps, terrain counts {terrain_counts:?}");
     assert!(candidates > 0);
     assert!(mirrors > 0);
     eprintln!("{} installed packs, {mirrors} mirror packs, {candidates} prepared candidates, {deferred} deferred native faults",paths.len());

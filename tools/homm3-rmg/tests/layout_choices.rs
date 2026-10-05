@@ -121,9 +121,22 @@ fn layout_retains_hint_choices_and_resets_query_counters_on_workspace_reuse() {
             11
         );
         assert_eq!(rng.checkpoint(), before);
-        // Later-stage algorithms must be implemented before this token proceeds.
+        let mut boundary_workspace = BoundaryWorkspace::default();
+        let mut boundaries = boundary_workspace.generate(layout, &mut rng).unwrap();
+        assert!(boundaries.hints().unwrap().diagnostics().is_empty());
+        let before = rng.checkpoint();
+        assert_eq!(
+            boundaries
+                .select_zone_town(zones[0].id(), &mut rng)
+                .unwrap()
+                .unwrap()
+                .index(),
+            11
+        );
+        assert_eq!(rng.checkpoint(), before);
+        // Terrain coverage remains gated until its HotA algorithms are integrated.
         assert!(matches!(
-            BoundaryWorkspace::default().generate(layout, &mut rng),
+            boundaries.prepare_terrain(&mut rng),
             Err(BoundaryError::UnsupportedRuleset(Ruleset::HotA181))
         ));
         assert_eq!(rng.checkpoint(), before);
@@ -191,6 +204,15 @@ fn mirror_layout_uses_compacted_fixed_towns_and_constructor_planes() {
         .zones()
         .iter()
         .all(|z| z.position().level == homm3_rmg::domain::Level::Surface));
+    let mut boundary_workspace = BoundaryWorkspace::default();
+    let boundaries = boundary_workspace.generate(layout, &mut rng).unwrap();
+    assert_eq!(boundaries.raster().cells().len(), 108 * 108);
+    assert!(boundaries
+        .level_rng(homm3_rmg::domain::Level::Surface)
+        .is_some());
+    assert!(boundaries
+        .level_rng(homm3_rmg::domain::Level::Underground)
+        .is_none());
 }
 
 #[test]

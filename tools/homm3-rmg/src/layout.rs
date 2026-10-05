@@ -12,7 +12,7 @@ use crate::{
 };
 use std::{collections::TryReserveError, error::Error, fmt, num::NonZeroU32};
 
-mod choices;
+pub(crate) mod choices;
 pub mod hints;
 mod positioning;
 
@@ -185,6 +185,10 @@ impl<'context> Layout<'_, 'context> {
             .ok_or(LayoutError::UnknownZone(zone))?;
         self.choices.town(zone, rng)
     }
+    pub(crate) fn into_choices(self) -> ZoneChoices {
+        self.choices
+    }
+
     pub(crate) const fn players(&self) -> [Option<Player>; crate::request::PLAYER_COUNT] {
         self.players
     }
