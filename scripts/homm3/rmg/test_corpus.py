@@ -10,8 +10,8 @@ import tempfile
 import unittest
 
 from .cases import load_cases, validate_case
-from .corpus import (database, digest, extend, extension_cases, packed, put, replay,
-                     retail_reference, status, sync_requests, verdict, writer)
+from .corpus import (check_batch_protocol, database, digest, extend, extension_cases, packed,
+                     put, replay, retail_reference, status, sync_requests, verdict, writer)
 
 
 def rainbow(root, cases):
@@ -67,6 +67,19 @@ class CorpusTests(unittest.TestCase):
             with self.assertRaises(BlockingIOError):
                 with writer(Path(tmp)):
                     self.fail('second writer acquired the lock')
+
+    def test_harness_failures_are_refused_not_stored(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            batch = Path(tmp)
+            two = [dict(status='crash'), dict(status='not-run')]
+            check_batch_protocol(batch, two)
+            check_batch_protocol(batch, [dict(status='process-error', exitCode=3)])
+            with self.assertRaisesRegex(ValueError, 'clean exit'):
+                check_batch_protocol(batch, [dict(status='process-error', exitCode=0)])
+            (batch / 'result.bin').write_bytes(b'')  # a single-job driver's output
+            check_batch_protocol(batch, two[:1])
+            with self.assertRaisesRegex(ValueError, 'ignored the batch'):
+                check_batch_protocol(batch, two)
 
     def test_replay_records_mode_and_memory_inputs(self):
         self.assertIn('behavior retail 4294967295 91 1 -1 none seats', replay(self.case, 'retail'))

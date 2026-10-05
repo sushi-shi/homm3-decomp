@@ -104,7 +104,9 @@ A writer lock prevents duplicate capture workers. Each batch commits atomically;
 interrupting the worker (for example with `kill`) loses at most the running
 batch, and restarting captures only missing entries. Faulting jobs are
 recorded, and jobs not reached after a crash are retried. Binaries are verified
-before capture. `progress.json`, `capture.log` and `run-*.json` record progress
+before capture. The frozen retail driver predates batching, so retail captures
+one job per Wine process by default; hotfix runs 32. A batch the driver ignored,
+or a clean exit without job outputs, stops the capture instead of being stored. `progress.json`, `capture.log` and `run-*.json` record progress
 and execution provenance. A complete table includes fault outcomes; it does not
 mean every request generated a map successfully.
 

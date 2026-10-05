@@ -37,6 +37,10 @@ ARCHIVES = ('h3bitmap.lod', 'h3sprite.lod', 'h3ab_bmp.lod', 'h3ab_spr.lod')
 # extensions must stay reproducible.
 SAMPLER = 'sample2-extend-v1'
 EXTEND_SEED = 0x524d4733
+# The retail driver imported from the sample2 campaign predates batching: it
+# runs only the first job and writes map.raw/result.bin. The hotfix driver
+# runs several jobs per Wine process.
+BATCH_SIZE = {'retail': 1, 'hotfix': 32}
 
 
 def packed(value):
@@ -396,6 +400,15 @@ def status(args):
     return value
 
 
+def check_batch_protocol(path, entries):
+    """Refuse harness failures that would otherwise become stored outcomes."""
+    if len(entries) > 1 and (path / 'result.bin').exists():
+        raise ValueError(f'{path}: the driver ignored the batch; use --batch-size 1')
+    for entry in entries:
+        if entry['status'] == 'process-error' and entry.get('exitCode') == 0:
+            raise ValueError(f'{path}: clean exit without the job outputs')
+
+
 def capture(args):
     from . import __main__ as oracle
     with writer(args.out):
@@ -413,6 +426,7 @@ def capture(args):
                         harness_sha256=digest(Path(oracle.__file__)))
         (args.out / ('run-' + uuid.uuid4().hex + '.json')).write_text(
             json.dumps(run_info, indent=2) + '\n')
+        size = args.batch_size or BATCH_SIZE[args.mode]
         with database(args.out) as db:
             pending = db.execute('SELECT ordinal,input_json FROM requests WHERE ordinal NOT IN '
                                  '(SELECT ordinal FROM results WHERE mode=?) ORDER BY ordinal',
@@ -420,12 +434,13 @@ def capture(args):
             began = time.monotonic()
             completed = 0
             while pending:
-                batch, pending = pending[:args.batch_size], pending[args.batch_size:]
+                batch, pending = pending[:size], pending[size:]
                 name = 'capture-' + uuid.uuid4().hex
                 entries = oracle.run_batch(directory, name,
                     'retail' if args.mode == 'retail' else 'candidate',
                     [job_bytes(json.loads(case)) for _, case in batch],
                     args.data, libraries, args.timeout)
+                check_batch_protocol(directory / name, entries)
                 retry = []
                 keep = False
                 for (i, case), entry in zip(batch, entries):
@@ -573,7 +588,8 @@ def main(argv=None, prog=None):
     cap = commands.add_parser('capture', help='fill missing native references with one worker')
     cap.add_argument('--mode', choices=MODES, required=True)
     cap.add_argument('--data', type=Path, required=True)
-    cap.add_argument('--batch-size', type=int, default=32)
+    cap.add_argument('--batch-size', type=int,
+                     help='jobs per Wine process (default: retail 1, hotfix 32)')
     cap.add_argument('--timeout', type=float, default=45)
     grow = commands.add_parser('extend', help='append deterministic sample2 requests')
     grow.add_argument('--count', type=int, required=True)
