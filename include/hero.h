@@ -575,30 +575,13 @@ public:
     unsigned int m_flags;  // +0x105
     float m_turnExperienceToRvRatio;  // +0x109 (DC name)
     signed char m_dWalkSpellsCast;  // +0x10d (DC name)
-    // +0x10e. TQuickHeroWindow reads the full mastery value to decide
-    // whether an enemy army is shown normally, as copies of its strongest
-    // stack, or as the strongest creature of the owner's alignment. The
-    // Dreamcast roster independently names the corresponding dword
-    // `disguiseLevel`; retail's later flight/water-walk pair fixes the
-    // four-byte extent from the other side.
-    int m_disguiseLevel;
-    // +0x112, the FLIGHT level - the twin of waterWalkLevel below and
-    // the other half of the movement-override pair hero::IsMobile
-    // (0x4e5f30) loads together. Sliced 2026-08-08 out of the old
-    // pad_109 by findpath's GetTerrainCost (0x4b18c0), which reads
-    // +0x112 and +0x116 back to back as the two mastery levels it
-    // forwards to CalcTerrainCost's `flying` and `water_walking`
-    // slots, raises EITHER to eMasteryExpert when the matching
-    // artifact is worn, and drives BOTH to -1 while the boat bit
-    // (flags & 0x40000) is set. Name from the role; the sibling's
-    // comment already called this slot an ordinal placeholder.
-    int m_flightLevel;  // +0x112
-    // +0x116, the water-walking level. Byte-proven by
-    // hero::WalkOnWater (0x4e5dd0), whose entire body is
-    // `mov [ecx+0x116], arg`, and by hero::IsMobile (0x4e5f30), which
-    // loads +0x116 and +0x112 together as the movement-override pair.
-    // Name from the writer; ordinal placeholder for the sibling.
-    int m_waterWalkLevel;  // +0x116
+    // Original public disguiseLevel, flightLevel and waterWalkLevel are
+    // TSkillMastery in all four DC hero records (0x1a6e/0x4d63/0x6311/0x71dc).
+    // Complete retains their dword widths at these shifted offsets. Disguise
+    // controls the enemy-army view; flight/water-walking feed movement costs.
+    TSkillMastery m_disguiseLevel;  // +0x10e
+    TSkillMastery m_flightLevel;  // +0x112
+    TSkillMastery m_waterWalkLevel;  // +0x116
     // Two one-byte battle temporaries. hero::ApplyBattleWinTemps
     // (0x4da510) opens by zeroing both from one `xor al,al`, storing
     // +0x11b BEFORE +0x11a, and then clears twenty-two `flags` bits -
@@ -982,7 +965,7 @@ public:
     bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_flightLevel != -1 || isWieldingArtifact(0x48))
+            && (m_flightLevel != eMasteryInvalid || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
 
@@ -991,7 +974,7 @@ public:
     bool canWalkOnWater(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
+            && (m_waterWalkLevel != eMasteryInvalid || isWieldingArtifact(0x5a))
             && (!checkTerrain || !canLand());
     }
 

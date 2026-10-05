@@ -650,7 +650,7 @@ public:
     virtual void close(unsigned char update);
     virtual void vslot8(unsigned char on);
     unsigned char processRightSelect(const message* msg);
-    unsigned char processHover(int hx, int hy);
+    bool processHover(int hx, int hy);
     void doHeroKnob(unsigned char up);
     void doTownKnob(unsigned char up);
     void updateHeroLocators(int top, unsigned char drawWin,

@@ -244,7 +244,7 @@ preconditions, and compile to no runtime assertion branch or call.
 | Helper | DC gap | Retained precondition | Deletion-only negative control |
 |---|---|---|---|
 | `hero::giveSS` (0x4e22d0) | hero.cpp:4628..4631 | Skill index within `m_skillLevel` | `setSS` 100 → 3.8; `checkLevel` 87.1338 → 49.8180; two other callers lose |
-| `advManager::getNormalCursor` (0x40e280) | advmgr.cpp:4531..4532 | Non-null cell | `processHover` 91.6263 → 63.9466 |
+| `advManager::getNormalCursor` (0x40e280) | advmgr.cpp:4531..4532 | Historical non-null-cell hypothesis; subsequently removed | Historical `processHover` 91.6263 → 63.9466 |
 | `type_AI_creature_purchaser::doPurchase` (0x42d690) | ai_player.cpp:2627..2628 | Non-null army and funds; adjacent army remains optional | `markTown` 100 → 0; `buyCreatures` 97.7723 → 52.4409; `valueOfHiring` 99.9522 → 79.2183 |
 | `CDPlayHeroes::compressMsg` (0x5532b0) | remote.cpp:426 | Non-null message, size at least its wire header | Four member/free transmit rows 100 → 0 |
 | `hero::getHeroSpellBonus` (0x4e5ff0) | hero.cpp:6429..6430 | Hero ID within the ability array | `modifySpellDamage` 100 → 32.6226 |
@@ -273,6 +273,14 @@ archives their source.
 Historical contexts, in the table's order, are `2ff41da5e8b0e579044c`,
 `192a25c02fd05fa8e2d1`, `51f3cf10f7743637ddfb`, `8845e9f7b12b05bd6fd7`, and
 `faf7fbb799ec071bd270`.
+
+The `getNormalCursor` precondition is no longer retained. Both DC line 4548
+and Mac 0xe5b0..0xe5c0 positively preserve a second trigger check in the
+shipwreck arm, which the earlier reconstruction had removed. After recovering
+that condition, the invariant-deletion control
+`2214f88d7fbf120d5529` reproduced two states/two objects with identical Windows
+percentages for every advmgr function (helper 100%, hover 88.8034%). The native
+condition stays; the two-line gap alone does not establish VERIFY.
 
 ### Serialization locals and interface recovery
 
