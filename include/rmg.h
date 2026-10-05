@@ -953,7 +953,7 @@ public:
     // generator callee replaces this object's property reference. These
     // mutable operations reject the earlier const receiver placeholder.
     virtual unsigned char completePlacement();
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 
 // Provisional Complete-only role: createGuard (0x540b20) allocates 0x2c and
@@ -978,19 +978,19 @@ public:
 SIZE(TRmgMonsterObject, 0x2c);
 
 // Complete town vtable 0x640a94; constructor expansion at 0x54543d
-// stores owner/option/id in the 0x28-byte allocation. Names are role-derived.
+// stores owner/fort/id in the 0x28-byte allocation. Names are role-derived.
 // Value/reference argument combinations and an ordinary out-of-class body
 // leave both placement callers unchanged; neither model improves their residual.
 class TRmgTownObject : public TRmgObject {
 public:
     int m_objectId;
     int m_player;
-    unsigned char m_townOption;
+    unsigned char m_hasFort;
     TRmgTownObject(TRmgObjectPropertiesRef* properties, int objectId,
-        int player, unsigned char townOption) : TRmgObject(properties)
+        int player, unsigned char hasFort) : TRmgObject(properties)
     {
         m_player = player;
-        m_townOption = townOption;
+        m_hasFort = hasFort;
         m_objectId = objectId;
     }
     virtual void write(TAbstractFile* outfile, int version);
@@ -1005,7 +1005,7 @@ class TRmgOwnableObject : public TRmgObject {
 public:
     TRmgOwnableObject(TRmgObjectPropertiesRef* properties)
         : TRmgObject(properties) {}
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 
 // Artifact factory 0x5341f0 allocates the base 0x1c extent and installs
@@ -1014,7 +1014,7 @@ public:
 class TRmgArtifactObject : public TRmgObject {
 public:
     TRmgArtifactObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(TRmgArtifactObject, 0x1c);
 
@@ -1025,7 +1025,7 @@ SIZE(TRmgArtifactObject, 0x1c);
 class TRmgResourceObject : public TRmgObject {
 public:
     TRmgResourceObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(TRmgResourceObject, 0x1c);
 
@@ -1101,7 +1101,7 @@ SIZE(TRmgKeyTentObject, 0x24);
 class TRmgScholarObject : public TRmgObject {
 public:
     TRmgScholarObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(TRmgScholarObject, 0x1c);
 
@@ -1109,7 +1109,7 @@ SIZE(TRmgScholarObject, 0x1c);
 class TRmgShrineObject : public TRmgObject {
 public:
     TRmgShrineObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(TRmgShrineObject, 0x1c);
 
@@ -1122,7 +1122,7 @@ class TRmgSpellScrollObject : public TRmgObject {
 public:
     int m_spell; // +0x1c, role-derived name
     TRmgSpellScrollObject(TRmgObjectPropertiesRef* properties, int spell);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(TRmgSpellScrollObject, 0x20);
 
@@ -1130,7 +1130,7 @@ SIZE(TRmgSpellScrollObject, 0x20);
 class TRmgWitchHutObject : public TRmgObject {
 public:
     TRmgWitchHutObject(TRmgObjectPropertiesRef* properties);
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(TRmgWitchHutObject, 0x1c);
 
@@ -1149,7 +1149,7 @@ public:
         int experience);
 
     virtual void releaseReservation();
-    virtual void write(TAbstractFile* outfile, int parameter);
+    virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(TRmgHeroObject, 0x2c);
 
@@ -1654,7 +1654,7 @@ public:
 
     TRmgLineWalker(
         TRmgLinePainterInterface* newPainter,
-        int newRiverType,
+        int newLineType,
         const TRmgGridPoint& start);
     void drawTo(const TRmgGridPoint& destination);
     // Shared by constructor 0x4fa280 and the two-axis walk 0x4fa2b0.
@@ -1946,8 +1946,8 @@ public:
 };
 SIZE(TRmgGeneratorBase, 0xed8);
 
-// Four fixed-count/density groups consumed by 0x544ae0; the option byte's
-// gameplay meaning remains provisional, while ownership and ordering are proven.
+// Four fixed-count/density groups consumed by 0x544ae0 distinguish player and
+// neutral towns, each with or without a starting fort.
 
 
 class TRmgGenerator : public TRmgGeneratorBase {
@@ -1978,9 +1978,9 @@ public:
     // execution comparisons must supply identical initial stack contents.
     int m_nextKeyTentColor;                            // +0x0f5c
     // 0x549bae clears nine alignment counts; 0x549be0..0x549c05 counts
-    // active zones both by their alignment (+4) and in the total.
-    int m_activeZoneCount;                             // +0x0f60
-    int m_activeZoneCountsByAlignment[9];              // +0x0f64
+    // zones with a primary town, both by their alignment (+4) and in the total.
+    int m_primaryTownZoneCount;                        // +0x0f60
+    int m_primaryTownZoneCountsByAlignment[9];          // +0x0f64
     unsigned char m_disabledHeroes[156];               // +0x0f88
     // Role-derived names; original spellings unknown. Replaces opaque1024.
     // Ctor 0x537cc6 clears 144 bytes. Quest selection 0x54b490 excludes
@@ -2033,7 +2033,7 @@ public:
         unsigned char startingMine, int spacing);
     void placePrimaryTown(TRmgZone* zone);
     unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
-        int player, unsigned char townOption);
+        int player, unsigned char hasFort);
     void initializeZones(TRmgTemplate* mapTemplate);
     void positionZone(TRmgZone* zone, int mapSize);
     void appendZonePositions(TRmgZone* center, TRmgZone* zone,
@@ -2049,7 +2049,7 @@ public:
     void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
     unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
-        int player, unsigned char townOption, int spacing);
+        int player, unsigned char hasFort, int spacing);
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
@@ -2057,9 +2057,9 @@ public:
         int* value, unsigned char primary, unsigned char allowLinkedPlacement,
         unsigned char compact, TRmgMapPosition position);
     int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        unsigned char alternate, int value);
+        unsigned char compact, int value);
     unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
-        unsigned char alternate, int minimum, int maximum);
+        unsigned char compact, int minimum, int maximum);
     unsigned char placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
     unsigned char canPlaceTreasureGroup(TRmgTreasureGroup* group,
         TRmgMapPosition position, TRmgZone* zone);

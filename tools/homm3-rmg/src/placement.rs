@@ -809,7 +809,7 @@ impl<'a> PlacementView<'a> {
         let Some(trigger) = entry.prototype().entrance() else {
             return Ok(true);
         };
-        // Map position of an object's trigger cell. Footprint mask cell (column, row)
+        // Approach cell immediately south of the object's trigger. Mask cell (column, row)
         // lies at position - (column, row): the mask grows west and north from the
         // object's bottom-right cell P. North is up.
         //   (2,1) (1,1) (0,1)

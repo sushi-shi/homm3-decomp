@@ -52,7 +52,7 @@ impl PrisonPayload {
         self.experience
     }
 }
-/// Seer reward and quest artifact, assigned only during placement completion.
+/// Seer reward fixed at generation, with its quest artifact assigned at completion.
 #[derive(Clone, Copy, Debug)]
 pub struct SeerPayload {
     pub(super) reward: SeerReward,

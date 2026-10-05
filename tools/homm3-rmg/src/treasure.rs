@@ -187,7 +187,7 @@ pub enum TreasureReward {
         /// Experience assigned to the imprisoned hero.
         experience: i32,
     },
-    /// Resource pile with native default amount.
+    /// Resource pile with a fixed selection value and the game's default amount.
     Resource(i32),
     /// Scholar with source-default value.
     Scholar,

@@ -102,10 +102,10 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
 }
 
 // Retail adapter slots 1 and 4 exchange this three-dword value. The first
-// two dwords are the terrain and frame fields; the low two bytes of the last
+// two dwords are the layer kind and frame fields: m_terrain holds terrain,
+// road or river kind according to the adapter. The low two bytes of the last
 // dword are the independent sprite flips. The names in this file describe
 // proven roles because the Dreamcast build has no RMG compiland.
-// Prior provisional class role: TRmgTerrainTile.
 struct TRmgTerrainTile {
     s32 m_terrain;
     s32 m_frame;

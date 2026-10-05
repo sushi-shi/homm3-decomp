@@ -262,7 +262,7 @@ enum ERmgDwellingSubtypeCounts {
     RMG_ROE_DWELLING_SUBTYPE_COUNT = 58
 };
 
-// lengthDivisor values of splitRmgBoundarySegment.
+// Boundary displacement divisors relative to the segment length.
 enum ERmgBoundaryDisplacement {
     RMG_FULL_LENGTH_DISPLACEMENT = 1,
     RMG_HALF_LENGTH_DISPLACEMENT = 2
@@ -570,11 +570,9 @@ TPoint g_rmgDirections[RMG_DIRECTION_COUNT] = {
     TPoint(1, -1)
 };
 
-// Shipyards are three tiles wide.  The connection repair pass probes the
-// four water-facing squares beside their upper and lower edges before it
-// floods the reachable water region.
-// Shipyards are three tiles wide; these offsets probe beside the left and
-// right ends of the bottom footprint row and the row below it.
+// Shipyards are three tiles wide. The connection repair pass probes beside
+// the left and right ends of the bottom footprint row and the row below it
+// before flooding the reachable water region.
 // North is up; digits are offset indices, P is the shipyard position,
 // # the rest of its bottom row and . the row below.
 //   0 # # P 1
@@ -1337,8 +1335,8 @@ void TRmgRoadMapAdapter::setTile(
     unsigned char flipY = tile.m_flipY;
     int frame = tile.m_frame;
     unsigned char flipX = tile.m_flipX;
-    int terrain = tile.m_terrain;
-    item.m_tile.m_roadType = terrain;
+    int roadType = tile.m_terrain;
+    item.m_tile.m_roadType = roadType;
     item.m_tileData.m_roadFrame = frame;
     item.m_tileData.m_roadFlipX = flipX;
     item.m_tileData.m_roadFlipY = flipY;
@@ -1418,10 +1416,10 @@ void TRmgRiverMapAdapter::setTile(const TRmgGridPoint& point, const TRmgTerrainT
 {
     TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
     unsigned char flipX = tile.m_flipX;
-    int terrain = tile.m_terrain;
+    int riverType = tile.m_terrain;
     unsigned char flipY = tile.m_flipY;
     int frame = tile.m_frame;
-    item.m_tile.m_riverType = terrain;
+    item.m_tile.m_riverType = riverType;
     item.m_tile.m_riverFrame = frame;
     item.m_tileData.m_riverFlipX = flipX;
     item.m_tileData.m_riverFlipY = flipY;
@@ -1923,7 +1921,7 @@ void TRmgObject::clearPlacementMarks()
 
 VA(0x00533170, 0x79)
 MAC_ADDRESS(0x2304c8, 0xfc)
-void TRmgObject::write(TAbstractFile* outfile, int parameter)
+void TRmgObject::write(TAbstractFile* outfile, int version)
 {
     {
         char byteBuffer = m_position.m_x;
@@ -2011,7 +2009,7 @@ void TRmgTownObject::write(TAbstractFile* outfile, int version)
         outfile->write(&value, sizeof(value));
     }
     {
-        char value = m_townOption;
+        char value = m_hasFort;
         outfile->write(&value, sizeof(value));
     }
     char spells[9];
@@ -2034,9 +2032,9 @@ void TRmgTownObject::write(TAbstractFile* outfile, int version)
 
 VA(0x00533460, 0xA0)
 MAC_ADDRESS(0x230a1c, 0x78) // base serialization plus unowned player and reserved bytes
-void TRmgOwnableObject::write(TAbstractFile* outfile, int parameter)
+void TRmgOwnableObject::write(TAbstractFile* outfile, int version)
 {
-    TRmgObject::write(outfile, parameter);
+    TRmgObject::write(outfile, version);
     {
         char player = -1;
         outfile->write(&player, sizeof(player));
@@ -2081,9 +2079,9 @@ TRmgKeyTentObject::TRmgKeyTentObject(TRmgObjectPropertiesRef* properties,
 
 VA(0x00533500, 0x8A)
 MAC_ADDRESS(0x230acc, 0x50)
-void TRmgArtifactObject::write(TAbstractFile* outfile, int parameter)
+void TRmgArtifactObject::write(TAbstractFile* outfile, int version)
 {
-    TRmgObject::write(outfile, parameter);
+    TRmgObject::write(outfile, version);
     {
         char hasCustomTreasure = 0;
         outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
@@ -2094,9 +2092,9 @@ VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, TRmgOwnableObject)
 
 VA(0x005335C0, 0xB2)
 MAC_ADDRESS(0x230bb4, 0x78) // anchor-vtable 0x640ac4 slot 3; thiscall ret 8
-void TRmgResourceObject::write(TAbstractFile* outfile, int parameter)
+void TRmgResourceObject::write(TAbstractFile* outfile, int version)
 {
-    TRmgObject::write(outfile, parameter);
+    TRmgObject::write(outfile, version);
     {
         char hasCustomTreasure = 0;
         outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
@@ -2465,9 +2463,9 @@ void TRmgHeroObject::write(TAbstractFile* outfile, int version)
 
 VA(0x00533E70, 0xC3)
 MAC_ADDRESS(0x2319ac, 0xbc) // anchor-vtable + default serialization bytes; ret 8
-void TRmgScholarObject::write(TAbstractFile* outfile, int parameter)
+void TRmgScholarObject::write(TAbstractFile* outfile, int version)
 {
-    TRmgObject::write(outfile, parameter);
+    TRmgObject::write(outfile, version);
     {
         char rewardKind = -1;
         outfile->write(&rewardKind, sizeof(rewardKind));
@@ -2488,9 +2486,9 @@ void TRmgScholarObject::write(TAbstractFile* outfile, int parameter)
 
 VA(0x00533F40, 0xAF)
 MAC_ADDRESS(0x231aa0, 0x9c) // anchor-vtable + ordered write sizes; ret 8
-void TRmgShrineObject::write(TAbstractFile* outfile, int parameter)
+void TRmgShrineObject::write(TAbstractFile* outfile, int version)
 {
-    TRmgObject::write(outfile, parameter);
+    TRmgObject::write(outfile, version);
     {
         char spell = -1;
         outfile->write(&spell, sizeof(spell));
@@ -2507,9 +2505,9 @@ void TRmgShrineObject::write(TAbstractFile* outfile, int parameter)
 
 VA(0x00533FF0, 0xC2)
 MAC_ADDRESS(0x231b84, 0xc8)
-void TRmgSpellScrollObject::write(TAbstractFile* outfile, int parameter)
+void TRmgSpellScrollObject::write(TAbstractFile* outfile, int version)
 {
-    TRmgObject::write(outfile, parameter);
+    TRmgObject::write(outfile, version);
     {
         char message = 0;
         outfile->write(&message, sizeof(message));
@@ -2530,10 +2528,10 @@ void TRmgSpellScrollObject::write(TAbstractFile* outfile, int parameter)
 
 VA(0x005340C0, 0x93)
 MAC_ADDRESS(0x231c84, 0x68) // anchor-vtable + version guard and mask 0xefdf; ret 8
-void TRmgWitchHutObject::write(TAbstractFile* outfile, int parameter)
+void TRmgWitchHutObject::write(TAbstractFile* outfile, int version)
 {
-    TRmgObject::write(outfile, parameter);
-    if (parameter >= RMG_MAP_ARMAGEDDONS_BLADE) {
+    TRmgObject::write(outfile, version);
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
         unsigned int allowedSkills = 0xefdf;
         outfile->write(&allowedSkills, sizeof(allowedSkills));
     }
@@ -2608,8 +2606,8 @@ int TRmgBlackBoxCreatureDef::getValue(
     int value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
     int alignmentCount = 0;
     if (alignment != -1)
-        alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
-    int zoneCount = generator->m_activeZoneCount;
+        alignmentCount = generator->m_primaryTownZoneCountsByAlignment[alignment];
+    int zoneCount = generator->m_primaryTownZoneCount;
     if (zoneCount > 0)
         value += alignmentCount * value / zoneCount;
     return value;
@@ -2685,9 +2683,9 @@ int TRmgMapDwellingDef::getValue(TRmgZone* zone, TRmgGenerator* generator)
     int value = creature.m_growthRate * creature.m_aiValue;
     int zoneCount = 0;
     if (creature.m_townType != -1)
-        zoneCount = generator->m_activeZoneCountsByAlignment[creature.m_townType];
-    if (generator->m_activeZoneCount > 0)
-        value += zoneCount * value / generator->m_activeZoneCount;
+        zoneCount = generator->m_primaryTownZoneCountsByAlignment[creature.m_townType];
+    if (generator->m_primaryTownZoneCount > 0)
+        value += zoneCount * value / generator->m_primaryTownZoneCount;
     return value + creature.m_aiValue * zoneCount / 2;
 }
 
@@ -3581,14 +3579,14 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 #if defined(HOMM3_TARGET_MAC)
     // CodeWarrior's 32K frame limit: Mac 0x23486c news both tables in one 0xd980 block.
     struct TPlacementTables {
-        std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
-        std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+        std::vector<TRmgObjectPlacementRule*> m_rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+        std::vector<int> m_subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
     };
     TPlacementTables* tables = new TPlacementTables;
     std::vector<TRmgObjectPlacementRule*> (&rulesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
-        tables->rulesByType;
+        tables->m_rulesByType;
     std::vector<int> (&subtypesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
-        tables->subtypesByType;
+        tables->m_subtypesByType;
 #else
     std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
     std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
@@ -8507,7 +8505,7 @@ void TRmgGenerator::placeAdditionalTowns(TRmgZone* zone)
 VA(0x00544D90, 0x4B7)
 MAC_ADDRESS(0x24882c, 0x5d4)
 unsigned char TRmgGenerator::tryPlaceAdditionalTown(TRmgZone* zone,
-    int alignment, int player, unsigned char townOption, int spacing)
+    int alignment, int player, unsigned char hasFort, int spacing)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
     if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == -1) {
@@ -8516,7 +8514,7 @@ unsigned char TRmgGenerator::tryPlaceAdditionalTown(TRmgZone* zone,
             alignment = rand() % (8 + (m_mapVersion >= 1));
     }
     if (!zone->m_hasPrimaryTown)
-        return tryPlacePrimaryTown(zone, alignment, player, townOption);
+        return tryPlacePrimaryTown(zone, alignment, player, hasFort);
 
     std::vector<TRmgMapPosition> candidates;
     int zoneIndex = slot->m_zoneIndex;
@@ -8562,7 +8560,7 @@ unsigned char TRmgGenerator::tryPlaceAdditionalTown(TRmgZone* zone,
     }
     if (!candidates.size())
         return 0;
-    TRmgTownObject* object = new TRmgTownObject(properties, m_nextObjectId++, player, townOption);
+    TRmgTownObject* object = new TRmgTownObject(properties, m_nextObjectId++, player, hasFort);
     position = candidates[rand() % candidates.size()];
     addObject(object, position);
     TRmgMapPosition entrance = position;
@@ -8592,7 +8590,7 @@ unsigned char TRmgGenerator::tryPlaceAdditionalTown(TRmgZone* zone,
 VA(0x00545250, 0x324)
 MAC_ADDRESS(0x248e00, 0x3b4)
 unsigned char TRmgGenerator::tryPlacePrimaryTown(
-    TRmgZone* zone, int alignment, int player, unsigned char townOption)
+    TRmgZone* zone, int alignment, int player, unsigned char hasFort)
 {
     if (alignment == -1)
         return 0;
@@ -8623,7 +8621,7 @@ unsigned char TRmgGenerator::tryPlacePrimaryTown(
     }
     if (!candidates.size())
         return 0;
-    TRmgTownObject* town = new TRmgTownObject(properties, m_nextObjectId++, player, townOption);
+    TRmgTownObject* town = new TRmgTownObject(properties, m_nextObjectId++, player, hasFort);
     unsigned int selected = rand() % candidates.size();
     position = candidates[selected];
     addObject(town, position);
@@ -9062,7 +9060,7 @@ TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
 VA(0x00546520, 0x1B6)
 MAC_ADDRESS(0x24a584, 0x22c) // anchor-callee 0x54678a; thiscall, ret 0x10
 int TRmgGenerator::fillTreasureGroup(TRmgZone* zone,
-    TRmgTreasureGroup* group, unsigned char alternate, int value)
+    TRmgTreasureGroup* group, unsigned char compact, int value)
 {
     int objectValue = 0;
     int attempts;
@@ -9075,7 +9073,7 @@ int TRmgGenerator::fillTreasureGroup(TRmgZone* zone,
         position.m_z = -1;
         for (attempts = 0; attempts < RMG_TREASURE_ATTEMPTS; ++attempts) {
             selected = createTreasureObject(zone, value / 4, value, &objectValue,
-                1, 1, alternate, position);
+                1, 1, compact, position);
             if (selected)
                 break;
         }
@@ -9103,7 +9101,7 @@ int TRmgGenerator::fillTreasureGroup(TRmgZone* zone,
                 unspecified.m_y = -1;
                 unspecified.m_z = -1;
                 nextObject = createTreasureObject(zone, remainder / 4, 5 * remainder / 4,
-                    &objectValue, 0, 1, alternate, unspecified);
+                    &objectValue, 0, 1, compact, unspecified);
                 if (nextObject)
                     break;
             }
@@ -9136,11 +9134,11 @@ int TRmgGenerator::fillTreasureGroup(TRmgZone* zone,
 VA(0x005466E0, 0x253)
 MAC_ADDRESS(0x24a7b0, 0x110) // anchor-callee 0x547594/0x54768c; thiscall, ret 0x14
 unsigned char TRmgGenerator::assembleTreasureGroup(TRmgZone* zone,
-    TRmgTreasureGroup* group, unsigned char alternate, int minimum, int maximum)
+    TRmgTreasureGroup* group, unsigned char compact, int minimum, int maximum)
 {
     group->reset();
     int value = maximum <= minimum ? maximum : rand() % (maximum - minimum) + minimum;
-    int totalValue = fillTreasureGroup(zone, group, alternate, value);
+    int totalValue = fillTreasureGroup(zone, group, compact, value);
     if (!totalValue)
         return 0;
     int guardValue = getZoneGuardValue(zone, totalValue);
@@ -9613,14 +9611,14 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
 
         mapItem = m_map.getMapItem(position);
         int positionCost = mapItem->m_movement.m_cost;
-        unsigned char currentDecorated = mapItem->m_tile.m_roadType != 0;
+        unsigned char currentHasRoad = mapItem->m_tile.m_roadType != 0;
         int direction = 8;
         unsigned char objectEntrance = mapItem->m_tileData.m_objectEntrance;
 
         if (objectEntrance) {
             TRmgObject* object = mapItem->m_objects[0];
-            TObjectType* properties = object->m_properties->m_prototype;
-            int objectType = properties->getObjectType();
+            TObjectType* prototype = object->m_properties->m_prototype;
+            int objectType = prototype->getObjectType();
             if (!g_adventureObjectTraits[objectType].m_enterableFromNorth
                 && !g_adventureObjectTraits[objectType].m_clearedOnVisit)
                 direction = 5;
@@ -9628,7 +9626,7 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
             switch (objectType) {
             case LITH_ONEWAY_ENTRANCE:
             case LITH_ONEWAY_EXIT: {
-                int subtype = properties->getSubtype();
+                int subtype = prototype->getSubtype();
                 for (int i = 0; i < m_monolithsOneWay.size(); ++i) {
                     TRmgObject* destination = m_monolithsOneWay[i];
                     if (destination->m_properties->m_prototype->getSubtype() != subtype)
@@ -9648,7 +9646,7 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
             }
 
             case LITH_TWOWAY: {
-                int subtype = properties->getSubtype();
+                int subtype = prototype->getSubtype();
                 for (int i = 0; i < m_monolithsTwoWay.size(); ++i) {
                     TRmgObject* destination = m_monolithsTwoWay[i];
                     if (destination->m_properties->m_prototype->getSubtype() != subtype)
@@ -9711,7 +9709,7 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
                     continue;
             }
 
-            int nextCost = currentDecorated
+            int nextCost = currentHasRoad
                                && nextMapItem->m_tile.m_roadType
                            ? 2 : 20;
             if (direction & 1)
@@ -10386,12 +10384,12 @@ unsigned char TRmgGenerator::generate()
             && m_zones[zone]->m_terrain != eTerrainWater)
             prepareJunctionZone(m_zones[zone]);
     placeMines();
-    memset(m_activeZoneCountsByAlignment, 0, sizeof(m_activeZoneCountsByAlignment));
-    m_activeZoneCount = 0;
+    memset(m_primaryTownZoneCountsByAlignment, 0, sizeof(m_primaryTownZoneCountsByAlignment));
+    m_primaryTownZoneCount = 0;
     for (zone = 0; zone < m_zones.size(); ++zone) {
         if (m_zones[zone]->m_hasPrimaryTown) {
-            ++m_activeZoneCountsByAlignment[m_zones[zone]->m_alignment];
-            ++m_activeZoneCount;
+            ++m_primaryTownZoneCountsByAlignment[m_zones[zone]->m_alignment];
+            ++m_primaryTownZoneCount;
         }
     }
     buildZoneConnectionPaths();
