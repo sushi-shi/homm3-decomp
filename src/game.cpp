@@ -2749,6 +2749,96 @@ bool type_creature_bank::save(void* output)
     return saveVector(outfile, m_artifacts);
 }
 
+// Retail 4bc0e0..4bc750 and Mac cf490..cfc34 order the snapshot
+// constructor, reset, save and load before game::load. Keep the ordinary
+// definitions in that cluster; selection retains the constructor call.
+// Moving the cluster does not change any current Windows function score.
+// E:\gamedcs\Game.h:1301
+VA(0x004bc0e0, 0x251)
+DC_ADDRESS(0x0bceb4, 0x4c)
+MAC_ADDRESS(0x0cf490, 0x260)
+SavedGameHeader::SavedGameHeader()
+{
+    memset(m_id, 0, sizeof(m_id));
+    strcpy(m_id, "H3SVG");
+    m_version = 42;
+}
+
+// Complete retains calls to these ordinary members in game::save.
+// Dreamcast attributes their older definitions to Game.h; the Mac
+// build also retains both calls.
+// E:\gamedcs\Game.h:1312
+VA(0x004bc350, 0x271)
+DC_ADDRESS(0x0bcf00, 0x6c)
+MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout
+void SavedGameHeader::reset()
+{
+    if (g_inCampaign)
+        strcpy(m_id, "H3SVC");
+    else
+        strcpy(m_id, "H3SVG");
+
+    m_version = 42;
+    m_gameVersion = g_game->m_gameVersion;
+
+    m_campaign = g_game->m_campaign;
+
+    m_mapHeader = g_game->m_mapHeader;
+
+    m_currentPlayer = g_netLocalGamePos;
+    m_mapSetup = g_game->m_setup;
+    m_campaignGame = g_inCampaign;
+    m_fileName = g_game->m_saveFileName;
+    m_difficultyRating = g_game->m_difficultyRating;
+    m_numDeadPlayers = g_game->m_numDeadPlayers;
+    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
+
+    int* human = m_humanPlayer;
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
+}
+
+// Complete serializes the expanded snapshot through its abstract stream.
+// Mac stages each scalar separately before its stream write.
+// E:\gamedcs\Game.h:1325
+VA(0x004bc5d0, 0x17A)
+DC_ADDRESS(0x0bcf6c, 0x78)
+MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
+int SavedGameHeader::save(TAbstractFile* outfile)
+{
+    char fileNameBuffer[0x15f];
+    char compatibilityBuffer[32];
+
+    outfile->write(m_id, sizeof(m_id));
+
+    writeValue<int>(outfile, m_version);
+    writeValue<int>(outfile, m_gameVersion);
+
+    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
+        sizeof(compatibilityBuffer))
+        return -1;
+
+    if (m_mapHeader.save(outfile) < 0)
+        return -1;
+    if (m_mapSetup.save(outfile) < 0)
+        return -1;
+
+    writeValue<short>(outfile, m_campaignGame);
+    if (m_campaignGame)
+        m_campaign.save(outfile);
+
+    strcpy(fileNameBuffer, m_fileName.c_str());
+    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
+
+    writeValue<short>(outfile, m_difficultyRating);
+    writeValue<char>(outfile, m_numDeadPlayers);
+    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
+    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
+    writeValue<int>(outfile, m_currentPlayer);
+
+    return 0;
+}
+
 // Complete reading belongs to SavedGameHeader::load. The caller tests
 // its result before restoring any game state and retains the snapshot for
 // later version tests. This ordinary application phase owns the demonstrated
@@ -2776,20 +2866,6 @@ void applySavedGameHeader(const SavedGameHeader& saved)
            sizeof(g_game->m_playerDisabled));
     g_netLocalGamePos = saved.m_currentPlayer;
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
-}
-
-// Complete places the save-header constructor before its owning game calls.
-// Those calls expand it; the selection TU retains the constructor call.
-// Mac places it before the save-header reset/save/load and game::load cluster.
-// E:\gamedcs\Game.h:1301
-VA(0x004bc0e0, 0x251)
-DC_ADDRESS(0x0bceb4, 0x4c)
-MAC_ADDRESS(0x0cf490, 0x260)
-SavedGameHeader::SavedGameHeader()
-{
-    memset(m_id, 0, sizeof(m_id));
-    strcpy(m_id, "H3SVG");
-    m_version = 42;
 }
 
 // Original: game::Load; game.cpp:3026 Complete loads a
@@ -3348,85 +3424,13 @@ int game::save(TAbstractFile* outfile)
     return 0;
 }
 
-// Complete retains calls to these ordinary members in game::save.
-// Dreamcast attributes their older definitions to Game.h; the Mac
-// build also retains both calls.
-// E:\gamedcs\Game.h:1312
-VA(0x004bc350, 0x271)
-DC_ADDRESS(0x0bcf00, 0x6c)
-MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout
-void SavedGameHeader::reset()
-{
-    if (g_inCampaign)
-        strcpy(m_id, "H3SVC");
-    else
-        strcpy(m_id, "H3SVG");
-
-    m_version = 42;
-    m_gameVersion = g_game->m_gameVersion;
-
-    m_campaign = g_game->m_campaign;
-
-    m_mapHeader = g_game->m_mapHeader;
-
-    m_currentPlayer = g_netLocalGamePos;
-    m_mapSetup = g_game->m_setup;
-    m_campaignGame = g_inCampaign;
-    m_fileName = g_game->m_saveFileName;
-    m_difficultyRating = g_game->m_difficultyRating;
-    m_numDeadPlayers = g_game->m_numDeadPlayers;
-    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
-
-    int* human = m_humanPlayer;
-    for (int i = 0; i < 8; ++i)
-        *human++ = g_game->m_players[i].isHuman();
-}
-
-// Complete serializes the expanded snapshot through its abstract stream.
-// Mac stages each scalar separately before its stream write.
-// E:\gamedcs\Game.h:1325
-VA(0x004bc5d0, 0x17A)
-DC_ADDRESS(0x0bcf6c, 0x78)
-MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
-int SavedGameHeader::save(TAbstractFile* outfile)
-{
-    char fileNameBuffer[0x15f];
-    char compatibilityBuffer[32];
-
-    outfile->write(m_id, sizeof(m_id));
-
-    writeValue<int>(outfile, m_version);
-    writeValue<int>(outfile, m_gameVersion);
-
-    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
-        sizeof(compatibilityBuffer))
-        return -1;
-
-    if (m_mapHeader.save(outfile) < 0)
-        return -1;
-    if (m_mapSetup.save(outfile) < 0)
-        return -1;
-
-    writeValue<short>(outfile, m_campaignGame);
-    if (m_campaignGame)
-        m_campaign.save(outfile);
-
-    strcpy(fileNameBuffer, m_fileName.c_str());
-    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
-
-    writeValue<short>(outfile, m_difficultyRating);
-    writeValue<char>(outfile, m_numDeadPlayers);
-    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
-    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
-    writeValue<int>(outfile, m_currentPlayer);
-
-    return 0;
-}
-
+// Original public ?SaveGame@game@@QAA_NPBD_N111@Z proves the Boolean
+// result and all four flag parameters, despite byte-lowered debug types.
 VA(0x004beea0, 0x2F6)
 DC_ADDRESS(0x0a99d0, 0x4b8)
 MAC_ADDRESS(0x0d44fc, 0x2e8)
-unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
+bool game::saveGame(const char* filename, bool determineSuffix,
+                    bool campaignWinMode, bool compressIt, bool xferFile)
 {
     char nameNoExtension[351] = {0};
     char saveName[351] = {0};
@@ -3694,26 +3698,32 @@ void game::giveTroopsToNeutralTowns()
 // disjunction rather than a nested per-campaign assignment chain. VC6
 // factors the comparisons and raises 91.1630% to 93.9000%. Direct named
 // coordinate arguments to the canonical point constructor reach 94.8833%.
-// The final valid-town path can return directly at unchanged 90.0315%.
-// Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
-// result flag gives 89.2426%; these used break as the failure-scope exit.
-// These are limits of the tested scopes, not proof of original gotos.
-// The town-loss scope uses continue for either failed team check and a
-// return for valid ownership. This removes both remaining joins at 90.0315%
-// with the full contribution and all relocation names/addends unchanged.
-// The earlier failure scopes used break and do not predict this lowering.
+// DC game.cpp:4225 evaluates the three town-loss failures in one statement;
+// Mac 0xd5a18..0xd5a84 retains the same short-circuit expression. Keep its
+// signed team loop and direct owner reads. An artificial one-iteration loop
+// with saved owner/team values lost that structure (94.8833 vs 95.4407%).
+// DC records one shared int i for the player and hero scans; moving that
+// declaration changes no function score.
+// DC 4116..4124 and 4189..4197 join each hero result at a common break;
+// 4140..4148 handles the invalid monster before the successful assignment.
+// Keep those native arms and read the condition fields directly, including
+// the victory type after the player queries. Removing its cached value and
+// the provisional aggregate aliases raises the full body to 95.5519%.
+// The defeat-hero test intentionally passes the owner directly to IsHumanTeam:
+// DC4116 and Mac d5534..d5594 compare that owner with teamInfo[player]. Retail
+// +0x1eb..+0x246 does the same; inserting GetTeam changes the native behavior.
 // Original public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves bool.
 VA(0x004bf780, 0x6E2)
 DC_ADDRESS(0x0aa7e0, 0x5c4)
 MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
 void game::validateVictoryLossConditions(bool checkMapLocations)
 {
-    signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
-    if (victoryType == VICTORY_CONDITION_ARTIFACT
-        || victoryType == VICTORY_CONDITION_BUILD_GRAIL
-        || victoryType == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
+    int i;
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_ARTIFACT
+        || m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_BUILD_GRAIL
+        || m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
         int numLivingPlayers = 0;
-        for (int i = 0; i < 8; ++i) {
+        for (i = 0; i < 8; ++i) {
             if (!m_playerDisabled[i])
                 ++numLivingPlayers;
         }
@@ -3750,60 +3760,55 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         }
     }
 
-    if (victoryType == VICTORY_CONDITION_DEFEAT_HERO)
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_DEFEAT_HERO)
         m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
 
     if (!checkMapLocations)
         return;
 
-    VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
-    if (victoryType == VICTORY_CONDITION_DEFEAT_HERO) {
-        type_point vcheroLoc(victory.m_heroX, victory.m_heroY,
-                            victory.m_heroZ);
-        victory.m_heroId = -1;
-        for (int i = 0; i < HERO_COUNT; ++i) {
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_DEFEAT_HERO) {
+        type_point vcheroLoc(m_mapHeader.m_victoryCondition.m_heroX, m_mapHeader.m_victoryCondition.m_heroY,
+                            m_mapHeader.m_victoryCondition.m_heroZ);
+        m_mapHeader.m_victoryCondition.m_heroId = -1;
+        for (i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (vcheroLoc == poolheroLoc) {
-                int team = getTeam(m_heroes[i].m_owner);
-                if (team >= 0 && isHumanTeam(team)) {
-                    victory.m_type = -1;
-                    break;
+                if (isHumanTeam(m_heroes[i].m_owner)) {
+                    m_mapHeader.m_victoryCondition.m_type = -1;
+                } else {
+                    m_mapHeader.m_victoryCondition.m_heroId = i;
                 }
-                victory.m_heroId = i;
                 break;
             }
         }
-        if (victory.m_heroId == -1)
-            victory.m_type = -1;
+        if (m_mapHeader.m_victoryCondition.m_heroId == -1)
+            m_mapHeader.m_victoryCondition.m_type = -1;
     }
 
-    if (victory.m_type == VICTORY_CONDITION_DEFEAT_MONSTER) {
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_DEFEAT_MONSTER) {
         const NewmapCell* thisCell = m_worldMap.cell(
-            victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
-        if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
-            {
-                victory.m_creatureType = TCreatureType(thisCell->m_objectIndex);
-            }
+            m_mapHeader.m_victoryCondition.m_monsterX, m_mapHeader.m_victoryCondition.m_monsterY, m_mapHeader.m_victoryCondition.m_monsterZ);
+        if (thisCell->m_type != MONSTER || !thisCell->m_isTrigger) {
+            m_mapHeader.m_victoryCondition.m_type = -1;
+            m_mapHeader.m_victoryCondition.m_creatureType = CREATURE_NONE;
+            m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
         } else {
-            victory.m_type = -1;
-            victory.m_creatureType = CREATURE_NONE;
-            victory.m_allowNormalVictory = 1;
+            m_mapHeader.m_victoryCondition.m_creatureType = TCreatureType(thisCell->m_objectIndex);
         }
     }
 
-    if (victory.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
+    if (m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
         town* thisTown = getTown(getTownId(
-            victory.m_townX, victory.m_townY, victory.m_townZ));
+            m_mapHeader.m_victoryCondition.m_townX, m_mapHeader.m_victoryCondition.m_townY, m_mapHeader.m_victoryCondition.m_townZ));
         int team = getTeam(thisTown->m_owner);
         if (team >= 0 && isHumanTeam(team))
-            victory.m_type = -1;
+            m_mapHeader.m_victoryCondition.m_type = -1;
     }
 
-    LossConditionStruct& loss = m_mapHeader.m_lossCondition;
-    if (loss.m_type == LOSS_CONDITION_LOSE_HERO) {
-        type_point lcheroLoc(loss.m_heroX, loss.m_heroY, loss.m_heroZ);
-        loss.m_heroId = -1;
-        for (int i = 0; i < HERO_COUNT; ++i) {
+    if (m_mapHeader.m_lossCondition.m_type == LOSS_CONDITION_LOSE_HERO) {
+        type_point lcheroLoc(m_mapHeader.m_lossCondition.m_heroX, m_mapHeader.m_lossCondition.m_heroY, m_mapHeader.m_lossCondition.m_heroZ);
+        m_mapHeader.m_lossCondition.m_heroId = -1;
+        for (i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (lcheroLoc == poolheroLoc) {
                 int numHumanTeams = 0;
@@ -3811,41 +3816,31 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
                     if (isHumanTeam(team))
                         ++numHumanTeams;
                 }
-                if (numHumanTeams <= 1) {
-                    if (!isComputerTeam(getTeam(m_heroes[i].m_owner))) {
-                        loss.m_heroId = i;
-                        break;
-                    }
+                if (numHumanTeams > 1
+                    || isComputerTeam(getTeam(m_heroes[i].m_owner))) {
+                    m_mapHeader.m_lossCondition.m_type = -1;
+                } else {
+                    m_mapHeader.m_lossCondition.m_heroId = i;
                 }
-                loss.m_type = -1;
                 break;
             }
         }
-        if (loss.m_heroId == -1)
-            loss.m_type = -1;
+        if (m_mapHeader.m_lossCondition.m_heroId == -1)
+            m_mapHeader.m_lossCondition.m_type = -1;
     }
 
-    if (loss.m_type == LOSS_CONDITION_LOSE_TOWN) {
+    if (m_mapHeader.m_lossCondition.m_type == LOSS_CONDITION_LOSE_TOWN) {
         town* thisTown = getTown(getTownId(
-            loss.m_townX, loss.m_townY, loss.m_townZ));
+            m_mapHeader.m_lossCondition.m_townX, m_mapHeader.m_lossCondition.m_townY, m_mapHeader.m_lossCondition.m_townZ));
         int numHumanTeams = 0;
-        int owner;
-        int townTeam;
-        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
-            if (isHumanTeam(teamCheck))
+        for (int team = 0; team < 8; ++team) {
+            if (isHumanTeam(team))
                 ++numHumanTeams;
         }
-        do {
-            if (numHumanTeams > 1)
-                continue;
-            owner = thisTown->m_owner;
-            townTeam = getTeam(owner);
-            if (isComputerTeam(townTeam))
-                continue;
-            if (owner != -1)
-                return;
-        } while (0);
-        loss.m_type = -1;
+        if (numHumanTeams > 1
+            || isComputerTeam(getTeam(thisTown->m_owner))
+            || thisTown->m_owner == -1)
+            m_mapHeader.m_lossCondition.m_type = -1;
     }
 }
 
@@ -4296,7 +4291,7 @@ static void randomizePyramid(NewmapCell* cell)
             possibleSpells.push_back(i);
     }
 
-    SpellID spell = SpellID(
+    ESpellId spell = ESpellId(
         possibleSpells[random(0, possibleSpells.size() - 1)]);
     cell->setPyramid(true, spell);
     cell->clearVisitedBits();
@@ -8958,8 +8953,9 @@ void game::processOnMapHeroes()
 // Preserve this native indexing despite its unusual broadcast behavior.
 // These lifetime/receiver corrections raise Windows 92.7077 -> 97.4264;
 // all 122 CFG blocks, 101 call entries and 172 relocations now agree.
-// Original public ends HH_N0: inGame and makeOrig are bool. The related
-// isDiff Boolean-local probe is byte-flat; keep its existing byte domain.
+// Original publics prove bool inGame/makeOrig and both transfer-init flags.
+// Keep the matching isDiff Boolean state: a byte local adds normalization
+// at the canonical constructor call (96.63% versus 97.40% in isolation).
 VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
@@ -8971,7 +8967,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
 
     CGameTransmitMainMsg* gameTransmitMainMsg =
         CGameTransmitMainMsg::createMsg(GAME_TRANSMIT_PAYLOAD_SIZE);
-    unsigned char isDiff = 0;
+    bool isDiff = false;
     unsigned long diffSize = 0;
     int changeSounds = g_soundManager->m_playSounds;
     g_soundManager->m_playSounds = 1;

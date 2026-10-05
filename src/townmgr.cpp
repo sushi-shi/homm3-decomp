@@ -1519,16 +1519,20 @@ void TTownScreenWindow::updateTownLocators()
 // plus Dungeon's summoning portal, each an icon (creature portrait), a
 // "+N" text, and a right-click breakdown of every growth modifier -
 // castle/citadel, the Legion artifacts, the horde building, the
-// generator bonus and the Grail. The two DC helpers
-// DoTownKnob/bonus_right_click that precede it have no distinct retail
-// carve row (inlined here). Locals and their scopes follow the DC
-// symbol records (help_text/right_text/iOffsetToMon/i/creature).
+// generator bonus and the Grail. DC records the locals
+// help_text/right_text/iOffsetToMon/i/creature. The neighbouring
+// DoTownKnob/bonus_right_click helpers serve townManager::main.
 // DC townmgr.cpp:2573 calls _memset; Mac 0x1bd924..0x1bd930 retains
 // memset(this + 0x90, -1, 0x20). Keep the library bulk initialization rather
 // than the counted-loop reconstruction: it improves Windows 87.6975 ->
 // 88.5786 while preserving the canonical growth and text helper calls.
-// The remaining comparison is 88 vs 89 blocks, starting at helpText
-// stack placement (-0x4c vs retail -0x50) before the growth-loop joins.
+// DC2592 branches over the whole bonus breakdown to DC2666. Mac
+// 0x1bdac4..0x1bdeb8 and retail agree: only positive extra growth enters
+// the breakdown. Restoring this scope raises Windows to 94.8913%.
+// The remaining comparison has 88 vs 89 blocks and a 0xdc vs 0xd4 frame.
+// The dwelling-loop register joins differ; replacing its positive scope
+// with a negative guard and continue emits identical bytes, with or
+// without the recovered bonus scope.
 // DC names GetArmyName twice and six text lookups. Complete keeps its
 // existing getText calls; the army-name calls lift Windows to 88.50%.
 // DC places get_horde before get_legion_bonus, but Complete calls them
@@ -1563,94 +1567,95 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             helpText = formatString((*g_generalText)[GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT], name);
             rightText = formatString((*g_generalText)[GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT], name,
                                        offsetToMon + growth);
-            if (offsetToMon > 0)
+            if (offsetToMon > 0) {
                 rightText += formatString((*g_generalText)[GENERAL_TEXT_BASIC_GROWTH_FORMAT],
                                             growth);
 
-            // Mac keeps one getBuildingName call in each arm at 0:0x1bdb68,
-            // 0:0x1bdbbc and 0:0x1bdbd4.
-            if (currTown->getCastleGrowthBonus(creature) > 0) {
-                const char* buildingName;
-                if (currTown->hasBuilding(CASTLE_CASTLE_ID, false))
-                    buildingName = getBuildingName(currTown->m_type,
-                                                   CASTLE_CASTLE_ID);
-                else if (currTown->hasBuilding(CASTLE_CITADEL_ID, false))
-                    buildingName = getBuildingName(currTown->m_type,
-                                                   CASTLE_CITADEL_ID);
-                else
-                    buildingName = getBuildingName(currTown->m_type,
-                                                   CASTLE_FORT_ID);
-                rightText += formatString(
-                    DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
-                    buildingName,
-                    currTown->getCastleGrowthBonus(creature));
-                offsetToMon -= currTown->getCastleGrowthBonus(creature);
-            }
-
-            if (currTown->m_owner >= 0) {
-                long legionBonus = currTown->getAssembledLegionBonus(slot);
-                if (legionBonus > 0) {
+                // Mac keeps one getBuildingName call in each arm at 0:0x1bdb68,
+                // 0:0x1bdbbc and 0:0x1bdbd4.
+                if (currTown->getCastleGrowthBonus(creature) > 0) {
+                    const char* buildingName;
+                    if (currTown->hasBuilding(CASTLE_CASTLE_ID, false))
+                        buildingName = getBuildingName(currTown->m_type,
+                                                       CASTLE_CASTLE_ID);
+                    else if (currTown->hasBuilding(CASTLE_CITADEL_ID, false))
+                        buildingName = getBuildingName(currTown->m_type,
+                                                       CASTLE_CITADEL_ID);
+                    else
+                        buildingName = getBuildingName(currTown->m_type,
+                                                       CASTLE_FORT_ID);
                     rightText += formatString(
-                        DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                        g_artifactTraits[0x85].m_name, legionBonus);
-                    offsetToMon -= legionBonus;
+                        DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
+                        buildingName,
+                        currTown->getCastleGrowthBonus(creature));
+                    offsetToMon -= currTown->getCastleGrowthBonus(creature);
                 }
-                long generatorBonus = currTown->getLegionBonus(slot);
-                if (generatorBonus > 0) {
-                    // Tier n's growth artifact, eArtifactLegsOfLegion
-                    // (0x76) .. eArtifactHeadOfLegion (0x7a) in DC
-                    // enum order. The dispatch domain is the dwelling
-                    // INDEX (tier - 1, TownFn_005BF900's dwelling%7+1
-                    // read backwards); retail's jump table is biased by
-                    // exactly that -1, so the labels spell it.
-                    // switch (i + 1) over the plain tier enumerators
-                    // measured 86.94 against 87.93 - the bias moves
-                    // into an lea and the dispatch drifts.
-                    int artifact = -1;
-                    switch (i) {
-                    case TOWN_DWELLING_TIER_2 - 1:
-                        artifact = 0x76;
-                        break;
-                    case TOWN_DWELLING_TIER_3 - 1:
-                        artifact = 0x77;
-                        break;
-                    case TOWN_DWELLING_TIER_4 - 1:
-                        artifact = 0x78;
-                        break;
-                    case TOWN_DWELLING_TIER_5 - 1:
-                        artifact = 0x79;
-                        break;
-                    case TOWN_DWELLING_TIER_6 - 1:
-                        artifact = 0x7a;
-                        break;
+
+                if (currTown->m_owner >= 0) {
+                    long legionBonus = currTown->getAssembledLegionBonus(slot);
+                    if (legionBonus > 0) {
+                        rightText += formatString(
+                            DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
+                            g_artifactTraits[0x85].m_name, legionBonus);
+                        offsetToMon -= legionBonus;
                     }
+                    long generatorBonus = currTown->getLegionBonus(slot);
+                    if (generatorBonus > 0) {
+                        // Tier n's growth artifact, eArtifactLegsOfLegion
+                        // (0x76) .. eArtifactHeadOfLegion (0x7a) in DC
+                        // enum order. The dispatch domain is the dwelling
+                        // INDEX (tier - 1, TownFn_005BF900's dwelling%7+1
+                        // read backwards); retail's jump table is biased by
+                        // exactly that -1, so the labels spell it.
+                        // switch (i + 1) over the plain tier enumerators
+                        // measured 86.94 against 87.93 - the bias moves
+                        // into an lea and the dispatch drifts.
+                        int artifact = -1;
+                        switch (i) {
+                        case TOWN_DWELLING_TIER_2 - 1:
+                            artifact = 0x76;
+                            break;
+                        case TOWN_DWELLING_TIER_3 - 1:
+                            artifact = 0x77;
+                            break;
+                        case TOWN_DWELLING_TIER_4 - 1:
+                            artifact = 0x78;
+                            break;
+                        case TOWN_DWELLING_TIER_5 - 1:
+                            artifact = 0x79;
+                            break;
+                        case TOWN_DWELLING_TIER_6 - 1:
+                            artifact = 0x7a;
+                            break;
+                        }
+                        rightText += formatString(
+                            DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
+                            g_artifactTraits[artifact].m_name, generatorBonus);
+                        offsetToMon -= generatorBonus;
+                    }
+                }
+
+                if (currTown->getHordeBonus(slot) > 0) {
+                    int hordeBuilding = currTown->getHorde(slot);
                     rightText += formatString(
                         DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                        g_artifactTraits[artifact].m_name, generatorBonus);
-                    offsetToMon -= generatorBonus;
+                        getBuildingName(currTown->m_type, hordeBuilding),
+                        currTown->getHordeBonus(slot));
+                    offsetToMon -= currTown->getHordeBonus(slot);
                 }
-            }
 
-            if (currTown->getHordeBonus(slot) > 0) {
-                int hordeBuilding = currTown->getHorde(slot);
-                rightText += formatString(
-                    DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                    getBuildingName(currTown->m_type, hordeBuilding),
-                    currTown->getHordeBonus(slot));
-                offsetToMon -= currTown->getHordeBonus(slot);
-            }
+                if (currTown->getGeneratorBonus(slot) > 0) {
+                    rightText += formatString((*g_generalText)[GENERAL_TEXT_EXTERNAL_DWELLINGS_FORMAT],
+                                                currTown->getGeneratorBonus(slot));
+                    offsetToMon -= currTown->getGeneratorBonus(slot);
+                }
 
-            if (currTown->getGeneratorBonus(slot) > 0) {
-                rightText += formatString((*g_generalText)[GENERAL_TEXT_EXTERNAL_DWELLINGS_FORMAT],
-                                            currTown->getGeneratorBonus(slot));
-                offsetToMon -= currTown->getGeneratorBonus(slot);
+                if (offsetToMon > 0 && currTown->hasBuilding(HOLY_GRAIL_ID, true))
+                    rightText += formatString(
+                        DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
+                        getBuildingName(currTown->m_type, HOLY_GRAIL_ID),
+                        offsetToMon);
             }
-
-            if (offsetToMon > 0 && currTown->hasBuilding(HOLY_GRAIL_ID, true))
-                rightText += formatString(
-                    DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
-                    getBuildingName(currTown->m_type, HOLY_GRAIL_ID),
-                    offsetToMon);
 
             m_growthBonusIcon[count]->setIconFrame(creature + 2);
             m_growthBonusIcon[count]->setHelpText(helpText.c_str(),

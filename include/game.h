@@ -1384,11 +1384,8 @@ private:
 
 public:
     int loadGame(const char* filename, int isOrigData, int isQuickLoad);
-    unsigned char saveGame(const char* filename,
-                           unsigned char determineSuffix,
-                           unsigned char campaignWinMode,
-                           unsigned char compressIt,
-                           unsigned char xferFile);
+    bool saveGame(const char* filename, bool determineSuffix,
+                  bool campaignWinMode, bool compressIt, bool xferFile);
 
 private:
     int load(TAbstractFile* infile);  // 0x4bcda0

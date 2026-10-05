@@ -751,15 +751,15 @@ public:
     void fillGarden(EGameResource resource);
     void setGarden(short id, EGameResource resource);
     void setGardenEmpty();
-    int getPyramidSpell() const;
+    ESpellId getPyramidSpell() const;
     bool pyramidIsGuarded() const;
     short getLeanToAmount() const;
     EGameResource getLeanToResource() const;
     void setLeanTo(short id, short amount, int resource);
     unsigned char magicSpringIsFull() const;
     void fillMagicSpring(unsigned char full);
-    void setMagicSpring(short id, unsigned char full);
-    void setPyramid(bool guards, int newSpell);
+    void setMagicSpring(short id, bool full);
+    void setPyramid(bool guards, ESpellId newSpell);
     ScholarAwards getScholarAward() const;
     TPrimarySkill getScholarPrimarySkill() const;
     TSecondarySkill getScholarSecondarySkill() const;
@@ -1685,9 +1685,10 @@ inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
 DC_ADDRESS(0x09c858, 0xc)
 inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
 
-// Original SetMagicSpring, MapCell.h:1040..1043.
+// Original SetMagicSpring, MapCell.h:1040..1043. The native public
+// ?SetMagicSpring@ExtraInfoUnion@@QAAXF_N@Z proves the Boolean flag.
 DC_ADDRESS(0x0bca04, 0x48)
-inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
+inline void ExtraInfoUnion::setMagicSpring(short id, bool full)
 {
     m_magicSpringInfo.m_id = id;
     m_magicSpringInfo.m_full = full;
@@ -1695,8 +1696,10 @@ inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
 
 // DC MapCell.h:1046/1051. do_event_pyramid
 // (0x4a4230) proves the signed spell lane and bit-zero guarded flag.
+// Native get_pyramid_spell/set_pyramid publics both name the SpellID enum;
+// ESpellId is that domain here, unlike the legacy int alias SpellID.
 DC_ADDRESS(0x09c864, 0xa)
-inline int ExtraInfoUnion::getPyramidSpell() const { return m_pyramidInfo.m_spell; }
+inline ESpellId ExtraInfoUnion::getPyramidSpell() const { return ESpellId(m_pyramidInfo.m_spell); }
 
 DC_ADDRESS(0x09c870, 0x6)
 inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_guarded; }
@@ -1704,7 +1707,7 @@ inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_gu
 // E:\gamedcs\MapCell.h:1056
 VA(0x004c2330, 0x27)
 DC_ADDRESS(0x09c878, 0x20)
-inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
+inline void ExtraInfoUnion::setPyramid(bool guards, ESpellId newSpell)
 {
     m_pyramidInfo.m_guarded = guards;
     m_pyramidInfo.m_spell = newSpell;

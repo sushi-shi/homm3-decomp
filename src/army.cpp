@@ -656,21 +656,19 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 // the effect row's flags nibble and draws it with bit 8 as the alpha.
 
 // Retail recycles the spent x parameter twice past the numbox (the
-// count ternary and the effect flags both home in [ebp+8]); count_text
-// is char[12] (the frame is 0x458, and the affinity temp overlays it).
+// count ternary and the effect flags both home in [ebp+8]). DC records
+// text as char[10]; its rounded stack slot also hosts the karma divisor.
+// Treating the allocated twelve bytes as the array extent shifts that spill.
 VA(0x0043e140, 0x8C0)
 DC_ADDRESS(0x0444a8, 0x8a6)
 MAC_ADDRESS(0x049ed4, 0x810)  // anchor-global
 void army::drawToBuffer(int x, int y, int numBoxOnly)
 {
-    // DC records powX/powY, numFrames, iFrameColor, ulx and hex_off as int.
-    // Restoring the latter four local types is Windows byte-flat at 99.18%.
-    // Delaying the step initializer until after facing selection is worse.
-    // Earlier 99.1724% controls: moving offset declarations ahead of step,
-    // naming a facing snapshot, and narrowing powX/powY to the effect scope
-    // are byte-flat. The residual starts with the count-box step/facing
-    // scratch-register assignment, then the karma denominator's spill slot
-    // and effect-coordinate register selection; branch flows remain exact.
+    // DC801/819 and Mac0x4a378/0x4a3e4 select signed offsets without
+    // changing the original offset values. DC796 also increments hex_off
+    // for a double-wide army. Keep these expressions and the canonical
+    // HasArmy/GetArmy calls. The ten-byte text buffer restores the native
+    // divisor spill.
     // DC 0x44d0c and Mac 0x4a570 bypass coordinate assignments outside
     // placement modes 0..3. Removing the invented powX = powY = x fallback
     // raises Windows 99.1724 -> 99.5839%; the whole effect-placement tail,
@@ -797,14 +795,10 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         }
         if (is(creatureDoubleWide)) {
             xoff += 0x2c;
-            step = 2;
+            ++step;
         }
-        if (m_facing == 0)
-            step = -step;
-        // DC army.cpp:808 calls hexcell::HasArmy here; VC6 expands it.
-        // Mac and retail both retain one computed neighbor index for the
-        // army and blocked-cell checks.
-        long neighborIndex = m_gridIndex + step;
+        // DC808 retains HasArmy; share its neighbor with the blocked-cell check.
+        long neighborIndex = m_gridIndex + (m_facing == 0 ? -step : step);
         if ((g_combatManager->m_cells[neighborIndex].hasArmy()
              && !g_combatManager->m_cells[neighborIndex].getArmy()->m_isMoving)
             || (g_combatManager->m_cells[neighborIndex].m_attributes & hexcell::blocked)) {
@@ -813,9 +807,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         } else {
             xoff += m_monFrameInfo.m_extraNumTroopsXOffset;
         }
-        if (m_facing == 0)
-            xoff = -xoff;
-        long numboxX = x + xoff;
+        long numboxX = x + (m_facing == 0 ? -xoff : xoff);
         long numboxY = y + yoff;
         if (g_combatManager->drawObject(
                 g_combatManager->m_combatGridBitmap, numboxX, numboxY)) {
@@ -830,7 +822,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                     static_cast<float>((computeKarma() + 1.0) * 0.1667f),
                     0.8f);
             }
-            char countText[12];
+            char countText[10];
             // The count recycles the spent x parameter (retail homes
             // the ternary's result in [ebp+8]).
             x = m_numTroopsToShowOverride == -1 ? m_numTroops
@@ -1087,8 +1079,7 @@ void army::endWalk()
 VA(0x0043f0b0, 0x206)
 DC_ADDRESS(0x045254, 0x172)
 MAC_ADDRESS(0x04ad94, 0x20c)
-void army::walk(int direction, unsigned char endWalk,
-                unsigned char initialWalk)
+void army::walk(int direction, bool endWalk, bool initialWalk)
 {
     if (initialWalk)
         setupAnimation();
@@ -2123,8 +2114,8 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // Champion's joustBonus with the step count - and re-wire auras and
 // facing at the end.
 
-// DC names/types: save_facing (int), initial_walk (unsigned char),
-// direction and both next_cell locals (const int). Its named calls recover
+// DC names/types: save_facing (int), direction and both next_cell locals
+// (const int). initial_walk forwards boolean state to Walk. Its named calls recover
 // remove_aura, EndWalk, GetObstacle, Is, OffsetToFront and
 // check_obstacle_attacks instead of pasted helper bodies.
 // Removing the five aura pins through removeAura() is byte-flat at 93.3162;
@@ -2139,7 +2130,7 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 VA(0x00441fa0, 0x461)
 DC_ADDRESS(0x0472f4, 0x2f8)
 MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global
-unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
+bool army::walkTo(int destIndex, bool restoreFacing)
 {
     m_side = m_slot = -1;
     if (!findPath(destIndex, getSpeed(), 0, 0))
@@ -2147,7 +2138,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     int saveFacing = m_facing;
     removeAura();
     removeBinding();
-    unsigned char succeeded = 1;
+    bool succeeded = true;
     long stop;
     if (!g_combatManager->m_creaturePlacement) {
         stop = g_searchArray->getPathSteps() - getSpeed();
@@ -2157,7 +2148,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         stop = 0;
     }
     long last = g_searchArray->getPathSteps() - 1;
-    unsigned char initialWalk = 1;
+    bool initialWalk = true;
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
@@ -3776,7 +3767,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
 VA(0x00445950, 0x107)
 DC_ADDRESS(0x04a6a4, 0x108)
 MAC_ADDRESS(0x051968, 0x16c)
-unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
+bool army::simpleMove(int hex, bool restoreFacing)
 {
     m_side = -1;
     m_slot = -1;
@@ -3787,7 +3778,7 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
     g_combatManager->markMovingArmy(this);
-    unsigned char moved;
+    bool moved;
     if (is(creatureFlyingArmy)) {
         m_pathTarget = hex;
         moved = validFlight(hex, 0);
@@ -3818,7 +3809,7 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
 VA(0x00445a60, 0x26D)
 DC_ADDRESS(0x04a7ac, 0x10a)
 MAC_ADDRESS(0x051ad4, 0x1b4)
-unsigned char army::attackHex(int hex, unsigned char restoreFacing)
+bool army::attackHex(int hex, bool restoreFacing)
 {
     m_side = -1;
     m_slot = -1;
@@ -3838,7 +3829,7 @@ unsigned char army::attackHex(int hex, unsigned char restoreFacing)
     } else {
         int direction = getAttackDirection(target);
         if (direction >= 0) {
-            unsigned char turned;
+            bool turned;
             if (needToTurn(direction)) {
                 setupAnimation();
                 turn(1);
@@ -3931,7 +3922,7 @@ static TWallTargetId chooseWallTarget(TWallTargetId wall,
 VA(0x00445d10, 0x14)
 DC_ADDRESS(0x04a8b8, 0x10)
 MAC_ADDRESS(0x051c88, 0x20)
-unsigned char army::moveTo(int hex, unsigned char restoreFacing)
+bool army::moveTo(int hex, bool restoreFacing)
 {
     return simpleMove(hex, restoreFacing);
 }
@@ -4332,15 +4323,13 @@ int army::otherArmyAdjacent(int group, int index)
     return isAdjacent(g_combatManager->m_armies[group][index]);
 }
 
-// Residual (91.7125%): control flow is exact. Candidate CL hoists the literal
-// 1 into EBX, costing a push/pop and replacing retail's immediate tests,
-// stores, and final animation argument with BL. Literal facing values and
-// hexcell::field_1a signedness are byte-flat; the remaining difference is the
-// register-homing family, not a reason to flatten either Is boundary.
+// Original Turn@@QAAX_N proves the animation flag is bool; the retained
+// Windows body and callers use the same zero/one domain. Keep the two Is
+// helpers and the shared final animation after either facing arm.
 VA(0x00446720, 0x107)
 DC_ADDRESS(0x04b454, 0x104)
 MAC_ADDRESS(0x052938, 0x174)  // anchor-global
-void army::turn(unsigned char animateTurn)
+void army::turn(bool animateTurn)
 {
     if (m_facing == FACING_ATTACKER) {
         if (animateTurn)
