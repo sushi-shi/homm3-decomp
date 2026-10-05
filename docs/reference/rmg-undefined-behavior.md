@@ -410,7 +410,7 @@ entry validation bounds what they are built from.
 
 | Operation | Prerequisite | Under `HOMM3_RMG_HOTFIX` |
 | --- | --- | --- |
-| `TRandomMapRequest::generateToFile`, map construction and lookup | Supported dimensions and levels, bounded player counts and enum values. Retail only clamps monster strength (after an overflowable `+ 3`) and repairs totals below two. | Request check. Team counts are clamped by `writeMapHeader`, so the lobby's out-of-range values stay accepted. |
+| `TRandomMapRequest::generateToFile`, map construction and lookup | Supported dimensions and levels, bounded player counts and enum values. Retail only clamps monster strength (after an overflowable `+ 3`) and repairs totals below two. | Request check. Team counts within 0-8 may exceed player counts; `writeMapHeader` clamps them to the players written. |
 | `getSerializedMapVersion` | Version 0–2; another value falls off the nonvoid helper. | Request check. |
 | `getMapItem`, terrain cache, line and terrain painting | Coordinates in the map; `paintTransitions` needs at least two rows and columns. | Request check (dimensions ≥ 36); coordinates are internal. |
 | `loadTemplates` | The short-row guard compares with the maximum-size column itself, so a row ending at the minimum size reads past it. | Existing short-row fix; template check. |
