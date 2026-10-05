@@ -514,9 +514,8 @@ enum EFountainLuck {
     FOUNTAIN_LUCK_PLUS_3 = 3
 };
 
-// The Tree of Knowledge's price selector, enumerator NAMES the
-// The tree-price selector enum WiseTreePrices lives in advmgr.h (the
-// one copy). DoEventTreeOfKnowledge (0x4a6710) switches over it with the
+// The tree-price selector enum WiseTreePrices lives with WiseTreeInfo in
+// mapcell.h. DoEventTreeOfKnowledge (0x4a6710) switches over it with the
 // decrement chain and sends anything else straight to the experience
 // award, which is why the count enumerator has no arm of its own.
 

@@ -4223,10 +4223,9 @@ DC_ADDRESS(0x0abe30, 0x5e)
 MAC_ADDRESS(0x0d6844, 0x60)
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffffffe0) | (id & 0x1f);
+    cell->m_treeInfo.m_id = id;
     cell->clearVisitedBits();
-    int price = random(0, 2);
-    cell->m_extraInfo = (cell->m_extraInfo & 0xffff1fff) | ((price & 7) << 13);
+    cell->m_treeInfo.m_price = WiseTreePrices(random(0, 2));
 }
 
 // E:\gamedcs\game.cpp:4691.
@@ -5973,16 +5972,16 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     }
 
     infile->read(&m_hasRandomHero, sizeof(m_hasRandomHero));
-    m_nonRandomHeroId = readHeroId(infile, mapVersion);
+    m_nonRandomHeroId = static_cast<HeroId>(readHeroId(infile, mapVersion));
     m_defaultPlaceholders = 0;
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
-            readHeroId(infile, mapVersion);
+            static_cast<HeroId>(readHeroId(infile, mapVersion));
         // Keep the decoded name alive through the copy into the player slot.
         std::string name = readLengthPrefixedString(infile);
         strcpy(m_nonRandomHeroCustomName, name.c_str());
     } else {
-        m_nonRandomHeroCustomPortrait = -1;
+        m_nonRandomHeroCustomPortrait = heroIdNone;
         m_nonRandomHeroCustomName[0] = 0;
     }
 
@@ -6221,10 +6220,10 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
             do {
                 int heroKey = readValue<unsigned char>(infile);
 
-                unsigned char savedHeroId = readValue<unsigned char>(infile);
-                int heroId = savedHeroId;
-                if (savedHeroId == g_savedHeroNone)
-                    heroId = -1;
+                // The admitted format is now SoD. Mac db424..db44c
+                // expands readHeroId's modern byte/sentinel operation;
+                // the constant argument is inferred from this admission.
+                int portrait = readHeroId(infile, MAP_FORMAT_SHADOW_OF_DEATH);
 
                 std::string heroName = readLengthPrefixedString(infile);
                 std::bitset<8> availability = readPackedBits<8>(infile);
@@ -6232,7 +6231,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 m_heroPlayerSetups.insert(
                     std::pair<const int, type_map_hero_info>(
                         heroKey,
-                        type_map_hero_info(heroId, heroName, availability)));
+                        type_map_hero_info(portrait, heroName, availability)));
             } while (--count != 0);
         }
     }
@@ -6568,15 +6567,15 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         }
 
         player->m_nonRandomHeroId =
-            loadHeroId(infile, saveVersion);
+            static_cast<HeroId>(loadHeroId(infile, saveVersion));
         if (player->m_nonRandomHeroId != -1) {
             std::string strTemp;
             player->m_nonRandomHeroCustomPortrait =
-                loadHeroId(infile, saveVersion);
+                static_cast<HeroId>(loadHeroId(infile, saveVersion));
             game::loadString(infile, strTemp);
             strcpy(player->m_nonRandomHeroCustomName, strTemp.c_str());
         } else {
-            player->m_nonRandomHeroCustomPortrait = -1;
+            player->m_nonRandomHeroCustomPortrait = heroIdNone;
             player->m_nonRandomHeroCustomName[0] = 0;
         }
     }

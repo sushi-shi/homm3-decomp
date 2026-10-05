@@ -632,17 +632,24 @@ public:
 };
 SIZE(MapArtifactInfo, 4);
 
-// DoEventTreeOfKnowledge (0x4a6710) shares the corpse's five-bit id lane -
-// it reads it through the same GetItemId, as the Dreamcast line table
-// says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
-// bits 13..15 (`shl eax,0x10 / sar eax,0x1d`).
-struct type_tree_info {
-public:
-    unsigned long m_unused : 13;
-    signed long m_price : 3;
-    unsigned long m_tail : 16;
+// Original DC WiseTreePrices enum and WiseTreeInfo (LF_STRUCTURE 0x2f94).
+// The id and visit fields occupy bits 0..4 and 5..12; RandomizeWiseTree
+// writes them before the signed three-bit price at 13..15 (DC 4682..4684,
+// Mac d685c..d688c). DoEventTreeOfKnowledge reads the same id through
+// GetItemId and sign-extends the price in retail at 0x4a6710.
+enum WiseTreePrices {
+    const_tree_wants_nothing = 0,
+    const_tree_wants_gold,
+    const_tree_wants_gems,
+    const_tree_price_count
 };
-SIZE(type_tree_info, 4);
+
+struct WiseTreeInfo {
+    unsigned int m_id : 5;
+    unsigned int m_visitedBits : 8;
+    WiseTreePrices m_price : 3;
+};
+SIZE(WiseTreeInfo, 4);
 
 // DC type 0x2d41: unused:5, visited_bits:8, index:12, empty:1,
 // all unsigned int. RandomizeEvents 5121..5123 clears visits, writes the
@@ -717,7 +724,7 @@ public:
         type_pyramid_info m_pyramidInfo;
         WagonInfo m_wagonInfo;
         type_skeleton_info m_skeletonInfo;
-        type_tree_info m_treeInfo;
+        WiseTreeInfo m_treeInfo;
         ShrineInfo m_shrineInfo;
         type_creature_bank_info m_creatureBankInfo;
         CustomResourceInfo m_customResourceInfo;
@@ -775,7 +782,7 @@ public:
     void setSkeleton(int id, bool hasTreasure, short artifact);
     int getSeaChestReward() const;
     TArtifact getSeaChestArtifact() const;
-    int getTreePrice() const;
+    WiseTreePrices getTreePrice() const;
     type_university* getUniversity() const;
     void emptyWagon();
     short getWagonAmount() const;
@@ -1812,11 +1819,13 @@ inline short ExtraInfoUnion::getTreasureSize() const { return m_treasureInfo.m_g
 DC_ADDRESS(0x09c948, 0x8)
 inline bool ExtraInfoUnion::treasureIsArtifact() const { return m_treasureInfo.m_hasArtifact; }
 
-// `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
-// the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
-// and spelled `int` until WiseTreePrices (advmgr.h) is visible here.
+// Original public ?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ
+// fixes the enum result used by the event and AI consumers.
 DC_ADDRESS(0x01faa8, 0x12)
-inline int ExtraInfoUnion::getTreePrice() const { return m_treeInfo.m_price; }
+inline WiseTreePrices ExtraInfoUnion::getTreePrice() const
+{
+    return WiseTreePrices(m_treeInfo.m_price);
+}
 
 DC_ADDRESS(0x09c950, 0xc)
 inline void ExtraInfoUnion::emptyWagon() { m_wagonInfo.m_full = 0; }
