@@ -153,8 +153,9 @@ impl<'a> Record<'a> {
         }
     }
     fn allows(&self, column: usize, request: &Request) -> Result<bool, TemplateError> {
-        let humans = i32::from(request.human_players().get());
-        let total = humans + i32::from(request.computer_players().get());
+        let parameters = request.constructor_parameters();
+        let humans = i32::from(parameters.human_players.get());
+        let total = humans + i32::from(parameters.computer_players.get());
         Ok(humans >= self.number(column)?
             && humans <= self.number(column + 1)?
             && total >= self.number(column + 2)?
@@ -611,8 +612,9 @@ pub(super) fn prepare<'a>(
     rules: Ruleset,
 ) -> Result<Vec<TemplateCandidate<'a>>, TemplateError> {
     let (columns, _) = settings(source, rules)?;
+    let parameters = request.constructor_parameters();
     let dimension = request.size().dimension();
-    let mut size = dimension * dimension * request.levels().count() / 1280;
+    let mut size = dimension * dimension * parameters.levels.count() / 1280;
     if water == Water::Islands {
         size = (size / 2).max(1);
     }
@@ -675,9 +677,11 @@ pub(super) fn prepare<'a>(
                     }
                 }
             }
-            if humans >= usize::from(request.human_players().get())
+            if humans >= usize::from(parameters.human_players.get())
                 && players
-                    >= usize::from(request.human_players().get() + request.computer_players().get())
+                    >= usize::from(
+                        parameters.human_players.get() + parameters.computer_players.get(),
+                    )
             {
                 if let Some(fault) = fault {
                     result.push(TemplateCandidate::NativeFault {
@@ -750,6 +754,51 @@ mod tests {
             .unwrap()
             .prepare_for(&request(), Water::None, Ruleset::HotA181)
             .unwrap()
+    }
+
+    #[test]
+    fn mirror_admission_uses_constructor_counts_and_planes() {
+        use crate::{behavior::RetailProfile, request::RequestOptions};
+
+        for (water, area) in [(Water::None, 9), (Water::Islands, 4)] {
+            let mut first = row("mirror", 1, 1);
+            for column in [16, 17] {
+                first[column] = area.to_string();
+            }
+            // One human slot, with row and connection gates admitting one player.
+            for column in [35, 37, 137, 139] {
+                first[column] = "1".into();
+            }
+            first[127] = "1".into();
+            first[128] = "-1".into();
+            let bytes = sheet(&[first]);
+            let source = TemplateSource::parse(&bytes).unwrap();
+            for levels in [Levels::Surface, Levels::Underground] {
+                for mirror in [false, true] {
+                    let request = Request::parse_with_options(
+                        default_record(MapSize::Large, levels),
+                        Behavior::Retail(RetailProfile::default()),
+                        RequestOptions {
+                            ruleset: Ruleset::HotA181,
+                            mirror,
+                            ..RequestOptions::default()
+                        },
+                    )
+                    .unwrap();
+                    let candidates = source.prepare(&request, water).unwrap();
+                    assert_eq!(candidates.len(), usize::from(mirror));
+                    if mirror {
+                        let TemplateCandidate::Ready(template) = &candidates[0] else {
+                            panic!("valid mirror candidate")
+                        };
+                        assert_eq!(template.ruleset(), Ruleset::HotA181);
+                        assert_eq!(template.zones().len(), 1);
+                        assert_eq!(template.zones()[0].connections().len(), 1);
+                        assert_eq!(template.zones()[0].connections()[0].destination(), None);
+                    }
+                }
+            }
+        }
     }
 
     #[test]

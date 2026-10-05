@@ -507,7 +507,7 @@ impl<'a> TemplateSource<'a> {
         ruleset: Ruleset,
     ) -> Result<Vec<TemplateCandidate<'a>>, TemplateError> {
         match ruleset {
-            Ruleset::Complete => self.prepare(request, water),
+            Ruleset::Complete => self.prepare_complete(request, water),
             Ruleset::HotA181 => pack::prepare(self, request, water, ruleset),
         }
     }
@@ -564,12 +564,20 @@ impl<'a> TemplateSource<'a> {
         Ok(())
     }
 
-    /// Apply the original size, player, version and behavior filters in order.
+    /// Apply the request's versioned size, player and format filters in order.
     ///
     /// # Errors
     /// Reports overflowing input numbers or a retail fault while reading rows.
     /// Faults that require selecting a candidate are deferred in the result.
     pub fn prepare(
+        &self,
+        request: &Request,
+        water: Water,
+    ) -> Result<Vec<TemplateCandidate<'a>>, TemplateError> {
+        self.prepare_for(request, water, request.ruleset())
+    }
+
+    fn prepare_complete(
         &self,
         request: &Request,
         water: Water,

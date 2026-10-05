@@ -1,8 +1,8 @@
 //! Checks against installed packs; no copyrighted template bytes are committed.
 
 use homm3_rmg::{
-    behavior::Behavior,
-    request::{default_record, Levels, MapSize, Request, Water},
+    behavior::{Behavior, RetailProfile},
+    request::{default_record, Levels, MapSize, Request, RequestOptions, Water},
     rules::Ruleset,
     template::{ConnectionKind, TemplateCandidate, TemplateFormat, TemplateSource, ZoneRole},
 };
@@ -38,13 +38,28 @@ fn installed_packs_normalize_all_zone_and_connection_records() {
             MapSize::Medium,
             MapSize::Large,
             MapSize::ExtraLarge,
+            MapSize::Huge,
+            MapSize::ExtraHuge,
+            MapSize::Giant,
         ] {
             for levels in [Levels::Surface, Levels::Underground] {
                 for (humans, computers) in [(2, 0), (1, 3), (2, 4), (8, 0)] {
-                    let request = request(size, levels, humans, computers);
+                    let mut record = default_record(size, levels);
+                    record.m_humanPlayerCount = humans;
+                    record.m_computerPlayerCount = computers;
+                    let request = Request::parse_with_options(
+                        record,
+                        Behavior::Retail(RetailProfile::default()),
+                        RequestOptions {
+                            ruleset: Ruleset::HotA181,
+                            mirror: settings.mirror,
+                            ..RequestOptions::default()
+                        },
+                    )
+                    .unwrap();
                     for water in [Water::None, Water::Normal, Water::Islands] {
                         for template in source
-                            .prepare_for(&request, water, Ruleset::HotA181)
+                            .prepare(&request, water)
                             .unwrap_or_else(|e| panic!("{}: {e}", path.display()))
                         {
                             let TemplateCandidate::Ready(template) = template else {

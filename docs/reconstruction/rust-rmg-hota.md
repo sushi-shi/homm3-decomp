@@ -117,12 +117,12 @@ Verification of this checkpoint:
   Corpus manifest SHA-256:
   `f9141c88440c0dcbfe45d015ea49acb30fb8bdad553f955217e3556e2546da14`.
 
-This is input/model support, not completed HotA generation. Layout explicitly
-rejects HotA rules until its algorithms are integrated. Requests and generation
-catalogs still have Complete domains; extended resources, algorithms, output and
-HD/mirror execution remain outstanding. In particular, parsing a mirror pack
-does not establish mirror generation, and the reference sample is not exhaustive
-Complete compatibility coverage.
+This first checkpoint established input/model support, not completed HotA
+generation. Layout explicitly rejects HotA rules until its algorithms are
+integrated. Subsequent checkpoints below expand requests and catalogs; generation
+algorithms, output and HD/mirror execution remain outstanding. Parsing a mirror
+pack does not establish mirror generation, and the reference sample is not
+exhaustive Complete compatibility coverage.
 
 The next checkpoint adds the allocation-free `homm3_resource::hdat` reader and
 installed `treasure::ObjectRecipes` loading. The container layout was checked
@@ -258,3 +258,42 @@ object-rule pruning and transferred through the complete versioned pipeline;
 current Complete generation creates its pool at the payload stage because no
 earlier Complete operation mutates those exclusions. HotA group placement,
 quest destinations, setup/output consumption and full native parity remain work.
+
+Requests now carry explicit generation rules, resolved mirror mode and eight
+starting-hero choices outside the original lobby record. Complete's existing
+parser and hotfix policy retain their original domains. HotA accepts all twelve
+factions and 180/216/252 dimensions in addition to the original four sizes. The
+extended dimensions come from the pinned DLL UI hook at RVA `0x181da0`, with
+size writes at `0x181eab`, `0x181efc` and `0x181f4d`. Constructor water coercion
+follows RVA `0x1b8f30`: values outside 0..2 become none without a random draw,
+while the caller's raw water value remains unchanged.
+
+Mirror request preparation follows HW's HD `0x54c494` entry hook and HW_HOTA RVA
+`0x19220` constructor splice. It skips the entry minimum-player repair and exposes
+separate constructor counts (halved, with at least one human slot) and one
+generated plane. The original/post-entry counts remain available for HotA's outer
+hero/prison setup. Generation-entry faction compaction follows HW RVA `0x191c0`,
+keeps unused slots and reports an out-of-bounds colour-pair read when the native
+zero-human/eight-computer case reaches source slot 8. It does not silently clamp
+or repair that case. All eight starting-hero choices survive mirror preparation.
+
+Template preparation now defaults to the request's ruleset. HotA's area, zone and
+connection admission use constructor-local counts and planes. The explicit
+`prepare_for` override remains available for independent template analysis.
+Complete pipeline admission checks the request as well as its catalogs, so a
+HotA request cannot silently run the unfinished stages under Complete rules.
+
+This remains preparation support: starting heroes still need wiring into the
+full HotA setup path, and mirror monolith state, placement, duplication and output
+are not implemented by these request transformations. Native constructor captures
+and end-to-end HotA comparisons remain required.
+
+Verification of request integration: all 122 library tests and library Clippy pass.
+Both installed-pack checks pass; the expanded seven-size, two-level, four-player-
+configuration, three-water-mode matrix prepares 2,399 candidates across 34 packs
+(eight mirror packs), with no deferred faults. An installed-asset regression
+confirms that a HotA request is rejected before RNG draws when given the current
+Complete pipeline. The 14-request Complete reference sample again yields 14 exact
+hotfix matches, seven exact retail matches and seven pre-existing typed coast
+faults, with no unexpected differences. Runner SHA-256:
+`237aa756753aa5e2521af295965c63162ad5a811df6f59d79dac9cb39e98799c`.
