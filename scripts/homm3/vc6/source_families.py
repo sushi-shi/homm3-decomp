@@ -37,7 +37,7 @@ from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 10
+VERSION = 11
 
 
 @dataclass(frozen=True)
@@ -230,8 +230,32 @@ def expected_control_scores(report, scored):
     with ledger CUR would reject a valid post-adoption fast-build state.
     """
     current = status.fn_fuzzy(report)
-    return {"|".join(key): round(current.get(key, 0.0), 4)
-            for key in scored}
+    missing = set(scored) - current.keys()
+    if missing:
+        raise ValueError(f"current report is missing scored functions: {sorted(missing)}")
+    return {"|".join(key): round(current[key], 4) for key in scored}
+
+
+def search_score_inputs(report, previous, rvas, units):
+    """Score current labels, carrying historical checkpoints by retail identity.
+
+    A fast build can rename or add functions before the ledger is banked.
+    Using ledger labels as the roster would silently score their absence as 0.
+    """
+    scored = tuple(sorted(key for key in status.fn_fuzzy(report) if key[0] in units))
+    missing = set(units) - {key[0] for key in scored}
+    if missing:
+        raise ValueError(f"current report has no functions for {sorted(missing)}; run a targeted build")
+    by_rva = {}
+    for key, row in previous.items():
+        if row.rva is not None:
+            by_rva.setdefault(row.rva, []).append((key, row))
+    renamed = {}
+    for key in scored:
+        _old_key, row = status._previous_row(key, rvas.get(key), previous, by_rva)
+        if row is not None:
+            renamed[key] = row
+    return scored, renamed
 
 
 def rank(row):
@@ -411,15 +435,17 @@ def main(argv=None):
     snapshot = output / "snapshot"
     if not snapshot.exists():
         create_snapshot(root, snapshot)
-    rows = status.load_baseline()
+    report = status.load_report()
+    scored, rows = search_score_inputs(
+        report, status.load_baseline(), status.function_rvas(), units)
     plans = []
     for unit, source in zip(units, sources):
         target = scoring.normalize.OBJDIFF / "target" / f"{unit}.c.obj"
-        scored = tuple(sorted(key for key in rows if key[0] == unit))
-        if not scored or not target.is_file():
-            raise ValueError(f"{unit}: run the full build before searching")
+        unit_scored = tuple(key for key in scored if key[0] == unit)
+        if not target.is_file():
+            raise ValueError(f"{unit}: run a targeted build before searching")
         plans.append(scoring.UnitPlan(unit, source, source.read_text(), digest(source.read_bytes()), (),
-            scored, scored, scoring._first_pass(unit, target.read_bytes()), context, output / unit, ()))
+            unit_scored, unit_scored, scoring._first_pass(unit, target.read_bytes()), context, output / unit, ()))
     checkpoint_path = output / "checkpoint.json"
     checkpoint = json.loads(checkpoint_path.read_text()) if checkpoint_path.exists() else {"generation": 0, "seen": [], "elites": [], "records": []}
     print(f"[source-families] output {output}", flush=True)
@@ -427,8 +453,7 @@ def main(argv=None):
     if render(originals, axes, zero) != originals:
         raise ValueError("the first option on every axis must preserve the original source")
     control = evaluate(snapshot, output, plans, originals, axes, zero, previous=rows)
-    scored = tuple(key for key in rows if key[0] in units)
-    expected = expected_control_scores(status.load_report(), scored)
+    expected = expected_control_scores(report, scored)
     if control["scores"] != expected:
         raise RuntimeError(f"unchanged-source control failed: {control.get('error', 'scores differ from current build')}")
     corner = tuple(len(axis.options) - 1 for axis in axes)

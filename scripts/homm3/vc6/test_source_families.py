@@ -11,7 +11,7 @@ from unittest.mock import patch
 from homm3.vc6.source_families import (
     Axis, Option, create_snapshot, identity_symbol, load_manifest, next_population, render,
     format_max_summary, max_summary, projected_max_scores, rank, select_elites,
-    candidate_environment, code_identity, expected_control_scores,
+    candidate_environment, code_identity, expected_control_scores, search_score_inputs,
 )
 
 
@@ -228,6 +228,42 @@ class SourceFamiliesTests(unittest.TestCase):
         self.assertEqual(
             expected_control_scores(report, (("u", "f"), ("u", "sibling"))),
             {"u|f": 82.4518, "u|sibling": 100.0})
+
+    def test_unchanged_control_rejects_missing_labels_instead_of_accepting_zero(self):
+        with self.assertRaisesRegex(ValueError, "missing scored functions"):
+            expected_control_scores({"units": []}, (("u", "old_name"),))
+
+    def test_search_scores_new_labels_and_preserves_renamed_checkpoint_by_rva(self):
+        from homm3.match.status import MatchRow
+
+        old = MatchRow(92, 95, 100, 123, "old")
+        previous = {("u", "old_name"): old,
+                    ("u", "removed"): MatchRow(100, 100, 100, 456, "removed")}
+        report = {"units": [{"name": "u", "functions": [
+            {"name": "new_name", "fuzzy_match_percent": 94},
+            {"name": "added", "fuzzy_match_percent": 100},
+        ]}, {"name": "other", "functions": [{"name": "irrelevant"}]}]}
+        scored, renamed = search_score_inputs(
+            report, previous, {("u", "new_name"): 123, ("u", "added"): 789}, {"u"})
+        self.assertEqual(scored, (("u", "added"), ("u", "new_name")))
+        self.assertEqual(renamed, {("u", "new_name"): old})
+        row = {"scores": expected_control_scores(report, scored)}
+        self.assertEqual(projected_max_scores(row, renamed, {("u", "new_name"): "old"}),
+                         {"u|added": 100, "u|new_name": 95})
+        self.assertEqual(projected_max_scores(row, renamed, {("u", "new_name"): "new"}),
+                         {"u|added": 100, "u|new_name": 94})
+        self.assertEqual(previous[("u", "old_name")], old)
+
+    def test_search_rejects_missing_units_and_does_not_reuse_a_labels_other_identity(self):
+        from homm3.match.status import MatchRow
+
+        report = {"units": [{"name": "u", "functions": [{"name": "f"}]}]}
+        with self.assertRaisesRegex(ValueError, "no functions"):
+            search_score_inputs(report, {}, {}, {"u", "missing"})
+        _scored, rows = search_score_inputs(
+            report, {("u", "f"): MatchRow(100, 100, 100, 1, "old")},
+            {("u", "f"): 2}, {"u"})
+        self.assertEqual(rows, {})
 
     def test_specialist_ranking_uses_projected_max(self):
         records = [
