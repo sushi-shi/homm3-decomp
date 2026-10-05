@@ -1185,12 +1185,12 @@ void playerData::init()
     m_numTowns = 0;
     m_deathCountDown = -1;
     m_extraPuzzlePieces = 0;
-    m_recruits[0] = -1;
-    m_recruits[1] = -1;
+    m_recruits[0] = heroIdNone;
+    m_recruits[1] = heroIdNone;
     m_personality = 0;
     memset(&m_ai, 0, sizeof(m_ai));
     int heroIndex;
-    MEMSET(m_heroes, -1, sizeof(m_heroes), heroIndex);
+    MEMSET(m_heroes, heroIdNone, sizeof(m_heroes), heroIndex);
     memset(m_townIds, 0xff, sizeof(m_townIds));
     m_isLocal = 0;
     m_isHuman = 0;
@@ -1248,7 +1248,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     for (i = found; i < m_numHeroes - 1; ++i)
         m_heroes[i] = m_heroes[i + 1];
-    m_heroes[m_numHeroes - 1] = -1;
+    m_heroes[m_numHeroes - 1] = heroIdNone;
 
     if (m_currHeroId == ourHero->m_id) {
         m_currHeroId = -1;
@@ -1370,11 +1370,11 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 
     int i;
     for (i = 0; i < 8; i++) {
-        m_heroes[i] = loadHeroId(infile, saveVersion);
+        m_heroes[i] = static_cast<HeroId>(loadHeroId(infile, saveVersion));
     }
 
     for (i = 0; i < 2; i++) {
-        m_recruits[i] = loadHeroId(infile, saveVersion);
+        m_recruits[i] = static_cast<HeroId>(loadHeroId(infile, saveVersion));
     }
 
     unsigned char flag;
@@ -7500,27 +7500,28 @@ void game::perDay()
 // THeroID hero_id and the selected hero pointer old_hero.
 DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
-void game::clearRecruits(int* recruits)
+void game::clearRecruits(HeroId* recruits)
 {
     for (long recruit = 0; recruit < 2; ++recruit) {
-        HeroId heroId = HeroId(recruits[recruit]);
+        HeroId heroId = recruits[recruit];
         if (heroId >= 0) {
             hero* oldHero = getHero(heroId);
             if (oldHero->m_flags & g_heroRecruitReservedFlag)
                 continue;
             m_heroAvailability[heroId] = -1;
-            recruits[recruit] = -1;
+            recruits[recruit] = heroIdNone;
         }
     }
 }
 
-// Original: get_new_hero; game.cpp:8290
+// Original: static THeroID get_new_hero; game.cpp:8290. Its result and
+// hero_id loop local retain the native hero-ID domain.
 DC_ADDRESS(0x0b3e00, 0x5e)
 MAC_ADDRESS(0x0def98, 0x114)
-int getNewHero(THeroClass heroClass)
+static HeroId getNewHero(THeroClass heroClass)
 {
-    int heroId = 0;
-    for (; heroId < game::HERO_COUNT; ++heroId) {
+    HeroId heroId = HeroId(0);
+    for (; heroId < game::HERO_COUNT; heroId = HeroId(heroId + 1)) {
         if (g_game->getHero(heroId)->m_heroClass == heroClass
             && g_game->m_heroAvailability[heroId] == -1)
             return heroId;
@@ -7542,7 +7543,7 @@ void game::setWeeklyRecruits(int playerPos)
 {
     playerData* player = &m_players[playerPos];
     type_artifact artifact(ARTIFACT_NONE);
-    int recruitSlot;
+    long recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
         if (player->m_recruits[recruitSlot] >= 0)
@@ -7556,7 +7557,7 @@ void game::setWeeklyRecruits(int playerPos)
             otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
         }
 
-        int heroId;
+        HeroId heroId;
         if (m_isTutorial
             && static_cast<unsigned short>(m_week) <= 2) {
             if (m_week == 1) {
@@ -7577,7 +7578,7 @@ void game::setWeeklyRecruits(int playerPos)
 
         m_heroAvailability[heroId] = 64;
         hero* newHero = getHero(heroId);
-        int backpackSlot = HERO_BACKPACK_CAPACITY - 1;
+        long backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
@@ -7601,7 +7602,7 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
         otherClass = THeroClass(getHero(player->m_recruits[1 - recruitSlot])->m_heroClass);
     }
 
-    int heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
+    HeroId heroId = getNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
     player->m_recruits[recruitSlot] = heroId;
     if (heroId != -1) {
         m_heroAvailability[heroId] = 64;

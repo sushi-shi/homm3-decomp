@@ -880,13 +880,13 @@ public:
     // +0x08. Extent from the DC repack (DC heroes 4..36 == 32 B) and
     // then PROVEN from retail: playerData::Init (0x4b9e20) fills it
     // with `lea edi,[this+8] / mov ecx,8 / rep stosd` of -1.
-    int m_heroes[8];
+    // Original heroes/recruits use THeroID (DC playerData 0x1c50).
+    HeroId m_heroes[8];
     // +0x28, the two heroes the player's taverns are currently
     // offering. DC type 0x35C7 is 8 bytes; retail reads them as DWORDS
     // - hero::hire (0x4d7890) scans `[player + 0x28 + 4*i]` for the
-    // hero's own id with a stride of 4 - so the row is two ints, not
-    // eight bytes.
-    int m_recruits[2];
+    // hero's own id with a stride of 4: two four-byte HeroId values.
+    HeroId m_recruits[2];
     unsigned char m_startingNumHeroes;  // +0x30
     int m_personality;  // +0x34
 #pragma pack(push, 1)
@@ -1430,7 +1430,7 @@ private:
     // Original DC clear_recruits and set_weekly_recruits carry private
     // AAAX mangling. The Complete helpers are called only by game methods.
     void setWeeklyRecruits(int playerPos);
-    void clearRecruits(int* recruits);
+    void clearRecruits(HeroId* recruits);
 
 public:
     void randomizeHeroPool();

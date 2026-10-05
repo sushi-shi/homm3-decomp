@@ -823,7 +823,7 @@ void town::swapHeroes()
     for (int i = rosterIndex; i < g_currentPlayer->m_numHeroes - 1; ++i)
         g_currentPlayer->m_heroes[i] = g_currentPlayer->m_heroes[i + 1];
     --g_currentPlayer->m_numHeroes;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = -1;
+    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = heroIdNone;
 
     if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
         g_currentPlayer->m_currHeroId = -1;
