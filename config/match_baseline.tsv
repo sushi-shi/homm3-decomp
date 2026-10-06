@@ -732,7 +732,7 @@ border	?onSetFocus@widget@@UAEXXZ	100.0000	100.0000	100.0000	0x4df0	tokens1:b063
 border	?setImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0	tokens1:d43cb37341b2
 border	?setPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	0x50520	tokens1:e3c6cbb4fc12
 border	?zBufferDraw@bitmapBorder@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0	tokens1:7b25b80f92b7
-bottomviewsubwindow	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	99.9167	100.0000	100.0000	0x53970	-
+bottomviewsubwindow	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	100.0000	100.0000	100.0000	0x53970	-
 bottomviewsubwindow	??0?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAE@XZ	100.0000	100.0000	100.0000	0x53f50	-
 bottomviewsubwindow	??0?$fpos@H@std@@QAE@J@Z	100.0000	100.0000	100.0000	0x54390	-
 bottomviewsubwindow	??0?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@QAE@I@Z	100.0000	100.0000	100.0000	0x546e0	-
