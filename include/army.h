@@ -541,7 +541,7 @@ public:
     // They stay source-visible in every TU; replacing them with padding in
     // selected consumers changed the class declaration stream seen by C1.
     int m_numSpellInfluences;       // +0x194
-    int m_spellInfluence[81];          // +0x198 .. +0x2db
+    int m_spellInfluence[NUM_SPELLS_AND_CREATURE_EFFECTS];          // +0x198 .. +0x2db
     // THE SECOND ROW, and it is the one the spellInfluence note above
     // already predicted: "DC's own spellInfluence[80] at 388 with
     // spell_level[80] straight after it at 708". Retail's pair is
@@ -585,7 +585,7 @@ public:
     // codegen; only the mangled COMDAT name differs, and those are
     // unclaimed rows whose reloc names are cosmetic anyway.
     typedef std::deque<int> TSpellQueue;
-    int m_spellLevel[81];          // +0x2dc .. +0x41f
+    int m_spellLevel[NUM_SPELLS_AND_CREATURE_EFFECTS];          // +0x2dc .. +0x41f
     TSpellQueue m_spellInfluenceQueue;  // +0x420 .. +0x44f
     float m_paletteEffect;          // +0x450 (DC army@1068)
     // Retaliations left this round: simulate_attack (0x4359b0) only

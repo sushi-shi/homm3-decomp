@@ -1338,7 +1338,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     case SPELL_DISPEL:
         if (target) {
             spellEffect(traits->m_effect, target, 100, 0);
-            for (int dispelledSpell = 0; dispelledSpell < 81;
+            for (int dispelledSpell = 0; dispelledSpell < NUM_SPELLS_AND_CREATURE_EFFECTS;
                  ++dispelledSpell) {
                 if (dispelledSpell != SPELL_POISON)
                     target->cancelIndividualSpell(dispelledSpell);
@@ -1355,7 +1355,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                              &thisArmy, 1,
                                              isMonsterSpell)) {
                         for (int dispelledSpell = 0;
-                             dispelledSpell < 81; ++dispelledSpell) {
+                             dispelledSpell < NUM_SPELLS_AND_CREATURE_EFFECTS; ++dispelledSpell) {
                             if (dispelledSpell != SPELL_POISON)
                                 thisArmy.cancelIndividualSpell(
                                     dispelledSpell);
@@ -4848,7 +4848,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         if (mastery < eMasteryAdvanced && target->getOwningSide() != side)
             return 0.0f;
         if (mastery < eMasteryExpert) {
-            for (int i = 10; i < 81; i++) {
+            for (int i = 10; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
                 if (target->getSpellTime(i))
                     return 1.0f;
             }
@@ -4860,7 +4860,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         if (targetHero
             && targetHero->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
-        for (int i = 10; i < 81; i++) {
+        for (int i = 10; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
             if (target->getSpellTime(i) && g_spellTraits[i].m_karma > 0)
                 return 1.0f;
         }
