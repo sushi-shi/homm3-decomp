@@ -2222,7 +2222,7 @@ hero	?getIdentifyLevel@hero@@QBE?AW4TSkillMastery@@XZ	100.0000	100.0000	100.0000
 hero	?getIntelligenceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe48b0	tokens1:033083c054f0
 hero	?getLastBackpackIndex@hero@@QBEJXZ	100.0000	100.0000	100.0000	0xdbd90	tokens1:3050ca49ad0e
 hero	?getLuck@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe36c0	tokens1:d8a31e829df7
-hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	91.2639	91.2639	100.0000	0xdcac0	tokens1:cfe66e245705
+hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	95.4490	95.4490	100.0000	0xdcac0	tokens1:3c89e2f36272
 hero	?getMagicResistanceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe46e0	tokens1:b0694667ef8d
 hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	tokens1:022c28de8cb6
 hero	?getManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	tokens1:462c7a0e1a4a
@@ -2230,7 +2230,7 @@ hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:312bea
 hero	?getMobility@hero@@QBEH_N@Z	100.0000	100.0000	100.0000	0xe4990	tokens1:bdeb07c4f019
 hero	?getMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	tokens1:170e6f789ec6
 hero	?getMorale@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe39b0	tokens1:c3a2421a1658
-hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	87.0770	87.0770	100.0000	0xdc320	tokens1:a65d62fe6841
+hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	97.9541	97.9541	100.0000	0xdc320	tokens1:93decc1751aa
 hero	?getMysticismBonus@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe3f40	tokens1:572e6087b46b
 hero	?getNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000	100.0000	100.0000	0xe3c60	tokens1:8719a74f0f82
 hero	?getNecromancyFactor@hero@@QBEME@Z	100.0000	100.0000	100.0000	0xe3cd0	tokens1:078f73078002
@@ -2278,7 +2278,7 @@ hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd
 hero	?isInIdentifyRange@hero@@QBE_NABUtype_point@@@Z	100.0000	100.0000	100.0000	0xe5e10	tokens1:0426f6a72f45
 hero	?isInPatrolRadius@hero@@QBEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	tokens1:54ef7c96cd78
 hero	?isMobile@hero@@QBE_NXZ	100.0000	100.0000	100.0000	0xe5f30	tokens1:4cc32b5cb8e9
-hero	?isWieldingArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91f0	tokens1:5f34f82b0337
+hero	?isWieldingArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91f0	tokens1:e87a35974978
 hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	94.9221	94.9221	100.0000	0xd7a20	tokens1:641cb1ba3883
 hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0	tokens1:099207a76ebe
 hero	?markArtifactSpells@@YI?AV?$bitset@$0EG@@std@@H@Z	100.0000	100.0000	100.0000	0xd9350	tokens1:748340d1cb90

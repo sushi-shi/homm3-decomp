@@ -1365,8 +1365,11 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
                 return 1;
         }
     }
-    int combination = g_artifactTraits[whichArtifact].m_targetCombo;
-    return combination != -1
+    // Mac 0xf4e6c/0xf4e88 reload m_targetCombo for the test and the index
+    // (CodeWarrior -O1 would keep a named local in r0): no local here. This
+    // also keeps the getArtifact-based body at the IL cost the description
+    // callers' retail append/_Grow decisions require.
+    return g_artifactTraits[whichArtifact].m_targetCombo != -1
         && isWieldingArtifact(g_combinationArtifacts[
                g_artifactTraits[whichArtifact].m_targetCombo].m_artifactId);
 }
@@ -3186,15 +3189,22 @@ std::string hero::getMoraleDescription() const
 
     // Mac expands the same signed packed mastery accessor at each rung.
     // Keep the typed helper path through the description's string inlining.
-    if (getSecondarySkill(eSecSkillLeadership) == eMasteryBasic) {
+    // DC hero.cpp:2962/2968/2974 reload the leadership byte directly
+    // (mov.b, no Hero.h GetSecondarySkill row). With the accessor, the
+    // Advanced arm's nested append budget is 1320/13 = 101 < 111; direct
+    // reads leave retail's 12 sites. getMoraleDescription 87.08 -> 97.95.
+    // Residue: retail keeps g_game in ebx across the Grail town loop. A
+    // pointer player local is byte-identical; reading g_game->m_players in
+    // the loop (DC's 2982 for-row has no separate local) gave 90.88%.
+    if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
         result += g_moraleInfo[20];
         morale++;
     }
-    if (getSecondarySkill(eSecSkillLeadership) == eMasteryAdvanced) {
+    if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
         result += g_moraleInfo[21];
         morale += 2;
     }
-    if (getSecondarySkill(eSecSkillLeadership) == eMasteryExpert) {
+    if (m_skillLevel[eSecSkillLeadership] == eMasteryExpert) {
         result += g_moraleInfo[22];
         morale += 3;
     }
@@ -3325,15 +3335,18 @@ std::string hero::getLuckDescription() const
     }
 
     // Mac likewise expands the canonical mastery read for these luck rungs.
-    if (getSecondarySkill(eSecSkillLuck) == eMasteryBasic) {
+    // DC reads the luck byte directly (+9, three mov.b reloads; no Hero.h
+    // row), as in getMoraleDescription: 91.26 -> 95.45 with the Mac-shaped
+    // isWieldingArtifact. Same g_game-in-ebx Grail-loop residue.
+    if (m_skillLevel[eSecSkillLuck] == eMasteryBasic) {
         result += g_luckInfo[15];
         luck++;
     }
-    if (getSecondarySkill(eSecSkillLuck) == eMasteryAdvanced) {
+    if (m_skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
         result += g_luckInfo[16];
         luck += 2;
     }
-    if (getSecondarySkill(eSecSkillLuck) == eMasteryExpert) {
+    if (m_skillLevel[eSecSkillLuck] == eMasteryExpert) {
         result += g_luckInfo[17];
         luck += 3;
     }
