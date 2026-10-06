@@ -4036,7 +4036,7 @@ type_random_map_generator::type_random_map_generator(
         memset(m_disabledHeroes, 0, sizeof(m_disabledHeroes));
         memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
         initializeObjectGenerators();
-        for (int hero = 0; hero < 156; ++hero) {
+        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
             if (akHeroTraits[hero].m_availability.m_special)
                 m_disabledHeroes[hero] = 1;
             else if (m_mapVersion >= 1) {
@@ -10689,9 +10689,9 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 
     if (m_mapVersion >= 1) {
-        std::bitset<156> availableHeroes;
+        std::bitset<RMG_HERO_COUNT> availableHeroes;
         setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
+            &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_HERO_COUNT);
 
         writePackedBits(outfile, availableHeroes);
     } else {
@@ -10742,7 +10742,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<28> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
-        for (int hero = 0; hero < 156; ++hero) {
+        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
             char byteBuffer = 0;
             outfile->write(&byteBuffer, sizeof(byteBuffer));
         }
