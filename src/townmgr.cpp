@@ -4782,6 +4782,12 @@ void townManager::doUniversity()
 // their idle values before the status widget is dimmed.
 // DC 0x174d90 polls sound once more after RedrawTownScreen. Both desktop
 // bodies return immediately after redraw (Windows 0x5d30ac, Mac 0x1cfe20).
+// DC 5713..5716 gives the garrison override a braced body (coincident scope
+// pair 0x174d60..0x174d68); the first if/else bodies are unbraced.
+// Wall (2026-10-07): retail keeps this body out of line in main, which needs
+// C1XX cost >= 176 (save cliff); this form costs 167 and is expanded there.
+// A diagnostic auto_inline(off) shows the retained call alone takes main
+// 89.90 -> 93.06%. No evidenced statement form supplies the missing cost.
 VA(0x005d2f90, 0x132)
 DC_ADDRESS(0x174d1c, 0x84)
 MAC_ADDRESS(0x1cfd64, 0xd4)
@@ -4793,8 +4799,9 @@ void townManager::doSkeletonTransformer()
     else
         transformGroup = &m_townToView->getArmy();
 
-    if (m_srcStrip && m_srcStrip == m_garrisonStrip)
+    if (m_srcStrip && m_srcStrip == m_garrisonStrip) {
         transformGroup = &m_townToView->getArmy();
+    }
 
     {
         type_skeleton_window skeletonWin(transformGroup);

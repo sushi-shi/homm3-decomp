@@ -1096,6 +1096,11 @@ void hero::initialize(short index)
 // assignment/assign and an unnamed/named level leave that boundary unchanged.
 // A reproduced VC6 trace admits assign's 307-byte body with 346 bytes left
 // in its inline budget. An array-derived unsigned fill count also leaves it inlined.
+// 2026-10-07 trace arithmetic: operator= is depth-1 site 5 of 5 with budget
+// 1730, so its nested assign gets 1730/5 = 346 >= 307. Retail's retained
+// assign needs either a sixth saved candidate after this site (346 -> 288)
+// or about 196 more budget spent before it. Mac retail also keeps the
+// primary-skill loop rolled where this source's CodeWarrior build unrolls it.
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4

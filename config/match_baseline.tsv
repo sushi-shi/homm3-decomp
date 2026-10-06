@@ -4502,7 +4502,7 @@ townmgr	?doMonsterJoinDialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	10
 townmgr	?doMonsterJoinDialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0	tokens1:41e927fa6a17
 townmgr	?doPortalOfSummoning@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d2950	tokens1:43bba85be8a6
 townmgr	?doShipyard@@YIXH@Z	100.0000	100.0000	100.0000	0x1d2720	tokens1:fe20c0a121c8
-townmgr	?doSkeletonTransformer@townManager@@AAEXXZ	100.0000	100.0000	100.0000	0x1d2f90	tokens1:8aef9fd1332e
+townmgr	?doSkeletonTransformer@townManager@@AAEXXZ	100.0000	100.0000	100.0000	0x1d2f90	tokens1:ad6d418d574b
 townmgr	?doTavern@@YIEXZ	100.0000	100.0000	100.0000	0x1d7ec0	tokens1:48631e9f7a8e
 townmgr	?doTownGate@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d8480	tokens1:9f9e3ddf5246
 townmgr	?doTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0	tokens1:f508f3a48afe
