@@ -1295,7 +1295,7 @@ long hero::getNumberInBackpack(bool countWarMachines) const
     long count = 0;
     if (countWarMachines)
         return m_backpackCount;
-    for (int slot = 0; slot < 64; slot++) {
+    for (int slot = 0; slot < HERO_BACKPACK_CAPACITY; slot++) {
         int id = m_backpack[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
@@ -1353,7 +1353,7 @@ unsigned char hero::hasArtifact(int whichArtifact) const
         if (m_equipped[slot].m_artifactId == whichArtifact)
             return 1;
     }
-    for (int pack = 0; pack < 64; pack++) {
+    for (int pack = 0; pack < HERO_BACKPACK_CAPACITY; pack++) {
         if (m_backpack[pack].m_artifactId == whichArtifact)
             return 1;
     }
@@ -5380,7 +5380,7 @@ DC_ADDRESS(0x0d3c64, 0x98)
 MAC_ADDRESS(0x103bd8, 0x9c)
 std::string hero::getBackpackError(TArtifact artifact) const
 {
-    if (m_backpackCount >= 64) {
+    if (m_backpackCount >= HERO_BACKPACK_CAPACITY) {
         return std::string((*g_generalText)[GENERAL_TEXT_BACKPACK_FULL]);
     }
     return formatString((*g_generalText)[GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT],
@@ -5395,7 +5395,7 @@ DC_ADDRESS(0x0d3cfc, 0xe8)
 MAC_ADDRESS(0x103c74, 0x134)
 bool hero::addToBackpack(const type_artifact& artifact, long slot)
 {
-    if (m_backpackCount >= 64)
+    if (m_backpackCount >= HERO_BACKPACK_CAPACITY)
         return 0;
     if (artifact.m_artifactId == ARTIFACT_CATAPULT ||
         artifact.m_artifactId == ARTIFACT_BALLISTA ||
@@ -5403,7 +5403,7 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
         artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
         return 0;
     if (slot < 0) {
-        for (slot = 0; slot < 64; slot++) {
+        for (slot = 0; slot < HERO_BACKPACK_CAPACITY; slot++) {
             if (m_backpack[slot].m_artifactId == -1)
                 break;
         }

@@ -636,7 +636,7 @@ public:
     unsigned char m_artifactSlotCounts[15];  // +0x1c5
 
 private:
-    type_artifact m_backpack[64];
+    type_artifact m_backpack[HERO_BACKPACK_CAPACITY];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
     // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
     // flag arm instead of walking the 64 slots, which is what proves

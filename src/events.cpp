@@ -1055,7 +1055,7 @@ MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact
 void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) >= 64) {
+    if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -1301,7 +1301,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
 
     type_artifact artifact(ARTIFACT_NONE);
     for (unsigned int m = 0; m < blackBox->m_artifacts.size(); m++) {
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             if (humanPlayer) {
                 addReward(msg, formatString(
                     g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
@@ -3011,7 +3011,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
     type_artifact artifact;
     int reward = cell->getSeaChestReward();
     if (reward == const_sea_chest_artifact
-        && currentHero->getNumberInBackpack(1) >= 64)
+        && currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
         reward = const_sea_chest_gold;
 
     switch (reward) {
@@ -3051,7 +3051,7 @@ MAC_ADDRESS(0x0b1bbc, 0x174)
 void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) < 64) {
+    if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_ARTIFACT_FORMAT],
@@ -3084,7 +3084,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
     if (cell->skeletonHasTreasure()) {
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             type_artifact artifact(TArtifact(cell->getSkeletonArtifact()));
             if (humanPlayer) {
                 sprintf(g_text,
@@ -3278,7 +3278,7 @@ MAC_ADDRESS(0x0b2824, 0x190)
 void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
                                     type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) >= 64) {
+    if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3460,7 +3460,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
     if (cell->treasureIsArtifact()) {
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             type_artifact artifact(cell->getTreasureArtifact());
             if (humanPlayer) {
                 sprintf(g_text,
@@ -3571,7 +3571,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     if (cell->wagonHasArtifact()
-        && currentHero->getNumberInBackpack(1) < 64) {
+        && currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
         type_artifact artifact(cell->getWagonArtifact());
         if (humanPlayer) {
             sprintf(g_text,
@@ -3611,7 +3611,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
 
     MonsterData* reward = &m_fullMap->m_customMonsterList[cell->getCustomIndex()];
     if (reward->m_artifact != ARTIFACT_NONE) {
-        if (currentHero->getNumberInBackpack(1) >= 64) {
+        if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
             if (humanPlayer)
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL], 1, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
@@ -4052,11 +4052,11 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
     } else {
         if (cell->playerKnowsCell(g_netLocalGamePos))
             return;
-        if (currentHero->getNumberInBackpack(1) >= 64)
+        if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return;
     }
 
-    if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < 64) {
+    if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
         type_artifact artifact(cell->getTombArtifact());
         if (humanPlayer) {
             sprintf(g_text,

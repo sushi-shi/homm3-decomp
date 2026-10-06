@@ -3103,7 +3103,7 @@ static void convertLegacyCampaignHero(hero& newHero,
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.equipArtifact(artifact, equippedSlot);
     }
-    for (int backpackSlot = 0; backpackSlot < 64; ++backpackSlot) {
+    for (int backpackSlot = 0; backpackSlot < HERO_BACKPACK_CAPACITY; ++backpackSlot) {
         type_artifact artifact = oldHero.m_backpack[backpackSlot];
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.addToBackpack(artifact, backpackSlot);
