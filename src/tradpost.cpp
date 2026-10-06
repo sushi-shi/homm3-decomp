@@ -3542,9 +3542,14 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 
 // Mac 0x1f99a4/0x1f99d8 and widget defaults reach the common flag phase;
 // mouse movement returns separately at 0x1f9c98. Arrow arms set update before
-// setupNewTrade. This model lifts Windows 81.15 -> 83.16 while retaining every
-// helper path. Two separate viewArtifact source calls remain separate on Mac;
+// setupNewTrade. Two separate viewArtifact source calls remain separate on Mac;
 // keep its shared call. Widget-local flags lower both compiler comparisons.
+// As in DC 3029..3036, the quick view works inside its slot case (its default
+// reaches the flag phase) and each backpack slot is one expression around
+// getNumberInBackpack (DC 3034 has no slot/count locals). That caller cb (826)
+// leaves the first setupNewTrade's nested budget below computeTradeRatios'
+// cb 162, so retail's resource arm calls it while the artifact arm expands it.
+// The residual is MESSAGE_WIDGET held in esi (msg then moves to edi).
 VA(0x005edf60, 0x75f)
 DC_ADDRESS(0x18c00c, 0x36c)
 MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9
@@ -3607,7 +3612,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             }
             break;
 
-        case MARKET_WIDGET_QUICK_VIEW: {
+        case MARKET_WIDGET_QUICK_VIEW:
             switch (msg.m_codeY) {
             case MARKET_ARTIFACT_SLOT_00_ID: case MARKET_ARTIFACT_SLOT_01_ID:
             case MARKET_ARTIFACT_SLOT_02_ID: case MARKET_ARTIFACT_SLOT_03_ID:
@@ -3619,25 +3624,20 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_14_ID: case MARKET_ARTIFACT_SLOT_15_ID:
             case MARKET_ARTIFACT_SLOT_16_ID: case MARKET_ARTIFACT_SLOT_18_ID:
             case MARKET_ARTIFACT_SLOT_19_ID: case MARKET_ARTIFACT_SLOT_20_ID:
-            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID:
+            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
+                int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
+                type_artifact artifact;
+                if (artifactSlot < 18)
+                    artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
+                else
+                    artifact = g_marketHero->getBackpack(
+                        ((g_backpackStart & 0xff) + artifactSlot - 18)
+                        % g_marketHero->getNumberInBackpack(1));
+                g_marketHero->viewArtifact(artifact, 1);
                 break;
-            default:
-                return MESSAGE_DISPATCH_CONSUME;
             }
-            int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
-            type_artifact artifact;
-            if (artifactSlot < 18) {
-                artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
-            } else {
-                int numInBackpack = g_marketHero->getNumberInBackpack(1);
-                int slot = ((g_backpackStart & 0xff) + artifactSlot - 18)
-                           % numInBackpack;
-                artifact = g_marketHero->getBackpack(slot);
             }
-            // Mac retains one view call shared by both artifact sources.
-            g_marketHero->viewArtifact(artifact, 1);
             break;
-        }
 
         case MARKET_WIDGET_ACTIVATE:
             switch (msg.m_codeY) {
@@ -3647,16 +3647,12 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 if (g_ratioInverted) {
                     g_currentPlayer->m_resources[g_leftResource] +=
                         g_giveQuantity * g_rightAmount;
-                    if (g_selectedArtifact < 18) {
+                    if (g_selectedArtifact < 18)
                         g_marketHero->removeArtifact(g_selectedArtifact);
-                    } else {
-                        int numInBackpack =
-                            g_marketHero->getNumberInBackpack(1);
-                        int slot = (g_selectedArtifact - 18
-                                    + (g_backpackStart & 0xff))
-                                   % numInBackpack;
-                        g_marketHero->removeBackpackArtifact(slot);
-                    }
+                    else
+                        g_marketHero->removeBackpackArtifact(
+                            ((g_backpackStart & 0xff) + g_selectedArtifact - 18)
+                            % g_marketHero->getNumberInBackpack(1));
                 }
                 g_leftDenominated = 1;
                 g_leftResource = -1;

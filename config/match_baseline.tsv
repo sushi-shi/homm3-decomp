@@ -4597,7 +4597,7 @@ tradpost	?update@TTradeResourceWindow@@QAEX_N@Z	99.7801	99.7801	99.7801	0x1ea6e0
 tradpost	?updateSellArtifactWidget@TSellArtifactWindow@@AAEXAAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0	tokens1:6efba4423483
 tradpost	?windowHandler@TBuyArtifactWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0	tokens1:a55f2f98efb8
 tradpost	?windowHandler@TGiveResourceWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	tokens1:0bdeca802ff1
-tradpost	?windowHandler@TSellArtifactWindow@@UAEHAAVmessage@@@Z	85.8223	85.8223	93.5964	0x1edf60	tokens1:05ed568109d3
+tradpost	?windowHandler@TSellArtifactWindow@@UAEHAAVmessage@@@Z	97.8494	97.8494	97.8494	0x1edf60	tokens1:236b6cb832a2
 tradpost	?windowHandler@TSellCreatureWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ee890	tokens1:5e154036ab4f
 tradpost	?windowHandler@TTradeResourceWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0	tokens1:49128342879b
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70	-

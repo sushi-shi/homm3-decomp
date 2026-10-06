@@ -480,6 +480,10 @@ void checkAdvCheatCode(std::string& chatString);
 // is byte-identical at 77.4872%, so source order does not explain this site.
 // DC 262 proves the retained const-char-pointer constructor; default-string
 // assignment controls do not recover that source boundary.
+// 2026-10-07 trace: the constructor is depth-1 site 1 of 4 (op==, c_str,
+// ~string follow); its nested assign keeps cost 69 only once five sites
+// remain ((1000 - 61) / 5 - 152 < 69). Mac 0x3e74 and DC 262..311 show the
+// same calls; DC's unrecorded 288..308 band does not identify a fifth.
 VA(0x004022e0, 0x167)
 DC_ADDRESS(0x00330c, 0x108)
 MAC_ADDRESS(0x003e74, 0x118)  // anchor-string("gosolo") + anchor-callee(CheckAdvCheatCode)
