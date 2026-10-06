@@ -29,6 +29,10 @@ enum TArtifactSlot {
     eArtifactSlotWarMachine3,
     eArtifactSlotWarMachine4,
     eArtifactSlotSpellbook,
+    // The Dreamcast count. Complete's fifth misc position follows the
+    // spellbook, so its equipped arrays and slot masks are
+    // kNumArtifactSlots + 1 long (NH3API MAX_ARTIFACT_SLOTS_SOD); a
+    // separate enumerator for that count reschedules advManager::doCombat.
     kNumArtifactSlots,
     const_first_artifact_slot = eArtifactSlotHead
 };
@@ -112,8 +116,8 @@ SIZE(TCombinationArtifact, 24);
 // the bitset itself, as the game-context table's readers must (see
 // gamecontext.cpp); a bitset member here leaves the hero and swapmgr readers
 // unchanged. The original type name is unknown.
-struct TArtifactSlotMask : public std::bitset<19> {
-    TArtifactSlotMask(const std::bitset<19>& slots) : std::bitset<19>(slots) {}
+struct TArtifactSlotMask : public std::bitset<kNumArtifactSlots + 1> {
+    TArtifactSlotMask(const std::bitset<kNumArtifactSlots + 1>& slots) : std::bitset<kNumArtifactSlots + 1>(slots) {}
 };
 SIZE(TArtifactSlotMask, 4);
 
@@ -146,7 +150,7 @@ extern const TArtifactSlotTraits (&akArtifactSlotTraits)[19];
 DC_ADDRESS(0x037d88, 0x2c)
 inline bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
 {
-    const std::bitset<19>& allowable =
+    const std::bitset<kNumArtifactSlots + 1>& allowable =
         g_artifactSlotMasks[akArtifactTraits[artifact].m_allowableSlotMask];
     return allowable[slot];
 }

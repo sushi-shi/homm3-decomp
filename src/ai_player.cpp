@@ -4238,7 +4238,7 @@ static long totalArtifactValue(hero* candidate, long playerId)
             candidate->getBackpack(slot).m_artifactId);
         total += aiGetValueOfArtifact(backpackArtifact, playerId);
     }
-    for (slot = 0; slot < 19; ++slot) {
+    for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
         type_artifact equippedArtifact(
             candidate->getArtifact(TArtifactSlot(slot)).m_artifactId);
         total += aiGetValueOfArtifact(equippedArtifact, playerId);
@@ -5261,7 +5261,7 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact)
 {
     int slot;
-    for (slot = 0; slot < 19; ++slot) {
+    for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
         if (const_cast<hero*>(ourHero)->canEquipArtifactInEmptySlot(
                 artifact.m_artifactId, slot)) {
             break;
@@ -5270,9 +5270,9 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
 
     long value = cppMax(
         aiGetValueOfArtifact(artifact, ourHero, 0, exact), 0L);
-    if (slot >= 19) {
+    if (slot >= kNumArtifactSlots + 1) {
         long replacedValue = 0;
-        for (int equippedSlot = 0; equippedSlot < 19;
+        for (int equippedSlot = 0; equippedSlot < kNumArtifactSlots + 1;
              ++equippedSlot) {
             if (const_cast<hero*>(ourHero)->canReplaceArtifactInSlot(
                     artifact.m_artifactId, equippedSlot)) {
@@ -5400,7 +5400,7 @@ long getFullValue(const hero* ourHero)
     // Mac 0x38f78..0x38f8c overwrites the same two-word temporary each turn;
     // its initial value is dead, but the source lifetime still spans the loop.
     type_artifact artifact(ARTIFACT_NONE);
-    for (int slot = 0; slot < 19; ++slot) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
         artifact = ourHero->getArtifact(TArtifactSlot(slot));
         if (artifact.m_artifactId != -1)
             value += aiGetValueOfArtifact(artifact, ourHero, 1, 1);

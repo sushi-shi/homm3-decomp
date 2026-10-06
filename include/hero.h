@@ -626,7 +626,7 @@ public:
     TSkillMastery m_identifyLevel;  // +0x129
 
 private:
-    type_artifact m_equipped[19];
+    type_artifact m_equipped[kNumArtifactSlots + 1];
 
 public:
     // One byte per artifact slot class. remove_artifact decrements the
@@ -1456,7 +1456,7 @@ class THeroScreenWindow : public CAdvPopup {
 public:
     enum EArtifactSlotBounds {
         ARTIFACT_SLOT_FIRST = 0,
-        ARTIFACT_SLOT_COUNT = 19
+        ARTIFACT_SLOT_COUNT = kNumArtifactSlots + 1
     };
     // The hero screen's widget ids, as UpdateHeroScreenStatusBar's switch
     // surfaces them in message::codeY. Decoded from the three dispatch
