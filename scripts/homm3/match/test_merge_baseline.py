@@ -44,8 +44,8 @@ class MergeBaselineTest(unittest.TestCase):
     def test_label_renamed_on_one_side_is_not_resurrected(self):
         # 2026-10-05: main renamed completeDraw (E -> _N mangling) while a lane
         # kept the base row untouched. The merge kept both labels for RVA
-        # 0xf3f0, and every later `status update --unit ... --write-readme`
-        # died with "duplicate checkpoint retail RVA 0xf3f0".
+        # 0xf3f0, and the README renderer refuses a ledger that names one
+        # retail body twice.
         old = "advmgr\t?completeDraw@@QAEXHHHEE@Z\t100.0000\t100.0000\t100.0000\t0xf3f0\told"
         new = "advmgr\t?completeDraw@@QAEXHHH_N0@Z\t100.0000\t100.0000\t100.0000\t0xf3f0\tnew"
         other = "unit\tf\t80.0000\t80.0000\t80.0000\t0x1\tsame"
@@ -123,32 +123,6 @@ class MergeBaselineTest(unittest.TestCase):
     def test_unterminated_conflict_hunk_is_reported(self):
         with self.assertRaisesRegex(ValueError, "unterminated conflict"):
             merge_baseline.base_variants("<<<<<<< ours\nrow\n=======\n")
-
-
-class CheckpointBodyRowsTest(unittest.TestCase):
-    def test_stale_label_beside_its_successor_yields_one_body(self):
-        old = status.MatchRow(100, 100, 100, 0xf3f0, "old")
-        new = status.MatchRow(100, 100, 100, 0xf3f0, "new")
-        lone = status.MatchRow(50, 60, 70, 0x10, "x")
-        rows = {("advmgr", "HHHEE"): old, ("advmgr", "_N0"): new, ("u", "f"): lone}
-        current = {("advmgr", "_N0"): 0xf3f0, ("u", "f"): 0x10}
-        self.assertEqual(status.checkpoint_body_rows(rows, current),
-                         {("advmgr", "_N0"): new, ("u", "f"): lone})
-
-    def test_live_names_are_read_only_for_a_duplicate(self):
-        from unittest.mock import patch
-        rows = {("u", "f"): status.MatchRow(1, 1, 1, 0x10, "x")}
-        with patch.object(status, "function_rvas", side_effect=AssertionError):
-            self.assertEqual(status.checkpoint_body_rows(rows), rows)
-
-    def test_unresolvable_duplicate_names_the_units_to_checkpoint(self):
-        import contextlib, io
-        row = status.MatchRow(1, 1, 1, 0x10, "x")
-        rows = {("a", "f"): row, ("b", "g"): row}
-        stderr = io.StringIO()
-        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
-            status.checkpoint_body_rows(rows, {})
-        self.assertIn("homm3 status update --unit a --unit b", stderr.getvalue())
 
 
 if __name__ == "__main__":

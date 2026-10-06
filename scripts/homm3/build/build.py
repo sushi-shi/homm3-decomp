@@ -203,7 +203,7 @@ def _main(argv: list[str]) -> int:
             failures.append("byte accounting")
         phase("byte accounting refreshed")
     try:
-        status.write_readme(report, data_accounting=data_accounting)
+        status.write_readme(data_accounting=data_accounting)
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 

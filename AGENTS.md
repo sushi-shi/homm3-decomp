@@ -64,9 +64,7 @@ Mac pairs are not part of `homm3 build`; check them occasionally with
 For ordinary matching, improve the current Windows game function using native
 evidence, run the targeted build, regenerate README with
 `homm3 status update --write-readme` (also banking the measured scores), then
-commit and push. This applies to workers too; a worker banks only the units
-it edited with `homm3 status update --unit <TU> --write-readme` (repeat
-`--unit`), so unrelated units' rows stay as the default branch measured them.
+commit and push. This applies to workers too.
 Do not run routine full builds, tests, standalone validation checks or broad
 accounting passes. Inspect evidence and compiler differences as needed to solve
 the current function; do not turn the diagnostic commands below into a checklist.

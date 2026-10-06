@@ -154,7 +154,7 @@ class StatusCommandLineTest(unittest.TestCase):
         with patch.object(status, "refresh_report") as report, \
                 patch.object(status, "read_report_view") as view:
             for argv in (["update", "--bogus"], ["show"], ["functions", "--nope"],
-                         ["check", "--unit", "x"], ["diff"]):
+                         ["check", "--unit", "x"], ["update", "--unit", "x"], ["diff"]):
                 with self.subTest(argv=argv):
                     self.assertEqual(self.quiet(argv)[0], 2)
             report.assert_not_called()
@@ -162,9 +162,8 @@ class StatusCommandLineTest(unittest.TestCase):
 
     def test_existing_invocations_parse_as_before(self):
         parse = status.build_parser().parse_args
-        args = parse(["update", "--unit", "a", "--unit", "b", "--write-readme"])
-        self.assertEqual((args.command, args.unit, args.write_readme),
-                         ("update", ["a", "b"], True))
+        args = parse(["update", "--write-readme"])
+        self.assertEqual((args.command, args.write_readme), ("update", True))
         args = parse(["--write-readme", "update"])
         self.assertTrue(args.write_readme)
         args = parse(["check", "--baseline-ref", "origin/x"])

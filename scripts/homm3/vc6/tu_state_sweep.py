@@ -728,7 +728,7 @@ def run(args) -> int:
           f"scored; {score_observations} function-score observation(s)")
     if args.bank:
         status.write_baseline(updated)
-        status.write_readme(status.refresh_report())
+        status.write_readme()
         print(f"[vc6 state-sweep] banked {len(changes)} reproduced improvement(s) "
               f"-> {status.BASELINE}")
     else:
