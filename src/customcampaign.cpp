@@ -1440,7 +1440,16 @@ void SCampaign::doPreLoadCustomization()
 // constructs an artifact from ARTIFACT_NONE inside each fill iteration;
 // a preconstructed artifact extends the wrong temporary lifetime. Mac
 // 0x94e98 fetches the custom name before storing its flag at 0x94ea4.
-// These lifetimes and ordering reproduce all Windows instructions (100%).
+// These lifetimes and ordering reproduce every other Windows instruction.
+// The final append is the open residual (91.76%): Windows stores m_id into
+// the dead placeholder home [ebp+8] and Mac 0x95114 into 0xdc(r1), beside
+// getCell's by-value argument copy, below its named locals. Both compilers
+// materialize a conversion temporary, so the argument's type differs from
+// the element type; with HeroId on both sides each passes &m_id directly.
+// An int m_id reproduced 100% before the DC THeroID member type. Probes:
+// static_cast/functional casts are byte-flat, a named HeroId local 99.92%
+// (own frame slot, +4; CW also homes it with the named locals), a by-value
+// id accessor 92.77% (one more inline site).
 // CodeWarrior emits default-argument constructor glue for savedArtifacts[].
 MAC_COMPGEN_ADDRESS(0x09513c, 0x10, CLASS_CTOR, type_artifact)
 VA(0x00486590, 0xA84)
