@@ -14,8 +14,8 @@
 #include "spells.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x00660858) long g_hypnotizeTurns[4] = { 1, 1, 2, 3 };
-DATA(0x0063b7c8) const long g_chainLightningTargets[4] = { 4, 4, 5, 5 };
+DATA(0x00660858) long g_hypnotizeTurns[kNumMasteries] = { 1, 1, 2, 3 };
+DATA(0x0063b7c8) const long g_chainLightningTargets[kNumMasteries] = { 4, 4, 5, 5 };
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the

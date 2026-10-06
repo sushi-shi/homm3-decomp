@@ -165,7 +165,7 @@ DATA(0x0063e5e0) const long g_roadCostRow[4] = { 0, 10, 11, 12 };
 // costs the same 100 as flat ground; the lower masteries pay a
 // surcharge. Name is a bootstrap invention - no roster reaches it.
 DATA(0x0063e5f0) const float g_diagonalCost = 1.4142135f;
-DATA(0x006778ac) long g_masteryTerrainCost[4] = { 140, 140, 120, 100 };
+DATA(0x006778ac) long g_masteryTerrainCost[kNumMasteries] = { 140, 140, 120, 100 };
 
 // simply forwards its own trailing parameter. Retail GetTerrainCost calls
 // GetCreatureTotal with creature 0x8e at 0x4b1a1b/0x4b1a22 and passes
