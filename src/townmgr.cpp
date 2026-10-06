@@ -447,7 +447,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
 };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
+DATA(0x00642eb4) const signed char g_townBuildOrder[TOWN_TYPE_COUNT][44] = {
     {
     26, 23, 7, 8, 9, 0, 1, 2,
     3, 14, 15, 36, 43, 30, 37, 31,
@@ -521,8 +521,8 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     18, 19, -1, -1
 }
 };
-DATA(0x00643040) const char* const g_townBackgroundPrefix[9] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
-DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
+DATA(0x00643040) const char* const g_townBackgroundPrefix[TOWN_TYPE_COUNT] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
+DATA(0x00643064) const char* const g_townBuildingSprites[TOWN_TYPE_COUNT][44] = {
     {
     "TBCsmage", "TBCsmag2", "TBCsmag3", "TBCsmag4", "TBCsmag5", "TBCstvrn", "TBCsdock", "TBCscstl",
     "TBCscas2", "TBCscas3", "TBCshall", "TBCshal2", "TBCshal3", "TBCshal4", "TBCsmark", "TBCssilo",
@@ -596,7 +596,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TbElUp_3", "TbElUp_4", "TbElUp_5", "TbElUp_6"
 }
 };
-DATA(0x006436bc) const char* const g_townMusic[9] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
+DATA(0x006436bc) const char* const g_townMusic[TOWN_TYPE_COUNT] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
 
 // Retail scalar state; startup initial values come from the pinned image.
 // Original DC name: castleOpen; DoTavern brackets the modal window lifetime.
@@ -650,7 +650,7 @@ DATA(0x006436e0) static const int g_resourceIconPos[8][2] = {
 // publishes the shared name townBuildingSpriteNames; retail's two local
 // readers plus type_dialog_icon::set in kb.obj prove townmgr.obj ownership
 // and cross-TU linkage.
-DATA(0x0067f578) const char* g_townBuildingSpriteNames[9] = {
+DATA(0x0067f578) const char* g_townBuildingSpriteNames[TOWN_TYPE_COUNT] = {
     "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def",
     "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def",
     "HALLelem.def"
@@ -671,7 +671,7 @@ DATA(0x0068a2f4) static const char* g_townCastleDefNames[10] = {
 // The mage guild background for each town type, indexed by town::type.
 // The table's ONE image-wide reference is the load inside
 // TMageGuildWindow's constructor, so this compiland owns it.
-DATA(0x0068a31c) static const char* g_mageGuildDefNames[9] = {
+DATA(0x0068a31c) static const char* g_mageGuildDefNames[TOWN_TYPE_COUNT] = {
     "TPMageCs.pcx", "TPMageRm.pcx", "TPMageTw.pcx", "TPMageIn.pcx",
     "TPMageNc.pcx", "TPMageDn.pcx", "TPMageSt.pcx", "TPMageFr.pcx",
     "TPMageEl.pcx"
@@ -681,7 +681,7 @@ DATA(0x0068a31c) static const char* g_mageGuildDefNames[9] = {
 // type; the five towns with no boat of their own share the empty
 // rollover string. The table's ONE image-wide reference is the load
 // inside TShipWindow's constructor, so this compiland owns it.
-DATA(0x0068a340) static const char* g_boatDefNames[9] = {
+DATA(0x0068a340) static const char* g_boatDefNames[TOWN_TYPE_COUNT] = {
     "AB02_.def",       "", "",
     "", "AB01_.def",       "",
     "", "AB03_.def",       "AB01_.def"
@@ -700,13 +700,13 @@ DATA(0x0068a340) static const char* g_boatDefNames[9] = {
 // SetRightClickText 0x5d1aa0 copies both dwords of a row into an 8-byte
 // local and calls type_artifact::get_description on it, which is the
 // artifact record's own member. The pair spelling was a placeholder.
-DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
+DATA(0x00642e90) static const int g_blacksmithMachines[TOWN_TYPE_COUNT] = {
     146, 147, 148, 148, 147, 146, 148, 147, 146
 };
 // Original: blacksmithArtifactType (const type_artifact[] in Dreamcast).
 // Retail CRT initializer 0x5c2e20 constructs these nine records, in town
 // order, with the ordinary artifact constructor's -1 extra field.
-DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[9] = {
+DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[TOWN_TYPE_COUNT] = {
     ARTIFACT_BALLISTA, ARTIFACT_FIRST_AID_TENT, ARTIFACT_AMMO_CART,
     ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA,
     ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA
@@ -3060,7 +3060,7 @@ THallWindow::THallWindow(int which)
     ResourceManager::delSprFromCache();  // DC townmgr.cpp:4303
     const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     const int slotY[5] = { 37, 141, 245, 349, 453 };
-    const int hallX[9][18] = {
+    const int hallX[TOWN_TYPE_COUNT][18] = {
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 4, 2, 0, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 1, 2, 0, 6, 5, 3, 1, 5, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 4, 0, 2, 0, 6, 5, 3, 6, 1 },
@@ -3071,7 +3071,7 @@ THallWindow::THallWindow(int which)
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 }
     };
-    const int hallY[9][18] = {
+    const int hallY[TOWN_TYPE_COUNT][18] = {
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 1, 2 },

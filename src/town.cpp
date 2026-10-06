@@ -27,7 +27,7 @@
 DATA(0x00688e84) int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
 DATA(0x00688e94) int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
 DATA(0x00688ea4) int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
-DATA(0x00688eb4) int g_siloIncome[9][NUM_RESOURCES] = {
+DATA(0x00688eb4) int g_siloIncome[TOWN_TYPE_COUNT][NUM_RESOURCES] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 1, 0, 0 },
     { 0, 0, 0, 0, 0, 1, 0 },
@@ -38,7 +38,7 @@ DATA(0x00688eb4) int g_siloIncome[9][NUM_RESOURCES] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 1, 0, 0, 0, 0, 0 }
 };
-DATA(0x006888c0) int g_eventBuildingIds[9][TOWN_EVENT_BUILDING_SLOTS] = {
+DATA(0x006888c0) int g_eventBuildingIds[TOWN_TYPE_COUNT][TOWN_EVENT_BUILDING_SLOTS] = {
     {
     11, 12, 13, 7, 8, 9, 5, 16,
     14, 15, 44, 0, 1, 2, 3, 4,
@@ -122,8 +122,8 @@ DATA(0x0066cd98) __int64 g_bitNumber[64] = {
     0x0001000000000000i64, 0x0002000000000000i64, 0x0004000000000000i64, 0x0008000000000000i64, 0x0010000000000000i64, 0x0020000000000000i64, 0x0040000000000000i64, 0x0080000000000000i64,
     0x0100000000000000i64, 0x0200000000000000i64, 0x0400000000000000i64, 0x0800000000000000i64, 0x1000000000000000i64, 0x2000000000000000i64, 0x4000000000000000i64, 0x8000000000000000i64
 };
-DATA(0x006976f0) __int64 g_townEligibleBuildMask[9];
-DATA(0x00697798) __int64 g_hierarchyMask[9][44];
+DATA(0x006976f0) __int64 g_townEligibleBuildMask[TOWN_TYPE_COUNT];
+DATA(0x00697798) __int64 g_hierarchyMask[TOWN_TYPE_COUNT][44];
 // Original gDwellingType has fourteen entries per town; Complete adds Conflux.
 DATA(0x006747b4) TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS] = {
     { TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12),
@@ -146,7 +146,7 @@ DATA(0x006747b4) TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLO
       TCreatureType(119), TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131) }
 };
 DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
-DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
+DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[TOWN_TYPE_COUNT][4] = {
     { { TCreatureType(4), 3, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(16), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(22), 2, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(30), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
@@ -2062,9 +2062,9 @@ static void initializeBuildingCosts(int* costs,
 DATA(0x006a80f8)
 int town::s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
 DATA(0x006a82dc)
-int town::s_specialBuildingCosts[9][9][NUM_RESOURCES];
+int town::s_specialBuildingCosts[TOWN_TYPE_COUNT][9][NUM_RESOURCES];
 DATA(0x006a9818)
-int town::s_dwellingCosts[9][14][NUM_RESOURCES];
+int town::s_dwellingCosts[TOWN_TYPE_COUNT][14][NUM_RESOURCES];
 
 VA(0x005c14c0, 0x1F6)
 DC_ADDRESS(0x168c3c, 0x112)

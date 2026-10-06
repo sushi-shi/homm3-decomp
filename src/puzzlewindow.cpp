@@ -25,7 +25,7 @@
 
 // Retail coordinates occupy nine 192-byte rows: 48 X words then 48 Y
 // words; the old g_puzzlePieceY symbol was a +0x60 view of the same array.
-DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[9] = {
+DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[TOWN_TYPE_COUNT] = {
     { { 8, 8, 8, 8, 8, 8, 17, 23, 71, 73, 102, 107, 107, 115, 127, 129, 153, 155, 158, 167, 186, 213, 215, 218, 236, 246, 267, 289, 299, 322, 347, 355, 356, 376, 383, 409, 409, 422, 423, 427, 437, 459, 487, 488, 518, 521, 525, 526 },
       { 8, 30, 102, 156, 202, 320, 8, 406, 301, 194, 332, 8, 31, 60, 329, 191, 347, 239, 429, 470, 127, 335, 191, 226, 147, 77, 384, 288, 8, 177, 67, 459, 397, 162, 255, 32, 111, 147, 466, 8, 238, 336, 8, 144, 145, 68, 234, 327 } },
     { { 8, 8, 8, 8, 8, 8, 62, 98, 99, 109, 116, 130, 135, 158, 161, 163, 165, 175, 179, 188, 191, 216, 256, 266, 278, 279, 293, 295, 311, 331, 340, 340, 345, 362, 364, 399, 401, 405, 422, 430, 431, 463, 470, 487, 500, 512, 517, 526 },
@@ -109,7 +109,7 @@ DATA(0x00681f64) short g_puzzlePieceOrder[432] = {
 // two tables.
 DATA(0x006822c4) static int g_lastImHoverId = -1;
 DATA(0x006822c8) double g_puzzleGuessThreshold[5] = { 1.1, 0.5, 0.25, 0.0, 0.0 };
-DATA(0x00681880) const char* g_puzzleFilePrefixes[9] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
+DATA(0x00681880) const char* g_puzzleFilePrefixes[TOWN_TYPE_COUNT] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
 
 // E:\gamedcs\puzzlewindow.cpp:103
 DC_ADDRESS(0x114f14, 0x2a)

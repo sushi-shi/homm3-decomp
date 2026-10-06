@@ -1877,12 +1877,12 @@ public:
 // roster row covers any of the five.
 extern const char* g_resourceObjectDefs[NUM_RESOURCES];
 extern const char* g_artifactObjectDefFormat;
-extern const char* g_townVillageObjectDefs[9];
-extern const char* g_townFortObjectDefs[9];
+extern const char* g_townVillageObjectDefs[TOWN_TYPE_COUNT];
+extern const char* g_townFortObjectDefs[TOWN_TYPE_COUNT];
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
-extern const char* g_townCapitolObjectDefs[9];
+extern const char* g_townCapitolObjectDefs[TOWN_TYPE_COUNT];
 // Original ?giWeekType@@3W4type_week_type@@A proves the enum domain.
 // Enumerator names follow the retail PerWeek and DoNewTurn cases; their
 // original spelling is unavailable. Month state and the network fields are int.

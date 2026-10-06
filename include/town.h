@@ -628,7 +628,7 @@ extern const char* g_townTypeNames[10];
 // Inferno/Conflux, crystal for Rampart, gems for Tower, sulfur for
 // Dungeon - and the gold column is zero in every row. Name INVENTED
 // (no DC symbol covers this table); owner TU unlocated.
-extern int g_siloIncome[9][NUM_RESOURCES];
+extern int g_siloIncome[TOWN_TYPE_COUNT][NUM_RESOURCES];
 
 // Original gDwellingType: DC public ?gDwellingType@@3PAY0O@W4TCreatureType@@A
 // proves fourteen-entry rows. Retail has nine towns, with seven base dwelling
