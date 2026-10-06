@@ -612,7 +612,7 @@ advManager::advManager()
 // abm01_..abm03_, abf01l..abf03k, and the 38-entry cached-graphics list
 // diboxbck.pcx..HALLFORT.def whose entry 26 re-points at pskill.def).
 DATA(0x0065f4c4) const char* g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
-DATA(0x0065f55c) const char* g_groundTilesetNames[10] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
+DATA(0x0065f55c) const char* g_groundTilesetNames[NUM_TERRAIN_TYPES] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
 // River and road tilesets are indexed by type; type 0 (none) names "".
 // Retail stores the empty-string pointer at 0x65f584 and 0x65f598 and the
 // loaders walk from entry 1 (0x65f588..0x65f598, 0x65f59c..0x65f5a8).
@@ -710,7 +710,7 @@ int advManager::open(int newPriority)
     m_movingObjectSprite =
         ResourceManager::GetSprite(DATA_COMPGEN(0x00660318, movingObjectSpriteName,
                                "avwattak.def"));
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < NUM_TERRAIN_TYPES; i++)
         m_groundTileset[i] = ResourceManager::GetSprite(g_groundTilesetNames[i]);
     incProgressBar(1);
     for (i = 1; i < 5; i++)
@@ -935,7 +935,7 @@ void advManager::close()
     m_gemIcons[1] = 0;
     m_gemIcons[2] = 0;
     m_gemIcons[3] = 0;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < NUM_TERRAIN_TYPES; i++) {
         ResourceManager::Dispose(m_groundTileset[i]);
         m_groundTileset[i] = 0;
         m_heroSamples[i]->dispose();

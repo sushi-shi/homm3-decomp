@@ -4877,7 +4877,7 @@ CObjectType::CObjectType(const TObjectType& source)
 
     // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
     // source selects the read-only terrain query, without a mutable proxy.
-    for (int terrain = 0; terrain < 10; terrain++)
+    for (int terrain = 0; terrain < NUM_TERRAIN_TYPES; terrain++)
         m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
 
     m_objectType = source.getType();
