@@ -1710,6 +1710,9 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // call insert(P, x) for the two mine appends but expand it later
 // (92.98 -> 99.54%). The remainder is ICF naming of the item-record vector
 // helpers and localPlayer's register home across the garrison pass.
+// Probes: indexing the shipyard player directly in the loop condition
+// (99.12%) and comparing `localPlayer != owner` in the garrison pass
+// (99.53%) are both worse; the player reference stays.
 VA(0x0051fa40, 0x1311)
 DC_ADDRESS(0x1084f0, 0xa84)
 MAC_ADDRESS(0x137ed0, 0x1e48)  // exhaustive ctor/callback/dtor identity

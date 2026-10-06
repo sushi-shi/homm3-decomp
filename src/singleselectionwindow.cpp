@@ -3436,6 +3436,8 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // to 99.11, so the paired lifetimes are load-bearing. Moving the ten main-loop
 // widget declarations into the loop, or moving the adjacent `i, nextColor`
 // pair below those declarations, is byte-flat; retain their current scope.
+// All 24 declaration orders of the four icon pointers in their DC block are
+// byte-flat (99.98%), so the slot swap is not declaration order.
 // The residual is a four-home rotation among nextColor, playerType, nameEdit,
 // and an induction temporary. Naming the duration isHost result and declaring
 // compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
