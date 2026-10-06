@@ -1047,7 +1047,10 @@ MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
 // identical object. The register model agrees at every first definition;
 // retain the canonical helper while investigating its later allocation.
 // Reversing both hasBuilding membership operands is also byte-identical
-// in town and its retained ai_player body.
+// in town and its retained ai_player body. So are the DC 1352 single
+// difficulty/ally condition below, braced if bodies in
+// updateFullBuildingMask, and unbraced hasBuilding: retail keeps the
+// populationMask high word in ebx across the inlined loop, ours the low.
 type_building_id town::buildBuilding(int buildingId,
                                      bool setBuiltFlag,
                                      bool applySpecialEffect)
@@ -1061,13 +1064,11 @@ type_building_id town::buildBuilding(int buildingId,
     built = createBuilding(type_building_id(buildingId));
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
-        if (g_game->m_setup.m_difficulty < 2) {
-            if (g_game->isHumanAlly(m_owner))
-                m_builtThisTurn = 1;
-            else
-                m_builtThisTurn = 2;
-        } else {
+        if (g_game->m_setup.m_difficulty >= 2
+            || g_game->isHumanAlly(m_owner)) {
             m_builtThisTurn = 1;
+        } else {
+            m_builtThisTurn = 2;
         }
     }
 
@@ -1767,14 +1768,17 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 }
 
 // E:\gamedcs\town.cpp:2084
+// DC opens three scopes from line 2089: the for, its body and the braced
+// if body at line 2090.
 DC_ADDRESS(0x168494, 0x6e)
 MAC_ADDRESS(0x1b66f4, 0x104)
 void town::updateFullBuildingMask()
 {
     m_fullBuildingMask = m_populationMask;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (hasBuilding(i, false))
+        if (hasBuilding(i, false)) {
             m_fullBuildingMask |= s_includedBuildings[m_type][i];
+        }
     }
 }
 

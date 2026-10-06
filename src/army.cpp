@@ -113,7 +113,8 @@ army::~army()
 // increments the Griffin allowance; VC6 folds the known initial value to 2.
 DC_ADDRESS(0x0437ac, 0x84)
 MAC_ADDRESS(0x048e5c, 0x68)
-// Mac 0x48e90 expands the COUNTERSTRIKE duration getter at +0x280.
+// Mac 0x48e90 reads COUNTERSTRIKE at +0x280; DC set_retaliation_count makes
+// no get_spell_time call (see army.h getSpellTime), so the row is read directly.
 void army::setRetaliationCount()
 {
     m_retaliationCount = 1;
@@ -121,7 +122,7 @@ void army::setRetaliationCount()
         m_retaliationCount++;
     if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
         m_retaliationCount = 5000;
-    if (getSpellTime(SPELL_COUNTERSTRIKE))
+    if (m_spellInfluence[SPELL_COUNTERSTRIKE])
         m_retaliationCount += m_counterstrokeBonus;
     if (is(creatureSiegeWeapon))
         m_retaliationCount = 0;
@@ -515,7 +516,8 @@ void army::loadResources()
 VA(0x0043df20, 0xDD)
 DC_ADDRESS(0x044318, 0x9c)
 MAC_ADDRESS(0x049b90, 0x150)
-// Mac 0x49c2c/0x49c40 expand the two luck spell-duration getters.
+// Mac 0x49c2c/0x49c40 read the two luck rows; DC SetLuck makes no
+// get_spell_time call (see army.h getSpellTime).
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain)
@@ -530,9 +532,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
             value = ownerGroup->getLuck(
                 ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
         }
-        if (getSpellTime(51))
+        if (m_spellInfluence[51])
             value += m_luckBonus;
-        if (getSpellTime(52))
+        if (m_spellInfluence[52])
             value -= m_luckPenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
@@ -564,7 +566,8 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 VA(0x0043e000, 0x139)
 DC_ADDRESS(0x0443b4, 0xf4)
 MAC_ADDRESS(0x049ce0, 0x1f4)
-// Mac 0x49d48/0x49d5c expand the two morale spell-duration getters.
+// Mac 0x49d48/0x49d5c read the two morale rows; DC SetMorale makes no
+// get_spell_time call (see army.h getSpellTime).
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
                      const armyGroup* otherGroup, int magicTerrain,
@@ -577,9 +580,9 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                 ownerHero, ownerTown, otherHero, otherGroup, 0,
                 groupAlignments, 0);
         }
-        if (getSpellTime(49))
+        if (m_spellInfluence[49])
             value += m_moraleBonus;
-        if (getSpellTime(50))
+        if (m_spellInfluence[50])
             value -= m_moralePenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
@@ -880,7 +883,8 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
 // its spell table grew from DC's 80 entries to 81.
 DC_ADDRESS(0x044d50, 0xc2)
 MAC_ADDRESS(0x04a6e4, 0xcc)
-// Mac 0x4a720 expands getSpellTime(i) before reading the karma table.
+// Mac 0x4a720 reads row i before the karma table; DC ComputeKarma makes no
+// get_spell_time call (see army.h getSpellTime).
 double army::computeKarma() const
 {
     if (m_numSpellInfluences == 0)
@@ -888,7 +892,7 @@ double army::computeKarma() const
     long sum = 0;
     long absSum = 0;
     for (long i = 0; i < 81; i++) {
-        if (getSpellTime(i) != 0) {
+        if (m_spellInfluence[i] != 0) {
             sum += g_spellTraits[i].m_karma;
             absSum += abs(g_spellTraits[i].m_karma);
         }
@@ -1850,7 +1854,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                                            target->m_gridIndex, 1, -1, eMasteryNone,
                                            3);
             if (m_creatureType == CREATURE_DRAGON_FLY
-                && target->getSpellTime(SPELL_WEAKNESS) == 0) {
+                && target->m_spellInfluence[SPELL_WEAKNESS] == 0) {
                 if (g_combatManager->spellCastWorks(
                         SPELL_WEAKNESS, getControllingSide(), target,
                         1, 1))
@@ -1909,10 +1913,9 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // (Windows 99.9040 -> 99.9232). The integrated declaration context also
 // restores the reload order after DoMultiHeadAttack (99.9616%). Remaining
 // differences are address-register choices in two MarkCreatureEffect expansions.
-// The canonical conditional controlling-side return closes getUnitCombatValue
-// while moving this caller to 99.9232%: the same two address decompositions
-// remain, plus the ordering of independent EDI/EBX loads after the hydra call.
-// No helper, branch or source-lifetime discrepancy supports a caller rewrite.
+// With the guarded controlling-side return and DC's direct spell-row reads
+// this caller is 99.9232%: the same two address decompositions remain, plus
+// the ordering of independent EDI/EBX loads after the hydra call.
 VA(0x00441610, 0x6A0)
 DC_ADDRESS(0x046bec, 0x3c2)
 MAC_ADDRESS(0x04d288, 0x638)  // corroborates
@@ -2054,9 +2057,9 @@ void army::doAttack(int direction)
         g_combatManager->m_actingSide = savedSide;
         g_combatManager->m_actingSlot = savedSlot;
     }
-    if (armyToAttack->getSpellTime(62))
+    if (armyToAttack->m_spellInfluence[62])
         armyToAttack->m_residualBlindness = 1;
-    if (armyToAttack->getSpellTime(74))
+    if (armyToAttack->m_spellInfluence[74])
         armyToAttack->m_residualParalyze = 1;
     bool killed = doAttack(armyToAttack, direction);
     m_joustBonus = 0;
@@ -2434,7 +2437,7 @@ bool army::isEnemy(const army* arg) const
         return 0;
     if (this == arg)
         return 0;
-    if (!m_spellInfluence[59] && !arg->getSpellTime(59))
+    if (!m_spellInfluence[59] && !arg->m_spellInfluence[59])
         return getControllingSide() != arg->getOwningSide();
     return 1;
 }
@@ -2510,11 +2513,11 @@ VA(0x00442a50, 0x410)
 DC_ADDRESS(0x047cf4, 0x472)
 MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
 // Original DC public ?get_unit_combat_value@army@@QBANJJ_NPBV1@@Z.
-// Mac 0x4ec18/0x4ec68 expand getOwningSide for the side-mass pointer/count.
-// The canonical conditional return in getControllingSide restores its
-// expansion inside the first damage reduction (97.6613 -> 100%); all seven
-// named retail calls agree. Combining the defense product into its
-// initializer was byte-flat; retain the canonical helper path.
+// Mac 0x4ec18/0x4ec68 load the side for the side-mass pointer/count, which
+// m_combatSide and an inline getOwningSide emit alike; DC's body (lines
+// 2888-2891) makes no get_owning_side call, though DC army.obj calls that
+// getter out of line elsewhere (GoBerserk, ProcessDeath, is_enemy).
+// Combining the defense product into its initializer was byte-flat.
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    bool ranged,
                                    const army* excluded) const
@@ -2556,8 +2559,8 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (is(creatureSiegeWeapon | creatureSummoned)) {
         long total = getTotalHitPoints(0);
         long sum = 0;
-        army* group = g_combatManager->m_armies[getOwningSide()];
-        for (long i = 0; i < g_combatManager->m_numArmies[getOwningSide()];
+        army* group = g_combatManager->m_armies[m_combatSide];
+        for (long i = 0; i < g_combatManager->m_numArmies[m_combatSide];
              i++, group++) {
             if (!group->is(creatureSiegeWeapon | creatureImmobilized | creatureSummoned)) {
                 sum += group->getTotalHitPoints(0);
@@ -3259,10 +3262,16 @@ void army::cancelSpellType(int spellType)
 // The by-value min wrapper preserves its two argument copies in retail.
 DC_ADDRESS(0x0496dc, 0x6a)
 MAC_ADDRESS(0x0504ac, 0xd4)
-// Mac 0x504ac reads AGE at +0x2c4: the constant-index getSpellTime body.
+// Mac 0x504ac reads AGE at +0x2c4, as a direct row read and an inline
+// getSpellTime(SPELL_AGE) both would; DC adjust_hitpoints makes no
+// get_spell_time call (see army.h getSpellTime). Retail agrees: expanded in
+// ResetRound, the AGE load is scheduled above the poison-factor store
+// (+0x4a4). VC6 hoists it across that store only for the constant-offset
+// field read; the inline getter's substituted index keeps the load behind
+// the store (ResetRound 97.40% with the getter, exact without).
 void army::adjustHitpoints()
 {
-    if (getSpellTime(SPELL_AGE))
+    if (m_spellInfluence[SPELL_AGE])
         m_monInfo.m_hitPoints = static_cast<int>(
             m_origHitPoints * m_poisonPenalty * 0.5f + 0.95f);
     else
@@ -3300,10 +3309,11 @@ void army::adjustHitpoints()
 VA(0x00444510, 0x3DB)
 DC_ADDRESS(0x049748, 0x262)
 MAC_ADDRESS(0x050580, 0x3b4)  // anchor-global
-// Mac 0x505a0..0x505ac expands getSpellTime(spell) before clearing its row.
+// Mac 0x505a0..0x505ac reads the row before clearing it; DC
+// CancelIndividualSpell makes no get_spell_time call (see army.h).
 void army::cancelIndividualSpell(int spell)
 {
-    if (getSpellTime(spell) <= 0)
+    if (m_spellInfluence[spell] <= 0)
         return;
     if (spell == SPELL_DISRUPTING_RAY)
         return;
@@ -3362,11 +3372,11 @@ void army::cancelIndividualSpell(int spell)
 // E:\gamedcs\army.cpp:3802
 DC_ADDRESS(0x0499ac, 0x3a)
 MAC_ADDRESS(0x050c24, 0x68)
-// Mac 0x50c48 expands getSpellTime(i); the following call cancels that spell.
+// Mac 0x50c48 reads row i; DC makes no get_spell_time call (see army.h).
 void army::cancelAllSpells()
 {
     for (int i = 0; i < 81; i++) {
-        if (getSpellTime(i) > 0)
+        if (m_spellInfluence[i] > 0)
             cancelIndividualSpell(i);
     }
 }
@@ -3445,8 +3455,8 @@ static void drop_aura_links(army* self)
 VA(0x004448f0, 0xB99)
 DC_ADDRESS(0x0499e8, 0x900)
 MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global
-// Mac 0x50d18 and 0x50d34 expand getSpellTime/getSpellLevel before
-// comparing the existing duration/mastery. Their writes remain field stores.
+// Mac 0x50d18/0x50d34 read the duration/mastery rows. DC SetSpellInfluence
+// calls neither get_spell_time nor get_spell_level (see army.h getSpellTime).
 void army::setSpellInfluence(int spell, int power, int mastery,
                              const hero* castingHero)
 {
@@ -3467,10 +3477,10 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         rounds = power;
         break;
     }
-    if (getSpellTime(spell) > 0) {
-        if (rounds > getSpellTime(spell))
+    if (m_spellInfluence[spell] > 0) {
+        if (rounds > m_spellInfluence[spell])
             m_spellInfluence[spell] = rounds;
-        if (mastery > getSpellLevel(spell))
+        if (mastery > m_spellLevel[spell])
             m_spellLevel[spell] = mastery;
         return;
     }
@@ -3643,13 +3653,13 @@ void army::setSpellInfluence(int spell, int power, int mastery,
 // entries; the older DC loop at line 4133 ends at 80.
 DC_ADDRESS(0x04a2e8, 0x5e)
 MAC_ADDRESS(0x051434, 0x98)
-// Mac 0x51458 expands getSpellTime(spell), reused by both tests; the
-// decrement at 0x51488 remains a mutation of the duration row.
+// Mac 0x51458 reads the row once for both tests; DC DecrementSpellRounds
+// makes no get_spell_time call (see army.h getSpellTime).
 void army::decrementSpellRounds()
 {
     for (int spell = 0; spell < 81; spell++) {
-        if (getSpellTime(spell) > 0 && spell != SPELL_FRENZY) {
-            if (getSpellTime(spell) == 1)
+        if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
+            if (m_spellInfluence[spell] == 1)
                 cancelIndividualSpell(spell);
             else
                 m_spellInfluence[spell]--;
@@ -4621,11 +4631,10 @@ void army::newTurn()
 VA(0x00447120, 0x20A)
 DC_ADDRESS(0x04bc84, 0xfa)
 MAC_ADDRESS(0x05369c, 0x15c)
-// Mac 0x53700 expands the POISON duration getter at +0x2b4.
-// Windows 97.4026 residual: the AGE getter load/test in adjustHitpoints
-// schedules after the poison-factor float copy/store rather than across it.
-// Capturing its duration result in the canonical helper is byte-flat; all
-// 36 blocks, 19 branches, nine calls and 19 references already agree.
+// Mac 0x53700 reads POISON at +0x2b4; DC NewTurn makes no get_spell_time
+// call (see army.h getSpellTime).
+// Exact once adjustHitpoints reads the AGE row directly (see there): the
+// inline getter's AGE load could not cross the poison-factor store.
 void army::resetRound()
 {
     if (m_numTroops <= 0)
@@ -4640,7 +4649,7 @@ void army::resetRound()
 
     decrementSpellRounds();
 
-    if (getSpellTime(SPELL_POISON) > 0) {
+    if (m_spellInfluence[SPELL_POISON] > 0) {
         int oldHitPoints = m_monInfo.m_hitPoints;
         double factor = cppMax<double>(m_poisonPenalty - 0.1f, 0.5);
         m_poisonPenalty = static_cast<float>(factor);
@@ -4720,10 +4729,10 @@ static const int g_faerieDragonSpells[] = {
     -1,
 };
 
-// With the canonical conditional controlling-side return, all 29 blocks and
-// helper boundaries remain aligned. The 99.9248% residual is one commutative
-// sideIsAi load address: [EAX + ECX] versus retail [ECX + EAX]. Preserve the
-// recovered getter instead of manufacturing an alternate indexing spelling.
+// Exact with DC's guarded-return getControllingSide (see army.h). The
+// conditional-expression body gave 99.9248%: one commutative sideIsAi
+// address, [EAX + ECX] versus retail [ECX + EAX]; naming the side in a local,
+// comparing != 0 or pointer arithmetic did not change it.
 VA(0x00447510, 0x1A8)
 MAC_ADDRESS(0x053a3c, 0x18c)
 void army::chooseFaerieDragonSpell()
@@ -5274,11 +5283,12 @@ VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
 VA(0x00448cd0, 0x4B)
 DC_ADDRESS(0x04c918, 0x50)
 MAC_ADDRESS(0x055028, 0x6c)
-// Mac 0x55028 expands the SLOW duration getter at +0x270.
+// Mac 0x55028 reads SLOW at +0x270; DC get_speed makes no get_spell_time
+// call (see army.h getSpellTime).
 int army::getSpeed() const
 {
     int speed = m_monInfo.m_speed;
-    if (getSpellTime(54)) {
+    if (m_spellInfluence[54]) {
         if (is(creatureSiegeWeapon))
             return 0;
         speed = static_cast<long>(speed * m_slowFactor);

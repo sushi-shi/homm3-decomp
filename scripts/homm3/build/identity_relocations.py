@@ -98,12 +98,16 @@ def _pairs(coff: canon.CoffObject):
         owner = canon._function_owner(ranges, relocation.section, relocation.site)
         if owner is None or len(names.get(owner.name, ())) != 1:
             continue
-        pairs[(owner.name, relocation.site - owner.value)] = relocation
+        pairs[(owner.name, relocation.site - owner.value)] = (relocation, owner.value)
     return pairs
 
 
-def _context(data: bytes, site: int) -> bytes:
-    return data[max(0, site - 2):site]
+def _context(data: bytes, site: int, start: int) -> bytes:
+    """The operand's two preceding instruction bytes, never reaching back
+    before the owning function: a site at function offset +1 would otherwise
+    compare the previous body's tail (or alignment fill) with a COMDAT that
+    starts its section."""
+    return data[max(start, site - 2):site]
 
 
 def _append_symbols(payload: bytearray, coff: canon.CoffObject,
@@ -141,8 +145,8 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
     base_pairs = _pairs(base)
     target_pairs = _pairs(target)
     rewrites = []                     # (target relocation, base symbol, addend, undefined)
-    for key, trel in target_pairs.items():
-        brel = base_pairs.get(key)
+    for key, (trel, tstart) in target_pairs.items():
+        brel, bstart = base_pairs.get(key, (None, 0))
         if brel is None or brel.typ != trel.typ:
             continue
         bsym = base.symbols[brel.symbol_index]
@@ -161,7 +165,8 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
                 tdata = target.section_bytes(target.sections[trel.section - 1])
                 if (brel.site + 4 <= len(bdata) and trel.site + 4 <= len(tdata)
                         and bdata[brel.site:brel.site + 4] == tdata[trel.site:trel.site + 4]
-                        and _context(bdata, brel.site) == _context(tdata, trel.site)):
+                        and _context(bdata, brel.site, bstart)
+                        == _context(tdata, trel.site, tstart)):
                     rewrites.append((trel, bsym, struct.unpack_from("<i", bdata, brel.site)[0],
                                      True))
             continue
@@ -183,7 +188,7 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
                 continue
         elif (mine + badd) & 0xFFFFFFFF != (theirs + tadd) & 0xFFFFFFFF:
             continue
-        if _context(bdata, brel.site) != _context(tdata, trel.site):
+        if _context(bdata, brel.site, bstart) != _context(tdata, trel.site, tstart):
             continue
         rewrites.append((trel, bsym, badd, False))
     if not rewrites:

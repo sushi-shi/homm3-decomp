@@ -591,15 +591,24 @@ static int g_townArmyCoords[7][2] = {
 // bytes of this function and the teardown is the last thing before the
 // epilogue.
 
-// The silo row collects resource indices. DC records EGameResource[3];
-// only the first two entries are displayed. get_silo_income
-// hands back a seven-entry row; the sweep records the position of each
-// non-zero entry and the display then has exactly two shapes - two
-// icons at y=75/87 when two resources are produced, one at y=81 when
-// one is. Retail walks the array with a cursor that LAGS by one slot
-// (`lea edx,[ebp-0x2c]` is &slots[-1] and it pre-increments) and
-// reloads `i` after every store because the store through that cursor
-// might alias it. Both are what `slots[found++] = i` produces.
+// The silo row's loop counter IS resource[0]. DC records only
+// EGameResource resource[3]: line 406 stores the counter at r14+44, the
+// array's own address, line 412 increments the count and 413 stores the
+// counter through r14+44+4*count; the icons read resource[1]/[2]. Retail
+// keeps the same frame shape - the counter homed at [ebp-0x2c] and
+// reloaded after each store, the cursor starting at &resource[0] and
+// pre-incrementing - exactly as TQuickTownWindow's sibling sweep. The
+// separate `int i` + `slots[found++]` spelling kept the counter in a
+// register and left the frame and reserve()'s nested _Ucopy inline
+// decision wrong (94.77; this form 98.72). Dreamcast line 373 also calls
+// HasBuilding(13, 0) directly, not IsCapitol; both emit the same bytes.
+// Remaining: the hall ladder's three mask tests and the fort ladder's
+// second pick the other commutative register form (retail copies the
+// cached mask and loads the bit into ecx/esi, the exact TQuickTownWindow
+// shape). Byte-flat probes: DC braces on both ladders, unbraced
+// hasBuilding, swapped mask operands, `hallLevel = 0` split from its
+// declaration, a const town receiver (labels only, 98.76); the sibling's
+// `else hallLevel = 0` ladder is worse (98.23).
 
 // PART OF IT IS THE SITE COUNT - see TBottomViewKingdom's note for the
 // mechanism. Padding this body with free inline candidates gives 94.43
@@ -711,12 +720,13 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     int hallLevel = 0;
-    if (which->hasBuilding(HALL_TOWN_ID, false))
+    if (which->hasBuilding(HALL_TOWN_ID, false)) {
         hallLevel = 1;
-    else if (which->hasBuilding(HALL_CITY_ID, false))
+    } else if (which->hasBuilding(HALL_CITY_ID, false)) {
         hallLevel = 2;
-    else if (which->isCapitol())
+    } else if (which->hasBuilding(HALL_CAPITOL_ID, false)) {
         hallLevel = 3;
+    }
 
     std::string townSizeName = g_townSizeNames[hallLevel];
 
@@ -724,14 +734,15 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         hallLevel, 0, 0, 0, 0x10));
 
     int fortLevel;
-    if (which->hasBuilding(CASTLE_FORT_ID, false))
+    if (which->hasBuilding(CASTLE_FORT_ID, false)) {
         fortLevel = 0;
-    else if (which->hasBuilding(CASTLE_CITADEL_ID, false))
+    } else if (which->hasBuilding(CASTLE_CITADEL_ID, false)) {
         fortLevel = 1;
-    else if (which->hasBuilding(CASTLE_CASTLE_ID, false))
+    } else if (which->hasBuilding(CASTLE_CASTLE_ID, false)) {
         fortLevel = 2;
-    else
+    } else {
         fortLevel = 3;
+    }
 
     m_widgets.push_back(new iconWidget(105, 31, 34, 34, 0x7d4, "itmcls.def",
         fortLevel, 0, 0, 0, 0x10));
@@ -741,21 +752,24 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
             "townqkgh.pcx", 0x800));
 
     if (which->hasBuilding(MARKETPLACE_SILO_ID, true)) {
-        int* resource = which->getSiloIncome();
-        EGameResource slots[3];
+        int* income = which->getSiloIncome();
+        EGameResource resource[3];
         int found = 0;
-        for (int i = 0; i <= 6; i++) {
-            if (resource[i] != 0)
-                slots[found++] = H3_ENUM_DECODE(EGameResource, i);
+        for (resource[0] = WOOD; resource[0] <= GOLD;
+             resource[0] = static_cast<EGameResource>(resource[0] + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */) {
+            if (income[resource[0]] != 0) {
+                ++found;
+                resource[found] = resource[0];
+            }
         }
         if (found == BOTTOM_VIEW_SILO_TWO_RESOURCES) {
             m_widgets.push_back(new iconWidget(6, 75, 20, 18, 0x7d7,
-                "smalres.def", slots[0], 0, 0, 0, 0x10));
+                "smalres.def", resource[1], 0, 0, 0, 0x10));
             m_widgets.push_back(new iconWidget(6, 87, 20, 18, 0x7d7,
-                "smalres.def", slots[1], 0, 0, 0, 0x10));
+                "smalres.def", resource[2], 0, 0, 0, 0x10));
         } else if (found == BOTTOM_VIEW_SILO_ONE_RESOURCE) {
             m_widgets.push_back(new iconWidget(6, 81, 20, 18, 0x7d7,
-                "smalres.def", slots[0], 0, 0, 0, 0x10));
+                "smalres.def", resource[1], 0, 0, 0, 0x10));
         }
     }
 

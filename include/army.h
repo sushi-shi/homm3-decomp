@@ -1727,19 +1727,23 @@ inline int army::getOwningSide() const
     }
 
     // E:\gamedcs\Army.h:800
-// DC line 803 records the condition; line 804 attributes both owning-side
-// calls to the return, with no recorded local. A conditional return keeps
-// those two canonical paths and lets Complete expand this getter inside
-// getUnitCombatValue's first damage reduction (97.6613 -> 100%). The former
-// guarded-return body costs 49 against that nested budget of 48. This is a
-// source-shape inference, not proof of the original expression's spelling.
+// DC line 803 records the condition and line 804 the first owning-side
+// call. DC's lexical scopes close the if statement (0x27d48..0x27d5e,
+// with the nested arm 0x27d50..0x27d5e) before the second call, so that
+// call is a return after the if, not a conditional-expression arm.
+// Retail agrees: the guarded return makes army::chooseFaerieDragonSpell
+// index sideIsAi as [g_combatManager + side] (exact), where a conditional
+// return gives [side + g_combatManager] (99.9248%). The nested budget that
+// once favoured the conditional return in getUnitCombatValue came from
+// helper calls DC does not have (getSpellTime/getOwningSide); without them
+// this body expands there too.
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 DC_ADDRESS(0x027d44, 0x30)
 inline int army::getControllingSide() const
     {
-        return m_spellInfluence[60]
-                   ? 1 - getOwningSide()
-                   : getOwningSide();
+        if (m_spellInfluence[60])
+            return 1 - getOwningSide();
+        return getOwningSide();
     }
 
     // E:\gamedcs\Army.h:810
@@ -1758,13 +1762,15 @@ inline const char* army::getName(int count) const
 
     // SpellID is still represented by its retail-width int domain here.
     // E:\gamedcs\Army.h:820
-    // Mac expands this indexed read (army + 0x198 + 4*spell) throughout
-    // army.cpp: getAverageDamage 0x4e61c/0x4e658, isEnemy 0x4e7f0,
-    // canShoot 0x4e914, and the duration loops 0x4a720/0x50c48/0x51458.
-    // Keep those reads as helper calls, including within duration updates;
-    // writes still belong to the spell lifecycle methods. Nested reads also
-    // survive in controlling-side (Mac 0x4e810), incapacitation (0x4db14),
-    // and retaliation (0x4da48) expansions.
+    // Mac's indexed reads (army + 0x198 + 4*spell) are what both this
+    // getter and a direct row read expand to, so Mac cannot place it.
+    // Dreamcast can: its army.obj and ai.obj call even tiny header inlines
+    // (get_owning_side, Is) out of line, yet only is_valid_caliph_spell
+    // calls get_spell_time in army.obj, and the is_incapacitated,
+    // can_retaliate and get_controlling_side copies read the rows directly.
+    // Army members with a DC counterpart therefore read m_spellInfluence;
+    // the getter belongs to the external readers DC records (ai, spells,
+    // findpath, path, command, viewarmywindow) and to Complete-only code.
 DC_ADDRESS(0x027d74, 0x12)
 inline long army::getSpellTime(int spell) const
     {
@@ -1797,15 +1803,15 @@ VA(0x0041f380, 0x27)  // anchor-callee
 DC_ADDRESS(0x027d9c, 0x3a)
 inline bool army::isIncapacitated() const
     {
-        return getSpellTime(62) || getSpellTime(70)
-               || getSpellTime(74);
+        return m_spellInfluence[62] || m_spellInfluence[70]
+               || m_spellInfluence[74];
     }
 
     // E:\gamedcs\Army.h:847
 DC_ADDRESS(0x027dd8, 0x44)
 inline bool army::canRetaliate(const army& attacker) const
     {
-        return !attacker.is(creatureFreeAttack) && !getSpellTime(70)
+        return !attacker.is(creatureFreeAttack) && !m_spellInfluence[70]
                && m_retaliationCount > 0;
     }
 

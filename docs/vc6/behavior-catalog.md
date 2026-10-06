@@ -812,6 +812,23 @@ shape that took `type_record_shroud::load` 84 -> 100 - costs 0.64 there.
 - status: methodology bound, measured
 - probe: none (not a compiler behavior)
 
+### C12. A member function's identifier spelling is TU state
+`cspriteframe` (2026-10-06): with every flip/alpha parameter `bool` (DC `_N`
+manglings), renaming only `CSpriteFrame::draw` changes the instruction
+selection of later functions in the TU. `drawSpellEffect`'s two blend loops
+emit retail's dword `mov ebx,[s_div2mask]; and edx,ebx` / `and ebx,dword
+[s_div2mask]` under the names `Draw` (DC's original), `drawz`, `drawA` or
+`drawB`, but word-sized `and dx,word [s_div2mask]` under `draw` or `drawRle`;
+`drawCreatureImpl` (93.70 <-> 95.88) and `drawAdvObjWithFlagAlpha` move with
+it. Retyping `draw`'s two flags `unsigned char` (which changes the decorated
+name) has the same effect. Removing `drawSpellEffect`'s own `draw` call does
+not, so it is not a call-site conversion. Treat a residual that flips with an
+unrelated symbol's spelling as name-keyed compiler state, not missing source:
+the project's normalized names cannot reproduce the original table.
+- evidence: `src/cspriteframe.cpp` drawSpellEffect note
+- status: observed, mechanism (C1 vs C2 symbol hashing) unmodelled
+- probe: none (needs the full TU)
+
 ### C9. Measurement hygiene the corpus depends on (model-training caveats)
 objdiff fuzzy gives partial credit for a differing displacement (a 97%
 function can have every local mis-slotted); masked diffs hide immediates (the
