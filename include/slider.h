@@ -81,7 +81,7 @@ protected:
 public:
     // Retail-only slot 16. The vtable points at the same empty `ret` body as
     // widget::Close (0x5bc690); no independent source body is claimable.
-    virtual void close();
+    virtual void onValueChanged();
 
     DC_ADDRESS(0x1285a8, 0x8)
     int getMaximum() const { return m_numStates; }

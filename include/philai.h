@@ -39,7 +39,7 @@ public:
 // Complete's computer-owner purchase wrapper, defined at 0x526d20 in
 // philai.cpp. town::buyBuilding calls it before charging the resource row.
 // No original name is known; retain the ordinal until source evidence exists.
-void unnamed526d20(int playerId, int* costs, int flag);
+void tradePlayerResources(int playerId, int* costs, int flag);
 
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
 

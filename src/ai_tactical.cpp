@@ -2150,7 +2150,7 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice& choice, l
         if (target->getSpellTime(SPELL_MAGIC_MIRROR)
                 && group != m_side && value > 0
                 && choice.m_spell != SPELL_DISPEL)
-            value = (50 - target->getMirrorEffect()) * value * 2 / 100;
+            value = (50 - target->getMagicMirrorChance()) * value * 2 / 100;
         if (value > choice.m_value) {
             best = target;
             choice.m_value = value;

@@ -45,7 +45,7 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
 // bitmap header, normalizes region endpoints, and returns a signed status.
 int __stdcall victorValidateImage(imgdes* image);
 int __stdcall victorUploadPalette(imgdes* image);
-void __stdcall victorInitializePalette(imgdes* image);
+void __stdcall victorInitializeGrayscalePalette(imgdes* image);
 // Provisional identity from the HDC/start/count/RGBQUAD call ABI at
 // 0x603871 and 0x603a93: dynamically supplied DIB color-table setter.
 typedef UINT (WINAPI *VictorSetDibColorTable)(HDC, UINT, UINT, const RGBQUAD*);
@@ -69,7 +69,7 @@ int __cdecl victorDecodeRleBytes(unsigned char* destination,
 void __cdecl victorUnpackFourPlanes(unsigned char* destination,
                                     const unsigned char* source,
                                     int planeStride, int pixels);
-void __cdecl victorInterleaveRgbPlanes(unsigned char* destination,
+void __cdecl victorConvertRgbPlanesToBgr(unsigned char* destination,
                                        const unsigned char* source, int stride);
 void __stdcall victorInsertBits(unsigned char* destination,
                                 const unsigned char* source, int offset, int count);
@@ -94,14 +94,14 @@ SIZE(VictorLock, 0x1c);
 // 0x603b10 is a bare `ret`; victorReleaseLock<N> is the cleanup of the Nth
 // VictorLock by address. Names are invented; bodies in src/victor.cpp.
 void __cdecl victorReleaseNothing();
-void __cdecl victorReleaseLock0();
-void __cdecl victorReleaseLock1();
-void __cdecl victorReleaseLock2();
-void __cdecl victorReleaseLock3();
-void __cdecl victorReleaseLock4();
-void __cdecl victorReleaseLock5();
-void __cdecl victorReleaseLock6();
-void __cdecl victorReleaseLock7();
+void __cdecl victorDestroyLock0();
+void __cdecl victorDestroyLock1();
+void __cdecl victorDestroyLock2();
+void __cdecl victorDestroyLock3();
+void __cdecl victorDestroyLock4();
+void __cdecl victorDestroyLock5();
+void __cdecl victorDestroyLock6();
+void __cdecl victorDestroyLock7();
 
 // TIFF 6.0 field layouts. The in-memory IFD image keeps the on-disk packing
 // (2-byte count, 12-byte entries at 2-byte offsets, next-IFD offset).

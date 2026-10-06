@@ -861,7 +861,7 @@ inlining control, dummy operation or release-budget adjustment.
 | `game::validateVictoryLossConditions` | 2 | Failed town-team checks continue from one validation scope | 1791 / 5 | 90.0315% |
 | `earlySetup` | 2 | Found result with the original two explicit head-tested scans | 1251 / 122 | 99.5994% |
 | `creditsWait` | 1 | Normal frame in switch default continues the playback loop | 1032 / 57 | 100% |
-| `kbFn004EE1B0` | 1 | Event-local done result checked after the switch | 248 / 17 | 100% |
+| `playFramedVideo` | 1 | Event-local done result checked after the switch | 248 / 17 | 100% |
 | `congratsWait` | 2 | Normal frame in switch default; key/mouse breaks leave playback | 884 / 52 | 100% |
 | `TRmgZone::TRmgZone` | 1 | Chosen result gates the existing selected-town fallback | 208 / 1 | 100% |
 | `combatManager::mirrorImage` | 1 | Valid fit arm owns the single placement/animation action and return | 1032 / 15 | 100% |

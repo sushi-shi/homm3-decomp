@@ -2240,7 +2240,7 @@ VA(0x00533A50, 0x33)
 MAC_ADDRESS(0x2311fc, 0x78) // vtable 0x640af4 slot 2 + retained callee 0x54b490
 unsigned char TRmgQuestArtifactObject::completePlacement()
 {
-    if (m_generator->placeQuestArtifact(this)) {
+    if (m_generator->placeSeerHutForArtifact(this)) {
         m_seerHut = 0;
         return 1;
     }
@@ -2927,7 +2927,7 @@ void TRmgTreasureGroup::discard()
 }
 
 // Native 0x232fc4 marks the group ready and flags every surface-outline cell.
-// Its retained callers are assembleTreasureGroup, placeQuestArtifact and
+// Its retained callers are assembleTreasureGroup, placeSeerHutForArtifact and
 // placeKeyTentGuard; Windows expands the same shared loop in those callers.
 // Recovery improves the key-tent caller 71.2882% -> 78.1076%; assembly and
 // quest-artifact caller lowering still need recovery. Keep the shared body.
@@ -6189,7 +6189,7 @@ void TRmgGenerator::floodWaterZoneDistances(TRmgMapPosition position, int zoneIn
 // and ADD-negative limit expressions do not recover the remaining differences.
 VA(0x0053F470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
-void TRmgGenerator::prepareWaterZoneConnections(TRmgZone* zone)
+void TRmgGenerator::populateWaterZoneIslands(TRmgZone* zone)
 {
     if (zone->m_terrain != eTerrainWater)
         return;
@@ -6261,7 +6261,7 @@ void TRmgGenerator::prepareWaterZoneConnections(TRmgZone* zone)
 // the ordinary findConnection helper and progress call remain canonical.
 VA(0x0053F880, 0x429)
 MAC_ADDRESS(0x241874, 0x628)
-void TRmgGenerator::expandObstacleClearance()
+void TRmgGenerator::markZoneBoundaryObstacles()
 {
     TRmgMapItem* current = m_map.m_mapItems;
     TRmgMapPosition position;
@@ -8356,7 +8356,7 @@ MAC_ADDRESS(0x24817c, 0x1ac)
 void TRmgGenerator::prepareZoneConnections()
 {
     carveBranchingPaths();
-    expandObstacleClearance();
+    markZoneBoundaryObstacles();
     TRmgMapItem* item = m_map.m_mapItems;
     TRmgMapPosition position;
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
@@ -8371,7 +8371,7 @@ void TRmgGenerator::prepareZoneConnections()
         }
     }
     for (unsigned int zone = 0; zone < m_zones.size(); ++zone)
-        prepareWaterZoneConnections(m_zones[zone]);
+        populateWaterZoneIslands(m_zones[zone]);
     buildZoneConnectionPaths();
     repairWaterZoneBorders();
     connectZones();
@@ -11132,7 +11132,7 @@ static const int g_rmgQuestArtifactClass = 2;
 // same helper used by the key-tent fallback.
 VA(0x0054B490, 0x42E)
 MAC_ADDRESS(0x250588, 0x360) // anchor-caller + artifact/group/generator fields; retail-only
-unsigned char TRmgGenerator::placeQuestArtifact(TRmgQuestArtifactObject* object)
+unsigned char TRmgGenerator::placeSeerHutForArtifact(TRmgQuestArtifactObject* object)
 {
     TRmgSeerHutObject* seerHut = object->m_seerHut;
     int available = 0;

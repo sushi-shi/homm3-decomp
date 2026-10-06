@@ -230,7 +230,7 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // caller is byte-flat, so it does not recover the required inline decision.
 
 //  * the traits row is COPIED BY VALUE onto the frame (`mov ecx,0x1d /
-//    rep movsd`) so hero::HeroFn_004E6120 can fold the hero's own
+//    rep movsd`) so hero::applyCreatureStatBonuses can fold the hero's own
 //    attack/defense and artifacts into the copy without touching the
 //    table. Every "modified" column then reads the copy while its
 //    "base" column reads the table row through the cached pointer.
@@ -282,7 +282,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
                            group->m_numTroops[iarmy]);
 
     if (thisHero)
-        thisHero->heroFn004E6120(m_armyType, &traits);
+        thisHero->applyCreatureStatBonuses(m_armyType, &traits);
 
     createAttackWidget(typeTraits->m_attackSkill, traits.m_attackSkill);
     createDefenseWidget(typeTraits->m_defenseSkill, traits.m_defenseSkill);

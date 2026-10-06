@@ -745,7 +745,7 @@ restore the proven call before blaming the compiler generation.
 
 ## A container scope can free the loop-counter register
 
-`type_skill_quest::doProgressDialog` (0x56dd60) held zero in EBX and spilled
+`type_skill_quest::doProposalDialog` (0x56dd60) held zero in EBX and spilled
 its four-iteration counter. Retail uses EBX for the counter and deletes the
 resource vector without clearing its three pointers. An inner vector scope,
 ending before the lifetime-extended dialog string, removes those stores and

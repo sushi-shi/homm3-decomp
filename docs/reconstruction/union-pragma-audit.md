@@ -678,7 +678,7 @@ could not disappear across that call. Its randomizer also fills the native
 record directly, with no elemental initialization.
 
 All three retained calls to 0x5d2d80 are in Conflux branches: two in
-`aiEnterTown` (0x5253d0), one in `valueOfTownBuildings` (0x52b1e0).
+`aiEnterTown` (0x5253d0), one in `valueOfTownVisitBonuses` (0x52b1e0).
 `townManager::doUniversity` expands the same four stores. The ordinary member
 `initializeMagicSkills`, defined at the same townmgr source position and
 explicitly called at those four sites, models that role. Its name and historical

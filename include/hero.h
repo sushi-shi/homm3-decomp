@@ -360,7 +360,7 @@ public:
     };
     // The nineteenth equipped position - the one Shadow of Death added on
     // top of the Dreamcast TArtifactSlot roster's eighteen.
-    // hero::HeroFn_004E2550 (0x4e2550) refuses it outright while the
+    // hero::canEquipArtifactInEmptySlot (0x4e2550) refuses it outright while the
     // engine gate reports a pre-SoD game. GATED to hero.obj's own view:
     // an ungated enumerator is a measured include-set cost in this tree
     // (netmsg.h's RS_ERASE_OBJECT note records 90.84 -> 88.24 on an
@@ -421,7 +421,7 @@ public:
     // (0x1a6e/0x4d63/0x6311/0x71dc). The enum's underlying int and the
     // Windows town callers' dword loads agree with this packed offset.
     HeroId m_id;  // +0x1a
-    // +0x1e. HeroFn_004D8B30 copies the setup record's +0x08 dword
+    // +0x1e. hero::initialize copies the setup record's +0x08 dword
     // straight in here, which is the only retail body that touches these
     // four bytes at all - hence a full DWORD and hence a member rather
     // than a pad. No name survives and nothing else reads it, so the
@@ -435,14 +435,14 @@ public:
     // it against the acting-player id. Name provisional.
     // Before normalization (Dreamcast): playerOwner.
     signed char m_owner;  // +0x22
-    // +0x23. HeroFn_004D8B30 copies exactly thirteen bytes of the setup
+    // +0x23. hero::initialize copies exactly thirteen bytes of the setup
     // record's name here; SetRolloverText passes this band to sprintf.
     char m_name[13];
     // Original hero_class is THeroClass in all four complete DC hero records
     // (0x1a6e/0x4d63/0x6311/0x71dc). Retail keeps the same dword at +0x30
     // and adds the two Conflux classes to its cursor and traits tables.
     THeroClass m_heroClass;
-    // +0x34. The current-hero gate in HeroFn_004D8FB0 compares this byte
+    // +0x34. The current-hero gate in hero::getBiography compares this byte
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.
     unsigned char m_portrait;
@@ -785,14 +785,14 @@ public:
     // Map/scenario setup application. Complete moved DC initialize_hero
     // (game.cpp:9912, dc 0xb6c84) to this member, retail 0x4d8b30, ret 4.
     void initialize(const class HeroExtra* setup);
-    int heroFn004D9B30(int artifact);
+    int showDisassembleArtifactDialog(int artifact);
     // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
     // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
     // component's targetCombo, describes the ASSEMBLED artifact and asks
     // general text 733 with the component's name formatted in. The old DC
     // bracket assignment to ViewArtifact is disproved by that name's exact
     // retail identity at 0x4d9a00; this remains an ordinal retail-only name.
-    int heroFn004D9CC0(int artifact);
+    int showAssembleArtifactDialog(int artifact);
     // Original ?ViewArtifact@hero@@QAAXABUtype_artifact@@H@Z proves
     // const reference. The Windows body passes the same one-word address
     // and never treats the artifact as optional.
@@ -806,8 +806,8 @@ public:
     // include-set sensitivity class with no semantic change anywhere.
 
     // 0x4e2550, RETAIL-ONLY (no DC row), `ret 8`: the actual equip
-    // attempt HeroFn_004E2840 wraps. ORDINAL PLACEHOLDER.
-    unsigned char heroFn004E2550(long artifact, long slot);
+    // attempt hero::canReplaceArtifactInSlot wraps. ORDINAL PLACEHOLDER.
+    unsigned char canEquipArtifactInEmptySlot(long artifact, long slot);
     // 0x4e2840, RETAIL-ONLY (no DC row), `ret 8`: decides whether the
     // artifact being dragged may drop into an equipment slot.
     // THeroScreenWindow::update_slot calls it THISCALL on gpCurrentHero
@@ -815,7 +815,7 @@ public:
     // (dc 0x37d88, the artifact.h free inline): this member uses that
     // primitive and adds occupancy/combination checks and displaced-slot
     // restoration. ORDINAL PLACEHOLDER name.
-    unsigned char heroFn004E2840(long artifact, long slot);
+    unsigned char canReplaceArtifactInSlot(long artifact, long slot);
     void upgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
     // the boat bit out of `flags` and forwards to the other.
@@ -852,7 +852,7 @@ private:
 
 public:
     TSkillMastery getIdentifyLevel() const;
-    void heroFn004E6120(int creatureType,
+    void applyCreatureStatBonuses(int creatureType,
                          TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
@@ -897,7 +897,7 @@ public:
     bool equipArtifact(const type_artifact& artifact, long slot);
     // 0x004dc070 - disassembles the combination artifact in one equipped
     // slot, then equips each component into its first legal position.
-    void heroFn004DC070(long slot);
+    void disassembleCombinationArtifact(long slot);
     // 0x004d9260 - drops the artifact backing a war machine when the
     // machine dies.
     void destroySiegeWeaponArtifact(int creatureType);
@@ -928,7 +928,7 @@ public:
     unsigned char giveArtifact(const type_artifact& artifact,
                                unsigned char announce,
                                unsigned char checkEnd);
-    const char* heroFn004D8F70();
+    const char* getClassName();
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     bool visitedArena(const NewmapCell* cell) const;
     void setVisitedArena(const NewmapCell* cell);
@@ -958,7 +958,7 @@ public:
                   bool applyLimits) const;
     int moraleIncreaseValue(int value);
     int luckIncreaseValue(int value);
-    int soDGetSeerSkillValue(int skill, int level);
+    int getSeerSkillRewardValue(int skill, int level);
     int getSpellDurationBonus() const;
     int giveExperience(int howMuch, int checkForLevelUp,
                        bool showCapWindow);
@@ -977,7 +977,7 @@ public:
     // with a single-precision fmul.
     float getExperienceBonusFactor() const;
     int getMysticismBonus() const;
-    TAdventureObjectType heroFn004E4EC0();
+    TAdventureObjectType getSpecialTerrainObjectType();
     long getCombatSpeedBonus() const;
 
     // Header inline at E:\gamedcs\Hero.h:634. Dreamcast's
@@ -1294,19 +1294,19 @@ public:
         return m_availableSpells[spell];
     }
     TCreatureType getNecromancyCreature();
-    const char* heroFn004D8FB0();
-    unsigned char heroFn004DBE80(int combination);
+    const char* getBiography();
+    unsigned char hasCombinationArtifactComponents(int combination);
     // Same gate and same reason as the equip pair above.
     // 0x4dbf30, the two-argument member of the combination family:
     // strips every worn component of `combination` (plus whatever sits
     // in `slot`) and equips the assembled artifact. ORDINAL PLACEHOLDER.
-    unsigned char heroFn004DBF30(int combination, long slot);
+    unsigned char assembleCombinationArtifact(int combination, long slot);
     // 0x4dc100, the family's NOTIFIER: called after a slot changes, it
     // records the assembled combination the artifact belongs to, or -
     // when every component of a combination is now worn - offers the
-    // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
+    // assembly through a NormalDialog and calls hero::assembleCombinationArtifact on yes.
     // ORDINAL PLACEHOLDER.
-    void heroFn004DC100(long slot);
+    void offerCombinationArtifactAssembly(long slot);
     boat* findSummonableBoat() const;
     void placeInMap(int playerId, type_point point, bool resetFlags);
     int load(TAbstractFile* infile, int saveVersion);
@@ -1372,7 +1372,7 @@ public:
         } m_availability;
     };                                              // +0x38
     char m_pad3c[4];  // +0x3c retail-only field
-    // HeroFn_004D8FB0 strcmp's the live hero name against this pointer.
+    // hero::getBiography strcmp's the live hero name against this pointer.
     // InitializeHeroTraitsTable independently fills it from hotraits.txt.
     const char* m_defaultName;  // +0x40
     // Retail parses columns 1/2, 4/5, and 7/8 into these six dwords;

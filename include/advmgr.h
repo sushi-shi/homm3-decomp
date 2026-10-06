@@ -131,7 +131,7 @@ enum EAdvmgrRetailObjectType {
 // every quick-info consumer sees is unchanged, line for line.
 extern const char* g_terrainNames[];
 extern int g_curWatchPlayer;
-// Paired with gUnnamed6989c8 by every non-local adventure command gate.
+// Paired with g_debugLevel by every non-local adventure command gate.
 // The role is byte-proven; no surviving symbol attests a semantic name.
 extern int g_debugLevel;
 // Written at startup by InitializeExtraInfoText (28 rows of
@@ -284,7 +284,7 @@ enum EMapDimension {
     MAP_DIMENSION_EXTRA_LARGE = 144
 };
 
-// The only three values UpdateRadar tests gUnnamed68c6b8 against. Retail
+// The only three values UpdateRadar tests g_viewWorldScaleFloat against. Retail
 // compares the float's BIT PATTERN with integer `cmp` immediates
 // (0x41800000 / 0x413d70a4 / 0x40f5c28f) - VC6 folding an exact float
 // equality against a normal constant - and our CL folds a literal the same
@@ -651,7 +651,7 @@ public:
     ~TAdventureMapWindow();
     virtual int open(int zOrder, bool update);
     virtual void close(unsigned char update);
-    virtual void vslot8(unsigned char on);
+    virtual void onSleepChange(unsigned char on);
     unsigned char processRightSelect(const message* msg);
     bool processHover(int hx, int hy);
     void doHeroKnob(unsigned char up);
@@ -1526,7 +1526,7 @@ void clipAdventureTile(int& baseX, int& baseY,
                        int& tileWidth, int& tileHeight);
 // Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
 // prove this five-parameter /Gr help-text signature, but no surviving name.
-void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
+void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList);
 
 // --- globals ---

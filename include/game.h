@@ -59,24 +59,26 @@ class type_event_record;
 class MonsterData;
 // Retail NewfullMap::Init proves the deleting destructor at slot zero.
 // NewMap and the mapcell broadcasts prove the remaining slot count and the
-// signatures at +0x24, +0x28 and +0x38; the other names remain address-based.
+// signatures at +0x24, +0x28 and +0x38. NewfullMap stores only type_quest
+// pointers here, so each slot takes the matching type_quest virtual's name;
+// the signatures of slots the map never calls remain opaque.
 class CMapObjectData {
 public:
     virtual ~CMapObjectData();
-    virtual void newMapVFn04();
-    virtual void newMapVFn08();
-    virtual void newMapVFn0c();
-    virtual void newMapVFn10();
-    virtual void newMapVFn14();
-    virtual void newMapVFn18();
-    virtual void newMapVFn1c();
-    virtual void newMapVFn20();
+    virtual void getAIPaymentValue();
+    virtual void isSatisfied();
+    virtual void takePayment();
+    virtual void doProgressDialog();
+    virtual void doProposalDialog();
+    virtual void getRequirementText();
+    virtual void getQuestDescription();
+    virtual void questType();
     virtual void notifyHeroDefeated(int heroId, int player);
     virtual void notifyMonsterDefeated(type_point point, int player);
-    virtual void newMapVFn2c();
-    virtual void newMapVFn30();
-    virtual void newMapVFn34();
-    virtual void newMapVFn38();
+    virtual void load();
+    virtual void loadFromMap();
+    virtual void save();
+    virtual void setDefaultText();
 };
 
 // The two map-object pools readObject (0x502e00) appends to that no other
@@ -137,7 +139,7 @@ class town;
 #pragma pack(push, 8)
 class HeroExtra {
 public:
-    // +0x00..+0x67 decoded by hero::HeroFn_004D8B30, which reads every
+    // +0x00..+0x67 decoded by hero::initialize, which reads every
     // field here. Names are the Dreamcast HeroExtra roster's: from DC
     // offset 8 onward all sixteen of its members land on retail at
     // DC + 4, in order and without exception, which is what identifies
@@ -170,7 +172,7 @@ public:
     unsigned char m_customName;  // +0x306
 #pragma pack(pop)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
-    // +0x318 is the hero's SEX, not experience: HeroFn_004D8B30 gates it
+    // +0x318 is the hero's SEX, not experience: hero::initialize gates it
     // on `!= -1` and stores it into hero::sex at +0x3d5. The real
     // Experience is the dword at +0x1c above. Renamed 2026-08-20.
     int m_sex;
@@ -180,7 +182,7 @@ public:
     signed char m_primarySkills[4];  // +0x32d, class trails to 0x334
 
     // Implicit default constructor; CodeView dc 0xbd5f4 compgenx.
-    void heroExtraFn004B8450(int heroId);
+    void reset(int heroId);
 };
 #pragma pack(pop)
 SIZE(HeroExtra, 0x334);
@@ -950,7 +952,7 @@ public:
     int m_quickCombat;  // +0xe4
     // Complete adds the combination-artifact bitset before the older AI
     // member. Constructors and load/save prove bitset<12> at +0xe8;
-    // hero::HeroFn_004DC100 uses its Dinkumware bounds check and word index.
+    // hero::offerCombinationArtifactAssembly uses its Dinkumware bounds check and word index.
     // +0xec..+0xef is implicit alignment padding: retail assignment skips
     // it, then copies the complete AI member, including its internal pad.
     std::bitset<12> m_assembledCombinations;  // +0xe8
@@ -1253,7 +1255,7 @@ public:
     };
     std::vector<MonsterIdentifier> m_monsterIdentifiers;
     NewfullMap* getWorldMapData();
-    type_point gameFn004CEF10(int identifier);
+    type_point getMonsterLocationByIdentifier(int identifier);
     HeroId getStartingHeroId(TTownType alignment, int playerPos,
                           int mapPosition);  // 0x4bb400
     int scan(signed char* whichList, int start, int length);
@@ -1525,10 +1527,6 @@ public:
     void showMoraleInfo(hero* who, int dialogType);
     void recordHideHero(hero* who, char newOwner,
                           unsigned char townGarrison);
-    // 0x4c86a0. town::hire passes the player id and consumed two-slot
-    // recruit index; hero::hire uses the same closeout call. The body
-    // remains outside the admitted surface.
-    void finishTownHire(long playerId, int recruitSlot);
 
     // Dreamcast's public symbol is `?OnSameTeam@game@@QBA_NHH@Z`: bool,
     VA(0x005296d0, 0x37)  // hd-crossbuild + anchor-callee x3
@@ -1948,9 +1946,9 @@ extern int g_sandAnim;
 // its own, and advManager::ProcessHover gates fog on it with the same
 // `test byte ptr [...], al` shape. game::Load's tail writes the pair one
 // after the other and that is what separates them: 0x69ccbc takes
-// `1 << gUnnamed69778c` (the acting player) while this one takes
-// `1 << gNetLocalGamePos` (this machine's own seat). NAME UNATTESTED -
-// address-ordinal placeholder, as gUnnamed69778c is.
+// `1 << g_curWatchPlayer` (the acting player) while this one takes
+// `1 << gNetLocalGamePos` (this machine's own seat). The name is project-assigned:
+// no Dreamcast or NH3API symbol covers this byte.
 extern unsigned char g_curPlayerBit;
 // Network-session latch; canonical storage is owned by kbwin.cpp.
 extern int g_remoteOn;

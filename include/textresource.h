@@ -427,7 +427,7 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT = 342,
     // The hero screen's "Level %d %s" line (widget 0x8c): a folded
     // [Text._First + 0x55c] in THeroScreenWindow::SetupHeroView, fed the
-    // hero's level and the class name HeroFn_004D8F70 picks. The INDEX is
+    // hero's level and the class name hero::getClassName picks. The INDEX is
     // byte-proven; the NAME describes the two arguments retail feeds it.
     GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT = 343,
     GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT = 344,

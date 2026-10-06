@@ -738,11 +738,11 @@ bool combatManager::isComputerAction()
 // SetDefaultCombatOptions initialises, which is what fixes the DEFAULT
 // arm's field as combatAutoCreatures rather than a catch-all.
 
-// The byte at 0x691209 is soundmgr's gbUnk691209. Nothing here
-// contradicts that TU's reading: the address is an ordinal-named byte
+// The byte at 0x691209 is advmgr.cpp's g_goSolo. Nothing here
+// contradicts that TU's reading: the address is a one-byte
 // flag with two independent readers, and both do nothing but test it
 // non-zero (`mov al, byte [0x691209]; test al, al`). The sound guard's
-// `field_84 || gbUnk691209` and this body's `gbUnk691209 && field_132b4`
+// `field_84 || g_goSolo` and this body's `g_goSolo && field_132b4`
 // are both consistent with a single global "an automated/attract mode is
 // running" latch; neither reader constrains the other, so the name
 // stays soundmgr's.
@@ -2182,7 +2182,7 @@ inline bool combatManager::automateTower()
     }
     if (!isComputerAction())
         return 0;
-    unnamed465f20();
+    chooseArrowTowerAction();
     resetMouse();
     return 1;
 }

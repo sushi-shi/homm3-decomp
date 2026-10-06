@@ -150,7 +150,7 @@ static const int g_fifthLevelSpell = 5;
 // bank SetWinText loads for this window.
 static const int g_dialogReturnDismissHero = 0x81;
 static const int g_heroScreenWinText = 6;
-// HeroFn_004E6120's three source-private ids, kept out of the shared
+// hero::applyCreatureStatBonuses's three source-private ids, kept out of the shared
 // headers for the same reason. 0x7f is the Vial of Dragon Blood (+5
 // attack and +5 defense to dragons, which is the identification); the
 // attribute bit is NH3API's CF_DRAGON; and hero 155 is the one hero whose
@@ -159,7 +159,7 @@ static const int g_heroScreenWinText = 6;
 // WindowHandler re-evaluates the rollover whenever either SHIFT changes.
 // These are PS/2 scan codes in message::codeX; inputmgr.h's own note
 // measures what adding ungated enumerators there costs, so they stay here.
-// HeroFn_004D8B30's start-level override: one campaign/scenario pair
+// hero::initialize's start-level override: one campaign/scenario pair
 // whose hero starts at another scenario hero's level plus five. The
 // displacements are exact (gpGame + 0x4c893 IS heroes[151].level), but
 // the campaign's identity is inference, so the names stay role-based.
@@ -693,7 +693,7 @@ void hero::placeInMap(int playerId, type_point point, bool resetFlags)
 //   >= 25  the sex byte, the custom-name flag and the name itself;
 //   <= 30  only EIGHTEEN equipped slots on the wire, after which the
 //          nineteenth - the one Shadow of Death added, and the one
-//          HeroFn_004E2550 refuses in a pre-SoD game - is cleared here
+//          hero::canEquipArtifactInEmptySlot refuses in a pre-SoD game - is cleared here
 //          by hand. Independent corroboration of that slot's identity;
 //   >= 32  the per-class artifact counts.
 // Unlike save, load takes `ret 8` for its two arguments; only
@@ -824,7 +824,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 // The custom name goes out as its length followed by c_str()'s bytes -
 // the `test ecx,ecx / mov ecx, heroNameEmptyText` pair at +0x64 is
 // Dinkumware's c_str() null fallback inlined, the same expansion
-// HeroFn_004D8FB0 carries.
+// hero::getBiography carries.
 VA(0x004d80c0, 0x526)
 DC_ADDRESS(0x0cb698, 0x720)
 MAC_ADDRESS(0x0f34b8, 0x974)
@@ -1071,7 +1071,7 @@ void hero::initialize(short index)
 // members (ecx is used as a hero and every displacement lands inside
 // the modelled 0x492 record) and none of them can be named from the
 // Dreamcast build, so the names below are ORDINAL PLACEHOLDERS flagged
-// unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
+// unattested (hero::getIdentifyLevel / WIDGET_RETURN_32 precedent). The HD
 // crossbuild map has no row for any of them either.
 
 // 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
@@ -1214,7 +1214,7 @@ void hero::initialize(const HeroExtra* setup)
 // the 64-byte-stride class record at 0x67dcec.
 VA(0x004d8f70, 0x3E)
 MAC_ADDRESS(0x0f4a74, 0x84)
-const char* hero::heroFn004D8F70()
+const char* hero::getClassName()
 {
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
@@ -1229,7 +1229,7 @@ const char* hero::heroFn004D8F70()
 // only while the live name still equals its default.
 VA(0x004d8fb0, 0xA0)
 MAC_ADDRESS(0x0f4af8, 0xc8)
-const char* hero::heroFn004D8FB0()
+const char* hero::getBiography()
 {
     if (m_hasCustomName)
         return m_customName.c_str();
@@ -1727,7 +1727,7 @@ void hero::viewArtifact(const type_artifact& artifact, int isQuickView)
 
 VA(0x004d9b30, 0x18D)
 MAC_ADDRESS(0x0f5aec, 0x104)  // combination-artifact caller + settled retail ABI
-int hero::heroFn004D9B30(int artifact)
+int hero::showDisassembleArtifactDialog(int artifact)
 {
     // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
     type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
@@ -1743,7 +1743,7 @@ int hero::heroFn004D9B30(int artifact)
 // The ASSEMBLE partner of 0x4d9b30 above, same arity settlement: `ret 4`,
 // ECX untouched, one artifact id in and the dialog reply out. It reads
 // the component's targetCombo, describes the ASSEMBLED artifact, and
-// asks general text 733 - the same prompt HeroFn_004DC100 uses - with
+// asks general text 733 - the same prompt hero::offerCombinationArtifactAssembly uses - with
 // the assembled artifact's name formatted in and its icon (resource
 // type 8) shown beside the question. Retail reuses the incoming
 // parameter slot for the assembled id, which is why the format argument
@@ -1759,7 +1759,7 @@ int hero::heroFn004D9B30(int artifact)
 // schedule and all 27 blocks, ten calls and relocations: 94.17 -> 100%.
 VA(0x004d9cc0, 0x200)
 MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity; old DC bracket retired
-int hero::heroFn004D9CC0(int artifact)
+int hero::showAssembleArtifactDialog(int artifact)
 {
     int assembled =
         g_combinationArtifacts[g_artifactTraits[artifact].m_targetCombo]
@@ -2407,7 +2407,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
     }
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
-        && g_currentHero->heroFn004E2840(
+        && g_currentHero->canReplaceArtifactInSlot(
                g_heroScreenDraggedArtifact.m_artifactId, slot)) {
         updateArtifactSlot(slot + 0x15, artifact);
         updateArtifactSlot(slot + 2, TArtifact(0x90));
@@ -2603,7 +2603,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     case PORTRAIT_ID:
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-                g_currentHero->m_name, g_currentHero->heroFn004D8F70());
+                g_currentHero->m_name, g_currentHero->getClassName());
         break;
 
     case MORALE_ID:
@@ -2737,7 +2737,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     case HERO_NAME_ID:
         sprintf(g_text, g_heroScreen[16],
-                g_currentHero->m_name, g_currentHero->heroFn004D8F70());
+                g_currentHero->m_name, g_currentHero->getClassName());
         break;
 
     case WIDGET_7800_ID:
@@ -2806,10 +2806,10 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     int targetCombo =
                         g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
                     if (comboType != -1) {
-                        if (g_currentHero->heroFn004D9B30(
+                        if (g_currentHero->showDisassembleArtifactDialog(
                                 oldArtifact.m_artifactId)
                             == DIALOG_RETURN_ACCEPT) {
-                            g_currentHero->heroFn004DC070(slot);
+                            g_currentHero->disassembleCombinationArtifact(slot);
                             g_currentHero->updateStats();
                             g_heroScreenWindow->updateAllSlots();
                             g_heroScreenWindow->drawWindow(1, 0xffff0001,
@@ -2820,11 +2820,11 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     if (targetCombo != -1) {
                         // Mac 0xf7f80 retains this call to the canonical
                         // combination predicate; VC6 expands it here.
-                        if (g_currentHero->heroFn004DBE80(targetCombo)) {
-                            if (g_currentHero->heroFn004D9CC0(
+                        if (g_currentHero->hasCombinationArtifactComponents(targetCombo)) {
+                            if (g_currentHero->showAssembleArtifactDialog(
                                     oldArtifact.m_artifactId)
                                 == DIALOG_RETURN_ACCEPT) {
-                                g_currentHero->heroFn004DBF30(targetCombo,
+                                g_currentHero->assembleCombinationArtifact(targetCombo,
                                                                slot);
                                 g_currentHero->updateStats();
                                 g_heroScreenWindow->updateAllSlots();
@@ -2857,13 +2857,13 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     mouseManager::ARTIFACT_SET);
             }
         }
-    } else if (!rightMouse && g_currentHero->heroFn004E2840(
+    } else if (!rightMouse && g_currentHero->canReplaceArtifactInSlot(
                 g_heroScreenDraggedArtifact.m_artifactId, slot)) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
             g_currentHero->equipArtifact(
                 g_heroScreenDraggedArtifact, slot);
             if (g_game->getGameVersion() >= 2)
-                g_currentHero->heroFn004DC100(slot);
+                g_currentHero->offerCombinationArtifactAssembly(slot);
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
             g_heroScreenWindow->updateAllSlots();
@@ -2875,7 +2875,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
             g_currentHero->equipArtifact(
                 g_heroScreenDraggedArtifact, slot);
             if (g_game->getGameVersion() >= 2)
-                g_currentHero->heroFn004DC100(slot);
+                g_currentHero->offerCombinationArtifactAssembly(slot);
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact = oldArtifact;
             g_heroScreenWindow->updateAllSlots();
@@ -2940,7 +2940,7 @@ MAC_ADDRESS(0x0f83ec, 0xc8)
 // Mac reloads the equipped ID after its sentinel test. Repeating that member
 // expression here keeps this body exact but does not recover the caller's
 // proxy/set boundary; giveArtifact changes from 95.9069% to 95.3968%.
-unsigned char hero::heroFn004DBE80(int combination)
+unsigned char hero::hasCombinationArtifactComponents(int combination)
 {
     std::bitset<144> missingComponents =
         g_combinationArtifacts[combination].m_components;
@@ -2955,7 +2955,7 @@ unsigned char hero::heroFn004DBE80(int combination)
 // Mac f8548/f859c/f85d0 expands bitset reference assignment/conversion.
 VA(0x004dbf30, 0x133)
 MAC_ADDRESS(0x0f84b4, 0x184)
-unsigned char hero::heroFn004DBF30(int combination, long slot)
+unsigned char hero::assembleCombinationArtifact(int combination, long slot)
 {
     std::bitset<144> components =
         g_combinationArtifacts[combination].m_components;
@@ -2984,7 +2984,7 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
 
 VA(0x004dc070, 0x87)
 MAC_ADDRESS(0x0f8638, 0xb4)
-void hero::heroFn004DC070(long slot)
+void hero::disassembleCombinationArtifact(long slot)
 {
     int combination =
         g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
@@ -3027,7 +3027,7 @@ void hero::heroFn004DC070(long slot)
 // recover all 25 retail blocks and nine calls: 97.4068 -> 100%.
 VA(0x004dc100, 0x217)
 MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
-void hero::heroFn004DC100(long slot)
+void hero::offerCombinationArtifactAssembly(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
     // Mac 0xf8734 owns comboType through its proxy write, then
@@ -3047,7 +3047,7 @@ void hero::heroFn004DC100(long slot)
     if (player.m_assembledCombinations[targetCombo])
         return;
 
-    if (!heroFn004DBE80(targetCombo))
+    if (!hasCombinationArtifactComponents(targetCombo))
         return;
 
     player.m_assembledCombinations[targetCombo] = true;
@@ -3058,7 +3058,7 @@ void hero::heroFn004DC100(long slot)
     normalDialog(prompt.c_str(), 2, -1, -1, 8, assembled, -1, 0, -1, 0,
                  -1, 0);
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
-        heroFn004DBF30(targetCombo, slot);
+        assembleCombinationArtifact(targetCombo, slot);
 }
 
 // E:\gamedcs\hero.cpp:2849
@@ -3499,7 +3499,7 @@ int THeroScreenWindow::exitDialog(message& msg)
 // units: this function's bytes are IDENTICAL on both sides (it is absent
 // from build/vc6/fe-generation-verdicts.tsv, which lists every function
 // that differs at all), and hero.obj's five functions that DO differ
-// (HeroFn_004E2550, equip_artifact, remove_artifact,
+// (hero::canEquipArtifactInEmptySlot, equip_artifact, remove_artifact,
 // THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
 // jb/jl loop-guard twins that move AWAY from retail. The captured IL is
 // byte-identical between the two front ends apart from its own two-byte
@@ -3739,7 +3739,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case PORTRAIT_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            normalDialog(g_currentHero->heroFn004D8FB0(),
+            normalDialog(g_currentHero->getBiography(),
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -4617,7 +4617,7 @@ void THeroScreenWindow::setupHeroView()
 
     sprintf(g_text,
             (*g_generalText)[GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT],
-            g_currentHero->m_level, g_currentHero->heroFn004D8F70());
+            g_currentHero->m_level, g_currentHero->getClassName());
     msg.m_codeY = 0x8c;
     msg.m_extraText = g_text;
     broadcastMessage(msg);
@@ -5003,7 +5003,7 @@ void hero::transferArtifacts(hero* src)
 // the remaining outer-loop exit/epilogue frontier is unchanged.
 VA(0x004e2550, 0x2EC)
 MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
-unsigned char hero::heroFn004E2550(long artifact, long slot)
+unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
 {
     if (g_game->getGameVersion() < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
         return 0;
@@ -5094,7 +5094,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 }
 
 // The wrapper: it validates the physical slot against the artifact's
-// allowable-slot class, then hands the real work to HeroFn_004E2550 -
+// allowable-slot class, then hands the real work to hero::canEquipArtifactInEmptySlot -
 // but when the slot is already occupied it SAVES the displaced record,
 // removes it, runs the attempt, and puts the displaced artifact back
 // whatever the answer was. The restore is retail's, on BOTH paths: the
@@ -5102,12 +5102,12 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 // this body's handler stub points at has nTryBlocks=1, tryLow=tryHigh=2,
 // catchHigh=3 and a NULL type descriptor (catch-all), and the state
 // stores bracket exactly one statement - `mov [ebp-4],2` at +0x166 just
-// before the second HeroFn_004E2550 and `mov [ebp-4],-1` at +0x17b right
+// before the second hero::canEquipArtifactInEmptySlot and `mov [ebp-4],-1` at +0x17b right
 // after it. The catch funclet the HandlerType names (0x4e29dc, 25 B, no
 // prologue, the parent's EBP frame) reads &displaced off [ebp-0x1c] and
 // `this` off [ebp-0x14], calls equip_artifact, and rethrows with
 // `push 0 / push 0 / call __CxxThrowException@8`. So the source is
-// `try { accepted = HeroFn_004E2550(...); } catch (...) { restore;
+// `try { accepted = hero::canEquipArtifactInEmptySlot(...); } catch (...) { restore;
 // throw; }` with the normal-path restore repeated below - the same
 // restore-on-unwind idiom artifact.cpp's va_end pair has.
 
@@ -5165,20 +5165,20 @@ MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8; size absorbs t
 // two getArtifact sites after the gate divide /Ob2's nested budget so the
 // bitset _Xran expansion starves (72.45%), one after it still does
 // (82.33%); the entry binding leaves the gate the whole budget (100%).
-unsigned char hero::heroFn004E2840(long artifact, long slot)
+unsigned char hero::canReplaceArtifactInSlot(long artifact, long slot)
 {
     const type_artifact& current = getArtifact(TArtifactSlot(slot));
     if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
         return 0;
 
     if (current.m_artifactId == ARTIFACT_NONE)
-        return heroFn004E2550(artifact, slot);
+        return canEquipArtifactInEmptySlot(artifact, slot);
 
     type_artifact displaced = current;
     removeArtifact(slot);
     unsigned char accepted;
     try {
-        accepted = heroFn004E2550(artifact, slot);
+        accepted = canEquipArtifactInEmptySlot(artifact, slot);
     } catch (...) {
         equipArtifact(displaced, slot);
         throw;
@@ -5192,7 +5192,7 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
 // supplied record without a null branch; the recursive spellbook case
 // passes an ordinary type_artifact temporary on both desktop builds.
 // DC's artifactAllowedInSlot call remains inside Complete's shared
-// heroFn004E2550 placement gate.
+// canEquipArtifactInEmptySlot placement gate.
 VA(0x004e2a00, 0x1C7)
 DC_ADDRESS(0x0d39d8, 0xf6)
 MAC_ADDRESS(0x1035fc, 0x258)
@@ -5203,12 +5203,12 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
         while (1) {
             if (slot >= 19)
                 return 0;
-            if (heroFn004E2550(artifact.m_artifactId, slot))
+            if (canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
                 break;
             ++slot;
         }
     } else {
-        if (!heroFn004E2550(artifact.m_artifactId, slot))
+        if (!canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
             return 0;
     }
 
@@ -5419,7 +5419,7 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // `prompt` must be a NAMED local: its _Tidy runs AFTER the dialogReturn
 // block, not at the end of the NormalDialog full-expression.
 
-// Mac giveArtifact calls the retained heroFn004DBE80 body at 0xf83ec. Its
+// Mac giveArtifact calls the retained hasCombinationArtifactComponents body at 0xf83ec. Its
 // four Mac callers and complete copy/clear/none body establish the existing
 // canonical helper boundary. VC6 expands the source call here, as retail
 // does: Windows similarity rises from 79.8138% to 83.25%, and the first
@@ -5479,7 +5479,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
             int targetCombo =
                 g_artifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
-                if (heroFn004DBE80(targetCombo)) {
+                if (hasCombinationArtifactComponents(targetCombo)) {
                     playerData& player = *getPlayer();
                     if (announce) {
                         if (m_owner == g_game->getLocalPlayerGamePos() &&
@@ -5493,11 +5493,11 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                                          assembled, -1, 0, -1, 0, -1, 0);
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
-                                heroFn004DBF30(targetCombo, -1);
+                                assembleCombinationArtifact(targetCombo, -1);
                         } else if (!player.isHuman()) {
                             // Mac 0x103f74 expands the canonical human-query byte body.
                             // Keep its helper and the guarded owner lookup.
-                            heroFn004DBF30(targetCombo, -1);
+                            assembleCombinationArtifact(targetCombo, -1);
                         }
                     }
                     player.m_assembledCombinations[targetCombo] = true;
@@ -6138,7 +6138,7 @@ int hero::getSpellDurationBonus() const
 
 VA(0x004e4ec0, 0xD6)
 MAC_ADDRESS(0x105cac, 0x1b0)
-TAdventureObjectType hero::heroFn004E4EC0()
+TAdventureObjectType hero::getSpecialTerrainObjectType()
 {
     type_point point = getLocation();
 
@@ -6643,7 +6643,7 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 // E:\gamedcs\hero.cpp:6493
 VA(0x004e6120, 0x39E)
 MAC_ADDRESS(0x1070a0, 0x3b0)
-void hero::heroFn004E6120(int creatureType,
+void hero::applyCreatureStatBonuses(int creatureType,
                            TCreatureTypeTraits* traits) const
 {
     traits->m_attackSkill += getPrimarySkill(0);

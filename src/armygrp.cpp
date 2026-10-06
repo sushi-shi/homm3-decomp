@@ -351,7 +351,7 @@ int TSplitWindow::windowHandler(message& msg)
 
 VA(0x0044a460, 0x55)
 MAC_ADDRESS(0x0578b4, 0x108)
-const std::bitset<9>& armyGrpFn0044A460()
+const std::bitset<9>& getAngelicAllianceAlignments()
 {
     // Retail: construction guard 0x69385c, the bitset at 0x693884 and the
     // built flag at 0x693890 (byte loads and stores in this body, getMorale
@@ -901,7 +901,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
         int grouped = 0;
         for (int a = -1; a < 9; ++a) {
             if (alignments[a + 1] > 0 && a != -1) {
-                if (armyGrpFn0044A460().test(a))
+                if (getAngelicAllianceAlignments().test(a))
                     ++grouped;
             }
         }
@@ -1330,7 +1330,7 @@ std::string armyGroup::getMoraleDescription(
         int grouped = 0;
         for (int alignment = -1; alignment < 9; ++alignment) {
             if (alignments[alignment + 1] > 0 && alignment != -1) {
-                if (armyGrpFn0044A460().test(alignment))
+                if (getAngelicAllianceAlignments().test(alignment))
                     ++grouped;
             }
         }

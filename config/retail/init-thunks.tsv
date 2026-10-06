@@ -1236,7 +1236,7 @@ rva	slot
 # Local-static atexit callbacks: a claimed parent registers each address
 # with _atexit; local_cleanups pairs the site with the parent's current
 # object and compares the complete emitted body and its callees.
-# armygrp: armyGrpFn0044A460 registers the bitset's empty destructor.
+# armygrp: getAngelicAllianceAlignments registers the bitset's empty destructor.
 0x4a4c0	-
 # creaturetype: initializeCreatureTypeTraits, three TAutoStrPtr arrays.
 0x7b7c0	-

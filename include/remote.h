@@ -427,7 +427,7 @@ SIZE(CTurnDuration, 0x14);
 
 extern CTurnDuration g_turnDuration;
 
-// Retail .bss pair right behind gUnnamed69d808's pointer cell, written
+// Retail .bss pair right behind g_dPlay's pointer cell, written
 // together by advManager::StartLocalPlayerTurn (the acting player's game
 // position and an armed byte) and read back by CAdvMgrNetMsgHandler::
 // HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is

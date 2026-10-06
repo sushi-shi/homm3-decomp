@@ -69,7 +69,7 @@ private:
     std::vector<TNameIndex::iterator> m_rows;
 
 public:
-    // Project names for indexed borrowing beside the retained getIndex helper.
+    // Project names for indexed borrowing beside the retained getOrAddIndex helper.
     unsigned int getCount() const { return m_rows.size(); }
     const std::string& getName(int index) const { return m_rows[index]->first; }
 
@@ -83,7 +83,7 @@ public:
     // ordinary registry accessor, returning the mapped value by value also
     // restores the caller's scratch allocation; see setImageName's controls.
     MAC_ADDRESS(0x2268d0, 0xc4)
-    int getIndex(const std::string& name)
+    int getOrAddIndex(const std::string& name)
     {
         TNameIndex::iterator found = m_nameIndex.find(name);
         TNameIndex::iterator result = found;
@@ -432,7 +432,7 @@ TObjectType& TObjectType::setImageName(
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
     unsigned int oldCount = imageNames.getCount();
-    m_imageNumber = imageNames.getIndex(name);
+    m_imageNumber = imageNames.getOrAddIndex(name);
 
     std::vector<TImageInfo>& imageCache = getObjectImageCache();
 
@@ -608,7 +608,7 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
     return is;
 }
 
-// Retail 0x514d80, the objects.txt reader NewfullMapFn_00505DA0 drives.
+// Retail 0x514d80, the objects.txt reader NewfullMap::loadObjectTypeTemplates drives.
 // The whole shape is published by the function's own EH data at 0x650150:
 // eight states, ONE try block spanning states 3..7, and a type-less
 // (`catch (...)`) handler at 0x514ff3 that Disposes the text resource and
@@ -623,7 +623,7 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // ResourceManager::dispose(resource*) calls at both exit paths restore the
 // nested expansion and make the whole Windows body exact (73.3263% -> 100%).
 VA(0x00514d80, 0x284)
-MAC_ADDRESS(0x224224, 0x244)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
+MAC_ADDRESS(0x224224, 0x244)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMap::loadObjectTypeTemplates; retail-only
 void TObjectTypeTable::load(char* filename)
 {
     TTextResource* text = ResourceManager::getText(filename);

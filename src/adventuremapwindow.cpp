@@ -82,7 +82,7 @@ const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 // slot 8: void f(unsigned char) - ret 4. Overrides heroWindow's retail-era
 //   slot-8 virtual (0x5ff5f0, the model's placeholder _vslot8, beyond the six
 //   named heroWindow virtuals the DC dump carries), calls that base first,
-//   then toggles the +0x9c member via sub_b6f50/sub_b6f30 on the bool arg.
+//   then toggles the +0x9c member via TImmMouseEffect::stop/start on the bool arg.
 //   Location, class and signature are proven; the METHOD NAME is not (no DC or
 //   sibling attestation), so it stays unnamed.
 //   RETAIL_LOCATED(0x004040b0, 0x38)  // anchor-vtable slot 8, retail-only
@@ -924,7 +924,7 @@ hero_rollover: {
                 // Dreamcast adventuremapwindow.cpp:733 names operator[].
                 sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
-                    mapHero->m_name, mapHero->heroFn004D8F70());
+                    mapHero->m_name, mapHero->getClassName());
                 rolloverText = g_text;
                 break;
             }
@@ -1477,10 +1477,10 @@ void button::setHotkey(int code)
 
 VA(0x004040b0, 0x38)
 MAC_ADDRESS(0x003ddc, 0x20)
-void TAdventureMapWindow::vslot8(unsigned char on)
+void TAdventureMapWindow::onSleepChange(unsigned char on)
 {
     // Mac 0:0x3ddc forwards only; the mouse-effect edge is Windows-specific.
-    heroWindow::vslot8(on);
+    heroWindow::onSleepChange(on);
 
     if (on) {
         if (m_immersion)

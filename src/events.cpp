@@ -5884,7 +5884,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
     int rightPlayer = -1;
 
     CCombatInitMsg combatInitMsg;
-    combatInitMsg.remoteFn00512E00(netMsg);
+    combatInitMsg.readMessage(netMsg);
 
     if (IsIconic(g_hwndApp))
         ShowWindow(g_hwndApp, SW_RESTORE);
@@ -5977,7 +5977,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
 //      (gpCombatManager) - runs the battle; SetPointer/ShowPointer.
 //   9. winner = gpCombatManager result; CheckLevel both heroes; if remote
 //      TransmitRemoteData + CLevelPickWaitDlg::WaitForLevels(iFromWho).
-//  10. NewfullMapFn_00505D20 x2 + 00505D60 redraw; CheckForHeroDefeatWin
+//  10. NewfullMap::notifyHeroDefeated x2 + 00505D60 redraw; CheckForHeroDefeatWin
 //      x3 with CheckEndGame; loser-side sound (Random/sprintf/
 //      LoadPlaySample "COMBT*.wav"); MobilizeCurrHero; Resume; clear busy
 //      seats; return winner.
@@ -6422,7 +6422,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
     if (rightHero)
         combatInitMsg.m_rightHeroData = *rightHero;
 
-    int result = combatInitMsg.remoteFn00512D40(toWhoNetPos, 0, 1);
+    int result = combatInitMsg.send(toWhoNetPos, 0, 1);
     if (!result)
         shutDown(0);
 }

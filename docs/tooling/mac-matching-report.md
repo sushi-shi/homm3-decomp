@@ -38,7 +38,7 @@ was introduced:
 | `town::canBuild` | 100%, 15/15 CFG blocks | Admitted; 27.18% with current shared source |
 | `recruitUnit::recruitUnit(hero*,...)` | 100%, 6/6 CFG blocks | **Exact, 192/192 bytes** |
 | `recruitUnit::recruitUnit(armyGroup*,...)` | 100%, 6/6 CFG blocks | **Exact, 196/196 bytes** |
-| `type_skill_quest::doProgressDialog` | 100%, 12/12 CFG blocks | **Exact, 84/84 bytes** |
+| `type_skill_quest::doProposalDialog` | 100%, 12/12 CFG blocks | **Exact, 84/84 bytes** |
 
 These are focused observations. The Mac result is a separate verdict for each
 admitted pair.
@@ -754,7 +754,7 @@ body size. A focused VC6 build kept Windows at 99.89% with all 40 CFG blocks,
 byte. The Mac residual is a second-scan army-pointer register choice, with
 no further source-backed edit adopted.
 
-`combatManager::sodChooseFaerieDragonSpell` has a reviewed Mac body at
+`combatManager::chooseFaerieDragonSpellTarget` has a reviewed Mac body at
 0:0x22e64..0x22f94, located through its sole caller, four ordered spell and
 caster calls, loop bound, grid arithmetic and army fields. The shared
 canonical `gridX` and `inInvisibleColumn` inline bodies were exposed through
@@ -866,12 +866,12 @@ one vector index-overload mismatch. A Dreamcast-supported disposal helper
 probe reduced Windows to 98.96% and was reverted; the current source and
 scores were reverified in focused work.
 
-`type_skill_quest::doProgressDialog` is admitted at Mac code
+`type_skill_quest::doProposalDialog` is admitted at Mac code
 0:0x165154..0x1651a8. Its vtable slot and RTTI pin the identity. A canonical
 ordinary skill-dialog helper shared by three Mac callers and the natural
 string temporary lifetime now make the Mac body **exact, 84/84 bytes**, with
 three ordered calls aligned. The focused SEERHUT build exited 0 and Windows
-is also **exact, 12/12 CFG blocks**. `doProposalDialog` remains unfinished at
+is also **exact, 12/12 CFG blocks**. `doProgressDialog` remains unfinished at
 58.11% Windows; its supported shared helper calls were retained. The later
 64-pair full build passed; the separate test suite was not rerun.
 

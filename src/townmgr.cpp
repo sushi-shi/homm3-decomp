@@ -1629,7 +1629,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                         // Tier n's growth artifact, eArtifactLegsOfLegion
                         // (0x76) .. eArtifactHeadOfLegion (0x7a) in DC
                         // enum order. The dispatch domain is the dwelling
-                        // INDEX (tier - 1, TownFn_005BF900's dwelling%7+1
+                        // INDEX (tier - 1, town::getLegionBonus's dwelling%7+1
                         // read backwards); retail's jump table is biased by
                         // exactly that -1, so the labels spell it.
                         // switch (i + 1) over the plain tier enumerators
@@ -6657,7 +6657,7 @@ void TTavernWindow::setRolloverText(int codeY)
             } else {
                 hero* recruit = g_game->getHero(player->m_recruits[m_selectedRecruit]);
                 sprintf(g_text, g_tavernInfo[3], recruit->m_name,
-                        recruit->heroFn004D8F70());
+                        recruit->getClassName());
             }
         }
         break;
@@ -6770,7 +6770,7 @@ int TTavernWindow::windowHandler(message& msg)
                                   + currentHero->getEquippedArtifacts(0);
                     sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT],
                             g_tavernHero->m_name, g_tavernHero->m_level,
-                            g_tavernHero->heroFn004D8F70(), artifacts);
+                            g_tavernHero->getClassName(), artifacts);
                     if (artifacts == 1) {
                         int end = strlen(g_text);
                         g_text[end - 2] = '.';
@@ -6939,7 +6939,7 @@ unsigned char doTavern()
         int total = g_tavernHero->getNumberInBackpack(0)
                   + g_tavernHero->getEquippedArtifacts(0);
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT], g_tavernHero->m_name,
-                g_tavernHero->m_level, g_tavernHero->heroFn004D8F70(), total);
+                g_tavernHero->m_level, g_tavernHero->getClassName(), total);
         if (total == 1) {
             int len = strlen(g_text);
             g_text[len - 2] = '.';
@@ -7665,7 +7665,7 @@ TCastleWindow::~TCastleWindow()
 //             ever read here, which is why the row is modelled as that
 //             column - `[2 * id]` IS the same address arithmetic - and
 //             the second column stays unmodelled.
-// gAdventureWindowHelp / gUnnamed642e70 are declared with the status-line
+// gAdventureWindowHelp / g_resourceHelpIndices are declared with the status-line
 // pool near the top of the file: townManager::SetCommandAndText reads
 // both long before this page does.
 

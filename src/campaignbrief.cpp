@@ -437,8 +437,8 @@ void TCampaignBrief::updateBonusIcons()
             border->setVisible(0);
         }
         SCampaign* activeCampaign = &g_game->m_campaign;
-        const char* name = scenario->getStartOptions()->getIconDefName(activeCampaign, i);
-        if (scenario->getStartOptions()->isBuildingBonus(i)) {
+        const char* name = scenario->getStartOptions()->getIconResourceName(activeCampaign, i);
+        if (scenario->getStartOptions()->usesBitmapIcon(i)) {
             m_bitmapBonusImages[i]->show();
             m_bitmapBonusImages[i]->setImage(name);
             m_spriteBonusImages[i]->hide();

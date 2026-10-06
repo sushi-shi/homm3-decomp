@@ -392,7 +392,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 0;
         type_quest* quest = guard->m_quest;
         int player = currentHero->m_owner;
-        cell.m_barrierValue -= quest->getAIValue(player);
+        cell.m_barrierValue -= quest->getAIPaymentValue(player);
         return 1;
     }
     case HERO:

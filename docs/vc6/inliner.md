@@ -1536,7 +1536,7 @@ the split `lea hero; add 0x23` and retail's gold/rumour/default copy join.
 A named pointer to the flattened array entry had not reproduced that boundary.
 Restoring the hire arm's getter leaves the exact bytes unchanged.
 
-Complete retains one named recruit pointer across `heroFn004D8F70`. Repeating
+Complete retains one named recruit pointer across `getClassName`. Repeating
 the getter inside both sprintf arguments, as in the older DC direct class-table
 expression, retains two pointer calculations and null branches before the call
 and scores 91.6049%.
@@ -1898,11 +1898,11 @@ decisions instead of the callee's bytes.
 `hero::isWieldingArtifact` (0x4d91f0) was exact at cost 133. `hero::getLuck`
 (0x4e36c0) retail-calls its seventh site after six expansions (`1000 - 6*cb <
 cb`, so cb >= 143) and then calls `town::hasBuilding` (`1000 - 6*cb - 45 <
-68`, so cb >= 149); `hero::heroFn004E6120` (0x4e6120) still expands the copy
+68`, so cb >= 149); `hero::applyCreatureStatBonuses` (0x4e6120) still expands the copy
 nested inside `getHitPointBonus` (`449 - 2*cb >= cb`, so cb <= 149). An
 if/else block (+8), a named combination index (+5) and a repeated traits
 lookup (+3) land exactly on 149 with the standalone body unchanged; getLuck
-closes from 88.0650% to 100% and heroFn004E6120 stays exact, while 150
+closes from 88.0650% to 100% and applyCreatureStatBonuses stays exact, while 150
 drops it to 86.88%. `town::hasBuilding`'s if/else block form raises its cost
 60 -> 68 (retail 62..84 from the same two callers; `town::buildBuilding`'s
 site budgets, retail calling at 72 and expanding at 82, narrow that to

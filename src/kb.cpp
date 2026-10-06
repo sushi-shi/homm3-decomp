@@ -342,7 +342,7 @@ unsigned char initializeRandomTavernText();
 unsigned char initializeCreatureBankTraits();
 unsigned char initializeCreatureGeneratorNames();
 unsigned char initializeCreatureTypeTraitsTable();
-void initializeAdventureObjectNames();
+void initializeAdventureObjectTraits();
 unsigned char initializeExtraInfoText();
 unsigned char initializeHeroSpecificAbilitiesTable();
 unsigned char initializeCampaignMusicTable();
@@ -748,7 +748,7 @@ static void setupCDRom()
 
 VA(0x004ee1b0, 0xF6)
 MAC_ADDRESS(0x10f960, 0x19c)
-static void kbFn004EE1B0(int videoId, const char* frameName)
+static void playFramedVideo(int videoId, const char* frameName)
 {
     Bitmap16Bit* frame = ResourceManager::getBitmap16(frameName);
 
@@ -1067,7 +1067,7 @@ int oldmain()
         if (g_showIntro || g_firstTimeThrough) {
             if (videoPlay(28, 0, 0, 800, 600)
                 && videoPlay(29, 0, 0, 800, 600)) {
-                kbFn004EE1B0(
+                playFramedVideo(
                     30,
                     DATA_COMPGEN(0x0067f718, oldMainIntroFrame,
                                  "introrim.pcx"));
@@ -1352,7 +1352,7 @@ int oldmain()
                         || (campaign.m_currentCampaign == g_campaignOrdinal18
                             && campaign.campaignComplete())) {
                         if (campaign.m_currentCampaign == g_campaignOrdinal03)
-                            kbFn004EE1B0(
+                            playFramedVideo(
                                 32,
                                 DATA_COMPGEN(0x0067f6d8,
                                              oldMainCampaignIntroFrame,
@@ -3338,7 +3338,7 @@ static unsigned char loadGameData()
         return 0;
     if (!initializeCreatureTypeTraitsTable())
         return 0;
-    initializeAdventureObjectNames();
+    initializeAdventureObjectTraits();
     if (!initializeArtifactTraitsTable())
         return 0;
     if (!initializeSpellTraitsTable())
@@ -3804,12 +3804,12 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_DESTROY_OPPOSING_ARMY:
         if (g_combatManager)
-            g_combatManager->unnamed4693a0(1 - g_combatManager->m_currentSide);
+            g_combatManager->cheatKillSide(1 - g_combatManager->m_currentSide);
         break;
 
     case APP_MENU_COMBAT_DESTROY_ACTING_ARMY:
         if (g_combatManager)
-            g_combatManager->unnamed4693a0(g_combatManager->m_currentSide);
+            g_combatManager->cheatKillSide(g_combatManager->m_currentSide);
         break;
 
     case APP_MENU_COMBAT_ORDINAL_B79B:

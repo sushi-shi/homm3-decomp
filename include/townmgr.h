@@ -212,7 +212,7 @@ public:
         // switch carries it as a real case (the -1-biased dispatch
         // table proves it), sharing the default's empty line.
         TOWN_HOTSPOT_NONE = -1,
-        // The build-cheat latch's domain (gUnnamed67832c, drained by
+        // The build-cheat latch's domain (g_pendingTownBuild, drained by
         // Main): 100 = build everything the town may ever build; 0x37
         // is a value past MAX_BUILDING_TYPE that Main's eligibility
         // test admits unconditionally - both compares are retail's,

@@ -834,7 +834,7 @@ public:
     // DoCommand sets this pair in the surrender action before transferring gold.
     unsigned char m_sideSurrendered[2];  // +0x132b2
     // Read as a full dword by is_computer_action (0x474bf0) and paired
-    // there with soundmgr's byte gbUnk691209: when that byte is set and
+    // there with the g_goSolo byte: when that byte is set and
     // this slot is non-zero the acting stack is computer-driven no
     // matter whose side it is on, whatever the per-machine options say.
     // Original Dreamcast gbThisNetHasControl (+0x12980): retail
@@ -854,7 +854,7 @@ public:
     int m_currentSide;  // +0x132c0
     // The automation-preference gate. is_computer_action (0x474bf0)
     // reads this dword before every one of the four preference fields it
-    // consults in gUnnamed698758 (combatCatapult for the catapult,
+    // consults in g_config (combatCatapult for the catapult,
     // combatBallista for the ballista and the arrow tower,
     // combatFirstAidTent for the tent, combatAutoCreatures for every
     // other stack) and only honours the preference while it is non-zero.
@@ -1103,7 +1103,7 @@ public:
     // routine with the creature-cast selector passed by command.cpp.
     void initiateSpell(ESpellId spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
-    void markMovingArmy(army* stack);  // 0x46a520
+    void beginObstacleTraversal(army* stack);  // 0x46a520
     bool checkObstacleAttacks(army* thisArmy, bool isWalking);
     void lootDeadHero(int side,
                       std::vector<type_artifact>& lootedArtifacts);
@@ -1135,7 +1135,7 @@ public:
     void markCreatureEffect(int group, int index)
     {
         if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
-            markTowerArmy(&m_armies[group][index]);
+            markTowerForEffect(&m_armies[group][index]);
         else
             m_creatureEffect[group][index] = 1;
     }
@@ -1175,7 +1175,7 @@ private:
 public:
     // Complete-only moat damage worker; its sole caller passes the entered
     // hex, moving stack and a byte sound-control flag.
-    unsigned char unnamed469e50(int hex, army* stack,
+    unsigned char applyMoatDamage(int hex, army* stack,
                                 unsigned char playSound);
     int open(int newPriority);
     void initNonVisualVars();
@@ -1320,7 +1320,7 @@ private:
     void keepAttack(int towerPos);  // 0x465ad0
 
 public:
-    void unnamed465f20();  // 0x465f20
+    void chooseArrowTowerAction();  // 0x465f20
     // The arrow tower's target selector, at the HEAD of ai.obj rather
     // than in cmbtmgr.obj: 0x41e190 is the first ai.cpp body after that
     // compiland's ten terrain.h bitset initializers, and the DC roster,
@@ -1330,7 +1330,7 @@ public:
     // ChooseBallistaTarget with these three parameters.
     int chooseBallistaTarget(int targetGroup, int attackSkill,
                              int averageDamage);
-    void unnamed4693a0(int side);  // 0x4693a0
+    void cheatKillSide(int side);  // 0x4693a0
     void checkRebirth();  // 0x469440
     bool canCastSpells(long side, bool heroSpell) const;  // 0x41f890
     long computeFireShieldDamage(long damage, const army* attacker,
@@ -1400,7 +1400,7 @@ private:
     // one creatureType 0x86 (Faerie Dragon) takes. The address is fixed
     // independently by that switch; the HD/cross-build symbol can then
     // supply the otherwise unattested private bool/reference declarator.
-    bool sodChooseFaerieDragonSpell(
+    bool chooseFaerieDragonSpellTarget(
         const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate);  // 0x420f00
 
@@ -1506,7 +1506,7 @@ public:
     army* addArmy(int side, int monType, int monQty, int gridIndex,
                   int setAttributes, int fizzleItIn);
     void viewCastleBallista(int isQuickInfo);
-    void markTowerArmy(const army* tower);
+    void markTowerForEffect(const army* tower);
     void demonicResurrection(const army* caster, army* target);
     void removeCorpse(army* corpse);
     void removeCorpse(hexcell& hex, long side, long slot);  // 0x5a7320
@@ -1625,7 +1625,7 @@ public:
     // (three stack arguments: the launch point and the target stack).
     // ORDINAL PLACEHOLDER name - no roster row reaches it; the body
     // stays spells.obj's to reconstruct.
-    void unnamed59FDE0(int x, int y, army* target);
+    void animateMagicArrow(int x, int y, army* target);
     void spellTargetMessage(SpellID spellId, int targetIndex,
                             bool firstTarget);  // 0x5a8690
     void doBolt(int handleResets, int sourceX, int sourceY, int destX,
@@ -1866,8 +1866,8 @@ private:
 
 public:
     static float computeDamageModifier(int attack, int defense);
-    unsigned char unnamed464d40(army* selected);
-    unsigned char unnamed464f50(const army* incumbent, const army* candidate);
+    unsigned char applyAzureDragonFear(army* selected);
+    unsigned char actsBefore(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
     int processCombatMsg(message& msg);
     int processNextAction(message& msg, bool automaticTurn);

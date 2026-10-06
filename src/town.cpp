@@ -1145,7 +1145,7 @@ bool town::buyBuilding(type_building_id building)
     int* costs = getBuildCostArray(building);
     playerData* player = &g_game->m_players[m_owner];
     if (!player->isHuman()) {
-        unnamed526d20(m_owner, costs, 1);
+        tradePlayerResources(m_owner, costs, 1);
         if (m_builtThisTurn)
             return 0;
     }

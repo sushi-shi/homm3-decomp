@@ -136,7 +136,7 @@ extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 // Original: artifactAllowedInSlot; artifact.h:229
 // DC233 indexes the artifact's bitset18 with operator[]. Complete replaces
 // that inline mask with a slot-class index into bitset19; the primitive
-// survives as the initial mask test in hero::heroFn004E2840 (0x4e2840).
+// survives as the initial mask test in hero::canReplaceArtifactInSlot (0x4e2840).
 // The richer hero member also checks displaced/combination artifacts.
 // Retain the const mask reference: it preserves the retail exception-path
 // value lifetime. Direct nested indexing expands _Eos instead of retaining
