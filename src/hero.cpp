@@ -1555,9 +1555,9 @@ void hero::updateSpellList()
                 }
                 int comboType = g_artifactTraits[artifactId].m_comboType;
                 if (comboType != -1) {
-                    const std::bitset<144>& components =
+                    const std::bitset<ARTIFACT_COUNT>& components =
                         g_combinationArtifacts[comboType].m_components;
-                    for (int component = 0; component < 144; component++) {
+                    for (int component = 0; component < ARTIFACT_COUNT; component++) {
                         if (components.test(component) &&
                             g_artifactTraits[component].m_givesSpells) {
                             std::bitset<70> granted = markArtifactSpells(component);
@@ -2947,7 +2947,7 @@ MAC_ADDRESS(0x0f83ec, 0xc8)
 // proxy/set boundary; giveArtifact changes from 95.9069% to 95.3968%.
 unsigned char hero::hasCombinationArtifactComponents(int combination)
 {
-    std::bitset<144> missingComponents =
+    std::bitset<ARTIFACT_COUNT> missingComponents =
         g_combinationArtifacts[combination].m_components;
     for (int slot = 0; slot < 19; slot++) {
         int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
@@ -2962,7 +2962,7 @@ VA(0x004dbf30, 0x133)
 MAC_ADDRESS(0x0f84b4, 0x184)
 unsigned char hero::assembleCombinationArtifact(int combination, long slot)
 {
-    std::bitset<144> components =
+    std::bitset<ARTIFACT_COUNT> components =
         g_combinationArtifacts[combination].m_components;
     if (slot != -1) {
         components[getArtifact(TArtifactSlot(slot)).m_artifactId] = false;
@@ -2995,9 +2995,9 @@ void hero::disassembleCombinationArtifact(long slot)
         g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
     removeArtifact(slot);
 
-    const std::bitset<144>& components =
+    const std::bitset<ARTIFACT_COUNT>& components =
         g_combinationArtifacts[combination].m_components;
-    for (int artifactId = 0; artifactId < 144; artifactId++) {
+    for (int artifactId = 0; artifactId < ARTIFACT_COUNT; artifactId++) {
         if (components.test(artifactId)) {
             // Complete enumerates all 144 component bits, beyond DC's 128 artifact ids; each set bit becomes a typed artifact record.
             type_artifact artifact(static_cast<TArtifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
@@ -5048,7 +5048,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
             for (; src != m_artifactSlotCounts + 15; ++dst, ++src)
                 *dst = *src;
 
-            const std::bitset<144>& components =
+            const std::bitset<ARTIFACT_COUNT>& components =
                 g_combinationArtifacts[combination].m_components;
             bool keptSlot = false;
             bool slotFits = true;
@@ -5087,7 +5087,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     }
                 }
                 counts[componentClass]++;
-            } while (++component < 144);
+            } while (++component < ARTIFACT_COUNT);
             if (!slotFits)
                 continue;
         }
@@ -5228,10 +5228,10 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     int combinationIndex =
         g_artifactTraits[artifact.m_artifactId].m_comboType;
     if (combinationIndex != -1) {
-        const std::bitset<144>& components =
+        const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[combinationIndex].m_components;
         bool keptSlot = false;
-        for (int component = 0; component < 144; component++) {
+        for (int component = 0; component < ARTIFACT_COUNT; component++) {
             if (components.test(component)) {
                 for (int skill = 0; skill < 4; skill++)
                     adjustPrimarySkill(skill,
@@ -5294,10 +5294,10 @@ void hero::removeArtifact(long slot)
     int combinationIndex =
         g_artifactTraits[artifact.m_artifactId].m_comboType;
     if (combinationIndex != -1) {
-        const std::bitset<144>& components =
+        const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[combinationIndex].m_components;
         bool keptSlot = false;
-        for (int component = 0; component < 144; component++) {
+        for (int component = 0; component < ARTIFACT_COUNT; component++) {
             if (components.test(component)) {
                 for (int skill = 0; skill < 4; skill++)
                     adjustPrimarySkill(skill,

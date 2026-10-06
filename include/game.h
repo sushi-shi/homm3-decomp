@@ -1158,8 +1158,8 @@ public:
     // the caller's player position through Dinkumware bitset::test(), and
     // the hero-placement path sets the same bit through bitset::set().
     std::bitset<8> m_heroPoolMap[0x9c];  // +0x4dfb4
-    unsigned char m_artifactUsed[0x90];
-    unsigned char m_artifactDisabled[0x90];
+    unsigned char m_artifactUsed[ARTIFACT_COUNT];
+    unsigned char m_artifactDisabled[ARTIFACT_COUNT];
 
     // Before normalization (Dreamcast): InfoFlags.
     unsigned char m_globalInfoFlags[32];
