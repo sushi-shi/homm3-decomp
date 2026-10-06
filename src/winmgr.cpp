@@ -1015,23 +1015,26 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     for (int shift = 0; shift < 3; shift++) {
         unsigned long nextFadeTime = GameTime::get() + fadePeriod;
         unsigned long time1 = GameTime::get();
-        unsigned char* destinationBytes = static_cast<unsigned char*>(
-            static_cast<void*>(m_screenBitmap->getMap(0, 0)));
-        const unsigned char* sourceBytes = static_cast<const unsigned char*>(
-            static_cast<const void*>(bmpFadeSource.getMap(0, 0)));
+        unsigned int* dst = reinterpret_cast<unsigned int*>(
+            m_screenBitmap->getMap(0, 0));
+        const unsigned int* src = reinterpret_cast<const unsigned int*>(
+            bmpFadeSource.getMap(0, 0));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
-            const unsigned int* src = static_cast<const unsigned int*>(
-                static_cast<const void*>(sourceBytes));
-            unsigned int* dst = static_cast<unsigned int*>(
-                static_cast<void*>(destinationBytes));
+            const unsigned int* pixelSrc = src;
+            unsigned int* pixelDst = dst;
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
-                const unsigned int r = *src++;
-                *dst = darkenScreenPixelPair(r, redMask2, greenMask2,
-                                             blueMask2, shift);
-                dst++;
+                const unsigned int r = *pixelSrc;
+                *pixelDst = darkenScreenPixelPair(r, redMask2, greenMask2,
+                                                  blueMask2, shift);
+                pixelDst++;
+                pixelSrc++;
             }
-            destinationBytes += m_screenBitmap->getPitch();
-            sourceBytes += bmpFadeSource.getPitch();
+            dst = reinterpret_cast<unsigned int*>(
+                reinterpret_cast<unsigned char*>(dst)
+                + m_screenBitmap->getPitch());
+            src = reinterpret_cast<const unsigned int*>(
+                reinterpret_cast<const unsigned char*>(src)
+                + bmpFadeSource.getPitch());
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);
@@ -1058,14 +1061,14 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // Dreamcast rows 1957/1958 (FadeToBlack 1804/1805) take the screen map for
 // dst before the fade copy's map for src, store with `*dst = ...` and
 // `dst++` on separate rows (1973/1974), and advance dst's row before src's
-// on row 1977 (1824). Both fades follow that order (fadeToBlack 90.58 ->
-// 91.15, fadeFromBlack 90.85 -> 93.21). Retail's inner loop still keeps src
-// as its one pointer induction variable and stores through
-// [dst - src + src_next - 4]; this body keeps a separate dst pointer.
-// Probes (2026-09-29): in the old src-first order *dst/dst++ and swapped
-// declarations alone were byte-flat; src[x] with dst[x] or *dst++ merges the
-// pointers but makes dst the primary one (88.63/89.35%; 87.72% in the
-// Dreamcast order).
+// on row 1977 (1824). DC's function-scope dst/src are those row pointers
+// (unsigned int* / const unsigned int*, advanced by the byte pitch); the
+// row's pixel walkers are register locals, src's loaded first (1962/1965).
+// Unrecorded row 1975 is the source increment, folded into SH4's @r4+
+// load. Reading `*pixelSrc` and incrementing it after the store gives
+// retail's single src induction variable with dst addressed as
+// [dst - src + src_next - 4] (both fades 100%; `*pixelSrc++` keeps a
+// separate dst pointer, and declaring the dst walker first falls to 86.90%).
 VA(0x006032e0, 0x1E5)
 DC_ADDRESS(0x19c3b8, 0x230)
 MAC_ADDRESS(0x20ea78, 0x26c)  // anchor-caller
@@ -1081,23 +1084,26 @@ void heroWindowManager::fadeFromBlack(int speed)
     for (int shift = 2; shift > 0; shift--) {
         unsigned long deadline = GameTime::get() + fadePeriod;
         unsigned long started = GameTime::get();
-        unsigned char* destinationBytes = static_cast<unsigned char*>(
-            static_cast<void*>(m_screenBitmap->getMap(0, 0)));
-        const unsigned char* sourceBytes = static_cast<const unsigned char*>(
-            static_cast<const void*>(fadeFrom.getMap(0, 0)));
+        unsigned int* dst = reinterpret_cast<unsigned int*>(
+            m_screenBitmap->getMap(0, 0));
+        const unsigned int* src = reinterpret_cast<const unsigned int*>(
+            fadeFrom.getMap(0, 0));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
-            const unsigned int* src = static_cast<const unsigned int*>(
-                static_cast<const void*>(sourceBytes));
-            unsigned int* dst = static_cast<unsigned int*>(
-                static_cast<void*>(destinationBytes));
+            const unsigned int* pixelSrc = src;
+            unsigned int* pixelDst = dst;
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
-                unsigned long pair = *src++;
-                *dst = darkenScreenPixelPair(pair, maskRed, maskGreen,
-                                             maskBlue, shift);
-                dst++;
+                unsigned long pair = *pixelSrc;
+                *pixelDst = darkenScreenPixelPair(pair, maskRed, maskGreen,
+                                                  maskBlue, shift);
+                pixelDst++;
+                pixelSrc++;
             }
-            destinationBytes += m_screenBitmap->getPitch();
-            sourceBytes += fadeFrom.getPitch();
+            dst = reinterpret_cast<unsigned int*>(
+                reinterpret_cast<unsigned char*>(dst)
+                + m_screenBitmap->getPitch());
+            src = reinterpret_cast<const unsigned int*>(
+                reinterpret_cast<const unsigned char*>(src)
+                + fadeFrom.getPitch());
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);

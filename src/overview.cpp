@@ -1699,10 +1699,20 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // vtable store, exact following destructor and address-taken slider callback
 // jointly fix this identity and extent.
 // E:\gamedcs\overview.cpp:2017
-// Retail retains vector::insert beneath the item-record push_back calls;
-// our current VC6 context expands several of those workers. Direct insert
-// spellings and a shipyard-vector alias previously hid part of this residual.
-// Keep the canonical appends while recovering the remaining inline decisions.
+// The Complete-only flaggable passes index the game vectors directly rather
+// than through record references. Retail proves it in the generator pass:
+// its creature-generator test STORES 0x11 into the record's class byte
+// (`mov byte ptr [eax],0x11` at 0x5208e0), i.e. the original condition is an
+// assignment, always true, and the following genType read reloads
+// gpGame->generators[i] after that store. The else arm is therefore dead in
+// Windows; Mac 0x139bcc keeps it as a two-case genType switch. The repeated
+// indexings and that switch are also the /Ob2 candidates that make retail
+// call insert(P, x) for the two mine appends but expand it later
+// (92.98 -> 99.54%). The remainder is ICF naming of the item-record vector
+// helpers and localPlayer's register home across the garrison pass.
+// Probes: indexing the shipyard player directly in the loop condition
+// (99.12%) and comparing `localPlayer != owner` in the garrison pass
+// (99.53%) are both worse; the player reference stays.
 VA(0x0051fa40, 0x1311)
 DC_ADDRESS(0x1084f0, 0xa84)
 MAC_ADDRESS(0x137ed0, 0x1e48)  // exhaustive ctor/callback/dtor identity
@@ -1843,38 +1853,48 @@ TOverviewWindow::TOverviewWindow()
     int localPlayer = g_game->getLocalPlayerGamePos();
 
     for (i = 0; i < g_game->m_mines.size(); ++i) {
-        mine& current = g_game->m_mines[i];
-        if (current.m_playerOwner != localPlayer)
+        if (g_game->m_mines[i].m_playerOwner != localPlayer)
             continue;
 
-        if (current.m_isAbandoned) {
+        if (g_game->m_mines[i].m_isAbandoned) {
             addFlaggableItem('U');
-        } else if (current.m_type == mine::MINE_TYPE_LIGHTHOUSE) {
+        } else if (g_game->m_mines[i].m_type == mine::MINE_TYPE_LIGHTHOUSE) {
             addFlaggableItem('R');
         }
     }
 
     for (i = 0; i < g_game->m_generators.size(); ++i) {
-        generator& current = g_game->m_generators[i];
-        if (current.getOwner() != localPlayer)
+        if (g_game->m_generators[i].getOwner() != localPlayer)
             continue;
 
-        if (current.m_genClass == CREATURE_GENERATOR_1) {
-            addFlaggableItem(current.m_genType);
-        } else if (current.m_genType == 0) {
-            addFlaggableItem('P');
-        } else if (current.m_genType == 1) {
-            addFlaggableItem('Q');
+        // Windows keeps the original assignment (see above); Mac 0x139bac
+        // compares the class byte with 0x11.
+#ifdef HOMM3_TARGET_MAC
+        if (g_game->m_generators[i].m_genClass == CREATURE_GENERATOR_1)
+#else
+        if (g_game->m_generators[i].m_genClass = CREATURE_GENERATOR_1)
+#endif
+        {
+            addFlaggableItem(g_game->m_generators[i].m_genType);
+        } else {
+            switch (g_game->m_generators[i].m_genType) {
+            case 0:
+                addFlaggableItem('P');
+                break;
+            case 1:
+                addFlaggableItem('Q');
+                break;
+            }
         }
     }
 
     for (i = 0; i < g_game->m_garrisons.size(); ++i) {
-        garrison& current = g_game->m_garrisons[i];
-        if (current.m_playerOwner != localPlayer)
+        if (g_game->m_garrisons[i].m_playerOwner != localPlayer)
             continue;
 
         NewmapCell* cell = g_game->m_worldMap.cell(
-            current.m_mapX, current.m_mapY, current.m_mapZ);
+            g_game->m_garrisons[i].m_mapX, g_game->m_garrisons[i].m_mapY,
+            g_game->m_garrisons[i].m_mapZ);
         if (cell->m_objectIndex == 0) {
             addFlaggableItem('S');
         } else {

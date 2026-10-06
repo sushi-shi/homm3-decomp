@@ -2842,7 +2842,7 @@ objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	1
 objnames	??1?$TResourcePtr@VTTextResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	tokens1:2696c69b2467
 objnames	?initializeAdventureObjectTraits@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	tokens1:e51ff9833fdc
 objnames	__h3cg$objnames$static_dtor$nameBuffer	100.0000	100.0000	100.0000	0x1b790	-
-overview	??0TOverviewWindow@@QAE@XZ	92.9774	92.9774	92.9774	0x11fa40	tokens1:b5e33271dae5
+overview	??0TOverviewWindow@@QAE@XZ	99.5408	99.5408	99.5408	0x11fa40	tokens1:68ce891d7f19
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	tokens1:2510f0c1a9f1
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?doFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	tokens1:3e20dc6a7377
@@ -4099,8 +4099,8 @@ singleselectionwindow	?sortMaps@TSingleSelectionWindow@@QAEXH_N0@Z	92.7281	92.72
 singleselectionwindow	?startMouseThread@@YIXXZ	100.0000	100.0000	100.0000	0x177790	tokens1:7b81776f1807
 singleselectionwindow	?stopMouseThread@@YIXXZ	100.0000	100.0000	100.0000	0x177810	tokens1:f0bf1629ccca
 singleselectionwindow	?test@?$bitset@$03@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcf960	-
-singleselectionwindow	?tick@CNewPlayerUpdateProc@@UAEXXZ	87.1303	87.1303	87.1555	0x178a90	tokens1:ad2e24cb141c
-singleselectionwindow	?tick@t_map_list_update@@UAEXXZ	90.5767	90.5767	90.5767	0x177de0	tokens1:aa0cb992e5e9
+singleselectionwindow	?tick@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.0000	0x178a90	tokens1:adb438a0245c
+singleselectionwindow	?tick@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x177de0	tokens1:f7cc8792c8b8
 singleselectionwindow	?toggleRandomMapOptions@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17feb0	tokens1:4c787590839f
 singleselectionwindow	?turnChatOff@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18cbf0	tokens1:ce300939f818
 singleselectionwindow	?turnChatOn@TSingleSelectionWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x18ca80	tokens1:680403520b6d
@@ -4817,9 +4817,9 @@ winmgr	?convertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	1
 winmgr	?doDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000	100.0000	100.0000	0x202520	tokens1:749dcd930a7e
 winmgr	?doDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000	100.0000	100.0000	0x2027a0	tokens1:b1f11a38d949
 winmgr	?doQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x202a40	tokens1:3a644994fac8
-winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	93.2099	93.2099	93.2099	0x2032e0	tokens1:d52cc148f64e
+winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x2032e0	tokens1:f7f03370e5b4
 winmgr	?fadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50	tokens1:7798457daf06
-winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	91.1453	91.1453	91.1453	0x2030e0	tokens1:58eac7f834a5
+winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x2030e0	tokens1:9e13a7d2cec3
 winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x202dc0	tokens1:706e4b7dcb70
 winmgr	?main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	tokens1:0baa2348f7dc
 winmgr	?open@heroWindowManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x2021b0	tokens1:50317853feb2

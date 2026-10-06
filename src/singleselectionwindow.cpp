@@ -1476,10 +1476,9 @@ inline void CNewPlayerUpdateProc::requestConfirmation()
 // back to +0x5e (past the initial guard), and the exhausted-list arm at
 // +0x1c6 skips BOTH HandleRequests and RequestConfirmation when empty.
 
-// Residual (90.5767%): all 21 blocks, 10 branches and three returns agree.
-// The message constructor still schedules its row/FILETIME arguments
-// differently: frame 0xa0 vs retail 0xa4, saved alignment pointer vs saved
-// FILETIME high word. Native Mac tests the unsigned request count; using
+// Binding the transfer row once gives retail's 0xa4 frame: the row pointer
+// stays live across strncpy and the FILETIME high word is spilled (90.58 ->
+// 100). Native Mac tests the unsigned request count; using
 // size() > 0 also restores retail's SAR 3 count lowering. The flattened
 // elapsed expression and wrong per-iteration
 // count guard banked 71.8957%; restoring only ElapsedSince gives 73.25%.
@@ -1497,11 +1496,11 @@ void t_map_list_update::tick()
 
     if (m_nextHeader < g_singleSelectionWindow->m_transferHeaders.size()) {
         for (int k = 0; k < 5; ++k) {
+            GameSelectionHeadersStruct& header =
+                g_singleSelectionWindow->m_transferHeaders[m_nextHeader];
             CMapFileNameMsg msg(
-                1, m_nextHeader,
-                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_setup.m_filename,
-                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_setup.m_alignment,
-                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_fileTime);
+                1, m_nextHeader, header.m_setup.m_filename,
+                header.m_setup.m_alignment, header.m_fileTime);
             transmitRemoteDataDPID(&msg, m_dpid, true, false);
             ++m_nextHeader;
             if (m_requests.size() > 0)
@@ -1587,13 +1586,13 @@ void CNewPlayerUpdateProc::go()
 // CGameHeaderInfoMsg/CMapFileNameMsg constructors, request-drain helper and
 // confirmation helper. Complete retail adds the list-select flag to both
 // message layouts but preserves that source control flow.
-// Residual (87.1555): all 32 aligned blocks, 16 branch sequences and their
-// topology agree. The remaining bands are VC6 scheduling: ESI/EDI exchange
-// roles for zero/m_nextHeader, the CMapFileNameMsg arguments are pushed in a
-// different schedule. The unsigned positive request count restores retail's
-// count lowering, as in the transfer-list override. Several callees
-// also still have anonymous relocation names. An explicit pHeader local was
-// tested and rejected: DC lists only i/msg/msg and it lowered the score.
+// The unsigned positive request count restores retail's count lowering, as
+// in the transfer-list override. DC 1309 re-indexes the header row for each
+// CMapFileNameMsg argument (DC lists only i/msg/msg; no stack row local).
+// Complete binds the row once, as its copied t_map_list_update override
+// does: retail keeps that row pointer live across strncpy and spills the
+// FILETIME high word. The row reference closes both ticks (87.13 -> 100);
+// the older triple-index spelling scheduled the arguments differently.
 // E:\gamedcs\singleselectionwindow.cpp:1282
 VA(0x00578A90, 0x370)
 DC_ADDRESS(0x148130, 0x208)
@@ -1611,11 +1610,11 @@ void CNewPlayerUpdateProc::tick()
                     &g_singleSelectionWindow->m_headersA[m_nextHeader]);
                 msg.sendToDPID(m_dpid, 1, 1);
             } else {
+                GameSelectionHeadersStruct& header =
+                    g_singleSelectionWindow->m_headersA[m_nextHeader];
                 CMapFileNameMsg msg(
-                    0, m_nextHeader,
-                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_setup.m_filename,
-                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_setup.m_alignment,
-                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_fileTime);
+                    0, m_nextHeader, header.m_setup.m_filename,
+                    header.m_setup.m_alignment, header.m_fileTime);
                 transmitRemoteDataDPID(&msg, m_dpid, true, false);
             }
 
@@ -3437,6 +3436,8 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // to 99.11, so the paired lifetimes are load-bearing. Moving the ten main-loop
 // widget declarations into the loop, or moving the adjacent `i, nextColor`
 // pair below those declarations, is byte-flat; retain their current scope.
+// All 24 declaration orders of the four icon pointers in their DC block are
+// byte-flat (99.98%), so the slot swap is not declaration order.
 // The residual is a four-home rotation among nextColor, playerType, nameEdit,
 // and an induction temporary. Naming the duration isHost result and declaring
 // compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
