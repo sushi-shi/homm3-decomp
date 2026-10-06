@@ -52,8 +52,8 @@ public:
         explicit _TImageInfo(const TPoint& size) : m_objectSize(size) {}
 
         TPoint m_objectSize;
-        std::bitset<48> m_drawMask;
-        std::bitset<48> m_shadowMask;
+        std::bitset<OBJECT_MASK_CELLS> m_drawMask;
+        std::bitset<OBJECT_MASK_CELLS> m_shadowMask;
     };
     // The default constructor load()'s `objectTypes.resize(count)` builds
     // its `_Ty()` temporary from, published one store at a time at
@@ -66,8 +66,8 @@ public:
 private:
     // The image and mask setters own these values and their invariants.
     int _m_imageNum;
-    std::bitset<48> m_passableMask;
-    std::bitset<48> m_triggerMask;
+    std::bitset<OBJECT_MASK_CELLS> m_passableMask;
+    std::bitset<OBJECT_MASK_CELLS> m_triggerMask;
 public:
     std::bitset<10> _m_terrainMask;
     std::bitset<10> m_recommendedTerrainMask;
@@ -149,11 +149,11 @@ public:
     TObjectType& setImageName(
         const std::basic_string<char, std::char_traits<char>,
                                 std::allocator<char> >& name);
-    TObjectType& _setTriggerMask(const std::bitset<48>& mask);
+    TObjectType& _setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& mask);
     // Provisional fluent setter names: retail objects.txt extraction retains
     // the two setters above and expands this ordered field/invariant chain.
     // The corresponding ordinary definitions live in objecttype.cpp.
-    TObjectType& _setPassableMask(const std::bitset<48>& mask);
+    TObjectType& _setPassableMask(const std::bitset<OBJECT_MASK_CELLS>& mask);
     TObjectType& setTerrainMask(const std::bitset<10>& mask);
     TObjectType& setRecommendedTerrainMask(const std::bitset<10>& mask);
     TObjectType& setType(TAdventureObjectType type);
@@ -183,7 +183,7 @@ extern const TObjectType::TPoint g_noTriggerCell;
 // keeps its explicit unsigned-long zero constructor.
 inline TObjectType::TObjectType()
     : _m_imageNum(0),
-      m_passableMask(~std::bitset<48>(0)),
+      m_passableMask(~std::bitset<OBJECT_MASK_CELLS>(0)),
       m_triggerMask(),
       _m_terrainMask(),
       m_recommendedTerrainMask(),

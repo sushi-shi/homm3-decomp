@@ -43,22 +43,22 @@ public:
 
 private:
     TResourceDisplay* m_puzzleResourceBar;
-    Bitmap816* m_puzzlePieces[48];
+    Bitmap816* m_puzzlePieces[PUZZLE_PIECE_COUNT];
     int m_puzWhich;
 
     int convertID2HelpID(int id) const;
 };
 SIZE(TPuzzleWindow, 0x12c);
 
-extern std::bitset<48> g_puzzlePiecesRemoved;
+extern std::bitset<TPuzzleWindow::PUZZLE_PIECE_COUNT> g_puzzlePiecesRemoved;
 extern short g_puzzlePieceOrder[];
 // Retail UpdatePuzzle (0x52c6c0) and AI_attempt_puzzle_guess (0x52c9b0)
 // read signed words at 2 * (puzzle * 96 + piece). DC UpdatePuzzle also
 // reads word coordinates (its scaling differs); these are short tables,
 // not byte buffers requiring pointer reinterpretation.
 struct TPuzzleCoordinates {
-    short m_x[48];
-    short m_y[48];
+    short m_x[TPuzzleWindow::PUZZLE_PIECE_COUNT];
+    short m_y[TPuzzleWindow::PUZZLE_PIECE_COUNT];
 };
 extern TPuzzleCoordinates g_puzzleCoordinates[9];
 extern const char* g_puzzleFilePrefixes[];
