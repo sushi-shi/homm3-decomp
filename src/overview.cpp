@@ -1043,7 +1043,7 @@ void game::overview()
     g_overviewBank = new TResourceDisplay(g_overWin, 1);
     g_overviewBank->update(1, 0);
 
-    signed char res[7];
+    signed char res[NUM_RESOURCES];
     memset(res, 0, sizeof(res));
 
     for (unsigned mineIndex = 0; mineIndex < m_mines.size(); mineIndex++) {
@@ -1054,7 +1054,7 @@ void game::overview()
             res[m_mines[mineIndex].m_type]++;
     }
 
-    for (int resource = 0; resource < 7; resource++) {
+    for (int resource = 0; resource < NUM_RESOURCES; resource++) {
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_extraText = g_text;
         sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),

@@ -1769,7 +1769,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         return -1;
     thisBox.m_luckBonus = charBuffer;
 
-    for (x = 0; x < 7; ++x) {
+    for (x = 0; x < NUM_RESOURCES; ++x) {
         count = readLittleEndianValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
@@ -1957,7 +1957,7 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
         return -1;
 
     int i;
-    for (i = 0; i < 7; ++i) {
+    for (i = 0; i < NUM_RESOURCES; ++i) {
         dwordValue = thisBox->m_resQty[i];
         if (static_cast<unsigned>(outfile->write(&dwordValue, 4)) < 4)
             return -1;
@@ -2096,7 +2096,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         return -1;
     thisBox.m_luckBonus = charBuffer;
 
-    for (x = 0; x < 7; ++x) {
+    for (x = 0; x < NUM_RESOURCES; ++x) {
         count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
             return -1;
@@ -2609,7 +2609,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         MonsterData tempMonster;
         NewSMapHeader::readString(infile, tempMonster.m_message);
 
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < NUM_RESOURCES; ++i) {
             int quantityRead;
             if (readLittleEndianValue(infile, quantityRead)
                 < sizeof(quantityRead))
@@ -2696,7 +2696,7 @@ int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster
 {
     game::saveString(outfile, thisMonster->m_message);
 
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < NUM_RESOURCES; ++i) {
         int value = thisMonster->m_resQty[i];
         if (static_cast<unsigned>(outfile->write(&value, 4)) < 4)
             return -1;
@@ -2716,7 +2716,7 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 {
     game::loadString(infile, thisMonster.m_message);
 
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < NUM_RESOURCES; ++i) {
         int value;
         if (readValue(infile, value) < sizeof(value))
             return -1;

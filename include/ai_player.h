@@ -63,10 +63,10 @@ public:
 protected:
     short m_team;
     long m_magusHutValue;
-    long m_reservedFunds[7];
-    long m_resourceSupply[7];
-    long m_resourceDemand[7];
-    double m_resourceValue[7];
+    long m_reservedFunds[NUM_RESOURCES];
+    long m_resourceSupply[NUM_RESOURCES];
+    long m_resourceDemand[NUM_RESOURCES];
+    double m_resourceValue[NUM_RESOURCES];
 
 public:
     void calculateDemand();  // 0x428740

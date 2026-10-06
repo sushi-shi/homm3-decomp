@@ -40,7 +40,7 @@ enum type_creature_bank_guard_shape {
 // is kept opaque until initialize_creature_bank names its reward fields.
 struct type_creature_bank_level {
     armyGroup m_guards;
-    int m_resources[7];
+    int m_resources[NUM_RESOURCES];
     TCreatureType m_rewardCreature;
     signed char m_rewardCreatures;
     signed char m_chance;

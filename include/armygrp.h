@@ -11,6 +11,10 @@
 #include "struct.h"
 #include "terrain_type.h"
 
+// The seven primary resources (wood .. gold), the width of every cost
+// row; town.h's EGameResource names the columns.
+#define NUM_RESOURCES 7
+
 namespace std {
 template<class T> class allocator;
 template<class E> struct char_traits;
@@ -648,7 +652,7 @@ struct TCreatureTypeTraits {
     const char* m_name;
     const char* m_pluralName;
     const char* m_specialAbility;
-    int m_cost[7];
+    int m_cost[NUM_RESOURCES];
     int m_baseFightValue;
     int m_aiValue;
     int m_growthRate;
