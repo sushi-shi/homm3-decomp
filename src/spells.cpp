@@ -677,6 +677,8 @@ void combatManager::animateMagicArrow(int x, int y, army* target)
 // local out of its loop did not recover the remaining shared-tail differences.
 // Preserve ResourceManager::dispose (DC 860/936, expanded on Complete Mac)
 // and the mass Dispel/Cure army reference locals (DC 1452/1517).
+// The [town][sex] sprite subscript (DC sCmbtHero[][2]) is byte-identical to
+// the flattened index; the castX ecx/edx swap is register choice, not shape.
 VA(0x0059fe30, 0x2A4F)
 DC_ADDRESS(0x14f7dc, 0x2366)
 MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row
@@ -756,23 +758,19 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         if (m_currentSide == 0)
-            castX = g_combatHeroSprites[
-                g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                + g_heroTraits[castingHero->m_id].m_sex].m_castX - 43;
+            castX = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castX - 43;
         else
             castX = m_creatureSprites[1]->getWidth()
-                - g_combatHeroSprites[
-                    g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                    + g_heroTraits[castingHero->m_id].m_sex].m_castX + 693;
-        castY = g_combatHeroSprites[
-            g_heroClasses[castingHero->m_heroClass].m_townType * 2
-            + g_heroTraits[castingHero->m_id].m_sex].m_castY - 19;
+                - g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castX + 693;
+        castY = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castY - 19;
 
         m_cmbtHeroFrameType[m_currentSide] = 4;
         for (int frame = 0;
-             frame < g_combatHeroSprites[
-                 g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                 + g_heroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
+             frame < g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
         }
@@ -1644,9 +1642,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // update in this order.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int nframes = m_creatureSprites[m_currentSide]->getNumFrames(4);
-        for (int frame = g_combatHeroSprites[
-                 g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                 + g_heroTraits[castingHero->m_id].m_sex].m_castFrame;
+        for (int frame = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castFrame;
              frame < nframes; ++frame) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);

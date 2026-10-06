@@ -89,25 +89,16 @@ DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
-    { "CH00.DEF", 92, 67, 5 },
-    { "CH01.DEF", 94, 54, 5 },
-    { "CH02.DEF", 102, 62, 5 },
-    { "CH03.DEF", 102, 62, 5 },
-    { "CH05.DEF", 100, 59, 5 },
-    { "CH04.DEF", 98, 52, 5 },
-    { "CH06.DEF", 97, 63, 5 },
-    { "CH07.DEF", 99, 62, 5 },
-    { "CH08.DEF", 91, 68, 5 },
-    { "CH09.DEF", 96, 56, 5 },
-    { "CH010.DEF", 92, 56, 5 },
-    { "CH11.DEF", 96, 56, 5 },
-    { "CH013.DEF", 101, 60, 5 },
-    { "CH012.DEF", 96, 59, 5 },
-    { "CH014.DEF", 99, 58, 5 },
-    { "CH015.DEF", 95, 52, 5 },
-    { "CH16.DEF", 99, 58, 5 },
-    { "CH17.DEF", 95, 52, 5 }
+DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[9][2] = {
+    { { "CH00.DEF", 92, 67, 5 }, { "CH01.DEF", 94, 54, 5 } },
+    { { "CH02.DEF", 102, 62, 5 }, { "CH03.DEF", 102, 62, 5 } },
+    { { "CH05.DEF", 100, 59, 5 }, { "CH04.DEF", 98, 52, 5 } },
+    { { "CH06.DEF", 97, 63, 5 }, { "CH07.DEF", 99, 62, 5 } },
+    { { "CH08.DEF", 91, 68, 5 }, { "CH09.DEF", 96, 56, 5 } },
+    { { "CH010.DEF", 92, 56, 5 }, { "CH11.DEF", 96, 56, 5 } },
+    { { "CH013.DEF", 101, 60, 5 }, { "CH012.DEF", 96, 59, 5 } },
+    { { "CH014.DEF", 99, 58, 5 }, { "CH015.DEF", 95, 52, 5 } },
+    { { "CH16.DEF", 99, 58, 5 }, { "CH17.DEF", 95, 52, 5 } }
 };
 DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTraits[9] = {
     { static_cast<TCreatureType>(2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 780, 238, 648, 566, 596, 80, "plcbowx.def" },
@@ -862,8 +853,8 @@ void combatManager::loadIcons()
         if (m_heroes[side]) {
             m_creatureSprites[side] = ResourceManager::getSprite(
                 g_combatHeroSprites[
-                    2 * g_heroClasses[m_heroes[side]->m_heroClass].m_townType
-                    + g_heroTraits[m_heroes[side]->m_id].m_sex].m_defName);
+                    g_heroClasses[m_heroes[side]->m_heroClass].m_townType][
+                    g_heroTraits[m_heroes[side]->m_id].m_sex].m_defName);
             m_heroFlagSprites[side] = ResourceManager::getSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
                 : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));

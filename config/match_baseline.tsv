@@ -180,7 +180,7 @@ advmgr	?updBottomViewMessage@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x16
 advmgr	?updBottomViewNewTurn@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x15fb0	tokens1:0cff3981e19f
 advmgr	?updBottomViewResMsg@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x16160	tokens1:bf043bf12df7
 advmgr	?updBottomViewTown@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x164f0	tokens1:0c7f45b4b817
-advmgr	?updateRadar@advManager@@QAEXUtype_point@@_N1111@Z	97.6248	97.6248	97.6248	0x12c40	tokens1:7130eb6884fd
+advmgr	?updateRadar@advManager@@QAEXUtype_point@@_N1111@Z	97.6248	97.6248	97.6248	0x12c40	tokens1:f3a84fa4440d
 advmgr	?updateRadar@advManager@@QAEX_N0000@Z	100.0000	100.0000	100.0000	0x13790	tokens1:be2c81edf71c
 advmgr	?updateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	tokens1:5892f9a75243
 advmgr	?viewPuzzle@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a7f0	tokens1:bf69743069a0
@@ -338,7 +338,7 @@ ai_player	?buyMageGuild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.00
 ai_player	?calculateDemand@type_AI_player@@QAEXXZ	93.4010	93.4010	97.4340	0x28740	tokens1:2ad4d69eaa3e
 ai_player	?calculateReserve@type_AI_player@@IAEXXZ	92.9406	92.9406	96.4566	0x29ad0	tokens1:e8e4db662fd5
 ai_player	?canTakeTown@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	tokens1:c17304739fb7
-ai_player	?canTradeResources@type_AI_player@@IAE_NQBHQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	86.5669	86.5669	86.6478	0x2a580	tokens1:735e167c19a5
+ai_player	?canTradeResources@type_AI_player@@IAE_NQBHQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	86.5669	86.5669	86.6478	0x2a580	tokens1:319bbd91558f
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	tokens1:011e555c4686
 ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	tokens1:9554fd4c375d
 ai_player	?checkTradeSupply@type_AI_player@@IAE_NQBHJQAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8036	85.8036	85.8333	0x2a2b0	tokens1:3da41ee58e3e
@@ -973,7 +973,7 @@ cmbtmgr	?keepAttack@combatManager@@AAEXH@Z	100.0000	100.0000	100.0000	0x65ad0	to
 cmbtmgr	?learnSpellFromEagleEye@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69fe0	tokens1:b54358309f5b
 cmbtmgr	?leftOfMoat@combatManager@@SI_NH@Z	100.0000	100.0000	100.0000	0x67490	tokens1:7f9121874455
 cmbtmgr	?loadArmies@combatManager@@AAEXE@Z	100.0000	100.0000	100.0000	0x63600	tokens1:861b6e5a0b78
-cmbtmgr	?loadIcons@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x63370	tokens1:577ec059f2ea
+cmbtmgr	?loadIcons@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x63370	tokens1:b0ebd4742f71
 cmbtmgr	?loadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990	tokens1:76108b273340
 cmbtmgr	?lootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x6a070	tokens1:0adc11c7c99d
 cmbtmgr	?lowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0	tokens1:515c30688955
@@ -4219,7 +4219,7 @@ spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	10
 spells	?animateMagicArrow@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	tokens1:960287a23de8
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	100.0000	100.0000	100.0000	0x1a4970	tokens1:9146a00eb4f3
 spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:85bd50bb7e09
-spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	95.5056	95.5056	95.5056	0x19fe30	tokens1:c1a43ef15a80
+spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	95.5056	95.5056	95.5056	0x19fe30	tokens1:1f8cbbaffde5
 spells	?chainLightning@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x1a6360	tokens1:07b3327e9d5d
 spells	?checkFireWall@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:118d813740c7
 spells	?checkLandmine@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:cf04ad62a96c

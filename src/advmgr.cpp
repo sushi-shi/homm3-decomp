@@ -5791,8 +5791,10 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                         if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger) {
-                                int owner = g_game->getGarrison(
-                                    trigger->getMapExtraInfo())->m_playerOwner;
+                                // DC 7301 indexes the garrison vector here
+                                // rather than calling its GetGarrison inline.
+                                int owner = g_game->m_garrisons[
+                                    trigger->getMapExtraInfo()].m_playerOwner;
                                 colour = g_systemPalette->m_data[64 + owner];
                             }
                         }
