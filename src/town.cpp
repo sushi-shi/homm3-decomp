@@ -224,7 +224,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
 {
     char charBuffer;
     unsigned char ucharBuffer;
-    unsigned char inBuf[70];
+    unsigned char inBuf[hero::NUM_SPELLS];
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
@@ -302,7 +302,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
 
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
-    for (int spell = 0; spell < 70; ++spell) {
+    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         m_spells[spell] =
             (inBuf[spell / 8] & (1 << (spell % 8))) != 0;
     }
@@ -344,7 +344,7 @@ int town::save(TAbstractFile* outfile)
 {
     char charBuffer;
     char posBuffer;
-    unsigned char spellBuf[70];
+    unsigned char spellBuf[hero::NUM_SPELLS];
 
     charBuffer = m_id;
     if (outfile->write(&charBuffer, sizeof(charBuffer))
@@ -428,7 +428,7 @@ int town::save(TAbstractFile* outfile)
         return -1;
 
     memset(spellBuf, 0, sizeof(spellBuf));
-    for (int spell = 0; spell < 70; ++spell) {
+    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         if (m_spells[spell])
             spellBuf[spell / 8] |= 1 << (spell % 8);
     }
@@ -852,7 +852,7 @@ void town::initializeSpells(const TownExtra* townSetup)
     // CodeWarrior emits this default ctor with the exact 20 bytes of Mac's
     // bitset<70>::reset target at 0:e7378; an explicit reset adds a call.
     // VC6's ctor calls _Tidy, which retail expands at this site.
-    std::bitset<70> prohibited;
+    std::bitset<hero::NUM_SPELLS> prohibited;
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         // Complete builds this mask one bit at a time; retail 0x5be668
         // retains Dinkumware's set(position,bool), without a game adapter.

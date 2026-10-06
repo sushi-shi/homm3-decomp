@@ -1422,7 +1422,7 @@ extern THeroTraits g_heroTraitsStorage[163];
 extern const THeroTraits (&akHeroTraits)[163];
 
 // E:\gamedcs\hero.cpp:267
-std::bitset<70> markArtifactSpells(int artifactId);
+std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId);
 int heroView(int heroID, int noDismiss, int alreadyFaded,
              unsigned char quickView);
 

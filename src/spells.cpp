@@ -1387,7 +1387,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // Complete independently narrows the loop to shared spell rows 10..69;
     // the later creature-effect rows are not part of this helpful-spell scan.
     case SPELL_DISPEL_HELPFUL: {
-        for (int dispelledSpell = 10; dispelledSpell < 70;
+        for (int dispelledSpell = 10; dispelledSpell < hero::NUM_SPELLS;
              ++dispelledSpell) {
             if (target->getSpellTime(dispelledSpell)
                 && akSpellTraits[dispelledSpell].m_karma > 0) {

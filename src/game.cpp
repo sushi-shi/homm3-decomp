@@ -4311,7 +4311,7 @@ static void randomizePyramid(NewmapCell* cell)
 {
     std::vector<int> possibleSpells;
     int i;
-    for (i = 0; i < 70; ++i) {
+    for (i = 0; i < hero::NUM_SPELLS; ++i) {
         if (akSpellTraits[i].m_school != const_invalid_school
             && akSpellTraits[i].m_level == g_pyramidSpellLevel
             && !g_game->m_spellDisabledInfo[i])
@@ -5238,7 +5238,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
+        std::bitset<hero::NUM_SPELLS> serializedSpells = readPackedBits<hero::NUM_SPELLS>(mapFile);
 
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpells[spell]) {

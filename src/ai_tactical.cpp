@@ -2918,7 +2918,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
 {
     long total = 0;
     long count = 0;
-    for (long spell = 10; spell < 70; spell++) {
+    for (long spell = 10; spell < hero::NUM_SPELLS; spell++) {
         if (!isValidCaliphSpell(spell, target))
             continue;
         TSkillMastery mastery = eMasteryAdvanced;
