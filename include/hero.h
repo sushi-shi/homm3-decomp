@@ -16,7 +16,7 @@
 
 // hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
 // and type; Complete fixes the 0x6a7540 address and all four indexed readers.
-extern const char* g_statDesc[4];
+extern const char* g_statDesc[kNumPrimarySkills];
 
 // Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
 // retail GetNewHeroId extends it with the two Conflux classes, indexes all
@@ -691,7 +691,7 @@ private:
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
     // and by 0x4e6120, which adds artifact bonuses into the same band.
-    signed char m_stats[4];  // +0x476
+    signed char m_stats[kNumPrimarySkills];  // +0x476
 
 public:
     // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,
@@ -1382,9 +1382,9 @@ public:
     int m_townType;  // +0x00
     const char* m_className;  // +0x04
     float m_aggression;  // +0x08
-    signed char m_initialPrimarySkill[4];  // +0x0c
-    signed char m_gainPrimarySkillChance[4];  // +0x10
-    signed char m_gainPrimarySkillChance10P[4];  // +0x14
+    signed char m_initialPrimarySkill[kNumPrimarySkills];  // +0x0c
+    signed char m_gainPrimarySkillChance[kNumPrimarySkills];  // +0x10
+    signed char m_gainPrimarySkillChance10P[kNumPrimarySkills];  // +0x14
     signed char m_gainSecondarySkillChance[kNumSecSkills];  // +0x18
     signed char m_foundInTownType[9];  // +0x34
     // Complete expands foundInTownType to nine bytes at +0x34.

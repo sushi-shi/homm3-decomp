@@ -71,7 +71,7 @@ struct LegacyCampaignHero : public type_obscuring_object {
     signed char m_backpackCount;               // +0x3b9
     unsigned char m_inSpellbook[hero::NUM_SPELLS];           // +0x3ba
     unsigned char m_availableSpells[hero::NUM_SPELLS];       // +0x400
-    signed char m_stats[4];                    // +0x446
+    signed char m_stats[kNumPrimarySkills];                    // +0x446
     float m_aggression; // +0x44a
     long m_valueOfPower; // +0x44e
     long m_valueOfDuration; // +0x452

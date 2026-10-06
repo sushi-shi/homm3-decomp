@@ -1775,7 +1775,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
-    for (x = 0; x < 4; ++x) {
+    for (x = 0; x < kNumPrimarySkills; ++x) {
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
@@ -1962,7 +1962,7 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
         if (static_cast<unsigned>(outfile->write(&dwordValue, 4)) < 4)
             return -1;
     }
-    for (i = 0; i < 4; ++i) {
+    for (i = 0; i < kNumPrimarySkills; ++i) {
         value = thisBox->m_primarySkillBonus[i];
         if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
@@ -2102,7 +2102,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
-    for (x = 0; x < 4; ++x) {
+    for (x = 0; x < kNumPrimarySkills; ++x) {
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
@@ -3235,7 +3235,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             charBuffer = readValue<char>(infile);
             if (charBuffer) {
                 heroData->m_customPrimarySkills = 1;
-                for (x = 0; x < 4; ++x) {
+                for (x = 0; x < kNumPrimarySkills; ++x) {
                     charBuffer = readValue<char>(infile);
                     heroData->m_primarySkills[x] = charBuffer;
                 }

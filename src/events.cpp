@@ -1187,7 +1187,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         rewardGiven = 1;
     }
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < kNumPrimarySkills; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
                 addReward(msg, alternate, rewards,
@@ -6271,7 +6271,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             && g_combatManager->m_winner == 1) {
             if (g_game->isLocalHuman(rightHero->m_owner)) {
                 rightHero->checkLevel();
-                signed char stats[4];
+                signed char stats[kNumPrimarySkills];
                 rightHero->copyPrimarySkills(stats);
                 CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
                                         rightHero->m_skillLevel, stats);

@@ -23,7 +23,7 @@
 // morale/luck sites; homm3_limit.h owns the integer reference selector.
 
 // DC static skill_loc (type 0x1ae5): const POINT[4].
-DATA(0x00640688) static const POINT g_skillLoc[4] = {
+DATA(0x00640688) static const POINT g_skillLoc[kNumPrimarySkills] = {
     {74, 62}, {101, 62}, {129, 62}, {157, 62}
 };
 
@@ -81,7 +81,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
 
     if (viewLevel >= ViewAll) {
         int widgetId = PRIMARY_SKILL_1_ID;
-        for (int stat = 0; stat < 4; ++stat) {
+        for (int stat = 0; stat < kNumPrimarySkills; ++stat) {
             sprintf(g_text, "%d", thisHero->getPrimarySkill(stat));
             widgets.push_back(new textWidget(
                 g_skillLoc[stat].x,

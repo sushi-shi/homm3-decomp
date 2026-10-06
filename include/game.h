@@ -188,7 +188,7 @@ public:
     unsigned char m_customSpells;  // +0x31c
     std::bitset<hero::NUM_SPELLS> m_spells;  // +0x320
     unsigned char m_customPrimarySkills;
-    signed char m_primarySkills[4];  // +0x32d, class trails to 0x334
+    signed char m_primarySkills[kNumPrimarySkills];  // +0x32d, class trails to 0x334
 
     // Implicit default constructor; CodeView dc 0xbd5f4 compgenx.
     void reset(int heroId);

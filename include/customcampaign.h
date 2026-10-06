@@ -323,7 +323,7 @@ public:
 
     int m_hero;
 
-    char m_skills[4];
+    char m_skills[kNumPrimarySkills];
 
 };
 
