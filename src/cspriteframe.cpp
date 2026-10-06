@@ -2659,6 +2659,12 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
 // and its flag color last.
 // The native row cursor restores all Windows bytes. Splitting its address
 // into a fixed base and row offset leaves 98.0214%; retain one row lifetime.
+// 99.3376% since the DC-proven bool flags: the two blend loops use word
+// `and dx,word [s_div2mask]` where retail loads the mask as a dword. This is
+// name-keyed TU state (docs/vc6/behavior-catalog.md C12): spelling draw as DC's
+// `Draw` (or drawz/drawA) restores every instruction, `draw`/`drawRle` do not;
+// true/false call arguments, uchar clip flags and dropping the draw call
+// leave it unchanged. The project's normalized names are kept.
 VA(0x0047ef60, 0x47C)
 DC_ADDRESS(0x077664, 0x338)
 MAC_ADDRESS(0x08def8, 0x44c)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity

@@ -208,19 +208,25 @@ unsigned char combatManager::failedSiege()
 // pyramid alone is +24.22 and makes the branch census exact (54/54
 // branches, 4/4 rets).
 
-// DC's IsActive and Is calls remain canonical in the fight-value loop.
-// A raw attribute-word carrier previously selected retail's test instruction,
-// but bypassed that interface. Positive active-arm nesting and a consumed
-// named done Boolean do not change the residual with the helpers restored.
+// DC calls IsActive (line 280) and Is (253) out of line here, but its Done
+// test (line 285) reads the attribute word directly, with no Is call; that
+// direct test gives retail's `test ecx, 0x4000000` (94.45 -> 95.24).
 // Keep the artifact-value result ahead of the by-value max so its argument
 // copy dies in that arm; the final quotient likewise owns its float slot.
 // DC records iSideFV as int[2], not long[2]. Restoring that array is
-// byte-flat at 94.4511%. Native DC publics prove Is/IsActive return bool;
-// the debug type records lower that bool to an unsigned-char primitive.
-// Their canonical expansions remain present; the residual has 78 matching
-// CFG blocks in flow, 54 branches and four returns. It still hoists the
-// initial zero carrier and lowers the Done test to shr/test rather than
-// retail's test of the attribute mask. Do not bypass Is to force that test.
+// byte-flat. Native DC publics prove Is/IsActive return bool; the debug
+// type records lower that bool to an unsigned-char primitive.
+// Residual (95.24%): 78 CFG blocks in flow, 54 branches, four returns. The
+// census index's `xor ebx,ebx` is hoisted to the entry (null tests compare
+// against EBX; retail loads/tests and zeroes EBX at `count`), so EDI keeps
+// g_game from the victory test where retail reloads it; the same cascade
+// predates every helper change (the 95.77 peak had it too). The fight-value
+// `imul eax,[edi+0x64]` order follows town::hasBuilding's inline form: it
+// matched while hasBuilding nested getBuildingMask() (not in DC) and with a
+// named __int64 per arm (96.01, but DC lines 326/327 are single statements
+// with no local). Byte-flat here: early first-guard folding, block-local
+// surrenderCost/combatValue/fightValues, raw isActive fields, a named
+// attribute word, `== 0` spelling, and a braceless hasBuilding.
 // Original ?AICheckRetreat@combatManager@@QAA_NXZ proves bool. Its sole
 // value forwarding into AI spellcaster::castSpell also has an original bool
 // parameter; byte return instructions and lowered debug primitives do not
@@ -323,7 +329,7 @@ bool combatManager::aiCheckRetreat()
                                         long value =
                                             sideArmy->m_numTroops
                                             * sideArmy->m_monInfo.m_baseFightValue;
-                                        if (!sideArmy->is(creatureDone))
+                                        if (!(sideArmy->m_monInfo.m_attributes & creatureDone))
                                             value = static_cast<long>(value * 1.2);
                                         fightValue += value;
                                     }
