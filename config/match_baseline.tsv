@@ -392,7 +392,7 @@ ai_player	?getValue@type_spellcaster_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.00
 ai_player	?getValue@type_statue_of_legion_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33580	tokens1:4ac337fb6993
 ai_player	?getValue@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32c20	tokens1:3534152121b4
 ai_player	?getValue@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x333a0	tokens1:6d57f64f0ded
-ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	tokens1:113dc9affd6d
+ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	tokens1:81fa85c3a14a
 ai_player	?hireHeroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	tokens1:affdde797775
 ai_player	?initializeArtifactEffects@@YIXXZ	97.4602	97.4602	97.5044	0x34100	tokens1:7a8c9bae5473
 ai_player	?makeGift@type_AI_player@@IAEXJ@Z	100.0000	100.0000	100.0000	0x29110	tokens1:150eb886b156
@@ -743,7 +743,7 @@ bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	100.0000	100.00
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820	tokens1:bf1da83bb895
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	99.9806	100.0000	100.0000	0x50dd0	tokens1:1245c50fac02
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51220	tokens1:adf5affa5312
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.7651	94.7651	98.7476	0x521f0	tokens1:7d2ad3a5f9e9
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	93.9705	94.7651	98.7476	0x521f0	tokens1:7d2ad3a5f9e9
 bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x53cd0	-
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
@@ -2228,7 +2228,7 @@ hero	?getHitPointBonus@hero@@QBEJH@Z	100.0000	100.0000	100.0000	0xe5b80	tokens1:
 hero	?getIdentifyLevel@hero@@QBE?AW4TSkillMastery@@XZ	100.0000	100.0000	100.0000	0xe5de0	tokens1:177277fc7d0d
 hero	?getIntelligenceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe48b0	tokens1:033083c054f0
 hero	?getLastBackpackIndex@hero@@QBEJXZ	100.0000	100.0000	100.0000	0xdbd90	tokens1:3050ca49ad0e
-hero	?getLuck@hero@@QBEHPBV1@_N1@Z	94.2276	100.0000	100.0000	0xe36c0	tokens1:d8a31e829df7
+hero	?getLuck@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe36c0	tokens1:d8a31e829df7
 hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0xdcac0	tokens1:3c89e2f36272
 hero	?getMagicResistanceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe46e0	tokens1:b0694667ef8d
 hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	tokens1:022c28de8cb6
@@ -4389,7 +4389,7 @@ textwdgt	?zBufferDraw@textWidget@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x1bc7e0
 tiles	?buildTileNeighbourMask@@YIXHHHHPAE@Z	100.0000	100.0000	100.0000	0x1bc910	tokens1:ad8ac122ec1a
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80	tokens1:578399898ae6
 town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0	tokens1:86dcd3989769
-town	?buildBuilding@town@@QAE?AW4type_building_id@@H_N0@Z	97.5460	99.5794	99.5794	0x1bede0	tokens1:ef139fe46a24
+town	?buildBuilding@town@@QAE?AW4type_building_id@@H_N0@Z	99.5794	99.5794	99.5794	0x1bede0	tokens1:ef139fe46a24
 town	?buyBuilding@town@@QAE_NW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0	tokens1:e52770832994
 town	?calcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0	tokens1:78e51c358e7d
 town	?canBuild@town@@QBE_NF@Z	100.0000	100.0000	100.0000	0x1c0d20	tokens1:b03fad77485c
