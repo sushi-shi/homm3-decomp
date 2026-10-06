@@ -535,14 +535,6 @@ void type_obscuring_object::initialize()
     m_extraInfo = 0;
 }
 
-// Project-inferred counterpart to getLocation, shared by heroes and boats.
-void type_obscuring_object::setLocation(const type_point& point)
-{
-    m_x = point.m_x;
-    m_y = point.m_y;
-    m_z = point.m_z;
-}
-
 VA(0x004d74f0, 0xD6)
 DC_ADDRESS(0x0cab54, 0x102)
 MAC_ADDRESS(0x0f22e0, 0x194)
@@ -1034,14 +1026,19 @@ void hero::initialize(short index)
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
     MEMSET(m_army.m_armies, CREATURE_NONE, sizeof(m_army.m_armies), i);
-    clearTarget();
+    m_pathTargetY = -1;
+    m_pathTargetX = -1;
     m_level = 1;
 
-    resetManaToMaximum();
+    m_mana = static_cast<short>(getMaxMana());
 
     m_maxMovePoints = 0;
     m_movePoints = 0;
-    resetAdventureSpells();
+    m_flightLevel = eMasteryInvalid;
+    m_waterWalkLevel = eMasteryInvalid;
+    m_disguiseLevel = eMasteryInvalid;
+    m_dWalkSpellsCast = 0;
+    m_identifyLevel = eMasteryInvalid;
     m_hasCustomName = 0;
     m_customName = "";
     m_isSleeping = 0;
@@ -1106,7 +1103,9 @@ void hero::initialize(const HeroExtra* setup)
 {
     long i;
     m_order = setup->m_objRef;
-    setLocation(setup->m_location);
+    m_x = setup->m_location.m_x;
+    m_y = setup->m_location.m_y;
+    m_z = setup->m_location.m_z;
     m_owner = setup->m_owner;
     m_id = static_cast<HeroId>(setup->m_id);
     m_heroClass = g_heroTraits[setup->m_id].m_heroClass;
@@ -1205,8 +1204,8 @@ void hero::initialize(const HeroExtra* setup)
         checkLevel();
     }
 
-    resetManaToMaximum();
-    refreshMovement();
+    m_mana = static_cast<short>(getMaxMana());
+    m_maxMovePoints = m_movePoints = getMobility();
 }
 
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
@@ -1413,13 +1412,6 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
             return;
         }
     }
-}
-
-// Project-inferred resource operations from initialization/recruitment and
-// daily regeneration. A reset is unconditional; a raise tests the threshold.
-void hero::resetManaToMaximum()
-{
-    m_mana = static_cast<short>(getMaxMana());
 }
 
 VA(0x004d92d0, 0x59)
@@ -6112,15 +6104,6 @@ int hero::getMobility() const
     return getMobility((m_flags & 0x40000) != 0);
 }
 
-// Project-inferred operations shared by turn/campaign setup, prison release
-// and adventure rewards. Refresh stores remaining points before allowance;
-// bonuses update allowance before remaining points and never recompute it.
-void hero::refreshMovement()
-{
-    m_movePoints = getMobility();
-    m_maxMovePoints = m_movePoints;
-}
-
 VA(0x004e4db0, 0x10D)
 DC_ADDRESS(0x0d4db0, 0x40)
 MAC_ADDRESS(0x105c18, 0x94)
@@ -6516,22 +6499,6 @@ bool hero::canLand() const
     if (cell->m_isTrigger && g_adventureObjectTraits[cell->m_type].m_blocksLanding)
         return 0;
     return 1;
-}
-
-// Project-inferred reset shared by boarding and the complete daily reset.
-// Calling fly(-1) would charge mana; these are spell-state invalidations.
-void hero::clearMovementSpells()
-{
-    m_flightLevel = eMasteryInvalid;
-    walkOnWater(eMasteryInvalid);
-}
-
-void hero::resetAdventureSpells()
-{
-    clearMovementSpells();
-    m_disguiseLevel = eMasteryInvalid;
-    m_dWalkSpellsCast = 0;
-    m_identifyLevel = eMasteryInvalid;
 }
 
 VA(0x004e5dd0, 0x10)
