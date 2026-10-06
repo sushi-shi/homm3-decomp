@@ -385,19 +385,21 @@ MAC_COMPGEN_ADDRESS(0x02b304, 0x68, IMPLICIT_DTOR, type_AI_creature_purchaser)
 // Original: type_AI_player::get_resource_value; ai_player.cpp:230
 // DC235/236 sums seven resources with conversion back to long each turn;
 // GetTotalValue calls it at DC1359. Retail0x42a150 expands this loop.
-// The indexed double reads expand the canonical ai_player.h:278 resource
-// getter, also used by the income artifact. Preserve that nested access path.
+// The indexed double reads are direct: DC 236 has no call to the
+// ai_player.h:278 getter (which DC's income artifact does call), and its
+// expansion adds a double return temporary that retail's inlined copy in
+// getTotalValue lacks (0x38 versus 0x30 frame, 96.21%).
 DC_ADDRESS(0x02e094, 0xc8)
 MAC_ADDRESS(0x02b36c, 0x78)
-// Original DC ?get_resource_value@type_AI_player@@QBAJQAH@Z proves a
-// const pointer parameter; its elements retain the mutable integer type.
-long type_AI_player::getResourceValue(int* const resources) const
+// Original DC ?get_resource_value@type_AI_player@@QBAJQAH@Z puts the
+// const pointer on the header declaration; DC's CodeView parameter record
+// (int *resources) shows this definition without top-level const.
+long type_AI_player::getResourceValue(int* resources) const
 {
     long value = 0;
     for (int resource = 0; resource < 7; ++resource)
         value = static_cast<long>(
-            value + resources[resource]
-                * getResourceValue(static_cast<EGameResource>(resource))); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            value + resources[resource] * m_resourceValue[resource]);
     return value;
 }
 
@@ -434,6 +436,8 @@ float type_AI_player::getAttackBonus(short player)
 // amount-word read (`movsx esi, cx` from the register copy vs our
 // `movsx esi, word ptr [ecx+8]` from the source) - register-homing family;
 // the creation-order probes measured against it are in the device note.
+// Direct average-loop reads: DC calculate_demand has no get_resource_value
+// call (DC GetTotalValue path keeps one); the getter dropped this to 73.94%.
 VA(0x00428740, 0x68E)
 DC_ADDRESS(0x02e188, 0x64e)
 MAC_ADDRESS(0x02b43c, 0x704)  // linkorder
@@ -1015,6 +1019,8 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
 VA(0x0042a150, 0x157)
 DC_ADDRESS(0x0301c4, 0x11c)
 MAC_ADDRESS(0x02df5c, 0x13c)
+// Original DC public ?get_total_value@type_AI_player@@IAAJJQAH@Z comes
+// from the header's int* const; DC's CodeView parameter is plain int*.
 long type_AI_player::getTotalValue(long basicValue, int* cost)
 {
     playerData* player = &g_game->m_players[m_team];
@@ -1062,10 +1068,10 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
 VA(0x0042a2b0, 0x1BF)
 DC_ADDRESS(0x030334, 0x196)
 MAC_ADDRESS(0x02e1b4, 0x284)  // retail link order + arity
-// Original DC public IAA_NQBHJQAH... proves const pointer parameters:
-// cost's elements are const, while supply's elements remain writable.
-bool type_AI_player::checkTradeSupply(const int* const cost, long number,
-                                        int* const supply,
+// Original DC public IAA_NQBHJQAH... proves the header's const pointer
+// parameters; DC's CodeView records the definition's as const int* / int*.
+bool type_AI_player::checkTradeSupply(const int* cost, long number,
+                                        int* supply,
                                         std::vector<long>& tradeQty)
 {
     unsigned char tradeNeeded = 0;
@@ -1134,6 +1140,9 @@ void type_AI_player::tradeResources(const int* cost, long number)
 VA(0x0042a580, 0x5BE)
 DC_ADDRESS(0x0305b4, 0x41e)
 MAC_ADDRESS(0x02e580, 0x424)  // retail link order + arity
+// Original DC public IAA_NQBH QAH... proves the header's const pointers;
+// DC's CodeView parameters (const int *cost, int *supply) show the
+// definition without them. The const definition measured 86.12%.
 bool type_AI_player::canTradeResources(const int* cost, int* supply,
                                          std::vector<long>& tradeQty)
 {

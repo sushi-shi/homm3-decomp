@@ -793,7 +793,10 @@ public:
     // bracket assignment to ViewArtifact is disproved by that name's exact
     // retail identity at 0x4d9a00; this remains an ordinal retail-only name.
     int heroFn004D9CC0(int artifact);
-    void viewArtifact(const type_artifact* artifact, int isQuickView);
+    // Original ?ViewArtifact@hero@@QAAXABUtype_artifact@@H@Z proves
+    // const reference. The Windows body passes the same one-word address
+    // and never treats the artifact as optional.
+    void viewArtifact(const type_artifact& artifact, int isQuickView);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void updateStats();
@@ -827,8 +830,6 @@ public:
     // Project-inferred complete refresh and paired reward operations.
     // Native maxMobility/currMobility remain public.
     void refreshMovement();
-    // Project-inferred boat-state interface; the native flag word is public.
-    bool isOnBoat() const;
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     short getPrimarySkillTotal() const;

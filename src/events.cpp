@@ -504,7 +504,7 @@ int advManager::doNetCombat(CCombatInitMsg* pCombatInitMsg)
 
 // E:\gamedcs\events.cpp:6283
 // RETAIL_LOCATED(0x004ad470, 0x1531)  // located @stub (promoted to active VA), dc 0x9b970
-int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout)
+int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, bool bFinishHeroes, bool alternate_layout)
 {
     // @stub
 }
@@ -6117,6 +6117,9 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // a call. CCombatInitMsg's destructor now correctly stays out of line.
 // DC uses DestroyMsg for its pointer payload; Complete's independently proven
 // CWaitForRemoteBattleDlg owns the payload by value, so no DestroyMsg is added.
+// Mac 0xbb1a0 passes the embedded payload at dialog+0x78. After setting the
+// winner, 0xbbcb8..0xbbd08 destroys the pause handler, payload members and
+// dialog base on both received/not-received exits, matching its implicit dtor.
 // Logical bool/byte replay spellings are byte-flat. A direct stats argument
 // does not compile: the DC member records independently prove stats private.
 // Pause-guard source tests (header declaration versus CPP-owned in-class or
@@ -6127,10 +6130,12 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // the copies is flat. DC's scheduled store alone does not settle the spelling.
 // Windows retail has no separate draw arm after quick combat: the winner
 // selects the defeated hero directly (Mac 0xbaf6c's draw check scores 92.78%).
+// Original DC public ?DoCombat@advManager@@QAAHUtype_point@@PAVhero@@
+// PAVarmyGroup@@JPAVtown@@12H_N4@Z proves both trailing flags bool.
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
-int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, unsigned char finishHeroes, unsigned char alternateLayout)
+int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, bool finishHeroes, bool alternateLayout)
 {
     int leftPlayer = leftHero ? leftHero->m_owner : -1;
     int winningPlayer;  // DC winning_player

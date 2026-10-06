@@ -315,7 +315,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
                 continue;
             if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            unsigned char ranged = ourArmy->canShoot(0);
+            bool ranged = ourArmy->canShoot(0);
             long attack = ourArmy->getAttackModifier(0, ranged);
             long defense = ourArmy->getDefenseModifier();
             if (first || m_lowestAttack > attack)
@@ -325,6 +325,9 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
             first = 0;
         }
     }
+    // Direct group fields: DC's four get_total_combat_value calls have no
+    // get_group/get_enemy_group calls (DC keeps 23 such calls elsewhere);
+    // the getters reorder each call's argument loads (97.57%).
     m_friendlyCombatValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
                                                m_lowestDefense, 1);
     m_awakeFriendlyValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,

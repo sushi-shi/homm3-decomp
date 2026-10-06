@@ -1365,8 +1365,11 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
                 return 1;
         }
     }
-    int combination = g_artifactTraits[whichArtifact].m_targetCombo;
-    return combination != -1
+    // Mac 0xf4e6c/0xf4e88 reload m_targetCombo for the test and the index
+    // (CodeWarrior -O1 would keep a named local in r0): no local here. This
+    // also keeps the getArtifact-based body at the IL cost the description
+    // callers' retail append/_Grow decisions require.
+    return g_artifactTraits[whichArtifact].m_targetCombo != -1
         && isWieldingArtifact(g_combinationArtifacts[
                g_artifactTraits[whichArtifact].m_targetCombo].m_artifactId);
 }
@@ -1705,16 +1708,16 @@ void hero::viewStat(int whichStat, int isQuickView)
 VA(0x004d9a00, 0x128)
 DC_ADDRESS(0x0cc75c, 0xa2)
 MAC_ADDRESS(0x0f59c8, 0x124)
-void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
+void hero::viewArtifact(const type_artifact& artifact, int isQuickView)
 {
-    if (artifact->m_artifactId == ARTIFACT_SPELL_SCROLL) {
-        normalDialog(artifact->getDescription().c_str(),
+    if (artifact.m_artifactId == ARTIFACT_SPELL_SCROLL) {
+        normalDialog(artifact.getDescription().c_str(),
                      isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                  : hero::PRIMARY_STAT_DIALOG_TYPE,
-                     -1, PRIMARY_STAT_DIALOG_Y, 9, artifact->m_extra,
+                     -1, PRIMARY_STAT_DIALOG_Y, 9, artifact.m_extra,
                      -1, 0, -1, 0, -1, 0);
     } else {
-        normalDialog(artifact->getDescription().c_str(),
+        normalDialog(artifact.getDescription().c_str(),
                      isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                  : hero::PRIMARY_STAT_DIALOG_TYPE,
                      -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0, -1, 0,
@@ -2831,9 +2834,9 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                             return;
                         }
                     }
-                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                    g_currentHero->viewArtifact(oldArtifact, rightMouse);
                 } else {
-                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                    g_currentHero->viewArtifact(oldArtifact, rightMouse);
                 }
             } else if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
                 TSpellbookWindow spellBookWindow(
@@ -3184,6 +3187,15 @@ std::string hero::getMoraleDescription() const
         morale -= 3;
     }
 
+    // Mac expands the same signed packed mastery accessor at each rung.
+    // Keep the typed helper path through the description's string inlining.
+    // DC hero.cpp:2962/2968/2974 reload the leadership byte directly
+    // (mov.b, no Hero.h GetSecondarySkill row). With the accessor, the
+    // Advanced arm's nested append budget is 1320/13 = 101 < 111; direct
+    // reads leave retail's 12 sites. getMoraleDescription 87.08 -> 97.95.
+    // Residue: retail keeps g_game in ebx across the Grail town loop. A
+    // pointer player local is byte-identical; reading g_game->m_players in
+    // the loop (DC's 2982 for-row has no separate local) gave 90.88%.
     if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
         result += g_moraleInfo[20];
         morale++;
@@ -3198,6 +3210,8 @@ std::string hero::getMoraleDescription() const
     }
 
     if (m_owner >= 0) {
+        // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
+        // DC get_morale_description has no get_player call.
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
@@ -3320,6 +3334,10 @@ std::string hero::getLuckDescription() const
         luck++;
     }
 
+    // Mac likewise expands the canonical mastery read for these luck rungs.
+    // DC reads the luck byte directly (+9, three mov.b reloads; no Hero.h
+    // row), as in getMoraleDescription: 91.26 -> 95.45 with the Mac-shaped
+    // isWieldingArtifact. Same g_game-in-ebx Grail-loop residue.
     if (m_skillLevel[eSecSkillLuck] == eMasteryBasic) {
         result += g_luckInfo[15];
         luck++;
@@ -3334,6 +3352,8 @@ std::string hero::getLuckDescription() const
     }
 
     if (m_owner >= 0) {
+        // Direct row: getPlayer() would be a call Mac lacks (see getLuck);
+        // DC get_luck_description has no get_player call.
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
@@ -3382,7 +3402,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
             return;
 
         if (rightMouse) {
-            g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+            g_currentHero->viewArtifact(oldArtifact, rightMouse);
             return;
         }
 
@@ -3589,7 +3609,7 @@ int THeroScreenWindow::exitDialog(message& msg)
 // after show_hero_skills (75.41 -> 69.34), which is what proves the
 // placement is a separate knob from the merge.
 // Two facts that any candidate explanation has to carry: retail's frame is
-// 0x14c against our 0x144 (two named locals we do not have), and retail
+// 0x14c against our 0x144 (the size alone cannot prove missing locals), and retail
 // homes `right_mouse` in the DEAD `msg` parameter slot [ebp+8] while we
 // spend a numbered local on it - both consistent with the frame being
 // allocated after a different set of blocks survived.
@@ -3605,6 +3625,13 @@ int THeroScreenWindow::exitDialog(message& msg)
 // move: it is still the last block, at fn+0x1291.  So the `else` is not the
 // construct that puts retail's join early, and no source bracketing tried so
 // far reaches C2's choice of surviving copy.
+// Current control (85.96526%): the Complete skill popup is instruction-exact
+// modulo shifted addresses, including both signed getSecondarySkill reads
+// on opposite sides of strcpy. A TSecondarySkill local instead of the two
+// argument casts is byte-flat. Fresh C2 tracing admits handleArtifactClick
+// but rejects its nested combination predicate at budget 17 versus cb 120;
+// updateAllSlots/updateSlot also has a reciprocal nested frontier. These are
+// additional residuals, not evidence of missing locals or a new inline pin.
 VA(0x004dd2d0, 0x143E)
 DC_ADDRESS(0x0cf54c, 0xc38)
 MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees
@@ -3944,17 +3971,17 @@ int THeroScreenWindow::windowHandler(message& msg)
             if (nth >= g_currentHero->m_skillCount)
                 break;
             int skill = g_currentHero->getNthSS(nth);
-            // Both reads index the byte array directly: the typed
-            // getSecondarySkill facade widens through TSkillMastery and
-            // scores 88.09% against this form's 92.07%.
+            // Mac 0xfa524/0xfa58c expands the signed packed mastery
+            // accessor. GetNthSS's native public returns int; decode that
+            // skill ID at the typed accessor boundary.
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
+                       .m_levelNames[g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
+                         3 * skill + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -5132,15 +5159,22 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 // liftable block and no DC-named helper has no dose to give.
 VA(0x004e2840, 0x1B5)
 MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8; size absorbs the
+// Mac 0x1034d8..0x103da8 expands the canonical reference readers before
+// copying/testing records. Keep that read boundary; mutations stay owned here.
+// The slot's record is bound once, at entry, ahead of the placement gate:
+// two getArtifact sites after the gate divide /Ob2's nested budget so the
+// bitset _Xran expansion starves (72.45%), one after it still does
+// (82.33%); the entry binding leaves the gate the whole budget (100%).
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
+    const type_artifact& current = getArtifact(TArtifactSlot(slot));
     if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
         return 0;
 
-    if (m_equipped[slot].m_artifactId == ARTIFACT_NONE)
+    if (current.m_artifactId == ARTIFACT_NONE)
         return heroFn004E2550(artifact, slot);
 
-    type_artifact displaced = m_equipped[slot];
+    type_artifact displaced = current;
     removeArtifact(slot);
     unsigned char accepted;
     try {
@@ -5600,6 +5634,9 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
         luck++;
 
     if (m_owner >= 0) {
+        // Direct row, not getPlayer(): CodeWarrior emits a getPlayer call for
+        // that spelling, absent from Mac 0x1044f4 (which calls it at 17
+        // other sites); DC GetLuck has no get_player call either.
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
@@ -6053,6 +6090,10 @@ int hero::getMobility(bool seaMovement) const
     if (m_owner >= 0 && m_owner < 6 && !g_game->isHuman(m_owner) &&
         g_game->m_setup.m_difficulty > 2) {
         mobility += 75;
+        // Not getPlayer(): Mac 0x105b9c indexes the row after isHuman with
+        // no owner guard, and CodeWarrior keeps a getPlayer call here while
+        // Mac retains its 17 real calls elsewhere; retail likewise has no
+        // guard after the isHuman call. DC GetMobility has no get_player.
         if (g_game->m_players[m_owner].m_personality == AI_PERSONALITY_AGGRESSIVE)
             mobility += 50;
     }
@@ -6062,9 +6103,11 @@ int hero::getMobility(bool seaMovement) const
 VA(0x004e4d90, 0x12)
 DC_ADDRESS(0x0d4d60, 0x50)
 MAC_ADDRESS(0x105be0, 0x38)
+// DC 5933 and Mac 0x105bf0 test the boat flag inline: Mac has no
+// predicate call where CodeWarrior would keep one for a hero.cpp helper.
 int hero::getMobility() const
 {
-    return getMobility(isOnBoat());
+    return getMobility((m_flags & 0x40000) != 0);
 }
 
 // Project-inferred operations shared by turn/campaign setup, prison release
@@ -6453,13 +6496,6 @@ long hero::getHitPointBonus(int creatureType) const
         && isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
         bonus += g_creatureTypeTraits[creatureType].m_hitPoints / 4;
     return bonus;
-}
-
-// Project-inferred names for the shared boat-bit predicate and mutation.
-// Playback uses only this mutation; live boarding/landing also charge movement.
-bool hero::isOnBoat() const
-{
-    return (m_flags & 0x40000) != 0;
 }
 
 // DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.

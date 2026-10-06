@@ -287,6 +287,11 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 
 VA(0x0043d8b0, 0x135)
 DC_ADDRESS(0x043d9c, 0xe4)
+// DC records hexcell& back_cell; restoring that reference is byte-flat.
+// Both side stores read m_combatSide directly: DC Init keeps its 14-byte Is
+// call but has no get_owning_side call, and retail narrows both loads to a
+// byte, which the int-returning getter's expansion does not (99.88%).
+// Complete/Mac addAura precedes retaliation setup, unlike the older DC order.
 MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
@@ -299,11 +304,11 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
         cell->m_armySlot = static_cast<signed char>(m_bitIndex);
         cell->m_partOfDouble = -1;
         if (is(creatureDoubleWide)) {
-            hexcell* second =
-                &g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
-            second->m_armySide = static_cast<signed char>(m_combatSide);
-            second->m_armySlot = static_cast<signed char>(m_bitIndex);
-            second->m_partOfDouble = m_facing != 0;
+            hexcell& backCell =
+                g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
+            backCell.m_armySide = static_cast<signed char>(m_combatSide);
+            backCell.m_armySlot = static_cast<signed char>(m_bitIndex);
+            backCell.m_partOfDouble = m_facing != 0;
             cell->m_partOfDouble = m_facing == 0;
         }
         addAura();
@@ -1652,6 +1657,9 @@ void army::doFireShield(long damageAmount)
     int i;
     army* a;
     g_combatManager->resetLimitCreature();
+    // Direct side read: DC DoFireShield has no get_owning_side call (DC
+    // keeps 30 such calls elsewhere); the getter plus a slot temporary
+    // reached only 99.93% with commuted LEA operands.
     g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     for (side = 0; side < 2; side++) {
         a = &g_combatManager->m_armies[side][0];
@@ -4560,6 +4568,9 @@ void army::newTurn()
     if (g_combatManager->m_creaturePlacement != 0)
         return;
     if (m_topCreatureDamage > 0) {
+        // Not getOwner(): Mac 0x53458 reads the side's hero inline, while
+        // CodeWarrior keeps getOwner a call (as in Mac rangeAttack 0x4b668);
+        // DC NewTurn has no get_owner call either.
         if (m_creatureType == CREATURE_WIGHT
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
@@ -4610,6 +4621,11 @@ void army::newTurn()
 VA(0x00447120, 0x20A)
 DC_ADDRESS(0x04bc84, 0xfa)
 MAC_ADDRESS(0x05369c, 0x15c)
+// Mac 0x53700 expands the POISON duration getter at +0x2b4.
+// Windows 97.4026 residual: the AGE getter load/test in adjustHitpoints
+// schedules after the poison-factor float copy/store rather than across it.
+// Capturing its duration result in the canonical helper is byte-flat; all
+// 36 blocks, 19 branches, nine calls and 19 references already agree.
 void army::resetRound()
 {
     if (m_numTroops <= 0)
@@ -4624,7 +4640,7 @@ void army::resetRound()
 
     decrementSpellRounds();
 
-    if (m_spellInfluence[SPELL_POISON] > 0) {
+    if (getSpellTime(SPELL_POISON) > 0) {
         int oldHitPoints = m_monInfo.m_hitPoints;
         double factor = cppMax<double>(m_poisonPenalty - 0.1f, 0.5);
         m_poisonPenalty = static_cast<float>(factor);
@@ -5091,6 +5107,8 @@ void army::castSpell(long hex)
         if ((targetX < myX && m_facing == 1) || shouldTurn)
             turn(1);
         g_combatManager->resetLimitCreature();
+        // Direct side read: DC CastSpell has no get_owning_side call, and
+        // the getter's expansion swaps the mark's registers (99.89%).
         g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
         g_combatManager->computeMaxExtent();
         long dx = targetX - myX;
