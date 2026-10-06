@@ -2022,7 +2022,7 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
         return;
     if (effect < 0)
         return;
-    if (effect >= 83)
+    if (effect >= kNumSpellEffects)
         return;
     if (!g_spellEffectTraits[effect].m_name)
         return;
@@ -2073,7 +2073,7 @@ void combatManager::spellEffect(int effect, int hex, int delay,
         return;
     if (effect < 0)
         return;
-    if (effect >= 83)
+    if (effect >= kNumSpellEffects)
         return;
 
     TSpellEffectTraits traits = g_spellEffectTraits[effect];

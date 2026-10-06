@@ -111,7 +111,7 @@ DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTrait
     { static_cast<TCreatureType>(100) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 795, 230, 626, 575, 580, 85, "pplizax.def" },
     { CREATURE_STORM_ELEMENTAL, 783, 225, 636, 575, 595, 105, "cprgtix.def" }
 };
-DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
+DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[kNumSpellEffects] = {
     { "C10spW.def", "Prayer", 256 },
     { "C11spA0.def", "Lightning_Bolt", 2 },
     { "C01spA0.def", "AirShield", 1 },
