@@ -21,6 +21,9 @@ enum TTerrainType {
 // Dreamcast's enum also carries kNumTerrainTypes = 10. Adding that
 // enumerator here changes VC6's code for recruitUnit::update (0x5503a0,
 // CUR 99.94% -> 97.54%, 2026-09-29), so Complete's TTerrainType is kept
-// without it; tables sized by terrain spell the count at their declaration.
+// without it. Per-terrain tables and masks use this source constant
+// instead (a const int here reschedules advManager::doCombat; a macro
+// changes no object).
+#define NUM_TERRAIN_TYPES 10
 
 #endif  // HOMM3_TERRAIN_TYPE_H
