@@ -610,7 +610,7 @@ void game::calculateProduction()
     // DC calculate_production keeps its EGameResource induction variable.
     // Widen the ordinal locally without adding a conversion call boundary.
     double playerHandicap;
-    for (playerId = 0; playerId < 8; ++playerId) {
+    for (playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         if (!m_playerDisabled[playerId]) {
             long (&production)[NUM_RESOURCES] =
                 m_players[playerId].m_ai.m_turnProductionResource;
@@ -632,7 +632,7 @@ void game::calculateProduction()
     // VC6's inline `memset(p, 0, 8)`.  `= {0}` lowers to the 1/4/2/1
     // byte/dword/word/byte run instead and costs 0.65; the fully enumerated
     // `= {0,0,0,0,0,0,0,0}` is worse again (91.26).
-    unsigned char crystalDragonIncome[8];
+    unsigned char crystalDragonIncome[NUM_PLAYERS];
     memset(crystalDragonIncome, 0, sizeof(crystalDragonIncome));
     long townId;
     for (townId = 0; townId < m_towns.size(); ++townId) {
@@ -662,7 +662,7 @@ void game::calculateProduction()
         }
     }
 
-    for (playerId = 0; playerId < 8; ++playerId) {
+    for (playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         if (m_playerDisabled[playerId])
             continue;
         playerData& currentPlayer = m_players[playerId];
@@ -699,13 +699,13 @@ void game::calculateProduction()
         }
     }
 
-    for (playerId = 0; playerId < 8; ++playerId) {
+    for (playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         if (m_day == 1 && crystalDragonIncome[playerId])
             m_players[playerId].m_ai.m_turnProductionResource[CRYSTAL] += 3;
     }
 
     if (m_setup.m_difficulty > 2) {
-        for (playerId = 0; playerId < 8; ++playerId) {
+        for (playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
             if (isHuman(playerId) || m_playerDisabled[playerId])
                 continue;
             playerData& currentPlayer = m_players[playerId];
@@ -723,7 +723,7 @@ void game::calculateProduction()
         }
     }
 
-    for (playerId = 0; playerId < 8; ++playerId) {
+    for (playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         if (!m_setup.m_handicap[playerId] || m_playerDisabled[playerId])
             continue;
         playerData& currentPlayer = m_players[playerId];
@@ -1387,7 +1387,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
     m_currHeroId = loadHeroId(infile, saveVersion);
 
     int i;
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < playerData::HERO_SLOT_COUNT; i++) {
         m_heroes[i] = static_cast<HeroId>(loadHeroId(infile, saveVersion));
     }
 
@@ -1502,7 +1502,7 @@ int playerData::save(TAbstractFile* outfile)
     if (count < sizeof(char))
         return -1;
 
-    for (x = 0; x < 8; x++) {
+    for (x = 0; x < playerData::HERO_SLOT_COUNT; x++) {
         charBuffer = static_cast<char>(m_heroes[x]);
         count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
@@ -1606,7 +1606,7 @@ DC_ADDRESS(0x0a5998, 0x54)
 MAC_ADDRESS(0x0cd278, 0x80)
 int game::loadPlayerData(TAbstractFile* infile, int saveVersion)
 {
-    for (int x = 0; x < 8; ++x) {
+    for (int x = 0; x < NUM_PLAYERS; ++x) {
         int err = m_players[x].load(infile, saveVersion);
         if (err < 0)
             return err;
@@ -1620,7 +1620,7 @@ DC_ADDRESS(0x0a59ec, 0x54)
 MAC_ADDRESS(0x0cd2f8, 0x70)
 int game::savePlayerData(TAbstractFile* outfile)
 {
-    for (int x = 0; x < 8; ++x) {
+    for (int x = 0; x < NUM_PLAYERS; ++x) {
         int err = m_players[x].save(outfile);
         if (err < 0)
             return err;
@@ -2558,7 +2558,7 @@ void game::setupShipyards()
     hero* obscuringHero = 0;
     boat* obscuringBoat = 0;
     long i;
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         m_players[i].m_shipyards.clear();
     }
 
@@ -2816,7 +2816,7 @@ void SavedGameHeader::reset()
     memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
 
     int* human = m_humanPlayer;
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < NUM_PLAYERS; ++i)
         *human++ = g_game->m_players[i].isHuman();
 }
 
@@ -3176,7 +3176,7 @@ int SGameSetupOptions::save(TAbstractFile* outfile)
     writeValue<char>(outfile, m_initializationNumHumans);
     writeValue<char>(outfile, m_turnDuration);
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         writeValue<char>(outfile, m_startingHero[i]);
     }
 
@@ -3308,11 +3308,11 @@ int game::save(TAbstractFile* outfile)
     // preserves that boundary without a pin (59.5944% for the whole save);
     // direct test(), including on a const reference, expands it (57.4921%).
     for (i = 0; i < HERO_COUNT; ++i) {
-        const std::bitset<8>& players = m_heroPoolMap[i];
+        const std::bitset<NUM_PLAYERS>& players = m_heroPoolMap[i];
         unsigned char poolBits[1];
         poolBits[0] = 0;
         unsigned int player;
-        for (player = 0; player < 8; ++player) {
+        for (player = 0; player < NUM_PLAYERS; ++player) {
             if (players[player])
                 poolBits[player >> 3] |= 1 << (player & 7);
         }
@@ -3554,7 +3554,7 @@ void game::setupOrigData()
     m_ultimateRadius = 0x7f;
     m_ultimateArtifactPresent = 0;
 
-    for (i = 0; i < 8; ++i)
+    for (i = 0; i < NUM_PLAYERS; ++i)
         m_uniqueSystemId[i * sizeof(int)] = 0;
 
     m_numObelisks = 0;
@@ -3562,7 +3562,7 @@ void game::setupOrigData()
     manager->m_curHeroMobile = 0;
     MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), i);
 
-    std::bitset<8> allPlayers = ~std::bitset<8>();
+    std::bitset<NUM_PLAYERS> allPlayers = ~std::bitset<NUM_PLAYERS>();
     for (i = 0; i < HERO_COUNT; ++i)
         m_heroPoolMap[i] = allPlayers;
 
@@ -3747,7 +3747,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         || m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_BUILD_GRAIL
         || m_mapHeader.m_victoryCondition.m_type == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
         int numLivingPlayers = 0;
-        for (i = 0; i < 8; ++i) {
+        for (i = 0; i < NUM_PLAYERS; ++i) {
             if (!m_playerDisabled[i])
                 ++numLivingPlayers;
         }
@@ -3838,7 +3838,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
                                    m_heroes[i].m_z);
             if (lcheroLoc == poolheroLoc) {
                 int numHumanTeams = 0;
-                for (int team = 0; team < 8; ++team) {
+                for (int team = 0; team < NUM_PLAYERS; ++team) {
                     if (isHumanTeam(team))
                         ++numHumanTeams;
                 }
@@ -3859,7 +3859,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         town* thisTown = getTown(getTownId(
             m_mapHeader.m_lossCondition.m_townX, m_mapHeader.m_lossCondition.m_townY, m_mapHeader.m_lossCondition.m_townZ));
         int numHumanTeams = 0;
-        for (int team = 0; team < 8; ++team) {
+        for (int team = 0; team < NUM_PLAYERS; ++team) {
             if (isHumanTeam(team))
                 ++numHumanTeams;
         }
@@ -3900,7 +3900,7 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
     }
 
     if (playerHeroFaces != NULL) {
-        for (int facePlayer = 0; facePlayer < 8; ++facePlayer) {
+        for (int facePlayer = 0; facePlayer < NUM_PLAYERS; ++facePlayer) {
             // Mac retains playerData::isHuman here and in the setup loop.
             if (m_players[facePlayer].isHuman()
                 && m_mapHeader.m_playerSlotAttributes[facePlayer].m_generateHero) {
@@ -3916,7 +3916,7 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
 
     loadMap(mapFile);
 
-    for (int playerIndex = 0; playerIndex < 8; ++playerIndex) {
+    for (int playerIndex = 0; playerIndex < NUM_PLAYERS; ++playerIndex) {
         m_players[playerIndex].m_color = static_cast<signed char>(playerIndex);
         m_players[playerIndex].m_numTowns = 0;
         m_players[playerIndex].m_currTownId = -1;
@@ -3946,7 +3946,7 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
 
     // Mac expands the constant-reference fill; VC6 folds its eight stores.
     std::fill_n(m_playerDisabled, 8, false);
-    for (int disabledPlayer = 0; disabledPlayer < 8; ++disabledPlayer)
+    for (int disabledPlayer = 0; disabledPlayer < NUM_PLAYERS; ++disabledPlayer)
         m_playerDisabled[disabledPlayer] =
             m_players[disabledPlayer].m_numHeroes == 0
             && m_players[disabledPlayer].m_numTowns == 0;
@@ -3967,7 +3967,7 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
         }
     }
 
-    for (int setupPlayer = 0; setupPlayer < 8; ++setupPlayer) {
+    for (int setupPlayer = 0; setupPlayer < NUM_PLAYERS; ++setupPlayer) {
         if (m_playerDisabled[setupPlayer])
             continue;
 
@@ -4139,7 +4139,7 @@ void game::setupFirstPlayer()
     // reads g_netLocalGamePos just written below; it needs no extra formal
     // or separate setupFirstPlayerPosition source helper.
     int startingPos = 0;
-    while (startingPos < 8) {
+    while (startingPos < NUM_PLAYERS) {
         if (isHuman(startingPos))
             break;
         ++startingPos;
@@ -6248,7 +6248,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 int portrait = readHeroId(infile, MAP_FORMAT_SHADOW_OF_DEATH);
 
                 std::string heroName = readLengthPrefixedString(infile);
-                std::bitset<8> availability = readPackedBits<8>(infile);
+                std::bitset<NUM_PLAYERS> availability = readPackedBits<NUM_PLAYERS>(infile);
 
                 m_heroPlayerSetups.insert(
                     std::pair<const int, type_map_hero_info>(
@@ -6266,7 +6266,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 VA(0x004c4cc0, 0x130)
 MAC_ADDRESS(0x0db644, 0x48)
 type_map_hero_info::type_map_hero_info(int portrait, std::string name,
-                                      std::bitset<8> availability)
+                                      std::bitset<NUM_PLAYERS> availability)
     : m_portrait(portrait), m_name(name), m_players(availability)
 {
 }
@@ -6289,7 +6289,7 @@ void game::applyMapHeaderAvailability()
     for (std::map<int, type_map_hero_info>::iterator it =
              m_mapHeader.m_heroPlayerSetups.begin();
          it != m_mapHeader.m_heroPlayerSetups.end(); ++it) {
-        std::bitset<8> allPlayers = ~std::bitset<8>();
+        std::bitset<NUM_PLAYERS> allPlayers = ~std::bitset<NUM_PLAYERS>();
         if (it->second.m_players != allPlayers)
             m_heroPoolMap[it->first] = it->second.m_players;
     }
@@ -6363,7 +6363,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     writeValue<char>(outfile, m_maxHeroLevel);
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
-    for (i = 0; i < 8; ++i, ++player) {
+    for (i = 0; i < NUM_PLAYERS; ++i, ++player) {
 
         boolBuffer = player->m_canBeHuman;
         if (outfile->write(&boolBuffer, sizeof(boolBuffer))
@@ -6463,7 +6463,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         outfile->write(it->second.m_name.c_str(), count);
 
         ucharBuffer = 0;
-        for (i = 0; i < 8; ++i) {
+        for (i = 0; i < NUM_PLAYERS; ++i) {
             if (it->second.m_players.test(i))
                 ucharBuffer |= 1 << i;
         }
@@ -6533,7 +6533,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     m_maxNumHumanPlayers = 0;
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
-    for (i = 0; i < 8; ++i, ++player) {
+    for (i = 0; i < NUM_PLAYERS; ++i, ++player) {
         if (infile->read(&boolBuffer, sizeof(boolBuffer))
             < sizeof(boolBuffer))
             return -1;
@@ -6628,7 +6628,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
             return -1;
     } else {
-        for (i = 0; i < 8; ++i)
+        for (i = 0; i < NUM_PLAYERS; ++i)
             m_teamInfo[i] = i;
     }
 
@@ -6653,7 +6653,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
-        std::bitset<8> availability =
+        std::bitset<NUM_PLAYERS> availability =
             saveVersion >= g_saveVersionCustomHeroAvailability
                 ? readPackedBits<8>(infile) : ~std::bitset<8>();
 
@@ -7084,7 +7084,7 @@ void game::nextPlayer()
 
     if (g_currentPlayer->isLocalHuman() && g_config.m_autosave) {
         humans = 0;
-        for (i = 0; i < 8; ++i) {
+        for (i = 0; i < NUM_PLAYERS; ++i) {
             if (!m_playerDisabled[i] && isHuman(i))
                 ++humans;
         }
@@ -7461,7 +7461,7 @@ void game::perDay()
     }
 
     calculateProduction();
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         if (!m_playerDisabled[i]) {
             long (&production)[NUM_RESOURCES] = m_players[i].m_ai.m_turnProductionResource;
             long (&resources)[NUM_RESOURCES] = m_players[i].m_resources;
@@ -7645,9 +7645,9 @@ MAC_ADDRESS(0x0df448, 0x90)
 void game::setRecruits()
 {
     long i;
-    for (i = 0; i < 8; ++i)
+    for (i = 0; i < NUM_PLAYERS; ++i)
         clearRecruits(m_players[i].m_recruits);
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         if (m_playerDisabled[i])
             continue;
         setWeeklyRecruits(i);
@@ -8506,7 +8506,7 @@ void game::createTownHeroes(HeroId* startingHeroIds)
     HeroId heroId;
     int i;
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < NUM_PLAYERS; i++) {
         if (!m_mapHeader.m_playerSlotAttributes[i].m_generateHero)
             continue;
 
@@ -9148,7 +9148,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     }
     done = 0;
 
-    unsigned char playerDone[8];
+    unsigned char playerDone[NUM_PLAYERS];
     memset(playerDone, 0, sizeof(playerDone));
     int dataTimeOutStart = GameTime::get();
     int retryCount = 0;
@@ -9182,7 +9182,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                                false, true);
                         return 0;
                     } else {
-                        for (int i = 0; i < 8; ++i) {
+                        for (int i = 0; i < NUM_PLAYERS; ++i) {
                             if (m_players[i].isHuman() && !playerDone[i]
                                     && i != g_game->getLocalPlayerGamePos()) {
                                 unsigned long killDPID =
@@ -9203,7 +9203,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             }
 
             dataTimeOutStart = GameTime::get();
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < NUM_PLAYERS; ++i) {
                 if (m_players[i].isHuman() && !playerDone[i]
                         && i != g_game->getLocalPlayerGamePos()) {
                     CGameTransmitEndMsg resendEnd(
@@ -9264,7 +9264,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 done = 1;
                 if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
                     playerDone[confirmMsg->m_from] = 1;
-                    for (int i = 0; i < 8; ++i) {
+                    for (int i = 0; i < NUM_PLAYERS; ++i) {
                         if (m_players[i].isHuman() && !playerDone[i]
                                 && i != g_game->getLocalPlayerGamePos()) {
                             done = 0;
@@ -9336,7 +9336,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     unsigned long diffSize = 0;
     CGameTransferSmack* transferSmack;
 
-    if (fromWho >= 8 || fromWho < 0)
+    if (fromWho >= NUM_PLAYERS || fromWho < 0)
         fromWho = 0;
 
     unsigned long fromDPID = g_game->m_players[fromWho].m_dpid;
@@ -9840,7 +9840,7 @@ DC_ADDRESS(0x0b9cac, 0xaa)
 MAC_ADDRESS(0x0e4488, 0xe4)
 void game::setSummoningGenerators()
 {
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (!m_playerDisabled[i]) {
             playerData* player = &m_players[i];
             for (int j = 0; j < player->m_numTowns; ++j) {
@@ -10308,7 +10308,7 @@ game::game()
     m_month = 0;
     std::fill_n(m_heroAvailability, sizeof(m_heroAvailability), -1);
 
-    std::bitset<8> allPlayers = ~std::bitset<8>();
+    std::bitset<NUM_PLAYERS> allPlayers = ~std::bitset<NUM_PLAYERS>();
     std::fill_n(m_heroPoolMap, static_cast<int>(HERO_COUNT), allPlayers);
     std::fill_n(m_artifactUsed, sizeof(m_artifactUsed), static_cast<unsigned char>(0));
     std::fill_n(m_artifactDisabled, sizeof(m_artifactDisabled), static_cast<unsigned char>(0));
@@ -10376,7 +10376,7 @@ DC_ADDRESS(0x0bbee4, 0xe8)
 MAC_ADDRESS(0x0e6bf4, 0x48)
 bool game::isHuman(int gamePos) const
 {
-    if (gamePos >= 8 || gamePos < 0)
+    if (gamePos >= NUM_PLAYERS || gamePos < 0)
         gamePos = 0;
     return m_players[gamePos].isHuman();
 }
@@ -10386,7 +10386,7 @@ DC_ADDRESS(0x0bbfcc, 0x44)
 MAC_ADDRESS(0x0e6c3c, 0x4c)
 bool game::isLocalHuman(int gamePos) const
 {
-    if (gamePos >= 8 || gamePos < 0)
+    if (gamePos >= NUM_PLAYERS || gamePos < 0)
         return false;
     return m_players[gamePos].isLocalHuman();
 }
@@ -10406,7 +10406,7 @@ int game::getLocalPlayerGamePos() const
 {
     if (g_mpNetProtocol == MP_HOTSEAT) {
         int pos = g_netLocalGamePos;
-        if (pos >= 0 && pos < 8 && m_players[pos].isHuman())
+        if (pos >= 0 && pos < NUM_PLAYERS && m_players[pos].isHuman())
             return pos;
         return getLastHuman();
     }
@@ -10436,7 +10436,7 @@ DC_ADDRESS(0x0bc1fc, 0x40)
 MAC_ADDRESS(0x0e6e34, 0x48)
 char* game::getPlayerName(int gamePos)
 {
-    if (gamePos >= 8 || gamePos < 0)
+    if (gamePos >= NUM_PLAYERS || gamePos < 0)
         gamePos = 0;
     return m_players[gamePos].getName();
 }
@@ -10446,7 +10446,7 @@ DC_ADDRESS(0x0bc23c, 0x7c)
 MAC_ADDRESS(0x0e6e7c, 0xe4)
 int game::getGamePosFromDPID(unsigned long dpid) const
 {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < NUM_PLAYERS; i++) {
         if (m_players[i].m_dpid == dpid)
             return i;
     }
@@ -10460,12 +10460,12 @@ bool game::isLastHuman(int gamePos) const
 {
     int i = gamePos + 1;
 
-    if (i >= 8)
+    if (i >= NUM_PLAYERS)
         return true;
     do {
         if (isHuman(i))
             return false;
-    } while (++i < 8);
+    } while (++i < NUM_PLAYERS);
     return true;
 }
 
@@ -10484,7 +10484,7 @@ MAC_ADDRESS(0x0e7054, 0xc4)
 void game::resetGame(int difficulty, int version,
                      NewSMapHeader* defaultMapHeader)
 {
-    for (int playerIndex = 0; playerIndex < 8; ++playerIndex)
+    for (int playerIndex = 0; playerIndex < NUM_PLAYERS; ++playerIndex)
         g_game->m_players[playerIndex].init();
 
     m_setup.m_fileInitialized = 0;

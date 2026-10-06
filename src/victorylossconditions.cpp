@@ -313,7 +313,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
             }
         }
         ++player;
-        if (player >= 8)
+        if (player >= NUM_PLAYERS)
             return 0;
     }
 }

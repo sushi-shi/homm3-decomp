@@ -1581,7 +1581,7 @@ DC_ADDRESS(0x11fbf0, 0x4c)
 MAC_ADDRESS(0x216110, 0x7c)
 bool CWaitForReadyPlayersDlg::allPlayersReady()
 {
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->isHuman(i) && !m_playerReady[i])
             return 0;
     }
@@ -2004,7 +2004,7 @@ DC_ADDRESS(0x11dde8, 0xb4)
 MAC_ADDRESS(0x213ba4, 0xec)
 int getPlayerPos(unsigned long dpid)
 {
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_players[i].m_dpid == dpid)
             return i;
     }
@@ -2049,7 +2049,7 @@ void updateCurrentPlayers()
     CAutoArray<CDPlayPlayer> playerArray;
     g_dPlay->enumPlayers(&playerArray, 0, 0);
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_players[i].m_dpid
             && isValidHuman(playerArray, g_game->m_players[i].m_dpid))
             continue;

@@ -264,7 +264,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     m_bonusSprite = ResourceManager::GetSprite("ScnrStar.def");
 
     const char* colorChars = "rbygopts";
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
         m_panels[i] = ResourceManager::GetBitmap816(tempName);
         sprintf(tempName, "adopflg%c.pcx", colorChars[i]);
@@ -292,7 +292,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // Widget IDs retain i so ProcessRightSelect can find the owning player.
     // Retail +0xf86 reads hero traits +0x30 (small portrait), not +0x34.
     int rowPosition = 0;
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
 
@@ -507,7 +507,7 @@ CScenarioInfoDlg::~CScenarioInfoDlg()
     ResourceManager::Dispose(m_bonusSprite);
     ResourceManager::Dispose(m_heroSpecificAbility);
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         ResourceManager::Dispose(m_panels[i]);
         ResourceManager::Dispose(m_flags[i]);
     }
@@ -534,7 +534,7 @@ void CScenarioInfoDlg::updateAllyEnemyFlags()
     int nextEnemy = SCENARIO_INFO_ENEMY_FIRST_ID;
     int nextAlly = SCENARIO_INFO_ALLY_FIRST_ID;
 
-    for (; i < 8; ++i) {
+    for (; i < NUM_PLAYERS; ++i) {
         flag = getWidget(i + SCENARIO_INFO_ENEMY_FIRST_ID);
         flag->hide();
         flag = getWidget(i + SCENARIO_INFO_ALLY_FIRST_ID);

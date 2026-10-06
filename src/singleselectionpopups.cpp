@@ -435,7 +435,7 @@ bool CTeamAlignmentDlg::createWin()
 
         int rowWidth = countNumPlayers(team) * 18 - 3;
         xStart = (m_width - rowWidth) / 2;
-        for (int player = 0; player < 8; ++player) {
+        for (int player = 0; player < NUM_PLAYERS; ++player) {
             if (m_teamMasks[team] & (1 << player)) {
                 iconWidget* flag = new iconWidget(
                     xStart, y + 20, 15, 20, -1, "itgflags.def",
@@ -454,7 +454,7 @@ MAC_ADDRESS(0x16ce7c, 0xd4)
 int CTeamAlignmentDlg::countNumPlayers(int teamNbr)
 {
     int count = 0;
-    for (int player = 0; player < 8; ++player) {
+    for (int player = 0; player < NUM_PLAYERS; ++player) {
         if (m_teamMasks[teamNbr] & (1 << player))
             ++count;
     }
@@ -466,19 +466,19 @@ DC_ADDRESS(0x12edd4, 0xd8)
 MAC_ADDRESS(0x16cf50, 0x170)
 void CTeamAlignmentDlg::getTeams()
 {
-    unsigned char assigned[8] = { 0 };
+    unsigned char assigned[NUM_PLAYERS] = { 0 };
     int player;
 
     memset(m_teamMasks, 0, sizeof(m_teamMasks));
     m_numTeams = 0;
-    for (player = 0; player < 8; ++player) {
+    for (player = 0; player < NUM_PLAYERS; ++player) {
         if (g_game->m_setup.m_playerPos[player] < 0)
             continue;
         if (assigned[player])
             continue;
         assigned[player] = 1;
         m_teamMasks[m_numTeams] = 1 << player;
-        for (int other = player + 1; other < 8; ++other) {
+        for (int other = player + 1; other < NUM_PLAYERS; ++other) {
             if (g_game->m_setup.m_playerPos[other] < 0)
                 continue;
             if (g_game->onSameTeam(player, other)) {

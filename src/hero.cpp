@@ -5526,7 +5526,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         return 0;
 
     if (akArtifactTraits[artifact.m_artifactId].m_comboType != -1
-        && m_owner >= 0 && m_owner < 8)
+        && m_owner >= 0 && m_owner < NUM_PLAYERS)
         g_game->m_players[m_owner].m_assembledCombinations[
             akArtifactTraits[artifact.m_artifactId].m_comboType] = true;
 

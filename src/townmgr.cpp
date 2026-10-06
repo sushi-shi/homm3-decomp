@@ -875,7 +875,7 @@ DATA(0x0068a378) unsigned char g_horde2DwellingSlot[TOWN_TYPE_COUNT][2] = {
     { 0, 0 },
     { 0, 0 }
 };
-DATA(0x0068a2d4) const char* g_playerFlagSprites[8] = { "PRRed.pcx", "PRBlue.pcx", "PRTan.pcx", "PRGreen.pcx", "PROrange.pcx", "PRPurple.pcx", "PRTeal.pcx", "PRRose.pcx" };
+DATA(0x0068a2d4) const char* g_playerFlagSprites[NUM_PLAYERS] = { "PRRed.pcx", "PRBlue.pcx", "PRTan.pcx", "PRGreen.pcx", "PROrange.pcx", "PRPurple.pcx", "PRTeal.pcx", "PRRose.pcx" };
 // adventuremapwindow.obj owns this eight-byte rollover/right-click record;
 // Dreamcast supplies the public name and THelpText type. The fort page and
 // SetCommandAndText select its two columns through the shared building map.
@@ -6959,7 +6959,7 @@ unsigned char doTavern()
     }
 
     if (player->m_resources[6] < g_heroGoldCost || g_tavernHero == 0
-        || player->m_numHeroes >= 8
+        || player->m_numHeroes >= playerData::HERO_SLOT_COUNT
         || (g_mapTavern == 0
             && g_townManager->m_townToView->m_visitingHeroId != -1)) {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -8221,7 +8221,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     int numDisabled = 0;
     int k;
     int slot;
-    for (k = 0; k < 8; k++) {
+    for (k = 0; k < NUM_PLAYERS; k++) {
         if (g_game->m_playerDisabled[k])
             numDisabled++;
     }
@@ -8229,7 +8229,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     for (k = 7 - numDisabled; k < 7; k++)
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                          0x2bc + k, widget::WIDGET_DRAWN);
-    for (k = 8 - numDisabled; k < 8; k++) {
+    for (k = NUM_PLAYERS - numDisabled; k < NUM_PLAYERS; k++) {
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                          0x2bc + k + 0x64, widget::WIDGET_DRAWN);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
@@ -8244,7 +8244,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 
         int start = 0;
         int last = 0;
-        for (int rankColumn = 0; rankColumn < 8; rankColumn++) {
+        for (int rankColumn = 0; rankColumn < NUM_PLAYERS; rankColumn++) {
             if (start
                 == g_game->m_numPlayers - numDisabled)
                 break;
@@ -8275,9 +8275,9 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     int bestCreature;
     int bestValue;
     int playerIndex = 0;
-    for (int column = 0; column < 8; column++) {
+    for (int column = 0; column < NUM_PLAYERS; column++) {
         int who = playerIndex;
-        while (who < 8 && g_game->m_playerDisabled[who])
+        while (who < NUM_PLAYERS && g_game->m_playerDisabled[who])
             who++;
         if (who == TTownScreenWindow::GUILD_PLAYER_COLUMNS)
             break;

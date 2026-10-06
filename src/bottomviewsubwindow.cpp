@@ -911,7 +911,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 
     int allyX, enemyX;
     allyX = enemyX = 67;
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < NUM_PLAYERS; i++) {
         if (!g_game->m_playerDisabled[i]) {
             if (g_game->onSameTeam(i, g_curWatchPlayer)) {
                 m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
@@ -981,7 +981,7 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
     m_step = 0;
     m_lastPlayerPos = g_netLocalGamePos;
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < NUM_PLAYERS; i++) {
         if (g_game->m_playerDisabled[i] || g_game->m_players[i].isHuman())
             m_mobility[i] = 0;
         else

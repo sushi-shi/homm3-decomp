@@ -32,13 +32,13 @@ DC_ADDRESS(0x0eb6a4, 0x98)
 MAC_ADDRESS(0x11d404, 0x130)
 void ExtraInfoUnion::setCellVisited(short player)
 {
-    if (player < 0 || player >= 8)
+    if (player < 0 || player >= NUM_PLAYERS)
         return;
 
     // DC mapcell.cpp:49 calls the canonical Game.h GetTeam member.
     int team = g_game->getTeam(player);
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_mapHeader.m_teamInfo[i] == team)
             m_cellVisitedInfo.m_visited |= 1 << i;
     }
