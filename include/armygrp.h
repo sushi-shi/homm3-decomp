@@ -541,6 +541,13 @@ enum ESpellId {
     SPELL_ACID_BREATH_DEFENSE = 0x50
 };
 
+// Spell ids 0 .. SPELL_ACID_BREATH_DEFENSE: the rows of the spell-traits
+// table and the width of each stack's influence/level arrays. The
+// Dreamcast spells it kNumSpellsAndCreatureEffects (80, before Acid
+// Breath); an ESpellId enumerator changes initializeGameData's code, so
+// it is a source constant like NUM_RESOURCES.
+#define NUM_SPELLS_AND_CREATURE_EFFECTS 81
+
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
 // by get_spell_work_chance's spell*17*8 indexing at 0x44a4e2): only
 // the fields that function reads are modeled; the full roster gets

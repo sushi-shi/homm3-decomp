@@ -1876,7 +1876,7 @@ MAC_ADDRESS(0x0420cc, 0x18c)
 long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const
 {
     long value = 0;
-    for (long spell = 10; spell < 81; spell++) {
+    for (long spell = 10; spell < NUM_SPELLS_AND_CREATURE_EFFECTS; spell++) {
         long duration = currentArmy->getSpellTime(spell);
         if (duration == 0)
             continue;
