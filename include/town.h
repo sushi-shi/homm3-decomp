@@ -372,12 +372,16 @@ public:
     // getBuildingMask() call (d3650d6a8, inferred from Mac calculateProduction's
     // two-word read) adds an inline site to every expansion and moved
     // hero's description loops off retail's g_game register (100 -> 97.95).
+    // DC also opens a second lexical scope for line 326: the active arm is
+    // braced. That block raises the inline cost to 62, which keeps retail's
+    // out-of-line call in hero::getLuck (budget 61) and restores buildBuilding.
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18
     DC_ADDRESS(0x01fe14, 0x98)
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
-        if (checkIncluded)
+        if (checkIncluded) {
             return (m_fullBuildingMask & g_bitNumber[buildingId]) != 0;
+        }
         return (m_populationMask & g_bitNumber[buildingId]) != 0;
     }
 
