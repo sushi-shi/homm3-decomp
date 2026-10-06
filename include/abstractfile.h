@@ -71,14 +71,18 @@ int readValues(TAbstractFile* infile, T* values, Count count)
     return infile->read(values, count * sizeof(T));
 }
 
+// Mac TSeerHut::read 0x16aae8 (and the other native readers) expands each
+// scalar read into the TAbstractFile virtual call; CodeWarrior -O1 only does
+// that for inline functions, so these readers are inline (VC6 /Ob2 output is
+// unchanged). Out of line, CW keeps 18 reader calls retail lacks.
 template <class T>
-int readValue(TAbstractFile* infile, T& value)
+inline int readValue(TAbstractFile* infile, T& value)
 {
     return infile->read(&value, sizeof(value));
 }
 
 template <class T>
-T readValue(TAbstractFile* infile)
+inline T readValue(TAbstractFile* infile)
 {
     T value;
     readValue(infile, value);
@@ -90,7 +94,7 @@ T readValue(TAbstractFile* infile)
 // still owns the read/count contract; PowerPC decodes the same caller slot.
 // Mac readMapObjects 0x1272bc..0x1272f0 reads four bytes and then uses lwbrx.
 template <class T>
-int readLittleEndianValue(TAbstractFile* infile, T& value)
+inline int readLittleEndianValue(TAbstractFile* infile, T& value)
 {
     int count = readValue(infile, value);
 #if defined(__POWERPC__)
@@ -109,7 +113,7 @@ int readLittleEndianValue(TAbstractFile* infile, T& value)
 // Mac quest load/loadFromMap decode their deadline immediately after read;
 // neither native caller tests the count before lwbrx.
 template <class T>
-T readLittleEndianValue(TAbstractFile* infile)
+inline T readLittleEndianValue(TAbstractFile* infile)
 {
     T value = readValue<T>(infile);
 #if defined(__POWERPC__)
