@@ -643,18 +643,18 @@ void combatManager::findMoveOrder(std::vector<army*>* result)
     std::sort(order.begin(), order.end(), func_moves_before());
     long wantSide = m_actingSide;
     for (unsigned i = 0; i < order.size(); i++) {
-        if (order[i]->getOwningSide() != wantSide) {
+        if (order[i]->m_combatSide != wantSide) {
             long key = order[i]->m_expectedMoveOrder;
             for (unsigned j = i + 1; j < order.size(); j++) {
                 if (order[j]->m_expectedMoveOrder != key)
                     break;
-                if (order[j]->getOwningSide() == wantSide) {
+                if (order[j]->m_combatSide == wantSide) {
                     std::swap(order[i], order[j]);
                     break;
                 }
             }
         }
-        wantSide = 1 - order[i]->getOwningSide();
+        wantSide = 1 - order[i]->m_combatSide;
     }
     for (unsigned k = 0; k < order.size(); k++) {
         order[k]->m_expectedMoveOrder = order.size() - k;

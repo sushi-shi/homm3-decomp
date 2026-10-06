@@ -1268,7 +1268,7 @@ long hero::getEquippedArtifacts(bool countWarMachines) const
 {
     long count = 0;
     for (int slot = 0; slot < 19; slot++) {
-        int id = getArtifact(TArtifactSlot(slot)).m_artifactId;
+        int id = m_equipped[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
             id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
@@ -1288,7 +1288,7 @@ long hero::getNumberInBackpack(bool countWarMachines) const
     if (countWarMachines)
         return m_backpackCount;
     for (int slot = 0; slot < 64; slot++) {
-        int id = getBackpack(slot).m_artifactId;
+        int id = m_backpack[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
             count++;
@@ -1342,16 +1342,20 @@ MAC_ADDRESS(0x0f4d94, 0x68)
 unsigned char hero::hasArtifact(int whichArtifact) const
 {
     for (int slot = 0; slot < 19; slot++) {
-        if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
+        if (m_equipped[slot].m_artifactId == whichArtifact)
             return 1;
     }
     for (int pack = 0; pack < 64; pack++) {
-        if (getBackpack(pack).m_artifactId == whichArtifact)
+        if (m_backpack[pack].m_artifactId == whichArtifact)
             return 1;
     }
     return 0;
 }
 
+// DC 0xcc272/0xcc292 indexes the equipped array directly, as hasArtifact's
+// DC body does, but here direct reads lower this body's /Ob2 cost and make
+// getLuck (100 -> 94.23) and getMoraleDescription (100 -> 92.02) expand it
+// where retail calls it. The getter path is kept until that cost is found.
 VA(0x004d91f0, 0x70)
 DC_ADDRESS(0x0cc26c, 0x3c)
 MAC_ADDRESS(0x0f4dfc, 0xc4)
@@ -1404,7 +1408,7 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
     }
     // Nineteen equipped slots, one more than the DC build's eighteen.
     for (int slot = 0; slot < 19; slot++) {
-        if (getArtifact(TArtifactSlot(slot)).m_artifactId == artifact) {
+        if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return;
         }
@@ -2895,7 +2899,7 @@ MAC_ADDRESS(0x0f8290, 0x38)
 long hero::getLastBackpackIndex() const
 {
     for (long slot = 64; slot--; ) {
-        if (getBackpack(slot).m_artifactId != -1)
+        if (m_backpack[slot].m_artifactId != -1)
             return slot;
     }
     return -1;
@@ -2909,9 +2913,9 @@ void hero::rotateBackpackLeft()
     long last = getLastBackpackIndex();
     if (last < 0)
         return;
-    type_artifact saved = getBackpack(last);
+    type_artifact saved = m_backpack[last];
     for (long slot = last; slot > 0; slot--)
-        m_backpack[slot] = getBackpack(slot - 1);
+        m_backpack[slot] = m_backpack[slot - 1];
     m_backpack[0] = saved;
 }
 
@@ -2923,9 +2927,9 @@ void hero::rotateBackpackRight()
     long last = getLastBackpackIndex();
     if (last <= 0)
         return;
-    type_artifact saved = getBackpack(0);
+    type_artifact saved = m_backpack[0];
     for (long slot = 0; slot < last; slot++)
-        m_backpack[slot] = getBackpack(slot + 1);
+        m_backpack[slot] = m_backpack[slot + 1];
     m_backpack[last] = saved;
 }
 
@@ -4907,7 +4911,7 @@ void hero::transferArtifacts(hero* src)
         return;
     type_artifact artifact;
     for (int slot = 0; slot < 19; slot++) {
-        artifact = src->getArtifact(TArtifactSlot(slot));
+        artifact = src->m_equipped[slot];
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
@@ -4921,7 +4925,7 @@ void hero::transferArtifacts(hero* src)
         src->removeArtifact(slot);
     }
     for (int index = 63; index >= 0; index--) {
-        artifact = src->getBackpack(index);
+        artifact = src->m_backpack[index];
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
@@ -5214,7 +5218,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     m_equipped[slot].m_extra = artifact.m_extra;
 
     if (artifact.m_artifactId == ARTIFACT_TITANS_THUNDER
-        && getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_NONE) {
+        && m_equipped[eArtifactSlotSpellbook].m_artifactId == ARTIFACT_NONE) {
         type_artifact spellbook(ARTIFACT_SPELLBOOK);
         equipArtifact(spellbook, 17);
     }
@@ -5281,7 +5285,7 @@ DC_ADDRESS(0x0d3ad0, 0xa2)
 MAC_ADDRESS(0x103854, 0x200)  // anchor-bracket
 void hero::removeArtifact(long slot)
 {
-    type_artifact artifact = getArtifact(TArtifactSlot(slot));
+    type_artifact artifact = m_equipped[slot];
     if (artifact.m_artifactId == ARTIFACT_NONE)
         return;
 
@@ -5325,11 +5329,11 @@ DC_ADDRESS(0x0d3b74, 0x76)
 MAC_ADDRESS(0x103a54, 0xb0)
 void hero::removeBackpackArtifact(short slot)
 {
-    if (getBackpack(slot).m_artifactId == -1)
+    if (m_backpack[slot].m_artifactId == -1)
         return;
     long last = getLastBackpackIndex();
     while (slot < last) {
-        m_backpack[slot] = getBackpack(slot + 1);
+        m_backpack[slot] = m_backpack[slot + 1];
         slot++;
     }
     m_backpack[slot].m_artifactId = ARTIFACT_NONE;
@@ -5348,13 +5352,13 @@ bool hero::removeArtifact(TArtifact artifact)
     long last = getLastBackpackIndex();
     short slot;
     for (slot = 0; slot <= last; slot++) {
-        if (getBackpack(slot).m_artifactId == artifact) {
+        if (m_backpack[slot].m_artifactId == artifact) {
             removeBackpackArtifact(slot);
             return 1;
         }
     }
     for (slot = 0; slot < 19; slot++) {
-        if (getArtifact(TArtifactSlot(slot)).m_artifactId == artifact) {
+        if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return 1;
         }
@@ -5391,14 +5395,14 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
         return 0;
     if (slot < 0) {
         for (slot = 0; slot < 64; slot++) {
-            if (getBackpack(slot).m_artifactId == -1)
+            if (m_backpack[slot].m_artifactId == -1)
                 break;
         }
     }
-    if (getBackpack(slot).m_artifactId != -1) {
+    if (m_backpack[slot].m_artifactId != -1) {
         long last = getLastBackpackIndex();
         for (long i = last; i >= slot; i--)
-            m_backpack[i + 1] = getBackpack(i);
+            m_backpack[i + 1] = m_backpack[i];
     }
     m_backpack[slot] = artifact;
     m_backpackCount++;
