@@ -1204,7 +1204,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
         unsigned char skillGiven = 0;
         if (currentHero->getSecondarySkill(skill) == 0
-            && currentHero->m_skillCount < 8) {
+            && currentHero->m_skillCount < kNumSecSkillsPerHero) {
             currentHero->giveSS(skill, level);
             skillGiven = 1;
         } else if (currentHero->getSecondarySkill(skill) > 0
@@ -4189,7 +4189,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
         }
         return;
     }
-    if (currentHero->m_skillCount >= 8) {
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero) {
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->GetText(

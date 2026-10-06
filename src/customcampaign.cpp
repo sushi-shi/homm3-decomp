@@ -170,7 +170,7 @@ static const int g_crossoverPatrolFirstScenario = 6;
 static const int g_crossoverPatrolLastScenario = 7;
 static const int g_crossoverPatrolHero = 155;
 static const int g_crossoverPatrolRadius = 10;
-static const int g_crossoverSecondarySkills = 28;
+static const int g_crossoverSecondarySkills = kNumSecSkills;
 static const int g_crossoverBackpackSlots = 64;
 
 // The three scenario overrides the bonus appliers carry, all four values

@@ -2249,7 +2249,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     if (currentHero->isLevelUpCampaignOverride())
         skillDisabled = g_campaignDisabledSkills;
 
-    if (currentHero->m_skillCount >= 8)
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
         minLevel = eMasteryBasic;
     if (minLevel >= maxLevel)
         return eSecSkillNone;
@@ -4831,7 +4831,7 @@ int hero::takeSS(int whichSS, int numLevelsToTake)
         if (m_skillLevel[whichSS] < 0)
             m_skillLevel[whichSS] = 0;
         if (m_skillLevel[whichSS] == 0) {
-            for (int i = 0; i < 28; i++) {
+            for (int i = 0; i < kNumSecSkills; i++) {
                 if (m_skillOrder[i] > m_skillOrder[whichSS])
                     m_skillOrder[i]--;
             }
@@ -4853,7 +4853,7 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
     if (m_skillLevel[whichSS] > 0) {
         m_skillLevel[whichSS] += numLevelsToGive;
     } else {
-        if (m_skillCount < 8) {
+        if (m_skillCount < kNumSecSkillsPerHero) {
             m_skillLevel[whichSS] = numLevelsToGive;
             m_skillOrder[whichSS] = m_skillCount + 1;
             m_skillCount++;
@@ -4903,7 +4903,7 @@ DC_ADDRESS(0x0d38b0, 0x28)
 MAC_ADDRESS(0x102fe0, 0x38)
 int hero::getNthSS(int which)
 {
-    for (int skill = 0; skill < 28; skill++) {
+    for (int skill = 0; skill < kNumSecSkills; skill++) {
         if (m_skillOrder[skill] == which + 1)
             return skill;
     }

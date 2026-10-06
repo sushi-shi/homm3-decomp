@@ -1134,7 +1134,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
         signed char currentLevel = currentHero->getSecondarySkill(
             blackBox->m_secondarySkills[secondaryIndex].m_type);
         int level = blackBox->m_secondarySkills[secondaryIndex].m_level;
-        if (currentLevel == 0 && currentHero->m_skillCount < 8)
+        if (currentLevel == 0 && currentHero->m_skillCount < kNumSecSkillsPerHero)
             value += level * primarySkillValue;
         else if (currentLevel > 0 && currentLevel < level)
             value += (level - currentLevel) * primarySkillValue;
@@ -1598,7 +1598,7 @@ int hero::getSeerSkillRewardValue(int skill, int level)
     if (m_skillLevel[skill] >= level)
         return 0;
     if (m_skillLevel[skill] == 0) {
-        if (m_skillCount >= 8)
+        if (m_skillCount >= kNumSecSkillsPerHero)
             return 0;
         if (!wantsSkill(this, TSecondarySkill(typedSkill), 1))
             return 0;
@@ -1891,12 +1891,12 @@ MAC_ADDRESS(0x13e904, 0x178)
 static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
                          unsigned char complexChoice)
 {
-    long skillValue[28];
-    TSecondarySkill skillIndex[28];
+    long skillValue[kNumSecSkills];
+    TSecondarySkill skillIndex[kNumSecSkills];
 
     int openSlots;
     int i;
-    for (i = 0; i < 28; i++) {
+    for (i = 0; i < kNumSecSkills; i++) {
         if (ourHero->getSecondarySkill(TSecondarySkill(i)) <= 0
             && (akHeroClassTraits[ourHero->m_heroClass]
                     .m_gainSecondarySkillChance[i]
@@ -1907,8 +1907,8 @@ static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
         skillIndex[i] = TSecondarySkill(i);
     }
 
-    for (i = 0; i < 27; i++) {
-        for (int j = i + 1; j < 28; j++) {
+    for (i = 0; i < kNumSecSkills - 1; i++) {
+        for (int j = i + 1; j < kNumSecSkills; j++) {
             if (skillValue[skillIndex[i]] > skillValue[skillIndex[j]])
                 std::swap(skillIndex[i], skillIndex[j]);
         }
@@ -1932,7 +1932,7 @@ DC_ADDRESS(0x113cbc, 0xe4)
 MAC_ADDRESS(0x13ec3c, 0x114)
 void aiVisitUniversity(hero* currentHero, type_university* university)
 {
-    if (currentHero->m_skillCount >= 8)
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
         return;
     if (g_currentPlayer->m_resources[GOLD] < 2000)
         return;
@@ -2214,7 +2214,7 @@ static long valueOfUniversity(const hero* currentHero,
                          type_university* university,
                          unsigned char mustPay)
 {
-    if (currentHero->m_skillCount >= 8)
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
         return 0;
     if (mustPay && g_currentPlayer->m_resources[GOLD] < 2000)
         return 0;
@@ -3841,7 +3841,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
     if (cell->playerKnowsCell(currentHero->m_owner)) {
-        if (currentHero->m_skillCount >= 8)
+        if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
             return 0;
         int skill = info->getWitchSkill();
         if (skill == -1)

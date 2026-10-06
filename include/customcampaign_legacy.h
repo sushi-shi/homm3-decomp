@@ -51,8 +51,8 @@ struct LegacyCampaignHero : public type_obscuring_object {
     unsigned char m_levelSeed;                 // +0x08b
     unsigned char m_lastWisdom;                // +0x08c
     armyGroup m_army;                          // +0x08d
-    signed char m_skillLevel[28];              // +0x0c5
-    unsigned char m_skillOrder[28];            // +0x0e1
+    signed char m_skillLevel[kNumSecSkills];              // +0x0c5
+    unsigned char m_skillOrder[kNumSecSkills];            // +0x0e1
     int m_skillCount;                          // +0x0fd
     unsigned long m_flags; // +0x101
     float m_turnExperienceToRvRatio; // +0x105
