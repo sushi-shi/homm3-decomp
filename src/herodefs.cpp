@@ -179,7 +179,7 @@ THeroTraits g_heroTraitsStorage[163] = {
     { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS136Wi.PCX", "HPL136Wi.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
 };
 DATA(0x0067d868)
-THeroClassTraits g_heroClassTraits[18] = {
+THeroClassTraits g_heroClassTraits[kNumHeroClasses] = {
     { 0, 0, 0.0f, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0 } },
     { 0, 0, 0.0f, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0 } },
     { 1, 0, 0.0f, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0 } },
@@ -281,7 +281,7 @@ bool InitializeHeroClassTraitsTable()
 
     int id = 0;
     int row = 2;
-    for (; id < 18; ++id, ++row) {
+    for (; id < kNumHeroClasses; ++id, ++row) {
         InitializeHeroClassTraits(id, resource->GetRow(row));
     }
 
@@ -351,7 +351,7 @@ static void InitializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
     DATA_COMPGEN_GUARD(0x00698b9a, heroClassStringsGuard,
                       heroClassStrings)
     DATA(0x00699120)
-    static TAutoStrPtr heroClassStrings[18];
+    static TAutoStrPtr heroClassStrings[kNumHeroClasses];
 
     heroClassStrings[id].set(new char[strlen(values[0]) + 1]);
     strcpy(heroClassStrings[id].get(), values[0]);

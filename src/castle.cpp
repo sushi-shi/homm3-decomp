@@ -17,7 +17,7 @@
 #include "winmgr.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x0066cf98) unsigned char g_townSpecStructScreen[TOWN_TYPE_COUNT][18] = {
+DATA(0x0066cf98) unsigned char g_townSpecStructScreen[TOWN_TYPE_COUNT][CASTLE_HALL_SLOT_COUNT] = {
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 0, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 24, 22, 17, 0 },
     { 30, 31, 32, 33, 34, 35, 36, 0, 5, 22, 14, 7, 10, 16, 18, 21, 23, 17 },
@@ -36,7 +36,7 @@ DATA(0x0066d03c) unsigned char g_numOfTownSpecStrScreen[TOWN_TYPE_COUNT] = { 16,
 DATA(0x00694e60)
 static heroWindow* g_castleWindow;
 DATA(0x00694e70)
-static unsigned char g_castleBuildOrder[18];
+static unsigned char g_castleBuildOrder[CASTLE_HALL_SLOT_COUNT];
 
 // Dreamcast public `cHallInfo`; Complete extends the same hall-page text
 // roster through the Conflux-era cases while retaining ten pointer slots.

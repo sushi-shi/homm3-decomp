@@ -454,7 +454,7 @@ public:
     };
 
 private:
-    static TWallTraits s_wallTraits[9][18];
+    static TWallTraits s_wallTraits[9][kNumWallSections];
 
 public:
     enum {
@@ -1043,9 +1043,9 @@ private:
     // whole level array; the last three rows are the arrow towers/keep.
     // DrawWall indexes the image table by wall_frame; DamageWall switches
     // that frame between the standing and destroyed art.
-    Bitmap816* m_wallImages[18][5];  // +0x13df8
-    int m_wallLevel[18];            // +0x13f60
-    int m_wallFrame[18];            // +0x13fa8
+    Bitmap816* m_wallImages[kNumWallSections][5];  // +0x13df8
+    int m_wallLevel[kNumWallSections];            // +0x13f60
+    int m_wallFrame[kNumWallSections];            // +0x13fa8
 
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
