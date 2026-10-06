@@ -1452,9 +1452,9 @@ void hero::addSpell(int whichSpell)
 // it into the artifact result. The other three Tome arms repeat this.
 DC_ADDRESS(0x0cc360, 0x2c)
 MAC_ADDRESS(0x0f5008, 0xb4)
-std::bitset<70> markSpells(TSpellSchool school)
+std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
 {
-    std::bitset<70> granted;
+    std::bitset<hero::NUM_SPELLS> granted;
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
         if ((g_spellTraits[spell].m_schoolBits & school) != 0)
             granted[spell] = true;
@@ -1490,9 +1490,9 @@ std::bitset<70> markSpells(TSpellSchool school)
 // from 97.56% to 77.57%; keep the shared result assignment and clear tail.
 VA(0x004d9350, 0x272)
 MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
-std::bitset<70> markArtifactSpells(int artifactId)
+std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId)
 {
-    std::bitset<70> result;
+    std::bitset<hero::NUM_SPELLS> result;
     switch (artifactId) {
     case ARTIFACT_TOME_OF_AIR_MAGIC:
         result = markSpells(eSchoolAir);
@@ -1547,10 +1547,10 @@ void hero::updateSpellList()
                 m_availableSpells[extra] = 1;
             } else {
                 if (g_artifactTraits[artifactId].m_givesSpells) {
-                    std::bitset<70> granted = markArtifactSpells(artifactId);
+                    std::bitset<NUM_SPELLS> granted = markArtifactSpells(artifactId);
                     std::transform(m_availableSpells,
                                    m_availableSpells + NUM_SPELLS,
-                                   bitset_iterator<70>(granted, 0),
+                                   bitset_iterator<NUM_SPELLS>(granted, 0),
                                    m_availableSpells, std::logical_or<bool>());
                 }
                 int comboType = g_artifactTraits[artifactId].m_comboType;
@@ -1560,10 +1560,10 @@ void hero::updateSpellList()
                     for (int component = 0; component < ARTIFACT_COUNT; component++) {
                         if (components.test(component) &&
                             g_artifactTraits[component].m_givesSpells) {
-                            std::bitset<70> granted = markArtifactSpells(component);
+                            std::bitset<NUM_SPELLS> granted = markArtifactSpells(component);
                             std::transform(m_availableSpells,
                                            m_availableSpells + NUM_SPELLS,
-                                           bitset_iterator<70>(granted, 0),
+                                           bitset_iterator<NUM_SPELLS>(granted, 0),
                                            m_availableSpells,
                                            std::logical_or<bool>());
                         }

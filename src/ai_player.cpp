@@ -4806,7 +4806,7 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
         baseValue = power * (m_bonus + 100) / 100;
     }
 
-    for (SpellID spell = 0; spell < 70; spell++) {
+    for (SpellID spell = 0; spell < hero::NUM_SPELLS; spell++) {
         if (!owner->spellIsAvailable(spell))
             continue;
         if (!(g_spellTraits[spell].m_schoolBits & m_school))
@@ -4892,7 +4892,7 @@ long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
         return 0;
 
     long bestValue = 0;
-    for (SpellID spell = 0; spell < 70; spell++) {
+    for (SpellID spell = 0; spell < hero::NUM_SPELLS; spell++) {
         if (owner->isInSpellbook(spell))
             continue;
         if (!equipped && owner->spellIsAvailable(spell))

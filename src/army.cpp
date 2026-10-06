@@ -4982,7 +4982,7 @@ MAC_ADDRESS(0x05455c, 0x68)
 long army::getValidCaliphSpells(const army* target) const
 {
     long count = 0;
-    for (SpellID spell = 10; spell < 70; spell++) {
+    for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
         if (isValidCaliphSpell(spell, target))
             count++;
     }
@@ -5004,7 +5004,7 @@ void army::castCaliphSpell(long hex)
     if (count == 0)
         return;
     long pick = random(1, count);
-    for (spell = 10; spell < 70; spell++) {
+    for (spell = 10; spell < hero::NUM_SPELLS; spell++) {
         if (isValidCaliphSpell(spell, target)) {
             if (--pick == 0) {
                 // This creature cast uses advanced mastery (2).

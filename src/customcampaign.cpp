@@ -3108,7 +3108,7 @@ static void convertLegacyCampaignHero(hero& newHero,
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.addToBackpack(artifact, backpackSlot);
     }
-    for (int spell = 0; spell < 70; ++spell) {
+    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         if (oldHero.m_inSpellbook[spell])
             newHero.addSpell(spell);
     }

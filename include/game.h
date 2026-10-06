@@ -177,7 +177,7 @@ public:
     // Experience is the dword at +0x1c above. Renamed 2026-08-20.
     int m_sex;
     unsigned char m_customSpells;  // +0x31c
-    std::bitset<70> m_spells;  // +0x320
+    std::bitset<hero::NUM_SPELLS> m_spells;  // +0x320
     unsigned char m_customPrimarySkills;
     signed char m_primarySkills[4];  // +0x32d, class trails to 0x334
 
@@ -579,8 +579,8 @@ public:
     // from CObjectType::extra and from setup.alignment[], both int.
     int m_townType;
     char m_isGrouped;
-    std::bitset<70> m_spells;
-    std::bitset<70> m_fixedSpells;
+    std::bitset<hero::NUM_SPELLS> m_spells;
+    std::bitset<hero::NUM_SPELLS> m_fixedSpells;
 };
 SIZE(TownExtra, 0x88);
 
@@ -1055,8 +1055,8 @@ public:
     // used by game::GetRandomSpell; mapcell.obj's readScholarData rolls a
     // random scholar reward by collecting every spell whose prohibition
     // byte is clear and picking one.
-    unsigned char m_spellAllocInfo[70];
-    unsigned char m_spellDisabledInfo[70];
+    unsigned char m_spellAllocInfo[hero::NUM_SPELLS];
+    unsigned char m_spellDisabledInfo[hero::NUM_SPELLS];
     // Dreamcast bGrailAsked follows spellAllocInfo at +0x4a; Complete
     // adds spellDisabled[70], placing the same shown-once latch at +0x90.
     unsigned char m_grailAsked;
