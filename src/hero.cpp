@@ -150,7 +150,7 @@ static const int g_fifthLevelSpell = 5;
 // bank SetWinText loads for this window.
 static const int g_dialogReturnDismissHero = 0x81;
 static const int g_heroScreenWinText = 6;
-// HeroFn_004E6120's three source-private ids, kept out of the shared
+// hero::applyCreatureStatBonuses's three source-private ids, kept out of the shared
 // headers for the same reason. 0x7f is the Vial of Dragon Blood (+5
 // attack and +5 defense to dragons, which is the identification); the
 // attribute bit is NH3API's CF_DRAGON; and hero 155 is the one hero whose
@@ -159,7 +159,7 @@ static const int g_heroScreenWinText = 6;
 // WindowHandler re-evaluates the rollover whenever either SHIFT changes.
 // These are PS/2 scan codes in message::codeX; inputmgr.h's own note
 // measures what adding ungated enumerators there costs, so they stay here.
-// HeroFn_004D8B30's start-level override: one campaign/scenario pair
+// hero::initialize's start-level override: one campaign/scenario pair
 // whose hero starts at another scenario hero's level plus five. The
 // displacements are exact (gpGame + 0x4c893 IS heroes[151].level), but
 // the campaign's identity is inference, so the names stay role-based.
@@ -693,7 +693,7 @@ void hero::placeInMap(int playerId, type_point point, bool resetFlags)
 //   >= 25  the sex byte, the custom-name flag and the name itself;
 //   <= 30  only EIGHTEEN equipped slots on the wire, after which the
 //          nineteenth - the one Shadow of Death added, and the one
-//          HeroFn_004E2550 refuses in a pre-SoD game - is cleared here
+//          hero::canEquipArtifactInEmptySlot refuses in a pre-SoD game - is cleared here
 //          by hand. Independent corroboration of that slot's identity;
 //   >= 32  the per-class artifact counts.
 // Unlike save, load takes `ret 8` for its two arguments; only
@@ -824,7 +824,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 // The custom name goes out as its length followed by c_str()'s bytes -
 // the `test ecx,ecx / mov ecx, heroNameEmptyText` pair at +0x64 is
 // Dinkumware's c_str() null fallback inlined, the same expansion
-// HeroFn_004D8FB0 carries.
+// hero::getBiography carries.
 VA(0x004d80c0, 0x526)
 DC_ADDRESS(0x0cb698, 0x720)
 MAC_ADDRESS(0x0f34b8, 0x974)
@@ -1071,7 +1071,7 @@ void hero::initialize(short index)
 // members (ecx is used as a hero and every displacement lands inside
 // the modelled 0x492 record) and none of them can be named from the
 // Dreamcast build, so the names below are ORDINAL PLACEHOLDERS flagged
-// unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
+// unattested (hero::getIdentifyLevel / WIDGET_RETURN_32 precedent). The HD
 // crossbuild map has no row for any of them either.
 
 // 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
@@ -1743,7 +1743,7 @@ int hero::showDisassembleArtifactDialog(int artifact)
 // The ASSEMBLE partner of 0x4d9b30 above, same arity settlement: `ret 4`,
 // ECX untouched, one artifact id in and the dialog reply out. It reads
 // the component's targetCombo, describes the ASSEMBLED artifact, and
-// asks general text 733 - the same prompt HeroFn_004DC100 uses - with
+// asks general text 733 - the same prompt hero::offerCombinationArtifactAssembly uses - with
 // the assembled artifact's name formatted in and its icon (resource
 // type 8) shown beside the question. Retail reuses the incoming
 // parameter slot for the assembled id, which is why the format argument
@@ -3499,7 +3499,7 @@ int THeroScreenWindow::exitDialog(message& msg)
 // units: this function's bytes are IDENTICAL on both sides (it is absent
 // from build/vc6/fe-generation-verdicts.tsv, which lists every function
 // that differs at all), and hero.obj's five functions that DO differ
-// (HeroFn_004E2550, equip_artifact, remove_artifact,
+// (hero::canEquipArtifactInEmptySlot, equip_artifact, remove_artifact,
 // THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
 // jb/jl loop-guard twins that move AWAY from retail. The captured IL is
 // byte-identical between the two front ends apart from its own two-byte
@@ -5094,7 +5094,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
 }
 
 // The wrapper: it validates the physical slot against the artifact's
-// allowable-slot class, then hands the real work to HeroFn_004E2550 -
+// allowable-slot class, then hands the real work to hero::canEquipArtifactInEmptySlot -
 // but when the slot is already occupied it SAVES the displaced record,
 // removes it, runs the attempt, and puts the displaced artifact back
 // whatever the answer was. The restore is retail's, on BOTH paths: the
@@ -5102,12 +5102,12 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
 // this body's handler stub points at has nTryBlocks=1, tryLow=tryHigh=2,
 // catchHigh=3 and a NULL type descriptor (catch-all), and the state
 // stores bracket exactly one statement - `mov [ebp-4],2` at +0x166 just
-// before the second HeroFn_004E2550 and `mov [ebp-4],-1` at +0x17b right
+// before the second hero::canEquipArtifactInEmptySlot and `mov [ebp-4],-1` at +0x17b right
 // after it. The catch funclet the HandlerType names (0x4e29dc, 25 B, no
 // prologue, the parent's EBP frame) reads &displaced off [ebp-0x1c] and
 // `this` off [ebp-0x14], calls equip_artifact, and rethrows with
 // `push 0 / push 0 / call __CxxThrowException@8`. So the source is
-// `try { accepted = HeroFn_004E2550(...); } catch (...) { restore;
+// `try { accepted = hero::canEquipArtifactInEmptySlot(...); } catch (...) { restore;
 // throw; }` with the normal-path restore repeated below - the same
 // restore-on-unwind idiom artifact.cpp's va_end pair has.
 

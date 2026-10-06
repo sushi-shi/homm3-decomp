@@ -35,7 +35,7 @@ void doMonsterJoinDialog(hero* currentHero, TCreatureType creature,
 // TSeerHut (dc0x12d238..0x12d4dc), one artifact and text-row byte drive
 // progress/proposal, acceptance/refusal and immediate-reward prompts.
 // Complete doSeerEvent0x573670 loads the quest pointer and invokes its
-// virtual slots4/5 for proposal/progress. The artifact quest owns its vector
+// virtual slots 5/4 for proposal/progress. The artifact quest owns its vector
 // of requirements and generated/custom text in0x56f8a0/0x56fbc0. The hut
 // marks visits before checking satisfaction, then uses one completion offer;
 // declining it returns, without the old separate refusal/acceptance dialogs.

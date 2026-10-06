@@ -834,7 +834,7 @@ public:
     // DoCommand sets this pair in the surrender action before transferring gold.
     unsigned char m_sideSurrendered[2];  // +0x132b2
     // Read as a full dword by is_computer_action (0x474bf0) and paired
-    // there with soundmgr's byte gbUnk691209: when that byte is set and
+    // there with the g_goSolo byte: when that byte is set and
     // this slot is non-zero the acting stack is computer-driven no
     // matter whose side it is on, whatever the per-machine options say.
     // Original Dreamcast gbThisNetHasControl (+0x12980): retail
@@ -854,7 +854,7 @@ public:
     int m_currentSide;  // +0x132c0
     // The automation-preference gate. is_computer_action (0x474bf0)
     // reads this dword before every one of the four preference fields it
-    // consults in gUnnamed698758 (combatCatapult for the catapult,
+    // consults in g_config (combatCatapult for the catapult,
     // combatBallista for the ballista and the arrow tower,
     // combatFirstAidTent for the tent, combatAutoCreatures for every
     // other stack) and only honours the preference while it is non-zero.

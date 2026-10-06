@@ -1142,7 +1142,7 @@ private:
     void setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain,
-                   unsigned char m_field54b2);
+                   unsigned char groupAlignments);
     // THREE CREATURE IDS THAT BELONG IN armygrp.h's TCreatureType and
     // are parked here instead. Byte-proven 2026-08-14 by two army.obj
     // bodies (get_adjusted_defense 0x442590 multiplies the defender's

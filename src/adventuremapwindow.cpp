@@ -82,7 +82,7 @@ const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 // slot 8: void f(unsigned char) - ret 4. Overrides heroWindow's retail-era
 //   slot-8 virtual (0x5ff5f0, the model's placeholder _vslot8, beyond the six
 //   named heroWindow virtuals the DC dump carries), calls that base first,
-//   then toggles the +0x9c member via sub_b6f50/sub_b6f30 on the bool arg.
+//   then toggles the +0x9c member via TImmMouseEffect::stop/start on the bool arg.
 //   Location, class and signature are proven; the METHOD NAME is not (no DC or
 //   sibling attestation), so it stays unnamed.
 //   RETAIL_LOCATED(0x004040b0, 0x38)  // anchor-vtable slot 8, retail-only

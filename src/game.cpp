@@ -260,7 +260,7 @@ const int g_campaignArmyOverrideTraits = 96;
 // local constant, exactly as CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN does.
 const int g_firstShadowOfDeathCampaign = 13;
 // game::CreateTownHeroes carries the SAME start-level override
-// hero.cpp's HeroFn_004D8B30 does, on the same campaign/scenario pair
+// hero.cpp's hero::initialize does, on the same campaign/scenario pair
 // and the same donor hero - both bodies spell `campaign == 8 &&
 // currentMap == 3` and then read gpGame + 0x4c893, which IS
 // heroes[151].level. The names mirror hero.cpp's kStartLevel* block so

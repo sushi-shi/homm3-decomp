@@ -8530,7 +8530,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         // The window-mode disjunct is OUTER, not part of the
         // CanChooseTown/townChosen group, and the dpid test sits beside
         // the host test rather than inside it: retail's `!IsHost` and
-        // `dpid != 0` arms both jump to the gUnnamed6989f0 compare, not
+        // `dpid != 0` arms both jump to the g_mpNetProtocol compare, not
         // past it (branch topology clean at 49/49 once written this way).
         if (getThisPlayerGamePos() == playerPos
                 || (isHost()

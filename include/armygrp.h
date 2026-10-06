@@ -162,7 +162,7 @@ enum TCreatureType {
     // already byte-proven - and by the creature->artifact switch
     // inlined into recruitUnit::Update, which maps 0x91->3 and
     // 0x92->4. NH3API spellings, Complete numbering.
-    // 0x8f, added 2026-08-08 for hero.obj's HeroFn_004E5DE0 (0x4e5de0)
+    // 0x8f, added 2026-08-08 for hero.obj's hero::getIdentifyLevel (0x4e5de0)
     // and the same block inlined into hero::IsInIdentifyRange
     // (0x4e5e10): both `push 0x8f` into armyGroup::get_creature_total
     // and, when the count is nonzero, force a mastery field that is

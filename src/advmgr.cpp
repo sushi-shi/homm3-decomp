@@ -2519,7 +2519,7 @@ void setWitchHutHelpText(char* buffer, hero* currentHero,
 // `type_cell_adjuster` declaration up to the DC's slot order (between
 // tempText and playerbit) - 93.4910.  The DC's `cTemp` buffers x4 and its
 // `abandoned`/`guarded` pair do not transfer: Complete writes the global
-// gText here, and the mine arm is the separate AdvmgrFn_0040D670 body the DC
+// gText here, and the mine arm is the separate getMineHelpText body the DC
 // had inlined. Its `player`/`iThisPlayer` now retain the semantic names
 // `player`/`thisPlayer`; `this_generator`/`type` are
 // `mapGenerator`/`generatorType`.
@@ -5560,11 +5560,10 @@ NewmapCell* advManager::getCell(type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:7037
-// All three of the decode's blockers are now declared: gUnnamed6aac3c's
+// All three of the decode's blockers are now declared: g_inViewWorld's
 // DATA claim is hoisted above this function, the view-world tile scale at
 // .data 0x68c6b8 is declared (no claim - viewwrld.obj owns it), and
-// game::GameFn_004CA780 takes the ordinal-placeholder
-// convention.
+// game::showHeroesLogo (0x4ca780) is declared.
 
 // The three switches the decode describes are all `switch (MAP_HEIGHT)`
 // with FOUR real labels - 36, 72, 108, 144 - and a default. What made them

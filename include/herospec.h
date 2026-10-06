@@ -70,7 +70,7 @@ enum THeroAbilityKind {
     // spelling (the WIDGET_RETURN_32 precedent).
     eHeroAbilityKind5 = 5
     ,
-    // Two more kinds, both byte-proven by hero::HeroFn_004E6120
+    // Two more kinds, both byte-proven by hero::applyCreatureStatBonuses
     // (0x4e6120), and both needed there as CASE LABELS - which is the
     // only reason they exist. Kind 4 shares kind 1's creature-match path
     // but takes the FLAT-bonus arm (+attack/+defense/+damage out of the
@@ -106,7 +106,7 @@ struct THeroSpecificAbility {
         enum TCreatureType m_creature; // +0x04 - valid for kind 1
     };
     // +0x08/+0x0c/+0x10, the FLAT creature bonuses kinds 4 and 7 add.
-    // Byte-proven by hero::HeroFn_004E6120, which reads them at exactly
+    // Byte-proven by hero::applyCreatureStatBonuses, which reads them at exactly
     // these displacements off the stride-40 row and adds the third to
     // BOTH damage bounds. Sliced out of the pad only in this view, so
     // findpath.cpp and game.cpp keep their declarator count unchanged;

@@ -5977,7 +5977,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
 //      (gpCombatManager) - runs the battle; SetPointer/ShowPointer.
 //   9. winner = gpCombatManager result; CheckLevel both heroes; if remote
 //      TransmitRemoteData + CLevelPickWaitDlg::WaitForLevels(iFromWho).
-//  10. NewfullMapFn_00505D20 x2 + 00505D60 redraw; CheckForHeroDefeatWin
+//  10. NewfullMap::notifyHeroDefeated x2 + 00505D60 redraw; CheckForHeroDefeatWin
 //      x3 with CheckEndGame; loser-side sound (Random/sprintf/
 //      LoadPlaySample "COMBT*.wav"); MobilizeCurrHero; Resume; clear busy
 //      seats; return winner.
