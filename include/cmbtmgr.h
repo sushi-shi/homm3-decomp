@@ -175,7 +175,7 @@ enum ECombatSpellRestriction {
 enum ECombatGrid {
     COMBAT_GRID_CELLS = 0xbb,
     COMBAT_GRID_ROW_STRIDE = 0x11,
-    COMBAT_GRID_LAST_COLUMN = 0x10,
+    COMBAT_GRID_LAST_COLUMN = COMBAT_GRID_ROW_STRIDE - 1,
     // The two hero-portrait pseudo-hexes GetGridIndex answers with when
     // the cursor is over a hero panel rather than the field. RightClick
     // (0x4769c0) is what pairs each with a side: 0xfc opens heroes[0]'s
@@ -621,7 +621,7 @@ public:
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     // Before normalization (Dreamcast): cell.
-    hexcell m_cells[187];  // +0x1c4, ends 0x5394
+    hexcell m_cells[COMBAT_GRID_CELLS];  // +0x1c4, ends 0x5394
     // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
     // it is the current combat terrain selector for the catalogue mask.
     int m_terrainType;  // +0x5394
@@ -948,7 +948,7 @@ public:
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
-    short m_adjacentCells[187][6];      // +0x13468
+    short m_adjacentCells[COMBAT_GRID_CELLS][COMBAT_DIRECTION_COUNT];  // +0x13468
     bool m_saveBiggestExtent;        // +0x13d2c
     // Dreamcast SaveBiggestExtent is one byte before the LimitToExtent
     // dword; retail preserves this alignment boundary at +0x13d2c/30.
