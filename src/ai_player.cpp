@@ -1154,7 +1154,6 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     // Current residual: 89/89 CFG blocks, same 35 calls (folded native vector
     // aliases differ), but VC6 uses eight extra frame bytes and different loop
     // register homes. Keep true vector size(), not synthetic cardinality helpers.
-    long onHand;
     long markets = 0;
     unsigned char canBuildMarket = 0;
     playerData* player = &g_game->m_players[m_team];
@@ -1196,10 +1195,8 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
                 getMarketValue(resource) * supply[i]
                 * efficiency + marketValue);
         } else if (supply[i] != 0) {
-            onHand = player->m_resources[i];
-            int resourceValue;
-            resourceValue = i;
-            long value = getMarketValue(EGameResource(resourceValue));
+            long onHand = player->m_resources[i];
+            long value = getMarketValue(EGameResource(i));
             for (unsigned int j = 0; j < tradeQty.size(); ++j) {
                 if (tradeQty[j] * cost[i] > onHand) {
                     baseCost[j] += (tradeQty[j] * cost[i] - onHand)

@@ -756,23 +756,19 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // tests the already-nonzero value against SPELL_CASTER_ARTIFACT.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         if (m_currentSide == 0)
-            castX = g_combatHeroSprites[
-                g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                + g_heroTraits[castingHero->m_id].m_sex].m_castX - 43;
+            castX = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castX - 43;
         else
             castX = m_creatureSprites[1]->getWidth()
-                - g_combatHeroSprites[
-                    g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                    + g_heroTraits[castingHero->m_id].m_sex].m_castX + 693;
-        castY = g_combatHeroSprites[
-            g_heroClasses[castingHero->m_heroClass].m_townType * 2
-            + g_heroTraits[castingHero->m_id].m_sex].m_castY - 19;
+                - g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castX + 693;
+        castY = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castY - 19;
 
         m_cmbtHeroFrameType[m_currentSide] = 4;
         for (int frame = 0;
-             frame < g_combatHeroSprites[
-                 g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                 + g_heroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
+             frame < g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
         }
@@ -1644,9 +1640,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // update in this order.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int nframes = m_creatureSprites[m_currentSide]->getNumFrames(4);
-        for (int frame = g_combatHeroSprites[
-                 g_heroClasses[castingHero->m_heroClass].m_townType * 2
-                 + g_heroTraits[castingHero->m_id].m_sex].m_castFrame;
+        for (int frame = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
+                g_heroTraits[castingHero->m_id].m_sex].m_castFrame;
              frame < nframes; ++frame) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);

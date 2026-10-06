@@ -257,7 +257,9 @@ enum ECombatMineType {
     COMBAT_MINE_TYPE_6 = 6
 };
 
-// The eighteen combat hero animations, keyed `2 * townType + sex`.
+// The eighteen combat hero animations, indexed [townType][sex]: DC's
+// ?sCmbtHero@combatManager@@0QAY01$$CBUSCmbtHero@1@A is a [][2] table, and
+// the two-dimensional subscript is byte-identical in LoadIcons/CastSpell.
 // Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
 // stride. CastSpell reads all three trailing dwords as the cast origin
 // and animation length. DC independently types the row combatManager::SCmbtHero
@@ -270,7 +272,7 @@ public:
     int m_castY;
     int m_castFrame;
 };
-extern const TCombatHeroSprite g_combatHeroSprites[18];
+extern const TCombatHeroSprite g_combatHeroSprites[9][2];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
