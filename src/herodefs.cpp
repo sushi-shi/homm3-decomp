@@ -371,7 +371,7 @@ static void InitializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
     for (column = 0; column < kNumSecSkills; ++column)
         traits.m_gainSecondarySkillChance[column] =
             static_cast<signed char>(atoi(values[column + 14]));
-    for (column = 0; column < 9; ++column)
+    for (column = 0; column < TOWN_TYPE_COUNT; ++column)
         traits.m_foundInTownType[column] =
             static_cast<signed char>(atoi(values[column + 42]));
 }

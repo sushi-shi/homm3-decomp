@@ -200,7 +200,7 @@ int aiResourceCost(long playerId, const int* resources);
 int aiResourceCost(const playerData* player, const int* resources);
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
 bool considerHiring(long playerId, hero* candidate);
-const std::bitset<9>& getAngelicAllianceAlignments();
+const std::bitset<TOWN_TYPE_COUNT>& getAngelicAllianceAlignments();
 int canBuy(const town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
                        double efficiency);
@@ -2024,7 +2024,7 @@ MAC_ADDRESS(0x02f990, 0x78)
 int type_AI_creature_swapper::normalizeAlignment(int alignment) const
 {
     if (m_hasAngelicAlliance) {
-        const std::bitset<9>& alliedAlignments = getAngelicAllianceAlignments();
+        const std::bitset<TOWN_TYPE_COUNT>& alliedAlignments = getAngelicAllianceAlignments();
         if (alliedAlignments.test(alignment)) {
             alignment = 0;
             while (!alliedAlignments.test(alignment))
@@ -2042,7 +2042,7 @@ void type_AI_creature_swapper::getAlignments()
     if (!m_hasAngelicAlliance) {
         return;
     }
-    for (int alignment = 0; alignment < 9; ++alignment) {
+    for (int alignment = 0; alignment < TOWN_TYPE_COUNT; ++alignment) {
         if (m_alignments[alignment + 1] != 0) {
             int other = normalizeAlignment(alignment);
             if (other != alignment) {
@@ -5011,7 +5011,7 @@ MAC_ADDRESS(0x038238, 0x26c)
 long type_angelic_alliance_artifact::getValue(
     const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    std::bitset<9> alliedAlignments = getAngelicAllianceAlignments();
+    std::bitset<TOWN_TYPE_COUNT> alliedAlignments = getAngelicAllianceAlignments();
     playerData* player = &g_game->m_players[owner->m_owner];
     long total = 0;
     int heroIndex = 0;
