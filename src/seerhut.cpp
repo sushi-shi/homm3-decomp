@@ -2200,7 +2200,7 @@ int TSeerReward::getValue(const hero* currentHero)
             m_value.m_secondarySkill.m_skillType, m_value.m_secondarySkill.m_bonus);
 
     case eRewardArtifact: {
-        if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= 64)
+        if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
         return aiGetValueOfArtifact(
             type_artifact(static_cast<TArtifact>(m_value.m_dwords[0]) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
@@ -2282,7 +2282,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     }
 
     case eRewardArtifact:
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             // Mac 0x16a2cc initializes both fields to -1, then replaces the ID.
             type_artifact artifact;
             artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);

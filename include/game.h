@@ -173,7 +173,7 @@ public:
     unsigned char m_groupFormation;  // +0x66 - no retail body reads it
     unsigned char m_customArtifacts;  // +0x67
     type_artifact m_artifacts[kNumArtifactSlots + 1];
-    type_artifact m_backpack[64];
+    type_artifact m_backpack[HERO_BACKPACK_CAPACITY];
     #pragma pack(push, 1)
     unsigned char m_numInBackpack;  // +0x300 - no retail body reads it
     type_point m_location;  // +0x301 - unaligned, hence the band
