@@ -8049,7 +8049,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         TCreatureType rowCreature =
             g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]];
         const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= 150)
+        if (rowCreature >= 0 && rowCreature <= g_creatureTypeLast)
             creatureName = akCreatureTypeTraits[rowCreature].m_plural_name;
         else
             creatureName = "";
@@ -8068,7 +8068,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeY = 0x20;
         const char* summonName;
         if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= 150)
+            && g_townManager->m_townToView->m_summoningType <= g_creatureTypeLast)
             summonName =
                 akCreatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_plural_name;
         else

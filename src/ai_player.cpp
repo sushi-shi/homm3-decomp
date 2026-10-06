@@ -478,9 +478,9 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    std::vector<type_creature_value> creatures(145);
+    std::vector<type_creature_value> creatures(g_creatureTypeCount);
     int creatureIndex;
-    for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
+    for (creatureIndex = 0; creatureIndex < g_creatureTypeCount; creatureIndex++) {
         creatures[creatureIndex].m_type = H3_ENUM_DECODE(TCreatureType, creatureIndex);
         creatures[creatureIndex].m_amount = 0;
     }
@@ -505,7 +505,7 @@ void type_AI_player::calculateDemand()
     }
 
     int valueCreature;
-    for (valueCreature = 0; valueCreature < 145; valueCreature++)
+    for (valueCreature = 0; valueCreature < g_creatureTypeCount; valueCreature++)
         creatures[valueCreature].m_value = creatures[valueCreature].m_amount
             * akCreatureTypeTraits[valueCreature].AI_value;
 
@@ -990,7 +990,7 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
         }
     }
 
-    for (int creature = 0; creature < 145; ++creature) {
+    for (int creature = 0; creature < g_creatureTypeCount; ++creature) {
         prohibited[creature] = 0;
         getMonsterCost(creature, resources);
         for (short resource = 0; resource < 6; ++resource) {
@@ -1808,7 +1808,7 @@ DC_ADDRESS(0x031094, 0x60)
 MAC_ADDRESS(0x02f20c, 0x60)
 void type_AI_player::purchaseBuildings()
 {
-    bool prohibitedCreatures[145];
+    bool prohibitedCreatures[g_creatureTypeCount];
     fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
     while (purchaseBuilding(prohibitedCreatures)) {
     }
