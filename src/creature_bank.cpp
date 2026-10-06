@@ -59,7 +59,7 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
     }
 
     ++column;
-    for (int resourceId = 0; resourceId < 7; ++resourceId)
+    for (int resourceId = 0; resourceId < NUM_RESOURCES; ++resourceId)
         traits.m_resources[resourceId] = atoi(resource[column++]);
 
     traits.m_rewardCreatures = atoi(resource[column]);

@@ -71,14 +71,14 @@ DATA(0x00677974) const char* g_artifactObjectDefFormat = "ava%04d.def";
 
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x00677998) double g_productionHandicap[3] = { 0.0, 0.15, 0.3 };
-DATA(0x00678170) int g_initResourcesHuman[5][7] = {
+DATA(0x00678170) int g_initResourcesHuman[5][NUM_RESOURCES] = {
     { 30, 15, 30, 15, 15, 15, 30000 },
     { 20, 10, 20, 10, 10, 10, 20000 },
     { 15, 7, 15, 7, 7, 7, 15000 },
     { 10, 4, 10, 4, 4, 4, 10000 },
     { 0, 0, 0, 0, 0, 0, 0 }
 };
-DATA(0x006781fc) int g_initResourcesComputer[5][7] = {
+DATA(0x006781fc) int g_initResourcesComputer[5][NUM_RESOURCES] = {
     { 5, 2, 5, 2, 2, 2, 5000 },
     { 10, 4, 10, 4, 4, 4, 7500 },
     { 15, 7, 15, 7, 7, 7, 10000 },
@@ -112,7 +112,7 @@ DATA(0x006779e4) const char* g_holeSpriteFilenames[10] = {
 DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
 DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
 DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
-DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x00677978) int g_mineProduction[NUM_RESOURCES] = { 2, 1, 2, 1, 1, 1, 1000 };
 DATA(0x006779b0) int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 // Retail newMap copies this independent seven-resource tutorial row.
 DATA(0x006779c8) int g_tutorialStartingResources[NUM_RESOURCES] =
@@ -1428,7 +1428,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
         m_townIds[i] = value;
     }
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < NUM_RESOURCES; i++) {
         if (readValue(infile, number) < sizeof(number))
             return -1;
         m_resources[i] = number;
@@ -1557,7 +1557,7 @@ int playerData::save(TAbstractFile* outfile)
             return -1;
     }
 
-    for (x = 0; x < 7; x++) {
+    for (x = 0; x < NUM_RESOURCES; x++) {
         intBuffer = m_resources[x];
         count = writeScalar(outfile, intBuffer);
         if (count < sizeof(int))

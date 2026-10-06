@@ -54,7 +54,7 @@ void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, 
     const int* toCost = akCreatureTypeTraits[upgrade].cost;
     const int* fromCost = akCreatureTypeTraits[creature].cost;
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < NUM_RESOURCES; i++) {
         if (toCost[i] > fromCost[i])
             cost[i] = (toCost[i] - fromCost[i]) * amount;
         else
@@ -69,7 +69,7 @@ void getMonsterCost(int monId, int* resCost)
 {
     int resource;
     MEMCPY(resCost, akCreatureTypeTraits[monId].cost,
-           7 * sizeof(resCost[0]), resource);
+           NUM_RESOURCES * sizeof(resCost[0]), resource);
 }
 
 // ---------------------------------------------------------------------
@@ -341,7 +341,7 @@ MAC_ADDRESS(0x14eec8, 0x438)
 int recruitUnit::open(int newPriority)
 {
     message msg;
-    int resCost[7];
+    int resCost[NUM_RESOURCES];
 
     g_recruitWindow = new TRecruitWindow(143, 16, m_altResource, this);
     if (!g_recruitWindow)
@@ -1035,7 +1035,7 @@ DC_ADDRESS(0x11ac7c, 0x88)
 MAC_ADDRESS(0x1506e0, 0xd8)
 void recruitUnit::updateCost()
 {
-    int resCost[7];
+    int resCost[NUM_RESOURCES];
     getMonsterCost(m_monsterType, resCost);
     m_goldPerTroop = resCost[6];
 
@@ -1212,7 +1212,7 @@ MAC_ADDRESS(0x150bb8, 0x688)
 void quickViewRecruit(TCreatureType monType, short* numMon)
 {
     message msg;
-    int cost[7];
+    int cost[NUM_RESOURCES];
     getMonsterCost(monType, cost);
 
     int i;

@@ -1278,7 +1278,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     }
     showRewards(msg, rewards, 1);
 
-    for (int k = 0; k < 7; k++) {
+    for (int k = 0; k < NUM_RESOURCES; k++) {
         if (blackBox->m_resQty[k] != 0) {
             if (humanPlayer) {
                 if (blackBox->m_resQty[k] > 0) {

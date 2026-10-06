@@ -510,7 +510,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
     if (valueOfWarFactory(currentHero, engine, 0) > 0) {
         TCreatureType creature = siegeArtifactToCreature(engine);
         const int* costs = akCreatureTypeTraits[creature].cost;
-        for (int resource = 0; resource < 7; resource++)
+        for (int resource = 0; resource < NUM_RESOURCES; resource++)
             g_currentPlayer->m_resources[resource] -= costs[resource];
 
         type_artifact artifact(engine);
@@ -578,7 +578,7 @@ DC_ADDRESS(0x10e6e8, 0x1aa)
 MAC_ADDRESS(0x13fd54, 0x2ec)
 static void markShipyards(playerData* player)
 {
-    int cost[7];
+    int cost[NUM_RESOURCES];
 
     if (player->m_resources[WOOD] < 10
         || player->m_resources[GOLD] < 1000)
@@ -602,7 +602,7 @@ static void markShipyards(playerData* player)
             currentTown->getBuildCost(DOCK_ID, cost);
             cost[WOOD] += 10;
             cost[GOLD] += 1000;
-            for (int resource = 0; resource < 7; ++resource) {
+            for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
                 if (player->m_resources[resource] < cost[resource])
                     canBuildShip = 0;
             }
@@ -2000,7 +2000,7 @@ static long valueOfWarFactory(const hero* currentHero,
     const int* costs = akCreatureTypeTraits[creature].cost;
     const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
     long resourceCost = 0;
-    for (int resource = 0; resource < 7; ++resource, ++costs) {
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource, ++costs) {
         if (g_currentPlayer->m_resources[resource] < *costs)
             return 0;
         resourceCost += *costs * resourceValues[resource];
@@ -2262,7 +2262,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     if (!value)
         return;
 
-    for (int resource = 0; resource < 7; ++resource) {
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
         if (g_currentPlayer->m_resources[resource] < costs[resource])
             return;
     }
@@ -2270,14 +2270,14 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     if (!currentTown->hasBuilding(building, true)) {
         if (!currentTown->buyBuilding(building))
             return;
-        for (int checkResource = 0; checkResource < 7; ++checkResource) {
+        for (int checkResource = 0; checkResource < NUM_RESOURCES; ++checkResource) {
             if (g_currentPlayer->m_resources[checkResource]
                     < costs[checkResource])
                 return;
         }
     }
 
-    for (int costResource = 0; costResource < 7; ++costResource)
+    for (int costResource = 0; costResource < NUM_RESOURCES; ++costResource)
         g_currentPlayer->m_resources[costResource] -= costs[costResource];
 
     currentHero->giveArtifact(type_artifact(engine), 1, 1);

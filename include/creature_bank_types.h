@@ -21,7 +21,7 @@
 struct type_creature_bank {
 public:
     armyGroup m_guards;
-    int m_resources[7];
+    int m_resources[NUM_RESOURCES];
     TCreatureType m_rewardCreature;
     signed char m_rewardCreatures;
     std::vector<TArtifact> m_artifacts;

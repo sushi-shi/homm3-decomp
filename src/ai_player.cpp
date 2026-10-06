@@ -397,7 +397,7 @@ MAC_ADDRESS(0x02b36c, 0x78)
 long type_AI_player::getResourceValue(int* resources) const
 {
     long value = 0;
-    for (int resource = 0; resource < 7; ++resource)
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource)
         value = static_cast<long>(
             value + resources[resource] * m_resourceValue[resource]);
     return value;
@@ -454,7 +454,7 @@ void type_AI_player::calculateDemand()
     memset(m_resourceDemand, 0, sizeof(m_resourceDemand));
 
     int supplyResource;
-    for (supplyResource = 0; supplyResource < 7; supplyResource++)
+    for (supplyResource = 0; supplyResource < NUM_RESOURCES; supplyResource++)
         m_resourceSupply[supplyResource] = player->m_resources[supplyResource]
             + 2 * player->m_ai.m_turnProductionResource[supplyResource];
 
@@ -470,7 +470,7 @@ void type_AI_player::calculateDemand()
                 buildCost = currentTown->getBuildCostArray(
                     type_building_id(building));
                 int buildResource;
-                for (buildResource = 0; buildResource < 7; buildResource++)
+                for (buildResource = 0; buildResource < NUM_RESOURCES; buildResource++)
                     m_resourceDemand[buildResource] = max(
                         m_resourceDemand[buildResource],
                         static_cast<long>(buildCost[buildResource]));
@@ -517,7 +517,7 @@ void type_AI_player::calculateDemand()
          valuableCreature++) {
         creatureInfo = creatures[valuableCreature];
         int costResource;
-        for (costResource = 0; costResource < 7; costResource++)
+        for (costResource = 0; costResource < NUM_RESOURCES; costResource++)
             m_resourceDemand[costResource] +=
                 akCreatureTypeTraits[creatureInfo.m_type].cost[costResource]
                 * creatureInfo.m_amount;
@@ -536,7 +536,7 @@ void type_AI_player::calculateDemand()
     double efficiency = g_tradingPostEfficency[markets];
 
     int valueResource;
-    for (valueResource = 0; valueResource < 7;
+    for (valueResource = 0; valueResource < NUM_RESOURCES;
          valueResource++) {
         if (m_resourceDemand[valueResource] == 0) {
             totalValue = efficiency;
@@ -577,7 +577,7 @@ void type_AI_player::endTurn()
     playerData* player = &g_game->m_players[m_team];
     g_game->calculateProduction();
 
-    for (int resource = 0; resource < 7; resource++) {
+    for (int resource = 0; resource < NUM_RESOURCES; resource++) {
         m_reservedFunds[resource] -= player->m_ai.m_turnProductionResource[resource];
         if (m_reservedFunds[resource] < 0)
             m_reservedFunds[resource] = 0;
@@ -621,7 +621,7 @@ void type_AI_player::endTurn()
     }
 
     std::string msg;
-    for (short warningResource = 0; warningResource < 7; ++warningResource) {
+    for (short warningResource = 0; warningResource < NUM_RESOURCES; ++warningResource) {
         if (player->m_resources[warningResource] < 0) {
             msg += formatString(
                 g_aiResourceWarningFormat,
@@ -670,10 +670,10 @@ MAC_ADDRESS(0x02bf4c, 0x6e0)  // linkorder
 void type_AI_player::makeGift(long playerId)
 {
     playerData& player = g_game->m_players[m_team];
-    long surplus[7];
+    long surplus[NUM_RESOURCES];
     int resource;
 
-    for (resource = 0; resource < 7; resource++) {
+    for (resource = 0; resource < NUM_RESOURCES; resource++) {
         surplus[resource] = m_resourceSupply[resource]
             - m_resourceDemand[resource];
         if (surplus[resource] > 0) {
@@ -702,7 +702,7 @@ void type_AI_player::makeGift(long playerId)
     }
 
     bool hasSurplus = false;
-    for (resource = 0; resource < 7; resource++) {
+    for (resource = 0; resource < NUM_RESOURCES; resource++) {
         if (surplus[resource] > 0)
             hasSurplus = true;
     }
@@ -711,7 +711,7 @@ void type_AI_player::makeGift(long playerId)
 
     if (!g_game->m_players[playerId].isHuman()) {
         g_aiPlayers[playerId].calculateDemand();
-        for (resource = 0; resource < 7; resource++) {
+        for (resource = 0; resource < NUM_RESOURCES; resource++) {
             surplus[resource] = min(
                 surplus[resource],
                 g_aiPlayers[playerId].m_resourceDemand[resource]
@@ -724,7 +724,7 @@ void type_AI_player::makeGift(long playerId)
         return;
     }
 
-    for (resource = 0; resource < 7; resource++) {
+    for (resource = 0; resource < NUM_RESOURCES; resource++) {
         if (surplus[resource] > 0) {
             g_game->m_players[playerId].m_resources[resource] += surplus[resource];
             player.m_resources[resource] -= surplus[resource];
@@ -735,7 +735,7 @@ void type_AI_player::makeGift(long playerId)
         return;
 
     std::vector<type_dialog_resource> list;
-    for (resource = 0; resource < 7; resource++) {
+    for (resource = 0; resource < NUM_RESOURCES; resource++) {
         if (surplus[resource] > 0) {
             type_dialog_resource displayedResource;
             displayedResource.m_resource = resource;
@@ -759,7 +759,7 @@ void type_AI_player::makeGift(long playerId)
     }
 
     list.clear();
-    for (resource = 0; resource < 7; resource++) {
+    for (resource = 0; resource < NUM_RESOURCES; resource++) {
         if (surplus[resource] < 0) {
             type_dialog_resource requestedResource;
             requestedResource.m_resource = resource;
@@ -882,8 +882,8 @@ MAC_ADDRESS(0x02c9d8, 0x2ac)  // anchor-callee
 void type_AI_player::calculateReserve()
 {
     playerData* player = &g_game->m_players[m_team];
-    int cost[7];
-    long totalCost[7];
+    int cost[NUM_RESOURCES];
+    long totalCost[NUM_RESOURCES];
     type_creature_value creatureInfo;
     std::vector<type_creature_value> creatures;
     memset(m_reservedFunds, 0, sizeof(m_reservedFunds));
@@ -912,12 +912,12 @@ void type_AI_player::calculateReserve()
              creature >= 0 && creature >= creatures.size() - 2;
              creature--) {
             getMonsterCost(creatures[creature].m_type, cost);
-            for (short resource = 0; resource < 7; resource++)
+            for (short resource = 0; resource < NUM_RESOURCES; resource++)
                 totalCost[resource] += cost[resource]
                     * creatures[creature].m_amount;
         }
 
-        for (short reserveResource = 0; reserveResource < 7; reserveResource++) {
+        for (short reserveResource = 0; reserveResource < NUM_RESOURCES; reserveResource++) {
             if (totalCost[reserveResource] > m_reservedFunds[reserveResource])
                 m_reservedFunds[reserveResource] = totalCost[reserveResource];
         }
@@ -953,11 +953,11 @@ MAC_ADDRESS(0x02d03c, 0x3a8)
 void fillProhibitedArray(playerData* player, bool* prohibited)
 {
     long humanStrength;
-    int income[7];
+    int income[NUM_RESOURCES];
     short i;
-    int resources[7];
+    int resources[NUM_RESOURCES];
 
-    for (i = 0; i < 7; ++i)
+    for (i = 0; i < NUM_RESOURCES; ++i)
         income[i] = player->m_ai.m_turnProductionResource[i] * 7;
 
     for (i = 0; i < player->m_numTowns; ++i) {
@@ -968,7 +968,7 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
             if (growth > 0) {
                 TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
                 getMonsterCost(creature, resources);
-                for (short resource = 0; resource < 7; ++resource) {
+                for (short resource = 0; resource < NUM_RESOURCES; ++resource) {
                     income[resource] -= resources[resource] * growth;
                 }
             }
@@ -1025,14 +1025,14 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
 {
     playerData* player = &g_game->m_players[m_team];
     unsigned char tradeNeeded = 0;
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < NUM_RESOURCES; i++) {
         if (cost[i] > player->m_resources[i]
             && player->m_ai.m_turnProductionResource[i] == 0)
             tradeNeeded = 1;
     }
 
     if (tradeNeeded) {
-        int supply[7];
+        int supply[NUM_RESOURCES];
         std::vector<long> tradeQty;
         if (!checkTradeSupply(cost, 1, supply, tradeQty))
             return -1;
@@ -1080,7 +1080,7 @@ bool type_AI_player::checkTradeSupply(const int* cost, long number,
     long limit;
 
     tradeQty.push_back(number);
-    for (int resource = 0; resource < 7; ++resource) {
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
         supply[resource] =
             player->m_resources[resource] - cost[resource] * number;
         if (supply[resource] < 0 && cost[resource] > 0) {
@@ -1121,7 +1121,7 @@ MAC_ADDRESS(0x02e438, 0x148)
 void type_AI_player::tradeResources(const int* cost, long number)
 {
     std::vector<long> tradeQty;
-    int supply[7];
+    int supply[NUM_RESOURCES];
     if (!checkTradeSupply(cost, number, supply, tradeQty))
         return;
     if (!canTradeResources(cost, supply, tradeQty))
@@ -1192,7 +1192,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     unitCost.insert(unitCost.begin(), tradeQty.size(), 0);
 
     int i;
-    for (i = 0; i < 7; ++i) {
+    for (i = 0; i < NUM_RESOURCES; ++i) {
         if (supply[i] > 0) {
             EGameResource resource = H3_ENUM_DECODE(EGameResource, i);
             marketValue = static_cast<long>(
@@ -1231,7 +1231,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     }
 
     long remaining = tradeQty.back() - qty;
-    for (int k = 0; k < 7; ++k) {
+    for (int k = 0; k < NUM_RESOURCES; ++k) {
         if (supply[k] < 0) {
             supply[k] += cost[k] * remaining;
             if (supply[k] > 0)
@@ -1281,10 +1281,10 @@ void type_AI_player::doResourceTrade(int* supply)
         return;
 
     double efficiency = g_tradingPostEfficency[marketCount];
-    for (int source = 0; source < 7; ++source) {
+    for (int source = 0; source < NUM_RESOURCES; ++source) {
         if (supply[source] <= 0)
             continue;
-        for (int dest = 0; dest < 7; ++dest) {
+        for (int dest = 0; dest < NUM_RESOURCES; ++dest) {
             if (supply[dest] >= 0)
                 continue;
             double ratio = getTradeRatio(H3_ENUM_DECODE(EGameResource, source),
@@ -1491,7 +1491,7 @@ static void getFullCost(const town* currentTown, int* result,
         if (requirements & g_bitNumber[k]) {
             int* costs = currentTown->getBuildCostArray(
                 H3_ENUM_DECODE(type_building_id, k));
-            for (int i = 0; i < 7; ++i)
+            for (int i = 0; i < NUM_RESOURCES; ++i)
                 result[i] += costs[i];
         }
     }
@@ -1556,7 +1556,7 @@ MAC_ADDRESS(0x02ed58, 0x420)  // retail callee set + arity
 bool type_AI_player::purchaseBuilding(
     bool* prohibitedCreatures)
 {
-    int extraCosts[MAX_BUILDING_TYPE][7];
+    int extraCosts[MAX_BUILDING_TYPE][NUM_RESOURCES];
     long fullValue[MAX_BUILDING_TYPE];
     long basicValue[MAX_BUILDING_TYPE];
     long bestValue = 0;
@@ -1564,7 +1564,7 @@ bool type_AI_player::purchaseBuilding(
     int bestBuilding = MAX_BUILDING_TYPE;
     __int64 requirements;
     __int64 buildMask;
-    int cost[7];
+    int cost[NUM_RESOURCES];
     playerData* player = &g_game->m_players[m_team];
 
     for (short townIndex = 0; townIndex < player->m_numTowns;
@@ -1629,7 +1629,7 @@ bool type_AI_player::purchaseBuilding(
     } else {
         // MAX 97.8283 was measured with `i != 7` - an unnamed domain compare
         // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
-        for (short i = 0; i < 7; ++i) {
+        for (short i = 0; i < NUM_RESOURCES; ++i) {
             if (m_reservedFunds[i] + cost[i] > player->m_resources[i])
                 return 0;
         }
@@ -1652,7 +1652,7 @@ long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* e
     long growth = traits.growthRate;
     if (g_game->m_day >= 5)
         growth = currentTown->getCastleGrowthBonus(creature) + 2 * growth;
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < NUM_RESOURCES; i++)
         extraCost[i] += traits.cost[i] * growth;
     return traits.AI_value * growth;
 }
@@ -1670,7 +1670,7 @@ long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
         amount += currentTown->getGrowthRate(baseDwelling);
     const TCreatureTypeTraits& baseTraits = akCreatureTypeTraits[creature];
     const TCreatureTypeTraits& upgradedTraits = akCreatureTypeTraits[upgraded];
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < NUM_RESOURCES; i++)
         extraCost[i] += (upgradedTraits.cost[i]
                           - baseTraits.cost[i]) * amount;
     return (upgradedTraits.AI_value - baseTraits.AI_value) * amount;
@@ -1697,7 +1697,7 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
                 int creature = g_dwellingType[currentTown->m_type][dwelling];
                 const TCreatureTypeTraits* traits =
                     akCreatureTypeTraits + creature;
-                for (int i = 0; i < 7; ++i)
+                for (int i = 0; i < NUM_RESOURCES; ++i)
                     extraCost[i] += traits->cost[i];
                 value += akCreatureTypeTraits[creature].AI_value;
             }
@@ -1716,7 +1716,7 @@ long valueOfHorde(town* currentTown, type_building_id building, bool* prohibited
     if (prohibited[creature])
         return -1;
     const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < NUM_RESOURCES; i++)
         extraCost[i] += horde->m_bonus * traits.cost[i];
     return traits.AI_value * horde->m_bonus;
 }
@@ -1735,7 +1735,7 @@ long valueOfHordeUpgrade(town* currentTown, type_building_id building, bool* pro
     if (prohibited[creature])
         return -1;
     const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < NUM_RESOURCES; i++)
         extraCost[i] += horde->m_bonus * traits.cost[i];
     return traits.AI_value * horde->m_bonus;
 }
@@ -1786,9 +1786,9 @@ MAC_ADDRESS(0x02f178, 0x94)
 static int __cdecl maxBuyableCreatures(
     const long* funds, TCreatureType type, int limit)
 {
-    int resources[7];
+    int resources[NUM_RESOURCES];
     getMonsterCost(type, resources);
-    for (int resource = 0; resource < 7; ++resource) {
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
         if (resources[resource] > 0) {
             int affordable;
             if (funds[resource] > 0)
@@ -1885,7 +1885,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     short amount;
     const TCreatureTypeTraits* traits;
     TCreatureType creature;
-    long funds[7];
+    long funds[NUM_RESOURCES];
     long bestValue = 0;
     type_building_id bestBuilding;
     __int64 buildMask = currentTown->getBuildableMask();
@@ -1900,7 +1900,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
             unsigned char affordable = 1;
             // Mac 0:0x2f4ec increments and sign-extends this index before
             // comparing it with seven; the short spelling gives that loop.
-            for (short resource = 0; resource < 7; ++resource) {
+            for (short resource = 0; resource < NUM_RESOURCES; ++resource) {
                 funds[resource] = player->m_resources[resource] - cost[resource];
                 if (funds[resource] < 0)
                     affordable = 0;
@@ -1923,7 +1923,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
         int* cost =
             currentTown->getBuildCostArray(bestBuilding);
         currentTown->buildBuilding(bestBuilding, 1, 1);
-        for (int resource = 0; resource < 7; ++resource)
+        for (int resource = 0; resource < NUM_RESOURCES; ++resource)
             player->m_resources[resource] -= cost[resource];
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
@@ -1967,7 +1967,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
         }
     }
 
-    int cost[7];
+    int cost[NUM_RESOURCES];
     currentTown->getBuildCost(type_building_id(building), cost);
     tradeResources(cost, 1);
     // Dreamcast ai_player.cpp:2011 calls game::TownAlreadyBuiltOn here.
@@ -2556,7 +2556,7 @@ long type_AI_creature_purchaser::doBestPurchase(
     bool tradeAllowed)
 {
     short slot;
-    int resourceCost[7];
+    int resourceCost[NUM_RESOURCES];
     short sourceIndex;
     int bestValue = 0;
     short bestNumber = 0;
@@ -2611,7 +2611,7 @@ long type_AI_creature_purchaser::doBestPurchase(
             getMonsterCost(type, resourceCost);
             bestNumber = maxBuyableCreatures(
                 m_funds, type, m_creatures[bestSource].m_number);
-            for (short resource = 0; resource < 7; ++resource)
+            for (short resource = 0; resource < NUM_RESOURCES; ++resource)
                 m_funds[resource] -= resourceCost[resource] * bestNumber;
             m_creatures[bestSource].m_number -= bestNumber;
         }
@@ -2671,7 +2671,7 @@ long type_AI_creature_purchaser::getPurchaseValue(
 {
     armyGroup localArmy(*newArmy);
     armyGroup localAdjacentArmy;
-    long localFunds[7];
+    long localFunds[NUM_RESOURCES];
     long value = 0;
     memcpy(localFunds, newFunds, sizeof localFunds);
 
@@ -4317,7 +4317,7 @@ long aiGetShipCost(const hero* ourHero, type_point point)
     const playerData* player = &g_game->m_players[ourHero->m_owner];
     town* shipyardTown =
         getShipyardTown(player, point.m_x, point.m_y, point.m_z);
-    int cost[7];
+    int cost[NUM_RESOURCES];
     memset(cost, 0, sizeof cost);
 
     if (!shipyardTown) {
@@ -4407,7 +4407,7 @@ bool considerHiring(long playerId, hero* candidate)
         if (type != CREATURE_NONE) {
             const int* creatureCost = akCreatureTypeTraits[type].cost;
             double troops = candidate->m_army.m_numTroops[slot];
-            for (int resource = 0; resource < 7; ++resource)
+            for (int resource = 0; resource < NUM_RESOURCES; ++resource)
                 total = static_cast<long>(
                     creatureCost[resource]
                     * player.m_ai.m_resourceValue[resource] * troops + total);
@@ -4494,7 +4494,7 @@ static long valueOfHiring(town* currentTown, hero* candidate,
 
     candidate->m_turnExperienceToRvRatio = 0;
     candidate->m_owner = static_cast<char>(playerId);
-    int resources[7];
+    int resources[NUM_RESOURCES];
     memcpy(resources, player->m_resources, sizeof(resources));
     short population[14];
     memcpy(population, currentTown->m_population, sizeof(population));

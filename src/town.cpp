@@ -27,7 +27,7 @@
 DATA(0x00688e84) int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
 DATA(0x00688e94) int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
 DATA(0x00688ea4) int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
-DATA(0x00688eb4) int g_siloIncome[9][7] = {
+DATA(0x00688eb4) int g_siloIncome[9][NUM_RESOURCES] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 1, 0, 0 },
     { 0, 0, 0, 0, 0, 1, 0 },

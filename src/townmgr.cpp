@@ -4410,7 +4410,7 @@ void doBlacksmith(int heroId, int townType)
             g_blacksmithArtifacts[townType], 1, 1);
         const int* cost =
             akCreatureTypeTraits[g_blacksmithMachines[townType]].cost;
-        for (int i = 0; i < 7; i++)
+        for (int i = 0; i < NUM_RESOURCES; i++)
             g_currentPlayer->m_resources[6] -= cost[i];
         sprintf(g_text, g_townCommand[31],
                 akCreatureTypeTraits[g_blacksmithMachines[townType]].m_name);
@@ -6163,8 +6163,8 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         { 303, 303, 303, 377, 377, 377,   0 },
         { 303, 303, 303, 303, 377, 377, 377 }
     };
-    EGameResource resources[7];
-    int amounts[7];
+    EGameResource resources[NUM_RESOURCES];
+    int amounts[NUM_RESOURCES];
     int i;
 
     int numResources = m_townToView->getBuildCost(

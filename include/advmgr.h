@@ -171,7 +171,7 @@ extern const char* g_resourceNames[8];
 // tables - `?gMineEventText@@3PAPBDA` and `?gMineDescriptions@@3PAPBDA` -
 // and only the ROLE separates them: this one is an event dialog's text,
 // so it takes the event name. PROVISIONAL on that ground alone.
-extern int g_mineCharacteristics[7];
+extern int g_mineCharacteristics[NUM_RESOURCES];
 // Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
 // bytes read as [previous step direction][current step direction], both
 // in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to

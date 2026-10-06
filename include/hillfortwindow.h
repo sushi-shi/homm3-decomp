@@ -127,7 +127,7 @@ public:
         char m_countText[10];         // +0x00
         char m_goldCost[10];      // +0x0a
         char m_resourceCost[12];  // +0x14
-        long m_cost[7];             // +0x20
+        long m_cost[NUM_RESOURCES];             // +0x20
         int m_resourceIndex;        // +0x3c
         TCreatureType m_type;                 // +0x40 (TCreatureType domain)
         int m_count;                // +0x44

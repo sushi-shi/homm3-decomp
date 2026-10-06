@@ -270,7 +270,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
     playerData* player = currentHero->getPlayer();
     if (searchType == const_AI_search) {
         gates = 2;
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < NUM_RESOURCES; i++) {
             if (cost[i] > 0) {
                 gates = min(gates, player->m_resources[i] / cost[i]);
                 if (!gates)

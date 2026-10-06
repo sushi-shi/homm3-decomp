@@ -828,8 +828,8 @@ struct AI {
 public:
     float m_gameAttentionValue[3];
     float m_turnAttentionValue[3];
-    long m_turnProductionResource[7];
-    double m_resourceValue[7];
+    long m_turnProductionResource[NUM_RESOURCES];
+    double m_resourceValue[NUM_RESOURCES];
     int m_averageResourceValue;
     float m_turnValueOfAvgArtifact;
 };
@@ -937,7 +937,7 @@ public:
     // price, and TResourceDisplay::Update (0x558f45) prints
     // `[player + 4*id + 0x9c]` for the seven ids in the table at
     // 0x641008..0x641024. Gold is index 6 (0x9c + 4*6 == 0xb4).
-    long m_resources[7];
+    long m_resources[NUM_RESOURCES];
     unsigned long m_mysticalGardenFlags;  // +0xb8
     unsigned long m_magicSpringFlags;  // +0xbc
     unsigned long m_deadGuyFlags;  // +0xc0
@@ -1896,7 +1896,7 @@ extern int g_monthTypeExtra;
 // x over MAP_WIDTH while indexing worldMap by its own Size.
 extern int g_mapWidth;
 extern int g_mapHeight;
-extern int g_mineProduction[7];
+extern int g_mineProduction[NUM_RESOURCES];
 // Six weighted neutral-town dwelling levels, byte-proven as
 // {2,3,4,5,4,3} by game::GiveTroopsToNeutralTown.
 extern double g_productionHandicap[];

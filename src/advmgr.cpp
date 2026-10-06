@@ -110,7 +110,7 @@ DATA(0x0067f574) unsigned char g_colorCyclingEnabled = 1;
 
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00678288) int g_mineCharacteristics[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x00678288) int g_mineCharacteristics[NUM_RESOURCES] = { 2, 1, 2, 1, 1, 1, 1000 };
 DATA(0x006782ac) signed char g_routeArrowFrames[8][8] = {
     { 8, 0, 0, 0, 8, 16, 16, 16 },
     { 17, 9, 1, 1, 1, 9, 17, 17 },
@@ -7279,7 +7279,7 @@ void advManager::townQuickView(int townId, int x, int y,
         }
 
         msg += "\n\n";
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < NUM_RESOURCES; i++) {
             if (i > 0)
                 msg += ", ";
             msg += formatString(
@@ -7289,7 +7289,7 @@ void advManager::townQuickView(int townId, int x, int y,
         msg += "\n\nIncome:\n";
         first = 1;
         g_game->calculateProduction();
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < NUM_RESOURCES; i++) {
             if (enemyPlayer.m_ai.m_turnProductionResource[i] > 0) {
                 if (!first)
                     msg += ", ";
