@@ -625,7 +625,7 @@ armygrp	?canJoin@armyGroup@@QBEHH@Z	100.0000	100.0000	100.0000	0x4ac50	tokens1:f
 armygrp	?dismiss@armyGroup@@QAEXH@Z	100.0000	100.0000	100.0000	0x4ab60	tokens1:fbe86e5e4bf3
 armygrp	?getAIValue@armyGroup@@QBEJXZ	100.0000	100.0000	100.0000	0x4ac80	tokens1:99dfac7f70d6
 armygrp	?getAlignments@armyGroup@@QBEHPAE@Z	100.0000	100.0000	100.0000	0x4abb0	tokens1:5a8f803d95aa
-armygrp	?getAngelicAllianceAlignments@@YIABV?$bitset@$08@std@@XZ	99.7826	99.7826	100.0000	0x4a460	tokens1:33e1905d3910
+armygrp	?getAngelicAllianceAlignments@@YIABV?$bitset@$08@std@@XZ	100.0000	100.0000	100.0000	0x4a460	tokens1:33e1905d3910
 armygrp	?getArmyLuck@armyGroup@@QBEHHPBVhero@@PBVtown@@HE@Z	100.0000	100.0000	100.0000	0x4b3c0	tokens1:68d764b5761e
 armygrp	?getArmyMorale@armyGroup@@QBEHHPBVhero@@PBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x4b100	tokens1:79f591d4004f
 armygrp	?getArmySizeName@armyGroup@@SIPBDHH@Z	100.0000	100.0000	100.0000	0x4ade0	tokens1:15072b37024f
