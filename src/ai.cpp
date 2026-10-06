@@ -748,7 +748,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
             m_nextActionGridIndex = hex;
             if (m_creaturePlacement)
                 moveLeft = pathIndex + 1;
-            if (m_creaturePlacement || isInSecondPhase())
+            if (m_creaturePlacement || m_inSecondPhase)
                 considerWaiting = 0;
             if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->m_combatSide])
                 considerWaiting = 0;
@@ -2040,7 +2040,7 @@ long combatManager::chooseMeleeAction(const army* currentArmy, bool teleport, bo
         return actionValue;
     if (!simulated && chooseSpellAction(currentArmy, &actionValue, &data))
         return actionValue;
-    if (!isInSecondPhase() && (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[side])) {
+    if (!m_inSecondPhase && (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[side])) {
         m_nextAction = 8;
         return 0;
     }

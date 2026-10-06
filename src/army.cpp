@@ -4398,6 +4398,8 @@ void army::turn(bool animateTurn)
 // draw this stack's cell into the buffer, take one full frame with
 // LetsPretendImNotHere raised, and blit the 800x600 result into the
 // manager's backup bitmap. Quick combat skips the lot.
+// DC 0x4b558 and 0x4b624 call Bitmap16Bit's Bitmap16Bit* Draw overload for
+// both backup blits; VC6 expands the header forwarding body here.
 VA(0x00446830, 0x103)
 DC_ADDRESS(0x04b558, 0xca)
 MAC_ADDRESS(0x052aac, 0x15c)
@@ -4416,10 +4418,7 @@ void army::setupAnimation()
     g_combatManager->drawFrame(0, 0, 0, 0, 1, 0);
     m_letsPretendImNotHere = 0;
     g_windowManager->m_screenBitmap->draw(
-        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid->getMap(0, 0), 0, 0,
-        g_combatManager->m_saveScreenPostGrid->getWidth(),
-        g_combatManager->m_saveScreenPostGrid->getHeight(),
-        g_combatManager->m_saveScreenPostGrid->getPitch(), false);
+        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid, 0, 0, false);
     g_combatManager->m_backgroundDrawn = 0;
 }
 
@@ -4457,11 +4456,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             frame.m_minX, frame.m_minY,
             frame.width(),
             frame.height(),
-            g_windowManager->m_screenBitmap->getMap(0, 0),
-            frame.m_minX, frame.m_minY,
-            g_windowManager->m_screenBitmap->getWidth(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getPitch(), false);
+            g_windowManager->m_screenBitmap,
+            frame.m_minX, frame.m_minY, false);
 
         g_combatManager->m_extent = heroWindowManager::s_nullLimits;
         g_combatManager->m_saveBiggestExtent = 1;

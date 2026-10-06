@@ -2700,7 +2700,7 @@ void combatManager::makeCreaturesVanish()
             const army& stack = m_armies[side][index];
             m_cells[stack.m_gridIndex].m_armySide = -1;
             m_cells[stack.m_gridIndex].m_armySlot = -1;
-            if (stack.is(creatureDoubleWide)) {
+            if (stack.m_monInfo.m_attributes & creatureDoubleWide) {
                 m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
                 m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
             }

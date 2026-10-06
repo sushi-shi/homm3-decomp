@@ -198,7 +198,7 @@ void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ou
     if (ourHits == 0 || enemyHits <= 0 || ranged)
         return;
     if (enemy.canRetaliate(currentArmy)
-            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[getGroup()])) {
+            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[m_ourGroup])) {
         simulateSingleAttack(enemy, enemyHits, currentArmy, ourHits, 0, 0);
         if (ourHits == 0 || enemyHits == 0)
             return;
@@ -252,7 +252,7 @@ MAC_ADDRESS(0x03d3fc, 0x1dc)
 long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, const army& enemy) const
 {
     long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
-    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[getGroup()])
+    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[m_ourGroup])
         return value;
     if (enemy.isIncapacitated())
         return value / 10;
