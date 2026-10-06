@@ -1046,13 +1046,13 @@ void army::removeBinding()
 // byte row.
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
-MAC_ADDRESS(0x04abf0, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:134f00e84cc5,100.0000): restore canonical getOwningSide inside the retained markCreatureEffect path (Mac 0x4ac24 own-side load).
+MAC_ADDRESS(0x04abf0, 0x118)  // DC reads the side directly; Mac 0x4ac24's load is the same field read.
 unsigned char army::setInsideAreaEffect(unsigned char arg)
 {
     if (m_isAreaEffectTarget == arg)
         return 0;
     m_isAreaEffectTarget = arg;
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     if (m_isAreaEffectTarget) {
         if (m_stdIcon->isValidSeq(cs_fidget)
             && m_currFrameType != cs_fidget) {
@@ -1143,7 +1143,7 @@ void army::walk(int direction, bool endWalk, bool initialWalk)
 // Nine const-pixel-address/mode-scope combinations preserve that score.
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
-MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): restore canonical getOwningSide before markCreatureEffect instead of a direct owning-side field load.
+MAC_ADDRESS(0x04afa0, 0x68c)
 void army::animateMissile(army* armyToAttack)
 {
     if (g_combatManager->isQuickCombat())
@@ -1152,7 +1152,7 @@ void army::animateMissile(army* armyToAttack)
     int targetX = armyToAttack->midX();
     int targetY = armyToAttack->midY();
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     g_combatManager->computeMaxExtent();
 
     int startX;
@@ -1465,7 +1465,7 @@ void army::rangeAttack()
         rangeAttack(target);
     if (m_creatureType == ARMY_CREATURE_BALLISTA && target->m_numTroops > 0
         && getController()
-        && getController()->getSecondarySkill(eSecSkillBattlefieldBallistics)
+        && getController()->m_skillLevel[eSecSkillBattlefieldBallistics]
                > 1) {
         rangeAttack(target);
     }
@@ -1533,7 +1533,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
         }
         *damageAmount += tempDamage;
         *killed += tempKilled;
-        g_combatManager->markCreatureEffect(target->getOwningSide(),
+        g_combatManager->markCreatureEffect(target->m_combatSide,
                                             target->m_bitIndex);
         target->m_hitByCreature = 1;
         if (!firstTarget || firstTarget->m_creatureType == target->m_creatureType)
@@ -1953,7 +1953,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     checkLuck();
     int damage = 0;
     int killed = 0;
@@ -1965,10 +1965,10 @@ bool army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
+        g_combatManager->markCreatureEffect(armyToAttack->m_combatSide,
                                             armyToAttack->m_bitIndex);
         if (behind)
-            g_combatManager->markCreatureEffect(behind->getOwningSide(),
+            g_combatManager->markCreatureEffect(behind->m_combatSide,
                                                 behind->m_bitIndex);
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
@@ -2050,7 +2050,7 @@ void army::doAttack(int direction)
     if (armyToAttack->needToTurn(counterDirection)) {
         int savedSide = g_combatManager->m_actingSide;
         int savedSlot = g_combatManager->m_actingSlot;
-        g_combatManager->m_actingSide = armyToAttack->getOwningSide();
+        g_combatManager->m_actingSide = armyToAttack->m_combatSide;
         g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
         armyToAttack->setupAnimation();
         armyToAttack->turn(1);
@@ -2084,7 +2084,7 @@ void army::doAttack(int direction)
         if (savedArmyToAttackFacing != armyToAttack->m_facing) {
             int savedSide = g_combatManager->m_actingSide;
             int savedSlot = g_combatManager->m_actingSlot;
-            g_combatManager->m_actingSide = armyToAttack->getOwningSide();
+            g_combatManager->m_actingSide = armyToAttack->m_combatSide;
             g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
             armyToAttack->setupAnimation();
             armyToAttack->turn(1);
@@ -4149,7 +4149,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                              : DATA_COMPGEN(0x00660a78, wallHitSampleName,
                                             "WallHit.82m"));
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     g_combatManager->computeMaxExtent();
     ds_memsample* shootSample =
         g_soundManager->memorySample(m_armySample[SHOOT_SAMPLE]);
@@ -4398,6 +4398,8 @@ void army::turn(bool animateTurn)
 // draw this stack's cell into the buffer, take one full frame with
 // LetsPretendImNotHere raised, and blit the 800x600 result into the
 // manager's backup bitmap. Quick combat skips the lot.
+// DC 0x4b558 and 0x4b624 call Bitmap16Bit's Bitmap16Bit* Draw overload for
+// both backup blits; VC6 expands the header forwarding body here.
 VA(0x00446830, 0x103)
 DC_ADDRESS(0x04b558, 0xca)
 MAC_ADDRESS(0x052aac, 0x15c)
@@ -4416,10 +4418,7 @@ void army::setupAnimation()
     g_combatManager->drawFrame(0, 0, 0, 0, 1, 0);
     m_letsPretendImNotHere = 0;
     g_windowManager->m_screenBitmap->draw(
-        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid->getMap(0, 0), 0, 0,
-        g_combatManager->m_saveScreenPostGrid->getWidth(),
-        g_combatManager->m_saveScreenPostGrid->getHeight(),
-        g_combatManager->m_saveScreenPostGrid->getPitch(), false);
+        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid, 0, 0, false);
     g_combatManager->m_backgroundDrawn = 0;
 }
 
@@ -4457,11 +4456,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             frame.m_minX, frame.m_minY,
             frame.width(),
             frame.height(),
-            g_windowManager->m_screenBitmap->getMap(0, 0),
-            frame.m_minX, frame.m_minY,
-            g_windowManager->m_screenBitmap->getWidth(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getPitch(), false);
+            g_windowManager->m_screenBitmap,
+            frame.m_minX, frame.m_minY, false);
 
         g_combatManager->m_extent = heroWindowManager::s_nullLimits;
         g_combatManager->m_saveBiggestExtent = 1;
@@ -4504,7 +4500,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
 // iNewDestIndex.
 VA(0x00446c40, 0x1E1)
 DC_ADDRESS(0x04b8c4, 0x1c4)
-MAC_ADDRESS(0x053028, 0x374)  // MAC_ABSTRACTION_FROM(tokens1:0f367c3b8d54,23.0851): restore canonical getOwningSide in both occupied-cell ownership comparisons (Mac 0x5310c/0x5322c).
+MAC_ADDRESS(0x053028, 0x374)  // DC and Mac 0x5310c/0x5322c load the owning side directly.
 int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 {
     if (newDestIndex)
@@ -4519,7 +4515,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
     if (cell->hasArmy()) {
-        if (cell->m_armySide != getOwningSide())
+        if (cell->m_armySide != m_combatSide)
             return 0;
         if (cell->m_armySlot != m_bitIndex)
             return 0;
@@ -4536,7 +4532,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     hexcell* otherCell = &g_combatManager->m_cells[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
         if (!otherCell->hasArmy()
-                || (otherCell->m_armySide == getOwningSide()
+                || (otherCell->m_armySide == m_combatSide
                     && otherCell->m_armySlot == m_bitIndex))
             return 1;
     }
