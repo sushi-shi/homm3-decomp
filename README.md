@@ -11,19 +11,19 @@ and the pinned CodeWarrior tools.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 98.48% matched (MAX)** — 4,458 / 4,785 functions exact (93.2%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 98.51% matched (MAX)** — 4,463 / 4,785 functions exact (93.3%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,436 |   98.41% | each unit's last measured checkpoint           |
-| MAX   |           4,458 |   98.48% | best result for each function's current source |
-| HIST  |           4,509 |   98.85% | all-time peak across source revisions          |
+| CUR   |           4,432 |   98.44% | this build                                     |
+| MAX   |           4,463 |   98.51% | best result for each function's current source |
+| HIST  |           4,510 |   98.86% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   123 | 3758 / 3997 (94.0%) |    98.77% |
+| `game`       |   123 | 3763 / 3997 (94.1%) |    98.79% |
 | `rmg`        |     3 |   307 / 369 (83.2%) |    95.08% |
 | `network`    |     4 |   275 / 281 (97.9%) |    99.40% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
