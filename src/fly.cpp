@@ -58,7 +58,7 @@ DC_ADDRESS(0x0a1360, 0x88)
 MAC_ADDRESS(0x0c7f1c, 0xcc)
 bool army::findFlyerAttackCell(int start, int target) const
 {
-    for (long dir = 0; dir < 6; dir++) {
+    for (long dir = 0; dir < COMBAT_DIRECTION_COUNT; dir++) {
         long adjacent = g_combatManager->m_adjacentCells[target][dir];
         long hex = adjacent - start + m_gridIndex;
         if (adjacent >= 0 && combatManager::validHex(hex)

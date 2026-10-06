@@ -379,7 +379,7 @@ enum EMapDirection {
     MAP_DIRECTION_COUNT = 8
 };
 
-extern tilePoint g_normalDirTable[8];
+extern tilePoint g_normalDirTable[MAP_DIRECTION_COUNT];
 
 // 0x56a360, search.obj's canonical predicate. Declared here because
 // TestPossibleDirections calls it as a free fastcall (const hero* in ECX,

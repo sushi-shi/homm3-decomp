@@ -523,7 +523,7 @@ DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[TOWN_TYP
         { 576, 28, 255, 0, { 0, "SgElTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
     }
 };
-DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8] = {
+DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[WALL_TARGET_COUNT] = {
     { 255, -1, 586, 48, TWallSection(5) },
     { 29, 1, 564, 128, TWallSection(6) },
     { 62, 4, 520, 212, TWallSection(8) },
@@ -1983,7 +1983,7 @@ DC_ADDRESS(0x05fcec, 0x24)
 MAC_ADDRESS(0x071778, 0xac)
 TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
 {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < WALL_TARGET_COUNT; i++) {
         if (combatManager::s_wallTargets[i].m_targetHex == gridIndex)
             return TWallTargetId(i);
     }
@@ -2820,7 +2820,7 @@ MAC_ADDRESS(0x07367c, 0xfc)
 bool combatManager::isAdjacent(int first, int second) const
 {
     if (validHex(first) && validHex(second)) {
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
             if (m_adjacentCells[first][i] == second)
                 return 1;
         }
@@ -3692,7 +3692,7 @@ MAC_ADDRESS(0x075c3c, 0x9c)
 bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                      const army* excluded) const
 {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
         int hex = m_adjacentCells[gridIndex][i];
         if (hex >= 0) {
             army* a = m_cells[hex].getArmy();

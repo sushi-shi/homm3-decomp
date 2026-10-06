@@ -524,7 +524,7 @@ public:
             return -1;
         }
     };
-    static const TWallTarget s_wallTargets[8];
+    static const TWallTarget s_wallTargets[WALL_TARGET_COUNT];
     // One of the three defending-town archer positions. InitializeArchers
     // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
     // members in this order; DamageWall later uses armySlot from each row

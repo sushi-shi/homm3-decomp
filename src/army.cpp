@@ -38,8 +38,8 @@
 #include "winmgr.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00660878) long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
-DATA(0x00660898) long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
+DATA(0x00660878) long g_wideDirectionRingIndex[COMBAT_DIRECTION_WIDE_LOWER + 1] = { 0, 1, 2, 4, 5, 6, 7, 3 };
+DATA(0x00660898) long g_wideDirectionRingOrder[COMBAT_DIRECTION_WIDE_LOWER + 1] = { 0, 1, 2, 7, 3, 4, 5, 6 };
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00660868) int g_walkingFrom = -1;
@@ -197,7 +197,7 @@ DC_ADDRESS(0x0438e8, 0xc8)
 MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity
 void army::initClean()
 {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < MAX_SAMPLES; i++) {
         m_armySample[i] = 0;
     }
     m_roundsLeftBeforeVanish = -1;
@@ -409,7 +409,7 @@ void army::loadResources()
         m_armySample[POST_WALK_SAMPLE] = 0;
     }
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < MAX_SAMPLES; i++) {
         if (m_armySample[i]) {
             m_armySample[i]->memSample.memVolume = 64;
             m_armySample[i]->memSample.memCindex = 3;
@@ -1517,7 +1517,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
     int tempDamage;
     int tempKilled;
     unsigned char mixedTypes = 0;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < COMBAT_DIRECTION_WIDE_LOWER + 1; i++) {
         if (attackMask & (1 << i))
             continue;
         long hex = getAdjacentHex(i);
@@ -3754,7 +3754,7 @@ long army::getAttackDirection(long ourHex, const army* enemy,
     long secondHex = enemyHex;
     if (enemy->is(creatureDoubleWide))
         secondHex = enemyHex + enemy->offsetToFront(-1);
-    for (long direction = 0; direction < 8; direction++) {
+    for (long direction = 0; direction < COMBAT_DIRECTION_WIDE_LOWER + 1; direction++) {
         if (direction < COMBAT_DIRECTION_COUNT || is(creatureDoubleWide)) {
             long hex = getAdjacentHex(ourHex, direction);
             if (hex == enemyHex || hex == secondHex)
@@ -3785,7 +3785,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
             }
         }
         direction++;
-        if (direction >= 8)
+        if (direction >= COMBAT_DIRECTION_WIDE_LOWER + 1)
             return best;
     }
 }

@@ -16,7 +16,7 @@
 #include "path.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x00678150) tilePoint g_normalDirTable[8] = {
+DATA(0x00678150) tilePoint g_normalDirTable[MAP_DIRECTION_COUNT] = {
     { 0, -1, 16 },
     { 1, -1, 16 },
     { 1, 0, 16 },
@@ -545,7 +545,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 
     pathCell dest;
 
-    for (long direction = 0; direction < 8; direction++) {
+    for (long direction = 0; direction < MAP_DIRECTION_COUNT; direction++) {
         dest = source;
         dest.m_point.m_x = source.m_point.m_x + g_normalDirTable[direction].m_x;
         dest.m_point.m_y = source.m_point.m_y + g_normalDirTable[direction].m_y;
@@ -844,7 +844,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 DC_ADDRESS(0x0a02c8, 0xc6)
 unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
 {
-    for (long i = 0; i < 6; i++) {
+    for (long i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
         int adjacent = g_combatManager->m_adjacentCells[hex][i];
         if (combatManager::validHex(adjacent)
             && g_combatManager->m_cells[adjacent].m_validMove
@@ -1227,7 +1227,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
         long hex = pc.m_point.m_x;
         long adjacent;
         long direction;
-        for (direction = 0; direction < 6; direction++) {
+        for (direction = 0; direction < COMBAT_DIRECTION_COUNT; direction++) {
             adjacent = currentArmy->getAdjacentCellIndex(hex, direction);
             if (!combatManager::validHex(adjacent))
                 continue;
