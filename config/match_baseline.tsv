@@ -996,8 +996,8 @@ cmbtmgr	?setupAdjacencyArray@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x
 cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66290	tokens1:641af617a5a9
 cmbtmgr	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHH_N@Z	100.0000	100.0000	100.0000	0x639f0	tokens1:c2c8ff62279d
 cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	94.6967	94.6967	100.0000	0x67db0	tokens1:b084d4e737aa
-cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	91.3063	91.3063	100.0000	0x67a00	tokens1:d5eda0f5326b
-cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	96.7043	96.7043	100.0000	0x68220	tokens1:6cf8147732d7
+cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	94.1906	94.1906	100.0000	0x67a00	tokens1:d5eda0f5326b
+cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	99.2308	99.2308	100.0000	0x68220	tokens1:6cf8147732d7
 cmbtmgr	?shotIsNotOptimal@combatManager@@QBE_NPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	tokens1:4a49fc1bb2cd
 cmbtmgr	?shotIsThroughWall@combatManager@@QBEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	tokens1:2b74d27c31da
 cmbtmgr	?shouldLowerDoor@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130	tokens1:d95fa6363bb4
@@ -1657,7 +1657,7 @@ events	?combatMonsterEvent@advManager@@QAEHPAVhero@@W4TCreatureType@@PAHPAVNewma
 events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PADUtype_point@@E@Z	98.3339	98.3339	98.3339	0xabdc0	tokens1:4bff0020a34a
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9970	99.9970	99.9970	0xa84f0	tokens1:1baf4185da03
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:d02ea83f02f7
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12H_N4@Z	95.5293	95.5293	99.1139	0xad470	tokens1:57dd6c2d8b2d
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12H_N4@Z	95.3608	95.5293	99.1139	0xad470	tokens1:57dd6c2d8b2d
 events	?doCustomArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9f070	tokens1:de3f2a15298a
 events	?doCustomResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	tokens1:f98c216d9d05
 events	?doCustomSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5a80	tokens1:cf0c985e9529
@@ -1751,7 +1751,7 @@ events	?monstersJoin@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z
 events	?monstersSellOut@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	tokens1:56c6811ef08b
 events	?payForArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@PBDFF_N@Z	100.0000	100.0000	100.0000	0x9ed50	tokens1:8d14cb5c61a5
 events	?read@CCombatInitMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xad1f0	tokens1:b8c6d0c86fea
-events	?receiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHAAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	100.0000	100.0000	100.0000	0xaeee0	tokens1:79e9d94b9279
+events	?receiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHAAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	99.9825	100.0000	100.0000	0xaeee0	tokens1:79e9d94b9279
 events	?sendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	100.0000	100.0000	100.0000	0xaeb50	tokens1:c330bbbf2402
 events	?showRewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	tokens1:1a1a0b4507af
 events	?size@?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf330	-

@@ -361,16 +361,16 @@ public:
     // Mac's contiguous drawing bodies leave no retained coordinate facade.
     // Visibility here is a platform inference, not a recovered inline word.
     DC_ADDRESS(0x084248, 0x60)
-    // Lead (2026-10-07): the forwarding body costs the missile animators'
-    // later Draw expansions their getMap budget. A Windows stub returning
-    // false gives shootBallisticMissile 91.31 -> 94.19 and shootMissile
-    // 96.70 -> 99.23 (removing the calls: 91.72/99.23); neither Mac nor
-    // retail retains a body that decides between delegation and stub.
-    bool scrollTo(int x, int y, int width, int height, bool draw,
-                  bool doscrollX, bool doscrollY)
+    // DECISION PENDING (2026-10-07): Windows has a fixed viewport, and the
+    // SLimitData overload below is already a `return false` stub. This
+    // coordinate facade is written as the same stub rather than DC's
+    // forwarding body: the forwarding costs the missile animators' later
+    // Draw expansions their getMap budget (shootBallisticMissile 91.31 ->
+    // 94.19, shootMissile 96.70 -> 99.23). Neither Mac nor retail retains a
+    // body that decides between delegation and stub.
+    bool scrollTo(int, int, int, int, bool, bool, bool)
     {
-        return scrollTo(SLimitData(x, y, x + width, y + height),
-                        draw, doscrollX, doscrollY);
+        return false;
     }
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.

@@ -11,12 +11,12 @@ and the pinned CodeWarrior tools.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 98.58% matched (MAX)** — 4,471 / 4,785 functions exact (93.4%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 98.59% matched (MAX)** — 4,471 / 4,785 functions exact (93.4%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,459 |   98.53% | last measured score                            |
-| MAX   |           4,471 |   98.58% | best result for each function's current source |
+| CUR   |           4,458 |   98.54% | last measured score                            |
+| MAX   |           4,471 |   98.59% | best result for each function's current source |
 | HIST  |           4,516 |   98.90% | all-time peak across source revisions          |
 
 MAX by module:
