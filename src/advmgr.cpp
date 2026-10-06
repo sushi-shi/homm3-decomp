@@ -3345,7 +3345,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                 separator, separator);
         break;
     default: {
-        if (cell->m_type >= NOTHING && cell->m_type < 232)
+        if (cell->m_type >= NOTHING && cell->m_type < ADVENTURE_OBJECT_TRAIT_COUNT)
             strcpy(g_text, g_quickViewText[cell->m_type]);
         else
             strcpy(g_text, DATA_COMPGEN(

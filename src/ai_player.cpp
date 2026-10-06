@@ -218,12 +218,12 @@ public:
 };
 static type_AI_initializer g_aiInitializer;
 
-// Retail startup0x428070 clears 232 one-byte flags and232 long values.
+// Retail startup0x428070 clears 232 one-byte flags and 232 long values.
 // Original visibility-array spelling: AI_event_visibility_values.
 DATA(0x00693718)
-unsigned char g_oneUseEvents[232];
+unsigned char g_oneUseEvents[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x006925ac)
-long g_aiEventVisibilityValues[232];
+long g_aiEventVisibilityValues[ADVENTURE_OBJECT_TRAIT_COUNT];
 
 // Retail and Dreamcast both make this an 8-byte strategy object: a
 // three-slot vptr followed by the current player id. start_turn inlines

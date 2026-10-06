@@ -436,9 +436,9 @@ unsigned char type_key_tent_def::requiresLinkedPlacement() { return 1; }
 // Retail constructor defaults and overrides; 0x546257 compares map counts,
 // while 0x546270 compares per-zone counts. Names are role-derived.
 DATA(0x0069CE4C)
-int g_rmgMapObjectLimits[232];
+int g_rmgMapObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x0069D1F4)
-int g_rmgZoneObjectLimits[232];
+int g_rmgZoneObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x00640718)
 static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] = {
     { 26, 200 },
@@ -3420,7 +3420,7 @@ void t_abstract_random_generator::loadObjectPrototypes()
         if (m_mapVersion < 2 && (type == LITH_TWOWAY || type == LITH_ONEWAY_ENTRANCE || type == LITH_ONEWAY_EXIT)
             && m_objectsTxt.m_objectTypes[index].getExtra() >= 3)
             continue;
-        if (type < 0 || type >= 232)
+        if (type < 0 || type >= ADVENTURE_OBJECT_TRAIT_COUNT)
             continue;
 #if defined(HOMM3_RMG_HOTFIX)
         if (!isUsableRmgPrototype(m_objectsTxt.m_objectTypes[index]))
@@ -3453,7 +3453,7 @@ t_abstract_random_generator::~t_abstract_random_generator()
 {
     for (unsigned int object = 0; object < m_objects.size(); ++object)
         delete m_objects[object];
-    for (int type = 0; type < 232; ++type)
+    for (int type = 0; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (unsigned int prototype = 0; prototype < m_objectPrototypes[type].size(); ++prototype)
             delete m_objectPrototypes[type][prototype];
 }
@@ -4045,9 +4045,9 @@ type_random_map_generator::type_random_map_generator(
             } else if (!akHeroTraits[hero].m_availability.m_availableInOriginal)
                 m_disabledHeroes[hero] = 1;
         }
-        for (int zoneObjectType = 0; zoneObjectType < 232; ++zoneObjectType)
+        for (int zoneObjectType = 0; zoneObjectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++zoneObjectType)
             g_rmgZoneObjectLimits[zoneObjectType] = 32000;
-        for (int mapObjectType = 0; mapObjectType < 232; ++mapObjectType)
+        for (int mapObjectType = 0; mapObjectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++mapObjectType)
             g_rmgMapObjectLimits[mapObjectType] = 32000;
         for (int mapLimit = 30; mapLimit--;)
             g_rmgMapObjectLimits[g_rmgMapObjectLimitOverrides[mapLimit].m_objectType]
@@ -10830,7 +10830,7 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
                 ++item;
             }
     int prototypeCount = 2;
-    for (int type = 0; type < 232; ++type)
+    for (int type = 0; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (unsigned int index = 0; index < m_objectPrototypes[type].size(); ++index) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[type][index];
             if (static_cast<int>(properties->m_refCount) > 0)
@@ -10842,7 +10842,7 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
     }
     writeRmgObjectPrototype(outfile, m_objectPrototypes[71][0]->m_prototype);
     writeRmgObjectPrototype(outfile, m_objectPrototypes[124][0]->m_prototype);
-    for (int objectType = 0; objectType < 232; ++objectType)
+    for (int objectType = 0; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
         for (unsigned int prototype = 0; prototype < m_objectPrototypes[objectType].size(); ++prototype) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][prototype];
             if (static_cast<int>(properties->m_refCount) > 0)
