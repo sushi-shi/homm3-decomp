@@ -8565,13 +8565,13 @@ void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
         thisMonInfo->m_numTroops[slot] = monNum;
         return;
     }
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         if (thisMonInfo->m_armies[i] == monType) {
             thisMonInfo->m_numTroops[i] += monNum;
             return;
         }
     }
-    for (int j = 0; j < 7; j++) {
+    for (int j = 0; j < armyGroup::ARMY_GROUP_SLOT_COUNT; j++) {
         if (thisMonInfo->m_armies[j] < 0) {
             thisMonInfo->m_armies[j] = monType;
             thisMonInfo->m_numTroops[j] = monNum;

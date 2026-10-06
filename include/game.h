@@ -159,8 +159,8 @@ public:
     char m_secondarySkill[kNumSecSkillsPerHero];  // +0x28 - movsx, so plain char
     char m_secondarySkillLevel[kNumSecSkillsPerHero];  // +0x30
     unsigned char m_customArmies;  // +0x38
-    int m_armies[7];  // +0x3c
-    short m_numTroops[7];  // +0x58 - movsx word
+    int m_armies[armyGroup::ARMY_GROUP_SLOT_COUNT];  // +0x3c
+    short m_numTroops[armyGroup::ARMY_GROUP_SLOT_COUNT];  // +0x58 - movsx word
     unsigned char m_groupFormation;  // +0x66 - no retail body reads it
     unsigned char m_customArtifacts;  // +0x67
     type_artifact m_artifacts[19];

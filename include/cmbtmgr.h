@@ -1970,10 +1970,10 @@ extern int g_combatSeed;
 // chosen turns on the defending hero's formation byte, so the pair is the
 // game's tight/loose deployment split - but no roster row or string
 // reaches any of the four, so the names carry their addresses.
-extern const int g_combatDeployHexes[2][7];
-extern const int g_combatDeploySurroundedHexes[2][7];
-extern const int g_combatDeploySpreadSlots[7][7];
-extern const int g_combatDeployGroupedSlots[7][7];
+extern const int g_combatDeployHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT];
+extern const int g_combatDeploySurroundedHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT];
+extern const int g_combatDeploySpreadSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT];
+extern const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT];
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot

@@ -63,15 +63,15 @@ DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62,
 // is descriptive, not recovered.
 DATA(0x0063bd0c) extern const unsigned char g_firstColumnHexes[11] = { 1, 18, 35, 52, 69, 86, 103, 120, 137, 154, 171 };
 DATA(0x0063d368) const int g_boatBlockedHexes[32] = { 6, 7, 8, 9, 24, 25, 26, 58, 59, 60, 75, 76, 77, 92, 93, 94, 109, 110, 111, 126, 127, 128, 159, 160, 161, 162, 163, 176, 177, 178, 179, 180 };
-DATA(0x0063d0a8) const int g_combatDeployHexes[2][7] = {
+DATA(0x0063d0a8) const int g_combatDeployHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 1, 35, 69, 86, 103, 137, 171 },
     { 15, 49, 83, 100, 117, 151, 185 }
 };
-DATA(0x0063d0e0) const int g_combatDeploySurroundedHexes[2][7] = {
+DATA(0x0063d0e0) const int g_combatDeploySurroundedHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 57, 61, 90, 93, 96, 125, 129 },
     { 15, 185, 172, 2, 100, 87, 8 }
 };
-DATA(0x0063d118) const int g_combatDeploySpreadSlots[7][7] = {
+DATA(0x0063d118) const int g_combatDeploySpreadSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 3, 0, 0, 0, 0, 0, 0 },
     { 1, 5, 0, 0, 0, 0, 0 },
     { 1, 3, 5, 0, 0, 0, 0 },
@@ -80,7 +80,7 @@ DATA(0x0063d118) const int g_combatDeploySpreadSlots[7][7] = {
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
+DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 3, 0, 0, 0, 0, 0, 0 },
     { 2, 4, 0, 0, 0, 0, 0 },
     { 2, 3, 4, 0, 0, 0, 0 },

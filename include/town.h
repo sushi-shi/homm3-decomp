@@ -581,7 +581,7 @@ enum ETownConstants {
     // (initialize_hordes steps its creature base by 14 per town) and
     // the extent of town::generatorBonus (change_generator_bonus scans
     // 0..13 and stops at 14).
-    TOWN_DWELLING_SLOTS = 14
+    TOWN_DWELLING_SLOTS = 2 * TOWN_DWELLING_COUNT
 };
 
 // The h3m editor's 41-slot building column order, one row per town

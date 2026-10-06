@@ -2788,7 +2788,7 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     ratio /= currentHero->getCombatValueModifier();
 
     int k;
-    for (k = 0; k < 7; ++k) {
+    for (k = 0; k < armyGroup::ARMY_GROUP_SLOT_COUNT; ++k) {
         TCreatureType type = enemy.m_armyTypes[k];
         if (type == CREATURE_NONE)
             continue;
@@ -2804,7 +2804,7 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     }
 
     int slot;
-    for (slot = 0; slot < 7; ++slot) {
+    for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         TCreatureType type = currentArmy.m_armyTypes[slot];
         if (type != CREATURE_NONE
             && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
@@ -2822,7 +2822,7 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     long heroShooterValue = 0;
     long walkerCount = 0;
     int m;
-    for (m = 0; m < 7; ++m) {
+    for (m = 0; m < armyGroup::ARMY_GROUP_SLOT_COUNT; ++m) {
         TCreatureType type = currentArmy.m_armyTypes[m];
         if (type == CREATURE_NONE)
             continue;
@@ -2845,7 +2845,7 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     }
     if (splitsNeeded < openSlots)
         openSlots = splitsNeeded;
-    for (slot = 0; slot < 7; ++slot) {
+    for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         TCreatureType type = currentArmy.m_armyTypes[slot];
         if (type == CREATURE_NONE)
             continue;
@@ -4994,7 +4994,7 @@ MAC_ADDRESS(0x038120, 0x70)
 long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         int type = owner->m_army.m_armies[i];
         if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureShootingArmy))
             total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
@@ -5091,7 +5091,7 @@ MAC_ADDRESS(0x0385e4, 0x58)
 long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
 {
     long total = 0;
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         int type = owner->m_army.m_armies[i];
         if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureAlive))
             total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];

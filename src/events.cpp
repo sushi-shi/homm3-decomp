@@ -952,7 +952,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                 std::string msg;
                 armyGroup guardList;
                 guardList.initialize();
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
                     if (treasure->m_guardians.m_armies[i] != CREATURE_NONE)
                         guardList.add(treasure->m_guardians.m_armies[i],
                                        treasure->m_guardians.m_numTroops[i], -1);
@@ -1351,7 +1351,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     // into the same procedure-local long amount at sp+0x24 used for mana;
     // 1069/1078/1081/1086 read that carrier. Reusing it here preserves the
     // native model and improves the full Windows caller 95.28% -> 95.62%.
-    for (int p = 0; p < 7; p++) {
+    for (int p = 0; p < armyGroup::ARMY_GROUP_SLOT_COUNT; p++) {
         // Read the native creature enum view and pass it directly to the
         // typed AI boundary; legacy Add/GetArmyName accept its int value.
         TCreatureType type = newCreatures.m_armyTypes[p];
@@ -1703,7 +1703,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
             if (humanPlayer) {
                 std::string prompt;
                 int i;
-                for (i = 0; i < 7; i++) {
+                for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
                     if (currentGenerator.m_guards.m_armies[i] != CREATURE_NONE)
                         break;
                 }
@@ -3856,7 +3856,7 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
             like = g_game->downgradedCreatureType(creature);
     }
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         if (currentHero->m_army.m_numTroops[i] > 0) {
             armyCount += currentHero->m_army.m_numTroops[i];
             int type = currentHero->m_army.m_armies[i];
@@ -5429,7 +5429,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     long creatureCount = bank.m_guards.getCreatureTotal();
     if (humanPlayer) {
         int best = 0;
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             int type = bank.m_guards.m_armies[i];
             if (type != CREATURE_NONE
                 && g_creatureTypeTraits[type].m_aiValue > best) {
@@ -5584,7 +5584,7 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
                                    int numMons3, int numGroups3)
 {
     DATA(0x006776e0) static double threshold[6] = { 3.0, 2.0, 1.5, 1.0, 0.67, 0.5 };
-    DATA(0x0063df94) static const int reorderMap[7][7][7] = {
+    DATA(0x0063df94) static const int reorderMap[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
         {
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
@@ -5681,7 +5681,7 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     int chance = random(1, 100);
     if (chance <= 20)
         --numGroups;
-    if (chance >= 80 && numGroups < 7)
+    if (chance >= 80 && numGroups < armyGroup::ARMY_GROUP_SLOT_COUNT)
         ++numGroups;
 
     if (monType2 != CREATURE_NONE)
@@ -5733,14 +5733,14 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     }
 
     if (monType2 != CREATURE_NONE || monType3 != CREATURE_NONE) {
-        int tempNumTroops[7];
-        TCreatureType tempArmies[7];
+        int tempNumTroops[armyGroup::ARMY_GROUP_SLOT_COUNT];
+        TCreatureType tempArmies[armyGroup::ARMY_GROUP_SLOT_COUNT];
         // DC names both arrays; Mac copies their slots without memcpy calls.
-        for (int slot = 0; slot < 7; ++slot) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             tempNumTroops[slot] = armyGroupForCombat.m_numTroops[slot];
             tempArmies[slot] = armyGroupForCombat.m_armyTypes[slot];
         }
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             armyGroupForCombat.m_armyTypes[i] =
                 tempArmies[reorderMap[numGroups][numGroups3][i]];
             armyGroupForCombat.m_numTroops[i] =
