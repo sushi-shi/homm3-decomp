@@ -6,7 +6,7 @@ use homm3_rmg::{
 };
 use std::fmt::Write;
 
-pub fn write_terrain_and_distances(actual: &mut String, map: &PlacementMap<'_, '_, '_>) {
+pub fn write_terrain_and_distances(actual: &mut String, map: &PlacementMap<'_>) {
     let side = map.coverage().map().raster().dimension();
     for (index, tile) in map.terrain().tiles().iter().enumerate() {
         let at = WorldPosition {

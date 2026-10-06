@@ -150,6 +150,49 @@ it as allocation contents. `createTreasureObject` still reads it through
 prototype filter. Whether a water prototype makes that read affect output was
 not traced.
 
+## Shared cause: reused helpers with unstated preconditions
+
+The three findings above are one defect shape. An operation relies on state
+that its caller was expected to establish, but nothing at the boundary states
+or enforces that requirement: no parameter carries it and no constructor
+initializes it. A new caller that does not know the requirement silently
+supplies memory residue, and the operation's side effects follow that residue.
+
+- **Zone constructor.** `TRmgZone::TRmgZone` (`0x5329e0`) assumes its
+  `TRmgTemplateZone` has all nine `m_allowedTowns` flags set deliberately, and
+  draws one `rand()` at `0x532a5b` when any is nonzero. Template zones meet
+  that assumption. `buildZoneBoundaries` (`0x53e050`) reuses the constructor
+  for two slots it builds itself and leaves the flags unwritten: the
+  [appended water zone](#added-water-zone-town-flags-uninitialized-heap-bytes)
+  with leftover heap bytes, and the
+  [stack `testSlot` probe](#temporary-boundary-slot-uninitialized-stack-town-flags)
+  with leftover stack bytes. Whether the RNG advances depends on that residue.
+- **Key-tent cursor.** The key-tent subtype selection at `0x540d6d` and the
+  tent valuation assume the generator has set `m_nextKeyTentColor`. Retail's
+  constructor never does, so the
+  [first read](#initial-key-tent-color-uninitialized-stack-integer) sees the
+  stack residue of `generateToFile`'s frame.
+
+The Rust port avoids the pattern by making each effect explicit at its call
+site instead of inheriting it from a shared helper:
+
+- `BoundaryWorkspace::add_radial_sites` (`tools/homm3-rmg/src/boundaries.rs`)
+  constructs no probe zone. It calls `rng.draw()` directly in retail mode,
+  citing retail `0x53e149` and `0x5329e0`, and draws nothing in hotfix mode.
+- In retail mode, each appended water zone's alignment comes from
+  `select_water_town`, which receives an explicit `TownMask` from
+  `RetailProfile` and draws only for a nonempty mask. Hotfix mode skips the
+  selection and draws nothing.
+- `KeyTentCursor` is set once in `prepare_catalog`: light blue in hotfix mode,
+  or the profile's `initial_key_tent_color` in retail mode. Without a recorded
+  value it stays `ReplayRequired`, and a read returns
+  `PlacementError::KeyTentReplayRequired` instead of guessing.
+
+The [architecture reference](../reconstruction/rust-rmg.md#compatibility-and-limits)
+lists these `RetailProfile` inputs. Rust never reads uninitialized storage.
+When reusing a native helper elsewhere, check which caller-established state
+it reads before treating it as self-contained.
+
 ## River drawing: unchecked out-of-range coordinates
 
 After its path-search queue becomes empty, `createRiverToOutlet` tests the last inspected

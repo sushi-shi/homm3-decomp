@@ -1,7 +1,7 @@
 //! River targets, randomized cardinal searches and ordered delta placement.
 use super::{
     lines::Layer, offset_position, registration::entrance_position, Direction, Movement,
-    ObjectArena, PlacementError, PlacementMap, RiverType,
+    ObjectArena, PlacementError, PlacementMap, RiverType, RoadsCreated, TreasureGeneration,
 };
 use crate::{
     domain::{Level, Terrain, WorldPosition},
@@ -29,7 +29,34 @@ fn opposite_bit(direction: Direction) -> u8 {
     1 << (direction.opposite().index() / raw::RMG_CARDINAL_DIRECTION_STEP as usize)
 }
 
-impl PlacementMap<'_, '_, '_> {
+/// Water-wheel rivers and deltas are placed: the final generation stage.
+pub(crate) struct RiversCreated<'map> {
+    roads: RoadsCreated<'map>,
+}
+impl RiversCreated<'_> {
+    /// Completed map and the payload context needed for serialization.
+    pub(crate) const fn generation(&self) -> &TreasureGeneration<'_> {
+        self.roads.generation()
+    }
+}
+impl<'map> RoadsCreated<'map> {
+    /// Route rivers once, after roads have been painted.
+    ///
+    /// # Errors
+    /// Reports native coast overreads, unwritten route predecessors, foreign
+    /// context, invalid geometry, arithmetic or allocation faults.
+    pub(crate) fn create_rivers(
+        mut self,
+        catalog: &PrototypeCatalog<'_>,
+        objects: &mut ObjectArena,
+        rng: &mut RetailRng,
+    ) -> Result<RiversCreated<'map>, PlacementError> {
+        self.map_mut().create_rivers(catalog, objects, rng)?;
+        Ok(RiversCreated { roads: self })
+    }
+}
+
+impl PlacementMap<'_> {
     fn coast_cell(&self, at: WorldPosition, hotfix: bool) -> Result<Option<usize>, PlacementError> {
         let side = self.view().signed_side();
         // Retail admits x == side, aliasing the next row or plane if allocated.
@@ -326,7 +353,7 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports native coast overreads, unwritten route predecessors, foreign
     /// context, invalid geometry, arithmetic or allocation faults.
-    pub fn create_rivers(
+    fn create_rivers(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         objects: &mut ObjectArena,

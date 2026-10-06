@@ -24,7 +24,7 @@ impl CellState {
         self.connection_visited
     }
 }
-impl ConnectingZones<'_, '_, '_> {
+impl ConnectingZones<'_> {
     /// Reset visits on this zone's entire level before its connection pass.
     ///
     /// # Errors
@@ -60,7 +60,7 @@ impl ConnectingZones<'_, '_, '_> {
         Ok(true)
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn clear_connection_visits(&mut self, level: Level) {
         let side = self.view().side();
         let start = level.index() * side * side;

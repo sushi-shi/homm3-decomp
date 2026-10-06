@@ -100,7 +100,7 @@ impl Layer {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn line_neighbour(&self, at: WorldPosition, direction: usize) -> Option<WorldPosition> {
         // Tile classifiers start at N; movement directions start at E.
         let movement = (direction + raw::RMG_DIRECTION_NORTH as usize) % raw::DIRECTIONS.len();

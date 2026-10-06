@@ -11,7 +11,7 @@ use crate::{
     rng::RetailRng,
 };
 
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     #[expect(
         clippy::too_many_lines,
         reason = "ordered footprint, guard and entrance rejection rules share one candidate context"

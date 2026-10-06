@@ -79,22 +79,22 @@ impl PortalPrototype {
 
 /// Both connection passes are complete, including failed native placement attempts.
 /// Unreachable water edges may remain incomplete, as in the native generator.
-pub struct ConnectionsPlaced<'state, 'zones, 'tiles> {
-    direct: DirectConnections<'state, 'zones, 'tiles>,
+pub struct ConnectionsPlaced<'map> {
+    direct: DirectConnections<'map>,
     rng: RngCheckpoint,
 }
-impl<'state, 'zones, 'tiles> ConnectionsPlaced<'state, 'zones, 'tiles> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> ConnectionsPlaced<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.direct.connecting.map_mut()
     }
     /// Current map and all successfully registered connection objects.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.direct.map()
     }
     /// Earlier town records remain available for subsequent object placement.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.direct.towns()
     }
     /// RNG after the remaining-connection pass.
@@ -103,7 +103,7 @@ impl<'state, 'zones, 'tiles> ConnectionsPlaced<'state, 'zones, 'tiles> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> DirectConnections<'state, 'zones, 'tiles> {
+impl<'map> DirectConnections<'map> {
     /// Retry shipyards for remaining edges, then place and protect portal endpoints.
     /// The portal prototype cycle is shared across zones and consumes no RNG.
     ///
@@ -116,7 +116,7 @@ impl<'state, 'zones, 'tiles> DirectConnections<'state, 'zones, 'tiles> {
         catalog: &PrototypeCatalog<'_>,
         creatures: &CreatureCatalog,
         rng: &mut RetailRng,
-    ) -> Result<ConnectionsPlaced<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<ConnectionsPlaced<'map>, ConnectionError> {
         self.connecting
             .map_mut()
             .prepare_object_context(objects, catalog)?;
@@ -184,7 +184,7 @@ impl<'state, 'zones, 'tiles> DirectConnections<'state, 'zones, 'tiles> {
         })
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Borrow portal identities in successful insertion order, retaining duplicates.
     #[must_use]
     pub fn portals(&self, direction: PortalDirection) -> &[ObjectId] {
@@ -366,16 +366,16 @@ fn indexed(
 
 // One connection shares guard suppression across its two protected endpoints.
 // Borrowed immutable catalogs travel with that policy; no extra allocation.
-struct PortalProtection<'catalog, 'source> {
+struct PortalProtection<'map> {
     border_guard: bool,
     guard_value: i32,
-    catalog: &'catalog PrototypeCatalog<'source>,
-    creatures: &'catalog CreatureCatalog,
+    catalog: &'map PrototypeCatalog<'map>,
+    creatures: &'map CreatureCatalog,
 }
-impl PortalProtection<'_, '_> {
+impl PortalProtection<'_> {
     fn protect(
         &mut self,
-        map: &mut PlacementMap<'_, '_, '_>,
+        map: &mut PlacementMap<'_>,
         position: WorldPosition,
         tent_zone: ZoneId,
         objects: &mut ObjectArena,

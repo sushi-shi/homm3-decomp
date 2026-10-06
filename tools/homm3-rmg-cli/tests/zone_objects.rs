@@ -90,7 +90,7 @@ fn native_zone_placement_preserves_candidates_registration_and_rng() {
 }
 
 fn snapshot(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     objects: &mut ObjectArena,
     catalog: &PrototypeCatalog<'_>,
 ) -> String {
@@ -183,7 +183,7 @@ fn snapshot(
 }
 fn write_registered_objects(
     actual: &mut String,
-    map: &PlacementMap<'_, '_, '_>,
+    map: &PlacementMap<'_>,
     objects: &ObjectArena,
     catalog: &PrototypeCatalog<'_>,
 ) {

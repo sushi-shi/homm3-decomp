@@ -45,7 +45,7 @@ impl BorderGuardPlacement {
         }
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Place a key tent in its zone, then guards eastward from the given cell.
     /// Prototype lookup uses the full cursor; only final reservation admits it
     /// as an availability index. No terrain filter or prototype draw is used.
@@ -123,7 +123,7 @@ impl PlacementMap<'_, '_, '_> {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     pub(super) fn mark_empty_border(
         &mut self,
         position: WorldPosition,

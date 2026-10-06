@@ -45,22 +45,22 @@ impl From<GuardPlacementError> for MineError {
 }
 
 /// Fixed and density-driven mine attempts, guards and resource piles are complete.
-pub struct MinesPlaced<'state, 'zones, 'tiles> {
-    junctions: JunctionsPrepared<'state, 'zones, 'tiles>,
+pub struct MinesPlaced<'map> {
+    junctions: JunctionsPrepared<'map>,
     rng: RngCheckpoint,
 }
-impl<'state, 'zones, 'tiles> MinesPlaced<'state, 'zones, 'tiles> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> MinesPlaced<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.junctions.map_mut()
     }
     /// Shared placement state after the mine pass.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.junctions.map()
     }
     /// Town records used by the following faction-count pass.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.junctions.towns()
     }
     /// RNG after the final mine attempt.
@@ -69,7 +69,7 @@ impl<'state, 'zones, 'tiles> MinesPlaced<'state, 'zones, 'tiles> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> JunctionsPrepared<'state, 'zones, 'tiles> {
+impl<'map> JunctionsPrepared<'map> {
     /// Place fixed mine counts followed by density-driven extras in each zone.
     ///
     /// # Errors
@@ -80,7 +80,7 @@ impl<'state, 'zones, 'tiles> JunctionsPrepared<'state, 'zones, 'tiles> {
         catalog: &PrototypeCatalog<'_>,
         creatures: &CreatureCatalog,
         rng: &mut RetailRng,
-    ) -> Result<MinesPlaced<'state, 'zones, 'tiles>, MineError> {
+    ) -> Result<MinesPlaced<'map>, MineError> {
         self.map_mut().prepare_object_context(objects, catalog)?;
         for index in 0..self.map().coverage().map().zones().len() {
             let zone = self.map().coverage().map().zones()[index];
@@ -174,7 +174,7 @@ impl<'c> MinePrototype<'c> {
         })
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     #[expect(
         clippy::too_many_arguments,
         reason = "mine attempt shares admitted catalogs, arena and RNG"

@@ -181,7 +181,7 @@ fn read_creatures(installation: &mut Installation) -> CreatureCatalog {
     CreatureCatalog::parse(&bytes).unwrap()
 }
 
-fn dry_junction_count(map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>) -> usize {
+fn dry_junction_count(map: &homm3_rmg::placement::PlacementMap<'_>) -> usize {
     let map = map.coverage().map();
     map.zones()
         .iter()
@@ -234,7 +234,7 @@ fn read_templates(installation: &mut Installation) -> Vec<u8> {
 }
 fn write_tents(
     actual: &mut String,
-    map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    map: &homm3_rmg::placement::PlacementMap<'_>,
     colors: &[homm3_rmg::placement::KeyTentColor],
 ) {
     actual.push_str("tents");
@@ -249,7 +249,7 @@ fn write_tents(
     actual.push('\n');
 }
 fn tent_colors(
-    map: &mut homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    map: &mut homm3_rmg::placement::PlacementMap<'_>,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
 ) -> Vec<homm3_rmg::placement::KeyTentColor> {
     let family =
@@ -264,7 +264,7 @@ fn tent_colors(
 }
 fn run_attempts(
     actual: &mut String,
-    connecting: &mut ConnectingZones<'_, '_, '_>,
+    connecting: &mut ConnectingZones<'_>,
     objects: &mut ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     creatures: &CreatureCatalog,
@@ -311,7 +311,7 @@ fn run_attempts(
     }
 }
 fn snapshot(
-    mut connecting: ConnectingZones<'_, '_, '_>,
+    mut connecting: ConnectingZones<'_>,
     objects: &mut ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     creatures: &CreatureCatalog,
@@ -386,7 +386,7 @@ fn snapshot(
 }
 
 fn treasure_paths_snapshot(
-    mines: homm3_rmg::placement::MinesPlaced<'_, '_, '_>,
+    mines: homm3_rmg::placement::MinesPlaced<'_>,
     objects: &mut ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     rng: &mut RetailRng,
@@ -457,7 +457,7 @@ fn treasure_paths_snapshot(
 }
 
 fn completed_snapshot(
-    map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    map: &homm3_rmg::placement::PlacementMap<'_>,
     objects: &ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     rng: &RetailRng,
@@ -522,7 +522,7 @@ fn completed_snapshot(
 }
 fn write_snapshot(
     actual: &mut String,
-    map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    map: &homm3_rmg::placement::PlacementMap<'_>,
     objects: &ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     colors: &[homm3_rmg::placement::KeyTentColor],
@@ -602,7 +602,7 @@ fn write_snapshot(
 
 fn write_objects(
     actual: &mut String,
-    map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    map: &homm3_rmg::placement::PlacementMap<'_>,
     objects: &ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
 ) {
@@ -704,7 +704,7 @@ fn with_border_guards(bytes: &[u8]) -> Vec<u8> {
     result
 }
 
-fn write_water_state(actual: &mut String, map: &homm3_rmg::placement::PlacementMap<'_, '_, '_>) {
+fn write_water_state(actual: &mut String, map: &homm3_rmg::placement::PlacementMap<'_>) {
     write!(actual, "roads").unwrap();
     for position in map.road_targets() {
         write!(

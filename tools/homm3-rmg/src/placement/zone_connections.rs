@@ -61,11 +61,11 @@ impl CrossingState {
 /// Connection creation shares one initial border scan and live mutable cells.
 /// Each native edge will try ground, shipyard, then gate in that order; this
 /// token deliberately does not represent a separate whole-map ground pass.
-pub struct ConnectingZones<'state, 'zones, 'tiles> {
-    repaired: RepairedWaterBorders<'state, 'zones, 'tiles>,
+pub struct ConnectingZones<'map> {
+    repaired: RepairedWaterBorders<'map>,
     owner: OwnerId,
 }
-impl<'state, 'zones, 'tiles> RepairedWaterBorders<'state, 'zones, 'tiles> {
+impl<'map> RepairedWaterBorders<'map> {
     /// Freeze potential border coordinates before trying any connection.
     ///
     /// # Errors
@@ -74,7 +74,7 @@ impl<'state, 'zones, 'tiles> RepairedWaterBorders<'state, 'zones, 'tiles> {
         mut self,
         objects: &ObjectArena,
         catalog: &PrototypeCatalog<'_>,
-    ) -> Result<ConnectingZones<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<ConnectingZones<'map>, ConnectionError> {
         let map = self.map_mut();
         map.prepare_object_context(objects, catalog)?;
         map.connections
@@ -88,18 +88,18 @@ impl<'state, 'zones, 'tiles> RepairedWaterBorders<'state, 'zones, 'tiles> {
         })
     }
 }
-impl<'state, 'zones, 'tiles> ConnectingZones<'state, 'zones, 'tiles> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> ConnectingZones<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.repaired.map_mut()
     }
     /// Current shared terrain, cells, objects and directed graph state.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.repaired.map()
     }
     /// Earlier town stage, retaining primary entrances and road targets.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.repaired.towns()
     }
     /// Copied handles can be iterated while mutating this stage, without a
@@ -178,19 +178,19 @@ impl<'state, 'zones, 'tiles> ConnectingZones<'state, 'zones, 'tiles> {
 }
 
 /// First-pass attempts are complete; remaining edges need shipyard retries or portals.
-pub struct DirectConnections<'state, 'zones, 'tiles> {
-    pub(super) connecting: ConnectingZones<'state, 'zones, 'tiles>,
+pub struct DirectConnections<'map> {
+    pub(super) connecting: ConnectingZones<'map>,
     rng: RngCheckpoint,
 }
-impl DirectConnections<'_, '_, '_> {
+impl DirectConnections<'_> {
     /// Shared map state after the complete first connection pass.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.connecting.map()
     }
     /// Town records remain available to subsequent placement stages.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.connecting.towns()
     }
     /// RNG after all first-pass connection attempts.
@@ -199,7 +199,7 @@ impl DirectConnections<'_, '_, '_> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> ConnectingZones<'state, 'zones, 'tiles> {
+impl<'map> ConnectingZones<'map> {
     /// Run the native first pass in zone/adjoining-record order, retaining
     /// water visits between a zone's attempts and clearing its entire level first.
     ///
@@ -211,7 +211,7 @@ impl<'state, 'zones, 'tiles> ConnectingZones<'state, 'zones, 'tiles> {
         catalog: &PrototypeCatalog<'_>,
         creatures: &CreatureCatalog,
         rng: &mut RetailRng,
-    ) -> Result<DirectConnections<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<DirectConnections<'map>, ConnectionError> {
         self.map_mut().prepare_object_context(objects, catalog)?;
         for index in 0..self.map().coverage().map().zones().len() {
             let zone = self.map().coverage().map().zones()[index];
@@ -241,7 +241,7 @@ impl<'state, 'zones, 'tiles> ConnectingZones<'state, 'zones, 'tiles> {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Native entrance sequence, including repeated coordinates, for this zone.
     ///
     /// # Errors

@@ -104,14 +104,14 @@ impl ZoneLayout {
 /// Completed layout with the exact template, request and water choice used to
 /// produce it. Boundary generation consumes this token instead of admitting
 /// unrelated zone slices and preparation arguments.
-pub struct Layout<'workspace, 'context> {
-    zones: &'workspace [ZoneLayout],
-    template: &'context Template<'context>,
-    request: &'context Request,
+pub struct Layout<'a> {
+    zones: &'a [ZoneLayout],
+    template: &'a Template<'a>,
+    request: &'a Request,
     water: Water,
     players: PerSlot<Option<Player>>,
 }
-impl<'context> Layout<'_, 'context> {
+impl<'a> Layout<'a> {
     /// Completed zone positions in source order, borrowing workspace storage.
     #[must_use]
     pub const fn zones(&self) -> &[ZoneLayout] {
@@ -119,12 +119,12 @@ impl<'context> Layout<'_, 'context> {
     }
     /// Selected template from which these zones were produced.
     #[must_use]
-    pub const fn template(&self) -> &'context Template<'context> {
+    pub const fn template(&self) -> &'a Template<'a> {
         self.template
     }
     /// Request supplying map dimensions, planes and behavior.
     #[must_use]
-    pub const fn request(&self) -> &'context Request {
+    pub const fn request(&self) -> &'a Request {
         self.request
     }
     /// Resolved water choice used during layout.
@@ -157,13 +157,13 @@ impl LayoutWorkspace {
         clippy::too_many_lines,
         reason = "the native positioning, relaxation and terrain stages retain their RNG order"
     )]
-    pub fn generate<'workspace, 'context>(
-        &'workspace mut self,
-        selected: &SelectedTemplate<'context>,
-        request: &'context Request,
+    pub fn generate<'a>(
+        &'a mut self,
+        selected: &SelectedTemplate<'a>,
+        request: &'a Request,
         water: Water,
         rng: &mut RetailRng,
-    ) -> Result<Layout<'workspace, 'context>, LayoutError> {
+    ) -> Result<Layout<'a>, LayoutError> {
         let template = selected.template();
         let zones = template.zones();
         self.positioned.clear();

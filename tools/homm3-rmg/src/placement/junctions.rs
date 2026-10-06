@@ -11,22 +11,22 @@ use crate::{
 };
 
 /// Both connection passes and the following dry-junction preparation are complete.
-pub struct JunctionsPrepared<'state, 'zones, 'tiles> {
-    connections: ConnectionsPlaced<'state, 'zones, 'tiles>,
+pub struct JunctionsPrepared<'map> {
+    connections: ConnectionsPlaced<'map>,
     rng: RngCheckpoint,
 }
-impl<'state, 'zones, 'tiles> JunctionsPrepared<'state, 'zones, 'tiles> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> JunctionsPrepared<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.connections.map_mut()
     }
     /// Current placement state, including junction paths and their cost floods.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.connections.map()
     }
     /// Earlier town payloads remain available for subsequent placement.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.connections.towns()
     }
     /// RNG after carving all dry junction routes in zone order.
@@ -35,7 +35,7 @@ impl<'state, 'zones, 'tiles> JunctionsPrepared<'state, 'zones, 'tiles> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> ConnectionsPlaced<'state, 'zones, 'tiles> {
+impl<'map> ConnectionsPlaced<'map> {
     /// Reset and connect dry junction zones in template order.
     /// Consuming this stage prevents repeating the subdivision draws.
     ///
@@ -45,7 +45,7 @@ impl<'state, 'zones, 'tiles> ConnectionsPlaced<'state, 'zones, 'tiles> {
     pub fn prepare_junctions(
         mut self,
         rng: &mut RetailRng,
-    ) -> Result<JunctionsPrepared<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<JunctionsPrepared<'map>, ConnectionError> {
         for index in 0..self.map().coverage().map().zones().len() {
             let zone = self.map().coverage().map().zones()[index];
             let Some(rules) = self.map().coverage().map().template_zone(&zone) else {
@@ -61,7 +61,7 @@ impl<'state, 'zones, 'tiles> ConnectionsPlaced<'state, 'zones, 'tiles> {
         })
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn prepare_junction_zone(
         &mut self,
         zone: BoundaryZone,

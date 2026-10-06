@@ -1,7 +1,7 @@
 //! Roads follow retained predecessor trees, rebuilding when painted costs change.
 use super::{
-    lines::Layer, offset_position, Direction, Movement, ObjectArena, PlacementError, PlacementMap,
-    PortalDirection, RoadType,
+    lines::Layer, offset_position, Direction, Movement, ObjectArena, ObstaclesPlaced,
+    PlacementError, PlacementMap, PortalDirection, RoadType, TreasureGeneration,
 };
 use crate::{
     domain::{Level, Terrain, WorldPosition},
@@ -12,7 +12,36 @@ use crate::{
 };
 use std::num::NonZeroU32;
 
-impl PlacementMap<'_, '_, '_> {
+/// One road type joins the stored town and shipyard targets.
+pub(crate) struct RoadsCreated<'map> {
+    obstacles: ObstaclesPlaced<'map>,
+}
+impl<'map> RoadsCreated<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
+        self.obstacles.map_mut()
+    }
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_> {
+        self.obstacles.generation()
+    }
+}
+impl<'map> ObstaclesPlaced<'map> {
+    /// Draw the road type and build roads once, over the decorated map.
+    ///
+    /// # Errors
+    /// Reports the retail empty-target underflow after its road-type draw,
+    /// missing route predecessors, foreign objects/catalogs or placement faults.
+    pub(crate) fn create_roads(
+        mut self,
+        catalog: &PrototypeCatalog<'_>,
+        objects: &ObjectArena,
+        rng: &mut RetailRng,
+    ) -> Result<RoadsCreated<'map>, PlacementError> {
+        self.map_mut().create_roads(catalog, objects, rng)?;
+        Ok(RoadsCreated { obstacles: self })
+    }
+}
+
+impl PlacementMap<'_> {
     pub(super) fn reset_movement(&mut self) {
         for cell in self.cells.iter_mut() {
             cell.movement = Movement::Unreached;
@@ -217,11 +246,9 @@ impl PlacementMap<'_, '_, '_> {
     /// # Errors
     /// Reports the retail empty-target underflow after its road-type draw,
     /// missing route predecessors, foreign objects/catalogs or placement faults.
-    #[expect(
-        clippy::missing_panics_doc,
-        reason = "source-derived road domain and selected catalog entries are bounded before lookup"
-    )]
-    pub fn create_roads(
+    // Cannot panic: the source-derived road domain and selected catalog
+    // entries are bounded before lookup.
+    fn create_roads(
         &mut self,
         catalog: &PrototypeCatalog<'_>,
         objects: &ObjectArena,

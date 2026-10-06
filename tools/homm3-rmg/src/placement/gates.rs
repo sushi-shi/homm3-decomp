@@ -28,7 +28,7 @@ use crate::{
 };
 use std::num::NonZeroU32;
 
-impl ConnectingZones<'_, '_, '_> {
+impl ConnectingZones<'_> {
     /// Attempt paired gates, completing this record and its first reverse on success.
     /// The dispatcher skips water destinations; the native helper only checks source.
     ///
@@ -54,7 +54,7 @@ impl ConnectingZones<'_, '_, '_> {
         Ok(true)
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn create_gate_connection(
         &mut self,
         connection: ZoneConnection,

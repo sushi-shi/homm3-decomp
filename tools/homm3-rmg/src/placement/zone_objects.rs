@@ -20,7 +20,7 @@ impl ZonePlacementScratch {
         self.candidates.clear();
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Register an existing object at a random fitting anchor in this zone.
     /// Candidates retain native row order, including the singleton RNG draw.
     /// No fitting site leaves the object unchanged; a new object may be discarded.

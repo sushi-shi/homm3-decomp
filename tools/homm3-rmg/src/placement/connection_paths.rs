@@ -69,19 +69,19 @@ fn resolve_seed(
 }
 
 /// First connection cost maps and their widened routes are ready.
-pub struct ConnectionPaths<'state, 'zones, 'tiles> {
-    islands: WaterIslands<'state, 'zones, 'tiles>,
+pub struct ConnectionPaths<'map> {
+    islands: WaterIslands<'map>,
     rng: RngCheckpoint,
 }
-impl ConnectionPaths<'_, '_, '_> {
+impl ConnectionPaths<'_> {
     /// Placement state and movement/predecessor maps.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.islands.map()
     }
     /// Town payloads and retained earlier checkpoint.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.islands.towns()
     }
     /// RNG after opening all initial zone routes.
@@ -91,22 +91,22 @@ impl ConnectionPaths<'_, '_, '_> {
     }
 }
 /// Initial routes and repaired water borders are ready for zone crossings.
-pub struct RepairedWaterBorders<'state, 'zones, 'tiles> {
-    paths: ConnectionPaths<'state, 'zones, 'tiles>,
+pub struct RepairedWaterBorders<'map> {
+    paths: ConnectionPaths<'map>,
     rng: RngCheckpoint,
 }
-impl<'state, 'zones, 'tiles> RepairedWaterBorders<'state, 'zones, 'tiles> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> RepairedWaterBorders<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         &mut self.paths.islands.borders.towns.map
     }
     /// Placement and terrain after deferred border painting.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.paths.map()
     }
     /// Retained town payloads and road targets.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.paths.towns()
     }
     /// RNG after the last border brush finishes.
@@ -115,7 +115,7 @@ impl<'state, 'zones, 'tiles> RepairedWaterBorders<'state, 'zones, 'tiles> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> WaterIslands<'state, 'zones, 'tiles> {
+impl<'map> WaterIslands<'map> {
     /// Build initial connection costs and open routes within each zone.
     ///
     /// # Errors
@@ -125,7 +125,7 @@ impl<'state, 'zones, 'tiles> WaterIslands<'state, 'zones, 'tiles> {
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
         rng: &mut RetailRng,
-    ) -> Result<ConnectionPaths<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<ConnectionPaths<'map>, ConnectionError> {
         self.borders
             .towns
             .map
@@ -136,7 +136,7 @@ impl<'state, 'zones, 'tiles> WaterIslands<'state, 'zones, 'tiles> {
         })
     }
 }
-impl<'state, 'zones, 'tiles> ConnectionPaths<'state, 'zones, 'tiles> {
+impl<'map> ConnectionPaths<'map> {
     /// Repair water borders without a directed zone connection, in plane order.
     ///
     /// # Errors
@@ -144,7 +144,7 @@ impl<'state, 'zones, 'tiles> ConnectionPaths<'state, 'zones, 'tiles> {
     pub fn repair_water_borders(
         mut self,
         rng: &mut RetailRng,
-    ) -> Result<RepairedWaterBorders<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<RepairedWaterBorders<'map>, ConnectionError> {
         self.islands
             .borders
             .towns
@@ -156,7 +156,7 @@ impl<'state, 'zones, 'tiles> ConnectionPaths<'state, 'zones, 'tiles> {
         })
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     pub(super) fn build_zone_connection_paths(
         &mut self,
         objects: &mut ObjectArena,

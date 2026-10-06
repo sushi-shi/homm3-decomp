@@ -5,7 +5,7 @@ use super::{
 };
 use crate::rng::RetailRng;
 
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     /// Remove a registered object and offer a replacement worth 1–1.5 times its
     /// value at the retained anchor. The removed record stays alive so its owning
     /// completion callback can apply the mode-specific lifetime policy.

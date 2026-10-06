@@ -41,12 +41,12 @@ impl From<TryReserveError> for TerrainError {
 }
 
 /// Completed terrain stage, borrowing both zone state and tile storage.
-pub struct PaintedTerrain<'zones, 'tiles> {
-    coverage: TerrainCoverage<'zones>,
-    workspace: &'tiles mut TerrainWorkspace,
+pub struct PaintedTerrain<'map> {
+    coverage: TerrainCoverage<'map>,
+    workspace: &'map mut TerrainWorkspace,
     rng: RngCheckpoint,
 }
-impl<'zones> PaintedTerrain<'zones, '_> {
+impl<'map> PaintedTerrain<'map> {
     pub(crate) fn with_brush(
         &mut self,
         level: Level,
@@ -79,7 +79,7 @@ impl<'zones> PaintedTerrain<'zones, '_> {
             Ok(())
         })
     }
-    pub(crate) fn coverage_mut(&mut self) -> &mut TerrainCoverage<'zones> {
+    pub(crate) fn coverage_mut(&mut self) -> &mut TerrainCoverage<'map> {
         &mut self.coverage
     }
     /// Zone state and ownership used by subsequent placement stages.
@@ -116,11 +116,11 @@ impl TerrainWorkspace {
         clippy::missing_panics_doc,
         reason = "source frame and private coverage bounds are valid by construction"
     )]
-    pub fn paint<'zones, 'tiles>(
-        &'tiles mut self,
-        coverage: TerrainCoverage<'zones>,
+    pub fn paint<'map>(
+        &'map mut self,
+        coverage: TerrainCoverage<'map>,
         rng: &mut RetailRng,
-    ) -> Result<PaintedTerrain<'zones, 'tiles>, TerrainError> {
+    ) -> Result<PaintedTerrain<'map>, TerrainError> {
         let map = coverage.map();
         let layout = map.raster().layout();
         let side = layout.side();

@@ -123,7 +123,7 @@ fn compare(
     mode: &str,
     case: usize,
     stage: &str,
-    towns: &homm3_rmg::placement::TownsPlaced<'_, '_, '_>,
+    towns: &homm3_rmg::placement::TownsPlaced<'_>,
     objects: &ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     rng: homm3_rmg::rng::RngCheckpoint,
@@ -183,7 +183,7 @@ fn compare(
 }
 
 fn check_empty_registered_list_admission(
-    map: &mut homm3_rmg::placement::PlacementMap<'_, '_, '_>,
+    map: &mut homm3_rmg::placement::PlacementMap<'_>,
     objects: &mut ObjectArena,
     catalog: &homm3_rmg::prototype::PrototypeCatalog<'_>,
     rng: &mut RetailRng,

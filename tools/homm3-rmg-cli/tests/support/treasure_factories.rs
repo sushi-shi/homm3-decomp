@@ -13,11 +13,7 @@ use homm3_rmg::{
 use homm3_rmg_cli::resources::Installation;
 use std::{fmt::Write, path::PathBuf};
 
-pub fn snapshot(
-    ready: TreasuresReady<'_, '_, '_, '_, '_, '_>,
-    objects: &mut ObjectArena,
-    rng: &RetailRng,
-) -> String {
+pub fn snapshot(ready: TreasuresReady<'_>, objects: &mut ObjectArena, rng: &RetailRng) -> String {
     let mut installation =
         Installation::open(&PathBuf::from(std::env::var_os("HOMM3_RMG_DATA").unwrap())).unwrap();
     let mut bytes = Vec::new();
@@ -99,7 +95,7 @@ pub fn snapshot(
     text
 }
 pub(super) fn row(
-    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &TreasureGeneration<'_>,
     prototype: homm3_rmg::prototype::PrototypeId,
 ) -> i32 {
     i32::try_from(
@@ -114,12 +110,7 @@ pub(super) fn row(
     )
     .unwrap()
 }
-fn state(
-    text: &mut String,
-    label: &str,
-    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
-    rng: &RetailRng,
-) {
+fn state(text: &mut String, label: &str, generation: &TreasureGeneration<'_>, rng: &RetailRng) {
     write!(
         text,
         "{label} {} {} ",
@@ -137,7 +128,7 @@ fn state(
 }
 fn write_payload(
     text: &mut String,
-    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &TreasureGeneration<'_>,
     objects: &ObjectArena,
     id: ObjectId,
 ) -> Option<ObjectId> {
@@ -153,7 +144,7 @@ fn write_payload(
 }
 pub(super) fn write_reward(
     text: &mut String,
-    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &TreasureGeneration<'_>,
     objects: &ObjectArena,
     id: ObjectId,
     quest_position: bool,
@@ -266,7 +257,7 @@ pub(super) fn tag(reward: TreasureReward) -> usize {
 }
 
 fn check_prison_exhaustion(
-    generation: &mut TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &mut TreasureGeneration<'_>,
     objects: &mut ObjectArena,
     rng: &mut RetailRng,
 ) {

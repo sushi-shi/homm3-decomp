@@ -10,7 +10,7 @@ use crate::{
     rng::RetailRng,
 };
 
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     /// Select a site, publish every group root, copy floor reservations, then
     /// complete roots in insertion order. Successful commit empties scratch
     /// references without deleting objects now owned by the world.

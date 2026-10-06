@@ -132,7 +132,7 @@ fn kind(value: u32) -> ObjectKind {
     ObjectKind::parse(i32::try_from(value).unwrap()).unwrap()
 }
 fn check_virgin_guard_release(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     catalog: &PrototypeCatalog<'_>,
     objects: &mut ObjectArena,
 ) -> (ObjectId, homm3_rmg::placement::KeyTentColor) {
@@ -156,7 +156,7 @@ fn check_virgin_guard_release(
 
     (virgin, color)
 }
-fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) -> String {
+fn snapshot(map: &mut PlacementMap<'_>, catalog: &PrototypeCatalog<'_>) -> String {
     let mut actual = String::new();
     let mut objects = ObjectArena::default();
     let (virgin, color) = check_virgin_guard_release(map, catalog, &mut objects);
@@ -250,7 +250,7 @@ fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) 
 }
 
 fn check_extreme_entrance(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     catalog: &PrototypeCatalog<'_>,
     objects: &mut ObjectArena,
 ) {
@@ -282,7 +282,7 @@ fn check_extreme_entrance(
 }
 
 fn check_arena_binding(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     catalog: &PrototypeCatalog<'_>,
     objects: &mut ObjectArena,
 ) {
@@ -320,7 +320,7 @@ fn check_arena_binding(
 
 fn write_snapshot(
     actual: &mut String,
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     catalog: &PrototypeCatalog<'_>,
     [a, b]: [ObjectId; 2],
     source_row: usize,

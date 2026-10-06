@@ -110,7 +110,7 @@ pub(super) struct Footprint {
     cells: [TouchedCell; raw::OBJECT_MASK_CELLS as usize],
     len: usize,
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Object identities in native insertion order, borrowing shared link storage.
     ///
     /// # Errors

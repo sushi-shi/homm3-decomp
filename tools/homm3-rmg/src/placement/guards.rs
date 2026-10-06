@@ -43,7 +43,7 @@ impl From<GuardError> for GuardPlacementError {
         Self::Selection(error)
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Construct an unplaced guard, assigning its ID only after successful selection.
     /// Geometry and payload share the supplied arena; no map membership is added.
     ///

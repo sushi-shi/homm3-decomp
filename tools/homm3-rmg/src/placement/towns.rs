@@ -106,14 +106,14 @@ impl TownState {
 }
 
 /// Towns are placed and the hotfix player-town requirement has passed.
-pub struct TownsPlaced<'state, 'zones, 'tiles> {
-    pub(super) map: PlacementMap<'state, 'zones, 'tiles>,
+pub struct TownsPlaced<'map> {
+    pub(super) map: PlacementMap<'map>,
     rng: RngCheckpoint,
 }
-impl TownsPlaced<'_, '_, '_> {
+impl TownsPlaced<'_> {
     /// Placement state for subsequent connections and object placement.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         &self.map
     }
     /// Registered town identities and their borrowed payloads in native order.
@@ -176,7 +176,7 @@ impl Rules {
     }
 }
 
-impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> PlacementMap<'map> {
     /// Place all primary towns, then all fixed and density towns in source order.
     /// Consumes the placement-stage token so this stage cannot run twice.
     ///
@@ -188,7 +188,7 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
         rng: &mut RetailRng,
-    ) -> Result<TownsPlaced<'state, 'zones, 'tiles>, TownError> {
+    ) -> Result<TownsPlaced<'map>, TownError> {
         self.prepare_object_context(objects, catalog)?;
         for index in 0..self.coverage().map().zones().len() {
             let zone = self.coverage().map().zones()[index];
@@ -231,7 +231,7 @@ impl<'state, 'zones, 'tiles> PlacementMap<'state, 'zones, 'tiles> {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn town_rules(&self, zone: BoundaryZone) -> Option<Rules> {
         let map = self.coverage().map();
         let source = map.template_zone(&zone)?;

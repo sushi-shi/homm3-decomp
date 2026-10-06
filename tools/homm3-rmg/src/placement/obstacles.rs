@@ -1,7 +1,8 @@
 //! Weighted obstacle filling with reusable candidates and lazy overlap priorities.
 
 use super::{
-    offset_position, ObjectArena, ObjectId, PathReservation, PlacementError, PlacementMap,
+    offset_position, CoastsMarked, ObjectArena, ObjectId, PathReservation, PlacementError,
+    PlacementMap, TreasureGeneration,
 };
 use crate::{
     domain::{FlagSet, Terrain, WorldPosition},
@@ -85,7 +86,38 @@ impl ObstacleWorkspace {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+/// Obstacle reservations are filled and the remaining passable floor is open.
+pub(crate) struct ObstaclesPlaced<'map> {
+    coasts: CoastsMarked<'map>,
+}
+impl<'map> ObstaclesPlaced<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
+        self.coasts.map_mut()
+    }
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_> {
+        self.coasts.generation()
+    }
+}
+impl<'map> CoastsMarked<'map> {
+    /// Fill obstacle reservations once, after coasts are known.
+    ///
+    /// # Errors
+    /// Reports placement-rule, object, geometry, allocation or arithmetic faults.
+    pub(crate) fn decorate_obstacles(
+        mut self,
+        scratch: &mut ObstacleWorkspace,
+        catalog: &PrototypeCatalog<'_>,
+        rules: &PlacementRules,
+        objects: &mut ObjectArena,
+        rng: &mut RetailRng,
+    ) -> Result<ObstaclesPlaced<'map>, PlacementError> {
+        self.map_mut()
+            .decorate_obstacles(scratch, catalog, rules, objects, rng)?;
+        Ok(ObstaclesPlaced { coasts: self })
+    }
+}
+
+impl PlacementMap<'_> {
     /// Score one obstacle anchor against terrain, reservations and existing objects.
     /// Both behavior modes preserve the native overwritten blocked-cell marks.
     ///
@@ -324,7 +356,7 @@ impl PlacementMap<'_, '_, '_> {
     ///
     /// # Errors
     /// Reports placement-rule, object, geometry, allocation or arithmetic faults.
-    pub fn decorate_obstacles(
+    fn decorate_obstacles(
         &mut self,
         scratch: &mut ObstacleWorkspace,
         catalog: &PrototypeCatalog<'_>,

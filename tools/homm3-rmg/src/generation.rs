@@ -9,7 +9,7 @@ use crate::{
     layout::{LayoutError, LayoutWorkspace},
     placement::{
         ConnectionError, MineError, ObjectArena, ObstacleWorkspace, PlacementError, PlacementMap,
-        PlacementWorkspace, SelectedTreasure, TownError, TreasureGeneration,
+        PlacementWorkspace, RiversCreated, SelectedTreasure, TownError, TreasureGeneration,
         TreasureGenerationError, TreasureGroupWorkspace,
     },
     placement_rules::PlacementRules,
@@ -315,15 +315,15 @@ pub struct GenerationWorkspace {
 }
 /// Complete generation, borrowing its buffers and immutable source context.
 pub struct GeneratedMap<'a> {
-    generation: TreasureGeneration<'a, 'a, 'a, 'a, 'a, 'a, 'a>,
+    rivers: RiversCreated<'a>,
     objects: &'a ObjectArena,
     report: GenerationReport,
 }
 impl GeneratedMap<'_> {
     /// Terrain, flags, zone state and ordered world-object identities.
     #[must_use]
-    pub fn map(&self) -> &PlacementMap<'_, '_, '_> {
-        self.generation.ready().map()
+    pub fn map(&self) -> &PlacementMap<'_> {
+        self.rivers.generation().ready().map()
     }
     /// Geometry and payload records, including modeled retained references.
     #[must_use]
@@ -332,8 +332,8 @@ impl GeneratedMap<'_> {
     }
     /// Definition and reward context needed for serialization.
     #[must_use]
-    pub const fn treasures(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
-        &self.generation
+    pub const fn treasures(&self) -> &TreasureGeneration<'_> {
+        self.rivers.generation()
     }
     /// Final RNG and all completed generation checkpoints.
     #[must_use]
@@ -441,21 +441,25 @@ impl GenerationWorkspace {
             mines.prepare_treasure_paths(&mut self.objects, catalog, &mut rng)
         );
         let ready = stage!(Treasures, paths.begin_treasures(definitions));
-        let mut generation = stage!(
+        let generation = stage!(
             Treasures,
             ready.begin_generation(&self.objects, assets.spells, assets.artifacts)
         );
-        generation.exchange_scratch(&mut self.offers, &mut self.nested_groups);
-        let treasures =
-            generation.place_all_treasures(&mut self.group, &mut self.objects, &mut rng);
-        generation.exchange_scratch(&mut self.offers, &mut self.nested_groups);
-        stage!(Treasures, treasures);
-        let map = generation.map_mut();
-        stage!(Underground, map.decorate_underground(&mut rng));
-        stage!(Coasts, map.mark_coastal_tiles());
-        stage!(
+        let treasures = stage!(
+            Treasures,
+            generation.place_all_treasures(
+                &mut self.group,
+                &mut self.offers,
+                &mut self.nested_groups,
+                &mut self.objects,
+                &mut rng
+            )
+        );
+        let underground = stage!(Underground, treasures.decorate_underground(&mut rng));
+        let coasts = stage!(Coasts, underground.mark_coastal_tiles());
+        let obstacles = stage!(
             Obstacles,
-            map.decorate_obstacles(
+            coasts.decorate_obstacles(
                 &mut self.obstacles,
                 catalog,
                 assets.placement,
@@ -463,15 +467,18 @@ impl GenerationWorkspace {
                 &mut rng
             )
         );
-        stage!(Roads, map.create_roads(catalog, &self.objects, &mut rng));
-        stage!(
+        let roads = stage!(
+            Roads,
+            obstacles.create_roads(catalog, &self.objects, &mut rng)
+        );
+        let rivers = stage!(
             Rivers,
-            map.create_rivers(catalog, &mut self.objects, &mut rng)
+            roads.create_rivers(catalog, &mut self.objects, &mut rng)
         );
         report.stage = Stage::Complete;
         report.completed(Stage::Complete, &rng);
         Ok(GeneratedMap {
-            generation,
+            rivers,
             objects: &self.objects,
             report,
         })

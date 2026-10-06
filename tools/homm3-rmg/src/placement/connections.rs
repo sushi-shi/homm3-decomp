@@ -170,19 +170,19 @@ impl ConnectionScratch {
 }
 
 /// Branching paths and border reservations are ready for water-zone islands.
-pub struct ConnectionBorders<'state, 'zones, 'tiles> {
-    pub(super) towns: TownsPlaced<'state, 'zones, 'tiles>,
+pub struct ConnectionBorders<'map> {
+    pub(super) towns: TownsPlaced<'map>,
     rng: RngCheckpoint,
 }
-impl ConnectionBorders<'_, '_, '_> {
+impl ConnectionBorders<'_> {
     /// Placement state after the in-place branch and border passes.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.towns.map()
     }
     /// Town payloads and their earlier stage checkpoint remain available.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         &self.towns
     }
     /// RNG after branching; border marking itself draws nothing.
@@ -191,7 +191,7 @@ impl ConnectionBorders<'_, '_, '_> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> TownsPlaced<'state, 'zones, 'tiles> {
+impl<'map> TownsPlaced<'map> {
     /// Carve branching paths, mark zone borders, then patch unassigned dry cells.
     /// Consuming the town stage prevents repeating its branching RNG work.
     ///
@@ -200,7 +200,7 @@ impl<'state, 'zones, 'tiles> TownsPlaced<'state, 'zones, 'tiles> {
     pub fn reserve_connection_borders(
         mut self,
         rng: &mut RetailRng,
-    ) -> Result<ConnectionBorders<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<ConnectionBorders<'map>, ConnectionError> {
         self.map.carve_branching_paths(rng)?;
         self.map.mark_zone_borders()?;
         self.map.mark_unassigned_obstacles()?;
@@ -211,7 +211,7 @@ impl<'state, 'zones, 'tiles> TownsPlaced<'state, 'zones, 'tiles> {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn carve_branching_paths(&mut self, rng: &mut RetailRng) -> Result<(), ConnectionError> {
         for cell in &mut *self.cells {
             if self.memberships.first(cell.objects).is_none() {
@@ -492,7 +492,7 @@ pub(super) fn draw_connection_prototype<'c>(
         .expect("remainder indexes admitted family"))
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     pub(super) fn connection_guard_value(
         &self,
         connection: ZoneConnection,

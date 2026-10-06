@@ -51,7 +51,7 @@ impl From<MonsterStrength> for GuardStrength {
         Self(value.get())
     }
 }
-impl super::PlacementMap<'_, '_, '_> {
+impl super::PlacementMap<'_> {
     pub(super) fn zone_guard_value(
         &self,
         value: i32,

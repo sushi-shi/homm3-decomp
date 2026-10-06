@@ -8,7 +8,7 @@ use crate::{
     traits::ArtifactId,
 };
 
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     pub(super) fn complete_treasure(
         &mut self,
         object: ObjectId,

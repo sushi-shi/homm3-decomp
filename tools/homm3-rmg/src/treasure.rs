@@ -323,13 +323,13 @@ pub struct TreasureWorkspace {
 }
 /// Immutable prepared definitions and their exact prototype/creature context.
 /// Does not reset map-owned tent, hero or quest reservations.
-pub struct TreasureCatalog<'workspace, 'assets, 'source> {
+pub struct TreasureCatalog<'a> {
     owner: OwnerId,
-    definitions: &'workspace [TreasureDefinition],
-    prototypes: &'assets PrototypeCatalog<'source>,
-    creatures: &'assets CreatureCatalog,
+    definitions: &'a [TreasureDefinition],
+    prototypes: &'a PrototypeCatalog<'a>,
+    creatures: &'a CreatureCatalog,
 }
-impl TreasureCatalog<'_, '_, '_> {
+impl TreasureCatalog<'_> {
     /// Definition identities in native insertion order, without allocating.
     #[must_use]
     pub fn ids(&self) -> impl ExactSizeIterator<Item = DefinitionId> + DoubleEndedIterator + '_ {
@@ -376,11 +376,11 @@ impl TreasureWorkspace {
     ///
     /// # Errors
     /// Reports invalid canonical data, eager creature-count arithmetic or allocation failure.
-    pub fn prepare<'workspace, 'assets, 'source>(
-        &'workspace mut self,
-        prototypes: &'assets PrototypeCatalog<'source>,
-        creatures: &'assets CreatureCatalog,
-    ) -> Result<TreasureCatalog<'workspace, 'assets, 'source>, TreasureError> {
+    pub fn prepare<'a>(
+        &'a mut self,
+        prototypes: &'a PrototypeCatalog<'a>,
+        creatures: &'a CreatureCatalog,
+    ) -> Result<TreasureCatalog<'a>, TreasureError> {
         let owner = OwnerId::new().ok_or(TreasureError::IdentityExhausted)?;
         self.definitions.clear();
         for &recipe in raw::TREASURE_RECIPES {
