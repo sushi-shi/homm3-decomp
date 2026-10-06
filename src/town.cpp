@@ -123,7 +123,7 @@ DATA(0x0066cd98) __int64 g_bitNumber[64] = {
     0x0100000000000000i64, 0x0200000000000000i64, 0x0400000000000000i64, 0x0800000000000000i64, 0x1000000000000000i64, 0x2000000000000000i64, 0x4000000000000000i64, 0x8000000000000000i64
 };
 DATA(0x006976f0) __int64 g_townEligibleBuildMask[TOWN_TYPE_COUNT];
-DATA(0x00697798) __int64 g_hierarchyMask[TOWN_TYPE_COUNT][44];
+DATA(0x00697798) __int64 g_hierarchyMask[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE];
 // Original gDwellingType has fourteen entries per town; Complete adds Conflux.
 DATA(0x006747b4) TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS] = {
     { TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12),

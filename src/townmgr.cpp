@@ -447,7 +447,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
 };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x00642eb4) const signed char g_townBuildOrder[TOWN_TYPE_COUNT][44] = {
+DATA(0x00642eb4) const signed char g_townBuildOrder[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE] = {
     {
     26, 23, 7, 8, 9, 0, 1, 2,
     3, 14, 15, 36, 43, 30, 37, 31,
@@ -522,7 +522,7 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[TOWN_TYPE_COUNT][44] = {
 }
 };
 DATA(0x00643040) const char* const g_townBackgroundPrefix[TOWN_TYPE_COUNT] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
-DATA(0x00643064) const char* const g_townBuildingSprites[TOWN_TYPE_COUNT][44] = {
+DATA(0x00643064) const char* const g_townBuildingSprites[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE] = {
     {
     "TBCsmage", "TBCsmag2", "TBCsmag3", "TBCsmag4", "TBCsmag5", "TBCstvrn", "TBCsdock", "TBCscstl",
     "TBCscas2", "TBCscas3", "TBCshall", "TBCshal2", "TBCshal3", "TBCshal4", "TBCsmark", "TBCssilo",
@@ -4983,7 +4983,7 @@ int townManager::main(message& msg)
     if (build != -1) {
         g_pendingTownBuild = -1;
         if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
-            for (build = 0; build < 0x2c; build++) {
+            for (build = 0; build < MAX_BUILDING_TYPE; build++) {
                 if ((g_townEligibleBuildMask[m_townToView->m_type]
                      & (1 << build))
                     || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA)
