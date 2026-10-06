@@ -2276,8 +2276,12 @@ static int handleGetTeleportDestination(message& msg)
 // army::can_cast_spell's `return call;` arms branch straight to the epilogue:
 // a named result with a final return. The Sacrifice then/else bodies have a
 // single scope each (a braced body has two), so they stay unbraced.
-// Retail's retained calls need cost >= 176; this form costs 173 and is still
-// saved. Neither DC nor Mac shows an accessor or local that supplies the rest.
+// Retail keeps findSpellTarget out of line in validSpellTarget, initiateSpell
+// and castSpell, which needs cost >= 176; the uninitialized named result
+// costs 173 and is still saved for inlining. Initializing that result to 0
+// in its declaration (DC gap 2608..2611; a dead store leaves no optimized SH
+// or Mac instruction) restores all three retained calls: validSpellTarget
+// 73.65 -> 96.60, initiateSpell 90.79 -> 94.49, castSpell 93.78 -> 95.51.
 VA(0x005a3950, 0x68)
 DC_ADDRESS(0x152dec, 0xee)
 MAC_ADDRESS(0x194120, 0xd8)
@@ -2287,7 +2291,7 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
 {
     if (!validHex(hex))
         return 0;
-    army* target;
+    army* target = 0;
     switch (spell) {
     case SPELL_SACRIFICE:
         if (firstTarget)

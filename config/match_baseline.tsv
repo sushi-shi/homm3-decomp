@@ -253,9 +253,9 @@ ai_combat	?aiApproximateStrength@@YIJPBVhero@@ABVarmyGroup@@@Z	100.0000	100.0000
 ai_combat	?aiAutoCombat@@YIXPAVhero@@0AAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x27210	tokens1:8341468a4b2b
 ai_combat	?aiQuickCombat@@YI_NPAVhero@@0AAVarmyGroup@@PAVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x270c0	tokens1:09b92f188758
 ai_combat	?aiValueOfCombat@@YIJPBVhero@@0ABVarmyGroup@@PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x27330	tokens1:a921ebb1301c
-ai_combat	?castAreaEffect@type_AI_combat_data@@IBEXAAUtype_spell_choice@@AAV1@JJ@Z	100.0000	100.0000	100.0000	0x25100	tokens1:98e384d8eb6d
-ai_combat	?castChainLightning@type_AI_combat_data@@IBEXAAUtype_spell_choice@@AAV1@J@Z	100.0000	100.0000	100.0000	0x24fb0	tokens1:92bff8fce95d
-ai_combat	?castDamageSpell@type_AI_combat_data@@IBEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25260	tokens1:2e83d8cf12a8
+ai_combat	?castAreaEffect@type_AI_combat_data@@IBEXAAUtype_spell_choice@@AAV1@JJ@Z	100.0000	100.0000	100.0000	0x25100	tokens1:8b7acf029dd1
+ai_combat	?castChainLightning@type_AI_combat_data@@IBEXAAUtype_spell_choice@@AAV1@J@Z	100.0000	100.0000	100.0000	0x24fb0	tokens1:404b5e0ef865
+ai_combat	?castDamageSpell@type_AI_combat_data@@IBEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25260	tokens1:3fcb31f61fa8
 ai_combat	?castEnchantment@type_AI_combat_data@@IAEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25b10	tokens1:c030d4e8dd42
 ai_combat	?castEnchantment@type_AI_combat_data@@IAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x258a0	tokens1:fb08780e39ab
 ai_combat	?castSpell@type_AI_combat_data@@IAEXAAV1@W4type_speed_catagory@@@Z	100.0000	100.0000	100.0000	0x25bd0	tokens1:3a24d4a9a5cf
@@ -264,15 +264,15 @@ ai_combat	?chooseMelee@type_AI_combat_data@@IBE_NABV1@W4type_speed_catagory@@@Z	
 ai_combat	?createSkeletons@@YIXPBVhero@@PBVarmyGroup@@AAV2@@Z	100.0000	100.0000	100.0000	0x26df0	tokens1:798f89ade65f
 ai_combat	?doAftermath@type_AI_combat_data@@QAEXAAV1@PAVtown@@@Z	100.0000	100.0000	100.0000	0x26ee0	tokens1:96d06cc96c8f
 ai_combat	?doGeneralMelee@type_AI_combat_data@@IAEXAAV1@@Z	100.0000	100.0000	100.0000	0x264d0	tokens1:4ebba3b756f7
-ai_combat	?getAreaValue@type_AI_combat_data@@IBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0	tokens1:e42a003cde28
+ai_combat	?getAreaValue@type_AI_combat_data@@IBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0	tokens1:3c150a8df739
 ai_combat	?getAttack@type_AI_combat_data@@IBEJW4type_speed_catagory@@E@Z	100.0000	100.0000	100.0000	0x26390	tokens1:def53e4a8e00
-ai_combat	?getDamageSpellValue@type_AI_combat_data@@IBEXAAUtype_spell_choice@@ABV1@@Z	86.4819	86.4819	100.0000	0x24d20	tokens1:15d15679b3cc
+ai_combat	?getDamageSpellValue@type_AI_combat_data@@IBEXAAUtype_spell_choice@@ABV1@@Z	100.0000	100.0000	100.0000	0x24d20	tokens1:e6c13be88778
 ai_combat	?getEnchantmentValue@type_AI_combat_data@@IBEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25510	tokens1:07ddcf0db4b9
 ai_combat	?getEnchantmentValue@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@1@Z	100.0000	100.0000	100.0000	0x23c80	tokens1:5912e8b71aa3
 ai_combat	?getFastestSpeed@type_AI_combat_data@@IBEJXZ	100.0000	100.0000	100.0000	0x24960	tokens1:3904e4857e0d
 ai_combat	?getFinalMeleeValue@type_AI_combat_data@@IBEJXZ	100.0000	100.0000	100.0000	0x26450	tokens1:3782e26ded49
 ai_combat	?getMassDamageValue@type_AI_combat_data@@IBEJAAUtype_spell_choice@@PBVhero@@@Z	100.0000	100.0000	100.0000	0x253e0	tokens1:3a86dbb55a8b
-ai_combat	?getNextChainLightningTarget@type_AI_combat_data@@IBEJJABV1@JJ@Z	100.0000	100.0000	100.0000	0x249d0	tokens1:4bc9e94257ca
+ai_combat	?getNextChainLightningTarget@type_AI_combat_data@@IBEJJABV1@JJ@Z	100.0000	100.0000	100.0000	0x249d0	tokens1:5fd5b313a6d8
 ai_combat	?getResurrectionValue@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@@Z	100.0000	100.0000	100.0000	0x23d00	tokens1:13df16b862d6
 ai_combat	?getSpellDamage@type_monster_data@@QBEJHPBVhero@@0J@Z	100.0000	100.0000	100.0000	0x23de0	tokens1:b8826bdf00a3
 ai_combat	?inflictDamage@type_AI_combat_data@@IAEXJJ@Z	100.0000	100.0000	100.0000	0x26300	tokens1:c2b50b65d414
@@ -2296,7 +2296,7 @@ hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0	
 hero	?setHotkey@button@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1370	tokens1:641ea6ccd2e3
 hero	?setSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210	tokens1:58ad67a0527e
 hero	?setVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0	tokens1:d7fa1d18cfde
-hero	?setupHeroView@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe1a50	tokens1:53d1a5f6f053
+hero	?setupHeroView@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe1a50	tokens1:c73b38b8765d
 hero	?showAssembleArtifactDialog@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9cc0	tokens1:c518fdc96935
 hero	?showDisassembleArtifactDialog@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9b30	tokens1:e5d9b256ce01
 hero	?tLimit@@YIABHABH00@Z	100.0000	100.0000	100.0000	0xe6750	-
@@ -2307,7 +2307,7 @@ hero	?updateAllSlots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d
 hero	?updateArmies@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xd97f0	tokens1:8de5cebc673f
 hero	?updateBackpack@@YIXXZ	100.0000	100.0000	100.0000	0xdb1f0	tokens1:293d9d00a535
 hero	?updateHeroLocator@THeroScreenWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1600	tokens1:01e4b027aad0
-hero	?updateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdb660	tokens1:0d803f93764d
+hero	?updateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdb660	tokens1:9109916bb83d
 hero	?updateSlot@THeroScreenWindow@@QAEXW4TArtifactSlot@@@Z	100.0000	100.0000	100.0000	0xdaf90	tokens1:ddbec34bea57
 hero	?updateSpellList@hero@@AAEXXZ	100.0000	100.0000	100.0000	0xd95d0	tokens1:25610c9c15c6
 hero	?updateStats@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xe16d0	tokens1:3338fcac5fb2
@@ -2317,7 +2317,7 @@ hero	?viewArtifact@hero@@QAEXABUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0x
 hero	?viewStat@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	tokens1:f1dd86876dfc
 hero	?visitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0	tokens1:c62c9eb2c168
 hero	?walkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0	tokens1:4cc3b3c16c6e
-hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	86.3784	86.3784	92.1185	0xdd2d0	tokens1:9ffaece57bd2
+hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	89.9156	89.9156	92.1185	0xdd2d0	tokens1:0c3d2ad6c364
 herodefs	?initializeHeroClassTraitsTable@@YI_NXZ	100.0000	100.0000	100.0000	0xe6920	tokens1:e9b90b3930be
 herodefs	?initializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0	tokens1:9543a21a56b5
 herodefs	?initializeSSkillTraitsTable@@YI_NXZ	100.0000	100.0000	100.0000	0xe6b10	tokens1:4c2d22b91eb1
@@ -4219,7 +4219,7 @@ spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	10
 spells	?animateMagicArrow@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	tokens1:960287a23de8
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	100.0000	100.0000	100.0000	0x1a4970	tokens1:cc820fecaa79
 spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:85bd50bb7e09
-spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	93.7782	93.7782	94.1057	0x19fe30	tokens1:2375510db972
+spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	95.5056	95.5056	95.5056	0x19fe30	tokens1:2375510db972
 spells	?chainLightning@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x1a6360	tokens1:07b3327e9d5d
 spells	?checkFireWall@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:118d813740c7
 spells	?checkLandmine@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:cf04ad62a96c
@@ -4233,7 +4233,7 @@ spells	?earthquake@combatManager@@QAEXH@Z	89.1405	89.1405	89.1405	0x1a7c80	token
 spells	?findAnimateDeadTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	tokens1:c538d970d8f0
 spells	?findDemonicResurrectionTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3e40	tokens1:ea8043ced0e6
 spells	?findResurrectionTarget@combatManager@@QAEPAVarmy@@HHJ@Z	100.0000	100.0000	100.0000	0x1a3cc0	tokens1:4e91a4dc7724
-spells	?findSpellTarget@combatManager@@AAEPAVarmy@@W4ESpellId@@JJ_NJ@Z	100.0000	100.0000	100.0000	0x1a3950	tokens1:78ea30c57cc0
+spells	?findSpellTarget@combatManager@@AAEPAVarmy@@W4ESpellId@@JJ_NJ@Z	100.0000	100.0000	100.0000	0x1a3950	tokens1:8cd0a230fc65
 spells	?getElementalType@@YI?AW4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1a9360	tokens1:d40ccf16d95c
 spells	?getFailureReason@combatManager@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4ESpellId@@PBDJ@Z	100.0000	100.0000	100.0000	0x1a2880	tokens1:de0255ba335f
 spells	?getNextChainLightningTarget@combatManager@@QAEHPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x1a61f0	tokens1:6f1b88711a80
@@ -4244,7 +4244,7 @@ spells	?handleCastWallSpell@@YIHAAVmessage@@@Z	99.9703	99.9703	99.9703	0x1a3250	
 spells	?handleGetTeleportDestination@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	tokens1:4b8741bcf77a
 spells	?handleSacrificeBeneficiary@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a2d00	tokens1:97abc108cec8
 spells	?hasValidSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@H_NJ@Z	100.0000	100.0000	100.0000	0x1a40d0	tokens1:49913ba2e9e1
-spells	?initiateSpell@combatManager@@QAEXW4ESpellId@@H@Z	90.7923	90.7923	94.4857	0x19ec50	tokens1:9278748eccba
+spells	?initiateSpell@combatManager@@QAEXW4ESpellId@@H@Z	94.4857	94.4857	94.4857	0x19ec50	tokens1:9278748eccba
 spells	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z	100.0000	100.0000	100.0000	0x1a9450	-
 spells	?isValidTeleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700	tokens1:a7bb22537fbe
 spells	?loadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0	tokens1:cc79eeae05b1
@@ -4268,7 +4268,7 @@ spells	?spellCastWorks@combatManager@@QBE_NHJPBVarmy@@_NJ@Z	100.0000	100.0000	10
 spells	?spellTargetMessage@combatManager@@QAEXHH_N@Z	100.0000	100.0000	100.0000	0x1a8690	tokens1:f9004ec11115
 spells	?summonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	100.0000	100.0000	100.0000	0x1a7080	tokens1:750939091759
 spells	?updateSpellTarget@@YIHJ@Z	100.0000	100.0000	100.0000	0x19f700	tokens1:5c2219257e58
-spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	73.6540	73.6540	96.5992	0x1a39c0	tokens1:df7b3f920390
+spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	96.5992	96.5992	96.5992	0x1a39c0	tokens1:df7b3f920390
 spells	?validSpellTargetArmy@combatManager@@QBE_NHHPBVarmy@@_NJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:c11331729942
 spells	?viewSpells@combatManager@@QBEHXZ	100.0000	100.0000	100.0000	0x19e900	tokens1:9dc52e9d1b3b
 string_support	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x115010	-
@@ -4570,8 +4570,8 @@ tradpost	??_GTGiveResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e3690	
 tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7be0	-
 tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80	-
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620	-
-tradpost	?computeTradeRatios@TSellArtifactWindow@@AAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ecdc0	tokens1:170f0e9198bc
-tradpost	?computeTradeRatios@TSellCreatureWindow@@AAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ece80	tokens1:179032283214
+tradpost	?computeTradeRatios@TSellArtifactWindow@@AAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ecdc0	tokens1:e853cba2c45c
+tradpost	?computeTradeRatios@TSellCreatureWindow@@AAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ece80	tokens1:c908df612afd
 tradpost	?doArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20	tokens1:ed0a1a6ae5a1
 tradpost	?doBlackMarket@@YIXPAVhero@@PAW4TArtifact@@@Z	100.0000	100.0000	100.0000	0x1ea100	tokens1:63b8d3e9d4f7
 tradpost	?doFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60	tokens1:6e0913a290fc
@@ -4580,7 +4580,7 @@ tradpost	?doMarket@@YIXXZ	94.6071	94.6071	94.6104	0x1ea130	tokens1:d6c83d18345d
 tradpost	?doMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0	tokens1:6bdae8e09a3d
 tradpost	?doTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0	tokens1:c5cc98c8cc49
 tradpost	?getMarketValue@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10	tokens1:1a2a09d5fa54
-tradpost	?getTradeRatio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20	tokens1:60117958ce97
+tradpost	?getTradeRatio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20	tokens1:907ccf838c61
 tradpost	?giveResourceSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e3670	tokens1:62301da864bf
 tradpost	?sellCreatureSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e9c60	tokens1:9c6e66244823
 tradpost	?setRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1eddd0	tokens1:5afac5bd106e
@@ -4597,7 +4597,7 @@ tradpost	?update@TTradeResourceWindow@@QAEX_N@Z	99.7801	99.7801	99.7801	0x1ea6e0
 tradpost	?updateSellArtifactWidget@TSellArtifactWindow@@AAEXAAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0	tokens1:6efba4423483
 tradpost	?windowHandler@TBuyArtifactWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0	tokens1:a55f2f98efb8
 tradpost	?windowHandler@TGiveResourceWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	tokens1:0bdeca802ff1
-tradpost	?windowHandler@TSellArtifactWindow@@UAEHAAVmessage@@@Z	83.1280	83.1280	93.5964	0x1edf60	tokens1:05ed568109d3
+tradpost	?windowHandler@TSellArtifactWindow@@UAEHAAVmessage@@@Z	85.8223	85.8223	93.5964	0x1edf60	tokens1:05ed568109d3
 tradpost	?windowHandler@TSellCreatureWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ee890	tokens1:5e154036ab4f
 tradpost	?windowHandler@TTradeResourceWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0	tokens1:49128342879b
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70	-

@@ -2796,8 +2796,10 @@ void TSellCreatureWindow::update(bool update)
         drawWindow(1, -65535, 65535);
 }
 
-// Mac 0x1f8144 loads the indexed market value. The same load is expanded
-// in getTradeRatio and the resource, artifact, and creature trade callers.
+// Mac 0x1f8144 loads the indexed market value. DC philai/ai_player keep jsr
+// calls to get_market_value, but every DC tradpost.obj caller (0x18abb8,
+// 0x18ad68, 0x18b048, 0x18b14a) indexes the ushort table itself; the trade
+// ratio bodies below read g_marketValues directly as that source did.
 VA(0x005ecd10, 0x0B)
 DC_ADDRESS(0x18ab8c, 0xe)
 MAC_ADDRESS(0x1f8144, 0x14)
@@ -2811,8 +2813,8 @@ DC_ADDRESS(0x18ab9c, 0x1ac)
 MAC_ADDRESS(0x1f8158, 0xe4)
 double getTradeRatio(EGameResource source, EGameResource dest, double efficiency)
 {
-    double ratio = static_cast<double>(getMarketValue(dest))
-                 / (static_cast<double>(getMarketValue(source)) * efficiency);
+    double ratio = static_cast<double>(g_marketValues[dest + 1])
+                 / (static_cast<double>(g_marketValues[source + 1]) * efficiency);
     if (ratio >= 1.0)
         ratio = static_cast<double>(static_cast<long>(ratio + 0.999));
     else
@@ -2830,9 +2832,9 @@ void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
     int* inMaxUnitsToTrade)
 {
-    float leftValue = static_cast<float>(getMarketValue(EGameResource(inLeftResource)))
+    float leftValue = static_cast<float>(g_marketValues[inLeftResource + 1])
         * g_tradingPostEfficency[g_marketCount];
-    float ratio = static_cast<float>(getMarketValue(EGameResource(inRightResource))) / leftValue;
+    float ratio = static_cast<float>(g_marketValues[inRightResource + 1]) / leftValue;
     if (ratio >= 1.0f) {
         *inLeftDenominated = 0;
         *inTradeRatio = static_cast<long>(ratio + 0.5);
@@ -2901,7 +2903,7 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
         static_cast<float>(g_artifactTraits[artifact.m_artifactId].m_cost)
         * g_artifactPurchaseEfficency[g_marketCount];
     float marketValue =
-        static_cast<float>(getMarketValue(EGameResource(inRightResource)));
+        static_cast<float>(g_marketValues[inRightResource + 1]);
     float result = leftValue / marketValue;
     if (result < 1.0f)
         result = 1.0f;
@@ -2925,7 +2927,7 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
     float denominator = static_cast<float>(g_creatureTypeTraits[
                             g_marketHero->m_army.m_armies[inLeftResource]].m_cost[6])
                       * g_creatureSaleEfficency[g_marketCount];
-    float ratio = static_cast<float>(getMarketValue(EGameResource(inRightResource))) / denominator;
+    float ratio = static_cast<float>(g_marketValues[inRightResource + 1]) / denominator;
     if (ratio >= 1.0f) {
         *inLeftDenominated = 0;
         *inTradeRatio = static_cast<long>(ratio + 0.5);
