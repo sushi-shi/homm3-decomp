@@ -1704,7 +1704,7 @@ DC_ADDRESS(0x026600, 0xd4)
 MAC_ADDRESS(0x023520, 0xdc)
 void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, type_AI_combat_parameters* estimate)
 {
-    for (long i = 0; i < 187; i++) {
+    for (long i = 0; i < COMBAT_GRID_CELLS; i++) {
         if ((m_cells[i].m_attributes & hexcell::fireWall) == 0)
             continue;
         TObstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);

@@ -82,7 +82,7 @@ void searchArray::init()
     m_validRectangle.bottom = g_mapHeight;
     m_cellData = new pathCell[g_game->getNumMapLevels() * g_mapHeight
             * g_mapWidth * 2];
-    m_isMoatSlowed = new bool[187];
+    m_isMoatSlowed = new bool[COMBAT_GRID_CELLS];
 }
 
 VA(0x004b1500, 0x2F)
@@ -1021,7 +1021,7 @@ DC_ADDRESS(0x0a0804, 0x16a)
 MAC_ADDRESS(0x0c6a08, 0x1d0)
 void searchArray::setMoat(const army* currentArmy)
 {
-    memset(m_isMoatSlowed, 0, 187);
+    memset(m_isMoatSlowed, 0, COMBAT_GRID_CELLS);
     if (currentArmy->is(creatureFlyingArmy))
         return;
     if (currentArmy->m_creatureType == CREATURE_ARCH_DEVIL)
@@ -1041,7 +1041,7 @@ void searchArray::setMoat(const army* currentArmy)
                 m_isMoatSlowed[g_innerMoatHexes[5]] = 0;
         }
     }
-    { for (int cell = 0; cell < 187; ++cell) {
+    { for (int cell = 0; cell < COMBAT_GRID_CELLS; ++cell) {
         if (g_combatManager->m_cells[cell].m_attributes & hexcell::quicksand) {
             const combatManager::TObstacle* obstacle =
                 &g_combatManager->getObstacle(g_combatManager->m_cells[cell].m_obstacleIndex);
