@@ -3142,7 +3142,7 @@ static void unblockLith(hero* currentHero,
     type_point point;
     long closest = 0;
     point.m_z = currentHero->m_z;
-    for (long direction = 0; direction < 8; ++direction) {
+    for (long direction = 0; direction < MAP_DIRECTION_COUNT; ++direction) {
         point.m_x = currentHero->m_x + g_normalDirTable[direction].m_x;
         point.m_y = currentHero->m_y + g_normalDirTable[direction].m_y;
         if (!point.isValid())

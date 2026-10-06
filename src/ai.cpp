@@ -1208,8 +1208,8 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
 
     *openHexes = 0;
     *bestHex = -1;
-    for (long direction = 0; direction < 8; direction++) {
-        if (direction >= 6 && !client->is(creatureDoubleWide))
+    for (long direction = 0; direction < COMBAT_DIRECTION_WIDE_LOWER + 1; direction++) {
+        if (direction >= COMBAT_DIRECTION_COUNT && !client->is(creatureDoubleWide))
             continue;
         long hex = client->getAdjacentHex(direction);
         if (!combatManager::validHex(hex))
@@ -2071,8 +2071,8 @@ void combatManager::placeShooter(const army* currentArmy)
         if (!g_searchArray->getHex(newHex)->m_visited)
             continue;
         long value = 0;
-        for (long dir = 0; dir < 8; dir++) {
-            if (dir >= 6 && !currentArmy->is(creatureDoubleWide))
+        for (long dir = 0; dir < COMBAT_DIRECTION_WIDE_LOWER + 1; dir++) {
+            if (dir >= COMBAT_DIRECTION_COUNT && !currentArmy->is(creatureDoubleWide))
                 continue;
             long adjacent = currentArmy->getAdjacentHex(newHex, dir);
             if (!validHex(adjacent))
