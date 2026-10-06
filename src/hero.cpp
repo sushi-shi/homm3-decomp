@@ -1101,6 +1101,10 @@ void hero::initialize(short index)
 // assign needs either a sixth saved candidate after this site (346 -> 288)
 // or about 196 more budget spent before it. Mac retail also keeps the
 // primary-skill loop rolled where this source's CodeWarrior build unrolls it.
+// 2026-10-07 diagnostic: any one extra depth-1 candidate after the custom-name
+// assignment (a throwaway isMale() test) retains assign and lifts this body
+// to 98.71%, so the missing candidate is real; Mac 0xf4948..0xf4a50 and DC
+// 10049..10053 show no accessor for it (direct level read, one getMobility).
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4

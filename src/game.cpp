@@ -7672,6 +7672,11 @@ void game::setRecruits()
 // aliases scored 96.9467%; the canonical model scores 94.1719%. The native
 // loop spelling, obscuringHero initialization and helper body placement are
 // byte-flat for that boundary. Historical 99.8370% is a TU-context lead.
+// 2026-10-07 trace: setRecruits is depth-1 site 16 (budget 1874, cb 112),
+// giving clearRecruits (1874 - 112) / 16 = 110 against cb 116. Fifteen
+// remaining sites (117) or clearRecruits cb <= 110 would expand it; the
+// literal flag, -1 store, != none test and post-increment spellings all
+// leave cb 116.
 VA(0x004c8780, 0x7B7)
 DC_ADDRESS(0x0b41e0, 0x5d8)
 MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees
