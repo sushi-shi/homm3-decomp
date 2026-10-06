@@ -89,10 +89,10 @@ DATA(0x006781fc) int g_initResourcesComputer[5][NUM_RESOURCES] = {
 // Legacy multiplier tables retained in Complete without code references.
 // DC names gfSSLogisticsMod/gfSSNavigationMod/gfSSArcheryMod/gfSSAIArcheryMod
 // identify the same four mastery rows; all 64 bytes agree between the builds.
-DATA(0x006782ec) float g_ssLogisticsMod[4] = { 1.0f, 1.1f, 1.2f, 1.3f };
-DATA(0x006782fc) float g_ssNavigationMod[4] = { 1.0f, 1.33f, 1.66f, 2.0f };
-DATA(0x0067830c) float g_ssArcheryMod[4] = { 1.0f, 1.1f, 1.25f, 1.5f };
-DATA(0x0067831c) float g_ssAIArcheryMod[4] = { 1.0f, 1.04f, 1.1f, 1.2f };
+DATA(0x006782ec) float g_ssLogisticsMod[kNumMasteries] = { 1.0f, 1.1f, 1.2f, 1.3f };
+DATA(0x006782fc) float g_ssNavigationMod[kNumMasteries] = { 1.0f, 1.33f, 1.66f, 2.0f };
+DATA(0x0067830c) float g_ssArcheryMod[kNumMasteries] = { 1.0f, 1.1f, 1.25f, 1.5f };
+DATA(0x0067831c) float g_ssAIArcheryMod[kNumMasteries] = { 1.0f, 1.04f, 1.1f, 1.2f };
 
 DATA(0x0069ccb0) playerData* g_currentPlayer;
 DATA(0x0069cca8) int g_netLocalGamePos;

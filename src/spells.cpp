@@ -96,9 +96,9 @@ DATA(0x00642200) const float g_magicArrowAngles[5] = { 0.0f, -16.0f, -34.0f, -56
 // Arrow tables. CastSpell's retail switch reads the first for Quicksand and
 // the second for Land Mine; both rows are exactly {4, 4, 6, 8}.
 DATA(0x00642214)
-static const int g_quicksandCountByMastery[4] = { 4, 4, 6, 8 };
+static const int g_quicksandCountByMastery[kNumMasteries] = { 4, 4, 6, 8 };
 DATA(0x00642224)
-static const int g_landMineCountByMastery[4] = { 4, 4, 6, 8 };
+static const int g_landMineCountByMastery[kNumMasteries] = { 4, 4, 6, 8 };
 
 DATA(0x00642234) const char* const g_iceBoltSprites[5] = { "c08spw0.def", "c08spw1.def", "c08spw2.def", "c08spw3.def", "c08spw4.def" };
 DATA(0x00642248) const float g_iceBoltAngles[5] = { 0.0f, -16.0f, -34.0f, -56.0f, -83.0f };
@@ -2744,7 +2744,7 @@ void combatManager::markAreaEffect(long hex, long radius,
 
 // The table's values are the spell's own rule - none and Basic reach
 // only the target hex, Advanced one ring, Expert two.
-DATA(0x00642264) static const long g_berserkRadius[4] = { 0, 0, 1, 2 };
+DATA(0x00642264) static const long g_berserkRadius[kNumMasteries] = { 0, 0, 1, 2 };
 
 VA(0x005a4430, 0x2B8)
 DC_ADDRESS(0x1537d8, 0xac)
@@ -3756,7 +3756,7 @@ int combatManager::getNextChainLightningTarget(army* lastTargetArmy,
 // bound is FOUR because the next dword, 0x642284, belongs to Earthquake
 // (0x5a7cef reaches it and nothing reaches it from here).
 DATA(0x00642274)
-static const int g_chainLightningTargets[4] = { 4, 4, 5, 5 };
+static const int g_chainLightningTargets[kNumMasteries] = { 4, 4, 5, 5 };
 
 // Earthquake's screen-shake path, .rdata 0x642284: fifteen (dx, dy)
 // pairs the whole framebuffer is blitted back at, three times over.
