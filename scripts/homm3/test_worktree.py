@@ -11,6 +11,8 @@ import unittest
 from unittest.mock import patch
 
 from homm3 import worktree
+from homm3.build import normalized_freshness
+from homm3.core import root
 
 
 def _digest(data: bytes) -> str:
@@ -136,6 +138,68 @@ class RemoveTests(unittest.TestCase):
             branches = subprocess.run(["git", "-C", str(repo), "branch", "--list", "lane"],
                                       capture_output=True, text=True, check=True).stdout
             self.assertEqual(branches, "")
+
+
+def _checkout(path: Path) -> Path:
+    for name in root.MARKER_FILES:
+        (path / name).parent.mkdir(parents=True, exist_ok=True)
+        (path / name).write_text("")
+    tools = path / "scripts/homm3"
+    tools.mkdir(parents=True)
+    (tools / "__main__.py").write_text("")
+    (tools / "normalize_objs.py").write_text("transform")
+    return path
+
+
+class ForeignCodeTests(unittest.TestCase):
+    """A seeded worktree is comparable at once only under its own tools."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory(prefix="homm3 code root ")
+        base = Path(self._tmp.name).resolve()
+        self.main = _checkout(base / "main")
+        self.tree = _checkout(base / "main/.claude/worktrees/lane")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _inputs(self, checkout: Path) -> dict:
+        return {"tool:normalize_objs.py": checkout / "scripts/homm3/normalize_objs.py"}
+
+    def test_seeded_stamp_is_fresh_only_under_the_trees_own_tools(self):
+        seeded = self.main / "build/objdiff/normalized/base/unit.obj"
+        seeded.parent.mkdir(parents=True)
+        seeded.write_bytes(b"normalized")
+        with patch.object(normalized_freshness, "implementation_inputs",
+                          lambda: self._inputs(self.main)):
+            normalized_freshness.write_stamp(seeded, {})
+        copy = self.tree / "build/objdiff/normalized/base/unit.obj"
+        copy.parent.mkdir(parents=True)
+        for name in ("unit.obj", "unit.obj.stamp.json"):
+            (copy.parent / name).write_bytes((seeded.parent / name).read_bytes())
+        for code, fresh in ((self.tree, True), (self.main, False)):
+            with patch.object(normalized_freshness, "implementation_inputs",
+                              lambda code=code: self._inputs(code)):
+                problems = normalized_freshness.freshness_problems(copy)
+            self.assertEqual(not problems, fresh, problems)
+
+    def test_main_checkout_code_reexecutes_under_the_worktree(self):
+        environ = {"HOMM3_DIR": str(self.main),
+                   "PYTHONPATH": f"{self.main / 'scripts'}:/elsewhere"}
+        plan = root.foreign_code_reexec(self.main, environ, cwd=self.tree / "src")
+        self.assertIsNotNone(plan)
+        environment, warning = plan
+        self.assertIn("different checkout", warning)
+        self.assertEqual(environment["HOMM3_DIR"], str(self.tree))
+        self.assertEqual(environment["PYTHONPATH"], f"{self.tree / 'scripts'}:/elsewhere")
+        # The re-executed process, an intentional override and the main
+        # checkout itself all keep their code.
+        self.assertIsNone(root.foreign_code_reexec(self.tree, environment, cwd=self.tree))
+        self.assertIsNone(root.foreign_code_reexec(
+            self.main, {**environ, root.FORCE_VARIABLE: "1"}, cwd=self.tree))
+        self.assertIsNone(root.foreign_code_reexec(self.main, environ, cwd=self.main))
+        self.assertIsNone(root.foreign_code_reexec(
+            self.main, {**environ, root.REEXEC_VARIABLE: str(self.tree)}, cwd=self.tree))
 
 
 if __name__ == "__main__":
