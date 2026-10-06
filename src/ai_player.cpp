@@ -3198,6 +3198,11 @@ static void unblockLith(hero* currentHero,
 // default constructor (Mac 0x33328..0x3335c, DC constructor 0x38c3c).
 // Original ?AI_choose_destination@@YAHPAVhero@@JAAUHeroDestination@@AAJ_N3@Z
 // proves both final flags bool despite their lowered byte debug records.
+// 2026-10-06 C2 trace: unblockLith's nested budget is 45 after
+// markStrategicMap (cb 879) consumes the caller's 2186. isOnMap (24) and
+// getTown (45) are admitted, exhausting it before the direction loop's
+// game::getCell (58) and getMapExtra(point) (48). Retail instead calls
+// getTown and expands those two loop helpers.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket

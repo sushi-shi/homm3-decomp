@@ -1730,6 +1730,12 @@ static long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
 // estate amount, and product probes do not improve it. A signed-byte owner
 // local and a named AI-player reference both shift the shared conversion
 // scratch slots by -8 and spread Mac mismatches beyond the Estates block.
+// 2026-10-06: DC philai.obj never calls get_secondary_skill (hero.obj,
+// army.obj and ai_player.obj keep jsr calls), and get_skill_value/
+// wants_skill index skillLevel directly (dc 0x1135c6, 0x11382c..0x1139ac,
+// 0x113b0c). Direct reads across philai are byte-flat here (86.4960) but
+// lower aiValueOfEvent 96.69 -> 95.25 through its inlined valuation helpers;
+// no single site reverts that. Lead held for a combined aiValueOfEvent pass.
 VA(0x00524690, 0x684)
 DC_ADDRESS(0x1135ac, 0x536)
 MAC_ADDRESS(0x13e158, 0x7ac)  // anchor-callee
