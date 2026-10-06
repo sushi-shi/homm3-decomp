@@ -2187,7 +2187,7 @@ void townManager::unloadTown()
 {
     int i;
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (m_monPix[i])
             ResourceManager::Dispose(m_monPix[i]);
     }

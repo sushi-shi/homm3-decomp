@@ -1322,7 +1322,7 @@ void army::rangeAttack(army* armyToAttack)
         unsigned char multiple = 0;
         int dmg;
         int killedNow;
-        for (long i = 0; i < 7; i++) {
+        for (long i = 0; i < COMBAT_DIRECTION_COUNT + 1; i++) {
             long hex;
             if (i == COMBAT_DIRECTION_COUNT)
                 hex = m_pathTarget;
@@ -1385,7 +1385,7 @@ void army::rangeAttack(army* armyToAttack)
         unsigned char multiple = 0;
         int dmg;
         int killedNow;
-        for (long i = 0; i < 7; i++) {
+        for (long i = 0; i < COMBAT_DIRECTION_COUNT + 1; i++) {
             long hex;
             if (i == COMBAT_DIRECTION_COUNT)
                 hex = m_pathTarget;

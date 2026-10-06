@@ -1639,7 +1639,7 @@ void hero::updateArmies()
     message msg;
     msg.m_id = MESSAGE_WIDGET;
 
-    for (int slot = 0; slot < 7; ++slot) {
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         if (m_army.m_armies[slot] == CREATURE_NONE) {
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = slot + 0x36;
@@ -1822,7 +1822,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
     type_obscuring_object::restoreCell();
 
     if (!g_combatSurrendered) {
-        for (int slot = 0; slot < 7; slot++)
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++)
             m_army.dismiss(slot);
     }
 
@@ -4640,7 +4640,7 @@ void THeroScreenWindow::setupHeroView()
 
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = widget::WIDGET_DRAWN;
-    for (int slotIcon = 0; slotIcon < 7; slotIcon++) {
+    for (int slotIcon = 0; slotIcon < armyGroup::ARMY_GROUP_SLOT_COUNT; slotIcon++) {
         msg.m_codeY = slotIcon + 0x44;
         broadcastMessage(msg);
     }
@@ -4880,7 +4880,7 @@ MAC_ADDRESS(0x102f5c, 0x4c)
 int hero::creatureTypeCount(int creatureType)
 {
     int count = 0;
-    for (int slot = 0; slot < 7; slot++) {
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
         if (m_army.m_armies[slot] == creatureType && m_army.m_numTroops[slot] > 0)
             count++;
     }
@@ -6073,7 +6073,7 @@ int hero::getMobility(bool seaMovement) const
             mobility += g_moveConstants.m_oceanGuidanceBonus;
     } else {
         int slowest = 20;
-        for (int slot = 0; slot < 7; slot++) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             int creature = m_army.m_armies[slot];
             if (creature != CREATURE_NONE) {
                 int speed = akCreatureTypeTraits[creature].speed;

@@ -28,7 +28,7 @@ DATA(0x00640688) static const POINT g_skillLoc[4] = {
 };
 
 // DC static army_pos (type 0x3fa2): int[7][2].
-DATA(0x00682378) static int g_armyPos[7][2] = {
+DATA(0x00682378) static int g_armyPos[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
     {45, 84}, {81, 84}, {117, 84}, {27, 132},
     {63, 132}, {99, 132}, {135, 132}
 };

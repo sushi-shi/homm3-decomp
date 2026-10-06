@@ -512,9 +512,9 @@ void type_sacrifice_window::createCreatureWidgets(
     m_widgets.push_back(currentTextWidget);
     m_creatureWidgets.push_back(currentTextWidget);
 
-    iconWidget* newIconWidgets[7];
-    iconWidget* selectionFrames[7];
-    textWidget* newTextWidgets[7];
+    iconWidget* newIconWidgets[armyGroup::ARMY_GROUP_SLOT_COUNT];
+    iconWidget* selectionFrames[armyGroup::ARMY_GROUP_SLOT_COUNT];
+    textWidget* newTextWidgets[armyGroup::ARMY_GROUP_SLOT_COUNT];
     long itemNumber = 0;
 
     long defIndex;
@@ -966,7 +966,7 @@ void type_sacrifice_window::setCreatureMode()
     for (i = 0; i < m_creatureWidgets.size(); ++i)
         m_creatureWidgets[i]->show();
 
-    for (long group = 0; group < 7; ++group) {
+    for (long group = 0; group < armyGroup::ARMY_GROUP_SLOT_COUNT; ++group) {
         m_creatureOfferings[group].m_amount = 0;
         m_creatureOfferings[group].m_group = group;
         updateCreatureOffering(m_creatureOfferings[group]);

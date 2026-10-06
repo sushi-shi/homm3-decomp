@@ -1041,7 +1041,7 @@ void swapManager::drawSelector()
         x = 0x43;
         for (int hero = 0; hero < 2; hero++)
         {
-            for (int slot = 0; slot < 7; slot++, x += 0x24)
+            for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++, x += 0x24)
             {
                 if (!(hero == m_sourceHeroIndex && slot == m_sourceArmySlot))
                 {
@@ -2289,7 +2289,7 @@ MAC_ADDRESS(0x1a8d74, 0x1ac)
 void swapManager::swapMons()
 {
     int nonemptyTroops = 0;
-    for (int slot = 0; slot < 7; ++slot)
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot)
         if (m_heroes[m_sourceHeroIndex]->m_army.m_armies[slot] != CREATURE_NONE
             && m_heroes[m_sourceHeroIndex]->m_army.m_numTroops[slot] > 0)
             ++nonemptyTroops;
@@ -2339,7 +2339,7 @@ void swapManager::update()
             m_parent->broadcastMessage(msg);
         }
 
-        for (i = 0; i < 7; ++i)
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         {
             msg.m_codeY = 0xd + side * 7 + i;
             if (m_heroes[side]->m_army.m_armies[i] == CREATURE_NONE)
@@ -2358,7 +2358,7 @@ void swapManager::update()
             m_parent->broadcastMessage(msg);
         }
 
-        for (i = 0; i < 7; ++i)
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         {
             msg.m_codeY = 0x41 + side * 7 + i;
             if (m_heroes[side]->m_army.m_armies[i] == CREATURE_NONE)
