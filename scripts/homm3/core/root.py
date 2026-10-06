@@ -22,6 +22,8 @@ import sys
 
 MARKER_FILES = ("flake.nix", "config/project.toml", "config/units.toml")
 FORCE_VARIABLE = "HOMM3_DIR_FORCE"
+# The checkout a re-executed process switched to; stops a second re-exec.
+REEXEC_VARIABLE = "HOMM3_REEXEC_ROOT"
 
 
 def project_root(start: str | os.PathLike | None) -> Path | None:
@@ -85,6 +87,43 @@ def process_root(fallback: Path) -> Path:
             os.environ["HOMM3_DIR"] = str(root)
         _SELECTED = root
     return _SELECTED
+
+
+def foreign_code_reexec(code: Path | None, environ=None,
+                        cwd: str | os.PathLike | None = None) -> tuple[dict, str | None] | None:
+    """The environment to rerun ``python -m homm3`` under the selected tree's code.
+
+    A long-lived shell's wrapper may put an inherited ``HOMM3_DIR`` checkout's
+    ``scripts`` on ``PYTHONPATH`` while the current directory selects a linked
+    worktree. That process would read the worktree's data with the other
+    checkout's tools: normalized-copy stamps then name foreign tool paths, so a
+    fresh worktree refuses ``--no-build`` comparisons, and a branch's own
+    tooling changes are silently ignored. Returns ``(environment, warning)``
+    when the selected checkout differs from ``code`` and carries its own
+    ``homm3`` package, else ``None``.
+    """
+    environ = os.environ if environ is None else environ
+    if code is None:
+        return None
+    selected, warning = select(environ=environ, cwd=cwd, fallback=code)
+    if selected is None:
+        return None
+    try:
+        selected, code = selected.resolve(), Path(code).resolve()
+    except (OSError, RuntimeError):
+        return None
+    if selected == code or not (selected / "scripts/homm3/__main__.py").is_file():
+        return None
+    if environ.get(REEXEC_VARIABLE) == str(selected):
+        return None
+    foreign = os.path.realpath(code / "scripts")
+    paths = [entry for entry in environ.get("PYTHONPATH", "").split(os.pathsep)
+             if entry and os.path.realpath(entry) != foreign]
+    environment = dict(environ)
+    environment["HOMM3_DIR"] = str(selected)
+    environment[REEXEC_VARIABLE] = str(selected)
+    environment["PYTHONPATH"] = os.pathsep.join([str(selected / "scripts"), *paths])
+    return environment, warning
 
 
 def code_root(module_file: str) -> Path | None:
