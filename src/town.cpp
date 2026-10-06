@@ -1767,14 +1767,17 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 }
 
 // E:\gamedcs\town.cpp:2084
+// DC opens three scopes from line 2089: the for, its body and the braced
+// if body at line 2090.
 DC_ADDRESS(0x168494, 0x6e)
 MAC_ADDRESS(0x1b66f4, 0x104)
 void town::updateFullBuildingMask()
 {
     m_fullBuildingMask = m_populationMask;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (hasBuilding(i, false))
+        if (hasBuilding(i, false)) {
             m_fullBuildingMask |= s_includedBuildings[m_type][i];
+        }
     }
 }
 

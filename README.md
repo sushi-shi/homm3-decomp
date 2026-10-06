@@ -15,7 +15,7 @@ and the pinned CodeWarrior tools.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,447 |   98.45% | last measured score                            |
+| CUR   |           4,447 |   98.46% | last measured score                            |
 | MAX   |           4,463 |   98.51% | best result for each function's current source |
 | HIST  |           4,512 |   98.86% | all-time peak across source revisions          |
 
