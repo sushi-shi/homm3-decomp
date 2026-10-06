@@ -440,7 +440,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
         if (excluded & (1 << i))
             continue;
         if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
-                                                  defender.getHero(), damage) > 0)
+                                                  defender.m_currentHero, damage) > 0)
             break;
     }
     if (i >= 0)
@@ -449,7 +449,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
         if (excluded & (1 << i))
             continue;
         if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
-                                                  defender.getHero(), damage) > 0)
+                                                  defender.m_currentHero, damage) > 0)
             break;
     }
     if ((unsigned)i < defender.m_creatures.size())
@@ -473,22 +473,22 @@ void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, cons
         if (target < 0)
             break;
         choice.m_value += defender.m_creatures[target].getSpellDamage(
-            choice.m_spell, getHero(), defender.getHero(), damage);
+            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
         excluded |= 1 << target;
     }
 }
 
 VA(0x00424bf0, 0x123)
 DC_ADDRESS(0x02a7e4, 0x82)
-MAC_ADDRESS(0x026fac, 0xb8)
+MAC_ADDRESS(0x026fac, 0xb8)  // MAC_ABSTRACTION_FROM(tokens1:71f41d05fd02,38.8298): DC 0x2a83c/0x2a83e reads both heroes directly; the getHero facade was inferred from an indistinguishable Mac load.
 void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage, long extraTargets) const
 {
     long targetIndex = defender.m_creatures[choice.m_target].m_index;
     for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
-        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, getHero(),
-                                                           defender.getHero(), damage);
+        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
+                                                           defender.m_currentHero, damage);
         if (value <= 0)
             continue;
         choice.m_value += value;
@@ -497,29 +497,14 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
     }
 }
 
-// The remaining size() branch layout differs from its exact sibling expansions
-// in getAttack/getFinalMeleeValue, despite the same native vector template.
-// Loop-index declaration/initialization order leaves that frontier unchanged.
-// Mac stores target before value and retains the reverse traversal. Testing
-// predecrement against zero improves Windows 84.5863 -> 86.8514; the paired
-// source-family probe keeps every helper and reproduces all emitted objects.
-// Mac instruction scheduling is supporting evidence, not a separate objective.
-// A separately initialized vector-count local before damage gives 76.19%;
-// splitting mastery initialization from the power addition with a postdecrement
-// loop gives 84.5863%. Neither restores retail's size() branch or register homes.
-// HIST 100 used getTotal as vector cardinality; that old body conflicts with
-// DC's independently proven total-combat-value accessor and is not recoverable.
-// Complete Mac 0x270e8..0x270f4 compares the count before decrementing,
-// matching retail's postdecrement test at function+0x5b..0x63. Restore that
-// native loop rather than retaining the higher-scoring predecrement probe.
-// Mac 0x270c4/0x270cc expands the casting/target hero loads at owner+0x20;
-// both match the canonical getHero header accessor. Its source-call placement
-// for the casting owner is inferred from that operation; keep the complete
-// accessor path through this caller, chain lightning, and area valuation.
-// Together these restorations score Windows 86.48% (from 86.8514%) and Mac
-// 99.00% (from 40.6667%). All 15 named call/jump targets and 16 relocations
-// agree; the remaining 36/35 CFG frontier still starts at vector::size's null
-// branch and register homes. No unrelated inline-budget controls were added.
+// DC 0x2a8b6/0x2a8b8 reads both heroes at +32 directly, as do the chain,
+// area and cast siblings below, while DoAftermath in the same module keeps
+// jsr calls to get_hero/get_army. The SH build retained those accessor calls,
+// so these valuation bodies used the fields themselves. Mac 0x270c4/0x270cc
+// expands an identical owner+0x20 load and cannot distinguish the two forms.
+// Mac stores target before value (DC 569/570) and retains the reverse
+// postdecrement traversal (Mac 0x270e8..0x270f4, retail +0x5b..+0x63).
+// The direct reads restore the retail register homes and size() branch.
 VA(0x00424d20, 0x290)
 DC_ADDRESS(0x02a868, 0xce)
 MAC_ADDRESS(0x027064, 0x12c)
@@ -528,8 +513,8 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = defender.m_creatures.size(); i-- > 0; ) {
-        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, getHero(),
-                                                           defender.getHero(), damage);
+        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
+                                                           defender.m_currentHero, damage);
         if (value > choice.m_value) {
             choice.m_target = i;  // Mac0x270e0 stores target before value.
             choice.m_value = value;
@@ -567,7 +552,7 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
         if (target < 0)
             break;
         long value = targetData.m_creatures[target].getSpellDamage(
-            choice.m_spell, m_currentHero, targetData.getHero(), damage);
+            choice.m_spell, m_currentHero, targetData.m_currentHero, damage);
         value = targetData.m_creatures[target].takeDamage(value);
         targetData.m_totalCombatValue -= value;
         excluded |= 1 << target;
@@ -584,7 +569,7 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(
-            choice.m_spell, m_currentHero, defender.getHero(), damage);
+            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
         if (value <= 0)
             continue;
         defender.m_totalCombatValue -= defender.m_creatures[i].takeDamage(value);
@@ -595,13 +580,13 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
 
 VA(0x00425260, 0x180)
 DC_ADDRESS(0x02aa7c, 0xbe)
-MAC_ADDRESS(0x02731c, 0x130)
+MAC_ADDRESS(0x02731c, 0x130)  // MAC_ABSTRACTION_FROM(tokens1:2e83d8cf12a8,47.7564): DC 0x2aaba/0x2aabc reads both heroes directly; the getHero facade was inferred from an indistinguishable Mac load.
 void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
-        choice.m_spell, m_currentHero, defender.getHero(), damage);
+        choice.m_spell, m_currentHero, defender.m_currentHero, damage);
     defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
     // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
     // hit one extra target, 0x16 hits two.

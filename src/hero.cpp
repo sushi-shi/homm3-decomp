@@ -2763,7 +2763,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
             int skill = g_currentHero->getNthSS(nth);
             sprintf(g_text, g_heroScreen[21],
                     g_secondarySkillLevels[
-                        g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
+                        g_currentHero->m_skillLevel[skill] - 1],
                     g_sSkillTraits[skill].m_name);
         } else {
             g_text[0] = 0;
@@ -3625,10 +3625,8 @@ int THeroScreenWindow::exitDialog(message& msg)
 // move: it is still the last block, at fn+0x1291.  So the `else` is not the
 // construct that puts retail's join early, and no source bracketing tried so
 // far reaches C2's choice of surviving copy.
-// Current control (85.96526%): the Complete skill popup is instruction-exact
-// modulo shifted addresses, including both signed getSecondarySkill reads
-// on opposite sides of strcpy. A TSecondarySkill local instead of the two
-// argument casts is byte-flat. Fresh C2 tracing admits handleArtifactClick
+// The Complete skill popup reads skillLevel directly at both sites, as DC
+// does (89.9156%). Fresh C2 tracing admits handleArtifactClick
 // but rejects its nested combination predicate at budget 17 versus cb 120;
 // updateAllSlots/updateSlot also has a reciprocal nested frontier. These are
 // additional residuals, not evidence of missing locals or a new inline pin.
@@ -3971,17 +3969,17 @@ int THeroScreenWindow::windowHandler(message& msg)
             if (nth >= g_currentHero->m_skillCount)
                 break;
             int skill = g_currentHero->getNthSS(nth);
-            // Mac 0xfa524/0xfa58c expands the signed packed mastery
-            // accessor. GetNthSS's native public returns int; decode that
-            // skill ID at the typed accessor boundary.
+            // DC 0xd00de/0xd010c index skillLevel directly, although hero.obj
+            // keeps jsr calls to get_secondary_skill in IsMobile and
+            // get_skill_award; Mac 0xfa524/0xfa58c's byte load cannot tell.
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
+                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
+                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -4732,7 +4730,7 @@ void THeroScreenWindow::setupHeroView()
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_codeY = i + 0x4f;
             msg.m_extra = skill * 3
-                + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2;
+                + g_currentHero->m_skillLevel[skill] + 2;
             broadcastMessage(msg);
 
             strcpy(g_text, g_sSkillTraits[skill].m_name);
@@ -4743,7 +4741,7 @@ void THeroScreenWindow::setupHeroView()
 
             strcpy(g_text,
                    g_secondarySkillLevels[
-                       g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
+                       g_currentHero->m_skillLevel[skill] - 1]);
             msg.m_codeY = i + 0x5f;
             broadcastMessage(msg);
 
