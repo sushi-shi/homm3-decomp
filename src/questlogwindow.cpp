@@ -124,7 +124,7 @@ void TQuestLogWindow::updateQuestLocator(int i)
         if (quest >= g_game->m_worldMap.m_seerHutList.size())
             strcpy(g_text, g_game->m_worldMap.m_questGuardList[
                        quest - g_game->m_worldMap.m_seerHutList.size()]
-                       .questGuardFn00572D60().c_str());
+                       .getQuestLogText().c_str());
         else
             strcpy(g_text, g_game->m_worldMap.m_seerHutList[quest]
                        .getSeerLogText().c_str());

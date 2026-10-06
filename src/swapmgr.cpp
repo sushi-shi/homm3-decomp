@@ -878,7 +878,7 @@ int swapManager::open(int newPriority)
 
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT],
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
-                m_heroes[hero]->heroFn004D8F70());
+                m_heroes[hero]->getClassName());
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = hero + 87;
         msg.m_extraText = g_text;
@@ -1139,7 +1139,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
     }
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
-        && m_heroes[hero]->heroFn004E2840(
+        && m_heroes[hero]->canReplaceArtifactInSlot(
                g_heroScreenDraggedArtifact.m_artifactId, slot))
     {
         int converted;
@@ -1337,10 +1337,10 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
                         g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
                     if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
                         != -1) {
-                        if (ourHero->heroFn004D9B30(
+                        if (ourHero->showDisassembleArtifactDialog(
                                 oldArtifact.m_artifactId)
                             == DIALOG_RETURN_ACCEPT) {
-                            ourHero->heroFn004DC070(slot);
+                            ourHero->disassembleCombinationArtifact(slot);
                             this->update();
                             drawSwapWin();
                         }
@@ -1348,11 +1348,11 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
                     }
 
                     if (targetCombo != -1
-                        && ourHero->heroFn004DBE80(targetCombo)) {
-                        if (ourHero->heroFn004D9CC0(
+                        && ourHero->hasCombinationArtifactComponents(targetCombo)) {
+                        if (ourHero->showAssembleArtifactDialog(
                                 oldArtifact.m_artifactId)
                             == DIALOG_RETURN_ACCEPT) {
-                            ourHero->heroFn004DBF30(targetCombo, slot);
+                            ourHero->assembleCombinationArtifact(targetCombo, slot);
                             this->update();
                             drawSwapWin();
                         }
@@ -1389,7 +1389,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
 
     if (rightClick)
         return;
-    if (!ourHero->heroFn004E2840(
+    if (!ourHero->canReplaceArtifactInSlot(
             g_heroScreenDraggedArtifact.m_artifactId, slot))
         return;
 
@@ -1406,7 +1406,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
     if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
         ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
         if (g_game->m_gameVersion >= 2)
-            ourHero->heroFn004DC100(slot);
+            ourHero->offerCombinationArtifactAssembly(slot);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         this->update();
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -1415,7 +1415,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
         ourHero->removeArtifact(slot);
         ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
         if (g_game->m_gameVersion >= 2)
-            ourHero->heroFn004DC100(slot);
+            ourHero->offerCombinationArtifactAssembly(slot);
         g_heroScreenDraggedArtifact = oldArtifact;
         this->update();
         g_mouseManager->setPointer(
@@ -2104,7 +2104,7 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverHeroLeft: case kSwapRolloverHeroRight:
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                 m_heroes[codeY - kSwapRolloverHeroLeft]->m_name,
-                m_heroes[codeY - kSwapRolloverHeroLeft]->heroFn004D8F70());
+                m_heroes[codeY - kSwapRolloverHeroLeft]->getClassName());
         break;
 
     case kSwapRolloverMoraleLeft: case kSwapRolloverMoraleRight:

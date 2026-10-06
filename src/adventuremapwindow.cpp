@@ -924,7 +924,7 @@ hero_rollover: {
                 // Dreamcast adventuremapwindow.cpp:733 names operator[].
                 sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
-                    mapHero->m_name, mapHero->heroFn004D8F70());
+                    mapHero->m_name, mapHero->getClassName());
                 rolloverText = g_text;
                 break;
             }
@@ -1477,10 +1477,10 @@ void button::setHotkey(int code)
 
 VA(0x004040b0, 0x38)
 MAC_ADDRESS(0x003ddc, 0x20)
-void TAdventureMapWindow::vslot8(unsigned char on)
+void TAdventureMapWindow::onSleepChange(unsigned char on)
 {
     // Mac 0:0x3ddc forwards only; the mouse-effect edge is Windows-specific.
-    heroWindow::vslot8(on);
+    heroWindow::onSleepChange(on);
 
     if (on) {
         if (m_immersion)

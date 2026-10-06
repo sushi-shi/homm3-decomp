@@ -45,7 +45,7 @@ void advManager::checkCastSpell()
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return;
 
-    TAdventureObjectType objectType = currentHero->heroFn004E4EC0();
+    TAdventureObjectType objectType = currentHero->getSpecialTerrainObjectType();
     if (objectType == CURSED_GROUND) {
         if (g_spellTraits[g_windowManager->m_dialogReturn].m_level > 1) {
             normalDialog(

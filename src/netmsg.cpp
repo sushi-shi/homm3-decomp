@@ -138,7 +138,7 @@ t_complex_net_message::t_complex_net_message(eRS_Messages subType)
 
 VA(0x00512c80, 0xBA)
 MAC_ADDRESS(0x2233ec, 0xb4)
-unsigned char t_complex_net_message::remoteFn00512C80(
+unsigned char t_complex_net_message::sendToDPID(
     unsigned long dpid, bool compressMsg, bool guaranteed)
 {
     t_memory_file outfile;
@@ -151,7 +151,7 @@ unsigned char t_complex_net_message::remoteFn00512C80(
 
 VA(0x00512d40, 0xBA)
 MAC_ADDRESS(0x2234a0, 0xb4)
-unsigned char t_complex_net_message::remoteFn00512D40(
+unsigned char t_complex_net_message::send(
     int toWho, bool compressMsg, bool guaranteed)
 {
     t_memory_file outfile;
@@ -164,7 +164,7 @@ unsigned char t_complex_net_message::remoteFn00512D40(
 
 VA(0x00512e00, 0xBF)
 MAC_ADDRESS(0x223554, 0x84)
-unsigned char t_complex_net_message::remoteFn00512E00(CNetMsg* netMsg)
+unsigned char t_complex_net_message::readMessage(CNetMsg* netMsg)
 {
     t_memory_file infile(netMsg);
     infile.read(&m_netmsg, sizeof(CNetMsg));

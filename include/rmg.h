@@ -2022,8 +2022,8 @@ public:
     void placeMines();
     // Provisional roles from the Complete-only connection coordinator.
     void prepareZoneConnections();
-    void expandObstacleClearance();
-    void prepareWaterZoneConnections(TRmgZone* zone);
+    void markZoneBoundaryObstacles();
+    void populateWaterZoneIslands(TRmgZone* zone);
     void createWaterZoneIsland(const TRmgZoneBounds& bounds, int level);
     void floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex);
     void buildZoneConnectionPaths();
@@ -2155,7 +2155,7 @@ public:
     // It changes the artifact prototype and attempts to place its seer hut;
     // success transfers ownership to the generated map. Retained thiscall
     // boundary with one mutable artifact argument.
-    unsigned char placeQuestArtifact(TRmgQuestArtifactObject* object);
+    unsigned char placeSeerHutForArtifact(TRmgQuestArtifactObject* object);
     // Retained Complete-only helpers at 0x54b180 and 0x54b300. The quest
     // artifact caller supplies its origin zone and the prepared hut group.
     // Original names are unavailable; the graph and placement roles are proven.

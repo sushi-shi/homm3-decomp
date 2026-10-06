@@ -1299,16 +1299,16 @@ void TRmgTerrainPainter::paintTransitions()
                 TRmgTerrainFlip flip;
                 transition = selectTerrainTransition(neighbours, &flip);
                 if (transition == SHAPE_N_W_BLEND) {
-                    if (checkFirstDiagonal(point, flip))
+                    if (hasMatchingDiagonalNeighbour(point, flip))
                         transition = 6;
                 } else if (transition == SHAPE_N_W_HARD) {
-                    if (checkFirstDiagonal(point, flip))
+                    if (hasMatchingDiagonalNeighbour(point, flip))
                         transition = 12;
                 } else if (transition == SHAPE_SE_BLEND) {
-                    if (checkSecondDiagonal(point, flip))
+                    if (hasDifferentOuterAxisNeighbour(point, flip))
                         transition = 7;
                 } else if (transition == SHAPE_SE_HARD) {
-                    if (checkSecondDiagonal(point, flip))
+                    if (hasDifferentOuterAxisNeighbour(point, flip))
                         transition = 13;
                 }
 
@@ -1541,7 +1541,7 @@ void TRmgTerrainPainter::buildNeighbourKinds(
 //   o ? ?
 VA(0x005b6ba0, 0x24c)
 MAC_ADDRESS(0x258f18, 0x360)
-b8 TRmgTerrainPainter::checkFirstDiagonal(
+b8 TRmgTerrainPainter::hasMatchingDiagonalNeighbour(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a52a0 (tested and set in this body).
@@ -1581,7 +1581,7 @@ b8 TRmgTerrainPainter::checkFirstDiagonal(
 //   o ? ?
 VA(0x005b6e00, 0x1b3)
 MAC_ADDRESS(0x259278, 0x288)
-b8 TRmgTerrainPainter::checkSecondDiagonal(
+b8 TRmgTerrainPainter::hasDifferentOuterAxisNeighbour(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a3d64 (tested and set in this body).

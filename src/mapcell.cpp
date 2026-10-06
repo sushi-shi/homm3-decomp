@@ -638,11 +638,11 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
     if (readTimedEventList(infile, mapVersion) < 0)
         return -1;
 
-    soDTransformRandomDwellings();
+    resolveRandomDwellings();
 
     placeObjects();
 
-    loadShipyards();
+    initializeShipyardBoatPositions();
     return 0;
 }
 
@@ -2317,7 +2317,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 }
 
 // Complete defers the later DC
-// trigger/terrain scan to loadShipyards; its readObject arm only initializes
+// trigger/terrain scan to initializeShipyardBoatPositions; its readObject arm only initializes
 // the two boat coordinates after the reads, then discards the status.
 DC_ADDRESS(0x0efe28, 0x1c2)
 MAC_ADDRESS(0x12354c, 0xa4)
@@ -2359,7 +2359,7 @@ static int g_shipyardOffsets[12][2] = {
 // preserving cell(type_point)'s by-value boundary.
 VA(0x00500de0, 0x239)
 MAC_ADDRESS(0x1232e8, 0x264)
-void NewfullMap::loadShipyards()
+void NewfullMap::initializeShipyardBoatPositions()
 {
     type_point newPoint;
 
@@ -3310,7 +3310,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 
 VA(0x00502b60, 0x29B)
 MAC_ADDRESS(0x125b78, 0x280)
-void NewfullMap::soDTransformRandomDwellings()
+void NewfullMap::resolveRandomDwellings()
 {
     generator newGenerator;
 

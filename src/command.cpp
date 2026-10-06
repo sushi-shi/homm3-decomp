@@ -2182,7 +2182,7 @@ inline bool combatManager::automateTower()
     }
     if (!isComputerAction())
         return 0;
-    unnamed465f20();
+    chooseArrowTowerAction();
     resetMouse();
     return 1;
 }

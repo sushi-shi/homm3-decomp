@@ -220,8 +220,8 @@ public:
     // Out of line at 0x485370, seven bytes of vftable restore; its
     // scalar deleting destructor is 0x484020.
     virtual ~TCampaignBonus();
-    virtual bool isBuildingBonus() const = 0;
-    virtual const char* getIconDefName() const = 0;
+    virtual bool usesBitmapIcon() const = 0;
+    virtual const char* getIconResourceName() const = 0;
     virtual int getIconIndex() const = 0;
     virtual std::string getText() const = 0;
     virtual void apply(int whichPlayer) const = 0;
@@ -235,8 +235,8 @@ public:
 // word then an unsigned byte (0x484050).
 class TCampaignSpellBonus : public TCampaignBonus {
 public:
-    virtual bool isBuildingBonus() const;
-    virtual const char* getIconDefName() const;
+    virtual bool usesBitmapIcon() const;
+    virtual const char* getIconResourceName() const;
     virtual int getIconIndex() const { return m_spell; }
     virtual std::string getText() const;
     virtual void apply(int whichPlayer) const;
@@ -261,8 +261,8 @@ public:
 // (0x4844f0) - the first two signed, the count unsigned.
 class TCampaignCreatureBonus : public TCampaignBonus {
 public:
-    virtual bool isBuildingBonus() const;
-    virtual const char* getIconDefName() const;
+    virtual bool usesBitmapIcon() const;
+    virtual const char* getIconResourceName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
     virtual void apply(int whichPlayer) const;
@@ -281,8 +281,8 @@ public:
 // SetTown, which is also where the building index is remapped.
 class TCampaignBuildingBonus : public TCampaignBonus {
 public:
-    virtual bool isBuildingBonus() const;
-    virtual const char* getIconDefName() const;
+    virtual bool usesBitmapIcon() const;
+    virtual const char* getIconResourceName() const;
     virtual int getIconIndex() const { return 0; }
     virtual std::string getText() const;
     virtual void apply(int whichPlayer) const;
@@ -296,8 +296,8 @@ public:
 // Artifact: hero and artifact, both signed words (0x4848a0).
 class TCampaignArtifactBonus : public TCampaignBonus {
 public:
-    virtual bool isBuildingBonus() const;
-    virtual const char* getIconDefName() const;
+    virtual bool usesBitmapIcon() const;
+    virtual const char* getIconResourceName() const;
     virtual int getIconIndex() const { return m_artifact; }
     virtual std::string getText() const;
     virtual void apply(int whichPlayer) const;
@@ -314,8 +314,8 @@ public:
 // four ints).
 class TCampaignPrimarySkillBonus : public TCampaignBonus {
 public:
-    virtual bool isBuildingBonus() const;
-    virtual const char* getIconDefName() const;
+    virtual bool usesBitmapIcon() const;
+    virtual const char* getIconResourceName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
     virtual void apply(int whichPlayer) const;
@@ -331,8 +331,8 @@ public:
 // as unsigned bytes (0x484cf0).
 class TCampaignSecondarySkillBonus : public TCampaignBonus {
 public:
-    virtual bool isBuildingBonus() const;
-    virtual const char* getIconDefName() const;
+    virtual bool usesBitmapIcon() const;
+    virtual const char* getIconResourceName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
     virtual void apply(int whichPlayer) const;
@@ -349,8 +349,8 @@ public:
 // 7 and 8 (0x484d70).
 class TCampaignResourceBonus : public TCampaignBonus {
 public:
-    virtual bool isBuildingBonus() const;
-    virtual const char* getIconDefName() const;
+    virtual bool usesBitmapIcon() const;
+    virtual const char* getIconResourceName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
     virtual void apply(int whichPlayer) const;
@@ -388,18 +388,18 @@ public:
     // 0x484f50, the root's `??_G`, then inlines it, as does every derived
     // destructor.
     virtual ~TCampaignStartOption();
-    virtual bool isBuildingBonus(int which) const = 0;
+    virtual bool usesBitmapIcon(int which) const = 0;
     virtual int getCount() const = 0;
-    virtual const char* getIconDefName(void* scenario, int which) const = 0;
+    virtual const char* getIconResourceName(void* scenario, int which) const = 0;
     virtual int getIconIndex(int which) const = 0;
     // 0x484f80, inherited by the bonus and the third option: sums the
     // 5-dword bit block through the nibble table at 0x67729c and answers
     // the campaign's crossover index.
     // These queries only read the scenario in every concrete override.
     // Scenario ownership and constness are inferred from those bodies.
-    virtual int slot5(const TCampaignBrief::ScenarioStruct* scenario, int which) const;
+    virtual int getCrossoverPoolIndex(const TCampaignBrief::ScenarioStruct* scenario, int which) const;
     virtual std::string getText(void* scenario, int which) const = 0;
-    virtual int slot7(int which) const;
+    virtual int getStartingHeroId(int which) const;
     virtual int getPlayer(int which) const = 0;
     virtual void read(TAbstractFile* file) = 0;
     // `ret 4`: the slot takes one argument this option never reads, and
@@ -409,7 +409,7 @@ public:
     virtual void setTown(CMapHeaderData* header) = 0;
     // 0x485000: every prerequisite scenario the record marks must already
     // be completed in gpGame->campaign.mapScores.
-    virtual bool slot12(const TCampaignBrief::ScenarioStruct* scenario, int value) const;
+    virtual bool canUseCrossoverPool(const TCampaignBrief::ScenarioStruct* scenario, int value) const;
 };
 
 // Scenario count query expanded at Mac 0x650dc/0x65318 and 0x95ee4.
@@ -424,9 +424,9 @@ inline int TCampaignBrief::ScenarioStruct::getStartOptionCount() const
 class TCampaignStartBonusOption : public TCampaignStartOption {
 public:
     virtual ~TCampaignStartBonusOption();
-    virtual bool isBuildingBonus(int which) const;
+    virtual bool usesBitmapIcon(int which) const;
     virtual int getCount() const;
-    virtual const char* getIconDefName(void* scenario, int which) const;
+    virtual const char* getIconResourceName(void* scenario, int which) const;
     virtual int getIconIndex(int which) const;
     virtual std::string getText(void* scenario, int which) const;
     virtual int getPlayer(int which) const;
@@ -466,17 +466,17 @@ struct TCampaignCrossoverChoice {
 class TCampaignStartCrossoverOption : public TCampaignStartOption {
 public:
     hero* getFirstCrossoverHero(SCampaign* campaign, int which) const;
-    virtual bool isBuildingBonus(int which) const;
+    virtual bool usesBitmapIcon(int which) const;
     virtual int getCount() const;
-    virtual const char* getIconDefName(void* campaign, int which) const;
+    virtual const char* getIconResourceName(void* campaign, int which) const;
     virtual int getIconIndex(int which) const { return 0; }
-    virtual int slot5(const TCampaignBrief::ScenarioStruct* scenario, int which) const;
+    virtual int getCrossoverPoolIndex(const TCampaignBrief::ScenarioStruct* scenario, int which) const;
     virtual std::string getText(void* campaign, int which) const;
     virtual int getPlayer(int which) const;
     virtual void read(TAbstractFile* file);
     virtual void apply(void* scenario) {}
     virtual void setTown(CMapHeaderData* header) {}
-    virtual bool slot12(const TCampaignBrief::ScenarioStruct* scenario, int value) const;
+    virtual bool canUseCrossoverPool(const TCampaignBrief::ScenarioStruct* scenario, int value) const;
 
     std::vector<TCampaignCrossoverChoice> m_choices;
 
@@ -501,12 +501,12 @@ struct TCampaignHeroChoice {
 class TCampaignStartHeroOption : public TCampaignStartOption {
 public:
     TCampaignStartHeroOption();
-    virtual bool isBuildingBonus(int which) const;
+    virtual bool usesBitmapIcon(int which) const;
     virtual int getCount() const;
-    virtual const char* getIconDefName(void* campaign, int which) const;
+    virtual const char* getIconResourceName(void* campaign, int which) const;
     virtual int getIconIndex(int which) const { return 0; }
     virtual std::string getText(void* campaign, int which) const;
-    virtual int slot7(int which) const;
+    virtual int getStartingHeroId(int which) const;
     virtual int getPlayer(int which) const;
     virtual void read(TAbstractFile* file);
     virtual void apply(void* scenario) {}

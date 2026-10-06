@@ -289,7 +289,7 @@ rva	function_count	class
 0x2401d8	14	CHotSeatDlg
 # ??_7 site paired in order: 0x511e20 ??0CHotSeatDlg@@QAE@XZ
 0x240210	21	CHotSeatEdit
-# ??_7 site paired in order: 0x512b00 ??1t_memory_file@@UAE@XZ; 0x512c80 ?remoteFn00512C80@t_complex_net_message@@QAEEK_N0@Z (+2 more)
+# ??_7 site paired in order: 0x512b00 ??1t_memory_file@@UAE@XZ; 0x512c80 ?sendToDPID@t_complex_net_message@@QAEEK_N0@Z (+2 more)
 0x240264	3	t_memory_file
 # ??_7 site paired in order: 0x512c20 ??0t_complex_net_message@@QAE@XZ; 0x512c50 ??0t_complex_net_message@@QAE@W4eRS_Messages@@@Z
 0x240270	2	t_complex_net_message

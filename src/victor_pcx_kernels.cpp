@@ -101,7 +101,7 @@ void __cdecl victorUnpackFourPlanes(unsigned char* destination,
 }
 
 VA(0x006045e0, 0x34)  // anchor-caller loadpcx + RGB plane layout; external Victor library
-void __cdecl victorInterleaveRgbPlanes(unsigned char* destination,
+void __cdecl victorConvertRgbPlanesToBgr(unsigned char* destination,
                                        const unsigned char* source, int stride)
 {
     __asm {

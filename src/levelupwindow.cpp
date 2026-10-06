@@ -76,7 +76,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     // Dreamcast lines 71, 86 and 117 retain TTextResource::operator[] for
     // these three formatted labels.
     sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_HERO_FORMAT],
-            thisHero->m_name, thisHero->m_level, thisHero->heroFn004D8F70());
+            thisHero->m_name, thisHero->m_level, thisHero->getClassName());
     m_widgets.push_back(new textWidget(
         23, 151, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
         TEXT2_ID, 5, 0, 8));

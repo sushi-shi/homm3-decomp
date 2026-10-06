@@ -354,9 +354,9 @@ public:
         const TRmgGridPoint& point, b8* matches);
 
     void buildNeighbourKinds(const TRmgGridPoint& point, s32* neighbours);
-    b8 checkFirstDiagonal(
+    b8 hasMatchingDiagonalNeighbour(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    b8 checkSecondDiagonal(
+    b8 hasDifferentOuterAxisNeighbour(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     s32 getTransitionStrength(const TRmgGridPoint& point, s32 terrain);
 };

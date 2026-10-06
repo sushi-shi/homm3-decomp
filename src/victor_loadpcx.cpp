@@ -142,7 +142,7 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                         continue;
                     planesRemaining = victorPcxRgbPlanes;
                     plane = planeStart;
-                    victorInterleaveRgbPlanes(decoded, planeStart, width);
+                    victorConvertRgbPlanesToBgr(decoded, planeStart, width);
                 case victorPcxIndexedMode:
                     copyDecoded = 1;
                     break;
@@ -177,7 +177,7 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                     color += 3;
                 }
             } else {
-                victorInitializePalette(image);
+                victorInitializeGrayscalePalette(image);
             }
         }
         if (image->m_bitmap)

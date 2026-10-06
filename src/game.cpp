@@ -356,7 +356,7 @@ unsigned char initializeRandomTavernText()
 
 VA(0x004b8450, 0xF7)
 MAC_ADDRESS(0x0ca048, 0xd4)
-void HeroExtra::heroExtraFn004B8450(int heroId)
+void HeroExtra::reset(int heroId)
 {
     m_owner = -1;
     m_id = heroId;
@@ -3567,7 +3567,7 @@ void game::setupOrigData()
         m_heroPoolMap[i] = allPlayers;
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        m_heroSetup[i].heroExtraFn004B8450(i);
+        m_heroSetup[i].reset(i);
         m_heroes[i].initialize(i);
     }
 
@@ -3941,7 +3941,7 @@ void game::newMap(TAbstractFile* mapFile, HeroId* playerHeroFaces,
 
     for (unsigned int mapDataIndex = 0;
          mapDataIndex < m_worldMap.m_mapObjectData.size(); ++mapDataIndex) {
-        m_worldMap.m_mapObjectData[mapDataIndex]->newMapVFn38();
+        m_worldMap.m_mapObjectData[mapDataIndex]->setDefaultText();
     }
 
     // Mac expands the constant-reference fill; VC6 folds its eight stores.
@@ -10504,7 +10504,7 @@ void game::recordMonsterIdentifier(int identifier, type_point point)
 // identifier; absent objects use the packed all-minus-one point sentinel.
 VA(0x004cef10, 0x68)
 MAC_ADDRESS(0x0e7154, 0x78)  // sole semantic caller 0x56ef20 + reverse 8-byte walk
-type_point game::gameFn004CEF10(int identifier)
+type_point game::getMonsterLocationByIdentifier(int identifier)
 {
     for (unsigned int i = m_monsterIdentifiers.size(); i-- != 0;) {
         if (m_monsterIdentifiers[i].m_identifier == identifier)

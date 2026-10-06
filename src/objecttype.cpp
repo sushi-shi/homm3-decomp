@@ -69,7 +69,7 @@ private:
     std::vector<TNameIndex::iterator> m_rows;
 
 public:
-    // Project names for indexed borrowing beside the retained getIndex helper.
+    // Project names for indexed borrowing beside the retained getOrAddIndex helper.
     unsigned int getCount() const { return m_rows.size(); }
     const std::string& getName(int index) const { return m_rows[index]->first; }
 
@@ -83,7 +83,7 @@ public:
     // ordinary registry accessor, returning the mapped value by value also
     // restores the caller's scratch allocation; see setImageName's controls.
     MAC_ADDRESS(0x2268d0, 0xc4)
-    int getIndex(const std::string& name)
+    int getOrAddIndex(const std::string& name)
     {
         TNameIndex::iterator found = m_nameIndex.find(name);
         TNameIndex::iterator result = found;
@@ -432,7 +432,7 @@ TObjectType& TObjectType::setImageName(
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
     unsigned int oldCount = imageNames.getCount();
-    m_imageNumber = imageNames.getIndex(name);
+    m_imageNumber = imageNames.getOrAddIndex(name);
 
     std::vector<TImageInfo>& imageCache = getObjectImageCache();
 

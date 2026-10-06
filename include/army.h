@@ -817,8 +817,8 @@ public:
     // immediately after army(). Its body owns the member cleanup; callers
     // such as getCureValue keep the call. DC attributes it to an ai.cpp use site.
     ~army();
-    void faerieDragonSpell();
-    unsigned char unnamed447fe0();
+    void chooseFaerieDragonSpell();
+    unsigned char castEnchanterSpell();
     bool checkObstacleAttacks(bool isWalking);
     void clearAIValues();
     void considerAttack(const army* enemy, long value,
@@ -967,7 +967,7 @@ public:
     int getMorale(unsigned char applyLimits) const;
     int getSpeed() const;
 
-    int getMirrorEffect() const;
+    int getMagicMirrorChance() const;
 
     // Complete's NextArmy directly combines the private reset latch with the
     // shared IsIncapacitated helper. The exact retail lowering proves that
@@ -1333,8 +1333,8 @@ public:
     //     for the enchanter and only while the per-side counter at
     //     combatManager+0x132a0 exceeds 2, clearing that counter when
     //     the answer is non-zero.
-    void faerieDragonSpell();                // 0x447510
-    unsigned char unnamed447fe0();           // 0x447fe0
+    void chooseFaerieDragonSpell();                // 0x447510
+    unsigned char castEnchanterSpell();           // 0x447fe0
     // 0x448260, reconstructed in army.cpp: the animated creature-cast
     // dispatcher. combatManager::SetNextArmy-family code is the retail
     // caller; declared with its family here.
@@ -1501,7 +1501,7 @@ public:
     // ResetRound and the round view's other twenty-six declarators.
     void processDeath(int bFadeElementals);
     int getSecondGridIndex() const;                          // 0x4466a0
-    int getMirrorEffect() const;                              // 0x4487f0
+    int getMagicMirrorChance() const;                              // 0x4487f0
     void considerAttack(const army* enemy, long value,
                          long attack_distance);                 // 0x448840
     long getAITargetTime(long speed) const;                  // 0x448bd0
@@ -1887,7 +1887,7 @@ bool isValidCaliphSpell(SpellID spell, const army* target);
 // is_valid_caliph_spell and can_cast_spell - so it is a retail-only
 // factoring and the NAME BELOW IS A BOOTSTRAP INVENTION, same class as
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
-bool spellIsValidOnTarget(int spell, const army* target);
+bool isCreatureSpellUsefulOnTarget(int spell, const army* target);
 
 // E:\gamedcs\army.cpp:917
 // E:\gamedcs\army.cpp:2708

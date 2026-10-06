@@ -156,7 +156,7 @@ catch transcript and verifies that EH evidence precedes inline suggestions.
 
 ## A nested scope can remove cleanup stores without changing the EH transcript
 
-In `type_artifact_quest::doProgressDialog` (0x56fbc0), the returned string
+In `type_artifact_quest::doProposalDialog` (0x56fbc0), the returned string
 outlives the resource vector. Enclosing only the vector, its population loop,
 and the dialog call in a nested block removes three vector-field zero stores
 after deletion. VC6 also stops reserving EBX for zero and restores retail's

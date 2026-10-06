@@ -394,7 +394,7 @@ however, abandon the removed wrapper:
 - `TRmgKeyTentObject::completePlacement` (`0x5338e0`) removes `this` at `+0x4a`,
   attempts to generate a replacement, and returns false without deleting the
   original key tent.
-- `placeQuestArtifact` (`0x54b490`) removes the artifact wrapper at `+0x298`
+- `placeSeerHutForArtifact` (`0x54b490`) removes the artifact wrapper at `+0x298`
   when `placeQuestGroup` fails. Its remaining cleanup destroys the temporary
   group's containers and map, not the wrapper. On return,
   `TRmgQuestArtifactObject::completePlacement` (`0x533a50`) deletes the seer hut through
@@ -412,7 +412,7 @@ history and potentially map bytes.
 
 These are native control-flow and ownership findings, not newly executed leak
 reproductions. They apply when the specified replacement path is taken; an early
-`placeQuestArtifact` failure due to an empty artifact pool does not remove the
+`placeSeerHutForArtifact` failure due to an empty artifact pool does not remove the
 wrapper and is not this leak. Preserve the existing lifetime behavior.
 
 ## Conditional contracts and unresolved hazards
@@ -476,7 +476,7 @@ entry validation bounds what they are built from.
 | `createRoads` | At least one road target. | Existing fix. |
 | `generate` player mapping | Slots cover the players, player indices 0–7, at most eight players, valid town-zone alignments. | Request and template checks, followed by a check that mapped players have owned primary towns. A randomly resolved primary town also supplies an unaligned zone's faction. |
 | `assignRmgTeams` | Team and player counts fit the arrays; a positive number of nonempty teams. | `writeMapHeader` makes the human and computer-only masks disjoint, recounts players (≤ 8), and clamps teams to 1..players before calling. |
-| `placeQuestArtifact` | Every eligible artifact has a prototype; nonempty seer family for the modulus. | Family check. Seer quests exist only for seer prototypes, so the modulus runs only when the family is nonempty. |
+| `placeSeerHutForArtifact` | Every eligible artifact has a prototype; nonempty seer family for the modulus. | Family check. Seer quests exist only for seer prototypes, so the modulus runs only when the family is nonempty. |
 | `writeMap` | `RANDOM_MONSTER` and `TERRAIN_HOLE` entry zero. Only the final write result is checked. | Family check. Unlatched short writes are an output issue, not input. |
 | `TRmgLinePatternTable` / terrain pattern tables and selectors | Fixed tables are well formed. | Internal fixed tables. |
 | Voronoi geometry / vector operators | 32-bit differences, squares and cross products stay representable; triangles noncollinear. | Internal; sites are scaled map positions. The unscaled layout (`canPlaceZone`, `canConnect`, radial positions) has no upper bound on template sizes: **not covered**. |

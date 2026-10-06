@@ -627,7 +627,7 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             dlg.createWin(row->m_heroPortrait, startingHero->m_name,
                           m_heroSpecificAbility, heroId,
                           startingHero->getSpecificAbilityTextShort(),
-                          startingHero->heroFn004D8F70());
+                          startingHero->getClassName());
             dlg.doModal(0);
         }
         return 1;

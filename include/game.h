@@ -59,24 +59,26 @@ class type_event_record;
 class MonsterData;
 // Retail NewfullMap::Init proves the deleting destructor at slot zero.
 // NewMap and the mapcell broadcasts prove the remaining slot count and the
-// signatures at +0x24, +0x28 and +0x38; the other names remain address-based.
+// signatures at +0x24, +0x28 and +0x38. NewfullMap stores only type_quest
+// pointers here, so each slot takes the matching type_quest virtual's name;
+// the signatures of slots the map never calls remain opaque.
 class CMapObjectData {
 public:
     virtual ~CMapObjectData();
-    virtual void newMapVFn04();
-    virtual void newMapVFn08();
-    virtual void newMapVFn0c();
-    virtual void newMapVFn10();
-    virtual void newMapVFn14();
-    virtual void newMapVFn18();
-    virtual void newMapVFn1c();
-    virtual void newMapVFn20();
+    virtual void getAIPaymentValue();
+    virtual void isSatisfied();
+    virtual void takePayment();
+    virtual void doProgressDialog();
+    virtual void doProposalDialog();
+    virtual void getRequirementText();
+    virtual void getQuestDescription();
+    virtual void questType();
     virtual void notifyHeroDefeated(int heroId, int player);
     virtual void notifyMonsterDefeated(type_point point, int player);
-    virtual void newMapVFn2c();
-    virtual void newMapVFn30();
-    virtual void newMapVFn34();
-    virtual void newMapVFn38();
+    virtual void load();
+    virtual void loadFromMap();
+    virtual void save();
+    virtual void setDefaultText();
 };
 
 // The two map-object pools readObject (0x502e00) appends to that no other
@@ -180,7 +182,7 @@ public:
     signed char m_primarySkills[4];  // +0x32d, class trails to 0x334
 
     // Implicit default constructor; CodeView dc 0xbd5f4 compgenx.
-    void heroExtraFn004B8450(int heroId);
+    void reset(int heroId);
 };
 #pragma pack(pop)
 SIZE(HeroExtra, 0x334);
@@ -1253,7 +1255,7 @@ public:
     };
     std::vector<MonsterIdentifier> m_monsterIdentifiers;
     NewfullMap* getWorldMapData();
-    type_point gameFn004CEF10(int identifier);
+    type_point getMonsterLocationByIdentifier(int identifier);
     HeroId getStartingHeroId(TTownType alignment, int playerPos,
                           int mapPosition);  // 0x4bb400
     int scan(signed char* whichList, int start, int length);

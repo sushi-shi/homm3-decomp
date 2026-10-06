@@ -282,7 +282,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
                            group->m_numTroops[iarmy]);
 
     if (thisHero)
-        thisHero->heroFn004E6120(m_armyType, &traits);
+        thisHero->applyCreatureStatBonuses(m_armyType, &traits);
 
     createAttackWidget(typeTraits->m_attackSkill, traits.m_attackSkill);
     createDefenseWidget(typeTraits->m_defenseSkill, traits.m_defenseSkill);

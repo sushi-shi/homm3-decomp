@@ -85,7 +85,7 @@ public:
     DC_ADDRESS(0x0669f4, 0x6)
     void setDisabledFrame(long frame) { m_disabledFrame = frame; }
     // The later private highlight frame has no Dreamcast field; its outside
-    // writer (TSingleSelectionWindow::createFilterWidgets) takes the same
+    // writer (TSingleSelectionWindow::createRandomMapOptionWidgets) takes the same
     // setter form beside setDisabledFrame. Project name.
     void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
 

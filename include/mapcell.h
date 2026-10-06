@@ -1373,8 +1373,8 @@ public:
     // This role-based name is provisional: the Dreamcast roster has no
     // corresponding procedure between loadObjectType and readMapObjects.
     void rebuildObjectTypeIndex();
-    void soDTransformRandomDwellings();
-    void loadShipyards();
+    void resolveRandomDwellings();
+    void initializeShipyardBoatPositions();
     int readObjectType(TAbstractFile* infile, CObjectType& objectType);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
     int loadObjectType(TAbstractFile* infile, CObjectType* objectType);

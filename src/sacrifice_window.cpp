@@ -749,7 +749,7 @@ void type_sacrifice_window::updateSlot(long slot)
     type_artifact artifact = m_currentHero->getArtifact(artifactSlot);
 
     if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE
-        && m_currentHero->heroFn004E2840(
+        && m_currentHero->canReplaceArtifactInSlot(
                m_holdingArtifact.m_artifactId, slot)) {
         updateArtifactWidget(m_slotBackWidgets[slot], artifact);
 
@@ -1073,7 +1073,7 @@ void type_sacrifice_window::artifactClick(
 
     if (rightClick)
         return;
-    if (!m_currentHero->heroFn004E2840(
+    if (!m_currentHero->canReplaceArtifactInSlot(
             m_holdingArtifact.m_artifactId, slot))
         return;
 

@@ -54,10 +54,10 @@ void checkCombatCheatCode(std::string& chatString)
 
     if (code.compare(bluePillCode)) {
         recognized = 1;
-        g_combatManager->unnamed4693a0(g_combatManager->m_currentSide);
+        g_combatManager->cheatKillSide(g_combatManager->m_currentSide);
     } else if (code.compare(redPillCode)) {
         recognized = 1;
-        g_combatManager->unnamed4693a0(1 - g_combatManager->m_currentSide);
+        g_combatManager->cheatKillSide(1 - g_combatManager->m_currentSide);
     } else if (code.compare(allSpellsCode)
                && currentHero) {
         recognized = 1;

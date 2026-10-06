@@ -76,7 +76,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     NewmapCell* cell);
 long valueOfReinforcing(hero* currentHero, town* currentTown,
                           short moveCost);
-long valueOfTownBuildings(const hero* currentHero, town* currentTown);
+long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown);
 int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     long pathfinding, long endRoad, long flying, long waterWalking,
     long nativeTerrain, unsigned char param9);
@@ -1590,7 +1590,7 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
 
 VA(0x00524630, 0x60)
 MAC_ADDRESS(0x13ea7c, 0x9c)
-int hero::soDGetSeerSkillValue(int skill, int level)
+int hero::getSeerSkillRewardValue(int skill, int level)
 {
     int typedSkill;
     typedSkill = skill;
@@ -2434,7 +2434,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 // calls trade_resources at 0x526d35, and returns with ret 4.
 VA(0x00526d20, 0x1e)
 MAC_ADDRESS(0x140df0, 0x2c)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
-void unnamed526d20(int playerId, int* costs, int flag)
+void tradePlayerResources(int playerId, int* costs, int flag)
 {
     g_aiPlayers[playerId].tradeResources(costs, flag);
 }
@@ -3484,7 +3484,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     town* currentTown = g_game->getTown(townId);
     if (currentTown->m_owner != currentHero->m_owner) {
         if (onMySide(currentTown->m_owner))
-            return valueOfTownBuildings(currentHero, currentTown);
+            return valueOfTownVisitBonuses(currentHero, currentTown);
 
         if (currentTown->m_visitingHeroId >= 0) {
             hero* visitingHero =
@@ -3498,7 +3498,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
 
     long value = valueOfReinforcing(
         const_cast<hero*>(currentHero), currentTown, moveCost);
-    value += valueOfTownBuildings(currentHero, currentTown);
+    value += valueOfTownVisitBonuses(currentHero, currentTown);
 
     VictoryConditionStruct& victory = g_game->m_mapHeader.m_victoryCondition;
     if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
@@ -3619,7 +3619,7 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 // Its role name is provisional; keep the retained body in this module.
 VA(0x0052b1e0, 0x2f4)
 MAC_ADDRESS(0x145000, 0x390)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
-long valueOfTownBuildings(const hero* currentHero, town* currentTown)
+long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown)
 {
     long value = 0;
     if (currentTown->m_type == TOWN_CONFLUX

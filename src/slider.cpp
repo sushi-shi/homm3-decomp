@@ -152,7 +152,7 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 
     if (m_oldState != m_currentState) {
         m_oldState = m_currentState;
-        close();
+        onValueChanged();
         if (m_sliderFunction)
             m_sliderFunction(m_currentState, m_parentWindow);
     }
@@ -187,7 +187,7 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 
     if (m_oldState != m_currentState) {
         m_oldState = m_currentState;
-        close();
+        onValueChanged();
         if (m_sliderFunction)
             m_sliderFunction(m_currentState, m_parentWindow);
     }
@@ -395,7 +395,7 @@ int slider::select(message* msg, unsigned char dragging)
 
     if (m_oldState != m_currentState) {
         m_oldState = m_currentState;
-        close();
+        onValueChanged();
         if (m_sliderFunction)
             m_sliderFunction(m_currentState, m_parentWindow);
     }
@@ -446,7 +446,7 @@ int slider::deselect(message* msg)
 
     if (m_oldState != m_currentState) {
         m_oldState = m_currentState;
-        close();
+        onValueChanged();
         if (m_sliderFunction)
             m_sliderFunction(m_currentState, m_parentWindow);
     }
@@ -632,6 +632,6 @@ void slider::enable(unsigned char arg)
 
 // Retail vtable 0x641d50 slot 16 is the shared empty return at 0x5bc690.
 // The scenario text slider overrides this optional change notification.
-void slider::close()
+void slider::onValueChanged()
 {
 }
