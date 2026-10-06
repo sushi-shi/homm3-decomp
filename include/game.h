@@ -172,7 +172,7 @@ public:
     short m_numTroops[armyGroup::ARMY_GROUP_SLOT_COUNT];  // +0x58 - movsx word
     unsigned char m_groupFormation;  // +0x66 - no retail body reads it
     unsigned char m_customArtifacts;  // +0x67
-    type_artifact m_artifacts[19];
+    type_artifact m_artifacts[kNumArtifactSlots + 1];
     type_artifact m_backpack[64];
     #pragma pack(push, 1)
     unsigned char m_numInBackpack;  // +0x300 - no retail body reads it

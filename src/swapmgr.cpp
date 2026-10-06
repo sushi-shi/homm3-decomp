@@ -1120,7 +1120,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         unsigned int remaining = m_heroes[hero]->m_artifactSlotCounts[type];
         if (remaining > 0)
         {
-            const std::bitset<19>& slots = g_artifactSlotMasks[type];
+            const std::bitset<kNumArtifactSlots + 1>& slots = g_artifactSlotMasks[type];
             for (int i = kNumArtifactSlots + 1; ; )
             {
                 --i;

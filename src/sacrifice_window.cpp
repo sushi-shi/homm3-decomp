@@ -20,7 +20,7 @@
 #include "winmgr.h"
 
 // Complete adds the nineteenth SoD equipment slot to DC's 18-pair table.
-DATA(0x00641228) static const long g_slotDefinitions[19][2] = {
+DATA(0x00641228) static const long g_slotDefinitions[kNumArtifactSlots + 1][2] = {
     {143, 18}, {202, 230}, {143, 68}, {17, 57}, {196, 172},
     {143, 119}, {65, 57}, {244, 172}, {149, 283}, {17, 131},
     {33, 181}, {49, 232}, {65, 283}, {198, 18}, {244, 18},
@@ -1464,7 +1464,7 @@ MAC_ADDRESS(0x15abb0, 0x94)
 void type_sacrifice_window::returnArtifact(
     const type_artifact_offering& artifact)
 {
-    if (artifact.m_source < 19) {
+    if (artifact.m_source < kNumArtifactSlots + 1) {
         if (m_currentHero->equipArtifact(artifact, artifact.m_source))
             return;
         if (m_currentHero->equipArtifact(artifact, -1))

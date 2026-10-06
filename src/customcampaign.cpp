@@ -3098,7 +3098,7 @@ static void convertLegacyCampaignHero(hero& newHero,
            sizeof(newHero.m_skillOrder));
     newHero.m_skillCount = oldHero.m_skillCount;
 
-    for (int equippedSlot = 0; equippedSlot < 19; ++equippedSlot) {
+    for (int equippedSlot = 0; equippedSlot < kNumArtifactSlots + 1; ++equippedSlot) {
         type_artifact artifact = oldHero.m_equipped[equippedSlot];
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.equipArtifact(artifact, equippedSlot);

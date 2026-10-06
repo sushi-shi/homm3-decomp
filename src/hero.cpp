@@ -1169,11 +1169,11 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customArtifacts) {
-        for (i = 0; i < 19; i++) {
+        for (i = 0; i < kNumArtifactSlots + 1; i++) {
             if (m_equipped[i].m_artifactId != ARTIFACT_NONE)
                 removeArtifact(i);
         }
-        for (i = 0; i < 19; i++) {
+        for (i = 0; i < kNumArtifactSlots + 1; i++) {
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
                 equipArtifact(setup->m_artifacts[i], i);
         }
@@ -1275,7 +1275,7 @@ MAC_ADDRESS(0x0f4c1c, 0x68)
 long hero::getEquippedArtifacts(bool countWarMachines) const
 {
     long count = 0;
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         int id = m_equipped[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
             id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
@@ -1349,7 +1349,7 @@ DC_ADDRESS(0x0cc220, 0x4a)
 MAC_ADDRESS(0x0f4d94, 0x68)
 unsigned char hero::hasArtifact(int whichArtifact) const
 {
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         if (m_equipped[slot].m_artifactId == whichArtifact)
             return 1;
     }
@@ -1372,7 +1372,7 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
         return getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_SPELLBOOK;
     } else {
-        for (int slot = 0; slot < 19; slot++) {
+        for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
             if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 return 1;
         }
@@ -1415,7 +1415,7 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
         break;
     }
     // Nineteen equipped slots, one more than the DC build's eighteen.
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return;
@@ -2949,7 +2949,7 @@ unsigned char hero::hasCombinationArtifactComponents(int combination)
 {
     std::bitset<ARTIFACT_COUNT> missingComponents =
         g_combinationArtifacts[combination].m_components;
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
         if (artifactId != ARTIFACT_NONE)
             missingComponents[artifactId] = false;
@@ -4911,7 +4911,7 @@ void hero::transferArtifacts(hero* src)
     if (!src)
         return;
     type_artifact artifact;
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         artifact = src->m_equipped[slot];
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
@@ -5026,12 +5026,12 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
         int slotClass = g_artifactSlotTraits[slot].m_type;
         unsigned int worn = m_artifactSlotCounts[slotClass];
         if (worn > 0) {
-            std::bitset<19> classSlots = g_artifactSlotMasks[slotClass];
+            std::bitset<kNumArtifactSlots + 1> classSlots = g_artifactSlotMasks[slotClass];
             size_t capacity = classSlots.count();
             if (worn >= capacity)
                 continue;
             int occupied = 0;
-            for (int i = 0; i < 19; i++) {
+            for (int i = 0; i < kNumArtifactSlots + 1; i++) {
                 if (classSlots[i] &&
                     getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                     occupied++;
@@ -5065,7 +5065,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     continue;
                 }
                 int componentCount = counts[componentClass];
-                std::bitset<19> classSlots =
+                std::bitset<kNumArtifactSlots + 1> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
                 if (componentCount >= capacity) {
@@ -5076,7 +5076,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     int occupied =
                         (g_artifactTraits[artifact].m_allowableSlotMask
                          == componentClass) ? 1 : 0;
-                    for (int i = 0; i < 19; i++) {
+                    for (int i = 0; i < kNumArtifactSlots + 1; i++) {
                         if (classSlots[i] &&
                             getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                             occupied++;
@@ -5204,7 +5204,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     if (slot == -1) {
         slot = 0;
         while (1) {
-            if (slot >= 19)
+            if (slot >= kNumArtifactSlots + 1)
                 return 0;
             if (canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
                 break;
@@ -5358,7 +5358,7 @@ bool hero::removeArtifact(TArtifact artifact)
             return 1;
         }
     }
-    for (slot = 0; slot < 19; slot++) {
+    for (slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return 1;

@@ -1818,7 +1818,7 @@ int playerData::numOfGivenArtifact(int whichArtifact) const
 
     for (int heroIndex = 0; heroIndex < m_numHeroes; heroIndex++) {
         hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
-        for (int slot = 0; slot < 19; slot++) {
+        for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
             if (currentHero->getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 count++;
         }
@@ -1828,7 +1828,7 @@ int playerData::numOfGivenArtifact(int whichArtifact) const
         town* currentTown = g_game->getTown(m_townIds[townIndex]);
         if (currentTown->m_garrisonHeroId >= 0) {
             hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
-            for (int slot = 0; slot < 19; slot++) {
+            for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
                 if (currentHero->getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                     count++;
             }
@@ -5362,7 +5362,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 
         if (readValue<char>(mapFile)) {
             heroRecord->m_customArtifacts = 1;
-            for (int equipped = 0; equipped < 19; ++equipped) {
+            for (int equipped = 0; equipped < kNumArtifactSlots + 1; ++equipped) {
                 heroRecord->m_artifacts[equipped] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
                     type_artifact(static_cast<TArtifact>(readLittleEndianValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
