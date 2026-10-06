@@ -11,20 +11,18 @@ use crate::{
 };
 
 /// Unused underground floor is rock and occupied zone floor is restored.
-pub(crate) struct UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
-    treasures: TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+pub(crate) struct UndergroundDecorated<'map> {
+    treasures: TreasuresPlaced<'map>,
 }
-impl<'state, 'zones, 'tiles> UndergroundDecorated<'state, 'zones, 'tiles, '_, '_, '_, '_> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> UndergroundDecorated<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.treasures.map_mut()
     }
-    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_> {
         self.treasures.generation()
     }
 }
-impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-    TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-{
+impl<'map> TreasuresPlaced<'map> {
     /// Fill unused underground floor with rock after all treasures are placed.
     ///
     /// # Errors
@@ -32,41 +30,31 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
     pub(crate) fn decorate_underground(
         mut self,
         rng: &mut RetailRng,
-    ) -> Result<
-        UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
-        TerrainError,
-    > {
+    ) -> Result<UndergroundDecorated<'map>, TerrainError> {
         self.map_mut().decorate_underground(rng)?;
         Ok(UndergroundDecorated { treasures: self })
     }
 }
 
 /// Dry neighbours of water are marked coastal in both planes.
-pub(crate) struct CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
-    underground: UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+pub(crate) struct CoastsMarked<'map> {
+    underground: UndergroundDecorated<'map>,
 }
-impl<'state, 'zones, 'tiles> CoastsMarked<'state, 'zones, 'tiles, '_, '_, '_, '_> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> CoastsMarked<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.underground.map_mut()
     }
-    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_> {
         self.underground.generation()
     }
 }
-impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-    UndergroundDecorated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-{
+impl<'map> UndergroundDecorated<'map> {
     /// Mark coasts once, after underground decoration has settled the terrain.
     /// No RNG is consumed.
     ///
     /// # Errors
     /// Reports coordinates outside admitted map dimensions.
-    pub(crate) fn mark_coastal_tiles(
-        mut self,
-    ) -> Result<
-        CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
-        PlacementError,
-    > {
+    pub(crate) fn mark_coastal_tiles(mut self) -> Result<CoastsMarked<'map>, PlacementError> {
         self.map_mut().mark_coastal_tiles()?;
         Ok(CoastsMarked { underground: self })
     }
@@ -80,7 +68,7 @@ impl CellState {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Fill unused underground floor with rock, then restore occupied zone floor.
     /// One brush spans all zones; changing terrain finishes its queued repairs.
     ///

@@ -166,7 +166,7 @@ impl Registration {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     pub(super) fn prepare_object_context(
         &mut self,
         objects: &ObjectArena,

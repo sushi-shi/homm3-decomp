@@ -88,7 +88,7 @@ fn native_footprint_and_complete_fit_queries_match_on_generated_maps() {
 }
 
 fn snapshot(
-    map: &PlacementMap<'_, '_, '_>,
+    map: &PlacementMap<'_>,
     catalog: &PrototypeCatalog<'_>,
     outline: &mut OutlineWorkspace,
 ) -> String {

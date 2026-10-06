@@ -370,10 +370,10 @@ impl PlacementWorkspace {
     ///
     /// # Errors
     /// Returns a failed state-buffer reservation.
-    pub fn begin<'state, 'zones, 'tiles>(
-        &'state mut self,
-        terrain: PaintedTerrain<'zones, 'tiles>,
-    ) -> Result<PlacementMap<'state, 'zones, 'tiles>, PlacementError> {
+    pub fn begin<'map>(
+        &'map mut self,
+        terrain: PaintedTerrain<'map>,
+    ) -> Result<PlacementMap<'map>, PlacementError> {
         let count = terrain.tiles().len();
         self.cells
             .try_reserve(count.saturating_sub(self.cells.len()))?;
@@ -400,17 +400,17 @@ impl PlacementWorkspace {
 }
 
 /// Placement stage owns its terrain-stage token while borrowing all map buffers.
-pub struct PlacementMap<'state, 'zones, 'tiles> {
-    terrain: PaintedTerrain<'zones, 'tiles>,
-    cells: &'state mut [CellState],
-    memberships: &'state mut Memberships,
-    registration: &'state mut Registration,
-    towns: &'state mut TownState,
-    road_targets: &'state mut Vec<WorldPosition>,
-    connections: &'state mut ConnectionScratch,
-    zone_placement: &'state mut ZonePlacementScratch,
+pub struct PlacementMap<'map> {
+    terrain: PaintedTerrain<'map>,
+    cells: &'map mut [CellState],
+    memberships: &'map mut Memberships,
+    registration: &'map mut Registration,
+    towns: &'map mut TownState,
+    road_targets: &'map mut Vec<WorldPosition>,
+    connections: &'map mut ConnectionScratch,
+    zone_placement: &'map mut ZonePlacementScratch,
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Town and shipyard road targets in native insertion order, including repeats.
     #[must_use]
     pub fn road_targets(&self) -> &[WorldPosition] {
@@ -433,7 +433,7 @@ impl PlacementMap<'_, '_, '_> {
 
     /// Existing painted tiles and zone coverage, without copying either buffer.
     #[must_use]
-    pub const fn terrain(&self) -> &PaintedTerrain<'_, '_> {
+    pub const fn terrain(&self) -> &PaintedTerrain<'_> {
         &self.terrain
     }
 
@@ -534,7 +534,7 @@ impl PlacementMap<'_, '_, '_> {
 ///
 /// ```compile_fail
 /// use homm3_rmg::{domain::WorldPosition, placement::{MapCell, PlacementMap}};
-/// fn cannot_escape(map: &PlacementMap<'_, '_, '_>, at: WorldPosition) -> MapCell<'static> {
+/// fn cannot_escape(map: &PlacementMap<'_>, at: WorldPosition) -> MapCell<'static> {
 ///     map.cell(at).unwrap()
 /// }
 /// ```

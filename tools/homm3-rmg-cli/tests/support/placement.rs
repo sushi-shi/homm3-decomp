@@ -13,7 +13,7 @@ fn position(x: i32, y: i32, level: Level) -> WorldPosition {
         level,
     }
 }
-pub fn write_counts(actual: &mut String, map: &PlacementMap<'_, '_, '_>) {
+pub fn write_counts(actual: &mut String, map: &PlacementMap<'_>) {
     let kind = |k| ObjectKind::parse(i32::try_from(k).unwrap()).unwrap();
     for k in 0..raw::ADVENTURE_OBJECT_TRAIT_COUNT {
         write!(actual, "{} ", map.object_count(kind(k))).unwrap();
@@ -33,7 +33,7 @@ pub fn write_counts(actual: &mut String, map: &PlacementMap<'_, '_, '_>) {
 }
 pub fn write_cells(
     actual: &mut String,
-    map: &PlacementMap<'_, '_, '_>,
+    map: &PlacementMap<'_>,
     object_id: impl Fn(ObjectId) -> i32,
 ) {
     let side = i32::try_from(map.coverage().map().raster().dimension()).unwrap();

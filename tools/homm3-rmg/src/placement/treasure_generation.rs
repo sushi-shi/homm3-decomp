@@ -113,32 +113,27 @@ impl PendingTreasure {
 }
 
 /// Treasure factories bound to one map, arena, and immutable reward-resource context.
-pub struct TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
-    pub(super) ready: TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>,
-    spells: &'rewards SpellCatalog,
-    artifacts: &'rewards ArtifactCatalog,
+pub struct TreasureGeneration<'map> {
+    pub(super) ready: TreasuresReady<'map>,
+    spells: &'map SpellCatalog,
+    artifacts: &'map ArtifactCatalog,
     heroes: HeroPool,
     pub(super) arena: Option<OwnerId>,
     pub(super) offers: Vec<SelectedTreasure>,
     pub(super) nested_groups: Vec<Box<super::TreasureGroupWorkspace>>,
 }
-impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
-    TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
-{
+impl<'map> TreasuresReady<'map> {
     /// Admit payload resources and the current map's arena once.
     /// No RNG is consumed; hero availability starts at the native constructor state.
     ///
     /// # Errors
     /// Rejects a foreign arena or prototype context before creating reservations.
-    pub fn begin_generation<'rewards>(
+    pub fn begin_generation(
         mut self,
         objects: &ObjectArena,
-        spells: &'rewards SpellCatalog,
-        artifacts: &'rewards ArtifactCatalog,
-    ) -> Result<
-        TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
-        PlacementError,
-    > {
+        spells: &'map SpellCatalog,
+        artifacts: &'map ArtifactCatalog,
+    ) -> Result<TreasureGeneration<'map>, PlacementError> {
         self.paths
             .map_mut()
             .prepare_object_context(objects, self.catalog.prototypes())?;
@@ -154,12 +149,12 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source>
         })
     }
 }
-impl<'state, 'zones, 'tiles> TreasureGeneration<'state, 'zones, 'tiles, '_, '_, '_, '_> {
-    pub(super) fn map_mut(&mut self) -> &mut super::PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> TreasureGeneration<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut super::PlacementMap<'map> {
         self.ready.paths.map_mut()
     }
 }
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     // Treasure placement borrows the outer workspace's buffers and returns them
     // on both success and failure; completed maps need neither buffer.
     pub(super) fn exchange_scratch(
@@ -172,7 +167,7 @@ impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
     }
     /// The admitted map, definitions and current offer policies.
     #[must_use]
-    pub const fn ready(&self) -> &TreasuresReady<'_, '_, '_, '_, '_, '_> {
+    pub const fn ready(&self) -> &TreasuresReady<'_> {
         &self.ready
     }
     /// Immutable artifact traits retained for later quest completion.

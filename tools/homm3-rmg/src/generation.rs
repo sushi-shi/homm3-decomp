@@ -315,14 +315,14 @@ pub struct GenerationWorkspace {
 }
 /// Complete generation, borrowing its buffers and immutable source context.
 pub struct GeneratedMap<'a> {
-    rivers: RiversCreated<'a, 'a, 'a, 'a, 'a, 'a, 'a>,
+    rivers: RiversCreated<'a>,
     objects: &'a ObjectArena,
     report: GenerationReport,
 }
 impl GeneratedMap<'_> {
     /// Terrain, flags, zone state and ordered world-object identities.
     #[must_use]
-    pub fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub fn map(&self) -> &PlacementMap<'_> {
         self.rivers.generation().ready().map()
     }
     /// Geometry and payload records, including modeled retained references.
@@ -332,7 +332,7 @@ impl GeneratedMap<'_> {
     }
     /// Definition and reward context needed for serialization.
     #[must_use]
-    pub const fn treasures(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    pub const fn treasures(&self) -> &TreasureGeneration<'_> {
         self.rivers.generation()
     }
     /// Final RNG and all completed generation checkpoints.

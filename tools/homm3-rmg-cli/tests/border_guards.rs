@@ -91,7 +91,7 @@ fn native_border_guards_preserve_tents_cursors_cells_and_rng() {
 }
 
 fn snapshot(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     objects: &mut ObjectArena,
     catalog: &PrototypeCatalog<'_>,
 ) -> String {
@@ -148,7 +148,7 @@ fn snapshot(
     write_borders_and_movement(&mut actual, map);
     actual
 }
-fn write_borders_and_movement(actual: &mut String, map: &PlacementMap<'_, '_, '_>) {
+fn write_borders_and_movement(actual: &mut String, map: &PlacementMap<'_>) {
     let side = i32::try_from(map.coverage().map().raster().dimension()).unwrap();
     for level in [Level::Surface, Level::Underground]
         .into_iter()
@@ -187,7 +187,7 @@ fn write_borders_and_movement(actual: &mut String, map: &PlacementMap<'_, '_, '_
 }
 fn write_registered_objects(
     actual: &mut String,
-    map: &PlacementMap<'_, '_, '_>,
+    map: &PlacementMap<'_>,
     objects: &ObjectArena,
     catalog: &PrototypeCatalog<'_>,
 ) {
@@ -237,7 +237,7 @@ fn with_palette(
     behavior: Behavior,
     tents: &[i32],
     guards: &[i32],
-    check: impl FnOnce(&mut PlacementMap<'_, '_, '_>, &mut ObjectArena, &PrototypeCatalog<'_>),
+    check: impl FnOnce(&mut PlacementMap<'_>, &mut ObjectArena, &PrototypeCatalog<'_>),
 ) {
     use homm3_rmg::{prototype::ImageMask, raw};
     use std::convert::Infallible;
@@ -290,7 +290,7 @@ fn with_palette(
     check(&mut map, &mut ObjectArena::default(), &catalog);
 }
 fn place_one(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     objects: &mut ObjectArena,
     catalog: &PrototypeCatalog<'_>,
     rng: &mut RetailRng,

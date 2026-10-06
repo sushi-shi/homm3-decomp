@@ -20,19 +20,19 @@ const ISLAND_TERRAINS: NonZeroU32 = match NonZeroU32::new(raw::eTerrainSubterran
 };
 
 /// Water-zone islands are painted and ready for zone connection pathfinding.
-pub struct WaterIslands<'state, 'zones, 'tiles> {
-    pub(super) borders: ConnectionBorders<'state, 'zones, 'tiles>,
+pub struct WaterIslands<'map> {
+    pub(super) borders: ConnectionBorders<'map>,
     rng: RngCheckpoint,
 }
-impl WaterIslands<'_, '_, '_> {
+impl WaterIslands<'_> {
     /// Map state with repainted island terrain and spacing distances.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.borders.map()
     }
     /// Retained town payloads, road targets and historical town checkpoint.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.borders.towns()
     }
     /// RNG after the last island brush and distance flood.
@@ -41,7 +41,7 @@ impl WaterIslands<'_, '_, '_> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> ConnectionBorders<'state, 'zones, 'tiles> {
+impl<'map> ConnectionBorders<'map> {
     /// Paint islands in water zones, preserving zone order and flood side effects.
     /// Consuming this stage prevents repeating random island placement.
     ///
@@ -50,7 +50,7 @@ impl<'state, 'zones, 'tiles> ConnectionBorders<'state, 'zones, 'tiles> {
     pub fn place_water_islands(
         mut self,
         rng: &mut RetailRng,
-    ) -> Result<WaterIslands<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<WaterIslands<'map>, ConnectionError> {
         let map = &mut self.towns.map;
         for index in 0..map.coverage().map().zones().len() {
             let zone = map.coverage().map().zones()[index];
@@ -65,7 +65,7 @@ impl<'state, 'zones, 'tiles> ConnectionBorders<'state, 'zones, 'tiles> {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn place_water_zone_islands(
         &mut self,
         zone: BoundaryZone,

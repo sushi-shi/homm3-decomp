@@ -62,23 +62,23 @@ impl TownZoneCounts {
 
 /// Mine placement, faction tally and the following path rebuild are complete.
 /// Treasure definitions are initialized earlier with assets; this is map state.
-pub struct TreasurePaths<'state, 'zones, 'tiles> {
-    mines: MinesPlaced<'state, 'zones, 'tiles>,
+pub struct TreasurePaths<'map> {
+    mines: MinesPlaced<'map>,
     town_zones: TownZoneCounts,
     rng: RngCheckpoint,
 }
-impl<'state, 'zones, 'tiles> TreasurePaths<'state, 'zones, 'tiles> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> TreasurePaths<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.mines.map_mut()
     }
     /// Current map after opening all post-mine zone routes.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.mines.map()
     }
     /// Existing town payloads and checkpoints.
     #[must_use]
-    pub const fn towns(&self) -> &TownsPlaced<'_, '_, '_> {
+    pub const fn towns(&self) -> &TownsPlaced<'_> {
         self.mines.towns()
     }
     /// Frozen faction weights used by subsequent treasure value calculations.
@@ -92,7 +92,7 @@ impl<'state, 'zones, 'tiles> TreasurePaths<'state, 'zones, 'tiles> {
         self.rng
     }
 }
-impl<'state, 'zones, 'tiles> MinesPlaced<'state, 'zones, 'tiles> {
+impl<'map> MinesPlaced<'map> {
     /// Count primary-town zone alignments, then rebuild and open connection paths.
     ///
     /// # Errors
@@ -102,7 +102,7 @@ impl<'state, 'zones, 'tiles> MinesPlaced<'state, 'zones, 'tiles> {
         objects: &mut ObjectArena,
         catalog: &PrototypeCatalog<'_>,
         rng: &mut RetailRng,
-    ) -> Result<TreasurePaths<'state, 'zones, 'tiles>, ConnectionError> {
+    ) -> Result<TreasurePaths<'map>, ConnectionError> {
         self.map_mut().prepare_object_context(objects, catalog)?;
         let mut town_zones = TownZoneCounts::default();
         for zone in self.map().coverage().map().zones() {

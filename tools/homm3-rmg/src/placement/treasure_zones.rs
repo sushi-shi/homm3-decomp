@@ -13,21 +13,19 @@ use crate::{
 use std::num::NonZeroU32;
 
 /// Every zone's treasure bands are placed; final decoration follows.
-pub(crate) struct TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
-    generation: TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+pub(crate) struct TreasuresPlaced<'map> {
+    generation: TreasureGeneration<'map>,
 }
-impl<'state, 'zones, 'tiles> TreasuresPlaced<'state, 'zones, 'tiles, '_, '_, '_, '_> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> TreasuresPlaced<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.generation.map_mut()
     }
     /// Payload context retained for serialization.
-    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_> {
         &self.generation
     }
 }
-impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-    TreasureGeneration<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-{
+impl<'map> TreasureGeneration<'map> {
     /// Place all zones' treasure bands in stored map order, including water zones.
     /// Connections are not rebuilt between zones. The workspace lends its offer
     /// and nested-group buffers and takes them back on both success and failure.
@@ -41,10 +39,7 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
         nested_groups: &mut Vec<Box<TreasureGroupWorkspace>>,
         objects: &mut ObjectArena,
         rng: &mut RetailRng,
-    ) -> Result<
-        TreasuresPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
-        TreasureGenerationError,
-    > {
+    ) -> Result<TreasuresPlaced<'map>, TreasureGenerationError> {
         self.exchange_scratch(offers, nested_groups);
         let placed = self.place_treasures_in_zone_order(group, objects, rng);
         self.exchange_scratch(offers, nested_groups);
@@ -52,7 +47,7 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
         Ok(TreasuresPlaced { generation: self })
     }
 }
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     fn place_treasures_in_zone_order(
         &mut self,
         group: &mut TreasureGroupWorkspace,

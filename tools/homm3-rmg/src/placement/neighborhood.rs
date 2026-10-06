@@ -82,7 +82,7 @@ impl Neighborhood {
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Open the centre first, then its clipped 3x3 patch, retaining border guards.
     /// The centre uses native flat indexing, as does the source helper.
     ///

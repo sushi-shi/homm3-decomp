@@ -30,18 +30,16 @@ fn opposite_bit(direction: Direction) -> u8 {
 }
 
 /// Water-wheel rivers and deltas are placed: the final generation stage.
-pub(crate) struct RiversCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
-    roads: RoadsCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+pub(crate) struct RiversCreated<'map> {
+    roads: RoadsCreated<'map>,
 }
-impl RiversCreated<'_, '_, '_, '_, '_, '_, '_> {
+impl RiversCreated<'_> {
     /// Completed map and the payload context needed for serialization.
-    pub(crate) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    pub(crate) const fn generation(&self) -> &TreasureGeneration<'_> {
         self.roads.generation()
     }
 }
-impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-    RoadsCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-{
+impl<'map> RoadsCreated<'map> {
     /// Route rivers once, after roads have been painted.
     ///
     /// # Errors
@@ -52,16 +50,13 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
         catalog: &PrototypeCatalog<'_>,
         objects: &mut ObjectArena,
         rng: &mut RetailRng,
-    ) -> Result<
-        RiversCreated<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
-        PlacementError,
-    > {
+    ) -> Result<RiversCreated<'map>, PlacementError> {
         self.map_mut().create_rivers(catalog, objects, rng)?;
         Ok(RiversCreated { roads: self })
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     fn coast_cell(&self, at: WorldPosition, hotfix: bool) -> Result<Option<usize>, PlacementError> {
         let side = self.view().signed_side();
         // Retail admits x == side, aliasing the next row or plane if allocated.

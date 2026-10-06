@@ -87,20 +87,18 @@ impl ObstacleWorkspace {
 }
 
 /// Obstacle reservations are filled and the remaining passable floor is open.
-pub(crate) struct ObstaclesPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards> {
-    coasts: CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
+pub(crate) struct ObstaclesPlaced<'map> {
+    coasts: CoastsMarked<'map>,
 }
-impl<'state, 'zones, 'tiles> ObstaclesPlaced<'state, 'zones, 'tiles, '_, '_, '_, '_> {
-    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'state, 'zones, 'tiles> {
+impl<'map> ObstaclesPlaced<'map> {
+    pub(super) fn map_mut(&mut self) -> &mut PlacementMap<'map> {
         self.coasts.map_mut()
     }
-    pub(super) const fn generation(&self) -> &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+    pub(super) const fn generation(&self) -> &TreasureGeneration<'_> {
         self.coasts.generation()
     }
 }
-impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-    CoastsMarked<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
-{
+impl<'map> CoastsMarked<'map> {
     /// Fill obstacle reservations once, after coasts are known.
     ///
     /// # Errors
@@ -112,17 +110,14 @@ impl<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>
         rules: &PlacementRules,
         objects: &mut ObjectArena,
         rng: &mut RetailRng,
-    ) -> Result<
-        ObstaclesPlaced<'state, 'zones, 'tiles, 'defs, 'assets, 'source, 'rewards>,
-        PlacementError,
-    > {
+    ) -> Result<ObstaclesPlaced<'map>, PlacementError> {
         self.map_mut()
             .decorate_obstacles(scratch, catalog, rules, objects, rng)?;
         Ok(ObstaclesPlaced { coasts: self })
     }
 }
 
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Score one obstacle anchor against terrain, reservations and existing objects.
     /// Both behavior modes preserve the native overwritten blocked-cell marks.
     ///

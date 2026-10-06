@@ -4,7 +4,7 @@ use super::{
     TreasureGroupWorkspace,
 };
 use crate::{domain::Terrain, geometry::ZoneId, raw, rng::RetailRng, template::ZoneRole};
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     pub(super) fn place_quest_group(
         &mut self,
         group: &mut TreasureGroupWorkspace,

@@ -13,7 +13,7 @@ pub struct RejectedTreasure {
     /// Still-owned object; discard explicitly through its generation.
     pub pending: PendingTreasure,
 }
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     pub(super) fn check_group(
         &self,
         group: &TreasureGroupWorkspace,

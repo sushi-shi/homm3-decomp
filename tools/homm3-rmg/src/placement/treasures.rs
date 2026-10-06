@@ -57,22 +57,21 @@ impl QuestState {
 /// Treasure placement state bound once to the catalog used for this generation.
 /// Definitions keep their original creature traits; cursors and reservations
 /// belong to this map and cannot be supplied by callers during value queries.
-pub struct TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source> {
-    pub(super) paths: TreasurePaths<'state, 'zones, 'tiles>,
-    pub(super) catalog: TreasureCatalog<'defs, 'assets, 'source>,
+pub struct TreasuresReady<'map> {
+    pub(super) paths: TreasurePaths<'map>,
+    pub(super) catalog: TreasureCatalog<'map>,
     pub(super) quests: QuestState,
 }
-impl<'state, 'zones, 'tiles> TreasurePaths<'state, 'zones, 'tiles> {
+impl<'map> TreasurePaths<'map> {
     /// Bind pre-generation definitions to the completed post-mine map.
     /// No RNG is consumed and existing tent reservations are retained.
     ///
     /// # Errors
     /// Rejects a catalog built from another map's prototype context.
-    pub fn begin_treasures<'defs, 'assets, 'source>(
+    pub fn begin_treasures(
         self,
-        catalog: TreasureCatalog<'defs, 'assets, 'source>,
-    ) -> Result<TreasuresReady<'state, 'zones, 'tiles, 'defs, 'assets, 'source>, PlacementError>
-    {
+        catalog: TreasureCatalog<'map>,
+    ) -> Result<TreasuresReady<'map>, PlacementError> {
         self.map()
             .registration
             .require_catalog(catalog.prototypes())?;
@@ -83,15 +82,15 @@ impl<'state, 'zones, 'tiles> TreasurePaths<'state, 'zones, 'tiles> {
         })
     }
 }
-impl TreasuresReady<'_, '_, '_, '_, '_, '_> {
+impl TreasuresReady<'_> {
     /// Current generation map, retaining its existing geometry and registrations.
     #[must_use]
-    pub const fn map(&self) -> &PlacementMap<'_, '_, '_> {
+    pub const fn map(&self) -> &PlacementMap<'_> {
         self.paths.map()
     }
     /// Prepared definitions bound to this generation.
     #[must_use]
-    pub const fn catalog(&self) -> &TreasureCatalog<'_, '_, '_> {
+    pub const fn catalog(&self) -> &TreasureCatalog<'_> {
         &self.catalog
     }
     /// Frozen primary-town counts used for lazy faction adjustments.

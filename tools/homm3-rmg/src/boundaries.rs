@@ -359,7 +359,7 @@ impl BoundaryWorkspace {
     )]
     pub fn generate<'a>(
         &'a mut self,
-        completed: Layout<'_, 'a>,
+        completed: Layout<'a>,
         rng: &mut RetailRng,
     ) -> Result<BoundaryMap<'a>, BoundaryError> {
         let template = completed.template();

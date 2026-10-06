@@ -92,7 +92,7 @@ fn generation_stages_match_vc6_checkpoints() {
     }
 }
 
-fn assert_terrain(terrain: &PaintedTerrain<'_, '_>, expected_path: &std::path::Path) {
+fn assert_terrain(terrain: &PaintedTerrain<'_>, expected_path: &std::path::Path) {
     let mut checkpoint = format!("{}\n", terrain.rng().state);
     for row in terrain
         .tiles()

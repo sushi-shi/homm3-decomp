@@ -12,7 +12,7 @@ use crate::{
     traits::CreatureCatalog,
 };
 use std::num::NonZeroU32;
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     pub(super) fn collect_connection_borders(&mut self) -> Result<(), PlacementError> {
         for index in 0..self.cells.len() {
             if self.cells[index].zone_distance.connection().is_none()

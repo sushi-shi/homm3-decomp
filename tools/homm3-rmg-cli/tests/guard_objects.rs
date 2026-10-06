@@ -119,7 +119,7 @@ fn position(index: usize, side: usize) -> WorldPosition {
 }
 fn write_creation_probes(
     actual: &mut String,
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     objects: &mut ObjectArena,
     catalog: &PrototypeCatalog<'_>,
     creatures: &CreatureCatalog,
@@ -171,7 +171,7 @@ fn write_creation_probes(
     assert!(map.active_objects().is_empty());
 }
 fn snapshot(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     objects: &mut ObjectArena,
     catalog: &PrototypeCatalog<'_>,
     creatures: &CreatureCatalog,

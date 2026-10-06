@@ -16,7 +16,7 @@ fn position(x: i32, y: i32, level: Level) -> WorldPosition {
     }
 }
 pub fn snapshot(
-    towns: &TownsPlaced<'_, '_, '_>,
+    towns: &TownsPlaced<'_>,
     objects: &ObjectArena,
     catalog: &PrototypeCatalog<'_>,
     checkpoint: RngCheckpoint,

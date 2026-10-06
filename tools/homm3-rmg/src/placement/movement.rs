@@ -197,7 +197,7 @@ impl CellState {
         self.movement
     }
 }
-impl PlacementMap<'_, '_, '_> {
+impl PlacementMap<'_> {
     /// Flood within the seed's zone and spill into each adjacent zone.
     /// Existing costs remain; zero-cost clearance propagates after the strict
     /// improvement test. Equal-cost work items retain insertion order.

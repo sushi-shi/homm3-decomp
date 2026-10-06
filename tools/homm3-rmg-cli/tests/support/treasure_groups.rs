@@ -18,7 +18,7 @@ use homm3_rmg_cli::resources::Installation;
 use std::{fmt::Write, path::PathBuf};
 
 pub fn snapshot(
-    ready: TreasuresReady<'_, '_, '_, '_, '_, '_>,
+    ready: TreasuresReady<'_>,
     objects: &mut ObjectArena,
     rng: &RetailRng,
     colors: &[KeyTentColor],
@@ -100,7 +100,7 @@ pub fn snapshot(
 )]
 fn generate(
     text: &mut String,
-    generation: &mut TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &mut TreasureGeneration<'_>,
     group: &mut TreasureGroupWorkspace,
     objects: &mut ObjectArena,
     rng: &mut RetailRng,
@@ -162,7 +162,7 @@ fn generate(
 }
 fn write_object(
     text: &mut String,
-    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &TreasureGeneration<'_>,
     objects: &ObjectArena,
     object: ObjectId,
     definition: DefinitionId,
@@ -208,7 +208,7 @@ fn write_object(
 }
 fn write_group(
     text: &mut String,
-    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &TreasureGeneration<'_>,
     group: &TreasureGroupWorkspace,
     objects: &ObjectArena,
     members: &[(ObjectId, DefinitionId)],
@@ -279,7 +279,7 @@ fn write_group(
 fn state(
     text: &mut String,
     label: &str,
-    generation: &TreasureGeneration<'_, '_, '_, '_, '_, '_, '_>,
+    generation: &TreasureGeneration<'_>,
     rng: &RetailRng,
     colors: &[KeyTentColor],
 ) {

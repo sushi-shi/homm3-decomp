@@ -20,7 +20,7 @@ pub(super) enum TreasurePurpose {
     Additional,
     Replacement(WorldPosition),
 }
-impl TreasureGeneration<'_, '_, '_, '_, '_, '_, '_> {
+impl TreasureGeneration<'_> {
     #[expect(
         clippy::too_many_lines,
         reason = "selection filters, lazy valuations and draws must stay in native order"

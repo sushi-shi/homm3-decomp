@@ -97,7 +97,7 @@ fn position(x: i32, y: i32) -> WorldPosition {
         level: Level::Surface,
     }
 }
-fn initialize(map: &mut PlacementMap<'_, '_, '_>) {
+fn initialize(map: &mut PlacementMap<'_>) {
     for y in 0..6 {
         for x in 0..6 {
             let point = position(x, y);
@@ -117,7 +117,7 @@ fn initialize(map: &mut PlacementMap<'_, '_, '_>) {
     map.clear_obstacle(border).unwrap();
     map.release_path(border).unwrap();
 }
-fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) -> String {
+fn snapshot(map: &mut PlacementMap<'_>, catalog: &PrototypeCatalog<'_>) -> String {
     let mut actual = String::new();
     let mut objects = ObjectArena::default();
     let monster = ObjectKind::parse(i32::try_from(raw::MONSTER).unwrap()).unwrap();
@@ -170,7 +170,7 @@ fn snapshot(map: &mut PlacementMap<'_, '_, '_>, catalog: &PrototypeCatalog<'_>) 
     }
     actual
 }
-fn write_cells(actual: &mut String, map: &PlacementMap<'_, '_, '_>, ids: [ObjectId; 3]) {
+fn write_cells(actual: &mut String, map: &PlacementMap<'_>, ids: [ObjectId; 3]) {
     for y in 0..6 {
         for x in 0..6 {
             let point = position(x, y);
@@ -201,7 +201,7 @@ fn write_cells(actual: &mut String, map: &PlacementMap<'_, '_, '_>, ids: [Object
 }
 
 fn apply_phase(
-    map: &mut PlacementMap<'_, '_, '_>,
+    map: &mut PlacementMap<'_>,
     objects: &mut ObjectArena,
     catalog: &PrototypeCatalog<'_>,
     [a, b, blocker]: [ObjectId; 3],
