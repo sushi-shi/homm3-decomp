@@ -1071,7 +1071,8 @@ public:
     // lea eax,[ecx+8*edx] / lea eax,[eax+4*eax] / lea esi,[edx+4*eax+0xa4]`
     // = gpGame + 820*id + 0xa4, and 156 * 0x334 is EXACTLY the 0x1f3b0 the
     // pad it replaces measured - 0xa4 + 0x1f3b0 lands on difficultyRating.
-    HeroExtra m_heroSetup[156];
+    enum { HERO_COUNT = 156 };
+    HeroExtra m_heroSetup[HERO_COUNT];
     short m_difficultyRating;
     // Dreamcast difficultyRating is a short before aligned sCampaign.
     // Retail retains this two-byte alignment gap at +0x1f456.
@@ -1148,16 +1149,15 @@ public:
     // that same 360-byte stride.
     // Before normalization (Dreamcast): townPool.
     std::vector<town> m_towns;
-    enum { HERO_COUNT = 156 };
     // Before normalization (Dreamcast): heroPool.
     hero m_heroes[HERO_COUNT];
     // Original game::heroAllocInfo is signed char[128] in all four DC
     // records. Complete extends the same status array to 156 heroes.
-    signed char m_heroAvailability[0x9c];  // +0x4df18
+    signed char m_heroAvailability[HERO_COUNT];  // +0x4df18
     // One eight-player eligibility mask per hero. GetStartingHeroId tests
     // the caller's player position through Dinkumware bitset::test(), and
     // the hero-placement path sets the same bit through bitset::set().
-    std::bitset<8> m_heroPoolMap[0x9c];  // +0x4dfb4
+    std::bitset<8> m_heroPoolMap[HERO_COUNT];  // +0x4dfb4
     unsigned char m_artifactUsed[ARTIFACT_COUNT];
     unsigned char m_artifactDisabled[ARTIFACT_COUNT];
 

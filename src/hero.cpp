@@ -212,7 +212,7 @@ DATA(0x00679cbc) static TSecondarySkill g_magicSchools[4] = {
 // 0x678420 and the reference cell immediately after it at 0x679c80, which is
 // what fixes the 156-row extent (0x679c80 - 0x678420 = 156 * 40).
 DATA(0x00678420)
-THeroSpecificAbility g_heroSpecificAbilitiesImp[156] = {
+THeroSpecificAbility g_heroSpecificAbilitiesImp[game::HERO_COUNT] = {
     { eHeroAbilitySecondarySkill, { eSecSkillArchery } },
     { eHeroAbilityCreature, { 2 } },
     { eHeroAbilityCreature, { CREATURE_GRIFFIN } },
@@ -372,7 +372,7 @@ THeroSpecificAbility g_heroSpecificAbilitiesImp[156] = {
 };
 
 DATA(0x00679c80)
-const THeroSpecificAbility (&g_heroSpecificAbilities)[156] =
+const THeroSpecificAbility (&g_heroSpecificAbilities)[game::HERO_COUNT] =
     g_heroSpecificAbilitiesImp;
 
 VA(0x004d71a0, 0x71)

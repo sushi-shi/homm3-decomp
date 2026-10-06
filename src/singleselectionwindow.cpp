@@ -4357,7 +4357,7 @@ void TSingleSelectionWindow::makeHeroFilter()
             break;
         }
         player->m_availableHeroesCount = 0;
-        for (heroId = 0; heroId < 156; ++heroId) {
+        for (heroId = 0; heroId < game::HERO_COUNT; ++heroId) {
             if (g_game->m_heroAvailability[heroId] != -1)
                 continue;
             if (g_heroTraits[heroId].m_heroClass != heroClass1
