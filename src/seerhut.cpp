@@ -570,6 +570,7 @@ std::string type_skill_quest::skillRequirementText(
 // also reproduces retail's _Tidy call/expansion split, but drops six other
 // quest-text callers (monster 95.53 -> 72.12, doQuestLog 96.54 -> 86.43);
 // calling questTexts() per use instead of the texts local gives 55.47%.
+// empty() guards in place of length() == 0 are byte-flat (49.31%).
 VA(0x0056e0d0, 0x169)
 MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()

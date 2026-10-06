@@ -162,6 +162,8 @@ int TQuestLogWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\questlogwindow.cpp:142
+// Residual: `test al,dl` operand order and the push_back receiver schedule.
+// Commuting playerHasInfo's mask operands is byte-flat across all units.
 VA(0x0052e430, 0x27E)
 DC_ADDRESS(0x116ccc, 0x15c)
 MAC_ADDRESS(0x14a280, 0x3e0)  // ; Complete adds QuestGuardList
