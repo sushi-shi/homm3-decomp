@@ -45,7 +45,7 @@ DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[TOWN_TYPE_COUNT] = {
     { { 8, 8, 8, 8, 16, 46, 49, 87, 94, 100, 102, 105, 108, 125, 135, 182, 183, 190, 193, 193, 202, 204, 229, 236, 243, 276, 279, 291, 292, 309, 311, 313, 318, 324, 328, 331, 350, 350, 408, 422, 429, 468, 482, 490, 505, 505, 508, 543 },
       { 8, 54, 227, 426, 48, 375, 249, 500, 55, 245, 354, 175, 14, 296, 8, 466, 200, 381, 40, 364, 124, 330, 293, 39, 335, 488, 202, 80, 115, 225, 158, 24, 8, 443, 253, 36, 330, 426, 191, 430, 246, 90, 13, 346, 113, 190, 8, 436 } }
 };
-DATA(0x006976e8) std::bitset<48> g_puzzlePiecesRemoved;
+DATA(0x006976e8) std::bitset<TPuzzleWindow::PUZZLE_PIECE_COUNT> g_puzzlePiecesRemoved;
 
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x00681f64) short g_puzzlePieceOrder[432] = {
@@ -167,7 +167,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
     g_soundManager->stopAllSamples(1);
 
-    for (int i = 0; i < 48; ++i) {
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         m_puzzlePieces[i] = getPuzzleBitmap(m_puzWhich, i);
     }
 
@@ -182,7 +182,7 @@ DC_ADDRESS(0x115268, 0xa2)
 MAC_ADDRESS(0x1477c4, 0x10c)
 TPuzzleWindow::~TPuzzleWindow()
 {
-    for (int i = 0; i < 48; ++i)
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i)
         m_puzzlePieces[i]->dispose();
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -250,7 +250,7 @@ int TPuzzleWindow::updatePuzzle(int full)
 {
     int piecesNotFound = 0;
 
-    for (int i = 0; i < 48; ++i) {
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         if (full || !g_puzzlePiecesRemoved[i]) {
             int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
@@ -428,7 +428,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
     if (!g_game->setupPuzzlePieces(player, 0))
         return 0;
     memset(visible, 1, 17 * 19);
-    for (int i = 0; i < 48; ++i) {
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         if (g_puzzlePiecesRemoved[i])
             continue;
         int piece = g_puzzlePieceOrder[puzzle * 48 + i];

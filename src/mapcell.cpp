@@ -4417,11 +4417,11 @@ VA(0x00505060, 0x1CD)
 DC_ADDRESS(0x0f33fc, 0x2b4)
 MAC_ADDRESS(0x127a98, 0x1a0)
 void NewfullMap::generateHeightMap(const CObject* object,
-                                   signed char heightMap[8][6])
+                                   signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT])
 {
     int typeIndex = object->m_typeIndex;
 
-    memset(heightMap, 0, 48);
+    memset(heightMap, 0, OBJECT_MASK_CELLS);
 
     if (m_objectTypes[typeIndex].m_suppressDraw)
         return;
@@ -4456,7 +4456,7 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
         = objectList.end();
     CObject* newObject = &m_objects[objectCell->m_objectIndex];
 
-    signed char heightMap[8][6];
+    signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
     generateHeightMap(newObject, heightMap);
 
     while (position != objectList.begin()) {
@@ -4690,7 +4690,7 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
     CObject* object = &m_objects[objectIndex];
     CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
 
-    signed char heightMap[8][6];
+    signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
     generateHeightMap(object, heightMap);
 
     // Mac retains getObjectTypePtr here at 0:0x128560 inside getType().

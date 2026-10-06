@@ -1496,7 +1496,7 @@ public:
     NewfullMap();
     ~NewfullMap();
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
-    void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
+    void generateHeightMap(const CObject* object, signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT]);
     int placeObject(int objectIndex, unsigned char setExtraInfo);
     int placeObjects();
 };
