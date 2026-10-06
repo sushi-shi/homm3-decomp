@@ -103,7 +103,7 @@ public:
     // Original Draw/Draw* and private Clip* publics encode _N for flip,
     // transparency and alpha flags; repeated bools use mangling backreferences.
     // Keep that domain through the public wrappers and private implementations.
-    void draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch,
               TPalette16& pal, bool hflip,
               bool tblit) const;
@@ -205,7 +205,7 @@ public:
     void drawPointer(unsigned short* dst, int dx, int dy, int dw, int dh,
                      int dpitch, TPalette16& pal, bool hflip) const
     {
-        draw(0, 0, m_width, m_height, dst, dx, dy, dw, dh, dpitch,
+        Draw(0, 0, m_width, m_height, dst, dx, dy, dw, dh, dpitch,
              pal, hflip, 1);
     }
 
@@ -215,7 +215,7 @@ public:
                        int dx, int dy, int dw, int dh, int dpitch,
                        TPalette16& pal, bool hflip) const
     {
-        draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
     }
 
     // Original: CSpriteFrame::DrawShroudTile; CSpriteFrame.h:192

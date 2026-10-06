@@ -197,7 +197,7 @@ void CSprite::draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                    unsigned short* dst, int dx, int dy, int dw, int dh,
                    int dpitch, bool hflip, bool tblit) const
 {
-    m_s[seqnum]->m_f[framenum]->draw(
+    m_s[seqnum]->m_f[framenum]->Draw(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, tblit);
 }
 

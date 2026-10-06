@@ -874,7 +874,7 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 VA(0x0047c570, 0x465)
 DC_ADDRESS(0x075810, 0x310)
 MAC_ADDRESS(0x08b710, 0x430)  // unique PC/DC renderer identity; retail byte verdict
-void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
+void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, TPalette16& pal, bool hflip,
                         bool tblit) const
@@ -1891,7 +1891,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
     static const unsigned char opaqueRunCode = 7;
 
     if (m_encodingMethod == eEncodeGeneralRLE) {
-        draw(sw, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        Draw(sw, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
         return;
     }
     if (m_encodingMethod == eEncodeAdvObjRLE) {
@@ -2675,7 +2675,7 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                                    bool alpha) const
 {
     if (!alpha) {
-        draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
+        Draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
         return;
     }
 
