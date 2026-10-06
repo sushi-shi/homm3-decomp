@@ -1046,7 +1046,7 @@ void army::removeBinding()
 // byte row.
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
-MAC_ADDRESS(0x04abf0, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:134f00e84cc5,100.0000): restore canonical getOwningSide inside the retained markCreatureEffect path (Mac 0x4ac24 own-side load).
+MAC_ADDRESS(0x04abf0, 0x118)  // DC reads the side directly; Mac 0x4ac24's load is the same field read.
 unsigned char army::setInsideAreaEffect(unsigned char arg)
 {
     if (m_isAreaEffectTarget == arg)
@@ -1143,7 +1143,7 @@ void army::walk(int direction, bool endWalk, bool initialWalk)
 // Nine const-pixel-address/mode-scope combinations preserve that score.
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
-MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): restore canonical getOwningSide before markCreatureEffect instead of a direct owning-side field load.
+MAC_ADDRESS(0x04afa0, 0x68c)
 void army::animateMissile(army* armyToAttack)
 {
     if (g_combatManager->isQuickCombat())
@@ -4504,7 +4504,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
 // iNewDestIndex.
 VA(0x00446c40, 0x1E1)
 DC_ADDRESS(0x04b8c4, 0x1c4)
-MAC_ADDRESS(0x053028, 0x374)  // MAC_ABSTRACTION_FROM(tokens1:0f367c3b8d54,23.0851): restore canonical getOwningSide in both occupied-cell ownership comparisons (Mac 0x5310c/0x5322c).
+MAC_ADDRESS(0x053028, 0x374)  // DC and Mac 0x5310c/0x5322c load the owning side directly.
 int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 {
     if (newDestIndex)
