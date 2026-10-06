@@ -175,7 +175,7 @@ DATA(0x0063ac7c) const int g_aiArtifactEffectDefinitions[637] = {
 };
 
 // AIInitialize's eight 0x98-byte records and GetAttackBonus's two floats.
-DATA(0x00692950) type_AI_player g_aiPlayers[8];
+DATA(0x00692950) type_AI_player g_aiPlayers[NUM_PLAYERS];
 DATA(0x006604f8) float type_AI_player::s_attackComputerBonus = 0.5f;
 DATA(0x006604fc) float type_AI_player::s_attackHumanBonus = 0.5f;
 
@@ -254,7 +254,7 @@ void type_town_threat_checker::checkTowns()
 {
     clearMarks();
 
-    for (int playerId = 0; playerId < 8; ++playerId) {
+    for (int playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         const playerData& player = g_game->m_players[playerId];
         if (!g_game->onSameTeam(playerId, m_currentPlayerId)
             && !g_game->m_playerDisabled[playerId]) {
@@ -597,14 +597,14 @@ void type_AI_player::endTurn()
         while (true) {
             town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
             if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
-                for (short playerId = 0; playerId < 8; playerId++) {
+                for (short playerId = 0; playerId < NUM_PLAYERS; playerId++) {
                     if (!g_game->m_playerDisabled[playerId]
                         && playerId != m_team
                         && g_game->onSameTeam(playerId, m_team)
                         && !g_game->m_players[playerId].isHuman())
                         makeGift(playerId);
                 }
-                for (short humanPlayerId = 0; humanPlayerId < 8;
+                for (short humanPlayerId = 0; humanPlayerId < NUM_PLAYERS;
                      humanPlayerId++) {
                     if (!g_game->m_playerDisabled[humanPlayerId]
                         && humanPlayerId != m_team
@@ -979,7 +979,7 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
     humanStrength = 0;
     if (g_game->m_setup.m_difficulty == 0) {
         if (!g_game->isHumanAlly(g_netLocalGamePos)) {
-            for (i = 0; i < 8; ++i) {
+            for (i = 0; i < NUM_PLAYERS; ++i) {
                 if (!g_game->m_playerDisabled[i]
                     && g_game->isHuman(i)) {
                     humanStrength = max(humanStrength, sumPlayerDwellings(i));
@@ -2944,7 +2944,7 @@ DC_ADDRESS(0x0329f8, 0x8a)
 MAC_ADDRESS(0x0316f4, 0x118)  // outer census + MoveHero caller
 void aiMarkDangerZones(hero* currentHero, long* dangerZones)
 {
-    for (int playerId = 0; playerId < 8; ++playerId) {
+    for (int playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         const playerData& player = g_game->m_players[playerId];
         if (!g_game->onSameTeam(playerId, currentHero->m_owner)
             && !g_game->m_playerDisabled[playerId]) {
@@ -4344,7 +4344,7 @@ bool type_AI_player::hireHeroes()
         return false;
 
     long globalHeroes = 0;
-    for (long playerId = 0; playerId < 8; ++playerId) {
+    for (long playerId = 0; playerId < NUM_PLAYERS; ++playerId) {
         if (!g_game->m_playerDisabled[playerId]
             && !g_game->isHuman(playerId)) {
             globalHeroes += g_game->m_players[playerId].m_numHeroes;
@@ -5745,7 +5745,7 @@ DC_ADDRESS(0x037c38, 0x36)
 MAC_ADDRESS(0x039624, 0x64)
 void aiInitialize()
 {
-    for (short i = 0; i < 8; ++i)
+    for (short i = 0; i < NUM_PLAYERS; ++i)
         g_aiPlayers[i].init(i);
     initializeArtifactEffects();
 }

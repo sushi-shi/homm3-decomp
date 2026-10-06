@@ -619,8 +619,8 @@ DATA(0x0065f55c) const char* g_groundTilesetNames[10] = { "dirttl.def", "sandtl.
 DATA(0x0065f584) const char* g_riverTilesetNames[5] = { "", "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
 DATA(0x0065f598) const char* g_roadTilesetNames[4] = { "", "dirtrd.def", "gravrd.def", "cobbrd.def" };
 DATA(0x0065f5a8) const char* g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
-DATA(0x0065f5f0) const char* g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
-DATA(0x0065f610) const char* g_boatFlagIconNames[3][8] = {
+DATA(0x0065f5f0) const char* g_flagIconNames[NUM_PLAYERS] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
+DATA(0x0065f610) const char* g_boatFlagIconNames[3][NUM_PLAYERS] = {
     { "abf01l.def", "abf01g.def", "abf01r.def", "abf01d.def", "abf01b.def", "abf01p.def", "abf01w.def", "abf01k.def" },
     { "abf02l.def", "abf02g.def", "abf02r.def", "abf02d.def", "abf02b.def", "abf02p.def", "abf02w.def", "abf02k.def" },
     { "abf03l.def", "abf03g.def", "abf03r.def", "abf03d.def", "abf03b.def", "abf03p.def", "abf03w.def", "abf03k.def" }
@@ -745,12 +745,12 @@ int advManager::open(int newPriority)
     for (i = 0; i < 3; i++) {
         m_boatIcons[i] = ResourceManager::getSprite(g_boatIconNames[i]);
         m_boatFrothIcons[i] = ResourceManager::getSprite(g_boatFrothIconNames[i]);
-        for (j = 0; j < 8; j++)
+        for (j = 0; j < NUM_PLAYERS; j++)
             m_boatFlagIcons[i][j] =
                 ResourceManager::getSprite(g_boatFlagIconNames[i][j]);
     }
     incProgressBar(1);
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < NUM_PLAYERS; i++)
         m_flagIcons[i] = ResourceManager::getSprite(g_flagIconNames[i]);
     m_radarIcons =
         ResourceManager::getSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
@@ -898,12 +898,12 @@ void advManager::close()
             m_boatIcons[i] = 0;
             ResourceManager::dispose(m_boatFrothIcons[i]);
             m_boatFrothIcons[i] = 0;
-            for (j = 0; j < 8; j++) {
+            for (j = 0; j < NUM_PLAYERS; j++) {
                 ResourceManager::dispose(m_boatFlagIcons[i][j]);
                 m_boatFlagIcons[i][j] = 0;
             }
         }
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < NUM_PLAYERS; i++) {
             ResourceManager::dispose(m_flagIcons[i]);
             m_flagIcons[i] = 0;
         }
@@ -4078,7 +4078,7 @@ int advManager::processSearch(int x, int y, int z)
     if (g_currentPlayer->isHuman())
         waitEndSample(digSample, -1);
 
-    for (player = 0; player < 8; player++) {
+    for (player = 0; player < NUM_PLAYERS; player++) {
         if (!g_game->m_playerDisabled[player])
             computeUALoc(player);
     }
@@ -4479,7 +4479,7 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
-    } else if (currHero->m_owner >= 0 && currHero->m_owner < 8) {
+    } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
         m_flagIcons[currHero->m_owner]->drawHero(
             currHero->getStandSequence(),
             m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
@@ -4512,7 +4512,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
     int heroCellX = part / 3;
 
     if (currHero->m_flags & 0x40000) {
-        if (currHero->m_owner < 0 || currHero->m_owner >= 8)
+        if (currHero->m_owner < 0 || currHero->m_owner >= NUM_PLAYERS)
             return;
 
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
@@ -4546,7 +4546,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
-    } else if (currHero->m_owner >= 0 && currHero->m_owner < 8) {
+    } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
         m_flagIcons[currHero->m_owner]->drawHeroShadow(
             currHero->getStandSequence(),
             m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
@@ -7806,7 +7806,7 @@ bool saveGame(bool campaignWinMode)
     int humanCount = 0;
     if (!campaignWinMode) {
         g_advManager->disableButtons();
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < NUM_PLAYERS; i++) {
             if (!g_game->m_playerDisabled[i] && g_game->isHuman(i))
                 humanCount++;
         }

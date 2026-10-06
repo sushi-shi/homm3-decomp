@@ -3258,7 +3258,7 @@ DC_ADDRESS(0x111ea4, 0xae)
 MAC_ADDRESS(0x144320, 0xa0)
 int valueOfPrison(NewmapCell* cell, playerData* player)
 {
-    if (g_currentPlayer->m_numHeroes >= 8)
+    if (g_currentPlayer->m_numHeroes >= playerData::HERO_SLOT_COUNT)
         return 0;
     hero& prisoner = g_game->m_heroes[cell->m_extraInfo];
     long armyValue = prisoner.m_army.getAIValue();

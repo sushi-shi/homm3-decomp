@@ -900,7 +900,7 @@ int swapManager::open(int newPriority)
         msg.m_extra = m_heroes[hero]->m_id;
         m_parent->broadcastMessage(msg);
 
-        for (int skillIndex = 0; skillIndex < 8; ++skillIndex) {
+        for (int skillIndex = 0; skillIndex < kNumSecSkillsPerHero; ++skillIndex) {
             if (skillIndex < m_heroes[hero]->m_skillCount) {
                 int skill = m_heroes[hero]->getNthSS(skillIndex);
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;

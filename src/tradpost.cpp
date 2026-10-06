@@ -1529,7 +1529,7 @@ void doMarket()
             g_leftResource = -1;
             g_rightAmount = 0;
             g_giveWindow->m_recipientCount = 0;
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < NUM_PLAYERS; ++i) {
                 if (i != g_netLocalGamePos && g_game->m_playerDisabled[i] == 0) {
                     g_giveWindow->m_slotPlayerColor[g_giveWindow->m_recipientCount] = i;
                     ++g_giveWindow->m_recipientCount;

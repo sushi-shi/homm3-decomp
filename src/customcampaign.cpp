@@ -2202,7 +2202,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->m_players[position].m_isHuman = 1;
     g_game->m_players[position].m_isLocal = 1;
 
-    HeroId playerHeroFaces[8];
+    HeroId playerHeroFaces[NUM_PLAYERS];
     int i;
     MEMSET(playerHeroFaces, heroIdNone, sizeof(playerHeroFaces), i);
     playerHeroFaces[position] = HeroId(getStartOptions()->getStartingHeroId(option));
@@ -2350,7 +2350,7 @@ static void applyCampaignMapHeader(
 {
     scenario.getStartOptions()->setTown(&mapHeader);
     scenario.m_heroPlaceholders = mapHeader.m_placeholders;
-    for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
+    for (int slotIndex = 0; slotIndex < NUM_PLAYERS; ++slotIndex)
         scenario.setCrossoverHeroCount(slotIndex,
             mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders);
 }
@@ -2893,7 +2893,7 @@ void SCampaign::completeCurrentMap(
     std::vector<hero>& crossover = getCrossoverHeroes(m_crossoverArrayIndex);
 
     int gamePos;
-    for (gamePos = 0; gamePos < 8; ++gamePos) {
+    for (gamePos = 0; gamePos < NUM_PLAYERS; ++gamePos) {
         if (g_game->m_players[gamePos].isHuman())
             break;
     }

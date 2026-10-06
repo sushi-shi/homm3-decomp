@@ -1017,7 +1017,7 @@ int oldmain()
     if (g_debugLevel > 0)
         g_globalTimer.enable();
 
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < NUM_PLAYERS; ++i)
         g_game->m_players[i].init();
 
     g_lobbyLaunched = testIfLobbyLaunched();
@@ -1191,8 +1191,8 @@ int oldmain()
             showProgressBar();
             incProgressBar(1);
 
-            playerData playerSave[8];
-            for (int i = 0; i < 8; ++i)
+            playerData playerSave[NUM_PLAYERS];
+            for (int i = 0; i < NUM_PLAYERS; ++i)
                 playerSave[i] = g_game->m_players[i];
 
             TTownType alignment[8];
@@ -1230,7 +1230,7 @@ int oldmain()
                 g_game->setupFirstPlayer();
                 campaignBrief.startScenario(currentMap, briefingChoice);
             } else {
-                for (int j = 0; j < 8; ++j) {
+                for (int j = 0; j < NUM_PLAYERS; ++j) {
                     if ((1 << alignment[j])
                         & g_game->m_mapHeader.m_playerSlotAttributes[j]
                               .m_legalAlignments) {
@@ -1515,7 +1515,7 @@ static int doNewGame()
             g_game->m_players[0].m_isHuman = 1;
             strcpy(g_game->m_players[0].m_name, g_config.m_networkDefaultName);
 
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < NUM_PLAYERS; ++i) {
                 g_newMapStartingBonus[i] = 3;
                 g_game->m_setup.m_startingBonus[i] = 3;
                 g_game->m_setup.m_startingHero[i] = -1;
@@ -2352,7 +2352,7 @@ unsigned char getTeamNames(int player, char* names)
     int numPlayers = 0;
     int i;
 
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         if ((teamMask & (1 << i)) && !g_game->m_playerDisabled[i])
             ++numPlayers;
     }
@@ -2364,7 +2364,7 @@ unsigned char getTeamNames(int player, char* names)
 
     names[0] = 0;
     int numPlayersAdded = 0;
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         if ((teamMask & (1 << i)) && !g_game->m_playerDisabled[i]) {
             strcat(names, g_game->getPlayerName(i));
             ++numPlayersAdded;
@@ -3966,7 +3966,7 @@ int getNextHumanPlayer(int start)
     while (!g_game->isHuman(start) || g_game->m_playerDisabled[start]) {
         start = (start + 1) % 8;
         ++checked;
-        if (checked >= 8) {
+        if (checked >= NUM_PLAYERS) {
             return -1;
         }
     }

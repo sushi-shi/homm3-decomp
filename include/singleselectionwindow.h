@@ -250,7 +250,7 @@ public:
     // it; the header ctor 0x14752c zeros the same band. Complete relocates
     // the band and uses SavedGameHeader::humanPlayer for the live restore
     // path. No Complete producer of this legacy band has been located.
-    int m_wasHuman[8];  // +0x4d0
+    int m_wasHuman[NUM_PLAYERS];  // +0x4d0
     // The selected row copies this complete 156-byte band to the game's
     // per-hero availability array before assigning the map header.
     unsigned char m_heroAvailability[game::HERO_COUNT];  // +0x4f0
@@ -392,7 +392,7 @@ SIZE(CNetPlayerHandlerPlayer, 0x7c);
 
 class CNetPlayerHandler {
 public:
-    enum { MAX_PLAYERS = 8 };
+    enum { MAX_PLAYERS = NUM_PLAYERS };
 
     CNetPlayerHandlerPlayer m_humanPlayers[MAX_PLAYERS];  // +0x000
 
@@ -504,8 +504,8 @@ public:
     CSprite* m_resource;  // 0x7c, DC name
     CSprite* m_heroSpecificAbility;  // 0x80, DC name
     char m_goldBox[0x88 - 0x84];
-    Bitmap816* m_flags[8];  // 0x88, DC name; adopflg%c.pcx
-    Bitmap816* m_panels[8];  // 0xa8, DC name; adop_cpnl.pcx
+    Bitmap816* m_flags[NUM_PLAYERS];  // 0x88, DC name; adopflg%c.pcx
+    Bitmap816* m_panels[NUM_PLAYERS];  // 0xa8, DC name; adop_cpnl.pcx
     Bitmap816* m_heroPix[164];  // 0xc8..0x357, expanded retail roster
     char m_pad358[0x35c - 0x358];
     Bitmap816* m_randomTownBmp;  // 0x35c
