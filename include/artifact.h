@@ -93,11 +93,11 @@ struct TCombinationArtifact {
     // two-argument constructor plus the implicit copy, and VC6 cannot
     // spell it any other way: brace initialization of a record carrying a
     // bitset member is a hard C2440 for this compiler.
-    TCombinationArtifact(int id, const std::bitset<144>& usedComponents)
+    TCombinationArtifact(int id, const std::bitset<ARTIFACT_COUNT>& usedComponents)
         : m_artifactId(id), m_components(usedComponents) {}
 
     int m_artifactId;             // +0x00
-    std::bitset<144> m_components;
+    std::bitset<ARTIFACT_COUNT> m_components;
 };
 SIZE(TCombinationArtifact, 24);
 
@@ -129,7 +129,7 @@ extern const TCombinationArtifact g_combinationArtifactTable[12];
 // Preserve that reference-to-array interface with the Complete-era bounds.
 // The combination table is Complete-only; its inferred pointer interface is
 // independent of the two DC declarations. artifact.cpp owns all three tables.
-extern const TArtifactTraits (&akArtifactTraits)[144];
+extern const TArtifactTraits (&akArtifactTraits)[ARTIFACT_COUNT];
 extern const TCombinationArtifact* g_combinationArtifacts;
 extern const TArtifactSlotTraits (&akArtifactSlotTraits)[19];
 

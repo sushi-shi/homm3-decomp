@@ -132,7 +132,7 @@ public:
         // cleanup. The installed MSL HeroId clear matches all 56 native bytes.
         std::vector<HeroId> m_heroPlaceholders;
         std::bitset<145> m_crossoverCreatures;
-        std::bitset<144> m_crossoverArtifacts;
+        std::bitset<ARTIFACT_COUNT> m_crossoverArtifacts;
 
     private:
         // Owned by this scenario: read constructs it and the destructor

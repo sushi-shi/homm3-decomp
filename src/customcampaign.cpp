@@ -151,7 +151,7 @@ DATA(0x0063d8c8) static const int g_legacyCampaignScenarioIndices[7][4] = {
 // the narrow plane below it.
 static const int g_campaignVersionWideArtifacts = 6;
 static const int g_crossoverCreatureBits = 145;
-static const int g_crossoverArtifactBits = 144;
+static const int g_crossoverArtifactBits = ARTIFACT_COUNT;
 static const int g_crossoverLegacyArtifactBits = 129;
 
 static const int g_crossoverPrimaryArtifactSlots = 16;
@@ -2148,11 +2148,11 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     if (campaignVersion >= g_campaignVersionWideArtifacts) {
         m_crossoverArtifacts = readPackedBits<g_crossoverArtifactBits>(infile);
     } else {
-        std::bitset<129> legacyArtifacts = readPackedBits<129>(infile);
+        std::bitset<g_crossoverLegacyArtifactBits> legacyArtifacts = readPackedBits<g_crossoverLegacyArtifactBits>(infile);
         std::copy(
-            bitset_iterator<129>(legacyArtifacts, 0),
-            bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
-            bitset_iterator<144>(m_crossoverArtifacts, 0));
+            bitset_iterator<g_crossoverLegacyArtifactBits>(legacyArtifacts, 0),
+            bitset_iterator<g_crossoverLegacyArtifactBits>(legacyArtifacts, g_crossoverLegacyArtifactBits),
+            bitset_iterator<g_crossoverArtifactBits>(m_crossoverArtifacts, 0));
     }
 
     unsigned char optionType = readValue<unsigned char>(infile);

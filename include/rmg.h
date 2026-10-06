@@ -2008,7 +2008,7 @@ public:
     // Role-derived names; original spellings unknown. Replaces opaque1024.
     // Ctor 0x537cc6 clears 144 bytes. Quest selection 0x54b490 excludes
     // marked artifacts; successful placement 0x54b813 marks the chosen ID.
-    unsigned char m_usedQuestArtifacts[144];           // +0x1024
+    unsigned char m_usedQuestArtifacts[ARTIFACT_COUNT];           // +0x1024
     // 0x54b4f1 latches this when fewer than 20 eligible artifacts remain;
     // seer-hut value paths 0x534b0c/0x534c9c reject further candidates.
     unsigned char m_questArtifactPoolLow;              // +0x10b4

@@ -10713,8 +10713,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     memset(reserved, 0, sizeof(reserved));
     outfile->write(reserved, sizeof(reserved));
 
-    std::bitset<144> disabledArtifacts;
-    for (int artifactIndex = 0; artifactIndex < 144; ++artifactIndex) {
+    std::bitset<ARTIFACT_COUNT> disabledArtifacts;
+    for (int artifactIndex = 0; artifactIndex < ARTIFACT_COUNT; ++artifactIndex) {
         disabledArtifacts[artifactIndex] =
             akArtifactTraits[artifactIndex].m_comboType != -1;
     }
@@ -10728,8 +10728,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     } else if (m_mapVersion >= 1) {
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
-            bitset_iterator<144>(disabledArtifacts, 0),
-            bitset_iterator<144>(disabledArtifacts, 129),
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 129),
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
         writePackedBits(outfile, legacyDisabledArtifacts);

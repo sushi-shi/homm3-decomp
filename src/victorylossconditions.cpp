@@ -164,7 +164,7 @@ bool VictoryConditionStruct::checkForArtifactWin()
         if (comboIdx == -1)
             return 0;
 
-        const std::bitset<144>& components =
+        const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[comboIdx].m_components;
         for (j = 0; j < g_currentPlayer->m_numHeroes; ++j) {
             int remaining = components.count();
@@ -495,7 +495,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
             if (comboIdx == -1)
                 return 0;
 
-            const std::bitset<144>& components =
+            const std::bitset<ARTIFACT_COUNT>& components =
                 g_combinationArtifacts[comboIdx].m_components;
             int remaining = components.count();
             for (int i = 0;; ++i) {
@@ -636,9 +636,9 @@ bool LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             if (map == g_map2 || map == g_map3 || map == g_map4) {
                 if (loser->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
                     return 1;
-                const std::bitset<144>& components =
+                const std::bitset<ARTIFACT_COUNT>& components =
                     g_combinationArtifacts[0].m_components;
-                for (int i = 0; i < 0x90; ++i) {
+                for (int i = 0; i < ARTIFACT_COUNT; ++i) {
                     if (components.test(i)
                         && loser->hasArtifact(i))
                         return 1;

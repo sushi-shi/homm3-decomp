@@ -209,7 +209,7 @@ const unsigned int g_ctaShooter = 0x4;
 // Dreamcast names the 144 vector rows and Complete's initializer passes this
 // address, count and 16-byte stride to the vector-constructor iterator.
 DATA(0x00692e18)
-std::vector<type_artifact_effect*> g_constArtifactEffects[144];
+std::vector<type_artifact_effect*> g_constArtifactEffects[ARTIFACT_COUNT];
 // DC source63 has the global initializer's generated call to its ordinary
 // constructor (0x37bbc). Retail startup entry0x428070 expands that body.
 class type_AI_initializer {
@@ -5238,9 +5238,9 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
 
     int combination = akArtifactTraits[artifact.m_artifactId].m_comboType;
     if (combination != -1) {
-        const std::bitset<144>& components =
+        const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[combination].m_components;
-        for (int component = 0; component < 144; ++component) {
+        for (int component = 0; component < ARTIFACT_COUNT; ++component) {
             if (components[component]) {
                 std::vector<type_artifact_effect*>::iterator effect =
                     g_constArtifactEffects[component].begin();
@@ -5897,7 +5897,7 @@ DC_ADDRESS(0x037c70, 0xbc)
 MAC_ADDRESS(0x039688, 0x88)
 void aiShutDown()
 {
-    for (int i = 0; i < 144; ++i) {
+    for (int i = 0; i < ARTIFACT_COUNT; ++i) {
         for (unsigned int j = 0; j < g_constArtifactEffects[i].size(); ++j)
             delete g_constArtifactEffects[i][j];
         g_constArtifactEffects[i].clear();

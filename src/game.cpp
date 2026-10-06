@@ -5202,7 +5202,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                HERO_COUNT - 128);
 
     int artifact;
-    for (artifact = 0; artifact < 144; ++artifact)
+    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact)
         m_artifactDisabled[artifact] = akArtifactTraits[artifact].m_disabled;
 
     if (m_gameVersion < 2) {
@@ -5215,12 +5215,12 @@ bool game::loadMap(TAbstractFile* mapFile)
     }
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        std::bitset<144> disabledArtifacts;
+        std::bitset<ARTIFACT_COUNT> disabledArtifacts;
         if (m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-            std::bitset<144> serializedArtifacts = readPackedBits<144>(mapFile);
+            std::bitset<ARTIFACT_COUNT> serializedArtifacts = readPackedBits<ARTIFACT_COUNT>(mapFile);
             disabledArtifacts = serializedArtifacts;
         } else {
-            for (artifact = 0; artifact < 144; ++artifact) {
+            for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
                 bool isComboArtifact = akArtifactTraits[artifact].m_comboType != -1;
                 disabledArtifacts[artifact] = isComboArtifact;
             }
@@ -5228,11 +5228,11 @@ bool game::loadMap(TAbstractFile* mapFile)
             std::bitset<129> serializedArtifacts = readPackedBits<129>(mapFile);
             std::copy(bitset_iterator<129>(serializedArtifacts, 0),
                       bitset_iterator<129>(serializedArtifacts, 129),
-                      bitset_iterator<144>(disabledArtifacts, 0));
+                      bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0));
         }
 
-        std::transform(m_artifactDisabled, m_artifactDisabled + 144,
-                       bitset_iterator<144>(disabledArtifacts, 0),
+        std::transform(m_artifactDisabled, m_artifactDisabled + ARTIFACT_COUNT,
+                       bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
                        m_artifactDisabled, std::logical_or<bool>());
     }
 
@@ -5242,7 +5242,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpells[spell]) {
-                for (artifact = 0; artifact < 144; ++artifact) {
+                for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
                     if (akArtifactTraits[artifact].m_givesSpells) {
                         m_artifactDisabled[artifact] =
                             m_artifactDisabled[artifact]
@@ -8047,7 +8047,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
 
     totalInClass = 0;
     unallocatedInClass = 0;
-    for (i = 0; i < 144; ++i) {
+    for (i = 0; i < ARTIFACT_COUNT; ++i) {
         if (!akArtifactTraits[i].m_disabled
             && (akArtifactTraits[i].m_class & artifactClass)) {
             ++totalInClass;
@@ -8059,7 +8059,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     curCount = 0;
     if (unallocatedInClass) {
         x = random(0, unallocatedInClass - 1);
-        for (i = 0; i < 144; ++i) {
+        for (i = 0; i < ARTIFACT_COUNT; ++i) {
             if (!akArtifactTraits[i].m_disabled
                 && (akArtifactTraits[i].m_class & artifactClass)
                 && !m_artifactUsed[i]) {
@@ -8072,7 +8072,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
         return TArtifact(i);
     } else {
         curCount = 0;
-        for (i = 0; i < 144; ++i) {
+        for (i = 0; i < ARTIFACT_COUNT; ++i) {
             if (!akArtifactTraits[i].m_disabled
                 && (akArtifactTraits[i].m_class & artifactClass)) {
                 m_artifactUsed[i] = m_artifactDisabled[i];
