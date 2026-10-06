@@ -2597,6 +2597,9 @@ void TSeerHut::read(TAbstractFile* infile)
     // as a static helper (2026-10-05) the depth-2 budget expanded the legacy
     // arm's vector constructor and called vector<bool>::_Ufill, both opposite
     // to retail (87.52%); written here, both retail decisions follow (100%).
+    // Mac agrees on placement: with this code in read, CodeWarrior emits
+    // retail's exact 29-call stream (0x16aae8); as an inline helper the extra
+    // depth leaves allocator<unsigned long>::allocator and num_words calls.
     // Mac uses packed vector<bool> fill and bit proxies (0x131708, 0xe73b8,
     // 0x99fb8); VC6 selects its generic byte container for the same
     // declaration, as in TPickANumber, so keep the native bool type.
