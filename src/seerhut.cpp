@@ -417,7 +417,7 @@ VA(0x0056da70, 0x60)
 MAC_ADDRESS(0x164d74, 0xd0)  // anchor-vtable 0x6417c4 slot 2, retail-only
 unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 {
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         int have = currentHero->getPrimarySkill(i);
         if (have < m_requiredSkills[i])
             return 0;
@@ -436,7 +436,7 @@ void type_skill_quest::showSkillRequirementsDialog(
     const char* text, const signed char* skills)
 {
     std::vector<type_dialog_resource> dialogResources;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         if (skills[i] > 0) {
             type_dialog_resource resource;
             resource.m_resource = 0x1f + i;
@@ -477,8 +477,8 @@ VA(0x0056dad0, 0x28C)
 MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProgressDialog(hero* currentHero)
 {
-    signed char missing[4];
-    for (int i = 0; i < 4; ++i) {
+    signed char missing[kNumPrimarySkills];
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         int have = currentHero->getPrimarySkill(i);
         if (m_requiredSkills[i] > have)
             missing[i] = m_requiredSkills[i];
@@ -547,7 +547,7 @@ std::string type_skill_quest::skillRequirementText(
     const signed char (&skills)[4])
 {
     std::vector<std::string> requirements;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         if (skills[i] > 0) {
             requirements.push_back(formatString(
                 DATA_COMPGEN(0x00683220, skillRequirementFormat, "%s %i"),

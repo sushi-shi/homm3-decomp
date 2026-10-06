@@ -635,7 +635,7 @@ int TCampaignPrimarySkillBonus::getIconIndex() const
 {
     int best = 0;
     int bestValue = 0;
-    for (int skill = 0; skill < 4; ++skill) {
+    for (int skill = 0; skill < kNumPrimarySkills; ++skill) {
         if (m_skills[skill] > bestValue) {
             bestValue = m_skills[skill];
             best = skill;
@@ -651,10 +651,10 @@ std::string TCampaignPrimarySkillBonus::getText() const
     std::string list;
     int remaining = 0;
     int stat;
-    for (stat = 0; stat < 4; ++stat)
+    for (stat = 0; stat < kNumPrimarySkills; ++stat)
         if (m_skills[stat] > 0)
             ++remaining;
-    for (stat = 0; stat < 4; ++stat) {
+    for (stat = 0; stat < kNumPrimarySkills; ++stat) {
         if (m_skills[stat] > 0) {
             list += formatString(
                 DATA_COMPGEN(0x00677278, primarySkillBonusFormat, "+%d %s"),
@@ -680,7 +680,7 @@ void TCampaignPrimarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
-        for (int stat = 0; stat < 4; ++stat) {
+        for (int stat = 0; stat < kNumPrimarySkills; ++stat) {
             int current = target->getPrimarySkill(stat);
             target->setPrimarySkill(stat, current + m_skills[stat]);
         }
@@ -3112,7 +3112,7 @@ static void convertLegacyCampaignHero(hero& newHero,
         if (oldHero.m_inSpellbook[spell])
             newHero.addSpell(spell);
     }
-    for (int stat = 0; stat < 4; ++stat)
+    for (int stat = 0; stat < kNumPrimarySkills; ++stat)
         newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
 }
 

@@ -66,8 +66,8 @@ DC_ADDRESS(0x14d3a4, 0x28)
 int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 {
     if (schoolMask == eSchoolAll)
-        return 4;
-    for (int position = 0; position < 4; ++position) {
+        return kNumSpellSchools;
+    for (int position = 0; position < kNumSpellSchools; ++position) {
         if (schoolMask & (1 << position))
             return position;
     }
@@ -80,7 +80,7 @@ int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 DC_ADDRESS(0x14d3cc, 0x12)
 TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 {
-    return position < 4 ? (TSpellSchool)(1 << position)
+    return position < kNumSpellSchools ? (TSpellSchool)(1 << position)
                         : eSchoolAll;
 }
 

@@ -5402,7 +5402,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 
         if (readValue<char>(mapFile)) {
             heroRecord->m_customPrimarySkills = 1;
-            for (int skill = 0; skill < 4; ++skill) {
+            for (int skill = 0; skill < kNumPrimarySkills; ++skill) {
                 heroRecord->m_primarySkills[skill] = readValue<char>(mapFile);
             }
         }
