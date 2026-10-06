@@ -76,7 +76,7 @@ class BuildModeTest(unittest.TestCase):
         self.mocks["mac"].assert_not_called()  # Mac is `homm3 mac build` only
         self.mocks["fingerprints"].assert_called_once_with(only_units=None)
         self.mocks["data_accounting"].assert_not_called()
-        self.mocks["readme"].assert_called_once_with({}, data_accounting=None)
+        self.mocks["readme"].assert_called_once_with(data_accounting=None)
         self.mocks["origins"].assert_called_once_with(include_declarations=True)
         self.mocks["ownership"].assert_called_once_with(origins=[])
         self.mocks["cleanliness"].assert_called_once_with(write=True, dc_origins=[])
@@ -86,7 +86,7 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(self.events[-2:], ["data_accounting", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["readme"].assert_called_once_with(
-            {}, data_accounting={"totals": {"file": {}}, "initializers": []})
+            data_accounting={"totals": {"file": {}}, "initializers": []})
 
     def test_link_failure_fails_checkpoint_but_keeps_evidence_gates(self):
         self.mocks['link'].side_effect = lambda: 1
@@ -100,7 +100,7 @@ class BuildModeTest(unittest.TestCase):
         self.mocks['data_accounting'].side_effect = ValueError('invalid extent')
         self.assertEqual(build.main(["--data"]), 1)
         self.mocks['claims'].assert_called_once()
-        self.mocks['readme'].assert_called_once_with({}, data_accounting=None)
+        self.mocks['readme'].assert_called_once_with(data_accounting=None)
 
     def test_missing_dc_evidence_preserves_independent_diagnostics_and_fails(self):
         for error in (inputs.InputError, NB11Error, FileNotFoundError):

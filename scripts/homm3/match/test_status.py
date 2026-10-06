@@ -37,23 +37,21 @@ class ReadmeUniverseTest(unittest.TestCase):
             {'unit': 'victor', 'source': 'src/victor.cpp', 'module': 'victor'},
             {'unit': 'adler32', 'source': 'vendor/zlib-1.1.3/adler32.c'},
         ]
-        report = {'units': [{'name': u['unit'], 'functions': [
-            {'name': 'f', 'size': 10, 'fuzzy_match_percent': 100}]} for u in units]}
         rvas = {(u['unit'], 'f'): 0x1000 + i * 16 for i, u in enumerate(units)}
-        summary = ({r: 'target' for r in rvas.values()}, {}, {'target': (6, 60)})
+        ledger = {key: MatchRow(100, 100, 100, rva) for key, rva in rvas.items()}
+        summary = ({r: 'target' for r in rvas.values()}, dict.fromkeys(rvas.values(), 10),
+                   {'target': (6, 60)})
         with tempfile.TemporaryDirectory() as tmp:
             readme = Path(tmp) / 'README.md'
             # Byte accounting is opt-in; without it the last measured line stays.
             kept = '**Byte accountability:** 7 file bytes unclaimed.'
             readme.write_text(status.RM_START + '\n' + kept + '\n' + status.RM_END + '\n')
             with mock.patch.object(status, 'README_PATH', readme), \
-                 mock.patch.object(status, 'load_baseline', return_value={}), \
-                 mock.patch.object(status, 'source_hash_pair', return_value=({}, {})), \
-                 mock.patch.object(status, 'function_rvas', return_value=rvas), \
+                 mock.patch.object(status, 'load_baseline', return_value=ledger), \
                  mock.patch('homm3.match.universe.summary', return_value=summary), \
                  mock.patch('homm3.build.configure.load_manifest', return_value=({}, {}, units)), \
                  contextlib.redirect_stdout(io.StringIO()):
-                status.write_readme(report)
+                status.write_readme()
             text = readme.read_text()
             rows = {line.split('|')[1].strip(): [c.strip() for c in line.split('|')[2:-1]]
                     for line in text.splitlines() if line.startswith('| `')}

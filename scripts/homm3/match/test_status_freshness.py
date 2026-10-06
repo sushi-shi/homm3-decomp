@@ -128,14 +128,33 @@ class FreshnessTest(unittest.TestCase):
             "build compiled: cl source\n  unit = hero\nbuild objects: phony compiled\n")
         subprocess.run(["ninja", "objects"], cwd=self.root, check=True, capture_output=True)
         (self.root / "source").write_text("after merge")
-        for argv in (["--write-readme"], ["functions", "--write-readme"], ["update"], ["check"]):
+        for argv, advice in ((["update"], "1 unit(s) are stale (hero). "
+                                          "Run `homm3 build --fast` (all units) first"),
+                             (["update", "--write-readme"], "Run `homm3 build --fast` (all units)"),
+                             (["check"], "homm3 build --fast hero")):
             stderr = io.StringIO()
             with self.subTest(argv=argv), patch.object(status, "refresh_report") as report, \
-                    patch.object(status, "write_readme"), contextlib.redirect_stderr(stderr):
+                    patch.object(status, "write_readme") as readme, \
+                    contextlib.redirect_stderr(stderr):
                 with self.assertRaises(SystemExit):
                     status.main(argv)
                 report.assert_not_called()
-                self.assertIn("homm3 build --fast hero", stderr.getvalue())
+                readme.assert_not_called()
+                self.assertIn(advice, stderr.getvalue())
+
+    def test_update_refuses_a_stale_comparison_of_any_unit(self):
+        config = json.loads((self.root / "objdiff.json").read_text())
+        config["units"][0]["name"] = "hero"
+        (self.root / "objdiff.json").write_text(json.dumps(config))
+        self.raw.write_bytes(b"rebuilt object")
+        stderr = io.StringIO()
+        with patch.object(status, "pending_build_edges", return_value=(0, "")), \
+                patch.object(status, "refresh_report") as report, \
+                contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            status.main(["update"])
+        report.assert_not_called()
+        self.assertIn("1 unit(s) are stale (hero). Run `homm3 build --fast` (all units) first",
+                      stderr.getvalue())
 
     def test_stale_comparison_names_the_fast_build_of_its_unit(self):
         # The advice used to be a full `homm3 build` (224 failures).
