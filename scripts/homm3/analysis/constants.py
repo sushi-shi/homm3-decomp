@@ -597,7 +597,7 @@ class Literal:
     line: int
     text: str
     value: int
-    context: str          # bound | size | dimension | template | value
+    context: str          # bound | size | dimension | template | index | value
     score: int
     arrays: list[str]     # same-length arrays referenced nearby
     candidates: list[Entry]
@@ -608,7 +608,21 @@ def _context(toks: list[_Tok], at: int) -> str:
     before = toks[at - 1].text if at else ""
     after = toks[at + 1].text if at + 1 < len(toks) else ""
     if before == "[" and after == "]":
-        return "dimension"
+        # A declarator's length, versus an element index such as
+        # `g_heroScreen[7]` or `m_armies[7] = 0`.
+        i = at - 1
+        while i > 0 and toks[i].text == "[" and toks[i - 1].text == "]":
+            i = _matching_open(toks, i - 1)
+        name = i - 1
+        if name >= 0 and toks[name].kind == "word":
+            start, declared = _declaration_start(toks, name)
+            close = at + 1
+            while close + 1 < len(toks) and toks[close + 1].text == "[":
+                close = _skip_balanced(toks, close + 1, "[", "]") - 1
+            follower = toks[close + 1].text if close + 1 < len(toks) else ";"
+            if declared and start < name and follower in (";", "=", ",", ")", "{", ":"):
+                return "dimension"
+        return "index"
     if before == "<" and after in (">", ","):
         # `bitset<144>` versus `i < 144`: a template width is followed by
         # `>`, a comparison by `;`/`)`/an operator.
@@ -743,10 +757,6 @@ def scan_literals(index: Index, root: Path, files: list[Path], *, minimum: int =
             for line in range(tok.line - window, tok.line + window + 1):
                 near |= words_by_line.get(line, set())
             same_length = sorted(name for name in by_length.get(value, ()) if name in near)
-            if context == "dimension":
-                # The declaration being scanned is itself an array length.
-                same_length = [n for n in same_length
-                               if n not in words_by_line.get(tok.line, set())]
             counts = [e for e in candidates if COUNT_NAME.search(e.name)]
             if context == "dimension":
                 # A table length spelled as a literal: coupled when another
@@ -755,7 +765,11 @@ def scan_literals(index: Index, root: Path, files: list[Path], *, minimum: int =
                 own = _declared_name(toks, at)
                 repeats = [w for w in literal_dims.get((own, value), ()) if w != (relative, tok.line)]
                 same_length = [own] if repeats else []
-            if context in ("bound", "size", "template") and same_length:
+            if context in ("index", "value"):
+                score = 1 if candidates else 0
+                if not score:
+                    continue
+            elif context in ("bound", "size", "template") and same_length:
                 score = 3
             elif context != "value" and counts:
                 score = 2

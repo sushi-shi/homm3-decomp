@@ -111,6 +111,7 @@ class LiteralTests(unittest.TestCase):
                 "    if (effect >= 83) return;\n"
                 "    g_table[effect] = 83;\n"
                 "    while (effect < 1000) { effect++; }\n"
+                "    use(g_table[83]);\n"
                 "}\n")
             raws = scan_source(header.read_text(), "src/t.h") + \
                 scan_source(body.read_text(), "src/t.cpp")
@@ -126,6 +127,7 @@ class LiteralTests(unittest.TestCase):
             self.assertNotIn(("src/t.cpp", 1), found)   # annotation
             self.assertNotIn(("src/t.cpp", 3), found)   # definition
             self.assertNotIn(("src/t.cpp", 7), found)   # no candidate
+            self.assertEqual(found[("src/t.cpp", 8)], (1, "index"))
             self.assertIn("kNumThings", {e.name for e in rows[0].candidates})
 
 
