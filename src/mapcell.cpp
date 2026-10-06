@@ -4172,7 +4172,7 @@ VA(0x005042c0, 0x1A5)
 MAC_ADDRESS(0x1270c0, 0x1b8)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
 void NewfullMap::rebuildObjectTypeIndex()
 {
-    for (int objectClass = 0; objectClass < 232; ++objectClass) {
+    for (int objectClass = 0; objectClass < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectClass) {
         for (int typeIndex = 0;
              typeIndex < m_objectTypeIndex[objectClass].size(); ++typeIndex) {
             m_objectTypeIndex[objectClass][typeIndex].m_objectTypeIndex = 0xffff;
