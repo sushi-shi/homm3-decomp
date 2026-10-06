@@ -3060,7 +3060,7 @@ THallWindow::THallWindow(int which)
     ResourceManager::delSprFromCache();  // DC townmgr.cpp:4303
     const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     const int slotY[5] = { 37, 141, 245, 349, 453 };
-    const int hallX[TOWN_TYPE_COUNT][18] = {
+    const int hallX[TOWN_TYPE_COUNT][CASTLE_HALL_SLOT_COUNT] = {
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 4, 2, 0, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 1, 2, 0, 6, 5, 3, 1, 5, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 4, 0, 2, 0, 6, 5, 3, 6, 1 },
@@ -3071,7 +3071,7 @@ THallWindow::THallWindow(int which)
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 }
     };
-    const int hallY[TOWN_TYPE_COUNT][18] = {
+    const int hallY[TOWN_TYPE_COUNT][CASTLE_HALL_SLOT_COUNT] = {
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 1, 2 },
@@ -3127,7 +3127,7 @@ THallWindow::THallWindow(int which)
     case TOWN_TOWER:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3145,7 +3145,7 @@ THallWindow::THallWindow(int which)
     case TOWN_INFERNO:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3163,7 +3163,7 @@ THallWindow::THallWindow(int which)
     case TOWN_NECROPOLIS:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3181,7 +3181,7 @@ THallWindow::THallWindow(int which)
     case TOWN_DUNGEON:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3199,7 +3199,7 @@ THallWindow::THallWindow(int which)
     case TOWN_STRONGHOLD:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));

@@ -89,7 +89,7 @@ DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[9][2] = {
+DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[TOWN_TYPE_COUNT][2] = {
     { { "CH00.DEF", 92, 67, 5 }, { "CH01.DEF", 94, 54, 5 } },
     { { "CH02.DEF", 102, 62, 5 }, { "CH03.DEF", 102, 62, 5 } },
     { { "CH05.DEF", 100, 59, 5 }, { "CH04.DEF", 98, 52, 5 } },
@@ -341,7 +341,7 @@ DATA(0x0063bec0) const combatManager::SElevationOverlay combatManager::s_elevati
 // Original DC name: akWallTraits.
 // LoadIcons computes 0x66d848 + town * 648; LoadWallTraitsTable writes
 // name/hitpoints at row + 0x1c/+0x20. Each 36-byte record starts with x/y.
-DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[TOWN_TYPE_COUNT][18] = {
+DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[TOWN_TYPE_COUNT][combatManager::kNumWallSections] = {
     { // Castle
         { 400, 276, -1, 0, { "SgCsDrw3.pcx", "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0 }, 0, 0, 0 },
         { 400, 276, -1, 0, { 0, "SgCsDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
@@ -632,7 +632,7 @@ unsigned char combatManager::loadWallTraitsTable()
     int row = 1;
     for (int townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
         row += 2;
-        for (int wall = 0; wall < 18; wall++) {
+        for (int wall = 0; wall < kNumWallSections; wall++) {
             const TSpreadsheetResource::TStringVector& values =
                 sheet->getRow(row);
             s_wallTraits[townType][wall].m_name = values[0];
@@ -831,7 +831,7 @@ void combatManager::loadIcons()
 
     if (m_fortificationLevel > 0) {
         TWallTraits* traits = s_wallTraits[m_defendingTown->m_type];
-        for (int wall = 0; wall < 18; wall++) {
+        for (int wall = 0; wall < kNumWallSections; wall++) {
             for (int icon = 0; icon < 5; icon++) {
                 if ((g_game->m_gameVersion >= 2
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
@@ -872,7 +872,7 @@ DC_ADDRESS(0x05dfb4, 0xe6)
 MAC_ADDRESS(0x06eb08, 0x164)
 void combatManager::freeIcons()
 {
-    for (int group = 0; group < 18; ++group) {
+    for (int group = 0; group < kNumWallSections; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
             if (m_wallImages[group][icon])
                 ResourceManager::dispose(m_wallImages[group][icon]);
@@ -2354,7 +2354,7 @@ void combatManager::setupAndLoadObstacles()
         return;
 
     if (m_fortificationLevel > eFortificationNone) {
-        for (int wall = 0; wall < 18; wall++)
+        for (int wall = 0; wall < kNumWallSections; wall++)
             m_wallLevel[wall] =
                 s_wallTraits[m_defendingTown->m_type][wall].m_hitpoints;
         m_wallLevel[17] = 1;

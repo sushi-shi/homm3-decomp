@@ -2217,10 +2217,10 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
     THeroClass heroClass;
     long totalCount;
     long choice = 0;
-    long counts[18];
+    long counts[kNumHeroClasses];
     // CodeView records THeroID; Complete retains the same signed domain.
     HeroId heroId;
-    long weights[18];
+    long weights[kNumHeroClasses];
     long alignedCount;
 
     totalCount = 0;

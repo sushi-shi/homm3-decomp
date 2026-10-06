@@ -1408,7 +1408,7 @@ public:
 };
 SIZE(type_movement_constants, 0x78);
 extern type_movement_constants g_moveConstants;
-extern THeroClassTraits g_heroClassTraits[18];
+extern THeroClassTraits g_heroClassTraits[kNumHeroClasses];
 extern const THeroClassTraits (&g_heroClasses)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
