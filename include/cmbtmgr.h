@@ -2026,7 +2026,7 @@ public:
     unsigned int m_flags;  // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
-extern const TSpellEffectTraits g_spellEffectTraits[];
+extern const TSpellEffectTraits g_spellEffectTraits[kNumSpellEffects];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
