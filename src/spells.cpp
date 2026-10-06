@@ -1228,7 +1228,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         if (!isQuickCombat()) {
             target->m_monInfo.m_attributes |= creatureGreyColoring;
             resetLimitCreature();
-            markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
+            markCreatureEffect(target->m_combatSide, target->m_bitIndex);
             computeMaxExtent();
             for (int frame = 10; frame > 0; --frame) {
                 target->m_paletteEffect = frame * 0.1;
@@ -1247,7 +1247,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             if (!isQuickCombat()) {
                 target->m_monInfo.m_attributes |= creatureRedColoring;
                 resetLimitCreature();
-                markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
+                markCreatureEffect(target->m_combatSide, target->m_bitIndex);
                 computeMaxExtent();
                 {
                     for (int frame = 0; frame < 10; ++frame) {
@@ -1581,7 +1581,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             army* thisArmy = *it;
             if (!spellCastWorks(spellId, m_currentSide, thisArmy, 0,
                                 isMonsterSpell)) {
-                m_effected[thisArmy->getOwningSide()][thisArmy->m_bitIndex] = 0;
+                m_effected[thisArmy->m_combatSide][thisArmy->m_bitIndex] = 0;
             } else {
                 thisArmy->setSpellInfluence(spellId, monsterPower,
                                              mastery, castingHero);
@@ -2813,9 +2813,9 @@ void combatManager::markAreaEffect(long hex, long radius,
             continue;
         if (target->is(creatureImmobilized))
             continue;
-        if (m_effected[target->getOwningSide()][target->m_bitIndex])
+        if (m_effected[target->m_combatSide][target->m_bitIndex])
             continue;
-        m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
+        m_effected[target->m_combatSide][target->m_bitIndex] = 1;
         targets.push_back(target);
     }
 }
@@ -2838,9 +2838,9 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
             continue;
         if (target->is(creatureImmobilized))
             continue;
-        if (m_effected[target->getOwningSide()][target->m_bitIndex])
+        if (m_effected[target->m_combatSide][target->m_bitIndex])
             continue;
-        m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
+        m_effected[target->m_combatSide][target->m_bitIndex] = 1;
         targets.push_back(target);
     }
 }
@@ -2932,7 +2932,7 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
     while (i--) {
         army* target = targets[i];
         if (!spellCastWorks(spellType, m_currentSide, target, 0, 0)) {
-            m_effected[target->getOwningSide()][target->m_bitIndex] = 0;
+            m_effected[target->m_combatSide][target->m_bitIndex] = 0;
             continue;
         }
         damage = computeSpellDamage(spellType, power, mastery, castingHero,
@@ -4317,11 +4317,11 @@ DC_ADDRESS(0x15668c, 0x6a)
 MAC_ADDRESS(0x19846c, 0x80)
 void combatManager::removeCorpse(army* corpse)
 {
-    removeCorpse(m_cells[corpse->m_gridIndex], corpse->getOwningSide(),
+    removeCorpse(m_cells[corpse->m_gridIndex], corpse->m_combatSide,
                 corpse->m_bitIndex);
     if (corpse->is(creatureDoubleWide))
         removeCorpse(m_cells[corpse->getSecondGridIndex()],
-                    corpse->getOwningSide(), corpse->m_bitIndex);
+                    corpse->m_combatSide, corpse->m_bitIndex);
 }
 
 // Project-inferred shared message; preserve the separate native format branches.
@@ -4443,7 +4443,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         placeArmyInGrid(*targetArmy, hex);
         removeCorpse(targetArmy);
     }
-    if (targetArmy->m_facing != 1 - targetArmy->getOwningSide())
+    if (targetArmy->m_facing != 1 - targetArmy->m_combatSide)
         targetArmy->turn(0);
 
     if (!isQuickCombat()) {

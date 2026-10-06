@@ -1052,7 +1052,7 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
     if (m_isAreaEffectTarget == arg)
         return 0;
     m_isAreaEffectTarget = arg;
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     if (m_isAreaEffectTarget) {
         if (m_stdIcon->isValidSeq(cs_fidget)
             && m_currFrameType != cs_fidget) {
@@ -1152,7 +1152,7 @@ void army::animateMissile(army* armyToAttack)
     int targetX = armyToAttack->midX();
     int targetY = armyToAttack->midY();
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     g_combatManager->computeMaxExtent();
 
     int startX;
@@ -1465,7 +1465,7 @@ void army::rangeAttack()
         rangeAttack(target);
     if (m_creatureType == ARMY_CREATURE_BALLISTA && target->m_numTroops > 0
         && getController()
-        && getController()->getSecondarySkill(eSecSkillBattlefieldBallistics)
+        && getController()->m_skillLevel[eSecSkillBattlefieldBallistics]
                > 1) {
         rangeAttack(target);
     }
@@ -1533,7 +1533,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
         }
         *damageAmount += tempDamage;
         *killed += tempKilled;
-        g_combatManager->markCreatureEffect(target->getOwningSide(),
+        g_combatManager->markCreatureEffect(target->m_combatSide,
                                             target->m_bitIndex);
         target->m_hitByCreature = 1;
         if (!firstTarget || firstTarget->m_creatureType == target->m_creatureType)
@@ -1953,7 +1953,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     checkLuck();
     int damage = 0;
     int killed = 0;
@@ -1965,10 +1965,10 @@ bool army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
+        g_combatManager->markCreatureEffect(armyToAttack->m_combatSide,
                                             armyToAttack->m_bitIndex);
         if (behind)
-            g_combatManager->markCreatureEffect(behind->getOwningSide(),
+            g_combatManager->markCreatureEffect(behind->m_combatSide,
                                                 behind->m_bitIndex);
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
@@ -2050,7 +2050,7 @@ void army::doAttack(int direction)
     if (armyToAttack->needToTurn(counterDirection)) {
         int savedSide = g_combatManager->m_actingSide;
         int savedSlot = g_combatManager->m_actingSlot;
-        g_combatManager->m_actingSide = armyToAttack->getOwningSide();
+        g_combatManager->m_actingSide = armyToAttack->m_combatSide;
         g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
         armyToAttack->setupAnimation();
         armyToAttack->turn(1);
@@ -2084,7 +2084,7 @@ void army::doAttack(int direction)
         if (savedArmyToAttackFacing != armyToAttack->m_facing) {
             int savedSide = g_combatManager->m_actingSide;
             int savedSlot = g_combatManager->m_actingSlot;
-            g_combatManager->m_actingSide = armyToAttack->getOwningSide();
+            g_combatManager->m_actingSide = armyToAttack->m_combatSide;
             g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
             armyToAttack->setupAnimation();
             armyToAttack->turn(1);
@@ -4149,7 +4149,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                              : DATA_COMPGEN(0x00660a78, wallHitSampleName,
                                             "WallHit.82m"));
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     g_combatManager->computeMaxExtent();
     ds_memsample* shootSample =
         g_soundManager->memorySample(m_armySample[SHOOT_SAMPLE]);
@@ -4519,7 +4519,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
     if (cell->hasArmy()) {
-        if (cell->m_armySide != getOwningSide())
+        if (cell->m_armySide != m_combatSide)
             return 0;
         if (cell->m_armySlot != m_bitIndex)
             return 0;
@@ -4536,7 +4536,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     hexcell* otherCell = &g_combatManager->m_cells[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
         if (!otherCell->hasArmy()
-                || (otherCell->m_armySide == getOwningSide()
+                || (otherCell->m_armySide == m_combatSide
                     && otherCell->m_armySlot == m_bitIndex))
             return 1;
     }
