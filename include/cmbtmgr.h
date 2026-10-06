@@ -361,6 +361,11 @@ public:
     // Mac's contiguous drawing bodies leave no retained coordinate facade.
     // Visibility here is a platform inference, not a recovered inline word.
     DC_ADDRESS(0x084248, 0x60)
+    // Lead (2026-10-07): the forwarding body costs the missile animators'
+    // later Draw expansions their getMap budget. A Windows stub returning
+    // false gives shootBallisticMissile 91.31 -> 94.19 and shootMissile
+    // 96.70 -> 99.23 (removing the calls: 91.72/99.23); neither Mac nor
+    // retail retains a body that decides between delegation and stub.
     bool scrollTo(int x, int y, int width, int height, bool draw,
                   bool doscrollX, bool doscrollY)
     {
