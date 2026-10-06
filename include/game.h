@@ -156,8 +156,8 @@ public:
     unsigned char m_portraitNumber;  // +0x21
     unsigned char m_customSecondarySkills;  // +0x22
     int m_numSecondarySkills;  // +0x24 - signed, the loop bound
-    char m_secondarySkill[8];  // +0x28 - movsx, so plain char
-    char m_secondarySkillLevel[8];  // +0x30
+    char m_secondarySkill[kNumSecSkillsPerHero];  // +0x28 - movsx, so plain char
+    char m_secondarySkillLevel[kNumSecSkillsPerHero];  // +0x30
     unsigned char m_customArmies;  // +0x38
     int m_armies[7];  // +0x3c
     short m_numTroops[7];  // +0x58 - movsx word
@@ -1208,7 +1208,7 @@ public:
     // at +0x32000; retail retains two alignment bytes before its vector.
     char m_paddingBeforeRumours[2];
     std::vector<TRumour> m_rumours;  // +0x4e648
-    char m_ssDisabled[0x1c];
+    char m_ssDisabled[kNumSecSkills];
     char m_armyWindow[4];
     // Dreamcast original viewFrame is int at +0x32010. InitVars
     // (dc 0xe3a04, kb.cpp:3771) clears it immediately before copying

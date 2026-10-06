@@ -570,14 +570,14 @@ public:
     // Before normalization (Dreamcast): heroArmy.
     armyGroup m_army;
     // Before normalization (Dreamcast): SSLevel.
-    signed char m_skillLevel[28];  // +0xc9
+    signed char m_skillLevel[kNumSecSkills];  // +0xc9
     // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
     // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
     // GetNthSS scans it for order iWhich+1 and returns the slot index;
     // GiveSS writes skillCount+1 into the newly-learned slot and TakeSS
     // decrements every entry above the vacated one before zeroing it.
     // Before normalization (Dreamcast): SSOrder.
-    unsigned char m_skillOrder[28];  // +0xe5
+    unsigned char m_skillOrder[kNumSecSkills];  // +0xe5
     // Number of secondary skills known. A full DWORD: GiveSS's cap test
     // is `cmp dword [this+0x101],8` and both trio bodies increment /
     // decrement it 32 bits wide; the narrowed `mov al,byte [this+0x101]`
@@ -1385,7 +1385,7 @@ public:
     signed char m_initialPrimarySkill[4];  // +0x0c
     signed char m_gainPrimarySkillChance[4];  // +0x10
     signed char m_gainPrimarySkillChance10P[4];  // +0x14
-    signed char m_gainSecondarySkillChance[28];  // +0x18
+    signed char m_gainSecondarySkillChance[kNumSecSkills];  // +0x18
     signed char m_foundInTownType[9];  // +0x34
     // Complete expands foundInTownType to nine bytes at +0x34.
     // NH3API confirms the three trailing alignment bytes and 0x40-byte PC stride.

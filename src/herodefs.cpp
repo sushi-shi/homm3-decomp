@@ -200,10 +200,10 @@ THeroClassTraits g_heroClassTraits[18] = {
     { 8, 0, 0.0f, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0 } },
 };
 
-DATA(0x00698cf0) TSSkillTraits g_sSkillTraitsStorage[28];
+DATA(0x00698cf0) TSSkillTraits g_sSkillTraitsStorage[kNumSecSkills];
 DATA(0x0067dce8) const THeroTraits (&g_heroTraits)[163] = g_heroTraitsStorage;
 DATA(0x0067dcec) const THeroClassTraits (&g_heroClasses)[18] = g_heroClassTraits;
-DATA(0x0067dcf0) const TSSkillTraits (&g_sSkillTraits)[28] = g_sSkillTraitsStorage;
+DATA(0x0067dcf0) const TSSkillTraits (&g_sSkillTraits)[kNumSecSkills] = g_sSkillTraitsStorage;
 
 namespace {
 
@@ -307,7 +307,7 @@ bool initializeSSkillTraitsTable()
 
     int id = 0;
     int row = 2;
-    for (; id < 28; ++id, ++row) {
+    for (; id < kNumSecSkills; ++id, ++row) {
         initializeSSkillTraits(id, resource->getRow(row));
     }
 
@@ -368,7 +368,7 @@ static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
     for (column = 0; column < 4; ++column)
         traits.m_gainPrimarySkillChance10P[column] =
             static_cast<signed char>(atoi(values[column + 10]));
-    for (column = 0; column < 28; ++column)
+    for (column = 0; column < kNumSecSkills; ++column)
         traits.m_gainSecondarySkillChance[column] =
             static_cast<signed char>(atoi(values[column + 14]));
     for (column = 0; column < 9; ++column)
@@ -386,14 +386,14 @@ static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
     DATA_COMPGEN_GUARD(0x00698b98, secondarySkillStringsGuard,
                       secondarySkillNames)
     DATA(0x00698b28)
-    static TAutoStrPtr secondarySkillNames[28];
+    static TAutoStrPtr secondarySkillNames[kNumSecSkills];
 
     secondarySkillNames[id].set(new char[strlen(values[0]) + 1]);
     strcpy(secondarySkillNames[id].get(), values[0]);
     traits.m_name = secondarySkillNames[id].get();
 
     DATA(0x00698b9c)
-    static TAutoStrPtr secondarySkillLevelNames[28][3];
+    static TAutoStrPtr secondarySkillLevelNames[kNumSecSkills][3];
 
     int level;
     for (level = 0; level < 3; ++level) {

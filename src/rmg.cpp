@@ -10771,7 +10771,7 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<70> disabledSpells;
         writePackedBits(outfile, disabledSpells);
 
-        std::bitset<28> disabledSkills;
+        std::bitset<kNumSecSkills> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
         for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {

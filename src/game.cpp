@@ -4357,11 +4357,11 @@ MAC_ADDRESS(0x0d6b44, 0x13c)  // dc-order + member receiver
 void game::randomizeUniversity(NewmapCell* cell)
 {
     type_university university;
-    std::bitset<28> availableSkills;
+    std::bitset<kNumSecSkills> availableSkills;
     long choice;
     long i;
     TSecondarySkill skill;
-    for (i = 0; i < 28; ++i)
+    for (i = 0; i < kNumSecSkills; ++i)
         availableSkills[i] = !g_game->m_ssDisabled[i];
 
     int availableCount = availableSkills.count();
@@ -4408,13 +4408,13 @@ DC_ADDRESS(0x0ac168, 0x3a)
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
 {
-    std::bitset<28> possibleSkills(cell->m_extraInfo);
+    std::bitset<kNumSecSkills> possibleSkills(cell->m_extraInfo);
     cell->m_extraInfo = 0;
     if (possibleSkills.none())
-        possibleSkills = ~std::bitset<28>();
+        possibleSkills = ~std::bitset<kNumSecSkills>();
 
     int i;
-    for (i = 0; i < 28; ++i)
+    for (i = 0; i < kNumSecSkills; ++i)
         possibleSkills[i] = possibleSkills[i]
             && !g_game->m_ssDisabled[i];
 
@@ -5255,7 +5255,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                 || (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-        std::bitset<28> serializedSkills = readPackedBits<28>(mapFile);
+        std::bitset<kNumSecSkills> serializedSkills = readPackedBits<kNumSecSkills>(mapFile);
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
             m_ssDisabled[skill] = serializedSkills[skill];
     } else {
