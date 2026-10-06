@@ -465,7 +465,7 @@ void type_AI_player::calculateDemand()
             player->m_townIds[buildingTownIndex]);
         buildMask = currentTown->getBuildableMask();
         int building;
-        for (building = 0; building < 44; building++) {
+        for (building = 0; building < MAX_BUILDING_TYPE; building++) {
             if (g_bitNumber[building] & buildMask) {
                 buildCost = currentTown->getBuildCostArray(
                     type_building_id(building));

@@ -493,7 +493,7 @@ public:
     // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
     // (the DC build carries eight); filled by initialize.cpp's
     // create_included_masks. Definition + DATA claim in src/town.cpp.
-    static __int64 s_includedBuildings[9][44];
+    static __int64 s_includedBuildings[9][MAX_BUILDING_TYPE];
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     const class armyGroup& getArmy() const;
     // DC town.cpp:2375 proves the ordinary non-const reference twin. Its
@@ -569,7 +569,7 @@ enum ETownConstants {
     TOWN_TYPE_COUNT = TOWN_CONFLUX + 1,
     // Restoration of Erathia has the first eight; Conflux came later.
     TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX,
-    TOWN_BUILDING_SLOTS = 44,
+    TOWN_BUILDING_SLOTS = MAX_BUILDING_TYPE,
     // The four horde columns of a const_horde_effects row - also the
     // length of gHordeBuildings, which get_horde_effect scans.
     TOWN_HORDE_SLOTS = 4,

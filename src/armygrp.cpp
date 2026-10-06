@@ -895,7 +895,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     int morale = 0;
     if (ownerHero)
         morale = ownerHero->getMorale(otherHero, 0, 0);
-    unsigned char alignments[10];
+    unsigned char alignments[TOWN_TYPE_COUNT + 1];
     int numAlignments = getAlignments(alignments);
     if (groupAlignments) {
         int grouped = 0;
@@ -1324,7 +1324,7 @@ std::string armyGroup::getMoraleDescription(
         ;
     }
 
-    unsigned char alignments[10];
+    unsigned char alignments[TOWN_TYPE_COUNT + 1];
     int numAlignments = getAlignments(alignments);
     if (groupAlignments) {
         int grouped = 0;
