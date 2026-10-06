@@ -427,10 +427,11 @@ static int g_heroArmyCoords[7][2] = {
 //   * mana is a SHORT (`movsx eax, word [hero+0x18]`), morale and luck
 //     are icon frames at GetMorale/GetLuck + 3, and both accessors take
 //     the DC-attested three arguments;
-//   * the army block is gated on a seven-slot count. Mac 0x60448..0x604c8
-//     expands the same operation as armyGroup::getNumArmies at 0x58528.
-//     Keep that canonical helper call rather than a second count body;
-//     Windows retail expands it into a mov ecx,7 / dec ecx countdown.
+//   * the army block is gated on a seven-slot count that this body
+//     computes itself: DC 273..278 counts the slots with no GetNumArmies
+//     jsr, while the same module's TBottomViewTown does call
+//     armyGroup::GetNumArmies. Windows retail expands only this count
+//     (mov ecx,7 / dec ecx); Mac 0x60448..0x604c8 retains no call either.
 
 // THE WIDGET IDS ARE LITERALS HERE, NOT AN INCREMENTING LOCAL - the
 // opposite of TBottomViewNewTurn. 0x7d8/0x7d9/0x7da are pushed as
@@ -472,15 +473,8 @@ static int g_heroArmyCoords[7][2] = {
 // index is dead), a spilled difference in `[ebp-0x10]`, and the
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
-// getNumArmies remains a canonical call. Its ordinary armygrp.cpp body
-// follows the older DC owner and Mac source-order evidence; neither that
-// ordering nor 42 retained Mac calls uniquely proves Complete placement.
-// Returning the body from armygrp.h to armygrp.cpp restores eight other
-// Windows callers to exact but moves this constructor 96.9607 -> 95.8752.
-// Retail and Mac still expand its seven-slot count here. Separate original
-// Complete TUs are inferred from older DC/authored units, not proven: keep
-// this expansion as unresolved placement/TU evidence, without a visibility
-// trick or replacing the recovered call with a pasted count loop.
+// The direct DC count restores 95.88 -> 97.76; the earlier getNumArmies
+// call kept the helper's retained Windows body out of this expansion.
 // The earlier in-class trace also left the quantity string's default
 // constructor -> _Tidy(false) call (cost 152, child budget 141); those figures
 // describe that prior context rather than the ordinary-body model.
@@ -520,7 +514,13 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     m_widgets.push_back(new iconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
         who->getLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
 
-    if (who->m_army.getNumArmies() > 0) {
+    int numStacks = 0;
+    for (int n = 0; n < 7; n++) {
+        if (who->m_army.m_armyTypes[n] != CREATURE_NONE)
+            numStacks++;
+    }
+
+    if (numStacks > 0) {
         int id = 0x7db;
         for (int j = 0; j < 7; j++) {
             TCreatureType type = who->m_army.m_armyTypes[j];
