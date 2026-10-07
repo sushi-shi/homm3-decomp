@@ -6242,12 +6242,10 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
             do {
                 int heroKey = readValue<unsigned char>(infile);
 
-                // Mac db424..db44c reads the portrait byte and maps only the
-                // 0xff sentinel, without readHeroId's version remap or call;
-                // writing that test here lifts VC6 97.03 -> 97.27%.
-                int portrait = readValue<unsigned char>(infile);
-                if (portrait == g_savedHeroNone)
-                    portrait = -1;
+                // The admitted format is now SoD. Mac db424..db44c
+                // expands readHeroId's modern byte/sentinel operation;
+                // the constant argument is inferred from this admission.
+                int portrait = readHeroId(infile, MAP_FORMAT_SHADOW_OF_DEATH);
 
                 std::string heroName = readLengthPrefixedString(infile);
                 std::bitset<8> availability = readPackedBits<8>(infile);
