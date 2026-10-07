@@ -4321,18 +4321,6 @@ void combatManager::removeCorpse(army* corpse)
                     corpse->m_combatSide, corpse->m_bitIndex);
 }
 
-// Project-inferred shared message; preserve the separate native format branches.
-void combatManager::showResurrectionMessage(const army* target, long raised)
-{
-    if (raised != 1)
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                target->getName(raised));
-    else
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                target->getName(raised));
-    m_combatWindow->combatMessage(g_text, 1, 0);
-}
-
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
 // stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
 // combat skips its initialization; a zero-initialized ternary adds absent
@@ -4363,7 +4351,15 @@ void combatManager::demonicResurrection(const army* caster, army* target)
     if (!isQuickCombat()) {
         updateGrid(0, 1);
         drawFrame(1, 0, 0, 0, 1, 0);
-        showResurrectionMessage(demons, raised);
+        // DC spells.cpp:4871-4877 and Mac 0x1985d4..0x1986b0 build the
+        // message here; Mac keeps one sprintf per format branch.
+        if (raised != 1)
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
+                    demons->getName(raised));
+        else
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
+                    demons->getName(raised));
+        m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sound, -1);
     }
 }

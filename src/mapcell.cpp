@@ -22,16 +22,6 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 
-// Project-inferred setter. Retail keeps no body, and creatureBankEvent
-// (events.obj) shows no call, yet a header-visible inline body adds a root
-// /Ob2 candidate that starves that caller's second append (99 < 111) and
-// drops it 98.33 -> 89.56%. Writing the bank's empty bit directly there
-// measured 98.71%; that change awaits the helper/direct-access decision.
-void ExtraInfoUnion::setCreatureBankEmpty(bool empty)
-{
-    m_creatureBankInfo.m_empty = empty;
-}
-
 VA(0x004fbf90, 0x61)
 DC_ADDRESS(0x0eb6a4, 0x98)
 MAC_ADDRESS(0x11d404, 0x130)

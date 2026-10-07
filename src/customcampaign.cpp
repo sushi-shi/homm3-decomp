@@ -341,6 +341,10 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 // Reversing the equivalent comparison to heroPower(candidate) >
 // heroPower(best) preserves those source calls but moves VC6 from 98.3704%
 // to 96.19%; keep the natural best-first expression and both helper sites.
+// Mac 0x91f1c..0x91f40 tests the first hero id against -1 only once, inside
+// getHero's expansion, and 0x91f6c..0x91f7c branches straight to the exit
+// for an owned hero (early-return owner test). Reusing `best` for the
+// chosen hero also matches Mac but drops VC6 to 92.11%.
 VA(0x004840d0, 0x155)
 MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
@@ -362,14 +366,14 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
     case CAMPAIGN_BONUS_HERO_FIRST:
         if (player->m_numHeroes == 0)
             return 0;
-        if (player->m_heroes[0] == -1)
-            return 0;
         return g_game->getHero(player->m_heroes[0]);
     case CAMPAIGN_BONUS_HERO_NONE:
         return 0;
     }
     hero* chosen = g_game->getHero(heroSelector);
-    return chosen->m_owner == whichPlayer ? chosen : 0;
+    if (chosen->m_owner != whichPlayer)
+        return 0;
+    return chosen;
 }
 
 // The two spell rows share the general-text pair 708/709: the campaign
@@ -1068,9 +1072,11 @@ int TCampaignStartCrossoverOption::getCount() const
 // Mac 0x93878, 0x9394c and 0x93bd8 expand the same choice-to-score lookup:
 // sign-extend the scenario byte, then read that score's crossover-pool index.
 // This option-owned accessor's name and private boundary are inferred.
-// All three callers are in this TU, supporting an ordinary source body;
-// keep the existing virtual getCrossoverPoolIndex as the public option interface.
-int TCampaignStartCrossoverOption::getCrossoverSlot(
+// All three callers are in this TU, supporting a source body; CodeWarrior
+// keeps an ordinary body out of line at -O3 and -O4, so Mac's expansions mark
+// it inline (VC6 byte-flat; pasting it drops getText 92.51 -> 66.90%).
+// Keep the existing virtual getCrossoverPoolIndex as the public option interface.
+inline int TCampaignStartCrossoverOption::getCrossoverSlot(
     const SCampaign& campaign, int which) const
 {
     return campaign.m_mapScores[m_choices[which].m_scenario].m_index;
@@ -2101,6 +2107,8 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
     prerequisiteBits = LITTLE_ENDIAN_LONG(prerequisiteBits);
     for (int prereq = 0; prereq < numScenarios; ++prereq) {
+        // Mac 0x961a8 calls the iterator-returning insert(end(), value) per
+        // bit; spelling that here drops VC6 89.67 -> 86.15%, so push_back stays.
         m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
     }
 

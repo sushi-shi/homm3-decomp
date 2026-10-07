@@ -47,8 +47,11 @@ public:
 // call, the instantiations reuse frame slots in hero::save. Dreamcast's
 // per-width locals and nested scopes support short staging lifetimes, but
 // do not distinguish a template from other original source spellings.
+// Like the readers below, the writers are inline: Mac playerData::save
+// (0xccd7c) and the other native writers call the stream's write virtual
+// directly, where out-of-line templates leave writeScalar calls under -O1.
 template <class T>
-int writeValue(TAbstractFile* outfile, T value)
+inline int writeValue(TAbstractFile* outfile, T value)
 {
     return outfile->write(&value, sizeof(value));
 }
@@ -56,7 +59,7 @@ int writeValue(TAbstractFile* outfile, T value)
 // Caller-owned scalar storage: saveString's retail writer passes its length
 // slot directly, so the later length tests reload that same local.
 template <class T>
-int writeScalar(TAbstractFile* outfile, T& value)
+inline int writeScalar(TAbstractFile* outfile, T& value)
 {
     return writeValue<T&>(outfile, value);
 }
@@ -112,10 +115,15 @@ inline int readLittleEndianValue(TAbstractFile* infile, T& value)
 // Value readers intentionally discard the native byte count, like readValue<T>.
 // Mac quest load/loadFromMap decode their deadline immediately after read;
 // neither native caller tests the count before lwbrx.
+// Mac game::readMapHeroSetups expands this reader to the virtual read; one
+// more readValue<T> level leaves a readValue<short> call at CodeWarrior's
+// inline-depth cutoff, so it reads into its own local directly.
+// VC6 is byte-flat for every consumer.
 template <class T>
 inline T readLittleEndianValue(TAbstractFile* infile)
 {
-    T value = readValue<T>(infile);
+    T value;
+    readValue(infile, value);
 #if defined(__POWERPC__)
     if (sizeof(T) == sizeof(unsigned short))
         value = static_cast<T>(__lhbrx(&value, 0));
@@ -128,7 +136,7 @@ inline T readLittleEndianValue(TAbstractFile* infile)
 // Mac saveString 0xced70..0xced8c encodes an owned short while retaining the
 // original length for its later checks. Windows passes the caller slot.
 template <class T>
-int writeLittleEndianValue(TAbstractFile* outfile, const T& value)
+inline int writeLittleEndianValue(TAbstractFile* outfile, const T& value)
 {
 #if defined(__POWERPC__)
     T encoded = value;
