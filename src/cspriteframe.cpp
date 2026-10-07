@@ -794,6 +794,9 @@ unsigned int CSpriteFrame::getSize() const
     return sizeof(*this) + m_dataSize;
 }
 
+// Loki's GCC 2.95 copies (which keep association order) flip with
+// `width - (x + w)` and form the cropped limits as origin plus extent;
+// VC6 emits the same bytes for either spelling.
 DC_ADDRESS(0x079294, 0x184)
 inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
                                int& dx, int& dy, int dw, int dh,
@@ -803,9 +806,9 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
     int deltaX;
 
     if (hflip)
-        sx = m_width - sx - sw;
+        sx = m_width - (sx + sw);
     if (vflip)
-        sy = m_height - sy - sh;
+        sy = m_height - (sy + sh);
 
     if (dx < 0) {
         if (!hflip)
@@ -844,13 +847,13 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
         sh -= deltaX;
         sy = m_croppedY;
     }
-    deltaX = m_croppedWidth + m_croppedX;
+    deltaX = m_croppedX + m_croppedWidth;
     if (sw + sx > deltaX) {
         if (hflip)
             dx += sw + sx - deltaX;
         sw = deltaX - sx;
     }
-    deltaX = m_croppedHeight + m_croppedY;
+    deltaX = m_croppedY + m_croppedHeight;
     if (sh + sy > deltaX) {
         if (vflip)
             dy += sh + sy - deltaX;
