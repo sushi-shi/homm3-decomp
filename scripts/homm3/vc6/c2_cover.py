@@ -76,23 +76,17 @@ def run(args) -> int:
     functions = Path(args.functions) if args.functions else _default_functions()
     entries = function_entries(functions)
     build._ensure_wine_env()
+    with contextlib.redirect_stdout(sys.stderr):
+        build.ensure_overlay()
     results = []
-    if args.installed:
-        # The trace shim is already installed (for example by a running
-        # forcing batch); do not rebuild or restore it underneath that run.
+    try:
+        with contextlib.redirect_stdout(sys.stderr):
+            build.compile_shim(inlineTrace=True)
         for source in args.sources:
             results.append(cover(Path(source).resolve(), entries))
-    else:
+    finally:
         with contextlib.redirect_stdout(sys.stderr):
-            build.ensure_overlay()
-        try:
-            with contextlib.redirect_stdout(sys.stderr):
-                build.compile_shim(inlineTrace=True)
-            for source in args.sources:
-                results.append(cover(Path(source).resolve(), entries))
-        finally:
-            with contextlib.redirect_stdout(sys.stderr):
-                build.compile_shim()
+            build.compile_shim()
     print(f"[cover] {len(entries)} C2 entries; hit: "
           + ", ".join(f"{Path(s).name}={len(r)}" for s, r in zip(args.sources, results)))
     if len(results) < 2:
