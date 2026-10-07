@@ -157,7 +157,7 @@ bool TAdventureMapWindow::processHover(int hx, int hy)
 
 // E:\gamedcs\adventuremapwindow.cpp:1119
 // RETAIL_LOCATED(0x004039b0, 0x1EA)  // anchor-global, dc 0x1134
-void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
+void TAdventureMapWindow::updateQuestLogButton(bool update)
 {
     // @stub
 }
@@ -981,7 +981,7 @@ generic_help:
 VA(0x00403220, 0x59)
 DC_ADDRESS(0x0010dc, 0x4)
 MAC_ADDRESS(0x002a1c, 0x94)
-void TAdventureMapWindow::doHeroKnob(unsigned char up)
+void TAdventureMapWindow::doHeroKnob(bool up)
 {
     playerData* player = g_game->getLocalPlayer();
     if (up) {
@@ -997,7 +997,7 @@ void TAdventureMapWindow::doHeroKnob(unsigned char up)
 VA(0x00403280, 0x59)
 DC_ADDRESS(0x0010e0, 0x4)
 MAC_ADDRESS(0x002ab0, 0x94)
-void TAdventureMapWindow::doTownKnob(unsigned char up)
+void TAdventureMapWindow::doTownKnob(bool up)
 {
     playerData* player = g_game->getLocalPlayer();
     if (up) {
@@ -1217,7 +1217,7 @@ void TAdventureMapWindow::updateTownLocator(int which, bool drawWinSect,
 VA(0x004038c0, 0xEC)
 DC_ADDRESS(0x0010f4, 0x40)
 MAC_ADDRESS(0x0034a0, 0x174)
-void TAdventureMapWindow::highlightLocators(unsigned char update)
+void TAdventureMapWindow::highlightLocators(bool update)
 {
     playerData* player = g_game->getLocalPlayer();
 
@@ -1251,7 +1251,7 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
 VA(0x004039b0, 0x1EA)
 DC_ADDRESS(0x001134, 0x4)
 MAC_ADDRESS(0x003614, 0x2b0)  // ; MAC_ABSTRACTION_FROM(tokens1:283a696f3572,30.7692): unchanged body; CodeWarrior collateral of the DC EGameResource return restored on ExtraInfoUnion::getCampfireResource (mapcell.h)
-void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
+void TAdventureMapWindow::updateQuestLogButton(bool update)
 {
     unsigned char enabled = 0;
     int player = g_game->getLocalPlayerGamePos();
@@ -1348,7 +1348,7 @@ void TAdventureMapWindow::showButtonImage(int id, const char* image)
 VA(0x00403c40, 0x78)
 DC_ADDRESS(0x001188, 0x4)
 MAC_ADDRESS(0x0039d8, 0xcc)
-unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
+bool TAdventureMapWindow::setElevationToggleImage(int level)
 {
     // Mac 0x39ec..0x3a04 initializes a function-local cache; 0x3a2c passes
     // the icon pointer directly to the four-int broadcast overload.
@@ -1356,9 +1356,9 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
     if (level != previousLevel) {
         previousLevel = level;
         showButtonImage(ELEVATION_TOGGLE_ID, g_aszElevationIcons[level]);
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 // The older TAdvMenu::SetSleepImage at dc 0x2a74 calls clear_hotkeys and
@@ -1422,7 +1422,7 @@ void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
 VA(0x00403f20, 0x3F)
 DC_ADDRESS(0x0011f4, 0x44)
 MAC_ADDRESS(0x003c1c, 0x78)
-void TAdventureMapWindow::drawChatText(unsigned char update)
+void TAdventureMapWindow::drawChatText(bool update)
 {
     drawWindow(0, CHAT_TEXT_ID, CHAT_TEXT_ID);
     if (update)
@@ -1447,7 +1447,7 @@ void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 VA(0x00403f60, 0x144)
 DC_ADDRESS(0x00125c, 0x28)
 MAC_ADDRESS(0x003ce0, 0xfc)
-void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update)
+void TAdventureMapWindow::updateButtons(bool draw, bool update)
 {
     int player = g_game->getLocalPlayerGamePos();
 
