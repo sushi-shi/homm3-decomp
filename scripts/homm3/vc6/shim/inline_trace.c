@@ -796,6 +796,26 @@ static int installInlineTrace(void)
     if (!patchHook(0x24748, colorHook, colorBytes, sizeof colorBytes)) return 0;
     loadMergeVeto();
     loadHashShift();
+    {
+        /* Diagnostic heap displacement: HOMM3_VC6_HEAP_PAD="malloc,local"
+         * byte counts allocated once before C2 runs. */
+        char text[64];
+        DWORD n = GetEnvironmentVariableA("HOMM3_VC6_HEAP_PAD", text, sizeof text);
+        if (n && n < sizeof text) {
+            unsigned long a = 0, b = 0, i;
+            int second = 0;
+            typedef void *(__cdecl *mallocFunction)(unsigned);
+            mallocFunction m = (mallocFunction)GetProcAddress(GetModuleHandleA("msvcrt.dll"), "malloc");
+            for (i = 0; i < n; ++i) {
+                if (text[i] == ',') { second = 1; continue; }
+                if (text[i] >= '0' && text[i] <= '9') {
+                    if (second) b = b * 10 + (text[i] - '0'); else a = a * 10 + (text[i] - '0');
+                }
+            }
+            if (a && m) m(a);
+            if (b) LocalAlloc(LMEM_FIXED, b);
+        }
+    }
     if (g_shiftK || g_keyLog) {
         static const unsigned char lookupBytes[] = {0x25,0xff,0x03,0x00,0x00};
         static const unsigned char insertBytes[] = {0x25,0xff,0x03,0x00,0x00};

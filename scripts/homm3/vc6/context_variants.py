@@ -49,14 +49,6 @@ FREE_COST = 40
 # produce instead of arbitrary records.
 COST_WINDOW = 12
 ROOT_WINDOW = 24
-# A callee whose definition is not visible in the unit (defined in another
-# source file) is never an inline candidate. The cost record emulates that
-# with a cost no budget admits. Compiler-library templates stay visible.
-HIDDEN_COST = 32000
-
-
-def hideable(name: str) -> bool:
-    return "@std@@" not in name
 
 
 # --------------------------------------------------------------------------
@@ -120,8 +112,7 @@ class Context:
             parts.append(f"phase={self.phase}")
         if self.root_cost is not None:
             parts.append(f"root-cost={self.root_cost}")
-        parts += [f"hidden[{name}]" if cost == HIDDEN_COST else f"cost[{name}]={cost}"
-                  for name, cost in sorted(self.callee_cost.items())]
+        parts += [f"cost[{name}]={cost}" for name, cost in sorted(self.callee_cost.items())]
         return ", ".join(parts) or "captured context"
 
     def key(self) -> str:
@@ -262,13 +253,8 @@ def enumerate_variants(replayer: Replayer, *, max_replays: int = 80, jobs: int =
         pending = nxt
 
     # callee costs: values that flip some recorded site, nearest first
-    points = callee_points(sites, limit=max(0, (max_replays - replayer.runs) // 2))
+    points = callee_points(sites, limit=max(0, max_replays - replayer.runs))
     batch([Context(callee_cost={name: value}) for name, value in points])
-
-    # visibility: each project callee the captured context expands, with its
-    # definition outside the unit
-    admitted = sorted({site["callee"] for site in sites if site["admitted"] and hideable(site["callee"])})
-    batch([Context(callee_cost={name: HIDDEN_COST}) for name in admitted])
 
     # pairs: each callee cost that changed the output, with each root-cost
     # boundary value that did (a dependency edit usually moves both)
