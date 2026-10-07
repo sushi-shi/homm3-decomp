@@ -246,7 +246,3 @@ object before reporting the measured budgets.
 | `build/vc6/toolchain-shim/` | the overlay (gitignored) |
 | `build/vc6/shim/argv.log` | canonical shim log (= `argv.SHIM_LOG`) |
 | `build/vc6/shim/gate/` | gate scratch: ref/shim objs, /Bd log |
-
-The same shim also forces decisions: per-site inline expand/keep at
-`0x19f8c` and global register choice at `0x24748`. See
-[decision forcing](decision-forcing.md).
