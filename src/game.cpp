@@ -7972,6 +7972,9 @@ void game::perMonth()
 // The remaining count-to-random-bound move/decrement is a separate source
 // lead. No native declaration distinguishes free/member placement, and
 // Complete's range has no counterpart in the older DC body.
+// Bound probes (2026-10-07): --totalInClass gives dec-then-copy (97.60%),
+// count()-1 into totalInClass 97.60%, unsigned totalInClass 99.0237%,
+// curCount staging 94.61%; retail copies the count to edx and decrements.
 VA(0x004c92c0, 0x202)
 DC_ADDRESS(0x0b4b58, 0x12a)
 MAC_ADDRESS(0x0dfed4, 0x398)  // MAC_ABSTRACTION_FROM(tokens1:38ec85859b6c,28.1385): native iterator addition replaces the provisional fromOffset factory; by-value temporary copies shift CW stack and register allocation.
