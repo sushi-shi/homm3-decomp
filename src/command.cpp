@@ -109,6 +109,12 @@ void combatManager::setTargetAction(int action, int extra, int targetHex)
 // the shared native index; no declaration remains in either outer scope.
 // Removing that scaffolding leaves Windows at 98.6842%, with 59 aligned
 // blocks, four calls and all 22 relocations unchanged.
+// DC command.cpp:179-181 and Mac 0x473fc4..0x473fe0 store action 9, the
+// target hex and extra -1 directly (as ai.cpp's wall order does); pasting
+// them makes the Mac pair exact but lowers VC6 98.76 -> 98.68% at the
+// skill test (setg vs jle): the project-inferred setTargetAction /
+// prepareAction pair supplies two later /Ob2 candidates that retail must
+// get from some other, still unidentified, inline call.
 VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
 MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
