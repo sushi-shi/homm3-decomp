@@ -32,6 +32,17 @@ enum EMessageId {
     MESSAGE_EXECUTIVE = 0x4000
 };
 
+// Project-inferred widget command envelope. Retail keeps no body and expands
+// it in both widget.obj (sendMessage) and overview.obj, so the single
+// definition is header-visible.
+inline void message::setWidgetCommand(int command, int widgetId)
+{
+    m_id = MESSAGE_WIDGET;
+    m_codeX = command;
+    m_codeY = widgetId;
+}
+
+
 // baseManager::Main's dispatch verdicts as executive::MainLoop
 // switches on them (homm2 BASE/message.h MessageDispatchResult
 // names/values carried over verbatim; CONTINUE = 0 is the untaken
