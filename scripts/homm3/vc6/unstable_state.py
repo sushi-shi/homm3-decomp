@@ -234,10 +234,19 @@ def received_states(rows: list[dict]) -> list[dict]:
 # compile 1-to-M
 # --------------------------------------------------------------------------
 
+def is_template_member(name: str) -> bool:
+    """A decorated name inside a class or function template instantiation."""
+    return "?$" in name
+
+
 def callee_prefixes(order: list[str], callees: dict[str, list[str]]) -> dict[str, list[str]]:
-    """{function: its inline callees with an emitted body, in compile order}."""
+    """{function: its inline callees with an emitted body, in compile order}.
+    Template instantiations are left out: C1XX defers them to the end of
+    the TU (state-impact.md §3), so no reordering of the unit's own
+    definitions compiles one before a function that inlines it."""
     index = {name: i for i, name in enumerate(order)}
-    return {root: sorted((c for c in found if c in index and c != root), key=index.__getitem__)
+    return {root: sorted((c for c in found if c in index and c != root
+                          and not is_template_member(c)), key=index.__getitem__)
             for root, found in callees.items()}
 
 
