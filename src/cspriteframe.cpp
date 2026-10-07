@@ -1886,7 +1886,9 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // Loki's GCC 2.95 build (no auto-inlining or cross-branch hoisting) loads
 // `pal.m_data` once, right after the line-table pointer and before the
 // flip dispatch, as the sibling decoders' `palette` local does; restoring
-// that local took retail from 81.42% to 98.27%.
+// that local took retail from 81.42% to 98.27%. DC attributes both raw-row
+// advances to one line (2938); advancing the destination row before the
+// source row reproduces retail's four raw arms exactly.
 VA(0x0047dd40, 0xAD8)
 DC_ADDRESS(0x076988, 0x762)
 MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
@@ -1954,10 +1956,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2047,10 +2048,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2142,10 +2142,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2235,10 +2234,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
