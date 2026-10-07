@@ -1480,6 +1480,10 @@ bool TMultiPlayerWindow::onTCP()
 // their folded general-text indices (459, 463, 456, then GetErrorDesc), and
 // the Dreamcast xref graph independently records exactly four NormalDialog
 // calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
+// `homm3 vc6 reach` (2026-10-07): retail keeps all five ~CMPInputDlg calls.
+// The first (cb 55) is admitted with 131 left after the 1017-cost
+// constructor, yet initRemote (119) right after it still expands in retail.
+// So the target is the destructor's cost (above 131), not the root budget.
 VA(0x00511660, 0x666)  // caller slot + complete TCP search flow
 DC_ADDRESS(0x10196c, 0x294)
 // Native OnSearch public QAA_NXZ (DC file 0x5aceb7); protocol and
