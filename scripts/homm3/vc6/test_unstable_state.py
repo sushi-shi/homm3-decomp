@@ -39,16 +39,52 @@ class ReadTest(unittest.TestCase):
         self.assertEqual(rows[0]["handle_residue"], 0x28b1 % 64)
 
 
+class CalleeOrderTest(unittest.TestCase):
+    def test_prefixes_follow_compile_order_and_rounds_clamp(self):
+        order = ["?c", "?a", "?f", "?b"]
+        prefixes = us.callee_prefixes(order, {"?f": ["?b", "?a", "?inline_only", "?f"]})
+        self.assertEqual(prefixes, {"?f": ["?a", "?b"]})  # no emitted body: never compiled
+        self.assertEqual(us.compiled_round(prefixes, 0), {"?f": []})
+        self.assertEqual(us.compiled_round(prefixes, 1), {"?f": ["?a"]})
+        self.assertEqual(us.compiled_round(prefixes, 9), {"?f": ["?a", "?b"]})
+        self.assertEqual(us.State(None, 0, 2).label(), "callees-compiled-first=2")
+
+
 class FuzzEditTest(unittest.TestCase):
     TEXT = "#include <x.h>\nint g;\nVA(0x00401000, 0x10)\nvoid f() {}\nVA(0x00401010, 0x10)\nvoid h() {}\n"
 
     def test_edits_only_insert_at_top_or_before_annotations(self):
-        edited, desc = us.unrelated_edit(self.TEXT, random.Random(3), 0)
+        rng = random.Random(3)
+        while True:
+            edited, desc, shadows = us.unrelated_edit(self.TEXT, rng, 0)
+            if not desc[0].startswith("swap"):
+                break
         self.assertTrue(desc)
+        self.assertEqual(shadows, {})
         kept = "".join(line for line in edited.splitlines(True) if "h3fz" not in line
                        and not line.startswith(("struct h3fz", "int h3fz")))
         self.assertEqual(kept, self.TEXT)  # nothing original moved or changed
-        self.assertEqual(us.unrelated_edit(self.TEXT, random.Random(3), 0), (edited, desc))
+        self.assertEqual(us.unrelated_edit(self.TEXT, random.Random(3), 0),
+                         us.unrelated_edit(self.TEXT, random.Random(3), 0))
+
+    def test_swap_exchanges_adjacent_definition_blocks(self):
+        rng = random.Random(0)
+        for _ in range(50):
+            edited, desc, _ = us.unrelated_edit(self.TEXT, rng, 0)
+            if desc[0].startswith("swap"):
+                break
+        self.assertTrue(edited.index("void h()") < edited.index("void f()"))
+        self.assertEqual(sorted(edited.splitlines()), sorted(self.TEXT.splitlines()))
+
+    def test_header_edit_shadows_a_copy(self):
+        rng = random.Random(0)
+        for _ in range(50):
+            edited, desc, shadows = us.unrelated_edit(self.TEXT, rng, 0, {"a.h": "#ifndef A\n#define A\n#endif\n"})
+            if shadows:
+                break
+        self.assertEqual(edited, self.TEXT)
+        self.assertTrue(shadows["a.h"].startswith("#ifndef A\n#define A\n"))
+        self.assertTrue(shadows["a.h"].endswith("#endif\n"))
 
 
 class ObjectFunctionsTest(unittest.TestCase):

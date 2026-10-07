@@ -188,6 +188,18 @@ def _build_parser() -> argparse.ArgumentParser:
     pfz.add_argument("--jobs", type=int, default=6)
     pfz.add_argument("--reuse", action="store_true", help="reuse the unit's compile-m.json")
 
+    pwl = ss.add_parser("compile-m-walls", help="compile-m every unit of a wall list and test "
+                        "whether retail is among each wall's M assemblies")
+    pwl.add_argument("list")
+    pwl.add_argument("--jobs", type=int, default=10)
+    pwl.add_argument("--reuse", action="store_true")
+    pwl.add_argument("--limit", type=int, default=0)
+
+    ppc = ss.add_parser("phase-census", help="per unit: which functions the phase flag moves, "
+                        "which value retail needs, and which function each order compiles first")
+    ppc.add_argument("units", nargs="*")
+    ppc.add_argument("--jobs", type=int, default=6)
+
     pcv = ss.add_parser("cover", help="C2 function-entry hit counts for scratch TUs; "
                         "with several sources, print the entries whose counts differ")
     pcv.add_argument("sources", nargs="+")
@@ -303,6 +315,8 @@ _TOOLS = {
     "state": ("unstable_state", "run_state"),
     "compile-m": ("unstable_state", "run_compile_m"),
     "fuzz-verify": ("unstable_state", "run_fuzz"),
+    "compile-m-walls": ("unstable_state", "run_walls"),
+    "phase-census": ("unstable_state", "run_phase_census"),
     "variants": ("context_variants", "run"),
     "variants-all": ("context_variants", "run_all"),
     "merge-reach": ("inline_force", "run_merge_reach"),

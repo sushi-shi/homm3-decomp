@@ -388,6 +388,102 @@ static void __cdecl traceMain(unsigned long *body)
     SetLastError(lastError);
 }
 
+/* Compiled-callee state (unstable-state.md): a callee record's +0x14 bit
+ * 0x800 is set once C2 has compiled the callee's own body. An inlined body
+ * expands differently before and after that (its EH states, for one).
+ * HOMM3_VC6_COMPILED=0|1 forces the bit for every callee at every budget
+ * test, the order in which every callee body came first or last. */
+static long g_compiledValue = -2;
+
+/* Per-root form: HOMM3_VC6_COMPILED_SPEC names a file of lines
+ * "root\tcallee\tcallee..." (callees to treat as compiled while that root is
+ * being compiled; every other callee of a listed root is treated as not
+ * yet compiled). Roots without a line keep C2's own bits. */
+#define SPEC_BUCKETS 4096
+typedef struct SpecRoot { struct SpecRoot *next; char *root; char **callees; unsigned count; } SpecRoot;
+static SpecRoot *g_spec[SPEC_BUCKETS];
+static int g_specLoaded;
+static SpecRoot *g_specCurrent;
+static unsigned long g_specRoot;
+
+static unsigned long nameHash(const char *s)
+{
+    unsigned long h = 5381;
+    while (*s) h = h * 33 + (unsigned char)*s++;
+    return h % SPEC_BUCKETS;
+}
+
+static void loadCompiledSpec(void)
+{
+    char path[MAX_PATH];
+    HANDLE f;
+    DWORD size, n;
+    char *text, *line, *end;
+    g_specLoaded = 1;
+    if (!GetEnvironmentVariableA("HOMM3_VC6_COMPILED_SPEC", path, sizeof path)) return;
+    f = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    if (f == INVALID_HANDLE_VALUE) return;
+    size = GetFileSize(f, 0);
+    text = (char *)LocalAlloc(LMEM_FIXED, size + 1);
+    ReadFile(f, text, size, &n, 0);
+    CloseHandle(f);
+    text[n] = 0;
+    for (line = text; *line; line = end) {
+        SpecRoot *r;
+        unsigned count = 0, i;
+        char *p;
+        for (end = line; *end && *end != '\n'; ++end) if (*end == '\t') ++count;
+        if (*end) *end++ = 0;
+        if (!*line) continue;
+        r = (SpecRoot *)LocalAlloc(LMEM_FIXED, sizeof *r);
+        r->callees = (char **)LocalAlloc(LMEM_FIXED, sizeof(char *) * (count + 1));
+        r->count = 0;
+        r->root = line;
+        for (p = line, i = 0; *p; ++p) {
+            if (*p == '\t') { *p = 0; r->callees[r->count++] = p + 1; }
+        }
+        r->next = g_spec[nameHash(r->root)];
+        g_spec[nameHash(r->root)] = r;
+    }
+}
+
+static SpecRoot *specFor(unsigned long root)
+{
+    SpecRoot *r;
+    const char *name;
+    if (root == g_specRoot) return g_specCurrent;
+    g_specRoot = root;
+    g_specCurrent = 0;
+    if (!root) return 0;
+    name = *(const char **)((unsigned char *)root + 0x18);
+    for (r = g_spec[nameHash(name)]; r; r = r->next)
+        if (lstrcmpA(r->root, name) == 0) { g_specCurrent = r; break; }
+    return g_specCurrent;
+}
+
+static void applyCompiled(unsigned char *sym)
+{
+    SpecRoot *r;
+    if (!g_specLoaded) loadCompiledSpec();
+    r = specFor(g_root);
+    if (r) {
+        unsigned i;
+        const char *name = *(const char **)(sym + 0x18);
+        int compiled = 0;
+        for (i = 0; i < r->count; ++i) if (lstrcmpA(r->callees[i], name) == 0) { compiled = 1; break; }
+        if (compiled) *(unsigned long *)(sym + 0x14) |= 0x800;
+        else *(unsigned long *)(sym + 0x14) &= ~0x800ul;
+        return;
+    }
+    if (g_compiledValue == -2) {
+        char text[8];
+        DWORD n = GetEnvironmentVariableA("HOMM3_VC6_COMPILED", text, sizeof text);
+        g_compiledValue = (n && n < sizeof text) ? (text[0] == '1') : -1;
+    }
+    if (g_compiledValue == 1) *(unsigned long *)(sym + 0x14) |= 0x800;
+    else if (g_compiledValue == 0) *(unsigned long *)(sym + 0x14) &= ~0x800ul;
+}
+
 static unsigned long __cdecl traceSite(unsigned long *regs)
 {
     HANDLE h;
@@ -396,9 +492,27 @@ static unsigned long __cdecl traceSite(unsigned long *regs)
     unsigned char *sp = (unsigned char *)(regs[3]+4); /* before pushfd */
     unsigned long *body = *(unsigned long **)(sp+0x1c);
     char action;
+    applyCompiled(sym);
     if (!g_selected) return 0;
     lastError = GetLastError();
     applyCbSet(sym, 0);
+    {
+        /* Diagnostic: HOMM3_VC6_SITE_OR="name:offhex:maskhex" ORs a mask into
+         * the callee record at its budget test. */
+        char spec[200];
+        DWORD n = GetEnvironmentVariableA("HOMM3_VC6_SITE_OR", spec, sizeof spec);
+        if (n && n < sizeof spec) {
+            char *a = spec, *b = 0, *c = 0;
+            unsigned long off = 0, mask = 0;
+            DWORD i;
+            for (i = 0; i < n; ++i) if (spec[i] == ':') { spec[i] = 0; if (!b) b = spec + i + 1; else c = spec + i + 1; }
+            if (b && c && contains(*(const char **)(sym+0x18), a)) {
+                for (; *b; ++b) off = off * 16 + (*b <= '9' ? *b - '0' : (*b | 32) - 'a' + 10);
+                for (; *c; ++c) mask = mask * 16 + (*c <= '9' ? *c - '0' : (*c | 32) - 'a' + 10);
+                *(unsigned long *)(sym + off) |= mask;
+            }
+        }
+    }
     action = g_ruleCount ? forceDecision(*(const char **)((unsigned char *)body[0]+0x18),
                                          *(const char **)(sym+0x18)) : 0;
     h = logOpen();
@@ -412,6 +526,15 @@ static unsigned long __cdecl traceSite(unsigned long *regs)
     writeString(h, " depth="); writeDecimal(h, *(unsigned long *)(sp+0x34));
     writeString(h, " remain="); writeDecimal(h, *(unsigned long *)(sp+0x30));
     writeString(h, " running="); writeSignedDecimal(h, *(long *)((char *)g_real+0x9f234));
+    {
+        char want[160];
+        if (GetEnvironmentVariableA("HOMM3_VC6_SITE_DUMP", want, sizeof want)
+                && contains(*(const char **)(sym+0x18), want)) {
+            unsigned i;
+            writeString(h, " record=");
+            for (i = 0; i < 0x80; i += 4) { writeHex(h, *(unsigned long *)(sym + i)); writeString(h, ","); }
+        }
+    }
     if (action) { writeString(h, " force="); writeString(h, action == 'E' ? "E" : "K"); }
     writeString(h, "\n"); CloseHandle(h);
     SetLastError(lastError);

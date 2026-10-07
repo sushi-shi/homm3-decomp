@@ -49,25 +49,36 @@ PHASES = (0, 1)
 @dataclass(frozen=True)
 class State:
     """phase None leaves the captured leftover; offset is extra handles
-    before every symbol of the unit (a global declaration offset)."""
+    before every symbol of the unit (a global declaration offset);
+    callee_order j treats, for every function, the first j of its inline
+    callees (in compile order) as compiled before it (None: as captured)."""
     phase: int | None = None
     offset: int = 0
+    callee_order: int | None = None
 
     def label(self) -> str:
-        if self.phase is None and not self.offset:
+        if self.phase is None and not self.offset and self.callee_order is None:
             return "captured"
         parts = []
         if self.phase is not None:
             parts.append(f"phase={self.phase}")
-        parts.append(f"decl-offset={self.offset}")
+        if self.offset or self.callee_order is None:
+            parts.append(f"decl-offset={self.offset}")
+        if self.callee_order is not None:
+            parts.append(f"callees-compiled-first={self.callee_order}")
         return " ".join(parts)
 
     def as_dict(self) -> dict:
-        return {"phase": self.phase, "decl_offset": self.offset}
+        out = {"phase": self.phase, "decl_offset": self.offset}
+        if self.callee_order is not None:
+            out["callee_order"] = self.callee_order
+        return out
 
 
-def state_env(state: State, log: Path | None = None) -> dict:
+def state_env(state: State, log: Path | None = None, spec: Path | None = None) -> dict:
     env = {"MSVC_DIR": str(build.OVERLAY_MSVC)}
+    if spec is not None:
+        env["HOMM3_VC6_COMPILED_SPEC"] = cc_wrap.winepath_w(spec)
     if state.phase is not None:
         env["HOMM3_VC6_PHASE"] = str(state.phase)
     if state.offset:
@@ -109,7 +120,8 @@ class Unit:
             streams = inline_force.capture_unit(unit)
         return cls(unit, Path(source).resolve(), list(flags), streams, workdir)
 
-    def replay(self, state: State, slot: str, log: bool = False) -> tuple[Path, str]:
+    def replay(self, state: State, slot: str, log: bool = False,
+               compiled: dict[str, list[str]] | None = None) -> tuple[Path, str]:
         work = self.workdir / slot
         work.mkdir(parents=True, exist_ok=True)
         out = work / "compiled.obj"
@@ -117,9 +129,14 @@ class Unit:
         log_path = work / "state.log" if log else None
         if log_path:
             log_path.write_text("")
+        spec = None
+        if compiled is not None:
+            spec = work / "compiled.tsv"
+            spec.write_text("".join("\t".join([root, *callees]) + "\n"
+                                    for root, callees in compiled.items()), encoding="latin1")
         process = build._traceReplay(out, self.source, self.flags,
                                      shifted_streams(self.streams, state.offset),
-                                     state_env(state, log_path))
+                                     state_env(state, log_path, spec))
         if process.returncode or not out.is_file():
             raise RuntimeError(f"replay {state.label()} failed:\n{build._tail(process)}")
         return out, log_path.read_text(encoding="latin1") if log_path else ""
@@ -217,8 +234,43 @@ def received_states(rows: list[dict]) -> list[dict]:
 # compile 1-to-M
 # --------------------------------------------------------------------------
 
+def callee_prefixes(order: list[str], callees: dict[str, list[str]]) -> dict[str, list[str]]:
+    """{function: its inline callees with an emitted body, in compile order}."""
+    index = {name: i for i, name in enumerate(order)}
+    return {root: sorted((c for c in found if c in index and c != root), key=index.__getitem__)
+            for root, found in callees.items()}
+
+
+def compiled_round(prefixes: dict[str, list[str]], j: int) -> dict[str, list[str]]:
+    return {root: ranked[:j] for root, ranked in prefixes.items() if ranked}
+
+
 def states(phases=PHASES, offsets=range(DECL_PERIOD)) -> list[State]:
     return [State(p, k) for p in phases for k in offsets]
+
+
+def inline_callees(unit: Unit) -> dict[str, list[str]]:
+    """{root: inline candidates at any depth} from one traced replay; the
+    fuzz verifier must not move these when it checks the root."""
+    work = unit.workdir / "callees"
+    work.mkdir(parents=True, exist_ok=True)
+    out, log = work / "compiled.obj", work / "trace.log"
+    out.unlink(missing_ok=True)
+    log.write_text("")
+    build._traceReplay(out, unit.source, unit.flags, unit.streams, {
+        "MSVC_DIR": str(build.OVERLAY_MSVC), "HOMM3_VC6_INLINE_TRACE": "?",
+        "HOMM3_VC6_SHIM_LOG": cc_wrap.winepath_w(log)})
+    names, callees = {}, collections.defaultdict(set)
+    for line in log.read_text(encoding="latin1").splitlines():
+        if line.startswith("sym "):
+            _, address, name = line.split(" ", 2)
+            names[address] = name
+        elif line.startswith("site ") or line.startswith("candidate "):
+            fields = dict(word.split("=", 1) for word in line.split()[1:])
+            root, callee = names.get(fields["root"]), names.get(fields["callee"])
+            if root and callee:
+                callees[root].add(callee)
+    return {root: sorted(found) for root, found in callees.items()}
 
 
 def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: int = 6) -> dict:
@@ -228,11 +280,18 @@ def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: in
     captured = object_functions(unit.replay(State(), "captured")[0])
     if captured != plain:
         raise RuntimeError("shim with no state set is not inert for this unit")
-    todo = states(phases, offsets)
+    callee_map = inline_callees(unit)
+    order = [row["name"] for row in read_state(unit)]
+    prefixes = callee_prefixes(order, callee_map)
+    rounds = max((len(v) for v in prefixes.values()), default=0) + 1
+    todo = states(phases, offsets) + [State(None, 0, j) for j in range(rounds)]
 
     def one(item):
         index, state = item
-        obj, _ = unit.replay(state, f"slot{index % max(jobs, 1)}-{state.phase}-{state.offset}")
+        compiled = (compiled_round(prefixes, state.callee_order)
+                    if state.callee_order is not None else None)
+        obj, _ = unit.replay(state, f"slot{index}-{state.phase}-{state.offset}-{state.callee_order}",
+                             compiled=compiled)
         funcs = object_functions(obj)
         shutil.rmtree(obj.parent, ignore_errors=True)
         return state, funcs
@@ -251,9 +310,11 @@ def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: in
             variants.append({"sha": digest(code), "bytes": code.hex(), "states": labels,
                              "captured": State().as_dict() in labels})
         variants.sort(key=lambda v: (not v["captured"], -len(v["states"]), v["sha"]))
-        functions[name] = {"m": len(variants), "variants": variants}
+        functions[name] = {"m": len(variants), "variants": variants,
+                           "inline_callees": callee_map.get(name, []),
+                           "compiled_callees_in_order": prefixes.get(name, [])}
     return {"unit": unit.name, "period": DECL_PERIOD, "phases": list(phases),
-            "offsets": list(offsets), "functions": functions}
+            "offsets": list(offsets), "callee_order_rounds": rounds, "functions": functions}
 
 
 def write_prediction(result: dict) -> Path:
@@ -281,12 +342,47 @@ UNRELATED_SNIPPETS = (
 )
 
 
-def unrelated_edit(text: str, rng: random.Random, serial: int) -> tuple[str, list[str]]:
-    """Insert 1..4 unrelated declarations/definitions at top-level boundaries
-    (the top of the unit or right before an annotated definition)."""
-    anchors = [0] + [m.start() for m in re.finditer(r"^VA\(0x", text, re.M)]
-    edits = []
-    inserts = []
+def _blocks(text: str) -> list[tuple[int, int]]:
+    """[start, end) of each annotated definition block (VA line to next)."""
+    starts = [m.start() for m in re.finditer(r"^VA\(0x", text, re.M)]
+    return [(a, starts[i + 1] if i + 1 < len(starts) else len(text)) for i, a in enumerate(starts)]
+
+
+def unrelated_edit(text: str, rng: random.Random, serial: int,
+                   headers: dict[str, str] | None = None) -> tuple[str, list[str], dict[str, str]]:
+    """One random unrelated edit: 1..4 insertions of declarations/definitions
+    at top-level boundaries, a swap of two adjacent definition blocks, or an
+    inserted declaration in a shadow copy of a directly included header.
+    Returns (unit text, description, {header name: shadow text})."""
+    kind = rng.choice(("insert", "insert", "swap", "front", "header")) if headers else rng.choice(("insert", "insert", "swap", "front"))
+    blocks = _blocks(text)
+    if kind == "front" and len(blocks) >= 2:
+        i = rng.randrange(1, len(blocks))
+        (f0, _), (b0, b1) = blocks[0], blocks[i]
+        block = text[b0:b1] if text[b0:b1].endswith("\n") else text[b0:b1] + "\n"
+        rest = text[:b0] + text[b1:]
+        moved = re.match(r"VA\((0x[0-9a-fA-F]+)", block)
+        return (rest[:f0] + block + rest[f0:],
+                [f"swap front {i} " + (moved.group(1) if moved else "")], {})
+    if kind == "swap" and len(blocks) >= 2:
+        i = rng.randrange(len(blocks) - 1)
+        (a0, a1), (b0, b1) = blocks[i], blocks[i + 1]
+        first, second = text[a0:a1], text[b0:b1]
+        if not second.endswith("\n"):
+            second += "\n"
+        moved = [m.group(1) for m in (re.match(r"VA\((0x[0-9a-fA-F]+)", first),
+                                      re.match(r"VA\((0x[0-9a-fA-F]+)", second)) if m]
+        return (text[:a0] + second + first + text[b1:],
+                [f"swap blocks {i}/{i + 1} " + " ".join(moved)], {})
+    if kind == "header" and headers:
+        name = rng.choice(sorted(headers))
+        body = headers[name]
+        cut = body.rfind("#endif")
+        cut = cut if cut >= 0 else len(body)
+        snippet = rng.choice(UNRELATED_SNIPPETS[:5]).format(n=serial * 10 + 9)
+        return text, [f"header {name}: {snippet.strip()[:40]}"], {name: body[:cut] + snippet + body[cut:]}
+    anchors = [0] + [a for a, _ in blocks]
+    edits, inserts = [], []
     for j in range(rng.randint(1, 4)):
         at = rng.choice(anchors)
         snippet = rng.choice(UNRELATED_SNIPPETS).format(n=serial * 10 + j)
@@ -294,7 +390,21 @@ def unrelated_edit(text: str, rng: random.Random, serial: int) -> tuple[str, lis
         edits.append(f"@{at}:{snippet.strip().splitlines()[0][:48]}")
     for at, snippet in sorted(inserts, key=lambda item: -item[0]):
         text = text[:at] + snippet + text[at:]
-    return text, edits
+    return text, edits, {}
+
+
+def direct_headers(unit: "Unit") -> dict[str, str]:
+    """Project headers the unit includes by quoted name, resolved like VC6."""
+    text = unit.source.read_text(encoding="latin1")
+    roots = [unit.source.parent, *[p for p in Project(_common.REPO).includes if p.is_dir()]]
+    out = {}
+    for name in re.findall(r'^#include\s+"([^"]+)"', text, re.M):
+        for root in roots:
+            path = root / name
+            if path.is_file():
+                out[name] = path.read_text(encoding="latin1")
+                break
+    return out
 
 
 def _include(unit: Unit) -> str:
@@ -309,16 +419,37 @@ def fuzz_verify(unit: Unit, prediction: dict, *, edits: int, seed: int = 1, jobs
     original function must land inside its predicted set."""
     predicted = {name: {v["sha"]: v for v in data["variants"]}
                  for name, data in prediction["functions"].items()}
+    callees = {name: set(data.get("inline_callees", ()))
+               for name, data in prediction["functions"].items()}
+    va_names: dict[str, str] = {}
+
+    def moved_symbols(desc: list[str]) -> set[str]:
+        out = set()
+        for item in desc:
+            if not item.startswith("swap"):
+                continue
+            for va in item.split()[3:]:
+                if va not in va_names:
+                    try:
+                        va_names[va] = _selection.retail(va).name
+                    except SystemExit:
+                        va_names[va] = ""
+                out.add(va_names[va])
+        return out - {""}
     text = unit.source.read_text(encoding="latin1")
     rng = random.Random(seed)
-    cases = [unrelated_edit(text, rng, i) for i in range(edits)]
+    headers = direct_headers(unit)
+    cases = [unrelated_edit(text, rng, i, headers) for i in range(edits)]
 
     def one(item):
-        index, (edited, desc) = item
+        index, (edited, desc, shadows) = item
         work = unit.workdir / "fuzz" / f"e{index:04d}"
         if work.exists():
             shutil.rmtree(work)
         work.mkdir(parents=True)
+        for name, body in shadows.items():
+            (work / name).parent.mkdir(parents=True, exist_ok=True)
+            (work / name).write_text(body, encoding="latin1")
         copy = work / unit.source.name
         copy.write_text(edited, encoding="latin1")
         _ilmod._wine_cl([*unit.flags, f"/Fo{copy.stem}.obj", copy.name], work, _include(unit))
@@ -327,14 +458,20 @@ def fuzz_verify(unit: Unit, prediction: dict, *, edits: int, seed: int = 1, jobs
         shutil.rmtree(work, ignore_errors=True)
         return index, desc, funcs
 
-    escapes, hits, compiled, checked = [], collections.defaultdict(set), 0, 0
+    escapes, hits, compiled, checked, skipped = [], collections.defaultdict(set), 0, 0, 0
+    kinds = collections.Counter()
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         for index, desc, funcs in pool.map(one, list(enumerate(cases))):
             if funcs is None:
                 continue
             compiled += 1
+            kinds[desc[0].split()[0] if desc and not desc[0].startswith("@") else "insert"] += 1
+            moved = moved_symbols(desc)
             for name, code in funcs.items():
                 if name not in predicted or (only and name not in only):
+                    continue
+                if moved & callees.get(name, set()):
+                    skipped += 1  # the edit moved one of this function's inline callees
                     continue
                 checked += 1
                 sha = digest(code)
@@ -345,6 +482,8 @@ def fuzz_verify(unit: Unit, prediction: dict, *, edits: int, seed: int = 1, jobs
     coverage = {name: {"hit": len(hits.get(name, ())), "predicted": len(variants)}
                 for name, variants in predicted.items() if not only or name in only}
     return {"unit": unit.name, "edits": edits, "compiled": compiled, "checked": checked,
+            "skipped_callee_moved": skipped,
+            "edit_kinds": dict(kinds),
             "escapes": escapes, "escape_rate": (len(escapes) / checked) if checked else 0.0,
             "coverage": coverage}
 
@@ -400,7 +539,8 @@ def run_compile_m(args) -> int:
         print(line)
         if symbol:
             for v in data["variants"]:
-                labels = [State(s["phase"], s["decl_offset"]).label() for s in v["states"][:4]]
+                labels = [State(s["phase"], s["decl_offset"], s.get("callee_order")).label()
+                          for s in v["states"][:4]]
                 print(f"   {v['sha']}  x{len(v['states']):<3} {'; '.join(labels)}")
     print(f"[compile-m] {path}")
     return 0
@@ -421,7 +561,8 @@ def run_fuzz(args) -> int:
     out = STATE_ROOT / unit_name / "fuzz-verify.json"
     out.write_text(json.dumps(report, indent=1) + "\n")
     hit = sum(1 for c in report["coverage"].values() if c["hit"])
-    print(f"[fuzz-verify] {unit_name}: {report['compiled']}/{report['edits']} edits compiled, "
+    print(f"[fuzz-verify] {unit_name}: {report['compiled']}/{report['edits']} edits compiled "
+          f"{report['edit_kinds']}, "
           f"{report['checked']} function checks, {len(report['escapes'])} escapes "
           f"(rate {report['escape_rate']:.4f})")
     multi = [n for n, c in report["coverage"].items() if c["predicted"] > 1]
@@ -433,3 +574,151 @@ def run_fuzz(args) -> int:
         print(f"   escape: {escape['function']} after {escape['changes']}")
     print(f"[fuzz-verify] {out}")
     return 1 if report["escapes"] else 0
+
+
+def retail_membership(prediction: dict, target: Path, symbols: list[str]) -> list[dict]:
+    """For each symbol: is the delinked retail copy one of its M assemblies?"""
+    retail = object_functions(target)
+    rows = []
+    for name in symbols:
+        data = prediction["functions"].get(name)
+        if data is None or name not in retail:
+            rows.append({"function": name, "verdict": "not compared"})
+            continue
+        sha = digest(retail[name])
+        hit = next((v for v in data["variants"] if v["sha"] == sha), None)
+        if hit is None:
+            verdict = "retail not among the M assemblies"
+        elif hit["captured"]:
+            verdict = "retail in the captured state"
+        else:
+            verdict = "retail reachable by unrelated-edit state"
+        rows.append({"function": name, "m": data["m"], "verdict": verdict,
+                     "retail_states": hit["states"][:8] if hit else []})
+    return rows
+
+
+def run_walls(args) -> int:
+    by_unit = collections.defaultdict(list)
+    for line in Path(args.list).read_text().splitlines():
+        fields = line.split("\t")
+        if not fields or not fields[0].startswith("0x"):
+            continue
+        if len(fields) > 1 and (fields[1].startswith("rmg") or fields[1] == "zlib"):
+            continue
+        try:
+            selected = _selection.retail(fields[0])
+        except SystemExit:
+            continue
+        by_unit[selected.unit].append((fields[0], selected.name))
+    out = STATE_ROOT / "walls.jsonl"
+    rows = []
+    with _shim(), out.open("w") as sink:
+        for unit_name in sorted(by_unit)[:args.limit or None]:
+            path = STATE_ROOT / unit_name / "compile-m.json"
+            try:
+                if args.reuse and path.exists():
+                    prediction = json.loads(path.read_text())
+                else:
+                    prediction = compile_m(Unit.open(unit_name), jobs=args.jobs)
+                    write_prediction(prediction)
+                target = _common.REPO / "build/objdiff/target" / f"{unit_name}.c.obj"
+                found = retail_membership(prediction, target, [name for _, name in by_unit[unit_name]])
+            except (Exception, SystemExit) as error:
+                found = [{"function": name, "verdict": f"error: {str(error).splitlines()[0][:120]}"}
+                         for _, name in by_unit[unit_name]]
+            for (selector, _), row in zip(by_unit[unit_name], found):
+                row.update(selector=selector, unit=unit_name)
+                rows.append(row)
+                sink.write(json.dumps(row) + "\n")
+            sink.flush()
+            print(f"[walls] {unit_name}: " + ", ".join(r["verdict"].split(":")[0] for r in found),
+                  file=sys.stderr)
+    counts = collections.Counter(r["verdict"].split(":")[0] for r in rows)
+    lines = ["# Stable walls under unrelated-edit state", "", "| verdict | walls |", "| --- | ---: |"]
+    lines += [f"| {k} | {v} |" for k, v in counts.most_common()]
+    lines += ["", "| VA | unit | M | verdict | retail states |", "| --- | --- | ---: | --- | --- |"]
+    for r in rows:
+        states = "; ".join(State(s["phase"], s["decl_offset"], s.get("callee_order")).label()
+                           for s in r.get("retail_states", [])[:3])
+        lines.append(f"| {r['selector']} | {r['unit']} | {r.get('m', '')} | {r['verdict']} | {states} |")
+    (STATE_ROOT / "walls.md").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines[:8]))
+    return 0
+
+
+# --------------------------------------------------------------------------
+# phase census: which functions the phase flag moves, and what retail needs
+# --------------------------------------------------------------------------
+
+def retail_order(unit_name: str) -> list[str]:
+    """The unit's retail functions in address order."""
+    funcs = _selection.get_context().symbols.funcs
+    return [v[0] for rva, v in sorted(funcs.items()) if v[1] == unit_name]
+
+
+def phase_census_unit(unit: Unit, target: Path | None) -> dict:
+    order = read_state(unit)
+    p0 = object_functions(unit.replay(State(0), "phase0")[0])
+    p1 = object_functions(unit.replay(State(1), "phase1")[0])
+    retail = object_functions(target) if target and target.is_file() else {}
+    retail_first = next((n for n in retail_order(unit.name) if n in retail), None)
+    sensitive = []
+    for name in sorted(p0):
+        if name not in p1 or p0[name] == p1[name]:
+            continue
+        r = retail.get(name)
+        needs = None
+        if r is not None:
+            d = digest(r)
+            needs = 0 if d == digest(p0[name]) else 1 if d == digest(p1[name]) else "neither"
+        ours = 0 if order and order[0]["name"] == name else 1
+        sensitive.append({"function": name, "retail_needs": needs, "ours": ours,
+                          "size": len(p0[name])})
+    return {"unit": unit.name, "functions": len(p0),
+            "first_compiled": order[0]["name"] if order else None,
+            "compile_order_head": [r["name"] for r in order[:4]],
+            "retail_first_by_address": retail_first,
+            "sensitive": sensitive}
+
+
+def run_phase_census(args) -> int:
+    from homm3 import manifest
+    units = args.units or sorted(u for u in manifest.by_unit()
+                                 if not u.startswith("rmg") and u != "zlib")
+    out = STATE_ROOT / "phase-census.jsonl"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    rows = []
+    with _shim(), out.open("w") as sink:
+        def one(name):
+            try:
+                unit = Unit.open(name)
+                target = _common.REPO / "build/objdiff/target" / f"{name}.c.obj"
+                return phase_census_unit(unit, target)
+            except (Exception, SystemExit) as error:
+                return {"unit": name, "error": str(error).splitlines()[0][:160] if str(error) else type(error).__name__}
+
+        with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+            for row in pool.map(one, units):
+                rows.append(row)
+                sink.write(json.dumps(row) + "\n")
+                sink.flush()
+                print(f"[phase] {row['unit']}: "
+                      + (row.get("error") or f"{len(row['sensitive'])}/{row['functions']} sensitive"),
+                      file=sys.stderr)
+    ok = [r for r in rows if "error" not in r]
+    total = sum(r["functions"] for r in ok)
+    sens = [dict(s, unit=r["unit"]) for r in ok for s in r["sensitive"]]
+    lines = ["# Phase-flag census", "",
+             f"{len(ok)} units, {total} functions, {len(sens)} phase-sensitive "
+             f"({100 * len(sens) / max(total, 1):.2f}%).", "",
+             "| unit | function | retail needs | ours | first compiled (ours) | retail first by address |",
+             "| --- | --- | --- | --- | --- | --- |"]
+    by_unit = {r["unit"]: r for r in ok}
+    for s in sens:
+        r = by_unit[s["unit"]]
+        lines.append(f"| {s['unit']} | {s['function']} | {s['retail_needs']} | {s['ours']} | "
+                     f"{r['first_compiled']} | {r['retail_first_by_address']} |")
+    (STATE_ROOT / "phase-census.md").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines[:3]))
+    return 0

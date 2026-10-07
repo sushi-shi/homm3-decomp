@@ -1,4 +1,12 @@
-# Context variants: which assemblies one body compiles into
+# Context variants: related-change channels (cost records)
+
+> The state that **unrelated** edits disturb (the phase flag and the
+> declaration offset), with read/set access, the 1-to-M unit compile and the
+> fuzz verifier, is documented in [unstable-state.md](unstable-state.md).
+> This page records the earlier per-function `homm3 vc6 variants`
+> investigation. Its cost-record sweeps model *related* changes (a callee's
+> or a referenced declaration's own source), so they are not part of
+> `compile-m`.
 
 A function whose own source never changed can still compile to different
 bytes. The ledger records this as CUR below MAX. This page names the
