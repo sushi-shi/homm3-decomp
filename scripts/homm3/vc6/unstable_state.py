@@ -308,20 +308,26 @@ def score_object(unit: str, obj: Path) -> dict[str, float]:
             for fn in report["units"][0].get("functions", [])}
 
 
-def scan_states(rounds: int) -> list[State]:
+def scan_states(rounds: int, offsets: bool = True) -> list[State]:
     """One axis at a time from the captured state: the phase value, each
-    declaration offset, each callee-prefix round."""
-    return ([State(0), State(1)] + [State(None, k) for k in range(1, DECL_PERIOD)]
+    declaration offset (unless the unit is known offset-inert), each
+    callee-prefix round."""
+    return ([State(0), State(1)]
+            + ([State(None, k) for k in range(1, DECL_PERIOD)] if offsets else [])
             + [State(None, 0, j) for j in range(rounds)])
 
 
 def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: int = 6,
-              axes: str = "product", score: bool = False) -> dict:
+              axes: str = "product", score: bool = False, sweep_offsets: bool = True,
+              focus: set[str] | None = None) -> dict:
     """Every function of the unit with each distinct assembly it takes
     across the swept states, labelled with those states. axes="product"
     sweeps phase x offset; axes="scan" sweeps each axis alone and adds the
     product only when some function responds to both phase and offset.
-    With score, each assembly carries its objdiff fuzzy score."""
+    With score, each assembly carries its objdiff fuzzy score. In scan mode,
+    sweep_offsets=False skips the offset axis (for units a handle census
+    found inert) and focus limits the callee-prefix rounds to the longest
+    prefix among those functions."""
     plain_obj = unit.plain()
     plain = object_functions(plain_obj)
     plain_scores = score_object(unit.name, plain_obj) if score else {}
@@ -331,9 +337,10 @@ def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: in
     callee_map = inline_callees(unit)
     order = [row["name"] for row in read_state(unit)]
     prefixes = callee_prefixes(order, callee_map)
-    rounds = max((len(v) for v in prefixes.values()), default=0) + 1
+    rounds = max((len(v) for k, v in prefixes.items() if focus is None or k in focus),
+                 default=0) + 1
     if axes == "scan":
-        todo = scan_states(rounds)
+        todo = scan_states(rounds, sweep_offsets)
     else:
         todo = states(phases, offsets) + [State(None, 0, j) for j in range(rounds)]
 
@@ -843,7 +850,13 @@ def scan_rows(prediction: dict, ledger: dict) -> list[dict]:
 def run_scan(args) -> int:
     from homm3.match import status
     ledger = status.load_baseline()
-    units = args.units or scan_units()
+    focus = collections.defaultdict(set)
+    for (unit_name, name), row in ledger.items():
+        if (row.cur is not None and row.cur < 100) or row.max < 100:
+            focus[unit_name].add(name)
+    offset_units = (json.loads(Path(args.offset_units).read_text())
+                    if args.offset_units else None)
+    units = args.units or [u for u in scan_units() if focus.get(u)]
     out = STATE_ROOT / "scan.jsonl"
     rows = []
     with _shim(), out.open("a" if args.reuse else "w") as sink:
@@ -852,8 +865,10 @@ def run_scan(args) -> int:
             try:
                 prediction = json.loads(path.read_text()) if args.reuse and path.exists() else None
                 if prediction is None or prediction.get("axes") != "scan":
-                    prediction = compile_m(Unit.open(unit_name), jobs=args.jobs,
-                                           axes="scan", score=True)
+                    prediction = compile_m(
+                        Unit.open(unit_name), jobs=args.jobs, axes="scan", score=True,
+                        sweep_offsets=offset_units is None or unit_name in offset_units,
+                        focus=focus.get(unit_name, set()))
                     write_prediction(prediction)
                 found = scan_rows(prediction, ledger)
             except (Exception, SystemExit) as error:

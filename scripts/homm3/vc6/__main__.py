@@ -202,6 +202,8 @@ def _build_parser() -> argparse.ArgumentParser:
     psc.add_argument("--jobs", type=int, default=8)
     psc.add_argument("--reuse", action="store_true",
                      help="reuse scored compile-m.json files and append to scan.jsonl")
+    psc.add_argument("--offset-units", help="JSON object whose keys are the units a handle "
+                     "census found offset-sensitive; other units skip the offset axis")
 
     ppc = ss.add_parser("phase-census", help="per unit: which functions the phase flag moves, "
                         "which value retail needs, and which function each order compiles first")
