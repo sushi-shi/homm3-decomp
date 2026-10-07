@@ -1369,7 +1369,7 @@ static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
 
 // Mac 0xccce0..0xccd60 constructs a local mask, reads two packed bytes,
 // expands the decoder and copies the mask through a second temporary into
-// the member. The existing readPackedBits return and nested decodePackedBits
+// the member. The inline readPackedBits return and its own decode loop
 // preserve those boundaries; its source name is inferred. Windows stays exact.
 VA(0x004ba260, 0x401)
 DC_ADDRESS(0x0a51b0, 0x3f6)

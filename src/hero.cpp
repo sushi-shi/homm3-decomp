@@ -701,11 +701,9 @@ void hero::placeInMap(int playerId, type_point point, bool resetFlags)
 // expansions need separate inliner evidence; they are not register-only.
 // Typed scalar readers preserve every on-disk width while shortening the
 // staging lifetimes, bringing the same body to 94.93%.
-// The historical exact result flattened decodePackedBits into its reader.
-// With the canonical helper chain retained, the exception path still keeps
-// nested string copy/end/cleanup calls that retail expands (94.9221%). C2's
-// reproduced trace reaches string assign/copy construction at depth eight;
-// those callees' nested operations exceed the default expansion depth.
+// Mac 0xf3468's leftover bitset::set call shows the decode loop directly in
+// the inline reader (see packed_bits.h); that flatter chain lets VC6 expand
+// the name assignment's nested string calls and makes this body exact.
 VA(0x004d7a20, 0x69F)
 DC_ADDRESS(0x0caf98, 0x700)
 MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder
