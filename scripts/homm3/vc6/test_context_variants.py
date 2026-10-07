@@ -59,5 +59,20 @@ class ChannelTest(unittest.TestCase):
         self.assertNotEqual(ctx.key(), cv.Context(phase=1).key())
 
 
+class DeclarationOffsetTest(unittest.TestCase):
+    SOURCE = "#include <a.h>\nint g;\n// note\nVA(0x00401230, 0x10)\nvoid f() {}\n"
+
+    def test_before_places_k_declarations_ahead_of_the_annotation(self):
+        text = cv.padded_source(self.SOURCE, 0x401230, 2, "before")
+        self.assertEqual(text, "#include <a.h>\nint g;\n// note\ntypedef int h3ctx_decl0;\n"
+                               "typedef int h3ctx_decl1;\nVA(0x00401230, 0x10)\nvoid f() {}\n")
+
+    def test_top_prefixes_the_unit_and_missing_annotation_is_none(self):
+        self.assertTrue(cv.padded_source(self.SOURCE, 0x401230, 1, "top")
+                        .startswith("typedef int h3ctx_decl0;\n#include"))
+        self.assertIsNone(cv.padded_source(self.SOURCE, 0x409999, 1, "before"))
+        self.assertEqual(cv.padded_source(self.SOURCE, 0x401230, 0, "before"), self.SOURCE)
+
+
 if __name__ == "__main__":
     unittest.main()

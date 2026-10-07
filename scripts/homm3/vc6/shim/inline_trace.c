@@ -354,6 +354,7 @@ static void __cdecl traceMain(unsigned long *body)
     writeString(h, "main "); writeHex(h, g_root);
     writeString(h, " cb="); writeSignedDecimal(h, *(short *)(sym+0x6d));
     writeString(h, " phase="); writeDecimal(h, *(unsigned long *)((char *)g_real+0x9f120));
+    writeString(h, " key="); writeHex(h, *(unsigned long *)(sym+0x1c));
     writeString(h, "\n"); CloseHandle(h);
     SetLastError(lastError);
 }
@@ -560,6 +561,98 @@ static void __declspec(naked) mergeHookB(void)
     }
 }
 
+/* Symbol-hash placement channel (context-variants.md). C2 files back-end
+ * symbols in 1024 buckets by key (sym+0x1c) & 0x3ff: insert 0x21267,
+ * lookup 0x232ee, unlink 0x213dc; bucket-ordered walks (0x2450d, 0x2df43)
+ * enumerate them. k declarations placed before a definition raise every
+ * later key by k. HOMM3_VC6_HASH_SHIFT="h0:k" files every key >= h0 as
+ * key + k (all three sites agree), which is that placement; the keys
+ * themselves and their order are unchanged. HOMM3_VC6_KEY_LOG logs the
+ * keys inserted while the selected root is current. */
+static unsigned long g_shiftH0, g_shiftK;
+static int g_keyLog;
+static void *g_lookupReturn, *g_insertReturn, *g_unlinkReturn;
+
+static void loadHashShift(void)
+{
+    char text[64];
+    DWORD n = GetEnvironmentVariableA("HOMM3_VC6_HASH_SHIFT", text, sizeof text);
+    unsigned long a = 0, b = 0, i;
+    int second = 0;
+    for (i = 0; i < n && i < sizeof text; ++i) {
+        char c = text[i];
+        unsigned long d = (c >= '0' && c <= '9') ? (unsigned long)(c - '0')
+            : (c >= 'a' && c <= 'f') ? (unsigned long)(c - 'a' + 10) : 99;
+        if (c == ':') { second = 1; continue; }
+        if (d == 99) continue;
+        if (second) b = b * 10 + d; else a = a * 16 + d;  /* h0 hex, k decimal */
+    }
+    if (n && second) { g_shiftH0 = a; g_shiftK = b; }
+    g_keyLog = GetEnvironmentVariableA("HOMM3_VC6_KEY_LOG", text, sizeof text) != 0;
+}
+
+static unsigned long __cdecl shiftKey(unsigned long key, unsigned long site)
+{
+    if (g_keyLog && site == 1 && g_selected) {
+        DWORD lastError = GetLastError();
+        HANDLE h = logOpen();
+        if (h != INVALID_HANDLE_VALUE) {
+            writeString(h, "key "); writeHex(h, key); writeString(h, "\n"); CloseHandle(h);
+        }
+        SetLastError(lastError);
+    }
+    if (g_shiftK && key >= g_shiftH0) key += g_shiftK;
+    return key & 0x3ff;
+}
+
+static void __declspec(naked) lookupHook(void)
+{
+    __asm {
+        push ecx
+        push edx
+        push 0
+        push eax
+        call shiftKey
+        add esp, 8
+        pop edx
+        pop ecx
+        jmp dword ptr [g_lookupReturn]
+    }
+}
+
+static void __declspec(naked) insertHook(void)
+{
+    __asm {
+        push ecx
+        push edx
+        push 1
+        push eax
+        call shiftKey
+        add esp, 8
+        pop edx
+        pop ecx
+        jmp dword ptr [g_insertReturn]
+    }
+}
+
+static void __declspec(naked) unlinkHook(void)
+{
+    __asm {
+        push eax
+        push ecx
+        push edx
+        push 2
+        push edi
+        call shiftKey
+        add esp, 8
+        mov edi, eax
+        pop edx
+        pop ecx
+        pop eax
+        jmp dword ptr [g_unlinkReturn]
+    }
+}
+
 /* Function-entry coverage, used to locate passes (decision-forcing.md,
  * stage D). HOMM3_VC6_COVER names a file of ascending hexadecimal C2 RVAs,
  * one per line. Each gets an INT3; a vectored handler counts the hit,
@@ -702,6 +795,18 @@ static int installInlineTrace(void)
     if (!patchHook(0x1a412, candidateHook, candidateBytes, sizeof candidateBytes)) return 0;
     if (!patchHook(0x24748, colorHook, colorBytes, sizeof colorBytes)) return 0;
     loadMergeVeto();
+    loadHashShift();
+    if (g_shiftK || g_keyLog) {
+        static const unsigned char lookupBytes[] = {0x25,0xff,0x03,0x00,0x00};
+        static const unsigned char insertBytes[] = {0x25,0xff,0x03,0x00,0x00};
+        static const unsigned char unlinkBytes[] = {0x81,0xe7,0xff,0x03,0x00,0x00};
+        g_lookupReturn = (char *)g_real+0x232f3;
+        g_insertReturn = (char *)g_real+0x2126c;
+        g_unlinkReturn = (char *)g_real+0x213e2;
+        if (!patchHook(0x232ee, lookupHook, lookupBytes, 5)) return 0;
+        if (!patchHook(0x21267, insertHook, insertBytes, 5)) return 0;
+        if (!patchHook(0x213dc, unlinkHook, unlinkBytes, 6)) return 0;
+    }
     g_mergeReturnA = (char *)g_real+0x36b00;
     g_mergeReturnB = (char *)g_real+0x3e3e6;
     if (!patchHook(0x36afa, mergeHookA, mergeBytesA, 6)) return 0;

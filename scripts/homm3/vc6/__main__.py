@@ -157,12 +157,17 @@ def _build_parser() -> argparse.ArgumentParser:
     pva.add_argument("--max-replays", type=int, default=80)
     pva.add_argument("--jobs", type=int, default=6)
     pva.add_argument("--against", help="also test membership of this object's copy")
+    pva.add_argument("--decl-classes", type=int, default=4)
     pvaa = ss.add_parser("variants-all", help="classify a wall list (first TSV column = VA): "
                          "retail reachable by context vs source wrong")
     pvaa.add_argument("list")
     pvaa.add_argument("--max-replays", type=int, default=60)
     pvaa.add_argument("--jobs", type=int, default=8)
     pvaa.add_argument("--limit", type=int, default=0)
+    pvaa.add_argument("--inner-jobs", type=int, default=3,
+                      help="parallel compiles/replays inside one function")
+    pvaa.add_argument("--decl-classes", type=int, default=3,
+                      help="declaration-offset classes that get their own phase/cost sweep")
 
     pcv = ss.add_parser("cover", help="C2 function-entry hit counts for scratch TUs; "
                         "with several sources, print the entries whose counts differ")
