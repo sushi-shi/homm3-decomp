@@ -310,7 +310,9 @@ def classify(selector: str, *, streams: dict | None = None, max_replays: int = 8
                   replays=replayer.runs, sites=result.get("sites"), main=result.get("main"),
                   distinct=len(variants))
     if "error" in result:
-        report["verdict"] = "error: " + result["error"]
+        # No inline candidate means no root/callee cost decision and no
+        # inliner entry at which to observe or set the phase flag.
+        report["verdict"] = "not swept: no inliner entry (no cost or phase channel)"
         return report
     retail_text, retail_label = _selection.reference_text(selector)
     retail = inline_force.strict_stream(retail_text)

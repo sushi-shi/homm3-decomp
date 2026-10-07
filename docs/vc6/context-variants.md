@@ -111,6 +111,39 @@ The other 14 are explained by dependency source:
 No context channel can bring these back, and the tool reports *source
 differs* for them, which is the correct verdict.
 
+Callee flags (`sym+0x73`, the auto-inline and saved-body bits) are the
+same in O and H for every candidate in all 21 traces. Flags are not a
+channel here.
+
+## Classification of the stable walls (2026-10-07)
+
+`variants-all` was run over the 242-row wall list (rmg/zlib excluded),
+with 48 replays per function:
+
+| verdict | walls |
+| --- | ---: |
+| not reachable by context channels: source differs | 222 |
+| body correct: retail is reachable in a real context | 9 |
+| exact in the captured context (strict stream; the residue is elsewhere) | 4 |
+| not swept: no inliner entry | 7 |
+
+For the reachable walls, the context the source must recreate is:
+
+| wall | context giving retail |
+| --- | --- |
+| `vwDrawHeroPart` 0x5f7500, `vwDrawHeroPartShadow` 0x5f7900 | root cost >= 657 (captured 649) |
+| `advManager::drawHeroPart` 0x40fe30 | root cost >= 719 (captured 707) |
+| `displayLCWinLoss` 0x4f2960 | `LossConditionStruct` constructor cost <= 40 |
+| `CNewPlayerUpdateProc::finish` 0x5795a0 | `CNetMsg` constructor cost 58 |
+| `NewfullMap::readBlackBox` 0x4ff6b0 | spell-vector `size`/`copy`/`_Destroy` cost <= 40 |
+| `NewfullMap::save` 0x4fdf40 | `vector<BlackBoxData>::operator[]` cost 41..42 |
+| `aiEnterTown` 0x5253d0 | phase=0 (the preceding function's kind) |
+| `loadSeerHutTextColumn` 0x56c120 | phase=1 |
+
+The root-cost rows match the inline-forcing deficit derived independently
+in [decision-forcing.md](decision-forcing.md): vwDrawHeroPart needs +16
+budget, which is +8 root cost.
+
 ## The tool
 
 ```sh
