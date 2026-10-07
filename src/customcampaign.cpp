@@ -2107,6 +2107,8 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
     prerequisiteBits = LITTLE_ENDIAN_LONG(prerequisiteBits);
     for (int prereq = 0; prereq < numScenarios; ++prereq) {
+        // Mac 0x961a8 calls the iterator-returning insert(end(), value) per
+        // bit; spelling that here drops VC6 89.67 -> 86.15%, so push_back stays.
         m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
     }
 
