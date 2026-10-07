@@ -2248,6 +2248,18 @@ TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
     clearScenarios();
 }
 
+// Complete expands this shared cleanup in both load and the destructor;
+// Mac retains it between them (0x96afc) and calls it from both.
+MAC_ADDRESS(0x096afc, 0x78)
+void TCampaignBrief::CampaignHeaderStruct::clearScenarios()
+{
+    for (unsigned int scenarioIndex = 0;
+         scenarioIndex < m_scenarios.size(); ++scenarioIndex)
+        delete m_scenarios[scenarioIndex];
+    m_scenarios.clear();
+    freeData();
+}
+
 // Complete-only; also reached from the custom-campaign list scanner
 // (0x482fd0 family). Name provisional.
 VA(0x004887e0, 0x30)
@@ -2343,7 +2355,10 @@ int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 // currentDirectory to the file-open scope leaves the score at 53.9715%.
 // Keep reads through TAbstractFile*: retail uses the virtual slot at +4.
 // Calling streamFile.read directly instead devirtualizes and expands them.
-void TCampaignBrief::CampaignHeaderStruct::readScenario(
+// Mac load expands this record step (new, ScenarioStruct::read, append)
+// with no readScenario call; inline is VC6 byte-flat, while pasting the
+// statements into load drops VC6 87.64 -> 78.68%.
+inline void TCampaignBrief::CampaignHeaderStruct::readScenario(
     TAbstractFile* file, int numScenarios)
 {
     TCampaignBrief::ScenarioStruct* scenario =

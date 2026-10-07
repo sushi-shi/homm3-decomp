@@ -6242,10 +6242,12 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
             do {
                 int heroKey = readValue<unsigned char>(infile);
 
-                // The admitted format is now SoD. Mac db424..db44c
-                // expands readHeroId's modern byte/sentinel operation;
-                // the constant argument is inferred from this admission.
-                int portrait = readHeroId(infile, MAP_FORMAT_SHADOW_OF_DEATH);
+                // Mac db424..db44c reads the portrait byte and maps only the
+                // 0xff sentinel, without readHeroId's version remap or call;
+                // writing that test here lifts VC6 97.03 -> 97.27%.
+                int portrait = readValue<unsigned char>(infile);
+                if (portrait == g_savedHeroNone)
+                    portrait = -1;
 
                 std::string heroName = readLengthPrefixedString(infile);
                 std::bitset<8> availability = readPackedBits<8>(infile);
@@ -6650,6 +6652,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         // Four HeroId reader-result/local models keep both reader bodies
         // exact but lower this caller to 91.6362%; their result domain has
         // no surviving native signature, so the numeric interface remains.
+        // Mac dc60c..dc61c has no loadHeroId call, but writing the byte and
+        // 0xff test in place (as NewSMapHeader::read now does) lowers VC6
+        // 94.62 -> 92.46%; the helper call stays.
         int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);

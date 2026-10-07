@@ -4036,7 +4036,8 @@ static unsigned char attemptTeleport(hero* currentHero,
 // E:\gamedcs\ai_player.cpp:4155
 DC_ADDRESS(0x034a7c, 0x8c)
 MAC_ADDRESS(0x034618, 0xbc)
-static inline void checkGatePurchase(type_point point)
+// Mac aiAttemptMove calls this body at 0x34b4c/0x34b58: not inline.
+static void checkGatePurchase(type_point point)
 {
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {
