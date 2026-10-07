@@ -99,9 +99,9 @@ it (a non-inlined call, its address taken, an EH unwind or a vtable).
   that consults bit `0x800` during inlining is not traced.
 - The handle-hash release test and operand filter, and why only 0.19% of
   functions respond.
-- Why retail places `terrain.h`'s mask initializers at the end of each
-  object while ours compile them first. This decides the first function's
-  phase in units that include `terrain.h`.
+- (Resolved) Retail does not place `terrain.h`'s mask initializers at the
+  end of each object: each run opens the TU that follows the 32-byte guard
+  ([unstable-state.md](unstable-state.md) §1).
 - `compile-m` sweeps callee-order prefixes only at the captured phase and
   offset, not as a full product.
 

@@ -80,9 +80,27 @@ function left 0.
 
 | function | retail needs | ours | clue |
 | --- | ---: | ---: | --- |
-| `combatManager::showCreatureSpellError` (drawing, first in the unit) | 1 | 0 | Retail compiled something before it. The 100% MAX commit had `_$E60`/`_$E63` first: the dynamic initializers of `combatManager::s_visibleCombatAreaLimits` and `s_combatAreaLimits` (`SLimitData` with constructors). Commit `3f0b03da3` moved them out of drawing.cpp. |
-| `loadSeerHutTextColumn` (seerhuttext, 99.96%) | 1 | 0 | Our first-compiled function. In retail, `TSeerHutTextColumn::TSeerHutTextColumn` at `0x56bde0` (first by address) and its destructor precede it. Proposed: define those, or any emitted function, before it. |
+| `combatManager::showCreatureSpellError` (drawing, first in the unit) | 1 | 0 | Retail's drawing range opens with the ten `terrain.h` mask initializers (see below), as Dreamcast's drawing.obj does. Including `terrain.h` gives 100. |
+| `loadSeerHutTextColumn` (seerhuttext, 99.96%) | 1 | 0 | Retail opens the unit with the initializer pairs of the two column tables and the name vector, and the generated constructors and destructors, all before `0x56c120`. Defining the tables above the loader reproduces those sizes and that order, and gives 100. |
 | `aiEnterTown` (philai, 99.96%) | 0 | 1 | Retail has it 14th by address, after `considerGarrisoning` (`0x525200`), yet retail needs it to be the unit's first globally optimized function. Either the 13 retail functions before it did not go through the global optimizer (for example, they sat in a `#pragma optimize("g", off)` region), or retail's address order is not its compile order here. Open. |
+
+**Terrain-mask runs open the following TU.** Retail has the run of ten
+`terrain.h` mask initializers (sizes 89, 96, 97, 95 × 7) 89 times, almost
+always right after a 32-byte `ctype<wchar_t>::id` guard. The run is the
+head of the TU that follows, not the tail of the one before:
+
+* our objects put the ten first and the guard last (initialize, drawing);
+* 58 units have a run directly before their first retail function, and 51
+  of those carry the `terrain.h:70-79` initializers in the Dreamcast corpus;
+* of the 7 units the old tail reading chose, 6 have no such initializers in
+  Dreamcast;
+* drawing's run stores to `0x6969xx`, next to drawing's own data
+  (`g_combatGridPosted` at `0x6969d4`).
+
+So in every unit whose retail range opens with the run, the first own
+function receives phase 1. Including `terrain.h` in those units (branch
+`match/state-walls`) brought `showCreatureSpellError` to 100 and reproduces
+each object's head.
 
 Retail's own address order is a weak guide to the first compiled function.
 Our first compiled function equals retail's first by address in 70 of 150
