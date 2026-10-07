@@ -87,6 +87,16 @@ class ParseColorsTest(unittest.TestCase):
         self.assertEqual((rows[0]["priority"], rows[1]["forced"]), (-3, 1))
 
 
+class ParseMergesTest(unittest.TestCase):
+    def test_root_filter_and_veto_flag(self):
+        text = LOG + ("merge root=00000010 k=1 kind=2 count=15\n"
+                      "merge root=00000099 k=1 kind=1 count=3\n"
+                      "merge root=00000010 k=2 kind=1 count=2 veto=1\n")
+        rows = inline_force.parse_merges(text, "?root@@YAXXZ")
+        self.assertEqual([(r["k"], r["kind"], r["count"], r["veto"]) for r in rows],
+                         [(1, 2, 15, False), (2, 1, 2, True)])
+
+
 class StrictStreamTest(unittest.TestCase):
     def test_switch_table_addend_is_masked(self):
         text = ("00000000 <?f@@YAXXZ>:\n"
