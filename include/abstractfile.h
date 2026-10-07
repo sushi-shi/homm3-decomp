@@ -115,10 +115,15 @@ inline int readLittleEndianValue(TAbstractFile* infile, T& value)
 // Value readers intentionally discard the native byte count, like readValue<T>.
 // Mac quest load/loadFromMap decode their deadline immediately after read;
 // neither native caller tests the count before lwbrx.
+// Mac game::readMapHeroSetups expands this reader to the virtual read; one
+// more readValue<T> level leaves a readValue<short> call at CodeWarrior's
+// inline-depth cutoff, so it reads into its own local directly.
+// VC6 is byte-flat for every consumer.
 template <class T>
 inline T readLittleEndianValue(TAbstractFile* infile)
 {
-    T value = readValue<T>(infile);
+    T value;
+    readValue(infile, value);
 #if defined(__POWERPC__)
     if (sizeof(T) == sizeof(unsigned short))
         value = static_cast<T>(__lhbrx(&value, 0));
