@@ -22,6 +22,7 @@
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "town.h"
