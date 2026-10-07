@@ -191,7 +191,7 @@ bool VictoryConditionStruct::checkForArtifactWin()
 VA(0x005f1b10, 0x169)
 DC_ADDRESS(0x18fe98, 0xea)
 MAC_ADDRESS(0x1fd818, 0x1e4)
-unsigned char VictoryConditionStruct::checkForTotalCreatures()
+bool VictoryConditionStruct::checkForTotalCreatures()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_CREATURES) {
         long total = 0;
@@ -217,7 +217,7 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
 VA(0x005f1c80, 0xB9)
 DC_ADDRESS(0x18ff84, 0xb4)
 MAC_ADDRESS(0x1fd9fc, 0x130)
-unsigned char VictoryConditionStruct::checkForTotalResources()
+bool VictoryConditionStruct::checkForTotalResources()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_RESOURCES
         && g_currentPlayer
@@ -236,7 +236,7 @@ unsigned char VictoryConditionStruct::checkForTotalResources()
 VA(0x005f1d40, 0x1A4)
 DC_ADDRESS(0x190038, 0xec)
 MAC_ADDRESS(0x1fdb2c, 0x298)
-unsigned char VictoryConditionStruct::checkForUpgradedTown()
+bool VictoryConditionStruct::checkForUpgradedTown()
 {
     if (m_type != VICTORY_CONDITION_UPGRADE_TOWN
         || !canCheckCurrentPlayerVictory())
@@ -282,7 +282,7 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
 VA(0x005f1ef0, 0x203)
 DC_ADDRESS(0x190124, 0x120)
 MAC_ADDRESS(0x1fddc4, 0x2d0)
-unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
+bool VictoryConditionStruct::checkForGrailBuildingWin()
 {
     if (m_type != VICTORY_CONDITION_BUILD_GRAIL
         || !g_currentPlayer
@@ -337,7 +337,7 @@ bool VictoryConditionStruct::checkForHeroDefeatWin(
 VA(0x005f2160, 0xFD)
 DC_ADDRESS(0x1902c4, 0x7a)
 MAC_ADDRESS(0x1fe124, 0x184)
-unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
+bool VictoryConditionStruct::isGrailTarget(town* thisTown)
 {
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
@@ -361,7 +361,7 @@ bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)
 VA(0x005f22a0, 0xE6)
 DC_ADDRESS(0x19037c, 0x8e)
 MAC_ADDRESS(0x1fe314, 0x154)
-unsigned char VictoryConditionStruct::checkForTownCaptureWin()
+bool VictoryConditionStruct::checkForTownCaptureWin()
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN
         || !canCheckCurrentPlayerVictory())
@@ -417,7 +417,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
 VA(0x005f2600, 0x117)
 DC_ADDRESS(0x190488, 0xb0)
 MAC_ADDRESS(0x1fe810, 0x194)
-unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
+bool VictoryConditionStruct::checkForFlaggedGeneratorWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS
         || !canCheckCurrentPlayerVictory())
@@ -438,7 +438,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
 VA(0x005f2720, 0xEB)
 DC_ADDRESS(0x190538, 0xe6)
 MAC_ADDRESS(0x1fe9a4, 0x190)
-unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
+bool VictoryConditionStruct::checkForFlaggedMineWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES
         || !canCheckCurrentPlayerVictory())
@@ -475,7 +475,7 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
 VA(0x005f2860, 0x1DE)
 DC_ADDRESS(0x190620, 0xb2)
 MAC_ADDRESS(0x1feba0, 0x2bc)
-unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
+bool VictoryConditionStruct::checkForArtifactTransportWin(
     const hero* thisHero, const type_point townLoc)
 {
     if (m_type != VICTORY_CONDITION_TRANSPORT_ARTIFACT
