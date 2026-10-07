@@ -25,6 +25,7 @@ static unsigned g_seenCount;
 #include "trace_common.h"
 
 static int g_selected;
+static void rearmCover(void);
 
 /* Decision forcing (docs/vc6/decision-forcing.md). Active only when
  * HOMM3_VC6_INLINE_FORCE names a rule file; otherwise every site takes the
@@ -333,6 +334,32 @@ static void applyCbSet(unsigned char *sym, int isRoot)
     }
 }
 
+/* HOMM3_VC6_HASH_DUMP: at the selected main, log every symbol filed in the
+ * back-end hash (buckets .bssbe 0x9d88c, key sym+0x1c, chain +0x2c). */
+static void dumpHash(void)
+{
+    char flag[8];
+    HANDLE h;
+    unsigned b;
+    unsigned char **buckets = (unsigned char **)((char *)g_real + 0x9d88c);
+    if (!GetEnvironmentVariableA("HOMM3_VC6_HASH_DUMP", flag, sizeof flag)) return;
+    h = logOpen();
+    if (h == INVALID_HANDLE_VALUE) return;
+    for (b = 0; b < 1024; ++b) {
+        unsigned char *sym = buckets[b];
+        unsigned depth = 0;
+        while (sym && depth < 4096) {
+            writeString(h, "hash "); writeDecimal(h, b);
+            writeString(h, " "); writeHex(h, *(unsigned long *)(sym + 0x1c));
+            writeString(h, " "); writeHex(h, (unsigned long)sym);
+            writeString(h, "\n");
+            sym = *(unsigned char **)(sym + 0x2c);
+            ++depth;
+        }
+    }
+    CloseHandle(h);
+}
+
 static void __cdecl traceMain(unsigned long *body)
 {
     HANDLE h;
@@ -347,6 +374,8 @@ static void __cdecl traceMain(unsigned long *body)
     lastError = GetLastError();
     snapshotState(sym);
     patchState();
+    rearmCover();
+    dumpHash();
     applyCbSet(sym, 1);
     h = logOpen();
     if (h == INVALID_HANDLE_VALUE) { SetLastError(lastError); return; }
@@ -591,13 +620,16 @@ static void loadHashShift(void)
     g_keyLog = GetEnvironmentVariableA("HOMM3_VC6_KEY_LOG", text, sizeof text) != 0;
 }
 
-static unsigned long __cdecl shiftKey(unsigned long key, unsigned long site)
+static unsigned long __cdecl shiftKey(unsigned long key, unsigned long site, unsigned char *sym)
 {
     if (g_keyLog && site == 1 && g_selected) {
         DWORD lastError = GetLastError();
         HANDLE h = logOpen();
         if (h != INVALID_HANDLE_VALUE) {
-            writeString(h, "key "); writeHex(h, key); writeString(h, "\n"); CloseHandle(h);
+            unsigned i;
+            writeString(h, "key "); writeHex(h, key);
+            for (i = 0; i < 0x40; i += 4) { writeString(h, " "); writeHex(h, *(unsigned long *)(sym + i)); }
+            writeString(h, "\n"); CloseHandle(h);
         }
         SetLastError(lastError);
     }
@@ -611,9 +643,10 @@ static void __declspec(naked) lookupHook(void)
         push ecx
         push edx
         push 0
+        push 0
         push eax
         call shiftKey
-        add esp, 8
+        add esp, 12
         pop edx
         pop ecx
         jmp dword ptr [g_lookupReturn]
@@ -625,10 +658,11 @@ static void __declspec(naked) insertHook(void)
     __asm {
         push ecx
         push edx
+        push ecx
         push 1
         push eax
         call shiftKey
-        add esp, 8
+        add esp, 12
         pop edx
         pop ecx
         jmp dword ptr [g_insertReturn]
@@ -641,16 +675,245 @@ static void __declspec(naked) unlinkHook(void)
         push eax
         push ecx
         push edx
+        push 0
         push 2
         push edi
         call shiftKey
-        add esp, 8
+        add esp, 12
         mov edi, eax
         pop edx
         pop ecx
         pop eax
         jmp dword ptr [g_unlinkReturn]
     }
+}
+
+/* Declaration-offset state (unstable-state.md). The IL reader 0x1c92e
+ * decodes every symbol handle (u16, or a 31-bit value when bit 15 is set).
+ * HOMM3_VC6_HANDLE_SHIFT="h0:k" returns handle + k for every decoded handle
+ * >= h0 (hex h0, decimal k): the numbering k extra declarations before
+ * handle h0 would have produced. */
+static unsigned long g_handleH0, g_handleK;
+static void *g_decodeContinue;
+static unsigned long *g_decodeFlag;
+
+#define DECODE_SITES 64
+static unsigned long g_decodeSite[DECODE_SITES], g_decodeCount[DECODE_SITES],
+    g_decodeMin[DECODE_SITES], g_decodeMax[DECODE_SITES];
+static int g_decodeLog;
+
+/* Decoder call sites whose values are not symbol handles: measured by
+ * comparing real captures with and without leading declarations. */
+static int isHandleSite(unsigned long ret)
+{
+    unsigned long site = ret - (unsigned long)g_real;
+    return site != 0x1cedf && site != 0x1d193 && site != 0x1d253;
+}
+
+static unsigned long __cdecl adjustHandle(unsigned long value, unsigned long ret)
+{
+    if (g_decodeLog == 2) {
+        static HANDLE seq = INVALID_HANDLE_VALUE;
+        unsigned long pair[2];
+        DWORD n;
+        if (seq == INVALID_HANDLE_VALUE) {
+            char path[MAX_PATH];
+            if (GetEnvironmentVariableA("HOMM3_VC6_DECODE_SEQ", path, sizeof path))
+                seq = CreateFileA(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+        }
+        pair[0] = ret - (unsigned long)g_real; pair[1] = value;
+        if (seq != INVALID_HANDLE_VALUE) WriteFile(seq, pair, 8, &n, 0);
+    }
+    if (g_decodeLog) {
+        unsigned i;
+        unsigned long site = ret - (unsigned long)g_real;
+        for (i = 0; i < DECODE_SITES && g_decodeSite[i] && g_decodeSite[i] != site; ++i) {}
+        if (i < DECODE_SITES) {
+            if (!g_decodeSite[i]) { g_decodeSite[i] = site; g_decodeMin[i] = value; }
+            ++g_decodeCount[i];
+            if (value < g_decodeMin[i]) g_decodeMin[i] = value;
+            if (value > g_decodeMax[i]) g_decodeMax[i] = value;
+        }
+    }
+    if (g_handleK && value && value >= g_handleH0 && isHandleSite(ret)) value += g_handleK;
+    return value;
+}
+
+static void writeDecodeLog(void)
+{
+    HANDLE h;
+    unsigned i;
+    if (!g_decodeLog) return;
+    h = logOpen();
+    if (h == INVALID_HANDLE_VALUE) return;
+    for (i = 0; i < DECODE_SITES && g_decodeSite[i]; ++i) {
+        writeString(h, "decode "); writeHex(h, g_decodeSite[i]);
+        writeString(h, " n="); writeDecimal(h, g_decodeCount[i]);
+        writeString(h, " min="); writeHex(h, g_decodeMin[i]);
+        writeString(h, " max="); writeHex(h, g_decodeMax[i]);
+        writeString(h, "\n");
+    }
+    CloseHandle(h);
+}
+
+static void __declspec(naked) decodeTrampoline(void)
+{
+    __asm {
+        sub esp, 8
+        mov ecx, dword ptr [g_decodeFlag]
+        mov ecx, dword ptr [ecx]
+        jmp dword ptr [g_decodeContinue]
+    }
+}
+
+static void __declspec(naked) decodeHook(void)
+{
+    __asm {
+        call decodeTrampoline
+        push ecx
+        push edx
+        push dword ptr [esp+8]
+        push eax
+        call adjustHandle
+        add esp, 8
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+static int loadHandleShift(void)
+{
+    char text[64];
+    DWORD n = GetEnvironmentVariableA("HOMM3_VC6_HANDLE_SHIFT", text, sizeof text);
+    unsigned long a = 0, b = 0, i;
+    int second = 0;
+    static const unsigned char entryBytes[] = {0x83,0xec,0x08,0x8b,0x0d};
+    g_decodeLog = GetEnvironmentVariableA("HOMM3_VC6_DECODE_LOG", text + 32, 8) != 0;
+    if (GetEnvironmentVariableA("HOMM3_VC6_DECODE_SEQ", text + 40, 8)) g_decodeLog = 2;
+    if (!g_decodeLog && (!n || n >= sizeof text)) return 1;
+    if (n >= 32) n = 0;
+    for (i = 0; i < n; ++i) {
+        char c = text[i];
+        if (c == ':') { second = 1; continue; }
+        if (second) { if (c >= '0' && c <= '9') b = b * 10 + (c - '0'); }
+        else if (c >= '0' && c <= '9') a = a * 16 + (c - '0');
+        else if (c >= 'a' && c <= 'f') a = a * 16 + (c - 'a' + 10);
+    }
+    g_handleH0 = a; g_handleK = b;
+    g_decodeFlag = *(unsigned long **)((char *)g_real + 0x1c933);
+    g_decodeContinue = (char *)g_real + 0x1c937;
+    return patchHook(0x1c92e, decodeHook, entryBytes, 5);
+}
+
+/* Phase-flag state (unstable-state.md). 0x5b11 in 0x5739 reads the flag
+ * 0x9f120 that the previous function's driver (0x13615) left behind.
+ * HOMM3_VC6_PHASE=0|1 makes every read see that value. HOMM3_VC6_STATE_LOG
+ * logs each read with the current inliner root. */
+static long g_phaseValue = -1;
+static int g_stateLog;
+static void *g_phaseReturn;
+
+static unsigned long __cdecl phaseRead(unsigned long value)
+{
+    if (g_stateLog) {
+        DWORD lastError = GetLastError();
+        HANDLE h = logOpen();
+        if (h != INVALID_HANDLE_VALUE) {
+            writeString(h, "phase-read root="); writeHex(h, g_root);
+            writeString(h, " value="); writeDecimal(h, value);
+            writeString(h, "\n"); CloseHandle(h);
+        }
+        SetLastError(lastError);
+    }
+    return value;
+}
+
+static void __declspec(naked) phaseHook(void)
+{
+    __asm {
+        push ecx
+        push edx
+        mov eax, dword ptr [g_real]
+        mov eax, dword ptr [eax + 0x9f120]
+        push eax
+        call phaseRead
+        add esp, 4
+        pop edx
+        pop ecx
+        jmp dword ptr [g_phaseReturn]
+    }
+}
+
+/* The driver 0x13615 has one caller; its return lands at 0x683cc. Setting
+ * the flag there is the leftover value a different previous function would
+ * have left for the next one (and install sets it for the first one). */
+static void *g_driverReturn;
+
+static void __cdecl driverDone(unsigned long *regs)
+{
+    /* pushad layout: EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX */
+    if (g_stateLog) {
+        DWORD lastError = GetLastError();
+        HANDLE h = logOpen();
+        unsigned long *body = (unsigned long *)regs[1];
+        if (h != INVALID_HANDLE_VALUE) {
+            unsigned i;
+            unsigned char *sym = (unsigned char *)body[0];
+            (void)i;
+            writeString(h, "driver left="); writeDecimal(h, *(unsigned long *)((char *)g_real + 0x9f120));
+            writeString(h, " base="); writeHex(h, *(unsigned long *)(sym + 0x28));
+            writeString(h, " name="); writeString(h, *(const char **)(sym + 0x18));
+            writeString(h, "\n"); CloseHandle(h);
+        }
+        SetLastError(lastError);
+    }
+    if (g_phaseValue >= 0)
+        *(unsigned long *)((char *)g_real + 0x9f120) = (unsigned long)g_phaseValue;
+}
+
+static void __declspec(naked) driverHook(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push eax
+        call driverDone
+        add esp, 4
+        popad
+        popfd
+        mov ecx, esi
+        push eax
+        mov eax, dword ptr [g_real]
+        mov word ptr [eax + 0xac360], di
+        pop eax
+        jmp dword ptr [g_driverReturn]
+    }
+}
+
+static int loadPhaseState(void)
+{
+    char text[16];
+    unsigned char readBytes[5];
+    DWORD n = GetEnvironmentVariableA("HOMM3_VC6_PHASE", text, sizeof text);
+    if (n && n < sizeof text) g_phaseValue = text[0] == '1' ? 1 : 0;
+    g_stateLog = GetEnvironmentVariableA("HOMM3_VC6_STATE_LOG", text, sizeof text) != 0;
+    if (g_phaseValue < 0 && !g_stateLog) return 1;
+    {
+        unsigned char doneBytes[9];
+        doneBytes[0] = 0x8b; doneBytes[1] = 0xce; doneBytes[2] = 0x66; doneBytes[3] = 0x89; doneBytes[4] = 0x3d;
+        *(unsigned long *)(doneBytes + 5) = (unsigned long)g_real + 0xac360;
+        g_driverReturn = (char *)g_real + 0x683d5;
+        if (g_phaseValue >= 0)
+            *(unsigned long *)((char *)g_real + 0x9f120) = (unsigned long)g_phaseValue;
+        if (!patchHook(0x683cc, driverHook, doneBytes, 9)) return 0;
+    }
+    if (!g_stateLog) return 1;
+    g_phaseReturn = (char *)g_real + 0x5b16;
+    readBytes[0] = 0xa1;
+    *(unsigned long *)(readBytes + 1) = (unsigned long)g_real + 0x9f120;
+    return patchHook(0x5b11, phaseHook, readBytes, 5);
 }
 
 /* Function-entry coverage, used to locate passes (decision-forcing.md,
@@ -666,6 +929,12 @@ static unsigned long g_coverHits[COVER_MAX];
 static unsigned char g_coverByte[COVER_MAX];
 static unsigned g_coverCount;
 static unsigned char *g_coverRearm;
+/* HOMM3_VC6_COVER_SEQ: also record the ordered entry sequence while the
+ * selected root is current (from its main to the next main), uncapped. */
+#define COVER_SEQ_MAX (4u << 20)
+static unsigned long g_coverSeq[COVER_SEQ_MAX];
+static unsigned long g_coverSeqCount;
+static int g_coverSeqOn;
 
 static int coverFind(unsigned long rva)
 {
@@ -693,7 +962,11 @@ static LONG __stdcall coverHandler(EXCEPTION_POINTERS *info)
         at[0] = g_coverByte[k];
         ++g_coverHits[k];
         context->Eip = (DWORD)at;
-        if (g_coverHits[k] < COVER_CAP) {
+        if (g_coverSeqOn && g_selected && g_coverSeqCount + 2 <= COVER_SEQ_MAX) {
+            g_coverSeq[g_coverSeqCount++] = g_coverRva[k];
+            g_coverSeq[g_coverSeqCount++] = *(unsigned long *)context->Esp - (unsigned long)g_real;
+        }
+        if (g_coverHits[k] < COVER_CAP || (g_coverSeqOn && g_selected)) {
             g_coverRearm = at;
             context->EFlags |= 0x100;
         }
@@ -721,6 +994,10 @@ static void loadCover(void)
     addHandlerFunction add;
     unsigned char *code = (unsigned char *)g_real;
     if (!GetEnvironmentVariableA("HOMM3_VC6_COVER", path, sizeof path)) return;
+    {
+        char flag[8];
+        g_coverSeqOn = GetEnvironmentVariableA("HOMM3_VC6_COVER_SEQ", flag, sizeof flag) != 0;
+    }
     h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (h == INVALID_HANDLE_VALUE) return;
     ReadFile(h, text, sizeof text - 1, &n, 0);
@@ -751,11 +1028,32 @@ static void loadCover(void)
     FlushInstructionCache(GetCurrentProcess(), code+low, high-low);
 }
 
+static void rearmCover(void)
+{
+    unsigned i;
+    unsigned char *code = (unsigned char *)g_real;
+    if (!g_coverSeqOn) return;
+    for (i = 0; i < g_coverCount; ++i)
+        if (code[g_coverRva[i]] != 0xcc && (unsigned char *)(code + g_coverRva[i]) != g_coverRearm)
+            code[g_coverRva[i]] = 0xcc;
+}
+
 static void writeCover(void)
 {
     HANDLE h;
     unsigned i;
     if (!g_coverCount) return;
+    if (g_coverSeqOn) {
+        char path[MAX_PATH];
+        if (GetEnvironmentVariableA("HOMM3_VC6_COVER_SEQ", path, sizeof path)) {
+            DWORD n;
+            HANDLE f = CreateFileA(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+            if (f != INVALID_HANDLE_VALUE) {
+                WriteFile(f, g_coverSeq, g_coverSeqCount * 4, &n, 0);
+                CloseHandle(f);
+            }
+        }
+    }
     h = logOpen();
     if (h == INVALID_HANDLE_VALUE) return;
     for (i = 0; i < g_coverCount; ++i) {
@@ -796,6 +1094,8 @@ static int installInlineTrace(void)
     if (!patchHook(0x24748, colorHook, colorBytes, sizeof colorBytes)) return 0;
     loadMergeVeto();
     loadHashShift();
+    if (!loadHandleShift()) return 0;
+    if (!loadPhaseState()) return 0;
     {
         /* Diagnostic heap displacement: HOMM3_VC6_HEAP_PAD="malloc,local"
          * byte counts allocated once before C2 runs. */

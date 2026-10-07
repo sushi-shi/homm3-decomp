@@ -169,6 +169,25 @@ def _build_parser() -> argparse.ArgumentParser:
     pvaa.add_argument("--decl-classes", type=int, default=3,
                       help="declaration-offset classes that get their own phase/cost sweep")
 
+    pst = ss.add_parser("state", help="read the unrelated-edit state (phase flag, handle "
+                        "base) each function of a unit receives")
+    pst.add_argument("target", help="unit, or a function selector")
+    pcm = ss.add_parser("compile-m", help="compile a unit once and emit, for every function, "
+                        "the M assemblies it takes across the unrelated-edit states")
+    pcm.add_argument("target", help="unit, or a function selector (its unit, filtered)")
+    pcm.add_argument("--function", help="only print this function")
+    pcm.add_argument("--offsets", type=int, default=64, help="declaration offsets 0..N-1")
+    pcm.add_argument("--jobs", type=int, default=6)
+    pcm.add_argument("--against", help="object whose copies are checked for membership")
+    pfz = ss.add_parser("fuzz-verify", help="compile randomly edited copies (unrelated edits "
+                        "only) and check every original function lands in its predicted set")
+    pfz.add_argument("target", help="unit, or a function selector")
+    pfz.add_argument("--function")
+    pfz.add_argument("--edits", type=int, default=50)
+    pfz.add_argument("--seed", type=int, default=1)
+    pfz.add_argument("--jobs", type=int, default=6)
+    pfz.add_argument("--reuse", action="store_true", help="reuse the unit's compile-m.json")
+
     pcv = ss.add_parser("cover", help="C2 function-entry hit counts for scratch TUs; "
                         "with several sources, print the entries whose counts differ")
     pcv.add_argument("sources", nargs="+")
@@ -281,6 +300,9 @@ _TOOLS = {
     "reg-reach": ("inline_force", "run_register_reach"),
     "reg-reach-all": ("inline_force", "run_register_reach_all"),
     "cover": ("c2_cover", "run"),
+    "state": ("unstable_state", "run_state"),
+    "compile-m": ("unstable_state", "run_compile_m"),
+    "fuzz-verify": ("unstable_state", "run_fuzz"),
     "variants": ("context_variants", "run"),
     "variants-all": ("context_variants", "run_all"),
     "merge-reach": ("inline_force", "run_merge_reach"),

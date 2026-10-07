@@ -240,6 +240,7 @@ int __stdcall InvokeCompilerPass(int argc, char **argv, int fLastTU)
     ret = g_invoke(argc, argv, fLastTU);
 #ifdef SHIM_INLINE_TRACE
     writeCover();
+    writeDecodeLog();
 #endif
     h = logOpen();
     if (h != INVALID_HANDLE_VALUE) {
