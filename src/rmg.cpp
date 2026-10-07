@@ -10689,9 +10689,9 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     }
 
     if (m_mapVersion >= 1) {
-        std::bitset<RMG_HERO_COUNT> availableHeroes;
+        std::bitset<156> availableHeroes;
         setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_HERO_COUNT);
+            &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
 
         writePackedBits(outfile, availableHeroes);
     } else {
@@ -10713,8 +10713,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     memset(reserved, 0, sizeof(reserved));
     outfile->write(reserved, sizeof(reserved));
 
-    std::bitset<ARTIFACT_COUNT> disabledArtifacts;
-    for (int artifactIndex = 0; artifactIndex < ARTIFACT_COUNT; ++artifactIndex) {
+    std::bitset<144> disabledArtifacts;
+    for (int artifactIndex = 0; artifactIndex < 144; ++artifactIndex) {
         disabledArtifacts[artifactIndex] =
             akArtifactTraits[artifactIndex].m_comboType != -1;
     }
@@ -10728,8 +10728,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
     } else if (m_mapVersion >= 1) {
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
-            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
-            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 129),
+            bitset_iterator<144>(disabledArtifacts, 0),
+            bitset_iterator<144>(disabledArtifacts, 129),
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
         writePackedBits(outfile, legacyDisabledArtifacts);
@@ -10739,10 +10739,10 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<70> disabledSpells;
         writePackedBits(outfile, disabledSpells);
 
-        std::bitset<kNumSecSkills> disabledSkills;
+        std::bitset<28> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
-        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
+        for (int hero = 0; hero < 156; ++hero) {
             char byteBuffer = 0;
             outfile->write(&byteBuffer, sizeof(byteBuffer));
         }
