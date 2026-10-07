@@ -16,6 +16,7 @@
 #include "hero.h"
 #include "magicterrain.h"
 #include "misc.h"
+#include "terrain.h"
 #include "town.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.

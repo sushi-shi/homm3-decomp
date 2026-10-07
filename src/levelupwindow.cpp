@@ -19,6 +19,7 @@
 #include "remote.h"
 #include "soundmgr.h"
 #include "sskilltraits.h"
+#include "terrain.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"

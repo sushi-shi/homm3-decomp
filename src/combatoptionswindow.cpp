@@ -12,6 +12,7 @@
 #include "prefs.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"

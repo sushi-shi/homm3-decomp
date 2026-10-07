@@ -31,6 +31,7 @@
 #include "soundmgr.h"
 #include "spellbookwindow.h"
 #include "spelldefs.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "wingraph.h"
 #include "winmgr.h"

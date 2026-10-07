@@ -9,6 +9,7 @@
 #include "game.h"
 #include "misc.h"
 #include "resourcemanager.h"
+#include "terrain.h"
 #include "textresource.h"
 
 // The bank traits table itself, and the pointer every consumer reads it

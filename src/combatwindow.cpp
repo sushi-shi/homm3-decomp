@@ -16,6 +16,7 @@
 #include "message.h"
 #include "remote.h"
 #include "subwindow.h"
+#include "terrain.h"
 #include "textntry.h"
 #include "textresource.h"
 #include "textwdgt.h"

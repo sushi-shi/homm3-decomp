@@ -15,6 +15,7 @@
 #include "slider.h"
 #include "soundmgr.h"
 #include "spellbookwindow.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "viewarmywindow.h"
 #include "winmgr.h"

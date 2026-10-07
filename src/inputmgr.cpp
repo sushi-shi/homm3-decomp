@@ -11,6 +11,7 @@
 #include "message.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textntry.h"
 #include "winmgr.h"
 

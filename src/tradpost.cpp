@@ -18,6 +18,7 @@
 #include "remote.h"
 #include "slider.h"
 #include "text.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "townmgr.h"

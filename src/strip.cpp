@@ -13,6 +13,7 @@
 #include "hero.h"
 #include "kb.h"
 #include "message.h"
+#include "terrain.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"

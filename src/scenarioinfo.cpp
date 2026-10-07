@@ -20,6 +20,7 @@
 #include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
 #include "slider.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textscroller.h"
 #include "textwdgt.h"

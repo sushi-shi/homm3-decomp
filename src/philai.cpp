@@ -22,6 +22,7 @@
 #include "mousemgr.h"
 #include "recruit.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "town.h"
 #include "tradpost.h"
 

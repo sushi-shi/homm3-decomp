@@ -42,6 +42,7 @@
 #include "smackmgr.h"
 #include "soundmgr.h"
 #include "sskilltraits.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "town.h"
 #include "winmgr.h"

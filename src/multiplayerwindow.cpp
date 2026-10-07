@@ -21,6 +21,7 @@
 #include "slider.h"
 #include "soundmgr.h"
 #include "text.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "winfile.h"
 #include "winmgr.h"
