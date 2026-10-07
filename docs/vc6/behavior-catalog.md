@@ -829,6 +829,19 @@ the project's normalized names cannot reproduce the original table.
 - status: observed, mechanism (C1 vs C2 symbol hashing) unmodelled
 - probe: none (needs the full TU)
 
+### C13. The TU's first globally optimized function compiles differently
+C2's global-optimizer driver leaves its phase flag (`.bssbe 0x9f120`) at 1
+after every function; only the first function it optimizes in a TU starts
+from the zeroed back-end state. With 0, branches whose compare has a constant
+outcome (typically inside an inlined helper called with constant arguments)
+are folded one stage later, which can change argument push scheduling.
+`combatManager::showCreatureSpellError` (0x4922f0) is retail-exact only with
+1; it lost that when two dynamically initialized statics were moved out of
+`drawing.cpp` (3f0b03da3) and it became the TU's first function.
+- evidence: [phase-flag.md](phase-flag.md)
+- status: mechanism traced (driver stages, reader decision, probes)
+- probe: `c13_phase_flag_first_function` (identical first/second bodies)
+
 ### C9. Measurement hygiene the corpus depends on (model-training caveats)
 objdiff fuzzy gives partial credit for a differing displacement (a 97%
 function can have every local mis-slotted); masked diffs hide immediates (the
