@@ -22,6 +22,9 @@ homm3 vc6 force 0x5f7500 --rule '?drawHero@,?getMap@,5,E'
 homm3 vc6 reach-all walls.tsv --jobs 6   # batch; first TSV column = retail VA
 homm3 vc6 reg-reach 0x4a5610 [--with-inline]   # global register choices
 homm3 vc6 reg-reach-all walls.tsv --jobs 8 --max-trials 100
+homm3 vc6 merge-reach 0x4805e0                 # tail-merge vetoes
+homm3 vc6 reg-reach-all walls.tsv --mode merge --jobs 8
+homm3 vc6 cover a.cpp b.cpp                    # locate a C2 pass by coverage
 ```
 
 Outputs go to `build/vc6/force/<unit>/<hash>/` (`reach.json`,
@@ -104,12 +107,51 @@ and repeats once. With `--with-inline` the inline rules from `reach` are
 applied first. Local scratch selection (`0x33273`, the rotating EAX/ECX/EDX
 cursor) is not forced.
 
+## Tail-merge forcing (stage D)
+
+Located with `homm3 vc6 cover`. The shim plants an INT3 on each of the
+2475 atlas function entries. A vectored handler counts each hit, restores
+the byte, single-steps and re-arms, so one compile yields a per-function
+hit table. Three scratch TUs isolated the mergers: four
+`g(n); h(b); return R` arms with equal R (A), with all R different (B,
+no merge) and with the last two equal (C). Entries hit only when a merge
+exists are `0x3dea7` (re-links the matched tail), `0x37042`, `0x36fd7`
+(deletes the duplicate) and `0x29a5` (adds the edge). Their common callers
+are the two tail mergers:
+
+| merger | called from | matched-count test | merge path | no-merge path |
+| --- | --- | --- | --- | --- |
+| `0x36aa0` (kind 1) | `0x3490e` | `[esp+0x10]` at `0x36afa` | `0x36b49` | `0x36b02` |
+| `0x3e30b` (kind 2) | `0x367aa` | `[esp+0x18]` at `0x3e3e0` | `0x3e4a1` | `0x3e3f2` |
+
+Both walk the two blocks' tails backwards (`0x36877` compares two
+instructions) and merge when the matched count is nonzero. Kind 2 also has
+a size heuristic after `0x3e4a1`. The hooks replay
+`mov eax,[esp+n]; test eax,eax` and return to the original `ja`.
+`HOMM3_VC6_MERGE_VETO="k,..."` zeroes the count of the k-th first-time pair
+decision in the selected root. C2 retries a declined pair, so a vetoed
+pair (EBP/EBX at the test) stays declined for the rest of that root. A
+veto can only decline a merge C2 found; it cannot create one.
+
+`merge-reach` greedily vetoes merges while strict similarity improves.
+First results:
+
+* `advManager::moveHero` (0x4805e0): one veto, 0.7779 -> 0.7924
+  (partial).
+* `TMultiPlayerWindow::onWidgetDeselect` (0x50f4e0, 24 merges) and
+  `combatManager::processCombatMsg` (0x474d80, 62 merges): no veto helps.
+  This matches the processCombatMsg note: there *retail* merges arms that
+  we keep, because our arms compare against constants cached in ESI/EDI.
+  That is constant-caching state, not a merge decision.
+
 ## Limits
 
 * The comparison is instruction-level and strict, not the objdiff
   percentage. A strict match is required for an "exact"/"reached" verdict.
 * Retail call streams only reveal kept calls. Two decisions with identical
   call effects are distinguished by the replay, not by the rule derivation.
-* Stage D (CFG tail merging / cross-jumping) is not hooked yet. Those walls
-  classify as "not inline" and, unless `reg-reach` reaches them, as
-  "not global-register state".
+* Tail-merge forcing can only decline merges. Walls where retail merges
+  more than we do (the constant-caching family) stay unclassified; the
+  constant-to-register caching decision is not hooked.
+* `reg-reach` is greedy and capped (`--max-trials`). An unreached wall can
+  still need a combination of choices that no single improving step finds.
