@@ -2355,7 +2355,10 @@ int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 // currentDirectory to the file-open scope leaves the score at 53.9715%.
 // Keep reads through TAbstractFile*: retail uses the virtual slot at +4.
 // Calling streamFile.read directly instead devirtualizes and expands them.
-void TCampaignBrief::CampaignHeaderStruct::readScenario(
+// Mac load expands this record step (new, ScenarioStruct::read, append)
+// with no readScenario call; inline is VC6 byte-flat, while pasting the
+// statements into load drops VC6 87.64 -> 78.68%.
+inline void TCampaignBrief::CampaignHeaderStruct::readScenario(
     TAbstractFile* file, int numScenarios)
 {
     TCampaignBrief::ScenarioStruct* scenario =
