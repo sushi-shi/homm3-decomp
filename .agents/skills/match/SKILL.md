@@ -71,6 +71,9 @@ Unreconstructed callees and EH frames are not automatic blockers to matching a
 caller. Distinguish missing evidence from a demonstrated compiler limitation.
 Consult `docs/vc6/README.md` for focused compiler diagnostics; historical findings
 are hypotheses to recheck in the current source and compiler context.
+When VC6 compiles two spellings identically, read the Mac counterpart with the
+[mac-evidence](../mac-evidence/SKILL.md) skill: CodeWarrior keeps inline
+wrapper depth, helper boundaries, guard shape and redundant tests.
 
 ## Search meaningful alternatives
 
