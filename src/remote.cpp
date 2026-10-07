@@ -255,7 +255,7 @@ DATA(0x00697758) char g_tcpAddress[21];
 // game::NextPlayer. No surviving symbol attests a semantic name.
 DATA(0x0069d804) unsigned char g_gameMode;
 DATA(0x0069d80d) unsigned char g_playerDrop;
-DATA(0x0069d80e) unsigned char g_weMoved;
+DATA(0x0069d80e) bool g_weMoved;  // DC ?g_weMoved@@3_NA
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
 DATA(0x006989f0) eNetGameType g_mpNetProtocol;
 DATA(0x00682a38) unsigned char g_followPlayerMode = 1;

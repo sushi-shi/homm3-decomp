@@ -433,7 +433,7 @@ extern CTurnDuration g_turnDuration;
 // HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
 // unclaimed, so the names stay ordinal and the DATA claims wait for it.
 extern int g_playerTurn;
-extern unsigned char g_weMoved;
+extern bool g_weMoved;
 
 // Retail's constructor/destructor pair stores and tests only this byte;
 // Dreamcast supplies the class and member names.

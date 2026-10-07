@@ -1064,7 +1064,7 @@ DATA(0x0069fbe8) static TSingleSelectionWindow* g_singleSelectionWindow;
 // WindowHandler tests and clears it before showing general-text row 686.
 // 0x69fda4: the eight-seat join-order table SetHumanSlot consults in
 // net-new-game mode before the plain unassigned fill.
-DATA(0x0069fda0) static unsigned char g_notifyNoSaved;
+DATA(0x0069fda0) static bool g_notifyNoSaved;  // DC ?notifyNoSaved@@3_NA
 // DC publishes g_wasHuman as an int array (segment 3, offset 0x1704c).
 // game::load also restores this table from SavedGameHeader::m_humanPlayer;
 // its 0x4bcda0+0x1bf copy rules out the former file-static declaration.
