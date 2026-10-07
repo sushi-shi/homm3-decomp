@@ -14,6 +14,7 @@ Wine remains the verdict. Do not use leaked compiler source as evidence.
 | Why unchanged functions change (overview) | [Instability findings](instability-findings.md) |
 | Global optimizer phase flag (first-function effect) | [Phase flag](phase-flag.md) |
 | Period-64 declaration-count effect | [Handle period](handle-period.md) |
+| Which functions a source edit moves (predictor) | [State impact](state-impact.md) |
 | Register allocation | [Register allocator](regalloc.md), [handle order](handle-order.md) |
 | Control flow and object lifetimes | [Control flow](control-flow.md), [EH cleanup](eh-cleanup.md) |
 | Candidate debug information | [Debug lines](debug-lines.md) |

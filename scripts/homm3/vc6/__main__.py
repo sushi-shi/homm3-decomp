@@ -195,6 +195,13 @@ def _build_parser() -> argparse.ArgumentParser:
     pwl.add_argument("--reuse", action="store_true")
     pwl.add_argument("--limit", type=int, default=0)
 
+    pim = ss.add_parser("impact", help="predict which functions a source edit moves and "
+                        "through which state (phase, callee order, handle offset)")
+    pim.add_argument("unit")
+    pim.add_argument("edit", nargs="?", help="swap-include:A:B | insert:LINE:TEXT | "
+                     "move:VA:before:VA | remove:VA (omit for the compile-order report)")
+    pim.add_argument("--verify", action="store_true", help="compile the edit once and compare")
+
     ppc = ss.add_parser("phase-census", help="per unit: which functions the phase flag moves, "
                         "which value retail needs, and which function each order compiles first")
     ppc.add_argument("units", nargs="*")
@@ -317,6 +324,7 @@ _TOOLS = {
     "fuzz-verify": ("unstable_state", "run_fuzz"),
     "compile-m-walls": ("unstable_state", "run_walls"),
     "phase-census": ("unstable_state", "run_phase_census"),
+    "impact": ("state_impact", "run"),
     "variants": ("context_variants", "run"),
     "variants-all": ("context_variants", "run_all"),
     "merge-reach": ("inline_force", "run_merge_reach"),
