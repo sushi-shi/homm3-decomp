@@ -82,7 +82,7 @@ DC_ADDRESS(0x164d68, 0x6c)
 void textWidget::initialize(int x, int y, int w, int h, int id, int style,
                              const char* text, const char* fontName,
                              font::TColor color, unsigned int justify,
-                             unsigned char focusable)
+                             bool focusable)
 {
     widget::initialize(x, y, w, h, id, style);
     m_font = ResourceManager::getFont(fontName);

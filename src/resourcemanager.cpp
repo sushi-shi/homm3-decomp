@@ -1328,7 +1328,7 @@ resource* ResourceManager::getFromCache(const char* name)
 // Original: ResourceManager::Report; resourcemanager.cpp:2404
 // Optimized release hook: the executable body is only return true.
 DC_ADDRESS(0x1229f8, 0x68)
-unsigned char ResourceManager::report(const char* filename)
+bool ResourceManager::report(const char* filename)
 {
     return 1;
 }

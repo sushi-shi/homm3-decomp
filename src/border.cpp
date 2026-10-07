@@ -43,7 +43,7 @@ border::~border()
 DC_ADDRESS(0x054408, 0x36)
 MAC_ADDRESS(0x05e32c, 0x20)
 void border::initialize(int x, int y, int w, int h, int id, int style,
-                        unsigned char focusable)
+                        bool focusable)
 {
     widget::initialize(x, y, w, h, id, style);
 }

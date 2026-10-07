@@ -676,7 +676,7 @@ public:
     void animateBottomView(bool inBackground);
     void clearBottomView();
     void drawBottomView(bool update);
-    inline void setBackgroundAnimation(unsigned char enable);
+    inline void setBackgroundAnimation(bool enable);
     void setBottomView(class type_bottom_view_window* newView);
     void updateResourceDisplay(bool draw, bool update);
     static void setAdvWinButtonPalette(int id, int player);

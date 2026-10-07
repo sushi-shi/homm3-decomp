@@ -92,7 +92,7 @@ public:
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
     void moveWindow(int deltaX, int deltaY);
-    void enableAllWidgets(unsigned char enable);
+    void enableAllWidgets(bool enable);
     void removeAndDeleteWidget(int id);
     int broadcastMessage(message& msg);
     int broadcastMessage(int id, int codeX, int codeY, int extra);
@@ -114,7 +114,7 @@ protected:
 
 private:
     int saveBackground();
-    void restoreBackground(unsigned char update);
+    void restoreBackground(bool update);
 
 public:
     void sleepAllWidgets(unsigned char sleep);
@@ -215,7 +215,7 @@ protected:
     virtual textWidget* getRolloverWidget();                            // slot 13
 };
 
-unsigned char initializeWinSetupText();
+bool initializeWinSetupText();
 void setWinText(heroWindow* win, int winId);
 
 #endif  /* HOMM3_WINDOW_H */

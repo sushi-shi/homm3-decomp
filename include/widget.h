@@ -192,7 +192,7 @@ public:
     // in both builds - retail's only call site is heroWindow's slot-8
     // body 0x5ff5f0, where /Ob2 expands it in full.
     DC_ADDRESS(0x002dec, 0x24)
-    void sleep(unsigned char on)
+    void sleep(bool on)
     {
         if (on) {
             if (m_sleepCount++ == 0)

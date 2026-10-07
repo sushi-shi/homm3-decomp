@@ -622,7 +622,7 @@ void heroWindowManager::blitToScreenWithPointer(int x, int y, int w, int h)
 VA(0x00602c50, 0x63)
 DC_ADDRESS(0x19b428, 0x66)
 MAC_ADDRESS(0x20e03c, 0xb4)
-void heroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFadein)
+void heroWindowManager::fadeScreen(int inOut, int speed, bool expectFadein)
 {
     if (inOut == 1) {
         if (expectFadein)
@@ -913,7 +913,7 @@ void heroWindowManager::flash(int startX, int startY, int width, int height,
 DC_ADDRESS(0x19be28, 0x394)
 void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
                                  const Bitmap816* srcBitmap, int dx, int dy,
-                                 unsigned char transparent, int frames, int period)
+                                 bool transparent, int frames, int period)
 {
     if (dx < 0) {
         sx -= dx;
@@ -998,7 +998,7 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 VA(0x006030e0, 0x1F9)
 DC_ADDRESS(0x19c1bc, 0x1fa)
 MAC_ADDRESS(0x20e634, 0x444) // MAC_ABSTRACTION_FROM(tokens1:a24615a82ad2,6.7766): restore bitmap Grab/Draw wrappers; Mac 0x20e6a8/0x20e7b8 and 0x20e8c8/0x20ea54 expand them in its separate fade paths.
-void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
+void heroWindowManager::fadeToBlack(int speed, bool expectFadein)
 {
     const unsigned int redMask2 = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
     const unsigned int greenMask2 = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;

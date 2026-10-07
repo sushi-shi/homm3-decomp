@@ -803,7 +803,7 @@ public:
     void setWagon(TArtifact artifact);
     void emptyTomb();
     TArtifact getTombArtifact() const;
-    unsigned char tombIsFull() const;
+    bool tombIsFull() const;
     void setTomb(TArtifact artifact);
     short getWheelGold() const;
     void setWheelGold(short amount);
@@ -1382,7 +1382,7 @@ public:
     int loadObject(TAbstractFile* infile, CObject* object);
 
 private:
-    void init(int size, unsigned char twoLayers);
+    void init(int size, bool twoLayers);
     void close();  // Original: Close, mapcell.cpp:537, dc 0xec724.
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
@@ -1497,7 +1497,7 @@ public:
     ~NewfullMap();
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
     void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
-    int placeObject(int objectIndex, unsigned char setExtraInfo);
+    int placeObject(int objectIndex, bool setExtraInfo);
     int placeObjects();
 };
 
@@ -1912,7 +1912,7 @@ inline TArtifact ExtraInfoUnion::getTombArtifact() const
 }
 
 DC_ADDRESS(0x09c9b0, 0x6)
-inline unsigned char ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
+inline bool ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
 
 // DC 1209..1211 writes artifact, fullness, visit bits. Complete widens
 // the artifact to ten bits; RandomizeEvents expands all three stores.

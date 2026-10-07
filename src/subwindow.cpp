@@ -105,7 +105,7 @@ void TSubWindow::deleteWidgetObjects()
 VA(0x005aa4f0, 0x63)
 DC_ADDRESS(0x158ed0, 0x7c)
 MAC_ADDRESS(0x19ba74, 0xa4)
-void TSubWindow::draw(unsigned char update, int lowID, int highID)
+void TSubWindow::draw(bool update, int lowID, int highID)
 {
     if (lowID == WINDOW_ALL_WIDGETS_LOW)
         lowID = m_lowId;

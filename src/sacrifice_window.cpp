@@ -233,7 +233,7 @@ DC_ADDRESS(0x1240ec, 0x80)
 MAC_ADDRESS(0x1555f8, 0x7c)
 type_army_slot_widget::type_army_slot_widget(
     long newX, long newY, long newW, long newH, long newSlot,
-    long newId, const char* image, unsigned char newLeftPane)
+    long newId, const char* image, bool newLeftPane)
     : iconWidget(newX, newY, newW, newH, newId, image,
                  0, 0, 0, 0, 16)
 {
@@ -625,6 +625,10 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(m_artifactsButton);
 }
 
+// DC ?create_creature_icons@type_sacrifice_window@@AAAJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@_N@Z
+// declares left_pane bool. Under VC6 a bool here reallocates registers in the
+// last push_back expansion (100 -> 97.10) while unsigned char matches; the
+// Complete parameter is kept byte-typed pending a source model that explains it.
 VA(0x00561f70, 0x427)
 DC_ADDRESS(0x1255cc, 0x258)
 MAC_ADDRESS(0x1588f0, 0x46c)
@@ -1019,7 +1023,7 @@ void type_sacrifice_window::pickUpArtifact(
 DC_ADDRESS(0x126254, 0x90)
 MAC_ADDRESS(0x159c74, 0xa4)
 void type_sacrifice_window::putDownArtifact(
-    unsigned char changeExperience)
+    bool changeExperience)
 {
     if (changeExperience) {
         m_totalExperience -= m_holdingArtifact.m_value;
@@ -1112,7 +1116,7 @@ VA(0x005636c0, 0x31a)
 DC_ADDRESS(0x1264dc, 0xdc)
 MAC_ADDRESS(0x159fa4, 0x13c)  // widget call edge + dc name/order
 void type_sacrifice_window::backpackClick(
-    long slot, unsigned char rightClick)
+    long slot, bool rightClick)
 {
     type_artifact oldArtifact = m_currentHero->getBackpack(slot);
 
@@ -1160,7 +1164,7 @@ VA(0x00563a80, 0x31b)
 DC_ADDRESS(0x126640, 0xdc)
 MAC_ADDRESS(0x15a120, 0x118)
 void type_sacrifice_window::offeringClick(
-    long slot, unsigned char rightClick)
+    long slot, bool rightClick)
 {
     type_artifact_offering oldArtifact = m_artifactOfferings[slot];
 
@@ -1657,7 +1661,7 @@ VA(0x00564fe0, 0x394)
 DC_ADDRESS(0x1270f0, 0x29e)
 MAC_ADDRESS(0x15b2a4, 0x374)
 void type_sacrifice_window::creatureClick(
-    long slot, unsigned char rightClick, unsigned char leftPane)
+    long slot, bool rightClick, bool leftPane)
 {
     if (rightClick || slot == m_currentCreature.m_group || slot < 0) {
         if (slot < 0)
@@ -2037,7 +2041,7 @@ VA(0x00566490, 0x258)
 DC_ADDRESS(0x127e50, 0x1f6)
 MAC_ADDRESS(0x15c954, 0x294)
 void type_skeleton_window::creatureClick(
-    long side, long slot, unsigned char rightClick)
+    long side, long slot, bool rightClick)
 {
     TCreatureType creatureType = m_armies[side]->m_armyTypes[slot];
 

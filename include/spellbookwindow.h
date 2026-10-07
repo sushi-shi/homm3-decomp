@@ -187,7 +187,7 @@ private:
 
     std::string getSpellDescription(SpellID spell,
                                       const hero* currentHero,
-                                      unsigned char rollover);
+                                      bool rollover);
 
     int convertID2HelpID(int id) const;
     static int getPositionFromSchool(unsigned schoolMask);

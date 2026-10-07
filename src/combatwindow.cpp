@@ -297,7 +297,7 @@ inline int TCombatWindow::convertID2HelpID(int id)
 VA(0x00472a50, 0x124)
 DC_ADDRESS(0x069cdc, 0x7e)
 MAC_ADDRESS(0x080974, 0xb4)
-unsigned char TCombatWindow::processRightSelect(const message& msg)
+bool TCombatWindow::processRightSelect(const message& msg)
 {
     int helpID = convertID2HelpID(msg.m_codeY);
     if (helpID < 0)
@@ -487,7 +487,7 @@ void TCombatWindow::endPlacementPhase()
 VA(0x00473290, 0x52)
 DC_ADDRESS(0x06a264, 0x5c)
 MAC_ADDRESS(0x081208, 0x8c)
-void TCombatWindow::drawChatText(unsigned char update)
+void TCombatWindow::drawChatText(bool update)
 {
     if (m_chatWidget) {
         g_chatMan.updateWidget(m_chatWidget, 1, 20);
@@ -503,7 +503,7 @@ void TCombatWindow::drawChatText(unsigned char update)
 // Original: TCombatWindow::DrawChatEdit; combatwindow.cpp:615
 DC_ADDRESS(0x06a2c0, 0x50)
 MAC_ADDRESS(0x081294, 0x84)
-void TCombatWindow::drawChatEdit(unsigned char update)
+void TCombatWindow::drawChatEdit(bool update)
 {
     if (m_chatEdit && m_chatEdit->m_hasFocus) {
         m_chatEdit->draw();
@@ -530,7 +530,7 @@ void TCombatWindow::drawWindow(bool update, int low, int high)
 // Keep the shared helper and widget::show/hide source calls.
 DC_ADDRESS(0x06a310, 0xb0)
 MAC_ADDRESS(0x081318, 0x98)
-void TCombatWindow::onChatActivate(unsigned char active)
+void TCombatWindow::onChatActivate(bool active)
 {
     if (!active) {
         if (m_controlSubWindow) {

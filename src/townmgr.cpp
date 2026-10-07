@@ -2323,7 +2323,7 @@ MAC_ADDRESS(0x1bf77c, 0x454)
 // restricted. Direct GetArmyName arguments follow DC 3297..3375. This source
 // family remains 88.3501%; a temporary depth-zero army-count arm reproduces
 // 100%, proving that getNumArmies admission is the sole remaining boundary.
-void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
+void townManager::setArmyCommand(int splitEnabled, bool joinDialog)
 {
     m_command = -1;
     unsigned char restricted = 0;
@@ -2707,7 +2707,7 @@ VA(0x005c8080, 0x108)
 DC_ADDRESS(0x16d0dc, 0x104)
 MAC_ADDRESS(0x1c05b0, 0x154)
 void townManager::selectArmy(strip* fromStrip, long slot,
-                              unsigned char isOwnerCell)
+                              bool isOwnerCell)
 {
     m_currStrip = fromStrip;
     m_currIndex = slot;
@@ -2743,7 +2743,7 @@ void townManager::selectArmy(strip* fromStrip, long slot,
 DC_ADDRESS(0x16d1e0, 0x5a)
 MAC_ADDRESS(0x1c0704, 0x88)
 void townManager::armyCommand(strip* whichStrip, int i, int shift,
-                              unsigned char joinDialog)
+                              bool joinDialog)
 {
     if (whichStrip->m_group) {
         if (m_srcIndex >= 0 && m_srcStrip->m_owner == g_netLocalGamePos) {
@@ -5640,7 +5640,7 @@ building_popup:
 VA(0x005d4c10, 0x53C)
 DC_ADDRESS(0x176634, 0x552)
 MAC_ADDRESS(0x1d1aa4, 0x5d8)
-void townManager::doCommand(int inCommand, unsigned char isGarrison,
+void townManager::doCommand(int inCommand, bool isGarrison,
                             type_garrison_base_window* garrisonWindow)
 {
     switch (inCommand) {

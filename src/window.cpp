@@ -358,7 +358,7 @@ int heroWindow::saveBackground()
 VA(0x005ff1c0, 0x7E)
 DC_ADDRESS(0x1977dc, 0x98)
 MAC_ADDRESS(0x20b790, 0xe0)
-void heroWindow::restoreBackground(unsigned char update)
+void heroWindow::restoreBackground(bool update)
 {
     if (!m_background)
         return;
@@ -499,7 +499,7 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
 
 // Original: heroWindow::EnableAllWidgets; window.cpp:893
 DC_ADDRESS(0x197bdc, 0x2a)
-void heroWindow::enableAllWidgets(unsigned char enable)
+void heroWindow::enableAllWidgets(bool enable)
 {
     widget* current = m_headWidget;
     while (current) {
@@ -741,7 +741,7 @@ void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
 VA(0x005ff960, 0xC3)
 DC_ADDRESS(0x197fd8, 0x158)
 MAC_ADDRESS(0x20c224, 0x200)
-unsigned char initializeWinSetupText()
+bool initializeWinSetupText()
 {
     TTextResource* textResource = ResourceManager::getText(
         DATA_COMPGEN(0x0068c838, winSetupTextName, "jktext.txt"));

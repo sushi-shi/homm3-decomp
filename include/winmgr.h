@@ -118,8 +118,8 @@ public:
     void nextFlashFrame(int startX, int startY, int width, int height, int fadeTime);
     void flash(int startX, int startY, int width, int height, int fadeTime);
     void fadeBlit(int sx, int sy, int sw, int sh, const Bitmap816* srcBitmap,
-                  int dx, int dy, unsigned char transparent, int frames, int period);
-    void fadeScreen(int inOut, int speed, unsigned char expectFadein);
+                  int dx, int dy, bool transparent, int frames, int period);
+    void fadeScreen(int inOut, int speed, bool expectFadein);
     void saveFizzleSourceX(int startX, int startY, int width, int height);
     void fizzleForwardX(int startX, int startY, int width, int height,
                         int fadeTime);
@@ -165,7 +165,7 @@ public:
     // updateHover reports a change and saves the new ID before rollover work.
     bool updateHover(int widgetId);
     void invalidateHover();
-    void fadeToBlack(int speed, unsigned char expectFadein);
+    void fadeToBlack(int speed, bool expectFadein);
     void fadeFromBlack(int speed);
 
 private:

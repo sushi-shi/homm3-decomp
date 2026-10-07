@@ -65,7 +65,7 @@ public:
     // body that frees a strip.
     ~strip();
     void draw(TCreatureType divideCreature);
-    void drawIcons(unsigned char update, TCreatureType divideCreature);
+    void drawIcons(bool update, TCreatureType divideCreature);
 
 protected:
     void drawNumber(int i);

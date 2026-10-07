@@ -60,7 +60,7 @@ void strip::draw(TCreatureType divideCreature)
 VA(0x005a9db0, 0x2A2)
 DC_ADDRESS(0x158910, 0xf0)
 MAC_ADDRESS(0x19b040, 0x15c)
-void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
+void strip::drawIcons(bool update, TCreatureType divideCreature)
 {
     int i;
 

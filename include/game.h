@@ -1378,7 +1378,7 @@ public:
     void perMonth();
     void setVisibility(const int startX, const int startY, const int z,
                        const int whichPlayer, int range,
-                       unsigned char remoteMove);  // 0x49cdd0
+                       bool remoteMove);  // 0x49cdd0
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
     // twin of SetVisibility below and the same five parameters in the same
     // order. DoEventCoverOfDarkness is the caller that needs the
@@ -1495,7 +1495,7 @@ private:
 public:
     void clearEventRecords();
     void recordShowHero(hero* who, signed char player, type_point point,
-                          unsigned char reset);  // 0x49cb20
+                          bool reset);  // 0x49cb20
     void processRandomObjects();  // 0x4c9dd0
     // The random-object pass and the monster roll it drives. Both bodies
     // are claimed in game.cpp.
@@ -1683,7 +1683,7 @@ int getTeam(int playerNum) const
         return (m_globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
     void playRecordedEvents();
-    unsigned char replayAvailable() const;
+    bool replayAvailable() const;
     int getNumThievesGuilds(int whichPlayer);
 
 private:

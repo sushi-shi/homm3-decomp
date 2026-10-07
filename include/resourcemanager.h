@@ -41,7 +41,7 @@ void saturateGraphics();
 bool open(bool openSprites, bool openBitmaps, int* errorCode);
 void close();
 void expunge();
-unsigned char report(const char* filename);
+bool report(const char* filename);
 void setPath(const char* path);
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x55a6b0

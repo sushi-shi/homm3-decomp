@@ -572,7 +572,7 @@ VA_COMPGEN(0x004fd4c0, 0x26, IMPLICIT_DTOR, NewmapCell)
 VA(0x004fd4f0, 0x160)
 DC_ADDRESS(0x0ec80c, 0xe6)
 MAC_ADDRESS(0x11f28c, 0xc8)
-void NewfullMap::init(int size, unsigned char twoLayers)
+void NewfullMap::init(int size, bool twoLayers)
 {
     m_size = size;
     m_hasTwoLevels = twoLayers;
@@ -4685,7 +4685,7 @@ void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtra
 VA(0x00505b20, 0x1F2)
 DC_ADDRESS(0x0f43e8, 0x356)
 MAC_ADDRESS(0x12850c, 0x1fc)
-int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
+int NewfullMap::placeObject(int objectIndex, bool setExtraInfo)
 {
     CObject* object = &m_objects[objectIndex];
     CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
