@@ -164,7 +164,7 @@ bool VictoryConditionStruct::checkForArtifactWin()
         if (comboIdx == -1)
             return 0;
 
-        const std::bitset<144>& components =
+        const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[comboIdx].m_components;
         for (j = 0; j < g_currentPlayer->m_numHeroes; ++j) {
             int remaining = components.count();

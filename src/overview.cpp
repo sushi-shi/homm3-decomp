@@ -148,8 +148,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
     int curText;
     int row;
     int item;
-    int monsterX[7] = { 0, 36, 72, 108, 18, 54, 90 };
-    int monsterY[7] = { 0, 0, 0, 0, 37, 37, 37 };
+    int monsterX[armyGroup::ARMY_GROUP_SLOT_COUNT] = { 0, 36, 72, 108, 18, 54, 90 };
+    int monsterY[armyGroup::ARMY_GROUP_SLOT_COUNT] = { 0, 0, 0, 0, 37, 37, 37 };
     unsigned short titleXOffs[2][3] = {
         { 28, 435, 459 }, { 28, 385, 385 }
     };
@@ -288,7 +288,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 g_overWin->addWidget(g_bitmapBorderDynamic[slot], -1);
             }
 
-            for (item = 0; item < 7; item++) {
+            for (item = 0; item < armyGroup::ARMY_GROUP_SLOT_COUNT; item++) {
                 if (currTown->getArmy()
                             .m_armies[item] != CREATURE_NONE
                         && currTown->getArmy()
@@ -334,7 +334,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     memError();
                 g_overWin->addWidget(g_bitmapBorderDynamic[slot + 1], -1);
 
-                for (item = 0; item < 7; item++) {
+                for (item = 0; item < armyGroup::ARMY_GROUP_SLOT_COUNT; item++) {
                     if (occupyingHero->m_army.m_armies[item] != CREATURE_NONE
                             && occupyingHero->m_army.m_numTroops[item] > 0) {
                         g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
@@ -557,7 +557,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             curBitmap++;
 
             offsetToMon = 39;
-            for (item = 0; item < 7; item++) {
+            for (item = 0; item < armyGroup::ARMY_GROUP_SLOT_COUNT; item++) {
                 if (currHero->m_army.m_armies[item] != CREATURE_NONE
                         && currHero->m_army.m_numTroops[item] > 0) {
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(

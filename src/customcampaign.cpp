@@ -2148,11 +2148,11 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     if (campaignVersion >= g_campaignVersionWideArtifacts) {
         m_crossoverArtifacts = readPackedBits<g_crossoverArtifactBits>(infile);
     } else {
-        std::bitset<129> legacyArtifacts = readPackedBits<129>(infile);
+        std::bitset<g_crossoverLegacyArtifactBits> legacyArtifacts = readPackedBits<g_crossoverLegacyArtifactBits>(infile);
         std::copy(
-            bitset_iterator<129>(legacyArtifacts, 0),
-            bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
-            bitset_iterator<144>(m_crossoverArtifacts, 0));
+            bitset_iterator<g_crossoverLegacyArtifactBits>(legacyArtifacts, 0),
+            bitset_iterator<g_crossoverLegacyArtifactBits>(legacyArtifacts, g_crossoverLegacyArtifactBits),
+            bitset_iterator<g_crossoverArtifactBits>(m_crossoverArtifacts, 0));
     }
 
     unsigned char optionType = readValue<unsigned char>(infile);
@@ -2893,7 +2893,7 @@ void SCampaign::completeCurrentMap(
     std::vector<hero>& crossover = getCrossoverHeroes(m_crossoverArrayIndex);
 
     int gamePos;
-    for (gamePos = 0; gamePos < 8; ++gamePos) {
+    for (gamePos = 0; gamePos < NUM_PLAYERS; ++gamePos) {
         if (g_game->m_players[gamePos].isHuman())
             break;
     }
