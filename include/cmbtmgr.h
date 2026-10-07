@@ -1933,10 +1933,10 @@ extern combatManager* g_combatManager;
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
 extern long g_surrenderCost;
-extern unsigned char g_combatRetreated;
+extern bool g_combatRetreated;
 // Set while the combat action pump is active; process_move_then_attack clears
 // it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
-extern unsigned char g_combatSurrendered;
+extern bool g_combatSurrendered;
 DATA(0x006989ec) extern int g_processingCombatAction;
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed

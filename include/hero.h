@@ -304,8 +304,8 @@ class boat;
 // same RVA is a fatal duplicate at delink time. Declared here rather than
 // by including cmbtmgr.h, which hero.obj's measured include closure does
 // not otherwise need.
-extern unsigned char g_combatRetreated;
-extern unsigned char g_combatSurrendered;
+extern bool g_combatRetreated;
+extern bool g_combatSurrendered;
 
 // 0x485d90, a /Gr free helper claimed in customcampaign.cpp. The returned
 // string's hidden pointer takes ECX and infile takes EDX, as hero::load's

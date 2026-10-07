@@ -576,8 +576,10 @@ DATA(0x00698a18) int g_combatActive;
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00695030) long g_surrenderCost;
-DATA(0x006985a3) unsigned char g_combatRetreated;
-DATA(0x00697744) unsigned char g_combatSurrendered;
+// Original gbRetreatWin/gbSurrenderWin: DC ?gbRetreatWin@@3_NA and
+// ?gbSurrenderWin@@3_NA are bool, as ReceiveHeroTownData's PA_N formals need.
+DATA(0x006985a3) bool g_combatRetreated;
+DATA(0x00697744) bool g_combatSurrendered;
 
 VA(0x00462760, 0x127)
 DC_ADDRESS(0x05d3e0, 0x158)
