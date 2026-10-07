@@ -638,6 +638,10 @@ record (byte-proven 2026-08-07/08, `config/match_baseline.tsv` ~741–927,
   `CREATURE_NOMAD` alone 96.09 → 26.18; +10 enumerators 97.04; +8 100.00;
   three `ESpellId` enumerators 96.09 → 90.16. Non-monotonic in both
   directions — MEASURE, DO NOT REASON.
+- Mechanism (2026-10-08): handle values modulo 64 of the data symbols whose
+  addresses the function uses select the live-range numbering in register
+  allocation. Retail is the class at +13..+26 handles before `town.h:496`.
+  See [handle-period.md](handle-period.md).
 - Effects do not ADD: two change-sets each reaching 100.0000 alone COMPOSED
   read 94.0741.
 - Values shown by this one row with no semantic change: 26.18, 90.16, 94.07,

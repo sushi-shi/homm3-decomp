@@ -273,6 +273,27 @@ evidence of a real predecessor, which must be recovered from other evidence.
     `drawing` functions equal the normal build object. The `compile-m` sweep
     used the same scratch shim.
 
+## 7a. `aiEnterTown`: a needed 0 that is not first
+
+philai's `aiEnterTown` (0x5253d0) matches retail only with phase 0. Retail
+places it 14th by address in the unit, and our compile order puts it 28th.
+Its opening sweep reads the flag for four constant tests: `0 vs 0`, then
+three times `1 vs 0`. Measured: forcing reads 16, 17 and 18 to 0 reproduces
+retail. Forcing any one of them alone does not.
+
+The tests come from the inlined `town::hasBuilding(id, checkIncluded)`
+calls with a literal `true`/`1` argument. Its body begins with
+`if (checkIncluded)`, so each call gives the opening sweep a compare with a
+known outcome.
+
+Two explanations fit retail. Either all 13 predecessors skipped the global
+optimizer, which is implausible for ordinary AI code. Or retail's source did
+not present those three tests as compare-and-branch tuples with a known
+outcome at that point. Examples would be a `hasBuilding` whose flag test
+compiles differently, or a call whose argument is not a literal. That
+second explanation is a hypothesis, and it is a source lead rather than a
+reason to rearrange compile order.
+
 ## 8. Open questions
 
 * The final scheduling link in §5: which stage-1 pass turns the merged
