@@ -3545,6 +3545,8 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // setupNewTrade. This model lifts Windows 81.15 -> 83.16 while retaining every
 // helper path. Two separate viewArtifact source calls remain separate on Mac;
 // keep its shared call. Widget-local flags lower both compiler comparisons.
+// Mac 0x1f9a58..0x1f9a78 sends an unviewable quick-view id to the common
+// flag tail rather than returning directly (VC6 byte-flat).
 VA(0x005edf60, 0x75f)
 DC_ADDRESS(0x18c00c, 0x36c)
 MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9
@@ -3619,23 +3621,24 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_14_ID: case MARKET_ARTIFACT_SLOT_15_ID:
             case MARKET_ARTIFACT_SLOT_16_ID: case MARKET_ARTIFACT_SLOT_18_ID:
             case MARKET_ARTIFACT_SLOT_19_ID: case MARKET_ARTIFACT_SLOT_20_ID:
-            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID:
+            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
+                int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
+                type_artifact artifact;
+                if (artifactSlot < 18) {
+                    artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
+                } else {
+                    int numInBackpack = g_marketHero->getNumberInBackpack(1);
+                    int slot = ((g_backpackStart & 0xff) + artifactSlot - 18)
+                               % numInBackpack;
+                    artifact = g_marketHero->getBackpack(slot);
+                }
+                // Mac retains one view call shared by both artifact sources.
+                g_marketHero->viewArtifact(artifact, 1);
                 break;
+            }
             default:
-                return MESSAGE_DISPATCH_CONSUME;
+                break;
             }
-            int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
-            type_artifact artifact;
-            if (artifactSlot < 18) {
-                artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
-            } else {
-                int numInBackpack = g_marketHero->getNumberInBackpack(1);
-                int slot = ((g_backpackStart & 0xff) + artifactSlot - 18)
-                           % numInBackpack;
-                artifact = g_marketHero->getBackpack(slot);
-            }
-            // Mac retains one view call shared by both artifact sources.
-            g_marketHero->viewArtifact(artifact, 1);
             break;
         }
 
