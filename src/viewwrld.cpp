@@ -719,10 +719,12 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // destY first (`mov esi,eax / imul eax,[ebp+0x18] / imul esi,[ebp+0x14]`),
 // which the baseX-first comma declaration cannot produce; the swap alone is
 // worth 83.9809 -> 87.0563 and also fixes the prologue (retail loads srcX
-// before `push ebx`) and srcX's register. MEASURED AND REJECTED at this
-// plateau: splitting playerBit into VWDrawAdvObj's two-statement `1 << pos`
-// then `&= GetMapExtra` form (byte-flat, 87.0563); the same baseY-first swap
-// in VWDrawAdvObj itself (byte-flat, 96.4955). What is left is srcX/srcY:
+// before `push ebx`) and srcX's register. Mac 0x204f54/0x204f6c
+// calls getLocalPlayerGamePos before getMapExtra; CodeWarrior evaluates the
+// joined `(1 << pos) & getMapExtra(...)` the other way round, so playerBit
+// uses VWDrawAdvObj's two-statement form (VC6 CUR 86.82 -> 87.65% in the
+// 2026-10-07 TU state, below the older 89.04% peak). MEASURED AND REJECTED:
+// the same baseY-first swap in VWDrawAdvObj itself (byte-flat, 96.4955). What is left is srcX/srcY:
 // retail RE-READS both parameter homes for the inlined type_point
 // (`mov ecx,[ebp+8] / mov esi,[ebp+0xc]` between the two bitfield words)
 // where we still hold them in registers across the guard, plus the one
@@ -753,8 +755,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         return;
 
     NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
-    int playerBit = (1 << g_game->getLocalPlayerGamePos())
-        & getMapExtra(srcX, srcY, z);
+    int playerBit = 1 << g_game->getLocalPlayerGamePos();
+    playerBit &= getMapExtra(srcX, srcY, z);
 
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH,
         baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
