@@ -1880,6 +1880,10 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // pointer directly. Restoring those lifetimes reaches 81.4249%, preserving
 // every decoder/delegation call and the DC const line-table pointer. The
 // entry this-register home and replicated arm allocation still differ.
+// Loki's GCC 2.95 build (no auto-inlining or cross-branch hoisting) loads
+// `pal.m_data` once, right after the line-table pointer and before the
+// flip dispatch, as the sibling decoders' `palette` local does; restoring
+// that local took retail from 81.42% to 98.27%.
 VA(0x0047dd40, 0xAD8)
 DC_ADDRESS(0x076988, 0x762)
 MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
@@ -1905,6 +1909,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
         if (sh > 0) {
             const unsigned short* const lineOffset = static_cast<const unsigned short*>(
                 static_cast<const void*>(m_map));
+            const unsigned short* const palette = pal.m_data;
             if (!vflip) {
                 if (!hflip) {
                     unsigned short* lineDst =
@@ -1921,28 +1926,28 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
@@ -1982,7 +1987,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *out++ = pal.m_data[*src++];
+                                        *out++ = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out += run;
@@ -2014,28 +2019,28 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
@@ -2075,7 +2080,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *--out = pal.m_data[*src++];
+                                        *--out = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out -= run;
@@ -2109,28 +2114,28 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
@@ -2170,7 +2175,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *out++ = pal.m_data[*src++];
+                                        *out++ = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out += run;
@@ -2202,28 +2207,28 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
@@ -2263,7 +2268,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *--out = pal.m_data[*src++];
+                                        *--out = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out -= run;
