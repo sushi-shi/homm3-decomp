@@ -41,44 +41,6 @@ before reporting anything. The same output path matters because `/Z7`
 records the object path in the object. Both replays use one capture, so
 anonymous-namespace salts also match.
 
-## Scope
-
-The inline budget is a source fact: `caller_cb` and every callee's IL
-cost come from the C++. Most later decisions (register allocation, block
-layout, tail merging) follow from inlining. So stage A is the diagnostic
-to use: force retail's observable inline decisions and see whether the
-function then matches. If it does, the wall is a source problem, and the
-reported per-site `need` is the delta to find in native evidence. Stages C
-and D below are retained but secondary. Their batch results (below) show
-they rarely explain a wall on their own.
-
-### Stage A split over the stable walls (2026-10-07)
-
-`reach-all` over the 242-row wall list (rmg/zlib excluded):
-
-| verdict | walls |
-| --- | ---: |
-| exact under the strict compare | 4 |
-| inline-state: retail reached by forcing | 5 |
-| inline-state: shape reached (stack/immediate residue) | 1 |
-| inline-state partial: forcing moves toward retail | 23 |
-| not inline: call decisions already agree | 182 |
-| not inline: no inline candidate sites | 19 |
-| not inline: forcing does not move toward retail | 1 |
-| replay error (customcampaign/game helpers, unresolved) | 7 |
-
-The six reached walls are:
-
-* `advManager::drawHeroPart` 0x40fe30, `vwDrawHeroPart` 0x5f7500 and
-  `vwDrawHeroPartShadow` 0x5f7900: one site each, the fifth getMap, +16.
-* `displayLCWinLoss` 0x4f2960: the LossConditionStruct constructor at two
-  sites.
-* `NewfullMap::readBlackBox` 0x4ff6b0: the spell resize's
-  erase -> _Destroy, +26 at depth 3.
-* `CTownDlg::createWin` 0x575e60: a nested size().
-
-Twenty-nine walls are therefore inline-explained, in whole or in part.
-
 ## Inline forcing (stage A)
 
 Hook: C2 RVA `0x19f8c`, the budget comparison inside the recursive
@@ -181,23 +143,6 @@ First results:
   This matches the processCombatMsg note: there *retail* merges arms that
   we keep, because our arms compare against constants cached in ESI/EDI.
   That is constant-caching state, not a merge decision.
-
-### Batch results for stages C and D (2026-10-07)
-
-`reg-reach-all --mode merge` searched 120 of the 122 walls with a strict
-similarity of at least 0.95, plus the inline-state walls, applying each
-wall's saved inline rules first. No veto reached retail. Four improved
-partially:
-
-* `displayVCWinLoss` 0x4f15e0: 0.9868 -> 0.9927
-* `initiateSpell` 0x59ec50: 0.9532 -> 0.9699
-* `onSearch` 0x511660: 0.8618 -> 0.8815
-* `seedPosition` 0x56b440: 0.9611 -> 0.9652
-
-Of the rest, 86 showed no veto gain and 30 had no merges. `reg-reach` on
-`doEventShrine` 0x4a5610 forced two of 27 colorings, 0.8562 -> 0.8746
-(partial). Both stages stay available as diagnostics only. The register
-batch was not run.
 
 ## Limits
 
