@@ -39,11 +39,6 @@
 // Text subscripts keep the public operator[] -> getText -> vector[] chain.
 // Native Mac 0x1ab964 onward retains the vector indexer; DC names the
 // outer operator on the corresponding label and confirmation statements.
-// `homm3 vc6 reach` (2026-10-07): expanding reserve's final size() (budget
-// 0, cost 42) moves the strict stream 0.935 -> 0.998. Reserve's share is
-// (8970 - 169) / 58 depth-1 sites; it needs 193, i.e. at most 45 sites or a
-// root budget 2393 larger. DC's 37 push_back/12 operator[] lack Windows'
-// video-quality widgets, so DC does not supply the missing site count.
 // E:\gamedcs\systemoptionswindow.cpp:43
 VA(0x005b1790, 0x187C)
 DC_ADDRESS(0x15f588, 0x10ac)
