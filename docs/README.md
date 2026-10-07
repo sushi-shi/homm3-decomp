@@ -16,6 +16,7 @@ iterate on a function.
 
 - [Codec module](formats/codec-module.md), [LOD and DEF](formats/lod-def-formats.md), [format matrix](formats/resource-format-matrix.md)
 - [RMG oracle](oracles/rmg.md) and [Victor oracle](oracles/victor.md)
+- [Alternate builds and compiler oracles](oracles/alternate-builds.md): Buka SP5, Loki GCC 2.95, Mac traces
 
 ## Reconstruction
 
