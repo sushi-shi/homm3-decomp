@@ -341,6 +341,10 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 // Reversing the equivalent comparison to heroPower(candidate) >
 // heroPower(best) preserves those source calls but moves VC6 from 98.3704%
 // to 96.19%; keep the natural best-first expression and both helper sites.
+// Mac 0x91f1c..0x91f40 tests the first hero id against -1 only once, inside
+// getHero's expansion, and 0x91f6c..0x91f7c branches straight to the exit
+// for an owned hero (early-return owner test). Reusing `best` for the
+// chosen hero also matches Mac but drops VC6 to 92.11%.
 VA(0x004840d0, 0x155)
 MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
@@ -362,14 +366,14 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
     case CAMPAIGN_BONUS_HERO_FIRST:
         if (player->m_numHeroes == 0)
             return 0;
-        if (player->m_heroes[0] == -1)
-            return 0;
         return g_game->getHero(player->m_heroes[0]);
     case CAMPAIGN_BONUS_HERO_NONE:
         return 0;
     }
     hero* chosen = g_game->getHero(heroSelector);
-    return chosen->m_owner == whichPlayer ? chosen : 0;
+    if (chosen->m_owner != whichPlayer)
+        return 0;
+    return chosen;
 }
 
 // The two spell rows share the general-text pair 708/709: the campaign
