@@ -1982,6 +1982,38 @@ The feature test also reads through the bitset reference proxy. Check Mac for
 ctor/dtor pairs that no call consumes. They mark unused locals whose extra
 destructor sites move Windows budgets.
 
+A corpus-wide counterfactual (2026-10-07) rules out a library or rule-level
+cause for this family. All 135 game units were traced with `--fn @`
+(identity gate passing), giving 3139 byte-exact roots whose recorded
+decisions are retail's. Replaying the recorded site trees under the §2 rule
+reproduces the logged budgets at 117,033 of 117,318 sites. All 285
+mismatches fall in 14 of 6211 roots, mostly `_Sort` copies and map-header
+readers. Only one byte-exact root changes a decision, so the baseline has
+one false contradiction. Each hypothesis below fixes some of
+hero::initialize, `type_skill_quest::setDefaultText`, `sendChat` and the
+two `type_quest` string loaders. The final count is the exact roots it
+would change:
+
+| hypothesis | exact roots contradicted |
+| --- | --- |
+| `assign(str, pos, n)` cost 317 / 347 | 8 / 31 (`type_map_hero_info` ctor, `type_dialog_icon` copy, `vector<string>::erase` expand at 314..316) |
+| `assign(const str&)` or `operator=(const str&)` charged (41) | 48 / 44 |
+| `assign(const char*)` 41, `assign(const char*, n)` 83, `const char*` ctor 117 | 59 / 34 / 15 |
+| `~basic_string` 41, `_Tidy` 201 | 87 / 134 |
+| nested divisor `remaining + 1` | 706 |
+| one / two extra trailing depth-1 candidates in every root | 547 / 673 |
+| unsaved same-TU callees counted in `remaining` | 87..94 |
+
+Every retained retail `basic_string` member is byte-exact, so its code
+cannot differ from the pinned SP3 `<xstring>` either. Each wall therefore
+needs its own source fact. One free, saved depth-1 candidate after the
+assignment fixes hero::initialize, setDefaultText and sendChat. Two after
+the first temporary's destructor fix both `type_quest` loaders. In each
+function, these changes flip only the retail boundaries. A candidate before
+the site does not work: it raises earlier remaining counts and leaves the
+final divisor unchanged. `perWeek`'s `clearRecruits` needs the opposite
+change: fewer remaining candidates or more budget.
+
 ## The vector single-insert wrapper is refused only one level down
 
 Dinkumware's `vector::insert(iterator, const T&)` is a 64-unit wrapper around
