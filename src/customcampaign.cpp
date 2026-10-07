@@ -2248,6 +2248,18 @@ TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
     clearScenarios();
 }
 
+// Complete expands this shared cleanup in both load and the destructor;
+// Mac retains it between them (0x96afc) and calls it from both.
+MAC_ADDRESS(0x096afc, 0x78)
+void TCampaignBrief::CampaignHeaderStruct::clearScenarios()
+{
+    for (unsigned int scenarioIndex = 0;
+         scenarioIndex < m_scenarios.size(); ++scenarioIndex)
+        delete m_scenarios[scenarioIndex];
+    m_scenarios.clear();
+    freeData();
+}
+
 // Complete-only; also reached from the custom-campaign list scanner
 // (0x482fd0 family). Name provisional.
 VA(0x004887e0, 0x30)
