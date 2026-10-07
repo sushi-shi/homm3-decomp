@@ -85,19 +85,6 @@ DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
-// Project-inferred replacement operation for the overview's typed slots.
-// Bind the table itself: removeWidget calls virtual close, so the subsequent
-// delete and clear must reread a dynamic table that callback may replace.
-template <class Slots>
-static void clearOverviewWidget(Slots& slots, int index)
-{
-    if (slots[index]) {
-        g_overWin->removeWidget(slots[index]);
-        delete slots[index];
-        slots[index] = 0;
-    }
-}
-
 long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
@@ -164,22 +151,42 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             && g_overviewTop[g_lastDynamicType] == g_lastDynamicTop)
         return;
 
+    // DC overview.cpp:239-261 and Mac 0x13353c..0x1335e4 test, remove,
+    // delete and clear each dynamic slot in place; neither build calls a
+    // per-slot helper or names a slot local.
     for (row = 0; row < 4; row++) {
         for (item = 0; item < 70; item++) {
-            int slot = row * 70 + item;
-            clearOverviewWidget(g_textWidgetDynamic, slot);
-            clearOverviewWidget(g_iconWidgetDynamic, slot);
-            clearOverviewWidget(g_bitmapBorderDynamic, slot);
+            if (g_textWidgetDynamic[row * 70 + item]) {
+                g_overWin->removeWidget(g_textWidgetDynamic[row * 70 + item]);
+                delete g_textWidgetDynamic[row * 70 + item];
+                g_textWidgetDynamic[row * 70 + item] = 0;
+            }
+            if (g_iconWidgetDynamic[row * 70 + item]) {
+                g_overWin->removeWidget(g_iconWidgetDynamic[row * 70 + item]);
+                delete g_iconWidgetDynamic[row * 70 + item];
+                g_iconWidgetDynamic[row * 70 + item] = 0;
+            }
+            if (g_bitmapBorderDynamic[row * 70 + item]) {
+                g_overWin->removeWidget(g_bitmapBorderDynamic[row * 70 + item]);
+                delete g_bitmapBorderDynamic[row * 70 + item];
+                g_bitmapBorderDynamic[row * 70 + item] = 0;
+            }
         }
 
         for (item = 0; item < 2; item++) {
-            int slot = row * 2 + item;
-            clearOverviewWidget(g_buttonDynamic, slot);
+            if (g_buttonDynamic[row * 2 + item]) {
+                g_overWin->removeWidget(g_buttonDynamic[row * 2 + item]);
+                delete g_buttonDynamic[row * 2 + item];
+                g_buttonDynamic[row * 2 + item] = 0;
+            }
         }
 
         for (item = 0; item < 3; item++) {
-            int slot = row * 3 + item;
-            clearOverviewWidget(g_textButtonDynamic, slot);
+            if (g_textButtonDynamic[row * 3 + item]) {
+                g_overWin->removeWidget(g_textButtonDynamic[row * 3 + item]);
+                delete g_textButtonDynamic[row * 3 + item];
+                g_textButtonDynamic[row * 3 + item] = 0;
+            }
         }
     }
 
