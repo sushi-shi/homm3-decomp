@@ -858,6 +858,7 @@ def run_scan(args) -> int:
                     if args.offset_units else None)
     units = args.units or [u for u in scan_units() if focus.get(u)]
     out = STATE_ROOT / "scan.jsonl"
+    out.parent.mkdir(parents=True, exist_ok=True)
     rows = []
     with _shim(), out.open("a" if args.reuse else "w") as sink:
         for unit_name in units:
