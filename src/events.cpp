@@ -619,6 +619,9 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
 // short stores are close but order the packing differently. The 3-arg
 // type_point constructor measured WORSE (85.51). A packed-bitfield store
 // ordering wall.
+// DC events.cpp:343-370 and Mac 0xa9810..0xa9968 nest the purchase inside
+// the build and affordability tests, with both refusals in trailing else
+// arms (VC6 byte-flat).
 VA(0x0049e2e0, 0x38B)
 DC_ADDRESS(0x0903b4, 0x2a4)
 MAC_ADDRESS(0x0a9580, 0x400)  // dc-bracket forced, ret 0xc=p4
@@ -652,29 +655,28 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
 
     NewmapCell* boatCell = g_game->getCell(boatPoint);
 
-    if (boatCell->m_isTrigger
-        && (boatCell->m_type == BOAT || boatCell->m_type == HERO
-            || g_game->getBoatsBuilt() >= 64)) {
+    if (!boatCell->m_isTrigger
+        || (boatCell->m_type != BOAT && boatCell->m_type != HERO
+            && g_game->getBoatsBuilt() < 64)) {
+        if (g_game->m_players[g_netLocalGamePos].m_resources[GOLD] >= 1000
+            && g_game->m_players[g_netLocalGamePos].m_resources[WOOD] >= 10) {
+            doShipyard(0);
+            if (g_windowManager->m_dialogReturn == DIALOG_RETURN_OK) {
+                if (g_game->createBoat(
+                        cell->m_shipyardInfo.m_boatX,
+                        cell->m_shipyardInfo.m_boatY,
+                        boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
+                    g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
+                    g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
+                }
+            }
+        } else {
+            normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD],
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else {
         normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_BUILD_BLOCKED],
                      1, 208, 40, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
-    }
-
-    if (g_game->m_players[g_netLocalGamePos].m_resources[GOLD] < 1000
-        || g_game->m_players[g_netLocalGamePos].m_resources[WOOD] < 10) {
-        normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD],
-                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
-    }
-
-    doShipyard(0);
-    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_OK
-        && g_game->createBoat(
-               cell->m_shipyardInfo.m_boatX,
-               cell->m_shipyardInfo.m_boatY,
-               boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
-        g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
-        g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
     }
 }
 
