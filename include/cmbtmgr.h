@@ -1707,6 +1707,7 @@ private:
     army* findSpellTarget(ESpellId spell, long side, long hex,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a3950
+    void showResurrectionMessage(const army* target, long raised);
 
 public:
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
