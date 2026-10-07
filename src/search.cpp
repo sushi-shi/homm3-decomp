@@ -664,17 +664,19 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 
     if (!seedContinuation) {
         g_advManager->m_fullySeeded = 0;
-        int flyLevel;
+        // Mac 0x1634fc/0x163590 calls clear from each search-type arm;
+        // DC 708 records no fly-level local (VC6 byte-flat).
         if (searchType == const_normal_search) {
-            flyLevel = m_waterWalkLevel > eMasteryInvalid
-                        || m_flightLevel > eMasteryInvalid;
+            clear(m_waterWalkLevel > eMasteryInvalid
+                      || m_flightLevel > eMasteryInvalid,
+                  0, g_game->getNumMapLevels());
         } else {
-            flyLevel = m_waterWalkLevel > eMasteryInvalid
-                        || m_flightLevel > eMasteryInvalid
-                        || m_canCastTeleport || m_canCastFlight
-                        || m_canCastWaterWalk;
+            clear(m_waterWalkLevel > eMasteryInvalid
+                      || m_flightLevel > eMasteryInvalid
+                      || m_canCastTeleport || m_canCastFlight
+                      || m_canCastWaterWalk,
+                  0, g_game->getNumMapLevels());
         }
-        clear(flyLevel, 0, g_game->getNumMapLevels());
     }
 
     g_advManager->m_seedingValid = 1;
