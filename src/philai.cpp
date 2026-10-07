@@ -3888,6 +3888,10 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 // Remaining call decisions: the first bank size(), magic school and power
 // school still expand where retail retains calls; BlackBox's merged secondary
 // skill tail also remains unresolved. Preserve all canonical helper paths.
+// `homm3 vc6 reach` (2026-10-07): magic school (cb 111) is admitted with 226
+// left after 36 charged sites. Retail still expands the next arm's spring
+// (134), so its remaining budget is not simply lower: the target is a magic-
+// school cost above 226 there, or arms ordered spring-before-school.
 DC_ADDRESS(0x113e24, 0x986)
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost)

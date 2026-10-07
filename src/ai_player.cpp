@@ -3149,7 +3149,7 @@ static void unblockLith(hero* currentHero,
         point.m_y = currentHero->m_y + g_normalDirTable[direction].m_y;
         if (!point.isValid())
             continue;
-        if (g_game->getCell(point)->m_isTrigger)
+        if (g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z)->m_isTrigger)
             continue;
         if (getMapExtra(point) & MAP_EXTRA_MONSTER)
             continue;
@@ -3205,6 +3205,12 @@ static void unblockLith(hero* currentHero,
 // m_worldMap.cell(x, y, z) and getMapExtra(x, y, z) directly leaves getTown a
 // call and scores 83.08%, but DC 0x33be4 opens an inline scope before its
 // GetMapExtra(x, y, z) call, so the point wrapper is the source; rejected.
+// The loop's cell lookup has no such scope: DC 0x33bd6 calls
+// NewfullMap::cell(x, y, z) directly, while line 3578 calls game::GetCell.
+// Restoring only that direct lookup keeps getTown a call and expands the
+// final getCell as retail does (82.66%). Residual: unblockLith's nested
+// budget is 42; the loop's getMapExtra(point) (48) needs 48 while getTown
+// (45) must still be refused - not satisfiable under one shared budget.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket

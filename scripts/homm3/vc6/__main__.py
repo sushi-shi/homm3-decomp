@@ -14,6 +14,10 @@ Subcommands
         Compile both, diff the C1XX->C2 IL at record granularity.
   predict-inline SELECTOR [--against SELECTOR]        (phase 3)
         Per-call-site expand/call decisions with the budget trajectory.
+  force SELECTOR [--rule OWNER,CALLEE,N,E|K ...]
+        Override C2's per-site inline decision over one frozen IL capture.
+  reach SELECTOR
+        Force retail's observable inline decisions; classify the wall.
   why-reg SELECTOR                                   (phase 0 v1)
         Which known knob moves a divergent register binding toward retail.
   oracle <subsystem> [--probe NAME | --all]
@@ -104,6 +108,55 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="v2: show candidate front-end local-handle order")
 
     pw.add_argument("--json", action="store_true")
+
+    pf = ss.add_parser("force", help="override C2 inline decisions for one function "
+                       "over a frozen IL capture (inertness-gated)")
+    pf.add_argument("target", help="retail VA/RVA, symbol or UNIT:SELECTOR")
+    pf.add_argument("--rule", action="append", metavar="OWNER,CALLEE,N,E|K",
+                    help="name substrings ('*' = any), 1-based occurrence (0 = all), "
+                         "E expand / K keep the call")
+
+    pre = ss.add_parser("reach", help="force retail's observable inline decisions; "
+                        "classify an inline-state wall")
+    pre.add_argument("target", help="retail VA/RVA, symbol or UNIT:SELECTOR")
+    pre.add_argument("--iterations", type=int, default=6)
+    pre.add_argument("--json", action="store_true")
+
+    pra = ss.add_parser("reach-all", help="batch reach over a TSV of retail VAs "
+                        "(first column; rmg/zlib units skipped)")
+    pra.add_argument("list")
+    pra.add_argument("--jobs", type=int, default=4)
+    pra.add_argument("--iterations", type=int, default=6)
+    pra.add_argument("--limit", type=int, default=0)
+
+    prr = ss.add_parser("reg-reach", help="greedy search over C2's eligible global "
+                        "register choices toward retail; classify a regalloc-state wall")
+    prr.add_argument("target")
+    prr.add_argument("--with-inline", action="store_true",
+                     help="first apply the inline rules `reach` derives")
+    prr.add_argument("--iterations", type=int, default=6)
+    prr.add_argument("--passes", type=int, default=2)
+
+    pra = ss.add_parser("reg-reach-all", help="batch reg-reach over a VA list, reusing "
+                        "each function's saved inline rules")
+    pra.add_argument("list")
+    pra.add_argument("--jobs", type=int, default=4)
+    pra.add_argument("--passes", type=int, default=1)
+    pra.add_argument("--max-trials", type=int, default=120)
+    pra.add_argument("--mode", choices=("register", "merge"), default="register",
+                     help="merge: run merge-reach (tail-merge vetoes) instead")
+
+    pmr = ss.add_parser("merge-reach", help="greedy veto search over C2's tail merges "
+                        "toward retail; classify a tail-merge wall")
+    pmr.add_argument("target")
+    pmr.add_argument("--passes", type=int, default=3)
+
+    pcv = ss.add_parser("cover", help="C2 function-entry hit counts for scratch TUs; "
+                        "with several sources, print the entries whose counts differ")
+    pcv.add_argument("sources", nargs="+")
+    pcv.add_argument("--functions", help="TSV of C2 entry RVAs (default: atlas raw list)")
+    pcv.add_argument("--installed", action="store_true",
+                     help="use the already installed trace shim (do not rebuild/restore)")
 
     pr = ss.add_parser("trace-registers", help="passive temporary-register stores, gated by object identity")
     pr.add_argument("unit", help="unit in config/units.toml")
@@ -204,6 +257,13 @@ _TOOLS = {
     "predict-inline": ("inline_model", "run_predict"),
     "why-reg": ("reg_model", "run_why"),
     "trace-registers": ("register_trace", "run"),
+    "force": ("inline_force", "run_force"),
+    "reach": ("inline_force", "run_reach"),
+    "reach-all": ("inline_force", "run_reach_all"),
+    "reg-reach": ("inline_force", "run_register_reach"),
+    "reg-reach-all": ("inline_force", "run_register_reach_all"),
+    "cover": ("c2_cover", "run"),
+    "merge-reach": ("inline_force", "run_merge_reach"),
     "why-branch": ("flow_model", "run_why"),
     "oracle": ("oracle", "run"),
     "diagnose": ("diagnose", "run"),

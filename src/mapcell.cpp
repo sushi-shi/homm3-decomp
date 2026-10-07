@@ -1724,6 +1724,11 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
 // DC mapcell.cpp:1524 proves BlackBoxData&. Both Complete callers
 // supply their constructed stack records; retain that interface through
 // the versioned creature reader rather than introducing a nullable pointer.
+// `homm3 vc6 reach` (2026-10-07) reaches retail strictly by expanding only
+// the spell resize's erase -> _Destroy (budget 23, cost 49): the inline state
+// is the whole residual. Target: +104 root budget before the spell resize
+// (+52 caller cb or 104 less charged earlier), or one fewer depth-1 inline
+// candidate after it (its share rises from 1056/4 to 1056/3).
 VA(0x004ff6b0, 0x535)
 DC_ADDRESS(0x0ee56c, 0x4f2)
 MAC_ADDRESS(0x121878, 0x570)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic)
