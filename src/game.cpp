@@ -6652,6 +6652,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         // Four HeroId reader-result/local models keep both reader bodies
         // exact but lower this caller to 91.6362%; their result domain has
         // no surviving native signature, so the numeric interface remains.
+        // Mac dc60c..dc61c has no loadHeroId call, but writing the byte and
+        // 0xff test in place (as NewSMapHeader::read now does) lowers VC6
+        // 94.62 -> 92.46%; the helper call stays.
         int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
