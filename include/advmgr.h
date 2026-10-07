@@ -1063,19 +1063,19 @@ private:
                             bool humanPlayer, class BlackBoxData* blackBox);
     void doEventBoat(class hero* currentHero, NewmapCell* cell);
     void doEventBorderGuard(type_point point, NewmapCell* cell,
-                            unsigned char humanPlayer);
+                            bool humanPlayer);
     void doEventBorderGate(type_point point, NewmapCell* cell,
                            unsigned char humanPlayer);
-    void doEventBorderTent(NewmapCell* cell, unsigned char humanPlayer);
+    void doEventBorderTent(NewmapCell* cell, bool humanPlayer);
     void doEventBouy(class hero* currentHero, NewmapCell* cell,
-                     unsigned char humanPlayer);
+                     bool humanPlayer);
     // The campfire (jump-table arm 0x0c). FOUR arguments and `ret 0x10`:
     // the map point rides along for EraseAndFizzle, which erases the object
     // the hero just stepped on.
     void doEventCampfire(class hero* currentHero, NewmapCell* cell,
                          type_point point, bool humanPlayer);
     void doEventCloverField(class hero* currentHero, NewmapCell* cell,
-                            unsigned char humanPlayer);
+                            bool humanPlayer);
     void doEventCoverOfDarkness(NewmapCell* cell, type_point point,
                                 bool humanPlayer);
     // 0x4abdc0, DECLARED not defined - 1744 bytes this lane is not
@@ -1104,7 +1104,7 @@ private:
     void doEventDragonCity(class hero* currentHero, NewmapCell* cell,
                               type_point point, bool humanPlayer);
     void doEventFaerieRing(class hero* currentHero, NewmapCell* cell,
-                           unsigned char humanPlayer);
+                           bool humanPlayer);
     void doEventFlotsam(class hero* currentHero, NewmapCell* cell,
                         type_point point, bool humanPlayer);
     void doEventFountain(class hero* currentHero, ExtraInfoUnion* cell,
@@ -1122,7 +1122,7 @@ private:
                        bool humanPlayer);
     void doEventLibrary(class hero* currentHero, NewmapCell* cell,
                         bool humanPlayer);
-    void doEventLighthouse(NewmapCell* cell, unsigned char humanPlayer);
+    void doEventLighthouse(NewmapCell* cell, bool humanPlayer);
     // The School of Magic (jump-table arm 0x2f). FOUR arguments and
     // `ret 0x10` - the map point rides along because the AI arm appraises
     // the tile with AI_value_of_event before it will pay.
@@ -1138,7 +1138,7 @@ private:
     void doEventMercenaryCamp(class hero* currentHero, NewmapCell* cell,
                               bool humanPlayer);
     void doEventMermaid(class hero* currentHero, NewmapCell* cell,
-                        unsigned char humanPlayer);
+                        bool humanPlayer);
     void doEventMine(NewmapCell* cell, class hero* currentHero,
                      type_point point, bool human);
     void doEventMysticalGarden(class hero* currentHero, ExtraInfoUnion* cell,
@@ -1223,7 +1223,7 @@ private:
     void doEventWateringHole(class hero* currentHero, NewmapCell* cell,
                                 bool humanPlayer);
     void doEventWhirlpool(class hero* currentHero, NewmapCell* cell,
-                            unsigned char humanPlayer);
+                            bool humanPlayer);
     void doEventWindmill(class hero* currentHero, ExtraInfoUnion* cell,
                            bool humanPlayer);
     void doEventWitchHut(class hero* currentHero, ExtraInfoUnion* cell,

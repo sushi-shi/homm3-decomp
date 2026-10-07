@@ -378,7 +378,7 @@ const THeroSpecificAbility (&g_heroSpecificAbilities)[156] =
 VA(0x004d71a0, 0x71)
 DC_ADDRESS(0x0ca728, 0x96)
 MAC_ADDRESS(0x0f1cac, 0xec)
-unsigned char initializeHeroSpecificAbilitiesTable()
+bool initializeHeroSpecificAbilitiesTable()
 {
     TSpreadsheetResource* text = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "HeroSpec.txt"));
@@ -420,7 +420,7 @@ const char* hero::getSpecificAbilityTextShort()
 // in source but /Ob2 expands it into the caller and emits no separate body.
 DC_ADDRESS(0x0ca7e8, 0x19c)
 MAC_ADDRESS(0x0f1db4, 0x294)
-static unsigned char initializeMoveConstants()
+static bool initializeMoveConstants()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00679cdc, movementSpreadsheetName, "movement.txt"));
@@ -458,11 +458,11 @@ static unsigned char initializeMoveConstants()
 VA(0x004d7240, 0x223)
 DC_ADDRESS(0x0ca984, 0x11c)
 MAC_ADDRESS(0x0f2048, 0x1cc)
-// DC public ?initialize_ballistics_table@@YA_NXZ is bool, but its
-// initialize_move_constants callee returns unsigned char. VC6 normalizes that
-// tail call for bool; Complete forwards the byte unchanged, proving the
-// Windows interface changed to unsigned char.
-unsigned char initializeBallisticsTable()
+// DC public ?initialize_ballistics_table@@YA_NXZ is bool. Its source-private
+// initialize_move_constants tail (DC T_UCHAR, the lowered bool record) is bool
+// too: VC6 forwards a bool callee's byte unchanged, as retail does, while an
+// unsigned char callee would be normalized (90.46%).
+bool initializeBallisticsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00679cec, ballisticsSpreadsheetName, "ballist.txt"));

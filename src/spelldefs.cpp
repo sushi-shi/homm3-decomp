@@ -124,7 +124,7 @@ unsigned char spellTargetsASingleArmy(int spell, int sslevel)
 VA(0x0059e090, 0xB7)
 DC_ADDRESS(0x14e2c8, 0xd4)
 MAC_ADDRESS(0x18e7b8, 0x13c)
-unsigned char initializeSpellTraitsTable()
+bool initializeSpellTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0068830c, spellTraitsSpreadsheetName,

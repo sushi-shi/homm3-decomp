@@ -198,7 +198,7 @@ DATA(0x00691368) static TTextResource* g_extraInfoText;
 VA(0x00405d20, 0x60)
 DC_ADDRESS(0x005714, 0xb6)
 MAC_ADDRESS(0x005e04, 0xe8)
-unsigned char initializeCreatureGeneratorNames()
+bool initializeCreatureGeneratorNames()
 {
     g_creatureGenerator1Text = ResourceManager::getText(
         DATA_COMPGEN(0x00660278, creatureGenerator1TextName, "crgen1.txt"));
@@ -222,7 +222,7 @@ unsigned char initializeCreatureGeneratorNames()
 VA(0x00405d80, 0x30)
 DC_ADDRESS(0x0057cc, 0x62)
 MAC_ADDRESS(0x005ef4, 0xa0)
-unsigned char initializeExtraInfoText()
+bool initializeExtraInfoText()
 {
     g_extraInfoText = ResourceManager::getText(
         DATA_COMPGEN(0x00660284, extraInfoTextName, "xtrainfo.txt"));

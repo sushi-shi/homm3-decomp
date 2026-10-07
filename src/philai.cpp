@@ -2909,7 +2909,7 @@ int aiVisitSirens(const hero* currentHero, armyGroup& army)
 VA(0x00527f60, 0x73)
 DC_ADDRESS(0x112dd4, 0x10c)
 MAC_ADDRESS(0x145890, 0xe0)
-unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
+bool aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
     TCreatureType type, short amount, long goldCost)
 {
     armyGroup monsterArmy(type, amount);
@@ -2923,7 +2923,7 @@ unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
 VA(0x00527fe0, 0x51)
 DC_ADDRESS(0x112ee0, 0x8a)
 MAC_ADDRESS(0x145970, 0xac)
-unsigned char aiChooseResourceOrExperience(const hero* currentHero,
+bool aiChooseResourceOrExperience(const hero* currentHero,
     EGameResource resource, int amount, int experience)
 {
     long experienceValue = static_cast<long>(

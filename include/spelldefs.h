@@ -30,7 +30,7 @@ enum ESpellTargetFlags {
 };
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
-unsigned char initializeSpellTraitsTable();
+bool initializeSpellTraitsTable();
 
 // Mutable implementation storage filled from sptraits.txt. The public
 // akSpellTraits pointer/reference cell is at 0x687f58; retail writes this

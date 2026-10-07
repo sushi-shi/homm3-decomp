@@ -3,7 +3,7 @@
 
 #include "sskilltraits.h"
 
-unsigned char initializeHeroTraitsTable();
+bool initializeHeroTraitsTable();
 // DC publics end in `_N`, the MSVC mangling for bool.
 bool initializeHeroClassTraitsTable();
 bool initializeSSkillTraitsTable();

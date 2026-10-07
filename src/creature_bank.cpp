@@ -76,7 +76,7 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
 VA(0x0047ab30, 0x254)
 DC_ADDRESS(0x07112c, 0xec)
 MAC_ADDRESS(0x089558, 0x1ac)
-unsigned char initializeCreatureBankTraits()
+bool initializeCreatureBankTraits()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006703a8, creatureBankSpreadsheetName, "crbanks.txt"));

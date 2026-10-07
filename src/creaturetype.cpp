@@ -238,7 +238,7 @@ TCreatureType downgradedCreatureType(TCreatureType type)
 VA(0x0047b290, 0x1E9)
 DC_ADDRESS(0x071968, 0x1d8)
 MAC_ADDRESS(0x088a70, 0x37c)
-unsigned char initializeCreatureTypeTraitsTable()
+bool initializeCreatureTypeTraitsTable()
 {
     TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00675514, creatureTraitsSpreadsheetName,

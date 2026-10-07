@@ -1994,7 +1994,7 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
 DC_ADDRESS(0x091fec, 0xf4)
 MAC_ADDRESS(0x0abcec, 0x138)
 inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
-                                           unsigned char humanPlayer)
+                                           bool humanPlayer)
 {
     unsigned char visitedFlags =
         g_game->m_borderTentVisitFlags[cell->m_objectIndex];
@@ -2034,7 +2034,7 @@ void advManager::doEventBorderGate(type_point, NewmapCell* cell,
 DC_ADDRESS(0x0920e0, 0xa6)
 MAC_ADDRESS(0x0abec0, 0x130)
 inline void advManager::doEventBorderTent(NewmapCell* cell,
-                                          unsigned char humanPlayer)
+                                          bool humanPlayer)
 {
     if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
         & g_curPlayerBit) {
@@ -2054,7 +2054,7 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
 DC_ADDRESS(0x092188, 0x96)
 MAC_ADDRESS(0x0abff0, 0x1f0)
 inline void advManager::doEventBouy(hero* currentHero, NewmapCell* cell,
-                                    unsigned char humanPlayer)
+                                    bool humanPlayer)
 {
     if (currentHero->m_flags & 4) {
         if (humanPlayer)
@@ -2076,7 +2076,7 @@ DC_ADDRESS(0x092220, 0xc8)
 MAC_ADDRESS(0x0ac1e0, 0x1fc)
 inline void advManager::doEventCloverField(hero* currentHero,
                                            NewmapCell* cell,
-                                           unsigned char humanPlayer)
+                                           bool humanPlayer)
 {
     if (currentHero->m_flags & 8) {
         if (humanPlayer)
@@ -2099,7 +2099,7 @@ DC_ADDRESS(0x092f08, 0x9e)
 MAC_ADDRESS(0x0ad764, 0x200)
 inline void advManager::doEventFaerieRing(hero* currentHero,
                                           NewmapCell* cell,
-                                          unsigned char humanPlayer)
+                                          bool humanPlayer)
 {
     if (currentHero->m_flags & 0x2000) {
         if (humanPlayer)
@@ -3414,7 +3414,7 @@ void advManager::doEventTrainingGrounds(hero* currentHero, NewmapCell* cell,
 
 // The AI arm of DoTreasureDialog reaches this philai helper before the
 // declaration accompanying its later tree-of-knowledge callers.
-unsigned char aiChooseResourceOrExperience(const hero* currentHero,
+bool aiChooseResourceOrExperience(const hero* currentHero,
                                                EGameResource resource,
                                                int cost, int value);
 
@@ -3679,7 +3679,7 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
 }
 
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
-unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
+bool aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
                                 TCreatureType type, short amount,
                                 long goldCost);
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
@@ -4277,7 +4277,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
 DC_ADDRESS(0x093d34, 0x7a)
 MAC_ADDRESS(0x0af094, 0x114)
 inline void advManager::doEventLighthouse(NewmapCell* cell,
-                                          unsigned char humanPlayer)
+                                          bool humanPlayer)
 {
     if (!g_game->onSameTeam(g_game->getMine(cell->m_extraInfo)->m_playerOwner,
                             g_netLocalGamePos)) {
@@ -4293,7 +4293,7 @@ inline void advManager::doEventLighthouse(NewmapCell* cell,
 DC_ADDRESS(0x094274, 0x9e)
 MAC_ADDRESS(0x0afd30, 0x200)
 inline void advManager::doEventMermaid(hero* currentHero, NewmapCell* cell,
-                                       unsigned char humanPlayer)
+                                       bool humanPlayer)
 {
     if (currentHero->m_flags & 0x8000) {
         if (humanPlayer)
@@ -4315,7 +4315,7 @@ DC_ADDRESS(0x0981ec, 0x60)
 MAC_ADDRESS(0x0b5aa4, 0x80)
 inline void advManager::doEventWhirlpool(hero* currentHero,
                                            NewmapCell* cell,
-                                           unsigned char humanPlayer)
+                                           bool humanPlayer)
 {
     type_point exitPoint;
     if (g_game->getRandomWhirlpool(cell->m_extraInfo, exitPoint)) {
