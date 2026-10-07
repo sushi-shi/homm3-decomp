@@ -937,19 +937,59 @@ static long g_phaseValue = -1;
 static int g_stateLog;
 static void *g_phaseReturn;
 
-static unsigned long __cdecl phaseRead(unsigned long value)
+static unsigned long g_readIndex;
+static char g_readForce[512];
+static unsigned long __cdecl phaseRead(unsigned long value, unsigned long esi, unsigned long ebx, unsigned long ret, unsigned long ebp, unsigned long blk)
 {
+    unsigned long forced = value;
+    ++g_readIndex;
+    if (g_readForce[0]) {
+        /* comma list of k=v; k is the 1-based read index in the whole run */
+        const char *p = g_readForce;
+        while (*p) {
+            unsigned long k = 0, v = 0;
+            while (*p >= '0' && *p <= '9') k = k * 10 + (unsigned long)(*p++ - '0');
+            if (*p == '=') { ++p; while (*p >= '0' && *p <= '9') v = v * 10 + (unsigned long)(*p++ - '0'); }
+            if (k == g_readIndex) forced = v;
+            while (*p && *p != ',') ++p;
+            if (*p == ',') ++p;
+        }
+    }
     if (g_stateLog) {
         DWORD lastError = GetLastError();
         HANDLE h = logOpen();
         if (h != INVALID_HANDLE_VALUE) {
-            writeString(h, "phase-read root="); writeHex(h, g_root);
+            writeString(h, "phase-read k="); writeDecimal(h, g_readIndex);
+            writeString(h, " root="); writeHex(h, g_root);
             writeString(h, " value="); writeDecimal(h, value);
+            writeString(h, " used="); writeDecimal(h, forced);
+            writeString(h, " stage="); writeDecimal(h, *(unsigned long *)((char *)g_real + 0x9f114));
+            writeString(h, " ret="); writeHex(h, ret - (unsigned long)g_real);
+            writeString(h, " tup="); writeHex(h, esi);
+            writeString(h, " op="); writeHex(h, *(unsigned long *)(esi + 4));
+            writeString(h, " ty="); writeHex(h, *(unsigned short *)(esi + 0xa));
+            writeString(h, " def="); writeHex(h, ebx);
+            writeString(h, " defop="); writeHex(h, *(unsigned long *)(ebx + 4));
+            writeString(h, " defkind="); writeHex(h, *(unsigned char *)(ebx + 8));
+            writeString(h, " defa="); writeHex(h, *(unsigned char *)(ebx + 0xa));
+            writeString(h, " ebp="); writeHex(h, ebp);
+            {
+                unsigned char *o1 = *(unsigned char **)(esi + 0x18);
+                unsigned char *o2 = o1 ? *(unsigned char **)o1 : 0;
+                writeString(h, " o1k="); writeHex(h, o1 ? o1[8] : 0xff);
+                if (o1 && o1[8] == 7) { writeString(h, " o1v="); writeHex(h, *(unsigned long *)(o1 + 0x18)); }
+                if (o1 && (o1[8] == 1 || o1[8] == 2 || o1[8] == 3)) { writeString(h, " o1sym="); writeHex(h, *(unsigned long *)(o1 + 0x14)); }
+                writeString(h, " o2k="); writeHex(h, o2 ? o2[8] : 0xff);
+                if (o2 && o2[8] == 7) { writeString(h, " o2v="); writeHex(h, *(unsigned long *)(o2 + 0x18)); }
+                if (o2 && (o2[8] == 1 || o2[8] == 2 || o2[8] == 3)) { writeString(h, " o2sym="); writeHex(h, *(unsigned long *)(o2 + 0x14)); }
+                writeString(h, " blk="); writeHex(h, blk);
+                writeString(h, " blkno="); writeDecimal(h, (unsigned long)(long)*(short *)(blk + 0x6c));
+            }
             writeString(h, "\n"); CloseHandle(h);
         }
         SetLastError(lastError);
     }
-    return value;
+    return forced;
 }
 
 static void __declspec(naked) phaseHook(void)
@@ -957,11 +997,18 @@ static void __declspec(naked) phaseHook(void)
     __asm {
         push ecx
         push edx
+        mov eax, dword ptr [esp + 0x18 + 8]
+        push eax
+        push ebp
+        mov eax, dword ptr [esp + 0x34 + 16]
+        push eax
+        push ebx
+        push esi
         mov eax, dword ptr [g_real]
         mov eax, dword ptr [eax + 0x9f120]
         push eax
         call phaseRead
-        add esp, 4
+        add esp, 24
         pop edx
         pop ecx
         jmp dword ptr [g_phaseReturn]
@@ -1015,6 +1062,461 @@ static void __declspec(naked) driverHook(void)
     }
 }
 
+
+/* scratch: driver checkpoints (phase-flag RE). tag 0 = entry (body in ECX),
+ * 1/2/3 = the three flag writes (body in EBP). */
+static void *g_ckReturn[4];
+static void __cdecl checkpoint(unsigned long *regs, unsigned long tag)
+{
+    /* pushad layout: EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX */
+    DWORD lastError = GetLastError();
+    HANDLE h;
+    unsigned char *body = (unsigned char *)(tag == 0 ? regs[6] : regs[2]);
+    unsigned char *b;
+    unsigned long n = 0, dead = 0;
+    if (tag == 0) {
+        char t[8];
+        if (GetEnvironmentVariableA("HOMM3_VC6_SIBLING_ZERO", t, sizeof t)) {
+            *(unsigned long *)((char *)g_real + 0x9f0e8) = 0;
+            *(unsigned long *)((char *)g_real + 0x9f104) = 0;
+        }
+        if (GetEnvironmentVariableA("HOMM3_VC6_SIBLING_ONE", t, sizeof t)) {
+            *(unsigned long *)((char *)g_real + 0x9f0fc) = 1;
+            *(unsigned long *)((char *)g_real + 0x9f118) = 1;
+        }
+    }
+    if (!g_stateLog) return;
+    h = logOpen();
+    if (h != INVALID_HANDLE_VALUE) {
+        for (b = **(unsigned char ***)(body + 8); b; b = *(unsigned char **)b) {
+            ++n;
+            if (*(unsigned long *)(b + 0x18) & 0x2000000) ++dead;
+        }
+        writeString(h, "ck tag="); writeDecimal(h, tag);
+        writeString(h, " flag="); writeDecimal(h, *(unsigned long *)((char *)g_real + 0x9f120));
+        writeString(h, " blocks="); writeDecimal(h, n);
+        writeString(h, " deadmark="); writeDecimal(h, dead);
+        writeString(h, " loops="); writeHex(h, *(unsigned long *)(body + 0xc));
+        writeString(h, " cfgdirty="); writeDecimal(h, *(unsigned long *)((char *)g_real + 0x9f0e0));
+        writeString(h, " name="); writeString(h, *(const char **)(*(unsigned char **)body + 0x18));
+        writeString(h, "\n"); CloseHandle(h);
+    }
+    SetLastError(lastError);
+}
+static void __declspec(naked) ck0(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 0
+        push eax
+        call checkpoint
+        add esp, 8
+        popad
+        popfd
+        sub esp, 0x14
+        push ebx
+        push ebp
+        jmp dword ptr [g_ckReturn]
+    }
+}
+static void __declspec(naked) ck1(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 1
+        push eax
+        call checkpoint
+        add esp, 8
+        popad
+        popfd
+        push eax
+        mov eax, dword ptr [g_real]
+        mov dword ptr [eax + 0x9f120], esi
+        pop eax
+        jmp dword ptr [g_ckReturn + 4]
+    }
+}
+static void __declspec(naked) ck2(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 2
+        push eax
+        call checkpoint
+        add esp, 8
+        popad
+        popfd
+        push eax
+        mov eax, dword ptr [g_real]
+        mov dword ptr [eax + 0x9f120], edi
+        pop eax
+        jmp dword ptr [g_ckReturn + 8]
+    }
+}
+static void __declspec(naked) ck3(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 3
+        push eax
+        call checkpoint
+        add esp, 8
+        popad
+        popfd
+        push eax
+        mov eax, dword ptr [g_real]
+        mov dword ptr [eax + 0x9f120], ebx
+        pop eax
+        jmp dword ptr [g_ckReturn + 12]
+    }
+}
+static int installCheckpoints(void)
+{
+    unsigned char e0[5] = {0x83, 0xec, 0x14, 0x53, 0x55};
+    unsigned char w[6];
+    unsigned long flag = (unsigned long)g_real + 0x9f120;
+    g_ckReturn[0] = (char *)g_real + 0x1361a;
+    g_ckReturn[1] = (char *)g_real + 0x136fc;
+    g_ckReturn[2] = (char *)g_real + 0x1391c;
+    g_ckReturn[3] = (char *)g_real + 0x13994;
+    if (!patchHook(0x13615, ck0, e0, 5)) return 0;
+    w[0] = 0x89; *(unsigned long *)(w + 2) = flag;
+    w[1] = 0x35; if (!patchHook(0x136f6, ck1, w, 6)) return 0;
+    w[1] = 0x3d; if (!patchHook(0x13916, ck2, w, 6)) return 0;
+    w[1] = 0x1d; if (!patchHook(0x1398e, ck3, w, 6)) return 0;
+    return 1;
+}
+
+
+/* scratch (handle-period RE): HOMM3_VC6_PATCH="rva=hexbytes;..." writes raw
+ * bytes into the loaded C2 image before compilation (counterfactual probes). */
+static int hexv(char c)
+{
+    return (c >= '0' && c <= '9') ? c - '0' : (c >= 'a' && c <= 'f') ? c - 'a' + 10
+        : (c >= 'A' && c <= 'F') ? c - 'A' + 10 : -1;
+}
+static void loadBytePatches(void)
+{
+    static char text[2048];
+    DWORD n = GetEnvironmentVariableA("HOMM3_VC6_PATCH", text, sizeof text);
+    unsigned i = 0;
+    if (!n || n >= sizeof text) return;
+    while (i < n) {
+        unsigned long rva = 0;
+        unsigned char buf[256];
+        unsigned len = 0;
+        DWORD old, ignored;
+        while (i < n && text[i] != '=') { if (hexv(text[i]) >= 0 && !(text[i] == 'x' )) rva = rva * 16 + hexv(text[i]); ++i; }
+        ++i;
+        while (i + 1 < n + 1 && text[i] && text[i] != ';' && len < sizeof buf) {
+            int a = hexv(text[i]), b = hexv(text[i + 1]);
+            if (a < 0 || b < 0) break;
+            buf[len++] = (unsigned char)(a * 16 + b);
+            i += 2;
+        }
+        while (i < n && text[i] != ';') ++i;
+        ++i;
+        if (!len || !rva) continue;
+        if (VirtualProtect((char *)g_real + rva, len, PAGE_EXECUTE_READWRITE, &old)) {
+            unsigned j;
+            for (j = 0; j < len; ++j) ((unsigned char *)g_real)[rva + j] = buf[j];
+            VirtualProtect((char *)g_real + rva, len, old, &ignored);
+            FlushInstructionCache(GetCurrentProcess(), (char *)g_real + rva, len);
+        }
+    }
+}
+
+
+/* scratch (handle-period RE): HOMM3_VC6_TUPLE_DUMP=<winpath> appends, at
+ * every phaseCheckpoint (0x9ab4) while the selected root is current, a
+ * handle-independent listing of its tuples: per block, each tuple's opcode,
+ * kind and type, and its operands' kinds; symbols are named by first
+ * appearance in that listing (pointer identity), constants by value. */
+static HANDLE g_tupleFile = INVALID_HANDLE_VALUE;
+static void *g_ckptReturn;
+static unsigned long g_ckptCount;
+#define SYMSEEN 8192
+static unsigned long g_symSeen[SYMSEEN];
+static unsigned g_symSeenN;
+static char g_tbuf[1 << 16];
+static unsigned g_tlen;
+static void tflush(void) { DWORD n; if (g_tlen) WriteFile(g_tupleFile, g_tbuf, g_tlen, &n, 0); g_tlen = 0; }
+static void tput(const char *s) { while (*s) { if (g_tlen >= sizeof g_tbuf - 1) tflush(); g_tbuf[g_tlen++] = *s++; } }
+static void thex(unsigned long v) { char b[12]; int i = 0, j; char t[12]; do { int d = (int)(v & 15); t[i++] = (char)(d < 10 ? '0' + d : 'a' + d - 10); v >>= 4; } while (v); for (j = 0; j < i; ++j) b[j] = t[i - 1 - j]; b[i] = 0; tput(b); }
+static unsigned symId(unsigned long p)
+{
+    unsigned i;
+    for (i = 0; i < g_symSeenN; ++i) if (g_symSeen[i] == p) return i;
+    if (g_symSeenN < SYMSEEN) g_symSeen[g_symSeenN++] = p;
+    return g_symSeenN - 1;
+}
+static void dumpOperand(unsigned char *o)
+{
+    unsigned char k = o[8];
+    tput(" k"); thex(k);
+    if (k == 7) { tput("="); thex(*(unsigned long *)(o + 0x18)); }
+    else if (k >= 1 && k <= 6) {
+        unsigned long sym = *(unsigned long *)(o + 0x14);
+        if (k <= 3 && sym) { tput("s"); thex(symId(sym)); }
+        if (k == 5 || k == 6) { tput("d"); thex(*(unsigned long *)(o + 0x24)); }
+    }
+}
+#define RD(p, n) (!IsBadReadPtr((const void *)(p), (n)))
+static void dumpBody(unsigned char *body, unsigned long ret)
+{
+    unsigned char *blk;
+    unsigned char **bl;
+    unsigned nb = 0;
+    g_symSeenN = 0;
+    tput("== ck "); thex(g_ckptCount); tput(" ret "); thex(ret - (unsigned long)g_real); tput("\n");
+    if (!RD(body + 8, 4)) { tput("FAULT\n"); return; }
+    bl = *(unsigned char ***)(body + 8);
+    if (!bl || !RD(bl, 4)) { tput("noblocks\n"); return; }
+    for (blk = *bl; blk && nb < 100000; ++nb) {
+        unsigned char *t, *last;
+        unsigned nt = 0;
+        if (!RD(blk, 0x24)) { tput("FAULT\n"); return; }
+        t = *(unsigned char **)(blk + 0x1c);
+        last = *(unsigned char **)(blk + 0x20);
+        tput("B\n");
+        while (t && nt < 100000) {
+            unsigned char *o;
+            if (!RD(t, 0x20)) { tput("FAULT\n"); return; }
+            tput(" t"); thex(*(unsigned long *)(t + 4)); tput(" "); thex(t[8]); tput(" "); thex(*(unsigned short *)(t + 0xa));
+            if (t[8] >= 0xc) {
+                for (o = *(unsigned char **)(t + 0x18); o && RD(o, 0x28); o = *(unsigned char **)o) dumpOperand(o);
+                tput(" ->");
+                o = *(unsigned char **)(t + 0x1c);
+                if (o && RD(o, 0x28)) dumpOperand(o);
+            }
+            tput("\n");
+            if (t == last) break;
+            t = *(unsigned char **)t; ++nt;
+        }
+        blk = *(unsigned char **)blk;
+    }
+}
+static void __cdecl checkpointDump(unsigned long ret)
+{
+    unsigned char *body;
+    DWORD lastError = GetLastError();
+    ++g_ckptCount;
+    if (g_tupleFile != INVALID_HANDLE_VALUE && g_selected) {
+        body = *(unsigned char **)((char *)g_real + 0xac380);
+        if (body) { dumpBody(body, ret); tflush(); }
+    }
+    SetLastError(lastError);
+}
+static void __declspec(naked) ckptHook(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, dword ptr [esp + 36]
+        push eax
+        call checkpointDump
+        add esp, 4
+        popad
+        popfd
+        mov eax, dword ptr [g_real]
+        mov eax, dword ptr [eax + 0xac2e8]
+        jmp dword ptr [g_ckptReturn]
+    }
+}
+static int loadTupleDump(void)
+{
+    char path[MAX_PATH];
+    unsigned char b[5];
+    if (!GetEnvironmentVariableA("HOMM3_VC6_TUPLE_DUMP", path, sizeof path)) return 1;
+    g_tupleFile = CreateFileA(path, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (g_tupleFile == INVALID_HANDLE_VALUE) return 1;
+    b[0] = 0xa1; *(unsigned long *)(b + 1) = (unsigned long)g_real + 0xac2e8;
+    g_ckptReturn = (char *)g_real + 0x9ab9;
+    return patchHook(0x9ab4, ckptHook, b, 5);
+}
+
+
+/* scratch: log the 0x2df43 temp walk (record order, key) and its accepted moves */
+static void *g_walkRet1, *g_walkRet2;
+static int g_walkLog;
+static void __cdecl walkLog(unsigned long *regs, unsigned long tag)
+{
+    /* pushad: EDI ESI EBP ESP EBX EDX ECX EAX */
+    DWORD lastError = GetLastError();
+    HANDLE h;
+    unsigned char *rec = (unsigned char *)regs[1];
+    if (!g_walkLog || !g_selected) return;
+    h = logOpen();
+    if (h != INVALID_HANDLE_VALUE) {
+        writeString(h, tag ? "walk-move rec=" : "walk rec="); writeHex(h, (unsigned long)rec);
+        writeString(h, " key="); writeHex(h, *(unsigned long *)(rec + 0x1c));
+        writeString(h, " f5="); writeHex(h, rec[5]);
+        writeString(h, " w4="); writeHex(h, *(unsigned long *)(rec + 4));
+        writeString(h, " use="); writeHex(h, *(unsigned long *)(rec + 0x14));
+        writeString(h, " def="); writeHex(h, *(unsigned long *)(rec + 0x38));
+        writeString(h, "\n"); CloseHandle(h);
+    }
+    SetLastError(lastError);
+}
+static void __declspec(naked) walkHook1(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 0
+        push eax
+        call walkLog
+        add esp, 8
+        popad
+        popfd
+        mov edi, dword ptr [esi + 0x30]
+        mov edx, dword ptr [esi + 0x1c]
+        jmp dword ptr [g_walkRet1]
+    }
+}
+static void __declspec(naked) walkHook2(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 1
+        push eax
+        call walkLog
+        add esp, 8
+        popad
+        popfd
+        mov eax, dword ptr [ebx + 0xc]
+        test eax, eax
+        jmp dword ptr [g_walkRet2]
+    }
+}
+static int loadWalkLog(void)
+{
+    char t[8];
+    static const unsigned char b1[] = {0x8b,0x7e,0x30,0x8b,0x56,0x1c};
+    static const unsigned char b2[] = {0x8b,0x43,0x0c,0x85,0xc0};
+    if (!GetEnvironmentVariableA("HOMM3_VC6_WALK_LOG", t, sizeof t)) return 1;
+    g_walkLog = 1;
+    g_walkRet1 = (char *)g_real + 0x2e17c;
+    g_walkRet2 = (char *)g_real + 0x2e1ac;
+    if (!patchHook(0x2e176, walkHook1, b1, 6)) return 0;
+    return patchHook(0x2e1a7, walkHook2, b2, 5);
+}
+
+
+/* scratch: who disqualifies which temp record in 0x2df43's first loop */
+static void *g_dqRet[4];
+static void __cdecl dqLog(unsigned long *regs, unsigned long tag)
+{
+    DWORD lastError = GetLastError();
+    HANDLE h;
+    unsigned char *esi = (unsigned char *)regs[1], *ebp = (unsigned char *)regs[2];
+    unsigned char *rec = tag < 2 ? (unsigned char *)regs[0] : *(unsigned char **)(ebp + 0x18);
+    if (!g_walkLog || !g_selected) return;
+    h = logOpen();
+    if (h != INVALID_HANDLE_VALUE) {
+        writeString(h, "dq site="); writeDecimal(h, tag);
+        writeString(h, " key="); writeHex(h, *(unsigned long *)(rec + 0x1c));
+        writeString(h, " tup="); writeHex(h, (unsigned long)esi);
+        writeString(h, " op="); writeHex(h, *(unsigned long *)(esi + 4));
+        writeString(h, " ofl="); writeHex(h, *(unsigned long *)(ebp + 0x10));
+        writeString(h, "\n"); CloseHandle(h);
+    }
+    SetLastError(lastError);
+}
+static void __declspec(naked) dq0(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 0
+        push eax
+        call dqLog
+        add esp, 8
+        popad
+        popfd
+        or byte ptr [edi + 5], 4
+        jmp dword ptr [g_dqRet + 0]
+    }
+}
+static void __declspec(naked) dq1(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 1
+        push eax
+        call dqLog
+        add esp, 8
+        popad
+        popfd
+        or bl, 4
+        mov byte ptr [edi + 5], bl
+        jmp dword ptr [g_dqRet + 4]
+    }
+}
+static void __declspec(naked) dq2(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 2
+        push eax
+        call dqLog
+        add esp, 8
+        popad
+        popfd
+        mov eax, dword ptr [ebp + 0x18]
+        or byte ptr [eax + 5], 4
+        jmp dword ptr [g_dqRet + 8]
+    }
+}
+static void __declspec(naked) dq3(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 3
+        push eax
+        call dqLog
+        add esp, 8
+        popad
+        popfd
+        mov eax, dword ptr [ebp + 0x18]
+        or byte ptr [eax + 5], 4
+        jmp dword ptr [g_dqRet + 12]
+    }
+}
+static int loadDqLog(void)
+{
+    static const unsigned char b0[] = {0x80,0x4f,0x05,0x04,0xe9};
+    static const unsigned char b1[] = {0x80,0xcb,0x04,0x88,0x5f,0x05};
+    static const unsigned char b2[] = {0x8b,0x45,0x18,0x80,0x48,0x05,0x04};
+    if (!g_walkLog) return 1;
+    g_dqRet[0] = (char *)g_real + 0x2e094;
+    g_dqRet[1] = (char *)g_real + 0x2dfe6;
+    g_dqRet[2] = (char *)g_real + 0x2e045;
+    g_dqRet[3] = (char *)g_real + 0x2e063;
+    if (!patchHook(0x2dfd1, dq0, b0, 5)) return 0;
+    if (!patchHook(0x2dfe0, dq1, b1, 6)) return 0;
+    if (!patchHook(0x2e03e, dq2, b2, 7)) return 0;
+    return patchHook(0x2e05c, dq3, b2, 7);
+}
+
 static int loadPhaseState(void)
 {
     char text[16];
@@ -1022,6 +1524,7 @@ static int loadPhaseState(void)
     DWORD n = GetEnvironmentVariableA("HOMM3_VC6_PHASE", text, sizeof text);
     if (n && n < sizeof text) g_phaseValue = text[0] == '1' ? 1 : 0;
     g_stateLog = GetEnvironmentVariableA("HOMM3_VC6_STATE_LOG", text, sizeof text) != 0;
+    if (GetEnvironmentVariableA("HOMM3_VC6_PHASE_READS", g_readForce, sizeof g_readForce) >= sizeof g_readForce) g_readForce[0] = 0;
     if (g_phaseValue < 0 && !g_stateLog) return 1;
     {
         unsigned char doneBytes[9];
@@ -1033,6 +1536,7 @@ static int loadPhaseState(void)
         if (!patchHook(0x683cc, driverHook, doneBytes, 9)) return 0;
     }
     if (!g_stateLog) return 1;
+    if (!installCheckpoints()) return 0;
     g_phaseReturn = (char *)g_real + 0x5b16;
     readBytes[0] = 0xa1;
     *(unsigned long *)(readBytes + 1) = (unsigned long)g_real + 0x9f120;
@@ -1219,6 +1723,10 @@ static int installInlineTrace(void)
     loadHashShift();
     if (!loadHandleShift()) return 0;
     if (!loadPhaseState()) return 0;
+    loadBytePatches();
+    if (!loadTupleDump()) return 0;
+    if (!loadWalkLog()) return 0;
+    if (!loadDqLog()) return 0;
     {
         /* Diagnostic heap displacement: HOMM3_VC6_HEAP_PAD="malloc,local"
          * byte counts allocated once before C2 runs. */
