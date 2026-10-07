@@ -261,11 +261,6 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
 // 2026-09-29: getMap through reinterpret_cast costs 43 (floor-gated),
 // isValidSeq without `!= 0` costs 41; both byte-flat here. An if/return
 // getNumFrames is worse (93.30%).
-// `homm3 vc6 reach` (2026-10-07) reaches retail strictly with only that site
-// forced (now budget 29 vs 45): target +16 root budget, i.e. +8 caller cb or
-// 16 less charged by getHero/getLocation/type_point/getNumFrames/isValidSeq/
-// drawHero. Repeating `part % 3`/`part / 3` per call (DC lists only currHero)
-// gives 68.08%.
 VA(0x005f7500, 0x3F7)
 DC_ADDRESS(0x19308c, 0x34c)
 MAC_ADDRESS(0x203150, 0x530)
