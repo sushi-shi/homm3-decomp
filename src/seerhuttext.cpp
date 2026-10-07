@@ -20,6 +20,16 @@ VA_COMPGEN(0x0056bed0, 0x56, CLASS_CTOR, TSeerHutQuestText)
 
 VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
 
+DATA(0x0069e728) TSeerHutTextColumn g_seerHutTextA[3];
+DATA(0x0069f0e8) TSeerHutTextColumn g_seerHutTextB[3];
+// Initial contents recovered from the pinned Complete image.
+// The quest readers use 52 contiguous strings per column; the loader's
+// aggregate owns their construction. Retail cells point to B and A, in that order.
+DATA(0x0068320c) const TSeerHutTextColumn* g_questTextA = g_seerHutTextB;
+DATA(0x00683210) const TSeerHutTextColumn* g_questTextB = g_seerHutTextA;
+
+DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
+
 // Retail 0x56c120. Copy one seerhut.txt column into one TSeerHutTextColumn.
 
 // The row map is read straight off the body: row 1 into `name` before the
@@ -33,29 +43,11 @@ VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
 // basic_string::assign at the first two sites and EXPANDS it at the other
 // three, which is an /Ob2 budget outcome and not a spelling difference.
 
-// Residual (99.9587%): ONE encoder tie-break. All 24 blocks, all 13 branches
-// and all 3 returns agree; the only divergence is the fourth inlined
-// basic_string::_Eos terminator, where retail encodes `mov byte ptr
-// [ecx + eax], 0` and we encode `mov byte ptr [eax + ecx], 0` - the same
-// instruction with the SIB base and index exchanged. The other three
-// expansions of the same statement already agree. The current divergent
-// block is B8, within text4 assignment; source labels do not recover the
-// original expression. Nine row/record lifetime variants emit six objects,
-// all reproduced: direct row expressions remain 99.9621 with an indexed,
-// reference or pointer destination; a local row base or paired induction
-// drops to 89.6136..89.7917. All five scored siblings remain exact.
-// The recovered spreadsheet cell accessor is not interchangeable with this
-// caller's row-access model: replacing all seven getRow(row)[column] sites
-// with getSpreadsheet(row,column) scores53.0833 and changes the call stream.
-// The four-state caller/sibling family reproduces all four objects; changing
-// initializeSeerHutText alone also loses its exact body (99.7101). No
-// Dreamcast counterpart proves either replacement in this Complete-only TU.
-// Sixty further cell/endpoint lifetime states produce six objects, all
-// reproduced. Actual char-pointer, destination-reference and row-reference
-// bindings preserve the seven reads/assignments, but none improves 99.9621%.
-// Shared input-pointer lifetime falls to 99.8712%; binding both endpoint
-// destinations reaches 98.7121% (98.6212% combined). All five siblings stay
-// exact. These meaningful local bindings do not explain the SIB choice.
+// The tables above are defined before the loader, as retail's order shows:
+// the two 39/23-byte initializer pairs and the vector initializer pair at
+// 0x56bd90..0x56c0b0 precede 0x56c120. Compiled after them, the loader
+// receives C2's phase flag as 1 (docs/vc6/phase-flag.md); compiled first in
+// the TU it kept the fourth inlined _Eos store as `[eax + ecx]` (99.9621%).
 VA(0x0056c120, 0x2A3)
 MAC_ADDRESS(0x2543f0, 0x1fc)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
@@ -73,16 +65,6 @@ void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
 
     column->m_completion = sheet->getRow(47)[col];
 }
-
-DATA(0x0069e728) TSeerHutTextColumn g_seerHutTextA[3];
-DATA(0x0069f0e8) TSeerHutTextColumn g_seerHutTextB[3];
-// Initial contents recovered from the pinned Complete image.
-// The quest readers use 52 contiguous strings per column; the loader's
-// aggregate owns their construction. Retail cells point to B and A, in that order.
-DATA(0x0068320c) const TSeerHutTextColumn* g_questTextA = g_seerHutTextB;
-DATA(0x00683210) const TSeerHutTextColumn* g_questTextB = g_seerHutTextA;
-
-DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
 
 // Both separator arms expand basic_string::append in full and the
 // cross-jumper merges their copy tails, which is what two `+=` statements in
