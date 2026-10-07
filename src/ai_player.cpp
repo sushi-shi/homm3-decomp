@@ -3151,7 +3151,7 @@ static void unblockLith(hero* currentHero,
         point.m_y = currentHero->m_y + g_normalDirTable[direction].m_y;
         if (!point.isValid())
             continue;
-        if (g_game->getCell(point)->m_isTrigger)
+        if (g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z)->m_isTrigger)
             continue;
         if (getMapExtra(point) & MAP_EXTRA_MONSTER)
             continue;
@@ -3203,7 +3203,13 @@ static void unblockLith(hero* currentHero,
 // markStrategicMap (cb 879) consumes the caller's 2186. isOnMap (24) and
 // getTown (45) are admitted, exhausting it before the direction loop's
 // game::getCell (58) and getMapExtra(point) (48). Retail instead calls
-// getTown and expands those two loop helpers.
+// getTown and expands those two loop helpers. The loop's cell lookup is
+// direct: DC 0x33bd6 calls NewfullMap::cell(x, y, z) with no inline scope
+// (unlike DC 0x33be4's GetMapExtra(point) wrapper), while line 3578 calls
+// game::GetCell. Restoring only that direct lookup keeps getTown a call and
+// expands the final getCell as retail does (82.66%). Residual: unblockLith's
+// nested budget is 42; the loop's getMapExtra(point) (48) needs 48 while
+// getTown (45) must still be refused - not satisfiable under one shared budget.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket
