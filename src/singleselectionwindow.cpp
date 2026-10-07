@@ -585,7 +585,7 @@ DC_ADDRESS(0x12fe84, 0x2c)
 MAC_ADDRESS(0x16e3ac, 0x34)
 // Original HasNonRandomHero is DC S_LPROC32. Complete internal linkage
 // follows its same-TU ownership; retail does not independently distinguish it.
-static inline unsigned char hasNonRandomHero(int gamePos)
+static unsigned char hasNonRandomHero(int gamePos)
 {
     return g_game->m_mapHeader.m_playerSlotAttributes[gamePos].m_nonRandomHeroId
         != -1;
@@ -595,7 +595,9 @@ static inline unsigned char hasNonRandomHero(int gamePos)
 DC_ADDRESS(0x12feb0, 0x90)
 MAC_ADDRESS(0x16e3e0, 0x40)
 // Original HasRandomHero is DC S_LPROC32, with the same ownership inference.
-static inline unsigned char hasRandomHero(int gamePos)
+// Mac processRightSelect (0x16e3e0/0x16e3ac calls) retains both helpers,
+// so neither was declared inline; VC6 expands them either way.
+static unsigned char hasRandomHero(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes& slot =
         g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
