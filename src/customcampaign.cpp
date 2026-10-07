@@ -1072,9 +1072,11 @@ int TCampaignStartCrossoverOption::getCount() const
 // Mac 0x93878, 0x9394c and 0x93bd8 expand the same choice-to-score lookup:
 // sign-extend the scenario byte, then read that score's crossover-pool index.
 // This option-owned accessor's name and private boundary are inferred.
-// All three callers are in this TU, supporting an ordinary source body;
-// keep the existing virtual getCrossoverPoolIndex as the public option interface.
-int TCampaignStartCrossoverOption::getCrossoverSlot(
+// All three callers are in this TU, supporting a source body; CodeWarrior
+// keeps an ordinary body out of line at -O3 and -O4, so Mac's expansions mark
+// it inline (VC6 byte-flat; pasting it drops getText 92.51 -> 66.90%).
+// Keep the existing virtual getCrossoverPoolIndex as the public option interface.
+inline int TCampaignStartCrossoverOption::getCrossoverSlot(
     const SCampaign& campaign, int which) const
 {
     return campaign.m_mapScores[m_choices[which].m_scenario].m_index;
