@@ -120,6 +120,11 @@ static long ftol(double d)
 // assignments and early return (89.00%). Clipping the offset-adjusted x/y
 // parameters and drawing from saved copies instead drops to 84.93%; retail
 // compares the clipped copies (ECX/EAX) where VC6 here compares the originals.
+// Loki's GCC body subtracts the offset from the x/y parameter slots just
+// before the draw, but DC stores the adjusted copies at lines 111/114 and
+// retail reuses the dead x/y slots for tilew/tiley. Spelling the late
+// `x -= offset; y -= offset;` scores 93.39% yet keeps x/y live, so it is
+// rejected; adjusting x/y first and clipping copies scores 87.05%.
 VA(0x005f73b0, 0x14D)
 DC_ADDRESS(0x192f4c, 0x140)
 MAC_ADDRESS(0x202fa4, 0x1ac)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket

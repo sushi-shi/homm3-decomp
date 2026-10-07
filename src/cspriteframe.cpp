@@ -794,6 +794,9 @@ unsigned int CSpriteFrame::getSize() const
     return sizeof(*this) + m_dataSize;
 }
 
+// Loki's GCC 2.95 copies (which keep association order) flip with
+// `width - (x + w)` and form the cropped limits as origin plus extent;
+// VC6 emits the same bytes for either spelling.
 DC_ADDRESS(0x079294, 0x184)
 inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
                                int& dx, int& dy, int dw, int dh,
@@ -803,9 +806,9 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
     int deltaX;
 
     if (hflip)
-        sx = m_width - sx - sw;
+        sx = m_width - (sx + sw);
     if (vflip)
-        sy = m_height - sy - sh;
+        sy = m_height - (sy + sh);
 
     if (dx < 0) {
         if (!hflip)
@@ -844,13 +847,13 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
         sh -= deltaX;
         sy = m_croppedY;
     }
-    deltaX = m_croppedWidth + m_croppedX;
+    deltaX = m_croppedX + m_croppedWidth;
     if (sw + sx > deltaX) {
         if (hflip)
             dx += sw + sx - deltaX;
         sw = deltaX - sx;
     }
-    deltaX = m_croppedHeight + m_croppedY;
+    deltaX = m_croppedY + m_croppedHeight;
     if (sh + sy > deltaX) {
         if (vflip)
             dy += sh + sy - deltaX;
@@ -1037,6 +1040,9 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
 // lower. `why-reg --model --il-order` still finds identical first definitions
 // (EDI=sw, ESI=sx, EBX=sh), bounding the residual past the minimum source-order
 // slice.
+// Loki probes: a drawTile-style `palette` local is byte-flat here, and
+// assigning the line table inside the positive extent guard (where retail
+// and Loki load m_map) scores 93.52%; RoE's body also differs in its tail.
 // The native per-row destination lifetime also appears in the exact adjacent
 // adventure renderer. Advancing that cursor directly restores 95.9000%;
 // splitting its address into a base and offset leaves 94.7302%.
@@ -1863,23 +1869,15 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // encoded tiles use a word row-offset table and the same packed packet byte as
 // adventure cells.  Only code seven carries pixels in this renderer.
 
-// Residual (83.2115%): four DC/retail direction arms, the eight-statement Duff
-// loop, raw do/while rows, and indexed encoded for-rows recover all behavior.
-// Split packet load/increment and block-scoped row destinations further match
-// retail's packet schedule and dead-vflip parameter-home reuse.  The recovered
-// `kOpaqueRunCode` and raw-row declaration order are byte-flat positive facts;
-// the surviving delta is a C1 register permutation replicated in four arms.
-// Retail and Dreamcast also agree on the surprising general-RLE delegation
-// `Draw(sw, sy, sw, ...)`; spelling that positive fact alone scores 81.4249%
-// because C1 then homes `this` in EDI across the whole body.  Swapping the two
-// leading declarations and replacing the local constant with the existing
-// code-7 enumerator are byte-flat paired probes.  The proven call spelling is
-// retained despite that expected checkpoint dip while the surrounding source
-// shape needed to restore retail's EDX home remains under reconstruction.
-// Native row traversal advances the destination pointer and raw source
-// pointer directly. Restoring those lifetimes reaches 81.4249%, preserving
-// every decoder/delegation call and the DC const line-table pointer. The
-// entry this-register home and replicated arm allocation still differ.
+// Four DC/retail direction arms, the eight-statement Duff loop, raw do/while
+// rows and indexed encoded for-rows recover all behavior. Retail and
+// Dreamcast agree on the surprising general-RLE delegation
+// `Draw(sw, sy, sw, ...)`. Loki's GCC 2.95 build (no auto-inlining or
+// cross-branch hoisting) loads `pal.m_data` once, right after the line-table
+// pointer and before the flip dispatch, as the sibling decoders' `palette`
+// local does; restoring that local took retail from 81.42% to 98.27%. DC
+// attributes both raw-row advances to one line (2938); advancing the
+// destination row before the source row reproduces retail exactly.
 VA(0x0047dd40, 0xAD8)
 DC_ADDRESS(0x076988, 0x762)
 MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
@@ -1905,6 +1903,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
         if (sh > 0) {
             const unsigned short* const lineOffset = static_cast<const unsigned short*>(
                 static_cast<const void*>(m_map));
+            const unsigned short* const palette = pal.m_data;
             if (!vflip) {
                 if (!hflip) {
                     unsigned short* lineDst =
@@ -1921,35 +1920,34 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -1982,7 +1980,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *out++ = pal.m_data[*src++];
+                                        *out++ = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out += run;
@@ -2014,35 +2012,34 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2075,7 +2072,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *--out = pal.m_data[*src++];
+                                        *--out = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out -= run;
@@ -2109,35 +2106,34 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *out++ = pal.m_data[*src++];
+                                    *out++ = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2170,7 +2166,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *out++ = pal.m_data[*src++];
+                                        *out++ = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out += run;
@@ -2202,35 +2198,34 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             switch (remaining & 7) {
                             case eRawRowUnroll8:
                                 do {
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll7:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll6:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll5:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll4:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll3:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll2:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 case eRawRowUnroll1:
-                                    *--out = pal.m_data[*src++];
+                                    *--out = palette[*src++];
                                     --remaining;
                                 } while (remaining > 0);
                             }
-
-                            line += m_pitch;
                             lineDst = static_cast<unsigned short*>(static_cast<void*>(
                                 static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                            line += m_pitch;
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2263,7 +2258,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 if (code == opaqueRunCode) {
                                     unsigned int count = run;
                                     do {
-                                        *--out = pal.m_data[*src++];
+                                        *--out = palette[*src++];
                                     } while (--count);
                                 } else {
                                     out -= run;
