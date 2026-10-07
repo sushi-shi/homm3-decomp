@@ -1006,6 +1006,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // are VC6 byte-flat at 98.0274%; all 117 blocks, 75 branches and 31 calls
 // align. The by-value update's scratch selection still adds an EDI save;
 // preserve the canonical helper instead of pasting its four arguments.
+// DC 1376-1384 and Mac 0xa65ec..0xa6690 test the limited update first and
+// call the plain updateCombatArea from its else arm (VC6 byte-flat).
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)
 DC_ADDRESS(0x084e2c, 0x5c8)
@@ -1183,13 +1185,12 @@ void combatManager::drawFrame(bool update,
     }
 
     if (update) {
-        if (!limitCreatureEffect && !limitDraw) {
+        if (limitCreatureEffect || limitDraw) {
+            m_extent.clip(combatManager::s_combatAreaLimits);
+            updateCombatArea(m_extent);
+        } else {
             updateCombatArea();
-            return;
         }
-
-        m_extent.clip(combatManager::s_combatAreaLimits);
-        updateCombatArea(m_extent);
     }
 
     if (limitCreatureEffect || limitDraw)
