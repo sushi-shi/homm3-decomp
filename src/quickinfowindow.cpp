@@ -10,6 +10,7 @@
 #include "exec.h"
 #include "iconwdgt.h"
 #include "kb.h"
+#include "terrain.h"
 #include "textwdgt.h"
 #include "winmgr.h"
 

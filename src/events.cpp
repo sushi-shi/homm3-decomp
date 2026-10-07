@@ -8,6 +8,7 @@
 
 #include "events.h"
 
+#include "terrain.h"
 #include "advmgr.h"
 #include "advmgr_objects.h"
 #include "cmbtmgr.h"

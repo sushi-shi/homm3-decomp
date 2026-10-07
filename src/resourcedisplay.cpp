@@ -8,6 +8,7 @@
 #include "exec.h"
 #include "game.h"
 #include "kb.h"
+#include "terrain.h"
 #include "textwdgt.h"
 #include "town.h"
 #include "window.h"

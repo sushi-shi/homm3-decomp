@@ -9,6 +9,7 @@
 #include "mapcell.h"
 #include "message.h"
 #include "mousemgr.h"
+#include "terrain.h"
 #include "widget.h"
 #include "winmgr.h"
 

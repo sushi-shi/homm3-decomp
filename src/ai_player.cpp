@@ -30,6 +30,7 @@
 #include "recruit.h"
 #include "remote.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "town.h"
 #include "tradpost.h"
 

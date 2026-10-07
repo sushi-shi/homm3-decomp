@@ -24,6 +24,7 @@ static int mainMenuHandler(message& msg);
 #include "remote.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "widget.h"
 #include "winmgr.h"
 
