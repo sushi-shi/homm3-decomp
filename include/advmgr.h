@@ -654,18 +654,18 @@ public:
     virtual void onSleepChange(unsigned char on);
     unsigned char processRightSelect(const message* msg);
     bool processHover(int hx, int hy);
-    void doHeroKnob(unsigned char up);
-    void doTownKnob(unsigned char up);
+    void doHeroKnob(bool up);
+    void doTownKnob(bool up);
     // Original locator publics encode H_N0: index and two Boolean flags.
     void updateHeroLocators(int top, bool drawWin, bool update);
     void updateTownLocators(int top, bool drawWin, bool update);
     void updateHeroLocator(int which, bool drawWinSect, bool update);
     void updateTownLocator(int which, bool drawWinSect, bool update);
-    void highlightLocators(unsigned char update);
+    void highlightLocators(bool update);
     void updateSpellButton(const class hero* thisHero);
     void updateSleepButton(const class hero* thisHero);
-    void updateQuestLogButton(unsigned char update);
-    unsigned char setElevationToggleImage(int level);
+    void updateQuestLogButton(bool update);
+    bool setElevationToggleImage(int level);
     // Retail 0x403cc0 is `ret 4` over one stack argument, so the
     // Dreamcast roster's zero-parameter TAdventureMapWindow spelling does
     // not transfer - the same divergence UpdateSleepButton records just
@@ -680,8 +680,8 @@ public:
     void setBottomView(class type_bottom_view_window* newView);
     void updateResourceDisplay(bool draw, bool update);
     static void setAdvWinButtonPalette(int id, int player);
-    void drawChatText(unsigned char update);
-    void updateButtons(unsigned char draw, unsigned char update);
+    void drawChatText(bool update);
+    void updateButtons(bool draw, bool update);
 
 private:
     void drawTownLocatorHighlight(int which, unsigned char update);
