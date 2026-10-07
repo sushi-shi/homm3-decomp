@@ -1593,6 +1593,9 @@ static int doCampaignWindow(bool newGame, int campaignSet)
 // Mac retains doCampaignWindow(true, set) in all three campaign-set arms
 // (0x111108, 0x111130, 0x111158). Each cancellation reopens the campaign
 // video after the helper returns; keep that caller operation separate.
+// Retail's frame has one unreferenced four-byte slot between exitCampaigns
+// (-0xd) and the set window (-0x60 vs our -0x5c). int/bool exitCampaigns
+// (99.77/99.89%) and a named switch selector are flat or lower.
 VA(0x004f00a0, 0x3EE)
 MAC_ADDRESS(0x111028, 0x264)
 static unsigned char doCampaignWindow()
@@ -1670,6 +1673,8 @@ static unsigned char doCampaignWindow()
 // E:\gamedcs\kb.cpp:1988. Complete retains this static helper out of line
 // at 0x4f0490. Retail independently proves the modal object's 0x1970 size,
 // the cancel/okay pair, the map-header refresh, and the final boolean.
+// An explicit empty CANCEL case plus OK case scores 94.92%: VC6 drops the
+// empty case and emits cmp, where retail keeps sub/je/dec/jne.
 VA(0x004f0490, 0xFB)
 DC_ADDRESS(0x0e1630, 0x110)
 MAC_ADDRESS(0x11171c, 0xec)

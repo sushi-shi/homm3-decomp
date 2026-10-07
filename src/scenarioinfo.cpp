@@ -105,6 +105,9 @@ public:
 SIZE(CScenarioPlayerInfoWidget, 0x60);
 
 // E:\gamedcs\scenarioinfo.cpp:258
+// 2026-10-07 trace: retail expands one nested size() in each of the last two
+// button push_backs; ours sees depth-4 budgets 10/15 against cost 42, the
+// same late-budget class as TAdventureMapWindow's constructor.
 VA(0x00567290, 0x2109)
 DC_ADDRESS(0x129db4, 0xcbc)
 MAC_ADDRESS(0x15ddc0, 0x2640)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape

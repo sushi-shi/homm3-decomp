@@ -6422,6 +6422,11 @@ void TSingleSelectionWindow::updatePlayerPositions(bool updateCurPlayer)
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
 }
 
+// 2026-10-07 trace: retail expands CRequestHeroFaceReplyMsg's constructor
+// inside onRequestHeroFaceMsg (our nested budget 51, cost 53). The simulator
+// shows that expanding it alone starves the second CHostWaitDlg::wait, so
+// retail's caller budget is 31..118 larger (cb +16..59). HIST 100 predates
+// the 2bb943d19 isHost() helper recovery.
 VA(0x005887a0, 0x9ED)
 DC_ADDRESS(0x13fd74, 0x6a0)
 MAC_ADDRESS(0x17fff0, 0x7e0)

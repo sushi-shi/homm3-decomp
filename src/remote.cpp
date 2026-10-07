@@ -277,6 +277,8 @@ static const long g_playerActiveUpdateInterval = 600000;
 // its native transport supplies the incoming message. DC remote.cpp:318/331
 // names text lookups at the ping reply and destroyed-session messages;
 // Complete keeps the existing getText calls at 98.3470%.
+// A named CPingResponseMsg local is 98.29%: retail still loads m_dpidFrom
+// after the inline transmit stamps, while VC6 hoists it into esi.
 VA(0x00552db0, 0x28F)
 DC_ADDRESS(0x11bc88, 0xd2)
 MAC_ADDRESS(0x2109e4, 0x1a0)
