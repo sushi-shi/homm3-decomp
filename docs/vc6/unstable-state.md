@@ -26,15 +26,20 @@ caller is `0x683c7`, and the driver returns to `0x683cc`.
 * The bss initial value is 0.
 * Across 1,105 functions in six units (drawing, mapcell, army, initialize,
   philai, singleselectionwindow), every driver run left 1.
-* So in our tree a function reads 0 only if it is the first function C2
-  compiles in its unit. That includes compiler-generated `_$E` dynamic
-  initializers and COMDAT inline or template bodies.
-* The mechanism (driver stages, the reader's decision) is documented
-  separately in `docs/vc6/phase-flag.md` on branch `vc6/phase-re`.
+* So a function reads 0 only if it is the first function in its unit
+  that goes through the global optimizer. That includes out-of-line
+  definitions, `_$E` dynamic initializers where their object is defined,
+  and generated destructors. Inline-only helpers, unreferenced statics and
+  `#pragma optimize("g", off)` bodies do not count.
+* The mechanism (driver stages, the reader's decision) is documented in
+  [phase-flag.md](phase-flag.md).
 
-**Effect.** `0x5739` applies a tuple fold only when the flag is 1. A
-first-compiled function therefore gets different instruction selection,
-ordering or registers. Inlining decisions are never affected.
+**Effect.** With the flag at 1, stage-0 tuple simplification in `0x5739`
+folds conditional branches whose compare outcome is known (see
+[phase-flag.md](phase-flag.md)), typically from inlined helpers with
+constant arguments. A first-optimized function keeps those branches, which
+changes instruction selection, order or registers. Inlining decisions are
+never affected.
 
 **Census** (`homm3 vc6 phase-census`): all 150 non-RMG units, 8,769
 functions, each replayed with the flag at 0 and at 1.
@@ -77,7 +82,7 @@ function left 0.
 | --- | ---: | ---: | --- |
 | `combatManager::showCreatureSpellError` (drawing, first in the unit) | 1 | 0 | Retail compiled something before it. The 100% MAX commit had `_$E60`/`_$E63` first: the dynamic initializers of `combatManager::s_visibleCombatAreaLimits` and `s_combatAreaLimits` (`SLimitData` with constructors). Commit `3f0b03da3` moved them out of drawing.cpp. |
 | `loadSeerHutTextColumn` (seerhuttext, 99.96%) | 1 | 0 | Our first-compiled function. In retail, `TSeerHutTextColumn::TSeerHutTextColumn` at `0x56bde0` (first by address) and its destructor precede it. Proposed: define those, or any emitted function, before it. |
-| `aiEnterTown` (philai, 99.96%) | 0 | 1 | Retail has it 14th by address, after `considerGarrisoning` (`0x525200`). Our order has the same predecessor, which leaves 1. Retail's predecessor must have left 0 (or retail compiled it first), but no function in our census leaves 0. This is open for the mechanism lane. |
+| `aiEnterTown` (philai, 99.96%) | 0 | 1 | Retail has it 14th by address, after `considerGarrisoning` (`0x525200`), yet retail needs it to be the unit's first globally optimized function. Either the 13 retail functions before it did not go through the global optimizer (for example, they sat in a `#pragma optimize("g", off)` region), or retail's address order is not its compile order here. Open. |
 
 Retail's own address order is a weak guide to the first compiled function.
 Our first compiled function equals retail's first by address in 70 of 150
