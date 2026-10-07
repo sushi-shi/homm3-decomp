@@ -31,6 +31,26 @@ Callee costs (`sym+0x6d`) do change inline decisions, but they move only when
 the callee's own source changes, so they count as a related edit, not an
 unrelated one.
 
+## Which edits move which state
+
+See [state-impact.md](state-impact.md); `homm3 vc6 impact` predicts the effect of
+an edit without compiling. Twelve targeted real compiles (1,447 function
+comparisons) produced no misprediction.
+
+| Edit | Phase flag | Callee compiled | Handles |
+| --- | --- | --- | --- |
+| Reorder includes | no change | no change | only symbols created inside the swapped headers move |
+| Add or remove a declaration | no change, unless it is an initialized object above the first function | no change | everything created after it shifts by its cost |
+| Add, move or remove a function | the first compiled body can change | its group of inline copies moves with it | symbols in between shift |
+| Change which helpers an earlier function uses | no change | the helper's emission point moves | later symbols shift |
+
+**Include order** never changes the compile order of a unit's own functions.
+No header defines a non-inline function, and only `terrain.h` emits code at
+its include point. So include order acts only through handles, which matters
+for just the 18 period-sensitive functions. A helper counts as compiled for
+function F if and only if some function above F needed an out-of-line copy of
+it (a non-inlined call, its address taken, an EH unwind or a vtable).
+
 ## What it means for matching
 
 - **Walls.** Of the 242 stable walls, 2 are reachable through these states,
@@ -79,9 +99,9 @@ unrelated one.
   that consults bit `0x800` during inlining is not traced.
 - The handle-hash release test and operand filter, and why only 0.19% of
   functions respond.
-- Whether include order matters beyond the handle hash, for example through
-  emitted constructs in headers or template instantiation points. An analytic
-  include-order map is in progress.
+- Why retail places `terrain.h`'s mask initializers at the end of each
+  object while ours compile them first. This decides the first function's
+  phase in units that include `terrain.h`.
 - `compile-m` sweeps callee-order prefixes only at the captured phase and
   offset, not as a full product.
 
