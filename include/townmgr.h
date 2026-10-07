@@ -490,7 +490,7 @@ public:
     // type_monster_join_window's sets to 1; SetCommandAndText 0x5d05f0
     // rides it through both troop runs as select_army's third argument
     // and SetArmyCommand's second.
-    unsigned char m_isJoinDialog;
+    bool m_isJoinDialog;
     // Dreamcast is_join_dialog is a byte at +0x64; retail places it
     // at +0x6c. These three bytes align the 0x70-byte base extent.
     char m_tailPadding[3];
@@ -646,7 +646,7 @@ public:
     virtual ~TTavernWindow();
     void setRolloverText(int id);
     virtual int open(int zOrder, bool update);  // slot 1
-    virtual void close(unsigned char update);            // slot 2
+    virtual void close(bool update);            // slot 2
     virtual int windowHandler(message& msg) OVERRIDE;    // slot 9, 0x5d7b30
 };
 

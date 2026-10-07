@@ -523,7 +523,7 @@ protected:
     // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
     // is an out-of-line body - the derived dispatcher touches the raw
     // members, so retail's access let it.
-    unsigned char m_inPopup;  // +0x04
+    bool m_inPopup;  // +0x04
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;  // slot 3
     char m_paddingBeforeAbortPopupMsg[3];
     CNetMsg* m_abortPopupMsg;  // +0x08

@@ -572,7 +572,7 @@ VA_COMPGEN(0x004fd4c0, 0x26, IMPLICIT_DTOR, NewmapCell)
 VA(0x004fd4f0, 0x160)
 DC_ADDRESS(0x0ec80c, 0xe6)
 MAC_ADDRESS(0x11f28c, 0xc8)
-void NewfullMap::init(int size, bool twoLayers)
+void NewfullMap::init(int size, unsigned char twoLayers)
 {
     m_size = size;
     m_hasTwoLevels = twoLayers;

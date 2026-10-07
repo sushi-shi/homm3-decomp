@@ -99,7 +99,7 @@ CCombatChatEdit::CCombatChatEdit(
 VA(0x004721d0, 0x42A)
 DC_ADDRESS(0x069850, 0x2dc)
 MAC_ADDRESS(0x08008c, 0x52c)
-TCombatWindow::TCombatWindow(unsigned char doPlacement)
+TCombatWindow::TCombatWindow(bool doPlacement)
     : heroWindow(0, 0, 800, 600, 1)
 {
     g_combatWindow = this;
@@ -229,7 +229,7 @@ VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, TCombatWindow)
 VA(0x004728d0, 0x2A)
 DC_ADDRESS(0x069b2c, 0x40)
 MAC_ADDRESS(0x08063c, 0x6c)
-void TCombatWindow::close(unsigned char update)
+void TCombatWindow::close(bool update)
 {
     if (m_controlSubWindow) {
         delete m_controlSubWindow;

@@ -195,7 +195,7 @@ public:
     void artifactClick(long slot, unsigned char rightClick);
     void backpackClick(long slot, bool rightClick);
     void creatureClick(long slot, bool rightClick,
-                        bool leftPane);
+                        unsigned char leftPane);
     void offeringClick(long slot, bool rightClick);
 
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
@@ -318,11 +318,11 @@ SIZE(type_artifact_offering_widget, 0x4c);
 class type_army_slot_widget : public iconWidget {
 public:
     long m_slot;
-    bool m_leftPane;
+    unsigned char m_leftPane;
 
     type_army_slot_widget(long newX, long newY, long newW, long newH,
                           long newSlot, long newId, const char* image,
-                          bool newLeftPane);
+                          unsigned char newLeftPane);
 
     virtual bool handleClick(bool downClick,
                                        bool rightClick);

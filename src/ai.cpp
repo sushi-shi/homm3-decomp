@@ -727,7 +727,7 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
 VA(0x0041f580, 0x304)
 DC_ADDRESS(0x024b64, 0x2f8)
 MAC_ADDRESS(0x0210f0, 0x3cc)
-bool combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, bool considerWaiting)
+bool combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
     if (!currentArmy->getSpellTime(72) && currentArmy->getSpeed()) {
         g_searchArray->findCombatPath(currentArmy, m_currentSide, targetHex,

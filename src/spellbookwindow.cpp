@@ -402,7 +402,7 @@ int TSpellbookWindow::open(int newPriority, bool update)
 VA(0x0059c990, 0x10)
 DC_ADDRESS(0x14c8f0, 0x12)
 MAC_ADDRESS(0x18c5b8, 0x20)
-void TSpellbookWindow::close(unsigned char update)
+void TSpellbookWindow::close(bool update)
 {
     heroWindow::close(update);
 }

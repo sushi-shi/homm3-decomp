@@ -52,7 +52,7 @@ public:
 
     strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
           long newOwner, hero* newHero, armyGroup* groupToDraw, int firstId,
-          unsigned char update, heroWindow* inWin);
+          bool update, heroWindow* inWin);
     // Defined out of line in strip.cpp, keeping its body hidden from callers.
     // Retail's `delete strip` calls a real out-of-line body before
     // operator delete: townManager::UnloadTown 0x5c70b0 and ::SwapHeroes

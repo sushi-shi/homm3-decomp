@@ -6834,7 +6834,7 @@ int TTavernWindow::open(int zOrder, bool update)
 VA(0x005d7e70, 0x1B)
 DC_ADDRESS(0x17ad78, 0x12)
 MAC_ADDRESS(0x1d5c98, 0x44)
-void TTavernWindow::close(unsigned char update)
+void TTavernWindow::close(bool update)
 {
     videoClose();
     heroWindow::close(update);

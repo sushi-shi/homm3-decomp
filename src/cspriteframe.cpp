@@ -74,7 +74,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
 
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:188
 DC_ADDRESS(0x0747cc, 0x6e)
-CSpriteFrame::CSpriteFrame(const char* name, unsigned char cropped)
+CSpriteFrame::CSpriteFrame(const char* name, bool cropped)
     : resource(name, RESOURCE_TYPE_SPRITE),
       m_dataSize(0), m_imageSize(0), m_encodingMethod(eEncodeRaw),
       m_width(0), m_height(0), m_croppedWidth(0), m_croppedHeight(0),

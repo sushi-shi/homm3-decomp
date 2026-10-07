@@ -725,7 +725,7 @@ DC_ADDRESS(0x03d6f0, 0x72)
 MAC_ADDRESS(0x03e41c, 0x84)
 type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
                                                 combatManager* combat, long side,
-                                                unsigned char creatureSpell)
+                                                bool creatureSpell)
     : m_estimate(combat, side)
 {
     m_isCreatureSpell = creatureSpell;

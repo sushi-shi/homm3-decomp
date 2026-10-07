@@ -650,7 +650,7 @@ public:
     TAdventureMapWindow();
     ~TAdventureMapWindow();
     virtual int open(int zOrder, bool update);
-    virtual void close(unsigned char update);
+    virtual void close(bool update);
     virtual void onSleepChange(unsigned char on);
     unsigned char processRightSelect(const message* msg);
     bool processHover(int hx, int hy);

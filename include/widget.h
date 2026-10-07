@@ -154,6 +154,9 @@ public:
     virtual int getRealWidth() const { return m_width; }  // slot 6
     virtual void processHover();  // slot 7
     virtual void dim() const;  // slot 8
+    // DC ?enable@widget@@UAAX_N@Z (and slider's override) declare bool, but
+    // TMultiPlayerWindow::update (0x50f0f0) keeps its byte flags in separate
+    // frame slots only with a byte parameter (bool: 100 -> 87.53).
     virtual void enable(unsigned char on);  // slot 9
     // Original set_help_text@@QAAXPBD0_N proves Boolean text ownership.
     void setHelpText(const char* text, const char* rclick, bool copyText);

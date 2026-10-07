@@ -2650,7 +2650,7 @@ void CGameTransferSmack::restoreScreen()
 VA(0x00557720, 0x3C)
 DC_ADDRESS(0x11ee54, 0x84)
 MAC_ADDRESS(0x2153bc, 0x54)
-CGameTransferDlg::CGameTransferDlg(unsigned char sending)
+CGameTransferDlg::CGameTransferDlg(bool sending)
     : CTextDialog(0x12)
 {
     m_sending = sending;

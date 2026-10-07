@@ -315,8 +315,8 @@ public:
     unsigned long m_fileSize;
     unsigned long m_fullGameCrc;
     unsigned long m_thisPlayerDead;
-    unsigned char m_isDiff;
-    unsigned char m_makeOrig;
+    bool m_isDiff;
+    bool m_makeOrig;
 
     // Original public ??0CGameTransmitInitMsg@@QAA@KKK_N0@Z proves
     // Boolean inputs; CodeView lowers both parameters to its byte type.

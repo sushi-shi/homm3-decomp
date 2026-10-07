@@ -22,7 +22,7 @@ DC_ADDRESS(0x158880, 0x62)
 MAC_ADDRESS(0x19af44, 0x6c)
 strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
              long newOwner, hero* newHero, armyGroup* groupToDraw,
-             int firstId, unsigned char update, heroWindow* inWin)
+             int firstId, bool update, heroWindow* inWin)
 {
     m_x = inX;
     m_y = inY;

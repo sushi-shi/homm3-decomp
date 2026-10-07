@@ -675,7 +675,7 @@ public:
     // while the byte below is set. Both names await a writer.
     int m_magicTerrain;  // +0x53c0
     unsigned char m_onAntiMagicGarrison;  // +0x53c4
-    unsigned char m_isSurrounded;  // +0x53c5
+    bool m_isSurrounded;  // +0x53c5
     // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
     // Name remains ordinal until its writer is reconstructed.
     unsigned char m_onBoats;  // +0x53c6
@@ -1361,9 +1361,12 @@ private:
                            type_AI_combat_parameters& data);  // 0x41f3b0
     void markFirewalls(const army* currentArmy, long* enemyAttacks,
                         type_AI_combat_parameters* estimate);  // 0x4214f0
+    // DC move_toward(..., bool) declares consider_waiting bool, but
+    // chooseMeleeTarget's retail call pushes the 0/1 int of its && test
+    // unconverted; a bool parameter inserts test/setne (100 -> 97.63).
     bool moveToward(const army* currentArmy, long targetHex,
                               const long* enemyAttacks,
-                              bool considerWaiting);  // 0x41f580
+                              unsigned char considerWaiting);  // 0x41f580
 
 public:
     void markMoat(const army* currentArmy, long* enemyAttacks,

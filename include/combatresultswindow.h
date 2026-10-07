@@ -16,7 +16,7 @@ public:
         int experience);
     virtual ~TCombatResultsWindow();
     virtual int open(int newPriority, bool update);
-    virtual void close(unsigned char update);
+    virtual void close(bool update);
     void doModal();
 
     // Dreamcast TCombatResultsWindow::EOtherWidgetIDs.

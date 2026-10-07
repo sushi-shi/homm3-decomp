@@ -221,7 +221,7 @@ protected:
     int m_y;  // +0x04
     int m_lastFrame;  // +0x08
     unsigned char m_started;  // +0x0c
-    unsigned char m_sending;  // +0x0d
+    bool m_sending;  // +0x0d
     unsigned char m_drawText;  // +0x0e
     CSaveScreen* m_saveScreen;  // +0x10
     void drawCurrentFrame();
@@ -246,13 +246,13 @@ public:
     // Public in DC field list 0x4e47; TransmitSaveGame selects this member
     // when the progress window, rather than the adventure view, owns it.
     CGameTransferSmack m_smack;  // +0x58
-    CGameTransferDlg(unsigned char sending);
+    CGameTransferDlg(bool sending);
     virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
 
 protected:
-    unsigned char m_sending;  // +0x6c
+    bool m_sending;  // +0x6c
 };
 SIZE(CGameTransferDlg, 0x70);
 

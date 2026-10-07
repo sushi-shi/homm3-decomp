@@ -235,7 +235,7 @@ int TAdventureMapWindow::open(int zOrder, bool update)
 
 VA(0x004014d0, 0x3C)
 MAC_ADDRESS(0x00028c, 0x20)
-void TAdventureMapWindow::close(unsigned char update)
+void TAdventureMapWindow::close(bool update)
 {
     // Mac 0:0x28c has only the base close call, without immersion teardown.
     delete static_cast<TImmMouseEffect*>(m_immersion);

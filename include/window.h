@@ -122,7 +122,7 @@ public:
     virtual ~heroWindow();
     // Original DC public ?Open@heroWindow@@UAAHH_N@Z proves bool update.
     virtual int open(int zOrder, bool update);
-    virtual void close(unsigned char update);         // slot 2, retail 0x5fec60
+    virtual void close(bool update);         // slot 2, retail 0x5fec60
     virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
     virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
     // Original DC DrawWindow@@UAAX_NHH@Z proves bool despite lowered 0x20.

@@ -110,7 +110,7 @@ public:
                      TSpellContext context, int magicTerrain);
     virtual ~TSpellbookWindow();
     virtual int open(int newPriority, bool update);
-    virtual void close(unsigned char update);
+    virtual void close(bool update);
 
     // E:\gamedcs\SpellbookWindow.h:222
     DC_ADDRESS(0x14d32c, 0x10)

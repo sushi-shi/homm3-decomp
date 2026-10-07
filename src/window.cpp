@@ -115,7 +115,7 @@ int heroWindow::open(int newPriority, bool update)
 VA(0x005fec60, 0x49)
 DC_ADDRESS(0x1972e0, 0x3c)
 MAC_ADDRESS(0x20b158, 0x78)
-void heroWindow::close(unsigned char update)
+void heroWindow::close(bool update)
 {
     if ((m_type & WINDOW_FLAG_SAVE_BACKGROUND) && (m_status & WINDOW_STATE_OPEN))
         restoreBackground(update);

@@ -1347,6 +1347,10 @@ private:
     NewmapCell* zCell(int x, int y, int z);
 
 public:
+    // DC Init/Load/Read/Save(..., bool) declare two_layers bool. Complete's
+    // callers push NewSMapHeader::m_hasTwoLayers unchanged; a bool parameter
+    // with the byte field normalizes it (game::load 100 -> 99.79), and a bool
+    // field too drops NewSMapHeader::load and game.obj's bitset<8>::set body.
     int load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
     int save(TAbstractFile* outfile, int size, unsigned char twoLayers);
@@ -1382,7 +1386,7 @@ public:
     int loadObject(TAbstractFile* infile, CObject* object);
 
 private:
-    void init(int size, bool twoLayers);
+    void init(int size, unsigned char twoLayers);
     void close();  // Original: Close, mapcell.cpp:537, dc 0xec724.
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.

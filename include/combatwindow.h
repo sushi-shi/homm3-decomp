@@ -67,7 +67,7 @@ public:
 
 public:
     virtual ~TCombatWindow();
-    virtual void close(unsigned char update);
+    virtual void close(bool update);
     virtual void handleWidgetHover(widget* currentWidget);
     // Original DC DrawWindow@TCombatWindow@@UAAX_NHH@Z proves bool.
     virtual void drawWindow(bool update, int low, int high);
@@ -79,7 +79,7 @@ public:
     void scrollRollover(long delta);
     static int scrollUp(message& msg);
     static int scrollDown(message& msg);
-    TCombatWindow(unsigned char doPlacement);
+    TCombatWindow(bool doPlacement);
     void endPlacementPhase();
     void combatMessage(const char* newText, bool keep,
                         bool priority);

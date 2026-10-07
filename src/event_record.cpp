@@ -798,7 +798,7 @@ DC_ADDRESS(0x08d708, 0xb6)
 MAC_ADDRESS(0x0c0e4c, 0xb8)
 inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
                                                     type_point location,
-                                                    unsigned char onBoat)
+                                                    bool onBoat)
     : type_record_hide_hero(who, newOwner, 0)
 {
     m_previousBoat = (who->m_flags >> 18) & 1;

@@ -233,7 +233,7 @@ DC_ADDRESS(0x1240ec, 0x80)
 MAC_ADDRESS(0x1555f8, 0x7c)
 type_army_slot_widget::type_army_slot_widget(
     long newX, long newY, long newW, long newH, long newSlot,
-    long newId, const char* image, bool newLeftPane)
+    long newId, const char* image, unsigned char newLeftPane)
     : iconWidget(newX, newY, newW, newH, newId, image,
                  0, 0, 0, 0, 16)
 {
@@ -625,10 +625,11 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(m_artifactsButton);
 }
 
-// DC ?create_creature_icons@type_sacrifice_window@@AAAJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@_N@Z
-// declares left_pane bool. Under VC6 a bool here reallocates registers in the
-// last push_back expansion (100 -> 97.10) while unsigned char matches; the
-// Complete parameter is kept byte-typed pending a source model that explains it.
+// DC create_creature_icons, type_army_slot_widget's ctor and creature_click
+// all declare left_pane bool. With the whole left-pane chain bool (including
+// m_leftPane, which handleClick forwards), VC6 inlines one more vector::size
+// here than retail keeps out of line (100 -> 97.10); the byte chain matches,
+// so Complete keeps it byte-typed pending a source model that explains it.
 VA(0x00561f70, 0x427)
 DC_ADDRESS(0x1255cc, 0x258)
 MAC_ADDRESS(0x1588f0, 0x46c)
@@ -1661,7 +1662,7 @@ VA(0x00564fe0, 0x394)
 DC_ADDRESS(0x1270f0, 0x29e)
 MAC_ADDRESS(0x15b2a4, 0x374)
 void type_sacrifice_window::creatureClick(
-    long slot, bool rightClick, bool leftPane)
+    long slot, bool rightClick, unsigned char leftPane)
 {
     if (rightClick || slot == m_currentCreature.m_group || slot < 0) {
         if (slot < 0)

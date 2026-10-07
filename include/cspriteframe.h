@@ -71,7 +71,7 @@ enum TRawRowUnrollEntry {
 class CSpriteFrame : public resource {
 public:
     CSpriteFrame();
-    CSpriteFrame(const char* name, unsigned char cropped);
+    CSpriteFrame(const char* name, bool cropped);
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding);
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,

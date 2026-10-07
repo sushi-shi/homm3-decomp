@@ -5547,7 +5547,7 @@ DC_ADDRESS(0x09adcc, 0x166)
 MAC_ADDRESS(0x0b9324, 0x15c)
 void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const char* questionText, const char* emptyText, const char* rewardText, unsigned long visitedFlag, type_point point)
 {
-    unsigned char humanPlayer = currentHero->belongsToHuman();
+    bool humanPlayer = currentHero->belongsToHuman();
     if (humanPlayer) {
         normalDialog(questionText, 2, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);

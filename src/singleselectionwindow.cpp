@@ -3347,7 +3347,7 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
 VA(0x00580A70, 0x68B)
 DC_ADDRESS(0x135f04, 0x484)
 MAC_ADDRESS(0x178b94, 0x33c)
-void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
+void TSingleSelectionWindow::setupScenarioOptions(bool randomMaps)
 {
     // DC 2839 constructs msg at procedure scope (DC local sp+0x4c) for
     // Update(msg); Complete's Update takes none, but the unused local stays

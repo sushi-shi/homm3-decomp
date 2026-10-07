@@ -852,7 +852,7 @@ public:
         std::vector<GameSelectionHeadersStruct>* headers);
     int getHeader(char* dir, char* filename,
                   GameSelectionHeadersStruct* header);
-    void setupScenarioOptions(unsigned char randomMaps);
+    void setupScenarioOptions(bool randomMaps);
     void setupAdvancedOptions();
     void toggleRandomMapOptions();
     void createRandomMapOptionWidgets();

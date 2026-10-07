@@ -267,7 +267,7 @@ public:
     // clear. Complete expands this ordinary constructor into the public
     // constructor; its definition is visible before that caller in the TU.
     type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat,
-                        long side, unsigned char creatureSpell);
+                        long side, bool creatureSpell);
     long getCaliphValue(const army* target) const;
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)

@@ -1276,8 +1276,12 @@ public:
 
     // DC-attested inline helper; SetShrineHelpText proves the direct
     // byte-indexed availability read in retail.
+    // DC ?SpellIsAvailable@hero@@QBA_NH@Z returns bool, but a bool return
+    // normalizes the byte read and perturbs type_AI_combat_data::castSpell
+    // (100 -> 99.96); a bool m_availableSpells costs hero::initialize and
+    // updateSpellList instead.
     DC_ADDRESS(0x01fd90, 0x1a)
-    bool spellIsAvailable(int spell) const
+    unsigned char spellIsAvailable(int spell) const
     {
         return m_availableSpells[spell];
     }
