@@ -155,6 +155,8 @@ def _build_parser() -> argparse.ArgumentParser:
                         "with several sources, print the entries whose counts differ")
     pcv.add_argument("sources", nargs="+")
     pcv.add_argument("--functions", help="TSV of C2 entry RVAs (default: atlas raw list)")
+    pcv.add_argument("--installed", action="store_true",
+                     help="use the already installed trace shim (do not rebuild/restore)")
 
     pr = ss.add_parser("trace-registers", help="passive temporary-register stores, gated by object identity")
     pr.add_argument("unit", help="unit in config/units.toml")
