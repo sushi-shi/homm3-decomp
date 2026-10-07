@@ -22,6 +22,11 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 
+void ExtraInfoUnion::setCreatureBankEmpty(bool empty)
+{
+    m_creatureBankInfo.m_empty = empty;
+}
+
 VA(0x004fbf90, 0x61)
 DC_ADDRESS(0x0eb6a4, 0x98)
 MAC_ADDRESS(0x11d404, 0x130)

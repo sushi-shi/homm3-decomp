@@ -5539,9 +5539,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     for (int m = 0; m <= 6; m++)
         who->giveResource(m, bank.m_resources[m]);
 
-    // DC events.cpp:5788-5790 and Mac creatureBankEvent store the empty bit
-    // directly; retail VC6 expands no helper call here.
-    cell->m_creatureBankInfo.m_empty = 1;
+    cell->setCreatureBankEmpty(true);
     who->checkLevel();
     return 1;
 }
