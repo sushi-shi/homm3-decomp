@@ -141,9 +141,6 @@ typedef int (__fastcall *setHasFunction)(void *set, unsigned long member);
 static setHasFunction g_setHas;
 static void *g_colorReturn;
 static unsigned long g_colorIndex;
-static unsigned long g_mergeIndex;
-static struct { unsigned long a, b; } g_vetoPairs[1024];
-static unsigned g_vetoPairCount;
 static unsigned char g_regForce[1024];
 static int g_regForceActive;
 
@@ -229,8 +226,6 @@ static void __cdecl traceMain(unsigned long *body)
     g_root = (unsigned long)sym;
     g_selected = contains(*(const char **)(sym+0x18), g_filter);
     g_colorIndex = 0;
-    g_mergeIndex = 0;
-    g_vetoPairCount = 0;
     if (!g_selected) return;
     lastError = GetLastError();
     h = logOpen();
@@ -350,213 +345,6 @@ static void __declspec(naked) siteHook(void)
     }
 }
 
-/* Tail merging (decision-forcing.md, stage D). Both C2 tail mergers count
- * matching trailing instructions of two blocks and merge when the count is
- * nonzero: 0x36aa0 tests [esp+0x10] at 0x36afa, 0x3e30b tests [esp+0x18]
- * at 0x3e3e0. Each nonzero test in the selected root is decision k and is
- * logged; HOMM3_VC6_MERGE_VETO="k,..." turns those into C2's own no-merge
- * path (count 0). A veto never creates a merge C2 did not find. */
-static void *g_mergeReturnA;
-static void *g_mergeReturnB;
-
-static unsigned char g_mergeVeto[1024];
-
-static void loadMergeVeto(void)
-{
-    static char text[8192];
-    DWORD n = GetEnvironmentVariableA("HOMM3_VC6_MERGE_VETO", text, sizeof text);
-    unsigned long k = 0, i;
-    if (!n || n >= sizeof text) return;
-    for (i = 0; i <= n; ++i) {
-        char c = i < n ? text[i] : ',';
-        if (c >= '0' && c <= '9') k = k * 10 + (unsigned long)(c - '0');
-        else { if (k && k < sizeof g_mergeVeto) g_mergeVeto[k] = 1; k = 0; }
-    }
-}
-
-/* regs: pushad layout (EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX). In both
- * mergers EBP and EBX hold the two blocks under comparison at the test. */
-static unsigned long __cdecl mergeDecision(unsigned long kind, unsigned long *regs)
-{
-    HANDLE h;
-    DWORD lastError;
-    unsigned long count = regs[7], a = regs[2], b = regs[4];
-    unsigned i;
-    int veto;
-    if (!count || !g_selected) return count;
-    /* C2 retries a declined pair; a vetoed pair stays declined, so the
-     * numbering counts each pair's first decision only. */
-    for (i = 0; i < g_vetoPairCount; ++i)
-        if (g_vetoPairs[i].a == a && g_vetoPairs[i].b == b) return 0;
-    lastError = GetLastError();
-    ++g_mergeIndex;
-    veto = g_mergeIndex < sizeof g_mergeVeto && g_mergeVeto[g_mergeIndex];
-    if (veto && g_vetoPairCount < 1024) {
-        g_vetoPairs[g_vetoPairCount].a = a;
-        g_vetoPairs[g_vetoPairCount].b = b;
-        ++g_vetoPairCount;
-    }
-    h = logOpen();
-    if (h != INVALID_HANDLE_VALUE) {
-        writeString(h, "merge root="); writeHex(h, g_root);
-        writeString(h, " k="); writeDecimal(h, g_mergeIndex);
-        writeString(h, " kind="); writeDecimal(h, kind);
-        writeString(h, " count="); writeDecimal(h, count);
-        if (veto) writeString(h, " veto=1");
-        writeString(h, "\n"); CloseHandle(h);
-    }
-    SetLastError(lastError);
-    return veto ? 0 : count;
-}
-
-static void __declspec(naked) mergeHookA(void)
-{
-    __asm {
-        mov eax, [esp+10h]
-        pushad
-        mov ecx, esp
-        push ecx
-        push 1
-        call mergeDecision
-        add esp, 8
-        mov [esp+1Ch], eax
-        popad
-        test eax, eax
-        jmp dword ptr [g_mergeReturnA]
-    }
-}
-
-static void __declspec(naked) mergeHookB(void)
-{
-    __asm {
-        mov eax, [esp+18h]
-        pushad
-        mov ecx, esp
-        push ecx
-        push 2
-        call mergeDecision
-        add esp, 8
-        mov [esp+1Ch], eax
-        popad
-        test eax, eax
-        jmp dword ptr [g_mergeReturnB]
-    }
-}
-
-/* Function-entry coverage, used to locate passes (decision-forcing.md,
- * stage D). HOMM3_VC6_COVER names a file of ascending hexadecimal C2 RVAs,
- * one per line. Each gets an INT3; a vectored handler counts the hit,
- * restores the byte, single-steps it and re-arms it, until COVER_CAP hits
- * (then the original byte stays, bounding the cost). After the pass every
- * hit entry is logged as "cover <rva> <count>". Inactive without the file. */
-#define COVER_MAX 4096
-#define COVER_CAP 4000
-static unsigned long g_coverRva[COVER_MAX];
-static unsigned long g_coverHits[COVER_MAX];
-static unsigned char g_coverByte[COVER_MAX];
-static unsigned g_coverCount;
-static unsigned char *g_coverRearm;
-
-static int coverFind(unsigned long rva)
-{
-    int lo = 0, hi = (int)g_coverCount - 1;
-    while (lo <= hi) {
-        int mid = (lo + hi) / 2;
-        if (g_coverRva[mid] == rva) return mid;
-        if (g_coverRva[mid] < rva) lo = mid + 1; else hi = mid - 1;
-    }
-    return -1;
-}
-
-static LONG __stdcall coverHandler(EXCEPTION_POINTERS *info)
-{
-    EXCEPTION_RECORD *record = info->ExceptionRecord;
-    CONTEXT *context = info->ContextRecord;
-    if (record->ExceptionCode == EXCEPTION_BREAKPOINT) {
-        unsigned char *at = (unsigned char *)record->ExceptionAddress;
-        int k = coverFind((unsigned long)(at - (unsigned char *)g_real));
-        if (k < 0) {
-            --at;
-            k = coverFind((unsigned long)(at - (unsigned char *)g_real));
-            if (k < 0) return EXCEPTION_CONTINUE_SEARCH;
-        }
-        at[0] = g_coverByte[k];
-        ++g_coverHits[k];
-        context->Eip = (DWORD)at;
-        if (g_coverHits[k] < COVER_CAP) {
-            g_coverRearm = at;
-            context->EFlags |= 0x100;
-        }
-        return EXCEPTION_CONTINUE_EXECUTION;
-    }
-    if (record->ExceptionCode == EXCEPTION_SINGLE_STEP && g_coverRearm) {
-        g_coverRearm[0] = 0xcc;
-        g_coverRearm = 0;
-        return EXCEPTION_CONTINUE_EXECUTION;
-    }
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
-typedef PVOID (__stdcall *addHandlerFunction)(ULONG, PVOID);
-
-static void loadCover(void)
-{
-    static char text[65536];
-    char path[MAX_PATH];
-    HANDLE h;
-    DWORD n = 0, old;
-    unsigned i, low = 0xffffffff, high = 0;
-    unsigned long value = 0;
-    int digits = 0;
-    addHandlerFunction add;
-    unsigned char *code = (unsigned char *)g_real;
-    if (!GetEnvironmentVariableA("HOMM3_VC6_COVER", path, sizeof path)) return;
-    h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-    if (h == INVALID_HANDLE_VALUE) return;
-    ReadFile(h, text, sizeof text - 1, &n, 0);
-    CloseHandle(h);
-    for (i = 0; i <= n; ++i) {
-        char c = i < n ? text[i] : '\n';
-        if (c >= '0' && c <= '9') { value = value*16 + (c-'0'); ++digits; }
-        else if (c >= 'a' && c <= 'f') { value = value*16 + (c-'a'+10); ++digits; }
-        else if (c == 'x' || c == 'X') { value = 0; digits = 0; }
-        else {
-            if (digits && g_coverCount < COVER_MAX
-                && (!g_coverCount || value > g_coverRva[g_coverCount-1]))
-                g_coverRva[g_coverCount++] = value;
-            value = 0; digits = 0;
-        }
-    }
-    if (!g_coverCount) return;
-    add = (addHandlerFunction)GetProcAddress(GetModuleHandleA("kernel32.dll"),
-        "AddVectoredExceptionHandler");
-    if (!add || !add(1, (PVOID)coverHandler)) { g_coverCount = 0; return; }
-    low = g_coverRva[0];
-    high = g_coverRva[g_coverCount-1] + 1;
-    VirtualProtect(code+low, high-low, PAGE_EXECUTE_READWRITE, &old);
-    for (i = 0; i < g_coverCount; ++i) {
-        g_coverByte[i] = code[g_coverRva[i]];
-        code[g_coverRva[i]] = 0xcc;
-    }
-    FlushInstructionCache(GetCurrentProcess(), code+low, high-low);
-}
-
-static void writeCover(void)
-{
-    HANDLE h;
-    unsigned i;
-    if (!g_coverCount) return;
-    h = logOpen();
-    if (h == INVALID_HANDLE_VALUE) return;
-    for (i = 0; i < g_coverCount; ++i) {
-        if (!g_coverHits[i]) continue;
-        writeString(h, "cover "); writeHex(h, g_coverRva[i]);
-        writeString(h, " "); writeDecimal(h, g_coverHits[i]);
-        writeString(h, "\n");
-    }
-    CloseHandle(h);
-}
-
 static int installInlineTrace(void)
 {
     static int installed;
@@ -564,8 +352,6 @@ static int installInlineTrace(void)
     static const unsigned char siteBytes[] = {0x66,0x8b,0x47,0x6d,0x8b,0x74,0x24,0x48};
     unsigned char candidateBytes[] = {0x8b,0x0d,0,0,0,0};
     static const unsigned char colorBytes[] = {0x8d,0x04,0xfd,0,0,0,0,0x2b,0xc7};
-    static const unsigned char mergeBytesA[] = {0x8b,0x44,0x24,0x10,0x85,0xc0,0x77,0x47};
-    static const unsigned char mergeBytesB[] = {0x8b,0x44,0x24,0x18,0x85,0xc0,0xc7,0x02};
     if (installed) return 1;
     if (GetEnvironmentVariableA("HOMM3_VC6_INLINE_TRACE", g_filter,
         sizeof g_filter) >= sizeof g_filter) return 0;
@@ -584,12 +370,6 @@ static int installInlineTrace(void)
     if (!patchHook(0x19f8c, siteHook, siteBytes, sizeof siteBytes)) return 0;
     if (!patchHook(0x1a412, candidateHook, candidateBytes, sizeof candidateBytes)) return 0;
     if (!patchHook(0x24748, colorHook, colorBytes, sizeof colorBytes)) return 0;
-    loadMergeVeto();
-    g_mergeReturnA = (char *)g_real+0x36b00;
-    g_mergeReturnB = (char *)g_real+0x3e3e6;
-    if (!patchHook(0x36afa, mergeHookA, mergeBytesA, 6)) return 0;
-    if (!patchHook(0x3e3e0, mergeHookB, mergeBytesB, 6)) return 0;
-    loadCover();
     installed = 1;
     return 1;
 }

@@ -238,9 +238,6 @@ int __stdcall InvokeCompilerPass(int argc, char **argv, int fLastTU)
     }
 #endif
     ret = g_invoke(argc, argv, fLastTU);
-#ifdef SHIM_INLINE_TRACE
-    writeCover();
-#endif
     h = logOpen();
     if (h != INVALID_HANDLE_VALUE) {
         writeString(h, "# c2shim call=");

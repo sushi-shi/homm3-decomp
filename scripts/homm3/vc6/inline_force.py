@@ -91,7 +91,12 @@ REGISTER_NAMES = {1: "eax", 2: "ecx", 3: "edx", 4: "ebx", 6: "ebp", 7: "esi", 8:
 
 def parse_colors(text: str, symbol: str) -> list[dict]:
     """Global coloring decisions (0x24748) of the selected root, in order."""
-    roots = _root_addresses(text, symbol)
+    names = {}
+    for line in text.splitlines():
+        if line.startswith("sym "):
+            _, address, name = line.split(" ", 2)
+            names[address] = name
+    roots = {a for a, n in names.items() if n == symbol}
     rows = []
     for line in text.splitlines():
         if not line.startswith("color "):
@@ -104,25 +109,6 @@ def parse_colors(text: str, symbol: str) -> list[dict]:
                          eligible=[r for r in range(1, 9) if mask >> r & 1],
                          priority=int(fields["priority"]),
                          forced=int(fields.get("forced", 0))))
-    return rows
-
-
-def _root_addresses(text: str, symbol: str) -> set[str]:
-    return {line.split(" ", 2)[1] for line in text.splitlines()
-            if line.startswith("sym ") and line.split(" ", 2)[2] == symbol}
-
-
-def parse_merges(text: str, symbol: str) -> list[dict]:
-    """Tail-merge decisions (0x36afa kind 1, 0x3e3e0 kind 2) of the root."""
-    roots = _root_addresses(text, symbol)
-    rows = []
-    for line in text.splitlines():
-        if not line.startswith("merge "):
-            continue
-        fields = dict(word.split("=", 1) for word in line.split()[1:])
-        if fields["root"] in roots:
-            rows.append(dict(k=int(fields["k"]), kind=int(fields["kind"]),
-                             count=int(fields["count"]), veto="veto" in fields))
     return rows
 
 
@@ -160,7 +146,6 @@ class Session:
     flags: list[str]
     streams: dict = field(repr=False, default_factory=dict)
     last_colors: list = field(repr=False, default_factory=list)
-    last_merges: list = field(repr=False, default_factory=list)
     reference: bytes = field(repr=False, default=b"")
     runs: int = 0
 
@@ -180,8 +165,7 @@ class Session:
         session.reference = session._replay(None)
         return session
 
-    def _replay(self, rules: list[Rule] | None, registers: dict[int, int] | None = None,
-                vetoes: set[int] | None = None) -> bytes:
+    def _replay(self, rules: list[Rule] | None, registers: dict[int, int] | None = None) -> bytes:
         # /Z7 records the object path: every replay writes the same file.
         compiled = self.workdir / "compiled.obj"
         compiled.unlink(missing_ok=True)
@@ -198,20 +182,17 @@ class Session:
             if registers:
                 extra["HOMM3_VC6_REG_FORCE"] = ",".join(
                     f"{k}:{reg}" for k, reg in sorted(registers.items()))
-            if vetoes:
-                extra["HOMM3_VC6_MERGE_VETO"] = ",".join(str(k) for k in sorted(vetoes))
         process = build._traceReplay(compiled, self.source, self.flags, self.streams, extra)
         if process.returncode or not compiled.is_file():
             raise RuntimeError("C2 replay failed:\n" + build._tail(process))
         self.runs += 1
         return compiled.read_bytes()
 
-    def force(self, rules: list[Rule], registers: dict[int, int] | None = None,
-              vetoes: set[int] | None = None) -> tuple[bytes, list[dict]]:
-        data = self._replay(rules, registers, vetoes)
+    def force(self, rules: list[Rule], registers: dict[int, int] | None = None
+              ) -> tuple[bytes, list[dict]]:
+        data = self._replay(rules, registers)
         log = (self.workdir / "sites.log").read_text(encoding="latin1")
         self.last_colors = parse_colors(log, self.symbol)
-        self.last_merges = parse_merges(log, self.symbol)
         return data, parse_sites(log, self.symbol)
 
     def text(self, data: bytes) -> str:
@@ -279,71 +260,6 @@ def register_reach(selector: str, *, rules: list[Rule] | None = None,
     return report
 
 
-def merge_reach(selector: str, *, rules: list[Rule] | None = None, passes: int = 3,
-                streams: dict | None = None, install_shim: bool = True) -> dict:
-    """Greedy veto search over C2's tail merges.
-
-    A veto sends one merge C2 found down C2's own no-merge path; nothing is
-    merged that C2 did not propose. Decision numbers are per root and can
-    shift after a veto changes later blocks, so each pass re-reads them."""
-    selected = _selection.retail(selector)
-    retail_text, retail_label = _selection.reference_text(selector)
-    retail_strict = strict_stream(retail_text)
-    session = Session.open(selected.unit, selected.name, streams)
-    if rules is None:
-        rules = _saved_inline_rules(session.workdir)
-    trials = 0
-    with (forcing_shim() if install_shim else contextlib.nullcontext()):
-        gate = gate_inert(session)
-        data, _ = session.force(rules)
-        base_merges = list(session.last_merges)
-        base_score = similarity(strict_stream(session.text(data)), retail_strict)
-        best_score, vetoes = base_score, set()
-        for _ in range(passes):
-            improved = False
-            data, _ = session.force(rules, vetoes=vetoes)
-            for merge in session.last_merges:
-                k = merge["k"]
-                if k in vetoes or merge["veto"]:
-                    continue
-                trial = vetoes | {k}
-                data, _ = session.force(rules, vetoes=trial)
-                trials += 1
-                score = similarity(strict_stream(session.text(data)), retail_strict)
-                if score > best_score + 1e-12:
-                    best_score, vetoes, improved = score, trial, True
-                if best_score == 1.0:
-                    break
-            if not improved or best_score == 1.0:
-                break
-    report = dict(selector=selector, unit=selected.unit, symbol=selected.name,
-                  retail=retail_label, inert_gate=gate, inline_rules=[r.line() for r in rules],
-                  merges=base_merges, vetoes=sorted(vetoes),
-                  base_similarity=round(base_score, 6), best_similarity=round(best_score, 6),
-                  strict=best_score == 1.0, trials=trials, replays=session.runs,
-                  workdir=str(session.workdir))
-    report["verdict"] = ("merge-state: retail reached by vetoing tail merges"
-                         if report["strict"] and vetoes else
-                         "merge-state partial" if vetoes else
-                         "not tail-merge state" if base_merges else
-                         "no tail merges")
-    (session.workdir / "merge-reach.json").write_text(json.dumps(report, indent=2) + "\n")
-    return report
-
-
-def run_merge_reach(args) -> int:
-    report = merge_reach(args.target, passes=args.passes)
-    print(f"[merge-reach] {report['symbol']} ({report['unit']}) vs {report['retail']}")
-    print(f"[gate]  empty decision vector reproduces the plain replay")
-    for row in report["merges"]:
-        print(f"   k={row['k']:>3} kind={row['kind']} matched={row['count']}")
-    print(f"[veto]  {report['vetoes'] or 'none'}  inline rules: {len(report['inline_rules'])}")
-    print(f"[score] {report['base_similarity']:.4f} -> {report['best_similarity']:.4f}"
-          f"{' STRICT' if report['strict'] else ''} ({report['trials']} trials)")
-    print(f"[verdict] {report['verdict']}")
-    return 0
-
-
 def _parse_rule_line(line: str) -> Rule:
     owner, callee, occurrence, action = line.split("\t")
     return Rule("" if owner == "*" else owner, "" if callee == "*" else callee,
@@ -360,64 +276,52 @@ def _saved_inline_rules(workdir: Path) -> list[Rule]:
 
 
 def register_reach_many(selectors: list[str], *, jobs: int = 4, passes: int = 2,
-                        max_trials: int = 0, output: Path | None = None,
-                        mode: str = "register") -> list[dict]:
-    """Capture every unit first, then search all functions in one pool.
-
-    mode "register" runs reg-reach, "merge" runs merge-reach."""
+                        max_trials: int = 0, output: Path | None = None) -> list[dict]:
     from concurrent.futures import ThreadPoolExecutor
 
-    units: dict[str, str] = {}
+    by_unit: dict[str, list[str]] = {}
     for selector in selectors:
         try:
-            units[selector] = _selection.retail(selector).unit
+            by_unit.setdefault(_selection.retail(selector).unit, []).append(selector)
         except SystemExit:
             continue
     results = []
-    output = output or (FORCE_ROOT / f"{'merge' if mode == 'merge' else 'reg'}-reach-all.jsonl")
+    output = output or (FORCE_ROOT / "reg-reach-all.jsonl")
     with forcing_shim(), output.open("w") as sink:
-        streams = {unit: capture_unit(unit) for unit in sorted(set(units.values()))}
+        for unit, members in sorted(by_unit.items()):
+            streams = capture_unit(unit)
 
-        def one(selector):
-            unit = units[selector]
-            try:
-                if mode == "merge":
-                    return merge_reach(selector, passes=passes, streams=streams[unit],
-                                       install_shim=False)
-                return register_reach(selector, passes=passes, streams=streams[unit],
-                                      install_shim=False, max_trials=max_trials)
-            except (Exception, SystemExit) as error:
-                return dict(selector=selector, unit=unit,
-                            verdict=f"error: {str(error).splitlines()[0][:160] if str(error) else type(error).__name__}")
+            def one(selector, streams=streams, unit=unit):
+                try:
+                    return register_reach(selector, passes=passes, streams=streams,
+                                          install_shim=False, max_trials=max_trials)
+                except (Exception, SystemExit) as error:
+                    return dict(selector=selector, unit=unit,
+                                verdict=f"error: {str(error).splitlines()[0][:160] if str(error) else type(error).__name__}")
 
-        with ThreadPoolExecutor(max_workers=jobs) as pool:
-            for report in pool.map(one, list(units)):
-                slim = {k: v for k, v in report.items() if k not in ("decisions", "merges")}
-                slim["decisions"] = len(report.get("decisions") or report.get("merges") or [])
-                results.append(slim)
-                sink.write(json.dumps(slim) + "\n")
-                sink.flush()
-                print(f"[{mode}-reach] {slim.get('selector')} {slim.get('unit')}: {slim.get('verdict')} "
-                      f"{slim.get('base_similarity')} -> {slim.get('best_similarity')}",
-                      file=sys.stderr)
+            with ThreadPoolExecutor(max_workers=jobs) as pool:
+                for report in pool.map(one, members):
+                    slim = {k: v for k, v in report.items() if k != "decisions"}
+                    results.append(slim)
+                    sink.write(json.dumps(slim) + "\n")
+                    sink.flush()
+                    print(f"[reg-reach] {slim.get('selector')} {unit}: {slim.get('verdict')} "
+                          f"{slim.get('base_similarity')} -> {slim.get('best_similarity')}",
+                          file=sys.stderr)
     return results
 
 
 def run_register_reach_all(args) -> int:
     selectors = [line.split("\t")[0] for line in Path(args.list).read_text().splitlines()
                  if line.startswith("0x")]
-    mode = getattr(args, "mode", "register")
     results = register_reach_many(selectors, jobs=args.jobs, passes=args.passes,
-                                  max_trials=args.max_trials, mode=mode)
+                                  max_trials=args.max_trials)
     lines = ["| VA | unit | base | best | forced | verdict |", "| --- | --- | ---: | ---: | --- | --- |"]
     for row in results:
-        forced = row.get("forced", row.get("vetoes", ""))
         lines.append(f"| {row.get('selector')} | {row.get('unit')} | {row.get('base_similarity', 0):.4f} "
-                     f"| {row.get('best_similarity', 0):.4f} | {forced} | {row.get('verdict')} |")
-    name = "merge" if mode == "merge" else "reg"
-    summary = FORCE_ROOT / f"{name}-reach-all.md"
-    title = "Tail-merge veto" if mode == "merge" else "Register-forcing"
-    summary.write_text(f"# {title} reachability\n\n" + "\n".join(lines) + "\n")
+                     f"| {row.get('best_similarity', 0):.4f} | {row.get('forced', '')} | {row.get('verdict')} |")
+    summary = FORCE_ROOT / "reg-reach-all.md"
+    summary.write_text("# Register-forcing reachability\n\n" + "\n".join(lines) + "\n")
     print(summary.read_text())
     return 0
 
