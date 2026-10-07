@@ -205,8 +205,8 @@ public:
         return windowHandler(msg);
     }
     virtual int windowHandler(message& msg);                            // slot 9
-    virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
-    virtual unsigned char processRightSelect(int id);                   // slot 11
+    virtual bool processHover(int mouseX, int mouseY);         // slot 10
+    virtual bool processRightSelect(int id);                   // slot 11
     // Original SetHelpText@@QAAXPAUTHelpText@@HH_N forwards a bool.
     void setHelpText(THelpText* helpText, int start, int stop, bool copyText);
 

@@ -1975,7 +1975,7 @@ int normalDialogHandler(message& msg)
             return exitNormalDialog(msg);
     }
     if (g_remoteOn && !g_dialogDeadline) {
-        unsigned char msgReceived = 0;
+        bool msgReceived = 0;
         if (g_dPlay) {
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
             if (handler) {

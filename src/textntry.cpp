@@ -27,7 +27,7 @@
 
 class CTextEntrySave : public Bitmap16Bit {
 private:
-    unsigned char m_saved;  // Original project spelling: bSaved; retail +0x38.
+    bool m_saved;  // Original project spelling: bSaved; retail +0x38.
 
 public:
     // E:\gamedcs\textntry.cpp:38 ()
@@ -44,7 +44,7 @@ public:
 
     // E:\gamedcs\textntry.cpp:50
     DC_ADDRESS(0x16377c, 0xa)
-    unsigned char isSaved() { return m_saved; }
+    bool isSaved() { return m_saved; }
 };
 
 // Original: textEntryWidget::textEntryWidget; textntry.cpp:60

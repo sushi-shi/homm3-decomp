@@ -792,7 +792,7 @@ int recruitUnit::main(message& msg)
     bool abortDialog = g_turnDuration.isExpired();
 
     if (!abortDialog && g_remoteOn) {
-        unsigned char msgReceived = 0;
+        bool msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
             handler->checkHandleNet(1, &msgReceived);

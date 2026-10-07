@@ -54,7 +54,7 @@ class CAnimatedDlg : public CTextDialog {
 public:
     CAnimatedDlg();
     virtual ~CAnimatedDlg();
-    virtual unsigned char setup(const char* text, font* currentFont,
+    virtual bool setup(const char* text, font* currentFont,
                                 const char* spriteName, int seq);  // slot 13
     virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
@@ -183,11 +183,11 @@ class CSaveScreen : public Bitmap16Bit {
 public:
     CSaveScreen(int w, int h);
     void save(int x, int y);
-    void restore(unsigned char update);
-    unsigned char isSaved();
+    void restore(bool update);
+    bool isSaved();
 
 protected:
-    unsigned char m_screenSaved;  // +0x38
+    bool m_screenSaved;  // +0x38
     int m_x;  // +0x3c
     int m_y;  // +0x40
 };
@@ -209,7 +209,7 @@ class CGameTransferSmack {
 public:
     CGameTransferSmack();
     ~CGameTransferSmack();
-    void setup(int x, int y, unsigned char sending, unsigned char drawText);
+    void setup(int x, int y, bool sending, bool drawText);
     void start();
     void setPercentage(float pct);
     void stop();

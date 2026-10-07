@@ -354,8 +354,8 @@ int combatManager::main(message& msg)
         // The retail command header retains the Dreamcast two-argument
         // prototype even though remote.cpp's Complete wrapper ignores the
         // compression out-parameter.
-        CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                               unsigned char* wasCompressed);
+        CNetMsg* getRemoteData(bool removeFromQueue,
+                               bool* wasCompressed);
         void receiveChat(char* chat, int fromWho);
 
         CNetMsg* netMsg = getRemoteData(1, 0);

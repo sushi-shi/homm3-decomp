@@ -438,11 +438,11 @@ SIZE(CNetPlayerHandler, 0x7d0);
 class CSingleSelectionNetMsgHandler : public CNetMsgHandler {
 public:
     CSingleSelectionNetMsgHandler();
-    virtual CNetMsg* checkHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* checkHandleNet(bool inPopup,
+                                    bool* msgReceived);  // slot 1
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);  // slot 3
 
-    unsigned char m_wasCompressed;  // +0x0c
+    bool m_wasCompressed;  // +0x0c
 };
 SIZE(CSingleSelectionNetMsgHandler, 0x10);
 
@@ -725,7 +725,7 @@ public:
     void updateAllyEnemyFlags(bool update);
 
 private:
-    virtual unsigned char processRightSelect(int id);  // slot 11
+    virtual bool processRightSelect(int id);  // slot 11
 
 public:
     virtual int exitDialog(message& msg);   // slot 14
@@ -749,15 +749,15 @@ public:
     void setHumanSlot();
     bool handleNetMsg(CNetMsg* netMsg, bool& cancel);
     void onSortMaps(int how);
-    unsigned char onBeginGame();
+    bool onBeginGame();
     void onPlayerPosClick(int pos);
     int getThisPlayerGamePos();
     void setDifficultyHiLite();
     int onWidgetDeselect(message* msg, unsigned char* exitFlag,
                          unsigned char remoteClick);
-    unsigned char canChooseTown(int gamePos);
-    unsigned char canChooseHero(int gamePos);
-    unsigned char hasMultipleTowns(int gamePos);
+    bool canChooseTown(int gamePos);
+    bool canChooseHero(int gamePos);
+    bool hasMultipleTowns(int gamePos);
     int getDisplayFace(int gamePos);
     int getHeroInPos(int gamePos);
     // Dreamcast names the enum return, and Complete's inlined nine-town
@@ -766,7 +766,7 @@ public:
     const char* getHeroName(int gamePos);
     void onNameChange(int gamePos, const char* newName);
     void updateNames();
-    unsigned char highlightFile(char* filename);
+    bool highlightFile(char* filename);
     void onNameClick(int pos);
     // Native ?IsVersionCompatible@TSingleSelectionWindow@@QAA_NPBD@Z.
     bool isVersionCompatible(const char* otherVersion);
@@ -774,7 +774,7 @@ public:
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
     void setCurrentMap(int map, bool update);
-    void drawHeroAdvancedOption(int playerPos, unsigned char update,
+    void drawHeroAdvancedOption(int playerPos, bool update,
                                 int position);
     void onDeleteFile();
     bool onNewSetupInfoMsg(CNetMsg* netMsg);
@@ -820,10 +820,10 @@ public:
     void turnOffAdvancedOptions();
     bool onClickMsg(CNetMsg* netMsg);
     void turnChatOn(bool update);
-    void turnChatOff(unsigned char update);
+    void turnChatOff(bool update);
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
-    void updateTown(int pos, TTownType town, unsigned char inPopup);
+    void updateTown(int pos, TTownType town, bool inPopup);
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
     void removePlayer(unsigned long dpid);
     void setupLoadGameMode();
@@ -835,7 +835,7 @@ public:
     // header transfer completes.
     void updateGameVars();
     void applyHeaderToGame(GameSelectionHeadersStruct* header);
-    unsigned char beginSavedGame();
+    bool beginSavedGame();
     bool beginNewGame();
     void updateMainWindow();
     // The disk header reader family around it, visible only to the
@@ -862,7 +862,7 @@ public:
     void rebuildRandomMapPlayerSetup();
     // Native ?SendPlayerPositions@TSingleSelectionWindow@@QAA_NK@Z.
     bool sendPlayerPositions(unsigned long dpidTo);
-    unsigned char sendSetupInfo(unsigned long dpid);
+    bool sendSetupInfo(unsigned long dpid);
     bool isHost();
     void sendPlayerFaces();
     bool isMultiPlayer();

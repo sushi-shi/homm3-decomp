@@ -66,7 +66,7 @@ public:
     // from OnKillFocus (dc 0x102cc8), which then redraws the dialog.
     int getPlayerCount();
     void updateOK();
-    unsigned char onOK();
+    bool onOK();
     virtual textWidget* getRolloverWidget();
 };
 SIZE(CHotSeatDlg, 0x114);
@@ -158,7 +158,7 @@ public:
     void goMainMenu();
     void refreshSessions();
     void checkSessions();
-    unsigned char isNT();
+    bool isNT();
     virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
 

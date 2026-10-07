@@ -4961,7 +4961,7 @@ int townManager::main(message& msg)
     int exitFlag = 0;
     char text[400];
     playerData* player = g_game->getLocalPlayer();
-    unsigned char netMsgSeen;
+    bool netMsgSeen;
 
     g_soundManager->serviceSounds();
     if (g_turnDuration.isExpired())

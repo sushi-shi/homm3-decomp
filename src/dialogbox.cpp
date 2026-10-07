@@ -45,7 +45,7 @@ TDialogBox::~TDialogBox()
 VA(0x0048ff00, 0x833)
 DC_ADDRESS(0x08185c, 0x52e)
 MAC_ADDRESS(0x0a166c, 0xa48)
-unsigned char TDialogBox::setup(int winX, int winY,
+bool TDialogBox::setup(int winX, int winY,
                                 int winWidth, int winHeight)
 {
     m_x = winX;
@@ -168,7 +168,7 @@ CTextDialog::CTextDialog(unsigned winType)
 VA(0x00490820, 0x26B)
 DC_ADDRESS(0x081e38, 0xc8)
 MAC_ADDRESS(0x0a20f4, 0x17c)
-unsigned char CTextDialog::setup(const char* text, font* currentFont)
+bool CTextDialog::setup(const char* text, font* currentFont)
 {
     int winX;
     int winY;

@@ -277,7 +277,7 @@ public:
 class CNewPlayerUpdateProc {
 public:
     CNewPlayerUpdateProc(unsigned long dpid);
-    unsigned char isFinished();
+    bool isFinished();
     void headerRequested(unsigned char flag, int number);
     void headerConfirmed();
     virtual void go();       // slot 0, 0x5789f0
@@ -321,7 +321,7 @@ public:
 
     CNewPlayerUpdateMan();
 
-    unsigned char isSendingHeaders();
+    bool isSendingHeaders();
 
     int getFirstAvailable();
 
@@ -415,7 +415,7 @@ const char* getResourceBonusDescription(int townType)
 // open read-only, restore the parent directory, then close a found file.
 DC_ADDRESS(0x12f84c, 0x20)
 MAC_ADDRESS(0x16dc00, 0x84)
-unsigned char savedGameExists(char* filename)
+bool savedGameExists(char* filename)
 {
     char tempText[100];
     sprintf(tempText, "%s%s", filename, g_saveGameSuffix);
@@ -432,9 +432,9 @@ unsigned char savedGameExists(char* filename)
 VA(0x00577360, 0x1C5)
 DC_ADDRESS(0x12f86c, 0x15c)
 MAC_ADDRESS(0x16dc84, 0x18c)
-unsigned char saveValid(const char* filename)
+bool saveValid(const char* filename)
 {
-    unsigned char valid = 0;
+    bool valid = 0;
 
     if (getAvailableDiskSpace() < 0x100000) {
         normalDialog(g_generalText->getText(GENERAL_TEXT_INSUFFICIENT_SAVE_DISK_SPACE), 1, -1, -1,
@@ -1048,7 +1048,7 @@ void sRand(int seed);
 void remoteCleanup();
 // This TU's own file-scope save-name validator; its definition sits in
 // the carcass under the 0x577360 claim until reconstructed.
-unsigned char saveValid(const char* filename);
+bool saveValid(const char* filename);
 static void sliderChatWindow(int state, heroWindow* parentWindow);
 static void sliderDuration(int state, heroWindow* parentWindow);
 static void sliderFileMenu(int state, heroWindow* parentWindow);
@@ -1432,7 +1432,7 @@ inline CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
 
 // E:\gamedcs\singleselectionwindow.cpp:1341
 DC_ADDRESS(0x148338, 0x10)
-inline unsigned char CNewPlayerUpdateProc::isFinished() { return m_finished; }
+inline bool CNewPlayerUpdateProc::isFinished() { return m_finished; }
 
 // DC HeaderRequested (0x148348), singleselectionwindow.cpp:1346.
 // Complete's expanded copy at 0x5892b0 queues flag/number by value instead
@@ -1682,7 +1682,7 @@ void CNewPlayerUpdateMan::tick()
 // DC IsSendingHeaders; Complete expands it into each sort-button arm.
 // E:\gamedcs\singleselectionwindow.cpp:1517
 DC_ADDRESS(0x148928, 0x38)
-inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
+inline bool CNewPlayerUpdateMan::isSendingHeaders()
 {
     for (int i = 0; i < 8; ++i)
         if (m_procs[i])
@@ -1742,7 +1742,7 @@ class CChatWidget : public textWidget {
 public:
     class CChatSave : public Bitmap16Bit {
     public:
-        unsigned char m_saved;  // +0x38
+        bool m_saved;  // +0x38
 
         // DC1618 constructs the base; DC1621 assigns the flag in the body.
         // Retail's expansion likewise writes the derived vptr before saved.
@@ -1763,7 +1763,7 @@ public:
         }
 
         DC_ADDRESS(0x148c8c, 0x12)
-        unsigned char isSaved() { return m_saved; }
+        bool isSaved() { return m_saved; }
     };
 
     DC_ADDRESS(0x148ca0, 0xd8)
@@ -3791,7 +3791,7 @@ void TSingleSelectionWindow::hideRandomMapOptions()
 VA(0x005822d0, 0x868)
 DC_ADDRESS(0x1371fc, 0xb2c)
 MAC_ADDRESS(0x17a05c, 0x844)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx)
-unsigned char TSingleSelectionWindow::processRightSelect(int id)
+bool TSingleSelectionWindow::processRightSelect(int id)
 {
     // File rows consume right clicks without opening a popup. Dreamcast's
     // first two source rows prove this guard precedes the detail dispatch.
@@ -6909,7 +6909,7 @@ bool TSingleSelectionWindow::sendPlayerPositions(
 // E:\gamedcs\singleselectionwindow.cpp:7009
 DC_ADDRESS(0x140ee4, 0x40)
 MAC_ADDRESS(0x181c70, 0x110)
-inline unsigned char TSingleSelectionWindow::sendSetupInfo(
+inline bool TSingleSelectionWindow::sendSetupInfo(
     unsigned long dpid)
 {
     CNewSetupInfoMsg msg(&g_game->m_setup);
@@ -7725,7 +7725,7 @@ void TSingleSelectionWindow::sendPlayerFaces()
 VA(0x0058BCE0, 0x5AF)
 DC_ADDRESS(0x142674, 0x1fc)
 MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape
-unsigned char TSingleSelectionWindow::onBeginGame()
+bool TSingleSelectionWindow::onBeginGame()
 {
     if (m_randomMapSelected) {
         std::string name = getRandomMapName();
@@ -7834,7 +7834,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 VA(0x0058C290, 0x2D2)
 DC_ADDRESS(0x142870, 0x176)
 MAC_ADDRESS(0x183bb4, 0x1a8)
-unsigned char TSingleSelectionWindow::beginSavedGame()
+bool TSingleSelectionWindow::beginSavedGame()
 {
     incProgressBar(1);
     updateTurnDuration();
@@ -8016,7 +8016,7 @@ void TSingleSelectionWindow::turnChatOn(bool update)
 VA(0x0058cbf0, 0x152)
 DC_ADDRESS(0x142fac, 0x11e)
 MAC_ADDRESS(0x184384, 0x184)
-void TSingleSelectionWindow::turnChatOff(unsigned char update)
+void TSingleSelectionWindow::turnChatOff(bool update)
 {
     m_chatToggle->setText(g_generalText->getText(GENERAL_TEXT_SHOW_CHAT));
     getWidget(105)->show();
@@ -8050,7 +8050,7 @@ VA(0x0058CD50, 0x119)
 DC_ADDRESS(0x143138, 0x84)
 MAC_ADDRESS(0x184538, 0xac)
 void TSingleSelectionWindow::updateTown(
-        int pos, TTownType town, unsigned char inPopup)
+        int pos, TTownType town, bool inPopup)
 {
     CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(pos);
     if (!p)
@@ -8068,7 +8068,7 @@ void TSingleSelectionWindow::updateTown(
 VA(0x0058CE70, 0x40)
 DC_ADDRESS(0x1431bc, 0x58)
 MAC_ADDRESS(0x1845e4, 0x6c)
-unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
+bool TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes* slot =
         &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
@@ -8084,7 +8084,7 @@ unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 VA(0x0058CEB0, 0xF7)
 DC_ADDRESS(0x143214, 0x116)
 MAC_ADDRESS(0x184650, 0x14c)
-unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
+bool TSingleSelectionWindow::canChooseTown(int gamePos)
 {
     if (m_loadMode)
         return 0;
@@ -8109,7 +8109,7 @@ unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
 VA(0x0058CFB0, 0x129)
 DC_ADDRESS(0x14332c, 0x116)
 MAC_ADDRESS(0x18479c, 0x154)
-unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
+bool TSingleSelectionWindow::canChooseHero(int gamePos)
 {
     if (m_loadMode)
         return 0;
@@ -8130,7 +8130,7 @@ unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
         return 0;
     if (slotAtt->m_generateHero)
         return 1;
-    unsigned char randomHero = slotAtt->m_hasRandomHero != 0;
+    bool randomHero = slotAtt->m_hasRandomHero != 0;
     return randomHero;
 }
 
@@ -8303,7 +8303,7 @@ void TSingleSelectionWindow::updateNames()
 VA(0x0058D3E0, 0x122)
 DC_ADDRESS(0x143954, 0x128)
 MAC_ADDRESS(0x184f00, 0xf0)
-unsigned char TSingleSelectionWindow::highlightFile(char* filename)
+bool TSingleSelectionWindow::highlightFile(char* filename)
 {
     int len = strlen(filename);
     int i = 0;
@@ -8349,7 +8349,7 @@ VA(0x0058d510, 0xA40)
 DC_ADDRESS(0x143a7c, 0x158a)
 MAC_ADDRESS(0x184ff0, 0xccc)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x
 void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
-                                                    unsigned char update,
+                                                    bool update,
                                                     int position)
 {
     if (position == -1)
@@ -8678,7 +8678,7 @@ VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
 VA(0x0058e310, 0x21)
 DC_ADDRESS(0x1451a0, 0x48)
 MAC_ADDRESS(0x186068, 0x58)
-CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(bool inPopup, bool* msgReceived)
 {
     CNetMsg* msg = getRemoteData(0, &m_wasCompressed);
     if (!msg)

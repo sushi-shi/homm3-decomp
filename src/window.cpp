@@ -625,7 +625,7 @@ VA_COMPGEN(0x005ff6b0, 0x21, SCALAR_DELETING_DTOR, CHeroWindowEx)
 VA(0x005ff6e0, 0xAE)
 DC_ADDRESS(0x197d9c, 0xba)
 MAC_ADDRESS(0x20beb0, 0x130)
-unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
+bool CHeroWindowEx::processHover(int mouseX, int mouseY)
 {
     textWidget* rollover = getRolloverWidget();
     if (!rollover)
@@ -656,7 +656,7 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
 VA(0x005ff790, 0x82)
 DC_ADDRESS(0x197e58, 0x5a)
 MAC_ADDRESS(0x20bfe0, 0xb4)
-unsigned char CHeroWindowEx::processRightSelect(int id)
+bool CHeroWindowEx::processRightSelect(int id)
 {
     widget* current = getWidget(id);
     if (!current)

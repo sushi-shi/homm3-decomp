@@ -9335,7 +9335,7 @@ int CAdvPopup::windowHandler(message& msg)
         return exitDialog(msg);
 
     if (g_remoteOn) {
-        unsigned char msgReceived = 0;
+        bool msgReceived = 0;
         CNetMsgHandler* netMsgHandler = g_dPlay->getNetMsgHandler();
         if (netMsgHandler)
             netMsgHandler->checkHandleNet(1, &msgReceived);
