@@ -9145,7 +9145,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     }
     done = 0;
 
-    unsigned char playerDone[NUM_PLAYERS];
+    unsigned char playerDone[8];
     memset(playerDone, 0, sizeof(playerDone));
     int dataTimeOutStart = GameTime::get();
     int retryCount = 0;
@@ -9179,7 +9179,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                                false, true);
                         return 0;
                     } else {
-                        for (int i = 0; i < NUM_PLAYERS; ++i) {
+                        for (int i = 0; i < 8; ++i) {
                             if (m_players[i].isHuman() && !playerDone[i]
                                     && i != g_game->getLocalPlayerGamePos()) {
                                 unsigned long killDPID =
@@ -9200,7 +9200,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             }
 
             dataTimeOutStart = GameTime::get();
-            for (int i = 0; i < NUM_PLAYERS; ++i) {
+            for (int i = 0; i < 8; ++i) {
                 if (m_players[i].isHuman() && !playerDone[i]
                         && i != g_game->getLocalPlayerGamePos()) {
                     CGameTransmitEndMsg resendEnd(
@@ -9261,7 +9261,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 done = 1;
                 if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
                     playerDone[confirmMsg->m_from] = 1;
-                    for (int i = 0; i < NUM_PLAYERS; ++i) {
+                    for (int i = 0; i < 8; ++i) {
                         if (m_players[i].isHuman() && !playerDone[i]
                                 && i != g_game->getLocalPlayerGamePos()) {
                             done = 0;
