@@ -1866,29 +1866,15 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // encoded tiles use a word row-offset table and the same packed packet byte as
 // adventure cells.  Only code seven carries pixels in this renderer.
 
-// Residual (83.2115%): four DC/retail direction arms, the eight-statement Duff
-// loop, raw do/while rows, and indexed encoded for-rows recover all behavior.
-// Split packet load/increment and block-scoped row destinations further match
-// retail's packet schedule and dead-vflip parameter-home reuse.  The recovered
-// `kOpaqueRunCode` and raw-row declaration order are byte-flat positive facts;
-// the surviving delta is a C1 register permutation replicated in four arms.
-// Retail and Dreamcast also agree on the surprising general-RLE delegation
-// `Draw(sw, sy, sw, ...)`; spelling that positive fact alone scores 81.4249%
-// because C1 then homes `this` in EDI across the whole body.  Swapping the two
-// leading declarations and replacing the local constant with the existing
-// code-7 enumerator are byte-flat paired probes.  The proven call spelling is
-// retained despite that expected checkpoint dip while the surrounding source
-// shape needed to restore retail's EDX home remains under reconstruction.
-// Native row traversal advances the destination pointer and raw source
-// pointer directly. Restoring those lifetimes reaches 81.4249%, preserving
-// every decoder/delegation call and the DC const line-table pointer. The
-// entry this-register home and replicated arm allocation still differ.
-// Loki's GCC 2.95 build (no auto-inlining or cross-branch hoisting) loads
-// `pal.m_data` once, right after the line-table pointer and before the
-// flip dispatch, as the sibling decoders' `palette` local does; restoring
-// that local took retail from 81.42% to 98.27%. DC attributes both raw-row
-// advances to one line (2938); advancing the destination row before the
-// source row reproduces retail's four raw arms exactly.
+// Four DC/retail direction arms, the eight-statement Duff loop, raw do/while
+// rows and indexed encoded for-rows recover all behavior. Retail and
+// Dreamcast agree on the surprising general-RLE delegation
+// `Draw(sw, sy, sw, ...)`. Loki's GCC 2.95 build (no auto-inlining or
+// cross-branch hoisting) loads `pal.m_data` once, right after the line-table
+// pointer and before the flip dispatch, as the sibling decoders' `palette`
+// local does; restoring that local took retail from 81.42% to 98.27%. DC
+// attributes both raw-row advances to one line (2938); advancing the
+// destination row before the source row reproduces retail exactly.
 VA(0x0047dd40, 0xAD8)
 DC_ADDRESS(0x076988, 0x762)
 MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
