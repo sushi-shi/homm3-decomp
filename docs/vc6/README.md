@@ -17,7 +17,7 @@ Wine remains the verdict. Do not use leaked compiler source as evidence.
 | Variadic member functions | [Variadic members](variadic-members.md) |
 | Global and static data placement | [Data layout](data-layout.md) |
 | Compiler generation comparison | [RTM generation](rtm-generation.md) |
-| Compiler instrumentation | [Shim](shim.md), [decision forcing](decision-forcing.md) |
+| Compiler instrumentation | [Shim](shim.md), [decision forcing](decision-forcing.md), [context variants](context-variants.md) |
 | Known compiler behavior | [Behavior catalog](behavior-catalog.md) |
 | Victor library compiler findings | [Victor](victor-library.md) |
 

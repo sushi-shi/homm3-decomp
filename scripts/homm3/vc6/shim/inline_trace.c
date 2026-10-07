@@ -221,6 +221,118 @@ static void __declspec(naked) colorHook(void)
     }
 }
 
+/* Carried-over back-end state at the start of the selected function
+ * (context-variants.md). HOMM3_VC6_SNAPSHOT names a file that receives, on
+ * the first selected root only, raw copies of C2's writable image sections
+ * (.bssbe, .data, .databe) and the root symbol record, each preceded by a
+ * 12-byte header: tag, rva, size. Observation only: nothing is changed. */
+static int g_snapshotDone;
+
+static void writeBlock(HANDLE h, unsigned long tag, unsigned long rva,
+    const void *data, unsigned long size)
+{
+    DWORD n;
+    unsigned long header[3];
+    header[0] = tag; header[1] = rva; header[2] = size;
+    WriteFile(h, header, sizeof header, &n, 0);
+    WriteFile(h, data, size, &n, 0);
+}
+
+static void snapshotState(unsigned char *sym)
+{
+    char path[MAX_PATH];
+    HANDLE h;
+    unsigned char *base = (unsigned char *)g_real;
+    if (g_snapshotDone) return;
+    if (!GetEnvironmentVariableA("HOMM3_VC6_SNAPSHOT", path, sizeof path)) return;
+    g_snapshotDone = 1;
+    h = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL, 0);
+    if (h == INVALID_HANDLE_VALUE) return;
+    writeBlock(h, 1, 0x99000, base + 0x99000, 0x66d4);
+    writeBlock(h, 2, 0xab000, base + 0xab000, 0xe0);
+    writeBlock(h, 3, 0xac000, base + 0xac000, 0x2470);
+    writeBlock(h, 4, (unsigned long)sym, sym, 0x80);
+    CloseHandle(h);
+}
+
+/* Diagnostic state transplant (context-variants.md): HOMM3_VC6_STATE_PATCH
+ * names a binary file of (rva, value) u32 pairs written into C2's image at
+ * the start of the first selected root, after the snapshot. Used only to
+ * attribute a CUR/MAX difference to carried state; never a variant source. */
+static int g_patchDone;
+
+static void patchState(void)
+{
+    static unsigned long pairs[4096];
+    char path[MAX_PATH];
+    HANDLE h;
+    DWORD n = 0, i;
+    unsigned char *base = (unsigned char *)g_real;
+    if (g_patchDone) return;
+    if (!GetEnvironmentVariableA("HOMM3_VC6_STATE_PATCH", path, sizeof path)) return;
+    g_patchDone = 1;
+    h = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    if (h == INVALID_HANDLE_VALUE) return;
+    ReadFile(h, pairs, sizeof pairs, &n, 0);
+    CloseHandle(h);
+    for (i = 0; i + 1 < n / 4; i += 2) {
+        unsigned long rva = pairs[i];
+        if ((rva >= 0x99000 && rva + 4 <= 0x9f6d4) || (rva >= 0xab000 && rva + 4 <= 0xae470))
+            *(unsigned long *)(base + rva) = pairs[i + 1];
+    }
+}
+
+/* Cost-record channel (context-variants.md). HOMM3_VC6_CB_SET is a list
+ * "name=cb;name=cb": each symbol whose compiler name contains `name` gets
+ * that IL cost in its record (sym+0x6d) when the selected root first meets
+ * it (the root itself in traceMain, a callee at its budget test). This
+ * emulates a context whose source gives that symbol another cost; C2 then
+ * makes every decision itself. "*root*" names the selected root. */
+#define CB_SET_MAX 16
+static struct { char name[160]; short cb; } g_cbSet[CB_SET_MAX];
+static unsigned g_cbSetCount;
+static int g_cbSetLoaded;
+
+static void loadCbSet(void)
+{
+    static char text[4096];
+    DWORD n, i;
+    unsigned k = 0, j = 0;
+    int value = 0, sign = 1, inValue = 0;
+    g_cbSetLoaded = 1;
+    n = GetEnvironmentVariableA("HOMM3_VC6_CB_SET", text, sizeof text);
+    if (!n || n >= sizeof text) return;
+    for (i = 0; i <= n && k < CB_SET_MAX; ++i) {
+        char c = i < n ? text[i] : ';';
+        if (c == ';') {
+            if (inValue && j) { g_cbSet[k].name[j] = 0; g_cbSet[k].cb = (short)(sign * value); ++k; }
+            j = 0; value = 0; sign = 1; inValue = 0;
+        } else if (!inValue && c == '=') {
+            inValue = 1;
+        } else if (inValue) {
+            if (c == '-') sign = -1; else if (c >= '0' && c <= '9') value = value * 10 + (c - '0');
+        } else if (j + 1 < sizeof g_cbSet[0].name) {
+            g_cbSet[k].name[j++] = c;
+        }
+    }
+    g_cbSetCount = k;
+}
+
+static void applyCbSet(unsigned char *sym, int isRoot)
+{
+    unsigned i;
+    const char *name;
+    if (!g_cbSetLoaded) loadCbSet();
+    if (!g_cbSetCount) return;
+    name = *(const char **)(sym + 0x18);
+    for (i = 0; i < g_cbSetCount; ++i) {
+        if (isRoot ? lstrcmpA(g_cbSet[i].name, "*root*") == 0
+                   : (lstrcmpA(g_cbSet[i].name, "*root*") != 0 && contains(name, g_cbSet[i].name)))
+            *(short *)(sym + 0x6d) = g_cbSet[i].cb;
+    }
+}
+
 static void __cdecl traceMain(unsigned long *body)
 {
     HANDLE h;
@@ -233,11 +345,15 @@ static void __cdecl traceMain(unsigned long *body)
     g_vetoPairCount = 0;
     if (!g_selected) return;
     lastError = GetLastError();
+    snapshotState(sym);
+    patchState();
+    applyCbSet(sym, 1);
     h = logOpen();
     if (h == INVALID_HANDLE_VALUE) { SetLastError(lastError); return; }
     traceSymbol(h, sym);
     writeString(h, "main "); writeHex(h, g_root);
     writeString(h, " cb="); writeSignedDecimal(h, *(short *)(sym+0x6d));
+    writeString(h, " phase="); writeDecimal(h, *(unsigned long *)((char *)g_real+0x9f120));
     writeString(h, "\n"); CloseHandle(h);
     SetLastError(lastError);
 }
@@ -252,6 +368,7 @@ static unsigned long __cdecl traceSite(unsigned long *regs)
     char action;
     if (!g_selected) return 0;
     lastError = GetLastError();
+    applyCbSet(sym, 0);
     action = g_ruleCount ? forceDecision(*(const char **)((unsigned char *)body[0]+0x18),
                                          *(const char **)(sym+0x18)) : 0;
     h = logOpen();
