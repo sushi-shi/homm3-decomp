@@ -229,6 +229,27 @@ predicted variants is reported.
     mapcell. Random edits rarely reach every phase/offset/prefix
     combination; an unhit variant is not shown to be unreachable.
 
+## Stable walls under this state (2026-10-07)
+
+`compile-m-walls` ran `compile-m` for each of the 242 walls (rmg/zlib
+excluded) and checked whether retail's masked bytes are among the M
+assemblies. Output: `build/vc6/unstable-state/walls.{jsonl,md}`.
+
+| verdict | walls |
+| --- | ---: |
+| retail not among the M assemblies | 226 |
+| retail in the captured state (the residue is outside the function's bytes) | 7 |
+| not compared (generated `__h3cg` helpers, or no retail body) | 7 |
+| retail reachable by unrelated-edit state | 2 |
+
+The two reachable walls are both phase cases:
+
+* `aiEnterTown` (0x5253d0) at phase 0;
+* `loadSeerHutTextColumn` (0x56c120) at phase 1.
+
+No wall needs a declaration offset or a callee prefix. The 226 are source
+differences: unrelated edits cannot reach retail for them.
+
 ## Limits
 
 * `compile-m` sweeps the three axes separately. Phase × offset is a full
