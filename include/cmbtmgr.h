@@ -1082,8 +1082,8 @@ public:
     unsigned char m_obstacleAttackVisited[COMBAT_GRID_CELLS];  // +0x14031
 
     combatManager();
-    unsigned char isWinner(int thisSide) const;
-    unsigned char combatIsOver() const;
+    bool isWinner(int thisSide) const;
+    bool combatIsOver() const;
     void resetHitByCreature();
     // DC LF_MFUNCTION records have no this type: these are static helpers.
     static TWallTargetId getTargetWallIndex(int gridIndex);
@@ -1109,7 +1109,7 @@ public:
     // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
     // routine with the creature-cast selector passed by command.cpp.
     void initiateSpell(ESpellId spellToCast, int creatureSpell);
-    unsigned char placeObstacle(int obstacleId);
+    bool placeObstacle(int obstacleId);
     void beginObstacleTraversal(army* stack);  // 0x46a520
     bool checkObstacleAttacks(army* thisArmy, bool isWalking);
     void lootDeadHero(int side,
@@ -1117,7 +1117,7 @@ public:
     void calculateGainedExperience(int side, int* experienceGained);
     bool checkFireWall(long hex, army* currentArmy, bool isWalking);
     bool checkLandmine(long hex, army* currentArmy, bool isWalking);
-    unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
+    bool shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
     bool isQuickCombat() const;
@@ -1177,7 +1177,7 @@ public:
 private:
     void loadIcons();
     void freeIcons();
-    unsigned char doorCanBeLowered() const;
+    bool doorCanBeLowered() const;
 
 public:
     // Complete-only moat damage worker; its sole caller passes the entered
@@ -1203,7 +1203,7 @@ private:
 public:
     int placeLargeObstacle(unsigned terrainMask,
                            unsigned specialTerrainMask);
-    static unsigned char loadWallTraitsTable();
+    static bool loadWallTraitsTable();
     void raiseSkeletons(int side);
     void learnSpellFromEagleEye(int side);
     void resetLimitCreature();
@@ -1433,7 +1433,7 @@ public:
                          unsigned char meleeOnly,
                          const type_AI_combat_parameters* data,
                          searchArray* currentSearchArray);
-    unsigned char isValidTeleport(const army* thisArmy, long newHex);
+    bool isValidTeleport(const army* thisArmy, long newHex);
     void simulateCombat(long side, bool simulated);  // 0x422a40
     bool validWallTarget(TWallTargetId wall);  // 0x476440
     void doCompAI(int whichGroup);  // 0x4221f0
@@ -1445,7 +1445,7 @@ public:
     bool aiCheckRetreat();  // 0x41e570
     void clearEffects();  // 0x5a66b0
     void checkGetAIMove();
-    unsigned char ableToSummonElemental(SpellID spell, long side);
+    bool ableToSummonElemental(SpellID spell, long side);
     int getNextChainLightningTarget(army* lastTargetArmy,
                                     int useSRandom);  // 0x5a61f0
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
@@ -1551,7 +1551,7 @@ public:
     long computeSpellDamage(SpellID spell, long spellPower, long mastery,
                             hero* castingHero, hero* targetHero,
                             const army* target,
-                            unsigned char simulated) const;  // 0x5a7890
+                            bool simulated) const;  // 0x5a7890
     long modifySpellDamage(long baseDamage, SpellID spell,
                            const hero* castingHero, const hero* targetHero,
                            const army* target,
@@ -1687,6 +1687,9 @@ public:
                         const army* target,
                         bool redirected,
                         long creatureSpell) const;  // 0x5a8640
+    // DC find_resurrection_target(int, int, bool) and CastSpell's bool
+    // monster flag predate Complete's integer creatureSpell: retail pushes
+    // the whole dword on to spellCastWorkChance (a bool zero-extends it).
     army* findResurrectionTarget(int armyGroup, int targetIndex,
                                    long creatureSpell);
     army* findAnimateDeadTarget(int armyGroup, int targetIndex);
@@ -1867,7 +1870,7 @@ private:
     // DC ?LoadArmies@combatManager@@AAAX_N@Z - PRIVATE on the Dreamcast
     // (`A` access), which costs nothing here and is recorded rather than
     // acted on: this header keeps one public block.
-    void loadArmies(unsigned char isSurrounded);
+    void loadArmies(bool isSurrounded);
     void checkNativeTerrain();
     void combineGroups(armyGroup* src, armyGroup* dest);
 
@@ -1909,7 +1912,7 @@ private:
     bool automateFirstAidTent();
     bool automateTower();
     void processFirstAid(army* currentArmy);
-    unsigned char processMoveThenAttack(message& msg);
+    bool processMoveThenAttack(message& msg);
 };
 SIZE(combatManager::TWallTraits, 0x24);
 

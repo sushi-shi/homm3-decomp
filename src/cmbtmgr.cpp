@@ -620,7 +620,7 @@ MAC_COMPGEN_ADDRESS(0x06df98, 0x94, IMPLICIT_DTOR, TArcher)
 VA(0x00462990, 0x8F)
 DC_ADDRESS(0x05d538, 0xd4)
 MAC_ADDRESS(0x06e140, 0xe0)
-unsigned char combatManager::loadWallTraitsTable()
+bool combatManager::loadWallTraitsTable()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0066fec0, wallsSpreadsheetName, "walls.txt"));
@@ -944,7 +944,7 @@ void combatManager::freeIcons()
 VA(0x00463600, 0x3D8)
 DC_ADDRESS(0x05e09c, 0x33a)
 MAC_ADDRESS(0x06ec6c, 0x420)  // anchor-callee
-void combatManager::loadArmies(unsigned char isSurrounded)
+void combatManager::loadArmies(bool isSurrounded)
 {
     int side;
     for (side = 0; side < 2; side++) {
@@ -1918,7 +1918,7 @@ void combatManager::setNextArmy(int group, int index)
 VA(0x00465830, 0x76)
 DC_ADDRESS(0x05fb14, 0xec)
 MAC_ADDRESS(0x0713a4, 0x170)
-unsigned char combatManager::combatIsOver() const
+bool combatManager::combatIsOver() const
 {
     for (int side = 0; side < 2; side++) {
         if (m_sideSurrendered[side])
@@ -1946,7 +1946,7 @@ unsigned char combatManager::combatIsOver() const
 VA(0x004658b0, 0xBC)
 DC_ADDRESS(0x05fc00, 0xea)
 MAC_ADDRESS(0x071514, 0x264)
-unsigned char combatManager::isWinner(int thisSide) const
+bool combatManager::isWinner(int thisSide) const
 {
     const int otherSide = 1 - thisSide;
     int other;
@@ -2261,7 +2261,7 @@ void combatManager::resetHitByCreature()
 VA(0x00466010, 0x243)
 DC_ADDRESS(0x060354, 0x1e2)
 MAC_ADDRESS(0x071fb0, 0x294)
-unsigned char combatManager::placeObstacle(int obstacleId)
+bool combatManager::placeObstacle(int obstacleId)
 {
     const TObstacleInfo* const shape = &s_obstacleInfo[obstacleId];
     TPickANumber picker(0x12, 0xa8);
@@ -2713,7 +2713,7 @@ void combatManager::makeCreaturesVanish()
 VA(0x00467130, 0x82)
 DC_ADDRESS(0x060ee0, 0xc8)
 MAC_ADDRESS(0x073328, 0xa8)
-unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
+bool combatManager::shouldLowerDoor(army* thisArmy, long hex) const
 {
     int side = thisArmy->getControllingSide();
     if (side != 1 || m_fortificationLevel == 0 || m_drawbridgeState != DRAWBRIDGE_UP)
@@ -3817,7 +3817,7 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
 // HexIsBlocked; its two cell/body tests are the same retail operands.
 DC_ADDRESS(0x063268, 0x5a)
 MAC_ADDRESS(0x07612c, 0x60)
-unsigned char combatManager::doorCanBeLowered() const
+bool combatManager::doorCanBeLowered() const
 {
     if (m_currentSide != 1)
         return 0;

@@ -991,7 +991,7 @@ public:
     // bare member-function declarator on a class this widely included
     // is the include-set wall's own trigger shape (the townManager
     // precedent), and townmgr.cpp is the only live consumer.
-    unsigned char addGarrisonHero(town* ourTown);
+    bool addGarrisonHero(town* ourTown);
     int buildingsOwned(int townType, int buildingId, int mageLevel);
     bool hasMobileHero();
     int nextHero();

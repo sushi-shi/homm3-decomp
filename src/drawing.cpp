@@ -570,7 +570,7 @@ void combatManager::updateMouseGrid(int iNewMouseGridIndex,
 
 // E:\gamedcs\drawing.cpp:1141
 // RETAIL_LOCATED(0x00494440, 0x7d5): not reconstructed; anchor-global, dc 0x84e2c
-void combatManager::drawFrame(unsigned char update, unsigned char bLimitCreatureEffect, unsigned char bLimitDraw, int iDelay, unsigned char bRefreshBackground, unsigned char bDoDelayTil)
+void combatManager::drawFrame(bool update, bool bLimitCreatureEffect, bool bLimitDraw, int iDelay, bool bRefreshBackground, bool bDoDelayTil)
 {
     // @stub
 }
@@ -591,35 +591,35 @@ void combatManager::drawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
 
 // E:\gamedcs\drawing.cpp:1661
 // RETAIL_LIVE(0x00495090, 0x114): reconstructed below; dc caller edge, dc 0x85978
-int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, bool isFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1699
 // RETAIL_LIVE(0x004951b0, 0xfd): reconstructed below; caller-edge, dc 0x85a48
-int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, unsigned char isFlipped, int iColor)
+int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, bool isFlipped, int iColor)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1772
 // RETAIL_LIVE(0x004952b0, 0xfb): reconstructed below; caller-edge, dc 0x85c2c
-int combatManager::drawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+int combatManager::drawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, bool isFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1804
 // RETAIL_LIVE(0x004953b0, 0x144): reconstructed below; caller-edge, dc 0x85d00
-int combatManager::drawSpellEffect(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped, unsigned char isAlpha)
+int combatManager::drawSpellEffect(const CSprite* sprite, int frame, int x, int y, bool isFlipped, bool isAlpha)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1836
 // RETAIL_LIVE(0x00495500, 0x142): reconstructed below; caller-edge, dc 0x85e3c
-int combatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped)
+int combatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int y, bool isFlipped)
 {
     // @stub
 }
@@ -2132,7 +2132,7 @@ void combatManager::computeMaxExtent()
 
 // E:\gamedcs\drawing.cpp:2214
 // RETAIL_LOCATED(0x00495f50, 0x17c): not reconstructed; dc-bracket forced, dc 0x866ac
-void combatManager::computeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, unsigned char SaveBiggestExtent)
+void combatManager::computeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, bool SaveBiggestExtent)
 {
     // @stub
 }

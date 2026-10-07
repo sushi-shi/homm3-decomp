@@ -101,6 +101,10 @@ DATA(0x00687f58) const SSpellTraits (&g_spellTraits)[81] = g_spellTraitsImp;
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);
 
+// DC ?SpellTargetsASingleArmy@@YA_NHH@Z returns bool, but retail
+// 0x59e077/0x59e08a set the whole EAX (xor eax,eax / mov eax,1). A bool
+// return normalizes the result through AL (100 -> 57.89), so Complete's
+// return is byte- or int-width rather than bool.
 VA(0x0059e060, 0x30)
 DC_ADDRESS(0x14e278, 0x50)
 MAC_ADDRESS(0x18e73c, 0x7c)

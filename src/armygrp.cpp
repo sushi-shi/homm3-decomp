@@ -63,7 +63,7 @@ bool armyGroup::hasCreatures() const
 // splitArmy and windowHandler retain calls; VC6 expands the same-TU calls.
 DC_ADDRESS(0x04db08, 0x80)
 MAC_ADDRESS(0x0564e8, 0xf4)
-void TSplitWindow::updateSplitArmy(unsigned char update)
+void TSplitWindow::updateSplitArmy(bool update)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -181,7 +181,7 @@ TSplitWindow::~TSplitWindow()
 VA(0x00449e90, 0x2EF)
 DC_ADDRESS(0x04e180, 0x206)
 MAC_ADDRESS(0x057204, 0x318)
-void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
+void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, bool inSrcRestricted, bool inDestRestricted)
 {
     g_splitWindow = new TSplitWindow(0xb1, 0x14, m_armyTypes[srcIndex]);
     if (!g_splitWindow)
@@ -624,7 +624,7 @@ void armyGroup::initialize()
 VA(0x0044ab20, 0x3A)
 DC_ADDRESS(0x04eb50, 0x36)
 MAC_ADDRESS(0x05814c, 0x48)
-unsigned char armyGroup::hasAllUndead() const
+bool armyGroup::hasAllUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
@@ -641,7 +641,7 @@ unsigned char armyGroup::hasAllUndead() const
 // image gap contains Dismiss rather than this body.
 DC_ADDRESS(0x04eb88, 0x36)
 MAC_ADDRESS(0x058194, 0x48)
-unsigned char armyGroup::hasSomeUndead() const
+bool armyGroup::hasSomeUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
@@ -664,7 +664,7 @@ void armyGroup::dismiss(int whichIndex)
 VA(0x0044ab80, 0x21)
 DC_ADDRESS(0x04ebd0, 0x20)
 MAC_ADDRESS(0x0581f8, 0x94)
-unsigned char armyGroup::isMember(TCreatureType monType) const
+bool armyGroup::isMember(TCreatureType monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == monType)
@@ -1025,7 +1025,7 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
 VA(0x0044b3c0, 0xED)
 DC_ADDRESS(0x04f2e8, 0x3e)
 MAC_ADDRESS(0x058f48, 0x178)
-int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
+int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, bool applyLimits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
@@ -1114,7 +1114,7 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
 VA(0x0044b620, 0x1FE)
 DC_ADDRESS(0x04f3cc, 0x21e)
 MAC_ADDRESS(0x059200, 0x3c4)
-unsigned char armyGroup::merge(armyGroup* ag)
+bool armyGroup::merge(armyGroup* ag)
 {
     armyGroup ag1;
     armyGroup ag2;

@@ -2180,7 +2180,7 @@ int handleCastTeleport(message& msg)
 VA(0x005a3700, 0xC3)
 DC_ADDRESS(0x152b7c, 0x102)
 MAC_ADDRESS(0x193df8, 0x114)
-unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
+bool combatManager::isValidTeleport(const army* thisArmy, long newHex)
 {
     int oldHex = thisArmy->m_gridIndex;
     if (newHex == oldHex)
@@ -4535,7 +4535,7 @@ DC_ADDRESS(0x156b94, 0x9c)
 MAC_ADDRESS(0x198cbc, 0x5c)
 long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mastery,
                                        hero* castingHero, hero* targetHero,
-                                       const army* target, unsigned char simulated) const
+                                       const army* target, bool simulated) const
 {
     long damage = g_spellTraits[spell].m_masteryBonus[mastery]
         + g_spellTraits[spell].m_powerFactor * spellPower;
@@ -5268,7 +5268,7 @@ TCreatureType getElementalType(SpellID spell)
 VA(0x005A93A0, 0xA4)
 DC_ADDRESS(0x1580c4, 0x42)
 MAC_ADDRESS(0x19aabc, 0x74)
-unsigned char combatManager::ableToSummonElemental(SpellID spell, long side)
+bool combatManager::ableToSummonElemental(SpellID spell, long side)
 {
     if (m_numArmies[side] >= 20)
         return 0;

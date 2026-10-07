@@ -4202,7 +4202,7 @@ DC_ADDRESS(0x114a5c, 0x7e)
 MAC_ADDRESS(0x146e80, 0xf4)
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
     TSecondarySkill first, TSecondarySkill second,
-    unsigned char complexChoice)
+    bool complexChoice)
 {
     if ((ourHero->getSecondarySkill(first) > 0)
             == (ourHero->getSecondarySkill(second) > 0)) {

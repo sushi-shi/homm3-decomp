@@ -3598,7 +3598,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
 
 TCreatureType upgradedCreatureType(TCreatureType type);
 TCreatureType downgradedCreatureType(TCreatureType type);
-int isBaseCreature(TCreatureType type);
+bool isBaseCreature(TCreatureType type);
 
 VA(0x004a6b30, 0x12A)
 DC_ADDRESS(0x096994, 0x180)

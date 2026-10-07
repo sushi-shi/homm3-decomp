@@ -1257,7 +1257,7 @@ const char* hero::getBiography()
 VA(0x004d9050, 0x20)
 DC_ADDRESS(0x0cc0bc, 0x26)
 MAC_ADDRESS(0x0f4bc0, 0x5c)
-unsigned char hero::belongsToHuman() const
+bool hero::belongsToHuman() const
 {
     if (m_owner < 0)
         return 0;
@@ -2013,7 +2013,7 @@ void hero::applyBattleLossTemps()
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
                                           TSecondarySkill first,
                                           TSecondarySkill second,
-                                          unsigned char complexChoice);
+                                          bool complexChoice);
 
 // get_skill_award is defined further down (0x4dad00): retail emits this
 // caller FIRST, so the helper needs a declaration here. Being only
@@ -4537,7 +4537,7 @@ void hero::updateStats()
 VA(0x004e1800, 0x24F)
 DC_ADDRESS(0x0d2e80, 0x230)
 MAC_ADDRESS(0x102330, 0x27c)
-int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickView)
+int heroView(int heroID, int noDismiss, int alreadyFaded, bool quickView)
 {
     g_heroScreenNoDismiss = noDismiss;
     g_heroScreenHeroId = heroID;
@@ -4862,7 +4862,7 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
 // E:\gamedcs\hero.cpp:4689
 DC_ADDRESS(0x0d38d8, 0x12)
 MAC_ADDRESS(0x103018, 0x20)
-unsigned char hero::hasSecondarySkill(int whichSkill)
+bool hero::hasSecondarySkill(int whichSkill)
 {
     return m_skillOrder[whichSkill] > 0;
 }
@@ -5729,7 +5729,7 @@ TCreatureType hero::getNecromancyCreature()
 VA(0x004e3cd0, 0x268)
 DC_ADDRESS(0x0d4390, 0x112)
 MAC_ADDRESS(0x104988, 0x280)
-float hero::getNecromancyFactor(unsigned char applyLimit) const
+float hero::getNecromancyFactor(bool applyLimit) const
 {
     float factor = g_necromancyFactors[m_skillLevel[eSecSkillNecromancy]];
     if (m_skillLevel[eSecSkillNecromancy] > 0) {
@@ -6368,7 +6368,7 @@ boat* hero::findSummonableBoat() const
 VA(0x004e5550, 0x15E)
 DC_ADDRESS(0x0d524c, 0x64)
 MAC_ADDRESS(0x106614, 0xd0)
-unsigned char hero::canSummonBoat() const
+bool hero::canSummonBoat() const
 {
     if (!spellIsAvailable(SPELL_SUMMON_BOAT))
         return 0;
@@ -6403,7 +6403,7 @@ DC_ADDRESS(0x0d52d0, 0xd0)
 MAC_ADDRESS(0x10671c, 0xd0)
 // Mac code 0+0x10671c retains both abs calls; -O1 -proc 750 plus linked
 // reload-slot collapse matches the complete 208-byte body. DC names distance.
-unsigned char hero::isInPatrolRadius(type_point point) const
+bool hero::isInPatrolRadius(type_point point) const
 {
     if (m_patrolRadius < 0 || m_patrolX == kPatrolNone)
         return 1;

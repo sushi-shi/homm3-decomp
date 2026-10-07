@@ -1239,7 +1239,7 @@ bool playerData::hasCapitol()
 VA(0x004b9fc0, 0x167)
 DC_ADDRESS(0x0a4ee8, 0x1c2)
 MAC_ADDRESS(0x0cc4fc, 0x1bc)
-unsigned char playerData::addGarrisonHero(town* ourTown)
+bool playerData::addGarrisonHero(town* ourTown)
 {
     int i;
     hero* ourHero;

@@ -2430,7 +2430,7 @@ void combatManager::resetMouse()
 VA(0x00478900, 0x290)
 DC_ADDRESS(0x06f664, 0x1c0)
 MAC_ADDRESS(0x086dac, 0x1f8)
-unsigned char combatManager::processMoveThenAttack(message& msg)
+bool combatManager::processMoveThenAttack(message& msg)
 {
     army* currentArmy = getCurrentArmy();
     int oldGridIndex = currentArmy->m_gridIndex;

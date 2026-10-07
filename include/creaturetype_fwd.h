@@ -6,8 +6,8 @@
 
 #include "armygrp.h"
 
-int isBaseCreature(TCreatureType monType);
-unsigned char isSiegeWeapon(TCreatureType creature);
+bool isBaseCreature(TCreatureType monType);
+bool isSiegeWeapon(TCreatureType creature);
 TCreatureType upgradedCreatureType(TCreatureType type);
 TCreatureType downgradedCreatureType(TCreatureType type);
 
