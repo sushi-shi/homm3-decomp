@@ -38,8 +38,8 @@
 #include "winmgr.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00660878) long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
-DATA(0x00660898) long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
+DATA(0x00660878) long g_wideDirectionRingIndex[COMBAT_DIRECTION_WIDE_LOWER + 1] = { 0, 1, 2, 4, 5, 6, 7, 3 };
+DATA(0x00660898) long g_wideDirectionRingOrder[COMBAT_DIRECTION_WIDE_LOWER + 1] = { 0, 1, 2, 7, 3, 4, 5, 6 };
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00660868) int g_walkingFrom = -1;
@@ -197,7 +197,7 @@ DC_ADDRESS(0x0438e8, 0xc8)
 MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity
 void army::initClean()
 {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < MAX_SAMPLES; i++) {
         m_armySample[i] = 0;
     }
     m_roundsLeftBeforeVanish = -1;
@@ -409,7 +409,7 @@ void army::loadResources()
         m_armySample[POST_WALK_SAMPLE] = 0;
     }
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < MAX_SAMPLES; i++) {
         if (m_armySample[i]) {
             m_armySample[i]->m_memSample.m_memVolume = 64;
             m_armySample[i]->m_memSample.m_memCindex = 3;
@@ -891,7 +891,7 @@ double army::computeKarma() const
         return 0.0;
     long sum = 0;
     long absSum = 0;
-    for (long i = 0; i < 81; i++) {
+    for (long i = 0; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
         if (m_spellInfluence[i] != 0) {
             sum += g_spellTraits[i].m_karma;
             absSum += abs(g_spellTraits[i].m_karma);
@@ -1322,7 +1322,7 @@ void army::rangeAttack(army* armyToAttack)
         unsigned char multiple = 0;
         int dmg;
         int killedNow;
-        for (long i = 0; i < 7; i++) {
+        for (long i = 0; i < COMBAT_DIRECTION_COUNT + 1; i++) {
             long hex;
             if (i == COMBAT_DIRECTION_COUNT)
                 hex = m_pathTarget;
@@ -1385,7 +1385,7 @@ void army::rangeAttack(army* armyToAttack)
         unsigned char multiple = 0;
         int dmg;
         int killedNow;
-        for (long i = 0; i < 7; i++) {
+        for (long i = 0; i < COMBAT_DIRECTION_COUNT + 1; i++) {
             long hex;
             if (i == COMBAT_DIRECTION_COUNT)
                 hex = m_pathTarget;
@@ -1517,7 +1517,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
     int tempDamage;
     int tempKilled;
     unsigned char mixedTypes = 0;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < COMBAT_DIRECTION_WIDE_LOWER + 1; i++) {
         if (attackMask & (1 << i))
             continue;
         long hex = getAdjacentHex(i);
@@ -3375,7 +3375,7 @@ MAC_ADDRESS(0x050c24, 0x68)
 // Mac 0x50c48 reads row i; DC makes no get_spell_time call (see army.h).
 void army::cancelAllSpells()
 {
-    for (int i = 0; i < 81; i++) {
+    for (int i = 0; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
         if (m_spellInfluence[i] > 0)
             cancelIndividualSpell(i);
     }
@@ -3512,7 +3512,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         break;
     case SPELL_ANTI_MAGIC: {
         m_antiMagicSpellLevel = amount;
-        for (int j = 0; j < 81; j++) {
+        for (int j = 0; j < NUM_SPELLS_AND_CREATURE_EFFECTS; j++) {
             if (g_spellTraits[j].m_level < m_antiMagicSpellLevel
                 && g_spellTraits[j].m_karma < 0
                 && !(g_spellTraits[j].m_flags & 8))
@@ -3657,7 +3657,7 @@ MAC_ADDRESS(0x051434, 0x98)
 // makes no get_spell_time call (see army.h getSpellTime).
 void army::decrementSpellRounds()
 {
-    for (int spell = 0; spell < 81; spell++) {
+    for (int spell = 0; spell < NUM_SPELLS_AND_CREATURE_EFFECTS; spell++) {
         if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
             if (m_spellInfluence[spell] == 1)
                 cancelIndividualSpell(spell);
@@ -3754,7 +3754,7 @@ long army::getAttackDirection(long ourHex, const army* enemy,
     long secondHex = enemyHex;
     if (enemy->is(creatureDoubleWide))
         secondHex = enemyHex + enemy->offsetToFront(-1);
-    for (long direction = 0; direction < 8; direction++) {
+    for (long direction = 0; direction < COMBAT_DIRECTION_WIDE_LOWER + 1; direction++) {
         if (direction < COMBAT_DIRECTION_COUNT || is(creatureDoubleWide)) {
             long hex = getAdjacentHex(ourHex, direction);
             if (hex == enemyHex || hex == secondHex)
@@ -3785,7 +3785,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
             }
         }
         direction++;
-        if (direction >= 8)
+        if (direction >= COMBAT_DIRECTION_WIDE_LOWER + 1)
             return best;
     }
 }
@@ -4982,7 +4982,7 @@ MAC_ADDRESS(0x05455c, 0x68)
 long army::getValidCaliphSpells(const army* target) const
 {
     long count = 0;
-    for (SpellID spell = 10; spell < 70; spell++) {
+    for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
         if (isValidCaliphSpell(spell, target))
             count++;
     }
@@ -5004,7 +5004,7 @@ void army::castCaliphSpell(long hex)
     if (count == 0)
         return;
     long pick = random(1, count);
-    for (spell = 10; spell < 70; spell++) {
+    for (spell = 10; spell < hero::NUM_SPELLS; spell++) {
         if (isValidCaliphSpell(spell, target)) {
             if (--pick == 0) {
                 // This creature cast uses advanced mastery (2).

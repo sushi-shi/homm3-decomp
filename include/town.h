@@ -90,8 +90,8 @@ enum type_building_id {
 // column get_gold_income reads out of the silo table (0x688ecc =
 // 0x688eb4 + 6*4).
 // NUM_RESOURCES is a source constant, not an EGameResource member: the
-// complete Dreamcast CodeView enum does not contain it.
-#define NUM_RESOURCES 7
+// complete Dreamcast CodeView enum does not contain it. It is defined in
+// armygrp.h, whose creature cost row is the first table it sizes.
 enum EGameResource {
     const_no_resource = -1,
     WOOD = 0,
@@ -493,7 +493,7 @@ public:
     // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
     // (the DC build carries eight); filled by initialize.cpp's
     // create_included_masks. Definition + DATA claim in src/town.cpp.
-    static __int64 s_includedBuildings[9][44];
+    static __int64 s_includedBuildings[9][MAX_BUILDING_TYPE];
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     const class armyGroup& getArmy() const;
     // DC town.cpp:2375 proves the ordinary non-const reference twin. Its
@@ -569,7 +569,7 @@ enum ETownConstants {
     TOWN_TYPE_COUNT = TOWN_CONFLUX + 1,
     // Restoration of Erathia has the first eight; Conflux came later.
     TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX,
-    TOWN_BUILDING_SLOTS = 44,
+    TOWN_BUILDING_SLOTS = MAX_BUILDING_TYPE,
     // The four horde columns of a const_horde_effects row - also the
     // length of gHordeBuildings, which get_horde_effect scans.
     TOWN_HORDE_SLOTS = 4,
@@ -581,7 +581,7 @@ enum ETownConstants {
     // (initialize_hordes steps its creature base by 14 per town) and
     // the extent of town::generatorBonus (change_generator_bonus scans
     // 0..13 and stops at 14).
-    TOWN_DWELLING_SLOTS = 14
+    TOWN_DWELLING_SLOTS = 2 * TOWN_DWELLING_COUNT
 };
 
 // The h3m editor's 41-slot building column order, one row per town
@@ -628,7 +628,7 @@ extern const char* g_townTypeNames[10];
 // Inferno/Conflux, crystal for Rampart, gems for Tower, sulfur for
 // Dungeon - and the gold column is zero in every row. Name INVENTED
 // (no DC symbol covers this table); owner TU unlocated.
-extern int g_siloIncome[9][NUM_RESOURCES];
+extern int g_siloIncome[TOWN_TYPE_COUNT][NUM_RESOURCES];
 
 // Original gDwellingType: DC public ?gDwellingType@@3PAY0O@W4TCreatureType@@A
 // proves fourteen-entry rows. Retail has nine towns, with seven base dwelling

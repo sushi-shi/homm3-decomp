@@ -110,7 +110,7 @@ DATA(0x0067f574) unsigned char g_colorCyclingEnabled = 1;
 
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00678288) int g_mineCharacteristics[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x00678288) int g_mineCharacteristics[NUM_RESOURCES] = { 2, 1, 2, 1, 1, 1, 1000 };
 DATA(0x006782ac) signed char g_routeArrowFrames[8][8] = {
     { 8, 0, 0, 0, 8, 16, 16, 16 },
     { 17, 9, 1, 1, 1, 9, 17, 17 },
@@ -612,15 +612,15 @@ advManager::advManager()
 // abm01_..abm03_, abf01l..abf03k, and the 38-entry cached-graphics list
 // diboxbck.pcx..HALLFORT.def whose entry 26 re-points at pskill.def).
 DATA(0x0065f4c4) const char* g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
-DATA(0x0065f55c) const char* g_groundTilesetNames[10] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
+DATA(0x0065f55c) const char* g_groundTilesetNames[NUM_TERRAIN_TYPES] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
 // River and road tilesets are indexed by type; type 0 (none) names "".
 // Retail stores the empty-string pointer at 0x65f584 and 0x65f598 and the
 // loaders walk from entry 1 (0x65f588..0x65f598, 0x65f59c..0x65f5a8).
 DATA(0x0065f584) const char* g_riverTilesetNames[5] = { "", "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
 DATA(0x0065f598) const char* g_roadTilesetNames[4] = { "", "dirtrd.def", "gravrd.def", "cobbrd.def" };
-DATA(0x0065f5a8) const char* g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
-DATA(0x0065f5f0) const char* g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
-DATA(0x0065f610) const char* g_boatFlagIconNames[3][8] = {
+DATA(0x0065f5a8) const char* g_cursorIconNames[kNumHeroClasses] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
+DATA(0x0065f5f0) const char* g_flagIconNames[NUM_PLAYERS] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
+DATA(0x0065f610) const char* g_boatFlagIconNames[3][NUM_PLAYERS] = {
     { "abf01l.def", "abf01g.def", "abf01r.def", "abf01d.def", "abf01b.def", "abf01p.def", "abf01w.def", "abf01k.def" },
     { "abf02l.def", "abf02g.def", "abf02r.def", "abf02d.def", "abf02b.def", "abf02p.def", "abf02w.def", "abf02k.def" },
     { "abf03l.def", "abf03g.def", "abf03r.def", "abf03d.def", "abf03b.def", "abf03p.def", "abf03w.def", "abf03k.def" }
@@ -710,7 +710,7 @@ int advManager::open(int newPriority)
     m_movingObjectSprite =
         ResourceManager::getSprite(DATA_COMPGEN(0x00660318, movingObjectSpriteName,
                                "avwattak.def"));
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < NUM_TERRAIN_TYPES; i++)
         m_groundTileset[i] = ResourceManager::getSprite(g_groundTilesetNames[i]);
     incProgressBar(1);
     for (i = 1; i < 5; i++)
@@ -736,7 +736,7 @@ int advManager::open(int newPriority)
     m_cloudIcons =
         ResourceManager::getSprite(DATA_COMPGEN(0x006602bc, cloudIconsName, "tshre.def"));
     incProgressBar(1);
-    for (i = 0; i < 18; i++) {
+    for (i = 0; i < kNumHeroClasses; i++) {
         m_cursorIcons[i] = ResourceManager::getSprite(g_cursorIconNames[i]);
         if (i == CURSOR_ICON_TICK)
             incProgressBar(1);
@@ -745,12 +745,12 @@ int advManager::open(int newPriority)
     for (i = 0; i < 3; i++) {
         m_boatIcons[i] = ResourceManager::getSprite(g_boatIconNames[i]);
         m_boatFrothIcons[i] = ResourceManager::getSprite(g_boatFrothIconNames[i]);
-        for (j = 0; j < 8; j++)
+        for (j = 0; j < NUM_PLAYERS; j++)
             m_boatFlagIcons[i][j] =
                 ResourceManager::getSprite(g_boatFlagIconNames[i][j]);
     }
     incProgressBar(1);
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < NUM_PLAYERS; i++)
         m_flagIcons[i] = ResourceManager::getSprite(g_flagIconNames[i]);
     m_radarIcons =
         ResourceManager::getSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
@@ -883,7 +883,7 @@ void advManager::close()
         m_radarIcons = 0;
         ResourceManager::dispose(m_cloudIcons);
         m_cloudIcons = 0;
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < kNumHeroClasses; i++) {
             ResourceManager::dispose(m_cursorIcons[i]);
             m_cursorIcons[i] = 0;
         }
@@ -898,12 +898,12 @@ void advManager::close()
             m_boatIcons[i] = 0;
             ResourceManager::dispose(m_boatFrothIcons[i]);
             m_boatFrothIcons[i] = 0;
-            for (j = 0; j < 8; j++) {
+            for (j = 0; j < NUM_PLAYERS; j++) {
                 ResourceManager::dispose(m_boatFlagIcons[i][j]);
                 m_boatFlagIcons[i][j] = 0;
             }
         }
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < NUM_PLAYERS; i++) {
             ResourceManager::dispose(m_flagIcons[i]);
             m_flagIcons[i] = 0;
         }
@@ -935,7 +935,7 @@ void advManager::close()
     m_gemIcons[1] = 0;
     m_gemIcons[2] = 0;
     m_gemIcons[3] = 0;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < NUM_TERRAIN_TYPES; i++) {
         ResourceManager::dispose(m_groundTileset[i]);
         m_groundTileset[i] = 0;
         m_heroSamples[i]->dispose();
@@ -3345,7 +3345,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                 separator, separator);
         break;
     default: {
-        if (cell->m_type >= NOTHING && cell->m_type < 232)
+        if (cell->m_type >= NOTHING && cell->m_type < ADVENTURE_OBJECT_TRAIT_COUNT)
             strcpy(g_text, g_quickViewText[cell->m_type]);
         else
             strcpy(g_text, DATA_COMPGEN(
@@ -4078,7 +4078,7 @@ int advManager::processSearch(int x, int y, int z)
     if (g_currentPlayer->isHuman())
         waitEndSample(digSample, -1);
 
-    for (player = 0; player < 8; player++) {
+    for (player = 0; player < NUM_PLAYERS; player++) {
         if (!g_game->m_playerDisabled[player])
             computeUALoc(player);
     }
@@ -4479,7 +4479,7 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
-    } else if (currHero->m_owner >= 0 && currHero->m_owner < 8) {
+    } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
         m_flagIcons[currHero->m_owner]->drawHero(
             currHero->getStandSequence(),
             m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
@@ -4512,7 +4512,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
     int heroCellX = part / 3;
 
     if (currHero->m_flags & 0x40000) {
-        if (currHero->m_owner < 0 || currHero->m_owner >= 8)
+        if (currHero->m_owner < 0 || currHero->m_owner >= NUM_PLAYERS)
             return;
 
         boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
@@ -4546,7 +4546,7 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
-    } else if (currHero->m_owner >= 0 && currHero->m_owner < 8) {
+    } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
         m_flagIcons[currHero->m_owner]->drawHeroShadow(
             currHero->getStandSequence(),
             m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
@@ -7277,7 +7277,7 @@ void advManager::townQuickView(int townId, int x, int y,
         }
 
         msg += "\n\n";
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < NUM_RESOURCES; i++) {
             if (i > 0)
                 msg += ", ";
             msg += formatString(
@@ -7287,7 +7287,7 @@ void advManager::townQuickView(int townId, int x, int y,
         msg += "\n\nIncome:\n";
         first = 1;
         g_game->calculateProduction();
-        for (i = 0; i < 7; i++) {
+        for (i = 0; i < NUM_RESOURCES; i++) {
             if (enemyPlayer.m_ai.m_turnProductionResource[i] > 0) {
                 if (!first)
                     msg += ", ";
@@ -7806,7 +7806,7 @@ bool saveGame(bool campaignWinMode)
     int humanCount = 0;
     if (!campaignWinMode) {
         g_advManager->disableButtons();
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < NUM_PLAYERS; i++) {
             if (!g_game->m_playerDisabled[i] && g_game->isHuman(i))
                 humanCount++;
         }

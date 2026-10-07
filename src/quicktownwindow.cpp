@@ -23,7 +23,7 @@
 // Seven compact army slots, consumed only by initialize_army_display.
 // Retail's sole reference is 0x5309df and the 56-byte extent closes at the
 // next initialized datum (0x6823f0).
-DATA(0x006823b8) static int g_quickTownArmyPositions[7][2] = {
+DATA(0x006823b8) static int g_quickTownArmyPositions[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
     {45, 84}, {81, 84}, {117, 84}, {27, 132},
     {63, 132}, {99, 132}, {135, 132}
 };

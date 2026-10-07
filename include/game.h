@@ -33,6 +33,15 @@
 #include "town.h"
 #include "victorylossconditions.h"
 
+// Red through pink: the length of game::players and playerDead, of the map
+// header's per-player tables and of every per-player loop. Like
+// NUM_RESOURCES this is a source constant: no Dreamcast enum carries it
+// (NH3API spells it MAX_PLAYERS, which CHotSeatMan and CNetPlayerHandler
+// use for their own member constants). A macro here rather than a new
+// header: adding a file to the include set reschedules
+// advManager::doCombat.
+#define NUM_PLAYERS 8
+
 // The one decoded value of game::field_1f63e shared by events.obj and
 // philai.obj: Sunday is the seventh day.  DoEventTemple doubles its morale
 // reward on this rung; move_hero stops a low-value full-hourglass move on it.
@@ -156,15 +165,15 @@ public:
     unsigned char m_portraitNumber;  // +0x21
     unsigned char m_customSecondarySkills;  // +0x22
     int m_numSecondarySkills;  // +0x24 - signed, the loop bound
-    char m_secondarySkill[8];  // +0x28 - movsx, so plain char
-    char m_secondarySkillLevel[8];  // +0x30
+    char m_secondarySkill[kNumSecSkillsPerHero];  // +0x28 - movsx, so plain char
+    char m_secondarySkillLevel[kNumSecSkillsPerHero];  // +0x30
     unsigned char m_customArmies;  // +0x38
-    int m_armies[7];  // +0x3c
-    short m_numTroops[7];  // +0x58 - movsx word
+    int m_armies[armyGroup::ARMY_GROUP_SLOT_COUNT];  // +0x3c
+    short m_numTroops[armyGroup::ARMY_GROUP_SLOT_COUNT];  // +0x58 - movsx word
     unsigned char m_groupFormation;  // +0x66 - no retail body reads it
     unsigned char m_customArtifacts;  // +0x67
-    type_artifact m_artifacts[19];
-    type_artifact m_backpack[64];
+    type_artifact m_artifacts[kNumArtifactSlots + 1];
+    type_artifact m_backpack[HERO_BACKPACK_CAPACITY];
     #pragma pack(push, 1)
     unsigned char m_numInBackpack;  // +0x300 - no retail body reads it
     type_point m_location;  // +0x301 - unaligned, hence the band
@@ -177,9 +186,9 @@ public:
     // Experience is the dword at +0x1c above. Renamed 2026-08-20.
     int m_sex;
     unsigned char m_customSpells;  // +0x31c
-    std::bitset<70> m_spells;  // +0x320
+    std::bitset<hero::NUM_SPELLS> m_spells;  // +0x320
     unsigned char m_customPrimarySkills;
-    signed char m_primarySkills[4];  // +0x32d, class trails to 0x334
+    signed char m_primarySkills[kNumPrimarySkills];  // +0x32d, class trails to 0x334
 
     // Implicit default constructor; CodeView dc 0xbd5f4 compgenx.
     void reset(int heroId);
@@ -365,11 +374,11 @@ struct type_map_hero_info {
 public:
     int m_portrait;
     std::string m_name;
-    std::bitset<8> m_players;
+    std::bitset<NUM_PLAYERS> m_players;
     // Map readers supply all three fields below; Dinkumware map insertion
     // copies the supplied value and does not default-construct this record.
     type_map_hero_info(int portrait, std::string name,
-                       std::bitset<8> availability);
+                       std::bitset<NUM_PLAYERS> availability);
 };
 SIZE(type_map_hero_info, 0x18);
 
@@ -457,7 +466,7 @@ public:
     // Original numTeams and teamInfo use plain char (DC 0x24ef/0x68fd).
     // The retained Windows getTeam body sign-extends each team byte.
     char m_numTeams;
-    char m_teamInfo[8];
+    char m_teamInfo[NUM_PLAYERS];
     // +0x15..+0x17: alignment hole. Retail's synthesized GameSelection-
     // HeadersStruct copy ctor (0x5904f0) copies the dword at +0x11 and then
     // the dword at +0x18 with nothing between; a named pad adds a word+byte
@@ -470,7 +479,7 @@ public:
     std::vector<HeroId> m_placeholders;
     VictoryConditionStruct m_victoryCondition;
     LossConditionStruct m_lossCondition;
-    TPlayerSlotAttributes m_playerSlotAttributes[8];
+    TPlayerSlotAttributes m_playerSlotAttributes[NUM_PLAYERS];
     // +0x2c0, and it belongs to THIS class, not to NewSMapHeader - byte-
     // proven 2026-08-20 by the two constructors. CMapHeaderData's own
     // compiler-generated ctor at 0x45a990 writes the Dinkumware _Tree
@@ -579,8 +588,8 @@ public:
     // from CObjectType::extra and from setup.alignment[], both int.
     int m_townType;
     char m_isGrouped;
-    std::bitset<70> m_spells;
-    std::bitset<70> m_fixedSpells;
+    std::bitset<hero::NUM_SPELLS> m_spells;
+    std::bitset<hero::NUM_SPELLS> m_fixedSpells;
 };
 SIZE(TownExtra, 0x88);
 
@@ -680,21 +689,21 @@ SIZE(mine, 0x40);
 
 class SGameSetupOptions {
 public:
-    signed char m_color[8];
-    signed char m_handicap[8];
+    signed char m_color[NUM_PLAYERS];
+    signed char m_handicap[NUM_PLAYERS];
     // Original SGameSetupOptions::alignment is TTownType[8].
-    TTownType m_alignment[8];
-    signed char m_playerPos[8];
+    TTownType m_alignment[NUM_PLAYERS];
+    signed char m_playerPos[NUM_PLAYERS];
     signed char m_difficulty;
     char m_filename[251];
     char m_path[100];
-    unsigned char m_canFlipFromToComputer[8];
+    unsigned char m_canFlipFromToComputer[NUM_PLAYERS];
     signed char m_curSelectedPlayer;
     unsigned char m_fileInitialized;
     signed char m_initializationNumHumans;
     signed char m_turnDuration;
-    int m_startingHero[8];
-    signed char m_startingBonus[8];
+    int m_startingHero[NUM_PLAYERS];
+    signed char m_startingBonus[NUM_PLAYERS];
     int save(TAbstractFile* outfile);
 
     VA(0x0045ac20, 0xD2)
@@ -702,7 +711,7 @@ public:
     MAC_ADDRESS(0x067430, 0x168)  // retained retail body; formerly enrolled by CLASS_CTOR
     SGameSetupOptions()
     {
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < NUM_PLAYERS; ++i) {
             m_color[i] = i;
             m_handicap[i] = 0;
             m_alignment[i] = TTownType(i % 9);
@@ -745,7 +754,7 @@ enum EGameVersion {
 // unrelated callers slightly downward. Keep the existing header structure.
 class SavedGameHeader {
 public:
-    char m_id[8];
+    char m_id[NUM_PLAYERS];
     int m_version;
     int m_gameVersion;
     NewSMapHeader m_mapHeader;
@@ -761,8 +770,8 @@ public:
     std::string m_fileName;
     int m_difficultyRating;
     int m_numDeadPlayers;
-    unsigned char m_deadPlayer[8];
-    int m_humanPlayer[8];
+    unsigned char m_deadPlayer[NUM_PLAYERS];
+    int m_humanPlayer[NUM_PLAYERS];
     int m_currentPlayer;
     SavedGameHeader();
     void reset();
@@ -828,8 +837,8 @@ struct AI {
 public:
     float m_gameAttentionValue[3];
     float m_turnAttentionValue[3];
-    long m_turnProductionResource[7];
-    double m_resourceValue[7];
+    long m_turnProductionResource[NUM_RESOURCES];
+    double m_resourceValue[NUM_RESOURCES];
     int m_averageResourceValue;
     float m_turnValueOfAvgArtifact;
 };
@@ -888,7 +897,7 @@ public:
     // then PROVEN from retail: playerData::Init (0x4b9e20) fills it
     // with `lea edi,[this+8] / mov ecx,8 / rep stosd` of -1.
     // Original heroes/recruits use THeroID (DC playerData 0x1c50).
-    HeroId m_heroes[8];
+    HeroId m_heroes[HERO_SLOT_COUNT];
     // +0x28, the two heroes the player's taverns are currently
     // offering. DC type 0x35C7 is 8 bytes; retail reads them as DWORDS
     // - hero::hire (0x4d7890) scans `[player + 0x28 + 4*i]` for the
@@ -937,7 +946,7 @@ public:
     // price, and TResourceDisplay::Update (0x558f45) prints
     // `[player + 4*id + 0x9c]` for the seven ids in the table at
     // 0x641008..0x641024. Gold is index 6 (0x9c + 4*6 == 0xb4).
-    long m_resources[7];
+    long m_resources[NUM_RESOURCES];
     unsigned long m_mysticalGardenFlags;  // +0xb8
     unsigned long m_magicSpringFlags;  // +0xbc
     unsigned long m_deadGuyFlags;  // +0xc0
@@ -1055,8 +1064,8 @@ public:
     // used by game::GetRandomSpell; mapcell.obj's readScholarData rolls a
     // random scholar reward by collecting every spell whose prohibition
     // byte is clear and picking one.
-    unsigned char m_spellAllocInfo[70];
-    unsigned char m_spellDisabledInfo[70];
+    unsigned char m_spellAllocInfo[hero::NUM_SPELLS];
+    unsigned char m_spellDisabledInfo[hero::NUM_SPELLS];
     // Dreamcast bGrailAsked follows spellAllocInfo at +0x4a; Complete
     // adds spellDisabled[70], placing the same shown-once latch at +0x90.
     unsigned char m_grailAsked;
@@ -1071,7 +1080,8 @@ public:
     // lea eax,[ecx+8*edx] / lea eax,[eax+4*eax] / lea esi,[edx+4*eax+0xa4]`
     // = gpGame + 820*id + 0xa4, and 156 * 0x334 is EXACTLY the 0x1f3b0 the
     // pad it replaces measured - 0xa4 + 0x1f3b0 lands on difficultyRating.
-    HeroExtra m_heroSetup[156];
+    enum { HERO_COUNT = 156 };
+    HeroExtra m_heroSetup[HERO_COUNT];
     short m_difficultyRating;
     // Dreamcast difficultyRating is a short before aligned sCampaign.
     // Retail retains this two-byte alignment gap at +0x1f456.
@@ -1097,7 +1107,7 @@ public:
     signed char m_numDeadPlayers;
     // Eight per-player disabled/dead flags. type_AI_player::end_turn
     // skips a gift candidate when the indexed byte is nonzero.
-    signed char m_playerDisabled[8];  // +0x1f636; DC playerDead is signed char[8].
+    signed char m_playerDisabled[NUM_PLAYERS];  // +0x1f636; DC playerDead is signed char[8].
     // Unsigned word gate used by calculate_demand: from value five on,
     // current dwelling population is augmented by one growth cycle.
     // Its wider calendar role is not yet attested, so the name remains
@@ -1136,7 +1146,7 @@ public:
     NewSMapHeader m_mapHeader;  // +0x1f86c
     NewfullMap m_worldMap;  // +0x1fb70
     // Before normalization (Dreamcast): player.
-    playerData m_players[8];
+    playerData m_players[NUM_PLAYERS];
     // +0x21610. The scenario's town pool, and it is a std::vector, not
     // a bare pointer: game::GetTownId (0x4bb870) reads _First at
     // +0x21614 AND _Last at +0x21618, divides the byte span by 360 with
@@ -1148,18 +1158,17 @@ public:
     // that same 360-byte stride.
     // Before normalization (Dreamcast): townPool.
     std::vector<town> m_towns;
-    enum { HERO_COUNT = 156 };
     // Before normalization (Dreamcast): heroPool.
     hero m_heroes[HERO_COUNT];
     // Original game::heroAllocInfo is signed char[128] in all four DC
     // records. Complete extends the same status array to 156 heroes.
-    signed char m_heroAvailability[0x9c];  // +0x4df18
+    signed char m_heroAvailability[HERO_COUNT];  // +0x4df18
     // One eight-player eligibility mask per hero. GetStartingHeroId tests
     // the caller's player position through Dinkumware bitset::test(), and
     // the hero-placement path sets the same bit through bitset::set().
-    std::bitset<8> m_heroPoolMap[0x9c];  // +0x4dfb4
-    unsigned char m_artifactUsed[0x90];
-    unsigned char m_artifactDisabled[0x90];
+    std::bitset<NUM_PLAYERS> m_heroPoolMap[HERO_COUNT];  // +0x4dfb4
+    unsigned char m_artifactUsed[ARTIFACT_COUNT];
+    unsigned char m_artifactDisabled[ARTIFACT_COUNT];
 
     // Before normalization (Dreamcast): InfoFlags.
     unsigned char m_globalInfoFlags[32];
@@ -1208,7 +1217,7 @@ public:
     // at +0x32000; retail retains two alignment bytes before its vector.
     char m_paddingBeforeRumours[2];
     std::vector<TRumour> m_rumours;  // +0x4e648
-    char m_ssDisabled[0x1c];
+    char m_ssDisabled[kNumSecSkills];
     char m_armyWindow[4];
     // Dreamcast original viewFrame is int at +0x32010. InitVars
     // (dc 0xe3a04, kb.cpp:3771) clears it immediately before copying
@@ -1581,7 +1590,7 @@ MAC_ADDRESS(0x02d3e4, 0x94)  // guarded team scan + named IsHuman callee
 bool isHumanTeam(int teamNum) const
 {
     if (teamNum >= 0) {
-        for (int player = 0; player < 8; ++player) {
+        for (int player = 0; player < NUM_PLAYERS; ++player) {
             if (m_mapHeader.m_teamInfo[player] == teamNum
                 && g_game->isHuman(player))
                 return true;
@@ -1620,9 +1629,9 @@ int getTeam(int playerNum) const
     unsigned char getTeamMask(int playerNum) const
     {
         unsigned char mask = 0;
-        if (playerNum >= 0 && playerNum < 8) {
+        if (playerNum >= 0 && playerNum < NUM_PLAYERS) {
             int team = getTeam(playerNum);
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < NUM_PLAYERS; ++i) {
                 if (m_mapHeader.m_teamInfo[i] == team)
                     mask |= 1 << i;
             }
@@ -1639,9 +1648,9 @@ int getTeam(int playerNum) const
     unsigned char getNumAllies(int playerNum) const
     {
         unsigned char numAllies = 0;
-        if (playerNum >= 0 && playerNum < 8) {
+        if (playerNum >= 0 && playerNum < NUM_PLAYERS) {
             int team = getTeam(playerNum);
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < NUM_PLAYERS; ++i) {
                 if (m_mapHeader.m_teamInfo[i] == team)
                     ++numAllies;
             }
@@ -1868,12 +1877,12 @@ public:
 // roster row covers any of the five.
 extern const char* g_resourceObjectDefs[NUM_RESOURCES];
 extern const char* g_artifactObjectDefFormat;
-extern const char* g_townVillageObjectDefs[9];
-extern const char* g_townFortObjectDefs[9];
+extern const char* g_townVillageObjectDefs[TOWN_TYPE_COUNT];
+extern const char* g_townFortObjectDefs[TOWN_TYPE_COUNT];
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
-extern const char* g_townCapitolObjectDefs[9];
+extern const char* g_townCapitolObjectDefs[TOWN_TYPE_COUNT];
 // Original ?giWeekType@@3W4type_week_type@@A proves the enum domain.
 // Enumerator names follow the retail PerWeek and DoNewTurn cases; their
 // original spelling is unavailable. Month state and the network fields are int.
@@ -1896,7 +1905,7 @@ extern int g_monthTypeExtra;
 // x over MAP_WIDTH while indexing worldMap by its own Size.
 extern int g_mapWidth;
 extern int g_mapHeight;
-extern int g_mineProduction[7];
+extern int g_mineProduction[NUM_RESOURCES];
 // Six weighted neutral-town dwelling levels, byte-proven as
 // {2,3,4,5,4,3} by game::GiveTroopsToNeutralTown.
 extern double g_productionHandicap[];
@@ -1911,7 +1920,7 @@ extern int g_initResourcesComputer[][NUM_RESOURCES];
 // SetupFirstPlayer writes its first-human scan result here alongside
 // gNetLocalGamePos.  StartLocalPlayerTurn later consumes the same cell;
 // no surviving symbol attests a semantic spelling.
-extern int g_newMapStartingBonus[8];
+extern int g_newMapStartingBonus[NUM_PLAYERS];
 // remote.obj owns the DATA claim. NextPlayer consumes the adjacent recovery
 // latch while retrying a failed turn-state transfer.
 extern int g_playerTurn;
@@ -1934,7 +1943,7 @@ extern int g_grailOwner;
 // No Dreamcast or NH3API symbol covers it, so the spelling stays ordinal on
 // gUnnamed69950c's precedent rather than inventing a role name.
 extern unsigned char g_normalVictory;
-extern HeroId g_startingHeroOverrides[8];
+extern HeroId g_startingHeroOverrides[NUM_PLAYERS];
 // Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
 // philAI::DoAI advances it as computer heroes are processed.
 extern int g_curHourGlassPhase;

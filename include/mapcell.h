@@ -857,8 +857,8 @@ public:
     int m_manaBonus;  // +0x54
     signed char m_moraleBonus;  // +0x58
     signed char m_luckBonus;  // +0x59
-    int m_resQty[7];  // +0x5c
-    signed char m_primarySkillBonus[4];  // +0x78
+    int m_resQty[NUM_RESOURCES];  // +0x5c
+    signed char m_primarySkillBonus[kNumPrimarySkills];  // +0x78
     std::vector<SecondarySkillData> m_secondarySkills;  // +0x7c
     // CodeView preserves vector<TArtifact> and vector<SpellID>.
     // loadBlackBox widens the serialized identifiers at the read boundary.
@@ -888,7 +888,7 @@ class TAbstractFile;
 class TTimedEvent {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
-    int m_resQty[7];
+    int m_resQty[NUM_RESOURCES];
     unsigned char m_playerFlags;
     unsigned char m_applyToHuman;
     unsigned char m_applyToComputer;
@@ -986,7 +986,7 @@ public:
     // here (Mac 0x128d44..0x128d6c). setObjectType uses it to choose a
     // terrain-appropriate template. Map serialization omits this cache.
     // Original member spelling is unknown.
-    std::bitset<10> m_recommendedTerrainMask;
+    std::bitset<NUM_TERRAIN_TYPES> m_recommendedTerrainMask;
     // loadObjectType stores one full dword at +0x38. A scalar preserves
     // that field and its single generated copy; no alternative view exists.
     TAdventureObjectType m_objectType;
@@ -1250,7 +1250,7 @@ enum EMonsterQuantityPreset {
 class MonsterData {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
-    int m_resQty[7];
+    int m_resQty[NUM_RESOURCES];
     // DC type 0x30cb records public TArtifact Artifact. The map and save
     // formats encode different widths; decode those at the stream boundary.
     TArtifact m_artifact;
@@ -1496,7 +1496,7 @@ public:
     NewfullMap();
     ~NewfullMap();
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
-    void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
+    void generateHeightMap(const CObject* object, signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT]);
     int placeObject(int objectIndex, unsigned char setExtraInfo);
     int placeObjects();
 };

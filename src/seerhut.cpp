@@ -417,7 +417,7 @@ VA(0x0056da70, 0x60)
 MAC_ADDRESS(0x164d74, 0xd0)  // anchor-vtable 0x6417c4 slot 2, retail-only
 unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 {
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         int have = currentHero->getPrimarySkill(i);
         if (have < m_requiredSkills[i])
             return 0;
@@ -436,7 +436,7 @@ void type_skill_quest::showSkillRequirementsDialog(
     const char* text, const signed char* skills)
 {
     std::vector<type_dialog_resource> dialogResources;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         if (skills[i] > 0) {
             type_dialog_resource resource;
             resource.m_resource = 0x1f + i;
@@ -477,8 +477,8 @@ VA(0x0056dad0, 0x28C)
 MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProgressDialog(hero* currentHero)
 {
-    signed char missing[4];
-    for (int i = 0; i < 4; ++i) {
+    signed char missing[kNumPrimarySkills];
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         int have = currentHero->getPrimarySkill(i);
         if (m_requiredSkills[i] > have)
             missing[i] = m_requiredSkills[i];
@@ -547,7 +547,7 @@ std::string type_skill_quest::skillRequirementText(
     const signed char (&skills)[4])
 {
     std::vector<std::string> requirements;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < kNumPrimarySkills; ++i) {
         if (skills[i] > 0) {
             requirements.push_back(formatString(
                 DATA_COMPGEN(0x00683220, skillRequirementFormat, "%s %i"),
@@ -2200,7 +2200,7 @@ int TSeerReward::getValue(const hero* currentHero)
             m_value.m_secondarySkill.m_skillType, m_value.m_secondarySkill.m_bonus);
 
     case eRewardArtifact: {
-        if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= 64)
+        if (const_cast<hero*>(currentHero)->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
         return aiGetValueOfArtifact(
             type_artifact(static_cast<TArtifact>(m_value.m_dwords[0]) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
@@ -2269,7 +2269,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
         int skill = m_value.m_secondarySkill.m_skillType;
         int bonus = m_value.m_secondarySkill.m_bonus;
         if (currentHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
-            if (currentHero->m_skillCount < 8) {
+            if (currentHero->m_skillCount < kNumSecSkillsPerHero) {
                 currentHero->giveSS(skill, bonus);
                 break;
             }
@@ -2282,7 +2282,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     }
 
     case eRewardArtifact:
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             // Mac 0x16a2cc initializes both fields to -1, then replaces the ID.
             type_artifact artifact;
             artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);

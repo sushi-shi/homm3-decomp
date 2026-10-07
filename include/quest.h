@@ -452,7 +452,7 @@ public:
     // Retail vtable 0x6418f0, slot 8: mov eax,7; ret.
     virtual int questType() { return 7; }
 
-    int m_resources[7];  // +0x40
+    int m_resources[NUM_RESOURCES];  // +0x40
 
 public:
     type_resource_quest(bool flags);

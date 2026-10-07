@@ -540,7 +540,7 @@ void type_university_window::~type_university_window()
 // the 194 references to that cell is inside events.obj's link bracket.
 DATA(0x00696a18) static TTextResource* g_adventureEventText;
 DATA(0x00696a1c) static TTextResource* g_randomSignTextResource;
-DATA(0x00696a2c) static const char* g_artifactEventText[144];
+DATA(0x00696a2c) static const char* g_artifactEventText[ARTIFACT_COUNT];
 DATA(0x00696c70) static TTextResource* g_artifactEventTextResource;
 DATA(0x00696c74) static const char* g_randomSignText[25];
 
@@ -565,7 +565,7 @@ bool initializeArtifactEventText()
         DATA_COMPGEN(0x00677720, artEventTextName, "artevent.txt"));
     if (!g_artifactEventTextResource)
         return false;
-    for (int i = 0; i < 144; i++)
+    for (int i = 0; i < ARTIFACT_COUNT; i++)
         g_artifactEventText[i] = g_artifactEventTextResource->getText(i);
     return true;
 }
@@ -952,7 +952,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                 std::string msg;
                 armyGroup guardList;
                 guardList.initialize();
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
                     if (treasure->m_guardians.m_armies[i] != CREATURE_NONE)
                         guardList.add(treasure->m_guardians.m_armies[i],
                                        treasure->m_guardians.m_numTroops[i], -1);
@@ -1055,7 +1055,7 @@ MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact
 void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) >= 64) {
+    if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -1187,7 +1187,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         rewardGiven = 1;
     }
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < kNumPrimarySkills; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
                 addReward(msg, alternate, rewards,
@@ -1204,7 +1204,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
         unsigned char skillGiven = 0;
         if (currentHero->getSecondarySkill(skill) == 0
-            && currentHero->m_skillCount < 8) {
+            && currentHero->m_skillCount < kNumSecSkillsPerHero) {
             currentHero->giveSS(skill, level);
             skillGiven = 1;
         } else if (currentHero->getSecondarySkill(skill) > 0
@@ -1278,7 +1278,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     }
     showRewards(msg, rewards, 1);
 
-    for (int k = 0; k < 7; k++) {
+    for (int k = 0; k < NUM_RESOURCES; k++) {
         if (blackBox->m_resQty[k] != 0) {
             if (humanPlayer) {
                 if (blackBox->m_resQty[k] > 0) {
@@ -1301,7 +1301,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
 
     type_artifact artifact(ARTIFACT_NONE);
     for (unsigned int m = 0; m < blackBox->m_artifacts.size(); m++) {
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             if (humanPlayer) {
                 addReward(msg, formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
@@ -1351,7 +1351,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     // into the same procedure-local long amount at sp+0x24 used for mana;
     // 1069/1078/1081/1086 read that carrier. Reusing it here preserves the
     // native model and improves the full Windows caller 95.28% -> 95.62%.
-    for (int p = 0; p < 7; p++) {
+    for (int p = 0; p < armyGroup::ARMY_GROUP_SLOT_COUNT; p++) {
         // Read the native creature enum view and pass it directly to the
         // typed AI boundary; legacy Add/GetArmyName accept its int value.
         TCreatureType type = newCreatures.m_armyTypes[p];
@@ -1703,7 +1703,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
             if (humanPlayer) {
                 std::string prompt;
                 int i;
-                for (i = 0; i < 7; i++) {
+                for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
                     if (currentGenerator.m_guards.m_armies[i] != CREATURE_NONE)
                         break;
                 }
@@ -3011,7 +3011,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
     type_artifact artifact;
     int reward = cell->getSeaChestReward();
     if (reward == const_sea_chest_artifact
-        && currentHero->getNumberInBackpack(1) >= 64)
+        && currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
         reward = const_sea_chest_gold;
 
     switch (reward) {
@@ -3051,7 +3051,7 @@ MAC_ADDRESS(0x0b1bbc, 0x174)
 void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) < 64) {
+    if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_ARTIFACT_FORMAT],
@@ -3084,7 +3084,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
     if (cell->skeletonHasTreasure()) {
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             type_artifact artifact(TArtifact(cell->getSkeletonArtifact()));
             if (humanPlayer) {
                 sprintf(g_text,
@@ -3278,7 +3278,7 @@ MAC_ADDRESS(0x0b2824, 0x190)
 void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
                                     type_point point, bool humanPlayer)
 {
-    if (currentHero->getNumberInBackpack(1) >= 64) {
+    if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3460,7 +3460,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
     if (cell->treasureIsArtifact()) {
-        if (currentHero->getNumberInBackpack(1) < 64) {
+        if (currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
             type_artifact artifact(cell->getTreasureArtifact());
             if (humanPlayer) {
                 sprintf(g_text,
@@ -3571,7 +3571,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     if (cell->wagonHasArtifact()
-        && currentHero->getNumberInBackpack(1) < 64) {
+        && currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
         type_artifact artifact(cell->getWagonArtifact());
         if (humanPlayer) {
             sprintf(g_text,
@@ -3611,7 +3611,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
 
     MonsterData* reward = &m_fullMap->m_customMonsterList[cell->getCustomIndex()];
     if (reward->m_artifact != ARTIFACT_NONE) {
-        if (currentHero->getNumberInBackpack(1) >= 64) {
+        if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY) {
             if (humanPlayer)
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL], 1, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3856,7 +3856,7 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
             like = g_game->downgradedCreatureType(creature);
     }
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         if (currentHero->m_army.m_numTroops[i] > 0) {
             armyCount += currentHero->m_army.m_numTroops[i];
             int type = currentHero->m_army.m_armies[i];
@@ -4052,11 +4052,11 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
     } else {
         if (cell->playerKnowsCell(g_netLocalGamePos))
             return;
-        if (currentHero->getNumberInBackpack(1) >= 64)
+        if (currentHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return;
     }
 
-    if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < 64) {
+    if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < HERO_BACKPACK_CAPACITY) {
         type_artifact artifact(cell->getTombArtifact());
         if (humanPlayer) {
             sprintf(g_text,
@@ -4189,7 +4189,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
         }
         return;
     }
-    if (currentHero->m_skillCount >= 8) {
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero) {
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->getText(
@@ -5429,7 +5429,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     long creatureCount = bank.m_guards.getCreatureTotal();
     if (humanPlayer) {
         int best = 0;
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             int type = bank.m_guards.m_armies[i];
             if (type != CREATURE_NONE
                 && g_creatureTypeTraits[type].m_aiValue > best) {
@@ -5584,7 +5584,7 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
                                    int numMons3, int numGroups3)
 {
     DATA(0x006776e0) static double threshold[6] = { 3.0, 2.0, 1.5, 1.0, 0.67, 0.5 };
-    DATA(0x0063df94) static const int reorderMap[7][7][7] = {
+    DATA(0x0063df94) static const int reorderMap[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
         {
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
@@ -5681,7 +5681,7 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     int chance = random(1, 100);
     if (chance <= 20)
         --numGroups;
-    if (chance >= 80 && numGroups < 7)
+    if (chance >= 80 && numGroups < armyGroup::ARMY_GROUP_SLOT_COUNT)
         ++numGroups;
 
     if (monType2 != CREATURE_NONE)
@@ -5733,14 +5733,14 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
     }
 
     if (monType2 != CREATURE_NONE || monType3 != CREATURE_NONE) {
-        int tempNumTroops[7];
-        TCreatureType tempArmies[7];
+        int tempNumTroops[armyGroup::ARMY_GROUP_SLOT_COUNT];
+        TCreatureType tempArmies[armyGroup::ARMY_GROUP_SLOT_COUNT];
         // DC names both arrays; Mac copies their slots without memcpy calls.
-        for (int slot = 0; slot < 7; ++slot) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             tempNumTroops[slot] = armyGroupForCombat.m_numTroops[slot];
             tempArmies[slot] = armyGroupForCombat.m_armyTypes[slot];
         }
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             armyGroupForCombat.m_armyTypes[i] =
                 tempArmies[reorderMap[numGroups][numGroups3][i]];
             armyGroupForCombat.m_numTroops[i] =
@@ -6271,7 +6271,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             && g_combatManager->m_winner == 1) {
             if (g_game->isLocalHuman(rightHero->m_owner)) {
                 rightHero->checkLevel();
-                signed char stats[4];
+                signed char stats[kNumPrimarySkills];
                 rightHero->copyPrimarySkills(stats);
                 CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
                                         rightHero->m_skillLevel, stats);

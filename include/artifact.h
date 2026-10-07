@@ -29,6 +29,10 @@ enum TArtifactSlot {
     eArtifactSlotWarMachine3,
     eArtifactSlotWarMachine4,
     eArtifactSlotSpellbook,
+    // The Dreamcast count. Complete's fifth misc position follows the
+    // spellbook, so its equipped arrays and slot masks are
+    // kNumArtifactSlots + 1 long (NH3API MAX_ARTIFACT_SLOTS_SOD); a
+    // separate enumerator for that count reschedules advManager::doCombat.
     kNumArtifactSlots,
     const_first_artifact_slot = eArtifactSlotHead
 };
@@ -93,11 +97,11 @@ struct TCombinationArtifact {
     // two-argument constructor plus the implicit copy, and VC6 cannot
     // spell it any other way: brace initialization of a record carrying a
     // bitset member is a hard C2440 for this compiler.
-    TCombinationArtifact(int id, const std::bitset<144>& usedComponents)
+    TCombinationArtifact(int id, const std::bitset<ARTIFACT_COUNT>& usedComponents)
         : m_artifactId(id), m_components(usedComponents) {}
 
     int m_artifactId;             // +0x00
-    std::bitset<144> m_components;
+    std::bitset<ARTIFACT_COUNT> m_components;
 };
 SIZE(TCombinationArtifact, 24);
 
@@ -112,8 +116,8 @@ SIZE(TCombinationArtifact, 24);
 // the bitset itself, as the game-context table's readers must (see
 // gamecontext.cpp); a bitset member here leaves the hero and swapmgr readers
 // unchanged. The original type name is unknown.
-struct TArtifactSlotMask : public std::bitset<19> {
-    TArtifactSlotMask(const std::bitset<19>& slots) : std::bitset<19>(slots) {}
+struct TArtifactSlotMask : public std::bitset<kNumArtifactSlots + 1> {
+    TArtifactSlotMask(const std::bitset<kNumArtifactSlots + 1>& slots) : std::bitset<kNumArtifactSlots + 1>(slots) {}
 };
 SIZE(TArtifactSlotMask, 4);
 
@@ -129,7 +133,7 @@ extern const TCombinationArtifact g_combinationArtifactTable[12];
 // Preserve that reference-to-array interface with the Complete-era bounds.
 // The combination table is Complete-only; its inferred pointer interface is
 // independent of the two DC declarations. artifact.cpp owns all three tables.
-extern const TArtifactTraits (&g_artifactTraits)[144];
+extern const TArtifactTraits (&g_artifactTraits)[ARTIFACT_COUNT];
 extern const TCombinationArtifact* g_combinationArtifacts;
 extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 
@@ -146,7 +150,7 @@ extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 DC_ADDRESS(0x037d88, 0x2c)
 inline bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
 {
-    const std::bitset<19>& allowable =
+    const std::bitset<kNumArtifactSlots + 1>& allowable =
         g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
     return allowable[slot];
 }

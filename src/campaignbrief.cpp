@@ -250,7 +250,7 @@ void TCampaignBrief::updateAllyEnemyFlags()
     int enemyFlag = 0;
     int allyFlag = 0;
     int i = 0;
-    for (; i < 8; i++) {
+    for (; i < NUM_PLAYERS; i++) {
         getWidget(i + ENEMY_FLAG1_ID)->hide();
         getWidget(i + ALLY_FLAG1_ID)->hide();
         if (g_game->m_setup.m_playerPos[i] >= 0) {
@@ -531,7 +531,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         backupGameHeaders(g_saveHeader, g_game);
         m_selectedScenario = g_game->m_campaign.m_currentMap;
     } else {
-        for (int i = 0; i < 8; ++i)
+        for (int i = 0; i < NUM_PLAYERS; ++i)
             g_game->m_players[i].init();
         g_game->m_campaign.m_briefingChoice = -1;
     }

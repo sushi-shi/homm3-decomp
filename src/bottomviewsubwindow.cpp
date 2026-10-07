@@ -393,7 +393,7 @@ TBottomViewMessage::~TBottomViewMessage()
 // own cursor against &[2] for the "power and knowledge floor at 1"
 // arm, which is what proves the row is a table and not four literals.
 DATA(0x00660bb0)
-static int g_heroStatCoords[4][2] = {
+static int g_heroStatCoords[kNumPrimarySkills][2] = {
     { 65, 51 }, { 92, 51 }, { 120, 51 }, { 148, 51 }
 };
 
@@ -401,7 +401,7 @@ static int g_heroStatCoords[4][2] = {
 // table above in retail .data, but a separate object: the stat loop
 // stops at this table's first byte and the army loop starts there.
 DATA(0x00660bd0)
-static int g_heroArmyCoords[7][2] = {
+static int g_heroArmyCoords[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };
@@ -497,7 +497,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     m_widgets.push_back(new textWidget(66, 2, 107, 17, who->m_name,
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < kNumPrimarySkills; i++) {
         int value = who->getPrimarySkill(i);
         sprintf(g_text, "%d", value);
         m_widgets.push_back(new textWidget(g_heroStatCoords[i][0],
@@ -515,14 +515,14 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
         who->getLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
 
     int numStacks = 0;
-    for (int n = 0; n < 7; n++) {
+    for (int n = 0; n < armyGroup::ARMY_GROUP_SLOT_COUNT; n++) {
         if (who->m_army.m_armyTypes[n] != CREATURE_NONE)
             numStacks++;
     }
 
     if (numStacks > 0) {
         int id = 0x7db;
-        for (int j = 0; j < 7; j++) {
+        for (int j = 0; j < armyGroup::ARMY_GROUP_SLOT_COUNT; j++) {
             TCreatureType type = who->m_army.m_armyTypes[j];
             if (type != CREATURE_NONE) {
                 m_widgets.push_back(new iconWidget(g_heroArmyCoords[j][0],
@@ -564,7 +564,7 @@ TBottomViewHero::~TBottomViewHero()
 // .data, but a separate object: the hero loop's cursor stops at this
 // table's first byte and this loop's cursor starts there.
 DATA(0x00660c08)
-static int g_townArmyCoords[7][2] = {
+static int g_townArmyCoords[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };
@@ -911,7 +911,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 
     int allyX, enemyX;
     allyX = enemyX = 67;
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < NUM_PLAYERS; i++) {
         if (!g_game->m_playerDisabled[i]) {
             if (g_game->onSameTeam(i, g_curWatchPlayer)) {
                 m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
@@ -981,7 +981,7 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
     m_step = 0;
     m_lastPlayerPos = g_netLocalGamePos;
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < NUM_PLAYERS; i++) {
         if (g_game->m_playerDisabled[i] || g_game->m_players[i].isHuman())
             m_mobility[i] = 0;
         else

@@ -135,7 +135,7 @@ long army::getAdjacentHex(long hex, long direction) const
         if (m_facing == 0) {
             if (direction >= 3)
                 hex += offsetToFront(-1);
-        } else if ((direction >= 0 && direction <= 2) || direction >= 6) {
+        } else if ((direction >= 0 && direction <= 2) || direction >= COMBAT_DIRECTION_COUNT) {
             hex += offsetToFront(-1);
         }
     }
@@ -161,7 +161,7 @@ DC_ADDRESS(0x10cd28, 0x28)
 MAC_ADDRESS(0x13d354, 0x40)
 int oppositeDirection(int direction)
 {
-    if (direction < 6)
+    if (direction < COMBAT_DIRECTION_COUNT)
         return (direction + 3) % 6;
     return direction == COMBAT_DIRECTION_WIDE_UPPER
                ? COMBAT_DIRECTION_WIDE_LOWER : COMBAT_DIRECTION_WIDE_UPPER;

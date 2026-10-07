@@ -25,9 +25,10 @@ enum ECombatWallDrawingConstants {
 // Retail's battlefield indexing: eleven rows of seventeen cells, with the
 // first and last column reserved as off-grid borders.
 enum ECombatGridDimensions {
-    COMBAT_GRID_COLUMN_COUNT = 17,
-    COMBAT_GRID_RIGHT_BORDER_COLUMN = 16,
-    COMBAT_GRID_HEX_COUNT = 187
+    // The same geometry cmbtmgr.h's ECombatGrid names.
+    COMBAT_GRID_COLUMN_COUNT = COMBAT_GRID_ROW_STRIDE,
+    COMBAT_GRID_RIGHT_BORDER_COLUMN = COMBAT_GRID_LAST_COLUMN,
+    COMBAT_GRID_HEX_COUNT = COMBAT_GRID_CELLS
 };
 
 #endif  /* HOMM3_DRAWING_H */

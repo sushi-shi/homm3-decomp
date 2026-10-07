@@ -32,13 +32,13 @@ DC_ADDRESS(0x0eb6a4, 0x98)
 MAC_ADDRESS(0x11d404, 0x130)
 void ExtraInfoUnion::setCellVisited(short player)
 {
-    if (player < 0 || player >= 8)
+    if (player < 0 || player >= NUM_PLAYERS)
         return;
 
     // DC mapcell.cpp:49 calls the canonical Game.h GetTeam member.
     int team = g_game->getTeam(player);
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_mapHeader.m_teamInfo[i] == team)
             m_cellVisitedInfo.m_visited |= 1 << i;
     }
@@ -1769,13 +1769,13 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         return -1;
     thisBox.m_luckBonus = charBuffer;
 
-    for (x = 0; x < 7; ++x) {
+    for (x = 0; x < NUM_RESOURCES; ++x) {
         count = readLittleEndianValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
-    for (x = 0; x < 4; ++x) {
+    for (x = 0; x < kNumPrimarySkills; ++x) {
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
@@ -1957,12 +1957,12 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
         return -1;
 
     int i;
-    for (i = 0; i < 7; ++i) {
+    for (i = 0; i < NUM_RESOURCES; ++i) {
         dwordValue = thisBox->m_resQty[i];
         if (static_cast<unsigned>(outfile->write(&dwordValue, 4)) < 4)
             return -1;
     }
-    for (i = 0; i < 4; ++i) {
+    for (i = 0; i < kNumPrimarySkills; ++i) {
         value = thisBox->m_primarySkillBonus[i];
         if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
@@ -2096,13 +2096,13 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         return -1;
     thisBox.m_luckBonus = charBuffer;
 
-    for (x = 0; x < 7; ++x) {
+    for (x = 0; x < NUM_RESOURCES; ++x) {
         count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
-    for (x = 0; x < 4; ++x) {
+    for (x = 0; x < kNumPrimarySkills; ++x) {
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
@@ -2297,7 +2297,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
         if (isRandom) {
             std::vector<ESpellId> candidates;
             for (ESpellId spell = SPELL_SUMMON_BOAT;
-                 spell < 70;
+                 spell < hero::NUM_SPELLS;
                  spell = H3_ENUM_DECODE(ESpellId, spell + 1)) {
                 if (g_spellTraits[spell].m_schoolBits
                     && !g_game->m_spellDisabledInfo[spell])
@@ -2609,7 +2609,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         MonsterData tempMonster;
         NewSMapHeader::readString(infile, tempMonster.m_message);
 
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < NUM_RESOURCES; ++i) {
             int quantityRead;
             if (readLittleEndianValue(infile, quantityRead)
                 < sizeof(quantityRead))
@@ -2696,7 +2696,7 @@ int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster
 {
     game::saveString(outfile, thisMonster->m_message);
 
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < NUM_RESOURCES; ++i) {
         int value = thisMonster->m_resQty[i];
         if (static_cast<unsigned>(outfile->write(&value, 4)) < 4)
             return -1;
@@ -2716,7 +2716,7 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 {
     game::loadString(infile, thisMonster.m_message);
 
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < NUM_RESOURCES; ++i) {
         int value;
         if (readValue(infile, value) < sizeof(value))
             return -1;
@@ -2859,14 +2859,14 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        for (x = 0; x < 70; ++x)
+        for (x = 0; x < hero::NUM_SPELLS; ++x)
             tempTown.m_fixedSpells[x] =
                 (spellBuf[x / 8] & (1 << (x % 8))) != 0;
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (x = 0; x < 70; ++x)
+    for (x = 0; x < hero::NUM_SPELLS; ++x)
         tempTown.m_spells[x] =
             (spellBuf[x / 8] & (1 << (x % 8))) != 0;
 
@@ -3216,7 +3216,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             intBuffer = charBuffer;
             if (intBuffer != -2) {
                 heroData->m_customSpells = 1;
-                heroData->m_spells = std::bitset<70>();
+                heroData->m_spells = std::bitset<hero::NUM_SPELLS>();
                 if (intBuffer != -1)
                     heroData->m_spells[intBuffer] = 1;
             }
@@ -3226,7 +3226,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 heroData->m_customSpells = 1;
                 unsigned char spellMask[9];
                 infile->read(spellMask, sizeof(spellMask));
-                for (int spell = 0; spell < 70; ++spell) {
+                for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                     heroData->m_spells[spell] =
                         (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
                 }
@@ -3235,7 +3235,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             charBuffer = readValue<char>(infile);
             if (charBuffer) {
                 heroData->m_customPrimarySkills = 1;
-                for (x = 0; x < 4; ++x) {
+                for (x = 0; x < kNumPrimarySkills; ++x) {
                     charBuffer = readValue<char>(infile);
                     heroData->m_primarySkills[x] = charBuffer;
                 }
@@ -4172,7 +4172,7 @@ VA(0x005042c0, 0x1A5)
 MAC_ADDRESS(0x1270c0, 0x1b8)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
 void NewfullMap::rebuildObjectTypeIndex()
 {
-    for (int objectClass = 0; objectClass < 232; ++objectClass) {
+    for (int objectClass = 0; objectClass < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectClass) {
         for (int typeIndex = 0;
              typeIndex < m_objectTypeIndex[objectClass].size(); ++typeIndex) {
             m_objectTypeIndex[objectClass][typeIndex].m_objectTypeIndex = 0xffff;
@@ -4417,11 +4417,11 @@ VA(0x00505060, 0x1CD)
 DC_ADDRESS(0x0f33fc, 0x2b4)
 MAC_ADDRESS(0x127a98, 0x1a0)
 void NewfullMap::generateHeightMap(const CObject* object,
-                                   signed char heightMap[8][6])
+                                   signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT])
 {
     int typeIndex = object->m_typeIndex;
 
-    memset(heightMap, 0, 48);
+    memset(heightMap, 0, OBJECT_MASK_CELLS);
 
     if (m_objectTypes[typeIndex].m_suppressDraw)
         return;
@@ -4456,7 +4456,7 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
         = objectList.end();
     CObject* newObject = &m_objects[objectCell->m_objectIndex];
 
-    signed char heightMap[8][6];
+    signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
     generateHeightMap(newObject, heightMap);
 
     while (position != objectList.begin()) {
@@ -4690,7 +4690,7 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
     CObject* object = &m_objects[objectIndex];
     CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
 
-    signed char heightMap[8][6];
+    signed char heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
     generateHeightMap(object, heightMap);
 
     // Mac retains getObjectTypePtr here at 0:0x128560 inside getType().
@@ -4877,7 +4877,7 @@ CObjectType::CObjectType(const TObjectType& source)
 
     // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
     // source selects the read-only terrain query, without a mutable proxy.
-    for (int terrain = 0; terrain < 10; terrain++)
+    for (int terrain = 0; terrain < NUM_TERRAIN_TYPES; terrain++)
         m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
 
     m_objectType = source.getObjectType();

@@ -900,7 +900,7 @@ int swapManager::open(int newPriority)
         msg.m_extra = m_heroes[hero]->m_id;
         m_parent->broadcastMessage(msg);
 
-        for (int skillIndex = 0; skillIndex < 8; ++skillIndex) {
+        for (int skillIndex = 0; skillIndex < kNumSecSkillsPerHero; ++skillIndex) {
             if (skillIndex < m_heroes[hero]->m_skillCount) {
                 int skill = m_heroes[hero]->getNthSS(skillIndex);
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
@@ -1041,7 +1041,7 @@ void swapManager::drawSelector()
         x = 0x43;
         for (int hero = 0; hero < 2; hero++)
         {
-            for (int slot = 0; slot < 7; slot++, x += 0x24)
+            for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++, x += 0x24)
             {
                 if (!(hero == m_sourceHeroIndex && slot == m_sourceArmySlot))
                 {
@@ -1120,7 +1120,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         unsigned int remaining = m_heroes[hero]->m_artifactSlotCounts[type];
         if (remaining > 0)
         {
-            const std::bitset<19>& slots = g_artifactSlotMasks[type];
+            const std::bitset<kNumArtifactSlots + 1>& slots = g_artifactSlotMasks[type];
             for (int i = kNumArtifactSlots + 1; ; )
             {
                 --i;
@@ -2289,7 +2289,7 @@ MAC_ADDRESS(0x1a8d74, 0x1ac)
 void swapManager::swapMons()
 {
     int nonemptyTroops = 0;
-    for (int slot = 0; slot < 7; ++slot)
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot)
         if (m_heroes[m_sourceHeroIndex]->m_army.m_armies[slot] != CREATURE_NONE
             && m_heroes[m_sourceHeroIndex]->m_army.m_numTroops[slot] > 0)
             ++nonemptyTroops;
@@ -2330,7 +2330,7 @@ void swapManager::update()
     {
         msg.m_codeX = 3;
         msg.m_extraText = g_text;
-        for (i = 0; i < 4; ++i)
+        for (i = 0; i < kNumPrimarySkills; ++i)
         {
             msg.m_codeY = 3 + side * 5 + i;
             sprintf(g_text,
@@ -2339,7 +2339,7 @@ void swapManager::update()
             m_parent->broadcastMessage(msg);
         }
 
-        for (i = 0; i < 7; ++i)
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         {
             msg.m_codeY = 0xd + side * 7 + i;
             if (m_heroes[side]->m_army.m_armies[i] == CREATURE_NONE)
@@ -2358,7 +2358,7 @@ void swapManager::update()
             m_parent->broadcastMessage(msg);
         }
 
-        for (i = 0; i < 7; ++i)
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         {
             msg.m_codeY = 0x41 + side * 7 + i;
             if (m_heroes[side]->m_army.m_armies[i] == CREATURE_NONE)

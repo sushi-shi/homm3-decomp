@@ -470,7 +470,7 @@ TObjectType& TObjectType::setImageName(
             ResourceManager::readFromBitmapResource(maskFile, shadowBits, 6);
             record->m_objectSize.m_x = width;
             record->m_objectSize.m_y = height;
-            for (; cell < 48; ++cell) {
+            for (; cell < OBJECT_MASK_CELLS; ++cell) {
                 unsigned int byteIndex = cell >> 3;
                 unsigned char bit =
                     static_cast<unsigned char>(1 << (cell & 7));
@@ -505,7 +505,7 @@ TObjectType::getImageName() const
 
 VA(0x00514a60, 0x11D)
 MAC_ADDRESS(0x223f44, 0x134)
-TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
+TObjectType& TObjectType::setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& mask)
 {
     m_triggerMask = mask & ~m_passableMask;
     m_hasTrigger = m_triggerMask.any();
@@ -535,14 +535,14 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 // retail's retained bitset operations and string destruction. Flattening
 // these calls with the same declarations/default constructors scores 76.6378%.
 MAC_ADDRESS(0x223ea8, 0x9c)
-TObjectType& TObjectType::setPassableMask(const std::bitset<48>& mask)
+TObjectType& TObjectType::setPassableMask(const std::bitset<OBJECT_MASK_CELLS>& mask)
 {
     m_passableMask = mask | ~m_imageInfo.m_drawMask;
     return *this;
 }
 
 MAC_ADDRESS(0x223e4c, 0x48)
-TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
+TObjectType& TObjectType::setTerrainMask(const std::bitset<NUM_TERRAIN_TYPES>& mask)
 {
     m_recommendedTerrainMask &= mask;
     m_terrainMask = mask;
@@ -550,7 +550,7 @@ TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
 }
 
 MAC_ADDRESS(0x223e94, 0xc)
-TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<10>& mask)
+TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<NUM_TERRAIN_TYPES>& mask)
 {
     m_recommendedTerrainMask = mask;
     return *this;
@@ -588,8 +588,8 @@ MAC_ADDRESS(0x224078, 0x1ac)
 std::istream& operator>>(std::istream& is, TObjectType& objectType)
 {
     std::string imageName;
-    std::bitset<48> passable;
-    std::bitset<48> trigger;
+    std::bitset<OBJECT_MASK_CELLS> passable;
+    std::bitset<OBJECT_MASK_CELLS> trigger;
     std::bitset<9> terrainRead;
     std::bitset<9> recommendedRead;
     int typeRead;
@@ -601,8 +601,8 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
         >> typeRead >> subtype >> slotCategory >> underlay;
 
     objectType.setImageName(imageName).setPassableMask(passable)
-        .setTriggerMask(trigger).setTerrainMask(std::bitset<10>(terrainRead.to_ulong()))
-        .setRecommendedTerrainMask(std::bitset<10>(recommendedRead.to_ulong()))
+        .setTriggerMask(trigger).setTerrainMask(std::bitset<NUM_TERRAIN_TYPES>(terrainRead.to_ulong()))
+        .setRecommendedTerrainMask(std::bitset<NUM_TERRAIN_TYPES>(recommendedRead.to_ulong()))
         .setObjectType(TAdventureObjectType(typeRead)).setSubtype(subtype)
         .setSlotCategory(slotCategory).setUnderlay(underlay != 0);
     return is;

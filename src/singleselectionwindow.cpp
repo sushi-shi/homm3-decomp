@@ -315,7 +315,7 @@ public:
     // Dreamcast's destructor calls CNewPlayerUpdateProc's scalar deleting
     // destructor, fixing the source element type. Complete's retail-only
     // t_map_list_update still converts to this immediate base.
-    CNewPlayerUpdateProc* m_procs[8];
+    CNewPlayerUpdateProc* m_procs[NUM_PLAYERS];
 
     ~CNewPlayerUpdateMan();
 
@@ -964,8 +964,8 @@ public:
 // +0x3f4.
 class CUpdatePlayerPosMsg : public CNetMsg {
 public:
-    CNetPlayerHandlerPlayer m_netPlayer[8];   // +0x014
-    CNetPlayerHandlerPlayer m_compPlayer[8];  // +0x3f4
+    CNetPlayerHandlerPlayer m_netPlayer[NUM_PLAYERS];   // +0x014
+    CNetPlayerHandlerPlayer m_compPlayer[NUM_PLAYERS];  // +0x3f4
 
     // E:\gamedcs\singleselectionwindow.cpp:717
     CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* netPlayers,
@@ -1025,7 +1025,7 @@ DATA(0x0069fb44) const char* g_turnDurationText[11];
 // these eight bytes without a terminator in .rdata at 0x641ae0 and indexes
 // them from the constructor; the pooled "rbygopts" literal at 0x6831a8 is a
 // separate object used by the panel loaders.
-DATA(0x00641ae0) static const char g_playerColorLetters[8] = {
+DATA(0x00641ae0) static const char g_playerColorLetters[NUM_PLAYERS] = {
     'r', 'b', 'y', 'g', 'o', 'p', 't', 's'
 };
 DATA(0x00641ae8) static const int g_turnDurationMinutes[10] = {
@@ -1068,7 +1068,7 @@ DATA(0x0069fda0) static unsigned char g_notifyNoSaved;
 // DC publishes g_wasHuman as an int array (segment 3, offset 0x1704c).
 // game::load also restores this table from SavedGameHeader::m_humanPlayer;
 // its 0x4bcda0+0x1bf copy rules out the former file-static declaration.
-DATA(0x0069fda4) int g_wasHuman[8];
+DATA(0x0069fda4) int g_wasHuman[NUM_PLAYERS];
 // DC's `campaignMode` byte survives as a TU-local Complete cell.  The
 // selected campaign row forces the unlimited (10) duration after transfer.
 DATA(0x0069fd90) static bool g_selectionCampaignMode;
@@ -1658,7 +1658,7 @@ MAC_COMPGEN_ADDRESS(0x17064c, 0x2c8, IMPLICIT_COPY_ASSIGN, SavedGameHeader)
 DC_ADDRESS(0x1486a8, 0x64)
 CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
 {
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (m_procs[i])
             delete m_procs[i];
     }
@@ -1668,7 +1668,7 @@ CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
 DC_ADDRESS(0x148790, 0xa8)
 void CNewPlayerUpdateMan::tick()
 {
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (m_procs[i]) {
             m_procs[i]->tick();
             if (m_procs[i]->isFinished()) {
@@ -1684,7 +1684,7 @@ void CNewPlayerUpdateMan::tick()
 DC_ADDRESS(0x148928, 0x38)
 inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
 {
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < NUM_PLAYERS; ++i)
         if (m_procs[i])
             return 1;
     return 0;
@@ -1695,7 +1695,7 @@ inline unsigned char CNewPlayerUpdateMan::isSendingHeaders()
 DC_ADDRESS(0x148960, 0x38)
 inline int CNewPlayerUpdateMan::getFirstAvailable()
 {
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < NUM_PLAYERS; ++i)
         if (m_procs[i] == 0)
             return i;
     return -1;
@@ -1707,7 +1707,7 @@ DC_ADDRESS(0x148998, 0x56)
 MAC_ADDRESS(0x1809b0, 0x40)
 inline CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
 {
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < NUM_PLAYERS; ++i)
         if (m_procs[i] && m_procs[i]->m_dpid == dpid)
             return m_procs[i];
     return 0;
@@ -2061,7 +2061,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     int i;
     if (!m_saveMode) {
-        for (i = 0; i < 8; ++i)
+        for (i = 0; i < NUM_PLAYERS; ++i)
             g_game->m_players[i].init();
     }
 
@@ -2256,7 +2256,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         m_durationSlider->hide();
         m_widgets.push_back(m_durationSlider);
 
-        for (i = 0; i < 8; ++i) {
+        for (i = 0; i < NUM_PLAYERS; ++i) {
             sprintf(flagName, "AOFLGB%c.DEF", flagColors[i]);
             m_widgets.push_back(new button(
                 14 - m_x, (133 + i * 50) - m_y - 3, 42, 50, 263 + i,
@@ -2475,7 +2475,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_resource = ResourceManager::getSprite("ScnrStar.def");
 
     const char* colorChars = "rbygopts";
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
         m_panels[i] = ResourceManager::getBitmap816(tempName);
         sprintf(tempName, "adopflg%c.pcx", colorChars[i]);
@@ -2516,7 +2516,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     }
 
     setHelpText(g_singleSelectionHelp + 4, 104, 345, 0);
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         g_newMapStartingBonus[i] = 3;
         g_startingHeroOverrides[i] = heroIdNone;
     }
@@ -3294,7 +3294,7 @@ void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
         header.m_numPlayers =
             static_cast<unsigned char>(m_randomMapOptions[2] + m_randomMapOptions[4]);
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         header.m_teamInfo[i] = static_cast<char>(i);
         header.m_playerSlotAttributes[i].m_legalAlignments = 0x1ff;
         header.m_playerSlotAttributes[i].m_canBeHuman =
@@ -3679,7 +3679,7 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
         setFocus(-1);
     getWidget(102)->hide();
     m_durationSlider->hide();
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         getWidget(i + 199)->hide();
         getWidget(i + 207)->hide();
         getWidget(i + 345)->hide();
@@ -4303,7 +4303,7 @@ void TSingleSelectionWindow::makeHeroFilter()
 
     if (m_saveMode)
         return;
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
         if (m_loadMode && g_game->m_playerDisabled[i])
@@ -4357,7 +4357,7 @@ void TSingleSelectionWindow::makeHeroFilter()
             break;
         }
         player->m_availableHeroesCount = 0;
-        for (heroId = 0; heroId < 156; ++heroId) {
+        for (heroId = 0; heroId < game::HERO_COUNT; ++heroId) {
             if (g_game->m_heroAvailability[heroId] != -1)
                 continue;
             if (g_heroTraits[heroId].m_heroClass != heroClass1
@@ -4693,7 +4693,7 @@ int TSingleSelectionWindow::update()
                 g_turnDurationText[g_game->m_setup.m_turnDuration],
                 g_windowManager->m_screenBitmap, 256, 556, 134, 18, font::WHITE, 5, -1);
             pos = 0;
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < NUM_PLAYERS; ++i) {
                 if (g_game->m_setup.m_playerPos[i] >= 0
                         && (m_loadMode == 0
                             || g_game->m_playerDisabled[i] == 0)) {
@@ -4987,7 +4987,7 @@ void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
     }
 
     widget* flag;
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         flag = getWidget(i + 120);
         flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
                            widget::WIDGET_CLEAR_STATUS);
@@ -5327,7 +5327,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     } else {
         if (computerPlayerCount == -1)
             computerPlayerCount = rand() % (9 - humanPlayerCount);
-        if (computerPlayerCount + humanPlayerCount > 8)
+        if (computerPlayerCount + humanPlayerCount > NUM_PLAYERS)
             computerPlayerCount = 8 - humanPlayerCount;
         if (computerPlayerCount == 0)
             computerTeamCount = 0;
@@ -6142,7 +6142,7 @@ int TSingleSelectionWindow::exitDialog(message& msg)
         g_chatMan.clearChat();
         g_logFile.log(DATA_COMPGEN(0x0068385c, exitLobbyLog,
             "Starting multiplayer game!!! Or maybe exiting??"));
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < NUM_PLAYERS; ++i) {
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
             if (player)
                 g_logFile.log(DATA_COMPGEN(0x00683840, exitLobbySeatLog,
@@ -6340,13 +6340,13 @@ void TSingleSelectionWindow::updatePlayerPositions(bool updateCurPlayer)
 {
     g_numHumanPlayers = 0;
     int i;
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         g_game->m_players[i].m_isLocal = 0;
         g_game->m_players[i].m_isHuman = 0;
     }
 
     if (isMultiPlayer()) {
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < NUM_PLAYERS; ++i) {
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
             if (!player)
                 player = m_players.getCompPlayerInPos(i);
@@ -6381,7 +6381,7 @@ void TSingleSelectionWindow::updatePlayerPositions(bool updateCurPlayer)
         }
     }
 
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         strcpy(g_game->m_players[i].m_name, g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
         CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
         if (player)
@@ -6646,7 +6646,7 @@ VA(0x00589480, 0x44)
 DC_ADDRESS(0x1488a4, 0x84)
 void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
 {
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         if (m_procs[i] && m_procs[i]->m_dpid == dpid) {
             delete m_procs[i];
             m_procs[i] = 0;
@@ -7633,10 +7633,10 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 {
     updateNameLists();
     int i;
-    for (i = 0; i < 8; ++i)
+    for (i = 0; i < NUM_PLAYERS; ++i)
         m_players.m_humanPlayers[i].m_playerPos = -1;
     CUpdatePlayerPosMsg* msg = static_cast<CUpdatePlayerPosMsg*>(netMsg);
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         CNetPlayerHandlerPlayer* rec = &msg->m_netPlayer[i];
         if (rec->isHuman()) {
             CNetPlayerHandlerPlayer* p = m_players.getPlayer(rec->m_dpid);
@@ -7651,7 +7651,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
     }
     memcpy(m_players.m_computerPlayers, msg->m_compPlayer,
            sizeof(m_players.m_computerPlayers));
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
         if (!p)
             p = m_players.getCompPlayerInPos(i);
@@ -7688,7 +7688,7 @@ DC_ADDRESS(0x1425f0, 0x84)
 MAC_ADDRESS(0x1835d8, 0xc0)
 void TSingleSelectionWindow::sendPlayerFaces()
 {
-    for (int i = 1; i < 8; ++i) {
+    for (int i = 1; i < NUM_PLAYERS; ++i) {
         CNetPlayerHandlerPlayer* player = &m_players.m_humanPlayers[i];
         if (player->isHuman() && player->m_playerPos != -1) {
             CRequestHeroFaceReplyMsg msg(player->m_playerPos,
@@ -7975,7 +7975,7 @@ void TSingleSelectionWindow::updateNameLists()
     }
     m_nameList1->setText(names);
     names[0] = 0;
-    for (i = 4; i < 8; ++i) {
+    for (i = 4; i < NUM_PLAYERS; ++i) {
         if (m_players.m_humanPlayers[i].isHuman()) {
             sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
             strcat(names, line);
@@ -8285,7 +8285,7 @@ DC_ADDRESS(0x1438b8, 0x9a)
 MAC_ADDRESS(0x184e50, 0xb0)
 void TSingleSelectionWindow::updateNames()
 {
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < NUM_PLAYERS; ++i) {
         CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
         textWidget* name = static_cast<textWidget*>(getWidget(i + 345));
         if (!player)
@@ -8746,7 +8746,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
 
     delete m_flagBack;
 
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < NUM_PLAYERS; ++i) {
         ResourceManager::dispose(m_panels[i]);
         ResourceManager::dispose(m_flags[i]);
     }

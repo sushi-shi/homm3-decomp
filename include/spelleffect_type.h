@@ -3,7 +3,11 @@
 
 // Original global TSpellEffectID, Dreamcast NB11 enum record 0x1f15.
 // TSpellTraits.m_effect (+0x08) references this record directly.
-// Complete retains the same effect-table ordinals and int-wide storage.
+// Complete retains the Dreamcast ordinals 0..80 and int-wide storage, then
+// inserts one row: g_spellEffectTraits (.rdata 0x641e08) has 83 rows, row 81
+// is "c0acid.def"/"AcidBreath" and row 82 is "poof.def"/"Poof", and both
+// combatManager::spellEffect overloads (0x496840 and its hex twin) reject
+// `effect >= 83`. kNumSpellEffects (DC 82) therefore counts 83 here.
 enum TSpellEffectID {
     eSpellEffectNone = -1,
     eSpellEffectPrayer = 0,
@@ -107,8 +111,11 @@ enum TSpellEffectID {
     // Original eSpellEffectRegenerate.
     eSpellEffectRegeneration = 79,
     eSpellEffectDeathStare = 80,
+    // Complete row 81 is "AcidBreath" and Poof moves to row 82 (see above).
+    // Renaming or adding an enumerator here reorders VC6's .bss layout and
+    // reschedules advManager::doCombat, so the Dreamcast spellings remain.
     eSpellEffectPoof = 81,
-    kNumSpellEffects = 82,
+    kNumSpellEffects = 83,
 };
 
 #endif

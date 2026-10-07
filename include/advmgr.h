@@ -171,7 +171,7 @@ extern const char* g_resourceNames[8];
 // tables - `?gMineEventText@@3PAPBDA` and `?gMineDescriptions@@3PAPBDA` -
 // and only the ROLE separates them: this one is an event dialog's text,
 // so it takes the event name. PROVISIONAL on that ground alone.
-extern int g_mineCharacteristics[7];
+extern int g_mineCharacteristics[NUM_RESOURCES];
 // Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
 // bytes read as [previous step direction][current step direction], both
 // in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to
@@ -831,7 +831,7 @@ public:
     NewfullMap* m_fullMap;
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
-    CSprite* m_groundTileset[10];  // +0x60
+    CSprite* m_groundTileset[NUM_TERRAIN_TYPES];  // +0x60
     CSprite* m_riverTileset[5];  // +0x88
     CSprite* m_roadTileset[4];  // +0x9c
     CSprite* m_borderTileset;  // +0xac

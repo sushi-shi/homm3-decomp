@@ -527,7 +527,7 @@ public:
     int m_imageHeight;             // +0x16c
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
-    TResourceHandle<sample> m_armySample[8];  // +0x170
+    TResourceHandle<sample> m_armySample[MAX_SAMPLES];  // +0x170
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
     // (0x436c60) refuses to cast now when any other still-able stack
     // on our side outranks the target's own value here. Name pending a
@@ -541,7 +541,7 @@ public:
     // They stay source-visible in every TU; replacing them with padding in
     // selected consumers changed the class declaration stream seen by C1.
     int m_numSpellInfluences;       // +0x194
-    int m_spellInfluence[81];          // +0x198 .. +0x2db
+    int m_spellInfluence[NUM_SPELLS_AND_CREATURE_EFFECTS];          // +0x198 .. +0x2db
     // THE SECOND ROW, and it is the one the spellInfluence note above
     // already predicted: "DC's own spellInfluence[80] at 388 with
     // spell_level[80] straight after it at 708". Retail's pair is
@@ -585,7 +585,7 @@ public:
     // codegen; only the mangled COMDAT name differs, and those are
     // unclaimed rows whose reloc names are cosmetic anyway.
     typedef std::deque<int> TSpellQueue;
-    int m_spellLevel[81];          // +0x2dc .. +0x41f
+    int m_spellLevel[NUM_SPELLS_AND_CREATURE_EFFECTS];          // +0x2dc .. +0x41f
     TSpellQueue m_spellInfluenceQueue;  // +0x420 .. +0x44f
     float m_paletteEffect;          // +0x450 (DC army@1068)
     // Retaliations left this round: simulate_attack (0x4359b0) only
@@ -1671,7 +1671,7 @@ inline void army::clearAIValues()
 DC_ADDRESS(0x04c9ec, 0x20)
 inline bool army::needToTurn(int direction) const
     {
-        return direction < 6 && (m_facing == 0) != (direction >= 3);
+        return direction < COMBAT_DIRECTION_COUNT && (m_facing == 0) != (direction >= 3);
     }
 
     // Original: army::Is; E:\gamedcs\Army.h:765
@@ -1866,8 +1866,8 @@ inline bool army::isInAreaHighlight() const
 // to say where. Sliced by army::get_clockwise / get_counter_clockwise,
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
-extern long g_wideDirectionRingIndex[8];
-extern long g_wideDirectionRingOrder[8];
+extern long g_wideDirectionRingIndex[COMBAT_DIRECTION_WIDE_LOWER + 1];
+extern long g_wideDirectionRingOrder[COMBAT_DIRECTION_WIDE_LOWER + 1];
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)

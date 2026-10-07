@@ -202,7 +202,7 @@ DATA(0x00679ca0) static char g_campaignDisabledSkills[kNumSecSkills] = {
 // The four magic schools as a table, retail .DATA 0x679cbc. NOT const:
 // get_skill_award walks it with a live `mov eax,[esi]` each iteration,
 // which a const array would let VC6 fold away.
-DATA(0x00679cbc) static TSecondarySkill g_magicSchools[4] = {
+DATA(0x00679cbc) static TSecondarySkill g_magicSchools[kNumSpellSchools] = {
     eSecSkillSchoolOfFireMagic, eSecSkillSchoolOfAirMagic,
     eSecSkillSchoolOfWaterMagic, eSecSkillSchoolOfEarthMagic
 };
@@ -212,7 +212,7 @@ DATA(0x00679cbc) static TSecondarySkill g_magicSchools[4] = {
 // 0x678420 and the reference cell immediately after it at 0x679c80, which is
 // what fixes the 156-row extent (0x679c80 - 0x678420 = 156 * 40).
 DATA(0x00678420)
-THeroSpecificAbility g_heroSpecificAbilitiesImp[156] = {
+THeroSpecificAbility g_heroSpecificAbilitiesImp[game::HERO_COUNT] = {
     { eHeroAbilitySecondarySkill, { eSecSkillArchery } },
     { eHeroAbilityCreature, { 2 } },
     { eHeroAbilityCreature, { CREATURE_GRIFFIN } },
@@ -372,7 +372,7 @@ THeroSpecificAbility g_heroSpecificAbilitiesImp[156] = {
 };
 
 DATA(0x00679c80)
-const THeroSpecificAbility (&g_heroSpecificAbilities)[156] =
+const THeroSpecificAbility (&g_heroSpecificAbilities)[game::HERO_COUNT] =
     g_heroSpecificAbilitiesImp;
 
 VA(0x004d71a0, 0x71)
@@ -1002,7 +1002,7 @@ void hero::initialize(short index)
     m_name[sizeof(m_name) - 1] = 0;
     m_heroClass = g_heroTraits[index].m_heroClass;
     m_skillCount = 0;
-    for (i = 0; i < 4; ++i) {
+    for (i = 0; i < kNumPrimarySkills; ++i) {
         setPrimarySkill(i, g_heroClasses[m_heroClass].m_initialPrimarySkill[i]);
     }
 
@@ -1138,7 +1138,7 @@ void hero::initialize(const HeroExtra* setup)
     if (setup->m_customPrimarySkills) {
         // Mac 0xf4658..0xf466c widens each signed skill byte before the
         // store, matching the existing int-valued setter's expansion.
-        for (i = 0; i < 4; i++)
+        for (i = 0; i < kNumPrimarySkills; i++)
             setPrimarySkill(i, setup->m_primarySkills[i]);
     }
 
@@ -1169,11 +1169,11 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customArtifacts) {
-        for (i = 0; i < 19; i++) {
+        for (i = 0; i < kNumArtifactSlots + 1; i++) {
             if (m_equipped[i].m_artifactId != ARTIFACT_NONE)
                 removeArtifact(i);
         }
-        for (i = 0; i < 19; i++) {
+        for (i = 0; i < kNumArtifactSlots + 1; i++) {
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
                 equipArtifact(setup->m_artifacts[i], i);
         }
@@ -1275,7 +1275,7 @@ MAC_ADDRESS(0x0f4c1c, 0x68)
 long hero::getEquippedArtifacts(bool countWarMachines) const
 {
     long count = 0;
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         int id = m_equipped[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
             id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
@@ -1295,7 +1295,7 @@ long hero::getNumberInBackpack(bool countWarMachines) const
     long count = 0;
     if (countWarMachines)
         return m_backpackCount;
-    for (int slot = 0; slot < 64; slot++) {
+    for (int slot = 0; slot < HERO_BACKPACK_CAPACITY; slot++) {
         int id = m_backpack[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
@@ -1349,11 +1349,11 @@ DC_ADDRESS(0x0cc220, 0x4a)
 MAC_ADDRESS(0x0f4d94, 0x68)
 unsigned char hero::hasArtifact(int whichArtifact) const
 {
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         if (m_equipped[slot].m_artifactId == whichArtifact)
             return 1;
     }
-    for (int pack = 0; pack < 64; pack++) {
+    for (int pack = 0; pack < HERO_BACKPACK_CAPACITY; pack++) {
         if (m_backpack[pack].m_artifactId == whichArtifact)
             return 1;
     }
@@ -1372,7 +1372,7 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
         return getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_SPELLBOOK;
     } else {
-        for (int slot = 0; slot < 19; slot++) {
+        for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
             if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 return 1;
         }
@@ -1415,7 +1415,7 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
         break;
     }
     // Nineteen equipped slots, one more than the DC build's eighteen.
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return;
@@ -1452,9 +1452,9 @@ void hero::addSpell(int whichSpell)
 // it into the artifact result. The other three Tome arms repeat this.
 DC_ADDRESS(0x0cc360, 0x2c)
 MAC_ADDRESS(0x0f5008, 0xb4)
-std::bitset<70> markSpells(TSpellSchool school)
+std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
 {
-    std::bitset<70> granted;
+    std::bitset<hero::NUM_SPELLS> granted;
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
         if ((g_spellTraits[spell].m_schoolBits & school) != 0)
             granted[spell] = true;
@@ -1490,9 +1490,9 @@ std::bitset<70> markSpells(TSpellSchool school)
 // from 97.56% to 77.57%; keep the shared result assignment and clear tail.
 VA(0x004d9350, 0x272)
 MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
-std::bitset<70> markArtifactSpells(int artifactId)
+std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId)
 {
-    std::bitset<70> result;
+    std::bitset<hero::NUM_SPELLS> result;
     switch (artifactId) {
     case ARTIFACT_TOME_OF_AIR_MAGIC:
         result = markSpells(eSchoolAir);
@@ -1547,23 +1547,23 @@ void hero::updateSpellList()
                 m_availableSpells[extra] = 1;
             } else {
                 if (g_artifactTraits[artifactId].m_givesSpells) {
-                    std::bitset<70> granted = markArtifactSpells(artifactId);
+                    std::bitset<NUM_SPELLS> granted = markArtifactSpells(artifactId);
                     std::transform(m_availableSpells,
                                    m_availableSpells + NUM_SPELLS,
-                                   bitset_iterator<70>(granted, 0),
+                                   bitset_iterator<NUM_SPELLS>(granted, 0),
                                    m_availableSpells, std::logical_or<bool>());
                 }
                 int comboType = g_artifactTraits[artifactId].m_comboType;
                 if (comboType != -1) {
-                    const std::bitset<144>& components =
+                    const std::bitset<ARTIFACT_COUNT>& components =
                         g_combinationArtifacts[comboType].m_components;
-                    for (int component = 0; component < 144; component++) {
+                    for (int component = 0; component < ARTIFACT_COUNT; component++) {
                         if (components.test(component) &&
                             g_artifactTraits[component].m_givesSpells) {
-                            std::bitset<70> granted = markArtifactSpells(component);
+                            std::bitset<NUM_SPELLS> granted = markArtifactSpells(component);
                             std::transform(m_availableSpells,
                                            m_availableSpells + NUM_SPELLS,
-                                           bitset_iterator<70>(granted, 0),
+                                           bitset_iterator<NUM_SPELLS>(granted, 0),
                                            m_availableSpells,
                                            std::logical_or<bool>());
                         }
@@ -1639,7 +1639,7 @@ void hero::updateArmies()
     message msg;
     msg.m_id = MESSAGE_WIDGET;
 
-    for (int slot = 0; slot < 7; ++slot) {
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         if (m_army.m_armies[slot] == CREATURE_NONE) {
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = slot + 0x36;
@@ -1822,7 +1822,7 @@ void hero::deallocate(bool gameLoaded, bool remoteMove)
     type_obscuring_object::restoreCell();
 
     if (!g_combatSurrendered) {
-        for (int slot = 0; slot < 7; slot++)
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++)
             m_army.dismiss(slot);
     }
 
@@ -2249,7 +2249,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     if (currentHero->isLevelUpCampaignOverride())
         skillDisabled = g_campaignDisabledSkills;
 
-    if (currentHero->m_skillCount >= 8)
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
         minLevel = eMasteryBasic;
     if (minLevel >= maxLevel)
         return eSecSkillNone;
@@ -2289,7 +2289,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         excluded != eSecSkillSchoolOfWaterMagic &&
         excluded != eSecSkillSchoolOfEarthMagic) {
         int schoolTotal = 0;
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < kNumSpellSchools; i++) {
             TSecondarySkill school = g_magicSchools[i];
             if (currentHero->getSecondarySkill(school) < maxLevel &&
                 currentHero->getSecondarySkill(school) >= minLevel &&
@@ -2302,7 +2302,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         }
         if (schoolTotal > 0) {
             int schoolRoll = random(1, schoolTotal);
-            for (i = 0; i < 4; i++) {
+            for (i = 0; i < kNumSpellSchools; i++) {
                 TSecondarySkill school = g_magicSchools[i];
                 if (currentHero->getSecondarySkill(school) < maxLevel &&
                     currentHero->getSecondarySkill(school) >= minLevel &&
@@ -2947,9 +2947,9 @@ MAC_ADDRESS(0x0f83ec, 0xc8)
 // proxy/set boundary; giveArtifact changes from 95.9069% to 95.3968%.
 unsigned char hero::hasCombinationArtifactComponents(int combination)
 {
-    std::bitset<144> missingComponents =
+    std::bitset<ARTIFACT_COUNT> missingComponents =
         g_combinationArtifacts[combination].m_components;
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
         if (artifactId != ARTIFACT_NONE)
             missingComponents[artifactId] = false;
@@ -2962,7 +2962,7 @@ VA(0x004dbf30, 0x133)
 MAC_ADDRESS(0x0f84b4, 0x184)
 unsigned char hero::assembleCombinationArtifact(int combination, long slot)
 {
-    std::bitset<144> components =
+    std::bitset<ARTIFACT_COUNT> components =
         g_combinationArtifacts[combination].m_components;
     if (slot != -1) {
         components[getArtifact(TArtifactSlot(slot)).m_artifactId] = false;
@@ -2995,9 +2995,9 @@ void hero::disassembleCombinationArtifact(long slot)
         g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
     removeArtifact(slot);
 
-    const std::bitset<144>& components =
+    const std::bitset<ARTIFACT_COUNT>& components =
         g_combinationArtifacts[combination].m_components;
-    for (int artifactId = 0; artifactId < 144; artifactId++) {
+    for (int artifactId = 0; artifactId < ARTIFACT_COUNT; artifactId++) {
         if (components.test(artifactId)) {
             // Complete enumerates all 144 component bits, beyond DC's 128 artifact ids; each set bit becomes a typed artifact record.
             type_artifact artifact(static_cast<TArtifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
@@ -4516,7 +4516,7 @@ void hero::updateStats()
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_extraText = g_text;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < kNumPrimarySkills; i++) {
         sprintf(g_text, "%d", g_currentHero->getPrimarySkill(i));
         msg.m_codeY = i + 0x2e;
         g_heroScreenWindow->broadcastMessage(msg);
@@ -4633,7 +4633,7 @@ void THeroScreenWindow::setupHeroView()
 
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = widget::WIDGET_DRAWN;
-    for (int slotIcon = 0; slotIcon < 7; slotIcon++) {
+    for (int slotIcon = 0; slotIcon < armyGroup::ARMY_GROUP_SLOT_COUNT; slotIcon++) {
         msg.m_codeY = slotIcon + 0x44;
         broadcastMessage(msg);
     }
@@ -4824,7 +4824,7 @@ int hero::takeSS(int whichSS, int numLevelsToTake)
         if (m_skillLevel[whichSS] < 0)
             m_skillLevel[whichSS] = 0;
         if (m_skillLevel[whichSS] == 0) {
-            for (int i = 0; i < 28; i++) {
+            for (int i = 0; i < kNumSecSkills; i++) {
                 if (m_skillOrder[i] > m_skillOrder[whichSS])
                     m_skillOrder[i]--;
             }
@@ -4846,7 +4846,7 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
     if (m_skillLevel[whichSS] > 0) {
         m_skillLevel[whichSS] += numLevelsToGive;
     } else {
-        if (m_skillCount < 8) {
+        if (m_skillCount < kNumSecSkillsPerHero) {
             m_skillLevel[whichSS] = numLevelsToGive;
             m_skillOrder[whichSS] = m_skillCount + 1;
             m_skillCount++;
@@ -4873,7 +4873,7 @@ MAC_ADDRESS(0x102f5c, 0x4c)
 int hero::creatureTypeCount(int creatureType)
 {
     int count = 0;
-    for (int slot = 0; slot < 7; slot++) {
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
         if (m_army.m_armies[slot] == creatureType && m_army.m_numTroops[slot] > 0)
             count++;
     }
@@ -4896,7 +4896,7 @@ DC_ADDRESS(0x0d38b0, 0x28)
 MAC_ADDRESS(0x102fe0, 0x38)
 int hero::getNthSS(int which)
 {
-    for (int skill = 0; skill < 28; skill++) {
+    for (int skill = 0; skill < kNumSecSkills; skill++) {
         if (m_skillOrder[skill] == which + 1)
             return skill;
     }
@@ -4911,7 +4911,7 @@ void hero::transferArtifacts(hero* src)
     if (!src)
         return;
     type_artifact artifact;
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         artifact = src->m_equipped[slot];
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
@@ -5026,12 +5026,12 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
         int slotClass = g_artifactSlotTraits[slot].m_type;
         unsigned int worn = m_artifactSlotCounts[slotClass];
         if (worn > 0) {
-            std::bitset<19> classSlots = g_artifactSlotMasks[slotClass];
+            std::bitset<kNumArtifactSlots + 1> classSlots = g_artifactSlotMasks[slotClass];
             size_t capacity = classSlots.count();
             if (worn >= capacity)
                 continue;
             int occupied = 0;
-            for (int i = 0; i < 19; i++) {
+            for (int i = 0; i < kNumArtifactSlots + 1; i++) {
                 if (classSlots[i] &&
                     getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                     occupied++;
@@ -5048,7 +5048,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
             for (; src != m_artifactSlotCounts + 15; ++dst, ++src)
                 *dst = *src;
 
-            const std::bitset<144>& components =
+            const std::bitset<ARTIFACT_COUNT>& components =
                 g_combinationArtifacts[combination].m_components;
             bool keptSlot = false;
             bool slotFits = true;
@@ -5065,7 +5065,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     continue;
                 }
                 int componentCount = counts[componentClass];
-                std::bitset<19> classSlots =
+                std::bitset<kNumArtifactSlots + 1> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
                 if (componentCount >= capacity) {
@@ -5076,7 +5076,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     int occupied =
                         (g_artifactTraits[artifact].m_allowableSlotMask
                          == componentClass) ? 1 : 0;
-                    for (int i = 0; i < 19; i++) {
+                    for (int i = 0; i < kNumArtifactSlots + 1; i++) {
                         if (classSlots[i] &&
                             getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                             occupied++;
@@ -5087,7 +5087,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     }
                 }
                 counts[componentClass]++;
-            } while (++component < 144);
+            } while (++component < ARTIFACT_COUNT);
             if (!slotFits)
                 continue;
         }
@@ -5204,7 +5204,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     if (slot == -1) {
         slot = 0;
         while (1) {
-            if (slot >= 19)
+            if (slot >= kNumArtifactSlots + 1)
                 return 0;
             if (canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
                 break;
@@ -5228,12 +5228,12 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     int combinationIndex =
         g_artifactTraits[artifact.m_artifactId].m_comboType;
     if (combinationIndex != -1) {
-        const std::bitset<144>& components =
+        const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[combinationIndex].m_components;
         bool keptSlot = false;
-        for (int component = 0; component < 144; component++) {
+        for (int component = 0; component < ARTIFACT_COUNT; component++) {
             if (components.test(component)) {
-                for (int skill = 0; skill < 4; skill++)
+                for (int skill = 0; skill < kNumPrimarySkills; skill++)
                     adjustPrimarySkill(skill,
                         g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
@@ -5251,7 +5251,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
         }
     }
 
-    for (int skill = 0; skill < 4; skill++)
+    for (int skill = 0; skill < kNumPrimarySkills; skill++)
         adjustPrimarySkill(skill,
             g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
 
@@ -5294,12 +5294,12 @@ void hero::removeArtifact(long slot)
     int combinationIndex =
         g_artifactTraits[artifact.m_artifactId].m_comboType;
     if (combinationIndex != -1) {
-        const std::bitset<144>& components =
+        const std::bitset<ARTIFACT_COUNT>& components =
             g_combinationArtifacts[combinationIndex].m_components;
         bool keptSlot = false;
-        for (int component = 0; component < 144; component++) {
+        for (int component = 0; component < ARTIFACT_COUNT; component++) {
             if (components.test(component)) {
-                for (int skill = 0; skill < 4; skill++)
+                for (int skill = 0; skill < kNumPrimarySkills; skill++)
                     adjustPrimarySkill(skill,
                         -g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
@@ -5317,7 +5317,7 @@ void hero::removeArtifact(long slot)
     }
 
     m_equipped[slot] = type_artifact(ARTIFACT_NONE);
-    for (int skill = 0; skill < 4; skill++)
+    for (int skill = 0; skill < kNumPrimarySkills; skill++)
         adjustPrimarySkill(skill,
             -g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
     if (updateSpells
@@ -5358,7 +5358,7 @@ bool hero::removeArtifact(TArtifact artifact)
             return 1;
         }
     }
-    for (slot = 0; slot < 19; slot++) {
+    for (slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return 1;
@@ -5372,7 +5372,7 @@ DC_ADDRESS(0x0d3c64, 0x98)
 MAC_ADDRESS(0x103bd8, 0x9c)
 std::string hero::getBackpackError(TArtifact artifact) const
 {
-    if (m_backpackCount >= 64) {
+    if (m_backpackCount >= HERO_BACKPACK_CAPACITY) {
         return std::string((*g_generalText)[GENERAL_TEXT_BACKPACK_FULL]);
     }
     return formatString((*g_generalText)[GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT],
@@ -5387,7 +5387,7 @@ DC_ADDRESS(0x0d3cfc, 0xe8)
 MAC_ADDRESS(0x103c74, 0x134)
 bool hero::addToBackpack(const type_artifact& artifact, long slot)
 {
-    if (m_backpackCount >= 64)
+    if (m_backpackCount >= HERO_BACKPACK_CAPACITY)
         return 0;
     if (artifact.m_artifactId == ARTIFACT_CATAPULT ||
         artifact.m_artifactId == ARTIFACT_BALLISTA ||
@@ -5395,7 +5395,7 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
         artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
         return 0;
     if (slot < 0) {
-        for (slot = 0; slot < 64; slot++) {
+        for (slot = 0; slot < HERO_BACKPACK_CAPACITY; slot++) {
             if (m_backpack[slot].m_artifactId == -1)
                 break;
         }
@@ -5514,7 +5514,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         return 0;
 
     if (g_artifactTraits[artifact.m_artifactId].m_comboType != -1
-        && m_owner >= 0 && m_owner < 8)
+        && m_owner >= 0 && m_owner < NUM_PLAYERS)
         g_game->m_players[m_owner].m_assembledCombinations[
             g_artifactTraits[artifact.m_artifactId].m_comboType] = true;
 
@@ -6061,7 +6061,7 @@ int hero::getMobility(bool seaMovement) const
             mobility += g_moveConstants.m_oceanGuidanceBonus;
     } else {
         int slowest = 20;
-        for (int slot = 0; slot < 7; slot++) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             int creature = m_army.m_armies[slot];
             if (creature != CREATURE_NONE) {
                 int speed = g_creatureTypeTraits[creature].m_speed;
@@ -6441,7 +6441,7 @@ MAC_ADDRESS(0x106948, 0x88)
 short hero::getPrimarySkillTotal() const
 {
     short total = 0;
-    for (short skill = 0; skill < 4; ++skill) {
+    for (short skill = 0; skill < kNumPrimarySkills; ++skill) {
         total += getPrimarySkill(skill);
     }
     return total;

@@ -436,9 +436,9 @@ unsigned char TRmgKeyTentDef::requiresLinkedPlacement() { return 1; }
 // Retail constructor defaults and overrides; 0x546257 compares map counts,
 // while 0x546270 compares per-zone counts. Names are role-derived.
 DATA(0x0069CE4C)
-int g_rmgMapObjectLimits[232];
+int g_rmgMapObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x0069D1F4)
-int g_rmgZoneObjectLimits[232];
+int g_rmgZoneObjectLimits[ADVENTURE_OBJECT_TRAIT_COUNT];
 DATA(0x00640718)
 static const TRmgObjectLimit g_rmgMapObjectLimitOverrides[30] = {
     { 26, 200 },
@@ -3415,7 +3415,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
         if (m_mapVersion < 2 && (type == LITH_TWOWAY || type == LITH_ONEWAY_ENTRANCE || type == LITH_ONEWAY_EXIT)
             && m_objectsTxt.m_objectTypes[index].getSubtype() >= 3)
             continue;
-        if (type < 0 || type >= 232)
+        if (type < 0 || type >= ADVENTURE_OBJECT_TRAIT_COUNT)
             continue;
 #if defined(HOMM3_RMG_HOTFIX)
         if (!isUsableRmgPrototype(m_objectsTxt.m_objectTypes[index]))
@@ -3448,7 +3448,7 @@ TRmgGeneratorBase::~TRmgGeneratorBase()
 {
     for (unsigned int object = 0; object < m_objects.size(); ++object)
         delete m_objects[object];
-    for (int type = 0; type < 232; ++type)
+    for (int type = 0; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (unsigned int prototype = 0; prototype < m_objectPrototypes[type].size(); ++prototype)
             delete m_objectPrototypes[type][prototype];
 }
@@ -4034,7 +4034,7 @@ TRmgGenerator::TRmgGenerator(
         memset(m_disabledHeroes, 0, sizeof(m_disabledHeroes));
         memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
         initializeObjectGenerators();
-        for (int hero = 0; hero < 156; ++hero) {
+        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
             if (g_heroTraits[hero].m_availability.m_special)
                 m_disabledHeroes[hero] = 1;
             else if (m_mapVersion >= 1) {
@@ -4043,9 +4043,9 @@ TRmgGenerator::TRmgGenerator(
             } else if (!g_heroTraits[hero].m_availability.m_availableInOriginal)
                 m_disabledHeroes[hero] = 1;
         }
-        for (int zoneObjectType = 0; zoneObjectType < 232; ++zoneObjectType)
+        for (int zoneObjectType = 0; zoneObjectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++zoneObjectType)
             g_rmgZoneObjectLimits[zoneObjectType] = 32000;
-        for (int mapObjectType = 0; mapObjectType < 232; ++mapObjectType)
+        for (int mapObjectType = 0; mapObjectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++mapObjectType)
             g_rmgMapObjectLimits[mapObjectType] = 32000;
         for (int mapLimit = 30; mapLimit--;)
             g_rmgMapObjectLimits[g_rmgMapObjectLimitOverrides[mapLimit].m_objectType]
@@ -10721,9 +10721,9 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
     }
 
     if (m_mapVersion >= 1) {
-        std::bitset<156> availableHeroes;
+        std::bitset<RMG_HERO_COUNT> availableHeroes;
         setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + 156);
+            &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_HERO_COUNT);
 
         writePackedBits(outfile, availableHeroes);
     } else {
@@ -10745,8 +10745,8 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
     memset(reserved, 0, sizeof(reserved));
     outfile->write(reserved, sizeof(reserved));
 
-    std::bitset<144> disabledArtifacts;
-    for (int artifactIndex = 0; artifactIndex < 144; ++artifactIndex) {
+    std::bitset<ARTIFACT_COUNT> disabledArtifacts;
+    for (int artifactIndex = 0; artifactIndex < ARTIFACT_COUNT; ++artifactIndex) {
         disabledArtifacts[artifactIndex] =
             g_artifactTraits[artifactIndex].m_comboType != -1;
     }
@@ -10760,8 +10760,8 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
     } else if (m_mapVersion >= 1) {
         std::bitset<129> legacyDisabledArtifacts;
         std::copy(
-            bitset_iterator<144>(disabledArtifacts, 0),
-            bitset_iterator<144>(disabledArtifacts, 129),
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 0),
+            bitset_iterator<ARTIFACT_COUNT>(disabledArtifacts, 129),
             bitset_iterator<129>(legacyDisabledArtifacts, 0));
 
         writePackedBits(outfile, legacyDisabledArtifacts);
@@ -10771,10 +10771,10 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<70> disabledSpells;
         writePackedBits(outfile, disabledSpells);
 
-        std::bitset<28> disabledSkills;
+        std::bitset<kNumSecSkills> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
-        for (int hero = 0; hero < 156; ++hero) {
+        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
             char byteBuffer = 0;
             outfile->write(&byteBuffer, sizeof(byteBuffer));
         }
@@ -10862,7 +10862,7 @@ unsigned char TRmgGenerator::writeMap(TAbstractFile* outfile)
                 ++item;
             }
     int prototypeCount = 2;
-    for (int type = 0; type < 232; ++type)
+    for (int type = 0; type < ADVENTURE_OBJECT_TRAIT_COUNT; ++type)
         for (unsigned int index = 0; index < m_objectPrototypes[type].size(); ++index) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[type][index];
             if (static_cast<int>(properties->m_refCount) > 0)
@@ -10874,7 +10874,7 @@ unsigned char TRmgGenerator::writeMap(TAbstractFile* outfile)
     }
     writeRmgObjectPrototype(outfile, m_objectPrototypes[71][0]->m_prototype);
     writeRmgObjectPrototype(outfile, m_objectPrototypes[124][0]->m_prototype);
-    for (int objectType = 0; objectType < 232; ++objectType)
+    for (int objectType = 0; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType)
         for (unsigned int prototype = 0; prototype < m_objectPrototypes[objectType].size(); ++prototype) {
             TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][prototype];
             if (static_cast<int>(properties->m_refCount) > 0)

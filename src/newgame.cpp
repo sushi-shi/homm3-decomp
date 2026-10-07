@@ -22,7 +22,7 @@ MAC_ADDRESS(0x132158, 0xc4)
 long getAlignmentCount(int legalAlignments)
 {
     long count = 0;
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < TOWN_TYPE_COUNT; ++i) {
         if (legalAlignments & (1 << i))
             ++count;
     }
@@ -42,7 +42,7 @@ TTownType pickAlignment(int legalAlignments, bool getFirstAvail)
     if (!getFirstAvail && count > 0)
         which = random(1, count);
 
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < TOWN_TYPE_COUNT; ++i) {
         if (legalAlignments & (1 << i)) {
             if (--which == 0) {
                 TTownType alignment;
@@ -95,10 +95,10 @@ void game::initNewGame(int difficulty, int version,
     setMapSize(this->m_mapHeader.m_size, this->m_mapHeader.m_size);
 
     int slot;
-    for (slot = 0; slot < 8; slot++)
+    for (slot = 0; slot < NUM_PLAYERS; slot++)
         m_setup.m_color[slot] = static_cast<signed char>(slot);
 
-    for (slot = 0; slot < 8; slot++) {
+    for (slot = 0; slot < NUM_PLAYERS; slot++) {
         if (!this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && !this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
             m_setup.m_handicap[slot] = -1;
             m_setup.m_alignment[slot] = eTownNeutral;
@@ -114,7 +114,7 @@ void game::initNewGame(int difficulty, int version,
         }
     }
 
-    for (slot = 0; slot < 8; slot++) {
+    for (slot = 0; slot < NUM_PLAYERS; slot++) {
         if (this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && !this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
             m_setup.m_canFlipFromToComputer[slot] = 0;
             m_setup.m_playerPos[slot] = static_cast<signed char>(humanCount);
@@ -127,7 +127,7 @@ void game::initNewGame(int difficulty, int version,
         }
     }
 
-    for (slot = 0; slot < 8; slot++) {
+    for (slot = 0; slot < NUM_PLAYERS; slot++) {
         if (m_setup.m_playerPos[slot] != -1)
             continue;
 

@@ -1982,11 +1982,11 @@ public:
     // zones with a primary town, both by their alignment (+4) and in the total.
     int m_primaryTownZoneCount;                        // +0x0f60
     int m_primaryTownZoneCountsByAlignment[9];          // +0x0f64
-    unsigned char m_disabledHeroes[156];               // +0x0f88
+    unsigned char m_disabledHeroes[RMG_HERO_COUNT];               // +0x0f88
     // Role-derived names; original spellings unknown. Replaces opaque1024.
     // Ctor 0x537cc6 clears 144 bytes. Quest selection 0x54b490 excludes
     // marked artifacts; successful placement 0x54b813 marks the chosen ID.
-    unsigned char m_usedQuestArtifacts[144];           // +0x1024
+    unsigned char m_usedQuestArtifacts[ARTIFACT_COUNT];           // +0x1024
     // 0x54b4f1 latches this when fewer than 20 eligible artifacts remain;
     // seer-hut value paths 0x534b0c/0x534c9c reject further candidates.
     unsigned char m_questArtifactPoolLow;              // +0x10b4

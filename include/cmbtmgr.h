@@ -175,7 +175,7 @@ enum ECombatSpellRestriction {
 enum ECombatGrid {
     COMBAT_GRID_CELLS = 0xbb,
     COMBAT_GRID_ROW_STRIDE = 0x11,
-    COMBAT_GRID_LAST_COLUMN = 0x10,
+    COMBAT_GRID_LAST_COLUMN = COMBAT_GRID_ROW_STRIDE - 1,
     // The two hero-portrait pseudo-hexes GetGridIndex answers with when
     // the cursor is over a hero panel rather than the field. RightClick
     // (0x4769c0) is what pairs each with a side: 0xfc opens heroes[0]'s
@@ -462,7 +462,7 @@ public:
     };
 
 private:
-    static TWallTraits s_wallTraits[9][18];
+    static TWallTraits s_wallTraits[9][kNumWallSections];
 
 public:
     enum {
@@ -532,7 +532,7 @@ public:
             return -1;
         }
     };
-    static const TWallTarget s_wallTargets[8];
+    static const TWallTarget s_wallTargets[WALL_TARGET_COUNT];
     // One of the three defending-town archer positions. InitializeArchers
     // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
     // members in this order; DamageWall later uses armySlot from each row
@@ -629,7 +629,7 @@ public:
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     // Before normalization (Dreamcast): cell.
-    hexcell m_cells[187];  // +0x1c4, ends 0x5394
+    hexcell m_cells[COMBAT_GRID_CELLS];  // +0x1c4, ends 0x5394
     // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
     // it is the current combat terrain selector for the catalogue mask.
     int m_terrainType;  // +0x5394
@@ -956,7 +956,7 @@ public:
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
-    short m_adjacentCells[187][6];      // +0x13468
+    short m_adjacentCells[COMBAT_GRID_CELLS][COMBAT_DIRECTION_COUNT];  // +0x13468
     bool m_saveBiggestExtent;        // +0x13d2c
     // Dreamcast SaveBiggestExtent is one byte before the LimitToExtent
     // dword; retail preserves this alignment boundary at +0x13d2c/30.
@@ -1051,9 +1051,9 @@ private:
     // whole level array; the last three rows are the arrow towers/keep.
     // DrawWall indexes the image table by wall_frame; DamageWall switches
     // that frame between the standing and destroyed art.
-    Bitmap816* m_wallImages[18][5];  // +0x13df8
-    int m_wallLevel[18];            // +0x13f60
-    int m_wallFrame[18];            // +0x13fa8
+    Bitmap816* m_wallImages[kNumWallSections][5];  // +0x13df8
+    int m_wallLevel[kNumWallSections];            // +0x13f60
+    int m_wallFrame[kNumWallSections];            // +0x13fa8
 
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
@@ -1970,10 +1970,10 @@ extern int g_combatSeed;
 // chosen turns on the defending hero's formation byte, so the pair is the
 // game's tight/loose deployment split - but no roster row or string
 // reaches any of the four, so the names carry their addresses.
-extern const int g_combatDeployHexes[2][7];
-extern const int g_combatDeploySurroundedHexes[2][7];
-extern const int g_combatDeploySpreadSlots[7][7];
-extern const int g_combatDeployGroupedSlots[7][7];
+extern const int g_combatDeployHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT];
+extern const int g_combatDeploySurroundedHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT];
+extern const int g_combatDeploySpreadSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT];
+extern const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT];
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
@@ -1982,7 +1982,7 @@ extern const int g_combatDeployGroupedSlots[7][7];
 // are all direct retail data.
 extern const char* const g_townCombatBackgrounds[9];          // 0x63d2a0
 extern const char* const g_magicTerrainCombatBackgrounds[10]; // 0x63d2c8
-extern const char* const g_terrainCombatBackgrounds[10][3];    // 0x63d2f0
+extern const char* const g_terrainCombatBackgrounds[NUM_TERRAIN_TYPES][3];    // 0x63d2f0
 
 // The leading two words of each 20-byte obstacle-catalogue row. They
 // are separate declarations because the delinked target relocates each
@@ -2026,7 +2026,7 @@ public:
     unsigned int m_flags;  // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
-extern const TSpellEffectTraits g_spellEffectTraits[];
+extern const TSpellEffectTraits g_spellEffectTraits[kNumSpellEffects];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,

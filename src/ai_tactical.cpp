@@ -14,8 +14,8 @@
 #include "spells.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x00660858) long g_hypnotizeTurns[4] = { 1, 1, 2, 3 };
-DATA(0x0063b7c8) const long g_chainLightningTargets[4] = { 4, 4, 5, 5 };
+DATA(0x00660858) long g_hypnotizeTurns[kNumMasteries] = { 1, 1, 2, 3 };
+DATA(0x0063b7c8) const long g_chainLightningTargets[kNumMasteries] = { 4, 4, 5, 5 };
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -403,7 +403,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
     if (!g_game->m_setup.m_difficulty
         && !g_combatManager->m_sideIsAi[m_data->getGroup()])
         return 0;
-    for (long direction = 0; direction < 6; direction++) {
+    for (long direction = 0; direction < COMBAT_DIRECTION_COUNT; direction++) {
         long index = g_combatManager->m_adjacentCells[hex][direction];
         if (!g_combatManager->validHex(index))
             continue;
@@ -570,7 +570,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
     long alreadyChecked = 1 << enemy->m_bitIndex;
     long validDirections = ourArmy->getMultiHeadDirections(ourHex, enemy, enemyHex);
     long value = 0;
-    for (long i = 0; i < 8; i++) {
+    for (long i = 0; i < COMBAT_DIRECTION_WIDE_LOWER + 1; i++) {
         if ((validDirections & (1 << i)) == 0)
             continue;
         long hex = ourArmy->getAdjacentHex(ourHex, i);
@@ -1876,7 +1876,7 @@ MAC_ADDRESS(0x0420cc, 0x18c)
 long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const
 {
     long value = 0;
-    for (long spell = 10; spell < 81; spell++) {
+    for (long spell = 10; spell < NUM_SPELLS_AND_CREATURE_EFFECTS; spell++) {
         long duration = currentArmy->getSpellTime(spell);
         if (duration == 0)
             continue;
@@ -2918,7 +2918,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
 {
     long total = 0;
     long count = 0;
-    for (long spell = 10; spell < 70; spell++) {
+    for (long spell = 10; spell < hero::NUM_SPELLS; spell++) {
         if (!isValidCaliphSpell(spell, target))
             continue;
         TSkillMastery mastery = eMasteryAdvanced;

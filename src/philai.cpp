@@ -510,7 +510,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
     if (valueOfWarFactory(currentHero, engine, 0) > 0) {
         TCreatureType creature = siegeArtifactToCreature(engine);
         const int* costs = g_creatureTypeTraits[creature].m_cost;
-        for (int resource = 0; resource < 7; resource++)
+        for (int resource = 0; resource < NUM_RESOURCES; resource++)
             g_currentPlayer->m_resources[resource] -= costs[resource];
 
         type_artifact artifact(engine);
@@ -578,7 +578,7 @@ DC_ADDRESS(0x10e6e8, 0x1aa)
 MAC_ADDRESS(0x13fd54, 0x2ec)
 static void markShipyards(playerData* player)
 {
-    int cost[7];
+    int cost[NUM_RESOURCES];
 
     if (player->m_resources[WOOD] < 10
         || player->m_resources[GOLD] < 1000)
@@ -602,7 +602,7 @@ static void markShipyards(playerData* player)
             currentTown->getBuildCost(DOCK_ID, cost);
             cost[WOOD] += 10;
             cost[GOLD] += 1000;
-            for (int resource = 0; resource < 7; ++resource) {
+            for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
                 if (player->m_resources[resource] < cost[resource])
                     canBuildShip = 0;
             }
@@ -794,7 +794,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
             if (selectedHero)
                 *isLastHero = 0;
             skillSum = 0;
-            for (short skill = 0; skill < 4; ++skill)
+            for (short skill = 0; skill < kNumPrimarySkills; ++skill)
                 skillSum += currentHero->getPrimarySkill(skill);
             if (selectedHero) {
                 if (currentHero->m_patrolX != hero::kPatrolNone
@@ -1122,7 +1122,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     int primarySkillValue = static_cast<int>(
         static_cast<float>(currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio);
-    for (int skill = 0; skill < 4; ++skill) {
+    for (int skill = 0; skill < kNumPrimarySkills; ++skill) {
         if (blackBox->m_primarySkillBonus[skill] > 0)
             value += blackBox->m_primarySkillBonus[skill]
                 * primarySkillValue;
@@ -1134,7 +1134,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
         signed char currentLevel = currentHero->getSecondarySkill(
             blackBox->m_secondarySkills[secondaryIndex].m_type);
         int level = blackBox->m_secondarySkills[secondaryIndex].m_level;
-        if (currentLevel == 0 && currentHero->m_skillCount < 8)
+        if (currentLevel == 0 && currentHero->m_skillCount < kNumSecSkillsPerHero)
             value += level * primarySkillValue;
         else if (currentLevel > 0 && currentLevel < level)
             value += (level - currentLevel) * primarySkillValue;
@@ -1598,7 +1598,7 @@ int hero::getSeerSkillRewardValue(int skill, int level)
     if (m_skillLevel[skill] >= level)
         return 0;
     if (m_skillLevel[skill] == 0) {
-        if (m_skillCount >= 8)
+        if (m_skillCount >= kNumSecSkillsPerHero)
             return 0;
         if (!wantsSkill(this, TSecondarySkill(typedSkill), 1))
             return 0;
@@ -1891,12 +1891,12 @@ MAC_ADDRESS(0x13e904, 0x178)
 static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
                          unsigned char complexChoice)
 {
-    long skillValue[28];
-    TSecondarySkill skillIndex[28];
+    long skillValue[kNumSecSkills];
+    TSecondarySkill skillIndex[kNumSecSkills];
 
     int openSlots;
     int i;
-    for (i = 0; i < 28; i++) {
+    for (i = 0; i < kNumSecSkills; i++) {
         if (ourHero->getSecondarySkill(TSecondarySkill(i)) <= 0
             && (g_heroClasses[ourHero->m_heroClass]
                     .m_gainSecondarySkillChance[i]
@@ -1907,8 +1907,8 @@ static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
         skillIndex[i] = TSecondarySkill(i);
     }
 
-    for (i = 0; i < 27; i++) {
-        for (int j = i + 1; j < 28; j++) {
+    for (i = 0; i < kNumSecSkills - 1; i++) {
+        for (int j = i + 1; j < kNumSecSkills; j++) {
             if (skillValue[skillIndex[i]] > skillValue[skillIndex[j]])
                 std::swap(skillIndex[i], skillIndex[j]);
         }
@@ -1932,7 +1932,7 @@ DC_ADDRESS(0x113cbc, 0xe4)
 MAC_ADDRESS(0x13ec3c, 0x114)
 void aiVisitUniversity(hero* currentHero, type_university* university)
 {
-    if (currentHero->m_skillCount >= 8)
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
         return;
     if (g_currentPlayer->m_resources[GOLD] < 2000)
         return;
@@ -2000,7 +2000,7 @@ static long valueOfWarFactory(const hero* currentHero,
     const int* costs = g_creatureTypeTraits[creature].m_cost;
     const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
     long resourceCost = 0;
-    for (int resource = 0; resource < 7; ++resource, ++costs) {
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource, ++costs) {
         if (g_currentPlayer->m_resources[resource] < *costs)
             return 0;
         resourceCost += *costs * resourceValues[resource];
@@ -2214,7 +2214,7 @@ static long valueOfUniversity(const hero* currentHero,
                          type_university* university,
                          unsigned char mustPay)
 {
-    if (currentHero->m_skillCount >= 8)
+    if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
         return 0;
     if (mustPay && g_currentPlayer->m_resources[GOLD] < 2000)
         return 0;
@@ -2262,7 +2262,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     if (!value)
         return;
 
-    for (int resource = 0; resource < 7; ++resource) {
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
         if (g_currentPlayer->m_resources[resource] < costs[resource])
             return;
     }
@@ -2270,14 +2270,14 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     if (!currentTown->hasBuilding(building, true)) {
         if (!currentTown->buyBuilding(building))
             return;
-        for (int checkResource = 0; checkResource < 7; ++checkResource) {
+        for (int checkResource = 0; checkResource < NUM_RESOURCES; ++checkResource) {
             if (g_currentPlayer->m_resources[checkResource]
                     < costs[checkResource])
                 return;
         }
     }
 
-    for (int costResource = 0; costResource < 7; ++costResource)
+    for (int costResource = 0; costResource < NUM_RESOURCES; ++costResource)
         g_currentPlayer->m_resources[costResource] -= costs[costResource];
 
     currentHero->giveArtifact(type_artifact(engine), 1, 1);
@@ -3258,7 +3258,7 @@ DC_ADDRESS(0x111ea4, 0xae)
 MAC_ADDRESS(0x144320, 0xa0)
 int valueOfPrison(NewmapCell* cell, playerData* player)
 {
-    if (g_currentPlayer->m_numHeroes >= 8)
+    if (g_currentPlayer->m_numHeroes >= playerData::HERO_SLOT_COUNT)
         return 0;
     hero& prisoner = g_game->m_heroes[cell->m_extraInfo];
     long armyValue = prisoner.m_army.getAIValue();
@@ -3840,7 +3840,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
     if (cell->playerKnowsCell(currentHero->m_owner)) {
-        if (currentHero->m_skillCount >= 8)
+        if (currentHero->m_skillCount >= kNumSecSkillsPerHero)
             return 0;
         int skill = info->getWitchSkill();
         if (skill == -1)

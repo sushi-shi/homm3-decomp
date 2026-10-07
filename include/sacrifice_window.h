@@ -58,8 +58,8 @@ enum ESacrificeWindowHelp {
 enum ESacrificeArtifactSlotFrame {
     SACRIFICE_ARTIFACT_SLOT_DROP_FRAME = 0x90,
     SACRIFICE_EQUIPPED_SLOT_COUNT = 16,
-    SACRIFICE_BACKPACK_SOURCE_SLOT = 19,
-    SACRIFICE_BACKPACK_ARTIFACT_COUNT = 64
+    SACRIFICE_BACKPACK_SOURCE_SLOT = kNumArtifactSlots + 1,
+    SACRIFICE_BACKPACK_ARTIFACT_COUNT = HERO_BACKPACK_CAPACITY
 };
 
 // ARTRAITS.TXT's parser maps T/N/J/R to these bit values, and the retained
@@ -263,7 +263,7 @@ private:
     std::vector<iconWidget*> m_slotBackWidgets;              // +0xec
     std::vector<iconWidget*> m_slotWidgets;                   // +0xfc
     std::vector<iconWidget*> m_backpackWidgets;               // +0x10c
-    type_creature_offering m_creatureOfferings[7];          // +0x11c
+    type_creature_offering m_creatureOfferings[armyGroup::ARMY_GROUP_SLOT_COUNT];          // +0x11c
     type_creature_offering m_currentCreature;               // +0x1fc
     std::vector<widget*> m_artifactWidgets;                   // +0x21c
     std::vector<widget*> m_creatureWidgets;                   // +0x22c
@@ -365,9 +365,9 @@ private:
     long m_selectedIndex;                        // +0x70
     armyGroup m_selectedCreatures;               // +0x74
     armyGroup* m_armies[2];                        // +0xac
-    iconWidget* m_armyWidget[2][7];               // +0xb4
-    iconWidget* m_selectBorder[2][7];             // +0xec
-    textWidget* m_armyLabel[2][7];                // +0x124
+    iconWidget* m_armyWidget[2][armyGroup::ARMY_GROUP_SLOT_COUNT];               // +0xb4
+    iconWidget* m_selectBorder[2][armyGroup::ARMY_GROUP_SLOT_COUNT];             // +0xec
+    textWidget* m_armyLabel[2][armyGroup::ARMY_GROUP_SLOT_COUNT];                // +0x124
     // +0x15c: the destructor 0x565f60 walks this vector by size(), stops and
     // disposes every sample in it, then lets the member's own _Tidy run
     // (operator delete on _First at +0x160, then the 0x160/0x164/0x168

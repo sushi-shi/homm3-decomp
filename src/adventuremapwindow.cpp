@@ -616,7 +616,7 @@ void checkAdvCheatCode(std::string& chatString)
         g_advManager->redrawAdvScreen(1, 0);
     } else if (code.compare(theConstructCode)) {
         cheatUsed = true;
-        for (int resource = 0; resource < 7; resource++)
+        for (int resource = 0; resource < NUM_RESOURCES; resource++)
             g_currentPlayer->m_resources[resource] +=
                 resource == GOLD ? 100000 : 100;
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);

@@ -16,7 +16,7 @@
 #include "path.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x00678150) tilePoint g_normalDirTable[8] = {
+DATA(0x00678150) tilePoint g_normalDirTable[MAP_DIRECTION_COUNT] = {
     { 0, -1, 16 },
     { 1, -1, 16 },
     { 1, 0, 16 },
@@ -82,7 +82,7 @@ void searchArray::init()
     m_validRectangle.bottom = g_mapHeight;
     m_cellData = new pathCell[g_game->getNumMapLevels() * g_mapHeight
             * g_mapWidth * 2];
-    m_isMoatSlowed = new bool[187];
+    m_isMoatSlowed = new bool[COMBAT_GRID_CELLS];
 }
 
 VA(0x004b1500, 0x2F)
@@ -165,7 +165,7 @@ DATA(0x0063e5e0) const long g_roadCostRow[4] = { 0, 10, 11, 12 };
 // costs the same 100 as flat ground; the lower masteries pay a
 // surcharge. Name is a bootstrap invention - no roster reaches it.
 DATA(0x0063e5f0) const float g_diagonalCost = 1.4142135f;
-DATA(0x006778ac) long g_masteryTerrainCost[4] = { 140, 140, 120, 100 };
+DATA(0x006778ac) long g_masteryTerrainCost[kNumMasteries] = { 140, 140, 120, 100 };
 
 // simply forwards its own trailing parameter. Retail GetTerrainCost calls
 // GetCreatureTotal with creature 0x8e at 0x4b1a1b/0x4b1a22 and passes
@@ -545,7 +545,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 
     pathCell dest;
 
-    for (long direction = 0; direction < 8; direction++) {
+    for (long direction = 0; direction < MAP_DIRECTION_COUNT; direction++) {
         dest = source;
         dest.m_point.m_x = source.m_point.m_x + g_normalDirTable[direction].m_x;
         dest.m_point.m_y = source.m_point.m_y + g_normalDirTable[direction].m_y;
@@ -844,7 +844,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 DC_ADDRESS(0x0a02c8, 0xc6)
 unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
 {
-    for (long i = 0; i < 6; i++) {
+    for (long i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
         int adjacent = g_combatManager->m_adjacentCells[hex][i];
         if (combatManager::validHex(adjacent)
             && g_combatManager->m_cells[adjacent].m_validMove
@@ -1021,7 +1021,7 @@ DC_ADDRESS(0x0a0804, 0x16a)
 MAC_ADDRESS(0x0c6a08, 0x1d0)
 void searchArray::setMoat(const army* currentArmy)
 {
-    memset(m_isMoatSlowed, 0, 187);
+    memset(m_isMoatSlowed, 0, COMBAT_GRID_CELLS);
     if (currentArmy->is(creatureFlyingArmy))
         return;
     if (currentArmy->m_creatureType == CREATURE_ARCH_DEVIL)
@@ -1041,7 +1041,7 @@ void searchArray::setMoat(const army* currentArmy)
                 m_isMoatSlowed[g_innerMoatHexes[5]] = 0;
         }
     }
-    { for (int cell = 0; cell < 187; ++cell) {
+    { for (int cell = 0; cell < COMBAT_GRID_CELLS; ++cell) {
         if (g_combatManager->m_cells[cell].m_attributes & hexcell::quicksand) {
             const combatManager::TObstacle* obstacle =
                 &g_combatManager->getObstacle(g_combatManager->m_cells[cell].m_obstacleIndex);
@@ -1227,7 +1227,7 @@ bool searchArray::findCombatPath(const army* currentArmy,
         long hex = pc.m_point.m_x;
         long adjacent;
         long direction;
-        for (direction = 0; direction < 6; direction++) {
+        for (direction = 0; direction < COMBAT_DIRECTION_COUNT; direction++) {
             adjacent = currentArmy->getAdjacentCellIndex(hex, direction);
             if (!combatManager::validHex(adjacent))
                 continue;

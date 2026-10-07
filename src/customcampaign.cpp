@@ -51,7 +51,7 @@ DATA(0x0063d734) const int g_campaignVideoIds[101] = { 38, 39, 40, 45, 46, 47, 4
 DATA(0x00675be8) const char* g_campaignVideoSounds[101] = { "g1a", "g1b", "g1c", "e1a", "e1b", "e1c", "n1a", "n1b", "n1c_d", "g2a", "g2b", "g2c", "g2d", "e2a", "e2Ae", "e2b", "e2c", "e2d", "g3a", "g3b", "g3c", "s1a", "s1b", "s1c", "ABvoAB1", "ABvoAB2", "ABvoAB3", "ABvoAB4", "ABvoAB5", "ABvoAB6", "ABvoAB7", "ABvoAB8", "ABvoAB9", "ABvoDB1", "ABvoDB2", "ABvoDB3", "ABvoDB4", "ABvoDB5", "ABvoDS1", "ABvoDS2", "ABvoDS3", "ABvoDS4", "ABvoDS5", "ABvoFL1", "ABvoFL2", "ABvoFL3", "ABvoFL4", "ABvoFL5", "ABvoFW1", "ABvoFW2", "ABvoFW3", "ABvoFW4", "ABvoFW5", "ABvoPF1", "ABvoPF2", "ABvoPF3", "ABvoPF4", "H3x2BBa", "H3x2BBb", "H3x2BBc", "H3x2BBd", "H3x2BBe", "H3x2BBf", "H3x2ELa", "H3x2ELb", "H3x2ELc", "H3x2ELd", "H3x2ELe", "H3x2HSa", "H3x2HSb", "H3x2HSc", "H3x2HSd", "H3x2HSe", "H3x2NBa", "H3x2NBb", "H3x2NBc", "H3x2NBd", "H3x2NBe", "H3x2RNa", "H3x2RNb", "H3x2RNc", "H3x2RNd", "H3x2RNe", "H3x2SPa", "H3x2SPb", "H3x2SPc", "H3x2SPd", "H3x2SPe", "H3x2UAa", "H3x2UAb", "H3x2UAc", "H3x2UAd", "H3x2UAe", "H3x2UAf", "H3x2UAg", "H3x2UAh", "H3x2UAi", "H3x2UAj", "H3x2UAk", "H3x2UAl", "H3x2UAm" };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x006755b8) const char* g_campaignBuildingIconNames[9][44] = {
+DATA(0x006755b8) const char* g_campaignBuildingIconNames[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE] = {
     {
     "BoCsMag1.pcx", "BoCsMag2.pcx", "BoCsMag3.pcx", "BoCsMag4.pcx", "BoCsMag5.pcx", "BoCsTav1.pcx", "BoCsDock.pcx", "BoCsCas1.pcx",
     "BoCsCas2.pcx", "BoCsCas3.pcx", "BoCsHal1.pcx", "BoCsHal2.pcx", "BoCsHal3.pcx", "BoCsHal4.pcx", "BoCsMrk1.pcx", "BoCsMrk2.pcx",
@@ -150,8 +150,8 @@ DATA(0x0063d8c8) static const int g_legacyCampaignScenarioIndices[7][4] = {
 // widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
 // the narrow plane below it.
 static const int g_campaignVersionWideArtifacts = 6;
-static const int g_crossoverCreatureBits = 145;
-static const int g_crossoverArtifactBits = 144;
+static const int g_crossoverCreatureBits = g_creatureTypeCount;
+static const int g_crossoverArtifactBits = ARTIFACT_COUNT;
 static const int g_crossoverLegacyArtifactBits = 129;
 
 static const int g_crossoverPrimaryArtifactSlots = 16;
@@ -170,7 +170,7 @@ static const int g_crossoverPatrolFirstScenario = 6;
 static const int g_crossoverPatrolLastScenario = 7;
 static const int g_crossoverPatrolHero = 155;
 static const int g_crossoverPatrolRadius = 10;
-static const int g_crossoverSecondarySkills = 28;
+static const int g_crossoverSecondarySkills = kNumSecSkills;
 static const int g_crossoverBackpackSlots = 64;
 
 // The three scenario overrides the bonus appliers carry, all four values
@@ -483,7 +483,7 @@ MAC_ADDRESS(0x092498, 0xac)
 std::string TCampaignCreatureBonus::getText() const
 {
     const char* name;
-    if (m_creature < 0 || m_creature > 150)
+    if (m_creature < 0 || m_creature > g_creatureTypeLast)
         name = "";
     else if (m_count == 1)
         name = g_creatureTypeTraits[m_creature].m_name;
@@ -631,7 +631,7 @@ int TCampaignPrimarySkillBonus::getIconIndex() const
 {
     int best = 0;
     int bestValue = 0;
-    for (int skill = 0; skill < 4; ++skill) {
+    for (int skill = 0; skill < kNumPrimarySkills; ++skill) {
         if (m_skills[skill] > bestValue) {
             bestValue = m_skills[skill];
             best = skill;
@@ -647,10 +647,10 @@ std::string TCampaignPrimarySkillBonus::getText() const
     std::string list;
     int remaining = 0;
     int stat;
-    for (stat = 0; stat < 4; ++stat)
+    for (stat = 0; stat < kNumPrimarySkills; ++stat)
         if (m_skills[stat] > 0)
             ++remaining;
-    for (stat = 0; stat < 4; ++stat) {
+    for (stat = 0; stat < kNumPrimarySkills; ++stat) {
         if (m_skills[stat] > 0) {
             list += formatString(
                 DATA_COMPGEN(0x00677278, primarySkillBonusFormat, "+%d %s"),
@@ -676,7 +676,7 @@ void TCampaignPrimarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
-        for (int stat = 0; stat < 4; ++stat) {
+        for (int stat = 0; stat < kNumPrimarySkills; ++stat) {
             int current = target->getPrimarySkill(stat);
             target->setPrimarySkill(stat, current + m_skills[stat]);
         }
@@ -2148,11 +2148,11 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     if (campaignVersion >= g_campaignVersionWideArtifacts) {
         m_crossoverArtifacts = readPackedBits<g_crossoverArtifactBits>(infile);
     } else {
-        std::bitset<129> legacyArtifacts = readPackedBits<129>(infile);
+        std::bitset<g_crossoverLegacyArtifactBits> legacyArtifacts = readPackedBits<g_crossoverLegacyArtifactBits>(infile);
         std::copy(
-            bitset_iterator<129>(legacyArtifacts, 0),
-            bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
-            bitset_iterator<144>(m_crossoverArtifacts, 0));
+            bitset_iterator<g_crossoverLegacyArtifactBits>(legacyArtifacts, 0),
+            bitset_iterator<g_crossoverLegacyArtifactBits>(legacyArtifacts, g_crossoverLegacyArtifactBits),
+            bitset_iterator<g_crossoverArtifactBits>(m_crossoverArtifacts, 0));
     }
 
     unsigned char optionType = readValue<unsigned char>(infile);
@@ -2202,7 +2202,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->m_players[position].m_isHuman = 1;
     g_game->m_players[position].m_isLocal = 1;
 
-    HeroId playerHeroFaces[8];
+    HeroId playerHeroFaces[NUM_PLAYERS];
     int i;
     MEMSET(playerHeroFaces, heroIdNone, sizeof(playerHeroFaces), i);
     playerHeroFaces[position] = HeroId(getStartOptions()->getStartingHeroId(option));
@@ -2350,7 +2350,7 @@ static void applyCampaignMapHeader(
 {
     scenario.getStartOptions()->setTown(&mapHeader);
     scenario.m_heroPlaceholders = mapHeader.m_placeholders;
-    for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
+    for (int slotIndex = 0; slotIndex < NUM_PLAYERS; ++slotIndex)
         scenario.setCrossoverHeroCount(slotIndex,
             mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders);
 }
@@ -2893,7 +2893,7 @@ void SCampaign::completeCurrentMap(
     std::vector<hero>& crossover = getCrossoverHeroes(m_crossoverArrayIndex);
 
     int gamePos;
-    for (gamePos = 0; gamePos < 8; ++gamePos) {
+    for (gamePos = 0; gamePos < NUM_PLAYERS; ++gamePos) {
         if (g_game->m_players[gamePos].isHuman())
             break;
     }
@@ -3098,21 +3098,21 @@ static void convertLegacyCampaignHero(hero& newHero,
            sizeof(newHero.m_skillOrder));
     newHero.m_skillCount = oldHero.m_skillCount;
 
-    for (int equippedSlot = 0; equippedSlot < 19; ++equippedSlot) {
+    for (int equippedSlot = 0; equippedSlot < kNumArtifactSlots + 1; ++equippedSlot) {
         type_artifact artifact = oldHero.m_equipped[equippedSlot];
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.equipArtifact(artifact, equippedSlot);
     }
-    for (int backpackSlot = 0; backpackSlot < 64; ++backpackSlot) {
+    for (int backpackSlot = 0; backpackSlot < HERO_BACKPACK_CAPACITY; ++backpackSlot) {
         type_artifact artifact = oldHero.m_backpack[backpackSlot];
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.addToBackpack(artifact, backpackSlot);
     }
-    for (int spell = 0; spell < 70; ++spell) {
+    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         if (oldHero.m_inSpellbook[spell])
             newHero.addSpell(spell);
     }
-    for (int stat = 0; stat < 4; ++stat)
+    for (int stat = 0; stat < kNumPrimarySkills; ++stat)
         newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
 }
 

@@ -82,6 +82,12 @@ Subcommands
         assembly and CFG blocks, explicitly qualified retail correlations,
         and generated C++/JSON reference trees (structure).
 
+  constants [VALUE ...] [--name TEXT] [--literals [--file F]] [--json]
+        Named-constant index (homm3.analysis.constants): value -> every
+        enumerator, integral const, numeric #define and array length in
+        src/include, plus Dreamcast CodeView and NH3API enumerators.
+        --literals ranks bare integer literals that should be tied to one.
+
   evidence SELECTOR... [--only|--skip SECTION,...] [--json] [--out DIR]
         The AGENTS.md evidence pass in one process: dreamcast show / lines /
         asm --blocks / inline-clues / audit, sema diff --summary / --structure
@@ -290,6 +296,8 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.worktree", *argv[1:])
     if argv and argv[0] == "evidence":
         return run_module("homm3.evidence", *argv[1:])
+    if argv and argv[0] == "constants":
+        return run_module("homm3.analysis.constants", *argv[1:])
 
     ap = argparse.ArgumentParser(
         prog="homm3", description=__doc__,
@@ -306,6 +314,8 @@ def _dispatch(argv: list[str]) -> int:
                         "(homm3 worktree --help)")
     sub.add_parser("evidence", add_help=False,
                    help="one-shot matching evidence pass for selectors (homm3 evidence --help)")
+    sub.add_parser("constants", add_help=False,
+                   help="value -> named constants index and literal scan (homm3 constants --help)")
 
     p = sub.add_parser("init", help="one-time local setup (executables, symbols, toolchain)")
     p.add_argument("--exe", metavar="PATH",

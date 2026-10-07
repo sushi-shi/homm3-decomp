@@ -16,7 +16,7 @@
 
 // hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
 // and type; Complete fixes the 0x6a7540 address and all four indexed readers.
-extern const char* g_statDesc[4];
+extern const char* g_statDesc[kNumPrimarySkills];
 
 // Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
 // retail GetNewHeroId extends it with the two Conflux classes, indexes all
@@ -570,14 +570,14 @@ public:
     // Before normalization (Dreamcast): heroArmy.
     armyGroup m_army;
     // Before normalization (Dreamcast): SSLevel.
-    signed char m_skillLevel[28];  // +0xc9
+    signed char m_skillLevel[kNumSecSkills];  // +0xc9
     // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
     // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
     // GetNthSS scans it for order iWhich+1 and returns the slot index;
     // GiveSS writes skillCount+1 into the newly-learned slot and TakeSS
     // decrements every entry above the vacated one before zeroing it.
     // Before normalization (Dreamcast): SSOrder.
-    unsigned char m_skillOrder[28];  // +0xe5
+    unsigned char m_skillOrder[kNumSecSkills];  // +0xe5
     // Number of secondary skills known. A full DWORD: GiveSS's cap test
     // is `cmp dword [this+0x101],8` and both trio bodies increment /
     // decrement it 32 bits wide; the narrowed `mov al,byte [this+0x101]`
@@ -626,7 +626,7 @@ public:
     TSkillMastery m_identifyLevel;  // +0x129
 
 private:
-    type_artifact m_equipped[19];
+    type_artifact m_equipped[kNumArtifactSlots + 1];
 
 public:
     // One byte per artifact slot class. remove_artifact decrements the
@@ -636,7 +636,7 @@ public:
     unsigned char m_artifactSlotCounts[15];  // +0x1c5
 
 private:
-    type_artifact m_backpack[64];
+    type_artifact m_backpack[HERO_BACKPACK_CAPACITY];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
     // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
     // flag arm instead of walking the 64 slots, which is what proves
@@ -691,7 +691,7 @@ private:
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
     // and by 0x4e6120, which adds artifact bonuses into the same band.
-    signed char m_stats[4];  // +0x476
+    signed char m_stats[kNumPrimarySkills];  // +0x476
 
 public:
     // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,
@@ -1382,10 +1382,10 @@ public:
     int m_townType;  // +0x00
     const char* m_className;  // +0x04
     float m_aggression;  // +0x08
-    signed char m_initialPrimarySkill[4];  // +0x0c
-    signed char m_gainPrimarySkillChance[4];  // +0x10
-    signed char m_gainPrimarySkillChance10P[4];  // +0x14
-    signed char m_gainSecondarySkillChance[28];  // +0x18
+    signed char m_initialPrimarySkill[kNumPrimarySkills];  // +0x0c
+    signed char m_gainPrimarySkillChance[kNumPrimarySkills];  // +0x10
+    signed char m_gainPrimarySkillChance10P[kNumPrimarySkills];  // +0x14
+    signed char m_gainSecondarySkillChance[kNumSecSkills];  // +0x18
     signed char m_foundInTownType[9];  // +0x34
     // Complete expands foundInTownType to nine bytes at +0x34.
     // NH3API confirms the three trailing alignment bytes and 0x40-byte PC stride.
@@ -1408,7 +1408,7 @@ public:
 };
 SIZE(type_movement_constants, 0x78);
 extern type_movement_constants g_moveConstants;
-extern THeroClassTraits g_heroClassTraits[18];
+extern THeroClassTraits g_heroClassTraits[kNumHeroClasses];
 extern const THeroClassTraits (&g_heroClasses)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
@@ -1422,7 +1422,7 @@ extern THeroTraits g_heroTraitsStorage[163];
 extern const THeroTraits (&g_heroTraits)[163];
 
 // E:\gamedcs\hero.cpp:267
-std::bitset<70> markArtifactSpells(int artifactId);
+std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId);
 int heroView(int heroID, int noDismiss, int alreadyFaded,
              unsigned char quickView);
 
@@ -1456,7 +1456,7 @@ class THeroScreenWindow : public CAdvPopup {
 public:
     enum EArtifactSlotBounds {
         ARTIFACT_SLOT_FIRST = 0,
-        ARTIFACT_SLOT_COUNT = 19
+        ARTIFACT_SLOT_COUNT = kNumArtifactSlots + 1
     };
     // The hero screen's widget ids, as UpdateHeroScreenStatusBar's switch
     // surfaces them in message::codeY. Decoded from the three dispatch

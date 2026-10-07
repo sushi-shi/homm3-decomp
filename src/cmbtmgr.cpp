@@ -63,15 +63,15 @@ DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62,
 // is descriptive, not recovered.
 DATA(0x0063bd0c) extern const unsigned char g_firstColumnHexes[11] = { 1, 18, 35, 52, 69, 86, 103, 120, 137, 154, 171 };
 DATA(0x0063d368) const int g_boatBlockedHexes[32] = { 6, 7, 8, 9, 24, 25, 26, 58, 59, 60, 75, 76, 77, 92, 93, 94, 109, 110, 111, 126, 127, 128, 159, 160, 161, 162, 163, 176, 177, 178, 179, 180 };
-DATA(0x0063d0a8) const int g_combatDeployHexes[2][7] = {
+DATA(0x0063d0a8) const int g_combatDeployHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 1, 35, 69, 86, 103, 137, 171 },
     { 15, 49, 83, 100, 117, 151, 185 }
 };
-DATA(0x0063d0e0) const int g_combatDeploySurroundedHexes[2][7] = {
+DATA(0x0063d0e0) const int g_combatDeploySurroundedHexes[2][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 57, 61, 90, 93, 96, 125, 129 },
     { 15, 185, 172, 2, 100, 87, 8 }
 };
-DATA(0x0063d118) const int g_combatDeploySpreadSlots[7][7] = {
+DATA(0x0063d118) const int g_combatDeploySpreadSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 3, 0, 0, 0, 0, 0, 0 },
     { 1, 5, 0, 0, 0, 0, 0 },
     { 1, 3, 5, 0, 0, 0, 0 },
@@ -80,7 +80,7 @@ DATA(0x0063d118) const int g_combatDeploySpreadSlots[7][7] = {
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
+DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][armyGroup::ARMY_GROUP_SLOT_COUNT] = {
     { 3, 0, 0, 0, 0, 0, 0 },
     { 2, 4, 0, 0, 0, 0, 0 },
     { 2, 3, 4, 0, 0, 0, 0 },
@@ -89,7 +89,7 @@ DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[9][2] = {
+DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[TOWN_TYPE_COUNT][2] = {
     { { "CH00.DEF", 92, 67, 5 }, { "CH01.DEF", 94, 54, 5 } },
     { { "CH02.DEF", 102, 62, 5 }, { "CH03.DEF", 102, 62, 5 } },
     { { "CH05.DEF", 100, 59, 5 }, { "CH04.DEF", 98, 52, 5 } },
@@ -100,7 +100,7 @@ DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[9][2] = {
     { { "CH014.DEF", 99, 58, 5 }, { "CH015.DEF", 95, 52, 5 } },
     { { "CH16.DEF", 99, 58, 5 }, { "CH17.DEF", 95, 52, 5 } }
 };
-DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTraits[9] = {
+DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTraits[TOWN_TYPE_COUNT] = {
     { static_cast<TCreatureType>(2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 780, 238, 648, 566, 596, 80, "plcbowx.def" },
     { CREATURE_WOOD_ELF, 786, 240, 625, 563, 595, 81, "pelfx.def" },
     { CREATURE_MAGE, 753, 251, 609, 578, 600, 92, "pmagex.def" },
@@ -111,7 +111,7 @@ DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTrait
     { static_cast<TCreatureType>(100) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 795, 230, 626, 575, 580, 85, "pplizax.def" },
     { CREATURE_STORM_ELEMENTAL, 783, 225, 636, 575, 595, 105, "cprgtix.def" }
 };
-DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
+DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[kNumSpellEffects] = {
     { "C10spW.def", "Prayer", 256 },
     { "C11spA0.def", "Lightning_Bolt", 2 },
     { "C01spA0.def", "AirShield", 1 },
@@ -341,7 +341,7 @@ DATA(0x0063bec0) const combatManager::SElevationOverlay combatManager::s_elevati
 // Original DC name: akWallTraits.
 // LoadIcons computes 0x66d848 + town * 648; LoadWallTraitsTable writes
 // name/hitpoints at row + 0x1c/+0x20. Each 36-byte record starts with x/y.
-DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[9][18] = {
+DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[TOWN_TYPE_COUNT][combatManager::kNumWallSections] = {
     { // Castle
         { 400, 276, -1, 0, { "SgCsDrw3.pcx", "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0 }, 0, 0, 0 },
         { 400, 276, -1, 0, { 0, "SgCsDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
@@ -523,7 +523,7 @@ DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[9][18] =
         { 576, 28, 255, 0, { 0, "SgElTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
     }
 };
-DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8] = {
+DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[WALL_TARGET_COUNT] = {
     { 255, -1, 586, 48, TWallSection(5) },
     { 29, 1, 564, 128, TWallSection(6) },
     { 62, 4, 520, 212, TWallSection(8) },
@@ -547,7 +547,7 @@ DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799,
 DATA(0x00694f08) const SLimitData combatManager::s_leftHeroLimits(0, 16, 57, 127);
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[9] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
+DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[TOWN_TYPE_COUNT] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
 DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
     0, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
     "CmBkRK.pcx", "CmBkMC.pcx"
@@ -555,7 +555,7 @@ DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
 // getBackgroundName indexes the rows with the hero's terrain type, so there
 // is one row per terrain (eTerrainDirt..eTerrainRock, ten): retail's twelve
 // zero bytes after the water row are the rock row.
-DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[10][3] = {
+DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[NUM_TERRAIN_TYPES][3] = {
     { "CmBkDrDd.pcx", "CmBkDrMt.pcx", "CmBkDrTr.pcx" },
     { "CmBkDes.pcx", "CmBkDes.pcx", "CmBkDes.pcx" },
     { "CmBkGrTr.pcx", "CmBkGrMt.pcx", "CmBkGrTr.pcx" },
@@ -567,7 +567,7 @@ DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[10][3] = {
     { 0, 0, 0 },
     { 0, 0, 0 }
 };
-DATA(0x0063bd18) const int g_moatDamage[9] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
+DATA(0x0063bd18) const int g_moatDamage[TOWN_TYPE_COUNT] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
 DATA(0x0063abe0) const long g_castleWallGateTargets[5] = { 6, 8, 9, 10, 12 };
 
 DATA(0x0066d840) int g_combatSeed = 1;
@@ -630,9 +630,9 @@ unsigned char combatManager::loadWallTraitsTable()
     }
 
     int row = 1;
-    for (int townType = 0; townType < 9; townType++) {
+    for (int townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
         row += 2;
-        for (int wall = 0; wall < 18; wall++) {
+        for (int wall = 0; wall < kNumWallSections; wall++) {
             const TSpreadsheetResource::TStringVector& values =
                 sheet->getRow(row);
             s_wallTraits[townType][wall].m_name = values[0];
@@ -831,7 +831,7 @@ void combatManager::loadIcons()
 
     if (m_fortificationLevel > 0) {
         TWallTraits* traits = s_wallTraits[m_defendingTown->m_type];
-        for (int wall = 0; wall < 18; wall++) {
+        for (int wall = 0; wall < kNumWallSections; wall++) {
             for (int icon = 0; icon < 5; icon++) {
                 if ((g_game->m_gameVersion >= 2
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
@@ -872,7 +872,7 @@ DC_ADDRESS(0x05dfb4, 0xe6)
 MAC_ADDRESS(0x06eb08, 0x164)
 void combatManager::freeIcons()
 {
-    for (int group = 0; group < 18; ++group) {
+    for (int group = 0; group < kNumWallSections; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
             if (m_wallImages[group][icon])
                 ResourceManager::dispose(m_wallImages[group][icon]);
@@ -1983,7 +1983,7 @@ DC_ADDRESS(0x05fcec, 0x24)
 MAC_ADDRESS(0x071778, 0xac)
 TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
 {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < WALL_TARGET_COUNT; i++) {
         if (combatManager::s_wallTargets[i].m_targetHex == gridIndex)
             return TWallTargetId(i);
     }
@@ -2354,7 +2354,7 @@ void combatManager::setupAndLoadObstacles()
         return;
 
     if (m_fortificationLevel > eFortificationNone) {
-        for (int wall = 0; wall < 18; wall++)
+        for (int wall = 0; wall < kNumWallSections; wall++)
             m_wallLevel[wall] =
                 s_wallTraits[m_defendingTown->m_type][wall].m_hitpoints;
         m_wallLevel[17] = 1;
@@ -2820,7 +2820,7 @@ MAC_ADDRESS(0x07367c, 0xfc)
 bool combatManager::isAdjacent(int first, int second) const
 {
     if (validHex(first) && validHex(second)) {
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
             if (m_adjacentCells[first][i] == second)
                 return 1;
         }
@@ -3694,7 +3694,7 @@ MAC_ADDRESS(0x075c3c, 0x9c)
 bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                      const army* excluded) const
 {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
         int hex = m_adjacentCells[gridIndex][i];
         if (hex >= 0) {
             army* a = m_cells[hex].getArmy();
@@ -4014,7 +4014,7 @@ void combatManager::lootDeadHero(int side,
     if (!dead)
         return;
     hero* winner = m_heroes[side];
-    for (int slot = 0; slot < 19; slot++) {
+    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
         // Complete walks 19 equipped ordinals; getArtifact retains DC's TArtifactSlot argument (Hero.h:18 positions).
         type_artifact artifact = dead->getArtifact(static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         if (artifact.m_artifactId == ARTIFACT_NONE

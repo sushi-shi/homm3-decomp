@@ -1529,7 +1529,7 @@ void doMarket()
             g_leftResource = -1;
             g_rightAmount = 0;
             g_giveWindow->m_recipientCount = 0;
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < NUM_PLAYERS; ++i) {
                 if (i != g_netLocalGamePos && g_game->m_playerDisabled[i] == 0) {
                     g_giveWindow->m_slotPlayerColor[g_giveWindow->m_recipientCount] = i;
                     ++g_giveWindow->m_recipientCount;
@@ -1940,7 +1940,7 @@ void TTradeResourceWindow::update(bool update)
             broadcastMessage(msg);
         }
 
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < NUM_RESOURCES; ++i) {
             if (side == 0) {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
                 msg.m_codeY = 0x15 + i;
@@ -2326,7 +2326,7 @@ void TBuyArtifactWindow::update(bool update)
             broadcastMessage(msg);
         }
 
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < NUM_RESOURCES; ++i) {
             if (col == 0) {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
                 msg.m_codeY = 0x15 + i;
@@ -2513,7 +2513,7 @@ void TSellArtifactWindow::update(bool update)
             broadcastMessage(msg);
         }
 
-        for (int i = 0; i < 7; ++i) {
+        for (int i = 0; i < NUM_RESOURCES; ++i) {
             if (i2 == 1) {
                 msg.m_codeY = i + 0x2a;
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -2702,7 +2702,7 @@ void TSellCreatureWindow::update(bool update)
             broadcastMessage(msg);
         }
 
-        for (int resource = 0; resource < 7; ++resource) {
+        for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
             if (side == 0) {
                 msg.m_codeX = 6;
                 msg.m_codeY = resource + 139;

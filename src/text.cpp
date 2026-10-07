@@ -6,6 +6,7 @@
 
 #include "exec.h"
 #include "hiscore.h"
+#include "objnames.h"
 #include "resourcemanager.h"
 #include "textresource.h"
 
@@ -163,7 +164,7 @@ DATA(0x006a780c)
 const char* g_buildingInfoSpecial[10][11];
 
 DATA(0x006a79ec)
-const char* g_quickViewText[232];
+const char* g_quickViewText[ADVENTURE_OBJECT_TRAIT_COUNT];
 
 DATA(0x006a7d8c)
 TSpreadsheetResource* g_townNameText;
@@ -476,7 +477,7 @@ unsigned char initializeAdvObjNames()
         DATA_COMPGEN(0x006604b4, advObjNamesName, "objnames.txt"));
     if (!g_advObjNames)
         return 0;
-    for (int i = 0; i < 232; i++)
+    for (int i = 0; i < ADVENTURE_OBJECT_TRAIT_COUNT; i++)
         g_quickViewText[i] = g_advObjNames->getText(i);
     return 1;
 }

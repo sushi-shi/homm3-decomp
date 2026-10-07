@@ -447,7 +447,7 @@ DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
 };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
+DATA(0x00642eb4) const signed char g_townBuildOrder[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE] = {
     {
     26, 23, 7, 8, 9, 0, 1, 2,
     3, 14, 15, 36, 43, 30, 37, 31,
@@ -521,8 +521,8 @@ DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     18, 19, -1, -1
 }
 };
-DATA(0x00643040) const char* const g_townBackgroundPrefix[9] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
-DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
+DATA(0x00643040) const char* const g_townBackgroundPrefix[TOWN_TYPE_COUNT] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
+DATA(0x00643064) const char* const g_townBuildingSprites[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE] = {
     {
     "TBCsmage", "TBCsmag2", "TBCsmag3", "TBCsmag4", "TBCsmag5", "TBCstvrn", "TBCsdock", "TBCscstl",
     "TBCscas2", "TBCscas3", "TBCshall", "TBCshal2", "TBCshal3", "TBCshal4", "TBCsmark", "TBCssilo",
@@ -596,7 +596,7 @@ DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     "TbElUp_3", "TbElUp_4", "TbElUp_5", "TbElUp_6"
 }
 };
-DATA(0x006436bc) const char* const g_townMusic[9] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
+DATA(0x006436bc) const char* const g_townMusic[TOWN_TYPE_COUNT] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
 
 // Retail scalar state; startup initial values come from the pinned image.
 // Original DC name: castleOpen; DoTavern brackets the modal window lifetime.
@@ -650,7 +650,7 @@ DATA(0x006436e0) static const int g_resourceIconPos[8][2] = {
 // publishes the shared name townBuildingSpriteNames; retail's two local
 // readers plus type_dialog_icon::set in kb.obj prove townmgr.obj ownership
 // and cross-TU linkage.
-DATA(0x0067f578) const char* g_townBuildingSpriteNames[9] = {
+DATA(0x0067f578) const char* g_townBuildingSpriteNames[TOWN_TYPE_COUNT] = {
     "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def",
     "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def",
     "HALLelem.def"
@@ -671,7 +671,7 @@ DATA(0x0068a2f4) static const char* g_townCastleDefNames[10] = {
 // The mage guild background for each town type, indexed by town::type.
 // The table's ONE image-wide reference is the load inside
 // TMageGuildWindow's constructor, so this compiland owns it.
-DATA(0x0068a31c) static const char* g_mageGuildDefNames[9] = {
+DATA(0x0068a31c) static const char* g_mageGuildDefNames[TOWN_TYPE_COUNT] = {
     "TPMageCs.pcx", "TPMageRm.pcx", "TPMageTw.pcx", "TPMageIn.pcx",
     "TPMageNc.pcx", "TPMageDn.pcx", "TPMageSt.pcx", "TPMageFr.pcx",
     "TPMageEl.pcx"
@@ -681,7 +681,7 @@ DATA(0x0068a31c) static const char* g_mageGuildDefNames[9] = {
 // type; the five towns with no boat of their own share the empty
 // rollover string. The table's ONE image-wide reference is the load
 // inside TShipWindow's constructor, so this compiland owns it.
-DATA(0x0068a340) static const char* g_boatDefNames[9] = {
+DATA(0x0068a340) static const char* g_boatDefNames[TOWN_TYPE_COUNT] = {
     "AB02_.def",       "", "",
     "", "AB01_.def",       "",
     "", "AB03_.def",       "AB01_.def"
@@ -700,13 +700,13 @@ DATA(0x0068a340) static const char* g_boatDefNames[9] = {
 // SetRightClickText 0x5d1aa0 copies both dwords of a row into an 8-byte
 // local and calls type_artifact::get_description on it, which is the
 // artifact record's own member. The pair spelling was a placeholder.
-DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
+DATA(0x00642e90) static const int g_blacksmithMachines[TOWN_TYPE_COUNT] = {
     146, 147, 148, 148, 147, 146, 148, 147, 146
 };
 // Original: blacksmithArtifactType (const type_artifact[] in Dreamcast).
 // Retail CRT initializer 0x5c2e20 constructs these nine records, in town
 // order, with the ordinary artifact constructor's -1 extra field.
-DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[9] = {
+DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[TOWN_TYPE_COUNT] = {
     ARTIFACT_BALLISTA, ARTIFACT_FIRST_AID_TENT, ARTIFACT_AMMO_CART,
     ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA,
     ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA
@@ -875,7 +875,7 @@ DATA(0x0068a378) unsigned char g_horde2DwellingSlot[TOWN_TYPE_COUNT][2] = {
     { 0, 0 },
     { 0, 0 }
 };
-DATA(0x0068a2d4) const char* g_playerFlagSprites[8] = { "PRRed.pcx", "PRBlue.pcx", "PRTan.pcx", "PRGreen.pcx", "PROrange.pcx", "PRPurple.pcx", "PRTeal.pcx", "PRRose.pcx" };
+DATA(0x0068a2d4) const char* g_playerFlagSprites[NUM_PLAYERS] = { "PRRed.pcx", "PRBlue.pcx", "PRTan.pcx", "PRGreen.pcx", "PROrange.pcx", "PRPurple.pcx", "PRTeal.pcx", "PRRose.pcx" };
 // adventuremapwindow.obj owns this eight-byte rollover/right-click record;
 // Dreamcast supplies the public name and THelpText type. The fort page and
 // SetCommandAndText select its two columns through the shared building map.
@@ -2187,7 +2187,7 @@ void townManager::unloadTown()
 {
     int i;
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (m_monPix[i])
             ResourceManager::dispose(m_monPix[i]);
     }
@@ -3060,7 +3060,7 @@ THallWindow::THallWindow(int which)
     ResourceManager::delSprFromCache();  // DC townmgr.cpp:4303
     const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     const int slotY[5] = { 37, 141, 245, 349, 453 };
-    const int hallX[9][18] = {
+    const int hallX[TOWN_TYPE_COUNT][CASTLE_HALL_SLOT_COUNT] = {
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 4, 2, 0, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 1, 2, 0, 6, 5, 3, 1, 5, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 2, 4, 4, 0, 2, 0, 6, 5, 3, 6, 1 },
@@ -3071,7 +3071,7 @@ THallWindow::THallWindow(int which)
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 },
         { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 }
     };
-    const int hallY[9][18] = {
+    const int hallY[TOWN_TYPE_COUNT][CASTLE_HALL_SLOT_COUNT] = {
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 0 },
         { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 1, 2 },
@@ -3127,7 +3127,7 @@ THallWindow::THallWindow(int which)
     case TOWN_TOWER:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3145,7 +3145,7 @@ THallWindow::THallWindow(int which)
     case TOWN_INFERNO:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3163,7 +3163,7 @@ THallWindow::THallWindow(int which)
     case TOWN_NECROPOLIS:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3181,7 +3181,7 @@ THallWindow::THallWindow(int which)
     case TOWN_DUNGEON:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -3199,7 +3199,7 @@ THallWindow::THallWindow(int which)
     case TOWN_STRONGHOLD:
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
-        for (i = 0; i < 18; i++) {
+        for (i = 0; i < CASTLE_HALL_SLOT_COUNT; i++) {
             m_widgets.push_back(new iconWidget(
                 slotX[hallX[which][i]] - 1, slotY[hallY[which][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
@@ -4410,7 +4410,7 @@ void doBlacksmith(int heroId, int townType)
             g_blacksmithArtifacts[townType], 1, 1);
         const int* cost =
             g_creatureTypeTraits[g_blacksmithMachines[townType]].m_cost;
-        for (int i = 0; i < 7; i++)
+        for (int i = 0; i < NUM_RESOURCES; i++)
             g_currentPlayer->m_resources[6] -= cost[i];
         sprintf(g_text, g_townCommand[31],
                 g_creatureTypeTraits[g_blacksmithMachines[townType]].m_name);
@@ -4983,7 +4983,7 @@ int townManager::main(message& msg)
     if (build != -1) {
         g_pendingTownBuild = -1;
         if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
-            for (build = 0; build < 0x2c; build++) {
+            for (build = 0; build < MAX_BUILDING_TYPE; build++) {
                 if ((g_townEligibleBuildMask[m_townToView->m_type]
                      & (1 << build))
                     || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA)
@@ -6163,8 +6163,8 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         { 303, 303, 303, 377, 377, 377,   0 },
         { 303, 303, 303, 303, 377, 377, 377 }
     };
-    EGameResource resources[7];
-    int amounts[7];
+    EGameResource resources[NUM_RESOURCES];
+    int amounts[NUM_RESOURCES];
     int i;
 
     int numResources = m_townToView->getBuildCost(
@@ -6959,7 +6959,7 @@ unsigned char doTavern()
     }
 
     if (player->m_resources[6] < g_heroGoldCost || g_tavernHero == 0
-        || player->m_numHeroes >= 8
+        || player->m_numHeroes >= playerData::HERO_SLOT_COUNT
         || (g_mapTavern == 0
             && g_townManager->m_townToView->m_visitingHeroId != -1)) {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -8049,7 +8049,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         TCreatureType rowCreature =
             g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]];
         const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= 150)
+        if (rowCreature >= 0 && rowCreature <= g_creatureTypeLast)
             creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
         else
             creatureName = "";
@@ -8068,7 +8068,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeY = 0x20;
         const char* summonName;
         if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= 150)
+            && g_townManager->m_townToView->m_summoningType <= g_creatureTypeLast)
             summonName =
                 g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
         else
@@ -8221,7 +8221,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     int numDisabled = 0;
     int k;
     int slot;
-    for (k = 0; k < 8; k++) {
+    for (k = 0; k < NUM_PLAYERS; k++) {
         if (g_game->m_playerDisabled[k])
             numDisabled++;
     }
@@ -8229,7 +8229,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     for (k = 7 - numDisabled; k < 7; k++)
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                          0x2bc + k, widget::WIDGET_DRAWN);
-    for (k = 8 - numDisabled; k < 8; k++) {
+    for (k = NUM_PLAYERS - numDisabled; k < NUM_PLAYERS; k++) {
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                          0x2bc + k + 0x64, widget::WIDGET_DRAWN);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
@@ -8244,7 +8244,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 
         int start = 0;
         int last = 0;
-        for (int rankColumn = 0; rankColumn < 8; rankColumn++) {
+        for (int rankColumn = 0; rankColumn < NUM_PLAYERS; rankColumn++) {
             if (start
                 == g_game->m_numPlayers - numDisabled)
                 break;
@@ -8275,9 +8275,9 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     int bestCreature;
     int bestValue;
     int playerIndex = 0;
-    for (int column = 0; column < 8; column++) {
+    for (int column = 0; column < NUM_PLAYERS; column++) {
         int who = playerIndex;
-        while (who < 8 && g_game->m_playerDisabled[who])
+        while (who < NUM_PLAYERS && g_game->m_playerDisabled[who])
             who++;
         if (who == TTownScreenWindow::GUILD_PLAYER_COLUMNS)
             break;

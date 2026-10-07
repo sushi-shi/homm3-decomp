@@ -201,7 +201,7 @@ MAC_ADDRESS(0x088940, 0x3c)
 int isBaseCreature(TCreatureType monType)
 {
     int creatureIndex = getCreatureDwellingIndex(monType);
-    return creatureIndex >= 0 && creatureIndex < 7;
+    return creatureIndex >= 0 && creatureIndex < TOWN_DWELLING_COUNT;
 }
 
 VA(0x0047b180, 0x16)
@@ -220,9 +220,9 @@ MAC_ADDRESS(0x0889a0, 0x6c)
 TCreatureType upgradedCreatureType(TCreatureType type)
 {
     int creatureIndex = getCreatureDwellingIndex(type);
-    if (creatureIndex < 0 || creatureIndex >= 7)
+    if (creatureIndex < 0 || creatureIndex >= TOWN_DWELLING_COUNT)
         return CREATURE_NONE;
-    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex + 7];
+    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex + TOWN_DWELLING_COUNT];
 }
 
 VA(0x0047B220, 0x6D)
@@ -230,9 +230,9 @@ MAC_ADDRESS(0x088a0c, 0x64)
 TCreatureType downgradedCreatureType(TCreatureType type)
 {
     int creatureIndex = getCreatureDwellingIndex(type);
-    if (creatureIndex < 7)
+    if (creatureIndex < TOWN_DWELLING_COUNT)
         return CREATURE_NONE;
-    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex - 7];
+    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex - TOWN_DWELLING_COUNT];
 }
 
 VA(0x0047b290, 0x1E9)

@@ -57,7 +57,7 @@ public:
     // it (`cmp dword [hero+0x101], 8`). Scoped to this window because it is
     // the only consumer that compares for EQUALITY; events.obj's own
     // readers spell the same cap as `< 8` / `>= 8`.
-    enum { TUITION = 2000, MAX_SECONDARY_SKILLS = 8 };
+    enum { TUITION = 2000, MAX_SECONDARY_SKILLS = kNumSecSkillsPerHero };
 
     // Dreamcast names this member sequence at +0x58..+0xdc. Retail shifts it
     // by the byte-proven eight-byte CAdvPopup widening; the constructor and

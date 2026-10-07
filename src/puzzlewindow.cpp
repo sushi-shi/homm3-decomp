@@ -25,7 +25,7 @@
 
 // Retail coordinates occupy nine 192-byte rows: 48 X words then 48 Y
 // words; the old g_puzzlePieceY symbol was a +0x60 view of the same array.
-DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[9] = {
+DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[TOWN_TYPE_COUNT] = {
     { { 8, 8, 8, 8, 8, 8, 17, 23, 71, 73, 102, 107, 107, 115, 127, 129, 153, 155, 158, 167, 186, 213, 215, 218, 236, 246, 267, 289, 299, 322, 347, 355, 356, 376, 383, 409, 409, 422, 423, 427, 437, 459, 487, 488, 518, 521, 525, 526 },
       { 8, 30, 102, 156, 202, 320, 8, 406, 301, 194, 332, 8, 31, 60, 329, 191, 347, 239, 429, 470, 127, 335, 191, 226, 147, 77, 384, 288, 8, 177, 67, 459, 397, 162, 255, 32, 111, 147, 466, 8, 238, 336, 8, 144, 145, 68, 234, 327 } },
     { { 8, 8, 8, 8, 8, 8, 62, 98, 99, 109, 116, 130, 135, 158, 161, 163, 165, 175, 179, 188, 191, 216, 256, 266, 278, 279, 293, 295, 311, 331, 340, 340, 345, 362, 364, 399, 401, 405, 422, 430, 431, 463, 470, 487, 500, 512, 517, 526 },
@@ -45,7 +45,7 @@ DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[9] = {
     { { 8, 8, 8, 8, 16, 46, 49, 87, 94, 100, 102, 105, 108, 125, 135, 182, 183, 190, 193, 193, 202, 204, 229, 236, 243, 276, 279, 291, 292, 309, 311, 313, 318, 324, 328, 331, 350, 350, 408, 422, 429, 468, 482, 490, 505, 505, 508, 543 },
       { 8, 54, 227, 426, 48, 375, 249, 500, 55, 245, 354, 175, 14, 296, 8, 466, 200, 381, 40, 364, 124, 330, 293, 39, 335, 488, 202, 80, 115, 225, 158, 24, 8, 443, 253, 36, 330, 426, 191, 430, 246, 90, 13, 346, 113, 190, 8, 436 } }
 };
-DATA(0x006976e8) std::bitset<48> g_puzzlePiecesRemoved;
+DATA(0x006976e8) std::bitset<48> g_puzzlePiecesRemoved;  // PUZZLE_PIECE_COUNT; the Mac DATA contract reads a literal width
 
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x00681f64) short g_puzzlePieceOrder[432] = {
@@ -109,7 +109,7 @@ DATA(0x00681f64) short g_puzzlePieceOrder[432] = {
 // two tables.
 DATA(0x006822c4) static int g_lastImHoverId = -1;
 DATA(0x006822c8) double g_puzzleGuessThreshold[5] = { 1.1, 0.5, 0.25, 0.0, 0.0 };
-DATA(0x00681880) const char* g_puzzleFilePrefixes[9] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
+DATA(0x00681880) const char* g_puzzleFilePrefixes[TOWN_TYPE_COUNT] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
 
 // E:\gamedcs\puzzlewindow.cpp:103
 DC_ADDRESS(0x114f14, 0x2a)
@@ -167,7 +167,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
     g_soundManager->stopAllSamples(1);
 
-    for (int i = 0; i < 48; ++i) {
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         m_puzzlePieces[i] = getPuzzleBitmap(m_puzWhich, i);
     }
 
@@ -182,7 +182,7 @@ DC_ADDRESS(0x115268, 0xa2)
 MAC_ADDRESS(0x1477c4, 0x10c)
 TPuzzleWindow::~TPuzzleWindow()
 {
-    for (int i = 0; i < 48; ++i)
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i)
         m_puzzlePieces[i]->dispose();
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -250,7 +250,7 @@ int TPuzzleWindow::updatePuzzle(int full)
 {
     int piecesNotFound = 0;
 
-    for (int i = 0; i < 48; ++i) {
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         if (full || !g_puzzlePiecesRemoved[i]) {
             int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
@@ -428,7 +428,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
     if (!g_game->setupPuzzlePieces(player, 0))
         return 0;
     memset(visible, 1, 17 * 19);
-    for (int i = 0; i < 48; ++i) {
+    for (int i = 0; i < TPuzzleWindow::PUZZLE_PIECE_COUNT; ++i) {
         if (g_puzzlePiecesRemoved[i])
             continue;
         int piece = g_puzzlePieceOrder[puzzle * 48 + i];

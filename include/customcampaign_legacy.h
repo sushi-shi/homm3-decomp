@@ -51,8 +51,8 @@ struct LegacyCampaignHero : public type_obscuring_object {
     unsigned char m_levelSeed;                 // +0x08b
     unsigned char m_lastWisdom;                // +0x08c
     armyGroup m_army;                          // +0x08d
-    signed char m_skillLevel[28];              // +0x0c5
-    unsigned char m_skillOrder[28];            // +0x0e1
+    signed char m_skillLevel[kNumSecSkills];              // +0x0c5
+    unsigned char m_skillOrder[kNumSecSkills];            // +0x0e1
     int m_skillCount;                          // +0x0fd
     unsigned long m_flags; // +0x101
     float m_turnExperienceToRvRatio; // +0x105
@@ -66,12 +66,12 @@ struct LegacyCampaignHero : public type_obscuring_object {
     unsigned char m_isSleeping; // +0x11c
     long m_bounty; // +0x11d
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121
-    type_artifact m_equipped[18];              // +0x129
-    type_artifact m_backpack[64];              // +0x1b9
+    type_artifact m_equipped[kNumArtifactSlots];              // +0x129
+    type_artifact m_backpack[HERO_BACKPACK_CAPACITY];              // +0x1b9
     signed char m_backpackCount;               // +0x3b9
-    unsigned char m_inSpellbook[70];           // +0x3ba
-    unsigned char m_availableSpells[70];       // +0x400
-    signed char m_stats[4];                    // +0x446
+    unsigned char m_inSpellbook[hero::NUM_SPELLS];           // +0x3ba
+    unsigned char m_availableSpells[hero::NUM_SPELLS];       // +0x400
+    signed char m_stats[kNumPrimarySkills];                    // +0x446
     float m_aggression; // +0x44a
     long m_valueOfPower; // +0x44e
     long m_valueOfDuration; // +0x452
