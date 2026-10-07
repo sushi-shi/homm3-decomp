@@ -2228,7 +2228,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             secondHero->getSecondarySkill(eSecSkillWisdom) + 2);
 
         ESpellId spell;
-        for (spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS;
+        for (spell = SPELL_SUMMON_BOAT; spell < kNumSpells;
              spell = static_cast<ESpellId>(spell + 1)) {
             if (firstHero->isInSpellbook(spell)) {
                 if (!secondHero->isInSpellbook(spell)

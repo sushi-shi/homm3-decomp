@@ -11,6 +11,7 @@
 #include "basemgr.h"
 #include "hexcell.h"
 #include "struct.h"
+#include "town_type.h"
 #include "winmgr.h"
 
 class Bitmap16Bit;
@@ -272,7 +273,7 @@ public:
     int m_castY;
     int m_castFrame;
 };
-extern const TCombatHeroSprite g_combatHeroSprites[9][2];
+extern const TCombatHeroSprite g_combatHeroSprites[kNumTownTypes][2];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -462,7 +463,7 @@ public:
     };
 
 private:
-    static TWallTraits s_wallTraits[9][kNumWallSections];
+    static TWallTraits s_wallTraits[kNumTownTypes][kNumWallSections];
 
 public:
     enum {
@@ -1015,7 +1016,7 @@ public:
 private:
     // Original ArcherTraits public ?ArcherTraits@combatManager@@0QBUTArcherTraits@1@B
     // independently proves this private static const table owner.
-    static const TArcherTraits s_archerTraits[9];
+    static const TArcherTraits s_archerTraits[kNumTownTypes];
     TArcher m_archers[kNumArchers];  // +0x13d78; armySlot at +0x20
 
 public:
@@ -1980,9 +1981,9 @@ extern const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][ar
 // zero is null), and the last by combatTerrain*3 + MoreTreesNear(mapPoint).
 // Names are source-facing inventions; their addresses, extents and contents
 // are all direct retail data.
-extern const char* const g_townCombatBackgrounds[9];          // 0x63d2a0
+extern const char* const g_townCombatBackgrounds[kNumTownTypes];          // 0x63d2a0
 extern const char* const g_magicTerrainCombatBackgrounds[10]; // 0x63d2c8
-extern const char* const g_terrainCombatBackgrounds[NUM_TERRAIN_TYPES][3];    // 0x63d2f0
+extern const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][3];    // 0x63d2f0
 
 // The leading two words of each 20-byte obstacle-catalogue row. They
 // are separate declarations because the delinked target relocates each

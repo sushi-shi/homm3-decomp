@@ -84,62 +84,10 @@ enum type_building_id {
     MAX_BUILDING_TYPE = 44
 };
 
-// DC LF_ENUM `EGameResource` (T_INT4, 37 enumerators; the tail past
-// GOLD is the reward/dialog domain, not a resource column). The seven
-// primary resources are the width of every cost row - GOLD = 6 is the
-// column get_gold_income reads out of the silo table (0x688ecc =
-// 0x688eb4 + 6*4).
-// NUM_RESOURCES is a source constant, not an EGameResource member: the
-// complete Dreamcast CodeView enum does not contain it. It is defined in
-// armygrp.h, whose creature cost row is the first table it sizes.
-enum EGameResource {
-    const_no_resource = -1,
-    WOOD = 0,
-    MERCURY = 1,
-    ORE = 2,
-    SULFUR = 3,
-    CRYSTAL = 4,
-    GEMS = 5,
-    GOLD = 6,
-    ABANDONED = 7,
-    RES_ARTIFACT = 8,
-    RES_SPELL = 9,
-    RES_COLOR = 10,
-    RES_GOOD_LUCK = 11,
-    RES_NEUTRAL_LUCK = 12,
-    RES_BAD_LUCK = 13,
-    RES_GOOD_MORALE = 14,
-    RES_NEUTRAL_MORALE = 15,
-    RES_BAD_MORALE = 16,
-    RES_EXPERIENCE = 17,
-    RES_HERO = 18,
-    RES_ARTIFACT_W_TEXT = 19,
-    RES_SECONDARY_SKILL = 20,
-    RES_MONSTER = 21,
-    RES_BUILDING_TT_0 = 22,
-    RES_BUILDING_TT_1 = 23,
-    RES_BUILDING_TT_2 = 24,
-    RES_BUILDING_TT_3 = 25,
-    RES_BUILDING_TT_4 = 26,
-    RES_BUILDING_TT_5 = 27,
-    RES_BUILDING_TT_6 = 28,
-    RES_BUILDING_TT_7 = 29,
-    // Complete inserts Conflux ahead of the four primary-skill icons.
-    // Retail type_dialog_icon::set proves this shifted tail through its
-    // nine-town jump-table arm and frame = resource - 31 lowering.
-    RES_BUILDING_TT_8 = 30,
-    RES_PRIMARY_SKILL_ATTACK = 31,
-    RES_PRIMARY_SKILL_DEFENSE = 32,
-    RES_PRIMARY_SKILL_POWER = 33,
-    RES_PRIMARY_SKILL_KNOWLEDGE = 34,
-    RES_MANA = 35,
-    RES_SMALL_GOLD = 36
-};
-
 // DC names this shared table townBuildingSpriteNames. Retail extends its
 // RoE eight-town run with Conflux and places the definition in townmgr.obj;
 // kb.obj's dialog-icon switch is the first proven cross-TU consumer.
-extern const char* g_townBuildingSpriteNames[9];
+extern const char* g_townBuildingSpriteNames[kNumTownTypes];
 
 // town.cpp owns the DATA claim; TResourceDisplay consumes the current
 // player-position selector directly, as its retail bodies do.
@@ -298,7 +246,7 @@ public:
     std::string m_name;
     // +0xd4..+0xdf. The three-word default-constructor fill and the
     // 70-position guards in the spell routines prove std::bitset<70>.
-    std::bitset<70> m_spells;
+    std::bitset<kNumSpells> m_spells;
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
     armyGroup m_garrison;
@@ -493,7 +441,7 @@ public:
     // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
     // (the DC build carries eight); filled by initialize.cpp's
     // create_included_masks. Definition + DATA claim in src/town.cpp.
-    static __int64 s_includedBuildings[9][MAX_BUILDING_TYPE];
+    static __int64 s_includedBuildings[kNumTownTypes][MAX_BUILDING_TYPE];
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     const class armyGroup& getArmy() const;
     // DC town.cpp:2375 proves the ordinary non-const reference twin. Its
@@ -518,8 +466,8 @@ protected:
     // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
     // initialize_hordes walks it with a 0x10 (two-entry) inner step
     // nine times, which is what pins the row count at 9.
-    static type_horde_effect s_constHordeEffects[9][4];
-    static int s_dwellingCosts[9][14][NUM_RESOURCES];
+    static type_horde_effect s_constHordeEffects[kNumTownTypes][4];
+    static int s_dwellingCosts[kNumTownTypes][14][NUM_RESOURCES];
     // The three build-cost tables get_build_cost_array switches
     // between, all DC-attested town statics whose retail .bss extents
     // CHAIN EXACTLY, which is what fixes both their bounds and their
@@ -540,7 +488,7 @@ protected:
     // NeutralBuildingCosts' leading bound is the only soft number: the
     // 17 rows the band uses end 8 bytes short of SpecialBuildingCosts.
     static int s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
-    static int s_specialBuildingCosts[9][9][NUM_RESOURCES];
+    static int s_specialBuildingCosts[kNumTownTypes][9][NUM_RESOURCES];
 };
 SIZE(town, 360);
 
@@ -563,12 +511,12 @@ extern int g_townInitArmyHigh[4];
 enum ETownConstants {
     // The "no dock site" sentinel CanBuildDock tests for.
     TOWN_DOCK_SITE_NONE = 0xff,
+    // Restoration of Erathia has the first eight town types; Conflux
+    // came later.
+    TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX,
     // Nine town types x 44 building-id slots, byte-derived from
     // initialize_game_data's mask walks (0x160 row stride, rows 0..8,
     // building ids to 43 in the requirement tables).
-    TOWN_TYPE_COUNT = TOWN_CONFLUX + 1,
-    // Restoration of Erathia has the first eight; Conflux came later.
-    TOWN_TYPE_ROE_COUNT = TOWN_CONFLUX,
     TOWN_BUILDING_SLOTS = MAX_BUILDING_TYPE,
     // The four horde columns of a const_horde_effects row - also the
     // length of gHordeBuildings, which get_horde_effect scans.
@@ -592,18 +540,18 @@ enum ETownConstants {
 // give_event_reward translates TTownEvent::BuildBuildings through it.
 // Name INVENTED (no DC symbol); owner TU unlocated - extern only.
 // Gated: town.obj is the only consumer.
-extern int g_eventBuildingIds[TOWN_TYPE_COUNT][TOWN_EVENT_BUILDING_SLOTS];
+extern int g_eventBuildingIds[kNumTownTypes][TOWN_EVENT_BUILDING_SLOTS];
 
 // Per-town-type legal-building rollup create_requirement_masks
 // accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
 // 0x6976f0, nine qwords). Owner TU unlocated - extern only.
-extern __int64 g_townEligibleBuildMask[TOWN_TYPE_COUNT];
+extern __int64 g_townEligibleBuildMask[kNumTownTypes];
 
 // Transitive building-requirement masks, one 44-slot row per town type
 // (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
 // 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
 DATA(0x00697798)
-extern __int64 g_hierarchyMask[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
+extern __int64 g_hierarchyMask[kNumTownTypes][TOWN_BUILDING_SLOTS];
 
 // One-based dwelling tier used by the retail artifact-growth helper.
 // Tier one has no corresponding growth artifact, so only the switch's
@@ -628,13 +576,13 @@ extern const char* g_townTypeNames[10];
 // Inferno/Conflux, crystal for Rampart, gems for Tower, sulfur for
 // Dungeon - and the gold column is zero in every row. Name INVENTED
 // (no DC symbol covers this table); owner TU unlocated.
-extern int g_siloIncome[TOWN_TYPE_COUNT][NUM_RESOURCES];
+extern int g_siloIncome[kNumTownTypes][NUM_RESOURCES];
 
 // Original gDwellingType: DC public ?gDwellingType@@3PAY0O@W4TCreatureType@@A
 // proves fourteen-entry rows. Retail has nine towns, with seven base dwelling
 // creatures followed by their seven upgrades in each row.
 DATA(0x006747b4)
-extern TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS];
+extern TCreatureType g_dwellingType[kNumTownTypes][TOWN_DWELLING_SLOTS];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so

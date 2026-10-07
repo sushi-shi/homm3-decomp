@@ -141,9 +141,9 @@ def generate(sources):
 
     spell_count = one((n for n in native.nodes
                        if n.kind == cx.CursorKind.ENUM_CONSTANT_DECL
-                       and n.spelling == 'NUM_SPELLS'
-                       and n.semantic_parent.semantic_parent.spelling == 'hero'),
-                      'hero::NUM_SPELLS')
+                       and n.spelling == 'kNumSpells'
+                       and n.semantic_parent.spelling == 'ESpellId'),
+                      'ESpellId::kNumSpells')
     values['HERO_SPELL_COUNT'] = str(spell_count.enum_value)
     for category in ('0', '4', '5'):
         entry = one((n for n in native.nodes

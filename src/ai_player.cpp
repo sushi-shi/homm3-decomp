@@ -200,7 +200,7 @@ int aiResourceCost(long playerId, const int* resources);
 int aiResourceCost(const playerData* player, const int* resources);
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
 bool considerHiring(long playerId, hero* candidate);
-const std::bitset<TOWN_TYPE_COUNT>& getAngelicAllianceAlignments();
+const std::bitset<kNumTownTypes>& getAngelicAllianceAlignments();
 int canBuy(const town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
                        double efficiency);
@@ -478,9 +478,9 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    std::vector<type_creature_value> creatures(g_creatureTypeCount);
+    std::vector<type_creature_value> creatures(kNumCreatureTypes);
     int creatureIndex;
-    for (creatureIndex = 0; creatureIndex < g_creatureTypeCount; creatureIndex++) {
+    for (creatureIndex = 0; creatureIndex < kNumCreatureTypes; creatureIndex++) {
         creatures[creatureIndex].m_type = H3_ENUM_DECODE(TCreatureType, creatureIndex);
         creatures[creatureIndex].m_amount = 0;
     }
@@ -505,7 +505,7 @@ void type_AI_player::calculateDemand()
     }
 
     int valueCreature;
-    for (valueCreature = 0; valueCreature < g_creatureTypeCount; valueCreature++)
+    for (valueCreature = 0; valueCreature < kNumCreatureTypes; valueCreature++)
         creatures[valueCreature].m_value = creatures[valueCreature].m_amount
             * g_creatureTypeTraits[valueCreature].m_aiValue;
 
@@ -990,7 +990,7 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
         }
     }
 
-    for (int creature = 0; creature < g_creatureTypeCount; ++creature) {
+    for (int creature = 0; creature < kNumCreatureTypes; ++creature) {
         prohibited[creature] = 0;
         getMonsterCost(creature, resources);
         for (short resource = 0; resource < 6; ++resource) {
@@ -1804,7 +1804,7 @@ DC_ADDRESS(0x031094, 0x60)
 MAC_ADDRESS(0x02f20c, 0x60)
 void type_AI_player::purchaseBuildings()
 {
-    bool prohibitedCreatures[g_creatureTypeCount];
+    bool prohibitedCreatures[kNumCreatureTypes];
     fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
     while (purchaseBuilding(prohibitedCreatures)) {
     }
@@ -2020,7 +2020,7 @@ MAC_ADDRESS(0x02f990, 0x78)
 int type_AI_creature_swapper::normalizeAlignment(int alignment) const
 {
     if (m_hasAngelicAlliance) {
-        const std::bitset<TOWN_TYPE_COUNT>& alliedAlignments = getAngelicAllianceAlignments();
+        const std::bitset<kNumTownTypes>& alliedAlignments = getAngelicAllianceAlignments();
         if (alliedAlignments.test(alignment)) {
             alignment = 0;
             while (!alliedAlignments.test(alignment))
@@ -2038,7 +2038,7 @@ void type_AI_creature_swapper::getAlignments()
     if (!m_hasAngelicAlliance) {
         return;
     }
-    for (int alignment = 0; alignment < TOWN_TYPE_COUNT; ++alignment) {
+    for (int alignment = 0; alignment < kNumTownTypes; ++alignment) {
         if (m_alignments[alignment + 1] != 0) {
             int other = normalizeAlignment(alignment);
             if (other != alignment) {
@@ -4234,7 +4234,7 @@ static long totalArtifactValue(hero* candidate, long playerId)
             candidate->getBackpack(slot).m_artifactId);
         total += aiGetValueOfArtifact(backpackArtifact, playerId);
     }
-    for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
+    for (slot = 0; slot < kNumEquippedSlots; ++slot) {
         type_artifact equippedArtifact(
             candidate->getArtifact(TArtifactSlot(slot)).m_artifactId);
         total += aiGetValueOfArtifact(equippedArtifact, playerId);
@@ -4806,7 +4806,7 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
         baseValue = power * (m_bonus + 100) / 100;
     }
 
-    for (SpellID spell = 0; spell < hero::NUM_SPELLS; spell++) {
+    for (SpellID spell = 0; spell < kNumSpells; spell++) {
         if (!owner->spellIsAvailable(spell))
             continue;
         if (!(g_spellTraits[spell].m_schoolBits & m_school))
@@ -4892,7 +4892,7 @@ long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
         return 0;
 
     long bestValue = 0;
-    for (SpellID spell = 0; spell < hero::NUM_SPELLS; spell++) {
+    for (SpellID spell = 0; spell < kNumSpells; spell++) {
         if (owner->isInSpellbook(spell))
             continue;
         if (!equipped && owner->spellIsAvailable(spell))
@@ -5007,7 +5007,7 @@ MAC_ADDRESS(0x038238, 0x26c)
 long type_angelic_alliance_artifact::getValue(
     const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    std::bitset<TOWN_TYPE_COUNT> alliedAlignments = getAngelicAllianceAlignments();
+    std::bitset<kNumTownTypes> alliedAlignments = getAngelicAllianceAlignments();
     playerData* player = &g_game->m_players[owner->m_owner];
     long total = 0;
     int heroIndex = 0;
@@ -5257,7 +5257,7 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact)
 {
     int slot;
-    for (slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
+    for (slot = 0; slot < kNumEquippedSlots; ++slot) {
         if (const_cast<hero*>(ourHero)->canEquipArtifactInEmptySlot(
                 artifact.m_artifactId, slot)) {
             break;
@@ -5266,9 +5266,9 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
 
     long value = cppMax(
         aiGetValueOfArtifact(artifact, ourHero, 0, exact), 0L);
-    if (slot >= kNumArtifactSlots + 1) {
+    if (slot >= kNumEquippedSlots) {
         long replacedValue = 0;
-        for (int equippedSlot = 0; equippedSlot < kNumArtifactSlots + 1;
+        for (int equippedSlot = 0; equippedSlot < kNumEquippedSlots;
              ++equippedSlot) {
             if (const_cast<hero*>(ourHero)->canReplaceArtifactInSlot(
                     artifact.m_artifactId, equippedSlot)) {
@@ -5396,7 +5396,7 @@ long getFullValue(const hero* ourHero)
     // Mac 0x38f78..0x38f8c overwrites the same two-word temporary each turn;
     // its initial value is dead, but the source lifetime still spans the loop.
     type_artifact artifact(ARTIFACT_NONE);
-    for (int slot = 0; slot < kNumArtifactSlots + 1; ++slot) {
+    for (int slot = 0; slot < kNumEquippedSlots; ++slot) {
         artifact = ourHero->getArtifact(TArtifactSlot(slot));
         if (artifact.m_artifactId != -1)
             value += aiGetValueOfArtifact(artifact, ourHero, 1, 1);

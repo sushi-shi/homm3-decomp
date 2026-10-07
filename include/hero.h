@@ -9,6 +9,7 @@
 #include "advmgr_popup.h"
 #include "armygrp.h"
 #include "artifact.h"
+#include "hero_type.h"
 #include "herospec.h"
 #include "mapcell.h"
 #include "primaryskill.h"
@@ -17,45 +18,6 @@
 // hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
 // and type; Complete fixes the 0x6a7540 address and all four indexed readers.
 extern const char* g_statDesc[kNumPrimarySkills];
-
-// Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
-// retail GetNewHeroId extends it with the two Conflux classes, indexes all
-// eighteen class-traits rows, and uses 18 as the no-class sentinel.
-// Before normalization (Dreamcast enumerators): eClassKnight, eClassCleric,
-// eClassRanger, eClassDruid, eClassAlchemist, eClassWizard, eClassPagan,
-// eClassHeretic, eClassDeathKnight, eClassNecromancer, eClassOverlord,
-// eClassWarlock, eClassBarbarian, eClassBattleMage, eClassBeastmaster,
-// eClassWitch, eClassPlanesWalker, eClassElementalist.
-enum THeroClass {
-    classKnight = 0,
-    classCleric = 1,
-    classRanger = 2,
-    classDruid = 3,
-    classAlchemist = 4,
-    classWizard = 5,
-    classPagan = 6,
-    classHeretic = 7,
-    classDeathKnight = 8,
-    classNecromancer = 9,
-    classOverlord = 10,
-    classWarlock = 11,
-    classBarbarian = 12,
-    classBattleMage = 13,
-    classBeastmaster = 14,
-    classWitch = 15,
-    classPlanesWalker = 16,
-    classElementalist = 17,
-    kNumHeroClasses = 18
-};
-
-// Dreamcast names the hero-ID domain THeroID; Complete uses 156 hero slots.
-// The -1 sentinel is serialized as0xff; hero.cpp independently identifies
-// Xeron as0x9b. Other admitted IDs retain their existing corpus constants.
-// The remaining original enumerator names are not yet recovered.
-enum HeroId {
-    heroIdNone = -1,
-    heroIdXeron = 0x9b
-};
 
 // Hero/boat sprite sequence ids, transcribed COMPLETE from the
 // Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
@@ -626,7 +588,7 @@ public:
     TSkillMastery m_identifyLevel;  // +0x129
 
 private:
-    type_artifact m_equipped[kNumArtifactSlots + 1];
+    type_artifact m_equipped[kNumEquippedSlots];
 
 public:
     // One byte per artifact slot class. remove_artifact decrements the
@@ -655,6 +617,7 @@ public:
     // operator= path, which proves the full 16-byte object at +0x3da.
     std::string m_customName;  // +0x3da
 
+private:
     // TWO per-spell byte tables, stride 1, 70 entries each, byte-proven
     // by hero::AddSpell 0x4d9330 - all 26 bytes of it are
     //     mov dl,1
@@ -681,12 +644,8 @@ public:
     // byte [this+0x430] and then handles spell 0 = eSpellSummonBoat.
     // The retail x86 offsets are byte-proven here; only the names come
     // from the Dreamcast build.
-    enum { NUM_SPELLS = 70 };
-
-private:
-       // DC SpellID::kNumSpells
-    unsigned char m_inSpellbook[NUM_SPELLS];  // +0x3ea
-    unsigned char m_availableSpells[NUM_SPELLS];  // +0x430
+    unsigned char m_inSpellbook[kNumSpells];  // +0x3ea
+    unsigned char m_availableSpells[kNumSpells];  // +0x430
     // The four primary skills (DC name `stats`), byte-proven by
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
@@ -1422,7 +1381,7 @@ extern THeroTraits g_heroTraitsStorage[163];
 extern const THeroTraits (&g_heroTraits)[163];
 
 // E:\gamedcs\hero.cpp:267
-std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId);
+std::bitset<kNumSpells> markArtifactSpells(int artifactId);
 int heroView(int heroID, int noDismiss, int alreadyFaded,
              unsigned char quickView);
 
@@ -1456,7 +1415,7 @@ class THeroScreenWindow : public CAdvPopup {
 public:
     enum EArtifactSlotBounds {
         ARTIFACT_SLOT_FIRST = 0,
-        ARTIFACT_SLOT_COUNT = kNumArtifactSlots + 1
+        ARTIFACT_SLOT_COUNT = kNumEquippedSlots
     };
     // The hero screen's widget ids, as UpdateHeroScreenStatusBar's switch
     // surfaces them in message::codeY. Decoded from the three dispatch

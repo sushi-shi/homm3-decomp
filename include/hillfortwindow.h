@@ -4,11 +4,12 @@
 #include "va.h"
 
 #include "armygrp.h"
+#include "town.h"
 #include "window.h"
 
 class message;
 
-extern const float g_afUpgradeCostFactor[7];
+extern const float g_afUpgradeCostFactor[TOWN_DWELLING_COUNT];
 
 // Retail vtable 0x63eb68 has heroWindow's nine-slot shape; the constructor
 // invokes heroWindow directly and installs that derived vptr.

@@ -111,10 +111,9 @@ enum TSpellEffectID {
     // Original eSpellEffectRegenerate.
     eSpellEffectRegeneration = 79,
     eSpellEffectDeathStare = 80,
-    // Complete row 81 is "AcidBreath" and Poof moves to row 82 (see above).
-    // Renaming or adding an enumerator here reorders VC6's .bss layout and
-    // reschedules advManager::doCombat, so the Dreamcast spellings remain.
-    eSpellEffectPoof = 81,
+    // Complete inserts row 81 (see above); Dreamcast's Poof is 81.
+    eSpellEffectAcidBreath = 81,
+    eSpellEffectPoof = 82,
     kNumSpellEffects = 83,
 };
 

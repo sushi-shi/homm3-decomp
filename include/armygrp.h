@@ -6,14 +6,13 @@
 #include "abstractfile.h"
 #include "artifact_type.h"
 #include "creature_flags.h"
+#include "resource_type.h"
+#include "secondaryskill.h"
 #include "spellschool.h"
 #include "spelleffect_type.h"
 #include "struct.h"
 #include "terrain_type.h"
-
-// The seven primary resources (wood .. gold), the width of every cost
-// row; town.h's EGameResource names the columns.
-#define NUM_RESOURCES 7
+#include "town_type.h"
 
 namespace std {
 template<class T> class allocator;
@@ -180,6 +179,10 @@ enum TCreatureType {
     // only consumer of this compare is the identify-range gate. NH3API
     // spelling.
     CREATURE_ROGUE = 0x8f,
+    // Dreamcast kNumCreatureTypes: the creatures before the war machines
+    // (NH3API MAX_CREATURES), the width of the AI's creature value
+    // tables and of the campaign crossover creature mask.
+    kNumCreatureTypes = 0x91,
     CREATURE_CATAPULT = 0x91,
     CREATURE_BALLISTA = 0x92,
     CREATURE_FIRST_AID_TENT = 0x93,
@@ -538,15 +541,16 @@ enum ESpellId {
     // iPostPowSpellToCast gated on the victim's defenseSkill being
     // positive - the defense-eating half of Acid Breath. NH3API
     // spelling.
-    SPELL_ACID_BREATH_DEFENSE = 0x50
+    SPELL_ACID_BREATH_DEFENSE = 0x50,
+    // The Dreamcast SpellID counts. Adventure spells precede the first
+    // combat spell, SPELL_QUICKSAND; the 70 book spells size hero's
+    // spellbook tables. The spell-traits rows and each stack's
+    // influence/level arrays run through SPELL_ACID_BREATH_DEFENSE, one
+    // past the Dreamcast build's kNumSpellsAndCreatureEffects = 80.
+    kNumAdventureSpells = 10,
+    kNumSpells = 70,
+    kNumSpellsAndCreatureEffects = 81
 };
-
-// Spell ids 0 .. SPELL_ACID_BREATH_DEFENSE: the rows of the spell-traits
-// table and the width of each stack's influence/level arrays. The
-// Dreamcast spells it kNumSpellsAndCreatureEffects (80, before Acid
-// Breath); an ESpellId enumerator changes initializeGameData's code, so
-// it is a source constant like NUM_RESOURCES.
-#define NUM_SPELLS_AND_CREATURE_EFFECTS 81
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
 // by get_spell_work_chance's spell*17*8 indexing at 0x44a4e2): only
@@ -590,7 +594,7 @@ struct SSpellTraits {
     // +0x20, the per-mastery MANA COST row: GetManaCost indexes it
     // `[base + 4*(mastery + spell*34) + 0x20]` with the mastery
     // get_spell_level just returned.
-    int m_manaCost[4];         // +0x20
+    int m_manaCost[kNumMasteries];         // +0x20
     // Spell-power multiplier (NH3API m_power_factor): multiplied by the
     // caster's power in get_resurrection_value (0x423d60),
     // get_mass_damage_value (0x42540a) and ai_tactical's
@@ -598,18 +602,18 @@ struct SSpellTraits {
     int m_powerFactor;         // +0x30
     // Per-mastery flat bonus row (NH3API m_mastery_bonus):
     // get_damage_spell_value adds [spell*136 + mastery*4 + 0x34].
-    int m_masteryBonus[4];     // +0x34
+    int m_masteryBonus[kNumMasteries];     // +0x34
     // +0x44, nine faction weights used by town::initialize_spells.
-    int m_townProbability[9];
+    int m_townProbability[kNumTownTypes];
     // A SECOND per-mastery dword row: get_enchantment_value indexes it
     // as spell*34 + mastery dwords from the table base (0x423cab) =
     // record +0x68 + mastery*4. Distinct from mastery_bonus - both
     // rows are byte-proven by their own consumers. Name provisional.
-    int m_masteryValues[4];    // +0x68
+    int m_masteryValues[kNumMasteries];    // +0x68
     // Complete's four per-mastery descriptions. Dreamcast names this
     // m_description at +0x74 before the added ninth town-probability dword;
     // retail InitializeSpellTraits writes the shifted +0x78 row.
-    const char* m_levelDescriptions[4];  // +0x78
+    const char* m_levelDescriptions[kNumMasteries];  // +0x78
 };
 SIZE(SSpellTraits, 136);
 
@@ -618,7 +622,7 @@ SIZE(SSpellTraits, 136);
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-extern const SSpellTraits (&g_spellTraits)[81];
+extern const SSpellTraits (&g_spellTraits)[kNumSpellsAndCreatureEffects];
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 

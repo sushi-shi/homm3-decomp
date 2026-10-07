@@ -8,6 +8,7 @@
 #include "ai_creature_value.h"
 #include "armygrp.h"
 #include "netmsg.h"
+#include "player_type.h"
 #include "turn_update_msg.h"
 
 class hero;
@@ -131,7 +132,7 @@ protected:
 // recalculates the recipient's demand through this array before giving
 // resources to another computer player. Owner TU remains unlocated.
 DATA(0x00692950)
-extern type_AI_player g_aiPlayers[8];
+extern type_AI_player g_aiPlayers[NUM_PLAYERS];
 
 // Dreamcast records this exact 12-byte value object, and retail's
 // constructor at 0x4286b0 writes the same four fields at 0/4/8/10.

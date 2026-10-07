@@ -1,6 +1,10 @@
 #ifndef HOMM3_TEXT_H
 #define HOMM3_TEXT_H
 
+#include "objnames.h"
+#include "player_type.h"
+#include "primaryskill.h"
+#include "town_type.h"
 #include "window.h"
 
 // Shared text storage filled by the resource loaders in text.cpp.
@@ -12,14 +16,14 @@ enum ECreditsTextIndex {
 };
 
 extern const char* g_abbSecondarySkillLevels[3];
-extern const char* g_statNames[4];
+extern const char* g_statNames[kNumPrimarySkills];
 extern const char* g_castleInfo[7];
 extern const char* g_townCommand[35];
 extern char* g_highScoreCampaignDefault[11][4];
 extern const char* g_neutralBuildingNames[19];
 extern const char* g_heroBio[163];
 extern const char* g_secondarySkillLevels[3];
-extern const char* g_quickViewText[232];
+extern const char* g_quickViewText[ADVENTURE_OBJECT_TRAIT_COUNT];
 extern char* g_highScoreStandardDefault[11][4];
 extern const char* g_heroScreen[33];
 extern const char* g_overviewText[16];
@@ -29,7 +33,7 @@ extern THelpText g_recruitHelp[3];
 extern THelpText g_adventureOptionsHelp[7];
 extern THelpText g_viewArmyHelp[15];
 extern const char* g_tavernInfo[8];
-extern const char* g_statDesc[4];
+extern const char* g_statDesc[kNumPrimarySkills];
 extern const char* g_weekNames[15];
 extern const char* g_monthNames[10];
 extern THelpText g_campaignBriefHelp[62];
@@ -47,14 +51,14 @@ extern THelpText g_sellCreatureWindowHelp[5];
 extern THelpText g_universityWindowHelp[4];
 extern const char* g_luckInfo[25];
 extern const char* g_moraleInfo[42];
-extern const char* g_ownedByColor[8];
+extern const char* g_ownedByColor[NUM_PLAYERS];
 extern const char* g_armySizeNames[9][3];
 extern const char* g_directions[9];
 extern const char* g_rumourTerrainDescriptions[10];
 extern const char* g_constWiseTreePriceText[3];
 extern const char* g_personality[4];
-extern const char* g_newTurn[8];
-extern const char* g_townNames[9][16];
+extern const char* g_newTurn[NUM_PLAYERS];
+extern const char* g_townNames[kNumTownTypes][16];
 
 // Other Arraytxt.txt and building-text destinations shared with their readers.
 extern const char* g_agrText[3];
@@ -62,7 +66,7 @@ extern const char* g_difficulty[5];
 extern const char* g_handiText[3];
 extern const char* g_humanCpu[3];
 extern const char* g_newLoadSaveText[3];
-extern const char* g_colors[8];
+extern const char* g_colors[NUM_PLAYERS];
 extern const char* g_resourceNames[8];
 extern const char* g_buildingInfoSpecial[10][11];
 extern const char* g_buildingInfoNeutral[28];

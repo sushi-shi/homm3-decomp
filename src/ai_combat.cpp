@@ -865,7 +865,7 @@ void type_AI_combat_data::castSpell(
     long bestManaCost;
     TSkillMastery mastery;
 
-    for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+    for (SpellID spell = kNumAdventureSpells; spell < kNumSpells; spell++) {
         if (!m_currentHero->spellIsAvailable(spell))
             continue;
 
@@ -1243,7 +1243,7 @@ static void doEagleEye(hero* winner, hero* loser)
 {
     if (winner->getSecondarySkill(eSecSkillEagleEye) > 0
         && winner->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-        for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (short spell = 0; spell < kNumSpells; ++spell) {
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;

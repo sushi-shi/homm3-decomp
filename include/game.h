@@ -23,8 +23,10 @@
 #include "campaignbrief.h"
 #include "hero.h"
 #include "DC_precompiledheaders.h"
+#include "keycolor.h"
 #include "mapcell.h"
 #include "netmsg.h"
+#include "player_type.h"
 #include "savegame.h"
 #include "secondaryskill.h"
 #include "seerhut.h"
@@ -32,15 +34,6 @@
 #include "struct.h"
 #include "town.h"
 #include "victorylossconditions.h"
-
-// Red through pink: the length of game::players and playerDead, of the map
-// header's per-player tables and of every per-player loop. Like
-// NUM_RESOURCES this is a source constant: no Dreamcast enum carries it
-// (NH3API spells it MAX_PLAYERS, which CHotSeatMan and CNetPlayerHandler
-// use for their own member constants). A macro here rather than a new
-// header: adding a file to the include set reschedules
-// advManager::doCombat.
-#define NUM_PLAYERS 8
 
 // The one decoded value of game::field_1f63e shared by events.obj and
 // philai.obj: Sunday is the seventh day.  DoEventTemple doubles its morale
@@ -172,7 +165,7 @@ public:
     short m_numTroops[armyGroup::ARMY_GROUP_SLOT_COUNT];  // +0x58 - movsx word
     unsigned char m_groupFormation;  // +0x66 - no retail body reads it
     unsigned char m_customArtifacts;  // +0x67
-    type_artifact m_artifacts[kNumArtifactSlots + 1];
+    type_artifact m_artifacts[kNumEquippedSlots];
     type_artifact m_backpack[HERO_BACKPACK_CAPACITY];
     #pragma pack(push, 1)
     unsigned char m_numInBackpack;  // +0x300 - no retail body reads it
@@ -186,7 +179,7 @@ public:
     // Experience is the dword at +0x1c above. Renamed 2026-08-20.
     int m_sex;
     unsigned char m_customSpells;  // +0x31c
-    std::bitset<hero::NUM_SPELLS> m_spells;  // +0x320
+    std::bitset<kNumSpells> m_spells;  // +0x320
     unsigned char m_customPrimarySkills;
     signed char m_primarySkills[kNumPrimarySkills];  // +0x32d, class trails to 0x334
 
@@ -504,7 +497,7 @@ class NewSMapHeader : public CMapHeaderData {
 public:
     std::string m_mapName;
     std::string m_mapDescription;
-    std::bitset<156> m_availableHeroes;
+    std::bitset<kNumHeroes> m_availableHeroes;
     int get(const char* path, const char* filename, int saveVersion);
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
@@ -588,8 +581,8 @@ public:
     // from CObjectType::extra and from setup.alignment[], both int.
     int m_townType;
     char m_isGrouped;
-    std::bitset<hero::NUM_SPELLS> m_spells;
-    std::bitset<hero::NUM_SPELLS> m_fixedSpells;
+    std::bitset<kNumSpells> m_spells;
+    std::bitset<kNumSpells> m_fixedSpells;
 };
 SIZE(TownExtra, 0x88);
 
@@ -1064,8 +1057,8 @@ public:
     // used by game::GetRandomSpell; mapcell.obj's readScholarData rolls a
     // random scholar reward by collecting every spell whose prohibition
     // byte is clear and picking one.
-    unsigned char m_spellAllocInfo[hero::NUM_SPELLS];
-    unsigned char m_spellDisabledInfo[hero::NUM_SPELLS];
+    unsigned char m_spellAllocInfo[kNumSpells];
+    unsigned char m_spellDisabledInfo[kNumSpells];
     // Dreamcast bGrailAsked follows spellAllocInfo at +0x4a; Complete
     // adds spellDisabled[70], placing the same shown-once latch at +0x90.
     unsigned char m_grailAsked;
@@ -1080,8 +1073,7 @@ public:
     // lea eax,[ecx+8*edx] / lea eax,[eax+4*eax] / lea esi,[edx+4*eax+0xa4]`
     // = gpGame + 820*id + 0xa4, and 156 * 0x334 is EXACTLY the 0x1f3b0 the
     // pad it replaces measured - 0xa4 + 0x1f3b0 lands on difficultyRating.
-    enum { HERO_COUNT = 156 };
-    HeroExtra m_heroSetup[HERO_COUNT];
+    HeroExtra m_heroSetup[kNumHeroes];
     short m_difficultyRating;
     // Dreamcast difficultyRating is a short before aligned sCampaign.
     // Retail retains this two-byte alignment gap at +0x1f456.
@@ -1159,20 +1151,20 @@ public:
     // Before normalization (Dreamcast): townPool.
     std::vector<town> m_towns;
     // Before normalization (Dreamcast): heroPool.
-    hero m_heroes[HERO_COUNT];
+    hero m_heroes[kNumHeroes];
     // Original game::heroAllocInfo is signed char[128] in all four DC
     // records. Complete extends the same status array to 156 heroes.
-    signed char m_heroAvailability[HERO_COUNT];  // +0x4df18
+    signed char m_heroAvailability[kNumHeroes];  // +0x4df18
     // One eight-player eligibility mask per hero. GetStartingHeroId tests
     // the caller's player position through Dinkumware bitset::test(), and
     // the hero-placement path sets the same bit through bitset::set().
-    std::bitset<NUM_PLAYERS> m_heroPoolMap[HERO_COUNT];  // +0x4dfb4
+    std::bitset<NUM_PLAYERS> m_heroPoolMap[kNumHeroes];  // +0x4dfb4
     unsigned char m_artifactUsed[ARTIFACT_COUNT];
     unsigned char m_artifactDisabled[ARTIFACT_COUNT];
 
     // Before normalization (Dreamcast): InfoFlags.
     unsigned char m_globalInfoFlags[32];
-    unsigned char m_borderTentVisitFlags[8]; // per EKeyColor (keycolor.h)
+    unsigned char m_borderTentVisitFlags[KEY_COLOR_COUNT]; // per EKeyColor (keycolor.h)
     unsigned short m_cartographerMask[3];
     unsigned char m_cartographerFlags[3];
     // The three cartographerFlags bytes end at +0x4e375; retail
@@ -1877,12 +1869,12 @@ public:
 // roster row covers any of the five.
 extern const char* g_resourceObjectDefs[NUM_RESOURCES];
 extern const char* g_artifactObjectDefFormat;
-extern const char* g_townVillageObjectDefs[TOWN_TYPE_COUNT];
-extern const char* g_townFortObjectDefs[TOWN_TYPE_COUNT];
+extern const char* g_townVillageObjectDefs[kNumTownTypes];
+extern const char* g_townFortObjectDefs[kNumTownTypes];
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
-extern const char* g_townCapitolObjectDefs[TOWN_TYPE_COUNT];
+extern const char* g_townCapitolObjectDefs[kNumTownTypes];
 // Original ?giWeekType@@3W4type_week_type@@A proves the enum domain.
 // Enumerator names follow the retail PerWeek and DoNewTurn cases; their
 // original spelling is unavailable. Month state and the network fields are int.

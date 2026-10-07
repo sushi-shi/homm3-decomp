@@ -2,6 +2,7 @@
 #define HOMM3_SCENARIOINFO_H
 
 #include "advmgr_popup.h"
+#include "player_type.h"
 
 class CSprite;
 class Bitmap816;
@@ -33,8 +34,8 @@ public:
     CSprite* m_lossIcon;                 // +0x64
     CSprite* m_townPix;                  // +0x68
     CSprite* m_bonusSprite;              // +0x6c
-    Bitmap816* m_panels[8];              // +0x70
-    Bitmap816* m_flags[8];               // +0x90
+    Bitmap816* m_panels[NUM_PLAYERS];              // +0x70
+    Bitmap816* m_flags[NUM_PLAYERS];             // +0x90
     CSprite* m_heroSpecificAbility;      // +0xb0
 
     CScenarioInfoDlg();

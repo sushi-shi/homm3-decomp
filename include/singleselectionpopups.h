@@ -7,6 +7,7 @@
 #include "kbwin.h"
 #include "includes.h"
 #include "message.h"
+#include "player_type.h"
 #include "remote.h"
 #include "rmg.h"
 #include "widget.h"
@@ -168,7 +169,7 @@ public:
 // [+0x78]).
 class CTeamAlignmentDlg : public CSingleSelPopup {
 public:
-    int m_teamMasks[8];
+    int m_teamMasks[NUM_PLAYERS];
     int m_numTeams;
 
     CTeamAlignmentDlg(bool newGameMode);  // retail 0x5764d0

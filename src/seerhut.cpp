@@ -707,7 +707,7 @@ void type_defeat_hero_quest::setDefaultText()
 {
     const TSeerHutQuestText& texts = questTexts();
     hero* defeatedHero;
-    for (m_defeatedHero = game::HERO_COUNT - 1; m_defeatedHero > -1;
+    for (m_defeatedHero = kNumHeroes - 1; m_defeatedHero > -1;
          --m_defeatedHero) {
         defeatedHero = g_game->getHero(m_defeatedHero);
         if (defeatedHero->m_order == m_mapHero)

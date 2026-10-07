@@ -7,6 +7,7 @@
 
 #include "dxplay.h"
 #include "inputmgr.h"
+#include "player_type.h"
 #include "textntry.h"
 #include "window.h"
 
@@ -22,7 +23,7 @@ class ds_memsample;
 class CHotSeatMan {
 public:
     enum {
-        MAX_PLAYERS = 8,
+        MAX_PLAYERS = NUM_PLAYERS,
         PLAYER_NAME_SIZE = 21
     };
     int m_playerCount;

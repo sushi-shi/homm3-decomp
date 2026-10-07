@@ -4,9 +4,11 @@
 #include "va.h"
 
 #include "basemgr.h"
+#include "hero_type.h"
 #include "herospec.h"
 #include "kb.h"
 #include "mapcell.h"
+#include "player_type.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
 #include "sskilltraits.h"
@@ -831,7 +833,7 @@ public:
     NewfullMap* m_fullMap;
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
-    CSprite* m_groundTileset[NUM_TERRAIN_TYPES];  // +0x60
+    CSprite* m_groundTileset[kNumTerrainTypes];  // +0x60
     CSprite* m_riverTileset[5];  // +0x88
     CSprite* m_roadTileset[4];  // +0x9c
     CSprite* m_borderTileset;  // +0xac
@@ -881,11 +883,11 @@ public:
     int m_flagFrame;
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
-    CSprite* m_cursorIcons[18];  // +0x10c, indexed by hero class
+    CSprite* m_cursorIcons[kNumHeroClasses];  // +0x10c, indexed by hero class
     CSprite* m_boatIcons[3];  // +0x154, indexed by boat type
     CSprite* m_boatFrothIcons[3];  // +0x160, indexed by boat type
-    CSprite* m_flagIcons[8];  // +0x16c, indexed by player owner
-    CSprite* m_boatFlagIcons[3][8];  // +0x18c, [boat type][player owner]
+    CSprite* m_flagIcons[NUM_PLAYERS];  // +0x16c, indexed by player owner
+    CSprite* m_boatFlagIcons[3][NUM_PLAYERS];  // +0x18c, [boat type][player owner]
     unsigned char m_drawCursor;  // +0x1ec, gates map cursor overlays
     // Dreamcast cursorVisible (+0x1f8) is byte storage; retail
     // retains it at +0x1ec. This gap aligns the following

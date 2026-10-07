@@ -89,7 +89,7 @@ DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[TOWN_TYPE_COUNT][2] = {
+DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[kNumTownTypes][2] = {
     { { "CH00.DEF", 92, 67, 5 }, { "CH01.DEF", 94, 54, 5 } },
     { { "CH02.DEF", 102, 62, 5 }, { "CH03.DEF", 102, 62, 5 } },
     { { "CH05.DEF", 100, 59, 5 }, { "CH04.DEF", 98, 52, 5 } },
@@ -100,7 +100,7 @@ DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[TOWN_TYPE_COUNT][2]
     { { "CH014.DEF", 99, 58, 5 }, { "CH015.DEF", 95, 52, 5 } },
     { { "CH16.DEF", 99, 58, 5 }, { "CH17.DEF", 95, 52, 5 } }
 };
-DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTraits[TOWN_TYPE_COUNT] = {
+DATA(0x0063cf88) const combatManager::TArcherTraits combatManager::s_archerTraits[kNumTownTypes] = {
     { static_cast<TCreatureType>(2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, 780, 238, 648, 566, 596, 80, "plcbowx.def" },
     { CREATURE_WOOD_ELF, 786, 240, 625, 563, 595, 81, "pelfx.def" },
     { CREATURE_MAGE, 753, 251, 609, 578, 600, 92, "pmagex.def" },
@@ -341,7 +341,7 @@ DATA(0x0063bec0) const combatManager::SElevationOverlay combatManager::s_elevati
 // Original DC name: akWallTraits.
 // LoadIcons computes 0x66d848 + town * 648; LoadWallTraitsTable writes
 // name/hitpoints at row + 0x1c/+0x20. Each 36-byte record starts with x/y.
-DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[TOWN_TYPE_COUNT][combatManager::kNumWallSections] = {
+DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[kNumTownTypes][combatManager::kNumWallSections] = {
     { // Castle
         { 400, 276, -1, 0, { "SgCsDrw3.pcx", "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0 }, 0, 0, 0 },
         { 400, 276, -1, 0, { 0, "SgCsDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
@@ -547,7 +547,7 @@ DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799,
 DATA(0x00694f08) const SLimitData combatManager::s_leftHeroLimits(0, 16, 57, 127);
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[TOWN_TYPE_COUNT] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
+DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[kNumTownTypes] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
 DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
     0, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
     "CmBkRK.pcx", "CmBkMC.pcx"
@@ -555,7 +555,7 @@ DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
 // getBackgroundName indexes the rows with the hero's terrain type, so there
 // is one row per terrain (eTerrainDirt..eTerrainRock, ten): retail's twelve
 // zero bytes after the water row are the rock row.
-DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[NUM_TERRAIN_TYPES][3] = {
+DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][3] = {
     { "CmBkDrDd.pcx", "CmBkDrMt.pcx", "CmBkDrTr.pcx" },
     { "CmBkDes.pcx", "CmBkDes.pcx", "CmBkDes.pcx" },
     { "CmBkGrTr.pcx", "CmBkGrMt.pcx", "CmBkGrTr.pcx" },
@@ -567,7 +567,7 @@ DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[NUM_TERRAIN_TYPES]
     { 0, 0, 0 },
     { 0, 0, 0 }
 };
-DATA(0x0063bd18) const int g_moatDamage[TOWN_TYPE_COUNT] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
+DATA(0x0063bd18) const int g_moatDamage[kNumTownTypes] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
 DATA(0x0063abe0) const long g_castleWallGateTargets[5] = { 6, 8, 9, 10, 12 };
 
 DATA(0x0066d840) int g_combatSeed = 1;
@@ -630,7 +630,7 @@ unsigned char combatManager::loadWallTraitsTable()
     }
 
     int row = 1;
-    for (int townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
+    for (int townType = 0; townType < kNumTownTypes; townType++) {
         row += 2;
         for (int wall = 0; wall < kNumWallSections; wall++) {
             const TSpreadsheetResource::TStringVector& values =
@@ -4014,7 +4014,7 @@ void combatManager::lootDeadHero(int side,
     if (!dead)
         return;
     hero* winner = m_heroes[side];
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < kNumEquippedSlots; slot++) {
         // Complete walks 19 equipped ordinals; getArtifact retains DC's TArtifactSlot argument (Hero.h:18 positions).
         type_artifact artifact = dead->getArtifact(static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
         if (artifact.m_artifactId == ARTIFACT_NONE

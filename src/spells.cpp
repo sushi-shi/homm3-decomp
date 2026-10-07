@@ -1338,7 +1338,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     case SPELL_DISPEL:
         if (target) {
             spellEffect(traits->m_effect, target, 100, 0);
-            for (int dispelledSpell = 0; dispelledSpell < NUM_SPELLS_AND_CREATURE_EFFECTS;
+            for (int dispelledSpell = 0; dispelledSpell < kNumSpellsAndCreatureEffects;
                  ++dispelledSpell) {
                 if (dispelledSpell != SPELL_POISON)
                     target->cancelIndividualSpell(dispelledSpell);
@@ -1355,7 +1355,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                              &thisArmy, 1,
                                              isMonsterSpell)) {
                         for (int dispelledSpell = 0;
-                             dispelledSpell < NUM_SPELLS_AND_CREATURE_EFFECTS; ++dispelledSpell) {
+                             dispelledSpell < kNumSpellsAndCreatureEffects; ++dispelledSpell) {
                             if (dispelledSpell != SPELL_POISON)
                                 thisArmy.cancelIndividualSpell(
                                     dispelledSpell);
@@ -1385,7 +1385,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // Complete independently narrows the loop to shared spell rows 10..69;
     // the later creature-effect rows are not part of this helpful-spell scan.
     case SPELL_DISPEL_HELPFUL: {
-        for (int dispelledSpell = 10; dispelledSpell < hero::NUM_SPELLS;
+        for (int dispelledSpell = kNumAdventureSpells; dispelledSpell < kNumSpells;
              ++dispelledSpell) {
             if (target->getSpellTime(dispelledSpell)
                 && g_spellTraits[dispelledSpell].m_karma > 0) {
@@ -4848,7 +4848,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         if (mastery < eMasteryAdvanced && target->getOwningSide() != side)
             return 0.0f;
         if (mastery < eMasteryExpert) {
-            for (int i = 10; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
+            for (int i = kNumAdventureSpells; i < kNumSpellsAndCreatureEffects; i++) {
                 if (target->getSpellTime(i))
                     return 1.0f;
             }
@@ -4860,7 +4860,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         if (targetHero
             && targetHero->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
-        for (int i = 10; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
+        for (int i = kNumAdventureSpells; i < kNumSpellsAndCreatureEffects; i++) {
             if (target->getSpellTime(i) && g_spellTraits[i].m_karma > 0)
                 return 1.0f;
         }

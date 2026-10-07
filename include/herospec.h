@@ -5,6 +5,7 @@
 
 #include "va.h"
 
+#include "hero_type.h"
 #include "secondaryskill.h"
 #include "creaturetype_fwd.h"
 
@@ -17,19 +18,6 @@
 //   Intelligence  24  0x4e48b0 reads +0xe1 (0xc9 + 24), tests id 0x18
 //   First Aid     27  0x4e4920 reads +0xe4 (0xc9 + 27), tests id 0x1b
 // Wisdom 7, Ballistics 10 and Eagle Eye 11 agree with that shared ladder.
-
-// DC LF_ENUM `TSkillMastery`. Retail corroborates the extent from the
-// data side: every per-skill factor table in hero.obj's .rdata run
-// (0x63e9e8 onward) is exactly FOUR floats wide, indexed by the
-// skillLevel byte.
-enum TSkillMastery {
-    eMasteryInvalid = -1,
-    eMasteryNone = 0,
-    eMasteryBasic = 1,
-    eMasteryAdvanced = 2,
-    eMasteryExpert = 3,
-    kNumMasteries = 4
-};
 
 // The hero-specialty record. DC public
 // ?akHeroSpecificAbilities@@3AAY0IA@$$CBUTHeroSpecificAbility@@A - a
@@ -148,6 +136,6 @@ struct THeroSpecificAbility {
 };
 SIZE(THeroSpecificAbility, 40);
 
-extern const THeroSpecificAbility (&g_heroSpecificAbilities)[156];
+extern const THeroSpecificAbility (&g_heroSpecificAbilities)[kNumHeroes];
 
 #endif  /* HOMM3_HEROSPEC_H */

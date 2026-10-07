@@ -99,16 +99,18 @@
 
 #include <bitset>
 
+#include "terrain_type.h"
+
 // E:\gamedcs\terrain.h:70-79
-static std::bitset<10> g_dirtMask = std::bitset<10>(1) << 0;          // eTerrainDirt
-static std::bitset<10> g_sandMask = std::bitset<10>(1) << 1;          // eTerrainSand
-static std::bitset<10> g_grassMask = std::bitset<10>(1) << 2;         // eTerrainGrass
-static std::bitset<10> g_snowMask = std::bitset<10>(1) << 3;          // eTerrainSnow
-static std::bitset<10> g_swampMask = std::bitset<10>(1) << 4;         // eTerrainSwamp
-static std::bitset<10> g_roughMask = std::bitset<10>(1) << 5;         // eTerrainRough
-static std::bitset<10> g_subterraneanMask = std::bitset<10>(1) << 6;  // eTerrainSubterranean
-static std::bitset<10> g_lavaMask = std::bitset<10>(1) << 7;          // eTerrainLava
-static std::bitset<10> g_waterMask = std::bitset<10>(1) << 8;         // eTerrainWater
-static std::bitset<10> g_rockMask = std::bitset<10>(1) << 9;          // eTerrainRock
+static std::bitset<kNumTerrainTypes> g_dirtMask = std::bitset<kNumTerrainTypes>(1) << eTerrainDirt;
+static std::bitset<kNumTerrainTypes> g_sandMask = std::bitset<kNumTerrainTypes>(1) << eTerrainSand;
+static std::bitset<kNumTerrainTypes> g_grassMask = std::bitset<kNumTerrainTypes>(1) << eTerrainGrass;
+static std::bitset<kNumTerrainTypes> g_snowMask = std::bitset<kNumTerrainTypes>(1) << eTerrainSnow;
+static std::bitset<kNumTerrainTypes> g_swampMask = std::bitset<kNumTerrainTypes>(1) << eTerrainSwamp;
+static std::bitset<kNumTerrainTypes> g_roughMask = std::bitset<kNumTerrainTypes>(1) << eTerrainRough;
+static std::bitset<kNumTerrainTypes> g_subterraneanMask = std::bitset<kNumTerrainTypes>(1) << eTerrainSubterranean;
+static std::bitset<kNumTerrainTypes> g_lavaMask = std::bitset<kNumTerrainTypes>(1) << eTerrainLava;
+static std::bitset<kNumTerrainTypes> g_waterMask = std::bitset<kNumTerrainTypes>(1) << eTerrainWater;
+static std::bitset<kNumTerrainTypes> g_rockMask = std::bitset<kNumTerrainTypes>(1) << eTerrainRock;
 
 #endif  // HOMM3_TERRAIN_H

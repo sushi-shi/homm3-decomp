@@ -105,13 +105,13 @@ DATA(0x00691680) int g_sandAnim;
 DATA(0x00677958) const char* g_resourceObjectDefs[NUM_RESOURCES] = { "avtwood0.def", "avtmerc0.def", "avtore0.def", "avtsulf0.def", "avtcrys0.def", "avtgems0.def", "avtgold0.def" };
 // Original DC name: HoleSpriteFilenames. Terrain order is dirt through rock;
 // water and rock have no digging sprite. The retained retail table is unused.
-DATA(0x006779e4) const char* g_holeSpriteFilenames[NUM_TERRAIN_TYPES] = {
+DATA(0x006779e4) const char* g_holeSpriteFilenames[kNumTerrainTypes] = {
     "avlhold0.def", "avlhlds0.def", "avlholg0.def", "avlhlsn0.def",
     "avlhols0.def", "avlholr0.def", "avlholx0.def", "avlholl0.def", "", ""
 };
-DATA(0x00677a0c) const char* g_townVillageObjectDefs[TOWN_TYPE_COUNT] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
-DATA(0x00677a30) const char* g_townFortObjectDefs[TOWN_TYPE_COUNT] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
-DATA(0x00677a54) const char* g_townCapitolObjectDefs[TOWN_TYPE_COUNT] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
+DATA(0x00677a0c) const char* g_townVillageObjectDefs[kNumTownTypes] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
+DATA(0x00677a30) const char* g_townFortObjectDefs[kNumTownTypes] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
+DATA(0x00677a54) const char* g_townCapitolObjectDefs[kNumTownTypes] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
 DATA(0x00677978) int g_mineProduction[NUM_RESOURCES] = { 2, 1, 2, 1, 1, 1, 1000 };
 DATA(0x006779b0) int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 // Retail newMap copies this independent seven-resource tutorial row.
@@ -180,7 +180,7 @@ const int g_saveGameFailureGeneralText = 10;
 const int g_mapVersionErrorGeneralText = 431;
 const int g_mapHeaderPlayerCount = 8;
 const int g_mapHeaderLegacyHeroCount = 128;
-const int g_mapHeaderHeroCount = game::HERO_COUNT;
+const int g_mapHeaderHeroCount = kNumHeroes;
 const int g_mapHeaderCompleteLegacyHeroFirst = 128;
 const int g_mapHeaderCompleteLegacyHeroLast = 143;
 const int g_mapHeaderPaddingSize = 31;
@@ -684,7 +684,7 @@ void game::calculateProduction()
         production[GOLD] += computeDailyGold(playerId, 0);
     }
 
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         const hero& currHero = m_heroes[i];
         if (currHero.m_owner == -1)
             continue;
@@ -1677,7 +1677,7 @@ int game::saveHeroPool(TAbstractFile* outfile)
 {
     // Complete's 156-entry loop uses an unsigned bound (`jb`) in its
     // expansion inside game::save; the older Dreamcast roster had 128 heroes.
-    for (unsigned int x = 0; x < HERO_COUNT; ++x) {
+    for (unsigned int x = 0; x < kNumHeroes; ++x) {
         int err = m_heroes[x].save(outfile);
         if (err < 0)
             return err;
@@ -1692,7 +1692,7 @@ DC_ADDRESS(0x0a5bf4, 0x56)
 MAC_ADDRESS(0x0cd544, 0x7c)
 int game::loadHeroPool(TAbstractFile* infile, int saveVersion)
 {
-    int heroCount = HERO_COUNT;
+    int heroCount = kNumHeroes;
     if (saveVersion < g_saveVersionCompleteHeroRoster)
         heroCount = g_mapHeaderLegacyHeroCount;
     for (int x = 0; x < heroCount; ++x) {
@@ -1818,7 +1818,7 @@ int playerData::numOfGivenArtifact(int whichArtifact) const
 
     for (int heroIndex = 0; heroIndex < m_numHeroes; heroIndex++) {
         hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
-        for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+        for (int slot = 0; slot < kNumEquippedSlots; slot++) {
             if (currentHero->getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 count++;
         }
@@ -1828,7 +1828,7 @@ int playerData::numOfGivenArtifact(int whichArtifact) const
         town* currentTown = g_game->getTown(m_townIds[townIndex]);
         if (currentTown->m_garrisonHeroId >= 0) {
             hero* currentHero = g_game->getHero(currentTown->m_garrisonHeroId);
-            for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+            for (int slot = 0; slot < kNumEquippedSlots; slot++) {
                 if (currentHero->getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                     count++;
             }
@@ -2118,7 +2118,7 @@ DC_ADDRESS(0x0a68d8, 0x3fc)
 MAC_ADDRESS(0x0ce1c8, 0x1d0)
 HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
 {
-    HeroId heroArray[HERO_COUNT];
+    HeroId heroArray[kNumHeroes];
     THeroClass heroClass1 = classKnight;
     THeroClass heroClass2 = classCleric;
 
@@ -2163,7 +2163,7 @@ HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPositi
 
     int top = 0;
     int heroIndex;
-    for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
+    for (heroIndex = 0; heroIndex < kNumHeroes; heroIndex++) {
         if (m_heroAvailability[heroIndex] == -1
             && m_heroPoolMap[heroIndex][playerPos]
             && (m_heroes[heroIndex].m_heroClass == heroClass1
@@ -2173,7 +2173,7 @@ HeroId game::getStartingHeroId(TTownType alignment, int playerPos, int mapPositi
     }
 
     if (top == 0) {
-        for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
+        for (heroIndex = 0; heroIndex < kNumHeroes; heroIndex++) {
             if (m_heroAvailability[heroIndex] == -1
                 && m_heroPoolMap[heroIndex][playerPos]) {
                 heroArray[top++] = HeroId(heroIndex);
@@ -2234,7 +2234,7 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
             g_heroClasses[heroClass].m_foundInTownType[alignment];
     }
 
-    for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
+    for (heroId = HeroId(0); heroId < kNumHeroes; heroId = HeroId(heroId + 1)) {
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])) {
             totalCount++;
@@ -2301,7 +2301,7 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
     }
 
     choice = random(1, counts[heroClass]);
-    for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
+    for (heroId = HeroId(0); heroId < kNumHeroes; heroId = HeroId(heroId + 1)) {
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])
             && m_heroes[heroId].m_heroClass == heroClass
@@ -2328,7 +2328,7 @@ int game::getTownId(int x, int y, int z)
 DC_ADDRESS(0x0a707c, 0x90)
 int game::getHeroId(type_point heroLocation)
 {
-    for (int i = 0; i < HERO_COUNT; ++i) {
+    for (int i = 0; i < kNumHeroes; ++i) {
         if (m_heroes[i].getLocation() == heroLocation)
             return i;
     }
@@ -2992,7 +2992,7 @@ int game::load(TAbstractFile* infile)
     // `heroCount`. Retail re-tests `saved.version >= 25` here and emits two
     // separate guarded reads with the literals 0x9c and 0x80 - two
     // teardowns, not one - and the 0x40 fill lives inside the SHORT arm
-    // rather than behind an `if (heroCount < HERO_COUNT)`.
+    // rather than behind an `if (heroCount < kNumHeroes)`.
     if (saved.m_version >= 25) {
         if (infile->read(m_heroAvailability, sizeof(m_heroAvailability))
             < sizeof(m_heroAvailability))
@@ -3003,12 +3003,12 @@ int game::load(TAbstractFile* infile)
             < g_mapHeaderLegacyHeroCount * sizeof(m_heroAvailability[0]))
             return -1;
         std::fill(m_heroAvailability + g_mapHeaderLegacyHeroCount,
-                  m_heroAvailability + HERO_COUNT,
+                  m_heroAvailability + kNumHeroes,
                   static_cast<signed char>(hero::HERO_AVAILABILITY_TAVERN_POOL));
     }
 
     if (saved.m_version >= 31) {
-        for (i = 0; i < HERO_COUNT; ++i) {
+        for (i = 0; i < kNumHeroes; ++i) {
             // readPackedBits<8> (a returned bitset temporary) keeps
             // decodePackedBits out of line here; retail expands its
             // bitset::reference loop in place.
@@ -3307,7 +3307,7 @@ int game::save(TAbstractFile* outfile)
     // Retail retains bitset<8>::test. Reading through const operator[]
     // preserves that boundary without a pin (59.5944% for the whole save);
     // direct test(), including on a const reference, expands it (57.4921%).
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         const std::bitset<NUM_PLAYERS>& players = m_heroPoolMap[i];
         unsigned char poolBits[1];
         poolBits[0] = 0;
@@ -3563,10 +3563,10 @@ void game::setupOrigData()
     MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), i);
 
     std::bitset<NUM_PLAYERS> allPlayers = ~std::bitset<NUM_PLAYERS>();
-    for (i = 0; i < HERO_COUNT; ++i)
+    for (i = 0; i < kNumHeroes; ++i)
         m_heroPoolMap[i] = allPlayers;
 
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         m_heroSetup[i].reset(i);
         m_heroes[i].initialize(i);
     }
@@ -3794,7 +3794,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         type_point vcheroLoc(m_mapHeader.m_victoryCondition.m_heroX, m_mapHeader.m_victoryCondition.m_heroY,
                             m_mapHeader.m_victoryCondition.m_heroZ);
         m_mapHeader.m_victoryCondition.m_heroId = -1;
-        for (i = 0; i < HERO_COUNT; ++i) {
+        for (i = 0; i < kNumHeroes; ++i) {
             type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y,
                                    m_heroes[i].m_z);
             if (vcheroLoc == poolheroLoc) {
@@ -3833,7 +3833,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
     if (m_mapHeader.m_lossCondition.m_type == LOSS_CONDITION_LOSE_HERO) {
         type_point lcheroLoc(m_mapHeader.m_lossCondition.m_heroX, m_mapHeader.m_lossCondition.m_heroY, m_mapHeader.m_lossCondition.m_heroZ);
         m_mapHeader.m_lossCondition.m_heroId = -1;
-        for (i = 0; i < HERO_COUNT; ++i) {
+        for (i = 0; i < kNumHeroes; ++i) {
             type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y,
                                    m_heroes[i].m_z);
             if (lcheroLoc == poolheroLoc) {
@@ -4311,7 +4311,7 @@ static void randomizePyramid(NewmapCell* cell)
 {
     std::vector<int> possibleSpells;
     int i;
-    for (i = 0; i < hero::NUM_SPELLS; ++i) {
+    for (i = 0; i < kNumSpells; ++i) {
         if (g_spellTraits[i].m_school != const_invalid_school
             && g_spellTraits[i].m_level == g_pyramidSpellLevel
             && !g_game->m_spellDisabledInfo[i])
@@ -5199,7 +5199,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     if (m_gameVersion < 1)
         memset(m_heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
-               HERO_COUNT - 128);
+               kNumHeroes - 128);
 
     int artifact;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact)
@@ -5238,9 +5238,9 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        std::bitset<hero::NUM_SPELLS> serializedSpells = readPackedBits<hero::NUM_SPELLS>(mapFile);
+        std::bitset<kNumSpells> serializedSpells = readPackedBits<kNumSpells>(mapFile);
 
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (int spell = 0; spell < kNumSpells; ++spell) {
             if (serializedSpells[spell]) {
                 for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
                     if (g_artifactTraits[artifact].m_givesSpells) {
@@ -5259,7 +5259,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
             m_ssDisabled[skill] = serializedSkills[skill];
     } else {
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (int spell = 0; spell < kNumSpells; ++spell) {
             m_spellDisabledInfo[spell] =
                 (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
@@ -5338,7 +5338,7 @@ VA(0x004c2ce0, 0x3A8)
 MAC_ADDRESS(0x0d8ec0, 0x460)  // sole caller LoadMap + HeroExtra field-offset walk
 void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 {
-    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
+    for (int heroId = 0; heroId < kNumHeroes; ++heroId) {
         HeroExtra* heroRecord = &m_heroSetup[heroId];
 
         if (!readValue<char>(mapFile))
@@ -5362,7 +5362,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 
         if (readValue<char>(mapFile)) {
             heroRecord->m_customArtifacts = 1;
-            for (int equipped = 0; equipped < kNumArtifactSlots + 1; ++equipped) {
+            for (int equipped = 0; equipped < kNumEquippedSlots; ++equipped) {
                 heroRecord->m_artifacts[equipped] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
                     type_artifact(static_cast<TArtifact>(readLittleEndianValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
@@ -5394,7 +5394,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             heroRecord->m_customSpells = 1;
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
-            for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            for (int spell = 0; spell < kNumSpells; ++spell) {
                 heroRecord->m_spells[spell] =
                     (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
             }
@@ -6279,7 +6279,7 @@ VA(0x004c4e30, 0xD3)
 MAC_ADDRESS(0x0db6b0, 0x154)  // sole new-map caller + map-header/member layout
 void game::applyMapHeaderAvailability()
 {
-    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
+    for (int heroId = 0; heroId < kNumHeroes; ++heroId) {
         if (m_mapHeader.m_availableHeroes.test(heroId))
             m_heroAvailability[heroId] = -1;
         else
@@ -7321,7 +7321,7 @@ MAC_ADDRESS(0x0de438, 0x3e0)
 void game::resetAllPlayerVisibility()
 {
     int i;
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         if (m_heroes[i].m_owner != -1) {
             setVisibility(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z,
                           m_heroes[i].m_owner, m_heroes[i].getVisibility(), 0);
@@ -7433,7 +7433,7 @@ void game::perDay()
         }
     }
 
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         hero& currHero = m_heroes[i];
         currHero.m_flags &= 0xfffdfffeU;
         currHero.m_disguiseLevel = eMasteryInvalid;
@@ -7473,7 +7473,7 @@ void game::perDay()
     if (m_mapHeader.m_victoryCondition.checkForTotalResources())
         checkEndGame(0);
 
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         hero& currHero = m_heroes[i];
         int maxMana = currHero.getMaxMana();
         if (currHero.isWieldingArtifact(g_artifactWizardsWellId)) {
@@ -7543,7 +7543,7 @@ MAC_ADDRESS(0x0def98, 0x114)
 static HeroId getNewHero(THeroClass heroClass)
 {
     HeroId heroId = HeroId(0);
-    for (; heroId < game::HERO_COUNT; heroId = HeroId(heroId + 1)) {
+    for (; heroId < kNumHeroes; heroId = HeroId(heroId + 1)) {
         if (g_game->getHero(heroId)->m_heroClass == heroClass
             && g_game->m_heroAvailability[heroId] == -1)
             return heroId;
@@ -7838,7 +7838,7 @@ void game::perWeek()
         }
     }
 
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         currHero = getHero(i);
         if (currHero->m_flags & g_heroWeeklyVisitFlag)
             currHero->m_flags -= g_heroWeeklyVisitFlag;
@@ -8095,7 +8095,7 @@ ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
 {
     int availableCount = 0;
     int spell;
-    for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (spell = 0; spell < kNumSpells; ++spell) {
         if (spellLevels.test(g_spellTraits[spell].m_level - 1)
             && g_spellTraits[spell].m_school != const_invalid_school
             && !m_spellAllocInfo[spell]) {
@@ -8106,7 +8106,7 @@ ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
     int ordinal = 0;
     if (availableCount != 0) {
         int selected = random(0, availableCount - 1);
-        for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (spell = 0; spell < kNumSpells; ++spell) {
             if (spellLevels.test(g_spellTraits[spell].m_level - 1)
                 && g_spellTraits[spell].m_school != const_invalid_school
                 && !m_spellAllocInfo[spell]) {
@@ -8120,7 +8120,7 @@ ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
     }
 
     ordinal = 0;
-    for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (spell = 0; spell < kNumSpells; ++spell) {
         if (spellLevels.test(g_spellTraits[spell].m_level - 1)
             && g_spellTraits[spell].m_school != const_invalid_school
             && !m_spellDisabledInfo[spell]) {
@@ -8157,7 +8157,7 @@ MAC_ADDRESS(0x0e085c, 0xb4)
 void game::randomizeHeroPool()
 {
     int heroIndex;
-    for (heroIndex = 0; heroIndex < HERO_COUNT; ++heroIndex) {
+    for (heroIndex = 0; heroIndex < kNumHeroes; ++heroIndex) {
         m_heroes[heroIndex].m_experience = random(0, 50) + 40;
         setRandomHeroArmies(heroIndex, 0, 0);
         int mobility = m_heroes[heroIndex].getMobility();
@@ -8773,7 +8773,7 @@ void game::setupTowns()
 // TPickRandomTownName objects and its element wrapper proves [0, 15].
 DATA(0x006971a0)
 // Previous project spelling: gRandomTownNames.
-static TPickRandomTownName g_randomTownNames[TOWN_TYPE_COUNT];
+static TPickRandomTownName g_randomTownNames[kNumTownTypes];
 
 // E:\gamedcs\game.cpp:9803
 // Mac retains this helper at 0:0xe1f18; VC6 expands its call in
@@ -8796,7 +8796,7 @@ DC_ADDRESS(0x0b69b8, 0x3a)
 MAC_ADDRESS(0x0e1f98, 0x8c)
 void resetRandomTownNames()
 {
-    for (int i = 0; i < TOWN_TYPE_COUNT; ++i)
+    for (int i = 0; i < kNumTownTypes; ++i)
         g_randomTownNames[i].reset();
 }
 
@@ -8884,7 +8884,7 @@ void game::processOnMapHeroes()
     NewmapCell* townCell;
     type_point townLoc;
 
-    for (i = 0; i < HERO_COUNT; ++i) {
+    for (i = 0; i < kNumHeroes; ++i) {
         heroExtra = &m_heroSetup[i];
         if (heroExtra->m_location.m_x >= 0) {
             townLoc = heroExtra->m_location;
@@ -10309,7 +10309,7 @@ game::game()
     std::fill_n(m_heroAvailability, sizeof(m_heroAvailability), -1);
 
     std::bitset<NUM_PLAYERS> allPlayers = ~std::bitset<NUM_PLAYERS>();
-    std::fill_n(m_heroPoolMap, static_cast<int>(HERO_COUNT), allPlayers);
+    std::fill_n(m_heroPoolMap, static_cast<int>(kNumHeroes), allPlayers);
     std::fill_n(m_artifactUsed, sizeof(m_artifactUsed), static_cast<unsigned char>(0));
     std::fill_n(m_artifactDisabled, sizeof(m_artifactDisabled), static_cast<unsigned char>(0));
     std::fill_n(m_obeliskFlags, sizeof(m_obeliskFlags), static_cast<signed char>(0));

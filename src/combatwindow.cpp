@@ -67,7 +67,7 @@ void checkCombatCheatCode(std::string& chatString)
             // Mac 0x7ffd4..0x7fff4 passes that two-word temporary by address.
             currentHero->giveArtifact(type_artifact(ARTIFACT_SPELLBOOK), 1, 1);
         }
-        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        for (int spell = 0; spell < kNumSpells; spell++) {
             currentHero->addSpell(spell);
         }
     }

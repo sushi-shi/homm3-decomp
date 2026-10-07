@@ -51,7 +51,7 @@ DATA(0x0063d734) const int g_campaignVideoIds[101] = { 38, 39, 40, 45, 46, 47, 4
 DATA(0x00675be8) const char* g_campaignVideoSounds[101] = { "g1a", "g1b", "g1c", "e1a", "e1b", "e1c", "n1a", "n1b", "n1c_d", "g2a", "g2b", "g2c", "g2d", "e2a", "e2Ae", "e2b", "e2c", "e2d", "g3a", "g3b", "g3c", "s1a", "s1b", "s1c", "ABvoAB1", "ABvoAB2", "ABvoAB3", "ABvoAB4", "ABvoAB5", "ABvoAB6", "ABvoAB7", "ABvoAB8", "ABvoAB9", "ABvoDB1", "ABvoDB2", "ABvoDB3", "ABvoDB4", "ABvoDB5", "ABvoDS1", "ABvoDS2", "ABvoDS3", "ABvoDS4", "ABvoDS5", "ABvoFL1", "ABvoFL2", "ABvoFL3", "ABvoFL4", "ABvoFL5", "ABvoFW1", "ABvoFW2", "ABvoFW3", "ABvoFW4", "ABvoFW5", "ABvoPF1", "ABvoPF2", "ABvoPF3", "ABvoPF4", "H3x2BBa", "H3x2BBb", "H3x2BBc", "H3x2BBd", "H3x2BBe", "H3x2BBf", "H3x2ELa", "H3x2ELb", "H3x2ELc", "H3x2ELd", "H3x2ELe", "H3x2HSa", "H3x2HSb", "H3x2HSc", "H3x2HSd", "H3x2HSe", "H3x2NBa", "H3x2NBb", "H3x2NBc", "H3x2NBd", "H3x2NBe", "H3x2RNa", "H3x2RNb", "H3x2RNc", "H3x2RNd", "H3x2RNe", "H3x2SPa", "H3x2SPb", "H3x2SPc", "H3x2SPd", "H3x2SPe", "H3x2UAa", "H3x2UAb", "H3x2UAc", "H3x2UAd", "H3x2UAe", "H3x2UAf", "H3x2UAg", "H3x2UAh", "H3x2UAi", "H3x2UAj", "H3x2UAk", "H3x2UAl", "H3x2UAm" };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x006755b8) const char* g_campaignBuildingIconNames[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE] = {
+DATA(0x006755b8) const char* g_campaignBuildingIconNames[kNumTownTypes][MAX_BUILDING_TYPE] = {
     {
     "BoCsMag1.pcx", "BoCsMag2.pcx", "BoCsMag3.pcx", "BoCsMag4.pcx", "BoCsMag5.pcx", "BoCsTav1.pcx", "BoCsDock.pcx", "BoCsCas1.pcx",
     "BoCsCas2.pcx", "BoCsCas3.pcx", "BoCsHal1.pcx", "BoCsHal2.pcx", "BoCsHal3.pcx", "BoCsHal4.pcx", "BoCsMrk1.pcx", "BoCsMrk2.pcx",
@@ -150,7 +150,7 @@ DATA(0x0063d8c8) static const int g_legacyCampaignScenarioIndices[7][4] = {
 // widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
 // the narrow plane below it.
 static const int g_campaignVersionWideArtifacts = 6;
-static const int g_crossoverCreatureBits = g_creatureTypeCount;
+static const int g_crossoverCreatureBits = kNumCreatureTypes;
 static const int g_crossoverArtifactBits = ARTIFACT_COUNT;
 static const int g_crossoverLegacyArtifactBits = 129;
 
@@ -1573,7 +1573,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     if (m_retainSpellbook) {
         currentHero->clearSpells();
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (int spell = 0; spell < kNumSpells; ++spell) {
             if (sourceHero->isInSpellbook(spell))
                 currentHero->addSpell(spell);
         }
@@ -2276,7 +2276,7 @@ MAC_ADDRESS(0x096cd8, 0x8c)
 void TCampaignBrief::CampaignHeaderStruct::markRequiredCampaignHeroes(
     bool* wanted) const
 {
-    memset(wanted, 0, game::HERO_COUNT);
+    memset(wanted, 0, kNumHeroes);
     for (unsigned int mapIndex = 0; mapIndex < m_scenarios.size(); ++mapIndex) {
         if (!g_game->m_campaign.getScenarioInfo(mapIndex).m_completed)
             m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
@@ -2974,7 +2974,7 @@ VA(0x00489e20, 0x450)
 MAC_ADDRESS(0x098934, 0x248)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::pruneCrossoverHeroes(const TCampaignBrief::CampaignHeaderStruct* header)
 {
-    bool wanted[game::HERO_COUNT];
+    bool wanted[kNumHeroes];
     header->markRequiredCampaignHeroes(wanted);
 
     for (int pool = m_carryOverHeroes.size(); pool--;) {
@@ -3098,7 +3098,7 @@ static void convertLegacyCampaignHero(hero& newHero,
            sizeof(newHero.m_skillOrder));
     newHero.m_skillCount = oldHero.m_skillCount;
 
-    for (int equippedSlot = 0; equippedSlot < kNumArtifactSlots + 1; ++equippedSlot) {
+    for (int equippedSlot = 0; equippedSlot < kNumEquippedSlots; ++equippedSlot) {
         type_artifact artifact = oldHero.m_equipped[equippedSlot];
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.equipArtifact(artifact, equippedSlot);
@@ -3108,7 +3108,7 @@ static void convertLegacyCampaignHero(hero& newHero,
         if (artifact.m_artifactId != ARTIFACT_NONE)
             newHero.addToBackpack(artifact, backpackSlot);
     }
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (int spell = 0; spell < kNumSpells; ++spell) {
         if (oldHero.m_inSpellbook[spell])
             newHero.addSpell(spell);
     }

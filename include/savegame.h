@@ -3,6 +3,7 @@
 #define HOMM3_SAVEGAME_H
 
 #include "gzfile.h"
+#include "player_type.h"
 
 // Retail .bss 0x699274. game::SaveGame formats it into "%s.GM%d" for an
 // ordinary (non-campaign, non-tutorial) save, which is what makes the
@@ -14,6 +15,6 @@ extern int g_numHumanPlayers;
 
 // Retail 0x69fda4: saved human-player flags shared by game::load and the
 // selection window's saved-game and lobby slot restoration.
-extern int g_wasHuman[8];
+extern int g_wasHuman[NUM_PLAYERS];
 
 #endif  /* HOMM3_SAVEGAME_H */

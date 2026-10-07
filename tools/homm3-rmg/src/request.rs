@@ -213,7 +213,7 @@ impl Town {
     pub const CONFLUX: Self = Self::known(raw::TOWN_CONFLUX);
 
     /// Every Complete-era faction in native order.
-    pub const ALL: [Self; raw::TOWN_TYPE_COUNT as usize] = [
+    pub const ALL: [Self; raw::kNumTownTypes as usize] = [
         Self::CASTLE,
         Self::RAMPART,
         Self::TOWER,
@@ -239,8 +239,8 @@ impl Ordinal for Town {
 }
 
 // Source table admitted once at compile time instead of at each lookup.
-const NATIVE_TERRAIN: [Terrain; raw::TOWN_TYPE_COUNT as usize] = {
-    let mut terrain = [Terrain::Dirt; raw::TOWN_TYPE_COUNT as usize];
+const NATIVE_TERRAIN: [Terrain; raw::kNumTownTypes as usize] = {
+    let mut terrain = [Terrain::Dirt; raw::kNumTownTypes as usize];
     let mut town = 0;
     while town < terrain.len() {
         #[allow(clippy::cast_possible_wrap)] // small source terrain IDs

@@ -12,7 +12,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct TownZoneCounts {
     total: i32,
-    aligned: [i32; raw::TOWN_TYPE_COUNT as usize],
+    aligned: [i32; raw::kNumTownTypes as usize],
 }
 impl TownZoneCounts {
     fn add(&mut self, alignment: Option<Town>) -> Result<(), PlacementError> {
@@ -35,7 +35,7 @@ impl TownZoneCounts {
     }
     /// Faction buckets in native order; neutral alignment has no bucket.
     #[must_use]
-    pub const fn by_alignment(&self) -> &[i32; raw::TOWN_TYPE_COUNT as usize] {
+    pub const fn by_alignment(&self) -> &[i32; raw::kNumTownTypes as usize] {
         &self.aligned
     }
     /// Primary-town zones of this faction; neutral alignment reports zero.

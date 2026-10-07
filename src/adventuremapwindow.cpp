@@ -640,7 +640,7 @@ void checkAdvCheatCode(std::string& chatString)
             type_artifact spellbook(ARTIFACT_SPELLBOOK);
             currentHero->giveArtifact(spellbook, 1, 1);
         }
-        for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+        for (int spell = 0; spell < kNumSpells; spell++)
             currentHero->addSpell(spell);
         g_advManager->updBottomView(1, 1, 1);
     } else if (code.compare(zionCode)) {

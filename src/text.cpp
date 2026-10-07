@@ -89,7 +89,7 @@ TSpreadsheetResource* g_specialBuildingText;
 // Retail's writer (0x5b9647) and reader (0x4cad13) share this table,
 // with sixteen pointers per faction. Keep its sole definition here.
 DATA(0x006a6048)
-const char* g_townNames[9][16];
+const char* g_townNames[kNumTownTypes][16];
 
 DATA(0x006a6288)
 TSpreadsheetResource* g_dwellingText;

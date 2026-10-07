@@ -212,7 +212,7 @@ DATA(0x00679cbc) static TSecondarySkill g_magicSchools[kNumSpellSchools] = {
 // 0x678420 and the reference cell immediately after it at 0x679c80, which is
 // what fixes the 156-row extent (0x679c80 - 0x678420 = 156 * 40).
 DATA(0x00678420)
-THeroSpecificAbility g_heroSpecificAbilitiesImp[game::HERO_COUNT] = {
+THeroSpecificAbility g_heroSpecificAbilitiesImp[kNumHeroes] = {
     { eHeroAbilitySecondarySkill, { eSecSkillArchery } },
     { eHeroAbilityCreature, { 2 } },
     { eHeroAbilityCreature, { CREATURE_GRIFFIN } },
@@ -372,7 +372,7 @@ THeroSpecificAbility g_heroSpecificAbilitiesImp[game::HERO_COUNT] = {
 };
 
 DATA(0x00679c80)
-const THeroSpecificAbility (&g_heroSpecificAbilities)[game::HERO_COUNT] =
+const THeroSpecificAbility (&g_heroSpecificAbilities)[kNumHeroes] =
     g_heroSpecificAbilitiesImp;
 
 VA(0x004d71a0, 0x71)
@@ -1162,18 +1162,18 @@ void hero::initialize(const HeroExtra* setup)
 
     if (setup->m_customSpells) {
         clearSpells();
-        for (i = 0; i < NUM_SPELLS; i++) {
+        for (i = 0; i < kNumSpells; i++) {
             if (setup->m_spells.test(i))
                 addSpell(i);
         }
     }
 
     if (setup->m_customArtifacts) {
-        for (i = 0; i < kNumArtifactSlots + 1; i++) {
+        for (i = 0; i < kNumEquippedSlots; i++) {
             if (m_equipped[i].m_artifactId != ARTIFACT_NONE)
                 removeArtifact(i);
         }
-        for (i = 0; i < kNumArtifactSlots + 1; i++) {
+        for (i = 0; i < kNumEquippedSlots; i++) {
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
                 equipArtifact(setup->m_artifacts[i], i);
         }
@@ -1275,7 +1275,7 @@ MAC_ADDRESS(0x0f4c1c, 0x68)
 long hero::getEquippedArtifacts(bool countWarMachines) const
 {
     long count = 0;
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < kNumEquippedSlots; slot++) {
         int id = m_equipped[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
             id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
@@ -1349,7 +1349,7 @@ DC_ADDRESS(0x0cc220, 0x4a)
 MAC_ADDRESS(0x0f4d94, 0x68)
 unsigned char hero::hasArtifact(int whichArtifact) const
 {
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < kNumEquippedSlots; slot++) {
         if (m_equipped[slot].m_artifactId == whichArtifact)
             return 1;
     }
@@ -1372,7 +1372,7 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
         return getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_SPELLBOOK;
     } else {
-        for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+        for (int slot = 0; slot < kNumEquippedSlots; slot++) {
             if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 return 1;
         }
@@ -1415,7 +1415,7 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
         break;
     }
     // Nineteen equipped slots, one more than the DC build's eighteen.
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < kNumEquippedSlots; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return;
@@ -1452,10 +1452,10 @@ void hero::addSpell(int whichSpell)
 // it into the artifact result. The other three Tome arms repeat this.
 DC_ADDRESS(0x0cc360, 0x2c)
 MAC_ADDRESS(0x0f5008, 0xb4)
-std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
+std::bitset<kNumSpells> markSpells(TSpellSchool school)
 {
-    std::bitset<hero::NUM_SPELLS> granted;
-    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+    std::bitset<kNumSpells> granted;
+    for (int spell = 0; spell < kNumSpells; spell++) {
         if ((g_spellTraits[spell].m_schoolBits & school) != 0)
             granted[spell] = true;
     }
@@ -1490,9 +1490,9 @@ std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
 // from 97.56% to 77.57%; keep the shared result assignment and clear tail.
 VA(0x004d9350, 0x272)
 MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
-std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId)
+std::bitset<kNumSpells> markArtifactSpells(int artifactId)
 {
-    std::bitset<hero::NUM_SPELLS> result;
+    std::bitset<kNumSpells> result;
     switch (artifactId) {
     case ARTIFACT_TOME_OF_AIR_MAGIC:
         result = markSpells(eSchoolAir);
@@ -1507,7 +1507,7 @@ std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId)
         result = markSpells(eSchoolEarth);
         break;
     case ARTIFACT_SPELLBINDERS_HAT: {
-        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        for (int spell = 0; spell < kNumSpells; spell++) {
             if (g_spellTraits[spell].m_level == g_fifthLevelSpell)
                 result[spell] = true;
         }
@@ -1534,9 +1534,9 @@ DC_ADDRESS(0x0cc38c, 0x10e)
 MAC_ADDRESS(0x0f52d0, 0x298)
 void hero::updateSpellList()
 {
-    std::copy(m_inSpellbook, m_inSpellbook + NUM_SPELLS, m_availableSpells);
+    std::copy(m_inSpellbook, m_inSpellbook + kNumSpells, m_availableSpells);
 
-    int remaining = 19;
+    int remaining = kNumEquippedSlots;
     const type_artifact* slot = m_equipped;
     do {
         type_artifact current = *slot;
@@ -1547,10 +1547,10 @@ void hero::updateSpellList()
                 m_availableSpells[extra] = 1;
             } else {
                 if (g_artifactTraits[artifactId].m_givesSpells) {
-                    std::bitset<NUM_SPELLS> granted = markArtifactSpells(artifactId);
+                    std::bitset<kNumSpells> granted = markArtifactSpells(artifactId);
                     std::transform(m_availableSpells,
-                                   m_availableSpells + NUM_SPELLS,
-                                   bitset_iterator<NUM_SPELLS>(granted, 0),
+                                   m_availableSpells + kNumSpells,
+                                   bitset_iterator<kNumSpells>(granted, 0),
                                    m_availableSpells, std::logical_or<bool>());
                 }
                 int comboType = g_artifactTraits[artifactId].m_comboType;
@@ -1560,10 +1560,10 @@ void hero::updateSpellList()
                     for (int component = 0; component < ARTIFACT_COUNT; component++) {
                         if (components.test(component) &&
                             g_artifactTraits[component].m_givesSpells) {
-                            std::bitset<NUM_SPELLS> granted = markArtifactSpells(component);
+                            std::bitset<kNumSpells> granted = markArtifactSpells(component);
                             std::transform(m_availableSpells,
-                                           m_availableSpells + NUM_SPELLS,
-                                           bitset_iterator<NUM_SPELLS>(granted, 0),
+                                           m_availableSpells + kNumSpells,
+                                           bitset_iterator<kNumSpells>(granted, 0),
                                            m_availableSpells,
                                            std::logical_or<bool>());
                         }
@@ -2949,7 +2949,7 @@ unsigned char hero::hasCombinationArtifactComponents(int combination)
 {
     std::bitset<ARTIFACT_COUNT> missingComponents =
         g_combinationArtifacts[combination].m_components;
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < kNumEquippedSlots; slot++) {
         int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
         if (artifactId != ARTIFACT_NONE)
             missingComponents[artifactId] = false;
@@ -4911,7 +4911,7 @@ void hero::transferArtifacts(hero* src)
     if (!src)
         return;
     type_artifact artifact;
-    for (int slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (int slot = 0; slot < kNumEquippedSlots; slot++) {
         artifact = src->m_equipped[slot];
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
@@ -5026,12 +5026,12 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
         int slotClass = g_artifactSlotTraits[slot].m_type;
         unsigned int worn = m_artifactSlotCounts[slotClass];
         if (worn > 0) {
-            std::bitset<kNumArtifactSlots + 1> classSlots = g_artifactSlotMasks[slotClass];
+            std::bitset<kNumEquippedSlots> classSlots = g_artifactSlotMasks[slotClass];
             size_t capacity = classSlots.count();
             if (worn >= capacity)
                 continue;
             int occupied = 0;
-            for (int i = 0; i < kNumArtifactSlots + 1; i++) {
+            for (int i = 0; i < kNumEquippedSlots; i++) {
                 if (classSlots[i] &&
                     getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                     occupied++;
@@ -5065,7 +5065,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     continue;
                 }
                 int componentCount = counts[componentClass];
-                std::bitset<kNumArtifactSlots + 1> classSlots =
+                std::bitset<kNumEquippedSlots> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
                 if (componentCount >= capacity) {
@@ -5076,7 +5076,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                     int occupied =
                         (g_artifactTraits[artifact].m_allowableSlotMask
                          == componentClass) ? 1 : 0;
-                    for (int i = 0; i < kNumArtifactSlots + 1; i++) {
+                    for (int i = 0; i < kNumEquippedSlots; i++) {
                         if (classSlots[i] &&
                             getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                             occupied++;
@@ -5204,7 +5204,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
     if (slot == -1) {
         slot = 0;
         while (1) {
-            if (slot >= kNumArtifactSlots + 1)
+            if (slot >= kNumEquippedSlots)
                 return 0;
             if (canEquipArtifactInEmptySlot(artifact.m_artifactId, slot))
                 break;
@@ -5358,7 +5358,7 @@ bool hero::removeArtifact(TArtifact artifact)
             return 1;
         }
     }
-    for (slot = 0; slot < kNumArtifactSlots + 1; slot++) {
+    for (slot = 0; slot < kNumEquippedSlots; slot++) {
         if (m_equipped[slot].m_artifactId == artifact) {
             removeArtifact(slot);
             return 1;

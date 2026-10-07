@@ -1,6 +1,7 @@
 #ifndef HOMM3_BOTTOMVIEWSUBWINDOW_H
 #define HOMM3_BOTTOMVIEWSUBWINDOW_H
 
+#include "player_type.h"
 #include "subwindow.h"
 
 class iconWidget;
@@ -84,7 +85,7 @@ public:
     // +0x44. One entry per player, filled here and refreshed by animate
     // through the SAME sum_mobility below, which is why the two bodies
     // carry the identical inlined loop.
-    long m_mobility[8];
+    long m_mobility[NUM_PLAYERS];
     int m_lastPlayerPos;           // +0x64
     int m_frame;                   // +0x68
     int m_frameDelay;              // +0x6c, 50 ticks

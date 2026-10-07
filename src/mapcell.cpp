@@ -2297,7 +2297,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
         if (isRandom) {
             std::vector<ESpellId> candidates;
             for (ESpellId spell = SPELL_SUMMON_BOAT;
-                 spell < hero::NUM_SPELLS;
+                 spell < kNumSpells;
                  spell = H3_ENUM_DECODE(ESpellId, spell + 1)) {
                 if (g_spellTraits[spell].m_schoolBits
                     && !g_game->m_spellDisabledInfo[spell])
@@ -2859,14 +2859,14 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        for (x = 0; x < hero::NUM_SPELLS; ++x)
+        for (x = 0; x < kNumSpells; ++x)
             tempTown.m_fixedSpells[x] =
                 (spellBuf[x / 8] & (1 << (x % 8))) != 0;
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (x = 0; x < hero::NUM_SPELLS; ++x)
+    for (x = 0; x < kNumSpells; ++x)
         tempTown.m_spells[x] =
             (spellBuf[x / 8] & (1 << (x % 8))) != 0;
 
@@ -3216,7 +3216,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             intBuffer = charBuffer;
             if (intBuffer != -2) {
                 heroData->m_customSpells = 1;
-                heroData->m_spells = std::bitset<hero::NUM_SPELLS>();
+                heroData->m_spells = std::bitset<kNumSpells>();
                 if (intBuffer != -1)
                     heroData->m_spells[intBuffer] = 1;
             }
@@ -3226,7 +3226,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 heroData->m_customSpells = 1;
                 unsigned char spellMask[9];
                 infile->read(spellMask, sizeof(spellMask));
-                for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                for (int spell = 0; spell < kNumSpells; ++spell) {
                     heroData->m_spells[spell] =
                         (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
                 }
@@ -4877,7 +4877,7 @@ CObjectType::CObjectType(const TObjectType& source)
 
     // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
     // source selects the read-only terrain query, without a mutable proxy.
-    for (int terrain = 0; terrain < NUM_TERRAIN_TYPES; terrain++)
+    for (int terrain = 0; terrain < kNumTerrainTypes; terrain++)
         m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
 
     m_objectType = source.getObjectType();

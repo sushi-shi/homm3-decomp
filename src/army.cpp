@@ -891,7 +891,7 @@ double army::computeKarma() const
         return 0.0;
     long sum = 0;
     long absSum = 0;
-    for (long i = 0; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
+    for (long i = 0; i < kNumSpellsAndCreatureEffects; i++) {
         if (m_spellInfluence[i] != 0) {
             sum += g_spellTraits[i].m_karma;
             absSum += abs(g_spellTraits[i].m_karma);
@@ -1762,7 +1762,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     SAMPLE2 sample = loadPlaySample(
                         DATA_COMPGEN(0x00660a40, drainLifeSampleName,
                                      "DrainLif.wav"));
-                    g_combatManager->spellEffect(74, this, 100, 0);
+                    g_combatManager->spellEffect(eSpellEffectDrainLife, this, 100, 0);
                     waitEndSample(sample, -1);
                 }
             }
@@ -1797,7 +1797,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                         text.c_str(), 1, 0);
                     sample = loadPlaySample(
                         g_spellTraits[SPELL_DEATH_STARE].m_sample);
-                    g_combatManager->spellEffect(80, target, 100, 0);
+                    g_combatManager->spellEffect(eSpellEffectDeathStare, target, 100, 0);
                 }
                 target->damage(damage);
                 g_combatManager->powEffect(eSpellEffectNone, 1);
@@ -1829,7 +1829,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                             DATA_COMPGEN(0x00660a30,
                                          lightningBoltSampleName,
                                          "LightBlt.wav"));
-                        g_combatManager->spellEffect(1, target, 10, 0);
+                        g_combatManager->spellEffect(eSpellEffectLightningBolt, target, 10, 0);
                     }
                     long killed = target->damage(damage);
                     g_combatManager->damageMessage(
@@ -1880,7 +1880,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     g_spellTraits[SPELL_ACID_BREATH_DEFENSE].m_name, 1,
                     damage, target, killed);
                 if (!g_combatManager->isQuickCombat()) {
-                    g_combatManager->spellEffect(81, target, 100, 0);
+                    g_combatManager->spellEffect(eSpellEffectAcidBreath, target, 100, 0);
                     waitEndSample(sample, -1);
                 }
                 g_combatManager->powEffect(eSpellEffectNone, 1);
@@ -3375,7 +3375,7 @@ MAC_ADDRESS(0x050c24, 0x68)
 // Mac 0x50c48 reads row i; DC makes no get_spell_time call (see army.h).
 void army::cancelAllSpells()
 {
-    for (int i = 0; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
+    for (int i = 0; i < kNumSpellsAndCreatureEffects; i++) {
         if (m_spellInfluence[i] > 0)
             cancelIndividualSpell(i);
     }
@@ -3512,7 +3512,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         break;
     case SPELL_ANTI_MAGIC: {
         m_antiMagicSpellLevel = amount;
-        for (int j = 0; j < NUM_SPELLS_AND_CREATURE_EFFECTS; j++) {
+        for (int j = 0; j < kNumSpellsAndCreatureEffects; j++) {
             if (g_spellTraits[j].m_level < m_antiMagicSpellLevel
                 && g_spellTraits[j].m_karma < 0
                 && !(g_spellTraits[j].m_flags & 8))
@@ -3657,7 +3657,7 @@ MAC_ADDRESS(0x051434, 0x98)
 // makes no get_spell_time call (see army.h getSpellTime).
 void army::decrementSpellRounds()
 {
-    for (int spell = 0; spell < NUM_SPELLS_AND_CREATURE_EFFECTS; spell++) {
+    for (int spell = 0; spell < kNumSpellsAndCreatureEffects; spell++) {
         if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
             if (m_spellInfluence[spell] == 1)
                 cancelIndividualSpell(spell);
@@ -4982,7 +4982,7 @@ MAC_ADDRESS(0x05455c, 0x68)
 long army::getValidCaliphSpells(const army* target) const
 {
     long count = 0;
-    for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+    for (SpellID spell = kNumAdventureSpells; spell < kNumSpells; spell++) {
         if (isValidCaliphSpell(spell, target))
             count++;
     }
@@ -5004,7 +5004,7 @@ void army::castCaliphSpell(long hex)
     if (count == 0)
         return;
     long pick = random(1, count);
-    for (spell = 10; spell < hero::NUM_SPELLS; spell++) {
+    for (spell = kNumAdventureSpells; spell < kNumSpells; spell++) {
         if (isValidCaliphSpell(spell, target)) {
             if (--pick == 0) {
                 // This creature cast uses advanced mastery (2).

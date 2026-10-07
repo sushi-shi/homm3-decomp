@@ -423,9 +423,9 @@ void TSpellbookWindow::gotoPage(int page)
     // DC locals: available_spells and FIRST_SLOT_AFTER_HEADING.
     const int firstSlotAfterHeading = 2;
     std::vector<TSpellbookEntry> availableSpells;
-    availableSpells.reserve(hero::NUM_SPELLS);
+    availableSpells.reserve(kNumSpells);
 
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (int spell = 0; spell < kNumSpells; ++spell) {
         if (m_hero->spellIsAvailable(spell)
             && (m_school & g_spellTraits[spell].m_school)
             && (m_contextMask & g_spellTraits[spell].m_flags)) {

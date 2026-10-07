@@ -16,7 +16,7 @@ use std::{
 };
 
 const COLUMNS: usize = raw::RMG_TEMPLATE_COLUMN_CONNECTION_MAXIMUM_PLAYERS as usize + 1;
-const TOWNS: usize = raw::TOWN_TYPE_COUNT as usize;
+const TOWNS: usize = raw::kNumTownTypes as usize;
 const RESOURCES: usize = raw::NUM_RESOURCES as usize;
 const BANDS: usize = raw::RMG_TREASURE_BAND_COUNT as usize;
 

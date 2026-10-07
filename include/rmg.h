@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "advmgr_objects.h"
+#include "hero_type.h"
+#include "objnames.h"
 #include "terrain_type.h"
 #include "rmg_request.h"
 
@@ -23,7 +25,7 @@ enum ERmgTerrainLimits {
 enum ERmgHeroCount {
     RMG_ROE_HERO_COUNT = 128,
     RMG_PRISON_HERO_COUNT = 145,
-    RMG_HERO_COUNT = 156
+    RMG_HERO_COUNT = kNumHeroes
 };
 
 enum ERmgTreasurePlacementLimits {
@@ -1743,7 +1745,7 @@ struct TRmgZone {
     // Placement 0x54039a increments by object type, removal 0x54bd30
     // decrements it, and 0x546270 checks the per-zone object-type limit.
     // Role-derived name, matching the generator's global counterpart.
-    int m_objectCountByType[232];      // +0x44
+    int m_objectCountByType[ADVENTURE_OBJECT_TRAIT_COUNT];      // +0x44
     // Retail +0x3e4 has vector construction/destruction. 0x53dc84 resizes
     // to the zone count; +0x53dc98 fills signed shorts with 32000 and
     // +0x53dcb1 sets this zone's own index to zero. 0x53d9ae reads a
@@ -1927,7 +1929,7 @@ public:
     TRmgMap m_map;                             // +0x00c
     // 0x536213 calls TObjectTypeTable::load with this complete member.
     TObjectTypeTable m_objectsTxt;                     // +0x024
-    std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
+    std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[ADVENTURE_OBJECT_TRAIT_COUNT]; // +0x034
     // Terrain-relation records populated by the loader and used by the scorer.
     std::vector<TRmgObjectPlacementRule> m_placementRules; // +0xeb4
     std::vector<TRmgObject*> m_objects;             // +0xec4
@@ -2007,7 +2009,7 @@ public:
     std::vector<TRmgZone*> m_zones;                    // +0x10e0
     std::vector<TRmgTreasureDef*> m_objectGenerators; // +0x10f0
     std::vector<unsigned char> m_disabledKeyTents;     // +0x1100
-    int m_objectCountByType[232];                      // +0x1110
+    int m_objectCountByType[ADVENTURE_OBJECT_TRAIT_COUNT];                      // +0x1110
     std::vector<TRmgMapPosition> m_roadTargets;        // +0x14b0
     std::vector<TRmgObject*> m_monolithsOneWay;       // +0x14c0
     std::vector<TRmgObject*> m_monolithsTwoWay;       // +0x14d0

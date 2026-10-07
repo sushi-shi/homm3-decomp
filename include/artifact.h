@@ -6,6 +6,7 @@
 #include <bitset>
 
 #include "artifact_type.h"
+#include "primaryskill.h"
 
 // Dreamcast's public wearable-position type. Complete adds a nineteenth
 // equipped position, but retains the same dword parameter ABI and may pass
@@ -29,11 +30,14 @@ enum TArtifactSlot {
     eArtifactSlotWarMachine3,
     eArtifactSlotWarMachine4,
     eArtifactSlotSpellbook,
-    // The Dreamcast count. Complete's fifth misc position follows the
-    // spellbook, so its equipped arrays and slot masks are
-    // kNumArtifactSlots + 1 long (NH3API MAX_ARTIFACT_SLOTS_SOD); a
-    // separate enumerator for that count reschedules advManager::doCombat.
+    // The Dreamcast count, the AB-era positions. Complete's overview still
+    // pages through only these eighteen (two pages of nine, modulo 18).
     kNumArtifactSlots,
+    // Complete's fifth misc position follows the spellbook, so its
+    // equipped arrays and slot masks are one longer (NH3API SLOT_MISC5,
+    // MAX_ARTIFACT_SLOTS_SOD).
+    eArtifactSlotMisc5 = kNumArtifactSlots,
+    kNumEquippedSlots,
     const_first_artifact_slot = eArtifactSlotHead
 };
 
@@ -116,8 +120,8 @@ SIZE(TCombinationArtifact, 24);
 // the bitset itself, as the game-context table's readers must (see
 // gamecontext.cpp); a bitset member here leaves the hero and swapmgr readers
 // unchanged. The original type name is unknown.
-struct TArtifactSlotMask : public std::bitset<kNumArtifactSlots + 1> {
-    TArtifactSlotMask(const std::bitset<kNumArtifactSlots + 1>& slots) : std::bitset<kNumArtifactSlots + 1>(slots) {}
+struct TArtifactSlotMask : public std::bitset<kNumEquippedSlots> {
+    TArtifactSlotMask(const std::bitset<kNumEquippedSlots>& slots) : std::bitset<kNumEquippedSlots>(slots) {}
 };
 SIZE(TArtifactSlotMask, 4);
 
@@ -150,7 +154,7 @@ extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
 DC_ADDRESS(0x037d88, 0x2c)
 inline bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
 {
-    const std::bitset<kNumArtifactSlots + 1>& allowable =
+    const std::bitset<kNumEquippedSlots>& allowable =
         g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
     return allowable[slot];
 }
@@ -164,7 +168,7 @@ extern const type_artifact g_blacksmithArtifacts[];
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real
 // retail data symbol and is used as the pointer-loop bound.
-extern const signed char g_artifactPrimarySkillBonuses[][4];
+extern const signed char g_artifactPrimarySkillBonuses[][kNumPrimarySkills];
 DATA(0x0063e998)
 extern const signed char g_artifactPrimarySkillBonusesEnd[];
 

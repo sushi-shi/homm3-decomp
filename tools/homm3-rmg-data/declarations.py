@@ -24,7 +24,7 @@ RECORDS = (
     'TCombinationArtifact', 'TArtifactSlotMask',
 )
 CONSTRUCTED_RECORDS = frozenset(('TCombinationArtifact', 'TArtifactSlotMask'))
-CONSTANTS = ('ADVENTURE_OBJECT_TRAIT_COUNT', 'TOWN_TYPE_COUNT', 'TOWN_TYPE_ROE_COUNT')
+CONSTANTS = ('ADVENTURE_OBJECT_TRAIT_COUNT', 'TOWN_TYPE_ROE_COUNT', 'NUM_RESOURCES')
 DECLARATIONS = frozenset((cx.CursorKind.ENUM_DECL, cx.CursorKind.STRUCT_DECL,
                          cx.CursorKind.CLASS_DECL, cx.CursorKind.TYPEDEF_DECL))
 
@@ -234,7 +234,6 @@ def generate(sources):
         declarations.emit(declarations.select(name))
     for name in CONSTANTS:
         declarations.constant(name)
-    declarations.macro('NUM_RESOURCES')
     for name, origins in declarations.named.items():
         if name.startswith('ERmg') and any(nodes[0].kind == cx.CursorKind.ENUM_DECL for nodes in origins.values()):
             declarations.emit(declarations.select(name))

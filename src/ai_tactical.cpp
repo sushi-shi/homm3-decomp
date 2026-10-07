@@ -1769,7 +1769,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
     long ourHits = ourArmy->getTotalHitPoints(0);
     armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
     TSkillMastery mastery;  // DC records enemy_mastery at procedure scope.
-    for (long i = 0; i < hero::NUM_SPELLS; i++) {
+    for (long i = 0; i < kNumSpells; i++) {
         if ((school & g_spellTraits[i].m_schoolBits) == 0)
             continue;
         if ((g_spellTraits[i].m_flags & 0x200) == 0)
@@ -1876,7 +1876,7 @@ MAC_ADDRESS(0x0420cc, 0x18c)
 long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const
 {
     long value = 0;
-    for (long spell = 10; spell < NUM_SPELLS_AND_CREATURE_EFFECTS; spell++) {
+    for (long spell = kNumAdventureSpells; spell < kNumSpellsAndCreatureEffects; spell++) {
         long duration = currentArmy->getSpellTime(spell);
         if (duration == 0)
             continue;
@@ -2918,7 +2918,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
 {
     long total = 0;
     long count = 0;
-    for (long spell = 10; spell < hero::NUM_SPELLS; spell++) {
+    for (long spell = kNumAdventureSpells; spell < kNumSpells; spell++) {
         if (!isValidCaliphSpell(spell, target))
             continue;
         TSkillMastery mastery = eMasteryAdvanced;
@@ -3070,7 +3070,7 @@ bool type_AI_spellcaster::castSpell(bool retreating)
         duration = m_ourHero->getSpellDurationBonus() + power;
     if (retreating)
         m_estimate.m_killsOnly = 1;
-    for (long spell = 0; spell < hero::NUM_SPELLS; spell++) {
+    for (long spell = 0; spell < kNumSpells; spell++) {
         if (!m_ourHero->spellIsAvailable(spell))
             continue;
         if ((g_spellTraits[spell].m_flags & 1) == 0)

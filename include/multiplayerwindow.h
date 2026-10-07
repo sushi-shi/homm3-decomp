@@ -9,6 +9,7 @@
 #include "dxplay.h"
 #include "hotseat.h"
 #include "netgame.h"
+#include "player_type.h"
 #include "textntry.h"
 #include "textwdgt.h"
 #include "window.h"
@@ -52,7 +53,7 @@ public:
         OKAY_ID = 519,
         BACK_ID = 520
     };
-    CHotSeatEdit* m_edit[8];  // +0x50
+    CHotSeatEdit* m_edit[NUM_PLAYERS];  // +0x50
     textWidget* m_rollover;  // +0x70
     THelpText m_hotSeatHelp[20];
     CHotSeatDlg();

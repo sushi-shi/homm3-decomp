@@ -255,7 +255,7 @@ unsigned char initializeHeroTraitsTable()
 
     int id = 0;
     int row = 2;
-    for (; id < 156; ++id, ++row) {
+    for (; id < kNumHeroes; ++id, ++row) {
         initializeHeroTraits(id, resource->getRow(row));
     }
 
@@ -327,7 +327,7 @@ static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVect
 
     DATA_COMPGEN_GUARD(0x00698b99, heroStringsGuard, heroStrings)
     DATA(0x00698eb0)
-    static TAutoStrPtr heroStrings[156];
+    static TAutoStrPtr heroStrings[kNumHeroes];
 
     heroStrings[id].set(new char[strlen(values[0]) + 1]);
     strcpy(heroStrings[id].get(), values[0]);
@@ -371,7 +371,7 @@ static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
     for (column = 0; column < kNumSecSkills; ++column)
         traits.m_gainSecondarySkillChance[column] =
             static_cast<signed char>(atoi(values[column + 14]));
-    for (column = 0; column < TOWN_TYPE_COUNT; ++column)
+    for (column = 0; column < kNumTownTypes; ++column)
         traits.m_foundInTownType[column] =
             static_cast<signed char>(atoi(values[column + 42]));
 }

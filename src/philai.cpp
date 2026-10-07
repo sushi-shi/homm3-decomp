@@ -2611,7 +2611,7 @@ long type_spellvalue::getBestSpellValue(long bits) const
     if (m_power == 0)
         return 0;
 
-    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+    for (int spell = 0; spell < kNumSpells; spell++) {
         if (!m_ourHero->spellIsAvailable(spell))
             continue;
         if (!(g_spellTraits[spell].m_flags & bits))
@@ -3284,7 +3284,7 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
     guardians.add(0x75, 0x14, -1);
 
     if (currentHero->getSecondarySkill(eSecSkillWisdom) >= 3) {
-        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        for (int spell = 0; spell < kNumSpells; spell++) {
             if (g_spellTraits[spell].m_level == g_pyramidSpellLevel) {
                 if (!currentHero->spellIsAvailable(spell)) {
                     value += valueOfSpell(currentHero, SpellID(spell));

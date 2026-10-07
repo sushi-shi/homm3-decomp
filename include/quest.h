@@ -21,6 +21,7 @@
 
 #include "va.h"
 #include "abstractfile.h"
+#include "primaryskill.h"
 #include "seerhuttext.h"
 
 #include <string>
@@ -308,13 +309,13 @@ public:
     // Retail vtable 0x6417c4, slot 8: mov eax,2; ret.
     virtual int questType() { return 2; }
 
-    signed char m_requiredSkills[4];  // +0x40
+    signed char m_requiredSkills[kNumPrimarySkills];  // +0x40
 
 public:
     type_skill_quest(bool flags);
 
     std::string skillRequirementText(
-        const signed char (&skills)[4]);
+        const signed char (&skills)[kNumPrimarySkills]);
     void showSkillRequirementsDialog(const char* text, const signed char* skills);
 
     virtual unsigned char isSatisfied(hero* currentHero);

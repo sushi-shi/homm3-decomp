@@ -1,6 +1,7 @@
 #ifndef HOMM3_RESOURCEDISPLAY_H
 #define HOMM3_RESOURCEDISPLAY_H
 
+#include "resource_type.h"
 #include "subwindow.h"
 
 class bitmapBorder;
@@ -48,10 +49,10 @@ public:
     char m_paddingBeforeResourceWidgets[3];
 
 private:
-    textWidget* m_resourceWidgets[7];
+    textWidget* m_resourceWidgets[NUM_RESOURCES];
 
 public:
-    border* m_resourceIconWidgets[7];
+    border* m_resourceIconWidgets[NUM_RESOURCES];
     bitmapBorder* m_backgroundWidget;
     textWidget* m_dayWidget;
 

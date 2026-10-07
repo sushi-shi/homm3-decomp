@@ -10,6 +10,8 @@
 #include "artifact.h"
 #include "domains.h"
 #include "herospec.h"
+#include "objnames.h"
+#include "player_type.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
 #include "terrain_type.h"
@@ -986,7 +988,7 @@ public:
     // here (Mac 0x128d44..0x128d6c). setObjectType uses it to choose a
     // terrain-appropriate template. Map serialization omits this cache.
     // Original member spelling is unknown.
-    std::bitset<NUM_TERRAIN_TYPES> m_recommendedTerrainMask;
+    std::bitset<kNumTerrainTypes> m_recommendedTerrainMask;
     // loadObjectType stores one full dword at +0x38. A scalar preserves
     // that field and its single generated copy; no alternative view exists.
     TAdventureObjectType m_objectType;
@@ -1329,7 +1331,7 @@ private:
     unsigned char m_hasTwoLevels;
 
 public:
-    std::vector<CObjectType> m_objectTypeIndex[232];
+    std::vector<CObjectType> m_objectTypeIndex[ADVENTURE_OBJECT_TRAIT_COUNT];
     // DC records this public const MapCell.h accessor; retail callers
     // read the same size member used by zCell's row and level strides.
     // Retail callers read the size used by the map stride calculations.
@@ -1571,7 +1573,7 @@ VA(0x00529690, 0x33)  // hd-crossbuild + anchor-callee x3
 DC_ADDRESS(0x01fa40, 0x40)
 inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 {
-    if (player < 0 || player >= 8)
+    if (player < 0 || player >= NUM_PLAYERS)
         return 0;
     return (m_cellVisitedInfo.m_visited & (1 << player)) != 0;
 }

@@ -16,6 +16,7 @@
 #include "dialogbox.h"
 #include "hero.h"
 #include "netmsg.h"
+#include "player_type.h"
 #include "remote.h"
 #include "town.h"
 
@@ -98,7 +99,7 @@ public:
     bool allPlayersReady();
 
 protected:
-    unsigned char m_playerReady[8];  // +0x90
+    unsigned char m_playerReady[NUM_PLAYERS];  // +0x90
 
     int onPlayerDrop(CNetMsg* netMsg, message& msg);
 };

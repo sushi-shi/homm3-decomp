@@ -40,4 +40,17 @@ enum TSecondarySkill {
     kNumSecSkills = 28
 };
 
+// DC LF_ENUM `TSkillMastery`. Retail corroborates the extent from the
+// data side: every per-skill factor table in hero.obj's .rdata run
+// (0x63e9e8 onward) is exactly FOUR floats wide, indexed by the
+// skillLevel byte.
+enum TSkillMastery {
+    eMasteryInvalid = -1,
+    eMasteryNone = 0,
+    eMasteryBasic = 1,
+    eMasteryAdvanced = 2,
+    eMasteryExpert = 3,
+    kNumMasteries = 4
+};
+
 #endif  /* HOMM3_SECONDARYSKILL_H */

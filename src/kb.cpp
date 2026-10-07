@@ -3897,7 +3897,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
                 switch (idItem) {
                 case APP_MENU_SPELL_ALL: {
-                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+                    for (int spell = 0; spell < kNumSpells; spell++)
                         currentHero->addSpell(spell);
                     break;
                 }
@@ -3906,7 +3906,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 case APP_MENU_SPELL_SCHOOL_SECOND:
                 case APP_MENU_SPELL_SCHOOL_THIRD:
                 case APP_MENU_SPELL_SCHOOL_FOURTH: {
-                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+                    for (int spell = 0; spell < kNumSpells; spell++) {
                         if (g_spellTraits[spell].m_schoolBits
                                 & (1 << (idItem - APP_MENU_SPELL_SCHOOL_FIRST)))
                             currentHero->addSpell(spell);
@@ -3919,7 +3919,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 case APP_MENU_SPELL_LEVEL_THREE:
                 case APP_MENU_SPELL_LEVEL_FOUR:
                 case APP_MENU_SPELL_LEVEL_FIVE: {
-                    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+                    for (int spell = 0; spell < kNumSpells; spell++) {
                         if (g_spellTraits[spell].m_level
                                 == idItem - APP_MENU_SPELL_LEVEL_BASE)
                             currentHero->addSpell(spell);

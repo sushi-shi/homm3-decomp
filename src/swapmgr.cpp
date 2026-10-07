@@ -1120,8 +1120,8 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         unsigned int remaining = m_heroes[hero]->m_artifactSlotCounts[type];
         if (remaining > 0)
         {
-            const std::bitset<kNumArtifactSlots + 1>& slots = g_artifactSlotMasks[type];
-            for (int i = kNumArtifactSlots + 1; ; )
+            const std::bitset<kNumEquippedSlots>& slots = g_artifactSlotMasks[type];
+            for (int i = kNumEquippedSlots; ; )
             {
                 --i;
                 if (!slots.test(i))
@@ -1145,22 +1145,22 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            hero * kNumEquippedSlots + slot + 0x96,
             TArtifact(converted));
         converted = 0x90;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            hero * kNumEquippedSlots + slot + 0x1b,
             TArtifact(converted));
     }
     else
     {
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            hero * kNumEquippedSlots + slot + 0x96,
             ARTIFACT_NONE);
         int converted;
         converted = artifact;
         updateArtifactWidget(
-            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            hero * kNumEquippedSlots + slot + 0x1b,
             TArtifact(converted));
     }
 }
@@ -1173,7 +1173,7 @@ void swapManager::updateAllSlots()
 {
     for (int hero = 0; hero < 2; ++hero)
         for (int slot = const_first_artifact_slot;
-             slot < kNumArtifactSlots + 1;
+             slot < kNumEquippedSlots;
              slot++)
             // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
             // domain; keep the proved callee ABI and make that revision

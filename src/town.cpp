@@ -27,7 +27,7 @@
 DATA(0x00688e84) int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
 DATA(0x00688e94) int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
 DATA(0x00688ea4) int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
-DATA(0x00688eb4) int g_siloIncome[TOWN_TYPE_COUNT][NUM_RESOURCES] = {
+DATA(0x00688eb4) int g_siloIncome[kNumTownTypes][NUM_RESOURCES] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 1, 0, 0 },
     { 0, 0, 0, 0, 0, 1, 0 },
@@ -38,7 +38,7 @@ DATA(0x00688eb4) int g_siloIncome[TOWN_TYPE_COUNT][NUM_RESOURCES] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 1, 0, 0, 0, 0, 0 }
 };
-DATA(0x006888c0) int g_eventBuildingIds[TOWN_TYPE_COUNT][TOWN_EVENT_BUILDING_SLOTS] = {
+DATA(0x006888c0) int g_eventBuildingIds[kNumTownTypes][TOWN_EVENT_BUILDING_SLOTS] = {
     {
     11, 12, 13, 7, 8, 9, 5, 16,
     14, 15, 44, 0, 1, 2, 3, 4,
@@ -122,10 +122,10 @@ DATA(0x0066cd98) __int64 g_bitNumber[64] = {
     0x0001000000000000i64, 0x0002000000000000i64, 0x0004000000000000i64, 0x0008000000000000i64, 0x0010000000000000i64, 0x0020000000000000i64, 0x0040000000000000i64, 0x0080000000000000i64,
     0x0100000000000000i64, 0x0200000000000000i64, 0x0400000000000000i64, 0x0800000000000000i64, 0x1000000000000000i64, 0x2000000000000000i64, 0x4000000000000000i64, 0x8000000000000000i64
 };
-DATA(0x006976f0) __int64 g_townEligibleBuildMask[TOWN_TYPE_COUNT];
-DATA(0x00697798) __int64 g_hierarchyMask[TOWN_TYPE_COUNT][MAX_BUILDING_TYPE];
+DATA(0x006976f0) __int64 g_townEligibleBuildMask[kNumTownTypes];
+DATA(0x00697798) __int64 g_hierarchyMask[kNumTownTypes][MAX_BUILDING_TYPE];
 // Original gDwellingType has fourteen entries per town; Complete adds Conflux.
-DATA(0x006747b4) TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLOTS] = {
+DATA(0x006747b4) TCreatureType g_dwellingType[kNumTownTypes][TOWN_DWELLING_SLOTS] = {
     { TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12),
       TCreatureType(1), TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13) },
     { TCreatureType(14), TCreatureType(16), TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26),
@@ -146,7 +146,7 @@ DATA(0x006747b4) TCreatureType g_dwellingType[TOWN_TYPE_COUNT][TOWN_DWELLING_SLO
       TCreatureType(119), TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131) }
 };
 DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
-DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[TOWN_TYPE_COUNT][4] = {
+DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[kNumTownTypes][4] = {
     { { TCreatureType(4), 3, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(16), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(22), 2, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(30), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
@@ -184,7 +184,7 @@ DATA(0x0069778c) int g_curWatchPlayer;
 // Filled by initialize.cpp's create_included_masks; read by the
 // can_build/can_ever_build family (0x5c0d20..0x5c0f20).
 DATA(0x006a8bb8)
-__int64 town::s_includedBuildings[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
+__int64 town::s_includedBuildings[kNumTownTypes][TOWN_BUILDING_SLOTS];
 
 // The saved-game town name became a length-prefixed string at save
 // version 25; before it, thirteen fixed bytes.
@@ -224,7 +224,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
 {
     char charBuffer;
     unsigned char ucharBuffer;
-    unsigned char inBuf[hero::NUM_SPELLS];
+    unsigned char inBuf[kNumSpells];
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
@@ -302,7 +302,7 @@ int town::load(TAbstractFile* infile, int saveVersion)
 
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (int spell = 0; spell < kNumSpells; ++spell) {
         m_spells[spell] =
             (inBuf[spell / 8] & (1 << (spell % 8))) != 0;
     }
@@ -344,7 +344,7 @@ int town::save(TAbstractFile* outfile)
 {
     char charBuffer;
     char posBuffer;
-    unsigned char spellBuf[hero::NUM_SPELLS];
+    unsigned char spellBuf[kNumSpells];
 
     charBuffer = m_id;
     if (outfile->write(&charBuffer, sizeof(charBuffer))
@@ -428,7 +428,7 @@ int town::save(TAbstractFile* outfile)
         return -1;
 
     memset(spellBuf, 0, sizeof(spellBuf));
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    for (int spell = 0; spell < kNumSpells; ++spell) {
         if (m_spells[spell])
             spellBuf[spell / 8] |= 1 << (spell % 8);
     }
@@ -624,7 +624,7 @@ DC_ADDRESS(0x1664b0, 0x9c)
 MAC_ADDRESS(0x1b3358, 0xbc)
 void town::initializeHordes()
 {
-    for (short townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
+    for (short townType = 0; townType < kNumTownTypes; townType++) {
         for (short entry = 0; entry < 4; entry += 2) {
             type_horde_effect* effect = &s_constHordeEffects[townType][entry];
             TCreatureType creature = effect->m_creature;
@@ -684,7 +684,7 @@ void town::giveSpells(hero* forceHero) const
                 if (hasBuilding(MAGE_GUILD_ID, true)) {
                     if (m_type == TOWN_CONFLUX
                         && (hasBuilding(HOLY_GRAIL_ID, true))) {
-                        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                        for (int spell = 0; spell < kNumSpells; ++spell) {
                             if (!m_spells.test(spell)
                                 && g_spellTraits[spell].m_level
                                     < currentHero->getSecondarySkill(
@@ -852,8 +852,8 @@ void town::initializeSpells(const TownExtra* townSetup)
     // CodeWarrior emits this default ctor with the exact 20 bytes of Mac's
     // bitset<70>::reset target at 0:e7378; an explicit reset adds a call.
     // VC6's ctor calls _Tidy, which retail expands at this site.
-    std::bitset<hero::NUM_SPELLS> prohibited;
-    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+    std::bitset<kNumSpells> prohibited;
+    for (int spell = 0; spell < kNumSpells; ++spell) {
         // Complete builds this mask one bit at a time; retail 0x5be668
         // retains Dinkumware's set(position,bool), without a game adapter.
         prohibited[spell] =
@@ -867,7 +867,7 @@ void town::initializeSpells(const TownExtra* townSetup)
              slot < g_mageGuildBaseSpellCounts[level - 1] + 1; ++slot) {
             int totalWeight = 0;
             int spell;
-            for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            for (spell = 0; spell < kNumSpells; ++spell) {
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
                     totalWeight +=
@@ -881,14 +881,14 @@ void town::initializeSpells(const TownExtra* townSetup)
                 }
             }
 
-            if (spell < hero::NUM_SPELLS)
+            if (spell < kNumSpells)
                 continue;
             if (totalWeight == 0) {
                 m_mageGuildSpells[level - 1][slot] = SPELL_NONE;
                 continue;
             }
             int roll = random(1, totalWeight);
-            for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            for (spell = 0; spell < kNumSpells; ++spell) {
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
                     roll -= g_spellTraits[spell].m_townProbability[m_type];
@@ -2062,9 +2062,9 @@ static void initializeBuildingCosts(int* costs,
 DATA(0x006a80f8)
 int town::s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
 DATA(0x006a82dc)
-int town::s_specialBuildingCosts[TOWN_TYPE_COUNT][9][NUM_RESOURCES];
+int town::s_specialBuildingCosts[kNumTownTypes][9][NUM_RESOURCES];
 DATA(0x006a9818)
-int town::s_dwellingCosts[TOWN_TYPE_COUNT][14][NUM_RESOURCES];
+int town::s_dwellingCosts[kNumTownTypes][14][NUM_RESOURCES];
 
 VA(0x005c14c0, 0x1F6)
 DC_ADDRESS(0x168c3c, 0x112)
@@ -2077,7 +2077,7 @@ bool town::initializeBuildingCostsTables()
         return 0;
 
     int row = 2;
-    for (int type = 0; type < TOWN_TYPE_COUNT; ++type) {
+    for (int type = 0; type < kNumTownTypes; ++type) {
         row += 2;
         for (int special = 0; special < 9; ++special) {
             initializeBuildingCosts(s_specialBuildingCosts[type][special],
@@ -2093,7 +2093,7 @@ bool town::initializeBuildingCostsTables()
     }
 
     row += 2;
-    for (int dwellingType = 0; dwellingType < TOWN_TYPE_COUNT; ++dwellingType) {
+    for (int dwellingType = 0; dwellingType < kNumTownTypes; ++dwellingType) {
         row += 2;
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
             initializeBuildingCosts(s_dwellingCosts[dwellingType][dwelling],

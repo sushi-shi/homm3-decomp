@@ -279,7 +279,7 @@ bool combatManager::aiCheckRetreat()
 
                 combatValue = 0;
                 type_artifact artifact;
-                { for (long i = 0; i < kNumArtifactSlots + 1; i++) {
+                { for (long i = 0; i < kNumEquippedSlots; i++) {
                         artifact = m_heroes[m_currentSide]->getArtifact(TArtifactSlot(i));
                         if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
@@ -860,7 +860,7 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
     if (canCastSpells(side, 1)) {
         hero* castingHero = m_heroes[side];
         long best = 0;
-        for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+        for (SpellID spell = kNumAdventureSpells; spell < kNumSpells; spell++) {
             if (!castingHero->spellIsAvailable(spell))
                 continue;
             if (spell == SPELL_FROST_RING || spell == SPELL_FIREBALL

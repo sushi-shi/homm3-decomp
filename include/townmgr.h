@@ -6,7 +6,9 @@
 #include "advmgr_popup.h"
 #include "armygrp.h"
 #include "basemgr.h"
+#include "player_type.h"
 #include "text.h"
+#include "town.h"
 #include "remote.h"
 #include "terrain_type.h"
 
@@ -162,24 +164,24 @@ enum ETownCommand {
 // arithmetic; every one of them is declared under this file's narrowest
 // gate, the include-set reason gSystemPalette's note above gives. The
 // extents are spelled as literals rather than as town.h's
-// TOWN_TYPE_COUNT / MAX_BUILDING_TYPE because this header is parsed
+// kNumTownTypes / MAX_BUILDING_TYPE because this header is parsed
 // BEFORE town.h in its one consumer's include order.
 
 // gTownBuildOrder: `movsx esi,byte [i + type*44 + 0x642eb4]` - a signed
 // char [9][44] of type_building_id values in PANORAMA DRAW ORDER, each
 // row closed by -1 (Castle's is 26,23,7,8,9,0,... then six -1s).
-extern const signed char g_townBuildOrder[9][44];
+extern const signed char g_townBuildOrder[kNumTownTypes][MAX_BUILDING_TYPE];
 // gTownBackgroundPrefix: the "%sBack.pcx" stem, one per faction -
 // TBCs, TBRm, TBTw, TBIn, TBNc, TBDn, TBSt, TBFr, TBEl.
-extern const char* const g_townBackgroundPrefix[9];
+extern const char* const g_townBackgroundPrefix[kNumTownTypes];
 // gTownBuildingSprites: `[objId + type*44]` scaled by four - a
 // char*[9][44] of the .def stem per faction and building (Castle's row
 // starts TBCsmage, TBCsmag2, TBCsmag3, TBCsmag4, TBCsmag5, TBCstvrn).
-extern const char* const g_townBuildingSprites[9][44];
+extern const char* const g_townBuildingSprites[kNumTownTypes][MAX_BUILDING_TYPE];
 // gTownMusic: the town page's MP3 per faction - CstleTown, Rampart,
 // TowerTown, InfernoTown, necroTown, dungeon, StrongHold,
 // FortressTown, ElemTown.
-extern const char* const g_townMusic[9];
+extern const char* const g_townMusic[kNumTownTypes];
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
@@ -391,7 +393,7 @@ public:
     // WindowHandler's right-click arms gate the hero/creature view on
     // owners[player] == GetLocalPlayerGamePos(), so only the local player's own
     // column opens the detail view.
-    int m_owners[8];
+    int m_owners[NUM_PLAYERS];
     // +0x80: SetupThievesGuild's last act builds it -
     // `new TResourceDisplay(this, 1)` stored here and Update(0,0)'d -
     // and the destructor deletes it through slot 0 before the widget
@@ -807,7 +809,7 @@ public:
     // currentDwellingIDOff), and UnloadTown 0x5c70b0 drives each
     // non-null one through vtable slot 1 - CSprite::Dispose - without
     // freeing it, which is exactly how a shared resource is released.
-    CSprite* m_monPix[7];
+    CSprite* m_monPix[TOWN_DWELLING_COUNT];
     // +0x5c: the town's building objects, count at +0x10c. UnloadTown
     // walks exactly this many, unhooks each one's widget at +0x2c from
     // the town window and frees the object - which is ~townObject
@@ -919,7 +921,7 @@ public:
     // `currentDwellingIDOff` at its own 476, which is this offset
     // under the same 0x10 shift that puts divideStatus/recruitSelected
     // at +0x1c4/+0x1c8.
-    unsigned char m_currentDwellingIdOff[7];
+    unsigned char m_currentDwellingIdOff[TOWN_DWELLING_COUNT];
     void resetStrips();
     void setCommandAndText(message& msg);
     void showText();

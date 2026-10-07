@@ -5,6 +5,7 @@
 
 #include "advmgr_popup.h"
 #include "struct.h"
+#include "town_type.h"
 
 struct type_point;
 
@@ -60,7 +61,7 @@ struct TPuzzleCoordinates {
     short m_x[TPuzzleWindow::PUZZLE_PIECE_COUNT];
     short m_y[TPuzzleWindow::PUZZLE_PIECE_COUNT];
 };
-extern TPuzzleCoordinates g_puzzleCoordinates[9];
+extern TPuzzleCoordinates g_puzzleCoordinates[kNumTownTypes];
 extern const char* g_puzzleFilePrefixes[];
 // 0x6822c8: five doubles - 1.1, 0.5, 0.25, 0.0, 0.0 - read from the
 // image, indexed by SGameSetupOptions::difficulty and compared against

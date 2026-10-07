@@ -542,7 +542,7 @@ TObjectType& TObjectType::setPassableMask(const std::bitset<OBJECT_MASK_CELLS>& 
 }
 
 MAC_ADDRESS(0x223e4c, 0x48)
-TObjectType& TObjectType::setTerrainMask(const std::bitset<NUM_TERRAIN_TYPES>& mask)
+TObjectType& TObjectType::setTerrainMask(const std::bitset<kNumTerrainTypes>& mask)
 {
     m_recommendedTerrainMask &= mask;
     m_terrainMask = mask;
@@ -550,7 +550,7 @@ TObjectType& TObjectType::setTerrainMask(const std::bitset<NUM_TERRAIN_TYPES>& m
 }
 
 MAC_ADDRESS(0x223e94, 0xc)
-TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<NUM_TERRAIN_TYPES>& mask)
+TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<kNumTerrainTypes>& mask)
 {
     m_recommendedTerrainMask = mask;
     return *this;
@@ -601,8 +601,8 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
         >> typeRead >> subtype >> slotCategory >> underlay;
 
     objectType.setImageName(imageName).setPassableMask(passable)
-        .setTriggerMask(trigger).setTerrainMask(std::bitset<NUM_TERRAIN_TYPES>(terrainRead.to_ulong()))
-        .setRecommendedTerrainMask(std::bitset<NUM_TERRAIN_TYPES>(recommendedRead.to_ulong()))
+        .setTriggerMask(trigger).setTerrainMask(std::bitset<kNumTerrainTypes>(terrainRead.to_ulong()))
+        .setRecommendedTerrainMask(std::bitset<kNumTerrainTypes>(recommendedRead.to_ulong()))
         .setObjectType(TAdventureObjectType(typeRead)).setSubtype(subtype)
         .setSlotCategory(slotCategory).setUnderlay(underlay != 0);
     return is;

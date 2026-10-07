@@ -11350,7 +11350,7 @@ void TRmgGenerator::setTownChoice(int seat, int town)
 #if defined(HOMM3_RMG_HOTFIX)
 static s32 getRmgTownTypeCount(s32 mapVersion)
 {
-    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? TOWN_TYPE_COUNT : TOWN_TYPE_ROE_COUNT;
+    return mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE ? kNumTownTypes : TOWN_TYPE_ROE_COUNT;
 }
 
 static bool isRmgSelectablePrototype(const TObjectType& prototype,
