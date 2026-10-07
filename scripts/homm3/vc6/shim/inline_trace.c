@@ -833,6 +833,27 @@ static int isHandleSite(unsigned long ret)
     return site != 0x1cedf && site != 0x1d193 && site != 0x1d253;
 }
 
+/* scratch: HOMM3_VC6_HANDLE_SET="h1,h2,...:delta[:invert]" (hex handles, decimal delta) */
+static unsigned long g_setH[256], g_setN, g_setDelta;
+static int g_setInvert;
+static void loadHandleSet(void)
+{
+    static char t[4096];
+    DWORD n = GetEnvironmentVariableA("HOMM3_VC6_HANDLE_SET", t, sizeof t);
+    unsigned long v = 0, i, part = 0;
+    if (!n || n >= sizeof t) return;
+    for (i = 0; i <= n; ++i) {
+        char c = i < n ? t[i] : 0;
+        int d = (c >= '0' && c <= '9') ? c - '0' : (c >= 'a' && c <= 'f') ? c - 'a' + 10 : -1;
+        if (part == 0) {
+            if (d >= 0) v = v * 16 + d;
+            else { if (v && g_setN < 256) g_setH[g_setN++] = v; v = 0; if (c == ':') part = 1; }
+        } else if (part == 1) {
+            if (c >= '0' && c <= '9') g_setDelta = g_setDelta * 10 + (c - '0');
+            else if (c == ':') part = 2;
+        } else if (c == '1') g_setInvert = 1;
+    }
+}
 static unsigned long __cdecl adjustHandle(unsigned long value, unsigned long ret)
 {
     if (g_decodeLog == 2) {
@@ -859,6 +880,12 @@ static unsigned long __cdecl adjustHandle(unsigned long value, unsigned long ret
         }
     }
     if (g_handleK && value && value >= g_handleH0 && isHandleSite(ret)) value += g_handleK;
+    if (g_setN && value && isHandleSite(ret)) {
+        unsigned i;
+        int inSet = 0;
+        for (i = 0; i < g_setN; ++i) if (g_setH[i] == value) inSet = 1;
+        if (inSet != g_setInvert) value += g_setDelta;
+    }
     return value;
 }
 
@@ -914,7 +941,7 @@ static int loadHandleShift(void)
     static const unsigned char entryBytes[] = {0x83,0xec,0x08,0x8b,0x0d};
     g_decodeLog = GetEnvironmentVariableA("HOMM3_VC6_DECODE_LOG", text + 32, 8) != 0;
     if (GetEnvironmentVariableA("HOMM3_VC6_DECODE_SEQ", text + 40, 8)) g_decodeLog = 2;
-    if (!g_decodeLog && (!n || n >= sizeof text)) return 1;
+    if (!g_decodeLog && !g_setN && (!n || n >= sizeof text)) return 1;
     if (n >= 32) n = 0;
     for (i = 0; i < n; ++i) {
         char c = text[i];
@@ -1517,6 +1544,147 @@ static int loadDqLog(void)
     return patchHook(0x2e05c, dq3, b2, 7);
 }
 
+
+/* scratch: log 0x2c6ce's 64-bucket rematerialization table (bucket computed at 0x2c6fe),
+ * the 0x2cdf4 free walk (0x2ce69) and record reuse (0x2125a). */
+static void *g_pkRet, *g_pfRet, *g_prRet;
+static int g_pkLog;
+static void writeName(HANDLE h, unsigned char *sym)
+{
+    const char *n;
+    unsigned i;
+    if (!sym || IsBadReadPtr(sym + 0x18, 4)) return;
+    n = *(const char **)(sym + 0x18);
+    if (!n || IsBadReadPtr(n, 1)) return;
+    writeString(h, " name=");
+    for (i = 0; i < 80 && !IsBadReadPtr(n + i, 1) && n[i] > 32 && n[i] < 127; ++i) {
+        char c[2]; c[0] = n[i]; c[1] = 0; writeString(h, c);
+    }
+}
+static void __cdecl pkLog(unsigned long ebp)
+{
+    DWORD lastError = GetLastError();
+    HANDLE h;
+    unsigned char *op = *(unsigned char **)(ebp - 0x10);
+    unsigned long bucket = *(unsigned long *)(ebp - 8);
+    if (!g_pkLog || !g_selected) return;
+    h = logOpen();
+    if (h != INVALID_HANDLE_VALUE) {
+        unsigned char k = op[8];
+        unsigned char *sym = 0;
+        writeString(h, "pk kind="); writeHex(h, k);
+        writeString(h, " bucket="); writeDecimal(h, bucket);
+        if (k == 7) { writeString(h, " val="); writeHex(h, *(unsigned long *)(op + 0x18)); }
+        else if (k == 3) sym = **(unsigned char ***)(*(unsigned char **)(op + 0x14) + 8);
+        else sym = *(unsigned char **)(op + 0x14);
+        if (sym) {
+            writeString(h, " key="); writeHex(h, *(unsigned long *)(sym + 0x28));
+            writeString(h, " sym="); writeHex(h, (unsigned long)sym);
+            writeString(h, " cat="); writeHex(h, sym[4]);
+            writeName(h, sym);
+        }
+        writeString(h, "\n"); CloseHandle(h);
+    }
+    SetLastError(lastError);
+}
+static void __declspec(naked) pkHook(void)
+{
+    __asm {
+        pushfd
+        pushad
+        push ebp
+        call pkLog
+        add esp, 4
+        popad
+        popfd
+        mov edx, dword ptr [ebp - 8]
+        mov eax, dword ptr [g_real]
+        lea eax, [eax + edx*4 + 0x9d750]
+        mov eax, dword ptr [eax]
+        jmp dword ptr [g_pkRet]
+    }
+}
+static void __cdecl pfLog(unsigned long *regs, unsigned long tag)
+{
+    DWORD lastError = GetLastError();
+    HANDLE h;
+    if (!g_pkLog || !g_selected) return;
+    h = logOpen();
+    if (h != INVALID_HANDLE_VALUE) {
+        if (tag == 0) {
+            /* 0x2ce69: ESI pseudo being freed, EAX its use struct; record at [EAX+0xc] */
+            unsigned char *rec = *(unsigned char **)(regs[7] + 0xc);
+            writeString(h, "pfree pseudo="); writeHex(h, regs[1]);
+            writeString(h, " reckey="); writeHex(h, rec ? *(unsigned long *)(rec + 0x1c) : 0);
+            writeString(h, " bucketwalk="); writeHex(h, (regs[4] - ((unsigned long)g_real + 0x9d750)) / 4);
+        } else {
+            /* 0x2125a: ESI reused record (key kept), EDI the symbol it is for */
+            writeString(h, "preuse key="); writeHex(h, *(unsigned long *)(regs[1] + 0x1c));
+            writeString(h, " for="); writeHex(h, regs[0]);
+            writeString(h, " forkey="); writeHex(h, *(unsigned long *)(regs[0] + 0x28));
+            writeName(h, (unsigned char *)regs[0]);
+        }
+        writeString(h, "\n"); CloseHandle(h);
+    }
+    SetLastError(lastError);
+}
+static void __declspec(naked) pfHook(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 0
+        push eax
+        call pfLog
+        add esp, 8
+        popad
+        popfd
+        mov edi, dword ptr [eax + 0xc]
+        xor edx, edx
+        jmp dword ptr [g_pfRet]
+    }
+}
+static void __declspec(naked) prHook(void)
+{
+    __asm {
+        pushfd
+        pushad
+        mov eax, esp
+        push 1
+        push eax
+        call pfLog
+        add esp, 8
+        popad
+        popfd
+        mov eax, dword ptr [esi + 0x2c]
+        push ecx
+        mov ecx, dword ptr [g_real]
+        mov dword ptr [ecx + 0xae038], eax
+        pop ecx
+        jmp dword ptr [g_prRet]
+    }
+}
+static int loadPkLog(void)
+{
+    char t[8];
+    unsigned char b[10];
+    static const unsigned char bf[] = {0x8b,0x78,0x0c,0x33,0xd2};
+    unsigned char br[8];
+    if (!GetEnvironmentVariableA("HOMM3_VC6_PK_LOG", t, sizeof t)) return 1;
+    g_pkLog = 1;
+    b[0] = 0x8b; b[1] = 0x55; b[2] = 0xf8; b[3] = 0x8b; b[4] = 0x04; b[5] = 0x95;
+    *(unsigned long *)(b + 6) = (unsigned long)g_real + 0x9d750;
+    g_pkRet = (char *)g_real + 0x2c708;
+    g_pfRet = (char *)g_real + 0x2ce6e;
+    g_prRet = (char *)g_real + 0x21262;
+    br[0] = 0x8b; br[1] = 0x46; br[2] = 0x2c; br[3] = 0xa3;
+    *(unsigned long *)(br + 4) = (unsigned long)g_real + 0xae038;
+    if (!patchHook(0x2c6fe, pkHook, b, 10)) return 0;
+    if (!patchHook(0x2ce69, pfHook, bf, 5)) return 0;
+    return patchHook(0x2125a, prHook, br, 8);
+}
+
 static int loadPhaseState(void)
 {
     char text[16];
@@ -1721,12 +1889,14 @@ static int installInlineTrace(void)
     if (!patchHook(0x24748, colorHook, colorBytes, sizeof colorBytes)) return 0;
     loadMergeVeto();
     loadHashShift();
+    loadHandleSet();
     if (!loadHandleShift()) return 0;
     if (!loadPhaseState()) return 0;
     loadBytePatches();
     if (!loadTupleDump()) return 0;
     if (!loadWalkLog()) return 0;
     if (!loadDqLog()) return 0;
+    if (!loadPkLog()) return 0;
     {
         /* Diagnostic heap displacement: HOMM3_VC6_HEAP_PAD="malloc,local"
          * byte counts allocated once before C2 runs. */
