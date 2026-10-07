@@ -343,7 +343,7 @@ const int g_gameDifficultyImpossible = 4;
 VA(0x004b8410, 0x33)
 DC_ADDRESS(0x0a2af8, 0x62)
 MAC_ADDRESS(0x0c9fa8, 0xa0)
-unsigned char initializeRandomTavernText()
+bool initializeRandomTavernText()
 {
     g_randomTavernText = ResourceManager::getText(
         DATA_COMPGEN(0x00677d20, randomTavernTextName, "randtvrn.txt"));
@@ -1239,7 +1239,7 @@ bool playerData::hasCapitol()
 VA(0x004b9fc0, 0x167)
 DC_ADDRESS(0x0a4ee8, 0x1c2)
 MAC_ADDRESS(0x0cc4fc, 0x1bc)
-unsigned char playerData::addGarrisonHero(town* ourTown)
+bool playerData::addGarrisonHero(town* ourTown)
 {
     int i;
     hero* ourHero;
@@ -9305,7 +9305,7 @@ VA(0x004cbd40, 0xA83)
 DC_ADDRESS(0x0b85c4, 0xe44)
 MAC_ADDRESS(0x0e31b0, 0xc0c)  // retail body +  source shape
 int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
-                          unsigned char inGame, unsigned char isDiff)
+                          bool inGame, bool isDiff)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);
@@ -10194,7 +10194,7 @@ void game::checkForTownEvent()
 VA(0x004cdb80, 0x231)
 DC_ADDRESS(0x0bb0e4, 0x2fc)
 MAC_ADDRESS(0x0e52e0, 0x2cc)
-unsigned char game::getRandomLith(const std::vector<type_point>& points,
+bool game::getRandomLith(const std::vector<type_point>& points,
                                     type_point& result, long cellType,
                                     long excluded) const
 {
@@ -10249,7 +10249,7 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
 VA(0x004cddc0, 0x22)
 DC_ADDRESS(0x0bb3e0, 0x3c)
 MAC_ADDRESS(0x0e55ac, 0x38)
-unsigned char game::getRandomLithExit(long color, type_point& result) const
+bool game::getRandomLithExit(long color, type_point& result) const
 {
     return getRandomLith(getLithExits(color), result, 0x2c, -1);
 }
@@ -10257,7 +10257,7 @@ unsigned char game::getRandomLithExit(long color, type_point& result) const
 VA(0x004cddf0, 0x24)
 DC_ADDRESS(0x0bb41c, 0x3e)
 MAC_ADDRESS(0x0e55e4, 0x3c)
-unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
+bool game::getRandomLith(long color, long excluded, type_point& result) const
 {
     return getRandomLith(getLiths(color), result, 0x2d, excluded);
 }
@@ -10265,7 +10265,7 @@ unsigned char game::getRandomLith(long color, long excluded, type_point& result)
 VA(0x004cde20, 0x1D)
 DC_ADDRESS(0x0bb45c, 0x32)
 MAC_ADDRESS(0x0e5620, 0x30)
-unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
+bool game::getRandomWhirlpool(long excluded, type_point& result) const
 {
     return getRandomLith(getWhirlpools(), result, 0x6f, excluded);
 }

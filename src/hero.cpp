@@ -378,7 +378,7 @@ const THeroSpecificAbility (&g_heroSpecificAbilities)[156] =
 VA(0x004d71a0, 0x71)
 DC_ADDRESS(0x0ca728, 0x96)
 MAC_ADDRESS(0x0f1cac, 0xec)
-unsigned char initializeHeroSpecificAbilitiesTable()
+bool initializeHeroSpecificAbilitiesTable()
 {
     TSpreadsheetResource* text = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "HeroSpec.txt"));
@@ -420,7 +420,7 @@ const char* hero::getSpecificAbilityTextShort()
 // in source but /Ob2 expands it into the caller and emits no separate body.
 DC_ADDRESS(0x0ca7e8, 0x19c)
 MAC_ADDRESS(0x0f1db4, 0x294)
-static unsigned char initializeMoveConstants()
+static bool initializeMoveConstants()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00679cdc, movementSpreadsheetName, "movement.txt"));
@@ -458,11 +458,11 @@ static unsigned char initializeMoveConstants()
 VA(0x004d7240, 0x223)
 DC_ADDRESS(0x0ca984, 0x11c)
 MAC_ADDRESS(0x0f2048, 0x1cc)
-// DC public ?initialize_ballistics_table@@YA_NXZ is bool, but its
-// initialize_move_constants callee returns unsigned char. VC6 normalizes that
-// tail call for bool; Complete forwards the byte unchanged, proving the
-// Windows interface changed to unsigned char.
-unsigned char initializeBallisticsTable()
+// DC public ?initialize_ballistics_table@@YA_NXZ is bool. Its source-private
+// initialize_move_constants tail (DC T_UCHAR, the lowered bool record) is bool
+// too: VC6 forwards a bool callee's byte unchanged, as retail does, while an
+// unsigned char callee would be normalized (90.46%).
+bool initializeBallisticsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00679cec, ballisticsSpreadsheetName, "ballist.txt"));
@@ -1253,7 +1253,7 @@ const char* hero::getBiography()
 VA(0x004d9050, 0x20)
 DC_ADDRESS(0x0cc0bc, 0x26)
 MAC_ADDRESS(0x0f4bc0, 0x5c)
-unsigned char hero::belongsToHuman() const
+bool hero::belongsToHuman() const
 {
     if (m_owner < 0)
         return 0;
@@ -2005,7 +2005,7 @@ void hero::applyBattleLossTemps()
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
                                           TSecondarySkill first,
                                           TSecondarySkill second,
-                                          unsigned char complexChoice);
+                                          bool complexChoice);
 
 // get_skill_award is defined further down (0x4dad00): retail emits this
 // caller FIRST, so the helper needs a declaration here. Being only
@@ -4529,7 +4529,7 @@ void hero::updateStats()
 VA(0x004e1800, 0x24F)
 DC_ADDRESS(0x0d2e80, 0x230)
 MAC_ADDRESS(0x102330, 0x27c)
-int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickView)
+int heroView(int heroID, int noDismiss, int alreadyFaded, bool quickView)
 {
     g_heroScreenNoDismiss = noDismiss;
     g_heroScreenHeroId = heroID;
@@ -4854,7 +4854,7 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
 // E:\gamedcs\hero.cpp:4689
 DC_ADDRESS(0x0d38d8, 0x12)
 MAC_ADDRESS(0x103018, 0x20)
-unsigned char hero::hasSecondarySkill(int whichSkill)
+bool hero::hasSecondarySkill(int whichSkill)
 {
     return m_skillOrder[whichSkill] > 0;
 }
@@ -5721,7 +5721,7 @@ TCreatureType hero::getNecromancyCreature()
 VA(0x004e3cd0, 0x268)
 DC_ADDRESS(0x0d4390, 0x112)
 MAC_ADDRESS(0x104988, 0x280)
-float hero::getNecromancyFactor(unsigned char applyLimit) const
+float hero::getNecromancyFactor(bool applyLimit) const
 {
     float factor = g_necromancyFactors[getSecondarySkill(eSecSkillNecromancy)];
     if (getSecondarySkill(eSecSkillNecromancy) > 0) {
@@ -6360,7 +6360,7 @@ boat* hero::findSummonableBoat() const
 VA(0x004e5550, 0x15E)
 DC_ADDRESS(0x0d524c, 0x64)
 MAC_ADDRESS(0x106614, 0xd0)
-unsigned char hero::canSummonBoat() const
+bool hero::canSummonBoat() const
 {
     if (!spellIsAvailable(SPELL_SUMMON_BOAT))
         return 0;
@@ -6395,7 +6395,7 @@ DC_ADDRESS(0x0d52d0, 0xd0)
 MAC_ADDRESS(0x10671c, 0xd0)
 // Mac code 0+0x10671c retains both abs calls; -O1 -proc 750 plus linked
 // reload-slot collapse matches the complete 208-byte body. DC names distance.
-unsigned char hero::isInPatrolRadius(type_point point) const
+bool hero::isInPatrolRadius(type_point point) const
 {
     if (m_patrolRadius < 0 || m_patrolX == kPatrolNone)
         return 1;

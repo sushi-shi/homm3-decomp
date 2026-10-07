@@ -166,7 +166,7 @@ public:
     void adjustSoundVolumes();
     void adjustMusicVolumes();
     int musicPlaying();
-    void startMP3(const char* filename, int loopCount, unsigned char stopSamples);
+    void startMP3(const char* filename, int loopCount, bool stopSamples);
     void stopMP3();
     void resumeStream();          // 0x59ac00
     void resumeSamples();         // 0x599b90, name provisional

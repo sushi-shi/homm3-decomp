@@ -287,8 +287,8 @@ public:
     unsigned char m_rightHero;  // +0x01e
     int m_seed;  // +0x020
     int m_winner;  // +0x024
-    unsigned char m_retreatWin;  // +0x028
-    unsigned char m_combatSurrender;  // +0x029
+    bool m_retreatWin;  // +0x028
+    bool m_combatSurrender;  // +0x029
     int m_leftOwner;  // +0x02c
     int m_leftGold;  // +0x030
     int m_rightOwner;  // +0x034
@@ -315,8 +315,8 @@ public:
     unsigned long m_fileSize;
     unsigned long m_fullGameCrc;
     unsigned long m_thisPlayerDead;
-    unsigned char m_isDiff;
-    unsigned char m_makeOrig;
+    bool m_isDiff;
+    bool m_makeOrig;
 
     // Original public ??0CGameTransmitInitMsg@@QAA@KKK_N0@Z proves
     // Boolean inputs; CodeView lowers both parameters to its byte type.

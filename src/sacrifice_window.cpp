@@ -625,6 +625,11 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(m_artifactsButton);
 }
 
+// DC create_creature_icons, type_army_slot_widget's ctor and creature_click
+// all declare left_pane bool. With the whole left-pane chain bool (including
+// m_leftPane, which handleClick forwards), VC6 inlines one more vector::size
+// here than retail keeps out of line (100 -> 97.10); the byte chain matches,
+// so Complete keeps it byte-typed pending a source model that explains it.
 VA(0x00561f70, 0x427)
 DC_ADDRESS(0x1255cc, 0x258)
 MAC_ADDRESS(0x1588f0, 0x46c)
@@ -1019,7 +1024,7 @@ void type_sacrifice_window::pickUpArtifact(
 DC_ADDRESS(0x126254, 0x90)
 MAC_ADDRESS(0x159c74, 0xa4)
 void type_sacrifice_window::putDownArtifact(
-    unsigned char changeExperience)
+    bool changeExperience)
 {
     if (changeExperience) {
         m_totalExperience -= m_holdingArtifact.m_value;
@@ -1112,7 +1117,7 @@ VA(0x005636c0, 0x31a)
 DC_ADDRESS(0x1264dc, 0xdc)
 MAC_ADDRESS(0x159fa4, 0x13c)  // widget call edge + dc name/order
 void type_sacrifice_window::backpackClick(
-    long slot, unsigned char rightClick)
+    long slot, bool rightClick)
 {
     type_artifact oldArtifact = m_currentHero->getBackpack(slot);
 
@@ -1160,7 +1165,7 @@ VA(0x00563a80, 0x31b)
 DC_ADDRESS(0x126640, 0xdc)
 MAC_ADDRESS(0x15a120, 0x118)
 void type_sacrifice_window::offeringClick(
-    long slot, unsigned char rightClick)
+    long slot, bool rightClick)
 {
     type_artifact_offering oldArtifact = m_artifactOfferings[slot];
 
@@ -1657,7 +1662,7 @@ VA(0x00564fe0, 0x394)
 DC_ADDRESS(0x1270f0, 0x29e)
 MAC_ADDRESS(0x15b2a4, 0x374)
 void type_sacrifice_window::creatureClick(
-    long slot, unsigned char rightClick, unsigned char leftPane)
+    long slot, bool rightClick, unsigned char leftPane)
 {
     if (rightClick || slot == m_currentCreature.m_group || slot < 0) {
         if (slot < 0)
@@ -2037,7 +2042,7 @@ VA(0x00566490, 0x258)
 DC_ADDRESS(0x127e50, 0x1f6)
 MAC_ADDRESS(0x15c954, 0x294)
 void type_skeleton_window::creatureClick(
-    long side, long slot, unsigned char rightClick)
+    long side, long slot, bool rightClick)
 {
     TCreatureType creatureType = m_armies[side]->m_armyTypes[slot];
 

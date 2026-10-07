@@ -121,7 +121,7 @@ public:
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
 DC_ADDRESS(0x038064, 0xa)
-unsigned char isVis() const { return m_hideCount == 0; }
+bool isVis() const { return m_hideCount == 0; }
 
 private:
     void saveAndDraw(IDirectDrawSurface* dstSurface,
@@ -135,7 +135,7 @@ private:
 public:
     // DC wingraph.cpp:1789 directly calls LoadFrame after GetFrame;
     // retail 0x601a00 retains that call. Preserve this specific friend.
-    friend unsigned char ddSetFullScreenStatus(int newStatus);
+    friend bool ddSetFullScreenStatus(int newStatus);
     void showSystemCursor(bool showIt);
     void reset();                 // 0x50cc80
 

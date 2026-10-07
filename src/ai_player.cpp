@@ -243,7 +243,7 @@ public:
     type_town_threat_checker(int newPlayer) { m_currentPlayerId = newPlayer; }
     void checkTowns();
     virtual void clearMarks() const;
-    virtual unsigned char isMarked(const town* ourTown) const;
+    virtual bool isMarked(const town* ourTown) const;
     virtual void markTown(town* ourTown) const;
 };
 
@@ -326,7 +326,7 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
 // Retail vtable0x63b670 slot1 points to the folded xor-al/ret4 body
 // 0x5543f0; DC independently returns false at source180.
 DC_ADDRESS(0x02dfa0, 0x4)
-unsigned char type_town_threat_checker::isMarked(const town* ourTown) const
+bool type_town_threat_checker::isMarked(const town* ourTown) const
 {
     return 0;
 }
@@ -347,7 +347,7 @@ public:
     type_garrison_purchaser(int newPlayer)
         : type_town_threat_checker(newPlayer) {}
     virtual void clearMarks() const;
-    virtual unsigned char isMarked(const town* ourTown) const;
+    virtual bool isMarked(const town* ourTown) const;
     virtual void markTown(town* ourTown) const;
 };
 
@@ -361,7 +361,7 @@ void type_garrison_purchaser::clearMarks() const
 // Original: type_garrison_purchaser::is_marked; ai_player.cpp:209
 // Retail vtable0x63b67c slot1 shares the false/ret4 body0x5543f0.
 DC_ADDRESS(0x02dff0, 0x4)
-unsigned char type_garrison_purchaser::isMarked(const town* ourTown) const
+bool type_garrison_purchaser::isMarked(const town* ourTown) const
 {
     return 0;
 }
@@ -4637,7 +4637,7 @@ type_artifact_effect::~type_artifact_effect()
 VA(0x00432510, 0x24)
 DC_ADDRESS(0x036258, 0x1c)
 MAC_ADDRESS(0x036c98, 0x28)
-long type_scouting_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_scouting_artifact::getValue(const hero* owner, bool, bool) const
 {
     return owner->m_maxMovePoints * m_bonus / 100;
 }
@@ -4653,7 +4653,7 @@ type_combat_artifact::type_combat_artifact(long newBonus)
 VA(0x00432560, 0x32)
 DC_ADDRESS(0x0362b8, 0x26)
 MAC_ADDRESS(0x036d08, 0x50)
-long type_combat_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_combat_artifact::getValue(const hero* owner, bool, bool) const
 {
     return owner->m_army.getAIValue() * m_bonus / 100;
 }
@@ -4661,7 +4661,7 @@ long type_combat_artifact::getValue(const hero* owner, unsigned char, unsigned c
 VA(0x004325a0, 0x40)
 DC_ADDRESS(0x036320, 0x2e)
 MAC_ADDRESS(0x036df0, 0x60)
-long type_might_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_might_artifact::getValue(const hero* owner, bool, bool exact) const
 {
     if (exact)
         return 0;
@@ -4671,7 +4671,7 @@ long type_might_artifact::getValue(const hero* owner, unsigned char, unsigned ch
 VA(0x004325e0, 0x21)
 DC_ADDRESS(0x036390, 0x24)
 MAC_ADDRESS(0x036e88, 0x20)
-long type_power_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_power_artifact::getValue(const hero* owner, bool, bool exact) const
 {
     if (exact)
         return 0;
@@ -4681,7 +4681,7 @@ long type_power_artifact::getValue(const hero* owner, unsigned char, unsigned ch
 VA(0x00432610, 0x21)
 DC_ADDRESS(0x0363f0, 0x24)
 MAC_ADDRESS(0x036ee0, 0x20)
-long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_knowledge_artifact::getValue(const hero* owner, bool, bool exact) const
 {
     if (exact)
         return 0;
@@ -4692,7 +4692,7 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
 // necromancy artifacts. VC6 expands it in their retail getValue bodies.
 MAC_ADDRESS(0x036f38, 0xfc)
 long type_base_necromancy_artifact::getValue(
-    const hero* owner, unsigned char equipped, unsigned char) const
+    const hero* owner, bool equipped, bool) const
 {
     long effect = static_cast<long>(
         (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
@@ -4716,7 +4716,7 @@ long type_base_necromancy_artifact::getValue(
 VA(0x00432640, 0x97)
 DC_ADDRESS(0x036450, 0x8a)
 MAC_ADDRESS(0x0370d8, 0x34)  // artifact get_value cluster order-map + get_AI_value
-long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+long type_necromancy_artifact::getValue(const hero* owner, bool equipped, bool exact) const
 {
     if (owner->m_skillLevel[eSecSkillNecromancy] == 0)
         return 0;
@@ -4726,7 +4726,7 @@ long type_necromancy_artifact::getValue(const hero* owner, unsigned char equippe
 VA(0x004326e0, 0x38)
 DC_ADDRESS(0x03652c, 0x2a)
 MAC_ADDRESS(0x037144, 0x54)
-long type_movement_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_movement_artifact::getValue(const hero* owner, bool, bool) const
 {
     return (owner->m_army.getAIValue() + 2500) * m_bonus / 100;
 }
@@ -4734,7 +4734,7 @@ long type_movement_artifact::getValue(const hero* owner, unsigned char, unsigned
 VA(0x00432720, 0x54)
 DC_ADDRESS(0x03659c, 0x46)
 MAC_ADDRESS(0x0371d0, 0x78)
-long type_spellcaster_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_spellcaster_artifact::getValue(const hero* owner, bool, bool) const
 {
     if (owner->getValueOfPower() == 0)
         return 0;
@@ -4753,7 +4753,7 @@ double aiValueOfLuck(long luck, long change);
 VA(0x00432780, 0x68)
 DC_ADDRESS(0x03662c, 0xaa)
 MAC_ADDRESS(0x037280, 0xc4)
-long type_morale_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+long type_morale_artifact::getValue(const hero* owner, bool equipped, bool exact) const
 {
     if (exact)
         return 0;
@@ -4767,7 +4767,7 @@ long type_morale_artifact::getValue(const hero* owner, unsigned char equipped, u
 VA(0x004327f0, 0x68)
 DC_ADDRESS(0x036720, 0xaa)
 MAC_ADDRESS(0x03737c, 0xc4)
-long type_luck_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+long type_luck_artifact::getValue(const hero* owner, bool equipped, bool exact) const
 {
     if (exact)
         return 0;
@@ -4781,7 +4781,7 @@ long type_luck_artifact::getValue(const hero* owner, unsigned char equipped, uns
 VA(0x00432860, 0x21)
 DC_ADDRESS(0x036814, 0x24)
 MAC_ADDRESS(0x0374e4, 0x20)
-long type_duration_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_duration_artifact::getValue(const hero* owner, bool, bool exact) const
 {
     if (exact)
         return 0;
@@ -4791,8 +4791,8 @@ long type_duration_artifact::getValue(const hero* owner, unsigned char, unsigned
 VA(0x00432890, 0x1b2)
 DC_ADDRESS(0x03687c, 0x160)
 MAC_ADDRESS(0x037550, 0x1e4)
-long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
-                                     unsigned char exact) const
+long type_school_artifact::getValue(const hero* owner, bool equipped,
+                                     bool exact) const
 {
     if (exact)
         return 0;
@@ -4835,7 +4835,7 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
 VA(0x00432a50, 0xc3)
 DC_ADDRESS(0x036a1c, 0x98)
 MAC_ADDRESS(0x03777c, 0x110)
-long type_antimagic_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+long type_antimagic_artifact::getValue(const hero* owner, bool equipped, bool exact) const
 {
     long value;
     if (m_bonus == 0)
@@ -4857,7 +4857,7 @@ long type_antimagic_artifact::getValue(const hero* owner, unsigned char equipped
 VA(0x00432b20, 0x78)
 DC_ADDRESS(0x036afc, 0x142)
 MAC_ADDRESS(0x0378c4, 0xe4)
-long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_antimorale_artifact::getValue(const hero* owner, bool, bool exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfMorale(0, 2) * army);
@@ -4872,7 +4872,7 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
 VA(0x00432ba0, 0x78)
 DC_ADDRESS(0x036c90, 0x142)
 MAC_ADDRESS(0x0379e0, 0xe4)
-long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
+long type_antiluck_artifact::getValue(const hero* owner, bool, bool exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
@@ -4887,8 +4887,8 @@ long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned
 VA(0x00432c20, 0xf5)
 DC_ADDRESS(0x036e28, 0xbe)
 MAC_ADDRESS(0x037b10, 0x130)
-long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
-                                   unsigned char exact) const
+long type_tome_artifact::getValue(const hero* owner, bool equipped,
+                                   bool exact) const
 {
     if (exact)
         return 0;
@@ -4915,8 +4915,8 @@ long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
 VA(0x00432d20, 0x49)
 DC_ADDRESS(0x036f54, 0x96)
 MAC_ADDRESS(0x037c98, 0x64)
-long type_income_artifact::getValue(const hero* owner, unsigned char,
-                                     unsigned char) const
+long type_income_artifact::getValue(const hero* owner, bool,
+                                     bool) const
 {
     return static_cast<long>(
         m_amount * g_aiPlayers[owner->m_owner].getResourceValue(m_resource) * 3.0);
@@ -4926,8 +4926,8 @@ VA(0x00432d70, 0x219)
 DC_ADDRESS(0x03704c, 0x148)
 MAC_ADDRESS(0x037d54, 0x278)  // MAC_ABSTRACTION_FROM(tokens1:948ededbbe52,51.5823): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 long type_creature_growth_artifact::getValue(const hero* owner,
-                                               unsigned char,
-                                               unsigned char exact) const
+                                               bool,
+                                               bool exact) const
 {
     long value = 0;
     const playerData& player = g_game->m_players[owner->m_owner];
@@ -4976,8 +4976,8 @@ long type_creature_growth_artifact::getValue(const hero* owner,
 // config/source/win_only.tsv; class names remain provisional semantic names.
 VA(0x00432f90, 0xe4)
 MAC_ADDRESS(0x038014, 0xd4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
-long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
-                                    unsigned char exact) const
+long type_spell_artifact::getValue(const hero* owner, bool equipped,
+                                    bool exact) const
 {
     if (exact)
         return 0;
@@ -4997,7 +4997,7 @@ VA_COMPGEN(0x00433080, 0x21, SCALAR_DELETING_DTOR, type_combat_artifact)
 
 VA(0x004330b0, 0x73)
 MAC_ADDRESS(0x038120, 0x70)
-long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_shooter_bonus_artifact::getValue(const hero* owner, bool, bool) const
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
@@ -5011,7 +5011,7 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
 VA(0x00433130, 0x26f)
 MAC_ADDRESS(0x038238, 0x26c)
 long type_angelic_alliance_artifact::getValue(
-    const hero* owner, unsigned char equipped, unsigned char exact) const
+    const hero* owner, bool equipped, bool exact) const
 {
     std::bitset<9> alliedAlignments = getAngelicAllianceAlignments();
     playerData* player = &g_game->m_players[owner->m_owner];
@@ -5063,8 +5063,8 @@ long type_angelic_alliance_artifact::getValue(
 VA(0x004333a0, 0x174)
 MAC_ADDRESS(0x0384e0, 0x104)  // vtable slot 0x63b768, Mac 0:0x384e0
 long type_undead_king_cloak_artifact::getValue(const hero* owner,
-                                                unsigned char equipped,
-                                                unsigned char exact) const
+                                                bool equipped,
+                                                bool exact) const
 {
     if (owner->getSecondarySkill(eSecSkillNecromancy) == 0)
         return type_base_necromancy_artifact::getValue(
@@ -5094,7 +5094,7 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
 
 VA(0x00433520, 0x5a)
 MAC_ADDRESS(0x0385e4, 0x58)
-long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, unsigned char) const
+long type_elixir_of_life_artifact::getValue(const hero* owner, bool, bool) const
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
@@ -5108,7 +5108,7 @@ long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, un
 VA(0x00433580, 0x13a)
 MAC_ADDRESS(0x03863c, 0x160)
 long type_statue_of_legion_artifact::getValue(
-    const hero* owner, unsigned char, unsigned char) const
+    const hero* owner, bool, bool) const
 {
     long total = 0;
     playerData* player = &g_game->m_players[owner->m_owner];
@@ -5153,7 +5153,7 @@ long type_statue_of_legion_artifact::getValue(
 VA(0x004336c0, 0x320)
 DC_ADDRESS(0x037194, 0x2d0)
 MAC_ADDRESS(0x03879c, 0x428)  // anchor-callee unique (hero::GetFirstAidFactor)
-long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact)
+long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, bool equipped, bool exact)
 {
     if (artifact.m_artifactId == ARTIFACT_NONE)
         return 0;
@@ -5260,7 +5260,7 @@ VA(0x004339e0, 0xb8)
 DC_ADDRESS(0x037464, 0xae)
 MAC_ADDRESS(0x038bc4, 0x130)
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
-                        unsigned char exact)
+                        bool exact)
 {
     int slot;
     for (slot = 0; slot < 19; ++slot) {

@@ -198,7 +198,7 @@ DATA(0x00691368) static TTextResource* g_extraInfoText;
 VA(0x00405d20, 0x60)
 DC_ADDRESS(0x005714, 0xb6)
 MAC_ADDRESS(0x005e04, 0xe8)
-unsigned char initializeCreatureGeneratorNames()
+bool initializeCreatureGeneratorNames()
 {
     g_creatureGenerator1Text = ResourceManager::getText(
         DATA_COMPGEN(0x00660278, creatureGenerator1TextName, "crgen1.txt"));
@@ -222,7 +222,7 @@ unsigned char initializeCreatureGeneratorNames()
 VA(0x00405d80, 0x30)
 DC_ADDRESS(0x0057cc, 0x62)
 MAC_ADDRESS(0x005ef4, 0xa0)
-unsigned char initializeExtraInfoText()
+bool initializeExtraInfoText()
 {
     g_extraInfoText = ResourceManager::getText(
         DATA_COMPGEN(0x00660284, extraInfoTextName, "xtrainfo.txt"));
@@ -6943,7 +6943,7 @@ void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
 VA(0x00415de0, 0x140)
 DC_ADDRESS(0x018d38, 0x210)
 MAC_ADDRESS(0x0166b0, 0x1b4)
-void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWindow, unsigned char update)
+void advManager::updBottomView(bool forceUpdate, bool drawWindow, bool update)
 {
     if (m_bottomViewOverride == BOTTOM_VIEW_8)
         return;
@@ -6985,6 +6985,8 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         changed = updBottomViewEnemyTurn(forceUpdate);
     }
 
+    // DC 0x18f2a..0x18f36 and Mac 0x16838..0x16848 also normalize the bool
+    // update argument, so the explicit comparison is source.
     if (changed && drawWindow)
         m_advWindow->drawBottomView(update != 0);
 }
@@ -6994,12 +6996,12 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
 VA(0x00415f20, 0x87)
 DC_ADDRESS(0x018f48, 0x7c)
 MAC_ADDRESS(0x016864, 0x88)
-unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
+bool advManager::updBottomViewEnemyTurn(bool forceUpdate)
 {
-    unsigned char changed = 0;
+    bool changed = false;
 
     if (m_bottomViewType != BOTTOM_VIEW_5) {
-        changed = 1;
+        changed = true;
         clearBottomView();
         m_bottomViewType = BOTTOM_VIEW_5;
         m_advWindow->setBottomView(new TBottomViewEnemyTurn(m_advWindow));
@@ -7011,7 +7013,7 @@ unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
 VA(0x00415fb0, 0xB0)
 DC_ADDRESS(0x018fc4, 0xd4)
 MAC_ADDRESS(0x0168ec, 0xa4)
-unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
+bool advManager::updBottomViewNewTurn(bool forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_1) {
         m_advWindow->animateBottomView(0);
@@ -7048,7 +7050,7 @@ void advManager::bvResMsg(const char* msg, int resType, int resQty)
 VA(0x00416160, 0xAF)
 DC_ADDRESS(0x0190fc, 0x96)
 MAC_ADDRESS(0x016a1c, 0x94)
-unsigned char advManager::updBottomViewResMsg(unsigned char forceUpdate)
+bool advManager::updBottomViewResMsg(bool forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_6)
         return 0;
@@ -7083,7 +7085,7 @@ void advManager::bvMessage(const char* msg)
 VA(0x004162f0, 0xA1)
 DC_ADDRESS(0x0191d0, 0xaa)
 MAC_ADDRESS(0x016b24, 0x8c)
-unsigned char advManager::updBottomViewMessage(unsigned char forceUpdate)
+bool advManager::updBottomViewMessage(bool forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_7)
         return 0;
@@ -7098,7 +7100,7 @@ unsigned char advManager::updBottomViewMessage(unsigned char forceUpdate)
 VA(0x004163a0, 0xA6)
 DC_ADDRESS(0x01927c, 0x8e)
 MAC_ADDRESS(0x016bb0, 0x98)
-unsigned char advManager::updBottomViewKingdom(unsigned char forceUpdate)
+bool advManager::updBottomViewKingdom(bool forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_2)
         return 0;
@@ -7113,7 +7115,7 @@ unsigned char advManager::updBottomViewKingdom(unsigned char forceUpdate)
 VA(0x00416450, 0x9A)
 DC_ADDRESS(0x01930c, 0x7c)
 MAC_ADDRESS(0x016c48, 0x88)
-unsigned char advManager::updBottomViewHero(unsigned char forceUpdate)
+bool advManager::updBottomViewHero(bool forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_3)
         return 0;
@@ -7127,7 +7129,7 @@ unsigned char advManager::updBottomViewHero(unsigned char forceUpdate)
 VA(0x004164f0, 0x9A)
 DC_ADDRESS(0x019388, 0x98)
 MAC_ADDRESS(0x016cd0, 0x88)
-unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
+bool advManager::updBottomViewTown(bool forceUpdate)
 {
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_4)
         return 0;
@@ -7443,7 +7445,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
 VA(0x00417420, 0x146)
 DC_ADDRESS(0x01a230, 0x180)
 MAC_ADDRESS(0x017b38, 0x18c)
-void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
+void advManager::redrawAdvScreen(bool update, bool forceSaveBorder)
 {
     const int playerId = g_game->getLocalPlayerGamePos();
     Bitmap816* const bmp = ResourceManager::getBitmap816("AdvMap.pcx");
@@ -8775,7 +8777,7 @@ void advManager::startLocalPlayerTurn()
 VA(0x0041a100, 0xD9)
 DC_ADDRESS(0x01d6ec, 0x118)
 MAC_ADDRESS(0x01a854, 0xcc)
-void advManager::loadRemote(unsigned char makeOrig)
+void advManager::loadRemote(bool makeOrig)
 {
     g_turnDuration.clear();
     CHourGlass hourGlass(1);
@@ -9333,7 +9335,7 @@ int CAdvPopup::windowHandler(message& msg)
         return exitDialog(msg);
 
     if (g_remoteOn) {
-        unsigned char msgReceived = 0;
+        bool msgReceived = 0;
         CNetMsgHandler* netMsgHandler = g_dPlay->getNetMsgHandler();
         if (netMsgHandler)
             netMsgHandler->checkHandleNet(1, &msgReceived);

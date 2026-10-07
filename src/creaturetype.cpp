@@ -198,7 +198,7 @@ static int getCreatureDwellingIndex(TCreatureType type)
 VA(0x0047b120, 0x5D)
 DC_ADDRESS(0x0718fc, 0x36)
 MAC_ADDRESS(0x088940, 0x3c)
-int isBaseCreature(TCreatureType monType)
+bool isBaseCreature(TCreatureType monType)
 {
     int creatureIndex = getCreatureDwellingIndex(monType);
     return creatureIndex >= 0 && creatureIndex < 7;
@@ -207,7 +207,7 @@ int isBaseCreature(TCreatureType monType)
 VA(0x0047b180, 0x16)
 DC_ADDRESS(0x071934, 0x12)
 MAC_ADDRESS(0x08897c, 0x24)
-unsigned char isSiegeWeapon(TCreatureType creature)
+bool isSiegeWeapon(TCreatureType creature)
 {
     if (creature >= CREATURE_CATAPULT && creature <= CREATURE_AMMO_CART)
         return 1;
@@ -238,7 +238,7 @@ TCreatureType downgradedCreatureType(TCreatureType type)
 VA(0x0047b290, 0x1E9)
 DC_ADDRESS(0x071968, 0x1d8)
 MAC_ADDRESS(0x088a70, 0x37c)
-unsigned char initializeCreatureTypeTraitsTable()
+bool initializeCreatureTypeTraitsTable()
 {
     TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00675514, creatureTraitsSpreadsheetName,

@@ -11,7 +11,7 @@ public:
     border(int x, int y, int w, int h, int id, int style);
     border();
     void initialize(int x, int y, int w, int h, int id, int style,
-                    unsigned char focusable = 0);
+                    bool focusable = 0);
     virtual int main(message& msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;  // slot 4

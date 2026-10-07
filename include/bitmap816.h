@@ -52,7 +52,7 @@ public:
         int dy, int dw, int dh, int dpitch, bool tblit) const;
     void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
         int dy, bool tblit) const;
-    void markPuzzle(unsigned char* visible, long destX, long destY);
+    void markPuzzle(bool* visible, long destX, long destY);
     void setPalette(const unsigned short* pal);
     void setPalette(TPalette24* pal24);
     void resetPalette();

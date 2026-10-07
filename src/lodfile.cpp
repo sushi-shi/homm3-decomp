@@ -51,7 +51,7 @@ LODEntry* LODFile::getItemIndex(const char* itemName)
 
 // Original: LODFile::exist; lodfile.cpp:112
 DC_ADDRESS(0x0e9198, 0x26)
-unsigned char LODFile::exist(const char* itemName)
+bool LODFile::exist(const char* itemName)
 {
     find(0, m_numEntries, itemName);
     return m_matchindex >= 0;

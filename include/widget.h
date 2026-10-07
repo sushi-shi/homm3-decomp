@@ -154,6 +154,9 @@ public:
     virtual int getRealWidth() const { return m_width; }  // slot 6
     virtual void processHover();  // slot 7
     virtual void dim() const;  // slot 8
+    // DC ?enable@widget@@UAAX_N@Z (and slider's override) declare bool, but
+    // TMultiPlayerWindow::update (0x50f0f0) keeps its byte flags in separate
+    // frame slots only with a byte parameter (bool: 100 -> 87.53).
     virtual void enable(unsigned char on);  // slot 9
     // Original set_help_text@@QAAXPBD0_N proves Boolean text ownership.
     void setHelpText(const char* text, const char* rclick, bool copyText);
@@ -192,7 +195,7 @@ public:
     // in both builds - retail's only call site is heroWindow's slot-8
     // body 0x5ff5f0, where /Ob2 expands it in full.
     DC_ADDRESS(0x002dec, 0x24)
-    void sleep(unsigned char on)
+    void sleep(bool on)
     {
         if (on) {
             if (m_sleepCount++ == 0)

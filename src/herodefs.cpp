@@ -240,7 +240,7 @@ static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
 VA(0x004e67a0, 0x176)
 DC_ADDRESS(0x0d5a40, 0x72)
 MAC_ADDRESS(0x1077f8, 0xd4)
-unsigned char initializeHeroTraitsTable()
+bool initializeHeroTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f154, heroTraitsSpreadsheetName,

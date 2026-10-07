@@ -338,35 +338,35 @@ static palette* g_palette;
 // The remaining declarations below are the ordinary free functions whose
 // bodies are claimed elsewhere but whose owner headers carry them only as
 // CODEVIEW comments.
-unsigned char initializeRandomTavernText();
-unsigned char initializeCreatureBankTraits();
-unsigned char initializeCreatureGeneratorNames();
-unsigned char initializeCreatureTypeTraitsTable();
+bool initializeRandomTavernText();
+bool initializeCreatureBankTraits();
+bool initializeCreatureGeneratorNames();
+bool initializeCreatureTypeTraitsTable();
 void initializeAdventureObjectTraits();
-unsigned char initializeExtraInfoText();
-unsigned char initializeHeroSpecificAbilitiesTable();
+bool initializeExtraInfoText();
+bool initializeHeroSpecificAbilitiesTable();
 unsigned char initializeCampaignMusicTable();
 int interpretCommandLine();
 bool initializeAdventureEventText();
-unsigned char initializeSpellTraitsTable();
-unsigned char initializeHeroTraitsTable();
+bool initializeSpellTraitsTable();
+bool initializeHeroTraitsTable();
 bool initializeHeroClassTraitsTable();
-unsigned char initializeBallisticsTable();
+bool initializeBallisticsTable();
 bool initializeSSkillTraitsTable();
 bool initializeArtifactTraitsTable();
 bool initializeVCDescriptions();
 bool initializeLCDescriptions();
 bool initializeTurnDurationText();
-unsigned char initializeCreatureAnimationTraitsTable();
+bool initializeCreatureAnimationTraitsTable();
 bool initializeArtifactEventText();
 bool initializeRandomSignText();
-unsigned char initializeCampaignMapTraitsTable();
+bool initializeCampaignMapTraitsTable();
 void aiInitialize();
 void readPrefs();
 void writePrefs();
 int setupCDDrive();
-unsigned char loadAnimHeaders();
-unsigned char loadSoundHeaders();
+bool loadAnimHeaders();
+bool loadSoundHeaders();
 namespace ResourceManager {
 bool open(bool checkCd, bool loadLod, int* result);
 }
@@ -1975,7 +1975,7 @@ int normalDialogHandler(message& msg)
             return exitNormalDialog(msg);
     }
     if (g_remoteOn && !g_dialogDeadline) {
-        unsigned char msgReceived = 0;
+        bool msgReceived = 0;
         if (g_dPlay) {
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
             if (handler) {
@@ -2351,7 +2351,7 @@ static void checkPlayerLoss()
 VA(0x004f1460, 0x172)
 DC_ADDRESS(0x0e2808, 0x128)
 MAC_ADDRESS(0x112dd4, 0x294)
-unsigned char getTeamNames(int player, char* names)
+bool getTeamNames(int player, char* names)
 {
     unsigned short teamMask = g_game->getTeamMask(player);
     int numPlayers = 0;
@@ -3984,7 +3984,7 @@ int getNextHumanPlayer(int start)
 VA(0x004f4c00, 0x2AA)
 DC_ADDRESS(0x0e5214, 0x94)
 MAC_ADDRESS(0x1164bc, 0x2c4)
-void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
+void handleRemoteDeadPlayerExit(int dpGamePos, bool showMsg)
 {
     if (g_remoteOn) {
         if (dpGamePos == g_game->getLocalPlayerGamePos()) {

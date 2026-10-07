@@ -193,10 +193,10 @@ public:
     virtual ~type_sacrifice_window();
 
     void artifactClick(long slot, unsigned char rightClick);
-    void backpackClick(long slot, unsigned char rightClick);
-    void creatureClick(long slot, unsigned char rightClick,
+    void backpackClick(long slot, bool rightClick);
+    void creatureClick(long slot, bool rightClick,
                         unsigned char leftPane);
-    void offeringClick(long slot, unsigned char rightClick);
+    void offeringClick(long slot, bool rightClick);
 
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     virtual void doModal(bool fadeIn);                        // slot 6
@@ -218,7 +218,7 @@ private:
     long getMaxAmount(long slot) const;
     void pickUpArtifact(type_artifact artifact, long slot,
                           unsigned char newArtifact);
-    void putDownArtifact(unsigned char changeExperience);
+    void putDownArtifact(bool changeExperience);
     void returnArtifact(const type_artifact_offering& artifact);
     void setArtifactMode();
     void setCreatureMode();
@@ -340,7 +340,7 @@ public:
     type_skeleton_window(armyGroup* newArmy);
 
     virtual ~type_skeleton_window();
-    void creatureClick(long side, long slot, unsigned char rightClick);
+    void creatureClick(long side, long slot, bool rightClick);
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     virtual int windowHandler(message& msg);                   // slot 9
     virtual int exitDialog(message& msg);                      // slot 14

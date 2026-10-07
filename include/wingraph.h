@@ -34,13 +34,13 @@ inline unsigned rgBto16(int r, int g, int b)
 
 // Live prototypes (claimed wingraph.cpp bodies; called from kbwin's
 // AppCommand fullscreen arm, AppExit, WM_PAINT and WinMain).
-unsigned char setFullScreenStatus(int fullScreenOn);    // 0x6019a0
+bool setFullScreenStatus(int fullScreenOn);    // 0x6019a0
 void cleanUpWinGraphics();                               // 0x601890
 int appPaint(void* hwnd, void* hdc);                     // 0x601820
 void initGraphics();
 void ddInitGraphics();
 void ddCleanUpWinGraphics();                             // 0x6018a0
-unsigned char ddSetFullScreenStatus(int newStatus);     // 0x601a00
+bool ddSetFullScreenStatus(int newStatus);     // 0x601a00
 void ddsd(int ddErr, char* file, int line);           // 0x6006e0
 int getDesktopWidth();                                   // 0x6014c0
 int getDesktopHeight();                                  // 0x6014d0
@@ -48,11 +48,11 @@ int getDesktopHeight();                                  // 0x6014d0
 // already at 16bpp, so the GetDeviceCaps(BITSPIXEL) reading is compared
 // against this depth and the result is the function's return value.
 enum { DESKTOP_REQUIRED_BITS_PER_PIXEL = 16 };
-unsigned char getDesktopInfo();
+bool getDesktopInfo();
 long ddRestoreSurfaces();                                // 0x6013a0
 
 void ddCleanUpWinGraphics();                             // 0x6018a0
-unsigned char ddSetFullScreenStatus(int newStatus);     // 0x601a00
+bool ddSetFullScreenStatus(int newStatus);     // 0x601a00
 
 // The windowed frame DDSetFullScreenStatus restores, and the 565 green
 // mask it tests the rebuilt surface against. Both are written as raw

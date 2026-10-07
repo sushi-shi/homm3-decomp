@@ -650,22 +650,22 @@ public:
     TAdventureMapWindow();
     ~TAdventureMapWindow();
     virtual int open(int zOrder, bool update);
-    virtual void close(unsigned char update);
+    virtual void close(bool update);
     virtual void onSleepChange(unsigned char on);
     unsigned char processRightSelect(const message* msg);
     bool processHover(int hx, int hy);
-    void doHeroKnob(unsigned char up);
-    void doTownKnob(unsigned char up);
+    void doHeroKnob(bool up);
+    void doTownKnob(bool up);
     // Original locator publics encode H_N0: index and two Boolean flags.
     void updateHeroLocators(int top, bool drawWin, bool update);
     void updateTownLocators(int top, bool drawWin, bool update);
     void updateHeroLocator(int which, bool drawWinSect, bool update);
     void updateTownLocator(int which, bool drawWinSect, bool update);
-    void highlightLocators(unsigned char update);
+    void highlightLocators(bool update);
     void updateSpellButton(const class hero* thisHero);
     void updateSleepButton(const class hero* thisHero);
-    void updateQuestLogButton(unsigned char update);
-    unsigned char setElevationToggleImage(int level);
+    void updateQuestLogButton(bool update);
+    bool setElevationToggleImage(int level);
     // Retail 0x403cc0 is `ret 4` over one stack argument, so the
     // Dreamcast roster's zero-parameter TAdventureMapWindow spelling does
     // not transfer - the same divergence UpdateSleepButton records just
@@ -673,15 +673,15 @@ public:
     // 0x2a74) carries the parameter and names it `image`, and
     // DoAdvCommand's one call site passes the literal 0.
     void setSleepImage(int image);
-    void animateBottomView(unsigned char inBackground);
+    void animateBottomView(bool inBackground);
     void clearBottomView();
-    void drawBottomView(unsigned char update);
-    inline void setBackgroundAnimation(unsigned char enable);
+    void drawBottomView(bool update);
+    inline void setBackgroundAnimation(bool enable);
     void setBottomView(class type_bottom_view_window* newView);
     void updateResourceDisplay(bool draw, bool update);
     static void setAdvWinButtonPalette(int id, int player);
-    void drawChatText(unsigned char update);
-    void updateButtons(unsigned char draw, unsigned char update);
+    void drawChatText(bool update);
+    void updateButtons(bool draw, bool update);
 
 private:
     void drawTownLocatorHighlight(int which, unsigned char update);
@@ -943,7 +943,7 @@ public:
     void updateScreen(int allowIntermediateMouse, int forceDraw);
     BlackBoxData* getBlackBox(const ExtraInfoUnion* cell) const;
     TreasureData* getTreasureData(NewmapCell* cell) const;
-    void redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder);
+    void redrawAdvScreen(bool update, bool forceSaveBorder);
     NewmapCell* doAdvCommand(type_point& triggerPoint);
     // advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
 // hands the trigger cell straight to this dispatcher. The guard is SPLIT
@@ -959,7 +959,7 @@ public:
     void generatorEvent(class hero* who, NewmapCell* eventCell,
                         type_point point);
     void townEvent(NewmapCell* cell, type_point point,
-                   unsigned char humanPlayer);
+                   bool humanPlayer);
     // DC events.cpp:5851 proves the creature enum. The mine caller uses
     // the army's typed creature view, preserving the retail argument order
     // without an int facade or an enum-conversion helper in its call.
@@ -1016,19 +1016,19 @@ public:
                           town* rightTown, hero* rightHero,
                           armyGroup* rightArmyGroup, int seed,
                           int toWhoNetPos, int winner,
-                          unsigned char retreatWin,
-                          unsigned char combatSurrender);
+                          bool retreatWin,
+                          bool combatSurrender);
     void bvResMsg(const char* message, int resourceType, int quantity);
     void bvMessage(const char* message);
 
 private:
-    unsigned char updBottomViewHero(unsigned char forceUpdate);
-    unsigned char updBottomViewTown(unsigned char forceUpdate);
-    unsigned char updBottomViewKingdom(unsigned char forceUpdate);
-    unsigned char updBottomViewEnemyTurn(unsigned char forceUpdate);
-    unsigned char updBottomViewNewTurn(unsigned char forceUpdate);
-    unsigned char updBottomViewResMsg(unsigned char forceUpdate);
-    unsigned char updBottomViewMessage(unsigned char forceUpdate);
+    bool updBottomViewHero(bool forceUpdate);
+    bool updBottomViewTown(bool forceUpdate);
+    bool updBottomViewKingdom(bool forceUpdate);
+    bool updBottomViewEnemyTurn(bool forceUpdate);
+    bool updBottomViewNewTurn(bool forceUpdate);
+    bool updBottomViewResMsg(bool forceUpdate);
+    bool updBottomViewMessage(bool forceUpdate);
     void doEventAnchor(class hero* currentHero, bool humanPlayer);
     void doEventArena(class hero* currentHero, NewmapCell* cell,
                       bool humanPlayer);
@@ -1063,19 +1063,19 @@ private:
                             bool humanPlayer, class BlackBoxData* blackBox);
     void doEventBoat(class hero* currentHero, NewmapCell* cell);
     void doEventBorderGuard(type_point point, NewmapCell* cell,
-                            unsigned char humanPlayer);
+                            bool humanPlayer);
     void doEventBorderGate(type_point point, NewmapCell* cell,
                            unsigned char humanPlayer);
-    void doEventBorderTent(NewmapCell* cell, unsigned char humanPlayer);
+    void doEventBorderTent(NewmapCell* cell, bool humanPlayer);
     void doEventBouy(class hero* currentHero, NewmapCell* cell,
-                     unsigned char humanPlayer);
+                     bool humanPlayer);
     // The campfire (jump-table arm 0x0c). FOUR arguments and `ret 0x10`:
     // the map point rides along for EraseAndFizzle, which erases the object
     // the hero just stepped on.
     void doEventCampfire(class hero* currentHero, NewmapCell* cell,
                          type_point point, bool humanPlayer);
     void doEventCloverField(class hero* currentHero, NewmapCell* cell,
-                            unsigned char humanPlayer);
+                            bool humanPlayer);
     void doEventCoverOfDarkness(NewmapCell* cell, type_point point,
                                 bool humanPlayer);
     // 0x4abdc0, DECLARED not defined - 1744 bytes this lane is not
@@ -1090,7 +1090,7 @@ private:
     // unused parameter and string-literal callers do not prove constness.
     int creatureBankEvent(class hero* who, NewmapCell* cell,
                           char* text, type_point point,
-                          unsigned char humanPlayer);
+                          bool humanPlayer);
     void doEventCreatureBank(class hero* currentHero, NewmapCell* cell,
                              type_point point, bool humanPlayer);
     // The creature dwelling (jump-table arms 0x11 and 0x14 share the one
@@ -1104,7 +1104,7 @@ private:
     void doEventDragonCity(class hero* currentHero, NewmapCell* cell,
                               type_point point, bool humanPlayer);
     void doEventFaerieRing(class hero* currentHero, NewmapCell* cell,
-                           unsigned char humanPlayer);
+                           bool humanPlayer);
     void doEventFlotsam(class hero* currentHero, NewmapCell* cell,
                         type_point point, bool humanPlayer);
     void doEventFountain(class hero* currentHero, ExtraInfoUnion* cell,
@@ -1122,7 +1122,7 @@ private:
                        bool humanPlayer);
     void doEventLibrary(class hero* currentHero, NewmapCell* cell,
                         bool humanPlayer);
-    void doEventLighthouse(NewmapCell* cell, unsigned char humanPlayer);
+    void doEventLighthouse(NewmapCell* cell, bool humanPlayer);
     // The School of Magic (jump-table arm 0x2f). FOUR arguments and
     // `ret 0x10` - the map point rides along because the AI arm appraises
     // the tile with AI_value_of_event before it will pay.
@@ -1138,7 +1138,7 @@ private:
     void doEventMercenaryCamp(class hero* currentHero, NewmapCell* cell,
                               bool humanPlayer);
     void doEventMermaid(class hero* currentHero, NewmapCell* cell,
-                        unsigned char humanPlayer);
+                        bool humanPlayer);
     void doEventMine(NewmapCell* cell, class hero* currentHero,
                      type_point point, bool human);
     void doEventMysticalGarden(class hero* currentHero, ExtraInfoUnion* cell,
@@ -1223,7 +1223,7 @@ private:
     void doEventWateringHole(class hero* currentHero, NewmapCell* cell,
                                 bool humanPlayer);
     void doEventWhirlpool(class hero* currentHero, NewmapCell* cell,
-                            unsigned char humanPlayer);
+                            bool humanPlayer);
     void doEventWindmill(class hero* currentHero, ExtraInfoUnion* cell,
                            bool humanPlayer);
     void doEventWitchHut(class hero* currentHero, ExtraInfoUnion* cell,
@@ -1250,8 +1250,8 @@ public:
                              hero** rightHero,
                              armyGroup** rightArmyGroup, int* seed,
                              signed char* winner,
-                             unsigned char* retreatWin,
-                             unsigned char* combatSurrender);
+                             bool* retreatWin,
+                             bool* combatSurrender);
     void drawGround(int srcX, int srcY, int z, int destX, int destY);
     void drawUnderlay(int srcX, int srcY, int z, int destX, int destY);
     void drawRoad(int srcX, int srcY, int z, int destX, int destY);
@@ -1403,8 +1403,8 @@ public:
     int processWaitingHover(int mouseX, int mouseY);
     int processHover(int mouseX, int mouseY);
     int processSearch(int x, int y, int z);
-    void updBottomView(unsigned char forceUpdate, unsigned char drawWindow,
-                       unsigned char update);
+    void updBottomView(bool forceUpdate, bool drawWindow,
+                       bool update);
     void showRoute(int updateScreen, int reseed, int changeButton);
     void seedTo(type_point target);
     void forceNewHover();
@@ -1412,7 +1412,7 @@ public:
     void checkScreenScroll();
     bool findAdjacentMonster(type_point point, type_point& result,
                              type_point excluded);
-    void loadRemote(unsigned char makeOrig);
+    void loadRemote(bool makeOrig);
     void startLocalPlayerTurn();
     int getCloudLookup(int srcX, int srcY, int z);
     void checkCastSpell();
@@ -1476,7 +1476,7 @@ private:
     // hands it the trigger cell, a second copy of the map point and
     // playerData::IsLocalHuman's bool result unwidened.
     void doEventShipyard(NewmapCell* cell, type_point point,
-                         unsigned char humanPlayer);
+                         bool humanPlayer);
     void doEventPrison(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
     NewmapCell* endMoveHero(class hero* curr, NewmapCell* returnCell,

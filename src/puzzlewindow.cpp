@@ -373,7 +373,7 @@ bool type_AI_puzzle_tile::operator==(
 VA(0x0052c8b0, 0xFC)
 DC_ADDRESS(0x11577c, 0xbc)
 MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt
-void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
+void Bitmap816::markPuzzle(bool* visible, long destX, long destY)
 {
     int offsetX = (-16 - destX) & 31;
     int offsetY = (-16 - destY) & 31;
@@ -393,12 +393,12 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 
     unsigned char* source = m_map + m_pitch * offsetY + offsetX;
     int row = destY / 32;
-    unsigned char* destination = visible + 18 * row;
+    bool* destination = visible + 18 * row;
     destination += row;
     destination += destX / 32;
 
     for (int y = 0; y < height; y += 32) {
-        unsigned char* destinationBlock = destination;
+        bool* destinationBlock = destination;
         unsigned char* sourceBlock = source;
 
         for (int x = 0; x < width; x += 32) {
@@ -418,7 +418,7 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 // vtable; those retail operations override the older DC callees.
 DC_ADDRESS(0x115838, 0x10a)
 MAC_ADDRESS(0x147f70, 0x148)
-static unsigned char markAIPuzzle(long player, unsigned char* visible)
+static unsigned char markAIPuzzle(long player, bool* visible)
 {
     long puzzle;
     if (player < 0 || (puzzle = g_game->m_setup.m_alignment[player]) == -1)
@@ -447,7 +447,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 // Complete's tile dimensions are 19x17, independently fixed by retail strides.
 DC_ADDRESS(0x115944, 0x12c)
 MAC_ADDRESS(0x1480b8, 0x190)
-static void createAIPuzzleMap(long player, unsigned char* visible,
+static void createAIPuzzleMap(long player, bool* visible,
                             long puzzleX, long puzzleY,
                             type_AI_puzzle_tile (&puzzleMap)[19][17])
 {
@@ -481,7 +481,7 @@ type_point aiAttemptPuzzleGuess(long player)
     double uncovered =
         found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT);
     if (g_puzzleGuessThreshold[g_game->m_setup.m_difficulty] <= uncovered) {
-        unsigned char visible[17 * 19];
+        bool visible[17 * 19];
         if (markAIPuzzle(player, visible)) {
             type_point origin = g_game->getPuzzleOrigin();
             type_AI_puzzle_tile puzzleMap[19][17];

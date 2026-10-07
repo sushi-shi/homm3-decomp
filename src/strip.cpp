@@ -22,7 +22,7 @@ DC_ADDRESS(0x158880, 0x62)
 MAC_ADDRESS(0x19af44, 0x6c)
 strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
              long newOwner, hero* newHero, armyGroup* groupToDraw,
-             int firstId, unsigned char update, heroWindow* inWin)
+             int firstId, bool update, heroWindow* inWin)
 {
     m_x = inX;
     m_y = inY;
@@ -60,7 +60,7 @@ void strip::draw(TCreatureType divideCreature)
 VA(0x005a9db0, 0x2A2)
 DC_ADDRESS(0x158910, 0xf0)
 MAC_ADDRESS(0x19b040, 0x15c)
-void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
+void strip::drawIcons(bool update, TCreatureType divideCreature)
 {
     int i;
 

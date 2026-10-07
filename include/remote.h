@@ -98,13 +98,13 @@ public:
     CDPlayHeroes();
     virtual ~CDPlayHeroes();
     void destroyMsgQueue();
-    virtual unsigned char sysMsgHost(DPMSG_GENERIC* message,
+    virtual bool sysMsgHost(DPMSG_GENERIC* message,
                                      unsigned long toId);
-    virtual unsigned char sysMsgSessionLost(DPMSG_GENERIC* message,
+    virtual bool sysMsgSessionLost(DPMSG_GENERIC* message,
                                             unsigned long toId);
-    virtual unsigned char sysMsgDestroyPlayerOrGroup(
+    virtual bool sysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
-    virtual unsigned char sysMsgCreatePlayerOrGroup(
+    virtual bool sysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     bool pollRemote();
     // Out of line at 0x553040 (`ret 8`), and reached from two directions in
@@ -112,8 +112,8 @@ public:
     // ecx through and a literal 0, and CNetMsgHandler::CheckHandleNet
     // (0x557860) calls it with the literal pair (1, 0). Declaration only,
     // for the same reason as the pair above.
-    CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                           unsigned char* wasCompressed);
+    CNetMsg* getRemoteData(bool removeFromQueue,
+                           bool* wasCompressed);
     bool transmitRemoteData(CNetMsg* msg, int toWho,
                             bool compressMsg, bool guaranteed);
     bool transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
@@ -132,7 +132,7 @@ protected:
     void queueMsg(CNetMsg* netMsg);
     CNetMsg* compressMsg(CNetMsg* netMsg);
     CNetMsg* uncompressMsg(CNetMsg* netMsg);
-    unsigned char handleLowLevelMsg(CNetMsg* netMsg);
+    bool handleLowLevelMsg(CNetMsg* netMsg);
 
 public:
     friend int transmitRemoteDataDPID(CNetMsg*, unsigned long,
@@ -251,8 +251,8 @@ public:
 
     DC_ADDRESS(0x087620, 0x20)
     bool chatChanged() { return m_changed || m_chatKilled; }
-    unsigned char hasOldChat();
-    unsigned char hasChat();
+    bool hasOldChat();
+    bool hasChat();
 
 protected:
     sample* m_chatSample;  // +0x30
@@ -433,7 +433,7 @@ extern CTurnDuration g_turnDuration;
 // HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
 // unclaimed, so the names stay ordinal and the DATA claims wait for it.
 extern int g_playerTurn;
-extern unsigned char g_weMoved;
+extern bool g_weMoved;
 
 // Retail's constructor/destructor pair stores and tests only this byte;
 // Dreamcast supplies the class and member names.
@@ -486,11 +486,11 @@ class CNetMsgHandler {
 public:
     CNetMsgHandler();
     virtual ~CNetMsgHandler();  // slot 0
-    virtual CNetMsg* checkHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* checkHandleNet(bool inPopup,
+                                    bool* msgReceived);  // slot 1
 
     DC_ADDRESS(0x0201e8, 0x10)
-    unsigned char isInPopup() { return m_inPopup; }
+    bool isInPopup() { return m_inPopup; }
 
     // E:\gamedcs\remote.h:629
     VA(0x00557900, 0x4)
@@ -511,7 +511,7 @@ public:
     void setAbortPopupMsg(CNetMsg* netMsg);
 
     DC_ADDRESS(0x020204, 0x16)
-    void setInPopup(unsigned char b) { m_inPopup = b; }
+    void setInPopup(bool b) { m_inPopup = b; }
 
 protected:
     // A pure virtual may still have an out-of-line definition. Retail's
@@ -523,7 +523,7 @@ protected:
     // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
     // is an out-of-line body - the derived dispatcher touches the raw
     // members, so retail's access let it.
-    unsigned char m_inPopup;  // +0x04
+    bool m_inPopup;  // +0x04
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;  // slot 3
     char m_paddingBeforeAbortPopupMsg[3];
     CNetMsg* m_abortPopupMsg;  // +0x08
@@ -558,8 +558,8 @@ public:
     VA(0x00555170, 0x5)
     DC_ADDRESS(0x11f80c, 0x4)
     MAC_ADDRESS(0x215e1c, 0x8)
-    virtual CNetMsg* checkHandleNet(unsigned char inPopup,
-                                                 unsigned char* msgReceived)
+    virtual CNetMsg* checkHandleNet(bool inPopup,
+                                                 bool* msgReceived)
     {
         return 0;
     }
@@ -589,12 +589,12 @@ SIZE(CAdvMgrNetMsgHandler, 0x0c);
 
 void handlePlayerDrop(unsigned long dpid);
 void onPlayerDropUpdateMsg(unsigned long dpid);
-void handlePlayerDead(int deadGuy, unsigned char showMsg);
+void handlePlayerDead(int deadGuy, bool showMsg);
 void handlePlayerWon(CNetMsg* netMsg);
 void handlePlayerLost(CNetMsg* netMsg);
 void handleNormalWinMsg(CNetMsg* netMsg);
 
-unsigned char getQueueSize(int toWho, unsigned long& numMsgs, unsigned long& queueSize);
+bool getQueueSize(int toWho, unsigned long& numMsgs, unsigned long& queueSize);
 void receiveChat(char* chat, int fromWho);
 void handlePlayerDrop(unsigned long dpid);
 
@@ -602,8 +602,8 @@ int transmitRemoteData(CNetMsg* msg, int toWho,
                        bool compressMsg, bool guaranteed);
 int transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed);
-CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                       unsigned char* wasCompressed);
+CNetMsg* getRemoteData(bool removeFromQueue,
+                       bool* wasCompressed);
 unsigned long calcCrcLong(const unsigned char* buf, unsigned len);
 // DC remote.cpp:1411, dc 0x11ce68; retail ReceiveSaveGame keeps this
 // cleanup boundary out of line on both fatal in-game receive paths.
@@ -615,7 +615,7 @@ extern int g_defeatedAllPlayers;
 void remoteCleanup();
 void pollRemote();
 void sendChat(const char* chat, int toWho);
-unsigned char lobbyLaunchConnect();
+bool lobbyLaunchConnect();
 // Dreamcast names this network-launch state directly; retail oldmain tests
 // it only while handling the missing-CD startup result.
 extern int g_tcpHostStatus;
@@ -632,7 +632,7 @@ extern int g_mpBaseType;
 void destroyMsg(CNetMsg* netMsg);
 void handlePlayerDrop(unsigned long dpid);
 void onPlayerDropUpdateMsg(unsigned long dpid);
-void handlePlayerDead(int deadGuy, unsigned char showMsg);
+void handlePlayerDead(int deadGuy, bool showMsg);
 void handlePlayerWon(CNetMsg* netMsg);
 void handlePlayerLost(CNetMsg* netMsg);
 void handleNormalWinMsg(CNetMsg* netMsg);

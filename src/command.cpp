@@ -360,8 +360,8 @@ int combatManager::main(message& msg)
         // The retail command header retains the Dreamcast two-argument
         // prototype even though remote.cpp's Complete wrapper ignores the
         // compression out-parameter.
-        CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                               unsigned char* wasCompressed);
+        CNetMsg* getRemoteData(bool removeFromQueue,
+                               bool* wasCompressed);
         void receiveChat(char* chat, int fromWho);
 
         CNetMsg* netMsg = getRemoteData(1, 0);
@@ -2436,7 +2436,7 @@ void combatManager::resetMouse()
 VA(0x00478900, 0x290)
 DC_ADDRESS(0x06f664, 0x1c0)
 MAC_ADDRESS(0x086dac, 0x1f8)
-unsigned char combatManager::processMoveThenAttack(message& msg)
+bool combatManager::processMoveThenAttack(message& msg)
 {
     army* currentArmy = getCurrentArmy();
     int oldGridIndex = currentArmy->m_gridIndex;

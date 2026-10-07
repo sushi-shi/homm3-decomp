@@ -279,7 +279,7 @@ void lostGame();
 // kb.cpp:4168 - arity and role both agree.
 extern int g_totalHighMem;
 void memError();
-void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg);
+void handleRemoteDeadPlayerExit(int dpGamePos, bool showMsg);
 int gameUnsaved();                                       // 0x4f4310
 void checkEndGame(int forceWin);                        // 0x4f2ce0
 bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,

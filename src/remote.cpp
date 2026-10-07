@@ -149,7 +149,7 @@ CDPlayHeroes::~CDPlayHeroes()
 
 VA(0x00552530, 0x20E)
 DC_ADDRESS(0x11bad8, 0x48)
-unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
+bool CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
                                        unsigned long toId)
 {
     unsigned char wasHost = isHost();
@@ -162,7 +162,7 @@ unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
 
 VA(0x00552740, 0x1DE)
 DC_ADDRESS(0x11bb20, 0x20)
-unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
+bool CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
                                               unsigned long toId)
 {
     CSessionLostMsg msg;
@@ -177,7 +177,7 @@ unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
 // Mac retains that helper at 0x21100c. Keep the ordinary source call.
 VA(0x00552920, 0x216)  // anchor-string(playerDroppedLog) + dc-order-map
 DC_ADDRESS(0x11bb40, 0x20)
-unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
+bool CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
     DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId)
 {
     if (message->m_playerType == DPPLAYERTYPE_PLAYER) {
@@ -189,7 +189,7 @@ unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
 
 VA(0x00552b40, 0x14)
 DC_ADDRESS(0x11bb60, 0x3a)
-unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(
+bool CDPlayHeroes::sysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
     return CDPlay::sysMsgCreatePlayerOrGroup(message, toId);
@@ -255,7 +255,7 @@ DATA(0x00697758) char g_tcpAddress[21];
 // game::NextPlayer. No surviving symbol attests a semantic name.
 DATA(0x0069d804) unsigned char g_gameMode;
 DATA(0x0069d80d) unsigned char g_playerDrop;
-DATA(0x0069d80e) unsigned char g_weMoved;
+DATA(0x0069d80e) bool g_weMoved;  // DC ?g_weMoved@@3_NA
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
 DATA(0x006989f0) eNetGameType g_mpNetProtocol;
 DATA(0x00682a38) unsigned char g_followPlayerMode = 1;
@@ -282,7 +282,7 @@ static const long g_playerActiveUpdateInterval = 600000;
 VA(0x00552db0, 0x28F)
 DC_ADDRESS(0x11bc88, 0xd2)
 MAC_ADDRESS(0x2109e4, 0x1a0)
-unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
+bool CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType) {
     case RS_PING:
@@ -352,8 +352,8 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 VA(0x00553040, 0x1D1)
 DC_ADDRESS(0x11bd5c, 0xf4)
 MAC_ADDRESS(0x210b84, 0x14c)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map
-CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
-                                     unsigned char* wasCompressed)
+CNetMsg* CDPlayHeroes::getRemoteData(bool removeFromQueue,
+                                     bool* wasCompressed)
 {
     if (wasCompressed)
         *wasCompressed = 0;
@@ -910,7 +910,7 @@ int CChatManager::getNextMsgNbr(int msgNbr)
 VA(0x00553db0, 0x33)
 DC_ADDRESS(0x11c754, 0x5c)
 MAC_ADDRESS(0x211b6c, 0x6c)
-unsigned char CChatManager::hasOldChat()
+bool CChatManager::hasOldChat()
 {
     if (m_msgCount == 0)
         return 0;
@@ -1039,7 +1039,7 @@ void CChatManager::resumeTimeOuts()
 
 // Original: CChatManager::HasChat; remote.cpp:1213
 DC_ADDRESS(0x11ca60, 0x10)
-unsigned char CChatManager::hasChat()
+bool CChatManager::hasChat()
 {
     return m_msgCount > 0;
 }
@@ -1214,8 +1214,8 @@ unsigned char CChatEdit::ignoreKey(message* msg)
 VA(0x00554400, 0xF)
 DC_ADDRESS(0x11cdfc, 0x18)
 MAC_ADDRESS(0x21294c, 0x30)
-CNetMsg* getRemoteData(unsigned char removeFromQueue,
-                       unsigned char* wasCompressed)
+CNetMsg* getRemoteData(bool removeFromQueue,
+                       bool* wasCompressed)
 {
     return g_dPlay->getRemoteData(removeFromQueue, 0);
 }
@@ -1225,7 +1225,7 @@ CNetMsg* getRemoteData(unsigned char removeFromQueue,
 VA(0x00554410, 0x93)
 DC_ADDRESS(0x11ce14, 0x54)
 MAC_ADDRESS(0x21297c, 0xd4)
-unsigned char initRemote(eNetGameType mpType, const char* userName)
+bool initRemote(eNetGameType mpType, const char* userName)
 {
     g_gameMode = static_cast<unsigned char>(mpType);
     g_followPlayerMode = 0;
@@ -1407,7 +1407,7 @@ CAnimatedDlg::~CAnimatedDlg()
 VA(0x00554b10, 0x20)
 DC_ADDRESS(0x11d290, 0x20)
 MAC_ADDRESS(0x2130b4, 0x28)
-unsigned char CAnimatedDlg::setup(
+bool CAnimatedDlg::setup(
     const char* text, font* textFont, const char* spriteName, int sequence)
 {
     m_spriteName = spriteName;
@@ -1695,7 +1695,7 @@ VA_COMPGEN(0x005554e0, 0xC9, IMPLICIT_DTOR, CWaitForReadyPlayersDlg)
 
 VA(0x005555b0, 0x126)
 DC_ADDRESS(0x11d708, 0x68)
-unsigned char createDPlayObject()
+bool createDPlayObject()
 {
     if (g_dPlay)
         return 1;
@@ -1712,7 +1712,7 @@ unsigned char createDPlayObject()
 
 VA(0x005556e0, 0x224)
 DC_ADDRESS(0x11d770, 0x17c)
-unsigned char initConnection(char* ipAddressOrPhoneNbr,
+bool initConnection(char* ipAddressOrPhoneNbr,
                              _DPCOMPORTADDRESS* comportInfo)
 {
     if (!createDPlayObject()) {
@@ -1847,7 +1847,7 @@ bool testIfLobbyLaunched()
 // match without changing the session-array lifetime or its cleanup calls.
 VA(0x00555aa0, 0x443)  // anchor-IAT/vtable/data + dc-xref/order-map
 DC_ADDRESS(0x11d9ac, 0x210)
-unsigned char handleMPlayerLaunch()
+bool handleMPlayerLaunch()
 {
     g_logFile.log(DATA_COMPGEN(0x00682c50, remoteMPlayerDetected,
                             "Detected MPlayer launch."));
@@ -1917,7 +1917,7 @@ unsigned char handleMPlayerLaunch()
 
 VA(0x00555ef0, 0x3E4)
 DC_ADDRESS(0x11dbbc, 0x22c)
-unsigned char lobbyLaunchConnect()
+bool lobbyLaunchConnect()
 {
     strcpy(g_mapName, g_game->m_setup.m_filename);
     g_game->m_mapHeader.get(
@@ -2194,7 +2194,7 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
 VA(0x00556780, 0x1C0)
 DC_ADDRESS(0x11e39c, 0xf6)
 MAC_ADDRESS(0x214310, 0x1ac)
-void handlePlayerDead(int deadGuy, unsigned char showMsg)
+void handlePlayerDead(int deadGuy, bool showMsg)
 {
     g_game->m_playerDisabled[deadGuy] = 1;
 
@@ -2509,7 +2509,7 @@ void CSaveScreen::save(int x, int y)
 VA(0x00557390, 0x69)
 DC_ADDRESS(0x11ebc8, 0x92)
 MAC_ADDRESS(0x214f88, 0xb8)
-void CSaveScreen::restore(unsigned char update)
+void CSaveScreen::restore(bool update)
 {
     if (m_screenSaved) {
         draw(0, 0, getWidth(), getHeight(), g_windowManager->m_screenBitmap,
@@ -2522,7 +2522,7 @@ void CSaveScreen::restore(unsigned char update)
 VA(0x00557400, 0x4)
 DC_ADDRESS(0x11ec5c, 0x8)
 MAC_ADDRESS(0x215040, 0x8)
-unsigned char CSaveScreen::isSaved()
+bool CSaveScreen::isSaved()
 {
     return m_screenSaved;
 }
@@ -2556,8 +2556,8 @@ CGameTransferSmack::~CGameTransferSmack()
 VA(0x00557460, 0x1E)
 DC_ADDRESS(0x11ecbc, 0x1c)
 MAC_ADDRESS(0x2150f8, 0x14)
-void CGameTransferSmack::setup(int x, int y, unsigned char sending,
-                               unsigned char drawText)
+void CGameTransferSmack::setup(int x, int y, bool sending,
+                               bool drawText)
 {
     m_x = x;
     m_y = y;
@@ -2650,7 +2650,7 @@ void CGameTransferSmack::restoreScreen()
 VA(0x00557720, 0x3C)
 DC_ADDRESS(0x11ee54, 0x84)
 MAC_ADDRESS(0x2153bc, 0x54)
-CGameTransferDlg::CGameTransferDlg(unsigned char sending)
+CGameTransferDlg::CGameTransferDlg(bool sending)
     : CTextDialog(0x12)
 {
     m_sending = sending;
@@ -2692,8 +2692,8 @@ MAC_COMPGEN_ADDRESS(0x215568, 0x84, SCALAR_DELETING_DTOR, CNetMsgHandler)
 VA(0x00557860, 0x70)
 DC_ADDRESS(0x11ef60, 0x6c)
 MAC_ADDRESS(0x21549c, 0xcc)
-CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
-                                        unsigned char* msgReceived)
+CNetMsg* CNetMsgHandler::checkHandleNet(bool inPopup,
+                                        bool* msgReceived)
 {
     if (msgReceived)
         *msgReceived = 0;
@@ -3068,7 +3068,7 @@ void CHourGlass::start()
 
 // Original: GetQueueSize; remote.cpp:3142
 DC_ADDRESS(0x11f550, 0x94)
-unsigned char getQueueSize(int toWho, unsigned long& numMsgs,
+bool getQueueSize(int toWho, unsigned long& numMsgs,
                            unsigned long& queueSize)
 {
     if (!g_dPlay)

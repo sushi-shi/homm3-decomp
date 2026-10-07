@@ -1179,7 +1179,7 @@ long ddRestoreSurfaces()
 
 VA(0x00601460, 0x52)
 DC_ADDRESS(0x19a418, 0x4)
-unsigned char getDesktopInfo()
+bool getDesktopInfo()
 {
     HDC desktopDC = GetDC(0);
     if (desktopDC) {
@@ -1335,14 +1335,14 @@ void ddCleanUpWinGraphics()
 
 VA(0x006019a0, 0x5a)
 DC_ADDRESS(0x19a454, 0xd8)
-unsigned char setFullScreenStatus(int fullScreenOn)
+bool setFullScreenStatus(int fullScreenOn)
 {
     if (g_fullScreenChangesDisabled)
         return 0;
     if (fullScreenOn == g_config.m_windowConfig.m_fullScreen)
         return 1;
 
-    unsigned char changed = ddSetFullScreenStatus(fullScreenOn);
+    bool changed = ddSetFullScreenStatus(fullScreenOn);
     g_windowManager->updateScreen();
     if (fullScreenOn)
         g_mouseManager->update(1);
@@ -1398,7 +1398,7 @@ void resizeWindow(int windowX, int windowY)
 // saved masks red/green/blue rather than blue/green/red, worth 0.0036.
 VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order
 DC_ADDRESS(0x19a234, 0x1ac)
-unsigned char ddSetFullScreenStatus(int newStatus)
+bool ddSetFullScreenStatus(int newStatus)
 {
     int status = newStatus;
     Bitmap16Bit savedScreen(800, 600);
@@ -1408,7 +1408,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     if (g_winGraphBusy)
         return 0;
 
-    unsigned char changed = 1;
+    bool changed = 1;
     g_winGraphBusy = 1;
     if (g_mp3Stream)
         AIL_pause_stream(g_mp3Stream, 1);
@@ -1428,7 +1428,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     ddCleanUpWinGraphics();
     g_winGraphBusy = 0;
 
-    unsigned char desktopOk = getDesktopInfo();
+    bool desktopOk = getDesktopInfo();
     if (status == 0 && !desktopOk) {
         status = 1;
         changed = 0;

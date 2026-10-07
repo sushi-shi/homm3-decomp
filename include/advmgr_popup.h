@@ -17,7 +17,7 @@ protected:
     int m_exitCommand;
     // Complete-only: ctor 0x41b040 saves the handler's popup state and
     // dtor 0x41b120 restores it. This byte does not overlap exitCommand.
-    unsigned char m_savedPlayerState;
+    bool m_savedPlayerState;
     // The saved byte ends at +0x5d. The class's four-byte alignment
     // supplies the trailing three bytes; there is no additional member.
 

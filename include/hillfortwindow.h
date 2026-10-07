@@ -162,8 +162,8 @@ public:
 private:
     int convertID2HelpID(int id) const;
     void handleClick(message& msg);
-    void recalculate(unsigned char drawDimmedButtons);
-    void upgradeSlot(int which, unsigned char showMessage);
+    void recalculate(bool drawDimmedButtons);
+    void upgradeSlot(int which, bool showMessage);
 private:
     // DC fieldlist 0x5209 marks these helpers private; the callback calls them.
     friend int hillFortWindowHandler(message& msg);

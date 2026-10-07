@@ -298,7 +298,7 @@ inline bool canAfford(const long* cost, const long* playerRes)
 VA(0x004e7eb0, 0x64D)
 DC_ADDRESS(0x0d6bf8, 0x52a)
 MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites
-void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
+void THillFortWindow::recalculate(bool drawDimmedButtons)
 {
     message msg;
     msg.m_id = 0;
@@ -511,7 +511,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 VA(0x004e8500, 0x18F)
 DC_ADDRESS(0x0d7124, 0x134)
 MAC_ADDRESS(0x109b3c, 0x260)
-void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
+void THillFortWindow::upgradeSlot(int which, bool showMessage)
 {
     switch (m_slot[which].m_state) {
     case UPGRADE_STATE_NONE:

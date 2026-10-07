@@ -993,7 +993,7 @@ public:
     // bare member-function declarator on a class this widely included
     // is the include-set wall's own trigger shape (the townManager
     // precedent), and townmgr.cpp is the only live consumer.
-    unsigned char addGarrisonHero(town* ourTown);
+    bool addGarrisonHero(town* ourTown);
     int buildingsOwned(int townType, int buildingId, int mageLevel);
     bool hasMobileHero();
     int nextHero();
@@ -1358,13 +1358,13 @@ public:
     // event_record.obj owns 0x49d6c0's body.
     void clearEventRecords(char playerId);
     type_point getUndergroundGateExit(const NewmapCell* cell) const;
-    unsigned char getRandomLithExit(long color, type_point& result) const;
-    unsigned char getRandomLith(const std::vector<type_point>& points,
+    bool getRandomLithExit(long color, type_point& result) const;
+    bool getRandomLith(const std::vector<type_point>& points,
                                   type_point& result, long cellType,
                                   long excluded) const;  // 0x4cdb80
-    unsigned char getRandomLith(long color, long excluded,
+    bool getRandomLith(long color, long excluded,
                                   type_point& result) const;
-    unsigned char getRandomWhirlpool(long excluded, type_point& result) const;
+    bool getRandomWhirlpool(long excluded, type_point& result) const;
     // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
     // EraseObj is its caller and pins the retail row: a 0x18-byte record
     // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
@@ -1380,7 +1380,7 @@ public:
     void perMonth();
     void setVisibility(const int startX, const int startY, const int z,
                        const int whichPlayer, int range,
-                       unsigned char remoteMove);  // 0x49cdd0
+                       bool remoteMove);  // 0x49cdd0
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
     // twin of SetVisibility below and the same five parameters in the same
     // order. DoEventCoverOfDarkness is the caller that needs the
@@ -1401,7 +1401,7 @@ public:
     // DC game.cpp:10587 names the received-save body. Retail's transmit-init
     // handlers independently prove the five arguments and 0x4cbd40 entry.
     int receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
-                        unsigned char inGame, unsigned char isDiff);
+                        bool inGame, bool isDiff);
     void doNewTurn();
     void showHeroesLogo();
     void setMapSize(int width, int height);  // 0x4ccef0
@@ -1497,7 +1497,7 @@ private:
 public:
     void clearEventRecords();
     void recordShowHero(hero* who, signed char player, type_point point,
-                          unsigned char reset);  // 0x49cb20
+                          bool reset);  // 0x49cb20
     void processRandomObjects();  // 0x4c9dd0
     // The random-object pass and the monster roll it drives. Both bodies
     // are claimed in game.cpp.
@@ -1685,7 +1685,7 @@ int getTeam(int playerNum) const
         return (m_globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
     void playRecordedEvents();
-    unsigned char replayAvailable() const;
+    bool replayAvailable() const;
     int getNumThievesGuilds(int whichPlayer);
 
 private:
@@ -1994,7 +1994,7 @@ extern int g_localGamePos;                   // .bss 0x699554
 unsigned char initImmMouse(void* instance, void* hwnd);  // 0x4b6890
 void immMouseWindowMoved();
 unsigned char playImmEffect(const char* effectName, int count);  // 0x4b69f0
-unsigned char initializeRandomTavernText();
+bool initializeRandomTavernText();
 void computeUALoc(int whichPlayer);                   // 0x4baed0
 
 // Canonical Game.h inline definitions after all referenced layouts/globals.

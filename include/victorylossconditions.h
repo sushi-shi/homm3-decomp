@@ -86,34 +86,34 @@ public:
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
     // CheckEndGame(0).
-    unsigned char checkForTotalCreatures();
-    unsigned char checkForTotalResources();
-    unsigned char checkForUpgradedTown();
+    bool checkForTotalCreatures();
+    bool checkForTotalResources();
+    bool checkForUpgradedTown();
     bool checkForHeroDefeatWin(int winningPlayer, const hero* loser);
     bool isTownCaptureTarget(town* thisTown);
-    unsigned char checkForTownCaptureWin();
+    bool checkForTownCaptureWin();
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
     // Utype_point@@@Z` fixes the whole signature - public, bool, a const
     bool checkForDefeatedMonsterWin(const hero* thisHero,
                                     const type_point monsterLoc);
-    unsigned char checkForFlaggedGeneratorWin();
-    unsigned char checkForFlaggedMineWin();
-    unsigned char checkForArtifactTransportWin(const hero* thisHero,
+    bool checkForFlaggedGeneratorWin();
+    bool checkForFlaggedMineWin();
+    bool checkForArtifactTransportWin(const hero* thisHero,
                                                const type_point townLoc);
-    unsigned char isGrailTarget(town* thisTown);
+    bool isGrailTarget(town* thisTown);
     // Shared comparison expanded in Mac 0x1fdf0c and retained 0x1fe124.
     // Callers own the point lifetimes; no instance state is needed here.
-    static unsigned char isGrailTarget(const type_point& thisTownLoc,
-                                       const type_point& grailTownLoc,
-                                       const type_point& anyTownLoc)
+    static bool isGrailTarget(const type_point& thisTownLoc,
+                              const type_point& grailTownLoc,
+                              const type_point& anyTownLoc)
     {
         if (thisTownLoc == grailTownLoc || anyTownLoc == grailTownLoc)
-            return 1;
-        return 0;
+            return true;
+        return false;
     }
     unsigned char checkForTimeSurvival();
     bool checkForArtifactWin();
-    unsigned char checkForGrailBuildingWin();
+    bool checkForGrailBuildingWin();
 
     // Project-inferred query shared by current-player condition checks.
     bool allowsCurrentPlayerVictory() const;
