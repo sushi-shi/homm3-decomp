@@ -3201,7 +3201,10 @@ static void unblockLith(hero* currentHero,
 // markStrategicMap (cb 879) consumes the caller's 2186. isOnMap (24) and
 // getTown (45) are admitted, exhausting it before the direction loop's
 // game::getCell (58) and getMapExtra(point) (48). Retail instead calls
-// getTown and expands those two loop helpers.
+// getTown and expands those two loop helpers. Probe (2026-10-07): calling
+// m_worldMap.cell(x, y, z) and getMapExtra(x, y, z) directly leaves getTown a
+// call and scores 83.08%, but DC 0x33be4 opens an inline scope before its
+// GetMapExtra(x, y, z) call, so the point wrapper is the source; rejected.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket
