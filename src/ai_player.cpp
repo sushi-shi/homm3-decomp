@@ -1177,6 +1177,8 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
         }
     }
 
+    // Loki's GCC clamp selects as min(10, markets); retail keeps
+    // `10 < markets` here, and that spelling scores 86.47%.
     markets = min(markets, 10);
     if (markets == 0)
         return false;

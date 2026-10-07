@@ -1040,6 +1040,9 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
 // lower. `why-reg --model --il-order` still finds identical first definitions
 // (EDI=sw, ESI=sx, EBX=sh), bounding the residual past the minimum source-order
 // slice.
+// Loki probes: a drawTile-style `palette` local is byte-flat here, and
+// assigning the line table inside the positive extent guard (where retail
+// and Loki load m_map) scores 93.52%; RoE's body also differs in its tail.
 // The native per-row destination lifetime also appears in the exact adjacent
 // adventure renderer. Advancing that cursor directly restores 95.9000%;
 // splitting its address into a base and offset leaves 94.7302%.
