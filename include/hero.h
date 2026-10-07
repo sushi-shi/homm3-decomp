@@ -172,9 +172,6 @@ public:
     {
         return type_point(m_x, m_y, m_z);
     }
-    // Project-inferred coordinate update only; callers own cell restoration.
-    // Native mapX/mapY/mapZ are public short members in Dreamcast CodeView.
-    void setLocation(const type_point& point);
     bool load(void* infile);
 
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
@@ -827,9 +824,6 @@ public:
     long getNavigationFactor() const;
     int getMobility(bool seaMovement) const;
     int getMobility() const;
-    // Project-inferred complete refresh and paired reward operations.
-    // Native maxMobility/currMobility remain public.
-    void refreshMovement();
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     short getPrimarySkillTotal() const;
@@ -838,10 +832,6 @@ public:
     void fly(int level);
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void walkOnWater(int level);
-    // Project-inferred resets. Boarding retains non-movement spells and the
-    // Dimension Door count; day rollover/initialization reset all five lanes.
-    void clearMovementSpells();
-    void resetAdventureSpells();
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     bool isInIdentifyRange(const type_point& location) const;
 
@@ -904,8 +894,6 @@ public:
     // 0x004d92d0 - spends mana and refreshes the local adventure hero
     // locators while that manager is active.
     void useSpell(int cost);
-    // Project-inferred resource operations; native mana remains public.
-    void resetManaToMaximum();
     // 0x004d7890 - consumes this hero from one player's tavern offers,
     // charges the standard gold cost and places the hero on the map.
     void hire(int playerId, type_point point);

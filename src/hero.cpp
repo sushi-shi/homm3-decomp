@@ -535,14 +535,6 @@ void type_obscuring_object::initialize()
     m_extraInfo = 0;
 }
 
-// Project-inferred counterpart to getLocation, shared by heroes and boats.
-void type_obscuring_object::setLocation(const type_point& point)
-{
-    m_x = point.m_x;
-    m_y = point.m_y;
-    m_z = point.m_z;
-}
-
 VA(0x004d74f0, 0xD6)
 DC_ADDRESS(0x0cab54, 0x102)
 MAC_ADDRESS(0x0f22e0, 0x194)
@@ -947,9 +939,9 @@ hero::hero()
     m_portrait = 0;
     m_name[0] = 0;
 
-    std::fill_n(m_equipped, 19, ARTIFACT_NONE);
-    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), static_cast<unsigned char>(0));
-    std::fill_n(m_backpack, 64, ARTIFACT_NONE);
+    std::fill_n(m_equipped, sizeof(m_equipped) / sizeof(m_equipped[0]), ARTIFACT_NONE);
+    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), 0);
+    std::fill_n(m_backpack, sizeof(m_backpack) / sizeof(m_backpack[0]), ARTIFACT_NONE);
     m_townSpecialGrantedMask.reset();
 
     g_heroScreenWindow = 0;
@@ -973,6 +965,9 @@ hero::hero()
 // 95.87 -> 97.36%; retain the canonical helpers through the residual scheduling.
 // Mac 0xf40ac/0xf4114/0xf413c loads integer zero values for the byte fills;
 // byte-typed fill values instead compile to lbz and omit the signed conversion.
+// DC hero.cpp:1286-1293 and Mac 0xf4408..0xf4484 paste the mana reset and
+// the five spell-state stores; DC 1287 and Mac 0xf4468 store one zero to
+// both movement fields. Neither build calls a reset helper here.
 // All current differences begin in the custom-name string assignment. Moving
 // initialSex to its use or reading the trait directly falls to 81.3926%;
 // commuting the aggression product is flat (six states, three objects).
@@ -989,10 +984,10 @@ void hero::initialize(short index)
     clearSpells();
 
     short i;
-    std::fill_n(m_equipped, 19, ARTIFACT_NONE);
+    std::fill_n(m_equipped, sizeof(m_equipped) / sizeof(m_equipped[0]), ARTIFACT_NONE);
 
     std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), 0);
-    std::fill_n(m_backpack, 64, ARTIFACT_NONE);
+    std::fill_n(m_backpack, sizeof(m_backpack) / sizeof(m_backpack[0]), ARTIFACT_NONE);
     m_backpackCount = 0;
     std::fill_n(m_skillLevel, sizeof(m_skillLevel), 0);
     std::fill_n(m_skillOrder, sizeof(m_skillOrder), 0);
@@ -1037,11 +1032,14 @@ void hero::initialize(short index)
     clearTarget();
     m_level = 1;
 
-    resetManaToMaximum();
+    m_mana = static_cast<short>(getMaxMana());
 
-    m_maxMovePoints = 0;
-    m_movePoints = 0;
-    resetAdventureSpells();
+    m_movePoints = m_maxMovePoints = 0;
+    m_flightLevel = eMasteryInvalid;
+    m_waterWalkLevel = eMasteryInvalid;
+    m_disguiseLevel = eMasteryInvalid;
+    m_dWalkSpellsCast = 0;
+    m_identifyLevel = eMasteryInvalid;
     m_hasCustomName = 0;
     m_customName = "";
     m_isSleeping = 0;
@@ -1094,6 +1092,11 @@ void hero::initialize(short index)
 // The enum-valued backpack fill constructs each empty artifact inside the
 // loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
 // reads the field directly, without an additional getArtifact helper call.
+// DC game.cpp:9915-9917 and 10051/10053 and Mac 0xf457c..0xf45ac and
+// 0xf4a00..0xf4a50 paste the coordinate copies, mana reset and one chained
+// mobility store; neither build calls a location or movement helper. Mac
+// 0xf4600 stores one 0xff register to both patrol bytes. Unsigned
+// sizeof-derived fill counts reproduce Mac's cmplwi/bne fill loops.
 // The remaining mismatch includes string::assign expanding where retail
 // retains it. Shared/local loop indices, literal/sizeof backpack bounds,
 // assignment/assign and an unnamed/named level leave that boundary unchanged.
@@ -1106,7 +1109,9 @@ void hero::initialize(const HeroExtra* setup)
 {
     long i;
     m_order = setup->m_objRef;
-    setLocation(setup->m_location);
+    m_x = setup->m_location.m_x;
+    m_y = setup->m_location.m_y;
+    m_z = setup->m_location.m_z;
     m_owner = setup->m_owner;
     m_id = static_cast<HeroId>(setup->m_id);
     m_heroClass = g_heroTraits[setup->m_id].m_heroClass;
@@ -1116,8 +1121,7 @@ void hero::initialize(const HeroExtra* setup)
         m_patrolX = m_x;
         m_patrolY = m_y;
     } else {
-        m_patrolY = kPatrolNone;
-        m_patrolX = kPatrolNone;
+        m_patrolX = m_patrolY = kPatrolNone;
     }
 
     if (setup->m_hasCustomName) {
@@ -1128,10 +1132,12 @@ void hero::initialize(const HeroExtra* setup)
         m_portrait = setup->m_portraitNumber;
 
     if (setup->m_customPrimarySkills) {
-        // Mac 0xf4658..0xf466c widens each signed skill byte before the
-        // store, matching the existing int-valued setter's expansion.
-        for (i = 0; i < 4; i++)
-            setPrimarySkill(i, setup->m_primarySkills[i]);
+        // Mac 0xf4650..0xf4674 (-O1 profile) keeps this counter in a
+        // volatile register apart from the call-carrying loops' index, and
+        // widens once: an unsigned record byte through the int setter. The
+        // signed class table in initialize(short) widens twice.
+        for (int skill = 0; skill < 4; skill++)
+            setPrimarySkill(skill, setup->m_primarySkills[skill]);
     }
 
     if (setup->m_customSecondarySkills) {
@@ -1169,7 +1175,7 @@ void hero::initialize(const HeroExtra* setup)
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
                 equipArtifact(setup->m_artifacts[i], i);
         }
-        std::fill_n(m_backpack, 64, ARTIFACT_NONE);
+        std::fill_n(m_backpack, sizeof(m_backpack) / sizeof(m_backpack[0]), ARTIFACT_NONE);
         for (i = 0; i < sizeof(setup->m_backpack) / sizeof(setup->m_backpack[0]); i++) {
             if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
                 addToBackpack(setup->m_backpack[i], -1);
@@ -1205,8 +1211,8 @@ void hero::initialize(const HeroExtra* setup)
         checkLevel();
     }
 
-    resetManaToMaximum();
-    refreshMovement();
+    m_mana = static_cast<short>(getMaxMana());
+    m_maxMovePoints = m_movePoints = getMobility();
 }
 
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
@@ -1409,13 +1415,6 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
             return;
         }
     }
-}
-
-// Project-inferred resource operations from initialization/recruitment and
-// daily regeneration. A reset is unconditional; a raise tests the threshold.
-void hero::resetManaToMaximum()
-{
-    m_mana = static_cast<short>(getMaxMana());
 }
 
 VA(0x004d92d0, 0x59)
@@ -6108,15 +6107,6 @@ int hero::getMobility() const
     return getMobility((m_flags & 0x40000) != 0);
 }
 
-// Project-inferred operations shared by turn/campaign setup, prison release
-// and adventure rewards. Refresh stores remaining points before allowance;
-// bonuses update allowance before remaining points and never recompute it.
-void hero::refreshMovement()
-{
-    m_movePoints = getMobility();
-    m_maxMovePoints = m_movePoints;
-}
-
 VA(0x004e4db0, 0x10D)
 DC_ADDRESS(0x0d4db0, 0x40)
 MAC_ADDRESS(0x105c18, 0x94)
@@ -6514,21 +6504,6 @@ bool hero::canLand() const
     return 1;
 }
 
-// Project-inferred reset shared by boarding and the complete daily reset.
-// Calling fly(-1) would charge mana; these are spell-state invalidations.
-void hero::clearMovementSpells()
-{
-    m_flightLevel = eMasteryInvalid;
-    walkOnWater(eMasteryInvalid);
-}
-
-void hero::resetAdventureSpells()
-{
-    clearMovementSpells();
-    m_disguiseLevel = eMasteryInvalid;
-    m_dWalkSpellsCast = 0;
-    m_identifyLevel = eMasteryInvalid;
-}
 
 VA(0x004e5dd0, 0x10)
 DC_ADDRESS(0x0d55b8, 0x6)
