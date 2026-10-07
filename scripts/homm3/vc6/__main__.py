@@ -195,6 +195,14 @@ def _build_parser() -> argparse.ArgumentParser:
     pwl.add_argument("--reuse", action="store_true")
     pwl.add_argument("--limit", type=int, default=0)
 
+    psc = ss.add_parser("state-scan", help="compile every in-scope unit 1-to-M one state axis at "
+                        "a time, score every assembly with objdiff and rank the functions a "
+                        "reachable state would improve")
+    psc.add_argument("units", nargs="*")
+    psc.add_argument("--jobs", type=int, default=8)
+    psc.add_argument("--reuse", action="store_true",
+                     help="reuse scored compile-m.json files and append to scan.jsonl")
+
     ppc = ss.add_parser("phase-census", help="per unit: which functions the phase flag moves, "
                         "which value retail needs, and which function each order compiles first")
     ppc.add_argument("units", nargs="*")
@@ -317,6 +325,7 @@ _TOOLS = {
     "fuzz-verify": ("unstable_state", "run_fuzz"),
     "compile-m-walls": ("unstable_state", "run_walls"),
     "phase-census": ("unstable_state", "run_phase_census"),
+    "state-scan": ("unstable_state", "run_scan"),
     "variants": ("context_variants", "run"),
     "variants-all": ("context_variants", "run_all"),
     "merge-reach": ("inline_force", "run_merge_reach"),

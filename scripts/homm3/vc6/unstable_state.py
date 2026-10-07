@@ -273,10 +273,58 @@ def inline_callees(unit: Unit) -> dict[str, list[str]]:
     return {root: sorted(found) for root, found in callees.items()}
 
 
-def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: int = 6) -> dict:
+def score_object(unit: str, obj: Path) -> dict[str, float]:
+    """{function: objdiff fuzzy_match_percent} for a candidate object of
+    `unit` against its delinked retail target, through the same paired
+    normalization the full build applies (the number the ledger banks)."""
+    import os
+    import subprocess
+    import tempfile
+    from homm3.build import normalize_objs as normalize
+    from homm3.vc6 import tu_state_sweep as sweep
+
+    target = sweep._first_pass(unit, (normalize.OBJDIFF / "target" / f"{unit}.c.obj").read_bytes())
+    base, paired, _ = normalize.canonicalize_pair(
+        sweep._first_pass(unit, Path(obj).read_bytes()), target, unit,
+        normalize._retail_symbol_rvas(), image_base=normalize.retail_image_base())
+    with tempfile.TemporaryDirectory(dir=STATE_ROOT) as directory:
+        directory = Path(directory)
+        (directory / "base.obj").write_bytes(base)
+        (directory / "target.obj").write_bytes(paired)
+        (directory / "objdiff.json").write_text(json.dumps({
+            "build_base": False, "build_target": False,
+            "options": {"functionRelocDiffs": "all"},
+            "units": [{"name": unit, "base_path": str(directory / "base.obj"),
+                       "target_path": str(directory / "target.obj"),
+                       "scratch": {"platform": "win32", "compiler": "msvc6.0"}}]}))
+        process = subprocess.run(
+            ["objdiff-cli", "-C", str(directory), "-L", "error", "report", "generate",
+             "-o", "report.json"], capture_output=True, text=True,
+            env=dict(os.environ, RAYON_NUM_THREADS="1"))
+        if process.returncode:
+            raise RuntimeError((process.stdout + process.stderr).strip())
+        report = json.loads((directory / "report.json").read_text())
+    return {fn["name"]: float(fn.get("fuzzy_match_percent") or 0.0)
+            for fn in report["units"][0].get("functions", [])}
+
+
+def scan_states(rounds: int) -> list[State]:
+    """One axis at a time from the captured state: the phase value, each
+    declaration offset, each callee-prefix round."""
+    return ([State(0), State(1)] + [State(None, k) for k in range(1, DECL_PERIOD)]
+            + [State(None, 0, j) for j in range(rounds)])
+
+
+def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: int = 6,
+              axes: str = "product", score: bool = False) -> dict:
     """Every function of the unit with each distinct assembly it takes
-    across the swept states, labelled with those states."""
-    plain = object_functions(unit.plain())
+    across the swept states, labelled with those states. axes="product"
+    sweeps phase x offset; axes="scan" sweeps each axis alone and adds the
+    product only when some function responds to both phase and offset.
+    With score, each assembly carries its objdiff fuzzy score."""
+    plain_obj = unit.plain()
+    plain = object_functions(plain_obj)
+    plain_scores = score_object(unit.name, plain_obj) if score else {}
     captured = object_functions(unit.replay(State(), "captured")[0])
     if captured != plain:
         raise RuntimeError("shim with no state set is not inert for this unit")
@@ -284,7 +332,10 @@ def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: in
     order = [row["name"] for row in read_state(unit)]
     prefixes = callee_prefixes(order, callee_map)
     rounds = max((len(v) for v in prefixes.values()), default=0) + 1
-    todo = states(phases, offsets) + [State(None, 0, j) for j in range(rounds)]
+    if axes == "scan":
+        todo = scan_states(rounds)
+    else:
+        todo = states(phases, offsets) + [State(None, 0, j) for j in range(rounds)]
 
     def one(item):
         index, state = item
@@ -293,28 +344,54 @@ def compile_m(unit: Unit, *, phases=PHASES, offsets=range(DECL_PERIOD), jobs: in
         obj, _ = unit.replay(state, f"slot{index}-{state.phase}-{state.offset}-{state.callee_order}",
                              compiled=compiled)
         funcs = object_functions(obj)
+        scores = score_object(unit.name, obj) if score else {}
         shutil.rmtree(obj.parent, ignore_errors=True)
-        return state, funcs
+        return state, funcs, scores
 
     table: dict[str, dict[bytes, list]] = collections.defaultdict(dict)
+    fuzzy: dict[tuple[str, bytes], float] = {}
     for name, code in captured.items():
         table[name].setdefault(code, []).append(State().as_dict())
-    with ThreadPoolExecutor(max_workers=jobs) as pool:
-        for state, funcs in pool.map(one, list(enumerate(todo))):
+        if name in plain_scores:
+            fuzzy[name, code] = plain_scores[name]
+
+    def absorb(results):
+        for state, funcs, scores in results:
             for name, code in funcs.items():
                 table[name].setdefault(code, []).append(state.as_dict())
+                if name in scores:
+                    fuzzy.setdefault((name, code), scores[name])
+
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        absorb(pool.map(one, list(enumerate(todo))))
+        if axes == "scan":
+            def responds(name, test):
+                return any(test(s) for code, labels in table[name].items()
+                           if code != captured.get(name) for s in labels)
+            both = [name for name in table
+                    if responds(name, lambda s: s["phase"] is not None)
+                    and responds(name, lambda s: s["decl_offset"])]
+            if both:
+                extra = [State(p, k) for p in phases for k in range(1, DECL_PERIOD)]
+                absorb(pool.map(one, list(enumerate(extra, len(todo)))))
     functions = {}
     for name in sorted(table):
         variants = []
         for code, labels in table[name].items():
-            variants.append({"sha": digest(code), "bytes": code.hex(), "states": labels,
-                             "captured": State().as_dict() in labels})
+            variant = {"sha": digest(code), "bytes": code.hex(), "states": labels,
+                       "captured": State().as_dict() in labels}
+            if (name, code) in fuzzy:
+                variant["score"] = fuzzy[name, code]
+            variants.append(variant)
         variants.sort(key=lambda v: (not v["captured"], -len(v["states"]), v["sha"]))
         functions[name] = {"m": len(variants), "variants": variants,
                            "inline_callees": callee_map.get(name, []),
                            "compiled_callees_in_order": prefixes.get(name, [])}
+        if name in plain_scores:
+            functions[name]["current_score"] = plain_scores[name]
     return {"unit": unit.name, "period": DECL_PERIOD, "phases": list(phases),
-            "offsets": list(offsets), "callee_order_rounds": rounds, "functions": functions}
+            "offsets": list(offsets), "axes": axes, "callee_order_rounds": rounds,
+            "functions": functions}
 
 
 def write_prediction(result: dict) -> Path:
@@ -722,3 +799,100 @@ def run_phase_census(args) -> int:
     (STATE_ROOT / "phase-census.md").write_text("\n".join(lines) + "\n")
     print("\n".join(lines[:3]))
     return 0
+
+
+# --------------------------------------------------------------------------
+# state scan: score every reachable assembly of every function
+# --------------------------------------------------------------------------
+
+def scan_units() -> list[str]:
+    """Matching scope: game-profile and victor units, without rmg or zlib."""
+    import tomllib
+    rows = tomllib.loads((_common.REPO / "config/units.toml").read_text())["unit"]
+    return sorted(row["unit"] for row in rows
+                  if row["source"].startswith("src/") and not row["unit"].startswith("rmg"))
+
+
+def scan_rows(prediction: dict, ledger: dict) -> list[dict]:
+    """Functions that some state moves, with the best-scoring assembly."""
+    rows = []
+    unit = prediction["unit"]
+    for name, data in prediction["functions"].items():
+        if data["m"] < 2 or "current_score" not in data:
+            continue
+        scored = [v for v in data["variants"] if "score" in v]
+        if not scored:
+            continue
+        best = max(scored, key=lambda v: (v["score"], v["captured"]))
+        row = ledger.get((unit, name))
+        cur = data["current_score"]
+        rows.append({
+            "unit": unit, "function": name, "m": data["m"], "current": cur,
+            "ledger_cur": getattr(row, "cur", None), "ledger_max": getattr(row, "max", None),
+            "ledger_hist": getattr(row, "hist", None),
+            "best": best["score"], "best_sha": best["sha"], "best_states": best["states"][:6],
+            "gain_over_current": round(best["score"] - cur, 5),
+            "gain_over_max": (round(best["score"] - row.max, 5) if row is not None else None),
+            "axes": sorted({"phase" if s["phase"] is not None else
+                            "callee_order" if s.get("callee_order") is not None else "offset"
+                            for v in data["variants"] if not v["captured"] for s in v["states"]}),
+        })
+    return rows
+
+
+def run_scan(args) -> int:
+    from homm3.match import status
+    ledger = status.load_baseline()
+    units = args.units or scan_units()
+    out = STATE_ROOT / "scan.jsonl"
+    rows = []
+    with _shim(), out.open("a" if args.reuse else "w") as sink:
+        for unit_name in units:
+            path = STATE_ROOT / unit_name / "compile-m.json"
+            try:
+                prediction = json.loads(path.read_text()) if args.reuse and path.exists() else None
+                if prediction is None or prediction.get("axes") != "scan":
+                    prediction = compile_m(Unit.open(unit_name), jobs=args.jobs,
+                                           axes="scan", score=True)
+                    write_prediction(prediction)
+                found = scan_rows(prediction, ledger)
+            except (Exception, SystemExit) as error:
+                print(f"[scan] {unit_name}: error {str(error).splitlines()[0][:160] if str(error) else error!r}",
+                      file=sys.stderr)
+                continue
+            for row in found:
+                rows.append(row)
+                sink.write(json.dumps(row) + "\n")
+            sink.flush()
+            better = [r for r in found if r["gain_over_current"] > 0]
+            print(f"[scan] {unit_name}: {len(found)} state-sensitive, {len(better)} with a better "
+                  f"assembly", file=sys.stderr)
+    write_scan_report()
+    return 0
+
+
+def write_scan_report() -> Path:
+    rows = {}
+    for line in (STATE_ROOT / "scan.jsonl").read_text().splitlines():
+        row = json.loads(line)
+        rows[row["unit"], row["function"]] = row
+    rows = sorted(rows.values(), key=lambda r: -r["gain_over_current"])
+    candidates = [r for r in rows if r["current"] < 100 or
+                  (r["ledger_max"] is not None and r["ledger_max"] < 100)]
+    lines = ["# Unrelated-edit state scan", "",
+             f"{len(rows)} state-sensitive functions; {len(candidates)} not exact "
+             f"(current < 100 or ledger MAX < 100); "
+             f"{sum(1 for r in candidates if r['gain_over_current'] > 0)} of them have a "
+             f"better-scoring reachable assembly.", "",
+             "| unit | function | current | ledger MAX | best | gain | state of best |",
+             "| --- | --- | ---: | ---: | ---: | ---: | --- |"]
+    for r in candidates:
+        label = "; ".join(State(s["phase"], s["decl_offset"], s.get("callee_order")).label()
+                          for s in r["best_states"][:3])
+        lines.append(f"| {r['unit']} | {r['function']} | {r['current']:.4f} | "
+                     f"{r['ledger_max'] if r['ledger_max'] is not None else ''} | {r['best']:.4f} | "
+                     f"{r['gain_over_current']:+.4f} | {label} |")
+    path = STATE_ROOT / "scan.md"
+    path.write_text("\n".join(lines) + "\n")
+    print("\n".join(lines[:3]))
+    return path
