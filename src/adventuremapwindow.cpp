@@ -243,6 +243,12 @@ void TAdventureMapWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
+// 2026-10-07 trace: the only residual is the m_chatEdit push_back's nested
+// insert, whose first size() sees depth-4 budget 38 against cost 42 (retail
+// expands it). The counterfactual simulator flips it if the chat-edit
+// constructor chain costs about 38 less (CAdventurMapChatEdit <= 80). Natural
+// for-loops for the three icon rows fall to 96.36%; scoping unusedText before
+// the chat edit overshoots (91.66%).
 VA(0x00401510, 0xCB5)
 DC_ADDRESS(0x00089c, 0x300)
 MAC_ADDRESS(0x000a34, 0x15e0)

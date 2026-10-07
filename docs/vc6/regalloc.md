@@ -1963,6 +1963,26 @@ The private capture/replay preserved all 77,868 object bytes outside the COFF
 timestamp, replayed overwritten instructions and flags, and restored its clean
 shim. This validates this observation, not a complete stack-allocator model.
 
+### x87 rounding temporaries: retail's rare shared bin
+
+Under `/Op`, `float(a) / float(b)` rounds each integer conversion through a
+stack slot. A census of the retail image finds the
+`fild/fstp X; fld X; fild/fstp X; fdiv X` order at only three sites (0x474ae4
+`checkSetMouseDirection`, 0x4baf71 `setupPuzzlePieces`, 0x5a52d7
+`resetBoltAngle`); `combatMonsterEvent` (0x4ac580) has the double-precision
+form. Thirty other conversion pairs use VC6's ordinary order, where both
+conversions precede the load. In each interleaved site the divisor's
+rounding temporary shares the dividend's bin, so the dividend must be loaded
+before that slot is overwritten. Our compiles round the divisor in place
+instead. Standalone probes (`build/p_fdiv`) also keep the ordinary order for
+casts and implicit conversions, named, hoisted and scoped components,
+compound division, inline float/int helpers, a float parameter or member
+dividend, reordered `abs` and guards, and `/G3`-`/G6`, `/Ox`, `/Oa`, `/Ow`
+and `/Oi-`. Only a `volatile` dividend or a float/double operand mix
+interleaves, and neither matches retail's dword divisor. Treat this as one
+open stack-bin difference across those four functions rather than four
+spelling problems.
+
 ### Stack-bin priorities have unstable ties
 
 For frames exceeding 128 bytes, the pinned backend sorts the movable stack
