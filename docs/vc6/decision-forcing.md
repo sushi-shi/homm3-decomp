@@ -135,9 +135,8 @@ the live-range group. The stolen `lea eax,[edi*8]; sub eax,edi` is replayed.
 `HOMM3_VC6_REG_FORCE="k:reg,..."` replaces the k-th decision of the selected
 function, in C2's priority order (1=EAX ... 8=EDI). The replacement is used
 only if the group's own candidate set (`group+0x20`, tested with C2's
-member function `0x19b5`) contains it. That only keeps the register
-encodable for the group. It does not make the result reachable: C2 rejected
-the alternative, so no real source context need produce it. Every decision is logged as
+member function `0x19b5`) contains it, so only allocations C2 itself
+considered legal are produced. Every decision is logged as
 `color k= chosen= eligible= priority=`.
 
 `reg-reach` is a greedy search. It walks the decisions in order, tries every
@@ -202,14 +201,6 @@ batch was not run.
 
 ## Limits
 
-* **Forced output is not reachable output.** Every forced decision
-  (inline, register, merge veto) overrides a choice the real compiler made.
-  A wall "reached by forcing" shows only that those bytes are encodable from
-  this IL, not that any source context produces them. A forced inline
-  `need` becomes evidence only after a real source change yields that budget.
-  The set of assemblies a function can actually produce comes from varying
-  the state that earlier code carries into it (handle numbers, the scratch
-  register cursor, callee data, other back-end globals), not from forcing.
 * The comparison is instruction-level and strict, not the objdiff
   percentage. A strict match is required for an "exact"/"reached" verdict.
 * Retail call streams only reveal kept calls. Two decisions with identical
