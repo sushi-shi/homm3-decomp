@@ -53,6 +53,10 @@ void LossConditionStruct::recordLoss(signed char player)
 // The canonical team helper replaces the pasted scan. Both compilers expand
 // it and retain its nested isHuman call; the caller keeps explicit integer
 // success/failure returns, as Mac 0x1fd394 and 0x1fd3a8 do.
+// DC ?applies_to_player@VictoryConditionStruct@@QBA_NJ@Z returns bool, but
+// retail 0x5f15f9/0x5f15f0 set the whole EAX (mov eax,1 / xor eax,eax); a
+// bool return emits mov al,1 / xor al,al (100 -> 99.63), so Complete
+// widened it to int.
 VA(0x005f15a0, 0x63)
 DC_ADDRESS(0x18fdc4, 0x34)
 MAC_ADDRESS(0x1fd30c, 0xc0)

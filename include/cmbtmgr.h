@@ -1354,25 +1354,25 @@ public:
     CSprite* loadSpellEffect(int effect);  // 0x5a92f0
 
 private:
-    unsigned char chooseToRun(const army* ourArmy,
+    bool chooseToRun(const army* ourArmy,
                                 const long* enemyAttacks,
                                 const searchArray* currentSearchArray);  // 0x4208f0
     long getAttackChange(const army* currentArmy, const army* enemy,
                            type_AI_combat_parameters& data);  // 0x41f3b0
     void markFirewalls(const army* currentArmy, long* enemyAttacks,
                         type_AI_combat_parameters* estimate);  // 0x4214f0
-    unsigned char moveToward(const army* currentArmy, long targetHex,
+    bool moveToward(const army* currentArmy, long targetHex,
                               const long* enemyAttacks,
-                              unsigned char considerWaiting);  // 0x41f580
+                              bool considerWaiting);  // 0x41f580
 
 public:
     void markMoat(const army* currentArmy, long* enemyAttacks,
                    type_AI_combat_parameters* estimate);  // 0x421590
-    unsigned char chooseCyclopsAction(long bestValue, long side,
+    bool chooseCyclopsAction(long bestValue, long side,
                                         type_AI_combat_parameters& estimate);  // 0x41eea0
 
 private:
-    unsigned char chooseCreatureSpell(const army* currentArmy,
+    bool chooseCreatureSpell(const army* currentArmy,
                                         long& bestValue,
                                         type_AI_combat_parameters& estimate);  // 0x420d20
     bool chooseMeleeTarget(const army* currentArmy,
@@ -1415,7 +1415,7 @@ public:
     void berserkAttack(army* currentArmy, const army* target);  // 0x4222c0
     long chooseMeleeAction(const army* currentArmy, bool teleport,
                              bool simulated, long side);  // 0x421f80
-    unsigned char failedSiege();  // 0x41e440
+    bool failedSiege();  // 0x41e440
     // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
     // here - `homm3 sema rva` files it under seg_0002. The DC roster
     // puts combatManager::find_AI_targets in ai.obj (ai.cpp:2608, dc
@@ -1434,11 +1434,11 @@ public:
                          const type_AI_combat_parameters* data,
                          searchArray* currentSearchArray);
     unsigned char isValidTeleport(const army* thisArmy, long newHex);
-    void simulateCombat(long side, unsigned char simulated);  // 0x422a40
+    void simulateCombat(long side, bool simulated);  // 0x422a40
     bool validWallTarget(TWallTargetId wall);  // 0x476440
     void doCompAI(int whichGroup);  // 0x4221f0
     // command.cpp calls this ai.obj leaf from CheckGetAIMove.
-    unsigned char doSpellAI();  // 0x422da0
+    bool doSpellAI();  // 0x422da0
     // command.cpp:3038. The retail call at 0x477f3d occupies the exact
     // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
     // helper's other retail caller sits in ai.obj.
@@ -1471,7 +1471,7 @@ private:
                                      searchArray* currentSearchArray);  // 0x4205d0
     void chooseShooterAction(const army* currentArmy,
                                bool simulated, long side);  // 0x41f060
-    unsigned char hasRangedAdvantage(
+    bool hasRangedAdvantage(
         type_AI_combat_parameters& data);  // 0x420a80
     void placeShooter(const army* currentArmy);  // 0x422060
     unsigned char shouldStayInCastle(

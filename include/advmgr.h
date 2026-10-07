@@ -673,9 +673,9 @@ public:
     // 0x2a74) carries the parameter and names it `image`, and
     // DoAdvCommand's one call site passes the literal 0.
     void setSleepImage(int image);
-    void animateBottomView(unsigned char inBackground);
+    void animateBottomView(bool inBackground);
     void clearBottomView();
-    void drawBottomView(unsigned char update);
+    void drawBottomView(bool update);
     inline void setBackgroundAnimation(unsigned char enable);
     void setBottomView(class type_bottom_view_window* newView);
     void updateResourceDisplay(bool draw, bool update);

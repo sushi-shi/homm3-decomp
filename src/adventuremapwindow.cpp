@@ -89,7 +89,7 @@ const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 
 // E:\gamedcs\adventuremapwindow.cpp:505
 // RETAIL_LOCATED(0x00402b90, 0x24)  // anchor-global, dc 0xbf0
-void TAdventureMapWindow::animateBottomView(unsigned char in_background)
+void TAdventureMapWindow::animateBottomView(bool in_background)
 {
     // @stub
 }
@@ -681,7 +681,7 @@ TAdventureMapWindow::~TAdventureMapWindow()
 VA(0x00402b90, 0x24)
 DC_ADDRESS(0x000bf0, 0x2a)
 MAC_ADDRESS(0x0021f4, 0x4c)
-void TAdventureMapWindow::animateBottomView(unsigned char inBackground)
+void TAdventureMapWindow::animateBottomView(bool inBackground)
 {
     if ((!inBackground || m_animateInBackground) && m_bottomView)
         m_bottomView->animate();
@@ -690,7 +690,7 @@ void TAdventureMapWindow::animateBottomView(unsigned char inBackground)
 VA(0x00402bc0, 0x4E)
 DC_ADDRESS(0x000c1c, 0x40)
 MAC_ADDRESS(0x002240, 0x80)
-void TAdventureMapWindow::drawBottomView(unsigned char update)
+void TAdventureMapWindow::drawBottomView(bool update)
 {
     if (m_bottomView) {
         m_bottomView->draw(0, 0xffff0001, 0xffff);

@@ -185,7 +185,7 @@ public:
     type_AI_attack_hex_chooser(const army* attacker, const army* defender,
                                const long* attackArray, searchArray* search,
                                const type_AI_combat_parameters* combatData);
-    unsigned char findAttackHex();
+    bool findAttackHex();
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.
     long getAttackTime(const pathCell* cell) const;
@@ -260,7 +260,7 @@ public:
     // (0x420d20) builds one on the stack with exactly (this, side, 1)
     // and the 0x420 frame the 0x410 operator-new size predicts.
     type_AI_spellcaster(combatManager* combat, long side,
-                        unsigned char creatureSpell);
+                        bool creatureSpell);
     // dc 0x3d6f0. The DEPUTY's constructor - the one the public ctor
     // reaches through `new` for the other side's caster, with `parent`
     // landing in the deputy's own +0x48 and its owns_deputy byte left
@@ -284,7 +284,7 @@ protected:
     // dc 0x3d7b0. "Is this the last stack on our side that can still
     // act?" - inlined into consider_teleport, consider_resurrect and
     // consider_single_enchantment, with no retail body of its own.
-    unsigned char isLastAction() const;
+    bool isLastAction() const;
     // A THIRD census on the same 16-byte stride, byte-proven by
     // get_defense_skill_value (0x438910): it reads the record's `enemy`
     // pointer as `(bitIndex + 0x2d) * 16 + this`, i.e. this + 0x2d0 +
@@ -333,7 +333,7 @@ protected:
     long getDiseaseValue(const army* enemy, type_enchant_data caster) const;
     long getDispelValue(const army* ourArmy, type_enchant_data caster) const;
     // DC ai_tactical.cpp:2116, get_duration. Retail protection expands it.
-    double getDuration(long turns, unsigned char movedThisTurn) const;
+    double getDuration(long turns, bool movedThisTurn) const;
     long getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const;
     long getEarthProtectionValue(const army* ourArmy,
                                     type_enchant_data caster) const;
@@ -367,7 +367,7 @@ protected:
     long getWaterProtectionValue(const army* ourArmy,
                                     type_enchant_data caster) const;
     long getWeaknessValue(const army* enemy, type_enchant_data caster) const;
-    unsigned char shouldAttackNow(const army& enemy) const;
+    bool shouldAttackNow(const army& enemy) const;
     long unimplemented(const army* enemy, type_enchant_data caster) const;
     // The shape of every row in get_enchantment_function's table, and
     // the shape get_cancel_value (0x439a80) and get_caliph_value
@@ -407,7 +407,7 @@ protected:
     void setWorstEnemies();
     void addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
                   const army* enemy, bool ranged);
-    unsigned char spellsNotRequired() const;
+    bool spellsNotRequired() const;
 
     // Project-inferred timing rule shared by Resurrection and Sacrifice.
     bool shouldRestoreNow(const army* restoredArmy) const;
