@@ -174,10 +174,19 @@ def orders(objects: dict[str, tuple[int, Path]], image: LokiImage | None = None)
     return out
 
 
-def render(order: Order, names: dict[str, str] | None = None) -> list[str]:
-    """The aligned lists: equal runs folded, image-only lines `-`, ours-only `+`."""
+def render(order: Order, names: dict[str, str] | None = None,
+           candidates: dict[int, list[str]] | None = None) -> list[str]:
+    """The aligned lists: equal runs folded, image-only lines `-`, ours-only `+`.
+    `candidates` names an image-only discarded slot by the kept linkonce
+    functions of its size (when there are at most three)."""
     names = names or {}
-    show = lambda e: f"{e.size:6}  {names.get(e.name, e.name)}"
+    candidates = candidates or {}
+
+    def show(e: Entry) -> str:
+        label = names.get(e.name, e.name)
+        if e.key.startswith("linkonce:") and e.name.startswith("(") and 0 < len(candidates.get(e.size, ())) <= 3:
+            label += " ~ " + " | ".join(names.get(n, n) for n in candidates[e.size])
+        return f"{e.size:6}  {label}"
     lines = []
     for tag, i1, i2, j1, j2 in order.opcodes:
         if tag == "equal":
@@ -197,7 +206,12 @@ def main(units: list[str], verbose: bool = False) -> int:
     from homm3.loki import build
     chosen = build.units(units or None)
     objects = {u.name: (u.obj, build.OUT / "obj" / f"{u.name}.o") for u in chosen}
-    results = orders(objects)
+    image = LokiImage()
+    results = orders(objects, image)
+    candidates: dict[int, list[str]] = {}
+    for function in image.functions:
+        if function.linkonce and function.name:
+            candidates.setdefault(function.size, []).append(function.name)
     identical = 0
     for order in results:
         identical += order.identical
@@ -214,11 +228,14 @@ def main(units: list[str], verbose: bool = False) -> int:
             if not order.identical:
                 try:
                     from homm3.loki.census import demangle
-                    mangled = sorted({e.name for e in order.image + order.ours if not e.name.startswith("(")})
+                    mangled = {e.name for e in order.image + order.ours if not e.name.startswith("(")}
+                    mangled |= {n for e in order.image if e.name.startswith("(")
+                                for n in candidates.get(e.size, ())[:3]}
+                    mangled = sorted(mangled)
                     names = dict(zip(mangled, demangle(mangled)))
                 except Exception:   # demangling is a convenience; the toolchain may be unstaged
                     names = {}
-            for line in render(order, names) if not order.identical else []:
+            for line in render(order, names, candidates) if not order.identical else []:
                 print("    " + line)
     print(f"[loki] {identical}/{len(results)} objects emit the image's function list")
     return 0
