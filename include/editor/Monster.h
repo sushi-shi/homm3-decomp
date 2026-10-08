@@ -49,21 +49,22 @@ public:
     virtual bool isCustomized() const;
     virtual void exportText(ostream* pOStream) const;
 
+    void setQuantity(unsigned int newQuantity);
+    void setDisposition(TDisposition newDisposition);
+    void setBNeverFlees(bool bNeverFlees) { _m_bNeverFlees = bNeverFlees; }
+    void setBNeverGrows(bool bNeverGrows) { _m_bNeverGrows = bNeverGrows; }
+    void setMessage(const string& newMessage);
+    void setResourceQuantity(TGameResourceType type, unsigned int newQuantity);
+    void setArtifact(TArtifact newArtifact);
+
     TCreatureType getCreatureType() const { return TCreatureType(getExtra()); }
     unsigned int getQuantity() const { return _m_quantity; }
-    void setQuantity(unsigned int newQuantity);
     TDisposition getDisposition() const { return _m_disposition; }
-    void setDisposition(TDisposition newDisposition);
     bool getBNeverFlees() const { return _m_bNeverFlees; }
-    void setBNeverFlees(bool bNeverFlees) { _m_bNeverFlees = bNeverFlees; }
     bool getBNeverGrows() const { return _m_bNeverGrows; }
-    void setBNeverGrows(bool bNeverGrows) { _m_bNeverGrows = bNeverGrows; }
     const string& getMessage() const { return _m_message; }
-    void setMessage(const string& newMessage);
     unsigned int getResourceQuantity(TGameResourceType type) const;
-    void setResourceQuantity(TGameResourceType type, unsigned int newQuantity);
     TArtifact getArtifact() const { return _m_artifact; }
-    void setArtifact(TArtifact newArtifact);
 
     virtual bool hasText() const { return !getMessage().empty(); }
 

@@ -87,26 +87,27 @@ public:
 
         TContents();
 
-        int getExperienceBonus() const { return _m_experienceBonus; }
         void setExperienceBonus(int newExperienceBonus);
-        int getManaBonus() const { return _m_manaBonus; }
         void setManaBonus(int newManaBonus);
-        int getMoraleBonus() const { return _m_moraleBonus; }
         void setMoraleBonus(int newMoraleBonus);
-        int getLuckBonus() const { return _m_luckBonus; }
         void setLuckBonus(int newLuckBonus);
-        const TResourceQuantities& getResourceQuantities() const { return _m_resourceQuantities; }
         void setResourceQuantities(const TResourceQuantities& newQuantities) { _m_resourceQuantities = newQuantities; }
-        const TPrimarySkillBonuses& getPrimarySkillBonuses() const { return _m_primarySkillBonuses; }
         void setPrimarySkillBonuses(const TPrimarySkillBonuses& newBonuses) { _m_primarySkillBonuses = newBonuses; }
-        const vector<TSecondarySkillRecord>& getSecondarySkills() const { return _m_aSecondarySkill; }
         void setSecondarySkills(const vector<TSecondarySkillRecord>& aNewSecondarySkill);
-        const vector<TArtifact>& getArtifacts() const { return _m_aArtifact; }
         void setArtifacts(const vector<TArtifact>& aNewArtifact);
-        const vector<SpellID>& getSpells() const { return _m_aSpell; }
         void setSpells(const vector<SpellID>& aNewSpell);
-        const vector<TCreatureStack>& getCreatureStacks() const { return _m_aCreatureStack; }
         void setCreatureStacks(const vector<TCreatureStack>& aNewCreatureStack);
+
+        int getExperienceBonus() const { return _m_experienceBonus; }
+        int getManaBonus() const { return _m_manaBonus; }
+        int getMoraleBonus() const { return _m_moraleBonus; }
+        int getLuckBonus() const { return _m_luckBonus; }
+        const TResourceQuantities& getResourceQuantities() const { return _m_resourceQuantities; }
+        const TPrimarySkillBonuses& getPrimarySkillBonuses() const { return _m_primarySkillBonuses; }
+        const vector<TSecondarySkillRecord>& getSecondarySkills() const { return _m_aSecondarySkill; }
+        const vector<TArtifact>& getArtifacts() const { return _m_aArtifact; }
+        const vector<SpellID>& getSpells() const { return _m_aSpell; }
+        const vector<TCreatureStack>& getCreatureStacks() const { return _m_aCreatureStack; }
 
         bool isCustomized() const;
 
