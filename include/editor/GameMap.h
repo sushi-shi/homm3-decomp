@@ -15,13 +15,13 @@
 #ifndef HOMM3_EDITOR_GAMEMAP_H
 #define HOMM3_EDITOR_GAMEMAP_H
 
-#include <bitset>
 #include <exception>
 #include <iterator>
 #include <stddef.h>
 #include <vector>
 #include <set>
 #include <string>
+#include <bitset>
 
 #include "editor/GameObject.h"
 #include "editor/TimedEvent.h"
