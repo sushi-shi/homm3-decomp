@@ -8940,12 +8940,6 @@ int TSingleSelectionWindow::getCommonGameVersion()
 
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
-VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
-std::vector<HeroId>::vector(const std::vector<HeroId>& other)
-{
-    // @stub
-}
-
 VA(0x0058fef0, 0x8D)  // COMDAT pairing (unique 141 B in this obj)
 std::vector<hero>::vector(const std::vector<hero>& other)
 {
@@ -9224,6 +9218,8 @@ VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)
 VA_COMPGEN(0x0058ffc0, 0xA8, TREE_INIT, type_map_hero_info)
 
 VA_COMPGEN(0x00590810, 0x2BD, IMPLICIT_COPY_CTOR, CMapHeaderData)
+
+VA_COMPGEN(0x0058fe80, 0x66, VECTOR_COPY_CTOR, HeroId)
 
 VA_COMPGEN(0x005941b0, 0x6C, VECTOR_COPY_CTOR, hero_vector)
 
