@@ -14,6 +14,7 @@
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
 #include "editor/TilePoint.h"
+#include "editor/VictoryCondition.h"
 #include "retailobjecttype.h"
 
 namespace {
@@ -180,11 +181,82 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
     insert(value_type(kCappedGeneratorTypes.m_aType[4], &_m_aInfo[which]));
 }
 
+// An object's location as the map's condition records keep it: -1s for
+// no object (h3maped 0x42921c fills it).
+struct TMapLoc {
+    int m_x;
+    int m_y;
+    int m_layer;
+};
+
+// A victory condition as the map keeps it (h3maped's visitors write the
+// kind's ordinal as a dword, the two flags at +4/+5, the kind's data at +8).
+struct TVictoryConditionData {
+    int m_type;
+    bool m_bAllowNormalVictory;
+    bool m_bAppliesToComputer;
+    union {
+        struct {
+            TArtifact m_artifact;
+        } m_aquireArtifact;
+        struct {
+            TCreatureType m_creatureType;
+            unsigned int m_quantity;
+        } m_accumulateCreature;
+        struct {
+            TGameResourceType m_resourceType;
+            unsigned int m_quantity;
+        } m_accumulateResource;
+        struct {
+            TMapLoc m_townLoc;
+            int m_hallLevel;
+            int m_castleLevel;
+        } m_upgradeTown;
+        struct {
+            TMapLoc m_townLoc;
+        } m_buildHolyGrailStruct;
+        struct {
+            TMapLoc m_heroLoc;
+        } m_defeatHero;
+        struct {
+            TMapLoc m_townLoc;
+        } m_captureTown;
+        struct {
+            TMapLoc m_monsterLoc;
+        } m_defeatMonster;
+        struct {
+            TArtifact m_artifact;
+            TMapLoc m_townLoc;
+        } m_transportArtifact;
+    };
+};
+
+// A loss condition as the map keeps it.
+struct TLossConditionData {
+    int m_type;
+    union {
+        struct {
+            TMapLoc m_townLoc;
+        } m_loseTown;
+        struct {
+            TMapLoc m_heroLoc;
+        } m_loseHero;
+        struct {
+            unsigned int m_numDays;
+        } m_timeExpires;
+    };
+};
+
 }  // namespace
 
 // The map's implementation: so far only the dimension of each size.
 class TGameMap::_TImpl {
 public:
+    class _TGetVictoryConditionDataFunc;
+    class _TGetLossConditionDataFunc;
+
+    void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
+
     // The caps the failures report (h3maped 0x41ec98: 156 heroes; 0x41ecb8:
     // 48 towns).
     enum { s_kMaxHeroesOnMap = 156, s_kMaxTownsOnMap = 48 };
@@ -202,6 +274,153 @@ VA(0x0041ecb8, 0x20)
 TPlaceObjFailureTooManyTownsOnMap::TPlaceObjFailureTooManyTownsOnMap()
     : TPlaceObjFailureTooManyInstancesOfTypeOnMap(TOWN, TGameMap::_TImpl::s_kMaxTownsOnMap)
 {
+}
+
+// Fills a map's victory-condition record from a condition (h3maped RTTI
+// _TGetVictoryConditionDataFunc@_TImpl@TGameMap, twelve slots).
+class TGameMap::_TImpl::_TGetVictoryConditionDataFunc : public TVictoryCondition::TVisitor {
+public:
+    _TGetVictoryConditionDataFunc(const _TImpl& map, TVictoryConditionData* pData)
+        : _m_map(map), _m_pData(pData) {}
+
+    virtual void visit(const TVCAquireArtifact& vc);
+    virtual void visit(const TVCAccumulateCreature& vc);
+    virtual void visit(const TVCAccumulateResource& vc);
+    virtual void visit(const TVCUpgradeTown& vc);
+    virtual void visit(const TVCBuildHolyGrailStruct& vc);
+    virtual void visit(const TVCDefeatHero& vc);
+    virtual void visit(const TVCCaptureTown& vc);
+    virtual void visit(const TVCDefeatMonster& vc);
+    virtual void visit(const TVCFlagAllCreatureGenerators& vc);
+    virtual void visit(const TVCFlagAllMines& vc);
+    virtual void visit(const TVCTransportArtifact& vc);
+
+private:
+    void _setHeader(TVictoryConditionType type, const TVictoryCondition& vc)
+    {
+        _m_pData->m_type = type;
+        _m_pData->m_bAllowNormalVictory = vc.getBAllowNormalVictory();
+        _m_pData->m_bAppliesToComputer = vc.getBAppliesToComputer();
+    }
+
+    const _TImpl& _m_map;
+    TVictoryConditionData* _m_pData;
+};
+
+// ...and its loss-condition record (four slots).
+class TGameMap::_TImpl::_TGetLossConditionDataFunc : public TLossCondition::TVisitor {
+public:
+    _TGetLossConditionDataFunc(const _TImpl& map, TLossConditionData* pData)
+        : _m_map(map), _m_pData(pData) {}
+
+    virtual void visit(const TLCLoseTown& lc);
+    virtual void visit(const TLCLoseHero& lc);
+    virtual void visit(const TLCTimeExpires& lc);
+
+private:
+    const _TImpl& _m_map;
+    TLossConditionData* _m_pData;
+};
+
+VA(0x0041ecd8, 0x29)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCAquireArtifact& vc)
+{
+    _setHeader(eVCAquireArtifact, vc);
+    _m_pData->m_aquireArtifact.m_artifact = vc.getArtifact();
+}
+
+VA(0x0041ed01, 0x38)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCAccumulateCreature& vc)
+{
+    _setHeader(eVCAccumulateCreature, vc);
+    _m_pData->m_accumulateCreature.m_creatureType = vc.getCreatureType();
+    _m_pData->m_accumulateCreature.m_quantity = vc.getQuantity();
+}
+
+VA(0x0041ed39, 0x38)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCAccumulateResource& vc)
+{
+    _setHeader(eVCAccumulateResource, vc);
+    _m_pData->m_accumulateResource.m_resourceType = vc.getResourceType();
+    _m_pData->m_accumulateResource.m_quantity = vc.getQuantity();
+}
+
+VA(0x0041ed71, 0x4d)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCUpgradeTown& vc)
+{
+    _setHeader(eVCUpgradeTown, vc);
+    _m_map._getObjectLoc(vc.getTownRef(), &_m_pData->m_upgradeTown.m_townLoc);
+    _m_pData->m_upgradeTown.m_hallLevel = vc.getHallLevel();
+    _m_pData->m_upgradeTown.m_castleLevel = vc.getCastleLevel();
+}
+
+VA(0x0041edbe, 0x3b)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCBuildHolyGrailStruct& vc)
+{
+    _setHeader(eVCBuildHolyGrailStruct, vc);
+    _m_map._getObjectLoc(vc.getTownRef(), &_m_pData->m_buildHolyGrailStruct.m_townLoc);
+}
+
+VA(0x0041edf9, 0x3b)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCDefeatHero& vc)
+{
+    _setHeader(eVCDefeatHero, vc);
+    _m_map._getObjectLoc(vc.getHeroRef(), &_m_pData->m_defeatHero.m_heroLoc);
+}
+
+VA(0x0041ee34, 0x3b)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCCaptureTown& vc)
+{
+    _setHeader(eVCCaptureTown, vc);
+    _m_map._getObjectLoc(vc.getTownRef(), &_m_pData->m_captureTown.m_townLoc);
+}
+
+VA(0x0041ee6f, 0x3b)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCDefeatMonster& vc)
+{
+    _setHeader(eVCDefeatMonster, vc);
+    _m_map._getObjectLoc(vc.getMonsterRef(), &_m_pData->m_defeatMonster.m_monsterLoc);
+}
+
+VA(0x0041eeaa, 0x24)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCFlagAllCreatureGenerators& vc)
+{
+    _setHeader(eVCFlagAllCreatureGenerators, vc);
+}
+
+VA(0x0041eece, 0x24)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCFlagAllMines& vc)
+{
+    _setHeader(eVCFlagAllMines, vc);
+}
+
+VA(0x0041eef2, 0x42)
+void TGameMap::_TImpl::_TGetVictoryConditionDataFunc::visit(const TVCTransportArtifact& vc)
+{
+    _setHeader(eVCTransportArtifact, vc);
+    _m_pData->m_transportArtifact.m_artifact = vc.getArtifact();
+    _m_map._getObjectLoc(vc.getTownRef(), &_m_pData->m_transportArtifact.m_townLoc);
+}
+
+VA(0x0041ef34, 0x20)
+void TGameMap::_TImpl::_TGetLossConditionDataFunc::visit(const TLCLoseTown& lc)
+{
+    _m_pData->m_type = eLCLoseTown;
+    _m_map._getObjectLoc(lc.getTownRef(), &_m_pData->m_loseTown.m_townLoc);
+}
+
+VA(0x0041ef54, 0x23)
+void TGameMap::_TImpl::_TGetLossConditionDataFunc::visit(const TLCLoseHero& lc)
+{
+    _m_pData->m_type = eLCLoseHero;
+    _m_map._getObjectLoc(lc.getHeroRef(), &_m_pData->m_loseHero.m_heroLoc);
+}
+
+VA(0x0041ef77, 0x19)
+void TGameMap::_TImpl::_TGetLossConditionDataFunc::visit(const TLCTimeExpires& lc)
+{
+    _m_pData->m_type = eLCTimeExpires;
+    _m_pData->m_timeExpires.m_numDays = lc.getNumDays();
 }
 
 DATA(0x00535214)
