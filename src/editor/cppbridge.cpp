@@ -5,6 +5,8 @@
 // {anonymous}::doSave(char *)"); _isspace is the one C++ function. The
 // assert lines come from the retail immediates. Names of the file statics
 // are not proven.
+#include <memory>
+
 #include "editor/stdafx.h"
 
 #include <ctype.h>
