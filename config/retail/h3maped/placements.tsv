@@ -57,7 +57,6 @@ rva	size	kind	name	unit	evidence
 0x0002bde9	0x32	func	?erase@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAH0@Z	rmg	masked body (50 bytes, 0 relocations) unique at a census start; ICF-folded with 5 identical bodies
 0x0002be1b	0x6c	func	?resize@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXIABUTObjectType@@@Z	objecttype	referenced by ?load@TObjectTypeTable@@QAEXPAD@Z at +0x67
 0x0002bfe6	0x13	func	??1?$auto_ptr@VBitmap16Bit@@@std@@QAE@XZ	resourcemanager	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
-0x0002c28f	0xa4	func	?reserve@?$vector@UTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@V?$allocator@UTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@@std@@QAEXI@Z	GameMap	masked body (164 bytes, 2 relocations) unique at a census start
 0x0002c92d	0x20	func	??1?$vector@EV?$allocator@E@std@@@std@@QAE@XZ	rmg	masked body (32 bytes, 1 relocations) unique at a census start; ICF-folded with 21 identical bodies
 0x0002cb17	0xb1	func	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	objecttype	masked prefix (145 fixed bytes agree, 279 compiled, 177 retail)
 0x0002cc4c	0x1a	func	?snextc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	objecttype	masked body (26 bytes, 2 relocations) unique at a census start
