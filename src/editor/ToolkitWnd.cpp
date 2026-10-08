@@ -29,11 +29,11 @@ TToolkitWnd::TToolkitWnd(GtkWidget* thisWidget, TToolkitWndClient* pClient)
 #line 39
     assert(pClient != NULL);
     _m_hWnd = NULL;
-    try {
-        GtkWidget* pWidget = _widget("terraintoolkit");
-        if (!(_m_pTerrainToolkit = new TTerrainToolkit(pWidget)))
+    GtkWidget* pWidget = _widget("terraintoolkit");
+    if (!(_m_pTerrainToolkit = new TTerrainToolkit(pWidget)))
 #line 64
-            throw TAllocationFailure(__FILE__, __LINE__);
+        throw TAllocationFailure(__FILE__, __LINE__);
+    try {
         pWidget = _widget("rivertoolkit");
         if (!(_m_pRiverToolkit = new TRiverToolkit(pWidget)))
 #line 71

@@ -28,12 +28,12 @@ TMapFrameWnd::TMapFrameWnd(GtkWidget* thisWidget, TMapEditingWnd::TController* p
     assert(pMap != NULL);
     assert(!bSecondLayer || pMap->isTwoLayer());
     _m_hWnd = NULL;
-    try {
-        GtkWidget* editWidget = _widget("mapeditwnd");
-        if ((_m_pEditWnd = new TMapEditWnd(editWidget, this, id, pMap, bSecondLayer, zoom, bShowGrid,
-                                           bShowPassability, pHAdjustment, pVAdjustment)) == NULL)
+    GtkWidget* editWidget = _widget("mapeditwnd");
+    if ((_m_pEditWnd = new TMapEditWnd(editWidget, this, id, pMap, bSecondLayer, zoom, bShowGrid,
+                                       bShowPassability, pHAdjustment, pVAdjustment)) == NULL)
 #line 69
-            throw TAllocationFailure(__FILE__, __LINE__);
+        throw TAllocationFailure(__FILE__, __LINE__);
+    try {
         GtkWidget* statusBarWidget = _widget("statusbar");
         GtkStyle* s = gtk_widget_get_style(statusBarWidget);
 #line 78
