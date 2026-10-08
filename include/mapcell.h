@@ -887,18 +887,18 @@ class TAbstractFile;
 // makes VC6's generated copies treat retail padding as a real member.
 class TTimedEvent {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
-    int m_resQty[7];
-    unsigned char m_playerFlags;
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
+    int ResQty[7];
+    unsigned char PlayerFlags;
     unsigned char m_applyToHuman;
-    unsigned char m_applyToComputer;
-    unsigned short m_firstTime;
-    unsigned short m_interval;
+    unsigned char ApplyToComputer;
+    unsigned short FirstTime;
+    unsigned short Interval;
     // `ret 8`: the save version is a second argument, gating the
     // apply-to-human flag at 28 exactly as LoadGarrisonPool does.
-    int read(TAbstractFile* infile, int saveVersion);
-    int save(TAbstractFile* outfile);
-    int load(TAbstractFile* infile, int saveVersion);
+    int Read(TAbstractFile* infile, int saveVersion);
+    int Save(TAbstractFile* outfile);
+    int Load(TAbstractFile* infile, int saveVersion);
 
 };
 SIZE(TTimedEvent, 0x34);
