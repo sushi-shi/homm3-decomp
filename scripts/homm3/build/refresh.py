@@ -31,7 +31,7 @@ def refresh_unit(unit: str, *, run=subprocess.run) -> RefreshResult:
     import time
     if not ninja_file.is_file() or not unit:
         return RefreshResult(unit)
-    target = f"build/objdiff/base/{unit}.obj"
+    target = _image_path(f"build/objdiff/base/{unit}.obj")   # the image's own graph
     started = time.time()
     refresh_lock.parent.mkdir(parents=True, exist_ok=True)
     from homm3.core import worktree_lock
