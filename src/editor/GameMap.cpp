@@ -482,6 +482,7 @@ private:
 
     typedef TRefCountingPtr<_TProperties> _TPProperties;
     typedef TRefCountingPtr<_TBookkeeping> _TPBookkeeping;
+    typedef TRefCountingPtr<_TPlayerBookkeeping> _TPPlayerBookkeeping;
 
     TClient* _m_pClient;
     const TObjectFactory* _m_pObjectFactory;
@@ -490,7 +491,7 @@ private:
     _TPProperties _m_pProperties;
     vector<TLayer> _m_aLayer;
     _TPBookkeeping _m_pBookkeeping;
-    TArray<TRefCountingPtr<_TPlayerBookkeeping>, kNumPlayers> _m_apPlayerBookkeeping;
+    TArray<_TPPlayerBookkeeping, kNumPlayers> _m_apPlayerBookkeeping;
 };
 
 namespace {
@@ -983,6 +984,57 @@ void TGameMap::_TImpl::setDifficulty(TDifficulty newDifficulty)
     _m_pProperties->m_difficulty = newDifficulty;
 }
 
+void TGameMap::_TImpl::setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers)
+{
+    for (unsigned int player = 0; player < kNumPlayers; player++) {
+        const _TPPlayerBookkeeping& pConstPlayerBookkeeping = _m_apPlayerBookkeeping[player];
+        if (pConstPlayerBookkeeping->m_numUnits != 0) {
+#line 1852
+            assert(newPlayers[ player ].getBPresent());
+            if (newPlayers[player].getBGenerateHero()) {
+#line 1857
+                assert(pConstPlayerBookkeeping->m_numHeroes < s_kMaxHeroesPerPlayer);
+                const TMapObjectRef& mainTownRef = newPlayers[player].getMainTownRef();
+#line 1862
+                assert(_m_apPlayerBookkeeping[ player ]->m_townRefs.find( mainTownRef ) != _m_apPlayerBookkeeping[ player ]->m_townRefs.end());
+                const TTown* pTown = dynamic_cast<const TTown*>(
+                    &getLayer(mainTownRef.getBSecondLayer()).getObject(mainTownRef.getObjectID()));
+#line 1864
+                assert(pTown != NULL);
+                assert(pTown->getOwner() == player && pTown->getPVisitingHero() == __null);
+            } else {
+#line 1868
+                assert(newPlayers[ player ].getMainTownRef() == TMapObjectRef());
+            }
+        } else {
+#line 1872
+            assert(!newPlayers[ player ].getBPresent());
+            assert(!newPlayers[ player ].getBGenerateHero());
+            assert(newPlayers[ player ].getMainTownRef() == TMapObjectRef());
+        }
+    }
+    _m_pProperties->m_players = newPlayers;
+}
+
+void TGameMap::_TImpl::setTeamInfo(const TTeamInfo& newTeamInfo)
+{
+    if (newTeamInfo.getBHasTeams()) {
+#line 1888
+        assert(newTeamInfo.getNumTeams() < _m_pBookkeeping->m_numPlayableSlots);
+        const _TPProperties& pConstProperties = _m_pProperties;
+        for (unsigned int player = 0; player < kNumPlayers; player++) {
+            if (pConstProperties->m_players[player].getBPresent()) {
+#line 1895
+                assert(newTeamInfo.getPlayerTeam( static_cast< TPlayer >( player ) ) < newTeamInfo.getNumTeams());
+            } else {
+#line 1897
+                assert(newTeamInfo.getPlayerTeam( static_cast< TPlayer >( player ) ) == 0);
+            }
+        }
+    }
+    _m_pProperties->m_teamInfo = newTeamInfo;
+}
+
 void TGameMap::_TImpl::setRumors(const vector<TRumor>& newRumors)
 {
 #line 1909
@@ -995,6 +1047,40 @@ void TGameMap::_TImpl::setTimedEvents(const vector<TTimedEvent>& newTimedEvents)
 #line 1916
     assert(newTimedEvents.size() <= s_kMaxTimedEvents);
     _m_pProperties->m_timedEvents = newTimedEvents;
+}
+
+void TGameMap::_TImpl::setVictoryCondition(const TVictoryCondition* pNewVictoryCondition)
+{
+    if ((_m_pProperties->m_pVictoryCondition == NULL && pNewVictoryCondition == NULL)
+        || (_m_pProperties->m_pVictoryCondition != NULL && pNewVictoryCondition != NULL
+            && TVictoryCondition::equivalent(*_m_pProperties->m_pVictoryCondition, *pNewVictoryCondition)))
+        return;
+    delete _m_pProperties->m_pVictoryCondition;
+    _m_pProperties->m_pVictoryCondition = NULL;
+    if (pNewVictoryCondition != NULL) {
+#line 1937
+        assert(_isValid( *pNewVictoryCondition ));
+        _m_pProperties->m_pVictoryCondition = TVictoryCondition::clone(*pNewVictoryCondition, ::operator new);
+        if (_m_pProperties->m_pVictoryCondition == NULL)
+            throw TAllocationFailure(__FILE__, __LINE__);
+    }
+}
+
+void TGameMap::_TImpl::setLossCondition(const TLossCondition* pNewLossCondition)
+{
+    if ((_m_pProperties->m_pLossCondition == NULL && pNewLossCondition == NULL)
+        || (_m_pProperties->m_pLossCondition != NULL && pNewLossCondition != NULL
+            && TLossCondition::equivalent(*_m_pProperties->m_pLossCondition, *pNewLossCondition)))
+        return;
+    delete _m_pProperties->m_pLossCondition;
+    _m_pProperties->m_pLossCondition = NULL;
+    if (pNewLossCondition != NULL) {
+#line 1961
+        assert(_isValid( *pNewLossCondition ));
+        _m_pProperties->m_pLossCondition = TLossCondition::clone(*pNewLossCondition, ::operator new);
+        if (_m_pProperties->m_pLossCondition == NULL)
+            throw TAllocationFailure(__FILE__, __LINE__);
+    }
 }
 
 void TGameMap::_TImpl::removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
