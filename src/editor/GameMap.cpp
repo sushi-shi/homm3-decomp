@@ -929,57 +929,6 @@ void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
     _removeObjectHelper(bSecondLayer, getPLayer(bSecondLayer)->getFloatingObjID());
 }
 
-// The map's customized heroes (Shadow of Death maps): per hero a flag,
-// then each customized part behind its own flag.
-VA(0x00426a65, 0x215)
-void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
-{
-    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
-        unsigned char bCustomized;
-        *pIStream >> bCustomized;
-        if (!bCustomized)
-            continue;
-        THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
-        unsigned char bHasExperience;
-        *pIStream >> bHasExperience;
-        if (bHasExperience) {
-            int experience;
-            *pIStream >> experience;
-            prototype.setExperience(experience);
-        }
-        bool bHasSecondarySkills;
-        *pIStream >> bHasSecondarySkills;
-        if (bHasSecondarySkills) {
-            THeroPrototype::TSecondarySkills secondarySkills;
-            secondarySkills.read(pIStream, version);
-            prototype.setSecondarySkills(secondarySkills);
-        }
-        bool bHasArtifacts;
-        *pIStream >> bHasArtifacts;
-        if (bHasArtifacts)
-            prototype.setArtifacts(THeroPrototype::TArtifactContainer(pIStream, version));
-        bool bHasBiography;
-        *pIStream >> bHasBiography;
-        if (bHasBiography) {
-            string biography;
-            *pIStream >> biography;
-            prototype.setBiography(biography);
-        }
-        signed char sex;
-        *pIStream >> sex;
-        if (sex != -1)
-            prototype.setSex(sex);
-        unsigned char bHasSpells;
-        *pIStream >> bHasSpells;
-        if (bHasSpells)
-            prototype.setSpells(THeroPrototype::TSpells(pIStream, version));
-        bool bHasPrimarySkills;
-        *pIStream >> bHasPrimarySkills;
-        if (bHasPrimarySkills)
-            prototype.setPrimarySkills(THeroPrototype::TPrimarySkills(pIStream, version));
-    }
-}
-
 // A cell's new terrain removes the objects whose blocking cells (or an
 // underlay's cells) it no longer allows, and a shipyard left without water.
 VA(0x004205b9, 0x34e)
@@ -1195,6 +1144,57 @@ bool TGameMap::_TImpl::_isValidShipyardPlacement(const TLayer& layer, const TGam
     return false;
 }
 
+// The map's customized heroes (Shadow of Death maps): per hero a flag,
+// then each customized part behind its own flag.
+VA(0x00426a65, 0x215)
+void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
+{
+    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        unsigned char bCustomized;
+        *pIStream >> bCustomized;
+        if (!bCustomized)
+            continue;
+        THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
+        unsigned char bHasExperience;
+        *pIStream >> bHasExperience;
+        if (bHasExperience) {
+            int experience;
+            *pIStream >> experience;
+            prototype.setExperience(experience);
+        }
+        bool bHasSecondarySkills;
+        *pIStream >> bHasSecondarySkills;
+        if (bHasSecondarySkills) {
+            THeroPrototype::TSecondarySkills secondarySkills;
+            secondarySkills.read(pIStream, version);
+            prototype.setSecondarySkills(secondarySkills);
+        }
+        bool bHasArtifacts;
+        *pIStream >> bHasArtifacts;
+        if (bHasArtifacts)
+            prototype.setArtifacts(THeroPrototype::TArtifactContainer(pIStream, version));
+        bool bHasBiography;
+        *pIStream >> bHasBiography;
+        if (bHasBiography) {
+            string biography;
+            *pIStream >> biography;
+            prototype.setBiography(biography);
+        }
+        signed char sex;
+        *pIStream >> sex;
+        if (sex != -1)
+            prototype.setSex(sex);
+        unsigned char bHasSpells;
+        *pIStream >> bHasSpells;
+        if (bHasSpells)
+            prototype.setSpells(THeroPrototype::TSpells(pIStream, version));
+        bool bHasPrimarySkills;
+        *pIStream >> bHasPrimarySkills;
+        if (bHasPrimarySkills)
+            prototype.setPrimarySkills(THeroPrototype::TPrimarySkills(pIStream, version));
+    }
+}
+
 VA(0x00427600, 0x61)
 void TGameMap::_TImpl::_removeObjectHelper(bool bSecondLayer, unsigned int objID)
 {
@@ -1320,7 +1320,7 @@ const TLinkableObject* TGameMap::_TImpl::_findLinkableObject(unsigned int linkID
 }
 
 // Whether a link id names a random town.
-VA(0x00429196, 0x84)
+VA(0x00429196, 0x86)
 bool TGameMap::_TImpl::_isRandomTownLink(unsigned int linkID) const
 {
     map<unsigned int, TMapObjectRef>::const_iterator pObjRef = _m_paLinkableObjectRef->find(linkID);
