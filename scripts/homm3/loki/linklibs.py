@@ -272,8 +272,10 @@ class Builder:
                                     ("opvdel", "new2.cc", ("-DL_op_vdel",)), ("opvdelnt", "new2.cc", ("-DL_op_vdelnt",)),
                                     ("exception", "exception.cc", ("-fexceptions",))):
             compile_(name, "-g", "-O2", *cp, *defines, source_file=source / "cp" / file)
+        # gcc/Makefile's libgcc.a rule re-archives the extracted members as `*.o`, in name order:
+        # the image links _eh, _pure, _udivdi3, _umoddi3, exception, frame, new, opdel, ... tinfo2.
         archive = self.lib / "libgcc.a"
-        self.run(["ar", "rc", str(archive), *members], out, env)
+        self.run(["ar", "rc", str(archive), *sorted(members)], out, env)
         self.run(["ranlib", str(archive)], out, env)
         crt = [cc, *gcc_cflags, *includes, "-g0", "-finhibit-size-directive", "-fno-inline-functions",
                "-fno-exceptions", *variable("CRTSTUFF_T_CFLAGS")]
