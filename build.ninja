@@ -2697,5 +2697,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/victor_bits.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj | $
     scripts/homm3/build/link.py scripts/homm3/build/link_order.py $
-    config/retail/link-order.tsv
+    scripts/homm3/build/resources.py config/retail/link-order.tsv $
+    src/heroes3.rc
 build candidate: phony build/exe/HEROES3.candidate.EXE
