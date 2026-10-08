@@ -449,3 +449,8 @@ source = "src/editor/HeroPropsGeneralPage.cpp"
 name = "MiniMapWnd"
 object = 56
 source = "src/editor/MiniMapWnd.cpp"
+
+[[unit]]
+name = "ObjectPaletteWnd"
+object = 67
+source = "src/editor/ObjectPaletteWnd.cpp"
