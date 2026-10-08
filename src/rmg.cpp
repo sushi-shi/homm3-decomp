@@ -778,6 +778,10 @@ void TRmgMapItem::clear()
 // Mac commit 0x24abfc..0x24ac24 stores the obstacle fill before clearing the
 // path clearance, and its copy-back (0x24ac28) inserts the saved byte as the
 // bit. Retail group commit 0x5469b0 stores both saved bytes the same way.
+// Mac addGuard (0x2331d8, 0x233504, 0x233648) keeps the same per-setter
+// store order: the set mark first, then the cleared one.
+// createSubterraneanGate and carveBranchingPaths still spell these stores:
+// the setters lower them by 2.35 and 1.94 points under the current budgets.
 inline void TRmgMapItem::setObstacleFill(unsigned char obstacleFill)
 {
     if (!m_connection.m_present) {
@@ -1108,10 +1112,7 @@ MAC_ADDRESS(0x22e284, 0x1d0) // anchor-callee 0x5441a1; Complete-only, ret 0xc
 void TRmgMap::openPathPatch(int x, int y, int level)
 {
     TRmgMapItem* item = getMapItem(x, y, level);
-    if (!item->m_connection.m_present) {
-        item->m_tileData.m_obstacleFill = 0;
-        item->m_tileData.m_pathClearance = 1;
-    }
+    item->setPathClearance(1);
     TRmgZoneBounds bounds;
     bounds.m_minimumX = max(x - 1, 0);
     bounds.m_minimumY = max(y - 1, 0);
@@ -1120,10 +1121,7 @@ void TRmgMap::openPathPatch(int x, int y, int level)
     for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
         for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, level);
-            if (!nearby->m_connection.m_present) {
-                nearby->m_tileData.m_obstacleFill = 0;
-                nearby->m_tileData.m_pathClearance = 1;
-            }
+            nearby->setPathClearance(1);
         }
     }
 }
@@ -1133,10 +1131,7 @@ MAC_ADDRESS(0x22e454, 0x254) // anchor-callee 0x544343; Complete-only, ret 0xc
 void TRmgMap::markObstacleFillPatch(TRmgMapPosition position)
 {
     TRmgMapItem* item = getMapItem(position);
-    if (!item->m_connection.m_present) {
-        item->m_tileData.m_pathClearance = 0;
-        item->m_tileData.m_obstacleFill = 1;
-    }
+    item->setObstacleFill(1);
     TRmgZoneBounds bounds;
     bounds.m_minimumX = max(position.m_x - 1, 0);
     bounds.m_minimumY = max(position.m_y - 1, 0);
@@ -1147,9 +1142,8 @@ void TRmgMap::markObstacleFillPatch(TRmgMapPosition position)
             TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
             if (!nearby->isObjectEntrance() && nearby->m_tileData.m_passable
                 && nearby->getLandType() != eTerrainRock
-                && nearby->getLandType() != eTerrainWater
-                && !nearby->m_connection.m_present)
-                nearby->m_tileData.m_pathClearance = 0;
+                && nearby->getLandType() != eTerrainWater)
+                nearby->setPathClearance(0);
         }
     }
 }
@@ -1247,10 +1241,7 @@ void TRmgMap::addObject(TRmgObject& object, TRmgMapPosition position)
             TRmgMapItem* item = getMapItem(nearby);
             if (prototype.getBCellTrigger(maskPoint.m_x, maskPoint.m_y)) {
                 item->m_tileData.m_objectEntrance = 1;
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_obstacleFill = 0;
-                    item->m_tileData.m_pathClearance = 1;
-                }
+                item->setPathClearance(1);
                 item->m_objects.push_back(&object);
             } else if (!prototype.getBCellPassable(maskPoint.m_x, maskPoint.m_y)) {
                 item->m_tileData.m_passable = 0;
@@ -3034,16 +3025,12 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
             TRmgMapItem* item = m_map.getMapItem(position);
             if (item->isObjectEntrance() || !item->isPassable())
                 continue;
-            if (!item->m_connection.m_present) {
-                item->m_tileData.m_pathClearance = 0;
-                item->m_tileData.m_obstacleFill = 1;
-            }
+            item->setObstacleFill(1);
             for (int x = position.m_x - 1; x <= position.m_x + 1; ++x) {
                 for (int y = position.m_y - 1; y <= position.m_y + 1; ++y) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y);
-                    if (nearby->isPassable()
-                        && !nearby->isObjectEntrance() && !nearby->m_connection.m_present)
-                        nearby->m_tileData.m_pathClearance = 0;
+                    if (nearby->isPassable() && !nearby->isObjectEntrance())
+                        nearby->setPathClearance(0);
                 }
             }
         }
@@ -3075,10 +3062,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
             continue;
         if (guardType == BORDER_GUARD && item->hasObstacleFill())
             continue;
-        if (!item->m_connection.m_present) {
-            item->m_tileData.m_obstacleFill = 0;
-            item->m_tileData.m_pathClearance = 1;
-        }
+        item->setPathClearance(1);
         int fanDirection;
         unsigned int count;
         if (direction & 1) {
@@ -3095,10 +3079,8 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
                 && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
                 TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y);
                 if (!next->hasObstacleFill() && !next->hasPathClearance()
-                    && next->isPassable() && !next->m_connection.m_present) {
-                    next->m_tileData.m_obstacleFill = 0;
-                    next->m_tileData.m_pathClearance = 1;
-                }
+                    && next->isPassable())
+                    next->setPathClearance(1);
             }
             fanDirection = (fanDirection + 1) & 7;
         }
@@ -4003,10 +3985,8 @@ void TRmgGeneratorBase::decorateMap()
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
                 if (!item->hasPathClearance() && item->m_tileData.m_passable
-                    && item->getLandType() != eTerrainRock && !item->m_connection.m_present) {
-                    item->m_tileData.m_obstacleFill = 0;
-                    item->m_tileData.m_pathClearance = 1;
-                }
+                    && item->getLandType() != eTerrainRock)
+                    item->setPathClearance(1);
             }
         }
     }
@@ -6118,10 +6098,8 @@ void TRmgGenerator::createWaterZoneIsland(const TRmgZoneBounds& bounds, int leve
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
             TRmgMapItem* item = m_map.getMapItem(point);
-            if (item->getLandType() != eTerrainWater && !item->m_connection.m_present) {
-                item->m_tileData.m_pathClearance = 0;
-                item->m_tileData.m_obstacleFill = 1;
-            }
+            if (item->getLandType() != eTerrainWater)
+                item->setObstacleFill(1);
         }
     }
     delete[] mask;
@@ -6322,10 +6300,7 @@ void TRmgGenerator::markZoneBoundaryObstacles()
                 }
                 if (!found)
                     continue;
-                if (!current->m_connection.m_present) {
-                    current->m_tileData.m_pathClearance = 0;
-                    current->m_tileData.m_obstacleFill = 1;
-                }
+                current->setObstacleFill(1);
                 {
                     bounds.m_minimumY = max(position.m_y, 0);
                     bounds.m_minimumX = max(position.m_x, 0);
@@ -6336,11 +6311,8 @@ void TRmgGenerator::markZoneBoundaryObstacles()
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
                         if (item->getLandType() != eTerrainWater
-                            && static_cast<int>(item->m_objects.size()) <= 0
-                            && !item->m_connection.m_present) {
-                            item->m_tileData.m_pathClearance = 0;
-                            item->m_tileData.m_obstacleFill = 1;
-                        }
+                            && static_cast<int>(item->m_objects.size()) <= 0)
+                            item->setObstacleFill(1);
                     }
                 }
                 {
@@ -6353,8 +6325,8 @@ void TRmgGenerator::markZoneBoundaryObstacles()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0 && !item->m_connection.m_present)
-                            item->m_tileData.m_pathClearance = 0;
+                        if (static_cast<int>(item->m_objects.size()) <= 0)
+                            item->setPathClearance(0);
                     }
                 }
             }
@@ -6440,10 +6412,7 @@ void TRmgGenerator::repairWaterZoneBorders()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (!item->m_connection.m_present) {
-                            item->m_tileData.m_pathClearance = 0;
-                            item->m_tileData.m_obstacleFill = 1;
-                        }
+                        item->setObstacleFill(1);
                         if (item->getLandType() == eTerrainWater) {
                             positions.push_back(nearby);
                             terrains.push_back(terrain);
@@ -6464,9 +6433,8 @@ void TRmgGenerator::repairWaterZoneBorders()
                 for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
                     for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0
-                            && !item->m_connection.m_present)
-                            item->m_tileData.m_pathClearance = 0;
+                        if (static_cast<int>(item->m_objects.size()) <= 0)
+                            item->setPathClearance(0);
                     }
                 }
             }
@@ -6665,10 +6633,7 @@ void TRmgGenerator::buildZoneConnectionPaths()
 #endif
         if (!found) {
             TRmgMapItem* current = m_map.getMapItem(seed);
-            if (!current->m_connection.m_present) {
-                current->m_tileData.m_obstacleFill = 0;
-                current->m_tileData.m_pathClearance = 1;
-            }
+            current->setPathClearance(1);
         }
         m_map.floodConnectionCosts(seed, zone->m_terrain == eTerrainWater);
         pathPosition = zone->m_levelPosition;
@@ -6717,16 +6682,10 @@ void TRmgGenerator::openConnectionPath(
             TRmgObject* object = new TRmgObject(properties);
             item->m_connection.m_present = 0;
             item->m_connection.m_guardColor = 0;
-            if (!item->m_connection.m_present) {
-                item->m_tileData.m_obstacleFill = 0;
-                item->m_tileData.m_pathClearance = 1;
-            }
+            item->setPathClearance(1);
             addObject(object, position);
         }
-        if (!item->m_connection.m_present) {
-            item->m_tileData.m_obstacleFill = 0;
-            item->m_tileData.m_pathClearance = 1;
-        }
+        item->setPathClearance(1);
         TRmgMapPosition previous = item->m_previousTile;
         if (!narrow) {
             TRmgZoneBounds bounds;
@@ -6737,9 +6696,8 @@ void TRmgGenerator::openConnectionPath(
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                    if (nearby->m_zoneState.m_zone == zone
-                        && !nearby->m_connection.m_present)
-                        nearby->m_tileData.m_obstacleFill = 0;
+                    if (nearby->m_zoneState.m_zone == zone)
+                        nearby->setObstacleFill(0);
                 }
             }
         }
@@ -6853,10 +6811,7 @@ int TRmgGenerator::placeBorderGuard(
         TRmgMapItem* item = m_map.getMapItem(position);
         item->m_connection.m_present = 0;
         item->m_connection.m_guardColor = 0;
-        if (!item->m_connection.m_present) {
-            item->m_tileData.m_obstacleFill = 0;
-            item->m_tileData.m_pathClearance = 1;
-        }
+        item->setPathClearance(1);
         addObject(guard, position);
         ++position.m_x;
     }
@@ -6883,10 +6838,7 @@ void TRmgGenerator::markBorderObjectArea(
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
             if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_pathClearance = 0;
-                    item->m_tileData.m_obstacleFill = 1;
-                }
+                item->setObstacleFill(1);
                 item->m_connection.m_guardColor = color;
                 item->m_connection.m_present = 1;
             }
@@ -6898,10 +6850,7 @@ void TRmgGenerator::markBorderObjectArea(
         TRmgMapItem* item = m_map.getMapItem(previous);
         item->m_connection.m_present = 0;
         item->m_connection.m_guardColor = 0;
-        if (!item->m_connection.m_present) {
-            item->m_tileData.m_obstacleFill = 0;
-            item->m_tileData.m_pathClearance = 1;
-        }
+        item->setPathClearance(1);
     }
 }
 
@@ -7329,10 +7278,7 @@ unsigned char TRmgGenerator::createShipyardConnection(
     for (nearby.m_x = position.m_x - prototype->getWidth() + 1;
          nearby.m_x <= position.m_x; ++nearby.m_x) {
         TRmgMapItem* item = m_map.getMapItem(nearby);
-        if (!item->m_connection.m_present) {
-            item->m_tileData.m_obstacleFill = 0;
-            item->m_tileData.m_pathClearance = 1;
-        }
+        item->setPathClearance(1);
         source->m_entrances.push_back(TPoint(nearby.m_x, nearby.m_y));
     }
 
@@ -7654,10 +7600,7 @@ unsigned char TRmgGenerator::placeMonolithBorderGuard(
             TPoint offset = offsets[direction];
             TRmgMapPosition nearby = position + offset;
             TRmgMapItem* neighbor = m_map.getMapItem(nearby);
-            if (!neighbor->m_connection.m_present) {
-                neighbor->m_tileData.m_pathClearance = 0;
-                neighbor->m_tileData.m_obstacleFill = 1;
-            }
+            neighbor->setObstacleFill(1);
             neighbor->m_connection.m_guardColor = color;
             neighbor->m_connection.m_present = 1;
         }
@@ -8285,10 +8228,7 @@ void TRmgGenerator::connectJunctionEntrance(TPoint from, TPoint to,
             y = cppMin<long>(y, m_map.m_mapHeight - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
             if (item->m_zoneState.m_zone == zoneIndex) {
-                if (!item->m_connection.m_present) {
-                    item->m_tileData.m_obstacleFill = 0;
-                    item->m_tileData.m_pathClearance = 1;
-                }
+                item->setPathClearance(1);
                 TRmgZoneBounds bounds;
                 bounds.m_minimumX = cppMax<long>(x - 1, 0);
                 bounds.m_minimumY = cppMax<long>(y - 1, 0);
@@ -8297,9 +8237,8 @@ void TRmgGenerator::connectJunctionEntrance(TPoint from, TPoint to,
                 for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
                     for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
                         TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);
-                        if (nearby->m_zoneState.m_zone == zoneIndex
-                            && !nearby->m_connection.m_present)
-                            nearby->m_tileData.m_obstacleFill = 0;
+                        if (nearby->m_zoneState.m_zone == zoneIndex)
+                            nearby->setObstacleFill(0);
                     }
                 }
             }
@@ -8597,10 +8536,7 @@ unsigned char TRmgGenerator::tryPlaceAdditionalTown(TRmgZone* zone,
     m_roadTargets.push_back(entrance);
     ++entrance.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
-    if (!item->m_connection.m_present) {
-        item->m_tileData.m_obstacleFill = 0;
-        item->m_tileData.m_pathClearance = 1;
-    }
+    item->setPathClearance(1);
     return 1;
 }
 
@@ -8660,10 +8596,7 @@ unsigned char TRmgGenerator::tryPlacePrimaryTown(
     m_roadTargets.push_back(position);
     ++position.m_y;
     TRmgMapItem* item = m_map.getMapItem(position);
-    if (!item->m_connection.m_present) {
-        item->m_tileData.m_obstacleFill = 0;
-        item->m_tileData.m_pathClearance = 1;
-    }
+    item->setPathClearance(1);
 #if defined(HOMM3_RMG_HOTFIX)
     // An additional town can supply the first town of an unaligned zone.
     // The faction tally and map header must use its resolved town type.
