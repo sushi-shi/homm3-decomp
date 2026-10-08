@@ -13,7 +13,7 @@
 // The bools are true exactly for the colour-cycled tilesets (lava and
 // water; the clear, mud and lava rivers), so they are named m_bAnimated.
 // That name, the per-tile flag, the TZoomTraits fields and the zoom
-// enumerators are not proven.
+// enumerators are not proven, except kNumZooms (the rulers' asserts).
 #ifndef HOMM3_EDITOR_TILE_H
 #define HOMM3_EDITOR_TILE_H
 
@@ -58,7 +58,8 @@ extern const TRoadTilesetTraits* const akRoadTilesetTraits;
 enum TZoom {
     eZoom100,
     eZoom50,
-    eZoom25
+    eZoom25,
+    kNumZooms
 };
 
 struct TZoomTraits {

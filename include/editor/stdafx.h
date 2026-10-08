@@ -56,6 +56,9 @@ extern "C" void doMessageBox(const char* message);
 namespace {
 extern "C" GtkWidget* _widget(char* name);
 }
+// cppbridge.cpp's allocated colours, which the rulers draw with.
+extern GdkColor _m_white;
+extern GdkColor _m_black;
 
 class CPoint {
 public:
