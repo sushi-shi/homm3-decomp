@@ -20,7 +20,7 @@ homm3 loki diff Error __11TDebugBreak      # one function, base | retail
 `--debs` holds the eight Debian 2.2 "potato" i386 packages pinned in
 `config/loki/toolchain.toml` (gcc, g++, cpp 2.95.2-13.1; binutils
 2.9.5.0.37-1; libc6 and libc6-dev 2.1.3-20; libstdc++2.10 and -dev).
-`--sgi-stl` holds SGI STL 3.3's `stl.tar.gz` (tar dated 2000-06-08). The
+`--sgi-stl` holds SGI STL 3.2's `stl32.tar.gz` (members dated 1999-04-23). The
 environment variables `HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS` and
 `HOMM3_LOKI_SGI_STL` work as well. Everything is staged under ignored
 `build/`: the image at `build/orig/loki/h3maped` and the toolchain at
@@ -43,7 +43,7 @@ last. Neither Wine nor patchelf is involved.
 | exceptions and RTTI on | `.eh_frame` (21,301 FDEs) and `.gcc_except_table`; `-fno-exceptions` loses half of the exact bodies (419 to 210). |
 | non-PIC, vtable thunks | Absolute addressing; `virtual function thunk` symbols. |
 | `-g` | Undecidable from code (stripped image); irrelevant to bytes. |
-| SGI STL 3.3 headers first | `string` is `basic_string<char, char_traits<char>, allocator<char> >` with `_String_base`; `runtime_error` objects are 0x104 bytes (`__Named_exception`'s 256-byte buffer); `vector<T>::_M_fill_insert` instantiations are exact. libstdc++ 2.95's own iostream (libio) stays. |
+| SGI STL 3.2 headers first | `string` is `basic_string<char, char_traits<char>, allocator<char> >` with `_String_base`; `runtime_error` objects are 0x104 bytes (`__Named_exception`'s 256-byte buffer); `vector<T>::_M_fill_insert` instantiations are exact. 3.2, not 3.3: the per-object static `__get_c_string` is non-inline (3.3's inline copy loads its parameter into `%ebx`) and `fill_n<char*, unsigned, char>` is the generic template (3.3 adds char overloads). libstdc++ 2.95's own iostream (libio) stays. |
 
 `config/loki/units.toml` records the profile: `-O0 -mcpu=pentiumpro
 -fpermissive`, `-DHOMM3_TARGET_LOKI=1` and `-include include/gcc_prefix.h`.
@@ -118,13 +118,3 @@ Differences seen so far are real: for example `Bitmap16Bit(char const*, char
 const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
 `MAX_PATH`.
 
-## Known toolchain residual
-
-SGI STL 3.3 declares `static const char* __get_c_string(const string&)` in
-`stl_string_fwd.h` and defines it `inline` in `<string>`. Every object that
-includes `<string>` emits it first in `.text` (about 90 objects). Loki's copies
-keep the parameter on the stack, the code g++ gives a non-inline function;
-the Debian 2.95.2-13.1 compiler (a 20000220 branch snapshot) treats the
-inline definition as inline and loads the parameter into `%ebx`. Loki's
-`.comment` says `19991024 (release)`. The difference is in the compiler, not
-the source; a vanilla 2.95.2 release build is the candidate fix.

@@ -1,4 +1,4 @@
-"""Stage the pinned GCC 2.95.2 toolchain (Debian potato i386 packages + SGI STL 3.3).
+"""Stage the pinned GCC 2.95.2 toolchain (Debian potato i386 packages + SGI STL 3.2).
 
 The 2000-era binaries run unmodified through the packaged ld-2.1.3.so loader:
 every program the driver spawns (cpp, cc1plus, as) is reached through a

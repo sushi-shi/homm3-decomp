@@ -29,7 +29,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("init", help="stage h3maped and the GCC 2.95.2 toolchain")
     p.add_argument("--exe", help="Loki h3maped (otherwise HOMM3_LOKI_H3MAPED or the staged copy)")
     p.add_argument("--debs", help="directory of the pinned Debian potato packages")
-    p.add_argument("--sgi-stl", help="directory holding SGI STL 3.3 stl.tar.gz")
+    p.add_argument("--sgi-stl", help="directory holding SGI STL 3.2 stl32.tar.gz")
     p = sub.add_parser("toolchain", help="stage or verify the GCC 2.95.2 toolchain")
     p.add_argument("--debs")
     p.add_argument("--sgi-stl")
