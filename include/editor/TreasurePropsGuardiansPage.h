@@ -8,8 +8,8 @@
 #define HOMM3_EDITOR_TREASUREPROPSGUARDIANSPAGE_H
 
 #include "editor/stdafx.h"
-#include "editor/Army.h"
 #include "editor/ObjectSpecializations.h"
+#include "editor/Army.h"
 
 class TArmyDlg;
 

@@ -6,8 +6,8 @@
 
 #include "exceptions.h"
 #include "editor/cppbridge.h"
-#include "editor/ArmyDlg.h"
 #include "editor/TreasurePropsGuardiansPage.h"
+#include "editor/ArmyDlg.h"
 
 TTreasurePropsGuardiansPage::TTreasurePropsGuardiansPage(const TTreasure& treasure, unsigned int pageNum)
     : _m_treasure(treasure),
