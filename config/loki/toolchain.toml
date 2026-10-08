@@ -11,8 +11,6 @@
 "libc6-dev_2.1.3-20.deb" = "83616dc9a4ca97312ad06186285c8995518678e54259a16ccf20f2b3c2218d75"
 "libstdc++2.10_2.95.2-13.1.deb" = "29783eb9628e9d8b924354986bb2809a076789e7dc394ec1c27b27c1eebd8609"
 "libstdc++2.10-dev_2.95.2-13.1.deb" = "6cfd88a7de13c2ff4524843492a809b585c5c8b5f09102eecf94f4b48d44abed"
-# GLib 1.2 headers: the port calls g_warning (TTextResource::GetText) and the GTK layer.
-"libglib1.2-dev_1.2.7-2.deb" = "d26129ba470047ad5a13b2ab8b029d21a8098c09ff0f6adcc5c7a73816c6fa4f"
 
 [driver]
 version = "2.95.2"
@@ -47,3 +45,15 @@ target = "i386-linux"
 # Stage with `homm3 loki toolchain --gcc DIR` (or HOMM3_LOKI_GCC).
 [compilers]
 "gcc.tgz" = "d55eec8780baeea94e5c1ef7af0459d31495055f1d9e63fd3e95d4061d7707a4"
+
+# GTK+ and GLib headers: GTK+ 1.2.8 and GLib 1.2.8 as packaged by Slackware 7.1
+# (slakware/gtk1/gtkglib.tgz, md5 e3fb178ffed2f0c4658bd1262305ff89 matching the release
+# CHECKSUMS.md5). h3maped links both statically and exports their versions:
+# gtk_major/minor/micro_version 1.2.8, gtk_binary_age 8, gtk_interface_age 3 (0x083f28c0)
+# and glib_major/minor/micro_version 1.2.8 (0x08413fe0), exactly this package's
+# gtkfeatures.h and glibconfig.h; potato ships only 1.2.7. The port calls g_warning
+# (TTextResource::GetText) and the GTK+ layer. Only usr/include/{glib.h,gmodule.h,gdk,gtk}
+# and usr/lib/glib/include/glibconfig.h are staged (no X11 headers: gdkx.h and
+# gdkprivate.h are unusable). Stage with `homm3 loki toolchain --gtk DIR` (or HOMM3_LOKI_GTK).
+[gtk]
+"gtkglib.tgz" = "7458d5f061ba14f8e6e820b6c9f395dddd57af217e22e054d33cd71531892562"

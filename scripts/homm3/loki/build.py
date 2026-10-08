@@ -60,8 +60,8 @@ def units(selected: list[str] | None = None) -> list[Unit]:
 def include_flags() -> list[str]:
     flags = [f"-I{ROOT / 'src'}", f"-I{ROOT / 'include'}"]
     flags += [f"-I{ROOT / 'vendor' / path}" for path in VENDOR_INCLUDES]
-    # GLib 1.2 (`glib-config --cflags`): glibconfig.h lives beside the library.
-    flags += [f"-I{toolchain.SYSROOT / 'usr/lib/glib/include'}"]
+    # GTK+/GLib 1.2.8 (`gtk-config --cflags`): glibconfig.h lives beside the library.
+    flags += [f"-I{toolchain.GTK / 'usr/include'}", f"-I{toolchain.GTK / 'usr/lib/glib/include'}"]
     # The Windows SDK the shared source names comes after GCC's own headers.
     flags += ["-idirafter", str(ROOT / "build/gen/msvc-include")]
     return flags

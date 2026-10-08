@@ -1,6 +1,7 @@
 """Stage the pinned GCC 2.95.2 toolchain: Debian potato i386 packages (driver,
 cpp, libc, libstdc++), the vanilla 2.95.2 release compilers (cc1, cc1plus) and
-binutils 2.9.1.0.25 `as` of Slackware 7.1, and SGI STL 3.2.
+binutils 2.9.1.0.25 `as` of Slackware 7.1, SGI STL 3.2, and the GTK+/GLib 1.2.8
+headers of Slackware 7.1.
 
 The 2000-era binaries run unmodified through the packaged ld-2.1.3.so loader:
 every program the driver spawns (cpp, cc1plus, as) is reached through a
@@ -33,6 +34,7 @@ WRAPPERS = DESTINATION / "libexec"
 SGI_STL = DESTINATION / "sgi-stl"
 BINUTILS = DESTINATION / "binutils"
 COMPILERS = DESTINATION / "gcc-2.95.2-release"
+GTK = DESTINATION / "gtk"
 STAMP = DESTINATION / "staged.sha256"
 LOADER = SYSROOT / "lib/ld-2.1.3.so"
 
@@ -107,7 +109,7 @@ def _write_wrappers() -> None:
 
 
 def _digest(spec: dict) -> str:
-    pins = {**spec["debs"], **spec["sgi_stl"], **spec["binutils"], **spec["compilers"]}
+    pins = {**spec["debs"], **spec["sgi_stl"], **spec["binutils"], **spec["compilers"], **spec["gtk"]}
     return hashlib.sha256("".join(f"{k}={v}\n" for k, v in sorted(pins.items())).encode()).hexdigest()
 
 
@@ -133,24 +135,27 @@ def is_staged() -> bool:
 
 
 def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
-          binutils: str | Path | None = None, compilers: str | Path | None = None) -> Path:
-    """Explicit directories > HOMM3_LOKI_DEBS/_SGI_STL/_BINUTILS/_GCC > the staged toolchain."""
+          binutils: str | Path | None = None, compilers: str | Path | None = None,
+          gtk: str | Path | None = None) -> Path:
+    """Explicit directories > HOMM3_LOKI_DEBS/_SGI_STL/_BINUTILS/_GCC/_GTK > the staged toolchain."""
     spec = specification()
     debs = debs if debs is not None else os.environ.get("HOMM3_LOKI_DEBS")
     sgi_stl = sgi_stl if sgi_stl is not None else os.environ.get("HOMM3_LOKI_SGI_STL")
     binutils = binutils if binutils is not None else os.environ.get("HOMM3_LOKI_BINUTILS")
     compilers = compilers if compilers is not None else os.environ.get("HOMM3_LOKI_GCC")
-    if debs is None or sgi_stl is None or binutils is None or compilers is None:
+    gtk = gtk if gtk is not None else os.environ.get("HOMM3_LOKI_GTK")
+    if debs is None or sgi_stl is None or binutils is None or compilers is None or gtk is None:
         if is_staged():
             return DESTINATION
         raise ToolchainError("GCC 2.95.2 toolchain not staged; run `homm3 loki toolchain --debs DIR "
-                             "--sgi-stl DIR --binutils DIR --gcc DIR` (or set HOMM3_LOKI_DEBS, "
-                             "HOMM3_LOKI_SGI_STL, HOMM3_LOKI_BINUTILS and HOMM3_LOKI_GCC); "
+                             "--sgi-stl DIR --binutils DIR --gcc DIR --gtk DIR` (or set HOMM3_LOKI_DEBS, "
+                             "HOMM3_LOKI_SGI_STL, HOMM3_LOKI_BINUTILS, HOMM3_LOKI_GCC and HOMM3_LOKI_GTK); "
                              "the pins are in config/loki/toolchain.toml")
     packages = _read_pinned(Path(debs).expanduser().resolve(), spec["debs"])
     (archive,) = _read_pinned(Path(sgi_stl).expanduser().resolve(), spec["sgi_stl"]).values()
     (assembler,) = _read_pinned(Path(binutils).expanduser().resolve(), spec["binutils"]).values()
     (release,) = _read_pinned(Path(compilers).expanduser().resolve(), spec["compilers"]).values()
+    (toolkit,) = _read_pinned(Path(gtk).expanduser().resolve(), spec["gtk"]).values()
     if DESTINATION.exists():
         shutil.rmtree(DESTINATION)
     SYSROOT.mkdir(parents=True)
@@ -181,6 +186,16 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(package.extractfile(member).read())
                 path.chmod(0o755)
+    # Slackware's GTK+/GLib 1.2.8 package: only the headers (`gtk-config --cflags`).
+    with tarfile.open(fileobj=io.BytesIO(toolkit), mode="r:gz") as package:
+        for member in package.getmembers():
+            name = member.name.lstrip("./")
+            if member.isfile() and (name in ("usr/include/glib.h", "usr/include/gmodule.h",
+                                             "usr/lib/glib/include/glibconfig.h")
+                                    or name.startswith(("usr/include/gdk/", "usr/include/gtk/"))):
+                path = GTK / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(package.extractfile(member).read())
     _write_wrappers()
     STAMP.write_text(_digest(spec) + "\n")
     return DESTINATION

@@ -10,7 +10,7 @@ the game ledger or the README score block.
 ## Setup
 
 ```sh
-homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR --binutils DIR --gcc DIR
+homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR --binutils DIR --gcc DIR --gtk DIR
 homm3 loki census --check      # retail facts are current
 homm3 loki build -v            # compile, delink, canonicalize, objdiff
 homm3 loki disasm _getC__13TGzInflateBuf   # references named as compared
@@ -30,9 +30,13 @@ which as 2.9.1.0.25 emits and 2.9.5.0.37 does not. `--gcc` holds Slackware
 release compiler emits a class's in-class inline members as strong `.text`
 globals in the unit that defines its vtable, as Loki's objects show
 (`resource::AddRef` and the other accessors in `resource.o`), where Debian's
-emits weak linkonce copies. Debian's driver and `cpp` stay. The environment
+emits weak linkonce copies. Debian's driver and `cpp` stay. `--gtk` holds
+Slackware 7.1's `gtkglib.tgz`, whose GTK+ 1.2.8 and GLib 1.2.8 headers are
+the versions the image links statically: its `gtk_major/minor/micro_version`
+read 1.2.8 with `gtk_binary_age` 8 and `gtk_interface_age` 3, and
+`glib_*_version` 1.2.8 (potato ships 1.2.7). The environment
 variables `HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS`, `HOMM3_LOKI_SGI_STL`,
-`HOMM3_LOKI_BINUTILS` and `HOMM3_LOKI_GCC` work as well. Everything is staged under ignored
+`HOMM3_LOKI_BINUTILS`, `HOMM3_LOKI_GCC` and `HOMM3_LOKI_GTK` work as well. Everything is staged under ignored
 `build/`: the image at `build/orig/loki/h3maped` and the toolchain at
 `build/loki/toolchain/`.
 
