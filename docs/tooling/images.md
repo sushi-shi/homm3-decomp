@@ -88,8 +88,8 @@ where the opcode byte before its relocation field agrees with retail, so a
 body that differs elsewhere still names its callees where it agrees. Steps 4
 and 5 never contradict an earlier placement. A name that reaches two
 addresses, or an address that receives two names, is dropped. Names keep
-their checkout-independent anonymous-namespace spelling. The label model reads the table as the image's claims (channel
-`placement`).
+their checkout-independent anonymous-namespace spelling. The label model
+reads the table as the image's claims (channel `placement`).
 
 Sources only the image compiles spell the image's own addresses in
 `VA()`/`DATA()` and are extracted like game sources. They live in the
