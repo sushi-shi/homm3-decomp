@@ -12,7 +12,7 @@ class TResourcePtr {
 public:
 
     DC_ADDRESS(0x05b284, 0xe)
-    TResourcePtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
+    TResourcePtr(T* ptr = 0) throw() : m_owns(ptr != 0), m_ptr(ptr) {}
     // CodeView 0x57a9 declares this ordinary copy constructor, but has no
     // procedure/source location for its body. Current consumers construct
     // directly from pointers; retain the declaration without guessing a
@@ -32,10 +32,10 @@ public:
     }
 
     DC_ADDRESS(0x05b2b8, 0x4)
-    T* get() const { return m_ptr; }
+    T* get() const throw() { return m_ptr; }
 
     DC_ADDRESS(0x05b2bc, 0x18)
-    T* operator->() const { return get(); }
+    T* operator->() const throw() { return get(); }
 
 private:
     mutable unsigned char m_owns;

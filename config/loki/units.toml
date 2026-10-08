@@ -163,3 +163,8 @@ source = "src/editor/GameMap.cpp"
 name = "herodefs"
 object = 16
 source = "src/HeroDefs.cpp"
+
+[[unit]]
+name = "AdvObjectTypeTraits"
+object = 3
+source = "src/AdvObjectTypeTraits.cpp"
