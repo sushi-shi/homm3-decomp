@@ -117,6 +117,7 @@ rva	size	kind	name	unit	evidence
 0x000385c9	0x13	func	??YTPoint@@QAEAAU0@ABU0@@Z	rmg_terrain	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x0003bee8	0x4d	func	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	rmg	masked body (77 bytes, 1 relocations) unique at a census start
 0x0003bf35	0x5a	func	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	rmg	referenced by ?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z at +0x11
+0x00049461	0x3e	func	?_putLong@TGzDeflateBuf@@AAEXK@Z	gzinflatebuf	masked body (62 bytes, 4 relocations) unique at a census start
 0x0004960f	0x54	func	?_getC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	masked body (84 bytes, 0 relocations) unique at a census start
 0x00049663	0x169	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	masked prefix (37 fixed bytes agree, 689 compiled, 361 retail)
 0x00049911	0x55	func	??0TDataError@TGzInflateBuf@@QAE@XZ	gzinflatebuf	masked body (85 bytes, 7 relocations) unique at a census start
@@ -690,11 +691,13 @@ rva	size	kind	name	unit	evidence
 0x000fc300	0x4d	func	?victorMinimumDimensions@@YAXPAUimgdes@@0PAI1@Z	victor	masked body (77 bytes, 0 relocations) unique at a census start
 0x000fc360	0x2d2	func	?flipimage@@YGHPAUimgdes@@0@Z	victor_flip	masked body (722 bytes, 9 relocations) unique at a census start
 0x000fc640	0x494	func	?loadpcx@@YGHPBDPAUimgdes@@@Z	victor_loadpcx	masked body (1172 bytes, 23 relocations) unique at a census start
-0x000fcae0	0x127	func	?pcxinfo@@YGHPBDPAUPcxData@@@Z	victor	masked body (295 bytes, 3 relocations) unique at a census start
-0x000fcc10	0x13c	func	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	victor	masked body (316 bytes, 8 relocations) unique at a census start
+0x000fcae0	0x127	func	?pcxinfo@@YGHPBDPAUPcxData@@@Z	victor_pcxinfo	masked body (295 bytes, 3 relocations) unique at a census start
+0x000fcc10	0x13c	func	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	victor_pcxinfo	masked body (316 bytes, 8 relocations) unique at a census start
 0x000fcd50	0x53	func	?victorDecodeRleBytes@@YAHPAE0H@Z	victor_pcx_kernels	masked body (83 bytes, 0 relocations) unique at a census start
 0x000fcdb0	0x63	func	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	victor_pcx_kernels	masked body (99 bytes, 0 relocations) unique at a census start
 0x000fce20	0x34	func	?victorConvertRgbPlanesToBgr@@YAXPAEPBEH@Z	victor_pcx_kernels	masked body (52 bytes, 0 relocations) unique at a census start
+0x000fcf60	0x84	func	?victorInsertBits@@YGXPAEPBEHH@Z	victor_bits	referenced by ?flipimage@@YGHPAUimgdes@@0@Z at +0x26a
+0x000fcff0	0x73	func	?victorExtractBits@@YGXPAEPBEHH@Z	victor_bits	masked body (115 bytes, 1 relocations) unique at a census start
 0x0012f91c	0x1	data	?_C@?1??_Nullstr@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@CAPBDXZ@4DB	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x13e
 0x0012f940	0x4	data	?npos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@2IB	resourcemanager	referenced by ?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z at +0x27
 0x00131cb8	0x9	data	??_C@_08OJCH@game?4pal?$AA@	resourcemanager	referenced by ?initColors@@YAXXZ at +0x3a

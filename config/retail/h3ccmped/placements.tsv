@@ -59,6 +59,7 @@ rva	size	kind	name	unit	evidence
 0x0000e680	0x74	func	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	resourcemanager	masked body (116 bytes, 1 relocations) unique at a census start
 0x0000f140	0x20	func	?_Doraise@bad_cast@std@@MBEXXZ	resourcemanager	vtable ??_7bad_cast@std@@6B@ stored by ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z slot 2
 0x0000f180	0x19	func	??0bad_cast@std@@QAE@ABV01@@Z	resourcemanager	referenced by ?_Doraise@bad_cast@std@@MBEXXZ at +0x9
+0x0000f1a0	0x25	func	?_Incref@facet@locale@std@@QAEXXZ	gzinflatebuf	masked body (37 bytes, 2 relocations) unique at a census start
 0x0000f1f0	0x38	func	?_Decref@facet@locale@std@@QAEPAV123@XZ	resourcemanager	masked body (56 bytes, 2 relocations) unique at a census start
 0x0000f4a0	0x3a	func	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	resourcemanager	masked body (58 bytes, 2 relocations) unique at a census start
 0x0000f5c0	0x51	func	??4?$auto_ptr@VTScenarioStartingBonus@@@std@@QAEAAV01@ABV01@@Z	CampaignDoc	masked body (81 bytes, 0 relocations) unique at a census start
@@ -112,6 +113,7 @@ rva	size	kind	name	unit	evidence
 0x00022530	0x110	func	??0TRuntimeError@@QAE@PBD@Z	error	masked body (272 bytes, 13 relocations) unique at a census start
 0x000249b0	0x10	func	??A?$bitset@$0BD@@std@@QAE?AVreference@01@I@Z	artifact	masked body (16 bytes, 0 relocations) unique at a census start
 0x00024db0	0x3b	func	??5TRawIStream@@QAEAAV0@AAF@Z	CampaignDoc	masked body (59 bytes, 3 relocations) unique at a census start
+0x00025380	0x124	func	?_putLong@TGzDeflateBuf@@AAEXK@Z	gzinflatebuf	masked body (292 bytes, 0 relocations) unique at a census start
 0x00025670	0x6d	func	?_getC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	masked body (109 bytes, 0 relocations) unique at a census start
 0x000256e0	0x11	func	?_putBackC@TGzInflateBuf@@AAEXD@Z	gzinflatebuf	masked body (17 bytes, 0 relocations) unique at a census start
 0x00025700	0x1a4	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	referenced by ?createInflateBuf@TFileContent@?A0x14d14b60f51c421c@@QBE?AV?$auto_ptr@V?$basic_streambuf@DU?$char_traits@D@std@@@std@@@std@@XZ at +0x81
@@ -331,11 +333,13 @@ rva	size	kind	name	unit	evidence
 0x00063060	0x4d	func	?victorMinimumDimensions@@YAXPAUimgdes@@0PAI1@Z	victor	masked body (77 bytes, 0 relocations) unique at a census start
 0x000630c0	0x2d2	func	?flipimage@@YGHPAUimgdes@@0@Z	victor_flip	masked body (722 bytes, 9 relocations) unique at a census start
 0x000633a0	0x494	func	?loadpcx@@YGHPBDPAUimgdes@@@Z	victor_loadpcx	masked body (1172 bytes, 23 relocations) unique at a census start
-0x00063840	0x127	func	?pcxinfo@@YGHPBDPAUPcxData@@@Z	victor	masked body (295 bytes, 3 relocations) unique at a census start
-0x00063970	0x13c	func	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	victor	masked body (316 bytes, 8 relocations) unique at a census start
+0x00063840	0x127	func	?pcxinfo@@YGHPBDPAUPcxData@@@Z	victor_pcxinfo	masked body (295 bytes, 3 relocations) unique at a census start
+0x00063970	0x13c	func	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	victor_pcxinfo	masked body (316 bytes, 8 relocations) unique at a census start
 0x00063ab0	0x53	func	?victorDecodeRleBytes@@YAHPAE0H@Z	victor_pcx_kernels	masked body (83 bytes, 0 relocations) unique at a census start
 0x00063b10	0x63	func	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	victor_pcx_kernels	masked body (99 bytes, 0 relocations) unique at a census start
 0x00063b80	0x34	func	?victorConvertRgbPlanesToBgr@@YAXPAEPBEH@Z	victor_pcx_kernels	masked body (52 bytes, 0 relocations) unique at a census start
+0x00063cc0	0x84	func	?victorInsertBits@@YGXPAEPBEHH@Z	victor_bits	referenced by ?flipimage@@YGHPAUimgdes@@0@Z at +0x26a
+0x00063d50	0x73	func	?victorExtractBits@@YGXPAEPBEHH@Z	victor_bits	masked body (115 bytes, 1 relocations) unique at a census start
 0x000876a0	0x1	data	?_C@?1??_Nullstr@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@CAPBDXZ@4DB	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x13e
 0x000876b4	0x4	data	?npos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@2IB	resourcemanager	referenced by ?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z at +0x36
 0x00088180	0x8	data	??_8?$basic_ostream@DU?$char_traits@D@std@@@std@@7B@	resourcemanager	referenced by ??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z at +0x31
