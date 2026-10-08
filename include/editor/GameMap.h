@@ -149,7 +149,7 @@ private:
 // The alliances: whether the map has teams, how many, and each player's.
 class TTeamInfo {
 public:
-    static const unsigned int s_kMinTeams = 2;
+    static const int s_kMinTeams = 2;
     static const unsigned int s_kMaxTeams = 7;
 
     TTeamInfo() : _m_bHasTeams(false), _m_numTeams(s_kMinTeams), _m_aPlayerTeam(0) {}
