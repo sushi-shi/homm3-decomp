@@ -24,6 +24,14 @@ sha256 = "650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86"
 env = "HOMM3_MAC_EXE"
 option = "--mac-exe"
 
+[inputs.loki_h3maped]
+name = "Loki Linux h3maped 1.0 (map editor image h3maped-loki)"
+path = "build/orig/loki/h3maped"
+size = 4970572
+sha256 = "0d5614c407a9977d877bbe2ee7e35c476670b006cd88981ca40366fe2138559d"
+env = "HOMM3_LOKI_H3MAPED"
+option = "--loki-h3maped"
+
 # Positive CodeView/source spelling equivalences reviewed for this project.
 # Used only by the Dreamcast source-fact audit, never by the generic comparator.
 [type_aliases.dreamcast]

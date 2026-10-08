@@ -1,0 +1,24 @@
+# GCC 2.95.2 toolchain for the Loki h3maped image (GCC: "2.95.2 19991024 (release)" in every
+# editor object). Debian 2.2 "potato" i386 packages; each matches the potato Packages index.
+# Stage with `homm3 loki toolchain --debs DIR` (or HOMM3_LOKI_DEBS); see docs/loki/README.md.
+
+[debs]
+"binutils_2.9.5.0.37-1.deb" = "3b68c362559c0437b0384cb42128b33820dd4b85384a9379777e17d837278ca9"
+"cpp_2.95.2-13.1.deb" = "fa2e210e6ece4941555e38a0370f6e40e394067c16c4deb5aad34b458740b9ba"
+"g++_2.95.2-13.1.deb" = "fbc9577b5ae2ce4c1f5c56858b7cd60d8eb307e8ca8a21e0cceb988d2c17ecdd"
+"gcc_2.95.2-13.1.deb" = "366f1c8b3bf4ae24a857efbce5eda9d8bba22282079c133bda089ac4cd0763a3"
+"libc6_2.1.3-20.deb" = "0c3937f80ae515abc69d44d18b4d8d924491f4b6c6420a0bfdaf2da91c174be6"
+"libc6-dev_2.1.3-20.deb" = "83616dc9a4ca97312ad06186285c8995518678e54259a16ccf20f2b3c2218d75"
+"libstdc++2.10_2.95.2-13.1.deb" = "29783eb9628e9d8b924354986bb2809a076789e7dc394ec1c27b27c1eebd8609"
+"libstdc++2.10-dev_2.95.2-13.1.deb" = "6cfd88a7de13c2ff4524843492a809b585c5c8b5f09102eecf94f4b48d44abed"
+
+[driver]
+version = "2.95.2"
+target = "i386-linux"
+
+# SGI STL 3.3 (tar created 2000-06-08). Loki's string is SGI's basic_string<char,
+# char_traits<char>, allocator<char> > (_String_base), and runtime_error is SGI's
+# 0x104-byte __Named_exception: these headers precede libstdc++ 2.95's own.
+# Stage with `homm3 loki toolchain --sgi-stl DIR` (or HOMM3_LOKI_SGI_STL).
+[sgi_stl]
+"stl.tar.gz" = "1285e6d5d85b8a138dbce3ef8cd36e0c2f8c668b71d4d8fd3f78266d0c212a67"
