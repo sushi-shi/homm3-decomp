@@ -78,8 +78,11 @@ def current() -> bool:
 
 
 def build(source: str | Path | None = None, force: bool = False) -> Path:
-    """Build (or repair) the overlay; returns its msvc/ root."""
+    """Build (or repair) the overlay; returns its msvc/ root. An overlay that
+    already holds the pinned passes (a worktree links its seed's) is kept."""
     from homm3.core.cc_wrap import find_ci, msvc_dir
+    if not force and source is None and current():
+        return destination()
     staged = verify(source_dir(source))
     pinned = msvc_dir()
     if not find_ci(pinned / "bin", "cl.exe"):

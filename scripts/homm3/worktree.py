@@ -8,9 +8,9 @@
 symlink, executable staging, Mac SDK copy, a full build before `--fast`):
 
 1. `git worktree add [-b BRANCH] PATH [REF]` in the current checkout's repo.
-2. Link the shared VC6 toolchain directory from the seed checkout (default:
-   the repository's main worktree) and copy its verified Mac SDK; the SDK
-   stager rejects symlinks, so it is a real copy.
+2. Link the shared VC6 toolchain directory and the VC6 RTM compiler overlay
+   from the seed checkout (default: the repository's main worktree) and copy
+   its verified Mac SDK; the SDK stager rejects symlinks, so it is a real copy.
 3. Run the new tree's own `homm3 init --no-smoke` with the seed's staged
    executables and CodeWarrior tools (hash-verified on staging, no download).
 4. Seed comparison state so `homm3 build --fast TU` works immediately:
@@ -54,6 +54,8 @@ from homm3.core.project import Project
 from homm3.core.root import project_root
 
 TOOLCHAIN = Path("build/homm3-toolchain-vc6-sp3")
+# The VC6 RTM compiler overlay of the zlib units (homm3.init.vc6_rtm).
+RTM_TOOLCHAIN = Path("build/homm3-toolchain-vc6-rtm")
 MAC_SDK = Path("build/mac/sdk")
 MAC_TOOLCHAIN = Path("build/mac/toolchain")
 OBJDIFF = Path("build/objdiff")
@@ -270,11 +272,12 @@ def _stage_mac_sdk(seed: Path, tree: Path) -> str:
     return "copied and verified"
 
 
-def _link_toolchain(seed: Path, tree: Path) -> str:
-    source = (seed / TOOLCHAIN).resolve()
+def _link_toolchain(seed: Path, tree: Path, toolchain: Path = TOOLCHAIN,
+                    missing: str = "seed has no unpacked toolchain; init will fetch it") -> str:
+    source = (seed / toolchain).resolve()
     if not _find_ci(source / "msvc/bin", "cl.exe"):
-        return "not linked (seed has no unpacked toolchain; init will fetch it)"
-    link = tree / TOOLCHAIN
+        return f"not linked ({missing})"
+    link = tree / toolchain
     link.parent.mkdir(parents=True, exist_ok=True)
     if link.is_symlink() or link.exists():
         return f"kept existing {link}"
@@ -371,6 +374,9 @@ def cmd_new(args) -> int:
 
     log(f"seed checkout: {seed}")
     log(f"VC6 toolchain: {_link_toolchain(seed, tree)}")
+    log("VC6 RTM compiler: " + _link_toolchain(
+        seed, tree, RTM_TOOLCHAIN,
+        "seed has no RTM overlay; init builds it from the staged RTM binaries"))
     (tree / "build/mac").mkdir(parents=True, exist_ok=True)
     log(f"Mac SDK: {_stage_mac_sdk(seed, tree)}")
     # The new tree's own init (verified staging, configure, Wine prefix) runs
@@ -461,7 +467,7 @@ def cmd_remove(args) -> int:
         subprocess.run([server, "-k"], env=dict(os.environ, WINEPREFIX=str(prefix)),
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     # Unlink shared-input symlinks first so nothing can follow them.
-    for link in (tree / TOOLCHAIN,):
+    for link in (tree / TOOLCHAIN, tree / RTM_TOOLCHAIN):
         if link.is_symlink():
             link.unlink()
     _git(repo, "worktree", "remove", str(tree), capture=False)
