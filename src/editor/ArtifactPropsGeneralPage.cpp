@@ -10,6 +10,7 @@ namespace {
 }
 
 #include "editor/ArtifactPropsGeneralPage.h"
+#include "editor/ObjectSpecializations.h"
 
 TArtifactPropsGeneralPage::TArtifactPropsGeneralPage(const TGameArtifact& artifact)
     : _m_messageText(GTK_TEXT(_widget("artifact_props_general_message"))),

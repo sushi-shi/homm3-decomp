@@ -13,6 +13,7 @@
 #include "editor/Clamp.h"
 #include "editor/EditTimedEventGeneralPage.h"
 #include "editor/MapEditorText.h"
+#include "editor/TimedEvent.h"
 
 namespace {
 

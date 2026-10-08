@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "editor/ObjectSpecializations.h"
+class TGameArtifact;
 
 class TArtifactPropsGeneralPage {
 public:

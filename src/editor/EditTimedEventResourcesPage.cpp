@@ -6,6 +6,7 @@
 #include "exceptions.h"
 #include "editor/EditTimedEventResourcesPage.h"
 #include "editor/ResourceQuantitiesDlg.h"
+#include "editor/TimedEvent.h"
 
 TEditTimedEventResourcesPage::TEditTimedEventResourcesPage(const TTimedEvent& event)
     : _m_pResourceQuantitiesDlg(NULL)

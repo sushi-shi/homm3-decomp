@@ -16,7 +16,8 @@
 #include <string>
 
 #include "editor/Player.h"
-#include "editor/TimedEvent.h"
+
+class TTimedEvent;
 
 class TEditTimedEventGeneralPage {
 public:

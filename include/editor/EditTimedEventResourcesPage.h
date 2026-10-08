@@ -8,9 +8,9 @@
 
 #include "editor/stdafx.h"
 #include "editor/ResourceQuantities.h"
-#include "editor/TimedEvent.h"
 
 class TResourceQuantitiesDlg;
+class TTimedEvent;
 
 class TEditTimedEventResourcesPage {
 public:

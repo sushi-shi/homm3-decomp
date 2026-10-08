@@ -11,8 +11,8 @@ namespace {
 #include <gtk/gtk.h>
 }
 
-#include "editor/ObjectSpecializations.h"
 #include "editor/SignPropsDlg.h"
+#include "editor/ObjectSpecializations.h"
 
 TSignPropsDlg* signModalPtr = NULL;
 
