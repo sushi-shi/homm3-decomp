@@ -2,7 +2,7 @@
 import struct
 import unittest
 from homm3.build.link import unresolved_symbols, link_succeeded, run_wine, main
-from homm3.build.import_libraries import named_imports, exact_import_names
+from homm3.build.import_libraries import named_imports, export_table
 
 
 class LinkDiagnosticsTest(unittest.TestCase):
@@ -134,19 +134,18 @@ def import_image():
 
 
 class ImportLibraryTest(unittest.TestCase):
-    def test_short_import_preserves_exact_stdcall_export(self):
-        strings = b'_Export@4\0TEST.dll\0'
-        member = struct.pack('<HHHHIIHH', 0, 0xffff, 0, 0x14c, 0,
-                             len(strings), 0, 2 << 2) + strings
-        header = (b'export/         ' + b'0           ' + b'0     ' +
-                  b'0     ' + b'0       ' + f'{len(member):<10}'.encode() + b'`\n')
-        archive = b'!<arch>\n' + header + member + (b'\n' if len(member) & 1 else b'')
-        result = exact_import_names(archive, 'TEST.dll', ['_Export@4'])
-        self.assertEqual(result[:86], archive[:86])
-        self.assertEqual(struct.unpack_from('<H', result, 86)[0], 1 << 2)
-        self.assertEqual(result[88:], archive[88:])
-        with self.assertRaisesRegex(ValueError, 'differ from retail'):
-            exact_import_names(archive, 'TEST.dll', ['Export@4'])
+    def test_fillers_put_each_name_at_its_hint(self):
+        table = export_table({'_AIL_b@0': 2, '_AIL_d@4': 5})
+        names = [name for name, _filler in table]
+        self.assertEqual(names.index('_AIL_b@0'), 2)
+        self.assertEqual(names.index('_AIL_d@4'), 5)
+        self.assertEqual(names, sorted(names))
+        cpp = export_table({'??0A@@QAE@XZ': 3, '?f@A@@QAEXXZ': 4}, prefix='?')
+        self.assertTrue(all(name.startswith('?') for name, _filler in cpp))
+        self.assertEqual([n for n, f in cpp if not f], ['??0A@@QAE@XZ', '?f@A@@QAEXXZ'])
+        self.assertEqual(len(cpp), 5)
+        with self.assertRaisesRegex(ValueError, 'ascending'):
+            export_table({'a': 3, 'b': 1})
 
     def test_preserves_decoration_and_ordinals(self):
         self.assertEqual(named_imports(import_image()), {'TEST.dll': ['_Export@4', 11]})

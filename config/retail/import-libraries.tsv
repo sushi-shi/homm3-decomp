@@ -1,0 +1,10 @@
+# MANUALLY MANAGED - the linker that wrote each vendor import library
+# (homm3.build.import_libraries rebuilds them from the retail import table).
+# `linker` is a config/project.toml compiler whose LINK.EXE runs the stub's
+# /IMPLIB link. Retail's Rich header counts four Linker600 8168 objects: the
+# import descriptor and null thunk of two libraries written by LINK 6.00 RTM.
+dll	linker	evidence
+binkw32.dll	msvc6-rtm	Rich Linker600 8168 x4: two libraries' descriptor and null thunk
+IFC20.dll	msvc6-rtm	Rich Linker600 8168 x4: two libraries' descriptor and null thunk
+mss32.dll	msvc6-rtm	PROVISIONAL: retail counts no third and fourth Linker600 8168 library
+smackw32.dll	msvc6-rtm	PROVISIONAL: retail counts no third and fourth Linker600 8168 library

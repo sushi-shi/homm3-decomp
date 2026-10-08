@@ -85,7 +85,7 @@ locations = ["build/homm3-toolchain-vc6-sp3/msvc", "build/toolchain/msvc"]
 env = "HOMM3_MSVC5_DIR"
 locations = ["build/homm3-toolchain-vc5-sp3/msvc"]
 
-# msvc6-rtm: Visual C++ 6.0 RTM (C1/C2 12.00.8168), the compiler of the
+# msvc6-rtm: Visual C++ 6.0 RTM (C1/C2 12.00.8168, LINK 6.00.8168), the compiler of the
 # statically linked zlib objects: retail's Rich header counts them under
 # Utc12_C 8168 and has no 8447 C entry (docs/reference/executable-libraries.md).
 # `homm3 init` (homm3.init.vc6_rtm) builds the overlay at `locations`: the
@@ -100,3 +100,6 @@ source = "../orig/vc6-rtm"
 [toolchain.compilers."msvc6-rtm".files]
 "C1.DLL" = "ee14a2603a1339f95db2e396751f7e51b50e421731229fb2416a01f974689d80"
 "C2.DLL" = "45187b0b6288240f73272a7c61e6329c50048a76e57db3bb87b6f0229e09e27d"
+# LINK/LIB 6.00.8168: the linker that wrote retail's Linker600 8168 import
+# objects (homm3.build.import_libraries).
+"LINK.EXE" = "08d3a4c9701c8f6c871b2c48bd74d07422aa1f86e5d9a4ddb2c9bd6a88b857e7"
