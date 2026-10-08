@@ -178,7 +178,7 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
                 path.write_bytes(package.extractfile(member).read())
                 path.chmod(0o755)
     # Slackware's vanilla 2.95.2: only the compilers proper. Its cccp rejects
-    # the Windows SDK headers the shared source imports; potato's cpp stays.
+    # the Windows SDK headers the shared source once imported; potato's cpp stays.
     prefix = "usr/lib/gcc-lib/i386-slackware-linux/2.95.2/"
     with tarfile.open(fileobj=io.BytesIO(release), mode="r:gz") as package:
         for member in package.getmembers():
