@@ -40,13 +40,13 @@ class TRoadEraseOp;
 class TMapDocLoadFailure : public exception {
 public:
     TMapDocLoadFailure(bool bLoading);
-    virtual ~TMapDocLoadFailure();
+    virtual ~TMapDocLoadFailure() {}
 };
 
 class TMapDocInvalidFileVersion : public TMapDocLoadFailure {
 public:
     TMapDocInvalidFileVersion(int version, int expectedVersion, bool bLoading);
-    virtual ~TMapDocInvalidFileVersion();
+    virtual ~TMapDocInvalidFileVersion() {}
 };
 
 class TMapDoc : public TGameMap::TClient,
