@@ -32,8 +32,10 @@ source (build/<image>/objdiff/base/<unit>.obj, the image's profile):
 Steps 2 and 3 repeat to a fixpoint after each of steps 1, 5 and 6; steps 5
 and 6 never name an address that an earlier step claimed. Functions the image's runtime map names
 (statically linked library code) are never placed. A name that reaches two addresses, or an
-address that receives two names, is dropped and reported (ICF folds and
-genuine ambiguity alike stay unclaimed until reviewed). The result is
+address that receives two names, is dropped and reported, except an /OPT:ICF
+fold: the names that reach only that address, when their compiled bodies
+agree byte for byte with the same relocation sites, place the first of them
+there, and the comparison pairs the others' references with it. The result is
 config/retail/<image>/placements.tsv; the label model reads it as the image's
 claims for shared units (channel `placement`).
 """
@@ -440,6 +442,25 @@ def derive(log=print, want_suggestions=False):
     for name, rvas in names.items():
         for rva in rvas:
             by_rva[rva].add(name)
+    def folded(rva):
+        """The one name of an address that several compiled bodies reach:
+        /OPT:ICF folded the bodies that reach only this address when they
+        agree byte for byte with the same relocation sites. The first name
+        labels the address; the comparison pairs the others' references
+        with it (normalize_objs ICF twins)."""
+        # a name that also reaches another address is no witness either way
+        group = sorted(name for name in by_rva[rva] if len(names[name]) == 1)
+        if len(group) < 2 or any(name not in bodies for name in group):
+            return None
+        shapes = set()
+        for name in group:
+            body, relocs = bodies[name]
+            masked = bytearray(body)
+            for site in relocs:
+                masked[site:site + 4] = b"\0\0\0\0"
+            shapes.add((bytes(masked), tuple(sorted(relocs))))
+        return group[0] if len(shapes) == 1 else None
+
     rows, conflicts = [], 0
     for name, rvas in sorted(names.items()):
         if len(rvas) != 1:
@@ -447,7 +468,14 @@ def derive(log=print, want_suggestions=False):
             continue
         (rva,) = rvas
         if len(by_rva[rva]) != 1:
-            conflicts += 1
+            if folded(rva) == name:
+                unit = definers[name][0]
+                why = (f"{evidence[(name, rva)]}; ICF-folded with "
+                       f"{len(by_rva[rva]) - 1} identical bodies")
+                rows.append((rva, functions[rva], "func", portable(name, unit), unit,
+                             portable(why, unit)))
+            else:
+                conflicts += 1
             continue
         unit = definers[name][0]
         rows.append((rva, functions[rva], "func", portable(name, unit), unit,

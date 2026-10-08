@@ -92,7 +92,11 @@ Steps 2 and 3 follow every other step. A placed body names a referent only
 where the opcode byte before its relocation field agrees with retail, so a
 body that differs elsewhere still names its callees where it agrees. Steps 4
 and 5 never contradict an earlier placement. A name that reaches two
-addresses, or an address that receives two names, is dropped. Names keep
+addresses, or an address that receives two names, is dropped, except an
+`/OPT:ICF` fold: when the names that reach only that address have compiled
+bodies that agree byte for byte, the first of them places it, and the
+comparison names the others' references after it (`vector<T*>::push_back`
+for every pointer `T`). Names keep
 their checkout-independent anonymous-namespace spelling. The label model
 reads the table as the image's claims (channel `placement`).
 
