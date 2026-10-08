@@ -629,9 +629,6 @@ TRawIStream& operator>>(TRawIStream& stream, TVictoryConditionData& vcData)
         case eVCDefeatMonster:
             stream >> vcData.m_defeatMonster.m_monsterLoc;
             break;
-        case eVCFlagAllCreatureGenerators:
-        case eVCFlagAllMines:
-            break;
         case eVCTransportArtifact:
             stream >> vcData.m_transportArtifact.m_artifact >> vcData.m_transportArtifact.m_townLoc;
             break;
@@ -1477,19 +1474,19 @@ bool TGameMap::_TImpl::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, u
         aObjID.push_back(layer.getObjectIDAtCell(x, y, i));
     for (vector<unsigned int>::const_iterator pObjID = aObjID.begin(); pObjID != aObjID.end(); ++pObjID) {
         const TGameObject& obj = layer.getObject(*pObjID);
-        if (obj.getTerrainMask()[newTerrainType])
-            continue;
-        TTilePoint objLoc = layer.getObjectLoc(*pObjID);
-        unsigned int i = objLoc.x() - x;
-        unsigned int j = objLoc.y() - y;
-        if (obj.getBUnderlay() ? obj.getBCellPlaced(i, j) : !obj.getBCellPassable(i, j)) {
-            TTileExtent removedExtent;
-            removeObject(bSecondLayer, *pObjID, &removedExtent);
-            if (!bObjectsRemoved) {
-                *pUpdatedExtent = removedExtent;
-                bObjectsRemoved = true;
-            } else {
-                *pUpdatedExtent |= removedExtent;
+        if (!obj.getTerrainMask()[newTerrainType]) {
+            TTilePoint objLoc = layer.getObjectLoc(*pObjID);
+            unsigned int i = objLoc.x() - x;
+            unsigned int j = objLoc.y() - y;
+            if (obj.getBUnderlay() ? obj.getBCellPlaced(i, j) : !obj.getBCellPassable(i, j)) {
+                TTileExtent removedExtent;
+                removeObject(bSecondLayer, *pObjID, &removedExtent);
+                if (!bObjectsRemoved) {
+                    *pUpdatedExtent = removedExtent;
+                    bObjectsRemoved = true;
+                } else {
+                    *pUpdatedExtent |= removedExtent;
+                }
             }
         }
     }
@@ -2750,13 +2747,13 @@ TMapLayerObjectID TGameMap::_TImpl::_placeGeneralObject(bool bSecondLayer, const
         if (pConstBookkeeping->m_aNumObjsOfCappedType[typeOrdinal] >= pCappedObjTypeInfo->second.m_cap)
             throw TPlaceObjFailureTooManyInstancesOfTypeOnMap(obj.getType(), pCappedObjTypeInfo->second.m_cap);
     }
-    TLayer& layer = *getPLayer(bSecondLayer);
-    if (!_isValidPlacement(layer, obj, x, y))
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    if (!_isValidPlacement(*pLayer, obj, x, y))
         throw TPlaceObjFailureInvalidPlacement();
-    TMapLayerObjectID result = layer._placeObject(obj, x, y);
+    TMapLayerObjectID result = pLayer->_placeObject(obj, x, y);
 #line 3764
     assert(result != TLayer::s_kInvalidObjID);
-    *pUpdatedExtent = layer.getObjectExtent(result);
+    *pUpdatedExtent = pLayer->getObjectExtent(result);
     return result;
 }
 
@@ -3086,7 +3083,7 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject& playable)
                     if (teamInfo.getNumTeams() == TTeamInfo::s_kMinTeams) {
                         teamInfo.setBHasTeams(false);
                     } else {
-                        for (unsigned int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                        for (otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
                             if (_m_pProperties->m_players[otherPlayer].getBPresent()) {
                                 unsigned int otherTeam = teamInfo.getPlayerTeam(TPlayer(otherPlayer));
                                 if (otherTeam > team)
@@ -4270,7 +4267,7 @@ void TGameMap::TLayer::_TImpl::_removeObject(unsigned int objID)
 #line 5743
     assert(objID != 0 && objID < aObjectLink.size());
     assert(static_cast< _TObjectLink const & >( aObjectLink[ objID ] ).getPObject() != __null);
-    if (objID != _m_floatingObjID)
+    if (_m_floatingObjID != objID)
         _unstampObject(objID);
     else
         _m_floatingObjID = s_kInvalidObjID;
