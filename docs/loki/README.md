@@ -3,9 +3,9 @@
 The Loki Linux map editor 1.0 (`h3maped`, 4,970,572 bytes, SHA-256
 `0d5614c4…2138559d`, pinned as `[inputs.loki_h3maped]` in
 `config/project.toml`) is the first map-editor image. It is Loki's GTK+ port of
-the RoE-era editor source. Its retail bytes are the verdict for this image;
-the game's verdict stays `HEROES3.EXE`. Nothing here changes `homm3 build`,
-the game ledger or the README score block.
+the RoE-era editor source. Its retail bytes are the verdict for this image,
+the only target of `decomp-loki-1.0`; the Windows game (`HEROES3.EXE`) and its
+ledger live on `decomp-complete-4.0`.
 
 ## Setup
 
