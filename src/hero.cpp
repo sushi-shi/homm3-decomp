@@ -3635,6 +3635,13 @@ int THeroScreenWindow::exitDialog(message& msg)
 // but rejects its nested combination predicate at budget 17 versus cb 120;
 // updateAllSlots/updateSlot also has a reciprocal nested frontier. These are
 // additional residuals, not evidence of missing locals or a new inline pin.
+// The army-slot view test is two guarded disjuncts, not a ternary: retail
+// branches on rightMouse into each comparison and duplicates the slot-pick
+// tail, where the ternary materialised a setne/sete value (91.27 -> 97.32%).
+// rightMouse is a bool: retail pushes its dword home to viewArmy's bool
+// parameter unconverted (97.33%). Passing the dismiss test inline as
+// viewArmy's argument reproduces retail's 1/0 arms there but reshuffles the
+// expanded artifact-click registers (95.92%); a bool local scores 95.37/97.17.
 VA(0x004dd2d0, 0x143E)
 DC_ADDRESS(0x0cf54c, 0xc38)
 MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees
@@ -3646,7 +3653,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         return result;
 
     playerData* localPlayer = g_game->getLocalPlayer();
-    unsigned char rightMouse;
+    bool rightMouse;
     if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
         rightMouse = 1;
     else
@@ -3822,10 +3829,10 @@ int THeroScreenWindow::windowHandler(message& msg)
                         g_heroScreenArmySlot = slot;
                         g_currentHero->heroScreenUpdate();
                     }
-                } else if (rightMouse
-                               ? g_currentHero->m_army.m_armies[slot]
-                                     != CREATURE_NONE
-                               : g_heroScreenArmySlot == slot) {
+                } else if ((rightMouse
+                            && g_currentHero->m_army.m_armies[slot]
+                                   != CREATURE_NONE)
+                           || (!rightMouse && g_heroScreenArmySlot == slot)) {
                     g_heroScreenArmyStripLive = 0;
                     int showDismiss = 0;
                     if (!g_castleOpen
