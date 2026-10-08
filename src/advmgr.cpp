@@ -5637,7 +5637,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
 
     int blockPhase = 0;
     int rowPhase = 0;
-    unsigned short* destRow;
+    Bitmap16MapPointer destRow;
     unsigned short* dest;
     // DC7059..7062 bounds the full map; 7097..7117 derives the pixel
     // origin, horizontal offset and large-map phases from those bounds.
@@ -5649,24 +5649,24 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
     int x;
     switch (g_mapHeight) {
     case MAP_DIMENSION_SMALL:
-        destRow = g_windowManager->m_screenBitmap->GetMap(
+        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + firstRow / 4);
         xOffset = firstColumn / 4;
         break;
     case MAP_DIMENSION_MEDIUM:
-        destRow = g_windowManager->m_screenBitmap->GetMap(
+        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + firstRow / 2);
         xOffset = firstColumn / 2;
         break;
     case MAP_DIMENSION_LARGE:
-        destRow = g_windowManager->m_screenBitmap->GetMap(
+        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + (firstRow * 4 + 2) / 3);
         xOffset = (firstColumn * 4 + 2) / 3;
         blockPhase = firstColumn % 3;
         rowPhase = firstRow % 3;
         break;
     default:
-        destRow = g_windowManager->m_screenBitmap->GetMap(
+        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + firstRow);
         xOffset = firstColumn;
         break;
@@ -5674,35 +5674,26 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
 
     int visibilityBit = g_mapVisibilityBit;
     for (int y = firstRow; y <= lastRow; y++) {
-        dest = destRow + xOffset;
-        // The native row pointer is unsigned short*, advanced by byte pitch.
+        dest = destRow.m_pixels + xOffset;
+        // DC's row pointer is unsigned short*, advanced by the byte pitch
+        // (Bitmap16.h:151); Bitmap16MapPointer names both views.
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            destRow = reinterpret_cast<unsigned short*>(
-                reinterpret_cast<unsigned char*>(destRow)
-                + 4 * g_windowManager->m_screenBitmap->GetPitch());
+            destRow.m_bytes += 4 * g_windowManager->m_screenBitmap->GetPitch();
             break;
         case MAP_DIMENSION_MEDIUM:
-            destRow = reinterpret_cast<unsigned short*>(
-                reinterpret_cast<unsigned char*>(destRow)
-                + 2 * g_windowManager->m_screenBitmap->GetPitch());
+            destRow.m_bytes += 2 * g_windowManager->m_screenBitmap->GetPitch();
             break;
         case MAP_DIMENSION_LARGE:
-            destRow = reinterpret_cast<unsigned short*>(
-                reinterpret_cast<unsigned char*>(destRow)
-                + g_windowManager->m_screenBitmap->GetPitch());
+            destRow.m_bytes += g_windowManager->m_screenBitmap->GetPitch();
             if (++rowPhase > 2)
                 rowPhase = 0;
             if (rowPhase == 0) {
-                destRow = reinterpret_cast<unsigned short*>(
-                    reinterpret_cast<unsigned char*>(destRow)
-                    + g_windowManager->m_screenBitmap->GetPitch());
+                destRow.m_bytes += g_windowManager->m_screenBitmap->GetPitch();
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            destRow = reinterpret_cast<unsigned short*>(
-                reinterpret_cast<unsigned char*>(destRow)
-                + g_windowManager->m_screenBitmap->GetPitch());
+            destRow.m_bytes += g_windowManager->m_screenBitmap->GetPitch();
             break;
         }
         int z = origin.m_z;

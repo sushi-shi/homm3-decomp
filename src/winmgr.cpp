@@ -1016,13 +1016,13 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     for (int shift = 0; shift < 3; shift++) {
         unsigned long nextFadeTime = GameTime::get() + fadePeriod;
         unsigned long time1 = GameTime::get();
-        unsigned int* dst = reinterpret_cast<unsigned int*>(
-            m_screenBitmap->GetMap(0, 0));
-        const unsigned int* src = reinterpret_cast<const unsigned int*>(
-            bmpFadeSource.GetMap(0, 0));
+        Bitmap16MapPointer dst;
+        dst.m_pixels = m_screenBitmap->GetMap(0, 0);
+        Bitmap16ConstMapPointer src;
+        src.m_pixels = bmpFadeSource.GetMap(0, 0);
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
-            const unsigned int* pixelSrc = src;
-            unsigned int* pixelDst = dst;
+            const unsigned int* pixelSrc = src.m_pixelPairs;
+            unsigned int* pixelDst = dst.m_pixelPairs;
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 const unsigned int r = *pixelSrc;
                 *pixelDst = darkenScreenPixelPair(r, redMask2, greenMask2,
@@ -1030,12 +1030,8 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
                 pixelDst++;
                 pixelSrc++;
             }
-            dst = reinterpret_cast<unsigned int*>(
-                reinterpret_cast<unsigned char*>(dst)
-                + m_screenBitmap->GetPitch());
-            src = reinterpret_cast<const unsigned int*>(
-                reinterpret_cast<const unsigned char*>(src)
-                + bmpFadeSource.GetPitch());
+            dst.m_bytes += m_screenBitmap->GetPitch();
+            src.m_bytes += bmpFadeSource.GetPitch();
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);
@@ -1063,8 +1059,9 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // dst before the fade copy's map for src, store with `*dst = ...` and
 // `dst++` on separate rows (1973/1974), and advance dst's row before src's
 // on row 1977 (1824). DC's function-scope dst/src are those row pointers
-// (unsigned int* / const unsigned int*, advanced by the byte pitch); the
-// row's pixel walkers are register locals, src's loaded first (1962/1965).
+// (unsigned int* / const unsigned int*, advanced by the byte pitch), here
+// the pixel-pair and byte views of Bitmap16MapPointer; the row's pixel
+// walkers are register locals, src's loaded first (1962/1965).
 // Unrecorded row 1975 is the source increment, folded into SH4's @r4+
 // load. Reading `*pixelSrc` and incrementing it after the store gives
 // retail's single src induction variable with dst addressed as
@@ -1085,13 +1082,13 @@ void heroWindowManager::fadeFromBlack(int speed)
     for (int shift = 2; shift > 0; shift--) {
         unsigned long deadline = GameTime::get() + fadePeriod;
         unsigned long started = GameTime::get();
-        unsigned int* dst = reinterpret_cast<unsigned int*>(
-            m_screenBitmap->GetMap(0, 0));
-        const unsigned int* src = reinterpret_cast<const unsigned int*>(
-            fadeFrom.GetMap(0, 0));
+        Bitmap16MapPointer dst;
+        dst.m_pixels = m_screenBitmap->GetMap(0, 0);
+        Bitmap16ConstMapPointer src;
+        src.m_pixels = fadeFrom.GetMap(0, 0);
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
-            const unsigned int* pixelSrc = src;
-            unsigned int* pixelDst = dst;
+            const unsigned int* pixelSrc = src.m_pixelPairs;
+            unsigned int* pixelDst = dst.m_pixelPairs;
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 unsigned long pair = *pixelSrc;
                 *pixelDst = darkenScreenPixelPair(pair, maskRed, maskGreen,
@@ -1099,12 +1096,8 @@ void heroWindowManager::fadeFromBlack(int speed)
                 pixelDst++;
                 pixelSrc++;
             }
-            dst = reinterpret_cast<unsigned int*>(
-                reinterpret_cast<unsigned char*>(dst)
-                + m_screenBitmap->GetPitch());
-            src = reinterpret_cast<const unsigned int*>(
-                reinterpret_cast<const unsigned char*>(src)
-                + fadeFrom.GetPitch());
+            dst.m_bytes += m_screenBitmap->GetPitch();
+            src.m_bytes += fadeFrom.GetPitch();
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);

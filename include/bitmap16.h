@@ -8,15 +8,19 @@
 // Bitmap16Bit::map is DC-proven as unsigned short*, while Pitch is
 // independently proven as a byte stride. This union names those two views
 // without introducing reinterpret-cast debt or changing the stored pointer.
+// The screen fades walk a row two pixels at a time; DC FadeToBlack and
+// FadeFrom type those row pointers unsigned int* / const unsigned int*.
 union Bitmap16MapPointer {
 public:
     unsigned short* m_pixels;
+    unsigned int* m_pixelPairs;
     unsigned char* m_bytes;
 };
 
 union Bitmap16ConstMapPointer {
 public:
     const unsigned short* m_pixels;
+    const unsigned int* m_pixelPairs;
     const unsigned char* m_bytes;
 };
 
