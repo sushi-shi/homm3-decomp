@@ -516,6 +516,11 @@ public:
         TObjectIDIter objectIDEnd() const { return TObjectIDIter(this, s_kInvalidObjID); }
         unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
         TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
+        unsigned int getNumObjectIDsAtCell(const TTilePoint& loc) const { return getNumObjectIDsAtCell(loc.x(), loc.y()); }
+        TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const
+        {
+            return getObjectIDAtCell(loc.x(), loc.y(), which);
+        }
         unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
         TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
 
@@ -525,6 +530,10 @@ public:
         friend class TGameMap::_TImpl;
 
         TMapLayerObjectID _placeObject(const TGameObject& obj, const TTilePoint& loc);
+        TMapLayerObjectID _placeObject(const TGameObject& obj, unsigned int x, unsigned int y)
+        {
+            return _placeObject(obj, TTilePoint(x, y));
+        }
         void _removeObject(unsigned int objID);
         void _floatObject(unsigned int objID);
         void _unfloatObject(const TTilePoint& loc);
