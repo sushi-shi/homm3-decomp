@@ -213,3 +213,28 @@ source = "src/editor/ObjectSprites.cpp"
 name = "VictoryCondition"
 object = 36
 source = "src/editor/VictoryCondition.cpp"
+
+[[unit]]
+name = "EraseToolkit"
+object = 63
+source = "src/editor/EraseToolkit.cpp"
+
+[[unit]]
+name = "RoadToolkit"
+object = 64
+source = "src/editor/RoadToolkit.cpp"
+
+[[unit]]
+name = "RiverToolkit"
+object = 65
+source = "src/editor/RiverToolkit.cpp"
+
+[[unit]]
+name = "ToolkitBase"
+object = 62
+source = "src/editor/ToolkitBase.cpp"
+
+[[unit]]
+name = "TerrainToolkit"
+object = 66
+source = "src/editor/TerrainToolkit.cpp"
