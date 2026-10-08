@@ -502,13 +502,19 @@ public:
     void exportText(ostream* pOStream) const;
     void save(streambuf* pStreamBuf) const;
 
+    TLayer* getPLayer(unsigned int num);
+    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
     unsigned int getWidth() const { return _s_akDimension[_m_size]; }
     unsigned int getHeight() const { return _s_akDimension[_m_size]; }
     bool isTwoLayer() const { return _m_bTwoLayer; }
     void removeSecondLayer();
     void addSecondLayer();
-    TLayer* getPLayer(unsigned int num);
-    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
+    const TGameObject* getPObject(const TMapObjectRef& objRef) const
+    {
+        return getPObject(objRef.getBSecondLayer(), objRef.getObjectID());
+    }
+    TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
     const TLayer* getPLayer(unsigned int num) const;
     const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
     const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
@@ -541,16 +547,7 @@ public:
     void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
     void removeFloatingObject(bool bSecondLayer);
-    bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const
-    {
-        return _isValidPlacement(getLayer(bSecondLayer), obj, x, y);
-    }
-    const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
-    const TGameObject* getPObject(const TMapObjectRef& objRef) const
-    {
-        return getPObject(objRef.getBSecondLayer(), objRef.getObjectID());
-    }
-    TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
+    bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const;
 
     bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
                               TTileExtent* pUpdatedExtent);
@@ -2360,6 +2357,13 @@ unsigned int TGameMap::_TImpl::getNumObelisksOnMap() const
     return _m_pBookkeeping->m_aNumObjsOfCappedType[obeliskOrdinal];
 }
 
+// Defined here, not in the class: GameMap.o queues it after
+// getAvailableHeroesInClass's set copy and before save's instantiations.
+inline bool TGameMap::_TImpl::isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x,
+                                               unsigned int y) const
+{
+    return _isValidPlacement(getLayer(bSecondLayer), obj, x, y);
+}
 
 void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
 {
