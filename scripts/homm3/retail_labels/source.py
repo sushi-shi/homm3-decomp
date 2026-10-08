@@ -1720,7 +1720,7 @@ def _base_authority_scan(unit: str) -> tuple:
     0x90 COMDAT-alignment fill (same rule the comparison normalization
     applies) - the discriminator for overload groups that carry
     unclaimed members retail dropped."""
-    obj = common.HOMM3_DIR / f"build/objdiff/base/{unit}.obj"
+    obj = common.HOMM3_DIR / _image_path(f"build/objdiff/base/{unit}.obj")
     if not obj.is_file():
         return {}, {}
     # Read on every lookup: rebuilds/merges may preserve size and timestamps.
