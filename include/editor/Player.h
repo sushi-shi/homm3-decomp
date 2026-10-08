@@ -3,10 +3,11 @@
 #define HOMM3_EDITOR_PLAYER_H
 
 // TTimedEvent proves TPlayer is an enum (passed by value, compared signed,
-// and SGI's global relops instantiate operator!=<TPlayer>); its enumerator
-// names are not yet recovered.
+// and SGI's global relops instantiate operator!=<TPlayer>); GameMap.cpp's
+// asserts spell its "no player" value ePlayerNone. The players' own
+// enumerator names are not yet recovered.
 enum TPlayer {
-    kNoPlayer = -1
+    ePlayerNone = -1
 };
 
 const int kNumPlayers = 8;
