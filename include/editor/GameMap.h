@@ -165,7 +165,7 @@ inline bool operator!=(const TPlayerInfo& lhs, const TPlayerInfo& rhs)
 class TTeamInfo {
 public:
     static const int s_kMinTeams = 2;
-    static const unsigned int s_kMaxTeams = 7;
+    static const int s_kMaxTeams = 7;
 
     TTeamInfo() : _m_bHasTeams(false), _m_numTeams(s_kMinTeams), _m_aPlayerTeam(0) {}
 
