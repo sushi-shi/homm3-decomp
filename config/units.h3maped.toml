@@ -360,3 +360,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "FlaggablePropsDlg"
 source = "src/editor/FlaggablePropsDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPrototypePropsGeneralPage"
+source = "src/editor/HeroPrototypePropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
