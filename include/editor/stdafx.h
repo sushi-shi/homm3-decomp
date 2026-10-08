@@ -94,7 +94,9 @@ extern "C" guchar* getImgLine(GdkImage* img, int line);
 // adjustments' value_changed handlers pass 42, the main window's arrow and
 // page keys 0x30-0x37; the palette handles the vertical ones (its jump
 // table spans 42-55 and skips 44, 45 and 48-51). MFC's SB_ names; Loki's
-// spelling and the order within each pair are not proven.
+// spelling is not proven. The map edit window fixes the order within each
+// pair: its arrow handlers scroll left with 0x31 and right with 0x30, and
+// 0x32/0x33 page right/left.
 enum {
     SB_THUMBTRACK = 42,
     SB_THUMBPOSITION,
@@ -102,10 +104,10 @@ enum {
     SB_RIGHT,
     SB_TOP,
     SB_BOTTOM,
-    SB_LINELEFT,
     SB_LINERIGHT,
-    SB_PAGELEFT,
+    SB_LINELEFT,
     SB_PAGERIGHT,
+    SB_PAGELEFT,
     SB_LINEUP,
     SB_LINEDOWN,
     SB_PAGEUP,
@@ -117,6 +119,10 @@ extern GdkColor _m_white;
 extern GdkColor _m_black;
 extern GdkColor _m_red;
 
+// A point whose coordinates are long, as MFC's POINT has them: the map
+// edit window's clamp<int> calls bind them in place (a long lvalue binds a
+// const int& directly), where an int member is reached through its
+// object's address.
 class CPoint {
 public:
     CPoint() : x(0), y(0) {}
@@ -142,8 +148,8 @@ public:
         y += point.y;
     }
 
-    int x;
-    int y;
+    long x;
+    long y;
 };
 
 class CSize {
