@@ -367,19 +367,36 @@ unit and runs binutils 2.9.1.0.25's `ld` directly, with what the image proves:
 | Fact | Evidence |
 | :--- | :------- |
 | link order | `.comment` (one entry per linked object) runs 2 egcs, 122 GCC 2.95.2, 155 egcs, 23 GCC 2.95.2, 1 egcs, 1 GCC 2.95.2, 1 egcs: crt1.o and crti.o (glibc 2.1.3, egcs 1.1.2), crtbegin.o, the 103 project objects, libglade and libxml (GCC 2.95.2 C, no `.eh_frame`), GTK+, GDK, GModule, GLib and zlib (egcs), libstdc++ and libgcc, libc_nonshared, crtend.o, crtn.o. `.text` agrees: `glade_init` follows the last project object at 0x08202730, then libxml, `gtk_accel_group_new` (0x0823ead0), GDK, GModule/GLib, zlib (0x083206b0), libstdc++ (0x083278e0). All 2,481 exported C-library functions of the image are linked, in its order. |
-| shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order. Everything else is static. libm is first named by g++'s own `-lstdc++ -lm` tail, after libstdc++.a: the image exports libstdc++'s `clog` stream unversioned, where an earlier `-lm` makes ld 2.9.1 give it libm's `clog@@GLIBC_2.1` version and a `.gnu.version_d`. |
+| shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order. The link host's are Red Hat 6.0's glibc 2.1.1-6 (every imported libc/libm/libdl `st_size` matches) and X libraries ordered as Red Hat 6.2's libX11/libXi and XFree86 4's libXext (ld records imports in each library's `.dynsym` order). Everything else is static. libm is first named by g++'s own `-lstdc++ -lm` tail, after libstdc++.a: the image exports libstdc++'s `clog` stream unversioned, where an earlier `-lm` makes ld 2.9.1 give it libm's `clog@@GLIBC_2.1` version and a `.gnu.version_d`. |
 | flags | `-export-dynamic` (12,052 defined `.dynsym` entries; libglade connects handlers by name), interpreter `/lib/ld-linux.so.2`, no `.symtab` (`-s`). |
 | ld 2.9.1 | `.gcc_except_table` precedes `.eh_frame`, both after `.data`: ld 2.9.1's default script has neither, and an orphan goes right after `.data`, so the later one lands first. 2.9.5's script names `.eh_frame` first. The assembler is already 2.9.1.0.25. |
 | GCC runtime | crtbegin.o, libgcc and libio/libstdc++ 2.10 come from an i686-pc-linux-gnu bootstrap of 2.95.2 (`-g -O2`, default `-mcpu=pentiumpro`, libgcc `-fPIC` per `config/t-linux`, so its type_info objects go through the 63 `R_386_GLOB_DAT` GOT entries; threads off: no pthread imports). The recipe reproduces crtbegin's `__do_global_dtors_aux`, 12 of 13 linked libgcc members and all 9 libstdc++ members. |
 | libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2`, against Red Hat 6.0's glibc 2.1.1-6 headers (its `<bits/string2.h>` turns every `memset(p, 0, n)` into a `__bzero` call and leaves `memset(p, -1, 12)` a call, as the image's libxml does at all 12 and 5 sites; glibc 2.1.1 final and later inline both): the five libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
 | GLib/GTK+ 1.2.8, zlib 1.0.8 | Red Hat 6.2's egcs 1.1.2 (egcs-1.1.2-30; it emits `.p2align 4,,7` for jump targets, Slackware's `.align 16`) and assembler (binutils-2.9.5.0.22-6: the image's GDK uses the `a0`/`a2` moffs byte moves and its nop fills) at Red Hat's `-O2 -m486 -fno-strength-reduce`, GTK+ with Red Hat's ahiguti i18n patch (the word breaks of GtkEntry, GtkLabel and GtkText call `iswpunct`/`iswcntrl`, which no GTK+ 1.2.x release does), GTK+ `--with-xinput=xfree` (libXi) and NLS on (the image imports `bindtextdomain` and `_nl_msg_cat_cntr`; Slackware 7.1's gettext 0.10.35 is on `PATH` while GTK+ configures). zlib at `-O2 -fno-strength-reduce`: all 14 members exact (`zlibVersion()` "1.0.8"). GLib 18 of 21 members, GModule 1/1, GDK 18 of 20, GTK+ 92 of 98. |
 
-Still different (`.text` layout: libstdc++/libgcc 0x10 longer):
+Still different (the linked file has the image's size, sections, PLT,
+`.dynsym` order and `.comment` runs; with the first three items below
+patched by hand as an experiment, only 202 `.dynsym` bytes differ):
 
-- libgcc's `exception::what()` has no null test before `typeid(*this)`;
-  g++ 2.95.2 (release and Debian's 20000220) tests `this` there
-  (`fixed_type_or_null` falls through from `INDIRECT_REF` to the
-  constructor check).
+- libgcc's `exception::what()` has no null test before `typeid(*this)`
+  (16 bytes of `.text`, which shifts everything after libgcc by 0x10).
+  g++ 2.95.2 (release, Debian's 20000220) and 2.95.3 all test `this`
+  there: `fixed_type_or_null` falls through from `INDIRECT_REF` to the
+  constructor check. The compiler that built the image's libgcc is not
+  known.
+- zlib's `deflate_copyright` is " deflate 1.0.4 Copyright 1995-1996
+  Jean-loup Gailly " in `.data` (non-const, before deflateInit2_'s
+  `my_version`), while deflate.o's code is 1.0.8's and inflate_copyright
+  is 1.0.8's const string: Loki's zlib 1.0.8 carried 1.0.4's copyright
+  line. The source of that zlib is not known.
+- ObjectPaletteWnd.o's `.rodata` is 1 to 32 zero bytes longer than ours
+  (GzBuf's 32-byte aligned `.rodata` starts 0x20 later): a zero-valued
+  file constant after TimedEvent.h's, of unknown name and type.
+- The imported X symbols' `st_size` values: 170 of 194 match Red Hat 6.0's
+  XFree86 3.3.3.1-49 libraries, whose `.dynsym` order does not match; the
+  order matches Red Hat 6.2's libX11/libXi and XFree86 4's libXext (only
+  it references XGetVisualInfo). The image's X libraries are a build
+  between those (a Red Hat 6.0 erratum?) not found yet.
 
 `homm3 loki link-diff` reads the linked file (or a path) and reports the
 total differing bytes over the file; the ELF header and program headers; every
