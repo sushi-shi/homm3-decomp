@@ -19,16 +19,18 @@ void message::setWidgetCommand(int command, int widgetId)
     m_codeY = widgetId;
 }
 
+// Mac expands these bodies in their callers; CodeWarrior expands only
+// bodies declared inline (VC6 output is unchanged).
 // Project-inferred initialization operations. Neither releases owned text nor
 // removes a live widget from its window; they only initialize these fields.
-void widget::initializeLinks()
+inline void widget::initializeLinks()
 {
     m_parentWindow = 0;
     m_prevWidget = 0;
     m_nextWidget = 0;
 }
 
-void widget::initializeHelpText()
+inline void widget::initializeHelpText()
 {
     m_rollOver = 0;
     m_rightClick = 0;
@@ -209,8 +211,13 @@ DC_ADDRESS(0x196f88, 0x40)
 MAC_ADDRESS(0x20aa0c, 0x74)
 int widget::sendMessage(widget::ECommands command, int extra)
 {
+    // Mac 0x20aa0c stores the command envelope in place. The out-of-line
+    // setWidgetCommand stays for overview.cpp: inlining it there changes that
+    // TU's VC6 output (setupDynamicStuff 92.44 -> 91.97, measured 2026-10-08).
     message msg;
-    msg.setWidgetCommand(command, m_id);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = command;
+    msg.m_codeY = m_id;
     msg.m_extra = extra;
     msg.m_window = m_parentWindow;
     return main(msg);
@@ -227,7 +234,7 @@ void widget::dim() const
 
 // Project-inferred per-string replacement steps. Borrowed text is detached
 // without deletion; callers change the ownership flag only after both releases.
-void widget::releaseHelpText(char*& text)
+inline void widget::releaseHelpText(char*& text)
 {
     if (text) {
         if (m_freeText)
@@ -236,7 +243,7 @@ void widget::releaseHelpText(char*& text)
     }
 }
 
-void widget::copyHelpText(char*& destination, const char* source)
+inline void widget::copyHelpText(char*& destination, const char* source)
 {
     if (source) {
         destination = new char[strlen(source) + 1];

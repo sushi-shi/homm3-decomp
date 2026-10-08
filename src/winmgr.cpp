@@ -18,26 +18,6 @@
 #include "window.h"
 #include "wingraph.h"
 
-// Project-inferred clipping for the fixed-size fade/capture surface. Unlike
-// updateScreen, a negative origin also trims the extent. FadeBlit separately
-// adjusts source coordinates and uses the bitmap's dimensions.
-static bool clipScreenEffectRect(int& x, int& y, int& width, int& height)
-{
-    if (x < 0) {
-        width += x;
-        x = 0;
-    }
-    if (y < 0) {
-        height += y;
-        y = 0;
-    }
-    if (x + width > WINDOW_SCREEN_WIDTH)
-        width = WINDOW_SCREEN_WIDTH - x;
-    if (y + height > WINDOW_SCREEN_HEIGHT)
-        height = WINDOW_SCREEN_HEIGHT - y;
-    return width > 0 && height > 0;
-}
-
 // Project-inferred 16.16 blend shared by direct and palette-expanded pixels.
 // Keep signed int channel differences/products, arithmetic shifts and the
 // runtime masks; callers own transparency, frame factors and row traversal.
@@ -57,20 +37,6 @@ static unsigned short blendScreenPixel(unsigned short from, unsigned short to,
         (blue & Bitmap16Bit::blue_mask)
         | (green & Bitmap16Bit::green_mask)
         | (red & Bitmap16Bit::red_mask));
-}
-
-// Project-inferred packed-pixel dimming shared by fade-out and fade-in.
-// Each mask covers two pixels; remasking after the unsigned shift prevents
-// bits crossing component boundaries. Mask snapshots stay in the callers.
-static unsigned int darkenScreenPixelPair(unsigned int pixels,
-                                         unsigned int redMask,
-                                         unsigned int greenMask,
-                                         unsigned int blueMask, int shift)
-{
-    unsigned long blue = (pixels & redMask) >> shift;
-    unsigned long green = (pixels & greenMask) >> shift;
-    unsigned long red = (pixels & blueMask) >> shift;
-    return (red & blueMask) | (green & greenMask) | (blue & redMask);
 }
 
 // Project-inferred message operations shared by modal callbacks and widgets.
@@ -653,6 +619,8 @@ void heroWindowManager::screenShot()
 }
 
 // Original: heroWindowManager::SaveFizzleSource; winmgr.cpp:1085
+// DC winmgr.cpp:1093..1110 and Mac saveFizzleSourceX/fizzleForwardX clip
+// in place: no helper lines, and no materialized result before the test.
 // The ordinary non-X interface shares the saved bitmap with the retained X
 // family. Neither debug nor retail evidence proves a distinct Complete body.
 DC_ADDRESS(0x19b4bc, 0x104)
@@ -660,7 +628,19 @@ void heroWindowManager::saveFizzleSource(int startX, int startY, int width, int 
 {
     if (!g_completeDrawEnabled)
         return;
-    if (!clipScreenEffectRect(startX, startY, width, height))
+    if (startX < 0) {
+        width += startX;
+        startX = 0;
+    }
+    if (startY < 0) {
+        height += startY;
+        startY = 0;
+    }
+    if (startX + width > WINDOW_SCREEN_WIDTH)
+        width = WINDOW_SCREEN_WIDTH - startX;
+    if (startY + height > WINDOW_SCREEN_HEIGHT)
+        height = WINDOW_SCREEN_HEIGHT - startY;
+    if (width <= 0 || height <= 0)
         return;
     if (m_bmpFizzleSource)
         delete m_bmpFizzleSource;
@@ -675,7 +655,20 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
                                           int height)
 {
     if (g_completeDrawEnabled) {
-        if (clipScreenEffectRect(startX, startY, width, height)) {
+        if (startX < 0) {
+            width += startX;
+            startX = 0;
+        }
+        if (startY < 0) {
+            height += startY;
+            startY = 0;
+        }
+        if (startX + width > WINDOW_SCREEN_WIDTH)
+            width = WINDOW_SCREEN_WIDTH - startX;
+        if (startY + height > WINDOW_SCREEN_HEIGHT)
+            height = WINDOW_SCREEN_HEIGHT - startY;
+
+        if (width > 0 && height > 0) {
             delete m_bmpFizzleSource;
             m_bmpFizzleSource = new Bitmap16Bit(width, height);
             m_bmpFizzleSource->Grab(g_windowManager->m_screenBitmap,
@@ -694,7 +687,19 @@ void heroWindowManager::fizzleForward(int startX, int startY, int width,
     const int defaultFadeTime = 10;
     if (!g_completeDrawEnabled)
         return;
-    if (!clipScreenEffectRect(startX, startY, width, height))
+    if (startX < 0) {
+        width += startX;
+        startX = 0;
+    }
+    if (startY < 0) {
+        height += startY;
+        startY = 0;
+    }
+    if (startX + width > WINDOW_SCREEN_WIDTH)
+        width = WINDOW_SCREEN_WIDTH - startX;
+    if (startY + height > WINDOW_SCREEN_HEIGHT)
+        height = WINDOW_SCREEN_HEIGHT - startY;
+    if (width <= 0 || height <= 0)
         return;
     int savedColorCycling = m_colorCyclingOn;
     m_colorCyclingOn = 0;
@@ -769,7 +774,20 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
     // this RGB spelling also aligns all 17 retail references (99.91%).
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
-        if (clipScreenEffectRect(startX, startY, width, height)) {
+        if (startX < 0) {
+            width += startX;
+            startX = 0;
+        }
+        if (startY < 0) {
+            height += startY;
+            startY = 0;
+        }
+        if (startX + width > WINDOW_SCREEN_WIDTH)
+            width = WINDOW_SCREEN_WIDTH - startX;
+        if (startY + height > WINDOW_SCREEN_HEIGHT)
+            height = WINDOW_SCREEN_HEIGHT - startY;
+
+        if (width > 0 && height > 0) {
             int savedColorCycling = m_colorCyclingOn;
             m_colorCyclingOn = 0;
             if (fadeTime == -1)
@@ -884,7 +902,19 @@ void heroWindowManager::flash(int startX, int startY, int width, int height,
     const int defaultFadeTime = 10;
     if (!g_completeDrawEnabled)
         return;
-    if (!clipScreenEffectRect(startX, startY, width, height))
+    if (startX < 0) {
+        width += startX;
+        startX = 0;
+    }
+    if (startY < 0) {
+        height += startY;
+        startY = 0;
+    }
+    if (startX + width > WINDOW_SCREEN_WIDTH)
+        width = WINDOW_SCREEN_WIDTH - startX;
+    if (startY + height > WINDOW_SCREEN_HEIGHT)
+        height = WINDOW_SCREEN_HEIGHT - startY;
+    if (width <= 0 || height <= 0)
         return;
     int savedColorCycling = m_colorCyclingOn;
     m_colorCyclingOn = 0;
@@ -1025,8 +1055,11 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
             unsigned int* pixelDst = dst.m_pixelPairs;
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 const unsigned int r = *pixelSrc;
-                *pixelDst = darkenScreenPixelPair(r, redMask2, greenMask2,
-                                                  blueMask2, shift);
+                unsigned long blue = (r & redMask2) >> shift;
+                unsigned long green = (r & greenMask2) >> shift;
+                unsigned long red = (r & blueMask2) >> shift;
+                *pixelDst = (red & blueMask2) | (green & greenMask2)
+                    | (blue & redMask2);
                 pixelDst++;
                 pixelSrc++;
             }
@@ -1090,9 +1123,13 @@ void heroWindowManager::fadeFromBlack(int speed)
             const unsigned int* pixelSrc = src.m_pixelPairs;
             unsigned int* pixelDst = dst.m_pixelPairs;
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
+                // DC winmgr.cpp:1967..1976 dims the pixel pair in place.
                 unsigned long pair = *pixelSrc;
-                *pixelDst = darkenScreenPixelPair(pair, maskRed, maskGreen,
-                                                  maskBlue, shift);
+                unsigned long blue = (pair & maskRed) >> shift;
+                unsigned long green = (pair & maskGreen) >> shift;
+                unsigned long red = (pair & maskBlue) >> shift;
+                *pixelDst = (red & maskBlue) | (green & maskGreen)
+                    | (blue & maskRed);
                 pixelDst++;
                 pixelSrc++;
             }

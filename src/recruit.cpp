@@ -1053,16 +1053,18 @@ void recruitUnit::updateCost()
     }
 }
 
+// Mac expands these bodies in their callers; CodeWarrior expands only
+// bodies declared inline (VC6 output is unchanged).
 // Project-inferred constructor operations. Retain the original store order,
 // borrowed count pointers and timer write before the native cost calculation.
-void recruitUnit::initializeNonTownSource()
+inline void recruitUnit::initializeNonTownSource()
 {
     m_type = RECRUIT_SOURCE_NONE;
     m_viewOnly = 0;
     m_inTownMainScreen = 0;
 }
 
-void recruitUnit::initializeCreatureChoices(
+inline void recruitUnit::initializeCreatureChoices(
     TCreatureType monType1, short* numMon1,
     TCreatureType monType2, short* numMon2,
     TCreatureType monType3, short* numMon3,
@@ -1081,7 +1083,7 @@ void recruitUnit::initializeCreatureChoices(
     m_available[3] = numMon4;
 }
 
-void recruitUnit::prepareInitialCost()
+inline void recruitUnit::prepareInitialCost()
 {
     g_timers[0] = GameTime::get() + 100;
     updateCost();

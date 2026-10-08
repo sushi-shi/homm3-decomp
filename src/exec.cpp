@@ -226,7 +226,7 @@ void executive::callManager(baseManager* newManager)
 
 VA(0x004b0e40, 0xF5)
 DC_ADDRESS(0x09e9b0, 0x130)
-MAC_ADDRESS(0x0c4220, 0x198)
+MAC_ADDRESS(0x0c4220, 0x198)  // MAC_ABSTRACTION_FROM(tokens1:43b23a831334,35.8974): canonical baseManager::getStatus replaces the direct status read; CW moves the message copy and grows the frame (masked 59 -> 58 of 102).
 void executive::mainLoop()
 {
     message msg;

@@ -1162,9 +1162,11 @@ bool initializeTurnDurationText()
     return 1;
 }
 
+// Mac expands this body in its callers; CodeWarrior expands only bodies
+// declared inline (VC6 output is unchanged).
 // Project-inferred start of a player-choice cycle, also used for its initial
 // inactive state. Keep m_unused reset alongside the saved assignment.
-void CNetPlayerHandler::beginPlayerCycle(int pos)
+inline void CNetPlayerHandler::beginPlayerCycle(int pos)
 {
     m_playerPos = pos;
     m_unused = -1;
@@ -1194,7 +1196,7 @@ CNetPlayerHandler::CNetPlayerHandler()
 
 VA(0x00577ae0, 0xd0)
 DC_ADDRESS(0x1304a8, 0x15c)
-MAC_ADDRESS(0x16ee14, 0x120)
+MAC_ADDRESS(0x16ee14, 0x120)  // MAC_ABSTRACTION_FROM(tokens1:1544db73c123,59.5395): canonical player-position accessors, resetTownAndHero and beginPlayerCycle replace the direct stores; the instruction stream is unchanged, but the inline boundary grows the CW frame by 16 bytes.
 // Native SetNextPlayer public: QAA_NH@Z (DC file 0x5edf0f).
 bool CNetPlayerHandler::setNextPlayer(int pos)
 {

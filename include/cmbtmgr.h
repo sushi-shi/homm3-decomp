@@ -1449,11 +1449,6 @@ public:
 
 private:
     bool automateCatapult();  // 0x473c00
-    // Project-inferred action preparation retains both target hexes until
-    // the UI picker or a complete order supplies them.
-    void prepareAction(int action, int extra);
-    // Targeted command tuple; secondary spell target survives.
-    void setTargetAction(int action, int extra, int targetHex);
     unsigned char attemptShooterDefense(
         const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);  // 0x420760

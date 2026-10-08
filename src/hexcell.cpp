@@ -6,6 +6,26 @@
 #include "cmbtmgr.h"
 #include "terrain.h"
 
+// Mac 0x1081cc expands these in the constructor; CodeWarrior expands only
+// inline bodies defined before the call (VC6 output is unchanged).
+inline void hexcell::clearArmy()
+{
+    m_armySide = -1;
+    m_armySlot = -1;
+}
+
+inline void hexcell::resetArmy()
+{
+    clearArmy();
+    m_partOfDouble = -1;
+}
+
+inline void hexcell::resetObstacle()
+{
+    m_obstacleIndex = -1;
+    m_attributes = 0;
+}
+
 VA(0x004e7150, 0x20)
 DC_ADDRESS(0x0d60fc, 0x3a)
 MAC_ADDRESS(0x1081cc, 0x2c)
@@ -38,22 +58,4 @@ army* hexcell::getDeadArmy(int i) const
     if (m_deadArmySide[i] < 0)
         return 0;
     return &g_combatManager->m_armies[m_deadArmySide[i]][m_deadArmySlot[i]];
-}
-
-void hexcell::clearArmy()
-{
-    m_armySide = -1;
-    m_armySlot = -1;
-}
-
-void hexcell::resetArmy()
-{
-    clearArmy();
-    m_partOfDouble = -1;
-}
-
-void hexcell::resetObstacle()
-{
-    m_obstacleIndex = -1;
-    m_attributes = 0;
 }

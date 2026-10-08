@@ -1075,7 +1075,9 @@ int TCampaignStartCrossoverOption::getCount() const
 // This option-owned accessor's name and private boundary are inferred.
 // All three callers are in this TU, supporting an ordinary source body;
 // keep the existing virtual getCrossoverPoolIndex as the public option interface.
-int TCampaignStartCrossoverOption::getCrossoverSlot(
+// Mac expands this body in its callers; CodeWarrior expands only bodies
+// declared inline (VC6 output is unchanged).
+inline int TCampaignStartCrossoverOption::getCrossoverSlot(
     const SCampaign& campaign, int which) const
 {
     return campaign.m_mapScores[m_choices[which].m_scenario].m_index;
@@ -2475,7 +2477,7 @@ bool TCampaignBrief::ScenarioStruct::prerequisitesMet() const
 // already completed; otherwise every prerequisite scenario must be
 // completed in the running campaign's score table.
 VA(0x00488f00, 0xAC)
-MAC_ADDRESS(0x09761c, 0xa8)
+MAC_ADDRESS(0x09761c, 0xa8)  // MAC_ABSTRACTION_FROM(tokens1:46236d797707,54.0698): canonical SCampaign::getScenarioInfo replaces the direct m_mapScores write; same loads and stores, but CW swaps the loop's induction registers.
 void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
     unsigned char* available) const
 {

@@ -422,7 +422,7 @@ TCombatResultsWindow::~TCombatResultsWindow()
 
 VA(0x00471af0, 0x54)
 DC_ADDRESS(0x069200, 0x44)
-MAC_ADDRESS(0x07fb20, 0x98)
+MAC_ADDRESS(0x07fb20, 0x98)  // MAC_ABSTRACTION_FROM(tokens1:331cdd680fdd,100.0000): DC-proven bool update and the full-screen updateScreen facade; same instructions, but the canonical call grows the CW frame by 16 bytes.
 int TCombatResultsWindow::open(int newPriority, bool update)
 {
     int result = heroWindow::open(newPriority, 0);

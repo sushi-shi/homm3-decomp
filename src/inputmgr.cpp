@@ -15,7 +15,9 @@
 #include "textntry.h"
 #include "winmgr.h"
 
-void message::setNoInput()
+// Mac expands these bodies in their callers; CodeWarrior expands only
+// bodies declared inline (VC6 output is unchanged).
+inline void message::setNoInput()
 {
     m_id = 0;
     m_codeY = 0;
@@ -25,7 +27,7 @@ void message::setNoInput()
 
 // Project-inferred queue commit shared by native and forced input. The event
 // is complete before this advances the tail; overflow discards the oldest slot.
-void inputManager::commitBufferedEvent()
+inline void inputManager::commitBufferedEvent()
 {
     m_tail++;
     m_tail %= 64;
@@ -36,7 +38,7 @@ void inputManager::commitBufferedEvent()
 }
 
 // Reset indices only: opening owns the buffer wipe and flushing owns the pump.
-void inputManager::resetQueueIndices()
+inline void inputManager::resetQueueIndices()
 {
     m_tail = 0;
     m_head = 0;
@@ -222,7 +224,7 @@ void inputManager::flush()
 
 // Project-inferred common read. Callers construct their own return message
 // before sound polling; peeking retains its original head normalization.
-void inputManager::readBufferedEvent(message& msg, bool consume)
+inline void inputManager::readBufferedEvent(message& msg, bool consume)
 {
     pollSound();
     if (m_status == STATUS_ACTIVE && m_head != m_tail) {
