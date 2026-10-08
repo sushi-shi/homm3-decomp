@@ -92,6 +92,18 @@ def derive(log=print):
     classes = {c: r for r, _n, c in vt if c and not c.startswith("??_7")}
     runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log,
                                imports=imports, vtables=classes)
+    # reviewed names for identical library members the bytes cannot tell apart
+    from homm3.core.tsv import read as read_tsv
+    named = {r for r, _n, _l, _m in runtime}
+    reviewed = paths.retail_dir() / "runtime-contributions.tsv"
+    if reviewed.is_file():
+        starts = {r for r, _s, _d in rows}
+        for row in read_tsv(reviewed)[2]:
+            rva = int(row["rva"], 16)
+            if row["kind"] == "code" and rva in starts and rva not in named:
+                runtime.append((rva, row["symbol"], row["library"].rsplit(".", 1)[0],
+                                row["member"]))
+        runtime.sort()
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
         thunks += eh.cleanup_rows(census, {r for r, _k in thunks}, atexit)

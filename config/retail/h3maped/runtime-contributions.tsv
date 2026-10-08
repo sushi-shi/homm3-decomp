@@ -1,2 +1,7 @@
-# REVIEWED rows for the h3maped image; none admitted yet.
+# REVIEWED rows for the h3maped image. A code row names a runtime function
+# the census cannot tell apart by bytes (identical library members); the
+# census adds it to runtime-map.tsv (homm3.census.__main__).
 rva	size	kind	library	member	section	symbol	evidence
+0xe6380	821	code	LIBCMT.LIB	memcpy.obj	1	_memcpy	memcpy.obj and memmove.obj assemble to the same 821 bytes and both are linked; placed callers of _memcpy reach this copy (TGzInflateBuf::underflow 0x449ab6, InitializeArtifactTraitsTable 0x4036a8)
+0xe66c0	821	code	LIBCMT.LIB	memmove.obj	1	_memmove	the other of the two identical copies; placed callers of _memmove reach it (basic_string::replace 0x49125b)
+0xe6c60	16	code	LIBCMT.LIB	strcat.obj	1	_strcpy	strcat.obj's _strcpy and mbscat.obj's __mbscpy are the same 16 bytes; the image holds one copy, so one member is linked, and placed callers of _strcpy reach it (InitializeHeroTraits 0x44cd9f, InitializePlayerTraitsTable 0x494324)

@@ -294,6 +294,8 @@ rva	name	library	member
 0xe6297	??1exception@@UAE@XZ	LIBCMT	stdexcpt.obj
 0xe62c0	_strlen	LIBCMT	strlen.obj
 0xe633b	__CxxThrowException@8	LIBCMT	throw.obj
+0xe6380	_memcpy	LIBCMT	memcpy.obj
+0xe66c0	_memmove	LIBCMT	memmove.obj
 0xe69f5	__onexit	LIBCMT	onexit.obj
 0xe6a73	_atexit	LIBCMT	onexit.obj
 0xe6a85	___onexitinit	LIBCMT	onexit.obj
@@ -303,6 +305,7 @@ rva	name	library	member
 0xe6b7c	_atoi	LIBCMT	atox.obj
 0xe6b87	_isspace	LIBCMT	_ctype.obj
 0xe6bb0	_memcmp	LIBCMT	memcmp.obj
+0xe6c60	_strcpy	LIBCMT	strcat.obj
 0xe6d50	??0__non_rtti_object@@QAE@PBD@Z	LIBCMT	rtti.obj
 0xe6d72	??0__non_rtti_object@@QAE@ABV0@@Z	LIBCMT	rtti.obj
 0xe6d8a	??0bad_typeid@@QAE@ABV0@@Z	LIBCMT	rtti.obj
