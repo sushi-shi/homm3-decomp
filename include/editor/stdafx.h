@@ -78,6 +78,12 @@ typedef uword TColor;
 // UpdateData(bool) take bool.
 typedef bool BOOL;
 
+// The rest of the Windows names the editor's source spells: the timer id
+// type of TMapEditWnd::SetTimer and the dialogs' DoModal result for OK
+// (the sheets store 1 for OK).
+typedef unsigned int UINT;
+#define IDOK 1
+
 // cppbridge.cpp: the modal message box behind CWnd::MessageBox, and the
 // glade widget lookup ("struct GtkWidget * {anonymous}::_widget(char *)",
 // exported unmangled).
