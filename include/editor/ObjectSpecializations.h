@@ -298,4 +298,9 @@ private:
     unsigned int _m_radius;
 };
 
+// The creature bank and monolith type tables, filled at start-up by
+// cppbridge.cpp's init_objects (neither returns a value).
+void InitializeCreatureBankTypeTraitsTable();
+void InitializeMonolithTypeTraitsTables();
+
 #endif  /* HOMM3_EDITOR_OBJECTSPECIALIZATIONS_H */
