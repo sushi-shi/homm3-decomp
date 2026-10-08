@@ -114,11 +114,6 @@ DATA(0x006440f0) extern const VictorTiffTagDefault g_victorTiffTagDefaults[3] = 
     { 0x13d, 3, 1, 1, 0 },
     { 0x140, 3, 0, 0, 0 }
 };
-// Retail masks preserve bits preceding/following an inclusive bit range.
-DATA(0x00644120) const unsigned char g_victorLeadingBits[8] =
-    { 0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe };
-DATA(0x00644128) const unsigned char g_victorTrailingBits[8] =
-    { 0x7f, 0x3f, 0x1f, 0x0f, 7, 3, 1, 0 };
 // Three RGB bits (red = 1, green = 2, blue = 4) -> standard VGA color index.
 DATA(0x00644130) extern const unsigned char g_victorRgbToVgaIndex[8] = {
     0, 12, 10, 14, 9, 13, 11, 15
@@ -388,13 +383,7 @@ void __stdcall freeimage(imgdes* image)
 // Retail loadpcx calls this after filling an indexed palette. The optional
 // DIB receives the same RGBQUAD rows through the recovered callback ABI.
 // The DC stubs contain no implementation of this Windows-only operation.
-// Residual (77.1404%): initializing failure status before the success
-// branch restores shared ReleaseDC cleanup, but VC6 retains status in EBX
-// where retail uses a stack slot. Four JSON status-scope probes favor this
-// form; the original failure assignment in the else arm scores 70.3860%.
-// The inlined palette-initializer caller remains unchanged at 88.8478%.
-// Eight resource-declaration/success-status lifetimes and six status-type /
-// nested-guard controls do not improve the retained 77.1404% body.
+// Only a failed memory DC sets the status, which lives in a stack slot.
 VA(0x00603810, 0x9a)  // anchor-caller loadpcx + GDI selection/cleanup + imgdes layout
 int __stdcall victorUploadPalette(imgdes* image)
 {
@@ -403,13 +392,13 @@ int __stdcall victorUploadPalette(imgdes* image)
         HWND desktop = GetDesktopWindow();
         HDC desktopDc = GetDC(desktop);
         HDC memoryDc = CreateCompatibleDC(desktopDc);
-        status = -14;
         if (memoryDc) {
-            status = 0;
             HGDIOBJ previous = SelectObject(memoryDc, image->m_bitmap);
             g_victorSetDibColorTable(memoryDc, 0, image->m_colors, image->m_palette);
             SelectObject(memoryDc, previous);
             DeleteDC(memoryDc);
+        } else {
+            status = -14;
         }
         ReleaseDC(desktop, desktopDc);
     }
@@ -449,8 +438,6 @@ int __stdcall victorValidateImage(imgdes* image)
             status = victorUnsupportedBitDepth;
         if (header->biCompression)
             return -12;
-        else
-            return status;
     }
     return status;
 }
@@ -467,16 +454,8 @@ int __stdcall victorValidateBitmap(imgdes* image)
 // Both the allocation worker and loadpcx use this grayscale initialization.
 // Retail writes red, green, blue, reserved in that order and expands the
 // palette-upload helper, discarding its status but preserving GDI cleanup.
-// /Ob2 restores that ordinary-helper expansion (21.84 -> 69.72%); the
-// reserved-byte post-increment raises it to 88.85%. A 120-state guard/count/
-// loop family then identifies the bitmap-header pointer snapshot below and
-// raises this body to 94.61%. A real per-iteration index snapshot then fixes
-// retail's EBX/EBP entry saves and restore order, reaching 95.16%. Its remaining
-// loop delta is a separate scaled old-index temporary plus EBP/EDI/EDX allocation
-// where retail keeps colors/index/shade in EDI/EDX/ECX. Sixty-six type/update,
-// thirteen zero-order, eleven coalescing, sixty register-hint, and twelve real
-// member-binding combinations do not exceed it. The for-clause increment is
-// worse (69.72%).
+// /Ob2 expands the upload helper. The bitmap-header snapshot keeps retail's
+// depth reload; index and shade advance together in the for clause.
 VA(0x006039c0, 0xfc)  // anchor-callers alloc/loadpcx + RGBQUAD stores / GDI cleanup
 void __stdcall victorInitializeGrayscalePalette(imgdes* image)
 {
@@ -491,14 +470,12 @@ void __stdcall victorInitializeGrayscalePalette(imgdes* image)
             image->m_imgtype = 1;
             step = 256 / colors;
         }
-        int shade = 0;
-        for (int i = 0; i < image->m_colors;) {
-            int colorIndex = i++;
-            image->m_palette[colorIndex].rgbRed = shade;
-            image->m_palette[colorIndex].rgbGreen = shade;
-            image->m_palette[colorIndex].rgbBlue = shade;
-            image->m_palette[colorIndex].rgbReserved = 0;
-            shade += step;
+        int i, shade;
+        for (i = 0, shade = 0; i < image->m_colors; ++i, shade += step) {
+            image->m_palette[i].rgbRed = shade;
+            image->m_palette[i].rgbGreen = shade;
+            image->m_palette[i].rgbBlue = shade;
+            image->m_palette[i].rgbReserved = 0;
         }
         victorUploadPalette(image);
     }
@@ -573,20 +550,8 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
 // are accepted except planar RGB. A missing extended palette marker falls
 // back to the 16 header entries. OpenFile's strictly-positive test and
 // returned color count on open failure are preserved from retail.
-// Residual 92.57%: declaring the real source pointer before memset matches
-// retail's LEA-before-REP schedule and moves colors/file/source into the
-// retail EBX/spill/ESI homes. A 60-state declaration-scope family is byte-flat;
-// status-before-colors forms are worse. Index and countdown loops are identical.
-// Re-hoisting all four POD locals across 73 old-C nested/goto/return forms emits
-// only the retained object or a worse early-return object. Named destination
-// cursors and earlier source-pointer initialization are also measured worse.
-// The nested success scope preserves the shared exit; separate early returns
-// score 74.23%. A separate exit label crosses initialized locals in VC6.
-// Goto audit: read the extended palette first, then conditionally read the
-// header fallback. This removes copyPalette with all 315 compiled bytes and
-// every relocation name/addend unchanged at 92.5688%. Six structured read-
-// scope/result alternatives reproduce the same object, including do/for
-// scopes and bool/byte/int fallback results. Preserve the one conversion tail.
+// An extended palette jumps straight to the conversion; a missing marker
+// sets the header colour count itself, which VC5 shares with the clamp.
 VA(0x006043d0, 0x13c)  // anchor-caller loadpcx + PCX palette marker/seek offsets
 int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
 {
@@ -608,14 +573,15 @@ int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
             if (colors == victorPcxExtendedColors) {
                 _llseek(file, -769, 2);
                 _lread(file, buffer, 769);
+                if (*buffer == victorPcxExtendedPaletteMarker)
+                    goto copy;
+                colors = victorPcxHeaderColors;
+            } else if (colors > victorPcxHeaderColors) {
+                colors = victorPcxHeaderColors;
             }
-            if (colors != victorPcxExtendedColors
-                    || *buffer != victorPcxExtendedPaletteMarker) {
-                if (colors > victorPcxHeaderColors)
-                    colors = victorPcxHeaderColors;
-                _llseek(file, 16, 0);
-                _lread(file, buffer + 1, colors * 3);
-            }
+            _llseek(file, 16, 0);
+            _lread(file, buffer + 1, colors * 3);
+        copy:
             unsigned char* source = buffer + 1;
             memset(palette, 0, colors * sizeof(RGBQUAD));
             for (int index = 0; index < colors; ++index) {
@@ -706,54 +672,4 @@ void __cdecl victorDestroyLock7()
         DeleteCriticalSection(&g_victorLock7.m_section);
         g_victorLock7.m_initialized = 0;
     }
-}
-
-// Retail-only bit-range insertion, called by flipimage. The first and last
-// destination bytes retain bits outside the inclusive range. Signed count
-// division and the two-stage loop follow retail, including zero counts.
-// It advances its destination and source parameters directly, like the
-// paired extractor.
-VA(0x00604720, 0x84)  // anchor-caller flipimage + paired bit-mask tables
-void __stdcall victorInsertBits(unsigned char* destination,
-                                const unsigned char* source, int offset, int count)
-{
-    int shift = offset & 7;
-    unsigned char mask = g_victorTrailingBits[(shift + count - 1) & 7];
-    unsigned char saved = destination[(shift + count - 1) / 8] & mask;
-    *destination &= g_victorLeadingBits[shift];
-    while (count > 0) {
-        unsigned char bits = *source >> shift;
-        count += shift - 8;
-        *destination |= bits;
-        if (count <= 0)
-            break;
-        *++destination = *source << (8 - shift);
-        count -= shift;
-        ++source;
-    }
-    *destination = (*destination & ~mask) | saved;
-}
-
-// Retail-only bit-range extraction, paired with victorInsertBits by
-// flipimage. It left-aligns the source range and clears the trailing bits.
-// Advancing the destination parameter itself (no cursor copy) reproduces
-// retail's separate empty-count tail, which still addresses the parameter.
-VA(0x006047b0, 0x73)  // anchor-caller flipimage + trailing bit-mask table
-void __stdcall victorExtractBits(unsigned char* destination,
-                                 const unsigned char* source, int offset, int count)
-{
-    offset &= 7;
-    unsigned char mask = g_victorTrailingBits[(count - 1) & 7];
-    while (count > 0) {
-        *destination = *source << offset;
-        count += offset - 8;
-        if (count <= 0)
-            break;
-        *destination |= *++source >> (8 - offset);
-        count -= offset;
-        if (count <= 0)
-            break;
-        ++destination;
-    }
-    *destination &= ~mask;
 }

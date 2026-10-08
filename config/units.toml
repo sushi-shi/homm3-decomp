@@ -28,6 +28,9 @@ zlib_o2_ml_gr_c_windows = [
 
 # Victor library objects are VC5 SP3 output (compiler = "msvc5.0" on their
 # units; docs/vc6/victor-library.md). /Ob2 expands the palette helper.
+# VC5's headers leave STRICT undefined, so handles such as HDC are void*
+# in Victor's mangled names; NO_STRICT gives the VC6-header analysis the
+# same types and does not affect VC5.
 victor_o2_ml_gd_windows = [
   "/nologo",
   "/c",
@@ -36,6 +39,7 @@ victor_o2_ml_gd_windows = [
   "/ML",
   "/Gd",
   "/D_WINDOWS",
+  "/DNO_STRICT",
 ]
 
 # The PCX kernels keep the RLE decoder's EBX save only with global
@@ -48,6 +52,7 @@ victor_kernels_o2_ogoff_ml_gd_windows = [
   "/ML",
   "/Gd",
   "/D_WINDOWS",
+  "/DNO_STRICT",
 ]
 
 game_o2_mt_gr_windows = [
@@ -835,6 +840,13 @@ flags = "victor_o2_ml_gd_windows"
 unit = "victor_loadpcx"
 module = "victor"
 source = "src/victor_loadpcx.cpp"
+compiler = "msvc5.0"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_bits"
+module = "victor"
+source = "src/victor_bits.cpp"
 compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 

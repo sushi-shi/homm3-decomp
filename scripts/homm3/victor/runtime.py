@@ -9,7 +9,7 @@ from homm3.rmg.__main__ import run_command, write_json, file_digest
 from homm3.rmg.bindings import absolute_object, prepare_calls, undefined_symbols, DRIVER_BASE
 from homm3.core.images import path as _image_path
 
-UNITS = ('victor', 'victor_flip', 'victor_loadpcx', 'victor_pcx_kernels')
+UNITS = ('victor', 'victor_flip', 'victor_loadpcx', 'victor_pcx_kernels', 'victor_bits')
 
 
 def resolve(paths):

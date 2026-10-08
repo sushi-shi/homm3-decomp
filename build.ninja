@@ -1071,28 +1071,35 @@ build build/objdiff/base/victor.obj: cl src/victor.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     scripts/homm3/core/compile_receipt.py config/units.toml $
     config/project.toml
-  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS /DNO_STRICT
   unit = victor
 build victor: phony build/objdiff/base/victor.obj
 build build/objdiff/base/victor_flip.obj: cl src/victor_flip.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     scripts/homm3/core/compile_receipt.py config/units.toml $
     config/project.toml
-  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS /DNO_STRICT
   unit = victor_flip
 build victor_flip: phony build/objdiff/base/victor_flip.obj
 build build/objdiff/base/victor_loadpcx.obj: cl src/victor_loadpcx.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     scripts/homm3/core/compile_receipt.py config/units.toml $
     config/project.toml
-  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS /DNO_STRICT
   unit = victor_loadpcx
 build victor_loadpcx: phony build/objdiff/base/victor_loadpcx.obj
+build build/objdiff/base/victor_bits.obj: cl src/victor_bits.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS /DNO_STRICT
+  unit = victor_bits
+build victor_bits: phony build/objdiff/base/victor_bits.obj
 build build/objdiff/base/victor_pcx_kernels.obj: cl $
     src/victor_pcx_kernels.cpp | scripts/homm3/core/cc_wrap.py $
     scripts/homm3/core/project.py scripts/homm3/core/compile_receipt.py $
     config/units.toml config/project.toml
-  flags = /nologo /c /O2 /Og- /ML /Gd /D_WINDOWS
+  flags = /nologo /c /O2 /Og- /ML /Gd /D_WINDOWS /DNO_STRICT
   unit = victor_pcx_kernels
 build victor_pcx_kernels: phony build/objdiff/base/victor_pcx_kernels.obj
 build build/objdiff/base/log.obj: cl src/log.cpp | $
@@ -2308,6 +2315,14 @@ build build/mac/obj/victor_loadpcx.o: mwcc src/victor_loadpcx.cpp | $
     scripts/homm3/mac/object.py config/mac/units.toml
   unit = victor_loadpcx
 build mac$:victor_loadpcx: phony build/mac/obj/victor_loadpcx.o
+build build/mac/obj/victor_bits.o: mwcc src/victor_bits.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = victor_bits
+build mac$:victor_bits: phony build/mac/obj/victor_bits.o
 build build/mac/obj/victor_pcx_kernels.o: mwcc src/victor_pcx_kernels.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
@@ -2393,7 +2408,8 @@ build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
     build/mac/obj/campaign.o build/mac/obj/campaignmusic.o $
     build/mac/obj/tiles.o build/mac/obj/victor.o $
     build/mac/obj/victor_flip.o build/mac/obj/victor_loadpcx.o $
-    build/mac/obj/victor_pcx_kernels.o build/mac/obj/log.o
+    build/mac/obj/victor_bits.o build/mac/obj/victor_pcx_kernels.o $
+    build/mac/obj/log.o
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -2482,6 +2498,7 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
     build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
+    build/objdiff/base/victor_bits.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -2571,6 +2588,7 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
     build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
+    build/objdiff/base/victor_bits.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
@@ -2661,6 +2679,7 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
     build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
+    build/objdiff/base/victor_bits.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj | $
     scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
