@@ -141,7 +141,7 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
         insert(value_type(akCappedObjectTypes[i].m_type, TCappedObjectTypeInfo(i, akCappedObjectTypes[i].m_cap)));
 }
 
-TCappedObjectTypeInfoMap kCappedObjectTypeInfoMap;
+const TCappedObjectTypeInfoMap kCappedObjectTypeInfoMap;
 
 inline bool isHero(const TGameObject& obj)
 {
@@ -373,6 +373,16 @@ private:
     void _write(TRawOStream* pOStream, const TLCTimeExpires& lc) const;
 
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
+    void _onGeneralObjectAdded(const TGameObject& obj);
+    void _onRemovingGeneralObject(const TGameObject& obj);
+    void _onHolyGrailAdded(const THolyGrail& holyGrail);
+    void _onRemovingHolyGrail(const THolyGrail& holyGrail);
+    void _onMineAdded(const TMine& mine);
+    void _onRemovingMine(const TMine& mine);
+    void _onGeneratorAdded(const TGenerator& generator);
+    void _onRemovingGenerator(const TGenerator& generator);
+    void _onSignAdded(const TSign& sign);
+    void _onRemovingSign(const TSign& sign);
     bool _isMapPlayable() const;
     TMapLayerObjectID _findObject(bool bSecondLayer, const TTilePoint& loc,
                                   bool (*pfnPredicate)(const TGameObject&)) const;
@@ -448,13 +458,15 @@ private:
 
     static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
 
+    typedef TRefCountingPtr<_TBookkeeping> _TPBookkeeping;
+
     TClient* _m_pClient;
     const TObjectFactory* _m_pObjectFactory;
     TSize _m_size;
     bool _m_bTwoLayer;
     TRefCountingPtr<_TProperties> _m_pProperties;
     vector<TLayer> _m_aLayer;
-    TRefCountingPtr<_TBookkeeping> _m_pBookkeeping;
+    _TPBookkeeping _m_pBookkeeping;
     TArray<TRefCountingPtr<_TPlayerBookkeeping>, kNumPlayers> _m_apPlayerBookkeeping;
 };
 
@@ -1026,6 +1038,94 @@ const set<TMapObjectRef>& TGameMap::_TImpl::getPlayerTownRefs(TPlayer player) co
 #line 3034
     assert(player >= 0 && player < kNumPlayers);
     return _m_apPlayerBookkeeping[player]->m_townRefs;
+}
+
+void TGameMap::_TImpl::_onGeneralObjectAdded(const TGameObject& obj)
+{
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = kCappedObjectTypeInfoMap.find(obj.getType());
+    if (pCappedObjTypeInfo != kCappedObjectTypeInfoMap.end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second.m_ordinal;
+#line 4140
+        assert(typeOrdinal < _m_pBookkeeping->m_aNumObjsOfCappedType.size());
+        assert(_m_pBookkeeping->m_aNumObjsOfCappedType[ typeOrdinal ] < pCappedObjTypeInfo->second.m_cap);
+        _m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal]++;
+    }
+}
+
+void TGameMap::_TImpl::_onRemovingGeneralObject(const TGameObject& obj)
+{
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = kCappedObjectTypeInfoMap.find(obj.getType());
+    if (pCappedObjTypeInfo != kCappedObjectTypeInfoMap.end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second.m_ordinal;
+#line 4155
+        assert(typeOrdinal < _m_pBookkeeping->m_aNumObjsOfCappedType.size());
+        assert(_m_pBookkeeping->m_aNumObjsOfCappedType[ typeOrdinal ] > 0);
+        _m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal]--;
+    }
+}
+
+void TGameMap::_TImpl::_onHolyGrailAdded(const THolyGrail& holyGrail)
+{
+#line 4409
+    assert(!static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_bGrailPlaced);
+    _onGeneralObjectAdded(holyGrail);
+    _m_pBookkeeping->m_bGrailPlaced = true;
+}
+
+void TGameMap::_TImpl::_onRemovingHolyGrail(const THolyGrail& holyGrail)
+{
+#line 4419
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_bGrailPlaced);
+    _m_pBookkeeping->m_bGrailPlaced = false;
+    _onRemovingGeneralObject(holyGrail);
+}
+
+void TGameMap::_TImpl::_onMineAdded(const TMine& mine)
+{
+#line 4429
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numMines < s_kMaxMinesOnMap);
+    _onGeneralObjectAdded(mine);
+    _m_pBookkeeping->m_numMines++;
+}
+
+void TGameMap::_TImpl::_onRemovingMine(const TMine& mine)
+{
+#line 4439
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numMines > 0);
+    _m_pBookkeeping->m_numMines--;
+    _onRemovingGeneralObject(mine);
+}
+
+void TGameMap::_TImpl::_onGeneratorAdded(const TGenerator& generator)
+{
+#line 4449
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numGenerators < s_kMaxGeneratorsOnMap);
+    _onGeneralObjectAdded(generator);
+    _m_pBookkeeping->m_numGenerators++;
+}
+
+void TGameMap::_TImpl::_onRemovingGenerator(const TGenerator& generator)
+{
+#line 4459
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numGenerators > 0);
+    _m_pBookkeeping->m_numGenerators--;
+    _onRemovingGeneralObject(generator);
+}
+
+void TGameMap::_TImpl::_onSignAdded(const TSign& sign)
+{
+#line 4469
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numSigns < s_kMaxSignsOnMap);
+    _onGeneralObjectAdded(sign);
+    _m_pBookkeeping->m_numSigns++;
+}
+
+void TGameMap::_TImpl::_onRemovingSign(const TSign& sign)
+{
+#line 4479
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numSigns > 0);
+    _m_pBookkeeping->m_numSigns--;
+    _onRemovingGeneralObject(sign);
 }
 
 bool TGameMap::_TImpl::_isMapPlayable() const
