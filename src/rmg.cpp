@@ -949,6 +949,9 @@ static void insertRmgWorkItem(
 // Forty-nine local coordinate/API/cost-lifetime forms and eighty-one lookup
 // states plateau at 83.6813%. Reusing queuedCost reaches 82.2308%; scalar
 // lookup overloads add no peak. Keep the existing position-lookup interface.
+// The neighbour bounds read through getWidth()/getHeight(): one more free
+// /Ob2 site after the cost pop_back lowers its body budget from 70 under
+// erase's cost, which retail calls (91.05%; every call matches).
 VA(0x00531460, 0x441)
 MAC_ADDRESS(0x22d9ac, 0x5cc)
 void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone)
@@ -979,8 +982,8 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
             int nextCost = currentCost + 1;
             TRmgMapPosition nextPosition = currentPosition;
             nextPosition += g_rmgDirections[direction];
-            if (nextPosition.m_x < 0 || nextPosition.m_x >= m_mapWidth
-                || nextPosition.m_y < 0 || nextPosition.m_y >= m_mapHeight)
+            if (nextPosition.m_x < 0 || nextPosition.m_x >= getWidth()
+                || nextPosition.m_y < 0 || nextPosition.m_y >= getHeight())
                 continue;
             TRmgMapItem* next = getMapItem(nextPosition);
             if (next->m_zoneState.m_zone < 0 || !next->isPassable())
