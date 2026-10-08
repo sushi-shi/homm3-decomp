@@ -104,6 +104,10 @@ void TGzInflateBuf::_putBackC(signed char)
 
 // Retail's reserved-byte loop counts down from six. Its extra-field loop
 // tests the unsigned OLD count with jbe/ja, recovered by extra-- > 0.
+// Loki h3maped's constructor (0x81d359b..0x81d35bf) accumulates the
+// length in one local: extra = _mustGetC(); extra += _mustGetC() << 8.
+// That spelling restores retail's call/expansion choice for the two FHCRC
+// reads below (93.92% -> 98.92%); a separate low-byte local inverts it.
 // The name/comment loops have peeled _getC sites at ctor+0x422/0x432
 // and +0x47b/0x48b; while(_mustGetC()!=0) reproduces all twelve ordered
 // _getC references and the exact B38..B50 countdown/name-loop blocks.
@@ -173,8 +177,8 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
         for (int skip = 6; skip > 0; --skip)
             _mustGetC();
         if ((flags & 4) != 0) {
-            int low = _mustGetC();
-            unsigned extra = (_mustGetC() << 8) + low;
+            unsigned extra = _mustGetC();
+            extra += _mustGetC() << 8;
             while (extra-- > 0)
                 _mustGetC();
         }
