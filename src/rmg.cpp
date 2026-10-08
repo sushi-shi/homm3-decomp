@@ -2905,6 +2905,10 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
 // still expand the outline destructor. Owned-map/reference receivers and
 // direct-output/returned-reference bindings give 198/199-byte bodies with a
 // 0xc frame and nine blocks; the direct dimension reads remain supported.
+// Probe (2026-10-08): reading the dimensions through getWidth()/getHeight()
+// makes this body exact (two more /Ob2 sites starve the erase chain, so both
+// _Destroy calls stay out of line), but raises its cost to 140 and discard
+// then keeps reset out of line in assembleTreasureGroup (97.38% -> 81.66%).
 VA(0x00535040, 0xC6)
 MAC_ADDRESS(0x232e70, 0xa8) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
 void TRmgTreasureGroup::reset()
@@ -9126,6 +9130,11 @@ void TRmgMapItem::setTerrain(int terrain, int frame,
     m_tileData.m_terrainFlipY = flipY;
 }
 
+// Retail keeps this lookup out of line inside nested reset, discard and
+// outline expansions, so its /Ob2 cost exceeds the free threshold of 40: the
+// direct return costs 39 and always expanded; the named index costs 44.
+// The three-coordinate position overload keeps its direct return (cost 53):
+// any 55..58 spelling loses connectZones' floodShipyardWater expansion.
 VA(0x00546990, 0x1E) // anchor-callee reset expansions; Complete-only helper
 TRmgMapItem* type_random_map::getMapItem(int x, int y)
 {
