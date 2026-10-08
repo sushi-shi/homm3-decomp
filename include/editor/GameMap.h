@@ -366,8 +366,8 @@ public:
     const TLayer* getPLayer(unsigned int num) const;
     TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
     const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
-    const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
-    const TLayer& getLayer(bool bSecondLayer) const { return *getPLayer(bSecondLayer); }
+    const TLayer& getLayer(unsigned int num) const;
+    const TLayer& getLayer(bool bSecondLayer) const;
 
     const string& getName() const;
     void setName(const string& newName);
@@ -435,6 +435,19 @@ private:
 
     TRefCountingPtr<_TImpl> _m_pImpl;
 };
+
+// Defined after the class: MapValidation.o writes getLayer after the
+// in-class getObjectLoc(const TMapObjectRef&), MapView.o the unsigned
+// overload before the bool one.
+inline const TGameMap::TLayer& TGameMap::getLayer(unsigned int num) const
+{
+    return *getPLayer(num);
+}
+
+inline const TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer) const
+{
+    return *getPLayer(bSecondLayer);
+}
 
 // Creates the map's objects (TGUIGameObjectFactory in the editor): for each
 // kind a fresh object and one read from a stream, both placed with
