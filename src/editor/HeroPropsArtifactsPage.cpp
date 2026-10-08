@@ -19,10 +19,10 @@ namespace {
 
 int compareItems(unsigned long lParam1, unsigned long lParam2, unsigned long lParamSort)
 {
-    TArtifact artifact1 = TArtifact(lParam1 & 0xffff);
-    TArtifact artifact2 = TArtifact((unsigned short)lParam2);
-    TArtifactSlot slot1 = TArtifactSlot((lParam1 & 0xffff0000) >> 16);
-    TArtifactSlot slot2 = TArtifactSlot((lParam2 & 0xffff0000) >> 16);
+    TArtifact artifact1 = TArtifact(LOWORD(lParam1));
+    TArtifact artifact2 = TArtifact(LOWORD(lParam2));
+    TArtifactSlot slot1 = TArtifactSlot(HIWORD(lParam1));
+    TArtifactSlot slot2 = TArtifactSlot(HIWORD(lParam2));
     const char* name1 = akArtifactTraits[artifact1].m_name;
     const char* name2 = akArtifactTraits[artifact2].m_name;
     const char* slotName1 = slot1 < kNumArtifactSlots ? akArtifactSlotTraits[slot1].m_name : kBackpackStr;
