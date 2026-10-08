@@ -20,6 +20,7 @@
 #include "editor/Hero.h"
 #include "editor/MapEditorText.h"
 #include "editor/Town.h"
+#include "editor/GameMap.h"
 
 namespace {
 #include <glade/glade.h>

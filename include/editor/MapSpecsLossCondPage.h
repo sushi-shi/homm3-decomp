@@ -17,9 +17,10 @@
 #include <memory>
 #include <vector>
 
-#include "editor/GameMap.h"
 #include "editor/MapObjectRef.h"
 #include "editor/VictoryCondition.h"
+
+class TGameMap;
 
 class TMapSpecsLossCondPage : private TLossCondition::TVisitor {
 public:
