@@ -344,3 +344,8 @@ source = "src/editor/MapSpecsGeneralPage.cpp"
 name = "MapSpecsRumorsPage"
 object = 73
 source = "src/editor/MapSpecsRumorsPage.cpp"
+
+[[unit]]
+name = "MapSpecsTimedEventsPage"
+object = 75
+source = "src/editor/MapSpecsTimedEventsPage.cpp"
