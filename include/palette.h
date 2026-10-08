@@ -162,7 +162,7 @@ extern TPalette24* g_playerPalette24;
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z
 // (retail body 0x55b3e0 takes just the name; called by button::Main).
 namespace ResourceManager {
-TPalette16* getPalette(const char* name);
+TPalette16* GetPalette(const char* name);
 }
 
 #endif  /* HOMM3_PALETTE_H */

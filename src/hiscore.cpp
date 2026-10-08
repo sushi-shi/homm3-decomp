@@ -644,9 +644,9 @@ THighScoreWindow::THighScoreWindow()
             memError();
     }
 
-    m_hiScoreBack[0] = ResourceManager::getBitmap816(
+    m_hiScoreBack[0] = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x0067f504, highScoreBackground0, "hiscore2.pcx"));
-    m_hiScoreBack[1] = ResourceManager::getBitmap816(
+    m_hiScoreBack[1] = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x0067f4f8, highScoreBackground1, "hiscore.pcx"));
 
     for (i = 0; i < 11; ++i) {
@@ -675,8 +675,8 @@ DC_ADDRESS(0x0d8424, 0x76)
 MAC_ADDRESS(0x10b74c, 0xd4)
 THighScoreWindow::~THighScoreWindow()
 {
-    ResourceManager::dispose(m_hiScoreBack[1]);
-    ResourceManager::dispose(m_hiScoreBack[0]);
+    ResourceManager::Dispose(m_hiScoreBack[1]);
+    ResourceManager::Dispose(m_hiScoreBack[0]);
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;

@@ -28,7 +28,7 @@ public:
     ~TResourcePtr()
     {
         if (m_owns && m_ptr)
-            ResourceManager::dispose(m_ptr);
+            ResourceManager::Dispose(m_ptr);
     }
 
     DC_ADDRESS(0x05b2b8, 0x4)

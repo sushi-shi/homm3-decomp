@@ -621,7 +621,7 @@ unsigned char initializeCampaignMapTraitsTable()
     static TAutoArrayPtr<char> campaignNames;
 
     TResourcePtr<TTextResource> textResource(
-        ResourceManager::getText(
+        ResourceManager::GetText(
             DATA_COMPGEN(0x0066b7bc, campaignTextName, "camptext.txt")));
     if (!textResource.get())
         return 0;

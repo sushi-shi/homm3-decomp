@@ -517,7 +517,7 @@ MAC_ADDRESS(0x065518, 0x1b5c)  // anchor-caller/callee/string/vtable
 TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     : heroWindow(0, 0, 800, 600, 0)
 {
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
     unsigned char bitMask[8];
     int numPreReqs;
     int mx;
@@ -1181,7 +1181,7 @@ static int campaignBriefHandler(message& msg)
         int difficulty = g_game->m_setup.m_difficulty;
 
         g_game->m_campaign.m_currentMap = static_cast<signed char>(selected);
-        ResourceManager::delSprFromCache();
+        ResourceManager::del_Spr_from_Cache();
         if (g_game->m_campaign.m_currentCampaign != GAME_CAMPAIGN_2
             || selected != GAME_SCENARIO_2)
             g_game->m_campaign.playScenarioPrologue(brief->m_campaign);

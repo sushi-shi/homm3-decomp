@@ -122,14 +122,14 @@ DC_ADDRESS(0x14e2c8, 0xd4)
 MAC_ADDRESS(0x18e7b8, 0x13c)
 unsigned char initializeSpellTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0068830c, spellTraitsSpreadsheetName,
                      "sptraits.txt"));
     if (!resource)
         return 0;
 
     if (resource->GetNumberOfRows() < 92) {
-        ResourceManager::dispose(resource);
+        ResourceManager::Dispose(resource);
         return 0;
     }
 
@@ -154,7 +154,7 @@ unsigned char initializeSpellTraitsTable()
         ++row;
     }
 
-    ResourceManager::dispose(resource);
+    ResourceManager::Dispose(resource);
     return 1;
 }
 

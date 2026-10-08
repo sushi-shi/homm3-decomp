@@ -2373,15 +2373,15 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     if (!fileBuf->is_open()) {
         delete fileBuf;
         LODFile* resource =
-            ResourceManager::pointToBitmapResource(m_fileName.c_str());
+            ResourceManager::PointToBitmapResource(m_fileName.c_str());
         if (!resource) {
             m_fileError = CAMPAIGN_FILE_OPEN_FAILED;
             return false;
         }
         int resourceSize =
-            ResourceManager::getBitmapResourceSize(m_fileName.c_str());
+            ResourceManager::GetBitmapResourceSize(m_fileName.c_str());
         m_data = new unsigned char[resourceSize];
-        ResourceManager::readFromBitmapResource(resource, m_data, resourceSize);
+        ResourceManager::ReadFromBitmapResource(resource, m_data, resourceSize);
         m_stream = new std::strstreambuf(m_data, resourceSize);
     } else {
         m_stream = fileBuf;
@@ -2569,7 +2569,7 @@ void TCampaignBrief::MapTextStruct::play()
     if (!speechName)
         speech = 0;
     else
-        speech = ResourceManager::getSample(speechName);
+        speech = ResourceManager::GetSample(speechName);
 
     g_inputManager->flush();
     g_windowManager->updateScreen(0, 0, 800, 600);

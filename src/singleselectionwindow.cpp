@@ -1125,7 +1125,7 @@ DC_ADDRESS(0x12ff40, 0x62)
 MAC_ADDRESS(0x16e7b4, 0x94)
 bool initializeVCDescriptions()
 {
-    g_victoryConditionText = ResourceManager::getText(
+    g_victoryConditionText = ResourceManager::GetText(
         DATA_COMPGEN(0x006834ac, victoryConditionTextName, "vcdesc.txt"));
     if (!g_victoryConditionText)
         return 0;
@@ -1139,7 +1139,7 @@ DC_ADDRESS(0x12ffa4, 0x62)
 MAC_ADDRESS(0x16e848, 0x94)
 bool initializeLCDescriptions()
 {
-    g_lossConditionText = ResourceManager::getText(
+    g_lossConditionText = ResourceManager::GetText(
         DATA_COMPGEN(0x006834b8, lossConditionTextName, "lcdesc.txt"));
     if (!g_lossConditionText)
         return 0;
@@ -1153,7 +1153,7 @@ DC_ADDRESS(0x130008, 0x62)
 MAC_ADDRESS(0x16e8dc, 0x94)
 bool initializeTurnDurationText()
 {
-    g_turnDurationTextResource = ResourceManager::getText(
+    g_turnDurationTextResource = ResourceManager::GetText(
         DATA_COMPGEN(0x006834c4, turnDurationTextName, "turndur.txt"));
     if (!g_turnDurationTextResource)
         return 0;
@@ -2463,27 +2463,27 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             memError();
     }
 
-    m_versionIcon = ResourceManager::getSprite("ScSelC.def");
-    m_victoryIcon = ResourceManager::getSprite("scnrvict.def");
-    m_lossIcon = ResourceManager::getSprite("scnrloss.def");
-    m_townPix = ResourceManager::getSprite("itpa.def");
-    m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
+    m_versionIcon = ResourceManager::GetSprite("ScSelC.def");
+    m_victoryIcon = ResourceManager::GetSprite("scnrvict.def");
+    m_lossIcon = ResourceManager::GetSprite("scnrloss.def");
+    m_townPix = ResourceManager::GetSprite("itpa.def");
+    m_heroSpecificAbility = ResourceManager::GetSprite("un44.def");
     for (i = 0; i < 163; ++i)
-        m_heroPix[i] = ResourceManager::getBitmap816(
+        m_heroPix[i] = ResourceManager::GetBitmap816(
             g_heroTraits[i].m_smallPortraitName);
-    m_heroPix[163] = ResourceManager::getBitmap816("hpsrand.pcx");
-    m_resource = ResourceManager::getSprite("ScnrStar.def");
+    m_heroPix[163] = ResourceManager::GetBitmap816("hpsrand.pcx");
+    m_resource = ResourceManager::GetSprite("ScnrStar.def");
 
     const char* colorChars = "rbygopts";
     for (i = 0; i < 8; ++i) {
         sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
-        m_panels[i] = ResourceManager::getBitmap816(tempName);
+        m_panels[i] = ResourceManager::GetBitmap816(tempName);
         sprintf(tempName, "adopflg%c.pcx", colorChars[i]);
-        m_flags[i] = ResourceManager::getBitmap816(tempName);
+        m_flags[i] = ResourceManager::GetBitmap816(tempName);
     }
-    m_randomTownBmp = ResourceManager::getBitmap816("hpsrand0.pcx");
-    m_randomHeroBmp = ResourceManager::getBitmap816("hpsrand1.pcx");
-    m_noHeroBmp = ResourceManager::getBitmap816("hpsrand6.pcx");
+    m_randomTownBmp = ResourceManager::GetBitmap816("hpsrand0.pcx");
+    m_randomHeroBmp = ResourceManager::GetBitmap816("hpsrand1.pcx");
+    m_noHeroBmp = ResourceManager::GetBitmap816("hpsrand6.pcx");
     m_currentIndex = 0;
     m_currentMap = 0;
 
@@ -8752,24 +8752,24 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
     delete m_flagBack;
 
     for (i = 0; i < 8; ++i) {
-        ResourceManager::dispose(m_panels[i]);
-        ResourceManager::dispose(m_flags[i]);
+        ResourceManager::Dispose(m_panels[i]);
+        ResourceManager::Dispose(m_flags[i]);
     }
 
-    ResourceManager::dispose(m_resource);
+    ResourceManager::Dispose(m_resource);
     for (i = 0; i < 164; ++i) {
         if (m_heroPix[i])
-            ResourceManager::dispose(m_heroPix[i]);
+            ResourceManager::Dispose(m_heroPix[i]);
     }
 
-    ResourceManager::dispose(m_townPix);
-    ResourceManager::dispose(m_lossIcon);
-    ResourceManager::dispose(m_victoryIcon);
-    ResourceManager::dispose(m_versionIcon);
-    ResourceManager::dispose(m_randomTownBmp);
-    ResourceManager::dispose(m_randomHeroBmp);
-    ResourceManager::dispose(m_noHeroBmp);
-    ResourceManager::dispose(m_heroSpecificAbility);
+    ResourceManager::Dispose(m_townPix);
+    ResourceManager::Dispose(m_lossIcon);
+    ResourceManager::Dispose(m_victoryIcon);
+    ResourceManager::Dispose(m_versionIcon);
+    ResourceManager::Dispose(m_randomTownBmp);
+    ResourceManager::Dispose(m_randomHeroBmp);
+    ResourceManager::Dispose(m_noHeroBmp);
+    ResourceManager::Dispose(m_heroSpecificAbility);
 
     if (m_newPlayerUpdateMan) {
         delete m_newPlayerUpdateMan;
@@ -8791,7 +8791,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
 
     // Dreamcast line 4069 guards this cache cleanup; the Complete helper is empty.
     if (!m_saveMode)
-        ResourceManager::delSprFromCache();
+        ResourceManager::del_Spr_from_Cache();
 }
 
 VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4

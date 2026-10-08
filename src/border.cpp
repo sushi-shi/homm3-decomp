@@ -247,7 +247,7 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
 {
     initialize(x, y, w, h, id, style);
     if (image)
-        m_image = ResourceManager::getBitmap816(image);
+        m_image = ResourceManager::GetBitmap816(image);
     else
         m_image = 0;
 }
@@ -260,7 +260,7 @@ MAC_ADDRESS(0x05e83c, 0x7c)
 bitmapBorder::~bitmapBorder()
 {
     if (m_image)
-        ResourceManager::dispose(m_image);
+        ResourceManager::Dispose(m_image);
 }
 
 VA(0x004503f0, 0x55)
@@ -290,10 +290,10 @@ MAC_ADDRESS(0x05e9dc, 0x6c)
 void bitmapBorder::setPalette(const char* paletteName)
 {
     if (m_image) {
-        TPalette16* newPalette = ResourceManager::getPalette(paletteName);
+        TPalette16* newPalette = ResourceManager::GetPalette(paletteName);
         if (newPalette) {
             m_image->SetPalette(newPalette->Palette);
-            ResourceManager::dispose(newPalette);
+            ResourceManager::Dispose(newPalette);
         }
     }
 }
@@ -326,9 +326,9 @@ void bitmapBorder::setImage(const char* bitmapName)
     if (m_image != 0) {
         if (strcmp(m_image->get_Name(), bitmapName) == 0)
             return;
-        ResourceManager::dispose(m_image);
+        ResourceManager::Dispose(m_image);
     }
-    m_image = ResourceManager::getBitmap816(bitmapName);
+    m_image = ResourceManager::GetBitmap816(bitmapName);
 }
 
 VA(0x00450520, 0x2D)
@@ -376,7 +376,7 @@ bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
 {
     initialize(x, y, w, h, id, style);
     if (image)
-        m_image = ResourceManager::getBitmap16(image);
+        m_image = ResourceManager::GetBitmap16(image);
     else
         m_image = 0;
 }
@@ -389,7 +389,7 @@ MAC_ADDRESS(0x05ec80, 0x7c)
 bitmapBorder16::~bitmapBorder16()
 {
     if (m_image)
-        ResourceManager::dispose(m_image);
+        ResourceManager::Dispose(m_image);
 }
 
 // Original: bitmapBorder16::zBufferDraw; border.cpp:415
@@ -465,9 +465,9 @@ void bitmapBorder16::setImage(const char* bitmapName)
     if (m_image != 0) {
         if (strcmp(m_image->get_Name(), bitmapName) == 0)
             return;
-        ResourceManager::dispose(m_image);
+        ResourceManager::Dispose(m_image);
     }
-    m_image = ResourceManager::getBitmap16(bitmapName);
+    m_image = ResourceManager::GetBitmap16(bitmapName);
 }
 
 VA(0x00450860, 0xC6)

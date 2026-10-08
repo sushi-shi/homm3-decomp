@@ -508,7 +508,7 @@ MAC_ADDRESS(0x16d654, 0x21c)
 TRandomMapProgress::TRandomMapProgress(int totalSteps)
     : TProgressSink(totalSteps)
 {
-    m_barSprite = ResourceManager::getSprite(
+    m_barSprite = ResourceManager::GetSprite(
         DATA_COMPGEN(0x0067F5AC, progressBarSpriteName, "loadprog.def"));
     m_drawnPosition = 0;
     m_window = new TDialogBox(240, 236, 320, 128, 0x12);
@@ -542,7 +542,7 @@ TRandomMapProgress::~TRandomMapProgress()
     if (m_barSprite)
         // Mac 0x16d8cc..0x16d8e0 expands the sprite-disposal facade;
         // the surrounding null guard belongs to this caller.
-        ResourceManager::dispose(m_barSprite);
+        ResourceManager::Dispose(m_barSprite);
     for (unsigned int i = 0; i < m_widgets.size(); i++)
         delete m_widgets[i];
 }

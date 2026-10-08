@@ -91,10 +91,10 @@ public:
         m_bonusSprite = bonusSprite;
         m_startingHero = startingHero;
         if (m_startingHero)
-            m_heroPortrait = ResourceManager::getBitmap816(
+            m_heroPortrait = ResourceManager::GetBitmap816(
                 g_heroTraits[m_startingHero->m_portrait].m_smallPortraitName);
         else
-            m_heroPortrait = ResourceManager::getBitmap816("hpsrand6.pcx");
+            m_heroPortrait = ResourceManager::GetBitmap816("hpsrand6.pcx");
     }
 
     virtual ~CScenarioPlayerInfoWidget();
@@ -258,17 +258,17 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         581, 529, 166, 40, SCENARIO_INFO_ACCEPT_ID, "scnrback.def",
         0, 1, 0, 1, 2));
 
-    m_victoryIcon = ResourceManager::getSprite("scnrvict.def");
-    m_lossIcon = ResourceManager::getSprite("scnrloss.def");
-    m_townPix = ResourceManager::getSprite("itpa.def");
-    m_bonusSprite = ResourceManager::getSprite("ScnrStar.def");
+    m_victoryIcon = ResourceManager::GetSprite("scnrvict.def");
+    m_lossIcon = ResourceManager::GetSprite("scnrloss.def");
+    m_townPix = ResourceManager::GetSprite("itpa.def");
+    m_bonusSprite = ResourceManager::GetSprite("ScnrStar.def");
 
     const char* colorChars = "rbygopts";
     for (i = 0; i < 8; ++i) {
         sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
-        m_panels[i] = ResourceManager::getBitmap816(tempName);
+        m_panels[i] = ResourceManager::GetBitmap816(tempName);
         sprintf(tempName, "adopflg%c.pcx", colorChars[i]);
-        m_flags[i] = ResourceManager::getBitmap816(tempName);
+        m_flags[i] = ResourceManager::GetBitmap816(tempName);
     }
 
     slider* durationSlider = new slider(
@@ -378,7 +378,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // Retail +0xccd saves the duration slider in [ebp-0x10]; +0x205c
     // reloads that same object for Enable(false), after SetHelpText.
     durationSlider->enable(0);
-    m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
+    m_heroSpecificAbility = ResourceManager::GetSprite("un44.def");
 }
 
 // Retail draws the player name with g_smallFont and every later label with
@@ -501,15 +501,15 @@ DC_ADDRESS(0x12aa70, 0x8e)
 MAC_ADDRESS(0x160400, 0x114)
 CScenarioInfoDlg::~CScenarioInfoDlg()
 {
-    ResourceManager::dispose(m_victoryIcon);
-    ResourceManager::dispose(m_lossIcon);
-    ResourceManager::dispose(m_townPix);
-    ResourceManager::dispose(m_bonusSprite);
-    ResourceManager::dispose(m_heroSpecificAbility);
+    ResourceManager::Dispose(m_victoryIcon);
+    ResourceManager::Dispose(m_lossIcon);
+    ResourceManager::Dispose(m_townPix);
+    ResourceManager::Dispose(m_bonusSprite);
+    ResourceManager::Dispose(m_heroSpecificAbility);
 
     for (int i = 0; i < 8; ++i) {
-        ResourceManager::dispose(m_panels[i]);
-        ResourceManager::dispose(m_flags[i]);
+        ResourceManager::Dispose(m_panels[i]);
+        ResourceManager::Dispose(m_flags[i]);
     }
 }
 

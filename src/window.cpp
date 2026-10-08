@@ -743,7 +743,7 @@ DC_ADDRESS(0x197fd8, 0x158)
 MAC_ADDRESS(0x20c224, 0x200)
 unsigned char initializeWinSetupText()
 {
-    TTextResource* textResource = ResourceManager::getText(
+    TTextResource* textResource = ResourceManager::GetText(
         DATA_COMPGEN(0x0068c838, winSetupTextName, "jktext.txt"));
     if (!textResource)
         return 0;

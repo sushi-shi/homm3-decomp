@@ -195,7 +195,7 @@ MAC_ADDRESS(0x21dd80, 0x1c4)
 unsigned char initializeCampaignMusicTable()
 {
     TResourcePtr<TTextResource> textResource(
-        ResourceManager::getText(
+        ResourceManager::GetText(
             DATA_COMPGEN(0x0066c484, campaignMusicTextName, "CmpMusic.txt")));
     if (!textResource.get())
         return 0;

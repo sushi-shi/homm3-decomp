@@ -182,7 +182,7 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
       m_onMagicPlains(magicTerrain)
 {
     // DC181 names the cache hook; its Complete body is empty.
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 
     if (h.m_id != g_lastSpellbookHeroId) {
         s_lastPage = -1;
@@ -388,7 +388,7 @@ TSpellbookWindow::~TSpellbookWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 VA(0x0059c970, 0x1B)

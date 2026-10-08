@@ -3880,24 +3880,24 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     _strrev(imageName);
 
     unsigned char usedDefaultMask = 0;
-    LODFile* maskFile = ResourceManager::pointToSpriteResource(imageName);
+    LODFile* maskFile = ResourceManager::PointToSpriteResource(imageName);
     if (maskFile == 0) {
         usedDefaultMask = 1;
-        maskFile = ResourceManager::pointToSpriteResource(
+        maskFile = ResourceManager::PointToSpriteResource(
             DATA_COMPGEN(0x0067fb3c, readObjectTypeDefaultMask,
                          "default.msk"));
         if (maskFile == 0)
             return -1;
     }
 
-    ResourceManager::readFromBitmapResource(maskFile, &byteValue,
+    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
                                             sizeof(byteValue));
     tempObjectType.m_width = byteValue;
-    ResourceManager::readFromBitmapResource(maskFile, &byteValue,
+    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
                                             sizeof(byteValue));
     tempObjectType.m_height = byteValue;
 
-    ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
+    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
         tempObjectType.m_drawCells[i] =
             (packed[i / 8] & (1 << (i % 8))) != 0;
@@ -3911,7 +3911,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
             (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
-    ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
+    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
         tempObjectType.m_shadowCells[i] =
             (packed[i / 8] & (1 << (i % 8))) != 0;
@@ -4254,7 +4254,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     m_sprites.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
         m_sprites[x] =
-            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
+            ResourceManager::GetSprite(m_objectTypes[x].m_imageName.c_str());
         if (x == m_objectTypes.size() / 3)
             incProgressBar(1);
         if (x == m_objectTypes.size() / 3 * 2)
@@ -4265,7 +4265,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     // through ResourceManager::Dispose. Mac 0x1274f8..0x12752c retains the
     // nested virtual sprite-disposal call; keep the canonical wrapper here.
     for (x = 0; x < oldSprites.size(); ++x)
-        ResourceManager::dispose(oldSprites[x]);
+        ResourceManager::Dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
@@ -4376,7 +4376,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     m_sprites.resize(m_objectTypes.size());
     for (x = 0; x < m_objectTypes.size(); ++x) {
         m_sprites[x] =
-            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
+            ResourceManager::GetSprite(m_objectTypes[x].m_imageName.c_str());
         if (x == m_objectTypes.size() / 3)
             incProgressBar(1);
         if (x == m_objectTypes.size() / 3 * 2)
@@ -4384,7 +4384,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     }
 
     for (x = 0; x < oldSprites.size(); ++x)
-        ResourceManager::dispose(oldSprites[x]);
+        ResourceManager::Dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
@@ -4811,7 +4811,7 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
         m_objectTypeIndex[objectType][i].m_objectTypeIndex =
             static_cast<unsigned short>(m_objectTypes.size());
         m_objectTypes.push_back(m_objectTypeIndex[objectType][i]);
-        m_sprites.push_back(ResourceManager::getSprite(
+        m_sprites.push_back(ResourceManager::GetSprite(
             m_objectTypeIndex[objectType][i].m_imageName.c_str()));
     }
 

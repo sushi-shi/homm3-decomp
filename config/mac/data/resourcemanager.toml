@@ -15,6 +15,7 @@ evidence = "The archive pathname helper at code 0:0x15221c computes the address 
 [[data]]
 retail_va = 0x0069e5b0
 source = "src/resourcemanager.cpp"
+mac_symbol = "SaturatedGraphicsEasterEgg__15ResourceManager"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c108
@@ -25,6 +26,7 @@ evidence = "The palette-data helper reads the graphics-saturation byte through T
 [[data]]
 retail_va = 0x0069d860
 source = "src/resourcemanager.cpp"
+mac_symbol = "RedBits__15ResourceManager"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c12c
@@ -35,6 +37,7 @@ evidence = "getSprite loads firstMaskBits through TOC 1+0xe7c at 0:0x1544c8 into
 [[data]]
 retail_va = 0x0069d868
 source = "src/resourcemanager.cpp"
+mac_symbol = "RedShift__15ResourceManager"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c120
@@ -45,6 +48,7 @@ evidence = "getSprite loads firstMaskShift through TOC 1+0xe80 at 0:0x1544d0 int
 [[data]]
 retail_va = 0x0069d854
 source = "src/resourcemanager.cpp"
+mac_symbol = "GreenBits__15ResourceManager"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c128
@@ -55,6 +59,7 @@ evidence = "getSprite loads greenMaskBits through TOC 1+0xe74 at 0:0x1544d8 into
 [[data]]
 retail_va = 0x0069d864
 source = "src/resourcemanager.cpp"
+mac_symbol = "GreenShift__15ResourceManager"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c11c
@@ -65,6 +70,7 @@ evidence = "getSprite loads greenMaskShift through TOC 1+0xe78 at 0:0x1544dc int
 [[data]]
 retail_va = 0x0069e5a0
 source = "src/resourcemanager.cpp"
+mac_symbol = "BlueBits__15ResourceManager"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c124
@@ -75,6 +81,7 @@ evidence = "getSprite loads lastMaskBits through TOC 1+0xe6c at 0:0x1544e0 into 
 [[data]]
 retail_va = 0x0069d85c
 source = "src/resourcemanager.cpp"
+mac_symbol = "BlueShift__15ResourceManager"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c118

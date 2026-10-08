@@ -118,7 +118,7 @@ static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
 {
     char pieceName[40];
     sprintf(pieceName, "puz%s%02d.pcx", g_puzzleFilePrefixes[puzzle], piece);
-    return ResourceManager::getBitmap816(pieceName);
+    return ResourceManager::GetBitmap816(pieceName);
 }
 
 VA(0x0052c1e0, 0x388)
