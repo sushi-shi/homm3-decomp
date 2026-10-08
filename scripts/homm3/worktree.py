@@ -295,6 +295,24 @@ def _init_arguments(seed: Path) -> list[str]:
     return arguments + ["--no-smoke"]
 
 
+def _stage_images(seed: Path, tree: Path) -> list[str]:
+    """Stage every other image the seed has staged (`homm3 --image KEY init`,
+    hash-verified), with the seed's SP3 MFC overlay when it has one."""
+    from homm3.core import images
+    lines = []
+    project = Project(seed)
+    mfc = seed / "build/mfc-sp3"
+    for key in images.images(tree)[1:]:
+        staged = project.executable(images.input_key(key)).destination
+        if not staged.is_file():
+            continue
+        extra = ["--mfc-sp3", str(mfc)] if mfc.is_dir() else []
+        rc = _homm3(tree, "--image", key, "init", "--exe", str(staged), *extra)
+        lines.append(f"image {key}: " + ("staged" if rc == 0 else
+                                          f"staging failed; run `homm3 --image {key} init` there"))
+    return lines
+
+
 def _units(tree: Path) -> list[str]:
     from homm3 import manifest
     return [row["unit"] for row in manifest.units(tree / "config/units.toml")]
@@ -388,6 +406,8 @@ def cmd_new(args) -> int:
         raise WorktreeError(f"`homm3 init` failed in the new worktree (log: {init_log}); "
                             "fix the reported input and rerun it there")
     phase(f"initialized executables, CodeWarrior tools and Wine prefix (log: {init_log})")
+    for line in _stage_images(seed, tree):
+        log(line)
     if not state:
         return 0
 

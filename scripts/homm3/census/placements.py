@@ -15,7 +15,10 @@ source (build/<image>/objdiff/base/<unit>.obj, the image's profile):
      unit is placed at that census start even when its own bytes differ;
   3. vtables: a census vtable whose RTTI class an image unit defines as
      `??_7Class@@6B@`, or a vtable address a placed function stores, places
-     every slot symbol of the compiled table at the retail slot's target.
+     every slot symbol of the compiled table at the retail slot's target;
+  4. data: a DIR32 reference of a placed function to data an image unit
+     defines (globals, string-literal COMDATs) places that datum at the
+     retail address less the compiled addend, with the compiled extent.
 
 Steps 2 and 3 repeat to a fixpoint. Functions the image's runtime map names
 (statically linked library code) are never placed. A name that reaches two addresses, or an
@@ -58,9 +61,32 @@ def _functions_of(obj):
         relocs = obj.typed_relocations(number)
         for i, (off, name) in enumerate(members):
             end = members[i + 1][0] if i + 1 < len(members) else len(payload)
-            body = payload[off:end]
             own = {site - off: ref for site, ref in relocs.items() if off <= site < end}
+            # /O2 objects align each function within one .text section; the
+            # NOP/INT3 fill belongs to no function (the census strips it too)
+            floor = off + max((site + 4 for site in own), default=0)
+            while end > max(floor, off + 1) and payload[end - 1] in (0x90, 0xCC):
+                end -= 1
+            body = payload[off:end]
             out.append((name, number, off, body, own))
+    return out
+
+
+def _data_of(obj):
+    """{name: size} of the data an object defines: external symbols and
+    string-literal COMDATs in its non-code sections, each running to the
+    next symbol of its section. Vtables and RTTI records are the census's."""
+    out = {}
+    for sec in obj.section_table:
+        if sec["characteristics"] & 0x20 or sec["name"].startswith((".debug", ".drectve")):
+            continue
+        number = sec["index"]
+        members = sorted((off, name) for off, name, scl in obj.section_members(number)
+                         if scl == 2 and not name.startswith(("$", ".", "??_7", "??_R")))
+        for i, (off, name) in enumerate(members):
+            end = members[i + 1][0] if i + 1 < len(members) else sec["size"]
+            if end > off:
+                out.setdefault(name, end - off)
     return out
 
 
@@ -117,6 +143,7 @@ def derive(log=print):
     compiled = []                         # (unit, name, body, relocs)
     definers = defaultdict(list)          # function name -> units, manifest order
     tables = {}                           # vtable symbol -> slots
+    data_definers = {}                    # data name -> (unit, size)
     for unit in units:
         path = paths.BUILD / "objdiff/base" / f"{unit['unit']}.obj"
         if not path.is_file():
@@ -129,6 +156,8 @@ def derive(log=print):
                 definers[name].append(unit["unit"])
         for name, slots in _vtable_slots(obj).items():
             tables.setdefault(name, slots)
+        for name, size in _data_of(obj).items():
+            data_definers.setdefault(name, (unit["unit"], size))
 
     by_size = defaultdict(list)
     for rva, size in functions.items():
@@ -137,6 +166,21 @@ def derive(log=print):
     names = defaultdict(set)              # name -> {rva}
     evidence = {}                         # (name, rva) -> first evidence
     bodies = {}                           # name -> (body, relocs), first definer
+
+    data_names = defaultdict(set)         # data name -> {rva}
+    data_evidence = {}
+
+    def propose_data(name, rva, why):
+        sec = image.section_of(rva)
+        if VOLATILE.match(name) or sec is None or sec.executable or rva in names_by_function:
+            return 0
+        if rva in data_names[name]:
+            return 0
+        data_names[name].add(rva)
+        data_evidence.setdefault((name, rva), why)
+        return 0          # data never seeds further propagation
+
+    names_by_function = set(functions)
 
     def propose(name, rva, why):
         if VOLATILE.match(name) or rva not in functions:
@@ -193,13 +237,16 @@ def derive(log=print):
                 if kind == REL32:
                     target = (rva + site + 4 + value) & 0xFFFFFFFF
                 elif kind == DIR32:
-                    target = value - base
+                    # the compiled field holds the reference's addend
+                    target = value - base - struct.unpack_from("<i", body, site)[0]
                 else:
                     continue
                 if ref in definers:
                     moved += propose(ref, target, f"referenced by {name} at +0x{site:x}")
                 elif ref in tables:
                     moved += place_table(ref, target, f"vtable {ref} stored by {name}")
+                elif ref in data_definers and kind == DIR32:
+                    propose_data(ref, target, f"referenced by {name} at +0x{site:x}")
         if not moved:
             break
 
@@ -218,9 +265,24 @@ def derive(log=print):
             continue
         rows.append((rva, functions[rva], "func", name, definers[name][0],
                      evidence[(name, rva)]))
+    placed_functions = len(rows)
+    data_by_rva = defaultdict(set)
+    for name, rvas in data_names.items():
+        for rva in rvas:
+            data_by_rva[rva].add(name)
+    data_conflicts = 0
+    for name, rvas in sorted(data_names.items()):
+        if len(rvas) != 1 or len(data_by_rva[next(iter(rvas))]) != 1:
+            data_conflicts += 1
+            continue
+        (rva,) = rvas
+        unit, size = data_definers[name]
+        rows.append((rva, size, "data", name, unit, data_evidence[(name, rva)]))
     rows.sort()
-    log(f"[placements] {len(rows)} functions placed from {len(compiled)} compiled "
-        f"bodies of {len(units)} units; {conflicts} ambiguous names or addresses dropped")
+    log(f"[placements] {placed_functions} functions and {len(rows) - placed_functions} "
+        f"data objects placed from {len(compiled)} compiled bodies of {len(units)} "
+        f"units; {conflicts} function and {data_conflicts} data names or addresses "
+        "ambiguous and dropped")
     return rows
 
 
