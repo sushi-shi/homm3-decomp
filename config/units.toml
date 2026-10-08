@@ -206,7 +206,7 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "font"
-source = "src/font.cpp"
+source = "src/Font.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
@@ -366,12 +366,12 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "bitmap16"
-source = "src/bitmap16.cpp"
+source = "src/Bitmap16.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "bitmap24"
-source = "src/bitmap24.cpp"
+source = "src/Bitmap24.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]

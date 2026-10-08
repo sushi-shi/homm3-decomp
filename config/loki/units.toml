@@ -35,14 +35,14 @@ object = 38
 source = "src/bitmap816.cpp"
 
 [[unit]]
-name = "bitmap16"
+name = "Bitmap16"
 object = 39
-source = "src/bitmap16.cpp"
+source = "src/Bitmap16.cpp"
 
 [[unit]]
-name = "bitmap24"
+name = "Bitmap24"
 object = 40
-source = "src/bitmap24.cpp"
+source = "src/Bitmap24.cpp"
 
 [[unit]]
 name = "lodfile"
@@ -85,9 +85,9 @@ object = 68
 source = "src/GzBuf.cpp"
 
 [[unit]]
-name = "font"
+name = "Font"
 object = 60
-source = "src/font.cpp"
+source = "src/Font.cpp"
 
 [[unit]]
 name = "T16bppPalette"
