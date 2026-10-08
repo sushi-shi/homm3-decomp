@@ -341,6 +341,10 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 // Reversing the equivalent comparison to heroPower(candidate) >
 // heroPower(best) preserves those source calls but moves VC6 from 98.3704%
 // to 96.19%; keep the natural best-first expression and both helper sites.
+// The pre-helper 100% body summed `skills + total` per hero; with heroPower
+// expanded, `best && heroPower(best) >= heroPower(candidate)` plus continue,
+// and heroPower returning skills + primary or accumulating either side, are
+// all byte-flat. Retail adds the candidate's sum into its skills register.
 VA(0x004840d0, 0x155)
 MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)

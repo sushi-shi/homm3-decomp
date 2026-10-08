@@ -1907,7 +1907,8 @@ public:
 // Budget replay (2026-09-29): retail's set needs sendSetupInfo at IL cost
 // 132..159 (ours 174) or this caller at cb 508..521 (ours 355). Copying the
 // eight extras with memcpy emits rep movsd (73.51%). DC and Mac show no
-// accessor calls in either body.
+// accessor calls in either body. Passing the flag and extras through a
+// CNewSetupInfoMsg constructor argument list drops this body to 58.46%.
 // E:\gamedcs\singleselectionwindow.cpp:1393
 VA(0x005795A0, 0x2CA)
 DC_ADDRESS(0x1484c8, 0x1b0)

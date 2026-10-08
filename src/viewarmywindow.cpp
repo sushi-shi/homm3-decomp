@@ -502,6 +502,10 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // append decisions. The luck += still retains append where retail expands
 // it. Exit-flag declaration and upgrade-input lifetime controls are flat;
 // the source operators and their shared text lifetime stay canonical.
+// Probe (2026-10-08): the seven stores as text.assign(...) reach 99.13%
+// (99.15% with GetText for the indexer) and restore retail's inline luck
+// append, but DC 0x19189e..0x191a1a calls ??4 for each store, so the
+// operator= spelling stays. The two-flag switch on the spell is 84.26%.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)
 DC_ADDRESS(0x191804, 0x604)
