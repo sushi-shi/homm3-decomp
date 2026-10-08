@@ -240,7 +240,7 @@ void iconWidget::draw() const
 
     switch (m_style) {
     case ICON_STYLE_PLAIN:
-        switch (m_sprite->getResType()) {
+        switch (m_sprite->get_resType()) {
         case RESOURCE_TYPE_SPRITE:
             m_sprite->Draw(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);
@@ -285,7 +285,7 @@ void iconWidget::draw() const
             drawX += (m_width - m_sprite->GetWidth()) / 2;
         if (m_sprite->GetHeight() + 2 < m_height)
             drawY += m_height - m_sprite->GetHeight() - 2;
-        switch (m_sprite->getResType()) {
+        switch (m_sprite->get_resType()) {
         case RESOURCE_TYPE_SPRITE:
             m_sprite->Draw(m_seqId, m_frame, 0, 0, m_sprite->GetWidth(), m_sprite->GetHeight(),
                 g_windowManager->m_screenBitmap, drawX, drawY, m_isFlipped, 1);

@@ -247,7 +247,7 @@ int army::fly(int destIndex)
 
     if (!g_combatManager->isQuickCombat()) {
         playSample(POST_WALK_SAMPLE);
-        g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
+        g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->memSample.memHSample);
         playAnimation(21, -1, 0);
         playAnimation(2, 1, 0);
         m_isMoving = 0;

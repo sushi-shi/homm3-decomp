@@ -306,9 +306,9 @@ int button::select(message& msg)
     if (s_clickSample) {
         int saved = g_soundManager->m_playSounds;
         g_soundManager->m_playSounds = 1;
-        s_clickSample->m_memSample.m_memVolume = 0x40;
-        s_clickSample->m_memSample.m_memLooping = 1;
-        s_clickSample->m_memSample.m_memCindex = 3;
+        s_clickSample->memSample.memVolume = 0x40;
+        s_clickSample->memSample.memLooping = 1;
+        s_clickSample->memSample.memCindex = 3;
         g_soundManager->memorySample(s_clickSample);
         g_soundManager->m_playSounds = saved;
     }

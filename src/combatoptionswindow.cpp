@@ -384,9 +384,9 @@ int combatOptionsWindowHandler(message& msg)
             if (id >= TCombatOptionsWindow::AUTO_CREATURES_ID
                     && id <= TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID
                     && button::s_clickSample) {
-                button::s_clickSample->m_memSample.m_memVolume = 0x40;
-                button::s_clickSample->m_memSample.m_memLooping = 1;
-                button::s_clickSample->m_memSample.m_memCindex = 3;
+                button::s_clickSample->memSample.memVolume = 0x40;
+                button::s_clickSample->memSample.memLooping = 1;
+                button::s_clickSample->memSample.memCindex = 3;
                 g_soundManager->memorySample(button::s_clickSample);
             }
             return MESSAGE_DISPATCH_CONSUME;

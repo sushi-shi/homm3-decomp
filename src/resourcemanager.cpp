@@ -143,8 +143,8 @@ MAC_ADDRESS(0x1521d0, 0x40)
 // hash/pointer array through 0x151ff4; that backend has no Windows tree key.
 void ResourceManager::addToCache(resource* value)
 {
-    g_resourceCache.insert(std::make_pair(value->getName(), value));
-    value->addRef();
+    g_resourceCache.insert(std::make_pair(value->get_Name(), value));
+    value->AddRef();
 }
 
 // The ostringstream used by both missing-resource reporters makes VC6 retain
@@ -343,9 +343,9 @@ void ResourceManager::remapGraphics()
          position != g_resourceCache.end(); position++) {
         resource* value = position->second;
 
-        switch (value->getResType()) {
+        switch (value->get_resType()) {
         case RESOURCE_TYPE_BITMAP16: {
-            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->getName()));
+            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->get_Name()));
             if (loaded.get()) {
                 loaded->draw(0, 0, loaded->getWidth(), loaded->getHeight(),
                              static_cast<Bitmap16Bit*>(value), 0, 0, false);
@@ -378,7 +378,7 @@ void ResourceManager::remapGraphics()
 
         case RESOURCE_TYPE_PALETTE: {
             TPalette16* destination = static_cast<TPalette16*>(value);
-            std::auto_ptr<TPalette16> loaded(loadPalette(value->getName()));
+            std::auto_ptr<TPalette16> loaded(loadPalette(value->get_Name()));
             if (loaded.get())
                 destination->m_colors = loaded->m_colors;
             break;
@@ -397,9 +397,9 @@ void ResourceManager::saturateGraphics()
          position != g_resourceCache.end(); position++) {
         resource* value = position->second;
 
-        switch (value->getResType()) {
+        switch (value->get_resType()) {
         case RESOURCE_TYPE_BITMAP16: {
-            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->getName()));
+            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->get_Name()));
             if (loaded.get()) {
                 loaded->draw(0, 0, loaded->getWidth(), loaded->getHeight(),
                              static_cast<Bitmap16Bit*>(value), 0, 0, false);
@@ -436,7 +436,7 @@ void ResourceManager::saturateGraphics()
 
         case RESOURCE_TYPE_PALETTE: {
             TPalette16* destination = static_cast<TPalette16*>(value);
-            std::auto_ptr<TPalette16> loaded(loadPalette(value->getName()));
+            std::auto_ptr<TPalette16> loaded(loadPalette(value->get_Name()));
             if (loaded.get())
                 destination->m_colors = loaded->m_colors;
             break;
@@ -1321,7 +1321,7 @@ resource* ResourceManager::getFromCache(const char* name)
     if (found == g_resourceCache.end())
         return 0;
     resource* value = found->second;
-    value->addRef();
+    value->AddRef();
     return value;
 }
 
@@ -1854,10 +1854,10 @@ MAC_ADDRESS(0x1547c4, 0x78)  // resource vslot 1 + cache-key/lower-bound proof
 void resource::dispose()
 {
     if (this) {
-        release();
-        if (getReferenceCount() == 0) {
+        Release();
+        if (GetReferenceCount() == 0) {
             ResourceManager::TCacheMap::iterator found =
-                g_resourceCache.find(getName());
+                g_resourceCache.find(get_Name());
             if (found != g_resourceCache.end()) {
                 g_resourceCache.erase(found);
                 delete this;
@@ -1878,9 +1878,9 @@ MAC_ADDRESS(0x15483c, 0x118)
 void CSprite::dispose()
 {
     if (this) {
-        release();
-        if (getReferenceCount() == 0) {
-            int sequenceCount = GetNumSeqs(getResType());
+        Release();
+        if (GetReferenceCount() == 0) {
+            int sequenceCount = GetNumSeqs(get_resType());
             for (int sequence = 0; sequence < sequenceCount; ++sequence) {
                 if (IsValidSeq(sequence)) {
                     int frameCount = GetNumFrames(sequence);

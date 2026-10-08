@@ -174,7 +174,7 @@ public:
     {
         m_resource = that.m_resource;
         if (m_resource)
-            m_resource->addRef();
+            m_resource->AddRef();
     }
     ~TResourceHandle() { if (m_resource) m_resource->dispose(); }
 

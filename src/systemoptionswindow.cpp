@@ -414,10 +414,10 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                 if (id >= SHOW_PATH_ID && id <= ANIMATE_SPELLBOOK_ID &&
                     button::s_clickSample)
                 {
-                    button::s_clickSample->m_memSample.m_memVolume = 0x40;
-                    button::s_clickSample->m_memSample.m_memLooping =
+                    button::s_clickSample->memSample.memVolume = 0x40;
+                    button::s_clickSample->memSample.memLooping =
                         MESSAGE_DISPATCH_CONSUME;
-                    button::s_clickSample->m_memSample.m_memCindex = 3;
+                    button::s_clickSample->memSample.memCindex = 3;
                     g_soundManager->memorySample(button::s_clickSample);
                 }
                 break;

@@ -544,8 +544,8 @@ MAC_ADDRESS(0x218d54, 0x194)
 ds_memsample* soundManager::memorySample(sample* samplePointer)
 {
     if (!g_noSound && m_ds && (m_playSounds || g_goSolo) && g_config.m_soundVolume && samplePointer
-        && m_samples && samplePointer->m_memSample.m_memVolume) {
-        SoundChannelRange* range = &g_soundChannels[samplePointer->m_memSample.m_memCindex];
+        && m_samples && samplePointer->memSample.memVolume) {
+        SoundChannelRange* range = &g_soundChannels[samplePointer->memSample.memCindex];
         EnterCriticalSection(&m_sectionSoundCall);
         int slot = range->m_first;
         while (slot < range->m_last) {
@@ -554,7 +554,7 @@ ds_memsample* soundManager::memorySample(sample* samplePointer)
             slot++;
         }
         if (slot == range->m_last) {
-            if (samplePointer->m_memSample.m_memCindex == SOUND_CHANNEL_COUNT) {
+            if (samplePointer->memSample.memCindex == SOUND_CHANNEL_COUNT) {
                 LeaveCriticalSection(&m_sectionSoundCall);
                 return 0;
             }
@@ -566,16 +566,16 @@ ds_memsample* soundManager::memorySample(sample* samplePointer)
         }
 
         ds_memsample* handle = m_sampleHandles[slot];
-        g_ailDriverState[slot] = static_cast<short>(samplePointer->m_memSample.m_memVolume);
+        g_ailDriverState[slot] = static_cast<short>(samplePointer->memSample.memVolume);
         AIL_init_sample(handle);
-        AIL_set_sample_file(handle, samplePointer->m_memSample.m_data, 0);
-        AIL_set_sample_loop_count(handle, samplePointer->m_memSample.m_memLooping);
+        AIL_set_sample_file(handle, samplePointer->memSample.m_data, 0);
+        AIL_set_sample_loop_count(handle, samplePointer->memSample.memLooping);
         if (g_config.m_soundVolume)
-            AIL_set_sample_volume(handle, convertVolume(samplePointer->m_memSample.m_memVolume, 100));
+            AIL_set_sample_volume(handle, convertVolume(samplePointer->memSample.memVolume, 100));
         else
             AIL_set_sample_volume(handle, 0);
         AIL_start_sample(handle);
-        samplePointer->m_memSample.m_memSampleHandle = handle;
+        samplePointer->memSample.memHSample = handle;
         LeaveCriticalSection(&m_sectionSoundCall);
 
         g_soundManager->serviceSounds();
@@ -619,7 +619,7 @@ SAMPLE2 loadPlaySample(const char* sampleName)
     sample* loaded = ResourceManager::getSample(sampleName);
     if (!loaded)
         return g_nullSample2;
-    loaded->m_memSample.m_memCindex = 2;
+    loaded->memSample.memCindex = 2;
     SAMPLE2 played;
     played.m_resSample = loaded;
     played.m_playSample = g_soundManager->memorySample(loaded);
@@ -668,7 +668,7 @@ void launchSample(const char* sampleName, int maxTime, int channel)
         delete launched;
         return;
     }
-    launched->m_sample2.m_resSample->m_memSample.m_memCindex = channel;
+    launched->m_sample2.m_resSample->memSample.memCindex = channel;
     launched->m_sample2.m_playSample =
         g_soundManager->memorySample(launched->m_sample2.m_resSample);
     g_soundManager->serviceSounds();

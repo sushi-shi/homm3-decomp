@@ -1936,7 +1936,7 @@ MAC_ADDRESS(0x15c320, 0xd8)
 type_skeleton_window::~type_skeleton_window()
 {
     for (unsigned int i = 0; i < m_deathSamples.size(); i++) {
-        g_soundManager->stopSample(m_deathSamples[i]->m_memSample.m_memSampleHandle);
+        g_soundManager->stopSample(m_deathSamples[i]->memSample.memHSample);
         // The preceding dereference and Complete release are unguarded.
         ResourceManager::dispose(static_cast<resource*>(m_deathSamples[i]));
     }

@@ -324,7 +324,7 @@ MAC_ADDRESS(0x05ea48, 0x74)
 void bitmapBorder::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
-        if (strcmp(m_image->getName(), bitmapName) == 0)
+        if (strcmp(m_image->get_Name(), bitmapName) == 0)
             return;
         ResourceManager::dispose(m_image);
     }
@@ -463,7 +463,7 @@ MAC_ADDRESS(0x05ee3c, 0x74)
 void bitmapBorder16::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
-        if (strcmp(m_image->getName(), bitmapName) == 0)
+        if (strcmp(m_image->get_Name(), bitmapName) == 0)
             return;
         ResourceManager::dispose(m_image);
     }
