@@ -98,6 +98,103 @@ static TSpellTraits aSpellTraitsImp[kNumSpellsAndCreatureEffects] = {
 
 const TSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects] = aSpellTraitsImp;
 
+// The combat spell effects' sprites, exported from this object and read by
+// nothing in the editor. The Loki record is the Dreamcast roster's eight
+// bytes (?akSpellEffectTraits@@3QBUTSpellEffectTraits@@B, m_name at 0):
+// the sprite and the placement/alpha flags the Windows game's
+// TSpellEffectTraits (cmbtmgr.h) keeps at +8 behind its Immersion name.
+struct TSpellEffectTraits {
+    const char* m_name;
+    unsigned int m_flags;
+};
+
+extern const TSpellEffectTraits akSpellEffectTraits[82];
+
+const TSpellEffectTraits akSpellEffectTraits[82] = {
+    { "C10spW.def", 256 },
+    { "C11spA0.def", 2 },
+    { "C01spA0.def", 1 },
+    { "C02spA0.def", 1 },
+    { "C01spE0.def", 1 },
+    { "C02spE0.def", 1 },
+    { "C02spF0.def", 1 },
+    { "C04spA0.def", 1 },
+    { "C04spE0.def", 1 },
+    { "C04spF0.def", 1 },
+    { "C05spE0.def", 0 },
+    { "C05spF0.def", 1 },
+    { "C06spF0.def", 15 },
+    { "C07spA0.def", 15 },
+    { "C07spA1.def", 257 },
+    { "C07spE0.def", 257 },
+    { "C08spE0.def", 1 },
+    { "C08spF0.def", 1 },
+    { "C09spA0.def", 1 },
+    { "C09spE0.def", 0 },
+    { "C09spW0.def", 1 },
+    { "C10spA0.def", 1 },
+    { "C11spE0.def", 0 },
+    { "C11spF0.def", 0 },
+    { "C11spW0.def", 0 },
+    { "C12spA0.def", 1 },
+    { "C13spA0.def", 0 },
+    { "C13spE0.def", 1 },
+    { "C13spW0.def", 1 },
+    { "C14spA0.def", 257 },
+    { "C14spE0.def", 1 },
+    { "C15spA0.def", 0 },
+    { "C15spE0.def", 0 },
+    { "C15spE9.def", 0 },
+    { "C18spW0.def", 0 },
+    { "C01spF0.def", 1 },
+    { "C01spW0.def", 1 },
+    { "C03spA0.def", 2 },
+    { "C03spA1.def", 1 },
+    { "C03spW0.def", 1 },
+    { "C04spW0.def", 1 },
+    { "C05spW0.def", 1 },
+    { "C06spW0.def", 1 },
+    { "C07spF0.def", 4 },
+    { "C07spF9.def", 4 },
+    { "C07spW0.def", 1 },
+    { "C08spW5.def", 257 },
+    { "C09spF0.def", 4 },
+    { "C10spF0.def", 1 },
+    { "C11spA1.def", 0 },
+    { "C12spE0.def", 257 },
+    { "C12spF0.def", 1 },
+    { "C12spF1.def", 257 },
+    { "C13spF.def", 1 },
+    { "C16spE0.def", 1 },
+    { "C17spE0.def", 4 },
+    { "C17spW0.def", 1 },
+    { "C09spF3.def", 0 },
+    { "C17spE2.def", 4 },
+    { "C09spF2.def", 4 },
+    { "C15spE2.def", 4 },
+    { "C15spE11.def", 4 },
+    { "C07spF2.def", 4 },
+    { "C07spF11.def", 4 },
+    { "C20SPX.DEF", 1 },
+    { "C07spF60.def", 4 },
+    { "C07spF62.def", 4 },
+    { "sp11_.def", 1 },
+    { "sp02_.def", 0 },
+    { "sp05_.def", 1 },
+    { "sp10_.def", 0 },
+    { "sp01_.def", 1 },
+    { "sp04_.def", 271 },
+    { "sp03_.def", 1 },
+    { "sp06_.def", 257 },
+    { "sp07_A.def", 1 },
+    { "sp07_B.def", 1 },
+    { "sp08_.def", 0 },
+    { "sp09_.def", 3 },
+    { "sp12_.def", 257 },
+    { "c07spe0.def", 1 },
+    { "poof.def", 0 }
+};
+
 namespace {
 
 // Owns one loaded string; the loader keeps the pointers in the traits rows.
