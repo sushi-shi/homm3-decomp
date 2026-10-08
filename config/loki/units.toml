@@ -238,3 +238,8 @@ source = "src/editor/ToolkitBase.cpp"
 name = "TerrainToolkit"
 object = 66
 source = "src/editor/TerrainToolkit.cpp"
+
+[[unit]]
+name = "ResourceQuantitiesDlg"
+object = 26
+source = "src/editor/ResourceQuantitiesDlg.cpp"
