@@ -1103,6 +1103,10 @@ void hero::initialize(short index)
 // assignment (a throwaway isMale() test) retains assign and lifts this body
 // to 98.71%, so the missing candidate is real; Mac 0xf4948..0xf4a50 and DC
 // 10049..10053 show no accessor for it (direct level read, one getMobility).
+// 2026-10-08 trace: the depth-1 sites after operator= are getHero,
+// getExperience, getMaxMana and getMobility; giveExperience and checkLevel
+// are defined later in hero.cpp (retail order too) and never become
+// candidates, so neither can be the missing sixth site.
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4

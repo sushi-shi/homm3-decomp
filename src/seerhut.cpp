@@ -229,6 +229,11 @@ void type_quest::load(TAbstractFile* file, int version)
 // /Ob1 is byte-identical to the configured /Ob2 body. /Os retains all
 // three _Tidy calls and uses __EH_prolog (30.4375%); retail retains only
 // the first cleanup and emits its prologue inline. Neither policy explains it.
+// 2026-10-08 trace: retail's split needs the first destructor's _Tidy budget
+// below 152 (1000/7: at least two more root candidates after it, or 240
+// units spent before it), the second at or above 152, and the final assign
+// below 307. Three extra root sites costing 79..196 each, one per reader
+// call, satisfy all four; no candidate source for them is known.
 VA(0x0056ce50, 0x11E)
 MAC_ADDRESS(0x1642ac, 0xe0)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)

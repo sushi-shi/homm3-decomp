@@ -279,6 +279,17 @@ shape-dependent (13→14 simple statements; 5→6 statements for the a06 loop
 shape) and stays a front-end unknown; the model takes it as the boolean
 `candidate` input.
 
+**Brace and else-arm costs (2026-10-08 traces).** Braces around a
+single-statement `if` body add 2 to the enclosing function's `cb` (so 4 to a
+small caller's initial budget), with no instruction change. getHero's DC
+`else return &m_heroes[which];` arm raised its inline cost, and each
+expanded getHero site now spends that much more of its caller's budget.
+That moved checkForArtifactWin's final bitset::test site from 181 to 177 and
+completeCurrentMap's garrison push_back from 64 to 63. A DC-scoped braced
+guard restored the first; the second still lacks a source-backed change.
+Bisect such drops with a private `git archive` root per commit and compare
+only the function's compiled bytes before reading the trace.
+
 ## 5. Validation record (2026-08-10, pinned SP3 CL under Wine)
 
 Every case below is a real-compiler measurement; `--predict --selftest`

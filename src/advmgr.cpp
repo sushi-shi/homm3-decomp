@@ -6032,6 +6032,10 @@ void advManager::updateRadar(bool updateFlag, bool partialUpdate,
 // Mac visited-bitmap arms repeatedly extract five bits then extsh, the
 // getItemId short-return operation (e.g. 15528..15538, 15678..15688).
 // Spring 15788 and garden 15ad8..15adc expand their fullness getters.
+// 2026-10-08 trace (cb 6736, budget 13472): the first string += char site
+// offers append 12975/122 = 106 against its cb 110, so append stays a call
+// where retail expands it (+0x29f: _Xlen/_Grow/_Eos inline). Retail needs
+// four fewer later depth-1 candidates, or about 225 more caller cb units.
 VA(0x004137c0, 0x25A0)
 DC_ADDRESS(0x015fdc, 0x2c50)
 MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder
