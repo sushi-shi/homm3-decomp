@@ -208,6 +208,7 @@ public:
     static const unsigned int s_kMaxTimedEvents = 50;
 
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
+    static const TMapLayerObjectID s_kInvalidObjID;
 
     static void streamObject(streambuf* pStreamBuf, const TGameObject& obj);
 
@@ -956,6 +957,9 @@ void TGameMap::_TImpl::_TLossConditionValidater::visit(const TLCTimeExpires& lc)
     _m_bValid = true;
 }
 
+const unsigned int TGameMap::_TImpl::_s_akDimension[TGameMap::s_kNumSizes] = { 36, 72, 108, 144 };
+const TMapLayerObjectID TGameMap::_TImpl::s_kInvalidObjID = 0;
+
 void TGameMap::_TImpl::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
 {
 #line 1438
@@ -999,6 +1003,215 @@ TRawIStream& TGameMap::_TImpl::readContainer(TRawIStream& stream, vector<TTimedE
         aTimedEvent.push_back(timedEvent);
     }
     return stream;
+}
+
+
+TGameMap::_TImpl::_TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, streambuf* pStreamBuf, int version)
+    : _m_pClient(pClient), _m_pObjectFactory(pObjectFactory)
+{
+#line 1495
+    assert(_m_pClient != NULL);
+    assert(_m_pObjectFactory != NULL);
+    assert(pStreamBuf != NULL);
+    assert(pObjectFactory != NULL);
+    TRawIStream stream(pStreamBuf);
+    unsigned int dimension;
+    signed char bTwoLayer;
+    signed char difficulty;
+    TArray<TPlayerInfo, kNumPlayers> players;
+    TMapLoc aMainTownLoc[kNumPlayers];
+    TTeamInfo teamInfo;
+    signed char unused;
+    TVictoryConditionData vcData;
+    TLossConditionData lcData;
+    signed char aReserved[31];
+    if (version > 9) {
+        signed char bAnyPlayers;
+        stream >> bAnyPlayers;
+    }
+    stream >> (long&) dimension >> bTwoLayer >> _m_pProperties->m_name >> _m_pProperties->m_desc >> difficulty;
+    for (unsigned int player = 0; player < kNumPlayers; player++) {
+        signed char bHumanPlayable;
+        signed char bComputerPlayable;
+        signed char behaviorType;
+        stream >> bHumanPlayable >> bComputerPlayable >> behaviorType;
+        if (bHumanPlayable)
+            bComputerPlayable = true;
+        players[player].setBHumanPlayable(bHumanPlayable);
+        players[player].setBComputerPlayable(bComputerPlayable);
+        players[player].setBehaviorType(TPlayerInfo::TBehaviorType(behaviorType));
+        if (version > 7) {
+            ubyte alignmentMask;
+            signed char bHasRandom;
+            stream >> alignmentMask >> bHasRandom;
+#line 1554
+            assert(( !players[ player ].getBPresent() && alignmentMask == 0 && bHasRandom == 0 ) || ( players[ player ].getBPresent() && alignmentMask != 0 ));
+        }
+        if (version > 8) {
+            signed char bGenerateHero;
+            stream >> bGenerateHero;
+            players[player].setBGenerateHero(bGenerateHero);
+            if (bGenerateHero)
+                stream >> aMainTownLoc[player];
+        }
+        if (version > 12) {
+            signed char bRandomHero;
+            signed char heroType;
+            stream >> bRandomHero >> heroType;
+            if (heroType > -1) {
+                signed char portrait;
+                string heroName;
+                stream >> portrait >> heroName;
+            }
+        }
+    }
+    if (version <= 8)
+        stream >> unused;
+    stream >> vcData >> lcData >> teamInfo;
+    if (version > 7) {
+        ubyte aHeroAvailable[16];
+        stream >> aHeroAvailable;
+    }
+    stream >> aReserved;
+    readContainer(stream, _m_pProperties->m_rumors);
+    _m_size = TSize(find(_s_akDimension, _s_akDimension + s_kNumSizes, dimension) - _s_akDimension);
+#line 1607
+    assert((int) _m_size >= (int) 0 && (int) _m_size < (int) s_kNumSizes);
+    _m_bTwoLayer = bTwoLayer;
+    if (_m_pProperties->m_name.size() > s_kMaxNameLen)
+        _m_pProperties->m_name.erase(s_kMaxNameLen);
+    if (_m_pProperties->m_desc.size() > s_kMaxDescLen)
+        _m_pProperties->m_desc.erase(s_kMaxDescLen);
+    _m_pProperties->m_difficulty = TDifficulty(difficulty);
+    if (_m_pProperties->m_rumors.size() > s_kMaxRumors)
+        _m_pProperties->m_rumors.resize(s_kMaxRumors);
+    _m_aLayer.resize(_m_bTwoLayer ? 2 : 1, TLayer(_m_size));
+    readCellData(stream, &_m_aLayer[0]);
+    if (_m_bTwoLayer)
+        readCellData(stream, &_m_aLayer[1]);
+    long numObjTypes;
+    stream >> numObjTypes;
+    vector<TObjectType> tempObjTypeTable;
+    tempObjTypeTable.resize(numObjTypes);
+    vector<TObjectType>::iterator iter = tempObjTypeTable.begin();
+    while (numObjTypes-- > 0)
+        stream >> *iter++;
+    long numObjs;
+    stream >> numObjs;
+    if (numObjs > 0) {
+        ubyte x;
+        ubyte y;
+        ubyte layerNum;
+        long typeID;
+        signed char aObjReserved[5];
+        stream >> x >> y >> layerNum >> typeID >> aObjReserved;
+        for (;;) {
+#line 1655
+            assert(layerNum == 0 || ( _m_bTwoLayer && layerNum == 1 ));
+            assert(typeID < tempObjTypeTable.size());
+            auto_ptr<TGameObject> pObj(_createObject(tempObjTypeTable[typeID], &stream, version, ::operator new));
+#line 1660
+            assert(pObj.get() != NULL);
+            if (( x + 1 >= pObj->getWidth() && x + 1 - pObj->getWidth() >= getWidth() )
+                || ( y + 1 >= pObj->getHeight() && y + 1 - pObj->getHeight() >= getHeight() )) {
+                if (--numObjs <= 0)
+                    break;
+                stream >> x >> y >> layerNum >> typeID >> aObjReserved;
+                continue;
+            }
+            TMapLayerObjectID placedObjID = _m_aLayer[layerNum]._placeObject(*pObj, x, y);
+#line 1674
+            assert(placedObjID != TLayer::s_kInvalidObjID);
+            TGameObject* pPlacedObj = _m_aLayer[layerNum].getPObject(placedObjID);
+            TTown* pTown = dynamic_cast<TTown*>(pPlacedObj);
+            if (pTown != NULL)
+                _onTownAdded(*pTown, layerNum, placedObjID);
+            else {
+                THero* pHero = dynamic_cast<THero*>(pPlacedObj);
+                if (pHero != NULL)
+                    onHeroAdded(*pHero);
+                else {
+                    THolyGrail* pHolyGrail = dynamic_cast<THolyGrail*>(pPlacedObj);
+                    if (pHolyGrail != NULL)
+                        _onHolyGrailAdded(*pHolyGrail);
+                    else {
+                        TMine* pMine = dynamic_cast<TMine*>(pPlacedObj);
+                        if (pMine != NULL)
+                            _onMineAdded(*pMine);
+                        else {
+                            TGenerator* pGenerator = dynamic_cast<TGenerator*>(pPlacedObj);
+                            if (pGenerator != NULL)
+                                _onGeneratorAdded(*pGenerator);
+                            else {
+                                TSign* pSign = dynamic_cast<TSign*>(pPlacedObj);
+                                if (pSign != NULL)
+                                    _onSignAdded(*pSign);
+                                else
+                                    _onGeneralObjectAdded(*pPlacedObj);
+                            }
+                        }
+                    }
+                }
+            }
+            if (--numObjs <= 0)
+                break;
+            if (pTown != NULL) {
+                ubyte nextX;
+                ubyte nextY;
+                ubyte nextLayerNum;
+                long nextTypeID;
+                stream >> nextX >> nextY >> nextLayerNum >> nextTypeID >> aObjReserved;
+                if (nextX == x && nextY == y && nextLayerNum == layerNum
+                    && ( tempObjTypeTable[nextTypeID].getType() == HERO
+                         || tempObjTypeTable[nextTypeID].getType() == RANDOM_HERO )) {
+                    auto_ptr<TGameObject> pObj(_createObject(tempObjTypeTable[nextTypeID], &stream, version,
+                                                             ::operator new));
+#line 1732
+                    assert(pObj.get() != NULL);
+                    THero* pHero = dynamic_cast<THero*>(pObj.get());
+#line 1735
+                    assert(pHero != NULL);
+                    pTown->setVisitingHero(pHero);
+                    onHeroAdded(*pHero);
+                    if (--numObjs <= 0)
+                        break;
+                    stream >> nextX >> nextY >> nextLayerNum >> nextTypeID >> aObjReserved;
+                }
+                x = nextX;
+                y = nextY;
+                layerNum = nextLayerNum;
+                typeID = nextTypeID;
+            } else
+                stream >> x >> y >> layerNum >> typeID >> aObjReserved;
+        }
+    }
+    readContainer(stream, _m_pProperties->m_timedEvents);
+    if (_m_pProperties->m_timedEvents.size() >= s_kMaxTimedEvents)
+        _m_pProperties->m_timedEvents.resize(s_kMaxTimedEvents);
+    for (player = 0; player < kNumPlayers; player++) {
+        if (players[player].getBPresent()) {
+#line 1768
+            assert(_m_pProperties->m_players[ player ].getBPresent());
+            _m_pProperties->m_players[player] = players[player];
+            if (players[player].getBGenerateHero()) {
+                const TMapLoc& mainTownLoc = aMainTownLoc[player];
+                TMapLayerObjectID mainTownID = _findObject(mainTownLoc.m_layer, TTilePoint(mainTownLoc.m_x, mainTownLoc.m_y),
+                                                           isTown);
+#line 1776
+                assert(mainTownID != TLayer::s_kInvalidObjID);
+                const TTown* pMainTown = dynamic_cast<const TTown*>(&getLayer(mainTownLoc.m_layer != 0).getObject(mainTownID));
+#line 1779
+                assert(pMainTown != NULL);
+                assert(pMainTown->getOwner() == player && pMainTown->getPVisitingHero() == NULL);
+                _m_pProperties->m_players[player].setMainTownRef(TMapObjectRef(mainTownLoc.m_layer, mainTownID));
+            }
+        } else
+#line 1786
+            assert(!_m_pProperties->m_players[ player ].getBPresent());
+    }
+    _m_pProperties->m_teamInfo = teamInfo;
+    _m_pProperties->m_pVictoryCondition = _reconstructVictoryCondition(vcData);
+    _m_pProperties->m_pLossCondition = _reconstructLossCondition(lcData);
 }
 
 
@@ -3413,13 +3626,13 @@ TTileExtent TGameMap::TLayer::_TImpl::_computeObjExtent(const TTilePoint& loc, c
     if (clippedSize.x() > lastCell.x() + 1)
         clippedSize.x(lastCell.x() + 1);
     if (lastCell.x() >= getWidth()) {
-        clippedSize.x(clippedSize.x() - (lastCell.x() + 1 - getWidth()));
+        clippedSize.x(clippedSize.x() - (lastCell.x() - (getWidth() - 1)));
         lastCell.x(getWidth() - 1);
     }
     if (clippedSize.y() > lastCell.y() + 1)
         clippedSize.y(lastCell.y() + 1);
     if (lastCell.y() >= getHeight()) {
-        clippedSize.y(clippedSize.y() - (lastCell.y() + 1 - getHeight()));
+        clippedSize.y(clippedSize.y() - (lastCell.y() - (getHeight() - 1)));
         lastCell.y(getHeight() - 1);
     }
     return TTileExtent(lastCell + TPoint<unsigned int>(1, 1) - clippedSize, clippedSize);
