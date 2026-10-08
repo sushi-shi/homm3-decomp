@@ -166,6 +166,7 @@ homm3 vc6 compile-m <unit> [--function VA] [--against OBJ]
 homm3 vc6 fuzz-verify <unit> [--function VA] --edits N [--seed S] [--reuse]
 homm3 vc6 phase-census [units...]
 homm3 vc6 compile-m-walls walls.tsv [--reuse]
+homm3 vc6 state-scan [units...] [--offset-units FILE]  # objdiff-scored 1-to-M, ranked
 ```
 
 **Set (IL replay through the trace shim).**
