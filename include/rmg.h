@@ -1217,8 +1217,6 @@ struct TRmgMapItem {
         return m_tileData.m_obstacleFill;
     }
 
-    bool canBlockFloor() const;
-
     // Border connections protect their cells from changes to path
     // reservations. Setting either mark clears the other.
     void setObstacleFill(unsigned char obstacleFill);

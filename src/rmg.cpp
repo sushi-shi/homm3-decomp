@@ -7953,13 +7953,9 @@ void TRmgGenerator::connectZones()
         m_progress->advance(0x1900);
 }
 
-// A floor cell may be blocked outside paths and object entrances.
-bool TRmgMapItem::canBlockFloor() const
-{
-    return !hasPathClearance() && isPassable() && !isObjectEntrance();
-}
-
 // Underground-only terrain pass retained by generation at 0x549c82.
+// The floor test spells its three cell predicates; routing them through one
+// combined helper measured 99.0138% against this body's 99.7982%.
 // One borrowed level-one map and one brush span both scans. The first scan
 // closes unused floor with rock; the second restores each zone's terrain at
 // its occupied or path-reserved rock cells. Both progress updates precede cleanup.
@@ -7990,7 +7986,7 @@ void TRmgGenerator::decorateUnderground()
     TRmgTerrainBrush brush(&map, eTerrainRock, 4);
     for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
         for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
-            if (item->canBlockFloor())
+            if (!item->hasPathClearance() && item->isPassable() && !item->isObjectEntrance())
                 brush.paintRectangle(scan.m_x, scan.m_y, 1, 1);
         }
     }
@@ -9295,8 +9291,8 @@ TRmgMapPosition TRmgObject::getPlacedGroupPosition(
 // translation. Keep the shared position-plus-point operation and live bounds.
 // Retail keeps the three-coordinate constructor inside operator+ as a call:
 // the inline trace gives it (881 - 56) / remaining sites, below its cost 48
-// only with three source-cell predicate calls here rather than one
-// canBlockFloor call. Both copy-backs store the saved byte (Mac 0x24ac28,
+// only with the three source-cell predicate calls spelled here; a combined
+// floor predicate helper leaves too few sites. Both copy-backs store the saved byte (Mac 0x24ac28,
 // retail +0x225). Residual: y*width operand order in the group-map lookup
 // and one reload placement at the inner-loop latch (register/schedule).
 VA(0x005469B0, 0x2B4)
