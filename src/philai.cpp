@@ -2088,6 +2088,8 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // relocations agree. The only residual is two SIB base/index encodings in the
 // expanded upgradeCreatures debit loop: [edx+eax] versus retail [eax+edx],
 // including the following store at displacement -4. No semantic divergence.
+// compile-m: C2's phase flag at 0 gives retail exactly (phase-flag.md 7a), but
+// every function compiled above leaves 1; no source arrangement found yet.
 VA(0x005253d0, 0x60c)
 DC_ADDRESS(0x10e3f8, 0x280)
 MAC_ADDRESS(0x13f8dc, 0x368)  // MAC_ABSTRACTION_FROM(tokens1:46b741d4bc9b,95.5275): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
