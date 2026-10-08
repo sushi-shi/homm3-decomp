@@ -5,8 +5,7 @@
 
 #include "advmgr_popup.h"
 #include "armygrp.h"
-
-enum TTownType;
+#include "town_type.h"
 
 class army;
 class armyGroup;
