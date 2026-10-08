@@ -13,8 +13,11 @@
 #include "resourcemanager.h"
 #include "resourceptr.h"
 #include "textresource.h"
-#include "editor/MapEditorText.h"
 
+// The anonymous namespace opens before MapEditorText.h: g++ 2.95 writes
+// namespace-scope .bss namespace by namespace, the namespaces created
+// first last, and the image puts akGeneralStringImp after every
+// S...Text namespace's akStringImp.
 namespace {
 
 size_t stringLength(const char* str)
@@ -47,6 +50,12 @@ void stringCopy(char* dest, const char* src)
     }
     *dest = '\0';
 }
+
+}  // namespace
+
+#include "editor/MapEditorText.h"
+
+namespace {
 
 bool bInitialized = false;
 
