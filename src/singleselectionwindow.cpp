@@ -6906,10 +6906,12 @@ bool TSingleSelectionWindow::sendPlayerPositions(
 // DC keeps this source helper out of line. Complete's larger setup message
 // adds the window's mode byte and eight filter dwords; VC6 expands this call
 // into Finish while retaining the CNewSetupInfoMsg constructor boundary.
+// That expansion needs no inline keyword: the ordinary definition after
+// Finish emits the same bytes in every caller.
 // E:\gamedcs\singleselectionwindow.cpp:7009
 DC_ADDRESS(0x140ee4, 0x40)
 MAC_ADDRESS(0x181c70, 0x110)
-inline unsigned char TSingleSelectionWindow::sendSetupInfo(
+unsigned char TSingleSelectionWindow::sendSetupInfo(
     unsigned long dpid)
 {
     CNewSetupInfoMsg msg(&g_game->m_setup);
