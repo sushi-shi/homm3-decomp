@@ -4714,6 +4714,8 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // DC 5215/5217/5221 loads the mastery count and initializes the drawn count
 // before clearing damage. Mac 0x199314..0x199334 retains that order, and
 // retail loads mastery before rep stosd. Restoring it raises 87.02 -> 89.14%.
+// The Windows const-reference updateCombatArea extent removes a by-value
+// rectangle copy: 89.14 -> 91.21%.
 VA(0x005a7c80, 0x408)
 DC_ADDRESS(0x156ec4, 0x490)
 MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity

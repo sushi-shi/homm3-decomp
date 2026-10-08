@@ -3147,7 +3147,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         updateArea.include(SLimitData(
             x, y, x + width - 1, y + height - 1));
         updateArea.clip(combatManager::s_combatAreaLimits);
-        updateCombatArea(updateArea);  // DC 3874, by-value extent
+        updateCombatArea(updateArea);  // DC 3874
         ++frame;
         if (frame >= missile->GetNumFrames(0))
             frame = 0;
@@ -3286,7 +3286,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         scrollTo(x, y, x + width - 1, y + height - 1,
                  true, true, true);  // DC 4016
         updateArea.clip(combatManager::s_combatAreaLimits);
-        updateCombatArea(updateArea);  // DC 4022, by-value extent
+        updateCombatArea(updateArea);  // DC 4022
         GameTime::delayTil(nextFrameTime);
     }
 
@@ -3398,14 +3398,14 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // DC4321/4337 and Mac 0x754b0..0x7553c enclose advancement in the positive
 // next-frame/readiness guards. The references subtract frameCount before
 // one in winceStartOffset; moving this local among its use scopes is flat.
-// DC4389 retains by-value UpdateCombatArea; keep its nested rectangle
-// accessors. DC4410/4411 and Mac 0x757b4..0x758ac finish with a while loop
+// DC4389 retains UpdateCombatArea; keep its nested rectangle accessors.
+// DC4410/4411 and Mac 0x757b4..0x758ac finish with a while loop
 // whose progress flag is set in each advancing branch (DC4425/4433).
-// These complete source scopes reach 98.5390% on Windows. All 225 blocks,
-// 134 branches, 14 calls and 25 relocations align; the 34 differing
-// instruction rows start at by-value extent lowering. Early-continue and
-// shared progress-write variants lose that alignment. Counter declaration
-// positions and wince-offset use-scope variants produce identical bytes.
+// With the Windows const-reference extent overload these source scopes
+// reproduce retail exactly; the by-value copy stopped at 98.5390%.
+// Early-continue and shared progress-write variants lose CFG alignment.
+// Counter declaration positions and wince-offset use-scope variants
+// produce identical bytes.
 VA(0x00468990, 0xA08)
 DC_ADDRESS(0x062560, 0x856)
 MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
@@ -3562,7 +3562,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                 m_powFrameIndex = frameCount;
 
             drawFrame(0, 1, 0, 100, 1, 1);
-            // DC cmbtmgr.cpp:4389 retains this by-value rectangle helper.
+            // DC cmbtmgr.cpp:4389 retains this rectangle helper.
             updateCombatArea(m_extent);
         }
     }

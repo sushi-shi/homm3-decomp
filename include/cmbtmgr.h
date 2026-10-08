@@ -1222,10 +1222,11 @@ public:
     void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
                          unsigned char forceUpdate);
     void updateMouseGrid(int gridIndex, int allowDuringAction);
-    // Preserve DC UpdateCombatArea's by-value extent and coordinate facade.
-    // The Windows fixed-viewport definitions and their platform evidence are
-    // below. The coordinate ScrollTo facades are visible above.
-    void updateCombatArea(SLimitData area);
+    // Preserve DC UpdateCombatArea's extent and coordinate facade. The
+    // Windows fixed-viewport definitions, the extent's const-reference
+    // parameter and their platform evidence are below. The coordinate
+    // ScrollTo facades are visible above.
+    void updateCombatArea(const SLimitData& area);
     void updateCombatArea(int x, int y, int width, int height);
     bool scrollTo(SLimitData extent, bool draw,
                   bool doscrollX, bool doscrollY);
@@ -2085,22 +2086,26 @@ extern const long g_castleWallGateTargets[5];   // 0x63abe0
 
 // Windows fixed-viewport implementations. CE drawing.cpp:513/514 forwards
 // a by-value extent to the four-int UpdateCombatArea (dc 0x83ec0/0x83ee8).
-// Preserve that call and inclusive dimensions. The CE leaf clips/translates
+// Preserve that call and inclusive dimensions. The Windows extent overload
+// takes the rectangle by const reference: VC6 materializes a by-value
+// inlined parameter as a sixteen-byte copy, which retail's frames lack.
+// With the reference, attackWall, powEffect and drawFrame reproduce
+// exactly and updateMouseGrid reaches 99.98%; Fly is unchanged. CE's
+// by-value signature is from the older viewport implementation. The CE leaf clips/translates
 // viewport offsets, calls six-int Window::UpdateScreen and redraws a combat
 // window; retail Fly instead calls four-int updateScreen at 0x4b4df3.
 // Likewise CE ScrollTo (drawing.cpp:598, dc 0x8405c) moves/redraws a viewport;
 // retail Fly has neither its scrolling work nor a scrolled-result branch.
 // One shared Windows definition accounts for those cross-TU expansions.
 // Header placement is a platform visibility inference, not recovered lexical
-// source. dc_only.tsv retains the CE origins separately. The by-value helper
-// chain reproduces all 1102 Fly bytes; an inlined copy does not prove a
-// const-reference parameter.
+// source. dc_only.tsv retains the CE origins separately. Both parameter
+// forms reproduce all 1102 Fly bytes.
 inline void combatManager::updateCombatArea(int x, int y, int width, int height)
 {
     g_windowManager->updateScreen(x, y, width, height);
 }
 
-inline void combatManager::updateCombatArea(SLimitData area)
+inline void combatManager::updateCombatArea(const SLimitData& area)
 {
     updateCombatArea(area.m_minX, area.m_minY, area.width(), area.height());
 }

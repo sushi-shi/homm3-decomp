@@ -4070,16 +4070,14 @@ void army::attackWall(TWallTargetId wall,
 // Cached-coordinate and scoped-bounds probes reached 91.46%; adding a
 // wall-domain or nonnull-explosion VERIFY was byte-flat in that model.
 // DC line 4699 instead records the direct rectangle constructor below.
-// Its repeated getters and ordinary temporary recover 96.0460% while
-// preserving all 53 block flows. The residual includes an EBX/EDI role
-// swap and one extra instruction in the sprite draw/update block.
+// Its repeated getters and ordinary temporary preserve all 53 block flows.
 // DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload;
 // preserve its nested bitmap accessors, as in animateMissile.
 // Mac 0x521f0 expands getOwningSide before MarkCreatureEffect's array strides;
-// retain that canonical accessor as in doAttack (Windows byte-flat at 96.0460%).
-// why-reg --model finds the EBX/EDI permutation in the initial saved-register
-// definitions, involving this and an expression value: a front-end handle-state
-// residual rather than a movable named-local declaration. Keep the proven ABI.
+// retain that canonical accessor as in doAttack.
+// The former 96.0460% EBX/EDI permutation was the sixteen-byte copy of a
+// by-value updateCombatArea extent; the const-reference Windows overload
+// reproduces retail exactly.
 // DC army.cpp:4731 guards the sample; 4732 calls ResourceManager::Dispose
 // (sample*) at 0x1225c0. Keep both that guard and its named source call.
 // Mac 0x525b4..0x525cc expands its null guard and resource virtual disposal;

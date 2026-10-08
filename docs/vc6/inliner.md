@@ -2542,7 +2542,7 @@ score history follows the retail RVA across the regenerated labels.
 `army::fly` (0x4b4a40) reaches 100% with one canonical Windows renderer
 implementation visible through cmbtmgr.h. The CE renderer scrolls, clips and
 translates a viewport; Complete presents the accumulated screen rectangle
-without those operations. Preserve the by-value extent-to-four-int
+without those operations. Preserve the extent-to-four-int
 `updateCombatArea` call and give the Windows leaf its four-int Window call.
 The coordinate `scrollTo` facades are visible in cmbtmgr.h: Complete
 combat missile callers also preserve the seven-coordinate source call
@@ -2553,9 +2553,15 @@ order slot. One class-visible body preserves the canonical path without
 adding an explicit inline keyword. Header placement is a platform inference,
 recorded in the source catalogs, not recovered lexical text.
 
-Both const-reference and by-value extent controls reproduce Fly, so its
-inlined copy cannot establish a changed parameter type. The by-value chain
-preserves the positive DC interface and named source call. The narrow family
+Both const-reference and by-value extent controls reproduce Fly, so Fly
+alone cannot establish the parameter type. Other Complete callers do: an
+expanded by-value `SLimitData` parameter still gets its own sixteen-byte
+copy, which moves the frame and callee-saved register roles. With the
+Windows overload taking `const SLimitData&`, army::attackWall,
+combatManager::powEffect, drawFrame and updateMouseGrid reproduce retail
+(96.05/98.54/98.03/96.34% by value), earthquake rises 89.14 -> 91.21%,
+and Fly is unchanged. CE's by-value signature belongs to its older
+scrolling implementation. The narrow family
 reproduces three distinct objects across all 22 affected TUs; all 1102 Fly
 bytes and 54 relocation operands agree with retail. Ordinary definitions of
 its two local search helpers and removal of the redundant outer loop block

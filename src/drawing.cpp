@@ -841,13 +841,10 @@ MAC_ADDRESS(0x0a581c, 0x5d8)
 // DC's offset_used[19] has procedure scope (record 12712), alongside
 // SaveExtent and both recorded int locals; no enclosing array block occurs
 // in the lexical records. Keep that lifetime and the ordinary rectangle
-// member calls. VC6 reaches 96.3415%; UpdateCombatArea already expands
-// through the matching UpdateScreen call. The first instruction difference
-// is the by-value extent's copy/register lowering; named bounds and local
-// width/height copies did not improve it. The remaining call-label difference
-// is vector<long>::_Destroy versus vector<type_artifact>::_Destroy: both
-// emitted bodies are ret 8 (retail 0x404140). Keep the DC-proven vector<long>
-// and canonical clear(), without selecting a library-internal substitute.
+// member calls. UpdateCombatArea expands through the matching UpdateScreen
+// call; the const-reference Windows extent overload removes the by-value
+// copy that held this body at 96.3415%, and it now reproduces retail.
+// Keep the DC-proven vector<long> and canonical clear().
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
@@ -1003,9 +1000,9 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // DC1378/1380 clips and passes the member rectangle directly (this+0x13408),
 // as Mac 0xa6600..0xa6684 also does. Do not invent a temp_limits copy for
 // that operation. Direct member calls without provisional reference aliases
-// are VC6 byte-flat at 98.0274%; all 117 blocks, 75 branches and 31 calls
-// align. The by-value update's scratch selection still adds an EDI save;
-// preserve the canonical helper instead of pasting its four arguments.
+// and the const-reference Windows update overload reproduce retail; the
+// by-value copy's scratch selection had added an EDI save (98.0274%).
+// Preserve the canonical helper instead of pasting its four arguments.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)
 DC_ADDRESS(0x084e2c, 0x5c8)
