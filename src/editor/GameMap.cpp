@@ -379,6 +379,14 @@ private:
                                void* (*pfnAllocator)(unsigned int)) const;
     TMapLayerObjectID _placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
                                           unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNonRandomHero(bool bSecondLayer, const TNonRandomHero& hero, unsigned int x,
+                                          unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placePrison(bool bSecondLayer, const TPrison& prison, unsigned int x, unsigned int y,
+                                   TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeHero(bool bSecondLayer, const THero& hero, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeTown(bool bSecondLayer, const TTown& town, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
     TMapLayerObjectID _placeHolyGrail(bool bSecondLayer, const THolyGrail& holyGrail, unsigned int x,
                                       unsigned int y, TTileExtent* pUpdatedExtent);
     TMapLayerObjectID _placeMine(bool bSecondLayer, const TMine& mine, unsigned int x, unsigned int y,
@@ -1081,6 +1089,33 @@ void TGameMap::_TImpl::setLossCondition(const TLossCondition* pNewLossCondition)
         if (_m_pProperties->m_pLossCondition == NULL)
             throw TAllocationFailure(__FILE__, __LINE__);
     }
+}
+
+TMapLayerObjectID TGameMap::_TImpl::placeObject(bool bSecondLayer, const TGameObject& obj, unsigned int x, unsigned int y,
+                                                TTileExtent* pUpdatedExtent)
+{
+    if (const TNonRandomHero* pNonRandomHero = dynamic_cast<const TNonRandomHero*>(&obj))
+        return _placeNonRandomHero(bSecondLayer, *pNonRandomHero, x, y, pUpdatedExtent);
+    if (const TPrison* pPrison = dynamic_cast<const TPrison*>(&obj))
+        return _placePrison(bSecondLayer, *pPrison, x, y, pUpdatedExtent);
+    if (const THero* pHero = dynamic_cast<const THero*>(&obj))
+        return _placeHero(bSecondLayer, *pHero, x, y, pUpdatedExtent);
+    if (const TTown* pTown = dynamic_cast<const TTown*>(&obj))
+        return _placeTown(bSecondLayer, *pTown, x, y, pUpdatedExtent);
+    if (const THolyGrail* pHolyGrail = dynamic_cast<const THolyGrail*>(&obj))
+        return _placeHolyGrail(bSecondLayer, *pHolyGrail, x, y, pUpdatedExtent);
+    if (const TMine* pMine = dynamic_cast<const TMine*>(&obj))
+        return _placeMine(bSecondLayer, *pMine, x, y, pUpdatedExtent);
+    if (const TGenerator* pGenerator = dynamic_cast<const TGenerator*>(&obj))
+        return _placeGenerator(bSecondLayer, *pGenerator, x, y, pUpdatedExtent);
+    if (const TSign* pSign = dynamic_cast<const TSign*>(&obj))
+        return _placeSign(bSecondLayer, *pSign, x, y, pUpdatedExtent);
+    TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, obj, x, y, pUpdatedExtent);
+#line 2009
+    assert(result != TLayer::s_kInvalidObjID);
+    const TLayer* pLayer = getPLayer(bSecondLayer);
+    _onGeneralObjectAdded(pLayer->getObject(result));
+    return result;
 }
 
 void TGameMap::_TImpl::removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
