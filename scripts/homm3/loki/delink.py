@@ -287,7 +287,11 @@ def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, t
         if compiled is None or len(compiled) != len(retail):
             continue
         pairs = list(zip(compiled, retail))
-        if any(not t.target.startswith("data_") and (c.target, c.addend) != (t.target, t.addend)
+        # Compare canonical names: anonymous-namespace symbols differ in
+        # their random suffix until cmpobj folds them.
+        if any(not t.target.startswith("data_")
+               and (cmpobj.canonical_symbol(c.target), c.addend)
+               != (cmpobj.canonical_symbol(t.target), t.addend)
                for c, t in pairs):
             continue
         for c, t in pairs:
