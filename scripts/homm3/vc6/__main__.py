@@ -14,6 +14,10 @@ Subcommands
         Compile both, diff the C1XX->C2 IL at record granularity.
   predict-inline SELECTOR [--against SELECTOR]        (phase 3)
         Per-call-site expand/call decisions with the budget trajectory.
+  force SELECTOR [--rule OWNER,CALLEE,N,E|K ...]
+        Override C2's per-site inline decision over one frozen IL capture.
+  reach SELECTOR
+        Force retail's observable inline decisions; classify the wall.
   why-reg SELECTOR                                   (phase 0 v1)
         Which known knob moves a divergent register binding toward retail.
   oracle <subsystem> [--probe NAME | --all]
@@ -104,6 +108,120 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="v2: show candidate front-end local-handle order")
 
     pw.add_argument("--json", action="store_true")
+
+    pf = ss.add_parser("force", help="override C2 inline decisions for one function "
+                       "over a frozen IL capture (inertness-gated)")
+    pf.add_argument("target", help="retail VA/RVA, symbol or UNIT:SELECTOR")
+    pf.add_argument("--rule", action="append", metavar="OWNER,CALLEE,N,E|K",
+                    help="name substrings ('*' = any), 1-based occurrence (0 = all), "
+                         "E expand / K keep the call")
+
+    pre = ss.add_parser("reach", help="force retail's observable inline decisions; "
+                        "classify an inline-state wall")
+    pre.add_argument("target", help="retail VA/RVA, symbol or UNIT:SELECTOR")
+    pre.add_argument("--iterations", type=int, default=6)
+    pre.add_argument("--json", action="store_true")
+
+    pra = ss.add_parser("reach-all", help="batch reach over a TSV of retail VAs "
+                        "(first column; rmg/zlib units skipped)")
+    pra.add_argument("list")
+    pra.add_argument("--jobs", type=int, default=4)
+    pra.add_argument("--iterations", type=int, default=6)
+    pra.add_argument("--limit", type=int, default=0)
+
+    prr = ss.add_parser("reg-reach", help="greedy search over C2's eligible global "
+                        "register choices toward retail; classify a regalloc-state wall")
+    prr.add_argument("target")
+    prr.add_argument("--with-inline", action="store_true",
+                     help="first apply the inline rules `reach` derives")
+    prr.add_argument("--iterations", type=int, default=6)
+    prr.add_argument("--passes", type=int, default=2)
+
+    pra = ss.add_parser("reg-reach-all", help="batch reg-reach over a VA list, reusing "
+                        "each function's saved inline rules")
+    pra.add_argument("list")
+    pra.add_argument("--jobs", type=int, default=4)
+    pra.add_argument("--passes", type=int, default=1)
+    pra.add_argument("--max-trials", type=int, default=120)
+    pra.add_argument("--mode", choices=("register", "merge"), default="register",
+                     help="merge: run merge-reach (tail-merge vetoes) instead")
+
+    pmr = ss.add_parser("merge-reach", help="greedy veto search over C2's tail merges "
+                        "toward retail; classify a tail-merge wall")
+    pmr.add_argument("target")
+    pmr.add_argument("--passes", type=int, default=3)
+
+    pva = ss.add_parser("variants", help="distinct assemblies of one unchanged body "
+                        "across real context channels; is retail among them?")
+    pva.add_argument("target")
+    pva.add_argument("--max-replays", type=int, default=80)
+    pva.add_argument("--jobs", type=int, default=6)
+    pva.add_argument("--against", help="also test membership of this object's copy")
+    pva.add_argument("--decl-classes", type=int, default=4)
+    pvaa = ss.add_parser("variants-all", help="classify a wall list (first TSV column = VA): "
+                         "retail reachable by context vs source wrong")
+    pvaa.add_argument("list")
+    pvaa.add_argument("--max-replays", type=int, default=60)
+    pvaa.add_argument("--jobs", type=int, default=8)
+    pvaa.add_argument("--limit", type=int, default=0)
+    pvaa.add_argument("--inner-jobs", type=int, default=3,
+                      help="parallel compiles/replays inside one function")
+    pvaa.add_argument("--decl-classes", type=int, default=3,
+                      help="declaration-offset classes that get their own phase/cost sweep")
+
+    pst = ss.add_parser("state", help="read the unrelated-edit state (phase flag, handle "
+                        "base) each function of a unit receives")
+    pst.add_argument("target", help="unit, or a function selector")
+    pcm = ss.add_parser("compile-m", help="compile a unit once and emit, for every function, "
+                        "the M assemblies it takes across the unrelated-edit states")
+    pcm.add_argument("target", help="unit, or a function selector (its unit, filtered)")
+    pcm.add_argument("--function", help="only print this function")
+    pcm.add_argument("--offsets", type=int, default=64, help="declaration offsets 0..N-1")
+    pcm.add_argument("--jobs", type=int, default=6)
+    pcm.add_argument("--against", help="object whose copies are checked for membership")
+    pfz = ss.add_parser("fuzz-verify", help="compile randomly edited copies (unrelated edits "
+                        "only) and check every original function lands in its predicted set")
+    pfz.add_argument("target", help="unit, or a function selector")
+    pfz.add_argument("--function")
+    pfz.add_argument("--edits", type=int, default=50)
+    pfz.add_argument("--seed", type=int, default=1)
+    pfz.add_argument("--jobs", type=int, default=6)
+    pfz.add_argument("--reuse", action="store_true", help="reuse the unit's compile-m.json")
+
+    pwl = ss.add_parser("compile-m-walls", help="compile-m every unit of a wall list and test "
+                        "whether retail is among each wall's M assemblies")
+    pwl.add_argument("list")
+    pwl.add_argument("--jobs", type=int, default=10)
+    pwl.add_argument("--reuse", action="store_true")
+    pwl.add_argument("--limit", type=int, default=0)
+
+    psc = ss.add_parser("state-scan", help="compile every in-scope unit 1-to-M one state axis at "
+                        "a time, score every assembly with objdiff and rank the functions a "
+                        "reachable state would improve")
+    psc.add_argument("units", nargs="*")
+    psc.add_argument("--jobs", type=int, default=8)
+    psc.add_argument("--reuse", action="store_true",
+                     help="reuse scored compile-m.json files and append to scan.jsonl")
+    psc.add_argument("--offset-units", help="JSON object whose keys are the units a handle "
+                     "census found offset-sensitive; other units skip the offset axis")
+    pim = ss.add_parser("impact", help="predict which functions a source edit moves and "
+                        "through which state (phase, callee order, handle offset)")
+    pim.add_argument("unit")
+    pim.add_argument("edit", nargs="?", help="swap-include:A:B | insert:LINE:TEXT | "
+                     "move:VA:before:VA | remove:VA (omit for the compile-order report)")
+    pim.add_argument("--verify", action="store_true", help="compile the edit once and compare")
+
+    ppc = ss.add_parser("phase-census", help="per unit: which functions the phase flag moves, "
+                        "which value retail needs, and which function each order compiles first")
+    ppc.add_argument("units", nargs="*")
+    ppc.add_argument("--jobs", type=int, default=6)
+
+    pcv = ss.add_parser("cover", help="C2 function-entry hit counts for scratch TUs; "
+                        "with several sources, print the entries whose counts differ")
+    pcv.add_argument("sources", nargs="+")
+    pcv.add_argument("--functions", help="TSV of C2 entry RVAs (default: atlas raw list)")
+    pcv.add_argument("--installed", action="store_true",
+                     help="use the already installed trace shim (do not rebuild/restore)")
 
     pr = ss.add_parser("trace-registers", help="passive temporary-register stores, gated by object identity")
     pr.add_argument("unit", help="unit in config/units.toml")
@@ -204,6 +322,22 @@ _TOOLS = {
     "predict-inline": ("inline_model", "run_predict"),
     "why-reg": ("reg_model", "run_why"),
     "trace-registers": ("register_trace", "run"),
+    "force": ("inline_force", "run_force"),
+    "reach": ("inline_force", "run_reach"),
+    "reach-all": ("inline_force", "run_reach_all"),
+    "reg-reach": ("inline_force", "run_register_reach"),
+    "reg-reach-all": ("inline_force", "run_register_reach_all"),
+    "cover": ("c2_cover", "run"),
+    "state": ("unstable_state", "run_state"),
+    "compile-m": ("unstable_state", "run_compile_m"),
+    "fuzz-verify": ("unstable_state", "run_fuzz"),
+    "compile-m-walls": ("unstable_state", "run_walls"),
+    "phase-census": ("unstable_state", "run_phase_census"),
+    "state-scan": ("unstable_state", "run_scan"),
+    "impact": ("state_impact", "run"),
+    "variants": ("context_variants", "run"),
+    "variants-all": ("context_variants", "run_all"),
+    "merge-reach": ("inline_force", "run_merge_reach"),
     "why-branch": ("flow_model", "run_why"),
     "oracle": ("oracle", "run"),
     "diagnose": ("diagnose", "run"),

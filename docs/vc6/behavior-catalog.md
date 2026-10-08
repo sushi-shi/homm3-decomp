@@ -638,6 +638,10 @@ record (byte-proven 2026-08-07/08, `config/match_baseline.tsv` ~741–927,
   `CREATURE_NOMAD` alone 96.09 → 26.18; +10 enumerators 97.04; +8 100.00;
   three `ESpellId` enumerators 96.09 → 90.16. Non-monotonic in both
   directions — MEASURE, DO NOT REASON.
+- Mechanism (2026-10-08): handle values modulo 64 of the data symbols whose
+  addresses the function uses select the live-range numbering in register
+  allocation. Retail is the class at +13..+26 handles before `town.h:496`.
+  See [handle-period.md](handle-period.md).
 - Effects do not ADD: two change-sets each reaching 100.0000 alone COMPOSED
   read 94.0741.
 - Values shown by this one row with no semantic change: 26.18, 90.16, 94.07,
@@ -836,6 +840,19 @@ names in `cspriteframe`.
 - evidence: `src/cspriteframe.cpp` drawSpellEffect and drawTileShadow notes
 - status: observed; the width is the global's placement, the order behind it unmodelled
 - probe: none (needs the full TU)
+
+### C13. The TU's first globally optimized function compiles differently
+C2's global-optimizer driver leaves its phase flag (`.bssbe 0x9f120`) at 1
+after every function; only the first function it optimizes in a TU starts
+from the zeroed back-end state. With 0, branches whose compare has a constant
+outcome (typically inside an inlined helper called with constant arguments)
+are folded one stage later, which can change argument push scheduling.
+`combatManager::showCreatureSpellError` (0x4922f0) is retail-exact only with
+1; it lost that when two dynamically initialized statics were moved out of
+`drawing.cpp` (3f0b03da3) and it became the TU's first function.
+- evidence: [phase-flag.md](phase-flag.md)
+- status: mechanism traced (driver stages, reader decision, probes)
+- probe: `c13_phase_flag_first_function` (identical first/second bodies)
 
 ### C9. Measurement hygiene the corpus depends on (model-training caveats)
 objdiff fuzzy gives partial credit for a differing displacement (a 97%

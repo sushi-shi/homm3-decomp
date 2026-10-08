@@ -11,6 +11,10 @@ Wine remains the verdict. Do not use leaked compiler source as evidence.
 | Driver options and compiler passes | [Driver passes](driver-passes.md) |
 | Intermediate language | [IL format](il-format.md) |
 | Inlining | [Inliner](inliner.md), [optimization scope](optimization-scope.md) |
+| Why unchanged functions change (overview) | [Instability findings](instability-findings.md) |
+| Global optimizer phase flag (first-function effect) | [Phase flag](phase-flag.md) |
+| Period-64 declaration-count effect | [Handle period](handle-period.md) |
+| Which functions a source edit moves (predictor) | [State impact](state-impact.md) |
 | Register allocation | [Register allocator](regalloc.md), [handle order](handle-order.md) |
 | Control flow and object lifetimes | [Control flow](control-flow.md), [EH cleanup](eh-cleanup.md) |
 | Candidate debug information | [Debug lines](debug-lines.md) |
@@ -18,7 +22,7 @@ Wine remains the verdict. Do not use leaked compiler source as evidence.
 | Global and static data placement | [Data layout](data-layout.md) |
 | Anonymous-namespace names and compile times | [Anonymous namespaces](anonymous-namespace-names.md) |
 | Compiler generation comparison | [RTM generation](rtm-generation.md) |
-| Compiler instrumentation | [Shim](shim.md) |
+| Compiler instrumentation | [Shim](shim.md), [state unrelated edits disturb](unstable-state.md), [decision forcing](decision-forcing.md), [context variants](context-variants.md) |
 | Known compiler behavior | [Behavior catalog](behavior-catalog.md) |
 | Victor library compiler findings | [Victor](victor-library.md) |
 
