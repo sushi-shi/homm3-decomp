@@ -292,3 +292,7 @@ available.
   handlers after a switch whose cases all return. The generic case after
   the switch, not a `default:` arm, leaves that jump unaligned
   (`createObject`/`_createObject`).
+- An unsigned `x % 8` and a source-level `x & 7` emit the same `andl $7`
+  but allocate its result differently (the modulus goes through
+  `expand_divmod`): `(dir + 1) & (kNumDirs - 1)` takes `%ecx` where
+  `(dir + 1) % kNumDirs` takes `%edx` (`_validateTile`'s span loop).

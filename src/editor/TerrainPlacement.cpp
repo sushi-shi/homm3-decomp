@@ -1118,7 +1118,7 @@ void TTerrainPlacementOp::_validateTile(unsigned int x, unsigned int y, TTilePoi
                     }
                 for (dir = aAdjDifferentSpan[spanNum].m_startDir;
                      dir != (aAdjDifferentSpan[spanNum].m_startDir + aAdjDifferentSpan[spanNum].m_numDirs) % kNumDirs;
-                     dir = (dir + 1) % kNumDirs)
+                     dir = (dir + 1) & (kNumDirs - 1))
                     if (abAdjDir[dir]) {
                         TTilePoint adjPt = TPoint<int>((int)x, (int)y) + akAdjOffset[dir];
                         _placeTile(adjPt.x(), adjPt.y(), pTopLeft, pBottomRight);
