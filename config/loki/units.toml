@@ -93,3 +93,8 @@ source = "src/Font.cpp"
 name = "T16bppPalette"
 object = 6
 source = "src/editor/T16bppPalette.cpp"
+
+[[unit]]
+name = "Bitmap8"
+object = 41
+source = "src/Bitmap8.cpp"
