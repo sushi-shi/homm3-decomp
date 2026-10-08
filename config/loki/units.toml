@@ -419,3 +419,8 @@ source = "src/editor/TownPropsBuildingsPage.cpp"
 name = "TownPropsSheet"
 object = 94
 source = "src/editor/TownPropsSheet.cpp"
+
+[[unit]]
+name = "MapSpecsLossCondPage"
+object = 71
+source = "src/editor/MapSpecsLossCondPage.cpp"
