@@ -315,34 +315,6 @@ public:
         pPoint->x += x;
         pPoint->y += y;
     }
-    void ScreenToClient(CPoint* pPoint) const
-    {
-        gint x;
-        gint y;
-        gdk_window_get_position(_m_hWnd->window, &x, &y);
-        gint topX;
-        gint topY;
-        gdk_window_get_position(gtk_widget_get_toplevel(_m_hWnd)->window, &topX, &topY);
-        x += topX;
-        y += topY;
-        pPoint->x -= x;
-        pPoint->y -= y;
-    }
-
-    bool GetClientRect(CRect* pRect) const
-    {
-        bool bResult = false;
-        pRect->left = pRect->top = 0;
-        pRect->right = 0;
-        pRect->bottom = 0;
-        if (_m_hWnd) {
-            pRect->bottom = _m_hWnd->allocation.height;
-            pRect->right = _m_hWnd->allocation.width;
-            bResult = true;
-        }
-        return bResult;
-    }
-    void GetWindowRect(CRect& rect) { GetClientRect(&rect); }
 
     void Invalidate(bool bErase) { gtk_widget_queue_draw(_m_hWnd); }
     void InvalidateRect(CRect* pRect, int bErase)
@@ -361,6 +333,19 @@ public:
         ClientToScreen(pPoint);
         return true;
     }
+    void ScreenToClient(CPoint* pPoint) const
+    {
+        gint x;
+        gint y;
+        gdk_window_get_position(_m_hWnd->window, &x, &y);
+        gint topX;
+        gint topY;
+        gdk_window_get_position(gtk_widget_get_toplevel(_m_hWnd)->window, &topX, &topY);
+        x += topX;
+        y += topY;
+        pPoint->x -= x;
+        pPoint->y -= y;
+    }
 
     CWnd* GetCapture() { return _m_bHasCapture ? this : NULL; }
     void SetCapture() { _m_bHasCapture = true; }
@@ -369,6 +354,21 @@ public:
         _m_bHasCapture = false;
         OnCaptureChanged(NULL);
     }
+
+    bool GetClientRect(CRect* pRect) const
+    {
+        bool bResult = false;
+        pRect->left = pRect->top = 0;
+        pRect->right = 0;
+        pRect->bottom = 0;
+        if (_m_hWnd) {
+            pRect->bottom = _m_hWnd->allocation.height;
+            pRect->right = _m_hWnd->allocation.width;
+            bResult = true;
+        }
+        return bResult;
+    }
+    void GetWindowRect(CRect& rect) { GetClientRect(&rect); }
 
     void TColorToGdkColor(TColor color, GdkColor* pGdkColor)
     {
