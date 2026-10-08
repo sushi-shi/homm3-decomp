@@ -77,8 +77,8 @@ public:
 
     virtual void write(TRawOStream* pOStream) const;
 
-    TPlayer getOwner() const { return _m_owner; }
     void setOwner(TPlayer newOwner) { _m_owner = newOwner; }
+    TPlayer getOwner() const { return _m_owner; }
 
 private:
     TPlayer _m_owner;
@@ -112,12 +112,12 @@ public:
     TAbandonedMine(const TObjectType& objType);
     TAbandonedMine(const TObjectType& objType, TRawIStream* pIStream, int version);
 
-    virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return _m_abPotentialResource != _s_kabDefaultPotentialResource; }
-
     bool getBIsPotentialResource(TGameResourceType type) const;
     void setBIsPotentialResource(TGameResourceType type, bool bIsPotential);
     unsigned int getNumPotentialResources() const { return _m_abPotentialResource.count(); }
+
+    virtual void write(TRawOStream* pOStream) const;
+    virtual bool isCustomized() const { return _m_abPotentialResource != _s_kabDefaultPotentialResource; }
 
 private:
     static const bitset<kNumGameResourceTypes> _s_kabDefaultPotentialResource;
@@ -204,8 +204,8 @@ public:
 
     virtual void write(TRawOStream* pOStream) const;
 
-    TPlayer getOwner() const { return _m_owner; }
     void setOwner(TPlayer newOwner) { _m_owner = newOwner; }
+    TPlayer getOwner() const { return _m_owner; }
 
 private:
     TPlayer _m_owner;
@@ -220,18 +220,18 @@ public:
     TTreasure(const TObjectType& objType);
     TTreasure(const TObjectType& objType, TRawIStream* pIStream, int version);
 
+    void setBCustomGuardians(bool bCustom) { _m_bCustomGuardians = bCustom; }
+    const string& getMessage() const { return _m_message; }
+    void setMessage(const string& newMessage);
+    bool getBCustomGuardians() const { return _m_bCustomGuardians; }
+    const TArmy& getGuardians() const { return _m_guardians; }
+    void setGuardians(const TArmy& newGuardians);
+
     virtual void importText(istream* pIStream);
     virtual void write(TRawOStream* pOStream) const;
     virtual bool isCustomized() const;
     virtual bool hasText() const { return !getMessage().empty(); }
     virtual void exportText(ostream* pOStream) const;
-
-    const string& getMessage() const { return _m_message; }
-    void setMessage(const string& newMessage);
-    bool getBCustomGuardians() const { return _m_bCustomGuardians; }
-    void setBCustomGuardians(bool bCustom) { _m_bCustomGuardians = bCustom; }
-    const TArmy& getGuardians() const { return _m_guardians; }
-    void setGuardians(const TArmy& newGuardians);
 
 protected:
     void read(TRawIStream* pIStream, int version);
@@ -297,14 +297,14 @@ public:
     TSign(const TObjectType& objType);
     TSign(const TObjectType& objType, TRawIStream* pIStream, int version);
 
+    const string& getText() const { return _m_text; }
+    void setText(const string& newText);
+
     virtual void importText(istream* pIStream);
     virtual void write(TRawOStream* pOStream) const;
     virtual bool isCustomized() const { return !_m_text.empty(); }
     virtual bool hasText() const { return true; }
     virtual void exportText(ostream* pOStream) const;
-
-    const string& getText() const { return _m_text; }
-    void setText(const string& newText);
 
 private:
     string _m_text;
@@ -329,9 +329,6 @@ public:
     TScholar(const TObjectType& objType);
     TScholar(const TObjectType& objType, TRawIStream* pIStream, int version);
 
-    virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return _m_rewardType != eRewardRandom; }
-
     TRewardType getRewardType() const { return _m_rewardType; }
     void setRewardType(TRewardType newRewardType);
     TPrimarySkill getPrimarySkill() const { return _m_primarySkill; }
@@ -340,6 +337,9 @@ public:
     void setSecondarySkill(TSecondarySkill newSecondarySkill);
     SpellID getSpell() const { return _m_spell; }
     void setSpell(SpellID newSpell);
+
+    virtual void write(TRawOStream* pOStream) const;
+    virtual bool isCustomized() const { return _m_rewardType != eRewardRandom; }
 
 private:
     TRewardType _m_rewardType;
@@ -356,11 +356,11 @@ public:
     THolyGrail(const TObjectType& objType);
     THolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version);
 
-    virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return _m_radius != 0; }
-
     unsigned int getRadius() const { return _m_radius; }
     void setRadius(unsigned int newRadius);
+
+    virtual void write(TRawOStream* pOStream) const;
+    virtual bool isCustomized() const { return _m_radius != 0; }
 
 private:
     unsigned int _m_radius;
