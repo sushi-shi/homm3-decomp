@@ -11,6 +11,7 @@
 #include "editor/MapViewingWnd.h"
 #include "editor/GameMap.h"
 #include "editor/Tile.h"
+#include "editor/MapEditingWnd.h"
 
 class TMapEditWnd;
 class TTileHRuler;

@@ -9,20 +9,20 @@
 #include <vector>
 
 #include "exceptions.h"
+#include "editor/MapSpecsLossCondPage.h"
 #include "editor/GameMap.h"
+#include "editor/MapSpecsSheet.h"
 #include "editor/GameObject.h"
 #include "editor/Hero.h"
+#include "editor/Town.h"
 #include "editor/MapDoc.h"
 #include "editor/MapSpecsGeneralPage.h"
-#include "editor/MapSpecsLossCondPage.h"
 #include "editor/MapSpecsPlayerSpecsPage.h"
 #include "editor/MapSpecsRumorsPage.h"
-#include "editor/MapSpecsSheet.h"
 #include "editor/MapSpecsTeamsPage.h"
 #include "editor/MapSpecsTimedEventsPage.h"
 #include "editor/Monster.h"
 #include "editor/TerrainPlacement.h"
-#include "editor/Town.h"
 
 namespace {
 #include <gtk/gtk.h>

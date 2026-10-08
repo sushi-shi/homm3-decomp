@@ -23,12 +23,10 @@
 #define HOMM3_EDITOR_MAPVIEW_H
 
 #include "editor/stdafx.h"
-#include "editor/GameMap.h"
-#include "editor/GUIGameObject.h"
-#include "editor/MapViewingWnd.h"
+#include "editor/MapEditingWnd.h"
 #include "editor/Player.h"
-#include "editor/Tile.h"
 #include "editor/ToolkitWnd.h"
+#include "editor/GUIGameObject.h"
 #include "adventureobjecttype.h"
 #include "objecttype.h"
 #include "terrain_type.h"

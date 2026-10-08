@@ -29,10 +29,10 @@
 #include <memory>
 
 #include "editor/GameMap.h"
-#include "editor/MapView.h"
 #include "editor/TerrainPlacement.h"
 #include "editor/RiverPlacement.h"
 #include "editor/RoadPlacement.h"
+#include "editor/MapView.h"
 
 class TGameObject;
 class TMapView;

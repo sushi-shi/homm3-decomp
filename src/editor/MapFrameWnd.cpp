@@ -9,9 +9,9 @@
 #include <string>
 
 #include "exceptions.h"
+#include "editor/MapFrameWnd.h"
 #include "editor/GameMap.h"
 #include "editor/MapEditWnd.h"
-#include "editor/MapFrameWnd.h"
 #include "editor/TileHRuler.h"
 #include "editor/TileVRuler.h"
 

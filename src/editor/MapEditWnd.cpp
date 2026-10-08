@@ -20,9 +20,9 @@
 
 #include "exceptions.h"
 #include "editor/Clamp.h"
+#include "editor/MapEditWnd.h"
 #include "editor/GameMap.h"
 #include "editor/GUIGameObject.h"
-#include "editor/MapEditWnd.h"
 #include "editor/Tile.h"
 
 namespace {

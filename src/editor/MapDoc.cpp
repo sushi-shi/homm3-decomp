@@ -16,13 +16,13 @@
 #include <string>
 
 #include "exceptions.h"
-#include "GzBuf.h"
 #include "editor/GameMap.h"
-#include "editor/GUIGameObject.h"
 #include "editor/MapDoc.h"
+#include "editor/GUIGameObject.h"
 #include "editor/MapEditorText.h"
 #include "editor/MapView.h"
 #include "editor/RawStream.h"
+#include "GzBuf.h"
 
 namespace {
 

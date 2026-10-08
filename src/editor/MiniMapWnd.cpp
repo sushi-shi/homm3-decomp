@@ -8,11 +8,11 @@
 
 #include <string>
 
+#include "editor/MiniMapWnd.h"
 #include "editor/Clamp.h"
 #include "editor/Colors.h"
 #include "editor/GameMap.h"
 #include "editor/GUIGameObject.h"
-#include "editor/MiniMapWnd.h"
 
 const CSize TMiniMapWnd::s_kClientSize(144, 144);
 
