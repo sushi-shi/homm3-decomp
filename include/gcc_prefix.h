@@ -23,23 +23,5 @@
 #define __declspec(x)
 #define __unaligned
 
-/* 2. The shared source still names Windows SDK types. Import the real SDK
- *    declarations (after GCC's own headers, see homm3.loki.cc) through the
- *    SDK's portable PowerPC branch, which carries no x86 __asm blocks; the
- *    selection is scoped to the import. */
-#define _WIN32 1
-#define WIN32 1
-#define _M_PPC 1
-#define _STDCALL_SUPPORTED 1
-#define WIN32_LEAN_AND_MEAN 1
-#define NOMINMAX 1
-/*    The SDK's BOOL (int) is imported under another name: the editor's own
- *    BOOL is Loki's one-byte typedef (stdafx.h; "BOOL ...::OnInitDialog()"
- *    texts, returned in %al), and no shared unit spells the SDK's. */
-#define BOOL HOMM3_WIN32_BOOL
-#include <windows.h>
-#undef BOOL
-#undef _M_PPC
-
 #endif
 #endif

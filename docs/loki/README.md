@@ -63,9 +63,10 @@ last. Neither Wine nor patchelf is involved.
 -fpermissive`, `-DHOMM3_TARGET_LOKI=1` and `-include include/gcc_prefix.h`.
 `-fpermissive` only admits the VC6 dialect of the shared source.
 `include/gcc_prefix.h` is the GCC counterpart of `codewarrior_prefix.h`: it
-spells the Microsoft keywords and imports the real Windows SDK declarations
-(after GCC's own headers) through the SDK's portable PowerPC branch. VC6 never
-sees it.
+spells the Microsoft keywords. VC6 never sees it. No Windows SDK header is on
+the Loki include path: the port defines the few Windows names it spells
+itself (`UINT` and `IDOK` in the editor's MFC shim, `stdafx.h`; `tagRGBQUAD`
+in `palette.cpp`).
 
 ## Census
 
