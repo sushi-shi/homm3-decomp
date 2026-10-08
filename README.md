@@ -48,6 +48,18 @@ Excluded from the scores (generated or library code):
 <!-- mac-match-score:end -->
 
 <!-- loki-match-score:start -->
+
+**Loki Linux `h3maped` 1.0 (map editor, GCC 2.95.2): 495 / 7,432 functions exact (6.66%) &middot; 9.62% fuzzy (MAX).**
+
+A separate image with its own scores; `homm3 loki build --bank` banks `config/loki/match_baseline.tsv`, and this block renders from it.
+
+| Phase | Objects | Functions exact MAX | Fuzzy MAX |
+| :---- | ------: | ------------------: | --------: |
+| engine (shared with the game) | 29 | 495 / 1,001 (49.5%) | 59.01% |
+| editor | 74 | 0 / 6,431 (0.0%) | 0.00% |
+
+_CUR / MAX / HIST: 495 / 495 / 495 exact &middot; 9.62% / 9.62% / 9.62% fuzzy, weighted by size. Project functions only: the 3,120 `.text` functions and 4,312 kept linkonce bodies of the 103 GCC 2.95.2 project objects (20 built units); GTK+/glib/libglade/libxml/zlib and libstdc++ are excluded._
+
 <!-- loki-match-score:end -->
 
 Scores always satisfy CUR ≤ MAX ≤ HIST. Editing a function resets its MAX to
