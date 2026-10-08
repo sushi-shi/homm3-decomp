@@ -429,3 +429,8 @@ source = "src/editor/MapSpecsLossCondPage.cpp"
 name = "MapSpecsSheet"
 object = 69
 source = "src/editor/MapSpecsSheet.cpp"
+
+[[unit]]
+name = "HeroPropsArtifactsPage"
+object = 86
+source = "src/editor/HeroPropsArtifactsPage.cpp"
