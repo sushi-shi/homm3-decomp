@@ -96,7 +96,7 @@ static SSpellTraits aSpellTraitsImp[kNumSpellsAndCreatureEffects] = {
     { -1, "Deathstr.wav", eSpellEffectDeathStare, 0x18 },
 };
 
-const SSpellTraits* akSpellTraits = aSpellTraitsImp;
+const SSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects] = aSpellTraitsImp;
 
 namespace {
 
@@ -118,7 +118,7 @@ static void InitializeSpellTraits(int id, const vector<char*>& resource);
 
 bool SpellTargetsASingleArmy(int spell, int sslevel)
 {
-    unsigned int flags = akSpellTraits[spell].m_flags;
+    const unsigned int flags = akSpellTraits[spell].m_flags;
     return (flags & SPELL_TARGET_ALWAYS_SINGLE)
         || ((flags & SPELL_TARGET_MASS_AT_EXPERT) && sslevel <= 2)
         || ((flags & SPELL_TARGET_MASS_AT_ADVANCED) && sslevel <= 1);

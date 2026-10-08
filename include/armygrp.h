@@ -526,7 +526,7 @@ struct SSpellTraits {
     const char* m_sample;     // +0x04
     // DC TSpellTraits record 0x1f65: member type 0x1f15, TSpellEffectID.
     TSpellEffectID m_effect;  // +0x08, int-wide enum
-    unsigned int m_flags;     // bit 10 gates one immunity family;
+    unsigned long m_flags;    // DC T_ULONG; bit 10 gates one immunity family;
                               // bit 12 (byte +0xd & 0x10) blocks the
                               // spell against siege weapons
     // +0x10 is the display name. SetShrineHelpText passes it as the string
@@ -573,8 +573,9 @@ SIZE(SSpellTraits, 132);
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-// Loki exports the table pointer as akSpellTraits (the Dreamcast name).
-extern const SSpellTraits* akSpellTraits;
+// Loki exports the table pointer as akSpellTraits; Dreamcast types it as a
+// reference to the const 80-row array.
+extern const SSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects];
 
 bool SpellTargetsASingleArmy(int spell, int sslevel);
 
