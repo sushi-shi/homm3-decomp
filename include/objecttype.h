@@ -191,8 +191,8 @@ enum TObjectSlot {
 class TObjectTypeTable : public vector<TObjectType> {
 public:
     TObjectTypeTable() {}
-    TObjectTypeTable(const char* fileName) { load(fileName); }
     TObjectTypeTable(unsigned int numElements) : vector<TObjectType>(numElements) {}
+    TObjectTypeTable(const char* fileName) { load(fileName); }
 
     void load(const char* fileName);
 };
