@@ -131,17 +131,18 @@ public:
         : _m_bHumanPlayable(false), _m_bComputerPlayable(false), _m_behaviorType(TBehaviorType(0)),
           _m_bGenerateHero(false) {}
 
+    void setBHumanPlayable(bool bPlayable) { _m_bHumanPlayable = bPlayable; }
+    void setBComputerPlayable(bool bPlayable) { _m_bComputerPlayable = bPlayable; }
+    void setBehaviorType(TBehaviorType newBehaviorType);
+    void setBGenerateHero(bool bGenerate) { _m_bGenerateHero = bGenerate; }
+    void setMainTownRef(const TMapObjectRef& newMainTownRef) { _m_mainTownRef = newMainTownRef; }
+
     bool getBPresent() const { return _m_bHumanPlayable || _m_bComputerPlayable; }
     bool getBHumanPlayable() const { return _m_bHumanPlayable; }
-    void setBHumanPlayable(bool bPlayable) { _m_bHumanPlayable = bPlayable; }
     bool getBComputerPlayable() const { return _m_bComputerPlayable; }
-    void setBComputerPlayable(bool bPlayable) { _m_bComputerPlayable = bPlayable; }
     TBehaviorType getBehaviorType() const { return _m_behaviorType; }
-    void setBehaviorType(TBehaviorType newBehaviorType);
     bool getBGenerateHero() const { return _m_bGenerateHero; }
-    void setBGenerateHero(bool bGenerate) { _m_bGenerateHero = bGenerate; }
     const TMapObjectRef& getMainTownRef() const { return _m_mainTownRef; }
-    void setMainTownRef(const TMapObjectRef& newMainTownRef) { _m_mainTownRef = newMainTownRef; }
 
     friend bool operator==(const TPlayerInfo& lhs, const TPlayerInfo& rhs);
 
@@ -538,32 +539,31 @@ public:
           _m_bRiverHFlipped(false), _m_bRiverVFlipped(false), _m_bRoadHFlipped(false),
           _m_bRoadVFlipped(false) {}
 
-    TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
     void setTerrainType(TTerrainType newTerrainType);
-    unsigned int getTileNum() const { return _m_tileNum; }
     void setTileNum(unsigned int newTileNum);
-    bool getBHFlipped() const { return _m_bHFlipped; }
     void setBHFlipped(bool bFlipped) { _m_bHFlipped = bFlipped; }
-    bool getBVFlipped() const { return _m_bVFlipped; }
     void setBVFlipped(bool bFlipped) { _m_bVFlipped = bFlipped; }
-
-    TRiverType getRiverType() const { return TRiverType(_m_riverType); }
     void setRiverType(TRiverType newRiverType);
-    unsigned int getRiverTileNum() const { return _m_riverTileNum; }
     void setRiverTileNum(unsigned int newTileNum);
-    bool getBRiverHFlipped() const { return _m_bRiverHFlipped; }
     void setBRiverHFlipped(bool bFlipped) { _m_bRiverHFlipped = bFlipped; }
-    bool getBRiverVFlipped() const { return _m_bRiverVFlipped; }
     void setBRiverVFlipped(bool bFlipped) { _m_bRiverVFlipped = bFlipped; }
-
-    TRoadType getRoadType() const { return TRoadType(_m_roadType); }
     void setRoadType(TRoadType newRoadType);
-    unsigned int getRoadTileNum() const { return _m_roadTileNum; }
     void setRoadTileNum(unsigned int newTileNum);
-    bool getBRoadHFlipped() const { return _m_bRoadHFlipped; }
     void setBRoadHFlipped(bool bFlipped) { _m_bRoadHFlipped = bFlipped; }
-    bool getBRoadVFlipped() const { return _m_bRoadVFlipped; }
     void setBRoadVFlipped(bool bFlipped) { _m_bRoadVFlipped = bFlipped; }
+
+    TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
+    unsigned int getTileNum() const { return _m_tileNum; }
+    bool getBHFlipped() const { return _m_bHFlipped; }
+    bool getBVFlipped() const { return _m_bVFlipped; }
+    TRiverType getRiverType() const { return TRiverType(_m_riverType); }
+    unsigned int getRiverTileNum() const { return _m_riverTileNum; }
+    bool getBRiverHFlipped() const { return _m_bRiverHFlipped; }
+    bool getBRiverVFlipped() const { return _m_bRiverVFlipped; }
+    TRoadType getRoadType() const { return TRoadType(_m_roadType); }
+    unsigned int getRoadTileNum() const { return _m_roadTileNum; }
+    bool getBRoadHFlipped() const { return _m_bRoadHFlipped; }
+    bool getBRoadVFlipped() const { return _m_bRoadVFlipped; }
 
 // A lazily created, shared and copy-on-write _TObjectCellInfo vector.
 class _TPObjectCellInfoList {
