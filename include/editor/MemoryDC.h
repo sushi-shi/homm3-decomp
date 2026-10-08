@@ -1,0 +1,31 @@
+// MemoryDC.h - the editor's memory DC and its GDI helpers (MemoryDC.cpp,
+// name inferred from its alphabetical slot). RTTI names TMemoryDC (a CDC
+// with a 29-slot vtable, built in the Map Editor.cpp span at 0x45c561)
+// and its nested TError, which TMemoryDC throws when it cannot create its
+// DC. The transparent blits treat one colour of a bitmap, by default its
+// top-left pixel, as see-through; the menu helpers skip separators.
+//
+// Ported so far: TMemoryDC's error class; the DC itself follows with the
+// shell.
+#ifndef HOMM3_EDITOR_MEMORYDC_H
+#define HOMM3_EDITOR_MEMORYDC_H
+
+#include "exceptions.h"
+
+class TMemoryDC : public CDC {
+public:
+    class TError : public TRuntimeError {
+    public:
+        TError();
+    };
+};
+
+COLORREF getTransparentColor(CBitmap* pBitmap);
+void drawTransparentBitmap(CDC* pDC, CBitmap* pBitmap, int x, int y, COLORREF transparentColor);
+void drawTransparentBitmap(CDC* pDC, CBitmap* pBitmap, int x, int y);
+bool isPixelColor(CBitmap* pBitmap, int x, int y, COLORREF color);
+bool isTransparentPixel(CBitmap* pBitmap, int x, int y);
+unsigned int getFirstMenuItem(CMenu* pMenu);
+bool setMenuItemText(CMenu* pMenu, unsigned int& index, CString text);
+
+#endif  /* HOMM3_EDITOR_MEMORYDC_H */
