@@ -2,8 +2,9 @@
 // and its two tile rulers. It is an editing window and its edit window's
 // controller, forwarding the events to its own controller. Methods as the
 // image declares them; return types from __PRETTY_FUNCTION__ texts or the
-// retail bodies; the getters read +0x14 (edit window), +0x18 and +0x1c
-// (rulers). Data members are not declared yet.
+// retail bodies. The members are the controller (+0x10), the edit window
+// (+0x14) and the rulers (+0x18, +0x1c), named by the asserts; the getters
+// are in-class (strong after the static initialization).
 #ifndef HOMM3_EDITOR_MAPFRAMEWND_H
 #define HOMM3_EDITOR_MAPFRAMEWND_H
 
@@ -19,12 +20,12 @@ class TGUIGameObject;
 class TMapFrameWnd : public TMapEditingWnd, public TMapEditingWnd::TController {
 public:
     TMapFrameWnd(GtkWidget* thisWidget, TMapEditingWnd::TController* pController, int id,
-                 const TGameMap* pMap, bool bUnderground, TZoom zoom, bool bShowGrid,
+                 const TGameMap* pMap, bool bSecondLayer, TZoom zoom, bool bShowGrid,
                  bool bShowPassability, GtkAdjustment* pHAdjustment, GtkAdjustment* pVAdjustment);
     virtual ~TMapFrameWnd();
 
     void clearMap();
-    void setMapLayer(const TGameMap* pMap, bool bUnderground);
+    void setMapLayer(const TGameMap* pMap, bool bSecondLayer);
     void moveViewRect(const CPoint& pos);
     void update(const CRect& rect);
     void setZoom(TZoom zoom);
@@ -64,12 +65,17 @@ public:
 
     void OnSize(unsigned int type, int cx, int cy);
 
-    TMapEditWnd* getMapEditWnd();
-    TTileHRuler* getHRuler();
-    TTileVRuler* getVRuler();
+    TMapEditWnd* getMapEditWnd() { return _m_pEditWnd; }
+    TTileHRuler* getHRuler() { return _m_pHRuler; }
+    TTileVRuler* getVRuler() { return _m_pVRuler; }
 
 private:
     void _deleteAll();
+
+    TMapEditingWnd::TController* _m_pController;
+    TMapEditWnd* _m_pEditWnd;
+    TTileHRuler* _m_pHRuler;
+    TTileVRuler* _m_pVRuler;
 };
 
 #endif  /* HOMM3_EDITOR_MAPFRAMEWND_H */
