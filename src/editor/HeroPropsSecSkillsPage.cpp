@@ -317,7 +317,7 @@ BOOL THeroPropsSecSkillsPage::OnInitDialog()
         GList* items = NULL;
         GtkCombo* pMasteryCombo = _getPMasteryCombo(slot);
         emptyList(GTK_LIST(pMasteryCombo->list));
-        for (unsigned int mastery = 0; mastery < kNumMasteries - 1; mastery++)
+        for (unsigned int mastery = 0; mastery < kNumMasteries; mastery++)
             items = g_list_append(items, (gpointer)THero::s_akSkillMasteryTraits[mastery].m_name);
         gtk_combo_set_popdown_strings(pMasteryCombo, items);
         gtk_widget_set_sensitive(GTK_WIDGET(pMasteryCombo), FALSE);

@@ -164,11 +164,6 @@ private:
 
 class TSeersHut::TSecondarySkillReward : public TSeersHut::TReward {
 public:
-    // The editor's mastery count, as in TSecondarySkillRecord.
-    enum {
-        kNumMasteries = 3
-    };
-
     TSecondarySkillReward(TSecondarySkill skill, TSkillMastery mastery);
 
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }

@@ -49,16 +49,9 @@ private:
 TRawOStream& operator<<(TRawOStream& stream, const TPrimarySkillBonuses& bonuses);
 TRawIStream& operator>>(TRawIStream& stream, TPrimarySkillBonuses& bonuses);
 
-// A secondary skill at a mastery (basic by default). The editor counts
-// three masteries from basic ("mastery < eMasteryBasic + kNumMasteries"
-// compares with 4) where the game's TSkillMastery counts four from none;
-// the record carries the editor's count so herospec.h keeps the game's.
+// A secondary skill at a mastery (basic by default).
 class TSecondarySkillRecord {
 public:
-    enum {
-        kNumMasteries = 3
-    };
-
     TSecondarySkillRecord() : _m_type(TSecondarySkill(0)), _m_mastery(TSkillMastery(1)) {}
     TSecondarySkillRecord(TSecondarySkill type, TSkillMastery mastery);
 

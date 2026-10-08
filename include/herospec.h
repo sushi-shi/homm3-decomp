@@ -18,17 +18,17 @@
 //   First Aid     27  0x4e4920 reads +0xe4 (0xc9 + 27), tests id 0x1b
 // Wisdom 7, Ballistics 10 and Eagle Eye 11 agree with that shared ladder.
 
-// DC LF_ENUM `TSkillMastery`. Retail corroborates the extent from the
-// data side: every per-skill factor table in hero.obj's .rdata run
-// (0x63e9e8 onward) is exactly FOUR floats wide, indexed by the
-// skillLevel byte.
+// DC LF_ENUM `TSkillMastery`. The editor counts three masteries from
+// basic: Hero.cpp's namespace-scope TCopiedProto asserts
+// "m_1stSkillLevel < eMasteryBasic + kNumMasteries" against 4, and
+// skilllev.txt fills kNumMasteries (3) names.
 enum TSkillMastery {
     eMasteryInvalid = -1,
     eMasteryNone = 0,
     eMasteryBasic = 1,
     eMasteryAdvanced = 2,
     eMasteryExpert = 3,
-    kNumMasteries = 4
+    kNumMasteries = 3
 };
 
 // The hero-specialty record. DC public
