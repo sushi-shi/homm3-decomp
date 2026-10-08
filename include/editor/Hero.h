@@ -96,8 +96,13 @@ public:
     };
 
     struct TPrimarySkillTraits;
-    struct TSecondarySkillTraits;
-    struct TSkillMasteryTraits;
+    // One name per row (the hero secondary skills page lists them).
+    struct TSecondarySkillTraits {
+        const char* m_name;
+    };
+    struct TSkillMasteryTraits {
+        const char* m_name;
+    };
 
     static TClassTraits* s_akClassTraits;
     static TPrimarySkillTraits* s_akPrimarySkillTraits;
