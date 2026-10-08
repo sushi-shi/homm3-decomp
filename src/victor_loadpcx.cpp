@@ -21,27 +21,11 @@ DATA(0x0068d2d0) unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // Retail proves five decode modes, bounded input refills, paired RGB plane
 // accumulation and the palette fallback below. Short input ends decoding
 // without introducing a new error; the remaining palette work still runs.
-// Residual 78.45%: all 15 real calls agree; the switch-table self-reference
-// moves with the body. Retail's branchless refill clamp, validation exits and
-// full-width shared nibble value recover the CFG and make the 21-instruction
-// nibble loop exact. Bounded status, declaration, address and switch-exit
-// families leave a register wall: retail carries consumed in ESI and reloads
-// image around the decode loop, while VC6 carries image in ESI and spills
-// consumed. Explicit shared switch exits and six classifier forms are flat.
-// Goto audit: a bool/byte copyDecoded result removes copyRow with identical
-// emitted code and relocation names/addends at 78.4456%. Nibble, indexed and
-// completed RGB rows set it; partial RGB planes still continue immediately.
-// A separate memcpy in the nibble arm scores 76.6737%, and moving nibble to
-// fall through into indexed copy scores 53.9655%; keep the shared copy result.
-// Hoisting and reordering all prelude, decode-state and allocation-success
-// declarations across a complete 64-state old-C family emits one object.
-// Boundary repair: a separate DIB has no preceding header/palette to absorb
-// the unused final bottom-up decrement. Guard only completed rows; partial
-// RGB planes still continue without advancing. Four-form family: final-row
-// guard 80.2679%, predecrement count 79.6207%, visited offset 78.8409%,
-// unchecked control 78.4456%. No input-decoder or error contract is changed.
-// Three fresh relative-row forms reproduce three objects: integral byte
-// offsets score 79.9470%, multiplied row indices 76.5172%; retain the guard.
+// The nibble arm jumps to the indexed row copy, which the converted RGB
+// row falls into; partial RGB planes continue without advancing the row.
+// Every handled row steps the destination up one stride, as retail does.
+// Residual (VC5): register and schedule choices around the validation
+// status, the zero-initialised decode state and the destination offset.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {
@@ -80,17 +64,17 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
         _llseek(file, 128, 0);
         unsigned int refillAt = 0;
         int buffered = 0;
-        unsigned int rowsRemaining = height;
-        int planesRemaining = victorPcxRgbPlanes;
         int encodedRowBytes = data.m_bytesPerLine * data.m_nplanes;
+        unsigned int rowsRemaining = height;
         int consumed = 0;
+        int planesRemaining = victorPcxRgbPlanes;
         unsigned char* input = static_cast<unsigned char*>(malloc(victorPcxInputCapacity
             + g_victorPcxScratchRows[mode - 1] * encodedRowBytes));
         if (!input) {
             status = -14;
         } else {
             unsigned char* decoded = input + victorPcxInputCapacity;
-            unsigned char* planeStart = decoded + encodedRowBytes;
+            unsigned char* planeStart = input + victorPcxInputCapacity + encodedRowBytes;
             unsigned char* plane = planeStart;
             int decodeBytes = mode == victorPcxRgbMode ? data.m_bytesPerLine : encodedRowBytes;
             unsigned int offset = (image->m_bmh->biHeight - image->m_sty - 1)
@@ -111,7 +95,6 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                     consumed = 0;
                 }
                 consumed += victorDecodeRleBytes(decoded, input + consumed, decodeBytes);
-                bool copyDecoded = 0;
                 switch (mode) {
                 case victorPcxNibbleMode: {
                     int pixels = width;
@@ -126,8 +109,7 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                         }
                         decoded[pixels - 1] = value;
                     } while (--pixels);
-                    copyDecoded = 1;
-                    break;
+                    goto copyRow;
                 }
                 case victorPcxFourPlaneMode:
                     victorUnpackFourPlanes(destination, decoded, data.m_bytesPerLine, width);
@@ -144,13 +126,11 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                     plane = planeStart;
                     victorConvertRgbPlanesToBgr(decoded, planeStart, width);
                 case victorPcxIndexedMode:
-                    copyDecoded = 1;
+                copyRow:
+                    memcpy(destination, decoded, copyBytes);
                     break;
                 }
-                if (copyDecoded)
-                    memcpy(destination, decoded, copyBytes);
-                if (rowsRemaining > 1)
-                    destination -= image->m_buffwidth;
+                destination -= image->m_buffwidth;
                 --rowsRemaining;
             }
             free(input);
@@ -169,12 +149,10 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
         if (!image->m_colors) {
             if (image->m_palette && (mode == victorPcxFourPlaneMode || mode == victorPcxNibbleMode)) {
                 image->m_colors = victorPcxHeaderColors;
-                const unsigned char* color = g_victorPcxDefaultPalette;
                 for (int i = 0; i < image->m_colors; ++i) {
-                    image->m_palette[i].rgbRed = color[0];
-                    image->m_palette[i].rgbGreen = color[1];
-                    image->m_palette[i].rgbBlue = color[2];
-                    color += 3;
+                    image->m_palette[i].rgbRed = g_victorPcxDefaultPalette[i * 3];
+                    image->m_palette[i].rgbGreen = g_victorPcxDefaultPalette[i * 3 + 1];
+                    image->m_palette[i].rgbBlue = g_victorPcxDefaultPalette[i * 3 + 2];
                 }
             } else {
                 victorInitializeGrayscalePalette(image);
