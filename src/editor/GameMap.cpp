@@ -94,6 +94,53 @@ public:
     TCappedObjectTypeInfoMap();
 };
 
+// The object types the map caps and their caps; the table's index is the
+// type's ordinal in the bookkeeping's counts.
+struct TCappedObjectType {
+    int m_type;
+    unsigned int m_cap;
+};
+
+const TCappedObjectType akCappedObjectTypes[] = {
+    { EVENT, 200 },
+    { BLACK_BOX, 200 },
+    { OBELISK, 48 },
+    { BOAT, 64 },
+    { GARRISON, 48 },
+    { TRAINING_GROUNDS, 32 },
+    { DEFENSE_TOWER, 32 },
+    { GARDEN_OF_REVELATION, 32 },
+    { MERC_CAMP, 32 },
+    { POWER_SCHOOL, 32 },
+    { TREE_OF_KNOWLEDGE, 32 },
+    { LIBRARY, 32 },
+    { ARENA, 32 },
+    { MAGIC_SCHOOL, 32 },
+    { WAR_SCHOOL, 32 },
+    { UNIVERSITY, 32 },
+    { WITCH_HUT, 32 },
+    { SHRINE1, 32 },
+    { SHRINE2, 32 },
+    { SHRINE3, 32 },
+    { SIREN, 32 },
+    { MYSTICAL_GARDEN, 32 },
+    { WATER_WHEEL, 32 },
+    { WINDMILL, 32 },
+    { MAGIC_SPRING, 32 },
+    { DEAD_GUY, 32 },
+    { LEAN_TO, 32 },
+    { WARRIOR_TOMB, 32 },
+    { WAGON, 32 },
+    { SEER, 48 },
+    { BLACK_MARKET, 32 },
+};
+
+TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
+{
+    for (unsigned int i = 0; i < sizeof(akCappedObjectTypes) / sizeof(akCappedObjectTypes[0]); i++)
+        insert(value_type(akCappedObjectTypes[i].m_type, TCappedObjectTypeInfo(i, akCappedObjectTypes[i].m_cap)));
+}
+
 TCappedObjectTypeInfoMap kCappedObjectTypeInfoMap;
 
 inline bool isHero(const TGameObject& obj)
