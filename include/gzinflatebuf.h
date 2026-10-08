@@ -52,9 +52,9 @@ public:
     unsigned char* _m_pInBuf;      // +0x74, new[0x400]
     unsigned char* _m_pOutBuf;     // +0x78, buffer + 0x200
     unsigned long m_crc;           // +0x7c
-    unsigned char m_ok;            // +0x80
-    unsigned char m_sourceEof;    // +0x81
-    unsigned char m_inflating;     // +0x82
+    bool m_ok;             // +0x80
+    bool m_sourceEof;     // +0x81
+    bool m_inflating;      // +0x82
     char m_open;
 
 private:

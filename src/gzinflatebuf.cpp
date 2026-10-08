@@ -70,7 +70,7 @@ int TGzInflateBuf::_getC()
         int count = _m_pSrcBuf->sgetn(
             static_cast<char*>(static_cast<void*>(_m_pInBuf)), GZ_WINDOW_SIZE);
         if (count < GZ_WINDOW_SIZE)
-            m_sourceEof = 1;
+            m_sourceEof = true;
         _m_zstream.next_in = _m_pInBuf;
         _m_zstream.avail_in = count;
         // Mac 0x220a80 reloads the unsigned stream member for this guard.
@@ -125,9 +125,9 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
       _m_pInBuf(0),
       _m_pOutBuf(0),
       m_crc(crc32(0, 0, 0)),
-      m_ok(1),
-      m_sourceEof(0),
-      m_inflating(0)
+      m_ok(true),
+      m_sourceEof(false),
+      m_inflating(false)
 {
     _m_pInBuf = new unsigned char[2 * GZ_WINDOW_SIZE];
     if (_m_pInBuf == 0)
@@ -165,7 +165,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
             throw;
         }
     } catch (bool) {
-        m_ok = 0;
+        m_ok = false;
     }
     if (m_ok) {
         int method = _mustGetC();
@@ -196,7 +196,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
         }
         if (inflateInit2(&_m_zstream, -MAX_WBITS) == Z_MEM_ERROR)
             throw TAllocationFailure();
-        m_inflating = 1;
+        m_inflating = true;
     }
     ownedBuffer.release();
 }
@@ -282,7 +282,7 @@ int TGzInflateBuf::underflow()
             int count = _m_pSrcBuf->sgetn(
                 static_cast<char*>(static_cast<void*>(_m_pInBuf)), GZ_WINDOW_SIZE);
             if (count < GZ_WINDOW_SIZE)
-                m_sourceEof = 1;
+                m_sourceEof = true;
             _m_zstream.next_in = _m_pInBuf;
             _m_zstream.avail_in = count;
         }
@@ -308,7 +308,7 @@ int TGzInflateBuf::underflow()
                                 GZ_WINDOW_SIZE - _m_zstream.avail_out);
                     if (status == Z_STREAM_END) {
                         inflateEnd(&_m_zstream);
-                        m_inflating = 0;
+                        m_inflating = false;
                         _mustGetLong();
                         _mustGetLong();
                         break;
