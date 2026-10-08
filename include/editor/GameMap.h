@@ -114,8 +114,8 @@ public:
             {
                 return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
             }
-            vector<_TObjectCellInfo>* operator*() { return get(); }
-            const vector<_TObjectCellInfo>* operator*() const { return get(); }
+            vector<_TObjectCellInfo>& operator*() { return *get(); }
+            const vector<_TObjectCellInfo>& operator*() const { return *get(); }
 
             void construct()
             {
@@ -181,8 +181,8 @@ public:
             {
                 return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
             }
-            vector<unsigned int>* operator*() { return get(); }
-            const vector<unsigned int>* operator*() const { return get(); }
+            vector<unsigned int>& operator*() { return *get(); }
+            const vector<unsigned int>& operator*() const { return *get(); }
 
             void construct()
             {
@@ -312,7 +312,7 @@ public:
         TCell* getPCell(unsigned int x, unsigned int y);
         const TCell* getPCell(unsigned int x, unsigned int y) const;
         const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
-        const TCell& getCell(const TTilePoint& loc) const { return *getPCell(loc.x(), loc.y()); }
+        const TCell& getCell(const TTilePoint& loc) const { return getCell(loc.x(), loc.y()); }
         TGameObject* getPObject(unsigned int objID);
         const TGameObject* getPObject(unsigned int objID) const;
         const TGameObject& getObject(unsigned int objID) const { return *getPObject(objID); }

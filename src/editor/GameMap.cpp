@@ -11,6 +11,59 @@
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
 #include "editor/RawStream.h"
+#include "editor/TilePoint.h"
+
+namespace {
+
+bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
+{
+    if (layer.getCell(loc).getTerrainType() == eTerrainWater)
+        return false;
+    bool abAdjacent[8];
+    computeAdjacentDirs(layer.getWidth(), layer.getHeight(), loc.x(), loc.y(), abAdjacent);
+    for (unsigned int dir = 0; dir < 8; dir++) {
+        if (!abAdjacent[dir])
+            continue;
+        TTilePoint adjLoc = TPoint<int>(loc) + akAdjOffset[dir];
+        if (layer.getCell(adjLoc).getTerrainType() == eTerrainWater)
+            return true;
+    }
+    return false;
+}
+
+// The height of each placed cell of an object: an underlay lies at 0,
+// anything else rises by one per row from its front, and a passable cell
+// that continues a blocked one to its left takes that cell's height.
+void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[TObjectType::kMaxObjWidth][TObjectType::kMaxObjHeight])
+{
+    for (unsigned int x = 0; x < obj.getWidth(); x++) {
+        unsigned int height = obj.getBUnderlay() ? 0 : 1;
+        unsigned int y = 0;
+        for (;;) {
+            if (obj.getBCellPlaced(x, y))
+                heightMap[x][y] = height;
+            if (++y >= obj.getHeight())
+                break;
+            if (!obj.getBUnderlay()) {
+                if (obj.getBCellPassable(x, y)) {
+                    if (x != 0 && !obj.getBCellPassable(x - 1, y))
+                        height = heightMap[x - 1][y];
+                    else
+                        height++;
+                } else {
+                    if (obj.getBCellPassable(x, y - 1))
+                        height = 1;
+                    else
+                        height++;
+                }
+            }
+        }
+    }
+}
+
+}  // namespace
+
+const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
 
 class TGameMap::_TImpl {
 public:
@@ -66,7 +119,8 @@ class TGameMap::TLayer::_TImpl {
             if (pObj != NULL) {
 #line 5435
                 assert(_m_pWrapper == __null);
-                if ((_m_pWrapper = new _TWrapper(pObj)) == NULL)
+                _m_pWrapper = new _TWrapper(pObj);
+                if (_m_pWrapper == NULL)
                     _fail();
             } else {
 #line 5442
@@ -207,6 +261,12 @@ private:
     TMapLayerObjectID _m_floatingObjID;
 };
 
+TGameMap::TLayer::_TImpl::_TImpl(const _TImpl& other)
+    : _m_size(other._m_size), _m_pCellGrid(other._m_pCellGrid), _m_nextAvail(other._m_nextAvail),
+      _m_paObjectLink(other._m_paObjectLink), _m_floatingObjID(other._m_floatingObjID)
+{
+}
+
 TGameMap::TLayer::_TImpl::_TImpl(TGameMap::TSize size)
     : _m_size(size), _m_nextAvail(0), _m_floatingObjID(0)
 {
@@ -216,12 +276,6 @@ TGameMap::TLayer::_TImpl::_TImpl(TGameMap::TSize size)
     vector<_TObjectLink>& aObjectLink = *_m_paObjectLink;
     aObjectLink.resize(1, _TObjectLink());
     aObjectLink[0].m_next = aObjectLink[0].m_prev = 0;
-}
-
-TGameMap::TLayer::_TImpl::_TImpl(const _TImpl& other)
-    : _m_size(other._m_size), _m_pCellGrid(other._m_pCellGrid), _m_nextAvail(other._m_nextAvail),
-      _m_paObjectLink(other._m_paObjectLink), _m_floatingObjID(other._m_floatingObjID)
-{
 }
 
 TGameMap::TLayer::_TImpl::~_TImpl()
@@ -326,6 +380,246 @@ inline TMapLayerObjectID TGameMap::TLayer::_TImpl::getShadowIDAtCell(unsigned in
     assert(paShadowID != __null && paShadowID->size() > 0);
     assert(which < paShadowID->size());
     return (*paShadowID)[which];
+}
+
+TMapLayerObjectID TGameMap::TLayer::_TImpl::_placeObject(const TGameObject& obj, const TTilePoint& loc)
+{
+    vector<_TObjectLink>& aObjectLink = *_m_paObjectLink;
+    TMapLayerObjectID objID;
+    if (_m_nextAvail != s_kInvalidObjID) {
+#line 5706
+        assert(_m_nextAvail < aObjectLink.size());
+        objID = _m_nextAvail;
+        _m_nextAvail = aObjectLink[_m_nextAvail].m_next;
+    } else {
+        objID = aObjectLink.size();
+        aObjectLink.push_back(_TObjectLink());
+    }
+    aObjectLink[objID].m_next = _m_nextAvail;
+    try {
+        aObjectLink[objID].setObject(&obj);
+    } catch (...) {
+        _m_nextAvail = objID;
+        throw;
+    }
+    aObjectLink[objID].m_next = 0;
+    aObjectLink[objID].m_prev = aObjectLink[0].m_prev;
+    aObjectLink[aObjectLink[0].m_prev].m_next = objID;
+    aObjectLink[0].m_prev = objID;
+    aObjectLink[objID].m_loc = loc;
+    _stampObject(aObjectLink[objID].getPObject(), loc, objID);
+    return objID;
+}
+
+void TGameMap::TLayer::_TImpl::_removeObject(unsigned int objID)
+{
+    vector<_TObjectLink>& aObjectLink = *_m_paObjectLink;
+#line 5743
+    assert(objID != 0 && objID < aObjectLink.size());
+    assert(static_cast< _TObjectLink const & >( aObjectLink[ objID ] ).getPObject() != __null);
+    if (objID != _m_floatingObjID)
+        _unstampObject(objID);
+    else
+        _m_floatingObjID = s_kInvalidObjID;
+    aObjectLink[aObjectLink[objID].m_prev].m_next = aObjectLink[objID].m_next;
+    aObjectLink[aObjectLink[objID].m_next].m_prev = aObjectLink[objID].m_prev;
+    aObjectLink[objID].m_next = _m_nextAvail;
+    _m_nextAvail = objID;
+    aObjectLink[objID].setObject(NULL);
+}
+
+void TGameMap::TLayer::_TImpl::_stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID)
+{
+#line 5763
+    assert(pObj != __null);
+    const TTileExtent objExtent = _computeObjExtent(loc, TPoint<unsigned int>(pObj->getWidth(), pObj->getHeight()));
+    unsigned int heightMap[TObjectType::kMaxObjWidth][TObjectType::kMaxObjHeight];
+    constructObjectHeightMap(*pObj, heightMap);
+    for (unsigned int x = 0; x < pObj->getWidth(); x++) {
+        unsigned int mapX = loc.x() - x;
+        if (mapX >= getWidth())
+            continue;
+        for (unsigned int y = 0; y < pObj->getHeight(); y++) {
+            if (pObj->getBCellPlaced(x, y)) {
+                unsigned int mapY = loc.y() - y;
+                if (mapY < getHeight()) {
+                    unsigned int height = heightMap[x][y];
+                    TCell* pCell = getPCell(mapX, mapY);
+                    vector<_TObjectCellInfo>& aObjInfo = *pCell->_m_paObjInfo;
+                    vector<_TObjectCellInfo>::iterator pInsertAt = aObjInfo.end();
+                    while (pInsertAt != aObjInfo.begin()) {
+                        const _TObjectCellInfo* const pPrev = pInsertAt - 1;
+                        if (height > pPrev->m_height)
+                            break;
+                        if (height == pPrev->m_height) {
+                            if (pObj->getBUnderlay())
+                                break;
+                            bool bObjOnMapIsAbove = false;
+                            TMapLayerObjectID objOnMapID = pPrev->m_objID;
+                            const TGameObject& objOnMap = getObject(objOnMapID);
+                            TTilePoint objOnMapLoc = getObjectLoc(objOnMapID);
+                            TTileExtent objOnMapExtent = getObjectExtent(objOnMapID);
+#line 5836
+                            assert(intersect( objOnMapExtent, objExtent ));
+                            TTileExtent intersectExtent = objOnMapExtent & objExtent;
+                            for (unsigned int ix = intersectExtent.left(); ix < intersectExtent.right(); ix++) {
+                                unsigned int objX = loc.x() - ix;
+                                unsigned int objOnMapX = objOnMapLoc.x() - ix;
+                                for (unsigned int iy = intersectExtent.top(); iy < intersectExtent.bottom(); iy++) {
+                                    unsigned int objY = loc.y() - iy;
+                                    if (!pObj->getBCellPlaced(objX, objY))
+                                        continue;
+                                    unsigned int objOnMapY = objOnMapLoc.y() - iy;
+                                    if (!objOnMap.getBCellPlaced(objOnMapX, objOnMapY))
+                                        continue;
+                                    unsigned int intersectHeight = heightMap[objX][objY];
+                                    const TCell& intersectCell = getCell(ix, iy);
+#line 5859
+                                    assert(intersectCell._m_paObjInfo.get() != __null);
+                                    const vector<_TObjectCellInfo>& aIntersectCellObjInfo = *intersectCell._m_paObjInfo;
+                                    vector<_TObjectCellInfo>::const_iterator pObjOnMapCellInfo = aIntersectCellObjInfo.begin();
+#line 5863
+                                    assert(pObjOnMapCellInfo != aIntersectCellObjInfo.end());
+                                    while (pObjOnMapCellInfo->m_objID != objOnMapID) {
+                                        ++pObjOnMapCellInfo;
+#line 5868
+                                        assert(pObjOnMapCellInfo != aIntersectCellObjInfo.end());
+                                    }
+                                    unsigned int objOnMapHeight = pObjOnMapCellInfo->m_height;
+                                    if (objOnMapHeight > intersectHeight) {
+                                        bObjOnMapIsAbove = true;
+                                        break;
+                                    }
+                                }
+                                if (bObjOnMapIsAbove)
+                                    break;
+                            }
+                            if (!bObjOnMapIsAbove)
+                                break;
+                        }
+                        --pInsertAt;
+                    }
+                    aObjInfo.insert(pInsertAt, _TObjectCellInfo(objID, height));
+                }
+            }
+            if (pObj->getBCellShadow(x, y)) {
+                unsigned int mapY = loc.y() - y;
+                if (mapY < getHeight()) {
+                    TCell* pCell = getPCell(mapX, mapY);
+                    vector<unsigned int>& aShadowID = *pCell->_m_paShadowID;
+                    aShadowID.push_back(objID);
+                }
+            }
+        }
+    }
+}
+
+void TGameMap::TLayer::_TImpl::_unstampObject(unsigned int objID)
+{
+    vector<_TObjectLink>& aObjectLink = *_m_paObjectLink;
+    TTilePoint loc = aObjectLink[objID].m_loc;
+    const TGameObject* pObj = static_cast< _TObjectLink const & >( aObjectLink[ objID ] ).getPObject();
+    const TTileExtent objExtent = _computeObjExtent(loc, TPoint<unsigned int>(pObj->getWidth(), pObj->getHeight()));
+    TTilePoint cell;
+    for (cell.y(objExtent.top()); cell.y() < objExtent.bottom(); cell.y(cell.y() + 1)) {
+        for (cell.x(objExtent.left()); cell.x() < objExtent.right(); cell.x(cell.x() + 1)) {
+            TTilePoint objCell = loc - cell;
+            if (pObj->getBCellPlaced(objCell.x(), objCell.y())) {
+                TCell* pCell = getPCell(cell);
+                vector<_TObjectCellInfo>& aObjInfo = *pCell->_m_paObjInfo;
+#line 5930
+                assert(aObjInfo.size() > 0);
+                vector<_TObjectCellInfo>::iterator pObjInfo = aObjInfo.begin();
+                while (pObjInfo->m_objID != objID) {
+#line 5933
+                    assert(pObjInfo != aObjInfo.end());
+                    ++pObjInfo;
+                }
+                aObjInfo.erase(pObjInfo);
+                if (aObjInfo.size() == 0)
+                    pCell->_m_paObjInfo.clear();
+            }
+            if (pObj->getBCellShadow(objCell.x(), objCell.y())) {
+                TCell* pCell = getPCell(cell);
+                vector<unsigned int>& aShadowID = *pCell->_m_paShadowID;
+#line 5946
+                assert(aShadowID.size() > 0);
+                vector<unsigned int>::iterator pObjID = find(aShadowID.begin(), aShadowID.end(), objID);
+                assert(pObjID != aShadowID.end());
+                aShadowID.erase(pObjID);
+                if (aShadowID.size() == 0)
+                    pCell->_m_paShadowID.clear();
+            }
+        }
+    }
+}
+
+void TGameMap::TLayer::_TImpl::_floatObject(unsigned int objID)
+{
+    vector<_TObjectLink>& aObjectLink = *_m_paObjectLink;
+#line 5962
+    assert(_m_floatingObjID == s_kInvalidObjID);
+    assert(objID != 0 && objID < aObjectLink.size());
+    assert(static_cast< _TObjectLink const & >( aObjectLink[ objID ] ).getPObject() != __null);
+    _unstampObject(objID);
+    aObjectLink[aObjectLink[objID].m_prev].m_next = aObjectLink[objID].m_next;
+    aObjectLink[aObjectLink[objID].m_next].m_prev = aObjectLink[objID].m_prev;
+    aObjectLink[objID].m_next = aObjectLink[objID].m_prev = objID;
+    _m_floatingObjID = objID;
+}
+
+void TGameMap::TLayer::_TImpl::_unfloatObject(const TTilePoint& loc)
+{
+    vector<_TObjectLink>& aObjectLink = *_m_paObjectLink;
+#line 5980
+    assert(_m_floatingObjID != s_kInvalidObjID);
+    aObjectLink[_m_floatingObjID].m_loc = loc;
+    aObjectLink[_m_floatingObjID].m_next = 0;
+    aObjectLink[_m_floatingObjID].m_prev = aObjectLink[0].m_prev;
+    aObjectLink[aObjectLink[0].m_prev].m_next = _m_floatingObjID;
+    aObjectLink[0].m_prev = _m_floatingObjID;
+    _stampObject(static_cast< _TObjectLink const & >( aObjectLink[ _m_floatingObjID ] ).getPObject(), loc,
+                 _m_floatingObjID);
+    _m_floatingObjID = s_kInvalidObjID;
+}
+
+TTileExtent TGameMap::TLayer::_TImpl::_computeObjExtent(const TTilePoint& loc, const TPoint<unsigned int>& size) const
+{
+#line 5998
+    assert(loc.x() + 1 < size.x() || loc.x() - size.x() + 1 < getWidth());
+    assert(loc.y() + 1 < size.y() || loc.y() - size.y() + 1 < getHeight());
+    TTilePoint lastCell = loc;
+    TPoint<unsigned int> clippedSize = size;
+    if (clippedSize.x() > lastCell.x() + 1)
+        clippedSize.x(lastCell.x() + 1);
+    if (lastCell.x() >= getWidth()) {
+        clippedSize.x(clippedSize.x() - (lastCell.x() + 1 - getWidth()));
+        lastCell.x(getWidth() - 1);
+    }
+    if (clippedSize.y() > lastCell.y() + 1)
+        clippedSize.y(lastCell.y() + 1);
+    if (lastCell.y() >= getHeight()) {
+        clippedSize.y(clippedSize.y() - (lastCell.y() + 1 - getHeight()));
+        lastCell.y(getHeight() - 1);
+    }
+    return TTileExtent(lastCell + TPoint<unsigned int>(1, 1) - clippedSize, clippedSize);
+}
+
+TMapLayerObjectID TGameMap::TLayer::_TImpl::_findObject(const TTilePoint& loc,
+                                                        bool (*pfnPredicate)(const TGameObject&)) const
+{
+    unsigned int numObjs = getNumObjectIDsAtCell(loc);
+    for (unsigned int i = 0; i < numObjs; i++) {
+        TMapLayerObjectID objID = getObjectIDAtCell(loc, i);
+        const TGameObject& obj = getObject(objID);
+        TTilePoint objLoc = getObjectLoc(objID);
+#line 6036
+        assert(objLoc.x() >= loc.x() && objLoc.y() >= loc.y());
+        TTilePoint objCell = objLoc - loc;
+        if (obj.getBCellTrigger(objCell.x(), objCell.y()) && pfnPredicate(obj))
+            return objID;
+    }
+    return s_kInvalidObjID;
 }
 
 TGameMap::TLayer::TLayer(const TLayer& other)
@@ -472,6 +766,13 @@ void readCellData(TRawIStream& stream, TGameMap::TLayer* pLayer)
     for (unsigned int y = 0; y < pLayer->getHeight(); y++)
         for (unsigned int x = 0; x < pLayer->getWidth(); x++)
             readCell(&stream, pLayer->getPCell(x, y));
+}
+
+void writeCellData(TRawOStream& stream, const TGameMap::TLayer& layer)
+{
+    for (unsigned int y = 0; y < layer.getHeight(); y++)
+        for (unsigned int x = 0; x < layer.getWidth(); x++)
+            writeCell(&stream, layer.getCell(x, y), isBeachBorder(layer, TTilePoint(x, y)));
 }
 
 void TGameMap::TLayer::TCell::setTerrainType(TTerrainType newTerrainType)
