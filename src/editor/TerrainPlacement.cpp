@@ -489,13 +489,6 @@ TTerrainTypeTraits* const akTerrainTypeTraits[kNumTerrainTypes] = {
     &kRoughTraits, &kSubterraneanTraits, &kLavaTraits, &kWaterTraits, &kRockTraits
 };
 
-// Each neighbour direction (clockwise from north) as it lands after
-// flipping a tile horizontally and/or vertically.
-const unsigned int akFlippedDir[2][2][kNumDirs] = {
-    { { 0, 1, 2, 3, 4, 5, 6, 7 }, { 4, 3, 2, 1, 0, 7, 6, 5 } },
-    { { 0, 7, 6, 5, 4, 3, 2, 1 }, { 4, 5, 6, 7, 0, 1, 2, 3 } }
-};
-
 // A cell of terrainType at (x, y) would sit between two cells of other
 // terrains horizontally (vertically).
 bool wouldBeInvalidHoriz(const TGameMap::TLayer* pMapLayer, unsigned int x, unsigned int y,
@@ -626,6 +619,12 @@ void getTransitions(const TGameMap::TLayer* pMapLayer, const TTilePoint& loc,
 void computeGroundShape(const TTransType (&akTransType)[kNumDirs], TGroundShape* pGroundShape,
                         TFlippedState* pFlippedState)
 {
+    // Each neighbour direction (clockwise from north) as it lands after
+    // flipping a tile horizontally and/or vertically.
+    static const unsigned int akFlippedDir[2][2][kNumDirs] = {
+        { { 0, 1, 2, 3, 4, 5, 6, 7 }, { 4, 3, 2, 1, 0, 7, 6, 5 } },
+        { { 0, 7, 6, 5, 4, 3, 2, 1 }, { 4, 5, 6, 7, 0, 1, 2, 3 } }
+    };
     static const TFlippedState akFlippedState[4] = {
         TFlippedState(false, false), TFlippedState(false, true),
         TFlippedState(true, false), TFlippedState(true, true)
