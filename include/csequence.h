@@ -13,18 +13,18 @@ class CSpriteFrame;
 // independently reads numFrames through CSprite::s[0].
 class CSequence {
 private:
-    int m_numFrames;
-    int m_allocatedFrames;
-    CSpriteFrame** m_f;
+    int numFrames;
+    int allocatedFrames;
+    CSpriteFrame** f;
 
     friend class CSprite;
-    int addFrame(const char* name);
-    int addFrame(const char* name, int w, int h, unsigned char* data,
+    int AddFrame(const char* name);
+    int AddFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding);
-    int addFrame(const char* name, int w, int h, unsigned char* data,
+    int AddFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding,
                  int croppedWidth, int croppedHeight, int croppedX, int croppedY);
-    int addFrame(CSpriteFrame* frame);
+    int AddFrame(CSpriteFrame* frame);
     CSequence();
     CSequence(int num);
     ~CSequence();
