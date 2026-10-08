@@ -575,80 +575,10 @@ public:
     unsigned int getNumObelisksOnMap() const;
 
 private:
-    class _TVictoryConditionWriter : public TVictoryCondition::TVisitor {
-    public:
-        _TVictoryConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
-
-        virtual void visit(const TVCAquireArtifact& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCAccumulateCreature& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCAccumulateResource& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCUpgradeTown& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCBuildHolyGrailStruct& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCDefeatHero& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCCaptureTown& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCDefeatMonster& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCFlagAllCreatureGenerators& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCFlagAllMines& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCTransportArtifact& vc) { _m_map._write(_m_pOStream, vc); }
-
-    private:
-        const _TImpl& _m_map;
-        TRawOStream* _m_pOStream;
-    };
-
-    class _TLossConditionWriter : public TLossCondition::TVisitor {
-    public:
-        _TLossConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
-
-        virtual void visit(const TLCLoseTown& lc) { _m_map._write(_m_pOStream, lc); }
-        virtual void visit(const TLCLoseHero& lc) { _m_map._write(_m_pOStream, lc); }
-        virtual void visit(const TLCTimeExpires& lc) { _m_map._write(_m_pOStream, lc); }
-
-    private:
-        const _TImpl& _m_map;
-        TRawOStream* _m_pOStream;
-    };
-
-    class _TVictoryConditionValidater : public TVictoryCondition::TVisitor {
-    public:
-        _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
-
-        bool isValid() const { return _m_bValid; }
-
-        virtual void visit(const TVCAquireArtifact& vc);
-        virtual void visit(const TVCAccumulateCreature& vc);
-        virtual void visit(const TVCAccumulateResource& vc);
-        virtual void visit(const TVCUpgradeTown& vc);
-        virtual void visit(const TVCBuildHolyGrailStruct& vc);
-        virtual void visit(const TVCDefeatHero& vc);
-        virtual void visit(const TVCCaptureTown& vc);
-        virtual void visit(const TVCDefeatMonster& vc);
-        virtual void visit(const TVCFlagAllCreatureGenerators& vc);
-        virtual void visit(const TVCFlagAllMines& vc);
-        virtual void visit(const TVCTransportArtifact& vc);
-
-    private:
-        bool _isArtifact(const TMapObjectRef& objRef) const;
-        bool _isTown(const TMapObjectRef& objRef) const;
-
-        const _TImpl& _m_map;
-        bool _m_bValid;
-    };
-
-    class _TLossConditionValidater : public TLossCondition::TVisitor {
-    public:
-        _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
-
-        bool isValid() const { return _m_bValid; }
-
-        virtual void visit(const TLCLoseTown& lc);
-        virtual void visit(const TLCLoseHero& lc);
-        virtual void visit(const TLCTimeExpires& lc);
-
-    private:
-        const _TImpl& _m_map;
-        bool _m_bValid;
-    };
+    class _TVictoryConditionWriter;
+    class _TLossConditionWriter;
+    class _TVictoryConditionValidater;
+    class _TLossConditionValidater;
 
     friend class _TVictoryConditionValidater;
     friend class _TLossConditionValidater;
@@ -840,6 +770,83 @@ private:
     vector<TLayer> _m_aLayer;
     _TPBookkeeping _m_pBookkeeping;
     TArray<_TPPlayerBookkeeping, kNumPlayers> _m_apPlayerBookkeeping;
+};
+
+// The condition visitors are defined after the class: GameMap.o queues
+// their members after _TImpl's.
+class TGameMap::_TImpl::_TVictoryConditionWriter : public TVictoryCondition::TVisitor {
+public:
+    _TVictoryConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
+
+    virtual void visit(const TVCAquireArtifact& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCAccumulateCreature& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCAccumulateResource& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCUpgradeTown& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCBuildHolyGrailStruct& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCDefeatHero& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCCaptureTown& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCDefeatMonster& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCFlagAllCreatureGenerators& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCFlagAllMines& vc) { _m_map._write(_m_pOStream, vc); }
+    virtual void visit(const TVCTransportArtifact& vc) { _m_map._write(_m_pOStream, vc); }
+
+private:
+    const _TImpl& _m_map;
+    TRawOStream* _m_pOStream;
+};
+
+class TGameMap::_TImpl::_TLossConditionWriter : public TLossCondition::TVisitor {
+public:
+    _TLossConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
+
+    virtual void visit(const TLCLoseTown& lc) { _m_map._write(_m_pOStream, lc); }
+    virtual void visit(const TLCLoseHero& lc) { _m_map._write(_m_pOStream, lc); }
+    virtual void visit(const TLCTimeExpires& lc) { _m_map._write(_m_pOStream, lc); }
+
+private:
+    const _TImpl& _m_map;
+    TRawOStream* _m_pOStream;
+};
+
+class TGameMap::_TImpl::_TVictoryConditionValidater : public TVictoryCondition::TVisitor {
+public:
+    _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+    bool isValid() const { return _m_bValid; }
+
+    virtual void visit(const TVCAquireArtifact& vc);
+    virtual void visit(const TVCAccumulateCreature& vc);
+    virtual void visit(const TVCAccumulateResource& vc);
+    virtual void visit(const TVCUpgradeTown& vc);
+    virtual void visit(const TVCBuildHolyGrailStruct& vc);
+    virtual void visit(const TVCDefeatHero& vc);
+    virtual void visit(const TVCCaptureTown& vc);
+    virtual void visit(const TVCDefeatMonster& vc);
+    virtual void visit(const TVCFlagAllCreatureGenerators& vc);
+    virtual void visit(const TVCFlagAllMines& vc);
+    virtual void visit(const TVCTransportArtifact& vc);
+
+private:
+    bool _isArtifact(const TMapObjectRef& objRef) const;
+    bool _isTown(const TMapObjectRef& objRef) const;
+
+    const _TImpl& _m_map;
+    bool _m_bValid;
+};
+
+class TGameMap::_TImpl::_TLossConditionValidater : public TLossCondition::TVisitor {
+public:
+    _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+    bool isValid() const { return _m_bValid; }
+
+    virtual void visit(const TLCLoseTown& lc);
+    virtual void visit(const TLCLoseHero& lc);
+    virtual void visit(const TLCTimeExpires& lc);
+
+private:
+    const _TImpl& _m_map;
+    bool _m_bValid;
 };
 
 TCreateObjFailureTooManyHeroesOnMap::TCreateObjFailureTooManyHeroesOnMap()
