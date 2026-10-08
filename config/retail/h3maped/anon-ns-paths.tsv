@@ -1,0 +1,58 @@
+# Canonical paths for VC6 anonymous namespace scopes (?%<path><number>@) of
+# the map editor (docs/vc6/anonymous-namespace-names.md).
+#
+# Evidence: each scope as the editor's RTTI type descriptors spell it in
+# h3maped.exe; the file offset of its first `?%` spelling is given per row.
+# Units the image compiles today are `objecttype` and `resourcemanager`;
+# the editor's own units take their original file stem (`Player`, `MapDoc`).
+# `Map Editor.cpp` (file offset 0x18b724) is absent: a unit name has no space.
+#
+# BlackBoxPropsContentsPage: `?%` at file offset 0x17c938
+# EditQuestDlg: `?%` at file offset 0x1821c4
+# EditRewardDlg: `?%` at file offset 0x182763
+# FindDlg: `?%` at file offset 0x182e8a
+# GUIGameObject: `?%` at file offset 0x184772
+# MapDoc: `?%` at file offset 0x18b9c6
+# MapEditWnd: `?%` at file offset 0x18c176
+# MapSpecsGeneralPage: `?%` at file offset 0x18c348
+# MapSpecsLossCondPage: `?%` at file offset 0x18c3fa
+# MapSpecsVictoryCondPage: `?%` at file offset 0x18c718
+# MapView: `?%` at file offset 0x18cd47
+# objecttype: `?%` at file offset 0x18d0f7
+# Quest: `?%` at file offset 0x18d384
+# QuestLocation: `?%` at file offset 0x18d9c9
+# QuestLocationPropsDlg: `?%` at file offset 0x18da68
+# random_object_placer: `?%` at file offset 0x18e5a3
+# RandomGeneratorPropsDlg: `?%` at file offset 0x18e60d
+# SeersHut: `?%` at file offset 0x18e9aa
+# SeersHutPropsDlg: `?%` at file offset 0x18f0e7
+# TerrainPlacement: `?%` at file offset 0x1929a7
+# ToolkitBase: `?%` at file offset 0x192c7a
+# TownTypeTraits: `?%` at file offset 0x192e6d
+# VictoryCondition: `?%` at file offset 0x192fb7
+# resourcemanager: `?%` at file offset 0x195de7
+unit	source_basename	canonical_scope
+BlackBoxPropsContentsPage	blackboxpropscontentspage.cpp	C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908
+EditQuestDlg	editquestdlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\EditQuestDlg.cpp2607015843
+EditRewardDlg	editrewarddlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\EditRewardDlg.cpp1654426747
+FindDlg	finddlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326
+GUIGameObject	guigameobject.cpp	C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+MapDoc	mapdoc.cpp	C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000
+MapEditWnd	mapeditwnd.cpp	C:\Dev\Heroes 3 Exp 2\Editor\MapEditWnd.cpp618416512
+MapSpecsGeneralPage	mapspecsgeneralpage.cpp	C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsGeneralPage.cpp2959323531
+MapSpecsLossCondPage	mapspecslosscondpage.cpp	C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417
+MapSpecsVictoryCondPage	mapspecsvictorycondpage.cpp	C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
+MapView	mapview.cpp	C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553
+objecttype	objecttype.cpp	C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164
+Quest	quest.cpp	C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631
+QuestLocation	questlocation.cpp	C:\Dev\Heroes 3 Exp 2\Editor\QuestLocation.cpp472427463
+QuestLocationPropsDlg	questlocationpropsdlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\QuestLocationPropsDlg.cpp2981517644
+random_object_placer	random_object_placer.cpp	C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752
+RandomGeneratorPropsDlg	randomgeneratorpropsdlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979
+SeersHut	seershut.cpp	C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111
+SeersHutPropsDlg	seershutpropsdlg.cpp	C:\Dev\Heroes 3 Exp 2\Editor\SeersHutPropsDlg.cpp929930200
+TerrainPlacement	terrainplacement.cpp	C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156
+ToolkitBase	toolkitbase.cpp	C:\Dev\Heroes 3 Exp 2\Editor\ToolkitBase.cpp94647960
+TownTypeTraits	towntypetraits.cpp	C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956
+VictoryCondition	victorycondition.cpp	C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907
+resourcemanager	resourcemanager.cpp	C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485

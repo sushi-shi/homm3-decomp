@@ -432,9 +432,12 @@ rva	function_count	class
 # ??_7 site paired in order: 0x55db40 ??1?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ; 0x55e440 ??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z
 0x2410ec	13	?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std
 # ??_7 site paired in order: 0x55b8d0 ?loadFont@ResourceManager@@YIPAVfont@@PBD@Z; 0x55bb90 ?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z (+1 more)
-0x241128	3	t_lod_file_adapter@ResourceManager
+# 2026-10-08: the map editor's RTTI (h3maped .?AVt_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@)
+# puts both adapters in an anonymous namespace of ResourceManager. The game's own scope number is not in its image,
+# so the two rows spell the scope by its checkout-independent identity (msvc_names.anonymous_namespaces).
+0x241128	3	t_lod_file_adapter@?A0xd38fcb16638c5270@ResourceManager
 # ??_7 site paired in order: 0x55b8d0 ?loadFont@ResourceManager@@YIPAVfont@@PBD@Z; 0x55bb90 ?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z (+1 more)
-0x241134	3	t_stdio_file_adapter@ResourceManager
+0x241134	3	t_stdio_file_adapter@?A0xd38fcb16638c5270@ResourceManager
 # ??_7 site paired in order: 0x55ee50 TRmgRiverPainter ctor; 0x55eda0 ~TRmgRiverPainter.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
 0x241174	7	TRmgRiverLinePainter

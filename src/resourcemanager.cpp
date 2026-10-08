@@ -40,6 +40,11 @@ namespace ResourceManager {
 // behavior at these addresses. These implementation types are used only by
 // this resource-loading module; they have no shared header interface.
 // Both Write methods fold with CHeroWindowEx::OnWidgetDeselect at 0x559140.
+// The map editor's RTTI places both in an anonymous namespace of
+// ResourceManager: its descriptor for the LOD adapter reads
+// `.?AVt_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@`.
+namespace {
+
 class t_stdio_file_adapter : public TAbstractFile {
 public:
     explicit t_stdio_file_adapter(FILE* value) : m_file(value) {}
@@ -62,6 +67,8 @@ public:
 
     LODFile* m_lodFile;
 };
+
+}  // namespace
 
 // Dreamcast resourcemanager.cpp:121/126 proves the class, constructor and
 // ordinary const operator< (original field: name). Retail 0x55ac20 copies

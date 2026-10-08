@@ -3188,8 +3188,8 @@ resourcemanager	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@
 resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1594f0	-
 resourcemanager	??_G?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15dae0	-
 resourcemanager	??_G?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15db10	-
-resourcemanager	??_Gt_lod_file_adapter@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7d0	-
-resourcemanager	??_Gt_stdio_file_adapter@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7a0	-
+resourcemanager	??_Gt_lod_file_adapter@?A0xd38fcb16638c5270@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7d0	-
+resourcemanager	??_Gt_stdio_file_adapter@?A0xd38fcb16638c5270@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7a0	-
 resourcemanager	?AddToCache@ResourceManager@@YIXPAVresource@@@Z	100.0000	100.0000	100.0000	0x1594b0	tokens1:2632b0e2d783
 resourcemanager	?Close@ResourceManager@@YIXXZ	100.0000	100.0000	100.0000	0x15a550	tokens1:d940fa8465e4
 resourcemanager	?GetBackdrop@ResourceManager@@YIXPBDPAVBitmap16Bit@@@Z	100.0000	100.0000	100.0000	0x15cf00	tokens1:2d4152ebaa13
@@ -3237,8 +3237,8 @@ resourcemanager	?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z	100.0000	10
 resourcemanager	?lower_bound@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@ABVTCacheMapKey@ResourceManager@@@Z	100.0000	100.0000	100.0000	0x15e740	c86aeceab36e
 resourcemanager	?overflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x15d630	-
 resourcemanager	?pbackfail@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x15d7e0	-
-resourcemanager	?read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x159110	tokens1:b2aae8ba2f88
-resourcemanager	?read@t_stdio_file_adapter@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x1590f0	tokens1:12f49cab0faf
+resourcemanager	?read@t_lod_file_adapter@?A0xd38fcb16638c5270@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x159110	tokens1:b2aae8ba2f88
+resourcemanager	?read@t_stdio_file_adapter@?A0xd38fcb16638c5270@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x1590f0	tokens1:12f49cab0faf
 resourcemanager	?reportMissingSpriteResource@@YIXPBDH0@Z	100.0000	100.0000	100.0000	0x1599e0	tokens1:8d6e3e065292
 resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	100.0000	100.0000	100.0000	0x159510	tokens1:5364e85796f5
 resourcemanager	?seekoff@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	100.0000	100.0000	100.0000	0x15d8a0	-
@@ -3247,7 +3247,7 @@ resourcemanager	?setg@?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAEXPAD00@Z
 resourcemanager	?str@?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x15d600	-
 resourcemanager	?str@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x15e570	-
 resourcemanager	?underflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x15d840	-
-resourcemanager	?write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140	tokens1:4270d87f0121
+resourcemanager	?write@t_stdio_file_adapter@?A0xd38fcb16638c5270@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140	tokens1:4270d87f0121
 rmg	??0?$vector@PAUTRmgTemplateZone@@V?$allocator@PAUTRmgTemplateZone@@@std@@@std@@QAE@ABV?$allocator@PAUTRmgTemplateZone@@@1@@Z	100.0000	100.0000	100.0000	0x1157d0	-
 rmg	??0TRandomMapRequest@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x14bf00	tokens1:63657dff0d02
 rmg	??0TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130e90	tokens1:01824b537fe6
