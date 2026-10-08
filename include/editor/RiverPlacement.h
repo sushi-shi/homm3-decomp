@@ -58,7 +58,7 @@ public:
     virtual void onPlacingRiver(bool bUnderground, unsigned int x, unsigned int y) = 0;
 };
 
-class TRiverPlacementOp : public TRiverOp, public TLinePlacementOpClient {
+class TRiverPlacementOp : public TRiverOp, private TLinePlacementOpClient {
 public:
     TRiverPlacementOp(TRiverPlacementOpClient* pClient, TGameMap* pMap, bool bSecondLayer,
                      TRiverType riverType, unsigned int x, unsigned int y);
@@ -75,7 +75,7 @@ private:
     TLinePlacementOp* _m_pLinePlacementOp;
 };
 
-class TRiverEraseOp : public TRiverOp, public TLineOpClient {
+class TRiverEraseOp : public TRiverOp, private TLineOpClient {
 public:
     static void onTerrainTypeChanged(TRiverOpClient* pClient, TGameMap* pMap, bool bSecondLayer,
                                      unsigned int x, unsigned int y);

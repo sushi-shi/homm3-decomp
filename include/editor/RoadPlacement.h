@@ -58,7 +58,7 @@ public:
     virtual void onPlacingRoad(bool bUnderground, unsigned int x, unsigned int y) = 0;
 };
 
-class TRoadPlacementOp : public TRoadOp, public TLinePlacementOpClient {
+class TRoadPlacementOp : public TRoadOp, private TLinePlacementOpClient {
 public:
     TRoadPlacementOp(TRoadPlacementOpClient* pClient, TGameMap* pMap, bool bSecondLayer,
                      TRoadType roadType, unsigned int x, unsigned int y);
@@ -75,7 +75,7 @@ private:
     TLinePlacementOp* _m_pLinePlacementOp;
 };
 
-class TRoadEraseOp : public TRoadOp, public TLineOpClient {
+class TRoadEraseOp : public TRoadOp, private TLineOpClient {
 public:
     static void onTerrainTypeChanged(TRoadOpClient* pClient, TGameMap* pMap, bool bSecondLayer,
                                      unsigned int x, unsigned int y);

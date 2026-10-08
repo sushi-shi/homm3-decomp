@@ -29,7 +29,7 @@ class THero;
 class TSeersHut;
 class TTown;
 
-class TMapValidationFunc : private TVictoryCondition::TVisitor, public TLossCondition::TVisitor {
+class TMapValidationFunc : private TVictoryCondition::TVisitor, private TLossCondition::TVisitor {
 public:
     TMapValidationFunc(const TGameMap& map);
 
