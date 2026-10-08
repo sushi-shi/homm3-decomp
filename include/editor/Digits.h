@@ -9,13 +9,13 @@
 template<unsigned int N>
 class TDigits {
 public:
-    static unsigned short getDigits() { return TDigits<N / 10>::getDigits() + 1; }
+    static unsigned int getDigits() { return TDigits<N / 10>::getDigits() + 1; }
 };
 
 template<>
 class TDigits<9> {
 public:
-    static unsigned short getDigits() { return 1; }
+    static unsigned int getDigits() { return 1; }
 };
 
 #endif  /* HOMM3_EDITOR_DIGITS_H */
