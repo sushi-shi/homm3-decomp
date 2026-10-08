@@ -84,7 +84,8 @@ class Target:
                 if value not in tables:
                     tables.append(value)
                 return f"{_symbol_name(function)}$jt{tables.index(value)}", 0
-            return cmpobj.literal_for(self.image.elf.read, value, field.access_size, self.pointer), 0
+            return cmpobj.literal_for(self.image.elf.read, value, field.access_size, self.pointer,
+                                      self.string_table), 0
         section = self.image.elf.section_at(value)
         if section is not None:
             return f"data_{value:08x}", 0
@@ -96,6 +97,16 @@ class Target:
         if exported is not None and exported.value == word:
             return exported.name
         return None
+
+    def string_table(self, address: int) -> list[str]:
+        elements = []
+        while self.rodata.contains(address):
+            (word,) = struct.unpack("<I", self.image.elf.read(address, 4))
+            if not self.rodata.contains(word) or self.image.object_at(word) is not None:
+                break
+            elements.append(cmpobj.literal_name(cmpobj.c_string(self.image.elf.read, word)))
+            address += 4
+        return elements
 
     def section(self, name: str, start: int, end: int, members: list[CensusFunction]) -> CodeSection:
         data = bytearray(self.image.elf.read(start, end - start))
@@ -169,6 +180,22 @@ def base_sections(data: bytes) -> list[CodeSection]:
             return None
         return pointer
 
+    def string_table_in(index: int):
+        relocated = {r.offset: r for r in rels.get(index, ())}
+        raw = elf.bytes(elf.sections[index])
+
+        def table(offset: int) -> list[str]:
+            elements = []
+            while (r := relocated.get(offset)) is not None and r.type == R_386_32:
+                target = symbols[r.symbol]
+                if target.type != STT_SECTION or not elf.sections[target.shndx].name.startswith(".rodata"):
+                    break
+                (addend,) = struct.unpack_from("<i", raw, offset)
+                elements.append(cmpobj.literal_name(cmpobj.c_string(read_section(target.shndx), addend)))
+                offset += 4
+            return elements
+        return table
+
     def is_jump_table(index: int, offset: int) -> bool:
         return any(r.offset == offset and symbols[r.symbol].type == STT_SECTION
                    and elf.sections[symbols[r.symbol].shndx].flags & SHF_EXECINSTR
@@ -225,7 +252,7 @@ def base_sections(data: bytes) -> list[CodeSection]:
                     # A file-static constant has no name in the image either:
                     # both sides name it by the bytes the operand uses.
                     name, delta = cmpobj.literal_for(read_section(target.shndx), place, field.access_size,
-                                                     pointer_in(target.shndx)), 0
+                                                     pointer_in(target.shndx), string_table_in(target.shndx)), 0
                 else:
                     name, delta = f"{kind.name}+{place:x}", 0
                 put(section, field.offset, rel.type, name, delta - 4 if rel.type == R_386_PC32 else delta)

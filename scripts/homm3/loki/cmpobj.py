@@ -144,7 +144,15 @@ def put(section: CodeSection, offset: int, rtype: int, target: str, addend: int)
     struct.pack_into("<i", section.data, offset, addend)
 
 
-def literal_for(read, address: int, access_size: int, pointer=None) -> str:
+def table_name(elements: list[str]) -> str:
+    """A table of pointers to file-static constants (`const char* const
+    names[] = {...}`): named by what each entry points to, since the bytes
+    are addresses the link fills in."""
+    digest = hashlib.sha1("\0".join(elements).encode()).hexdigest()[:8]
+    return f"$t{len(elements)}[{elements[0]}...]#{digest}"
+
+
+def literal_for(read, address: int, access_size: int, pointer=None, table=None) -> str:
     """Name a .rodata reference by what the instruction uses: the bytes a
     memory operand loads, or the C string whose address is taken.
 
@@ -159,4 +167,11 @@ def literal_for(read, address: int, access_size: int, pointer=None) -> str:
         target = pointer(address)
         if target is not None:
             return f"$p{target}+{read(address + 4, 4).hex()}"
+    if table is not None:
+        # `table(address)` names the consecutive address-sized fields that
+        # point into .rodata (relocations against it in the compiled object,
+        # .rodata addresses in the image) by the C strings they point to.
+        elements = table(address)
+        if elements:
+            return table_name(elements)
     return literal_name(c_string(read, address))

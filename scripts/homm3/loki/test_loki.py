@@ -43,6 +43,15 @@ class ComparisonObjectTest(unittest.TestCase):
             cmpobj.literal_name(b"Q231_GLOBAL_.N.ObjectType.cppULngUc18TTerrainSlotTraits\0"))
         self.assertEqual(cmpobj.literal_name(b"\0\0\0\0\0\0\xf0\x3f"), "$d000000000000f03f")
 
+    def test_string_tables_are_named_by_their_strings(self):
+        strings = [b"dirttl.def\0", b"sandtl.def\0"]
+        image = {0x100: strings[0], 0x10b: strings[1]}
+        read = lambda address, size: image[address][:size]
+        table = lambda address: [cmpobj.literal_name(cmpobj.c_string(read, a)) for a in (0x100, 0x10b)]
+        named = cmpobj.literal_for(read, 0x200, 0, None, table)
+        self.assertTrue(named.startswith('$t2[$s"dirttl.def"#'))
+        self.assertEqual(named, cmpobj.table_name([cmpobj.literal_name(s) for s in strings]))
+
 
 @unittest.skipUnless(toolchain.is_staged(), "GCC 2.95.2 not staged (homm3 loki toolchain)")
 class CompiledBaseTest(unittest.TestCase):
