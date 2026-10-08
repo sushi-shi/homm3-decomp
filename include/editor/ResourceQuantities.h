@@ -27,6 +27,10 @@ public:
     {
         return lhs._m_quantities == rhs._m_quantities;
     }
+    friend bool operator!=(const TResourceQuantities& lhs, const TResourceQuantities& rhs)
+    {
+        return !(lhs == rhs);
+    }
 
 private:
     TArray<int, kNumGameResourceTypes> _m_quantities;

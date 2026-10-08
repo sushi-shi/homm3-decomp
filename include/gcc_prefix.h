@@ -33,7 +33,12 @@
 #define _STDCALL_SUPPORTED 1
 #define WIN32_LEAN_AND_MEAN 1
 #define NOMINMAX 1
+/*    The SDK's BOOL (int) is imported under another name: the editor's own
+ *    BOOL is Loki's one-byte typedef (stdafx.h; "BOOL ...::OnInitDialog()"
+ *    texts, returned in %al), and no shared unit spells the SDK's. */
+#define BOOL HOMM3_WIN32_BOOL
 #include <windows.h>
+#undef BOOL
 #undef _M_PPC
 
 #endif

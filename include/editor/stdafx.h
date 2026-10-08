@@ -43,8 +43,19 @@
 typedef unsigned char ubyte;
 typedef unsigned short uword;
 
-// cppbridge.cpp: the modal message box behind CWnd::MessageBox.
+// The MFC shim's BOOL: __PRETTY_FUNCTION__ texts spell it
+// ("BOOL TResourceQuantitiesDlg::OnInitDialog()") and such functions return
+// it in %al. bool is assumed: the shim's own predicates and the dialogs'
+// UpdateData(bool) take bool.
+typedef bool BOOL;
+
+// cppbridge.cpp: the modal message box behind CWnd::MessageBox, and the
+// glade widget lookup ("struct GtkWidget * {anonymous}::_widget(char *)",
+// exported unmangled).
 extern "C" void doMessageBox(const char* message);
+namespace {
+extern "C" GtkWidget* _widget(char* name);
+}
 
 class CPoint {
 public:
