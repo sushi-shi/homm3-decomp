@@ -979,19 +979,6 @@ public:
     // resource paths.
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
-    // Project names for the paired control transitions used by setup and
-    // solo play. Neither operation discards the player's name or network ID;
-    // disconnecting a player is the separate clearNetInfo operation.
-    void setLocalHuman()
-    {
-        m_isHuman = 1;
-        m_isLocal = 1;
-    }
-    void setComputer()
-    {
-        m_isHuman = 0;
-        m_isLocal = 0;
-    }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
