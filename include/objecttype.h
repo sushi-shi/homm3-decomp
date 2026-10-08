@@ -44,12 +44,12 @@ public:
         int m_x;
         int m_y;
     };
-    struct TImageInfo {
+    struct _TImageInfo {
         // Provisional overload: setImageName initializes the point before
         // either bitset constructor. TObjectType's default construction
         // leaves that point uninitialized, requiring a distinct size path.
-        TImageInfo() {}
-        explicit TImageInfo(const TPoint& size) : m_objectSize(size) {}
+        _TImageInfo() {}
+        explicit _TImageInfo(const TPoint& size) : m_objectSize(size) {}
 
         TPoint m_objectSize;
         std::bitset<48> m_drawMask;
@@ -65,11 +65,11 @@ public:
 
 private:
     // The image and mask setters own these values and their invariants.
-    int m_imageNumber;
+    int _m_imageNum;
     std::bitset<48> m_passableMask;
     std::bitset<48> m_triggerMask;
 public:
-    std::bitset<10> m_terrainMask;
+    std::bitset<10> _m_terrainMask;
     std::bitset<10> m_recommendedTerrainMask;
 private:
     TAdventureObjectType m_objectType;
@@ -85,7 +85,7 @@ public:
     TPoint m_triggerCell;
 private:
 
-    TImageInfo m_imageInfo;
+    _TImageInfo m_imageInfo;
 
 public:
     // The image-name registry lookup reads this record's image number;
@@ -104,19 +104,19 @@ public:
     // shared 8-by-6 coordinate mapping. Mac placement 0x22e090..0x22e17c
     // expands the same trigger/passability queries; both Windows TUs need
     // their definitions visible here.
-    bool isDrawCell(unsigned x, unsigned y) const
+    bool getBCellPlaced(unsigned x, unsigned y) const
     {
         return m_imageInfo.m_drawMask.test(CObjectType::getBitPos(x, y));
     }
-    bool isPassableCell(unsigned x, unsigned y) const
+    bool getBCellPassable(unsigned x, unsigned y) const
     {
         return m_passableMask.test(CObjectType::getBitPos(x, y));
     }
-    bool isShadowCell(unsigned x, unsigned y) const
+    bool getBCellShadow(unsigned x, unsigned y) const
     {
         return m_imageInfo.m_shadowMask.test(CObjectType::getBitPos(x, y));
     }
-    bool isTriggerCell(unsigned x, unsigned y) const
+    bool getBCellTrigger(unsigned x, unsigned y) const
     {
         return m_triggerMask.test(CObjectType::getBitPos(x, y));
     }
@@ -136,9 +136,9 @@ public:
     // Mac conversion 0x128d7c..0x128d94 reads this metadata after the
     // masks. These read-only counterparts of the existing fluent setters
     // have inferred names and boundaries; preserve each stored type.
-    TAdventureObjectType getObjectType() const { return m_objectType; }
-    int getSubtype() const { return m_subtype; }
-    unsigned char isUnderlay() const { return m_isUnderlay; }
+    TAdventureObjectType getType() const { return m_objectType; }
+    int getExtra() const { return m_subtype; }
+    unsigned char getBUnderlay() const { return m_isUnderlay; }
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
     // compiland and both returning *this - the per-row `>>` at 0x514b80
     // chains them off each other's result. setImageName resolves the
@@ -149,22 +149,22 @@ public:
     TObjectType& setImageName(
         const std::basic_string<char, std::char_traits<char>,
                                 std::allocator<char> >& name);
-    TObjectType& setTriggerMask(const std::bitset<48>& mask);
+    TObjectType& _setTriggerMask(const std::bitset<48>& mask);
     // Provisional fluent setter names: retail objects.txt extraction retains
     // the two setters above and expands this ordered field/invariant chain.
     // The corresponding ordinary definitions live in objecttype.cpp.
-    TObjectType& setPassableMask(const std::bitset<48>& mask);
+    TObjectType& _setPassableMask(const std::bitset<48>& mask);
     TObjectType& setTerrainMask(const std::bitset<10>& mask);
     TObjectType& setRecommendedTerrainMask(const std::bitset<10>& mask);
-    TObjectType& setObjectType(TAdventureObjectType type);
-    TObjectType& setSubtype(int subtype);
+    TObjectType& setType(TAdventureObjectType type);
+    TObjectType& setExtra(int subtype);
     TObjectType& setSlotCategory(int category);
-    TObjectType& setUnderlay(bool underlay);
+    TObjectType& setBUnderlay(bool underlay);
 
     // Accessor boundary inferred from the existing property interface and
     // external field operations; these additional names are project names.
     int getSlotCategory() const { return m_slotCategory; }
-    const TPoint& getTriggerCell() const { return m_triggerCell; }
+    const TPoint& getTriggerLoc() const { return m_triggerCell; }
     unsigned int getRecommendedTerrainCount() const { return m_recommendedTerrainMask.count(); }
 };
 SIZE(TObjectType, 0x4c);
@@ -182,10 +182,10 @@ extern const TObjectType::TPoint g_noTriggerCell;
 // construction reproduces that frontier; the flipped passable temporary
 // keeps its explicit unsigned-long zero constructor.
 inline TObjectType::TObjectType()
-    : m_imageNumber(0),
+    : _m_imageNum(0),
       m_passableMask(~std::bitset<48>(0)),
       m_triggerMask(),
-      m_terrainMask(),
+      _m_terrainMask(),
       m_recommendedTerrainMask(),
       m_objectType(NOTHING),
       m_subtype(0),
@@ -199,7 +199,7 @@ inline TObjectType::TObjectType()
 class TObjectTypeTable {
 public:
     std::vector<TObjectType> m_objectTypes;
-    void load(char* filename);
+    void load(char* fileName);
 };
 SIZE(TObjectTypeTable, 0x10);
 

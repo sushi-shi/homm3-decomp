@@ -276,9 +276,9 @@ TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // with the ordinary registry accessor and value-returning lookup, it
 // reproduces the retail cache/string operands. A static inline definition
 // keeps kind 8 storage and does not recover those operands.
-inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
+inline std::vector<TObjectType::_TImageInfo>& getObjectImageCache()
 {
-    static std::vector<TObjectType::TImageInfo> imageCache;
+    static std::vector<TObjectType::_TImageInfo> imageCache;
     return imageCache;
 }
 
@@ -291,7 +291,7 @@ VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
 // grows from 20 to 39 bytes and replaces rep movsd with six individual
 // load/store pairs. Coordinate constructors taking values or references
 // are neutral when the empty point is initialized before the row count.
-VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, TImageInfo)
+VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, _TImageInfo)
 
 // Further boundary controls do not close the residual: an ordinary free
 // GetIndex is neutral; a separate registry-append helper changes nested
@@ -432,13 +432,13 @@ TObjectType& TObjectType::setImageName(
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
     unsigned int oldCount = imageNames.getCount();
-    m_imageNumber = imageNames.getOrAddIndex(name);
+    _m_imageNum = imageNames.getOrAddIndex(name);
 
-    std::vector<TImageInfo>& imageCache = getObjectImageCache();
+    std::vector<_TImageInfo>& imageCache = getObjectImageCache();
 
-    if (m_imageNumber == oldCount) {
-        imageCache.push_back(TImageInfo(emptySize));
-        TImageInfo* record = &imageCache[oldCount];
+    if (_m_imageNum == oldCount) {
+        imageCache.push_back(_TImageInfo(emptySize));
+        _TImageInfo* record = &imageCache[oldCount];
 
         // Retail keeps the suffix as .rdata array storage (0x640280), while
         // "default.msk" below remains a pooled .data literal.
@@ -480,10 +480,10 @@ TObjectType& TObjectType::setImageName(
         }
     }
 
-    m_imageInfo.m_objectSize.m_x = imageCache[m_imageNumber].m_objectSize.m_x;
-    m_imageInfo.m_objectSize.m_y = imageCache[m_imageNumber].m_objectSize.m_y;
-    m_imageInfo.m_drawMask = imageCache[m_imageNumber].m_drawMask;
-    m_imageInfo.m_shadowMask = imageCache[m_imageNumber].m_shadowMask;
+    m_imageInfo.m_objectSize.m_x = imageCache[_m_imageNum].m_objectSize.m_x;
+    m_imageInfo.m_objectSize.m_y = imageCache[_m_imageNum].m_objectSize.m_y;
+    m_imageInfo.m_drawMask = imageCache[_m_imageNum].m_drawMask;
+    m_imageInfo.m_shadowMask = imageCache[_m_imageNum].m_shadowMask;
     return *this;
 }
 
@@ -498,21 +498,21 @@ TObjectType::getImageName() const
     static std::string emptyImageName;
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
-    if (m_imageNumber < imageNames.getCount())
-        return imageNames.getName(m_imageNumber);
+    if (_m_imageNum < imageNames.getCount())
+        return imageNames.getName(_m_imageNum);
     return emptyImageName;
 }
 
 VA(0x00514a60, 0x11D)
 MAC_ADDRESS(0x223f44, 0x134)
-TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
+TObjectType& TObjectType::_setTriggerMask(const std::bitset<48>& mask)
 {
     m_triggerMask = mask & ~m_passableMask;
     m_hasTrigger = m_triggerMask.any();
     if (m_hasTrigger) {
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
-                if (isTriggerCell(x, y)) {
+                if (getBCellTrigger(x, y)) {
                     m_triggerCell.m_x = x;
                     m_triggerCell.m_y = y;
                     return *this;
@@ -535,7 +535,7 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 // retail's retained bitset operations and string destruction. Flattening
 // these calls with the same declarations/default constructors scores 76.6378%.
 MAC_ADDRESS(0x223ea8, 0x9c)
-TObjectType& TObjectType::setPassableMask(const std::bitset<48>& mask)
+TObjectType& TObjectType::_setPassableMask(const std::bitset<48>& mask)
 {
     m_passableMask = mask | ~m_imageInfo.m_drawMask;
     return *this;
@@ -545,7 +545,7 @@ MAC_ADDRESS(0x223e4c, 0x48)
 TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
 {
     m_recommendedTerrainMask &= mask;
-    m_terrainMask = mask;
+    _m_terrainMask = mask;
     return *this;
 }
 
@@ -555,12 +555,12 @@ TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<10>& mask)
     m_recommendedTerrainMask = mask;
     return *this;
 }
-TObjectType& TObjectType::setObjectType(TAdventureObjectType type)
+TObjectType& TObjectType::setType(TAdventureObjectType type)
 {
     m_objectType = type;
     return *this;
 }
-TObjectType& TObjectType::setSubtype(int subtype)
+TObjectType& TObjectType::setExtra(int subtype)
 {
     m_subtype = subtype;
     return *this;
@@ -572,7 +572,7 @@ TObjectType& TObjectType::setSlotCategory(int category)
     m_slotCategory = category;
     return *this;
 }
-TObjectType& TObjectType::setUnderlay(bool underlay)
+TObjectType& TObjectType::setBUnderlay(bool underlay)
 {
     m_isUnderlay = underlay;
     return *this;
@@ -600,11 +600,11 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
     is >> imageName >> passable >> trigger >> terrainRead >> recommendedRead
         >> typeRead >> subtype >> slotCategory >> underlay;
 
-    objectType.setImageName(imageName).setPassableMask(passable)
-        .setTriggerMask(trigger).setTerrainMask(std::bitset<10>(terrainRead.to_ulong()))
+    objectType.setImageName(imageName)._setPassableMask(passable)
+        ._setTriggerMask(trigger).setTerrainMask(std::bitset<10>(terrainRead.to_ulong()))
         .setRecommendedTerrainMask(std::bitset<10>(recommendedRead.to_ulong()))
-        .setObjectType(TAdventureObjectType(typeRead)).setSubtype(subtype)
-        .setSlotCategory(slotCategory).setUnderlay(underlay != 0);
+        .setType(TAdventureObjectType(typeRead)).setExtra(subtype)
+        .setSlotCategory(slotCategory).setBUnderlay(underlay != 0);
     return is;
 }
 
@@ -978,13 +978,13 @@ VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, runtime_error)
 // outside the two verified new/delete relocations. The retained claim now
 // belongs to cmbtmgr's TObstacle specialization; no image-cache count-insert
 // call or explicit instantiation is introduced just to emit another copy.
-VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, TImageInfo)
+VA_COMPGEN(0x00516c10, 0x20A, VECTOR_INSERT_SINGLE, _TImageInfo)
 
 // This insertion and setupAndLoadObstacles (0x466290) both call 0x517750.
 // Retail retains the folded size helper here in the objecttype cluster.
 // The TObstacle copy expands in cmbtmgr; this native TImageInfo instance
 // matches all 33 retail bytes, with no relocations or added instantiation.
-VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, TImageInfo)
+VA_COMPGEN(0x00517750, 0x21, VECTOR_SIZE, _TImageInfo)
 
 // COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
 // 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.

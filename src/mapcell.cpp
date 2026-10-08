@@ -4761,7 +4761,7 @@ void NewfullMap::loadObjectTypeTemplates()
 
     for (unsigned int i = 0; i < objectTypeTable.m_objectTypes.size(); ++i) {
         TAdventureObjectType objectType =
-            objectTypeTable.m_objectTypes[i].getObjectType();
+            objectTypeTable.m_objectTypes[i].getType();
         m_objectTypeIndex[objectType].push_back(
             CObjectType(objectTypeTable.m_objectTypes[i]));
     }
@@ -4868,10 +4868,10 @@ CObjectType::CObjectType(const TObjectType& source)
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
             unsigned pos = getBitPos(x, y);
-            m_drawCells[pos] = source.isDrawCell(x, y);
-            m_passableCells[pos] = source.isPassableCell(x, y);
-            m_shadowCells[pos] = source.isShadowCell(x, y);
-            m_triggerCells[pos] = source.isTriggerCell(x, y);
+            m_drawCells[pos] = source.getBCellPlaced(x, y);
+            m_passableCells[pos] = source.getBCellPassable(x, y);
+            m_shadowCells[pos] = source.getBCellShadow(x, y);
+            m_triggerCells[pos] = source.getBCellTrigger(x, y);
         }
     }
 
@@ -4880,9 +4880,9 @@ CObjectType::CObjectType(const TObjectType& source)
     for (int terrain = 0; terrain < 10; terrain++)
         m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
 
-    m_objectType = source.getObjectType();
-    m_extra = source.getSubtype();
-    m_suppressDraw = source.isUnderlay();
+    m_objectType = source.getType();
+    m_extra = source.getExtra();
+    m_suppressDraw = source.getBUnderlay();
 }
 
 VA_COMPGEN(0x00506260, 0x38, VECTOR_DTOR, CObjectType)
