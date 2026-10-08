@@ -89,8 +89,9 @@ def derive(log=print):
     from homm3.retail_labels.iat import iat_slots
     imports = {name: slot for slot, (name, _channel)
                in iat_slots(common.resolve_exe(), toolchain).items()}
+    classes = {c: r for r, _n, c in vt if c and not c.startswith("??_7")}
     runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log,
-                               imports=imports)
+                               imports=imports, vtables=classes)
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
         thunks += eh.cleanup_rows(census, {r for r, _k in thunks}, atexit)

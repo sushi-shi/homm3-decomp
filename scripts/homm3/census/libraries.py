@@ -18,7 +18,10 @@ to the next external label (`_memcpy` past its interior `TrailUpVec`,
    function already named by the field's symbol (`_atoi` calls `_atol`,
    `operator delete` calls `_free`; `__errno` calls `__getptd`) and every
    `__imp_` field holds that import's IAT slot (`std::_Lockit::~_Lockit`
-   leaves its critical section).
+   leaves its critical section), and every DIR32 field naming a class's
+   vtable (`??_7CButton@@6B@`) holds the address the image's RTTI gives
+   that vtable (the MFC control destructors differ only in the vptr they
+   store).
 
 The rows become the image's runtime-map.tsv (rva, name, library, member):
 named, not matched, and excluded from the scores like the game's runtime
@@ -35,7 +38,10 @@ MIN_FIXED = 12
 #: Initializer ordinals (`_$E365`) are volatile and never names.
 VOLATILE = re.compile(r"^_?\$E[0-9]+$")
 REL32 = 20
+DIR32 = 6
 EXTERNAL = 2
+#: A class's primary vtable symbol.
+VTABLE = re.compile(r"^\?\?_7(\w+)@@6B@$")
 
 
 def _member_functions(obj):
@@ -89,9 +95,12 @@ def archive_functions(path: Path):
 
 
 def derive(image, functions: dict[int, int], archives: dict[str, Path], log=print,
-           imports: dict[str, int] | None = None):
-    """`imports` maps each `__imp_` symbol to its IAT slot rva."""
+           imports: dict[str, int] | None = None,
+           vtables: dict[str, int] | None = None):
+    """`imports` maps each `__imp_` symbol to its IAT slot rva; `vtables`
+    maps each RTTI-named class to its primary vtable's rva."""
     imports = imports or {}
+    vtables = vtables or {}
     by_size = defaultdict(list)
     by_first = defaultdict(list)
 
@@ -162,6 +171,9 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
                     if named_rvas.get(ref) != {(rva + site + 4 + value) & 0xFFFFFFFF}:
                         break
                 elif ref in imports and imports[ref] != value - image.image_base:
+                    break
+                elif kind == DIR32 and VTABLE.match(ref) and VTABLE.match(ref).group(1) in vtables \
+                        and vtables[VTABLE.match(ref).group(1)] != value - image.image_base:
                     break
             else:
                 agree.append(rva)
