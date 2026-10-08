@@ -42,7 +42,6 @@ rva	size	kind	name	unit	evidence
 0x0000ce11	0x277	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	masked body (631 bytes, 58 relocations) unique at a census start
 0x0000d513	0x17	func	??0TAllocationFailure@@QAE@XZ	rmg_support	referenced by ??0TRmgLinePatternTable@@QAE@IPBH@Z at +0x27
 0x0000ed06	0x1	func	?releaseReservation@type_object@@UAEXXZ	rmg	vtable ??_7type_object@@6B@ stored by ??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z slot 1
-0x00011916	0x3	func	?imbue@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEXABVlocale@2@@Z	resourcemanager	vtable ??_7?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@6B@ stored by ?reportMissingResource@@YAXPBD00@Z slot 12
 0x00018c04	0x3	func	??0TDebugBreak@@QAE@XZ	error	referenced by ??0TRuntimeError@@QAE@XZ at +0x17
 0x00018c07	0x6c	func	??0TRuntimeError@@QAE@PBD@Z	error	masked body (108 bytes, 9 relocations) unique at a census start
 0x000193cb	0x2c	func	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	objecttype	masked body (44 bytes, 1 relocations) unique at a census start
@@ -789,7 +788,7 @@ rva	size	kind	name	unit	evidence
 0x00195f80	0x4	data	??_C@_03OJHL@rb?$CL?$AA@	lodfile	referenced by ?open@LODFile@@QAEHPBDH@Z at +0x25
 0x00197de8	0x30	data	?g_victorPcxDefaultPalette@@3PAEA	victor_loadpcx	referenced by ?loadpcx@@YGHPBDPAUimgdes@@@Z at +0x426 (retail +0x42e, by operand order)
 0x00197e18	0x5	data	?g_victorPcxScratchRows@@3PAEA	victor_loadpcx	referenced by ?loadpcx@@YGHPBDPAUimgdes@@@Z at +0x12e (retail +0x137, by operand order)
-0x001982f8	0x1	data	??_C@_00A@?$AA@	gzio	referenced by ??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z at +0x1b
+0x001982f8	0x1	data	??_C@_00A@?$AA@	gzio	referenced by ??0TEditRumorDlg@@QAE@PAVCWnd@@ABVTRumor@@@Z at +0x76
 0x0019e3cc	0x4	data	?_Psave@?1??use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	objecttype	referenced by ?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z at +0x47
 0x0019e3d0	0x4	data	?_Psave@?1??use_facet@std@@YAABV?$numpunct@D@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	resourcemanager	referenced by ?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z at +0x48
 0x0019e3e4	0x4	data	?_Facsav@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@0PAV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@A	objecttype	referenced by ?_Save@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAPAV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@PAV32@@Z at +0x1f
