@@ -50,16 +50,16 @@ level as a call. The wrapper itself disappears in both spellings. What
 identifies the spelling is the call that remains, and it stays the same from
 `-O1` to `-O4`.
 
-Example: our `TTextResource::operator[]` calls `getText`, which indexes a
+Example: our `TTextResource::operator[]` calls `GetText`, which indexes a
 `std::vector<char*>`.
 
 | Caller spelling | Call left in the Mac code |
 | :-------------- | :------------------------ |
-| `g_generalText->getText(i)` | `vector_pod<unsigned long>::data()` |
+| `g_generalText->GetText(i)` | `vector_pod<unsigned long>::data()` |
 | `(*g_generalText)[i]` | `vector_pod<unsigned long>::operator[]` (retail 0x2a0c) |
 
 Retail sites call 0x2a0c, so under our header model the original indexed
-through `operator[]`. This only measures depth: if the original `getText`
+through `operator[]`. This only measures depth: if the original `GetText`
 carried one more wrapper layer than ours, its calls would leave the same call.
 State that caveat, and treat a conflict with an `AGENTS.md` rule as a decision
 for the user rather than a silent rewrite.
@@ -74,7 +74,7 @@ Do this in a scratch worktree (`homm3 worktree new`); paths must sit inside
 mkdir -p build/probes && cat > build/probes/p.cpp <<'EOF'
 #include "textresource.h"
 extern void sinkText(const char*);
-void viaGetText(int i) { sinkText(g_generalText->getText(i)); }
+void viaGetText(int i) { sinkText(g_generalText->GetText(i)); }
 void viaIndex(int i) { sinkText((*g_generalText)[i]); }
 EOF
 HOMM3_DIR=$PWD PYTHONPATH=$PWD/scripts python3 - -O3 <<'EOF'

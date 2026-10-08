@@ -48,7 +48,7 @@ The 23 unclaimed direct Mac targets inspected were container/bitset operations
 and a Smacker API routine. Unknown template spellings and the codec routine's
 unverified complete extent do not establish missing game helpers.
 
-`initializeArtifactTraitsTable` already calls the canonical
+`InitializeArtifactTraitsTable` already calls the canonical
 `initializeArtifactTraits`. DC retains the helper separately at `0x50058`;
 Windows and Mac expand it in the table initializer. A missing standalone
 desktop address is not evidence that its source body is missing.

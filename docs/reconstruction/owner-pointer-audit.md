@@ -57,7 +57,7 @@ exposed two instances of the latter problem.
 | Immersion initialization (`0x4b6260`), window movement (`0x4b6950`), enclosure (`0x4b6a50`) | Replace two independent `LONG` globals with one SDK `POINT g_immWindowOrigin` at `0x696d70`. `ClientToScreen` receives the complete 8-byte owner; consumers use `x/y`. The API call and both retail field addresses prove the grouping. | All three remain 100% |
 | DirectDraw `g_pixelFormat`, `0x68c850` | Replace the 16-byte prefix plus three separate mask globals with one 32-byte SDK `DDPIXELFORMAT`. DC `wingraph.cpp:235/239` names `PixelFormat` and the SDK type. The retail initializer is `{32, DDPF_RGB, 0, ...}`; `GetPixelFormat` and mask consumers use the same owner. | All caller scores preserved; `drawBolt` improves 89.316536% → 94.90726% |
 | Mask-driven `TPalette16` constructor (`0x522810`) | Walk `paletteHiColor::m_data[256][3]` with a pointer to three-byte rows, not a byte pointer beyond row zero. DC `palette.cpp:95..109` supplies entry-wise RGB access. | 98.91549%, unchanged |
-| Six-field palette constructors (`0x5226d0`, `0x522770`) and `CSprite::resetPalette` (`0x47bc00`) | Give the existing byte-oriented helper/constructor the complete `paletteHiColor` object representation. Keep their signatures, source calls and inlining decisions. | 94.854836%, 94.93651%, 100%, unchanged |
+| Six-field palette constructors (`0x5226d0`, `0x522770`) and `CSprite::ResetPalette` (`0x47bc00`) | Give the existing byte-oriented helper/constructor the complete `paletteHiColor` object representation. Keep their signatures, source calls and inlining decisions. | 94.854836%, 94.93651%, 100%, unchanged |
 | `CDiffFile::getData`, inline in `apply` (`0x490f60`) | Remove the fabricated one-byte tail. A diff is an allocated byte stream with a four-byte size header and variable records; derive its payload from the allocation/header base plus `sizeof(m_numBytes)`. DC `diff.cpp:58` independently returns `this + 4`; retail writes the same header. | 99.6429%, unchanged |
 
 `CDiffFile` now models just the four-byte header. No allocation was shortened:
@@ -82,7 +82,7 @@ pointers or oversized allocations were introduced. The pinned SDK stays pristine
 
 ### Retained image-row edge cases
 
-`Bitmap16Bit::fillRect` (`0x44e4c0`) is an exact, small control for this class.
+`Bitmap16Bit::FillRect` (`0x44e4c0`) is an exact, small control for this class.
 At the bottom of an image, with nonzero `x`, its final `dst += pitch` forms
 `end + x`. Both the DC row walk (`bitmap16.cpp:679..703`) and retail contain
 the unconditional update. The corresponding clipped `draw`, `grab`,
@@ -92,7 +92,7 @@ fizzle/fade paths require the same distinction between accessed pixels and
 the final unused cursor. Some full-width, zero-origin paths end exactly
 one-past and are valid; others can pass the allocation boundary.
 
-Vertically reversed `CSpriteFrame::drawTile` / `drawTileShadow` paths can form
+Vertically reversed `CSpriteFrame::DrawTile` / `DrawTileShadow` paths can form
 a before-begin row after drawing the topmost row. Victor `loadpcx` has the same
 final bottom-up decrement; `flipimage` has it for a one-row region. These are
 retained legacy operations, not fabricated owners and not certified safe.

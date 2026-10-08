@@ -1364,7 +1364,7 @@ SHA-256 `6abb39482afe1d855242d8803dc124a085ade6bfb86d3b1f6d5e8a8bfa134449`.
 
 ### Recover iterator traversal before tuning inline budgets
 
-`initializeArtifactTraitsTable` (0x44cd50) had flattened its Dreamcast-proven
+`InitializeArtifactTraitsTable` (0x44cd50) had flattened its Dreamcast-proven
 static `InitializeArtifactTraits(int, const vector<char*>&)` and replaced the
 Complete combination-artifact traversal with a scalar bit loop. Two invented,
 compile-time-dead diagnostic calls had raised that version to 80.5129%.

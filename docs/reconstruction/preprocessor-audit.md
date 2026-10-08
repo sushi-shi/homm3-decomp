@@ -54,7 +54,7 @@ preprocessed token streams agree with includes removed for that comparison;
 the subsequent VC6 object comparison also verifies the real include state.
 
 The Dreamcast/retail evidence pass was run for `setRolloverText` (0x40b150),
-`quickInfo` (0x4137c0), `readPrefsFromRegistry` (0x50b7b0), `TPalette16::gray`
+`quickInfo` (0x4137c0), `readPrefsFromRegistry` (0x50b7b0), `TPalette16::Gray`
 (0x522d50), and the three constructors below: `dreamcast show`,
 `dreamcast asm --blocks`, `dreamcast inline-clues`, and `sema diff` with
 `--summary`, `--structure`, and verified `--source`. The Dreamcast registry
@@ -113,7 +113,7 @@ original exact functions stayed exact, and eight more reached 100%:
 | --- | --- | ---: | --- |
 | `TTownScreenWindow` | 0x005c34d0 | 98.9497% | Escape hotkey, real widget-result lifetimes and attachment loop. |
 | `TLevelUpWindow` | 0x004f8880 | 99.1299% | Visibility/hotkey/text helpers and widget-result lifetimes. |
-| `videoRealignBuffers` | 0x005971f0 | 88.9254% | Existing `Bitmap16Bit::getMap(x,y)` interface. |
+| `videoRealignBuffers` | 0x005971f0 | 88.9254% | Existing `Bitmap16Bit::GetMap(x,y)` interface. |
 | `SmackManager::nextSmackerFrame` | 0x00598eb0 | 90.7265% | Assign the actual dirty flag from the short-circuit predicate, then test it. |
 | `eventWindowHandler` | 0x004f0fc0 | 99.3701% | DC OK-arm `if`/`else` and shared reply normalization. |
 | `checkEndGame` | 0x004f2ce0 | 88.5571% | Player-record lifetime, handled/outcome statements, enemy-mask consumption and initialization order. |

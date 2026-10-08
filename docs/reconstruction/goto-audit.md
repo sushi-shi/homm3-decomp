@@ -251,7 +251,7 @@ evidence against replacing every goto mechanically.
 | `showCreatureSpellError` | Direct false returns | 92.3889% | 68.3889% |
 | `iconWidget::main` | Direct zero returns | 95.7040% | 89.5668% |
 | `NewfullMap::load` | Direct failure returns | 56.7217% | 53.5994% |
-| `ResourceManager::getBitmap816` | Direct cached-result return | 94.5542% | 91.6626% |
+| `ResourceManager::GetBitmap816` | Direct cached-result return | 94.5542% | 91.6626% |
 | `hasSeparatedNeighbours` | Direct false returns | 100% | 99.7458% |
 | `slider::main` | Direct base calls/returns | 100% | 89.6667% |
 | System options handler | Direct consume returns | 94.3957% | 92.3189% |
@@ -440,7 +440,7 @@ The earlier isolated percentages describe their own compiler context.
 
 One integration-specific loss was recovered: `CEnterNameEdit::onKeyPress`
 initially scored 99.8868%. A new 12-state family (six distinct objects)
-reproduces 100% with the canonical `getText()` call passed directly to
+reproduces 100% with the canonical `GetText()` call passed directly to
 `onNameChange`. The separate text local that was exact in the isolated tree
 now changes two stack-slot operands. Every sibling keeps its score; retail
 CFG, instructions and the eight named calls agree in the adopted result.
@@ -468,7 +468,7 @@ label syntactically begins a terminal return.
 | `advManager::doTreasureDialog` | 2 | Choice result with the gold arm first and the separate explicit-gold return |
 | `oldmain` | 2 | Scored-campaign result and picker cancellation `break` |
 | `NewfullMap::load` | 2 | One breakable failure scope around seer and event loading |
-| `ResourceManager::getBitmap816` | 1 | Positive allocation result before cache insertion and return |
+| `ResourceManager::GetBitmap816` | 1 | Positive allocation result before cache insertion and return |
 | `fillTreasureGroup` | 1 | Clear the failed selection after the final deletion, then use its existing loop exit |
 | **Total** | **20** | **11 functions** |
 

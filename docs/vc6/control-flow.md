@@ -922,7 +922,7 @@ All 64 source states were measured and no AI-player sibling moved.
 
 ### Shared fallback after a backtracking loop
 
-`font::lineLength` (0x4b5820) was 91.7423% with a separate candidate
+`font::LineLength` (0x4b5820) was 91.7423% with a separate candidate
 fallback inside each backtracking exit. Dreamcast lines 465 and 479/480
 place one fallback after the loop. Restoring it reaches exact and restores
 the retail boxWidth lifetime that earlier notes called an optimizer limit.
@@ -930,7 +930,7 @@ All eight variants with that boundary are exact; all eight without it retain
 91.7423%. The loop-head decrement, combined forward guard, and meaningful
 trailing-space width correction are independently neutral source facts.
 
-`Bitmap16Bit::grab` (0x44e3f0) likewise needed the saved local dimensions
+`Bitmap16Bit::Grab` (0x44e3f0) likewise needed the saved local dimensions
 updated during clipping. Reloading the members caused its entry-register
 cascade. The corrected clipping reaches 99.8488%; grouping the two destination
 origin initializations before the saved dimensions closes the last store order.

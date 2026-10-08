@@ -282,7 +282,7 @@ treat a call to that helper as the leading source hypothesis. Compare its body
 and cross-references with the Mac and retail callers, then test the call and
 related caller structure under VC6. Try source-backed alternatives through a
 temporary score dip before concluding the caller has reached a local limit.
-Preserve existing `g_generalText->getText(...)` calls. An older Dreamcast
+Preserve existing `g_generalText->GetText(...)` calls. An older Dreamcast
 `TTextResource::operator[]` call does not by itself justify replacing them.
 
 Preserve one canonical helper and its source calls. Preserve proven types and

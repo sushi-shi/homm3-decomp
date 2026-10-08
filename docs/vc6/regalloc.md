@@ -666,7 +666,7 @@ ordinary accessor to its original `.cpp` position is independently byte-neutral.
 Older cached-pointer controls were flat in their then-current source state.
 
 Two further controls make the same limit concrete. Restoring the canonical
-`TSpreadsheetResource::getSpreadsheet(row, column)` calls in
+`TSpreadsheetResource::GetSpreadsheet(row, column)` calls in
 `initializeHighScoreDefaults` closes four first-loop SIB transpositions
 (99.3846% to 100%). Removing the extra `bankGuardTypes` pointer view from
 `initializeCreatureBankTraits` restores the two-cursor copy and the string
@@ -1584,7 +1584,7 @@ example where identical standalone code did not imply identical expansions.
 
 ### Float conversion parameter storage
 
-`Bitmap16Bit::colorize` (0x44e940) reaches 100% from 98.8301% when its
+`Bitmap16Bit::Colorize` (0x44e940) reaches 100% from 98.8301% when its
 ordinary file-static `ftol` updates its by-value `double d` and reads that
 parameter's low word, matching DC 0x50a9c lines 62–63 and the existing bitmap24
 source. The invented result union caused eighteen separate inlined scratch

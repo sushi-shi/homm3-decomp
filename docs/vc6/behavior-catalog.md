@@ -550,7 +550,7 @@ type/troop walkers, frame 0x8c vs 0x88; ours coalesces).
 Retail adds `(pitch*y + 2*x)` before the map pointer. Pasted field arithmetic
 remained at 88.92538% across term orders, indexing, casts, shifts and named
 offsets. That did not establish a compiler ceiling: on 2026-09-10, calling
-the existing `Bitmap16Bit::getMap(x,y)` through the direct screen receiver
+the existing `Bitmap16Bit::GetMap(x,y)` through the direct screen receiver
 reproduced every instruction at 100%. Caching the bitmap receiver lost the
 match; using its width/height accessors after the map call was byte-flat.
 

@@ -94,7 +94,7 @@ hide an invalid cursor, and no production pointer is converted to an integer.
 | Map lookup `0x505ea0` | Throw before indexing a missing definition | 100 → 84.0566 |
 | Map lookup `0x505f20` | Same failure boundary, before publication | 100 → 97.7099 |
 
-DC proves `Bitmap816::getMap` uses storage pitch, but `getPitch` returns
+DC proves `Bitmap816::GetMap` uses storage pitch, but `getPitch` returns
 **width**. Retail's masked darken reads those same distinct fields. Both
 canonical accessors and source calls are restored; changing mask traversal
 to storage pitch would alter the proven algorithm. Tests deliberately use

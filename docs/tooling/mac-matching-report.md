@@ -156,7 +156,7 @@ positive evidence for a source boundary; each Windows call or inline expansion
 still needs its own VC6 verdict.
 
 A later MAPCELL -O4 compilation did expose context sensitivity: adding the
-source-earlier `TTimedEvent::read` body changed helper inlining in two
+source-earlier `TTimedEvent::Read` body changed helper inlining in two
 previously paired bodies and emitted a candidate-only allocator constructor
 and two vector helper calls. Retail expands those operations at the
 corresponding sites, so assigning arbitrary retained callee addresses would
@@ -164,7 +164,7 @@ be wrong. The bounded `TTimedEvent` body remains a reviewed proposal while
 its compiler context is investigated.
 It shows why every Mac result carries source-order and profile provenance and
 must be refreshed when the compilation group changes.
-An isolated source-order probe confirmed the effect: when `TTimedEvent::read`
+An isolated source-order probe confirmed the effect: when `TTimedEvent::Read`
 precedes both controls, their emitted bodies change from 1008/444 to
 992/312 bytes and gain vector helper calls; placing it between them changes
 only the later control; placing it last restores both. The allocator call in
@@ -544,7 +544,7 @@ multiplication operand-load order difference; reversing the C++ operands was
 byte-flat and was restored.
 
 `TRecruitWindow`'s constructor now uses four Dreamcast-named
-`TTextResource::operator[]` calls in place of direct `getText` spelling.
+`TTextResource::operator[]` calls in place of direct `GetText` spelling.
 This was byte-flat on Windows at 99.01016% but closed its Dreamcast audit
 findings without moving the exact `recruitUnit` constructors. Its Mac body
 is independently bounded at 0:0x14d310..0x14eb7c; the window declaration
