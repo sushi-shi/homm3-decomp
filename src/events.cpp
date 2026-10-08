@@ -566,7 +566,7 @@ bool initializeArtifactEventText()
     if (!g_artifactEventTextResource)
         return false;
     for (int i = 0; i < 144; i++)
-        g_artifactEventText[i] = g_artifactEventTextResource->getText(i);
+        g_artifactEventText[i] = g_artifactEventTextResource->GetText(i);
     return true;
 }
 
@@ -580,7 +580,7 @@ bool initializeRandomSignText()
     if (!g_randomSignTextResource)
         return false;
     for (int i = 0; i < 25; i++)
-        g_randomSignText[i] = g_randomSignTextResource->getText(i);
+        g_randomSignText[i] = g_randomSignTextResource->GetText(i);
     return true;
 }
 
@@ -1228,10 +1228,10 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             amount = 999 - currentHero->m_mana;
         } else if (currentHero->m_mana + amount < 0) {
             amount = -currentHero->m_mana;
-            alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MANA_FORMAT),
+            alternate = formatString(g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MANA_FORMAT),
                                       currentHero->m_name);
         } else {
-            alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MANA_FORMAT),
+            alternate = formatString(g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MANA_FORMAT),
                                       currentHero->m_name);
         }
         if (humanPlayer && amount != 0) {
@@ -1245,12 +1245,12 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         if (humanPlayer) {
             if (blackBox->m_moraleBonus < 0) {
                 addReward(msg, formatString(
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MORALE_FORMAT),
+                    g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MORALE_FORMAT),
                     currentHero->m_name), rewards, RES_BAD_MORALE,
                            blackBox->m_moraleBonus);
             } else {
                 addReward(msg, formatString(
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MORALE_FORMAT),
+                    g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MORALE_FORMAT),
                     currentHero->m_name), rewards, RES_GOOD_MORALE,
                            blackBox->m_moraleBonus);
             }
@@ -1263,12 +1263,12 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         if (humanPlayer) {
             if (blackBox->m_luckBonus < 0) {
                 addReward(msg, formatString(
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_LUCK_FORMAT),
+                    g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_LUCK_FORMAT),
                     currentHero->m_name), rewards, RES_BAD_LUCK,
                            blackBox->m_luckBonus);
             } else {
                 addReward(msg, formatString(
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_LUCK_FORMAT),
+                    g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_LUCK_FORMAT),
                     currentHero->m_name), rewards, RES_GOOD_LUCK,
                            blackBox->m_luckBonus);
             }
@@ -1283,12 +1283,12 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
             if (humanPlayer) {
                 if (blackBox->m_resQty[k] > 0) {
                     addReward(msg, formatString(
-                        g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
+                        g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                         currentHero->m_name), rewards, EGameResource(k),
                                blackBox->m_resQty[k]);
                 } else {
                     addReward(msg, formatString(
-                        g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_TREASURE_FORMAT),
+                        g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_TREASURE_FORMAT),
                         currentHero->m_name), rewards, EGameResource(k),
                                blackBox->m_resQty[k] - 100000);
                 }
@@ -1304,7 +1304,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         if (currentHero->getNumberInBackpack(1) < 64) {
             if (humanPlayer) {
                 addReward(msg, formatString(
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
+                    g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                     currentHero->m_name), rewards, RES_ARTIFACT,
                            blackBox->m_artifacts[m]);
             }
@@ -1329,11 +1329,11 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
                     // lifetime despite Windows 96.35 -> 95.28%.
                     if (rewards.size() != 0) {
                         msg = formatString(
-                            g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),
+                            g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),
                             currentHero->m_name);
                     }
                     addReward(msg, formatString(
-                        g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELL_FORMAT),
+                        g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELL_FORMAT),
                         currentHero->m_name), rewards, RES_SPELL,
                                blackBox->m_spells[n]);
                 }
@@ -1361,11 +1361,11 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
         if (humanPlayer) {
             if (amount == 1)
                 alternate = formatString(
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURE_JOINS_FORMAT),
+                    g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_CREATURE_JOINS_FORMAT),
                     getArmyName(type, 1), currentHero->m_name);
             else
                 alternate = formatString(
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
+                    g_adventureEventText->GetText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
                     getArmyName(type, 2), currentHero->m_name);
             addReward(msg, alternate, rewards, RES_MONSTER,
                        ((amount & 0xffff) << 16) | (type & 0xffff));
@@ -2000,7 +2000,7 @@ inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
         g_game->m_borderTentVisitFlags[cell->m_objectIndex];
     if (visitedFlags & g_curPlayerBit) {
         if (humanPlayer) {
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_BORDER_GUARD_PROMPT),
                          2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
@@ -2008,7 +2008,7 @@ inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
         }
         eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
     } else if (humanPlayer) {
-        normalDialog(g_adventureEventText->getText(
+        normalDialog(g_adventureEventText->GetText(
                          ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
@@ -2039,12 +2039,12 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
     if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
         & g_curPlayerBit) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_BORDER_TENT_VISITED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_BORDER_TENT),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         g_game->m_borderTentVisitFlags[cell->m_objectIndex] |= g_curPlayerBit;
@@ -2058,7 +2058,7 @@ inline void advManager::doEventBouy(hero* currentHero, NewmapCell* cell,
 {
     if (currentHero->m_flags & 4) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_BUOY_VISITED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
@@ -2066,7 +2066,7 @@ inline void advManager::doEventBouy(hero* currentHero, NewmapCell* cell,
         currentHero->m_moraleBonus += 1;
         g_game->setInfoFlag(BuoyInfo, g_netLocalGamePos);
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_BUOY),
                          1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
     }
@@ -2080,7 +2080,7 @@ inline void advManager::doEventCloverField(hero* currentHero,
 {
     if (currentHero->m_flags & 8) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_CLOVER_FIELD_VISITED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
@@ -2089,7 +2089,7 @@ inline void advManager::doEventCloverField(hero* currentHero,
         currentHero->m_luckBonus += 2;
         currentHero->m_movePoints = 0;
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_CLOVER_FIELD),
                          1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
     }
@@ -2103,12 +2103,12 @@ inline void advManager::doEventFaerieRing(hero* currentHero,
 {
     if (currentHero->m_flags & 0x2000) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_FAERIE_RING_VISITED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_FAERIE_RING),
                          1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
         currentHero->m_flags |= 0x2000;
@@ -2737,7 +2737,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
-        normalDialog(g_adventureEventText->getText(
+        normalDialog(g_adventureEventText->GetText(
                          ADV_EVENT_TEXT_PYRAMID_PROMPT),
                      2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
@@ -2749,7 +2749,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     cell->setCellVisited(currentHero->m_owner);
     if (!cell->pyramidIsGuarded()) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_PYRAMID_ROBBED),
                          1, -1, -1, 0xd, 0, 0xd, 0, -1, 0, -1, 0);
         if (!(currentHero->m_flags & 0x1000)) {
@@ -2769,20 +2769,20 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     ESpellId spell = cell->getPyramidSpell();
     char text[500];
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
-            g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
+            g_adventureEventText->GetText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
             g_spellTraits[spell].m_name);
     cell->setPyramid(0, ESpellId(spell));
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
-            strcat(text, g_adventureEventText->getText(
+            strcat(text, g_adventureEventText->GetText(
                               ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK_SUFFIX));
             normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (g_spellTraits[spell].m_level
                > currentHero->getSecondarySkill(eSecSkillWisdom) + 2) {
         if (humanPlayer) {
-            strcat(text, g_adventureEventText->getText(
+            strcat(text, g_adventureEventText->GetText(
                               ADV_EVENT_TEXT_PYRAMID_NO_WISDOM_SUFFIX));
             normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -4173,7 +4173,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
     g_game->setInfoFlag(WitchHutInfo, g_netLocalGamePos);
     if (skill == -1) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
@@ -4181,7 +4181,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
     if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
         if (humanPlayer) {
             sprintf(g_text,
-                    g_adventureEventText->getText(
+                    g_adventureEventText->GetText(
                         ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
                     g_sSkillTraits[skill].m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0,
@@ -4192,7 +4192,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
     if (currentHero->m_skillCount >= 8) {
         if (humanPlayer) {
             sprintf(g_text,
-                    g_adventureEventText->getText(
+                    g_adventureEventText->GetText(
                         ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
                     g_sSkillTraits[skill].m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0,
@@ -4202,7 +4202,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
     }
     if (humanPlayer) {
         sprintf(g_text,
-                g_adventureEventText->getText(
+                g_adventureEventText->GetText(
                     ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
                 g_sSkillTraits[skill].m_name);
         // iResType1 20 is the secondary-skill picture class and the
@@ -4282,7 +4282,7 @@ inline void advManager::doEventLighthouse(NewmapCell* cell,
     if (!g_game->onSameTeam(g_game->getMine(cell->m_extraInfo)->m_playerOwner,
                             g_netLocalGamePos)) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_LIGHTHOUSE),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         g_game->claimMine(cell->m_extraInfo, g_netLocalGamePos,
@@ -4297,12 +4297,12 @@ inline void advManager::doEventMermaid(hero* currentHero, NewmapCell* cell,
 {
     if (currentHero->m_flags & 0x8000) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_MERMAID_VISITED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
+            normalDialog(g_adventureEventText->GetText(
                              ADV_EVENT_TEXT_MERMAID),
                          1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
         currentHero->m_flags |= 0x8000;
@@ -6235,12 +6235,12 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             char text[256];  // DC sText[256]
             const char* target;
             if (rightTown)
-                target = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
+                target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
             else if (rightHero)
-                target = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_HERO);
+                target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_HERO);
             else
-                target = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_GARRISON);
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_TOWN_UNDER_ATTACK_FORMAT),
+                target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_GARRISON);
+            sprintf(text, g_generalText->GetText(GENERAL_TEXT_TOWN_UNDER_ATTACK_FORMAT),
                     g_game->getPlayerName(rightPlayer), target);
             g_game->waitForPlayer(text, rightPlayer);
         }
@@ -6321,10 +6321,10 @@ combatFinished:
         sprintf(g_text, "pickup%02d.82M", sRandom(1, 7));
         SAMPLE2 sample = loadPlaySample(g_text);
         if (g_combatManager->m_raisedCreatureCount == 1) {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_NECROMANCY_RAISE_ONE_FORMAT),
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_NECROMANCY_RAISE_ONE_FORMAT),
                     getArmyName(g_combatManager->m_raisedCreatureType, 1));
         } else {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_NECROMANCY_RAISE_MANY_FORMAT),
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_NECROMANCY_RAISE_MANY_FORMAT),
                     g_combatManager->m_raisedCreatureCount,
                     getArmyName(g_combatManager->m_raisedCreatureType, 2));
         }

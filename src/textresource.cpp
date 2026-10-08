@@ -6,7 +6,7 @@
 
 // Original: TTextResource::TTextResource; textresource.cpp:33
 DC_ADDRESS(0x163808, 0x50)
-TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), m_data(0)
+TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), Data(0)
 {
 }
 
@@ -18,24 +18,24 @@ MAC_ADDRESS(0x1b0b70, 0x21c)
 TTextResource::TTextResource(const char* name, int size, const char* data)
     : resource(name, RESOURCE_TYPE_TEXT)
 {
-    m_data = new char[size];
-    if (!m_data)
+    Data = new char[size];
+    if (!Data)
         return;
-    memcpy(m_data, data, size);
+    memcpy(Data, data, size);
 
     int numStrings = 0;
     int bytesLeft = size;
-    char* scan = m_data;
+    char* scan = Data;
     while (bytesLeft > 0) {
         if (*scan == '\r')
             ++numStrings;
         ++scan;
         --bytesLeft;
     }
-    m_text.resize(numStrings, 0);
+    Text.resize(numStrings, 0);
 
-    char* next = m_data;
-    for (TTextArray::iterator it = m_text.begin(); it != m_text.end(); ++it) {
+    char* next = Data;
+    for (TTextVector::iterator it = Text.begin(); it != Text.end(); ++it) {
         char* end;
         if (*next != '"') {
             *it = next;
@@ -77,21 +77,21 @@ MAC_ADDRESS(0x1b0d8c, 0x8c)
 TTextResource::~TTextResource()
 {
     // Mac retains array delete (0x268c34) for the character buffer.
-    if (m_data)
-        delete[] m_data;
+    if (Data)
+        delete[] Data;
 }
 
 VA(0x005bbe20, 0x1B)
 MAC_ADDRESS(0x1b0e18, 0xc)
 unsigned int TTextResource::getSize() const
 {
-    return sizeof(*this) + m_text.size();
+    return sizeof(*this) + Text.size();
 }
 
 // Original: TSpreadsheetResource::TSpreadsheetResource; textresource.cpp:177
 DC_ADDRESS(0x1639ec, 0x84)
 TSpreadsheetResource::TSpreadsheetResource()
-    : resource(0, RESOURCE_TYPE_NONE), m_data(0)
+    : resource(0, RESOURCE_TYPE_NONE), Data(0)
 {
 }
 
@@ -105,25 +105,25 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
     : resource(name, RESOURCE_TYPE_TEXT)
 {
     m_dataSize = size;
-    m_data = new char[size];
-    if (!m_data)
+    Data = new char[size];
+    if (!Data)
         return;
-    memcpy(m_data, data, size);
+    memcpy(Data, data, size);
 
     int numRows = 0;
     int bytesLeft = size;
-    char* scan = m_data;
+    char* scan = Data;
     while (bytesLeft > 0) {
         if (*scan == '\r')
             ++numRows;
         ++scan;
         --bytesLeft;
     }
-    m_spreadsheet.resize(numRows, 0);
+    Spreadsheet.resize(numRows, 0);
 
-    char* next = m_data;
-    for (TArray::iterator rowIt = m_spreadsheet.begin();
-         rowIt != m_spreadsheet.end(); ++rowIt) {
+    char* next = Data;
+    for (TArray::iterator rowIt = Spreadsheet.begin();
+         rowIt != Spreadsheet.end(); ++rowIt) {
         TStringVector* row = new TStringVector;
         *rowIt = row;
 
@@ -180,14 +180,14 @@ DC_ADDRESS(0x163c30, 0xc8)
 MAC_ADDRESS(0x1b1124, 0xe4)
 TSpreadsheetResource::~TSpreadsheetResource()
 {
-    for (TStringVector** it = m_spreadsheet.begin(); it != m_spreadsheet.end();
+    for (TStringVector** it = Spreadsheet.begin(); it != Spreadsheet.end();
          ++it) {
         if (*it)
             delete *it;
     }
     // Mac retains array delete (0x268c34) for the character buffer.
-    if (m_data)
-        delete[] m_data;
+    if (Data)
+        delete[] Data;
 }
 
 // E:\gamedcs\textresource.cpp:298

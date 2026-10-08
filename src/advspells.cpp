@@ -49,13 +49,13 @@ void advManager::checkCastSpell()
     if (objectType == CURSED_GROUND) {
         if (g_spellTraits[g_windowManager->m_dialogReturn].m_level > 1) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL),
+                g_generalText->GetText(GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             castSpell(g_windowManager->m_dialogReturn);
         }
     } else if (objectType == GARRISON) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_GARRISON_ADVENTURE_SPELL),
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_GARRISON_ADVENTURE_SPELL),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
         castSpell(g_windowManager->m_dialogReturn);
@@ -273,7 +273,7 @@ void advManager::skuttleBoat(TSkillMastery level)
 
     if (g_windowManager->m_dialogReturn == 0) {
         normalDialog(
-            g_generalText->getText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
+            g_generalText->GetText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -394,7 +394,7 @@ void advManager::dimensionDoor(TSkillMastery level)
 
     updateRadar(1, 1, 0, 0, 0);
     normalDialog(
-        g_generalText->getText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
+        g_generalText->GetText(GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET),
         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
@@ -546,7 +546,7 @@ void advManager::identify(TSkillMastery level)
     SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_VISIONS].m_sample);
     who->m_identifyLevel = level;
     if (g_game->isLocalHuman(who->m_owner)) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_VISIONS_CAST),
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_VISIONS_CAST),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
     who->useSpell(who->getManaCost(SPELL_VISIONS));
@@ -602,7 +602,7 @@ void advManager::flight(TSkillMastery level)
 
     if ((who->m_flags & 0x40000) != 0) {
         normalDialog(
-            g_generalText->getText(GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT),
+            g_generalText->GetText(GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT),
             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }

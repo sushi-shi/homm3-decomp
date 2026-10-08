@@ -350,7 +350,7 @@ unsigned char initializeRandomTavernText()
     if (g_randomTavernText == 0)
         return 0;
     for (int i = 0; i < 256; i++)
-        g_cannedRumours[i] = g_randomTavernText->getText(i);
+        g_cannedRumours[i] = g_randomTavernText->GetText(i);
     return 1;
 }
 
@@ -1314,7 +1314,7 @@ DC_ADDRESS(0x0a5168, 0x48)
 MAC_ADDRESS(0x0cc72c, 0x5c)
 void playerData::clearNetInfo()
 {
-    strcpy(m_name, g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
+    strcpy(m_name, g_generalText->GetText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     m_dpid = 0;
     m_isHuman = 0;
     m_isLocal = 0;
@@ -1895,7 +1895,7 @@ DC_ADDRESS(0x0a6180, 0xb0)
 MAC_ADDRESS(0x0cdc08, 0xd0)
 char* playerData::getName()
 {
-    if ((!isHuman() && _strcmpi(m_name, g_generalText->getText(
+    if ((!isHuman() && _strcmpi(m_name, g_generalText->GetText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
         (isHuman() && !_strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")))) {
         strcpy(m_name, g_colors[m_color]);
@@ -3497,8 +3497,8 @@ bool game::saveGame(const char* filename, bool determineSuffix,
                 saveName);
         // General text 77 and 109 are the two reserved auto-save names;
         // a save under either of them does not become the remembered one.
-        if (_strnicmp(saveName, g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME), 8)
-            && _strnicmp(saveName, g_generalText->getText(GENERAL_TEXT_PLAYER_EXIT_SAVE_NAME), 8))
+        if (_strnicmp(saveName, g_generalText->GetText(GENERAL_TEXT_AUTOSAVE_NAME), 8)
+            && _strnicmp(saveName, g_generalText->GetText(GENERAL_TEXT_PLAYER_EXIT_SAVE_NAME), 8))
             strcpy(g_game->m_saveFileName, filename);
     }
 
@@ -3517,7 +3517,7 @@ bool game::saveGame(const char* filename, bool determineSuffix,
     } catch (TGzFile::TOpenFailure) {
         normalDialog(
             formatString(
-                g_generalText->getText(g_saveGameFailureGeneralText),
+                g_generalText->GetText(g_saveGameFailureGeneralText),
                 filename).c_str(),
             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
@@ -3540,7 +3540,7 @@ void game::setupOrigData()
     g_weekTypeExtra = 0;
     m_isCheater = 0;
 
-    strncpy(m_saveFileName, g_generalText->getText(GENERAL_TEXT_NEW_GAME_SAVE_NAME), sizeof(m_saveFileName));
+    strncpy(m_saveFileName, g_generalText->GetText(GENERAL_TEXT_NEW_GAME_SAVE_NAME), sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
     MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
     memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
@@ -6085,7 +6085,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     if (m_version != MAP_FORMAT_SHADOW_OF_DEATH
         && m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        m_mapName = g_generalText->getText(g_mapVersionErrorGeneralText);
+        m_mapName = g_generalText->GetText(g_mapVersionErrorGeneralText);
         return -1;
     }
 
@@ -9002,7 +9002,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     g_soundManager->m_playSounds = changeSounds;
 
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
-        g_advManager->bvMessage(g_generalText->getText(GENERAL_TEXT_SENDING_GAME));
+        g_advManager->bvMessage(g_generalText->GetText(GENERAL_TEXT_SENDING_GAME));
 
     saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
 
@@ -9167,7 +9167,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                             "Timeout sending save game [%d]"),
                         retryCount);
             if (retryCount > 1) {
-                normalDialog(g_generalText->getText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT), 2, -1, -1,
+                normalDialog(g_generalText->GetText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT), 2, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_ACCEPT) {
@@ -9306,7 +9306,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     g_advManager->trimLoopingSounds(4);
 
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
-        g_advManager->bvMessage(g_generalText->getText(GENERAL_TEXT_RECEIVING_GAME));
+        g_advManager->bvMessage(g_generalText->GetText(GENERAL_TEXT_RECEIVING_GAME));
 
     int lastDataReceiveTime = GameTime::get();
     int changeSounds = g_soundManager->m_currentTerrainMusic;
@@ -9360,7 +9360,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
         if (GameTime::elapsedSince(lastDataReceiveTime)
                 > GAME_TRANSMIT_TIMEOUT) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_NETWORK_RECEIVE_RETRY_PROMPT), 2, -1, -1,
+            normalDialog(g_generalText->GetText(GENERAL_TEXT_NETWORK_RECEIVE_RETRY_PROMPT), 2, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 lastDataReceiveTime = GameTime::get();
@@ -9379,7 +9379,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             } else {
                 if (inGame) {
                     remoteCleanup();
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
+                    normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
                                  -1, 0, -1, 0, -1, 0, -1, 0);
                     shutDown(0);
                 } else {
@@ -9506,7 +9506,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             case RS_PLAYER_DROPPED:
                 if (getGamePosFromDPID(netMsg->m_dpidFrom) == fromWho) {
                     remoteCleanup();
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_PLAYER_LEFT_DURING_TRANSMISSION), 1, -1, -1,
+                    normalDialog(g_generalText->GetText(GENERAL_TEXT_PLAYER_LEFT_DURING_TRANSMISSION), 1, -1, -1,
                                  -1, 0, -1, 0, -1, 0, -1, 0);
                     return 0;
                 }
@@ -9514,7 +9514,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                 break;
 
             case RS_SET_AS_HOST:
-                g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
+                g_chatMan.systemMsg(g_generalText->GetText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
                 break;
 
             case RS_CHAT_MSG: {
@@ -9969,24 +9969,24 @@ void game::setSpecialRumour()
             if (value[0] != value[1]) {
                 if (roll2 == g_specialRumourFirstCategory) {
                     sprintf(m_currentRumour,
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 g_specialRumourCategoryText),
                             getPlayerName(index[0]));
                 } else if (roll2
                            == g_specialRumourFirstCategory + 1) {
                     sprintf(m_currentRumour,
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 g_specialRumourCategoryText + 1),
                             getPlayerName(index[0]));
                 } else if (roll2
                            == g_specialRumourFirstCategory + 2) {
                     sprintf(m_currentRumour,
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 g_specialRumourCategoryText + 2),
                             getPlayerName(index[0]));
                 } else {
                     sprintf(m_currentRumour,
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 g_specialRumourCategoryText + 3),
                             getPlayerName(index[0]));
                 }
@@ -10041,12 +10041,12 @@ void game::setSpecialRumour()
 
         if (!m_ultimateArtifactZ) {
             sprintf(m_currentRumour,
-                    g_generalText->getText(
+                    g_generalText->GetText(
                         g_specialRumourGrailAboveText),
                     g_directions[loc]);
         } else {
             sprintf(m_currentRumour,
-                    g_generalText->getText(
+                    g_generalText->GetText(
                         g_specialRumourGrailBelowText),
                     g_directions[loc]);
         }
@@ -10055,7 +10055,7 @@ void game::setSpecialRumour()
                                     m_ultimateArtifactZ);
         const NewmapCell* cell = g_advManager->getCell(point);
         sprintf(m_currentRumour,
-                g_generalText->getText(g_specialRumourGrailObjectText),
+                g_generalText->GetText(g_specialRumourGrailObjectText),
                 g_rumourTerrainDescriptions[cell->m_groundSet]);
     }
 }

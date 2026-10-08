@@ -1429,7 +1429,7 @@ int game::processIconSelect(int codeY, bool rightMouse)
             }
 
             case OVERVIEW_HERO_MANA_ID:
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT), currHero->m_name,
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT), currHero->m_name,
                         currHero->m_mana, currHero->getMaxMana());
                 normalDialog(
                     g_text,
@@ -2309,7 +2309,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 11:
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 13:
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(g_dwellingType[currTown->m_type][codeY - OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID], 1));
                 break;
 
@@ -2327,13 +2327,13 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 11:
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 13:
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(g_dwellingType[currTown->m_type][codeY - OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID], 1));
                 break;
 
             case OVERVIEW_TOWN_SUMMONING_GROWTH_ICON_ID:
             case OVERVIEW_TOWN_SUMMONING_GROWTH_TEXT_ID:
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(currTown->m_summoningType, 1));
                 break;
 
@@ -2422,7 +2422,7 @@ void TOverviewWindow::doRollover(int codeY)
         }
 
         case OVERVIEW_RESOURCE_TOTAL_ID:
-            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_DAILY_INCOME));
+            strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_DAILY_INCOME));
             break;
 
         case OVERVIEW_HELP_FIRST_ID:

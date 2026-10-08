@@ -101,57 +101,57 @@ TCombatOptionsWindow::TCombatOptionsWindow()
         0, 0, 0, 0, 0x10));
 
     m_widgets.push_back(new textWidget(
-        26, 19, 432, 28, g_generalText->getText(GENERAL_TEXT_COMBAT_OPTIONS), "bigfont.fnt",
+        26, 19, 432, 28, g_generalText->GetText(GENERAL_TEXT_COMBAT_OPTIONS), "bigfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 204, 193, 20, g_generalText->getText(GENERAL_TEXT_ANIMATION_SPEED), "medfont.fnt",
+        26, 204, 193, 20, g_generalText->GetText(GENERAL_TEXT_ANIMATION_SPEED), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 283, 193, 20, g_generalText->getText(GENERAL_TEXT_MUSIC_VOLUME), "medfont.fnt",
+        26, 283, 193, 20, g_generalText->GetText(GENERAL_TEXT_MUSIC_VOLUME), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 349, 193, 20, g_generalText->getText(GENERAL_TEXT_EFFECTS_VOLUME), "medfont.fnt",
+        26, 349, 193, 20, g_generalText->GetText(GENERAL_TEXT_EFFECTS_VOLUME), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        248, 56, 211, 20, g_generalText->getText(GENERAL_TEXT_AUTO_COMBAT_OPTIONS), "medfont.fnt",
+        248, 56, 211, 20, g_generalText->GetText(GENERAL_TEXT_AUTO_COMBAT_OPTIONS), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        248, 255, 211, 20, g_generalText->getText(GENERAL_TEXT_CREATURE_INFO), "medfont.fnt",
+        248, 255, 211, 20, g_generalText->GetText(GENERAL_TEXT_CREATURE_INFO), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
 
     m_widgets.push_back(new textWidget(
-        283, 84, 182, 24, g_generalText->getText(GENERAL_TEXT_CREATURES), "medfont.fnt",
+        283, 84, 182, 24, g_generalText->GetText(GENERAL_TEXT_CREATURES), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        283, 114, 182, 24, g_generalText->getText(GENERAL_TEXT_SPELLS), "medfont.fnt",
+        283, 114, 182, 24, g_generalText->GetText(GENERAL_TEXT_SPELLS), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        283, 144, 182, 24, g_generalText->getText(GENERAL_TEXT_CATAPULT), "medfont.fnt",
+        283, 144, 182, 24, g_generalText->GetText(GENERAL_TEXT_CATAPULT), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        283, 174, 182, 24, g_generalText->getText(GENERAL_TEXT_COMBAT_BALLISTA_OPTION), "medfont.fnt",
+        283, 174, 182, 24, g_generalText->GetText(GENERAL_TEXT_COMBAT_BALLISTA_OPTION), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        283, 204, 182, 24, g_generalText->getText(GENERAL_TEXT_FIRST_AID_TENT), "medfont.fnt",
+        283, 204, 182, 24, g_generalText->GetText(GENERAL_TEXT_FIRST_AID_TENT), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        283, 283, 182, 24, g_generalText->getText(GENERAL_TEXT_ALL_STATISTICS), "medfont.fnt",
+        283, 283, 182, 24, g_generalText->GetText(GENERAL_TEXT_ALL_STATISTICS), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        283, 313, 182, 24, g_generalText->getText(GENERAL_TEXT_SPELLS_ONLY), "medfont.fnt",
+        283, 313, 182, 24, g_generalText->GetText(GENERAL_TEXT_SPELLS_ONLY), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
     m_widgets.push_back(new textWidget(
-        61, 55, 168, 24, g_generalText->getText(GENERAL_TEXT_VIEW_HEX_GRID), "medfont.fnt",
+        61, 55, 168, 24, g_generalText->GetText(GENERAL_TEXT_VIEW_HEX_GRID), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        61, 88, 168, 24, g_generalText->getText(GENERAL_TEXT_MOVEMENT_SHADOW), "medfont.fnt",
+        61, 88, 168, 24, g_generalText->GetText(GENERAL_TEXT_MOVEMENT_SHADOW), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        61, 122, 168, 24, g_generalText->getText(GENERAL_TEXT_CURSOR_SHADOW), "medfont.fnt",
+        61, 122, 168, 24, g_generalText->GetText(GENERAL_TEXT_CURSOR_SHADOW), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        61, 154, 168, 24, g_generalText->getText(GENERAL_TEXT_SPELL_BOOK_ANIMATION), "medfont.fnt",
+        61, 154, 168, 24, g_generalText->GetText(GENERAL_TEXT_SPELL_BOOK_ANIMATION), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -455,7 +455,7 @@ int combatOptionsWindowHandler(message& msg)
                 case TCombatOptionsWindow::MUSIC_VOLUME_9_ID: {
                     if (!g_config.m_musicVolume && !g_soundManager->m_ds) {
                         normalDialog(
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                         break;
@@ -489,7 +489,7 @@ int combatOptionsWindowHandler(message& msg)
                 case TCombatOptionsWindow::EFFECTS_VOLUME_9_ID: {
                     if (!g_config.m_soundVolume && !g_soundManager->m_ds) {
                         normalDialog(
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                         break;

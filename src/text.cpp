@@ -395,7 +395,7 @@ unsigned char initializeCustomCampaignText()
     if (!g_customCampText)
         return 0;
     for (int i = 1; i <= 67; i++)
-        g_customCampRclick[i - 1] = g_customCampText->getText(i);
+        g_customCampRclick[i - 1] = g_customCampText->GetText(i);
     return 1;
 }
 
@@ -409,7 +409,7 @@ unsigned char initializeMineEventText()
     if (!g_mineEventTextResource)
         return 0;
     for (int i = 0; i < 8; i++)
-        g_mineEventText[i] = g_mineEventTextResource->getText(i);
+        g_mineEventText[i] = g_mineEventTextResource->GetText(i);
     return 1;
 }
 
@@ -423,7 +423,7 @@ unsigned char initializeCampaignRegionNames()
     if (!g_campaignRegionNamesResource)
         return 0;
     for (int i = 0; i < 23; i++)
-        g_campaignRegionNames[i] = g_campaignRegionNamesResource->getSpreadsheet(i + 1, 0);
+        g_campaignRegionNames[i] = g_campaignRegionNamesResource->GetSpreadsheet(i + 1, 0);
     return 1;
 }
 
@@ -438,16 +438,16 @@ unsigned char initializeHighScoreDefaults()
         return 0;
     int i;
     for (i = 0; i < 11; i++) {
-        g_highScoreStandardDefault[i][0] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 1));
-        g_highScoreStandardDefault[i][1] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 2));
-        g_highScoreStandardDefault[i][2] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 3));
-        g_highScoreStandardDefault[i][3] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 1, 4));
+        g_highScoreStandardDefault[i][0] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 1, 1));
+        g_highScoreStandardDefault[i][1] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 1, 2));
+        g_highScoreStandardDefault[i][2] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 1, 3));
+        g_highScoreStandardDefault[i][3] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 1, 4));
     }
     for (i = 0; i < 11; i++) {
-        g_highScoreCampaignDefault[i][0] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 1));
-        g_highScoreCampaignDefault[i][1] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 2));
-        g_highScoreCampaignDefault[i][2] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 3));
-        g_highScoreCampaignDefault[i][3] = const_cast<char*>(g_highScoreDefaults->getSpreadsheet(i + 13, 4));
+        g_highScoreCampaignDefault[i][0] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 13, 1));
+        g_highScoreCampaignDefault[i][1] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 13, 2));
+        g_highScoreCampaignDefault[i][2] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 13, 3));
+        g_highScoreCampaignDefault[i][3] = const_cast<char*>(g_highScoreDefaults->GetSpreadsheet(i + 13, 4));
     }
     g_highScoreManager->resetHighScores();
     return 1;
@@ -463,7 +463,7 @@ unsigned char initializeTerrainNames()
     if (!g_terrainNamesResource)
         return 0;
     for (int i = 0; i < 10; i++)
-        g_terrainNames[i] = g_terrainNamesResource->getText(i);
+        g_terrainNames[i] = g_terrainNamesResource->GetText(i);
     return 1;
 }
 
@@ -477,7 +477,7 @@ unsigned char initializeAdvObjNames()
     if (!g_advObjNames)
         return 0;
     for (int i = 0; i < 232; i++)
-        g_quickViewText[i] = g_advObjNames->getText(i);
+        g_quickViewText[i] = g_advObjNames->GetText(i);
     return 1;
 }
 
@@ -491,7 +491,7 @@ unsigned char initializeResourceNames()
     if (!g_resourceNamesResource)
         return 0;
     for (int i = 0; i < 8; i++)
-        g_resourceNames[i] = g_resourceNamesResource->getText(i);
+        g_resourceNames[i] = g_resourceNamesResource->GetText(i);
     return 1;
 }
 
@@ -505,7 +505,7 @@ unsigned char initializeMineNames()
     if (!g_mineNames)
         return 0;
     for (int i = 0; i < 8; i++)
-        g_mineDescriptions[i] = g_mineNames->getText(i);
+        g_mineDescriptions[i] = g_mineNames->GetText(i);
     return 1;
 }
 
@@ -519,7 +519,7 @@ unsigned char initializePlayerColors()
     if (!g_playerColors)
         return 0;
     for (int i = 0; i < 8; i++) {
-        char* color = const_cast<char*>(g_playerColors->getText(i));
+        char* color = const_cast<char*>(g_playerColors->GetText(i));
         *color = static_cast<char>(toupper(*color));
         g_colors[i] = color;
     }
@@ -536,7 +536,7 @@ unsigned char initializePrimaryStatNames()
     if (!g_primaryStatNames)
         return 0;
     for (int i = 0; i < 4; i++)
-        g_statNames[i] = g_primaryStatNames->getText(i);
+        g_statNames[i] = g_primaryStatNames->GetText(i);
     return 1;
 }
 
@@ -550,9 +550,9 @@ unsigned char initializeSecondarySkillLevelNames()
     if (!g_secondarySkillLevelNames)
         return 0;
     for (int i = 0; i < 3; i++)
-        g_secondarySkillLevels[i] = g_secondarySkillLevelNames->getText(i);
+        g_secondarySkillLevels[i] = g_secondarySkillLevelNames->GetText(i);
     for (int j = 0; j < 3; j++)
-        g_abbSecondarySkillLevels[j] = g_secondarySkillLevelNames->getText(j + 3);
+        g_abbSecondarySkillLevels[j] = g_secondarySkillLevelNames->GetText(j + 3);
     return 1;
 }
 
@@ -566,14 +566,14 @@ unsigned char initializeNeutralBuildingText()
     if (!g_neutralBuildingText)
         return 0;
     for (int i = 0; i < 19; i++) {
-        if (g_neutralBuildingText->getNumberOfColumns(i) > 1)
-            g_neutralBuildingNames[i] = g_neutralBuildingText->getSpreadsheet(i, 0);
+        if (g_neutralBuildingText->GetNumberOfColumns(i) > 1)
+            g_neutralBuildingNames[i] = g_neutralBuildingText->GetSpreadsheet(i, 0);
         else
             g_neutralBuildingNames[i] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
     for (int j = 0; j < 28; j++) {
-        if (g_neutralBuildingText->getNumberOfColumns(j) > 1)
-            g_buildingInfoNeutral[j] = g_neutralBuildingText->getSpreadsheet(j, 1);
+        if (g_neutralBuildingText->GetNumberOfColumns(j) > 1)
+            g_buildingInfoNeutral[j] = g_neutralBuildingText->GetSpreadsheet(j, 1);
         else
             g_buildingInfoNeutral[j] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
@@ -592,11 +592,11 @@ unsigned char initializeSpecialBuildingText()
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 11; slot++) {
-            if (g_specialBuildingText->getNumberOfColumns(n) > 1) {
+            if (g_specialBuildingText->GetNumberOfColumns(n) > 1) {
                 g_specialBuildingNames[faction][slot] =
-                    g_specialBuildingText->getSpreadsheet(n, 0);
+                    g_specialBuildingText->GetSpreadsheet(n, 0);
                 g_buildingInfoSpecial[faction][slot] =
-                    g_specialBuildingText->getSpreadsheet(n, 1);
+                    g_specialBuildingText->GetSpreadsheet(n, 1);
             } else {
                 g_specialBuildingNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -621,9 +621,9 @@ unsigned char initializeDwellingText()
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 14; slot++) {
-            if (g_dwellingText->getNumberOfColumns(n) > 0) {
-                g_dwellingNames[faction][slot] = g_dwellingText->getSpreadsheet(n, 0);
-                g_dwellingInfo[faction][slot] = g_dwellingText->getSpreadsheet(n, 1);
+            if (g_dwellingText->GetNumberOfColumns(n) > 0) {
+                g_dwellingNames[faction][slot] = g_dwellingText->GetSpreadsheet(n, 0);
+                g_dwellingInfo[faction][slot] = g_dwellingText->GetSpreadsheet(n, 1);
             } else {
                 g_dwellingNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -648,8 +648,8 @@ unsigned char initializeTownNameText()
     int n = 0;
     for (int faction = 0; faction < 9; faction++) {
         for (int slot = 0; slot < 16; slot++) {
-            if (g_townNameText->getNumberOfColumns(n) > 0)
-                g_townNames[faction][slot] = g_townNameText->getSpreadsheet(n, 0);
+            if (g_townNameText->GetNumberOfColumns(n) > 0)
+                g_townNames[faction][slot] = g_townNameText->GetSpreadsheet(n, 0);
             else
                 g_townNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -669,7 +669,7 @@ unsigned char initializeHeroBioText()
     if (!g_heroBioText)
         return 0;
     for (int i = 0; i < 163; i++)
-        g_heroBio[i] = g_heroBioText->getText(i);
+        g_heroBio[i] = g_heroBioText->GetText(i);
     return 1;
 }
 
@@ -683,7 +683,7 @@ unsigned char initializeCastleText()
     if (!g_castleText)
         return 0;
     for (int i = 0; i < 7; i++)
-        g_castleInfo[i] = g_castleText->getText(i);
+        g_castleInfo[i] = g_castleText->GetText(i);
     return 1;
 }
 
@@ -697,7 +697,7 @@ unsigned char initializeTavernText()
     if (!g_tavernText)
         return 0;
     for (int i = 0; i < 8; i++)
-        g_tavernInfo[i] = g_tavernText->getText(i);
+        g_tavernInfo[i] = g_tavernText->GetText(i);
     return 1;
 }
 
@@ -711,7 +711,7 @@ unsigned char initializeHallText()
     if (!g_hallText)
         return 0;
     for (int i = 0; i < 10; i++)
-        g_hallInfo[i] = g_hallText->getText(i);
+        g_hallInfo[i] = g_hallText->GetText(i);
     return 1;
 }
 
@@ -725,7 +725,7 @@ unsigned char initializeTownText()
     if (!g_townText)
         return 0;
     for (int i = 0; i < 35; i++)
-        g_townCommand[i] = g_townText->getText(i);
+        g_townCommand[i] = g_townText->GetText(i);
     return 1;
 }
 
@@ -739,7 +739,7 @@ unsigned char initializeOverviewText()
     if (!g_ovText)
         return 0;
     for (int i = 0; i < 16; i++)
-        g_overviewText[i] = g_ovText->getText(i);
+        g_overviewText[i] = g_ovText->GetText(i);
     return 1;
 }
 
@@ -753,7 +753,7 @@ unsigned char initializeHeroText()
     if (!g_heroText)
         return 0;
     for (int i = 0; i < 33; i++)
-        g_heroScreen[i] = g_heroText->getText(i);
+        g_heroScreen[i] = g_heroText->GetText(i);
     return 1;
 }
 
@@ -767,7 +767,7 @@ unsigned char initializeCampaignDialogText()
     if (!g_campaignDialogResource)
         return 0;
     for (int i = 0; i < 24; i++)
-        g_campaignDialog[i] = g_campaignDialogResource->getRow(i)[1];
+        g_campaignDialog[i] = g_campaignDialogResource->GetRow(i)[1];
     return 1;
 }
 
@@ -780,8 +780,8 @@ unsigned char initializeCreditsText()
         DATA_COMPGEN(0x00688768, creditsTextName, "Credits.txt"));
     if (!g_creditsText)
         return 0;
-    g_credits[0] = g_creditsText->getText(CREDITS_TEXT_STAFF);
-    g_credits[1] = g_creditsText->getText(CREDITS_TEXT_LEGAL);
+    g_credits[0] = g_creditsText->GetText(CREDITS_TEXT_STAFF);
+    g_credits[1] = g_creditsText->GetText(CREDITS_TEXT_LEGAL);
     return 1;
 }
 
@@ -794,7 +794,7 @@ unsigned char initializeTentColorText()
     if (!g_tentColorText)
         return 0;
     for (int i = 0; i < 8; i++)
-        g_borderColorNames[i] = g_tentColorText->getText(i);
+        g_borderColorNames[i] = g_tentColorText->GetText(i);
     return 1;
 }
 
@@ -819,7 +819,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Main Menu");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_mainMenuHelp[j].m_text = row[0];
         g_mainMenuHelp[j].m_rclick = row[1];
@@ -828,7 +828,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "New Game");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_newGameHelp[j].m_text = row[0];
         g_newGameHelp[j].m_rclick = row[1];
@@ -837,7 +837,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Single Scenario Selection");
     for (j = 0; j < 245; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_singleSelectionHelp[j].m_text = row[0];
         g_singleSelectionHelp[j].m_rclick = row[1];
@@ -846,7 +846,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Multiplayer Selection");
     for (j = 0; j < 25; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_multiSelectionHelp[j].m_text = row[0];
         g_multiSelectionHelp[j].m_rclick = row[1];
@@ -855,7 +855,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Adventure Map Window");
     for (j = 0; j < 27; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_adventureWindowHelp[j].m_text = row[0];
         g_adventureWindowHelp[j].m_rclick = row[1];
@@ -864,7 +864,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "System Options");
     for (j = 0; j < 48; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_systemOptionsHelp[j].m_text = row[0];
         g_systemOptionsHelp[j].m_rclick = row[1];
@@ -873,7 +873,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Adventure Options");
     for (j = 0; j < 7; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_adventureOptionsHelp[j].m_text = row[0];
         g_adventureOptionsHelp[j].m_rclick = row[1];
@@ -882,7 +882,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Combat Window");
     for (j = 0; j < 11; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_combatWindowHelp[j].m_text = row[0];
         g_combatWindowHelp[j].m_rclick = row[1];
@@ -891,7 +891,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Combat Options");
     for (j = 0; j < 39; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_combatOptionsHelp[j].m_text = row[0];
         g_combatOptionsHelp[j].m_rclick = row[1];
@@ -900,7 +900,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "View Army");
     for (j = 0; j < 15; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_viewArmyHelp[j].m_text = row[0];
         g_viewArmyHelp[j].m_rclick = row[1];
@@ -909,7 +909,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Spell Book");
     for (j = 0; j < 11; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_spellbookHelp[j].m_text = row[0];
         g_spellbookHelp[j].m_rclick = row[1];
@@ -918,7 +918,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "CampaignBrief");
     for (j = 0; j < 62; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_campaignBriefHelp[j].m_text = row[0];
         g_campaignBriefHelp[j].m_rclick = row[1];
@@ -927,7 +927,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "CampaignWindow");
     for (j = 0; j < 24; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_campaignWindowHelp[j].m_text = row[0];
         g_campaignWindowHelp[j].m_rclick = row[1];
@@ -936,7 +936,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Recruit");
     for (j = 0; j < 3; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_recruitHelp[j].m_text = row[0];
         g_recruitHelp[j].m_rclick = row[1];
@@ -945,7 +945,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Multiplayer");
     for (j = 0; j < 8; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_mpHelp[j].m_text = row[0];
         g_mpHelp[j].m_rclick = row[1];
@@ -954,7 +954,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Sacrifice Window");
     for (j = 0; j < 20; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_sacrificeWindowHelp[j].m_text = row[0];
         g_sacrificeWindowHelp[j].m_rclick = row[1];
@@ -963,7 +963,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Skeleton Transformer");
     for (j = 0; j < 3; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_transformerWindowHelp[j].m_text = row[0];
         g_transformerWindowHelp[j].m_rclick = row[1];
@@ -972,7 +972,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Trade Window");
     for (j = 0; j < 6; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_resourceWindowHelp[j].m_text = row[0];
         g_resourceWindowHelp[j].m_rclick = row[1];
@@ -981,7 +981,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Give Resource Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_giveResourceWindowHelp[j].m_text = row[0];
         g_giveResourceWindowHelp[j].m_rclick = row[1];
@@ -990,7 +990,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Buy Artifact Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_buyArtifactWindowHelp[j].m_text = row[0];
         g_buyArtifactWindowHelp[j].m_rclick = row[1];
@@ -999,7 +999,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Sell Artifact Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_sellArtifactWindowHelp[j].m_text = row[0];
         g_sellArtifactWindowHelp[j].m_rclick = row[1];
@@ -1008,7 +1008,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "Sell Creature Window");
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_sellCreatureWindowHelp[j].m_text = row[0];
         g_sellCreatureWindowHelp[j].m_rclick = row[1];
@@ -1017,7 +1017,7 @@ unsigned char initializeHelpText()
     checkSpreadsheetResource(*g_helpText, i - 1, 0, "University Window");
     for (j = 0; j < 4; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            g_helpText->getRow(i);
+            g_helpText->GetRow(i);
 
         g_universityWindowHelp[j].m_text = row[0];
         g_universityWindowHelp[j].m_rclick = row[1];
@@ -1043,101 +1043,101 @@ unsigned char initializeArrayText()
     i = 2;
     checkTextResource(*g_arrayText, i - 1, "gStatDesc");
     for (j = 0; j < 4; j++, i++)
-        g_statDesc[j] = g_arrayText->getText(i);
+        g_statDesc[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "gLuckText");
     for (j = 0; j < 7; j++, i++)
-        g_luckText[j] = g_arrayText->getText(i);
+        g_luckText[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "gMoraleText");
     for (j = 0; j < 7; j++, i++)
-        g_moraleText[j] = g_arrayText->getText(i);
+        g_moraleText[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "gOwnedByColor");
     for (j = 0; j < 8; j++, i++)
-        g_ownedByColor[j] = g_arrayText->getText(i);
+        g_ownedByColor[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "gMonthNames");
     for (j = 0; j < 10; j++, i++)
-        g_monthNames[j] = g_arrayText->getText(i);
+        g_monthNames[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "gWeekNames");
     for (j = 0; j < 15; j++, i++)
-        g_weekNames[j] = g_arrayText->getText(i);
+        g_weekNames[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cLuckInfo");
     for (j = 0; j < 25; j++, i++)
-        g_luckInfo[j] = g_arrayText->getText(i);
+        g_luckInfo[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cMoraleInfo");
     for (j = 0; j < 42; j++, i++)
-        g_moraleInfo[j] = g_arrayText->getText(i);
+        g_moraleInfo[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cNewTurn");
     for (j = 0; j < 8; j++, i++)
-        g_newTurn[j] = g_arrayText->getText(i);
+        g_newTurn[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cMapSize");
     for (j = 0; j < 4; j++, i++)
-        g_mapSize[j] = g_arrayText->getText(i);
+        g_mapSize[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cDifficulty");
     for (j = 0; j < 5; j++, i++)
-        g_difficulty[j] = g_arrayText->getText(i);
+        g_difficulty[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cDirections");
     for (j = 0; j < 9; j++, i++)
-        g_directions[j] = g_arrayText->getText(i);
+        g_directions[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cRumourTerrainDescriptions");
     for (j = 0; j < 10; j++, i++)
-        g_rumourTerrainDescriptions[j] = g_arrayText->getText(i);
+        g_rumourTerrainDescriptions[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "cPersonality");
     for (j = 0; j < 4; j++, i++)
-        g_personality[j] = g_arrayText->getText(i);
+        g_personality[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "gArmySizeNames");
     for (j = 0; j < 9; j++) {
         int k;
 
         for (k = 0; k < 3; i++, k++)
-            g_armySizeNames[j][k] = g_arrayText->getText(i);
+            g_armySizeNames[j][k] = g_arrayText->GetText(i);
     }
     i++;
     checkTextResource(*g_arrayText, i - 1, "const_wise_tree_price_text");
     for (j = 0; j < 3; j++, i++)
-        g_constWiseTreePriceText[j] = g_arrayText->getText(i);
+        g_constWiseTreePriceText[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "HumanCPU");
     for (j = 0; j < 3; j++, i++)
-        g_humanCpu[j] = g_arrayText->getText(i);
+        g_humanCpu[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "HandiText");
     for (j = 0; j < 3; j++, i++)
-        g_handiText[j] = g_arrayText->getText(i);
+        g_handiText[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "AGRText");
     for (j = 0; j < 3; j++, i++)
-        g_agrText[j] = g_arrayText->getText(i);
+        g_agrText[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "gTownTypeNames");
     for (j = 0; j < 10; j++, i++)
-        g_townTypeNames[j] = g_arrayText->getText(i);
+        g_townTypeNames[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "NewLoadSave");
     for (j = 0; j < 3; j++, i++)
-        g_newLoadSaveText[j] = g_arrayText->getText(i);
+        g_newLoadSaveText[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "Army Speed Names");
     for (j = 0; j < 21; j++, i++)
-        g_speedNames[j] = g_arrayText->getText(i);
+        g_speedNames[j] = g_arrayText->GetText(i);
     i++;
     checkTextResource(*g_arrayText, i - 1, "Town Size Names");
     for (j = 0; j < 4; j++, i++)
-        g_townSizeNames[j] = g_arrayText->getText(i);
+        g_townSizeNames[j] = g_arrayText->GetText(i);
     i++;
     for (j = 0; j < 9; j++, i++)
-        g_moatDamageMessages[j] = g_arrayText->getText(i);
+        g_moatDamageMessages[j] = g_arrayText->GetText(i);
     return 1;
 }

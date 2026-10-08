@@ -754,37 +754,37 @@ unsigned char initializeWinSetupText()
 
     ++textLine;
     for (i = 0; i < 9; ++i, ++textLine, ++setup) {
-        g_winSetup[setup].m_text = textResource->getText(textLine);
+        g_winSetup[setup].m_text = textResource->GetText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 1; ++i, ++textLine, ++setup) {
-        g_winSetup[setup].m_text = textResource->getText(textLine);
+        g_winSetup[setup].m_text = textResource->GetText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 2; ++i, ++textLine, ++setup) {
-        g_winSetup[setup].m_text = textResource->getText(textLine);
+        g_winSetup[setup].m_text = textResource->GetText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 20; ++i, ++textLine, ++setup) {
-        g_winSetup[setup].m_text = textResource->getText(textLine);
+        g_winSetup[setup].m_text = textResource->GetText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 2; ++i, ++textLine, ++setup) {
-        g_winSetup[setup].m_text = textResource->getText(textLine);
+        g_winSetup[setup].m_text = textResource->GetText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 2; ++i, ++textLine, ++setup) {
-        g_winSetup[setup].m_text = textResource->getText(textLine);
+        g_winSetup[setup].m_text = textResource->GetText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 1; ++i, ++textLine, ++setup) {
-        g_winSetup[setup].m_text = textResource->getText(textLine);
+        g_winSetup[setup].m_text = textResource->GetText(textLine);
     }
 
     return 1;

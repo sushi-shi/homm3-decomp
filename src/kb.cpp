@@ -1531,7 +1531,7 @@ static int doNewGame()
                 exitNewGame = 1;
             } else {
                 g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-                normalDialog(g_generalText->getText(GENERAL_TEXT_TUTORIAL_MAP_MISSING), 1, -1, -1, -1, 0,
+                normalDialog(g_generalText->GetText(GENERAL_TEXT_TUTORIAL_MAP_MISSING), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             }
             break;
@@ -1901,7 +1901,7 @@ int interpretCommandLine()
         }
     }
     if (showUsage)
-        shutDown(g_generalText->getText(GENERAL_TEXT_COMMAND_LINE_HELP));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_COMMAND_LINE_HELP));
     return 1;
 }
 
@@ -2478,25 +2478,25 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
             if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_7
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_1) {
-                strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE_COMPLETE));
+                strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ARMAGEDDONS_BLADE_COMPLETE));
             } else if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_8) {
-                strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ANGELIC_ALLIANCE_RECOVERED));
+                strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ANGELIC_ALLIANCE_RECOVERED));
             } else if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_9) {
-                strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ANGELIC_ALLIANCE_COMPONENTS_RECOVERED));
+                strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ANGELIC_ALLIANCE_COMPONENTS_RECOVERED));
             } else {
                 if (gameWon) {
                     if (remoteCheck) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ALLIED_ARTIFACT_VICTORY_FORMAT),
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ALLIED_ARTIFACT_VICTORY_FORMAT),
                                 g_game->getPlayerName(
                                     victoryCondition.m_playerWinner),
                                 g_artifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_ARTIFACT_VICTORY_FORMAT),
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_ARTIFACT_VICTORY_FORMAT),
                                 g_artifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     }
@@ -2504,16 +2504,16 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                     if (remoteCheck) {
                         if (getTeamNames(victoryCondition.m_playerWinner,
                                          names)) {
-                            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_ARTIFACT_VICTORY_FORMAT), names,
+                            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_ARTIFACT_VICTORY_FORMAT), names,
                                     g_artifactTraits[
                                         victoryCondition.m_artifactNum].m_name);
                         } else {
-                            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_ARTIFACT_VICTORY_FORMAT), names,
+                            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_ARTIFACT_VICTORY_FORMAT), names,
                                     g_artifactTraits[
                                         victoryCondition.m_artifactNum].m_name);
                         }
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_ARTIFACT_VICTORY_FORMAT),
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_ARTIFACT_VICTORY_FORMAT),
                                 g_artifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     }
@@ -2537,7 +2537,7 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
             }
 
             if (gameWon) {
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_CREATURE_COUNT_VICTORY_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_CREATURE_COUNT_VICTORY_FORMAT),
                         victoryCondition.m_numCreatures,
                         getArmyName(victoryCondition.m_creatureType,
                                     victoryCondition.m_numCreatures));
@@ -2545,18 +2545,18 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_CREATURE_COUNT_VICTORY_FORMAT), names,
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_CREATURE_COUNT_VICTORY_FORMAT), names,
                                 victoryCondition.m_numCreatures,
                                 getArmyName(victoryCondition.m_creatureType,
                                             victoryCondition.m_numCreatures));
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_CREATURE_COUNT_VICTORY_FORMAT), names,
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_CREATURE_COUNT_VICTORY_FORMAT), names,
                                 victoryCondition.m_numCreatures,
                                 getArmyName(victoryCondition.m_creatureType,
                                             victoryCondition.m_numCreatures));
                     }
                 } else {
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_CREATURE_COUNT_VICTORY_FORMAT),
+                    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_CREATURE_COUNT_VICTORY_FORMAT),
                             victoryCondition.m_numCreatures,
                             getArmyName(victoryCondition.m_creatureType,
                                         victoryCondition.m_numCreatures));
@@ -2579,25 +2579,25 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
             }
 
             if (gameWon) {
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_RESOURCE_COUNT_VICTORY_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_RESOURCE_COUNT_VICTORY_FORMAT),
                         victoryCondition.m_resourceAmount,
                         g_resourceNames[victoryCondition.m_resourceType]);
             } else {
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_RESOURCE_COUNT_VICTORY_FORMAT), names,
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_RESOURCE_COUNT_VICTORY_FORMAT), names,
                                 victoryCondition.m_resourceAmount,
                                 g_resourceNames[
                                     victoryCondition.m_resourceType]);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_RESOURCE_COUNT_VICTORY_FORMAT), names,
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_RESOURCE_COUNT_VICTORY_FORMAT), names,
                                 victoryCondition.m_resourceAmount,
                                 g_resourceNames[
                                     victoryCondition.m_resourceType]);
                     }
                 } else {
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_RESOURCE_COUNT_VICTORY_FORMAT),
+                    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_RESOURCE_COUNT_VICTORY_FORMAT),
                             victoryCondition.m_resourceAmount,
                             g_resourceNames[victoryCondition.m_resourceType]);
                 }
@@ -2620,22 +2620,22 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 
             if (gameWon) {
                 if (remoteCheck) {
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ALLIED_UPGRADE_TOWN_VICTORY_FORMAT),
+                    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ALLIED_UPGRADE_TOWN_VICTORY_FORMAT),
                             g_game->getPlayerName(
                                 victoryCondition.m_playerWinner));
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_UPGRADE_TOWN_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_UPGRADE_TOWN_VICTORY));
                 }
             } else {
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_UPGRADE_TOWN_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_UPGRADE_TOWN_VICTORY_FORMAT), names);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_UPGRADE_TOWN_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_UPGRADE_TOWN_VICTORY_FORMAT), names);
                     }
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_UPGRADE_TOWN_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_UPGRADE_TOWN_VICTORY));
                 }
             }
             if (!remoteCheck)
@@ -2656,22 +2656,22 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 
             if (gameWon) {
                 if (remoteCheck) {
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ALLIED_BUILD_GRAIL_VICTORY_FORMAT),
+                    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ALLIED_BUILD_GRAIL_VICTORY_FORMAT),
                             g_game->getPlayerName(
                                 victoryCondition.m_playerWinner));
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_BUILD_GRAIL_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_BUILD_GRAIL_VICTORY));
                 }
             } else {
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_BUILD_GRAIL_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_BUILD_GRAIL_VICTORY_FORMAT), names);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_BUILD_GRAIL_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_BUILD_GRAIL_VICTORY_FORMAT), names);
                     }
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_BUILD_GRAIL_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_BUILD_GRAIL_VICTORY));
                 }
             }
             if (!remoteCheck)
@@ -2686,7 +2686,7 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
             if (g_game->onSameTeam(g_game->getLocalPlayerGamePos(),
                                    victoryCondition.m_playerWinner)) {
                 gameWon = 1;
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_DEFEAT_HERO_VICTORY_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_DEFEAT_HERO_VICTORY_FORMAT),
                         g_game->getHero(victoryCondition.m_heroId)->m_name);
                 if (!remoteCheck)
                     sendPlayerWon();
@@ -2709,10 +2709,10 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                 victoryCondition.m_townX, victoryCondition.m_townY,
                 victoryCondition.m_townZ));
             if (gameWon) {
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_CAPTURE_TOWN_VICTORY_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_CAPTURE_TOWN_VICTORY_FORMAT),
                         thisTown->m_name.c_str());
             } else {
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_CAPTURE_TOWN_VICTORY_FORMAT),
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_CAPTURE_TOWN_VICTORY_FORMAT),
                         thisTown->m_name.c_str());
             }
             if (!remoteCheck)
@@ -2733,22 +2733,22 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 
             if (gameWon) {
                 if (remoteCheck) {
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ALLIED_KILL_MONSTER_VICTORY_FORMAT),
+                    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ALLIED_KILL_MONSTER_VICTORY_FORMAT),
                             g_game->getPlayerName(
                                 victoryCondition.m_playerWinner));
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_KILL_MONSTER_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_KILL_MONSTER_VICTORY));
                 }
             } else {
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_KILL_MONSTER_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_KILL_MONSTER_VICTORY_FORMAT), names);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_KILL_MONSTER_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_KILL_MONSTER_VICTORY_FORMAT), names);
                     }
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_KILL_MONSTER_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_KILL_MONSTER_VICTORY));
                 }
             }
             if (!remoteCheck)
@@ -2789,17 +2789,17 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
             }
 
             if (gameWon) {
-                strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_FLAG_DWELLINGS_VICTORY));
+                strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_FLAG_DWELLINGS_VICTORY));
             } else {
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_FLAG_DWELLINGS_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_FLAG_DWELLINGS_VICTORY_FORMAT), names);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_FLAG_DWELLINGS_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_FLAG_DWELLINGS_VICTORY_FORMAT), names);
                     }
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_FLAG_DWELLINGS_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_FLAG_DWELLINGS_VICTORY));
                 }
             }
             if (!remoteCheck)
@@ -2819,17 +2819,17 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
             }
 
             if (gameWon) {
-                strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_FLAG_MINES_VICTORY));
+                strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_FLAG_MINES_VICTORY));
             } else {
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_FLAG_MINES_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_FLAG_MINES_VICTORY_FORMAT), names);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_FLAG_MINES_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_FLAG_MINES_VICTORY_FORMAT), names);
                     }
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_FLAG_MINES_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_FLAG_MINES_VICTORY));
                 }
             }
             if (!remoteCheck)
@@ -2850,22 +2850,22 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 
             if (gameWon) {
                 if (remoteCheck) {
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ALLIED_TRANSPORT_ARTIFACT_VICTORY_FORMAT),
+                    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ALLIED_TRANSPORT_ARTIFACT_VICTORY_FORMAT),
                             g_game->getPlayerName(
                                 victoryCondition.m_playerWinner));
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_TRANSPORT_ARTIFACT_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_TRANSPORT_ARTIFACT_VICTORY));
                 }
             } else {
                 if (remoteCheck) {
                     if (getTeamNames(victoryCondition.m_playerWinner,
                                      names)) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_TEAM_TRANSPORT_ARTIFACT_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_TRANSPORT_ARTIFACT_VICTORY_FORMAT), names);
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_REMOTE_PLAYER_TRANSPORT_ARTIFACT_VICTORY_FORMAT), names);
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_TRANSPORT_ARTIFACT_VICTORY_FORMAT), names);
                     }
                 } else {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_ENEMY_TRANSPORT_ARTIFACT_VICTORY));
+                    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_TRANSPORT_ARTIFACT_VICTORY));
                 }
             }
             if (!remoteCheck)
@@ -2963,7 +2963,7 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
                     g_game->getTownId(lossCondition.m_townX,
                                       lossCondition.m_townY,
                                       lossCondition.m_townZ));
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSE_TOWN_DEFEAT_FORMAT), lostTown->m_name.c_str());
+                sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOSE_TOWN_DEFEAT_FORMAT), lostTown->m_name.c_str());
                 if (remoteCheck)
                     g_gameOver = 1;
                 else
@@ -2979,13 +2979,13 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
             if (g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
                 gameLost = 1;
                 if (localPos == lossCondition.m_playerLoser) {
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSE_HERO_DEFEAT_FORMAT),
+                    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOSE_HERO_DEFEAT_FORMAT),
                             g_game->getHero(lossCondition.m_heroId)->m_name);
                 } else {
                     char* loserName =
                         g_game->getPlayerName(lossCondition.m_playerLoser);
                     if (loserName)
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOSS_HERO_DEFEATED_FORMAT), loserName,
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOSS_HERO_DEFEATED_FORMAT), loserName,
                                 g_game->getHero(lossCondition.m_heroId)->m_name);
                 }
                 if (remoteCheck)
@@ -3005,7 +3005,7 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
             else
                 sendPlayerLost();
             gameLost = 1;
-            normalDialog(g_generalText->getText(GENERAL_TEXT_TIME_LIMIT_DEFEAT), NORMAL_DIALOG_DEFAULT, -1, -1,
+            normalDialog(g_generalText->GetText(GENERAL_TEXT_TIME_LIMIT_DEFEAT), NORMAL_DIALOG_DEFAULT, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
         break;
@@ -3087,7 +3087,7 @@ void checkEndGame(int forceWin)
             CNormalWinMsg winMsg(g_game->getLocalPlayerGamePos());
             transmitRemoteData(&winMsg, 127, false, true);
         }
-        normalDialog(g_generalText->getText(GENERAL_TEXT_TEAM_VICTORY), NORMAL_DIALOG_DEFAULT, -1, -1,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_TEAM_VICTORY), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
         for (i = 0; i < g_gamePlayerCount; i++)
@@ -3498,7 +3498,7 @@ void fileError(const char* buf)
 {
     char temp[500];
 
-    sprintf(temp, g_generalText->getText(GENERAL_TEXT_FILE_OPEN_ERROR_FORMAT), buf);
+    sprintf(temp, g_generalText->GetText(GENERAL_TEXT_FILE_OPEN_ERROR_FORMAT), buf);
     normalDialog(temp, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
@@ -3510,11 +3510,11 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
     message msg;
     font* currentFont = ResourceManager::getFont("HiScore.fnt");
     const char* labels[5] = {
-        g_generalText->getText(GENERAL_TEXT_TOTAL_TIME),
-        g_generalText->getText(GENERAL_TEXT_BASE_SCORE),
-        g_generalText->getText(GENERAL_TEXT_DIFFICULTY_LEVEL),
-        g_generalText->getText(GENERAL_TEXT_FINAL_SCORE),
-        g_generalText->getText(GENERAL_TEXT_CAMPAIGN_RANK)
+        g_generalText->GetText(GENERAL_TEXT_TOTAL_TIME),
+        g_generalText->GetText(GENERAL_TEXT_BASE_SCORE),
+        g_generalText->GetText(GENERAL_TEXT_DIFFICULTY_LEVEL),
+        g_generalText->GetText(GENERAL_TEXT_FINAL_SCORE),
+        g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_RANK)
     };
     char temp[100];
     Smack* smk = 0;
@@ -3712,7 +3712,7 @@ void memError()
         sprintf(g_text,
             DATA_COMPGEN(0x0067f694, memErrorFormat,
                 "\n%s\n\nHeroes III encountered an error\n\n"),
-            g_generalText->getText(GENERAL_TEXT_OUT_OF_MEMORY));
+            g_generalText->GetText(GENERAL_TEXT_OUT_OF_MEMORY));
         shutDown(g_text);
         g_inMemError = 0;
     }
@@ -4128,7 +4128,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
                 DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
                 m_qualifier + 100000);
         } else {
-            m_text = formatString(g_generalText->getText(GENERAL_TEXT_PER_DAY_FORMAT), -m_qualifier);
+            m_text = formatString(g_generalText->GetText(GENERAL_TEXT_PER_DAY_FORMAT), -m_qualifier);
         }
         m_spriteName = DATA_COMPGEN(
             0x00660114, dialogResourceSprite, "resour82.def");
@@ -4147,7 +4147,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
                 DATA_COMPGEN(0x00660a1c, dialogDecimalFormat, "%d"),
                 m_qualifier + 100000);
         } else {
-            m_text = formatString(g_generalText->getText(GENERAL_TEXT_PER_DAY_FORMAT), -m_qualifier);
+            m_text = formatString(g_generalText->GetText(GENERAL_TEXT_PER_DAY_FORMAT), -m_qualifier);
         }
         m_spriteName = DATA_COMPGEN(
             0x00660224, dialogSmallGoldSprite, "resource.def");
@@ -4226,7 +4226,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
             0x006601f0, dialogPrimarySkillSprite, "pskill.def");
         m_spriteFrameIndex = 4;
         if (m_qualifier == -1) {
-            m_text = g_generalText->getText(GENERAL_TEXT_ONE_LEVEL_BONUS);
+            m_text = g_generalText->GetText(GENERAL_TEXT_ONE_LEVEL_BONUS);
         } else if (m_qualifier == 0) {
             m_text = DATA_COMPGEN(0x00691210, dialogEmptyText, "");
         } else {
@@ -4242,7 +4242,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
         m_spriteFrameIndex = 5;
         m_text = formatString(
             DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
-            m_qualifier, g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL));
+            m_qualifier, g_generalText->GetText(GENERAL_TEXT_SPELL_POINTS_LABEL));
         break;
 
     case RES_GOOD_MORALE:
@@ -4897,13 +4897,13 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 
     if (dialogInfo.m_special == 1) {
         long textWidth = g_mediumFont->lineWidth(
-            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_OR));
+            g_generalText->GetText(GENERAL_TEXT_LEVEL_UP_OR));
         long textHeight = g_mediumFont->m_fs.m_height;
         long textX = (dialogInfo.m_width - textWidth) / 2;
         long textY = dialogInfo.m_icons[0].m_textY - textHeight;
         textWidget* special = new textWidget(
             textX, textY, textWidth, textHeight,
-            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_OR),
+            g_generalText->GetText(GENERAL_TEXT_LEVEL_UP_OR),
             DATA_COMPGEN(0x0065f2ec, normalDialogMediumFont,
                          "medfont.fnt"),
             font::PRIMARY, -1, font::CENTER_JUSTIFIED, 0, 8);

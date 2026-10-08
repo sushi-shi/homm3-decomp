@@ -1398,7 +1398,7 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
         && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
         && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
         && ourHero->m_id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE_GELU_ONLY), 1, -1, -1,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_ARMAGEDDONS_BLADE_GELU_ONLY), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -1874,7 +1874,7 @@ int swapManager::main(message& msg)
                         == ARTIFACT_NONE)
                     {
                         int level = m_heroes[0]->m_level;
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 level, hero::getExperience(level + 1),
                                 m_heroes[0]->m_experience);
                         normalDialog(
@@ -1890,7 +1890,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[0]->m_name, m_heroes[0]->m_mana,
                                 m_heroes[0]->getMaxMana());
                         normalDialog(
@@ -1945,7 +1945,7 @@ int swapManager::main(message& msg)
                         == ARTIFACT_NONE)
                     {
                         int level = m_heroes[1]->m_level;
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 level, hero::getExperience(level + 1),
                                 m_heroes[1]->m_experience);
                         normalDialog(
@@ -1961,7 +1961,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
+                        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[1]->m_name, m_heroes[1]->m_mana,
                                 m_heroes[1]->getMaxMana());
                         normalDialog(
@@ -2102,7 +2102,7 @@ void swapManager::setRolloverText(int codeY)
         break;
 
     case kSwapRolloverHeroLeft: case kSwapRolloverHeroRight:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                 m_heroes[codeY - kSwapRolloverHeroLeft]->m_name,
                 m_heroes[codeY - kSwapRolloverHeroLeft]->getClassName());
         break;
@@ -2139,7 +2139,7 @@ void swapManager::setRolloverText(int codeY)
 
     case kSwapRolloverArmyMoveLeft: case kSwapRolloverArmyMoveRight:
         sprintf(g_text, g_heroScreen[20],
-                g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
+                g_generalText->GetText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
         break;
 
     case kSwapRolloverText0Left: case kSwapRolloverText0Right:

@@ -174,10 +174,10 @@ void game::getLossConditionText(char* text)
                 loss.m_townX, loss.m_townY, loss.m_townZ));
             const char* targetType;
             if (targetTown->isCastle())
-                targetType = g_generalText->getText(GENERAL_TEXT_CASTLE_LOWERCASE);
+                targetType = g_generalText->GetText(GENERAL_TEXT_CASTLE_LOWERCASE);
             else
-                targetType = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_LOSE_TOWN_FORMAT), targetType,
+                targetType = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
+            sprintf(text, g_generalText->GetText(GENERAL_TEXT_LOSS_CONDITION_LOSE_TOWN_FORMAT), targetType,
                     targetTown->m_name.c_str());
             break;
         }

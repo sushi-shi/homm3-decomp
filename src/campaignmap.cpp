@@ -631,20 +631,20 @@ unsigned char initializeCampaignMapTraitsTable()
     unsigned campaign;
     for (campaign = 0; campaign < 21; ++campaign) {
         if (g_campaignMapTraits[campaign].m_numRegions > 0) {
-            strSize += strlen(textResource->getText(textLine)) + 1;
+            strSize += strlen(textResource->GetText(textLine)) + 1;
             ++textLine;
         }
     }
 
     for (campaign = 0; campaign < 21; ++campaign) {
         if (g_campaignMapTraits[campaign].m_numRegions > 0) {
-            while (strlen(textResource->getText(textLine)) == 0)
+            while (strlen(textResource->GetText(textLine)) == 0)
                 ++textLine;
             ++textLine;
             for (unsigned region = 0;
                  region < g_campaignMapTraits[campaign].m_numRegions;
                  ++region) {
-                strSize += strlen(textResource->getText(textLine)) + 1;
+                strSize += strlen(textResource->GetText(textLine)) + 1;
                 ++textLine;
             }
         }
@@ -658,7 +658,7 @@ unsigned char initializeCampaignMapTraitsTable()
     textLine = 1;
     for (campaign = 0; campaign < 21; ++campaign) {
         if (g_campaignMapTraits[campaign].m_numRegions > 0) {
-            const char* source = textResource->getText(textLine);
+            const char* source = textResource->GetText(textLine);
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
             g_campaignMapTraitsImp[campaign].m_name = destination;
@@ -669,13 +669,13 @@ unsigned char initializeCampaignMapTraitsTable()
 
     for (campaign = 0; campaign < 21; ++campaign) {
         if (g_campaignMapTraits[campaign].m_numRegions > 0) {
-            while (strlen(textResource->getText(textLine)) == 0)
+            while (strlen(textResource->GetText(textLine)) == 0)
                 ++textLine;
             ++textLine;
             for (unsigned region = 0;
                  region < g_campaignMapTraits[campaign].m_numRegions;
                  ++region) {
-                const char* source = textResource->getText(textLine);
+                const char* source = textResource->GetText(textLine);
                 unsigned length = strlen(source) + 1;
                 memcpy(destination, source, length);
                 g_campaignRegionTraits[campaign][region].m_name = destination;

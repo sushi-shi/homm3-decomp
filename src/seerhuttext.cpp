@@ -61,17 +61,17 @@ MAC_ADDRESS(0x2543f0, 0x1fc)  // anchor-string(seerhut.txt caller 0x56c3e0) + an
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col)
 {
-    column->m_name = sheet->getRow(1)[col];
+    column->m_name = sheet->GetRow(1)[col];
 
     for (int q = 1; q < 10; ++q) {
-        column->m_quest[q].m_text0 = sheet->getRow(5 * q - 3)[col];
-        column->m_quest[q].m_text1 = sheet->getRow(5 * q - 2)[col];
-        column->m_quest[q].m_text2 = sheet->getRow(5 * q - 1)[col];
-        column->m_quest[q].m_text3 = sheet->getRow(5 * q)[col];
-        column->m_quest[q].m_text4 = sheet->getRow(5 * q + 1)[col];
+        column->m_quest[q].m_text0 = sheet->GetRow(5 * q - 3)[col];
+        column->m_quest[q].m_text1 = sheet->GetRow(5 * q - 2)[col];
+        column->m_quest[q].m_text2 = sheet->GetRow(5 * q - 1)[col];
+        column->m_quest[q].m_text3 = sheet->GetRow(5 * q)[col];
+        column->m_quest[q].m_text4 = sheet->GetRow(5 * q + 1)[col];
     }
 
-    column->m_completion = sheet->getRow(47)[col];
+    column->m_completion = sheet->GetRow(47)[col];
 }
 
 DATA(0x0069e728) TSeerHutTextColumn g_seerHutTextA[3];
@@ -97,7 +97,7 @@ std::string joinTextList(const std::vector<std::string>& items)
     for (int i = 0; i < items.size(); ++i) {
         if (i > 0) {
             if (i == items.size() - 1)
-                result += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                result += g_generalText->GetText(GENERAL_TEXT_LIST_AND);
             else
                 result += DATA_COMPGEN(0x0066032c, seerHutListSeparator, ", ");
         }

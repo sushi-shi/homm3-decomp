@@ -31,11 +31,11 @@ MAC_ADDRESS(0x0c3928, 0xdc)
 int executive::initSystem()
 {
     if (g_inputManager->open(-1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_INPUT_DEVICE_INITIALIZATION_ERROR));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_INPUT_DEVICE_INITIALIZATION_ERROR));
     if (addManager(g_mouseManager, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_MOUSE_INITIALIZATION_ERROR));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_MOUSE_INITIALIZATION_ERROR));
     if (addManager(g_windowManager, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_WINDOWS_INITIALIZATION_ERROR));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_WINDOWS_INITIALIZATION_ERROR));
     return 0;
 }
 
@@ -82,13 +82,13 @@ int executive::doDialog(baseManager* newDialog)
         m = m->m_nextManager;
     }
     if (addManager(newDialog, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_ADD_MANAGER_ERROR));
     if (dialogExec.addManager(g_mouseManager, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_ADD_MANAGER_ERROR));
     if (dialogExec.addManager(g_windowManager, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_ADD_MANAGER_ERROR));
     if (dialogExec.addManager(newDialog, -1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+        shutDown(g_generalText->GetText(GENERAL_TEXT_ADD_MANAGER_ERROR));
     dialogExec.mainLoop();
     removeManager(newDialog);
     for (i = 0; i < count; i++) {
@@ -185,7 +185,7 @@ void executive::callManager(baseManager* newManager)
         }
         try {
             if (addManager(newManager, -1))
-                shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+                shutDown(g_generalText->GetText(GENERAL_TEXT_ADD_MANAGER_ERROR));
             try {
                 mainLoop();
             } catch (...) {
@@ -199,7 +199,7 @@ void executive::callManager(baseManager* newManager)
                 g_advManager->m_advWindow->sleepAllWidgets(0);
             } else {
                 if (addManager(saved, -1))
-                    shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+                    shutDown(g_generalText->GetText(GENERAL_TEXT_ADD_MANAGER_ERROR));
             }
             throw;
         }
@@ -215,7 +215,7 @@ void executive::callManager(baseManager* newManager)
                 g_windowManager->fadeScreen(0, 4, 0);
         } else {
             if (addManager(saved, -1))
-                shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+                shutDown(g_generalText->GetText(GENERAL_TEXT_ADD_MANAGER_ERROR));
         }
     } catch (...) {
         m_currentManager = saved;

@@ -385,13 +385,13 @@ unsigned char initializeHeroSpecificAbilitiesTable()
     if (text == 0)
         return 0;
 
-    if (text->getNumberOfRows() < 158) {
+    if (text->GetNumberOfRows() < 158) {
         ResourceManager::dispose(text);
         return 0;
     }
 
     for (int i = 2; i < 158; i++) {
-        const TSpreadsheetResource::TStringVector& row = text->getRow(i);
+        const TSpreadsheetResource::TStringVector& row = text->GetRow(i);
         g_heroSpecificAbilitiesImp[i - 2].m_shortText = row[0];
         g_heroSpecificAbilitiesImp[i - 2].m_mediumText = row[1];
         g_heroSpecificAbilitiesImp[i - 2].m_longText = row[2];
@@ -427,29 +427,29 @@ static unsigned char initializeMoveConstants()
     if (!resource)
         return 0;
 
-    if (resource->getNumberOfRows() < 23) {
+    if (resource->GetNumberOfRows() < 23) {
         resource->dispose();
         return 0;
     }
 
     int i;
     for (i = 0; i <= 20; ++i)
-        g_moveConstants.m_land[i] = atoi(resource->getRow(i + 2)[1]);
+        g_moveConstants.m_land[i] = atoi(resource->GetRow(i + 2)[1]);
 
     int* seaMovement = g_moveConstants.m_sea;
     for (int row = 2; row < 2 + kNumMasteries; ++row, ++seaMovement) {
         const TSpreadsheetResource::TStringVector& values =
-            resource->getRow(row);
+            resource->GetRow(row);
         *seaMovement = atoi(values[3]);
     }
 
     i = 2;
-    g_moveConstants.m_equestriansGlovesBonus = atoi(resource->getRow(i++)[5]);
-    g_moveConstants.m_bootsOfSpeedBonus = atoi(resource->getRow(i++)[5]);
-    g_moveConstants.m_oceanGuidanceBonus = atoi(resource->getRow(i++)[5]);
-    g_moveConstants.m_seaCaptainsHatBonus = atoi(resource->getRow(i++)[5]);
-    g_stablesMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_moveConstants.m_lighthouseBonus = atoi(resource->getRow(i)[5]);
+    g_moveConstants.m_equestriansGlovesBonus = atoi(resource->GetRow(i++)[5]);
+    g_moveConstants.m_bootsOfSpeedBonus = atoi(resource->GetRow(i++)[5]);
+    g_moveConstants.m_oceanGuidanceBonus = atoi(resource->GetRow(i++)[5]);
+    g_moveConstants.m_seaCaptainsHatBonus = atoi(resource->GetRow(i++)[5]);
+    g_stablesMovementBonus = atoi(resource->GetRow(i++)[5]);
+    g_moveConstants.m_lighthouseBonus = atoi(resource->GetRow(i)[5]);
 
     resource->dispose();
     return 1;
@@ -469,7 +469,7 @@ unsigned char initializeBallisticsTable()
     if (!resource)
         return 0;
 
-    if (resource->getNumberOfRows() < 6) {
+    if (resource->GetNumberOfRows() < 6) {
         ResourceManager::dispose(resource);
         return 0;
     }
@@ -477,7 +477,7 @@ unsigned char initializeBallisticsTable()
     int i;
     for (i = 0; i < 4; ++i) {
         const TSpreadsheetResource::TStringVector& values =
-            resource->getRow(i + 2);
+            resource->GetRow(i + 2);
         int column = 2;
         g_ballisticsTraits[i].m_chanceToHitMainBuilding = atoi(values[column++]);
         g_ballisticsTraits[i].m_chanceToHitTower = atoi(values[column++]);
@@ -1226,7 +1226,7 @@ const char* hero::getClassName()
 {
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
-        return g_generalText->getText(GENERAL_TEXT_SORCERESS_CLASS_NAME);
+        return g_generalText->GetText(GENERAL_TEXT_SORCERESS_CLASS_NAME);
     return g_heroClasses[m_heroClass].m_className;
 }
 
@@ -1738,7 +1738,7 @@ int hero::showDisassembleArtifactDialog(int artifact)
     type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
-    text += g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_DISASSEMBLY_PROMPT);
+    text += g_generalText->GetText(GENERAL_TEXT_COMBINATION_ARTIFACT_DISASSEMBLY_PROMPT);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0,
                  -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn;
@@ -2607,7 +2607,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     case PORTRAIT_ID:
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                g_generalText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                 g_currentHero->m_name, g_currentHero->getClassName());
         break;
 
@@ -2733,7 +2733,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     case MIXED_ARMY_ID:
         sprintf(g_text, g_heroScreen[20],
-                g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
+                g_generalText->GetText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
         break;
 
     case WIDGET_80_ID:
@@ -2849,7 +2849,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     g_currentHero->getSpecialTerrain());
                 spellBookWindow.doModal(0);
             } else if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
-                normalDialog(g_generalText->getText(GENERAL_TEXT_CATAPULT_MUST_BE_EQUIPPED), 1, -1, -1, 8, 3,
+                normalDialog(g_generalText->GetText(GENERAL_TEXT_CATAPULT_MUST_BE_EQUIPPED), 1, -1, -1, 8, 3,
                              -1, 0, -1, 0, -1, 0);
             } else if (g_currentPlayer->isLocalHuman()) {
                 g_heroScreenDraggedArtifact = oldArtifact;

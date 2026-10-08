@@ -753,7 +753,7 @@ void type_AI_player::makeGift(long playerId)
     std::string message;
     if (g_game->m_players[playerId].isLocalHuman()) {
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
+            g_generalText->GetText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
             g_colors[m_team]);
         extendedDialog(message.c_str(), list, -1, -1, 0);
     }
@@ -776,13 +776,13 @@ void type_AI_player::makeGift(long playerId)
     if (g_game->m_players[playerId].isLocalHuman() && list.size()) {
         if (list.size() == 1) {
             message = formatString(
-                g_generalText->getText(
+                g_generalText->GetText(
                     GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
                 g_colors[m_team],
                 g_resourceNames[list[0].m_resource]);
         } else {
             message = formatString(
-                g_generalText->getText(
+                g_generalText->GetText(
                     GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST_FORMAT),
                 g_colors[m_team]);
         }

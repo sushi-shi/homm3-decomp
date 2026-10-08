@@ -2009,7 +2009,7 @@ void townManager::setupTown(bool fade)
     msg.m_extraText = g_text;
     m_townWindow->broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TOWN_SCREEN));
+    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_TOWN_SCREEN));
     msg.m_codeY = 151;
     msg.m_extraText = g_text;
     m_townWindow->broadcastMessage(msg);
@@ -3257,7 +3257,7 @@ THallWindow::THallWindow(int which)
     m_widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
                                      font::PRIMARY, 502, 1, 0, 8));
     m_widgets.push_back(new textWidget(0, 0, 800, 30,
-                                     g_generalText->getText(GENERAL_TEXT_HALL),
+                                     g_generalText->GetText(GENERAL_TEXT_HALL),
                                      "bigfont.fnt", font::PRIMARY, 503, 1,
                                      0, 8));
 
@@ -3445,7 +3445,7 @@ void TMageGuildWindow::setRolloverText(int codeY)
         int slot = cell % 6;
         if (thisTown->m_type == TOWN_CONFLUX
             && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
                     getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID));
         } else if (slot >= thisTown->m_mageGuildSpellCounts[level]) {
             strcpy(g_text, "");
@@ -3454,7 +3454,7 @@ void TMageGuildWindow::setRolloverText(int codeY)
                    g_spellTraits[thisTown->m_mageGuildSpells[level][slot]].m_name);
         }
     } else if (codeY == EXIT_BUTTON_ID) {
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_EXIT_MAGE_GUILD));
+        strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_EXIT_MAGE_GUILD));
     } else {
         strcpy(g_text, "");
     }
@@ -3533,7 +3533,7 @@ int TMageGuildWindow::windowHandler(message& msg)
                     && thisTown->hasBuilding(HOLY_GRAIL_ID, true)) {
                     normalDialog(
                         formatString(
-                            g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
+                            g_generalText->GetText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
                             getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
                             .c_str(),
                         qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
@@ -3609,16 +3609,16 @@ void townManager::handleMageGuildClick()
             && currentHero->m_id == hero::LEVEL_UP_OVERRIDE_HERO_ID
             && g_game->m_campaign.m_currentCampaign
                    == hero::LEVEL_UP_CAMPAIGN_OVERRIDE) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_YOG_REJECTS_MAGIC), 1, -1, -1, -1, 0,
+            normalDialog(g_generalText->GetText(GENERAL_TEXT_YOG_REJECTS_MAGIC), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
         }
         if (g_currentPlayer->m_resources[GOLD] < 500) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_SPELLBOOK_CANNOT_AFFORD), 1, -1, -1, 8, 0,
+            normalDialog(g_generalText->GetText(GENERAL_TEXT_SPELLBOOK_CANNOT_AFFORD), 1, -1, -1, 8, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        normalDialog(g_generalText->getText(GENERAL_TEXT_SPELLBOOK_PURCHASE_PROMPT), 2, -1, -1, 8, 0,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_SPELLBOOK_PURCHASE_PROMPT), 2, -1, -1, 8, 0,
                      -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
             return;
@@ -4090,7 +4090,7 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
     std::string title;
     m_isJoinDialog = 1;
     if (flags) {
-        title = g_generalText->getText(GENERAL_TEXT_LEAVE_GUARDS);
+        title = g_generalText->GetText(GENERAL_TEXT_LEAVE_GUARDS);
     } else {
         int i;
         for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -4099,7 +4099,7 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
         }
 
         title = formatString(
-            g_generalText->getText(GENERAL_TEXT_TOWN_GARRISON_MAKE_ROOM_FORMAT),
+            g_generalText->GetText(GENERAL_TEXT_TOWN_GARRISON_MAKE_ROOM_FORMAT),
             getArmyName(monsters->m_armies[i], monsters->m_numTroops[i]));
     }
 
@@ -4124,7 +4124,7 @@ TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrisonOwner,
     : type_garrison_base_window(inHero, garrisonOwner, garrisonArmy)
 {
     widget* newWidget = new textWidget(0, 20, m_width, 30,
-                                       g_generalText->getText(GENERAL_TEXT_TOWN_GARRISON),
+                                       g_generalText->GetText(GENERAL_TEXT_TOWN_GARRISON),
                                        "bigfont.fnt", font::HEADING,
                                        203, 1, 0, 8);
     m_widgets.push_back(newWidget);
@@ -4198,7 +4198,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
                                        "TPSmith.pcx", 0x800));
 
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BUILD_NEW_FORMAT),
+    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_NEW_FORMAT),
             g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
     m_widgets.push_back(new textWidget(0, 15, m_width, 30, g_text, "bigfont.fnt",
                                      font::HEADING, 1, 1, 0, 8));
@@ -4301,11 +4301,11 @@ void TBlacksmithWindow::setRolloverText(int id)
 {
     switch (id) {
     case CANCEL_BUTTON_ID:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
                 g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
         break;
     case BUY_BUTTON_ID:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BUILD_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_FORMAT),
                 g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
         break;
     default:
@@ -4392,7 +4392,7 @@ MAC_ADDRESS(0x1ce2d8, 0x238)  // anchor-callee(TBlacksmithWindow ctor 0x5d1360) 
 void doBlacksmith(int heroId, int townType)
 {
     if (heroId == -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT), g_neutralBuildingNames[16]);
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT), g_neutralBuildingNames[16]);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -4537,10 +4537,10 @@ void TShipWindow::setRolloverText(int codeY)
     // is this sunk-body switch's own convention and not a source
     // order - swapping the two case labels is byte-flat.
     case CANCEL_BUTTON_ID:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_DO_NOT_BUILD_SHIP));
+        strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_DO_NOT_BUILD_SHIP));
         break;
     case BUY_BUTTON_ID:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_BUILD_SHIP));
+        strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_SHIP));
         break;
     default:
         strcpy(g_text, "");
@@ -4698,10 +4698,10 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
                     break;
                 strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
                 if (thisTown->m_pondAmount == 0) {
-                    strcat(buffer, g_generalText->getText(GENERAL_TEXT_MYSTIC_POND_EMPTY));
+                    strcat(buffer, g_generalText->GetText(GENERAL_TEXT_MYSTIC_POND_EMPTY));
                 } else {
                     strcat(buffer, formatString(
-                                       g_generalText->getText(GENERAL_TEXT_MYSTIC_POND_REWARD_FORMAT),
+                                       g_generalText->GetText(GENERAL_TEXT_MYSTIC_POND_REWARD_FORMAT),
                                        thisTown->m_pondAmount,
                                        g_resourceNames[thisTown->m_pondResource])
                                        .c_str());
@@ -4841,7 +4841,7 @@ void townManager::handleHallClick()
         && !(m_townToView->hasBuilding(HOLY_GRAIL_ID, false))
         && g_currentPlayer->isLocalHuman()) {
         if (m_townToView->isLegalBuilding(HOLY_GRAIL_ID)) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_GRAIL_HOME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
+            normalDialog(g_generalText->GetText(GENERAL_TEXT_GRAIL_HOME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 townHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
@@ -4851,7 +4851,7 @@ void townManager::handleHallClick()
                 return;
             }
         } else if (!g_game->m_grailAsked) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_GRAIL_TOWN_LACKS_FAITH), 1, -1, -1, -1, 0, -1, 0,
+            normalDialog(g_generalText->GetText(GENERAL_TEXT_GRAIL_TOWN_LACKS_FAITH), 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             g_game->m_grailAsked = 1;
         }
@@ -5170,7 +5170,7 @@ int townManager::main(message& msg)
                             }
                         }
                     } else {
-                        normalDialog(g_generalText->getText(GENERAL_TEXT_BOAT_BUILD_BLOCKED), 1, 208, 40,
+                        normalDialog(g_generalText->GetText(GENERAL_TEXT_BOAT_BUILD_BLOCKED), 1, 208, 40,
                                      -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     g_windowManager->broadcastMessage(
@@ -5240,7 +5240,7 @@ int townManager::main(message& msg)
                         break;
                     case TOWN_INFERNO:
                         if (m_townToView->m_visitingHeroId == -1)
-                            normalDialog(g_generalText->getText(GENERAL_TEXT_TOWN_GATE_VISITING_HERO_ONLY), 1,
+                            normalDialog(g_generalText->GetText(GENERAL_TEXT_TOWN_GATE_VISITING_HERO_ONLY), 1,
                                          -1, -1, -1, 0, -1, 0, -1, 0,
                                          -1, 0);
                         else
@@ -5792,7 +5792,7 @@ void townManager::moveHeroToGarrison()
         // General text 276 - the refusal this page prints when the
         // garrison will not take the hero. Spelled as the bare index,
         // as the other unnamed general-text consumers in the tree are.
-        normalDialog(g_generalText->getText(GENERAL_TEXT_GARRISON_NO_ROOM), 1, -1, -1, -1, 0,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_GARRISON_NO_ROOM), 1, -1, -1, -1, 0,
                      -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -5821,13 +5821,13 @@ void townManager::moveHeroFromGarrison()
 
     if (player->m_numHeroes >= playerData::HERO_SLOT_COUNT) {
         std::string text;
-        text = formatString(g_generalText->getText(GENERAL_TEXT_TOWN_HERO_LIMIT_FORMAT), player->m_numHeroes);
+        text = formatString(g_generalText->GetText(GENERAL_TEXT_TOWN_HERO_LIMIT_FORMAT), player->m_numHeroes);
         normalDialog(text.c_str(), 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
     if (m_townToView->getArmy().getNumArmies() == 0) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_TOWN_HERO_NEEDS_ARMY), 1, -1, -1, -1, 0,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_TOWN_HERO_NEEDS_ARMY), 1, -1, -1, -1, 0,
                      -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -5921,7 +5921,7 @@ TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
         g_townBuildingSpriteNames[g_townManager->m_townToView->m_type], m_buildingId,
         0, 0, 0, 0x10));
 
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BUILD_FORMAT),
+    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_FORMAT),
             getBuildingName(g_townManager->m_townToView->m_type, m_buildingId));
     m_widgets.push_back(new textWidget(0, 20, m_width, 30, g_text,
                                      "bigfont.fnt", font::HEADING, 3, 1, 0, 8));
@@ -6248,12 +6248,12 @@ void TBuyBuildWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case BUY_BUTTON_ID:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BUILD_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_FORMAT),
                 getBuildingName(g_townManager->m_townToView->m_type,
                                 m_buildingId));
         break;
     case CANCEL_BUTTON_ID:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
                 getBuildingName(g_townManager->m_townToView->m_type,
                                 m_buildingId));
         break;
@@ -7444,135 +7444,135 @@ TCastleWindow::TCastleWindow()
                                      font::PRIMARY, 0x87, 2, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 26, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 26, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x39, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 26, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 26, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x3a, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 159, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 159, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x3b, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 159, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 159, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x3c, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 292, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 292, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x3d, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 292, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 292, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x3e, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 425, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 425, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x3f, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 425, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 425, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x40, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 425, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 425, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x3f, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 46, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 46, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x41, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 46, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 46, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x42, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 179, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 179, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x43, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 179, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 179, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x44, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 312, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 312, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x45, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 312, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 312, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x46, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 445, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 445, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x47, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 445, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 445, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x48, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 445, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 445, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x47, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 67, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 67, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x49, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 67, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 67, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x4a, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 200, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 200, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x4b, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 200, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 200, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x4c, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 333, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 333, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x4d, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 333, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 333, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x4e, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 466, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 466, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x4f, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 466, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 466, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x50, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 466, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 466, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
                                      font::PRIMARY, 0x4f, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 87, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 87, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x51, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 87, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 87, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x52, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 220, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 220, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x53, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 220, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 220, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x54, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 353, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 353, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x55, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 353, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 353, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x56, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 486, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 486, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x57, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 486, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 486, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x58, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 486, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 486, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
                                      font::PRIMARY, 0x57, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 108, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 108, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x59, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 108, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 108, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x5a, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 241, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 241, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x5b, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 241, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 241, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x5c, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 374, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 374, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x5d, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 374, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 374, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x5e, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 507, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 507, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x5f, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 507, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 507, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x60, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 507, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 507, 91, 30, g_generalText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
                                      font::PRIMARY, 0x5f, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 128, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 128, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x61, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 128, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 128, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x62, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 261, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 261, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x63, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 261, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 261, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x64, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 394, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 394, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x65, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 394, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 394, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x66, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 527, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 527, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x67, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 527, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 527, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x68, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 527, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 527, 91, 30, g_generalText->GetText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
                                      font::PRIMARY, 0x67, 0, 0, 8));
     }
 
@@ -7790,7 +7790,7 @@ void TCastleWindow::recruit(int i)
         g_executive->doDialog(g_recruitUnit);
         delete g_recruitUnit;
         m_castleBank->update(1, 1);
-        sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
+        sprintf(g_text, "%s %d", g_generalText->GetText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                 g_townManager->m_townToView->m_population[dwelling]);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, i + 0x21,
                          reinterpret_cast<int>(g_text));
@@ -7903,7 +7903,7 @@ int TCastleWindow::windowHandler(message& msg)
                 delete g_recruitUnit;
                 m_castleBank->update(1, 1);
                 // Mac 0x1e12b0..0x1e12c4 likewise forwards the buffer pointer.
-                sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
+                sprintf(g_text, "%s %d", g_generalText->GetText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                         g_townManager->m_townToView->m_summoningPopulation);
                 broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
                                  0x28, reinterpret_cast<int>(g_text));
@@ -8039,7 +8039,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         wellWin->broadcastMessage(msg);
         if (m_townToView->getBuildingMask()
             & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
-            sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
+            sprintf(g_text, "%s %d", g_generalText->GetText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                     m_townToView->m_population[m_currentDwellingIdOff[i]]);
             msg.m_codeY = i + 0x21;
             msg.m_extraText = g_text;
@@ -8059,7 +8059,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
     }
 
     if (wellWin->m_use8) {
-        sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
+        sprintf(g_text, "%s %d", g_generalText->GetText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                 g_townManager->m_townToView->m_summoningPopulation);
         msg.m_codeY = 0x28;
         msg.m_extraText = g_text;
@@ -8317,7 +8317,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                 if (bestHero) {
                     m_widgets.push_back(new textWidget(
                         66 * column + 0x102, 0x18c, 0x35, 0x2c,
-                        g_generalText->getText(GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS),
+                        g_generalText->GetText(GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS),
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, -1, 0, 0, 8));
                     addWidget(m_widgets.back(), -1);

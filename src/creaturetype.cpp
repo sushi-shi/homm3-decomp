@@ -245,7 +245,7 @@ unsigned char initializeCreatureTypeTraitsTable()
                      "crtraits.txt"));
     if (!traitsSheet)
         return 0;
-    if (traitsSheet->getNumberOfRows() < 179) {
+    if (traitsSheet->GetNumberOfRows() < 179) {
         ResourceManager::dispose(traitsSheet);
         return 0;
     }
@@ -253,50 +253,50 @@ unsigned char initializeCreatureTypeTraitsTable()
     int id = 0;
     int row = 2;
     for (; id < 14; id++, row++)
-        initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+        initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 6; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 13; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     row += 3;
     { for (int i = 0; i < 5; i++, id++, row++)
-            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
     ResourceManager::dispose(traitsSheet);
     return 1;

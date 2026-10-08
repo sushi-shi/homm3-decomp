@@ -366,7 +366,7 @@ void TCampaignBrief::addBonusIcons()
     }
 
     m_widgets.push_back(new textWidget(
-        680, 425, 90, 30, g_generalText->getText(GENERAL_TEXT_DIFFICULTY_LEVEL),
+        680, 425, 90, 30, g_generalText->GetText(GENERAL_TEXT_DIFFICULTY_LEVEL),
         DATA_COMPGEN(0x0065f2ec, campaignDifficultyMediumFont,
                      "medfont.fnt"),
         static_cast<font::TColor>(4), -1, 5, 0, 8));
@@ -555,12 +555,12 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         switch (m_campaign->m_fileError) {
         case CampaignHeaderStruct::CAMPAIGN_FILE_OPEN_FAILED:
             normalDialog(
-                formatString(g_generalText->getText(GENERAL_TEXT_FILE_OPEN_ERROR_FORMAT), campaignFilename).c_str(),
+                formatString(g_generalText->GetText(GENERAL_TEXT_FILE_OPEN_ERROR_FORMAT), campaignFilename).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case CampaignHeaderStruct::CAMPAIGN_FILE_VERSION_UNSUPPORTED:
             normalDialog(
-                formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_FILE_PARSE_ERROR_FORMAT), campaignFilename).c_str(),
+                formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_FILE_PARSE_ERROR_FORMAT), campaignFilename).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -675,7 +675,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                         static_cast<font::TColor>(8), CAMPAIGN_NAME_ID, 4, 0, 8));
     }
     widgets.push_back(new textWidget(
-                    481, 63, 270, 108, g_generalText->getText(GENERAL_TEXT_CAMPAIGN_DESCRIPTION),
+                    481, 63, 270, 108, g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_DESCRIPTION),
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     if (m_campaign->getCampaignDescription().length() > 0) {
@@ -695,7 +695,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                     DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
                     static_cast<font::TColor>(8), MAP_NAME_ID, 4, 0, 8));
     widgets.push_back(new textWidget(
-                    481, 253, 270, 108, g_generalText->getText(GENERAL_TEXT_SCENARIO_DESCRIPTION_LABEL),
+                    481, 253, 270, 108, g_generalText->GetText(GENERAL_TEXT_SCENARIO_DESCRIPTION_LABEL),
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     m_scroller = new type_text_scroller(
@@ -713,14 +713,14 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 
     sprintf(g_text,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
-            g_generalText->getText(GENERAL_TEXT_ALLIES));
+            g_generalText->GetText(GENERAL_TEXT_ALLIES));
     widgets.push_back(new textWidget(
                     480, 404, 44, 23, g_text,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
     sprintf(g_text,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
-            g_generalText->getText(GENERAL_TEXT_ENEMIES));
+            g_generalText->GetText(GENERAL_TEXT_ENEMIES));
     widgets.push_back(new textWidget(
                     612, 404, 58, 23, g_text,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
