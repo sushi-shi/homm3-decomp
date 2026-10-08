@@ -4,9 +4,9 @@
 #include <bitset>
 #include <stdlib.h>
 #include <string.h>
-#include <vector>
 
 #include "artifact.h"
+#include <vector>
 
 #include "resourcemanager.h"
 #include "textresource.h"
