@@ -20,7 +20,6 @@
 #include "editor/Player.h"
 #include "objecttype.h"
 #include "editor/Array.h"
-#include "editor/Tile.h"
 
 #include <vector>
 

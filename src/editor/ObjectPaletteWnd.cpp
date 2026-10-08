@@ -17,6 +17,7 @@
 
 #include "editor/ObjectPaletteWnd.h"
 #include "editor/Colors.h"
+#include "editor/Tile.h"
 #include "adventureobjecttype.h"
 #include "artifact.h"
 #include "creaturetype.h"

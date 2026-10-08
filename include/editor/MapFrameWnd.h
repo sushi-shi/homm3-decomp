@@ -18,7 +18,7 @@ class TTileHRuler;
 class TTileVRuler;
 class TGUIGameObject;
 
-class TMapFrameWnd : public TMapEditingWnd, public TMapEditingWnd::TController {
+class TMapFrameWnd : public TMapEditingWnd, private TMapEditingWnd::TController {
 public:
     TMapFrameWnd(GtkWidget* thisWidget, TMapEditingWnd::TController* pController, int id,
                  const TGameMap* pMap, bool bSecondLayer, TZoom zoom, bool bShowGrid,
