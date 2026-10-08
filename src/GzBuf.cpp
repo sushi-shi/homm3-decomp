@@ -163,6 +163,23 @@ int TGzDeflateBuf::overflow(int c)
     return not_eof(c);
 }
 
+inline int TGzInflateBuf::_mustGetC()
+{
+    int c = _getC();
+    if (c == EOF)
+        throw TDataError();
+    return c;
+}
+
+inline uLong TGzInflateBuf::_mustGetLong()
+{
+    uLong x = _mustGetC();
+    x += _mustGetC() << 8;
+    x += _mustGetC() << 16;
+    x += _mustGetC() << 24;
+    return x;
+}
+
 int TGzInflateBuf::_getC()
 {
     if (_m_zstream.avail_in == 0) {
@@ -357,21 +374,4 @@ int_type TGzInflateBuf::underflow()
     _m_zstream.avail_out = GZBUF_SIZE;
 
     return egptr() > eback() ? static_cast< unsigned char >( *gptr() ) : EOF;
-}
-
-int TGzInflateBuf::_mustGetC()
-{
-    int c = _getC();
-    if (c == EOF)
-        throw TDataError();
-    return c;
-}
-
-uLong TGzInflateBuf::_mustGetLong()
-{
-    uLong x = _mustGetC();
-    x += _mustGetC() << 8;
-    x += _mustGetC() << 16;
-    x += _mustGetC() << 24;
-    return x;
 }
