@@ -3,7 +3,7 @@
 
 #include "va.h"
 
-#include "abstractfile.h"
+class TAbstractFile;
 #include "artifact_type.h"
 #include "creature_flags.h"
 #include "spellschool.h"
