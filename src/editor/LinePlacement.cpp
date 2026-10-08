@@ -5,11 +5,12 @@
 // tile of that shape and reports the changed rectangle. Assert and throw
 // lines come from the retail immediates.
 
+#include "editor/LinePlacement.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <algorithm>
 
-#include "editor/LinePlacement.h"
 #include "exceptions.h"
 #include "editor/TilePoint.h"
 

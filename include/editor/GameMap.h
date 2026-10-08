@@ -19,10 +19,12 @@
 #include <exception>
 #include <iterator>
 #include <stddef.h>
+#include <vector>
 #include <set>
 #include <string>
-#include <vector>
 
+#include "editor/GameObject.h"
+#include "editor/TimedEvent.h"
 #include "artifact.h"
 #include "herodefs.h"
 #include "terrain.h"
@@ -34,8 +36,6 @@
 #include "editor/Point.h"
 #include "editor/RefCountingPtr.h"
 #include "editor/Uncopyable.h"
-#include "editor/GameObject.h"
-#include "editor/TimedEvent.h"
 #include "editor/VictoryCondition.h"
 
 class istream;

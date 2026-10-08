@@ -11,7 +11,6 @@
 #include <functional>
 #include <iostream.h>
 #include <string>
-#include <vector>
 
 #include "adventureobjecttype.h"
 #include "autoarrayptr.h"

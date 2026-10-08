@@ -7,6 +7,11 @@
 
 #include <function.h>
 
+// The object ID of no object, as a default-constructed reference holds it.
+// Every Loki object that includes this header emits this 0 at the end of
+// its .rodata; the name is inferred.
+const unsigned int kNullObjectID = 0;
+
 class TMapObjectRef {
 public:
     TMapObjectRef() : _m_bSecondLayer(false), _m_objectID(0) {}

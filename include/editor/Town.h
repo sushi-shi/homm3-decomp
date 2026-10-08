@@ -17,12 +17,11 @@
 
 #include <bitset>
 #include <string>
-#include <vector>
 
 #include "armygrp.h"
 #include "town_type.h"
-#include "editor/Hero.h"
 #include "editor/Army.h"
+#include "editor/Hero.h"
 #include "editor/Array.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/TimedEvent.h"
