@@ -192,3 +192,26 @@ const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
   (%esi),%esi`/`movl %esi,%esi` padding and the jump offsets around it is
   usually right; it converges once the functions before it in the object
   are complete (GameMap.cpp's TLayer bodies while the file is partial).
+- A call result stored into a variable of the call's own type goes through
+  a pseudo (`movl %eax,%eax` before the store); a converting store
+  (`size_t` to `int`, `gchar*` to `const gchar*`) writes `%eax` directly
+  (cppbridge.cpp's `on_h3path_ok_clicked` keeps the entry text in a
+  `const gchar*`).
+- A `volatile bool` is loaded into `%al` and tested (`movb; testb`) where a
+  plain one is compared in memory (`cmpb $0`), and a volatile store takes
+  `%al` without the `movb %al,%al` copy. The bridge's modal loops spin on
+  volatile flags their signal handlers set.
+- `b = !b` on a `bool` in memory is `xorb $1`; `b = b ? false : true` is a
+  `cmpb` and two stores.
+- `if (f(s) || g(t))` whose operands build temporaries with cleanups (the
+  by-value `string` of `_isspace`) is evaluated into a byte temporary
+  (`movb $0`, `movb $1`, `cmpb $0`) before the branch; a named flag
+  assigned in the `if` gives a second slot.
+- GTK+ 1.2.8's checked casts are macros: `GTK_OBJECT(_widget("x"))`
+  evaluates `_widget` four times (the `GTK_IS_OBJECT` test, then the
+  cast), `GTK_TOGGLE_BUTTON(w)` calls the type function before its
+  argument.
+- The GTK+ types beyond `gtkwidget.h` are `{anonymous}::` in the editor's
+  dialogs and bridge (`<gtk/gtk.h>` included inside `namespace { }` after
+  stdafx.h): it shows in mangled names (`PQ2..._GLOBAL_.N.ArmyDlg.cpp..9_GtkCombo`)
+  and `__PRETTY_FUNCTION__` texts, while `GtkWidget` stays global.
