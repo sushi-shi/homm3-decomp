@@ -18,9 +18,7 @@
 // mode is 0 at construction and 5 for the object palette) and the
 // floating-object origin's meaning are not proven.
 //
-// TStatusUIImpl, the GTK status bar behind TStatusUI, has only inline
-// members (linkonce bodies owned by MapView.o, whose constructor creates
-// it); its member names are not proven.
+// The status bar behind TStatusUI is MapView.cpp's TStatusUIImpl.
 #ifndef HOMM3_EDITOR_MAPVIEW_H
 #define HOMM3_EDITOR_MAPVIEW_H
 
@@ -56,9 +54,19 @@ public:
     };
 
     enum _TMode {
+        _eModeStartup,
+        _eModeTerrain,
+        _eModeRiver,
+        _eModeRoad,
+        _eModeErase,
+        _eModeObjects
     };
 
     enum _TBrush {
+        _eBrush1x1,
+        _eBrush2x2,
+        _eBrush4x4,
+        _eBrushFill
     };
 
     TMapView(GtkAdjustment* pHAdjustment, GtkAdjustment* pVAdjustment);
@@ -77,9 +85,9 @@ public:
 
     TMapDoc* getPDocument();
     const TMapDoc* getPDocument() const;
-    TMapFrameWnd* getMapFrameWnd();
-    TMiniMapWnd* getMiniMapWnd();
-    TObjectPaletteWnd* getObjPaletteWnd();
+    TMapFrameWnd* getMapFrameWnd() { return _m_pMapFrameWnd; }
+    TMiniMapWnd* getMiniMapWnd() { return _m_pMiniMapWnd; }
+    TObjectPaletteWnd* getObjPaletteWnd() { return _m_pToolkitWnd->getObjPal(); }
     void updateMapStatus();
 
     bool onToolkitCanCreateObject(TToolkitWnd* pToolkitWnd, const TObjectType& objType);
@@ -211,6 +219,10 @@ private:
     void _setCurrentPlayer(TPlayer player);
     void _realizeBrush();
 
+    static TZoom _s_zoom;
+    static bool _s_bViewGrid;
+    static bool _s_bViewPassability;
+
 protected:
     TMapDoc* m_pDocument;
 
@@ -232,32 +244,9 @@ private:
     bool _m_bFloatingObjFromMap;
     unsigned int _m_floatingObjX;
     unsigned int _m_floatingObjY;
-    TAdventureObjectType _m_lastFindType;
+    int _m_lastFindType;
     int _m_lastFindSubtype;
     TFindDlg* _m_pFindDlg;
-};
-
-class TStatusUIImpl : public CWnd, public TMapView::TStatusUI {
-public:
-    TStatusUIImpl(GtkWidget* statusBar);
-    virtual ~TStatusUIImpl();
-
-    void showObjectName();
-    void hideObjectName();
-    void setObjectName(const char* name);
-    void setCurPlayer(TPlayer player);
-    void setMapSize(unsigned int width, unsigned int height, bool bTwoLayer);
-
-private:
-    void updateStatus();
-
-    guint _m_contextID;
-    char* _m_objectName;
-    char* _m_playerName;
-    unsigned int _m_mapWidth;
-    unsigned int _m_mapHeight;
-    bool _m_bTwoLayer;
-    bool _m_bShowObjectName;
 };
 
 #endif  /* HOMM3_EDITOR_MAPVIEW_H */
