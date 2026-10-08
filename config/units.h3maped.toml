@@ -380,3 +380,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "OptionsDlg"
 source = "src/editor/OptionsDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "DIBSection"
+source = "src/editor/DIBSection.cpp"
+flags = "editor_o1_ob2_gr_windows"
