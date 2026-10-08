@@ -5482,6 +5482,11 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // reads the human byte inline; that direct row reproduces the guard-free
 // block (94.67%, 95.32% with the byte read) but moves the bitset range-check
 // out_of_range expansion, so the guarded helper call is kept for now.
+// 2026-10-08 TU trace: the only retained-call difference is bitset
+// reference::operator= (cb 43) inside hasCombinationArtifactComponents,
+// whose body gets (1036 - 120) / 11 = 83, leaving 42 after operator[].
+// Retail expands it: four more caller cb units (a braced guard adds two)
+// or one fewer later depth-1 candidate would do; neither is evidenced.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)  // MAC_ABSTRACTION_FROM(tokens1:3d82fe0d0468,25.0000): Restore the canonical playerData::isHuman call for Mac's expanded human-query byte body at 0x103f74.
