@@ -18,9 +18,9 @@ struct TRGBA {
 };
 SIZE(TRGBA, 4);
 
-void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
+void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
               float* h, float* s, float* v);
-void hsvToRGB(float h, float s, float v,
+void HSVToRGB(float h, float s, float v,
               unsigned int* r, unsigned int* g, unsigned int* b);
 
 // Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
