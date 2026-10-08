@@ -307,89 +307,89 @@ TSeersHut::TSeersHut(const TObjectType& objType, TRawIStream* pIStream, int vers
 #line 367
     assert(objType.getType() == SEER);
     assert(pIStream != NULL);
-    try {
-        signed char questArtifact;
-        *pIStream >> questArtifact;
-        setQuestArtifact(TArtifact(questArtifact));
-        signed char rewardType;
-        *pIStream >> rewardType;
+    signed char questArtifact;
+    *pIStream >> questArtifact;
+    setQuestArtifact(TArtifact(questArtifact));
+    signed char rewardType;
+    *pIStream >> rewardType;
 #line 377
-        assert(rewardType >= 0 && rewardType < kNumRewardTypes);
-        switch (rewardType) {
-        case eRewardExperience: {
-            long bonus;
-            *pIStream >> bonus;
-            TExperienceReward reward(bonus);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardMana: {
-            long bonus;
-            *pIStream >> bonus;
-            TManaReward reward(bonus);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardMorale: {
-            signed char bonus;
-            *pIStream >> bonus;
-            TMoraleReward reward(bonus);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardLuck: {
-            signed char bonus;
-            *pIStream >> bonus;
-            TLuckReward reward(bonus);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardResource: {
-            signed char type;
-            long quantity;
-            *pIStream >> type >> quantity;
-            TResourceReward reward((TGameResourceType) type, quantity);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardPrimarySkill: {
-            signed char skill;
-            signed char bonus;
-            *pIStream >> skill >> bonus;
-            TPrimarySkillReward reward((TPrimarySkill) skill, bonus);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardSecondarySkill: {
-            signed char skill;
-            signed char mastery;
-            *pIStream >> skill >> mastery;
-            TSecondarySkillReward reward((TSecondarySkill) skill, (TSkillMastery) mastery);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardArtifact: {
-            signed char artifact;
-            *pIStream >> artifact;
-            TArtifactReward reward((TArtifact) artifact);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardSpell: {
-            signed char spell;
-            *pIStream >> spell;
-            TSpellReward reward((SpellID) spell);
-            setQuestReward(&reward);
-            break;
-        }
-        case eRewardCreature: {
-            TCreatureStack creatureStack;
-            *pIStream >> creatureStack;
-            TCreatureReward reward(creatureStack);
-            setQuestReward(&reward);
-            break;
-        }
-        }
+    assert(rewardType >= 0 && rewardType < kNumRewardTypes);
+    switch (rewardType) {
+    case eRewardExperience: {
+        long bonus;
+        *pIStream >> bonus;
+        TExperienceReward reward(bonus);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardMana: {
+        long bonus;
+        *pIStream >> bonus;
+        TManaReward reward(bonus);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardMorale: {
+        signed char bonus;
+        *pIStream >> bonus;
+        TMoraleReward reward(bonus);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardLuck: {
+        signed char bonus;
+        *pIStream >> bonus;
+        TLuckReward reward(bonus);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardResource: {
+        signed char type;
+        long quantity;
+        *pIStream >> type >> quantity;
+        TResourceReward reward((TGameResourceType) type, quantity);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardPrimarySkill: {
+        signed char skill;
+        signed char bonus;
+        *pIStream >> skill >> bonus;
+        TPrimarySkillReward reward((TPrimarySkill) skill, bonus);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardSecondarySkill: {
+        signed char skill;
+        signed char mastery;
+        *pIStream >> skill >> mastery;
+        TSecondarySkillReward reward((TSecondarySkill) skill, (TSkillMastery) mastery);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardArtifact: {
+        signed char artifact;
+        *pIStream >> artifact;
+        TArtifactReward reward((TArtifact) artifact);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardSpell: {
+        signed char spell;
+        *pIStream >> spell;
+        TSpellReward reward((SpellID) spell);
+        setQuestReward(&reward);
+        break;
+    }
+    case eRewardCreature: {
+        TCreatureStack creatureStack;
+        *pIStream >> creatureStack;
+        TCreatureReward reward(creatureStack);
+        setQuestReward(&reward);
+        break;
+    }
+    }
+    try {
         signed char aReserved[kNumSeersHutReserved];
         *pIStream >> aReserved;
     } catch (...) {

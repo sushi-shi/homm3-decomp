@@ -509,10 +509,13 @@ available.
   before the epilogue, also in the compiler-generated bodies at the end
   of the object (static initialization, `_GLOBAL_.I`, type_info
   functions). MapValidation.cpp's eight misses are this state.
-- A constructor that owns heap state and reads it from a stream guards
-  the reading with `try { ... } catch (...) { delete p; throw; }`
-  (`__start_cp_handler`, `__uncatch_exception`; TSeersHut's streamed
-  constructor).
+- A constructor that owns heap state guards only what follows its first
+  owned allocation with `try { ... } catch (...) { delete p; throw; }`
+  (`__start_cp_handler`, `__uncatch_exception`): the try block emits no
+  code, but `.gcc_except_table` records where its region starts. TSeersHut's
+  streamed constructor guards the reserved bytes read after the reward;
+  the property sheets, TMapFrameWnd and TToolkitWnd create their first page
+  or child before the `try`.
 - The strong in-class inline members a class emits with its vtable come
   out in declaration order: TBlackBox's virtual `isCustomized`/`hasText`
   follow its content accessors.
