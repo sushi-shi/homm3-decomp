@@ -182,8 +182,7 @@ TSpreadsheetResource::~TSpreadsheetResource()
 {
     for (TStringVector** it = Spreadsheet.begin(); it != Spreadsheet.end();
          ++it) {
-        if (*it)
-            delete *it;
+        delete *it;
     }
     // Mac retains array delete (0x268c34) for the character buffer.
     if (Data)

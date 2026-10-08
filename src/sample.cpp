@@ -32,7 +32,7 @@ DC_ADDRESS(0x129b4c, 0x6)
 MAC_ADDRESS(0x15db68, 0x8c)
 sample::~sample()
 {
-    delete memSample.m_data;
+    delete[] memSample.m_data;
     memSample.m_data = 0;
     memSample.m_size = 0;
     memSample.memVolume = 0;
