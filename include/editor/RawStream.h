@@ -10,7 +10,9 @@
 #ifndef HOMM3_EDITOR_RAWSTREAM_H
 #define HOMM3_EDITOR_RAWSTREAM_H
 
+#include <bitset>
 #include <string>
+#include <string.h>
 #include <streambuf.h>
 
 #include "exceptions.h"
@@ -96,6 +98,28 @@ inline TRawOStream& writeContainer(TRawOStream& stream, const Container& contain
 inline TRawOStream& operator<<(TRawOStream& stream, const string& value)
 {
     return writeContainer(stream, value);
+}
+
+// A bitset<N> travels as (N + 7) / 8 bytes, bit 0 first (ObjectType.cpp
+// owns the 48- and 9-bit instantiations).
+template<size_t N>
+void writeBitset(TRawOStream& stream, const bitset<N>& bits)
+{
+    unsigned char bytes[(N + 7) / 8];
+    memset(bytes, 0, sizeof(bytes));
+    for (size_t i = 0; i < N; i++)
+        if (bits[i])
+            bytes[i / 8] |= 1 << (i % 8);
+    stream << bytes;
+}
+
+template<size_t N>
+void readBitset(TRawIStream& stream, bitset<N>* pBits)
+{
+    unsigned char bytes[(N + 7) / 8];
+    stream >> bytes;
+    for (size_t i = 0; i < N; i++)
+        (*pBits)[i] = (bytes[i / 8] >> (i % 8)) & 1;
 }
 
 #endif  /* HOMM3_EDITOR_RAWSTREAM_H */

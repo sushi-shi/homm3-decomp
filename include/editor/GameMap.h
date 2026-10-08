@@ -51,8 +51,6 @@ enum TRoadType {
     kNumRoadTypes = 4
 };
 
-const int kNumTerrainTypes = 10;
-
 typedef unsigned int TMapLayerObjectID;
 
 class TGameMap {

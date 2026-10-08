@@ -168,3 +168,13 @@ source = "src/HeroDefs.cpp"
 name = "AdvObjectTypeTraits"
 object = 3
 source = "src/AdvObjectTypeTraits.cpp"
+
+[[unit]]
+name = "ObjectType"
+object = 47
+source = "src/ObjectType.cpp"
+
+[[unit]]
+name = "ObjectTypeTable"
+object = 23
+source = "src/editor/ObjectTypeTable.cpp"
