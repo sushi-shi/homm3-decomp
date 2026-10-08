@@ -2,8 +2,7 @@
 // fires for the players it allows and may cancel itself after a visit.
 // Assert lines come from the retail immediates.
 #include <assert.h>
-#include <bitset>
-#include <string>
+#include <algorithm>
 
 #include "adventureobjecttype.h"
 #include "exceptions.h"

@@ -17,12 +17,12 @@ public:
     virtual void write(TRawOStream* pOStream) const;
     virtual bool isCustomized() const;
 
-    bool getBAllowPlayer(TPlayer player) const;
     void setBAllowPlayer(TPlayer player, bool bAllow);
-    bool getBAllowComputer() const { return _m_bAllowComputer; }
     void setBAllowComputer(bool bAllow) { _m_bAllowComputer = bAllow; }
-    bool getBCancelAfterVisit() const { return _m_bCancelAfterVisit; }
     void setBCancelAfterVisit(bool bCancel) { _m_bCancelAfterVisit = bCancel; }
+    bool getBAllowPlayer(TPlayer player) const;
+    bool getBAllowComputer() const { return _m_bAllowComputer; }
+    bool getBCancelAfterVisit() const { return _m_bCancelAfterVisit; }
 
 private:
     bitset<kNumPlayers> _m_bAllowPlayer;
