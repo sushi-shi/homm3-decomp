@@ -375,6 +375,8 @@ private:
     void _write(TRawOStream* pOStream, const TLCLoseHero& lc) const;
     void _write(TRawOStream* pOStream, const TLCTimeExpires& lc) const;
 
+    TGameObject* _createObject(const TObjectType& objType, TRawIStream* pIStream, int version,
+                               void* (*pfnAllocator)(unsigned int)) const;
     TMapLayerObjectID _placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
                                           unsigned int y, TTileExtent* pUpdatedExtent);
     TMapLayerObjectID _placeHolyGrail(bool bSecondLayer, const THolyGrail& holyGrail, unsigned int x,
@@ -1219,12 +1221,65 @@ const TGameMap::TLayer* TGameMap::_TImpl::getPLayer(unsigned int num) const
     return &_m_aLayer[num];
 }
 
+TGameObject* TGameMap::_TImpl::reconstructObject(streambuf* pStreamBuf, int version,
+                                                 void* (*pfnAllocator)(unsigned int)) const
+{
+#line 2977
+    assert(pStreamBuf != NULL);
+    TRawIStream iStream(pStreamBuf);
+    TObjectType objType;
+    iStream >> objType;
+    return _createObject(objType, &iStream, version, pfnAllocator);
+}
+
+bool TGameMap::_TImpl::isHeroOnMap(THeroID heroID) const
+{
+    THeroClass heroClass = THeroClass(heroID / 8);
+#line 2989
+    assert(heroClass >= 0 && heroClass < kNumHeroClasses);
+    unsigned int protoNum = heroID - THero::s_akClassTraits[heroClass].m_firstHeroID;
+    return !_m_pBookkeeping->m_aabHeroAvailable[heroClass][protoNum];
+}
+
+set<unsigned int> TGameMap::_TImpl::getAvailableHeroesInClass(THeroClass heroClass) const
+{
+    set<unsigned int> result;
+    for (unsigned int protoNum = 0; protoNum < THero::s_akClassTraits[heroClass].m_numPrototypes; protoNum++)
+        if (_m_pBookkeeping->m_aabHeroAvailable[heroClass][protoNum])
+            result.insert(protoNum);
+    return result;
+}
+
+bitset<kNumPlayers> TGameMap::_TImpl::getAvailableHeroOwnersMask() const
+{
+    bitset<kNumPlayers> result;
+    for (unsigned int player = 0; player < kNumPlayers; player++) {
+        unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+        if (getPlayers()[player].getBGenerateHero())
+            numHeroes++;
+        result[player] = numHeroes < s_kMaxHeroesPerPlayer;
+    }
+    return result;
+}
+
 const set<TMapObjectRef>& TGameMap::_TImpl::getPlayerTownRefs(TPlayer player) const
 {
 #line 3034
     assert(player >= 0 && player < kNumPlayers);
     return _m_apPlayerBookkeeping[player]->m_townRefs;
 }
+
+unsigned int TGameMap::_TImpl::getNumObelisksOnMap() const
+{
+    TCappedObjectTypeInfoMap::const_iterator pObeliskInfo = kCappedObjectTypeInfoMap.find(OBELISK);
+#line 3042
+    assert(pObeliskInfo != kCappedObjectTypeInfoMap.end());
+    unsigned int obeliskOrdinal = pObeliskInfo->second.m_ordinal;
+#line 3045
+    assert(obeliskOrdinal < _m_pBookkeeping->m_aNumObjsOfCappedType.size());
+    return _m_pBookkeeping->m_aNumObjsOfCappedType[obeliskOrdinal];
+}
+
 
 TMapLayerObjectID TGameMap::_TImpl::_placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
                                                         unsigned int y, TTileExtent* pUpdatedExtent)
