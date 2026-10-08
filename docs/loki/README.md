@@ -161,3 +161,14 @@ const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
 - Variables of sibling blocks reuse frame slots, last allocated first.
 - A clip of the form `width -= -x` emits `neg; sub`, distinct from
   `width += x`.
+- A `const` local with a constant initializer gets an ordinary frame slot
+  (`movl $229,-4(%ebp)`), in declaration order with the other locals. Loki's
+  `animateTilesets` instead keeps such constants in `%ebx/%esi/%edi` and
+  spills the rest after every other local: they are `register const int`,
+  the only way -O0 allocates a pseudo to a variable with a constant
+  initializer. Their uses still fold to immediates.
+- One loop variable declared at the top of a function and reused by several
+  `for` loops takes one slot; a `for (unsigned int i = ...)` per loop takes
+  one slot each (`loadTilesets`).
+- An address-taken table of string pointers in `.rodata` is compared by the
+  strings its entries point to (`$t<n>[...]#digest`), on both sides.

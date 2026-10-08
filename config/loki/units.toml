@@ -183,3 +183,8 @@ source = "src/editor/ObjectTypeTable.cpp"
 name = "TilePoint"
 object = 33
 source = "src/editor/TilePoint.cpp"
+
+[[unit]]
+name = "Tile"
+object = 32
+source = "src/editor/Tile.cpp"
