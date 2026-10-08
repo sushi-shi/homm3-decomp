@@ -1978,16 +1978,12 @@ TGameObject* TGameMap::_TImpl::createObject(const TObjectType& objType, TPlayer 
                 throw TAllocationFailure(__FILE__, __LINE__);
             return pShrine;
         }
-
-    default:
-        {
-            TGenericObject* pGeneric = _m_pObjectFactory->createGenericObject(objType, pfnAllocator);
-            if (pGeneric == NULL)
-#line 2699
-                throw TAllocationFailure(__FILE__, __LINE__);
-            return pGeneric;
-        }
     }
+    TGenericObject* pGeneric = _m_pObjectFactory->createGenericObject(objType, pfnAllocator);
+    if (pGeneric == NULL)
+#line 2699
+        throw TAllocationFailure(__FILE__, __LINE__);
+    return pGeneric;
 }
 
 TGameObject* TGameMap::_TImpl::_createObject(const TObjectType& objType, TRawIStream* pIStream, int version,
@@ -2193,16 +2189,12 @@ TGameObject* TGameMap::_TImpl::_createObject(const TObjectType& objType, TRawISt
                 throw TAllocationFailure(__FILE__, __LINE__);
             return pShrine;
         }
-
-    default:
-        {
-            TGenericObject* pGeneric = _m_pObjectFactory->createGenericObject(objType, pIStream, version, pfnAllocator);
-            if (pGeneric == NULL)
-#line 2892
-                throw TAllocationFailure(__FILE__, __LINE__);
-            return pGeneric;
-        }
     }
+    TGenericObject* pGeneric = _m_pObjectFactory->createGenericObject(objType, pIStream, version, pfnAllocator);
+    if (pGeneric == NULL)
+#line 2892
+        throw TAllocationFailure(__FILE__, __LINE__);
+    return pGeneric;
 }
 
 bool TGameMap::_TImpl::canCreate(const TObjectType& objType, TPlayer player) const

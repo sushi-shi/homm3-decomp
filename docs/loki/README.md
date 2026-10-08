@@ -287,3 +287,8 @@ available.
 - `if (...) { ...; return; }` jumps straight to the epilogue, where an
   `if/else` arm jumps to the end of the enclosing `if` first; a `return`
   in an `else if` arm still leaves the jump over the following `else`.
+- `-O0` never deletes a label (`delete_insn` only marks it), so a switch's
+  exit label survives unreferenced and aligns the jump around the EH
+  handlers after a switch whose cases all return. The generic case after
+  the switch, not a `default:` arm, leaves that jump unaligned
+  (`createObject`/`_createObject`).
