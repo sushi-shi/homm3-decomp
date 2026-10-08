@@ -98,8 +98,10 @@ static TSpellTraits aSpellTraitsImp[kNumSpellsAndCreatureEffects] = {
 
 const TSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects] = aSpellTraitsImp;
 
-// The combat spell effects' sprites, exported from this object and read by
-// nothing in the editor. The Loki record is the Dreamcast roster's eight
+#ifdef HOMM3_TARGET_LOKI
+// The combat spell effects' sprites: the Loki port exports them from this
+// object (the Windows game keeps g_spellEffectTraits in cmbtmgr.cpp), and
+// nothing in the editor reads them. The Loki record is the Dreamcast roster's eight
 // bytes (?akSpellEffectTraits@@3QBUTSpellEffectTraits@@B, m_name at 0):
 // the sprite and the placement/alpha flags the Windows game's
 // TSpellEffectTraits (cmbtmgr.h) keeps at +8 behind its Immersion name.
@@ -194,6 +196,7 @@ const TSpellEffectTraits akSpellEffectTraits[82] = {
     { "c07spe0.def", 1 },
     { "poof.def", 0 }
 };
+#endif
 
 namespace {
 
