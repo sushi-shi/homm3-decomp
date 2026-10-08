@@ -995,7 +995,7 @@ MAC_ADDRESS(0x1b9020, 0x70)
 void townObject::drawOutline()
 {
     if (m_objOutline && g_config.m_townOutlines)
-        m_objOutline->draw(0, 0, m_w, m_h,
+        m_objOutline->Draw(0, 0, m_w, m_h,
                            g_windowManager->m_screenBitmap, m_x, m_y, 1);
 }
 
@@ -6330,7 +6330,7 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
                                const int w, const int h)
 {
     g_outlinedTownObjectId = m_townObjects[objectIndex]->m_objId;
-    TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->getPalette();
+    TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->GetPalette();
     unsigned short saved = pal.Palette[96];
 
     for (int i = 128; i < 135; i++) {

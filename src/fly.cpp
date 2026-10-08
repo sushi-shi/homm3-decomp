@@ -215,17 +215,17 @@ int army::fly(int destIndex)
                 SLimitData ttlExtent = g_combatManager->m_extent;
                 x += stepX / static_cast<float>(numFlapFrames);
                 y += stepY / static_cast<float>(numFlapFrames);
-                g_combatManager->m_saveScreenPostGrid->draw(
+                g_combatManager->m_saveScreenPostGrid->Draw(
                            g_combatManager->m_extent.m_minX,
                            g_combatManager->m_extent.m_minY,
                            g_combatManager->m_extent.width(),
                            g_combatManager->m_extent.height(),
-                           g_windowManager->m_screenBitmap->getMap(0, 0),
+                           g_windowManager->m_screenBitmap->GetMap(0, 0),
                            g_combatManager->m_extent.m_minX,
                            g_combatManager->m_extent.m_minY,
-                           g_windowManager->m_screenBitmap->getWidth(),
-                           g_windowManager->m_screenBitmap->getHeight(),
-                           g_windowManager->m_screenBitmap->getPitch(),
+                           g_windowManager->m_screenBitmap->GetWidth(),
+                           g_windowManager->m_screenBitmap->GetHeight(),
+                           g_windowManager->m_screenBitmap->GetPitch(),
                            false);
                 g_combatManager->m_extent = heroWindowManager::s_nullLimits;
                 g_combatManager->m_saveBiggestExtent = 1;

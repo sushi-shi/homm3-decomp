@@ -128,7 +128,7 @@ void TSubWindow::saveBackground()
 {
     m_background = new Bitmap16Bit(m_width, m_height);
     pollSound();
-    m_background->grab(g_windowManager->m_screenBitmap,
+    m_background->Grab(g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
     pollSound();
 }
@@ -143,7 +143,7 @@ void TSubWindow::restoreBackground()
         int drawY = m_y + m_parentWindow->m_y;
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
         // Mac 0x19bbe4..bc44 expands the Bitmap16Bit-destination Draw overload.
-        m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+        m_background->Draw(0, 0, m_background->GetWidth(), m_background->GetHeight(),
             screen, drawX, drawY, false);
         g_windowManager->updateScreen(drawX, drawY, m_width + 1, m_height);
         delete m_background;

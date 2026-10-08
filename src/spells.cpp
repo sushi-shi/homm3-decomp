@@ -3322,28 +3322,28 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
                     switch (bolt->m_color) {
                     case BOLT_COLOR_4: {
                         unsigned char* rgb = g_boltWhiteSpanColors[fromEdge];
-                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
+                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(
                                 rgBto16(rgb[0], rgb[1], rgb[2]));
                         break;
                     }
                     case BOLT_COLOR_2: {
                         unsigned char* rgb = g_boltGreenSpanColors[fromEdge];
-                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
+                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(
                                 rgBto16(rgb[0], rgb[1], rgb[2]));
                         break;
                     }
                     case BOLT_COLOR_0: {
                         unsigned char* rgb = g_boltSpectrumColors[k - spanFirst];
-                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
+                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(rgBto16(
                                 rgb[0], rgb[1], rgb[2]));
                         break;
                     }
                     case BOLT_COLOR_3: {
                         unsigned char* rgb = g_boltSpectrumColors[14 - (k - spanFirst)];
-                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
+                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(rgBto16(
                                 rgb[0], rgb[1], rgb[2]));
                         break;
@@ -3361,12 +3361,12 @@ void combatManager::drawBolt(SBolt* bolt, int drawLength)
                             color = rgBto16(200, 200, 255);
                         else
                             color = rgBto16(192, 192, 255);
-                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] = color;
+                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] = color;
                         break;
                     default:
                         // Anything outside the six special values is a raw
                         // 16-bit pixel, written straight through.
-                        (g_windowManager->m_screenBitmap->getMap(0, 0) + y * 800)[x] =
+                        (g_windowManager->m_screenBitmap->GetMap(0, 0) + y * 800)[x] =
                             static_cast<unsigned short>(bolt->m_color);
                         break;
                     }
@@ -4723,7 +4723,7 @@ void combatManager::earthquake(int level)
     int counts[WALL_TARGET_COUNT];
     if (!isQuickCombat()) {
         g_mouseManager->hidePointer();
-        m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap, 0, 0);
+        m_saveScreenPostGrid->Grab(g_windowManager->m_screenBitmap, 0, 0);
         const int shakeDelay = static_cast<int>(
             combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
         int pass = 3;
@@ -4731,7 +4731,7 @@ void combatManager::earthquake(int level)
             for (int step = 0; step < 15; step++) {
                 unsigned long shakeTil = GameTime::get() + shakeDelay;
                 pollSound();
-                m_saveScreenPostGrid->draw(0, 0, m_saveScreenPostGrid->getWidth(), m_saveScreenPostGrid->getHeight(),
+                m_saveScreenPostGrid->Draw(0, 0, m_saveScreenPostGrid->GetWidth(), m_saveScreenPostGrid->GetHeight(),
                                  g_windowManager->m_screenBitmap,
                                  g_earthquakeShakeOffsets[step][0],
                                  g_earthquakeShakeOffsets[step][1], 0);

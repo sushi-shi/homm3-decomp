@@ -132,9 +132,9 @@ int Bitmap24Bit::importPCXFile(const char* filename)
     flipimage(&pcxfile, &pcxfile);
 
     for (int y = 0; y < m_height; ++y) {
-        memcpy(m_data + y * getPitch(),
+        memcpy(m_data + y * GetPitch(),
                pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
-               getPitch());
+               GetPitch());
     }
 
     freeimage(&pcxfile);
@@ -144,11 +144,11 @@ int Bitmap24Bit::importPCXFile(const char* filename)
 VA(0x0044efd0, 0x37)
 DC_ADDRESS(0x0528f8, 0x70)
 MAC_ADDRESS(0x05cfd0, 0x3c)
-void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                        int dx, int dy) const
 {
-    draw(sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-         dst->getWidth(), dst->getHeight(), dst->getPitch());
+    Draw(sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+         dst->GetWidth(), dst->GetHeight(), dst->GetPitch());
 }
 
 // E:\gamedcs\bitmap24.cpp:280. Dreamcast proves the clipped rectangle,
@@ -161,7 +161,7 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 VA(0x0044f010, 0x161)
 DC_ADDRESS(0x052968, 0x13e)
 MAC_ADDRESS(0x05d00c, 0x210)  // source-order bracket + RGB mask/data flow
-void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch) const
 {
     if (dx < 0) {
@@ -180,27 +180,27 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        const unsigned char* src = m_data + sy * getPitch() + sx * 3;
+        const unsigned char* src = m_data + sy * GetPitch() + sx * 3;
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
         // Complete's x86 relocation and byte schedule require this later-
         // revision declaration order. It retains all three DC-named scale
         // locals while assigning bm1/rm1/gm1 to retail's ESI/stack/EBX roles.
-        const unsigned int rm1 = (Bitmap16Bit::s_redMask << 1) & ~Bitmap16Bit::s_redMask;
-        const unsigned int gm1 = (Bitmap16Bit::s_greenMask << 1) & ~Bitmap16Bit::s_greenMask;
-        const unsigned int bm1 = (Bitmap16Bit::s_blueMask << 1) & ~Bitmap16Bit::s_blueMask;
+        const unsigned int rm1 = (Bitmap16Bit::red_mask << 1) & ~Bitmap16Bit::red_mask;
+        const unsigned int gm1 = (Bitmap16Bit::green_mask << 1) & ~Bitmap16Bit::green_mask;
+        const unsigned int bm1 = (Bitmap16Bit::blue_mask << 1) & ~Bitmap16Bit::blue_mask;
 
         for (int y = 0; y < sh; ++y) {
             const unsigned char* in = src;
             unsigned short* out = dst;
             for (int x = 0; x < sw; ++x) {
                 unsigned int blue =
-                    ((in[0] * bm1) >> 8) & Bitmap16Bit::s_blueMask;
+                    ((in[0] * bm1) >> 8) & Bitmap16Bit::blue_mask;
                 unsigned int green =
-                    ((in[1] * gm1) >> 8) & Bitmap16Bit::s_greenMask;
+                    ((in[1] * gm1) >> 8) & Bitmap16Bit::green_mask;
                 unsigned int red =
-                    ((in[2] * rm1) >> 8) & Bitmap16Bit::s_redMask;
+                    ((in[2] * rm1) >> 8) & Bitmap16Bit::red_mask;
                 // The operands are commutative; this grouping is retail's
                 // exact blue/red/green source-load schedule under VC6 C1.
                 *out++ = static_cast<unsigned short>(blue | red | green);
@@ -209,7 +209,7 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
             dst = static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dpitch));
-            src += getPitch();
+            src += GetPitch();
         }
     }
 }
@@ -225,7 +225,7 @@ unsigned int Bitmap24Bit::getSize() const
 VA(0x0044f190, 0x5F8)
 DC_ADDRESS(0x052aa8, 0x424)
 MAC_ADDRESS(0x05d228, 0x2f8)  // source-order bracket + inlined HSV helpers
-void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
+void Bitmap24Bit::AdjustHSV(int x, int y, int w, int h, float hue,
                             float hueAdjust, float saturationAdjust,
                             float valueAdjust)
 {
@@ -236,7 +236,7 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
     const unsigned int blueNorm =
         std::numeric_limits<int>::max() / 255;
 
-    unsigned char* src = m_data + y * getPitch() + x * 3;
+    unsigned char* src = m_data + y * GetPitch() + x * 3;
     for (int row = 0; row < h; ++row) {
         unsigned char* pixel = src;
         for (int column = 0; column < w; ++column) {
@@ -289,7 +289,7 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
             pixel += 3;
         }
 
-        src += getPitch();
+        src += GetPitch();
     }
 }
 

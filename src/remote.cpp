@@ -2503,7 +2503,7 @@ void CSaveScreen::save(int x, int y)
     m_x = x;
     m_y = y;
     m_screenSaved = 1;
-    grab(g_windowManager->m_screenBitmap, x, y);
+    Grab(g_windowManager->m_screenBitmap, x, y);
 }
 
 VA(0x00557390, 0x69)
@@ -2512,10 +2512,10 @@ MAC_ADDRESS(0x214f88, 0xb8)
 void CSaveScreen::restore(unsigned char update)
 {
     if (m_screenSaved) {
-        draw(0, 0, getWidth(), getHeight(), g_windowManager->m_screenBitmap,
+        Draw(0, 0, GetWidth(), GetHeight(), g_windowManager->m_screenBitmap,
              m_x, m_y, 0);
         if (update)
-            g_windowManager->updateScreen(m_x, m_y, getWidth(), getHeight());
+            g_windowManager->updateScreen(m_x, m_y, GetWidth(), GetHeight());
     }
 }
 

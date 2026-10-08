@@ -221,7 +221,7 @@ DC_ADDRESS(0x196fc8, 0x34)
 MAC_ADDRESS(0x20aa80, 0x54)
 void widget::dim() const
 {
-    g_windowManager->m_screenBitmap->darken(
+    g_windowManager->m_screenBitmap->Darken(
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 

@@ -8716,7 +8716,7 @@ void game::showHeroesLogo()
     y = g_advManager->m_advWindow->m_radarWidget->m_y;
     w = g_advManager->m_advWindow->m_radarWidget->m_width;
     h = g_advManager->m_advWindow->m_radarWidget->m_height;
-    heroLogo->draw(0, 0, w, h, g_windowManager->m_screenBitmap, x, y, false);
+    heroLogo->Draw(0, 0, w, h, g_windowManager->m_screenBitmap, x, y, false);
     g_windowManager->updateScreen(x, y, w, h);
     heroLogo->dispose();
 }

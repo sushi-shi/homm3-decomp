@@ -256,7 +256,7 @@ int TPuzzleWindow::updatePuzzle(int full)
             Bitmap816* bitmap = m_puzzlePieces[piece];
             const short* xCoordinate = g_puzzleCoordinates[m_puzWhich].m_x;
             const short* yCoordinate = g_puzzleCoordinates[m_puzWhich].m_y;
-            bitmap->draw(0, 0, bitmap->getWidth(), bitmap->getHeight(),
+            bitmap->Draw(0, 0, bitmap->GetWidth(), bitmap->GetHeight(),
                          g_windowManager->m_screenBitmap,
                          xCoordinate[piece], yCoordinate[piece], 1);
             ++piecesNotFound;
@@ -373,12 +373,12 @@ bool type_AI_puzzle_tile::operator==(
 VA(0x0052c8b0, 0xFC)
 DC_ADDRESS(0x11577c, 0xbc)
 MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt
-void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
+void Bitmap816::mark_puzzle(unsigned char* visible, long destX, long destY)
 {
     int offsetX = (-16 - destX) & 31;
     int offsetY = (-16 - destY) & 31;
-    int width = m_width - offsetX;
-    int height = m_height - offsetY;
+    int width = Width - offsetX;
+    int height = Height - offsetY;
 
     destX += offsetX;
     destY += offsetY;
@@ -391,7 +391,7 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
     if (width <= 0 || height <= 0)
         return;
 
-    unsigned char* source = m_map + m_pitch * offsetY + offsetX;
+    unsigned char* source = map + Pitch * offsetY + offsetX;
     int row = destY / 32;
     unsigned char* destination = visible + 18 * row;
     destination += row;
@@ -409,7 +409,7 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
         }
 
         destination += 19;
-        source += m_pitch * 32;
+        source += Pitch * 32;
     }
 }
 
@@ -435,7 +435,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
         Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
         const short* xCoordinate = g_puzzleCoordinates[puzzle].m_x;
         const short* yCoordinate = g_puzzleCoordinates[puzzle].m_y;
-        bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
+        bitmap->mark_puzzle(visible, xCoordinate[piece] - 8,
                             yCoordinate[piece] - 8);
         bitmap->dispose();
     }

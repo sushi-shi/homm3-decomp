@@ -21,13 +21,13 @@ VA_COMPGEN(0x0044f7d0, 0x21, SCALAR_DELETING_DTOR, Bitmap816)
 DC_ADDRESS(0x053854, 0x10c)
 Bitmap816::Bitmap816(int w, int h)
     : resource(0, RESOURCE_TYPE_NONE),
-      m_imageSize(w * h), m_width(w), m_height(h), m_pitch(w)
+      ImageSize(w * h), Width(w), Height(h), Pitch(w)
 {
-    m_dataSize = m_imageSize;
+    DataSize = ImageSize;
     if (w && h)
-        m_map = new unsigned char[m_dataSize];
+        map = new unsigned char[DataSize];
     else
-        m_map = 0;
+        map = 0;
 }
 
 VA(0x0044f800, 0xCA)
@@ -36,12 +36,12 @@ MAC_ADDRESS(0x05daf0, 0xc4)
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
                      TPalette16* palette16, int dataSize)
     : resource(name, RESOURCE_TYPE_BITMAP),
-      m_imageSize(w * h), m_width(w), m_height(h), m_pitch(w), m_p16(palette16)
+      ImageSize(w * h), Width(w), Height(h), Pitch(w), m_p16(palette16)
 {
-    m_dataSize = dataSize ? dataSize : m_imageSize;
-    m_map = new unsigned char[m_dataSize];
-    if (m_map)
-        memcpy(m_map, data, m_dataSize);
+    DataSize = dataSize ? dataSize : ImageSize;
+    map = new unsigned char[DataSize];
+    if (map)
+        memcpy(map, data, DataSize);
 }
 
 // Original: Bitmap816::Bitmap816; bitmap816.cpp:125
@@ -49,7 +49,7 @@ DC_ADDRESS(0x053a68, 0xa4)
 Bitmap816::Bitmap816(const char* name, int rbits, int rshift,
                      int gbits, int gshift, int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_BITMAP),
-      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
+      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
 {
     importPCXFile(name, rbits, rshift, gbits, gshift, bbits, bshift);
 }
@@ -60,7 +60,7 @@ Bitmap816::Bitmap816(const char* name, const char* path,
                      int rbits, int rshift, int gbits, int gshift,
                      int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_BITMAP),
-      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
+      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
 {
     char filename[264];
 
@@ -78,8 +78,8 @@ DC_ADDRESS(0x053ba4, 0xb8)
 MAC_ADDRESS(0x05dbb4, 0x88)
 Bitmap816::~Bitmap816()
 {
-    if (m_map)
-        delete[] m_map;
+    if (map)
+        delete[] map;
 }
 
 // The initial EH state (retail 1, ours was 2) was a CLEANUP-COUNT fact, not
@@ -101,15 +101,15 @@ void Bitmap816::import(int w, int h, unsigned char* data,
                        TPalette16& p16, int size)
 {
     clear();
-    m_width = w;
-    m_height = h;
-    m_pitch = w;
-    m_imageSize = w * h;
-    m_dataSize = size ? size : m_imageSize;
+    Width = w;
+    Height = h;
+    Pitch = w;
+    ImageSize = w * h;
+    DataSize = size ? size : ImageSize;
     if (w && h)
-        m_map = new unsigned char[m_dataSize];
-    if (m_map)
-        memcpy(m_map, data, m_dataSize);
+        map = new unsigned char[DataSize];
+    if (map)
+        memcpy(map, data, DataSize);
     // DC 0x53d34..0x53d48 copies through a separate palette temporary and
     // destroys it after assignment. Preserve that lifetime using Complete's
     // pointer-taking payload-copy interfaces (0x5228e0 / 0x522910); assigning
@@ -123,14 +123,14 @@ void Bitmap816::import(int w, int h, unsigned char* data,
 DC_ADDRESS(0x053d60, 0x90)
 void Bitmap816::clear()
 {
-    m_width = 0;
-    m_height = 0;
-    m_pitch = 0;
-    m_dataSize = 0;
-    m_imageSize = 0;
-    if (m_map) {
-        delete[] m_map;
-        m_map = 0;
+    Width = 0;
+    Height = 0;
+    Pitch = 0;
+    DataSize = 0;
+    ImageSize = 0;
+    if (map) {
+        delete[] map;
+        map = 0;
     }
 }
 
@@ -145,13 +145,13 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
     if (error)
         return 1;
 
-    m_width = pdat.m_width;
-    m_height = pdat.m_length;
-    m_pitch = m_width;
-    m_imageSize = m_width * m_height;
-    m_dataSize = m_imageSize;
-    m_map = new unsigned char[m_imageSize];
-    if (!m_map)
+    Width = pdat.m_width;
+    Height = pdat.m_length;
+    Pitch = Width;
+    ImageSize = Width * Height;
+    DataSize = ImageSize;
+    map = new unsigned char[ImageSize];
+    if (!map)
         return 2;
 
     allocimage(&pcxfile, pdat.m_width, pdat.m_length,
@@ -159,10 +159,10 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
     loadpcx(filename, &pcxfile);
     flipimage(&pcxfile, &pcxfile);
 
-    for (int y = 0; y < m_height; ++y) {
-        memcpy(m_map + y * m_pitch,
+    for (int y = 0; y < Height; ++y) {
+        memcpy(map + y * Pitch,
                pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
-               m_width);
+               Width);
     }
 
     for (int i = 0; i < 256; ++i) {
@@ -203,7 +203,7 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        const unsigned char* src = getMap(sx, sy);
+        const unsigned char* src = GetMap(sx, sy);
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
@@ -219,7 +219,7 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
             dst = static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dpitch));
-            src += m_pitch;
+            src += Pitch;
         }
     }
 }
@@ -227,7 +227,7 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
 VA(0x0044fc70, 0x136)
 DC_ADDRESS(0x0540a8, 0x108)
 MAC_ADDRESS(0x05dd34, 0x21c)
-void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+void Bitmap816::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                      int dx, int dy, int dw, int dh, int dpitch,
                      bool tblit) const
 {
@@ -247,7 +247,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        const unsigned char* src = getMap(sx, sy);
+        const unsigned char* src = GetMap(sx, sy);
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
@@ -264,7 +264,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                 dst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(dst))
                     + dpitch));
-                src += m_pitch;
+                src += Pitch;
             }
         } else {
             for (int y = 0; y < sh; ++y) {
@@ -276,7 +276,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                 dst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(dst))
                     + dpitch));
-                src += m_pitch;
+                src += Pitch;
             }
         }
     }
@@ -285,11 +285,11 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
 VA(0x0044fdb0, 0x3B)
 DC_ADDRESS(0x0541b0, 0x7a)
 MAC_ADDRESS(0x05df50, 0x44)
-void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+void Bitmap816::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                      int dx, int dy, bool tblit) const
 {
-    draw(sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-         dst->getWidth(), dst->getHeight(), dst->getPitch(), tblit);
+    Draw(sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+         dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), tblit);
 }
 
 VA(0x0044fdf0, 0x3B)
@@ -308,13 +308,13 @@ VA(0x0044fe30, 0x09)
 MAC_ADDRESS(0x05dfd4, 0xc)
 unsigned int Bitmap816::getSize() const
 {
-    return m_dataSize + sizeof(*this);
+    return DataSize + sizeof(*this);
 }
 
 VA(0x0044fe40, 0x18)
 DC_ADDRESS(0x05427c, 0x18)
 MAC_ADDRESS(0x05dfe0, 0x34)
-void Bitmap816::setPalette(const unsigned short* pal)
+void Bitmap816::SetPalette(const unsigned short* pal)
 {
     memcpy(m_p16.Palette, pal, sizeof(m_p16.Palette));
 }
@@ -322,7 +322,7 @@ void Bitmap816::setPalette(const unsigned short* pal)
 VA(0x0044fe60, 0x16)
 DC_ADDRESS(0x054294, 0x6)
 MAC_ADDRESS(0x05e014, 0x24)
-void Bitmap816::setPalette(TPalette24* pal24)
+void Bitmap816::SetPalette(TPalette24* pal24)
 {
     m_p24 = *pal24;
 }
@@ -330,8 +330,8 @@ void Bitmap816::setPalette(TPalette24* pal24)
 VA(0x0044fe80, 0x40)
 DC_ADDRESS(0x05429c, 0x64)
 MAC_ADDRESS(0x05e038, 0x4c)
-void Bitmap816::resetPalette()
+void Bitmap816::ResetPalette()
 {
-    TPalette16 converted(getPalette24());
-    setPalette(converted.Palette);
+    TPalette16 converted(GetPalette24());
+    SetPalette(converted.Palette);
 }

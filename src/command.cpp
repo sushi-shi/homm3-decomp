@@ -1941,7 +1941,7 @@ void combatManager::doVictory(int winningGroup)
     // Complete shares the pointer restoration before its result branches.
     g_mouseManager->enable();
     if (!isQuickCombat()) {
-        g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
+        g_windowManager->m_screenBitmap->Darken(0, 0, 800, 600);
         g_windowManager->updateScreen();
     }
 

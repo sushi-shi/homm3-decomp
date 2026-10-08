@@ -162,9 +162,9 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
     g_playingBink.m_y = y;
     g_playingBink.m_w = w;
     g_playingBink.m_h = h;
-    g_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(x, y);
-    g_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
-    g_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
+    g_playingBink.m_screen = g_windowManager->m_screenBitmap->GetMap(x, y);
+    g_playingBink.m_pitch = g_windowManager->m_screenBitmap->GetPitch();
+    g_playingBink.m_height = g_windowManager->m_screenBitmap->GetHeight();
     g_playingBinkActive = 1;
 }
 
@@ -356,7 +356,7 @@ static unsigned char playBinkCore(int id, int x, int y, int w, int h)
             vw = g_playingBink.m_bink->Width;
             vh = g_playingBink.m_bink->Height;
         }
-        g_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
+        g_playingBink.m_screen = g_windowManager->m_screenBitmap->GetMap(
             g_playingBink.m_x, g_playingBink.m_y);
         aborted = 0;
         g_inputManager->flush();

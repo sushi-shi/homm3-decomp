@@ -86,8 +86,8 @@ void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
     int height = m_fs.m_height;
     unsigned char* src = static_cast<unsigned char*>(m_data) + m_fs.m_offset[c];
     unsigned char* dst = static_cast<unsigned char*>(
-                             static_cast<void*>(bmp->getMap(0, 0)))
-                         + y * bmp->getPitch() + 2 * (x + m_fs.m_abc[c].m_abcA);
+                             static_cast<void*>(bmp->GetMap(0, 0)))
+                         + y * bmp->GetPitch() + 2 * (x + m_fs.m_abc[c].m_abcA);
     for (int row = 0; row < height; row++) {
         unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(dst));
         for (int col = 0; col < width; col++) {
@@ -100,7 +100,7 @@ void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
             }
             out++;
         }
-        dst += bmp->getPitch();
+        dst += bmp->GetPitch();
     }
 }
 
@@ -208,7 +208,7 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
                       int x, int y, TColor color)
 {
     drawStringExecute(text, strlen(text), bitmap, x, y, color,
-                      0, 0, bitmap->getWidth(), bitmap->getHeight(), -1);
+                      0, 0, bitmap->GetWidth(), bitmap->GetHeight(), -1);
 }
 
 // The layout pass: split `str` into lines that fit boxWidth, place the

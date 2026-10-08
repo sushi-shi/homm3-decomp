@@ -199,7 +199,7 @@ void textWidget::draw() const
         int drawX = m_x + m_parentWindow->m_x;
         int drawY = m_y + m_parentWindow->m_y;
         if (m_backColor) {
-            g_windowManager->m_screenBitmap->fillRect(
+            g_windowManager->m_screenBitmap->FillRect(
                 drawX, drawY, m_width, m_height,
                 g_systemPalette->Palette[m_backColor]);
         }
@@ -312,9 +312,9 @@ void bitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
-    int blitWidth = min(m_image->getWidth(), m_width);
-    int blitHeight = min(m_image->getHeight(), m_height);
-    m_image->draw(0, 0, blitWidth, blitHeight,
+    int blitWidth = min(m_image->GetWidth(), m_width);
+    int blitHeight = min(m_image->GetHeight(), m_height);
+    m_image->Draw(0, 0, blitWidth, blitHeight,
                 g_windowManager->m_screenBitmap, drawX, drawY, 0);
     textWidget::draw();
 }

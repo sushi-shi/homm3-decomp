@@ -1419,10 +1419,10 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     unsigned long savedGreen = 0;
     unsigned long savedBlue = 0;
     if (!g_closingApp) {
-        savedScreen.grab(g_windowManager->m_screenBitmap, 0, 0);
-        savedRed = Bitmap16Bit::s_redMask;
-        savedGreen = Bitmap16Bit::s_greenMask;
-        savedBlue = Bitmap16Bit::s_blueMask;
+        savedScreen.Grab(g_windowManager->m_screenBitmap, 0, 0);
+        savedRed = Bitmap16Bit::red_mask;
+        savedGreen = Bitmap16Bit::green_mask;
+        savedBlue = Bitmap16Bit::blue_mask;
     }
 
     ddCleanUpWinGraphics();
@@ -1447,14 +1447,14 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     g_winGraphBusy = 1;
 
     if (!g_closingApp) {
-        if (savedRed != Bitmap16Bit::s_redMask || savedGreen != Bitmap16Bit::s_greenMask
-            || savedBlue != Bitmap16Bit::s_blueMask) {
-            savedScreen.remap(savedGreen == GREEN_MASK_565
+        if (savedRed != Bitmap16Bit::red_mask || savedGreen != Bitmap16Bit::green_mask
+            || savedBlue != Bitmap16Bit::blue_mask) {
+            savedScreen.Remap(savedGreen == GREEN_MASK_565
                                   ? BITMAP_GREEN_BITS_565
                                   : BITMAP_GREEN_BITS_1555);
             ResourceManager::remapGraphics();
         }
-        savedScreen.draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0, false);
+        savedScreen.Draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0, false);
     }
 
     g_mouseManager->reset();

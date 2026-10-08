@@ -1048,7 +1048,7 @@ void swapManager::drawSelector()
                     int creature = m_heroes[hero]->m_army.m_armies[slot];
                     if (creature == -1 || creature == selectedType)
                     {
-                        m_border->draw(0, 0, 0x24, 0x24,
+                        m_border->Draw(0, 0, 0x24, 0x24,
                                      g_windowManager->m_screenBitmap,
                                      x - 2, 0x81, true);
                         g_windowManager->updateScreen(x - 2, 0x81,
@@ -1078,7 +1078,7 @@ void swapManager::drawSelector()
             }
             break;
         }
-        m_border->draw(0, 0, 0x24, 0x24, g_windowManager->m_screenBitmap,
+        m_border->Draw(0, 0, 0x24, 0x24, g_windowManager->m_screenBitmap,
                      x, y, true);
         g_windowManager->updateScreen(x, y, 0x24, 0x24);
     }

@@ -38,28 +38,28 @@ public:
     void clear();
 
     DC_ADDRESS(0x122b24, 0x4)
-    int getWidth() const { return m_width; }
+    int GetWidth() const { return m_width; }
 
     DC_ADDRESS(0x122b28, 0x4)
-    int getHeight() const { return m_height; }
+    int GetHeight() const { return m_height; }
 
     // Dreamcast bitmap24.h:72; both row advances in the raw
     // Draw body inline this exact 24-bit pitch calculation in retail.
     DC_ADDRESS(0x0533b0, 0xa)
-    int getPitch() const { return m_width * 3; }
-    void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+    int GetPitch() const { return m_width * 3; }
+    void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
               int dx, int dy) const;
-    void draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch) const;
-    void adjustHSV(int x, int y, int w, int h, float hue,
+    void AdjustHSV(int x, int y, int w, int h, float hue,
                    float hueAdjust, float saturationAdjust,
                    float valueAdjust);
 
     DC_ADDRESS(0x122b2c, 0x60)
-    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+    void AdjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust)
     {
-        adjustHSV(0, 0, getWidth(), getHeight(), hue, hueAdjust,
+        AdjustHSV(0, 0, GetWidth(), GetHeight(), hue, hueAdjust,
                   saturationAdjust, valueAdjust);
     }
 
