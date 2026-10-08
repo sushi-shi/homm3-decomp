@@ -15,10 +15,10 @@
 #include "exceptions.h"
 #include "objnames.h"
 #include "editor/cppbridge.h"
+#include "editor/MapSpecsLossCondPage.h"
 #include "editor/GameObject.h"
 #include "editor/Hero.h"
 #include "editor/MapEditorText.h"
-#include "editor/MapSpecsLossCondPage.h"
 #include "editor/Town.h"
 
 namespace {

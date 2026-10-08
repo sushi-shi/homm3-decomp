@@ -17,6 +17,7 @@
 
 #include "adventureobjecttype.h"
 #include "editor/GameMap.h"
+#include "editor/RawStream.h"
 #include "editor/GameObject.h"
 #include "editor/Hero.h"
 #include "editor/Monster.h"
@@ -26,7 +27,6 @@
 #include "editor/SeersHut.h"
 #include "editor/Town.h"
 #include "editor/MapEditorText.h"
-#include "editor/RawStream.h"
 #include "editor/TilePoint.h"
 #include "editor/TimedEvent.h"
 #include "editor/UniqueSet.h"

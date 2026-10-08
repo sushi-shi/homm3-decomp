@@ -7,8 +7,8 @@
 #include <string>
 
 #include "adventureobjecttype.h"
-#include "artifact.h"
 #include "creaturetype.h"
+#include "artifact.h"
 #include "editor/Clamp.h"
 #include "editor/MapEditorText.h"
 #include "editor/Monster.h"

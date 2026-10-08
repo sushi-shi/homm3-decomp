@@ -19,10 +19,10 @@
 #include "exceptions.h"
 #include "resourcemanager.h"
 #include "resourceptr.h"
-#include "textresource.h"
 #include "editor/Hero.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
+#include "textresource.h"
 #include "editor/Town.h"
 
 #define ARRAY_SIZE( a ) ( sizeof( a ) / sizeof( ( a )[ 0 ] ) )

@@ -9,8 +9,8 @@
 
 #include "exceptions.h"
 #include "editor/cppbridge.h"
-#include "editor/GameMap.h"
 #include "editor/Hero.h"
+#include "editor/GameMap.h"
 #include "editor/MapObjectRef.h"
 #include "editor/Town.h"
 #include "editor/TownPropsBuildingsPage.h"

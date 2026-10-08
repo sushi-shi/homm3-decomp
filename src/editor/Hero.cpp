@@ -14,17 +14,16 @@
 #include <vector>
 
 #include "adventureobjecttype.h"
-#include "artifact.h"
 #include "autoarrayptr.h"
 #include "exceptions.h"
 #include "herodefs.h"
 #include "resourcemanager.h"
 #include "resourceptr.h"
 #include "sskilltraits.h"
-#include "textresource.h"
 #include "editor/Hero.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
+#include "textresource.h"
 
 namespace {
 TObjectTypeTable aHeroObjType(kNumHeroClasses + 1);

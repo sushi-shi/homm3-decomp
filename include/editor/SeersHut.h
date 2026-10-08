@@ -15,6 +15,7 @@
 #include "primaryskill.h"
 #include "secondaryskill.h"
 #include "editor/Army.h"
+#include "artifact.h"
 #include "editor/GameObject.h"
 #include "editor/GameResource.h"
 

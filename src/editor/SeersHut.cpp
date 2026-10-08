@@ -7,10 +7,9 @@
 #include <new>
 
 #include "adventureobjecttype.h"
-#include "artifact.h"
 #include "exceptions.h"
-#include "editor/RawStream.h"
 #include "editor/SeersHut.h"
+#include "editor/RawStream.h"
 
 namespace {
 

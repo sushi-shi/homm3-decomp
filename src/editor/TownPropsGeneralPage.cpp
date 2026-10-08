@@ -12,8 +12,8 @@
 #include "editor/TownPropsGeneralPage.h"
 
 #include "exceptions.h"
-#include "editor/GameMap.h"
 #include "editor/Hero.h"
+#include "editor/GameMap.h"
 #include "editor/HeroPropsSheet.h"
 #include "editor/MapEditorText.h"
 #include "editor/SelectHeroClassDlg.h"

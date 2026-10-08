@@ -16,6 +16,7 @@
 #include <string>
 
 #include "editor/cppbridge.h"
+#include "editor/GameMap.h"
 #include "editor/ArmyDlg.h"
 #include "editor/ArtifactPropsSheet.h"
 #include "editor/EditArtifactDlg.h"

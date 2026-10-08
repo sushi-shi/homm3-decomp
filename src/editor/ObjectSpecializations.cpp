@@ -12,15 +12,14 @@
 #include <string>
 
 #include "adventureobjecttype.h"
-#include "artifact.h"
 #include "autoarrayptr.h"
 #include "exceptions.h"
 #include "resourcemanager.h"
 #include "resourceptr.h"
-#include "textresource.h"
 #include "editor/MapEditorText.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/RawStream.h"
+#include "textresource.h"
 
 namespace {
 TCreatureBankTypeTraits aCreatureBankTypeTraitsImp[kNumCreatureBankTypes];

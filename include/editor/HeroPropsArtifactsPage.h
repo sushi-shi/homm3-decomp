@@ -14,8 +14,8 @@
 
 #include "editor/stdafx.h"
 
-#include "editor/EditArtifactDlg.h"
 #include "editor/Hero.h"
+#include "editor/EditArtifactDlg.h"
 
 class THeroPropsArtifactsPage {
 public:
