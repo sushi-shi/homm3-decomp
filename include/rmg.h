@@ -1219,31 +1219,10 @@ struct TRmgMapItem {
 
     bool canBlockFloor() const;
 
-    // Border connections protect their cells from changes to path reservations.
-    void openPath()
-    {
-        if (!m_connection.m_present) {
-            m_tileData.m_obstacleFill = 0;
-            m_tileData.m_pathClearance = 1;
-        }
-    }
-    void markObstacleFill()
-    {
-        if (!m_connection.m_present) {
-            m_tileData.m_pathClearance = 0;
-            m_tileData.m_obstacleFill = 1;
-        }
-    }
-    void clearObstacleFill()
-    {
-        if (!m_connection.m_present)
-            m_tileData.m_obstacleFill = 0;
-    }
-    void releasePathClearance()
-    {
-        if (!m_connection.m_present)
-            m_tileData.m_pathClearance = 0;
-    }
+    // Border connections protect their cells from changes to path
+    // reservations. Setting either mark clears the other.
+    void setObstacleFill(unsigned char obstacleFill);
+    void setPathClearance(unsigned char pathClearance);
 
     // Group fit 0x546ed5 shifts bit 23 and tests the byte result.
     unsigned char isPlacementOutline() const

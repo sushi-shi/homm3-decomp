@@ -774,6 +774,28 @@ void TRmgMapItem::clear()
     m_tileData = tileData;
 }
 
+// Each path mark is stored as the given byte; setting one clears the other.
+// Mac commit 0x24abfc..0x24ac24 stores the obstacle fill before clearing the
+// path clearance, and its copy-back (0x24ac28) inserts the saved byte as the
+// bit. Retail group commit 0x5469b0 stores both saved bytes the same way.
+inline void TRmgMapItem::setObstacleFill(unsigned char obstacleFill)
+{
+    if (!m_connection.m_present) {
+        m_tileData.m_obstacleFill = obstacleFill;
+        if (obstacleFill)
+            m_tileData.m_pathClearance = 0;
+    }
+}
+
+inline void TRmgMapItem::setPathClearance(unsigned char pathClearance)
+{
+    if (!m_connection.m_present) {
+        m_tileData.m_pathClearance = pathClearance;
+        if (pathClearance)
+            m_tileData.m_obstacleFill = 0;
+    }
+}
+
 // The allocation uses the initialized dimensions. Both forms emit the exact
 // retained map constructor, but using its parameters instead over-inlines
 // this body into TRmgGeneratorBase::TRmgGeneratorBase (0x536070, 48.0526%).
@@ -3912,7 +3934,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                     candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
                     TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
                     if (nearby->hasObstacleFill() && nearby->isPassable()) {
-                        nearby->clearObstacleFill();
+                        nearby->setObstacleFill(0);
                         pending.push_back(candidatePosition);
                     }
                 }
@@ -8315,7 +8337,7 @@ void TRmgGenerator::prepareJunctionZone(TRmgZone* zone)
                 previous.m_z = -1;
                 item->resetMovement(previous);
                 if (static_cast<int>(item->m_objects.size()) <= 0)
-                    item->markObstacleFill();
+                    item->setObstacleFill(1);
             }
         }
     }
@@ -8763,7 +8785,7 @@ unsigned char TRmgGenerator::placeMineSite(TRmgObject* object,
 // the last scanned prototype, not the randomly selected mine prototype.
 // Keep the trigger's value snapshot and the separate resourceProperties local.
 // Mac 0x2498f8..0x24993c selects the resource value, then calls the shared
-// zone-strength helper. The path reservation is the canonical openPath call.
+// zone-strength helper. The path reservation is the canonical setPathClearance(1) call.
 // That complete source model retains retail's first single-element vector
 // insertion; duplicating the path stores instead expands count-insertion.
 // Mac's retained vector::reserve call proves push_back in both scans.
@@ -8811,7 +8833,7 @@ unsigned char TRmgGenerator::tryPlaceMine(TRmgZone* zone,
     entrance.m_x -= trigger.m_x;
     entrance.m_y += 1 - trigger.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
-    item->openPath();
+    item->setPathClearance(1);
     if (guardValue > 0)
         placeGuard(guardValue, entrance);
     int placed = 0;
@@ -9271,6 +9293,12 @@ TRmgMapPosition TRmgObject::getPlacedGroupPosition(
 // canonical predicates rather than their direct field-test approximations.
 // Mac 0x24aa6c..0x24aacc copies the full position and local point before
 // translation. Keep the shared position-plus-point operation and live bounds.
+// Retail keeps the three-coordinate constructor inside operator+ as a call:
+// the inline trace gives it (881 - 56) / remaining sites, below its cost 48
+// only with three source-cell predicate calls here rather than one
+// canBlockFloor call. Both copy-backs store the saved byte (Mac 0x24ac28,
+// retail +0x225). Residual: y*width operand order in the group-map lookup
+// and one reload placement at the inner-loop latch (register/schedule).
 VA(0x005469B0, 0x2B4)
 MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
 void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
@@ -9294,21 +9322,16 @@ void TRmgGenerator::commitTreasureGroup(TRmgTreasureGroup* group,
             unsigned char pathClearance = destination->hasPathClearance();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->getLandType() != eTerrainWater
-                && source->canBlockFloor()
+                && !source->hasPathClearance() && source->isPassable()
+                && !source->isObjectEntrance()
                 && destination->isPassable() && !destination->isObjectEntrance()) {
-                destination->releasePathClearance();
+                destination->setPathClearance(0);
                 if (source->hasObstacleFill())
-                    destination->markObstacleFill();
+                    destination->setObstacleFill(1);
             }
             // Copy the destination's earlier marks back to the group map.
-            if (obstacleFill)
-                source->markObstacleFill();
-            else
-                source->clearObstacleFill();
-            if (pathClearance)
-                source->openPath();
-            else
-                source->releasePathClearance();
+            source->setObstacleFill(obstacleFill);
+            source->setPathClearance(pathClearance);
         }
     }
     for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex)
