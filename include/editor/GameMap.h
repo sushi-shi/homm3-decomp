@@ -90,6 +90,8 @@ public:
 
     static const unsigned int s_kMaxTextLen = 300;
 
+    TRumor() {}
+
     const string& getName() const { return _m_name; }
     const string& getText() const { return _m_text; }
     void setNameAndText(const string& newName, const string& newText);
