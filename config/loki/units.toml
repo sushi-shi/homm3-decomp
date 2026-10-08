@@ -108,3 +108,8 @@ source = "src/Bitmap8.cpp"
 name = "GameResource"
 object = 14
 source = "src/editor/GameResource.cpp"
+
+[[unit]]
+name = "Player"
+object = 24
+source = "src/editor/Player.cpp"
