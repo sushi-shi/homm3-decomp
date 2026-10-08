@@ -800,9 +800,9 @@ TRawOStream& operator<<(TRawOStream& stream, const TTeamInfo& teamInfo)
     } else {
 #line 630
         assert(teamInfo._m_numTeams >= TTeamInfo::s_kMinTeams && teamInfo._m_numTeams <= TTeamInfo::s_kMaxTeams);
-        stream << reinterpret_cast<const signed char&>(teamInfo._m_numTeams);
+        stream << (signed char) teamInfo._m_numTeams;
         for (unsigned int player = 0; player < kNumPlayers; player++)
-            stream << reinterpret_cast<const signed char&>(teamInfo._m_aPlayerTeam[player]);
+            stream << (signed char) teamInfo._m_aPlayerTeam[player];
     }
     return stream;
 }
@@ -1371,21 +1371,29 @@ void TGameMap::_TImpl::setLossCondition(const TLossCondition* pNewLossCondition)
 TMapLayerObjectID TGameMap::_TImpl::placeObject(bool bSecondLayer, const TGameObject& obj, unsigned int x, unsigned int y,
                                                 TTileExtent* pUpdatedExtent)
 {
-    if (const TNonRandomHero* pNonRandomHero = dynamic_cast<const TNonRandomHero*>(&obj))
+    const TNonRandomHero* pNonRandomHero = dynamic_cast<const TNonRandomHero*>(&obj);
+    if (pNonRandomHero != NULL)
         return _placeNonRandomHero(bSecondLayer, *pNonRandomHero, x, y, pUpdatedExtent);
-    if (const TPrison* pPrison = dynamic_cast<const TPrison*>(&obj))
+    const TPrison* pPrison = dynamic_cast<const TPrison*>(&obj);
+    if (pPrison != NULL)
         return _placePrison(bSecondLayer, *pPrison, x, y, pUpdatedExtent);
-    if (const THero* pHero = dynamic_cast<const THero*>(&obj))
+    const THero* pHero = dynamic_cast<const THero*>(&obj);
+    if (pHero != NULL)
         return _placeHero(bSecondLayer, *pHero, x, y, pUpdatedExtent);
-    if (const TTown* pTown = dynamic_cast<const TTown*>(&obj))
+    const TTown* pTown = dynamic_cast<const TTown*>(&obj);
+    if (pTown != NULL)
         return _placeTown(bSecondLayer, *pTown, x, y, pUpdatedExtent);
-    if (const THolyGrail* pHolyGrail = dynamic_cast<const THolyGrail*>(&obj))
+    const THolyGrail* pHolyGrail = dynamic_cast<const THolyGrail*>(&obj);
+    if (pHolyGrail != NULL)
         return _placeHolyGrail(bSecondLayer, *pHolyGrail, x, y, pUpdatedExtent);
-    if (const TMine* pMine = dynamic_cast<const TMine*>(&obj))
+    const TMine* pMine = dynamic_cast<const TMine*>(&obj);
+    if (pMine != NULL)
         return _placeMine(bSecondLayer, *pMine, x, y, pUpdatedExtent);
-    if (const TGenerator* pGenerator = dynamic_cast<const TGenerator*>(&obj))
+    const TGenerator* pGenerator = dynamic_cast<const TGenerator*>(&obj);
+    if (pGenerator != NULL)
         return _placeGenerator(bSecondLayer, *pGenerator, x, y, pUpdatedExtent);
-    if (const TSign* pSign = dynamic_cast<const TSign*>(&obj))
+    const TSign* pSign = dynamic_cast<const TSign*>(&obj);
+    if (pSign != NULL)
         return _placeSign(bSecondLayer, *pSign, x, y, pUpdatedExtent);
     TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, obj, x, y, pUpdatedExtent);
 #line 2009
@@ -2323,7 +2331,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
 {
     TRawOStream stream(pStreamBuf);
     stream << (signed char) _isMapPlayable() << (long) _s_akDimension[_m_size] << (signed char) _m_bTwoLayer
-           << _m_pProperties->m_name << _m_pProperties->m_desc << (const signed char&) _m_pProperties->m_difficulty;
+           << _m_pProperties->m_name << _m_pProperties->m_desc << (signed char) _m_pProperties->m_difficulty;
     for (unsigned int player = 0; player < kNumPlayers; player++) {
         const _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[player];
 #line 3074
@@ -2433,14 +2441,14 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     for (layerNum = 0; layerNum < numLayers; layerNum++) {
         for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd(); ++iter) {
             TTilePoint loc = _m_aLayer[layerNum].getObjectLoc(*iter);
-            stream << (ubyte) loc.x() << (ubyte) loc.y() << (const ubyte&) layerNum << aObjTypeID[objNum++] << aObjReserved;
+            stream << (ubyte) loc.x() << (ubyte) loc.y() << (ubyte) layerNum << aObjTypeID[objNum++] << aObjReserved;
             const TGameObject& obj = _m_aLayer[layerNum].getObject(*iter);
             obj.write(&stream);
             const TTown* pTown = dynamic_cast<const TTown*>(&obj);
             if (pTown != NULL) {
                 const THero* pHero = pTown->getPVisitingHero();
                 if (pHero != NULL) {
-                    stream << (ubyte) loc.x() << (ubyte) loc.y() << (const ubyte&) layerNum << aObjTypeID[objNum++]
+                    stream << (ubyte) loc.x() << (ubyte) loc.y() << (ubyte) layerNum << aObjTypeID[objNum++]
                            << aObjReserved;
                     pHero->write(&stream);
                 }
@@ -2653,12 +2661,18 @@ bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject&
             if (paObjInfo != NULL) {
                 const vector<TLayer::_TObjectCellInfo>& aObjInfo = *paObjInfo;
                 vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
-                for (; pObjInfo != aObjInfo.end() && pObjInfo->m_height < height; ++pObjInfo)
+                for (; pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                    if (pObjInfo->m_height >= height)
+                        break;
                     if (find(aLowerObjIDs.begin(), aLowerObjIDs.end(), pObjInfo->m_objID) == aLowerObjIDs.end())
                         aLowerObjIDs.push_back(pObjInfo->m_objID);
-                for (; pObjInfo != aObjInfo.end() && pObjInfo->m_height <= height; ++pObjInfo)
+                }
+                for (; pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                    if (pObjInfo->m_height > height)
+                        break;
 #line 3616
                     assert(pObjInfo->m_height == height);
+                }
                 for (; pObjInfo != aObjInfo.end(); ++pObjInfo) {
 #line 3621
                     assert(pObjInfo->m_height > height);
