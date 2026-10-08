@@ -6,6 +6,7 @@
 // throw lines come from the retail immediates; the tileset's name is not
 // proven.
 #include <assert.h>
+#include <vector>
 
 #include "editor/RiverPlacement.h"
 #include "exceptions.h"
