@@ -17,17 +17,6 @@ namespace {
 
 #include "editor/MapSpecsTeamsPage.h"
 
-int TMapSpecsTeamsPage::* const TMapSpecsTeamsPage::_s_apPlayerTeam[kNumPlayers] = {
-    &TMapSpecsTeamsPage::_m_player1Team,
-    &TMapSpecsTeamsPage::_m_player2Team,
-    &TMapSpecsTeamsPage::_m_player3Team,
-    &TMapSpecsTeamsPage::_m_player4Team,
-    &TMapSpecsTeamsPage::_m_player5Team,
-    &TMapSpecsTeamsPage::_m_player6Team,
-    &TMapSpecsTeamsPage::_m_player7Team,
-    &TMapSpecsTeamsPage::_m_player8Team,
-};
-
 static GtkWidget* numTeamsRadio(int index)
 {
     char name[100];
@@ -71,6 +60,17 @@ static int getActivePlayerTeamButton(int player)
     assert(0);
     return -1;
 }
+
+int TMapSpecsTeamsPage::* const TMapSpecsTeamsPage::_s_apPlayerTeam[kNumPlayers] = {
+    &TMapSpecsTeamsPage::_m_player1Team,
+    &TMapSpecsTeamsPage::_m_player2Team,
+    &TMapSpecsTeamsPage::_m_player3Team,
+    &TMapSpecsTeamsPage::_m_player4Team,
+    &TMapSpecsTeamsPage::_m_player5Team,
+    &TMapSpecsTeamsPage::_m_player6Team,
+    &TMapSpecsTeamsPage::_m_player7Team,
+    &TMapSpecsTeamsPage::_m_player8Team,
+};
 
 void TMapSpecsTeamsPage::UpdateData(bool bSaveAndValidate)
 {
