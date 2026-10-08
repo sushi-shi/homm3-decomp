@@ -188,3 +188,8 @@ source = "src/editor/TilePoint.cpp"
 name = "Tile"
 object = 32
 source = "src/editor/Tile.cpp"
+
+[[unit]]
+name = "MapEditorText"
+object = 18
+source = "src/editor/MapEditorText.cpp"
