@@ -4,13 +4,15 @@
 // thunks'.
 //
 // The data members (0x140 bytes, as TToolkitWnd allocates) follow the
-// constructor and their users: the scroll adjustment and client (named
-// _m_vAdjust and _m_pClient by asserts), the object-name label, the
-// visible tool range and per-tool flags, the back-buffer pixmap, the
-// current slot, one _TSlotInfo per slot (the slot's object types, which
-// the constructor collects from kObjectTypeTable), the player and the
-// hovered tool. Names other than _m_vAdjust and _m_pClient, and the
-// meaning of the word at +0xc, are not proven.
+// constructor and their users: the last scroll position OnVScroll saw,
+// the scroll adjustment and client (named _m_vAdjust and _m_pClient by
+// asserts), the object-name label, the visible tool range [first, end) and
+// per-tool enabled flags, the back-buffer pixmap, the current slot, one
+// _TSlotInfo per slot (its saved scroll position and the object types the
+// constructor collects from kObjectTypeTable), the player and the hovered
+// tool. Names other than _m_vAdjust and _m_pClient are not proven;
+// s_kObjFrameSize is the image's symbol. _computeRows is an in-class inline
+// (emitted after the static initializer, its parameters in registers).
 #ifndef HOMM3_EDITOR_OBJECTPALETTEWND_H
 #define HOMM3_EDITOR_OBJECTPALETTEWND_H
 
@@ -59,19 +61,27 @@ public:
 private:
     void _setupTools(int firstRow);
     void _removeAllTools();
-    unsigned int _computeRows() const;
+    unsigned int _computeRows() const
+    {
+        return (_m_aSlotInfo[_m_slot].m_objTypes.size() + 2) / 3;
+    }
 
+    // A slot's saved scroll position (pixels) and its object types.
     struct _TSlotInfo {
-        int m_firstRow;
+        _TSlotInfo() : m_scrollPos(0) {}
+
+        unsigned int m_scrollPos;
         vector<const TObjectType*> m_objTypes;
     };
+
+    static const CSize s_kObjFrameSize;
 
     int _m_scrollPos;
     GtkAdjustment* _m_vAdjust;
     TObjectPaletteWndClient* _m_pClient;
     GtkLabel* _m_pObjNameLabel;
     unsigned int _m_firstTool;
-    unsigned int _m_numTools;
+    unsigned int _m_endTool;
     vector<bool> _m_abToolEnabled;
     GdkPixmap* _m_pBackBuffer;
     TObjectSlot _m_slot;
