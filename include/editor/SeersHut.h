@@ -7,6 +7,8 @@
 #ifndef HOMM3_EDITOR_SEERSHUT_H
 #define HOMM3_EDITOR_SEERSHUT_H
 
+#include <assert.h>
+
 #include "artifact_type.h"
 #include "armygrp.h"
 #include "herospec.h"
@@ -76,13 +78,23 @@ private:
 template<int s_kMaxBonus>
 class TSimpleBonusReward : public TSeersHut::TReward {
 public:
-    TSimpleBonusReward(int bonus);
+    TSimpleBonusReward(int bonus) : _m_bonus(bonus)
+    {
+#line 111 "SeersHut.h"
+        assert(bonus >= 1 && bonus <= s_kMaxBonus);
+    }
 
     int getBonus() const { return _m_bonus; }
 
 private:
     int _m_bonus;
 };
+
+template<int s_kMaxBonus>
+inline bool operator==(const TSimpleBonusReward<s_kMaxBonus>& lhs, const TSimpleBonusReward<s_kMaxBonus>& rhs)
+{
+    return lhs.getBonus() == rhs.getBonus();
+}
 
 class TSeersHut::TExperienceReward : public TSimpleBonusReward<99999999> {
 public:
@@ -114,12 +126,19 @@ public:
 
 class TSeersHut::TResourceReward : public TSeersHut::TReward {
 public:
+    static const unsigned int s_kMaxQuantity = 99999;
+
     TResourceReward(TGameResourceType type, unsigned int quantity);
 
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     TGameResourceType getType() const { return _m_type; }
     unsigned int getQuantity() const { return _m_quantity; }
+
+    friend bool operator==(const TResourceReward& lhs, const TResourceReward& rhs)
+    {
+        return lhs._m_type == rhs._m_type && lhs._m_quantity == rhs._m_quantity;
+    }
 
 private:
     TGameResourceType _m_type;
@@ -134,18 +153,33 @@ public:
 
     TPrimarySkill getSkill() const { return _m_skill; }
 
+    friend bool operator==(const TPrimarySkillReward& lhs, const TPrimarySkillReward& rhs)
+    {
+        return static_cast< const TSimpleBonusReward<99>& >( lhs ) == rhs && lhs._m_skill == rhs._m_skill;
+    }
+
 private:
     TPrimarySkill _m_skill;
 };
 
 class TSeersHut::TSecondarySkillReward : public TSeersHut::TReward {
 public:
+    // The editor's mastery count, as in TSecondarySkillRecord.
+    enum {
+        kNumMasteries = 3
+    };
+
     TSecondarySkillReward(TSecondarySkill skill, TSkillMastery mastery);
 
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     TSecondarySkill getSkill() const { return _m_skill; }
     TSkillMastery getMastery() const { return _m_mastery; }
+
+    friend bool operator==(const TSecondarySkillReward& lhs, const TSecondarySkillReward& rhs)
+    {
+        return lhs._m_skill == rhs._m_skill && lhs._m_mastery == rhs._m_mastery;
+    }
 
 private:
     TSecondarySkill _m_skill;
@@ -160,6 +194,11 @@ public:
 
     TArtifact getArtifact() const { return _m_artifact; }
 
+    friend bool operator==(const TArtifactReward& lhs, const TArtifactReward& rhs)
+    {
+        return lhs._m_artifact == rhs._m_artifact;
+    }
+
 private:
     TArtifact _m_artifact;
 };
@@ -172,6 +211,11 @@ public:
 
     SpellID getSpell() const { return _m_spell; }
 
+    friend bool operator==(const TSpellReward& lhs, const TSpellReward& rhs)
+    {
+        return lhs._m_spell == rhs._m_spell;
+    }
+
 private:
     SpellID _m_spell;
 };
@@ -183,6 +227,11 @@ public:
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     const TCreatureStack& getCreatureStack() const { return _m_creatureStack; }
+
+    friend bool operator==(const TCreatureReward& lhs, const TCreatureReward& rhs)
+    {
+        return lhs._m_creatureStack == rhs._m_creatureStack;
+    }
 
 private:
     TCreatureStack _m_creatureStack;

@@ -12,7 +12,7 @@
 #include "artifact_type.h"
 #include "editor/GameObject.h"
 #include "editor/GameResource.h"
-#include "editor/ResourceQuantities.h"
+#include "editor/Array.h"
 
 class istream;
 class ostream;
@@ -21,8 +21,23 @@ class TRawOStream;
 
 class TMonster : public virtual TGameObject {
 public:
+    // The dispositions' names are not recorded; they follow the game's
+    // order (aggressive, 2, is the default).
     enum TDisposition {
+        eDispositionCompliant = 0,
+        eDispositionFriendly = 1,
+        eDispositionAggressive = 2,
+        eDispositionHostile = 3,
+        eDispositionSavage = 4
     };
+
+    enum {
+        s_kNumDispositions = 5
+    };
+
+    static const int s_kMaxQuantity = 4000;
+    static const unsigned int s_kMaxMessageLen = 300;
+    static const unsigned int s_kMaxResourceQuantity = 99999;
 
     TMonster(const TObjectType& objType);
     TMonster(const TObjectType& objType, TRawIStream* pIStream, int version);
@@ -31,7 +46,6 @@ public:
     virtual void write(TRawOStream* pOStream) const;
     virtual string getTypeName() const;
     virtual bool isCustomized() const;
-    virtual bool hasText() const;
     virtual void exportText(ostream* pOStream) const;
 
     TCreatureType getCreatureType() const { return TCreatureType(getExtra()); }
@@ -50,13 +64,15 @@ public:
     TArtifact getArtifact() const { return _m_artifact; }
     void setArtifact(TArtifact newArtifact);
 
+    virtual bool hasText() const { return !getMessage().empty(); }
+
 private:
     unsigned int _m_quantity;
     TDisposition _m_disposition;
     bool _m_bNeverFlees : 1;
     bool _m_bNeverGrows : 1;
     string _m_message;
-    TResourceQuantities _m_resourceQuantities;
+    TArray<unsigned int, kNumGameResourceTypes> _m_resourceQuantities;
     TArtifact _m_artifact;
 };
 
