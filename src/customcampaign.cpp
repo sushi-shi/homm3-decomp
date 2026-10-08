@@ -2092,6 +2092,12 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 // in readPackedBits reproduces every other decision near cb 650..710; the
 // copy loop's legacy dereference still differs. DC and Mac show no extra
 // accessor calls in this Complete-only reader.
+// 2026-10-06: with readPackedBits' own decode loop (84.44 -> 89.67) and the
+// option records assigned straight to m_options instead of through a
+// `record` local (-> 90.63), retail still keeps bitset<145>'s
+// reference::operator=, the hero-option constructor and both option-vector
+// constructors called, and calls vector<unsigned char>::insert(P, x) from
+// push_back: this body still has more /Ob2 budget than retail's.
 VA(0x00487e40, 0x586)
 MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
@@ -2165,19 +2171,15 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     }
 
     unsigned char optionType = readValue<unsigned char>(infile);
-    TCampaignStartOption* record;
     switch (optionType) {
     case CAMPAIGN_START_OPTION_BONUS:
-        record = new TCampaignStartBonusOption;
-        m_options = record;
+        m_options = new TCampaignStartBonusOption;
         break;
     case CAMPAIGN_START_OPTION_CROSSOVER:
-        record = new TCampaignStartCrossoverOption;
-        m_options = record;
+        m_options = new TCampaignStartCrossoverOption;
         break;
     case CAMPAIGN_START_OPTION_HERO:
-        record = new TCampaignStartHeroOption;
-        m_options = record;
+        m_options = new TCampaignStartHeroOption;
         break;
     default:
         m_options = 0;

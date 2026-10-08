@@ -6484,6 +6484,10 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // bitset::set spelling used by the scenario reader lowers this saved-header
 // reader from 90.8783% to 90.13% (84 to 83 exact CFG blocks); retail's
 // retained bitset<8>::_Xran call still does not appear. Keep the proxy form.
+// Mac 0xdc644..0xdc6f8 builds the availability from a two-temporary
+// conditional: the expanded packed read or a default bitset flipped by
+// operator~. An if/else with availability.set() reaches 96.40% but
+// contradicts that flip; the if/else with operator~ falls to 94.02%.
 VA(0x004c5630, 0x7CD)
 DC_ADDRESS(0x0b0754, 0x752)
 MAC_ADDRESS(0x0dbef4, 0x8b8)  // DC Load + saved-header callers + helper edges
