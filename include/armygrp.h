@@ -421,7 +421,7 @@ enum ESpellId {
 
     // UNGATED DELIBERATELY. armygrp.h reaches initialize.cpp's include
     // closure and a new enumerator is an input to the include-set class
-    // recorded on SSpellTraits below; the trade was authorised, is
+    // recorded on TSpellTraits below; the trade was authorised, is
     // recorded above initialize_game_data's baseline row, and the
     // ratchet keeps the peak in `hist` for a later lane to re-measure.
     SPELL_REMOVE_OBSTACLE = 0x40,
@@ -476,7 +476,7 @@ enum ESpellId {
     // animation over the target hex. NH3API's SPELL_DEATH_CLOUD at the
     // same value; the neighbours 0x4a/0x4b above and 0x4e below bracket
     // it. Canaries measured on admission (the ESpellId class is
-    // non-monotonic - see the SSpellTraits school note).
+    // non-monotonic - see the TSpellTraits school note).
     SPELL_DEATH_CLOUD = 0x4c,
     // 78, byte-proven by combatManager::ShowSpellMessage (0x5a8950).
     // Its creature-spell dispatch is a jump table over 0x2a..0x4e and
@@ -505,7 +505,7 @@ enum ESpellId {
 // by get_spell_work_chance's spell*17*8 indexing at 0x44a4e2): only
 // the fields that function reads are modeled; the full roster gets
 // its own header when spell work begins in earnest.
-struct SSpellTraits {
+struct TSpellTraits {
     int m_karma;              // <= 0 short-circuits to certain-work
     // DC TSpellTraits.m_sample (members.csv TSpellTraits@4) - the WAV
     // this spell plays. army::do_fire_shield (0x4409c0) is the witness:
@@ -566,7 +566,7 @@ struct SSpellTraits {
     // retail InitializeSpellTraits writes the shifted +0x78 row.
     const char* m_levelDescriptions[4];  // +0x78
 };
-SIZE(SSpellTraits, 132);
+SIZE(TSpellTraits, 132);
 
 // The spell table is reached through a stored pointer, exactly like
 // akCreatureTypeTraits: retail loads [0x687f58] before indexing.
@@ -575,7 +575,7 @@ SIZE(SSpellTraits, 132);
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
 // Loki exports the table pointer as akSpellTraits; Dreamcast types it as a
 // reference to the const 80-row array.
-extern const SSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects];
+extern const TSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects];
 
 bool SpellTargetsASingleArmy(int spell, int sslevel);
 

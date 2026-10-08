@@ -2770,7 +2770,7 @@ void type_AI_spellcaster::considerSpell(type_spell_choice& choice) const
         considerTeleport(choice);
         return;
     }
-    const SSpellTraits* traits = &g_spellTraits[choice.m_spell];
+    const TSpellTraits* traits = &g_spellTraits[choice.m_spell];
     if ((traits->m_flags & 0x70) == 0)
         return;
     if (traits->m_karma >= 0)

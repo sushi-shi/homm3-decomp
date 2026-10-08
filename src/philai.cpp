@@ -2532,7 +2532,7 @@ MAC_ADDRESS(0x141254, 0x158)
 long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
-    const SSpellTraits* traits = &g_spellTraits[spell];
+    const TSpellTraits* traits = &g_spellTraits[spell];
     unsigned char coversWholeArmy = !spellTargetsASingleArmy(spell, mastery);
     long totalDuration = m_duration * timesCastable;
     if (coversWholeArmy) {
@@ -2564,7 +2564,7 @@ DC_ADDRESS(0x10fa84, 0x1e6)
 MAC_ADDRESS(0x14145c, 0x1fc)
 long type_spellvalue::getRawSpellValue(SpellID spell) const
 {
-    const SSpellTraits* traits = &g_spellTraits[spell];
+    const TSpellTraits* traits = &g_spellTraits[spell];
     hero* caster = const_cast<hero*>(m_ourHero);
     int mastery = caster->getSpellLevel(spell);
     int cost = const_cast<hero*>(m_ourHero)->getManaCost(spell, 0, -1);

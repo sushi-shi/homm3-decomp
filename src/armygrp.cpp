@@ -397,7 +397,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     float chance;
     const TCreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
     unsigned int attrs = creatureRec->m_attributes;
-    const SSpellTraits* spellRec = &g_spellTraits[spell];
+    const TSpellTraits* spellRec = &g_spellTraits[spell];
     if (targetHero && spellRec->m_level <= 4
         && targetHero->isWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
         return 0.0f;  // Power of the Dragon Father

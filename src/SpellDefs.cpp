@@ -13,7 +13,7 @@
 // Karma, sound, battle effect and class flags are compiled in; sptraits.txt
 // fills the names, level, schools, costs, power, effects, town chances, AI
 // values and descriptions (InitializeSpellTraits).
-static SSpellTraits aSpellTraitsImp[kNumSpellsAndCreatureEffects] = {
+static TSpellTraits aSpellTraitsImp[kNumSpellsAndCreatureEffects] = {
     { 0, "SummBoat.wav", eSpellEffectNone, 0x80002 },
     { 0, "ScutBoat.wav", eSpellEffectNone, 0x2 },
     { 0, "Visions.wav", eSpellEffectNone, 0x2 },
@@ -96,7 +96,7 @@ static SSpellTraits aSpellTraitsImp[kNumSpellsAndCreatureEffects] = {
     { -1, "Deathstr.wav", eSpellEffectDeathStare, 0x18 },
 };
 
-const SSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects] = aSpellTraitsImp;
+const TSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects] = aSpellTraitsImp;
 
 namespace {
 
@@ -164,7 +164,7 @@ static void InitializeSpellTraits(int id, const vector<char*>& resource)
 #line 336
     assert(id >= 0 && id < kNumSpellsAndCreatureEffects);
     assert(resource.size() >= 32);
-    SSpellTraits* const traits = &aSpellTraitsImp[id];
+    TSpellTraits* const traits = &aSpellTraitsImp[id];
 
     static TAutoStrPtr names[kNumSpellsAndCreatureEffects];
     names[id].set(new char[strlen(resource[0]) + 1]);

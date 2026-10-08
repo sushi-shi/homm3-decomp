@@ -140,7 +140,7 @@ MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Com
 std::string TSpellbookWindow::getSpellDescription(
     SpellID spell, const hero* currentHero, unsigned char rollover)
 {
-    const SSpellTraits* traits = &g_spellTraits[spell];
+    const TSpellTraits* traits = &g_spellTraits[spell];
     std::string result;
     int mastery = 0;
     if (currentHero)
@@ -827,8 +827,8 @@ DC_ADDRESS(0x14d290, 0x90)
 MAC_ADDRESS(0x18d858, 0xa8)
 bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) const
 {
-    const SSpellTraits* traits = &g_spellTraits[m_id];
-    const SSpellTraits* yTraits = &g_spellTraits[y.m_id];
+    const TSpellTraits* traits = &g_spellTraits[m_id];
+    const TSpellTraits* yTraits = &g_spellTraits[y.m_id];
     if (traits->m_level < yTraits->m_level)
         return true;
     if (traits->m_level > yTraits->m_level)

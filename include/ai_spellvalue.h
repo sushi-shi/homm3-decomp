@@ -19,7 +19,7 @@
 class hero;
 
 // get_best_spell_value refuses to appraise any spell whose
-// SSpellTraits::level is above 2 while the caster wields artifact 0x53 -
+// TSpellTraits::level is above 2 while the caster wields artifact 0x53 -
 // i.e. the artifact that shuts level 3+ magic off. DC 83 is
 // eArtifactRecantersCloak and NH3API agrees; ai_combat.cpp reaches the
 // same identification from cast_spell and keeps its own TU-local
@@ -29,7 +29,7 @@ class hero;
 // measured decision.
 const int g_artifactRecantersCloak = 0x53;
 
-// SSpellTraits::field_c carries an AI VALUE-CLASS field in bits 15..20:
+// TSpellTraits::field_c carries an AI VALUE-CLASS field in bits 15..20:
 // get_raw_spell_value switches on `field_c & 0x1f8000` and dispatches one
 // appraisal per value.  The names are role-derived from the arm each
 // value selects (byte-proven at 0x5273d0); the values themselves are

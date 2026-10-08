@@ -160,7 +160,7 @@ DC_ADDRESS(0x021b84, 0x4d0)
 MAC_ADDRESS(0x01d364, 0x650)  // anchor-callee hero::find_summonable_boat + game::CreateBoat
 void advManager::summonBoat(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_SUMMON_BOAT];
+    const TSpellTraits& traits = g_spellTraits[SPELL_SUMMON_BOAT];
 
     hero* who = g_game->getCurrHero();
     if (who == 0)
@@ -264,7 +264,7 @@ DC_ADDRESS(0x022054, 0x206)
 MAC_ADDRESS(0x01d9b4, 0x310)  // anchor-vtable TSkuttleBoatWindow ctor/dtor
 void advManager::skuttleBoat(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_SCUTTLE_BOAT];
+    const TSpellTraits& traits = g_spellTraits[SPELL_SCUTTLE_BOAT];
 
     {
         TSkuttleBoatWindow skuttleWindow;
@@ -332,14 +332,13 @@ void advManager::skuttleBoat(TSkillMastery level)
 // with no out-of-line Flight anywhere in the image.
 // DC398 names GetCurrHero, DC414 the one-argument get_spell_level,
 // DC425..427 the scoped doorWin, and DC462 one-argument GetManaCost.
-// The traits reference and mastery parameter retain their recorded types;
-// TSpellTraits is the older source name for SSpellTraits.
+// The traits reference and mastery parameter retain their recorded types.
 VA(0x0041d090, 0x2C6)
 DC_ADDRESS(0x02225c, 0x2b4)
 MAC_ADDRESS(0x01dcc4, 0x404)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo
 void advManager::dimensionDoor(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_DIMENSION_DOOR];
+    const TSpellTraits& traits = g_spellTraits[SPELL_DIMENSION_DOOR];
     hero* who = g_game->getCurrHero();
     if (who->m_movePoints <= 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
@@ -443,7 +442,7 @@ DC_ADDRESS(0x022510, 0x3d6)
 MAC_ADDRESS(0x01e0c8, 0x6c0)  // anchor-vtable TTownGateWindow ctor/dtor
 void advManager::townGate(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_TOWN_PORTAL];
+    const TSpellTraits& traits = g_spellTraits[SPELL_TOWN_PORTAL];
     const int movementCost[4] = {300, 300, 300, 200};
     hero* who = g_game->getCurrHero();
 
@@ -561,7 +560,7 @@ DC_ADDRESS(0x0229c4, 0x7a)
 MAC_ADDRESS(0x01e8d0, 0x128)
 void advManager::waterWalk(TSkillMastery level)
 {
-    const SSpellTraits* traits = &g_spellTraits[SPELL_WATER_WALK];
+    const TSpellTraits* traits = &g_spellTraits[SPELL_WATER_WALK];
     hero* who = g_game->getCurrHero();
     if (who->canWalkOnWater(0))
         return;
@@ -595,7 +594,7 @@ DC_ADDRESS(0x022a9c, 0xec)
 MAC_ADDRESS(0x01eac0, 0x160)
 void advManager::flight(TSkillMastery level)
 {
-    const SSpellTraits* traits = &g_spellTraits[SPELL_FLY];
+    const TSpellTraits* traits = &g_spellTraits[SPELL_FLY];
     hero* who = g_game->getCurrHero();
     if (who->isFlying(0))
         return;

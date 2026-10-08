@@ -18,7 +18,7 @@
 #include "misc.h"
 #include "town.h"
 
-// The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
+// The mutually exclusive AI-dispatch family encoded in TSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five
 // values below; the sixth bit has no quick-combat implementation. Names are
 // behavior-derived and local to this TU. Kept as constants rather than a new
@@ -1247,7 +1247,7 @@ static void doEagleEye(hero* winner, hero* loser)
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;
-            const SSpellTraits& traits = g_spellTraits[spell];
+            const TSpellTraits& traits = g_spellTraits[spell];
             if (winner->getSecondarySkill(eSecSkillEagleEye) + 1
                 < traits.m_level)
                 continue;

@@ -14,7 +14,7 @@ inline bool IsMindSpell(int spell)
     return (akSpellTraits[spell].m_flags & 0x400) != 0;
 }
 
-// Spell-class flag roles in SSpellTraits::m_flags. Names are behavior-
+// Spell-class flag roles in TSpellTraits::m_flags. Names are behavior-
 // derived; values and mastery thresholds are byte-proven by
 // SpellTargetsASingleArmy.
 enum ESpellTargetFlags {

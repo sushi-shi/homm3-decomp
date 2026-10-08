@@ -20,7 +20,7 @@ DOMAIN_TYPES = (
 )
 RECORDS = (
     'TRandomMapRequest', 'TRmgTerrainPatternEntry', 'TRmgTerrainTransitionEntry',
-    'TAdvObjectNameRow', 'TCreatureTypeTraits', 'SSpellTraits', 'THeroTraits',
+    'TAdvObjectNameRow', 'TCreatureTypeTraits', 'TSpellTraits', 'THeroTraits',
     'TCombinationArtifact', 'TArtifactSlotMask',
 )
 CONSTRUCTED_RECORDS = frozenset(('TCombinationArtifact', 'TArtifactSlotMask'))

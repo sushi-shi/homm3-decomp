@@ -691,7 +691,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     hero* castingHero = isMonsterSpell == SPELL_CASTER_CREATURE
         ? 0 : m_heroes[m_currentSide];
     hero* const otherHero = m_heroes[otherSide];
-    const SSpellTraits* traits = &g_spellTraits[spellId];
+    const TSpellTraits* traits = &g_spellTraits[spellId];
 
     TSkillMastery mastery;
     if (!isMonsterSpell) {
@@ -1718,7 +1718,7 @@ MAC_ADDRESS(0x192f34, 0x304)
 std::string combatManager::getFailureReason(ESpellId spell, const char* msg,
                                               long hex)
 {
-    const SSpellTraits* spellTraits = &g_spellTraits[spell];
+    const TSpellTraits* spellTraits = &g_spellTraits[spell];
     if (spellTraits->m_flags & 0x70) {
         if (!validHex(hex))
             return msg;
@@ -2425,7 +2425,7 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
 {
     if (!validHex(targetIndex))
         return 0;
-    const SSpellTraits& traits = g_spellTraits[spellId];
+    const TSpellTraits& traits = g_spellTraits[spellId];
     if (traits.m_flags & 0x20070) {
         army* target = findSpellTarget(spellId, castingSide, targetIndex,
                                          firstTarget, creatureSpell);
@@ -3010,7 +3010,7 @@ DC_ADDRESS(0x153d2c, 0x588)
 MAC_ADDRESS(0x195640, 0x6e0)  // order-map+arity
 void combatManager::armageddon(int level, int power)
 {
-    const SSpellTraits& spellTraits = g_spellTraits[SPELL_ARMAGEDDON];
+    const TSpellTraits& spellTraits = g_spellTraits[SPELL_ARMAGEDDON];
     unsigned char damageDone;
     int i;
     clearEffects();
@@ -4829,7 +4829,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
     const hero* const castingHero = m_heroes[side];
     hero* targetHero = target->getController();
     TCreatureType creature = target->m_creatureType;
-    const SSpellTraits* traits = &g_spellTraits[spell];
+    const TSpellTraits* traits = &g_spellTraits[spell];
 
     if (m_magicTerrain == MAGIC_TERRAIN_CURSED_GROUND && traits->m_level > 1)
         return 0.0f;

@@ -5203,7 +5203,7 @@ int army::getMagicMirrorChance() const
     if (getSpellTime(36) > 0)
         effect = m_backlashChance;
     if (m_creatureType == CREATURE_FAERIE_DRAGON) {
-        const SSpellTraits* mirrorTraits =
+        const TSpellTraits* mirrorTraits =
             &g_spellTraits[SPELL_MAGIC_MIRROR];
         int current = effect;
         int innate = mirrorTraits->m_masteryBonus[0];
