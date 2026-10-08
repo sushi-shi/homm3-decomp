@@ -49,16 +49,16 @@ Excluded from the scores (generated or library code):
 
 <!-- loki-match-score:start -->
 
-**Loki Linux `h3maped` 1.0 (map editor, GCC 2.95.2): 5,762 / 7,432 functions exact (77.53%) &middot; 79.84% fuzzy (MAX).**
+**Loki Linux `h3maped` 1.0 (map editor, GCC 2.95.2): 6,523 / 7,432 functions exact (87.77%) &middot; 87.36% fuzzy (MAX).**
 
 A separate image with its own scores; `homm3 loki build --bank` banks `config/loki/match_baseline.tsv`, and this block renders from it.
 
 | Phase | Objects | Functions exact MAX | Fuzzy MAX |
 | :---- | ------: | ------------------: | --------: |
 | engine (shared with the game) | 29 | 1,001 / 1,001 (100.0%) | 100.00% |
-| editor | 74 | 4,761 / 6,431 (74.0%) | 75.91% |
+| editor | 74 | 5,522 / 6,431 (85.9%) | 84.90% |
 
-_CUR / MAX / HIST: 5,762 / 5,762 / 5,762 exact &middot; 79.84% / 79.84% / 79.84% fuzzy, weighted by size. Project functions only: the 3,120 `.text` functions and 4,312 kept linkonce bodies of the 103 GCC 2.95.2 project objects (94 built units); GTK+/glib/libglade/libxml/zlib and libstdc++ are excluded._
+_CUR / MAX / HIST: 6,523 / 6,523 / 6,523 exact &middot; 87.36% / 87.36% / 87.36% fuzzy, weighted by size. Project functions only: the 3,120 `.text` functions and 4,312 kept linkonce bodies of the 103 GCC 2.95.2 project objects (96 built units); GTK+/glib/libglade/libxml/zlib and libstdc++ are excluded._
 
 <!-- loki-match-score:end -->
 
