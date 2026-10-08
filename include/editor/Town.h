@@ -18,6 +18,7 @@
 #include "editor/Array.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/TimedEvent.h"
+#include "town_type.h"
 
 class THero;
 
@@ -48,6 +49,8 @@ public:
     virtual TLinkableObject* getPContainedObject();
     virtual const TLinkableObject* getPContainedObject() const;
 
+    // The faction: the object type's subtype for a town (0x4c2a24).
+    TTownType getTownType() const;
     const std::string& getName() const { return _m_name; }
     const TArmy& getGarrison() const { return _m_garrison; }
     THero* getPVisitingHero() { return _m_pVisitingHero; }

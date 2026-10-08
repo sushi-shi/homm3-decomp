@@ -87,6 +87,8 @@ public:
 
     void setBHumanPlayable(bool bPlayable) { _m_bHumanPlayable = bPlayable; }
     void setBComputerPlayable(bool bPlayable) { _m_bComputerPlayable = bPlayable; }
+    // No main town, and so no hero generated at it (0x4942db).
+    void clearMainTown();
 
     bool getBPresent() const { return _m_bHumanPlayable || _m_bComputerPlayable; }
     bool getBHumanPlayable() const { return _m_bHumanPlayable; }
@@ -283,6 +285,8 @@ public:
     void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
     void removeFloatingObject(bool bSecondLayer);
+    // The quest location's quest is gone (its props dialog, 0x4994c6).
+    void clearQuest(const TMapObjectRef& questLocationRef);
     void removeSecondLayer();
     void addSecondLayer();
     bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,

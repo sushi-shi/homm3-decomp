@@ -9,10 +9,12 @@
 #ifndef HOMM3_EDITOR_OBJECTSPECIALIZATIONS_H
 #define HOMM3_EDITOR_OBJECTSPECIALIZATIONS_H
 
+#include <bitset>
 #include <string>
 
 #include "editor/GameObject.h"
 #include "editor/Player.h"
+#include "town_type.h"
 
 class TRawIStream;
 
@@ -70,6 +72,25 @@ public:
 
 private:
     TPlayer _m_owner;
+};
+
+// A random dwelling whose alignment follows a town or a set of town types
+// (RTTI TAbstractRandomlyAlignedGenerator: its vtable, vbptr, the town's
+// link id, then the alignments; 16 bytes before TRandomlyAlignedGenerator's
+// TFlaggableObject). Its two pure virtuals yield the flaggable part (the
+// derived dwellings return their TFlaggableObject, 0x43e774). Removing a
+// random town unlinks the dwellings that named it (h3maped 0x427fbe).
+class TAbstractRandomlyAlignedGenerator : public virtual TGameObject {
+public:
+    virtual TFlaggableObject* getPFlaggableObject() = 0;
+    virtual const TFlaggableObject* getPFlaggableObject() const = 0;
+
+    unsigned int getTownLinkID() const { return _m_townLinkID; }
+    void setTownLinkID(unsigned int townLinkID) { _m_townLinkID = townLinkID; }
+
+private:
+    unsigned int _m_townLinkID;
+    std::bitset<kNumTownTypes> _m_alignments;
 };
 
 // The Grail's site: it may not lie within nine cells of the map's edge

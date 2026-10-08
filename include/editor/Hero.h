@@ -18,10 +18,12 @@
 
 #include "armygrp.h"
 #include "artifact.h"
+#include "heroclass.h"
 #include "herospec.h"
 #include "objecttype.h"
 #include "primaryskill.h"
 #include "town_type.h"
+#include "editor/Army.h"
 #include "editor/Array.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/Player.h"
@@ -137,9 +139,24 @@ private:
     THeroID _m_heroID;
 };
 
-// A hero on the map: linkable (+0) and a basic hero (+0xc).
+// A hero on the map: linkable (+0) and a basic hero (+0xc), then what a
+// map may customize (0x110 bytes before the vtordisp). The copy
+// constructor 0x440a2b copies the members in this order. The stream
+// constructor 0x44b09a reads each customization flag before its member:
+// the first eight flags fill byte +0x18 in declaration order and the
+// experience flag, added last, opens byte +0x19.
 class THero : public TLinkableObject, public TBasicHero {
 public:
+    // One row per hero (16 bytes): the game's definition, the class, the
+    // game versions that have the hero (indexed by the map's version,
+    // 0x42373b) and whether the hero is a special one.
+    struct TTraits {
+        THeroPrototype m_prototype;
+        THeroClass m_class;
+        std::bitset<3> m_gameVersions;
+        bool m_bSpecial;
+    };
+
     struct TClassTraits {
         TClassTraits(const TObjectType& objType, TTownType townType)
             : m_objType(objType), m_townType(townType), m_name(NULL) {}
@@ -150,8 +167,57 @@ public:
         std::set<int> m_heroes;
     };
 
+    // h3maped 0x5857d4: points at the 156 hero rows (one per THeroID).
+    static TTraits* s_akTraits;
     // h3maped 0x5857d8: points at the eighteen rows (one per THeroClass).
     static TClassTraits* s_akClassTraits;
+
+private:
+    bool _m_bCustomName : 1;
+    bool _m_bCustomPortrait : 1;
+    bool _m_bCustomSecondarySkills : 1;
+    bool _m_bCustomArmy : 1;
+    bool _m_bCustomArtifacts : 1;
+    bool _m_bCustomBiography : 1;
+    bool _m_bCustomSpells : 1;
+    bool _m_bCustomPrimarySkills : 1;
+    bool _m_bCustomExperience : 1;
+    std::string _m_name;
+    int _m_portrait;
+    THeroPrototype::TSecondarySkills _m_secondarySkills;
+    TArmy _m_army;
+    THeroPrototype::TArtifactContainer _m_artifacts;
+    std::string _m_biography;
+    std::bitset<kNumSpells> _m_spells;
+    TArray<int, kNumPrimarySkills> _m_aPrimarySkill;
+    int _m_experience;
+    bool _m_bGroupedFormation;
+    int _m_patrolRadius;
+    int _m_sex;
+};
+
+// A hero of the map's choosing (RTTI TRandomHero).
+class TRandomHero : public THero {
+};
+
+// A specific hero (RTTI TIdentifiedHero; its basic hero's slot 0 answers
+// the id at +0x110, 0x44c03e).
+class TIdentifiedHero : public THero {
+public:
+    virtual THeroID getHeroID() const { return _m_heroID; }
+
+    THeroClass getHeroClass() const { return s_akTraits[_m_heroID].m_class; }
+
+private:
+    THeroID _m_heroID;
+};
+
+// A specific hero walking the map (RTTI TNonRandomHero).
+class TNonRandomHero : public TIdentifiedHero {
+};
+
+// A specific hero held in a prison (RTTI TPrison).
+class TPrison : public TIdentifiedHero {
 };
 
 #endif  /* HOMM3_EDITOR_HERO_H */
