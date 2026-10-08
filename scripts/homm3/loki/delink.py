@@ -277,6 +277,12 @@ def pair_statics(base: list[CodeSection], target: list[CodeSection]) -> list[str
     return unpaired
 
 
+def _is_unnamed_data(name: str) -> bool:
+    """An image address with no name (`data_<8 hex digits>`), not a symbol
+    that merely starts with data_ (`data__Ct12basic_string...`)."""
+    return len(name) == 13 and name.startswith("data_") and all(c in "0123456789abcdef" for c in name[5:])
+
+
 def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, tuple[str, int]]:
     """Name the retail object's file-static data after the compiled object's.
 
@@ -305,13 +311,13 @@ def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, t
         pairs = list(zip(compiled, retail))
         # Compare canonical names: anonymous-namespace symbols differ in
         # their random suffix until cmpobj folds them.
-        if any(not t.target.startswith("data_")
+        if any(not _is_unnamed_data(t.target)
                and (cmpobj.canonical_symbol(c.target), c.addend)
                != (cmpobj.canonical_symbol(t.target), t.addend)
                for c, t in pairs):
             continue
         for c, t in pairs:
-            if t.target.startswith("data_"):
+            if _is_unnamed_data(t.target):
                 address = int(t.target[5:], 16) + t.addend
                 votes.setdefault(f"data_{address:08x}", set()).add((c.target, c.addend))
     mapping = {name: next(iter(found)) for name, found in votes.items() if len(found) == 1}
@@ -319,7 +325,7 @@ def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, t
     mapping = {name: found for name, found in mapping.items() if counterparts.count(found) == 1}
     for section in target:
         for reloc in section.relocs:
-            if reloc.target.startswith("data_"):
+            if _is_unnamed_data(reloc.target):
                 address = int(reloc.target[5:], 16) + reloc.addend
                 found = mapping.get(f"data_{address:08x}")
                 if found is not None:
