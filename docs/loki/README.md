@@ -176,3 +176,12 @@ const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
   one slot each (`loadTilesets`).
 - An address-taken table of string pointers in `.rodata` is compared by the
   strings its entries point to (`$t<n>[...]#digest`), on both sides.
+- An inline function keeps its parameters in registers. At `-O0` GCC 2.95
+  homes every parameter in its stack slot (`obey_regdecls`) unless the
+  function is `DECL_INLINE`, so the linkonce bodies of inline members and
+  inline templates load `this` and their arguments into `%ebx/%esi/%edi`
+  once (`writeFromIter`, `readToIter`, `writeContainer`, `TArray::end`,
+  the raw stream member templates), while out-of-line functions reload
+  them from `8(%ebp)`. A helper whose parameters live in registers was
+  declared `inline`; a non-inline spelling of it never matches. Locals
+  stay on the stack either way.
