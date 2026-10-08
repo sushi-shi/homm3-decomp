@@ -9,13 +9,13 @@
 #include "editor/cppbridge.h"
 #include "editor/TownPropsBuildingsPage.h"
 
-namespace {
+// The state flags in the high word of a tree row's data (16-bit constants
+// at the end of the object's .rodata).
+const unsigned short kBuiltFlag = 1;
+const unsigned short kDisabledFlag = 2;
+const unsigned short kGrayedFlag = 4;
 
-enum {
-    kBuiltFlag = 1,
-    kDisabledFlag = 2,
-    kGrayedFlag = 4
-};
+namespace {
 
 void demolishDependentBuildings(const TTown::TBuildingTraits (&akBuildingTraits)[kNumBuildings],
                                 TBuilding baseBuilding, TArray<TTown::TBuildingState, kNumBuildings>* pBuildingStates)
