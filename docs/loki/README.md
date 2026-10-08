@@ -293,7 +293,37 @@ Applied:
   assemble_start_function and output_constant_def_contents, configured
   i686-pc-linux-gnu with the gas alignment features) produces the same
   objects and logs the queue, the instantiations, the passes and every
-  string constant.
+  string constant. Configure does not detect the alignment features with
+  the staged tools: define `HAVE_GAS_MAX_SKIP_P2ALIGN` and
+  `HAVE_GAS_BALIGN_AND_P2ALIGN` in `gcc/auto-host.h` before `make cc1plus`,
+  or labels lose their `.p2align 4,,7` and the objects differ. Logging the
+  return-value state at `finish_function` (decl.c, next to
+  `no_return_label`) shows which bodies get the two extra jumps.
+- Non-inline templates (SGI's `lexicographical_compare`, the allocator's
+  `_S_chunk_alloc`) are instantiated at the end of the file in first-use
+  order, after the last out-of-line body: their code takes the return state
+  that body left (GzBuf's 100- and 132-byte `lexicographical_compare` slots
+  need `underflow` last, so `_mustGetC`/`_mustGetLong` are `inline` members
+  defined before `_getC`; they still come out strong in `.text`, queued at
+  their definition, with `this` reloaded from the frame).
+- A class template's static member functions are instantiated at the end
+  of the file; an explicit specialization's in-class bodies are queued where
+  it is parsed. `TDigits<9>` ends the recursion with `N < 10 ? 1 : ...`,
+  not a specialization.
+- The first header that parses `<vector>` (its range-error helper builds a
+  `string`) instantiates the string and allocator helpers; units place
+  `<vector>`, `<memory>`, `terrain.h` (bitset<10> tables) and their own
+  header relative to it as the image's first-use order shows (FindDlg,
+  RiverPlacement, RoadPlacement, TerrainPlacement, Colors, cppbridge).
+- An implicit member is synthesized at the end of the file; a user-declared
+  in-class one is queued with the class's bodies (`TRumor()`, the GUI
+  specialized objects' inline virtual destructors, written between `edit`
+  and `clone` as the vtable instantiates them).
+- Line directives order a class's parts: `_TImpl::getNextObjectID`'s assert
+  (line 5375) precedes `_TObjectLink`'s (5435 on), so TLayer::_TImpl
+  declares its interface before its nested classes; TCell likewise defines
+  its shared vector holders after its accessors, and TPlayerInfo and TCell
+  declare their setters before their getters.
 - exceptions.h's never-called `TRuntimeError()` (`runtime_error(string())`)
   is inferred from rule 6: every includer queues `allocator<char>()`, the
   `__default_alloc_template::allocate` chain, `~basic_string` and
