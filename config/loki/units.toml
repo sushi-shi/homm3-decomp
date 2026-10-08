@@ -103,3 +103,8 @@ source = "src/editor/T16bppPalette.cpp"
 name = "Bitmap8"
 object = 41
 source = "src/Bitmap8.cpp"
+
+[[unit]]
+name = "GameResource"
+object = 14
+source = "src/editor/GameResource.cpp"
