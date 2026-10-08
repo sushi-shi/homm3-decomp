@@ -201,15 +201,18 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
     return DESTINATION
 
 
-def driver_command(*arguments: str) -> list[str]:
-    """argv for the g++ driver; spawned tools resolve through the wrapper -B prefix.
+def driver_command(*arguments: str, driver: str = "g++") -> list[str]:
+    """argv for the g++ (or gcc) driver; spawned tools resolve through the wrapper -B prefix.
+
+    The g++ driver compiles a .c file as C++; Loki's C objects (Glade's
+    main.c and support.c) need the gcc driver, which runs cc1.
 
     The 2.95 driver prepends each -B prefix, so the last one is searched first:
     the wrappers must follow the gcc-lib directory that holds specs and crt files.
     """
     gcc_lib = _gcc_lib()
     return [str(LOADER), "--library-path", f"{SYSROOT}/lib:{SYSROOT}/usr/lib",
-            str(SYSROOT / "usr/bin/g++"), f"-B{gcc_lib}/", f"-B{WRAPPERS}/",
+            str(SYSROOT / "usr/bin" / driver), f"-B{gcc_lib}/", f"-B{WRAPPERS}/",
             "-nostdinc", "-nostdinc++",
             "-isystem", str(SGI_STL),
             "-isystem", str(SYSROOT / "usr/include/g++-3"),

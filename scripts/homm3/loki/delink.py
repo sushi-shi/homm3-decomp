@@ -67,7 +67,15 @@ class Target:
     def function_name(self, address: int) -> tuple[str, int] | None:
         owner = self.image.function_at(address)
         if owner is not None and owner.address in self.functions:
-            return _symbol_name(self.functions[owner.address]), address - owner.address
+            name = _symbol_name(self.functions[owner.address])
+            if owner.address == address and name.startswith("_") and self.functions[owner.address].obj < 0:
+                # A C library entry exported under its internal and public
+                # names (libc_nonshared's __stat and stat): source calls
+                # the public alias.
+                public = name.lstrip("_")
+                if any(s.name == public for s in self.image.exported.get(address, ())):
+                    name = public
+            return name, address - owner.address
         return None
 
     def name(self, value: int, field: cmpobj.Field, function: CensusFunction, tables: list[int]) -> tuple[str, int] | None:

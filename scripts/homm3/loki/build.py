@@ -33,6 +33,7 @@ class Unit:
     obj: int
     source: Path
     flags: tuple[str, ...]
+    driver: str = "g++"
 
 
 def manifest() -> dict:
@@ -47,7 +48,8 @@ def units(selected: list[str] | None = None) -> list[Unit]:
         profile = spec["profiles"][row.get("profile", "editor")]
         flags = (*profile["flags"], *(f"-D{d}" for d in profile.get("defines", ())),
                  *(("-include", str(ROOT / profile["prefix"])) if "prefix" in profile else ()))
-        out.append(Unit(row["name"], row["object"], ROOT / row["source"], flags))
+        out.append(Unit(row["name"], row["object"], ROOT / row["source"], flags,
+                        profile.get("driver", "g++")))
     if selected:
         known = {u.name for u in out}
         missing = [name for name in selected if name not in known]
@@ -72,7 +74,8 @@ def compile_unit(unit: Unit) -> tuple[Path, str | None]:
     out.parent.mkdir(parents=True, exist_ok=True)
     # Loki compiled each file from its own directory: every __FILE__ (assert
     # text, TRuntimeError sites) is a bare name such as "GzBuf.cpp".
-    command = toolchain.driver_command("-c", *unit.flags, *include_flags(), unit.source.name, "-o", str(out))
+    command = toolchain.driver_command("-c", *unit.flags, *include_flags(), unit.source.name, "-o", str(out),
+                                       driver=unit.driver)
     completed = subprocess.run(command, env=toolchain.environment(), capture_output=True, text=True,
                                cwd=unit.source.parent)
     (OUT / "obj" / f"{unit.name}.log").write_text(completed.stdout + completed.stderr)
