@@ -689,23 +689,6 @@ static void __fastcall assignRmgTeams(
     const unsigned char* players,
     char* teams);
 
-// The Dreamcast build has no RMG compiland. Complete's two expanded instances
-// retain bitset<156>::set and bitset<128>::set while consuming the disabled-byte
-// range through the project's canonical bitset iterator.
-// Invert the disabled-byte range through the shared bitset iterator without
-// an inline-depth pin. The Complete-only wrapper name is inferred; the proxy
-// expansion still differs from retail's retained bitset::set call boundary.
-template <unsigned int N>
-static void setAvailableRmgHeroes(
-    std::bitset<N>* availableHeroes,
-    unsigned char* heroFlag,
-    unsigned char* end)
-{
-    std::transform(heroFlag, end,
-        bitset_iterator<N>(*availableHeroes, 0),
-        std::logical_not<unsigned char>());
-}
-
 // Vtable 0x6409cc slot 0 and the 0x18-byte concrete map layout identify this
 // scalar deleting wrapper. Its non-deleting half destroys the owned array of
 // 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
@@ -10431,13 +10414,13 @@ static const int g_rmgArtifactVialOfDragonBlood = 127;
 // are all read directly from retail's stream-write CFG.  The Dreamcast port
 // has no RMG compiland, so the method spelling remains provisional while its
 // class offsets and serialization order are retail-byte facts.
-// Typed scalar/string writes, shared bit encoding and hero-flag transform
-// plus dimension queries and natural player/byte lifetimes recover 95.6721%
-// without the old hero-set inline-depth pin. All 164 branch destinations
-// align; 157 blocks also have matching instruction counts. Dimension queries
-// restore the pre-c_str width/level loads, and the final hero loop owns a
-// fresh zero byte for each write. Stack homes, bit-proxy call boundaries and
-// exception expansions remain.
+// Typed scalar/string writes, shared bit encoding and dimension queries
+// restore the pre-c_str width/level loads. The hero-flag inversion is an
+// std::transform in this body, as Mac 0x24f2c8 expands it here; a separate
+// wrapper and the open-coded final zero writes starve the artifact copy's
+// retained test/set boundary (93.48%). With them inline 97.44%: the 156-bit
+// hero encoder still expands test where retail calls _Xran, and the 70/28-
+// bit encoders' range-error strings expand differently; stack homes remain.
 VA(0x00549CB0, 0xE90)
 MAC_ADDRESS(0x24e7d4, 0x11ac)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
@@ -10668,8 +10651,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
         m_humanTeamCount = max(m_humanTeamCount, 1);
         m_computerTeamCount = max(m_computerTeamCount, 1);
-        m_humanTeamCount = min(m_humanPlayerCount, m_humanTeamCount);
-        m_computerTeamCount = min(m_computerPlayerCount, m_computerTeamCount);
+        m_humanTeamCount = min(m_humanTeamCount, m_humanPlayerCount);
+        m_computerTeamCount = min(m_computerTeamCount, m_computerPlayerCount);
 
         assignRmgTeams(
             m_humanTeamCount,
@@ -10690,14 +10673,16 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
 
     if (m_mapVersion >= 1) {
         std::bitset<RMG_HERO_COUNT> availableHeroes;
-        setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + RMG_HERO_COUNT);
+        std::transform(m_disabledHeroes, m_disabledHeroes + RMG_HERO_COUNT,
+            bitset_iterator<RMG_HERO_COUNT>(availableHeroes, 0),
+            std::logical_not<unsigned char>());
 
         writePackedBits(outfile, availableHeroes);
     } else {
         std::bitset<128> availableHeroes;
-        setAvailableRmgHeroes(
-            &availableHeroes, m_disabledHeroes, m_disabledHeroes + 128);
+        std::transform(m_disabledHeroes, m_disabledHeroes + 128,
+            bitset_iterator<128>(availableHeroes, 0),
+            std::logical_not<unsigned char>());
 
         writePackedBits(outfile, availableHeroes);
     }
@@ -10742,10 +10727,8 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
         std::bitset<kNumSecSkills> disabledSkills;
         writePackedBits(outfile, disabledSkills);
 
-        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero) {
-            char byteBuffer = 0;
-            outfile->write(&byteBuffer, sizeof(byteBuffer));
-        }
+        for (int hero = 0; hero < RMG_HERO_COUNT; ++hero)
+            writeValue<char>(outfile, 0);
     }
 }
 
