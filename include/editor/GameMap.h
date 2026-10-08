@@ -532,6 +532,39 @@ private:
 
 class TGameMap::TLayer::TCell {
 public:
+    TCell()
+        : _m_terrainType(eTerrainWater), _m_riverType(0), _m_roadType(0), _m_tileNum(0),
+          _m_riverTileNum(0), _m_roadTileNum(0), _m_bHFlipped(false), _m_bVFlipped(false),
+          _m_bRiverHFlipped(false), _m_bRiverVFlipped(false), _m_bRoadHFlipped(false),
+          _m_bRoadVFlipped(false) {}
+
+    TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
+    void setTerrainType(TTerrainType newTerrainType);
+    unsigned int getTileNum() const { return _m_tileNum; }
+    void setTileNum(unsigned int newTileNum);
+    bool getBHFlipped() const { return _m_bHFlipped; }
+    void setBHFlipped(bool bFlipped) { _m_bHFlipped = bFlipped; }
+    bool getBVFlipped() const { return _m_bVFlipped; }
+    void setBVFlipped(bool bFlipped) { _m_bVFlipped = bFlipped; }
+
+    TRiverType getRiverType() const { return TRiverType(_m_riverType); }
+    void setRiverType(TRiverType newRiverType);
+    unsigned int getRiverTileNum() const { return _m_riverTileNum; }
+    void setRiverTileNum(unsigned int newTileNum);
+    bool getBRiverHFlipped() const { return _m_bRiverHFlipped; }
+    void setBRiverHFlipped(bool bFlipped) { _m_bRiverHFlipped = bFlipped; }
+    bool getBRiverVFlipped() const { return _m_bRiverVFlipped; }
+    void setBRiverVFlipped(bool bFlipped) { _m_bRiverVFlipped = bFlipped; }
+
+    TRoadType getRoadType() const { return TRoadType(_m_roadType); }
+    void setRoadType(TRoadType newRoadType);
+    unsigned int getRoadTileNum() const { return _m_roadTileNum; }
+    void setRoadTileNum(unsigned int newTileNum);
+    bool getBRoadHFlipped() const { return _m_bRoadHFlipped; }
+    void setBRoadHFlipped(bool bFlipped) { _m_bRoadHFlipped = bFlipped; }
+    bool getBRoadVFlipped() const { return _m_bRoadVFlipped; }
+    void setBRoadVFlipped(bool bFlipped) { _m_bRoadVFlipped = bFlipped; }
+
 // A lazily created, shared and copy-on-write _TObjectCellInfo vector.
 class _TPObjectCellInfoList {
 public:
@@ -666,39 +699,6 @@ private:
 
     _TWrapper* _m_pWrapper;
 };
-
-    TCell()
-        : _m_terrainType(eTerrainWater), _m_riverType(0), _m_roadType(0), _m_tileNum(0),
-          _m_riverTileNum(0), _m_roadTileNum(0), _m_bHFlipped(false), _m_bVFlipped(false),
-          _m_bRiverHFlipped(false), _m_bRiverVFlipped(false), _m_bRoadHFlipped(false),
-          _m_bRoadVFlipped(false) {}
-
-    TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
-    void setTerrainType(TTerrainType newTerrainType);
-    unsigned int getTileNum() const { return _m_tileNum; }
-    void setTileNum(unsigned int newTileNum);
-    bool getBHFlipped() const { return _m_bHFlipped; }
-    void setBHFlipped(bool bFlipped) { _m_bHFlipped = bFlipped; }
-    bool getBVFlipped() const { return _m_bVFlipped; }
-    void setBVFlipped(bool bFlipped) { _m_bVFlipped = bFlipped; }
-
-    TRiverType getRiverType() const { return TRiverType(_m_riverType); }
-    void setRiverType(TRiverType newRiverType);
-    unsigned int getRiverTileNum() const { return _m_riverTileNum; }
-    void setRiverTileNum(unsigned int newTileNum);
-    bool getBRiverHFlipped() const { return _m_bRiverHFlipped; }
-    void setBRiverHFlipped(bool bFlipped) { _m_bRiverHFlipped = bFlipped; }
-    bool getBRiverVFlipped() const { return _m_bRiverVFlipped; }
-    void setBRiverVFlipped(bool bFlipped) { _m_bRiverVFlipped = bFlipped; }
-
-    TRoadType getRoadType() const { return TRoadType(_m_roadType); }
-    void setRoadType(TRoadType newRoadType);
-    unsigned int getRoadTileNum() const { return _m_roadTileNum; }
-    void setRoadTileNum(unsigned int newTileNum);
-    bool getBRoadHFlipped() const { return _m_bRoadHFlipped; }
-    void setBRoadHFlipped(bool bFlipped) { _m_bRoadHFlipped = bFlipped; }
-    bool getBRoadVFlipped() const { return _m_bRoadVFlipped; }
-    void setBRoadVFlipped(bool bFlipped) { _m_bRoadVFlipped = bFlipped; }
 
 private:
     unsigned int _m_terrainType : 4;
