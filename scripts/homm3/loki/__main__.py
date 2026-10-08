@@ -8,9 +8,10 @@
         regenerate (or check) config/retail/h3maped-loki/{objects,functions}.tsv
   build [UNIT ...] [-v] [-j N] [--bank]
         compile units from config/loki/units.toml, delink their retail objects,
-        canonicalize both and score them with objdiff (never the game ledger);
-        --bank records the built units in config/loki/match_baseline.tsv and
-        refreshes the README Loki block
+        canonicalize both and score them with objdiff (never the game ledger),
+        then compare their data with the image slices (homm3.loki.datacmp);
+        --bank records the built units' functions and data bytes in
+        config/loki/match_baseline.tsv and refreshes the README Loki block
   disasm SELECTOR
         disassemble a retail function by address or mangled-name substring,
         with its references named as in the comparison object

@@ -17,7 +17,7 @@ import subprocess
 import tomllib
 
 from homm3.core import common
-from homm3.loki import delink, ledger, objwriter, toolchain
+from homm3.loki import datacmp, delink, ledger, objwriter, toolchain
 from homm3.loki.image import IMAGE, LokiImage
 
 ROOT = common.HOMM3_DIR
@@ -138,9 +138,9 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False,
         ready.append(unit.name)
         built[unit.name] = (unit, target, ledger.fingerprints(base))
     objdiff_config([u.name for u in chosen], set(ready))
-    data = report()
+    report_data = report()
     total_exact = total = 0
-    for row in data.get("units", []):
+    for row in report_data.get("units", []):
         measures = row.get("measures", {})
         functions = row.get("functions", [])
         exact = sum(1 for f in functions if f.get("fuzzy_match_percent", 0) >= 100)
@@ -153,16 +153,38 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False,
                 name = function.get("metadata", {}).get("demangled_name") or function["name"]
                 print(f"         {function.get('fuzzy_match_percent', 0):6.2f}  {name}")
     print(f"[loki] {total_exact}/{total} retail functions exact across {len(chosen)} units")
+    data = compare_data(set(built), image, verbose)
     if bank:
         rows = ledger.load()
-        for report_unit in data.get("units", []):
+        for report_unit in report_data.get("units", []):
             if report_unit["name"] not in built:
                 continue
             unit, target, prints = built[report_unit["name"]]
             scores = {f["name"]: f.get("fuzzy_match_percent", 0.0) for f in report_unit.get("functions", [])}
             ledger.bank(rows, unit.name, unit.obj, target, scores, prints)
+        for result in data:
+            ledger.bank_data(rows, result.unit, result.obj, result.matched, result.total, result.fingerprint)
         ledger.save(rows)
         changed = ledger.write_readme(rows)
         print(f"[loki] banked {len(built)} units into {ledger.LEDGER.relative_to(ROOT)}"
               + ("; README Loki block refreshed" if changed else ""))
     return 0
+
+
+def compare_data(selected: set[str], image: LokiImage, verbose: bool = False) -> list[datacmp.UnitData]:
+    """Data bytes of the selected units against their image slices. Every
+    unit's last compiled object takes part in the layout (linkonce
+    ownership, slice ends), built in this run or not."""
+    objects = {u.name: (u.obj, OUT / "obj" / f"{u.name}.o") for u in units()}
+    results = datacmp.run(objects, selected, image)
+    for result in results:
+        if result.matched < result.total or verbose:
+            print(f"[loki] {result.unit:14} data {result.matched}/{result.total} bytes"
+                  + (f"  ({'; '.join(result.notes)})" if result.notes and verbose else ""))
+        if verbose:
+            for item in result.differing():
+                print(f"         {item.matched:6}/{item.total:<6} {item.name}")
+    matched = sum(r.matched for r in results)
+    total = sum(r.total for r in results)
+    print(f"[loki] {matched}/{total} data bytes match across {len(results)} units")
+    return results

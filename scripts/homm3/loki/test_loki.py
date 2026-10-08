@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.loki import cmpobj, delink, objwriter, toolchain
+from homm3.loki import cmpobj, datacmp, delink, ledger, objwriter, toolchain
 from homm3.loki.cmpobj import CodeSection, Function
 from homm3.loki.elf import R_386_32, R_386_PC32, SHT_REL, SHT_SYMTAB, Elf
 
@@ -98,6 +98,36 @@ class ComparisonObjectTest(unittest.TestCase):
         target = [section([(0x4, other)])]
         self.assertEqual(delink.pair_data(base, target), {})
         self.assertEqual(target[0].relocs[0].target, other)
+
+class DataComparisonTest(unittest.TestCase):
+    def test_symbol_key_drops_only_the_random_suffix(self):
+        retail = "__vt_Q234_GLOBAL_.N.GUIGameObject.cppMHhwNb29TGUIStandardSpecializedObject"
+        compiled = "__vt_Q234_GLOBAL_.N.GUIGameObject.cppaB3dE929TGUIStandardSpecializedObject"
+        other = "__vt_Q233_GLOBAL_.N.ObjectHelp.cppMHhwNbAB29TGUIStandardSpecializedObject"
+        self.assertEqual(datacmp.symbol_key(retail), datacmp.symbol_key(compiled))
+        self.assertNotEqual(datacmp.symbol_key(retail), datacmp.symbol_key(other))
+        self.assertEqual(datacmp.symbol_key("akAdvObjectTypeTraits"), "akAdvObjectTypeTraits")
+
+    def test_items_cover_symbols_and_gaps(self):
+        from homm3.loki.elf import Section, Symbol, STT_OBJECT
+        header = Section(3, ".data", 1, 3, 0, 0, 0x20, 0, 0, 4, 0)
+        symbols = [Symbol(1, "a", 0x4, 8, 0, STT_OBJECT, 3), Symbol(2, "b", 0xc, 4, 1, STT_OBJECT, 3)]
+        compiled = datacmp.Compiled("u", 0, None, symbols, {})
+        items = datacmp._items(compiled, header, 0x20)
+        self.assertEqual([(i.name, i.offset, i.size) for i in items],
+                         [(".data+0x0", 0, 4), ("a", 4, 8), ("b", 0xc, 4), (".data+0x10", 0x10, 0x10)])
+
+    def test_data_rows_bank_bytes(self):
+        rows: dict[int, ledger.Row] = {}
+        ledger.bank_data(rows, "Army", 4, 90, 100, "f1")
+        ledger.bank_data(rows, "Army", 4, 80, 100, "f1")
+        self.assertEqual((rows[4].cur, rows[4].max, rows[4].hist), (80, 90, 90))
+        ledger.bank_data(rows, "Army", 4, 85, 100, "f2")      # source changed: MAX resets
+        self.assertEqual((rows[4].cur, rows[4].max, rows[4].hist), (85, 85, 90))
+        ledger.bank_data(rows, "Army", 4, 70, 120, "f2")      # slice resized: new denominator
+        self.assertEqual((rows[4].cur, rows[4].max, rows[4].hist), (70, 70, 70))
+        self.assertEqual(ledger.data_rows(rows)[0].name, ledger.DATA)
+
 
 @unittest.skipUnless(toolchain.is_staged(), "GCC 2.95.2 not staged (homm3 loki toolchain)")
 class CompiledBaseTest(unittest.TestCase):

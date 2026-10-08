@@ -132,6 +132,38 @@ Units compile from their source's directory with the bare file name, as Loki
 did: `__FILE__` in assert text and `TRuntimeError(__FILE__, __LINE__, ...)`
 sites is `"GzBuf.cpp"`, never a path.
 
+## Data comparison
+
+`homm3 loki build` also compares every built object's data with its slice
+of the image (`homm3.loki.datacmp`). GNU ld 2.9.5's default script
+concatenates input sections in link order: `.rodata` holds each object's
+`.rodata` and then the kept `.gnu.linkonce.r*`, `.data` each `.data` and
+then the kept `.gnu.linkonce.d*` (vtables, SGI allocator statics), `.bss`
+the copy-relocated `.dynbss`, each `.bss` and then COMMON (g++ 2.95's
+`__ti` type_info nodes); `.gcc_except_table`, `.ctors` and `.dtors` follow
+link order too.
+
+- A data section's image base is voted by the absolute fields that relocate
+  against it from code and frames whose place is known (object `.text`,
+  kept linkonce bodies, the object's `.eh_frame` at its CIE) and by the
+  exported symbols it defines. A section nothing refers to is found by its
+  resolved bytes (`.ctors`), or follows the previous object's, aligned.
+- A slice runs from the object's base to the next object's base; the
+  compiled bytes are zero-padded to it, as ld pads. Missing or extra data,
+  order and alignment therefore show as differing bytes.
+- A relocated field matches when the image word is the address of the same
+  target: the paired symbol, or the same offset of the object's own
+  section. A discarded linkonce section sits at address 0 (ld 2.9.5), so
+  exception ranges into it keep their bare offsets, as in the image.
+- A `.bss` byte matches while every code reference into its symbol votes
+  for the section's base. Kept linkonce data is compared in the first
+  project object that defines it; a COMMON symbol must exist with the same
+  size. Jump tables count with their functions and are left out.
+
+Each unit reports matching data bytes over the image's bytes, and `-v`
+lists the differing symbols and anonymous gaps (`.rodata+0x40`). `--bank`
+records one `$data` row per unit in the ledger.
+
 ## Ledger and README block
 
 `homm3 loki build --bank` records every built unit's functions in
