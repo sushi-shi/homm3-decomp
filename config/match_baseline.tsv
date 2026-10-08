@@ -1246,7 +1246,7 @@ customcampaign	?_Unguarded_partition@std@@YIPAVhero@@PAV2@0V2@UCrossoverHeroStro
 customcampaign	?_Xran@?$bitset@$07@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8da70	-
 customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8d9a0	-
 customcampaign	?apply@TCampaignArtifactBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84860	tokens1:ca65bc35a00b
-customcampaign	?apply@TCampaignBuildingBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84650	tokens1:777994d1ab6f
+customcampaign	?apply@TCampaignBuildingBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84650	tokens1:1e38b7ccd60d
 customcampaign	?apply@TCampaignCreatureBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84310	tokens1:f9fa490ed56a
 customcampaign	?apply@TCampaignPrimarySkillBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84b90	tokens1:2dd9489127fa
 customcampaign	?apply@TCampaignResourceBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84e20	tokens1:0cdeff4b7318
@@ -1323,7 +1323,7 @@ customcampaign	?getTotalTime@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b28
 customcampaign	?getloc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x8d820	-
 customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x87900	tokens1:97fd08843736
 customcampaign	?heroPower@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x83f50	tokens1:5a07967a5987
-customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	100.0000	100.0000	100.0000	0x86590	tokens1:ba976298602b
+customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	100.0000	100.0000	100.0000	0x86590	tokens1:6effb2f65a5e
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
 customcampaign	?insert@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEXPAUtype_artifact@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d330	-
 customcampaign	?insert@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x8c610	-
@@ -2131,7 +2131,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.4042	97.4264	97.4264	0xcafd0	tokens1:4a480194c767
+game	?transmitSaveGame@game@@QAEHHH_N0@Z	97.4264	97.4264	97.4264	0xcafd0	tokens1:4a480194c767
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987
@@ -2268,7 +2268,7 @@ hero	?hasCombinationArtifactComponents@hero@@QAEEH@Z	100.0000	100.0000	100.0000	
 hero	?heroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	tokens1:9e0149e3d34c
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	tokens1:06b0579ceb00
 hero	?initialize@hero@@QAEXF@Z	97.3624	97.3624	97.3624	0xd8720	tokens1:903bde6c0e57
-hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	75.2930	75.2930	100.0000	0xd8b30	tokens1:4eb1cf750602
+hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	100.0000	100.0000	100.0000	0xd8b30	tokens1:0a9aa1126a9a
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	tokens1:90bec856c736
 hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	tokens1:75d0b2a8aa0f
 hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	tokens1:820620713eee
@@ -4051,7 +4051,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAE_NPAVC
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	tokens1:c58d1b550f99
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:263a3adaf3eb
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:3e0a02090019
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	91.1860	91.1860	93.0332	0x189710	tokens1:3ac119cf2ca1
@@ -4293,7 +4293,7 @@ swapmgr	??1TSwapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1ae3c0	tokens1:18393
 swapmgr	??_GTSwapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ae390	-
 swapmgr	?close@swapManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1aed20	tokens1:3053289f80e3
 swapmgr	?drawSelector@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1aedc0	tokens1:276e0843e9fe
-swapmgr	?handleArtifactClick@swapManager@@AAEXJJ_N@Z	100.0000	100.0000	100.0000	0x1af590	tokens1:6e576c985851
+swapmgr	?handleArtifactClick@swapManager@@AAEXJJ_N@Z	100.0000	100.0000	100.0000	0x1af590	tokens1:b2e8a35b0aa5
 swapmgr	?handleBackpackClick@swapManager@@AAEXJJ_N@Z	100.0000	100.0000	100.0000	0x1af990	tokens1:f46e55e402bc
 swapmgr	?handleMonster@swapManager@@AAEXHHH_N@Z	100.0000	100.0000	100.0000	0x1af2b0	tokens1:b5020512bb22
 swapmgr	?handleNetMsg@CSwapMgrNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x1aeb00	tokens1:5e7f0796ed30
