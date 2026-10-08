@@ -333,12 +333,12 @@ static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVect
     strcpy(heroStrings[id].get(), values[0]);
 
     traits.m_defaultName = heroStrings[id].get();
-    traits.m_firstStackLow = atoi(values[1]);
-    traits.m_firstStackHigh = atoi(values[2]);
-    traits.m_secondStackLow = atoi(values[4]);
-    traits.m_secondStackHigh = atoi(values[5]);
-    traits.m_thirdStackLow = atoi(values[7]);
-    traits.m_thirdStackHigh = atoi(values[8]);
+    traits.m_1stStackLow = atoi(values[1]);
+    traits.m_1stStackHigh = atoi(values[2]);
+    traits.m_2ndStackLow = atoi(values[4]);
+    traits.m_2ndStackHigh = atoi(values[5]);
+    traits.m_3rdStackLow = atoi(values[7]);
+    traits.m_3rdStackHigh = atoi(values[8]);
 }
 
 // Original: InitializeHeroClassTraits; herodefs.cpp:441
@@ -355,7 +355,7 @@ static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
 
     heroClassStrings[id].set(new char[strlen(values[0]) + 1]);
     strcpy(heroClassStrings[id].get(), values[0]);
-    traits.m_className = heroClassStrings[id].get();
+    traits.m_name = heroClassStrings[id].get();
     traits.m_aggression = static_cast<float>(atof(values[1]));
 
     int column;

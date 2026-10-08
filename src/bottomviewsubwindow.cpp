@@ -493,7 +493,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     hero* who = g_game->getCurrHero();
 
     m_widgets.push_back(new bitmapBorder(3, 2, 58, 64, 0x7d1,
-        akHeroTraits[who->m_portrait].m_largePortraitName, 0x800));
+        akHeroTraits[who->m_portrait].m_large_portrait_name, 0x800));
     m_widgets.push_back(new textWidget(66, 2, 107, 17, who->m_name,
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 

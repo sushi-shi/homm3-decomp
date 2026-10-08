@@ -51,8 +51,8 @@ DC_ADDRESS(0x118adc, 0x5a)
 MAC_ADDRESS(0x14d19c, 0x70)
 void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
 {
-    const int* toCost = akCreatureTypeTraits[upgrade].m_cost;
-    const int* fromCost = akCreatureTypeTraits[creature].m_cost;
+    const int* toCost = akCreatureTypeTraits[upgrade].cost;
+    const int* fromCost = akCreatureTypeTraits[creature].cost;
 
     for (int i = 0; i < 7; i++) {
         if (toCost[i] > fromCost[i])
@@ -68,7 +68,7 @@ MAC_ADDRESS(0x14d20c, 0x7c)
 void getMonsterCost(int monId, int* resCost)
 {
     int resource;
-    MEMCPY(resCost, akCreatureTypeTraits[monId].m_cost,
+    MEMCPY(resCost, akCreatureTypeTraits[monId].cost,
            7 * sizeof(resCost[0]), resource);
 }
 
@@ -327,7 +327,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
-        slot + 0x216, akCreatureTypeTraits[creature].m_spriteName,
+        slot + 0x216, akCreatureTypeTraits[creature].m_sprite_name,
         0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE);
     m_widgets.push_back(m_creatureWidgets[slot]);
 
@@ -568,7 +568,7 @@ void recruitUnit::update(bool newMonster, long slot)
     g_recruitWindow->broadcastMessage(msg);
 
     m_numAvail = m_available[slot];
-    if (akCreatureTypeTraits[m_monsterType].m_attributes & g_ctaSiegeWeapon) {
+    if (akCreatureTypeTraits[m_monsterType].attributes & g_ctaSiegeWeapon) {
         *m_numAvail = 1 - m_thisHero->hasArtifact(
             siegeMonsterToSiegeArtifact(m_monsterType));
         if (*m_numAvail < 0)
@@ -944,7 +944,7 @@ int recruitUnit::main(message& msg)
                 if (m_numberToBuy == 0 && m_monType2 == CREATURE_NONE)
                     return finishRecruitUnit(msg);
 
-                if (akCreatureTypeTraits[m_monsterType].m_attributes
+                if (akCreatureTypeTraits[m_monsterType].attributes
                     & g_ctaSiegeWeapon) {
                     if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
                         > 64) {
@@ -1260,7 +1260,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         g_creatureBackgroundNames[g_game->getAlignment(monType) + 1],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
-        akCreatureTypeTraits[monType].m_spriteName,
+        akCreatureTypeTraits[monType].m_sprite_name,
         0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE), -1);
 
     sprintf(g_text,

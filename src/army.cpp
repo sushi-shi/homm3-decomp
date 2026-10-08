@@ -247,21 +247,21 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;
     *traits = akCreatureTypeTraits[type];
-    traits->m_townType = g_game->getAlignment(type);
+    traits->townType = g_game->getAlignment(type);
     if (owner != 0)
         owner->applyCreatureStatBonuses(type, traits);
     if (g_combatManager->m_magicTerrain
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
-        && townManager::getNativeTerrain(m_monInfo.m_townType)
+        && townManager::getNativeTerrain(m_monInfo.townType)
                == g_combatManager->m_terrainType)
         m_onNativeTerrain = 1;
     else
         m_onNativeTerrain = 0;
     if (m_onNativeTerrain) {
         if (!is(creatureSiegeWeapon))
-            m_monInfo.m_speed++;
-        m_monInfo.m_attackSkill++;
-        m_monInfo.m_defenseSkill++;
+            m_monInfo.speed++;
+        m_monInfo.attackSkill++;
+        m_monInfo.defenseSkill++;
     }
     m_facing = 1 - newGroup;
     m_currFrameType = cs_wait;
@@ -281,8 +281,8 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_someUnitsDamaged = 0;
     m_showFireShield = 0;
     m_origNumTroops = m_numTroops;
-    m_baseSpeed = m_monInfo.m_speed;
-    m_origHitPoints = m_monInfo.m_hitPoints;
+    m_baseSpeed = m_monInfo.speed;
+    m_origHitPoints = m_monInfo.hitPoints;
     m_poisonPenalty = 1.0f;
 }
 
@@ -334,7 +334,7 @@ void army::loadResources()
     if (!is(creatureSiegeWeapon)) {
         sprintf(g_text, DATA_COMPGEN(0x00660a10, moveSampleFormat,
                                     "%smove.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
         s = ResourceManager::GetSample(g_text);
         m_armySample[WALK_SAMPLE] = s;
     } else {
@@ -344,38 +344,38 @@ void army::loadResources()
     if (m_creatureType == CREATURE_BALLISTA)
         sprintf(g_text, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
     else if (is(creatureSiegeWeapon))
         sprintf(g_text, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                     "%swnce.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
     else
         sprintf(g_text, DATA_COMPGEN(0x006609ec, attackSampleFormat,
                                     "%sattk.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
     s = ResourceManager::GetSample(g_text);
     m_armySample[ATTACK_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                 "%swnce.82M"),
-            m_monInfo.m_samplePrefix);
+            m_monInfo.cSamplePrefix);
     s = ResourceManager::GetSample(g_text);
     m_armySample[WINCE_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609e0, killSampleFormat,
                                 "%skill.82M"),
-            m_monInfo.m_samplePrefix);
+            m_monInfo.cSamplePrefix);
     s = ResourceManager::GetSample(g_text);
     m_armySample[DIE_SAMPLE] = s;
 
     if (is(creatureSiegeWeapon))
         sprintf(g_text, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                     "%swnce.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
     else
         sprintf(g_text, DATA_COMPGEN(0x006609d4, defendSampleFormat,
                                     "%sdfnd.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
     s = ResourceManager::GetSample(g_text);
     m_armySample[DEFEND_SAMPLE] = s;
 
@@ -383,7 +383,7 @@ void army::loadResources()
         || m_creatureType == CREATURE_OGRE_MAGE) {
         sprintf(g_text, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
         s = ResourceManager::GetSample(g_text);
         m_armySample[SHOOT_SAMPLE] = s;
     } else {
@@ -396,12 +396,12 @@ void army::loadResources()
         || m_creatureType == CREATURE_ARCH_DEVIL) {
         sprintf(g_text, DATA_COMPGEN(0x006609c8, ext1SampleFormat,
                                     "%sext1.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
         s = ResourceManager::GetSample(g_text);
         m_armySample[PRE_WALK_SAMPLE] = s;
         sprintf(g_text, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
                                     "%sext2.82M"),
-                m_monInfo.m_samplePrefix);
+                m_monInfo.cSamplePrefix);
         s = ResourceManager::GetSample(g_text);
         m_armySample[POST_WALK_SAMPLE] = s;
     } else {
@@ -419,7 +419,7 @@ void army::loadResources()
 
     CSprite* icon =
         ResourceManager::GetSprite(akCreatureTypeTraits[m_creatureType]
-                                       .m_spriteName);
+                                       .m_sprite_name);
     m_stdIcon = icon;
     m_imageHeight = 267 - m_stdIcon->GetFrame(cs_wait, 0)->GetCroppedY();
 
@@ -539,7 +539,7 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 
         if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
             do {
-                switch (m_monInfo.m_townType) {
+                switch (m_monInfo.townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
                 case TOWN_TOWER:
@@ -587,7 +587,7 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
             do {
-                switch (m_monInfo.m_townType) {
+                switch (m_monInfo.townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
                 case TOWN_TOWER:
@@ -607,7 +607,7 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
         }
         do {
             if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-                switch (m_monInfo.m_townType) {
+                switch (m_monInfo.townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
                 case TOWN_TOWER:
@@ -1293,7 +1293,7 @@ void army::rangeAttack(army* armyToAttack)
     animateMissile(armyToAttack);
     if (!getOwner()
         || !getOwner()->isWieldingArtifact(ARTIFACT_AMMO_CART))
-        m_monInfo.m_numShots--;
+        m_monInfo.numShots--;
     if (m_creatureType == CREATURE_MAGOG) {
         long effect = akSpellTraits[SPELL_FIREBALL].m_effect;
         if (effect != -1
@@ -1624,7 +1624,7 @@ bool army::checkSpecialAttack(army* target)
         }
         return 0;
     case CREATURE_RUST_DRAGON:
-        if (target->m_numTroops > 0 && target->m_monInfo.m_defenseSkill > 0)
+        if (target->m_numTroops > 0 && target->m_monInfo.defenseSkill > 0)
             target->m_postPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
         return 0;
     case CREATURE_WYVERN_MONARCH:
@@ -1729,12 +1729,12 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
             long missingTroops = m_origNumTroops - m_numTroops;
             long damageRecovered = min(attackDamage, totalLife);
             damageRecovered = min(damageRecovered,
-                m_monInfo.m_hitPoints * missingTroops + m_topCreatureDamage);
+                m_monInfo.hitPoints * missingTroops + m_topCreatureDamage);
             m_topCreatureDamage -= damageRecovered;
             if (m_topCreatureDamage < 0) {
                 deadVampires =
-                    (m_monInfo.m_hitPoints - m_topCreatureDamage - 1) / m_monInfo.m_hitPoints;
-                m_topCreatureDamage += m_monInfo.m_hitPoints * deadVampires;
+                    (m_monInfo.hitPoints - m_topCreatureDamage - 1) / m_monInfo.hitPoints;
+                m_topCreatureDamage += m_monInfo.hitPoints * deadVampires;
                 m_numTroops += deadVampires;
             }
             if (damageRecovered > 0) {
@@ -1780,7 +1780,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
             dead = min(dead, (m_numTroops + 9) / 10);
             if (dead > 0) {
                 long damage =
-                    target->m_monInfo.m_hitPoints * dead - target->m_topCreatureDamage;
+                    target->m_monInfo.hitPoints * dead - target->m_topCreatureDamage;
                 std::string text;
                 if (dead == 1)
                     text = formatString(g_generalText->GetText(GENERAL_TEXT_DEATH_STARE_ONE_FORMAT),
@@ -1867,7 +1867,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 
     case CREATURE_RUST_DRAGON:
         if (target->m_numTroops > 0 && sRandom(1, 100) <= 20) {
-            long damage = sRandom(m_monInfo.m_damageLowBound, m_monInfo.m_damageHighBound) * m_numTroops / 2;
+            long damage = sRandom(m_monInfo.damageLowBound, m_monInfo.damageHighBound) * m_numTroops / 2;
             if (damage > 0) {
                 std::string text;
                 SAMPLE2 sample;
@@ -2250,7 +2250,7 @@ MAC_ADDRESS(0x04e174, 0x160)
 long army::getAdjustedAttack(const army* enemy,
                                bool rangedAttack) const
 {
-    long attack = m_monInfo.m_attackSkill;
+    long attack = m_monInfo.attackSkill;
     if (rangedAttack) {
         if (m_spellInfluence[44])
             attack += m_precisionAmount;
@@ -2265,7 +2265,7 @@ long army::getAdjustedAttack(const army* enemy,
             attack += 8;
             if (getController()) {
                 hero* castingHero = getController();
-                attack += castingHero->getHeroSpellBonus(55, m_monInfo.m_level, 8);
+                attack += castingHero->getHeroSpellBonus(55, m_monInfo.level, 8);
             }
         }
     }
@@ -2287,7 +2287,7 @@ long army::getAttackModifier(const army* enemy,
                                bool rangedAttack) const
 {
     long adjusted = getAdjustedAttack(enemy, rangedAttack);
-    return adjusted - akCreatureTypeTraits[m_creatureType].m_attackSkill;
+    return adjusted - akCreatureTypeTraits[m_creatureType].attackSkill;
 }
 
 VA(0x00442590, 0xC2)
@@ -2301,7 +2301,7 @@ long army::getAdjustedDefense(const army* enemy,
 {
     if (frenzyIncluded && m_spellInfluence[56])
         return 0;
-    long defense = m_monInfo.m_defenseSkill;
+    long defense = m_monInfo.defenseSkill;
     if (enemy) {
         if (enemy->m_creatureType == ARMY_CREATURE_BEHEMOTH)
             defense = static_cast<long>(defense - defense * 0.4f);
@@ -2327,7 +2327,7 @@ MAC_ADDRESS(0x04e498, 0x50)
 long army::getDefenseModifier() const
 {
     long adjusted = getAdjustedDefense(0, 1);
-    return adjusted - akCreatureTypeTraits[m_creatureType].m_defenseSkill;
+    return adjusted - akCreatureTypeTraits[m_creatureType].defenseSkill;
 }
 
 // E:\gamedcs\army.cpp:2680: the recovered base modifier returns 1.0.
@@ -2399,10 +2399,10 @@ MAC_ADDRESS(0x04e61c, 0xd8)
 double army::getAverageDamage() const
 {
     if (m_spellInfluence[41])
-        return m_blessAmount + m_monInfo.m_damageHighBound;
+        return m_blessAmount + m_monInfo.damageHighBound;
     if (m_spellInfluence[42])
-        return cppMax(m_monInfo.m_damageLowBound - m_curseAmount, 1);
-    return (m_monInfo.m_damageHighBound + m_monInfo.m_damageLowBound) / 2.0;
+        return cppMax(m_monInfo.damageLowBound - m_curseAmount, 1);
+    return (m_monInfo.damageHighBound + m_monInfo.damageLowBound) / 2.0;
 }
 
 VA(0x00442780, 0x100)
@@ -2459,7 +2459,7 @@ bool army::canShoot(const army* excluded) const
     if (m_creatureType == ARMY_CREATURE_BALLISTA
         || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 1;
-    if (!is(creatureShootingArmy) || m_monInfo.m_numShots <= 0)
+    if (!is(creatureShootingArmy) || m_monInfo.numShots <= 0)
         return 0;
     hero* controller = getController();
     return ((controller
@@ -2547,7 +2547,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
         }
     }
     if (m_spellInfluence[41] || m_spellInfluence[42]) {
-        long damageRange = m_monInfo.m_damageLowBound + m_monInfo.m_damageHighBound;
+        long damageRange = m_monInfo.damageLowBound + m_monInfo.damageHighBound;
         double baseAverage = damageRange / 2.0;
         double averageDamage = getAverageDamage();
         attack = averageDamage / baseAverage * attack;
@@ -2555,7 +2555,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (ranged && is(creatureTwoAttacks))
         attack = attack + attack;
     double result = sqrt(attack * defense)
-                    * akCreatureTypeTraits[m_creatureType].m_baseFightValue;
+                    * akCreatureTypeTraits[m_creatureType].baseFightValue;
     if (is(creatureSiegeWeapon | creatureSummoned)) {
         long total = getTotalHitPoints(0);
         long sum = 0;
@@ -2593,7 +2593,7 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
     if (is(creatureClone))
         return static_cast<long>(m_numTroops * value / 5.0);
     return static_cast<long>(getTotalHitPoints(0)
-                             * value / m_monInfo.m_hitPoints);
+                             * value / m_monInfo.hitPoints);
 }
 
 VA(0x00442fd0, 0xA9)
@@ -2612,9 +2612,9 @@ long army::getLossCombatValue(long lowestAttack, long lowestDefense,
     if (killsOnly)
         value = 1000.0;
     long lost = 0;
-    if (damage % m_monInfo.m_hitPoints + m_topCreatureDamage >= m_monInfo.m_hitPoints)
+    if (damage % m_monInfo.hitPoints + m_topCreatureDamage >= m_monInfo.hitPoints)
         lost = m_topCreatureDamage;
-    return static_cast<long>((lost + damage) * value / m_monInfo.m_hitPoints);
+    return static_cast<long>((lost + damage) * value / m_monInfo.hitPoints);
 }
 
 VA(0x00443080, 0x50)
@@ -2627,7 +2627,7 @@ long army::getTotalHitPoints(bool simulated) const
     if (is(creatureClone))
         total = 1;
     else
-        total = m_monInfo.m_hitPoints * m_numTroops - m_topCreatureDamage;
+        total = m_monInfo.hitPoints * m_numTroops - m_topCreatureDamage;
     if (simulated)
         total = max(total - m_aiExpectedDamage, 0);
     return total;
@@ -2670,11 +2670,11 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
     int high;
     if (m_creatureType == ARMY_CREATURE_BALLISTA) {
         const hero* shooter = getController();
-        low = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageLowBound;
-        high = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageHighBound;
+        low = (shooter->getPrimarySkill(0) + 1) * m_monInfo.damageLowBound;
+        high = (shooter->getPrimarySkill(0) + 1) * m_monInfo.damageHighBound;
     } else {
-        low = m_monInfo.m_damageLowBound;
-        high = m_monInfo.m_damageHighBound;
+        low = m_monInfo.damageLowBound;
+        high = m_monInfo.damageHighBound;
     }
 
     int damage;
@@ -2799,7 +2799,7 @@ int army::computeAttackerBonus(int baseDamage, bool isShooting,
                 + static_cast<float>(bonus));
         if (m_spellInfluence[SPELL_BLESS])
             total += controller->getHeroSpellBonus(SPELL_BLESS,
-                                                   m_monInfo.m_level,
+                                                   m_monInfo.level,
                                                    baseDamage);
     }
     return total;
@@ -3040,8 +3040,8 @@ MAC_ADDRESS(0x05004c, 0xac)
 int army::damage(int damage)
 {
     int total = damage + m_topCreatureDamage;
-    int killed = total / m_monInfo.m_hitPoints;
-    m_topCreatureDamage = total % m_monInfo.m_hitPoints;
+    int killed = total / m_monInfo.hitPoints;
+    m_topCreatureDamage = total % m_monInfo.hitPoints;
     if (is(creatureClone)) {
         killed = m_numTroops;
         m_topCreatureDamage = 0;
@@ -3065,7 +3065,7 @@ int army::damage(int damage)
 DC_ADDRESS(0x04935c, 0x44)
 unsigned long army::strength()
 {
-    return m_numTroops * akCreatureTypeTraits[m_creatureType].m_baseFightValue;
+    return m_numTroops * akCreatureTypeTraits[m_creatureType].baseFightValue;
 }
 
 // E:\gamedcs\army.cpp:3492
@@ -3178,7 +3178,7 @@ void army::processDeath(int fadeElementals)
     // expands its positive-duration walk here; keep the source call.
     cancelAllSpells();
 
-    m_monInfo.m_attributes |= creatureImmobilized;
+    m_monInfo.attributes |= creatureImmobilized;
     m_allUnitsKilled = 0;
 
     if (g_combatManager->validHex(m_gridIndex)) {
@@ -3272,12 +3272,12 @@ MAC_ADDRESS(0x0504ac, 0xd4)
 void army::adjustHitpoints()
 {
     if (m_spellInfluence[SPELL_AGE])
-        m_monInfo.m_hitPoints = static_cast<int>(
+        m_monInfo.hitPoints = static_cast<int>(
             m_origHitPoints * m_poisonPenalty * 0.5f + 0.95f);
     else
-        m_monInfo.m_hitPoints = static_cast<int>(
+        m_monInfo.hitPoints = static_cast<int>(
             m_origHitPoints * m_poisonPenalty + 0.95f);
-    m_topCreatureDamage = min(m_topCreatureDamage, m_monInfo.m_hitPoints - 1);
+    m_topCreatureDamage = min(m_topCreatureDamage, m_monInfo.hitPoints - 1);
 }
 
 // Take one standing spell off this stack: clear its round row, undo
@@ -3333,20 +3333,20 @@ void army::cancelIndividualSpell(int spell)
         addAura();
         break;
     case SPELL_STONE_SKIN:
-        m_monInfo.m_defenseSkill -= m_toughskinBonus;
+        m_monInfo.defenseSkill -= m_toughskinBonus;
         break;
     case SPELL_WEAKNESS:
-        m_monInfo.m_attackSkill += m_weaknessPenalty;
+        m_monInfo.attackSkill += m_weaknessPenalty;
         break;
     case SPELL_PRAYER:
-        m_monInfo.m_attackSkill -= m_prayerBonus;
-        m_monInfo.m_defenseSkill -= m_prayerBonus;
+        m_monInfo.attackSkill -= m_prayerBonus;
+        m_monInfo.defenseSkill -= m_prayerBonus;
         if (!is(creatureSiegeWeapon))
-            m_monInfo.m_speed -= m_prayerBonus;
+            m_monInfo.speed -= m_prayerBonus;
         break;
     case SPELL_HASTE:
         if (!is(creatureSiegeWeapon)) {
-            m_monInfo.m_speed -= m_tailwindBonus;
+            m_monInfo.speed -= m_tailwindBonus;
             m_monFrameInfo.m_walkCycleTime = m_origWalkCycleTime;
         }
         break;
@@ -3357,8 +3357,8 @@ void army::cancelIndividualSpell(int spell)
         adjustHitpoints();
         break;
     case SPELL_DISEASE:
-        m_monInfo.m_attackSkill += m_diseaseAttackPenalty;
-        m_monInfo.m_defenseSkill += m_diseaseDefensePenalty;
+        m_monInfo.attackSkill += m_diseaseAttackPenalty;
+        m_monInfo.defenseSkill += m_diseaseDefensePenalty;
         break;
     }
     TSpellQueue::iterator si = std::find(m_spellInfluenceQueue.begin(),
@@ -3532,39 +3532,39 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_bloodlustAmount = amount;
         if (castingHero)
             m_bloodlustAmount += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                spell, m_monInfo.level, amount);
         break;
     case SPELL_PRECISION:
         m_precisionAmount = amount;
         if (castingHero)
             m_precisionAmount += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                spell, m_monInfo.level, amount);
         break;
     case SPELL_WEAKNESS:
         m_weaknessPenalty = amount;
         if (castingHero)
             m_weaknessPenalty += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
-        if (m_monInfo.m_attackSkill < m_weaknessPenalty)
-            m_weaknessPenalty = m_monInfo.m_attackSkill;
-        m_monInfo.m_attackSkill = m_monInfo.m_attackSkill - m_weaknessPenalty;
+                spell, m_monInfo.level, amount);
+        if (m_monInfo.attackSkill < m_weaknessPenalty)
+            m_weaknessPenalty = m_monInfo.attackSkill;
+        m_monInfo.attackSkill = m_monInfo.attackSkill - m_weaknessPenalty;
         break;
     case SPELL_STONE_SKIN:
         m_toughskinBonus = amount;
         if (castingHero)
             m_toughskinBonus += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
-        m_monInfo.m_defenseSkill = m_monInfo.m_defenseSkill + m_toughskinBonus;
+                spell, m_monInfo.level, amount);
+        m_monInfo.defenseSkill = m_monInfo.defenseSkill + m_toughskinBonus;
         break;
     case SPELL_PRAYER:
         m_prayerBonus = amount;
         if (castingHero)
             m_prayerBonus += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
-        m_monInfo.m_attackSkill = m_monInfo.m_attackSkill + m_prayerBonus;
-        m_monInfo.m_defenseSkill = m_monInfo.m_defenseSkill + m_prayerBonus;
+                spell, m_monInfo.level, amount);
+        m_monInfo.attackSkill = m_monInfo.attackSkill + m_prayerBonus;
+        m_monInfo.defenseSkill = m_monInfo.defenseSkill + m_prayerBonus;
         if (!is(creatureSiegeWeapon))
-            m_monInfo.m_speed = m_monInfo.m_speed + m_prayerBonus;
+            m_monInfo.speed = m_monInfo.speed + m_prayerBonus;
         break;
     case SPELL_MIRTH:
         m_moraleBonus = amount;
@@ -3576,7 +3576,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_luckBonus = amount;
         if (castingHero)
             m_luckBonus += castingHero->getHeroSpellBonus(
-                spell, m_monInfo.m_level, amount);
+                spell, m_monInfo.level, amount);
         break;
     case SPELL_MISFORTUNE:
         m_luckPenalty = amount;
@@ -3587,8 +3587,8 @@ void army::setSpellInfluence(int spell, int power, int mastery,
             m_tailwindBonus = amount;
             if (castingHero)
                 m_tailwindBonus += castingHero->getHeroSpellBonus(
-                    spell, m_monInfo.m_level, amount);
-            m_monInfo.m_speed = m_monInfo.m_speed + m_tailwindBonus;
+                    spell, m_monInfo.level, amount);
+            m_monInfo.speed = m_monInfo.speed + m_tailwindBonus;
             m_monFrameInfo.m_walkCycleTime =
                 static_cast<long>(m_origWalkCycleTime * 0.65);
         }
@@ -3623,10 +3623,10 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_blindFactor = amount / 100.0;
         break;
     case SPELL_DISEASE:
-        m_diseaseDefensePenalty = min(2, m_monInfo.m_defenseSkill);
-        m_diseaseAttackPenalty = min(2, m_monInfo.m_attackSkill);
-        m_monInfo.m_attackSkill = m_monInfo.m_attackSkill - m_diseaseAttackPenalty;
-        m_monInfo.m_defenseSkill = m_monInfo.m_defenseSkill - m_diseaseDefensePenalty;
+        m_diseaseDefensePenalty = min(2, m_monInfo.defenseSkill);
+        m_diseaseAttackPenalty = min(2, m_monInfo.attackSkill);
+        m_monInfo.attackSkill = m_monInfo.attackSkill - m_diseaseAttackPenalty;
+        m_monInfo.defenseSkill = m_monInfo.defenseSkill - m_diseaseDefensePenalty;
         break;
     case SPELL_POISON: {
         double poisonValue = cppMax(static_cast<double>(m_poisonPenalty - 0.1f), 0.5);
@@ -3636,7 +3636,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
     }
     case SPELL_AGE:
         adjustHitpoints();
-        m_topCreatureDamage = min(m_topCreatureDamage, m_monInfo.m_hitPoints - 1);
+        m_topCreatureDamage = min(m_topCreatureDamage, m_monInfo.hitPoints - 1);
         break;
     case SPELL_MAGIC_MIRROR:
         m_backlashChance = amount;
@@ -4232,7 +4232,7 @@ void army::cure(int level, int spellPower, const hero* castingHero)
     int healed = akSpellTraits[SPELL_CURE].m_masteryBonus[level]
                  + akSpellTraits[SPELL_CURE].m_powerFactor * spellPower;
     if (castingHero)
-        healed += castingHero->getHeroSpellBonus(SPELL_CURE, m_monInfo.m_level,
+        healed += castingHero->getHeroSpellBonus(SPELL_CURE, m_monInfo.level,
                                                   healed);
     m_topCreatureDamage -= healed;
     if (m_topCreatureDamage < 0)
@@ -4568,8 +4568,8 @@ void army::newTurn()
         return;
     m_resetThisRound = 1;
     if (is(creatureDefending)) {
-        m_monInfo.m_defenseSkill -= m_defendBonus;
-        m_monInfo.m_attributes &= ~creatureDefending;
+        m_monInfo.defenseSkill -= m_defendBonus;
+        m_monInfo.attributes &= ~creatureDefending;
     }
     if (g_combatManager->m_creaturePlacement != 0)
         return;
@@ -4580,7 +4580,7 @@ void army::newTurn()
         if (m_creatureType == CREATURE_WIGHT
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
-            || ((akCreatureTypeTraits[m_creatureType].m_attributes
+            || ((akCreatureTypeTraits[m_creatureType].attributes
                  & g_ctaAlive)
                 && g_combatManager->m_heroes[m_combatSide] != 0
                 && g_combatManager->m_heroes[m_combatSide]
@@ -4636,7 +4636,7 @@ void army::resetRound()
     if (m_numTroops <= 0)
         return;
 
-    m_monInfo.m_attributes &= ~(creatureMorale | creatureWaiting | creatureDone);
+    m_monInfo.attributes &= ~(creatureMorale | creatureWaiting | creatureDone);
     m_resetThisRound = 0;
     setRetaliationCount();
 
@@ -4646,11 +4646,11 @@ void army::resetRound()
     decrementSpellRounds();
 
     if (m_spellInfluence[SPELL_POISON] > 0) {
-        int oldHitPoints = m_monInfo.m_hitPoints;
+        int oldHitPoints = m_monInfo.hitPoints;
         double factor = cppMax<double>(m_poisonPenalty - 0.1f, 0.5);
         m_poisonPenalty = static_cast<float>(factor);
         adjustHitpoints();
-        if (oldHitPoints - m_monInfo.m_hitPoints > 0) {
+        if (oldHitPoints - m_monInfo.hitPoints > 0) {
             m_showPowEffect = 1;
             m_someUnitsDamaged = 1;
             SAMPLE2 sample;
@@ -4680,12 +4680,12 @@ long army::getResurrectionSize(const army* target) const
 {
     if (m_creatureType == CREATURE_ARCHANGEL) {
         int missing = target->m_origNumTroops - target->m_numTroops;
-        int raised = m_numTroops * 100 / target->m_monInfo.m_hitPoints;
+        int raised = m_numTroops * 100 / target->m_monInfo.hitPoints;
         return min(raised, missing);
     }
-    int totalLife = target->m_monInfo.m_hitPoints * target->m_origNumTroops;
+    int totalLife = target->m_monInfo.hitPoints * target->m_origNumTroops;
     int raised = min(totalLife, m_numTroops * 50)
-        / akCreatureTypeTraits[ARMY_CREATURE_DEMON].m_hitPoints;
+        / akCreatureTypeTraits[ARMY_CREATURE_DEMON].hitPoints;
     return min(raised, target->m_origNumTroops);
 }
 
@@ -5283,7 +5283,7 @@ MAC_ADDRESS(0x055028, 0x6c)
 // call (see army.h getSpellTime).
 int army::getSpeed() const
 {
-    int speed = m_monInfo.m_speed;
+    int speed = m_monInfo.speed;
     if (m_spellInfluence[54]) {
         if (is(creatureSiegeWeapon))
             return 0;

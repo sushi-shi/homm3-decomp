@@ -65,7 +65,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
     m_widgets.push_back(new bitmapBorder(
         171, 66, 58, 64, PORTRAIT_ID,
-        akHeroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
+        akHeroTraits[thisHero->m_portrait].m_large_portrait_name, 0x800));
 
     sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
             thisHero->m_name);

@@ -1305,7 +1305,7 @@ void combatManager::autoResolveCombat()
                 stack->m_numTroops =
                     localArmies[side].m_numTroops[stack->m_originalIndex];
                 if (stack->m_numTroops == 0)
-                    stack->m_monInfo.m_attributes |= creatureImmobilized;
+                    stack->m_monInfo.attributes |= creatureImmobilized;
             }
         }
     }
@@ -1575,7 +1575,7 @@ int combatManager::getCommand(int newIndex)
             || !isOutsidePlacementBoundry(currentArmy->getOwningSide(),
                                              newIndex)) {
         g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
-                                          currentArmy->m_monInfo.m_speed,
+                                          currentArmy->m_monInfo.speed,
                                           m_creaturePlacement, -1);
         if (m_cells[newIndex].m_validMove || m_cells[newIndex].m_frontMove)
             return (currentArmy->is(creatureFlyingArmy)) ? COMBAT_COMMAND_FLY
@@ -1870,7 +1870,7 @@ void combatManager::doVictory(int winningGroup)
             m_raisedCreatureType =
                 m_heroes[winningGroup]->getNecromancyCreature();
             int raisedHitPoints =
-                akCreatureTypeTraits[m_raisedCreatureType].m_hitPoints;
+                akCreatureTypeTraits[m_raisedCreatureType].hitPoints;
             unsigned char anythingDied = 0;
             for (int slot = 0; slot < 20; slot++) {
                 army* stack = &m_armies[lastAliveSideIndex][slot];
@@ -1881,7 +1881,7 @@ void combatManager::doVictory(int winningGroup)
                     continue;
                 anythingDied = 1;
                 int hitPoints =
-                    akCreatureTypeTraits[stack->m_creatureType].m_hitPoints;
+                    akCreatureTypeTraits[stack->m_creatureType].hitPoints;
                 if (hitPoints > raisedHitPoints)
                     hitPoints = raisedHitPoints;
                 int raised = static_cast<int>(hitPoints * killed
@@ -2007,7 +2007,7 @@ long combatManager::getSurrenderCost()
                 > currentArmy->m_numTroopsBattleResurrected) {
             cost += (currentArmy->m_numTroops
                      - currentArmy->m_numTroopsBattleResurrected)
-                  * akCreatureTypeTraits[currentArmy->m_creatureType].m_cost[6];
+                  * akCreatureTypeTraits[currentArmy->m_creatureType].cost[6];
         }
     }
 
@@ -2176,7 +2176,7 @@ inline bool combatManager::automateTower()
     }
 
     if (m_wallLevel[wall] == 0) {
-        currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
+        currentArmy->m_monInfo.attributes |= creatureImmobilized;
         m_nextAction = 12;
         return 1;
     }
@@ -2236,7 +2236,7 @@ void combatManager::checkGetAIMove()
                     army* currentArmy = &m_armies[m_currentSide][slot];
                     if (currentArmy->isActive()) {
                         combatValue +=
-                            akCreatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
+                            akCreatureTypeTraits[currentArmy->m_creatureType].cost[6]
                             * currentArmy->m_numTroops;
                     }
                 }
@@ -2450,7 +2450,7 @@ unsigned char combatManager::processMoveThenAttack(message& msg)
         currentArmy->checkObstacleAttacks(0);
     }
 
-    currentArmy->m_monInfo.m_attributes |= creatureDone;
+    currentArmy->m_monInfo.attributes |= creatureDone;
     currentArmy->m_joustBonus = 0;
     // Mac 0x86ec0..0x86f00 expands isIncapacitated in this return step.
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra
@@ -2494,7 +2494,7 @@ void combatManager::processFirstAid(army* currentArmy)
         int result = targetArmy->m_topCreatureDamage;
         result = min(maximum, result);
         targetArmy->m_topCreatureDamage -= result;
-        currentArmy->m_monInfo.m_attributes |= creatureDone;
+        currentArmy->m_monInfo.attributes |= creatureDone;
 
         if (!isQuickCombat()) {
             SAMPLE2 sample = loadPlaySample(
@@ -2597,7 +2597,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         resetCyclingCreatures();
         currentArmy->moveTo(m_nextActionGridIndex, 1);
         currentArmy->m_joustBonus = 0;
-        currentArmy->m_monInfo.m_attributes |= creatureDone;
+        currentArmy->m_monInfo.attributes |= creatureDone;
         if (checkWin(&msg)) {
             g_processingCombatAction = 0;
             resetMouse();
@@ -2612,7 +2612,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         m_anyActionTaken = 1;
         resetCyclingCreatures();
         currentArmy->attackHex(m_nextActionGridIndex, 1);
-        currentArmy->m_monInfo.m_attributes |= creatureDone;
+        currentArmy->m_monInfo.attributes |= creatureDone;
         if (checkWin(&msg)) {
             g_processingCombatAction = 0;
             resetMouse();
@@ -2631,7 +2631,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         m_anyActionTaken = 1;
         resetCyclingCreatures();
         currentArmy->castSpell(m_nextActionGridIndex);
-        currentArmy->m_monInfo.m_attributes |= creatureDone;
+        currentArmy->m_monInfo.attributes |= creatureDone;
         checkApplyGoodMorale(m_actingSide, m_actingSlot);
         returnValue = 1;
         resetCycleTimers();
@@ -2676,12 +2676,12 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
 
     case g_combatActionDefend:
         if (!currentArmy->is(creatureDone | creatureDefending)) {
-            currentArmy->m_monInfo.m_attributes |= creatureDone;
+            currentArmy->m_monInfo.attributes |= creatureDone;
             if (!m_creaturePlacement && !currentArmy->is(creatureSiegeWeapon)) {
                 std::string message;
-                currentArmy->m_monInfo.m_attributes |= creatureDefending;
+                currentArmy->m_monInfo.attributes |= creatureDefending;
                 currentArmy->m_defendBonus = max(
-                    currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
+                    currentArmy->m_monInfo.defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)
                     message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT],
@@ -2695,7 +2695,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
             } else {
                 currentArmy->m_defendBonus = 0;
             }
-            currentArmy->m_monInfo.m_defenseSkill += currentArmy->m_defendBonus;
+            currentArmy->m_monInfo.defenseSkill += currentArmy->m_defendBonus;
         }
         memset(m_obstacleAttackVisited, 0, COMBAT_GRID_CELLS);
         currentArmy->checkObstacleAttacks(0);
@@ -2703,7 +2703,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         break;
 
     case g_combatActionWait: {
-        currentArmy->m_monInfo.m_attributes |= creatureWaiting;
+        currentArmy->m_monInfo.attributes |= creatureWaiting;
         if (!m_creaturePlacement) {
             std::string message;
             if (currentArmy->m_numTroops == 1)
@@ -2724,7 +2724,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         resetCyclingCreatures();
         m_anyActionTaken = 1;
         currentArmy->attackWall(m_nextActionGridIndex);
-        currentArmy->m_monInfo.m_attributes |= creatureDone;
+        currentArmy->m_monInfo.attributes |= creatureDone;
         checkApplyGoodMorale(m_actingSide, m_actingSlot);
         returnValue = 1;
         resetCycleTimers();
@@ -2736,7 +2736,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         break;
 
     case AI_ORDER_NONE:
-        currentArmy->m_monInfo.m_attributes |= creatureDone;
+        currentArmy->m_monInfo.attributes |= creatureDone;
         returnValue = 1;
         break;
     }
@@ -2894,7 +2894,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
     newArmy->init(monType, monQty, m_heroes[side], side, slot, gridIndex,
                   -1);
     newArmy->loadResources();
-    newArmy->m_monInfo.m_attributes |= setAttributes;
+    newArmy->m_monInfo.attributes |= setAttributes;
     if (!replaced)
         m_numArmies[side]++;
 

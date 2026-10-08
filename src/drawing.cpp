@@ -183,8 +183,8 @@ static std::string getEstimatedDamage(const army* currentArmy,
                                         bool ranged,
                                         long distance)
 {
-    long low = currentArmy->m_monInfo.m_damageLowBound * currentArmy->m_numTroops;
-    long high = currentArmy->m_monInfo.m_damageHighBound * currentArmy->m_numTroops;
+    long low = currentArmy->m_monInfo.damageLowBound * currentArmy->m_numTroops;
+    long high = currentArmy->m_monInfo.damageHighBound * currentArmy->m_numTroops;
     std::string result;
 
     if (currentArmy->getSpellTime(41) || currentArmy->getSpellTime(42)) {
@@ -359,7 +359,7 @@ void combatManager::combatMessage(int command)
     long distance;
     switch (command) {
     case COMBAT_COMMAND_NONE:
-        if (currentArmy->is(creatureShootingArmy) && currentArmy->m_monInfo.m_numShots == 0
+        if (currentArmy->is(creatureShootingArmy) && currentArmy->m_monInfo.numShots == 0
                 && targetArmy)
             strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_NO_SHOTS_LEFT));
         else
@@ -395,14 +395,14 @@ void combatManager::combatMessage(int command)
         long expectedDamage = aiGetAttackDamage(*(currentArmy), currentHits, *(targetArmy), 1, distance);
         if (!g_config.m_combatArmyInfoLevel) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_ATTACK_FORMAT), targetArmy->getName());
-        } else if (currentArmy->m_monInfo.m_numShots == 1) {
+        } else if (currentArmy->m_monInfo.numShots == 1) {
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_SHOOT_LAST_SHOT_FORMAT), targetArmy->getName(),
                     getEstimatedDamage(currentArmy, targetArmy, 1,
                                          distance).c_str());
         } else {
             // Retail loads text row 297 (table displacement 0x4a4).
             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_SHOOT_CURSOR_FORMAT), targetArmy->getName(),
-                    currentArmy->m_monInfo.m_numShots,
+                    currentArmy->m_monInfo.numShots,
                     getEstimatedDamage(currentArmy, targetArmy, 1,
                                          distance).c_str());
         }
@@ -1298,14 +1298,14 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     if (!archer->m_facing) {
                         drawX = archer->m_x - archer->m_sprite->GetWidth();
                         drawX += COMBAT_ARCHER_X_BIAS;
-                        if (akCreatureTypeTraits[archer->m_type].m_attributes
+                        if (akCreatureTypeTraits[archer->m_type].attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX += COMBAT_WALL_HEX_WIDTH;
                         if (archer->m_type == CREATURE_MEDUSA)
                             drawX -= 5;
                     } else {
                         drawX = archer->m_x - COMBAT_ARCHER_X_BIAS;
-                        if (akCreatureTypeTraits[archer->m_type].m_attributes
+                        if (akCreatureTypeTraits[archer->m_type].attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX -= COMBAT_WALL_HEX_WIDTH;
                         if (archer->m_type == CREATURE_MEDUSA)
@@ -1778,14 +1778,14 @@ void combatManager::computeMaxExtent()
             if (!archer.m_facing) {
                 drawX = archer.m_x - archer.m_sprite->GetWidth()
                          + COMBAT_ARCHER_X_BIAS;
-                if (akCreatureTypeTraits[archer.m_type].m_attributes
+                if (akCreatureTypeTraits[archer.m_type].attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX += COMBAT_WALL_HEX_WIDTH;
                 if (archer.m_type == CREATURE_MEDUSA)
                     drawX -= 5;
             } else {
                 drawX = archer.m_x - COMBAT_ARCHER_X_BIAS;
-                if (akCreatureTypeTraits[archer.m_type].m_attributes
+                if (akCreatureTypeTraits[archer.m_type].attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX -= COMBAT_WALL_HEX_WIDTH;
                 if (archer.m_type == CREATURE_MEDUSA)

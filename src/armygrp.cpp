@@ -109,7 +109,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 
     sprintf(g_text,
             (*g_generalText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT],
-            akCreatureTypeTraits[m_creature].m_pluralName);
+            akCreatureTypeTraits[m_creature].m_plural_name);
     m_widgets.push_back(new textWidget(
         0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
         1, 1, 0, 8));
@@ -122,7 +122,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
     m_widgets.push_back(new bitmapBorder(
         177, 54, 100, 130, -1, g_text, 0x800));
 
-    strcpy(g_text, akCreatureTypeTraits[m_creature].m_spriteName);
+    strcpy(g_text, akCreatureTypeTraits[m_creature].m_sprite_name);
     m_widgets.push_back(new iconWidget(
         20, 54, 100, 130, 2, g_text, 0, 2, 0, 0, 0x12));
     m_widgets.push_back(new iconWidget(
@@ -261,7 +261,7 @@ void TSplitWindow::setRolloverText(int codeY)
     case DIALOG_RETURN_SPLIT_ACCEPT:
         sprintf(g_text,
                 g_generalText->GetText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
-                akCreatureTypeTraits[m_creature].m_pluralName);
+                akCreatureTypeTraits[m_creature].m_plural_name);
         break;
     default:
         strcpy(g_text, "");
@@ -396,7 +396,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
 {
     float chance;
     const TCreatureTypeTraits* creatureRec = &akCreatureTypeTraits[targetArmyType];
-    unsigned int attrs = creatureRec->m_attributes;
+    unsigned int attrs = creatureRec->attributes;
     const SSpellTraits* spellRec = &akSpellTraits[spell];
     if (targetHero && spellRec->m_level <= 4
         && targetHero->isWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
@@ -449,7 +449,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     case SPELL_CURSE:
         if (attrs & g_ctaUndead)
             return 0.0f;
-        if (creatureRec->m_damageHighBound == 0)
+        if (creatureRec->damageHighBound == 0)
             return 0.0f;
         if (targetHero
             && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_HOLINESS))
@@ -465,7 +465,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     case SPELL_FORTUNE:
     case SPELL_MISFORTUNE:
     case SPELL_SLAYER:
-        if (creatureRec->m_damageHighBound == 0)
+        if (creatureRec->damageHighBound == 0)
             return 0.0f;
         break;
     case SPELL_ANIMATE_DEAD:
@@ -629,7 +629,7 @@ unsigned char armyGroup::hasAllUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (!(akCreatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead))
+        if (!(akCreatureTypeTraits[m_armies[i]].attributes & g_ctaUndead))
             return 0;
     }
     return 1;
@@ -646,7 +646,7 @@ unsigned char armyGroup::hasSomeUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (akCreatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead)
+        if (akCreatureTypeTraits[m_armies[i]].attributes & g_ctaUndead)
             return 1;
     }
     return 0;
@@ -695,7 +695,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         if (creature == CREATURE_NONE)
             continue;
         const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
-        if (traits.m_attributes & g_ctaSiegeWeapon)
+        if (traits.attributes & g_ctaSiegeWeapon)
             continue;
         int alignment = g_game->getAlignment(creature);
         alignments[alignment + 1]++;
@@ -737,7 +737,7 @@ long armyGroup::getAIValue() const
     long value = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] != CREATURE_NONE)
-            value += akCreatureTypeTraits[m_armies[i]].m_aiValue * m_numTroops[i];
+            value += akCreatureTypeTraits[m_armies[i]].AI_value * m_numTroops[i];
     }
     return value;
 }
@@ -938,7 +938,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
-    if (akCreatureTypeTraits[m_armies[index]].m_attributes & g_ctaNoMorale)
+    if (akCreatureTypeTraits[m_armies[index]].attributes & g_ctaNoMorale)
         return 0;
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
@@ -1193,7 +1193,7 @@ void armyGroup::mergeArmies(armyGroup& source)
         for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
             if (m_armies[i] == CREATURE_NONE)
                 break;
-            long value = akCreatureTypeTraits[m_armies[i]].m_aiValue
+            long value = akCreatureTypeTraits[m_armies[i]].AI_value
                          * m_numTroops[i];
             if (weakestIndex < 0 || weakestValue >= value) {
                 weakestValue = value;
@@ -1203,7 +1203,7 @@ void armyGroup::mergeArmies(armyGroup& source)
         for (int j = 0; j < ARMY_GROUP_SLOT_COUNT; ++j) {
             if (source.m_armies[j] == CREATURE_NONE)
                 continue;
-            long gain = akCreatureTypeTraits[source.m_armies[j]].m_aiValue
+            long gain = akCreatureTypeTraits[source.m_armies[j]].AI_value
                         * source.m_numTroops[j];
             if (!canJoin(source.m_armies[j]))
                 gain -= weakestValue;
@@ -1250,7 +1250,7 @@ std::string armyGroup::getMoraleDescription(
     // reference makes VC6 materialise the ADDRESS instead - one extra
     // `add` per use, a stack slot of its own, and the table base loaded
     // BEFORE the index chain rather than after it.
-    if (akCreatureTypeTraits[creature].m_attributes & g_ctaNoMorale)
+    if (akCreatureTypeTraits[creature].attributes & g_ctaNoMorale)
         return g_moraleInfo[28];
 
     int currentMorale = getMorale(

@@ -1150,7 +1150,7 @@ int type_creature_quest::getAIPaymentValue(int player)
     int total = 0;
 
     for (unsigned i = 0; i < m_types.size(); ++i)
-        total += akCreatureTypeTraits[m_types[i]].m_aiValue * m_counts[i];
+        total += akCreatureTypeTraits[m_types[i]].AI_value * m_counts[i];
     return total;
 }
 
@@ -2211,7 +2211,7 @@ int TSeerReward::getValue(const hero* currentHero)
         return currentHero->valueOfSpell(m_value.m_dwords[0]);
 
     case eRewardCreature:
-        return akCreatureTypeTraits[m_value.m_creature.m_creatureType].m_aiValue
+        return akCreatureTypeTraits[m_value.m_creature.m_creatureType].AI_value
             * m_value.m_creature.m_count;
 
     default:

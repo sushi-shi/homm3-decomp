@@ -53,7 +53,7 @@ struct TArtifactTraits {
     // combination artifact and each component, then uses it to index the
     // hero's per-slot equipped counts.
     int m_allowableSlotMask;      // +0x08
-    int m_artifactClass;          // +0x0c
+    int m_class;          // +0x0c
     const char* m_description;    // +0x10
     // comboType is set on an assembled artifact; targetCombo is set on each
     // component. Both are indices into gCombinationArtifacts, or -1.

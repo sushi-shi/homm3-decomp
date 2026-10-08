@@ -568,15 +568,15 @@ static void initializeArtifactTraits(int id,
 
     const char* classCell = resource[21];
     if (classCell[0] == 'R')
-        traits.m_artifactClass = 16;
+        traits.m_class = 16;
     else if (classCell[0] == 'J')
-        traits.m_artifactClass = 8;
+        traits.m_class = 8;
     else if (classCell[0] == 'N')
-        traits.m_artifactClass = 4;
+        traits.m_class = 4;
     else if (classCell[0] == 'T')
-        traits.m_artifactClass = 2;
+        traits.m_class = 2;
     else
-        traits.m_artifactClass = 1;
+        traits.m_class = 1;
 }
 
 VA_COMPGEN(0x0044D380, 0x60, BITSET_SET, Bitset19)

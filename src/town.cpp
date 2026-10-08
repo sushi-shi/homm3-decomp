@@ -507,7 +507,7 @@ void town::setSummoningGenerator()
         }
         m_summoningType = thisGenerator.m_type[i];
         m_summoningPopulation =
-            akCreatureTypeTraits[m_summoningType].m_growthRate;
+            akCreatureTypeTraits[m_summoningType].growthRate;
     }
 }
 
@@ -974,7 +974,7 @@ type_building_id town::createBuilding(type_building_id building)
 
     if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
         short slot = building - DWELLING_0_ID;
-        m_population[slot] = akCreatureTypeTraits[g_dwellingType[m_type][slot]].m_growthRate;
+        m_population[slot] = akCreatureTypeTraits[g_dwellingType[m_type][slot]].growthRate;
     }
     if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
         short slot = building - DWELLING_0_UPG_ID;
@@ -1194,9 +1194,9 @@ MAC_ADDRESS(0x1b4c20, 0x8c)
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
     return hasBuilding(CASTLE_CASTLE_ID, false)
-        ? akCreatureTypeTraits[creature].m_growthRate
+        ? akCreatureTypeTraits[creature].growthRate
         : hasBuilding(CASTLE_CITADEL_ID, false)
-            ? akCreatureTypeTraits[creature].m_growthRate / 2 : 0;
+            ? akCreatureTypeTraits[creature].growthRate / 2 : 0;
 }
 
 // Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
@@ -1266,7 +1266,7 @@ long town::getAssembledLegionBonus(long dwelling) const
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
         TCreatureType creature = g_dwellingType[m_type][dwelling];
-        long growth = akCreatureTypeTraits[creature].m_growthRate;
+        long growth = akCreatureTypeTraits[creature].growthRate;
         bonus = getCastleGrowthBonus(creature);
         bonus += growth;
         bonus /= 2;
@@ -1363,7 +1363,7 @@ short town::getGrowthRate(short dwelling) const
         return 0;
 
     TCreatureType creature = g_dwellingType[m_type][dwellingIndex];
-    short growth = akCreatureTypeTraits[creature].m_growthRate;
+    short growth = akCreatureTypeTraits[creature].growthRate;
     growth += getCastleGrowthBonus(creature);
 
     if (m_owner >= 0) {

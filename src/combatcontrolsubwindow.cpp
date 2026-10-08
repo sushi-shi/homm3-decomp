@@ -452,7 +452,7 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
     hero& mutableInfo = const_cast<hero&>(info);
 
     m_backgroundWidget->setPlayerPaletteColors(info.m_owner);
-    m_portrait->setImage(akHeroTraits[info.m_portrait].m_largePortraitName);
+    m_portrait->setImage(akHeroTraits[info.m_portrait].m_large_portrait_name);
 
     sprintf(buffer, "%d", info.getPrimarySkill(0));
     m_attackText->setText(buffer);
@@ -713,20 +713,20 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         if (canShoot)
             attack = max(attack, info.getAdjustedAttack(0, 0));
 
-        sprintf(buffer, "%d(%d)", normalTraits.m_attackSkill, attack);
+        sprintf(buffer, "%d(%d)", normalTraits.attackSkill, attack);
         m_attackText->setText(buffer);
-        sprintf(buffer, "%d(%d)", normalTraits.m_defenseSkill, defense);
+        sprintf(buffer, "%d(%d)", normalTraits.defenseSkill, defense);
         m_defenseText->setText(buffer);
 
-        if (info.m_monInfo.m_damageLowBound != info.m_monInfo.m_damageHighBound) {
-            sprintf(buffer, "%d-%d", info.m_monInfo.m_damageLowBound,
-                    info.m_monInfo.m_damageHighBound);
+        if (info.m_monInfo.damageLowBound != info.m_monInfo.damageHighBound) {
+            sprintf(buffer, "%d-%d", info.m_monInfo.damageLowBound,
+                    info.m_monInfo.damageHighBound);
         } else {
-            sprintf(buffer, "%d", info.m_monInfo.m_damageLowBound);
+            sprintf(buffer, "%d", info.m_monInfo.damageLowBound);
         }
         m_damageText->setText(buffer);
 
-        sprintf(buffer, "%d", info.m_monInfo.m_hitPoints);
+        sprintf(buffer, "%d", info.m_monInfo.hitPoints);
         m_speedText->setText(buffer);
 
         m_moraleIcon->setIconFrame(info.getMorale(1) + 3);

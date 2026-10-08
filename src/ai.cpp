@@ -328,8 +328,8 @@ bool combatManager::aiCheckRetreat()
                                             continue;
                                         long value =
                                             sideArmy->m_numTroops
-                                            * sideArmy->m_monInfo.m_baseFightValue;
-                                        if (!(sideArmy->m_monInfo.m_attributes & creatureDone))
+                                            * sideArmy->m_monInfo.baseFightValue;
+                                        if (!(sideArmy->m_monInfo.attributes & creatureDone))
                                             value = static_cast<long>(value * 1.2);
                                         fightValue += value;
                                     }
@@ -682,10 +682,10 @@ static long getAttackValue(const army* currentArmy, const army* enemy,
     double combatValue = enemy->getUnitCombatValue(data.m_lowestAttack,
                                                    data.m_lowestDefense, 0, 0);
     if (data.m_killsOnly) {
-        return ((enemyHitPoints % enemy->m_monInfo.m_hitPoints + damage)
-                / enemy->m_monInfo.m_hitPoints) * combatValue;
+        return ((enemyHitPoints % enemy->m_monInfo.hitPoints + damage)
+                / enemy->m_monInfo.hitPoints) * combatValue;
     }
-    return damage * combatValue / enemy->m_monInfo.m_hitPoints;
+    return damage * combatValue / enemy->m_monInfo.hitPoints;
 }
 
 VA(0x0041f3b0, 0x1C2)
@@ -1401,16 +1401,16 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters& data)
         int archerLevel;
         m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
         if (m_wallLevel[14] > 0)
-            shooterValue[1] += akCreatureTypeTraits[CREATURE_ARCHER].m_aiValue
+            shooterValue[1] += akCreatureTypeTraits[CREATURE_ARCHER].AI_value
                                 * numArchers;
         if (m_fortificationLevel == eFortificationCastle) {
             if (m_wallLevel[13] > 0)
                 shooterValue[1] +=
-                    akCreatureTypeTraits[CREATURE_ARCHER].m_aiValue
+                    akCreatureTypeTraits[CREATURE_ARCHER].AI_value
                     * (numArchers + 1) / 2;
             if (m_wallLevel[5] > 0)
                 shooterValue[1] +=
-                    akCreatureTypeTraits[CREATURE_ARCHER].m_aiValue
+                    akCreatureTypeTraits[CREATURE_ARCHER].AI_value
                     * (numArchers + 1) / 2;
         }
     }

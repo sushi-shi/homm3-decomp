@@ -488,7 +488,7 @@ std::string TCampaignCreatureBonus::getText() const
     else if (m_count == 1)
         name = akCreatureTypeTraits[m_creature].m_name;
     else
-        name = akCreatureTypeTraits[m_creature].m_pluralName;
+        name = akCreatureTypeTraits[m_creature].m_plural_name;
     return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 
@@ -1095,7 +1095,7 @@ const char* TCampaignStartCrossoverOption::getIconResourceName(void* campaignRec
     hero* first = getFirstCrossoverHero(static_cast<SCampaign*>(campaignRecord), which);
     if (first == 0)
         return "hpl000kn.pcx";
-    return akHeroTraits[first->m_portrait].m_largePortraitName;
+    return akHeroTraits[first->m_portrait].m_large_portrait_name;
 }
 
 // The help text names the MAP the heroes come from, which is not the choice's
@@ -1220,7 +1220,7 @@ const char* TCampaignStartHeroOption::getIconResourceName(void* campaign,
 {
     if (m_choices[which].m_hero == -1)
         return "CBONN1A3.pcx";
-    return akHeroTraits[m_choices[which].m_hero].m_largePortraitName;
+    return akHeroTraits[m_choices[which].m_hero].m_large_portrait_name;
 }
 
 VA(0x00485a90, 0xBA)
@@ -1391,7 +1391,7 @@ void game::rehomeCampaignHeroSetup(int heroId)
     if (setup.m_location.m_x < 0)
         return;
 
-    THeroClass heroClass = akHeroTraits[heroId].m_heroClass;
+    THeroClass heroClass = akHeroTraits[heroId].m_class;
     int newHeroId = getNewHeroId(setup.m_owner, kNumHeroClasses, 1, heroClass);
     if (newHeroId == -1) {
         setup.m_location.m_x = -1;

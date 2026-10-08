@@ -2598,7 +2598,7 @@ void TSellCreatureWindow::update(bool update)
                 rightQty > 1
                     ? akCreatureTypeTraits[
                           g_marketHero->m_army.m_armies[g_selectedArtifact]]
-                          .m_pluralName
+                          .m_plural_name
                     : akCreatureTypeTraits[
                           g_marketHero->m_army.m_armies[g_selectedArtifact]]
                           .m_name);
@@ -2925,7 +2925,7 @@ MAC_ADDRESS(0x1f8574, 0x1e4)  // anchor-callee (TSellCreatureWindow::Update+Wind
 void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     float denominator = static_cast<float>(akCreatureTypeTraits[
-                            g_marketHero->m_army.m_armies[inLeftResource]].m_cost[6])
+                            g_marketHero->m_army.m_armies[inLeftResource]].cost[6])
                       * g_creatureSaleEfficency[g_marketCount];
     float ratio = static_cast<float>(g_marketValues[inRightResource + 1]) / denominator;
     if (ratio >= 1.0f) {
