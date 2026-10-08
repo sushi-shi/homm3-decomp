@@ -482,7 +482,15 @@ private:
         // Which prototypes of each hero class are still free to place.
         class TAABHeroAvailable : public TArray<bitset<8>, kNumHeroClasses> {
         public:
-            TAABHeroAvailable();
+            TAABHeroAvailable()
+            {
+                for (unsigned int heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
+                    bitset<8>& abHeroAvailable = (*this)[heroClass];
+                    for (unsigned int protoNum = 0; protoNum < THero::s_akClassTraits[heroClass].m_numPrototypes;
+                         protoNum++)
+                        abHeroAvailable[protoNum] = true;
+                }
+            }
         };
 
         _TBookkeeping()
@@ -2445,6 +2453,136 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     signed char aTrailer[124];
     fill_n(aTrailer, sizeof(aTrailer), 0);
     stream << aTrailer;
+}
+
+void TGameMap::_TImpl::importText(istream* pIStream)
+{
+#line 3296
+    assert(pIStream != NULL);
+    static const string kSectionStart("===== ");
+    static const string kSectionEnd(" =====");
+    string line;
+    getline(*pIStream, line);
+    if (line != kSectionStart + kMapNameStr + kSectionEnd)
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line.size() > s_kMaxNameLen)
+        line.erase(s_kMaxNameLen);
+    replace(line.begin(), line.end(), '\t', ' ');
+    setName(line);
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kMapDescriptionStr + kSectionEnd)
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line.size() > s_kMaxDescLen)
+        line.erase(s_kMaxDescLen);
+    replace(line.begin(), line.end(), '\t', '\n');
+    setDesc(line);
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kRumorsStr + kSectionEnd)
+        throw TImportTextFailure();
+    for (vector<TRumor>::iterator pRumor = _m_pProperties->m_rumors.begin(); pRumor != _m_pProperties->m_rumors.end();
+         pRumor++) {
+        getline(*pIStream, line);
+        if (!line.empty())
+            throw TImportTextFailure();
+        try {
+            pRumor->importText(pIStream);
+        } catch (const TRumor::TImportTextFailure& failure) {
+            throw TImportTextFailure();
+        }
+    }
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kTimedEventsStr + kSectionEnd)
+        throw TImportTextFailure();
+    for (vector<TTimedEvent>::iterator pTimedEvent = _m_pProperties->m_timedEvents.begin();
+         pTimedEvent != _m_pProperties->m_timedEvents.end(); pTimedEvent++) {
+        getline(*pIStream, line);
+        if (!line.empty())
+            throw TImportTextFailure();
+        try {
+            pTimedEvent->importText(pIStream);
+        } catch (const TTimedEvent::TImportTextFailure& failure) {
+            throw TImportTextFailure();
+        }
+    }
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kObjectsStr + kSectionEnd)
+        throw TImportTextFailure();
+    unsigned int numLayers = isTwoLayer() ? 2 : 1;
+    for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+        const TLayer& layer = getLayer(layerNum);
+        for (TLayer::TObjectIDIter iter = layer.objectIDBegin(); iter != layer.objectIDEnd(); ++iter) {
+            const TGameObject& obj = layer.getObject(*iter);
+            if (obj.hasText()) {
+                getline(*pIStream, line);
+                if (!line.empty())
+                    throw TImportTextFailure();
+                TTilePoint loc = layer.getObjectLoc(*iter);
+                if (obj.hasTrigger())
+                    loc -= obj.getTriggerLoc();
+                int c = pIStream->get();
+                if (c != '(')
+                    throw TImportTextFailure();
+                int n;
+                *pIStream >> n;
+                if (n != loc.x())
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ',')
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ' ')
+                    throw TImportTextFailure();
+                *pIStream >> n;
+                if (n != loc.y())
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ',')
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ' ')
+                    throw TImportTextFailure();
+                *pIStream >> n;
+                if (n != layerNum)
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ')')
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ' ')
+                    throw TImportTextFailure();
+                getline(*pIStream, line);
+                if (line != string("***") + obj.getTypeName() + string("***"))
+                    throw TImportTextFailure();
+                TLayer* pLayer = getPLayer(layerNum);
+                TGameObject* pObj = pLayer->getPObject(*iter);
+                try {
+                    pObj->importText(pIStream);
+                } catch (const TGameObject::TImportTextFailure& failure) {
+                    throw TImportTextFailure();
+                }
+            }
+        }
+    }
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kEndOfFileStr + kSectionEnd)
+        throw TImportTextFailure();
 }
 
 void TGameMap::_TImpl::exportText(ostream* pOStream) const
