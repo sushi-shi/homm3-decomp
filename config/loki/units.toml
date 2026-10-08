@@ -88,3 +88,8 @@ source = "src/GzBuf.cpp"
 name = "font"
 object = 60
 source = "src/font.cpp"
+
+[[unit]]
+name = "T16bppPalette"
+object = 6
+source = "src/editor/T16bppPalette.cpp"
