@@ -901,11 +901,6 @@ public:
     DC_ADDRESS(0x002d74, 0x18)
     const char* GetText(int r) const { return Text[r]; }
 
-    // Dreamcast CodeView declares this count (type 0x19ea) without a
-    // procedure; Loki's TextResource.h defines it inline beside GetText.
-    // Only the map editor's asserts read it.
-    int GetNumberOfStrings() const;
-
     // E:\gamedcs\TextResource.h:73
     DC_ADDRESS(0x002d8c, 0x18)
     const char* operator[](int i) const { return GetText(i); }
