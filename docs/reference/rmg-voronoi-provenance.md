@@ -173,7 +173,7 @@ all pre-1999 geometry packages is claimed.
 
 ## Historical corroboration searched
 
-The [1999 Armageddon's Blade manual][manual] identifies the random map
+The 1999 Armageddon's Blade manual identifies the random map
 generator as a new feature (printed pp. 4–5; use on p. 8). Its copyright/technology
 notice on p. 1 names Bink and Miles but supplies no geometry attribution.
 The full 28-page text contains no `Voronoi`, `Delaunay`, `Graphics Gems`,
@@ -239,4 +239,3 @@ triangulation or matching helper spelling alone could not.
 [errata]: https://people.eecs.berkeley.edu/~jrs/meshpapers/GSflaws
 [netlib]: https://www.netlib.org/voronoi/
 [triangle]: https://www.cs.cmu.edu/~quake/tripaper/triangle2.html
-[manual]: https://heroes3wog.net/download/%5BHeroes%203%5D%20Armageddons%20Blade%20Manual.pdf

@@ -88,16 +88,14 @@ This establishes recurrence across these local files, not which release or
 tool introduced it. Neither is a known unmodified predecessor. A controlled
 before/after comparison remains necessary to attribute the changes.
 
-## Archived Collector's Edition comparison, 2026-09-30
+## European Collector's Edition comparison, 2026-09-30
 
-The [archived European Collector's Edition discs](https://archive.org/details/heroes-of-might-and-magic-iii-complete-collectors-edition-europe)
-provide a closely related executable. The uploader describes a likely 2004
-Ubisoft rerelease; Disc 1's ISO volume date is 2002-06-14. Those are separate
-metadata observations, not a verified release date.
+The European Collector's Edition discs provide a closely related executable,
+likely from a 2004 Ubisoft rerelease; Disc 1's ISO volume date is 2002-06-14.
+Neither is a verified release date.
 
-Disc 1 download: `Heroes of Might and Magic III Complete - Collector's Edition
-(Europe) (Disc 1).7z`, 419,103,047 bytes, SHA-1
-`7046e7a75fc47f64ea8876af2dc83b580460136e` (matches Archive.org metadata).
+Disc 1 image archive: 419,103,047 bytes, SHA-1
+`7046e7a75fc47f64ea8876af2dc83b580460136e`.
 Its MODE1/2352 BIN has SHA-256
 `954e247d1d1d51abf76ffb6aabc8c8a65ae55efe142e2dd7b375c9d777e6e1c8`.
 After extracting the ISO payload, `unshield` extracts
@@ -147,11 +145,10 @@ under ignored `build/provenance/archive/`.
 
 ## Earlier protected Shadow of Death comparison
 
-The [archived USA Shadow of Death disc](https://archive.org/details/homm3cc)
-contains version 3.0, with separate `Heroes3.exe`, `HEROES3.ICD` and
-`dplayerx.dll` in the InstallShield cabinets. The downloaded BIN is
-781,571,952 bytes, SHA-1 `fd7b273a95d23faf894e57512174c0e3b8ec27ff`, matching
-Archive.org metadata; its ISO volume date is 2000-03-11. The cabinets were
+The USA Shadow of Death disc contains version 3.0, with separate `Heroes3.exe`,
+`HEROES3.ICD` and `dplayerx.dll` in the InstallShield cabinets. Its BIN is
+781,571,952 bytes, SHA-1 `fd7b273a95d23faf894e57512174c0e3b8ec27ff`; its ISO
+volume date is 2000-03-11. The cabinets were
 extracted without executing the installer, launcher or protection components.
 
 `HEROES3.ICD` is 2,736,173 bytes, SHA-256
@@ -174,14 +171,12 @@ mixed-case-name, timestamp and tail-byte changes. The evidence supports a
 SafeDisc-related ancestry, but does not identify a particular unpacker or
 prove that all the remaining anomalies share its producer.
 
-The [Shadow of Death 3.2 patch](https://archive.org/details/sd30to32) was also
-downloaded (4,126,480 bytes; SHA-1
-`0c51ef77937931313ac4c1d8fbee834dba02cabd`, matching archive metadata). It is an
+The Shadow of Death 3.2 patch was also examined (4,126,480 bytes; SHA-1
+`0c51ef77937931313ac4c1d8fbee834dba02cabd`). It is an
 RTPatch binary delta, not an independently extracted 3.2 executable, and has
 not been applied. Disc 2 of the Collector's Edition was checked too: it has
-`00000001.TMP`, but no additional game executable. The item labelled
-`Heroes_of_Might_and_Magic_3_Install_Disc_Disc_1_PCD-5179-801_2000` is an Apple
-HFS disc and is excluded from this Windows comparison.
+`00000001.TMP`, but no additional game executable. An Apple HFS install disc
+is excluded from this Windows comparison.
 
 ## To decide
 
