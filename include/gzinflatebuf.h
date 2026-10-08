@@ -61,6 +61,7 @@ private:
     int _getC();                // 0x4d5fd0
     void _putBackC(signed char c); // Mac 0x220ac8
     int _mustGetC();            // 0x4d6ba0
+    unsigned long _mustGetLong();
 };
 SIZE(TGzInflateBuf, 0x84);
 
