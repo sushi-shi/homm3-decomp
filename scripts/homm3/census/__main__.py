@@ -15,7 +15,9 @@ Reads the selected image's pinned executable and derives:
                   dropped against the function census;
   funclets.tsv    rva, parent_rva, state: EH funclets and the function
                   whose `__ehhandler` stub names their FuncInfo;
-  init-thunks.tsv rva, slot: the `.CRT$XCU` initializer table;
+  init-thunks.tsv rva, slot: the `.CRT$XCU` initializer table, the body
+                  after each `/O1` `jmp $+5` slot thunk, and the cleanups
+                  those initializers register with `_atexit` (slot -);
   runtime-map.tsv rva, name, library, member: statically linked library
                   functions named by unique masked identity with a member
                   of LIBCMT, LIBCPMT or the staged SP3 MFC NAFXCW
@@ -89,6 +91,9 @@ def derive(log=print):
                in iat_slots(common.resolve_exe(), toolchain).items()}
     runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log,
                                imports=imports)
+    atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
+    if atexit is not None:
+        thunks += eh.cleanup_rows(census, {r for r, _k in thunks}, atexit)
     log(f"[census] {len(funclets)} funclets with parents ({orphans} without), "
         f"{len(thunks)} .CRT$XCU initializers")
     log(f"[census] {len(rows)} functions, {len(vt)} vtables "

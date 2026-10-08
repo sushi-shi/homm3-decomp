@@ -68,4 +68,34 @@ def initializer_rows(c):
         v = c.dword(at)
         if v and c.in_text(v - base):
             rows.append((v - base, slot))
+            # an `/O1` slot holds `jmp $+5`: the initializer body follows it
+            body = v - base + 5
+            if c.blob[v - base - c.text_lo:v - base - c.text_lo + 5] == JMP0 \
+                    and body in c.starts:
+                rows.append((body, slot))
     return rows
+
+
+JMP0 = b"\xe9\x00\x00\x00\x00"
+
+
+def cleanup_rows(c, initializers, atexit):
+    """[(cleanup rva, "-")]: the functions the initializers register with
+    `_atexit` (`push offset cleanup` with `call _atexit` the next call), the
+    compiler's static destructors; the game's table admits them as slot -."""
+    base = c.image.image_base
+    out = set()
+    for start in initializers:
+        order = sorted(c.reached.get(start, ()))
+        for k, r in enumerate(order):
+            ins = c.insn(r)
+            if ins.mnemonic != "push" or ins.operands[0].type != x86.X86_OP_IMM:
+                continue
+            target = (ins.operands[0].imm & 0xFFFFFFFF) - base
+            if target not in c.starts or target in initializers:
+                continue
+            call = next((c.insn(q) for q in order[k + 1:] if c.insn(q).mnemonic == "call"), None)
+            if call is not None and call.operands[0].type == x86.X86_OP_IMM \
+                    and (call.operands[0].imm & 0xFFFFFFFF) - base == atexit:
+                out.add(target)
+    return [(rva, "-") for rva in sorted(out)]
