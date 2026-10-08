@@ -482,41 +482,16 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
     return result;
 }
 
-// E:\gamedcs\remote.cpp:578. Dreamcast supplies the public member boundary
-// and its HandlePlayerDrop edge. Retail fixes the DirectPlay error cases,
-// six-attempt retry loop, localized retry dialog and queued drop message.
-// Residual wall (86.98%): the invalid-player tail is exact block-for-block,
-// including the caller-context decision to leave deque::push_back out of
-// line. C2 rotates this source-honest for-loop into a bottom test and
-// normalizes Send's AL result through CL; retail keeps the retry-limit test
-// at the header and AL live through the HRESULT compares. `while`, explicit
-// header-break and call-site inline_depth(1/2) forms do not recover that
-// schedule. Caching GetLastError in a named local regresses it to 85.00%.
-// 2026-09-05, easy lane 3. Two deltas, one cause. Retail's retry loop is
-// UNROTATED - `cmp retries,5 / jg <exit>` at the head and a bare `jmp <head>`
-// at the tail - and its ShutDown failure arm falls into the SAME 7-instruction
-// epilogue as the loop exit, so retail has 2 returns to our 3. Measured and
-// rejected: the goto-loop spelling (`retries = 0; retry: if (retries > 5) goto
-// failed; ... ++retries; goto retry; failed: return false;`), which is
-// BYTE-IDENTICAL to the `for` - VC6 constant-folds the head test away because
-// `retries = 0` immediately dominates it, then rotates, so no source form
-// reachable from a zero initialiser reproduces the top test. The doctrine that
-// VC6 does not rotate goto flow does not survive a foldable guard.
-// 2026-09-06, polish lane 35. Of the two deltas the SECOND one was not a
-// schedule at all: `Send` returns `unsigned char` (dxplay.h:214) and landing
-// it in a `bool` is a NARROWING CONVERSION, so VC6 normalized AL through
-// `setne cl` and then tested CL at both use sites. Retail tests AL itself
-// twice, which only a byte-typed receiver produces. `unsigned char sent`
-// 86.9847 -> 88.8489. The rotation survives and is measured again here: a
-// `for (;;)` with an explicit `if (retries > 5)` head test is byte-flat at
-// 88.8489 (VC6 recognizes the induction variable and rotates it back into a
-// loop guard exactly as it does the `for`), and routing BOTH failure exits
-// through one `goto failed;` label does merge the ShutDown arm into the
-// shared epilogue but leaves the rotated loop's own fall-through `xor al,al`
-// tail behind - still 3 returns, still 88.8489. The surplus return is a
-// CONSEQUENCE of the rotation, not an independent merge to spell.
-// Polish 49 adds the third loop form to that list: `int retries = 0;
-// while (retries <= 5) { ...; ++retries; }` is byte-identical at 88.8550.
+// E:\gamedcs\remote.cpp:578. DC 579/581 initialize the send result and the
+// retry counter, and 584 tests both in the loop header; its two sErr locals
+// are block-scoped per error arm. DC then tests the result three times:
+// the logging arm, an early success return (615/616) and the retry-limit
+// dialog (`retries >= 5 && !sent`). That compound header keeps retail's
+// unrotated loop (head `cmp retries,5`, `inc; jmp` tail): 88.86 -> 96.95.
+// Send returns unsigned char; a bool receiver adds a setne normalization.
+// Residual: queueMsg's nested memcpy schedules after the push_back
+// argument store; retail copies first. A pre-cast CNetMsg* storage local
+// does not move it and costs handleLowLevelMsg 6.5 points.
 // Mac 0x210f98 sends through its native transport once; Windows retains the
 // DirectPlay retry and error-dialog flow around the corresponding send.
 VA(0x005533d0, 0x1AB)
@@ -525,14 +500,17 @@ MAC_ADDRESS(0x210f98, 0x74)  // anchor-strings + virtual-slots + dc-order-map
 bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
                           bool guaranteed)
 {
-    char errorDescription[256];
-    int retries;
-    for (retries = 0; retries <= 5; ++retries) {
-        unsigned char sent = send(msg, msg->m_size, g_thisNetPlayerInfo.m_dpid,
-                                  dpidTo, guaranteed);
+    unsigned char sent = 0;
+
+    int retries = 0;
+
+    while (!sent && retries <= 5) {
+        sent = send(msg, msg->m_size, g_thisNetPlayerInfo.m_dpid,
+                    dpidTo, guaranteed);
         if ((!sent
              && getLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER)
             || getLastError() == DPLAY_SEND_ERROR_INVALID_PARAMETER) {
+            char errorDescription[256];
             getErrorDesc(getLastError(), errorDescription);
             g_logFile.log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
                                     "DPlay Send error [%s]"),
@@ -548,26 +526,29 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
         }
 
         if (!sent) {
+            char errorDescription[256];
             getErrorDesc(getLastError(), errorDescription);
             g_logFile.log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
                                     "DPlay Send error [%s]"),
                         errorDescription);
             GameTime::delay(200);
+        }
 
-            if (retries >= 5) {
-                normalDialogTimeOut(
-                    g_generalText->GetText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT),
-                    2, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
-                if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
-                    shutDown(0);
-                    return false;
-                }
+        if (sent)
+            return true;
+
+        if (retries >= 5 && !sent) {
+            normalDialogTimeOut(
+                g_generalText->GetText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT),
+                2, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
+            if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 retries = -1;
+            } else {
+                shutDown(0);
+                return false;
             }
         }
-        else {
-            return true;
-        }
+        retries++;
     }
     return false;
 }
