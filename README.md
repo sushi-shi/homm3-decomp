@@ -14,16 +14,16 @@ packages.
 
 <!-- loki-match-score:start -->
 
-**Loki Linux `h3maped` 1.0 (map editor, GCC 2.95.2): 7,432 / 7,432 functions exact (100.00%) &middot; 100.00% fuzzy &middot; 561,138 / 565,944 data bytes (99.15%) (MAX).**
+**Loki Linux `h3maped` 1.0 (map editor, GCC 2.95.2): 7,432 / 7,432 functions exact (100.00%) &middot; 100.00% fuzzy &middot; 564,707 / 565,928 data bytes (99.78%) (MAX).**
 
 A separate image with its own scores; `homm3 loki build --bank` banks `config/loki/match_baseline.tsv`, and this block renders from it.
 
 | Phase | Objects | Functions exact MAX | Fuzzy MAX | Data bytes MAX |
 | :---- | ------: | ------------------: | --------: | -------------: |
-| engine (shared with the game) | 29 | 1,001 / 1,001 (100.0%) | 100.00% | 101,608 / 102,144 (99.48%) |
-| editor | 74 | 6,431 / 6,431 (100.0%) | 100.00% | 459,530 / 463,800 (99.08%) |
+| engine (shared with the game) | 29 | 1,001 / 1,001 (100.0%) | 100.00% | 102,048 / 102,048 (100.00%) |
+| editor | 74 | 6,431 / 6,431 (100.0%) | 100.00% | 462,659 / 463,880 (99.74%) |
 
-_CUR / MAX / HIST: 7,432 / 7,432 / 7,432 exact &middot; 100.00% / 100.00% / 100.00% fuzzy, weighted by size &middot; 561,138 / 561,138 / 561,138 data bytes. Project functions only: the 3,120 `.text` functions and 4,312 kept linkonce bodies of the 103 GCC 2.95.2 project objects (103 built units); GTK+/glib/libglade/libxml/zlib and libstdc++ are excluded. Data bytes are the objects' `.rodata`, `.data`, `.bss`, `.gcc_except_table`, `.ctors`/`.dtors` slices of the image, their kept linkonce data (vtables) and COMMON type_info nodes, relocations resolved; jump tables count with their functions._
+_CUR / MAX / HIST: 7,432 / 7,432 / 7,432 exact &middot; 100.00% / 100.00% / 100.00% fuzzy, weighted by size &middot; 564,707 / 564,707 / 564,707 data bytes. Project functions only: the 3,120 `.text` functions and 4,312 kept linkonce bodies of the 103 GCC 2.95.2 project objects (103 built units); GTK+/glib/libglade/libxml/zlib and libstdc++ are excluded. Data bytes are the objects' `.rodata`, `.data`, `.bss`, `.gcc_except_table`, `.ctors`/`.dtors` slices of the image, their kept linkonce data (vtables) and COMMON type_info nodes, relocations resolved; jump tables count with their functions._
 
 <!-- loki-match-score:end -->
 
