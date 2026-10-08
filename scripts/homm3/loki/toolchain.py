@@ -155,7 +155,9 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
     (archive,) = _read_pinned(Path(sgi_stl).expanduser().resolve(), spec["sgi_stl"]).values()
     (assembler,) = _read_pinned(Path(binutils).expanduser().resolve(), spec["binutils"]).values()
     (release,) = _read_pinned(Path(compilers).expanduser().resolve(), spec["compilers"]).values()
-    (toolkit,) = _read_pinned(Path(gtk).expanduser().resolve(), spec["gtk"]).values()
+    toolkit_files = _read_pinned(Path(gtk).expanduser().resolve(), spec["gtk"])
+    toolkit = toolkit_files["gtkglib.tgz"]
+    glade = toolkit_files["libglade-0.14.tar.gz"]
     if DESTINATION.exists():
         shutil.rmtree(DESTINATION)
     SYSROOT.mkdir(parents=True)
@@ -194,6 +196,15 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
                                              "usr/lib/glib/include/glibconfig.h")
                                     or name.startswith(("usr/include/gdk/", "usr/include/gtk/"))):
                 path = GTK / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(package.extractfile(member).read())
+    # libglade 0.14's public headers, from its source release (glade-config --cflags).
+    with tarfile.open(fileobj=io.BytesIO(glade), mode="r:gz") as package:
+        for member in package.getmembers():
+            name = Path(member.name)
+            if member.isfile() and name.parent.name == "glade" and name.name in (
+                    "glade.h", "glade-xml.h", "glade-build.h", "glade-widget-tree.h"):
+                path = GTK / "usr/include/glade" / name.name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(package.extractfile(member).read())
     _write_wrappers()

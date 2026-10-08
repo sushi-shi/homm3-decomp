@@ -57,3 +57,9 @@ target = "i386-linux"
 # gdkprivate.h are unusable). Stage with `homm3 loki toolchain --gtk DIR` (or HOMM3_LOKI_GTK).
 [gtk]
 "gtkglib.tgz" = "7458d5f061ba14f8e6e820b6c9f395dddd57af217e22e054d33cd71531892562"
+# libglade 0.14 (upstream source release, members dated 2000-03-13), from the same --gtk
+# directory: only its public headers glade/{glade,glade-xml,glade-build,glade-widget-tree}.h.
+# The image's statically linked libglade exports glade_set_custom_handler, glade_create_custom
+# and glade_xml_build_extended_widget (new in 0.14; Slackware 7.1 ships 0.13) and lacks
+# glade-xml.c's "libglade::GladeXML::tooltips" (0.15 on).
+"libglade-0.14.tar.gz" = "33a2a290eec04cf1fb8a8d5e7420e7225530a5b753659bfa36ba01aaafd3a371"
