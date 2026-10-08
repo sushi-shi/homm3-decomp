@@ -52,6 +52,28 @@ The name effect in `cspriteframe` goes through **data layout**, not code paths:
 
 See [behavior-catalog C12](../vc6/behavior-catalog.md).
 
+### Why the delinker doesn't neutralize it
+
+The delinker masks relocated addresses, so where a static lands is never
+compared in itself. But here the static's position changes the **instruction**
+C2 emits, before any relocation exists:
+
+```
+div4mask 4-aligned in the object:  and ebx, dword ptr [div4mask]   ; 23 1D <addr32>
+div4mask at 2 mod 4:               and bx,  word ptr  [div4mask]   ; 66 23 1D <addr32>
+```
+
+Only `<addr32>` is a relocation. The `66` operand-size prefix, the register
+width and the instruction length are real code bytes. The extra byte also
+shifts every later offset in the function, so jump-table entries move too.
+
+Apparently C2 lays out the unit's `.bss` itself and knows each static's
+alignment. Reading a full dword from a 2-byte variable is only safe within its
+4-aligned slot, so it uses the wider form only then. **This rule is inferred**
+from three cspriteframe functions and retail's addresses (`div2mask` aligned
+and dword-accessed, `div4mask` at 2 mod 4 and word-accessed). It is not traced
+in C2.
+
 ## Hypothesis for other units
 
 Where a name change moves bytes, first check whether it moved a `.bss` or
