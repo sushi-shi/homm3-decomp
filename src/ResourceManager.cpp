@@ -629,7 +629,8 @@ tryAgain:
     SoundHeaderStruct* header;
     strcpy(baseName, name);
     strtok(baseName, ".");
-    if (!GetSoundFile(baseName, (void*&)data, header, size)) {
+    void*& soundData = (void*&)data;
+    if (!GetSoundFile(baseName, soundData, header, size)) {
         if (name != defaultName) {
             ReportSoundNotFound("GetSample", RESOURCE_TYPE_SFX, name);
             name = defaultName;
