@@ -10,7 +10,7 @@ the game ledger or the README score block.
 ## Setup
 
 ```sh
-homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR --binutils DIR
+homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR --binutils DIR --gcc DIR
 homm3 loki census --check      # retail facts are current
 homm3 loki build -v            # compile, delink, canonicalize, objdiff
 homm3 loki disasm _getC__13TGzInflateBuf   # references named as compared
@@ -24,9 +24,15 @@ homm3 loki diff Error __11TDebugBreak      # one function, base | retail
 `--binutils` holds Slackware 7.1's `binutils.tgz` (2.9.1.0.25), whose `as`
 replaces potato's: Loki's objects never use the byte `moffs` encodings
 (`a0`/`a2`); all 29 absolute byte loads and stores are `8a 05`/`88 05`,
-which as 2.9.1.0.25 emits and 2.9.5.0.37 does not. The environment variables
-`HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS`, `HOMM3_LOKI_SGI_STL` and
-`HOMM3_LOKI_BINUTILS` work as well. Everything is staged under ignored
+which as 2.9.1.0.25 emits and 2.9.5.0.37 does not. `--gcc` holds Slackware
+7.1's contrib `gcc.tgz`, the unpatched 2.95.2 release, whose `cc1` and
+`cc1plus` replace Debian's 2.95.2-13.1 (a 20000220 branch snapshot): the
+release compiler emits a class's in-class inline members as strong `.text`
+globals in the unit that defines its vtable, as Loki's objects show
+(`resource::AddRef` and the other accessors in `resource.o`), where Debian's
+emits weak linkonce copies. Debian's driver and `cpp` stay. The environment
+variables `HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS`, `HOMM3_LOKI_SGI_STL`,
+`HOMM3_LOKI_BINUTILS` and `HOMM3_LOKI_GCC` work as well. Everything is staged under ignored
 `build/`: the image at `build/orig/loki/h3maped` and the toolchain at
 `build/loki/toolchain/`.
 
@@ -41,7 +47,7 @@ last. Neither Wine nor patchelf is involved.
 
 | Fact | Evidence |
 | :--- | :------- |
-| GCC 2.95.2 | `.comment`: 146 objects `GCC: (GNU) 2.95.2 19991024 (release)`; Debian's 2.95.2-13.1 reports `20000220`. Code generation agrees: game functions compile byte-exact. |
+| GCC 2.95.2 release | `.comment`: 146 objects `GCC: (GNU) 2.95.2 19991024 (release)`. The release `cc1plus` (Slackware 7.1 contrib) is staged; Debian's 2.95.2-13.1 (`20000220`) differs in where it emits in-class inline members. |
 | `-O0` | Out-of-line accessors, `jmp` to the next instruction, `mov %eax,%eax` after calls, locals reloaded from the frame. A sweep over 12 game units paired by mangled name gives 0 exact at `-O1 -fno-inline` and `-O2`. |
 | `-mcpu=pentiumpro` | Epilogues are `mov %ebp,%esp; pop %ebp`, not `leave` (the i386 default emits `leave`, so 0 functions match). `Bitmap16Bit::Bitmap16Bit(int,int)` sign-extends with `cltd` only under pentiumpro. The Loki compiler was i686-configured, whose default this is. |
 | exceptions and RTTI on | `.eh_frame` (21,301 FDEs) and `.gcc_except_table`; `-fno-exceptions` loses half of the exact bodies (419 to 210). |

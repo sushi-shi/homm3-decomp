@@ -1,5 +1,6 @@
-"""Stage the pinned GCC 2.95.2 toolchain (Debian potato i386 packages + SGI STL 3.2,
-assembling with the binutils 2.9.1.0.25 `as` of Slackware 7.1).
+"""Stage the pinned GCC 2.95.2 toolchain: Debian potato i386 packages (driver,
+cpp, libc, libstdc++), the vanilla 2.95.2 release compilers (cc1, cc1plus) and
+binutils 2.9.1.0.25 `as` of Slackware 7.1, and SGI STL 3.2.
 
 The 2000-era binaries run unmodified through the packaged ld-2.1.3.so loader:
 every program the driver spawns (cpp, cc1plus, as) is reached through a
@@ -31,6 +32,7 @@ SYSROOT = DESTINATION / "root"
 WRAPPERS = DESTINATION / "libexec"
 SGI_STL = DESTINATION / "sgi-stl"
 BINUTILS = DESTINATION / "binutils"
+COMPILERS = DESTINATION / "gcc-2.95.2-release"
 STAMP = DESTINATION / "staged.sha256"
 LOADER = SYSROOT / "lib/ld-2.1.3.so"
 
@@ -93,7 +95,8 @@ def _wrapper(program: Path, *library_dirs: Path) -> str:
 
 def _write_wrappers() -> None:
     WRAPPERS.mkdir(parents=True, exist_ok=True)
-    programs = {name: _gcc_lib() / name for name in ("cpp", "cc1", "cc1plus", "collect2")}
+    programs = {name: _gcc_lib() / name for name in ("cpp", "collect2")}
+    programs.update({name: COMPILERS / name for name in ("cc1", "cc1plus")})
     programs.update({"as": BINUTILS / "usr/bin/as", "ld": SYSROOT / "usr/bin/ld"})
     for name, program in programs.items():
         if not program.is_file():
@@ -104,7 +107,7 @@ def _write_wrappers() -> None:
 
 
 def _digest(spec: dict) -> str:
-    pins = {**spec["debs"], **spec["sgi_stl"], **spec["binutils"]}
+    pins = {**spec["debs"], **spec["sgi_stl"], **spec["binutils"], **spec["compilers"]}
     return hashlib.sha256("".join(f"{k}={v}\n" for k, v in sorted(pins.items())).encode()).hexdigest()
 
 
@@ -130,22 +133,24 @@ def is_staged() -> bool:
 
 
 def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
-          binutils: str | Path | None = None) -> Path:
-    """Explicit directories > HOMM3_LOKI_DEBS/_SGI_STL/_BINUTILS > the staged toolchain."""
+          binutils: str | Path | None = None, compilers: str | Path | None = None) -> Path:
+    """Explicit directories > HOMM3_LOKI_DEBS/_SGI_STL/_BINUTILS/_GCC > the staged toolchain."""
     spec = specification()
     debs = debs if debs is not None else os.environ.get("HOMM3_LOKI_DEBS")
     sgi_stl = sgi_stl if sgi_stl is not None else os.environ.get("HOMM3_LOKI_SGI_STL")
     binutils = binutils if binutils is not None else os.environ.get("HOMM3_LOKI_BINUTILS")
-    if debs is None or sgi_stl is None or binutils is None:
+    compilers = compilers if compilers is not None else os.environ.get("HOMM3_LOKI_GCC")
+    if debs is None or sgi_stl is None or binutils is None or compilers is None:
         if is_staged():
             return DESTINATION
         raise ToolchainError("GCC 2.95.2 toolchain not staged; run `homm3 loki toolchain --debs DIR "
-                             "--sgi-stl DIR --binutils DIR` (or set HOMM3_LOKI_DEBS, "
-                             "HOMM3_LOKI_SGI_STL and HOMM3_LOKI_BINUTILS); "
+                             "--sgi-stl DIR --binutils DIR --gcc DIR` (or set HOMM3_LOKI_DEBS, "
+                             "HOMM3_LOKI_SGI_STL, HOMM3_LOKI_BINUTILS and HOMM3_LOKI_GCC); "
                              "the pins are in config/loki/toolchain.toml")
     packages = _read_pinned(Path(debs).expanduser().resolve(), spec["debs"])
     (archive,) = _read_pinned(Path(sgi_stl).expanduser().resolve(), spec["sgi_stl"]).values()
     (assembler,) = _read_pinned(Path(binutils).expanduser().resolve(), spec["binutils"]).values()
+    (release,) = _read_pinned(Path(compilers).expanduser().resolve(), spec["compilers"]).values()
     if DESTINATION.exists():
         shutil.rmtree(DESTINATION)
     SYSROOT.mkdir(parents=True)
@@ -162,6 +167,17 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
             name = member.name.lstrip("./")
             if member.isfile() and (name == "usr/bin/as" or name.startswith("usr/lib/libbfd-")):
                 path = BINUTILS / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(package.extractfile(member).read())
+                path.chmod(0o755)
+    # Slackware's vanilla 2.95.2: only the compilers proper. Its cccp rejects
+    # the Windows SDK headers the shared source imports; potato's cpp stays.
+    prefix = "usr/lib/gcc-lib/i386-slackware-linux/2.95.2/"
+    with tarfile.open(fileobj=io.BytesIO(release), mode="r:gz") as package:
+        for member in package.getmembers():
+            name = member.name.lstrip("./")
+            if member.isfile() and name in {prefix + p for p in ("cc1", "cc1plus")}:
+                path = COMPILERS / name[len(prefix):]
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(package.extractfile(member).read())
                 path.chmod(0o755)

@@ -34,3 +34,14 @@ target = "i386-linux"
 # Stage with `homm3 loki toolchain --binutils DIR` (or HOMM3_LOKI_BINUTILS).
 [binutils]
 "binutils.tgz" = "70a0560e929fdd4cab4b204876e6f5eb2fdb6debe5da4429b5ff12c78f8d73db"
+
+# The compilers proper (cc1, cc1plus): vanilla GCC 2.95.2 "19991024 (release)", the
+# string in every editor object's .comment, as packaged by Slackware 7.1
+# (contrib/gcc-2.95.2/gcc.tgz). Debian's 2.95.2-13.1 (a 20000220 branch snapshot) emits the
+# in-class inline members of a class whose vtable a TU defines as weak linkonce bodies; the
+# release compiler emits them as strong .text globals in that TU, after its out-of-line
+# functions, as Loki's resource.o does (get_resType .. GetReferenceCount). The Debian
+# driver, cpp, specs, headers and libraries stay (Slackware's cccp rejects the SDK headers).
+# Stage with `homm3 loki toolchain --gcc DIR` (or HOMM3_LOKI_GCC).
+[compilers]
+"gcc.tgz" = "d55eec8780baeea94e5c1ef7af0459d31495055f1d9e63fd3e95d4061d7707a4"
