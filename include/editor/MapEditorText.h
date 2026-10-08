@@ -10,7 +10,7 @@
 #ifndef HOMM3_EDITOR_MAPEDITORTEXT_H
 #define HOMM3_EDITOR_MAPEDITORTEXT_H
 
-const unsigned int kNumGeneralStrings = 208;
+enum { kNumGeneralStrings = 208 };
 extern const char* const& kRegistryKeyStr;
 extern const char* const& kAppTitleStr;
 extern const char* const& kCopyrightStr;
@@ -221,7 +221,7 @@ extern const char* const& kNoPropertiesStr;
 extern const char* const& kContinuingWillDeleteUndergroundLayerStr;
 
 namespace SAbandonedMinePropsDlgText {
-const unsigned int kNumStrings = 7;
+enum { kNumStrings = 7 };
 extern const char* const& kPotentialResourcesStaticStr;
 extern const char* const& kRes2CheckStr;
 extern const char* const& kRes3CheckStr;
@@ -232,14 +232,14 @@ extern const char* const& kRes7CheckStr;
 }
 
 namespace SArmyDlgText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kTypeStaticStr;
 extern const char* const& kQuantityStaticStr;
 extern const char* const& kSlotStaticFmtStr;
 }
 
 namespace SGarrisonPropertiesDlgText {
-const unsigned int kNumStrings = 4;
+enum { kNumStrings = 4 };
 extern const char* const& kOwnerStaticStr;
 extern const char* const& kNoneRadioStr;
 extern const char* const& kPlayerRadioFmtStr;
@@ -247,7 +247,7 @@ extern const char* const& kCreaturesStaticStr;
 }
 
 namespace SArtifactPropsGeneralPageText {
-const unsigned int kNumStrings = 4;
+enum { kNumStrings = 4 };
 extern const char* const& kTypeStaticStr;
 extern const char* const& kMessageStaticStr;
 extern const char* const& kNoteStaticStr;
@@ -255,12 +255,12 @@ extern const char* const& kSpellStaticStr;
 }
 
 namespace SBlackBoxPropsGeneralPageText {
-const unsigned int kNumStrings = 1;
+enum { kNumStrings = 1 };
 extern const char* const& kMessageStaticStr;
 }
 
 namespace SEventPropsGeneralPageText {
-const unsigned int kNumStrings = 4;
+enum { kNumStrings = 4 };
 extern const char* const& kAllowedPlayersStaticStr;
 extern const char* const& kPlayerCheckFmtStr;
 extern const char* const& kAllowComputerCheckStr;
@@ -268,7 +268,7 @@ extern const char* const& kCancelCheckStr;
 }
 
 namespace SBlackBoxPropsContentsPageText {
-const unsigned int kNumStrings = 28;
+enum { kNumStrings = 28 };
 extern const char* const& kCategoryStaticStr;
 extern const char* const& kAddButtonStr;
 extern const char* const& kEditButtonStr;
@@ -300,7 +300,7 @@ extern const char* const& kSpellsStaticStr;
 }
 
 namespace SResourceQuantitiesDlgText {
-const unsigned int kNumStrings = 9;
+enum { kNumStrings = 9 };
 extern const char* const& kRes1StaticStr;
 extern const char* const& kRes2StaticStr;
 extern const char* const& kRes3StaticStr;
@@ -313,7 +313,7 @@ extern const char* const& kTakeRadioStr;
 }
 
 namespace SEditSecondarySkillDlgText {
-const unsigned int kNumStrings = 5;
+enum { kNumStrings = 5 };
 extern const char* const& kTypeStaticStr;
 extern const char* const& kMasteryStaticStr;
 extern const char* const& kBasicRadioStr;
@@ -322,13 +322,13 @@ extern const char* const& kExpertRadioStr;
 }
 
 namespace SEditCreatureStackDlgText {
-const unsigned int kNumStrings = 2;
+enum { kNumStrings = 2 };
 extern const char* const& kTypeStaticStr;
 extern const char* const& kQuantityStaticStr;
 }
 
 namespace SEditTimedEventGeneralPageText {
-const unsigned int kNumStrings = 7;
+enum { kNumStrings = 7 };
 extern const char* const& kEventNameStaticStr;
 extern const char* const& kMessageStaticStr;
 extern const char* const& kAllowedPlayersStaticStr;
@@ -339,46 +339,46 @@ extern const char* const& kSubsequentOccurenceStaticStr;
 }
 
 namespace SEditTownEventBuildingsPageText {
-const unsigned int kNumStrings = 2;
+enum { kNumStrings = 2 };
 extern const char* const& kBuildingTreeStaticStr;
 extern const char* const& kBuildCheckStr;
 }
 
 namespace SEditTownEventCreaturesPageText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kGeneratorNoStaticStr;
 extern const char* const& kQuantityStaticStr;
 extern const char* const& kNoteStaticStr;
 }
 
 namespace SEditArtifactDlgText {
-const unsigned int kNumStrings = 2;
+enum { kNumStrings = 2 };
 extern const char* const& kEquipWhereStaticStr;
 extern const char* const& kArtifactStaticStr;
 }
 
 namespace SEditRumorDlgText {
-const unsigned int kNumStrings = 2;
+enum { kNumStrings = 2 };
 extern const char* const& kNameStaticStr;
 extern const char* const& kTextStaticStr;
 }
 
 namespace SFindDlgText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kFindWhatStaticStr;
 extern const char* const& kFindNextButtonStr;
 extern const char* const& kFindPrevButtonStr;
 }
 
 namespace SFlaggablePropsDlgText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kOwnerStaticStr;
 extern const char* const& kNoneRadioStr;
 extern const char* const& kPlayerRadioFmtStr;
 }
 
 namespace SHeroPropsGeneralPageText {
-const unsigned int kNumStrings = 9;
+enum { kNumStrings = 9 };
 extern const char* const& kClassStaticStr;
 extern const char* const& kPlayerStaticStr;
 extern const char* const& kIdentityStaticStr;
@@ -391,21 +391,21 @@ extern const char* const& kCustomizePortraitCheckStr;
 }
 
 namespace SHeroPropsCreaturesPageText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kFormationStaticStr;
 extern const char* const& kSpreadRadioStr;
 extern const char* const& kGroupedRadioStr;
 }
 
 namespace SHeroPropsSecSkillsPageText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kTypeStaticStr;
 extern const char* const& kMasteryStaticStr;
 extern const char* const& kSkillStaticFmtStr;
 }
 
 namespace SHeroPropsArtifactsPageText {
-const unsigned int kNumStrings = 8;
+enum { kNumStrings = 8 };
 extern const char* const& kHasSpellbookCheckStr;
 extern const char* const& kArtifactsStaticStr;
 extern const char* const& kNameColumnStr;
@@ -417,7 +417,7 @@ extern const char* const& kRemoveAllButtonStr;
 }
 
 namespace SMapSpecsGeneralPageText {
-const unsigned int kNumStrings = 9;
+enum { kNumStrings = 9 };
 extern const char* const& kDifficultyStaticStr;
 extern const char* const& kEasyRadioStr;
 extern const char* const& kNormalRadioStr;
@@ -430,7 +430,7 @@ extern const char* const& kDescriptionStaticStr;
 }
 
 namespace SMapSpecsPlayerSpecsPageText {
-const unsigned int kNumStrings = 6;
+enum { kNumStrings = 6 };
 extern const char* const& kPlayerStaticStr;
 extern const char* const& kGenerateHeroCheckStr;
 extern const char* const& kPlayabilityStaticStr;
@@ -440,7 +440,7 @@ extern const char* const& kBehaviorStaticStr;
 }
 
 namespace SMapSpecsTeamsPageText {
-const unsigned int kNumStrings = 5;
+enum { kNumStrings = 5 };
 extern const char* const& kEnableTeamsCheckStr;
 extern const char* const& kNumberOfTeamsStaticStr;
 extern const char* const& kTeamAssignmentsStaticStr;
@@ -449,7 +449,7 @@ extern const char* const& kPlayerStaticFmtStr;
 }
 
 namespace SMapSpecsRumorsPageText {
-const unsigned int kNumStrings = 5;
+enum { kNumStrings = 5 };
 extern const char* const& kRumorsStaticStr;
 extern const char* const& kAddButtonStr;
 extern const char* const& kEditButtonStr;
@@ -458,7 +458,7 @@ extern const char* const& kRemoveAllButtonStr;
 }
 
 namespace SMapSpecsTimedEventsPageText {
-const unsigned int kNumStrings = 7;
+enum { kNumStrings = 7 };
 extern const char* const& kEventsStaticStr;
 extern const char* const& kAddButtonStr;
 extern const char* const& kEditButtonStr;
@@ -469,7 +469,7 @@ extern const char* const& kMoveDownButtonStr;
 }
 
 namespace SMapSpecsVictoryCondPageText {
-const unsigned int kNumStrings = 31;
+enum { kNumStrings = 31 };
 extern const char* const& kSelectVictoryConditionStaticStr;
 extern const char* const& kNoneRadioStr;
 extern const char* const& kAquireArtifactRadioStr;
@@ -504,7 +504,7 @@ extern const char* const& kDestinationStaticStr;
 }
 
 namespace SMapSpecsLossCondPageText {
-const unsigned int kNumStrings = 8;
+enum { kNumStrings = 8 };
 extern const char* const& kSelectLossConditionStaticStr;
 extern const char* const& kNoneRadioStr;
 extern const char* const& kLoseTownRadioStr;
@@ -516,7 +516,7 @@ extern const char* const& kTimeLimitStaticStr;
 }
 
 namespace SMonsterPropsGeneralPageText {
-const unsigned int kNumStrings = 13;
+enum { kNumStrings = 13 };
 extern const char* const& kTypeStaticStr;
 extern const char* const& kQuantityStaticStr;
 extern const char* const& kRandomQtyRadioStr;
@@ -533,7 +533,7 @@ extern const char* const& kMessageStaticStr;
 }
 
 namespace SMonsterPropsTreasurePageText {
-const unsigned int kNumStrings = 9;
+enum { kNumStrings = 9 };
 extern const char* const& kResourcesStaticStr;
 extern const char* const& kRes1StaticStr;
 extern const char* const& kRes2StaticStr;
@@ -546,7 +546,7 @@ extern const char* const& kArtifactStaticStr;
 }
 
 namespace SNewMapDlgText {
-const unsigned int kNumStrings = 6;
+enum { kNumStrings = 6 };
 extern const char* const& kMapSizeStaticStr;
 extern const char* const& k36x36RadioStr;
 extern const char* const& k72x72RadioStr;
@@ -556,7 +556,7 @@ extern const char* const& kTwoLevelMapCheckStr;
 }
 
 namespace SOptionsDlgText {
-const unsigned int kNumStrings = 8;
+enum { kNumStrings = 8 };
 extern const char* const& kTileFrequencyStaticStr;
 extern const char* const& kNoneStaticStr;
 extern const char* const& kLotsStaticStr;
@@ -568,7 +568,7 @@ extern const char* const& kMinutesStaticStr;
 }
 
 namespace SResourcePropsGeneralPageText {
-const unsigned int kNumStrings = 7;
+enum { kNumStrings = 7 };
 extern const char* const& kTypeStaticStr;
 extern const char* const& kQuantityStaticStr;
 extern const char* const& kRandomQtyRadioStr;
@@ -579,7 +579,7 @@ extern const char* const& kNoteStaticStr;
 }
 
 namespace SScholarPropsDlgText {
-const unsigned int kNumStrings = 5;
+enum { kNumStrings = 5 };
 extern const char* const& kRewardStaticStr;
 extern const char* const& kRandomRewardRadioStr;
 extern const char* const& kPriSkillRewardRadioStr;
@@ -588,7 +588,7 @@ extern const char* const& kSpellRewardRadioStr;
 }
 
 namespace SSeersHutPropsDlgText {
-const unsigned int kNumStrings = 19;
+enum { kNumStrings = 19 };
 extern const char* const& kQuestArtifactStaticStr;
 extern const char* const& kQuestRewardStaticStr;
 extern const char* const& kTypeStaticStr;
@@ -611,19 +611,19 @@ extern const char* const& kSpellStaticStr;
 }
 
 namespace SShrinePropsDlgText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kSpellStaticFmtStr;
 extern const char* const& kRandomSpellRadioStr;
 extern const char* const& kCustomSpellRadioStr;
 }
 
 namespace SSignPropsDlgText {
-const unsigned int kNumStrings = 1;
+enum { kNumStrings = 1 };
 extern const char* const& kMessageStaticStr;
 }
 
 namespace STownPropsGeneralPageText {
-const unsigned int kNumStrings = 10;
+enum { kNumStrings = 10 };
 extern const char* const& kTownTypeStaticStr;
 extern const char* const& kPlayerStaticStr;
 extern const char* const& kTownNameStaticStr;
@@ -637,14 +637,14 @@ extern const char* const& kRemoveButtonStr;
 }
 
 namespace STownPropsGarrisonPageText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kFormationStaticStr;
 extern const char* const& kSpreadRadioStr;
 extern const char* const& kGroupedRadioStr;
 }
 
 namespace STownPropsBuildingsPageText {
-const unsigned int kNumStrings = 6;
+enum { kNumStrings = 6 };
 extern const char* const& kHasFortCheckStr;
 extern const char* const& kBuildingTreeStaticStr;
 extern const char* const& kEnabledCheckStr;
@@ -654,12 +654,12 @@ extern const char* const& kDemolishAllButtonStr;
 }
 
 namespace STownPropsSpellsPageText {
-const unsigned int kNumStrings = 1;
+enum { kNumStrings = 1 };
 extern const char* const& kSpellsStaticStr;
 }
 
 namespace STownPropsTimedEventsPageText {
-const unsigned int kNumStrings = 7;
+enum { kNumStrings = 7 };
 extern const char* const& kEventsStaticStr;
 extern const char* const& kAddButtonStr;
 extern const char* const& kEditButtonStr;
@@ -670,7 +670,7 @@ extern const char* const& kMoveDownButtonStr;
 }
 
 namespace SMainMenuText {
-const unsigned int kNumStrings = 6;
+enum { kNumStrings = 6 };
 extern const char* const& kFileStr;
 extern const char* const& kEditStr;
 extern const char* const& kViewStr;
@@ -680,7 +680,7 @@ extern const char* const& kHelpStr;
 }
 
 namespace SFileMenuText {
-const unsigned int kNumStrings = 8;
+enum { kNumStrings = 8 };
 extern const char* const& kNewStr;
 extern const char* const& kOpenStr;
 extern const char* const& kSaveStr;
@@ -692,7 +692,7 @@ extern const char* const& kExitStr;
 }
 
 namespace SEditMenuText {
-const unsigned int kNumStrings = 10;
+enum { kNumStrings = 10 };
 extern const char* const& kUndoStr;
 extern const char* const& kRedoStr;
 extern const char* const& kCutStr;
@@ -706,7 +706,7 @@ extern const char* const& kPropertiesStr;
 }
 
 namespace SViewMenuText {
-const unsigned int kNumStrings = 10;
+enum { kNumStrings = 10 };
 extern const char* const& kZoomInStr;
 extern const char* const& kZoomOutStr;
 extern const char* const& kUndergroundStr;
@@ -720,7 +720,7 @@ extern const char* const& kStatusBarStr;
 }
 
 namespace SToolsMenuText {
-const unsigned int kNumStrings = 8;
+enum { kNumStrings = 8 };
 extern const char* const& kTerrainStr;
 extern const char* const& kRiversStr;
 extern const char* const& kRoadsStr;
@@ -732,7 +732,7 @@ extern const char* const& kOptionsStr;
 }
 
 namespace SToolsTerrainMenuText {
-const unsigned int kNumStrings = 14;
+enum { kNumStrings = 14 };
 extern const char* const& k1x1Str;
 extern const char* const& k2x2Str;
 extern const char* const& k4x4Str;
@@ -750,7 +750,7 @@ extern const char* const& kRockStr;
 }
 
 namespace SToolsRiversMenuText {
-const unsigned int kNumStrings = 4;
+enum { kNumStrings = 4 };
 extern const char* const& kClearStr;
 extern const char* const& kIcyStr;
 extern const char* const& kMuddyStr;
@@ -758,14 +758,14 @@ extern const char* const& kLavaStr;
 }
 
 namespace SToolsRoadsMenuText {
-const unsigned int kNumStrings = 3;
+enum { kNumStrings = 3 };
 extern const char* const& kDirtStr;
 extern const char* const& kGravelStr;
 extern const char* const& kCobblestoneStr;
 }
 
 namespace SToolsEraseMenuText {
-const unsigned int kNumStrings = 4;
+enum { kNumStrings = 4 };
 extern const char* const& k1x1Str;
 extern const char* const& k2x2Str;
 extern const char* const& k4x4Str;
@@ -773,7 +773,7 @@ extern const char* const& kFillStr;
 }
 
 namespace SToolsObjectsMenuText {
-const unsigned int kNumStrings = 15;
+enum { kNumStrings = 15 };
 extern const char* const& kDirtObjectsStr;
 extern const char* const& kSandObjectsStr;
 extern const char* const& kGrassObjectsStr;
@@ -792,7 +792,7 @@ extern const char* const& kTreasuresStr;
 }
 
 namespace SPlayerMenuText {
-const unsigned int kNumStrings = 9;
+enum { kNumStrings = 9 };
 extern const char* const& kNoneStr;
 extern const char* const& kPlayer1FmtStr;
 extern const char* const& kPlayer2FmtStr;
@@ -805,13 +805,13 @@ extern const char* const& kPlayer8FmtStr;
 }
 
 namespace SHelpMenuText {
-const unsigned int kNumStrings = 2;
+enum { kNumStrings = 2 };
 extern const char* const& kHelpTopicsStr;
 extern const char* const& kAboutMapEditorStr;
 }
 
 namespace SContextMenuText {
-const unsigned int kNumStrings = 11;
+enum { kNumStrings = 11 };
 extern const char* const& kWhatsThisStr;
 extern const char* const& kUndoStr;
 extern const char* const& kRedoStr;
