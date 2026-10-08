@@ -1,9 +1,0 @@
-# Reviewed literals used by retained spell helpers.
-
-[[constants]]
-units = ["spells"]
-mac_section = 1
-mac_offset = 0x570d
-mac_size = 1
-sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
-evidence = "Mac resurrection0:0x198870 and0x1988e0 load the empty C-string directly from RTOC-0x28f3 after rejecting creature types outside0..150, then pass it to sprintf. This retained army::getName(count) invalid-type fallback matches the canonical helper's empty string and emitted one-byte TD @1517 exactly. Data1+0x570d contains the reviewed zero terminator."

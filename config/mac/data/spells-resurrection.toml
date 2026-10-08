@@ -1,9 +1,0 @@
-# Source filename literal used by the retained Pit Lord resurrection call.
-
-[[constants]]
-units = ["spells"]
-mac_section = 1
-mac_offset = 0x53283
-mac_size = 13
-sha256 = "6e9528bd82ea42f3cc988ecbca44d7eed783b415ceddefd9c8bc5ef01b87801e"
-evidence = "demonicResurrection native0:0x1984ec supplies Resurect.wav (including NUL) to loadPlaySample at0x198528. Its preceding R4 load at0x198524 reads loader-relocated TOC1+0x2ff8 ->1+0x53283. All13 candidate filename bytes match this bounded native payload. The PEF has three equal filename copies; the source-unit binding selects this one from the actual native call argument, not a payload-only address guess. Compiler-generated literal names remain unbound."

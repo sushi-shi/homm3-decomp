@@ -1,9 +1,0 @@
-# Alignment census's reference-bound fill value.
-
-[[constants]]
-units = ["armygrp"]
-mac_section = 1
-mac_offset = 0x417c
-mac_size = 4
-sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "Mac getAlignments loads a zero-valued int directly from RTOC-0x3e84 before each byte store at code 0x582a0..0x582f0. This ten-byte fill reloads its reference-bound value for each element, matching std::fill's int-valued third argument. The four-byte native payload and candidate anonymous integer literal are both 00000000."
