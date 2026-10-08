@@ -212,15 +212,18 @@ class LinkTest(unittest.TestCase):
         self.assertEqual(names.index("crti.o") + 1, names.index("crtbegin.o"))
         self.assertEqual(names[-2:], ["crtend.o", "crtn.o"])
         objects = [Path(a) for a in argv if a.endswith(".o") and "/obj/" in a]
-        self.assertEqual(len(objects), 103)
+        self.assertEqual(len(objects), 104)   # the 103 census objects and the version object
         self.assertEqual(objects, link.project_objects())
+        self.assertEqual(objects[-1].name, "version.o")
         archives = [n for n in names if n.endswith(".a")]
         self.assertEqual(archives[:6], list(link.ARCHIVES_BEFORE))
         self.assertEqual(archives[6:], ["libz.a", "libstdc++.a", "libgcc.a", "libgcc.a"])
         shared = [a for a in argv if a.startswith("-l")]
-        self.assertEqual(shared, ["-ldl", "-lXi", "-lXext", "-lX11", "-lm", "-lm", "-lc"])
+        # libm first comes from g++'s tail, after libstdc++.a (an earlier -lm versions clog).
+        self.assertEqual(shared, ["-ldl", "-lXi", "-lXext", "-lX11", "-lm", "-lc"])
         self.assertLess(names.index("libglib.a"), argv.index("-ldl"))
-        self.assertLess(argv.index("-lm"), names.index("libz.a"))
+        self.assertLess(names.index("libstdc++.a"), argv.index("-lm"))
+        self.assertEqual(argv[argv.index("-rpath-link") + 1].split(":")[0], str(toolchain.LINK / "glibc"))
 
     def test_link_media_digest_covers_the_pins(self):
         spec = toolchain.specification()
