@@ -1,4 +1,5 @@
-"""Link the Loki h3maped image from the 103 project objects and the staged libraries.
+"""Link the Loki h3maped image from the 103 project objects, the link-only
+version object and the staged libraries.
 
     build/h3maped-loki/link/h3maped        the linked, stripped executable
     build/h3maped-loki/link/h3maped.map    ld's link map (input sections, archive members)
@@ -7,7 +8,8 @@
 The image's own facts fix the command (docs/loki/README.md, "Link"):
 
 - link order: its .comment entries and .eh_frame CIEs run crt1.o, crti.o (egcs
-  1.1.2, glibc 2.1.3), crtbegin.o, the project objects in census order, libglade,
+  1.1.2, glibc 2.1.3), crtbegin.o, the project objects in census order, the
+  version object (game_version; GCC 2.95.2, no .text or CIE), libglade,
   libxml, GTK+, GDK, GModule, GLib, zlib, libstdc++, libgcc, then crtend.o, crtn.o;
 - DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc, in that order, so those
   six are the only shared libraries; everything else is static;
@@ -36,8 +38,11 @@ UNDEFINED = re.compile(r"undefined reference to `([^']+)'")
 
 
 def project_objects() -> list[Path]:
-    """The compiled units in link order (their census object index)."""
-    return [build.OUT / "obj" / f"{unit.name}.o" for unit in sorted(build.units(), key=lambda u: u.obj)]
+    """The compiled units in link order (their census object index); a link-only
+    object follows the census object it names."""
+    order = [(unit.obj, 0, unit.name) for unit in build.units()]
+    order += [(after, 1, unit.name) for unit, after in build.link_only_units()]
+    return [build.OUT / "obj" / f"{name}.o" for _, _, name in sorted(order)]
 
 
 def command(output: Path = IMAGE, map_path: Path = MAP) -> list[str]:
@@ -61,8 +66,9 @@ def command(output: Path = IMAGE, map_path: Path = MAP) -> list[str]:
 
 def compile_all(jobs: int) -> list[str]:
     failures = []
+    units = build.units() + [unit for unit, _ in build.link_only_units()]
     with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
-        for unit, (_, error) in zip(build.units(), pool.map(build.compile_unit, build.units())):
+        for unit, (_, error) in zip(units, pool.map(build.compile_unit, units)):
             if error:
                 failures.append(f"{unit.name}: {error}")
     return failures

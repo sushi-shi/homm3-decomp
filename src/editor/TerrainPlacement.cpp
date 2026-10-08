@@ -475,16 +475,16 @@ const TNormalTerrainTypeTraits::TTileProps akWaterTileProps[] = {
     { eGS_full, false }, { eGS_full, false }, { eGS_full, false }, { eGS_full, false }
 };
 
-TNormalTerrainTypeTraits kDirtTraits(true, true, 50, ARRAY_SIZE(akDirtTileProps), akDirtTileProps);
-TNormalTerrainTypeTraits kSandTraits(false, true, 70, ARRAY_SIZE(akSandTileProps), akSandTileProps);
-TNormalTerrainTypeTraits kGrassTraits(true, true, 50, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
-TNormalTerrainTypeTraits kSnowTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
-TNormalTerrainTypeTraits kSwampTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
-TNormalTerrainTypeTraits kRoughTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
-TNormalTerrainTypeTraits kSubterraneanTraits(true, true, 60, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
-TNormalTerrainTypeTraits kLavaTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
-TNormalTerrainTypeTraits kWaterTraits(false, false, 0, ARRAY_SIZE(akWaterTileProps), akWaterTileProps);
-TRockTraits kRockTraits;
+const TNormalTerrainTypeTraits kDirtTraits(true, true, 50, ARRAY_SIZE(akDirtTileProps), akDirtTileProps);
+const TNormalTerrainTypeTraits kSandTraits(false, true, 70, ARRAY_SIZE(akSandTileProps), akSandTileProps);
+const TNormalTerrainTypeTraits kGrassTraits(true, true, 50, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
+const TNormalTerrainTypeTraits kSnowTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
+const TNormalTerrainTypeTraits kSwampTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
+const TNormalTerrainTypeTraits kRoughTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
+const TNormalTerrainTypeTraits kSubterraneanTraits(true, true, 60, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
+const TNormalTerrainTypeTraits kLavaTraits(true, true, 80, ARRAY_SIZE(akNormalTileProps), akNormalTileProps);
+const TNormalTerrainTypeTraits kWaterTraits(false, false, 0, ARRAY_SIZE(akWaterTileProps), akWaterTileProps);
+const TRockTraits kRockTraits;
 
 TTerrainTypeTraits* const akTerrainTypeTraits[kNumTerrainTypes] = {
     &kDirtTraits, &kSandTraits, &kGrassTraits, &kSnowTraits, &kSwampTraits,

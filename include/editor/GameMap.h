@@ -345,6 +345,10 @@ public:
 
     class TLayer;
 
+    // Exported from GameMap.o's .rodata after the team stream operators;
+    // nothing refers to it.
+    static const TMapLayerObjectID s_kInvalidObjID;
+
     TGameMap(TClient* pClient, const TObjectFactory* pObjectFactory, TSize size, bool bTwoLayer);
     TGameMap(TClient* pClient, const TObjectFactory* pObjectFactory, streambuf* pStreamBuf, int version);
     TGameMap(const TGameMap& other);

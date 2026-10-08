@@ -476,6 +476,8 @@ TRawOStream& operator<<(TRawOStream& stream, const TTeamInfo& teamInfo)
     return stream;
 }
 
+const TMapLayerObjectID TGameMap::s_kInvalidObjID = 0;
+
 class TGameMap::_TImpl {
 public:
     static const unsigned int s_kMaxHeroesOnMap = 128;
@@ -3966,6 +3968,8 @@ const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
 
 class TGameMap::TLayer::_TImpl {
 public:
+    static const TMapLayerObjectID s_kInvalidObjID;
+
     _TImpl(TGameMap::TSize size);
     _TImpl(const _TImpl& other);
     ~_TImpl();
@@ -4153,6 +4157,8 @@ private:
     TRefCountingPtr<vector<_TObjectLink> > _m_paObjectLink;
     TMapLayerObjectID _m_floatingObjID;
 };
+
+const TMapLayerObjectID TGameMap::TLayer::_TImpl::s_kInvalidObjID = 0;
 
 TGameMap::TLayer::_TImpl::_TImpl(const _TImpl& other)
     : _m_size(other._m_size), _m_pCellGrid(other._m_pCellGrid), _m_nextAvail(other._m_nextAvail),

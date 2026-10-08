@@ -59,6 +59,19 @@ def units(selected: list[str] | None = None) -> list[Unit]:
     return out
 
 
+def link_only_units() -> list[tuple[Unit, int]]:
+    """Objects only the link needs (no census object): each with the census object it follows."""
+    spec = manifest()
+    out = []
+    for row in spec.get("link_only", ()):
+        profile = spec["profiles"][row.get("profile", "editor")]
+        flags = (*profile["flags"], *(f"-D{d}" for d in profile.get("defines", ())),
+                 *(("-include", str(ROOT / profile["prefix"])) if "prefix" in profile else ()))
+        out.append((Unit(row["name"], -1, ROOT / row["source"], flags, profile.get("driver", "g++")),
+                    row["after"]))
+    return out
+
+
 def include_flags() -> list[str]:
     flags = [f"-I{ROOT / 'src'}", f"-I{ROOT / 'include'}"]
     flags += [f"-I{ROOT / 'vendor' / path}" for path in VENDOR_INCLUDES]

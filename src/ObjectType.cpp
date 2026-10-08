@@ -86,21 +86,21 @@ bool TCategorySlotTraits::contains(const TObjectType& objectType) const
     return objectType.getSlotCategory() == _m_category;
 }
 
-TTerrainSlotTraits dirtSlotTraits(eTerrainDirt);
-TTerrainSlotTraits sandSlotTraits(eTerrainSand);
-TTerrainSlotTraits grassSlotTraits(eTerrainGrass);
-TTerrainSlotTraits snowSlotTraits(eTerrainSnow);
-TTerrainSlotTraits swampSlotTraits(eTerrainSwamp);
-TTerrainSlotTraits roughSlotTraits(eTerrainRough);
-TTerrainSlotTraits subterraneanSlotTraits(eTerrainSubterranean);
-TTerrainSlotTraits lavaSlotTraits(eTerrainLava);
-TTerrainSlotTraits waterSlotTraits(eTerrainWater);
-TAllTerrainSlotTraits allTerrainSlotTraits;
-TCategorySlotTraits townSlotTraits(eCategoryTown);
-TCategorySlotTraits monsterSlotTraits(eCategoryMonster);
-TCategorySlotTraits heroSlotTraits(eCategoryHero);
-TCategorySlotTraits artifactSlotTraits(eCategoryArtifact);
-TCategorySlotTraits treasureSlotTraits(eCategoryTreasure);
+const TTerrainSlotTraits dirtSlotTraits(eTerrainDirt);
+const TTerrainSlotTraits sandSlotTraits(eTerrainSand);
+const TTerrainSlotTraits grassSlotTraits(eTerrainGrass);
+const TTerrainSlotTraits snowSlotTraits(eTerrainSnow);
+const TTerrainSlotTraits swampSlotTraits(eTerrainSwamp);
+const TTerrainSlotTraits roughSlotTraits(eTerrainRough);
+const TTerrainSlotTraits subterraneanSlotTraits(eTerrainSubterranean);
+const TTerrainSlotTraits lavaSlotTraits(eTerrainLava);
+const TTerrainSlotTraits waterSlotTraits(eTerrainWater);
+const TAllTerrainSlotTraits allTerrainSlotTraits;
+const TCategorySlotTraits townSlotTraits(eCategoryTown);
+const TCategorySlotTraits monsterSlotTraits(eCategoryMonster);
+const TCategorySlotTraits heroSlotTraits(eCategoryHero);
+const TCategorySlotTraits artifactSlotTraits(eCategoryArtifact);
+const TCategorySlotTraits treasureSlotTraits(eCategoryTreasure);
 
 }
 
