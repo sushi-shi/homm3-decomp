@@ -208,7 +208,7 @@ void textWidget::draw() const
             colorScheme = m_color + 2;
         else
             colorScheme = m_color;
-        m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+        m_font->DrawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
                                 drawX, drawY, m_width, m_height,
                                 font::TColor(colorScheme), m_justify, -1);
     }

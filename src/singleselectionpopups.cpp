@@ -514,7 +514,7 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
     m_window = new TDialogBox(240, 236, 320, 128, 0x12);
 
     const char* caption = g_generalText->GetText(GENERAL_TEXT_CREATING_MAP);
-    int captionWidth = g_mediumFont->getStringWidth(caption);
+    int captionWidth = g_mediumFont->get_string_width(caption);
     int captionX = (m_window->m_width - captionWidth) / 2;
     textWidget* captionWidget = new textWidget(
         captionX, 30, captionWidth, 20, caption,

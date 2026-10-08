@@ -837,7 +837,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                                               : m_numTroopsToShowOverride;
             sprintf(countText,
                     DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), x);
-            g_tinyFont->drawBoundedString(
+            g_tinyFont->DrawBoundedString(
                 countText, g_windowManager->m_screenBitmap, numboxX,
                 numboxY, 0x1e, 0xf, font::WHITE, 1, -1);
         }

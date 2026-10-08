@@ -81,7 +81,7 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
     m_background = 0;
     textFont->fillLinesVector(text, m_width - 24, m_textLines);
 
-    int visibleLines = m_height / textFont->m_fs.m_height;
+    int visibleLines = m_height / textFont->fs.height;
     if (m_textLines.size() <= visibleLines) {
         textFont->fillLinesVector(text, m_width - 3, m_textLines);
         for (int pad = m_textLines.size(); pad < visibleLines; pad++)
@@ -91,9 +91,9 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
     textWidget* lineWidget;
     for (int line = 0; line < visibleLines; line++) {
         lineWidget = new textWidget(
-            this->m_x, lineY, m_width, textFont->m_fs.m_height,
+            this->m_x, lineY, m_width, textFont->fs.height,
             m_textLines[line].c_str(), m_fontFilename, color, -1, 0, 0, 8);
-        lineY += textFont->m_fs.m_height;
+        lineY += textFont->fs.height;
         m_lineImages.push_back(lineWidget);
     }
 

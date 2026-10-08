@@ -989,7 +989,7 @@ void CChatManager::updateWidgetText(int numLines, textWidget* widget)
     int i;
     for (i = firstMsg; i <= lastMsg; i++) {
         lineCounts[lineNbr] =
-            widget->m_font->lineLength(m_msgArray[msgNbr].m_text, widget->m_width);
+            widget->m_font->LineLength(m_msgArray[msgNbr].m_text, widget->m_width);
         msgNbr = getNextMsgNbr(msgNbr);
         totalLines += lineCounts[lineNbr];
         lineNbr++;
@@ -2599,7 +2599,7 @@ void CGameTransferSmack::setPercentage(float pct)
     strcat(text, percentageText);
 
     if (m_drawText) {
-        g_mediumFont->drawBoundedString(
+        g_mediumFont->DrawBoundedString(
             text, g_windowManager->m_screenBitmap, m_x, m_y, 160, 160,
             font::PRIMARY, 5, -1);
     }

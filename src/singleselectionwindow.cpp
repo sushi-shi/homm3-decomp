@@ -3407,7 +3407,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
     if (!m_scenarioOptionsStarted) {
         startMouseThread();
         drawWindow(0, 0xffff0001, 0xffff);
-        g_smallFont->drawBoundedString(
+        g_smallFont->DrawBoundedString(
             (*g_generalText)[GENERAL_TEXT_SCENARIO_READING_MAP_FILES], g_windowManager->m_screenBitmap,
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
@@ -4484,7 +4484,7 @@ void TSingleSelectionWindow::drawBasicMapInfo()
         name = getMapName(m_currentMap);
     else
         name = getFileName(m_currentMap);
-    g_bigFont->drawBoundedString(name, g_windowManager->m_screenBitmap,
+    g_bigFont->DrawBoundedString(name, g_windowManager->m_screenBitmap,
                                  422, 45, 324, 30, font::HEADING_HIGHLIGHT, 0, -1);
     if (m_currentMap != -1
             && (m_loadMode != 0 || m_saveMode != 0 || m_randomMapMode != 0)) {
@@ -4507,15 +4507,15 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                              "%d/%d/%d - %d:%02d"),
                 st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
 #endif
-        g_smallFont->drawBoundedString(dateBuf,
+        g_smallFont->DrawBoundedString(dateBuf,
             g_windowManager->m_screenBitmap, 422, 27, 278, 18, font::WHITE, 6, -1);
     }
-    g_smallFont->drawBoundedString(g_difficulty[hdr->m_difficulty],
+    g_smallFont->DrawBoundedString(g_difficulty[hdr->m_difficulty],
         g_windowManager->m_screenBitmap, 414, 454, 89, 48, font::WHITE, 5, -1);
     char ratingBuf[256];
     sprintf(ratingBuf, DATA_COMPGEN(0x006831e4, percentFormat, "%d%%"),
             g_difficultyRatingPercent[g_game->m_setup.m_difficulty]);
-    g_smallFont->drawBoundedString(ratingBuf,
+    g_smallFont->DrawBoundedString(ratingBuf,
         g_windowManager->m_screenBitmap, 666, 454, 83, 48, font::WHITE, 5, -1);
     if (m_chatShowing != 0)
         return;
@@ -4523,9 +4523,9 @@ void TSingleSelectionWindow::drawBasicMapInfo()
     char lcText[256];
     getVCText(vc, vcText);
     getLCText(lc, lcText);
-    g_smallFont->drawBoundedString(vcText,
+    g_smallFont->DrawBoundedString(vcText,
         g_windowManager->m_screenBitmap, 456, 305, 288, 32, font::WHITE, 4, -1);
-    g_smallFont->drawBoundedString(lcText,
+    g_smallFont->DrawBoundedString(lcText,
         g_windowManager->m_screenBitmap, 456, 364, 288, 32, font::WHITE, 4, -1);
     if (vc->m_type >= 0 && vc->m_type <= 11)
         m_victoryIcon->Draw(0, vc->m_type, 0, 0,
@@ -4556,7 +4556,7 @@ int TSingleSelectionWindow::update()
     if (m_receivedMaps == 0) {
         if (isHost())
             return 1;
-        g_smallFont->drawBoundedString(
+        g_smallFont->DrawBoundedString(
             g_generalText->GetText(GENERAL_TEXT_RECEIVING_MAP_HEADERS), g_windowManager->m_screenBitmap,
             433, 46, 210, 23, font::WHITE, 4, -1);
         g_windowManager->updateScreen(0, 0, 800, 600);
@@ -4567,7 +4567,7 @@ int TSingleSelectionWindow::update()
             int rows = g_scenarioListVisibleRows;
             if (m_selectionHeaders.size() < static_cast<unsigned int>(rows))
                 rows = m_selectionHeaders.size();
-            g_smallFont->drawBoundedString(
+            g_smallFont->DrawBoundedString(
                 g_generalText->GetText(GENERAL_TEXT_MAP_SIZES), g_windowManager->m_screenBitmap,
                 25, 52, 132, 32, font::PRIMARY_HIGHLIGHT, 5, -1);
             int i = 0;
@@ -4628,7 +4628,7 @@ int TSingleSelectionWindow::update()
                                 DATA_COMPGEN(0x00679dc8, mapPlayersFormat,
                                              "%d/%d"),
                                 hdr->m_header.m_numPlayers, hdr->m_header.m_maxNumHumanPlayers);
-                        g_smallFont->drawBoundedString(
+                        g_smallFont->DrawBoundedString(
                             text, g_windowManager->m_screenBitmap,
                             26, y - 1, 30, 25, font::TColor(color), 5, -1);
                         const char* sizeText;
@@ -4641,14 +4641,14 @@ int TSingleSelectionWindow::update()
                         else
                             sizeText = g_generalText->GetText(GENERAL_TEXT_MAP_SIZE_EXTRA_LARGE_ABBREVIATION);
                         strcpy(text, sizeText);
-                        g_smallFont->drawBoundedString(
+                        g_smallFont->DrawBoundedString(
                             text, g_windowManager->m_screenBitmap,
                             59, y - 1, 30, 25, font::TColor(color), 5, -1);
                         if (frame >= 0)
                             m_versionIcon->Draw(0, frame, 0, 0,
                                 m_versionIcon->GetWidth(), m_versionIcon->GetHeight(),
                                 g_windowManager->m_screenBitmap, 91, y, 0, 1);
-                        g_smallFont->drawBoundedString(
+                        g_smallFont->DrawBoundedString(
                             getMapName(m_currentIndex + i),
                             g_windowManager->m_screenBitmap,
                             125, y - 1, 184, 25, font::TColor(color), 5, -1);
@@ -4683,13 +4683,13 @@ int TSingleSelectionWindow::update()
         if (m_inAdvancedOptions) {
             updateNames();
             int pos;
-            g_bigFont->drawBoundedString(
+            g_bigFont->DrawBoundedString(
                 g_generalText->GetText(GENERAL_TEXT_ADVANCED_OPTIONS), g_windowManager->m_screenBitmap,
                 58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
-            g_smallFont->drawBoundedString(
+            g_smallFont->DrawBoundedString(
                 g_generalText->GetText(GENERAL_TEXT_ADVANCED_OPTIONS_HELP), g_windowManager->m_screenBitmap,
                 58, 48, 334, 34, font::WHITE, 1, -1);
-            g_smallFont->drawBoundedString(
+            g_smallFont->DrawBoundedString(
                 g_turnDurationText[g_game->m_setup.m_turnDuration],
                 g_windowManager->m_screenBitmap, 256, 556, 134, 18, font::WHITE, 5, -1);
             pos = 0;
@@ -4703,10 +4703,10 @@ int TSingleSelectionWindow::update()
             }
         }
         if (m_inFilterOptions) {
-            g_bigFont->drawBoundedString(
+            g_bigFont->DrawBoundedString(
                 g_generalText->GetText(GENERAL_TEXT_RANDOM_MAP_SETUP), g_windowManager->m_screenBitmap,
                 58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
-            g_smallFont->drawBoundedString(
+            g_smallFont->DrawBoundedString(
                 g_generalText->GetText(GENERAL_TEXT_RANDOM_MAP_SETUP_HELP), g_windowManager->m_screenBitmap,
                 58, 48, 334, 34, font::WHITE, 1, -1);
             updateRandomMapOptionWidgets();
@@ -8369,7 +8369,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         m_townPix->Draw(0, townType * 2 + 2, 0, 0, m_townPix->GetWidth(),
                         m_townPix->GetHeight(), g_windowManager->m_screenBitmap,
                         176, position * 50 + 130, 0, 1);
-        g_tinyFont->drawBoundedString(townManager::getTownTypeName(townType),
+        g_tinyFont->DrawBoundedString(townManager::getTownTypeName(townType),
             g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16, font::WHITE, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
@@ -8377,13 +8377,13 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 m_heroPix[0]->GetHeight(), g_windowManager->m_screenBitmap,
                 252, position * 50 + 130, 0);
             const char* name = getHeroName(playerPos);
-            g_tinyFont->drawBoundedString(name,
+            g_tinyFont->DrawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
         } else {
             m_noHeroBmp->Draw(0, 0, m_noHeroBmp->GetWidth(), m_noHeroBmp->GetHeight(),
                 g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
-            g_tinyFont->drawBoundedString(g_generalText->GetText(GENERAL_TEXT_NO_HERO),
+            g_tinyFont->DrawBoundedString(g_generalText->GetText(GENERAL_TEXT_NO_HERO),
                 g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
         }
@@ -8407,11 +8407,11 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                          m_resource->GetHeight(),
                          g_windowManager->m_screenBitmap, 328, position * 50 + 130, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
-            g_tinyFont->drawBoundedString(g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
+            g_tinyFont->DrawBoundedString(g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
                 g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
         else
-            g_tinyFont->drawBoundedString(g_agrText[bonus],
+            g_tinyFont->DrawBoundedString(g_agrText[bonus],
                 g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
     } else {
@@ -8435,14 +8435,14 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             m_randomTownBmp->Draw(0, 0, m_randomHeroBmp->GetWidth(),
                 m_randomHeroBmp->GetHeight(), g_windowManager->m_screenBitmap,
                 176, position * 50 + 130, 0);
-            g_tinyFont->drawBoundedString(g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
+            g_tinyFont->DrawBoundedString(g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         } else {
             m_townPix->Draw(0, town * 2 + 2, 0, 0, m_townPix->GetWidth(),
                 m_townPix->GetHeight(), g_windowManager->m_screenBitmap, 176,
                 position * 50 + 130, 0, 1);
-            g_tinyFont->drawBoundedString(townManager::getTownTypeName(town),
+            g_tinyFont->DrawBoundedString(townManager::getTownTypeName(town),
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         }
@@ -8471,7 +8471,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                     && !hasRandomHero(playerPos)) {
                 m_noHeroBmp->Draw(0, 0, m_noHeroBmp->GetWidth(), m_noHeroBmp->GetHeight(),
                     g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
-                g_tinyFont->drawBoundedString(
+                g_tinyFont->DrawBoundedString(
                     g_generalText->GetText(GENERAL_TEXT_NO_HERO),
                     g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71,
                     16, font::WHITE, 5, -1);
@@ -8479,7 +8479,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 m_randomHeroBmp->Draw(0, 0, m_randomHeroBmp->GetWidth(),
                     m_randomHeroBmp->GetHeight(),
                     g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
-                g_tinyFont->drawBoundedString(
+                g_tinyFont->DrawBoundedString(
                     g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
                     g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71,
                     16, font::WHITE, 5, -1);
@@ -8489,7 +8489,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             m_heroPix[face]->Draw(0, 0, m_heroPix[0]->GetWidth(),
                 m_heroPix[0]->GetHeight(), g_windowManager->m_screenBitmap,
                 252, position * 50 + 130, 0);
-            g_tinyFont->drawBoundedString(name,
+            g_tinyFont->DrawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         }
@@ -8520,11 +8520,11 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             break;
         }
         if (bonus == NEW_MAP_BONUS_RANDOM)
-            g_tinyFont->drawBoundedString(g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
+            g_tinyFont->DrawBoundedString(g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
                 g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         else
-            g_tinyFont->drawBoundedString(g_agrText[bonus],
+            g_tinyFont->DrawBoundedString(g_agrText[bonus],
                 g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         m_resource->Draw(0, frame, 0, 0, m_resource->GetWidth(),

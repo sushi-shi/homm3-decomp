@@ -372,7 +372,7 @@ void ResourceManager::remapGraphics()
                 DATA_COMPGEN(0x0067f780, resourceGamePaletteName,
                              "game.pal")));
             if (palette.get())
-                static_cast<font*>(value)->setPalette(*palette);
+                static_cast<font*>(value)->SetPalette(*palette);
             break;
         }
 
@@ -430,7 +430,7 @@ void ResourceManager::saturateGraphics()
         case RESOURCE_TYPE_FONT: {
             std::auto_ptr<TPalette16> palette(loadPalette("game.pal"));
             if (palette.get())
-                static_cast<font*>(value)->setPalette(*palette);
+                static_cast<font*>(value)->SetPalette(*palette);
             break;
         }
 
@@ -1059,7 +1059,7 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     TPalette16* palette = getPalette("game.pal");
     if (palette) {
         try {
-            result.get()->setPalette(*palette);
+            result.get()->SetPalette(*palette);
         }
         catch (...) {
             ResourceManager::dispose(palette);

@@ -112,7 +112,7 @@ THillFortWindow::THillFortWindow()
         int goldCostId = GOLD_COST_1_ID + i;
         int resIconId = RES_ICON_1_ID + i;
         int resCostId = RES_COST_1_ID + i;
-        int numY = 0x7c - g_calligraphicFont->m_fs.m_height;
+        int numY = 0x7c - g_calligraphicFont->fs.height;
 
         m_widgets.push_back(new iconWidget(
             x + 3, 0x3c, 0x3a, 0x40, id,
