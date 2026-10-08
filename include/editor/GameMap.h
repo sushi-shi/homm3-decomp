@@ -78,6 +78,9 @@ public:
         bool m_bRandom;
     };
 
+    void setBHumanPlayable(bool bPlayable) { _m_bHumanPlayable = bPlayable; }
+    void setBComputerPlayable(bool bPlayable) { _m_bComputerPlayable = bPlayable; }
+
     bool getBPresent() const { return _m_bHumanPlayable || _m_bComputerPlayable; }
     bool getBHumanPlayable() const { return _m_bHumanPlayable; }
     bool getBComputerPlayable() const { return _m_bComputerPlayable; }
@@ -105,7 +108,8 @@ class TTeamInfo {
 public:
     bool getBHasTeams() const { return _m_bHasTeams; }
     unsigned int getNumTeams() const { return _m_numTeams; }
-    unsigned int getPlayerTeam(TPlayer player) const { return _m_aPlayerTeam[player]; }
+    unsigned int getPlayerTeam(TPlayer player) const;
+    void setPlayerTeam(TPlayer player, unsigned int newTeam);
 
 private:
     bool _m_bHasTeams;

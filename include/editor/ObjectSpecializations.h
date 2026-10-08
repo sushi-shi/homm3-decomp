@@ -41,6 +41,17 @@ public:
     virtual const TLinkableObject* getPContainedObject() const { return NULL; }
 
     unsigned int getLinkID() const { return _m_linkID; }
+    // A fresh id from the running counter, never the no-link id (h3maped
+    // 0x426ffd).
+    void assignNewLinkID()
+    {
+        _m_linkID = s_nextLinkID++;
+        if (_m_linkID == s_kNoLinkID)
+            _m_linkID = s_nextLinkID++;
+    }
+
+    static const unsigned int s_kNoLinkID;
+    static unsigned int s_nextLinkID;
 
 private:
     unsigned int _m_linkID;

@@ -95,9 +95,18 @@ class TCappedObjectTypeInfoMap : public std::map<int, const TCappedObjectTypeInf
 public:
     TCappedObjectTypeInfoMap();
 
+    unsigned int getNumInfos() const { return _m_aInfo.size(); }
+
 private:
     std::vector<TCappedObjectTypeInfo> _m_aInfo;
 };
+
+// Built on first use (h3maped 0x4226d8: guard 0x5aa6b3, object 0x5aa6c0).
+inline const TCappedObjectTypeInfoMap& getCappedObjectTypeInfoMap()
+{
+    static const TCappedObjectTypeInfoMap s_map;
+    return s_map;
+}
 
 // One type and its cap.
 struct TCappedObjectType {
@@ -396,6 +405,15 @@ public:
     bool _isOnMap(const TGameObject& obj, unsigned int x, unsigned int y) const;
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
     void _onRemovingObject(const TGameObject& obj, bool bReplacing);
+    void _onGeneralObjectAdded(const TGameObject& obj, bool bSecondLayer, unsigned int objID);
+    void _onRemovingGeneralObject(const TGameObject& obj);
+    void _registerLinkable(const TLinkableObject& linkable, bool bSecondLayer, unsigned int objID);
+    void _onLinkableAdded(const TLinkableObject* pLinkable, bool bSecondLayer, unsigned int objID);
+    void _onPlayableAdded(const TPlayableObject* pPlayable, bool bSecondLayer, unsigned int objID);
+    unsigned int _pickAvailableTeam() const;
+    void _makeLinkIDUnique(TLinkableObject& linkable) const;
+    const TLinkableObject* _findLinkableObject(unsigned int linkID) const;
+    bool _isRandomTownLink(unsigned int linkID) const;
 
     void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
     void _readHeroSettings(TRawIStream* pIStream, int version);
@@ -1200,6 +1218,119 @@ void TGameMap::_TImpl::onObjectRemoved()
         TRefCountingAutoPtr<TVictoryCondition> pNoVictoryCondition((auto_ptr<TVictoryCondition>()));
         _m_pProperties->m_pVictoryCondition = pNoVictoryCondition;
     }
+}
+
+// A capped type's count follows its objects (the linkable and playable
+// additions pass their place, which the count ignores).
+VA(0x00427762, 0x5e)
+void TGameMap::_TImpl::_onGeneralObjectAdded(const TGameObject& obj, bool bSecondLayer, unsigned int objID)
+{
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = getCappedObjectTypeInfoMap().find(obj.getType());
+    if (pCappedObjTypeInfo != getCappedObjectTypeInfoMap().end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second->m_ordinal;
+        _m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal]++;
+    }
+}
+
+VA(0x004277c0, 0x5e)
+void TGameMap::_TImpl::_onRemovingGeneralObject(const TGameObject& obj)
+{
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = getCappedObjectTypeInfoMap().find(obj.getType());
+    if (pCappedObjTypeInfo != getCappedObjectTypeInfoMap().end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second->m_ordinal;
+        _m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal]--;
+    }
+}
+
+// Where each linkable object lies, by its link id.
+VA(0x0042781e, 0x4a)
+void TGameMap::_TImpl::_registerLinkable(const TLinkableObject& linkable, bool bSecondLayer, unsigned int objID)
+{
+    _m_paLinkableObjectRef->insert(map<unsigned int, TMapObjectRef>::value_type(linkable.getLinkID(),
+                                                                                TMapObjectRef(bSecondLayer, objID)));
+}
+
+VA(0x00427868, 0x3e)
+void TGameMap::_TImpl::_onLinkableAdded(const TLinkableObject* pLinkable, bool bSecondLayer, unsigned int objID)
+{
+    _onGeneralObjectAdded(*pLinkable, bSecondLayer, objID);
+    _registerLinkable(*pLinkable, bSecondLayer, objID);
+}
+
+// A player's first unit makes the player present: human and computer
+// playable as the map's first playable slot, otherwise computer playable
+// and on the smallest team.
+VA(0x004279fd, 0x11a)
+void TGameMap::_TImpl::_onPlayableAdded(const TPlayableObject* pPlayable, bool bSecondLayer, unsigned int objID)
+{
+    _onGeneralObjectAdded(*pPlayable, bSecondLayer, objID);
+    TPlayer owner = pPlayable->getOwner();
+    if (owner != ePlayerNone && _m_apPlayerBookkeeping[owner]->m_numUnits++ == 0) {
+        TPlayerInfo& player = (*_m_pProperties->m_paPlayer)[owner];
+        if (_m_pBookkeeping->m_numPlayableSlots == 0) {
+            player.setBHumanPlayable(true);
+            player.setBComputerPlayable(true);
+        } else {
+            const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
+            if (pConstProperties->m_pTeamInfo->getBHasTeams())
+                _m_pProperties->m_pTeamInfo->setPlayerTeam(owner, _pickAvailableTeam());
+            player.setBComputerPlayable(true);
+        }
+        _m_pBookkeeping->m_numPlayableSlots++;
+    }
+}
+
+// The smallest team.
+VA(0x00429072, 0x89)
+unsigned int TGameMap::_TImpl::_pickAvailableTeam() const
+{
+    const TTeamInfo& teamInfo = *_m_pProperties->m_pTeamInfo;
+    unsigned int aTeamSize[kNumPlayers];
+    fill_n(aTeamSize, teamInfo.getNumTeams(), 0U);
+    for (unsigned int player = 0; player < kNumPlayers; player++) {
+        if ((*_m_pProperties->m_paPlayer)[player].getBPresent()) {
+            unsigned int team = teamInfo.getPlayerTeam(TPlayer(player));
+            if (team < teamInfo.getNumTeams())
+                aTeamSize[team]++;
+        }
+    }
+    unsigned int result = 0;
+    for (unsigned int team = 1; team < teamInfo.getNumTeams(); team++)
+        if (aTeamSize[team] < aTeamSize[result])
+            result = team;
+    return result;
+}
+
+// A pasted or read object's link id must not repeat one on the map.
+VA(0x004290fb, 0x3c)
+void TGameMap::_TImpl::_makeLinkIDUnique(TLinkableObject& linkable) const
+{
+    while (_m_paLinkableObjectRef->find(linkable.getLinkID()) != _m_paLinkableObjectRef->end())
+        linkable.assignNewLinkID();
+}
+
+VA(0x00429137, 0x5f)
+const TLinkableObject* TGameMap::_TImpl::_findLinkableObject(unsigned int linkID) const
+{
+    map<unsigned int, TMapObjectRef>::const_iterator pObjRef = _m_paLinkableObjectRef->find(linkID);
+    if (pObjRef != _m_paLinkableObjectRef->end())
+        return dynamic_cast<const TLinkableObject*>(
+            &getLayer(pObjRef->second.getBSecondLayer()).getObject(pObjRef->second.getObjectID()));
+    return NULL;
+}
+
+// Whether a link id names a random town.
+VA(0x00429196, 0x84)
+bool TGameMap::_TImpl::_isRandomTownLink(unsigned int linkID) const
+{
+    map<unsigned int, TMapObjectRef>::const_iterator pObjRef = _m_paLinkableObjectRef->find(linkID);
+    if (pObjRef != _m_paLinkableObjectRef->end()) {
+        const TTown* pTown = dynamic_cast<const TTown*>(dynamic_cast<const TLinkableObject*>(
+            &getLayer(pObjRef->second.getBSecondLayer()).getObject(pObjRef->second.getObjectID())));
+        if (pTown != NULL && pTown->getType() == RANDOM_TOWN)
+            return true;
+    }
+    return false;
 }
 
 VA(0x0042921c, 0x70)
