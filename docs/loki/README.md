@@ -1,0 +1,111 @@
+# Loki h3maped image (GCC 2.95.2, ELF i386)
+
+The Loki Linux map editor 1.0 (`h3maped`, 4,970,572 bytes, SHA-256
+`0d5614c4…2138559d`, pinned as `[inputs.loki_h3maped]` in
+`config/project.toml`) is the first map-editor image. It is Loki's GTK+ port of
+the RoE-era editor source. Its retail bytes are the verdict for this image;
+the game's verdict stays `HEROES3.EXE`. Nothing here changes `homm3 build`,
+the game ledger or the README score block.
+
+## Setup
+
+```sh
+homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR
+homm3 loki census --check      # retail facts are current
+homm3 loki build -v            # compile, delink, canonicalize, objdiff
+homm3 loki disasm _getC__13TGzInflateBuf
+```
+
+`--debs` holds the eight Debian 2.2 "potato" i386 packages pinned in
+`config/loki/toolchain.toml` (gcc, g++, cpp 2.95.2-13.1; binutils
+2.9.5.0.37-1; libc6 and libc6-dev 2.1.3-20; libstdc++2.10 and -dev).
+`--sgi-stl` holds SGI STL 3.3's `stl.tar.gz` (tar dated 2000-06-08). The
+environment variables `HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS` and
+`HOMM3_LOKI_SGI_STL` work as well. Everything is staged under ignored
+`build/`: the image at `build/orig/loki/h3maped` and the toolchain at
+`build/loki/toolchain/`.
+
+The 2000-era binaries run unmodified. Each program the driver spawns (`cpp`,
+`cc1plus`, `as`) is a small wrapper that starts it through the packaged
+`ld-2.1.3.so` with `--library-path`, and the driver runs under a clean
+environment, so the Nix `COMPILER_PATH` and `LD_LIBRARY_PATH` cannot leak in.
+The 2.95 driver prepends each `-B` prefix, so the wrapper directory is given
+last. Neither Wine nor patchelf is involved.
+
+## Compiler and flags
+
+| Fact | Evidence |
+| :--- | :------- |
+| GCC 2.95.2 | `.comment`: 146 objects `GCC: (GNU) 2.95.2 19991024 (release)`; Debian's 2.95.2-13.1 reports `20000220`. Code generation agrees: game functions compile byte-exact. |
+| `-O0` | Out-of-line accessors, `jmp` to the next instruction, `mov %eax,%eax` after calls, locals reloaded from the frame. A sweep over 12 game units paired by mangled name gives 0 exact at `-O1 -fno-inline` and `-O2`. |
+| `-mcpu=pentiumpro` | Epilogues are `mov %ebp,%esp; pop %ebp`, not `leave` (the i386 default emits `leave`, so 0 functions match). `Bitmap16Bit::Bitmap16Bit(int,int)` sign-extends with `cltd` only under pentiumpro. The Loki compiler was i686-configured, whose default this is. |
+| exceptions and RTTI on | `.eh_frame` (21,301 FDEs) and `.gcc_except_table`; `-fno-exceptions` loses half of the exact bodies (419 to 210). |
+| non-PIC, vtable thunks | Absolute addressing; `virtual function thunk` symbols. |
+| `-g` | Undecidable from code (stripped image); irrelevant to bytes. |
+| SGI STL 3.3 headers first | `string` is `basic_string<char, char_traits<char>, allocator<char> >` with `_String_base`; `runtime_error` objects are 0x104 bytes (`__Named_exception`'s 256-byte buffer); `vector<T>::_M_fill_insert` instantiations are exact. libstdc++ 2.95's own iostream (libio) stays. |
+
+`config/loki/units.toml` records the profile: `-O0 -mcpu=pentiumpro
+-fpermissive`, `-DHOMM3_TARGET_LOKI=1` and `-include include/gcc_prefix.h`.
+`-fpermissive` only admits the VC6 dialect of the shared source.
+`include/gcc_prefix.h` is the GCC counterpart of `codewarrior_prefix.h`: it
+spells the Microsoft keywords and imports the real Windows SDK declarations
+(after GCC's own headers) through the SDK's portable PowerPC branch. VC6 never
+sees it.
+
+## Census
+
+`homm3 loki census` writes `config/retail/h3maped-loki/`:
+
+- `objects.tsv`: one row per compiled object. g++ 2.95 emits one `.eh_frame`
+  CIE per object and one FDE per function, so CIE order is link order and FDEs
+  give exact starts and sizes, including file-static functions. 103 project
+  objects (0–102) precede the frameless C libraries (GTK+ 1.2, gdk, glib,
+  libglade, libxml, zlib; egcs 1.1.2), then 19 libstdc++/libgcc objects.
+  86 objects are named by their `__FILE__` strings (assert/`__assert_fail`
+  arguments), one by its anonymous namespace, the rest by class and marked
+  "file name inferred".
+- `functions.tsv`: 10,754 starts with object, placement, binding, GNU v2
+  mangled name and the era's `c++filt` demangling. `linkonce` marks kept
+  `.gnu.linkonce.t` copies (templates and inline members), which the default
+  linker script places after every object's `.text`; their owner is the first
+  object that defined them. Static init/fini functions are named by role from
+  `.ctors`/`.dtors`.
+
+Project code: 3,120 `.text` functions (421 file-static) and 4,312 kept linkonce
+functions, plus 364 frameless virtual-function thunks.
+
+## Comparison
+
+The linked ELF has no relocations. `homm3.loki.delink` decodes every function
+of an object and names each rel32 branch and absolute address through the
+census, the PLT (`.rel.plt`) and the exported symbols. The compiled object goes
+through the same canonical form (`homm3.loki.cmpobj`) before objdiff sees it:
+
+- every call or jump that leaves its function and every absolute address is a
+  relocation against a named symbol, with the addend in the field. GAS resolves
+  calls to file-static functions in the same section; the canonical form
+  relocates them too;
+- a string or constant in `.rodata` is named by its content: the bytes a
+  memory operand loads, or the C string whose address is taken. Literal
+  identity is therefore checked independently of the object's `.rodata`
+  layout;
+- a jump table is `<function>$jt<n>`;
+- `_GLOBAL_.N.<file><6 random chars>` anonymous-namespace components become
+  `5_ANON` (append_random_chars draws on gettimeofday and the pid), and
+  `_GLOBAL_.I.*`/`_GLOBAL_.D.*` keep their role.
+
+Nothing is masked: an unnamed reference keeps a distinct name and differs.
+File-static functions without a source claim are named `sub_<address>` and stay
+unpaired until claimed.
+
+## Shared engine source
+
+Engine units compile the game's own `src/` file, so one source serves both
+programs. The first run (`homm3 loki build`, twelve game units, no new source)
+pairs 378 retail functions and finds 101 exact, among them
+`Bitmap16Bit::Bitmap16Bit(int,int)`, `Bitmap816::zBufferDraw`, `LODFile::sort`,
+`CSequence::CSequence(int)`, `resource::resource(char const*, EResourceType)`,
+`TTextResource::~TTextResource` and the SGI `vector<LODEntry>` instantiations.
+Differences seen so far are real: for example `Bitmap16Bit(char const*, char
+const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
+`MAX_PATH`.
