@@ -30,7 +30,7 @@ object = 30
 source = "src/spelldefs.cpp"
 
 [[unit]]
-name = "bitmap816"
+name = "Bitmap816"
 object = 38
 source = "src/bitmap816.cpp"
 

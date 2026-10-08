@@ -37,72 +37,58 @@ public:
 public:
     Bitmap816(int w, int h);
     Bitmap816(const char* name, int w, int h, unsigned char* data,
-              TPalette16* palette16, int dataSize);
+              const TPalette16& palette16, int dataSize);
     Bitmap816(const char* name, int rbits, int rshift,
               int gbits, int gshift, int bbits, int bshift);
     Bitmap816(const char* name, const char* path,
               int rbits, int rshift, int gbits, int gshift,
               int bbits, int bshift);
     virtual ~Bitmap816();
-    void import(int w, int h, unsigned char* data, TPalette16& p16, int size);
+    void import(int w, int h, unsigned char* data, const TPalette16& p16,
+                int size);
     void clear();
-    void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
-        int dx, int dy, int dw, int dh, int dpitch, int id) const;
-    void draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx,
-        int dy, int dw, int dh, int dpitch, bool tblit) const;
-    void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
-        int dy, bool tblit) const;
-    void markPuzzle(unsigned char* visible, long destX, long destY);
-    void setPalette(const unsigned short* pal);
-    void setPalette(TPalette24* pal24);
-    void resetPalette();
-
-    // Bitmap816.h:70/71 header accessors. DrawBackground's Dreamcast xref
-    // graph records both inlined uses; the retail body reads +0x24/+0x28.
-    DC_ADDRESS(0x020164, 0xc)
-    int getWidth() const { return m_width; }
-
-    DC_ADDRESS(0x020170, 0xc)
-    int getHeight() const { return m_height; }
-
-    // DC Bitmap816.h:71 returns Width, while GetMap below
-    // addresses rows through Pitch. Masked Darken's retail loads independently
-    // confirm that distinction; do not replace this helper with m_pitch.
-    DC_ADDRESS(0x05256c, 0x4)
-    int getPitch() const { return m_width; }
-
-    // Original: Bitmap816::GetPalette; Bitmap816.h:72
-    DC_ADDRESS(0x02017c, 0x10)
-    TPalette16& getPalette() { return m_p16; }
-
-    // Original: Bitmap816::GetPalette; Bitmap816.h:73
-    DC_ADDRESS(0x19c5e8, 0x8)
-    const TPalette16& getPalette() const { return m_p16; }
-
-    // Original: Bitmap816::GetPalette24; Bitmap816.h:74
-    // Complete embeds both palettes; DC stored pointers to the same types.
-    DC_ADDRESS(0x054300, 0x8)
-    TPalette24& getPalette24() { return m_p24; }
-
-    // DC Bitmap816.h:98/99, expanded in masked Darken.
-    DC_ADDRESS(0x052570, 0xe)
-    unsigned char* getMap(int x, int y) { return m_map + m_pitch * y + x; }
-
-    // Original: Bitmap816::GetMap; Bitmap816.h:104
-    DC_ADDRESS(0x19c5f0, 0xe)
-    const unsigned char* getMap(int x, int y) const
-    {
-        return m_map + m_pitch * y + x;
-    }
-
-private:
     int importPCXFile(const char* filename, int rbits, int rshift,
-        int gbits, int gshift, int bbits, int bshift);
-
-public:
-    virtual unsigned int getSize() const;
+                      int gbits, int gshift, int bbits, int bshift);
+    void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
+                     int dx, int dy, int dw, int dh, int dpitch, int id) const;
+    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx,
+              int dy, int dw, int dh, int dpitch, bool tblit) const;
+    void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
+              int dy, bool tblit) const;
+    // Loki vtable 0x842723c: the destructor, then this overload.
     virtual void zBufferDraw(int sx, int sy, int sw, int sh,
-        unsigned short* zBuffer, int dx, int dy, int id) const;
+                             unsigned short* zBuffer, int dx, int dy,
+                             int id) const;
+    void SetPalette(const unsigned short* pal);
+    void SetPalette(const TPalette24& pal24);
+    void ResetPalette();
+
+    // DC Bitmap816.h:70-104; Loki emits these after bitmap816.cpp's own
+    // functions (the unit that defines the key function).
+    int GetDataSize() const { return m_dataSize; }
+    int GetImageSize() const { return m_imageSize; }
+    DC_ADDRESS(0x020164, 0xc)
+    int GetWidth() const { return m_width; }
+    DC_ADDRESS(0x020170, 0xc)
+    int GetHeight() const { return m_height; }
+    // DC Bitmap816.h:71 returns Width, while GetMap addresses rows through
+    // Pitch.
+    DC_ADDRESS(0x05256c, 0x4)
+    int GetPitch() const { return m_width; }
+    DC_ADDRESS(0x02017c, 0x10)
+    TPalette16& GetPalette() { return m_p16; }
+    DC_ADDRESS(0x19c5e8, 0x8)
+    const TPalette16& GetPalette() const { return m_p16; }
+    DC_ADDRESS(0x054300, 0x8)
+    TPalette24& GetPalette24() { return m_p24; }
+    const TPalette24& GetPalette24() const { return m_p24; }
+    DC_ADDRESS(0x052570, 0xe)
+    unsigned char* GetMap(int x, int y) { return m_map + y * m_pitch + x; }
+    DC_ADDRESS(0x19c5f0, 0xe)
+    const unsigned char* GetMap(int x, int y) const
+    {
+        return m_map + y * m_pitch + x;
+    }
 };
 SIZE(Bitmap816, 0x56c);
 
