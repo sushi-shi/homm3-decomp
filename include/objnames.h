@@ -18,16 +18,12 @@ struct TAdvObjectTypeTraits {
     const char* m_name;
 };
 
-#if defined(HOMM3_TARGET_LOKI)
-// The Loki editor sizes the table: TObjectPaletteWnd::OnToolTipNeedText
-// asserts "pObjType->getType() < ( sizeof( akAdvObjectTypeTraits ) /
+// The table is sized: TObjectPaletteWnd::OnToolTipNeedText asserts
+// "pObjType->getType() < ( sizeof( akAdvObjectTypeTraits ) /
 // sizeof( ( akAdvObjectTypeTraits )[ 0 ] ) )" and compares with 164, so it
-// sees a reference to the 165-row array (the exported 4-byte cell holds
-// its address either way).
+// is a reference to the 165-row array (the exported 4-byte cell holds its
+// address).
 extern const TAdvObjectTypeTraits (&akAdvObjectTypeTraits)[MAX_EVENT_TYPE];
-#else
-extern const TAdvObjectTypeTraits* akAdvObjectTypeTraits;
-#endif
 
 void InitializeAdvObjectTypeTraitsTable();
 
