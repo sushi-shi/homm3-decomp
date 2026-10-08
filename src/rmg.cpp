@@ -2568,8 +2568,8 @@ TRmgBlackBoxCreatureDef::TRmgBlackBoxCreatureDef(int newCreatureType)
       m_creatureType(newCreatureType)
 {
     m_creatureCount =
-        g_rmgCreatureValueByLevel[akCreatureTypeTraits[newCreatureType].m_level]
-        / akCreatureTypeTraits[newCreatureType].m_aiValue;
+        g_rmgCreatureValueByLevel[akCreatureTypeTraits[newCreatureType].level]
+        / akCreatureTypeTraits[newCreatureType].AI_value;
 
     if (m_creatureCount > 50)
         m_creatureCount = ((m_creatureCount + 5) / 10) * 10;
@@ -2587,10 +2587,10 @@ MAC_ADDRESS(0x231f04, 0x6c)
 int TRmgBlackBoxCreatureDef::getValue(
     TRmgZone* zone, TRmgGenerator* generator)
 {
-    int alignment = akCreatureTypeTraits[m_creatureType].m_townType;
+    int alignment = akCreatureTypeTraits[m_creatureType].townType;
     if (alignment != zone->m_creatureTownType)
         return -1;
-    int value = akCreatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
+    int value = akCreatureTypeTraits[m_creatureType].AI_value * m_creatureCount;
     int alignmentCount = 0;
     if (alignment != -1)
         alignmentCount = generator->m_primaryTownZoneCountsByAlignment[alignment];
@@ -2664,16 +2664,16 @@ int TRmgMapDwellingDef::getValue(TRmgZone* zone, TRmgGenerator* generator)
 {
     const TCreatureTypeTraits& creature =
         akCreatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
-    if (creature.m_townType != zone->m_creatureTownType)
+    if (creature.townType != zone->m_creatureTownType)
         return -1;
 
-    int value = creature.m_growthRate * creature.m_aiValue;
+    int value = creature.growthRate * creature.AI_value;
     int zoneCount = 0;
-    if (creature.m_townType != -1)
-        zoneCount = generator->m_primaryTownZoneCountsByAlignment[creature.m_townType];
+    if (creature.townType != -1)
+        zoneCount = generator->m_primaryTownZoneCountsByAlignment[creature.townType];
     if (generator->m_primaryTownZoneCount > 0)
         value += zoneCount * value / generator->m_primaryTownZoneCount;
-    return value + creature.m_aiValue * zoneCount / 2;
+    return value + creature.AI_value * zoneCount / 2;
 }
 
 // Resource-definition table 0x640bc4 constructs the base-sized resource
@@ -4426,7 +4426,7 @@ void TRmgGenerator::initializeObjectGenerators()
     {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
-            if (akCreatureTypeTraits[creature].m_level >= 0)
+            if (akCreatureTypeTraits[creature].level >= 0)
                 m_objectGenerators.push_back(
                     new TRmgBlackBoxCreatureDef(creature));
         }
@@ -4545,7 +4545,7 @@ void TRmgGenerator::initializeObjectGenerators()
     for (int seerSubtype = 0; seerSubtype < m_objectPrototypes[83].size(); ++seerSubtype) {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
-            if (akCreatureTypeTraits[creature].m_level >= 0)
+            if (akCreatureTypeTraits[creature].level >= 0)
                 m_objectGenerators.push_back(
                     new TRmgQuestCreatureDef(creature, seerSubtype));
         }
@@ -6765,9 +6765,9 @@ TRmgObject* TRmgGenerator::createGuard(int value, TRmgZone* zone)
     }
     for (--creature; creature >= 0; --creature) {
         const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
-        if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
-            && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
-            && traits.m_level >= 0 && allowed[traits.m_townType + 1]) {
+        if ((traits.wanderingHigh + traits.wanderingLow) / 2 * traits.AI_value <= value
+            && value <= traits.AI_value * RMG_GUARD_MAXIMUM_COUNT
+            && traits.level >= 0 && allowed[traits.townType + 1]) {
             ++eligibleCount;
         } else {
             prototypeIndices[creature] = -1;
@@ -6788,7 +6788,7 @@ TRmgObject* TRmgGenerator::createGuard(int value, TRmgZone* zone)
     // Retail bug: if the counts disagree, creature can reach -1.
 #endif
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][prototypeIndices[creature]];
-    int aiValue = akCreatureTypeTraits[creature].m_aiValue;
+    int aiValue = akCreatureTypeTraits[creature].AI_value;
     int count = (value + aiValue / 2) / aiValue;
     int variation = count / 4 + 1;
     if (variation > 1) {
@@ -11139,7 +11139,7 @@ unsigned char TRmgGenerator::placeSeerHutForArtifact(TRmgQuestArtifactObject* ob
     int artifact;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
         if (!akArtifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (akArtifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+            && (akArtifactTraits[artifact].m_class & g_rmgQuestArtifactClass)) {
             ++available;
         }
     }
@@ -11150,7 +11150,7 @@ unsigned char TRmgGenerator::placeSeerHutForArtifact(TRmgQuestArtifactObject* ob
     int selected = rand() % available;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
         if (!akArtifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (akArtifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+            && (akArtifactTraits[artifact].m_class & g_rmgQuestArtifactClass)) {
             if (selected-- <= 0)
                 break;
         }

@@ -1147,7 +1147,7 @@ void TAdventureMapWindow::updateHeroLocator(int which, bool drawWinSect,
         hero* thisHero = g_game->getHero(heroId);
         widgetSetStatus(HERO_0_ID + which, widget::WIDGET_ACTIVE);
         m_heroPortraits[which]->setImage(
-            akHeroTraits[thisHero->m_portrait].m_smallPortraitName);
+            akHeroTraits[thisHero->m_portrait].m_small_portrait_name);
         widgetSetStatus(HERO_MOVEMENT_0_ID + which, widget::WIDGET_ACTIVE);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
             HERO_MOVEMENT_0_ID + which, thisHero->getMobilityFrame());

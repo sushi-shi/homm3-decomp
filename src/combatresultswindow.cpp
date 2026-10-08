@@ -171,7 +171,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             ATTACKER_NAME, 0, 0, 8));
         m_widgets.push_back(new bitmapBorder(
             21, 38, 58, 64, ATTACKER_PORTRAIT,
-            akHeroTraits[attacker->m_portrait].m_largePortraitName, 0x800));
+            akHeroTraits[attacker->m_portrait].m_large_portrait_name, 0x800));
     } else {
         // No hero on this side: name the side's strongest surviving stack
         // instead, ranked by the embedded traits row's AI value, and say it
@@ -185,7 +185,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             if (stack.m_creatureType != -1 &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
-                int value = stack.m_monInfo.m_aiValue;
+                int value = stack.m_monInfo.AI_value;
                 if (value > amount) {
                     amount = value;
                     type = TCreatureType(slot);
@@ -195,7 +195,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         m_widgets.push_back(new textWidget(
             89, 37, 115, 20,
             numMons > 1
-                ? g_combatManager->m_armies[0][type].m_monInfo.m_pluralName
+                ? g_combatManager->m_armies[0][type].m_monInfo.m_plural_name
                 : g_combatManager->m_armies[0][type].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
         m_widgets.push_back(new iconWidget(
@@ -215,7 +215,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             DEFENDER_NAME, 2, 0, 8));
         m_widgets.push_back(new bitmapBorder(
             392, 38, 58, 64, DEFENDER_PORTRAIT,
-            akHeroTraits[defender->m_portrait].m_largePortraitName, 0x800));
+            akHeroTraits[defender->m_portrait].m_large_portrait_name, 0x800));
     } else {
         amount = 0;
         type = TCreatureType(0);
@@ -225,7 +225,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             if (stack.m_creatureType != -1 &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
-                int value = stack.m_monInfo.m_aiValue;
+                int value = stack.m_monInfo.AI_value;
                 if (value > amount) {
                     amount = value;
                     type = TCreatureType(slot);
@@ -235,7 +235,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         m_widgets.push_back(new textWidget(
             266, 37, 115, 20,
             numMons > 1
-                ? g_combatManager->m_armies[1][type].m_monInfo.m_pluralName
+                ? g_combatManager->m_armies[1][type].m_monInfo.m_plural_name
                 : g_combatManager->m_armies[1][type].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
         m_widgets.push_back(new iconWidget(

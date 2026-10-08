@@ -281,7 +281,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             if (occupyingHero) {
                 g_bitmapBorderDynamic[slot] = new bitmapBorder(
                     265, row * 116 + 30, 58, 64, rowWidgetId + 53,
-                    akHeroTraits[occupyingHero->m_portrait].m_largePortraitName,
+                    akHeroTraits[occupyingHero->m_portrait].m_large_portrait_name,
                     0x800);
                 if (!g_bitmapBorderDynamic[slot])
                     memError();
@@ -328,7 +328,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             if (occupyingHero) {
                 g_bitmapBorderDynamic[slot + 1] = new bitmapBorder(
                     497, row * 116 + 30, 58, 64, rowWidgetId + 48,
-                    akHeroTraits[occupyingHero->m_portrait].m_largePortraitName,
+                    akHeroTraits[occupyingHero->m_portrait].m_large_portrait_name,
                     0x800);
                 if (!g_bitmapBorderDynamic[slot + 1])
                     memError();
@@ -506,7 +506,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_bitmapBorderDynamic[slot + curBitmap] = new bitmapBorder(
                 27, row * 116 + 30, 58, 64, rowWidgetId + 103,
-                akHeroTraits[currHero->m_portrait].m_largePortraitName,
+                akHeroTraits[currHero->m_portrait].m_large_portrait_name,
                 0x800);
             if (!g_bitmapBorderDynamic[slot + curBitmap])
                 memError();
@@ -2383,7 +2383,7 @@ void TOverviewWindow::doRollover(int codeY)
                     strcpy(g_text,
                            akCreatureTypeTraits[
                                g_creatureGenerator1Types[itemType]]
-                               .m_pluralName);
+                               .m_plural_name);
                 } else {
                     // Mac 0x13ab20 and Windows 0x521614 put lighthouse
                     // before the two creature-generator label arms.

@@ -24,7 +24,7 @@ inline const char* getArmyName(int type, int count)
         return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
     } else {
         return count == 1 ? akCreatureTypeTraits[type].m_name
-                          : akCreatureTypeTraits[type].m_pluralName;
+                          : akCreatureTypeTraits[type].m_plural_name;
     }
 }
 

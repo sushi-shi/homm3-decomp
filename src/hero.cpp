@@ -1000,19 +1000,19 @@ void hero::initialize(short index)
 
     strncpy(m_name, akHeroTraits[index].m_defaultName, sizeof(m_name));
     m_name[sizeof(m_name) - 1] = 0;
-    m_heroClass = akHeroTraits[index].m_heroClass;
+    m_heroClass = akHeroTraits[index].m_class;
     m_skillCount = 0;
     for (i = 0; i < 4; ++i) {
         setPrimarySkill(i, akHeroClassTraits[m_heroClass].m_initialPrimarySkill[i]);
     }
 
-    if (akHeroTraits[index].m_firstSkill != eSecSkillNone) {
-        giveSS(akHeroTraits[index].m_firstSkill,
-               akHeroTraits[index].m_firstSkillLevel);
+    if (akHeroTraits[index].m_1stSkill != eSecSkillNone) {
+        giveSS(akHeroTraits[index].m_1stSkill,
+               akHeroTraits[index].m_1stSkillLevel);
     }
-    if (akHeroTraits[index].m_secondSkill != eSecSkillNone) {
-        giveSS(akHeroTraits[index].m_secondSkill,
-               akHeroTraits[index].m_secondSkillLevel);
+    if (akHeroTraits[index].m_2ndSkill != eSecSkillNone) {
+        giveSS(akHeroTraits[index].m_2ndSkill,
+               akHeroTraits[index].m_2ndSkillLevel);
     }
     if (akHeroTraits[index].m_startsWithSpellbook) {
         m_equipped[17].m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
@@ -1117,7 +1117,7 @@ void hero::initialize(const HeroExtra* setup)
     m_z = setup->m_location.m_z;
     m_owner = setup->m_owner;
     m_id = static_cast<HeroId>(setup->m_id);
-    m_heroClass = akHeroTraits[setup->m_id].m_heroClass;
+    m_heroClass = akHeroTraits[setup->m_id].m_class;
 
     m_patrolRadius = setup->m_patrolRadius;
     if (setup->m_patrolRadius >= 0) {
@@ -1227,7 +1227,7 @@ const char* hero::getClassName()
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
         return g_generalText->GetText(GENERAL_TEXT_SORCERESS_CLASS_NAME);
-    return akHeroClassTraits[m_heroClass].m_className;
+    return akHeroClassTraits[m_heroClass].m_name;
 }
 
 // 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
@@ -4480,7 +4480,7 @@ void THeroScreenWindow::updateHeroLocator(int which)
     hero* displayedHero = g_game->getHero(
         localPlayer->m_heroes[m_topHero + which]);
     const char* portraitName =
-        akHeroTraits[displayedHero->m_portrait].m_smallPortraitName;
+        akHeroTraits[displayedHero->m_portrait].m_small_portrait_name;
     union {
         const char* m_pointer;
         int m_value;
@@ -4654,7 +4654,7 @@ void THeroScreenWindow::setupHeroView()
         int m_value;
     } portraitMessage;
     portraitMessage.m_pointer =
-        akHeroTraits[g_currentHero->m_portrait].m_largePortraitName;
+        akHeroTraits[g_currentHero->m_portrait].m_large_portrait_name;
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, 0x2d,
                      portraitMessage.m_value);
 
@@ -6064,7 +6064,7 @@ int hero::getMobility(bool seaMovement) const
         for (int slot = 0; slot < 7; slot++) {
             int creature = m_army.m_armies[slot];
             if (creature != CREATURE_NONE) {
-                int speed = akCreatureTypeTraits[creature].m_speed;
+                int speed = akCreatureTypeTraits[creature].speed;
                 if (g_heroSpecificAbilities[m_id].m_type == eHeroAbilityCreature) {
                     if (creature == g_heroSpecificAbilities[m_id].m_creature)
                         speed++;
@@ -6429,7 +6429,7 @@ long hero::modifySpellDamage(SpellID spell, int damage,
     value = getSorceryFactor() * value;
     if (targetArmy)
         value = static_cast<float>(
-                    getHeroSpellBonus(spell, targetArmy->m_monInfo.m_level,
+                    getHeroSpellBonus(spell, targetArmy->m_monInfo.level,
                                       static_cast<int>(value)))
                 + value;
     return static_cast<long>(value);
@@ -6486,9 +6486,9 @@ long hero::getHitPointBonus(int creatureType) const
         bonus++;
     if (isWieldingArtifact(ARTIFACT_VIAL_OF_LIFEBLOOD))
         bonus += 2;
-    if ((akCreatureTypeTraits[creatureType].m_attributes & creatureAlive)
+    if ((akCreatureTypeTraits[creatureType].attributes & creatureAlive)
         && isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
-        bonus += akCreatureTypeTraits[creatureType].m_hitPoints / 4;
+        bonus += akCreatureTypeTraits[creatureType].hitPoints / 4;
     return bonus;
 }
 
@@ -6624,16 +6624,16 @@ MAC_ADDRESS(0x1070a0, 0x3b0)
 void hero::applyCreatureStatBonuses(int creatureType,
                            TCreatureTypeTraits* traits) const
 {
-    traits->m_attackSkill += getPrimarySkill(0);
-    traits->m_defenseSkill += getPrimarySkill(1);
+    traits->attackSkill += getPrimarySkill(0);
+    traits->defenseSkill += getPrimarySkill(1);
 
     const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
 
     if (isWieldingArtifact(g_artifactVialOfDragonBlood)
-        && (traits->m_attributes & g_creatureAttrDragon)) {
+        && (traits->attributes & g_creatureAttrDragon)) {
         int bonus = g_vialOfDragonBloodBonus;
-        traits->m_attackSkill += bonus;
-        traits->m_defenseSkill += bonus;
+        traits->attackSkill += bonus;
+        traits->defenseSkill += bonus;
     }
 
     switch (ability.m_type) {
@@ -6643,39 +6643,39 @@ void hero::applyCreatureStatBonuses(int creatureType,
             || (ability.m_creature != CREATURE_BALLISTA
                 && creatureType == g_game->upgradedCreatureType(ability.m_creature))) {
             if (ability.m_type == eHeroAbilityCreature) {
-                double scale = m_level / (traits->m_level + 1) * 0.05;
-                traits->m_attackSkill = static_cast<int>(
-                    ceil(akCreatureTypeTraits[creatureType].m_attackSkill * scale)
-                    + traits->m_attackSkill);
-                traits->m_defenseSkill = static_cast<int>(
-                    ceil(akCreatureTypeTraits[creatureType].m_defenseSkill * scale)
-                    + traits->m_defenseSkill);
-                if (!(traits->m_attributes & g_ctaSiegeWeapon))
-                    traits->m_speed++;
+                double scale = m_level / (traits->level + 1) * 0.05;
+                traits->attackSkill = static_cast<int>(
+                    ceil(akCreatureTypeTraits[creatureType].attackSkill * scale)
+                    + traits->attackSkill);
+                traits->defenseSkill = static_cast<int>(
+                    ceil(akCreatureTypeTraits[creatureType].defenseSkill * scale)
+                    + traits->defenseSkill);
+                if (!(traits->attributes & g_ctaSiegeWeapon))
+                    traits->speed++;
             } else {
-                traits->m_attackSkill += ability.m_creatureAttackBonus;
-                traits->m_defenseSkill += ability.m_creatureDefenseBonus;
-                traits->m_damageLowBound += ability.m_creatureDamageBonus;
-                traits->m_damageHighBound += ability.m_creatureDamageBonus;
+                traits->attackSkill += ability.m_creatureAttackBonus;
+                traits->defenseSkill += ability.m_creatureDefenseBonus;
+                traits->damageLowBound += ability.m_creatureDamageBonus;
+                traits->damageHighBound += ability.m_creatureDamageBonus;
                 if (m_id == g_heroXeron)
-                    traits->m_speed++;
+                    traits->speed++;
             }
         }
         break;
     case eHeroAbilityDragons:
-        if (akCreatureTypeTraits[creatureType].m_attributes
+        if (akCreatureTypeTraits[creatureType].attributes
             & g_creatureAttrDragon) {
-            traits->m_attackSkill += ability.m_creatureAttackBonus;
-            traits->m_defenseSkill += ability.m_creatureDefenseBonus;
-            traits->m_damageLowBound += ability.m_creatureDamageBonus;
-            traits->m_damageHighBound += ability.m_creatureDamageBonus;
+            traits->attackSkill += ability.m_creatureAttackBonus;
+            traits->defenseSkill += ability.m_creatureDefenseBonus;
+            traits->damageLowBound += ability.m_creatureDamageBonus;
+            traits->damageHighBound += ability.m_creatureDamageBonus;
         }
         break;
     }
 
-    if (!(traits->m_attributes & g_ctaSiegeWeapon))
-        traits->m_speed += getCombatSpeedBonus();
-    traits->m_hitPoints += getHitPointBonus(creatureType);
+    if (!(traits->attributes & g_ctaSiegeWeapon))
+        traits->speed += getCombatSpeedBonus();
+    traits->hitPoints += getHitPointBonus(creatureType);
 }
 
 // Original: hero::reset_artifacts; hero.cpp:6493

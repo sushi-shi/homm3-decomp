@@ -110,7 +110,7 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     if (castingHero)
         value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
-            choice.m_spell, akCreatureTypeTraits[m_type].m_level, value);
+            choice.m_spell, akCreatureTypeTraits[m_type].level, value);
     long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
                            m_originalNumber - m_number);
     return resurrected * m_value;
@@ -287,14 +287,14 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
 
         int creatureId = creature;
         const TCreatureTypeTraits& traits = akCreatureTypeTraits[creatureId];
-        hitPoints = traits.m_hitPoints;
+        hitPoints = traits.hitPoints;
         if (m_currentHero) {
             hitBonus = m_currentHero->getHitPointBonus(creatureId);
             hitPoints += hitBonus;
         }
 
-        long speed = traits.m_speed + speedBonus;
-        unsigned int attributes = traits.m_attributes;
+        long speed = traits.speed + speedBonus;
+        unsigned int attributes = traits.attributes;
 
         unit.m_index = i;
         unit.m_type = creature;
@@ -302,8 +302,8 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
         unit.m_originalNumber = unit.m_number;
         unit.m_speed = speed;
         unit.m_value = static_cast<long>(
-            sqrt(hitPoints / traits.m_hitPoints)
-            * traits.m_baseFightValue * forceModifier);
+            sqrt(hitPoints / traits.hitPoints)
+            * traits.baseFightValue * forceModifier);
         unit.m_totalValue = unit.m_value * unit.m_number;
         unit.m_catagory = getCatagory(creature, speed);
         unit.m_combatValuePerHit = static_cast<double>(unit.m_value)
@@ -380,7 +380,7 @@ type_speed_catagory type_AI_combat_data::getCatagory(
     TCreatureType creature,
     long speed) const
 {
-    unsigned int attributes = akCreatureTypeTraits[creature].m_attributes;
+    unsigned int attributes = akCreatureTypeTraits[creature].attributes;
     if (attributes & g_ctaShooter)
         return const_ranged;
 
@@ -1279,12 +1279,12 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
     factor += 0.02f;
     TCreatureType skeleton = const_cast<hero*>(currentHero)->getNecromancyCreature();
     long total = 0;
-    long skeletonHitPoints = akCreatureTypeTraits[skeleton].m_hitPoints;
+    long skeletonHitPoints = akCreatureTypeTraits[skeleton].hitPoints;
     float skeletonHitPointsF = static_cast<float>(skeletonHitPoints);
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         long creature = deadArmy->m_armies[i];
         long count = deadArmy->m_numTroops[i];
-        long hitPoints = akCreatureTypeTraits[creature].m_hitPoints;
+        long hitPoints = akCreatureTypeTraits[creature].hitPoints;
         if (hitPoints > skeletonHitPoints)
             hitPoints = skeletonHitPoints;
         long raised = static_cast<long>(static_cast<float>(hitPoints * count)

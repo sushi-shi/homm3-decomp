@@ -182,11 +182,11 @@ MAC_ADDRESS(0x0888d0, 0x70)
 static int getCreatureDwellingIndex(TCreatureType type)
 {
     const TCreatureTypeTraits& traits = akCreatureTypeTraits[type];
-    int townType = traits.m_townType;
+    int townType = traits.townType;
     if (townType == -1)
         return -1;
 
-    int creatureIndex = traits.m_level;
+    int creatureIndex = traits.level;
     if (type == g_dwellingType[townType][creatureIndex])
         return creatureIndex;
     creatureIndex += 7;
@@ -222,7 +222,7 @@ TCreatureType upgradedCreatureType(TCreatureType type)
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 0 || creatureIndex >= 7)
         return CREATURE_NONE;
-    return g_dwellingType[akCreatureTypeTraits[type].m_townType][creatureIndex + 7];
+    return g_dwellingType[akCreatureTypeTraits[type].townType][creatureIndex + 7];
 }
 
 VA(0x0047B220, 0x6D)
@@ -232,7 +232,7 @@ TCreatureType downgradedCreatureType(TCreatureType type)
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 7)
         return CREATURE_NONE;
-    return g_dwellingType[akCreatureTypeTraits[type].m_townType][creatureIndex - 7];
+    return g_dwellingType[akCreatureTypeTraits[type].townType][creatureIndex - 7];
 }
 
 VA(0x0047b290, 0x1E9)
@@ -367,34 +367,34 @@ void initializeCreatureTypeTraits(int id,
 
     creatureTypePluralNames[id].set(new char[strlen(values[1]) + 1]);
     strcpy(creatureTypePluralNames[id].get(), values[1]);
-    traits.m_pluralName = creatureTypePluralNames[id].get();
+    traits.m_plural_name = creatureTypePluralNames[id].get();
 
-    traits.m_cost[0] = atoi(values[2]);
-    traits.m_cost[1] = atoi(values[3]);
-    traits.m_cost[2] = atoi(values[4]);
-    traits.m_cost[3] = atoi(values[5]);
-    traits.m_cost[4] = atoi(values[6]);
-    traits.m_cost[5] = atoi(values[7]);
-    traits.m_cost[6] = atoi(values[8]);
-    traits.m_baseFightValue = atoi(values[9]);
-    traits.m_aiValue = atoi(values[10]);
-    traits.m_growthRate = atoi(values[11]);
-    traits.m_hordeGrowthRate = atoi(values[12]);
-    traits.m_hitPoints = atoi(values[13]);
-    traits.m_speed = atoi(values[14]);
-    traits.m_attackSkill = atoi(values[15]);
-    traits.m_defenseSkill = atoi(values[16]);
-    traits.m_damageLowBound = atoi(values[17]);
-    traits.m_damageHighBound = atoi(values[18]);
-    traits.m_numShots = atoi(values[19]);
+    traits.cost[0] = atoi(values[2]);
+    traits.cost[1] = atoi(values[3]);
+    traits.cost[2] = atoi(values[4]);
+    traits.cost[3] = atoi(values[5]);
+    traits.cost[4] = atoi(values[6]);
+    traits.cost[5] = atoi(values[7]);
+    traits.cost[6] = atoi(values[8]);
+    traits.baseFightValue = atoi(values[9]);
+    traits.AI_value = atoi(values[10]);
+    traits.growthRate = atoi(values[11]);
+    traits.horde_growth_rate = atoi(values[12]);
+    traits.hitPoints = atoi(values[13]);
+    traits.speed = atoi(values[14]);
+    traits.attackSkill = atoi(values[15]);
+    traits.defenseSkill = atoi(values[16]);
+    traits.damageLowBound = atoi(values[17]);
+    traits.damageHighBound = atoi(values[18]);
+    traits.numShots = atoi(values[19]);
     traits.m_hasSpell = atoi(values[20]);
-    traits.m_wanderingLow = atoi(values[21]);
-    traits.m_wanderingHigh = atoi(values[22]);
+    traits.wanderingLow = atoi(values[21]);
+    traits.wanderingHigh = atoi(values[22]);
 
     DATA(0x00696190)
     static TAutoStrPtr creatureTypeAbilities[150];
 
     creatureTypeAbilities[id].set(new char[strlen(values[23]) + 1]);
     strcpy(creatureTypeAbilities[id].get(), values[23]);
-    traits.m_specialAbility = creatureTypeAbilities[id].get();
+    traits.special_ability = creatureTypeAbilities[id].get();
 }

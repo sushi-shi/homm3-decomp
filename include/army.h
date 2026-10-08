@@ -1681,7 +1681,7 @@ inline bool army::needToTurn(int direction) const
 DC_ADDRESS(0x027ce4, 0xe)
 inline bool army::is(unsigned attribute) const
     {
-        return (m_monInfo.m_attributes & attribute) != 0;
+        return (m_monInfo.attributes & attribute) != 0;
     }
 
     // E:\gamedcs\Army.h:770

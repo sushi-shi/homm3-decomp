@@ -1759,14 +1759,14 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                 if (creature == CREATURE_NONE)
                     continue;
 
-                if (akCreatureTypeTraits[creature].m_level != 0) {
+                if (akCreatureTypeTraits[creature].level != 0) {
                     canRecruit = true;
                     continue;
                 }
 
                 if (currentGenerator.m_population[i] == 0) {
                     result += formatString((*g_generalText)[GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT],
-                        akCreatureTypeTraits[creature].m_pluralName);
+                        akCreatureTypeTraits[creature].m_plural_name);
                 } else if (!currentHero->m_army.add(
                                creature, currentGenerator.m_population[i],
                                -1)) {
@@ -3787,7 +3787,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
         monType = TCreatureType(cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
-    int cost = akCreatureTypeTraits[monType].m_cost[GOLD] * numMons;
+    int cost = akCreatureTypeTraits[monType].cost[GOLD] * numMons;
 
     if (cost > g_game->m_players[currentHero->m_owner].m_resources[GOLD])
         return false;
@@ -3916,7 +3916,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
 
     float strengthRatio =
         static_cast<float>(aiApproximateStrength(currentHero))
-        / static_cast<float>(akCreatureTypeTraits[monType].m_aiValue
+        / static_cast<float>(akCreatureTypeTraits[monType].AI_value
                              * numTroops);
     short likeModifier = getLikeModifier(currentHero, monType);
     short diplomacy = currentHero->getSecondarySkill(eSecSkillDiplomacy);
@@ -5365,14 +5365,14 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
             if (creature == CREATURE_NONE)
                 continue;
 
-            if (akCreatureTypeTraits[creature].m_level != 0) {
+            if (akCreatureTypeTraits[creature].level != 0) {
                 canRecruit = true;
                 continue;
             }
 
             if (currentGenerator.m_population[i] == 0) {
                 result += formatString((*g_generalText)[GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT],
-                    akCreatureTypeTraits[creature].m_pluralName);
+                    akCreatureTypeTraits[creature].m_plural_name);
             } else if (!who->m_army.add(creature,
                                       currentGenerator.m_population[i], -1)) {
                 result += formatString((*g_generalText)[GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT],
@@ -5432,8 +5432,8 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
         for (int i = 0; i < 7; i++) {
             int type = bank.m_guards.m_armies[i];
             if (type != CREATURE_NONE
-                && akCreatureTypeTraits[type].m_aiValue > best) {
-                best = akCreatureTypeTraits[type].m_aiValue;
+                && akCreatureTypeTraits[type].AI_value > best) {
+                best = akCreatureTypeTraits[type].AI_value;
                 leaderMonster = TCreatureType(type);
             }
         }
@@ -5656,11 +5656,11 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
                      + point.m_y * 0x4386d + 0x25ea7;
     sRand(eventSeed);
 
-    int combatValue = akCreatureTypeTraits[monType].m_aiValue * *numMons;
+    int combatValue = akCreatureTypeTraits[monType].AI_value * *numMons;
     if (monType2 != CREATURE_NONE)
-        combatValue += akCreatureTypeTraits[monType2].m_aiValue * numMons2;
+        combatValue += akCreatureTypeTraits[monType2].AI_value * numMons2;
     if (monType3 != CREATURE_NONE)
-        combatValue += akCreatureTypeTraits[monType3].m_aiValue * numMons3;
+        combatValue += akCreatureTypeTraits[monType3].AI_value * numMons3;
 
     // DC events.cpp:5883 computes AI value * (primary skills + 40) / 40;
     // 5884 overwrites ratio with the unweighted double quotient. Mac
@@ -5802,7 +5802,7 @@ void advManager::doWhirlpool(hero* who)
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (who->m_army.m_numTroops[i] > 0) {
             int value = who->m_army.m_numTroops[i]
-                * akCreatureTypeTraits[who->m_army.m_armies[i]].m_baseFightValue;
+                * akCreatureTypeTraits[who->m_army.m_armies[i]].baseFightValue;
             if (value < weakestValue) {
                 weakestArmy = i;
                 weakestValue = value;

@@ -139,17 +139,17 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // the singular/plural lookup and invalid-type fallback.
     createNameWidget(thisArmy->getName());
 
-    createPortraitWidget(stackTraits->m_spriteName,
-                           static_cast<TTownType>(stackTraits->m_townType), thisArmy->m_numTroops); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-    createAttackWidget(typeTraits.m_attackSkill, attack);
-    createDefenseWidget(typeTraits.m_defenseSkill, defense);
-    createShotsWidget(*stackTraits, typeTraits.m_numShots,
-                        stackTraits->m_numShots);
+    createPortraitWidget(stackTraits->m_sprite_name,
+                           static_cast<TTownType>(stackTraits->townType), thisArmy->m_numTroops); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+    createAttackWidget(typeTraits.attackSkill, attack);
+    createDefenseWidget(typeTraits.defenseSkill, defense);
+    createShotsWidget(*stackTraits, typeTraits.numShots,
+                        stackTraits->numShots);
     createDamageWidget(*stackTraits, thisArmy->getController());
-    createHitpointsWidget(typeTraits.m_hitPoints, stackTraits->m_hitPoints);
-    createHitpointsLeftWidget(stackTraits->m_hitPoints
+    createHitpointsWidget(typeTraits.hitPoints, stackTraits->hitPoints);
+    createHitpointsLeftWidget(stackTraits->hitPoints
                                  - thisArmy->m_topCreatureDamage);
-    createSpeedWidget(typeTraits.m_speed, thisArmy->getSpeed());
+    createSpeedWidget(typeTraits.speed, thisArmy->getSpeed());
 
     createMoraleWidget(thisArmy->getMorale(0));
 
@@ -201,9 +201,9 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
             75, 237, 48, 36, OK_ID,
             DATA_COMPGEN(0x0066ffd4, viewArmyCastButton, "icm005.def"),
             viewArmyCastSpellHandler, 0, 1));
-    } else if (stackTraits->m_specialAbility) {
+    } else if (stackTraits->special_ability) {
         m_widgets.push_back(new textWidget(
-            20, 232, 192, 41, stackTraits->m_specialAbility, "smalfont.fnt",
+            20, 232, 192, 41, stackTraits->special_ability, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
 
@@ -278,18 +278,18 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     createNameWidget(getArmyName(m_armyType, 2));
 
     int townType = g_game->getAlignment(m_armyType);
-    createPortraitWidget(traits.m_spriteName, static_cast<TTownType>(townType), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+    createPortraitWidget(traits.m_sprite_name, static_cast<TTownType>(townType), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                            group->m_numTroops[iarmy]);
 
     if (thisHero)
         thisHero->applyCreatureStatBonuses(m_armyType, &traits);
 
-    createAttackWidget(typeTraits->m_attackSkill, traits.m_attackSkill);
-    createDefenseWidget(typeTraits->m_defenseSkill, traits.m_defenseSkill);
-    createShotsWidget(traits, traits.m_numShots, traits.m_numShots);
+    createAttackWidget(typeTraits->attackSkill, traits.attackSkill);
+    createDefenseWidget(typeTraits->defenseSkill, traits.defenseSkill);
+    createShotsWidget(traits, traits.numShots, traits.numShots);
     createDamageWidget(traits, thisHero);
-    createHitpointsWidget(typeTraits->m_hitPoints, traits.m_hitPoints);
-    createSpeedWidget(typeTraits->m_speed, traits.m_speed);
+    createHitpointsWidget(typeTraits->hitPoints, traits.hitPoints);
+    createSpeedWidget(typeTraits->speed, traits.speed);
 
     createMoraleWidget(group->getArmyMorale(
         iarmy, thisHero, thisTown, -1, groupAlignments, 0));
@@ -312,9 +312,9 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     if (showDismiss) {
         createDismissWidget();
         m_showingDismissButton = 1;
-    } else if (upgrade == -1 && traits.m_specialAbility) {
+    } else if (upgrade == -1 && traits.special_ability) {
         widgets.push_back(new textWidget(
-            20, 232, 192, 41, traits.m_specialAbility, "smalfont.fnt",
+            20, 232, 192, 41, traits.special_ability, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
 
@@ -366,24 +366,24 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     // player's colours unconditionally - the null argument is what folds
     // create_background_widget's ternary down to that one call.
     createBackgroundWidget(0);
-    createNameWidget(traits->m_pluralName);
+    createNameWidget(traits->m_plural_name);
 
     int townType = g_game->getAlignment(armyType);
-    createPortraitWidget(traits->m_spriteName, static_cast<TTownType>(townType), 0); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+    createPortraitWidget(traits->m_sprite_name, static_cast<TTownType>(townType), 0); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
 
-    createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);
-    createDefenseWidget(traits->m_defenseSkill, traits->m_defenseSkill);
-    createShotsWidget(*traits, traits->m_numShots, traits->m_numShots);
+    createAttackWidget(traits->attackSkill, traits->attackSkill);
+    createDefenseWidget(traits->defenseSkill, traits->defenseSkill);
+    createShotsWidget(*traits, traits->numShots, traits->numShots);
     createDamageWidget(*traits, 0);
-    createHitpointsWidget(traits->m_hitPoints, traits->m_hitPoints);
-    createSpeedWidget(traits->m_speed, traits->m_speed);
+    createHitpointsWidget(traits->hitPoints, traits->hitPoints);
+    createSpeedWidget(traits->speed, traits->speed);
 
     if (showOk)
         createOkWidget();
 
-    if (traits->m_specialAbility) {
+    if (traits->special_ability) {
         m_widgets.push_back(new textWidget(
-            20, 232, 192, 41, traits->m_specialAbility, "smalfont.fnt",
+            20, 232, 192, 41, traits->special_ability, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
 
@@ -831,8 +831,8 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
         (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE],
         "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
 
-    int low = traits.m_damageLowBound;
-    int high = traits.m_damageHighBound;
+    int low = traits.damageLowBound;
+    int high = traits.damageHighBound;
     if (ourHero != 0 && m_armyType == CREATURE_BALLISTA) {
         low *= ourHero->getPrimarySkill(0) + 1;
         high *= ourHero->getPrimarySkill(0) + 1;
@@ -861,7 +861,7 @@ MAC_ADDRESS(0x201b98, 0x210)  // widget IDs + text-record field + format literal
 void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
                                           int normalShots, int currentShots)
 {
-    if (traits.m_attributes & g_ctaShooter) {
+    if (traits.attributes & g_ctaShooter) {
         m_widgets.push_back(new textWidget(
             154, 85, 122, 17,
             (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SHOTS],

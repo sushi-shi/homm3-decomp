@@ -1566,7 +1566,7 @@ void CWaitForReadyPlayersDlg::wait()
         creature = sRandom(0, 111);
 
     setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
-          akCreatureTypeTraits[creature].m_spriteName, 0);
+          akCreatureTypeTraits[creature].m_sprite_name, 0);
     doModal(0);
 
     if (g_dPlay->isHost()) {
@@ -2308,7 +2308,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
         creature = sRandom(0, 111);
 
     setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
-          akCreatureTypeTraits[creature].m_spriteName, 0);
+          akCreatureTypeTraits[creature].m_sprite_name, 0);
     doModal(0);
 }
 
@@ -2419,7 +2419,7 @@ void CWaitForRemoteBattleDlg::wait(int playerPos)
     m_playerPos = playerPos;
     int creature = sRandom(0, 111);
     setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
-          akCreatureTypeTraits[creature].m_spriteName, 12);
+          akCreatureTypeTraits[creature].m_sprite_name, 12);
     doModal(0);
 }
 

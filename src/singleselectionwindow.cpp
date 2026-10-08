@@ -705,7 +705,7 @@ public:
             creature = sRandom(0, 111);
         }
         setup(text, g_mediumFont,
-              akCreatureTypeTraits[creature].m_spriteName, 0);
+              akCreatureTypeTraits[creature].m_sprite_name, 0);
         doModal(0);
     }
 
@@ -2470,7 +2470,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_heroSpecificAbility = ResourceManager::GetSprite("un44.def");
     for (i = 0; i < 163; ++i)
         m_heroPix[i] = ResourceManager::GetBitmap816(
-            akHeroTraits[i].m_smallPortraitName);
+            akHeroTraits[i].m_small_portrait_name);
     m_heroPix[163] = ResourceManager::GetBitmap816("hpsrand.pcx");
     m_resource = ResourceManager::GetSprite("ScnrStar.def");
 
@@ -4360,8 +4360,8 @@ void TSingleSelectionWindow::makeHeroFilter()
         for (heroId = 0; heroId < 156; ++heroId) {
             if (g_game->m_heroAvailability[heroId] != -1)
                 continue;
-            if (akHeroTraits[heroId].m_heroClass != heroClass1
-                    && akHeroTraits[heroId].m_heroClass != heroClass2)
+            if (akHeroTraits[heroId].m_class != heroClass1
+                    && akHeroTraits[heroId].m_class != heroClass2)
                 continue;
             const std::map<int, type_map_hero_info>& setups =
                 g_game->m_mapHeader.m_heroPlayerSetups;

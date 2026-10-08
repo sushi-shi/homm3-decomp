@@ -7398,7 +7398,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             const int diplomacy = currHero->getSecondarySkill(eSecSkillDiplomacy);
             const float strengthRatio =
                 static_cast<float>(aiApproximateStrength(currHero))
-                / static_cast<float>(akCreatureTypeTraits[type].m_aiValue
+                / static_cast<float>(akCreatureTypeTraits[type].AI_value
                                      * count);
             int force = getForceModifier(strengthRatio);
             TQuickCreatureWindow::TDisposition disposition =
@@ -7418,7 +7418,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             else
                 mood = TQuickCreatureWindow::Flee;
 
-            int cost = akCreatureTypeTraits[type].m_cost[6] * count;
+            int cost = akCreatureTypeTraits[type].cost[6] * count;
             window = new TQuickCreatureWindow(
                 TQuickCreatureWindow::ViewAll, type, count, mood, cost);
             showDetails = true;

@@ -564,13 +564,13 @@ void generator::grow(int unusedArg)
     m_guards.initialize();
     for (long i = 0; i < 4; i++) {
         if (m_type[i] != -1) {
-            m_population[i] = akCreatureTypeTraits[m_type[i]].m_growthRate;
+            m_population[i] = akCreatureTypeTraits[m_type[i]].growthRate;
             // DC game.cpp:614 records this traits assignment after the
             // population write.  That source order also makes VC6 retain
             // grow at both Complete call sites while preserving this body.
             const TCreatureTypeTraits* traits =
                 &akCreatureTypeTraits[m_type[i]];
-            if (traits->m_level >= 4)
+            if (traits->level >= 4)
                 m_guards.add(m_type[i], m_population[i] * 3, -1);
         }
     }
@@ -3655,12 +3655,12 @@ void game::giveTroopsToNeutralTown(int townId)
     if (townArmy.getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
 
-    long amount = akCreatureTypeTraits[creature].m_growthRate;
+    long amount = akCreatureTypeTraits[creature].growthRate;
     if (!townArmy.canJoin(creature)) {
         long worstArmy = -1;
-        long worstValue = akCreatureTypeTraits[creature].m_aiValue * amount;
+        long worstValue = akCreatureTypeTraits[creature].AI_value * amount;
         for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            long value = akCreatureTypeTraits[townArmy.m_armies[slot]].m_aiValue
+            long value = akCreatureTypeTraits[townArmy.m_armies[slot]].AI_value
                        * townArmy.m_numTroops[slot];
             if (value < worstValue) {
                 worstArmy = slot;
@@ -4190,7 +4190,7 @@ static void randomizeRefugeeCamp(NewmapCell* cell)
 {
     TCreatureType creature = g_game->getRandomMonster(0, 6);
     cell->m_objectIndex = creature;
-    cell->m_extraInfo = akCreatureTypeTraits[creature].m_growthRate;
+    cell->m_extraInfo = akCreatureTypeTraits[creature].growthRate;
 }
 
 // E:\gamedcs\game.cpp:4613.
@@ -6986,8 +6986,8 @@ DC_ADDRESS(0x0b1f1c, 0x42)
 MAC_ADDRESS(0x0dd70c, 0x38)
 int game::getRandomNumTroops(int whichMon)
 {
-    return random(akCreatureTypeTraits[whichMon].m_wanderingLow,
-                  akCreatureTypeTraits[whichMon].m_wanderingHigh);
+    return random(akCreatureTypeTraits[whichMon].wanderingLow,
+                  akCreatureTypeTraits[whichMon].wanderingHigh);
 }
 
 VA(0x004c6f40, 0x3F)
@@ -7714,7 +7714,7 @@ void game::perWeek()
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
             if (getAlignment(align) != -1
-                && akCreatureTypeTraits[align].m_level >= 0)
+                && akCreatureTypeTraits[align].level >= 0)
                 ++i;
         }
 
@@ -7722,13 +7722,13 @@ void game::perWeek()
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
             if (getAlignment(align) != -1
-                && akCreatureTypeTraits[align].m_level >= 0) {
+                && akCreatureTypeTraits[align].level >= 0) {
                 if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL
                      || align == CREATURE_EARTH_ELEMENTAL
                      || align == CREATURE_FIRE_ELEMENTAL
                      || align == CREATURE_WATER_ELEMENTAL
-                     || akCreatureTypeTraits[align].m_townType != TOWN_CONFLUX)
+                     || akCreatureTypeTraits[align].townType != TOWN_CONFLUX)
                     && i-- <= 0)
                     break;
             }
@@ -7743,7 +7743,7 @@ void game::perWeek()
             g_weekType = weekTypeInfernoGrail;
             bonusCreature = CREATURE_IMP;
             alternateBonus = CREATURE_FAMILIAR;
-            bonusAmount = akCreatureTypeTraits[CREATURE_IMP].m_growthRate;
+            bonusAmount = akCreatureTypeTraits[CREATURE_IMP].growthRate;
             g_weekTypeExtra = CREATURE_IMP;
             break;
         }
@@ -8015,8 +8015,8 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     }
 
     for (i = 0; i < CREATURE_CATAPULT; ++i) {
-        if (akCreatureTypeTraits[i].m_level < minLevel
-            || akCreatureTypeTraits[i].m_level > maxLevel)
+        if (akCreatureTypeTraits[i].level < minLevel
+            || akCreatureTypeTraits[i].level > maxLevel)
             monsterOk[i] = false;
     }
 
@@ -8049,7 +8049,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     unallocatedInClass = 0;
     for (i = 0; i < 144; ++i) {
         if (!akArtifactTraits[i].m_disabled
-            && (akArtifactTraits[i].m_artifactClass & artifactClass)) {
+            && (akArtifactTraits[i].m_class & artifactClass)) {
             ++totalInClass;
             if (!m_artifactUsed[i])
                 ++unallocatedInClass;
@@ -8061,7 +8061,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
         x = random(0, unallocatedInClass - 1);
         for (i = 0; i < 144; ++i) {
             if (!akArtifactTraits[i].m_disabled
-                && (akArtifactTraits[i].m_artifactClass & artifactClass)
+                && (akArtifactTraits[i].m_class & artifactClass)
                 && !m_artifactUsed[i]) {
                 if (curCount == x)
                     break;
@@ -8074,7 +8074,7 @@ TArtifact game::getRandomArtifactId(int artifactClass)
         curCount = 0;
         for (i = 0; i < 144; ++i) {
             if (!akArtifactTraits[i].m_disabled
-                && (akArtifactTraits[i].m_artifactClass & artifactClass)) {
+                && (akArtifactTraits[i].m_class & artifactClass)) {
                 m_artifactUsed[i] = m_artifactDisabled[i];
                 if (!m_artifactUsed[i])
                     ++curCount;
@@ -8196,34 +8196,34 @@ void game::setRandomHeroArmies(int hero, int cheat, bool minimal)
         currentArmy->m_numTroops[i] = 0;
     }
 
-    currentArmy->m_armies[0] = traits->m_firstStack;
-    currentArmy->m_numTroops[0] = random(traits->m_firstStackLow,
-                                        traits->m_firstStackHigh);
+    currentArmy->m_armies[0] = traits->m_1stStack;
+    currentArmy->m_numTroops[0] = random(traits->m_1stStackLow,
+                                        traits->m_1stStackHigh);
     if (minimal) {
         currentArmy->m_numTroops[0] = 1;
         return;
     }
 
     i = 1;
-    if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
-        if (traits->m_secondStack == CREATURE_BALLISTA) {
+    if (random(1, 100) <= 88 && traits->m_2ndStack != -1) {
+        if (traits->m_2ndStack == CREATURE_BALLISTA) {
             type_artifact artifact(ARTIFACT_BALLISTA);
             m_heroes[hero].giveArtifact(artifact, 0, 0);
-        } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
+        } else if (traits->m_2ndStack == CREATURE_FIRST_AID_TENT) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
             m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else {
-            currentArmy->m_armies[i] = traits->m_secondStack;
-            currentArmy->m_numTroops[i] = random(traits->m_secondStackLow,
-                                                traits->m_secondStackHigh);
+            currentArmy->m_armies[i] = traits->m_2ndStack;
+            currentArmy->m_numTroops[i] = random(traits->m_2ndStackLow,
+                                                traits->m_2ndStackHigh);
             ++i;
         }
     }
 
-    if (random(1, 100) <= 25 && traits->m_thirdStack != -1) {
-        currentArmy->m_armies[i] = traits->m_thirdStack;
-        currentArmy->m_numTroops[i] = random(traits->m_thirdStackLow,
-                                            traits->m_thirdStackHigh);
+    if (random(1, 100) <= 25 && traits->m_3rdStack != -1) {
+        currentArmy->m_armies[i] = traits->m_3rdStack;
+        currentArmy->m_numTroops[i] = random(traits->m_3rdStackLow,
+                                            traits->m_3rdStackHigh);
     }
 }
 
@@ -8591,7 +8591,7 @@ int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
     int value = 0;
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (whichGroup->m_numTroops[i] > 0)
-            value += akCreatureTypeTraits[whichGroup->m_armies[i]].m_hitPoints
+            value += akCreatureTypeTraits[whichGroup->m_armies[i]].hitPoints
                      * whichGroup->m_numTroops[i];
     }
     if (whichHero)
@@ -9737,9 +9737,9 @@ void game::doNewTurn()
             sprintf(g_text, g_newTurn[7],
                     akCreatureTypeTraits[CREATURE_IMP].m_name,
                     akCreatureTypeTraits[CREATURE_IMP].m_name,
-                    akCreatureTypeTraits[CREATURE_IMP].m_growthRate,
+                    akCreatureTypeTraits[CREATURE_IMP].growthRate,
                     akCreatureTypeTraits[CREATURE_FAMILIAR].m_name,
-                    akCreatureTypeTraits[CREATURE_IMP].m_growthRate);
+                    akCreatureTypeTraits[CREATURE_IMP].growthRate);
             break;
         }
     }

@@ -383,8 +383,8 @@ int main()
     // Decode the word explicitly so export does not depend on host endianness.
     std::printf("pub const HERO_AVAILABILITY: [(bool, bool, bool); %lu] = [", sizeof(heroTraits)/sizeof(heroTraits[0]));
     for (const auto& row : heroTraits)
-        std::printf("(%s,%s,%s),", row.m_attributes & 0xff ? "true" : "false",
-            row.m_attributes & 0xff00 ? "true" : "false", row.m_attributes & 0xff0000 ? "true" : "false");
+        std::printf("(%s,%s,%s),", row.attributes & 0xff ? "true" : "false",
+            row.attributes & 0xff00 ? "true" : "false", row.attributes & 0xff0000 ? "true" : "false");
     std::printf("];\n");
     emitArray("DISABLED_ARTIFACTS", disabledArtifacts);
     emitArray("ARTIFACT_SLOT_COLUMNS", artifactSlotColumns);
@@ -404,7 +404,7 @@ int main()
     std::printf("];\n");
     std::printf("pub const CREATURE_FACTIONS_AND_LEVELS: [(i32, i32); %lu] = [", sizeof(creatureTraits)/sizeof(creatureTraits[0]));
     for (const auto& row : creatureTraits)
-        std::printf("(%d,%d),", row.m_townType, row.m_level);
+        std::printf("(%d,%d),", row.townType, row.level);
     std::printf("];\n");
     std::printf("pub const SPELL_FLAGS: [u32; %lu] = [", sizeof(spellTraits)/sizeof(spellTraits[0]));
     for (const auto& row : spellTraits) std::printf("%u,", row.m_flags);

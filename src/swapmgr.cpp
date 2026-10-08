@@ -874,7 +874,7 @@ int swapManager::open(int newPriority)
         m_parent->broadcastMessage(
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             reinterpret_cast<int>(
-                akHeroTraits[m_heroes[hero]->m_portrait].m_largePortraitName));
+                akHeroTraits[m_heroes[hero]->m_portrait].m_large_portrait_name));
 
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT],
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,

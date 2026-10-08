@@ -640,36 +640,36 @@ enum EMagicTerrain {
 // AI_value @0x40 from the same bodies; field names are the NH3API
 // roster, which lands exactly on those offsets with cost[7].
 struct TCreatureTypeTraits {
-    int m_townType;
-    int m_level;
-    const char* m_samplePrefix;
-    const char* m_spriteName;
-    unsigned int m_attributes;
+    int townType;
+    int level;
+    const char* cSamplePrefix;
+    const char* m_sprite_name;
+    unsigned int attributes;
     const char* m_name;
-    const char* m_pluralName;
-    const char* m_specialAbility;
-    int m_cost[7];
-    int m_baseFightValue;
-    int m_aiValue;
-    int m_growthRate;
+    const char* m_plural_name;
+    const char* special_ability;
+    int cost[7];
+    int baseFightValue;
+    int AI_value;
+    int growthRate;
     // SIXTEEN BITS, not 32: the crtraits.txt parser (0x47b480) stores this
     // column's atoi result with `mov word ptr [esi+0x48], ax` where every
     // neighbouring column takes a dword.
-    short m_hordeGrowthRate;
+    short horde_growth_rate;
     // Two alignment bytes before hitPoints at +0x4c. Dreamcast declares
     // horde_growth_rate as a short; retail parser 0x47b480 writes a word at +0x48.
     // NH3API widens that field, so its int32 facade is not used here.
     char m_paddingAfterHordeGrowth[2];
-    int m_hitPoints;
-    int m_speed;
-    int m_attackSkill;
-    int m_defenseSkill;
-    int m_damageLowBound;
-    int m_damageHighBound;
-    int m_numShots;
+    int hitPoints;
+    int speed;
+    int attackSkill;
+    int defenseSkill;
+    int damageLowBound;
+    int damageHighBound;
+    int numShots;
     int m_hasSpell;
-    int m_wanderingLow;
-    int m_wanderingHigh;
+    int wanderingLow;
+    int wanderingHigh;
 };
 SIZE(TCreatureTypeTraits, 116);
 

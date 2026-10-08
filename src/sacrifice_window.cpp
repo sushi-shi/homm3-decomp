@@ -86,7 +86,7 @@ void type_artifact_offering::set(const type_artifact& artifact, TArtifactSlot sl
                                  const hero* owner)
 {
     long artifactClass =
-        akArtifactTraits[artifact.m_artifactId].m_artifactClass;
+        akArtifactTraits[artifact.m_artifactId].m_class;
     m_artifactId = artifact.m_artifactId;
     m_extra = artifact.m_extra;
     m_source = slot;
@@ -845,7 +845,7 @@ DC_ADDRESS(0x125de0, 0x28)
 MAC_ADDRESS(0x1595e0, 0x34)
 long sacrificeValue(TCreatureType creature)
 {
-    return akCreatureTypeTraits[creature].m_aiValue / 40 * 5;
+    return akCreatureTypeTraits[creature].AI_value / 40 * 5;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:924
@@ -2276,7 +2276,7 @@ int type_skeleton_window::sacrifice(message& msg)
             sprintf(g_text,
                     DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
                                  "%skill.82M"),
-                    akCreatureTypeTraits[type].m_samplePrefix);
+                    akCreatureTypeTraits[type].cSamplePrefix);
             sample* newSample = ResourceManager::GetSample(g_text);
             window->m_deathSamples.push_back(newSample);
             g_soundManager->memorySample(newSample);

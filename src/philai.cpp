@@ -289,8 +289,8 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
             // into akCreatureTypeTraits.cost. Complete widens cost entries
             // from short to int; retail proves +0x20 in a 116-byte record.
             baseCost = akCreatureTypeTraits[
-                currentHero->m_army.m_armyTypes[slot]].m_cost;
-            upgradeCost = akCreatureTypeTraits[upgrade].m_cost;
+                currentHero->m_army.m_armyTypes[slot]].cost;
+            upgradeCost = akCreatureTypeTraits[upgrade].cost;
             amount = currentHero->m_army.m_numTroops[slot];
 
             int resource;
@@ -509,7 +509,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
 {
     if (valueOfWarFactory(currentHero, engine, 0) > 0) {
         TCreatureType creature = siegeArtifactToCreature(engine);
-        const int* costs = akCreatureTypeTraits[creature].m_cost;
+        const int* costs = akCreatureTypeTraits[creature].cost;
         for (int resource = 0; resource < 7; resource++)
             g_currentPlayer->m_resources[resource] -= costs[resource];
 
@@ -949,7 +949,7 @@ void type_spellvalue::fillCreatureValueList()
         creature.m_type = m_ourHero->m_army.m_armyTypes[i];
         if (creature.m_type != CREATURE_NONE) {
             creature.m_amount = m_ourHero->m_army.m_numTroops[i];
-            creature.m_value = akCreatureTypeTraits[creature.m_type].m_aiValue
+            creature.m_value = akCreatureTypeTraits[creature.m_type].AI_value
                 * creature.m_amount;
             m_list.push_back(creature);
         }
@@ -990,8 +990,8 @@ static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
     int number = currentHero->creatureTypeCount(sourceType);
     if (number == 0)
         return 0;
-    int value = (akCreatureTypeTraits[destType].m_aiValue
-                 - akCreatureTypeTraits[sourceType].m_aiValue) * number;
+    int value = (akCreatureTypeTraits[destType].AI_value
+                 - akCreatureTypeTraits[sourceType].AI_value) * number;
     if (currentHero->creatureTypeCount(destType) != 0)
         value = static_cast<int>(value * 1.2);
     return value;
@@ -1157,7 +1157,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
         if (creature != CREATURE_NONE
             && currentHero->m_army.canJoin(creature)) {
             value += blackBox->m_creatures.m_numTroops[slot]
-                * akCreatureTypeTraits[creature].m_aiValue;
+                * akCreatureTypeTraits[creature].AI_value;
         }
     }
     return value;
@@ -1184,7 +1184,7 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell)
 
     if (bank.m_rewardCreatures > 0)
         value += bank.m_rewardCreatures
-            * akCreatureTypeTraits[bank.m_rewardCreature].m_aiValue;
+            * akCreatureTypeTraits[bank.m_rewardCreature].AI_value;
 
     value = bank.m_artifacts.size()
         * g_currentPlayer->m_ai.m_turnValueOfAvgArtifact + value;
@@ -1419,7 +1419,7 @@ inline long valueOfHillFort(const hero* currentHero,
                          currentHero->m_army.m_numTroops[slot], cost);
         cost[GOLD] = static_cast<int>(
             static_cast<float>(cost[GOLD])
-            * g_afUpgradeCostFactor[akCreatureTypeTraits[creature].m_level]);
+            * g_afUpgradeCostFactor[akCreatureTypeTraits[creature].level]);
 
         int resource;
         for (resource = 0; resource <= GOLD; ++resource) {
@@ -1430,8 +1430,8 @@ inline long valueOfHillFort(const hero* currentHero,
             continue;
 
         value += currentHero->m_army.m_numTroops[slot]
-            * (akCreatureTypeTraits[upgrade].m_aiValue
-               - akCreatureTypeTraits[creature].m_aiValue);
+            * (akCreatureTypeTraits[upgrade].AI_value
+               - akCreatureTypeTraits[creature].AI_value);
         for (resource = 0; resource <= GOLD; ++resource)
             funds[resource] -= cost[resource];
     }
@@ -1757,10 +1757,10 @@ static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
             TCreatureType creature = ourHero->m_army.m_armyTypes[group];
             if (creature != CREATURE_NONE) {
                 const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
-                long value = traits.m_aiValue
+                long value = traits.AI_value
                     * ourHero->m_army.m_numTroops[group];
                 armyValue += value;
-                if (traits.m_attributes & creatureShootingArmy)
+                if (traits.attributes & creatureShootingArmy)
                     rangedValue += value;
             }
         }
@@ -1997,7 +1997,7 @@ static long valueOfWarFactory(const hero* currentHero,
     long artifactValue = aiGetValueOfArtifact(
         type_artifact(engine), currentHero, false, true);
     TCreatureType creature = siegeArtifactToCreature(engine);
-    const int* costs = akCreatureTypeTraits[creature].m_cost;
+    const int* costs = akCreatureTypeTraits[creature].cost;
     const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
     long resourceCost = 0;
     for (int resource = 0; resource < 7; ++resource, ++costs) {
@@ -2258,7 +2258,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     long value = aiGetValueOfArtifact(
         type_artifact(engine), currentHero, false, true);
     TCreatureType creature = siegeArtifactToCreature(engine);
-    const int* costs = akCreatureTypeTraits[creature].m_cost;
+    const int* costs = akCreatureTypeTraits[creature].cost;
     if (!value)
         return;
 
@@ -2512,7 +2512,7 @@ long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery maste
             TCreatureType creatureType = H3_ENUM_DECODE(TCreatureType, creature);
             double chance = getSpellWorkChance(ESpellId(spell), creatureType, m_ourHero, 0);
             total = static_cast<long>(
-                static_cast<double>(akCreatureTypeTraits[creature].m_aiValue)
+                static_cast<double>(akCreatureTypeTraits[creature].AI_value)
                 * static_cast<double>(m_ourHero->m_army.m_numTroops[i])
                 * (1.0 - chance)
                 + static_cast<double>(total));
@@ -2802,7 +2802,7 @@ void aiVisitHillFort(hero* currentHero)
         getUpgradeCost(creature, upgrade,
                          currentHero->m_army.m_numTroops[i], cost);
         cost[GOLD] = static_cast<int>(static_cast<float>(cost[GOLD])
-            * g_afUpgradeCostFactor[akCreatureTypeTraits[creature].m_level]);
+            * g_afUpgradeCostFactor[akCreatureTypeTraits[creature].level]);
 
         int resource;
         for (resource = 0; resource <= GOLD; resource++) {
@@ -2897,7 +2897,7 @@ int aiVisitSirens(const hero* currentHero, armyGroup& army)
                 short sacrifice = static_cast<short>(
                     static_cast<float>(troops) * 0.7);
                 army.m_numTroops[i] = sacrifice;
-                total += akCreatureTypeTraits[creature].m_hitPoints
+                total += akCreatureTypeTraits[creature].hitPoints
                     * (troops - sacrifice);
             }
         }
@@ -3115,7 +3115,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
         if (population > 0) {
             creature = g_dwellingType[enemyTown->m_type][dwelling];
             getMonsterCost(creature, creatureCost);
-            long profit = akCreatureTypeTraits[creature].m_aiValue
+            long profit = akCreatureTypeTraits[creature].AI_value
                 - aiResourceCost(player, creatureCost);
             if (profit > 0)
                 townValue += profit * population;

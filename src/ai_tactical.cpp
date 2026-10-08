@@ -158,8 +158,8 @@ MAC_ADDRESS(0x03cfd8, 0x44)
 // Original DC public ?AI_get_attack_damage@@YAJABVarmy@@J0_NJ@Z.
 long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy, bool ranged, long distance)
 {
-    long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
-                  / currentArmy.m_monInfo.m_hitPoints;
+    long troops = (currentArmy.m_monInfo.hitPoints + ourHits - 1)
+                  / currentArmy.m_monInfo.hitPoints;
     return currentArmy.getAverageDamage(enemy, ranged, troops, 1, distance);
 }
 
@@ -388,8 +388,8 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
     enemyHits -= aiGetAttackDamage(*attacker, ourHits, *defender, 0, 0);
     if (enemyHits < 0)
         enemyHits = 0;
-    m_enemyTroopsLeft = (defender->m_monInfo.m_hitPoints + enemyHits - 1) / defender->m_monInfo.m_hitPoints;
-    m_ourTroops = (attacker->m_monInfo.m_hitPoints + ourHits - 1) / attacker->m_monInfo.m_hitPoints;
+    m_enemyTroopsLeft = (defender->m_monInfo.hitPoints + enemyHits - 1) / defender->m_monInfo.hitPoints;
+    m_ourTroops = (attacker->m_monInfo.hitPoints + ourHits - 1) / attacker->m_monInfo.hitPoints;
 }
 
 // E:\gamedcs\ai_tactical.cpp:511
@@ -428,7 +428,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
         combatValue -= enemy->getUnitCombatValue(
                            m_data->m_lowestAttack, m_data->m_lowestDefense, 0, 0);
         long share = static_cast<long>(combatValue * static_cast<double>(hits)
-                                       / static_cast<double>(enemy->m_monInfo.m_hitPoints));
+                                       / static_cast<double>(enemy->m_monInfo.hitPoints));
         if (share < 1)
             share = 1;
         value += share;
@@ -1115,7 +1115,7 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
         return 0;
     double average = ourArmy->getAverageDamage();
     long blessed = akSpellTraits[SPELL_BLESS].m_masteryBonus[caster.m_mastery]
-                   + ourArmy->m_monInfo.m_damageHighBound;
+                   + ourArmy->m_monInfo.damageHighBound;
     double increase = blessed / average;
     return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
@@ -1186,7 +1186,7 @@ long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* e
     if (m_winLikely)
         return 0;
     army testArmy = *ourArmy;
-    testArmy.m_monInfo.m_attackSkill += bonus;
+    testArmy.m_monInfo.attackSkill += bonus;
     // Preserve the logical result through getEstimatedDamage's bool interface.
     bool ranged = ourArmy->canShoot(0);
     double oldDamage = ourArmy->getEstimatedDamage(enemy, 100, ranged, 0);
@@ -1319,12 +1319,12 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
         return 0;
     if (m_winLikely) {
         if (ourArmy->getAIExpectedDamage() + ourArmy->m_topCreatureDamage
-                < ourArmy->m_monInfo.m_hitPoints)
+                < ourArmy->m_monInfo.hitPoints)
             return 0;
     }
     if ((m_meleeEnemies[ourArmy->m_bitIndex].m_totalDamage
                 + m_attacks[ourArmy->m_bitIndex].m_totalDamage) * m_estimate.m_roundsLeft
-            + ourArmy->m_topCreatureDamage < ourArmy->m_monInfo.m_hitPoints)
+            + ourArmy->m_topCreatureDamage < ourArmy->m_monInfo.hitPoints)
         return 0;
     double scale = getDuration(duration, 0);
     return static_cast<long>(scale * ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
@@ -1340,7 +1340,7 @@ long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duratio
     if (!enemy)
         return 0;
     army testArmy = *ourArmy;
-    testArmy.m_monInfo.m_defenseSkill += bonus;
+    testArmy.m_monInfo.defenseSkill += bonus;
     bool ranged = enemy->canShoot(0);
     double oldDamage = enemy->getEstimatedDamage(ourArmy, 100, ranged, 0);
     double newDamage = enemy->getEstimatedDamage(&testArmy, 100, ranged, 0);
@@ -1513,7 +1513,7 @@ long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data 
             long capped = min(
                 static_cast<int>(akSpellTraits[SPELL_WEAKNESS]
                                      .m_masteryBonus[caster.m_mastery]),
-                static_cast<int>(enemy->m_monInfo.m_attackSkill));
+                static_cast<int>(enemy->m_monInfo.attackSkill));
             return getAttackSkillValue(enemy, target, caster.m_duration, capped);
         }
     }
@@ -1688,7 +1688,7 @@ long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data ca
 {
     if (m_winLikely)
         return 0;
-    long damage = (enemy->m_monInfo.m_hitPoints - enemy->m_topCreatureDamage) / 2;
+    long damage = (enemy->m_monInfo.hitPoints - enemy->m_topCreatureDamage) / 2;
     return enemy->getLossCombatValue(m_estimate.m_lowestAttack,
                                         m_estimate.m_lowestDefense,
                                         enemy->canShoot(0), damage,
@@ -1929,7 +1929,7 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
                        damage);
     if (m_winLikely) {
         if (ourArmy->m_topCreatureDamage + ourArmy->getAIExpectedDamage()
-                < ourArmy->m_monInfo.m_hitPoints)
+                < ourArmy->m_monInfo.hitPoints)
             healed = 0;
     }
     if (healed > 0)
@@ -1937,7 +1937,7 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
             ourArmy->getUnitCombatValue(m_estimate.m_lowestAttack,
                                             m_estimate.m_lowestDefense,
                                             ourArmy->canShoot(0), 0)
-            * healed / ourArmy->m_monInfo.m_hitPoints + value);
+            * healed / ourArmy->m_monInfo.hitPoints + value);
     return value;
 }
 
@@ -2115,7 +2115,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
         turns--;
     if (turns == 0)
         return 0;
-    g_searchArray->seedCombatPosition(enemy, m_side, enemy->m_monInfo.m_speed * turns, 0, -1);
+    g_searchArray->seedCombatPosition(enemy, m_side, enemy->m_monInfo.speed * turns, 0, -1);
     long count = g_combatManager->m_numArmies[m_enemySide];
     for (; count-- > 0; enemyRow++) {
         if (enemyRow == enemy)
@@ -2329,7 +2329,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
         }
         long healable = (akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power
                          + akSpellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery])
-                        / ourArmy->m_monInfo.m_hitPoints;
+                        / ourArmy->m_monInfo.hitPoints;
         long dead = ourArmy->m_origNumTroops - ourArmy->m_numTroops;
         if (healable > dead) {
             if (dead < ourArmy->m_origNumTroops * 3 / 4) {
@@ -2389,9 +2389,9 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
                                              creatureCast))
             continue;
         int resurrected = (choice.getMasteryValue()
-                            + akCreatureTypeTraits[victim->m_creatureType].m_hitPoints
+                            + akCreatureTypeTraits[victim->m_creatureType].hitPoints
                             + choice.m_power)
-                           * victim->m_numTroops / healedArmy->m_monInfo.m_hitPoints;
+                           * victim->m_numTroops / healedArmy->m_monInfo.hitPoints;
         int missing = healedArmy->m_origNumTroops - healedArmy->m_numTroops;
         if (resurrected > missing
                 && missing < healedArmy->m_origNumTroops * 3 / 4
@@ -2483,7 +2483,7 @@ long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data cas
         long value = enemy->getTotalCombatValue(m_estimate.m_lowestAttack,
                                                    m_estimate.m_lowestDefense);
         double oldAverage = enemy->getAverageDamage();
-        double newAverage = enemy->m_monInfo.m_damageLowBound - akSpellTraits[SPELL_CURSE].m_masteryBonus[caster.m_mastery];
+        double newAverage = enemy->m_monInfo.damageLowBound - akSpellTraits[SPELL_CURSE].m_masteryBonus[caster.m_mastery];
         if (newAverage < 1.0)
             newAverage = 1.0;
         double decrease = newAverage / oldAverage;
@@ -2513,7 +2513,7 @@ long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_
             damage -= enemy->getUnitCombatValue(m_estimate.m_lowestAttack,
                                                    m_estimate.m_lowestDefense, 0, 0);
             double hits = enemy->getTotalHitPoints(0);
-            long value = static_cast<long>(hits * damage / enemy->m_monInfo.m_hitPoints);
+            long value = static_cast<long>(hits * damage / enemy->m_monInfo.hitPoints);
             double scale = getDuration(caster.m_duration, enemy->is(creatureDone));
             value = static_cast<long>(value * scale);
             if (caster.m_checkResistance) {
@@ -2714,7 +2714,7 @@ void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
         choice.m_value = power * 1000;
     } else {
         TCreatureType summoned = getElementalType(choice.m_spell);
-        choice.m_value = akCreatureTypeTraits[summoned].m_aiValue * power;
+        choice.m_value = akCreatureTypeTraits[summoned].AI_value * power;
     }
     choice.m_castNow = 1;
 }
@@ -3032,7 +3032,7 @@ unsigned char type_AI_spellcaster::spellsNotRequired() const
         if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
         if (ourArmy->getAIExpectedDamage() + ourArmy->m_topCreatureDamage
-                >= ourArmy->m_monInfo.m_hitPoints)
+                >= ourArmy->m_monInfo.hitPoints)
             return 0;
     }
     return 1;

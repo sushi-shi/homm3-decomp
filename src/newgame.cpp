@@ -308,7 +308,7 @@ void game::getVictoryConditionText(char* text)
         }
         case VICTORY_CONDITION_TOTAL_CREATURES:
             sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_CREATURES_FORMAT], victory.m_numCreatures,
-                    akCreatureTypeTraits[victory.m_creatureType].m_pluralName);
+                    akCreatureTypeTraits[victory.m_creatureType].m_plural_name);
             break;
         case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
             strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FLAG_DWELLINGS]);

@@ -1592,7 +1592,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
         return;
     if (sRandom(1, 24) > stack->getMorale(1))
         return;
-    stack->m_monInfo.m_attributes = (stack->m_monInfo.m_attributes & ~creatureDone) | creatureMorale;
+    stack->m_monInfo.attributes = (stack->m_monInfo.attributes & ~creatureDone) | creatureMorale;
     if (!isQuickCombat()) {
         SAMPLE2 sample = loadPlaySample(
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
@@ -1615,7 +1615,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
         army* stack = &m_armies[group][index];
         if (sRandom(1, 12) <= -stack->getMorale(1)) {
             if (m_sideIsAi[group] || sRandom(1, 4) != 1) {
-                stack->m_monInfo.m_attributes |= creatureDone;
+                stack->m_monInfo.attributes |= creatureDone;
                 if (!isQuickCombat()) {
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
@@ -1656,7 +1656,7 @@ unsigned char combatManager::applyAzureDragonFear(army* selected)
     if (rand() % 10 > 0)
         return 0;
 
-    selected->m_monInfo.m_attributes |= creatureDone;
+    selected->m_monInfo.attributes |= creatureDone;
     if (!isQuickCombat()) {
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x0066ff88, fearSampleName, "Fear.wav"));
@@ -1737,7 +1737,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
                     if (stack->m_resetThisRound && stack->isIncapacitated())
                         continue;
                     if (m_creaturePlacement) {
-                        if (!stack->m_monInfo.m_speed)
+                        if (!stack->m_monInfo.speed)
                             continue;
                     }
                     if (m_creaturePlacement) {
@@ -1778,7 +1778,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
             checkingForBadMorale = false;
             for (int s = 0; s < 2; s++) {
                 for (int j = 0; j < m_numArmies[s]; j++)
-                    m_armies[s][j].m_monInfo.m_attributes &= ~creatureWaiting;
+                    m_armies[s][j].m_monInfo.attributes &= ~creatureWaiting;
             }
         }
     }
@@ -2020,21 +2020,21 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
             int slot = m_archers[eArcherUpperTower].m_armySlot;
             m_wallLevel[17] = 0;
             m_wallFrame[17] = 0;
-            m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
+            m_armies[1][slot].m_monInfo.attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_6: {
             int slot = m_archers[eArcherLowerTower].m_armySlot;
             m_wallLevel[16] = 0;
             m_wallFrame[16] = 0;
-            m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
+            m_armies[1][slot].m_monInfo.attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_7: {
             int slot = m_archers[eArcherMainBuilding].m_armySlot;
             m_wallLevel[15] = 0;
             m_wallFrame[15] = 0;
-            m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
+            m_armies[1][slot].m_monInfo.attributes |= creatureImmobilized;
             break;
         }
         }
@@ -2129,7 +2129,7 @@ void combatManager::keepAttack(int towerPos)
         sprintf(g_text,
                 DATA_COMPGEN(0x0066ffa4, towerShotSampleFormat,
                              "%sshot.82m"),
-                akCreatureTypeTraits[archer->m_type].m_samplePrefix);
+                akCreatureTypeTraits[archer->m_type].cSamplePrefix);
         sample = loadPlaySample(g_text);
 
         const int frames = info->m_attackFrames > 0
@@ -2232,7 +2232,7 @@ int combatManager::experienceValueOfStack(int whichGroup)
         const army& a = m_armies[whichGroup][slot];
         if (a.m_creatureType != -1 && !a.is(creatureSummoned) && !a.is(creatureSiegeWeapon))
             total += (a.m_origNumTroops - a.m_numTroops)
-                * akCreatureTypeTraits[a.m_creatureType].m_hitPoints;
+                * akCreatureTypeTraits[a.m_creatureType].hitPoints;
     }
     if (m_heroes[whichGroup])
         total += 500;
@@ -2597,7 +2597,7 @@ void combatManager::initializeArchers()
     const TArcherTraits& info = s_archerTraits[m_defendingTown->m_type];
     TArcherLoadState locals;
     locals.m_spriteName =
-        akCreatureTypeTraits[info.m_creatureType].m_spriteName;
+        akCreatureTypeTraits[info.m_creatureType].m_sprite_name;
 
     archer->m_type = info.m_creatureType;
     locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
@@ -2691,7 +2691,7 @@ void combatManager::makeCreaturesVanish()
             const army& stack = m_armies[side][index];
             m_cells[stack.m_gridIndex].m_armySide = -1;
             m_cells[stack.m_gridIndex].m_armySlot = -1;
-            if (stack.m_monInfo.m_attributes & creatureDoubleWide) {
+            if (stack.m_monInfo.attributes & creatureDoubleWide) {
                 m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
                 m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
             }
@@ -3678,11 +3678,11 @@ void combatManager::checkRebirth()
             if (!resurrected)
                 continue;
 
-            stack->m_monInfo.m_attributes |= creatureDone;
+            stack->m_monInfo.attributes |= creatureDone;
             if (!isQuickCombat())
                 launchSample(akSpellTraits[SPELL_RESURRECTION].m_sample,
                               -1, 3);
-            resurrect(stack, stack->m_monInfo.m_hitPoints * resurrected, 0);
+            resurrect(stack, stack->m_monInfo.hitPoints * resurrected, 0);
         }
     }
 }
