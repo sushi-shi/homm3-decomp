@@ -174,8 +174,8 @@ public:
 
     TTeamInfo() : _m_bHasTeams(false), _m_numTeams(s_kMinTeams), _m_aPlayerTeam(0) {}
 
-    bool getBHasTeams() const { return _m_bHasTeams; }
     void setBHasTeams(bool bHasTeams) { _m_bHasTeams = bHasTeams; }
+    bool getBHasTeams() const { return _m_bHasTeams; }
     unsigned int getNumTeams() const { return _m_numTeams; }
     void setNumTeams(unsigned int newNumTeams);
     unsigned int getPlayerTeam(TPlayer player) const;
