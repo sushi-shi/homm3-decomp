@@ -17,7 +17,7 @@ import subprocess
 import tomllib
 
 from homm3.core import common
-from homm3.loki import datacmp, delink, ledger, objwriter, toolchain
+from homm3.loki import census, datacmp, delink, ledger, objwriter, toolchain
 from homm3.loki.image import IMAGE, LokiImage
 
 ROOT = common.HOMM3_DIR
@@ -74,7 +74,13 @@ def compile_unit(unit: Unit) -> tuple[Path, str | None]:
     # text, TRuntimeError sites) is a bare name such as "GzBuf.cpp".
     command = toolchain.driver_command("-c", *unit.flags, *include_flags(), unit.source.name, "-o", str(out),
                                        driver=unit.driver)
-    completed = subprocess.run(command, env=toolchain.environment(), capture_output=True, text=True,
+    environment = toolchain.environment()
+    seed = census.anonymous_table().get(unit.source.name)
+    if seed is not None:
+        # The retail anonymous namespace suffix: anonseed.so (preloaded into
+        # cc1plus) hands append_random_chars this sum as the time of day.
+        environment.update(HOMM3_LOKI_TIMEOFDAY=f"{seed}.0", HOMM3_LOKI_PID="0")
+    completed = subprocess.run(command, env=environment, capture_output=True, text=True,
                                cwd=unit.source.parent)
     (OUT / "obj" / f"{unit.name}.log").write_text(completed.stdout + completed.stderr)
     if completed.returncode:

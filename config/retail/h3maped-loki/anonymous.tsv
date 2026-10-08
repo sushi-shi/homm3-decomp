@@ -1,0 +1,36 @@
+# Loki h3maped census (homm3 loki census); image sha256 0d5614c407a9977d877bbe2ee7e35c476670b006cd88981ca40366fe2138559d
+# file	chars	seed	evidence
+AdvObjectTypeTraits.cpp	yvqtSd	3403148342	.dynstr x1
+ArmyDlg.cpp	LRFvUc	2517103875	.dynstr x5
+Artifact.cpp	vQuqNd	3328568353	.dynstr x5
+Colors.cpp	swYU9b	1828645998	.dynstr x2
+EditTimedEventGeneralPage.cpp	iyP88c	2733304604	.dynstr x1
+EditTownEventBuildingsPage.cpp	ACeC3b	1735521634	.dynstr x4
+Error.cpp	Nf4chb	1020259453	.dynstr x1
+FindDlg.cpp	harWCd	3173641003	.dynstr x68
+GUIGameObject.cpp	pZMFta	288287801	.dynstr x436, .rodata x25
+GameMap.cpp	b1iXCb	1341582351	.dynstr x171
+GameResource.cpp	QlWxjd	2887052300	.dynstr x1
+Hero.cpp	IjQude	3713788936	.dynstr x7
+HeroPropsArtifactsPage.cpp	D0ZZYa	751170825	.dynstr x1
+HeroPropsSecSkillsPage.cpp	42saFe	4122670340	.dynstr x2
+MapDoc.cpp	PmevPb	1526983657	.dynstr x1
+MapEditWnd.cpp	ct6Jja	141552636	.dynstr x16, .rodata x1
+MapEditorText.cpp	5AKNzd	3127241741	.dynstr x59
+MapSpecsLossCondPage.cpp	m004cd	2791500660	.dynstr x1
+MapSpecsPlayerSpecsPage.cpp	UKASAc	2227039054	.dynstr x1
+MapSpecsTimedEventsPage.cpp	4lcG4c	2667375402	.dynstr x1
+MapView.cpp	UIvDKe	4203473814	.dynstr x1
+ObjectPaletteWnd.cpp	K0ZNrb	1176824640	.dynstr x1
+ObjectSpecializations.cpp	vD1tue	3964791831	.dynstr x7
+ObjectSprites.cpp	fwIyHc	2325736689	.dynstr x3
+ObjectType.cpp	IWVf1b	1700653958	.dynstr x19, .rodata x3
+ObjectTypeTable.cpp	5bbYze	4045860091	.dynstr x1
+Player.cpp	moLRNb	1502801148	.dynstr x1
+SeersHut.cpp	PBS6wb	1255206099	.dynstr x142, .rodata x14
+TerrainPlacement.cpp	wUWE5d	3597986874	.dynstr x65, .rodata x3
+Tile.cpp	3tyDpa	228650041	.dynstr x12
+Town.cpp	XqFiZb	1671752797	.dynstr x25, .rodata x2
+TownPropsBuildingsPage.cpp	qPDvFe	4127716666	.dynstr x11
+TownPropsSpellsPage.cpp	KG0nDa	431813916	.dynstr x1
+VictoryCondition.cpp	vbxlJc	2352147527	.dynstr x190, .rodata x20

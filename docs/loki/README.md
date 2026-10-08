@@ -406,10 +406,20 @@ project objects, C libraries, libstdc++/libgcc, linkonce) against the image's.
 It is not a gate yet.
 
 Anonymous-namespace names are random per compile: `append_random_chars`
-(gcc/tree.c) seeds them from `gettimeofday` and `getpid`, and 34 units
-export `_GLOBAL_.N.<file><6 chars>` names through `.dynsym`, `.dynstr` and
-their type-name strings. The comparison canonicalizes them (`5_ANON`); a
-byte-identical link needs the image's six characters back.
+(gcc/tree.c) adds `(tv_usec << 16) ^ tv_sec ^ getpid()` to a static sum and
+spells the sum in six base-62 digits, least significant first, which hold
+all 32 bits. 34 units export `_GLOBAL_.N.<file><6 chars>` names through
+`.dynsym`, `.dynstr` and their type-name strings; `homm3 loki census`
+records each file's characters and the sum they spell in
+`config/retail/h3maped-loki/anonymous.tsv`. The staged cc1plus runs with
+`anonseed.so` preloaded (`scripts/homm3/loki/anonseed.c`, built with the
+staged gcc into `build/loki/toolchain/libexec/`), and `homm3 loki build`
+gives a listed unit `HOMM3_LOKI_TIMEOFDAY=<sum>.0` and `HOMM3_LOKI_PID=0`:
+the names prove the sum, not its split between the clock and the process
+id, so the whole sum is fed as seconds. Every compiled suffix equals the
+image's. cppbridge.cpp's anonymous namespace holds only local data, which
+the image strips, so it has no row and stays random. The comparison still
+canonicalizes the names (`5_ANON`).
 
 Launch (2026-10-08): headless only, `xvfb-run -a -s "-screen 0 1280x1024x24"`
 with a run directory holding `heroes-iii-level-editor.glade`, a `heroes3`

@@ -90,9 +90,35 @@ def _extract(deb: bytes, root: Path) -> None:
                 path.chmod(member.mode & 0o755 | 0o600)
 
 
-def _wrapper(program: Path, *library_dirs: Path) -> str:
+def _wrapper(program: Path, *library_dirs: Path, preload: Path | None = None) -> str:
     library_path = ":".join(str(p) for p in (SYSROOT / "lib", SYSROOT / "usr/lib", *library_dirs))
-    return f'#!/bin/sh\nexec "{LOADER}" --library-path "{library_path}" "{program}" "$@"\n'
+    prefix = f'LD_PRELOAD="{preload}" ' if preload is not None else ""
+    return f'#!/bin/sh\n{prefix}exec "{LOADER}" --library-path "{library_path}" "{program}" "$@"\n'
+
+
+# cc1plus runs with anonseed.so preloaded: the build feeds each unit's
+# gettimeofday/getpid values for its anonymous namespace (see anonseed.c).
+ANONSEED_SOURCE = Path(__file__).with_name("anonseed.c")
+ANONSEED = WRAPPERS / "anonseed.so"
+ANONSEED_STAMP = WRAPPERS / "anonseed.sha256"
+
+
+def _build_anonseed() -> None:
+    digest = hashlib.sha256(ANONSEED_SOURCE.read_bytes()).hexdigest()
+    try:
+        if ANONSEED.is_file() and ANONSEED_STAMP.read_text().strip() == digest:
+            return
+    except OSError:
+        pass
+    WRAPPERS.mkdir(parents=True, exist_ok=True)
+    # No start files or libc.so script: the shim's libc references resolve in
+    # cc1plus; libdl.so.2 (dlsym) is named so the loader maps it.
+    command = driver_command("-shared", "-nostdlib", "-fPIC", "-O2", "-o", str(ANONSEED),
+                             str(ANONSEED_SOURCE), str(SYSROOT / "lib/libdl.so.2"), driver="gcc")
+    completed = subprocess.run(command, env=environment(), capture_output=True, text=True)
+    if completed.returncode:
+        raise ToolchainError(f"cannot build {ANONSEED.name}: {completed.stderr.strip()}")
+    ANONSEED_STAMP.write_text(digest + "\n")
 
 
 def _write_wrappers() -> None:
@@ -104,8 +130,16 @@ def _write_wrappers() -> None:
         if not program.is_file():
             raise ToolchainError(f"staged toolchain lacks {program}")
         path = WRAPPERS / name
-        path.write_text(_wrapper(program, BINUTILS / "usr/lib") if name == "as" else _wrapper(program))
+        if name == "as":
+            text = _wrapper(program, BINUTILS / "usr/lib")
+        elif name == "cc1plus":
+            text = _wrapper(program, preload=ANONSEED)
+        else:
+            text = _wrapper(program)
+        if not path.is_file() or path.read_text() != text:
+            path.write_text(text)
         path.chmod(0o755)
+    _build_anonseed()
 
 
 def _digest(spec: dict) -> str:
@@ -146,6 +180,7 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
     gtk = gtk if gtk is not None else os.environ.get("HOMM3_LOKI_GTK")
     if debs is None or sgi_stl is None or binutils is None or compilers is None or gtk is None:
         if is_staged():
+            _write_wrappers()
             return DESTINATION
         raise ToolchainError("GCC 2.95.2 toolchain not staged; run `homm3 loki toolchain --debs DIR "
                              "--sgi-stl DIR --binutils DIR --gcc DIR --gtk DIR` (or set HOMM3_LOKI_DEBS, "

@@ -9,6 +9,9 @@ Writes the retail facts under config/retail/h3maped-loki/:
                  including file-static ones) and exported functions of the
                  frameless C libraries, with object, placement, binding,
                  GNU v2 mangled name and its demangling.
+  anonymous.tsv  each source file's anonymous namespace suffix
+                 (`_GLOBAL_.N.<file><6 chars>` in .dynstr and type names)
+                 and the 32-bit sum append_random_chars spelled in it.
 
 `--check` regenerates in memory and fails when the committed tables differ.
 """
@@ -111,6 +114,47 @@ def objects(image: LokiImage) -> list[dict]:
     return rows
 
 
+ANONYMOUS = re.compile(rb"_GLOBAL_\.N\.([A-Za-z_][\w.+-]*?\.(?:cpp|cc|c))([A-Za-z0-9]{6})")
+LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+
+def anonymous_seed(chars: str) -> int:
+    """The sum gcc/tree.c append_random_chars spelled: six base-62 digits, least significant first."""
+    value = sum(LETTERS.index(c) * 62 ** i for i, c in enumerate(chars))
+    if value >= 1 << 32:
+        raise ValueError(f"{chars}: not a 32-bit append_random_chars value")
+    return value
+
+
+def anonymous_rows(image: LokiImage) -> list[dict]:
+    found: dict[str, dict[str, collections.Counter]] = collections.defaultdict(
+        lambda: collections.defaultdict(collections.Counter))
+    for section in (".dynstr", ".rodata"):
+        for match in ANONYMOUS.finditer(image.elf.bytes(image.elf.section(section))):
+            found[match.group(1).decode()][match.group(2).decode()][section] += 1
+    rows = []
+    for file in sorted(found):
+        if len(found[file]) != 1:
+            raise ValueError(f"{file}: more than one anonymous namespace suffix {sorted(found[file])}")
+        ((chars, places),) = found[file].items()
+        evidence = ", ".join(f"{section} x{count}" for section, count in sorted(places.items()))
+        rows.append(dict(file=file, chars=chars, seed=anonymous_seed(chars), evidence=evidence))
+    return rows
+
+
+def anonymous_table() -> dict[str, int]:
+    """file -> seed from the committed anonymous.tsv (empty when absent)."""
+    path = RETAIL / "anonymous.tsv"
+    if not path.is_file():
+        return {}
+    out = {}
+    for line in path.read_text().splitlines():
+        if line and not line.startswith("#"):
+            file, _, seed, *_ = line.split("\t")
+            out[file] = int(seed)
+    return out
+
+
 def function_rows(image: LokiImage) -> list[dict]:
     names = demangle([f.name for f in image.functions if f.name])
     demangled = dict(zip([f.name for f in image.functions if f.name], names))
@@ -135,7 +179,11 @@ def render(image: LokiImage) -> dict[str, str]:
     for row in function_rows(image):
         funcs.append(f"{row['address']:08x}\t{row['size']}\t{row['object']}\t{row['placement']}\t"
                      f"{row['bind']}\t{row['name']}\t{row['demangled']}")
-    return {"objects.tsv": "\n".join(lines) + "\n", "functions.tsv": "\n".join(funcs) + "\n"}
+    anon = [header + "# file\tchars\tseed\tevidence"]
+    for row in anonymous_rows(image):
+        anon.append(f"{row['file']}\t{row['chars']}\t{row['seed']}\t{row['evidence']}")
+    return {"objects.tsv": "\n".join(lines) + "\n", "functions.tsv": "\n".join(funcs) + "\n",
+            "anonymous.tsv": "\n".join(anon) + "\n"}
 
 
 def image_sha() -> str:
