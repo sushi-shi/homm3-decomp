@@ -68,6 +68,7 @@ rva	size	kind	name	unit	evidence
 0x0000f850	0x4d	func	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusPrimarySkill@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	Campaign	vtable ??_7?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusPrimarySkill@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@6B@ stored by ?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z slot 2
 0x0000ffd0	0x3b	func	??5TRawIStream@@QAEAAV0@AAJ@Z	CampaignDoc	masked body (59 bytes, 3 relocations) unique at a census start
 0x00010500	0x2f	func	??Bid@locale@std@@QAEIXZ	resourcemanager	masked body (47 bytes, 4 relocations) unique at a census start
+0x00010ed0	0x55	func	??1TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	masked body (85 bytes, 7 relocations) unique at a census start
 0x00011ae0	0x17	func	??0TAllocationFailure@@QAE@XZ	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x25
 0x00011b00	0x12	func	??0TScenarioHeroBonus@@QAE@H@Z	CampaignDoc	masked body (18 bytes, 1 relocations) unique at a census start
 0x000152e0	0x10	func	??0ios_base@std@@IAE@XZ	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x2f
@@ -88,6 +89,7 @@ rva	size	kind	name	unit	evidence
 0x00015dd0	0x3b	func	??0?$fpos@H@std@@QAE@J@Z	resourcemanager	masked body (59 bytes, 5 relocations) unique at a census start
 0x00016c80	0x3	func	?_Destroy@?$vector@PADV?$allocator@PAD@std@@@std@@IAEXPAPAD0@Z	textresource	referenced by ??0TSpreadsheetResource@@QAE@PBDH0@Z at +0x1cd
 0x00016dd0	0x3b	func	??5TRawIStream@@QAEAAV0@AAC@Z	CampaignDoc	masked body (59 bytes, 3 relocations) unique at a census start
+0x00016e80	0x8	func	??_ETStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WFE@AEPAXI@Z	CampaignDoc	vtable ??_7TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTGzInflateBuf@@@ stored by ?createInflateBuf@TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QBE?AV?$auto_ptr@V?$basic_streambuf@DU?$char_traits@D@std@@@std@@@std@@XZ slot 0
 0x00018da0	0x167	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xdd
 0x00019100	0x31d	func	?initializeCampaignMapTraitsTable@@YAEXZ	campaignmap	masked body (797 bytes, 28 relocations) unique at a census start
 0x00019420	0x16	func	__h3cg$campaignmap$static_dtor$campaignNames	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x24
@@ -112,8 +114,9 @@ rva	size	kind	name	unit	evidence
 0x00024db0	0x3b	func	??5TRawIStream@@QAEAAV0@AAF@Z	CampaignDoc	masked body (59 bytes, 3 relocations) unique at a census start
 0x00025670	0x6d	func	?_getC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	masked body (109 bytes, 0 relocations) unique at a census start
 0x000256e0	0x11	func	?_putBackC@TGzInflateBuf@@AAEXD@Z	gzinflatebuf	masked body (17 bytes, 0 relocations) unique at a census start
+0x00025700	0x1a4	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	referenced by ?createInflateBuf@TFileContent@?A0x14d14b60f51c421c@@QBE?AV?$auto_ptr@V?$basic_streambuf@DU?$char_traits@D@std@@@std@@@std@@XZ at +0x81
 0x00025cb0	0xba	func	??0TDataError@TGzInflateBuf@@QAE@XZ	gzinflatebuf	masked body (186 bytes, 11 relocations) unique at a census start
-0x00025f40	0xfb	func	??1TGzInflateBuf@@UAE@XZ	gzinflatebuf	masked prefix (66 fixed bytes agree, 255 compiled, 251 retail)
+0x00025f40	0xfb	func	??1TGzInflateBuf@@UAE@XZ	gzinflatebuf	referenced by ??1TStrGzInflateBuf@?A0x14d14b60f51c421c@@UAE@XZ at +0x2b
 0x00026040	0x25a	func	?underflow@TGzInflateBuf@@UAEHXZ	gzinflatebuf	vtable ??_7TGzInflateBuf@@6B@ stored by ??1TGzInflateBuf@@UAE@XZ slot 4
 0x000262a0	0x29	func	?_mustGetC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	masked body (41 bytes, 4 relocations) unique at a census start
 0x000262d0	0x58	func	?_Init@?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAEXXZ	gzinflatebuf	masked body (88 bytes, 0 relocations) unique at a census start

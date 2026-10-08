@@ -1,11 +1,41 @@
 // CampaignDoc.cpp - the campaign document: loading and saving campaign files.
 #include "campaign_editor/stdafx.h"
 
+#include <strstream>
+
 #include "va.h"
+#include "gzinflatebuf.h"
 #include "editor/RawStream.h"
 #include "campaign_editor/Campaign.h"
 
 namespace {
+
+class TFileContent {
+public:
+    TFileContent(int size, auto_ptr<char> pData);
+    virtual ~TFileContent();
+
+    auto_ptr<streambuf> createInflateBuf() const;
+
+private:
+    int m_size;
+    auto_ptr<char> m_pData;
+};
+
+class TStrGzInflateBufBase {
+public:
+    TStrGzInflateBufBase(const char* pData, int size) : m_strBuf(pData, size) {}
+    virtual ~TStrGzInflateBufBase() {}
+
+protected:
+    strstreambuf m_strBuf;
+};
+
+class TStrGzInflateBuf : private TStrGzInflateBufBase, public TGzInflateBuf {
+public:
+    TStrGzInflateBuf(const char* pData, int size)
+        : TStrGzInflateBufBase(pData, size), TGzInflateBuf(&m_strBuf) {}
+};
 
 class TScenarioStartingBonusWriter : public TScenarioStartingBonus::TVisitor {
 public:
@@ -38,6 +68,26 @@ private:
 
 DATA(0x004c6f40) TScenarioStartingBonusWriter bonusWriter;
 DATA(0x004c6f30) TScenarioStartingOptionsWriter optionsWriter;
+
+VA(0x00410bd0, 0x20)
+TFileContent::TFileContent(int size, auto_ptr<char> pData)
+    : m_size(size), m_pData(pData)
+{
+}
+
+VA(0x00410c10, 0x18)
+TFileContent::~TFileContent()
+{
+}
+
+VA(0x00410d70, 0xed)
+auto_ptr<streambuf> TFileContent::createInflateBuf() const
+{
+    auto_ptr<streambuf> pBuf(new TStrGzInflateBuf(m_pData.get(), m_size));
+    if (pBuf.get() == NULL)
+        throw TAllocationFailure();
+    return pBuf;
+}
 
 VA(0x00410f30, 0x1d)
 void TScenarioStartingBonusWriter::write(const TScenarioStartingBonus& bonus,
