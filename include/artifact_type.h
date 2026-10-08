@@ -12,6 +12,10 @@
 // contains only the domain, without artifact traits or STL dependencies.
 enum TArtifact {
     ARTIFACT_NONE = -1,
+    // The Dreamcast spellings of the two ends; the Loki editor's asserts
+    // print them (HeroPropsArtifactsPage.cpp:150).
+    eArtifactNone = -1,
+    eArtifactSpellbook = 0,
     // Retail witness: hero::TransferArtifacts (0x4e23d0) refuses to move
     // an artifact whose id is -1, 2, 0 or one of the four war machines
     // (`cmp eax,2`, `test eax,eax`, then 3/4/5/6) - the "not a real,

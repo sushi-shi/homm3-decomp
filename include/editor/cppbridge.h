@@ -34,6 +34,7 @@ void on_town_props_buildings_enabled_toggled(GtkToggleButton* togglebutton, gpoi
 void on_town_props_buildings_built_toggled(GtkToggleButton* togglebutton, gpointer user_data);
 void on_creatures_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data);
 void on_town_props_general_player_name_changed(GtkEditable* editable, gpointer user_data);
+void on_hero_artifacts_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data);
 void on_hero_secskills_type_entry_0_changed(GtkEditable* editable, gpointer user_data);
 void on_hero_secskills_type_entry_1_changed(GtkEditable* editable, gpointer user_data);
 void on_hero_secskills_type_entry_2_changed(GtkEditable* editable, gpointer user_data);
