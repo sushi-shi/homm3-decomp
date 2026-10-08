@@ -232,6 +232,14 @@ public:
     int bottom;
 };
 
+// MFC's busy cursor; the Loki port keeps the scope object and shows
+// nothing (both bodies are empty).
+class CWaitCursor {
+public:
+    CWaitCursor() {}
+    ~CWaitCursor() {}
+};
+
 class CWnd {
 public:
     CWnd() {}
