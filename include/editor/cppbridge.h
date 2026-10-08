@@ -24,6 +24,10 @@ bool isChecked(char* name);
 void enableWidget(char* name, gboolean bEnable);
 void handleQueuedEvents();
 bool askYesNoQuestion(char* question);
+
+// glade signal handlers the pages block while they set their own widgets
+void on_artifact_props_guardians_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data);
+void on_edit_town_event_buildings_build_toggled(GtkToggleButton* togglebutton, gpointer user_data);
 }
 }
 
