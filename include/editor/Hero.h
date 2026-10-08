@@ -15,8 +15,8 @@
 #ifndef HOMM3_EDITOR_HERO_H
 #define HOMM3_EDITOR_HERO_H
 
-#include <bitset>
 #include <map>
+#include <bitset>
 #include <string>
 #include <vector>
 

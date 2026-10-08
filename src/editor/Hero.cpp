@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream.h>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
