@@ -7,6 +7,7 @@
 // are not proven.
 #include "editor/stdafx.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +16,24 @@
 #include <string>
 
 #include "editor/cppbridge.h"
+#include "editor/ArmyDlg.h"
+#include "editor/ArtifactPropsSheet.h"
+#include "editor/EditArtifactDlg.h"
+#include "editor/EditTownEventBuildingsPage.h"
+#include "editor/EditTownEventSheet.h"
+#include "editor/HeroPropsArtifactsPage.h"
+#include "editor/HeroPropsCreaturesPage.h"
+#include "editor/HeroPropsGeneralPage.h"
+#include "editor/HeroPropsSecSkillsPage.h"
+#include "editor/HeroPropsSheet.h"
+#include "editor/SelectHeroClassDlg.h"
+#include "editor/SignPropsDlg.h"
+#include "editor/TownPropsBuildingsPage.h"
+#include "editor/TownPropsGarrisonPage.h"
+#include "editor/TownPropsGeneralPage.h"
+#include "editor/TownPropsSheet.h"
+#include "editor/TownPropsTimedEventsPage.h"
+#include "editor/TreasurePropsGuardiansPage.h"
 #include "editor/EditRumorDlg.h"
 #include "editor/EditTimedEventSheet.h"
 #include "editor/MapSpecsLossCondPage.h"
@@ -2520,6 +2539,989 @@ void on_mapspecs_gen_desc_insert_text(GtkEditable* editable, gchar* new_text, gi
                                       gint* position, gpointer user_data)
 {
     enforceTextMaxLength(GTK_TEXT(editable), 300);
+}
+
+
+void on_hero_props_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (heroPropsSheetModal)
+        heroPropsSheetModal->OnOK();
+}
+
+void on_hero_props_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (heroPropsSheetModal)
+        heroPropsSheetModal->OnCancel();
+}
+
+void on_hero_exp_combo_entry_insert_text(GtkEditable* editable, gchar* new_text, gint new_text_length,
+                                         gint* position, gpointer user_data)
+{
+    for (int i = 0; i < new_text_length; i++) {
+        if (!isdigit(new_text[i])) {
+            gtk_signal_emit_stop_by_name(GTK_OBJECT(editable), "insert_text");
+            return;
+        }
+    }
+}
+
+void on_edit_artifact_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (editArtifactDlg)
+        editArtifactDlg->OnOK();
+}
+
+void on_edit_artifact_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (editArtifactDlg)
+        editArtifactDlg->OnCancel();
+}
+
+void on_edit_artifact_where_changed(GtkEditable* editable, gpointer user_data)
+{
+    if (editArtifactDlg)
+        editArtifactDlg->OnSelChangeWhereCombo();
+}
+
+void on_edit_artifact_artifact_changed(GtkEditable* editable, gpointer user_data)
+{
+    if (editArtifactDlg)
+        editArtifactDlg->OnSelChangeArtifactCombo();
+}
+
+void on_hero_name_customize_toggled(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsGeneralPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_getPGeneralPage();
+    if (pPage)
+        pPage->OnCustomizeNameCheck();
+}
+
+void on_hero_portrait_customize_toggled(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsGeneralPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_getPGeneralPage();
+    if (pPage)
+        pPage->OnCustomizePortraitCheck();
+}
+
+void on_hero_name_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsGeneralPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_getPGeneralPage();
+    if (pPage)
+        pPage->OnChangeNameEdit();
+}
+
+void on_hero_secskills_customize_toggled(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnCustomizeCheck();
+}
+
+void on_hero_secskills_type_entry_0_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill1Combo();
+}
+
+void on_hero_secskills_type_entry_1_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill2Combo();
+}
+
+void on_hero_secskills_type_entry_2_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill3Combo();
+}
+
+void on_hero_secskills_type_entry_3_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill4Combo();
+}
+
+void on_hero_secskills_type_entry_4_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill5Combo();
+}
+
+void on_hero_secskills_type_entry_5_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill6Combo();
+}
+
+void on_hero_secskills_type_entry_6_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill7Combo();
+}
+
+void on_hero_secskills_type_entry_7_changed(GtkEditable* editable, gpointer user_data)
+{
+    THeroPropsSecSkillsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPSecSkillsPage();
+    if (pPage)
+        pPage->OnSelChangeSkill8Combo();
+}
+
+void on_hero_artifacts_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    THeroPropsArtifactsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPArtifactsPage();
+    if (pPage)
+        pPage->OnCustomizeCheck();
+}
+
+void on_hero_artifacts_has_spellbook_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+}
+
+void on_hero_artifacts_list_select_row(GtkCList* clist, gint row, gint column, GdkEvent* event, gpointer user_data)
+{
+    THeroPropsArtifactsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPArtifactsPage();
+    if (pPage)
+        pPage->OnListSelect(row);
+}
+
+void on_hero_artifacts_add_clicked(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsArtifactsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPArtifactsPage();
+    if (pPage)
+        pPage->OnAddArtifactButton();
+}
+
+void on_hero_artifacts_edit_clicked(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsArtifactsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPArtifactsPage();
+    if (pPage)
+        pPage->OnEditArtifactButton();
+}
+
+void on_hero_artifacts_remove_clicked(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsArtifactsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPArtifactsPage();
+    if (pPage)
+        pPage->OnRemoveArtifactButton();
+}
+
+void on_hero_artifacts_remall_clicked(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsArtifactsPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->getPArtifactsPage();
+    if (pPage)
+        pPage->OnRemoveAllArtifactButton();
+}
+
+void on_sign_props_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (signModalPtr)
+        signModalPtr->OnOK();
+}
+
+void on_sign_props_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (signModalPtr)
+        signModalPtr->OnCancel();
+}
+
+gboolean on_hero_props_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_hero_props_cancel_clicked(NULL, NULL);
+    return TRUE;
+}
+
+gboolean on_edit_artifact_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_edit_artifact_cancel_clicked(NULL, NULL);
+    return TRUE;
+}
+
+gboolean on_sign_props_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_sign_props_cancel_clicked(NULL, NULL);
+    return TRUE;
+}
+
+void on_sign_props_message_insert_text(GtkEditable* editable, gchar* new_text, gint new_text_length,
+                                       gint* position, gpointer user_data)
+{
+    enforceTextMaxLength(GTK_TEXT(editable), 150);
+}
+
+void on_creatures_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnCustomizeCheck();
+}
+
+void hp_on_creature_slot0_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnSelChangeTypeCombo1();
+}
+
+void hp_on_creature_slot1_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnSelChangeTypeCombo2();
+}
+
+void hp_on_creature_slot2_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnSelChangeTypeCombo3();
+}
+
+void hp_on_creature_slot3_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnSelChangeTypeCombo4();
+}
+
+void hp_on_creature_slot4_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnSelChangeTypeCombo5();
+}
+
+void hp_on_creature_slot5_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnSelChangeTypeCombo6();
+}
+
+void hp_on_creature_slot6_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnSelChangeTypeCombo7();
+}
+
+void hp_on_creature_slot0_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnKillFocusQtyEdit1();
+}
+
+void hp_on_creature_slot1_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnKillFocusQtyEdit2();
+}
+
+void hp_on_creature_slot2_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnKillFocusQtyEdit3();
+}
+
+void hp_on_creature_slot3_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnKillFocusQtyEdit4();
+}
+
+void hp_on_creature_slot4_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnKillFocusQtyEdit5();
+}
+
+void hp_on_creature_slot5_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnKillFocusQtyEdit6();
+}
+
+void hp_on_creature_slot6_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    THeroPropsCreaturesPage* pPage = NULL;
+    if (heroPropsSheetModal)
+        pPage = heroPropsSheetModal->_m_pCreaturesPage;
+    if (pPage)
+        pPage->OnKillFocusQtyEdit7();
+}
+
+void on_town_props_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (townPropsSheetModal)
+        townPropsSheetModal->OnOK();
+}
+
+void on_town_props_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (townPropsSheetModal)
+        townPropsSheetModal->OnCancel();
+}
+
+void on_town_props_general_customize_toggled(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGeneralPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGeneralPage;
+    if (pPage)
+        pPage->OnCustomizeCheck();
+}
+
+void on_town_props_general_add_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGeneralPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGeneralPage;
+    if (pPage)
+        pPage->OnVisitingAddButton();
+}
+
+void on_town_props_general_edit_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGeneralPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGeneralPage;
+    if (pPage)
+        pPage->OnVisitingEditButton();
+}
+
+void on_town_props_general_remove_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGeneralPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGeneralPage;
+    if (pPage)
+        pPage->OnVisitingRemoveButton();
+}
+
+void on_town_props_general_player_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGeneralPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGeneralPage;
+    if (pPage)
+        pPage->OnSelChangePlayerCombo();
+}
+
+void on_town_props_general_player_name_changed(GtkEditable* editable, gpointer user_data)
+{
+    TTownPropsGeneralPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGeneralPage;
+    if (pPage)
+        pPage->OnChangeNameEdit();
+}
+
+void on_town_props_buildings_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    TTownPropsBuildingsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnCustomizeCheck();
+}
+
+void on_town_props_buildings_has_fort_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    TTownPropsBuildingsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnHasFortCheck();
+}
+
+void on_town_props_buildings_tree_tree_select_row(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsBuildingsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnSelChangedBuildingTree();
+}
+
+void on_town_props_buildings_enabled_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    TTownPropsBuildingsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnEnabledCheck();
+}
+
+void on_town_props_buildings_built_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    TTownPropsBuildingsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnBuiltCheck();
+}
+
+void on_town_props_buildings_build_all_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsBuildingsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnBuildAllButton();
+}
+
+void on_town_props_buildings_demolish_all_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsBuildingsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnDemolishAllButton();
+}
+
+void on_town_props_garrison_customize_toggled(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->OnCustomizeCheck();
+}
+
+void tp_on_creature_slot0_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnSelChangeTypeCombo1();
+}
+
+void tp_on_creature_slot1_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnSelChangeTypeCombo2();
+}
+
+void tp_on_creature_slot2_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnSelChangeTypeCombo3();
+}
+
+void tp_on_creature_slot3_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnSelChangeTypeCombo4();
+}
+
+void tp_on_creature_slot4_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnSelChangeTypeCombo5();
+}
+
+void tp_on_creature_slot5_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnSelChangeTypeCombo6();
+}
+
+void tp_on_creature_slot6_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnSelChangeTypeCombo7();
+}
+
+void tp_on_creature_slot0_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnKillFocusQtyEdit1();
+}
+
+void tp_on_creature_slot1_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnKillFocusQtyEdit2();
+}
+
+void tp_on_creature_slot2_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnKillFocusQtyEdit3();
+}
+
+void tp_on_creature_slot3_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnKillFocusQtyEdit4();
+}
+
+void tp_on_creature_slot4_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnKillFocusQtyEdit5();
+}
+
+void tp_on_creature_slot5_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnKillFocusQtyEdit6();
+}
+
+void tp_on_creature_slot6_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsGarrisonPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pGarrisonPage;
+    if (pPage)
+        pPage->_m_pArmyDlg->OnKillFocusQtyEdit7();
+}
+
+void on_select_hero_list_selection_changed(GtkList* list, gpointer user_data)
+{
+    if (selectHeroClassModal)
+        selectHeroClassModal->OnSelChangeHeroClassList();
+}
+
+void on_select_hero_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (selectHeroClassModal)
+        selectHeroClassModal->OnOK();
+}
+
+void on_select_hero_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (selectHeroClassModal)
+        selectHeroClassModal->OnCancel();
+}
+
+void on_town_props_timed_list_selection_changed(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsTimedEventsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pTimedEventsPage;
+    if (pPage)
+        pPage->OnSelChangeEventList();
+}
+
+void on_town_props_timed_add_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsTimedEventsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pTimedEventsPage;
+    if (pPage)
+        pPage->OnAddEventButton();
+}
+
+void on_town_props_timed_edit_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsTimedEventsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pTimedEventsPage;
+    if (pPage)
+        pPage->OnEditEventButton();
+}
+
+void on_town_props_timed_moveup_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsTimedEventsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pTimedEventsPage;
+    if (pPage)
+        pPage->OnMoveUpButton();
+}
+
+void on_town_props_timed_remove_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsTimedEventsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pTimedEventsPage;
+    if (pPage)
+        pPage->OnRemoveEventButton();
+}
+
+void on_town_props_timed_remall_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsTimedEventsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pTimedEventsPage;
+    if (pPage)
+        pPage->OnRemoveAllEventButton();
+}
+
+void on_town_props_timed_movedown_clicked(GtkWidget* widget, gpointer user_data)
+{
+    TTownPropsTimedEventsPage* pPage = NULL;
+    if (townPropsSheetModal)
+        pPage = townPropsSheetModal->_m_pTimedEventsPage;
+    if (pPage)
+        pPage->OnMoveDownButton();
+}
+
+void on_edit_town_event_buildings_tree_tree_select_row(GtkWidget* widget, gpointer user_data)
+{
+    TEditTownEventBuildingsPage* pPage = NULL;
+    if (editTownEventSheetModal)
+        pPage = editTownEventSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnSelChangedBuildingTree();
+}
+
+void on_edit_town_event_buildings_build_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    TEditTownEventBuildingsPage* pPage = NULL;
+    if (editTownEventSheetModal)
+        pPage = editTownEventSheetModal->_m_pBuildingsPage;
+    if (pPage)
+        pPage->OnBuildCheck();
+}
+
+gboolean on_edit_rumor_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    if (rumorDlgModal)
+        rumorDlgModal->OnCancel();
+    return TRUE;
+}
+
+gboolean on_find_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_find_cancel_button_clicked(NULL, NULL);
+    return TRUE;
+}
+
+gboolean on_import_text_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_import_text_cancel_clicked(NULL, NULL);
+    return TRUE;
+}
+
+gboolean on_h3path_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_h3path_cancel_clicked(NULL, NULL);
+    return FALSE;
+}
+
+gboolean on_town_props_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_town_props_cancel_clicked(NULL, NULL);
+    return TRUE;
+}
+
+gboolean on_select_hero_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_select_hero_cancel_clicked(NULL, NULL);
+    return TRUE;
+}
+
+void on_artifact_props_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (artifactPropsSheetModal)
+        artifactPropsSheetModal->OnOK();
+}
+
+void on_artifact_props_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (artifactPropsSheetModal)
+        artifactPropsSheetModal->OnCancel();
+}
+
+void on_artifact_props_general_message_insert_text(GtkEditable* editable, gchar* new_text,
+                                                   gint new_text_length, gint* position, gpointer user_data)
+{
+    enforceTextMaxLength(GTK_TEXT(editable), 300);
+}
+
+void on_artifact_props_guardians_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->OnCustomizeCheck();
+    }
+}
+
+void gd_on_creature_slot0_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnSelChangeTypeCombo1();
+    }
+}
+
+void gd_on_creature_slot1_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnSelChangeTypeCombo2();
+    }
+}
+
+void gd_on_creature_slot2_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnSelChangeTypeCombo3();
+    }
+}
+
+void gd_on_creature_slot3_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnSelChangeTypeCombo4();
+    }
+}
+
+void gd_on_creature_slot4_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnSelChangeTypeCombo5();
+    }
+}
+
+void gd_on_creature_slot5_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnSelChangeTypeCombo6();
+    }
+}
+
+void gd_on_creature_slot6_type_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnSelChangeTypeCombo7();
+    }
+}
+
+void gd_on_creature_slot0_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnKillFocusQtyEdit1();
+    }
+}
+
+void gd_on_creature_slot1_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnKillFocusQtyEdit2();
+    }
+}
+
+void gd_on_creature_slot2_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnKillFocusQtyEdit3();
+    }
+}
+
+void gd_on_creature_slot3_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnKillFocusQtyEdit4();
+    }
+}
+
+void gd_on_creature_slot4_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnKillFocusQtyEdit5();
+    }
+}
+
+void gd_on_creature_slot5_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnKillFocusQtyEdit6();
+    }
+}
+
+void gd_on_creature_slot6_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+    if (artifactPropsSheetModal) {
+        TTreasurePropsGuardiansPage* pPage = artifactPropsSheetModal->_m_pGuardiansPage;
+        if (pPage)
+            pPage->_m_pArmyDlg->OnKillFocusQtyEdit7();
+    }
+}
+
+void on_seers_hut_props_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+}
+
+gboolean on_seers_hut_props_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    return FALSE;
+}
+
+void on_seers_hut_props_artifact_changed(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_reward_type_changed(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_exp_bonus_changed(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_mana_bonus_changed(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_morale_plus1_toggled(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_morale_plus2_toggled(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_morale_plus3_toggled(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_resource_quantity_changed(GtkWidget* widget, gpointer user_data)
+{
+}
+
+void on_seers_hut_props_ok_clicked(GtkWidget* widget, gpointer user_data)
+{
 }
 
 }
