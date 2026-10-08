@@ -9,6 +9,7 @@
 #include "advmgr_popup.h"
 #include "armygrp.h"
 #include "artifact.h"
+#include "csprite.h"
 #include "herospec.h"
 #include "mapcell.h"
 #include "primaryskill.h"
@@ -57,35 +58,7 @@ enum HeroId {
     heroIdXeron = 0x9b
 };
 
-// Hero/boat sprite sequence ids, transcribed COMPLETE from the
-// Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
-// csprite.h). Retail proves the five STAND values and their order
-// directly: hero::GetStandSequence (0x4d9110) and boat::GetStandSequence
-// (0x4d9160) are one eight-entry jump table each over the compass
-// facing, returning 0/1/2/3/4 with 5,6,7 folded back onto 3,2,1 - i.e.
-// the west-facing frames are the east-facing ones mirrored, which is
-// exactly what a n/ne/e/se/s roster with no west members implies.
-enum hero_seqid {
-    hs_stand_n = 0,
-    hs_stand_ne = 1,
-    hs_stand_e = 2,
-    hs_stand_se = 3,
-    hs_stand_s = 4,
-    hs_walk_n = 5,
-    hs_walk_ne = 6,
-    hs_walk_e = 7,
-    hs_walk_se = 8,
-    hs_walk_s = 9,
-    hs_turn_n_ne = 10,
-    hs_turn_ne_n = 11,
-    hs_turn_ne_e = 12,
-    hs_turn_e_ne = 13,
-    hs_turn_e_se = 14,
-    hs_turn_se_e = 15,
-    hs_turn_se_s = 16,
-    hs_turn_s_se = 17,
-    hs_max = 18
-};
+// hero_seqid lives in csprite.h beside creature_seqid: CSprite names both.
 
 // Byte-proven by HasArtifact 0x4d91b0: 19 equipped slots of 8 bytes
 // starting at 0x12d, then 64 backpack slots of 8 bytes at 0x1d4; each

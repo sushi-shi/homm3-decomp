@@ -55,6 +55,11 @@ object = 43
 source = "src/TextResource.cpp"
 
 [[unit]]
+name = "csprite"
+object = 44
+source = "src/CSprite.cpp"
+
+[[unit]]
 name = "cspriteframe"
 object = 45
 source = "src/CSpriteFrame.cpp"
