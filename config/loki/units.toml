@@ -409,3 +409,8 @@ source = "src/editor/TownPropsGeneralPage.cpp"
 name = "TownPropsTimedEventsPage"
 object = 96
 source = "src/editor/TownPropsTimedEventsPage.cpp"
+
+[[unit]]
+name = "TownPropsBuildingsPage"
+object = 91
+source = "src/editor/TownPropsBuildingsPage.cpp"

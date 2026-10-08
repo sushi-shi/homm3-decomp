@@ -14,7 +14,7 @@
 #undef MAKELONG
 #define LOWORD(l) ((l) & 0xFFFF)
 #define HIWORD(l) (((l) & 0xFFFF0000) >> 16)
-#define MAKELONG(lo, hi) ((lo) | ((hi) << 16))
+#define MAKELONG(lo, hi) (((hi) << 16) | (lo))
 
 TEditTownEventBuildingsPage::TEditTownEventBuildingsPage(const TTown::TTimedEvent& event, TTownType townType)
     : _m_buildCheck(GTK_TOGGLE_BUTTON(_widget("edit_town_event_buildings_build"))),
