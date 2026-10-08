@@ -5,5 +5,7 @@
 #define HOMM3_EDITOR_MAPEDITORTEXT_H
 
 extern const char* const& kPlayerNameFmtStr;
+extern const char* const& kNameStr;
+extern const char* const& kMessageStr;
 
 #endif  /* HOMM3_EDITOR_MAPEDITORTEXT_H */

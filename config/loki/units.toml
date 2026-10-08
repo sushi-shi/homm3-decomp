@@ -25,6 +25,11 @@ object = 10
 source = "src/Error.cpp"
 
 [[unit]]
+name = "TimedEvent"
+object = 34
+source = "src/editor/TimedEvent.cpp"
+
+[[unit]]
 name = "spelldefs"
 object = 30
 source = "src/SpellDefs.cpp"
