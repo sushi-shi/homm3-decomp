@@ -11,6 +11,7 @@
 #ifndef HOMM3_EDITOR_GAMEMAP_H
 #define HOMM3_EDITOR_GAMEMAP_H
 
+#include <exception>
 #include <string>
 #include <vector>
 
@@ -37,6 +38,97 @@ public:
 private:
     std::string _m_name;
     std::string _m_text;
+};
+
+// Why an object could not be created... The hierarchies are h3maped's
+// RTTI (vtables 0x535234..0x5353b4, each with exception's two slots);
+// the NotSupportedByReleaseVersion pair is Complete's, and Loki's caps on
+// mines, generators and signs are gone.
+class TCreateObjectFailure : public exception {
+};
+
+class TCreateObjFailureTooManyInstancesOfTypeOnMap : public TCreateObjectFailure {
+public:
+    TCreateObjFailureTooManyInstancesOfTypeOnMap(int type, unsigned int cap) : _m_type(type), _m_cap(cap) {}
+
+    int getType() const { return _m_type; }
+    unsigned int getCap() const { return _m_cap; }
+
+private:
+    int _m_type;
+    unsigned int _m_cap;
+};
+
+class TCreateObjFailureNotSupportedByReleaseVersion : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureNoAvailableHeroesInClass : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureNoOwnerForHero : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureTooManyHeroesOnMap : public TCreateObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TCreateObjFailureTooManyHeroesOnMap();
+};
+
+class TCreateObjFailureTooManyHeroesForPlayer : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureTooManyTownsOnMap : public TCreateObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TCreateObjFailureTooManyTownsOnMap();
+};
+
+class TCreateObjFailureHolyGrailAlreadyPlaced : public TCreateObjectFailure {
+};
+
+// ...and why it could not be placed.
+class TPlaceObjectFailure : public exception {
+};
+
+class TPlaceObjFailureTooManyInstancesOfTypeOnMap : public TPlaceObjectFailure {
+public:
+    TPlaceObjFailureTooManyInstancesOfTypeOnMap(int type, unsigned int cap) : _m_type(type), _m_cap(cap) {}
+
+    int getType() const { return _m_type; }
+    unsigned int getCap() const { return _m_cap; }
+
+private:
+    int _m_type;
+    unsigned int _m_cap;
+};
+
+class TPlaceObjFailureNotSupportedByReleaseVersion : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailureInvalidPlacement : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailurePlacementNotOnMap : public TPlaceObjFailureInvalidPlacement {
+};
+
+class TPlaceObjFailureNoAvailableHeroesInClass : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailureTooManyHeroesOnMap : public TPlaceObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TPlaceObjFailureTooManyHeroesOnMap();
+};
+
+class TPlaceObjFailureTooManyHeroesForPlayer : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailureTooManyTownsOnMap : public TPlaceObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TPlaceObjFailureTooManyTownsOnMap();
+};
+
+class TPlaceObjFailureHolyGrailTooCloseToEdge : public TPlaceObjFailureInvalidPlacement {
+};
+
+class TPlaceObjFailureHolyGrailAlreadyPlaced : public TPlaceObjectFailure {
 };
 
 class TGameMap {

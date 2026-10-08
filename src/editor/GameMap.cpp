@@ -185,8 +185,24 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 // The map's implementation: so far only the dimension of each size.
 class TGameMap::_TImpl {
 public:
+    // The caps the failures report (h3maped 0x41ec98: 156 heroes; 0x41ecb8:
+    // 48 towns).
+    enum { s_kMaxHeroesOnMap = 156, s_kMaxTownsOnMap = 48 };
+
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
 };
+
+VA(0x0041ec98, 0x20)
+TPlaceObjFailureTooManyHeroesOnMap::TPlaceObjFailureTooManyHeroesOnMap()
+    : TPlaceObjFailureTooManyInstancesOfTypeOnMap(HERO, TGameMap::_TImpl::s_kMaxHeroesOnMap)
+{
+}
+
+VA(0x0041ecb8, 0x20)
+TPlaceObjFailureTooManyTownsOnMap::TPlaceObjFailureTooManyTownsOnMap()
+    : TPlaceObjFailureTooManyInstancesOfTypeOnMap(TOWN, TGameMap::_TImpl::s_kMaxTownsOnMap)
+{
+}
 
 DATA(0x00535214)
 const unsigned int TGameMap::_TImpl::_s_akDimension[TGameMap::s_kNumSizes] = { 36, 72, 108, 144 };
