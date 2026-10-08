@@ -1065,8 +1065,9 @@ SIZE(type_random_artifact, 0x1c);
 // These four factories allocate the same 0x1c base extent and change only
 // the writer vptr. Their distinct default H3M payloads prove separate classes;
 // the Complete-only class spellings below describe those roles.
-// Retail vtable 0x640ac4.
-class type_resource_lump : public type_object {
+// Retail vtable 0x640ac4. The editor's class hierarchy descriptor lists
+// type_resource_lump <- type_random_artifact <- type_object.
+class type_resource_lump : public type_random_artifact {
 public:
     type_resource_lump(TRmgObjectPropertiesRef* properties);
     virtual void write(TAbstractFile* outfile, int version);

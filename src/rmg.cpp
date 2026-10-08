@@ -1861,7 +1861,7 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
 // 0x534a90 allocate only the base's 0x1c bytes and install 0x640ac4/0x640b24/
 // 0x640b34/0x640b54 respectively; writer slot 3 proves each payload role.
 type_resource_lump::type_resource_lump(TRmgObjectPropertiesRef* properties)
-    : type_object(properties)
+    : type_random_artifact(properties)
 {
 }
 
