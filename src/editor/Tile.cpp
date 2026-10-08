@@ -213,9 +213,9 @@ TRoadTilesetTraits aRoadTilesetTraitsImp[3] = {
 
 }  // namespace
 
-const TGroundTilesetTraits* const akGroundTilesetTraits = aGroundTilesetTraitsImp;
-const TRiverTilesetTraits* const akRiverTilesetTraits = aRiverTilesetTraitsImp;
-const TRoadTilesetTraits* const akRoadTilesetTraits = aRoadTilesetTraitsImp;
+const TGroundTilesetTraits* akGroundTilesetTraits = aGroundTilesetTraitsImp;
+const TRiverTilesetTraits* akRiverTilesetTraits = aRiverTilesetTraitsImp;
+const TRoadTilesetTraits* akRoadTilesetTraits = aRoadTilesetTraitsImp;
 
 void loadTilesets()
 {

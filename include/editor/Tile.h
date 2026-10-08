@@ -51,9 +51,9 @@ struct TRoadTilesetTraits {
 };
 
 // Indexed by TTerrainType; river and road traits by type - 1.
-extern const TGroundTilesetTraits* const akGroundTilesetTraits;
-extern const TRiverTilesetTraits* const akRiverTilesetTraits;
-extern const TRoadTilesetTraits* const akRoadTilesetTraits;
+extern const TGroundTilesetTraits* akGroundTilesetTraits;
+extern const TRiverTilesetTraits* akRiverTilesetTraits;
+extern const TRoadTilesetTraits* akRoadTilesetTraits;
 
 enum TZoom {
     eZoom100,

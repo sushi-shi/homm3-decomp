@@ -14,7 +14,7 @@ namespace {
 TPlayerTraits aPlayerTraitsImp[kNumPlayers];
 }
 
-const TPlayerTraits* const akPlayerTraits = aPlayerTraitsImp;
+const TPlayerTraits* akPlayerTraits = aPlayerTraitsImp;
 
 bool InitializePlayerTraitsTable()
 {

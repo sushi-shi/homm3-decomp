@@ -29,8 +29,6 @@ TCreatureBankTypeTraits aCreatureBankTypeTraitsImp[kNumCreatureBankTypes];
 TMonolithTypeTraits aMonolithTypeTraitsImp[kNumMonolithTypes];
 TMonolithTypeTraits aOneWayMonolithTypeTraitsImp[kNumOneWayMonolithTypes];
 TMine::TTypeTraits aMineTypeTraitsImp[TMine::s_kNumMineTypes];
-TGenerator::TGeneratorTypeTraits aGenerator1TypeTraitsImp[TGenerator::s_kNumGenerator1Types];
-TGenerator::TGeneratorTypeTraits aGenerator4TypeTraitsImp[TGenerator::s_kNumGenerator4Types];
 TGarrison::TTypeTraits aGarrisonTypeTraitsImp[TGarrison::s_kNumTypes];
 }
 
@@ -274,6 +272,24 @@ void TAbandonedMine::write(TRawOStream* pOStream) const
     signed char aReserved[3];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
+}
+
+// Whether a dwelling of each kind can be flagged is compiled in; the names
+// come from crgen1.txt and crgen4.txt at startup.
+namespace {
+TGenerator::TGeneratorTypeTraits aGenerator1TypeTraitsImp[TGenerator::s_kNumGenerator1Types] = {
+    { true }, { true }, { true }, { true }, { true }, { true }, { true }, { false },  // 0-7
+    { true }, { true }, { true }, { true }, { true }, { false }, { true }, { true },  // 8-15
+    { false }, { true }, { true }, { true }, { true }, { true }, { true }, { true },  // 16-23
+    { true }, { true }, { true }, { true }, { true }, { true }, { true }, { true },  // 24-31
+    { true }, { true }, { true }, { true }, { true }, { true }, { true }, { true },  // 32-39
+    { true }, { true }, { true }, { true }, { true }, { true }, { true }, { false },  // 40-47
+    { true }, { true }, { true }, { true }, { true }, { true }, { true }, { true },  // 48-55
+    { true }, { true }, { true },  // 56-58
+};
+TGenerator::TGeneratorTypeTraits aGenerator4TypeTraitsImp[TGenerator::s_kNumGenerator4Types] = {
+    { false }, { true }
+};
 }
 
 const TGenerator::TGeneratorTypeTraits* TGenerator::s_akGenerator1TypeTraits = aGenerator1TypeTraitsImp;

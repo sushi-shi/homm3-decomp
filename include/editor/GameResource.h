@@ -15,7 +15,7 @@ struct TGameResourceTypeTraits {
     const char* m_name;
 };
 
-extern const TGameResourceTypeTraits* const akGameResourceTypeTraits;
+extern const TGameResourceTypeTraits* akGameResourceTypeTraits;
 
 void InitializeGameResourceTypeTraitsTable();
 

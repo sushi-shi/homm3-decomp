@@ -15,8 +15,8 @@ TTerrainColors aTerrainColorsImp[10];
 unsigned short aPlayerColorImp[9];
 }
 
-const TTerrainColors* const akTerrainColors = aTerrainColorsImp;
-const unsigned short* const akPlayerColor = aPlayerColorImp;
+const TTerrainColors* akTerrainColors = aTerrainColorsImp;
+const unsigned short* akPlayerColor = aPlayerColorImp;
 
 void initColors()
 {

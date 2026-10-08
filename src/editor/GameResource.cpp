@@ -13,7 +13,7 @@ namespace {
 TGameResourceTypeTraits aGameResourceTypeTraitsImp[kNumGameResourceTypes];
 }
 
-const TGameResourceTypeTraits* const akGameResourceTypeTraits = aGameResourceTypeTraitsImp;
+const TGameResourceTypeTraits* akGameResourceTypeTraits = aGameResourceTypeTraitsImp;
 
 void InitializeGameResourceTypeTraitsTable()
 {

@@ -25,7 +25,7 @@ struct TPlayerTraits {
     const char* m_pColorName;
 };
 
-extern const TPlayerTraits* const akPlayerTraits;
+extern const TPlayerTraits* akPlayerTraits;
 
 bool InitializePlayerTraitsTable();
 

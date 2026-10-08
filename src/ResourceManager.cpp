@@ -27,6 +27,13 @@
 #include "soundheader.h"
 #include "textresource.h"
 
+// The sound archives' file handles and directory sizes, filled by the
+// sound module: global names in this object's .data, ahead of its own.
+int SoundFile = -1;
+int SoundFileCD = -1;
+int numSound = 0;
+int numSoundCD = 0;
+
 namespace ResourceManager {
 
 // The cache key: a resource name compared without case.
@@ -63,6 +70,15 @@ static string Path;
 static LODFile BitmapLod;
 static LODFile SpriteLod;
 static map<TCacheMapKey, resource*> Cache;
+
+}  // namespace ResourceManager
+
+// The two sound directories, between the cache and the colour masks in this
+// object's .bss.
+SoundHeaderStruct* SoundHeader;
+SoundHeaderStruct* SoundHeaderCD;
+
+namespace ResourceManager {
 
 int RedBits;
 int GreenBits;

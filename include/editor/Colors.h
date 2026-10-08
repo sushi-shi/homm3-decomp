@@ -8,9 +8,9 @@ struct TTerrainColors {
     unsigned short m_color;
     unsigned short m_obstacleColor;
 };
-extern const TTerrainColors* const akTerrainColors;
+extern const TTerrainColors* akTerrainColors;
 // Per player (and the neutral entry): game.pal entries 63..71.
-extern const unsigned short* const akPlayerColor;
+extern const unsigned short* akPlayerColor;
 
 void initColors();
 

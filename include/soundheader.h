@@ -11,7 +11,10 @@ struct SoundHeaderStruct {
     int m_size;
 };
 
-// Loki h3maped's exported sound directories (the sound module fills them).
+// Loki h3maped's exported sound directories (the sound module fills them),
+// defined in ResourceManager.cpp with the archives' handles.
+extern int SoundFile;
+extern int SoundFileCD;
 extern SoundHeaderStruct* SoundHeader;
 extern int numSound;
 extern SoundHeaderStruct* SoundHeaderCD;
