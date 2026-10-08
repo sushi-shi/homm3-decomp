@@ -519,10 +519,13 @@ def derive(log=print, want_suggestions=False):
         """The one name of an address that several compiled bodies reach:
         /OPT:ICF folded the bodies that reach only this address when they
         agree byte for byte with the same relocation sites. The first name
-        labels the address; the comparison pairs the others' references
-        with it (normalize_objs ICF twins)."""
+        labels the address, a shared unit's before the image's own (whose
+        MFC inline virtuals fold onto shared bodies but are no placement);
+        the comparison pairs the others' references with it
+        (normalize_objs ICF twins)."""
         # a name that also reaches another address is no witness either way
-        group = sorted(name for name in by_rva[rva] if len(names[name]) == 1)
+        group = sorted((name for name in by_rva[rva] if len(names[name]) == 1),
+                       key=lambda name: (definers[name][0] in owned, name))
         if len(group) < 2 or any(name not in bodies for name in group):
             return None
         shapes = set()
