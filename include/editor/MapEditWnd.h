@@ -2,9 +2,15 @@
 // window over one map layer. Methods as the image declares them; return
 // types from __PRETTY_FUNCTION__ texts or the retail bodies; the virtuals in
 // vtable order (OnCaptureChanged, the destructor, getBDoHScroll,
-// getBDoVScroll, onPan). Data members, the _TMode enumerators and the
-// file-static helpers are not declared yet; _getMapLayer's return type is
-// assumed (the bodies use it as an address).
+// getBDoVScroll, onPan). The data members are in the constructor's
+// initialization order (sizeof 0x114, TMapFrameWnd's new); the names the
+// asserts give are _m_timers, _m_hAdjust, _m_vAdjust, _m_pController,
+// _m_pMap, _m_bSecondLayer, _m_bDragging, _m_bAutoScrollOn, _m_mode,
+// _m_selectedObjID, _m_pFloatingObj, _m_potentialGrabID and _m_bBrushOn;
+// the others are named from their uses. The _TMode enumerators and
+// _s_kNumModes come from the asserts, _drawSelectionFrame's default argument
+// and the GdkDrawable parameters from __PRETTY_FUNCTION__. getSelectedObjectID
+// and _getMapLayer are in-class (strong after the static initialization).
 #ifndef HOMM3_EDITOR_MAPEDITWND_H
 #define HOMM3_EDITOR_MAPEDITWND_H
 
@@ -17,11 +23,15 @@ class TGUIGameObject;
 class TMapEditWnd : public TMapEditingWnd {
 public:
     enum _TMode {
+        _eModeSel,
+        _eModeBrush,
+        _eModeFill
     };
+    static const int _s_kNumModes = 3;
 
     TMapEditWnd(GtkWidget* thisWidget, TMapEditingWnd::TController* pController, int id,
                 const TGameMap* pMap, bool bUnderground, TZoom zoom, bool bShowGrid,
-                bool bShowPassability, GtkAdjustment* pHAdjustment, GtkAdjustment* pVAdjustment);
+                bool bShowPassability, GtkAdjustment* hAdjust, GtkAdjustment* vAdjust);
     virtual void OnCaptureChanged(GtkWidget* pWidget);
     virtual ~TMapEditWnd();
     virtual bool getBDoHScroll() const;
@@ -52,7 +62,7 @@ public:
     void brushMode();
     void fillMode();
     CSize getMinWndSize() const;
-    TMapLayerObjectID getSelectedObjectID() const;
+    TMapLayerObjectID getSelectedObjectID() const { return _m_selectedObjID; }
 
     void OnSize(unsigned int type, int cx, int cy);
     void OnHScroll(unsigned int code);
@@ -96,8 +106,8 @@ private:
     void _turnFillRectOff();
     void _setFillRectAnchor(const CPoint& pos);
     void _setFillRectDragPos(const CPoint& pos);
-    void _drawSelectionFrame(GdkWindow* pWindow, GdkGC* pGC, bool bErase);
-    void _drawBrush(GdkWindow* pWindow, GdkGC* pGC);
+    void _drawSelectionFrame(GdkDrawable* drawable, GdkGC* gc, bool bErase = false);
+    void _drawBrush(GdkDrawable* drawable, GdkGC* gc);
     void _paintRect(CRect& rect);
     void _drawMap(GdkGC* pGC, CRect& rect);
     void _generateMouseMove();
@@ -108,7 +118,50 @@ private:
     CPoint _computeBrushPos(const CPoint& point) const;
     CRect _computeFillRect() const;
     CPoint _computeFillRectDragPos(const CPoint& point) const;
-    const TGameMap::TLayer& _getMapLayer() const;
+    const TGameMap::TLayer& _getMapLayer() const { return _m_pMap->getLayer(_m_bSecondLayer); }
+
+    gint _m_timers[15];
+    GtkAdjustment* _m_hAdjust;
+    GtkAdjustment* _m_vAdjust;
+    TMapEditingWnd::TController* _m_pController;
+    int _m_id;
+    const TGameMap* _m_pMap;
+    bool _m_bSecondLayer;
+    CPoint _m_viewPos;
+    GdkImage* _m_pImage;
+    unsigned int _m_frameNum;
+    bool _m_bDragging;
+    GdkCursor* _m_hCursor;
+    bool _m_bMouseInside;
+    CPoint _m_cursorTilePos;
+    CPoint _m_scrollDelta;
+    bool _m_bAutoScrollOn;
+    CPoint _m_autoScrollPoint;
+    unsigned int _m_autoScrollTime;
+    int _m_hAutoScrollDir;
+    unsigned int _m_hAutoScrollInterval;
+    unsigned int _m_hAutoScrollDelay;
+    int _m_vAutoScrollDir;
+    unsigned int _m_vAutoScrollInterval;
+    unsigned int _m_vAutoScrollDelay;
+    _TMode _m_mode;
+    TZoom _m_zoom;
+    bool _m_bShowGrid;
+    bool _m_bShowPassability;
+    TMapLayerObjectID _m_selectedObjID;
+    TMapLayerObjectID _m_toolTipObjID;
+    const TGUIGameObject* _m_pFloatingObj;
+    CPoint _m_floatingObjPos;
+    TMapLayerObjectID _m_potentialGrabID;
+    bool _m_bPotentialCopy;
+    CPoint _m_potentialGrabPoint;
+    bool _m_bBrushOn;
+    CPoint _m_brushPos;
+    CSize _m_brushSize;
+    CPoint _m_fillRectAnchor;
+    CPoint _m_fillRectDragPos;
+    bool _m_bPanning;
+    CPoint _m_panPoint;
 };
 
 #endif  /* HOMM3_EDITOR_MAPEDITWND_H */
