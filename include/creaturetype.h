@@ -59,7 +59,8 @@ inline const char* GetArmyName(int type, int count = 2)
     assert( ( type >= 0 ) && ( type < kNumCreatureAndSiegeWeaponTypes ) );
     if (type < 0 || type > kNumCreatureAndSiegeWeaponTypes)
         return "";
-    return count == 1 ? akCreatureTypeTraits[type].m_name : akCreatureTypeTraits[type].m_plural_name;
+    else
+        return count == 1 ? akCreatureTypeTraits[type].m_name : akCreatureTypeTraits[type].m_plural_name;
 }
 
 #endif  /* HOMM3_CREATURETYPE_H */
