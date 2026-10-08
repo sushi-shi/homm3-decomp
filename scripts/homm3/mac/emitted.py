@@ -299,11 +299,18 @@ def owner(symbol: str, definitions) -> object | None:
     return definitions[winners[0]] if len(winners) == 1 else None
 
 
+# An unnamed namespace: CodeWarrior's `@unnamed@<file>_cpp@` qualifier and the
+# clang/MSVC display spellings. The owning unit already scopes the join.
+ANONYMOUS_NAMESPACE_RE = re.compile(
+    r"(?:@unnamed@\w+@|\(anonymous namespace\)|`anonymous namespace')::")
+
+
 def key(name: str) -> str:
-    """Join key: template arguments and whitespace removed."""
+    """Join key: template arguments, unnamed namespaces and whitespace removed."""
     previous = None
     while previous != name:
         previous, name = name, re.sub(r"<[^<>]*>", "", name)
+    name = ANONYMOUS_NAMESPACE_RE.sub("", name)
     return re.sub(r"\s+", "", name)
 
 

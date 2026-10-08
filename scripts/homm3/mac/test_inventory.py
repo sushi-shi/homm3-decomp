@@ -122,6 +122,11 @@ class TestEmittedJoin(unittest.TestCase):
         for symbol, qualified in cases.items():
             self.assertEqual(emitted.demangle(symbol), qualified, symbol)
         self.assertEqual(emitted.key("TResourceHandle<T>::get<int>"), "TResourceHandle::get")
+        unnamed = ".read__Q315ResourceManager29@unnamed@resourcemanager_cpp@18t_lod_file_adapterFPvi"
+        self.assertEqual(emitted.key(emitted.demangle(unnamed)),
+                         "ResourceManager::t_lod_file_adapter::read")
+        self.assertEqual(emitted.key("ResourceManager::(anonymous namespace)::t_lod_file_adapter::read"),
+                         "ResourceManager::t_lod_file_adapter::read")
 
     def test_owner_classification(self):
         from homm3.match.source_ownership import Definition
