@@ -12,7 +12,7 @@ import struct
 
 from homm3.core import common
 from homm3.loki import cmpobj
-from homm3.loki.cmpobj import CodeSection, Function, put
+from homm3.loki.cmpobj import CodeSection, Function, canonical_symbol, put
 from homm3.loki.elf import (Elf, R_386_32, R_386_PC32, SHF_ALLOC, SHF_EXECINSTR, SHT_REL,
                             SHT_SYMTAB, STT_FUNC, STT_NOTYPE, STT_OBJECT, STT_SECTION)
 from homm3.loki.image import IMAGE, LokiImage
@@ -282,14 +282,16 @@ def pair_statics(base: list[CodeSection], target: list[CodeSection]) -> list[str
     target_text = next((s for s in target if s.name == ".text"), None)
     if base_text is None or target_text is None:
         return []
-    shared = {f.name for f in base_text.functions} & {f.name for f in target_text.functions}
+    # The compiled `_GLOBAL_.I.<first global>` is the image's `_GLOBAL_.I`.
+    shared = ({canonical_symbol(f.name) for f in base_text.functions}
+              & {f.name for f in target_text.functions})
 
     def gaps(functions: list[Function], unnamed) -> dict[str | None, list[Function]]:
         out: dict[str | None, list[Function]] = {}
         anchor = None
         for function in sorted(functions, key=lambda f: f.offset):
-            if function.name in shared:
-                anchor = function.name
+            if canonical_symbol(function.name) in shared:
+                anchor = canonical_symbol(function.name)
             elif unnamed(function):
                 out.setdefault(anchor, []).append(function)
         return out
