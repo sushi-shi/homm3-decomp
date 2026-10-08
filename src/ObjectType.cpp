@@ -1,6 +1,8 @@
 // ObjectType.cpp of the Loki port (Loki object 47): the adventure-object
 // template, its text and binary forms, its map ordering, the object-palette
 // slot traits and the objects.txt loader.
+#include "objecttype.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -10,13 +12,16 @@
 #include <string>
 #include <vector>
 
-#include "objecttype.h"
-
-#include "editor/RawStream.h"
-#include "editor/UniqueSet.h"
 #include "exceptions.h"
+#include "editor/UniqueSet.h"
+#include "editor/RawStream.h"
 #include "resourcemanager.h"
 #include "textresource.h"
+
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumObjectTypeReserved = 16;
 
 namespace {
 
@@ -42,11 +47,24 @@ private:
     TTerrainType _m_terrainType;
 };
 
+bool TTerrainSlotTraits::contains(const TObjectType& objectType) const
+{
+    if (objectType.getSlotCategory() != eCategoryGeneric)
+        return false;
+    const TTerrainMask& recommendedTerrainMask = objectType.getRecommendedTerrainMask();
+    return recommendedTerrainMask[_m_terrainType] && recommendedTerrainMask.count() <= 3;
+}
+
 // The slot of the generic objects recommended for more than three terrains.
 class TAllTerrainSlotTraits : public TObjectSlotTraits {
 public:
     virtual bool contains(const TObjectType& objectType) const;
 };
+
+bool TAllTerrainSlotTraits::contains(const TObjectType& objectType) const
+{
+    return objectType.getSlotCategory() == eCategoryGeneric && objectType.getRecommendedTerrainMask().count() > 3;
+}
 
 // The slot of one object category.
 class TCategorySlotTraits : public TObjectSlotTraits {
@@ -62,19 +80,6 @@ public:
 private:
     TSlotCategory _m_category;
 };
-
-bool TTerrainSlotTraits::contains(const TObjectType& objectType) const
-{
-    if (objectType.getSlotCategory() != eCategoryGeneric)
-        return false;
-    const TTerrainMask& recommendedTerrainMask = objectType.getRecommendedTerrainMask();
-    return recommendedTerrainMask[_m_terrainType] && recommendedTerrainMask.count() <= 3;
-}
-
-bool TAllTerrainSlotTraits::contains(const TObjectType& objectType) const
-{
-    return objectType.getSlotCategory() == eCategoryGeneric && objectType.getRecommendedTerrainMask().count() > 3;
-}
 
 bool TCategorySlotTraits::contains(const TObjectType& objectType) const
 {
@@ -99,23 +104,6 @@ TCategorySlotTraits treasureSlotTraits(eCategoryTreasure);
 
 }
 
-const TObjectSlotTraits* const apObjectSlotTraits[] = {
-    &dirtSlotTraits,
-    &sandSlotTraits,
-    &grassSlotTraits,
-    &snowSlotTraits,
-    &swampSlotTraits,
-    &roughSlotTraits,
-    &subterraneanSlotTraits,
-    &lavaSlotTraits,
-    &waterSlotTraits,
-    &allTerrainSlotTraits,
-    &townSlotTraits,
-    &monsterSlotTraits,
-    &heroSlotTraits,
-    &artifactSlotTraits,
-    &treasureSlotTraits
-};
 
 TObjectType::TObjectType()
     : _m_imageNum(0),
@@ -154,12 +142,16 @@ TObjectType& TObjectType::setImageName(const string& newImageName)
         aImageInfo.push_back(_TImageInfo());
         _TImageInfo& imageInfo = aImageInfo[setSize];
 
+        // ObjectType.o holds ".msk" twice before "default.msk": one copy
+        // is this array (written where it is declared), the other the
+        // literal. Which use takes which is not visible.
+        static const char kMaskExtension[] = ".msk";
         string maskName = newImageName;
         unsigned int dotPos = maskName.find_last_of('.');
         if (dotPos != string::npos)
             maskName.replace(dotPos, maskName.size() - dotPos, ".msk");
         else
-            maskName.append(".msk");
+            maskName.append(kMaskExtension);
 
         if (ResourceManager::PointToSpriteResource(maskName.c_str())
             || ResourceManager::PointToSpriteResource("default.msk")) {
@@ -325,7 +317,7 @@ TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType)
           .operator<< <long>(objectType._m_extra)
           .operator<< <signed char>(objectType._m_slotCategory)
           .operator<< <signed char>(objectType._m_bUnderlay);
-    signed char reserved[16];
+    signed char reserved[kNumObjectTypeReserved];
     fill_n(reserved, sizeof(reserved), 0);
     stream << reserved;
     return stream;
@@ -348,7 +340,7 @@ TRawIStream& operator>>(TRawIStream& stream, TObjectType& objectType)
     signed char slotCategory;
     signed char bUnderlay;
     stream >> type >> extra >> slotCategory >> bUnderlay;
-    signed char reserved[16];
+    signed char reserved[kNumObjectTypeReserved];
     stream >> reserved;
     objectType.setImageName(imageName)
         ._setPassableMask(passableMask)
@@ -440,3 +432,22 @@ void TObjectTypeTable::load(const char* fileName)
     }
     ResourceManager::Dispose(pTextResource);
 }
+
+// Defined last: ObjectType.o writes the table after load()'s strings.
+const TObjectSlotTraits* const apObjectSlotTraits[] = {
+    &dirtSlotTraits,
+    &sandSlotTraits,
+    &grassSlotTraits,
+    &snowSlotTraits,
+    &swampSlotTraits,
+    &roughSlotTraits,
+    &subterraneanSlotTraits,
+    &lavaSlotTraits,
+    &waterSlotTraits,
+    &allTerrainSlotTraits,
+    &townSlotTraits,
+    &monsterSlotTraits,
+    &heroSlotTraits,
+    &artifactSlotTraits,
+    &treasureSlotTraits
+};

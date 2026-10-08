@@ -45,9 +45,6 @@ public:
 
     TObjectType& setImageName(const string& newImageName);
     const string& getImageName() const;
-    unsigned int getImageNum() const { return _m_imageNum; }
-    unsigned int getWidth() const { return _m_width; }
-    unsigned int getHeight() const { return _m_height; }
 
     bool getBCellPlaced(unsigned int x, unsigned int y) const
     {
@@ -74,13 +71,17 @@ public:
     TObjectType& setRecommendedTerrainMask(const TTerrainMask& newRecommendedTerrainMask);
 
     int getType() const { return _m_type; }
-    TObjectType& setType(int newType) { _m_type = newType; return *this; }
+    TObjectType& setType(int newType);
     int getExtra() const { return _m_extra; }
-    TObjectType& setExtra(int newExtra) { _m_extra = newExtra; return *this; }
+    TObjectType& setExtra(int newExtra);
     TSlotCategory getSlotCategory() const { return _m_slotCategory; }
     TObjectType& setSlotCategory(TSlotCategory newSlotCategory);
     bool getBUnderlay() const { return _m_bUnderlay; }
-    TObjectType& setBUnderlay(bool bUnderlay) { _m_bUnderlay = bUnderlay; return *this; }
+    TObjectType& setBUnderlay(bool bUnderlay);
+
+    unsigned int getImageNum() const { return _m_imageNum; }
+    unsigned int getWidth() const { return _m_width; }
+    unsigned int getHeight() const { return _m_height; }
 
     bool hasTrigger() const { return _m_bHasTrigger; }
     const TPoint<unsigned int>& getTriggerLoc() const { return _m_triggerLoc; }
@@ -129,6 +130,26 @@ private:
     bitset<kMaxObjWidth * kMaxObjHeight> _m_shadowMask;
 };
 
+// The inline setters are defined after the class: ObjectType.o emits them
+// after the in-class bodies (_getBitPos last).
+inline TObjectType& TObjectType::setType(int newType)
+{
+    _m_type = newType;
+    return *this;
+}
+
+inline TObjectType& TObjectType::setExtra(int newExtra)
+{
+    _m_extra = newExtra;
+    return *this;
+}
+
+inline TObjectType& TObjectType::setBUnderlay(bool bUnderlay)
+{
+    _m_bUnderlay = bUnderlay;
+    return *this;
+}
+
 ostream& operator<<(ostream& os, const TObjectType& objectType);
 istream& operator>>(istream& is, TObjectType& objectType);
 TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType);
@@ -166,6 +187,18 @@ enum TObjectSlot {
     kNumObjectSlots
 };
 
+// The object types of objects.txt, in file order.
+class TObjectTypeTable : public vector<TObjectType> {
+public:
+    TObjectTypeTable() {}
+    TObjectTypeTable(const char* fileName) { load(fileName); }
+    TObjectTypeTable(unsigned int numElements) : vector<TObjectType>(numElements) {}
+
+    void load(const char* fileName);
+};
+
+extern const TObjectTypeTable& kObjectTypeTable;
+
 class TObjectSlotTraits {
 public:
     virtual ~TObjectSlotTraits() {}
@@ -180,18 +213,6 @@ inline bool objectTypeInSlot(const TObjectType& objType, TObjectSlot slot)
 {
     return apObjectSlotTraits[slot]->contains(objType);
 }
-
-// The object types of objects.txt, in file order.
-class TObjectTypeTable : public vector<TObjectType> {
-public:
-    TObjectTypeTable() {}
-    TObjectTypeTable(const char* fileName) { load(fileName); }
-    TObjectTypeTable(unsigned int numElements) : vector<TObjectType>(numElements) {}
-
-    void load(const char* fileName);
-};
-
-extern const TObjectTypeTable& kObjectTypeTable;
 
 void loadObjectTypeTable();
 

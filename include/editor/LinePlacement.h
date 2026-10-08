@@ -67,17 +67,26 @@ public:
         bool m_bVFlipped;
     };
 
+    TMapLineFilter(unsigned int width, unsigned int height) : _m_mapWidth(width), _m_mapHeight(height) {}
+
+    unsigned int getWidth() const { return _m_mapWidth; }
+    unsigned int getHeight() const { return _m_mapHeight; }
+
     // A cell of the filter, read through its virtuals.
     class TCellConstRef {
     public:
-        TCellConstRef(const TMapLineFilter& mapFilter, const TTilePoint& loc)
-            : _m_pMapFilter(&mapFilter), _m_loc(loc) {}
-
         bool isBlocked() const { return _m_pMapFilter->_isCellBlocked(_m_loc); }
         void getInfo(TCellInfo* pInfo) const { _m_pMapFilter->_getCellInfo(_m_loc, pInfo); }
         unsigned int getType() const { return _m_pMapFilter->_getCellType(_m_loc); }
 
     protected:
+        // The filter's getCell makes the references; the constructors
+        // follow the accessors (their bodies come out after them).
+        TCellConstRef(const TMapLineFilter& mapFilter, const TTilePoint& loc)
+            : _m_pMapFilter(&mapFilter), _m_loc(loc) {}
+
+        friend class TMapLineFilter;
+
         const TMapLineFilter* _m_pMapFilter;
         TTilePoint _m_loc;
     };
@@ -86,8 +95,6 @@ public:
 
     class TCellRef : public TCellConstRef {
     public:
-        TCellRef(TMapLineFilter* pMapFilter, const TTilePoint& loc) : TCellConstRef(*pMapFilter, loc) {}
-
         void setInfo(const TCellInfo& info) const
         {
             const_cast<TMapLineFilter*>(_m_pMapFilter)->_setCellInfo(_m_loc, info);
@@ -96,14 +103,14 @@ public:
         {
             const_cast<TMapLineFilter*>(_m_pMapFilter)->_setCellType(_m_loc, type);
         }
+
+    private:
+        TCellRef(TMapLineFilter* pMapFilter, const TTilePoint& loc) : TCellConstRef(*pMapFilter, loc) {}
+
+        friend class TMapLineFilter;
     };
 
     friend class TCellRef;
-
-    TMapLineFilter(unsigned int width, unsigned int height) : _m_mapWidth(width), _m_mapHeight(height) {}
-
-    unsigned int getWidth() const { return _m_mapWidth; }
-    unsigned int getHeight() const { return _m_mapHeight; }
 
     TCellRef getCell(const TTilePoint& tilePoint);
     TCellConstRef getCell(const TTilePoint& tilePoint) const;
