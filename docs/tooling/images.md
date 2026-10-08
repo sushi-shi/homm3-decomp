@@ -89,8 +89,14 @@ body that differs elsewhere still names its callees where it agrees. Steps 4
 and 5 never contradict an earlier placement. A name that reaches two
 addresses, or an address that receives two names, is dropped. Names keep
 their checkout-independent anonymous-namespace spelling. The label model reads the table as the image's claims (channel
-`placement`). Sources only the image compiles (`src/editor/...`) spell the
-image's own addresses in `VA()`/`DATA()` and are extracted like game sources.
+`placement`).
+
+Sources only the image compiles spell the image's own addresses in
+`VA()`/`DATA()` and are extracted like game sources. They live in the
+image's source directory, the pin's `sources` key (`editor` for h3maped, the
+original's `Editor\` directory): `src/editor/` and `include/editor/`. The
+game's claim, ownership, cleanliness and accounting scans skip those trees
+(`homm3.core.images.foreign`); the image's scans read only them.
 
 ## The SP3 MFC overlay
 
@@ -104,6 +110,13 @@ image's units put `build/mfc-sp3/include` ahead of the toolchain's MFC headers,
 and the census names MFC code from `build/mfc-sp3/lib/nafxcw.lib`.
 
 ## Building an image
+
+A full `homm3 build` builds the game, then every other image whose
+executable and SP3 MFC overlay are staged, each in its own process; a
+failed image fails the build. `homm3 --image h3maped build [--fast TU]`
+builds one image alone: configure, ninja, the placements check, delink,
+report, ledger, the banked-rows and VA-claim gates and its README block.
+The game's `--fast` loop never builds an image. The steps by hand:
 
 ```sh
 homm3 --image h3maped init --exe /path/to/h3maped.exe --mfc-sp3 /path/to/vc98/mfc
