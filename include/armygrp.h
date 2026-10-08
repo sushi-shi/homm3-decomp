@@ -589,7 +589,9 @@ struct SSpellTraits {
     // get_damage_spell_value adds [spell*136 + mastery*4 + 0x34].
     int m_masteryBonus[4];     // +0x34
     // +0x44, nine faction weights used by town::initialize_spells.
-    int m_townProbability[9];
+    // RoE has eight towns (Conflux came with Armageddon's Blade): Loki's
+    // InitializeSpellTraits reads columns 16..23 into this row.
+    int m_townProbability[8];
     // A SECOND per-mastery dword row: get_enchantment_value indexes it
     // as spell*34 + mastery dwords from the table base (0x423cab) =
     // record +0x68 + mastery*4. Distinct from mastery_bonus - both
@@ -600,16 +602,17 @@ struct SSpellTraits {
     // retail InitializeSpellTraits writes the shifted +0x78 row.
     const char* m_levelDescriptions[4];  // +0x78
 };
-SIZE(SSpellTraits, 136);
+SIZE(SSpellTraits, 132);
 
 // The spell table is reached through a stored pointer, exactly like
 // akCreatureTypeTraits: retail loads [0x687f58] before indexing.
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-extern const SSpellTraits (&g_spellTraits)[81];
+// Loki exports the table pointer as akSpellTraits (the Dreamcast name).
+extern const SSpellTraits* akSpellTraits;
 
-unsigned char spellTargetsASingleArmy(int spell, int sslevel);
+bool SpellTargetsASingleArmy(int spell, int sslevel);
 
 // The special-ground MODE GetArmyMorale/GetArmyLuck dispatch on (the
 // dword param with sentinels 2..5): cursed ground zeroes the stat,

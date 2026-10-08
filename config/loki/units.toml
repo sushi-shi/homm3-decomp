@@ -27,7 +27,7 @@ source = "src/Error.cpp"
 [[unit]]
 name = "spelldefs"
 object = 30
-source = "src/spelldefs.cpp"
+source = "src/SpellDefs.cpp"
 
 [[unit]]
 name = "Bitmap816"
