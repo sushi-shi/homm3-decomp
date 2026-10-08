@@ -7,11 +7,20 @@
 // are the destructor, OnInitialUpdate and OnUpdate. The view-wide settings
 // (animate, zoom, grid, passability) are static: they walk every view
 // (the file-static allMapViews set) through the per-view _set* members and
-// keep _s_* statics. TStatusUI's slot order is TStatusUIImpl's thunks'
-// (cppbridge.cpp). Data members are not declared yet (cppbridge.cpp
-// allocates 0x70 bytes); m_pDocument is at +0x18, the map frame at +0x20,
-// the mini map at +0x24 and the toolkit window at +0x28. The _TMode and
-// _TBrush enumerators are not recovered.
+// keep _s_* statics. TStatusUI's slot order is TStatusUIImpl's thunks'.
+//
+// The data members (0x70 bytes, as cppbridge.cpp allocates) follow the
+// constructor's initializers and their users; the assert texts name
+// m_pDocument, _m_pStatusUI, _m_pMapFrameWnd, _m_pMiniMapWnd,
+// _m_pToolkitWnd, _m_bViewUnderground, _m_mode, _m_pFloatingObj and
+// _m_lastFindType. The other member names, the _TMode/_TBrush enumerators
+// (_eModeStartup, _eModeTerrain and _eModeErase are named by asserts; the
+// mode is 0 at construction and 5 for the object palette) and the
+// floating-object origin's meaning are not proven.
+//
+// TStatusUIImpl, the GTK status bar behind TStatusUI, has only inline
+// members (linkonce bodies owned by MapView.o, whose constructor creates
+// it); its member names are not proven.
 #ifndef HOMM3_EDITOR_MAPVIEW_H
 #define HOMM3_EDITOR_MAPVIEW_H
 
@@ -22,6 +31,7 @@
 #include "editor/Player.h"
 #include "editor/Tile.h"
 #include "editor/ToolkitWnd.h"
+#include "adventureobjecttype.h"
 #include "objecttype.h"
 #include "terrain_type.h"
 
@@ -29,6 +39,7 @@ class TMapDoc;
 class TMapFrameWnd;
 class TMiniMapWnd;
 class TMapSpecsSheet;
+class TFindDlg;
 
 class TMapView : public CWnd,
                  public TMapEditingWnd::TController,
@@ -199,6 +210,54 @@ private:
     void _setRoadType(TRoadType roadType);
     void _setCurrentPlayer(TPlayer player);
     void _realizeBrush();
+
+protected:
+    TMapDoc* m_pDocument;
+
+private:
+    TStatusUI* _m_pStatusUI;
+    TMapFrameWnd* _m_pMapFrameWnd;
+    TMiniMapWnd* _m_pMiniMapWnd;
+    TToolkitWnd* _m_pToolkitWnd;
+    CPoint _m_viewPos;
+    bool _m_bViewUnderground;
+    _TMode _m_mode;
+    TObjectSlot _m_objectSlot;
+    _TBrush _m_brush;
+    TTerrainType _m_terrainType;
+    TRiverType _m_riverType;
+    TRoadType _m_roadType;
+    TPlayer _m_currentPlayer;
+    TGUIGameObject* _m_pFloatingObj;
+    bool _m_bFloatingObjFromMap;
+    unsigned int _m_floatingObjX;
+    unsigned int _m_floatingObjY;
+    TAdventureObjectType _m_lastFindType;
+    int _m_lastFindSubtype;
+    TFindDlg* _m_pFindDlg;
+};
+
+class TStatusUIImpl : public CWnd, public TMapView::TStatusUI {
+public:
+    TStatusUIImpl(GtkWidget* statusBar);
+    virtual ~TStatusUIImpl();
+
+    void showObjectName();
+    void hideObjectName();
+    void setObjectName(const char* name);
+    void setCurPlayer(TPlayer player);
+    void setMapSize(unsigned int width, unsigned int height, bool bTwoLayer);
+
+private:
+    void updateStatus();
+
+    guint _m_contextID;
+    char* _m_objectName;
+    char* _m_playerName;
+    unsigned int _m_mapWidth;
+    unsigned int _m_mapHeight;
+    bool _m_bTwoLayer;
+    bool _m_bShowObjectName;
 };
 
 #endif  /* HOMM3_EDITOR_MAPVIEW_H */

@@ -6,14 +6,23 @@
 // onMapObjectRemoved, the destructor, OnNewDocument, Serialize,
 // DeleteContents, OnOpenDocument, ReportSaveLoadException, OnSaveDocument,
 // SaveModified). The bases' order follows the thunk deltas (TClient at +0,
-// the terrain, river and road clients at +4, +8, +12). Data members are not
-// declared yet (cppbridge.cpp allocates 0x7c bytes); getPMap reads +0x1c.
+// the terrain, river and road clients at +4, +8, +12).
+//
+// The data members (0x7c bytes, as cppbridge.cpp allocates) follow the
+// constructor's initializers and their users; the assert texts name
+// _m_pMap, _m_undoQueue, _m_currentIndex and the five operation pointers.
+// The undo queue is a deque<TGameMap>; the new-map parameters are copied
+// from s_kDefaultParams (8 bytes: the size and the two-layer flag, as
+// setNewMapParams stores them). The other member names, the parameters'
+// type name and the last word (never touched by MapDoc.o) are not proven.
 // The load failures are thrown by pointer; their inline bodies (linkonce,
 // owned by MapDoc.cpp) are not written yet.
 #ifndef HOMM3_EDITOR_MAPDOC_H
 #define HOMM3_EDITOR_MAPDOC_H
 
+#include <deque>
 #include <exception>
+#include <memory>
 
 #include "editor/GameMap.h"
 #include "editor/TerrainPlacement.h"
@@ -22,6 +31,11 @@
 
 class TGameObject;
 class TMapView;
+class TTerrainPlacementOp;
+class TRiverPlacementOp;
+class TRiverEraseOp;
+class TRoadPlacementOp;
+class TRoadEraseOp;
 
 class TMapDocLoadFailure : public exception {
 public:
@@ -112,8 +126,37 @@ public:
     void UpdateAllViews(void* pSender);
 
 private:
+    struct TNewMapParams {
+        TGameMap::TSize m_size;
+        bool m_bTwoLayer;
+    };
+
+    static const TNewMapParams s_kDefaultParams;
+
     void _sendUpdate(bool bUnderground, unsigned int left, unsigned int top,
                      unsigned int width, unsigned int height);
+
+protected:
+    bool m_bModified;
+    TMapView* m_pView;
+
+private:
+    auto_ptr<TGameMap::TObjectFactory> _m_pObjectFactory;
+    TGameMap* _m_pMap;
+    deque<TGameMap> _m_undoQueue;
+    unsigned int _m_currentIndex;
+    unsigned int _m_savedIndex;
+    bool _m_bPromptForNewMapParams;
+    TNewMapParams _m_newMapParams;
+    bool _m_bFlag5c;
+    bool _m_bFlag5d;
+    TTerrainPlacementOp* _m_pTerrainPlacementOp;
+    TRiverPlacementOp* _m_pRiverPlacementOp;
+    TRiverEraseOp* _m_pRiverEraseOp;
+    TRoadPlacementOp* _m_pRoadPlacementOp;
+    TRoadEraseOp* _m_pRoadEraseOp;
+    bool _m_bEraseUnderground;
+    unsigned int _m_unknown78;
 };
 
 #endif  /* HOMM3_EDITOR_MAPDOC_H */
