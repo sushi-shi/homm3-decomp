@@ -281,20 +281,20 @@ BOOL TMapSpecsLossCondPage::OnInitDialog()
 
     w = _widget("losscond_none");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), TRUE);
-    TLossConditionType type = eLCNone;
+    int kind = 0;
     if (_m_pLossCondition.get())
-        type = _m_pLossCondition.get()->_m_type;
-    switch (type) {
-    case eLCNone:
+        kind = _m_pLossCondition.get()->_m_kind;
+    switch (kind) {
+    case 0:
         w = _widget("losscond_none");
         break;
-    case eLCLoseTown:
+    case 1:
         w = _widget("losscond_town");
         break;
-    case eLCLoseHero:
+    case 2:
         w = _widget("losscond_hero");
         break;
-    case eLCTimeExpires:
+    case 3:
         w = _widget("losscond_time");
         break;
     default:
