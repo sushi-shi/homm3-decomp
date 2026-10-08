@@ -1158,7 +1158,7 @@ def _demangle_key(mangled: str):
             return f"{list_member.group('owner').lower()}@{kind}"
 
     tree_value = re.search(
-        r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
+        r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:P[AB])?(?:V|U)([A-Za-z_]\w*)@",
         mangled)
     # Maps whose key is a class encode that key immediately after `_Tree@`.
     # Keep the mapped-value key above for the established map<int, T> claims,

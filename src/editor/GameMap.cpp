@@ -241,3 +241,9 @@ const TGameMap::TLayer::TCell* TGameMap::TLayer::getPCell(unsigned int x, unsign
 {
     return _m_pImpl->getPCell(x, y);
 }
+
+// The capped-type map's and info vector's template members, emitted here; the
+// vector's fill insert folds with the RMG's TRmgMapPosition copy (0x430b35).
+VA_COMPGEN(0x0042c28f, 0xa4, VECTOR_RESERVE, TCappedObjectTypeInfo)
+VA_COMPGEN(0x0042db3f, 0xf0, TREE_INSERT, TCappedObjectTypeInfo)
+VA_COMPGEN(0x00430930, 0x89, TREE_INIT, TCappedObjectTypeInfo)
