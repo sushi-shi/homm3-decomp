@@ -374,3 +374,8 @@ source = "src/editor/EditTownEventBuildingsPage.cpp"
 name = "EditTownEventSheet"
 object = 97
 source = "src/editor/EditTownEventSheet.cpp"
+
+[[unit]]
+name = "TownPropsGarrisonPage"
+object = 92
+source = "src/editor/TownPropsGarrisonPage.cpp"
