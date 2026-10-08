@@ -37,7 +37,10 @@ struct TCreatureTypeTraits {
     int wanderingHigh;
 };
 
-extern TCreatureTypeTraits akCreatureTypeTraits[kNumCreatureAndSiegeWeaponTypes];
+// Loki exports the 4-byte reference cell (0x841a140) right after the anonymous
+// array; Dreamcast types it as a reference to the const 122-row array
+// (?akCreatureTypeTraits@@3AAY0HK@$$CBUTCreatureTypeTraits@@A).
+extern const TCreatureTypeTraits (&akCreatureTypeTraits)[kNumCreatureAndSiegeWeaponTypes];
 
 TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
 bool IsBaseCreature(TCreatureType type);

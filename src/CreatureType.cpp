@@ -22,7 +22,9 @@ static const TCreatureType akBaseCreatures[kNumTownTypes][kNumCreatureTypesPerTo
     { eCreatureGnoll, eCreaturePrimitiveLizardman, eCreatureCopperGorgon, eCreatureSerpentFly, eCreatureBasilisk, eCreatureWyvern, eCreatureHydra },
 };
 
-TCreatureTypeTraits akCreatureTypeTraits[kNumCreatureAndSiegeWeaponTypes] = {
+// The static columns are compiled in; crtraits.txt fills the names, costs and
+// combat values (InitializeCreatureTypeTraits).
+static TCreatureTypeTraits aCreatureTypeTraitsImp[kNumCreatureAndSiegeWeaponTypes] = {
     { eTownCastle, 0, "pike", "cpkman.def", creatureAlive },
     { eTownCastle, 0, "halb", "chalbd.def", creatureAlive },
     { eTownCastle, 1, "lcrs", "clcbow.def", creatureShootingArmy | creatureAlive },
@@ -146,6 +148,8 @@ TCreatureTypeTraits akCreatureTypeTraits[kNumCreatureAndSiegeWeaponTypes] = {
     { eTownNeutral, 0, "faid", "smtent.def", creatureDoubleWide | creatureSiegeWeapon | creatureImmuneToMindSpells | creatureNoMorale },
     { eTownNeutral, 0, "cart", "smcart.def", creatureSiegeWeapon | creatureImmuneToMindSpells | creatureNoMorale },
 };
+
+const TCreatureTypeTraits (&akCreatureTypeTraits)[kNumCreatureAndSiegeWeaponTypes] = aCreatureTypeTraitsImp;
 
 TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
 {
@@ -286,7 +290,7 @@ static void InitializeCreatureTypeTraits(int id, const vector<char*>& resource)
 #line 413
     assert(id >= 0 && id < kNumCreatureAndSiegeWeaponTypes);
     assert(resource.size() >= 23);
-    TCreatureTypeTraits* const traits = &akCreatureTypeTraits[id];
+    TCreatureTypeTraits* const traits = &aCreatureTypeTraitsImp[id];
 
     static TAutoStrPtr aNameAutoStrs[kNumCreatureAndSiegeWeaponTypes];
     aNameAutoStrs[id].set(new char[strlen(resource[0]) + 1]);
