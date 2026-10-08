@@ -63,8 +63,11 @@ def _link_diff() -> list[str]:
         print(f"[build] link-diff: unavailable: {exc}", file=sys.stderr)
         return ["link-diff (unavailable)"]
     print("[link-diff] " + ", ".join(f"{name} {report.counts[name]}"
-                                     for name in link_diff.GATED))
-    findings = link_diff.gate_findings(report, link_diff.read_ceiling())
+                                     for name in link_diff.GATED + link_diff.TRACKED))
+    ceiling = link_diff.read_ceiling()
+    for line in link_diff.tracked_rises(report, ceiling):
+        print(f"[link-diff] tracked region rose (not gated): {line}")
+    findings = link_diff.gate_findings(report, ceiling)
     for line in findings:
         print(f"[build] link-diff: {line}", file=sys.stderr)
     return [f"link-diff ({len(findings)} finding(s))"] if findings else []

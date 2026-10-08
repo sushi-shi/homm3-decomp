@@ -233,12 +233,14 @@
 
         build = pkgs.mkShell {
           name = "homm3-build";
-          packages = commonTools ++ [ pkgs.wineWow64Packages.staging ];
+          packages = commonTools ++ [ pkgs.wineWow64Packages.staging pkgs.libfaketime ];
           shellHook = commonShellHook + ''
             export HOMM3_TOOLCHAIN="''${HOMM3_TOOLCHAIN:-$HOMM3_DIR/build/homm3-toolchain-vc6-sp3}"
             export MSVC_DIR="$HOMM3_TOOLCHAIN/msvc"
             export HOMM3_MSVC5_DIR="''${HOMM3_MSVC5_DIR:-${vc5-toolchain}/msvc}"
             export WINEPREFIX="$HOMM3_DIR/build/wineprefix"
+            # The candidate link runs LINK.EXE at the retail link time.
+            export HOMM3_FAKETIME_LIB="${pkgs.libfaketime}/lib/libfaketime.so.1"
             export WINEDEBUG="fixme-all,err-kerberos"
             export WINEDLLOVERRIDES="mscoree,mshtml="
             case "$-" in

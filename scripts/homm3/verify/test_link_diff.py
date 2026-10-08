@@ -46,13 +46,13 @@ class LinkDiffTest(unittest.TestCase):
     def test_import_rules(self):
         edits = _edits("import-dll-name\tKERNEL32.dll\t-\tKeRNeL32.dll\tKERNEL32.dll\tw\te\n"
                        "import-hints\tUSER32.dll\t-\t0\tlibrary\tw\te\n"
-                       "import-timestamp\t*\t-\tad2b0000\t00000000\tw\te\n")
+                       "import-timestamp\t*\t-\t0xad2b0000\t0x0\tw\te\n")
         self.assertEqual(edits.dll_names, {"kernel32.dll": "KeRNeL32.dll"})
         self.assertEqual(edits.zero_hints, {"user32.dll"})
-        self.assertEqual(edits.timestamp, 0x2BAD)
+        self.assertEqual(edits.timestamp, 0xAD2B0000)
 
     def test_ratchet(self):
-        counts = {name: 1 for name in link_diff.GATED}
+        counts = {name: 1 for name in link_diff.GATED + link_diff.TRACKED}
         report = link_diff.Report(counts, {})
         self.assertEqual(link_diff.gate_findings(report, dict(counts)), [])
         rising = dict(counts, imports=2)

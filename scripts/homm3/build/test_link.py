@@ -28,10 +28,11 @@ class LinkDiagnosticsTest(unittest.TestCase):
         with TemporaryDirectory() as directory, ExitStack() as stack:
             root = Path(directory)
             output = root / 'game.exe'
-            def run(command, cwd):
+            def run(command, cwd, env=None):
                 output.write_bytes(b'linked executable')
                 return '', 0
             patches = {
+                'homm3.build.link.retail_clock': lambda: {'FAKETIME': 'retail'},
                 'homm3.build.link.shutil.which': lambda _: 'wine',
                 'homm3.build.link.msvc_dir': lambda: root,
                 'homm3.build.link.find_ci': lambda parent, name: parent / name,
@@ -41,6 +42,8 @@ class LinkDiagnosticsTest(unittest.TestCase):
                 'homm3.build.link.retail_inputs': lambda out, link, objs: (
                     [root / 'b.obj', root / 'a.obj'], [root / 'zlib.lib', root / 'victor.lib']),
                 'homm3.build.link.run_wine': run,
+                'homm3.build.resources.compile_resources':
+                    lambda out: out.parent / 'heroes3.res',
                 'homm3.core.common.load_image': lambda: (
                     SimpleNamespace(image_base=0x400000, data=b'retail'), None),
                 'homm3.build.import_libraries.build_vendor_libraries':
@@ -73,8 +76,8 @@ class LinkDiagnosticsTest(unittest.TestCase):
         names = [line.strip('"').rsplit('/', 1)[-1] for line in response
                  if not line.startswith('/')]
         # objects in the given order, then the library line in retail order
-        self.assertEqual(names[:2], ['b.obj', 'a.obj'])
-        self.assertEqual(names[2:5], ['victor.lib', 'zlib.lib', 'version.lib'])
+        self.assertEqual(names[:3], ['b.obj', 'a.obj', 'heroes3.res'])
+        self.assertEqual(names[3:6], ['victor.lib', 'zlib.lib', 'version.lib'])
         self.assertIn('binkw32.lib', names)
 
     def test_timeout_does_not_accept_an_existing_executable(self):

@@ -17,7 +17,7 @@
 #   import-dll-name  dll  spelling   retail spells the DLL name `retail`
 #   import-hints     dll  0          every hint of the DLL is zero in retail;
 #                                    LINK writes the import library's hint
-#   import-timestamp *    hex        retail descriptor TimeDateStamp; LINK 0
+#   import-timestamp *    value      retail descriptor TimeDateStamp; LINK 0
 #   import-orphan    rva  name       a hint/name string no thunk references
 #
 # Not stated here, because the source reproduces them: the arithmetic and
@@ -48,5 +48,5 @@ bytes	0x29affd	2	29b0	0000	.rsrc FileAlignment tail	LINK zero-fills the tail; Co
 import-dll-name	KERNEL32.dll	-	KeRNeL32.dll	KERNEL32.dll	mixed-case DLL name	pinned KERNEL32.LIB and Collector's spell KERNEL32.dll
 import-hints	KERNEL32.dll	-	0	library	all 105 KERNEL32 hints zero	pinned KERNEL32.LIB and Collector's carry real hints
 import-hints	USER32.dll	-	0	library	all 56 USER32 hints zero	pinned USER32.LIB and Collector's carry real hints
-import-timestamp	*	-	ad2b0000	00000000	descriptor TimeDateStamp of all 14 DLLs	an unbound LINK writes 0; Collector's 0
+import-timestamp	*	-	0xad2b0000	0x0	descriptor TimeDateStamp of all 14 DLLs	an unbound LINK writes 0; Collector's 0
 import-orphan	0x25d91c	-	GetSysteminfo	-	hint/name string no thunk references	Collector's zero; already in the protected Shadow of Death 3.0 image

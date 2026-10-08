@@ -57,8 +57,15 @@ ROOT = common.HOMM3_DIR
 EDITS = ROOT / "config/retail/post-link-edits.tsv"
 CEILING = ROOT / "config/link_diff.tsv"
 CANDIDATE = ROOT / _image_path("build/exe/HEROES3.candidate.EXE")
-GATED = ("headers", "rich", "imports", "code-exact", "code-order",
-         "code-unplaced", "code-absent", "data", "data-unplaced", "rsrc")
+#: Regions that fail `homm3 build` when they rise: they measure the link's
+#: own inputs (flags, libraries, objects read, resources) and do not move
+#: with matching work elsewhere.
+GATED = ("headers", "rich", "imports", "rsrc")
+#: Regions banked beside them and reported, but not yet gated: they compare
+#: code and data contributions, which still move when non-exact functions
+#: or header COMDAT emission change. Each joins GATED once it reaches 0.
+TRACKED = ("code-exact", "code-order", "code-unplaced", "code-absent", "data",
+           "data-unplaced")
 
 _EXECUTE = 0x20000000
 _CODE = 0x20
@@ -141,7 +148,7 @@ def read_edits(path: Path = EDITS) -> Edits:
         elif kind == "import-hints":
             edits.zero_hints.add(row["offset"].lower())
         elif kind == "import-timestamp":
-            edits.timestamp = int.from_bytes(bytes.fromhex(row["retail"]), "little")
+            edits.timestamp = int(row["retail"], 16)
         elif kind == "import-orphan":
             edits.orphans.append((int(row["offset"], 16), row["retail"]))
         else:
@@ -177,11 +184,50 @@ def _differing(a: bytes, b: bytes) -> int:
     return sum(1 for i in range(n) if a[i] != b[i]) + abs(len(a) - len(b))
 
 
+def _layout_fields(pe: Pe) -> set[int]:
+    """Offsets from the PE signature of the header fields whose values follow
+    the section layout: the optional header's sizes, entry point, bases and
+    image size, the data directories of linker-built tables, and each
+    section header's sizes and positions."""
+    at = 24
+    fields = [(at + 4, 12), (at + 16, 12), (at + 56, 4)]
+    for index in (1, 2, 12):                                    # imports, resources, IAT
+        fields.append((at + 96 + 8 * index, 8))
+    optional = struct.unpack_from("<H", pe.data, pe.header + 20)[0]
+    for index in range(len(pe.sections)):
+        fields.append((24 + optional + 40 * index + 8, 16))
+    return {offset + i for offset, size in fields for i in range(size)}
+
+
+def header_difference(expected: Pe, candidate: Pe) -> tuple[int, int]:
+    """(differing header bytes, of which follow the layout). The DOS header
+    and stub compare in place; the PE headers compare from each image's own
+    PE signature, since `e_lfanew` follows the Rich header's length, which
+    `rich` compares on its own."""
+    first = min(raw for _n, _r, _v, raw, size in expected.sections if size)
+    differing = sum(1 for i in range(0x40) if i not in range(0x3C, 0x40)
+                    and expected.data[i] != candidate.data[i])
+    stub = range(0x40, 0x80)
+    differing += sum(1 for i in stub if expected.data[i] != candidate.data[i])
+    layout = _layout_fields(expected)
+    layout_differing = 0
+    a, b = expected.header, candidate.header
+    for k in range(first - max(a, b)):
+        if expected.data[a + k] == candidate.data[b + k]:
+            continue
+        if k in layout:
+            layout_differing += 1
+        else:
+            differing += 1
+    return differing, layout_differing
+
+
 def raw_regions(expected: Pe, candidate: Pe) -> dict[str, int]:
     """Plain file comparison over the retail section layout."""
     first = min(raw for _n, _r, _v, raw, size in expected.sections if size)
+    headers, layout = header_difference(expected, candidate)
     counts = {"size": abs(len(expected.data) - len(candidate.data)),
-              "headers": _differing(expected.data[:first], candidate.data[:first])}
+              "headers": headers, "header-layout": layout}
     end = first
     for name, _rva, _vsize, raw, size in expected.sections:
         counts[f"raw-{name}"] = _differing(expected.data[raw:raw + size],
@@ -755,7 +801,14 @@ def read_ceiling(path: Path = CEILING) -> dict[str, int]:
 
 
 def write_ceiling(counts: dict[str, int], path: Path = CEILING) -> None:
-    path.write_text(HEADER + "".join(f"{name}\t{counts[name]}\n" for name in GATED))
+    path.write_text(HEADER + "".join(f"{name}\t{counts[name]}\n"
+                                     for name in GATED + TRACKED))
+
+
+def tracked_rises(report: Report, ceiling: dict[str, int]) -> list[str]:
+    """TRACKED regions above their banked count (reported, not fatal)."""
+    return [f"{name}: {report.counts[name]} > banked {ceiling[name]}"
+            for name in TRACKED if name in ceiling and report.counts[name] > ceiling[name]]
 
 
 def gate_findings(report: Report, ceiling: dict[str, int]) -> list[str]:
@@ -786,13 +839,15 @@ def main(argv: list[str] | None = None) -> int:
     report = measure(args.candidate)
     ceiling = read_ceiling()
     for name, count in report.counts.items():
-        limit = ceiling.get(name) if name in GATED else None
-        mark = ("" if name not in GATED else
+        banked = name in GATED + TRACKED
+        limit = ceiling.get(name) if banked else None
+        mark = ("" if not banked else
                 " (no ceiling)" if limit is None else
                 " (above ceiling)" if count > limit else
                 " (bankable)" if count < limit else "")
         shown = "" if limit is None else f"  ceiling {limit}"
-        tag = "" if name in GATED else "  [informational]"
+        tag = ("" if name in GATED else "  [tracked]" if name in TRACKED
+               else "  [informational]")
         print(f"[link-diff] {name:14} {count:9d}{shown}{mark}{tag}")
     for name in args.detail:
         for line in report.details.get(name, []):

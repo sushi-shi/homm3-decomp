@@ -1,0 +1,880 @@
+// heroes3.rc - the retail HEROES3.EXE resources as source.
+//
+// Compiled by the pinned VC6 SP3 RC.EXE and gated payload for payload
+// against the retail image (homm3.build.resources); LINK converts the .res
+// with the pinned CVTRES 5.00.1736, whose objects carry @comp.id 6/1735 as
+// retail's Rich header records. Statement order is retail payload order.
+// The retail image names no resource IDs, so the command IDs stay numbers.
+// heroes3.ico is the one binary input: the build rebuilds it from the
+// user's HEROES3.EXE in a temporary stage beside a copy of this file.
+
+#include <windows.h>
+
+115 ICON "heroes3.ico"
+
+103 DIALOG 22, 17, 242, 133
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION
+FONT 10, "MS Sans Serif"
+BEGIN
+    ICON            "HEROES", -1, 8, 19, 20, 20
+    CTEXT           "Heroes of Might and Magic III Complete", 32768, 31, 8, 178, 8
+    CTEXT           "Version 4.0", 32769, 73, 21, 94, 10
+    CTEXT           "\251 2000 The 3DO Company. All Rights Reserved.", 32771, 26, 36, 189, 8
+    CTEXT           "New World Computing is a division of The 3DO Company.", -1, 26, 90, 189, 18
+    DEFPUSHBUTTON   "OK", 1, 96, 110, 48, 14, WS_GROUP
+    CTEXT           "3DO, Heroes, Heroes of Might and Magic, Armageddon's Blade, Shadow of Death, New World Computing, and their respective logos, are trademarks and/or service marks of The 3DO Company in the U.S. and other countries.", -1, 26, 44, 189, 40
+    CTEXT           "All other trademarks belong to their respective owners.", -1, 26, 76, 189, 8
+END
+
+111 MENU
+BEGIN
+    POPUP "&Cheat"
+    BEGIN
+        POPUP "Free artifacts"
+        BEGIN
+            MENUITEM "Spellbook", 45000
+            MENUITEM "Holy Grail", 45002
+            MENUITEM "Ballista", 45004
+            MENUITEM "Ammo Cart", 45005
+            MENUITEM "First-Aid Tent", 45006
+            MENUITEM "Centaurs Axe", 45007
+            MENUITEM "Blackshard of The Dead Knight", 45008
+            MENUITEM "Greater Gnolls Flail", 45009
+            MENUITEM "Ogres Club of Havoc", 45010
+            MENUITEM "Sword of Hellfire", 45011
+            MENUITEM "Titans Gladius", 45012
+            MENUITEM "Shield of The Dwarven Lords", 45013
+            MENUITEM "Shield of The Yawning Dead", 45014
+            MENUITEM "Buckler of The Gnoll King", 45015
+            MENUITEM "Targ of The Rampaging Ogre", 45016
+            MENUITEM "Shield of The Damned", 45017
+            MENUITEM "Sentinel's Shield", 45018
+            MENUITEM "Helm of The Alabaster Unicorn", 45019
+            MENUITEM "Skull Helmet", 45020
+            MENUITEM "Helm of The Chaos", 45021
+            MENUITEM "Crown of The Supreme Magi", 45022
+            MENUITEM "Hellstorm Helmet", 45023
+            MENUITEM "Thunder Helmet", 45024
+            MENUITEM "Breastplate of Petrified Wood", 45025
+            MENUITEM "Rib Cage", 45026
+            MENUITEM "Scales of The Greater Basilisk", 45027
+            MENUITEM "Tunic of The Cyclops King", 45028
+            MENUITEM "Breastplate of Brimstone", 45029
+            MENUITEM "Titans Cuirass", 45030
+            MENUITEM "Armor of Wonder", 45031
+            MENUITEM "Sandals of The Saint", 45032
+            MENUITEM "Celestial Necklace of Bliss", 45033
+            MENUITEM "Lion's Shield of Courage", 45034, MENUBREAK
+            MENUITEM "Sword of Judgement", 45035
+            MENUITEM "Helm of Heavenly Enlightenment", 45036
+            MENUITEM "Quiet Eye of The Dragon", 45037
+            MENUITEM "Red Dragon Flame Tongue", 45038
+            MENUITEM "Dragon Scale Shield", 45039
+            MENUITEM "Dragon Scale Armor", 45040
+            MENUITEM "Dragonbone Greaves", 45041
+            MENUITEM "Dragon Wing Tabard", 45042
+            MENUITEM "Necklace of Dragonteeth", 45043
+            MENUITEM "Crown of Dragontooth", 45044
+            MENUITEM "Still Eye of The Dragon", 45045
+            MENUITEM "Clover of Fortune", 45046
+            MENUITEM "Cards of Prophecy", 45047
+            MENUITEM "Ladybird of Luck", 45048
+            MENUITEM "Badge of Courage", 45049
+            MENUITEM "Crest of Valor", 45050
+            MENUITEM "Glyph of Gallantry", 45051
+            MENUITEM "Speculum", 45052
+            MENUITEM "Spyglass", 45053
+            MENUITEM "Amulet of The Undertaker", 45054
+            MENUITEM "Vampire's Cowl", 45055
+            MENUITEM "Dead Man's Boots", 45056
+            MENUITEM "Garniture of Interference", 45057
+            MENUITEM "Surcoat of Counterpoise", 45058
+            MENUITEM "Boots of Polarity", 45059
+            MENUITEM "Bow of Elven Cherrywood", 45060
+            MENUITEM "Bowstring of The Unicorn's Mane", 45061
+            MENUITEM "Angel Feather Arrows", 45062
+            MENUITEM "Bird of Perception", 45063
+            MENUITEM "Stoic Watchman", 45064
+            MENUITEM "Emblem of Cognizance", 45065
+            MENUITEM "Statesman's Medal", 45066, MENUBREAK
+            MENUITEM "Diplomat's Ring", 45067
+            MENUITEM "Ambassador's Sash", 45068
+            MENUITEM "Ring of The Wayfarer", 45069
+            MENUITEM "Equestrian's Gloves", 45070
+            MENUITEM "Necklace of Ocean Guidance", 45071
+            MENUITEM "Angel Wings", 45072
+            MENUITEM "Charm of Mana", 45073
+            MENUITEM "Talisman of Mana", 45074
+            MENUITEM "Mystic Orb of Mana", 45075
+            MENUITEM "Collar of Conjuring", 45076
+            MENUITEM "Ring of Conjuring", 45077
+            MENUITEM "Cape of Conjuring", 45078
+            MENUITEM "Orb of The Firmament", 45079
+            MENUITEM "Orb of Silt", 45080
+            MENUITEM "Orb of Tempstuous Fire", 45081
+            MENUITEM "Orb of Driving Rain", 45082
+            MENUITEM "Recanter's Cloak", 45083
+            MENUITEM "Spirit of Oppression", 45084
+            MENUITEM "Hourglass of The Evil Hour", 45085
+            MENUITEM "Tome of Fire Magic", 45086
+            MENUITEM "Tome of Air Magic", 45087
+            MENUITEM "Tome of Water Magic", 45088
+            MENUITEM "Tome of Earth Magic", 45089
+            MENUITEM "Boots of Levitation", 45090
+            MENUITEM "Golden Bow", 45091
+            MENUITEM "Sphere of Permanence", 45092
+            MENUITEM "Orb of Vulnerability", 45093
+            MENUITEM "Ring of Vitality", 45094
+            MENUITEM "Ring of Life", 45095
+            MENUITEM "Vial of Lifeblood", 45096
+            MENUITEM "Necklace of Swiftness", 45097
+            MENUITEM "Boots of Speed", 45098, MENUBREAK
+            MENUITEM "Cape of Velocity", 45099
+            MENUITEM "Pendant of Dispassion", 45100
+            MENUITEM "Pendant of Second Sight", 45101
+            MENUITEM "Pendant of Holiness", 45102
+            MENUITEM "Pendant of Life", 45103
+            MENUITEM "Pendant of Death", 45104
+            MENUITEM "Pendant of Free Will", 45105
+            MENUITEM "Pendant of Agitation", 45106
+            MENUITEM "Pendant of Total Recall", 45107
+            MENUITEM "Pendant of Courage", 45108
+            MENUITEM "Everflowing Crystal Cloak", 45109
+            MENUITEM "Ring of Infinite Gems", 45110
+            MENUITEM "Everpouring Vial of Mercury", 45111
+            MENUITEM "Inexhaustable Cart of Ore", 45112
+            MENUITEM "Eversmoking Ring of Sulfur", 45113
+            MENUITEM "Inexhaustable Cart of Lumber", 45114
+            MENUITEM "Endless Sack of Gold", 45115
+            MENUITEM "Endless Bag of Gold", 45116
+            MENUITEM "Endless Purse of Gold", 45117
+            MENUITEM "Legs of Legion", 45118
+            MENUITEM "Loins of Legion", 45119
+            MENUITEM "Torso of Legion", 45120
+            MENUITEM "Arms of Legion", 45121
+            MENUITEM "Head of Legion", 45122
+            MENUITEM "Sea Captain's Hat", 45123
+            MENUITEM "Spellbinder's Hat", 45124
+            MENUITEM "Shackles of War", 45125
+            MENUITEM "Orb of Inhibition", 45126
+        END
+        POPUP "Free spells"
+        BEGIN
+            MENUITEM "All spells", 46000
+            MENUITEM SEPARATOR
+            MENUITEM "Air spells", 46001
+            MENUITEM "Fire spells", 46002
+            MENUITEM "Water spells", 46003
+            MENUITEM "Earth spells", 46004
+            MENUITEM SEPARATOR
+            MENUITEM "Level 1 spells", 46005
+            MENUITEM "Level 2 spells", 46006
+            MENUITEM "Level 3 spells", 46007
+            MENUITEM "Level 4 spells", 46008
+            MENUITEM "Level 5 spells", 46009
+        END
+        POPUP "Free creatures"
+        BEGIN
+            POPUP "Castle"
+            BEGIN
+                MENUITEM "Pikemen", 41000
+                MENUITEM "Halberdiers", 41001
+                MENUITEM "Archers", 41002
+                MENUITEM "Marksmen", 41003
+                MENUITEM "Griffins", 41004
+                MENUITEM "Royal Griffins", 41005
+                MENUITEM "Swordsmen", 41006
+                MENUITEM "Crusaders", 41007
+                MENUITEM "Monks", 41008
+                MENUITEM "Zealots", 41009
+                MENUITEM "Cavaliers", 41010
+                MENUITEM "Champions", 41011
+                MENUITEM "Angels", 41012
+                MENUITEM "Archangels", 41013
+            END
+            POPUP "Rampart"
+            BEGIN
+                MENUITEM "Centaurs", 41014
+                MENUITEM "Centaur Captains", 41015
+                MENUITEM "Dwarves", 41016
+                MENUITEM "Battle Dwarves", 41017
+                MENUITEM "Wood Elves", 41018
+                MENUITEM "Grand Elves", 41019
+                MENUITEM "Pegasi", 41020
+                MENUITEM "Silver Pegasi", 41021
+                MENUITEM "Dendroid Guards", 41022
+                MENUITEM "Dendroid Soldiers", 41023
+                MENUITEM "Unicorns", 41024
+                MENUITEM "War Unicorns", 41025
+                MENUITEM "Green Dragons", 41026
+                MENUITEM "Gold Dragons", 41027
+            END
+            POPUP "Tower"
+            BEGIN
+                MENUITEM "Gremlins", 41028
+                MENUITEM "Master Gremlins", 41029
+                MENUITEM "Stone Gargoyles", 41030
+                MENUITEM "Obsidian Gargoyles", 41031
+                MENUITEM "Stone Golems", 41032
+                MENUITEM "Iron Golems", 41033
+                MENUITEM "Magi", 41034
+                MENUITEM "Arch Magi", 41035
+                MENUITEM "Genies", 41036
+                MENUITEM "Master Genies", 41037
+                MENUITEM "Nagas", 41038
+                MENUITEM "Naga Queens", 41039
+                MENUITEM "Giants", 41040
+                MENUITEM "Titans", 41041
+            END
+            POPUP "Inferno"
+            BEGIN
+                MENUITEM "Imps", 41042
+                MENUITEM "Familiars", 41043
+                MENUITEM "Gogs", 41044
+                MENUITEM "Magogs", 41045
+                MENUITEM "Hell Hounds", 41046
+                MENUITEM "Cerberi", 41047
+                MENUITEM "Demons", 41048
+                MENUITEM "Horned Demons", 41049
+                MENUITEM "Pit Fiends", 41050
+                MENUITEM "Pit Lords", 41051
+                MENUITEM "Efreet", 41052
+                MENUITEM "Efreet Sultans", 41053
+                MENUITEM "Devils", 41054
+                MENUITEM "Arch Devils", 41055
+            END
+            POPUP "Necropolis"
+            BEGIN
+                MENUITEM "Skeletons", 41056
+                MENUITEM "Skeleton Warriors", 41057
+                MENUITEM "Walking Dead", 41058
+                MENUITEM "Zombies", 41059
+                MENUITEM "Wights", 41060
+                MENUITEM "Wraiths", 41061
+                MENUITEM "Vampires", 41062
+                MENUITEM "Vampire Lords", 41063
+                MENUITEM "Liches", 41064
+                MENUITEM "Power Liches", 41065
+                MENUITEM "Black Knights", 41066
+                MENUITEM "Dread Knights", 41067
+                MENUITEM "Bone Dragons", 41068
+                MENUITEM "Ghost Dragons", 41069
+            END
+            POPUP "Dungeon"
+            BEGIN
+                MENUITEM "Troglodytes", 41070
+                MENUITEM "Infernal Troglodyte", 41071
+                MENUITEM "Harpies", 41072
+                MENUITEM "Harpy Hags", 41073
+                MENUITEM "Beholders", 41074
+                MENUITEM "Evil Eyes", 41075
+                MENUITEM "Medusas", 41076
+                MENUITEM "Medusa Queens", 41077
+                MENUITEM "Minotaurs", 41078
+                MENUITEM "Minotaur Kings", 41079
+                MENUITEM "Manticores", 41080
+                MENUITEM "Scorpicores", 41081
+                MENUITEM "Red Dragons", 41082
+                MENUITEM "Black Dragons", 41083
+            END
+            POPUP "Stronghold"
+            BEGIN
+                MENUITEM "Goblins", 41084
+                MENUITEM "Hobgoblins", 41085
+                MENUITEM "Wolf Riders", 41086
+                MENUITEM "Wolf Raiders", 41087
+                MENUITEM "Orcs", 41088
+                MENUITEM "Orc Chieftains", 41089
+                MENUITEM "Ogres", 41090
+                MENUITEM "Ogre Magi", 41091
+                MENUITEM "Rocs", 41092
+                MENUITEM "Thunderbirds", 41093
+                MENUITEM "Cyclopes", 41094
+                MENUITEM "Cyclops Kings", 41095
+                MENUITEM "Behemoths", 41096
+                MENUITEM "Ancient Behemoths", 41097
+            END
+            POPUP "Fortress"
+            BEGIN
+                MENUITEM "Gnolls", 41098
+                MENUITEM "Gnoll Marauders", 41099
+                MENUITEM "Lizardmen", 41100
+                MENUITEM "Lizard Warriors", 41101
+                MENUITEM "Gorgons", 41102
+                MENUITEM "Mighty Gorgons", 41103
+                MENUITEM "Serpent Flies", 41104
+                MENUITEM "Dragon Flies", 41105
+                MENUITEM "Basilisks", 41106
+                MENUITEM "Greater Basilisks", 41107
+                MENUITEM "Wyverns", 41108
+                MENUITEM "Wyvern Monarchs", 41109
+                MENUITEM "Hydras", 41110
+                MENUITEM "Chaos Hydras", 41111
+            END
+            POPUP "Elemental"
+            BEGIN
+                MENUITEM "Pixies", 41118
+                MENUITEM "Sprites", 41119
+                MENUITEM "Air Elementals", 41112
+                MENUITEM "Storm Elementals", 41127
+                MENUITEM "Water Elementals", 41115
+                MENUITEM "Ice Elementals", 41123
+                MENUITEM "Fire Elementals", 41114
+                MENUITEM "Earth Elementals", 41113
+                MENUITEM "Magma Elementals", 41125
+                MENUITEM "Energy Elementals", 41129
+                MENUITEM "Psychic Elementals", 41120
+                MENUITEM "Magic Elementals", 41121
+                MENUITEM "Firebirds", 41130
+                MENUITEM "Pheonixes", 41131
+            END
+            POPUP "Neutral"
+            BEGIN
+                MENUITEM "Gold Golems", 41116
+                MENUITEM "Diamond Golems", 41117
+                MENUITEM "Azure Dragons", 41132
+                MENUITEM "Crystal Dragons", 41133
+                MENUITEM "Faerie Dragons", 41134
+                MENUITEM "Rust Dragons", 41135
+                MENUITEM "Sharpshooters", 41137
+                MENUITEM "Enchanters", 41136
+                MENUITEM "Peasants", 41139
+                MENUITEM "Halflings", 41138
+                MENUITEM "Rogues", 41143
+                MENUITEM "Nomads", 41142
+                MENUITEM "Boars", 41140
+                MENUITEM "Mummies", 41141
+                MENUITEM "Trolls", 41144
+            END
+        END
+        POPUP "Secondary skills"
+        BEGIN
+            POPUP "Pathfinding"
+            BEGIN
+                MENUITEM "None", 42000
+                MENUITEM "Basic", 42001
+                MENUITEM "Advanced", 42002
+                MENUITEM "Expert", 42003
+            END
+            POPUP "Archery"
+            BEGIN
+                MENUITEM "None", 42004
+                MENUITEM "Basic", 42005
+                MENUITEM "Advanced", 42006
+                MENUITEM "Expert", 42007
+            END
+            POPUP "Logistics"
+            BEGIN
+                MENUITEM "None", 42008
+                MENUITEM "Basic", 42009
+                MENUITEM "Advanced", 42010
+                MENUITEM "Expert", 42011
+            END
+            POPUP "Scouting"
+            BEGIN
+                MENUITEM "None", 42012
+                MENUITEM "Basic", 42013
+                MENUITEM "Advanced", 42014
+                MENUITEM "Expert", 42015
+            END
+            POPUP "Diplomacy"
+            BEGIN
+                MENUITEM "None", 42016
+                MENUITEM "Basic", 42017
+                MENUITEM "Advanced", 42018
+                MENUITEM "Expert", 42019
+            END
+            POPUP "Navigation"
+            BEGIN
+                MENUITEM "None", 42020
+                MENUITEM "Basic", 42021
+                MENUITEM "Advanced", 42022
+                MENUITEM "Expert", 42023
+            END
+            POPUP "Leadership"
+            BEGIN
+                MENUITEM "None", 42024
+                MENUITEM "Basic", 42025
+                MENUITEM "Advanced", 42026
+                MENUITEM "Expert", 42027
+            END
+            POPUP "Wisdom"
+            BEGIN
+                MENUITEM "None", 42028
+                MENUITEM "Basic", 42029
+                MENUITEM "Advanced", 42030
+                MENUITEM "Expert", 42031
+            END
+            POPUP "Mysticism"
+            BEGIN
+                MENUITEM "None", 42032
+                MENUITEM "Basic", 42033
+                MENUITEM "Advanced", 42034
+                MENUITEM "Expert", 42035
+            END
+            POPUP "Luck"
+            BEGIN
+                MENUITEM "None", 42036
+                MENUITEM "Basic", 42037
+                MENUITEM "Advanced", 42038
+                MENUITEM "Expert", 42039
+            END
+            POPUP "Ballistics"
+            BEGIN
+                MENUITEM "None", 42040
+                MENUITEM "Basic", 42041
+                MENUITEM "Advanced", 42042
+                MENUITEM "Expert", 42043
+            END
+            POPUP "Eagle Eye"
+            BEGIN
+                MENUITEM "None", 42044
+                MENUITEM "Basic", 42045
+                MENUITEM "Advanced", 42046
+                MENUITEM "Expert", 42047
+            END
+            POPUP "Necromancy"
+            BEGIN
+                MENUITEM "None", 42048
+                MENUITEM "Basic", 42049
+                MENUITEM "Advanced", 42050
+                MENUITEM "Expert", 42051
+            END
+            POPUP "Estates"
+            BEGIN
+                MENUITEM "None", 42052
+                MENUITEM "Basic", 42053
+                MENUITEM "Advanced", 42054
+                MENUITEM "Expert", 42055
+            END
+            POPUP "Fire Magic"
+            BEGIN
+                MENUITEM "None", 42056
+                MENUITEM "Basic", 42057
+                MENUITEM "Advanced", 42058
+                MENUITEM "Expert", 42059
+            END
+            POPUP "Air Magic"
+            BEGIN
+                MENUITEM "None", 42060
+                MENUITEM "Basic", 42061
+                MENUITEM "Advanced", 42062
+                MENUITEM "Expert", 42063
+            END
+            POPUP "Water Magic"
+            BEGIN
+                MENUITEM "None", 42064
+                MENUITEM "Basic", 42065
+                MENUITEM "Advanced", 42066
+                MENUITEM "Expert", 42067
+            END
+            POPUP "Earth Magic"
+            BEGIN
+                MENUITEM "None", 42068
+                MENUITEM "Basic", 42069
+                MENUITEM "Advanced", 42070
+                MENUITEM "Expert", 42071
+            END
+            POPUP "Scholar"
+            BEGIN
+                MENUITEM "None", 42072
+                MENUITEM "Basic", 42073
+                MENUITEM "Advanced", 42074
+                MENUITEM "Expert", 42075
+            END
+            POPUP "Tactics"
+            BEGIN
+                MENUITEM "None", 42076
+                MENUITEM "Basic", 42077
+                MENUITEM "Advanced", 42078
+                MENUITEM "Expert", 42079
+            END
+            POPUP "Artillery"
+            BEGIN
+                MENUITEM "None", 42080
+                MENUITEM "Basic", 42081
+                MENUITEM "Advanced", 42082
+                MENUITEM "Expert", 42083
+            END
+            POPUP "Learning"
+            BEGIN
+                MENUITEM "None", 42084
+                MENUITEM "Basic", 42085
+                MENUITEM "Advanced", 42086
+                MENUITEM "Expert", 42087
+            END
+            POPUP "Offense"
+            BEGIN
+                MENUITEM "None", 42088
+                MENUITEM "Basic", 42089
+                MENUITEM "Advanced", 42090
+                MENUITEM "Expert", 42091
+            END
+            POPUP "Armorer"
+            BEGIN
+                MENUITEM "None", 42092
+                MENUITEM "Basic", 42093
+                MENUITEM "Advanced", 42094
+                MENUITEM "Expert", 42095
+            END
+            POPUP "Intelligence"
+            BEGIN
+                MENUITEM "None", 42096
+                MENUITEM "Basic", 42097
+                MENUITEM "Advanced", 42098
+                MENUITEM "Expert", 42099
+            END
+            POPUP "Sorcery"
+            BEGIN
+                MENUITEM "None", 42100
+                MENUITEM "Basic", 42101
+                MENUITEM "Advanced", 42102
+                MENUITEM "Expert", 42103
+            END
+            POPUP "Resistance"
+            BEGIN
+                MENUITEM "None", 42104
+                MENUITEM "Basic", 42105
+                MENUITEM "Advanced", 42106
+                MENUITEM "Expert", 42107
+            END
+            POPUP "First Aid"
+            BEGIN
+                MENUITEM "None", 42108
+                MENUITEM "Basic", 42109
+                MENUITEM "Advanced", 42110
+                MENUITEM "Expert", 42111
+            END
+        END
+        MENUITEM "Free resources", 40144
+        MENUITEM "View entire map", 40141
+        MENUITEM "View enemy towns", 40062
+        MENUITEM "Extra hero mobility", 40142
+        MENUITEM "Win game", 40059
+        MENUITEM "Lose game", 40060
+    END
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Quit", 40140
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Full Screen (F4)", 40009
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "On Line &Manual", 40052
+        MENUITEM SEPARATOR
+        MENUITEM "&About", 40053
+    END
+END
+
+110 MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Quit", 40140
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Full Screen (F4)", 40009
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "On Line &Manual", 40052
+        MENUITEM SEPARATOR
+        MENUITEM "&About", 40053
+    END
+END
+
+112 MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Quit", 40140
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Full Screen (F4)", 40009
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "On Line &Manual", 40052
+        MENUITEM SEPARATOR
+        MENUITEM "&About", 40053
+    END
+END
+
+113 MENU
+BEGIN
+    POPUP "&Cheat"
+    BEGIN
+        MENUITEM "Disable spellcasting limit", 47000
+        MENUITEM "Show hidden objects", 47003
+        MENUITEM "Show blocked hexes", 47004
+        MENUITEM "Place all obstacles", 47005
+        MENUITEM "Current player wins now", 47001
+        MENUITEM "Current player loses now", 47002
+        POPUP "Secondary Skills"
+        BEGIN
+            POPUP "Pathfinding"
+            BEGIN
+                MENUITEM "None", 42000
+                MENUITEM "Basic", 42001
+                MENUITEM "Advanced", 42002
+                MENUITEM "Expert", 42003
+            END
+            POPUP "Archery"
+            BEGIN
+                MENUITEM "None", 42004
+                MENUITEM "Basic", 42005
+                MENUITEM "Advanced", 42006
+                MENUITEM "Expert", 42007
+            END
+            POPUP "Logistics"
+            BEGIN
+                MENUITEM "None", 42008
+                MENUITEM "Basic", 42009
+                MENUITEM "Advanced", 42010
+                MENUITEM "Expert", 42011
+            END
+            POPUP "Scouting"
+            BEGIN
+                MENUITEM "None", 42012
+                MENUITEM "Basic", 42013
+                MENUITEM "Advanced", 42014
+                MENUITEM "Expert", 42015
+            END
+            POPUP "Diplomacy"
+            BEGIN
+                MENUITEM "None", 42016
+                MENUITEM "Basic", 42017
+                MENUITEM "Advanced", 42018
+                MENUITEM "Expert", 42019
+            END
+            POPUP "Navigation"
+            BEGIN
+                MENUITEM "None", 42020
+                MENUITEM "Basic", 42021
+                MENUITEM "Advanced", 42022
+                MENUITEM "Expert", 42023
+            END
+            POPUP "Leadership"
+            BEGIN
+                MENUITEM "None", 42024
+                MENUITEM "Basic", 42025
+                MENUITEM "Advanced", 42026
+                MENUITEM "Expert", 42027
+            END
+            POPUP "Wisdom"
+            BEGIN
+                MENUITEM "None", 42028
+                MENUITEM "Basic", 42029
+                MENUITEM "Advanced", 42030
+                MENUITEM "Expert", 42031
+            END
+            POPUP "Mysticism"
+            BEGIN
+                MENUITEM "None", 42032
+                MENUITEM "Basic", 42033
+                MENUITEM "Advanced", 42034
+                MENUITEM "Expert", 42035
+            END
+            POPUP "Luck"
+            BEGIN
+                MENUITEM "None", 42036
+                MENUITEM "Basic", 42037
+                MENUITEM "Advanced", 42038
+                MENUITEM "Expert", 42039
+            END
+            POPUP "Ballistics"
+            BEGIN
+                MENUITEM "None", 42040
+                MENUITEM "Basic", 42041
+                MENUITEM "Advanced", 42042
+                MENUITEM "Expert", 42043
+            END
+            POPUP "Eagle Eye"
+            BEGIN
+                MENUITEM "None", 42044
+                MENUITEM "Basic", 42045
+                MENUITEM "Advanced", 42046
+                MENUITEM "Expert", 42047
+            END
+            POPUP "Necromancy"
+            BEGIN
+                MENUITEM "None", 42048
+                MENUITEM "Basic", 42049
+                MENUITEM "Advanced", 42050
+                MENUITEM "Expert", 42051
+            END
+            POPUP "Estates"
+            BEGIN
+                MENUITEM "None", 42052
+                MENUITEM "Basic", 42053
+                MENUITEM "Advanced", 42054
+                MENUITEM "Expert", 42055
+            END
+            POPUP "Fire Magic"
+            BEGIN
+                MENUITEM "None", 42056
+                MENUITEM "Basic", 42057
+                MENUITEM "Advanced", 42058
+                MENUITEM "Expert", 42059
+            END
+            POPUP "Air Magic"
+            BEGIN
+                MENUITEM "None", 42060
+                MENUITEM "Basic", 42061
+                MENUITEM "Advanced", 42062
+                MENUITEM "Expert", 42063
+            END
+            POPUP "Water Magic"
+            BEGIN
+                MENUITEM "None", 42064
+                MENUITEM "Basic", 42065
+                MENUITEM "Advanced", 42066
+                MENUITEM "Expert", 42067
+            END
+            POPUP "Earth Magic"
+            BEGIN
+                MENUITEM "None", 42068
+                MENUITEM "Basic", 42069
+                MENUITEM "Advanced", 42070
+                MENUITEM "Expert", 42071
+            END
+            POPUP "Scholar"
+            BEGIN
+                MENUITEM "None", 42072
+                MENUITEM "Basic", 42073
+                MENUITEM "Advanced", 42074
+                MENUITEM "Expert", 42075
+            END
+            POPUP "Tactics"
+            BEGIN
+                MENUITEM "None", 42076
+                MENUITEM "Basic", 42077
+                MENUITEM "Advanced", 42078
+                MENUITEM "Expert", 42079
+            END
+            POPUP "Artillery"
+            BEGIN
+                MENUITEM "None", 42080
+                MENUITEM "Basic", 42081
+                MENUITEM "Advanced", 42082
+                MENUITEM "Expert", 42083
+            END
+            POPUP "Learning"
+            BEGIN
+                MENUITEM "None", 42084
+                MENUITEM "Basic", 42085
+                MENUITEM "Advanced", 42086
+                MENUITEM "Expert", 42087
+            END
+            POPUP "Offense"
+            BEGIN
+                MENUITEM "None", 42088
+                MENUITEM "Basic", 42089
+                MENUITEM "Advanced", 42090
+                MENUITEM "Expert", 42091
+            END
+            POPUP "Armorer"
+            BEGIN
+                MENUITEM "None", 42092
+                MENUITEM "Basic", 42093
+                MENUITEM "Advanced", 42094
+                MENUITEM "Expert", 42095
+            END
+            POPUP "Intelligence"
+            BEGIN
+                MENUITEM "None", 42096
+                MENUITEM "Basic", 42097
+                MENUITEM "Advanced", 42098
+                MENUITEM "Expert", 42099
+            END
+            POPUP "Sorcery"
+            BEGIN
+                MENUITEM "None", 42100
+                MENUITEM "Basic", 42101
+                MENUITEM "Advanced", 42102
+                MENUITEM "Expert", 42103
+            END
+            POPUP "Resistance"
+            BEGIN
+                MENUITEM "None", 42104
+                MENUITEM "Basic", 42105
+                MENUITEM "Advanced", 42106
+                MENUITEM "Expert", 42107
+            END
+            POPUP "First Aid"
+            BEGIN
+                MENUITEM "None", 42108
+                MENUITEM "Basic", 42109
+                MENUITEM "Advanced", 42110
+                MENUITEM "Expert", 42111
+            END
+        END
+        POPUP "Free Spells"
+        BEGIN
+            MENUITEM "All Spells", 46000
+            MENUITEM SEPARATOR
+            MENUITEM "Air Spells", 46001
+            MENUITEM "Fire Spells", 46002
+            MENUITEM "Water Spells", 46003
+            MENUITEM "Earth Spells", 46004
+            MENUITEM SEPARATOR
+            MENUITEM "Level 1 Spells", 46005
+            MENUITEM "Level 2 Spells", 46006
+            MENUITEM "Level 3 Spells", 46007
+            MENUITEM "Level 4 Spells", 46008
+            MENUITEM "Level 5 Spells", 46009
+        END
+    END
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Quit", 40140
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Full Screen (F4)", 40009
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "On Line &Manual", 40052
+        MENUITEM SEPARATOR
+        MENUITEM "&About", 40053
+    END
+END
+
+1 VERSIONINFO
+ FILEVERSION 4,0,0,0
+ PRODUCTVERSION 4,0,0,0
+ FILEFLAGSMASK 0x3fL
+ FILEFLAGS 0x0L
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "New World Computing\256"
+            VALUE "CompanyName", "The 3DO Company"
+            VALUE "FileDescription", "Heroes of Might and Magic\256 III"
+            VALUE "FileVersion", "4.0"
+            VALUE "InternalName", "Heroes III"
+            VALUE "LegalCopyright", "\251 2000 The 3DO Company. All Rights Reserved."
+            VALUE "LegalTrademarks", "3DO, Heroes, Heroes of Might and Magic, New World Computing, The Shadow of Death, and their respective logos are trademarks and/or service marks of The 3DO Company in the U.S. and other countries.  All other trademarks belong to their respective owners."
+            VALUE "OriginalFilename", "HEROES3.EXE"
+            VALUE "PrivateBuild", ""
+            VALUE "ProductName", "Heroes of Might and Magic\256 III: The Shadow of Death"
+            VALUE "ProductVersion", "4.0"
+            VALUE "SpecialBuild", ""
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

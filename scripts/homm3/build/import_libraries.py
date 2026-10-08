@@ -91,16 +91,21 @@ def exact_import_names(archive: bytes, dll: str, names: list[str]) -> bytes:
 
 
 def build_vendor_libraries(data: bytes, directory: Path) -> list[Path]:
+    """One import library per vendor DLL, under the DLL name retail's import
+    table spells (mss32.dll, binkw32.dll, smackw32.dll, IFC20.dll): LINK
+    orders the IAT by that name, case-sensitively."""
+    spelled = {dll.lower(): dll for dll in named_imports(data)}
     imports = {dll.lower(): names for dll, names in named_imports(data).items()}
     directory.mkdir(parents=True, exist_ok=True)
     libraries = []
-    for dll in VENDOR_DLLS:
+    for vendor in VENDOR_DLLS:
+        dll = spelled[vendor.lower()]
         names = imports[dll.lower()]
         if any(isinstance(name, int) for name in names):
             raise ValueError(f'{dll}: ordinal imports need an explicit ABI mapping')
         exports = [f'  {name}' + (' DATA' if name == '?m_dwErrHandlingFlags@CIFCErrors@@0KA' else '')
                    for name in names]
-        definition = directory / (Path(dll).stem + '.def')
+        definition = directory / (Path(dll).stem.lower() + '.def')
         definition.write_text(f'LIBRARY {dll}\nEXPORTS\n' + '\n'.join(exports) + '\n')
         library = definition.with_suffix('.lib')
         library.unlink(missing_ok=True)

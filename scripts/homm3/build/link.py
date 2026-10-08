@@ -25,7 +25,8 @@ walking its import table); MSDIS110.DLL is loaded dynamically and only by the
 `/dump /disasm` path. MSPDB60.DLL ships next to link.exe in the toolchain.
 
 The game links as retail did (config/retail facts, docs/vc6/runtime-link.md):
-the objects in retail object order (homm3.build.link_order), the units a
+the objects in retail object order (homm3.build.link_order), the resources
+of src/heroes3.rc (homm3.build.resources, gated against retail), the units a
 `library` key archives (victor, zlib) as libraries, the retail library
 line (RETAIL_LIBRARIES) and the objects' own default libraries (LIBCMT,
 LIBCPMT, OLDNAMES), with
@@ -49,6 +50,7 @@ import os
 import re
 import shutil
 import signal
+import struct
 import subprocess
 import sys
 import tempfile
@@ -64,7 +66,7 @@ def die(msg: str) -> None:
     sys.exit(1)
 
 
-def run_wine(cmd: list, cwd):
+def run_wine(cmd: list, cwd, env: dict | None = None):
     """Run a wine command hang-proof; return (output, rc). Mirrors cc_wrap:
     wine can leave a finished-but-unreaped grandchild holding stdio open, so log
     to a temp FILE (no pipe to block on), own process group, bounded wait."""
@@ -72,7 +74,7 @@ def run_wine(cmd: list, cwd):
     with tempfile.TemporaryFile() as logf:
         proc = subprocess.Popen(cmd, cwd=str(cwd), stdin=subprocess.DEVNULL,
                                 stdout=logf, stderr=subprocess.STDOUT,
-                                start_new_session=True)
+                                start_new_session=True, env=env)
         try:
             proc.wait(timeout=timeout)
             rc = proc.returncode
@@ -109,6 +111,24 @@ RETAIL_LIBRARIES = [
 
 #: Retail links LIBCMT only; the /ML victor and zlib objects name LIBC.
 RETAIL_FLAGS = ["/OPT:REF", "/NODEFAULTLIB:LIBC"]
+
+
+def retail_clock() -> dict[str, str]:
+    """The environment that runs LINK with its clock frozen at retail's
+    TimeDateStamp (0x39b83835, 2000-09-08 00:52:05 UTC): libfaketime from
+    the build shell. LINK stamps the header with CRT time(), which is UTC."""
+    import datetime
+    from homm3.core.common import load_image
+    library = os.environ.get("HOMM3_FAKETIME_LIB")
+    if not library or not Path(library).is_file():
+        die("HOMM3_FAKETIME_LIB unset - run inside `nix develop .#build`")
+    data = load_image()[0].data
+    pe = struct.unpack_from("<I", data, 0x3C)[0]
+    stamp = struct.unpack_from("<I", data, pe + 8)[0]
+    at = datetime.datetime.fromtimestamp(stamp, datetime.timezone.utc)
+    return {**os.environ, "LD_PRELOAD": library, "TZ": "UTC",
+            "FAKETIME": at.strftime("%Y-%m-%d %H:%M:%S"),
+            "FAKETIME_DONT_FAKE_MONOTONIC": "1"}
 
 
 def game_objects(objs_dir: Path | None = None) -> tuple[dict[str, Path], dict[str, list[str]]]:
@@ -292,6 +312,12 @@ def main(argv: list[str] | None = None) -> int:
                 die(f"missing library {name}")
             libraries.append(str(library))
         rsp_lines += RETAIL_FLAGS + [f'/LIBPATH:"{winepath_w(msvc / "lib")}"']
+        from homm3.build import resources
+        try:
+            res = resources.compile_resources(out=out.parent / "heroes3.res")
+        except (ValueError, OSError) as exc:
+            die(f"resources: {exc}")
+        objs = objs + [res]
     rsp_lines += list(extra)
     rsp_lines += [f'"{winepath_w(o)}"' for o in objs]
     rsp_lines += [f'"{winepath_w(Path(lib)) if os.path.exists(lib) else lib}"'
@@ -301,7 +327,7 @@ def main(argv: list[str] | None = None) -> int:
     rsp.write_text("\n".join(rsp_lines) + "\n")
 
     output, rc = run_wine(["wine", str(link), f"@{winepath_w(rsp)}"],
-                          out.parent)
+                          out.parent, env=None if study else retail_clock())
 
     log = out.with_suffix(".link.log")
     log.write_text(output)
