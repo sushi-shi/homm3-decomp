@@ -264,3 +264,8 @@ name = "main"
 object = 0
 profile = "glade-c"
 source = "src/editor/loki/main.c"
+
+[[unit]]
+name = "ToolkitWnd"
+object = 61
+source = "src/editor/ToolkitWnd.cpp"
