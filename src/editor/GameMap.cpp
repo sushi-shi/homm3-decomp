@@ -434,6 +434,9 @@ private:
     bool _isMapPlayable() const;
     TMapLayerObjectID _findObject(bool bSecondLayer, const TTilePoint& loc,
                                   bool (*pfnPredicate)(const TGameObject&)) const;
+    const TNonRandomHero* _findPlayersNonRandomHero(TPlayer player) const;
+    TRawIStream& readContainer(TRawIStream& stream, vector<TRumor>& aRumor);
+    TRawIStream& readContainer(TRawIStream& stream, vector<TTimedEvent>& aTimedEvent);
 
     struct _TProperties {
         _TProperties()
@@ -970,6 +973,33 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, const TObjectFactory* pObjectFactory,
     _m_aLayer.resize(_m_bTwoLayer ? 2 : 1, TLayer(_m_size));
 }
 
+TRawIStream& TGameMap::_TImpl::readContainer(TRawIStream& stream, vector<TRumor>& aRumor)
+{
+    aRumor.erase(aRumor.begin(), aRumor.end());
+    long n;
+    stream >> n;
+    while (n-- > 0) {
+        TRumor rumor;
+        stream >> rumor;
+        aRumor.push_back(rumor);
+    }
+    return stream;
+}
+
+TRawIStream& TGameMap::_TImpl::readContainer(TRawIStream& stream, vector<TTimedEvent>& aTimedEvent)
+{
+    aTimedEvent.erase(aTimedEvent.begin(), aTimedEvent.end());
+    long n;
+    stream >> n;
+    while (n-- > 0) {
+        TTimedEvent timedEvent;
+        stream >> timedEvent;
+        aTimedEvent.push_back(timedEvent);
+    }
+    return stream;
+}
+
+
 TGameMap::_TImpl::~_TImpl()
 {
 #line 1798
@@ -1156,6 +1186,27 @@ void TGameMap::_TImpl::floatObject(bool bSecondLayer, unsigned int objID, TTileE
     TLayer* pLayer = getPLayer(bSecondLayer);
     *pUpdatedExtent = pLayer->getObjectExtent(objID);
     pLayer->_floatObject(objID);
+}
+
+void TGameMap::_TImpl::unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent)
+{
+#line 2043
+    assert(pUpdatedExtent != NULL);
+    assert(!bSecondLayer || _m_bTwoLayer);
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    TMapLayerObjectID objID = pLayer->getFloatingObjID();
+#line 2048
+    assert(objID != TLayer::s_kInvalidObjID);
+    const TGameObject& obj = pLayer->getObject(objID);
+    if (!(x >= 9 && y >= 9 && x < getWidth() - 9 && y < getHeight() - 9)) {
+        const THolyGrail* pHolyGrail = dynamic_cast<const THolyGrail*>(&obj);
+        if (pHolyGrail != NULL)
+            throw TPlaceObjFailureHolyGrailTooCloseToEdge();
+    }
+    if (!_isValidPlacement(*pLayer, obj, x, y))
+        throw TPlaceObjFailureInvalidPlacement();
+    pLayer->_unfloatObject(TTilePoint(x, y));
+    *pUpdatedExtent = pLayer->getObjectExtent(objID);
 }
 
 void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
@@ -2220,6 +2271,31 @@ TMapLayerObjectID TGameMap::_TImpl::_findObject(bool bSecondLayer, const TTilePo
     assert(!bSecondLayer || _m_bTwoLayer);
     const TLayer& layer = getLayer(bSecondLayer);
     return layer._findObject(loc, pfnPredicate);
+}
+
+const TNonRandomHero* TGameMap::_TImpl::_findPlayersNonRandomHero(TPlayer player) const
+{
+#line 4911
+    assert(player >= 0 && player < kNumPlayers);
+    unsigned int numLayers = isTwoLayer() ? 2 : 1;
+    for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+        const TLayer& layer = getLayer(layerNum);
+        for (TLayer::TObjectIDIter iter = layer.objectIDBegin(); iter != layer.objectIDEnd(); ++iter) {
+            const TPlayableObject* pPlayable = dynamic_cast<const TPlayableObject*>(layer.getPObject(*iter));
+            if (pPlayable != NULL && pPlayable->getOwner() == player) {
+                const TNonRandomHero* pHero = dynamic_cast<const TNonRandomHero*>(pPlayable);
+                if (pHero != NULL)
+                    return pHero;
+                const TTown* pTown = dynamic_cast<const TTown*>(pPlayable);
+                if (pTown != NULL && pTown->getPVisitingHero() != NULL) {
+                    pHero = dynamic_cast<const TNonRandomHero*>(pTown->getPVisitingHero());
+                    if (pHero != NULL)
+                        return pHero;
+                }
+            }
+        }
+    }
+    return NULL;
 }
 
 void TGameMap::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
