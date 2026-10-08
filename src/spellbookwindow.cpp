@@ -837,7 +837,7 @@ bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) cons
         return true;
     if (m_school > y.m_school)
         return false;
-    return _strcmpi(traits->m_name, yTraits->m_name) < 0;
+    return strcmpi(traits->m_name, yTraits->m_name) < 0;
 }
 
 // COMDAT pairing: std::_Sort<TSpellbookEntry>, agreement 1.000 over all 235

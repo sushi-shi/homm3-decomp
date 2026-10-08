@@ -604,7 +604,7 @@ void videoShutDown()
 
 // The base archive's path on the drive the misc.obj install scan selected.
 // That scan (in the unclaimed 0x50c1cb body) walks GetLogicalDrives, writes
-// each candidate letter to gArchiveDriveLetter, and _open()s what this
+// each candidate letter to gArchiveDriveLetter, and open()s what this
 // function returns; smackmgr's own two loaders then open their third archive
 // from it, the sound loader after swapping the extension for .snd.
 VA(0x00597d00, 0x50E)
@@ -822,7 +822,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
 
     if (g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
         for (i = 0; i < g_videoCount1; i++) {
-            if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
+            if (strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
@@ -834,7 +834,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
     }
 
     for (i = 0; i < g_videoCount2; i++) {
-        if (_strcmpi(g_videoHeader2[i].m_name, name) == 0) {
+        if (strcmpi(g_videoHeader2[i].m_name, name) == 0) {
             g_soundManager->serviceSounds();
             SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, 0, FILE_BEGIN);
             return SmackOpen(static_cast<const char*>(g_videoFile2),
@@ -845,7 +845,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
 
     if (g_videoFile3) {
         for (i = 0; i < g_videoCount3; i++) {
-            if (_strcmpi(g_videoHeader3[i].m_name, name) == 0) {
+            if (strcmpi(g_videoHeader3[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile3, g_videoHeader3[i].m_offset, 0,
                     FILE_BEGIN);
@@ -858,7 +858,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
 
     if (g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         for (i = 0; i < g_videoCount1; i++) {
-            if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
+            if (strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);

@@ -1895,9 +1895,9 @@ DC_ADDRESS(0x0a6180, 0xb0)
 MAC_ADDRESS(0x0cdc08, 0xd0)
 char* playerData::getName()
 {
-    if ((!isHuman() && _strcmpi(m_name, g_generalText->GetText(
+    if ((!isHuman() && strcmpi(m_name, g_generalText->GetText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
-        (isHuman() && !_strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")))) {
+        (isHuman() && !strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")))) {
         strcpy(m_name, g_colors[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
@@ -3497,8 +3497,8 @@ bool game::saveGame(const char* filename, bool determineSuffix,
                 saveName);
         // General text 77 and 109 are the two reserved auto-save names;
         // a save under either of them does not become the remembered one.
-        if (_strnicmp(saveName, g_generalText->GetText(GENERAL_TEXT_AUTOSAVE_NAME), 8)
-            && _strnicmp(saveName, g_generalText->GetText(GENERAL_TEXT_PLAYER_EXIT_SAVE_NAME), 8))
+        if (strnicmp(saveName, g_generalText->GetText(GENERAL_TEXT_AUTOSAVE_NAME), 8)
+            && strnicmp(saveName, g_generalText->GetText(GENERAL_TEXT_PLAYER_EXIT_SAVE_NAME), 8))
             strcpy(g_game->m_saveFileName, filename);
     }
 
@@ -3588,7 +3588,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 
     char buf[450];
     g_gameOver = 0;
-    if (_strnicmp(filename,
+    if (strnicmp(filename,
                   DATA_COMPGEN(0x00677da8, remoteSavePrefix, "RMT"),
                   3) == 0) {
         sprintf(buf,
@@ -9060,15 +9060,15 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                              "orig.dat"), 0, 0, 0, 1);
 
     int fileSize = ::fileSize(fileName);
-    int handle = _open(fileName, _O_BINARY);
+    int handle = open(fileName, _O_BINARY);
     if (handle == -1) {
         fileError(fileName);
         return 0;
     }
 
     unsigned char* data = new unsigned char[fileSize];
-    _read(handle, data, fileSize);
-    _close(handle);
+    read(handle, data, fileSize);
+    close(handle);
     int fullGameCRC = calcCrcLong(data, fileSize);
 
     CGameTransmitInitMsg msg(fileSize, fullGameCRC, thisPlayerDead,
@@ -9607,13 +9607,13 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
             g_config.m_rcFile);
-    int handle = _open(fileName,
+    int handle = open(fileName,
                        _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
                        _S_IWRITE);
     if (handle == -1)
         fileError(fileName);
-    _write(handle, data, fileSize);
-    _close(handle);
+    write(handle, data, fileSize);
+    close(handle);
 
     delete[] blockReceived;
     delete[] data;

@@ -41,9 +41,11 @@
 #endif
 
 /* 4. Microsoft CRT spellings with MSL equivalents. */
-#define _strcmpi _stricmp
+#define strcmpi _stricmp
 #define stricmp _stricmp
 #define strnicmp _strnicmp
+#define strrev _strrev
+#define strupr _strupr
 // The file API keeps Microsoft's names in shared source; MSL supplies the
 // open flags and owner-write permission under their POSIX spellings.
 #define _O_BINARY O_BINARY

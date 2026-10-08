@@ -353,7 +353,7 @@ void setGameDefaults()
     generateUniqueSystemID();
     g_config.m_firstInstall = 0;
 
-    _getcwd(g_regAppPath, sizeof(g_regAppPath));
+    getcwd(g_regAppPath, sizeof(g_regAppPath));
     strcat(g_regAppPath,
         DATA_COMPGEN(0x00677dac, prefsPathSeparator, "\\"));
 
@@ -574,13 +574,13 @@ void readPrefsFromRegistry()
                 &g_config.m_windowConfig.m_fullScreen)), &cbData);
 
         cbData = 350;
-        _getcwd(appPath, sizeof(appPath));
+        getcwd(appPath, sizeof(appPath));
         strcat(appPath, "\\");
         if (RegQueryValueExA(key, g_prefAppPath, 0, &type,
                 static_cast<BYTE*>(static_cast<void*>(g_regAppPath)),
                 &cbData)
                 != ERROR_SUCCESS ||
-                _strcmpi(g_regAppPath, appPath) != 0) {
+                strcmpi(g_regAppPath, appPath) != 0) {
             strcpy(g_regAppPath, appPath);
             RegSetValueExA(key, g_prefAppPath, 0, REG_SZ,
                 static_cast<const BYTE*>(static_cast<const void*>(

@@ -694,8 +694,8 @@ int advManager::open(int newPriority)
     for (i = 0; i < sizeof(g_advCachedGraphicNames) / sizeof(g_advCachedGraphicNames[0]); i++) {
         char reversed[16];
         strcpy(reversed, g_advCachedGraphicNames[i]);
-        _strrev(reversed);
-        if (_strnicmp(reversed,
+        strrev(reversed);
+        if (strnicmp(reversed,
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
             m_cachedGraphics.push_back(ResourceManager::GetSprite(g_advCachedGraphicNames[i]));

@@ -419,11 +419,11 @@ unsigned char savedGameExists(char* filename)
 {
     char tempText[100];
     sprintf(tempText, "%s%s", filename, g_saveGameSuffix);
-    _chdir("games");
-    int file = _open(tempText, 0);
-    _chdir("..");
+    chdir("games");
+    int file = open(tempText, 0);
+    chdir("..");
     if (file != -1) {
-        _close(file);
+        close(file);
         return 1;
     }
     return 0;
@@ -2732,7 +2732,7 @@ MAC_ADDRESS(0x186c08, 0x68)
 int CSaveGameEdit::onKeyPress(message* msg)
 {
     int ret = textEntryWidget::onKeyPress(msg);
-    if (_strcmpi(m_text.c_str(),
+    if (strcmpi(m_text.c_str(),
                  g_newGameFileName) != 0
             && g_singleSelectionWindow->m_currentMap != -1)
         g_singleSelectionWindow->setCurrentMap(-1, 1);
@@ -4043,7 +4043,7 @@ void TSingleSelectionWindow::getHeaders(
     char* dir;
     int gameFileProblem;
     int x;
-    _chdir(getHeaderDirectory());
+    chdir(getHeaderDirectory());
     findHandle = _findfirst(g_fileSpec[getFileSpecNbr()], mapNames);
     if (findHandle != -1) {
         count = 1;
@@ -4051,7 +4051,7 @@ void TSingleSelectionWindow::getHeaders(
             ++count;
         _findclose(findHandle);
     }
-    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
 
     headers->clear();
     GameSelectionHeadersStruct temp;
@@ -4143,7 +4143,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
             sizeof(header->m_description) - 1);
 
     if (dir[0])
-        _chdir(dir);
+        chdir(dir);
 #if defined(HOMM3_TARGET_MAC)
     // Mac 0:0x17aec8 uses its native fork adapter and DateTimeRec.
     // Native open passes the incoming eight-byte directory adapter in r4;
@@ -4166,7 +4166,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
     }
 #endif
     if (dir[0])
-        _chdir("..");
+        chdir("..");
 
     if (!m_loadMode && !m_saveMode) {
         if (header->m_header.m_version == MAP_FORMAT_SHADOW_OF_DEATH
@@ -4192,7 +4192,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
         strcpy(header->m_description, g_generalText->GetText(GENERAL_TEXT_MAP_DATA_INVALID));
     }
 
-    if (_strnicmp(header->m_setup.m_filename, g_generalText->GetText(GENERAL_TEXT_AUTOSAVE_NAME),
+    if (strnicmp(header->m_setup.m_filename, g_generalText->GetText(GENERAL_TEXT_AUTOSAVE_NAME),
                   strlen(g_generalText->GetText(GENERAL_TEXT_AUTOSAVE_NAME))) == 0)
         strcpy(header->m_title, g_generalText->GetText(GENERAL_TEXT_AUTOSAVE_NAME));
     return gameFileProblem;
@@ -6082,11 +6082,11 @@ std::string getRandomMapName()
     _finddata_t fileinfo;
     int i;
 
-    _chdir(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"));
+    chdir(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"));
     long findHandle = _findfirst(DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
                             &fileinfo);
     if (findHandle == -1) {
-        _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+        chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
         return DATA_COMPGEN(0x006837f8, firstRandomMapName,
                             "random_map_1.h3m");
     }
@@ -6102,14 +6102,14 @@ std::string getRandomMapName()
 
     do {
         for (int j = 0; j < 15; ++j) {
-            if (_strcmpi(names[j], fileinfo.name) == 0) {
+            if (strcmpi(names[j], fileinfo.name) == 0) {
                 times[j] = fileinfo.time_write;
                 break;
             }
         }
     } while (_findnext(findHandle, &fileinfo) == 0);
 
-    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
     _findclose(findHandle);
 
     int oldest = times[0];
@@ -6766,12 +6766,12 @@ bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
                       static_cast<const void*>(getHeaderDirectory())),
                   mapFileNameMsg->m_fileName, 0, 0, false) == 0)
 #else
-    _chdir(getHeaderDirectory());
-    if (_access(mapFileNameMsg->m_fileName, 0) == 0)
+    chdir(getHeaderDirectory());
+    if (access(mapFileNameMsg->m_fileName, 0) == 0)
 #endif
     {
 #if !defined(HOMM3_TARGET_MAC)
-        _chdir("..");
+        chdir("..");
 #endif
         GameSelectionHeadersStruct temp;
         getHeader(getHeaderDirectory(),
@@ -6791,7 +6791,7 @@ bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
         return 1;
     } else {
 #if !defined(HOMM3_TARGET_MAC)
-        _chdir("..");
+        chdir("..");
 #endif
         CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
         transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
@@ -7051,11 +7051,11 @@ DC_ADDRESS(0x1409d4, 0xa0)
 MAC_ADDRESS(0x18154c, 0x148)
 bool TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
 {
-    if (_strcmpi(m_gameVersion,
+    if (strcmpi(m_gameVersion,
                  DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0"))
             < 0)
         return 1;
-    if (_strcmpi(m_gameVersion, otherVersion) == 0)
+    if (strcmpi(m_gameVersion, otherVersion) == 0)
         return 1;
     if (strcmp(m_gameVersion,
                DATA_COMPGEN(0x006838fc, versionComplete14, "1.4")) == 0
@@ -7320,7 +7320,7 @@ MAC_ADDRESS(0x182770, 0x138)
 inline void TSingleSelectionWindow::sendChat(
     unsigned long dpid, const char* chat)
 {
-    if (_strcmpi(chat,
+    if (strcmpi(chat,
                  g_generalText->GetText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         CPingMsg msg(GameTime::get(), RS_SETUP_PING);
         transmitRemoteDataDPID(&msg, dpid, false, false);
@@ -8314,7 +8314,7 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
     int len = strlen(filename);
     int i = 0;
     while (static_cast<unsigned int>(i) < m_selectionHeaders.size()) {
-        if (_strnicmp(filename, m_selectionHeaders[i].m_setup.m_filename, len)
+        if (strnicmp(filename, m_selectionHeaders[i].m_setup.m_filename, len)
                 == 0) {
             m_currentIndex = i;
             m_currentMap = i;
@@ -8619,9 +8619,9 @@ void TSingleSelectionWindow::onDeleteFile()
     normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
         return;
-    _chdir("games");
+    chdir("games");
     DeleteFileA(fileName);
-    _chdir("..");
+    chdir("..");
     int i = 0;
     while (static_cast<unsigned int>(i) < m_headersA.size()) {
         if (strcmp(m_headersA[i].m_setup.m_filename, fileName) == 0)
@@ -8960,12 +8960,12 @@ inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
     if (m_isNet) {
         sa = a.m_setup.m_filename;
         sb = b.m_setup.m_filename;
-        if (_strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
+        if (strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
                                        "AUTOSAVE."), 9) == 0) {
             strcat(nameA, sa);
             sa = nameA;
         }
-        if (_strnicmp(sb, DATA_COMPGEN(0x00683968, autosavePrefix,
+        if (strnicmp(sb, DATA_COMPGEN(0x00683968, autosavePrefix,
                                        "AUTOSAVE."), 9) == 0) {
             strcat(nameB, sb);
             sb = nameB;
@@ -8973,8 +8973,8 @@ inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
     }
 
     if (m_direction)
-        return _strcmpi(sb, sa) < 0;
-    return _strcmpi(sa, sb) < 0;
+        return strcmpi(sb, sa) < 0;
+    return strcmpi(sa, sb) < 0;
 }
 
 VA(0x00590e00, 0x4F)

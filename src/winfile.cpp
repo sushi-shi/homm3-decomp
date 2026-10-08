@@ -14,7 +14,7 @@
 // Absent from retail (documented, not forced): GetLastError,
 // UpdateError, Rename, SetAttribute, GetAttribute (unreferenced -
 // nothing in the image touches sLastError/open), Exists (survives
-// only inlined into Delete/Open as _access(s,0)==0; the `inline`
+// only inlined into Delete/Open as access(s,0)==0; the `inline`
 // definition below reproduces the absence under the non-/Gy profile),
 // File::Init (winfile.h:90 header inline, dc 0x198864), and ALL
 // FOURTEEN CFindFile methods (dc 0x198748..0x198863) - the only
@@ -66,7 +66,7 @@ unsigned char File::close()
 DC_ADDRESS(0x1984ec, 0x4)
 inline unsigned char File::exists(const char* filename)
 {
-    return _access(filename, 0) == 0;
+    return access(filename, 0) == 0;
 }
 
 // Original: File::Delete; winfile.cpp:77

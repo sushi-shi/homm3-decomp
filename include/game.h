@@ -2012,7 +2012,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
 
     if (!inputWasProvided) {
         openedName = g_game->m_setup.m_filename;
-        _chdir("games");
+        chdir("games");
         try {
             ownedInput = std::auto_ptr<TAbstractFile>(
                 infile = new TGzFile(openedName.c_str(), "rb"));
@@ -2020,7 +2020,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
         catch (const TGzFile::TOpenFailure&) {
             return -1;
         }
-        _chdir("..");
+        chdir("..");
         if (!infile)
             return -1;
     }
@@ -2194,7 +2194,7 @@ public:
     DC_ADDRESS(0x002f84, 0x1c)
     bool compare(const char* value) const
     {
-        return _strcmpi(m_code, value) == 0;
+        return strcmpi(m_code, value) == 0;
     }
     const char* getCode() const;
 

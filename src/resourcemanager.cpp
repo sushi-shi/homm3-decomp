@@ -799,7 +799,7 @@ ResourceManager::TCacheMapKey::TCacheMapKey(const char* n)
 DC_ADDRESS(0x122bf8, 0x1c)
 bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& y) const
 {
-    return _stricmp(name, y.name) < 0;
+    return stricmp(name, y.name) < 0;
 }
 
 VA(0x0055ac40, 0x388)
@@ -1392,7 +1392,7 @@ bool ResourceManager::GetSoundFile(const char* localName,
         TSoundHeaderDescriptor& descriptor =
             g_soundHeaderDescriptors[*archive];
         for (; x < *descriptor.m_count; ++x) {
-            if (_stricmp((*descriptor.m_sounds)[x].m_filename,
+            if (stricmp((*descriptor.m_sounds)[x].m_filename,
                          soundName.c_str()) == 0) {
                 SoundHeaderStruct& header = (*descriptor.m_sounds)[x];
                 *size = header.m_size;

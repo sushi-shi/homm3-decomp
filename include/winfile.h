@@ -54,7 +54,7 @@ public:
     ~File();
 
     // Defined inline in winfile.cpp: no retail body, it survives only
-    // inlined into Delete and Open as `_access(sFilename, 0) == 0`.
+    // inlined into Delete and Open as `access(sFilename, 0) == 0`.
     static unsigned char exists(const char* filename);
     static unsigned char deleteFile(const char* filename);
     unsigned char rename(char* oldName, char* newName);                      // dc 0x198508, no retail body

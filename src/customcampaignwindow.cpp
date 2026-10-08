@@ -140,19 +140,19 @@ void TCustomCampaignWindow::loadCampaignList()
     _finddata_t fileInfo;
     TCampaignBrief::CampaignHeaderStruct* header;
 
-    _getcwd(currentDirectory, sizeof(currentDirectory));
-    _chdir(DATA_COMPGEN(0x006755ac, mapsDirectory, "Maps"));
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    getcwd(currentDirectory, sizeof(currentDirectory));
+    chdir(DATA_COMPGEN(0x006755ac, mapsDirectory, "Maps"));
+    getcwd(currentDirectory, sizeof(currentDirectory));
     long findHandle = _findfirst(
         DATA_COMPGEN(0x006755a4, campaignFilePattern, "*.h3c"), &fileInfo);
-    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    getcwd(currentDirectory, sizeof(currentDirectory));
     if (findHandle == -1)
         return;
 
     do {
         header = new TCampaignBrief::CampaignHeaderStruct(fileInfo.name);
-        _getcwd(currentDirectory, sizeof(currentDirectory));
+        getcwd(currentDirectory, sizeof(currentDirectory));
         if (!header->load()) {
             delete header;
         } else if (header->getNumMaps() == 0) {
@@ -162,10 +162,10 @@ void TCustomCampaignWindow::loadCampaignList()
             header->freeData();
             m_campaignHeaders.push_back(header);
         }
-        _getcwd(currentDirectory, sizeof(currentDirectory));
+        getcwd(currentDirectory, sizeof(currentDirectory));
     } while (_findnext(findHandle, &fileInfo) == 0);
     _findclose(findHandle);
-    _getcwd(currentDirectory, sizeof(currentDirectory));
+    getcwd(currentDirectory, sizeof(currentDirectory));
 
     std::sort(m_campaignHeaders.begin(), m_campaignHeaders.end(),
               CampaignHeaderPointerLess());

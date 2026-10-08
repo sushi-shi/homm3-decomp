@@ -457,7 +457,7 @@ int earlySetup()
         while (1) {
             if (i >= g_videoCount3)
                 break;
-            if (!_strcmpi(g_videoHeader3[i].m_name,
+            if (!strcmpi(g_videoHeader3[i].m_name,
                           DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
                               "h3x2_rne1.smk"))) {
                 found = 1;
@@ -470,7 +470,7 @@ int earlySetup()
             while (1) {
                 if (i >= g_videoCount3)
                     break;
-                if (!_strcmpi(g_videoHeader3[i].m_name,
+                if (!strcmpi(g_videoHeader3[i].m_name,
                               DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
                                   "h3abab1.smk"))) {
                     g_cdDriveNumber = 6;
@@ -1870,7 +1870,7 @@ int interpretCommandLine()
     g_limitPlayer = 0;
     strcpy(g_mapName, (*g_generalText)[GENERAL_TEXT_DEFAULT_MAP_FILENAME]);
     length = strlen(g_commandLine);
-    _strupr(g_commandLine);
+    strupr(g_commandLine);
     for (i = 0; i < length; i++) {
         if (g_commandLine[i] == ' ' && i + 1 < length
             && (g_commandLine[i + 1] == '?' || g_commandLine[i + 1] == 'h'

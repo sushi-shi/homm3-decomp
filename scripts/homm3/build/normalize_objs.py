@@ -1599,11 +1599,78 @@ def _canonicalize_claimed_guards(base_payload: bytes, target_payload: bytes,
     return canon._rewrite_names(base, renames), len(renames)
 
 
+_WEAK_EXTERNAL = 105
+_OLDNAMES: dict[str, str] | None = None
+
+
+def oldnames_aliases(library: Path | None = None) -> dict[str, str]:
+    """{old name: CRT name} from the pinned toolchain's OLDNAMES.LIB.
+
+    Each member defines one weak external (`_strcmpi`) whose default is the
+    underscored CRT function (`__strcmpi`); LINK binds a call spelled with
+    the old POSIX name to that function."""
+    global _OLDNAMES
+    if library is None and _OLDNAMES is not None:
+        return _OLDNAMES
+    from homm3.core.cc_wrap import find_ci, msvc_dir
+    from homm3.verify.library_code import archive_members
+    path = library or find_ci(msvc_dir() / "lib", "OLDNAMES.LIB")
+    aliases: dict[str, str] = {}
+    if path is not None and Path(path).is_file():
+        for _member, body in archive_members(Path(path)):
+            aliases.update(_weak_externals(body))
+    if library is None:
+        _OLDNAMES = aliases
+    return aliases
+
+
+def _weak_externals(body: bytes) -> dict[str, str]:
+    """{weak external: its default} of one COFF object; OLDNAMES alias
+    members are machine-independent (machine 0) COFF objects."""
+    if len(body) < 20:
+        return {}
+    _machine, _sections, _stamp, table, count = struct.unpack_from("<HHIII", body)
+    strings = table + 18 * count
+
+    def name(at: int) -> str:
+        if body[at:at + 4] == b"\0\0\0\0":
+            start = strings + struct.unpack_from("<I", body, at + 4)[0]
+            return body[start:body.index(b"\0", start)].decode("latin-1")
+        return body[at:at + 8].split(b"\0", 1)[0].decode("latin-1")
+
+    out = {}
+    index = 0
+    while index < count:
+        at = table + 18 * index
+        storage, aux = body[at + 16], body[at + 17]
+        if storage == _WEAK_EXTERNAL and aux:
+            tag = struct.unpack_from("<I", body, at + 18)[0]
+            out[name(at)] = name(table + 18 * tag)
+        index += 1 + aux
+    return out
+
+
+def _resolve_oldnames(payload: bytes, aliases: dict[str, str] | None = None) -> tuple[bytes, int]:
+    """Bind undefined old POSIX names to their CRT functions, as LINK does
+    through OLDNAMES.LIB: retail's code reaches `__strcmpi` whichever name
+    the source called it by."""
+    aliases = oldnames_aliases() if aliases is None else aliases
+    coff = canon.CoffObject(payload)
+    renames = {symbol.index: aliases[symbol.name] for symbol in coff.symbols.values()
+               if symbol.section == 0 and symbol.storage_class == EXTERNAL_STORAGE
+               and symbol.value == 0 and symbol.name in aliases}
+    if not renames:
+        return payload, 0
+    return canon._rewrite_names(coff, renames), len(renames)
+
+
 def canonicalize_pair(base_payload: bytes, target_payload: bytes, unit: str,
                       symbol_rvas, *, image_base=None, identities=None
                       ) -> tuple[bytes, bytes, Counter]:
     """Apply the shared full-build and candidate-search paired passes."""
     counts: Counter = Counter()
+    base_payload, oldnames = _resolve_oldnames(base_payload)
+    counts["oldnames"] += oldnames
     base_payload, guard_count = _canonicalize_claimed_guards(
         base_payload, target_payload, unit)
     counts["guard"] += guard_count

@@ -2367,10 +2367,10 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
 
     std::filebuf* fileBuf = new std::filebuf;
     char currentDirectory[200];
-    _getcwd(currentDirectory, sizeof(currentDirectory));
-    _chdir(DATA_COMPGEN(0x006772d0, oldMainMapsDir, "maps"));
+    getcwd(currentDirectory, sizeof(currentDirectory));
+    chdir(DATA_COMPGEN(0x006772d0, oldMainMapsDir, "maps"));
     fileBuf->open(m_fileName.c_str(), std::ios::in | std::ios::binary);
-    _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
+    chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
     if (!fileBuf->is_open()) {
         delete fileBuf;
         LODFile* resource =

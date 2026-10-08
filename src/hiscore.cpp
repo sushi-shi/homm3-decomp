@@ -369,10 +369,10 @@ int highScoreManager::open(int newPriority)
             DATA_COMPGEN(0x00660358, highScorePathFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, highScoreDataDirectory, ".\\DATA\\"),
             g_highScoreFileName);
-    int file = _open(path, _O_BINARY);
+    int file = ::open(path, _O_BINARY);
     if (file != -1) {
-        _read(file, m_highScores, sizeof(m_highScores));
-        _close(file);
+        ::read(file, m_highScores, sizeof(m_highScores));
+        ::close(file);
     }
     return 0;
 }
@@ -420,14 +420,14 @@ void writeHighScores()
         DATA_COMPGEN(0x00660358, highScorePathFormat, "%s%s"),
         DATA_COMPGEN(0x00677d88, highScoreDataDirectory, ".\\DATA\\"),
         g_highScoreFileName);
-    int file = _open(path, _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
+    int file = ::open(path, _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
                      _S_IWRITE);
     if (file == -1) {
         fileError(g_highScoreFileName);
     } else {
-        _write(file, g_highScoreManager->m_highScores,
+        ::write(file, g_highScoreManager->m_highScores,
                sizeof(g_highScoreManager->m_highScores));
-        _close(file);
+        ::close(file);
     }
 }
 

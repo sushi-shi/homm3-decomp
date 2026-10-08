@@ -3878,11 +3878,11 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     infile->read(imageName, value);
     tempObjectType.m_imageName = imageName;
 
-    _strrev(imageName);
+    strrev(imageName);
     imageName[0] = 'k';
     imageName[1] = 's';
     imageName[2] = 'm';
-    _strrev(imageName);
+    strrev(imageName);
 
     unsigned char usedDefaultMask = 0;
     LODFile* maskFile = ResourceManager::PointToSpriteResource(imageName);

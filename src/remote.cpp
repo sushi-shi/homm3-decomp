@@ -1323,7 +1323,7 @@ DC_ADDRESS(0x11d020, 0x1a6)
 MAC_ADDRESS(0x212d70, 0x220)
 void sendChat(const char* chatString, int toWho)
 {
-    if (_strcmpi(chatString,
+    if (strcmpi(chatString,
                  g_generalText->GetText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
             g_chatMan.systemMsg(g_generalText->GetText(GENERAL_TEXT_CHAT_PING_ALL));

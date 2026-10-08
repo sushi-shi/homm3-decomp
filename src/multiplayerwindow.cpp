@@ -353,14 +353,14 @@ void CHotSeatDlg::updateOK()
 
 // Original: DeleteTempSaveGame; multiplayerwindow.cpp:872
 // DC builds the same RMT path but elides deletion; Complete calls DeleteFileA.
-// DC spells the comparison strnicmp; Windows calls LIBCMT's _strnicmp at
-// 0x6260c0. Preserve that external ABI spelling in the expanded constructor.
+// DC spells the comparison strnicmp, as does Windows: retail links the
+// OLDNAMES alias to LIBCMT's _strnicmp at 0x6260c0.
 DC_ADDRESS(0x0ffb40, 0x30)
 MAC_ADDRESS(0x219e54, 0x94)
 void deleteTempSaveGame(const char* filename)
 {
     char buffer[450];
-    if (!_strnicmp(filename, "RMT", 3)) {
+    if (!strnicmp(filename, "RMT", 3)) {
         sprintf(buffer, "%s%s", ".\\DATA\\", filename);
         DeleteFileA(buffer);
     }
@@ -883,7 +883,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         return 1;
 
     case ONLINE_ID:
-        _chdir("online");
+        chdir("online");
         ShellExecuteA(g_hwndApp, "open", "autorun.exe", 0, 0, SW_SHOWNORMAL);
         shutDown(0);
         return 1;

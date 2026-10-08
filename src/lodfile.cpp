@@ -74,7 +74,7 @@ void LODFile::Find(unsigned begin, unsigned end, const char* itemName)
 
     unsigned half = (end - begin) / 2;
     unsigned i;
-    int order = _strcmpi(itemName, subindex[begin + half].name);
+    int order = strcmpi(itemName, subindex[begin + half].name);
     if (order == 0) {
         matchindex = begin + half;
         return;
@@ -84,7 +84,7 @@ void LODFile::Find(unsigned begin, unsigned end, const char* itemName)
             Find(begin, begin + half, itemName);
         } else {
             for (i = begin; i < end; i++) {
-                if (_strcmpi(itemName, subindex[i].name) == 0) {
+                if (strcmpi(itemName, subindex[i].name) == 0) {
                     matchindex = i;
                     return;
                 }
@@ -96,7 +96,7 @@ void LODFile::Find(unsigned begin, unsigned end, const char* itemName)
             Find(begin + half, end, itemName);
         } else {
             for (i = begin; i < end; i++) {
-                if (_strcmpi(itemName, subindex[i].name) == 0) {
+                if (strcmpi(itemName, subindex[i].name) == 0) {
                     matchindex = i;
                     return;
                 }
@@ -206,7 +206,7 @@ int LODFile::open(const char* filename, int flags)
 DC_ADDRESS(0x0e9654, 0x12)
 int __cdecl compare(const void* arg1, const void* arg2)
 {
-    return _strcmpi(static_cast<const LODEntry*>(arg1)->name,
+    return strcmpi(static_cast<const LODEntry*>(arg1)->name,
                     static_cast<const LODEntry*>(arg2)->name);
 }
 
