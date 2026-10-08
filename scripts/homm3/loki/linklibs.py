@@ -9,6 +9,7 @@ build/loki/toolchain/link/:
               libglade.a libxml.a                             (GCC 2.95.2 -O2)
               libgtk.a libgdk.a libgmodule.a libglib.a libz.a (egcs 1.1.2)
     xlib/     libX11.so.6, libXi.so.6 (Red Hat 6.2), libXext.so.6 (Red Hat 7.0)
+    glibc/    libc.so.6, libm.so.6, libdl.so.2 (Red Hat 6.0 glibc 2.1.1-6), for h3maped's link
     libexec/  ld (binutils 2.9.1.0.25)
     build.log every configure and make
 
@@ -326,6 +327,20 @@ def build(link: Path, media: dict[str, bytes], jobs: int = 2) -> None:
     # libc.so is a linker script naming /lib/libc.so.6; ld 2.9.1 has no --sysroot.
     (lib / "libc.so").write_text(f"/* GNU ld script (staged) */\n"
                                  f"GROUP ( {tc.SYSROOT}/lib/libc.so.6 {lib}/libc_nonshared.a )\n")
+    # The image's link saw Red Hat 6.0's shared glibc 2.1.1-6: every imported libc, libm and
+    # libdl symbol carries its st_size (dlerror 192, dlclose 55, dlsym 79, dlopen 61; potato's
+    # 2.1.3 differs). link/glibc comes first on h3maped's -L path only; the library builds keep
+    # potato's.
+    glibc = link / "glibc"
+    names = {"lib/libc-2.1.1.so": "libc.so.6", "lib/libm-2.1.1.so": "libm.so.6", "lib/libdl-2.1.1.so": "libdl.so.2"}
+    _install_rpm(media["glibc-2.1.1-6.i386.rpm"], link / "glibc-rpm", lambda name: name in names)
+    glibc.mkdir(parents=True, exist_ok=True)
+    for member, soname in names.items():
+        shutil.copyfile(link / "glibc-rpm" / member, glibc / soname)
+    for stem, soname in (("libm", "libm.so.6"), ("libdl", "libdl.so.2")):
+        (glibc / f"{stem}.so").symlink_to(soname)
+    (glibc / "libc.so").write_text(f"/* GNU ld script (staged) */\n"
+                                   f"GROUP ( {glibc}/libc.so.6 {lib}/libc_nonshared.a )\n")
     # libX11 and libXi of Red Hat 6.2 (XFree86 3.3.6), libXext of Red Hat 7.0 (XFree86 4.0.1, built
     # against glibc 2.0 symbols only): ld records the X imports in these libraries' .dynsym order,
     # and the image's .dynsym places XGetVisualInfo between libXext's XShmDetach and XIfEvent, an

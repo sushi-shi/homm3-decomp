@@ -89,9 +89,10 @@ target = "i386-linux"
 #                  ... _init; XGetVisualInfo after XShmDetach, as XFree86 4's libXext has it).
 #   gtk+-1.2.10-ahiguti.patch
 #                  Red Hat's GTK+ i18n patch (Fedora dist-git): iswpunct/iswcntrl word breaks.
-#   glibc-devel-2.1.1-6.i386.rpm
+#   glibc-devel-2.1.1-6.i386.rpm, glibc-2.1.1-6.i386.rpm
 #                  Red Hat 6.0: the headers libxml and libglade were compiled against
-#                  (glibc 2.1's memset → __bzero macro).
+#                  (glibc 2.1's memset → __bzero macro), and the shared libc, libm and libdl
+#                  h3maped is linked against (the imports' st_size values).
 #   glib-1.2.8.tar.gz, gtk+-1.2.8.tar.gz
 #                  the image's GLib/GTK+ (gtk_*_version 1.2.8, glib_*_version 1.2.8), built at
 #                  Red Hat's -O2 -m486 -fno-strength-reduce, --with-xinput=xfree (libXi).
@@ -120,4 +121,5 @@ target = "i386-linux"
 "gtk+-1.2.10-ahiguti.patch" = "fee67bbc147a98220d4acc136540de64fe8664a8d92a5141ee4bce8d47d27f22"
 "XFree86-libs-3.3.6-20.i386.rpm" = "879a761cbce1f75db691b1ebd8f26b3751a4300ceff1e77d42bf2c37968a21ce"
 "XFree86-libs-4.0.1-1.i386.rpm" = "efa0920420091ca6ea3c65a76fe993ffb9a8e6391f6e27f1e185643e42d3f212"
+"glibc-2.1.1-6.i386.rpm" = "3c84a8b871c65fe757d0ac477175987089ac7d750214adef717e0b02eeef37c0"
 "glibc-devel-2.1.1-6.i386.rpm" = "42c53fe875f2ec071654f5aa33fa0fd06a143ff05cb73ba2c7d5769a7602f1bc"

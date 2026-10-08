@@ -49,11 +49,11 @@ def project_objects() -> list[Path]:
 def command(output: Path = IMAGE, map_path: Path = MAP) -> list[str]:
     lib = toolchain.LINK / "lib"
     sysroot = toolchain.SYSROOT
-    library_dirs = [lib, toolchain.LINK / "xlib", sysroot / "usr/lib", sysroot / "lib"]
+    library_dirs = [toolchain.LINK / "glibc", lib, toolchain.LINK / "xlib", sysroot / "usr/lib", sysroot / "lib"]
     return [str(toolchain.LINK / "libexec/ld"), "-m", "elf_i386",
             "-export-dynamic", "-dynamic-linker", "/lib/ld-linux.so.2", "-s",
             "-o", str(output), "-Map", str(map_path),
-            "-rpath-link", ":".join(str(d) for d in library_dirs[1:]),
+            "-rpath-link", ":".join(str(d) for d in (library_dirs[0], *library_dirs[2:])),
             *(f"-L{d}" for d in library_dirs),
             str(lib / "crt1.o"), str(lib / "crti.o"), str(lib / "crtbegin.o"),
             *(str(o) for o in project_objects()),
