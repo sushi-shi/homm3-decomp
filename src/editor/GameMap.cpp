@@ -3971,10 +3971,10 @@ public:
     ~_TImpl();
     _TImpl& operator=(const _TImpl& other);
 
-    unsigned int getWidth() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
-    unsigned int getHeight() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
     TCell* getPCell(unsigned int x, unsigned int y);
     TCell* getPCell(const TTilePoint& loc) { return getPCell(loc.x(), loc.y()); }
+    unsigned int getWidth() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
+    unsigned int getHeight() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
     const TCell* getPCell(unsigned int x, unsigned int y) const;
     const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
     TGameObject* getPObject(unsigned int objID);
@@ -4039,19 +4039,6 @@ private:
             return *this;
         }
 
-        TGameObject* getPObject()
-        {
-            if (_m_pWrapper != NULL) {
-                if (_m_pWrapper->m_refCnt > 1)
-                    _split();
-                return _m_pWrapper->m_pObject;
-            }
-            return NULL;
-        }
-        const TGameObject* getPObject() const
-        {
-            return _m_pWrapper != NULL ? _m_pWrapper->m_pObject : NULL;
-        }
         void setObject(const TGameObject* pObj)
         {
             if (pObj != NULL) {
@@ -4069,6 +4056,19 @@ private:
             }
         }
 
+        TGameObject* getPObject()
+        {
+            if (_m_pWrapper != NULL) {
+                if (_m_pWrapper->m_refCnt > 1)
+                    _split();
+                return _m_pWrapper->m_pObject;
+            }
+            return NULL;
+        }
+        const TGameObject* getPObject() const
+        {
+            return _m_pWrapper != NULL ? _m_pWrapper->m_pObject : NULL;
+        }
         TMapLayerObjectID m_next;
         TMapLayerObjectID m_prev;
         TTilePoint m_loc;

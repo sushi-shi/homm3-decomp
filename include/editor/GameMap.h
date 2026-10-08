@@ -641,11 +641,7 @@ private:
 
 class TGameMap::TLayer::TCell {
 public:
-    TCell()
-        : _m_terrainType(eTerrainWater), _m_riverType(0), _m_roadType(0), _m_tileNum(0),
-          _m_riverTileNum(0), _m_roadTileNum(0), _m_bHFlipped(false), _m_bVFlipped(false),
-          _m_bRiverHFlipped(false), _m_bRiverVFlipped(false), _m_bRoadHFlipped(false),
-          _m_bRoadVFlipped(false) {}
+    TCell();
 
     void setTerrainType(TTerrainType newTerrainType);
     void setTileNum(unsigned int newTileNum);
@@ -826,6 +822,15 @@ public:
     _TPObjectCellInfoList _m_paObjInfo;
     _TPAObjectID _m_paShadowID;
 };
+
+// Defined after the class: GameMap.o queues the constructor after the
+// shared vector holders' members.
+inline TGameMap::TLayer::TCell::TCell()
+    : _m_terrainType(eTerrainWater), _m_riverType(0), _m_roadType(0), _m_tileNum(0), _m_riverTileNum(0),
+      _m_roadTileNum(0), _m_bHFlipped(false), _m_bVFlipped(false), _m_bRiverHFlipped(false),
+      _m_bRiverVFlipped(false), _m_bRoadHFlipped(false), _m_bRoadVFlipped(false)
+{
+}
 
 void readCellData(TRawIStream& stream, TGameMap::TLayer* pLayer);
 void writeCellData(TRawOStream& stream, const TGameMap::TLayer& layer);
