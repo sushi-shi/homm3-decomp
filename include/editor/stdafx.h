@@ -9,4 +9,10 @@
 
 #include "terrain.h"
 
+// The sized integer names of the editor's source: __PRETTY_FUNCTION__
+// texts spell uword (Tile.cpp's drawing functions take a uword* buffer)
+// and assert texts spell numeric_limits< ubyte >.
+typedef unsigned char ubyte;
+typedef unsigned short uword;
+
 #endif  /* HOMM3_EDITOR_STDAFX_H */

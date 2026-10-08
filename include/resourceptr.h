@@ -19,6 +19,22 @@ public:
     // transfer implementation from the other ownership operations.
     TResourcePtr(const TResourcePtr& rhs);
 
+    // Loki (GUIGameObject.o's linkonce TResourcePtr<CSprite>): the
+    // ownership-transferring assignment of the pre-standard auto_ptr.
+    TResourcePtr& operator=(const TResourcePtr& rhs)
+    {
+        if (&rhs != this) {
+            if (m_ptr != rhs.m_ptr) {
+                if (m_owns && m_ptr)
+                    ResourceManager::Dispose(m_ptr);
+                m_owns = rhs.m_owns;
+            } else if (rhs.m_owns)
+                m_owns = true;
+            m_ptr = rhs.release();
+        }
+        return *this;
+    }
+
     // CodeView ResourcePtr.h:44: ownership byte +0, pointer +4.
     // Retail 0x41bd90 keeps those tests and dispatches virtual dispose;
     // objnames' state-0 unwind at 0x627890 calls this retained instance.
@@ -36,6 +52,12 @@ public:
 
     DC_ADDRESS(0x05b2bc, 0x18)
     T* operator->() const throw() { return get(); }
+
+    T* release() const throw()
+    {
+        m_owns = false;
+        return m_ptr;
+    }
 
 private:
     mutable unsigned char m_owns;

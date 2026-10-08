@@ -216,7 +216,7 @@ public:
     const TPalette24* GetPalette24() const { return p24; }
     unsigned short GetPaletteColor(unsigned char index) const { return p->m_data[index]; }
     int GetNumSeqs() const { return numSequences; }
-    int GetNumFrames(int seq) const { return IsValidSeq(seq) ? s[seq]->numFrames : 0; }
+    int GetNumFrames(int seq = 0) const { return IsValidSeq(seq) ? s[seq]->numFrames : 0; }
     int IsValidSeq(int seq) const { return seq < numSequences && validSeqMask[seq]; }
 
     void Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
