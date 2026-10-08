@@ -188,10 +188,9 @@ Open items, in the order they block a byte-identical link:
 - **Object partition.** `code-order` breaks where retail places a header
   COMDAT in another object than ours (our earlier object emits a body the
   original did not) and where one of our units holds functions of several
-  original objects. victor is an example: retail pulls its members as
-  allocate/validate, flip, loadpcx, pcxinfo, the PCX kernels, the lock
-  destructors and the bit helpers, so `victor.cpp` stands for at least three
-  original members. Nine 8447 C++ objects are missing.
+  original objects. The victor units follow retail's member pull order
+  except the PCX kernels, which retail references before the lock cleanups
+  and the bit helpers ([victor-library.md](../vc6/victor-library.md)).
 - **zlib pull order.** Retail places `deflate.obj` first, yet no game code
   calls a `deflate.obj` function: an original game object referenced one from
   code `/OPT:REF` removed. The candidate pulls `inflate.obj` first.
@@ -201,33 +200,23 @@ Open items, in the order they block a byte-identical link:
   byte-identical link needs, with the stated entry edit on top. The same
   holds for the CD edits in `earlySetup` and `readPrefsFromRegistry`, both
   non-exact today; `mciSendStringA` (WINMM) is referenced only from that body.
-- **Vendor import libraries.** Retail's mss32, binkw32 and smackw32 imports
-  keep the decorated `_Name@n` export names, which VC6 `LIB /DEF` cannot
-  produce (it prefixes another underscore or emits NOPREFIX names); the
-  binkw32, smackw32 and IFC20 hints equal the shipped DLLs' export indices,
-  mss32's come from an older export table. HoMM1's stub-DLL `/IMPLIB`
-  method (homm1.graph.implib) and its long-format findings are the
-  precedent.
-- **IAT order.** LINK sorts each DLL's thunks with its C runtime's `qsort`;
-  HoMM1's editor needed a native VC6 MSVCRT.DLL for the retail order.
-
-### Post-link edits
-
-The pinned GOG image differs from the same-timestamp Collector's Edition
-executable in 467 bytes
-([import-table-post-link-edits.md](../todos/import-table-post-link-edits.md)).
-`config/retail/post-link-edits.tsv` states those LINK cannot produce, each
-with the Collector's byte as LINK's: `IMAGE_FILE_UP_SYSTEM_ONLY`
-(Characteristics `0x410f` against `0x10f`), the Load Configuration entry
-pointing into the headers and the header bytes behind it, the stale checksum
-(`0x2a540c` stored, `0x2aaeb3` computed), the SafeDisc 1.50.020 signature
-at `0xfd4`, the larger `.text`, `.rdata` and `.rsrc` VirtualSizes, the
-`strlen` and `05 43 5f` at the end of `.text`, the version-info text and
-tail bytes at the end of `.rsrc`, the import-table rules (mixed-case
-`KeRNeL32.dll`, zero KERNEL32/USER32 hints, descriptor timestamps, the
-`GetSysteminfo` orphan) and the no-CD code edits in `earlySetup`,
-`readPrefsFromRegistry` and `setupCDDrive`. The arithmetic and sample-rate
-differences are reproduced by the source and are not stated.
+- **Vendor import libraries** (`homm3.build.import_libraries`). mss32,
+  binkw32 and smackw32 are the `/IMPLIB` of a stub DLL whose `__stdcall`
+  exports decorate to the retail names; IFC20's C++ exports are a `LIB
+  /DEF`; filler exports put every name at its retail hint, and each library
+  is checked against retail. LINK 6.00 RTM writes them
+  (`config/retail/import-libraries.tsv`). Retail counts only two libraries'
+  descriptor pairs as `Linker600` 8168; the producer of the other two (no
+  `@comp.id`) is unknown, so mss32 and smackw32 are provisional.
+- **IAT order.** LINK sorts each DLL's thunks with its C runtime's `qsort`.
+  The game link runs LINK against the VC6 SP3 MSVCRT.DLL from the pinned SP3
+  media (`[toolchain.linker_runtime]`); the remaining order differences
+  follow the imports and reference order the reconstruction still lacks.
+- **Rich header.** Retail counts 69 objects without `@comp.id`; the
+  VC5-compiled Victor library members are most of them
+  ([victor-library.md](../vc6/victor-library.md)). Nine `Utc12_CPP` 8447 and
+  three `Utc12_C` 8168 objects are still missing; their code is either
+  absent from retail (removed by `/OPT:REF`) or folded into other units.
 
 ## Import inventory
 
