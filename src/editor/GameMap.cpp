@@ -2658,23 +2658,26 @@ bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject&
             if (paObjInfo != NULL) {
                 const vector<TLayer::_TObjectCellInfo>& aObjInfo = *paObjInfo;
                 vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
-                for (; pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                while (pObjInfo != aObjInfo.end()) {
                     if (pObjInfo->m_height >= height)
                         break;
                     if (find(aLowerObjIDs.begin(), aLowerObjIDs.end(), pObjInfo->m_objID) == aLowerObjIDs.end())
                         aLowerObjIDs.push_back(pObjInfo->m_objID);
+                    ++pObjInfo;
                 }
-                for (; pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                while (pObjInfo != aObjInfo.end()) {
                     if (pObjInfo->m_height > height)
                         break;
 #line 3616
                     assert(pObjInfo->m_height == height);
+                    ++pObjInfo;
                 }
-                for (; pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                while (pObjInfo != aObjInfo.end()) {
 #line 3621
                     assert(pObjInfo->m_height > height);
                     if (find(aHigherObjIDs.begin(), aHigherObjIDs.end(), pObjInfo->m_objID) == aHigherObjIDs.end())
                         aHigherObjIDs.push_back(pObjInfo->m_objID);
+                    ++pObjInfo;
                 }
             }
             bool bPassable = obj.getBCellPassable(i, j);
