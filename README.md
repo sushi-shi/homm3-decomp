@@ -49,16 +49,16 @@ Excluded from the scores (generated or library code):
 
 <!-- loki-match-score:start -->
 
-**Loki Linux `h3maped` 1.0 (map editor, GCC 2.95.2): 7,432 / 7,432 functions exact (100.00%) &middot; 100.00% fuzzy &middot; 502,976 / 561,376 data bytes (89.60%) (MAX).**
+**Loki Linux `h3maped` 1.0 (map editor, GCC 2.95.2): 7,432 / 7,432 functions exact (100.00%) &middot; 100.00% fuzzy &middot; 535,988 / 566,400 data bytes (94.63%) (MAX).**
 
 A separate image with its own scores; `homm3 loki build --bank` banks `config/loki/match_baseline.tsv`, and this block renders from it.
 
 | Phase | Objects | Functions exact MAX | Fuzzy MAX | Data bytes MAX |
 | :---- | ------: | ------------------: | --------: | -------------: |
-| engine (shared with the game) | 29 | 1,001 / 1,001 (100.0%) | 100.00% | 95,510 / 100,636 (94.91%) |
-| editor | 74 | 6,431 / 6,431 (100.0%) | 100.00% | 407,466 / 460,740 (88.44%) |
+| engine (shared with the game) | 29 | 1,001 / 1,001 (100.0%) | 100.00% | 96,530 / 100,636 (95.92%) |
+| editor | 74 | 6,431 / 6,431 (100.0%) | 100.00% | 439,458 / 465,764 (94.35%) |
 
-_CUR / MAX / HIST: 7,432 / 7,432 / 7,432 exact &middot; 100.00% / 100.00% / 100.00% fuzzy, weighted by size &middot; 502,976 / 502,976 / 502,976 data bytes. Project functions only: the 3,120 `.text` functions and 4,312 kept linkonce bodies of the 103 GCC 2.95.2 project objects (103 built units); GTK+/glib/libglade/libxml/zlib and libstdc++ are excluded. Data bytes are the objects' `.rodata`, `.data`, `.bss`, `.gcc_except_table`, `.ctors`/`.dtors` slices of the image, their kept linkonce data (vtables) and COMMON type_info nodes, relocations resolved; jump tables count with their functions._
+_CUR / MAX / HIST: 7,432 / 7,432 / 7,432 exact &middot; 100.00% / 100.00% / 100.00% fuzzy, weighted by size &middot; 535,988 / 535,988 / 535,988 data bytes. Project functions only: the 3,120 `.text` functions and 4,312 kept linkonce bodies of the 103 GCC 2.95.2 project objects (103 built units); GTK+/glib/libglade/libxml/zlib and libstdc++ are excluded. Data bytes are the objects' `.rodata`, `.data`, `.bss`, `.gcc_except_table`, `.ctors`/`.dtors` slices of the image, their kept linkonce data (vtables) and COMMON type_info nodes, relocations resolved; jump tables count with their functions._
 
 <!-- loki-match-score:end -->
 
