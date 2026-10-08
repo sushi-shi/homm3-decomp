@@ -364,9 +364,9 @@ public:
 };
 
 // Retail writes both 0x640bac and 0x640bb8 after the retained base call.
-// That is direct evidence for this two-level dwelling hierarchy.  The older
-// cross-build vtable roster supplies the final class name; the intermediate
-// role name remains provisional until stronger source evidence appears.
+// That is direct evidence for this two-level dwelling hierarchy. The
+// Complete editor's hierarchy descriptor names the intermediate class:
+// type_map_dwelling_def <- type_flaggable_def <- type_treasure_def.
 class type_flaggable_def : public type_treasure_def {
 public:
     inline type_flaggable_def(int subtype)

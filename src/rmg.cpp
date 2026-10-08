@@ -8711,6 +8711,13 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // That complete source model retains retail's first single-element vector
 // insertion; duplicating the path stores instead expands count-insertion.
 // Mac's retained vector::reserve call proves push_back in both scans.
+// Wall (inliner, 2026-10-08): retail keeps getMapItem(TRmgMapPosition) out of
+// line inside the placeGuard expansion and expands the guard-cell size();
+// this body expands the lookup (nested budget 63 > cost 53) and keeps size.
+// Every retail placeGuard expansion (ground x2, monolith x2, gate x2, here)
+// retains that lookup; decorateMapCell, openConnectionPath and the seer-hut
+// placement also retain one. The /Ob2 trace allows all of them here, so the
+// retail callers' budgets differ; no local spelling found.
 VA(0x00545990, 0x466)
 MAC_ADDRESS(0x249680, 0x5ac)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
@@ -9308,6 +9315,13 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // recover the caller lowering.
 // Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
 // preserve that canonical addition as well (byte-flat with these predicates).
+// Wall (inliner, 2026-10-08): retail keeps operator+'s three-int position
+// constructor as a call at the guard translation. The trace gives it
+// (1981 - 56) / 27 = 71 against cost 48; retail needs about 41 remaining
+// sites or a much smaller budget. Exact callers expand the same constructor
+// at nested budgets 70..210 (floodWaterZoneDistances 70), so a constructor
+// cost change cannot separate them; markRiverCoastTarget (72/81) and
+// createRiverToOutlet (55/72) share this wall.
 VA(0x00546C70, 0x452)
 MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
