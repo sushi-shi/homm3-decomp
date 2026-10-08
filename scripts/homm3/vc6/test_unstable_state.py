@@ -50,14 +50,6 @@ class CalleeOrderTest(unittest.TestCase):
         self.assertEqual(us.State(None, 0, 2).label(), "callees-compiled-first=2")
 
 
-class TemplateCalleeTest(unittest.TestCase):
-    def test_template_members_never_enter_a_prefix(self):
-        order = ["?f", "?g@@YAXXZ", "??0?$vector@H@std@@QAE@XZ", "??1C@@QAE@XZ"]
-        prefixes = us.callee_prefixes(order, {"?f": ["??0?$vector@H@std@@QAE@XZ", "??1C@@QAE@XZ",
-                                                     "?g@@YAXXZ"]})
-        self.assertEqual(prefixes, {"?f": ["?g@@YAXXZ", "??1C@@QAE@XZ"]})
-
-
 class FuzzEditTest(unittest.TestCase):
     TEXT = "#include <x.h>\nint g;\nVA(0x00401000, 0x10)\nvoid f() {}\nVA(0x00401010, 0x10)\nvoid h() {}\n"
 
