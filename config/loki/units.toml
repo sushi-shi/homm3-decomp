@@ -509,3 +509,8 @@ source = "src/editor/Monster.cpp"
 name = "SeersHut"
 object = 29
 source = "src/editor/SeersHut.cpp"
+
+[[unit]]
+name = "MapEditWnd"
+object = 55
+source = "src/editor/MapEditWnd.cpp"
