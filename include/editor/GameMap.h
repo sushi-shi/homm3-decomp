@@ -688,21 +688,6 @@ public:
             delete _m_pWrapper;
     }
 
-    vector<_TObjectCellInfo>* get()
-    {
-        if (_m_pWrapper == NULL)
-            construct();
-        else if (_m_pWrapper->m_refCnt > 1)
-            _split();
-        return &_m_pWrapper->m_a;
-    }
-    const vector<_TObjectCellInfo>* get() const
-    {
-        return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
-    }
-    vector<_TObjectCellInfo>& operator*() { return *get(); }
-    const vector<_TObjectCellInfo>& operator*() const { return *get(); }
-
     void construct()
     {
         if ((_m_pWrapper = new _TWrapper) == NULL)
@@ -714,6 +699,21 @@ public:
             delete _m_pWrapper;
         _m_pWrapper = NULL;
     }
+
+    vector<_TObjectCellInfo>* get()
+    {
+        if (_m_pWrapper == NULL)
+            construct();
+        else if (_m_pWrapper->m_refCnt > 1)
+            _split();
+        return &_m_pWrapper->m_a;
+    }
+    vector<_TObjectCellInfo>& operator*() { return *get(); }
+    const vector<_TObjectCellInfo>* get() const
+    {
+        return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
+    }
+    const vector<_TObjectCellInfo>& operator*() const { return *get(); }
 
 private:
     struct _TWrapper {
@@ -755,21 +755,6 @@ public:
             delete _m_pWrapper;
     }
 
-    vector<unsigned int>* get()
-    {
-        if (_m_pWrapper == NULL)
-            construct();
-        else if (_m_pWrapper->m_refCnt > 1)
-            _split();
-        return &_m_pWrapper->m_a;
-    }
-    const vector<unsigned int>* get() const
-    {
-        return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
-    }
-    vector<unsigned int>& operator*() { return *get(); }
-    const vector<unsigned int>& operator*() const { return *get(); }
-
     void construct()
     {
         if ((_m_pWrapper = new _TWrapper) == NULL)
@@ -781,6 +766,21 @@ public:
             delete _m_pWrapper;
         _m_pWrapper = NULL;
     }
+
+    vector<unsigned int>* get()
+    {
+        if (_m_pWrapper == NULL)
+            construct();
+        else if (_m_pWrapper->m_refCnt > 1)
+            _split();
+        return &_m_pWrapper->m_a;
+    }
+    vector<unsigned int>& operator*() { return *get(); }
+    const vector<unsigned int>* get() const
+    {
+        return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
+    }
+    const vector<unsigned int>& operator*() const { return *get(); }
 
 private:
     struct _TWrapper {
