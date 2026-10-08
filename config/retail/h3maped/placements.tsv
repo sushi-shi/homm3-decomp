@@ -701,7 +701,7 @@ rva	size	kind	name	unit	evidence
 0x00176020	0x10	data	__TI1?AW4t_open_errors@ResourceManager@@	resourcemanager	referenced by ?Open@ResourceManager@@YA_N_N0PAH@Z at +0xda
 0x0017c5a0	0x11	data	??_C@_0BB@NCJF@?$AA?$AB?$AB?$AC?$AB?$AC?$AC?$AD?$AB?$AC?$AC?$AD?$AC?$AD?$AD?$AE?$AA@	objecttype	referenced by ?count@?$bitset@$09@std@@QBEIXZ at +0x10
 0x0017c610	0x1b	data	??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@	resource	referenced by ?_Xran@?$bitset@$0DA@@std@@ABEXXZ at +0x1f
-0x0017c7cc	0x4	data	?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A	artifact	referenced by ?placeSeerHutForArtifact@type_random_map_generator@@QAEEPAVt_quest_artifact@@@Z at +0x20
+0x0017c7cc	0x4	data	?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A	artifact	referenced by ?OnInitDialog@TSelectArtifactDlg@@MAEHXZ at +0x8f
 0x0017c7d0	0x4	data	?g_combinationArtifacts@@3PBUTCombinationArtifact@@B	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0x1be (retail +0x273, by operand order)
 0x0017c7d4	0xd	data	??_C@_0N@GIEN@artslots?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x0017c7e4	0xd	data	??_C@_0N@GEJI@artraits?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
