@@ -19,6 +19,15 @@ flags = ["-O0", "-mcpu=pentiumpro", "-fpermissive"]
 defines = ["HOMM3_TARGET_LOKI=1"]
 prefix = "include/gcc_prefix.h"
 
+# Glade's generated C (main.c, support.c): the gcc driver and cc1. Their
+# calls to glibc's extern-inline stat stay external calls (C keeps no body at
+# -O0, where g++ would emit one), and their names are unmangled. Both objects
+# have .eh_frame CIEs, which gcc emits for C only with -fexceptions.
+[profiles.glade-c]
+driver = "gcc"
+flags = ["-O0", "-mcpu=pentiumpro", "-fexceptions"]
+defines = ["HOMM3_TARGET_LOKI=1"]
+
 [[unit]]
 name = "Error"
 object = 10
@@ -243,3 +252,9 @@ source = "src/editor/TerrainToolkit.cpp"
 name = "ResourceQuantitiesDlg"
 object = 26
 source = "src/editor/ResourceQuantitiesDlg.cpp"
+
+[[unit]]
+name = "support"
+object = 1
+profile = "glade-c"
+source = "src/editor/loki/support.c"
