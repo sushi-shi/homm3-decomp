@@ -10,11 +10,11 @@
 
 #include "exceptions.h"
 #include "editor/cppbridge.h"
+#include "editor/EditTownEventSheet.h"
 #include "editor/EditTimedEventGeneralPage.h"
 #include "editor/EditTimedEventResourcesPage.h"
 #include "editor/EditTownEventBuildingsPage.h"
 #include "editor/EditTownEventCreaturesPage.h"
-#include "editor/EditTownEventSheet.h"
 
 TEditTownEventSheet* editTownEventSheetModal = NULL;
 
