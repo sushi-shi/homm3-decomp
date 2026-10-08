@@ -2973,6 +2973,9 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 //   4 4 G 0 0
 //   3 3 2 1 1
 //   3 3 2 1 1
+// The fan bounds read through the point and map accessors: those free /Ob2
+// sites refuse the entrance translation's position constructor (nested
+// budget 52 against 48) while addObject still expands its own (92.07%).
 VA(0x00535110, 0x4AB)
 MAC_ADDRESS(0x233028, 0x6a8) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
@@ -3044,8 +3047,8 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         while (count--) {
             TPoint nearby = g_rmgDirections[fanDirection]
                 + TRmgVector(point.m_x, point.m_y);
-            if (nearby.m_x >= 0 && nearby.m_x < m_map.m_mapWidth
-                && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
+            if (nearby.getX() >= 0 && nearby.getX() < m_map.getWidth()
+                && nearby.getY() >= 0 && nearby.getY() < m_map.getHeight()) {
                 TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y);
                 if (!next->hasObstacleFill() && !next->hasPathClearance()
                     && next->isPassable())
