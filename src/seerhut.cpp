@@ -111,7 +111,7 @@ DC_ADDRESS(0x12cd28, 0x35c)
 MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 bool initializeSeerHutText()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
     if (!sheet)
         return 0;
@@ -131,7 +131,7 @@ bool initializeSeerHutText()
         g_seerHutNames.push_back(name);
     }
 
-    ResourceManager::dispose(sheet);
+    ResourceManager::Dispose(sheet);
     return 1;
 }
 

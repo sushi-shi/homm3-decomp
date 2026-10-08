@@ -380,7 +380,7 @@ DC_ADDRESS(0x160ffc, 0x20)
 MAC_ADDRESS(0x1ad3c0, 0x44)
 unsigned char initializeGeneralText()
 {
-    g_generalText = ResourceManager::getText(
+    g_generalText = ResourceManager::GetText(
         DATA_COMPGEN(0x006885fc, generalTextName, "genrltxt.txt"));
     return g_generalText != 0;
 }
@@ -390,7 +390,7 @@ DC_ADDRESS(0x16101c, 0x4c)
 MAC_ADDRESS(0x1ad404, 0xa4)
 unsigned char initializeCustomCampaignText()
 {
-    g_customCampText = ResourceManager::getText(
+    g_customCampText = ResourceManager::GetText(
         DATA_COMPGEN(0x0068860c, campaignButtonTextName, "campbttn.txt"));
     if (!g_customCampText)
         return 0;
@@ -404,7 +404,7 @@ DC_ADDRESS(0x161068, 0xa4)
 MAC_ADDRESS(0x1ad4a8, 0xa0)
 unsigned char initializeMineEventText()
 {
-    g_mineEventTextResource = ResourceManager::getText(
+    g_mineEventTextResource = ResourceManager::GetText(
         DATA_COMPGEN(0x0068861c, mineEventTextName, "mineevnt.txt"));
     if (!g_mineEventTextResource)
         return 0;
@@ -418,7 +418,7 @@ DC_ADDRESS(0x16110c, 0x4e)
 MAC_ADDRESS(0x1ad548, 0xa4)
 unsigned char initializeCampaignRegionNames()
 {
-    g_campaignRegionNamesResource = ResourceManager::getSpreadsheet(
+    g_campaignRegionNamesResource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0068862c, campaignRegionsName, "regions.txt"));
     if (!g_campaignRegionNamesResource)
         return 0;
@@ -432,7 +432,7 @@ DC_ADDRESS(0x16115c, 0xd4)
 MAC_ADDRESS(0x1ad5ec, 0x1f0)
 unsigned char initializeHighScoreDefaults()
 {
-    g_highScoreDefaults = ResourceManager::getSpreadsheet(
+    g_highScoreDefaults = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00688638, highScoreDefaultsName, "CampHigh.txt"));
     if (!g_highScoreDefaults)
         return 0;
@@ -458,7 +458,7 @@ DC_ADDRESS(0x161230, 0x4a)
 MAC_ADDRESS(0x1ad7dc, 0xa0)
 unsigned char initializeTerrainNames()
 {
-    g_terrainNamesResource = ResourceManager::getText(
+    g_terrainNamesResource = ResourceManager::GetText(
         DATA_COMPGEN(0x00688648, terrainNamesName, "terrname.txt"));
     if (!g_terrainNamesResource)
         return 0;
@@ -472,7 +472,7 @@ DC_ADDRESS(0x16127c, 0x4a)
 MAC_ADDRESS(0x1ad87c, 0xa0)
 unsigned char initializeAdvObjNames()
 {
-    g_advObjNames = ResourceManager::getText(
+    g_advObjNames = ResourceManager::GetText(
         DATA_COMPGEN(0x006604b4, advObjNamesName, "objnames.txt"));
     if (!g_advObjNames)
         return 0;
@@ -486,7 +486,7 @@ DC_ADDRESS(0x1612c8, 0x4a)
 MAC_ADDRESS(0x1ad91c, 0xa0)
 unsigned char initializeResourceNames()
 {
-    g_resourceNamesResource = ResourceManager::getText(
+    g_resourceNamesResource = ResourceManager::GetText(
         DATA_COMPGEN(0x00688658, resourceNamesName, "restypes.txt"));
     if (!g_resourceNamesResource)
         return 0;
@@ -500,7 +500,7 @@ DC_ADDRESS(0x161314, 0x4a)
 MAC_ADDRESS(0x1ad9bc, 0xa0)
 unsigned char initializeMineNames()
 {
-    g_mineNames = ResourceManager::getText(
+    g_mineNames = ResourceManager::GetText(
         DATA_COMPGEN(0x00688668, mineNamesName, "minename.txt"));
     if (!g_mineNames)
         return 0;
@@ -514,7 +514,7 @@ DC_ADDRESS(0x161360, 0xc6)
 MAC_ADDRESS(0x1ada5c, 0xb4)
 unsigned char initializePlayerColors()
 {
-    g_playerColors = ResourceManager::getText(
+    g_playerColors = ResourceManager::GetText(
         DATA_COMPGEN(0x00688678, playerColorsName, "plcolors.txt"));
     if (!g_playerColors)
         return 0;
@@ -531,7 +531,7 @@ DC_ADDRESS(0x161428, 0x4a)
 MAC_ADDRESS(0x1adb10, 0xa0)
 unsigned char initializePrimaryStatNames()
 {
-    g_primaryStatNames = ResourceManager::getText(
+    g_primaryStatNames = ResourceManager::GetText(
         DATA_COMPGEN(0x00688688, primaryStatNamesName, "priskill.txt"));
     if (!g_primaryStatNames)
         return 0;
@@ -545,7 +545,7 @@ DC_ADDRESS(0x161474, 0x6e)
 MAC_ADDRESS(0x1adbb0, 0xdc)
 unsigned char initializeSecondarySkillLevelNames()
 {
-    g_secondarySkillLevelNames = ResourceManager::getText(
+    g_secondarySkillLevelNames = ResourceManager::GetText(
         DATA_COMPGEN(0x00688698, skillLevelNamesName, "skilllev.txt"));
     if (!g_secondarySkillLevelNames)
         return 0;
@@ -561,7 +561,7 @@ DC_ADDRESS(0x1614e4, 0xa8)
 MAC_ADDRESS(0x1adc8c, 0x13c)
 unsigned char initializeNeutralBuildingText()
 {
-    g_neutralBuildingText = ResourceManager::getSpreadsheet(
+    g_neutralBuildingText = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x006886a8, neutralBuildingTextName, "bldgneut.txt"));
     if (!g_neutralBuildingText)
         return 0;
@@ -585,7 +585,7 @@ DC_ADDRESS(0x16158c, 0x10c)
 MAC_ADDRESS(0x1addc8, 0x118)
 unsigned char initializeSpecialBuildingText()
 {
-    g_specialBuildingText = ResourceManager::getSpreadsheet(
+    g_specialBuildingText = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x006886b8, specialBuildingTextName, "bldgspec.txt"));
     if (!g_specialBuildingText)
         return 0;
@@ -614,7 +614,7 @@ DC_ADDRESS(0x161698, 0xae)
 MAC_ADDRESS(0x1adee0, 0x118)
 unsigned char initializeDwellingText()
 {
-    g_dwellingText = ResourceManager::getSpreadsheet(
+    g_dwellingText = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x006886c8, dwellingTextName, "dwelling.txt"));
     if (!g_dwellingText)
         return 0;
@@ -641,7 +641,7 @@ DC_ADDRESS(0x161748, 0x8e)
 MAC_ADDRESS(0x1adff8, 0xdc)
 unsigned char initializeTownNameText()
 {
-    g_townNameText = ResourceManager::getSpreadsheet(
+    g_townNameText = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x006886d8, townNameTextName, "townname.txt"));
     if (!g_townNameText)
         return 0;
@@ -664,7 +664,7 @@ DC_ADDRESS(0x1617d8, 0x4a)
 MAC_ADDRESS(0x1ae0d4, 0xa0)
 unsigned char initializeHeroBioText()
 {
-    g_heroBioText = ResourceManager::getText(
+    g_heroBioText = ResourceManager::GetText(
         DATA_COMPGEN(0x006886e8, heroBioTextName, "HeroBios.txt"));
     if (!g_heroBioText)
         return 0;
@@ -678,7 +678,7 @@ DC_ADDRESS(0x161824, 0x4a)
 MAC_ADDRESS(0x1ae174, 0xa0)
 unsigned char initializeCastleText()
 {
-    g_castleText = ResourceManager::getText(
+    g_castleText = ResourceManager::GetText(
         DATA_COMPGEN(0x006886f8, castleTextName, "CastInfo.txt"));
     if (!g_castleText)
         return 0;
@@ -692,7 +692,7 @@ DC_ADDRESS(0x161870, 0x4a)
 MAC_ADDRESS(0x1ae214, 0xa0)
 unsigned char initializeTavernText()
 {
-    g_tavernText = ResourceManager::getText(
+    g_tavernText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688708, tavernTextName, "TvrnInfo.txt"));
     if (!g_tavernText)
         return 0;
@@ -706,7 +706,7 @@ DC_ADDRESS(0x1618bc, 0xae)
 MAC_ADDRESS(0x1ae2b4, 0xa0)
 unsigned char initializeHallText()
 {
-    g_hallText = ResourceManager::getText(
+    g_hallText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688718, hallTextName, "HallInfo.txt"));
     if (!g_hallText)
         return 0;
@@ -720,7 +720,7 @@ DC_ADDRESS(0x16196c, 0x4a)
 MAC_ADDRESS(0x1ae354, 0xa0)
 unsigned char initializeTownText()
 {
-    g_townText = ResourceManager::getText(
+    g_townText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688728, townTextName, "TCommand.txt"));
     if (!g_townText)
         return 0;
@@ -734,7 +734,7 @@ DC_ADDRESS(0x1619b8, 0x4a)
 MAC_ADDRESS(0x1ae3f4, 0xa0)
 unsigned char initializeOverviewText()
 {
-    g_ovText = ResourceManager::getText(
+    g_ovText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688738, overviewTextName, "Overview.txt"));
     if (!g_ovText)
         return 0;
@@ -748,7 +748,7 @@ DC_ADDRESS(0x161a04, 0x4a)
 MAC_ADDRESS(0x1ae494, 0xa0)
 unsigned char initializeHeroText()
 {
-    g_heroText = ResourceManager::getText(
+    g_heroText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688748, heroTextName, "HeroScrn.txt"));
     if (!g_heroText)
         return 0;
@@ -762,7 +762,7 @@ DC_ADDRESS(0x161a50, 0x54)
 MAC_ADDRESS(0x1ae534, 0xa8)
 unsigned char initializeCampaignDialogText()
 {
-    g_campaignDialogResource = ResourceManager::getSpreadsheet(
+    g_campaignDialogResource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00688758, campaignDialogName, "CampDiag.txt"));
     if (!g_campaignDialogResource)
         return 0;
@@ -776,7 +776,7 @@ DC_ADDRESS(0x161aa4, 0x40)
 MAC_ADDRESS(0x1ae5dc, 0x84)
 unsigned char initializeCreditsText()
 {
-    g_creditsText = ResourceManager::getText(
+    g_creditsText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688768, creditsTextName, "Credits.txt"));
     if (!g_creditsText)
         return 0;
@@ -789,7 +789,7 @@ VA(0x005b9880, 0x30)
 MAC_ADDRESS(0x1ae660, 0xa0)
 unsigned char initializeTentColorText()
 {
-    g_tentColorText = ResourceManager::getText(
+    g_tentColorText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688774, tentColorTextName, "TentColr.txt"));
     if (!g_tentColorText)
         return 0;
@@ -810,7 +810,7 @@ unsigned char initializeHelpText()
     int i;
     unsigned int j;
 
-    g_helpText = ResourceManager::getSpreadsheet(
+    g_helpText = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00688784, helpTextName, "Help.txt"));
     if (!g_helpText)
         return 0;
@@ -1035,7 +1035,7 @@ unsigned char initializeArrayText()
     int i;
     int j;
 
-    g_arrayText = ResourceManager::getText(
+    g_arrayText = ResourceManager::GetText(
         DATA_COMPGEN(0x00688790, arrayTextName, "Arraytxt.txt"));
     if (!g_arrayText)
         return 0;

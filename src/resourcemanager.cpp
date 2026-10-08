@@ -69,9 +69,9 @@ public:
 // _stricmp. Complete's map node has its key at +0xc and resource* at +0x1c.
 class TCacheMapKey {
 public:
-    char m_name[13];
-    TCacheMapKey(const char* name);
-    bool operator<(const TCacheMapKey& other) const;
+    char name[13];
+    TCacheMapKey(const char* n);
+    bool operator<(const TCacheMapKey& y) const;
 };
 
 typedef std::map<TCacheMapKey, resource*> TCacheMap;
@@ -81,13 +81,14 @@ SIZE(TCacheMap, 16);
 Bitmap16Bit* loadBitmap16(const char* name);
 TPalette16* loadPalette(const char* name);
 TPalette16* loadPaletteData(const char* name, TAbstractFile* stream);
-TPalette24* getPalette24(const char* name);
+TPalette24* GetPalette24(const char* name);
 TPalette24* loadPalette24Data(const char* name, TAbstractFile* stream);
 font* loadFont(const char* name);
 font* loadFontData(const char* name, TAbstractFile* stream, int fileSize);
 TTextResource* loadText(const char* name);
 TTextResource* loadTextData(const char* name, TAbstractFile* stream,
                             int fileSize);
+
 TSpreadsheetResource* loadSpreadsheet(const char* name);
 TSpreadsheetResource* loadSpreadsheetData(const char* name,
                                           TAbstractFile* stream,
@@ -141,7 +142,7 @@ MAC_ADDRESS(0x1521d0, 0x40)
 // DC 0x1229a0. Windows 0x5594b9..0x5594df expands the twelve-byte copy,
 // terminator and tree insertion. Mac instead inserts into its 16384-entry
 // hash/pointer array through 0x151ff4; that backend has no Windows tree key.
-void ResourceManager::addToCache(resource* value)
+void ResourceManager::AddToCache(resource* value)
 {
     g_resourceCache.insert(std::make_pair(value->get_Name(), value));
     value->AddRef();
@@ -162,18 +163,24 @@ DATA(0x00694d68) unsigned int Bitmap16Bit::red_mask;
 DATA(0x0069cc60) unsigned int TPalette16::green_mask;
 DATA(0x0069cc64) unsigned int TPalette16::red_mask;
 DATA(0x0069cc68) unsigned int TPalette16::blue_mask;
-DATA(0x0069e598) unsigned long g_spriteMaskFirst;
-DATA(0x0069e59c) unsigned long g_spriteMaskGreen;
+// SetPixelFormat's channel masks and their derived shift/bit counts; Loki
+// h3maped's SetPixelFormat stores its first argument in RedMask
+// (0x850d2d4) and exports all nine as ResourceManager:: objects.
+// Only this unit names the nine, so they are declared by their definitions.
+namespace ResourceManager {
+DATA(0x0069e598) unsigned long RedMask;
+DATA(0x0069e59c) unsigned long GreenMask;
+DATA(0x0069d858) unsigned long BlueMask;
 // Toggled by the retail adventure-map command that dispatches
 // SaturateGraphics/RemapGraphics; every resource loader consults the byte.
-DATA(0x0069d858) unsigned long g_spriteMaskLast;
-DATA(0x0069e5b0) unsigned char g_graphicsSaturated;
-DATA(0x0069d868) int g_firstMaskShift;
-DATA(0x0069d860) int g_firstMaskBits;
-DATA(0x0069d864) int g_greenMaskShift;
-DATA(0x0069d854) int g_greenMaskBits;
-DATA(0x0069d85c) int g_lastMaskShift;
-DATA(0x0069e5a0) int g_lastMaskBits;
+DATA(0x0069e5b0) unsigned char SaturatedGraphicsEasterEgg;
+DATA(0x0069d868) int RedShift;
+DATA(0x0069d860) int RedBits;
+DATA(0x0069d864) int GreenShift;
+DATA(0x0069d854) int GreenBits;
+DATA(0x0069d85c) int BlueShift;
+DATA(0x0069e5a0) int BlueBits;
+}
 // Only this TU uses the path. File-static linkage makes CodeWarrior address
 // the same-TU object directly through TOC 1+0x5494, as at Mac 0:0x15221c.
 DATA(0x0069e4f0) static std::string g_resourcePath;
@@ -337,7 +344,7 @@ void __fastcall reportMissingSpriteResource(const char* caller,
 VA(0x00559e30, 0x1E5)
 DC_ADDRESS(0x1213a0, 0x182)
 MAC_ADDRESS(0x1523fc, 0x1f4)
-void ResourceManager::remapGraphics()
+void ResourceManager::RemapGraphics()
 {
     for (TCacheMap::iterator position = g_resourceCache.begin();
          position != g_resourceCache.end(); position++) {
@@ -391,7 +398,7 @@ void ResourceManager::remapGraphics()
 VA(0x0055a020, 0x221)
 DC_ADDRESS(0x121524, 0x216)
 MAC_ADDRESS(0x152700, 0x224)
-void ResourceManager::saturateGraphics()
+void ResourceManager::SaturateGraphics()
 {
     for (TCacheMap::iterator position = g_resourceCache.begin();
          position != g_resourceCache.end(); position++) {
@@ -536,7 +543,7 @@ static LODFile* findBitmapResource(const char* name)
 VA(0x0055a250, 0x2F1)
 DC_ADDRESS(0x12173c, 0x144)
 MAC_ADDRESS(0x152924, 0x210)  // sole retail caller + two flags/error output
-bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
+bool ResourceManager::Open(bool openSprites, bool openBitmaps, int* errorCode)
 {
     try {
         std::vector<int> openedArchives;
@@ -598,9 +605,9 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 VA(0x0055a550, 0x67)
 DC_ADDRESS(0x121880, 0x1c)
 MAC_ADDRESS(0x152b9c, 0x60)
-void ResourceManager::close()
+void ResourceManager::Close()
 {
-    expunge();
+    Expunge();
 
     for (int i = 0; i < 8; ++i)
         g_resourceLodSlots[i].m_file.clear();
@@ -609,7 +616,7 @@ void ResourceManager::close()
 VA(0x0055a5c0, 0xE2)
 DC_ADDRESS(0x12189c, 0x26)
 MAC_ADDRESS(0x152bfc, 0x3c)
-void ResourceManager::setPath(const char* path)
+void ResourceManager::SetPath(const char* path)
 {
 #if defined(HOMM3_TARGET_MAC)
     // Mac 0x152bfc assigns the path unchanged; MSL has no _fullpath.
@@ -624,47 +631,47 @@ void ResourceManager::setPath(const char* path)
 VA(0x0055a6b0, 0xEF)
 DC_ADDRESS(0x1218c4, 0x168)
 MAC_ADDRESS(0x152c38, 0x16c)
-void ResourceManager::setPixelFormat(unsigned long redMask,
+void ResourceManager::SetPixelFormat(unsigned long redMask,
                                      unsigned long greenMask,
                                      unsigned long blueMask)
 {
     CSprite::SetPixelFormat(redMask, greenMask, blueMask);
     Bitmap16Bit::SetPixelFormat(redMask, greenMask, blueMask);
     TPalette16::SetPixelFormat(redMask, greenMask, blueMask);
-    g_spriteMaskFirst = redMask;
-    g_spriteMaskGreen = greenMask;
-    g_spriteMaskLast = blueMask;
+    RedMask = redMask;
+    GreenMask = greenMask;
+    BlueMask = blueMask;
 
-    g_firstMaskShift = 0;
+    RedShift = 0;
     while (!(redMask & 1) && redMask) {
         redMask >>= 1;
-        ++g_firstMaskShift;
+        ++RedShift;
     }
-    g_firstMaskBits = 0;
+    RedBits = 0;
     while (redMask) {
-        ++g_firstMaskBits;
+        ++RedBits;
         redMask >>= 1;
     }
 
-    g_greenMaskShift = 0;
+    GreenShift = 0;
     while (!(greenMask & 1) && greenMask) {
         greenMask >>= 1;
-        ++g_greenMaskShift;
+        ++GreenShift;
     }
-    g_greenMaskBits = 0;
+    GreenBits = 0;
     while (greenMask) {
-        ++g_greenMaskBits;
+        ++GreenBits;
         greenMask >>= 1;
     }
 
-    g_lastMaskShift = 0;
+    BlueShift = 0;
     while (!(blueMask & 1) && blueMask) {
         blueMask >>= 1;
-        ++g_lastMaskShift;
+        ++BlueShift;
     }
-    g_lastMaskBits = 0;
+    BlueBits = 0;
     while (blueMask) {
-        ++g_lastMaskBits;
+        ++BlueBits;
         blueMask >>= 1;
     }
 }
@@ -679,7 +686,7 @@ VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
 template <class T>
 static void adjustLoadedResourceSaturation(T* value)
 {
-    if (g_graphicsSaturated)
+    if (ResourceManager::SaturatedGraphicsEasterEgg)
         value->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 }
 
@@ -693,9 +700,9 @@ static void adjustLoadedResourceSaturation(T* value)
 VA(0x0055a800, 0x41F)
 DC_ADDRESS(0x121ac8, 0x194)
 MAC_ADDRESS(0x152df8, 0x1d0)  // bitmapBorder::SetImage loader;
-Bitmap816* ResourceManager::getBitmap816(const char* name)
+Bitmap816* ResourceManager::GetBitmap816(const char* name)
 {
-    Bitmap816* cached = static_cast<Bitmap816*>(getFromCache(name));
+    Bitmap816* cached = static_cast<Bitmap816*>(GetFromCache(name));
     if (cached)
         return cached;
 
@@ -711,11 +718,11 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
         fclose(file);
         result = new Bitmap816(
             name, g_resourcePath.c_str(),
-            g_firstMaskBits, g_firstMaskShift,
-            g_greenMaskBits, g_greenMaskShift,
-            g_lastMaskBits, g_lastMaskShift);
+            RedBits, RedShift,
+            GreenBits, GreenShift,
+            BlueBits, BlueShift);
         if (result)
-            addToCache(result);
+            AddToCache(result);
         return result;
     }
 
@@ -751,14 +758,14 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 
             TPalette24 palette24;
             lodFile->read(palette24.Palette, sizeof(palette24.Palette));
-            if (g_graphicsSaturated)
+            if (SaturatedGraphicsEasterEgg)
                 palette24.AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
             TPalette16 palette16(
                 palette24,
-                g_firstMaskBits, g_firstMaskShift,
-                g_greenMaskBits, g_greenMaskShift,
-                g_lastMaskBits, g_lastMaskShift);
+                RedBits, RedShift,
+                GreenBits, GreenShift,
+                BlueBits, BlueShift);
 
             result = new Bitmap816(
                 name, bmpHeader.m_width, bmpHeader.m_height, data.get(),
@@ -768,7 +775,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
         }
 
         if (result)
-            addToCache(result);
+            AddToCache(result);
     }
 
     return result;
@@ -776,16 +783,16 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 
 VA(0x0055ac20, 0x20)
 DC_ADDRESS(0x122bd0, 0x28)
-ResourceManager::TCacheMapKey::TCacheMapKey(const char* value)
+ResourceManager::TCacheMapKey::TCacheMapKey(const char* n)
 {
-    strncpy(m_name, value, 12);
-    m_name[12] = 0;
+    strncpy(name, n, 12);
+    name[12] = 0;
 }
 
 DC_ADDRESS(0x122bf8, 0x1c)
-bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
+bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& y) const
 {
-    return _stricmp(m_name, other.m_name) < 0;
+    return _stricmp(name, y.name) < 0;
 }
 
 VA(0x0055ac40, 0x388)
@@ -800,7 +807,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 
         std::auto_ptr<Bitmap24Bit> source(
             new Bitmap24Bit(name, g_resourcePath.c_str()));
-        if (g_graphicsSaturated)
+        if (SaturatedGraphicsEasterEgg)
             source->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
         result = new Bitmap16Bit(
@@ -837,7 +844,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 
         std::auto_ptr<Bitmap24Bit> source(new Bitmap24Bit(
             name, header.m_width, header.m_height, data.get(), header.m_dataSize));
-        if (g_graphicsSaturated)
+        if (SaturatedGraphicsEasterEgg)
             source->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
         result = new Bitmap16Bit(
@@ -856,15 +863,15 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 // performs the shared cache lookup before loading, then returns with ret.
 VA(0x0055afd0, 0x8A)
 MAC_ADDRESS(0x153204, 0x54)
-Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
+Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
 {
-    Bitmap16Bit* cached = static_cast<Bitmap16Bit*>(getFromCache(name));
+    Bitmap16Bit* cached = static_cast<Bitmap16Bit*>(GetFromCache(name));
     if (cached)
         return cached;
 
     Bitmap16Bit* loaded = loadBitmap16(name);
     if (loaded)
-        addToCache(loaded);
+        AddToCache(loaded);
     return loaded;
 }
 
@@ -891,9 +898,9 @@ TPalette16* ResourceManager::loadPaletteData(const char* name,
     TPalette24 palette24(paletteData);
     adjustLoadedResourceSaturation(&palette24);
     return new TPalette16(name, palette24,
-        g_firstMaskBits, g_firstMaskShift,
-        g_greenMaskBits, g_greenMaskShift,
-        g_lastMaskBits, g_lastMaskShift);
+        RedBits, RedShift,
+        GreenBits, GreenShift,
+        BlueBits, BlueShift);
 }
 
 VA(0x0055b060, 0x377)
@@ -947,15 +954,15 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 VA(0x0055b3e0, 0x8A)
 DC_ADDRESS(0x121d90, 0x138)
 MAC_ADDRESS(0x1533e0, 0x54)  // dc public GetPalette + retail getter family
-TPalette16* ResourceManager::getPalette(const char* name)
+TPalette16* ResourceManager::GetPalette(const char* name)
 {
-    TPalette16* cached = static_cast<TPalette16*>(getFromCache(name));
+    TPalette16* cached = static_cast<TPalette16*>(GetFromCache(name));
     if (cached)
         return cached;
 
     TPalette16* loaded = loadPalette(name);
     if (loaded)
-        addToCache(loaded);
+        AddToCache(loaded);
     return loaded;
 }
 
@@ -988,7 +995,7 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 VA(0x0055b470, 0x2D1)
 DC_ADDRESS(0x121ec8, 0xe4)
 MAC_ADDRESS(0x1534dc, 0x84)  // dc/hd public identity + retail palette-file shape
-TPalette24* ResourceManager::getPalette24(const char* name)
+TPalette24* ResourceManager::GetPalette24(const char* name)
 {
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
     if (file) {
@@ -1056,16 +1063,16 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
         new font(name, spec, dataSize, data.get()));
     data = TAutoArrayPtr<unsigned char>(0);
 
-    TPalette16* palette = getPalette("game.pal");
+    TPalette16* palette = GetPalette("game.pal");
     if (palette) {
         try {
             result.get()->SetPalette(*palette);
         }
         catch (...) {
-            ResourceManager::dispose(palette);
+            ResourceManager::Dispose(palette);
             throw;
         }
-        ResourceManager::dispose(palette);
+        ResourceManager::Dispose(palette);
     }
 
     return result.release();
@@ -1141,15 +1148,15 @@ font* ResourceManager::loadFont(const char* name)
 VA(0x0055bb00, 0x8A)
 DC_ADDRESS(0x121fac, 0xe0)
 MAC_ADDRESS(0x153944, 0x54)
-font* ResourceManager::getFont(const char* name)
+font* ResourceManager::GetFont(const char* name)
 {
-    font* cached = static_cast<font*>(getFromCache(name));
+    font* cached = static_cast<font*>(GetFromCache(name));
     if (cached)
         return cached;
 
     font* loaded = loadFont(name);
     if (loaded)
-        addToCache(loaded);
+        AddToCache(loaded);
     return loaded;
 }
 
@@ -1212,15 +1219,15 @@ TTextResource* ResourceManager::loadText(const char* name)
 VA(0x0055bdd0, 0x8A)
 DC_ADDRESS(0x12208c, 0xd8)
 MAC_ADDRESS(0x153ad8, 0x54)
-TTextResource* ResourceManager::getText(const char* name)
+TTextResource* ResourceManager::GetText(const char* name)
 {
-    TTextResource* cached = static_cast<TTextResource*>(getFromCache(name));
+    TTextResource* cached = static_cast<TTextResource*>(GetFromCache(name));
     if (cached)
         return cached;
 
     TTextResource* loaded = loadText(name);
     if (loaded)
-        addToCache(loaded);
+        AddToCache(loaded);
     return loaded;
 }
 
@@ -1280,22 +1287,22 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 VA(0x0055c0a0, 0x8A)
 DC_ADDRESS(0x122164, 0x98)
 MAC_ADDRESS(0x153c6c, 0x54)
-TSpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
+TSpreadsheetResource* ResourceManager::GetSpreadsheet(const char* name)
 {
-    TSpreadsheetResource* cached = static_cast<TSpreadsheetResource*>(getFromCache(name));
+    TSpreadsheetResource* cached = static_cast<TSpreadsheetResource*>(GetFromCache(name));
     if (cached)
         return cached;
 
     TSpreadsheetResource* loaded = loadSpreadsheet(name);
     if (loaded)
-        addToCache(loaded);
+        AddToCache(loaded);
     return loaded;
 }
 
 // Original: ResourceManager::Expunge; resourcemanager.cpp:2359
 DC_ADDRESS(0x1228ac, 0x7c)
 MAC_ADDRESS(0x154748, 0x7c)
-void ResourceManager::expunge()
+void ResourceManager::Expunge()
 {
     TCacheMap::iterator position = g_resourceCache.begin();
     while (position != g_resourceCache.end()) {
@@ -1315,7 +1322,7 @@ void ResourceManager::expunge()
 // be admitted as the same map storage solely through an address binding.
 DC_ADDRESS(0x122928, 0x5c)
 MAC_ADDRESS(0x152194, 0x3c)
-resource* ResourceManager::getFromCache(const char* name)
+resource* ResourceManager::GetFromCache(const char* name)
 {
     TCacheMap::iterator found = g_resourceCache.find(name);
     if (found == g_resourceCache.end())
@@ -1328,13 +1335,13 @@ resource* ResourceManager::getFromCache(const char* name)
 // Original: ResourceManager::Report; resourcemanager.cpp:2404
 // Optimized release hook: the executable body is only return true.
 DC_ADDRESS(0x1229f8, 0x68)
-unsigned char ResourceManager::report(const char* filename)
+unsigned char ResourceManager::Report(const char* filename)
 {
     return 1;
 }
 
 namespace ResourceManager {
-bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
+bool GetSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
 }
 
 TSoundHeaderDescriptor::TSoundHeaderDescriptor(
@@ -1357,7 +1364,7 @@ TSoundHeaderDescriptor g_soundHeaderDescriptors[3] = {
 VA(0x0055c130, 0x28F)
 DC_ADDRESS(0x1221fc, 0xe4)
 MAC_ADDRESS(0x153cc0, 0x144)  // dc GetSoundFile + caller/record layout
-bool ResourceManager::getSoundFile(const char* localName,
+bool ResourceManager::GetSoundFile(const char* localName,
                                    std::auto_ptr<char>& data,
                                    int* size)
 {
@@ -1440,10 +1447,10 @@ sample* ResourceManager::loadSample(const char* name)
 
     std::auto_ptr<char> data;
     int size;
-    if (!getSoundFile(name, data, &size)) {
+    if (!GetSoundFile(name, data, &size)) {
         reportMissingSample(name);
         DATA(0x006410dc) static const char fallbackName[] = "default.wav";
-        if (!getSoundFile(fallbackName, data, &size)) {
+        if (!GetSoundFile(fallbackName, data, &size)) {
             reportMissingSample(fallbackName);
             return 0;
         }
@@ -1455,15 +1462,15 @@ sample* ResourceManager::loadSample(const char* name)
 VA(0x0055c720, 0x8A)
 DC_ADDRESS(0x1222e0, 0x40)
 MAC_ADDRESS(0x153f78, 0x54)
-sample* ResourceManager::getSample(const char* name)
+sample* ResourceManager::GetSample(const char* name)
 {
-    sample* cached = static_cast<sample*>(getFromCache(name));
+    sample* cached = static_cast<sample*>(GetFromCache(name));
     if (cached)
         return cached;
 
     sample* loaded = loadSample(name);
     if (loaded)
-        addToCache(loaded);
+        AddToCache(loaded);
     return loaded;
 }
 
@@ -1532,9 +1539,9 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 VA(0x0055c7b0, 0x743)
 DC_ADDRESS(0x122320, 0x112)
 MAC_ADDRESS(0x153fcc, 0x618)  // anchor-caller/body records; wall
-CSprite* ResourceManager::getSprite(const char* name)
+CSprite* ResourceManager::GetSprite(const char* name)
 {
-    CSprite* cached = static_cast<CSprite*>(getFromCache(name));
+    CSprite* cached = static_cast<CSprite*>(GetFromCache(name));
     if (cached)
         return cached;
 
@@ -1662,7 +1669,7 @@ CSprite* ResourceManager::getSprite(const char* name)
                        compactHeader.m_dataSize);
             }
 
-            CSpriteFrame* frame = static_cast<CSpriteFrame*>(getFromCache(
+            CSpriteFrame* frame = static_cast<CSpriteFrame*>(GetFromCache(
                 sequence.m_frameNames + frameNameOffset));
 
             if (!frame) {
@@ -1690,7 +1697,7 @@ CSprite* ResourceManager::getSprite(const char* name)
                         croppedHeader.m_encoding);
                 }
 
-                addToCache(frame);
+                AddToCache(frame);
             }
 
             sprite->AddFrame(sequenceNumber, frame);
@@ -1711,15 +1718,15 @@ CSprite* ResourceManager::getSprite(const char* name)
 
     TPalette16 palette16(
         palette24,
-        g_firstMaskBits, g_firstMaskShift,
-        g_greenMaskBits, g_greenMaskShift,
-        g_lastMaskBits, g_lastMaskShift);
+        RedBits, RedShift,
+        GreenBits, GreenShift,
+        BlueBits, BlueShift);
 
     addPal16(sprite, &palette16);
     addPal24(sprite, &palette24);
 
     delete[] fileData;
-    addToCache(sprite);
+    AddToCache(sprite);
     return sprite;
 }
 
@@ -1778,13 +1785,13 @@ TResourceArchiveContext g_resourceArchiveContexts[4] = {
 VA(0x0055cf00, 0x4B)
 DC_ADDRESS(0x122434, 0x4e)
 MAC_ADDRESS(0x1545e4, 0x7c)
-void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
+void ResourceManager::GetBackdrop(const char* resName, Bitmap16Bit* destBmap)
 {
-    Bitmap816* source = getBitmap816(resName);
+    Bitmap816* source = GetBitmap816(resName);
     if (source) {
         source->Draw(0, 0, source->GetWidth(), source->GetHeight(),
                      destBmap, 0, 0, false);
-        ResourceManager::dispose(source);
+        ResourceManager::Dispose(source);
     } else {
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683094, getBackdropErrorContext, "GetBackdrop"),
@@ -1795,7 +1802,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
 VA(0x0055cf50, 0x83)
 DC_ADDRESS(0x122484, 0x16)
 MAC_ADDRESS(0x154660, 0x20)
-LODFile* ResourceManager::pointToSpriteResource(const char* name)
+LODFile* ResourceManager::PointToSpriteResource(const char* name)
 {
     return findSpriteResource(name);
 }
@@ -1803,7 +1810,7 @@ LODFile* ResourceManager::pointToSpriteResource(const char* name)
 VA(0x0055cfe0, 0x83)
 DC_ADDRESS(0x1224b4, 0x16)
 MAC_ADDRESS(0x154680, 0x20)  // bitmap-field twin of PointToSpriteResource
-LODFile* ResourceManager::pointToBitmapResource(const char* name)
+LODFile* ResourceManager::PointToBitmapResource(const char* name)
 {
     return findBitmapResource(name);
 }
@@ -1828,7 +1835,7 @@ LODFile* ResourceManager::pointToBitmapResource(const char* name)
 VA(0x0055d070, 0x5C)
 DC_ADDRESS(0x1224e4, 0x4c)
 MAC_ADDRESS(0x1546a0, 0x88)  // retail archive-list walk + dc/hd name corroboration
-int ResourceManager::getBitmapResourceSize(const char* name)
+int ResourceManager::GetBitmapResourceSize(const char* name)
 {
     const int* archive =
         g_resourceArchiveContexts[g_videoGameState].m_bitmaps.m_indices;
@@ -1843,7 +1850,7 @@ int ResourceManager::getBitmapResourceSize(const char* name)
 VA(0x0055d0d0, 0x11)
 DC_ADDRESS(0x1224cc, 0x18)
 MAC_ADDRESS(0x154728, 0x20)  // caller-family merge + explicit LOD receiver/ret 4
-int ResourceManager::readFromBitmapResource(LODFile* resource, void* data,
+int ResourceManager::ReadFromBitmapResource(LODFile* resource, void* data,
                                              int numBytes)
 {
     return resource->read(data, numBytes);
@@ -1891,7 +1898,7 @@ void CSprite::dispose()
                             // older free sprite-disposal function. Complete
                             // moves this loop into the virtual override;
                             // Mac 0x154900..0x154910 expands that facade.
-                            ResourceManager::dispose(image);
+                            ResourceManager::Dispose(image);
                     }
                 }
             }

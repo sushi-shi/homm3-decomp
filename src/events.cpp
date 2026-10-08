@@ -549,7 +549,7 @@ DC_ADDRESS(0x09028c, 0x24)
 MAC_ADDRESS(0x0a9368, 0x48)
 bool initializeAdventureEventText()
 {
-    g_adventureEventText = ResourceManager::getText(
+    g_adventureEventText = ResourceManager::GetText(
         DATA_COMPGEN(0x00677710, advEventTextName, "advevent.txt"));
     if (!g_adventureEventText)
         return false;
@@ -561,7 +561,7 @@ DC_ADDRESS(0x0902b0, 0x4a)
 MAC_ADDRESS(0x0a93b0, 0xa0)
 bool initializeArtifactEventText()
 {
-    g_artifactEventTextResource = ResourceManager::getText(
+    g_artifactEventTextResource = ResourceManager::GetText(
         DATA_COMPGEN(0x00677720, artEventTextName, "artevent.txt"));
     if (!g_artifactEventTextResource)
         return false;
@@ -575,7 +575,7 @@ DC_ADDRESS(0x0902fc, 0x4a)
 MAC_ADDRESS(0x0a9450, 0xa0)
 bool initializeRandomSignText()
 {
-    g_randomSignTextResource = ResourceManager::getText(
+    g_randomSignTextResource = ResourceManager::GetText(
         DATA_COMPGEN(0x00677730, randomSignTextName, "randsign.txt"));
     if (!g_randomSignTextResource)
         return false;

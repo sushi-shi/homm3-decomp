@@ -675,15 +675,15 @@ DC_ADDRESS(0x11c330, 0x42)
 MAC_ADDRESS(0x211484, 0x64)
 void CChatManager::init()
 {
-    m_chatSample = ResourceManager::getSample(
+    m_chatSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b30, chatSampleName, "chat.wav"));
-    m_playerDropSample = ResourceManager::getSample(
+    m_playerDropSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b20, playerDropSampleName, "playexit.wav"));
-    m_sysMsgSample = ResourceManager::getSample(
+    m_sysMsgSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b14, systemMessageSampleName, "sysmsg.wav"));
-    m_turnDurSample = ResourceManager::getSample(
+    m_turnDurSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682b04, turnDurationSampleName, "timeover.wav"));
-    m_playerEnterSample = ResourceManager::getSample(
+    m_playerEnterSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x00682af4, playerEnterSampleName, "playcome.wav"));
 }
 
@@ -1461,7 +1461,7 @@ void CAnimatedDlg::calcDimensions(
     CTextDialog::calcDimensions(
         text, textFont, winX, winY, winWidth, winHeight);
 
-    m_sprite = ResourceManager::getSprite(m_spriteName);
+    m_sprite = ResourceManager::GetSprite(m_spriteName);
     int spriteWidth;
     int spriteHeight;
     int minY;

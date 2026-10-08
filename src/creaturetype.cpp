@@ -240,13 +240,13 @@ DC_ADDRESS(0x071968, 0x1d8)
 MAC_ADDRESS(0x088a70, 0x37c)
 unsigned char initializeCreatureTypeTraitsTable()
 {
-    TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* traitsSheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00675514, creatureTraitsSpreadsheetName,
                      "crtraits.txt"));
     if (!traitsSheet)
         return 0;
     if (traitsSheet->GetNumberOfRows() < 179) {
-        ResourceManager::dispose(traitsSheet);
+        ResourceManager::Dispose(traitsSheet);
         return 0;
     }
 
@@ -298,7 +298,7 @@ unsigned char initializeCreatureTypeTraitsTable()
     { for (int i = 0; i < 5; i++, id++, row++)
             initializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
     }
-    ResourceManager::dispose(traitsSheet);
+    ResourceManager::Dispose(traitsSheet);
     return 1;
 }
 

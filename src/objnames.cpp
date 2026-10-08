@@ -136,7 +136,7 @@ void initializeAdventureObjectTraits()
         g_adventureObjectTraitRows[g_adventureObjectEnterableFromNorthIds[i]].m_enterableFromNorth = 1;
     }
 
-    TTextResource* names = ResourceManager::getText(
+    TTextResource* names = ResourceManager::GetText(
         DATA_COMPGEN(0x006604b4, objectNamesFileName, "objnames.txt"));
     TResourcePtr<TTextResource> guard(names);
     if (names == 0)

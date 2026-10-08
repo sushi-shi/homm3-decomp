@@ -335,7 +335,7 @@ void army::loadResources()
         sprintf(g_text, DATA_COMPGEN(0x00660a10, moveSampleFormat,
                                     "%smove.82M"),
                 m_monInfo.m_samplePrefix);
-        s = ResourceManager::getSample(g_text);
+        s = ResourceManager::GetSample(g_text);
         m_armySample[WALK_SAMPLE] = s;
     } else {
         m_armySample[WALK_SAMPLE] = 0;
@@ -353,19 +353,19 @@ void army::loadResources()
         sprintf(g_text, DATA_COMPGEN(0x006609ec, attackSampleFormat,
                                     "%sattk.82M"),
                 m_monInfo.m_samplePrefix);
-    s = ResourceManager::getSample(g_text);
+    s = ResourceManager::GetSample(g_text);
     m_armySample[ATTACK_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                 "%swnce.82M"),
             m_monInfo.m_samplePrefix);
-    s = ResourceManager::getSample(g_text);
+    s = ResourceManager::GetSample(g_text);
     m_armySample[WINCE_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609e0, killSampleFormat,
                                 "%skill.82M"),
             m_monInfo.m_samplePrefix);
-    s = ResourceManager::getSample(g_text);
+    s = ResourceManager::GetSample(g_text);
     m_armySample[DIE_SAMPLE] = s;
 
     if (is(creatureSiegeWeapon))
@@ -376,7 +376,7 @@ void army::loadResources()
         sprintf(g_text, DATA_COMPGEN(0x006609d4, defendSampleFormat,
                                     "%sdfnd.82M"),
                 m_monInfo.m_samplePrefix);
-    s = ResourceManager::getSample(g_text);
+    s = ResourceManager::GetSample(g_text);
     m_armySample[DEFEND_SAMPLE] = s;
 
     if (is(creatureShootingArmy) || m_creatureType == CREATURE_MASTER_GENIE
@@ -384,7 +384,7 @@ void army::loadResources()
         sprintf(g_text, DATA_COMPGEN(0x00660a04, shotSampleFormat,
                                     "%sshot.82M"),
                 m_monInfo.m_samplePrefix);
-        s = ResourceManager::getSample(g_text);
+        s = ResourceManager::GetSample(g_text);
         m_armySample[SHOOT_SAMPLE] = s;
     } else {
         m_armySample[SHOOT_SAMPLE] = 0;
@@ -397,12 +397,12 @@ void army::loadResources()
         sprintf(g_text, DATA_COMPGEN(0x006609c8, ext1SampleFormat,
                                     "%sext1.82M"),
                 m_monInfo.m_samplePrefix);
-        s = ResourceManager::getSample(g_text);
+        s = ResourceManager::GetSample(g_text);
         m_armySample[PRE_WALK_SAMPLE] = s;
         sprintf(g_text, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
                                     "%sext2.82M"),
                 m_monInfo.m_samplePrefix);
-        s = ResourceManager::getSample(g_text);
+        s = ResourceManager::GetSample(g_text);
         m_armySample[POST_WALK_SAMPLE] = s;
     } else {
         m_armySample[PRE_WALK_SAMPLE] = 0;
@@ -418,7 +418,7 @@ void army::loadResources()
     }
 
     CSprite* icon =
-        ResourceManager::getSprite(g_creatureTypeTraits[m_creatureType]
+        ResourceManager::GetSprite(g_creatureTypeTraits[m_creatureType]
                                        .m_spriteName);
     m_stdIcon = icon;
     m_imageHeight = 267 - m_stdIcon->GetFrame(cs_wait, 0)->GetCroppedY();
@@ -506,7 +506,7 @@ void army::loadResources()
                                        "cprgtix.def");
             break;
         }
-        CSprite* missile = ResourceManager::getSprite(missileName);
+        CSprite* missile = ResourceManager::GetSprite(missileName);
         m_missileIcon = missile;
     } else {
         m_missileIcon = 0;
@@ -1300,7 +1300,7 @@ void army::rangeAttack(army* armyToAttack)
             && !g_combatManager->isQuickCombat()) {
             launchSample(g_spellTraits[SPELL_FIREBALL].m_sample, -1, 3);
             CSprite* spr =
-                ResourceManager::getSprite(g_spellEffectTraits[effect]
+                ResourceManager::GetSprite(g_spellEffectTraits[effect]
                                                .m_name);
             long x = armyToAttack->midX() - spr->GetWidth() / 2;
             long y = armyToAttack->midY() - spr->GetHeight() / 2;
@@ -1313,7 +1313,7 @@ void army::rangeAttack(army* armyToAttack)
                 g_combatManager->updateCombatArea();
             }
             g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-            ResourceManager::dispose(spr);
+            ResourceManager::Dispose(spr);
         }
         g_combatManager->clearEffects();
         int killed = 0;
@@ -1366,7 +1366,7 @@ void army::rangeAttack(army* armyToAttack)
             launchSample(g_spellTraits[SPELL_DEATH_CLOUD].m_sample, -1,
                           3);
             CSprite* spr =
-                ResourceManager::getSprite(g_spellEffectTraits[effect]
+                ResourceManager::GetSprite(g_spellEffectTraits[effect]
                                                .m_name);
             long x = armyToAttack->midX() - spr->GetWidth() / 2;
             long y = armyToAttack->midY() - spr->GetHeight() / 2;
@@ -1376,7 +1376,7 @@ void army::rangeAttack(army* armyToAttack)
                 g_combatManager->updateCombatArea();
             }
             g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-            ResourceManager::dispose(spr);
+            ResourceManager::Dispose(spr);
         }
         g_combatManager->clearEffects();
         int killed = 0;
@@ -4143,7 +4143,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     startY = g_combatManager->m_cells[m_gridIndex].m_refY
              + m_monFrameInfo.m_missileOffset[2 * pose + 1];
 
-    sample* sample2b = ResourceManager::getSample(
+    sample* sample2b = ResourceManager::GetSample(
         levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
                                             "WallMiss.82m")
                              : DATA_COMPGEN(0x00660a78, wallHitSampleName,
@@ -4168,7 +4168,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                                            m_missileIcon);
     ds_memsample* hitSample = g_soundManager->memorySample(sample2b);
 
-    CSprite* explosion = ResourceManager::getSprite(
+    CSprite* explosion = ResourceManager::GetSprite(
         levelsDestroyed == 0
             ? DATA_COMPGEN(0x00660a6c, rockSpriteName, "CSGRCK.DEF")
             : DATA_COMPGEN(0x00660a60, explosionSpriteName, "SGEXPL.DEF"));
@@ -4199,12 +4199,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
             g_combatManager->updateCombatArea(
                 g_combatManager->m_extent);
     }
-    ResourceManager::dispose(explosion);
+    ResourceManager::Dispose(explosion);
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
     g_soundManager->waitSample(shootSample, -1);
     g_soundManager->waitSample(hitSample, -1);
     if (sample2b)
-        ResourceManager::dispose(sample2b);
+        ResourceManager::Dispose(sample2b);
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
 

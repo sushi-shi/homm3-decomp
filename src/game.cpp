@@ -345,7 +345,7 @@ DC_ADDRESS(0x0a2af8, 0x62)
 MAC_ADDRESS(0x0c9fa8, 0xa0)
 unsigned char initializeRandomTavernText()
 {
-    g_randomTavernText = ResourceManager::getText(
+    g_randomTavernText = ResourceManager::GetText(
         DATA_COMPGEN(0x00677d20, randomTavernTextName, "randtvrn.txt"));
     if (g_randomTavernText == 0)
         return 0;
@@ -8342,7 +8342,7 @@ void game::convertObject(NewmapCell* tempCell)
     objectType->m_objectType = type;
     objectType->m_extra = tempCell->m_objectIndex;
     CSprite* tempSprite =
-        ResourceManager::getSprite(objectType->m_imageName.c_str());
+        ResourceManager::GetSprite(objectType->m_imageName.c_str());
     m_worldMap.m_sprites.push_back(tempSprite);
 
     for (int vert = 0; vert < objectType->m_height; vert++) {
@@ -8710,7 +8710,7 @@ void game::showHeroesLogo()
         return;
 
     g_advManager->m_heroLogoShowing = 1;
-    heroLogo = ResourceManager::getBitmap816(
+    heroLogo = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x00677eb8, heroesLogoBitmapName, "aishield.pcx"));
     x = g_advManager->m_advWindow->m_radarWidget->m_x;
     y = g_advManager->m_advWindow->m_radarWidget->m_y;

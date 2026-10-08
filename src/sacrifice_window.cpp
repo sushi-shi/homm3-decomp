@@ -1938,7 +1938,7 @@ type_skeleton_window::~type_skeleton_window()
     for (unsigned int i = 0; i < m_deathSamples.size(); i++) {
         g_soundManager->stopSample(m_deathSamples[i]->memSample.memHSample);
         // The preceding dereference and Complete release are unguarded.
-        ResourceManager::dispose(static_cast<resource*>(m_deathSamples[i]));
+        ResourceManager::Dispose(static_cast<resource*>(m_deathSamples[i]));
     }
     deleteWidgets();
 }
@@ -2277,7 +2277,7 @@ int type_skeleton_window::sacrifice(message& msg)
                     DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
                                  "%skill.82M"),
                     g_creatureTypeTraits[type].m_samplePrefix);
-            sample* newSample = ResourceManager::getSample(g_text);
+            sample* newSample = ResourceManager::GetSample(g_text);
             window->m_deathSamples.push_back(newSample);
             g_soundManager->memorySample(newSample);
             window->m_armies[1]->m_armyTypes[i] = g_deathCreature[type];

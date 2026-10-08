@@ -3489,7 +3489,7 @@ VA(0x00536560, 0x5F2)
 MAC_ADDRESS(0x23486c, 0x6a0) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
 void TRmgGeneratorBase::readObjectPlacementRules()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x006827F4, rmgPlacementRulesFilename, "rand_trn.txt"));
     int row = 3;
     std::vector<TAdventureObjectType> objectTypes;
@@ -4249,7 +4249,7 @@ VA(0x00537FF0, 0x482)
 MAC_ADDRESS(0x2372ec, 0x304)
 void TRmgGenerator::loadTemplates()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00682804, rmgTemplatesFilename, "rmg.txt"));
     int mapSize = m_map.getWidth() * m_map.getHeight() * m_map.m_numberLevels / 1296;
     int row = 3;

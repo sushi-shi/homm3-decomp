@@ -41,7 +41,7 @@ iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
       m_backColor(static_cast<unsigned short>(backColor)),
       m_postPostWalkSequence(cs_wait)
 {
-    m_sprite = image ? ResourceManager::getSprite(image) : 0;
+    m_sprite = image ? ResourceManager::GetSprite(image) : 0;
 }
 
 // Original: iconWidget::initialize; iconwdgt.cpp:75
@@ -53,7 +53,7 @@ void iconWidget::initialize(int x, int y, int w, int h, int id,
     unsigned int backColor, int style, unsigned char focusable)
 {
     widget::initialize(x, y, w, h, id, style);
-    m_sprite = ResourceManager::getSprite(image);
+    m_sprite = ResourceManager::GetSprite(image);
     m_frame = frame;
     m_seqId = sequence;
     m_isFlipped = flipped != 0;
@@ -67,7 +67,7 @@ MAC_ADDRESS(0x10c498, 0x7c)
 iconWidget::~iconWidget()
 {
     if (m_sprite)
-        ResourceManager::dispose(m_sprite);
+        ResourceManager::Dispose(m_sprite);
 }
 
 // E:\gamedcs\iconwdgt.cpp:119
@@ -386,10 +386,10 @@ DC_ADDRESS(0x0d9cac, 0x32)
 MAC_ADDRESS(0x10cfc0, 0x60)
 void iconWidget::setPalette(const char* paletteName)
 {
-    TPalette16* newPalette = ResourceManager::getPalette(paletteName);
+    TPalette16* newPalette = ResourceManager::GetPalette(paletteName);
     if (newPalette) {
         m_sprite->SetPalette(newPalette->Palette);
-        ResourceManager::dispose(newPalette);
+        ResourceManager::Dispose(newPalette);
     }
 }
 
@@ -409,8 +409,8 @@ MAC_ADDRESS(0x10d074, 0x5c)
 void iconWidget::setSprite(const char* newSprite)
 {
     if (m_sprite)
-        ResourceManager::dispose(m_sprite);
-    m_sprite = ResourceManager::getSprite(newSprite);
+        ResourceManager::Dispose(m_sprite);
+    m_sprite = ResourceManager::GetSprite(newSprite);
 }
 
 VA(0x004eb060, 0x1EB)

@@ -182,7 +182,7 @@ void mouseManager::close()
         m_systemPointerIsOn = 1;
     }
     if (m_sprite)
-        ResourceManager::dispose(m_sprite);
+        ResourceManager::Dispose(m_sprite);
     m_sprite = 0;
 }
 
@@ -238,7 +238,7 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
         m_set = newSet;
         if (m_sprite)
             m_sprite->dispose();
-        m_sprite = ResourceManager::getSprite(g_pointerSetSprites[m_set]);
+        m_sprite = ResourceManager::GetSprite(g_pointerSetSprites[m_set]);
         m_frame = -1;
     }
     if (newFrame < 0) {

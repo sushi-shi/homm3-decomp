@@ -510,7 +510,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_sessTimer = 0;
     m_localIpAddress[0] = 0;
     m_sessionRefreshTimeout = 0;
-    m_gameState = ResourceManager::getSprite("muGstat.def");
+    m_gameState = ResourceManager::GetSprite("muGstat.def");
     m_inSessionList = 0;
     m_currentIndex = 0;
     m_currentGame = 0;

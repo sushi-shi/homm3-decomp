@@ -289,7 +289,7 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         1, 0, 8));
 
     if (res >= 0) {
-        CSprite* sprite = ResourceManager::getSprite("resour82.def");
+        CSprite* sprite = ResourceManager::GetSprite("resour82.def");
 
         m_widgets.push_back(new iconWidget((m_width - sprite->GetWidth()) / 2, 50,
             sprite->GetWidth(), sprite->GetHeight(), 0x837, "resour82.def", res,
@@ -308,7 +308,7 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
 
         quantityText.freeze(false);
         // DC bottomviewsubwindow.cpp:176 names the canonical Dispose wrapper.
-        ResourceManager::dispose(sprite);
+        ResourceManager::Dispose(sprite);
     }
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {

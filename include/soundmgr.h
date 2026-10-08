@@ -50,7 +50,7 @@ void clearMemSample(SAMPLE2 sample2);
 void waitEndSample(SAMPLE2 sample2, int milliWait);
 
 namespace ResourceManager {
-sample* getSample(const char* name);
+sample* GetSample(const char* name);
 }
 SAMPLE2 loadPlaySample(const char* sampleName);
 void waitEndSample(SAMPLE2 sample2, int milliWait);

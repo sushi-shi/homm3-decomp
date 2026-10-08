@@ -1721,7 +1721,7 @@ TOverviewWindow::TOverviewWindow()
 {
     // DC overview.cpp:2018 calls the cache sweep before widget setup.
     // Complete's canonical helper is empty and release-elided.
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
     m_widgets.reserve(100);
 
     m_widgets.push_back(new bitmapBorder(

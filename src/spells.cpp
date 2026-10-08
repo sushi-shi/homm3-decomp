@@ -823,7 +823,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         const int nhexes = g_quicksandCountByMastery[mastery];
         sample* sample2b;
         if (!isQuickCombat())
-            sample2b = ResourceManager::getSample(
+            sample2b = ResourceManager::GetSample(
                 DATA_COMPGEN(0x006884a0, quicksandSampleName,
                              "Quiksand.wav"));
 
@@ -847,7 +847,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             spellEffect(traits->m_effect, hex, 100, 1);
 
             TObstacle newQuicksand = {
-                ResourceManager::getSprite(s_quicksandInfo[0].m_spriteName),
+                ResourceManager::GetSprite(s_quicksandInfo[0].m_spriteName),
                 &s_quicksandInfo[0],
                 static_cast<unsigned char>(hex),
                 static_cast<signed char>(m_currentSide),
@@ -868,7 +868,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         // DC 860/936 names ResourceManager::Dispose. Complete Mac
         // 0x190d64/0x190ff8 expands its null-guarded virtual disposal.
         if (!isQuickCombat())
-            ResourceManager::dispose(sample2b);
+            ResourceManager::Dispose(sample2b);
         break;
     }
 
@@ -878,7 +878,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                               mastery, 0, 0, 0, 0);
         sample* sample2b;
         if (!isQuickCombat())
-            sample2b = ResourceManager::getSample(
+            sample2b = ResourceManager::GetSample(
                 DATA_COMPGEN(0x00688490, landMineSampleName,
                              "landmine.wav"));
 
@@ -902,7 +902,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             spellEffect(traits->m_effect, hex, 100, 1);
 
             TObstacle newLandmine = {
-                ResourceManager::getSprite(s_landMineInfo[0].m_spriteName),
+                ResourceManager::GetSprite(s_landMineInfo[0].m_spriteName),
                 &s_landMineInfo[0],
                 static_cast<unsigned char>(hex),
                 static_cast<signed char>(m_currentSide),
@@ -923,7 +923,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         // DC 860/936 names ResourceManager::Dispose. Complete Mac
         // 0x190d64/0x190ff8 expands its null-guarded virtual disposal.
         if (!isQuickCombat())
-            ResourceManager::dispose(sample2b);
+            ResourceManager::Dispose(sample2b);
         break;
     }
 
@@ -936,7 +936,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             shape = &s_wallObstacleInfo[1];
 
         TObstacle newWall = {
-            ResourceManager::getSprite(shape->m_spriteName),
+            ResourceManager::GetSprite(shape->m_spriteName),
             shape,
             static_cast<unsigned char>(targetIndex),
             static_cast<signed char>(m_currentSide),
@@ -961,7 +961,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             spellEffect(traits->m_effect, targetIndex, 100, 1);
 
             TObstacle newWall = {
-                ResourceManager::getSprite(s_wallObstacleInfo[4].m_spriteName),
+                ResourceManager::GetSprite(s_wallObstacleInfo[4].m_spriteName),
                 &s_wallObstacleInfo[4],
                 static_cast<unsigned char>(
                     getSpellWallHex(targetIndex, i, m_currentSide)),
@@ -4775,7 +4775,7 @@ void combatManager::earthquake(int level)
         && !isQuickCombat()) {
         const int frameDelay = static_cast<int>(
             combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
-        CSprite* blast = ResourceManager::getSprite("SGEXPL.DEF");
+        CSprite* blast = ResourceManager::GetSprite("SGEXPL.DEF");
         launchSample("WallHit.82m", -1, 3);
         for (int frame = 0; frame < blast->GetNumFrames(0); frame++) {
             unsigned long frameTil = GameTime::get() + frameDelay;
@@ -4807,7 +4807,7 @@ void combatManager::earthquake(int level)
             }
             GameTime::delayTil(frameTil);
         }
-        ResourceManager::dispose(blast);
+        ResourceManager::Dispose(blast);
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
@@ -5235,9 +5235,9 @@ CSprite* combatManager::loadSpellEffect(int effect)
 {
     if (m_powSpellEffect != effect) {
         if (m_powSprite)
-            ResourceManager::dispose(m_powSprite);
+            ResourceManager::Dispose(m_powSprite);
         if (effect != -1)
-            m_powSprite = ResourceManager::getSprite(
+            m_powSprite = ResourceManager::GetSprite(
                 g_spellEffectTraits[effect].m_name);
         else
             m_powSprite = 0;

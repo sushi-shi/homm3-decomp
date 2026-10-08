@@ -794,16 +794,16 @@ void combatManager::drawBackground()
     if (m_backgroundDrawn)
         return;
 
-    ResourceManager::getBackdrop(m_backgroundName, m_saveScreenPostGrid);
+    ResourceManager::GetBackdrop(m_backgroundName, m_saveScreenPostGrid);
 
     int index = m_largeObstacleId;
     if (index >= 0) {
         const SElevationOverlay* overlay = &s_elevationOverlay[index];
-        Bitmap816* bitmap = ResourceManager::getBitmap816(
+        Bitmap816* bitmap = ResourceManager::GetBitmap816(
             overlay->m_fileName);
         bitmap->Draw(0, 0, bitmap->GetWidth(), bitmap->GetHeight(), m_saveScreenPostGrid,
                      overlay->m_x, overlay->m_y, true);
-        ResourceManager::dispose(bitmap);
+        ResourceManager::Dispose(bitmap);
     }
 
     if (m_fortificationLevel > eFortificationNone && m_moatOn) {

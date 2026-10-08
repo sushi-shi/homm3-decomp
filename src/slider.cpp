@@ -41,14 +41,14 @@ void slider::initialize(const char* resourceName)
 {
     if (m_width > m_height) {
         m_length = m_width;
-        m_sliderSprite = ResourceManager::getSprite(resourceName);
-        m_sliderBitmap = ResourceManager::getBitmap816(
+        m_sliderSprite = ResourceManager::GetSprite(resourceName);
+        m_sliderBitmap = ResourceManager::GetBitmap816(
             DATA_COMPGEN(0x00683980, sliderHorizontalBitmap, "slider.pcx"));
         m_knobStart = m_sliderSprite->GetWidth();
     } else {
         m_length = m_height;
-        m_sliderSprite = ResourceManager::getSprite(resourceName);
-        m_sliderBitmap = ResourceManager::getBitmap816(
+        m_sliderSprite = ResourceManager::GetSprite(resourceName);
+        m_sliderBitmap = ResourceManager::GetBitmap816(
             DATA_COMPGEN(0x00683974, sliderVerticalBitmap, "sliderV.pcx"));
         m_knobStart = m_sliderSprite->GetHeight();
     }
@@ -95,8 +95,8 @@ DC_ADDRESS(0x149ba4, 0x46)
 MAC_ADDRESS(0x189428, 0x88)
 slider::~slider()
 {
-    ResourceManager::dispose(m_sliderBitmap);
-    ResourceManager::dispose(m_sliderSprite);
+    ResourceManager::Dispose(m_sliderBitmap);
+    ResourceManager::Dispose(m_sliderSprite);
 }
 
 VA(0x005961E0, 0x4C)

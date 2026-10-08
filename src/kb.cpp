@@ -230,9 +230,9 @@ MAC_ADDRESS(0x10e998, 0xd8)
 void showProgressBar()
 {
     if (!g_loadBar) {
-        g_loadBar = ResourceManager::getBitmap16(
+        g_loadBar = ResourceManager::GetBitmap16(
             DATA_COMPGEN(0x0067f5bc, progressBarBackName, "loadbar.pcx"));
-        g_progDots = ResourceManager::getSprite(
+        g_progDots = ResourceManager::GetSprite(
             DATA_COMPGEN(0x0067f5ac, progressBarSpriteName, "loadprog.def"));
         g_progressCount = 0;
     }
@@ -251,9 +251,9 @@ MAC_ADDRESS(0x10ea70, 0x80)
 void unloadProgressBar()
 {
     if (g_loadBar)
-        ResourceManager::dispose(g_loadBar);
+        ResourceManager::Dispose(g_loadBar);
     if (g_progDots)
-        ResourceManager::dispose(g_progDots);
+        ResourceManager::Dispose(g_progDots);
     g_progressCount = 0;
     g_progDots = 0;
     g_loadBar = 0;
@@ -368,7 +368,7 @@ int setupCDDrive();
 unsigned char loadAnimHeaders();
 unsigned char loadSoundHeaders();
 namespace ResourceManager {
-bool open(bool checkCd, bool loadLod, int* result);
+bool Open(bool checkCd, bool loadLod, int* result);
 }
 
 // Source-static helpers defined later in CodeView order.
@@ -423,9 +423,9 @@ int earlySetup()
         g_config.m_windowConfig.m_fullScreen = 1;
         writePrefs();
     }
-    ResourceManager::setPath(
+    ResourceManager::SetPath(
         DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"));
-    if (!ResourceManager::open(1, 1, &openResult)) {
+    if (!ResourceManager::Open(1, 1, &openResult)) {
         if (openResult == 1)
             shutDown(DATA_COMPGEN(0x0067f64c, filesMissingMessage,
                 "Files from Heroes III are missing.   "
@@ -484,7 +484,7 @@ int earlySetup()
         }
     }
 
-    button::s_clickSample = ResourceManager::getSample(
+    button::s_clickSample = ResourceManager::GetSample(
         DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
     initVars();
     g_earlySetupDone = 1;
@@ -516,7 +516,7 @@ MAC_ADDRESS(0x10f454, 0x430)
 void creditsWait()
 {
     message msg;
-    font* creditsFont = ResourceManager::getFont("Credits.fnt");
+    font* creditsFont = ResourceManager::GetFont("Credits.fnt");
     int done = 0;
     int textHeight = creditsFont->LineLength(g_credits[0], 328)
         * creditsFont->fs.height;
@@ -605,7 +605,7 @@ void creditsWait()
         delete credits;
     if (background)
         delete background;
-    ResourceManager::dispose(creditsFont);
+    ResourceManager::Dispose(creditsFont);
 }
 
 #if 0  // @carcass
@@ -750,7 +750,7 @@ VA(0x004ee1b0, 0xF6)
 MAC_ADDRESS(0x10f960, 0x19c)
 static void playFramedVideo(int videoId, const char* frameName)
 {
-    Bitmap16Bit* frame = ResourceManager::getBitmap16(frameName);
+    Bitmap16Bit* frame = ResourceManager::GetBitmap16(frameName);
 
     videoOpen(videoId, 80, 187, 0, 0, 0, 0, 1);
     frame->Draw(0, 0, frame->GetWidth(), frame->GetHeight(),
@@ -996,15 +996,15 @@ int oldmain()
 
     kbChangeMenu(g_dfltMenu);
 
-    g_systemPalette = ResourceManager::getPalette("game.pal");
-    g_playerPalette = ResourceManager::getPalette("Players.pal");
-    g_playerPalette24 = ResourceManager::getPalette24("Players.pal");
+    g_systemPalette = ResourceManager::GetPalette("game.pal");
+    g_playerPalette = ResourceManager::GetPalette("Players.pal");
+    g_playerPalette24 = ResourceManager::GetPalette24("Players.pal");
 
-    g_tinyFont = ResourceManager::getFont("tiny.fnt");
-    g_smallFont = ResourceManager::getFont("smalfont.fnt");
-    g_mediumFont = ResourceManager::getFont("medfont.fnt");
-    g_bigFont = ResourceManager::getFont("bigfont.fnt");
-    g_calligraphicFont = ResourceManager::getFont("Calli10R.fnt");
+    g_tinyFont = ResourceManager::GetFont("tiny.fnt");
+    g_smallFont = ResourceManager::GetFont("smalfont.fnt");
+    g_mediumFont = ResourceManager::GetFont("medfont.fnt");
+    g_bigFont = ResourceManager::GetFont("bigfont.fnt");
+    g_calligraphicFont = ResourceManager::GetFont("Calli10R.fnt");
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     setupCDRom();
@@ -1088,10 +1088,10 @@ int oldmain()
     unused = 0;
     while (!unused) {
         if (!g_mainBack) {
-            g_mainBack = ResourceManager::getBitmap16(
+            g_mainBack = ResourceManager::GetBitmap16(
                 DATA_COMPGEN(0x0067f708, oldMainMenuBackground,
                              "mainmenu.pcx"));
-            g_gameSelectBack = ResourceManager::getBitmap16(
+            g_gameSelectBack = ResourceManager::GetBitmap16(
                 DATA_COMPGEN(0x0067f6f8, oldGameSelectBackground,
                              "GamSelBk.pcx"));
             openCampaignVideo();
@@ -1263,9 +1263,9 @@ int oldmain()
             break;
         }
 
-        ResourceManager::dispose(g_mainBack);
+        ResourceManager::Dispose(g_mainBack);
         g_mainBack = 0;
-        ResourceManager::dispose(g_gameSelectBack);
+        ResourceManager::Dispose(g_gameSelectBack);
         g_gameSelectBack = 0;
         videoClose();
 
@@ -3264,7 +3264,7 @@ void shutDown(const char* inExitMessage)
             g_mapExtra = 0;
         }
         deleteMainClasses();
-        ResourceManager::close();
+        ResourceManager::Close();
         appExit();
         timeEndPeriod(1);
         g_inShutDown = 0;
@@ -3508,7 +3508,7 @@ MAC_ADDRESS(0x115694, 0x458)
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
     message msg;
-    font* currentFont = ResourceManager::getFont("HiScore.fnt");
+    font* currentFont = ResourceManager::GetFont("HiScore.fnt");
     const char* labels[5] = {
         g_generalText->GetText(GENERAL_TEXT_TOTAL_TIME),
         g_generalText->GetText(GENERAL_TEXT_BASE_SCORE),
@@ -4283,10 +4283,10 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
         break;
     }
 
-    CSprite* image = ResourceManager::getSprite(m_spriteName.c_str());
+    CSprite* image = ResourceManager::GetSprite(m_spriteName.c_str());
     m_spriteWidth = image->GetWidth() + 2;
     m_spriteHeight = image->GetHeight() + 2;
-    ResourceManager::dispose(image);
+    ResourceManager::Dispose(image);
 
     if (!m_text.length())
         return;

@@ -78,7 +78,7 @@ textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
     m_textBack = 0;
     m_saveBack = 0;
     if (backgroundIcon)
-        m_textBack = ResourceManager::getBitmap816(backgroundIcon);
+        m_textBack = ResourceManager::GetBitmap816(backgroundIcon);
     m_displayStart = 0;
     m_textLines = 1;
     m_maxLength = static_cast<unsigned short>(textSize);
@@ -110,7 +110,7 @@ MAC_ADDRESS(0x1af924, 0xa0)
 textEntryWidget::~textEntryWidget()
 {
     if (m_textBack)
-        ResourceManager::dispose(m_textBack);
+        ResourceManager::Dispose(m_textBack);
     if (m_saveBack)
         delete m_saveBack;
 }

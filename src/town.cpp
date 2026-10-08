@@ -2071,7 +2071,7 @@ DC_ADDRESS(0x168c3c, 0x112)
 MAC_ADDRESS(0x1b708c, 0x158)
 bool town::initializeBuildingCostsTables()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00688fb4, townBuildingSpreadsheetName, "building.txt"));
     if (!sheet)
         return 0;

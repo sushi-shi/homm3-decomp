@@ -76,7 +76,7 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
                                        slider::EGraphics graphics)
     : widget(x, y, w, h, -1, 1), m_fontFilename(fontName)
 {
-    font* textFont = ResourceManager::getFont(m_fontFilename);
+    font* textFont = ResourceManager::GetFont(m_fontFilename);
     int lineY = this->m_y;
     m_background = 0;
     textFont->fillLinesVector(text, m_width - 24, m_textLines);
@@ -103,7 +103,7 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
         graphics, m_lineImages.size(), 1);
     // Mac 0x25b424 and retail 0x5ba297 expand the same resource-disposal
     // wrapper used by setText below; the resource overload has no null guard.
-    ResourceManager::dispose(textFont);
+    ResourceManager::Dispose(textFont);
 }
 
 // The scalar deleting destructor, slot 0 of vtable 0x642d0c.
@@ -204,7 +204,7 @@ VA(0x005BA6E0, 0x1EF)
 MAC_ADDRESS(0x25b8d8, 0x1dc)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)
 {
-    font* textFont = ResourceManager::getFont(m_fontFilename);
+    font* textFont = ResourceManager::GetFont(m_fontFilename);
     m_textLines.clear();
     textFont->fillLinesVector(text, m_width - 24, m_textLines);
 
@@ -227,7 +227,7 @@ void type_text_scroller::setText(const char* text)
 
     for (unsigned int i = 0; i < m_lineImages.size(); i++)
         m_lineImages[i]->setText(m_textLines[i].c_str());
-    ResourceManager::dispose(textFont);
+    ResourceManager::Dispose(textFont);
 }
 
 // Retail vtable 0x642d0c slots 3/4 share the empty ret 8 / ret bodies

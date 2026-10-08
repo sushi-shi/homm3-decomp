@@ -200,7 +200,7 @@ DC_ADDRESS(0x005714, 0xb6)
 MAC_ADDRESS(0x005e04, 0xe8)
 unsigned char initializeCreatureGeneratorNames()
 {
-    g_creatureGenerator1Text = ResourceManager::getText(
+    g_creatureGenerator1Text = ResourceManager::GetText(
         DATA_COMPGEN(0x00660278, creatureGenerator1TextName, "crgen1.txt"));
     if (g_creatureGenerator1Text == 0)
         return 0;
@@ -209,7 +209,7 @@ unsigned char initializeCreatureGeneratorNames()
         g_creatureGenerator1RolloverNames[i] =
             g_creatureGenerator1Text->GetText(i);
 
-    g_creatureGenerator4Text = ResourceManager::getText(
+    g_creatureGenerator4Text = ResourceManager::GetText(
         DATA_COMPGEN(0x0066026c, creatureGenerator4TextName, "crgen4.txt"));
     if (g_creatureGenerator4Text == 0)
         return 0;
@@ -224,7 +224,7 @@ DC_ADDRESS(0x0057cc, 0x62)
 MAC_ADDRESS(0x005ef4, 0xa0)
 unsigned char initializeExtraInfoText()
 {
-    g_extraInfoText = ResourceManager::getText(
+    g_extraInfoText = ResourceManager::GetText(
         DATA_COMPGEN(0x00660284, extraInfoTextName, "xtrainfo.txt"));
     if (g_extraInfoText == 0)
         return 0;
@@ -698,9 +698,9 @@ int advManager::open(int newPriority)
         if (_strnicmp(reversed,
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
-            m_cachedGraphics.push_back(ResourceManager::getSprite(g_advCachedGraphicNames[i]));
+            m_cachedGraphics.push_back(ResourceManager::GetSprite(g_advCachedGraphicNames[i]));
         } else {
-            m_cachedGraphics.push_back(ResourceManager::getBitmap816(g_advCachedGraphicNames[i]));
+            m_cachedGraphics.push_back(ResourceManager::GetBitmap816(g_advCachedGraphicNames[i]));
         }
         if (i == CACHED_GRAPHIC_TICK)
             incProgressBar(1);
@@ -708,52 +708,52 @@ int advManager::open(int newPriority)
     incProgressBar(1);
 
     m_movingObjectSprite =
-        ResourceManager::getSprite(DATA_COMPGEN(0x00660318, movingObjectSpriteName,
+        ResourceManager::GetSprite(DATA_COMPGEN(0x00660318, movingObjectSpriteName,
                                "avwattak.def"));
     for (i = 0; i < 10; i++)
-        m_groundTileset[i] = ResourceManager::getSprite(g_groundTilesetNames[i]);
+        m_groundTileset[i] = ResourceManager::GetSprite(g_groundTilesetNames[i]);
     incProgressBar(1);
     for (i = 1; i < 5; i++)
-        m_riverTileset[i] = ResourceManager::getSprite(g_riverTilesetNames[i]);
+        m_riverTileset[i] = ResourceManager::GetSprite(g_riverTilesetNames[i]);
     incProgressBar(1);
     for (i = 1; i < 4; i++)
-        m_roadTileset[i] = ResourceManager::getSprite(g_roadTilesetNames[i]);
+        m_roadTileset[i] = ResourceManager::GetSprite(g_roadTilesetNames[i]);
     incProgressBar(1);
     m_borderTileset =
-        ResourceManager::getSprite(DATA_COMPGEN(0x00660310, borderTilesetName, "edg.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x00660310, borderTilesetName, "edg.def"));
     m_arrowTileset =
-        ResourceManager::getSprite(DATA_COMPGEN(0x00660304, arrowTilesetName, "adag.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x00660304, arrowTilesetName, "adag.def"));
     m_gemIcons[0] =
-        ResourceManager::getSprite(DATA_COMPGEN(0x006602f8, gemIconName0, "agemul.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602f8, gemIconName0, "agemul.def"));
     m_gemIcons[1] =
-        ResourceManager::getSprite(DATA_COMPGEN(0x006602ec, gemIconName1, "agemur.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602ec, gemIconName1, "agemur.def"));
     m_gemIcons[2] =
-        ResourceManager::getSprite(DATA_COMPGEN(0x006602e0, gemIconName2, "agemll.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602e0, gemIconName2, "agemll.def"));
     m_gemIcons[3] =
-        ResourceManager::getSprite(DATA_COMPGEN(0x006602d4, gemIconName3, "agemlr.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602d4, gemIconName3, "agemlr.def"));
     m_starTileset =
-        ResourceManager::getSprite(DATA_COMPGEN(0x006602c8, starTilesetName, "tshrc.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602c8, starTilesetName, "tshrc.def"));
     m_cloudIcons =
-        ResourceManager::getSprite(DATA_COMPGEN(0x006602bc, cloudIconsName, "tshre.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602bc, cloudIconsName, "tshre.def"));
     incProgressBar(1);
     for (i = 0; i < 18; i++) {
-        m_cursorIcons[i] = ResourceManager::getSprite(g_cursorIconNames[i]);
+        m_cursorIcons[i] = ResourceManager::GetSprite(g_cursorIconNames[i]);
         if (i == CURSOR_ICON_TICK)
             incProgressBar(1);
     }
     incProgressBar(1);
     for (i = 0; i < 3; i++) {
-        m_boatIcons[i] = ResourceManager::getSprite(g_boatIconNames[i]);
-        m_boatFrothIcons[i] = ResourceManager::getSprite(g_boatFrothIconNames[i]);
+        m_boatIcons[i] = ResourceManager::GetSprite(g_boatIconNames[i]);
+        m_boatFrothIcons[i] = ResourceManager::GetSprite(g_boatFrothIconNames[i]);
         for (j = 0; j < 8; j++)
             m_boatFlagIcons[i][j] =
-                ResourceManager::getSprite(g_boatFlagIconNames[i][j]);
+                ResourceManager::GetSprite(g_boatFlagIconNames[i][j]);
     }
     incProgressBar(1);
     for (i = 0; i < 8; i++)
-        m_flagIcons[i] = ResourceManager::getSprite(g_flagIconNames[i]);
+        m_flagIcons[i] = ResourceManager::GetSprite(g_flagIconNames[i]);
     m_radarIcons =
-        ResourceManager::getSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
 
     for (i = 0; i < LOOPING_SOUND_COUNT; i++)
         m_loopedSample[i] = 0;
@@ -879,32 +879,32 @@ void advManager::close()
     }
 
     if (g_adventureGraphicsPreserveMode <= 0) {
-        ResourceManager::dispose(m_radarIcons);
+        ResourceManager::Dispose(m_radarIcons);
         m_radarIcons = 0;
-        ResourceManager::dispose(m_cloudIcons);
+        ResourceManager::Dispose(m_cloudIcons);
         m_cloudIcons = 0;
         for (i = 0; i < 18; i++) {
-            ResourceManager::dispose(m_cursorIcons[i]);
+            ResourceManager::Dispose(m_cursorIcons[i]);
             m_cursorIcons[i] = 0;
         }
         for (i = 0; i < m_cachedGraphics.size(); i++)
-            ResourceManager::dispose(m_cachedGraphics[i]);
+            ResourceManager::Dispose(m_cachedGraphics[i]);
         // The canonical dispose calls restore retail's destroy-range call.
         m_cachedGraphics.clear();
-        ResourceManager::dispose(m_movingObjectSprite);
+        ResourceManager::Dispose(m_movingObjectSprite);
         m_movingObjectSprite = 0;
         for (i = 0; i < 3; i++) {
-            ResourceManager::dispose(m_boatIcons[i]);
+            ResourceManager::Dispose(m_boatIcons[i]);
             m_boatIcons[i] = 0;
-            ResourceManager::dispose(m_boatFrothIcons[i]);
+            ResourceManager::Dispose(m_boatFrothIcons[i]);
             m_boatFrothIcons[i] = 0;
             for (j = 0; j < 8; j++) {
-                ResourceManager::dispose(m_boatFlagIcons[i][j]);
+                ResourceManager::Dispose(m_boatFlagIcons[i][j]);
                 m_boatFlagIcons[i][j] = 0;
             }
         }
         for (i = 0; i < 8; i++) {
-            ResourceManager::dispose(m_flagIcons[i]);
+            ResourceManager::Dispose(m_flagIcons[i]);
             m_flagIcons[i] = 0;
         }
     }
@@ -916,27 +916,27 @@ void advManager::close()
         }
     }
     for (i = 1; i < 5; i++) {
-        ResourceManager::dispose(m_riverTileset[i]);
+        ResourceManager::Dispose(m_riverTileset[i]);
         m_riverTileset[i] = 0;
     }
     for (i = 1; i < 4; i++) {
-        ResourceManager::dispose(m_roadTileset[i]);
+        ResourceManager::Dispose(m_roadTileset[i]);
         m_roadTileset[i] = 0;
     }
-    ResourceManager::dispose(m_borderTileset);
+    ResourceManager::Dispose(m_borderTileset);
     m_borderTileset = 0;
-    ResourceManager::dispose(m_arrowTileset);
+    ResourceManager::Dispose(m_arrowTileset);
     m_arrowTileset = 0;
-    ResourceManager::dispose(m_gemIcons[0]);
-    ResourceManager::dispose(m_gemIcons[1]);
-    ResourceManager::dispose(m_gemIcons[2]);
-    ResourceManager::dispose(m_gemIcons[3]);
+    ResourceManager::Dispose(m_gemIcons[0]);
+    ResourceManager::Dispose(m_gemIcons[1]);
+    ResourceManager::Dispose(m_gemIcons[2]);
+    ResourceManager::Dispose(m_gemIcons[3]);
     m_gemIcons[0] = 0;
     m_gemIcons[1] = 0;
     m_gemIcons[2] = 0;
     m_gemIcons[3] = 0;
     for (i = 0; i < 10; i++) {
-        ResourceManager::dispose(m_groundTileset[i]);
+        ResourceManager::Dispose(m_groundTileset[i]);
         m_groundTileset[i] = 0;
         m_heroSamples[i]->dispose();
         m_heroSamples[i] = 0;
@@ -976,7 +976,7 @@ void advManager::getCursorSampleSet(int walkSpeed)
         sprintf(g_text,
                 DATA_COMPGEN(0x006602a0, heroSampleFormat, "horse%02d.wav"),
                 i);
-        m_heroSamples[i] = ResourceManager::getSample(g_text);
+        m_heroSamples[i] = ResourceManager::GetSample(g_text);
     }
 }
 
@@ -7446,7 +7446,7 @@ MAC_ADDRESS(0x017b38, 0x18c)
 void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder)
 {
     const int playerId = g_game->getLocalPlayerGamePos();
-    Bitmap816* const bmp = ResourceManager::getBitmap816("AdvMap.pcx");
+    Bitmap816* const bmp = ResourceManager::GetBitmap816("AdvMap.pcx");
 
     if (bmp) {
         setPlayerPaletteColors(bmp->GetPalette().m_colors.m_data, playerId);
@@ -7958,7 +7958,7 @@ void advManager::checkLoadSample(e_looping_sound_id idNum)
         return;
     if (!m_loopedSample[idNum]) {
         trimLoopingSounds(4);
-        m_loopedSample[idNum] = ResourceManager::getSample(g_loopingSoundNames[idNum]);
+        m_loopedSample[idNum] = ResourceManager::GetSample(g_loopingSoundNames[idNum]);
     }
 }
 

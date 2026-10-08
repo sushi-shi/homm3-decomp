@@ -948,7 +948,7 @@ townObject::townObject(int townType, int objPos, const char* basename)
 
     sprintf(defName, DATA_COMPGEN(0x0068c1c4, townObjectSpriteFormat,
                                   "%s.def"), basename);
-    m_objIcon = ResourceManager::getSprite(defName);
+    m_objIcon = ResourceManager::GetSprite(defName);
     m_numFrames = m_objIcon->GetNumFrames(0);
     m_w = m_objIcon->GetWidth();
     m_h = m_objIcon->GetHeight();
@@ -964,9 +964,9 @@ townObject::townObject(int townType, int objPos, const char* basename)
     if (maskFileName[0] != 0) {
         sprintf(maskName, DATA_COMPGEN(0x0068c1bc, townObjectMaskFormat,
                                        "%s.pcx"), maskFileName);
-        m_objOutline = ResourceManager::getBitmap816(maskName);
+        m_objOutline = ResourceManager::GetBitmap816(maskName);
         maskName[1] = 'Z';
-        m_objHotspot = ResourceManager::getBitmap816(maskName);
+        m_objHotspot = ResourceManager::GetBitmap816(maskName);
     } else {
         m_objOutline = 0;
         m_objHotspot = 0;
@@ -981,12 +981,12 @@ MAC_ADDRESS(0x1b8f54, 0xcc)
 townObject::~townObject()
 {
     delete m_objBorder;
-    ResourceManager::dispose(m_objIcon);
+    ResourceManager::Dispose(m_objIcon);
     if (m_objOutline)
-        ResourceManager::dispose(m_objOutline);
+        ResourceManager::Dispose(m_objOutline);
     if (m_objHotspot)
-        ResourceManager::dispose(m_objHotspot);
-    ResourceManager::delSprFromCache();
+        ResourceManager::Dispose(m_objHotspot);
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // Original: townObject::DrawOutline; townmgr.cpp:1913
@@ -1741,7 +1741,7 @@ MAC_ADDRESS(0x1be22c, 0x2f4)
 int townManager::open(int newPriority)
 {
     g_inputManager->flush();
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:2733
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:2733
     startMouseThread();
     g_game->checkHeroConsistency();
     pollSound();
@@ -1959,7 +1959,7 @@ DC_ADDRESS(0x16b9e4, 0xac)
 MAC_ADDRESS(0x1be520, 0xac)
 void townManager::changeTown(bool fade)
 {
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
     startMouseThread();
     setupExtraStuff();
     setupTown(fade);
@@ -2109,7 +2109,7 @@ void townManager::setupTown(bool fade)
             m_currentDwellingIdOff[slot] = slot + TOWN_DWELLING_COUNT;
         else
             m_currentDwellingIdOff[slot] = slot;
-        m_monPix[slot] = ResourceManager::getSprite(
+        m_monPix[slot] = ResourceManager::GetSprite(
             g_creatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[slot]]]
                 .m_spriteName);
     }
@@ -2189,7 +2189,7 @@ void townManager::unloadTown()
 
     for (i = 0; i < 7; i++) {
         if (m_monPix[i])
-            ResourceManager::dispose(m_monPix[i]);
+            ResourceManager::Dispose(m_monPix[i]);
     }
 
     delete m_heroStrip;
@@ -2207,7 +2207,7 @@ void townManager::unloadTown()
         delete m_panorama;
         m_panorama = 0;
     }
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:3169
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:3169
 }
 
 // The manager's Close, slot 1 of vtable 0x643720 and the second of its
@@ -2779,7 +2779,7 @@ MAC_ADDRESS(0x1c085c, 0x21f4)
 TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     : CAdvPopup(0, 0, 800, 600, 2)
 {
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:3861
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:3861
     m_widgets.reserve(30);
 
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 600, 0,
@@ -2887,7 +2887,7 @@ TThievesGuildWindow::~TThievesGuildWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // Eight player columns shared by the guild builder, rollover and click handler.
@@ -3057,7 +3057,7 @@ MAC_ADDRESS(0x1c3050, 0x351c)
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4303
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:4303
     const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     const int slotY[5] = { 37, 141, 245, 349, 453 };
     const int hallX[9][18] = {
@@ -3285,7 +3285,7 @@ THallWindow::~THallWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 VA(0x005cc980, 0x179F)
@@ -3294,7 +3294,7 @@ MAC_ADDRESS(0x1c661c, 0x2804)
 TMageGuildWindow::TMageGuildWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4477
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:4477
     m_widgets.reserve(77);
 
     m_widgets.push_back(new bitmapBorder16(0, 0, 800, 600, 0,
@@ -3420,7 +3420,7 @@ TMageGuildWindow::~TMageGuildWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // The mage guild page's rollover line. The page lays its thirty spell
@@ -3653,7 +3653,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
                                                      armyGroup& garrisonArmy)
     : CAdvPopup(125, 102, 549, 392, 0x12)
 {
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4810
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:4810
     m_thisHero = inHero;
     m_isJoinDialog = 0;
     m_widgets.reserve(51);
@@ -3823,7 +3823,7 @@ type_garrison_base_window::~type_garrison_base_window()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // The garrison dialog's status line, and the town page's command with
@@ -4192,7 +4192,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
 {
     int cost = g_creatureTypeTraits[g_blacksmithMachines[inTownType]].m_cost[6];
     m_townType = inTownType;
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:5218
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:5218
     m_widgets.reserve(12);
 
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
@@ -4277,7 +4277,7 @@ TBlacksmithWindow::~TBlacksmithWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 VA(0x005d1aa0, 0xB3)
@@ -4432,7 +4432,7 @@ TShipWindow::TShipWindow(int type)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
     m_boatFrame = 0;
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:5396
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:5396
     m_widgets.reserve(12);
 
     bitmapBorder* background = new bitmapBorder(0, 0, m_width, m_height, 0,
@@ -4513,7 +4513,7 @@ TShipWindow::~TShipWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // Original: TShipWindow::SetRightClickText; townmgr.cpp:5461
@@ -5910,7 +5910,7 @@ MAC_ADDRESS(0x1d267c, 0xaf8)
 TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
     : CAdvPopup(x2, y2, 0x18b, 0x208, 0x12)
 {
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:7211
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:7211
     m_buildingId = id;
     m_widgets.reserve(18);
 
@@ -5973,7 +5973,7 @@ TBuyBuildWindow::~TBuyBuildWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // The buy-a-building transaction: put up TBuyBuildWindow, price the
@@ -6181,7 +6181,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     msg.m_extra = g_game->getLocalPlayerGamePos();
     window->broadcastMessage(msg);
 
-    CSprite* resourceIcon = ResourceManager::getSprite("Resource.def");
+    CSprite* resourceIcon = ResourceManager::GetSprite("Resource.def");
     int thisWidth = resourceIcon->GetWidth();
     for (i = 0; i < numResources; i++) {
         sprintf(g_text, "%d", amounts[i]);
@@ -6203,7 +6203,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         window->m_widgets.push_back(icon);
         window->addWidget(icon, -1);
     }
-    ResourceManager::dispose(resourceIcon);
+    ResourceManager::Dispose(resourceIcon);
 
     m_objToBuild = -1;
     if (quickView) {
@@ -6622,7 +6622,7 @@ TTavernWindow::~TTavernWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // DC broadcasts the rollover text and draws widgets 13..14 with update=1.
@@ -6823,7 +6823,7 @@ DC_ADDRESS(0x17ad3c, 0x3a)
 MAC_ADDRESS(0x1d5c14, 0x84)
 int TTavernWindow::open(int zOrder, bool update)
 {
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
     videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
     int result = heroWindow::open(zOrder, update);
     if (result)
@@ -7101,7 +7101,7 @@ MAC_ADDRESS(0x1d6668, 0xa4e0)
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    ResourceManager::delSprFromCache();  // DC townmgr.cpp:8256
+    ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:8256
     // DC 8257 initializes the removed scroll_offset (+0x58), not a size
     // check. Mac 0x1d66b8..0x1d66d4 goes from base/vtable setup to reserve.
     // Removing the formerly assumed release VERIFY is byte-flat at 95.6830%.
@@ -7599,7 +7599,7 @@ TCastleWindow::~TCastleWindow()
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // ---------------------------------------------------------------------

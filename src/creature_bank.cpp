@@ -78,13 +78,13 @@ DC_ADDRESS(0x07112c, 0xec)
 MAC_ADDRESS(0x089558, 0x1ac)
 unsigned char initializeCreatureBankTraits()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x006703a8, creatureBankSpreadsheetName, "crbanks.txt"));
     if (!sheet)
         return 0;
     // DC retains ResourceManager::Dispose; Complete expands the wrapper.
     if (sheet->GetNumberOfRows() < 13) {
-        ResourceManager::dispose(sheet);
+        ResourceManager::Dispose(sheet);
         return 0;
     }
 
@@ -136,7 +136,7 @@ unsigned char initializeCreatureBankTraits()
 
     }
 
-    ResourceManager::dispose(sheet);
+    ResourceManager::Dispose(sheet);
     return 1;
 }
 

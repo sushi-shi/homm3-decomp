@@ -242,14 +242,14 @@ DC_ADDRESS(0x0d5a40, 0x72)
 MAC_ADDRESS(0x1077f8, 0xd4)
 unsigned char initializeHeroTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0067f154, heroTraitsSpreadsheetName,
                      "hotraits.txt"));
     if (!resource)
         return 0;
 
     if (resource->GetNumberOfRows() < 158) {
-        ResourceManager::dispose(resource);
+        ResourceManager::Dispose(resource);
         return 0;
     }
 
@@ -259,7 +259,7 @@ unsigned char initializeHeroTraitsTable()
         initializeHeroTraits(id, resource->GetRow(row));
     }
 
-    ResourceManager::dispose(resource);
+    ResourceManager::Dispose(resource);
     return 1;
 }
 
@@ -268,14 +268,14 @@ DC_ADDRESS(0x0d5ab4, 0x72)
 MAC_ADDRESS(0x1078cc, 0xd4)
 bool initializeHeroClassTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0067f164, heroClassTraitsSpreadsheetName,
                      "hctraits.txt"));
     if (!resource)
         return 0;
 
     if (resource->GetNumberOfRows() < 20) {
-        ResourceManager::dispose(resource);
+        ResourceManager::Dispose(resource);
         return 0;
     }
 
@@ -285,7 +285,7 @@ bool initializeHeroClassTraitsTable()
         initializeHeroClassTraits(id, resource->GetRow(row));
     }
 
-    ResourceManager::dispose(resource);
+    ResourceManager::Dispose(resource);
     return 1;
 }
 
@@ -294,14 +294,14 @@ DC_ADDRESS(0x0d5b28, 0x98)
 MAC_ADDRESS(0x1079a0, 0xd4)
 bool initializeSSkillTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0067f174, secondarySkillTraitsSpreadsheetName,
                      "sstraits.txt"));
     if (!resource)
         return 0;
 
     if (resource->GetNumberOfRows() < 30) {
-        ResourceManager::dispose(resource);
+        ResourceManager::Dispose(resource);
         return 0;
     }
 
@@ -311,7 +311,7 @@ bool initializeSSkillTraitsTable()
         initializeSSkillTraits(id, resource->GetRow(row));
     }
 
-    ResourceManager::dispose(resource);
+    ResourceManager::Dispose(resource);
     return 1;
 }
 

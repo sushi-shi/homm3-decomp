@@ -1160,7 +1160,7 @@ MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54
 TViewWorldWindow::TViewWorldWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
     m_x = 0;
     m_y = 0;
     m_width = 800;
@@ -1335,13 +1335,13 @@ MAC_ADDRESS(0x208d70, 0xe8)
 TViewWorldWindow::~TViewWorldWindow()
 {
     delete g_memoryBuffer;
-    ResourceManager::dispose(g_csVwIcons);
+    ResourceManager::Dispose(g_csVwIcons);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
-    ResourceManager::delSprFromCache();
+    ResourceManager::del_Spr_from_Cache();
 }
 
 // The type_func_button click code both callbacks answer, the same 13
@@ -1444,7 +1444,7 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 
     g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_MID;
     g_viewWorldScale = 11;
-    g_csVwIcons = ResourceManager::getSprite("VWsymbol.def");
+    g_csVwIcons = ResourceManager::GetSprite("VWsymbol.def");
     g_memoryBuffer = new Bitmap16Bit(64, 64);
     g_advManager->demobilizeCurrHero(0, 1);
     g_windowManager->m_colorCyclingOn = 0;

@@ -1252,7 +1252,7 @@ void ddInitGraphics()
     ddCreatePrimary();
     g_ddsPrimary->GetPixelFormat(&g_pixelFormat);
 
-    ResourceManager::setPixelFormat(
+    ResourceManager::SetPixelFormat(
         g_pixelFormat.dwRBitMask, g_pixelFormat.dwGBitMask, g_pixelFormat.dwBBitMask);
     SmackManager::setPixelFormat(
         g_pixelFormat.dwRBitMask, g_pixelFormat.dwGBitMask, g_pixelFormat.dwBBitMask);
@@ -1452,7 +1452,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
             savedScreen.Remap(savedGreen == GREEN_MASK_565
                                   ? BITMAP_GREEN_BITS_565
                                   : BITMAP_GREEN_BITS_1555);
-            ResourceManager::remapGraphics();
+            ResourceManager::RemapGraphics();
         }
         savedScreen.Draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0, false);
     }

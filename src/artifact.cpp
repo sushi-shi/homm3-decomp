@@ -400,7 +400,7 @@ MAC_ADDRESS(0x05a70c, 0x7ec)  // anchor-strings/caller
 bool initializeArtifactTraitsTable()
 {
     {
-        TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
+        TSpreadsheetResource* traitsSheet = ResourceManager::GetSpreadsheet(
             DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
                          "artraits.txt"));
         TResourcePtr<TSpreadsheetResource> traitsSheetGuard(traitsSheet);
@@ -484,7 +484,7 @@ bool initializeArtifactTraitsTable()
     }
 
     {
-        TSpreadsheetResource* slotsSheet = ResourceManager::getSpreadsheet(
+        TSpreadsheetResource* slotsSheet = ResourceManager::GetSpreadsheet(
             DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
                          "artslots.txt"));
         TResourcePtr<TSpreadsheetResource> slotsSheetGuard(slotsSheet);

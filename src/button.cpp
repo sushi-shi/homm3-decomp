@@ -93,7 +93,7 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
     m_highlightedFrame = 3;
     m_endDialog = end;
     m_hotKeyCodes.push_back(hotkey);
-    m_buttonIcon = ResourceManager::getSprite(image);
+    m_buttonIcon = ResourceManager::GetSprite(image);
 }
 
 VA(0x004560f0, 0x9A)
@@ -101,7 +101,7 @@ DC_ADDRESS(0x0571ec, 0x48)
 MAC_ADDRESS(0x062d98, 0x9c)
 inline button::~button()
 {
-    ResourceManager::dispose(m_buttonIcon);
+    ResourceManager::Dispose(m_buttonIcon);
 }
 
 // E:\gamedcs\button.cpp:104..111. Original name: SetPalette.
@@ -112,10 +112,10 @@ DC_ADDRESS(0x057234, 0x32)
 MAC_ADDRESS(0x062e34, 0x60)
 void button::setPalette(const char* paletteName)
 {
-    TPalette16* newPalette = ResourceManager::getPalette(paletteName);
+    TPalette16* newPalette = ResourceManager::GetPalette(paletteName);
     if (newPalette) {
         m_buttonIcon->SetPalette(newPalette->Palette);
-        ResourceManager::dispose(newPalette);
+        ResourceManager::Dispose(newPalette);
     }
 }
 
@@ -139,7 +139,7 @@ void button::initialize(int x, int y, int w, int h, int id,
     m_selectedFrame = selected;
     m_endDialog = end;
     m_hotKeyCodes.push_back(hotkey);
-    m_buttonIcon = ResourceManager::getSprite(image);
+    m_buttonIcon = ResourceManager::GetSprite(image);
 }
 
 // E:\gamedcs\button.cpp:131
@@ -176,8 +176,8 @@ int button::main(message& msg)
             return 1;
         case widget::WIDGET_SET_ICON_NAME:
             if (m_buttonIcon)
-                ResourceManager::dispose(m_buttonIcon);
-            m_buttonIcon = ResourceManager::getSprite(msg.m_extraText);
+                ResourceManager::Dispose(m_buttonIcon);
+            m_buttonIcon = ResourceManager::GetSprite(msg.m_extraText);
             return 1;
         case widget::WIDGET_SET_TEXT:
             setText(msg.m_extraText);
@@ -455,7 +455,7 @@ textButton::textButton(int x, int y, int w, int h, int id, const char* image, co
 {
     initialize(x, y, w, h, id, image, normal, selected, end, hotkey, style);
     setText(text);
-    m_font = ResourceManager::getFont(fontName);
+    m_font = ResourceManager::GetFont(fontName);
     m_textColor = newColor;
 }
 
@@ -465,7 +465,7 @@ DC_ADDRESS(0x057b5c, 0x3a)
 MAC_ADDRESS(0x063930, 0x74)  // anchor-global
 textButton::~textButton()
 {
-    ResourceManager::dispose(m_font);
+    ResourceManager::Dispose(m_font);
 }
 
 VA(0x00456ca0, 0x82)

@@ -927,7 +927,7 @@ int swapManager::open(int newPriority)
 
     g_windowManager->addWindow(m_parent, -1, 1);
     kbChangeMenu(g_dfltMenu);
-    m_border = ResourceManager::getBitmap816(
+    m_border = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x00688524, swapTradeSelectorBitmapName,
                      "TradeSel.pcx"));
     g_windowManager->updateScreen(0, 0, 800, 600);

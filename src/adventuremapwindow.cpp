@@ -647,11 +647,11 @@ void checkAdvCheatCode(std::string& chatString)
         cheatUsed = true;
         g_buildAllBuildings = !g_buildAllBuildings;
     } else if (code.compare(phisherPriceCode)) {
-        g_graphicsSaturated = !g_graphicsSaturated;
-        if (!g_graphicsSaturated)
-            ResourceManager::remapGraphics();
+        ResourceManager::SaturatedGraphicsEasterEgg = !ResourceManager::SaturatedGraphicsEasterEgg;
+        if (!ResourceManager::SaturatedGraphicsEasterEgg)
+            ResourceManager::RemapGraphics();
         else
-            ResourceManager::saturateGraphics();
+            ResourceManager::SaturateGraphics();
         g_advManager->redrawAdvScreen(1, 0);
     }
 

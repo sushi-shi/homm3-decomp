@@ -32,12 +32,12 @@ DC_ADDRESS(0x0fe598, 0x1cc)
 MAC_ADDRESS(0x131a88, 0x37c)
 unsigned char initializeCreatureAnimationTraitsTable()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0067ff28, cranimSpreadsheetName, "cranim.txt"));
     if (!sheet)
         return 0;
     if (sheet->GetNumberOfRows() < 179) {
-        ResourceManager::dispose(sheet);
+        ResourceManager::Dispose(sheet);
         return 0;
     }
     int id = 0;
@@ -113,7 +113,7 @@ unsigned char initializeCreatureAnimationTraitsTable()
         ++id;
         ++row;
     } }
-    ResourceManager::dispose(sheet);
+    ResourceManager::Dispose(sheet);
     return 1;
 }
 

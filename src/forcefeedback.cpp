@@ -141,12 +141,12 @@ t_initializer::t_initializer(void* instance, void* hwnd)
         project = std::auto_ptr<char>(new char[size]);
         file.sgetn(project.get(), size);
     } catch (t_initialize_failure) {
-        LODFile* resource = ResourceManager::pointToBitmapResource(shadowProjectName);
+        LODFile* resource = ResourceManager::PointToBitmapResource(shadowProjectName);
         if (resource == 0)
             throw t_initialize_failure();
-        int size = ResourceManager::getBitmapResourceSize(shadowProjectName);
+        int size = ResourceManager::GetBitmapResourceSize(shadowProjectName);
         project = std::auto_ptr<char>(new char[size]);
-        ResourceManager::readFromBitmapResource(resource, project.get(), size);
+        ResourceManager::ReadFromBitmapResource(resource, project.get(), size);
     }
 
     std::auto_ptr<CImmProject> immProject(new CImmProject);

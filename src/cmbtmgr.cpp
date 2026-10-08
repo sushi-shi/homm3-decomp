@@ -620,12 +620,12 @@ DC_ADDRESS(0x05d538, 0xd4)
 MAC_ADDRESS(0x06e140, 0xe0)
 unsigned char combatManager::loadWallTraitsTable()
 {
-    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0066fec0, wallsSpreadsheetName, "walls.txt"));
     if (!sheet)
         return 0;
     if (sheet->GetNumberOfRows() < 179) {
-        ResourceManager::dispose(sheet);
+        ResourceManager::Dispose(sheet);
         return 0;
     }
 
@@ -668,7 +668,7 @@ int combatManager::open(int newPriority)
     g_config.m_showCombatMouseHex = 0;
     m_combatShowIt = 0;
     g_soundManager->stopAllSamples(1);
-    ResourceManager::delSprFromCache();  // DC cmbtmgr.cpp:599
+    ResourceManager::del_Spr_from_Cache();  // DC cmbtmgr.cpp:599
 
     if (!isQuickCombat()) {
         char name[20];
@@ -822,11 +822,11 @@ DC_ADDRESS(0x05ddc0, 0x1f2)
 MAC_ADDRESS(0x06e938, 0x1d0)
 void combatManager::loadIcons()
 {
-    m_combatCellGridBitmap = ResourceManager::getBitmap816(
+    m_combatCellGridBitmap = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x0066ff30, combatCellGridBitmapName, "ccellgrd.pcx"));
-    m_combatShadowBitmap = ResourceManager::getBitmap816(
+    m_combatShadowBitmap = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x0066ff20, combatShadowBitmapName, "ccellshd.pcx"));
-    m_combatGridBitmap = ResourceManager::getBitmap816(
+    m_combatGridBitmap = ResourceManager::GetBitmap816(
         DATA_COMPGEN(0x0066ff10, combatGridBitmapName, "CmNumWin.pcx"));
 
     if (m_fortificationLevel > 0) {
@@ -837,7 +837,7 @@ void combatManager::loadIcons()
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].m_filenames[icon] != 0)
-                    m_wallImages[wall][icon] = ResourceManager::getBitmap816(
+                    m_wallImages[wall][icon] = ResourceManager::GetBitmap816(
                         traits[wall].m_filenames[icon]);
                 else
                     m_wallImages[wall][icon] = 0;
@@ -851,11 +851,11 @@ void combatManager::loadIcons()
         m_cmbtHeroFrameType[side] = 0;
         m_cmbtHeroFrameIndex[side] = 0;
         if (m_heroes[side]) {
-            m_creatureSprites[side] = ResourceManager::getSprite(
+            m_creatureSprites[side] = ResourceManager::GetSprite(
                 g_combatHeroSprites[
                     g_heroClasses[m_heroes[side]->m_heroClass].m_townType][
                     g_heroTraits[m_heroes[side]->m_id].m_sex].m_defName);
-            m_heroFlagSprites[side] = ResourceManager::getSprite(side == 0
+            m_heroFlagSprites[side] = ResourceManager::GetSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
                 : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));
             setPlayerPaletteColors(m_heroFlagSprites[side]->GetPalette(),
@@ -875,28 +875,28 @@ void combatManager::freeIcons()
     for (int group = 0; group < 18; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
             if (m_wallImages[group][icon])
-                ResourceManager::dispose(m_wallImages[group][icon]);
+                ResourceManager::Dispose(m_wallImages[group][icon]);
         }
     }
 
     for (TObstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_sprite)
-            ResourceManager::dispose(obstacle->m_sprite);
+            ResourceManager::Dispose(obstacle->m_sprite);
     }
     m_obstacles.clear();
 
     for (int side = 0; side < 2; ++side) {
         if (m_creatureSprites[side])
-            ResourceManager::dispose(m_creatureSprites[side]);
+            ResourceManager::Dispose(m_creatureSprites[side]);
         if (m_heroFlagSprites[side])
-            ResourceManager::dispose(m_heroFlagSprites[side]);
+            ResourceManager::Dispose(m_heroFlagSprites[side]);
     }
 
     loadSpellEffect(-1);
-    ResourceManager::dispose(m_combatGridBitmap);
-    ResourceManager::dispose(m_combatCellGridBitmap);
-    ResourceManager::dispose(m_combatShadowBitmap);
+    ResourceManager::Dispose(m_combatGridBitmap);
+    ResourceManager::Dispose(m_combatCellGridBitmap);
+    ResourceManager::Dispose(m_combatShadowBitmap);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:1004
@@ -2302,7 +2302,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             }
 
             TObstacle obstacle;
-            obstacle.m_sprite = ResourceManager::getSprite(shape->m_spriteName);
+            obstacle.m_sprite = ResourceManager::GetSprite(shape->m_spriteName);
             obstacle.m_shape = shape;
             obstacle.m_hex = static_cast<unsigned char>(hex);
             obstacle.m_owner = -1;
@@ -2409,7 +2409,7 @@ void combatManager::setupAndLoadObstacles()
 
                 TObstacle newLandmine;
                 newLandmine.m_sprite =
-                    ResourceManager::getSprite(s_landMineInfo[0].m_spriteName);
+                    ResourceManager::GetSprite(s_landMineInfo[0].m_spriteName);
                 newLandmine.m_shape = &s_landMineInfo[0];
                 newLandmine.m_hex = static_cast<unsigned char>(hex);
                 newLandmine.m_owner = 1;
@@ -2580,7 +2580,7 @@ void combatManager::removeObstacle(int index)
     hexcell& anchor = m_cells[obstacle->m_hex];
     anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
-    ResourceManager::dispose(obstacle->m_sprite);
+    ResourceManager::Dispose(obstacle->m_sprite);
     obstacle->m_sprite = 0;
 }
 
@@ -2600,9 +2600,9 @@ void combatManager::initializeArchers()
         g_creatureTypeTraits[info.m_creatureType].m_spriteName;
 
     archer->m_type = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
+    locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
     archer->m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_missileName);
+    locals.m_sprite = ResourceManager::GetSprite(info.m_missileName);
     archer->m_missile = locals.m_sprite;
     archer->m_x = info.m_mainBuildingX;
     archer->m_y = info.m_mainBuildingY;
@@ -2614,9 +2614,9 @@ void combatManager::initializeArchers()
         return;
 
     m_archers[eArcherLowerTower].m_type = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
+    locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
     m_archers[eArcherLowerTower].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_missileName);
+    locals.m_sprite = ResourceManager::GetSprite(info.m_missileName);
     m_archers[eArcherLowerTower].m_missile = locals.m_sprite;
     m_archers[eArcherLowerTower].m_x = info.m_lowerTowerX;
     m_archers[eArcherLowerTower].m_y = info.m_lowerTowerY;
@@ -2625,9 +2625,9 @@ void combatManager::initializeArchers()
     m_archers[eArcherLowerTower].m_frame = 0;
 
     m_archers[eArcherUpperTower].m_type = info.m_creatureType;
-    locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
+    locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
     m_archers[eArcherUpperTower].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::getSprite(info.m_missileName);
+    locals.m_sprite = ResourceManager::GetSprite(info.m_missileName);
     m_archers[eArcherUpperTower].m_missile = locals.m_sprite;
     m_archers[eArcherUpperTower].m_x = info.m_upperTowerX;
     m_archers[eArcherUpperTower].m_y = info.m_upperTowerY;
@@ -3115,7 +3115,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             spriteIndex = nsprites - 1;
     }
 
-    CSprite* const missile = ResourceManager::getSprite(fileNames[spriteIndex]);
+    CSprite* const missile = ResourceManager::GetSprite(fileNames[spriteIndex]);
     int width = missile->GetWidth();
     int height = missile->GetHeight();
     int x = startX - width / 2;
@@ -3157,7 +3157,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     saved.Draw(0, 0, width, height,
                g_windowManager->m_screenBitmap, x, y, false);
     updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:3890
-    ResourceManager::dispose(missile);
+    ResourceManager::Dispose(missile);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3902

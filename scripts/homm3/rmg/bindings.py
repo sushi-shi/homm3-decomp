@@ -16,7 +16,7 @@ SERVICES = {
     '??0TRuntimeError@@QAE@PBD@Z',
     '?buildTileNeighbourMask@@YIXHHHHPAE@Z',
     '?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ',
-    '?getSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z',
+    '?GetSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z',
     '?load@TObjectTypeTable@@QAEXPAD@Z',
 }
 DATA_SERVICES = {

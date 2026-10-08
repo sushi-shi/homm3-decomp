@@ -453,9 +453,9 @@ TObjectType& TObjectType::setImageName(
         }
 
         LODFile* maskFile =
-            ResourceManager::pointToSpriteResource(maskName.c_str());
+            ResourceManager::PointToSpriteResource(maskName.c_str());
         if (maskFile == 0) {
-            maskFile = ResourceManager::pointToSpriteResource("default.msk");
+            maskFile = ResourceManager::PointToSpriteResource("default.msk");
         }
         if (maskFile != 0) {
             unsigned int cell = 0;
@@ -464,10 +464,10 @@ TObjectType& TObjectType::setImageName(
             unsigned char drawBits[6];
             unsigned char shadowBits[6];
 
-            ResourceManager::readFromBitmapResource(maskFile, &width, 1);
-            ResourceManager::readFromBitmapResource(maskFile, &height, 1);
-            ResourceManager::readFromBitmapResource(maskFile, drawBits, 6);
-            ResourceManager::readFromBitmapResource(maskFile, shadowBits, 6);
+            ResourceManager::ReadFromBitmapResource(maskFile, &width, 1);
+            ResourceManager::ReadFromBitmapResource(maskFile, &height, 1);
+            ResourceManager::ReadFromBitmapResource(maskFile, drawBits, 6);
+            ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
             record->m_objectSize.m_x = width;
             record->m_objectSize.m_y = height;
             for (; cell < 48; ++cell) {
@@ -626,7 +626,7 @@ VA(0x00514d80, 0x284)
 MAC_ADDRESS(0x224224, 0x244)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMap::loadObjectTypeTemplates; retail-only
 void TObjectTypeTable::load(char* filename)
 {
-    TTextResource* text = ResourceManager::getText(filename);
+    TTextResource* text = ResourceManager::GetText(filename);
     if (text == 0)
         throw TRuntimeError();
 
@@ -638,10 +638,10 @@ void TObjectTypeTable::load(char* filename)
             row >> m_objectTypes[i];
         }
     } catch (...) {
-        ResourceManager::dispose(text);
+        ResourceManager::Dispose(text);
         throw;
     }
-    ResourceManager::dispose(text);
+    ResourceManager::Dispose(text);
 }
 
 VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)

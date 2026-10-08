@@ -380,13 +380,13 @@ DC_ADDRESS(0x0ca728, 0x96)
 MAC_ADDRESS(0x0f1cac, 0xec)
 unsigned char initializeHeroSpecificAbilitiesTable()
 {
-    TSpreadsheetResource* text = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* text = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "HeroSpec.txt"));
     if (text == 0)
         return 0;
 
     if (text->GetNumberOfRows() < 158) {
-        ResourceManager::dispose(text);
+        ResourceManager::Dispose(text);
         return 0;
     }
 
@@ -422,7 +422,7 @@ DC_ADDRESS(0x0ca7e8, 0x19c)
 MAC_ADDRESS(0x0f1db4, 0x294)
 static unsigned char initializeMoveConstants()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00679cdc, movementSpreadsheetName, "movement.txt"));
     if (!resource)
         return 0;
@@ -464,13 +464,13 @@ MAC_ADDRESS(0x0f2048, 0x1cc)
 // Windows interface changed to unsigned char.
 unsigned char initializeBallisticsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00679cec, ballisticsSpreadsheetName, "ballist.txt"));
     if (!resource)
         return 0;
 
     if (resource->GetNumberOfRows() < 6) {
-        ResourceManager::dispose(resource);
+        ResourceManager::Dispose(resource);
         return 0;
     }
 
@@ -490,7 +490,7 @@ unsigned char initializeBallisticsTable()
                 atoi(values[column++]);
     }
 
-    ResourceManager::dispose(resource);
+    ResourceManager::Dispose(resource);
     return initializeMoveConstants();
 }
 
@@ -4019,7 +4019,7 @@ MAC_ADDRESS(0x0fa5f0, 0x78b4)
 THeroScreenWindow::THeroScreenWindow()
     : CAdvPopup(0x40, 7, 0x2a0, 0x24a, 0x12)
 {
-    ResourceManager::delSprFromCache();  // DC hero.cpp:3965
+    ResourceManager::del_Spr_from_Cache();  // DC hero.cpp:3965
     m_topHero = 0;
     m_widgets.reserve(121);
     m_field64 = m_widgets.back();

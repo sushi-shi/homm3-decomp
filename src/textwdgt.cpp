@@ -55,7 +55,7 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
              static_cast<short>(w), static_cast<short>(h),
              static_cast<short>(id), 8)
 {
-    m_font = ResourceManager::getFont(fontName);
+    m_font = ResourceManager::GetFont(fontName);
     // DC textwdgt.cpp:64..65 records the conditional body's lexical scope.
     // Removing these braces leaves this constructor's bytes unchanged, but
     // makes VC6 expand it in bitmapBackedTextWidget (retail call 0x5bc7ab).
@@ -72,7 +72,7 @@ DC_ADDRESS(0x164d24, 0x44)
 MAC_ADDRESS(0x1b1550, 0x80)
 textWidget::~textWidget()
 {
-    ResourceManager::dispose(m_font);
+    ResourceManager::Dispose(m_font);
 }
 
 // Original: textWidget::initialize; textwdgt.cpp:102
@@ -85,7 +85,7 @@ void textWidget::initialize(int x, int y, int w, int h, int id, int style,
                              unsigned char focusable)
 {
     widget::initialize(x, y, w, h, id, style);
-    m_font = ResourceManager::getFont(fontName);
+    m_font = ResourceManager::GetFont(fontName);
     if (text) {
         m_text = text;
     }
@@ -236,7 +236,7 @@ iconBackedTextWidget::iconBackedTextWidget(
     int style)
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
-    m_background = ResourceManager::getSprite(backName);
+    m_background = ResourceManager::GetSprite(backName);
     m_backgroundFrame = 0;
 }
 
@@ -277,7 +277,7 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
     int style)
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
-    m_image = ResourceManager::getBitmap816(backName);
+    m_image = ResourceManager::GetBitmap816(backName);
 }
 
 // Claim-only home for the ordinary textWidget definition above. Retail
