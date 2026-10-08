@@ -299,3 +299,8 @@ source = "src/editor/EditTimedEventResourcesPage.cpp"
 name = "EditTimedEventGeneralPage"
 object = 80
 source = "src/editor/EditTimedEventGeneralPage.cpp"
+
+[[unit]]
+name = "EditTimedEventSheet"
+object = 79
+source = "src/editor/EditTimedEventSheet.cpp"
