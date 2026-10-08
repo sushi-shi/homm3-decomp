@@ -193,3 +193,8 @@ source = "src/editor/Tile.cpp"
 name = "MapEditorText"
 object = 18
 source = "src/editor/MapEditorText.cpp"
+
+[[unit]]
+name = "GameObject"
+object = 13
+source = "src/editor/GameObject.cpp"
