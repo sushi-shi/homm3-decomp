@@ -256,6 +256,29 @@ def startup_ranges(comparison):
 
 def library_ranges(pe, model):
     """Byte-verified static-library contributions (`homm3.verify.library_code`)."""
+    from homm3.verify import library_code
+    verdicts, data, game = _library_verify(pe, model)
+    ranges = [Range(lo, hi, category, identity, 2)
+              for lo, hi, category, identity in library_code.ranges(verdicts, pe)]
+    return ranges, library_code.summary(verdicts, data, game), _library_names(verdicts)
+
+
+def library_verdicts(pe, model):
+    """(per-contribution verdicts, {rva: masked public names they define})."""
+    verdicts, _data, _game = _library_verify(pe, model)
+    return verdicts, _library_names(verdicts)
+
+
+def _library_names(verdicts):
+    defined = defaultdict(set)
+    for v in verdicts:
+        if v.verdict == 'exact' and v.row.kind != 'alias':
+            for rva, name in v.symbols:
+                defined[rva].add(msvc_names.mask(name))
+    return defined
+
+
+def _library_verify(pe, model):
     from homm3.retail_labels.censuses import functions
     from homm3.verify import library_code
     names = defaultdict(set)
@@ -273,14 +296,7 @@ def library_ranges(pe, model):
     verdicts, data = library_code.verify(pe, names=names, game_comdats=game,
                                          reloc_sites=Image(pe).reloc_sites,
                                          referenced=referenced)
-    ranges = [Range(lo, hi, category, identity, 2)
-              for lo, hi, category, identity in library_code.ranges(verdicts, pe)]
-    defined = defaultdict(set)
-    for v in verdicts:
-        if v.verdict == 'exact' and v.row.kind != 'alias':
-            for rva, name in v.symbols:
-                defined[rva].add(msvc_names.mask(name))
-    return ranges, library_code.summary(verdicts, data, game), defined
+    return verdicts, data, game
 
 
 def linker_ranges(pe, dynamic, startup_sets, library, library_names, enrolled,
@@ -865,7 +881,12 @@ def report(model=None):
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
     # Byte-verified library sections name their symbols at their own offsets.
-    library, library_report, library_names = library_ranges(pe, model)
+    from homm3.verify import library_code
+    library_verdict_rows, library_data, library_game = _library_verify(pe, model)
+    library = [Range(lo, hi, category, identity, 2)
+               for lo, hi, category, identity in library_code.ranges(library_verdict_rows, pe)]
+    library_report = library_code.summary(library_verdict_rows, library_data, library_game)
+    library_names = _library_names(library_verdict_rows)
     shared = compare_shared(project, pe, model, excluded={
         row['rva'] for row in startup['matches'] + dynamic['matches']},
         library_names=library_names)
@@ -1001,6 +1022,14 @@ def report(model=None):
            'import_thunks': thunks,
            'code_extents': code_extents,
            'model_violations': model.violations, 'totals': {}}
+    # Per-function verdicts of the library and compiler-generated code the
+    # scores exclude; `homm3 build --data` banks them for the README.
+    from homm3.verify import generated_code
+    runtime_rows, generated_rows = generated_code.measure(
+        pe=pe, model=model, verdicts=library_verdict_rows, library_names=library_names,
+        enrolled=enrolled, parts=dict(dynamic=dynamic, startup=startup, shared=shared,
+                                      cleanups=cleanups, thunks=thunks))
+    doc['generated_code'] = dict(runtime=runtime_rows, baseline=generated_rows)
     for domain, rows in domains.items():
         totals = Counter()
         for row in rows:

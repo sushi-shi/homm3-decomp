@@ -199,6 +199,17 @@ def _main(argv: list[str]) -> int:
             print(f"[data-coverage] {totals.get('missing', 0):,} unclaimed file bytes; "
                   f"{totals.get('overlap', 0):,} overlapping bytes; "
                   "worklist in build/gen/data_coverage.json")
+            from homm3.verify import generated_code
+            generated = data_accounting['generated_code']
+            # The compiler-generated verdicts follow the game objects and are
+            # banked like the score ledger; the runtime table is a retail fact
+            # that only a reviewed `homm3 verify generated-code --write` moves.
+            generated_code.write_baseline(generated['baseline'])
+            if generated_code.stale(generated['runtime'], None):
+                print("[generated-code] config/retail/runtime-functions.tsv disagrees with "
+                      "`homm3 verify library-code`; review and run "
+                      "`homm3 verify generated-code --write`", file=sys.stderr)
+                failures.append("runtime function verdicts")
         except (ValueError, OSError) as exc:
             print(f"[data-coverage] unavailable: {exc}")
             failures.append("byte accounting")

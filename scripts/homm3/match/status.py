@@ -1185,6 +1185,36 @@ def ledger_bodies(rows: dict) -> dict:
     return bodies
 
 
+def generated_code_table(category: dict, tally: dict) -> list[list[str]]:
+    """README rows for the census categories outside the score denominator.
+
+    Verified counts come from the banked tables of `homm3 verify
+    generated-code` (`config/retail/runtime-functions.tsv` and
+    `config/generated_code_baseline.tsv`), counted over the census rows of
+    each category; a category without a banked table is shown as excluded.
+    """
+    from homm3.match import universe
+    from homm3.verify import generated_code
+    banked = generated_code.committed()
+    labels = {"runtime": ("`CRT/C++ runtime`", "library, verified"),
+              "eh-funclet": ("`EH unwind funclets`", "compiler-generated, verified with parent"),
+              "init-thunk": ("`init/cleanup thunks`", "compiler-generated, verified"),
+              "import-thunk": ("`import thunks`", "linker-generated, verified")}
+    rows = [["Category", "Functions", "Verified", "Code (B)", "Status", "How verified"]]
+    for cat, (label, status_text) in labels.items():
+        fns, code = tally.get(cat, (0, 0))
+        if not fns:
+            continue
+        if cat in banked:
+            exact = banked[cat]
+            verified = f"{sum(c == cat and rva in exact for rva, c in category.items()):,}"
+            how = universe.VERIFIED_NOTES[cat]
+        else:
+            verified, status_text, how = "—", "excluded", universe.EXCLUDED_NOTES[cat]
+        rows.append([label, f"{fns:,}", verified, f"{code:,}", status_text, how])
+    return rows
+
+
 def readme_block(rows: dict, *, data_accounting: dict | None = None,
                  previous_accountability: str | None = None) -> list[str]:
     """The README score block: a pure function of the banked ledger rows.
@@ -1266,18 +1296,9 @@ def readme_block(rows: dict, *, data_accounting: dict | None = None,
     block += ["", "MAX by module:", ""]
     block += _md_table(table, "lrrr")
 
-    excluded = [["Category", "Functions", "Code (B)", "Why excluded"]]
-    labels = {"eh-funclet": "`EH unwind funclets`",
-              "runtime": "`CRT/C++ runtime`",
-              "init-thunk": "`init/cleanup thunks`",
-              "import-thunk": "`import thunks`"}
-    for cat, label in labels.items():
-        fns, code = tally.get(cat, (0, 0))
-        if fns:
-            excluded.append([label, f"{fns:,}", f"{code:,}",
-                             universe.EXCLUDED_NOTES[cat]])
-    block += ["", "Excluded from the scores (generated or library code):", ""]
-    block += _md_table(excluded, "lrrl")
+    block += ["", "Library and compiler-generated code (outside the scores; each "
+              "function verified against what produced it):", ""]
+    block += _md_table(generated_code_table(category, tally), "lrrrll")
     if data_accounting is not None:
         totals = data_accounting['totals']['file']
         initializers = data_accounting['initializers']

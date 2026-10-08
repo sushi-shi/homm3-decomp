@@ -46,6 +46,17 @@ EXCLUDED_NOTES = {
     "import-thunk": "FF 25 jumps through the IAT",
 }
 
+#: How `homm3 verify generated-code` verifies each category, for the README.
+VERIFIED_NOTES = {
+    "runtime": "bytes and relocations equal pinned VC6 SP3 LIBCMT/LIBCPMT "
+               "members (config/retail/runtime-functions.tsv)",
+    "eh-funclet": "parent's `.text$x` COMDAT: bytes and every relocation "
+                  "target (library parents: their library section)",
+    "init-thunk": "source-emitted CRT bodies, bytes and named relocations",
+    "import-thunk": "`FF 25` through a named IAT slot (and the pinned "
+                    "import library where one exists)",
+}
+
 
 def _rows(path):
     return [line.rstrip("\n").split("\t") for line in path.open()

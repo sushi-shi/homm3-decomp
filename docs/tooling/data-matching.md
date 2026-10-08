@@ -17,6 +17,7 @@ homm3 verify data-tu-order
 homm3 verify data-coverage --tsv
 homm3 verify library-data-refs
 homm3 verify library-code
+homm3 verify generated-code        # per-function library/compiler-generated verdicts
 ```
 
 The normal build refreshes the complete byte report and its README summary.
@@ -357,6 +358,39 @@ The access report complements byte accounting with instruction-width, stride and
 shortfall checks. Its register tracking is local to a basic block; pointer escapes
 and accesses through unknown runtime pointers remain blind spots. A report of no
 findings is not proof that every datum is fully understood.
+
+## Per-function verdicts outside the score denominator
+
+`homm3 verify generated-code` turns those section verdicts into per-function
+verdicts for the census rows the scores exclude, so the README shows them as
+verified code rather than an exclusion:
+
+- **`runtime`** (LIBCMT/LIBCPMT): a function is `exact` when every byte lies in
+  exact `runtime-contributions.tsv` sections, or in 0xCC fill between two of
+  them. `config/retail/runtime-functions.tsv` records each function's library,
+  member, covering `member#section` list, linker symbol and verdict. Pinned
+  libraries and retail bytes decide it, so it is a retail fact:
+  `homm3 build --data` fails when the measured table differs, and only a
+  reviewed `homm3 verify generated-code --write` moves it.
+- **`eh-funclet`**: a game parent's cleanup funclets and registration stub are
+  its associative `.text$x` COMDAT. The candidate section must have the retail
+  group's length, unrelocated bytes and absolute-relocation sites. Each
+  relocation target must also resolve to the retail address: the destructor by
+  its model name, a verified library symbol (`___CxxFrameHandler`), or a
+  game-emitted COMDAT of that name that is byte-identical at the target. The
+  stub's `$T` resolves to the FuncInfo that the parent registers, and local
+  labels resolve within the section. A differing group whose parent is not yet
+  byte-exact is `pending-parent`, because VC6 emits funclets from the parent's
+  frame. Funclets of library parents are credited by the library section that
+  holds them.
+- **`init-thunk`**: the source, startup, shared-header and local-cleanup
+  comparisons above, with the census extent.
+- **`import-thunk`**: `homm3.verify.import_thunks`.
+
+`homm3 build --data` banks the last three in `config/generated_code_baseline.tsv`,
+the same way it banks the score ledger. The README's
+"Library and compiler-generated code" table counts `exact` rows per census
+category. These verdicts never change a game function's CUR, MAX or HIST.
 
 ## Retail records, pairing and padding
 

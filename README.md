@@ -32,14 +32,14 @@ MAX by module:
 | `codec`      |     4 |     42 / 43 (97.7%) |    99.92% |
 | `victor`     |     4 |     14 / 26 (53.8%) |    86.18% |
 
-Excluded from the scores (generated or library code):
+Library and compiler-generated code (outside the scores; each function verified against what produced it):
 
-| Category              | Functions | Code (B) | Why excluded                                                       |
-| :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
-| `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       912 |  110,461 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
-| `init/cleanup thunks` |     1,173 |   95,322 | compiler-generated CRT initializer/cleanup bodies                  |
-| `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
+| Category              | Functions | Verified | Code (B) | Status                                   | How verified                                                                                            |
+| :-------------------- | --------: | -------: | -------: | :--------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| `CRT/C++ runtime`     |       912 |      912 |  110,461 | library, verified                        | bytes and relocations equal pinned VC6 SP3 LIBCMT/LIBCPMT members (config/retail/runtime-functions.tsv) |
+| `EH unwind funclets`  |     5,125 |    4,558 |   53,151 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section)   |
+| `init/cleanup thunks` |     1,173 |    1,166 |   95,322 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                  |
+| `import thunks`       |        27 |       26 |      162 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                       |
 
 <!-- match-score:end -->
 

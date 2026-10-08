@@ -84,14 +84,21 @@ class ReadmeScoreTest(ReadmeCase):
                 for rva in categories}
         universe = (categories, dict.fromkeys(categories, 10),
                     {cat: (1, 10) for cat in categories.values()})
-        text = self.render(rows, universe)
+        banked = {"runtime": {5}, "eh-funclet": set(), "init-thunk": {3, 99}}
+        with patch("homm3.verify.generated_code.committed", return_value=banked):
+            text = self.render(rows, universe)
 
         self.assertIn("75.00% matched (MAX)** — 1 / 2 functions exact", text)
         self.assertRegex(text, r"\| CUR\s*\|\s*1 \|")
         self.assertRegex(text, r"\| HIST\s*\|\s*1 \|")
         self.assertNotIn("`(unmatched)`", text)
         self.assertRegex(text, r"\|\s*1 / 2 \(50\.0%\) \|\s*75\.00% \|")
-        self.assertRegex(text, r"\| `import thunks`\s*\|\s*1 \|\s*10 \|")
+        # Banked verdicts count only census rows of their own category; a
+        # category without a banked table stays excluded.
+        self.assertRegex(text, r"\| `CRT/C\+\+ runtime`\s*\|\s*1 \|\s*1 \|\s*10 \| library, verified")
+        self.assertRegex(text, r"\| `EH unwind funclets`\s*\|\s*1 \|\s*0 \|")
+        self.assertRegex(text, r"\| `init/cleanup thunks`\s*\|\s*1 \|\s*1 \|")
+        self.assertRegex(text, r"\| `import thunks`\s*\|\s*1 \|\s*— \|\s*10 \| excluded")
 
     def test_duplicate_retail_body_is_refused(self):
         rows = {("a", "old"): status.MatchRow(1, 1, 1, 0x10),
