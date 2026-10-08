@@ -73,10 +73,22 @@ compiles the file with its own profile and **places** its functions
    relocation fields masked;
 2. the callees and referents named by the relocations of each placed body,
    read from the retail bytes;
-3. the slots of each RTTI-named vtable.
+3. the slots of each RTTI-named vtable;
+4. string literals: a `??_C@` literal whose bytes sit at exactly one retail
+   address that code references anchors the compiled functions that use it.
+   A function still unplaced is placed where retail references all of its
+   anchored literals together, when that is one unclaimed census function;
+5. masked prefixes: a function still unplaced whose masked bytes agree with
+   the start of exactly one unclaimed census function for 32 fixed bytes,
+   8 more than any other start, with a size within a factor of two (a body
+   whose tail the image's compile changes).
 
-A name that reaches two addresses, or an address that receives two names, is
-dropped. The label model reads the table as the image's claims (channel
+Steps 2 and 3 follow every other step. A placed body names a referent only
+where the opcode byte before its relocation field agrees with retail, so a
+body that differs elsewhere still names its callees where it agrees. Steps 4
+and 5 never contradict an earlier placement. A name that reaches two
+addresses, or an address that receives two names, is dropped. Names keep
+their checkout-independent anonymous-namespace spelling. The label model reads the table as the image's claims (channel
 `placement`). Sources only the image compiles (`src/editor/...`) spell the
 image's own addresses in `VA()`/`DATA()` and are extracted like game sources.
 

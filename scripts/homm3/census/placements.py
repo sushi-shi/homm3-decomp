@@ -18,9 +18,19 @@ source (build/<image>/objdiff/base/<unit>.obj, the image's profile):
      every slot symbol of the compiled table at the retail slot's target;
   4. data: a DIR32 reference of a placed function to data an image unit
      defines (globals, string-literal COMDATs) places that datum at the
-     retail address less the compiled addend, with the compiled extent.
+     retail address less the compiled addend, with the compiled extent;
+  5. string literals: a string-literal COMDAT (`??_C@`) whose bytes occur
+     at exactly one retail address that retail code references anchors
+     every compiled function that references it. A function still unplaced
+     whose literals are referenced together by exactly one unclaimed census
+     function is placed there, and the literal at its address;
+  6. prefixes: a function still unplaced whose masked bytes agree with the
+     start of exactly one unclaimed census function for at least
+     PREFIX_FIXED fixed bytes, PREFIX_MARGIN more than any other start, is
+     placed there (a body whose tail the image's compile changes).
 
-Steps 2 and 3 repeat to a fixpoint. Functions the image's runtime map names
+Steps 2 and 3 repeat to a fixpoint after each of steps 1, 5 and 6; steps 5
+and 6 never name an address that an earlier step claimed. Functions the image's runtime map names
 (statically linked library code) are never placed. A name that reaches two addresses, or an
 address that receives two names, is dropped and reported (ICF folds and
 genuine ambiguity alike stay unclaimed until reviewed). The result is
@@ -30,6 +40,7 @@ claims for shared units (channel `placement`).
 from __future__ import annotations
 
 import argparse
+import bisect
 import struct
 import sys
 from collections import defaultdict
@@ -39,6 +50,12 @@ from homm3.core import common, paths
 import re
 
 MIN_FIXED = 12
+#: Prefix placement: fixed (unmasked) bytes the agreeing prefix must hold,
+#: and its lead over the next best census start.
+PREFIX_FIXED = 32
+PREFIX_MARGIN = 8
+#: A string-literal COMDAT: `??_C@_` plus its length and checksum.
+LITERAL = re.compile(r"^\?\?_C@_")
 #: Compiler initializer ordinals (`_$E22`): volatile, never a placed name.
 VOLATILE = re.compile(r"^_?\$E[0-9]+$")
 DIR32, REL32 = 6, 20
@@ -73,9 +90,10 @@ def _functions_of(obj):
 
 
 def _data_of(obj):
-    """{name: size} of the data an object defines: external symbols and
-    string-literal COMDATs in its non-code sections, each running to the
-    next symbol of its section. Vtables and RTTI records are the census's."""
+    """{name: (size, bytes)} of the data an object defines: external symbols
+    and string-literal COMDATs in its non-code sections, each running to the
+    next symbol of its section (bytes None for uninitialized storage).
+    Vtables and RTTI records are the census's."""
     out = {}
     for sec in obj.section_table:
         if sec["characteristics"] & 0x20 or sec["name"].startswith((".debug", ".drectve")):
@@ -83,10 +101,11 @@ def _data_of(obj):
         number = sec["index"]
         members = sorted((off, name) for off, name, scl in obj.section_members(number)
                          if scl == 2 and not name.startswith(("$", ".", "??_7", "??_R")))
+        payload = None if sec["characteristics"] & 0x80 else obj.section_payload(number)
         for i, (off, name) in enumerate(members):
             end = members[i + 1][0] if i + 1 < len(members) else sec["size"]
             if end > off:
-                out.setdefault(name, end - off)
+                out.setdefault(name, (end - off, payload[off:end] if payload else None))
     return out
 
 
@@ -109,11 +128,22 @@ def _vtable_slots(obj):
     return out
 
 
+def portable(text: str, unit: str) -> str:
+    """`text` with each anonymous-namespace scope in its checkout-independent
+    spelling (homm3.compare.canonicalize), so the table does not depend on
+    where the image's units were compiled."""
+    from homm3.compare.canonicalize import normalize_anon_ns_name
+    if "?%" not in text:
+        return text
+    return " ".join(normalize_anon_ns_name(word, unit) for word in text.split(" "))
+
+
 def derive(log=print):
     from homm3 import manifest
     from homm3.core.image import Image
     from homm3.delink.coffx import Obj
     from homm3.retail_labels import censuses
+    from homm3.core.tsv import read as read_tsv
 
     image = Image(str(common.resolve_exe()))
     base = image.image_base
@@ -143,7 +173,7 @@ def derive(log=print):
     compiled = []                         # (unit, name, body, relocs)
     definers = defaultdict(list)          # function name -> units, manifest order
     tables = {}                           # vtable symbol -> slots
-    data_definers = {}                    # data name -> (unit, size)
+    data_definers = {}                    # data name -> (unit, size, bytes)
     for unit in units:
         path = paths.BUILD / "objdiff/base" / f"{unit['unit']}.obj"
         if not path.is_file():
@@ -156,8 +186,8 @@ def derive(log=print):
                 definers[name].append(unit["unit"])
         for name, slots in _vtable_slots(obj).items():
             tables.setdefault(name, slots)
-        for name, size in _data_of(obj).items():
-            data_definers.setdefault(name, (unit["unit"], size))
+        for name, (size, text) in _data_of(obj).items():
+            data_definers.setdefault(name, (unit["unit"], size, text))
 
     by_size = defaultdict(list)
     for rva, size in functions.items():
@@ -182,17 +212,26 @@ def derive(log=print):
 
     names_by_function = set(functions)
 
+    strict = False                        # set once steps 5 and 6 begin
+    named_at = defaultdict(set)           # rva -> {name}
+
     def propose(name, rva, why):
         if VOLATILE.match(name) or rva not in functions:
             return False
         if rva in names[name]:
             return False
+        if strict and (names[name] or named_at[rva]):
+            # the weaker steps never contradict what is already placed
+            return False
         names[name].add(rva)
+        named_at[rva].add(name)
         evidence.setdefault((name, rva), why)
         return True
 
+    relocs_of = {}                        # id(body) -> its relocation sites
     for unit, name, body, relocs in compiled:
         bodies.setdefault(name, (body, relocs))
+        relocs_of[id(body)] = tuple(relocs)
         mask = bytearray(len(body))
         for site in relocs:
             mask[site:site + 4] = b"\1\1\1\1"
@@ -220,35 +259,178 @@ def derive(log=print):
         if row is not None:
             place_table(symbol, row["rva"], f"vtable of {cls} (RTTI)")
 
+    def same_operand(body, rva, site):
+        """A relocation site whose instruction bytes before the field agree
+        with retail: a placed body that differs elsewhere still names its
+        referents there, and nowhere else."""
+        start = max(0, site - 1)
+        theirs = blob(rva + start, site - start)
+        fields = [other for other in relocs_of[id(body)] if other != site]
+        return all(theirs[k - start] == body[k] for k in range(start, site)
+                   if not any(other <= k < other + 4 for other in fields))
+
     # reference propagation to a fixpoint over uniquely placed functions
     done = set()
-    while True:
-        moved = 0
-        for name, rvas in list(names.items()):
-            if len(rvas) != 1 or name in done or name not in bodies:
+
+    def propagate():
+        while True:
+            moved = 0
+            for name, rvas in list(names.items()):
+                if len(rvas) != 1 or name in done or name not in bodies:
+                    continue
+                done.add(name)
+                (rva,) = rvas
+                body, relocs = bodies[name]
+                for site, (ref, kind) in relocs.items():
+                    value = word(rva + site)
+                    if value is None or not same_operand(body, rva, site):
+                        continue
+                    if kind == REL32:
+                        target = (rva + site + 4 + value) & 0xFFFFFFFF
+                    elif kind == DIR32:
+                        # the compiled field holds the reference's addend
+                        target = value - base - struct.unpack_from("<i", body, site)[0]
+                    else:
+                        continue
+                    if ref in definers:
+                        moved += propose(ref, target, f"referenced by {name} at +0x{site:x}")
+                    elif ref in tables:
+                        moved += place_table(ref, target, f"vtable {ref} stored by {name}")
+                    elif ref in data_definers and kind == DIR32:
+                        propose_data(ref, target, f"referenced by {name} at +0x{site:x}")
+            if not moved:
+                break
+
+    propagate()
+
+    def claimed():
+        return {rva for rvas in names.values() for rva in rvas}
+
+    starts = sorted(functions)
+
+    def owner(site):
+        """The census function whose extent holds a retail site."""
+        k = bisect.bisect_right(starts, site) - 1
+        if k >= 0 and site < starts[k] + functions[starts[k]]:
+            return starts[k]
+        return None
+
+    strict = True
+
+    # 5. string-literal anchors
+    referrers = defaultdict(set)          # retail data address -> {census function}
+    for row in read_tsv(retail / "reloc-evidence.tsv")[2]:
+        if row["disposition"] != "kept" or row["channel"] != "code":
+            continue
+        fn = owner(int(row["site_rva"], 16))
+        if fn is not None:
+            referrers[int(row["value"], 16) - base].add(fn)
+    data_blobs = [(sec, image.blob(sec)) for sec in image.sections if not sec.executable]
+
+    def literal_home(text):
+        """The one retail address that holds `text` and that code references."""
+        hits = []
+        for sec, payload in data_blobs:
+            at = payload.find(text)
+            while at >= 0:
+                if sec.rva + at in referrers:
+                    hits.append(sec.rva + at)
+                at = payload.find(text, at + 1)
+        return hits[0] if len(hits) == 1 else None
+
+    homes = {}
+    for name, (unit, size, text) in data_definers.items():
+        if LITERAL.match(name) and text and len(text) >= 4:
+            home = literal_home(text)
+            if home is not None:
+                homes[name] = home
+    taken = claimed()
+    anchored = 0
+    chosen = defaultdict(list)            # rva -> [(name, literals)]
+    for unit, name, body, relocs in compiled:
+        if names.get(name):
+            continue
+        literals = {ref for ref, kind in relocs.values() if kind == DIR32 and ref in homes}
+        if not literals:
+            continue
+        candidates = None
+        for ref in literals:
+            users = referrers[homes[ref]] - taken
+            candidates = users if candidates is None else candidates & users
+        if candidates and len(candidates) == 1:
+            chosen[next(iter(candidates))].append((name, literals))
+    for rva, choices in sorted(chosen.items()):
+        if len(choices) != 1:
+            continue                      # two compiled bodies anchor here
+        name, literals = choices[0]
+        shown = ", ".join(sorted(literals))
+        anchored += propose(name, rva, f"string literal anchor ({shown})")
+        for ref in literals:
+            propose_data(ref, homes[ref], f"string literal referenced by {name}")
+    propagate()
+    # a literal's unique home is its address when a placed referrer reads it
+    for unit, name, body, relocs in compiled:
+        if len(names.get(name, ())) != 1:
+            continue
+        (rva,) = names[name]
+        for ref, kind in relocs.values():
+            if kind == DIR32 and ref in homes and rva in referrers[homes[ref]]:
+                propose_data(ref, homes[ref], f"string literal referenced by {name}")
+
+    # 6. masked prefixes
+    taken = claimed()
+    windows = {}                          # offset -> {6 retail bytes: [rva]}
+
+    def window(offset):
+        if offset not in windows:
+            index = defaultdict(list)
+            for rva in starts:
+                if rva not in taken and functions[rva] >= offset + 6:
+                    index[blob(rva + offset, 6)].append(rva)
+            windows[offset] = index
+        return windows[offset]
+
+    prefixed = 0
+    chosen = defaultdict(list)            # rva -> [(name, evidence)]
+    for unit, name, body, relocs in compiled:
+        if names.get(name) or len(body) < PREFIX_FIXED:
+            continue
+        mask = bytearray(len(body))
+        for site in relocs:
+            mask[site:site + 4] = b"\1\1\1\1"
+        offset = next((o for o in range(min(32, len(body) - 6))
+                       if not any(mask[o:o + 6])), None)
+        if offset is None:
+            continue
+        scores = []
+        for rva in window(offset).get(bytes(body[offset:offset + 6]), ()):
+            if rva in taken:
                 continue
-            done.add(name)
-            (rva,) = rvas
-            body, relocs = bodies[name]
-            for site, (ref, kind) in relocs.items():
-                value = word(rva + site)
-                if value is None:
+            theirs = blob(rva, min(len(body), functions[rva]))
+            fixed = 0
+            for k, (a, b) in enumerate(zip(theirs, body)):
+                if mask[k]:
                     continue
-                if kind == REL32:
-                    target = (rva + site + 4 + value) & 0xFFFFFFFF
-                elif kind == DIR32:
-                    # the compiled field holds the reference's addend
-                    target = value - base - struct.unpack_from("<i", body, site)[0]
-                else:
-                    continue
-                if ref in definers:
-                    moved += propose(ref, target, f"referenced by {name} at +0x{site:x}")
-                elif ref in tables:
-                    moved += place_table(ref, target, f"vtable {ref} stored by {name}")
-                elif ref in data_definers and kind == DIR32:
-                    propose_data(ref, target, f"referenced by {name} at +0x{site:x}")
-        if not moved:
-            break
+                if a != b:
+                    break
+                fixed += 1
+            scores.append((fixed, rva))
+        scores.sort(reverse=True)
+        if not scores or scores[0][0] < PREFIX_FIXED:
+            continue
+        if not 0.5 <= functions[scores[0][1]] / len(body) <= 2:
+            continue
+        if len(scores) > 1 and scores[0][0] - scores[1][0] < PREFIX_MARGIN:
+            continue
+        fixed, rva = scores[0]
+        chosen[rva].append((name, f"masked prefix ({fixed} fixed bytes agree, "
+                                  f"{len(body)} compiled, {functions[rva]} retail)"))
+    for rva, choices in sorted(chosen.items()):
+        if len(choices) == 1:
+            prefixed += propose(choices[0][0], rva, choices[0][1])
+    propagate()
+    log(f"[placements] {len(homes)} string literals at unique referenced addresses; "
+        f"{anchored} functions anchored by them, {prefixed} by masked prefixes")
 
     by_rva = defaultdict(set)
     for name, rvas in names.items():
@@ -263,8 +445,9 @@ def derive(log=print):
         if len(by_rva[rva]) != 1:
             conflicts += 1
             continue
-        rows.append((rva, functions[rva], "func", name, definers[name][0],
-                     evidence[(name, rva)]))
+        unit = definers[name][0]
+        rows.append((rva, functions[rva], "func", portable(name, unit), unit,
+                     portable(evidence[(name, rva)], unit)))
     placed_functions = len(rows)
     data_by_rva = defaultdict(set)
     for name, rvas in data_names.items():
@@ -276,8 +459,9 @@ def derive(log=print):
             data_conflicts += 1
             continue
         (rva,) = rvas
-        unit, size = data_definers[name]
-        rows.append((rva, size, "data", name, unit, data_evidence[(name, rva)]))
+        unit, size, _text = data_definers[name]
+        rows.append((rva, size, "data", portable(name, unit), unit,
+                     portable(data_evidence[(name, rva)], unit)))
     rows.sort()
     log(f"[placements] {placed_functions} functions and {len(rows) - placed_functions} "
         f"data objects placed from {len(compiled)} compiled bodies of {len(units)} "
