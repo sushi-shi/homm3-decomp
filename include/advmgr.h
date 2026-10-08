@@ -113,17 +113,7 @@ enum ECartographerType {
     CARTOGRAPHER_UNDERGROUND = 2
 };
 
-enum EAdvmgrRetailObjectType {
-    BORDER_GATE = 212,
-    // 213: DispatchEvent's 0xd5 arm gates DoFreelancersGuild(hero*) on
-    // human_player - the map-object entry of tradpost's guild pair.
-    FREELANCERS_GUILD = 213,
-    HERO_PLACEHOLDER = 214,
-    QUEST_GUARD = 215,
-    RANDOM_DWELLING = 216,
-    RANDOM_DWELLING_LVL = 217,
-    RANDOM_DWELLING_FACTION = 218
-};
+#include "retailobjecttype.h"
 
 // events.obj joins the gate for the refugee camp (0x4a4600), which names
 // the object it is standing on in both of its dialogs. The guard is SPLIT
