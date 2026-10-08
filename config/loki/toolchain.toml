@@ -25,3 +25,12 @@ target = "i386-linux"
 # Stage with `homm3 loki toolchain --sgi-stl DIR` (or HOMM3_LOKI_SGI_STL).
 [sgi_stl]
 "stl32.tar.gz" = "4ce657852c460c6b016c470886865a6ebc575a89c82df979012a0cde094a5076"
+
+# The assembler: binutils 2.9.1.0.25 (Slackware 7.1 d1/binutils.tgz, md5 matching the
+# release CHECKSUMS.md5). Loki's objects never use the byte moffs forms (a0/a2): all 29
+# absolute byte loads/stores are 8a 05 / 88 05, beside 781 a1 and 42 a3 for 32-bit ones.
+# potato's as 2.9.5.0.37 emits a0 for `movb sym, %al`; 2.9.1.0.25 emits 8a 05.
+# Only usr/bin/as and its libbfd are staged; cc1plus and cpp stay Debian's.
+# Stage with `homm3 loki toolchain --binutils DIR` (or HOMM3_LOKI_BINUTILS).
+[binutils]
+"binutils.tgz" = "70a0560e929fdd4cab4b204876e6f5eb2fdb6debe5da4429b5ff12c78f8d73db"

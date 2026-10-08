@@ -1,8 +1,8 @@
 """homm3 loki: the Loki Linux h3maped image (GCC 2.95.2, ELF i386).
 
-  init [--exe PATH] [--debs DIR] [--sgi-stl DIR]
+  init [--exe PATH] [--debs DIR] [--sgi-stl DIR] [--binutils DIR]
         verify and stage the pinned h3maped and GCC 2.95.2 toolchain
-  toolchain [--debs DIR] [--sgi-stl DIR]
+  toolchain [--debs DIR] [--sgi-stl DIR] [--binutils DIR]
         stage or verify the toolchain only; print the driver version
   census [--check]
         regenerate (or check) config/retail/h3maped-loki/{objects,functions}.tsv
@@ -30,9 +30,11 @@ def main(argv=None) -> int:
     p.add_argument("--exe", help="Loki h3maped (otherwise HOMM3_LOKI_H3MAPED or the staged copy)")
     p.add_argument("--debs", help="directory of the pinned Debian potato packages")
     p.add_argument("--sgi-stl", help="directory holding SGI STL 3.2 stl32.tar.gz")
+    p.add_argument("--binutils", help="directory holding Slackware 7.1 binutils.tgz (as 2.9.1.0.25)")
     p = sub.add_parser("toolchain", help="stage or verify the GCC 2.95.2 toolchain")
     p.add_argument("--debs")
     p.add_argument("--sgi-stl")
+    p.add_argument("--binutils")
     p = sub.add_parser("census", help="object/function census of the retail image")
     p.add_argument("--check", action="store_true")
     p = sub.add_parser("build", help="compile, delink and score Loki units")
@@ -54,7 +56,7 @@ def main(argv=None) -> int:
             if args.command == "init":
                 from homm3.loki.image import executable
                 print(f"[loki] image: {inputs.stage_executable(executable(), args.exe)}")
-            toolchain.stage(args.debs, args.sgi_stl)
+            toolchain.stage(args.debs, args.sgi_stl, args.binutils)
             print(f"[loki] g++ {toolchain.version()} staged at {toolchain.DESTINATION}")
             return 0
         if args.command == "census":

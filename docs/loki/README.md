@@ -10,7 +10,7 @@ the game ledger or the README score block.
 ## Setup
 
 ```sh
-homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR
+homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR --binutils DIR
 homm3 loki census --check      # retail facts are current
 homm3 loki build -v            # compile, delink, canonicalize, objdiff
 homm3 loki disasm _getC__13TGzInflateBuf   # references named as compared
@@ -20,9 +20,13 @@ homm3 loki diff Error __11TDebugBreak      # one function, base | retail
 `--debs` holds the eight Debian 2.2 "potato" i386 packages pinned in
 `config/loki/toolchain.toml` (gcc, g++, cpp 2.95.2-13.1; binutils
 2.9.5.0.37-1; libc6 and libc6-dev 2.1.3-20; libstdc++2.10 and -dev).
-`--sgi-stl` holds SGI STL 3.2's `stl32.tar.gz` (members dated 1999-04-23). The
-environment variables `HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS` and
-`HOMM3_LOKI_SGI_STL` work as well. Everything is staged under ignored
+`--sgi-stl` holds SGI STL 3.2's `stl32.tar.gz` (members dated 1999-04-23).
+`--binutils` holds Slackware 7.1's `binutils.tgz` (2.9.1.0.25), whose `as`
+replaces potato's: Loki's objects never use the byte `moffs` encodings
+(`a0`/`a2`); all 29 absolute byte loads and stores are `8a 05`/`88 05`,
+which as 2.9.1.0.25 emits and 2.9.5.0.37 does not. The environment variables
+`HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS`, `HOMM3_LOKI_SGI_STL` and
+`HOMM3_LOKI_BINUTILS` work as well. Everything is staged under ignored
 `build/`: the image at `build/orig/loki/h3maped` and the toolchain at
 `build/loki/toolchain/`.
 

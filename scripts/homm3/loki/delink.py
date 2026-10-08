@@ -191,9 +191,12 @@ def base_sections(data: bytes) -> list[CodeSection]:
                     if place not in tables:
                         tables.append(place)
                     name, delta = f"{symbol.name}$jt{tables.index(place)}", 0
-                elif (owner := containing(target.shndx, place)) is not None:
+                elif (owner := containing(target.shndx, place)) is not None and not (
+                        owner.bind == 0 and kind.name.startswith(".rodata")):
                     name, delta = owner.name, place - owner.value
                 elif kind.name.startswith(".rodata"):
+                    # A file-static constant has no name in the image either:
+                    # both sides name it by the bytes the operand uses.
                     name, delta = cmpobj.literal_for(read_section(target.shndx), place, field.access_size), 0
                 else:
                     name, delta = f"{kind.name}+{place:x}", 0

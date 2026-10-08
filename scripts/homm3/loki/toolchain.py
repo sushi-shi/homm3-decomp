@@ -1,4 +1,5 @@
-"""Stage the pinned GCC 2.95.2 toolchain (Debian potato i386 packages + SGI STL 3.2).
+"""Stage the pinned GCC 2.95.2 toolchain (Debian potato i386 packages + SGI STL 3.2,
+assembling with the binutils 2.9.1.0.25 `as` of Slackware 7.1).
 
 The 2000-era binaries run unmodified through the packaged ld-2.1.3.so loader:
 every program the driver spawns (cpp, cc1plus, as) is reached through a
@@ -29,6 +30,7 @@ DESTINATION = ROOT / "build/loki/toolchain"
 SYSROOT = DESTINATION / "root"
 WRAPPERS = DESTINATION / "libexec"
 SGI_STL = DESTINATION / "sgi-stl"
+BINUTILS = DESTINATION / "binutils"
 STAMP = DESTINATION / "staged.sha256"
 LOADER = SYSROOT / "lib/ld-2.1.3.so"
 
@@ -84,25 +86,25 @@ def _extract(deb: bytes, root: Path) -> None:
                 path.chmod(member.mode & 0o755 | 0o600)
 
 
-def _wrapper(program: Path) -> str:
-    library_path = f"{SYSROOT}/lib:{SYSROOT}/usr/lib"
+def _wrapper(program: Path, *library_dirs: Path) -> str:
+    library_path = ":".join(str(p) for p in (SYSROOT / "lib", SYSROOT / "usr/lib", *library_dirs))
     return f'#!/bin/sh\nexec "{LOADER}" --library-path "{library_path}" "{program}" "$@"\n'
 
 
 def _write_wrappers() -> None:
     WRAPPERS.mkdir(parents=True, exist_ok=True)
     programs = {name: _gcc_lib() / name for name in ("cpp", "cc1", "cc1plus", "collect2")}
-    programs.update({"as": SYSROOT / "usr/bin/as", "ld": SYSROOT / "usr/bin/ld"})
+    programs.update({"as": BINUTILS / "usr/bin/as", "ld": SYSROOT / "usr/bin/ld"})
     for name, program in programs.items():
         if not program.is_file():
             raise ToolchainError(f"staged toolchain lacks {program}")
         path = WRAPPERS / name
-        path.write_text(_wrapper(program))
+        path.write_text(_wrapper(program, BINUTILS / "usr/lib") if name == "as" else _wrapper(program))
         path.chmod(0o755)
 
 
 def _digest(spec: dict) -> str:
-    pins = {**spec["debs"], **spec["sgi_stl"]}
+    pins = {**spec["debs"], **spec["sgi_stl"], **spec["binutils"]}
     return hashlib.sha256("".join(f"{k}={v}\n" for k, v in sorted(pins.items())).encode()).hexdigest()
 
 
@@ -127,19 +129,23 @@ def is_staged() -> bool:
         return False
 
 
-def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None) -> Path:
-    """Explicit directories > HOMM3_LOKI_DEBS/HOMM3_LOKI_SGI_STL > the staged toolchain."""
+def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
+          binutils: str | Path | None = None) -> Path:
+    """Explicit directories > HOMM3_LOKI_DEBS/_SGI_STL/_BINUTILS > the staged toolchain."""
     spec = specification()
     debs = debs if debs is not None else os.environ.get("HOMM3_LOKI_DEBS")
     sgi_stl = sgi_stl if sgi_stl is not None else os.environ.get("HOMM3_LOKI_SGI_STL")
-    if debs is None or sgi_stl is None:
+    binutils = binutils if binutils is not None else os.environ.get("HOMM3_LOKI_BINUTILS")
+    if debs is None or sgi_stl is None or binutils is None:
         if is_staged():
             return DESTINATION
         raise ToolchainError("GCC 2.95.2 toolchain not staged; run `homm3 loki toolchain --debs DIR "
-                             "--sgi-stl DIR` (or set HOMM3_LOKI_DEBS and HOMM3_LOKI_SGI_STL); "
+                             "--sgi-stl DIR --binutils DIR` (or set HOMM3_LOKI_DEBS, "
+                             "HOMM3_LOKI_SGI_STL and HOMM3_LOKI_BINUTILS); "
                              "the pins are in config/loki/toolchain.toml")
     packages = _read_pinned(Path(debs).expanduser().resolve(), spec["debs"])
     (archive,) = _read_pinned(Path(sgi_stl).expanduser().resolve(), spec["sgi_stl"]).values()
+    (assembler,) = _read_pinned(Path(binutils).expanduser().resolve(), spec["binutils"]).values()
     if DESTINATION.exists():
         shutil.rmtree(DESTINATION)
     SYSROOT.mkdir(parents=True)
@@ -150,6 +156,15 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None) -> 
         for member in headers.getmembers():
             if member.isfile() and "/" not in member.name.strip("./"):
                 (SGI_STL / member.name.strip("./")).write_bytes(headers.extractfile(member).read())
+    # Slackware's package: only the assembler and the libbfd it loads.
+    with tarfile.open(fileobj=io.BytesIO(assembler), mode="r:gz") as package:
+        for member in package.getmembers():
+            name = member.name.lstrip("./")
+            if member.isfile() and (name == "usr/bin/as" or name.startswith("usr/lib/libbfd-")):
+                path = BINUTILS / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(package.extractfile(member).read())
+                path.chmod(0o755)
     _write_wrappers()
     STAMP.write_text(_digest(spec) + "\n")
     return DESTINATION
