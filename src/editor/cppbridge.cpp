@@ -15,6 +15,8 @@
 #include <string>
 
 #include "editor/cppbridge.h"
+#include "editor/EditRumorDlg.h"
+#include "editor/EditTimedEventSheet.h"
 #include "editor/Hero.h"
 #include "editor/MapDoc.h"
 #include "editor/MapEditWnd.h"
@@ -2092,6 +2094,232 @@ void on_options_ok_clicked(GtkButton* button, gpointer user_data)
 void on_options_cancel_clicked(GtkButton* button, gpointer user_data)
 {
     gtk_widget_hide(_widget("options_dlg"));
+}
+
+
+void on_edit_rumor_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (rumorDlgModal)
+        rumorDlgModal->OnOK();
+}
+
+void on_edit_rumor_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (rumorDlgModal)
+        rumorDlgModal->OnCancel();
+}
+
+void on_edit_rumor_name_changed(GtkEditable* editable, gpointer user_data)
+{
+    if (rumorDlgModal)
+        rumorDlgModal->OnChangeRumorNameEdit();
+}
+
+void on_edit_rumor_text_changed(GtkEditable* editable, gpointer user_data)
+{
+    if (rumorDlgModal)
+        rumorDlgModal->OnChangeRumorTextEdit();
+}
+
+void on_timed_event_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    if (timedEventSheetModal)
+        timedEventSheetModal->OnOK();
+}
+
+void on_timed_event_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    if (timedEventSheetModal)
+        timedEventSheetModal->OnCancel();
+}
+
+void on_validation_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    gtk_widget_hide(_widget("validation_dlg"));
+}
+
+void on_ok_msgbox_button_clicked(GtkButton* button, gpointer user_data)
+{
+    msgboxDone = true;
+}
+
+void on_find_next_button_clicked(GtkButton* button, gpointer user_data)
+{
+    mapView->OnEditFindNext();
+    gtk_widget_hide(_widget("find_dlg"));
+}
+
+void on_find_previous_button_clicked(GtkButton* button, gpointer user_data)
+{
+    mapView->OnEditFindPrev();
+    gtk_widget_hide(_widget("find_dlg"));
+}
+
+void on_find_cancel_button_clicked(GtkButton* button, gpointer user_data)
+{
+    gtk_widget_hide(_widget("find_dlg"));
+}
+
+void on_import_text_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    GtkFileSelection* fileSelection = GTK_FILE_SELECTION(_widget("import_text_dlg"));
+    char* filename = gtk_file_selection_get_filename(fileSelection);
+#line 3246
+    assert(filename != NULL);
+    gtk_widget_hide(GTK_WIDGET(fileSelection));
+    mapView->getPDocument()->OnFileImportText(filename);
+}
+
+void on_import_text_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    GtkFileSelection* fileSelection = GTK_FILE_SELECTION(_widget("import_text_dlg"));
+    gtk_widget_hide(GTK_WIDGET(fileSelection));
+}
+
+void on_export_text_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    GtkFileSelection* fileSelection = GTK_FILE_SELECTION(_widget("export_text_dlg"));
+    char* filename = gtk_file_selection_get_filename(fileSelection);
+#line 3268
+    assert(filename != NULL);
+    int length = strlen(filename);
+    char pathName[length + 5];
+    strcpy(pathName, filename);
+    char* extension = strchr(pathName, '.');
+    if (!extension || strcasecmp(extension, ".txt") != 0)
+        strcat(pathName, ".txt");
+    gtk_widget_hide(GTK_WIDGET(fileSelection));
+    mapView->getPDocument()->OnFileExportText(pathName);
+}
+
+void on_export_text_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    GtkFileSelection* fileSelection = GTK_FILE_SELECTION(_widget("export_text_dlg"));
+    gtk_widget_hide(GTK_WIDGET(fileSelection));
+}
+
+void on_new_map_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    TGameMap::TSize size;
+    if (isChecked("new_map_36x36") == true)
+        size = TGameMap::TSize(0);
+    else if (isChecked("new_map_72x72") == true)
+        size = TGameMap::TSize(1);
+    else if (isChecked("new_map_108x108") == true)
+        size = TGameMap::TSize(2);
+    else if (isChecked("new_map_144x144") == true)
+        size = TGameMap::TSize(3);
+    else
+#line 3340
+        assert(0);
+    bool bTwoLevel = isChecked("new_map_two_level");
+    GtkToggleButton* undergroundButton = GTK_TOGGLE_BUTTON(_widget("underground_button"));
+    if (gtk_toggle_button_get_active(undergroundButton))
+        gtk_toggle_button_set_active(undergroundButton, FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(undergroundButton), bTwoLevel ? TRUE : FALSE);
+    GtkWidget* newMapDialog = _widget("new_map_dlg");
+    gtk_widget_hide(newMapDialog);
+    TMapDoc* pDoc = mapView->getPDocument();
+    pDoc->setNewMapParams(size, bTwoLevel);
+    pDoc->OnNewDocument();
+    mapView->OnInitialUpdate(NULL, NULL);
+    mapEditWnd->OnSize(0, mapEditWnd->_m_hWnd->allocation.width, mapEditWnd->_m_hWnd->allocation.width);
+    currentFileName = NULL;
+}
+
+void on_new_map_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    GtkWidget* newMapDialog = _widget("new_map_dlg");
+    gtk_widget_hide(newMapDialog);
+}
+
+gboolean on_minimapwnd_enter_notify_event(GtkWidget* widget, GdkEventCrossing* event, gpointer user_data)
+{
+    miniMapWnd->OnMouseEnter();
+    return FALSE;
+}
+
+gboolean on_options_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_hide(widget);
+    return TRUE;
+}
+
+gboolean on_about_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_hide(widget);
+    return TRUE;
+}
+
+gboolean on_timed_event_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    on_timed_event_cancel_clicked(NULL, NULL);
+    return TRUE;
+}
+
+gboolean on_bad_color_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_main_quit();
+    return FALSE;
+}
+
+gboolean on_validation_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_hide(widget);
+    return TRUE;
+}
+
+gboolean on_ok_msgbox_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    msgboxDone = true;
+    return TRUE;
+}
+
+gboolean on_open_map_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_hide(widget);
+    return TRUE;
+}
+
+gboolean on_save_map_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    saveDialogResult = false;
+    saveDialogDone = true;
+    return TRUE;
+}
+
+gboolean on_export_text_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_hide(widget);
+    return TRUE;
+}
+
+gboolean on_yesno_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    yesnoAnswer = false;
+    yesnoDone = true;
+    return TRUE;
+}
+
+gboolean on_new_map_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_hide(widget);
+    return TRUE;
+}
+
+void enforceTextMaxLength(GtkText* text, int maxLen)
+{
+#line 3671
+    assert(text != NULL);
+    assert(maxLen >= 0);
+    if (gtk_text_get_length(text) >= (guint)maxLen)
+        gtk_signal_emit_stop_by_name(GTK_OBJECT(text), "insert_text");
+}
+
+void on_mapspecs_gen_desc_insert_text(GtkEditable* editable, gchar* new_text, gint new_text_length,
+                                      gint* position, gpointer user_data)
+{
+    enforceTextMaxLength(GTK_TEXT(editable), 300);
 }
 
 }
