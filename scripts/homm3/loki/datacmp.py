@@ -209,12 +209,14 @@ class Layout:
         return None
 
     def _vote(self) -> None:
-        for _ in range(2):   # a data section placed by the first pass votes in the second
+        # Code and frames vote first; a data section placed by them votes
+        # only for sections nothing else placed (its own base may be wrong).
+        for from_data in (False, True):
             votes: dict[tuple[int, int], collections.Counter] = collections.defaultdict(collections.Counter)
             for compiled in self.objects:
                 for index, rels in compiled.rels.items():
                     base = self.base.get((compiled.obj, index))
-                    if base is None:
+                    if base is None or is_data(compiled.elf.sections[index]) != from_data:
                         continue
                     raw = compiled.elf.bytes(compiled.elf.sections[index])
                     for rel in rels:
@@ -230,8 +232,8 @@ class Layout:
                             continue
                         (addend,) = struct.unpack_from("<i", raw, rel.offset)
                         word = self.index.word(base + rel.offset)
-                        if word is None:
-                            continue
+                        if word is None or not self.index.sections[target.name].contains(word):
+                            continue   # code the image lacks reads another object's bytes
                         place = (0 if symbol.type == STT_SECTION else symbol.value) + addend
                         votes[(compiled.obj, symbol.shndx)][(word - place) & 0xffffffff] += 1
                 for symbol in compiled.symbols:
@@ -240,7 +242,8 @@ class Layout:
                         address = self.index.address(symbol.name)
                         if is_data(header) and not linkonce_kind(header.name) and address is not None:
                             votes[(compiled.obj, symbol.shndx)][(address - symbol.value) & 0xffffffff] += 4
-            self.votes = votes
+            if not from_data:
+                self.votes = votes
             for key, counter in votes.items():
                 if self.base.get(key) is None:
                     self.base[key] = counter.most_common(1)[0][0]
@@ -439,7 +442,7 @@ def _bss_mismatches(compiled: Compiled, header, layout: Layout, base: int) -> se
     bad = set()
     for index, rels in compiled.rels.items():
         source = layout.base.get((compiled.obj, index))
-        if source is None:
+        if source is None or is_data(compiled.elf.sections[index]):
             continue
         raw = compiled.elf.bytes(compiled.elf.sections[index])
         for rel in rels:
