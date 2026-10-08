@@ -11,10 +11,15 @@
 #include <string.h>
 
 #include "palette.h"
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include "platform.h"
+
+// The Loki port's own RGBQUAD: the Windows SDK's layout and tag, which the
+// TPalette16/TPalette24 constructors' mangled names keep.
+struct tagRGBQUAD {
+    unsigned char rgbBlue;
+    unsigned char rgbGreen;
+    unsigned char rgbRed;
+    unsigned char rgbReserved;
+};
 
 static void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
                      float* h, float* s, float* v);
