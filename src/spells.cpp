@@ -246,6 +246,8 @@ static int updateSpellTargetFromMouse()
     return updateSpellTarget(g_combatManager->getGridIndex(x, y));
 }
 
+// Retail calls getMagicMirrorChance before random in the reflection test;
+// VC6 calls random first for both operand orders (94.27% reversed).
 // DC 201..212 and 217..228 records explicit dialog/action if/else scope
 // pairs for Land Mine and Earthquake. Complete Mac 0x18f8dc..0x18f9a4 keeps
 // both action alternatives. Restoring those scopes is VC6 byte-flat at 90.79%.

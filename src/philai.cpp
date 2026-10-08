@@ -2707,7 +2707,8 @@ void aiSetHeroBonuses(hero* ourHero)
 // second average local falls to 95.57%, so the direct DC-shaped expression
 // remains the strongest defensible spelling. Naming the numerator while
 // implicitly promoting artifactCount is also Windows byte-flat; Mac falls
-// from 88.70% to 85.82%, so that probe was restored.
+// from 88.70% to 85.82%, so that probe was restored. Implicit numerator or
+// denominator conversions and C-style double casts are also byte-flat.
 VA(0x00527960, 0x140)
 DC_ADDRESS(0x110018, 0x15a)
 MAC_ADDRESS(0x141bf8, 0x1a0)  // anchor-callee
