@@ -93,8 +93,6 @@ TCappedObjectTypeInfoMap kCappedObjectTypeInfoMap;
 
 }  // namespace
 
-const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
-
 class TGameMap::_TImpl {
 public:
     static const unsigned int s_kMaxHeroesOnMap = 128;
@@ -102,6 +100,10 @@ public:
     static const unsigned int s_kMaxMinesOnMap = 144;
     static const unsigned int s_kMaxGeneratorsOnMap = 144;
     static const unsigned int s_kMaxSignsOnMap = 128;
+    static const unsigned int s_kMaxNameLen = 30;
+    static const unsigned int s_kMaxDescLen = 300;
+    static const unsigned int s_kMaxRumors = 30;
+    static const unsigned int s_kMaxTimedEvents = 50;
 
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
 
@@ -188,6 +190,11 @@ public:
     unsigned int getNumObelisksOnMap() const;
 
 private:
+    void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
+    bool _isMapPlayable() const;
+    TMapLayerObjectID _findObject(bool bSecondLayer, const TTilePoint& loc,
+                                  bool (*pfnPredicate)(const TGameObject&)) const;
+
     struct _TProperties {
         _TProperties()
             : m_difficulty(TDifficulty(1)), m_pVictoryCondition(NULL), m_pLossCondition(NULL) {}
@@ -490,196 +497,123 @@ TGameMap::TLayer* TGameMap::_TImpl::getPLayer(unsigned int num)
     return &_m_aLayer[num];
 }
 
-class TGameMap::TLayer::_TImpl {
-    // A slot in the layer's object list: the doubly linked order of placed
-    // objects (slot 0 is the list head), the object's location and its shared,
-    // copy-on-write clone.
-    class _TObjectLink {
-    public:
-        _TObjectLink() : _m_pWrapper(NULL) {}
-        _TObjectLink(const _TObjectLink& other)
-            : m_next(other.m_next), m_prev(other.m_prev), m_loc(other.m_loc), _m_pWrapper(other._m_pWrapper)
-        {
-            if (_m_pWrapper != NULL)
-                ++_m_pWrapper->m_refCnt;
-        }
-        ~_TObjectLink()
-        {
-            if (_m_pWrapper != NULL && --_m_pWrapper->m_refCnt == 0)
-                delete _m_pWrapper;
-        }
-        _TObjectLink& operator=(const _TObjectLink& other)
-        {
-            m_next = other.m_next;
-            m_prev = other.m_prev;
-            m_loc = other.m_loc;
-            _TWrapper* pOldWrapper = _m_pWrapper;
-            if ((_m_pWrapper = other._m_pWrapper) != NULL)
-                ++_m_pWrapper->m_refCnt;
-            if (pOldWrapper != NULL && --pOldWrapper->m_refCnt == 0)
-                delete pOldWrapper;
-            return *this;
-        }
+void TGameMap::_TImpl::setName(const string& newName)
+{
+#line 1818
+    assert(newName.size() <= s_kMaxNameLen);
+    assert(newName.find( '\n' ) == std::string::npos);
+    assert(newName.find( '\t' ) == std::string::npos);
+    _m_pProperties->m_name = newName;
+}
 
-        TGameObject* getPObject()
-        {
-            if (_m_pWrapper != NULL) {
-                if (_m_pWrapper->m_refCnt > 1)
-                    _split();
-                return _m_pWrapper->m_pObject;
-            }
-            return NULL;
-        }
-        const TGameObject* getPObject() const
-        {
-            return _m_pWrapper != NULL ? _m_pWrapper->m_pObject : NULL;
-        }
-        void setObject(const TGameObject* pObj)
-        {
-            if (pObj != NULL) {
-#line 5435
-                assert(_m_pWrapper == __null);
-                _m_pWrapper = new _TWrapper(pObj);
-                if (_m_pWrapper == NULL)
-                    _fail();
-            } else {
-#line 5442
-                assert(_m_pWrapper != __null);
-                if (--_m_pWrapper->m_refCnt == 0)
-                    delete _m_pWrapper;
-                _m_pWrapper = NULL;
-            }
-        }
+void TGameMap::_TImpl::setDesc(const string& newDesc)
+{
+#line 1827
+    assert(newDesc.size() <= s_kMaxDescLen);
+    assert(newDesc.find( '\t' ) == std::string::npos);
+    _m_pProperties->m_desc = newDesc;
+}
 
-        TMapLayerObjectID m_next;
-        TMapLayerObjectID m_prev;
-        TTilePoint m_loc;
+void TGameMap::_TImpl::setDifficulty(TDifficulty newDifficulty)
+{
+#line 1835
+    assert((int) newDifficulty >= 0 && (int) newDifficulty < (int) s_kNumDifficulties);
+    _m_pProperties->m_difficulty = newDifficulty;
+}
 
-    private:
-        struct _TWrapper {
-            _TWrapper(const TGameObject* pObject) : m_refCnt(1), m_pObject(pObject->clone(::operator new))
-            {
-                if (m_pObject == NULL)
-                    _fail();
-            }
-            ~_TWrapper() { delete m_pObject; }
+void TGameMap::_TImpl::setRumors(const vector<TRumor>& newRumors)
+{
+#line 1909
+    assert(newRumors.size() <= s_kMaxRumors);
+    _m_pProperties->m_rumors = newRumors;
+}
 
-            void _fail()
-            {
-#line 5473
-                throw TAllocationFailure(__FILE__, __LINE__);
-            }
+void TGameMap::_TImpl::setTimedEvents(const vector<TTimedEvent>& newTimedEvents)
+{
+#line 1916
+    assert(newTimedEvents.size() <= s_kMaxTimedEvents);
+    _m_pProperties->m_timedEvents = newTimedEvents;
+}
 
-            unsigned int m_refCnt;
-            TGameObject* m_pObject;
-        };
+void TGameMap::_TImpl::removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+#line 2019
+    assert(pUpdatedExtent != NULL);
+    assert(!bSecondLayer || _m_bTwoLayer);
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    *pUpdatedExtent = pLayer->getObjectExtent(objID);
+    _removeObjectHelper(bSecondLayer, objID);
+}
 
-        void _fail()
-        {
-#line 5480
-            throw TAllocationFailure(__FILE__, __LINE__);
-        }
-        void _split()
-        {
-#line 5483
-            assert(_m_pWrapper != __null && _m_pWrapper->m_refCnt > 1);
-            _TWrapper* pNewWrapper = new _TWrapper(_m_pWrapper->m_pObject);
-            if (pNewWrapper == NULL)
-                _fail();
-            --_m_pWrapper->m_refCnt;
-            _m_pWrapper = pNewWrapper;
-        }
+void TGameMap::_TImpl::floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+#line 2031
+    assert(pUpdatedExtent != NULL);
+    assert(!bSecondLayer || _m_bTwoLayer);
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    *pUpdatedExtent = pLayer->getObjectExtent(objID);
+    pLayer->_floatObject(objID);
+}
 
-        _TWrapper* _m_pWrapper;
-    };
+void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
+{
+#line 2071
+    assert(!bSecondLayer || _m_bTwoLayer);
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    TMapLayerObjectID objID = pLayer->getFloatingObjID();
+#line 2075
+    assert(objID != TLayer::s_kInvalidObjID);
+    _removeObjectHelper(bSecondLayer, objID);
+}
 
-    // The layer's cells in shared, copy-on-write segments of
-    // s_kSegmentDim x s_kSegmentDim.
-    class _TCellGrid {
-    public:
-        _TCellGrid() : _m_widthInSegments(0) {}
+const TGameObject* TGameMap::_TImpl::getPObject(bool bSecondLayer, unsigned int objID) const
+{
+#line 2410
+    assert(!bSecondLayer || _m_bTwoLayer);
+    const TLayer& layer = getLayer(bSecondLayer);
+    if (!layer.isObjectIDValid(objID))
+        return NULL;
+    return layer.getPObject(objID);
+}
 
-        void resize(unsigned int width, unsigned int height)
-        {
-#line 5506
-            assert(width % s_kSegmentDim == 0);
-            assert(height % s_kSegmentDim == 0);
-            _m_widthInSegments = width / s_kSegmentDim;
-            _m_aSegment.resize(height / s_kSegmentDim * _m_widthInSegments);
-        }
-        TCell* getPCell(unsigned int x, unsigned int y)
-        {
-            return &(*_m_aSegment[y / s_kSegmentDim * _m_widthInSegments + x / s_kSegmentDim])
-                [y % s_kSegmentDim][x % s_kSegmentDim];
-        }
-        const TCell* getPCell(unsigned int x, unsigned int y) const
-        {
-            return &(*_m_aSegment[y / s_kSegmentDim * _m_widthInSegments + x / s_kSegmentDim])
-                [y % s_kSegmentDim][x % s_kSegmentDim];
-        }
+TTilePoint TGameMap::_TImpl::getObjectLoc(bool bSecondLayer, unsigned int objID) const
+{
+#line 2420
+    assert(!bSecondLayer || _m_bTwoLayer);
+    const TLayer& layer = getLayer(bSecondLayer);
+#line 2422
+    assert(layer.isObjectIDValid( objID ));
+    return layer.getObjectLoc(objID);
+}
 
-    private:
-        static const unsigned int s_kSegmentDim = 9;
-        typedef TArray<TArray<TCell, s_kSegmentDim>, s_kSegmentDim> _TSegment;
+const TGameMap::TLayer* TGameMap::_TImpl::getPLayer(unsigned int num) const
+{
+#line 2429
+    assert(num == 0 || ( _m_bTwoLayer && num < 2 ));
+    assert(_m_aLayer.size() == ( _m_bTwoLayer ? 2 : 1 ));
+    return &_m_aLayer[num];
+}
 
-        unsigned int _m_widthInSegments;
-        vector<TRefCountingPtr<_TSegment> > _m_aSegment;
-    };
+const set<TMapObjectRef>& TGameMap::_TImpl::getPlayerTownRefs(TPlayer player) const
+{
+#line 3034
+    assert(player >= 0 && player < kNumPlayers);
+    return _m_apPlayerBookkeeping[player]->m_townRefs;
+}
 
-public:
-    _TImpl(TGameMap::TSize size);
-    _TImpl(const _TImpl& other);
-    ~_TImpl();
-    _TImpl& operator=(const _TImpl& other);
+bool TGameMap::_TImpl::_isMapPlayable() const
+{
+    return _m_pBookkeeping->m_numPlayableSlots != 0;
+}
 
-    unsigned int getWidth() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
-    unsigned int getHeight() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
-    TCell* getPCell(unsigned int x, unsigned int y);
-    TCell* getPCell(const TTilePoint& loc) { return getPCell(loc.x(), loc.y()); }
-    const TCell* getPCell(unsigned int x, unsigned int y) const;
-    const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
-    TGameObject* getPObject(unsigned int objID);
-    const TGameObject* getPObject(unsigned int objID) const;
-    const TGameObject& getObject(unsigned int objID) const { return *getPObject(objID); }
-    TTilePoint getObjectLoc(unsigned int objID) const;
-    TTileExtent getObjectExtent(unsigned int objID) const;
-    TMapLayerObjectID getFloatingObjID() const { return _m_floatingObjID; }
-    bool isObjectIDValid(unsigned int objID) const
-    {
-        return objID < _m_paObjectLink->size() && (*_m_paObjectLink)[objID].getPObject() != NULL;
-    }
-    TMapLayerObjectID getFirstObjectID() const { return (*_m_paObjectLink)[0].m_next; }
-    TMapLayerObjectID getLastObjectID() const { return (*_m_paObjectLink)[0].m_prev; }
-#line 5375
-    TMapLayerObjectID getNextObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_next; }
-    TMapLayerObjectID getPrevObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_prev; }
-    unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
-    unsigned int getNumObjectIDsAtCell(const TTilePoint& loc) const { return getNumObjectIDsAtCell(loc.x(), loc.y()); }
-    TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
-    TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const
-    {
-        return getObjectIDAtCell(loc.x(), loc.y(), which);
-    }
-    unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
-    TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
-
-    TMapLayerObjectID _placeObject(const TGameObject& obj, const TTilePoint& loc);
-    void _removeObject(unsigned int objID);
-    void _floatObject(unsigned int objID);
-    void _unfloatObject(const TTilePoint& loc);
-    TMapLayerObjectID _findObject(const TTilePoint& loc, bool (*pfnPredicate)(const TGameObject&)) const;
-
-private:
-    void _stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID);
-    void _unstampObject(unsigned int objID);
-    TTileExtent _computeObjExtent(const TTilePoint& loc, const TPoint<unsigned int>& size) const;
-
-    TGameMap::TSize _m_size;
-    TRefCountingPtr<_TCellGrid> _m_pCellGrid;
-    TMapLayerObjectID _m_nextAvail;
-    TRefCountingPtr<vector<_TObjectLink> > _m_paObjectLink;
-    TMapLayerObjectID _m_floatingObjID;
-};
+TMapLayerObjectID TGameMap::_TImpl::_findObject(bool bSecondLayer, const TTilePoint& loc,
+                                                bool (*pfnPredicate)(const TGameObject&)) const
+{
+#line 4903
+    assert(!bSecondLayer || _m_bTwoLayer);
+    const TLayer& layer = getLayer(bSecondLayer);
+    return layer._findObject(loc, pfnPredicate);
+}
 
 void TGameMap::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
 {
@@ -995,6 +929,199 @@ bool TGameMap::isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsig
 {
     return _m_pImpl->isValidPlacement(obj, bSecondLayer, x, y);
 }
+
+const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
+
+class TGameMap::TLayer::_TImpl {
+    // A slot in the layer's object list: the doubly linked order of placed
+    // objects (slot 0 is the list head), the object's location and its shared,
+    // copy-on-write clone.
+    class _TObjectLink {
+    public:
+        _TObjectLink() : _m_pWrapper(NULL) {}
+        _TObjectLink(const _TObjectLink& other)
+            : m_next(other.m_next), m_prev(other.m_prev), m_loc(other.m_loc), _m_pWrapper(other._m_pWrapper)
+        {
+            if (_m_pWrapper != NULL)
+                ++_m_pWrapper->m_refCnt;
+        }
+        ~_TObjectLink()
+        {
+            if (_m_pWrapper != NULL && --_m_pWrapper->m_refCnt == 0)
+                delete _m_pWrapper;
+        }
+        _TObjectLink& operator=(const _TObjectLink& other)
+        {
+            m_next = other.m_next;
+            m_prev = other.m_prev;
+            m_loc = other.m_loc;
+            _TWrapper* pOldWrapper = _m_pWrapper;
+            if ((_m_pWrapper = other._m_pWrapper) != NULL)
+                ++_m_pWrapper->m_refCnt;
+            if (pOldWrapper != NULL && --pOldWrapper->m_refCnt == 0)
+                delete pOldWrapper;
+            return *this;
+        }
+
+        TGameObject* getPObject()
+        {
+            if (_m_pWrapper != NULL) {
+                if (_m_pWrapper->m_refCnt > 1)
+                    _split();
+                return _m_pWrapper->m_pObject;
+            }
+            return NULL;
+        }
+        const TGameObject* getPObject() const
+        {
+            return _m_pWrapper != NULL ? _m_pWrapper->m_pObject : NULL;
+        }
+        void setObject(const TGameObject* pObj)
+        {
+            if (pObj != NULL) {
+#line 5435
+                assert(_m_pWrapper == __null);
+                _m_pWrapper = new _TWrapper(pObj);
+                if (_m_pWrapper == NULL)
+                    _fail();
+            } else {
+#line 5442
+                assert(_m_pWrapper != __null);
+                if (--_m_pWrapper->m_refCnt == 0)
+                    delete _m_pWrapper;
+                _m_pWrapper = NULL;
+            }
+        }
+
+        TMapLayerObjectID m_next;
+        TMapLayerObjectID m_prev;
+        TTilePoint m_loc;
+
+    private:
+        struct _TWrapper {
+            _TWrapper(const TGameObject* pObject) : m_refCnt(1), m_pObject(pObject->clone(::operator new))
+            {
+                if (m_pObject == NULL)
+                    _fail();
+            }
+            ~_TWrapper() { delete m_pObject; }
+
+            void _fail()
+            {
+#line 5473
+                throw TAllocationFailure(__FILE__, __LINE__);
+            }
+
+            unsigned int m_refCnt;
+            TGameObject* m_pObject;
+        };
+
+        void _fail()
+        {
+#line 5480
+            throw TAllocationFailure(__FILE__, __LINE__);
+        }
+        void _split()
+        {
+#line 5483
+            assert(_m_pWrapper != __null && _m_pWrapper->m_refCnt > 1);
+            _TWrapper* pNewWrapper = new _TWrapper(_m_pWrapper->m_pObject);
+            if (pNewWrapper == NULL)
+                _fail();
+            --_m_pWrapper->m_refCnt;
+            _m_pWrapper = pNewWrapper;
+        }
+
+        _TWrapper* _m_pWrapper;
+    };
+
+    // The layer's cells in shared, copy-on-write segments of
+    // s_kSegmentDim x s_kSegmentDim.
+    class _TCellGrid {
+    public:
+        _TCellGrid() : _m_widthInSegments(0) {}
+
+        void resize(unsigned int width, unsigned int height)
+        {
+#line 5506
+            assert(width % s_kSegmentDim == 0);
+            assert(height % s_kSegmentDim == 0);
+            _m_widthInSegments = width / s_kSegmentDim;
+            _m_aSegment.resize(height / s_kSegmentDim * _m_widthInSegments);
+        }
+        TCell* getPCell(unsigned int x, unsigned int y)
+        {
+            return &(*_m_aSegment[y / s_kSegmentDim * _m_widthInSegments + x / s_kSegmentDim])
+                [y % s_kSegmentDim][x % s_kSegmentDim];
+        }
+        const TCell* getPCell(unsigned int x, unsigned int y) const
+        {
+            return &(*_m_aSegment[y / s_kSegmentDim * _m_widthInSegments + x / s_kSegmentDim])
+                [y % s_kSegmentDim][x % s_kSegmentDim];
+        }
+
+    private:
+        static const unsigned int s_kSegmentDim = 9;
+        typedef TArray<TArray<TCell, s_kSegmentDim>, s_kSegmentDim> _TSegment;
+
+        unsigned int _m_widthInSegments;
+        vector<TRefCountingPtr<_TSegment> > _m_aSegment;
+    };
+
+public:
+    _TImpl(TGameMap::TSize size);
+    _TImpl(const _TImpl& other);
+    ~_TImpl();
+    _TImpl& operator=(const _TImpl& other);
+
+    unsigned int getWidth() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
+    unsigned int getHeight() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
+    TCell* getPCell(unsigned int x, unsigned int y);
+    TCell* getPCell(const TTilePoint& loc) { return getPCell(loc.x(), loc.y()); }
+    const TCell* getPCell(unsigned int x, unsigned int y) const;
+    const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
+    TGameObject* getPObject(unsigned int objID);
+    const TGameObject* getPObject(unsigned int objID) const;
+    const TGameObject& getObject(unsigned int objID) const { return *getPObject(objID); }
+    TTilePoint getObjectLoc(unsigned int objID) const;
+    TTileExtent getObjectExtent(unsigned int objID) const;
+    TMapLayerObjectID getFloatingObjID() const { return _m_floatingObjID; }
+    bool isObjectIDValid(unsigned int objID) const
+    {
+        return objID < _m_paObjectLink->size() && (*_m_paObjectLink)[objID].getPObject() != NULL;
+    }
+    TMapLayerObjectID getFirstObjectID() const { return (*_m_paObjectLink)[0].m_next; }
+    TMapLayerObjectID getLastObjectID() const { return (*_m_paObjectLink)[0].m_prev; }
+#line 5375
+    TMapLayerObjectID getNextObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_next; }
+    TMapLayerObjectID getPrevObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_prev; }
+    unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
+    unsigned int getNumObjectIDsAtCell(const TTilePoint& loc) const { return getNumObjectIDsAtCell(loc.x(), loc.y()); }
+    TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
+    TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const
+    {
+        return getObjectIDAtCell(loc.x(), loc.y(), which);
+    }
+    unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
+    TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
+
+    TMapLayerObjectID _placeObject(const TGameObject& obj, const TTilePoint& loc);
+    void _removeObject(unsigned int objID);
+    void _floatObject(unsigned int objID);
+    void _unfloatObject(const TTilePoint& loc);
+    TMapLayerObjectID _findObject(const TTilePoint& loc, bool (*pfnPredicate)(const TGameObject&)) const;
+
+private:
+    void _stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID);
+    void _unstampObject(unsigned int objID);
+    TTileExtent _computeObjExtent(const TTilePoint& loc, const TPoint<unsigned int>& size) const;
+
+    TGameMap::TSize _m_size;
+    TRefCountingPtr<_TCellGrid> _m_pCellGrid;
+    TMapLayerObjectID _m_nextAvail;
+    TRefCountingPtr<vector<_TObjectLink> > _m_paObjectLink;
+    TMapLayerObjectID _m_floatingObjID;
+};
 
 TGameMap::TLayer::_TImpl::_TImpl(const _TImpl& other)
     : _m_size(other._m_size), _m_pCellGrid(other._m_pCellGrid), _m_nextAvail(other._m_nextAvail),
