@@ -7,11 +7,12 @@
 #ifndef HOMM3_EDITOR_SELECTARTIFACTDLG_H
 #define HOMM3_EDITOR_SELECTARTIFACTDLG_H
 
+#include "gameversion.h"
 #include "editor/resource.h"
 
 class TSelectArtifactDlg : public CDialog {
 public:
-    TSelectArtifactDlg(CWnd* pParent, int mapVersion, int artifact);
+    TSelectArtifactDlg(CWnd* pParent, EGameVersion mapVersion, int artifact);
 
     int getArtifact() const { return _m_artifact; }
 
@@ -30,7 +31,7 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 private:
-    int _m_mapVersion;
+    EGameVersion _m_mapVersion;
     int _m_artifact;
 };
 

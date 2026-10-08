@@ -10,7 +10,7 @@
 #include "editor/SelectArtifactDlg.h"
 
 VA(0x004b7deb, 0x74)
-TSelectArtifactDlg::TSelectArtifactDlg(CWnd* pParent, int mapVersion, int artifact)
+TSelectArtifactDlg::TSelectArtifactDlg(CWnd* pParent, EGameVersion mapVersion, int artifact)
     : CDialog(TSelectArtifactDlg::IDD, pParent),
       _m_mapVersion(mapVersion),
       _m_artifact(artifact)
@@ -51,10 +51,10 @@ BOOL TSelectArtifactDlg::OnInitDialog()
     GetDlgItem(ID_HELP)->SetWindowText(kHelpStr);
     CDialog::OnInitDialog();
     int numArtifacts;
-    if (_m_mapVersion >= 2)
+    if (_m_mapVersion >= GAME_VERSION_SOD)
         numArtifacts = 144;
     else
-        numArtifacts = _m_mapVersion >= 1 ? 129 : 127;
+        numArtifacts = _m_mapVersion >= GAME_VERSION_AB ? 129 : 127;
     for (int artifact = 0; artifact < numArtifacts; artifact++) {
         if (!akArtifactTraits[artifact].m_disabled
             && !(akArtifactTraits[artifact].m_class & ArtifactClassSpecial)) {
