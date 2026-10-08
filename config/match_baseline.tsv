@@ -1214,7 +1214,7 @@ customcampaign	??_GTCampaignStartCrossoverOption@@UAEPAXI@Z	100.0000	100.0000	10
 customcampaign	??_GTCampaignStartHeroOption@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x88430	-
 customcampaign	??_GTCampaignStartOption@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x84f50	-
 customcampaign	??_H@YGXPAXIHP6EX0@Z@Z	100.0000	100.0000	100.0000	0x13d0	-
-customcampaign	?_Addfac@std@@YI?AVlocale@1@V21@PAV?$codecvt@DDH@1@@Z	100.0000	100.0000	100.0000	0x8e8c0	-
+customcampaign	?_Addfac@std@@YI?AVlocale@1@V21@PAV?$codecvt@DDH@1@@Z	99.9412	100.0000	100.0000	0x8e8c0	-
 customcampaign	?_Construct@std@@YIXPAUTCampaignCrossoverChoice@@ABU2@@Z	100.0000	100.0000	100.0000	0x8e9e0	-
 customcampaign	?_Construct@std@@YIXPAVhero@@ABV2@@Z	100.0000	100.0000	100.0000	0x603a0	-
 customcampaign	?_Destroy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEXPAUtype_artifact@@0@Z	100.0000	100.0000	100.0000	0x4140	-
@@ -1323,7 +1323,7 @@ customcampaign	?getTotalTime@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b28
 customcampaign	?getloc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x8d820	-
 customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x87900	tokens1:97fd08843736
 customcampaign	?heroPower@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x83f50	tokens1:5a07967a5987
-customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	91.7582	91.7582	100.0000	0x86590	tokens1:1e1b90022e07
+customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	100.0000	100.0000	100.0000	0x86590	tokens1:ba976298602b
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
 customcampaign	?insert@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEXPAUtype_artifact@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d330	-
 customcampaign	?insert@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@QAEPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x8c610	-
@@ -2842,7 +2842,7 @@ objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	1
 objnames	??1?$TResourcePtr@VTTextResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	tokens1:6ab8aaba9a26
 objnames	?InitializeAdvObjectTypeTraitsTable@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	tokens1:ee33283f099b
 objnames	__h3cg$objnames$static_dtor$nameBuffer	100.0000	100.0000	100.0000	0x1b790	-
-overview	??0TOverviewWindow@@QAE@XZ	99.5408	99.5408	99.5408	0x11fa40	tokens1:4c249b756d76
+overview	??0TOverviewWindow@@QAE@XZ	99.5408	99.5408	99.5408	0x11fa40	tokens1:48ed524c183f
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	tokens1:2510f0c1a9f1
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?doFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	tokens1:3e20dc6a7377
@@ -4053,8 +4053,8 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAE_NPAVCNetM
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:263a3adaf3eb
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:c1f6f3aeee6f
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
-singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	90.5249	90.5249	93.0332	0x189710	tokens1:981fce85b65b
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	91.1860	91.1860	93.0332	0x189710	tokens1:7347b40a1d63
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:9ab4056b5b4f
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:66f526e7e131
 singleselectionwindow	?onNewPlayerMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189fa0	tokens1:fa779ca3a76d
