@@ -269,3 +269,13 @@ source = "src/editor/loki/main.c"
 name = "ToolkitWnd"
 object = 61
 source = "src/editor/ToolkitWnd.cpp"
+
+[[unit]]
+name = "TileHRuler"
+object = 58
+source = "src/editor/TileHRuler.cpp"
+
+[[unit]]
+name = "TileVRuler"
+object = 59
+source = "src/editor/TileVRuler.cpp"
