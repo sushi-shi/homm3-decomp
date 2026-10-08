@@ -334,3 +334,8 @@ source = "src/editor/EditArtifactDlg.cpp"
 name = "ArmyDlg"
 object = 88
 source = "src/editor/ArmyDlg.cpp"
+
+[[unit]]
+name = "MapSpecsGeneralPage"
+object = 70
+source = "src/editor/MapSpecsGeneralPage.cpp"
