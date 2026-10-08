@@ -184,7 +184,11 @@ TAdvObjectTypeTraits aAdvObjectTypeTraitsImp[MAX_EVENT_TYPE] = {
 
 }
 
+#if defined(HOMM3_TARGET_LOKI)
+const TAdvObjectTypeTraits (&akAdvObjectTypeTraits)[MAX_EVENT_TYPE] = aAdvObjectTypeTraitsImp;
+#else
 const TAdvObjectTypeTraits* akAdvObjectTypeTraits = aAdvObjectTypeTraitsImp;
+#endif
 
 void InitializeAdvObjectTypeTraitsTable()
 {
