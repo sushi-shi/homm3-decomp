@@ -35,6 +35,7 @@ confirmation IS the mirror's negative control, re-run on every extraction.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 import shutil
@@ -49,7 +50,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 8
+PATCH_VERSION = 9
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -178,6 +179,26 @@ PATCHES = {
 }
 
 
+def _implicit_int_comparisons(text: str) -> str:
+    """afxwin1.inl defines CMenu's comparisons without a return type, which
+    cl reads as int (afxwin.h declares them BOOL); Clang requires one."""
+    return re.sub(r"_AFXWIN_INLINE CMenu::operator(==|!=)",
+                  r"_AFXWIN_INLINE BOOL CMenu::operator\1", text)
+
+
+def _implicit_int_typedef(text: str) -> str:
+    """ocidl.h's `typedef __RPC_FAR *LPFONTEVENTS;` declares an int pointer
+    by implicit int, which cl accepts and Clang rejects."""
+    return text.replace("typedef __RPC_FAR *LPFONTEVENTS;", "typedef int __RPC_FAR *LPFONTEVENTS;")
+
+
+#: The staged library headers' rewrites (lowercase_include), as PATCHES.
+LIBRARY_PATCHES = {
+    "afxwin1.inl": _implicit_int_comparisons,
+}
+PATCHES["ocidl.h"] = _implicit_int_typedef
+
+
 def clang_bin() -> str | None:
     """The probe binary, or None when clang is absent (outside the nix
     devshell). Extraction degrades to the lexical channel and SAYS SO -
@@ -218,6 +239,41 @@ def mirror(project_root=None, toolchain=None) -> Path | None:
         patched = rewrite(text)
         link.unlink()
         link.write_text(patched)
+    (tmp / stamp.name).write_text(want)
+    if destination.is_dir():
+        shutil.rmtree(destination)
+    tmp.replace(destination)
+    return destination
+
+
+def lowercase_include(directory: Path, project_root: Path) -> Path:
+    """`directory` itself, or a lowercase symlink mirror of it when it is a
+    staged library directory under build/ whose file names are upper case
+    (the toolchain's MFC INCLUDE): VC6 resolves
+    `#include <afxwin.h>` without regard to case, Clang on Linux does not."""
+    directory = Path(directory)
+    # only staged library headers; the project's own trees keep their paths
+    staged = Path(project_root) / "build"
+    if staged not in directory.parents or not directory.is_dir() or all(
+            entry.name == entry.name.lower() and entry.name.lower() not in LIBRARY_PATCHES
+            for entry in directory.iterdir()):
+        return directory
+    key = hashlib.sha256(os.path.realpath(directory).encode()).hexdigest()[:12]
+    destination = project_root / "build/gen/include-lower" / f"{directory.name.lower()}-{key}"
+    stamp = destination / ".mirror-stamp"
+    want = f"{os.path.realpath(directory)}\n{PATCH_VERSION}\n"
+    if stamp.is_file() and stamp.read_text() == want:
+        return destination
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    tmp = Path(tempfile.mkdtemp(dir=str(destination.parent)))
+    for entry in sorted(directory.iterdir()):
+        if not entry.is_file():
+            continue
+        name = entry.name.lower()
+        if name in LIBRARY_PATCHES:
+            (tmp / name).write_text(LIBRARY_PATCHES[name](entry.read_text(errors="replace")))
+        else:
+            (tmp / name).symlink_to(entry.resolve())
     (tmp / stamp.name).write_text(want)
     if destination.is_dir():
         shutil.rmtree(destination)

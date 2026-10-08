@@ -15,11 +15,13 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+Player	?InitializePlayerTraitsTable@@YA_NXZ	89.7935	89.7935	89.7935	0x94324	tokens1:e8d8c496355c
 adler32	@adler32@12	100.0000	100.0000	100.0000	0xd6dd0	-
-artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x2215	-
+artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	-	100.0000	100.0000	0x2215	-
 artifact	??8?$bitset@$0BD@@std@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x2d03d	-
 artifact	??9?$bitset@$0BD@@std@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x90e69	-
-artifact	?InitializeArtifactTraitsTable@@YA_NXZ	62.3343	62.3343	62.3343	0x36a8	-
+artifact	??_3?$bitset@$0BD@@std@@QAEAAV01@I@Z	99.9565	99.9565	99.9565	0x8f975	-
+artifact	?InitializeArtifactTraitsTable@@YA_NXZ	62.2918	62.3343	62.3343	0x36a8	-
 artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x3b75	-
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x3bd6	-
 artifact	?flip@?$bitset@$0BD@@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x5a69	-
@@ -86,7 +88,7 @@ gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	95.9074	99.8148	99.8148	0x49a1b	-
 gzinflatebuf	?_getC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0x4960f	-
 gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	99.2857	99.2857	99.2857	0x499bf	-
 gzinflatebuf	?_mustGetLong@TGzInflateBuf@@AAEKXZ	100.0000	100.0000	100.0000	0x49c1e	-
-gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	91.9167	99.8333	99.8333	0x49ab6	-
+gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	91.8750	99.8333	99.8333	0x49ab6	-
 herodefs	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.3458	99.3458	99.3458	0x4ce90	-
 herodefs	?InitializeHeroClassTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x4ccf9	-
 herodefs	?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	98.8095	98.8095	98.8095	0x4cd9f	-
@@ -236,6 +238,7 @@ resourcemanager	??0?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAE@XZ	99.6939
 resourcemanager	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	99.8246	99.8246	99.8246	0xdd4d0	-
 resourcemanager	??0?$numpunct@D@std@@QAE@I@Z	0.0000	0.0000	0.0000	0x371ca	-
 resourcemanager	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0xdccf0	-
+resourcemanager	??1?$TAutoArrayPtr@D@@QAE@XZ	72.5000	72.5000	72.5000	0x5b3bc	-
 resourcemanager	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x60f42	-
 resourcemanager	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	99.6094	99.6094	99.6094	0xdd5a0	-
 resourcemanager	??1?$numpunct@D@std@@UAE@XZ	49.6154	49.6154	49.6154	0x372e9	-
@@ -386,7 +389,7 @@ rmg	?createRoads@TRmgGenerator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
 rmg	?createShipyardConnection@TRmgGenerator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5266	89.5266	89.5266	0xa696b	-
 rmg	?createSubterraneanGate@TRmgGenerator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	87.7158	87.7158	87.7158	0xa6cf2	-
 rmg	?decorateMap@TRmgGeneratorBase@@QAEXXZ	83.0074	83.0074	83.0074	0x9eb8d	-
-rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	79.0027	79.0027	79.0027	0x9e700	-
+rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	78.9892	79.0027	79.0027	0x9e700	-
 rmg	?decorateUnderground@TRmgGenerator@@QAEXXZ	87.2333	87.2333	87.2333	0xa7ecc	-
 rmg	?discard@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x9cebd	-
 rmg	?drawIrregularZoneBoundary@TRmgGenerator@@QAEXUTPoint@@0HHH@Z	99.9447	99.9447	99.9447	0xa2413	-
@@ -518,7 +521,7 @@ rmg	?write@TRmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	
 rmg	?write@TRmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9c4f4	-
 rmg	?writeMap@TRmgGenerator@@QAEEPAVTAbstractFile@@@Z	95.7047	95.7047	95.7047	0xad1e3	-
 rmg	?writeMapHeader@TRmgGenerator@@QAEXPAVTAbstractFile@@@Z	79.3205	79.3205	79.3205	0xac857	-
-rmg_support	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd513	-
+rmg_support	??0TAllocationFailure@@QAE@XZ	99.3750	100.0000	100.0000	0xd513	-
 rmg_support	??0TRmgHalfEdge@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0xcc5db	-
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	99.8413	99.8413	99.8413	0x58755	-
 rmg_support	??0TRmgVoronoi@@QAE@XZ	99.7566	99.7566	99.7566	0xcc788	-
@@ -541,7 +544,7 @@ rmg_terrain	??0?$vector@EV?$allocator@E@std@@@std@@QAE@IABEABV?$allocator@E@1@@Z
 rmg_terrain	??0TRmgLineWalker@@QAE@PAVTRmgLinePainterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x58d37	-
 rmg_terrain	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	99.8214	99.8214	99.8214	0xba868	-
 rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	99.0000	99.0000	99.0000	0xbaa66	-
-rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	99.7561	99.7561	99.7561	0xbcff5	-
+rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	99.5122	99.7561	99.7561	0xbcff5	-
 rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	99.8387	99.8387	99.8387	0xbb5ce	-
 rmg_terrain	??0TRmgTerrainPatternTable@@QAE@XZ	100.0000	100.0000	100.0000	0xba9c8	-
 rmg_terrain	??1?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE@XZ	99.0323	99.5161	99.5161	0xbd11f	-

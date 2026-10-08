@@ -324,3 +324,9 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "spelldefs"
 source = "src/spelldefs.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+# The map editor's own objects (src/editor/, the original's Editor\)
+[[unit]]
+unit = "Player"
+source = "src/editor/Player.cpp"
+flags = "editor_o1_ob2_gr_windows"

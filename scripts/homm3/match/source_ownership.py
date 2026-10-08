@@ -871,9 +871,11 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
 
 
 def unadmitted_sources(root: Path, admitted: set[str]) -> list[str]:
-    from homm3.core import images
+    from homm3.core import images, paths as image_paths
+    tree = (root / 'src' if image_paths.is_game() else
+            root / 'src' / images.source_dir(image_paths.image_key(), root))
     return [path.relative_to(root).as_posix()
-            for path in sorted((root / 'src').rglob('*'))
+            for path in sorted(tree.rglob('*'))
             if path.suffix.lower() in {'.c', '.cpp', '.cxx'}
             and not images.foreign(path, root)
             and path.relative_to(root).as_posix() not in admitted]
@@ -1027,9 +1029,12 @@ def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
 
     results = scan_all(units)
     reached = {p for _, _, paths in results for p in paths}
-    from homm3.core import images
+    from homm3.core import images, paths as image_paths
+    # another image's orphan headers are its own (include/<its directory>)
+    header_tree = (root / 'include' if image_paths.is_game() else
+                   root / 'include' / images.source_dir(image_paths.image_key(), root))
     orphan_headers = [dict(source=p.relative_to(root).as_posix())
-                      for p in sorted((root / 'include').rglob('*'))
+                      for p in sorted(header_tree.rglob('*'))
                       if p.suffix.lower() in {'.h', '.hpp', '.inl'}
                       and not images.foreign(p, root)
                       and p.relative_to(root).as_posix() not in reached]

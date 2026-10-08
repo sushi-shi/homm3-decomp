@@ -901,6 +901,10 @@ public:
     DC_ADDRESS(0x002d74, 0x18)
     const char* GetText(int r) const { return Text[r]; }
 
+    // Loki's TextResource.h keeps this count beside GetText; the map
+    // editor's asserts read it.
+    int GetNumberOfStrings() const { return Text.size(); }
+
     // E:\gamedcs\TextResource.h:73
     DC_ADDRESS(0x002d8c, 0x18)
     const char* operator[](int i) const { return GetText(i); }

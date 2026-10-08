@@ -138,7 +138,7 @@ def portable(text: str, unit: str) -> str:
     return " ".join(normalize_anon_ns_name(word, unit) for word in text.split(" "))
 
 
-def derive(log=print):
+def derive(log=print, want_suggestions=False):
     from homm3 import manifest
     from homm3.core.image import Image
     from homm3.delink.coffx import Obj
@@ -170,6 +170,10 @@ def derive(log=print):
         return image.data[o:o + size]
 
     units = manifest.units(paths.manifest())
+    # the image's own units spell their addresses in VA()/DATA(); their
+    # placements are suggestions for that source, never table rows
+    shared_sources = {u["source"] for u in manifest.units(paths.manifest("game"))}
+    owned = {u["unit"] for u in units if u["source"] not in shared_sources}
     compiled = []                         # (unit, name, body, relocs)
     definers = defaultdict(list)          # function name -> units, manifest order
     tables = {}                           # vtable symbol -> slots
@@ -463,11 +467,17 @@ def derive(log=print):
         rows.append((rva, size, "data", portable(name, unit), unit,
                      portable(data_evidence[(name, rva)], unit)))
     rows.sort()
+    suggestions = [row for row in rows if row[4] in owned]
+    rows = [row for row in rows if row[4] not in owned]
+    placed_functions -= sum(row[2] == "func" for row in suggestions)
     log(f"[placements] {placed_functions} functions and {len(rows) - placed_functions} "
         f"data objects placed from {len(compiled)} compiled bodies of {len(units)} "
         f"units; {conflicts} function and {data_conflicts} data names or addresses "
         "ambiguous and dropped")
-    return rows
+    if suggestions:
+        log(f"[placements] {len(suggestions)} placements of the image's own units "
+            "(`--suggest` lists them for their VA()/DATA() claims)")
+    return (rows, suggestions) if want_suggestions else rows
 
 
 def render(rows) -> str:
@@ -488,11 +498,23 @@ def main(argv=None) -> int:
                         help="store config/retail/<image>/placements.tsv")
     parser.add_argument("--check", action="store_true",
                         help="fail when the committed table differs from the derivation")
+    parser.add_argument("--suggest", metavar="UNIT", action="append",
+                        help="list where the image's own UNIT's compiled functions "
+                             "and data sit, for its VA()/DATA() claims (repeatable)")
     args = parser.parse_args(argv)
     if paths.is_game():
         print("[placements] the game spells its addresses in source; select "
               "another image with `homm3 --image KEY placements`", file=sys.stderr)
         return 1
+    if args.suggest:
+        _rows, suggestions = derive(want_suggestions=True)
+        for rva, size, kind, name, unit, why in suggestions:
+            if unit in args.suggest:
+                macro = "VA" if kind == "func" else "DATA"
+                spelled = f"0x{rva + common.IMAGE_BASE:08x}"
+                print(f"{unit}\t{macro}({spelled}{f', 0x{size:x}' if kind == 'func' else ''})"
+                      f"\t{name}\t{why}")
+        return 0
     text = render(derive())
     target = paths.retail_dir() / "placements.tsv"
 

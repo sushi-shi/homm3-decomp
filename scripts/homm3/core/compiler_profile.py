@@ -37,7 +37,8 @@ class Profiles:
         self.project = project
         self.data = project.manifest
         self.mirror = clang.mirror(project.root, project.toolchain)
-        self.includes = ([self.mirror] if self.mirror else []) + project.includes
+        self.includes = ([self.mirror] if self.mirror else []) + [
+            clang.lowercase_include(path, project.root) for path in project.includes]
         self.by_source = {u['source']: u for u in self.data.get('unit', [])}
 
     def compiler_for_source(self, path):

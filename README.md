@@ -51,35 +51,35 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 14.67% matched (MAX)** — 290 / 10,376 functions exact (2.8%), weighted by size over 940,876 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 14.72% matched (MAX)** — 290 / 10,382 functions exact (2.8%), weighted by size over 941,335 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |             288 |   14.66% | last measured score                            |
-| MAX   |             290 |   14.67% | best result for each function's current source |
-| HIST  |             290 |   14.67% | all-time peak across source revisions          |
+| CUR   |             286 |   14.71% | last measured score                            |
+| MAX   |             290 |   14.72% | best result for each function's current source |
+| HIST  |             290 |   14.72% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
 | `rmg`         |     3 |   125 / 283 (44.2%) |    91.77% |
-| `game`        |    13 |   104 / 236 (44.1%) |    85.39% |
+| `game`        |    14 |   104 / 239 (43.5%) |    85.47% |
 | `zlib-1.1.3`  |    12 |     43 / 56 (76.8%) |    99.97% |
 | `codec`       |     3 |     13 / 35 (37.1%) |    93.16% |
 | `victor`      |     4 |      5 / 14 (35.7%) |    79.06% |
-| `(unmatched)` |     — |    0 / 9,752 (0.0%) |      0.0% |
+| `(unmatched)` |     — |    0 / 9,755 (0.0%) |      0.0% |
 
 Excluded from the scores (generated or library code):
 
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
-| `EH unwind funclets`  |     4,533 |   55,776 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |     1,693 |  209,899 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
+| `EH unwind funclets`  |     4,533 |   55,766 | compiler EH unwind funclets; match with their parent function      |
+| `CRT/C++ runtime`     |     1,691 |  209,450 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
 | `init/cleanup thunks` |     2,356 |   23,808 | compiler-generated CRT initializer/cleanup bodies                  |
 | `import thunks`       |        13 |       78 | FF 25 jumps through the IAT                                        |
 
-**Data:** 142 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
+**Data:** 140 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
 <!-- h3maped-match-score:end -->
 
