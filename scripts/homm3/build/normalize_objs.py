@@ -1162,11 +1162,19 @@ EH_PROLOGUES = (b"\x55\x8b\xec\x6a\xff\x68",
                 b"\x55\x8b\xec\x64\xa1\x00\x00\x00\x00\x6a\xff\x68")
 
 
+#: The `/O1` form (the map editor): `mov eax, offset handler; call
+#: __EH_prolog`, whose helper builds the same registration.
+EH_PROLOG_CALL = (b"\xb8", b"\xe8")
+
+
 def _eh_prologue_site(code: bytes, start: int) -> int | None:
     """Offset of the handler operand after a recognized EH prologue."""
     for prologue in EH_PROLOGUES:
         if code[start:start + len(prologue)] == prologue:
             return len(prologue)
+    mov, call = EH_PROLOG_CALL
+    if code[start:start + 1] == mov and code[start + 5:start + 6] == call:
+        return len(mov)
     return None
 
 

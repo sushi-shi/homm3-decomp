@@ -81,11 +81,20 @@ def _coff(sections: tuple[FixtureSection, ...], symbols: tuple[bytes, ...]) -> b
 
 STANDARD = b"\x55\x8b\xec\x6a\xff\x68"
 FS_FIRST = b"\x55\x8b\xec\x64\xa1\x00\x00\x00\x00\x6a\xff\x68"
+#: `/O1`: `mov eax, offset handler; call __EH_prolog`, the operand at +1
+EH_PROLOG = b"\xb8"
+
+
+def _body(prologue: bytes) -> bytearray:
+    body = bytearray(prologue + bytes(32 - len(prologue)))
+    if prologue == EH_PROLOG:
+        body[5] = 0xE8
+    return body
 
 
 def _base(*, handler_opcode: int = 0xB8,
           cleanup_storage: int = 6, prologue: bytes = STANDARD) -> bytes:
-    parent = bytearray(prologue + bytes(32 - len(prologue)))
+    parent = _body(prologue)
     child = bytearray(21)
     child[0] = 0xC3
     child[11] = handler_opcode
@@ -115,7 +124,7 @@ def _base(*, handler_opcode: int = 0xB8,
 
 def _target(funclet_size: int = 11, owner: str = "unwind13",
             prologue: bytes = STANDARD) -> bytes:
-    text = bytearray(prologue + bytes(32 - len(prologue)))
+    text = _body(prologue)
     struct.pack_into("<I", text, len(prologue), funclet_size)
     sections = (FixtureSection(".text", bytes(text), ((len(prologue), 1, DIR32),)),)
     symbols = (
@@ -199,6 +208,17 @@ class EhHandlerNormalizationTest(unittest.TestCase):
         self.assertEqual(len(rewrites), 1)
         normalized = CoffObject(after)
         row = next(r for r in normalized.relocations if r.site == 12)
+        self.assertEqual(normalized.symbols[row.symbol_index].name, "unwind13")
+
+    def test_eh_prolog_call_is_canonicalized(self):
+        # the map editor's /O1 objects load the handler into eax for
+        # __EH_prolog; its operand at +1 carries the same proof
+        before = _base(prologue=EH_PROLOG)
+        after, rewrites = _canonicalize_matching_eh_handler_owners(
+            before, _target(prologue=EH_PROLOG))
+        self.assertEqual(len(rewrites), 1)
+        normalized = CoffObject(after)
+        row = next(r for r in normalized.relocations if r.site == 1)
         self.assertEqual(normalized.symbols[row.symbol_index].name, "unwind13")
 
     def test_different_prologue_forms_stay_visible(self):

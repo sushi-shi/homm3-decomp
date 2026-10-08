@@ -46,7 +46,12 @@ its census from its pinned executable (`homm3.census`):
   decreasing strength (entry, EH funclets, call and tail targets, the code
   after a zero-displacement `jmp`, runs of code pointers in data, immediate
   code addresses, isolated data pointers, then the code after each decoded
-  extent). Extents partition `.text` to the next start minus padding.
+  extent). Extents partition `.text` to the next start minus padding. A C++
+  EH registration stub (`mov eax, offset FuncInfo; jmp ___CxxFrameHandler`)
+  is never a start: as in the game's census it closes its parent's
+  `.text$x` group, so the parent's `offset stub` reads as the last funclet
+  plus its size, the form the comparison canonicalizes (also for the
+  editor's `/O1` prologue `mov eax, offset stub; call __EH_prolog`).
 - `vtables.tsv`: RTTI vtables (the dword before each is its Complete Object
   Locator, which names the class) and tables that code stores as a vptr.
 - `relocs.tsv` and `reloc-evidence.tsv`: the vendored `find_relocs` channels.

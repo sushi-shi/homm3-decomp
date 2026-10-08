@@ -11,17 +11,10 @@ def funclet_rows(c):
 
     A function with C++ EH loads its `__ehhandler$` stub (`mov eax, offset
     FuncInfo; jmp ___CxxFrameHandler`) into eax before its frame setup; the
-    stub's FuncInfo lists the parent's unwind actions and catch handlers."""
+    stub's FuncInfo lists the parent's unwind actions and catch handlers.
+    The census keeps the stubs apart from its starts (`Census.stubs`)."""
     base = c.image.image_base
-    stub_info = {}
-    for start in c.starts:
-        ins = c.insn(start)
-        nxt = c.insn(start + ins.size) if ins else None
-        if ins and nxt and ins.mnemonic == "mov" and nxt.mnemonic == "jmp" \
-                and len(ins.operands) == 2 and ins.operands[1].type == x86.X86_OP_IMM:
-            info = (ins.operands[1].imm & 0xFFFFFFFF) - base
-            if info in c.funcinfo:
-                stub_info[start] = info
+    stub_info = dict(c.stubs)             # never starts (homm3.census.functions)
     parent_of = {}
     for start, seen in c.reached.items():
         if start in stub_info or start in c.funclets:

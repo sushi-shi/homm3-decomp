@@ -20,6 +20,12 @@ strength, each later seed admitted only outside the bodies already decoded:
 Extents partition .text: a function runs to the next start minus trailing
 NOP/INT3 padding, and always covers its decoded instructions, jump tables
 and byte index tables.
+
+A C++ EH registration stub (`mov eax, offset FuncInfo; jmp
+___CxxFrameHandler`, ten bytes) is never a start: it closes its parent's
+`.text$x` COMDAT after the unwind funclets, as in the game's census, so no
+extent covers it and the parent's `offset stub` operand reads as the last
+funclet plus its size.
 """
 from __future__ import annotations
 
@@ -31,6 +37,8 @@ import capstone
 from capstone import x86
 
 PAD = {0x90, 0xCC}
+#: `mov eax, imm32` + `jmp rel32`: the EH registration stub.
+STUB_SIZE = 10
 
 
 @dataclass
@@ -47,6 +55,7 @@ class Census:
     funcinfo: set = field(default_factory=set)       # FuncInfo record rvas
     continuations: dict = field(default_factory=dict)  # label -> catch funclet
     imms: set = field(default_factory=set)
+    stubs: dict = field(default_factory=dict)        # EH registration stub -> FuncInfo
 
     def __post_init__(self):
         text = next(s for s in self.image.sections if s.executable)
@@ -62,6 +71,18 @@ class Census:
     # -- decoding ----------------------------------------------------------
     def in_text(self, rva):
         return self.text_lo <= rva < self.text_hi
+
+    def stub_info(self, rva):
+        """The FuncInfo an EH registration stub at `rva` loads, else None."""
+        if rva in self.stubs:
+            return self.stubs[rva]
+        if not self.in_text(rva) or not self.in_text(rva + STUB_SIZE - 1):
+            return None
+        o = rva - self.text_lo
+        if self.blob[o] != 0xB8 or self.blob[o + 5] != 0xE9:
+            return None
+        info = struct.unpack_from("<I", self.blob, o + 1)[0] - self.image.image_base
+        return info if info in self.funcinfo else None
 
     def next_start(self, start):
         import bisect
@@ -303,6 +324,10 @@ def run(image, log=print):
     def take(start, why, check=True):
         if start in c.starts:
             return False
+        info = c.stub_info(start)
+        if info is not None:
+            c.stubs[start] = info
+            return False
         if check and (start in covered or start in table_bytes):
             return False
         c.starts[start] = why
@@ -380,8 +405,14 @@ def run(image, log=print):
         for a, b in zip(order, order[1:] + [c.text_hi]):
             end = extent_end(c, a)
             gap = end
-            while gap < b and c.byte(gap) in PAD:
-                gap += 1
+            while gap < b:
+                while gap < b and c.byte(gap) in PAD:
+                    gap += 1
+                if gap < b and c.stub_info(gap) is not None:
+                    c.stubs[gap] = c.stub_info(gap)
+                    gap += STUB_SIZE      # the stub closes a's group
+                    continue
+                break
             if gap >= b:
                 continue
             if gap in c.continuations:
@@ -417,12 +448,18 @@ def extent_end(c, start):
 
 
 def partition(c):
-    """[(start, size, decoded size)]: a function runs to the next start minus
-    trailing padding, and never ends before its decoded extent."""
+    """[(start, size, decoded size)]: a function runs to the next start or EH
+    registration stub minus trailing padding, and never ends before its
+    decoded extent."""
+    import bisect
     order = sorted(c.starts)
+    stubs = sorted(c.stubs)
     rows = []
     for a, b in zip(order, order[1:] + [c.text_hi]):
         reached = extent_end(c, a)
+        k = bisect.bisect_right(stubs, a)
+        if k < len(stubs) and stubs[k] < b:
+            b = stubs[k]
         end = b
         while end > a and c.byte(end - 1) in PAD:
             end -= 1
