@@ -25,7 +25,13 @@ VA(0x00494324, 0x205)
 bool InitializePlayerTraitsTable()
 {
     assert(kPlayerNameFmtStr != NULL);
+    // One guard byte holds both arrays' bits; each array's teardown runs
+    // ??_M over its eight elements.
+    DATA_COMPGEN_GUARD(0x005a24e8, playerTraitsNamesGuard, aNames)
+
+    VA_COMPGEN(0x0049453d, 0x14, STATIC_DTOR, aNames)
     DATA(0x005a2468) static TAutoArrayPtr<char> aNames[kNumPlayers];
+    VA_COMPGEN(0x00494529, 0x14, STATIC_DTOR, aColorNames)
     DATA(0x005a24a8) static TAutoArrayPtr<char> aColorNames[kNumPlayers];
     TResourcePtr<TTextResource> pTextResource(ResourceManager::GetText("plcolors.txt"));
     if (!pTextResource.get())
