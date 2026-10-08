@@ -1,7 +1,8 @@
-// resource.h - the editor's dialog template and control identifiers, as
-// the image's .rsrc dialogs and their users' DDX and GetDlgItem calls
-// spell them. The original resource.h is not recorded: the names follow
-// the AppWizard IDD_/IDC_ style from each control's role.
+// resource.h - the editor's dialog template, control, bitmap and cursor
+// identifiers, as the image's .rsrc entries and their users' DDX,
+// GetDlgItem and Load* calls spell them. The original resource.h is not
+// recorded: the names follow the AppWizard IDD_/IDB_/IDC_ style from each
+// resource's role.
 #ifndef HOMM3_EDITOR_RESOURCE_H
 #define HOMM3_EDITOR_RESOURCE_H
 
@@ -11,6 +12,26 @@ enum {
     IDD_FLAGGABLE_PROPS = 207,
     IDD_SELECT_ARTIFACT = 256,
     IDD_OPTIONS = 304
+};
+
+enum {
+    IDB_PANNER_BOTH = 216,
+    IDB_PANNER_HORZ = 217,
+    IDB_PANNER_VERT = 218
+};
+
+enum {
+    IDC_PAN_BOTH = 219,
+    IDC_PAN_HORZ = 220,
+    IDC_PAN_VERT = 221,
+    IDC_PAN_NORTH = 222,
+    IDC_PAN_SOUTH = 223,
+    IDC_PAN_EAST = 224,
+    IDC_PAN_WEST = 225,
+    IDC_PAN_NORTHEAST = 226,
+    IDC_PAN_NORTHWEST = 227,
+    IDC_PAN_SOUTHEAST = 228,
+    IDC_PAN_SOUTHWEST = 229
 };
 
 enum {

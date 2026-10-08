@@ -415,3 +415,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "MemoryDC"
 source = "src/editor/MemoryDC.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "PannerCtrl"
+source = "src/editor/PannerCtrl.cpp"
+flags = "editor_o1_ob2_gr_windows"
