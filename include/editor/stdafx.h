@@ -43,6 +43,10 @@
 typedef unsigned char ubyte;
 typedef unsigned short uword;
 
+// A 15-bit (5:5:5) editor colour: CWnd::TColorToGdkColor names it, and
+// "TColor TGUIGameObject::miniMapColor(TTerrainType) const" returns it.
+typedef uword TColor;
+
 // The MFC shim's BOOL: __PRETTY_FUNCTION__ texts spell it
 // ("BOOL TResourceQuantitiesDlg::OnInitDialog()") and such functions return
 // it in %al. bool is assumed: the shim's own predicates and the dialogs'
@@ -56,9 +60,11 @@ extern "C" void doMessageBox(const char* message);
 namespace {
 extern "C" GtkWidget* _widget(char* name);
 }
-// cppbridge.cpp's allocated colours, which the rulers draw with.
+// cppbridge.cpp's allocated colours, which the rulers draw with, and the
+// initialized red the mini map crosses out an empty map with.
 extern GdkColor _m_white;
 extern GdkColor _m_black;
+extern GdkColor _m_red;
 
 class CPoint {
 public:
@@ -302,7 +308,7 @@ public:
     }
 
     // A 15-bit (5:5:5) editor colour as a GdkColor.
-    void TColorToGdkColor(unsigned short color, GdkColor* pGdkColor)
+    void TColorToGdkColor(TColor color, GdkColor* pGdkColor)
     {
         pGdkColor->pixel = 0;
         pGdkColor->red = (gushort)(((color & 0x7c00) >> 10) / 31.0 * 65535.0);
