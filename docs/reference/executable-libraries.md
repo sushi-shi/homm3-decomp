@@ -63,6 +63,132 @@ section, and the thirteen `DPAID_*`, `DPSPGUID_*`, `CLSID_DirectPlay*` and
 `IID_IDirectPlayLobby3A` (DirectPlay 6) exist only in that library, not in
 `lib-rtm/DXGUID.LIB`.
 
+## Library identity from the Rich header
+
+The Rich header lists the `@comp.id` of every object LINK read. Decoded, with
+the pinned members' own `@comp.id` alongside:
+
+| Rich entry (product/build, count) | Producer | Linked members that carry it |
+|---|---|---|
+| `Utc12_CPP` 8447, 145 | VC6 SP3 C++ | game C++ objects; our build has 139 (135 game + 4 victor) |
+| `Utc12_C` 8168, 178 | VC6 RTM C compiler | 153 LIBCMT + 6 LIBCPMT C members, 14 zlib objects, 5 unidentified |
+| `Utc12_CPP` 8168, 26 | VC6 RTM C++ | 13 LIBCMT + 13 LIBCPMT C++ members: exact |
+| `Masm613` 7299, 41 | MASM 6.13 | 41 LIBCMT assembler members: exact |
+| `AliasObj60` 7291, 12 | OLDNAMES aliases | 12 `OLDNAMES.LIB` weak-alias members |
+| `Linker512` 8034, 19 | import descriptors | 9 system DLLs x 2 + the null descriptor |
+| `Linker512` 9049, 3 | import descriptors | DirectX 7 `DDRAW.LIB` |
+| `Linker600` 8168, 4 | LIB 6.00 RTM | 4 objects that no pinned library contains (vendor import libraries are the likely source) |
+| `Cvtres500` 1735, 1 | resource converter | the `.res`; the pinned toolchain has CVTRES 5.00.1736 |
+
+The SP3 service pack rebuilt only three LIBCMT members (`strftime`, `tzset`,
+`undname`), and kept build 8168 for them. The Rich header therefore cannot
+separate SP3 from RTM. The bytes can: `strftime` and `tzset` match only the SP3
+`lib/LIBCMT.LIB`. LIBCPMT is identical in RTM and SP3. The libraries are:
+`lib/LIBCMT.LIB` (SP3), `lib/LIBCPMT.LIB`, `lib/OLDNAMES.LIB`, `lib/UUID.LIB`,
+`lib/DXGUID.LIB` (DirectX 7), and the system import libraries.
+
+Two counts point to differences in the build inputs, not in code bytes:
+
+- **zlib was compiled by the RTM C compiler.** The 14 zlib objects compiled by
+  `orig/vc6-rtm` (C1/C2 12.00.8168) are section-for-section identical to our
+  SP3-compiled objects, including relocations, and carry `@comp.id` 10/8168.
+  Retail has no 10/8447 entry, so it linked an RTM-built zlib (with `/ML`,
+  probably as a prebuilt library).
+- **The game used 12 old POSIX names.** Our objects pull one OLDNAMES alias
+  (`stricmp` in `csprite`). Retail pulled 12. The underscore names that our
+  game objects reference and that have OLDNAMES aliases are exactly 12:
+  `access chdir close getcwd open read strcmpi stricmp strnicmp strrev strupr
+  write`. The original source most likely spelled these without the
+  underscore. This changes no code byte; it is source-spelling evidence.
+
+## Per-function runtime verdicts
+
+`config/retail/runtime-functions.tsv` maps each of the 912 runtime-band census
+functions to its library, member and covering COFF sections. All 912 are
+`exact`; `homm3 verify generated-code` re-derives the table from the verified
+contributions. 292 of them are Dinkumware template instantiations
+(`wlocale` 154, `xlocale` 80, `wiostrea` 42, `locale` 7, `strstrea` 5,
+`iostream` 4). Each is the copy explicitly instantiated in the LIBCPMT member,
+and no game object emits it. LINK keeps the first definition, and game objects
+come first, so any instantiation a game unit emitted would sit in that unit's
+part of `.text`.
+
+STL instantiations compiled into game units are different. They belong to the
+game units and are counted in the game score. The library verification found
+47 references from library sections that resolve to game-emitted COMDATs:
+
+- code such as `basic_string<char>::~basic_string` (adventuremapwindow),
+  `basic_streambuf<char>::sync`/`pbackfail` and the `num_put`/`num_get`
+  deleting destructors (bottomviewsubwindow, objecttype), the
+  `codecvt<char>` members (customcampaign), and the `out_of_range`/
+  `runtime_error` members (advmgr, artifact);
+- data such as RTTI and throw records, `npos`, `_Nullstr`, the literals the
+  facets use and floating-point constants.
+
+`homm3 verify library-code` lists them under `game_comdats`.
+
+## Link readiness
+
+`homm3 link` already links all 153 objects with the pinned LINK 6.00.8447,
+using no `/FORCE`, with no unresolved or duplicate symbols. It is a layout
+study. A byte-identical link like HoMM1's and HoMM2's would also need the
+following.
+
+**Flags.** Read from the retail headers: LINK 6.00; `/SUBSYSTEM:WINDOWS`
+(4.0); `/BASE:0x400000`; stack and heap reserve/commit `0x100000`/`0x1000`
+(defaults); no `.reloc` (EXE default `/FIXED`); file alignment `0x1000` (VC6
+default); no debug directory, so no `/DEBUG`. ICF-folded runtime COMDATs
+(`icf` rows) mean `/OPT:REF` with folding, not the study's
+`/OPT:NOREF /OPT:NOICF`. With `/OPT:REF` the study already drops LIBCMT
+`qsort.obj` (referenced from `lodfile`) and `rewind.obj` (zlib `gzio`), which
+retail does not link. The entry point is LIBCMT's `WinMainCRTStartup`
+(`0x21a2b4`).
+
+**Default libraries.** The game objects are `/MT` (LIBCMT), and zlib and
+victor are `/ML` (LIBC). Retail links only LIBCMT, so the link needs
+`/NODEFAULTLIB:LIBC` (as HoMM1 does), or the study's blanket `/NODEFAULTLIB`
+with explicit libraries.
+
+**Order.** The `.text` order is game objects, then zlib (`0x204830`), then
+LIBCMT `delete.obj` (`0x20ab30`), then LIBCPMT members (`0x20ab3b`), then the
+rest of LIBCMT (`0x216e8d`). The LIBCPMT funclets follow at
+`0x238568`. `runtime-contributions.tsv` records each library member's
+position. Game object order still has to be derived. Sorting by first claimed
+function gives 138 units in 290 runs; 40 units appear in more than one run,
+mostly header COMDATs claimed by a unit other than the first object that
+emitted them. The study passes objects in name order. The Rich header has 6
+more SP3 C++ objects than our build compiles, which marks missing translation
+units.
+
+**Inputs not yet pinned.**
+
+- An RTM-compiled zlib (see above).
+- The vendor import libraries: mss32, binkw32, smackw32 and IFC20 are
+  currently synthesized from the import directory. The 4 `Linker600` 8168
+  objects and the extra `@comp.id`-less objects suggest real SDK `.lib`
+  files.
+- The `.res` (CVTRES 1735, not the pinned 1736).
+- The 12 OLDNAMES spellings.
+
+**Post-link edits.** These are not producible by LINK. The pinned GOG image
+differs from the same-timestamp Collector's Edition executable in 467 bytes
+([import-table-post-link-edits.md](../todos/import-table-post-link-edits.md)).
+Beyond that note, the header carries:
+
+- `IMAGE_FILE_UP_SYSTEM_ONLY` (Characteristics `0x410f`; Collector's has
+  `0x10f`, which is what LINK emits);
+- a Load Configuration directory entry (`0x2a0`, 64 bytes) that points into
+  the headers;
+- a stale checksum, `0x2a540c` stored against `0x2aaeb3` computed (Collector's
+  stores 0);
+- SafeDisc metadata at file offset `0xfd4`;
+- the import anomalies, the `.text` tail bytes and the `setupCDDrive` patch.
+
+A link-diff gate therefore needs a decision. One option is a target of
+"Collector's-equivalent link output plus the documented edits". The other is
+per-region ceilings that state the edited bytes explicitly. Either way, no
+binary is patched to pass.
+
 ## Import inventory
 
 | dll | imports | note |
