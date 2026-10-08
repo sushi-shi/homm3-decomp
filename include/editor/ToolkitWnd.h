@@ -17,7 +17,7 @@ class TRiverToolkit;
 class TRoadToolkit;
 class TEraseToolkit;
 
-class TToolkitWnd : public CWnd, public TObjectPaletteWndClient {
+class TToolkitWnd : public CWnd, private TObjectPaletteWndClient {
 public:
     TToolkitWnd(GtkWidget* thisWidget, TToolkitWndClient* pClient);
     virtual ~TToolkitWnd();
