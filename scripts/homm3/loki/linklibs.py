@@ -18,7 +18,8 @@ Two compilers build them, both 2000-era binaries run through potato's loader:
   i686 default `-mcpu=pentiumpro`: libgcc, crtstuff, libio/libstdc++ 2.10 the
   way the 2.95.2 tree builds its target libraries (`-g -O2`), then libxml 1.8.9
   and libglade 0.14 at `-O2`;
-- egcs 1.1.2 of Red Hat 6.2 (egcs-1.1.2-30, its cpp and cc1): GLib/GTK+ 1.2.8 at
+- egcs 1.1.2 of Red Hat 6.2 (egcs-1.1.2-30, its cpp and cc1, binutils-2.9.5.0.22-6's
+  as): GLib/GTK+ 1.2.8 (with Red Hat's ahiguti i18n patch) at
   Red Hat's `-O2 -m486 -fno-strength-reduce`, zlib 1.0.8 at
   `-O2 -fno-strength-reduce`. It emits `.p2align 4,,7` for jump targets, as the
   image's C libraries show (Slackware's egcs emits `.align 16`).
@@ -135,9 +136,13 @@ class Builder:
         wrappers = egcs / "libexec"
         for name in ("cpp", "cc1", "collect2"):
             tc._script(wrappers / name, tc._wrapper(egcs / EGCS_LIB / name))
-        for name in ("as", "ld"):
-            shutil.copyfile(tc.WRAPPERS / "as" if name == "as" else self.link / "libexec/ld", wrappers / name)
-            (wrappers / name).chmod(0o755)
+        # Red Hat 6.2's assembler (binutils 2.9.5.0.22) beside its egcs: the image's GTK+/GDK use the
+        # short `a0`/`a2` moffs forms for absolute byte moves and its nop fills, which the
+        # project objects' as 2.9.1.0.25 never emits.
+        redhat = self.link / "redhat-binutils"
+        tc._script(wrappers / "as", tc._wrapper(redhat / "usr/bin/as", redhat / "usr/lib"))
+        shutil.copyfile(self.link / "libexec/ld", wrappers / "ld")
+        (wrappers / "ld").chmod(0o755)
         tc._script(self.bin / "egcc", self._driver_script(
             egcs / "usr/bin/gcc", [egcs / EGCS_LIB, tc.SYSROOT / "usr/lib", wrappers],
             [egcs / EGCS_LIB / "include", tc.SYSROOT / "usr/include"]))
@@ -187,8 +192,15 @@ class Builder:
             shutil.copyfile(prefix / "lib" / name, self.lib / name)
         return prefix
 
-    def gtk(self, source: bytes, glib_prefix: Path, x_headers: Path) -> None:
+    def gtk(self, source: bytes, glib_prefix: Path, x_headers: Path, patches: list[bytes]) -> None:
         tree = self.unpack(source)
+        for patch in patches:
+            completed = subprocess.run(["patch", "-p1", "--no-backup-if-mismatch"], cwd=tree, input=patch,
+                                       capture_output=True)
+            with self.log.open("ab") as stream:
+                stream.write(b"$ patch -p1\n" + completed.stdout + completed.stderr)
+            if completed.returncode:
+                raise BuildError(f"GTK+ patch failed in {tree} (see {self.log})")
         env = self.env("egcc", REDHAT_CFLAGS)
         self.run(["./configure", "--prefix=/usr", "--disable-shared", f"--with-glib-prefix={glib_prefix}",
                   "--with-xinput=xfree", f"--x-includes={x_headers}", f"--x-libraries={self.xlib}",
@@ -309,6 +321,8 @@ def build(link: Path, media: dict[str, bytes], jobs: int = 2) -> None:
     x_root = link / "x11"
     _install_rpm(media["XFree86-devel-3.3.6-20.i386.rpm"], x_root,
                  lambda name: name.startswith("usr/X11R6/include/"))
+    _install_rpm(media["binutils-2.9.5.0.22-6.i386.rpm"], link / "redhat-binutils",
+                 lambda name: name in ("usr/bin/as", "usr/lib/libbfd-2.9.5.0.22.so"))
     egcs = link / "egcs"
     for package in ("egcs-1.1.2-30.i386.rpm", "cpp-1.1.2-30.i386.rpm"):
         _install_rpm(media[package], egcs,
@@ -322,6 +336,9 @@ def build(link: Path, media: dict[str, bytes], jobs: int = 2) -> None:
     builder.write_compilers()
     builder.zlib(media["zlib-1.0.8.tar.gz"])
     glib_prefix = builder.glib(media["glib-1.2.8.tar.gz"])
-    builder.gtk(media["gtk+-1.2.8.tar.gz"], glib_prefix, x_root / "usr/X11R6/include")
+    # Red Hat's i18n patch (Akira Higuchi, 1999; Fedora keeps its 1.2.10 refresh): the word
+    # breaks of GtkEntry, GtkLabel and GtkText call iswpunct/iswcntrl, as the image imports them.
+    builder.gtk(media["gtk+-1.2.8.tar.gz"], glib_prefix, x_root / "usr/X11R6/include",
+                [media["gtk+-1.2.10-ahiguti.patch"]])
     builder.gcc_runtime(media["gcc-2.95.2.tar.gz"])
     builder.libxml_and_libglade(media["libxml-1.8.9.tar.gz"], media["libglade-0.14.tar.gz"])
