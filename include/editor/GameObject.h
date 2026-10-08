@@ -56,6 +56,8 @@ public:
         return _m_objectTypeIter->first.getBCellTrigger(x, y);
     }
     const TObjectType::TPoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
+    const std::bitset<kNumTerrainTypes>& getTerrainMask() const { return _m_objectTypeIter->first._m_terrainMask; }
+    TAdventureObjectType getType() const { return _m_objectTypeIter->first.getType(); }
     bool getBUnderlay() const { return _m_objectTypeIter->first.getBUnderlay() != 0; }
     unsigned int getWidth() const { return _m_objectTypeIter->first.getWidth(); }
     unsigned int getHeight() const { return _m_objectTypeIter->first.getHeight(); }

@@ -365,6 +365,8 @@ public:
     }
 
     static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
+    static bool _isValidShipyardPlacement(const TLayer& layer, const TGameObject& shipyard, unsigned int x,
+                                          unsigned int y);
 
     bool _isOnMap(const TGameObject& obj, unsigned int x, unsigned int y) const;
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
@@ -920,6 +922,109 @@ const TLinkableObject* TGameMap::_TImpl::getPLinkableObject(int linkID) const
     while (pLinkable->getLinkID() != linkID)
         pLinkable = pLinkable->getPContainedObject();
     return pLinkable;
+}
+
+// Whether an object fits at (x, y): its trigger cells on the map, its
+// blocking cells on terrain it allows, no trigger under another's blocking
+// cell or blocking cell over another's trigger, and no object both above
+// and below it.
+VA(0x0042650e, 0x3dd)
+bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y)
+{
+    static vector<int> aLowerObjIDs;
+    static vector<int> aHigherObjIDs;
+    aLowerObjIDs.clear();
+    aHigherObjIDs.clear();
+    unsigned int heightMap[kMaxObjWidth][kMaxObjHeight];
+    constructObjectHeightMap(obj, heightMap);
+    for (unsigned int i = 0; i < obj.getWidth(); i++) {
+        unsigned int cellX = x - i;
+        for (unsigned int j = 0; j < obj.getHeight(); j++) {
+            unsigned int cellY = y - j;
+            if (cellX >= layer.getWidth() || cellY >= layer.getHeight()) {
+                if (obj.getBCellTrigger(i, j))
+                    return false;
+                continue;
+            }
+            if (!obj.getBCellPlaced(i, j))
+                continue;
+            unsigned int height = heightMap[i][j];
+            const TLayer::TCell& cell = layer.getCell(cellX, cellY);
+            const vector<TLayer::_TObjectCellInfo>* paObjInfo = cell._m_paObjInfo.get();
+            if (paObjInfo != NULL) {
+                const vector<TLayer::_TObjectCellInfo>& aObjInfo = *paObjInfo;
+                vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
+                while (pObjInfo != aObjInfo.end()) {
+                    if (pObjInfo->m_height >= height)
+                        break;
+                    if (find(aLowerObjIDs.begin(), aLowerObjIDs.end(), pObjInfo->m_objID) == aLowerObjIDs.end())
+                        aLowerObjIDs.push_back(pObjInfo->m_objID);
+                    ++pObjInfo;
+                }
+                while (pObjInfo != aObjInfo.end()) {
+                    if (pObjInfo->m_height > height)
+                        break;
+                    ++pObjInfo;
+                }
+                while (pObjInfo != aObjInfo.end()) {
+                    if (find(aHigherObjIDs.begin(), aHigherObjIDs.end(), pObjInfo->m_objID) == aHigherObjIDs.end())
+                        aHigherObjIDs.push_back(pObjInfo->m_objID);
+                    ++pObjInfo;
+                }
+            }
+            bool bPassable = obj.getBCellPassable(i, j);
+            if ((!bPassable || obj.getBUnderlay()) && !obj.getTerrainMask()[cell.getTerrainType()])
+                return false;
+            if (!bPassable && paObjInfo != NULL) {
+                const vector<TLayer::_TObjectCellInfo>& aObjInfo = *paObjInfo;
+                if (obj.getBCellTrigger(i, j)) {
+                    for (vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
+                         pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                        const TGameObject& otherObj = layer.getObject(pObjInfo->m_objID);
+                        TTilePoint otherLoc = layer.getObjectLoc(pObjInfo->m_objID);
+                        unsigned int otherI = otherLoc.x() - cellX;
+                        unsigned int otherJ = otherLoc.y() - cellY;
+                        if (!otherObj.getBCellPassable(otherI, otherJ))
+                            return false;
+                    }
+                } else {
+                    for (vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
+                         pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                        const TGameObject& otherObj = layer.getObject(pObjInfo->m_objID);
+                        TTilePoint otherLoc = layer.getObjectLoc(pObjInfo->m_objID);
+                        unsigned int otherI = otherLoc.x() - cellX;
+                        unsigned int otherJ = otherLoc.y() - cellY;
+                        if (otherObj.getBCellTrigger(otherI, otherJ))
+                            return false;
+                    }
+                }
+            }
+        }
+    }
+    for (vector<int>::const_iterator pObjID = aLowerObjIDs.begin(); pObjID != aLowerObjIDs.end(); ++pObjID)
+        if (find(aHigherObjIDs.begin(), aHigherObjIDs.end(), *pObjID) != aHigherObjIDs.end())
+            return false;
+    return obj.getType() != SHIPYARD || _isValidShipyardPlacement(layer, obj, x, y);
+}
+
+// A shipyard needs water at one of the cells beside its dock.
+VA(0x0042693b, 0x129)
+bool TGameMap::_TImpl::_isValidShipyardPlacement(const TLayer& layer, const TGameObject& shipyard, unsigned int x,
+                                                 unsigned int y)
+{
+    static const TPoint<int> akWaterOffset[] = {
+        TPoint<int>(1, 1), TPoint<int>(1, 0), TPoint<int>(1, -1), TPoint<int>(0, 1), TPoint<int>(0, -1),
+        TPoint<int>(-1, 1), TPoint<int>(-1, -1), TPoint<int>(-2, 1), TPoint<int>(-2, -1), TPoint<int>(-3, 1),
+        TPoint<int>(-3, 0), TPoint<int>(-3, -1)
+    };
+    for (unsigned int i = 0; i < sizeof(akWaterOffset) / sizeof(akWaterOffset[0]); i++) {
+        TTilePoint loc = TPoint<int>(x, y) + akWaterOffset[i];
+        if (loc.x() >= layer.getWidth() || loc.y() >= layer.getHeight())
+            continue;
+        if (layer.getCell(loc).getTerrainType() == eTerrainWater)
+            return true;
+    }
+    return false;
 }
 
 VA(0x00427600, 0x61)

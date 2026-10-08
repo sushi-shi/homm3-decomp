@@ -321,9 +321,9 @@ public:
     // One object's footprint record in a cell: the object and the
     // height of its placed cell there.
     struct _TObjectCellInfo {
-        _TObjectCellInfo(unsigned int objID, unsigned int height) : m_objID(objID), m_height(height) {}
+        _TObjectCellInfo(int objID, unsigned int height) : m_objID(objID), m_height(height) {}
 
-        unsigned int m_objID;
+        int m_objID;
         unsigned int m_height;
     };
 
@@ -426,6 +426,7 @@ public:
 
 private:
     friend class TGameMap::TLayer::_TImpl;
+    friend class TGameMap::_TImpl;
 
     // A lazily created, shared and copy-on-write vector. One template for
     // Loki's two classes: h3maped folds their creation (0x42b042).
