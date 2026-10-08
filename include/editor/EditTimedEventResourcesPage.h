@@ -21,8 +21,8 @@ public:
     bool wasModified() const;
 
     void OnDestroy();
-    virtual BOOL OnInitDialog();
     virtual void OnOK();
+    virtual BOOL OnInitDialog();
 
 private:
     TResourceQuantitiesDlg* _m_pResourceQuantitiesDlg;
