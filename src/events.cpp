@@ -6141,11 +6141,11 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // and retail re-indexes the player row for the second byte store; that
 // costs the constructor 69 inline units, which leaves the final pause
 // destructor 68 of its 72 (96.22%, against 96.99% for a shared-row helper).
-// 2026-10-08 TU trace: retail expands the final CTurnDurationPause
-// destructor (cb 72, budget 68 here: two more caller cb units would do it,
-// per inline_replay) and one of the three string _Tidy calls this body keeps
-// inside the town/hero copy-and-delete chains; the nearest needs 152 against
-// 130, beyond any small cb change.
+// Every guarded statement is braced (cb 2110 -> 2152), which gives the final
+// CTurnDurationPause destructor its 72 units as retail (96.22 -> 96.95%).
+// Retail also expands one of the three string _Tidy calls this body keeps
+// inside the town/hero copy-and-delete chains; the nearest, under the town
+// delete, gets 134 against 152 (about three fewer later depth-1 candidates).
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
@@ -6159,14 +6159,16 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     unsigned char rightHuman =
         rightPlayer >= 0 && g_game->isHuman(rightPlayer);
     unsigned char leftHuman = leftPlayer >= 0 && g_game->isHuman(leftPlayer);
-    if (seed == -1)
+    if (seed == -1) {
         seed = sRandom(1, 1000);
+    }
     demobilizeCurrHero(0, 1);
     reseed(0, 0);
 
     unsigned char replay = 0;
-    if (g_goSolo && g_goSoloTest)
+    if (g_goSolo && g_goSoloTest) {
         replay = 1;
+    }
     if (!rightHuman && !leftHuman && !replay) {
         int winner;
         NewmapCell* target = g_game->getCell(point);
@@ -6181,8 +6183,9 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             loser = leftHero;
         }
         if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                winningPlayer, loser))
+                winningPlayer, loser)) {
             checkEndGame(0);
+        }
         mobilizeCurrHero(0, 0, 1);
         return winner;
     }
@@ -6250,12 +6253,13 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             g_game->turnOffAIMusic();
             char text[256];  // DC sText[256]
             const char* target;
-            if (rightTown)
+            if (rightTown) {
                 target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
-            else if (rightHero)
+            } else if (rightHero) {
                 target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_HERO);
-            else
+            } else {
                 target = g_generalText->GetText(GENERAL_TEXT_ATTACK_TARGET_GARRISON);
+            }
             sprintf(text, g_generalText->GetText(GENERAL_TEXT_TOWN_UNDER_ATTACK_FORMAT),
                     g_game->getPlayerName(rightPlayer), target);
             g_game->waitForPlayer(text, rightPlayer);
@@ -6266,22 +6270,26 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     g_combatManager->setupCombat(point, leftHero, leftArmyGroup, rightPlayer,
                                  rightTown, rightHero, rightArmyGroup,
                                  point.m_x, point.m_y, seed, alternateLayout);
-    if (!leftHuman)
+    if (!leftHuman) {
         aiArrangeArmyForCombat(leftHero, rightHero, *rightArmyGroup);
+    }
     if (!rightHuman && rightHero
         && rightHero->getSecondarySkill(eSecSkillBattleTactics)
-               > leftHero->getSecondarySkill(eSecSkillBattleTactics))
+               > leftHero->getSecondarySkill(eSecSkillBattleTactics)) {
         aiArrangeArmyForCombat(rightHero, leftHero, *leftArmyGroup);
-    if (g_highMemBuffer > 2900)
+    }
+    if (g_highMemBuffer > 2900) {
         g_adventureGraphicsPreserveMode = 2;
-    else if (g_highMemBuffer > 900)
+    } else if (g_highMemBuffer > 900) {
         g_adventureGraphicsPreserveMode = 1;
+    }
     g_executive->callManager(g_combatManager);
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
     g_adventureGraphicsPreserveMode = 0;
-    if (leftHero)
+    if (leftHero) {
         leftHero->checkLevel();
+    }
     if (rightHero) {
         if (g_remoteOn && rightHuman && leftHuman
             && g_combatManager->m_winner == 1) {
@@ -6295,8 +6303,9 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             } else {
                 CLevelPickWaitDlg dlg2;
                 dlg2.waitForLevels(rightHero->m_owner);
-                if (dlg2.m_playerDropped)
+                if (dlg2.m_playerDropped) {
                     rightHero->checkLevel();
+                }
             }
         } else {
             rightHero->checkLevel();
@@ -6306,20 +6315,23 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 
 combatFinished:
     int winner = g_combatManager->m_winner;
-    if (winner != 0)
+    if (winner != 0) {
         g_game->m_worldMap.notifyHeroDefeated(leftHero->m_id, rightPlayer);
+    }
     if (winner != 1) {
-        if (rightHero)
+        if (rightHero) {
             g_game->m_worldMap.notifyHeroDefeated(rightHero->m_id, leftPlayer);
-        else
+        } else {
             g_game->m_worldMap.notifyMonsterDefeated(point, leftPlayer);
+        }
     }
     if (winner == -1) {
         if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
                 leftPlayer, rightHero)
             || g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                   rightPlayer, leftHero))
+                   rightPlayer, leftHero)) {
             checkEndGame(0);
+        }
     } else {
         if (winner == 0) {
             winningPlayer = leftPlayer;
@@ -6359,10 +6371,11 @@ combatFinished:
         switch (g_combatManager->m_winner) {
         case COMBAT_WINNER_LEFT:
             if (rightTown && rightHero
-                && rightTown->m_garrisonHeroId == rightHero->m_id)
+                && rightTown->m_garrisonHeroId == rightHero->m_id) {
                 heroLoses(rightHero, -1);
-            else
+            } else {
                 heroLoses(rightHero, 0);
+            }
             break;
         case COMBAT_WINNER_RIGHT:
             heroLoses(leftHero, 0);
@@ -6370,10 +6383,11 @@ combatFinished:
         case COMBAT_WINNER_NONE:
             heroLoses(leftHero, 0);
             if (rightTown && rightHero
-                && rightTown->m_garrisonHeroId == rightHero->m_id)
+                && rightTown->m_garrisonHeroId == rightHero->m_id) {
                 heroLoses(rightHero, -1);
-            else
+            } else {
                 heroLoses(rightHero, 0);
+            }
             break;
         }
     }
@@ -6381,8 +6395,9 @@ combatFinished:
     g_completeDrawEnabled = saveShowIt;
     g_netLocalGamePos = savePlayer;
     if (!g_currentPlayer->isHuman()) {
-        if (!g_remoteOn)
+        if (!g_remoteOn) {
             g_game->showComputerScreen();
+        }
         g_game->turnOnAIMusic();
         setNoDialogMenus(0);
     } else {
