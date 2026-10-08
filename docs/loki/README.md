@@ -187,6 +187,70 @@ include order); `--types` compares the g++ type names of the `__ti` nodes
 sequence runs from the end of the previous object's compiled `.rodata` to
 the next object's base, so a string before the voted base still counts.
 
+## Emission order (g++ 2.95.2)
+
+What an object emits, and in which order, decides most of its data:
+`.rodata` strings, type names and `.gcc_except_table` entries are written
+with the functions. The rules below come from `cp/decl2.c`
+(`finish_file`, `mark_inline_for_output`), `cp/pt.c` (`instantiate_decl`,
+`instantiate_pending_templates`), `cp/rtti.c` and `toplev.c`
+(`wrapup_global_declarations`), and were checked with a cc1plus that logs
+the queue, every emitted function and every string constant.
+
+1. An out-of-line function is written as it is parsed, in source order.
+2. Every inline function, implicitly declared member and `__tf` type_info
+   function enters one queue (`saved_inlines`) and is written only at the
+   end of the file:
+   - a non-template inline enters when its body is compiled: a free inline
+     at its definition, in-class bodies at the end of the *outermost* class
+     in textual order (so a nested class's bodies wait for the enclosing
+     class; a nested class defined outside, `class A::B { ... };`, has its
+     bodies queued after A's);
+   - the implicit members (copy constructor, `operator=`, destructor,
+     default constructor) enter when their class is completed, before its
+     in-class bodies, whether or not they are ever used;
+   - an inline template instance used inside a function body is
+     instantiated on the spot, depth first: its callees enter before it,
+     and before the function that used it;
+   - a polymorphic class's `__tf` enters when the class is completed (its
+     vtable initializer names it, which also marks it used); a
+     non-polymorphic class's `__tf` enters at its first use (a throw).
+3. A template instance that is not inline (out-of-class SGI members such as
+   `_S_chunk_alloc`), or an inline one first used outside a function body
+   (a default argument), goes to the pending list in first-use order. At
+   the end of the file the pending list is instantiated first, and such a
+   non-inline instance is written at once.
+4. Then the used artificial functions are synthesized in queue order: every
+   `__tf` of a class defined in the object whose vtable is emitted here is
+   written now, and its type-name string with it. The type names in
+   `.rodata` therefore follow class completion order, which is what
+   `emitorder --types` compares.
+5. The queue is written in passes. Each pass walks it in order and writes
+   every function some written function already refers to, including
+   those written earlier in the same pass: a callee queued after its
+   caller follows it in the same pass, one queued before waits for the
+   next pass. The `.text`/FDE order is pass 1 in queue order, then pass 2,
+   and so on; new instantiations made while writing go to the end of the
+   queue and of the next round.
+6. A queued inline that nothing refers to is never written, but its body
+   was still compiled when it entered the queue: its string constants are
+   already in `.rodata` and everything it instantiated is already queued.
+   An uncalled header inline therefore moves every later queue entry.
+
+Applied:
+
+- The image's type names give the class definition order and therefore
+  the include order where the assert file names do not (a header without
+  asserts leaves no file name). Most fixes are a header that included what
+  it only needed to forward-declare, a source that included its own header
+  after the object headers, or a nested class the original defined after
+  its enclosing class (`TGameMap::TLayer`, `TLayer::TCell`, the map
+  windows' controllers).
+- exceptions.h's never-called `TRuntimeError()` (`runtime_error(string())`)
+  is inferred from rule 6: every includer queues `allocator<char>()`, the
+  `__default_alloc_template::allocate` chain, `~basic_string` and
+  `~allocator` right after TRuntimeError's implicit members.
+
 ## Ledger and README block
 
 `homm3 loki build --bank` records every built unit's functions in
