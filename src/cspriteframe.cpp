@@ -1681,10 +1681,13 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 // half blend first at 0x47db45, the quarter-plus-half second at 0x47db5f),
 // which is what a compare-chain switch does regardless of source order.
 
-// Residual (99.94%): 86 of 86 blocks EXACT, 42 of 42 branches, both returns,
-// empty call multiset. All that is left is the three-quarter blend's two
-// sites, the same B-family transposition DrawTileShadow carries below. The
-// half blend DID have a source cause: the widening `unsigned int color =
+// Residual (99.98%): 86 of 86 blocks EXACT, 42 of 42 branches, both returns,
+// empty call multiset. Loki's h3maped (GCC -O0) reads the row's cell source
+// before its skipped-pixel base and evaluates the three-quarter blend's
+// div2mask term first; the latter took 99.92 -> 99.98. All that is left is
+// that blend's `and bx,word[div4mask]`, which VC6 emits as a dword AND - the
+// .bss alignment DrawTileShadow below records. The half blend DID have a
+// source cause: the widening `unsigned int color =
 // out[-1]` spelling cost nine flow-kind blocks and a whole missing block, and
 // dropping it took this row 98.5765 -> 99.9400 on one line.
 // The native row cursor restores 99.9404%; an extra base/offset pair changes
@@ -1716,10 +1719,10 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 
                 for (int y = sy; y < sy + sh; ++y) {
                     unsigned short* out = lineDst;
-                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
                         m_map + cellOffset[y * cellsPerLine +
                                           (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     unsigned char packet = *src;
                     unsigned char code = packet >> 5;
                     unsigned int run = (packet & 31) + 1;
@@ -1751,8 +1754,8 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                             case eRleControlShadow75: {
                                 unsigned int count = run;
                                 do {
-                                    *out = ((*out >> 2) & s_div4mask)
-                                         + ((*out >> 1) & s_div2mask);
+                                    *out = ((*out >> 1) & s_div2mask)
+                                         + ((*out >> 2) & s_div4mask);
                                     ++out;
                                 } while (--count);
                                 break;
@@ -1791,10 +1794,10 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 
                 for (int y = sy; y < sy + sh; ++y) {
                     unsigned short* out = lineDst;
-                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
                         m_map + cellOffset[y * cellsPerLine +
                                           (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     unsigned char packet = *src;
                     unsigned char code = packet >> 5;
                     unsigned int run = (packet & 31) + 1;
@@ -1827,8 +1830,8 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                 unsigned int count = run;
                                 do {
                                     --out;
-                                    *out = ((*out >> 2) & s_div4mask)
-                                         + ((*out >> 1) & s_div2mask);
+                                    *out = ((*out >> 1) & s_div2mask)
+                                         + ((*out >> 2) & s_div4mask);
                                 } while (--count);
                                 break;
                             }
@@ -2297,12 +2300,15 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // all 72 branches and all four returns. Splitting it into a fixed base and
 // row offset leaves 92.0317%; an address union is byte-neutral and unnecessary.
 //
-// The remaining difference is the three-quarter blend's four sites. Retail
-// computes the div4mask term into the COPY register (`mov bx,ax / shr bx,2 /
-// and bx,word[div4mask]`) while VC6 computes the div2mask term there,
-// emitting the same `add ebx,eax` and store. Source order is not the lever:
-// writing the div2mask term first and naming either term in a local are
-// byte-flat because VC6 canonicalises `+`. The half blend written
+// Loki's h3maped (GCC -O0) evaluates the three-quarter blend's div2mask term
+// first; that order puts the div4mask term in the copy register as retail
+// does (99.90 -> 99.97). Which term VC6 schedules first follows TU symbol
+// state, so this was byte-flat in earlier TU states. What remains is that
+// term's AND width: retail `and bx,word[div4mask]`, here a dword. VC6 widens
+// a ushort global's AND to a dword only when the object places that global
+// on a 4-byte boundary; retail's div4mask sits at 0x6968aa, ours lands
+// aligned. That is the compiland's name-hashed .bss order, not this body.
+// The half blend written
 // `unsigned int color = out[-1]; --out; *out = (color >> 1) & mask;`
 // emits a widening `xor eax,eax / mov ax,` pair retail does not have.
 // `--out; *out = (*out >> 1) & mask;` reads the same location AFTER the
@@ -2372,8 +2378,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                 case eRleControlShadow2: {
                                     unsigned int count = run;
                                     do {
-                                        *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask);
+                                        *out = ((*out >> 1) & s_div2mask)
+                                             + ((*out >> 2) & s_div4mask);
                                         ++out;
                                     } while (--count);
                                     break;
@@ -2448,8 +2454,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         --out;
-                                        *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask);
+                                        *out = ((*out >> 1) & s_div2mask)
+                                             + ((*out >> 2) & s_div4mask);
                                     } while (--count);
                                     break;
                                 }
@@ -2523,8 +2529,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                 case eRleControlShadow2: {
                                     unsigned int count = run;
                                     do {
-                                        *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask);
+                                        *out = ((*out >> 1) & s_div2mask)
+                                             + ((*out >> 2) & s_div4mask);
                                         ++out;
                                     } while (--count);
                                     break;
@@ -2599,8 +2605,8 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         --out;
-                                        *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask);
+                                        *out = ((*out >> 1) & s_div2mask)
+                                             + ((*out >> 2) & s_div4mask);
                                     } while (--count);
                                     break;
                                 }
