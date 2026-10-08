@@ -80,7 +80,11 @@ compiles the file with its own profile and **places** its functions
 1. a compiled body that equals exactly one census function of the same size,
    relocation fields masked;
 2. the callees and referents named by the relocations of each placed body,
-   read from the retail bytes;
+   read from the retail bytes (where the layouts differ, the absolute
+   operands pair by order when both bodies have the same number). A shared
+   unit's `$E` initializers and static destructors take the game's
+   compiler-function names (`__h3cg$...`), which the image's comparison
+   claims unsized;
 3. the slots of each RTTI-named vtable;
 4. string literals: a `??_C@` literal whose bytes sit at exactly one retail
    address that code references anchors the compiled functions that use it.

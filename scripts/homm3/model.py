@@ -357,6 +357,30 @@ def _write_compgen(src_claims) -> None:
         for c in sorted(rows, key=lambda c: (c.unit, c.rva)):
             writer.writerow([c.unit, c.meta["raw"], c.meta["ckind"],
                              c.meta["owner"], f"0x{c.size:x}"])
+        for row in _placed_compgen():
+            writer.writerow(row)
+
+
+def _placed_compgen() -> list[list[str]]:
+    """Another image's claims for its shared units' compiler functions: each
+    `__h3cg$` name its placements put (homm3.census.placements), with the
+    game claim's kind and owner and no size (the image's compile has its
+    own)."""
+    from homm3.core import paths
+    if paths.is_game():
+        return []
+    from homm3.census.placements import GAME_COMPGEN
+    if not GAME_COMPGEN.is_file():
+        return []
+    with GAME_COMPGEN.open(newline="") as stream:
+        game = {(r["unit"], r["name"]): r for r in csv.DictReader(
+            (line for line in stream if not line.startswith("#")), delimiter="\t")}
+    rows = []
+    for c in providers.placements():
+        claim = game.get((c.unit, c.name))
+        if claim is not None:
+            rows.append([c.unit, c.name, claim["kind"], claim["owner"], "0x0"])
+    return sorted(rows)
 
 
 _EMITTED: dict[str, set[str]] = {}

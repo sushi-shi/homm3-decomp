@@ -12,7 +12,12 @@ source (build/<image>/objdiff/base/<unit>.obj, the image's profile):
   2. references: each placed function's relocations name their referents in
      retail - a REL32 call or jump lands on its callee, a DIR32 operand holds
      its referent's address - so a referenced function defined by an image
-     unit is placed at that census start even when its own bytes differ;
+     unit is placed at that census start even when its own bytes differ.
+     Where a placed body's layout differs from retail's, its DIR32 operands
+     pair with the retail function's absolute sites by order, when both
+     have the same number and the opcode byte before each agrees. A shared
+     unit's `$E` bodies carry the game's compiler-function names
+     (`__h3cg$...`, bound by homm3.compare.canonicalize's relocation roles);
   3. vtables: a census vtable whose RTTI class an image unit defines as
      `??_7Class@@6B@`, or a vtable address a placed function stores, places
      every slot symbol of the compiled table at the retail slot's target;
@@ -130,6 +135,34 @@ def _vtable_slots(obj):
     return out
 
 
+#: The game's source-owned compiler-function claims (homm3.model), whose
+#: unit + kind + owner identify a shared unit's `$E` bodies in any compile.
+GAME_COMPGEN = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
+
+
+def _compgen_names(path, unit: str) -> dict[str, str]:
+    """{volatile `$E` symbol: `__h3cg$` name} of a shared unit's object: the
+    game's claims for the unit, bound by the comparison's relocation roles
+    (homm3.compare.canonicalize) and unsized, since this image's compile
+    need not give the game's body sizes."""
+    import warnings
+    from homm3.compare import canonicalize as canon
+    if not GAME_COMPGEN.is_file():
+        return {}
+    claims = tuple(canon.CompgenClaim(c.name, c.kind, c.owner, 0)
+                   for c in canon.load_compgen_claims(GAME_COMPGEN, unit))
+    if not claims:
+        return {}
+    coff = canon.CoffObject(path.read_bytes())
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)   # unbound claims stay unbound
+        try:
+            renames, _rows = canon._compgen_renames(coff, claims)
+        except ValueError:
+            return {}
+    return {coff.symbols[index].name: name for index, name in renames.items()}
+
+
 def portable(text: str, unit: str) -> str:
     """`text` with each anonymous-namespace scope in its checkout-independent
     spelling (homm3.compare.canonicalize), so the table does not depend on
@@ -186,7 +219,10 @@ def derive(log=print, want_suggestions=False):
             log(f"[placements] {unit['unit']}: no object at {path}; build it first")
             continue
         obj = Obj(path)
+        semantic = _compgen_names(path, unit["unit"]) if unit["source"] in shared_sources else {}
         for name, _sec, _off, body, relocs in _functions_of(obj):
+            name = semantic.get(name, name)
+            relocs = {site: (semantic.get(ref, ref), kind) for site, (ref, kind) in relocs.items()}
             compiled.append((unit["unit"], name, body, relocs))
             if unit["unit"] not in definers[name]:
                 definers[name].append(unit["unit"])
@@ -278,6 +314,27 @@ def derive(log=print, want_suggestions=False):
     # reference propagation to a fixpoint over uniquely placed functions
     done = set()
 
+    from homm3.core.tsv import read as _read_tsv
+    absolute = sorted(int(row["site_rva"], 16)
+                      for row in _read_tsv(retail / "relocs.tsv")[2])
+
+    def paired_sites(body, relocs, rva):
+        """{compiled DIR32 site: retail site} by order, for a placed body
+        whose layout differs from retail's: when both hold the same number
+        of absolute operands, the n-th of each agree when the opcode byte
+        before them does."""
+        mine = sorted(site for site, (_ref, kind) in relocs.items() if kind == DIR32)
+        lo = bisect.bisect_left(absolute, rva)
+        hi = bisect.bisect_left(absolute, rva + functions[rva])
+        theirs = [site - rva for site in absolute[lo:hi]]
+        if len(mine) != len(theirs):
+            return {}
+        out = {}
+        for a, b in zip(mine, theirs):
+            if a and b and body[a - 1] == blob(rva + b - 1, 1)[0]:
+                out[a] = b
+        return out
+
     def propagate():
         while True:
             moved = 0
@@ -287,10 +344,21 @@ def derive(log=print, want_suggestions=False):
                 done.add(name)
                 (rva,) = rvas
                 body, relocs = bodies[name]
+                order = None
                 for site, (ref, kind) in relocs.items():
                     value = word(rva + site)
+                    at = f"+0x{site:x}"
                     if value is None or not same_operand(body, rva, site):
-                        continue
+                        if kind != DIR32:
+                            continue
+                        if order is None:
+                            order = paired_sites(body, relocs, rva)
+                        if site not in order:
+                            continue
+                        value = word(rva + order[site])
+                        at = f"+0x{site:x} (retail +0x{order[site]:x}, by operand order)"
+                        if value is None:
+                            continue
                     if kind == REL32:
                         target = (rva + site + 4 + value) & 0xFFFFFFFF
                     elif kind == DIR32:
@@ -299,11 +367,11 @@ def derive(log=print, want_suggestions=False):
                     else:
                         continue
                     if ref in definers:
-                        moved += propose(ref, target, f"referenced by {name} at +0x{site:x}")
+                        moved += propose(ref, target, f"referenced by {name} at {at}")
                     elif ref in tables:
                         moved += place_table(ref, target, f"vtable {ref} stored by {name}")
                     elif ref in data_definers and kind == DIR32:
-                        propose_data(ref, target, f"referenced by {name} at +0x{site:x}")
+                        propose_data(ref, target, f"referenced by {name} at {at}")
             if not moved:
                 break
 

@@ -24,6 +24,7 @@ rva	size	kind	name	unit	evidence
 0x00003245	0x38	func	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	artifact	masked prefix (44 fixed bytes agree, 88 compiled, 56 retail)
 0x0000329d	0x43	func	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	artifact	masked prefix (55 fixed bytes agree, 104 compiled, 67 retail)
 0x000036a8	0x457	func	?InitializeArtifactTraitsTable@@YA_NXZ	artifact	string literal anchor (??_C@_0N@GEJI@artraits?4txt?$AA@, ??_C@_0N@GIEN@artslots?4txt?$AA@)
+0x00003b15	0x16	func	__h3cg$artifact$static_dtor$artifactStrings	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0xc4 (retail +0xb9, by operand order)
 0x00003b2b	0x4a	func	?set@?$bitset@$0BD@@std@@QAEAAV12@I_N@Z	artifact	masked body (74 bytes, 1 relocations) unique at a census start
 0x00003b75	0x14	func	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	artifact	masked body (20 bytes, 0 relocations) unique at a census start
 0x00003b89	0x4d	func	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	rmg	masked body (77 bytes, 1 relocations) unique at a census start
@@ -402,6 +403,9 @@ rva	size	kind	name	unit	evidence
 0x000b9221	0x8a	func	?InitializeSpellTraitsTable@@YAEXZ	spelldefs	masked body (138 bytes, 6 relocations) unique at a census start
 0x000b92ab	0x290	func	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	spelldefs	masked body (656 bytes, 43 relocations) unique at a census start
 0x000b953b	0x6	func	??0?$bitset@$09@std@@QAE@XZ	objecttype	referenced by ??0TObjectType@@QAE@XZ at +0x41; ICF-folded with 3 identical bodies
+0x000b9541	0x17	func	__h3cg$spelldefs$static_dtor$spellDescriptions	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x22c
+0x000b9558	0x14	func	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xa9
+0x000b956c	0x14	func	__h3cg$spelldefs$static_dtor$spellNames	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x41
 0x000ba868	0x8f	func	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	rmg_terrain	masked body (143 bytes, 2 relocations) unique at a census start
 0x000ba8f7	0xa	func	?hasSpecialBaseFrames@TRmgPatternTerrainRule@@UAEEXZ	rmg_terrain	vtable ??_7TRmgPatternTerrainRule@@6B@ stored by ??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z slot 1
 0x000ba91d	0xe	func	?isSpecialFrame@TRmgPatternTerrainRule@@UAEEH@Z	rmg_terrain	masked body (14 bytes, 0 relocations) unique at a census start
@@ -415,6 +419,10 @@ rva	size	kind	name	unit	evidence
 0x000baa86	0xe	func	?getTransition@TRmgTableTerrainRule@@UAEHH@Z	rmg_terrain	vtable ??_7TRmgTableTerrainRule@@6B@ stored by ??0TRmgTableTerrainRule@@QAE@XZ slot 3
 0x000baa94	0x2b	func	?selectBaseFrame@TRmgTableTerrainRule@@UAEHHH@Z	rmg_terrain	masked body (43 bytes, 4 relocations) unique at a census start
 0x000baabf	0x66	func	?selectTransitionFrame@TRmgTableTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	rmg_terrain	masked body (102 bytes, 5 relocations) unique at a census start
+0x000bab36	0x18	func	__h3cg$rmg_terrain$static_ctor$g_rmgDirtRule	rmg_terrain	masked body (24 bytes, 3 relocations) unique at a census start
+0x000bab69	0x18	func	__h3cg$rmg_terrain$static_ctor$g_rmgSandRule	rmg_terrain	masked body (24 bytes, 3 relocations) unique at a census start
+0x000bab9c	0x18	func	__h3cg$rmg_terrain$static_ctor$g_rmgGrassRule	rmg_terrain	masked body (24 bytes, 3 relocations) unique at a census start
+0x000bac68	0x18	func	__h3cg$rmg_terrain$static_ctor$g_rmgSubterraneanRule	rmg_terrain	masked body (24 bytes, 3 relocations) unique at a census start
 0x000bad0f	0x88	func	?setTile@TRmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@ABUTRmgTerrainTile@@@Z	rmg_terrain	masked prefix (46 fixed bytes agree, 136 compiled, 136 retail)
 0x000bad97	0x76	func	?initializePackedCell@TRmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@I@Z	rmg_terrain	masked body (118 bytes, 0 relocations) unique at a census start
 0x000bb5ce	0xae	func	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	rmg_terrain	masked body (174 bytes, 6 relocations) unique at a census start
@@ -434,6 +442,7 @@ rva	size	kind	name	unit	evidence
 0x000bc988	0x4f	func	?needsTerrainRepair@TRmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	referenced by ?finish@TRmgTerrainPainter@@QAEXXZ at +0x5b
 0x000bc9d7	0x1ba	func	?buildNeighbourKinds@TRmgTerrainPainter@@QAEXABU?$TRmgCoordinatePoint@I@@PAH@Z	rmg_terrain	masked prefix (106 fixed bytes agree, 418 compiled, 442 retail)
 0x000bcd43	0x129	func	?hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@ABUTRmgTerrainFlip@@@Z	rmg_terrain	masked body (297 bytes, 16 relocations) unique at a census start
+0x000bce6c	0x1	func	__h3cg$rmg_terrain$static_dtor$secondDiagonalOffsets	rmg_terrain	referenced by ?hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABU?$TRmgCoordinatePoint@I@@ABUTRmgTerrainFlip@@@Z at +0x3d
 0x000bcff5	0x82	func	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	rmg_terrain	masked body (130 bytes, 10 relocations) unique at a census start
 0x000bd077	0x5	func	??1TRmgTerrainBrush@@QAE@XZ	rmg_terrain	referenced by ?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ at +0x499
 0x000bd07c	0x1d	func	?changeTerrain@TRmgTerrainBrush@@QAEXHH@Z	rmg_terrain	masked body (29 bytes, 1 relocations) unique at a census start
@@ -683,9 +692,10 @@ rva	size	kind	name	unit	evidence
 0x0014b348	0x1ec	data	__length_code	trees	referenced by @deflate_fast@8 at +0x10a
 0x0014b860	0x8	data	??_8?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@7B@	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x2a
 0x0015c410	0x10	data	__TI3?AVout_of_range@std@@	resource	referenced by ?_Xran@?$bitset@$0DA@@std@@ABEXXZ at +0x48
+0x0015c480	0x10	data	__TI2?AVlogic_error@std@@	resource	referenced by ?_Doraise@logic_error@std@@MBEXXZ at +0x12 (retail +0x13, by operand order)
 0x0015c5f8	0x10	data	__TI4?AVTRuntimeError@@	objecttype	referenced by ?initColors@@YAXXZ at +0x54
 0x0015c640	0x10	data	__TI2?AVruntime_error@std@@	rmg_support	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x13
-0x00161c20	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	referenced by ?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z at +0xb3
+0x00161c20	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	referenced by ?_Doraise@bad_cast@std@@MBEXXZ at +0x12 (retail +0x13, by operand order)
 0x00166018	0x10	data	__TI3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	referenced by ?_mustGetC@TGzInflateBuf@@AAEHXZ at +0x1c
 0x00166028	0x10	data	__TI1_N	gzinflatebuf	referenced by ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z at +0x103
 0x0016dbf8	0x10	data	__TI3?AVinvalid_argument@std@@	objecttype	referenced by ?_Xinv@?$bitset@$0DA@@std@@ABEXXZ at +0x48
@@ -693,6 +703,7 @@ rva	size	kind	name	unit	evidence
 0x0017c5a0	0x11	data	??_C@_0BB@NCJF@?$AA?$AB?$AB?$AC?$AB?$AC?$AC?$AD?$AB?$AC?$AC?$AD?$AC?$AD?$AD?$AE?$AA@	objecttype	referenced by ?count@?$bitset@$09@std@@QBEIXZ at +0x10
 0x0017c610	0x1b	data	??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@	resource	referenced by ?_Xran@?$bitset@$0DA@@std@@ABEXXZ at +0x1f
 0x0017c7cc	0x4	data	?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A	artifact	referenced by ?placeSeerHutForArtifact@type_random_map_generator@@QAEEPAVt_quest_artifact@@@Z at +0x20
+0x0017c7d0	0x4	data	?g_combinationArtifacts@@3PBUTCombinationArtifact@@B	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0x1be (retail +0x273, by operand order)
 0x0017c7d4	0xd	data	??_C@_0N@GIEN@artslots?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x0017c7e4	0xd	data	??_C@_0N@GEJI@artraits?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x0017cea0	0x43f8	data	?g_creatureTypeTraitsStorage@?A0xf10867bd5b3ccba5@@3PAUTCreatureTypeTraits@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xe
@@ -776,6 +787,8 @@ rva	size	kind	name	unit	evidence
 0x00195f04	0xa	data	??_C@_09EAAB@GetSprite?$AA@	resourcemanager	string literal referenced by ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z
 0x00195f7c	0x4	data	??_C@_03CMHN@LOD?$AA@	lodfile	referenced by ??0LODHeader@@QAE@XZ at +0x5
 0x00195f80	0x4	data	??_C@_03OJHL@rb?$CL?$AA@	lodfile	referenced by ?open@LODFile@@QAEHPBDH@Z at +0x25
+0x00197de8	0x30	data	?g_victorPcxDefaultPalette@@3PAEA	victor_loadpcx	referenced by ?loadpcx@@YGHPBDPAUimgdes@@@Z at +0x426 (retail +0x42e, by operand order)
+0x00197e18	0x5	data	?g_victorPcxScratchRows@@3PAEA	victor_loadpcx	referenced by ?loadpcx@@YGHPBDPAUimgdes@@@Z at +0x12e (retail +0x137, by operand order)
 0x001982f8	0x1	data	??_C@_00A@?$AA@	gzio	referenced by ??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z at +0x1b
 0x0019e3cc	0x4	data	?_Psave@?1??use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	objecttype	referenced by ?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z at +0x47
 0x0019e3d0	0x4	data	?_Psave@?1??use_facet@std@@YAABV?$numpunct@D@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	resourcemanager	referenced by ?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z at +0x48

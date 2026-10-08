@@ -894,6 +894,13 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
         start, end = extent(symbol)
         section = coff.sections[symbol.section - 1]
         body = coff.section_bytes(section)
+        if not claim.size:
+            # an unsized claim (another image's compile of a shared unit,
+            # whose bodies need not have the game's sizes) spans the symbol
+            # up to its code padding
+            while end > start + 1 and body[end - 1] in (0x90, 0xCC):
+                end -= 1
+            return start, end
         padding = body[start + claim.size:end]
         if end - start < claim.size or any(byte not in (0x90, 0xCC)
                                            for byte in padding):
