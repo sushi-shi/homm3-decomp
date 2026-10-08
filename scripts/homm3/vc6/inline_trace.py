@@ -134,19 +134,11 @@ def function_bytes(data: bytes, symbol: str) -> bytes:
     return data[section.raw_offset + sym.value:section.raw_offset + end]
 
 
-def capture(source: Path, flags: list[str], symbol: str, expected_object: Path,
-            *, workdir: Path | None = None) -> dict:
-    """Trace current source with its exact profile; refuse non-identical output."""
-    if not symbol or len(symbol.encode("utf-8")) >= 256:
-        raise ValueError("inline trace needs a nonempty symbol under 256 bytes")
-    source = source.resolve()
-    expected_object = expected_object.resolve()
-    if not source.is_file() or not expected_object.is_file():
-        raise ValueError("inline trace requires an existing source and matching object")
-    if workdir is None:
-        tag = hashlib.sha256(symbol.encode()).hexdigest()[:12]
-        workdir = _common.REPO / "build/vc6/inline-trace" / source.stem / tag
-    workdir = workdir.resolve()
+def _replay(source: Path, flags: list[str], workdir: Path, filter_text: str) -> tuple[bytes, bytes, str]:
+    """Replay one captured-IL stream through clean and tracing C2.
+
+    Returns (reference object, traced object, trace log). Both objects come
+    from the same four C1 streams; the identity gate is the caller's."""
     workdir.mkdir(parents=True, exist_ok=True)
     for subject in ("CL.EXE", "C1.DLL", "C1XX.DLL", "C2.DLL"):
         _toolchain.resolve(subject)
@@ -165,7 +157,7 @@ def capture(source: Path, flags: list[str], symbol: str, expected_object: Path,
                 with contextlib.redirect_stdout(sys.stderr):
                     build.compile_shim(inlineTrace=True)
                 extra = {"MSVC_DIR": str(build.OVERLAY_MSVC),
-                         "HOMM3_VC6_INLINE_TRACE": symbol,
+                         "HOMM3_VC6_INLINE_TRACE": filter_text,
                          "HOMM3_VC6_SHIM_LOG": cc_wrap.winepath_w(log)}
             compiled.unlink(missing_ok=True)
             proc = build._traceReplay(compiled, source, flags, streams, extra)
@@ -175,7 +167,25 @@ def capture(source: Path, flags: list[str], symbol: str, expected_object: Path,
     finally:
         with contextlib.redirect_stdout(sys.stderr):
             build.compile_shim()
-    reference_data, traced_data = reference.read_bytes(), traced.read_bytes()
+    if not log.is_file():
+        raise ValueError("C2 wrote no inline trace log")
+    return reference.read_bytes(), traced.read_bytes(), log.read_text(encoding="latin1")
+
+
+def capture(source: Path, flags: list[str], symbol: str, expected_object: Path,
+            *, workdir: Path | None = None) -> dict:
+    """Trace current source with its exact profile; refuse non-identical output."""
+    if not symbol or len(symbol.encode("utf-8")) >= 256:
+        raise ValueError("inline trace needs a nonempty symbol under 256 bytes")
+    source = source.resolve()
+    expected_object = expected_object.resolve()
+    if not source.is_file() or not expected_object.is_file():
+        raise ValueError("inline trace requires an existing source and matching object")
+    if workdir is None:
+        tag = hashlib.sha256(symbol.encode()).hexdigest()[:12]
+        workdir = _common.REPO / "build/vc6/inline-trace" / source.stem / tag
+    workdir = workdir.resolve()
+    reference_data, traced_data, text = _replay(source, flags, workdir, symbol)
     oracle = verify_identity(reference_data, traced_data)
     body = function_bytes(reference_data, symbol)
     if body != function_bytes(expected_object.read_bytes(), symbol):
@@ -183,10 +193,80 @@ def capture(source: Path, flags: list[str], symbol: str, expected_object: Path,
                          "refresh its source/profile before using the trace")
     oracle["matching_function_bytes"] = len(body)
     oracle["matching_function_sha256"] = hashlib.sha256(body).hexdigest()
-    if not log.is_file():
-        raise ValueError("C2 wrote no inline trace log")
-    report = parse_trace(log.read_text(encoding="latin1"), symbol)
+    report = parse_trace(text, symbol)
     report.update(oracle=oracle, source=str(source), flags=flags,
                   directory=str(workdir))
+    (workdir / "trace.json").write_text(json.dumps(report, indent=2) + "\n")
+    return report
+
+
+def parse_tu_trace(text: str) -> dict:
+    """Every traced root of one C2 pass, in compile order.
+
+    The canonical shim records name their root by address; a root whose
+    name repeats (two bodies with one label) keeps separate entries."""
+    lines = text.splitlines()
+    names = {}
+    for line in lines:
+        if line.startswith("sym "):
+            _, address, name = line.split(" ", 2)
+            names[address] = name
+    roots, current = [], {}
+    for line in lines:
+        if line.startswith("main "):
+            _, address, estimate, *_extra = line.split()
+            if address not in names:
+                raise ValueError(f"inline trace root {address} has no symbol record")
+            cb = int(estimate.removeprefix("cb="))
+            root = dict(symbol=names[address], cb=cb,
+                        initial_budget=min(35000, max(1000, 2 * cb)), sites=[])
+            roots.append(root)
+            current[address] = root
+        elif line.startswith("site "):
+            fields = dict(word.split("=", 1) for word in line.split()[1:])
+            root = current.get(fields["root"])
+            if root is None or fields["callee"] not in names:
+                raise ValueError("inline site has no traced root or callee symbol")
+            depth, budget, remaining, cb = (int(fields[key]) for key in
+                                            ("depth", "budget", "remain", "cb"))
+            if depth < 1 or remaining < 1:
+                raise ValueError("invalid inline depth or remaining-site count")
+            root["sites"].append(dict(
+                depth=depth, budget=budget, remaining=remaining, cb=cb,
+                symbol=names[fields["callee"]],
+                owner=names.get(fields["owner"], fields["owner"]),
+                running=int(fields["running"]),
+                budget_allows=cb <= 40 or budget >= cb))
+    return dict(roots=roots)
+
+
+def capture_tu(source: Path, flags: list[str], expected_object: Path,
+               *, workdir: Path | None = None, filter_text: str = "?") -> dict:
+    """Trace every root whose name contains `filter_text` in one C2 pass.
+
+    The same identity gate as `capture` applies to the whole object; each
+    root is marked `reproduced` when its bytes equal the build object's,
+    so a stale build cannot pass for the traced compile."""
+    if not filter_text or len(filter_text.encode("utf-8")) >= 256:
+        raise ValueError("a TU inline trace needs a nonempty filter under 256 bytes")
+    source = source.resolve()
+    expected_object = expected_object.resolve()
+    if not source.is_file() or not expected_object.is_file():
+        raise ValueError("inline trace requires an existing source and matching object")
+    if workdir is None:
+        workdir = _common.REPO / "build/vc6/inline-trace" / source.stem / "tu"
+    workdir = workdir.resolve()
+    reference_data, traced_data, text = _replay(source, flags, workdir, filter_text)
+    oracle = verify_identity(reference_data, traced_data)
+    expected_data = expected_object.read_bytes()
+    report = parse_tu_trace(text)
+    for root in report["roots"]:
+        try:
+            root["reproduced"] = (function_bytes(reference_data, root["symbol"])
+                                  == function_bytes(expected_data, root["symbol"]))
+        except ValueError:
+            root["reproduced"] = None
+    report.update(oracle=oracle, source=str(source), flags=flags,
+                  filter=filter_text, directory=str(workdir))
     (workdir / "trace.json").write_text(json.dumps(report, indent=2) + "\n")
     return report

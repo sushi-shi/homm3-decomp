@@ -96,6 +96,15 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="capture live C2 inline budgets with a byte-identity gate")
     pp.add_argument("--no-build", action="store_true",
                     help="use the last built manifest object without a source/header refresh")
+    pp.add_argument("--tu", metavar="UNIT",
+                    help="trace every root of UNIT in one C2 pass and list the roots "
+                         "whose retained calls differ from retail (no SELECTOR)")
+    pp.add_argument("--filter", metavar="TEXT", default="?",
+                    help="--tu: trace only roots whose decorated name contains TEXT")
+    pp.add_argument("--root", metavar="TEXT",
+                    help="--tu: print every budget test of the roots matching TEXT")
+    pp.add_argument("--callee", metavar="TEXT",
+                    help="--tu: print every budget test of callees matching TEXT, by root")
 
     pw = ss.add_parser("why-reg", help="which knob fixes a register binding")
     _solver_arguments(pw)

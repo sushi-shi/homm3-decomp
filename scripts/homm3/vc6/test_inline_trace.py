@@ -86,6 +86,49 @@ class InlineTraceTests(unittest.TestCase):
             self.assertTrue(args.trace)
 
 
+class TuInlineTraceTests(unittest.TestCase):
+    RECORDS = ("sym a first\nsym b second\nsym c ctor\nsym d wrapper\n"
+               "main a cb=400 phase=1 key=00000000\n"
+               "site root=a owner=a callee=d cb=56 budget=1000 depth=1 remain=2 running=400\n"
+               "site root=a owner=d callee=c cb=48 budget=47 depth=2 remain=1 running=456\n"
+               "main b cb=900 phase=1 key=00000000\n"
+               "site root=b owner=b callee=c cb=48 budget=1800 depth=1 remain=1 running=900")
+
+    def test_every_root_keeps_its_own_sites_in_compile_order(self):
+        roots = inline_trace.parse_tu_trace(self.RECORDS)["roots"]
+        self.assertEqual([r["symbol"] for r in roots], ["first", "second"])
+        self.assertEqual(roots[0]["initial_budget"], 1000)
+        self.assertEqual(roots[1]["initial_budget"], 1800)
+        self.assertEqual([s["owner"] for s in roots[0]["sites"]], ["first", "wrapper"])
+        self.assertFalse(roots[0]["sites"][1]["budget_allows"])
+        self.assertTrue(roots[1]["sites"][0]["budget_allows"])
+
+    def test_unknown_roots_and_callees_are_rejected(self):
+        for bad in (self.RECORDS.replace("root=b", "root=e"),
+                    self.RECORDS.replace("callee=c cb=48 budget=1800", "callee=e cb=48 budget=1800"),
+                    self.RECORDS.replace("main b", "main e")):
+            with self.assertRaises(ValueError):
+                inline_trace.parse_tu_trace(bad)
+
+    def test_divergences_compare_traced_callees_with_retail_calls(self):
+        from collections import Counter
+        from homm3.vc6.inline_model import tu_divergences
+        roots = inline_trace.parse_tu_trace(self.RECORDS)["roots"]
+        base = {"first": Counter(), "second": Counter()}
+        retail = {"first": Counter({"ctor": 1}), "second": Counter()}
+        rows = tu_divergences(roots, base, retail)
+        self.assertEqual([r["root"] for r in rows], ["first"])
+        self.assertEqual(rows[0]["callees"][0]["callee"], "ctor")
+        self.assertEqual((rows[0]["callees"][0]["base_calls"],
+                          rows[0]["callees"][0]["retail_calls"]), (0, 1))
+        self.assertEqual(len(rows[0]["callees"][0]["sites"]), 1)
+        self.assertEqual(tu_divergences(roots, base, {"second": Counter()}), [])
+
+    def test_tu_mode_takes_no_selector(self):
+        args = _build_parser().parse_args(['predict-inline', '--tu', 'rmg', '--callee', 'ctor'])
+        self.assertEqual((args.tu, args.src, args.filter, args.callee), ('rmg', None, '?', 'ctor'))
+
+
 @unittest.skipUnless(os.environ.get('HOMM3_TEST_VC6_TRACE') == '1',
                      'requires the pinned VC6 toolchain and Wine')
 class LiveInlineTraceTests(unittest.TestCase):

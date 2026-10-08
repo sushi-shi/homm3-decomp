@@ -411,7 +411,119 @@ def _current_report_score(unit: str | None, symbol: str,
     return None
 
 
+def _function_calls(obj: Path) -> dict[str, Counter]:
+    """REL32 call/jump targets of every function in one COFF object."""
+    from homm3.build import canonicalize_data_symbols as canon
+    coff = canon.CoffObject(obj.read_bytes())
+    ranges = canon._function_ranges(coff)
+    out: dict[str, Counter] = {}
+    for relocation in coff.relocations:
+        if relocation.typ != 0x14:
+            continue
+        owner = canon._function_owner(ranges, relocation.section, relocation.site)
+        if owner is not None:
+            out.setdefault(owner.name, Counter())[
+                coff.symbols[relocation.symbol_index].name] += 1
+    return out
+
+
+def tu_divergences(roots: list[dict], base: dict[str, Counter],
+                   retail: dict[str, Counter]) -> list[dict]:
+    """Traced callees whose retained-call count differs from retail, per root.
+
+    Only roots retail also defines are compared. Callees are the traced
+    inline candidates, so a callee retail reaches through an ICF-folded label
+    of another name counts as a difference; read those sites by hand."""
+    rows = []
+    for root in roots:
+        name = root["symbol"]
+        if name not in retail:
+            continue
+        callees = {site["symbol"] for site in root["sites"]}
+        diffs = [(callee, base.get(name, Counter())[callee], retail[name][callee])
+                 for callee in sorted(callees)
+                 if base.get(name, Counter())[callee] != retail[name][callee]]
+        if diffs:
+            rows.append(dict(root=name, cb=root["cb"], reproduced=root.get("reproduced"),
+                             callees=[dict(callee=c, base_calls=b, retail_calls=r,
+                                           sites=[x for x in root["sites"] if x["symbol"] == c])
+                                      for c, b, r in diffs]))
+    return rows
+
+
+def _site_line(site: dict) -> str:
+    verdict = "ok " if site["budget_allows"] else "REF"
+    return (f"    d{site['depth']} budget={site['budget']:<5} remain={site['remaining']:<3} "
+            f"cb={site['cb']:<4} running={site['running']:<6} {verdict} {site['symbol']}"
+            f"  <- {site['owner']}")
+
+
+def run_predict_tu(args) -> int:
+    """`predict-inline --tu UNIT`: one tracing C2 pass over the whole unit."""
+    from homm3.vc6 import inline_trace
+    unit = args.tu
+    src = _unit.source_for_unit(unit)
+    if src is None or not src.is_file():
+        _common.die(f"unknown unit or missing source: {unit}")
+    if not getattr(args, "no_build", False):
+        note = _asm.refresh_unit(unit)
+        if note:
+            print(note, file=sys.stderr)
+    base_obj = _unit.base_obj(unit)
+    if base_obj is None:
+        _common.die(f"missing compiled object for {unit}; run homm3 build --fast {unit}")
+    try:
+        report = inline_trace.capture_tu(src, _unit.flags_for_unit(unit), base_obj,
+                                         filter_text=args.filter or "?")
+    except ValueError as exc:
+        _common.die(str(exc))
+    base = _function_calls(_asm.NORMAL_BASE / f"{unit}.obj")
+    retail = _function_calls(_asm.NORMAL_TARGET / f"{unit}.c.obj")
+    rows = tu_divergences(report["roots"], base, retail)
+    stale = [r["symbol"] for r in report["roots"] if r.get("reproduced") is False]
+    if getattr(args, "json", False):
+        print(json.dumps({"unit": unit, "roots": report["roots"], "divergences": rows,
+                          "stale": stale, "oracle": report["oracle"],
+                          "trace": report["directory"]}, indent=2))
+        return 1 if rows else 0
+    sites = sum(len(r["sites"]) for r in report["roots"])
+    print(f"[predict-inline --tu] {unit}: {len(report['roots'])} roots, {sites} budget "
+          f"tests, identical C2 object; {report['directory']}/trace.json")
+    if stale:
+        print(f"[stale] {len(stale)} traced root(s) differ from the build object; rebuild")
+    if args.root:
+        for root in report["roots"]:
+            if args.root in root["symbol"]:
+                print(f"{root['symbol']} cb={root['cb']} budget={root['initial_budget']}")
+                for site in root["sites"]:
+                    print(_site_line(site))
+    if args.callee:
+        for root in report["roots"]:
+            hits = [s for s in root["sites"] if args.callee in s["symbol"]]
+            if hits:
+                name = root["symbol"]
+                b = sum(base.get(name, Counter())[s] for s in {h["symbol"] for h in hits})
+                r = sum(retail.get(name, Counter())[s] for s in {h["symbol"] for h in hits})
+                mark = "" if b == r else "   <<< differs"
+                print(f"{name} calls base {b} retail {r}{mark}")
+                for site in hits:
+                    print(_site_line(site))
+    if not args.root and not args.callee:
+        for row in rows:
+            print(f"{row['root']} cb={row['cb']}")
+            for callee in row["callees"]:
+                print(f"  {callee['callee']}: base {callee['base_calls']} "
+                      f"retail {callee['retail_calls']}")
+                for site in callee["sites"]:
+                    print(_site_line(site))
+    return 1 if rows else 0
+
+
 def run_predict(args) -> int:
+    if getattr(args, "tu", None):
+        if getattr(args, "src", None) or getattr(args, "fn", None):
+            _common.die("--tu traces a whole unit; give no SELECTOR or --fn")
+        return run_predict_tu(args)
     from homm3.vc6 import _selection
     _selection.prepare(args)
     src = Path(args.src).resolve()

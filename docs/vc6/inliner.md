@@ -2048,6 +2048,45 @@ runs on the same unit collide (every trace after the first reports no
 budget data), so scan a unit serially; and any `build --fast` of that unit
 while a trace runs invalidates the trace's object gate the same way.
 
+### Whole-unit traces: `predict-inline --tu UNIT`
+
+`homm3 vc6 predict-inline --tu rmg` replays the unit's captured IL once
+through clean C2 and once through the tracing shim, applies the same
+whole-object identity gate as `--trace`, and records every root's budget
+tests in one pass (about 30 s for rmg's 497 roots, against one compile per
+function with `--trace`). Each root is marked stale when its bytes differ
+from the build object. Without further options it lists, per root, the
+traced callees whose retained-call count differs from the delinked retail
+function, with their budget tests. `--callee TEXT` prints one callee's sites
+in every root with both call counts (the constructor-family view: which
+callers retail refuses at which nested budgets), `--root TEXT` prints a
+root's full trace, `--filter TEXT` limits the traced roots, and `--json`
+writes everything. A callee that retail reaches through an ICF-folded label
+of another name counts as a difference; read those sites by hand.
+
+Solving the budget rule by hand over these traces closed three rmg rows in
+one lane (2026-10-08):
+
+- `placeZoneTreasures` (73.2 -> 99.95): retail needs both vector `_Destroy`
+  calls refused in the early-return destructor, the first discard's reset
+  expanded with its object clear expanded, and the second discard's reset
+  expanded with every nested call refused. One free predicate site in the
+  step loop (after the early return) divides the destructor's budget by five
+  instead of four; the same predicate in the first loop lowers the caller's
+  own cb (its budget is 2 x cb) and loses everything, and so does a range
+  reference that retail does not have (it re-indexes the range per call).
+- `TRmgTreasureGroup::reset` (71.5 -> 100): two accessor sites starve its
+  erase chain, and multiplying the two accessor results directly instead of
+  through locals keeps its cost at 130, under both discards' budgets.
+- `writeMapHeader` (93.5 -> 97.4): an inferred `setAvailableRmgHeroes`
+  wrapper nested the hero transform one level deeper than retail (Mac also
+  expands the transform in the body), and the open-coded final zero writes
+  were one site short of starving the artifact copy's `test`/`set` calls.
+
+A useful corollary: shrinking a caller (an inline helper replacing open
+code) costs twice its cb reduction in budget, so a site added for its
+remaining-count effect can still lose by making the caller smaller.
+
 ## Free accessor sites are the lever behind retail's refused calls
 
 A nested body budget is `(site budget - callee cb) / remaining sites`, and
