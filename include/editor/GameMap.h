@@ -544,29 +544,12 @@ class TGameMap::TLayer {
 public:
     static const TMapLayerObjectID s_kInvalidObjID;
 
-    // One object's footprint record in a cell: the object and the
-    // height of its placed cell there.
-    struct _TObjectCellInfo {
-        _TObjectCellInfo(unsigned int objID, unsigned int height) : m_objID(objID), m_height(height) {}
-
-        unsigned int m_objID;
-        unsigned int m_height;
-    };
-
     class TCell;
 
     // Walks a layer's placed objects in link order.
+    // The layer creates its iterators (objectIDBegin, objectIDEnd).
     class TObjectIDIter : public forward_iterator<TMapLayerObjectID, ptrdiff_t> {
     public:
-        bool operator==(const TObjectIDIter& other) const
-        {
-            return _m_pLayer == other._m_pLayer && _m_objID == other._m_objID;
-        }
-        bool operator!=(const TObjectIDIter& other) const { return !(*this == other); }
-
-        TObjectIDIter(const TLayer* pLayer, unsigned int objID) : _m_pLayer(pLayer), _m_objID(objID) {}
-
-        TMapLayerObjectID operator*() const { return _m_objID; }
         TObjectIDIter& operator++()
         {
             _m_objID = _m_pLayer->getNextObjectID(_m_objID);
@@ -578,8 +561,18 @@ public:
             ++*this;
             return result;
         }
+        TMapLayerObjectID operator*() const { return _m_objID; }
+        bool operator==(const TObjectIDIter& other) const
+        {
+            return _m_pLayer == other._m_pLayer && _m_objID == other._m_objID;
+        }
+        bool operator!=(const TObjectIDIter& other) const { return !(*this == other); }
 
     private:
+        friend class TLayer;
+
+        TObjectIDIter(const TLayer* pLayer, unsigned int objID) : _m_pLayer(pLayer), _m_objID(objID) {}
+
         const TLayer* _m_pLayer;
         TMapLayerObjectID _m_objID;
     };
@@ -623,6 +616,15 @@ private:
     class _TImpl;
     friend class TGameMap;
     friend class TGameMap::_TImpl;
+
+    // One object's footprint record in a cell: the object and the
+    // height of its placed cell there.
+    struct _TObjectCellInfo {
+        _TObjectCellInfo(unsigned int objID, unsigned int height) : m_objID(objID), m_height(height) {}
+
+        unsigned int m_objID;
+        unsigned int m_height;
+    };
 
     TMapLayerObjectID _placeObject(const TGameObject& obj, const TTilePoint& loc);
     TMapLayerObjectID _placeObject(const TGameObject& obj, unsigned int x, unsigned int y)
