@@ -102,6 +102,7 @@ copies; sizes and SHA-256 hashes are pinned in
 [config/project.toml](config/project.toml).
 
 - `HEROES3.EXE`: English Complete 4.0, engine 3.2 (MSVC 6.0, Sep 2000)
+- `h3maped.exe`: English Complete 4.0 map editor (MSVC 6.0 SP3, MFC 4.2, Sep 2000)
 - `H3.EXE`: Dreamcast port, SH-4 with CodeView symbols (Aug 2000)
 - `Heroes_III_raw.pef`: Classic Mac OS port, PowerPC CodeWarrior (Dec 2000)
 
