@@ -206,14 +206,16 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
 
         if not game:
             return
-        # Opt-in candidate link (layout study; never in the default `all`).
-        # homm3.build.link re-globs build/objdiff/base itself; the inputs only
-        # make ninja re-link when a base obj changes.
+        # Opt-in candidate link (never in the default `all`; `homm3 build`
+        # links through homm3.build.link directly). The inputs only make
+        # ninja re-link when a base obj or the retail link line changes.
         writer.build(
             _image_path("build/exe/HEROES3.candidate.EXE"),
             "link",
             inputs=objects,
-            implicit="scripts/homm3/build/link.py",
+            implicit=["scripts/homm3/build/link.py",
+                      "scripts/homm3/build/link_order.py",
+                      "config/retail/link-order.tsv"],
         )
         writer.build("candidate", "phony",
                      inputs=[_image_path("build/exe/HEROES3.candidate.EXE")])

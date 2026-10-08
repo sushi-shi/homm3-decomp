@@ -26,6 +26,11 @@ zlib_o2_ml_gr_c_windows = [
   "/D_WINDOWS",
 ]
 
+# `library = "<name>"` archives a unit into build/exe/<name>.lib for the
+# game link instead of passing it as an object: retail places the victor and
+# zlib code after every game object, in LINK's pull order
+# (homm3.build.link, docs/vc6/runtime-link.md).
+
 # Victor library objects are VC5 SP3 output (compiler = "msvc5.0" on their
 # units; docs/vc6/victor-library.md). /Ob2 expands the palette helper.
 # VC5's headers leave STRICT undefined, so handles such as HDC are void*
@@ -72,71 +77,85 @@ game_o2_mt_gr_windows = [
 unit = "adler32"
 source = "vendor/zlib-1.1.3/adler32.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "compress"
 source = "vendor/zlib-1.1.3/compress.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "crc32"
 source = "vendor/zlib-1.1.3/crc32.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "deflate"
 source = "vendor/zlib-1.1.3/deflate.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "gzio"
 source = "vendor/zlib-1.1.3/gzio.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "infblock"
 source = "vendor/zlib-1.1.3/infblock.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "infcodes"
 source = "vendor/zlib-1.1.3/infcodes.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "inffast"
 source = "vendor/zlib-1.1.3/inffast.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "inflate"
 source = "vendor/zlib-1.1.3/inflate.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "inftrees"
 source = "vendor/zlib-1.1.3/inftrees.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "infutil"
 source = "vendor/zlib-1.1.3/infutil.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "trees"
 source = "vendor/zlib-1.1.3/trees.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "uncompr"
 source = "vendor/zlib-1.1.3/uncompr.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "zutil"
 source = "vendor/zlib-1.1.3/zutil.c"
 flags = "zlib_o2_ml_gr_c_windows"
+library = "zlib"
 
 [[unit]]
 unit = "misc"
@@ -830,6 +849,7 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "victor"
 module = "victor"
+library = "victor"
 source = "src/victor.cpp"
 compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
@@ -837,6 +857,7 @@ flags = "victor_o2_ml_gd_windows"
 [[unit]]
 unit = "victor_flip"
 module = "victor"
+library = "victor"
 source = "src/victor_flip.cpp"
 compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
@@ -844,6 +865,7 @@ flags = "victor_o2_ml_gd_windows"
 [[unit]]
 unit = "victor_loadpcx"
 module = "victor"
+library = "victor"
 source = "src/victor_loadpcx.cpp"
 compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
@@ -851,6 +873,7 @@ flags = "victor_o2_ml_gd_windows"
 [[unit]]
 unit = "victor_bits"
 module = "victor"
+library = "victor"
 source = "src/victor_bits.cpp"
 compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
@@ -858,6 +881,7 @@ flags = "victor_o2_ml_gd_windows"
 [[unit]]
 unit = "victor_pcx_kernels"
 module = "victor"
+library = "victor"
 source = "src/victor_pcx_kernels.cpp"
 compiler = "msvc5.0"
 flags = "victor_kernels_o2_ogoff_ml_gd_windows"

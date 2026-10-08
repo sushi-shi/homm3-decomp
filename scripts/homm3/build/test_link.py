@@ -18,7 +18,7 @@ class LinkDiagnosticsTest(unittest.TestCase):
             with self.subTest(output=output, rc=rc, exists=exists):
                 self.assertFalse(link_succeeded(output, rc, exists))
 
-    def test_default_link_uses_game_libraries_and_real_startup(self):
+    def _linked_response(self, argv, *, objects=None):
         from contextlib import ExitStack, redirect_stdout
         from io import StringIO
         from pathlib import Path
@@ -38,23 +38,44 @@ class LinkDiagnosticsTest(unittest.TestCase):
                 'homm3.build.link.ensure_wineserver': lambda: None,
                 'homm3.build.link.winepath_w': str,
                 'homm3.build.link.collect_objs': lambda _: [root / 'game.obj'],
+                'homm3.build.link.retail_inputs': lambda out, link, objs: (
+                    [root / 'b.obj', root / 'a.obj'], [root / 'zlib.lib', root / 'victor.lib']),
                 'homm3.build.link.run_wine': run,
                 'homm3.core.common.load_image': lambda: (
                     SimpleNamespace(image_base=0x400000, data=b'retail'), None),
                 'homm3.build.import_libraries.build_vendor_libraries':
-                    lambda data, where: [where / 'BINKW32.lib'],
+                    lambda data, where: [where / 'binkw32.lib'],
             }
             for name, value in patches.items():
                 stack.enter_context(patch(name, value))
             stack.enter_context(patch.dict('os.environ', {'WINEPREFIX': directory}))
+            stack.enter_context(patch.dict('os.environ', {'HOMM3_IMAGE': 'game'}))
             with redirect_stdout(StringIO()):
-                self.assertEqual(main(['--out', str(output)]), 0)
-            response = output.with_suffix('.objs.rsp').read_text()
-            self.assertIn('/ENTRY:WinMainCRTStartup', response)
-            self.assertNotIn('/FORCE', response)
-            for name in ('LIBCMT.LIB', 'LIBCPMT.LIB', 'BINKW32.lib'):
-                self.assertIn(name, response)
+                self.assertEqual(main(['--out', str(output), *argv]), 0)
             self.assertEqual(output.with_suffix('.unresolved.txt').read_text(), '')
+            return output.with_suffix('.objs.rsp').read_text()
+
+    def test_study_link_uses_game_libraries_and_real_startup(self):
+        response = self._linked_response(['--study'])
+        self.assertIn('/ENTRY:WinMainCRTStartup', response)
+        self.assertIn('/OPT:NOREF', response)
+        self.assertNotIn('/FORCE', response)
+        for name in ('LIBCMT.LIB', 'LIBCPMT.LIB', 'binkw32.lib'):
+            self.assertIn(name, response)
+
+    def test_retail_link_follows_the_retail_line(self):
+        response = self._linked_response([]).splitlines()
+        self.assertNotIn('/NODEFAULTLIB', response)
+        self.assertNotIn('/FORCE', response)
+        self.assertFalse(any(line.startswith('/ENTRY') for line in response))
+        for flag in ('/OPT:REF', '/NODEFAULTLIB:LIBC'):
+            self.assertIn(flag, response)
+        names = [line.strip('"').rsplit('/', 1)[-1] for line in response
+                 if not line.startswith('/')]
+        # objects in the given order, then the library line in retail order
+        self.assertEqual(names[:2], ['b.obj', 'a.obj'])
+        self.assertEqual(names[2:5], ['victor.lib', 'zlib.lib', 'version.lib'])
+        self.assertIn('binkw32.lib', names)
 
     def test_timeout_does_not_accept_an_existing_executable(self):
         import subprocess

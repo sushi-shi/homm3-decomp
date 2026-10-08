@@ -1,0 +1,10 @@
+# MANUALLY MANAGED - reviewed object-order placements for game units that
+# retail code cannot place (homm3.build.link_order). Every other unit is
+# ordered by the lowest retail RVA of a function only its object defines.
+# Retail object order is the original source names' alphabetical order
+# (adventuremapwindow 0x401400 .. winmgr 0x602170), so a unit without
+# placed code takes its alphabetical position.
+# log: initLogFile's only body is a bare `ret` that ICF folds into
+# textWidget::dim at 0x5bc690; Mac keeps it out of kb's code region.
+unit	after	evidence
+log	lodfile	initLogFile folds into textWidget::dim (0x5bc690); alphabetical position

@@ -24,14 +24,23 @@ VC6 LINK.EXE's static imports are only mspdb60/msvcrt/kernel32 (verified by
 walking its import table); MSDIS110.DLL is loaded dynamically and only by the
 `/dump /disasm` path. MSPDB60.DLL ships next to link.exe in the toolchain.
 
-Defaults use the real game startup and explicitly selected libraries:
-  /NODEFAULTLIB /SUBSYSTEM:WINDOWS /BASE:0x400000 /INCREMENTAL:NO /MAP
-  /ENTRY:WinMainCRTStartup
-  /OPT:NOREF /OPT:NOICF   (keep EVERY function so the map is complete)
+The game links as retail did (config/retail facts, docs/vc6/runtime-link.md):
+the objects in retail object order (homm3.build.link_order), the units a
+`library` key archives (victor, zlib) as libraries, the retail library
+line (RETAIL_LIBRARIES) and the objects' own default libraries (LIBCMT,
+LIBCPMT, OLDNAMES), with
+  /SUBSYSTEM:WINDOWS /BASE:0x400000 /INCREMENTAL:NO /OPT:REF
+  /NODEFAULTLIB:LIBC   (the /ML victor and zlib objects ask for LIBC)
+No /ENTRY: LINK's default for a Windows subsystem is the CRT's
+WinMainCRTStartup, and naming it would pull wincrt0.obj ahead of the rest.
+
+`--study` keeps the layout study of other images and experiments: objects
+in name order, /OPT:NOREF /OPT:NOICF (every COMDAT kept, so the map is
+complete) and /NODEFAULTLIB with explicit libraries.
 
 Run inside `nix develop .#build`:
     homm3 link [-- <extra link flags>]
-    python3 -m homm3.build.link --order config/link-order.txt
+    homm3 link --study --order ORDER.txt
 """
 from __future__ import annotations
 
@@ -76,6 +85,78 @@ def run_wine(cmd: list, cwd):
             rc = 124
         logf.seek(0)
         return logf.read().decode("latin1", "replace"), rc
+
+
+#: The retail library line, before the objects' default libraries. Retail
+#: import descriptors are LINK's pull order, one library after another:
+#: VERSION, WINMM, mss32, smackw32, DDRAW, WSOCK32, KERNEL32, USER32, GDI32,
+#: ADVAPI32, SHELL32, ole32, binkw32, IFC20 (config/retail facts in
+#: docs/reference/executable-libraries.md). KERNEL32 through ole32 follow
+#: the VC6 AppWizard line (kernel32 user32 gdi32 winspool comdlg32 advapi32
+#: shell32 ole32 oleaut32 uuid odbc32 odbccp32); the game's own libraries
+#: surround it. victor.lib and zlib.lib come first: their members follow the
+#: game objects in `.text` (victor 0x603590, zlib 0x604830), victor's first.
+#: GUID_NULL is UUID.LIB's and the DirectPlay identifiers DXGUID.LIB's.
+RETAIL_LIBRARIES = [
+    "victor.lib", "zlib.lib",
+    "version.lib", "winmm.lib", "mss32.lib", "smackw32.lib", "ddraw.lib",
+    "wsock32.lib",
+    "kernel32.lib", "user32.lib", "gdi32.lib", "winspool.lib", "comdlg32.lib",
+    "advapi32.lib", "shell32.lib", "ole32.lib", "oleaut32.lib", "uuid.lib",
+    "odbc32.lib", "odbccp32.lib",
+    "binkw32.lib", "ifc20.lib", "dxguid.lib",
+]
+
+#: Retail links LIBCMT only; the /ML victor and zlib objects name LIBC.
+RETAIL_FLAGS = ["/OPT:REF", "/NODEFAULTLIB:LIBC"]
+
+
+def game_objects(objs_dir: Path | None = None) -> tuple[dict[str, Path], dict[str, list[str]]]:
+    """({unit: object} linked as objects, {library: [units]} archived), in
+    manifest order; a unit's `library` key names its archive."""
+    from homm3 import manifest
+    objs_dir = Path(objs_dir or _image_path("build/objdiff/base"))
+    objects: dict[str, Path] = {}
+    libraries: dict[str, list[str]] = {}
+    for unit in manifest.units():
+        name = unit["unit"]
+        if unit.get("library"):
+            libraries.setdefault(unit["library"], []).append(name)
+        else:
+            objects[name] = objs_dir / f"{name}.obj"
+    return objects, libraries
+
+
+def build_library(link: Path, library: Path, members: list[Path], cwd: Path) -> None:
+    """Archive `members` (in order) into `library` with the pinned LIB."""
+    library.unlink(missing_ok=True)
+    rsp = library.with_suffix(".lib.rsp")
+    rsp.write_text("\n".join(["/NOLOGO", f'/OUT:"{winepath_w(library)}"',
+                               *[f'"{winepath_w(m)}"' for m in members]]) + "\n")
+    # `-lib` must be LINK's first argument; in a response file it is an option.
+    output, rc = run_wine(["wine", str(link), "-lib", f"@{winepath_w(rsp)}"], cwd)
+    if rc or not library.is_file():
+        die(f"LIB failed for {library.name} (exit {rc}):\n{output.strip()}")
+
+
+def retail_inputs(out_dir: Path, link: Path, objs_dir: Path | None = None) -> tuple[list[Path], list[Path]]:
+    """(objects in retail order, archived libraries) of the game link."""
+    from homm3.build import link_order
+    objects, libraries = game_objects(objs_dir)
+    missing = [str(p) for p in objects.values() if not p.is_file()]
+    if missing:
+        die("missing objects: " + ", ".join(missing[:5]))
+    units, _how = link_order.order(objects)
+    objs_dir = Path(objs_dir or _image_path("build/objdiff/base"))
+    archives = []
+    for name, members in libraries.items():
+        paths = {unit: objs_dir / f"{unit}.obj" for unit in members}
+        keys = link_order.unit_keys(paths)
+        ordered = sorted(members, key=lambda unit: keys.get(unit, (1 << 32,))[0])
+        library = out_dir / f"{name}.lib"
+        build_library(link, library, [paths[u] for u in ordered], out_dir)
+        archives.append(library)
+    return [objects[u] for u in units], archives
 
 
 def collect_objs(args) -> list:
@@ -126,28 +207,32 @@ def link_succeeded(output: str, rc: int, exists: bool) -> bool:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from homm3.core.images import DEFAULT_IMAGE, IMAGE_ENV
     ap = argparse.ArgumentParser(description="VC6 link.exe wrapper (candidate link).")
     ap.add_argument("--out", default=_image_path("build/exe/HEROES3.candidate.EXE"))
     ap.add_argument("--map", dest="mapfile", default=None,
                     help="map path (default: <out> with .map suffix).")
     ap.add_argument("--objs-dir", default=_image_path("build/objdiff/base"))
-    ap.add_argument("--obj", action="append", help="explicit obj (repeatable).")
-    ap.add_argument("--order", help="file listing obj stems/paths in link order.")
+    ap.add_argument("--study", action="store_true",
+                    help="the layout study: name order (or --order/--obj), "
+                         "/OPT:NOREF /OPT:NOICF, /NODEFAULTLIB + explicit libraries")
+    ap.add_argument("--obj", action="append", help="explicit obj (repeatable; study).")
+    ap.add_argument("--order", help="file listing obj stems/paths in link order (study).")
     ap.add_argument("--lib", action="append", default=[],
                     help="extra import/static lib to pass to link (repeatable).")
     ap.add_argument("--base", default=None, help="image base (/BASE).")
-    ap.add_argument("--entry", default="WinMainCRTStartup",
-                    help="/ENTRY symbol (default: WinMainCRTStartup).")
-    ap.add_argument("--keep-all", dest="keep_all", action="store_true", default=True,
-                    help="/OPT:NOREF /OPT:NOICF - keep every COMDAT (default).")
-    ap.add_argument("--opt-ref", dest="keep_all", action="store_false",
-                    help="let the linker strip/fold unreferenced COMDATs (/OPT:REF).")
+    ap.add_argument("--opt-ref", dest="keep_all", action="store_false", default=True,
+                    help="study: let the linker strip/fold unreferenced COMDATs.")
     ap.add_argument("flags", nargs=argparse.REMAINDER,
                     help="extra link flags after `--`.")
     args = ap.parse_args(argv)
     extra = args.flags[1:] if args.flags and args.flags[0] == "--" else args.flags
     if any(re.match(r"^[-/]force(?:[:=]|$)", flag, re.I) for flag in extra):
         ap.error("/FORCE is unsupported: the game must link without unresolved or duplicate symbols")
+    # Only the game has a reconstructed retail link line; other images and
+    # explicit object lists stay layout studies.
+    study = (args.study or args.order or args.obj
+             or os.environ.get(IMAGE_ENV, DEFAULT_IMAGE) != DEFAULT_IMAGE)
     if args.base is None:
         from homm3.core import common
         args.base = hex(common.load_image()[0].image_base)
@@ -168,41 +253,49 @@ def main(argv: list[str] | None = None) -> int:
         if f.exists():
             f.unlink()
 
-    objs = collect_objs(args)
-    if not objs:
-        die("no objects to link.")
-
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
     ensure_wineserver()
 
-    libraries = list(args.lib)
     from homm3.build.import_libraries import build_vendor_libraries
     from homm3.core.common import load_image
-    libraries += [str(path) for path in build_vendor_libraries(
-        load_image()[0].data, out.parent / "imports")]
-    for name in ("LIBCMT.LIB", "LIBCPMT.LIB", "KERNEL32.LIB", "USER32.LIB",
-                 "GDI32.LIB", "ADVAPI32.LIB", "WINMM.LIB", "VERSION.LIB",
-                 "WSOCK32.LIB", "DDRAW.LIB", "DINPUT.LIB", "DXGUID.LIB",
-                 "UUID.LIB", "OLE32.LIB", "SHELL32.LIB", "OLDNAMES.LIB"):
-        library = find_ci(msvc / "lib", name)
-        if library is None:
-            die(f"missing toolchain library {name}")
-        libraries.append(str(library))
+    vendor = {path.name.lower(): path for path in build_vendor_libraries(
+        load_image()[0].data, out.parent / "imports")}
 
     rsp_lines = [
         f'/OUT:"{winepath_w(out)}"',
         f'/MAP:"{winepath_w(mapf)}"',
-        "/NOLOGO", "/NODEFAULTLIB", "/SUBSYSTEM:WINDOWS",
-        f"/BASE:{args.base}", "/INCREMENTAL:NO", f"/ENTRY:{args.entry}",
+        "/NOLOGO", "/SUBSYSTEM:WINDOWS",
+        f"/BASE:{args.base}", "/INCREMENTAL:NO",
     ]
-    if args.keep_all:
-        rsp_lines += ["/OPT:NOREF", "/OPT:NOICF"]
+    if study:
+        objs = collect_objs(args)
+        if not objs:
+            die("no objects to link.")
+        libraries = list(args.lib) + [str(p) for p in vendor.values()]
+        for name in ("LIBCMT.LIB", "LIBCPMT.LIB", "KERNEL32.LIB", "USER32.LIB",
+                     "GDI32.LIB", "ADVAPI32.LIB", "WINMM.LIB", "VERSION.LIB",
+                     "WSOCK32.LIB", "DDRAW.LIB", "DINPUT.LIB", "DXGUID.LIB",
+                     "UUID.LIB", "OLE32.LIB", "SHELL32.LIB", "OLDNAMES.LIB"):
+            library = find_ci(msvc / "lib", name)
+            if library is None:
+                die(f"missing toolchain library {name}")
+            libraries.append(str(library))
+        rsp_lines += ["/NODEFAULTLIB", "/ENTRY:WinMainCRTStartup"]
+        rsp_lines += ["/OPT:NOREF", "/OPT:NOICF"] if args.keep_all else ["/OPT:REF"]
     else:
-        rsp_lines += ["/OPT:REF", "/OPT:ICF"]
+        objs, archives = retail_inputs(out.parent, link, Path(args.objs_dir))
+        built = {path.name.lower(): path for path in archives}
+        libraries = list(args.lib)
+        for name in RETAIL_LIBRARIES:
+            library = built.get(name) or vendor.get(name) or find_ci(msvc / "lib", name)
+            if library is None:
+                die(f"missing library {name}")
+            libraries.append(str(library))
+        rsp_lines += RETAIL_FLAGS + [f'/LIBPATH:"{winepath_w(msvc / "lib")}"']
     rsp_lines += list(extra)
+    rsp_lines += [f'"{winepath_w(o)}"' for o in objs]
     rsp_lines += [f'"{winepath_w(Path(lib)) if os.path.exists(lib) else lib}"'
                   for lib in libraries]
-    rsp_lines += [f'"{winepath_w(o)}"' for o in objs]
 
     rsp = out.parent / (out.stem + ".objs.rsp")
     rsp.write_text("\n".join(rsp_lines) + "\n")
@@ -222,7 +315,8 @@ def main(argv: list[str] | None = None) -> int:
 
     warns = sum(1 for ln in output.splitlines() if "LNK4006" in ln)
     shown = out.relative_to(HOMM3_DIR) if out.is_relative_to(HOMM3_DIR) else out
-    print(f"[link] {len(objs)} objs -> {shown} ({out.stat().st_size} B) + {mapf.name}")
+    mode = "study" if study else "retail line"
+    print(f"[link] {len(objs)} objs ({mode}) -> {shown} ({out.stat().st_size} B) + {mapf.name}")
     print(f"[link] {len(unresolved)} unresolved externals -> {punch.name}, "
           f"{warns} dup-symbol warnings")
     return 0
