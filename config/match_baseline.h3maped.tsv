@@ -15,7 +15,7 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
-Player	?InitializePlayerTraitsTable@@YA_NXZ	89.7935	89.7935	89.7935	0x94324	tokens1:e8d8c496355c
+Player	?InitializePlayerTraitsTable@@YA_NXZ	89.8903	89.8903	89.8903	0x94324	tokens1:e8d8c496355c
 adler32	@adler32@12	100.0000	100.0000	100.0000	0xd6dd0	-
 artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	-	100.0000	100.0000	0x2215	-
 artifact	??8?$bitset@$0BD@@std@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x2d03d	-
@@ -23,7 +23,7 @@ artifact	??9?$bitset@$0BD@@std@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x90e69
 artifact	??_3?$bitset@$0BD@@std@@QAEAAV01@I@Z	99.9565	99.9565	99.9565	0x8f975	-
 artifact	?InitializeArtifactTraitsTable@@YA_NXZ	62.2918	62.3343	62.3343	0x36a8	-
 artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x3b75	-
-artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x3bd6	-
+artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x3bd6	-
 artifact	?flip@?$bitset@$0BD@@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x5a69	-
 artifact	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	36.8519	36.8519	36.8519	0x329d	-
 artifact	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	37.8571	37.8571	37.8571	0x3245	-
@@ -86,9 +86,9 @@ gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	99.8148	99.8148	99.8148	0x49911
 gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	0.0000	1.1792	1.1792	0x49663	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	95.9074	99.8148	99.8148	0x49a1b	-
 gzinflatebuf	?_getC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0x4960f	-
-gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	99.2857	99.2857	99.2857	0x499bf	-
+gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	99.6429	99.6429	99.6429	0x499bf	-
 gzinflatebuf	?_mustGetLong@TGzInflateBuf@@AAEKXZ	100.0000	100.0000	100.0000	0x49c1e	-
-gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	91.8750	99.8333	99.8333	0x49ab6	-
+gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	91.9583	99.8333	99.8333	0x49ab6	-
 herodefs	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.3458	99.3458	99.3458	0x4ce90	-
 herodefs	?InitializeHeroClassTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x4ccf9	-
 herodefs	?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	98.8095	98.8095	98.8095	0x4cd9f	-
@@ -152,7 +152,7 @@ objecttype	??_5?$bitset@$0DA@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	
 objecttype	??_Distrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x90e43	-
 objecttype	?_Construct@std@@YAXPAU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@1@ABU21@@Z	99.6429	99.6429	99.6429	0x92667	-
 objecttype	?_Dec@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	99.7297	99.7297	99.7297	0x925c7	-
-objecttype	?_Doraise@invalid_argument@std@@MBEXXZ	99.0000	99.0000	99.0000	0x916c0	-
+objecttype	?_Doraise@invalid_argument@std@@MBEXXZ	99.5000	99.5000	99.5000	0x916c0	-
 objecttype	?_Erase@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@IAEXPAU_Node@12@@Z	99.5946	99.5946	99.5946	0x919df	-
 objecttype	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x193cb	-
 objecttype	?_Inc@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	99.6739	99.6739	99.6739	0x91e6d	-
@@ -167,9 +167,9 @@ objecttype	?_Save@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@
 objecttype	?_Tidy@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	99.5455	99.5455	99.5455	0x37c6b	-
 objecttype	?_Tidy@?$bitset@$08@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x2d0b8	-
 objecttype	?_Tidy@?$bitset@$0DA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x914dc	-
-objecttype	?_Xinv@?$bitset@$08@std@@ABEXXZ	99.4643	99.4643	99.4643	0x91d2c	-
-objecttype	?_Xinv@?$bitset@$0DA@@std@@ABEXXZ	99.4643	99.4643	99.4643	0x91666	-
-objecttype	?_Xran@?$bitset@$08@std@@ABEXXZ	99.6429	99.6429	99.6429	0x2f6f4	-
+objecttype	?_Xinv@?$bitset@$08@std@@ABEXXZ	99.6429	99.6429	99.6429	0x91d2c	-
+objecttype	?_Xinv@?$bitset@$0DA@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x91666	-
+objecttype	?_Xran@?$bitset@$08@std@@ABEXXZ	99.8214	99.8214	99.8214	0x2f6f4	-
 objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	99.5833	99.5833	99.5833	0x900ca	-
 objecttype	?accepts@TSlotCategoryObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x900eb	-
 objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAG@Z	99.7297	99.7297	99.7297	0x35adb	-
@@ -200,7 +200,7 @@ objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@
 objecttype	?insert@?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@QAEPAU_TImageInfo@TObjectType@@PAU34@ABU34@@Z	100.0000	100.0000	100.0000	0x915a6	-
 objecttype	?insert@?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@QAEXPAU_TImageInfo@TObjectType@@IABU34@@Z	99.9808	99.9808	99.9808	0x91ad5	-
 objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	30.9483	30.9483	30.9483	0x2cb17	-
-objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	91.1429	91.1429	91.1429	0x90c4c	-
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	91.2143	91.2143	91.2143	0x90c4c	-
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	99.6386	99.6386	99.6386	0x9125b	-
 objecttype	?resize@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXIABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x2be1b	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x91327	-
@@ -210,8 +210,8 @@ objecttype	?set@?$bitset@$0DA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x
 objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.4667	91.4667	91.4667	0x903e8	-
 objecttype	?setTerrainMask@TObjectType@@QAEAAU1@ABV?$bitset@$09@std@@@Z	99.6154	99.6154	99.6154	0x906de	-
 objecttype	?snextc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x2cc4c	-
-objecttype	?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z	30.3636	30.3636	30.3636	0x35855	-
-objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	99.6774	99.6774	99.6774	0x367ef	-
+objecttype	?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z	30.3864	30.3864	30.3864	0x35855	-
+objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	99.7581	99.7581	99.7581	0x367ef	-
 palette	??0TPalette16@@QAE@ABVTPalette24@@HHHHHH@Z	99.8649	99.8649	99.8649	0xe4790	-
 palette	??0TPalette16@@QAE@PBDABVTPalette24@@HHHHHH@Z	99.8684	99.8684	99.8684	0xe4810	-
 palette	??0TPalette16@@QAE@PBV0@@Z	100.0000	100.0000	100.0000	0xe4890	-
@@ -230,8 +230,8 @@ palette	?getSize@TPalette24@@UBEIXZ	100.0000	100.0000	100.0000	0xe4b40	-
 resource	??0logic_error@std@@QAE@ABV01@@Z	0.0000	0.0000	0.0000	0x1912	-
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0xe5a90	-
 resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0xe5b00	-
-resource	?_Doraise@logic_error@std@@MBEXXZ	71.9000	71.9000	71.9000	0x18d9	-
-resource	?_Doraise@out_of_range@std@@MBEXXZ	71.4000	71.4000	71.4000	0x196f	-
+resource	?_Doraise@logic_error@std@@MBEXXZ	72.4000	72.4000	72.4000	0x18d9	-
+resource	?_Doraise@out_of_range@std@@MBEXXZ	71.9000	71.9000	71.9000	0x196f	-
 resource	?_Xran@?$bitset@$09@std@@ABEXXZ	0.0000	0.0000	0.0000	0x1b93	-
 resourcemanager	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	0.0000	0.0000	0.0000	0x60ed8	-
 resourcemanager	??0?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAE@XZ	99.6939	99.6939	99.6939	0xddf40	-
@@ -255,7 +255,7 @@ resourcemanager	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	79.3415	79.3
 resourcemanager	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0xdccc0	-
 resourcemanager	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	85.5751	85.5751	85.5751	0xdcd20	-
 resourcemanager	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	99.7368	99.7368	99.7368	0xdca60	-
-resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	47.7200	47.7200	47.7200	0xdbe40	-
+resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	47.8800	47.8800	47.8800	0xdbe40	-
 resourcemanager	?ReadFromBitmapResource@ResourceManager@@YAHPAVLODFile@@PAXH@Z	100.0000	100.0000	100.0000	0xdd320	-
 resourcemanager	?SetPath@ResourceManager@@YAXPBD@Z	99.2208	99.2208	99.2208	0xdc090	-
 resourcemanager	?SetPixelFormat@ResourceManager@@YAXKKK@Z	100.0000	100.0000	100.0000	0xdc180	-
@@ -263,7 +263,7 @@ resourcemanager	?_Construct@std@@YAXPAHABH@Z	100.0000	100.0000	100.0000	0xde4d0	
 resourcemanager	?_Construct@std@@YAXPAU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xde4f0	-
 resourcemanager	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	0.0000	0.0000	0.0000	0x1bed	-
 resourcemanager	?_Dec@const_iterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAEXXZ	99.7500	99.7500	99.7500	0xde410	-
-resourcemanager	?_Doraise@bad_cast@std@@MBEXXZ	71.4000	71.4000	71.4000	0x3286e	-
+resourcemanager	?_Doraise@bad_cast@std@@MBEXXZ	71.9000	71.9000	71.9000	0x3286e	-
 resourcemanager	?_Eos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0xdd6c0	-
 resourcemanager	?_Erase@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@IAEXPAU_Node@12@@Z	99.6250	99.6250	99.6250	0xddff0	-
 resourcemanager	?_Inc@const_iterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAEXXZ	99.7170	99.7170	99.7170	0xdde70	-
@@ -351,11 +351,11 @@ rmg	??ZTRmgMapPosition@@QAEAAU0@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0x7fed3
 rmg	??_ETRmgMapItem@@QAEPAXI@Z	99.5312	99.5312	99.5312	0x99fe5	-
 rmg	??_Gtype_object@@UAEPAXI@Z	99.6154	99.6154	99.6154	0x9bab3	-
 rmg	?_Buynode@?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0xae64c	-
-rmg	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x2f2ec	-
-rmg	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x3bf35	-
-rmg	?_Xran@?$bitset@$0IB@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x37f83	-
-rmg	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x3c30	-
-rmg	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	99.6429	99.6429	99.6429	0x30070	-
+rmg	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x2f2ec	-
+rmg	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x3bf35	-
+rmg	?_Xran@?$bitset@$0IB@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x37f83	-
+rmg	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x3c30	-
+rmg	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x30070	-
 rmg	?addObject@TRmgTreasureGroup@@QAEXPAVtype_object@@UTPoint@@@Z	99.8333	99.8333	99.8333	0x9d69d	-
 rmg	?addObject@t_abstract_random_generator@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	99.7619	99.7619	99.7619	0x9e6cd	-
 rmg	?addObject@type_random_map@@QAEXAAVtype_object@@UTRmgMapPosition@@@Z	76.7647	76.7647	76.7647	0x9abd6	-
@@ -527,11 +527,11 @@ rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.7047	95.704
 rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	79.3205	79.3205	79.3205	0xac857	-
 rmg_support	??0TAllocationFailure@@QAE@XZ	99.3750	100.0000	100.0000	0xd513	-
 rmg_support	??0TRmgHalfEdge@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0xcc5db	-
-rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	99.8413	99.8413	99.8413	0x58755	-
+rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	99.9206	99.9206	99.9206	0x58755	-
 rmg_support	??0TRmgVoronoi@@QAE@XZ	99.7566	99.7566	99.7566	0xcc788	-
 rmg_support	??0runtime_error@std@@QAE@ABV01@@Z	99.8485	99.8485	99.8485	0x1f9b	-
 rmg_support	??1TRmgVoronoi@@QAE@XZ	99.6154	99.6154	99.6154	0xcc91e	-
-rmg_support	?_Doraise@runtime_error@std@@MBEXXZ	99.0000	99.0000	99.0000	0x1f25	-
+rmg_support	?_Doraise@runtime_error@std@@MBEXXZ	99.5000	99.5000	99.5000	0x1f25	-
 rmg_support	?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z	99.0826	99.0826	99.0826	0xccb64	-
 rmg_support	?connectEdges@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@PAU2@0@Z	100.0000	100.0000	100.0000	0xccb1f	-
 rmg_support	?createEdge@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTPoint@@PAUTRmgZone@@01@Z	99.6429	99.6429	99.6429	0xcc955	-
@@ -548,7 +548,7 @@ rmg_terrain	??0?$vector@EV?$allocator@E@std@@@std@@QAE@IABEABV?$allocator@E@1@@Z
 rmg_terrain	??0TRmgLineWalker@@QAE@PAVTRmgLinePainterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x58d37	-
 rmg_terrain	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	99.8214	99.8214	99.8214	0xba868	-
 rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	99.0000	99.0000	99.0000	0xbaa66	-
-rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	99.5122	99.7561	99.7561	0xbcff5	-
+rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	99.6342	99.7561	99.7561	0xbcff5	-
 rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	99.8387	99.8387	99.8387	0xbb5ce	-
 rmg_terrain	??0TRmgTerrainPatternTable@@QAE@XZ	100.0000	100.0000	100.0000	0xba9c8	-
 rmg_terrain	??1?$_Tree@U?$TRmgCoordinatePoint@I@@U1@U_Kfn@?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@U?$less@U?$TRmgCoordinatePoint@I@@@4@V?$allocator@U?$TRmgCoordinatePoint@I@@@4@@std@@QAE@XZ	99.0323	99.5161	99.5161	0xbd11f	-

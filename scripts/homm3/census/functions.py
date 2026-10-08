@@ -201,11 +201,15 @@ class Census:
         return seen, spans, calls, tails, imms
 
     def _table_count(self, table, bound):
+        """Entries of a jump table: up to the compared bound, and never past
+        an entry outside .text. The bound is the last compare of the index
+        register on any path, which an assembler routine need not have
+        tested (LIBCMT memcpy: `jmp TrailUpVec[ecx*4+16]` after `sub ecx, 4`
+        follows a `cmp ecx, 8` on another path)."""
         base = self.image.image_base
-        if bound is not None and 0 <= bound < 4096:
-            return bound + 1
+        cap = bound + 1 if bound is not None and 0 <= bound < 4096 else None
         n = 0
-        while True:
+        while cap is None or n < cap:
             v = self.dword(table + 4 * n)
             if v is None or not self.in_text(v - base):
                 break

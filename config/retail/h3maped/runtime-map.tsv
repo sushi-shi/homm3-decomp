@@ -240,6 +240,8 @@ rva	name	library	member
 0xd4215	?AboutToDo@XNotifyDBEvents@COleControlSite@@UAGJKKQAUtagDBNOTIFYREASON@@@Z	NAFXCW	occsite.obj
 0xd4235	?FailedToDo@XNotifyDBEvents@COleControlSite@@UAGJKKQAUtagDBNOTIFYREASON@@@Z	NAFXCW	occsite.obj
 0xd4255	?SyncAfter@XNotifyDBEvents@COleControlSite@@UAGJKKQAUtagDBNOTIFYREASON@@@Z	NAFXCW	occsite.obj
+0xd42be	?DidEvent@XNotifyDBEvents@COleControlSite@@UAGJKKQAUtagDBNOTIFYREASON@@@Z	NAFXCW	occsite.obj
+0xd430c	?FireEvent@XNotifyDBEvents@COleControlSite@@QAEJKKQAUtagDBNOTIFYREASON@@W4DSCSTATE@@@Z	NAFXCW	occsite.obj
 0xd441a	?OnFieldChange@XRowsetNotify@COleControlSite@@UAGJPAUIRowset@@KKQAKKKH@Z	NAFXCW	occsite.obj
 0xd44ab	?OnRowChange@XRowsetNotify@COleControlSite@@UAGJPAUIRowset@@KQBKKKH@Z	NAFXCW	occsite.obj
 0xd45c0	?OnRowsetChange@XRowsetNotify@COleControlSite@@UAGJPAUIRowset@@KKH@Z	NAFXCW	occsite.obj
@@ -284,6 +286,7 @@ rva	name	library	member
 0xe624d	??0exception@@QAE@ABV0@@Z	LIBCMT	stdexcpt.obj
 0xe6297	??1exception@@UAE@XZ	LIBCMT	stdexcpt.obj
 0xe62c0	_strlen	LIBCMT	strlen.obj
+0xe633b	__CxxThrowException@8	LIBCMT	throw.obj
 0xe69f5	__onexit	LIBCMT	onexit.obj
 0xe6a73	_atexit	LIBCMT	onexit.obj
 0xe6a85	___onexitinit	LIBCMT	onexit.obj
