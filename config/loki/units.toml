@@ -459,3 +459,8 @@ source = "src/editor/ObjectPaletteWnd.cpp"
 name = "MapValidation"
 object = 77
 source = "src/editor/MapValidation.cpp"
+
+[[unit]]
+name = "ObjectSpecializations"
+object = 21
+source = "src/editor/ObjectSpecializations.cpp"
