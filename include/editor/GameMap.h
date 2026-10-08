@@ -16,12 +16,15 @@
 #define HOMM3_EDITOR_GAMEMAP_H
 
 #include <bitset>
+#include <iterator>
+#include <stddef.h>
 #include <set>
 #include <string>
 #include <vector>
 
 #include "herodefs.h"
 #include "terrain_type.h"
+#include "exceptions.h"
 #include "editor/Array.h"
 #include "editor/Player.h"
 #include "editor/Point.h"
@@ -71,8 +74,160 @@ public:
 
     class TLayer {
     public:
+        static const TMapLayerObjectID s_kInvalidObjID;
+
+        // One object's footprint record in a cell: the object and the
+        // height of its placed cell there.
+        struct _TObjectCellInfo {
+            _TObjectCellInfo(unsigned int objID, unsigned int height) : m_objID(objID), m_height(height) {}
+
+            unsigned int m_objID;
+            unsigned int m_height;
+        };
+
         class TCell {
         public:
+        // A lazily created, shared and copy-on-write _TObjectCellInfo vector.
+        class _TPObjectCellInfoList {
+        public:
+            _TPObjectCellInfoList() : _m_pWrapper(NULL) {}
+            _TPObjectCellInfoList(const _TPObjectCellInfoList& other) : _m_pWrapper(other._m_pWrapper)
+            {
+                if (_m_pWrapper != NULL)
+                    ++_m_pWrapper->m_refCnt;
+            }
+            ~_TPObjectCellInfoList()
+            {
+                if (_m_pWrapper != NULL && --_m_pWrapper->m_refCnt == 0)
+                    delete _m_pWrapper;
+            }
+
+            vector<_TObjectCellInfo>* get()
+            {
+                if (_m_pWrapper == NULL)
+                    construct();
+                else if (_m_pWrapper->m_refCnt > 1)
+                    _split();
+                return &_m_pWrapper->m_a;
+            }
+            const vector<_TObjectCellInfo>* get() const
+            {
+                return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
+            }
+            vector<_TObjectCellInfo>* operator*() { return get(); }
+            const vector<_TObjectCellInfo>* operator*() const { return get(); }
+
+            void construct()
+            {
+                if ((_m_pWrapper = new _TWrapper) == NULL)
+                    _fail();
+            }
+            void clear()
+            {
+                if (--_m_pWrapper->m_refCnt == 0)
+                    delete _m_pWrapper;
+                _m_pWrapper = NULL;
+            }
+
+        private:
+            struct _TWrapper {
+                _TWrapper() : m_refCnt(1) {}
+                _TWrapper(const vector<_TObjectCellInfo>& a) : m_refCnt(1), m_a(a) {}
+
+                unsigned int m_refCnt;
+                vector<_TObjectCellInfo> m_a;
+            };
+
+            void _split()
+            {
+                _TWrapper* pNewWrapper = new _TWrapper(_m_pWrapper->m_a);
+                if (pNewWrapper == NULL)
+                    _fail();
+                --_m_pWrapper->m_refCnt;
+                _m_pWrapper = pNewWrapper;
+            }
+            void _fail()
+            {
+#line 912 "GameMap.h"
+                throw TAllocationFailure(__FILE__, __LINE__);
+            }
+
+            _TWrapper* _m_pWrapper;
+        };
+        // A lazily created, shared and copy-on-write unsigned int vector.
+        class _TPAObjectID {
+        public:
+            _TPAObjectID() : _m_pWrapper(NULL) {}
+            _TPAObjectID(const _TPAObjectID& other) : _m_pWrapper(other._m_pWrapper)
+            {
+                if (_m_pWrapper != NULL)
+                    ++_m_pWrapper->m_refCnt;
+            }
+            ~_TPAObjectID()
+            {
+                if (_m_pWrapper != NULL && --_m_pWrapper->m_refCnt == 0)
+                    delete _m_pWrapper;
+            }
+
+            vector<unsigned int>* get()
+            {
+                if (_m_pWrapper == NULL)
+                    construct();
+                else if (_m_pWrapper->m_refCnt > 1)
+                    _split();
+                return &_m_pWrapper->m_a;
+            }
+            const vector<unsigned int>* get() const
+            {
+                return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
+            }
+            vector<unsigned int>* operator*() { return get(); }
+            const vector<unsigned int>* operator*() const { return get(); }
+
+            void construct()
+            {
+                if ((_m_pWrapper = new _TWrapper) == NULL)
+                    _fail();
+            }
+            void clear()
+            {
+                if (--_m_pWrapper->m_refCnt == 0)
+                    delete _m_pWrapper;
+                _m_pWrapper = NULL;
+            }
+
+        private:
+            struct _TWrapper {
+                _TWrapper() : m_refCnt(1) {}
+                _TWrapper(const vector<unsigned int>& a) : m_refCnt(1), m_a(a) {}
+
+                unsigned int m_refCnt;
+                vector<unsigned int> m_a;
+            };
+
+            void _split()
+            {
+                _TWrapper* pNewWrapper = new _TWrapper(_m_pWrapper->m_a);
+                if (pNewWrapper == NULL)
+                    _fail();
+                --_m_pWrapper->m_refCnt;
+                _m_pWrapper = pNewWrapper;
+            }
+            void _fail()
+            {
+#line 989 "GameMap.h"
+                throw TAllocationFailure(__FILE__, __LINE__);
+            }
+
+            _TWrapper* _m_pWrapper;
+        };
+
+            TCell()
+                : _m_terrainType(eTerrainWater), _m_riverType(0), _m_roadType(0), _m_tileNum(0),
+                  _m_riverTileNum(0), _m_roadTileNum(0), _m_bHFlipped(false), _m_bVFlipped(false),
+                  _m_bRiverHFlipped(false), _m_bRiverVFlipped(false), _m_bRoadHFlipped(false),
+                  _m_bRoadVFlipped(false) {}
+
             TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
             void setTerrainType(TTerrainType newTerrainType);
             unsigned int getTileNum() const { return _m_tileNum; }
@@ -113,6 +268,38 @@ public:
             unsigned int _m_bRiverVFlipped : 1;
             unsigned int _m_bRoadHFlipped : 1;
             unsigned int _m_bRoadVFlipped : 1;
+
+        public:
+            _TPObjectCellInfoList _m_paObjInfo;
+            _TPAObjectID _m_paShadowID;
+        };
+
+        // Walks a layer's placed objects in link order.
+        class TObjectIDIter : public forward_iterator<TMapLayerObjectID, ptrdiff_t> {
+        public:
+            TObjectIDIter(const TLayer* pLayer, unsigned int objID) : _m_pLayer(pLayer), _m_objID(objID) {}
+
+            TMapLayerObjectID operator*() const { return _m_objID; }
+            TObjectIDIter& operator++()
+            {
+                _m_objID = _m_pLayer->getNextObjectID(_m_objID);
+                return *this;
+            }
+            TObjectIDIter operator++(int)
+            {
+                TObjectIDIter result = *this;
+                ++*this;
+                return result;
+            }
+            bool operator==(const TObjectIDIter& other) const
+            {
+                return _m_pLayer == other._m_pLayer && _m_objID == other._m_objID;
+            }
+            bool operator!=(const TObjectIDIter& other) const { return !(*this == other); }
+
+        private:
+            const TLayer* _m_pLayer;
+            TMapLayerObjectID _m_objID;
         };
 
         TLayer(TSize size);
@@ -137,6 +324,8 @@ public:
         TMapLayerObjectID getLastObjectID() const;
         TMapLayerObjectID getNextObjectID(unsigned int objID) const;
         TMapLayerObjectID getPrevObjectID(unsigned int objID) const;
+        TObjectIDIter objectIDBegin() const { return TObjectIDIter(this, getFirstObjectID()); }
+        TObjectIDIter objectIDEnd() const { return TObjectIDIter(this, s_kInvalidObjID); }
         unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
         TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
         unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
