@@ -1,9 +1,10 @@
 """homm3 loki: the Loki Linux h3maped image (GCC 2.95.2, ELF i386).
 
-  init [--exe PATH] [--debs DIR] [--sgi-stl DIR] [--binutils DIR] [--gcc DIR] [--gtk DIR]
+  init [--exe PATH] [--debs DIR] [--sgi-stl DIR] [--binutils DIR] [--gcc DIR] [--gtk DIR] [--libs DIR]
         verify and stage the pinned h3maped and GCC 2.95.2 toolchain
-  toolchain [--debs DIR] [--sgi-stl DIR] [--binutils DIR] [--gcc DIR] [--gtk DIR]
-        stage or verify the toolchain only; print the driver version
+  toolchain [--debs DIR] [--sgi-stl DIR] [--binutils DIR] [--gcc DIR] [--gtk DIR] [--libs DIR]
+        stage or verify the toolchain only; print the driver version; --libs also stages
+        the link media and builds libxml 1.8.9 and libglade 0.14 from source
   census [--check]
         regenerate (or check) config/retail/h3maped-loki/{objects,functions}.tsv
   build [UNIT ...] [-v] [-j N] [--bank]
@@ -16,6 +17,12 @@
         each built object's emitted functions (its .eh_frame list, discarded
         linkonce slots and __tf type_info functions included) against the
         image's; units named or -v print the aligned lists
+  link [-j N] [--no-compile]
+        link the 103 project objects with the staged link media (toolchain --libs) in the
+        image's order with binutils 2.9.1 ld: build/h3maped-loki/link/h3maped and its map
+  link-diff [-v] [PATH]
+        compare the linked image (or PATH) with retail: headers, every section, .text by
+        census object, .dynsym/PLT order, .comment, C library member order
   disasm SELECTOR
         disassemble a retail function by address or mangled-name substring,
         with its references named as in the comparison object
@@ -26,6 +33,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 
@@ -40,12 +48,14 @@ def main(argv=None) -> int:
     p.add_argument("--binutils", help="directory holding Slackware 7.1 binutils.tgz (as 2.9.1.0.25)")
     p.add_argument("--gcc", help="directory holding Slackware 7.1 contrib gcc.tgz (vanilla 2.95.2)")
     p.add_argument("--gtk", help="directory holding Slackware 7.1 gtkglib.tgz (GTK+/GLib 1.2.8 headers)")
+    p.add_argument("--libs", help="directory of the link media (config/loki/toolchain.toml [link])")
     p = sub.add_parser("toolchain", help="stage or verify the GCC 2.95.2 toolchain")
     p.add_argument("--debs")
     p.add_argument("--sgi-stl")
     p.add_argument("--binutils")
     p.add_argument("--gcc")
     p.add_argument("--gtk")
+    p.add_argument("--libs", help="also stage the link media and build libxml/libglade")
     p = sub.add_parser("census", help="object/function census of the retail image")
     p.add_argument("--check", action="store_true")
     p = sub.add_parser("build", help="compile, delink and score Loki units")
@@ -61,6 +71,12 @@ def main(argv=None) -> int:
                    help="compare the .rodata source-file name sequence (include order) instead")
     p.add_argument("--types", dest="strings", action="store_const", const="types",
                    help="compare the .rodata type-name sequence (class definition order) instead")
+    p = sub.add_parser("link", help="link the image from the project objects and the staged libraries")
+    p.add_argument("-j", "--jobs", type=int, default=3)
+    p.add_argument("--no-compile", action="store_true", help="link the objects already built")
+    p = sub.add_parser("link-diff", help="compare the linked image with retail, section by section")
+    p.add_argument("path", nargs="?", help="linked ELF (default build/h3maped-loki/link/h3maped)")
+    p.add_argument("-v", "--verbose", action="store_true")
     p = sub.add_parser("disasm", help="disassemble a retail function")
     p.add_argument("selector")
     p = sub.add_parser("diff", help="side-by-side base/retail listing of one function")
@@ -78,6 +94,8 @@ def main(argv=None) -> int:
                 print(f"[loki] image: {inputs.stage_executable(executable(), args.exe)}")
             toolchain.stage(args.debs, args.sgi_stl, args.binutils, args.gcc, args.gtk)
             print(f"[loki] g++ {toolchain.version()} staged at {toolchain.DESTINATION}")
+            if args.libs or os.environ.get("HOMM3_LOKI_LIBS"):
+                print(f"[loki] link media staged at {toolchain.stage_libraries(args.libs)}")
             return 0
         if args.command == "census":
             from homm3.loki import census
@@ -90,6 +108,17 @@ def main(argv=None) -> int:
             if args.strings:
                 return emitorder.strings_main(args.units, args.strings)
             return emitorder.main(args.units, args.verbose)
+        if args.command == "link":
+            from homm3.loki import link
+            return link.main(args.jobs, not args.no_compile)
+        if args.command == "link-diff":
+            from pathlib import Path
+            from homm3.loki import link, linkdiff
+            path = Path(args.path) if args.path else link.IMAGE
+            if not path.is_file():
+                raise RuntimeError(f"{path} does not exist; run `homm3 loki link`")
+            linkdiff.report(path, args.verbose)
+            return 0
         if args.command == "disasm":
             return _disasm(args.selector)
         if args.command == "diff":

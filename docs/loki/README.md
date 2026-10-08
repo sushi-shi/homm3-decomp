@@ -36,7 +36,7 @@ the versions the image links statically: its `gtk_major/minor/micro_version`
 read 1.2.8 with `gtk_binary_age` 8 and `gtk_interface_age` 3, and
 `glib_*_version` 1.2.8 (potato ships 1.2.7). The environment
 variables `HOMM3_LOKI_H3MAPED`, `HOMM3_LOKI_DEBS`, `HOMM3_LOKI_SGI_STL`,
-`HOMM3_LOKI_BINUTILS`, `HOMM3_LOKI_GCC` and `HOMM3_LOKI_GTK` work as well. Everything is staged under ignored
+`HOMM3_LOKI_BINUTILS`, `HOMM3_LOKI_GCC`, `HOMM3_LOKI_GTK` and `HOMM3_LOKI_LIBS` (see Link) work as well. Everything is staged under ignored
 `build/`: the image at `build/orig/loki/h3maped` and the toolchain at
 `build/loki/toolchain/`.
 
@@ -298,6 +298,74 @@ Applied:
   is inferred from rule 6: every includer queues `allocator<char>()`, the
   `__default_alloc_template::allocate` chain, `~basic_string` and
   `~allocator` right after TRuntimeError's implicit members.
+
+## Link
+
+```sh
+homm3 loki toolchain --libs DIR   # link media of config/loki/toolchain.toml [link]
+homm3 loki link                   # build/h3maped-loki/link/h3maped (+ .map, link.log)
+homm3 loki link-diff [-v]         # the linked file against retail, section by section
+```
+
+`--libs` (or `HOMM3_LOKI_LIBS`) stages the link media under
+`build/loki/toolchain/link/` and builds libxml 1.8.9 and libglade 0.14 from
+source with the release `cc1` at `-O2 -mcpu=pentiumpro` (configure
+`--disable-shared i686-pc-linux-gnu`; configure's test programs run through
+the staged loader). `homm3 loki link` compiles every unit and runs binutils
+2.9.1.0.25's `ld` directly, with what the image proves:
+
+| Fact | Evidence |
+| :--- | :------- |
+| link order | `.comment` (one entry per linked object) runs 2 egcs, 122 GCC 2.95.2, 155 egcs, 23 GCC 2.95.2, 1 egcs, 1 GCC 2.95.2, 1 egcs: crt1.o and crti.o (glibc 2.1.3, egcs 1.1.2), crtbegin.o, the 103 project objects, libglade and libxml (GCC 2.95.2 C, no `.eh_frame`), GTK+, GDK, GModule, GLib and zlib (egcs), libstdc++ and libgcc, libc_nonshared, crtend.o, crtn.o. `.text` agrees: `glade_init` follows the last project object at 0x08202730, then libxml, `gtk_accel_group_new` (0x0823ead0), GDK, GModule/GLib, zlib (0x083206b0), libstdc++ (0x083278e0). |
+| shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order: `gtk-config --libs`' tail (`-ldl -lXi -lXext -lX11 -lm`) and libc. Everything else is static. |
+| flags | `-export-dynamic` (12,052 defined `.dynsym` entries; libglade connects handlers by name), interpreter `/lib/ld-linux.so.2`, no `.symtab` (`-s`). |
+| ld 2.9.1 | `.gcc_except_table` precedes `.eh_frame`, both after `.data`: ld 2.9.1's default script has neither, and an orphan goes right after `.data`, so the later one lands first. 2.9.5's script names `.eh_frame` first. The assembler is already 2.9.1.0.25. |
+| libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2` (i686 default `-mcpu=pentiumpro`): the five linked libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
+
+The library sources are pinned to the image's versions, but four groups are
+stand-ins that link and run without being Loki's builds yet:
+
+- GTK+/GDK/GModule/GLib 1.2.8 are Slackware's `-O2` archives (`leave`
+  epilogues). The image's were compiled by egcs 1.1.2 at `-O2 -m486`
+  (16-byte function alignment, no `leave`) with an egcs that emits
+  `.p2align 4,,7` for jump targets (no padding past 7 bytes); Slackware's egcs
+  emits `.align 16`. The GLib functions checked (`g_byte_array_*`,
+  `g_array_new` but for one such label) match Slackware's egcs at `-O2 -m486`.
+- zlib: Slackware's 1.1.3. The image's `zlibVersion()` is "1.0.8" and its
+  `inflate_copyright` is 1.0.8's `.rodata` string, but `deflate_copyright`
+  is 1.0.4's non-const `.data` one; its crc32, adler32, infcodes, infutil and
+  inffast equal XFree86 3.3.6's zlib 1.0.4 build exactly.
+- crtbegin.o, crtend.o, libgcc and libstdc++ 2.10 are the i386-configured
+  release's. The image's are i686-configured (crtbegin's
+  `__do_global_dtors_aux` has no `leave`), and its type_info objects are
+  reached through 63 `R_386_GLOB_DAT` GOT entries.
+- One more GCC 2.95.2 object without `.text` or `.eh_frame` is linked
+  before the egcs libraries (122 entries, ours 121); it is not identified
+  yet (libxml's `xmlmemory.o` is empty and no symbol pulls it).
+
+`homm3 loki link-diff` reads the linked file (or a path) and reports the
+total differing bytes over the file; the ELF header and program headers; every
+section's address, offset, size and differing bytes (each at its own file
+offset); `.text` by census object at the image's addresses (start files,
+each project object, the C libraries, libstdc++/libgcc); `.dynsym` order,
+the PLT's import order; the `.comment` runs; and the C libraries' exported
+functions in the image's address order (longest run kept in order). It is not
+a gate yet.
+
+Anonymous-namespace names are random per compile: `append_random_chars`
+(gcc/tree.c) seeds them from `gettimeofday` and `getpid`, and 34 units
+export `_GLOBAL_.N.<file><6 chars>` names through `.dynsym`, `.dynstr` and
+their type-name strings. The comparison canonicalizes them (`5_ANON`); a
+byte-identical link needs the image's six characters back.
+
+Launch (2026-10-08): headless only, `xvfb-run -a -s "-screen 0 1280x1024x24"`
+with a run directory holding `heroes-iii-level-editor.glade`, a `heroes3`
+stub on `PATH` and `data/h3bitmap.lod`, `data/h3sprite.lod` (GOG Complete),
+under potato's `ld-2.1.3.so` with the staged X libraries. The linked editor
+initializes GTK+, reads the Glade file and both LODs, then stops where retail
+stops with the same data: `Artifact.cpp:163: InitializeArtifactTraits:
+Assertion '*resource[20] == 'S'' failed` (Complete's ARTRAITS.TXT is not
+RoE's). Retail and linked logs are identical.
 
 ## Ledger and README block
 

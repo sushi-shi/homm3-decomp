@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.loki import cmpobj, datacmp, delink, emitorder, ledger, objwriter, toolchain
+from homm3.loki import cmpobj, datacmp, delink, emitorder, ledger, link, linkdiff, objwriter, toolchain
 from homm3.loki.cmpobj import CodeSection, Function
 from homm3.loki.elf import R_386_32, R_386_PC32, SHT_REL, SHT_SYMTAB, Elf
 
@@ -200,6 +200,47 @@ class CompiledBaseTest(unittest.TestCase):
         order = emitorder.Strings("t", ["A.h", "B.h"], ["B.h", "A.h"])
         self.assertFalse(order.identical)
         self.assertEqual([tag for tag, *_ in order.opcodes], ["delete", "equal", "insert"])
+
+
+class LinkTest(unittest.TestCase):
+    def test_command_follows_the_image_link_order(self):
+        argv = link.command(Path("out"), Path("out.map"))
+        names = [Path(a).name for a in argv]
+        self.assertIn("-export-dynamic", argv)
+        self.assertEqual(argv[argv.index("-dynamic-linker") + 1], "/lib/ld-linux.so.2")
+        self.assertEqual(names.index("crt1.o") + 1, names.index("crti.o"))
+        self.assertEqual(names.index("crti.o") + 1, names.index("crtbegin.o"))
+        self.assertEqual(names[-2:], ["crtend.o", "crtn.o"])
+        objects = [Path(a) for a in argv if a.endswith(".o") and "/obj/" in a]
+        self.assertEqual(len(objects), 103)
+        self.assertEqual(objects, link.project_objects())
+        archives = [n for n in names if n.endswith(".a")]
+        self.assertEqual(archives[:6], list(link.ARCHIVES_BEFORE))
+        self.assertEqual(archives[6:], ["libz.a", "libstdc++.a", "libgcc.a", "libgcc.a"])
+        shared = [a for a in argv if a.startswith("-l")]
+        self.assertEqual(shared, ["-ldl", "-lXi", "-lXext", "-lX11", "-lm", "-lm", "-lc"])
+        self.assertLess(names.index("libglib.a"), argv.index("-ldl"))
+        self.assertLess(argv.index("-lm"), names.index("libz.a"))
+
+    def test_link_media_digest_covers_the_pins(self):
+        spec = toolchain.specification()
+        changed = {**spec, "link": {**spec["link"], "zlib.tgz": "0" * 64}}
+        self.assertNotEqual(toolchain._link_digest(spec), toolchain._link_digest(changed))
+        self.assertEqual(toolchain._link_digest(spec), toolchain._link_digest(dict(spec)))
+
+
+class LinkDiffTest(unittest.TestCase):
+    def test_differing_counts_bytes_and_length(self):
+        self.assertEqual(linkdiff.differing(b"abc", b"abc"), 0)
+        self.assertEqual(linkdiff.differing(b"abc", b"abd"), 1)
+        self.assertEqual(linkdiff.differing(b"abc", b"ab"), 1)
+        self.assertEqual(linkdiff.differing(b"", b"xyz"), 3)
+
+    def test_comment_runs_and_order(self):
+        self.assertEqual(linkdiff.runs(["e", "e", "g", "e"]), [(2, "e"), (1, "g"), (1, "e")])
+        self.assertEqual(linkdiff.longest_increasing([1, 2, 3]), 3)
+        self.assertEqual(linkdiff.longest_increasing([3, 1, 2, 4]), 3)
+        self.assertEqual(linkdiff.longest_increasing([]), 0)
 
 
 if __name__ == "__main__":

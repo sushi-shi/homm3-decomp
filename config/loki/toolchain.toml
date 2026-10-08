@@ -63,3 +63,36 @@ target = "i386-linux"
 # and glade_xml_build_extended_widget (new in 0.14; Slackware 7.1 ships 0.13) and lacks
 # glade-xml.c's "libglade::GladeXML::tooltips" (0.15 on).
 "libglade-0.14.tar.gz" = "33a2a290eec04cf1fb8a8d5e7420e7225530a5b753659bfa36ba01aaafd3a371"
+
+# Link media (`homm3 loki toolchain --libs DIR`, or HOMM3_LOKI_LIBS): everything `homm3 loki
+# link` puts beside the 103 project objects, in one directory. Staged into
+# build/loki/toolchain/link/ after the compile toolchain.
+#   binutils.tgz   Slackware 7.1 binutils 2.9.1.0.25 (as [binutils]): its ld. The image's
+#                  section order is ld 2.9.1's: .gcc_except_table before .eh_frame, both
+#                  orphans after .data (2.9.5's default script names .eh_frame first), and
+#                  the .rel.got/.rel.bss/.rel.plt split.
+#   glibc.tgz      Slackware 7.1 d1 glibc 2.1.3 (md5 acb259fe03473ac48d0432662d48f575):
+#                  crt1.o, crti.o, crtn.o and libc_nonshared.a, built with egcs 1.1.2 like
+#                  the image's first two and last .comment entries. Shared libc/libm/libdl
+#                  come from potato's libc6 (the same 2.1.3).
+#   xbin.tgz       Slackware 7.1 x1 XFree86 3.3.6 (md5 e7ce2d545e79345770c04a1ba28feb88):
+#                  libX11.so.6, libXext.so.6, libXi.so.6 (DT_NEEDED; also the launch test).
+#   gtkglib.tgz    as [gtk]: libgtk.a, libgdk.a, libgmodule.a, libglib.a (GTK+/GLib 1.2.8,
+#                  the image's versions; Slackware's -O2 build, not the image's -O2 -m486).
+#   zlib.tgz       Slackware 7.1 d1 zlib 1.1.3 (md5 243934cbb515fe7615ca95331a2cddb3): libz.a
+#                  and its headers. Stand-in: the image's zlibVersion() is "1.0.8".
+#   gcc.tgz        as [compilers]: crtbegin.o, crtend.o, libgcc.a, libstdc++ 2.10 .a of the
+#                  i386-configured release (the image's are i686: no `leave`).
+#   libglade-0.14.tar.gz, libxml-1.8.9.tar.gz
+#                  built here with the release cc1 at -O2 -mcpu=pentiumpro, as Loki built them:
+#                  every linked libglade member and parser.o, SAX.o, entities.o, encoding.o,
+#                  error.o of libxml reproduce the image's .text (xmlParserVersion "1.8.9").
+[link]
+"binutils.tgz" = "70a0560e929fdd4cab4b204876e6f5eb2fdb6debe5da4429b5ff12c78f8d73db"
+"glibc.tgz" = "b86371883c38349f50aff0307a8ed91c6ffc31a9b97187f5525e3e7b880b955e"
+"xbin.tgz" = "96e7e9976a59cf014e7f9088354fd45c9d0b0eaf97193edb30d2e4f7b318eb7b"
+"gtkglib.tgz" = "7458d5f061ba14f8e6e820b6c9f395dddd57af217e22e054d33cd71531892562"
+"zlib.tgz" = "25e6ccf7443a040c4e54002d648fc1ab2d7eb92573cc12b338b52e52a24fecfe"
+"gcc.tgz" = "d55eec8780baeea94e5c1ef7af0459d31495055f1d9e63fd3e95d4061d7707a4"
+"libglade-0.14.tar.gz" = "33a2a290eec04cf1fb8a8d5e7420e7225530a5b753659bfa36ba01aaafd3a371"
+"libxml-1.8.9.tar.gz" = "110b419d81101a301e3b5b11749b5618d31568b04c9c4e4394fff636a2d8fcb6"
