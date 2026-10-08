@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.loki import cmpobj, datacmp, delink, ledger, objwriter, toolchain
+from homm3.loki import cmpobj, datacmp, delink, emitorder, ledger, objwriter, toolchain
 from homm3.loki.cmpobj import CodeSection, Function
 from homm3.loki.elf import R_386_32, R_386_PC32, SHT_REL, SHT_SYMTAB, Elf
 
@@ -158,6 +158,28 @@ class CompiledBaseTest(unittest.TestCase):
                            env=toolchain.environment(), check=True)
             (text,) = [s for s in delink.base_sections(obj.read_bytes()) if s.name == ".text"]
         self.assertEqual([(r.target, r.addend) for r in text.relocs], [("b", 0)])
+
+    def test_emitted_functions_are_keyed_as_the_image_shows_them(self):
+        source = ('struct Shape { virtual int area() { return 0; } };\n'
+                  'static int helper(int x) { return x * 3; }\n'
+                  'int caller(int k) { Shape s; return helper(k) + s.area(); }\n')
+        with tempfile.TemporaryDirectory() as directory:
+            src = Path(directory) / "t.cpp"
+            obj = Path(directory) / "t.o"
+            src.write_text(source)
+            subprocess.run(toolchain.driver_command("-c", "-O0", "-mcpu=pentiumpro", str(src), "-o", str(obj)),
+                           env=toolchain.environment(), check=True)
+            entries = emitorder.compiled_entries(obj, {"__tf5Shape"}, {"caller__Fi", "__tf5Shape"})
+        names = [e.name for e in entries]
+        self.assertIn("__tf5Shape", names)          # the type_info function of a class without key function
+        keys = {e.name: e.key for e in entries}
+        self.assertEqual(keys["caller__Fi"], "caller__Fi")
+        self.assertEqual(keys["__tf5Shape"], "__tf5Shape")     # kept here
+        self.assertTrue(keys["helper__Fi"].startswith("static:"))
+        self.assertTrue(keys["area__5Shape"].startswith("linkonce:"))   # the image keeps it elsewhere
+        order = emitorder.Order("t", 0, entries, entries)
+        self.assertTrue(order.identical)
+        self.assertFalse(any(line.startswith(("-", "+")) for line in emitorder.render(order)))
 
 
 if __name__ == "__main__":

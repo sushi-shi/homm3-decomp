@@ -164,6 +164,18 @@ Each unit reports matching data bytes over the image's bytes, and `-v`
 lists the differing symbols and anonymous gaps (`.rodata+0x40`). `--bank`
 records one `$data` row per unit in the ledger.
 
+Most remaining data differences come from what each object emitted: header
+inlines that are never called still leave their assert and type-name
+strings, and a polymorphic class without an out-of-line virtual function
+gets a `__tf` type_info function wherever it is used. `homm3 loki
+emitorder [UNIT ...]` compares each built object's `.eh_frame` function
+list, in emission order, with the image's frame block of that object. ld
+keeps a frame block whole, so a linkonce copy that another object's copy
+displaced still shows as an FDE at address 0 with its size: exported
+functions compare by name, discarded slots and file-static functions by
+size. Naming units (or `-v`) prints the aligned lists, image-only lines
+`-`, ours-only `+`.
+
 ## Ledger and README block
 
 `homm3 loki build --bank` records every built unit's functions in

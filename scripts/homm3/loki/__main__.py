@@ -12,6 +12,10 @@
         then compare their data with the image slices (homm3.loki.datacmp);
         --bank records the built units' functions and data bytes in
         config/loki/match_baseline.tsv and refreshes the README Loki block
+  emitorder [UNIT ...] [-v]
+        each built object's emitted functions (its .eh_frame list, discarded
+        linkonce slots and __tf type_info functions included) against the
+        image's; units named or -v print the aligned lists
   disasm SELECTOR
         disassemble a retail function by address or mangled-name substring,
         with its references named as in the comparison object
@@ -50,6 +54,9 @@ def main(argv=None) -> int:
     p.add_argument("-j", "--jobs", type=int, default=3)
     p.add_argument("--bank", action="store_true",
                    help="bank the built units' scores and refresh the README Loki block")
+    p = sub.add_parser("emitorder", help="emitted function lists against the image's")
+    p.add_argument("units", nargs="*")
+    p.add_argument("-v", "--verbose", action="store_true", help="aligned lists of every differing object")
     p = sub.add_parser("disasm", help="disassemble a retail function")
     p.add_argument("selector")
     p = sub.add_parser("diff", help="side-by-side base/retail listing of one function")
@@ -74,6 +81,9 @@ def main(argv=None) -> int:
         if args.command == "build":
             from homm3.loki import build
             return build.run(args.units or None, jobs=args.jobs, verbose=args.verbose, bank=args.bank)
+        if args.command == "emitorder":
+            from homm3.loki import emitorder
+            return emitorder.main(args.units, args.verbose)
         if args.command == "disasm":
             return _disasm(args.selector)
         if args.command == "diff":
