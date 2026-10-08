@@ -1445,15 +1445,12 @@ void SCampaign::doPreLoadCustomization()
 // a preconstructed artifact extends the wrong temporary lifetime. Mac
 // 0x94e98 fetches the custom name before storing its flag at 0x94ea4.
 // These lifetimes and ordering reproduce every other Windows instruction.
-// The final append is the open residual (91.76%): Windows stores m_id into
-// the dead placeholder home [ebp+8] and Mac 0x95114 into 0xdc(r1), beside
-// getCell's by-value argument copy, below its named locals. Both compilers
-// materialize a conversion temporary, so the argument's type differs from
-// the element type; with HeroId on both sides each passes &m_id directly.
-// An int m_id reproduced 100% before the DC THeroID member type. Probes:
-// static_cast/functional casts are byte-flat, a named HeroId local 99.92%
-// (own frame slot, +4; CW also homes it with the named locals), a by-value
-// id accessor 92.77% (one more inline site).
+// The final append converts the HeroId member to the int element type of
+// m_assignedCarryover: Windows stores m_id into the dead placeholder home
+// [ebp+8] and Mac 0x95114 into 0xdc(r1), beside getCell's by-value argument
+// copy. With HeroId on both sides each compiler passes &m_id directly
+// (91.76%); static_cast/functional casts are byte-flat, a named HeroId local
+// 99.92% and a by-value id accessor 92.77%.
 // CodeWarrior emits default-argument constructor glue for savedArtifacts[].
 MAC_COMPGEN_ADDRESS(0x09513c, 0x10, CLASS_CTOR, type_artifact)
 VA(0x00486590, 0xA84)
@@ -1657,8 +1654,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
-    g_game->m_campaign.m_assignedCarryover.push_back(
-        H3_ENUM_DECODE(HeroId, currentHero->m_id));
+    g_game->m_campaign.m_assignedCarryover.push_back(currentHero->m_id);
 }
 
 // Mac retains this artifact offer at code 0:0x951b0. Its only caller passes
@@ -3130,8 +3126,7 @@ void SCampaign::readAssignedHeroes(TAbstractFile* infile, int count)
 {
     m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        m_assignedCarryover[assignedIndex] =
-            H3_ENUM_DECODE(HeroId, readValue<short>(infile));
+        m_assignedCarryover[assignedIndex] = readValue<short>(infile);
     }
 }
 
