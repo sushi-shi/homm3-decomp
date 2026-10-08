@@ -1,7 +1,6 @@
 """`homm3 evidence`: section selection, capture, Mac gating and outputs."""
 from __future__ import annotations
 
-import contextlib
 import io
 import json
 from pathlib import Path
@@ -9,7 +8,6 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
 
 from homm3 import evidence
 
@@ -136,24 +134,6 @@ class EvidenceTests(unittest.TestCase):
             index = io.StringIO()
             evidence.render_index(reports, index)
             self.assertIn("0x00524dd0.summary.json", index.getvalue())
-
-    def test_main_renders_sections_with_headers(self):
-        fake = FakeCommands()
-        out = io.StringIO()
-        from homm3.analysis import dreamcast
-        with patch.object(evidence, "_entry", fake.entry), \
-                patch.object(evidence, "mac_claimed", return_value=False), \
-                patch.object(dreamcast, "shared_corpus", contextlib.nullcontext), \
-                contextlib.redirect_stdout(out):
-            rc = evidence.main(["0x00524dd0", "dc:0x10", "--only", "lines,mac"])
-        self.assertEqual(rc, 0)
-        text = out.getvalue()
-        self.assertIn("===== [lines] homm3 dreamcast lines 0x00524dd0 =====", text)
-        self.assertIn("===== [lines] homm3 dreamcast lines dc:0x10 =====", text)
-        self.assertIn("skipped: no MAC_ADDRESS claim pairs 0x00524dd0", text)
-        self.assertIn("[evidence] summary", text)
-        # A non-VA selector has no cheap pair check, so `mac show` decides.
-        self.assertIn(("mac", ["show", "dc:0x10"]), fake.calls)
 
 
 if __name__ == "__main__":

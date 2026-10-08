@@ -23,8 +23,7 @@ from homm3.loki.image import IMAGE, LokiImage
 ROOT = common.HOMM3_DIR
 OUT = ROOT / "build" / IMAGE
 OBJDIFF = OUT / "objdiff"
-VENDOR_INCLUDES = ("bink-0.5a/include", "ifc-2.0.3/include", "miles-5.0e/include",
-                   "smacker-3.2h/include", "zlib-1.1.3")
+VENDOR_INCLUDES = ("zlib-1.1.3",)
 
 
 @dataclass(frozen=True)
