@@ -9,11 +9,13 @@
 // pure getClass) follows at +0xc4. The class traits table holds, per hero
 // class, the object type, the first hero ID, the town type, the number of
 // prototypes and the prototypes themselves (THero::s_akClassTraits,
-// asserts name m_objType, m_townType and m_numPrototypes); the field at
-// +0xc is never named by an assert and stays unnamed here.
+// asserts name m_objType, m_townType and m_numPrototypes). The field at
+// +0xc is the class name: TSelectHeroClassDlg labels its list rows with it
+// (the name m_name is not proven).
 #ifndef HOMM3_EDITOR_HERO_H
 #define HOMM3_EDITOR_HERO_H
 
+#include <bitset>
 #include <map>
 #include <string>
 #include <vector>
@@ -74,17 +76,21 @@ private:
     TArtifactContainer _m_artifacts;
 };
 
+// A set of hero classes, the random class included
+// ("TSelectHeroClassDlg::TSelectHeroClassDlg(GtkWidget *, const THeroClassMask &)").
+typedef bitset<kNumHeroClasses + 1> THeroClassMask;
+
 class THero : public TPlayableObject {
 public:
     struct TClassTraits {
         TClassTraits(const TObjectType& objType, THeroID firstHeroID, TTownType townType)
-            : m_objType(objType), m_firstHeroID(firstHeroID), m_townType(townType), m_unknown(0),
+            : m_objType(objType), m_firstHeroID(firstHeroID), m_townType(townType), m_name(NULL),
               m_numPrototypes(0), m_aPrototype(NULL) {}
 
         const TObjectType& m_objType;
         THeroID m_firstHeroID;
         TTownType m_townType;
-        unsigned int m_unknown;
+        const char* m_name;
         unsigned int m_numPrototypes;
         THeroPrototype* m_aPrototype;
     };
