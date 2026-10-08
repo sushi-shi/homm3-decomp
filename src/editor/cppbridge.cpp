@@ -2589,7 +2589,7 @@ void on_edit_artifact_artifact_changed(GtkEditable* editable, gpointer user_data
         editArtifactDlg->OnSelChangeArtifactCombo();
 }
 
-void on_hero_name_customize_toggled(GtkWidget* widget, gpointer user_data)
+void on_hero_name_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data)
 {
     THeroPropsGeneralPage* pPage = NULL;
     if (heroPropsSheetModal)
@@ -2598,7 +2598,7 @@ void on_hero_name_customize_toggled(GtkWidget* widget, gpointer user_data)
         pPage->OnCustomizeNameCheck();
 }
 
-void on_hero_portrait_customize_toggled(GtkWidget* widget, gpointer user_data)
+void on_hero_portrait_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data)
 {
     THeroPropsGeneralPage* pPage = NULL;
     if (heroPropsSheetModal)
