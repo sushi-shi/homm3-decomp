@@ -9994,10 +9994,7 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     resetMovementCosts();
 
     TRmgMapItem* mapItem;
-    TRmgMapPosition emptyPosition;
-    emptyPosition.m_x = -1;
-    emptyPosition.m_y = -1;
-    emptyPosition.m_z = -1;
+    TRmgMapPosition emptyPosition(-1, -1, -1);
 
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
