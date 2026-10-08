@@ -9,9 +9,9 @@
 
 #include "exceptions.h"
 #include "editor/cppbridge.h"
+#include "editor/EditTimedEventSheet.h"
 #include "editor/EditTimedEventGeneralPage.h"
 #include "editor/EditTimedEventResourcesPage.h"
-#include "editor/EditTimedEventSheet.h"
 
 TEditTimedEventSheet* timedEventSheetModal = NULL;
 
