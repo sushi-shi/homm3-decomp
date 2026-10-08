@@ -44,7 +44,13 @@ retail; data rows do not enter the function denominator.
 
 VC6 local-static guard claims own one byte, as confirmed by the compiler's
 unsigned-char guard symbols and retail byte accesses. They do not claim the
-adjacent flags or other guards. Mutable source-owned character arrays are
+adjacent flags or other guards. When relocation pairing leaves a guard
+unpaired, the delinked target names it by its `DATA_COMPGEN_GUARD` claim. The
+paired normalizer pass then gives the candidate's one `$S<n>` guard in the
+owner static's scope the same name. Without that rename, objdiff compared the
+two names through the referenced `.bss` bytes, whose extent follows cl's
+run-to-run `.bss` order. InitializeArtifactTraitsTable flipped between 89.36%
+and 89.40% on that order. Mutable source-owned character arrays are
 excluded from pooled-literal pairing: identical initial text does not make a
 writable buffer and a string literal the same object.
 

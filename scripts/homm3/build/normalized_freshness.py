@@ -95,7 +95,8 @@ def implementation_inputs() -> dict[str, Path]:
         "identity_relocations.py")}
     for name in ("project.py", "image.py", "inputs.py"):
         paths["tool:core/" + name] = directory.parent / "core" / name
-    for name in ("compare/canonicalize.py", "core/msvc_names.py"):
+    for name in ("compare/canonicalize.py", "core/msvc_names.py",
+                 "verify/byte_accounting.py"):
         paths["tool:" + name] = directory.parent / name
     _IMPLEMENTATION_INPUTS.update(paths)
     return dict(paths)

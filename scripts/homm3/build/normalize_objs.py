@@ -1539,11 +1539,68 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     return True
 
 
+_GUARD_OWNERS = None
+_CLAIMED_GUARD = re.compile(r"__h3cg\$(?P<unit>[^$]+)\$static_init_guard\$\w+")
+
+
+def _guard_owners() -> dict:
+    """{guard claim name: (owner static, address)} from DATA_COMPGEN_GUARD."""
+    global _GUARD_OWNERS
+    if _GUARD_OWNERS is None:
+        from homm3.verify.byte_accounting import _guard_owners as scan
+        _GUARD_OWNERS = scan(common.HOMM3_DIR)
+    return _GUARD_OWNERS
+
+
+def _canonicalize_claimed_guards(base_payload: bytes, target_payload: bytes,
+                                 unit: str, guard_owners=None) -> tuple[bytes, int]:
+    """Name the candidate's local-static guard by the target's guard claim.
+
+    A function-local static's guard byte is cl's `$S<n>` symbol in the owner
+    static's scope. When reloc_pairing does not pair it, the delinked target
+    names the retail byte by its DATA_COMPGEN_GUARD claim instead, and the two
+    references then compare by objdiff's fallback over the referenced bytes,
+    whose extent follows cl's run-to-run .bss order. Where the target uses a
+    claim of this unit and the candidate has exactly one guard in the claimed
+    owner's scope (byte_accounting.bridge_data_name), the candidate symbol
+    takes the claim name, so both sides name one guard identity. A target
+    that already spells the guard `$S<n>` is left alone.
+    """
+    from homm3.verify.byte_accounting import bridge_data_name
+    owners = _guard_owners() if guard_owners is None else guard_owners
+    target = canon.CoffObject(target_payload)
+    claims = sorted({symbol.name for symbol in target.symbols.values()
+                     if (m := _CLAIMED_GUARD.fullmatch(symbol.name)) and m["unit"] == unit
+                     and symbol.name in owners})
+    if not claims:
+        return base_payload, 0
+    base = canon.CoffObject(base_payload)
+    names = {symbol.name for symbol in base.symbols.values()}
+    emitted = {name: True for name in names}
+    renames: dict[int, str] = {}
+    for claim in claims:
+        if claim in names:
+            continue
+        spelling = bridge_data_name(claim, emitted, owners)
+        if spelling is None:
+            continue
+        indices = [symbol.index for symbol in base.symbols.values()
+                   if symbol.name == spelling]
+        if len(indices) == 1 and indices[0] not in renames:
+            renames[indices[0]] = claim
+    if not renames:
+        return base_payload, 0
+    return canon._rewrite_names(base, renames), len(renames)
+
+
 def canonicalize_pair(base_payload: bytes, target_payload: bytes, unit: str,
                       symbol_rvas, *, image_base=None, identities=None
                       ) -> tuple[bytes, bytes, Counter]:
     """Apply the shared full-build and candidate-search paired passes."""
     counts: Counter = Counter()
+    base_payload, guard_count = _canonicalize_claimed_guards(
+        base_payload, target_payload, unit)
+    counts["guard"] += guard_count
     padded, count = _retain_matching_target_padding(
         base_payload, target_payload)
     counts["retained"] += count
@@ -1705,6 +1762,7 @@ def normalize_all(units: set[str] | None = None) -> Counter:
           f"{counts['literal']} false-literal relocation(s) removed "
           f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
           f"{counts['icf']} ICF twin reference(s) named "
+          f"{counts['guard']} claimed static guard(s) named "
           f"{counts['zero_literal']} zero literal(s) given retail sections "
           f"{counts['address']} equivalent data address(es) named "
           f"{counts['identity']} relocation(s) compared by proven address "
