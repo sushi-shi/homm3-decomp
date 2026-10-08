@@ -33,6 +33,9 @@ inline void decodeMapBits(const unsigned char* packed, std::bitset<N>& result)
 // takes VC6 hero::load 94.92 -> 100%, NewSMapHeader::read 94.09 -> 97.03%,
 // game::loadMap 85.03 -> 88.60% and ScenarioStruct::read 84.44 -> 89.67%;
 // the inline keyword alone is VC6 byte-flat.
+// Probe (2026-10-08): result.set(index, bit) in the loop lifts loadMap
+// 88.60 -> 93.14 but drops NewSMapHeader::read/load, ScenarioStruct::read
+// and hero::load and leaves four retained set/reference bodies unemitted.
 template <size_t N>
 inline std::bitset<N> readPackedBits(TAbstractFile* infile)
 {
