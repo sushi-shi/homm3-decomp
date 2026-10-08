@@ -7,13 +7,24 @@
 #include "editor/stdafx.h"
 
 #include <assert.h>
+#include <ctype.h>
+#include <algorithm>
+#include <functional>
+#include <iostream.h>
 
+#include "adventureobjecttype.h"
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
+#include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 #include "editor/TilePoint.h"
 
 namespace {
+
+inline bool isAllSpace(const string& text)
+{
+    return find_if(text.begin(), text.end(), not1(ptr_fun(isspace))) == text.end();
+}
 
 bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
 {
@@ -67,8 +78,198 @@ const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
 
 class TGameMap::_TImpl {
 public:
+    static const unsigned int s_kMaxHeroesOnMap = 128;
+    static const unsigned int s_kMaxTownsOnMap = 48;
+    static const unsigned int s_kMaxMinesOnMap = 144;
+    static const unsigned int s_kMaxGeneratorsOnMap = 144;
+    static const unsigned int s_kMaxSignsOnMap = 128;
+
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
 };
+
+void TRumor::setNameAndText(const string& newName, const string& newText)
+{
+#line 469
+    assert(( newName.empty() && newText.empty() ) || ( !isAllSpace( newName ) && !isAllSpace( newText ) ));
+    assert(newName.find( '\n' ) == std::string::npos);
+    assert(newName.find( '\t' ) == std::string::npos);
+    assert(newText.size() <= s_kMaxTextLen);
+    assert(newText.find( '\t' ) == std::string::npos);
+    _m_name = newName;
+    _m_text = newText;
+}
+
+void TRumor::importText(istream* pIStream)
+{
+#line 484
+    assert(pIStream != NULL);
+    string line;
+    getline(*pIStream, line);
+    if (line != string(kNameStr) + ':')
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    replace(line.begin(), line.end(), '\t', ' ');
+    string name = line;
+    getline(*pIStream, line);
+    if (line != string(kTextStr) + ':')
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    replace(line.begin(), line.end(), '\t', '\n');
+    if (line.size() > s_kMaxTextLen)
+        line.erase(s_kMaxTextLen);
+    string text = line;
+    if (isAllSpace(name) || isAllSpace(text))
+        throw TImportTextFailure();
+    setNameAndText(name, text);
+}
+
+void TRumor::exportText(ostream* pOStream) const
+{
+#line 515
+    assert(pOStream != NULL);
+    assert(!isAllSpace( _m_name ) && !isAllSpace( _m_text ));
+    *pOStream << kNameStr << ':' << '\n' << _m_name << '\n';
+    string text = _m_text;
+    replace(text.begin(), text.end(), '\n', '\t');
+    *pOStream << kTextStr << ':' << '\n' << text << '\n';
+}
+
+TRawIStream& operator>>(TRawIStream& stream, TRumor& rumor)
+{
+    string name;
+    string text;
+    stream >> name >> text;
+    if (text.size() > TRumor::s_kMaxTextLen)
+        text.erase(TRumor::s_kMaxTextLen);
+    rumor.setNameAndText(name, text);
+    return stream;
+}
+
+TRawOStream& operator<<(TRawOStream& stream, const TRumor& rumor)
+{
+    stream << rumor.getName() << rumor.getText();
+    return stream;
+}
+
+void TPlayerInfo::setBehaviorType(TBehaviorType newBehaviorType)
+{
+#line 551
+    assert(newBehaviorType >= 0 && newBehaviorType < s_kNumBehaviorTypes);
+    _m_behaviorType = newBehaviorType;
+}
+
+void TTeamInfo::setNumTeams(unsigned int newNumTeams)
+{
+#line 565
+    assert(_m_bHasTeams);
+    assert(newNumTeams >= s_kMinTeams && newNumTeams <= s_kMaxTeams);
+    _m_numTeams = newNumTeams;
+}
+
+void TTeamInfo::setPlayerTeam(TPlayer player, unsigned int newTeam)
+{
+#line 574
+    assert(_m_bHasTeams);
+    assert(player >= 0 && player < kNumPlayers);
+    assert(newTeam < _m_numTeams);
+    _m_aPlayerTeam[player] = newTeam;
+}
+
+unsigned int TTeamInfo::getPlayerTeam(TPlayer player) const
+{
+#line 584
+    assert(_m_bHasTeams);
+    assert(player >= 0 && player < kNumPlayers);
+    return _m_aPlayerTeam[player];
+}
+
+TRawIStream& operator>>(TRawIStream& stream, TTeamInfo& teamInfo)
+{
+    signed char numTeams;
+    stream >> numTeams;
+    if (numTeams == 0) {
+        teamInfo._m_bHasTeams = false;
+        teamInfo._m_numTeams = 0;
+        fill(teamInfo._m_aPlayerTeam.begin(), teamInfo._m_aPlayerTeam.end(), 0U);
+    } else {
+#line 606
+        assert(numTeams >= TTeamInfo::s_kMinTeams && numTeams <= TTeamInfo::s_kMaxTeams);
+        teamInfo._m_bHasTeams = true;
+        teamInfo._m_numTeams = numTeams;
+        for (unsigned int player = 0; player < kNumPlayers; player++) {
+            signed char playerTeam;
+            stream >> playerTeam;
+#line 615
+            assert(playerTeam >= 0 && playerTeam < numTeams);
+            teamInfo._m_aPlayerTeam[player] = playerTeam;
+        }
+    }
+    return stream;
+}
+
+TRawOStream& operator<<(TRawOStream& stream, const TTeamInfo& teamInfo)
+{
+    if (!teamInfo._m_bHasTeams) {
+        stream << static_cast<signed char>(0);
+    } else {
+#line 630
+        assert(teamInfo._m_numTeams >= TTeamInfo::s_kMinTeams && teamInfo._m_numTeams <= TTeamInfo::s_kMaxTeams);
+        stream << reinterpret_cast<const signed char&>(teamInfo._m_numTeams);
+        for (unsigned int player = 0; player < kNumPlayers; player++)
+            stream << reinterpret_cast<const signed char&>(teamInfo._m_aPlayerTeam[player]);
+    }
+    return stream;
+}
+
+TCreateObjFailureTooManyHeroesOnMap::TCreateObjFailureTooManyHeroesOnMap()
+    : TCreateObjFailureTooManyInstancesOfTypeOnMap(HERO, TGameMap::_TImpl::s_kMaxHeroesOnMap)
+{
+}
+
+TCreateObjFailureTooManyTownsOnMap::TCreateObjFailureTooManyTownsOnMap()
+    : TCreateObjFailureTooManyInstancesOfTypeOnMap(TOWN, TGameMap::_TImpl::s_kMaxTownsOnMap)
+{
+}
+
+TCreateObjFailureTooManyMinesOnMap::TCreateObjFailureTooManyMinesOnMap()
+    : TCreateObjFailureTooManyInstancesOfTypeOnMap(MINE, TGameMap::_TImpl::s_kMaxMinesOnMap)
+{
+}
+
+TCreateObjFailureTooManyGeneratorsOnMap::TCreateObjFailureTooManyGeneratorsOnMap()
+    : TCreateObjFailureTooManyInstancesOfTypeOnMap(CREATURE_GENERATOR_1, TGameMap::_TImpl::s_kMaxGeneratorsOnMap)
+{
+}
+
+TCreateObjFailureTooManySignsOnMap::TCreateObjFailureTooManySignsOnMap()
+    : TCreateObjFailureTooManyInstancesOfTypeOnMap(SIGN, TGameMap::_TImpl::s_kMaxSignsOnMap)
+{
+}
+
+TPlaceObjFailureTooManyHeroesOnMap::TPlaceObjFailureTooManyHeroesOnMap()
+    : TPlaceObjFailureTooManyInstancesOfTypeOnMap(HERO, TGameMap::_TImpl::s_kMaxHeroesOnMap)
+{
+}
+
+TPlaceObjFailureTooManyTownsOnMap::TPlaceObjFailureTooManyTownsOnMap()
+    : TPlaceObjFailureTooManyInstancesOfTypeOnMap(TOWN, TGameMap::_TImpl::s_kMaxTownsOnMap)
+{
+}
+
+TPlaceObjFailureTooManyMinesOnMap::TPlaceObjFailureTooManyMinesOnMap()
+    : TPlaceObjFailureTooManyInstancesOfTypeOnMap(MINE, TGameMap::_TImpl::s_kMaxMinesOnMap)
+{
+}
+
+TPlaceObjFailureTooManyGeneratorsOnMap::TPlaceObjFailureTooManyGeneratorsOnMap()
+    : TPlaceObjFailureTooManyInstancesOfTypeOnMap(CREATURE_GENERATOR_1, TGameMap::_TImpl::s_kMaxGeneratorsOnMap)
+{
+}
+
+TPlaceObjFailureTooManySignsOnMap::TPlaceObjFailureTooManySignsOnMap()
+    : TPlaceObjFailureTooManyInstancesOfTypeOnMap(SIGN, TGameMap::_TImpl::s_kMaxSignsOnMap)
+{
+}
 
 class TGameMap::TLayer::_TImpl {
     // A slot in the layer's object list: the doubly linked order of placed

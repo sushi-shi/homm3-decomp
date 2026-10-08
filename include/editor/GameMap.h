@@ -16,6 +16,7 @@
 #define HOMM3_EDITOR_GAMEMAP_H
 
 #include <bitset>
+#include <exception>
 #include <iterator>
 #include <stddef.h>
 #include <set>
@@ -26,6 +27,7 @@
 #include "terrain_type.h"
 #include "exceptions.h"
 #include "editor/Array.h"
+#include "editor/MapObjectRef.h"
 #include "editor/Player.h"
 #include "editor/Point.h"
 #include "editor/RefCountingPtr.h"
@@ -42,10 +44,6 @@ class TTown;
 class TVictoryCondition;
 class TLossCondition;
 class TTimedEvent;
-class TRumor;
-class TPlayerInfo;
-class TTeamInfo;
-class TMapObjectRef;
 
 enum TRiverType {
     kNumRiverTypes = 5
@@ -56,6 +54,196 @@ enum TRoadType {
 };
 
 typedef unsigned int TMapLayerObjectID;
+
+// A rumor: a name and a text of at most s_kMaxTextLen characters, either
+// both empty or both with something besides white space.
+class TRumor {
+public:
+    class TImportTextFailure : public exception {
+    };
+
+    static const unsigned int s_kMaxTextLen = 300;
+
+    const string& getName() const { return _m_name; }
+    const string& getText() const { return _m_text; }
+    void setNameAndText(const string& newName, const string& newText);
+
+    void importText(istream* pIStream);
+    void exportText(ostream* pOStream) const;
+
+private:
+    string _m_name;
+    string _m_text;
+};
+
+TRawIStream& operator>>(TRawIStream& stream, TRumor& rumor);
+TRawOStream& operator<<(TRawOStream& stream, const TRumor& rumor);
+
+// Who may play a player, how the computer plays it, whether a hero is
+// generated at its main town, and that town.
+class TPlayerInfo {
+public:
+    enum TBehaviorType {
+    };
+
+    static const int s_kNumBehaviorTypes = 4;
+
+    TPlayerInfo()
+        : _m_bHumanPlayable(false), _m_bComputerPlayable(false), _m_behaviorType(TBehaviorType(0)),
+          _m_bGenerateHero(false) {}
+
+    bool getBPresent() const { return _m_bHumanPlayable || _m_bComputerPlayable; }
+    bool getBHumanPlayable() const { return _m_bHumanPlayable; }
+    void setBHumanPlayable(bool bPlayable) { _m_bHumanPlayable = bPlayable; }
+    bool getBComputerPlayable() const { return _m_bComputerPlayable; }
+    void setBComputerPlayable(bool bPlayable) { _m_bComputerPlayable = bPlayable; }
+    TBehaviorType getBehaviorType() const { return _m_behaviorType; }
+    void setBehaviorType(TBehaviorType newBehaviorType);
+    bool getBGenerateHero() const { return _m_bGenerateHero; }
+    void setBGenerateHero(bool bGenerate) { _m_bGenerateHero = bGenerate; }
+    const TMapObjectRef& getMainTownRef() const { return _m_mainTownRef; }
+    void setMainTownRef(const TMapObjectRef& newMainTownRef) { _m_mainTownRef = newMainTownRef; }
+
+private:
+    bool _m_bHumanPlayable;
+    bool _m_bComputerPlayable;
+    TBehaviorType _m_behaviorType;
+    bool _m_bGenerateHero;
+    TMapObjectRef _m_mainTownRef;
+};
+
+// The alliances: whether the map has teams, how many, and each player's.
+class TTeamInfo {
+public:
+    static const unsigned int s_kMinTeams = 2;
+    static const unsigned int s_kMaxTeams = 7;
+
+    TTeamInfo() : _m_bHasTeams(false), _m_numTeams(s_kMinTeams), _m_aPlayerTeam(0) {}
+
+    bool getBHasTeams() const { return _m_bHasTeams; }
+    void setBHasTeams(bool bHasTeams) { _m_bHasTeams = bHasTeams; }
+    unsigned int getNumTeams() const { return _m_numTeams; }
+    void setNumTeams(unsigned int newNumTeams);
+    unsigned int getPlayerTeam(TPlayer player) const;
+    void setPlayerTeam(TPlayer player, unsigned int newTeam);
+
+    friend TRawIStream& operator>>(TRawIStream& stream, TTeamInfo& teamInfo);
+    friend TRawOStream& operator<<(TRawOStream& stream, const TTeamInfo& teamInfo);
+
+private:
+    bool _m_bHasTeams;
+    unsigned int _m_numTeams;
+    TArray<unsigned int, kNumPlayers> _m_aPlayerTeam;
+};
+
+// Why an object could not be created...
+class TCreateObjectFailure : public exception {
+};
+
+class TCreateObjFailureTooManyInstancesOfTypeOnMap : public TCreateObjectFailure {
+public:
+    TCreateObjFailureTooManyInstancesOfTypeOnMap(int type, unsigned int cap) : _m_type(type), _m_cap(cap) {}
+
+    int getType() const { return _m_type; }
+    unsigned int getCap() const { return _m_cap; }
+
+private:
+    int _m_type;
+    unsigned int _m_cap;
+};
+
+class TCreateObjFailureNoAvailableHeroesInClass : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureNoOwnerForHero : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureTooManyHeroesOnMap : public TCreateObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TCreateObjFailureTooManyHeroesOnMap();
+};
+
+class TCreateObjFailureTooManyHeroesForPlayer : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureTooManyTownsOnMap : public TCreateObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TCreateObjFailureTooManyTownsOnMap();
+};
+
+class TCreateObjFailureHolyGrailAlreadyPlaced : public TCreateObjectFailure {
+};
+
+class TCreateObjFailureTooManyMinesOnMap : public TCreateObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TCreateObjFailureTooManyMinesOnMap();
+};
+
+class TCreateObjFailureTooManyGeneratorsOnMap : public TCreateObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TCreateObjFailureTooManyGeneratorsOnMap();
+};
+
+class TCreateObjFailureTooManySignsOnMap : public TCreateObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TCreateObjFailureTooManySignsOnMap();
+};
+
+// ...and why it could not be placed.
+class TPlaceObjectFailure : public exception {
+};
+
+class TPlaceObjFailureTooManyInstancesOfTypeOnMap : public TPlaceObjectFailure {
+public:
+    TPlaceObjFailureTooManyInstancesOfTypeOnMap(int type, unsigned int cap) : _m_type(type), _m_cap(cap) {}
+
+    int getType() const { return _m_type; }
+    unsigned int getCap() const { return _m_cap; }
+
+private:
+    int _m_type;
+    unsigned int _m_cap;
+};
+
+class TPlaceObjFailureInvalidPlacement : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailureNoAvailableHeroesInClass : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailureTooManyHeroesOnMap : public TPlaceObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TPlaceObjFailureTooManyHeroesOnMap();
+};
+
+class TPlaceObjFailureTooManyHeroesForPlayer : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailureTooManyTownsOnMap : public TPlaceObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TPlaceObjFailureTooManyTownsOnMap();
+};
+
+class TPlaceObjFailureHolyGrailTooCloseToEdge : public TPlaceObjFailureInvalidPlacement {
+};
+
+class TPlaceObjFailureHolyGrailAlreadyPlaced : public TPlaceObjectFailure {
+};
+
+class TPlaceObjFailureTooManyMinesOnMap : public TPlaceObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TPlaceObjFailureTooManyMinesOnMap();
+};
+
+class TPlaceObjFailureTooManyGeneratorsOnMap : public TPlaceObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TPlaceObjFailureTooManyGeneratorsOnMap();
+};
+
+class TPlaceObjFailureTooManySignsOnMap : public TPlaceObjFailureTooManyInstancesOfTypeOnMap {
+public:
+    TPlaceObjFailureTooManySignsOnMap();
+};
 
 class TGameMap {
     class _TImpl;
