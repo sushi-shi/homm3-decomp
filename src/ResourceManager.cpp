@@ -94,8 +94,6 @@ void RemapGraphics()
             }
             break;
         }
-        case RESOURCE_TYPE_SPRITE:
-        case RESOURCE_TYPE_SPRITE_DEFINITION:
         case RESOURCE_TYPE_CREATURE:
         case RESOURCE_TYPE_ADVENTURE_OBJECT:
         case RESOURCE_TYPE_HERO:
@@ -142,8 +140,6 @@ void SaturateGraphics()
             }
             break;
         }
-        case RESOURCE_TYPE_SPRITE:
-        case RESOURCE_TYPE_SPRITE_DEFINITION:
         case RESOURCE_TYPE_CREATURE:
         case RESOURCE_TYPE_ADVENTURE_OBJECT:
         case RESOURCE_TYPE_HERO:
