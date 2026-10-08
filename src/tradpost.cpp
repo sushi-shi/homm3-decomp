@@ -2230,7 +2230,7 @@ void TBuyArtifactWindow::update(bool update)
         else
             word = (*g_generalText)[GENERAL_TEXT_UNIT];
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ARTIFACT_FOR_RESOURCE_FORMAT],
-                g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
+                akArtifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
         if (g_leftDenominated)
@@ -2429,7 +2429,7 @@ void TSellArtifactWindow::update(bool update)
                 rightQty,
                 (rightQty > 1) ? g_generalText->GetText(GENERAL_TEXT_UNITS)
                                 : g_generalText->GetText(GENERAL_TEXT_UNIT),
-                g_resourceNames[g_leftResource], g_artifactTraits[art].m_name);
+                g_resourceNames[g_leftResource], akArtifactTraits[art].m_name);
     } else if (g_leftDenominated) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
     } else {
@@ -2596,10 +2596,10 @@ void TSellCreatureWindow::update(bool update)
                              : (*g_generalText)[GENERAL_TEXT_UNIT],
                 g_resourceNames[g_leftResource], rightQty,
                 rightQty > 1
-                    ? g_creatureTypeTraits[
+                    ? akCreatureTypeTraits[
                           g_marketHero->m_army.m_armies[g_selectedArtifact]]
                           .m_pluralName
-                    : g_creatureTypeTraits[
+                    : akCreatureTypeTraits[
                           g_marketHero->m_army.m_armies[g_selectedArtifact]]
                           .m_name);
     } else {
@@ -2873,7 +2873,7 @@ void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
     float leftValue = static_cast<float>(g_artifactMarketValues[inLeftResource + 1])
         * g_artifactPurchaseEfficency[g_marketCount];
     float artifactValue = static_cast<float>(
-        g_artifactTraits[g_marketArtifacts[inRightResource]].m_cost);
+        akArtifactTraits[g_marketArtifacts[inRightResource]].m_cost);
     if (leftValue == 0.0f || artifactValue == 0.0f) {
         *inTradeRatio = 0;
         *inMaxUnitsToTrade = 0;
@@ -2900,7 +2900,7 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
         artifact = g_marketHero->getBackpack(inLeftResource - 18);
 
     float leftValue =
-        static_cast<float>(g_artifactTraits[artifact.m_artifactId].m_cost)
+        static_cast<float>(akArtifactTraits[artifact.m_artifactId].m_cost)
         * g_artifactPurchaseEfficency[g_marketCount];
     float marketValue =
         static_cast<float>(g_marketValues[inRightResource + 1]);
@@ -2924,7 +2924,7 @@ DC_ADDRESS(0x18b114, 0x1d4)
 MAC_ADDRESS(0x1f8574, 0x1e4)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies
 void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
-    float denominator = static_cast<float>(g_creatureTypeTraits[
+    float denominator = static_cast<float>(akCreatureTypeTraits[
                             g_marketHero->m_army.m_armies[inLeftResource]].m_cost[6])
                       * g_creatureSaleEfficency[g_marketCount];
     float ratio = static_cast<float>(g_marketValues[inRightResource + 1]) / denominator;
@@ -3518,7 +3518,7 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
         if (art == ARTIFACT_NONE)
             strcpy(g_text, "");
         else
-            strcpy(g_text, g_artifactTraits[art].m_name);
+            strcpy(g_text, akArtifactTraits[art].m_name);
         break;
     }
     case MARKET_COMMAND_ID: strcpy(g_text, g_buyArtifactWindowHelp[4].m_text); break;
@@ -3750,7 +3750,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
                                  % g_marketHero->getNumberInBackpack(1);
             artifact = g_marketHero->getBackpack(backpackIndex);
         }
-        strcpy(g_text, g_artifactTraits[artifact.m_artifactId].m_name);
+        strcpy(g_text, akArtifactTraits[artifact.m_artifactId].m_name);
         break;
     }
     default: strcpy(g_text, ""); break;

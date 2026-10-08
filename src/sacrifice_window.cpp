@@ -86,7 +86,7 @@ void type_artifact_offering::set(const type_artifact& artifact, TArtifactSlot sl
                                  const hero* owner)
 {
     long artifactClass =
-        g_artifactTraits[artifact.m_artifactId].m_artifactClass;
+        akArtifactTraits[artifact.m_artifactId].m_artifactClass;
     m_artifactId = artifact.m_artifactId;
     m_extra = artifact.m_extra;
     m_source = slot;
@@ -298,7 +298,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
-    int townType = g_heroClasses[m_currentHero->m_heroClass].m_townType;
+    int townType = akHeroClassTraits[m_currentHero->m_heroClass].m_townType;
     m_canSacrificeArtifacts =
         !(townType > TOWN_TOWER && townType < TOWN_STRONGHOLD);
     m_canSacrificeCreatures = townType > TOWN_TOWER;
@@ -735,7 +735,7 @@ void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
         slotWidget->setIconFrame(artifact.m_artifactId);
         slotWidget->setVisible(1);
         slotWidget->setHelpText(
-            g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
+            akArtifactTraits[artifact.m_artifactId].m_name, 0, 1);
     }
 }
 
@@ -764,7 +764,7 @@ void type_sacrifice_window::updateSlot(long slot)
 
     if (artifact.m_artifactId == ARTIFACT_NONE) {
         m_slotWidgets[slot]->setHelpText(
-            g_artifactSlotTraits[slot].m_name, 0, 1);
+            akArtifactSlotTraits[slot].m_name, 0, 1);
     }
 }
 
@@ -845,7 +845,7 @@ DC_ADDRESS(0x125de0, 0x28)
 MAC_ADDRESS(0x1595e0, 0x34)
 long sacrificeValue(TCreatureType creature)
 {
-    return g_creatureTypeTraits[creature].m_aiValue / 40 * 5;
+    return akCreatureTypeTraits[creature].m_aiValue / 40 * 5;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:924
@@ -2276,7 +2276,7 @@ int type_skeleton_window::sacrifice(message& msg)
             sprintf(g_text,
                     DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
                                  "%skill.82M"),
-                    g_creatureTypeTraits[type].m_samplePrefix);
+                    akCreatureTypeTraits[type].m_samplePrefix);
             sample* newSample = ResourceManager::GetSample(g_text);
             window->m_deathSamples.push_back(newSample);
             g_soundManager->memorySample(newSample);

@@ -96,7 +96,7 @@ SSpellTraits g_spellTraitsImp[81] = {
     { -1, "Acid.wav", eSpellEffectPoof, 0x18, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 };
 
-DATA(0x00687f58) const SSpellTraits (&g_spellTraits)[81] = g_spellTraitsImp;
+DATA(0x00687f58) const SSpellTraits (&akSpellTraits)[81] = g_spellTraitsImp;
 
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);
@@ -106,7 +106,7 @@ DC_ADDRESS(0x14e278, 0x50)
 MAC_ADDRESS(0x18e73c, 0x7c)
 unsigned char spellTargetsASingleArmy(int spell, int sslevel)
 {
-    unsigned int flags = g_spellTraits[spell].m_flags;
+    unsigned int flags = akSpellTraits[spell].m_flags;
     unsigned int result;
     if ((flags & SPELL_TARGET_ALWAYS_SINGLE)
         || ((flags & SPELL_TARGET_MASS_AT_EXPERT) && sslevel <= 2)
@@ -120,7 +120,7 @@ unsigned char spellTargetsASingleArmy(int spell, int sslevel)
 VA(0x0059e090, 0xB7)
 DC_ADDRESS(0x14e2c8, 0xd4)
 MAC_ADDRESS(0x18e7b8, 0x13c)
-unsigned char initializeSpellTraitsTable()
+unsigned char InitializeSpellTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0068830c, spellTraitsSpreadsheetName,

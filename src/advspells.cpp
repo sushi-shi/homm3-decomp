@@ -47,7 +47,7 @@ void advManager::checkCastSpell()
 
     TAdventureObjectType objectType = currentHero->getSpecialTerrainObjectType();
     if (objectType == CURSED_GROUND) {
-        if (g_spellTraits[g_windowManager->m_dialogReturn].m_level > 1) {
+        if (akSpellTraits[g_windowManager->m_dialogReturn].m_level > 1) {
             normalDialog(
                 g_generalText->GetText(GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -160,7 +160,7 @@ DC_ADDRESS(0x021b84, 0x4d0)
 MAC_ADDRESS(0x01d364, 0x650)  // anchor-callee hero::find_summonable_boat + game::CreateBoat
 void advManager::summonBoat(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_SUMMON_BOAT];
+    const SSpellTraits& traits = akSpellTraits[SPELL_SUMMON_BOAT];
 
     hero* who = g_game->getCurrHero();
     if (who == 0)
@@ -264,7 +264,7 @@ DC_ADDRESS(0x022054, 0x206)
 MAC_ADDRESS(0x01d9b4, 0x310)  // anchor-vtable TSkuttleBoatWindow ctor/dtor
 void advManager::skuttleBoat(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_SCUTTLE_BOAT];
+    const SSpellTraits& traits = akSpellTraits[SPELL_SCUTTLE_BOAT];
 
     {
         TSkuttleBoatWindow skuttleWindow;
@@ -281,7 +281,7 @@ void advManager::skuttleBoat(TSkillMastery level)
     hero* who = g_game->getCurrHero();
 
     if (sRandom(1, 100)
-        <= g_spellTraits[SPELL_SCUTTLE_BOAT].m_masteryBonus[level]) {
+        <= akSpellTraits[SPELL_SCUTTLE_BOAT].m_masteryBonus[level]) {
         // The CONST get_map_center overload is the one retail calls here
         // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
         // one row, so the receiver cast costs no bytes and buys the name.
@@ -339,7 +339,7 @@ DC_ADDRESS(0x02225c, 0x2b4)
 MAC_ADDRESS(0x01dcc4, 0x404)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo
 void advManager::dimensionDoor(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_DIMENSION_DOOR];
+    const SSpellTraits& traits = akSpellTraits[SPELL_DIMENSION_DOOR];
     hero* who = g_game->getCurrHero();
     if (who->m_movePoints <= 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
@@ -443,7 +443,7 @@ DC_ADDRESS(0x022510, 0x3d6)
 MAC_ADDRESS(0x01e0c8, 0x6c0)  // anchor-vtable TTownGateWindow ctor/dtor
 void advManager::townGate(TSkillMastery level)
 {
-    const SSpellTraits& traits = g_spellTraits[SPELL_TOWN_PORTAL];
+    const SSpellTraits& traits = akSpellTraits[SPELL_TOWN_PORTAL];
     const int movementCost[4] = {300, 300, 300, 200};
     hero* who = g_game->getCurrHero();
 
@@ -543,7 +543,7 @@ MAC_ADDRESS(0x01e798, 0x138)
 void advManager::identify(TSkillMastery level)
 {
     hero* who = g_game->getCurrHero();
-    SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_VISIONS].m_sample);
+    SAMPLE2 sample = loadPlaySample(akSpellTraits[SPELL_VISIONS].m_sample);
     who->m_identifyLevel = level;
     if (g_game->isLocalHuman(who->m_owner)) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_VISIONS_CAST),
@@ -561,7 +561,7 @@ DC_ADDRESS(0x0229c4, 0x7a)
 MAC_ADDRESS(0x01e8d0, 0x128)
 void advManager::waterWalk(TSkillMastery level)
 {
-    const SSpellTraits* traits = &g_spellTraits[SPELL_WATER_WALK];
+    const SSpellTraits* traits = &akSpellTraits[SPELL_WATER_WALK];
     hero* who = g_game->getCurrHero();
     if (who->canWalkOnWater(0))
         return;
@@ -580,7 +580,7 @@ MAC_ADDRESS(0x01e9f8, 0xc8)
 void advManager::disguise(TSkillMastery level)
 {
     hero* who = g_game->getCurrHero();
-    SAMPLE2 sample = loadPlaySample(g_spellTraits[SPELL_DISGUISE].m_sample);
+    SAMPLE2 sample = loadPlaySample(akSpellTraits[SPELL_DISGUISE].m_sample);
     who->m_disguiseLevel = level;
     who->useSpell(who->getManaCost(SPELL_DISGUISE));
     waitEndSample(sample, -1);
@@ -595,7 +595,7 @@ DC_ADDRESS(0x022a9c, 0xec)
 MAC_ADDRESS(0x01eac0, 0x160)
 void advManager::flight(TSkillMastery level)
 {
-    const SSpellTraits* traits = &g_spellTraits[SPELL_FLY];
+    const SSpellTraits* traits = &akSpellTraits[SPELL_FLY];
     hero* who = g_game->getCurrHero();
     if (who->isFlying(0))
         return;

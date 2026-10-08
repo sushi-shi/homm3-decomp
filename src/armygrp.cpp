@@ -109,7 +109,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 
     sprintf(g_text,
             (*g_generalText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT],
-            g_creatureTypeTraits[m_creature].m_pluralName);
+            akCreatureTypeTraits[m_creature].m_pluralName);
     m_widgets.push_back(new textWidget(
         0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
         1, 1, 0, 8));
@@ -122,7 +122,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
     m_widgets.push_back(new bitmapBorder(
         177, 54, 100, 130, -1, g_text, 0x800));
 
-    strcpy(g_text, g_creatureTypeTraits[m_creature].m_spriteName);
+    strcpy(g_text, akCreatureTypeTraits[m_creature].m_spriteName);
     m_widgets.push_back(new iconWidget(
         20, 54, 100, 130, 2, g_text, 0, 2, 0, 0, 0x12));
     m_widgets.push_back(new iconWidget(
@@ -261,7 +261,7 @@ void TSplitWindow::setRolloverText(int codeY)
     case DIALOG_RETURN_SPLIT_ACCEPT:
         sprintf(g_text,
                 g_generalText->GetText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
-                g_creatureTypeTraits[m_creature].m_pluralName);
+                akCreatureTypeTraits[m_creature].m_pluralName);
         break;
     default:
         strcpy(g_text, "");
@@ -395,9 +395,9 @@ MAC_ADDRESS(0x0579bc, 0x574)  // linkorder
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
 {
     float chance;
-    const TCreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
+    const TCreatureTypeTraits* creatureRec = &akCreatureTypeTraits[targetArmyType];
     unsigned int attrs = creatureRec->m_attributes;
-    const SSpellTraits* spellRec = &g_spellTraits[spell];
+    const SSpellTraits* spellRec = &akSpellTraits[spell];
     if (targetHero && spellRec->m_level <= 4
         && targetHero->isWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
         return 0.0f;  // Power of the Dragon Father
@@ -629,7 +629,7 @@ unsigned char armyGroup::hasAllUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (!(g_creatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead))
+        if (!(akCreatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead))
             return 0;
     }
     return 1;
@@ -646,7 +646,7 @@ unsigned char armyGroup::hasSomeUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (g_creatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead)
+        if (akCreatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead)
             return 1;
     }
     return 0;
@@ -694,7 +694,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         int creature = m_armies[i];
         if (creature == CREATURE_NONE)
             continue;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
         int alignment = g_game->getAlignment(creature);
@@ -737,7 +737,7 @@ long armyGroup::getAIValue() const
     long value = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] != CREATURE_NONE)
-            value += g_creatureTypeTraits[m_armies[i]].m_aiValue * m_numTroops[i];
+            value += akCreatureTypeTraits[m_armies[i]].m_aiValue * m_numTroops[i];
     }
     return value;
 }
@@ -938,7 +938,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
-    if (g_creatureTypeTraits[m_armies[index]].m_attributes & g_ctaNoMorale)
+    if (akCreatureTypeTraits[m_armies[index]].m_attributes & g_ctaNoMorale)
         return 0;
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
@@ -1193,7 +1193,7 @@ void armyGroup::mergeArmies(armyGroup& source)
         for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
             if (m_armies[i] == CREATURE_NONE)
                 break;
-            long value = g_creatureTypeTraits[m_armies[i]].m_aiValue
+            long value = akCreatureTypeTraits[m_armies[i]].m_aiValue
                          * m_numTroops[i];
             if (weakestIndex < 0 || weakestValue >= value) {
                 weakestValue = value;
@@ -1203,7 +1203,7 @@ void armyGroup::mergeArmies(armyGroup& source)
         for (int j = 0; j < ARMY_GROUP_SLOT_COUNT; ++j) {
             if (source.m_armies[j] == CREATURE_NONE)
                 continue;
-            long gain = g_creatureTypeTraits[source.m_armies[j]].m_aiValue
+            long gain = akCreatureTypeTraits[source.m_armies[j]].m_aiValue
                         * source.m_numTroops[j];
             if (!canJoin(source.m_armies[j]))
                 gain -= weakestValue;
@@ -1250,7 +1250,7 @@ std::string armyGroup::getMoraleDescription(
     // reference makes VC6 materialise the ADDRESS instead - one extra
     // `add` per use, a stack slot of its own, and the table base loaded
     // BEFORE the index chain rather than after it.
-    if (g_creatureTypeTraits[creature].m_attributes & g_ctaNoMorale)
+    if (akCreatureTypeTraits[creature].m_attributes & g_ctaNoMorale)
         return g_moraleInfo[28];
 
     int currentMorale = getMorale(
@@ -1396,7 +1396,7 @@ std::string armyGroup::getMoraleDescription(
         if (currentMorale > 0) {
             result = formatString(
                 g_moraleInfo[34],
-                g_artifactTraits[ARTIFACT_SPIRIT_OF_OPPRESSION].m_name);
+                akArtifactTraits[ARTIFACT_SPIRIT_OF_OPPRESSION].m_name);
             currentMorale = 0;
         }
     }
@@ -1469,7 +1469,7 @@ std::string armyGroup::getLuckDescription(
         || (enemyHero && enemyHero->isWieldingArtifact(
                            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
         return formatString(g_luckInfo[23],
-                             g_artifactTraits[
+                             akArtifactTraits[
                                  ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR].m_name);
     }
 

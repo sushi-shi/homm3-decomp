@@ -141,7 +141,7 @@ void strip::drawOwner(int frame)
         } else {
             msg.m_codeY = 122;
             msg.m_codeX = widget::WIDGET_SET_IMAGE;
-            msg.m_extraText = g_heroTraits[frame].m_largePortraitName;
+            msg.m_extraText = akHeroTraits[frame].m_largePortraitName;
             m_win->broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_SET_STATUS;
             msg.m_extra = widget::WIDGET_DRAWN;
@@ -167,7 +167,7 @@ void strip::drawOwner(int frame)
         // Keep the direct assignment and both broadcasts (0x19b434/0x19b450);
         // an early portrait-name local changes Windows scheduling and cleanup.
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
-        msg.m_extraText = g_heroTraits[frame].m_largePortraitName;
+        msg.m_extraText = akHeroTraits[frame].m_largePortraitName;
         m_win->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;

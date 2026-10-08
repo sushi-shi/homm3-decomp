@@ -850,7 +850,7 @@ void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
     currentHero->checkLevel();
     if (humanPlayer) {
         sprintf(g_text, (*g_adventureEventText)[ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT],
-                g_artifactTraits[artifact].m_name);
+                akArtifactTraits[artifact].m_name);
         normalDialog(g_text, 1, -1, -1,
                      8, artifact, -1, 0, -1, 0, -1, 0);
     }
@@ -874,11 +874,11 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
             strcpy(resourceName, g_resourceNames[resourceType]);
             resourceName[0] = tolower(resourceName[0]);
             sprintf(g_text, dialogText,
-                    g_artifactTraits[artifact].m_name,
+                    akArtifactTraits[artifact].m_name,
                     resourceName);
         } else {
             sprintf(g_text, dialogText,
-                    g_artifactTraits[artifact].m_name);
+                    akArtifactTraits[artifact].m_name);
         }
         normalDialog(g_text, 2, -1, -1, 8, artifact,
                      -1, 0, -1, 0, -1, 0);
@@ -994,7 +994,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT],
-                    g_artifactTraits[artifactId].m_name);
+                    akArtifactTraits[artifactId].m_name);
             normalDialog(g_text, 1, -1, -1, 8, artifactId,
                          -1, 0, -1, 0, -1, 0);
         }
@@ -1028,7 +1028,7 @@ void advManager::doArtifactSkillRequirement(
         doEventFreeArtifact(currentHero, cell, point, humanPlayer);
     } else if (humanPlayer) {
         short artifact = cell->getArtifactIndex();
-        sprintf(g_text, dialogText, g_artifactTraits[artifact].m_name);
+        sprintf(g_text, dialogText, akArtifactTraits[artifact].m_name);
         normalDialog(g_text, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
     }
@@ -1319,7 +1319,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
 
     if (currentHero->isWieldingArtifact(0)) {
         for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
-            if (g_spellTraits[blackBox->m_spells[n]].m_level
+            if (akSpellTraits[blackBox->m_spells[n]].m_level
                     <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
                 && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
                 if (humanPlayer) {
@@ -1759,14 +1759,14 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                 if (creature == CREATURE_NONE)
                     continue;
 
-                if (g_creatureTypeTraits[creature].m_level != 0) {
+                if (akCreatureTypeTraits[creature].m_level != 0) {
                     canRecruit = true;
                     continue;
                 }
 
                 if (currentGenerator.m_population[i] == 0) {
                     result += formatString((*g_generalText)[GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT],
-                        g_creatureTypeTraits[creature].m_pluralName);
+                        akCreatureTypeTraits[creature].m_pluralName);
                 } else if (!currentHero->m_army.add(
                                creature, currentGenerator.m_population[i],
                                -1)) {
@@ -2124,10 +2124,10 @@ DC_ADDRESS(0x09cdc0, 0x48)
 inline bool spell_level_order::operator()(ESpellId first,
                                           ESpellId second) const
 {
-    if (g_spellTraits[first].m_level == g_spellTraits[second].m_level)
-        return strcmp(g_spellTraits[first].m_name,
-                      g_spellTraits[second].m_name) < 0;
-    return g_spellTraits[first].m_level > g_spellTraits[second].m_level;
+    if (akSpellTraits[first].m_level == akSpellTraits[second].m_level)
+        return strcmp(akSpellTraits[first].m_name,
+                      akSpellTraits[second].m_name) < 0;
+    return akSpellTraits[first].m_level > akSpellTraits[second].m_level;
 }
 
 // The two events.obj/philai.obj helpers this handler needs. 0x4a2940 is
@@ -2232,14 +2232,14 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
              spell = static_cast<ESpellId>(spell + 1)) {
             if (firstHero->isInSpellbook(spell)) {
                 if (!secondHero->isInSpellbook(spell)
-                    && g_spellTraits[spell].m_level <= secondSpellLevel) {
+                    && akSpellTraits[spell].m_level <= secondSpellLevel) {
                     secondHero->addSpell(spell);
                     if (g_currentPlayer->isLocalHuman())
                         spellsTaught.push_back(spell);
                 }
             } else if (secondHero->isInSpellbook(spell)) {
                 if (!firstHero->isInSpellbook(spell)
-                    && g_spellTraits[spell].m_level <= firstSpellLevel) {
+                    && akSpellTraits[spell].m_level <= firstSpellLevel) {
                     firstHero->addSpell(spell);
                     if (g_currentPlayer->isLocalHuman())
                         spellsLearned.push_back(spell);
@@ -2285,7 +2285,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
                 else
                     msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
-            msg += g_spellTraits[spellsLearned[i]].m_name;
+            msg += akSpellTraits[spellsLearned[i]].m_name;
         }
         msg += formatString((*g_generalText)[GENERAL_TEXT_FROM_HERO_FORMAT], secondHero->m_name);
     }
@@ -2308,7 +2308,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
                 else
                     msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
-            msg += g_spellTraits[spellsTaught[i]].m_name;
+            msg += akSpellTraits[spellsTaught[i]].m_name;
         }
         msg += formatString((*g_generalText)[GENERAL_TEXT_TO_HERO_FORMAT], secondHero->m_name);
     }
@@ -2770,7 +2770,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     char text[500];
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
             g_adventureEventText->GetText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
-            g_spellTraits[spell].m_name);
+            akSpellTraits[spell].m_name);
     cell->setPyramid(0, ESpellId(spell));
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
@@ -2779,7 +2779,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
                               ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK_SUFFIX));
             normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-    } else if (g_spellTraits[spell].m_level
+    } else if (akSpellTraits[spell].m_level
                > currentHero->getSecondarySkill(eSecSkillWisdom) + 2) {
         if (humanPlayer) {
             strcat(text, g_adventureEventText->GetText(
@@ -2965,7 +2965,7 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
     if (award == const_scholar_spell) {
         SpellID spell = info->getScholarSpell();
         if (currentHero->isInSpellbook(spell)
-            || g_spellTraits[spell].m_level
+            || akSpellTraits[spell].m_level
                    > currentHero->getSecondarySkill(eSecSkillWisdom) + 2
             || !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             award = const_scholar_primary_skill;
@@ -3031,7 +3031,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT],
-                    g_artifactTraits[artifact.m_artifactId].m_name);
+                    akArtifactTraits[artifact.m_artifactId].m_name);
             normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                          0x24, 1000, -1, 0, -1, 0);
         }
@@ -3055,7 +3055,7 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_ARTIFACT_FORMAT],
-                    g_artifactTraits[cell->m_extraInfo].m_name);
+                    akArtifactTraits[cell->m_extraInfo].m_name);
             normalDialog(g_text, 1, -1, -1, 8, cell->m_extraInfo,
                          -1, 0, -1, 0, -1, 0);
         }
@@ -3090,7 +3090,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660344, twoWordFormat, "%s %s"),
                         (*g_adventureEventText)[ADV_EVENT_TEXT_SKELETON_ARTIFACT_PREFIX],
-                        g_artifactTraits[artifact.m_artifactId].m_name);
+                        akArtifactTraits[artifact.m_artifactId].m_name);
                 normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                              -1, 0, -1, 0, -1, 0);
             }
@@ -3142,7 +3142,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
     if (humanPlayer)
         result = formatString("%s'%s'.", prompt,
-                               g_spellTraits[spell].m_name);
+                               akSpellTraits[spell].m_name);
 
     g_game->setInfoFlag(type, g_netLocalGamePos);
     cell->setCellVisited(currentHero->m_owner);
@@ -3165,7 +3165,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    if (g_spellTraits[spell].m_level
+    if (akSpellTraits[spell].m_level
         > currentHero->getSecondarySkill(eSecSkillWisdom) + 2) {
         if (humanPlayer) {
             result += (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE_NO_WISDOM_SUFFIX];
@@ -3244,7 +3244,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT],
-                    g_spellTraits[spell].m_name);
+                    akSpellTraits[spell].m_name);
             normalDialog(g_text, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         }
         currentHero->giveArtifact(artifact, 1, 1);
@@ -3261,7 +3261,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
         } else {
             std::string text;
             text = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT],
-                                 g_spellTraits[spell].m_name);
+                                 akSpellTraits[spell].m_name);
             normalDialog(text.c_str(),
                          1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         }
@@ -3296,7 +3296,7 @@ void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
     if (humanPlayer) {
         sprintf(g_text,
                 (*g_adventureEventText)[ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT],
-                g_spellTraits[spell].m_name);
+                akSpellTraits[spell].m_name);
         normalDialog(g_text, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
     }
     currentHero->giveArtifact(scroll, 1, 1);
@@ -3465,7 +3465,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
             if (humanPlayer) {
                 sprintf(g_text,
                         (*g_adventureEventText)[ADV_EVENT_TEXT_TREASURE_ARTIFACT_FORMAT],
-                        g_artifactTraits[artifact.m_artifactId].m_name);
+                        akArtifactTraits[artifact.m_artifactId].m_name);
                 normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                              -1, 0, -1, 0, -1, 0);
             }
@@ -3576,7 +3576,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WAGON_ARTIFACT_FORMAT],
-                    g_artifactTraits[artifact.m_artifactId].m_name);
+                    akArtifactTraits[artifact.m_artifactId].m_name);
             // iResType1 8 is the artifact picture class, exactly as the
             // warrior's tomb passes it.
             normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
@@ -3787,7 +3787,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
         monType = TCreatureType(cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
-    int cost = g_creatureTypeTraits[monType].m_cost[GOLD] * numMons;
+    int cost = akCreatureTypeTraits[monType].m_cost[GOLD] * numMons;
 
     if (cost > g_game->m_players[currentHero->m_owner].m_resources[GOLD])
         return false;
@@ -3916,7 +3916,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
 
     float strengthRatio =
         static_cast<float>(aiApproximateStrength(currentHero))
-        / static_cast<float>(g_creatureTypeTraits[monType].m_aiValue
+        / static_cast<float>(akCreatureTypeTraits[monType].m_aiValue
                              * numTroops);
     short likeModifier = getLikeModifier(currentHero, monType);
     short diplomacy = currentHero->getSecondarySkill(eSecSkillDiplomacy);
@@ -4061,7 +4061,7 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT_FORMAT],
-                    g_artifactTraits[artifact.m_artifactId].m_name);
+                    akArtifactTraits[artifact.m_artifactId].m_name);
             // iResType1 8 is the artifact picture class; the water wheel's
             // twin passes a resource id in the same slot.
             normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
@@ -4183,7 +4183,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
             sprintf(g_text,
                     g_adventureEventText->GetText(
                         ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
-                    g_sSkillTraits[skill].m_name);
+                    akSSkillTraits[skill].m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
         }
@@ -4194,7 +4194,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
             sprintf(g_text,
                     g_adventureEventText->GetText(
                         ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
-                    g_sSkillTraits[skill].m_name);
+                    akSSkillTraits[skill].m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
         }
@@ -4204,7 +4204,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
         sprintf(g_text,
                 g_adventureEventText->GetText(
                     ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
-                g_sSkillTraits[skill].m_name);
+                akSSkillTraits[skill].m_name);
         // iResType1 20 is the secondary-skill picture class and the
         // extra is the icon slot: three mastery frames per skill, the
         // basic one being 3*skill + 3.
@@ -5365,14 +5365,14 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
             if (creature == CREATURE_NONE)
                 continue;
 
-            if (g_creatureTypeTraits[creature].m_level != 0) {
+            if (akCreatureTypeTraits[creature].m_level != 0) {
                 canRecruit = true;
                 continue;
             }
 
             if (currentGenerator.m_population[i] == 0) {
                 result += formatString((*g_generalText)[GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT],
-                    g_creatureTypeTraits[creature].m_pluralName);
+                    akCreatureTypeTraits[creature].m_pluralName);
             } else if (!who->m_army.add(creature,
                                       currentGenerator.m_population[i], -1)) {
                 result += formatString((*g_generalText)[GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT],
@@ -5432,8 +5432,8 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
         for (int i = 0; i < 7; i++) {
             int type = bank.m_guards.m_armies[i];
             if (type != CREATURE_NONE
-                && g_creatureTypeTraits[type].m_aiValue > best) {
-                best = g_creatureTypeTraits[type].m_aiValue;
+                && akCreatureTypeTraits[type].m_aiValue > best) {
+                best = akCreatureTypeTraits[type].m_aiValue;
                 leaderMonster = TCreatureType(type);
             }
         }
@@ -5473,7 +5473,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
             resources.push_back(resource);
             result = formatString(
                 (*g_adventureEventText)[ADV_EVENT_TEXT_ARTIFACT_NAME_WITH_ARTICLE_FORMAT],
-                g_artifactTraits[bank.m_artifacts[i]].m_name);
+                akArtifactTraits[bank.m_artifacts[i]].m_name);
             rewardStrings.push_back(result);
         }
 
@@ -5656,11 +5656,11 @@ int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMon
                      + point.m_y * 0x4386d + 0x25ea7;
     sRand(eventSeed);
 
-    int combatValue = g_creatureTypeTraits[monType].m_aiValue * *numMons;
+    int combatValue = akCreatureTypeTraits[monType].m_aiValue * *numMons;
     if (monType2 != CREATURE_NONE)
-        combatValue += g_creatureTypeTraits[monType2].m_aiValue * numMons2;
+        combatValue += akCreatureTypeTraits[monType2].m_aiValue * numMons2;
     if (monType3 != CREATURE_NONE)
-        combatValue += g_creatureTypeTraits[monType3].m_aiValue * numMons3;
+        combatValue += akCreatureTypeTraits[monType3].m_aiValue * numMons3;
 
     // DC events.cpp:5883 computes AI value * (primary skills + 40) / 40;
     // 5884 overwrites ratio with the unweighted double quotient. Mac
@@ -5802,7 +5802,7 @@ void advManager::doWhirlpool(hero* who)
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (who->m_army.m_numTroops[i] > 0) {
             int value = who->m_army.m_numTroops[i]
-                * g_creatureTypeTraits[who->m_army.m_armies[i]].m_baseFightValue;
+                * akCreatureTypeTraits[who->m_army.m_armies[i]].m_baseFightValue;
             if (value < weakestValue) {
                 weakestArmy = i;
                 weakestValue = value;

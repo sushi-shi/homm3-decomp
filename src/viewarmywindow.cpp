@@ -109,7 +109,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // (army.h's sMonInfo slice); the table row is the unmodified one.
     const TCreatureTypeTraits* stackTraits = &thisArmy->m_monInfo;
     const TCreatureTypeTraits& typeTraits =
-        g_creatureTypeTraits[thisArmy->m_creatureType];
+        akCreatureTypeTraits[thisArmy->m_creatureType];
 
     // 97.20%: 67/67 blocks exact, every reloc and call agrees, and the
     // sole residual is one stack slot - retail spills the shooting-attack
@@ -263,7 +263,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     }
     m_upgrade = upgrade;
 
-    const TCreatureTypeTraits* typeTraits = &g_creatureTypeTraits[m_armyType];
+    const TCreatureTypeTraits* typeTraits = &akCreatureTypeTraits[m_armyType];
     TCreatureTypeTraits traits = *typeTraits;
 
     // The widget vector NAMED AS A REFERENCE (three uses): 90.4657 ->
@@ -358,7 +358,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
 {
-    const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
+    const TCreatureTypeTraits* traits = &akCreatureTypeTraits[armyType];
 
     m_widgets.reserve(NWIDGETS);
 
@@ -617,22 +617,22 @@ int TViewArmyWindow::windowHandler(message& msg)
                         if (spell == SPELL_BIND)
                             sprintf(g_text,
                                     (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
-                                    g_spellTraits[spell].m_name,
+                                    akSpellTraits[spell].m_name,
                                     (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BIND]);
                         else if (spell == SPELL_BERSERK)
                             sprintf(g_text,
                                     (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
-                                    g_spellTraits[spell].m_name,
+                                    akSpellTraits[spell].m_name,
                                     (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BERSERK]);
                         else if (spell == SPELL_DISRUPTING_RAY)
                             sprintf(g_text,
                                     (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
-                                    g_spellTraits[spell].m_name,
+                                    akSpellTraits[spell].m_name,
                                     (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY]);
                         else
                             sprintf(g_text,
                                     (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT],
-                                    g_spellTraits[spell].m_name,
+                                    akSpellTraits[spell].m_name,
                                     m_duration[hoverID - AFFECTING_SPELLS_0_ID]);
                         rollover = g_text;
                     } else {

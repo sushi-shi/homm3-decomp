@@ -622,10 +622,10 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
         }
 
         if (((1 << direction) & 0x83) && srcCell->cellIsTrigger()
-                && g_adventureObjectTraits[srcCell->getMapObject()].m_enterableFromNorth == 0)
+                && akAdvObjectTypeTraits[srcCell->getMapObject()].m_enterableFromNorth == 0)
             flyingRequired = 1;
         if (((1 << direction) & 0x38) && destCell->cellIsTrigger()
-                && g_adventureObjectTraits[destCell->getMapObject()].m_enterableFromNorth == 0)
+                && akAdvObjectTypeTraits[destCell->getMapObject()].m_enterableFromNorth == 0)
             continue;
 
         if (terrain == eTerrainWater) {
@@ -823,7 +823,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
         }
 
         if (source.m_canStop || !destCell->m_isTrigger
-                || (g_adventureObjectTraits[destCell->m_type].m_blocksLanding == 0
+                || (akAdvObjectTypeTraits[destCell->m_type].m_blocksLanding == 0
                     && destCell->m_type != TOWN))
             pushPoint(source, dest, direction, cost, maxMobility,
                       dest.m_barrierValue, dest.m_monster,

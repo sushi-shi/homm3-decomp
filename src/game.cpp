@@ -564,12 +564,12 @@ void generator::grow(int unusedArg)
     m_guards.initialize();
     for (long i = 0; i < 4; i++) {
         if (m_type[i] != -1) {
-            m_population[i] = g_creatureTypeTraits[m_type[i]].m_growthRate;
+            m_population[i] = akCreatureTypeTraits[m_type[i]].m_growthRate;
             // DC game.cpp:614 records this traits assignment after the
             // population write.  That source order also makes VC6 retain
             // grow at both Complete call sites while preserving this body.
             const TCreatureTypeTraits* traits =
-                &g_creatureTypeTraits[m_type[i]];
+                &akCreatureTypeTraits[m_type[i]];
             if (traits->m_level >= 4)
                 m_guards.add(m_type[i], m_population[i] * 3, -1);
         }
@@ -2231,7 +2231,7 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
         weights[heroClass] =
-            g_heroClasses[heroClass].m_foundInTownType[alignment];
+            akHeroClassTraits[heroClass].m_foundInTownType[alignment];
     }
 
     for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
@@ -2271,13 +2271,13 @@ HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
         alignedCount = 0;
         for (heroClass = classKnight; heroClass < kNumHeroClasses;
              heroClass = THeroClass(heroClass + 1)) {
-            if (g_heroClasses[heroClass].m_townType == alignment)
+            if (akHeroClassTraits[heroClass].m_townType == alignment)
                 alignedCount += weights[heroClass];
         }
         if (alignedCount > 0) {
             for (heroClass = classKnight; heroClass < kNumHeroClasses;
                  heroClass = THeroClass(heroClass + 1)) {
-                if (g_heroClasses[heroClass].m_townType != alignment)
+                if (akHeroClassTraits[heroClass].m_townType != alignment)
                     weights[heroClass] = 0;
             }
         }
@@ -3655,12 +3655,12 @@ void game::giveTroopsToNeutralTown(int townId)
     if (townArmy.getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
 
-    long amount = g_creatureTypeTraits[creature].m_growthRate;
+    long amount = akCreatureTypeTraits[creature].m_growthRate;
     if (!townArmy.canJoin(creature)) {
         long worstArmy = -1;
-        long worstValue = g_creatureTypeTraits[creature].m_aiValue * amount;
+        long worstValue = akCreatureTypeTraits[creature].m_aiValue * amount;
         for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            long value = g_creatureTypeTraits[townArmy.m_armies[slot]].m_aiValue
+            long value = akCreatureTypeTraits[townArmy.m_armies[slot]].m_aiValue
                        * townArmy.m_numTroops[slot];
             if (value < worstValue) {
                 worstArmy = slot;
@@ -4190,7 +4190,7 @@ static void randomizeRefugeeCamp(NewmapCell* cell)
 {
     TCreatureType creature = g_game->getRandomMonster(0, 6);
     cell->m_objectIndex = creature;
-    cell->m_extraInfo = g_creatureTypeTraits[creature].m_growthRate;
+    cell->m_extraInfo = akCreatureTypeTraits[creature].m_growthRate;
 }
 
 // E:\gamedcs\game.cpp:4613.
@@ -4312,8 +4312,8 @@ static void randomizePyramid(NewmapCell* cell)
     std::vector<int> possibleSpells;
     int i;
     for (i = 0; i < 70; ++i) {
-        if (g_spellTraits[i].m_school != const_invalid_school
-            && g_spellTraits[i].m_level == g_pyramidSpellLevel
+        if (akSpellTraits[i].m_school != const_invalid_school
+            && akSpellTraits[i].m_level == g_pyramidSpellLevel
             && !g_game->m_spellDisabledInfo[i])
             possibleSpells.push_back(i);
     }
@@ -5203,7 +5203,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     int artifact;
     for (artifact = 0; artifact < 144; ++artifact)
-        m_artifactDisabled[artifact] = g_artifactTraits[artifact].m_disabled;
+        m_artifactDisabled[artifact] = akArtifactTraits[artifact].m_disabled;
 
     if (m_gameVersion < 2) {
         if (m_gameVersion < 1)
@@ -5221,7 +5221,7 @@ bool game::loadMap(TAbstractFile* mapFile)
             disabledArtifacts = serializedArtifacts;
         } else {
             for (artifact = 0; artifact < 144; ++artifact) {
-                bool isComboArtifact = g_artifactTraits[artifact].m_comboType != -1;
+                bool isComboArtifact = akArtifactTraits[artifact].m_comboType != -1;
                 disabledArtifacts[artifact] = isComboArtifact;
             }
 
@@ -5243,7 +5243,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpells[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
-                    if (g_artifactTraits[artifact].m_givesSpells) {
+                    if (akArtifactTraits[artifact].m_givesSpells) {
                         m_artifactDisabled[artifact] =
                             m_artifactDisabled[artifact]
                             || markArtifactSpells(artifact)[spell];
@@ -5252,7 +5252,7 @@ bool game::loadMap(TAbstractFile* mapFile)
             }
             m_spellDisabledInfo[spell] =
                 serializedSpells[spell]
-                || (g_spellTraits[spell].m_flags & 0x2000) != 0;
+                || (akSpellTraits[spell].m_flags & 0x2000) != 0;
         }
 
         std::bitset<28> serializedSkills = readPackedBits<28>(mapFile);
@@ -5261,7 +5261,7 @@ bool game::loadMap(TAbstractFile* mapFile)
     } else {
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             m_spellDisabledInfo[spell] =
-                (g_spellTraits[spell].m_flags & 0x2000) != 0;
+                (akSpellTraits[spell].m_flags & 0x2000) != 0;
         }
         memset(m_ssDisabled, 0, sizeof(m_ssDisabled));
     }
@@ -6986,8 +6986,8 @@ DC_ADDRESS(0x0b1f1c, 0x42)
 MAC_ADDRESS(0x0dd70c, 0x38)
 int game::getRandomNumTroops(int whichMon)
 {
-    return random(g_creatureTypeTraits[whichMon].m_wanderingLow,
-                  g_creatureTypeTraits[whichMon].m_wanderingHigh);
+    return random(akCreatureTypeTraits[whichMon].m_wanderingLow,
+                  akCreatureTypeTraits[whichMon].m_wanderingHigh);
 }
 
 VA(0x004c6f40, 0x3F)
@@ -7714,7 +7714,7 @@ void game::perWeek()
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
             if (getAlignment(align) != -1
-                && g_creatureTypeTraits[align].m_level >= 0)
+                && akCreatureTypeTraits[align].m_level >= 0)
                 ++i;
         }
 
@@ -7722,13 +7722,13 @@ void game::perWeek()
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
             if (getAlignment(align) != -1
-                && g_creatureTypeTraits[align].m_level >= 0) {
+                && akCreatureTypeTraits[align].m_level >= 0) {
                 if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL
                      || align == CREATURE_EARTH_ELEMENTAL
                      || align == CREATURE_FIRE_ELEMENTAL
                      || align == CREATURE_WATER_ELEMENTAL
-                     || g_creatureTypeTraits[align].m_townType != TOWN_CONFLUX)
+                     || akCreatureTypeTraits[align].m_townType != TOWN_CONFLUX)
                     && i-- <= 0)
                     break;
             }
@@ -7743,7 +7743,7 @@ void game::perWeek()
             g_weekType = weekTypeInfernoGrail;
             bonusCreature = CREATURE_IMP;
             alternateBonus = CREATURE_FAMILIAR;
-            bonusAmount = g_creatureTypeTraits[CREATURE_IMP].m_growthRate;
+            bonusAmount = akCreatureTypeTraits[CREATURE_IMP].m_growthRate;
             g_weekTypeExtra = CREATURE_IMP;
             break;
         }
@@ -8015,8 +8015,8 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     }
 
     for (i = 0; i < CREATURE_CATAPULT; ++i) {
-        if (g_creatureTypeTraits[i].m_level < minLevel
-            || g_creatureTypeTraits[i].m_level > maxLevel)
+        if (akCreatureTypeTraits[i].m_level < minLevel
+            || akCreatureTypeTraits[i].m_level > maxLevel)
             monsterOk[i] = false;
     }
 
@@ -8048,8 +8048,8 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     totalInClass = 0;
     unallocatedInClass = 0;
     for (i = 0; i < 144; ++i) {
-        if (!g_artifactTraits[i].m_disabled
-            && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+        if (!akArtifactTraits[i].m_disabled
+            && (akArtifactTraits[i].m_artifactClass & artifactClass)) {
             ++totalInClass;
             if (!m_artifactUsed[i])
                 ++unallocatedInClass;
@@ -8060,8 +8060,8 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     if (unallocatedInClass) {
         x = random(0, unallocatedInClass - 1);
         for (i = 0; i < 144; ++i) {
-            if (!g_artifactTraits[i].m_disabled
-                && (g_artifactTraits[i].m_artifactClass & artifactClass)
+            if (!akArtifactTraits[i].m_disabled
+                && (akArtifactTraits[i].m_artifactClass & artifactClass)
                 && !m_artifactUsed[i]) {
                 if (curCount == x)
                     break;
@@ -8073,8 +8073,8 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     } else {
         curCount = 0;
         for (i = 0; i < 144; ++i) {
-            if (!g_artifactTraits[i].m_disabled
-                && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+            if (!akArtifactTraits[i].m_disabled
+                && (akArtifactTraits[i].m_artifactClass & artifactClass)) {
                 m_artifactUsed[i] = m_artifactDisabled[i];
                 if (!m_artifactUsed[i])
                     ++curCount;
@@ -8096,8 +8096,8 @@ ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
     int availableCount = 0;
     int spell;
     for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-        if (spellLevels.test(g_spellTraits[spell].m_level - 1)
-            && g_spellTraits[spell].m_school != const_invalid_school
+        if (spellLevels.test(akSpellTraits[spell].m_level - 1)
+            && akSpellTraits[spell].m_school != const_invalid_school
             && !m_spellAllocInfo[spell]) {
             ++availableCount;
         }
@@ -8107,8 +8107,8 @@ ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
     if (availableCount != 0) {
         int selected = random(0, availableCount - 1);
         for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-            if (spellLevels.test(g_spellTraits[spell].m_level - 1)
-                && g_spellTraits[spell].m_school != const_invalid_school
+            if (spellLevels.test(akSpellTraits[spell].m_level - 1)
+                && akSpellTraits[spell].m_school != const_invalid_school
                 && !m_spellAllocInfo[spell]) {
                 if (ordinal == selected)
                     break;
@@ -8121,8 +8121,8 @@ ESpellId game::getRandomSpell(const std::bitset<5> spellLevels)
 
     ordinal = 0;
     for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-        if (spellLevels.test(g_spellTraits[spell].m_level - 1)
-            && g_spellTraits[spell].m_school != const_invalid_school
+        if (spellLevels.test(akSpellTraits[spell].m_level - 1)
+            && akSpellTraits[spell].m_school != const_invalid_school
             && !m_spellDisabledInfo[spell]) {
             m_spellAllocInfo[spell] = 0;
             ++ordinal;
@@ -8181,13 +8181,13 @@ MAC_ADDRESS(0x0e0910, 0x1c4)
 void game::setRandomHeroArmies(int hero, int cheat, bool minimal)
 {
     armyGroup* currentArmy = &m_heroes[hero].m_army;
-    const THeroTraits* traits = &g_heroTraits[hero];
+    const THeroTraits* traits = &akHeroTraits[hero];
 
     if (g_inCampaign
         && hero == g_campaignArmyOverrideHero
         && m_campaign.m_currentCampaign == g_campaignArmyOverrideCampaign
         && m_campaign.m_currentMap) {
-        traits = &g_heroTraits[g_campaignArmyOverrideTraits];
+        traits = &akHeroTraits[g_campaignArmyOverrideTraits];
     }
 
     long i;
@@ -8591,7 +8591,7 @@ int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
     int value = 0;
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (whichGroup->m_numTroops[i] > 0)
-            value += g_creatureTypeTraits[whichGroup->m_armies[i]].m_hitPoints
+            value += akCreatureTypeTraits[whichGroup->m_armies[i]].m_hitPoints
                      * whichGroup->m_numTroops[i];
     }
     if (whichHero)
@@ -9735,11 +9735,11 @@ void game::doNewTurn()
 
         case weekTypeInfernoGrail:
             sprintf(g_text, g_newTurn[7],
-                    g_creatureTypeTraits[CREATURE_IMP].m_name,
-                    g_creatureTypeTraits[CREATURE_IMP].m_name,
-                    g_creatureTypeTraits[CREATURE_IMP].m_growthRate,
-                    g_creatureTypeTraits[CREATURE_FAMILIAR].m_name,
-                    g_creatureTypeTraits[CREATURE_IMP].m_growthRate);
+                    akCreatureTypeTraits[CREATURE_IMP].m_name,
+                    akCreatureTypeTraits[CREATURE_IMP].m_name,
+                    akCreatureTypeTraits[CREATURE_IMP].m_growthRate,
+                    akCreatureTypeTraits[CREATURE_FAMILIAR].m_name,
+                    akCreatureTypeTraits[CREATURE_IMP].m_growthRate);
             break;
         }
     }

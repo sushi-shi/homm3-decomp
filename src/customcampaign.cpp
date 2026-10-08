@@ -379,14 +379,14 @@ VA(0x00484230, 0x46)
 MAC_ADDRESS(0x092074, 0x70)
 std::string TCampaignSpellBonus::getText() const
 {
-    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), akSpellTraits[m_spell].m_name);
 }
 
 VA(0x00484280, 0x46)
 MAC_ADDRESS(0x0920e4, 0x70)
 std::string TCampaignSpellScrollBonus::getText() const
 {
-    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_SCROLL_FORMAT), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_SCROLL_FORMAT), akSpellTraits[m_spell].m_name);
 }
 
 VA(0x004842d0, 0x3B)
@@ -486,9 +486,9 @@ std::string TCampaignCreatureBonus::getText() const
     if (m_creature < 0 || m_creature > 150)
         name = "";
     else if (m_count == 1)
-        name = g_creatureTypeTraits[m_creature].m_name;
+        name = akCreatureTypeTraits[m_creature].m_name;
     else
-        name = g_creatureTypeTraits[m_creature].m_pluralName;
+        name = akCreatureTypeTraits[m_creature].m_pluralName;
     return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 
@@ -583,7 +583,7 @@ MAC_ADDRESS(0x092840, 0x6c)
 std::string TCampaignArtifactBonus::getText() const
 {
     return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
-                         g_artifactTraits[m_artifact].m_name);
+                         akArtifactTraits[m_artifact].m_name);
 }
 
 VA(0x00484860, 0x3B)
@@ -719,7 +719,7 @@ std::string TCampaignSecondarySkillBonus::getText() const
 {
     return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_SKILL_FORMAT),
                          g_secondarySkillLevels[m_level - 1],
-                         g_sSkillTraits[m_skill].m_name);
+                         akSSkillTraits[m_skill].m_name);
 }
 
 // A skill the hero does not have yet goes through GiveSS, which also
@@ -1095,7 +1095,7 @@ const char* TCampaignStartCrossoverOption::getIconResourceName(void* campaignRec
     hero* first = getFirstCrossoverHero(static_cast<SCampaign*>(campaignRecord), which);
     if (first == 0)
         return "hpl000kn.pcx";
-    return g_heroTraits[first->m_portrait].m_largePortraitName;
+    return akHeroTraits[first->m_portrait].m_largePortraitName;
 }
 
 // The help text names the MAP the heroes come from, which is not the choice's
@@ -1220,7 +1220,7 @@ const char* TCampaignStartHeroOption::getIconResourceName(void* campaign,
 {
     if (m_choices[which].m_hero == -1)
         return "CBONN1A3.pcx";
-    return g_heroTraits[m_choices[which].m_hero].m_largePortraitName;
+    return akHeroTraits[m_choices[which].m_hero].m_largePortraitName;
 }
 
 VA(0x00485a90, 0xBA)
@@ -1230,7 +1230,7 @@ std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
     if (m_choices[which].m_hero == -1)
         return g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_RANDOM_HERO);
     return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
-                         g_heroTraits[m_choices[which].m_hero].m_defaultName);
+                         akHeroTraits[m_choices[which].m_hero].m_defaultName);
 }
 
 VA(0x00485b50, 0x10)
@@ -1391,7 +1391,7 @@ void game::rehomeCampaignHeroSetup(int heroId)
     if (setup.m_location.m_x < 0)
         return;
 
-    THeroClass heroClass = g_heroTraits[heroId].m_heroClass;
+    THeroClass heroClass = akHeroTraits[heroId].m_heroClass;
     int newHeroId = getNewHeroId(setup.m_owner, kNumHeroClasses, 1, heroClass);
     if (newHeroId == -1) {
         setup.m_location.m_x = -1;

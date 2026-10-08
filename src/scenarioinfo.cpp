@@ -92,7 +92,7 @@ public:
         m_startingHero = startingHero;
         if (m_startingHero)
             m_heroPortrait = ResourceManager::GetBitmap816(
-                g_heroTraits[m_startingHero->m_portrait].m_smallPortraitName);
+                akHeroTraits[m_startingHero->m_portrait].m_smallPortraitName);
         else
             m_heroPortrait = ResourceManager::GetBitmap816("hpsrand6.pcx");
     }

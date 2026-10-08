@@ -81,7 +81,7 @@ THillFortWindow::THillFortWindow()
         font::HEADING, TITLE_ID, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new bitmapBorder(
         0x1e, 0x3c, 0x3a, 0x40, HERO_PORTRAIT_ID,
-        g_heroTraits[currentHero->m_portrait].m_largePortraitName, 0x800));
+        akHeroTraits[currentHero->m_portrait].m_largePortraitName, 0x800));
     m_widgets.push_back(new bitmapBackedTextWidget(
         7, 0x142, 0x27d, 0x13, 0,
         DATA_COMPGEN(0x0065f2f8, hillFortSmallFont, "smalfont.fnt"),
@@ -331,7 +331,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         s.m_resourceIndex = -1;
         s.m_type = currHero->m_army.m_armyTypes[i];
         s.m_count = currHero->m_army.m_numTroops[i];
-        s.m_level = g_creatureTypeTraits[s.m_type].m_level;
+        s.m_level = akCreatureTypeTraits[s.m_type].m_level;
         sprintf(s.m_countText, "%d", s.m_count);
         ZeroMemory(s.m_cost, sizeof s.m_cost);
 
@@ -694,7 +694,7 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::CREATURE_PORTRAIT_5_ID:
         case THillFortWindow::CREATURE_PORTRAIT_6_ID:
         case THillFortWindow::CREATURE_PORTRAIT_7_ID:
-            msg.m_extraText = g_creatureTypeTraits[
+            msg.m_extraText = akCreatureTypeTraits[
                 g_hillFortWindow->getCreatureType(
                     hoverID - THillFortWindow::CREATURE_PORTRAIT_1_ID)].m_pluralName;
             break;
@@ -707,7 +707,7 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::UPGRADE_BUTTON_6_ID:
         case THillFortWindow::UPGRADE_BUTTON_7_ID:
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_UPGRADE_FORMAT],
-                    g_creatureTypeTraits[
+                    akCreatureTypeTraits[
                         g_hillFortWindow->getCreatureType(
                             hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID)].m_pluralName);
             msg.m_extraText = g_text;

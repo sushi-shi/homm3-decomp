@@ -129,9 +129,9 @@ extern const TCombinationArtifact g_combinationArtifactTable[12];
 // Preserve that reference-to-array interface with the Complete-era bounds.
 // The combination table is Complete-only; its inferred pointer interface is
 // independent of the two DC declarations. artifact.cpp owns all three tables.
-extern const TArtifactTraits (&g_artifactTraits)[144];
+extern const TArtifactTraits (&akArtifactTraits)[144];
 extern const TCombinationArtifact* g_combinationArtifacts;
-extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
+extern const TArtifactSlotTraits (&akArtifactSlotTraits)[19];
 
 // Original: artifactAllowedInSlot; artifact.h:229
 // DC233 indexes the artifact's bitset18 with operator[]. Complete replaces
@@ -147,7 +147,7 @@ DC_ADDRESS(0x037d88, 0x2c)
 inline bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
 {
     const std::bitset<19>& allowable =
-        g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
+        g_artifactSlotMasks[akArtifactTraits[artifact].m_allowableSlotMask];
     return allowable[slot];
 }
 

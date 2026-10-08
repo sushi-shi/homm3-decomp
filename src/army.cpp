@@ -246,7 +246,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_numTroops = number;
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;
-    *traits = g_creatureTypeTraits[type];
+    *traits = akCreatureTypeTraits[type];
     traits->m_townType = g_game->getAlignment(type);
     if (owner != 0)
         owner->applyCreatureStatBonuses(type, traits);
@@ -418,7 +418,7 @@ void army::loadResources()
     }
 
     CSprite* icon =
-        ResourceManager::GetSprite(g_creatureTypeTraits[m_creatureType]
+        ResourceManager::GetSprite(akCreatureTypeTraits[m_creatureType]
                                        .m_spriteName);
     m_stdIcon = icon;
     m_imageHeight = 267 - m_stdIcon->GetFrame(cs_wait, 0)->GetCroppedY();
@@ -893,8 +893,8 @@ double army::computeKarma() const
     long absSum = 0;
     for (long i = 0; i < 81; i++) {
         if (m_spellInfluence[i] != 0) {
-            sum += g_spellTraits[i].m_karma;
-            absSum += abs(g_spellTraits[i].m_karma);
+            sum += akSpellTraits[i].m_karma;
+            absSum += abs(akSpellTraits[i].m_karma);
         }
     }
     if (absSum == 0)
@@ -1295,10 +1295,10 @@ void army::rangeAttack(army* armyToAttack)
         || !getOwner()->isWieldingArtifact(ARTIFACT_AMMO_CART))
         m_monInfo.m_numShots--;
     if (m_creatureType == CREATURE_MAGOG) {
-        long effect = g_spellTraits[SPELL_FIREBALL].m_effect;
+        long effect = akSpellTraits[SPELL_FIREBALL].m_effect;
         if (effect != -1
             && !g_combatManager->isQuickCombat()) {
-            launchSample(g_spellTraits[SPELL_FIREBALL].m_sample, -1, 3);
+            launchSample(akSpellTraits[SPELL_FIREBALL].m_sample, -1, 3);
             CSprite* spr =
                 ResourceManager::GetSprite(g_spellEffectTraits[effect]
                                                .m_name);
@@ -1360,10 +1360,10 @@ void army::rangeAttack(army* armyToAttack)
         }
     } else if (m_creatureType == CREATURE_LICH
                || m_creatureType == CREATURE_POWER_LICH) {
-        long effect = g_spellTraits[SPELL_DEATH_CLOUD].m_effect;
+        long effect = akSpellTraits[SPELL_DEATH_CLOUD].m_effect;
         if (effect != -1
             && !g_combatManager->isQuickCombat()) {
-            launchSample(g_spellTraits[SPELL_DEATH_CLOUD].m_sample, -1,
+            launchSample(akSpellTraits[SPELL_DEATH_CLOUD].m_sample, -1,
                           3);
             CSprite* spr =
                 ResourceManager::GetSprite(g_spellEffectTraits[effect]
@@ -1682,9 +1682,9 @@ void army::doFireShield(long damageAmount)
     int killed = damage(damageAmount);
     SAMPLE2 sample;
     if (!g_combatManager->isQuickCombat())
-        sample = loadPlaySample(g_spellTraits[SPELL_FIRE_SHIELD].m_sample);
+        sample = loadPlaySample(akSpellTraits[SPELL_FIRE_SHIELD].m_sample);
     g_combatManager->powEffect(eSpellEffectFireShield, 0);
-    g_combatManager->damageMessage(g_spellTraits[SPELL_FIRE_SHIELD].m_name, 1,
+    g_combatManager->damageMessage(akSpellTraits[SPELL_FIRE_SHIELD].m_name, 1,
                                     damageAmount, this, killed);
     if (!g_combatManager->isQuickCombat())
         waitEndSample(sample, -1);
@@ -1796,7 +1796,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     g_combatManager->m_combatWindow->combatMessage(
                         text.c_str(), 1, 0);
                     sample = loadPlaySample(
-                        g_spellTraits[SPELL_DEATH_STARE].m_sample);
+                        akSpellTraits[SPELL_DEATH_STARE].m_sample);
                     g_combatManager->spellEffect(80, target, 100, 0);
                 }
                 target->damage(damage);
@@ -1833,7 +1833,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     }
                     long killed = target->damage(damage);
                     g_combatManager->damageMessage(
-                        g_spellTraits[SPELL_LIGHTNING_BOLT].m_name, 1,
+                        akSpellTraits[SPELL_LIGHTNING_BOLT].m_name, 1,
                         damage, target, killed);
                     target->m_showPowEffect = 1;
                     g_combatManager->powEffect(eSpellEffectLightningDust, 1);
@@ -1873,11 +1873,11 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 SAMPLE2 sample;
                 if (!g_combatManager->isQuickCombat())
                     sample = loadPlaySample(
-                        g_spellTraits[SPELL_ACID_BREATH_DEFENSE]
+                        akSpellTraits[SPELL_ACID_BREATH_DEFENSE]
                             .m_sample);
                 long killed = target->damage(damage);
                 g_combatManager->damageMessage(
-                    g_spellTraits[SPELL_ACID_BREATH_DEFENSE].m_name, 1,
+                    akSpellTraits[SPELL_ACID_BREATH_DEFENSE].m_name, 1,
                     damage, target, killed);
                 if (!g_combatManager->isQuickCombat()) {
                     g_combatManager->spellEffect(81, target, 100, 0);
@@ -2287,7 +2287,7 @@ long army::getAttackModifier(const army* enemy,
                                bool rangedAttack) const
 {
     long adjusted = getAdjustedAttack(enemy, rangedAttack);
-    return adjusted - g_creatureTypeTraits[m_creatureType].m_attackSkill;
+    return adjusted - akCreatureTypeTraits[m_creatureType].m_attackSkill;
 }
 
 VA(0x00442590, 0xC2)
@@ -2327,7 +2327,7 @@ MAC_ADDRESS(0x04e498, 0x50)
 long army::getDefenseModifier() const
 {
     long adjusted = getAdjustedDefense(0, 1);
-    return adjusted - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
+    return adjusted - akCreatureTypeTraits[m_creatureType].m_defenseSkill;
 }
 
 // E:\gamedcs\army.cpp:2680: the recovered base modifier returns 1.0.
@@ -2555,7 +2555,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (ranged && is(creatureTwoAttacks))
         attack = attack + attack;
     double result = sqrt(attack * defense)
-                    * g_creatureTypeTraits[m_creatureType].m_baseFightValue;
+                    * akCreatureTypeTraits[m_creatureType].m_baseFightValue;
     if (is(creatureSiegeWeapon | creatureSummoned)) {
         long total = getTotalHitPoints(0);
         long sum = 0;
@@ -2919,12 +2919,12 @@ double army::computeAttackerDamageReduction(const army* defender,
         reduction *= 0.5;
     if (m_residualBlindness && m_residualParalyze) {
         double penalty = min(
-            m_blindFactor, g_spellTraits[SPELL_BLIND].m_masteryBonus[2] / 100.0);
+            m_blindFactor, akSpellTraits[SPELL_BLIND].m_masteryBonus[2] / 100.0);
         reduction = penalty * reduction;
     } else if (m_residualBlindness)
         reduction = m_blindFactor * reduction;
     else if (m_residualParalyze)
-        reduction = g_spellTraits[SPELL_BLIND].m_masteryBonus[2] / 100.0
+        reduction = akSpellTraits[SPELL_BLIND].m_masteryBonus[2] / 100.0
                     * reduction;
     return reduction;
 }
@@ -3065,7 +3065,7 @@ int army::damage(int damage)
 DC_ADDRESS(0x04935c, 0x44)
 unsigned long army::strength()
 {
-    return m_numTroops * g_creatureTypeTraits[m_creatureType].m_baseFightValue;
+    return m_numTroops * akCreatureTypeTraits[m_creatureType].m_baseFightValue;
 }
 
 // E:\gamedcs\army.cpp:3492
@@ -3487,7 +3487,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
     m_numSpellInfluences++;
     m_spellInfluence[spell] = rounds;
     m_spellLevel[spell] = mastery;
-    long amount = g_spellTraits[spell].m_masteryBonus[mastery];
+    long amount = akSpellTraits[spell].m_masteryBonus[mastery];
     switch (spell) {
     case SPELL_SHIELD:
         m_shieldFactor = amount / 100.0;
@@ -3513,9 +3513,9 @@ void army::setSpellInfluence(int spell, int power, int mastery,
     case SPELL_ANTI_MAGIC: {
         m_antiMagicSpellLevel = amount;
         for (int j = 0; j < 81; j++) {
-            if (g_spellTraits[j].m_level < m_antiMagicSpellLevel
-                && g_spellTraits[j].m_karma < 0
-                && !(g_spellTraits[j].m_flags & 8))
+            if (akSpellTraits[j].m_level < m_antiMagicSpellLevel
+                && akSpellTraits[j].m_karma < 0
+                && !(akSpellTraits[j].m_flags & 8))
                 cancelIndividualSpell(j);
         }
         break;
@@ -4229,8 +4229,8 @@ void army::cure(int level, int spellPower, const hero* castingHero)
     cancelIndividualSpell(SPELL_DISEASE);
     cancelIndividualSpell(SPELL_PARALYZE);
     cancelIndividualSpell(SPELL_AGE);
-    int healed = g_spellTraits[SPELL_CURE].m_masteryBonus[level]
-                 + g_spellTraits[SPELL_CURE].m_powerFactor * spellPower;
+    int healed = akSpellTraits[SPELL_CURE].m_masteryBonus[level]
+                 + akSpellTraits[SPELL_CURE].m_powerFactor * spellPower;
     if (castingHero)
         healed += castingHero->getHeroSpellBonus(SPELL_CURE, m_monInfo.m_level,
                                                   healed);
@@ -4580,7 +4580,7 @@ void army::newTurn()
         if (m_creatureType == CREATURE_WIGHT
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
-            || ((g_creatureTypeTraits[m_creatureType].m_attributes
+            || ((akCreatureTypeTraits[m_creatureType].m_attributes
                  & g_ctaAlive)
                 && g_combatManager->m_heroes[m_combatSide] != 0
                 && g_combatManager->m_heroes[m_combatSide]
@@ -4685,7 +4685,7 @@ long army::getResurrectionSize(const army* target) const
     }
     int totalLife = target->m_monInfo.m_hitPoints * target->m_origNumTroops;
     int raised = min(totalLife, m_numTroops * 50)
-        / g_creatureTypeTraits[ARMY_CREATURE_DEMON].m_hitPoints;
+        / akCreatureTypeTraits[ARMY_CREATURE_DEMON].m_hitPoints;
     return min(raised, target->m_origNumTroops);
 }
 
@@ -4761,7 +4761,7 @@ void army::chooseFaerieDragonSpell()
                                "The %s ready %s (press F to cast)");
         g_combatManager->m_combatWindow->combatMessage(
             formatString(fmt, getName(),
-                          g_spellTraits[m_faerieDragonSpell].m_name)
+                          akSpellTraits[m_faerieDragonSpell].m_name)
                 .c_str(),
             1, 0);
     }
@@ -4949,7 +4949,7 @@ MAC_ADDRESS(0x05446c, 0xac)
 static bool enchanterSpellHasTarget(int spell)
 {
     long side = g_combatManager->m_currentSide;
-    if (g_spellTraits[spell].m_karma < 0)
+    if (akSpellTraits[spell].m_karma < 0)
         side = 1 - side;
     army* targets = g_combatManager->m_armies[side];
     long n = g_combatManager->m_numArmies[side];
@@ -4968,7 +4968,7 @@ DC_ADDRESS(0x04c210, 0x164)
 MAC_ADDRESS(0x054518, 0x44)
 bool isValidCaliphSpell(SpellID spell, const army* target)
 {
-    if (!(g_spellTraits[spell].m_flags & 0x800))
+    if (!(akSpellTraits[spell].m_flags & 0x800))
         return 0;
     return isCreatureSpellUsefulOnTarget(spell, target);
 }
@@ -5204,7 +5204,7 @@ int army::getMagicMirrorChance() const
         effect = m_backlashChance;
     if (m_creatureType == CREATURE_FAERIE_DRAGON) {
         const SSpellTraits* mirrorTraits =
-            &g_spellTraits[SPELL_MAGIC_MIRROR];
+            &akSpellTraits[SPELL_MAGIC_MIRROR];
         int current = effect;
         int innate = mirrorTraits->m_masteryBonus[0];
         const int& selected = current < innate ? innate : current;

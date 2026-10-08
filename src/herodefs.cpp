@@ -201,9 +201,9 @@ THeroClassTraits g_heroClassTraits[18] = {
 };
 
 DATA(0x00698cf0) TSSkillTraits g_sSkillTraitsStorage[28];
-DATA(0x0067dce8) const THeroTraits (&g_heroTraits)[163] = g_heroTraitsStorage;
-DATA(0x0067dcec) const THeroClassTraits (&g_heroClasses)[18] = g_heroClassTraits;
-DATA(0x0067dcf0) const TSSkillTraits (&g_sSkillTraits)[28] = g_sSkillTraitsStorage;
+DATA(0x0067dce8) const THeroTraits (&akHeroTraits)[163] = g_heroTraitsStorage;
+DATA(0x0067dcec) const THeroClassTraits (&akHeroClassTraits)[18] = g_heroClassTraits;
+DATA(0x0067dcf0) const TSSkillTraits (&akSSkillTraits)[28] = g_sSkillTraitsStorage;
 
 namespace {
 
@@ -240,7 +240,7 @@ static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
 VA(0x004e67a0, 0x176)
 DC_ADDRESS(0x0d5a40, 0x72)
 MAC_ADDRESS(0x1077f8, 0xd4)
-unsigned char initializeHeroTraitsTable()
+unsigned char InitializeHeroTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0067f154, heroTraitsSpreadsheetName,
@@ -266,7 +266,7 @@ unsigned char initializeHeroTraitsTable()
 VA(0x004e6920, 0x1E2)
 DC_ADDRESS(0x0d5ab4, 0x72)
 MAC_ADDRESS(0x1078cc, 0xd4)
-bool initializeHeroClassTraitsTable()
+bool InitializeHeroClassTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0067f164, heroClassTraitsSpreadsheetName,
@@ -292,7 +292,7 @@ bool initializeHeroClassTraitsTable()
 VA(0x004e6b10, 0x1C8)
 DC_ADDRESS(0x0d5b28, 0x98)
 MAC_ADDRESS(0x1079a0, 0xd4)
-bool initializeSSkillTraitsTable()
+bool InitializeSSkillTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x0067f174, secondarySkillTraitsSpreadsheetName,

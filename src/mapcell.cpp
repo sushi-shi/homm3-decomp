@@ -2299,7 +2299,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
             for (ESpellId spell = SPELL_SUMMON_BOAT;
                  spell < 70;
                  spell = H3_ENUM_DECODE(ESpellId, spell + 1)) {
-                if (g_spellTraits[spell].m_schoolBits
+                if (akSpellTraits[spell].m_schoolBits
                     && !g_game->m_spellDisabledInfo[spell])
                     candidates.push_back(spell);
             }
@@ -3952,7 +3952,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     }
 
     memcpy(&tempObjectType.m_objectType,
-           &g_adventureObjectTraits[tempObjectType.m_objectType].m_nameRow,
+           &akAdvObjectTypeTraits[tempObjectType.m_objectType].m_nameRow,
            sizeof(tempObjectType.m_objectType));
 
     count = readLittleEndianValue(infile, value);

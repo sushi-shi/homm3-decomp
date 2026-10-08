@@ -975,7 +975,7 @@ DC_ADDRESS(0x0cbe80, 0x23a)
 MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout
 void hero::initialize(short index)
 {
-    const int& initialSex = g_heroTraits[index].m_sex;
+    const int& initialSex = akHeroTraits[index].m_sex;
 
     type_obscuring_object::initialize();
     clearSpells();
@@ -998,30 +998,30 @@ void hero::initialize(short index)
     m_owner = -1;
     m_facing = kFacingE;
 
-    strncpy(m_name, g_heroTraits[index].m_defaultName, sizeof(m_name));
+    strncpy(m_name, akHeroTraits[index].m_defaultName, sizeof(m_name));
     m_name[sizeof(m_name) - 1] = 0;
-    m_heroClass = g_heroTraits[index].m_heroClass;
+    m_heroClass = akHeroTraits[index].m_heroClass;
     m_skillCount = 0;
     for (i = 0; i < 4; ++i) {
-        setPrimarySkill(i, g_heroClasses[m_heroClass].m_initialPrimarySkill[i]);
+        setPrimarySkill(i, akHeroClassTraits[m_heroClass].m_initialPrimarySkill[i]);
     }
 
-    if (g_heroTraits[index].m_firstSkill != eSecSkillNone) {
-        giveSS(g_heroTraits[index].m_firstSkill,
-               g_heroTraits[index].m_firstSkillLevel);
+    if (akHeroTraits[index].m_firstSkill != eSecSkillNone) {
+        giveSS(akHeroTraits[index].m_firstSkill,
+               akHeroTraits[index].m_firstSkillLevel);
     }
-    if (g_heroTraits[index].m_secondSkill != eSecSkillNone) {
-        giveSS(g_heroTraits[index].m_secondSkill,
-               g_heroTraits[index].m_secondSkillLevel);
+    if (akHeroTraits[index].m_secondSkill != eSecSkillNone) {
+        giveSS(akHeroTraits[index].m_secondSkill,
+               akHeroTraits[index].m_secondSkillLevel);
     }
-    if (g_heroTraits[index].m_startsWithSpellbook) {
+    if (akHeroTraits[index].m_startsWithSpellbook) {
         m_equipped[17].m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
     }
-    if (g_heroTraits[index].m_startingSpell != -1)
-        addSpell(g_heroTraits[index].m_startingSpell);
+    if (akHeroTraits[index].m_startingSpell != -1)
+        addSpell(akHeroTraits[index].m_startingSpell);
 
     m_aggression = static_cast<float>(random(75, 100)) *
-                g_heroClasses[m_heroClass].m_aggression /
+                akHeroClassTraits[m_heroClass].m_aggression /
                 static_cast<float>(random(100, 125));
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
@@ -1117,7 +1117,7 @@ void hero::initialize(const HeroExtra* setup)
     m_z = setup->m_location.m_z;
     m_owner = setup->m_owner;
     m_id = static_cast<HeroId>(setup->m_id);
-    m_heroClass = g_heroTraits[setup->m_id].m_heroClass;
+    m_heroClass = akHeroTraits[setup->m_id].m_heroClass;
 
     m_patrolRadius = setup->m_patrolRadius;
     if (setup->m_patrolRadius >= 0) {
@@ -1227,7 +1227,7 @@ const char* hero::getClassName()
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
         return g_generalText->GetText(GENERAL_TEXT_SORCERESS_CLASS_NAME);
-    return g_heroClasses[m_heroClass].m_className;
+    return akHeroClassTraits[m_heroClass].m_className;
 }
 
 // 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
@@ -1248,7 +1248,7 @@ const char* hero::getBiography()
         return g_heroBio[156];
 
     const char* heroName = m_name;
-    const char* defaultName = g_heroTraits[m_id].m_defaultName;
+    const char* defaultName = akHeroTraits[m_id].m_defaultName;
     if (strcmp(heroName, defaultName) == 0)
         return g_heroBio[m_id];
     return heroName;
@@ -1381,9 +1381,9 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
     // (CodeWarrior -O1 would keep a named local in r0): no local here. This
     // also keeps the getArtifact-based body at the IL cost the description
     // callers' retail append/_Grow decisions require.
-    return g_artifactTraits[whichArtifact].m_targetCombo != -1
+    return akArtifactTraits[whichArtifact].m_targetCombo != -1
         && isWieldingArtifact(g_combinationArtifacts[
-               g_artifactTraits[whichArtifact].m_targetCombo].m_artifactId);
+               akArtifactTraits[whichArtifact].m_targetCombo].m_artifactId);
 }
 
 // E:\gamedcs\hero.cpp:1466
@@ -1456,7 +1456,7 @@ std::bitset<70> markSpells(TSpellSchool school)
 {
     std::bitset<70> granted;
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-        if ((g_spellTraits[spell].m_schoolBits & school) != 0)
+        if ((akSpellTraits[spell].m_schoolBits & school) != 0)
             granted[spell] = true;
     }
     return granted;
@@ -1508,7 +1508,7 @@ std::bitset<70> markArtifactSpells(int artifactId)
         break;
     case ARTIFACT_SPELLBINDERS_HAT: {
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-            if (g_spellTraits[spell].m_level == g_fifthLevelSpell)
+            if (akSpellTraits[spell].m_level == g_fifthLevelSpell)
                 result[spell] = true;
         }
         break;
@@ -1546,20 +1546,20 @@ void hero::updateSpellList()
             if (artifactId == ARTIFACT_SPELL_SCROLL) {
                 m_availableSpells[extra] = 1;
             } else {
-                if (g_artifactTraits[artifactId].m_givesSpells) {
+                if (akArtifactTraits[artifactId].m_givesSpells) {
                     std::bitset<70> granted = markArtifactSpells(artifactId);
                     std::transform(m_availableSpells,
                                    m_availableSpells + NUM_SPELLS,
                                    bitset_iterator<70>(granted, 0),
                                    m_availableSpells, std::logical_or<bool>());
                 }
-                int comboType = g_artifactTraits[artifactId].m_comboType;
+                int comboType = akArtifactTraits[artifactId].m_comboType;
                 if (comboType != -1) {
                     const std::bitset<144>& components =
                         g_combinationArtifacts[comboType].m_components;
                     for (int component = 0; component < 144; component++) {
                         if (components.test(component) &&
-                            g_artifactTraits[component].m_givesSpells) {
+                            akArtifactTraits[component].m_givesSpells) {
                             std::bitset<70> granted = markArtifactSpells(component);
                             std::transform(m_availableSpells,
                                            m_availableSpells + NUM_SPELLS,
@@ -1767,7 +1767,7 @@ MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity; old DC bracket ret
 int hero::showAssembleArtifactDialog(int artifact)
 {
     int assembled =
-        g_combinationArtifacts[g_artifactTraits[artifact].m_targetCombo]
+        g_combinationArtifacts[akArtifactTraits[artifact].m_targetCombo]
             .m_artifactId;
     // Complete's prompt ID crosses the canonical DC-typed record boundary.
     std::string text =
@@ -1776,7 +1776,7 @@ int hero::showAssembleArtifactDialog(int artifact)
     text += "\n\n";
     // Mac retail retains the text vector's indexer call here.
     text += formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
-                          g_artifactTraits[assembled].m_name);
+                          akArtifactTraits[assembled].m_name);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, 8, assembled,
                  -1, 0, -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn;
@@ -2088,15 +2088,15 @@ void hero::checkLevel()
             int stat = 0;
             const signed char* chances;
             if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
-                chances = g_heroClasses[m_heroClass].m_gainPrimarySkillChance;
+                chances = akHeroClassTraits[m_heroClass].m_gainPrimarySkillChance;
             else
-                chances = g_heroClasses[m_heroClass].m_gainPrimarySkillChance10P;
+                chances = akHeroClassTraits[m_heroClass].m_gainPrimarySkillChance10P;
             if (isLevelUpCampaignOverride()) {
                 if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
-                    chances = g_heroClasses[classBarbarian]
+                    chances = akHeroClassTraits[classBarbarian]
                                   .m_gainPrimarySkillChance;
                 else
-                    chances = g_heroClasses[classBarbarian]
+                    chances = akHeroClassTraits[classBarbarian]
                                   .m_gainPrimarySkillChance10P;
                 roll = chances[0] + chances[1];
                 roll = sRandom(1, roll);
@@ -2164,9 +2164,9 @@ void hero::checkLevel()
                     sprintf(text,
                             (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
                             g_secondarySkillLevels[m_skillLevel[skills[0]]],
-                            g_sSkillTraits[skills[0]].m_name,
+                            akSSkillTraits[skills[0]].m_name,
                             g_secondarySkillLevels[m_skillLevel[skills[1]]],
-                            g_sSkillTraits[skills[1]].m_name);
+                            akSSkillTraits[skills[1]].m_name);
                     strcat(g_text, text);
                     {
                         TLevelUpWindow window(
@@ -2244,7 +2244,7 @@ MAC_ADDRESS(0x0f66f0, 0x3d0)  // anchor-caller + arity
 TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, TSkillMastery maxLevel, TSecondarySkill excluded)
 {
     const THeroClassTraits& classTraits =
-        g_heroClasses[currentHero->m_heroClass];
+        akHeroClassTraits[currentHero->m_heroClass];
     const char* skillDisabled = g_game->m_ssDisabled;
     if (currentHero->isLevelUpCampaignOverride())
         skillDisabled = g_campaignDisabledSkills;
@@ -2392,7 +2392,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
 {
     TArtifact artifact = TArtifact(g_currentHero->getArtifact(slot).m_artifactId);
     if (artifact == ARTIFACT_NONE) {
-        int type = g_artifactSlotTraits[slot].m_type;
+        int type = akArtifactSlotTraits[slot].m_type;
         unsigned int remaining = g_currentHero->m_artifactSlotCounts[type];
         if (remaining > 0) {
             int i = ARTIFACT_SLOT_COUNT;
@@ -2500,7 +2500,7 @@ void type_artifact::getRolloverText(char* buffer) const
         strcpy(buffer, g_heroScreen[14]);
     else
         sprintf(buffer, g_heroScreen[15],
-                g_artifactTraits[m_artifactId].m_name);
+                akArtifactTraits[m_artifactId].m_name);
 }
 
 // E:\gamedcs\hero.cpp:2450
@@ -2523,14 +2523,14 @@ MAC_ADDRESS(0x0f7550, 0x15c)  // anchor-bracket
 std::string type_artifact::getDescription() const
 {
     if (m_artifactId != ARTIFACT_SPELL_SCROLL)
-        return g_artifactTraits[m_artifactId].m_description;
+        return akArtifactTraits[m_artifactId].m_description;
 
     std::string result;
-    const char* cursor = g_artifactTraits[m_artifactId].m_description;
+    const char* cursor = akArtifactTraits[m_artifactId].m_description;
     while (*cursor != 0 && *cursor != '[')
         result += *cursor++;
     if (*cursor == '[') {
-        result += g_spellTraits[m_extra].m_name;
+        result += akSpellTraits[m_extra].m_name;
         while (*cursor != 0 && *cursor != ']')
             cursor++;
         if (*cursor == ']')
@@ -2769,7 +2769,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
             sprintf(g_text, g_heroScreen[21],
                     g_secondarySkillLevels[
                         g_currentHero->m_skillLevel[skill] - 1],
-                    g_sSkillTraits[skill].m_name);
+                    akSSkillTraits[skill].m_name);
         } else {
             g_text[0] = 0;
         }
@@ -2807,9 +2807,9 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     // retaining those reads instead of a cached traits reference
                     // raises WindowHandler 85.54032 -> 85.96526% under VC6.
                     int comboType =
-                        g_artifactTraits[oldArtifact.m_artifactId].m_comboType;
+                        akArtifactTraits[oldArtifact.m_artifactId].m_comboType;
                     int targetCombo =
-                        g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
+                        akArtifactTraits[oldArtifact.m_artifactId].m_targetCombo;
                     if (comboType != -1) {
                         if (g_currentHero->showDisassembleArtifactDialog(
                                 oldArtifact.m_artifactId)
@@ -2992,7 +2992,7 @@ MAC_ADDRESS(0x0f8638, 0xb4)
 void hero::disassembleCombinationArtifact(long slot)
 {
     int combination =
-        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
+        akArtifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
     removeArtifact(slot);
 
     const std::bitset<144>& components =
@@ -3038,7 +3038,7 @@ void hero::offerCombinationArtifactAssembly(long slot)
     // Mac 0xf8734 owns comboType through its proxy write, then
     // 0xf8770..0xf8780 repeats the canonical equipped-record lookup.
     int comboType =
-        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
+        akArtifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
 
     if (comboType != -1) {
         player.m_assembledCombinations[comboType] = true;
@@ -3046,7 +3046,7 @@ void hero::offerCombinationArtifactAssembly(long slot)
     }
 
     int targetCombo =
-        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_targetCombo;
+        akArtifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_targetCombo;
     if (targetCombo == -1)
         return;
     if (player.m_assembledCombinations[targetCombo])
@@ -3059,7 +3059,7 @@ void hero::offerCombinationArtifactAssembly(long slot)
 
     int assembled = g_combinationArtifacts[targetCombo].m_artifactId;
     std::string prompt = formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
-                                       g_artifactTraits[assembled].m_name);
+                                       akArtifactTraits[assembled].m_name);
     normalDialog(prompt.c_str(), 2, -1, -1, 8, assembled, -1, 0, -1, 0,
                  -1, 0);
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -3978,7 +3978,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             // keeps jsr calls to get_secondary_skill in IsMobile and
             // get_skill_award; Mac 0xfa524/0xfa58c's byte load cannot tell.
             strcpy(g_text,
-                   g_sSkillTraits[skill]
+                   akSSkillTraits[skill]
                        .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
@@ -4480,7 +4480,7 @@ void THeroScreenWindow::updateHeroLocator(int which)
     hero* displayedHero = g_game->getHero(
         localPlayer->m_heroes[m_topHero + which]);
     const char* portraitName =
-        g_heroTraits[displayedHero->m_portrait].m_smallPortraitName;
+        akHeroTraits[displayedHero->m_portrait].m_smallPortraitName;
     union {
         const char* m_pointer;
         int m_value;
@@ -4654,7 +4654,7 @@ void THeroScreenWindow::setupHeroView()
         int m_value;
     } portraitMessage;
     portraitMessage.m_pointer =
-        g_heroTraits[g_currentHero->m_portrait].m_largePortraitName;
+        akHeroTraits[g_currentHero->m_portrait].m_largePortraitName;
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, 0x2d,
                      portraitMessage.m_value);
 
@@ -4738,7 +4738,7 @@ void THeroScreenWindow::setupHeroView()
                 + g_currentHero->m_skillLevel[skill] + 2;
             broadcastMessage(msg);
 
-            strcpy(g_text, g_sSkillTraits[skill].m_name);
+            strcpy(g_text, akSSkillTraits[skill].m_name);
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = i + 0x57;
             msg.m_extraText = g_text;
@@ -5023,7 +5023,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
         if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
             continue;
 
-        int slotClass = g_artifactSlotTraits[slot].m_type;
+        int slotClass = akArtifactSlotTraits[slot].m_type;
         unsigned int worn = m_artifactSlotCounts[slotClass];
         if (worn > 0) {
             std::bitset<19> classSlots = g_artifactSlotMasks[slotClass];
@@ -5040,7 +5040,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                 continue;
         }
 
-        int combination = g_artifactTraits[artifact].m_comboType;
+        int combination = akArtifactTraits[artifact].m_comboType;
         if (combination != -1) {
             int counts[15];
             const unsigned char* src = m_artifactSlotCounts;
@@ -5057,9 +5057,9 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                 if (!components.test(component))
                     continue;
                 int componentClass =
-                    g_artifactTraits[component].m_allowableSlotMask;
+                    akArtifactTraits[component].m_allowableSlotMask;
                 if (componentClass
-                        == g_artifactTraits[artifact].m_allowableSlotMask
+                        == akArtifactTraits[artifact].m_allowableSlotMask
                     && !keptSlot) {
                     keptSlot = true;
                     continue;
@@ -5074,7 +5074,7 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
                 }
                 {
                     int occupied =
-                        (g_artifactTraits[artifact].m_allowableSlotMask
+                        (akArtifactTraits[artifact].m_allowableSlotMask
                          == componentClass) ? 1 : 0;
                     for (int i = 0; i < 19; i++) {
                         if (classSlots[i] &&
@@ -5226,7 +5226,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
 
     bool updateSpells = false;
     int combinationIndex =
-        g_artifactTraits[artifact.m_artifactId].m_comboType;
+        akArtifactTraits[artifact.m_artifactId].m_comboType;
     if (combinationIndex != -1) {
         const std::bitset<144>& components =
             g_combinationArtifacts[combinationIndex].m_components;
@@ -5237,11 +5237,11 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
                     adjustPrimarySkill(skill,
                         g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
-                    || g_artifactTraits[component].m_givesSpells;
+                    || akArtifactTraits[component].m_givesSpells;
                 int componentSlot =
-                    g_artifactTraits[component].m_allowableSlotMask;
+                    akArtifactTraits[component].m_allowableSlotMask;
                 if (componentSlot
-                        == g_artifactTraits[artifact.m_artifactId]
+                        == akArtifactTraits[artifact.m_artifactId]
                                .m_allowableSlotMask
                     && !keptSlot)
                     keptSlot = true;
@@ -5256,7 +5256,7 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
             g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
 
     if (updateSpells
-        || g_artifactTraits[artifact.m_artifactId].m_givesSpells)
+        || akArtifactTraits[artifact.m_artifactId].m_givesSpells)
         updateSpellList();
     return 1;
 }
@@ -5292,7 +5292,7 @@ void hero::removeArtifact(long slot)
 
     bool updateSpells = false;
     int combinationIndex =
-        g_artifactTraits[artifact.m_artifactId].m_comboType;
+        akArtifactTraits[artifact.m_artifactId].m_comboType;
     if (combinationIndex != -1) {
         const std::bitset<144>& components =
             g_combinationArtifacts[combinationIndex].m_components;
@@ -5303,11 +5303,11 @@ void hero::removeArtifact(long slot)
                     adjustPrimarySkill(skill,
                         -g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
-                    || g_artifactTraits[component].m_givesSpells;
+                    || akArtifactTraits[component].m_givesSpells;
                 int componentSlot =
-                    g_artifactTraits[component].m_allowableSlotMask;
+                    akArtifactTraits[component].m_allowableSlotMask;
                 if (componentSlot
-                        == g_artifactTraits[artifact.m_artifactId].m_allowableSlotMask
+                        == akArtifactTraits[artifact.m_artifactId].m_allowableSlotMask
                     && !keptSlot)
                     keptSlot = true;
                 else
@@ -5321,7 +5321,7 @@ void hero::removeArtifact(long slot)
         adjustPrimarySkill(skill,
             -g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
     if (updateSpells
-        || g_artifactTraits[artifact.m_artifactId].m_givesSpells)
+        || akArtifactTraits[artifact.m_artifactId].m_givesSpells)
         updateSpellList();
 }
 
@@ -5376,7 +5376,7 @@ std::string hero::getBackpackError(TArtifact artifact) const
         return std::string((*g_generalText)[GENERAL_TEXT_BACKPACK_FULL]);
     }
     return formatString((*g_generalText)[GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT],
-                         g_artifactTraits[artifact].m_name);
+                         akArtifactTraits[artifact].m_name);
 }
 
 // Original public ?add_to_backpack@hero@@QAA_NABUtype_artifact@@J@Z
@@ -5480,7 +5480,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         placed = 1;
         if (g_game->getGameVersion() >= 2) {
             int targetCombo =
-                g_artifactTraits[artifact.m_artifactId].m_targetCombo;
+                akArtifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
                 if (hasCombinationArtifactComponents(targetCombo)) {
                     playerData& player = *getPlayer();
@@ -5491,7 +5491,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                                 g_combinationArtifacts[targetCombo].m_artifactId;
                             std::string prompt = formatString(
                                 (*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
-                                g_artifactTraits[assembled].m_name);
+                                akArtifactTraits[assembled].m_name);
                             normalDialog(prompt.c_str(), 2, -1, -1, 8,
                                          assembled, -1, 0, -1, 0, -1, 0);
                             if (g_windowManager->m_dialogReturn ==
@@ -5513,10 +5513,10 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
     if (!placed)
         return 0;
 
-    if (g_artifactTraits[artifact.m_artifactId].m_comboType != -1
+    if (akArtifactTraits[artifact.m_artifactId].m_comboType != -1
         && m_owner >= 0 && m_owner < 8)
         g_game->m_players[m_owner].m_assembledCombinations[
-            g_artifactTraits[artifact.m_artifactId].m_comboType] = true;
+            akArtifactTraits[artifact.m_artifactId].m_comboType] = true;
 
     if (checkEnd &&
         g_game->m_mapHeader.m_victoryCondition.checkForArtifactWin())
@@ -6064,7 +6064,7 @@ int hero::getMobility(bool seaMovement) const
         for (int slot = 0; slot < 7; slot++) {
             int creature = m_army.m_armies[slot];
             if (creature != CREATURE_NONE) {
-                int speed = g_creatureTypeTraits[creature].m_speed;
+                int speed = akCreatureTypeTraits[creature].m_speed;
                 if (g_heroSpecificAbilities[m_id].m_type == eHeroAbilityCreature) {
                     if (creature == g_heroSpecificAbilities[m_id].m_creature)
                         speed++;
@@ -6165,7 +6165,7 @@ TSkillMastery hero::getSpellLevel(SpellID spell, int magicTerrain) const
     if (spell == SPELL_ARMAGEDDON
         && isWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
         return eMasteryExpert;
-    return getSpellSchoolLevel(g_spellTraits[spell].m_school, magicTerrain);
+    return getSpellSchoolLevel(akSpellTraits[spell].m_school, magicTerrain);
 }
 
 VA(0x004e5100, 0xBC)
@@ -6260,7 +6260,7 @@ int hero::getManaCost(int whichSpell, const armyGroup* enemy,
     if (whichSpell == SPELL_TITANS_LIGHTNING_BOLT)
         return 0;
     TSkillMastery mastery = this->getSpellLevel(whichSpell, magicTerrain);
-    int cost = g_spellTraits[whichSpell].m_manaCost[mastery];
+    int cost = akSpellTraits[whichSpell].m_manaCost[mastery];
     if (enemy) {
         if (enemy->isMember(CREATURE_PEGASUS)
             || enemy->isMember(CREATURE_SILVER_PEGASUS))
@@ -6420,7 +6420,7 @@ long hero::modifySpellDamage(SpellID spell, int damage,
                                const class army* targetArmy) const
 {
     float value = static_cast<float>(damage);
-    int school = g_spellTraits[spell].m_school;
+    int school = akSpellTraits[spell].m_school;
     if (((school & eSchoolAir) && isWieldingArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT))
         || ((school & eSchoolEarth) && isWieldingArtifact(ARTIFACT_ORB_OF_SILT))
         || ((school & eSchoolFire) && isWieldingArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE))
@@ -6486,9 +6486,9 @@ long hero::getHitPointBonus(int creatureType) const
         bonus++;
     if (isWieldingArtifact(ARTIFACT_VIAL_OF_LIFEBLOOD))
         bonus += 2;
-    if ((g_creatureTypeTraits[creatureType].m_attributes & creatureAlive)
+    if ((akCreatureTypeTraits[creatureType].m_attributes & creatureAlive)
         && isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
-        bonus += g_creatureTypeTraits[creatureType].m_hitPoints / 4;
+        bonus += akCreatureTypeTraits[creatureType].m_hitPoints / 4;
     return bonus;
 }
 
@@ -6505,7 +6505,7 @@ bool hero::canLand() const
     }
     if (!(cell->m_flags0011 & 0x40))
         return 0;
-    if (cell->m_isTrigger && g_adventureObjectTraits[cell->m_type].m_blocksLanding)
+    if (cell->m_isTrigger && akAdvObjectTypeTraits[cell->m_type].m_blocksLanding)
         return 0;
     return 1;
 }
@@ -6539,7 +6539,7 @@ MAC_ADDRESS(0x106d34, 0x138)
 bool hero::isInIdentifyRange(const type_point& location) const
 {
     TSkillMastery identifyLevel = getIdentifyLevel();
-    int range = g_spellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
+    int range = akSpellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
         * getPrimarySkill(2);
     if (range < 3)
         range = 3;
@@ -6645,10 +6645,10 @@ void hero::applyCreatureStatBonuses(int creatureType,
             if (ability.m_type == eHeroAbilityCreature) {
                 double scale = m_level / (traits->m_level + 1) * 0.05;
                 traits->m_attackSkill = static_cast<int>(
-                    ceil(g_creatureTypeTraits[creatureType].m_attackSkill * scale)
+                    ceil(akCreatureTypeTraits[creatureType].m_attackSkill * scale)
                     + traits->m_attackSkill);
                 traits->m_defenseSkill = static_cast<int>(
-                    ceil(g_creatureTypeTraits[creatureType].m_defenseSkill * scale)
+                    ceil(akCreatureTypeTraits[creatureType].m_defenseSkill * scale)
                     + traits->m_defenseSkill);
                 if (!(traits->m_attributes & g_ctaSiegeWeapon))
                     traits->m_speed++;
@@ -6663,7 +6663,7 @@ void hero::applyCreatureStatBonuses(int creatureType,
         }
         break;
     case eHeroAbilityDragons:
-        if (g_creatureTypeTraits[creatureType].m_attributes
+        if (akCreatureTypeTraits[creatureType].m_attributes
             & g_creatureAttrDragon) {
             traits->m_attackSkill += ability.m_creatureAttackBonus;
             traits->m_defenseSkill += ability.m_creatureDefenseBonus;

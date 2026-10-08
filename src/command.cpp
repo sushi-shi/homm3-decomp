@@ -1759,14 +1759,14 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
             // General text 222 is the "<hero> learns <spell>" opener;
             // its enum name describes those two arguments.
             msg = formatString(g_generalText->GetText(GENERAL_TEXT_EAGLE_EYE_LEARNS_SPELL_FORMAT), winner->m_name,
-                                g_spellTraits[spell].m_name);
+                                akSpellTraits[spell].m_name);
         } else {
             if (x == m_eagleEyeData[winningGroup].end()
                 || rewards.size() == VICTORY_DIALOG_PAGE_SIZE - 1)
                 msg += g_generalText->GetText(GENERAL_TEXT_LIST_AND);
             else
                 msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
-            msg += g_spellTraits[spell].m_name;
+            msg += akSpellTraits[spell].m_name;
         }
         rewards.push_back(reward);
         if (rewards.size() == VICTORY_DIALOG_PAGE_SIZE
@@ -1870,7 +1870,7 @@ void combatManager::doVictory(int winningGroup)
             m_raisedCreatureType =
                 m_heroes[winningGroup]->getNecromancyCreature();
             int raisedHitPoints =
-                g_creatureTypeTraits[m_raisedCreatureType].m_hitPoints;
+                akCreatureTypeTraits[m_raisedCreatureType].m_hitPoints;
             unsigned char anythingDied = 0;
             for (int slot = 0; slot < 20; slot++) {
                 army* stack = &m_armies[lastAliveSideIndex][slot];
@@ -1881,7 +1881,7 @@ void combatManager::doVictory(int winningGroup)
                     continue;
                 anythingDied = 1;
                 int hitPoints =
-                    g_creatureTypeTraits[stack->m_creatureType].m_hitPoints;
+                    akCreatureTypeTraits[stack->m_creatureType].m_hitPoints;
                 if (hitPoints > raisedHitPoints)
                     hitPoints = raisedHitPoints;
                 int raised = static_cast<int>(hitPoints * killed
@@ -2007,7 +2007,7 @@ long combatManager::getSurrenderCost()
                 > currentArmy->m_numTroopsBattleResurrected) {
             cost += (currentArmy->m_numTroops
                      - currentArmy->m_numTroopsBattleResurrected)
-                  * g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6];
+                  * akCreatureTypeTraits[currentArmy->m_creatureType].m_cost[6];
         }
     }
 
@@ -2236,7 +2236,7 @@ void combatManager::checkGetAIMove()
                     army* currentArmy = &m_armies[m_currentSide][slot];
                     if (currentArmy->isActive()) {
                         combatValue +=
-                            g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
+                            akCreatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
                             * currentArmy->m_numTroops;
                     }
                 }

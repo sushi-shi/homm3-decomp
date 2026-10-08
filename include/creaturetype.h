@@ -23,8 +23,8 @@ inline const char* getArmyName(int type, int count)
     if (type < 0 || type > g_creatureTypeLast) {
         return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
     } else {
-        return count == 1 ? g_creatureTypeTraits[type].m_name
-                          : g_creatureTypeTraits[type].m_pluralName;
+        return count == 1 ? akCreatureTypeTraits[type].m_name
+                          : akCreatureTypeTraits[type].m_pluralName;
     }
 }
 

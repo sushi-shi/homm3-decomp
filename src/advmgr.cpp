@@ -3477,7 +3477,7 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
         strcat(buffer, separator1);
         char temp[500];
         sprintf(temp, g_generalText->GetText(GENERAL_TEXT_SHRINE_SPELL_FORMAT),
-                g_spellTraits[spell].m_name);
+                akSpellTraits[spell].m_name);
         strcat(buffer, temp);
         if (currentHero && currentHero->spellIsAvailable(spell)) {
             strcat(buffer, separator2);
@@ -3546,7 +3546,7 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
         char tempText[50];
         sprintf(tempText,
                 g_generalText->GetText(GENERAL_TEXT_WITCH_SKILL_FORMAT),
-                g_sSkillTraits[skill].m_name);
+                akSSkillTraits[skill].m_name);
         strcat(buffer, tempText);
         if (currentHero
             && currentHero->getSecondarySkill(TSecondarySkill(skill))) {
@@ -3672,7 +3672,7 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 {
     if ((getMapExtra(m_lastMapHover) & MAP_EXTRA_MONSTER)
         && (!currCell->m_isTrigger
-            || !g_adventureObjectTraits[currCell->m_type].m_blocksLanding)) {
+            || !akAdvObjectTypeTraits[currCell->m_type].m_blocksLanding)) {
         return ADV_SWORD_POINTER;
     }
 
@@ -4057,7 +4057,7 @@ int advManager::processSearch(int x, int y, int z)
                         DATA_COMPGEN(0x00660358,
                                      processSearchFoundFormat, "%s%s"),
                         (*g_generalText)[GENERAL_TEXT_SEARCH_FOUND_PREFIX],
-                        g_artifactTraits[ARTIFACT_HOLY_GRAIL].m_name);
+                        akArtifactTraits[ARTIFACT_HOLY_GRAIL].m_name);
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
@@ -7398,7 +7398,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             const int diplomacy = currHero->getSecondarySkill(eSecSkillDiplomacy);
             const float strengthRatio =
                 static_cast<float>(aiApproximateStrength(currHero))
-                / static_cast<float>(g_creatureTypeTraits[type].m_aiValue
+                / static_cast<float>(akCreatureTypeTraits[type].m_aiValue
                                      * count);
             int force = getForceModifier(strengthRatio);
             TQuickCreatureWindow::TDisposition disposition =
@@ -7418,7 +7418,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             else
                 mood = TQuickCreatureWindow::Flee;
 
-            int cost = g_creatureTypeTraits[type].m_cost[6] * count;
+            int cost = akCreatureTypeTraits[type].m_cost[6] * count;
             window = new TQuickCreatureWindow(
                 TQuickCreatureWindow::ViewAll, type, count, mood, cost);
             showDetails = true;
@@ -8945,7 +8945,7 @@ bool advManager::findAdjacentMonster(type_point point, type_point& result, type_
     mapCell = m_fullMap->cell(point.m_x, point.m_y, point.m_z);
     unsigned char centerIsWater = mapCell->m_groundSet == eTerrainWater;
     if (mapCell->cellIsTrigger()
-        && !g_adventureObjectTraits[mapCell->getMapObject()].m_enterableFromNorth)
+        && !akAdvObjectTypeTraits[mapCell->getMapObject()].m_enterableFromNorth)
         rect.top = point.m_y;
 
     for (x = rect.left; x < rect.right; ++x) {

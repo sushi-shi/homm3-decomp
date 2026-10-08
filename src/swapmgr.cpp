@@ -874,7 +874,7 @@ int swapManager::open(int newPriority)
         m_parent->broadcastMessage(
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             reinterpret_cast<int>(
-                g_heroTraits[m_heroes[hero]->m_portrait].m_largePortraitName));
+                akHeroTraits[m_heroes[hero]->m_portrait].m_largePortraitName));
 
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT],
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
@@ -1116,7 +1116,7 @@ void swapManager::updateSlot(int hero, TArtifactSlot slot)
     int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
     if (artifact == ARTIFACT_NONE)
     {
-        int type = g_artifactSlotTraits[slot].m_type;
+        int type = akArtifactSlotTraits[slot].m_type;
         unsigned int remaining = m_heroes[hero]->m_artifactSlotCounts[type];
         if (remaining > 0)
         {
@@ -1334,8 +1334,8 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
             } else {
                 if (g_game->m_gameVersion >= 2) {
                     int targetCombo =
-                        g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
-                    if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
+                        akArtifactTraits[oldArtifact.m_artifactId].m_targetCombo;
+                    if (akArtifactTraits[oldArtifact.m_artifactId].m_comboType
                         != -1) {
                         if (ourHero->showDisassembleArtifactDialog(
                                 oldArtifact.m_artifactId)
@@ -1665,7 +1665,7 @@ int swapManager::main(message& msg)
                     {
                         int skill = m_heroes[skillHero]->getNthSS(skillIndex);
                         strcpy(g_text,
-                               g_sSkillTraits[skill].m_levelNames[
+                               akSSkillTraits[skill].m_levelNames[
                                    m_heroes[skillHero]->getSecondarySkill(
                                        TSecondarySkill(skill)) - 1]);
                         normalDialog(
@@ -2189,7 +2189,7 @@ void swapManager::setRolloverText(int codeY)
             sprintf(g_text, g_heroScreen[21],
                     g_secondarySkillLevels[
                         m_heroes[0]->getSecondarySkill(TSecondarySkill(skill)) - 1],
-                    g_sSkillTraits[skill].m_name);
+                    akSSkillTraits[skill].m_name);
         }
         break;
 
@@ -2203,7 +2203,7 @@ void swapManager::setRolloverText(int codeY)
             sprintf(g_text, g_heroScreen[21],
                     g_secondarySkillLevels[
                         m_heroes[1]->getSecondarySkill(TSecondarySkill(skill)) - 1],
-                    g_sSkillTraits[skill].m_name);
+                    akSSkillTraits[skill].m_name);
         }
         break;
 

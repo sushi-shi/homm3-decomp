@@ -240,7 +240,7 @@ void game::getVictoryConditionText(char* text)
                 strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FIND_GRAIL]);
             } else {
                 sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FIND_ARTIFACT_FORMAT],
-                        g_artifactTraits[victory.m_artifactNum].m_name);
+                        akArtifactTraits[victory.m_artifactNum].m_name);
             }
             break;
         case VICTORY_CONDITION_TOTAL_RESOURCES:
@@ -308,7 +308,7 @@ void game::getVictoryConditionText(char* text)
         }
         case VICTORY_CONDITION_TOTAL_CREATURES:
             sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_CREATURES_FORMAT], victory.m_numCreatures,
-                    g_creatureTypeTraits[victory.m_creatureType].m_pluralName);
+                    akCreatureTypeTraits[victory.m_creatureType].m_pluralName);
             break;
         case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
             strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FLAG_DWELLINGS]);
@@ -320,7 +320,7 @@ void game::getVictoryConditionText(char* text)
             town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
             sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_TRANSPORT_ARTIFACT_FORMAT],
-                    g_artifactTraits[victory.m_artifactNum].m_name,
+                    akArtifactTraits[victory.m_artifactNum].m_name,
                     targetTown->m_name.c_str());
             break;
         }

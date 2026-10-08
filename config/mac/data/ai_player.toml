@@ -67,7 +67,7 @@ mac_section = 1
 mac_offset = 0x5b6a4
 mac_size = 4
 sha256 = "a4f8f8686439ea65c2b0d82c00347b1c0c2e92a24f3595ea46535dc043091fcc"
-evidence = "src/objnames.cpp owns DATA(0x660428) g_adventureObjectTraits, the pointer to canonical 16-byte trait rows. Mac netValueOfLocation loads its cell address from TOC1+0x6b8 at code0+0x32aa4; dereference0x32af0 followed by type*16 at0x32af4 and landing-veto byte load0x32af8 matches the shared row's m_blocksLanding at+0. PEF loader binds TOC1+0x6b8 -> data1+0x5b6a4 and that four-byte pointer cell -> data1+0x553ef0. This reviewed external-consumer storage binding does not compare the owner's pointer initializer."
+evidence = "src/objnames.cpp owns DATA(0x660428) akAdvObjectTypeTraits, the pointer to canonical 16-byte trait rows. Mac netValueOfLocation loads its cell address from TOC1+0x6b8 at code0+0x32aa4; dereference0x32af0 followed by type*16 at0x32af4 and landing-veto byte load0x32af8 matches the shared row's m_blocksLanding at+0. PEF loader binds TOC1+0x6b8 -> data1+0x5b6a4 and that four-byte pointer cell -> data1+0x553ef0. This reviewed external-consumer storage binding does not compare the owner's pointer initializer."
 
 [[data]]
 retail_va = 0x0069ccc4

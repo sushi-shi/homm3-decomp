@@ -281,7 +281,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             if (occupyingHero) {
                 g_bitmapBorderDynamic[slot] = new bitmapBorder(
                     265, row * 116 + 30, 58, 64, rowWidgetId + 53,
-                    g_heroTraits[occupyingHero->m_portrait].m_largePortraitName,
+                    akHeroTraits[occupyingHero->m_portrait].m_largePortraitName,
                     0x800);
                 if (!g_bitmapBorderDynamic[slot])
                     memError();
@@ -328,7 +328,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             if (occupyingHero) {
                 g_bitmapBorderDynamic[slot + 1] = new bitmapBorder(
                     497, row * 116 + 30, 58, 64, rowWidgetId + 48,
-                    g_heroTraits[occupyingHero->m_portrait].m_largePortraitName,
+                    akHeroTraits[occupyingHero->m_portrait].m_largePortraitName,
                     0x800);
                 if (!g_bitmapBorderDynamic[slot + 1])
                     memError();
@@ -506,7 +506,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_bitmapBorderDynamic[slot + curBitmap] = new bitmapBorder(
                 27, row * 116 + 30, 58, 64, rowWidgetId + 103,
-                g_heroTraits[currHero->m_portrait].m_largePortraitName,
+                akHeroTraits[currHero->m_portrait].m_largePortraitName,
                 0x800);
             if (!g_bitmapBorderDynamic[slot + curBitmap])
                 memError();
@@ -1340,7 +1340,7 @@ int game::processIconSelect(int codeY, bool rightMouse)
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 7: {
                 int skill = currHero->getNthSS(codeY - 158);
                 normalDialog(
-                    g_sSkillTraits[skill].m_levelNames[
+                    akSSkillTraits[skill].m_levelNames[
                         currHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -2114,7 +2114,7 @@ void TOverviewWindow::doRollover(int codeY)
                     sprintf(g_text, g_heroScreen[21],
                             g_secondarySkillLevels[
                                 currHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
-                            g_sSkillTraits[skill].m_name);
+                            akSSkillTraits[skill].m_name);
                 }
                 break;
             }
@@ -2381,7 +2381,7 @@ void TOverviewWindow::doRollover(int codeY)
                 int itemType = m_flaggableItems[item].m_itemType;
                 if (itemType < 80) {
                     strcpy(g_text,
-                           g_creatureTypeTraits[
+                           akCreatureTypeTraits[
                                g_creatureGenerator1Types[itemType]]
                                .m_pluralName);
                 } else {

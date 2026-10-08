@@ -552,7 +552,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
                 if (!playerBit
                     && (!g_vwTerrains
-                        || !g_adventureObjectTraits[objType->m_objectType].m_isDecoration))
+                        || !akAdvObjectTypeTraits[objType->m_objectType].m_isDecoration))
                     continue;
 
                 if (!objType->m_drawCells[
@@ -786,7 +786,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
         if (!playerBit
             && (!g_vwTerrains
-                || !g_adventureObjectTraits[objType->m_objectType].m_isDecoration))
+                || !akAdvObjectTypeTraits[objType->m_objectType].m_isDecoration))
             continue;
 
         if (!objType->m_shadowCells[

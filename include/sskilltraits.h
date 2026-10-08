@@ -14,6 +14,6 @@ struct TSSkillTraits {
 SIZE(TSSkillTraits, 0x10);
 
 extern TSSkillTraits g_sSkillTraitsStorage[28];
-extern const TSSkillTraits (&g_sSkillTraits)[28];
+extern const TSSkillTraits (&akSSkillTraits)[28];
 
 #endif  /* HOMM3_SSKILLTRAITS_H */

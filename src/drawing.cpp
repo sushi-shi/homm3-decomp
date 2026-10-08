@@ -108,41 +108,41 @@ static void getCreatureSpellMessage(char* buffer,
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         if (!targetArmy) {
             sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_FORMAT),
-                    g_spellTraits[currentArmy->m_faerieDragonSpell].m_name);
+                    akSpellTraits[currentArmy->m_faerieDragonSpell].m_name);
         } else {
             sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
-                    g_spellTraits[currentArmy->m_faerieDragonSpell].m_name,
+                    akSpellTraits[currentArmy->m_faerieDragonSpell].m_name,
                     targetArmy->getName());
         }
         break;
     case CREATURE_STORM_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
-                g_spellTraits[SPELL_PROTECTION_FROM_AIR].m_name,
+                akSpellTraits[SPELL_PROTECTION_FROM_AIR].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_ICE_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
-                g_spellTraits[SPELL_PROTECTION_FROM_WATER].m_name,
+                akSpellTraits[SPELL_PROTECTION_FROM_WATER].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_ENERGY_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
-                g_spellTraits[SPELL_PROTECTION_FROM_FIRE].m_name,
+                akSpellTraits[SPELL_PROTECTION_FROM_FIRE].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_MAGMA_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
-                g_spellTraits[SPELL_PROTECTION_FROM_EARTH].m_name,
+                akSpellTraits[SPELL_PROTECTION_FROM_EARTH].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_OGRE_MAGE:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
-                g_spellTraits[SPELL_BLOODLUST].m_name,
+                akSpellTraits[SPELL_BLOODLUST].m_name,
                 targetArmy->getName());
         break;
     }
@@ -278,7 +278,7 @@ bool combatManager::showCreatureSpellError(
                     && m_heroes[i]->isWieldingArtifact(
                         ARTIFACT_ORB_OF_INHIBITION)) {
                 sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CREATURE_PREVENTS_SPELLCASTING_FORMAT),
-                        g_artifactTraits[ARTIFACT_ORB_OF_INHIBITION].m_name);
+                        akArtifactTraits[ARTIFACT_ORB_OF_INHIBITION].m_name);
                 return true;
             }
         }
@@ -290,7 +290,7 @@ bool combatManager::showCreatureSpellError(
                 break;
             }
             sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_SPELL_IMMUNITY_FORMAT), targetArmy->getName(2),
-                    g_spellTraits[SPELL_BLOODLUST].m_name);
+                    akSpellTraits[SPELL_BLOODLUST].m_name);
             return true;
         }
 
@@ -1298,14 +1298,14 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     if (!archer->m_facing) {
                         drawX = archer->m_x - archer->m_sprite->GetWidth();
                         drawX += COMBAT_ARCHER_X_BIAS;
-                        if (g_creatureTypeTraits[archer->m_type].m_attributes
+                        if (akCreatureTypeTraits[archer->m_type].m_attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX += COMBAT_WALL_HEX_WIDTH;
                         if (archer->m_type == CREATURE_MEDUSA)
                             drawX -= 5;
                     } else {
                         drawX = archer->m_x - COMBAT_ARCHER_X_BIAS;
-                        if (g_creatureTypeTraits[archer->m_type].m_attributes
+                        if (akCreatureTypeTraits[archer->m_type].m_attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX -= COMBAT_WALL_HEX_WIDTH;
                         if (archer->m_type == CREATURE_MEDUSA)
@@ -1778,14 +1778,14 @@ void combatManager::computeMaxExtent()
             if (!archer.m_facing) {
                 drawX = archer.m_x - archer.m_sprite->GetWidth()
                          + COMBAT_ARCHER_X_BIAS;
-                if (g_creatureTypeTraits[archer.m_type].m_attributes
+                if (akCreatureTypeTraits[archer.m_type].m_attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX += COMBAT_WALL_HEX_WIDTH;
                 if (archer.m_type == CREATURE_MEDUSA)
                     drawX -= 5;
             } else {
                 drawX = archer.m_x - COMBAT_ARCHER_X_BIAS;
-                if (g_creatureTypeTraits[archer.m_type].m_attributes
+                if (akCreatureTypeTraits[archer.m_type].m_attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX -= COMBAT_WALL_HEX_WIDTH;
                 if (archer.m_type == CREATURE_MEDUSA)
