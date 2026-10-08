@@ -15,7 +15,7 @@ import struct
 from homm3.core import common
 from homm3.loki import cmpobj
 from homm3.loki.cmpobj import CodeSection, Function, canonical_symbol, put
-from homm3.loki.elf import (Elf, R_386_32, R_386_PC32, SHF_ALLOC, SHF_EXECINSTR, SHT_REL,
+from homm3.loki.elf import (Elf, R_386_32, R_386_PC32, SHF_ALLOC, SHF_EXECINSTR, SHF_WRITE, SHT_REL,
                             SHT_SYMTAB, STT_FUNC, STT_NOTYPE, STT_OBJECT, STT_SECTION)
 from homm3.loki.image import IMAGE, LokiImage
 
@@ -104,8 +104,12 @@ class Target:
     def pointer(self, address: int) -> str | None:
         (word,) = struct.unpack("<I", self.image.elf.read(address, 4))
         exported = self.image.object_at(word)
-        if exported is not None and exported.value == word:
-            return exported.name
+        if exported is not None:
+            return exported.name if exported.value == word else None
+        section = self.image.elf.section_at(word)
+        if section is not None and section.flags & SHF_WRITE and not section.flags & SHF_EXECINSTR:
+            # File-static data has no name in the image; pair_data names it.
+            return f"data_{word:08x}"
         return None
 
     def string_table(self, address: int) -> list[str]:
@@ -185,8 +189,19 @@ def base_sections(data: bytes) -> list[CodeSection]:
     def pointer_in(index: int):
         def pointer(offset: int) -> str | None:
             for r in rels.get(index, ()):
-                if r.offset == offset and r.type == R_386_32 and symbols[r.symbol].type != STT_SECTION:
-                    return symbols[r.symbol].name
+                if r.offset != offset or r.type != R_386_32:
+                    continue
+                symbol = symbols[r.symbol]
+                if symbol.type != STT_SECTION:
+                    return symbol.name
+                # GAS relocates against the section for file-static data:
+                # name the object the address falls in.
+                header = elf.sections[symbol.shndx]
+                if header.flags & SHF_WRITE and not header.flags & SHF_EXECINSTR:
+                    (addend,) = struct.unpack_from("<i", elf.bytes(elf.sections[index]), offset)
+                    owner = containing(symbol.shndx, addend)
+                    if owner is not None:
+                        return cmpobj.pointer_entry(owner.name, addend - owner.value)
             return None
         return pointer
 
@@ -409,6 +424,31 @@ def pair_locals(base: list[CodeSection], target: list[CodeSection]) -> dict[str,
     return mapping
 
 
+def _split_entry(entry: str) -> tuple[str, int]:
+    name, plus, offset = entry.rpartition("+")
+    return (name, int(offset, 16)) if plus else (entry, 0)
+
+
+def _unnamed_entries(compiled, retail) -> list[tuple[int, tuple[str, int]]] | None:
+    """The unnamed data a retail reference names through a pointer table
+    (`T* const ap[] = { &a, &b }` with file-static `a` and `b`), paired with
+    the compiled table's entries: [] when the references agree outright, None
+    when they differ in anything but those entries."""
+    if (canonical_symbol(compiled.target), compiled.addend) == (canonical_symbol(retail.target), retail.addend):
+        return []
+    left = cmpobj.pointer_tables.get(compiled.target)
+    right = cmpobj.pointer_tables.get(retail.target)
+    if left is None or right is None or len(left) != len(right) or compiled.addend != retail.addend:
+        return None
+    found = []
+    for c, t in zip(left, right):
+        if _is_unnamed_data(t):
+            found.append((int(t[5:], 16), _split_entry(c)))
+        elif canonical_symbol(c) != canonical_symbol(t):
+            return None
+    return found
+
+
 def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, tuple[str, int]]:
     """Name the retail object's file-static data after the compiled object's.
 
@@ -416,27 +456,32 @@ def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, t
     (`data_<address>`). For each function both sides define, when the two
     relocation lists have the same length and every other reference agrees
     in order, the k-th `data_` reference is the k-th compiled reference. A
-    retail address is renamed only when every such function agrees on its
-    counterpart (and no two addresses share one); everything else stays
-    `data_<address>`, so a wrong layout still shows as a difference."""
+    pointer table the function references counts the same way, entry by
+    entry: its k-th unnamed entry is the compiled table's k-th, and the
+    table is renamed from its entries. A retail address is renamed only
+    when every such use agrees on its counterpart (and no two addresses
+    share one); everything else stays `data_<address>`, so a wrong layout
+    still shows as a difference."""
     left, right = _relocs_by_function(base), _relocs_by_function(target)
     votes: dict[str, set[tuple[str, int]]] = {}
     for name, retail in right.items():
         compiled = left.get(name)
         if compiled is None or len(compiled) != len(retail):
             continue
-        pairs = list(zip(compiled, retail))
-        # Compare canonical names: anonymous-namespace symbols differ in
-        # their random suffix until cmpobj folds them.
-        if any(not _is_unnamed_data(t.target)
-               and (cmpobj.canonical_symbol(c.target), c.addend)
-               != (cmpobj.canonical_symbol(t.target), t.addend)
-               for c, t in pairs):
-            continue
-        for c, t in pairs:
+        found = []
+        for c, t in zip(compiled, retail):
             if _is_unnamed_data(t.target):
-                address = int(t.target[5:], 16) + t.addend
-                votes.setdefault(f"data_{address:08x}", set()).add((c.target, c.addend))
+                found.append((int(t.target[5:], 16) + t.addend, (c.target, c.addend)))
+                continue
+            # Compare canonical names: anonymous-namespace symbols differ in
+            # their random suffix until cmpobj folds them.
+            entries = _unnamed_entries(c, t)
+            if entries is None:
+                break
+            found += entries
+        else:
+            for address, counterpart in found:
+                votes.setdefault(f"data_{address:08x}", set()).add(counterpart)
     mapping = {name: next(iter(found)) for name, found in votes.items() if len(found) == 1}
     counterparts = [found for found in mapping.values()]
     mapping = {name: found for name, found in mapping.items() if counterparts.count(found) == 1}
@@ -448,4 +493,8 @@ def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, t
                 if found is not None:
                     reloc.target, reloc.addend = found
                     struct.pack_into("<i", section.data, reloc.offset, found[1])
+            elif (entries := cmpobj.pointer_tables.get(reloc.target)) is not None:
+                named = [cmpobj.pointer_entry(*mapping[e]) if e in mapping else e for e in entries]
+                if named != list(entries):
+                    reloc.target = cmpobj.pointer_table_name(named)
     return mapping

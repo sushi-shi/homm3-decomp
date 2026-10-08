@@ -120,7 +120,12 @@ Function-local statics (`<name>.<uid>`, their `_.tmp_<n>` guards and the
 `homm3.loki.delink.pair_locals` aligns that function's two relocation lists,
 unnamed retail references and compiled file-local data standing as
 placeholders, and pairs the k-th of an aligned run with the k-th, when every
-aligned use agrees one to one.
+aligned use agrees one to one. A pointer table in `.rodata` is named by its
+entries (`$P<n>[...]#digest`); an entry that points to file-static data is
+`data_<address>` in the image and the object it falls in on the compiled
+side, and `pair_data` pairs those entries position by position, like the
+function's own `data_` references, then renames the table from them
+(Town.cpp's generator tables).
 
 Units compile from their source's directory with the bare file name, as Loki
 did: `__FILE__` in assert text and `TRuntimeError(__FILE__, __LINE__, ...)`

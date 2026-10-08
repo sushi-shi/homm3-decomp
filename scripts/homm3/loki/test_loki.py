@@ -79,6 +79,26 @@ class ComparisonObjectTest(unittest.TestCase):
         self.assertEqual(target[0].functions[0].name, "__tcf_0")
 
 
+    def test_file_static_data_pairs_through_pointer_tables(self):
+        def section(relocs):
+            text = CodeSection(".text", bytearray(0x20), [Function("init__Fv", 0, 0x20, True)])
+            for offset, target in relocs:
+                cmpobj.put(text, offset, R_386_32, target, 0)
+            return text
+        compiled = cmpobj.pointer_table_name(["castle1", "g_named", "castle2+c"])
+        retail = cmpobj.pointer_table_name(["data_00001000", "g_named", "data_0000100c"])
+        base = [section([(0x4, "castle1"), (0x8, "ctor__Fv"), (0xc, compiled)])]
+        target = [section([(0x4, "data_00001000"), (0x8, "ctor__Fv"), (0xc, retail)])]
+        mapping = delink.pair_data(base, target)
+        self.assertEqual(mapping["data_0000100c"], ("castle2", 0xc))
+        self.assertEqual([r.target for r in target[0].relocs], ["castle1", "ctor__Fv", compiled])
+        # A table that differs in a named entry pairs nothing.
+        other = cmpobj.pointer_table_name(["data_00002000", "g_other"])
+        base = [section([(0x4, cmpobj.pointer_table_name(["castle1", "g_named"]))])]
+        target = [section([(0x4, other)])]
+        self.assertEqual(delink.pair_data(base, target), {})
+        self.assertEqual(target[0].relocs[0].target, other)
+
 @unittest.skipUnless(toolchain.is_staged(), "GCC 2.95.2 not staged (homm3 loki toolchain)")
 class CompiledBaseTest(unittest.TestCase):
     def test_static_call_and_literal_are_canonical(self):

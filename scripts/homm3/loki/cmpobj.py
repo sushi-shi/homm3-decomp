@@ -153,11 +153,24 @@ def table_name(elements: list[str]) -> str:
     return f"$t{len(elements)}[{elements[0]}...]#{digest}"
 
 
+# Every pointer table named so far and its targets: the comparison names an
+# image table's unnamed entries (`data_<address>`) after the compiled
+# table's entries and renames the table from them (delink.pair_data).
+pointer_tables: dict[str, tuple[str, ...]] = {}
+
+
 def pointer_table_name(targets: list[str]) -> str:
     """A table of symbol addresses, named by its targets in order (their
-    canonical names, so anonymous-namespace suffixes do not count)."""
+    canonical names, so anonymous-namespace suffixes do not count). An entry
+    that points into an object is `<symbol>+<hex offset>`."""
     digest = hashlib.sha1("\0".join(map(canonical_symbol, targets)).encode()).hexdigest()[:8]
-    return f"$P{len(targets)}[{targets[0]}...]#{digest}"
+    name = f"$P{len(targets)}[{canonical_symbol(targets[0])}...]#{digest}"
+    pointer_tables[name] = tuple(targets)
+    return name
+
+
+def pointer_entry(name: str, offset: int) -> str:
+    return f"{name}+{offset:x}" if offset else name
 
 
 def literal_for(read, address: int, access_size: int, pointer=None, table=None) -> str:
