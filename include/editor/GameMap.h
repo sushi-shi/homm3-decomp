@@ -425,6 +425,12 @@ private:
     TRefCountingPtr<_TImpl> _m_pImpl;
 };
 
+// The map's client (TMapDoc): one pure virtual, first in TMapDoc's vtable.
+class TGameMap::TClient {
+public:
+    virtual void onMapObjectRemoved(bool bUnderground, TMapLayerObjectID objID) = 0;
+};
+
 void readCellData(TRawIStream& stream, TGameMap::TLayer* pLayer);
 void writeCellData(TRawOStream& stream, const TGameMap::TLayer& layer);
 

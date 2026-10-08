@@ -142,6 +142,28 @@ struct less<TObjectType> : public binary_function<TObjectType, TObjectType, bool
 
 // The object palette's slots: one per terrain but rock, the all-terrain
 // slot and one per non-generic category.
+// TMapView's Tools/Objects handlers select them in this order (Dirt 0 ..
+// Water 8, all terrain 9, towns 10 .. treasures 14); the assert texts name
+// kNumObjectSlots. The enumerator names are not proven.
+enum TObjectSlot {
+    eObjectSlotDirt,
+    eObjectSlotSand,
+    eObjectSlotGrass,
+    eObjectSlotSnow,
+    eObjectSlotSwamp,
+    eObjectSlotRough,
+    eObjectSlotSubterranean,
+    eObjectSlotLava,
+    eObjectSlotWater,
+    eObjectSlotAllTerrain,
+    eObjectSlotTowns,
+    eObjectSlotMonsters,
+    eObjectSlotHeroes,
+    eObjectSlotArtifacts,
+    eObjectSlotTreasures,
+    kNumObjectSlots
+};
+
 class TObjectSlotTraits {
 public:
     virtual ~TObjectSlotTraits() {}
