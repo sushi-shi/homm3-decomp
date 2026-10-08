@@ -14,7 +14,7 @@ from homm3.core import common
 from homm3.loki import cmpobj
 from homm3.loki.cmpobj import CodeSection, Function, put
 from homm3.loki.elf import (Elf, R_386_32, R_386_PC32, SHF_ALLOC, SHF_EXECINSTR, SHT_REL,
-                            SHT_SYMTAB, STT_FUNC, STT_OBJECT, STT_SECTION)
+                            SHT_SYMTAB, STT_FUNC, STT_NOTYPE, STT_OBJECT, STT_SECTION)
 from homm3.loki.image import IMAGE, LokiImage
 
 RETAIL = common.HOMM3_DIR / "config/retail" / IMAGE
@@ -186,6 +186,11 @@ def base_sections(data: bytes) -> list[CodeSection]:
                     continue
                 target = symbols[rel.symbol]
                 (addend,) = struct.unpack_from("<i", section.data, field.offset)
+                if target.type == STT_NOTYPE and target.bind == 0 and 0 < target.shndx < 0xff00:
+                    # gas 2.9.1.0.x keeps local labels in linkonce sections and
+                    # relocates against them: fold back to section + offset.
+                    addend += target.value
+                    target = next(s for s in symbols if s.type == STT_SECTION and s.shndx == target.shndx)
                 if target.type != STT_SECTION:
                     put(section, field.offset, rel.type, target.name, addend)
                     continue
@@ -255,3 +260,49 @@ def pair_statics(base: list[CodeSection], target: list[CodeSection]) -> list[str
                         reloc.target = local.name + reloc.target[len(old):]
     return unpaired
 
+
+def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, tuple[str, int]]:
+    """Name the retail object's file-static data after the compiled object's.
+
+    The image names no file-static or function-local static data
+    (`data_<address>`). For each function both sides define, when the two
+    relocation lists have the same length and every other reference agrees
+    in order, the k-th `data_` reference is the k-th compiled reference. A
+    retail address is renamed only when every such function agrees on its
+    counterpart (and no two addresses share one); everything else stays
+    `data_<address>`, so a wrong layout still shows as a difference."""
+    def by_function(sections: list[CodeSection]) -> dict[str, list]:
+        out: dict[str, list] = {}
+        for section in sections:
+            relocs = sorted(section.relocs, key=lambda r: r.offset)
+            for function in section.functions:
+                end = function.offset + function.size
+                out[function.name] = [r for r in relocs if function.offset <= r.offset < end]
+        return out
+
+    left, right = by_function(base), by_function(target)
+    votes: dict[str, set[tuple[str, int]]] = {}
+    for name, retail in right.items():
+        compiled = left.get(name)
+        if compiled is None or len(compiled) != len(retail):
+            continue
+        pairs = list(zip(compiled, retail))
+        if any(not t.target.startswith("data_") and (c.target, c.addend) != (t.target, t.addend)
+               for c, t in pairs):
+            continue
+        for c, t in pairs:
+            if t.target.startswith("data_"):
+                address = int(t.target[5:], 16) + t.addend
+                votes.setdefault(f"data_{address:08x}", set()).add((c.target, c.addend))
+    mapping = {name: next(iter(found)) for name, found in votes.items() if len(found) == 1}
+    counterparts = [found for found in mapping.values()]
+    mapping = {name: found for name, found in mapping.items() if counterparts.count(found) == 1}
+    for section in target:
+        for reloc in section.relocs:
+            if reloc.target.startswith("data_"):
+                address = int(reloc.target[5:], 16) + reloc.addend
+                found = mapping.get(f"data_{address:08x}")
+                if found is not None:
+                    reloc.target, reloc.addend = found
+                    struct.pack_into("<i", section.data, reloc.offset, found[1])
+    return mapping

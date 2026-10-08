@@ -128,6 +128,7 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False,
             continue
         base = delink.base_sections(obj.read_bytes())
         unpaired = delink.pair_statics(base, target)
+        delink.pair_data(base, target)
         if unpaired and verbose:
             print(f"[loki] {unit.name}: unpaired file-static functions: {', '.join(unpaired)}")
         objwriter.write(delink_path, target)

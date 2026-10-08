@@ -132,6 +132,7 @@ def _diff(unit_name: str, selector: str, width: int) -> int:
     base_sections = delink.base_sections(obj.read_bytes())
     target_sections = delink.target_sections(unit.obj)
     delink.pair_statics(base_sections, target_sections)
+    delink.pair_data(base_sections, target_sections)
     base = diff.find(base_sections, selector)
     target = diff.find(target_sections, selector)
     if len(target) != 1 or len(base) > 1:
