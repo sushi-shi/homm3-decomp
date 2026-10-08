@@ -10,11 +10,11 @@
 // The 32-byte archive-directory row. Retail Find's indexing uses a five-bit
 // shift, while open reads these same five fields from the on-disk table.
 struct LODEntry {
-    char m_name[16];
-    int m_offset;
-    int m_size;
-    int m_attrib;
-    int m_csize;
+    char name[16];
+    int offset;
+    int size;
+    int attrib;
+    int csize;
 
     LODEntry();
 };
@@ -23,13 +23,13 @@ SIZE(LODEntry, 0x20);
 // Retail's inlined header constructor writes "LOD" at +0, version 500 at
 // +4, and clears the remaining 84 bytes.
 struct LODHeader {
-    char m_lodId[4];
-    int m_version;
-    int m_numEntries;
+    char LOD_ID[4];
+    int version;
+    int numEntries;
     // Original Dreamcast LODHeader::reserved is char[80] at +12,
     // exactly matching the retail 0x5c-byte header and constructor clear.
     // This is documented reserved storage, not an unresolved field.
-    char m_reserved[80];
+    char reserved[80];
 
     // No retail row of its own - LODFile's constructor 0x4fa780 carries
     // it inline, in this order: the "LOD" strcpy into this+0x11c, the
@@ -43,17 +43,17 @@ SIZE(LODHeader, 0x5c);
 // for every field and DoNewGame's static storage proves the total 0x18c size.
 class LODFile {
 private:
-    FILE* m_fileptr;
-    char m_lodFileName[256];
-    int m_opened;
-    unsigned char* m_dataBuffer;
-    unsigned long m_dataBufferSize;
-    int m_dataItemIndex;
-    int m_dataPos;
-    int m_matchindex;
-    LODHeader m_header;
+    FILE* fileptr;
+    char LODFileName[256];
+    int opened;
+    unsigned char* dataBuffer;
+    unsigned long dataBufferSize;
+    int dataItemIndex;
+    int dataPos;
+    int matchindex;
+    LODHeader header;
 
-    void find(unsigned begin, unsigned end, const char* itemName);
+    void Find(unsigned begin, unsigned end, const char* itemName);
     void* getDataPtr(const char* itemName);
 
 public:
@@ -65,8 +65,8 @@ public:
         LOD_ITEM_NOT_FOUND = 4,
         LOD_NO_IO_BUFFER = 5
     };
-    int m_numEntries;
-    std::vector<LODEntry> m_subindex;
+    int numEntries;
+    std::vector<LODEntry> subindex;
     unsigned char exist(const char* itemName);
     char* getErrorString(int lodError);
     void sort();

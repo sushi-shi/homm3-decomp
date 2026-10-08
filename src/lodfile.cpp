@@ -10,11 +10,11 @@ DC_ADDRESS(0x0e908c, 0x34)
 MAC_ADDRESS(0x11b598, 0x5c)
 void LODFile::clear()
 {
-    if (m_opened) {
-        m_subindex.clear();
-        fclose(m_fileptr);
-        delete[] m_dataBuffer;
-        m_opened = 0;
+    if (opened) {
+        subindex.clear();
+        fclose(fileptr);
+        delete[] dataBuffer;
+        opened = 0;
     }
 }
 
@@ -25,13 +25,13 @@ DC_ADDRESS(0x0e9100, 0x54)
 MAC_ADDRESS(0x11b5f4, 0x8c)
 void* LODFile::getDataPtr(const char* itemName)
 {
-    if (!m_opened)
+    if (!opened)
         return 0;
-    find(0, m_numEntries, itemName);
-    if (m_matchindex >= 0) {
-        fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
-        m_dataItemIndex = m_matchindex;
-        return m_fileptr;
+    Find(0, numEntries, itemName);
+    if (matchindex >= 0) {
+        fseek(fileptr, subindex[matchindex].offset, SEEK_SET);
+        dataItemIndex = matchindex;
+        return fileptr;
     }
     return 0;
 }
@@ -41,10 +41,10 @@ DC_ADDRESS(0x0e9154, 0x42)
 MAC_ADDRESS(0x11b680, 0x70)
 LODEntry* LODFile::getItemIndex(const char* itemName)
 {
-    if (m_opened) {
-        find(0, m_numEntries, itemName);
-        if (m_matchindex >= 0)
-            return &m_subindex[m_matchindex];
+    if (opened) {
+        Find(0, numEntries, itemName);
+        if (matchindex >= 0)
+            return &subindex[matchindex];
     }
     return 0;
 }
@@ -53,8 +53,8 @@ LODEntry* LODFile::getItemIndex(const char* itemName)
 DC_ADDRESS(0x0e9198, 0x26)
 unsigned char LODFile::exist(const char* itemName)
 {
-    find(0, m_numEntries, itemName);
-    return m_matchindex >= 0;
+    Find(0, numEntries, itemName);
+    return matchindex >= 0;
 }
 
 // Mac retains both recursive calls at 0x11b770 and 0x11b7d8. The Windows
@@ -62,45 +62,45 @@ unsigned char LODFile::exist(const char* itemName)
 VA(0x004fa660, 0x113)
 DC_ADDRESS(0x0e91c0, 0xf2)
 MAC_ADDRESS(0x11b6f0, 0x148)
-void LODFile::find(unsigned begin, unsigned end, const char* itemName)
+void LODFile::Find(unsigned begin, unsigned end, const char* itemName)
 {
     if (begin == end) {
-        m_matchindex = -1;
+        matchindex = -1;
         return;
     }
 
     unsigned half = (end - begin) / 2;
-    int order = _strcmpi(itemName, m_subindex[begin + half].m_name);
+    int order = _strcmpi(itemName, subindex[begin + half].name);
     if (order == 0) {
-        m_matchindex = begin + half;
+        matchindex = begin + half;
         return;
     }
     if (order < 0) {
         if (end - begin > 4) {
-            find(begin, begin + half, itemName);
+            Find(begin, begin + half, itemName);
             return;
         } else {
             for (unsigned i = begin; i < end; i++) {
-                if (_strcmpi(itemName, m_subindex[i].m_name) == 0) {
-                    m_matchindex = i;
+                if (_strcmpi(itemName, subindex[i].name) == 0) {
+                    matchindex = i;
                     return;
                 }
             }
-            m_matchindex = -1;
+            matchindex = -1;
             return;
         }
     } else {
         if (end - begin > 4) {
-            find(begin + half, end, itemName);
+            Find(begin + half, end, itemName);
             return;
         } else {
             for (unsigned j = begin; j < end; j++) {
-                if (_strcmpi(itemName, m_subindex[j].m_name) == 0) {
-                    m_matchindex = j;
+                if (_strcmpi(itemName, subindex[j].name) == 0) {
+                    matchindex = j;
                     return;
                 }
             }
-            m_matchindex = -1;
+            matchindex = -1;
             return;
         }
     }
@@ -127,11 +127,11 @@ DC_ADDRESS(0x0e92f8, 0x38)
 MAC_ADDRESS(0x11b838, 0x1c)
 LODEntry::LODEntry()
 {
-    m_name[0] = 0;
-    m_offset = 0;
-    m_size = 0;
-    m_attrib = 0;
-    m_csize = 0;
+    name[0] = 0;
+    offset = 0;
+    size = 0;
+    attrib = 0;
+    csize = 0;
 }
 
 // E:\gamedcs\lodfile.cpp:266.  No retail row of its own: /Ob2 folds it
@@ -141,10 +141,10 @@ DC_ADDRESS(0x0e93bc, 0x60)
 MAC_ADDRESS(0x11b9b0, 0x50)
 LODHeader::LODHeader()
 {
-    strcpy(m_lodId, DATA_COMPGEN(0x0067fa58, lodSignature, "LOD"));
-    m_version = 500;
-    m_numEntries = 0;
-    memset(m_reserved, 0, sizeof(m_reserved));
+    strcpy(LOD_ID, DATA_COMPGEN(0x0067fa58, lodSignature, "LOD"));
+    version = 500;
+    numEntries = 0;
+    memset(reserved, 0, sizeof(reserved));
 }
 
 VA(0x004fa780, 0x7B)
@@ -152,10 +152,10 @@ DC_ADDRESS(0x0e9330, 0x42)
 MAC_ADDRESS(0x11b854, 0x7c)
 LODFile::LODFile()
 {
-    m_fileptr = 0;
-    m_opened = 0;
+    fileptr = 0;
+    opened = 0;
     clear();
-    m_dataBuffer = 0;
+    dataBuffer = 0;
 }
 
 VA(0x004fa800, 0x97)
@@ -171,25 +171,25 @@ DC_ADDRESS(0x0e941c, 0x140)
 MAC_ADDRESS(0x11ba00, 0x174)
 int LODFile::open(const char* filename, int flags)
 {
-    if (m_opened)
+    if (opened)
         clear();
 
     if (flags & 1)
-        m_fileptr = fopen(filename,
+        fileptr = fopen(filename,
             DATA_COMPGEN(0x00677d6c, lodReadMode, "rb"));
     else
-        m_fileptr = fopen(filename,
+        fileptr = fopen(filename,
             DATA_COMPGEN(0x0067fa5c, lodUpdateMode, "rb+"));
-    if (!m_fileptr)
+    if (!fileptr)
         return 1;
 
-    strcpy(m_lodFileName, filename);
-    fread(&m_header, sizeof(m_header), 1, m_fileptr);
-    m_numEntries = m_header.m_numEntries;
-    m_subindex.resize(m_numEntries);
-    fread(&m_subindex[0], sizeof(LODEntry), m_numEntries, m_fileptr);
-    fseek(m_fileptr, 0, SEEK_SET);
-    m_opened = 1;
+    strcpy(LODFileName, filename);
+    fread(&header, sizeof(header), 1, fileptr);
+    numEntries = header.numEntries;
+    subindex.resize(numEntries);
+    fread(&subindex[0], sizeof(LODEntry), numEntries, fileptr);
+    fseek(fileptr, 0, SEEK_SET);
+    opened = 1;
     return 0;
 }
 
@@ -206,15 +206,15 @@ int LODFile::open(const char* filename, int flags)
 DC_ADDRESS(0x0e9654, 0x12)
 int __cdecl compare(const void* arg1, const void* arg2)
 {
-    return _strcmpi(static_cast<const LODEntry*>(arg1)->m_name,
-                    static_cast<const LODEntry*>(arg2)->m_name);
+    return _strcmpi(static_cast<const LODEntry*>(arg1)->name,
+                    static_cast<const LODEntry*>(arg2)->name);
 }
 
 // Original: LODFile::sort; lodfile.cpp:402
 DC_ADDRESS(0x0e9668, 0x28)
 void LODFile::sort()
 {
-    qsort(&m_subindex[0], m_numEntries, sizeof(LODEntry), compare);
+    qsort(&subindex[0], numEntries, sizeof(LODEntry), compare);
 }
 
 VA(0x004faa70, 0xAB)
@@ -227,15 +227,15 @@ MAC_ADDRESS(0x11bb74, 0x80)
 bool LODFile::pointAt(const char* itemName)
 {
     if (!getDataPtr(itemName)) {
-        m_dataItemIndex = -1;
-        m_dataPos = -1;
+        dataItemIndex = -1;
+        dataPos = -1;
         return false;
     }
-    m_dataItemIndex = m_matchindex;
-    m_dataPos = 0;
-    delete[] m_dataBuffer;
-    m_dataBuffer = 0;
-    m_dataBufferSize = 0;
+    dataItemIndex = matchindex;
+    dataPos = 0;
+    delete[] dataBuffer;
+    dataBuffer = 0;
+    dataBufferSize = 0;
     return true;
 }
 
@@ -244,27 +244,27 @@ DC_ADDRESS(0x0e96e0, 0x188)
 MAC_ADDRESS(0x11bbf4, 0x174)
 int LODFile::read(void* dest, int numBytes)
 {
-    if (!m_opened)
+    if (!opened)
         return -1;
-    if (m_dataItemIndex == -1)
+    if (dataItemIndex == -1)
         return -1;
 
-    LODEntry entry = m_subindex[m_dataItemIndex];
-    if (entry.m_csize) {
-        if (m_dataBuffer == 0) {
-            m_dataBuffer = new unsigned char[entry.m_size];
-            m_dataBufferSize = entry.m_size;
-            m_dataPos = 0;
-            unsigned char* packed = new unsigned char[entry.m_csize];
-            fread(packed, 1, entry.m_csize, m_fileptr);
-            unsigned long destLen = m_dataBufferSize;
-            uncompress(m_dataBuffer, &destLen, packed, entry.m_csize);
+    LODEntry entry = subindex[dataItemIndex];
+    if (entry.csize) {
+        if (dataBuffer == 0) {
+            dataBuffer = new unsigned char[entry.size];
+            dataBufferSize = entry.size;
+            dataPos = 0;
+            unsigned char* packed = new unsigned char[entry.csize];
+            fread(packed, 1, entry.csize, fileptr);
+            unsigned long destLen = dataBufferSize;
+            uncompress(dataBuffer, &destLen, packed, entry.csize);
             delete packed;
         }
-        memcpy(dest, m_dataBuffer + m_dataPos, numBytes);
-        m_dataPos += numBytes;
+        memcpy(dest, dataBuffer + dataPos, numBytes);
+        dataPos += numBytes;
     } else {
-        fread(dest, 1, numBytes, m_fileptr);
+        fread(dest, 1, numBytes, fileptr);
     }
     return 0;
 }
