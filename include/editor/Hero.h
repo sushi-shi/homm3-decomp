@@ -89,6 +89,9 @@ public:
     void setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills);
     void setSex(int newSex);
     void setExperience(int newExperience);
+    void setAvailability(const TPlayerMask& newAvailability);
+
+    const TPlayerMask& getAvailability() const { return _m_pImpl->m_availability; }
 
     friend bool operator==(const THeroPrototype& lhs, const THeroPrototype& rhs);
 

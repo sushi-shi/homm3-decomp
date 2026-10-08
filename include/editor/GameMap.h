@@ -71,9 +71,16 @@ public:
     enum TBehaviorType {
     };
 
+    // Nobody plays it (h3maped 0x427ee8).
+    TPlayerInfo()
+        : _m_bHumanPlayable(false), _m_bComputerPlayable(false), _m_bGenerateHero(false), _m_bHasMainTown(false),
+          _m_bCustomTownTypes(false), _m_behaviorType(TBehaviorType(0)) {}
+
     // The town types a player may start with, and whether one is drawn
     // at random among them.
     struct TTownTypes {
+        TTownTypes() : m_bRandom(false) {}
+
         std::bitset<kNumTownTypes> m_mask;
         bool m_bRandom;
     };
@@ -106,8 +113,12 @@ private:
 // (0x28 bytes; the map's assignment 0x42002a copies them in this order).
 class TTeamInfo {
 public:
+    enum { s_kMinTeams = 2, s_kMaxTeams = 7 };
+
     bool getBHasTeams() const { return _m_bHasTeams; }
     unsigned int getNumTeams() const { return _m_numTeams; }
+    void setBHasTeams(bool bHasTeams) { _m_bHasTeams = bHasTeams; }
+    void setNumTeams(unsigned int newNumTeams);
     unsigned int getPlayerTeam(TPlayer player) const;
     void setPlayerTeam(TPlayer player, unsigned int newTeam);
 

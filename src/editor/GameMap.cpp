@@ -410,6 +410,7 @@ public:
     void _registerLinkable(const TLinkableObject& linkable, bool bSecondLayer, unsigned int objID);
     void _onLinkableAdded(const TLinkableObject* pLinkable, bool bSecondLayer, unsigned int objID);
     void _onPlayableAdded(const TPlayableObject* pPlayable, bool bSecondLayer, unsigned int objID);
+    void _onRemovingPlayable(const TPlayableObject* pPlayable);
     unsigned int _pickAvailableTeam() const;
     void _makeLinkIDUnique(TLinkableObject& linkable) const;
     const TLinkableObject* _findLinkableObject(unsigned int linkID) const;
@@ -1278,6 +1279,93 @@ void TGameMap::_TImpl::_onPlayableAdded(const TPlayableObject* pPlayable, bool b
         }
         _m_pBookkeeping->m_numPlayableSlots++;
     }
+}
+
+// A player's last unit makes the player absent: the first remaining
+// computer-playable player becomes human playable if none is, the teams
+// close up, and each hero the player could hire is offered elsewhere.
+VA(0x00427b17, 0x3d1)
+void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject* pPlayable)
+{
+    TPlayer owner = pPlayable->getOwner();
+    if (owner != ePlayerNone && --_m_apPlayerBookkeeping[owner]->m_numUnits == 0) {
+        TPlayerInfo& player = (*_m_pProperties->m_paPlayer)[owner];
+        player = TPlayerInfo();
+        if (--_m_pBookkeeping->m_numPlayableSlots != 0) {
+            TPlayerInfo* pFirstPlayable = NULL;
+            unsigned int i;
+            for (i = 0; i < kNumPlayers; i++) {
+                if ((*_m_pProperties->m_paPlayer)[i].getBHumanPlayable())
+                    break;
+                if (pFirstPlayable == NULL && (*_m_pProperties->m_paPlayer)[i].getBComputerPlayable())
+                    pFirstPlayable = &(*_m_pProperties->m_paPlayer)[i];
+            }
+            if (i == kNumPlayers)
+                pFirstPlayable->setBHumanPlayable(true);
+        }
+        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
+        if (pConstProperties->m_pTeamInfo->getBHasTeams()) {
+            TTeamInfo& teamInfo = *_m_pProperties->m_pTeamInfo;
+            if (_m_pBookkeeping->m_numPlayableSlots == TTeamInfo::s_kMinTeams) {
+                teamInfo.setBHasTeams(false);
+            } else {
+                unsigned int team = teamInfo.getPlayerTeam(owner);
+                teamInfo.setPlayerTeam(owner, 0);
+                bool bTeamInUse = false;
+                unsigned int otherPlayer;
+                for (otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                    if ((*_m_pProperties->m_paPlayer)[otherPlayer].getBPresent()
+                        && teamInfo.getPlayerTeam(TPlayer(otherPlayer)) == team) {
+                        bTeamInUse = true;
+                        break;
+                    }
+                }
+                if (!bTeamInUse) {
+                    if (teamInfo.getNumTeams() == TTeamInfo::s_kMinTeams) {
+                        teamInfo.setBHasTeams(false);
+                    } else {
+                        for (otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                            if ((*_m_pProperties->m_paPlayer)[otherPlayer].getBPresent()) {
+                                unsigned int otherTeam = teamInfo.getPlayerTeam(TPlayer(otherPlayer));
+                                if (otherTeam > team)
+                                    teamInfo.setPlayerTeam(TPlayer(otherPlayer), otherTeam - 1);
+                            }
+                        }
+                        teamInfo.setNumTeams(teamInfo.getNumTeams() - 1);
+                    }
+                } else if (_m_pBookkeeping->m_numPlayableSlots == teamInfo.getNumTeams()) {
+                    unsigned int lastTeam = teamInfo.getNumTeams() - 1;
+                    for (unsigned int player = 0;; player++) {
+                        if ((*_m_pProperties->m_paPlayer)[player].getBPresent()
+                            && teamInfo.getPlayerTeam(TPlayer(player)) == lastTeam) {
+                            teamInfo.setPlayerTeam(TPlayer(player), 0);
+                            break;
+                        }
+                    }
+                    teamInfo.setNumTeams(lastTeam);
+                }
+            }
+        }
+        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+            TPlayerMask availability = getHeroPrototype(heroID).getAvailability();
+            unsigned int availableTo = owner;
+            if (availability[owner]) {
+                TPlayerMask presentPlayers;
+                for (int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++)
+                    if (otherPlayer != owner)
+                        presentPlayers.set(otherPlayer, isPlayerPresent(TPlayer(otherPlayer)));
+                if (!presentPlayers.any())
+                    continue;
+                if (!(availability & presentPlayers).none())
+                    continue;
+                for (availableTo = 0; !presentPlayers[availableTo]; availableTo++)
+                    ;
+            }
+            availability.set(availableTo, true);
+            (*_m_pProperties->m_aHeroPrototype)[heroID].setAvailability(availability);
+        }
+    }
+    _onRemovingGeneralObject(*pPlayable);
 }
 
 // The smallest team.
