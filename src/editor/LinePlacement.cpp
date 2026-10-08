@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#include "exceptions.h"
 #include "editor/LinePlacement.h"
+#include "exceptions.h"
 #include "editor/TilePoint.h"
 
 TLineTilesetTraits::TLineTilesetTraits(unsigned int numTiles, const TLineShape* akTileLineShape)
@@ -91,16 +91,6 @@ void TMapLineFilter::_getCellInfo(const TTilePoint& loc, TCellInfo* pInfo) const
 
 namespace {
 
-// Each neighbour direction (clockwise from north) as it lands after
-// flipping a tile horizontally and/or vertically.
-const unsigned int akFlippedDir[2][2][8] = {
-    { { 0, 1, 2, 3, 4, 5, 6, 7 }, { 4, 3, 2, 1, 0, 7, 6, 5 } },
-    { { 0, 7, 6, 5, 4, 3, 2, 1 }, { 4, 5, 6, 7, 0, 1, 2, 3 } }
-};
-
-// The four flips, unflipped first.
-const bool akFlips[4][2] = { { false, false }, { false, true }, { true, false }, { true, true } };
-
 inline void recompBoundingRect(unsigned int x, unsigned int y, TTilePoint* pTopLeft,
                                TTilePoint* pBottomRight)
 {
@@ -160,13 +150,16 @@ void computeLineShape(const bool* abAdjLine, const TLineTilesetTraits& traits,
         }
         *pbHFlipped = false;
     } else {
-        // Dead local: retail builds this 8-byte table in %eax:%edx at -O0 and
-        // never reads it (the loop reads the namespace table). Only a
-        // `register` local whose scope closes before the call does that; its
-        // name is unproven.
-        {
-            register const bool akFlipsCopy[4][2] = { { false, false }, { false, true }, { true, false }, { true, true } };
-        }
+        // Each neighbour direction (clockwise from north) as it lands after
+        // flipping a tile horizontally and/or vertically.
+        static const unsigned int akFlippedDir[2][2][8] = {
+            { { 0, 1, 2, 3, 4, 5, 6, 7 }, { 4, 3, 2, 1, 0, 7, 6, 5 } },
+            { { 0, 7, 6, 5, 4, 3, 2, 1 }, { 4, 5, 6, 7, 0, 1, 2, 3 } }
+        };
+        // The four flips, unflipped first. An 8-byte local static constant:
+        // g++ 2.95 first builds it in %eax:%edx (cp_finish_decl's "really a
+        // constant" case) and writes it to .rodata when the loop indexes it.
+        static const bool akFlips[4][2] = { { false, false }, { false, true }, { true, false }, { true, true } };
         bool bHasDiagTiles = traits.getNumTilesOfLineShape(eLS_esDiag) > 0;
         for (unsigned int i = 0; i < 4; ++i) {
             const unsigned int* akDir = akFlippedDir[akFlips[i][0]][akFlips[i][1]];
