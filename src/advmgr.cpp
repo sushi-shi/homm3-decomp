@@ -5269,6 +5269,8 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
 
 // Dreamcast advmgr.cpp:6708 calls GetCell for the temporary map point.
 // Retail keeps its inlined validity call after discarding the cell result.
+// DC's `unsigned char bCloudFlip` is a lowered bool: retail passes the flag
+// to DrawShroudTile's bool parameter without a test/setne conversion.
 VA(0x00412220, 0x248)
 DC_ADDRESS(0x013fc8, 0x316)
 MAC_ADDRESS(0x012cf8, 0x2d0)
@@ -5287,7 +5289,7 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 
     int baseX = m_scrollX + destX * 32;
     int baseY = m_scrollY + destY * 32;
-    unsigned char hflip = false;
+    bool hflip = false;
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
