@@ -6,10 +6,7 @@
 #include "armygrp.h"
 
 // SpellDefs.h of the Loki port (RoE): 80 spell and creature-effect rows
-// ("id >= 0 && id < kNumSpellsAndCreatureEffects").
-enum {
-    kNumSpellsAndCreatureEffects = 80
-};
+// ("id >= 0 && id < kNumSpellsAndCreatureEffects", a SpellID enumerator).
 
 // Dreamcast SpellDefs.h:345..346: original IsMindSpell.
 inline bool IsMindSpell(int spell)

@@ -698,7 +698,7 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "herodefs"
-source = "src/herodefs.cpp"
+source = "src/HeroDefs.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
