@@ -55,6 +55,32 @@ inline bool isAllSpace(const string& text)
     return find_if(text.begin(), text.end(), not1(ptr_fun(isspace))) == text.end();
 }
 
+inline bool isTown(const TGameObject& obj)
+{
+    return dynamic_cast<const TTown*>(&obj) != NULL;
+}
+
+inline bool isHero(const TGameObject& obj)
+{
+    return dynamic_cast<const THero*>(&obj) != NULL;
+}
+
+inline bool isMonster(const TGameObject& obj)
+{
+    return dynamic_cast<const TMonster*>(&obj) != NULL;
+}
+
+inline bool isArtifact(const TGameObject& obj)
+{
+    int type = obj.getType();
+    return type == ARTIFACT || type == SPELL_SCROLL || type == BLACK_BOX;
+}
+
+inline bool isHeroOrTown(const TGameObject& obj)
+{
+    return isHero(obj) || isTown(obj);
+}
+
 bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
 {
     if (layer.getCell(loc).getTerrainType() == eTerrainWater)
@@ -71,9 +97,6 @@ bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
     return false;
 }
 
-// The height of each placed cell of an object: an underlay lies at 0,
-// anything else rises by one per row from its front, and a passable cell
-// that continues a blocked one to its left takes that cell's height.
 void copyCustomizations(const THero& hero, THero* pNewHero)
 {
     pNewHero->setBCustomName(hero.getBCustomName());
@@ -91,6 +114,9 @@ void copyCustomizations(const THero& hero, THero* pNewHero)
     pNewHero->setPatrol(hero.getPatrol());
 }
 
+// The height of each placed cell of an object: an underlay lies at 0,
+// anything else rises by one per row from its front, and a passable cell
+// that continues a blocked one to its left takes that cell's height.
 void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[kMaxObjWidth][kMaxObjHeight])
 {
     for (unsigned int x = 0; x < obj.getWidth(); x++) {
@@ -180,32 +206,6 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 }
 
 const TCappedObjectTypeInfoMap kCappedObjectTypeInfoMap;
-
-inline bool isHero(const TGameObject& obj)
-{
-    return dynamic_cast<const THero*>(&obj) != NULL;
-}
-
-inline bool isTown(const TGameObject& obj)
-{
-    return dynamic_cast<const TTown*>(&obj) != NULL;
-}
-
-inline bool isMonster(const TGameObject& obj)
-{
-    return dynamic_cast<const TMonster*>(&obj) != NULL;
-}
-
-inline bool isHeroOrTown(const TGameObject& obj)
-{
-    return isHero(obj) || isTown(obj);
-}
-
-inline bool isArtifact(const TGameObject& obj)
-{
-    int type = obj.getType();
-    return type == ARTIFACT || type == SPELL_SCROLL || type == BLACK_BOX;
-}
 
 struct TVictoryConditionData;
 struct TLossConditionData;
