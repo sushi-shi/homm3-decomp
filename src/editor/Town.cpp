@@ -7,19 +7,19 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <algorithm>
 #include <functional>
 #include <iostream.h>
-#include <string>
 
 #include "adventureobjecttype.h"
 #include "autoarrayptr.h"
 #include "creaturetype.h"
 #include "resourcemanager.h"
 #include "resourceptr.h"
+#include "editor/Town.h"
 #include "editor/Hero.h"
 #include "editor/MapEditorText.h"
-#include "editor/Town.h"
 #include "editor/RawStream.h"
 #include "exceptions.h"
 #include "textresource.h"

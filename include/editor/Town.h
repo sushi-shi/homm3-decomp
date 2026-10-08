@@ -88,27 +88,6 @@ public:
     static const unsigned int s_kMaxNameLen = 12;
     static const int s_kMaxTimedEvents = 50;
 
-    // A building's state in a town: built, or disabled for this town.
-    class TBuildingState {
-    public:
-        TBuildingState() : _m_bBuilt(false), _m_bDisabled(false) {}
-
-        bool getBBuilt() const { return _m_bBuilt; }
-        void setBBuilt(bool bBuilt) { _m_bBuilt = bBuilt; }
-        bool getBDisabled() const { return _m_bDisabled; }
-        void setBDisabled(bool bDisabled) { _m_bDisabled = bDisabled; }
-
-        bool operator==(const TBuildingState& other) const
-        {
-            return _m_bBuilt == other._m_bBuilt && _m_bDisabled == other._m_bDisabled;
-        }
-        bool operator!=(const TBuildingState& other) const { return !(*this == other); }
-
-    private:
-        bool _m_bBuilt : 1;
-        bool _m_bDisabled : 1;
-    };
-
     // The town pages build their building trees from these: a building whose
     // name is unset is not available in this town type, and m_building is
     // the building it hangs under (eBuildingNone for the roots); the second
@@ -143,6 +122,27 @@ public:
         const TGeneratorTraits* const (&m_apGeneratorTraits)[s_kNumGeneratorTypes];
     };
 
+    // A building's state in a town: built, or disabled for this town.
+    class TBuildingState {
+    public:
+        TBuildingState() : _m_bBuilt(false), _m_bDisabled(false) {}
+
+        void setBBuilt(bool bBuilt) { _m_bBuilt = bBuilt; }
+        void setBDisabled(bool bDisabled) { _m_bDisabled = bDisabled; }
+        bool getBBuilt() const { return _m_bBuilt; }
+        bool getBDisabled() const { return _m_bDisabled; }
+
+        bool operator==(const TBuildingState& other) const
+        {
+            return _m_bBuilt == other._m_bBuilt && _m_bDisabled == other._m_bDisabled;
+        }
+        bool operator!=(const TBuildingState& other) const { return !(*this == other); }
+
+    private:
+        bool _m_bBuilt : 1;
+        bool _m_bDisabled : 1;
+    };
+
     // A bonus to each generator's weekly growth, up to s_kMax.
     class TGeneratorBonuses {
     public:
@@ -162,10 +162,7 @@ public:
 
     class TTimedEvent : public ::TTimedEvent {
     public:
-        const bitset<kNumBuildings>& getBuildMask() const { return _m_buildMask; }
-        void setBuildMask(const bitset<kNumBuildings>& newMask) { _m_buildMask = newMask; }
-        const TGeneratorBonuses& getGeneratorBonuses() const { return _m_generatorBonuses; }
-        void setGeneratorBonuses(const TGeneratorBonuses& newBonuses) { _m_generatorBonuses = newBonuses; }
+        TTimedEvent() {}
 
         TTimedEvent& operator=(const TTimedEvent& other)
         {
@@ -174,6 +171,11 @@ public:
             _m_generatorBonuses = other._m_generatorBonuses;
             return *this;
         }
+
+        void setBuildMask(const bitset<kNumBuildings>& newMask) { _m_buildMask = newMask; }
+        void setGeneratorBonuses(const TGeneratorBonuses& newBonuses) { _m_generatorBonuses = newBonuses; }
+        const bitset<kNumBuildings>& getBuildMask() const { return _m_buildMask; }
+        const TGeneratorBonuses& getGeneratorBonuses() const { return _m_generatorBonuses; }
 
         bool operator==(const TTimedEvent& other) const
         {
