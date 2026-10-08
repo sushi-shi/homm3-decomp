@@ -208,3 +208,8 @@ source = "src/editor/ObjectHelp.cpp"
 name = "ObjectSprites"
 object = 22
 source = "src/editor/ObjectSprites.cpp"
+
+[[unit]]
+name = "VictoryCondition"
+object = 36
+source = "src/editor/VictoryCondition.cpp"
