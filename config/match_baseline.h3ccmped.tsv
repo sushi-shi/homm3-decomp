@@ -30,20 +30,27 @@ Campaign	?accept@TScenarioBonusSpell@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z
 Campaign	?accept@TScenarioBonusSpellScroll@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0xdb60	-
 Campaign	?clone@TScenarioStartingBonus@@QBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x5280	tokens1:97414c7f911e
 Campaign	?clone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@ABVTScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x5380	tokens1:d2ee540ed024
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusArtifact@@@Z	99.9265	99.9265	99.9265	0xd9b0	-
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusBuilding@@@Z	99.9231	99.9231	99.9231	0xd8e0	-
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusCreature@@@Z	99.9286	99.9286	99.9286	0xd800	-
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusPrimarySkill@@@Z	68.4568	68.4568	68.4568	0xdb70	-
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusResource@@@Z	99.9254	99.9254	99.9254	0xdd30	-
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusSecondarySkill@@@Z	99.9286	99.9286	99.9286	0xdc60	-
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusSpell@@@Z	99.9265	99.9265	99.9265	0xd720	-
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusSpellScroll@@@Z	99.9265	99.9265	99.9265	0xda90	-
 Campaign	?test@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE_NABVTScenarioStartingBonus@@0@Z	100.0000	100.0000	100.0000	0x5020	tokens1:369db78065bd
 Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusArtifact@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0xf7b0	-
 Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusBuilding@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0xf830	-
 Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusCreature@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0xf7f0	-
-Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	98.7500	98.7500	98.7500	0x5330	tokens1:6e4a0bb36243
+Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusPrimarySkill@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	82.3235	82.3235	82.3235	0xf850	-
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x5330	tokens1:6e4a0bb36243
 Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x5320	tokens1:cbde19841b8b
-Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	98.7500	98.7500	98.7500	0x5310	tokens1:e5dd4511f867
-Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	98.7500	98.7500	98.7500	0x5350	tokens1:25b9a5348d8c
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x5310	tokens1:e5dd4511f867
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x5350	tokens1:25b9a5348d8c
 Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0x5370	tokens1:869a4fe60d16
-Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSecondarySkill@@@Z	98.7500	98.7500	98.7500	0x5360	tokens1:ff6987be5060
-Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpell@@@Z	98.7500	98.7500	98.7500	0x5300	tokens1:e23f2f1e574d
-Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpellScroll@@@Z	98.7500	98.7500	98.7500	0x5340	tokens1:71e36756dfe0
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x5360	tokens1:ff6987be5060
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpell@@@Z	100.0000	100.0000	100.0000	0x5300	tokens1:e23f2f1e574d
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpellScroll@@@Z	100.0000	100.0000	100.0000	0x5340	tokens1:71e36756dfe0
 Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x5140	tokens1:42c8a8d7fcc7
 Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x5100	tokens1:08d88b8061c9
 Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x50c0	tokens1:e253fc40f4e4
