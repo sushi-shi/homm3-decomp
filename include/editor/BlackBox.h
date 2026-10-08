@@ -3,7 +3,7 @@
 // copy-on-write TContents: experience, mana, morale and luck bonuses, a
 // resource grant, primary skill bonuses, and vectors of secondary skills,
 // artifacts, spells and creature stacks. The bonus limits (s_kMax*/s_kMin*)
-// and their names are in the asserts; their values follow with the bodies.
+// are the asserts' names with the bodies' values.
 #ifndef HOMM3_EDITOR_BLACKBOX_H
 #define HOMM3_EDITOR_BLACKBOX_H
 
@@ -26,10 +26,21 @@ class TRawOStream;
 // A bonus to each primary skill.
 class TPrimarySkillBonuses {
 public:
+    static const unsigned int s_kMax = 99;
+
     TPrimarySkillBonuses() : _m_bonuses(0) {}
 
-    unsigned int get(TPrimarySkill skill) const;
-    void set(TPrimarySkill skill, unsigned int newBonus);
+    unsigned int get(TPrimarySkill primarySkill) const;
+    void set(TPrimarySkill primarySkill, unsigned int newBonus);
+
+    friend bool operator==(const TPrimarySkillBonuses& lhs, const TPrimarySkillBonuses& rhs)
+    {
+        return lhs._m_bonuses == rhs._m_bonuses;
+    }
+    friend bool operator!=(const TPrimarySkillBonuses& lhs, const TPrimarySkillBonuses& rhs)
+    {
+        return !(lhs == rhs);
+    }
 
 private:
     TArray<unsigned int, kNumPrimarySkills> _m_bonuses;
@@ -38,9 +49,16 @@ private:
 TRawOStream& operator<<(TRawOStream& stream, const TPrimarySkillBonuses& bonuses);
 TRawIStream& operator>>(TRawIStream& stream, TPrimarySkillBonuses& bonuses);
 
-// A secondary skill at a mastery (basic by default).
+// A secondary skill at a mastery (basic by default). The editor counts
+// three masteries from basic ("mastery < eMasteryBasic + kNumMasteries"
+// compares with 4) where the game's TSkillMastery counts four from none;
+// the record carries the editor's count so herospec.h keeps the game's.
 class TSecondarySkillRecord {
 public:
+    enum {
+        kNumMasteries = 3
+    };
+
     TSecondarySkillRecord() : _m_type(TSecondarySkill(0)), _m_mastery(TSkillMastery(1)) {}
     TSecondarySkillRecord(TSecondarySkill type, TSkillMastery mastery);
 
@@ -61,6 +79,17 @@ class TBlackBox : public TTreasure {
 public:
     class TContents {
     public:
+        static const int s_kMaxExperienceBonus = 99999999;
+        static const int s_kMinManaBonus = -999;
+        static const int s_kMaxManaBonus = 999;
+        static const int s_kMinMoraleBonus = -3;
+        static const int s_kMaxMoraleBonus = 3;
+        static const int s_kMinLuckBonus = -3;
+        static const int s_kMaxLuckBonus = 3;
+        static const unsigned int s_kMaxSecSkills = 8;
+        static const unsigned int s_kMaxArtifacts = 64;
+        static const unsigned int s_kMaxCreatureStacks = 7;
+
         TContents();
 
         int getExperienceBonus() const { return _m_experienceBonus; }
@@ -103,12 +132,13 @@ public:
     TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const;
-    virtual bool hasText() const { return true; }
 
     TContents* getPContents() { return _m_pContents.get(); }
     const TContents* getPContents() const { return _m_pContents.get(); }
     const TContents& getContents() const { return *getPContents(); }
+
+    virtual bool isCustomized() const { return TTreasure::isCustomized() || _m_pContents->isCustomized(); }
+    virtual bool hasText() const { return true; }
 
 private:
     TRefCountingPtr<TContents> _m_pContents;
