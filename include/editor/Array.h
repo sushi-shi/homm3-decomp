@@ -36,7 +36,7 @@ public:
     const_iterator begin() const throw() { return _m_elements; }
     iterator end() throw() { return _m_elements + N; }
     const_iterator end() const throw() { return _m_elements + N; }
-    size_type size() throw() { return N; }
+    static size_type size() throw() { return N; }
 
     reference operator[](size_type i) throw() { return _m_elements[i]; }
     const_reference operator[](size_type i) const throw() { return _m_elements[i]; }
