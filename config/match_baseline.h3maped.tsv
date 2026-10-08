@@ -18,7 +18,7 @@
 Colors	?initColors@@YAXXZ	99.8913	99.8913	99.8913	0xcba4	tokens1:50621faedd82
 EditRumorDlg	??0TEditRumorDlg@@QAE@PAVCWnd@@ABVTRumor@@@Z	100.0000	100.0000	100.0000	0x1593f	tokens1:fa6f036e9c33
 EditRumorDlg	??0TRumor@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x15a3f	-
-EditRumorDlg	??1TEditRumorDlg@@UAE@XZ	99.6250	99.6250	99.6250	0x15aaa	-
+EditRumorDlg	??1TEditRumorDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x15aaa	-
 EditRumorDlg	??1TRumor@@QAE@XZ	100.0000	100.0000	100.0000	0x159ea	-
 EditRumorDlg	??_GTEditRumorDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a23	-
 EditRumorDlg	?DoDataExchange@TEditRumorDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x15b37	tokens1:800bca1193ce
@@ -227,10 +227,10 @@ objecttype	?_Xran@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x2f6f4	-
 objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x900ca	-
 objecttype	?accepts@TSlotCategoryObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x900eb	-
 objecttype	?count@?$bitset@$09@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1682	-
-objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAG@Z	99.9324	99.9324	99.9324	0x35adb	-
-objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAI@Z	99.9324	99.9324	99.9324	0x35ba7	-
-objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAJ@Z	99.9206	99.9206	99.9206	0x35c6f	-
-objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAK@Z	99.9206	99.9206	99.9206	0x35d1d	-
+objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAG@Z	100.0000	100.0000	100.0000	0x35adb	-
+objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAI@Z	100.0000	100.0000	100.0000	0x35ba7	-
+objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAJ@Z	100.0000	100.0000	100.0000	0x35c6f	-
+objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAK@Z	100.0000	100.0000	100.0000	0x35d1d	-
 objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAM@Z	99.9153	99.9153	99.9153	0x35dcb	-
 objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAN@Z	100.0000	100.0000	100.0000	0x35e75	-
 objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAO@Z	99.9153	99.9153	99.9153	0x35f1f	-
