@@ -1097,6 +1097,80 @@ void TGameMap::_TImpl::_onPlayableAdded(const TPlayableObject& playable)
     }
 }
 
+void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject& playable)
+{
+    TPlayer owner = playable.getOwner();
+#line 4205
+    assert(owner >= ePlayerNone && owner < kNumPlayers);
+    if (owner != ePlayerNone && --_m_apPlayerBookkeeping[owner]->m_numUnits == 0) {
+        TPlayerInfo& player = _m_pProperties->m_players[owner];
+#line 4211
+        assert(player.getBPresent());
+        player = TPlayerInfo();
+        if (--_m_pBookkeeping->m_numPlayableSlots != 0) {
+            TPlayerInfo* pFirstPlayable = NULL;
+            unsigned int i;
+            for (i = 0; i < kNumPlayers; i++) {
+                if (_m_pProperties->m_players[i].getBHumanPlayable())
+                    break;
+                if (pFirstPlayable == NULL && _m_pProperties->m_players[i].getBComputerPlayable())
+                    pFirstPlayable = &_m_pProperties->m_players[i];
+            }
+            if (i == kNumPlayers) {
+#line 4232
+                assert(pFirstPlayable != NULL);
+                pFirstPlayable->setBHumanPlayable(true);
+            }
+        }
+        if (_m_pProperties->m_teamInfo.getBHasTeams()) {
+            TTeamInfo& teamInfo = _m_pProperties->m_teamInfo;
+#line 4240
+            assert(_m_pBookkeeping->m_numPlayableSlots >= teamInfo.getNumTeams());
+            if (_m_pBookkeeping->m_numPlayableSlots == TTeamInfo::s_kMinTeams) {
+                teamInfo.setBHasTeams(false);
+            } else {
+                unsigned int team = teamInfo.getPlayerTeam(owner);
+                teamInfo.setPlayerTeam(owner, 0);
+                bool bTeamInUse = false;
+                for (unsigned int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                    if (_m_pProperties->m_players[otherPlayer].getBPresent()
+                        && teamInfo.getPlayerTeam(TPlayer(otherPlayer)) == team) {
+                        bTeamInUse = true;
+                        break;
+                    }
+                }
+                if (!bTeamInUse) {
+                    if (teamInfo.getNumTeams() == TTeamInfo::s_kMinTeams) {
+                        teamInfo.setBHasTeams(false);
+                    } else {
+                        for (unsigned int otherPlayer = 0; otherPlayer < kNumPlayers; otherPlayer++) {
+                            if (_m_pProperties->m_players[otherPlayer].getBPresent()) {
+                                unsigned int otherTeam = teamInfo.getPlayerTeam(TPlayer(otherPlayer));
+                                if (otherTeam > team)
+                                    teamInfo.setPlayerTeam(TPlayer(otherPlayer), otherTeam - 1);
+                            }
+                        }
+                        teamInfo.setNumTeams(teamInfo.getNumTeams() - 1);
+                    }
+                } else if (_m_pBookkeeping->m_numPlayableSlots == teamInfo.getNumTeams()) {
+                    unsigned int lastTeam = teamInfo.getNumTeams() - 1;
+                    for (unsigned int player = 0;; player++) {
+#line 4293
+                        assert(player < kNumPlayers);
+                        if (_m_pProperties->m_players[player].getBPresent()
+                            && teamInfo.getPlayerTeam(TPlayer(player)) == lastTeam) {
+                            teamInfo.setPlayerTeam(TPlayer(player), 0);
+                            break;
+                        }
+                    }
+                    teamInfo.setNumTeams(lastTeam);
+                }
+            }
+        }
+    }
+    _onRemovingGeneralObject(playable);
+}
+
 void TGameMap::_TImpl::_onHolyGrailAdded(const THolyGrail& holyGrail)
 {
 #line 4409
