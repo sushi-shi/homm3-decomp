@@ -15,6 +15,11 @@
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumMonsterReserved = 2;
+
 TMonster::TMonster(const TObjectType& objType)
     : TGameObject(objType), _m_quantity(0), _m_disposition(eDispositionAggressive), _m_bNeverFlees(false),
       _m_bNeverGrows(false), _m_resourceQuantities(0), _m_artifact(eArtifactNone)
@@ -62,7 +67,7 @@ TMonster::TMonster(const TObjectType& objType, TRawIStream* pIStream, int versio
     signed char bNeverGrows;
     *pIStream >> bNeverGrows;
     setBNeverGrows(bNeverGrows != 0);
-    signed char aReserved[2];
+    signed char aReserved[kNumMonsterReserved];
     *pIStream >> aReserved;
 }
 
@@ -151,7 +156,7 @@ void TMonster::write(TRawOStream* pOStream) const
         *pOStream << (signed char) _m_artifact;
     }
     *pOStream << (signed char) _m_bNeverFlees << (signed char) _m_bNeverGrows;
-    signed char aReserved[2];
+    signed char aReserved[kNumMonsterReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }

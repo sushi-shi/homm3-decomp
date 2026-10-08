@@ -13,6 +13,11 @@
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumTimedEventReserved = 16;
+
 TTimedEvent::TTimedEvent()
     : _m_bApplyToPlayer(~bitset<kNumPlayers>(0)),
       _m_bApplyToComputer(false),
@@ -118,7 +123,7 @@ TRawOStream& operator<<(TRawOStream& stream, const TTimedEvent& event)
            << static_cast< short >( event.getFirstOccurence() )
            << static_cast< short >( event.getSubsequentInterval() );
 
-    signed char reserved[16];
+    signed char reserved[kNumTimedEventReserved];
     fill_n(reserved, sizeof(reserved), 0);
     stream << reserved;
     return stream;
@@ -151,7 +156,7 @@ TRawIStream& operator>>(TRawIStream& stream, TTimedEvent& event)
     event.setFirstOccurence(firstOccurence);
     event.setSubsequentInterval(subsequentInterval);
 
-    signed char reserved[16];
+    signed char reserved[kNumTimedEventReserved];
     stream >> reserved;
     return stream;
 }

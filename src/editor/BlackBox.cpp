@@ -3,12 +3,17 @@
 // box and the heroes share. Assert lines come from the retail immediates.
 #include <assert.h>
 #include <algorithm>
-#include <vector>
 
 #include "adventureobjecttype.h"
 #include "exceptions.h"
 #include "editor/BlackBox.h"
 #include "editor/RawStream.h"
+
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumOldBlackBoxReserved = 3;
+const unsigned int kNumBlackBoxReserved = 8;
 
 void TPrimarySkillBonuses::set(TPrimarySkill primarySkill, unsigned int newBonus)
 {
@@ -237,13 +242,13 @@ TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int vers
         }
         _m_pContents->setCreatureStacks(aCreatureStack);
 
-        signed char aReserved[8];
+        signed char aReserved[kNumBlackBoxReserved];
         *pIStream >> aReserved;
     } else {
         if (objType.getType() == BLACK_BOX) {
             signed char artifact;
             *pIStream >> artifact;
-            signed char aReserved[3];
+            signed char aReserved[kNumOldBlackBoxReserved];
             *pIStream >> aReserved;
             if (artifact >= 0)
                 _m_pContents->setArtifacts(vector<TArtifact>(1, TArtifact(artifact)));
@@ -282,7 +287,7 @@ void TBlackBox::write(TRawOStream* pOStream) const
          pStack != _m_pContents->getCreatureStacks().end(); ++pStack)
         *pOStream << *pStack;
 
-    signed char aReserved[8];
+    signed char aReserved[kNumBlackBoxReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }

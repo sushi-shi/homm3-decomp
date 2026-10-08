@@ -12,6 +12,11 @@
 #include "exceptions.h"
 #include "editor/RawStream.h"
 
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumSeersHutReserved = 2;
+
 namespace {
 
 // The reward kinds as the map file numbers them; the names other than
@@ -385,7 +390,7 @@ TSeersHut::TSeersHut(const TObjectType& objType, TRawIStream* pIStream, int vers
             break;
         }
         }
-        signed char aReserved[2];
+        signed char aReserved[kNumSeersHutReserved];
         *pIStream >> aReserved;
     } catch (...) {
         delete _m_pQuestReward;
@@ -446,7 +451,7 @@ void TSeersHut::write(TRawOStream* pOStream) const
     } else {
         *pOStream << (signed char) eRewardNone;
     }
-    signed char aReserved[2];
+    signed char aReserved[kNumSeersHutReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }

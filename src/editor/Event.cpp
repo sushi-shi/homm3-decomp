@@ -4,11 +4,17 @@
 #include <assert.h>
 #include <bitset>
 #include <string>
-#include <vector>
 
 #include "adventureobjecttype.h"
+#include "exceptions.h"
 #include "editor/Event.h"
 #include "editor/RawStream.h"
+
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumOldEventReserved = 16;
+const unsigned int kNumEventReserved = 4;
 
 TEvent::TEvent(const TObjectType& objType)
     : TGameObject(objType), TBlackBox(objType), _m_bAllowPlayer(~bitset<kNumPlayers>(0)), _m_bAllowComputer(false),
@@ -50,10 +56,10 @@ TEvent::TEvent(const TObjectType& objType, TRawIStream* pIStream, int version)
     setBAllowComputer(bAllowComputer != 0);
     setBCancelAfterVisit(bCancelAfterVisit != 0);
     if (version < 6) {
-        signed char aReserved[16];
+        signed char aReserved[kNumOldEventReserved];
         *pIStream >> aReserved;
     } else {
-        signed char aReserved[4];
+        signed char aReserved[kNumEventReserved];
         *pIStream >> aReserved;
     }
 }
@@ -89,7 +95,7 @@ void TEvent::write(TRawOStream* pOStream) const
             players |= 1 << player;
     *pOStream << players;
     *pOStream << (signed char) _m_bAllowComputer << (signed char) _m_bCancelAfterVisit;
-    signed char aReserved[4];
+    signed char aReserved[kNumEventReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }

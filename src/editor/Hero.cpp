@@ -27,6 +27,11 @@
 #include "editor/RawStream.h"
 #include "textresource.h"
 
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumHeroReserved = 16;
+
 namespace {
 TObjectTypeTable aHeroObjType(kNumHeroClasses + 1);
 
@@ -426,7 +431,7 @@ THero::THero(const TObjectType& objType, TRawIStream* pIStream, int version)
     signed char patrol;
     *pIStream >> patrol;
     setPatrol(patrol);
-    signed char aReserved[16];
+    signed char aReserved[kNumHeroReserved];
     *pIStream >> aReserved;
 }
 
@@ -521,7 +526,7 @@ void THero::write(TRawOStream* pOStream) const
             *pOStream << (signed char) *iter;
     }
     *pOStream << (signed char) getPatrol();
-    signed char aReserved[16];
+    signed char aReserved[kNumHeroReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }

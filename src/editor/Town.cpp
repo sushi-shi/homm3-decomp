@@ -24,6 +24,12 @@
 #include "exceptions.h"
 #include "textresource.h"
 
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumTownReserved = 3;
+const unsigned int kNumTownEventReserved = 4;
+
 #define ARRAY_SIZE( a ) ( sizeof( a ) / sizeof( ( a )[ 0 ] ) )
 
 namespace {
@@ -432,7 +438,7 @@ TRawOStream& operator<<(TRawOStream& stream, const TTown::TTimedEvent& event)
         if (buildMask[building])
             aBuildMask[building / 8] |= 1 << building % 8;
     stream << aBuildMask << event.getGeneratorBonuses();
-    signed char aReserved[4];
+    signed char aReserved[kNumTownEventReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     stream << aReserved;
     return stream;
@@ -450,7 +456,7 @@ TRawIStream& operator>>(TRawIStream& stream, TTown::TTimedEvent& event)
     TTown::TGeneratorBonuses generatorBonuses;
     stream >> generatorBonuses;
     event.setGeneratorBonuses(generatorBonuses);
-    signed char aReserved[4];
+    signed char aReserved[kNumTownEventReserved];
     stream >> aReserved;
     return stream;
 }
@@ -786,7 +792,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
         events.push_back(event);
     }
     setTimedEvents(events);
-    signed char aReserved[3];
+    signed char aReserved[kNumTownReserved];
     *pIStream >> aReserved;
 }
 
@@ -969,7 +975,7 @@ void TTown::write(TRawOStream* pOStream) const
     *pOStream << (long) _m_events.size();
     for (vector<TTimedEvent>::const_iterator iter = _m_events.begin(); iter != _m_events.end(); ++iter)
         *pOStream << *iter;
-    signed char aReserved[3];
+    signed char aReserved[kNumTownReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }

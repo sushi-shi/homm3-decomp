@@ -21,6 +21,21 @@
 #include "exceptions.h"
 #include "textresource.h"
 
+// The reserved byte counts of the map format records this file reads and
+// writes. The object emits them at the end of its .rodata in this order
+// (values proven there); the names are inferred.
+const unsigned int kNumFlaggableObjectReserved = 3;
+const unsigned int kNumAbandonedMineReserved = 3;
+const unsigned int kNumGarrisonReserved = 8;
+const unsigned int kNumTreasureReserved = 4;
+const unsigned int kNumOldAbandonedMineReserved = 4;
+const unsigned int kNumSpellScrollReserved = 3;
+const unsigned int kNumGameResourceReserved = 4;
+const unsigned int kNumSignReserved = 4;
+const unsigned int kNumScholarReserved = 6;
+const unsigned int kNumHolyGrailReserved = 3;
+const unsigned int kNumShrineReserved = 3;
+
 namespace {
 TCreatureBankTypeTraits aCreatureBankTypeTraitsImp[kNumCreatureBankTypes];
 TMonolithTypeTraits aMonolithTypeTraitsImp[kNumMonolithTypes];
@@ -143,7 +158,7 @@ TFlaggableObject::TFlaggableObject(const TObjectType& objType, TRawIStream* pISt
     }
     signed char owner;
     *pIStream >> owner;
-    signed char aReserved[3];
+    signed char aReserved[kNumFlaggableObjectReserved];
     *pIStream >> aReserved;
     _m_owner = TPlayer(owner);
 #line 233
@@ -155,7 +170,7 @@ void TFlaggableObject::write(TRawOStream* pOStream) const
 #line 239
     assert(pOStream != NULL);
     *pOStream << (signed char) _m_owner;
-    signed char aReserved[3];
+    signed char aReserved[kNumFlaggableObjectReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -227,7 +242,7 @@ TAbandonedMine::TAbandonedMine(const TObjectType& objType, TRawIStream* pIStream
     assert(objType.getType() == MINE && objType.getExtra() == kNumGameResourceTypes);
     if (version < 12) {
         _m_abPotentialResource = _s_kabDefaultPotentialResource;
-        signed char aReserved[4];
+        signed char aReserved[kNumOldAbandonedMineReserved];
         *pIStream >> aReserved;
         return;
     }
@@ -238,7 +253,7 @@ TAbandonedMine::TAbandonedMine(const TObjectType& objType, TRawIStream* pIStream
 #line 363
     assert(!_m_abPotentialResource[ eResourceWood ]);
     assert(_m_abPotentialResource.count() > 0);
-    signed char aReserved[3];
+    signed char aReserved[kNumAbandonedMineReserved];
     *pIStream >> aReserved;
 }
 
@@ -266,7 +281,7 @@ void TAbandonedMine::write(TRawOStream* pOStream) const
         if (_m_abPotentialResource[type])
             potentialResources |= 1 << type;
     *pOStream << potentialResources;
-    signed char aReserved[3];
+    signed char aReserved[kNumAbandonedMineReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -434,7 +449,7 @@ TGarrison::TGarrison(const TObjectType& objType, TRawIStream* pIStream, int vers
     TArmy army;
     *pIStream >> army;
     setArmy(army);
-    signed char aReserved[8];
+    signed char aReserved[kNumGarrisonReserved];
     *pIStream >> aReserved;
 }
 
@@ -453,7 +468,7 @@ void TGarrison::write(TRawOStream* pOStream) const
 {
     TFlaggableObject::write(pOStream);
     *pOStream << _m_army;
-    signed char aReserved[8];
+    signed char aReserved[kNumGarrisonReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -522,7 +537,7 @@ void TTreasure::read(TRawIStream* pIStream, int version)
 #line 807
                 assert(!_m_message.empty());
             }
-            signed char aReserved[4];
+            signed char aReserved[kNumTreasureReserved];
             *pIStream >> aReserved;
         }
     }
@@ -569,7 +584,7 @@ void TTreasure::write(TRawOStream* pOStream) const
         *pOStream << (signed char) 1 << _m_message << (signed char) _m_bCustomGuardians;
         if (_m_bCustomGuardians)
             *pOStream << _m_guardians;
-        signed char aReserved[4];
+        signed char aReserved[kNumTreasureReserved];
         fill_n(aReserved, sizeof(aReserved), 0);
         *pOStream << aReserved;
     } else {
@@ -626,7 +641,7 @@ TSpellScroll::TSpellScroll(const TObjectType& objType, TRawIStream* pIStream, in
     signed char spell;
     *pIStream >> spell;
     setSpell(SpellID(spell));
-    signed char aReserved[3];
+    signed char aReserved[kNumSpellScrollReserved];
     *pIStream >> aReserved;
 }
 
@@ -648,7 +663,7 @@ void TSpellScroll::write(TRawOStream* pOStream) const
     assert(pOStream != NULL);
     TTreasure::write(pOStream);
     *pOStream << (signed char) _m_spell;
-    signed char aReserved[3];
+    signed char aReserved[kNumSpellScrollReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -669,7 +684,7 @@ TGameResource::TGameResource(const TObjectType& objType, TRawIStream* pIStream, 
         long quantity;
         *pIStream >> quantity;
         setQuantity(quantity);
-        signed char aReserved[4];
+        signed char aReserved[kNumGameResourceReserved];
         *pIStream >> aReserved;
     } else {
         _m_quantity = 0;
@@ -694,7 +709,7 @@ void TGameResource::write(TRawOStream* pOStream) const
     assert(pOStream != NULL);
     TTreasure::write(pOStream);
     *pOStream << (long) _m_quantity;
-    signed char aReserved[4];
+    signed char aReserved[kNumGameResourceReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -723,7 +738,7 @@ TSign::TSign(const TObjectType& objType, TRawIStream* pIStream, int version) : T
     *pIStream >> _m_text;
     if (_m_text.size() > s_kMaxTextLen)
         _m_text.erase(s_kMaxTextLen);
-    signed char aReserved[4];
+    signed char aReserved[kNumSignReserved];
     *pIStream >> aReserved;
 }
 
@@ -755,7 +770,7 @@ void TSign::write(TRawOStream* pOStream) const
 #line 1120
     assert(pOStream != NULL);
     *pOStream << _m_text;
-    signed char aReserved[4];
+    signed char aReserved[kNumSignReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -799,7 +814,7 @@ TScholar::TScholar(const TObjectType& objType, TRawIStream* pIStream, int versio
         setSpell(SpellID(reward));
         break;
     }
-    signed char aReserved[6];
+    signed char aReserved[kNumScholarReserved];
     *pIStream >> aReserved;
 }
 
@@ -848,7 +863,7 @@ void TScholar::write(TRawOStream* pOStream) const
         break;
     }
     *pOStream << (signed char) _m_rewardType << reward;
-    signed char aReserved[6];
+    signed char aReserved[kNumScholarReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -870,7 +885,7 @@ THolyGrail::THolyGrail(const TObjectType& objType, TRawIStream* pIStream, int ve
         signed char radius;
         *pIStream >> radius;
         setRadius(radius);
-        signed char aReserved[3];
+        signed char aReserved[kNumHolyGrailReserved];
         *pIStream >> aReserved;
     }
 }
@@ -887,7 +902,7 @@ void THolyGrail::write(TRawOStream* pOStream) const
 #line 1284
     assert(pOStream != NULL);
     *pOStream << (signed char) _m_radius;
-    signed char aReserved[3];
+    signed char aReserved[kNumHolyGrailReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
@@ -914,7 +929,7 @@ TShrine::TShrine(const TObjectType& objType, TRawIStream* pIStream, int version)
             && (akSpellTraits[spell].m_level != getSpellLevel() || akSpellTraits[spell].m_school == 0))
             spell = eSpellNone;
         setSpell(SpellID(spell));
-        signed char aReserved[3];
+        signed char aReserved[kNumShrineReserved];
         *pIStream >> aReserved;
     }
 }
@@ -953,7 +968,7 @@ void TShrine::write(TRawOStream* pOStream) const
 #line 1374
     assert(pOStream != NULL);
     *pOStream << (signed char) _m_spell;
-    signed char aReserved[3];
+    signed char aReserved[kNumShrineReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     *pOStream << aReserved;
 }
