@@ -25,6 +25,11 @@ object = 10
 source = "src/Error.cpp"
 
 [[unit]]
+name = "ResourceManager"
+object = 37
+source = "src/ResourceManager.cpp"
+
+[[unit]]
 name = "TimedEvent"
 object = 34
 source = "src/editor/TimedEvent.cpp"

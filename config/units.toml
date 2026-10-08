@@ -276,7 +276,7 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "resourcemanager"
-source = "src/resourcemanager.cpp"
+source = "src/ResourceManager.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]

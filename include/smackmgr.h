@@ -55,11 +55,7 @@ void setPixelFormat(unsigned long redMask, unsigned long greenMask,
 // (3*count + 6) * 16 bytes and reads 48*count bytes. GetSoundFile
 // (0x55c130) independently uses the filename, offset and size fields.
 // Shared with ResourceManager; the archive loader owns these records.
-struct SoundHeaderStruct {
-    char m_filename[40];
-    int m_offset;
-    int m_size;
-};
+#include "soundheader.h"
 SIZE(SoundHeaderStruct, 0x30);
 
 // LoadAnimHeaders (0x598210) allocates (11*count + 22) * 4 bytes

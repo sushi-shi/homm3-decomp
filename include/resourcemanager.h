@@ -28,41 +28,52 @@ class TTextResource;
 struct SoundHeaderStruct;
 
 // Loki h3maped object 37 (ResourceManager.cpp, RoE source): the resource
-// cache and LOD access as namespace-level functions under their original
-// spellings. Return types are provisional until each body is matched.
+// cache and LOD access as functions of the ResourceManager namespace under
+// their original spellings. The pixel-format globals are exported members.
 namespace ResourceManager {
+
+extern bool SaturatedGraphicsEasterEgg;
+extern int RedBits;
+extern int GreenBits;
+extern int BlueBits;
+extern int RedShift;
+extern int GreenShift;
+extern int BlueShift;
+extern int RedMask;
+extern int GreenMask;
+extern int BlueMask;
 
 void RemapGraphics();
 void SaturateGraphics();
 bool Open(bool openSprites, bool openBitmaps);
 void Close();
 // The port's stand-in for the Windows CRT _fullpath.
-char* _fullpath(char* absPath, const char* relPath, int maxLength);
+void _fullpath(char* absPath, const char* relPath, int maxLength);
 void SetPath(const char* path);
 void SetPixelFormat(unsigned long redMask, unsigned long greenMask, unsigned long blueMask);
 resource* GetResource(const char* name);
 Bitmap816* GetBitmap816(const char* name);
 Bitmap24Bit* GetBitmap24(const char* name);
-Bitmap16Bit* GetBitmap16(const char* name, bool unknown);
-TPalette16* GetPalette(const char* name, bool unknown);
+Bitmap16Bit* GetBitmap16(const char* name, bool noCache);
+TPalette16* GetPalette(const char* name, bool noCache);
 TPalette24* GetPalette24(const char* name);
 font* GetFont(const char* name);
 TTextResource* GetText(const char* name);
 TSpreadsheetResource* GetSpreadsheet(const char* name);
-int GetSoundFile(char* name, void*& data, SoundHeaderStruct*& header, int& size);
+bool GetSoundFile(char* name, void*& data, SoundHeaderStruct*& header, int& size);
 sample* GetSample(const char* name);
 CSprite* GetSprite(const char* name);
 void GetBackdrop(const char* name, Bitmap16Bit* destBmap);
 void GetBackdrop24(const char* name, Bitmap16Bit* destBmap);
-LODFile* PointToSpriteResource(const char* name);
+bool PointToSpriteResource(const char* name);
 int ReadFromSpriteResource(void* data, int numBytes);
-LODFile* PointToBitmapResource(const char* name);
+bool PointToBitmapResource(const char* name);
 int ReadFromBitmapResource(void* data, int numBytes);
 int GetBitmapResourceSize(const char* name);
-void Dispose(resource* value);
-void Dispose(CSprite* value);
+void Dispose(resource* r);
+void Dispose(CSprite* s);
 void Expunge();
-void Report(const char* filename);
+bool Report(const char* filename);
 
 }
 

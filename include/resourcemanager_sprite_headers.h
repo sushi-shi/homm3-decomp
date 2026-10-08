@@ -18,7 +18,7 @@ SIZE(SpriteDefHeader, 0x310);
 struct TSpriteDataHeader {
     int m_sequenceNumber;
     int m_numFrames;
-    char* m_frameNames;
+    char (*m_frameNames)[13];  // 13-byte frame names
     int* m_frameOffsets;
 };
 SIZE(TSpriteDataHeader, 0x10);
