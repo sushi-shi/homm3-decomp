@@ -369,6 +369,14 @@ public:
         OnCaptureChanged(NULL);
     }
 
+    void TColorToGdkColor(TColor color, GdkColor* pGdkColor)
+    {
+        pGdkColor->pixel = 0;
+        pGdkColor->red = (gushort)(((color & 0x7c00) >> 10) / 31.0 * 65535.0);
+        pGdkColor->green = (gushort)(((color & 0x3e0) >> 5) / 31.0 * 65535.0);
+        pGdkColor->blue = (gushort)((color & 0x1f) / 31.0 * 65535.0);
+    }
+
     bool button1Down()
     {
         GdkModifierType mask;
@@ -389,14 +397,6 @@ public:
     }
 
     // A 15-bit (5:5:5) editor colour as a GdkColor.
-    void TColorToGdkColor(TColor color, GdkColor* pGdkColor)
-    {
-        pGdkColor->pixel = 0;
-        pGdkColor->red = (gushort)(((color & 0x7c00) >> 10) / 31.0 * 65535.0);
-        pGdkColor->green = (gushort)(((color & 0x3e0) >> 5) / 31.0 * 65535.0);
-        pGdkColor->blue = (gushort)((color & 0x1f) / 31.0 * 65535.0);
-    }
-
     // Scales srcImage's srcWidth x srcHeight pixels to dstWidth x dstHeight
     // into dstImage (a new image when NULL) by error accumulation.
     GdkImage* StretchBlit(GdkImage* srcImage, GdkImage* dstImage, int srcX, int srcY,
