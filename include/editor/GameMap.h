@@ -316,7 +316,14 @@ class TGameMap {
     class _TImpl;
 
 public:
-    class TClient;
+    // The map's client (TMapDoc): one pure virtual, first in TMapDoc's
+    // vtable. Defined in the class: the image emits its type_info before
+    // TImportTextFailure's.
+    class TClient {
+    public:
+        virtual void onMapObjectRemoved(bool bUnderground, TMapLayerObjectID objID) = 0;
+    };
+
     class TObjectFactory;
 
     // importText's failure: a section, a frame line or an object header
@@ -706,12 +713,6 @@ private:
     friend class TLayer::_TImpl;
 
     TRefCountingPtr<_TImpl> _m_pImpl;
-};
-
-// The map's client (TMapDoc): one pure virtual, first in TMapDoc's vtable.
-class TGameMap::TClient {
-public:
-    virtual void onMapObjectRemoved(bool bUnderground, TMapLayerObjectID objID) = 0;
 };
 
 // Creates the map's objects (TGUIGameObjectFactory in the editor): for each
