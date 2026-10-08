@@ -363,7 +363,6 @@ public:
     // expand this across translation units; Mac's contiguous drawing bodies
     // leave no retained coordinate facade. The Windows body is with the
     // other fixed-viewport definitions at the end of this header.
-    DC_ADDRESS(0x084248, 0x60)
     bool scrollTo(int x, int y, int width, int height, bool draw,
                   bool doscrollX, bool doscrollY);
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
@@ -2115,6 +2114,9 @@ inline bool combatManager::scrollTo(SLimitData, bool, bool, bool)
     return false;
 }
 
+// The seven-coordinate facade of DC drawing.cpp:679/680; its Windows body is
+// the same fixed-viewport stub.
+DC_ADDRESS(0x084248, 0x60)
 inline bool combatManager::scrollTo(int, int, int, int, bool, bool, bool)
 {
     return false;
