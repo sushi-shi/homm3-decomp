@@ -214,9 +214,8 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
 
 LINK = DESTINATION / "link"
 LINK_STAMP = LINK / "staged.sha256"
-LINK_CFLAGS = "-O2 -mcpu=pentiumpro"  # Loki's i686-configured 2.95.2 at -O2 (libglade, libxml)
 # Recipe version: bump when what stage_libraries() builds changes for the same media.
-LINK_RECIPE = "1"
+LINK_RECIPE = "4"
 
 
 def _link_digest(spec: dict) -> str:
@@ -262,35 +261,9 @@ def _script(path: Path, text: str) -> None:
     path.chmod(0o755)
 
 
-def _build_compiler() -> str:
-    """A `cc` for the libraries' configure and make: the release cc1 through the
-    potato driver, able to link and run configure's test programs through the
-    staged loader and libraries (link flags never reach the kept objects)."""
-    gcc_lib = _gcc_lib()
-    run_path = f"{SYSROOT}/lib:{SYSROOT}/usr/lib:{LINK}/xlib"
-    return (
-        "#!/bin/sh\n"
-        f'LINKFLAGS="-Wl,-dynamic-linker,{LOADER} -Wl,-rpath,{run_path} -Wl,-rpath-link,{run_path}"\n'
-        'for a in "$@"; do case "$a" in -c|-S|-E|-M|-MM) LINKFLAGS=;; esac; done\n'
-        f'exec env -i PATH={WRAPPERS}:/run/current-system/sw/bin:/usr/bin:/bin TMPDIR="${{TMPDIR:-/tmp}}" '
-        f'"{LOADER}" --library-path "{SYSROOT}/lib:{SYSROOT}/usr/lib" "{SYSROOT}/usr/bin/gcc" '
-        f"-B{gcc_lib}/ -B{SYSROOT}/usr/lib/ -B{LINK}/libexec/ -B{WRAPPERS}/ -nostdinc "
-        f"-isystem {gcc_lib}/include -isystem {SYSROOT}/usr/include "
-        f'-L{LINK}/lib -L{LINK}/xlib -L{SYSROOT}/usr/lib -L{SYSROOT}/lib $LINKFLAGS "$@"\n')
-
-
-def _run_build(command: list[str], cwd: Path, env: dict[str, str], log: Path) -> None:
-    with log.open("a") as stream:
-        stream.write("$ " + " ".join(command) + "\n")
-        stream.flush()
-        completed = subprocess.run(command, cwd=cwd, env=env, stdout=stream, stderr=subprocess.STDOUT)
-    if completed.returncode:
-        raise ToolchainError(f"{' '.join(command[:2])} failed in {cwd} (see {log})")
-
-
 def stage_libraries(libs: str | Path | None = None, jobs: int = 2) -> Path:
     """Stage the link media of config/loki/toolchain.toml [link] under build/loki/toolchain/link
-    and build libxml 1.8.9 and libglade 0.14 from source with the release compiler."""
+    and build the static libraries from their era sources (homm3.loki.linklibs)."""
     spec = specification()
     libs = libs if libs is not None else os.environ.get("HOMM3_LOKI_LIBS")
     if libs is None:
@@ -302,50 +275,9 @@ def stage_libraries(libs: str | Path | None = None, jobs: int = 2) -> Path:
     media = _read_pinned(Path(libs).expanduser().resolve(), spec["link"])
     if LINK.exists():
         shutil.rmtree(LINK)
-    lib, xlib = LINK / "lib", LINK / "xlib"
-    bfd = "usr/lib/libbfd-2.9.1.0.25.so"
-    _unpack(media["binutils.tgz"], {"usr/bin/ld": LINK / "binutils/usr/bin/ld", bfd: LINK / "binutils" / bfd})
-    _script(LINK / "libexec/ld", _wrapper(LINK / "binutils/usr/bin/ld", LINK / "binutils/usr/lib"))
-    _unpack(media["glibc.tgz"], {f"usr/lib/{name}": lib / name
-                                 for name in ("crt1.o", "crti.o", "crtn.o", "libc_nonshared.a")})
-    # libc.so is a linker script naming /lib/libc.so.6; ld 2.9.1 has no --sysroot.
-    (lib / "libc.so").write_text(f"/* GNU ld script (staged) */\n"
-                                 f"GROUP ( {SYSROOT}/lib/libc.so.6 {lib}/libc_nonshared.a )\n")
-    x_libraries = {"libX11.so.6.1": "libX11", "libXext.so.6.3": "libXext", "libXi.so.6.0": "libXi"}
-    _unpack(media["xbin.tgz"], {f"usr/X11R6/lib/{name}": xlib / name for name in x_libraries})
-    for name, stem in x_libraries.items():
-        for alias in (f"{stem}.so.6", f"{stem}.so"):
-            (xlib / alias).symlink_to(name)
-    _unpack(media["gtkglib.tgz"], {f"usr/lib/{name}": lib / name
-                                   for name in ("libgtk.a", "libgdk.a", "libgmodule.a", "libglib.a")})
-    _unpack(media["zlib.tgz"], {"usr/lib/libz.a": lib / "libz.a",
-                                "usr/include/zlib.h": LINK / "include/zlib.h",
-                                "usr/include/zconf.h": LINK / "include/zconf.h"})
-    prefix = "usr/lib/gcc-lib/i386-slackware-linux/2.95.2/"
-    _unpack(media["gcc.tgz"], {prefix + "crtbegin.o": lib / "crtbegin.o", prefix + "crtend.o": lib / "crtend.o",
-                               prefix + "libgcc.a": lib / "libgcc.a",
-                               "usr/lib/libstdc++-3-libc6.1-2-2.10.0.a": lib / "libstdc++.a"})
-    # libxml, then libglade against it: configure and make, as Loki built them.
-    bin_dir = LINK / "bin"
-    _script(bin_dir / "cc", _build_compiler())
-    gtk_cflags = f"-I{GTK}/usr/include -I{GTK}/usr/lib/glib/include"
-    gtk_libs = f"-L{lib} -L{xlib} -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXi -lXext -lX11 -lm"
-    for name, libraries in (("glib-config", f"-L{lib} -rdynamic -lgmodule -lglib -ldl"), ("gtk-config", gtk_libs)):
-        _script(bin_dir / name, "#!/bin/sh\nfor a in \"$@\"; do case $a in --version) echo 1.2.8;; "
-                f"--cflags) echo \"{gtk_cflags}\";; --libs) echo \"{libraries}\";; esac; done\n")
-    env = {**os.environ, "PATH": f"{bin_dir}:{os.environ.get('PATH', '/usr/bin:/bin')}", "CC": str(bin_dir / "cc"),
-           "CFLAGS": LINK_CFLAGS, "CPPFLAGS": f"-I{LINK}/include", "LDFLAGS": f"-L{lib}", "LC_ALL": "C"}
-    env.pop("CONFIG_SITE", None)
-    log = LINK / "build.log"
-    configure = ["./configure", f"--prefix={LINK}", "--disable-shared", "--enable-static", "i686-pc-linux-gnu"]
-    xml = _unpack_source(media["libxml-1.8.9.tar.gz"], LINK / "src")
-    _run_build(configure, xml, env, log)
-    _run_build(["make", f"-j{jobs}", "libxml.la", "xml-config"], xml, env, log)
-    _run_build(["make", "install-libLTLIBRARIES", "install-xmlincHEADERS", "install-binSCRIPTS"], xml, env, log)
-    glade = _unpack_source(media["libglade-0.14.tar.gz"], LINK / "src")
-    _run_build([*configure, "--without-gnome", "--disable-bonobo"], glade, env, log)
-    _run_build(["make", f"-j{jobs}", "libglade.la"], glade / "glade", env, log)
-    shutil.copyfile(glade / "glade/.libs/libglade.a", lib / "libglade.a")
+    LINK.mkdir(parents=True)
+    from homm3.loki import linklibs
+    linklibs.build(LINK, media, jobs)
     LINK_STAMP.write_text(_link_digest(spec) + "\n")
     return LINK
 

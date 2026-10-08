@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.loki import cmpobj, datacmp, delink, emitorder, ledger, link, linkdiff, objwriter, toolchain
+from homm3.loki import cmpobj, datacmp, delink, emitorder, ledger, link, linkdiff, linklibs, objwriter, toolchain
 from homm3.loki.cmpobj import CodeSection, Function
 from homm3.loki.elf import R_386_32, R_386_PC32, SHT_REL, SHT_SYMTAB, Elf
 
@@ -241,6 +241,46 @@ class LinkDiffTest(unittest.TestCase):
         self.assertEqual(linkdiff.longest_increasing([1, 2, 3]), 3)
         self.assertEqual(linkdiff.longest_increasing([3, 1, 2, 4]), 3)
         self.assertEqual(linkdiff.longest_increasing([]), 0)
+
+
+class LinkLibrariesTest(unittest.TestCase):
+    @staticmethod
+    def _cpio(entries):
+        out = b""
+        for inode, name, mode, body in entries + [(0, "TRAILER!!!", 0, b"")]:
+            raw = name.encode() + b"\0"
+            fields = [inode, mode, 0, 0, 1, 0, len(body), 0, 0, 0, 0, len(raw), 0]
+            header = b"070701" + b"".join(b"%08X" % f for f in fields)
+            out += header + raw
+            out += b"\0" * (-len(out) % 4) + body
+            out += b"\0" * (-len(out) % 4)
+        return out
+
+    def test_rpm_payload_with_hard_links(self):
+        import gzip
+        header = b"\x8e\xad\xe8\x01" + bytes(4) + (0).to_bytes(4, "big") + (0).to_bytes(4, "big")
+        payload = self._cpio([(7, "./usr/bin/gcc", 0o100755, b""), (7, "./usr/bin/egcs", 0o100755, b"ELF"),
+                              (8, "./usr/lib/x.o", 0o100644, b"obj")])
+        rpm = b"\xed\xab\xee\xdb" + bytes(92) + header + header + gzip.compress(payload)
+        files = linklibs.rpm_files(rpm)
+        self.assertEqual(files["usr/bin/gcc"], (0o100755, b"ELF"))
+        self.assertEqual(files["usr/bin/egcs"][1], b"ELF")
+        self.assertEqual(files["usr/lib/x.o"][1], b"obj")
+
+    def test_linked_text_layout_groups_map_inputs(self):
+        lines = [".text           0x00001000      0x100",
+                 " *(.text)",
+                 " .text          0x00001000       0x10 /t/link/lib/crt1.o",
+                 " .text          0x00001010       0x30 /t/obj/main.o",
+                 " .text          0x00001040       0x20 /t/link/lib/libglade.a(glade-init.o)",
+                 " .text          0x00001060       0x10 /t/link/lib/libstdc++.a(iostream.o)",
+                 " .text          0x00001070       0x10 /t/link/lib/libgcc.a(_eh.o)",
+                 " .gnu.linkonce.t.f__Fv",
+                 "                0x00001080       0x80 /t/obj/main.o",
+                 ".fini           0x00001100       0x1a"]
+        layout = linkdiff.linked_text_layout("\n" + "\n".join(lines) + "\n")
+        self.assertEqual(layout, {"start files": 0x10, "project objects": 0x30, "C libraries": 0x20,
+                                  "libstdc++/libgcc": 0x20, "linkonce": 0x80})
 
 
 if __name__ == "__main__":

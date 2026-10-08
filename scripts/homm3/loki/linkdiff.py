@@ -20,6 +20,7 @@ from dataclasses import dataclass
 import bisect
 import itertools
 from pathlib import Path
+import re
 import struct
 
 from homm3.loki import delink, link
@@ -112,6 +113,45 @@ def text_by_object(retail: Elf, linked: Elf) -> list[tuple[str, int, int]]:
     return [(group, d, t) for group, (d, t) in totals.items()]
 
 
+TEXT_GROUPS = ("start files", "project objects", "C libraries", "libstdc++/libgcc", "linkonce")
+_MAP_INPUT = re.compile(r"^ (\.text|\.gnu\.linkonce\.t\S*)\s*\n?\s+0x([0-9a-f]+)\s+0x([0-9a-f]+) (\S+)", re.M)
+
+
+def retail_text_layout(image: LokiImage) -> dict[str, int]:
+    """Bytes of each .text group in the image, padding to the next group included."""
+    text = image.elf.section(".text")
+    objects = delink.objects()
+    project_end = objects[102][1]
+    cxx_start = objects[min(o for o in objects if o > 102)][0]
+    bounds = [text.addr, objects[0][0], project_end, cxx_start, image.linkonce_start, text.addr + text.size]
+    return {group: bounds[i + 1] - bounds[i] for i, group in enumerate(TEXT_GROUPS)}
+
+
+def linked_text_layout(map_text: str) -> dict[str, int]:
+    """The same groups of the linked .text, from ld's map (input sections and fill)."""
+    start = map_text.index("\n.text ")
+    body = map_text[start:map_text.index("\n.fini", start)]
+    header = re.match(r"\n\.text\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)", body)
+    end = int(header.group(1), 16) + int(header.group(2), 16)
+    inputs = [(m.group(1), int(m.group(2), 16), m.group(4)) for m in _MAP_INPUT.finditer(body)]
+    first: dict[str, int] = {}
+    for section, address, path in inputs:
+        name = path.rsplit("/", 1)[-1]
+        if section != ".text":
+            group = "linkonce"
+        elif "/obj/" in path:
+            group = "project objects"
+        elif name.startswith(("libstdc++", "libgcc")) or name in ("crtend.o", "crtn.o"):
+            group = "libstdc++/libgcc"
+        elif name.startswith("lib"):
+            group = "C libraries"
+        else:
+            group = "start files"
+        first.setdefault(group, address)
+    starts = [first.get(g, end) for g in TEXT_GROUPS] + [end]
+    return {group: starts[i + 1] - starts[i] for i, group in enumerate(TEXT_GROUPS)}
+
+
 def plt_names(elf: Elf) -> list[str]:
     return [name for _, name in sorted(elf.plt_slots.items())]
 
@@ -159,6 +199,12 @@ def report(linked_path: Path = link.IMAGE, verbose: bool = False) -> int:
         fmt = lambda t: "-" if t is None else f"{t[0]:08x}/{t[1]:06x}/{t[2]:06x}"
         if diff.differing or verbose:
             print(f"  {diff.name:20} {fmt(diff.retail):30} {fmt(diff.linked):30} {diff.differing}/{diff.total}")
+    map_path = linked_path.with_suffix(".map")
+    if map_path.is_file():
+        ours = linked_text_layout(map_path.read_text(encoding="latin-1"))
+        theirs = retail_text_layout(LokiImage())
+        print("  .text layout (bytes): " + ", ".join(
+            f"{g} {theirs[g]:#x}" + ("" if theirs[g] == ours[g] else f" vs {ours[g]:#x}") for g in TEXT_GROUPS))
     rows = text_by_object(retail, linked)
     exact = sum(1 for _, d, _ in rows if d == 0)
     print(f"  .text by object: {exact}/{len(rows)} groups identical at the image's addresses")

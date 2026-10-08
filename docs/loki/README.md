@@ -308,40 +308,40 @@ homm3 loki link-diff [-v]         # the linked file against retail, section by s
 ```
 
 `--libs` (or `HOMM3_LOKI_LIBS`) stages the link media under
-`build/loki/toolchain/link/` and builds libxml 1.8.9 and libglade 0.14 from
-source with the release `cc1` at `-O2 -mcpu=pentiumpro` (configure
-`--disable-shared i686-pc-linux-gnu`; configure's test programs run through
-the staged loader). `homm3 loki link` compiles every unit and runs binutils
-2.9.1.0.25's `ld` directly, with what the image proves:
+`build/loki/toolchain/link/` and builds every static library from its era
+source (`homm3.loki.linklibs`; configure's test programs link and run through
+the staged loader, never the kept objects). `homm3 loki link` compiles every
+unit and runs binutils 2.9.1.0.25's `ld` directly, with what the image proves:
 
 | Fact | Evidence |
 | :--- | :------- |
-| link order | `.comment` (one entry per linked object) runs 2 egcs, 122 GCC 2.95.2, 155 egcs, 23 GCC 2.95.2, 1 egcs, 1 GCC 2.95.2, 1 egcs: crt1.o and crti.o (glibc 2.1.3, egcs 1.1.2), crtbegin.o, the 103 project objects, libglade and libxml (GCC 2.95.2 C, no `.eh_frame`), GTK+, GDK, GModule, GLib and zlib (egcs), libstdc++ and libgcc, libc_nonshared, crtend.o, crtn.o. `.text` agrees: `glade_init` follows the last project object at 0x08202730, then libxml, `gtk_accel_group_new` (0x0823ead0), GDK, GModule/GLib, zlib (0x083206b0), libstdc++ (0x083278e0). |
+| link order | `.comment` (one entry per linked object) runs 2 egcs, 122 GCC 2.95.2, 155 egcs, 23 GCC 2.95.2, 1 egcs, 1 GCC 2.95.2, 1 egcs: crt1.o and crti.o (glibc 2.1.3, egcs 1.1.2), crtbegin.o, the 103 project objects, libglade and libxml (GCC 2.95.2 C, no `.eh_frame`), GTK+, GDK, GModule, GLib and zlib (egcs), libstdc++ and libgcc, libc_nonshared, crtend.o, crtn.o. `.text` agrees: `glade_init` follows the last project object at 0x08202730, then libxml, `gtk_accel_group_new` (0x0823ead0), GDK, GModule/GLib, zlib (0x083206b0), libstdc++ (0x083278e0). All 2,481 exported C-library functions of the image are linked, in its order. |
 | shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order: `gtk-config --libs`' tail (`-ldl -lXi -lXext -lX11 -lm`) and libc. Everything else is static. |
 | flags | `-export-dynamic` (12,052 defined `.dynsym` entries; libglade connects handlers by name), interpreter `/lib/ld-linux.so.2`, no `.symtab` (`-s`). |
 | ld 2.9.1 | `.gcc_except_table` precedes `.eh_frame`, both after `.data`: ld 2.9.1's default script has neither, and an orphan goes right after `.data`, so the later one lands first. 2.9.5's script names `.eh_frame` first. The assembler is already 2.9.1.0.25. |
-| libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2` (i686 default `-mcpu=pentiumpro`): the five linked libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
+| GCC runtime | crtbegin.o, libgcc and libio/libstdc++ 2.10 come from an i686-pc-linux-gnu bootstrap of 2.95.2 (`-g -O2`, default `-mcpu=pentiumpro`, libgcc `-fPIC` per `config/t-linux`, so its type_info objects go through the 63 `R_386_GLOB_DAT` GOT entries; threads off: no pthread imports). The recipe reproduces crtbegin's `__do_global_dtors_aux`, 12 of 13 linked libgcc members and all 9 libstdc++ members. |
+| libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2`: the five libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
+| GLib/GTK+ 1.2.8, zlib 1.0.8 | Red Hat 6.2's egcs 1.1.2 (egcs-1.1.2-30; it emits `.p2align 4,,7` for jump targets, Slackware's `.align 16`) at Red Hat's `-O2 -m486 -fno-strength-reduce`, GTK+ `--with-xinput=xfree` (libXi) and NLS on (the image imports `bindtextdomain` and `_nl_msg_cat_cntr`; Slackware 7.1's gettext 0.10.35 is on `PATH` while GTK+ configures). zlib at `-O2 -fno-strength-reduce`: all 14 members exact (`zlibVersion()` "1.0.8"). GLib 18 of 21 members, GModule 1/1, GDK 18 of 20, GTK+ 92 of 98. |
 
-The library sources are pinned to the image's versions, but four groups are
-stand-ins that link and run without being Loki's builds yet:
+Still different (`.text` layout: C libraries 0x2e0 bytes longer,
+libstdc++/libgcc 0x10, linkonce 0xd shorter):
 
-- GTK+/GDK/GModule/GLib 1.2.8 are Slackware's `-O2` archives (`leave`
-  epilogues). The image's were compiled by egcs 1.1.2 at `-O2 -m486`
-  (16-byte function alignment, no `leave`) with an egcs that emits
-  `.p2align 4,,7` for jump targets (no padding past 7 bytes); Slackware's egcs
-  emits `.align 16`. The GLib functions checked (`g_byte_array_*`,
-  `g_array_new` but for one such label) match Slackware's egcs at `-O2 -m486`.
-- zlib: Slackware's 1.1.3. The image's `zlibVersion()` is "1.0.8" and its
-  `inflate_copyright` is 1.0.8's `.rodata` string, but `deflate_copyright`
-  is 1.0.4's non-const `.data` one; its crc32, adler32, infcodes, infutil and
-  inffast equal XFree86 3.3.6's zlib 1.0.4 build exactly.
-- crtbegin.o, crtend.o, libgcc and libstdc++ 2.10 are the i386-configured
-  release's. The image's are i686-configured (crtbegin's
-  `__do_global_dtors_aux` has no `leave`), and its type_info objects are
-  reached through 63 `R_386_GLOB_DAT` GOT entries.
+- GTK+'s gtkentry, gtklabel and gtktext call `iswpunct`/`iswcntrl`, which
+  no GTK+ 1.2.8 or 1.2.9 source does: Loki's GTK+ carries a word-break
+  patch (a distribution's i18n patch); gtkaccelgroup, gtkdnd, gtkfontsel,
+  gdkdnd and gdkim differ by a few bytes.
+- libxml's xmlIO, nanohttp, nanoftp, valid, tree and the HTML members call
+  `__bzero` (12 sites) where glibc 2.1.3's `<bits/string2.h>` turns
+  `memset(p, 0, n)` into `__builtin_memset`: they were compiled against
+  other headers or flags than parser.o.
+- libgcc's `exception::what()` has no null test before `typeid(*this)`.
 - One more GCC 2.95.2 object without `.text` or `.eh_frame` is linked
-  before the egcs libraries (122 entries, ours 121); it is not identified
-  yet (libxml's `xmlmemory.o` is empty and no symbol pulls it).
+  before the egcs libraries (122 `.comment` entries, ours 121), and the
+  image exports `game_version`, `TGameMap::s_kInvalidObjID` and
+  `TGameMap::TLayer::_TImpl::s_kInvalidObjID`, which the project objects
+  do not define yet.
+- The linked `.dynsym` gains `clog@@GLIBC_2.1` (and a `.gnu.version_d`):
+  potato's libm exports a versioned `clog`, the image's link saw none.
 
 `homm3 loki link-diff` reads the linked file (or a path) and reports the
 total differing bytes over the file; the ELF header and program headers; every
@@ -349,8 +349,10 @@ section's address, offset, size and differing bytes (each at its own file
 offset); `.text` by census object at the image's addresses (start files,
 each project object, the C libraries, libstdc++/libgcc); `.dynsym` order,
 the PLT's import order; the `.comment` runs; and the C libraries' exported
-functions in the image's address order (longest run kept in order). It is not
-a gate yet.
+functions in the image's address order (longest run kept in order). With the
+link map beside the file it also sizes each `.text` group (start files,
+project objects, C libraries, libstdc++/libgcc, linkonce) against the image's.
+It is not a gate yet.
 
 Anonymous-namespace names are random per compile: `append_random_chars`
 (gcc/tree.c) seeds them from `gettimeofday` and `getpid`, and 34 units
@@ -363,7 +365,7 @@ with a run directory holding `heroes-iii-level-editor.glade`, a `heroes3`
 stub on `PATH` and `data/h3bitmap.lod`, `data/h3sprite.lod` (GOG Complete),
 under potato's `ld-2.1.3.so` with the staged X libraries. The linked editor
 initializes GTK+, reads the Glade file and both LODs, then stops where retail
-stops with the same data: `Artifact.cpp:163: InitializeArtifactTraits:
+stops with the same data (re-run after the source-built libraries, same log): `Artifact.cpp:163: InitializeArtifactTraits:
 Assertion '*resource[20] == 'S'' failed` (Complete's ARTRAITS.TXT is not
 RoE's). Retail and linked logs are identical.
 
