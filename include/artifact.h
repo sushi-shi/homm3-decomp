@@ -1,6 +1,7 @@
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
+#include <assert.h>
 #include <bitset>
 
 #include "artifact_type.h"
@@ -63,7 +64,7 @@ enum {
 struct TArtifactTraits {
     const char* m_name;                     // +0x00
     int m_cost;                             // +0x04
-    std::bitset<kNumArtifactSlots> m_slots; // +0x08
+    std::bitset<kNumArtifactSlots> m_allowableSlotMask; // +0x08
     TArtifactClass m_class;                 // +0x0c
     const char* m_description;              // +0x10
 };
@@ -79,7 +80,13 @@ extern const TArtifactTraits* akArtifactTraits;
 bool InitializeArtifactTraitsTable();
 
 // Whether an artifact may be worn in a slot. An inline of the editor's
-// Artifact.h (its assert names the header); Hero.cpp owns the image's copy.
-bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot);
+// Artifact.h (its asserts name the header); Hero.cpp owns the image's copy.
+inline bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
+{
+#line 225 "Artifact.h"
+    assert(artifact >= 0 && artifact < kNumArtifacts);
+    assert(slot >= 0 && slot < kNumArtifactSlots);
+    return akArtifactTraits[artifact].m_allowableSlotMask[slot];
+}
 
 #endif  /* HOMM3_ARTIFACT_H */

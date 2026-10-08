@@ -87,24 +87,24 @@ static void InitializeArtifactTraits(int id, const vector<char*>& resource)
     traits->m_name = names[id].get();
 
     traits->m_cost = atoi(resource[1]);
-    traits->m_slots[17] = *resource[2] && *resource[2] != ' ';
-    traits->m_slots[16] = *resource[3] && *resource[3] != ' ';
-    traits->m_slots[15] = *resource[4] && *resource[4] != ' ';
-    traits->m_slots[14] = *resource[5] && *resource[5] != ' ';
-    traits->m_slots[13] = *resource[6] && *resource[6] != ' ';
-    traits->m_slots[12] = *resource[7] && *resource[7] != ' ';
-    traits->m_slots[11] = *resource[8] && *resource[8] != ' ';
-    traits->m_slots[10] = *resource[9] && *resource[9] != ' ';
-    traits->m_slots[9] = *resource[10] && *resource[10] != ' ';
-    traits->m_slots[8] = *resource[11] && *resource[11] != ' ';
-    traits->m_slots[7] = *resource[12] && *resource[12] != ' ';
-    traits->m_slots[6] = *resource[13] && *resource[13] != ' ';
-    traits->m_slots[5] = *resource[14] && *resource[14] != ' ';
-    traits->m_slots[4] = *resource[15] && *resource[15] != ' ';
-    traits->m_slots[3] = *resource[16] && *resource[16] != ' ';
-    traits->m_slots[2] = *resource[17] && *resource[17] != ' ';
-    traits->m_slots[1] = *resource[18] && *resource[18] != ' ';
-    traits->m_slots[0] = *resource[19] && *resource[19] != ' ';
+    traits->m_allowableSlotMask[17] = *resource[2] && *resource[2] != ' ';
+    traits->m_allowableSlotMask[16] = *resource[3] && *resource[3] != ' ';
+    traits->m_allowableSlotMask[15] = *resource[4] && *resource[4] != ' ';
+    traits->m_allowableSlotMask[14] = *resource[5] && *resource[5] != ' ';
+    traits->m_allowableSlotMask[13] = *resource[6] && *resource[6] != ' ';
+    traits->m_allowableSlotMask[12] = *resource[7] && *resource[7] != ' ';
+    traits->m_allowableSlotMask[11] = *resource[8] && *resource[8] != ' ';
+    traits->m_allowableSlotMask[10] = *resource[9] && *resource[9] != ' ';
+    traits->m_allowableSlotMask[9] = *resource[10] && *resource[10] != ' ';
+    traits->m_allowableSlotMask[8] = *resource[11] && *resource[11] != ' ';
+    traits->m_allowableSlotMask[7] = *resource[12] && *resource[12] != ' ';
+    traits->m_allowableSlotMask[6] = *resource[13] && *resource[13] != ' ';
+    traits->m_allowableSlotMask[5] = *resource[14] && *resource[14] != ' ';
+    traits->m_allowableSlotMask[4] = *resource[15] && *resource[15] != ' ';
+    traits->m_allowableSlotMask[3] = *resource[16] && *resource[16] != ' ';
+    traits->m_allowableSlotMask[2] = *resource[17] && *resource[17] != ' ';
+    traits->m_allowableSlotMask[1] = *resource[18] && *resource[18] != ' ';
+    traits->m_allowableSlotMask[0] = *resource[19] && *resource[19] != ' ';
 
     if (*resource[20] == 'R')
         traits->m_class = ArtifactClassRelic;
