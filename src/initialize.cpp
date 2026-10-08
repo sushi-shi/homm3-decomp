@@ -6,6 +6,10 @@
 #include "town.h"
 
 // #include "initialize.h"
+// compile-m: retail is the 13..26 (mod 64) more handles class before
+// town.h:496 (handle-period.md). Dropping the unused <string.h> moves nothing.
+// DC's type_building_id has 200 per-town aliases ours lacks (+8 mod 64), so
+// with Complete's unknown Conflux aliases the count is not yet settled.
 VA(0x004eb730, 0x3D5)
 MAC_ADDRESS(0x10d9b0, 0x28)
 void initializeGameData();
