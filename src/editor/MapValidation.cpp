@@ -12,16 +12,16 @@
 #include <functional>
 #include <string>
 
+#include "editor/MapValidation.h"
+#include "editor/GameMap.h"
 #include "adventureobjecttype.h"
 #include "artifact.h"
 #include "creaturetype.h"
 #include "objnames.h"
 #include "editor/BlackBox.h"
-#include "editor/GameMap.h"
 #include "editor/GameObject.h"
 #include "editor/Hero.h"
 #include "editor/MapEditorText.h"
-#include "editor/MapValidation.h"
 #include "editor/Monster.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/SeersHut.h"

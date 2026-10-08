@@ -14,6 +14,7 @@
 #include "herospec.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
+#include "editor/Hero.h"
 #include "editor/Army.h"
 #include "editor/Array.h"
 #include "editor/ObjectSpecializations.h"

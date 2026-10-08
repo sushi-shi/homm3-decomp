@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "adventureobjecttype.h"
-#include "editor/Hero.h"
 #include "editor/BlackBox.h"
 #include "editor/RawStream.h"
 
