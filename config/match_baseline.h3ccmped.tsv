@@ -15,17 +15,18 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	93.9194	93.9194	93.9194	0x11180	tokens1:d033e38cd802
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	96.6667	96.6667	96.6667	0x11100	tokens1:b123a7f0689a
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	94.8875	94.8875	94.8875	0x11010	tokens1:668eb293f27b
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusPrimarySkill@@@Z	96.0714	96.0714	96.0714	0x11300	tokens1:373f8774e56c
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusResource@@@Z	94.0000	94.0000	94.0000	0x114c0	tokens1:69e42bb39d7f
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSecondarySkill@@@Z	94.8875	94.8875	94.8875	0x113d0	tokens1:d340e36fbb56
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpell@@@Z	93.9194	93.9194	93.9194	0x10f50	tokens1:19217ba01321
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpellScroll@@@Z	93.9194	93.9194	93.9194	0x11240	tokens1:22a73ae3e4ea
-CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsBonus@@@Z	95.8022	95.8022	95.8022	0x11b80	tokens1:44bc385628bd
-CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	83.1442	83.1442	83.1442	0x11c80	tokens1:609997297888
-CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsStartingHero@@@Z	83.1442	83.1442	83.1442	0x11da0	tokens1:c81cdc2c148c
+CampaignDoc	??0TWriteFailure@TRawOStream@@QAE@H@Z	99.9206	99.9206	99.9206	0x1280	-
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	94.1613	94.1613	94.1613	0x11180	tokens1:d033e38cd802
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	96.9048	96.9048	96.9048	0x11100	tokens1:b123a7f0689a
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	95.1375	95.1375	95.1375	0x11010	tokens1:668eb293f27b
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusPrimarySkill@@@Z	96.2857	96.2857	96.2857	0x11300	tokens1:373f8774e56c
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusResource@@@Z	94.2419	94.2419	94.2419	0x114c0	tokens1:69e42bb39d7f
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSecondarySkill@@@Z	95.1375	95.1375	95.1375	0x113d0	tokens1:d340e36fbb56
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpell@@@Z	94.1613	94.1613	94.1613	0x10f50	tokens1:19217ba01321
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpellScroll@@@Z	94.1613	94.1613	94.1613	0x11240	tokens1:22a73ae3e4ea
+CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsBonus@@@Z	95.9670	95.9670	95.9670	0x11b80	tokens1:44bc385628bd
+CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	83.3365	83.3365	83.3365	0x11c80	tokens1:609997297888
+CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsStartingHero@@@Z	83.3365	83.3365	83.3365	0x11da0	tokens1:c81cdc2c148c
 CampaignDoc	?write@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXABVTScenarioStartingBonus@@AAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x10f30	tokens1:6ffee2429f90
 DIBSection	??0T16bppDIBSection@@QAE@II@Z	99.9091	99.9091	99.9091	0x1d090	-
 DIBSection	??0T16bppDIBSection@@QAE@XZ	100.0000	100.0000	100.0000	0x1d060	-

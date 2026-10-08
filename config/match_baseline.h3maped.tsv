@@ -15,6 +15,7 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+Colors	??_3?$bitset@$09@std@@QAEAAV01@I@Z	100.0000	100.0000	100.0000	0x1783	-
 Colors	?initColors@@YAXXZ	99.7826	99.8913	99.8913	0xcba4	tokens1:50621faedd82
 DIBSection	??0T16bppDIBSection@@QAE@II@Z	100.0000	100.0000	100.0000	0xd1ea	tokens1:b9624ac570ea
 DIBSection	??0T16bppDIBSection@@QAE@XZ	100.0000	100.0000	100.0000	0xd1c2	tokens1:c0225f6bdb3c
@@ -23,6 +24,7 @@ DIBSection	??1?$TBitmapBase@G@@UAE@XZ	100.0000	100.0000	100.0000	0xd38f	tokens1:
 DIBSection	??1T16bppDIBSection@@UAE@XZ	99.8438	99.8438	99.8438	0xd243	tokens1:fd600db45ca0
 DIBSection	??4?$TBitmapBase@G@@UAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd3cf	tokens1:008640a64def
 DIBSection	??4T16bppDIBSection@@UAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd2b3	tokens1:a1d989fd4f70
+DIBSection	??_ET16bppDIBSection@@WBE@AEPAXI@Z	97.5000	97.5000	97.5000	0xd6cd	-
 DIBSection	??_GT16bppDIBSection@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd173	-
 DIBSection	?allocate@?$TBitmap@GK@@UAEPAGII@Z	99.7500	99.7500	99.7500	0xd4db	tokens1:763233f735bb
 DIBSection	?allocate@T16bppDIBSection@@UAEPAGII@Z	99.5333	99.5333	99.5333	0xd2cb	tokens1:a268f1fa1d84
@@ -37,7 +39,9 @@ EditRumorDlg	??0TRumor@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x15a3f	-
 EditRumorDlg	??1TEditRumorDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x15aaa	-
 EditRumorDlg	??1TRumor@@QAE@XZ	100.0000	100.0000	100.0000	0x159ea	-
 EditRumorDlg	??_GTEditRumorDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a23	-
+EditRumorDlg	?BeginModalState@CWnd@@UAEXXZ	100.0000	100.0000	100.0000	0x1803	-
 EditRumorDlg	?DoDataExchange@TEditRumorDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x15b37	tokens1:800bca1193ce
+EditRumorDlg	?EndModalState@CWnd@@UAEXXZ	100.0000	100.0000	100.0000	0x180f	-
 EditRumorDlg	?GetMessageMap@TEditRumorDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x15c82	tokens1:d1bebc1f43cf
 EditRumorDlg	?OnChangeRumorNameEdit@TEditRumorDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x15dbc	tokens1:3f961027d81b
 EditRumorDlg	?OnCreate@TEditRumorDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x15c88	tokens1:3e6d8c014084
@@ -54,20 +58,22 @@ FlaggablePropsDlg	?OnCreate@TFlaggablePropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.
 FlaggablePropsDlg	?OnDoubleClickedOwnerRadio@TFlaggablePropsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x1e573	tokens1:0182e1dee4b9
 FlaggablePropsDlg	?OnInitDialog@TFlaggablePropsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x1e282	tokens1:39aa75884d8b
 FlaggablePropsDlg	?OnOK@TFlaggablePropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x1e550	tokens1:f410315f0d49
-GameMap	??0TCappedObjectTypeInfoMap@?A0xaab635a5f3ca1b91@@QAE@XZ	82.3756	82.3756	82.3756	0x1e98d	tokens1:490280ebe79f
+GameMap	??0TCappedObjectTypeInfoMap@?A0xaab635a5f3ca1b91@@QAE@XZ	82.3974	82.3974	82.3974	0x1e98d	tokens1:490280ebe79f
 GameMap	?constructObjectHeightMap@?A0xaab635a5f3ca1b91@@YAXABVTGameObject@@AAY175I@Z	99.2405	99.2405	99.2405	0x1e84b	tokens1:7113bcdf0265
 GameMap	?getCell@TLayer@TGameMap@@QBEABVTCell@12@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1e82b	tokens1:11eec1851241
 GameMap	?getPCell@TLayer@TGameMap@@QBEPBVTCell@12@II@Z	100.0000	100.0000	100.0000	0x2b60f	tokens1:e083ac020761
 GameMap	?getPCell@_TCellGrid@_TImpl@TLayer@TGameMap@@QBEPBVTCell@34@II@Z	100.0000	100.0000	100.0000	0x2a4d0	tokens1:91a3900eb4de
 GameMap	?isBeachBorder@?A0xaab635a5f3ca1b91@@YA_NABVTLayer@TGameMap@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1e799	tokens1:75b1893af93c
+GameMap	?reserve@?$vector@UTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@V?$allocator@UTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x2c28f	-
 HeroPrototypePropsGeneralPage	?_isspace@@YA_NABVCString@@@Z	100.0000	100.0000	100.0000	0x55d02	tokens1:d25d22e246fc
 MemoryDC	??0?$TGDIObjectSelector@VCBitmap@@@@QAE@PAVCDC@@PAVCBitmap@@@Z	99.8148	99.8148	99.8148	0x51fdd	tokens1:1952c6fb6bad
 MemoryDC	??0TError@?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	99.2857	99.2857	99.2857	0x520ca	tokens1:760d3a8d42d7
 MemoryDC	??0TError@TMemoryDC@@QAE@XZ	99.2857	99.2857	99.2857	0x8701e	tokens1:1a9bc1fac8e7
 MemoryDC	??0TGDIObjectSelectorError@@QAE@XZ	99.2857	99.2857	99.2857	0x87030	tokens1:1fb997825f90
 MemoryDC	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x52022	tokens1:a499df6024c1
+MemoryDC	?SelectObject@CDC@@QAEPAVCBitmap@@PAV2@@Z	100.0000	100.0000	100.0000	0x876ce	-
 MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HH@Z	100.0000	100.0000	100.0000	0x87521	tokens1:52f0d023492a
-MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HHK@Z	55.4046	55.4046	55.4046	0x87042	tokens1:ac0e289f2e0a
+MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HHK@Z	55.4769	55.4769	55.4769	0x87042	tokens1:ac0e289f2e0a
 MemoryDC	?getFirstMenuItem@@YAIPAVCMenu@@@Z	0.0000	0.0000	0.0000	0x875d4	tokens1:524b1c06c1e1
 MemoryDC	?getTransparentColor@@YAKPAVCBitmap@@@Z	100.0000	100.0000	100.0000	0x86fb4	tokens1:82437037c163
 MemoryDC	?isPixelColor@@YA_NPAVCBitmap@@HHK@Z	100.0000	100.0000	100.0000	0x87543	tokens1:0151ed410c8e
@@ -83,15 +89,18 @@ Options	?setPassability@SOptions@@YAX_N@Z	100.0000	100.0000	100.0000	0x92ff0	tok
 Options	?setSpecialTileFrequency@SOptions@@YAXI@Z	100.0000	100.0000	100.0000	0x93018	tokens1:ea4934760eea
 Options	?setZoom@SOptions@@YAXH@Z	100.0000	100.0000	100.0000	0x92fdc	tokens1:a98dd34c451e
 OptionsDlg	??0TOptionsDlg@@QAE@PAVCWnd@@@Z	100.0000	100.0000	100.0000	0x9329c	tokens1:d02a8ee52d32
-OptionsDlg	??_GTOptionsDlg@@UAEPAXI@Z	99.5455	99.5455	99.5455	0x93333	-
+OptionsDlg	??1TOptionsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x5d4ca	-
+OptionsDlg	??_GTOptionsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x93333	-
 OptionsDlg	?DoDataExchange@TOptionsDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x9334f	tokens1:4717621344c9
 OptionsDlg	?GetMessageMap@TOptionsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x933b3	tokens1:d5372080286e
 OptionsDlg	?OnAutosaveCheck@TOptionsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x936eb	tokens1:14fe17954280
 OptionsDlg	?OnCreate@TOptionsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x933b9	tokens1:2bc5c91594ae
-OptionsDlg	?OnInitDialog@TOptionsDlg@@MAEHXZ	99.9709	99.9709	99.9709	0x933de	tokens1:39bd6bd56e97
+OptionsDlg	?OnInitDialog@TOptionsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x933de	tokens1:39bd6bd56e97
 OptionsDlg	?OnKillFocusMinutesEdit@TOptionsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x9375b	tokens1:30fe7e40b473
 OptionsDlg	?OnOK@TOptionsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x93627	tokens1:49e40b0b4d6d
-Player	?InitializePlayerTraitsTable@@YA_NXZ	90.2774	90.3097	90.3097	0x94324	tokens1:681eba712e3e
+OptionsDlg	?getDigits@?$TDigits@$05@@SAIXZ	100.0000	100.0000	100.0000	0x3178	-
+Player	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0xbe6e6	-
+Player	?InitializePlayerTraitsTable@@YA_NXZ	90.3097	90.3097	90.3097	0x94324	tokens1:681eba712e3e
 Player	__h3cg$Player$static_dtor$aColorNames	100.0000	100.0000	100.0000	0x94529	-
 Player	__h3cg$Player$static_dtor$aNames	100.0000	100.0000	100.0000	0x9453d	-
 SelectArtifactDlg	??0TSelectArtifactDlg@@QAE@PAVCWnd@@W4EGameVersion@@H@Z	100.0000	100.0000	100.0000	0xb7deb	tokens1:370f33c9540c

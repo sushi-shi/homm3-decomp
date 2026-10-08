@@ -9,6 +9,7 @@ rva	size	kind	name	unit	evidence
 0x00001020	0x15d	func	??0runtime_error@std@@QAE@ABV01@@Z	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x9
 0x00001180	0xd	func	?what@logic_error@std@@UBEPBDXZ	resource	vtable ??_7out_of_range@std@@6B@ stored by ??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z slot 1; ICF-folded with 1 identical bodies
 0x00001190	0x20	func	?_Doraise@runtime_error@std@@MBEXXZ	gzinflatebuf	vtable ??_7TRuntimeError@@6B@ stored by ??0TRuntimeError@@QAE@ABV0@@Z slot 2
+0x00001280	0xcb	func	??0TWriteFailure@TRawOStream@@QAE@H@Z	CampaignDoc	referenced by ?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z at +0x27
 0x00001350	0x3e	func	??1?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@XZ	resourcemanager	masked body (62 bytes, 1 relocations) unique at a census start
 0x00001390	0x200	func	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	resourcemanager	masked body (512 bytes, 20 relocations) unique at a census start
 0x00001590	0x48	func	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z	resourcemanager	masked body (72 bytes, 1 relocations) unique at a census start
@@ -321,6 +322,7 @@ rva	size	kind	name	unit	evidence
 0x00091518	0x8	data	__real@8@3ffd8000000000000000	bitmap24	referenced by ?AdjustHSV@Bitmap24Bit@@QAEXHHHHMMMM@Z at +0x1c3 (retail +0x1ac, by operand order)
 0x00091520	0x8	data	__real@8@3ffec000000000000000	bitmap24	referenced by ?AdjustHSV@Bitmap24Bit@@QAEXHHHHMMMM@Z at +0x1b2 (retail +0x19b, by operand order)
 0x00098660	0x10	data	__TI2?AVruntime_error@std@@	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x12
+0x000986d8	0x10	data	__TI5?AVTWriteFailure@TRawOStream@@	CampaignDoc	referenced by ?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z at +0x30
 0x00098838	0x10	data	__TI3?AVout_of_range@std@@	resource	referenced by ?_Xran@?$bitset@$0BD@@std@@ABEXXZ at +0xc3
 0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xf9
 0x00098d08	0x10	data	__TI5?AVTAllocationFailure@@	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x2e
