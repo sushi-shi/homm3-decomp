@@ -221,3 +221,24 @@ const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
   dialogs and bridge (`<gtk/gtk.h>` included inside `namespace { }` after
   stdafx.h): it shows in mangled names (`PQ2..._GLOBAL_.N.ArmyDlg.cpp..9_GtkCombo`)
   and `__PRETTY_FUNCTION__` texts, while `GtkWidget` stays global.
+- `fold` reassociates a subtraction of a difference with a constant:
+  `x - (w - 1)` becomes `(x + 1) - w` (`incl`/`leal 1` on `x`), while
+  `x + 1 - w` becomes `x - (w + -1)` (`decl` on `w`). Pick the spelling
+  whose folded shape the image shows (`_TImpl`'s streamed constructor,
+  `_computeObjExtent`).
+- A cast of an lvalue binds a `const T&` parameter without a temporary,
+  even across modes: `stream << (long) _s_akDimension[_m_size]` pushes the
+  element's address (`movl $sym,%edx; addl %edx,%eax`), and
+  `(signed char) teamInfo._m_numTeams` pushes `leal 4(%eax),%edx`; a
+  reference cast `(const long&) x` computes the address in place
+  (`leal sym(%eax)`, `addl $4,%eax`).
+- `begin_while_stmt` emits a `nop` when the last insn is a label (the end
+  of a preceding loop or `if`); a `for` statement first opens its own
+  scope and never does. A `nop` before a loop's head therefore marks a
+  `while` (`_isValidPlacement`'s height scans).
+- VC6 for-scoping survives: a second loop that reuses the first loop's
+  `for (unsigned int i = ...)` variable (`for (i = 0; ...)`, accepted with
+  a warning) shares its slot, where a fresh declaration takes a new one.
+- Declarations in `if (T* p = ...)` conditions are block-scoped temporaries;
+  a dispatch that declares each pointer at function scope allocates them
+  all before any expression temporary (`placeObject`'s frame).
