@@ -519,3 +519,8 @@ source = "src/editor/MapEditWnd.cpp"
 name = "MapDoc"
 object = 57
 source = "src/editor/MapDoc.cpp"
+
+[[unit]]
+name = "MapView"
+object = 53
+source = "src/editor/MapView.cpp"
