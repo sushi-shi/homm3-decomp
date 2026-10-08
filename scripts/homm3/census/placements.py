@@ -207,6 +207,18 @@ def _own_claimed_rvas() -> set[int]:
     return {rva for sites in sweep_sites().values() for rva in sites}
 
 
+def _own_function_claims(owned) -> list:
+    """The function claims of the image's own units, freshly extracted from
+    their VA() macros (homm3.retail_labels; content-idempotent fragments)."""
+    if not owned:
+        return []
+    from homm3.retail_labels import fragments
+    from homm3.retail_labels import source as labels_source
+    labels_source.extract(sorted(owned))
+    return [claim for unit in sorted(owned) for claim in fragments.unit_claims(unit)
+            if claim.kind == "func"]
+
+
 def portable(text: str, unit: str) -> str:
     """`text` with each anonymous-namespace scope in its checkout-independent
     spelling (homm3.compare.canonicalize), so the table does not depend on
@@ -341,6 +353,21 @@ def derive(log=print, want_suggestions=False):
         if len(hits) == 1:
             propose(name, hits[0], f"masked body ({len(body)} bytes, "
                                    f"{len(relocs)} relocations) unique at a census start")
+
+    # the image's own VA() claims: a claimed body that equals retail at its
+    # claimed address (relocation fields masked) names its referents (the
+    # template instances and header inlines it calls) like a placed body
+    for claim in _own_function_claims(owned):
+        if claim.name not in bodies or named_at[claim.rva] - {claim.name}:
+            continue
+        body, relocs = bodies[claim.name]
+        if functions.get(claim.rva) != len(body):
+            continue
+        mask = bytearray(len(body))
+        for site in relocs:
+            mask[site:site + 4] = b"\1\1\1\1"
+        if all(m or a == b for a, b, m in zip(blob(claim.rva, len(body)), body, mask)):
+            propose(claim.name, claim.rva, "the image's own VA() claim, masked body equal")
 
     # vtables named by RTTI
     def place_table(symbol, vt_rva, why):

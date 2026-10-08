@@ -133,7 +133,12 @@ image's tree, whose claims spell that image's addresses, so no source can
 claim it. Such a placement is a table row when no own source claims its
 address, no shared unit's name labels it, and no other own name reaches it
 (the campaign editor's inline `TRawOStream::TWriteFailure(int)`, which every
-writer in CampaignDoc.cpp calls, is placed this way).
+writer in CampaignDoc.cpp calls, is placed this way). An own unit's body
+whose masked bytes equal retail at its own `VA()` claim also seeds the
+reference propagation of step 2, so the template instances it calls are
+named (the campaign editor's `TScenarioStartingBonusCloner::setClone<T>`,
+whose masked bodies coincide across `T`); `placements` refreshes the own
+units' claim fragments first.
 
 ## The SP3 MFC overlay
 
