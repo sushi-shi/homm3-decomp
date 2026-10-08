@@ -2873,25 +2873,12 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
 // are constructed. This clears container entries without deleting objects,
 // clears map-cell state, then sets every surface cell to dirt/frame zero.
 // Complete-only role and ownership proven by 0x547360 and 0x5466e0.
-// Residual (80.8902%): all 11 CFG blocks and eight branches align. The
-// object clear now retains _Destroy; the outline erasure still expands it,
-// leaving a four-byte EBP spill and different dimension-multiply operands.
-// Three 60-state populations crossed public clear/erase/resize, seven real
-// surface walks, vector/iterator bindings, origin/dimension values, flag
-// sharing and cursor lifetimes. None restores the second _Destroy call.
-// These receiver and dimension snapshots also improve assembly and the
-// scheduler together; selecting their separate peaks loses this combination.
-// The canonical two-coordinate lookup expands here but is called by retail
-// reset copies at 0x547625/0x547717. Keep its one ordinary body in this TU.
-// Five dimension-query controls using the recovered getSize(output) interface
-// leave a virtual slot-3 call absent from retail, add an object-copy call, and
-// still expand the outline destructor. Owned-map/reference receivers and
-// direct-output/returned-reference bindings give 198/199-byte bodies with a
-// 0xc frame and nine blocks; the direct dimension reads remain supported.
-// Probe (2026-10-08): reading the dimensions through getWidth()/getHeight()
-// makes this body exact (two more /Ob2 sites starve the erase chain, so both
-// _Destroy calls stay out of line), but raises its cost to 140 and discard
-// then keeps reset out of line in assembleTreasureGroup (97.38% -> 81.66%).
+// Reading the dimensions through getWidth()/getHeight() gives two more /Ob2
+// sites that keep both _Destroy calls out of line here; their product
+// without width/height locals costs 130, so discard still expands this body
+// in assembleTreasureGroup and placeZoneTreasures. The canonical
+// two-coordinate lookup expands here but is called by retail reset copies at
+// 0x547625/0x547717. Keep its one ordinary body in this TU.
 VA(0x00535040, 0xC6)
 MAC_ADDRESS(0x232e70, 0xa8) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
 void TRmgTreasureGroup::reset()
@@ -2902,9 +2889,7 @@ void TRmgTreasureGroup::reset()
     m_hasGuard = 0;
     m_ready = 0;
     TRmgMapItem* item = m_map.getMapItem(0, 0);
-    int width = m_map.m_mapWidth;
-    int height = m_map.m_mapHeight;
-    int count = width * height;
+    int count = m_map.getWidth() * m_map.getHeight();
     while (count--) {
         item->setTerrain(eTerrainDirt, 0, 0, 0);
         ++item;
@@ -9467,9 +9452,11 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
 
 // The step loop's active-band test is a free inline site after the early
 // return: it divides that path's destructor budget so both vector _Destroy
-// calls stay out of line, leaving the first discard enough to expand reset.
-// The same call in the first loop shrinks this body's own budget and loses
-// that (73.06% against 95.66%). Mac 0x24b844 clears the counts by memset.
+// calls stay out of line, leaving each discard enough to expand reset. The
+// same call in the first loop shrinks this body's budget (73.06%), as does a
+// reference to the selected range (retail re-indexes it for both assembly
+// calls). Mac 0x24b844 clears the counts by memset. The residual is the
+// retail ICF copies' labels on the clear/erase/destructor twins.
 VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
@@ -9481,9 +9468,9 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     int product = 1;
     for (int band = 0; band < 3; ++band) {
         if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0) {
+            finished[band] = 0;
             density += slot->m_treasure[band].m_density;
             product *= slot->m_treasure[band].m_density;
-            finished[band] = 0;
         } else {
             finished[band] = 1;
         }
@@ -9514,10 +9501,10 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         if (selected == -1)
             break;
         count[selected] += step[selected];
-        TRmgTreasureRange& range = slot->m_treasure[selected];
         int attempt;
         for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-            if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
+            if (assembleTreasureGroup(zone, &group, 0, slot->m_treasure[selected].m_minimum,
+                    slot->m_treasure[selected].m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
                 group.discard();
@@ -9526,7 +9513,8 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         if (attempt < RMG_TREASURE_ATTEMPTS)
             continue;
         for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
-            if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
+            if (assembleTreasureGroup(zone, &group, 1, slot->m_treasure[selected].m_minimum,
+                    slot->m_treasure[selected].m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
                 group.discard();
