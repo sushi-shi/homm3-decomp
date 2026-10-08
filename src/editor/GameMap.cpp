@@ -64,7 +64,7 @@ void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[
                 break;
             if (!obj.getBUnderlay()) {
                 if (obj.getBCellPassable(x, y)) {
-                    if (x != 0 && !obj.getBCellPassable(x - 1, y))
+                    if (x > 0 && !obj.getBCellPassable(x - 1, y))
                         height = heightMap[x - 1][y];
                     else
                         height++;
@@ -256,6 +256,29 @@ struct TLossConditionData {
     };
 };
 
+// The kinds of object the map's conditions name; the reconstructions pass
+// them to the layers' searches (isTown h3maped 0x41fe17, isHeroOrTown
+// 0x4296c9, isMonster 0x4296a8).
+inline bool isTown(const TGameObject& obj)
+{
+    return dynamic_cast<const TTown*>(&obj) != NULL;
+}
+
+inline bool isHero(const TGameObject& obj)
+{
+    return dynamic_cast<const TBasicHero*>(&obj) != NULL;
+}
+
+inline bool isMonster(const TGameObject& obj)
+{
+    return dynamic_cast<const TMonster*>(&obj) != NULL;
+}
+
+inline bool isHeroOrTown(const TGameObject& obj)
+{
+    return isHero(obj) || isTown(obj);
+}
+
 }  // namespace
 
 // The map's implementation: so far only the dimension of each size.
@@ -332,8 +355,8 @@ public:
     void setDisabledSpells(const bitset<kNumSpells>& newMask) { _m_pProperties->m_disabledSpells = newMask; }
     const bitset<kNumSecSkills>& getDisabledSkills() const { return _m_pProperties->m_disabledSkills; }
     void setDisabledSkills(const bitset<kNumSecSkills>& newMask) { _m_pProperties->m_disabledSkills = newMask; }
-    const TPHeroPrototype& getHeroPrototype(THeroID heroID) const { return (*_m_pProperties->m_apHeroPrototype)[heroID]; }
-    void setHeroPrototype(THeroID heroID, const TPHeroPrototype& pNewPrototype);
+    const THeroPrototype& getHeroPrototype(THeroID heroID) const { return (*_m_pProperties->m_aHeroPrototype)[heroID]; }
+    void setHeroPrototype(THeroID heroID, const THeroPrototype& newPrototype);
     bool isPlayerPresent(TPlayer player) const { return _m_apPlayerBookkeeping[player]->m_numUnits > 0; }
     unsigned int getNumPlayableSlots() const { return _m_pBookkeeping->m_numPlayableSlots; }
 
@@ -375,6 +398,10 @@ public:
     void _onRemovingObject(const TGameObject& obj, bool bReplacing);
 
     void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
+    void _readHeroSettings(TRawIStream* pIStream, int version);
+    TMapObjectRef _findObject(const TMapLoc& loc, bool (*pfnPredicate)(const TGameObject&)) const;
+    auto_ptr<TVictoryCondition> _reconstructVictoryCondition(const TVictoryConditionData& vcData) const;
+    auto_ptr<TLossCondition> _reconstructLossCondition(const TLossConditionData& lcData) const;
 
     void onObjectRemoved();
 
@@ -399,7 +426,7 @@ private:
         bitset<kNumArtifacts> m_disabledArtifacts;
         bitset<kNumSpells> m_disabledSpells;
         bitset<kNumSecSkills> m_disabledSkills;
-        TRefCountingPtr<TArray<TPHeroPrototype, kNumHeroes> > m_apHeroPrototype;
+        TRefCountingPtr<TArray<THeroPrototype, kNumHeroes> > m_aHeroPrototype;
     };
 
     // The counts behind the caps (0x38 bytes; 0x4338c8).
@@ -819,10 +846,10 @@ void TGameMap::_TImpl::setLossCondition(auto_ptr<TLossCondition> pNewLossConditi
 }
 
 VA(0x004201c8, 0x5a)
-void TGameMap::_TImpl::setHeroPrototype(THeroID heroID, const TPHeroPrototype& pNewPrototype)
+void TGameMap::_TImpl::setHeroPrototype(THeroID heroID, const THeroPrototype& newPrototype)
 {
-    if (!(pNewPrototype == getHeroPrototype(heroID)))
-        (*_m_pProperties->m_apHeroPrototype)[heroID] = pNewPrototype;
+    if (!(newPrototype == getHeroPrototype(heroID)))
+        (*_m_pProperties->m_aHeroPrototype)[heroID] = newPrototype;
 }
 
 VA(0x0042029b, 0x45)
@@ -882,6 +909,57 @@ VA(0x0042059b, 0x1e)
 void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
 {
     _removeObjectHelper(bSecondLayer, getPLayer(bSecondLayer)->getFloatingObjID());
+}
+
+// The map's customized heroes (Shadow of Death maps): per hero a flag,
+// then each customized part behind its own flag.
+VA(0x00426a65, 0x215)
+void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
+{
+    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        unsigned char bCustomized;
+        *pIStream >> bCustomized;
+        if (!bCustomized)
+            continue;
+        THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
+        unsigned char bHasExperience;
+        *pIStream >> bHasExperience;
+        if (bHasExperience) {
+            int experience;
+            *pIStream >> experience;
+            prototype.setExperience(experience);
+        }
+        bool bHasSecondarySkills;
+        *pIStream >> bHasSecondarySkills;
+        if (bHasSecondarySkills) {
+            THeroPrototype::TSecondarySkills secondarySkills;
+            secondarySkills.read(pIStream, version);
+            prototype.setSecondarySkills(secondarySkills);
+        }
+        bool bHasArtifacts;
+        *pIStream >> bHasArtifacts;
+        if (bHasArtifacts)
+            prototype.setArtifacts(THeroPrototype::TArtifactContainer(pIStream, version));
+        bool bHasBiography;
+        *pIStream >> bHasBiography;
+        if (bHasBiography) {
+            string biography;
+            *pIStream >> biography;
+            prototype.setBiography(biography);
+        }
+        signed char sex;
+        *pIStream >> sex;
+        if (sex != -1)
+            prototype.setSex(sex);
+        unsigned char bHasSpells;
+        *pIStream >> bHasSpells;
+        if (bHasSpells)
+            prototype.setSpells(THeroPrototype::TSpells(pIStream, version));
+        bool bHasPrimarySkills;
+        *pIStream >> bHasPrimarySkills;
+        if (bHasPrimarySkills)
+            prototype.setPrimarySkills(THeroPrototype::TPrimarySkills(pIStream, version));
+    }
 }
 
 // A cell's new terrain removes the objects whose blocking cells (or an
@@ -1141,6 +1219,112 @@ void TGameMap::_TImpl::_getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc)
     }
 }
 
+// The object a condition record's location names, as the reading maps
+// find it: none for no location.
+VA(0x0042928c, 0x75)
+TMapObjectRef TGameMap::_TImpl::_findObject(const TMapLoc& loc, bool (*pfnPredicate)(const TGameObject&)) const
+{
+    if (loc.m_x == -1)
+        return TMapObjectRef();
+    TMapLayerObjectID objID = _m_aLayer[loc.m_layer]._findObject(TTilePoint(loc.m_x, loc.m_y), pfnPredicate);
+    if (objID == TLayer::s_kInvalidObjID)
+        return TMapObjectRef();
+    return TMapObjectRef(loc.m_layer != 0, objID);
+}
+
+// The victory condition a map's record describes.
+VA(0x00429301, 0x30d)
+auto_ptr<TVictoryCondition> TGameMap::_TImpl::_reconstructVictoryCondition(const TVictoryConditionData& vcData) const
+{
+    if (vcData.m_type == eVCNone)
+        return auto_ptr<TVictoryCondition>();
+    TVictoryCondition* pResult;
+    switch (vcData.m_type) {
+    case eVCAquireArtifact:
+        pResult = new TVCAquireArtifact(vcData.m_bAppliesToComputer, vcData.m_aquireArtifact.m_artifact);
+        break;
+    case eVCAccumulateCreature:
+        pResult = new TVCAccumulateCreature(vcData.m_bAllowNormalVictory, vcData.m_bAppliesToComputer,
+                                            vcData.m_accumulateCreature.m_creatureType,
+                                            vcData.m_accumulateCreature.m_quantity);
+        break;
+    case eVCAccumulateResource:
+        pResult = new TVCAccumulateResource(vcData.m_bAllowNormalVictory, vcData.m_bAppliesToComputer,
+                                            vcData.m_accumulateResource.m_resourceType,
+                                            vcData.m_accumulateResource.m_quantity);
+        break;
+    case eVCUpgradeTown: {
+        TMapObjectRef townRef = _findObject(vcData.m_upgradeTown.m_townLoc, isTown);
+        pResult = new TVCUpgradeTown(vcData.m_bAllowNormalVictory, townRef,
+                                     TVCUpgradeTown::THallLevel(vcData.m_upgradeTown.m_hallLevel),
+                                     TVCUpgradeTown::TCastleLevel(vcData.m_upgradeTown.m_castleLevel));
+        break;
+    }
+    case eVCBuildHolyGrailStruct: {
+        TMapObjectRef townRef = _findObject(vcData.m_buildHolyGrailStruct.m_townLoc, isTown);
+        pResult = new TVCBuildHolyGrailStruct(townRef);
+        break;
+    }
+    case eVCDefeatHero: {
+        TMapObjectRef heroRef = _findObject(vcData.m_defeatHero.m_heroLoc, isHeroOrTown);
+        pResult = new TVCDefeatHero(heroRef);
+        break;
+    }
+    case eVCCaptureTown: {
+        TMapObjectRef townRef = _findObject(vcData.m_captureTown.m_townLoc, isTown);
+        pResult = new TVCCaptureTown(vcData.m_bAllowNormalVictory, vcData.m_bAppliesToComputer, townRef);
+        break;
+    }
+    case eVCDefeatMonster: {
+        TMapObjectRef monsterRef = _findObject(vcData.m_defeatMonster.m_monsterLoc, isMonster);
+        pResult = new TVCDefeatMonster(vcData.m_bAllowNormalVictory, monsterRef);
+        break;
+    }
+    case eVCFlagAllCreatureGenerators:
+        pResult = new TVCFlagAllCreatureGenerators(vcData.m_bAllowNormalVictory, vcData.m_bAppliesToComputer);
+        break;
+    case eVCFlagAllMines:
+        pResult = new TVCFlagAllMines(vcData.m_bAllowNormalVictory, vcData.m_bAppliesToComputer);
+        break;
+    case eVCTransportArtifact: {
+        TMapObjectRef townRef = _findObject(vcData.m_transportArtifact.m_townLoc, isTown);
+        pResult = new TVCTransportArtifact(vcData.m_bAppliesToComputer, vcData.m_transportArtifact.m_artifact,
+                                           townRef);
+        break;
+    }
+    }
+    if (pResult == NULL)
+        throw TAllocationFailure();
+    return auto_ptr<TVictoryCondition>(pResult);
+}
+
+// The loss condition a map's record describes.
+VA(0x00429708, 0xee)
+auto_ptr<TLossCondition> TGameMap::_TImpl::_reconstructLossCondition(const TLossConditionData& lcData) const
+{
+    if (lcData.m_type == eLCNone)
+        return auto_ptr<TLossCondition>();
+    TLossCondition* pResult;
+    switch (lcData.m_type) {
+    case eLCLoseTown: {
+        TMapObjectRef townRef = _findObject(lcData.m_loseTown.m_townLoc, isTown);
+        pResult = new TLCLoseTown(townRef);
+        break;
+    }
+    case eLCLoseHero: {
+        TMapObjectRef heroRef = _findObject(lcData.m_loseHero.m_heroLoc, isHeroOrTown);
+        pResult = new TLCLoseHero(heroRef);
+        break;
+    }
+    case eLCTimeExpires:
+        pResult = new TLCTimeExpires(lcData.m_timeExpires.m_numDays);
+        break;
+    }
+    if (pResult == NULL)
+        throw TAllocationFailure();
+    return auto_ptr<TLossCondition>(pResult);
+}
+
 VA(0x00429a12, 0x4e)
 TGameMap::TGameMap(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer)
     : _m_pImpl(_TImpl(pClient, version, size, bTwoLayer))
@@ -1262,9 +1446,9 @@ void TGameMap::setDisabledSkills(const bitset<kNumSecSkills>& newMask)
 }
 
 VA(0x00429da2, 0x25)
-void TGameMap::setHeroPrototype(THeroID heroID, const TPHeroPrototype& pNewPrototype)
+void TGameMap::setHeroPrototype(THeroID heroID, const THeroPrototype& newPrototype)
 {
-    _m_pImpl->setHeroPrototype(heroID, pNewPrototype);
+    _m_pImpl->setHeroPrototype(heroID, newPrototype);
 }
 
 VA(0x00429dc7, 0x5b)
@@ -1479,7 +1663,7 @@ const bitset<kNumSecSkills>& TGameMap::getDisabledSkills() const
 }
 
 VA(0x0042a32d, 0x13)
-const TPHeroPrototype& TGameMap::getHeroPrototype(THeroID heroID) const
+const THeroPrototype& TGameMap::getHeroPrototype(THeroID heroID) const
 {
     return _m_pImpl->getHeroPrototype(heroID);
 }
@@ -2164,6 +2348,12 @@ VA(0x0042b793, 0x55)
 TMapLayerObjectID TGameMap::TLayer::_placeObject(auto_ptr<TGameObject> pObj, const TTilePoint& loc)
 {
     return _m_pImpl->_placeObject(pObj, loc);
+}
+
+inline TMapLayerObjectID TGameMap::TLayer::_findObject(const TTilePoint& loc,
+                                                       bool (*pfnPredicate)(const TGameObject&)) const
+{
+    return _m_pImpl->_findObject(loc, pfnPredicate);
 }
 
 inline void TGameMap::TLayer::_removeObject(unsigned int objID)

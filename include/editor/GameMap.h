@@ -258,7 +258,7 @@ public:
     void setDisabledArtifacts(const std::bitset<kNumArtifacts>& newMask);
     void setDisabledSpells(const std::bitset<kNumSpells>& newMask);
     void setDisabledSkills(const std::bitset<kNumSecSkills>& newMask);
-    void setHeroPrototype(THeroID heroID, const TPHeroPrototype& pNewPrototype);
+    void setHeroPrototype(THeroID heroID, const THeroPrototype& pNewPrototype);
 
     TMapLayerObjectID placeObject(bool bSecondLayer, std::auto_ptr<TGameObject> pObj, unsigned int x,
                                   unsigned int y);
@@ -298,7 +298,7 @@ public:
     const std::bitset<kNumArtifacts>& getDisabledArtifacts() const;
     const std::bitset<kNumSpells>& getDisabledSpells() const;
     const std::bitset<kNumSecSkills>& getDisabledSkills() const;
-    const TPHeroPrototype& getHeroPrototype(THeroID heroID) const;
+    const THeroPrototype& getHeroPrototype(THeroID heroID) const;
     bool isPlayerPresent(TPlayer player) const;
     unsigned int getNumPlayableSlots() const;
     std::bitset<kNumHeroes> getHeroesOnMap() const;
@@ -409,6 +409,7 @@ private:
     {
         return _placeObject(pObj, TTilePoint(x, y));
     }
+    TMapLayerObjectID _findObject(const TTilePoint& loc, bool (*pfnPredicate)(const TGameObject&)) const;
     void _removeObject(unsigned int objID);
     void _floatObject(unsigned int objID);
     void _unfloatObject(const TTilePoint& loc);

@@ -9,6 +9,7 @@
 #define HOMM3_EDITOR_RAWSTREAM_H
 
 #include <streambuf>
+#include <string>
 
 #include "exceptions.h"
 
@@ -35,6 +36,9 @@ public:
 private:
     std::streambuf* m_pStreamBuf;
 };
+
+// A string: its length, then its characters (h3maped 0x4190cb, cdecl).
+TRawIStream& operator>>(TRawIStream& stream, std::string& value);
 
 class TRawOStream {
 public:

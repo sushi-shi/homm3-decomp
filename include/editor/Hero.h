@@ -25,6 +25,7 @@
 #include "editor/Array.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/Player.h"
+#include "editor/RawStream.h"
 #include "editor/RefCountingPtr.h"
 
 // Complete's heroes: the map's hero tables hold one row per THeroID.
@@ -32,52 +33,81 @@ typedef int THeroID;
 enum { kNumHeroes = 156 };
 
 // A hero's definition: what the map specifications let a map customize
-// per hero (0x54 bytes behind its handle). Equality (0x44a77a) compares
-// every member; the map saves a hero only where it differs from the
-// game's. The members' offsets come from that comparison, the hero
-// settings writer (0x428892: experience +0x4c, skills, artifacts,
-// biography, sex +0x44) and the available-heroes writer (0x423b20:
-// portrait +0x48, players +0x50).
+// per hero. A copy-on-write handle (4 bytes; the map keeps 156 of them and
+// the hero traits rows one each) to its 0x54-byte implementation. Equality
+// (0x44a77a) compares every member; the map saves a hero only where it
+// differs from the game's. The members' offsets come from that comparison,
+// the setters (0x44a582..0x44a724, each a no-op on an equal value), the hero
+// settings writer (0x428892) and the available-heroes writer (0x423b20).
 class THeroPrototype {
 public:
-    // The worn artifact per slot and the backpack (0x5c; equality 0x428ac9).
+    // The hero's secondary skills; it reads itself from a map (0x44a2a6).
+    class TSecondarySkills : public std::map<TSecondarySkill, TSkillMastery> {
+    public:
+        void read(TRawIStream* pIStream, int version);
+    };
+
+    // The worn artifact per slot (none: -1) and the backpack, a multiset
+    // (0x5c; equality 0x428ac9; constructed from a map by 0x426c7a).
     class TArtifactContainer {
     public:
+        TArtifactContainer(TRawIStream* pIStream, int version) : _m_aSlot(ARTIFACT_NONE)
+        {
+            read(pIStream, version);
+        }
+
+        void read(TRawIStream* pIStream, int version);
+
         TArtifact getSlot(TArtifactSlot slot) const { return _m_aSlot[slot]; }
-        const std::vector<TArtifact>& getBackpack() const { return _m_backpack; }
+        const std::multiset<TArtifact>& getBackpack() const { return _m_backpack; }
 
         friend bool operator==(const TArtifactContainer& lhs, const TArtifactContainer& rhs);
 
     private:
         TArray<TArtifact, kNumArtifactSlots + 1> _m_aSlot;
-        std::vector<TArtifact> _m_backpack;
+        std::multiset<TArtifact> _m_backpack;
     };
 
-    typedef std::map<TSecondarySkill, TSkillMastery> TSecondarySkills;
+    // The spells the hero knows (constructed from a map by 0x426cde).
+    class TSpells : public std::bitset<kNumSpells> {
+    public:
+        TSpells(TRawIStream* pIStream, int version) { read(pIStream, version); }
 
-    const std::string& getName() const { return _m_name; }
-    const std::string& getBiography() const { return _m_biography; }
+        void read(TRawIStream* pIStream, int version);
+    };
+
+    // The four primary skills, a byte each in a map (0x44a4f3).
+    class TPrimarySkills : public TArray<int, kNumPrimarySkills> {
+    public:
+        TPrimarySkills(TRawIStream* pIStream, int version);
+    };
+
+    void setBiography(const std::string& newBiography);
+    void setSecondarySkills(const TSecondarySkills& newSecondarySkills);
+    void setArtifacts(const TArtifactContainer& newArtifacts);
+    void setSpells(const std::bitset<kNumSpells>& newSpells);
+    void setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills);
+    void setSex(int newSex);
+    void setExperience(int newExperience);
 
     friend bool operator==(const THeroPrototype& lhs, const THeroPrototype& rhs);
 
 private:
-    std::string _m_name;
-    std::string _m_biography;
-    TRefCountingPtr<TSecondarySkills> _m_pSecondarySkills;
-    TRefCountingPtr<TArtifactContainer> _m_pArtifacts;
-    std::bitset<kNumSpells> _m_spells;
-    TArray<int, kNumPrimarySkills> _m_aPrimarySkill;
-    int _m_sex;
-    int _m_portrait;
-    int _m_experience;
-    TPlayerMask _m_availability;
+    struct _TImpl {
+        std::string m_name;
+        std::string m_biography;
+        TRefCountingPtr<TSecondarySkills> m_pSecondarySkills;
+        TRefCountingPtr<TArtifactContainer> m_pArtifacts;
+        std::bitset<kNumSpells> m_spells;
+        TArray<int, kNumPrimarySkills> m_aPrimarySkill;
+        int m_sex;
+        int m_portrait;
+        int m_experience;
+        TPlayerMask m_availability;
+    };
+
+    TRefCountingPtr<_TImpl> _m_pImpl;
 };
-
-// The handle the map keeps per hero (0x4 bytes; 0x432ac7 assigns it).
-typedef TRefCountingPtr<THeroPrototype> TPHeroPrototype;
-
-// Two handles' definitions are equal (h3maped 0x44a77a, cdecl).
-bool operator==(const TPHeroPrototype& lhs, const TPHeroPrototype& rhs);
 
 // What heroes and hero placeholders share: an owner and the hero they
 // stand for (RTTI TBasicHero: its vtable, then the playable base; slot 0
