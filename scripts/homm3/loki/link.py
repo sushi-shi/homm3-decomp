@@ -9,7 +9,7 @@ The image's own facts fix the command (docs/loki/README.md, "Link"):
 
 - link order: its .comment entries and .eh_frame CIEs run crt1.o, crti.o (egcs
   1.1.2, glibc 2.1.3), crtbegin.o, the project objects in census order, the
-  version object (game_version; GCC 2.95.2, no .text or CIE), libglade,
+  version object (game_version; GCC 2.95.2 C, no .text, a CIE without FDEs), libglade,
   libxml, GTK+, GDK, GModule, GLib, zlib, libstdc++, libgcc, then crtend.o, crtn.o;
 - DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc, in that order (libm first
   from g++'s `-lstdc++ -lm` tail: an earlier -lm versions libstdc++'s clog), so those

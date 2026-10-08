@@ -28,18 +28,13 @@ driver = "gcc"
 flags = ["-O0", "-mcpu=pentiumpro", "-fexceptions"]
 defines = ["HOMM3_TARGET_LOKI=1"]
 
-# A C object without -fexceptions: no .eh_frame CIE.
-[profiles.version-c]
-driver = "gcc"
-flags = ["-O0", "-mcpu=pentiumpro"]
-
-# Linked objects the census cannot number (no .text, no CIE), with the census
+# Linked objects the census cannot number (no .text, no FDE), with the census
 # object they follow in link order. `homm3 loki link` compiles them; there is
 # no retail object to delink, so the build does not score them.
 [[link_only]]
 name = "version"
 after = 102
-profile = "version-c"
+profile = "glade-c"
 source = "src/editor/loki/version.c"
 
 [[unit]]
