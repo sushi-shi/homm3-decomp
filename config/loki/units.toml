@@ -534,3 +534,8 @@ source = "src/editor/LinePlacement.cpp"
 name = "RiverPlacement"
 object = 27
 source = "src/editor/RiverPlacement.cpp"
+
+[[unit]]
+name = "RoadPlacement"
+object = 28
+source = "src/editor/RoadPlacement.cpp"
