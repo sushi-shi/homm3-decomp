@@ -271,21 +271,6 @@ public:
         assert(FALSE);
     }
 
-    bool GetClientRect(CRect* pRect) const
-    {
-        bool bResult = false;
-        pRect->left = pRect->top = 0;
-        pRect->right = 0;
-        pRect->bottom = 0;
-        if (_m_hWnd) {
-            pRect->bottom = _m_hWnd->allocation.height;
-            pRect->right = _m_hWnd->allocation.width;
-            bResult = true;
-        }
-        return bResult;
-    }
-    void GetWindowRect(CRect& rect) { GetClientRect(&rect); }
-
     void ClientToScreen(CRect* pRect) const
     {
         gint x;
@@ -342,6 +327,21 @@ public:
         pPoint->x -= x;
         pPoint->y -= y;
     }
+
+    bool GetClientRect(CRect* pRect) const
+    {
+        bool bResult = false;
+        pRect->left = pRect->top = 0;
+        pRect->right = 0;
+        pRect->bottom = 0;
+        if (_m_hWnd) {
+            pRect->bottom = _m_hWnd->allocation.height;
+            pRect->right = _m_hWnd->allocation.width;
+            bResult = true;
+        }
+        return bResult;
+    }
+    void GetWindowRect(CRect& rect) { GetClientRect(&rect); }
 
     void Invalidate(bool bErase) { gtk_widget_queue_draw(_m_hWnd); }
     void InvalidateRect(CRect* pRect, int bErase)
