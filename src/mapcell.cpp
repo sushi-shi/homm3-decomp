@@ -55,7 +55,7 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 
     m_timedEventList.resize(count);
     for (unsigned int i = 0; i < m_timedEventList.size(); ++i) {
-        if (m_timedEventList[i].read(infile, saveVersion) < 0)
+        if (m_timedEventList[i].Read(infile, saveVersion) < 0)
             return -1;
     }
     return 0;
@@ -88,19 +88,19 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 VA(0x004fc1a0, 0x1EE)
 DC_ADDRESS(0x0eb7d0, 0x1ce)
 MAC_ADDRESS(0x11d5f0, 0x284)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing
-int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
+int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
 {
     int count;
     std::string throwAway;
     count = NewSMapHeader::readString(infile, throwAway);
-    count = NewSMapHeader::readString(infile, m_message);
+    count = NewSMapHeader::readString(infile, Message);
 
-    count = infile->read(m_resQty, sizeof(m_resQty));
-    if (count < sizeof(m_resQty)) {
+    count = infile->read(ResQty, sizeof(ResQty));
+    if (count < sizeof(ResQty)) {
         return -1;
     }
-    count = infile->read(&m_playerFlags, sizeof(m_playerFlags));
-    if (count < sizeof(m_playerFlags)) {
+    count = infile->read(&PlayerFlags, sizeof(PlayerFlags));
+    if (count < sizeof(PlayerFlags)) {
         return -1;
     }
 
@@ -110,17 +110,17 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
         m_applyToHuman = 1;
     }
 
-    count = infile->read(&m_applyToComputer, sizeof(m_applyToComputer));
-    if (count < sizeof(m_applyToComputer)) {
+    count = infile->read(&ApplyToComputer, sizeof(ApplyToComputer));
+    if (count < sizeof(ApplyToComputer)) {
         return -1;
     }
-    count = infile->read(&m_firstTime, sizeof(m_firstTime));
-    if (count < sizeof(m_firstTime)) {
+    count = infile->read(&FirstTime, sizeof(FirstTime));
+    if (count < sizeof(FirstTime)) {
         return -1;
     }
-    ++m_firstTime;
-    count = infile->read(&m_interval, sizeof(m_interval));
-    if (count < sizeof(m_interval)) {
+    ++FirstTime;
+    count = infile->read(&Interval, sizeof(Interval));
+    if (count < sizeof(Interval)) {
         return -1;
     }
 
@@ -151,7 +151,7 @@ int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
         return -1;
 
     for (x = 0; x < m_timedEventList.size(); ++x) {
-        err = m_timedEventList[x].save(outfile);
+        err = m_timedEventList[x].Save(outfile);
         if (err < 0)
             return -1;
     }
@@ -161,23 +161,23 @@ int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 VA(0x004fc440, 0xB7)
 DC_ADDRESS(0x0eba38, 0xd4)
 MAC_ADDRESS(0x11d938, 0x1e4)
-int TTimedEvent::save(TAbstractFile* outfile)
+int TTimedEvent::Save(TAbstractFile* outfile)
 {
-    if (game::saveString(outfile, m_message) < 0)
+    if (game::saveString(outfile, Message) < 0)
         return -1;
-    if (static_cast<unsigned>(outfile->write(m_resQty, sizeof(m_resQty)))
-        < sizeof(m_resQty))
+    if (static_cast<unsigned>(outfile->write(ResQty, sizeof(ResQty)))
+        < sizeof(ResQty))
         return -1;
-    if (static_cast<unsigned>(outfile->write(&m_playerFlags, 1)) < 1)
+    if (static_cast<unsigned>(outfile->write(&PlayerFlags, 1)) < 1)
         return -1;
 
     writeValue<unsigned char>(outfile, m_applyToHuman);
 
-    if (static_cast<unsigned>(outfile->write(&m_applyToComputer, 1)) < 1)
+    if (static_cast<unsigned>(outfile->write(&ApplyToComputer, 1)) < 1)
         return -1;
-    if (static_cast<unsigned>(outfile->write(&m_firstTime, 2)) < 2)
+    if (static_cast<unsigned>(outfile->write(&FirstTime, 2)) < 2)
         return -1;
-    return static_cast<unsigned>(outfile->write(&m_interval, 2)) < 2 ? -1 : 0;
+    return static_cast<unsigned>(outfile->write(&Interval, 2)) < 2 ? -1 : 0;
 }
 
 VA(0x004fc500, 0x19A)
@@ -191,7 +191,7 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 
     m_timedEventList.resize(count);
     for (unsigned int i = 0; i < m_timedEventList.size(); ++i) {
-        if (m_timedEventList[i].load(infile, saveVersion) < 0)
+        if (m_timedEventList[i].Load(infile, saveVersion) < 0)
             return -1;
     }
     return 0;
@@ -200,14 +200,14 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 VA(0x004fc6a0, 0xC8)
 DC_ADDRESS(0x0ebbbc, 0xd4)
 MAC_ADDRESS(0x11dbd8, 0x1f0)
-int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
+int TTimedEvent::Load(TAbstractFile* infile, int saveVersion)
 {
-    if (game::loadString(infile, m_message) < 0)
+    if (game::loadString(infile, Message) < 0)
         return -1;
-    if (static_cast<unsigned>(infile->read(m_resQty, sizeof(m_resQty)))
-        < sizeof(m_resQty))
+    if (static_cast<unsigned>(infile->read(ResQty, sizeof(ResQty)))
+        < sizeof(ResQty))
         return -1;
-    if (static_cast<unsigned>(infile->read(&m_playerFlags, 1)) < 1)
+    if (static_cast<unsigned>(infile->read(&PlayerFlags, 1)) < 1)
         return -1;
 
     if (saveVersion >= 42) {
@@ -216,11 +216,11 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
         m_applyToHuman = 1;
     }
 
-    if (static_cast<unsigned>(infile->read(&m_applyToComputer, 1)) < 1)
+    if (static_cast<unsigned>(infile->read(&ApplyToComputer, 1)) < 1)
         return -1;
-    if (static_cast<unsigned>(infile->read(&m_firstTime, 2)) < 2)
+    if (static_cast<unsigned>(infile->read(&FirstTime, 2)) < 2)
         return -1;
-    return static_cast<unsigned>(infile->read(&m_interval, 2)) < 2 ? -1 : 0;
+    return static_cast<unsigned>(infile->read(&Interval, 2)) < 2 ? -1 : 0;
 }
 
 // E:\gamedcs\mapcell.cpp:232
@@ -231,7 +231,7 @@ int TTownEvent::read(TAbstractFile* infile, int mapVersion)
     unsigned char inBuf[6];
     char padding[4];
 
-    TTimedEvent::read(infile, mapVersion);
+    TTimedEvent::Read(infile, mapVersion);
 
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
@@ -281,7 +281,7 @@ DC_ADDRESS(0x0ebdbc, 0x7e)
 MAC_ADDRESS(0x11dfcc, 0xc0)
 int TTownEvent::save(TAbstractFile* outfile)
 {
-    TTimedEvent::save(outfile);
+    TTimedEvent::Save(outfile);
     if (static_cast<unsigned>(outfile->write(&m_townNum, 1)) < 1)
         return -1;
     if (static_cast<unsigned>(outfile->write(&m_buildBuildings, 8)) < 8)
@@ -317,7 +317,7 @@ DC_ADDRESS(0x0ebeec, 0x7e)
 MAC_ADDRESS(0x11e13c, 0xc0)
 int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 {
-    TTimedEvent::load(infile, saveVersion);
+    TTimedEvent::Load(infile, saveVersion);
     if (static_cast<unsigned>(infile->read(&m_townNum, 1)) < 1)
         return -1;
     if (static_cast<unsigned>(infile->read(&m_buildBuildings, 8)) < 8)

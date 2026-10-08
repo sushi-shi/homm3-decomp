@@ -10072,7 +10072,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
     int i;
 
     for (j = 0; j < NUM_RESOURCES; ++j) {
-        resToShow = thisEvent->m_resQty[j];
+        resToShow = thisEvent->ResQty[j];
         if (-resToShow
             > g_game->m_players[g_netLocalGamePos].m_resources[j]) {
             resToShow =
@@ -10080,7 +10080,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
         }
 
         g_game->m_players[g_netLocalGamePos].m_resources[j]
-            += thisEvent->m_resQty[j];
+            += thisEvent->ResQty[j];
         if (g_game->m_players[g_netLocalGamePos].m_resources[j] < 0)
             g_game->m_players[g_netLocalGamePos].m_resources[j] = 0;
 
@@ -10095,7 +10095,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
 
     if (g_currentPlayer->isLocalHuman()) {
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
-        extendedDialog(thisEvent->m_message.c_str(), rewards, -1, -1, 0);
+        extendedDialog(thisEvent->Message.c_str(), rewards, -1, -1, 0);
 
         if (g_inCampaign) {
             short currentTurn = getCurrentTurn();
@@ -10144,16 +10144,16 @@ void game::checkForTimeEvent()
         // Mac retains game::isHuman here at code0+0xe512c.
         if (!(isHuman(g_netLocalGamePos)
                   ? thisEvent->m_applyToHuman
-                  : thisEvent->m_applyToComputer)) {
+                  : thisEvent->ApplyToComputer)) {
             continue;
         }
-        if (!(g_curPlayerBit & thisEvent->m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent->PlayerFlags))
             continue;
 
-        if (thisEvent->m_firstTime == day) {
+        if (thisEvent->FirstTime == day) {
             giveTimeEventReward(thisEvent);
-        } else if (thisEvent->m_interval && day > thisEvent->m_firstTime
-                   && (day - thisEvent->m_firstTime) % thisEvent->m_interval
+        } else if (thisEvent->Interval && day > thisEvent->FirstTime
+                   && (day - thisEvent->FirstTime) % thisEvent->Interval
                        == 0) {
             giveTimeEventReward(thisEvent);
         }
@@ -10171,16 +10171,16 @@ void game::checkForTownEvent()
         const TTownEvent& thisEvent = m_worldMap.m_townEventList[i];
         if (!(isHuman(g_netLocalGamePos)
                   ? thisEvent.m_applyToHuman
-                  : thisEvent.m_applyToComputer)) {
+                  : thisEvent.ApplyToComputer)) {
             continue;
         }
-        if (!(g_curPlayerBit & thisEvent.m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent.PlayerFlags))
             continue;
 
-        if (thisEvent.m_firstTime == day) {
+        if (thisEvent.FirstTime == day) {
             giveTownEventReward(thisEvent);
-        } else if (thisEvent.m_interval && day > thisEvent.m_firstTime
-                   && (day - thisEvent.m_firstTime) % thisEvent.m_interval == 0) {
+        } else if (thisEvent.Interval && day > thisEvent.FirstTime
+                   && (day - thisEvent.FirstTime) % thisEvent.Interval == 0) {
             giveTownEventReward(thisEvent);
         }
     }
