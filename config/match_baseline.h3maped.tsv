@@ -16,6 +16,10 @@
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
 Colors	?initColors@@YAXXZ	99.8913	99.8913	99.8913	0xcba4	tokens1:50621faedd82
+GameMap	?getCell@TLayer@TGameMap@@QBEABVTCell@12@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1e82b	tokens1:11eec1851241
+GameMap	?getPCell@TLayer@TGameMap@@QBEPBVTCell@12@II@Z	100.0000	100.0000	100.0000	0x2b60f	tokens1:e083ac020761
+GameMap	?getPCell@_TCellGrid@_TImpl@TLayer@TGameMap@@QBEPBVTCell@34@II@Z	100.0000	100.0000	100.0000	0x2a4d0	tokens1:91a3900eb4de
+GameMap	?isBeachBorder@?A0xaab635a5f3ca1b91@@YA_NABVTLayer@TGameMap@@ABV?$TPoint@I@@@Z	99.9138	99.9138	99.9138	0x1e799	tokens1:75b1893af93c
 Player	?InitializePlayerTraitsTable@@YA_NXZ	90.1161	90.1161	90.1161	0x94324	tokens1:681eba712e3e
 Player	__h3cg$Player$static_dtor$aColorNames	100.0000	100.0000	100.0000	0x94529	-
 Player	__h3cg$Player$static_dtor$aNames	100.0000	100.0000	100.0000	0x9453d	-

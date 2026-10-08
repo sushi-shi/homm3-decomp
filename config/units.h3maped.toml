@@ -332,6 +332,11 @@ source = "src/editor/Colors.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "GameMap"
+source = "src/editor/GameMap.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "Player"
 source = "src/editor/Player.cpp"
 flags = "editor_o1_ob2_gr_windows"
