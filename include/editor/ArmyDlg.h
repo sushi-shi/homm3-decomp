@@ -34,6 +34,7 @@ public:
 
     virtual void OnOK();
     virtual void EnableWindow(bool bEnable) { OnEnable(bEnable); }
+    BOOL IsWindowEnabled() { return _m_bEnabled; }
     virtual BOOL OnInitDialog();
 
     void OnEnable(bool bEnable);
@@ -73,7 +74,6 @@ private:
     };
 
     virtual void onNumOccupiedStacksChanged(unsigned int newNum, unsigned int oldNum) {}
-    BOOL IsWindowEnabled() { return _m_bEnabled; }
 
     void _retrieveStackQuantities();
     void _onSelChangeTypeCombo(unsigned int stackNum);
