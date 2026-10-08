@@ -11,23 +11,23 @@ and the pinned CodeWarrior tools.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 98.63% matched (MAX)** — 4,474 / 4,785 functions exact (93.5%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 98.61% matched (MAX)** — 4,474 / 4,785 functions exact (93.5%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,462 |   98.58% | last measured score                            |
-| MAX   |           4,474 |   98.63% | best result for each function's current source |
-| HIST  |           4,518 |   98.93% | all-time peak across source revisions          |
+| CUR   |           4,466 |   98.59% | last measured score                            |
+| MAX   |           4,474 |   98.61% | best result for each function's current source |
+| HIST  |           4,522 |   98.94% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   123 | 3771 / 3997 (94.3%) |    98.90% |
-| `rmg`        |     3 |   307 / 369 (83.2%) |    95.06% |
+| `game`       |   123 | 3767 / 3997 (94.2%) |    98.88% |
+| `rmg`        |     3 |   307 / 369 (83.2%) |    94.94% |
 | `network`    |     4 |   275 / 281 (97.9%) |    99.40% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
-| `codec`      |     4 |     38 / 43 (88.4%) |    99.35% |
+| `codec`      |     4 |     42 / 43 (97.7%) |    99.92% |
 | `victor`     |     4 |     14 / 26 (53.8%) |    86.18% |
 
 Excluded from the scores (generated or library code):
