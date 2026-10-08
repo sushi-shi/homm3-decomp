@@ -1266,8 +1266,20 @@ def write_readme(*, data_accounting: dict | None = None,
     Run it after banking: the block shows what the ledger holds, never a
     local build report.
     """
-    if rows is None:
-        rows = load_baseline()
+    rows = load_baseline() if rows is None else rows
+    if rows:
+        _write_game_block(rows, data_accounting)
+    else:
+        # A branch without the game (decomp-loki-1.0) has no game ledger and no game block.
+        print(f"[status] no game ledger ({BASELINE.relative_to(common.HOMM3_DIR)}); "
+              "README game block not rendered")
+    # The Loki h3maped image keeps its own ledger; the same edge renders it.
+    from homm3.loki import ledger as loki_ledger
+    if loki_ledger.write_readme(path=README_PATH):
+        print("[status] README Loki h3maped block refreshed from config/loki/match_baseline.tsv")
+
+
+def _write_game_block(rows: dict, data_accounting: dict | None) -> None:
     block = readme_block(rows, data_accounting=data_accounting,
                          previous_accountability=_previous_byte_accountability())
     text = README_PATH.read_text()
@@ -1285,10 +1297,6 @@ def write_readme(*, data_accounting: dict | None = None,
         README_PATH.write_text(new)
         print("[status] README match-score block refreshed from the ledger")
     print(f"[status] {block[2]}")
-    # The Loki h3maped image keeps its own ledger; the same edge renders it.
-    from homm3.loki import ledger as loki_ledger
-    if loki_ledger.write_readme(path=README_PATH):
-        print("[status] README Loki h3maped block refreshed from config/loki/match_baseline.tsv")
 
 
 def build_parser():

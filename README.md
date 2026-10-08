@@ -6,7 +6,8 @@
 C++ reconstruction of the **Heroes of Might and Magic III map editor** in Loki
 Software's Linux port (`h3maped` 1.0, Restoration of Erathia), built with GCC
 2.95.2 and SGI STL 3.2. All functions match; data is in progress. The editor
-shares its engine source with the Windows game on `decomp-complete-4.0`.
+shares its engine source with the Windows game on `decomp-complete-4.0`; this
+branch keeps only the editor and that shared engine.
 Retail bytes are authoritative. Supply your own executable and toolchain
 packages.
 
@@ -27,48 +28,6 @@ _CUR / MAX / HIST: 7,432 / 7,432 / 7,432 exact &middot; 100.00% / 100.00% / 100.
 
 <!-- loki-match-score:end -->
 
-### HEROES3.EXE
-
-The Windows game still builds from this tree and keeps its own scores.
-
-<!-- match-score:start -->
-
-**Windows `HEROES3.EXE`: 98.62% matched (MAX)** — 4,472 / 4,785 functions exact (93.5%), weighted by size over 1,999,585 bytes of code.
-
-| Score | Functions exact | Weighted | Meaning                                        |
-| :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,460 |   98.57% | last measured score                            |
-| MAX   |           4,472 |   98.62% | best result for each function's current source |
-| HIST  |           4,517 |   98.93% | all-time peak across source revisions          |
-
-MAX by module:
-
-| Module       | Units | Functions exact MAX | Fuzzy MAX |
-| :----------- | ----: | ------------------: | --------: |
-| `game`       |   123 | 3771 / 3997 (94.3%) |    98.90% |
-| `rmg`        |     3 |   307 / 369 (83.2%) |    95.06% |
-| `network`    |     4 |   275 / 281 (97.9%) |    99.40% |
-| `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
-| `codec`      |     4 |     36 / 43 (83.7%) |    98.61% |
-| `victor`     |     4 |     14 / 26 (53.8%) |    86.18% |
-
-Excluded from the scores (generated or library code):
-
-| Category              | Functions | Code (B) | Why excluded                                                       |
-| :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
-| `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       912 |  110,461 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
-| `init/cleanup thunks` |     1,173 |   95,322 | compiler-generated CRT initializer/cleanup bodies                  |
-| `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
-
-<!-- match-score:end -->
-
-<!-- mac-match-score:start -->
-
-**Mac reference `Heroes_III_raw.pef`: 58.50% matched** — 588 / 1,510 paired functions exact, over 443,528 compared bytes (last `homm3 mac build` checkpoint).
-
-<!-- mac-match-score:end -->
-
 ## Branches
 
 ```text
@@ -78,17 +37,12 @@ decomp-complete-4.0 ----> decomp-loki-1.0 (you are here)
 - [`decomp-complete-4.0`](https://github.com/sushi-shi/homm3-decomp/tree/decomp-complete-4.0#branches) — Complete 4.0 `HEROES3.EXE` (Sep 2000), VC6 SP3
 - [`decomp-loki-1.0`](https://github.com/sushi-shi/homm3-decomp/tree/decomp-loki-1.0#branches) — Loki Linux 1.0 map editor `h3maped`, GCC 2.95.2
 
-## Pinned executables
+## Pinned executable
 
-`h3maped` is this branch's target; the game tooling still uses `HEROES3.EXE`
-and its Dreamcast and Mac references. Supply your own
-copies; sizes and SHA-256 hashes are pinned in
+Supply your own copy; its size and SHA-256 hash are pinned in
 [config/project.toml](config/project.toml).
 
 - `h3maped`: Loki Linux map editor 1.0 (ELF i386, GCC 2.95.2)
-- `HEROES3.EXE`: English Complete 4.0, engine 3.2 (MSVC 6.0, Sep 2000)
-- `H3.EXE`: Dreamcast port, SH-4 with CodeView symbols (Aug 2000)
-- `Heroes_III_raw.pef`: Classic Mac OS port, PowerPC CodeWarrior (Dec 2000)
 
 ## Quickstart
 
@@ -117,8 +71,8 @@ homm3 loki build Error
 homm3 loki build --bank                    # bank scores and refresh this README
 ```
 
-Engine units compile the game's own `src/` files, so one source serves both
-programs; `homm3 build` still checks the Windows game.
+Engine units compile the engine sources under `src/` that the editor shares
+with the Windows game; the game itself lives on `decomp-complete-4.0`.
 
 ## Data matching
 
