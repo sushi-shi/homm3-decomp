@@ -1132,7 +1132,7 @@ font* ResourceManager::loadFont(const char* name)
         }
     }
 
-    int fileSize = lodFile->getItemIndex(name)->m_size;
+    int fileSize = lodFile->getItemIndex(name)->size;
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
     return loadFontData(name, streamInterface, fileSize);
@@ -1203,7 +1203,7 @@ TTextResource* ResourceManager::loadText(const char* name)
         return 0;
     }
 
-    int fileSize = lodFile->getItemIndex(name)->m_size;
+    int fileSize = lodFile->getItemIndex(name)->size;
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
     return loadTextData(name, streamInterface, fileSize);
@@ -1271,7 +1271,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
         return 0;
     }
 
-    int fileSize = lodFile->getItemIndex(name)->m_size;
+    int fileSize = lodFile->getItemIndex(name)->size;
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
     return loadSpreadsheetData(name, streamInterface, fileSize);
@@ -1561,8 +1561,8 @@ CSprite* ResourceManager::getSprite(const char* name)
     }
 
     LODEntry* entry = lodFile->getItemIndex(name);
-    unsigned char* fileData = new unsigned char[entry->m_size];
-    lodFile->read(fileData, entry->m_size);
+    unsigned char* fileData = new unsigned char[entry->size];
+    lodFile->read(fileData, entry->size);
 
     SpriteDefHeader sdef;
     unsigned char* definitionPosition = fileData + sizeof(sdef);
@@ -1835,7 +1835,7 @@ int ResourceManager::getBitmapResourceSize(const char* name)
     for (;;) {
         LODEntry* entry = g_resourceLodSlots[*archive].m_file.getItemIndex(name);
         if (entry)
-            return entry->m_size;
+            return entry->size;
         ++archive;
     }
 }
