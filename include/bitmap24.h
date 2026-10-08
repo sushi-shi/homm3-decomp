@@ -15,56 +15,48 @@ class Bitmap16Bit;
 // Bitmap16Bit and Bitmap816.
 class Bitmap24Bit : public resource {
 public:
-    unsigned int m_dataSize;
-
-public:
-    int m_imageSize;
-
-    int m_width;
-    int m_height;
-
-public:
-    unsigned char* m_data;
-
-    virtual ~Bitmap24Bit();
-    virtual unsigned int getSize() const;
-
     Bitmap24Bit();
     Bitmap24Bit(const char* name, int w, int h,
                 const unsigned char* source, int size);
     Bitmap24Bit(const char* name, const char* path);
+    // Loki's vtable (0x8427260) holds only the destructor.
+    virtual ~Bitmap24Bit();
 
     void import(int w, int h, const unsigned char* data, int size);
     void clear();
-
-    DC_ADDRESS(0x122b24, 0x4)
-    int getWidth() const { return m_width; }
-
-    DC_ADDRESS(0x122b28, 0x4)
-    int getHeight() const { return m_height; }
-
-    // Dreamcast bitmap24.h:72; both row advances in the raw
-    // Draw body inline this exact 24-bit pitch calculation in retail.
-    DC_ADDRESS(0x0533b0, 0xa)
-    int getPitch() const { return m_width * 3; }
-    void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+    int importPCXFile(const char* filename);
+    void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
               int dx, int dy) const;
-    void draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch) const;
-    void adjustHSV(int x, int y, int w, int h, float hue,
+    void AdjustHSV(int x, int y, int w, int h, float hue,
                    float hueAdjust, float saturationAdjust,
                    float valueAdjust);
 
+    // DC bitmap24.h; Loki emits these after Bitmap24.cpp's own functions.
+    int GetDataSize() const { return m_dataSize; }
+    int GetImageSize() const { return m_imageSize; }
+    DC_ADDRESS(0x122b24, 0x4)
+    int GetWidth() const { return m_width; }
+    DC_ADDRESS(0x122b28, 0x4)
+    int GetHeight() const { return m_height; }
+    DC_ADDRESS(0x0533b0, 0xa)
+    int GetPitch() const { return m_width * 3; }
+    unsigned char* GetMap() { return m_data; }
     DC_ADDRESS(0x122b2c, 0x60)
-    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+    void AdjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust)
     {
-        adjustHSV(0, 0, getWidth(), getHeight(), hue, hueAdjust,
+        AdjustHSV(0, 0, GetWidth(), GetHeight(), hue, hueAdjust,
                   saturationAdjust, valueAdjust);
     }
 
 private:
-    int importPCXFile(const char* filename);
+    int m_dataSize;
+    int m_imageSize;
+    int m_width;
+    int m_height;
+    unsigned char* m_data;
 };
 SIZE(Bitmap24Bit, 0x30);
 
