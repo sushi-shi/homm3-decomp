@@ -37,13 +37,17 @@ class TRawOStream;
 
 class THeroPrototype {
 public:
+    static const unsigned int s_kMaxNameLen = 12;
+    static const unsigned int s_kMaxSecSkills = 8;
+    static const unsigned int s_kMaxBackpackSize = 64;
+
     // The worn artifact per slot and the backpack.
     class TArtifactContainer {
     public:
-        TArtifactContainer();
+        TArtifactContainer() : _m_aSlot(eArtifactNone) {}
 
         TArtifact getSlot(TArtifactSlot slot) const { return _m_aSlot[slot]; }
-        void setSlot(TArtifactSlot slot, TArtifact newArtifact);
+        void setSlot(TArtifactSlot slot, TArtifact artifact);
         const vector<TArtifact>& getBackpack() const { return _m_backpack; }
         vector<TArtifact>* getPBackpack() { return &_m_backpack; }
         void setBackpack(const vector<TArtifact>& newBackpack);
@@ -65,11 +69,11 @@ public:
     const string& getName() const { return _m_name; }
     void setName(string newName);
     int getPortrait() const { return _m_portrait; }
-    void setPortrait(int newPortrait) { _m_portrait = newPortrait; }
+    void setPortrait(int newPortrait);
     const map<TSecondarySkill, TSkillMastery>& getSecondarySkills() const { return _m_secondarySkills; }
     void setSecondarySkills(const map<TSecondarySkill, TSkillMastery>& newSecondarySkills);
     const TArmy& getArmy() const { return _m_army; }
-    void setArmy(const TArmy& newArmy) { _m_army = newArmy; }
+    void setArmy(const TArmy& newArmy);
     const TArtifactContainer& getArtifacts() const { return _m_artifacts; }
     void setArtifacts(const TArtifactContainer& newArtifacts);
 
@@ -90,10 +94,15 @@ inline bool operator!=(const THeroPrototype::TArtifactContainer& lhs, const THer
 // ("TSelectHeroClassDlg::TSelectHeroClassDlg(GtkWidget *, const THeroClassMask &)").
 typedef bitset<kNumHeroClasses + 1> THeroClassMask;
 
+// The in-class members come out of Hero.cpp in declaration order: the
+// modifiers, the accessors, then hasText, protectedSetProtoNum and
+// _getPrototype.
 class THero : public TPlayableObject {
 public:
     // "_m_backpackSize < THero::s_kMaxBackpackSize" (HeroPropsArtifactsPage.cpp).
-    static const unsigned int s_kMaxBackpackSize = 64;
+    static const unsigned int s_kMaxBackpackSize = THeroPrototype::s_kMaxBackpackSize;
+    static const int s_kMaxSecSkills = THeroPrototype::s_kMaxSecSkills;
+    static const int s_kMaxExperience = 99999999;
 
     struct TClassTraits {
         TClassTraits(const TObjectType& objType, THeroID firstHeroID, TTownType townType)
@@ -108,8 +117,11 @@ public:
         THeroPrototype* m_aPrototype;
     };
 
-    struct TPrimarySkillTraits;
-    // One name per row (the hero secondary skills page lists them).
+    // One name per row of priskill.txt, secskill traits and skilllev.txt
+    // (the hero pages list them).
+    struct TPrimarySkillTraits {
+        const char* m_name;
+    };
     struct TSecondarySkillTraits {
         const char* m_name;
     };
@@ -127,64 +139,60 @@ public:
     THero(const TObjectType& objType, TPlayer owner, unsigned int protoNum);
     THero(const TObjectType& objType, TRawIStream* pIStream, int version);
 
-    virtual void importText(istream* pIStream);
-    virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const;
-    virtual bool hasText() const { return getBCustomName(); }
-    virtual void exportText(ostream* pOStream) const;
-
     virtual void setProtoNum(unsigned int newProtoNum);
-    virtual THeroClass getClass() const = 0;
-
-    unsigned int getProtoNum() const { return _m_protoNum; }
-    THeroID getIndivID() const { return THeroID(getClassTraits().m_firstHeroID + _m_protoNum); }
-    const TClassTraits& getClassTraits() const;
-
-    const string& getName() const;
-    void setName(string newName);
-    int getPortrait() const;
+    void setName(string newName) { _m_customPrototype.setName(newName); }
     void setPortrait(int newPortrait) { _m_customPrototype.setPortrait(newPortrait); }
-    const map<TSecondarySkill, TSkillMastery>& getSecondarySkills() const;
     void setSecondarySkills(const map<TSecondarySkill, TSkillMastery>& newSecondarySkills)
     {
         _m_customPrototype.setSecondarySkills(newSecondarySkills);
     }
-    const TArmy& getArmy() const;
     void setArmy(const TArmy& newArmy) { _m_customPrototype.setArmy(newArmy); }
-    const THeroPrototype::TArtifactContainer& getArtifacts() const;
     void setArtifacts(const THeroPrototype::TArtifactContainer& newArtifacts)
     {
         _m_customPrototype.setArtifacts(newArtifacts);
     }
-    bool getBHasArtifact(TArtifact artifact) const;
-
-    bool getBCustomName() const { return _m_bCustomName; }
     void setBCustomName(bool bCustom) { _m_bCustomName = bCustom; }
-    bool getBCustomPortrait() const { return _m_bCustomPortrait; }
     void setBCustomPortrait(bool bCustom) { _m_bCustomPortrait = bCustom; }
-    bool getBCustomSecondarySkills() const { return _m_bCustomSecondarySkills; }
     void setBCustomSecondarySkills(bool bCustom) { _m_bCustomSecondarySkills = bCustom; }
-    bool getBCustomArmy() const { return _m_bCustomArmy; }
     void setBCustomArmy(bool bCustom) { _m_bCustomArmy = bCustom; }
-    bool getBCustomArtifacts() const { return _m_bCustomArtifacts; }
     void setBCustomArtifacts(bool bCustom) { _m_bCustomArtifacts = bCustom; }
-
-    int getExperience() const { return _m_experience; }
     void setExperience(int newExperience);
-    bool getBGroupedFormation() const { return _m_bGroupedFormation; }
     void setBGroupedFormation(bool bGrouped) { _m_bGroupedFormation = bGrouped; }
-    int getPatrol() const { return _m_patrol; }
     void setPatrol(int newPatrol) { _m_patrol = newPatrol; }
 
-    const string& getDefaultName() const;
-    int getDefaultPortrait() const;
-    const map<TSecondarySkill, TSkillMastery>& getDefaultSecondarySkills() const;
-    const TArmy& getDefaultArmy() const;
-    const THeroPrototype::TArtifactContainer& getDefaultArtifacts() const;
-    int getDefaultExperience() const { return 0; }
-    bool getDefaultBGroupedFormation() const { return false; }
-    int getDefaultPatrol() const { return -1; }
+    virtual THeroClass getClass() const = 0;
+    unsigned int getProtoNum() const { return _m_protoNum; }
+    THeroID getIndivID() const { return THeroID(getClassTraits().m_firstHeroID + _m_protoNum); }
+    const TClassTraits& getClassTraits() const { return s_akClassTraits[getClass()]; }
+    const string& getName() const { return _m_bCustomName ? getCustomName() : getDefaultName(); }
+    int getPortrait() const { return _m_bCustomPortrait ? getCustomPortrait() : getDefaultPortrait(); }
+    const map<TSecondarySkill, TSkillMastery>& getSecondarySkills() const
+    {
+        return _m_bCustomSecondarySkills ? getCustomSecondarySkills() : getDefaultSecondarySkills();
+    }
+    const TArmy& getArmy() const { return _m_bCustomArmy ? getCustomArmy() : getDefaultArmy(); }
+    const THeroPrototype::TArtifactContainer& getArtifacts() const
+    {
+        return _m_bCustomArtifacts ? getCustomArtifacts() : getDefaultArtifacts();
+    }
+    bool getBHasArtifact(TArtifact whichArtifact) const;
+    bool getBCustomName() const { return _m_bCustomName; }
+    bool getBCustomPortrait() const { return _m_bCustomPortrait; }
+    bool getBCustomSecondarySkills() const { return _m_bCustomSecondarySkills; }
+    bool getBCustomArmy() const { return _m_bCustomArmy; }
+    bool getBCustomArtifacts() const { return _m_bCustomArtifacts; }
+    int getExperience() const { return _m_experience; }
+    bool getBGroupedFormation() const { return _m_bGroupedFormation; }
+    int getPatrol() const { return _m_patrol; }
 
+    const string& getDefaultName() const { return _getPrototype().getName(); }
+    int getDefaultPortrait() const { return _getPrototype().getPortrait(); }
+    const map<TSecondarySkill, TSkillMastery>& getDefaultSecondarySkills() const
+    {
+        return _getPrototype().getSecondarySkills();
+    }
+    const TArmy& getDefaultArmy() const { return _getPrototype().getArmy(); }
+    const THeroPrototype::TArtifactContainer& getDefaultArtifacts() const { return _getPrototype().getArtifacts(); }
     const string& getCustomName() const { return _m_customPrototype.getName(); }
     int getCustomPortrait() const { return _m_customPrototype.getPortrait(); }
     const map<TSecondarySkill, TSkillMastery>& getCustomSecondarySkills() const
@@ -193,12 +201,21 @@ public:
     }
     const TArmy& getCustomArmy() const { return _m_customPrototype.getArmy(); }
     const THeroPrototype::TArtifactContainer& getCustomArtifacts() const { return _m_customPrototype.getArtifacts(); }
+    int getDefaultExperience() const { return 0; }
+    bool getDefaultBGroupedFormation() const { return false; }
+    int getDefaultPatrol() const { return -1; }
+
+    virtual void importText(istream* pIStream);
+    virtual void write(TRawOStream* pOStream) const;
+    virtual bool isCustomized() const;
+    virtual bool hasText() const { return _m_bCustomName; }
+    virtual void exportText(ostream* pOStream) const;
 
 protected:
     void protectedSetProtoNum(unsigned int newProtoNum) { _m_protoNum = newProtoNum; }
 
 private:
-    const THeroPrototype& _getPrototype() const;
+    const THeroPrototype& _getPrototype() const { return s_akClassTraits[getClass()].m_aPrototype[_m_protoNum]; }
 
     bool _m_bCustomName : 1;
     bool _m_bCustomPortrait : 1;
