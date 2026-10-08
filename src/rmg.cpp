@@ -9889,6 +9889,10 @@ void type_random_map_generator::createRiverToJoin(TRmgMapPosition source)
 // A separate inland coordinate or earlier step snapshot does not improve
 // the peak; a water-item binding/direction local reaches only 79.6875%.
 // A copy-based operator+ removes the retail constructor calls (65.57%).
+// Retail refuses operator+'s position constructor at both translations:
+// reading the bounds through the map and point accessors adds the free /Ob2
+// sites that bring their nested budgets (72 and 81 with direct fields) under
+// its cost of 48, and every call now matches (78.69%). Registers remain.
 VA(0x00548A40, 0x222)
 MAC_ADDRESS(0x24ce88, 0x404)
 void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, int direction)
@@ -9897,11 +9901,11 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     TPoint step = g_rmgDirections[(direction - 2) & 7];
     for (int waterCount = 0; waterCount < 3; ++waterCount) {
 #if defined(HOMM3_RMG_HOTFIX)
-        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+        if (point.getX() < 0 || point.getX() >= m_map.getWidth()
 #else
-        if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
+        if (point.getX() < 0 || point.getX() > m_map.getWidth()
 #endif
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+            || point.getY() < 0 || point.getY() >= m_map.getHeight())
             return;
         if (m_map.getMapItem(point.m_x, point.m_y, point.m_z)->getLandType() != eTerrainWater)
             return;
@@ -9910,11 +9914,11 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     point = position + g_rmgDirections[(direction + 1) & 7];
     for (int dryCount = 0; dryCount < 3; ++dryCount) {
 #if defined(HOMM3_RMG_HOTFIX)
-        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+        if (point.getX() < 0 || point.getX() >= m_map.getWidth()
 #else
-        if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
+        if (point.getX() < 0 || point.getX() > m_map.getWidth()
 #endif
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+            || point.getY() < 0 || point.getY() >= m_map.getHeight())
             return;
         TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
         if (item->getLandType() == eTerrainWater || item->isObjectEntrance())
@@ -9926,11 +9930,11 @@ void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, i
     TRmgMapItem* item;
     for (int inlandCount = 0; inlandCount < 4; ++inlandCount) {
 #if defined(HOMM3_RMG_HOTFIX)
-        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
+        if (point.getX() < 0 || point.getX() >= m_map.getWidth()
 #else
-        if (point.m_x < 0 || point.m_x > m_map.m_mapWidth
+        if (point.getX() < 0 || point.getX() > m_map.getWidth()
 #endif
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+            || point.getY() < 0 || point.getY() >= m_map.getHeight())
             return;
         item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
         if (item->getLandType() == eTerrainWater || item->isObjectEntrance())
