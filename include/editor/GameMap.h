@@ -138,6 +138,8 @@ public:
     const TMapObjectRef& getMainTownRef() const { return _m_mainTownRef; }
     void setMainTownRef(const TMapObjectRef& newMainTownRef) { _m_mainTownRef = newMainTownRef; }
 
+    friend bool operator==(const TPlayerInfo& lhs, const TPlayerInfo& rhs);
+
 private:
     bool _m_bHumanPlayable;
     bool _m_bComputerPlayable;
@@ -145,6 +147,19 @@ private:
     bool _m_bGenerateHero;
     TMapObjectRef _m_mainTownRef;
 };
+
+// Inline: the map specifications' player page keeps the linkonce copies.
+inline bool operator==(const TPlayerInfo& lhs, const TPlayerInfo& rhs)
+{
+    return lhs._m_bHumanPlayable == rhs._m_bHumanPlayable && lhs._m_bComputerPlayable == rhs._m_bComputerPlayable
+           && lhs._m_behaviorType == rhs._m_behaviorType && lhs._m_bGenerateHero == rhs._m_bGenerateHero
+           && lhs._m_mainTownRef == rhs._m_mainTownRef;
+}
+
+inline bool operator!=(const TPlayerInfo& lhs, const TPlayerInfo& rhs)
+{
+    return !(lhs == rhs);
+}
 
 // The alliances: whether the map has teams, how many, and each player's.
 class TTeamInfo {
@@ -608,6 +623,10 @@ public:
     void addSecondLayer();
     TLayer* getPLayer(unsigned int num);
     const TLayer* getPLayer(unsigned int num) const;
+    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
+    const TLayer& getLayer(bool bSecondLayer) const { return *getPLayer(bSecondLayer); }
 
     const string& getName() const;
     void setName(const string& newName);
