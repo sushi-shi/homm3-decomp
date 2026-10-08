@@ -454,3 +454,8 @@ source = "src/editor/MiniMapWnd.cpp"
 name = "ObjectPaletteWnd"
 object = 67
 source = "src/editor/ObjectPaletteWnd.cpp"
+
+[[unit]]
+name = "MapValidation"
+object = 77
+source = "src/editor/MapValidation.cpp"
