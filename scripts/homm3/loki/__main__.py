@@ -6,9 +6,11 @@
         stage or verify the toolchain only; print the driver version
   census [--check]
         regenerate (or check) config/retail/h3maped-loki/{objects,functions}.tsv
-  build [UNIT ...] [-v] [-j N]
+  build [UNIT ...] [-v] [-j N] [--bank]
         compile units from config/loki/units.toml, delink their retail objects,
-        canonicalize both and score them with objdiff (never the game ledger)
+        canonicalize both and score them with objdiff (never the game ledger);
+        --bank records the built units in config/loki/match_baseline.tsv and
+        refreshes the README Loki block
   disasm SELECTOR
         disassemble a retail function by address or mangled-name substring,
         with its references named as in the comparison object
@@ -41,6 +43,8 @@ def main(argv=None) -> int:
     p.add_argument("units", nargs="*")
     p.add_argument("-v", "--verbose", action="store_true", help="per-function scores")
     p.add_argument("-j", "--jobs", type=int, default=3)
+    p.add_argument("--bank", action="store_true",
+                   help="bank the built units' scores and refresh the README Loki block")
     p = sub.add_parser("disasm", help="disassemble a retail function")
     p.add_argument("selector")
     p = sub.add_parser("diff", help="side-by-side base/retail listing of one function")
@@ -64,7 +68,7 @@ def main(argv=None) -> int:
             return census.main(["--check"] if args.check else [])
         if args.command == "build":
             from homm3.loki import build
-            return build.run(args.units or None, jobs=args.jobs, verbose=args.verbose)
+            return build.run(args.units or None, jobs=args.jobs, verbose=args.verbose, bank=args.bank)
         if args.command == "disasm":
             return _disasm(args.selector)
         if args.command == "diff":

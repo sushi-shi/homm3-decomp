@@ -110,6 +110,20 @@ Units compile from their source's directory with the bare file name, as Loki
 did: `__FILE__` in assert text and `TRuntimeError(__FILE__, __LINE__, ...)`
 sites is `"GzBuf.cpp"`, never a path.
 
+## Ledger and README block
+
+`homm3 loki build --bank` records every built unit's functions in
+`config/loki/match_baseline.tsv` (`homm3.loki.ledger`) with the game's
+CUR <= MAX <= HIST schema. The fingerprint standing in for a source hash is
+the compiled function's comparison form: g++ 2.95 at `-O0` compiles a
+function from its own source, so MAX holds while that body is unchanged and
+resets to CUR when it changes. The README's `loki-match-score` block renders
+from that ledger and the census, never from a build report, on both of the
+game's README edges (`homm3 build` and `homm3 status update
+--write-readme`) and after `--bank`. It counts project functions only (the
+`.text` and owned linkonce bodies of the 103 project objects) and splits out
+the engine phase listed in `config/loki/units.toml` `[phases]`.
+
 ## Shared engine source
 
 Engine units compile the game's own `src/` file, so one source serves both

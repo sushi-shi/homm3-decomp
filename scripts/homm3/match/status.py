@@ -1285,6 +1285,10 @@ def write_readme(*, data_accounting: dict | None = None,
         README_PATH.write_text(new)
         print("[status] README match-score block refreshed from the ledger")
     print(f"[status] {block[2]}")
+    # The Loki h3maped image keeps its own ledger; the same edge renders it.
+    from homm3.loki import ledger as loki_ledger
+    if loki_ledger.write_readme(path=README_PATH):
+        print("[status] README Loki h3maped block refreshed from config/loki/match_baseline.tsv")
 
 
 def build_parser():

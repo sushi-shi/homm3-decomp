@@ -47,6 +47,9 @@ Excluded from the scores (generated or library code):
 
 <!-- mac-match-score:end -->
 
+<!-- loki-match-score:start -->
+<!-- loki-match-score:end -->
+
 Scores always satisfy CUR ≤ MAX ≤ HIST. Editing a function resets its MAX to
 its new CUR; other CUR dips leave MAX alone. HIST above MAX marks a lost peak
 worth recovering. `homm3 status check` reports score changes, and

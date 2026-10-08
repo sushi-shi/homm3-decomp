@@ -17,7 +17,7 @@ import subprocess
 import tomllib
 
 from homm3.core import common
-from homm3.loki import delink, objwriter, toolchain
+from homm3.loki import delink, ledger, objwriter, toolchain
 from homm3.loki.image import IMAGE, LokiImage
 
 ROOT = common.HOMM3_DIR
@@ -106,13 +106,15 @@ def report() -> dict:
     return json.loads((OBJDIFF / "report.json").read_text())
 
 
-def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False) -> int:
+def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False,
+        bank: bool = False) -> int:
     toolchain.stage()
     chosen = units(selected)
     image = LokiImage()
     with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
         compiled = list(pool.map(compile_unit, chosen))
     ready = []
+    built: dict[str, tuple[Unit, list, dict[str, str]]] = {}
     for unit, (obj, error) in zip(chosen, compiled):
         delink_path = OBJDIFF / "target" / f"{unit.name}.o"
         target = delink.target_sections(unit.obj, image)
@@ -129,6 +131,7 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False)
         objwriter.write(delink_path, target)
         objwriter.write(base_path, base)
         ready.append(unit.name)
+        built[unit.name] = (unit, target, ledger.fingerprints(base))
     objdiff_config([u.name for u in chosen], set(ready))
     data = report()
     total_exact = total = 0
@@ -145,4 +148,16 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False)
                 name = function.get("metadata", {}).get("demangled_name") or function["name"]
                 print(f"         {function.get('fuzzy_match_percent', 0):6.2f}  {name}")
     print(f"[loki] {total_exact}/{total} retail functions exact across {len(chosen)} units")
+    if bank:
+        rows = ledger.load()
+        for report_unit in data.get("units", []):
+            if report_unit["name"] not in built:
+                continue
+            unit, target, prints = built[report_unit["name"]]
+            scores = {f["name"]: f.get("fuzzy_match_percent", 0.0) for f in report_unit.get("functions", [])}
+            ledger.bank(rows, unit.name, unit.obj, target, scores, prints)
+        ledger.save(rows)
+        changed = ledger.write_readme(rows)
+        print(f"[loki] banked {len(built)} units into {ledger.LEDGER.relative_to(ROOT)}"
+              + ("; README Loki block refreshed" if changed else ""))
     return 0

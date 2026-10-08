@@ -36,6 +36,7 @@ class Function:
     offset: int
     size: int
     bind_global: bool
+    address: int | None = None   # retail address (target side only)
 
 
 @dataclass

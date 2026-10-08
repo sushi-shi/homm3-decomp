@@ -8,6 +8,12 @@
 # -fno-exceptions or -O1 lose every exact body (docs/loki/README.md).
 # -fpermissive only admits the VC6 dialect of the shared source; it does not
 # change code generation.
+# The engine phase (loki-editor-plan section 4): objects compiled from the
+# game's engine classes. The README Loki block reports them separately.
+[phases]
+engine = [3, 5, 6, 8, 9, 10, 14, 16, 23, 24, 30, 34, 37, 38, 39, 40, 41, 42, 43,
+          44, 45, 46, 47, 48, 49, 50, 52, 60, 68]
+
 [profiles.editor]
 flags = ["-O0", "-mcpu=pentiumpro", "-fpermissive"]
 defines = ["HOMM3_TARGET_LOKI=1"]

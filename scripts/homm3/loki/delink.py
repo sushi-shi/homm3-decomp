@@ -95,7 +95,7 @@ class Target:
         section = CodeSection(name, data)
         for function in members:
             section.functions.append(Function(_symbol_name(function), function.address - start,
-                                              function.size, function.bind != "static"))
+                                              function.size, function.bind != "static", function.address))
             tables: list[int] = []
             local_start = function.address - start
             for field in cmpobj.fields(bytes(data), local_start, local_start + function.size):
