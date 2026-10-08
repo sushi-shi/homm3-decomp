@@ -40,21 +40,97 @@ enum EBitmapGreenBits {
     BITMAP_GREEN_BITS_565 = 6
 };
 
+// Loki's display is 5:6:5 while the game's palettes are 5:5:5; Bitmap816 and
+// the sprite drawers convert every palette entry they write (linkonce in
+// Loki, owned by Bitmap816.cpp as the first user).
+inline unsigned short convert555to565(unsigned short color)
+{
+    return ((color & 0x7fe0) << 1) | (color & 0x1f);
+}
+
 class Bitmap16Bit : public resource {
 public:
-    // Original class statics red_mask/green_mask/blue_mask. Complete's
-    // ResourceManager::setPixelFormat stores its arguments at 0x694d68,
-    // 0x694d60 and 0x694d64 respectively. PCX bytes are BGR, so its first
-    // byte uses s_blueMask; the earlier global names reversed red and blue.
-    static unsigned int s_redMask;
-    static unsigned int s_greenMask;
-    static unsigned int s_blueMask;
+    // Loki exports these as Bitmap16Bit::red_mask/green_mask/blue_mask.
+    static unsigned int red_mask;
+    static unsigned int green_mask;
+    static unsigned int blue_mask;
 
-    // Slot 0 is the scalar deleting destructor: heroWindow deletes its
-    // background through [vptr]+flag 1. Slot 2 reports the resource's
-    // total in-memory extent: the 0x38-byte object plus DataSize.
+    Bitmap16Bit(int w, int h);
+    Bitmap16Bit(const char* name, int w, int h);
+    Bitmap16Bit(const char* name, int w, int h,
+                const unsigned short* data, int size);
+    Bitmap16Bit(const char* name, const char* path);
+    // Loki's vtable (0x8427250) holds only the destructor.
     virtual ~Bitmap16Bit();
+
+    void Remap(int old_green_bits);
+    void import(int w, int h, const unsigned short* data, int size);
+    void reference(int w, int h, int pitch, unsigned short* data);
     void clear();
+    int importPCXFile(const char* filename);
+    void Draw(int srcX, int srcY, int srcWidth, int srcHeight,
+              unsigned short* dst, int dstX, int dstY, int dstWidth,
+              int dstHeight, int dstPitch, bool flipped) const;
+    void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth,
+              int srcHeight, int srcPitch);
+    void FillRect(int x, int y, int w, int h, unsigned short color);
+    void FrameRect(int x, int y, int w, int h, unsigned short color);
+    void Darken(int x, int y, int w, int h);
+    void Darken(int x, int y, int w, int h, Bitmap816* mask, int sx, int sy);
+    void Colorize(int x, int y, int w, int h, unsigned short color);
+    void Colorize(int x, int y, int w, int h, float hue, float saturation);
+    void Gray(int x, int y, int w, int h);
+    void GrabAndBlur(const Bitmap16Bit* src, int sx, int sy);
+
+    // DC Bitmap16.h:111-168; Loki emits these after Bitmap16.cpp's own
+    // functions (the unit that defines the key function).
+    int GetDataSize() const { return m_dataSize; }
+    int GetImageSize() const { return m_imageSize; }
+    DC_ADDRESS(0x01f100, 0xc)
+    int GetWidth() const { return m_width; }
+    DC_ADDRESS(0x01f10c, 0xc)
+    int GetHeight() const { return m_height; }
+    DC_ADDRESS(0x01f118, 0xc)
+    int GetPitch() const { return m_pitch; }
+    DC_ADDRESS(0x122b8c, 0x1c)
+    static void SetPixelFormat(unsigned int red, unsigned int green,
+                               unsigned int blue)
+    {
+        red_mask = red;
+        green_mask = green;
+        blue_mask = blue;
+    }
+    DC_ADDRESS(0x01f124, 0x22)
+    unsigned short* GetMap(int x, int y)
+    {
+        return (unsigned short*)((unsigned char*)m_map + y * m_pitch
+                                 + x * sizeof(unsigned short));
+    }
+    DC_ADDRESS(0x04ca7c, 0x10)
+    const unsigned short* GetMap(int x, int y) const
+    {
+        return (const unsigned short*)((const unsigned char*)m_map
+                                       + y * m_pitch
+                                       + x * sizeof(unsigned short));
+    }
+    DC_ADDRESS(0x04ca8c, 0x90)
+    void Draw(int srcX, int srcY, int w, int h, Bitmap16Bit* dst, int dstX,
+              int dstY, bool flipped) const
+    {
+        Draw(srcX, srcY, w, h, dst->GetMap(0, 0), dstX, dstY, dst->GetWidth(),
+             dst->GetHeight(), dst->GetPitch(), flipped);
+    }
+    DC_ADDRESS(0x04cb1c, 0x74)
+    void Grab(const Bitmap16Bit* src, int srcX, int srcY)
+    {
+        Grab(src->GetMap(0, 0), srcX, srcY, src->GetWidth(),
+             src->GetHeight(), src->GetPitch());
+    }
+    void Colorize(float hue, float saturation)
+    {
+        Colorize(0, 0, m_width, m_height, hue, saturation);
+    }
+    void Gray() { Gray(0, 0, m_width, m_height); }
 
 private:
     int m_dataSize;
@@ -64,106 +140,6 @@ private:
     int m_pitch;
     unsigned short* m_map;
     unsigned char m_referenced;
-
-public:
-    virtual unsigned int getSize() const;
-    Bitmap16Bit(int w, int h);
-    Bitmap16Bit(const char* name, int w, int h);
-    Bitmap16Bit(const char* name, int w, int h,
-                const unsigned short* data, int size);
-    Bitmap16Bit(const char* name, const char* path);
-    void import(int w, int h, const unsigned short* data, int size);
-    void reference(int w, int h, int pitch, unsigned short* data);
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
-    void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
-    // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
-    // callers pin it: textWidget::Draw's back-colour fill, and
-    // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push
-    // run is the DC signature verbatim.
-    void fillRect(int x, int y, int w, int h, unsigned short color);
-    // Retail bodies 0x44e540 / 0x44e780, both reached from
-    // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
-    // the DC signature verbatim, and the truncating `mov dx, [ecx+0x30]`
-    // load off an int member is what fixes the 16-bit colour parameter.
-    void frameRect(int x, int y, int w, int h, unsigned short color);
-    void darken(int x, int y, int w, int h);
-    // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
-    // 0x44e6a0 independently preserve this masked darken overload.
-    void darken(int x, int y, int w, int h, Bitmap816* mask,
-                int sx, int sy);
-    void colorize(int x, int y, int width, int height, unsigned short color);
-    // The float overload, DC bitmap16.cpp:873. advManager::ViewPuzzle is the
-    // retail caller that proves the (hue, saturation) pair as raw dwords.
-    void colorize(int x, int y, int w, int h, float hue, float saturation);
-    void gray(int x, int y, int w, int h);
-    void grabAndBlur(const Bitmap16Bit* src, int sx, int sy);
-
-    // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
-    // inline because Complete's ResourceManager expands them into its
-    // bitmap-remap blit rather than calling the emitted DC copies.
-    DC_ADDRESS(0x01f100, 0xc)
-    int getWidth() const { return m_width; }
-
-    DC_ADDRESS(0x01f10c, 0xc)
-    int getHeight() const { return m_height; }
-
-    DC_ADDRESS(0x01f118, 0xc)
-    int getPitch() const { return m_pitch; }
-
-    // Original: Bitmap16Bit::SetPixelFormat; Bitmap16.h:142
-    DC_ADDRESS(0x122b8c, 0x1c)
-    static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
-    {
-        s_redMask = red;
-        s_greenMask = green;
-        s_blueMask = blue;
-    }
-
-    VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
-    DC_ADDRESS(0x01f124, 0x22)
-    unsigned short* getMap(int x, int y)
-    {
-        // Bitmap16.h:151 (dc 0x1f124): add the byte row stride, then
-        // the pixel offset. Retail's retained body has the same order.
-        return reinterpret_cast<unsigned short*>(
-            reinterpret_cast<unsigned char*>(m_map) + y * m_pitch
-            + x * sizeof(*m_map));
-    }
-
-    // DC Bitmap16.h:156-157 has the same one-expression pixel address:
-    // y advances bytes by pitch; x advances unsigned-short pixels.
-    DC_ADDRESS(0x04ca7c, 0x10)
-    const unsigned short* getMap(int x, int y) const
-    {
-        return reinterpret_cast<const unsigned short*>(
-            reinterpret_cast<const unsigned char*>(m_map) + y * m_pitch
-            + x * sizeof(*m_map));
-    }
-
-    VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
-    DC_ADDRESS(0x04ca8c, 0x90)
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight,
-              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
-    {
-        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
-             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
-             flipped);
-    }
-
-    // DC Bitmap16.h:168 retains this inline body. This header forwarding
-    // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
-    // six-argument Grab. Complete's ShootAnimatedMissile expands it into
-    // the retained raw call at 0x0044e3f0.
-    DC_ADDRESS(0x04cb1c, 0x74)
-    void grab(const Bitmap16Bit* src, int srcX, int srcY)
-    {
-        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
-             src->getPitch());
-    }
-    void remap(int oldGreenBits);
-
-private:
-    int importPCXFile(const char* filename);
 };
 SIZE(Bitmap16Bit, 0x38);
 

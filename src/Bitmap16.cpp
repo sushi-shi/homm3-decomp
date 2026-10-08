@@ -1,32 +1,38 @@
+// Bitmap16.cpp - Bitmap16Bit and its colour helpers (Loki h3maped object 39).
+//
+// The Loki link order: the constructors and destructor, the four pixel
+// format converters, Remap and the bitmap operations; g++ then emits the
+// Bitmap16.h inline members (this unit defines the key function) and the
+// inline file-static ftol.
 #include "va.h"
 
+#include <assert.h>
 #include <limits>
 #include <math.h>
-#include <new>
 #include <string.h>
 
+#include "exceptions.h"
 #include "bitmap16.h"
 
 #include "bitmap816.h"
 #include "hsv.h"
-#include "pcx.h"
 
-// Convert using the low word of the biased double representation.
-// Original: ftol; bitmap16.cpp:59
+// Loki keeps the helper but asserts on entry (Bitmap16.cpp:61): nothing in
+// the port is meant to reach it.
 DC_ADDRESS(0x050a9c, 0x62)
-static long ftol(double d)
+inline static long ftol(double d)
 {
+#line 61
+    assert(0);
     const unsigned long magic = 0x59c00000;
-    d += *static_cast<const float*>(static_cast<const void*>(&magic));
-    return *static_cast<long*>(static_cast<void*>(&d));
+    d += *(const float*)&magic;
+    return *(long*)&d;
 }
 
-VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
+unsigned int Bitmap16Bit::red_mask;
+unsigned int Bitmap16Bit::green_mask;
+unsigned int Bitmap16Bit::blue_mask;
 
-// DC allocation uses BMCreateSurface then virtual Lock (slot +0x64),
-// falling back to the same heap allocation below. Mac 0x5be20/0x5bee4
-// and retail 0x44df70/0x44e050 retain only that heap path. Their class
-// has no surface descriptor/owner; these calls are not expanded helpers.
 VA(0x0044df70, 0xA3)
 DC_ADDRESS(0x050b00, 0x104)
 MAC_ADDRESS(0x05be20, 0xc4)
@@ -35,7 +41,6 @@ Bitmap16Bit::Bitmap16Bit(int w, int h)
       m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2)
 {
     m_dataSize = m_imageSize;
-
     if (w && h) {
         m_map = new unsigned short[m_dataSize / 2];
         m_referenced = 0;
@@ -46,23 +51,22 @@ Bitmap16Bit::Bitmap16Bit(int w, int h)
 
 VA(0x0044e050, 0xA5)
 DC_ADDRESS(0x050c04, 0x104)
-MAC_ADDRESS(0x05bee4, 0xc0)  // in-span, name/type base ctor + vftable 0x63b9c8
+MAC_ADDRESS(0x05bee4, 0xc0)
 Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
     : resource(name, RESOURCE_TYPE_BITMAP16),
       m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2),
       m_referenced(0)
 {
+#line 94
+    assert(w >= 0);
+    assert(h >= 0);
     m_dataSize = m_imageSize;
-
     if (w > 0 && h > 0)
         m_map = new unsigned short[m_dataSize / 2];
     else
         m_map = 0;
 }
 
-// Original: Bitmap16Bit::Bitmap16Bit; bitmap16.cpp:152
-// Complete's 0x38-byte bitmap keeps the heap-buffer arm of DC's allocation
-// path; DDSURFACEDESC, BMCreateSurface and the locked-surface owner are absent.
 DC_ADDRESS(0x050d08, 0xfa)
 Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h,
                          const unsigned short* data, int size)
@@ -71,21 +75,22 @@ Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h,
 {
     m_dataSize = size ? size : m_imageSize;
     m_map = new unsigned short[m_dataSize / 2];
-    m_referenced = 0;
     if (m_map)
         memcpy(m_map, data, m_dataSize);
+    m_referenced = 0;
 }
 
-// Original: Bitmap16Bit::Bitmap16Bit; bitmap16.cpp:187
+// Loki builds the path in a PATH_MAX buffer.
 DC_ADDRESS(0x050e04, 0xb8)
 Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
     : resource(name, RESOURCE_TYPE_BITMAP16),
-      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
+      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0),
+      m_map(0)
 {
-    char fileName[261];
-    strcpy(fileName, path);
-    strcat(fileName, name);
-    importPCXFile(fileName);
+    char filename[4096];
+    strcpy(filename, path);
+    strcat(filename, name);
+    importPCXFile(filename);
     m_referenced = 0;
 }
 
@@ -98,69 +103,69 @@ Bitmap16Bit::~Bitmap16Bit()
         delete[] m_map;
 }
 
-// E:\gamedcs\bitmap16.cpp:224/234/243/253. The four pixel-format converters
-// the compiland's own Remap runs the surface through. NONE of them has a
-// retail row: /Ob2 expands all four at Remap's two arms, which is the only
-// place in the image that reaches them, so the shift/mask chains below are
-// read straight out of that body.
 DC_ADDRESS(0x050f34, 0x2c)
 unsigned long color1555to8888(unsigned short color)
 {
-    return ((((((color & 0xffff8000) << 7 | (color & 0x7c00)) << 3)
-              | (color & 0x3e0))
-             << 3
-             | (color & 0x1f))
-            << 3);
+    unsigned long result = (unsigned short)(color & 0x8000) << 16;
+    result |= (unsigned short)(color & 0x7c00) << 9;
+    result |= (unsigned short)(color & 0x03e0) << 6;
+    result |= (unsigned short)(color & 0x001f) << 3;
+    return result;
 }
 
 DC_ADDRESS(0x050f60, 0x20)
 unsigned long color0565to8888(unsigned short color)
 {
-    return ((((color & 0xf800) << 3 | (color & 0x7e0)) << 2 | (color & 0x1f))
-            << 3);
+    unsigned long result = (unsigned short)(color & 0xf800) << 8;
+    result |= (unsigned short)(color & 0x07e0) << 5;
+    result |= (unsigned short)(color & 0x001f) << 3;
+    return result;
 }
 
 DC_ADDRESS(0x050f80, 0x2e)
 unsigned short color8888to1555(unsigned long color)
 {
-    return static_cast<unsigned short>(((color >> 9) & 0x7c00)
-                                       | ((color >> 6) & 0x3e0)
-                                       | ((color >> 3) & 0x1f)
-                                       | ((color >> 16) & 0x8000));
+    unsigned long result = (color & 0x000000f8) >> 3;
+    result |= (color & 0x0000f800) >> 6;
+    result |= (color & 0x00f80000) >> 9;
+    result |= (color & 0x80000000) >> 16;
+    return result;
 }
 
 DC_ADDRESS(0x050fb0, 0x22)
 unsigned short color8888to0565(unsigned long color)
 {
-    return static_cast<unsigned short>(((color >> 8) & 0xf800)
-                                       | ((color >> 5) & 0x7e0)
-                                       | ((color >> 3) & 0x1f));
+    unsigned long result = (color & 0x000000f8) >> 3;
+    result |= (color & 0x0000fc00) >> 5;
+    result |= (color & 0x00f80000) >> 8;
+    return result;
 }
 
 VA(0x0044e130, 0x110)
 DC_ADDRESS(0x050fd4, 0xa4)
-void Bitmap16Bit::remap(int oldGreenBits)
+void Bitmap16Bit::Remap(int old_green_bits)
 {
-    for (int col = 0; col < m_width; col++) {
-        for (int row = 0; row < m_height; row++) {
-            Bitmap16MapPointer pixel;
-            pixel.m_pixels = getMap(col, row);
-            if (oldGreenBits == BITMAP_GREEN_BITS_565)
-                *pixel.m_pixels = color8888to1555(color0565to8888(*pixel.m_pixels));
-            else
-                *pixel.m_pixels = color8888to0565(color1555to8888(*pixel.m_pixels));
+    if (old_green_bits == BITMAP_GREEN_BITS_565) {
+#line 186
+        assert(green_mask != 0x7e0);
+    } else {
+#line 190
+        assert(green_mask == 0x7e0);
+    }
+    for (int x = 0; x < m_width; x++) {
+        for (int y = 0; y < m_height; y++) {
+            unsigned short* pixel = GetMap(x, y);
+            if (old_green_bits == BITMAP_GREEN_BITS_565) {
+                unsigned long color = color0565to8888(*pixel);
+                *pixel = color8888to1555(color);
+            } else {
+                unsigned long color = color1555to8888(*pixel);
+                *pixel = color8888to0565(color);
+            }
         }
     }
 }
 
-VA(0x0044e240, 0x07)
-MAC_ADDRESS(0x05c020, 0xc)  // vtable slot 2: fixed object extent + pixel bytes
-unsigned int Bitmap16Bit::getSize() const
-{
-    return sizeof(*this) + m_dataSize;
-}
-
-// Original: Bitmap16Bit::import; bitmap16.cpp:294
 DC_ADDRESS(0x051078, 0xda)
 void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
 {
@@ -171,9 +176,9 @@ void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
     m_imageSize = w * h * 2;
     m_dataSize = size ? size : m_imageSize;
     m_map = new unsigned short[m_dataSize / 2];
-    m_referenced = 0;
     if (m_map)
         memcpy(m_map, data, m_dataSize);
+    m_referenced = 0;
 }
 
 VA(0x0044e250, 0x5D)
@@ -191,12 +196,6 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
     m_referenced = 1;
 }
 
-// DC bitmap16.cpp:358 supplies the ordinary clear helper called by reference.
-// Complete inlines its scalar resets and owned-buffer release; the DC-only
-// surface-release arm has no corresponding field or operation in retail.
-// DC 0x511d6/0x511e0 unlocks/releases the surface instead of deleting a
-// heap buffer. Mac 0x5c094 and retail reference 0x44e250 retain only the
-// heap/borrowed-buffer branch, including its null-pointer guard.
 DC_ADDRESS(0x051198, 0x90)
 MAC_ADDRESS(0x05c094, 0x64)
 void Bitmap16Bit::clear()
@@ -213,452 +212,298 @@ void Bitmap16Bit::clear()
     }
 }
 
-// Original: Bitmap16Bit::importPCXFile; bitmap16.cpp:472
+// The Loki port has no PCX reader.
 DC_ADDRESS(0x051228, 0x150)
 int Bitmap16Bit::importPCXFile(const char* filename)
 {
-    PcxData pdat;
-    imgdes pcxfile;
-    if (pcxinfo(filename, &pdat))
-        return 1;
-
-    m_width = pdat.m_width;
-    m_height = pdat.m_length;
-    m_pitch = pdat.m_width * 2;
-    m_imageSize = m_width * m_height * 2;
-    m_dataSize = m_imageSize;
-    m_map = new unsigned short[m_dataSize / 2];
-    m_referenced = 0;
-    if (!m_map)
-        return 2;
-
-    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
-               pdat.m_bpPixel * pdat.m_nplanes);
-    loadpcx(filename, &pcxfile);
-    flipimage(&pcxfile, &pcxfile);
-    for (int y = 0; y < m_height; ++y) {
-        // DC 0x51310..0x5132a advances this destination by Width bytes,
-        // although the copied row contains Width words. Preserve that old
-        // importer's addressing; neither retained PCX importer calls it.
-        Bitmap16MapPointer row;
-        row.m_pixels = m_map;
-        memcpy(row.m_bytes + y * m_width,
-               pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
-               m_width * sizeof(unsigned short));
-    }
-    freeimage(&pcxfile);
-    return 0;
+#line 448
+    assert(0);
+    return 2;
 }
 
-// E:\gamedcs\bitmap16.cpp:541
-#define BITMAP16_BYTE_OFFSET(pointer, offset)                              \
-    static_cast<unsigned short*>(static_cast<void*>(                      \
-        static_cast<unsigned char*>(static_cast<void*>(pointer)) + offset))
-#define BITMAP16_CONST_BYTE_OFFSET(pointer, offset)                        \
-    static_cast<const unsigned short*>(static_cast<const void*>(           \
-        static_cast<const unsigned char*>(static_cast<const void*>(pointer)) \
-        + offset))
-
-// The Mac draw/grab/rectangle family expands the canonical Bitmap16.h
-// dimension and byte-pitch reads (DC header lines 111-113). Examples:
-// draw 0x5c1e8/0x5c224, grab 0x5c274/0x5c278/0x5c31c,
-// fillRect 0x5c348/0x5c35c/0x5c41c, frameRect 0x5c438/0x5c44c/0x5c534,
-// darken 0x5c55c/0x5c570/0x5c6d4, masked darken 0x5c6fc/0x5c710/0x5c7e8.
-// Keep these operations as calls to the existing getters. The expanded
-// one-word reads identify the operation; original source-call spelling is
-// inferred. Map lookup is already represented by getMap in each caller.
 VA(0x0044e2b0, 0x139)
 DC_ADDRESS(0x051378, 0xf0)
-MAC_ADDRESS(0x05c0f8, 0x158)  // MAC_ABSTRACTION_FROM(tokens1:172e459daefb,41.2791): canonical getPitch calls replace the two direct row-stride loads; Windows remains exact.
-void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
+void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
                        int dstHeight, int dstPitch, bool flipped) const
 {
     if (dstX < 0) {
         srcX -= dstX;
-        srcWidth += dstX;
+        srcWidth -= -dstX;
         dstX = 0;
     }
     if (dstY < 0) {
         srcY -= dstY;
-        srcHeight += dstY;
+        srcHeight -= -dstY;
         dstY = 0;
     }
-    if (srcWidth + dstX > dstWidth)
+    if (dstX + srcWidth > dstWidth)
         srcWidth = dstWidth - dstX;
-    if (srcHeight + dstY > dstHeight)
+    if (dstY + srcHeight > dstHeight)
         srcHeight = dstHeight - dstY;
+    if (srcWidth <= 0 || srcHeight <= 0)
+        return;
 
-    if (srcWidth > 0 && srcHeight > 0) {
-        const unsigned short* src = getMap(srcX, srcY);
-        dst = BITMAP16_BYTE_OFFSET(
-            dst, dstY * dstPitch + dstX * sizeof(unsigned short));
-
-        if (flipped) {
-            for (int row = 0; row < srcHeight; ++row) {
-                const unsigned short* in = src;
-                unsigned short* out = dst;
-                for (int col = 0; col < srcWidth; ++col) {
-                    if (*in != static_cast<unsigned short>(flipped))
-                        *out = *in;
-                    ++in;
-                    ++out;
-                }
-                src = BITMAP16_CONST_BYTE_OFFSET(src, getPitch());
-                dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
+    const unsigned short* src = GetMap(srcX, srcY);
+    dst = (unsigned short*)((unsigned char*)dst + dstY * dstPitch
+                            + dstX * sizeof(unsigned short));
+    if (flipped) {
+        for (int row = 0; row < srcHeight; row++) {
+            unsigned short* out = dst;
+            const unsigned short* in = src;
+            for (int col = 0; col < srcWidth; col++) {
+                if (*in != flipped)
+                    *out = *in;
+                in++;
+                out++;
             }
-        } else {
-            for (int row = 0; row < srcHeight; ++row) {
-                memcpy(dst, src, srcWidth * sizeof(unsigned short));
-                src = BITMAP16_CONST_BYTE_OFFSET(src, getPitch());
-                dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
-            }
+            src = (const unsigned short*)((const unsigned char*)src + m_pitch);
+            dst = (unsigned short*)((unsigned char*)dst + dstPitch);
+        }
+    } else {
+        for (int row = 0; row < srcHeight; row++) {
+            memcpy(dst, src, srcWidth * sizeof(unsigned short));
+            src = (const unsigned short*)((const unsigned char*)src + m_pitch);
+            dst = (unsigned short*)((unsigned char*)dst + dstPitch);
         }
     }
 }
 
-#undef BITMAP16_CONST_BYTE_OFFSET
-#undef BITMAP16_BYTE_OFFSET
-
-// E:\gamedcs\bitmap16.cpp:625
 VA(0x0044e3f0, 0xC9)
 DC_ADDRESS(0x051468, 0xa4)
-MAC_ADDRESS(0x05c250, 0xf8)  // order-map(DC bitmap16.obj, between Draw and FillRect)
-void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
+void Bitmap16Bit::Grab(const unsigned short* src, int srcX, int srcY,
                        int srcWidth, int srcHeight, int srcPitch)
 {
     int dstX = 0;
     int dstY = 0;
-    int w = getWidth();
-    int h = getHeight();
-
+    int w = m_width;
+    int h = m_height;
     if (srcX < 0) {
         dstX -= srcX;
-        w += srcX;
+        w -= -srcX;
         srcX = 0;
     }
     if (srcY < 0) {
         dstY -= srcY;
-        h += srcY;
+        h -= -srcY;
         srcY = 0;
     }
     if (w > srcWidth - srcX)
         w = srcWidth - srcX;
     if (h > srcHeight - srcY)
         h = srcHeight - srcY;
-
     if (w <= 0 || h <= 0)
         return;
 
-    Bitmap16MapPointer dst;
-    dst.m_pixels = getMap(dstX, dstY);
-    Bitmap16ConstMapPointer source;
-    source.m_pixels = src;
-    source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
-    for (int row = 0; row < h; ++row) {
-        memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
-        dst.m_bytes += getPitch();
-        source.m_bytes += srcPitch;
+    unsigned short* dst = GetMap(dstX, dstY);
+    const unsigned short* in = (const unsigned short*)
+        ((const unsigned char*)src + srcY * srcPitch
+         + srcX * sizeof(unsigned short));
+    for (int row = 0; row < h; row++) {
+        memcpy(dst, in, w * sizeof(unsigned short));
+        dst = (unsigned short*)((unsigned char*)dst + m_pitch);
+        in = (const unsigned short*)((const unsigned char*)in + srcPitch);
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:679. FrameRect's sibling, and the same clipped
-// rectangle walk with the interior filled instead of outlined: VC6 turns
-// the inner store loop into its word-fill idiom (duplicate the colour into
-// a dword, `shr ecx,1 / rep stosd / adc ecx,ecx / rep stosw`).
-// DC bitmap16.cpp:699 (0x51566..0x51568) and retail both advance the row
-// cursor unconditionally. Retain that original source behavior for the exact
-// reconstruction, including its unused out-of-range pointer after a bottom-edge
-// rectangle with x > 0. For an owned 4x4 bitmap, fillRect(1,3,1,1) ends at
-// pixel offset 17, beyond one-past 16. The allocation does not include padding
-// that would make this valid portable C++. The earlier guarded repair scored
-// 82.1964%; tested integral offsets and zero-column origins do not match.
 VA(0x0044e4c0, 0x7D)
 DC_ADDRESS(0x05150c, 0x70)
-MAC_ADDRESS(0x05c348, 0xec)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj)
-void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
+void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
 {
-    if (w > getWidth() - x)
-        w = getWidth() - x;
-    if (h > getHeight() - y)
-        h = getHeight() - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
+    if (!w || !h)
+        return;
 
-    if (w && h) {
-        Bitmap16MapPointer dst;
-        dst.m_pixels = getMap(x, y);
-        for (int row = 0; row < h; ++row) {
-            for (int col = 0; col < w; ++col)
-                dst.m_pixels[col] = color;
-            dst.m_bytes += getPitch();
+    unsigned short* row = GetMap(x, y);
+    for (int iy = 0; iy < h; iy++) {
+        unsigned short* pixel = row;
+        for (int ix = 0; ix < w; ix++) {
+            *pixel++ = color;
         }
+        row = (unsigned short*)((unsigned char*)row + m_pitch);
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:705. The Dreamcast dossier ()
-// proves the clipped width/height, one GetMap call, row loop, full top/bottom
-// rows, and two endpoint stores on interior rows. Retail independently fixes
-// Pitch as a byte stride and preserves this 18-block source shape.
-// Row-boundary residual (95.2113%): step only on a visited following row.
-// The last-row guard scores 94.3662%, visited-row offsets 70.2113%; original
-// 100% forms end+x at the bottom edge and fails the native pointer control.
 VA(0x0044e540, 0xA3)
 DC_ADDRESS(0x05157c, 0x98)
-MAC_ADDRESS(0x05c434, 0x11c)
-void Bitmap16Bit::frameRect(int x, int y, int w, int h,
-                            unsigned short color)
+void Bitmap16Bit::FrameRect(int x, int y, int w, int h, unsigned short color)
 {
-    if (w > getWidth() - x)
-        w = getWidth() - x;
-    if (h > getHeight() - y)
-        h = getHeight() - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
+    if (!w || !h)
+        return;
 
-    if (w && h) {
-        Bitmap16MapPointer dst;
-        dst.m_pixels = getMap(x, y);
-        for (int row = 0; row < h; ++row) {
-            if (row == 0 || row == h - 1) {
-                for (int col = 0; col < w; ++col)
-                    dst.m_pixels[col] = color;
-            } else {
-                dst.m_pixels[0] = color;
-                dst.m_pixels[w - 1] = color;
+    unsigned short* row = GetMap(x, y);
+    for (int iy = 0; iy < h; iy++) {
+        unsigned short* pixel = row;
+        if (iy == 0 || iy == h - 1) {
+            for (int ix = 0; ix < w; ix++) {
+                *pixel++ = color;
             }
-            dst.m_bytes += getPitch();
+        } else {
+            *pixel = color;
+            *(pixel + w - 1) = color;
         }
+        row = (unsigned short*)((unsigned char*)row + m_pitch);
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:742. Dreamcast () proves the clipped
-// rectangle, one GetMap expression, RGB shift-mask construction, and nested
-// row/pixel loops. Complete inlines GetMap and independently fixes Pitch as
-// a byte stride; the earlier unchecked 0xA4-byte body was exact.
-// Row-boundary residual (82.6377%): an integral byte displacement advances
-// after each row, but the pointer is formed only on a visit. Next-row guards
-// score 77.4203%, last-row guards 64.5072%; the DC pixel/mask work is retained.
 VA(0x0044E5F0, 0xA4)
 DC_ADDRESS(0x051614, 0x94)
-MAC_ADDRESS(0x05c550, 0x1a8)
-void Bitmap16Bit::darken(int x, int y, int w, int h)
+void Bitmap16Bit::Darken(int x, int y, int w, int h)
 {
-    if (w > getWidth() - x)
-        w = getWidth() - x;
-    if (h > getHeight() - y)
-        h = getHeight() - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
+    if (!w || !h)
+        return;
 
-    if (w && h) {
-        unsigned long shiftMask =
-            ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask)
-            | ((Bitmap16Bit::s_greenMask >> 1) & Bitmap16Bit::s_greenMask)
-            | ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask);
-        Bitmap16MapPointer row;
-        row.m_pixels = getMap(x, y);
-
-        for (int iy = 0; iy < h; ++iy) {
-            Bitmap16MapPointer pixel = row;
-            for (int ix = 0; ix < w; ++ix) {
-                *pixel.m_pixels = static_cast<unsigned short>(
-                    (*pixel.m_pixels >> 1) & shiftMask);
-                ++pixel.m_pixels;
-            }
-
-            row.m_bytes += getPitch();
+    unsigned long mask = ((red_mask >> 1) & red_mask)
+                       | ((green_mask >> 1) & green_mask)
+                       | ((blue_mask >> 1) & blue_mask);
+    unsigned short* row = GetMap(x, y);
+    for (int iy = 0; iy < h; iy++) {
+        unsigned short* pixel = row;
+        for (int ix = 0; ix < w; ix++) {
+            *pixel = (*pixel >> 1) & mask;
+            pixel++;
         }
+        row = (unsigned short*)((unsigned char*)row + m_pitch);
     }
 }
 
-// E:\gamedcs\bitmap16.cpp:778. The masked Darken overload: the same halve-
-// and-mask pass as the plain one, applied only where the 8-bit companion
-// bitmap has a non-zero byte. The mask row stride is its WIDTH, not its
-// Pitch - retail adds [mask+0x24] at the foot of every row - while the
-// starting row is still taken through Pitch.
-// Dreamcast line 808 and retail both advance the mask and bitmap row pointers
-// after the inner pixel loop. Keep DC GetMap/GetPitch and their different
-// pitch meanings (dc 0x52570/0x5256c), not a width-to-pitch substitution.
 VA(0x0044e6a0, 0xE0)
 DC_ADDRESS(0x0516a8, 0xd4)
-MAC_ADDRESS(0x05c6f8, 0x10c)  // MAC_ABSTRACTION_FROM(tokens1:ad3fb507f76d,31.1644): canonical dimension/pitch getters replace the expanded field reads; Windows remains exact.
-void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
+void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask,
                          int sx, int sy)
 {
-    if (w > getWidth() - x)
-        w = getWidth() - x;
-    if (h > getHeight() - y)
-        h = getHeight() - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
+    if (!w || !h)
+        return;
 
-    if (w && h) {
-        unsigned int shiftMask =
-            ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask)
-            | ((Bitmap16Bit::s_greenMask >> 1) & Bitmap16Bit::s_greenMask)
-            | ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask);
-        unsigned char* maskRow = mask->getMap(sx, sy);
-        Bitmap16MapPointer row;
-        row.m_pixels = getMap(x, y);
-
-        for (int iy = 0; iy < h; ++iy) {
-            unsigned char* maskPixel = maskRow;
-            Bitmap16MapPointer pixel = row;
-            for (int ix = 0; ix < w; ++ix) {
-                if (*maskPixel) {
-                    *pixel.m_pixels = static_cast<unsigned short>(
-                        (*pixel.m_pixels >> 1) & shiftMask);
-                }
-                ++maskPixel;
-                ++pixel.m_pixels;
-            }
-            maskRow += mask->getPitch();
-            row.m_bytes += getPitch();
+    unsigned long shiftMask = ((red_mask >> 1) & red_mask)
+                            | ((green_mask >> 1) & green_mask)
+                            | ((blue_mask >> 1) & blue_mask);
+    unsigned char* maskRow = mask->GetMap(sx, sy);
+    unsigned short* row = GetMap(x, y);
+    for (int iy = 0; iy < h; iy++) {
+        unsigned char* maskPixel = maskRow;
+        unsigned short* pixel = row;
+        for (int ix = 0; ix < w; ix++) {
+            if (*maskPixel)
+                *pixel = (*pixel >> 1) & shiftMask;
+            maskPixel++;
+            pixel++;
         }
+        maskRow += mask->GetPitch();
+        row = (unsigned short*)((unsigned char*)row + m_pitch);
     }
 }
 
 VA(0x0044e780, 0x1BF)
 DC_ADDRESS(0x05177c, 0x246)
-MAC_ADDRESS(0x05c804, 0x1b0)
-void Bitmap16Bit::colorize(int x, int y, int width, int height,
-                           unsigned short color)
+void Bitmap16Bit::Colorize(int x, int y, int w, int h, unsigned short color)
 {
-    float redLevel = static_cast<float>(color & Bitmap16Bit::s_redMask)
-                       / static_cast<float>(Bitmap16Bit::s_redMask);
-    float greenLevel = static_cast<float>(color & Bitmap16Bit::s_greenMask)
-                        / static_cast<float>(Bitmap16Bit::s_greenMask);
-    float blueLevel = static_cast<float>(color & Bitmap16Bit::s_blueMask)
-                      / static_cast<float>(Bitmap16Bit::s_blueMask);
+    float r, g, b;
+    float hue, saturation, value;
+    float min, max;
+    float delta;
 
-    float top = redLevel > greenLevel ? redLevel : greenLevel;
-    if (top < blueLevel)
-        top = blueLevel;
-
-    float bottom = redLevel > greenLevel ? greenLevel : redLevel;
-    if (bottom > blueLevel)
-        bottom = blueLevel;
-
-    float saturation = top != 0.0 ? (top - bottom) / top : 0.0f;
-
-    float hue;
+    r = (float)(color & red_mask) / (float)red_mask;
+    g = (float)(color & green_mask) / (float)green_mask;
+    b = (float)(color & blue_mask) / (float)blue_mask;
+    max = r > g ? r : g;
+    if (max < b)
+        max = b;
+    min = r > g ? g : r;
+    if (min > b)
+        min = b;
+    value = max;
+    saturation = max != 0.0 ? (max - min) / max : 0.0f;
     if (saturation == 0.0) {
         hue = 0.0f;
     } else {
-        float span = top - bottom;
-        if (redLevel == top)
-            hue = (greenLevel - blueLevel) / span;
-        else if (greenLevel == top)
-            hue = (blueLevel - redLevel) / span + 2.0f;
+        delta = max - min;
+        if (r == max)
+            hue = (g - b) / delta;
+        else if (g == max)
+            hue = (b - r) / delta + 2.0f;
         else
-            hue = (redLevel - greenLevel) / span + 4.0f;
+            hue = (r - g) / delta + 4.0f;
         hue *= 60.0f;
         if (hue < 0.0)
             hue += 360.0f;
     }
     hue /= 360.0f;
-    colorize(x, y, width, height, hue, saturation);
+    Colorize(x, y, w, h, hue, saturation);
 }
 
-// E:\gamedcs\bitmap16.cpp:873. The float Colorize, tail-called by the
-// 16-bit-colour overload above. Each pixel's three channels are prescaled to
-// a full 31-bit range by INT_MAX/mask, their maximum becomes the HSV value,
-// and the hue's sextant selects which of v/p/q/t each channel takes back.
-// The integer and float overloads use the same class-owned RGB masks.
-// The sextant, `hue * 6`, `1.0f - saturation` and the fmod argument's
-// double conversion are all loop-invariant and land in the inner loop's
-// preheader; only the fmod call itself stays per-pixel, because VC6 will not
-// hoist an opaque call.
-// Row-boundary residual (96.5654%): integral relative byte offsets avoid the
-// final end+x pointer. Next/last guards score 94.6013/94.5490%; unchecked
-// row walks are not safe. Native one-row differential tests cover all six
-// hue sectors.
-// EXACT: the helper's by-value parameter owns the double scratch storage.
-// Sixteen source states / eight reproduced objects isolate this from the
-// caller's early-return scope (DC 884/885), plain ushort row/pixel pointers,
-// and the helper's ordinary declaration; those source restorations are flat.
-VA(0x0044e940, 0x3B8)
 DC_ADDRESS(0x0519c4, 0x47c)
-MAC_ADDRESS(0x05c9b4, 0x328)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj)
-void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
+void Bitmap16Bit::Colorize(int x, int y, int w, int h, float hue,
                            float saturation)
 {
     if (w > m_width - x)
         w = m_width - x;
     if (h > m_height - y)
         h = m_height - y;
-
     if (!w || !h)
         return;
 
-    const unsigned int redNorm =
-        std::numeric_limits<int>::max() / Bitmap16Bit::s_redMask;
-    const unsigned int greenNorm =
-        std::numeric_limits<int>::max() / Bitmap16Bit::s_greenMask;
-    const unsigned int blueNorm =
-        std::numeric_limits<int>::max() / Bitmap16Bit::s_blueMask;
-
-    Bitmap16MapPointer row;
-    row.m_pixels = getMap(x, y);
-
-    for (int iy = 0; iy < h; ++iy) {
-        Bitmap16MapPointer pixel = row;
-        for (int ix = 0; ix < w; ++ix) {
-            unsigned int r =
-                (*pixel.m_pixels & Bitmap16Bit::s_redMask) * redNorm;
-            unsigned int g =
-                (*pixel.m_pixels & Bitmap16Bit::s_greenMask) * greenNorm;
-            unsigned int b =
-                (*pixel.m_pixels & Bitmap16Bit::s_blueMask) * blueNorm;
-
-            const unsigned int max =
-                (r > g ? r : g) > b ? (r > g ? r : g) : b;
-            const float v = static_cast<float>(max);
-            const float f =
-                static_cast<float>(fmod(hue * 6.0f, 1.0));
+    const unsigned int redNorm = numeric_limits<int>::max() / red_mask;
+    const unsigned int greenNorm = numeric_limits<int>::max() / green_mask;
+    const unsigned int blueNorm = numeric_limits<int>::max() / blue_mask;
+    unsigned short* row = GetMap(x, y);
+    for (int iy = 0; iy < h; iy++) {
+        unsigned short* pixel = row;
+        for (int ix = 0; ix < w; ix++) {
+            unsigned int r = (*pixel & red_mask) * redNorm;
+            unsigned int g = (*pixel & green_mask) * greenNorm;
+            unsigned int b = (*pixel & blue_mask) * blueNorm;
+            const float v = (r > g ? r : g) > b ? (r > g ? r : g) : b;
+            const float f = fmod(hue * 6.0f, 1.0);
             const float p = v * (1.0f - saturation);
             const float q = v * (1.0f - saturation * f);
             const float t = v * (1.0f - saturation * (1.0f - f));
-
-            switch (static_cast<int>(hue * 6.0f)) {
+            switch ((int)(hue * 6.0f)) {
             case HSV_RED_SECTOR:
-                r = ftol(v);
-                g = ftol(t);
-                b = ftol(p);
+                r = ftol(v); g = ftol(t); b = ftol(p);
                 break;
             case HSV_YELLOW_SECTOR:
-                r = ftol(q);
-                g = ftol(v);
-                b = ftol(p);
+                r = ftol(q); g = ftol(v); b = ftol(p);
                 break;
             case HSV_GREEN_SECTOR:
-                r = ftol(p);
-                g = ftol(v);
-                b = ftol(t);
+                r = ftol(p); g = ftol(v); b = ftol(t);
                 break;
             case HSV_CYAN_SECTOR:
-                r = ftol(p);
-                g = ftol(q);
-                b = ftol(v);
+                r = ftol(p); g = ftol(q); b = ftol(v);
                 break;
             case HSV_BLUE_SECTOR:
-                r = ftol(t);
-                g = ftol(p);
-                b = ftol(v);
+                r = ftol(t); g = ftol(p); b = ftol(v);
                 break;
             case HSV_MAGENTA_SECTOR:
-                r = ftol(v);
-                g = ftol(p);
-                b = ftol(q);
+                r = ftol(v); g = ftol(p); b = ftol(q);
                 break;
             }
-
-            *pixel.m_pixels = static_cast<unsigned short>(
-                ((b / blueNorm) & Bitmap16Bit::s_blueMask)
-                | ((g / greenNorm) & Bitmap16Bit::s_greenMask)
-                | ((r / redNorm) & Bitmap16Bit::s_redMask));
-            ++pixel.m_pixels;
+            *pixel = (unsigned short)(((r / redNorm) & red_mask) |
+                                      ((g / greenNorm) & green_mask) |
+                                      ((b / blueNorm) & blue_mask));
+            pixel++;
         }
-        row.m_bytes += m_pitch;
+        row = (unsigned short*)((unsigned char*)row + m_pitch);
     }
 }
 
-// Original: Bitmap16Bit::Gray; bitmap16.cpp:934
 DC_ADDRESS(0x051e40, 0x148)
-void Bitmap16Bit::gray(int x, int y, int w, int h)
+void Bitmap16Bit::Gray(int x, int y, int w, int h)
 {
     if (w > m_width - x)
         w = m_width - x;
@@ -667,299 +512,256 @@ void Bitmap16Bit::gray(int x, int y, int w, int h)
     if (!w || !h)
         return;
 
-    const unsigned int redNorm = std::numeric_limits<int>::max() / Bitmap16Bit::s_redMask;
-    const unsigned int greenNorm = std::numeric_limits<int>::max() / Bitmap16Bit::s_greenMask;
-    const unsigned int blueNorm = std::numeric_limits<int>::max() / Bitmap16Bit::s_blueMask;
-    unsigned short* row = getMap(x, y);
-    for (int rowIndex = 0; rowIndex < h; ++rowIndex) {
+    const unsigned int redNorm = numeric_limits<int>::max() / red_mask;
+    const unsigned int greenNorm = numeric_limits<int>::max() / green_mask;
+    const unsigned int blueNorm = numeric_limits<int>::max() / blue_mask;
+    unsigned short* row = GetMap(x, y);
+    for (int iy = 0; iy < h; iy++) {
         unsigned short* pixel = row;
-        for (int column = 0; column < w; ++column) {
-            unsigned int r = (*pixel & Bitmap16Bit::s_redMask) * redNorm;
-            unsigned int g = (*pixel & Bitmap16Bit::s_greenMask) * greenNorm;
-            unsigned int b = (*pixel & Bitmap16Bit::s_blueMask) * blueNorm;
+        for (int ix = 0; ix < w; ix++) {
+            unsigned int r = (*pixel & red_mask) * redNorm;
+            unsigned int g = (*pixel & green_mask) * greenNorm;
+            unsigned int b = (*pixel & blue_mask) * blueNorm;
             unsigned int gray = (r > g ? r : g) > b ? (r > g ? r : g) : b;
-            *pixel = static_cast<unsigned short>(
-                ((gray / redNorm) & Bitmap16Bit::s_redMask) |
-                ((gray / greenNorm) & Bitmap16Bit::s_greenMask) |
-                ((gray / blueNorm) & Bitmap16Bit::s_blueMask));
-            ++pixel;
+            *pixel = (unsigned short)(((gray / redNorm) & red_mask) |
+                                      ((gray / greenNorm) & green_mask) |
+                                      ((gray / blueNorm) & blue_mask));
+            pixel++;
         }
-        Bitmap16MapPointer nextRow;
-        nextRow.m_pixels = row;
-        nextRow.m_bytes += m_pitch;
-        row = nextRow.m_pixels;
+        row = (unsigned short*)((unsigned char*)row + m_pitch);
     }
 }
 
-// Original: Bitmap16Bit::GrabAndBlur; bitmap16.cpp:979
-// The recorded 1017..1103 interior path explicitly sums the four neighboring
-// pixels on each axis, excluding the center; 1109..1241 checks those same
-// sixteen samples individually at the image edges and divides by their count.
 DC_ADDRESS(0x051f88, 0x5e4)
-void Bitmap16Bit::grabAndBlur(const Bitmap16Bit* src, int sx, int sy)
+void Bitmap16Bit::GrabAndBlur(const Bitmap16Bit* src, int sx, int sy)
 {
     int w = m_width;
     int h = m_height;
-    int sw = src->getWidth();
-    int sh = src->getHeight();
-    int sp = src->getPitch();
+    int sw = src->GetWidth();
+    int sh = src->GetHeight();
+    int sp = src->GetPitch();
     if (w > sw - sx)
         w = sw - sx;
     if (h > sh - sy)
         h = sh - sy;
 
     unsigned short* dstRow = m_map;
-    const unsigned short* srcRow = src->getMap(sx, sy);
-    for (int y = 0; y < h; ++y) {
+    const unsigned short* srcRow = src->GetMap(sx, sy);
+    for (int y = 0; y < h; y++) {
         unsigned short* d = dstRow;
         const unsigned short* s = srcRow;
-        for (int x = 0; x < w; ++x) {
-            int spp = sp / 2;
+        for (int x = 0; x < w; x++) {
             unsigned int r = 0;
             unsigned int g = 0;
             unsigned int b = 0;
-            unsigned int color;
-            const int blurRadius = 4;
-            if (sx + x >= blurRadius && sx + x < sw - blurRadius &&
-                sy + y >= blurRadius && sy + y < sh - blurRadius) {
-                color = s[-4];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+            int spp = sp / 2;
+            unsigned short color;
+            if (sx + x >= 4 && sx + x < sw - 4 && sy + y >= 4 && sy + y < sh - 4) {
+                color = *(s - 4);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[-3];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s - 3);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[-2];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s - 2);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[-1];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s - 1);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[1];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + 1);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[2];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + 2);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[3];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + 3);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[4];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + 4);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[-4 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s - 4 * spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[-3 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s - 3 * spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[-2 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s - 2 * spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[-1 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s - spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[1 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[2 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + 2 * spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[3 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + 3 * spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                color = s[4 * spp];
-                r += color & Bitmap16Bit::s_redMask;
-                g += color & Bitmap16Bit::s_greenMask;
-                b += color & Bitmap16Bit::s_blueMask;
+                color = *(s + 4 * spp);
+                r += color & red_mask;
+                g += color & green_mask;
+                b += color & blue_mask;
 
-                r = (r / (blurRadius * 4)) & Bitmap16Bit::s_redMask;
-                g = (g / (blurRadius * 4)) & Bitmap16Bit::s_greenMask;
-                b = (b / (blurRadius * 4)) & Bitmap16Bit::s_blueMask;
+                r = (r / 16) & red_mask;
+                g = (g / 16) & green_mask;
+                b = (b / 16) & blue_mask;
             } else {
                 int count = 0;
                 if (sx + x - 4 >= 0) {
-                    color = s[-4];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - 4);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sx + x - 3 >= 0) {
-                    color = s[-3];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - 3);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sx + x - 2 >= 0) {
-                    color = s[-2];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - 2);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sx + x - 1 >= 0) {
-                    color = s[-1];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - 1);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sx + x + 1 < sw) {
-                    color = s[1];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + 1);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sx + x + 2 < sw) {
-                    color = s[2];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + 2);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sx + x + 3 < sw) {
-                    color = s[3];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + 3);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sx + x + 4 < sw) {
-                    color = s[4];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + 4);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y - 4 >= 0) {
-                    color = s[-4 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - 4 * spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y - 3 >= 0) {
-                    color = s[-3 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - 3 * spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y - 2 >= 0) {
-                    color = s[-2 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - 2 * spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y - 1 >= 0) {
-                    color = s[-1 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s - spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y + 1 < sh) {
-                    color = s[1 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y + 2 < sh) {
-                    color = s[2 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + 2 * spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y + 3 < sh) {
-                    color = s[3 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + 3 * spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
                 if (sy + y + 4 < sh) {
-                    color = s[4 * spp];
-                    r += color & Bitmap16Bit::s_redMask;
-                    g += color & Bitmap16Bit::s_greenMask;
-                    b += color & Bitmap16Bit::s_blueMask;
-                    ++count;
+                    color = *(s + 4 * spp);
+                    r += color & red_mask;
+                    g += color & green_mask;
+                    b += color & blue_mask;
+                    count++;
                 }
-                r = (r / count) & Bitmap16Bit::s_redMask;
-                g = (g / count) & Bitmap16Bit::s_greenMask;
-                b = (b / count) & Bitmap16Bit::s_blueMask;
+                r = (r / count) & red_mask;
+                g = (g / count) & green_mask;
+                b = (b / count) & blue_mask;
             }
-            *d++ = static_cast<unsigned short>(r | g | b);
-            ++s;
+            *d++ = r | g | b;
+            s++;
         }
-        Bitmap16ConstMapPointer nextSource;
-        nextSource.m_pixels = srcRow;
-        nextSource.m_bytes += sp;
-        srcRow = nextSource.m_pixels;
-        Bitmap16MapPointer nextTarget;
-        nextTarget.m_pixels = dstRow;
-        nextTarget.m_bytes += m_pitch;
-        dstRow = nextTarget.m_pixels;
+        srcRow = (const unsigned short*)((const unsigned char*)srcRow + sp);
+        dstRow = (unsigned short*)((unsigned char*)dstRow + m_pitch);
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\bitmap16.cpp:224
-// E:\gamedcs\bitmap16.cpp:234
-// E:\gamedcs\bitmap16.cpp:243
-// E:\gamedcs\bitmap16.cpp:253
-// E:\gamedcs\bitmap16.cpp:262
-// E:\gamedcs\bitmap16.cpp:335
-// E:\gamedcs\bitmap16.cpp:358
-// E:\gamedcs\bitmap16.cpp:541
-// RETAIL_LOCATED(0x0044e2b0, 0x139): anchor-bracket, not reconstructed.
-
-// E:\gamedcs\bitmap16.cpp:625
-// RETAIL_LOCATED(0x0044e3f0, 0xC9): anchor-bracket, not reconstructed.
-
-// E:\gamedcs\bitmap16.cpp:679
-// RETAIL_LOCATED(0x0044e4c0, 0x7D): anchor-global, not reconstructed.
-
-// E:\gamedcs\bitmap16.cpp:873
-// Retail body reconstructed above at 0x0044e940; dc 0x519c4.
-void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue, float saturation)
-{
-    // @stub
-}
-
-#endif  // @carcass
