@@ -2051,6 +2051,22 @@ def _element_pairing(candidates: list[dict], mangled_group: list) -> dict:
     return out
 
 
+def _scope_pairing(candidates, mangled_group):
+    """{claim rva: mangled} for the scalar deleting destructors whose claim
+    names the nested class's whole scope (`Outer__Inner`): the one
+    `??_GInner@Outer@@` of the group."""
+    out = {}
+    for row in candidates:
+        scope = row.get("scope")
+        if not scope:
+            continue
+        prefix = "??_G" + "@".join(reversed(scope)) + "@@"
+        fits = [name for name, _content in mangled_group if name.startswith(prefix)]
+        if len(fits) == 1:
+            out[row["rva"]] = fits[0]
+    return out
+
+
 def _template_dtor_owner(owner: str):
     """`(element, template)` for a two-part `<Element>_<template>` compgen
     owner naming one instantiation of a SINGLE_ARG_TEMPLATE_DTORS class,
@@ -2384,6 +2400,14 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                 claim_keys.setdefault(f"{template}_{template}@gdtor",
                                       []).append(row)
                 continue
+            # A nested class spells its owner `Outer__Inner`: it keys with
+            # the other `Inner`s of the unit and binds by its whole scope
+            # (_scope_pairing), as the three placement operations'
+            # `TAbstractMap`s in rmg.cpp do.
+            scope = row["name"].rsplit("$", 1)[1].split("__")
+            if len(scope) > 1:
+                row["scope"] = scope
+                owner = scope[-1].lower()
             claim_keys.setdefault(f"{owner}_{owner}@gdtor",
                                   []).append(row)
             continue
@@ -2687,6 +2711,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         # only oracles that work.
         bound = dict(_element_pairing(candidates, mangled_group))
         bound.update(_template_element_pairing(candidates, mangled_group))
+        bound.update(_scope_pairing(candidates, mangled_group))
         if bound:
             for row in candidates:
                 mangled = bound.get(row["rva"])

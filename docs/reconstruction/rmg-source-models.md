@@ -548,8 +548,8 @@ output-reference signature at the same RVA. The historical generator keeps
 the scoped diagnostic as its first control; the comparison runner selects the
 query spelling from the baseline rather than forcing the value-result name.
 
-The corrected source uses one nonvirtual `TRmgMapInterface::getSize()` value
-convenience overload, with `using TRmgMapInterface::getSize` on the concrete map
+The corrected source uses one nonvirtual `TTerrainPlacementOp::TAbstractMap::getSize()` value
+convenience overload, with `using TTerrainPlacementOp::TAbstractMap::getSize` on the concrete map
 to expose it alongside the virtual output-reference overload. Both adapters
 return that value; the painter assigns `m_adapter->getSize()` before storage
 resize. This gives the query output a helper lifetime without caller braces.

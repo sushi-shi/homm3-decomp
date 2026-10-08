@@ -788,7 +788,7 @@ s32 __fastcall selectTerrainTransition(
 VA(0x005b45f0, 0x26d)
 MAC_ADDRESS(0x255c68, 0xbc)
 TRmgTerrainPainter::TRmgTerrainPainter(
-    TRmgMapInterface* newAdapter, s32 terrain, s32 strength)
+    TTerrainPlacementOp::TAbstractMap* newAdapter, s32 terrain, s32 strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
 #if defined(HOMM3_TARGET_MAC)
@@ -1685,8 +1685,8 @@ s32 TRmgTerrainPainter::changeTerrain(s32 terrain, s32 strength)
 
 VA(0x005b7250, 0x9a)
 MAC_ADDRESS(0x2599f8, 0xac) // anchor-callee 0x54017e; allocation and throw RTTI
-TRmgTerrainBrush::TRmgTerrainBrush(
-    TRmgMapInterface* map, s32 terrain, s32 strength)
+TTerrainPlacementOp::TTerrainPlacementOp(
+    TTerrainPlacementOp::TAbstractMap* map, s32 terrain, s32 strength)
     : m_painter(new TRmgTerrainPainter(map, terrain, strength))
 {
     if (!m_painter.get())
@@ -1695,20 +1695,20 @@ TRmgTerrainBrush::TRmgTerrainBrush(
 
 VA(0x005b72f0, 0x225)
 MAC_ADDRESS(0x259aa4, 0xc8) // anchor-callee 0x540207; auto_ptr ownership cleanup
-TRmgTerrainBrush::~TRmgTerrainBrush()
+TTerrainPlacementOp::~TTerrainPlacementOp()
 {
 }
 
 VA(0x005b7520, 0x16a)
 MAC_ADDRESS(0x259c9c, 0x24)
-void TRmgTerrainBrush::changeTerrain(s32 terrain, s32 strength)
+void TTerrainPlacementOp::changeTerrain(s32 terrain, s32 strength)
 {
     m_painter->changeTerrain(terrain, strength);
 }
 
 VA(0x005b7690, 0x1f)
 MAC_ADDRESS(0x259cc0, 0x24) // anchor-callee 0x5401e9; four unsigned rectangle args
-void TRmgTerrainBrush::paintRectangle(
+void TTerrainPlacementOp::paintRectangle(
     u32 x, u32 y,
     u32 rectangleWidth, u32 rectangleHeight)
 {
@@ -1780,7 +1780,7 @@ VA_COMPGEN(0x005b8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
 
 VA_COMPGEN(0x005b8060, 0x24, VECTOR_UFILL, unsigned_char)
 
-// PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
+// PaintPoint and TTerrainPlacementOp::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
 VA_COMPGEN(0x005b85a0, 0x17, TREE_LOWER_BOUND, TRmgCoordinatePoint_unsigned_int)
 
@@ -1796,7 +1796,7 @@ VA_COMPGEN(0x005b8b60, 0x59, TREE_UBOUND, TRmgCoordinatePoint_unsigned_int)
 
 VA_COMPGEN(0x005b4860, 0x6e, IMPLICIT_DTOR, set)
 
-// erase(key) in TRmgTerrainBrush::changeTerrain retains Dinkumware's
+// erase(key) in TTerrainPlacementOp::changeTerrain retains Dinkumware's
 // public distance wrapper and its category-dispatched overload. The wrapper
 // increments the caller's count directly; the unused tag argument accounts
 // for the tagged body's missing self-store.

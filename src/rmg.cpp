@@ -3332,11 +3332,11 @@ VA_COMPGEN(0x00536170, 0x21, SCALAR_DELETING_DTOR, t_abstract_random_generator)
 
 VA(0x005361A0, 0x07)
 MAC_ADDRESS(0x22d34c, 0x48)
-TRmgMapInterface::~TRmgMapInterface()
+TTerrainPlacementOp::TAbstractMap::~TAbstractMap()
 {
 }
 
-VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
+VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TTerrainPlacementOp__TAbstractMap)
 
 VA_COMPGEN(0x005361E0, 0x18, DEFAULT_CTOR_CLOSURE, TRmgObjectPropertiesRef)
 
@@ -5865,13 +5865,13 @@ void type_random_map_generator::paintZoneTerrain()
     if (m_map.getNumberLevels() > 1) {
         type_random_map levelMap(m_map.getMapItem(0, 0, 1),
             m_map.getWidth(), m_map.getHeight());
-        TRmgTerrainBrush brush(&levelMap, eTerrainRock, 4);
+        TTerrainPlacementOp brush(&levelMap, eTerrainRock, 4);
         brush.paintRectangle(0, 0, m_map.getWidth(), m_map.getHeight());
         if (m_progress)
             m_progress->advance(12500);
     }
     {
-        TRmgTerrainBrush brush(&m_map, eTerrainWater, 4);
+        TTerrainPlacementOp brush(&m_map, eTerrainWater, 4);
         brush.paintRectangle(0, 0, m_map.getWidth(), m_map.getHeight());
     }
     int progressSteps = 15800 / m_zones.size();
@@ -5882,7 +5882,7 @@ void type_random_map_generator::paintZoneTerrain()
         if (zone->getTerrain() != eTerrainWater) {
             type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.getWidth(), m_map.getHeight());
-            TRmgTerrainBrush brush(&levelMap, zone->getTerrain(), 4);
+            TTerrainPlacementOp brush(&levelMap, zone->getTerrain(), 4);
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
@@ -6061,7 +6061,7 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
     {
         type_random_map map(m_map.getMapItem(0, 0, level),
             m_map.m_mapWidth, m_map.m_mapHeight);
-        TRmgTerrainBrush brush(&map, terrain, 4);
+        TTerrainPlacementOp brush(&map, terrain, 4);
         generateRmgIslandMask(mask, width, height);
         point.m_z = level;
         for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
@@ -6421,7 +6421,7 @@ void type_random_map_generator::repairWaterZoneBorders()
             TTerrainType lastTerrain = terrains[0];
             type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
-            TRmgTerrainBrush brush(&levelMap, lastTerrain, 4);
+            TTerrainPlacementOp brush(&levelMap, lastTerrain, 4);
             for (unsigned int i = 0; i < positions.size(); ++i) {
                 terrain = terrains[i];
                 if (terrain != lastTerrain) {
@@ -7900,7 +7900,7 @@ void type_random_map_generator::decorateUnderground()
     TRmgMapItem* item = m_map.getMapItem(0, 0, scan.m_z);
     TPoint dimensions(m_map.m_mapWidth, m_map.m_mapHeight);
     type_random_map map(item, dimensions.m_x, dimensions.m_y);
-    TRmgTerrainBrush brush(&map, eTerrainRock, 4);
+    TTerrainPlacementOp brush(&map, eTerrainRock, 4);
     for (scan.m_y = 0; scan.m_y < m_map.m_mapHeight; ++scan.m_y) {
         for (scan.m_x = 0; scan.m_x < m_map.m_mapWidth; ++scan.m_x, ++item) {
             if (!item->hasPathClearance() && item->isPassable() && !item->isObjectEntrance())

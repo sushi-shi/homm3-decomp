@@ -970,7 +970,7 @@ seven relocations. Implicit copying interleaves the adapter and second size
 store (99.71%); moving that assignment into the base constructor body places
 the vptr store too early (99.10%). Copy assignment is byte-neutral here.
 
-The same declaration closes `TRmgTerrainBrush::ChangeTerrain` (`0x5b7520`,
+The same declaration closes `TTerrainPlacementOp::changeTerrain` (`0x5b7520`,
 362 raw bytes and 13 matching blocks) by restoring its retained set-distance
 helper. It also raises the terrain-painter constructor from 23.33% to 91.22%:
 both set initialization calls remain out of line and vector insertion expands.

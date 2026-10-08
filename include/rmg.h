@@ -11,6 +11,7 @@
 #include "advmgr_objects.h"
 #include "terrain_type.h"
 #include "rmg_request.h"
+#include "terrainplacement.h"
 
 
 // Terrain types, dirt through rock.
@@ -1316,30 +1317,6 @@ struct TRmgMapItem {
     }
 };
 
-// Retail has distinct seven-slot abstract tables at 0x6409e8 (map) and
-// 0x640a58 (adapter). Their deleting destructors at 0x5361b0/0x537910
-// store those different tables, so matching operation slots do not establish
-// one base identity. The painting coordinates are the unsigned grid type.
-class TRmgMapInterface {
-public:
-    virtual ~TRmgMapInterface();
-    virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setFrame(const TRmgGridPoint& point, int value) = 0;
-    // Slot 3 returns its explicit output reference. The adapters consume
-    // that returned reference, which distinguishes this from a hidden value
-    // result: together the map and both adapter bodies reproduce retail.
-#if defined(HOMM3_TARGET_MAC)
-    // Mac slot 3 (0x22eb84) returns by value.
-    virtual TRmgGridPoint getSize() = 0;
-#else
-    virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
-#endif
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getTerrain(const TRmgGridPoint& point) = 0;
-    virtual int getFrame(const TRmgGridPoint& point) = 0;
-};
-
 class TRmgRiverMapAdapterInterface {
 public:
     virtual ~TRmgRiverMapAdapterInterface();
@@ -1367,7 +1344,7 @@ public:
     virtual int getTerrain(const TRmgGridPoint& point) = 0;
 };
 
-class type_random_map : public TRmgMapInterface {
+class type_random_map : public TTerrainPlacementOp::TAbstractMap {
 public:
     unsigned char m_ownsMapItems;           // +0x04
     // The ownership flag is a byte at +4 after the vptr, and
@@ -2229,7 +2206,7 @@ SIZE(type_object, 0x1c);
 SIZE(type_flaggable, 0x1c);
 SIZE(TRmgMapItem, 0x30);
 SIZE(type_random_map, 0x18);
-SIZE(TRmgMapInterface, 0x04);
+SIZE(TTerrainPlacementOp::TAbstractMap, 0x04);
 SIZE(TRmgRiverMapAdapterInterface, 0x04);
 SIZE(TRmgRoadMapAdapterInterface, 0x04);
 SIZE(type_river_map, 0x08);

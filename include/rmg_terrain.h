@@ -317,7 +317,7 @@ struct TRmgTerrainGap {
 // Prior provisional class role: TRmgTerrainPainter.
 class TRmgTerrainPainter {
 public:
-    TRmgMapInterface* m_adapter;                // +0x00
+    TTerrainPlacementOp::TAbstractMap* m_adapter;                // +0x00
     s32 m_paintTerrain;                               // +0x04
     s32 m_transitionStrength;                         // +0x08
     TRmgGridPoint m_size;                             // +0x0c
@@ -328,7 +328,7 @@ public:
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
 
     TRmgTerrainPainter(
-        TRmgMapInterface* newAdapter,
+        TTerrainPlacementOp::TAbstractMap* newAdapter,
         s32 terrain,
         s32 strength);
     ~TRmgTerrainPainter();
@@ -380,25 +380,11 @@ public:
     s32 getTransitionStrength(const TRmgGridPoint& point, s32 terrain);
 };
 
-// Provisional facade name. The ctor at 0x5b7250 initializes the exact VC6
-// auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
-class TRmgTerrainBrush {
-public:
-    std::auto_ptr<TRmgTerrainPainter> m_painter;
-
-    TRmgTerrainBrush(TRmgMapInterface* map, s32 terrain, s32 strength);
-    ~TRmgTerrainBrush();
-    void changeTerrain(s32 terrain, s32 strength);
-    void paintRectangle(
-        u32 x, u32 y,
-        u32 rectangleWidth, u32 rectangleHeight);
-};
-
 SIZE(TRmgTerrainTile, 0x0c);
 SIZE(TRmgTerrainFlip, 0x02);
 SIZE(TRmgPackedTerrainCell, 0x02);
 SIZE(TRmgTerrainRule, 0x08);
 SIZE(TRmgTerrainPainter, 0x44);
-SIZE(TRmgTerrainBrush, 0x08);
+SIZE(TTerrainPlacementOp, 0x08);
 
 #endif  // HOMM3_RMG_TERRAIN_H

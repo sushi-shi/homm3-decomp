@@ -323,8 +323,8 @@ rva	function_count	class
 0x2409c0	3	type_progress_bar
 # ??_7 site paired in order: 0x530fb0 ??0type_random_map@@QAE@HHH@Z; 0x5310b0 ??1type_random_map@@UAE@XZ (+8 more)
 0x2409cc	7	type_random_map
-# ??_7 site paired in order: 0x5310b0 ??1type_random_map@@UAE@XZ; 0x5361b0 ??_GTRmgMapInterface@@UAEPAXI@Z (+7 more)
-0x2409e8	7	TRmgMapInterface
+# ??_7 site paired in order: 0x5310b0 ??1type_random_map@@UAE@XZ; 0x5361b0 ??_GTAbstractMap@TTerrainPlacementOp@@UAEPAXI@Z (+7 more)
+0x2409e8	7	TAbstractMap@TTerrainPlacementOp
 # retail slots 1:0x532360, 2:0x5323d0, 4:0x532410, 5:0x532480, 6:0x5324b0 are the candidate type_road_map slot functions; no other census row pairs
 0x240a04	7	type_road_map
 # ??_7 site paired in order: 0x532350 ??1TRmgRoadMapAdapterInterface@@UAE@XZ; 0x537940 ??_GTRmgRoadMapAdapterInterface@@UAEPAXI@Z
