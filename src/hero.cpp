@@ -6539,7 +6539,7 @@ MAC_ADDRESS(0x106d34, 0x138)
 bool hero::isInIdentifyRange(const type_point& location) const
 {
     TSkillMastery identifyLevel = getIdentifyLevel();
-    int range = akSpellTraits[SPELL_VISIONS].m_masteryBonus[identifyLevel]
+    int range = akSpellTraits[SPELL_VISIONS].m_mastery_bonus[identifyLevel]
         * getPrimarySkill(2);
     if (range < 3)
         range = 3;

@@ -2919,12 +2919,12 @@ double army::computeAttackerDamageReduction(const army* defender,
         reduction *= 0.5;
     if (m_residualBlindness && m_residualParalyze) {
         double penalty = min(
-            m_blindFactor, akSpellTraits[SPELL_BLIND].m_masteryBonus[2] / 100.0);
+            m_blindFactor, akSpellTraits[SPELL_BLIND].m_mastery_bonus[2] / 100.0);
         reduction = penalty * reduction;
     } else if (m_residualBlindness)
         reduction = m_blindFactor * reduction;
     else if (m_residualParalyze)
-        reduction = akSpellTraits[SPELL_BLIND].m_masteryBonus[2] / 100.0
+        reduction = akSpellTraits[SPELL_BLIND].m_mastery_bonus[2] / 100.0
                     * reduction;
     return reduction;
 }
@@ -3487,7 +3487,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
     m_numSpellInfluences++;
     m_spellInfluence[spell] = rounds;
     m_spellLevel[spell] = mastery;
-    long amount = akSpellTraits[spell].m_masteryBonus[mastery];
+    long amount = akSpellTraits[spell].m_mastery_bonus[mastery];
     switch (spell) {
     case SPELL_SHIELD:
         m_shieldFactor = amount / 100.0;
@@ -4229,8 +4229,8 @@ void army::cure(int level, int spellPower, const hero* castingHero)
     cancelIndividualSpell(SPELL_DISEASE);
     cancelIndividualSpell(SPELL_PARALYZE);
     cancelIndividualSpell(SPELL_AGE);
-    int healed = akSpellTraits[SPELL_CURE].m_masteryBonus[level]
-                 + akSpellTraits[SPELL_CURE].m_powerFactor * spellPower;
+    int healed = akSpellTraits[SPELL_CURE].m_mastery_bonus[level]
+                 + akSpellTraits[SPELL_CURE].m_power_factor * spellPower;
     if (castingHero)
         healed += castingHero->getHeroSpellBonus(SPELL_CURE, m_monInfo.level,
                                                   healed);
@@ -5203,10 +5203,10 @@ int army::getMagicMirrorChance() const
     if (getSpellTime(36) > 0)
         effect = m_backlashChance;
     if (m_creatureType == CREATURE_FAERIE_DRAGON) {
-        const SSpellTraits* mirrorTraits =
+        const TSpellTraits* mirrorTraits =
             &akSpellTraits[SPELL_MAGIC_MIRROR];
         int current = effect;
-        int innate = mirrorTraits->m_masteryBonus[0];
+        int innate = mirrorTraits->m_mastery_bonus[0];
         const int& selected = current < innate ? innate : current;
         return selected;
     }

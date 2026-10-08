@@ -18,7 +18,7 @@
 #include "misc.h"
 #include "town.h"
 
-// The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
+// The mutually exclusive AI-dispatch family encoded in TSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five
 // values below; the sixth bit has no quick-combat implementation. Names are
 // behavior-derived and local to this TU. Kept as constants rather than a new
@@ -63,7 +63,7 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
     long turns = choice.m_duration;
     if (turns > 5)
         turns = 5;
-    long value = akSpellTraits[choice.m_spell].m_masteryValues[choice.m_mastery];
+    long value = akSpellTraits[choice.m_spell].m_AI_value[choice.m_mastery];
     float chance = getSpellWorkChance(choice.m_spell, m_type, castingHero, targetHero);
     return static_cast<long>(value * turns * m_totalValue * chance / 500.0);
 }
@@ -107,7 +107,7 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
     if (getSpellWorkChance(choice.m_spell, m_type, castingHero, castingHero) == 0.0)
         return 0;
     long value = choice.getMasteryValue()
-                 + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                 + akSpellTraits[choice.m_spell].m_power_factor * choice.m_power;
     if (castingHero)
         value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
             choice.m_spell, akCreatureTypeTraits[m_type].level, value);
@@ -511,7 +511,7 @@ MAC_ADDRESS(0x027064, 0x12c)
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
-                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_power_factor * choice.m_power;
     for (long i = defender.m_creatures.size(); i-- > 0; ) {
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.m_currentHero, damage);
@@ -584,7 +584,7 @@ MAC_ADDRESS(0x02731c, 0x130)  // MAC_ABSTRACTION_FROM(tokens1:2e83d8cf12a8,47.75
 void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
-                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_power_factor * choice.m_power;
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
         choice.m_spell, m_currentHero, defender.m_currentHero, damage);
     defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
@@ -627,7 +627,7 @@ long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const he
 {
     long value = 0;
     long damage = choice.getMasteryValue()
-                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_power_factor * choice.m_power;
     for (long i = m_creatures.size(); i-- > 0; )
         value += m_creatures[i].getSpellDamage(choice.m_spell, castingHero, m_currentHero, damage);
     return value;
@@ -671,7 +671,7 @@ void type_AI_combat_data::castMassDamageSpell(
 {
     long value = 0;
     long damage = choice.getMasteryValue()
-                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_power_factor * choice.m_power;
     for (long i = m_creatures.size(); i-- > 0; ) {
         value += m_creatures[i].getSpellDamage(
             choice.m_spell, castingHero, m_currentHero, damage);
@@ -1247,7 +1247,7 @@ static void doEagleEye(hero* winner, hero* loser)
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;
-            const SSpellTraits& traits = akSpellTraits[spell];
+            const TSpellTraits& traits = akSpellTraits[spell];
             if (winner->getSecondarySkill(eSecSkillEagleEye) + 1
                 < traits.m_level)
                 continue;

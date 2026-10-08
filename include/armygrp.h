@@ -457,7 +457,7 @@ enum ESpellId {
 
     // UNGATED DELIBERATELY. armygrp.h reaches initialize.cpp's include
     // closure and a new enumerator is an input to the include-set class
-    // recorded on SSpellTraits below; the trade was authorised, is
+    // recorded on TSpellTraits below; the trade was authorised, is
     // recorded above initialize_game_data's baseline row, and the
     // ratchet keeps the peak in `hist` for a later lane to re-measure.
     SPELL_REMOVE_OBSTACLE = 0x40,
@@ -512,7 +512,7 @@ enum ESpellId {
     // animation over the target hex. NH3API's SPELL_DEATH_CLOUD at the
     // same value; the neighbours 0x4a/0x4b above and 0x4e below bracket
     // it. Canaries measured on admission (the ESpellId class is
-    // non-monotonic - see the SSpellTraits school note).
+    // non-monotonic - see the TSpellTraits school note).
     SPELL_DEATH_CLOUD = 0x4c,
     // 78, byte-proven by combatManager::ShowSpellMessage (0x5a8950).
     // Its creature-spell dispatch is a jump table over 0x2a..0x4e and
@@ -541,7 +541,7 @@ enum ESpellId {
 // by get_spell_work_chance's spell*17*8 indexing at 0x44a4e2): only
 // the fields that function reads are modeled; the full roster gets
 // its own header when spell work begins in earnest.
-struct SSpellTraits {
+struct TSpellTraits {
     int m_karma;              // <= 0 short-circuits to certain-work
     // DC TSpellTraits.m_sample (members.csv TSpellTraits@4) - the WAV
     // this spell plays. army::do_fire_shield (0x4409c0) is the witness:
@@ -570,7 +570,7 @@ struct SSpellTraits {
     const char* m_name;
     // Dreamcast-attested m_abbreviated_name; retail's loader duplicates
     // sptraits.txt column 1 into this pointer.
-    const char* m_abbreviatedName;
+    const char* m_abbreviated_name;
     int m_level;                // the dragons' magic-immunity gate
     union {
         TSpellSchool m_school;  // typed consumer view
@@ -584,30 +584,30 @@ struct SSpellTraits {
     // caster's power in get_resurrection_value (0x423d60),
     // get_mass_damage_value (0x42540a) and ai_tactical's
     // get_damage_spell_value (0x436f60: traits[spell*136 + 0x30]).
-    int m_powerFactor;         // +0x30
+    int m_power_factor;         // +0x30
     // Per-mastery flat bonus row (NH3API m_mastery_bonus):
     // get_damage_spell_value adds [spell*136 + mastery*4 + 0x34].
-    int m_masteryBonus[4];     // +0x34
+    int m_mastery_bonus[4];     // +0x34
     // +0x44, nine faction weights used by town::initialize_spells.
-    int m_townProbability[9];
+    int m_townGetsItChance[9];
     // A SECOND per-mastery dword row: get_enchantment_value indexes it
     // as spell*34 + mastery dwords from the table base (0x423cab) =
     // record +0x68 + mastery*4. Distinct from mastery_bonus - both
     // rows are byte-proven by their own consumers. Name provisional.
-    int m_masteryValues[4];    // +0x68
+    int m_AI_value[4];    // +0x68
     // Complete's four per-mastery descriptions. Dreamcast names this
     // m_description at +0x74 before the added ninth town-probability dword;
     // retail InitializeSpellTraits writes the shifted +0x78 row.
-    const char* m_levelDescriptions[4];  // +0x78
+    const char* m_description[4];  // +0x78
 };
-SIZE(SSpellTraits, 136);
+SIZE(TSpellTraits, 136);
 
 // The spell table is reached through a stored pointer, exactly like
 // akCreatureTypeTraits: retail loads [0x687f58] before indexing.
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-extern const SSpellTraits (&akSpellTraits)[81];
+extern const TSpellTraits (&akSpellTraits)[81];
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 

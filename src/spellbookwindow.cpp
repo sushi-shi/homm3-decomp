@@ -140,13 +140,13 @@ MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Com
 std::string TSpellbookWindow::getSpellDescription(
     SpellID spell, const hero* currentHero, unsigned char rollover)
 {
-    const SSpellTraits* traits = &akSpellTraits[spell];
+    const TSpellTraits* traits = &akSpellTraits[spell];
     std::string result;
     int mastery = 0;
     if (currentHero)
         mastery = currentHero->getSpellLevel(
             spell, m_onMagicPlains);
-    result = traits->m_levelDescriptions[mastery];
+    result = traits->m_description[mastery];
 
     if (rollover) {
         for (unsigned int i = 0; i < result.size(); ++i) {
@@ -162,7 +162,7 @@ std::string TSpellbookWindow::getSpellDescription(
         int power = currentHero->getPrimarySkill(2);
         int damage = const_cast<hero*>(currentHero)->modifySpellDamage(
             spell,
-            traits->m_powerFactor * power + traits->m_masteryBonus[mastery],
+            traits->m_power_factor * power + traits->m_mastery_bonus[mastery],
             0);
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT], damage);
         result += g_text;
@@ -827,8 +827,8 @@ DC_ADDRESS(0x14d290, 0x90)
 MAC_ADDRESS(0x18d858, 0xa8)
 bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) const
 {
-    const SSpellTraits* traits = &akSpellTraits[m_id];
-    const SSpellTraits* yTraits = &akSpellTraits[y.m_id];
+    const TSpellTraits* traits = &akSpellTraits[m_id];
+    const TSpellTraits* yTraits = &akSpellTraits[y.m_id];
     if (traits->m_level < yTraits->m_level)
         return true;
     if (traits->m_level > yTraits->m_level)

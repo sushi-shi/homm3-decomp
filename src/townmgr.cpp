@@ -3543,7 +3543,7 @@ int TMageGuildWindow::windowHandler(message& msg)
                 if (column >= thisTown->m_mageGuildSpellCounts[level])
                     return 1;
                 int spell = thisTown->m_mageGuildSpells[level][column];
-                normalDialog(akSpellTraits[spell].m_levelDescriptions[0],
+                normalDialog(akSpellTraits[spell].m_description[0],
                              qualifier ? 4 : 1, -1, -1, 9, spell,
                              -1, 0, -1, 0, -1, 0);
                 return 1;

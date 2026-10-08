@@ -691,7 +691,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     hero* castingHero = isMonsterSpell == SPELL_CASTER_CREATURE
         ? 0 : m_heroes[m_currentSide];
     hero* const otherHero = m_heroes[otherSide];
-    const SSpellTraits* traits = &akSpellTraits[spellId];
+    const TSpellTraits* traits = &akSpellTraits[spellId];
 
     TSkillMastery mastery;
     if (!isMonsterSpell) {
@@ -1444,7 +1444,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             army* sacrificeArmy = m_cells[secondaryIndex].getArmy();
             long hitPointsResurrected =
                 (akCreatureTypeTraits[sacrificeArmy->m_creatureType].hitPoints
-                 + traits->m_masteryBonus[mastery] + monsterPower)
+                 + traits->m_mastery_bonus[mastery] + monsterPower)
                 * sacrificeArmy->m_numTroops;
             sacrificeArmy->damage(sacrificeArmy->m_monInfo.hitPoints
                                    * sacrificeArmy->m_numTroops);
@@ -1469,11 +1469,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                  g_disruptingRaySprites);
         }
         const int previousSkill = target->m_monInfo.defenseSkill;
-        target->m_monInfo.defenseSkill -= traits->m_masteryBonus[mastery];
+        target->m_monInfo.defenseSkill -= traits->m_mastery_bonus[mastery];
         if (castingHero) {
             target->m_monInfo.defenseSkill -= castingHero->getHeroSpellBonus(
                 SPELL_DISRUPTING_RAY, target->m_monInfo.level,
-                traits->m_masteryBonus[mastery]);
+                traits->m_mastery_bonus[mastery]);
         }
         if (target->m_monInfo.defenseSkill < 0)
             target->m_monInfo.defenseSkill = 0;
@@ -1718,7 +1718,7 @@ MAC_ADDRESS(0x192f34, 0x304)
 std::string combatManager::getFailureReason(ESpellId spell, const char* msg,
                                               long hex)
 {
-    const SSpellTraits* spellTraits = &akSpellTraits[spell];
+    const TSpellTraits* spellTraits = &akSpellTraits[spell];
     if (spellTraits->m_flags & 0x70) {
         if (!validHex(hex))
             return msg;
@@ -2425,7 +2425,7 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
 {
     if (!validHex(targetIndex))
         return 0;
-    const SSpellTraits& traits = akSpellTraits[spellId];
+    const TSpellTraits& traits = akSpellTraits[spellId];
     if (traits.m_flags & 0x20070) {
         army* target = findSpellTarget(spellId, castingSide, targetIndex,
                                          firstTarget, creatureSpell);
@@ -3010,7 +3010,7 @@ DC_ADDRESS(0x153d2c, 0x588)
 MAC_ADDRESS(0x195640, 0x6e0)  // order-map+arity
 void combatManager::armageddon(int level, int power)
 {
-    const SSpellTraits& spellTraits = akSpellTraits[SPELL_ARMAGEDDON];
+    const TSpellTraits& spellTraits = akSpellTraits[SPELL_ARMAGEDDON];
     unsigned char damageDone;
     int i;
     clearEffects();
@@ -4273,7 +4273,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
         drawFrame(1, 0, 0, 0, 1, 0);
         lowerDoor();
     }
-    int count = akSpellTraits[spell].m_masteryBonus[level] * spellPower;
+    int count = akSpellTraits[spell].m_mastery_bonus[level] * spellPower;
     if (!isQuickCombat()) {
         m_combatWindow->combatMessage(
             formatString((*g_generalText)[GENERAL_TEXT_SUMMON_CREATURES_FORMAT],
@@ -4497,8 +4497,8 @@ inline void combatManager::resurrect(ESpellId spell, int targetHex,
         findResurrectionTarget(spell, m_currentSide, targetHex, 0);
     if (targetArmy) {
         long hitPointsResurrected =
-            akSpellTraits[spell].m_masteryBonus[mastery]
-            + akSpellTraits[spell].m_powerFactor * power;
+            akSpellTraits[spell].m_mastery_bonus[mastery]
+            + akSpellTraits[spell].m_power_factor * power;
         hitPointsResurrected += castingHero->getHeroSpellBonus(
             spell, targetArmy->m_monInfo.level, hitPointsResurrected);
         bool temporary =
@@ -4537,8 +4537,8 @@ long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mast
                                        hero* castingHero, hero* targetHero,
                                        const army* target, unsigned char simulated) const
 {
-    long damage = akSpellTraits[spell].m_masteryBonus[mastery]
-        + akSpellTraits[spell].m_powerFactor * spellPower;
+    long damage = akSpellTraits[spell].m_mastery_bonus[mastery]
+        + akSpellTraits[spell].m_power_factor * spellPower;
     return modifySpellDamage(damage, spell, castingHero, targetHero, target,
                              simulated);
 }
@@ -4743,7 +4743,7 @@ void combatManager::earthquake(int level)
         drawFrame(1, 0, 0, 0, 1, 0);
     }
 
-    int remaining = akSpellTraits[SPELL_EARTHQUAKE].m_masteryBonus[level];
+    int remaining = akSpellTraits[SPELL_EARTHQUAKE].m_mastery_bonus[level];
     int drawn = 0;
     memset(counts, 0, sizeof counts);
     while (remaining-- > 0) {
@@ -4829,7 +4829,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
     const hero* const castingHero = m_heroes[side];
     hero* targetHero = target->getController();
     TCreatureType creature = target->m_creatureType;
-    const SSpellTraits* traits = &akSpellTraits[spell];
+    const TSpellTraits* traits = &akSpellTraits[spell];
 
     if (m_magicTerrain == MAGIC_TERRAIN_CURSED_GROUND && traits->m_level > 1)
         return 0.0f;
@@ -4892,8 +4892,8 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         int mastery = castingHero->getSpellLevel(SPELL_HYPNOTIZE,
                                                     m_magicTerrain);
         int value = m_spellPower[side]
-                * akSpellTraits[SPELL_HYPNOTIZE].m_powerFactor
-            + akSpellTraits[SPELL_HYPNOTIZE].m_masteryBonus[mastery];
+                * akSpellTraits[SPELL_HYPNOTIZE].m_power_factor
+            + akSpellTraits[SPELL_HYPNOTIZE].m_mastery_bonus[mastery];
         value += castingHero->getHeroSpellBonus(SPELL_HYPNOTIZE,
                                                  target->m_monInfo.level, value);
         if (target->getSpellTime(36)
@@ -4914,7 +4914,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         if (target->is(creatureClone) || target->m_mirrorDestIndex != -1)
             return 0.0f;
         if (target->m_monInfo.level + 1
-            > akSpellTraits[SPELL_CLONE].m_masteryBonus[
+            > akSpellTraits[SPELL_CLONE].m_mastery_bonus[
                   castingHero->getSpellLevel(SPELL_CLONE, m_magicTerrain)])
             return 0.0f;
         break;
@@ -4929,8 +4929,8 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
                 value = caster->m_numTroops * 50;
         } else {
             int mastery = castingHero->getSpellLevel(spell, m_magicTerrain);
-            value = m_spellPower[side] * akSpellTraits[spell].m_powerFactor
-                + akSpellTraits[spell].m_masteryBonus[mastery];
+            value = m_spellPower[side] * akSpellTraits[spell].m_power_factor
+                + akSpellTraits[spell].m_mastery_bonus[mastery];
             value += castingHero->getHeroSpellBonus(spell,
                                                      target->m_monInfo.level,
                                                      value);

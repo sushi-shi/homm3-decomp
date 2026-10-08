@@ -1157,7 +1157,7 @@ private:
     // They are NOT in armygrp.h because ANY enumerator added to
     // TCreatureType costs initialize.obj's initialize_game_data
     // 100.0000 -> 96.0880 - the include-set-sensitivity class, and the
-    // same defect armygrp.h's SSpellTraits note already records for
+    // same defect armygrp.h's TSpellTraits note already records for
     // three ESpellId enumerators. MEASURED 2026-08-14 over enumerator
     // counts 0..6: the canary sits at 100.0 for zero added enumerators
     // and at 96.0880 for every count from one upward, so the wall fires

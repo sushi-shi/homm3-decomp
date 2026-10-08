@@ -2080,7 +2080,7 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
             break;
         }
         case RES_SPELL:
-            normalDialog(akSpellTraits[m_qualifier].m_levelDescriptions[0],
+            normalDialog(akSpellTraits[m_qualifier].m_description[0],
                          NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
