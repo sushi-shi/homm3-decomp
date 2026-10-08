@@ -15,6 +15,43 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+Campaign	??0TScenarioBonusPrimarySkill@@QAE@HQBH@Z	55.6207	55.6207	55.6207	0x53d0	tokens1:08d89e99638e
+Campaign	??0TScenarioBonusResource@@QAE@HH@Z	100.0000	100.0000	100.0000	0x54b0	tokens1:99b60332f497
+Campaign	??0TScenarioBonusSecondarySkill@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x5480	tokens1:1bea812b3ca7
+Campaign	??1TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE@XZ	100.0000	100.0000	100.0000	0x53b0	-
+Campaign	??8@YA_NABVTScenarioStartingBonus@@0@Z	100.0000	100.0000	100.0000	0x5050	tokens1:9ee239edcdf2
+Campaign	?accept@TScenarioBonusArtifact@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0xda80	-
+Campaign	?accept@TScenarioBonusBuilding@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0xd9a0	-
+Campaign	?accept@TScenarioBonusCreature@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0xd8d0	-
+Campaign	?accept@TScenarioBonusPrimarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x5440	-
+Campaign	?accept@TScenarioBonusResource@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x54d0	-
+Campaign	?accept@TScenarioBonusSecondarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x54a0	-
+Campaign	?accept@TScenarioBonusSpell@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0xd7f0	-
+Campaign	?accept@TScenarioBonusSpellScroll@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0xdb60	-
+Campaign	?clone@TScenarioStartingBonus@@QBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x5280	tokens1:97414c7f911e
+Campaign	?clone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@ABVTScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x5380	tokens1:d2ee540ed024
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusBuilding@@@Z	99.9231	99.9231	99.9231	0xd8e0	-
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusResource@@@Z	99.9254	99.9254	99.9254	0xdd30	-
+Campaign	?test@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE_NABVTScenarioStartingBonus@@0@Z	100.0000	100.0000	100.0000	0x5020	tokens1:369db78065bd
+Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusArtifact@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0xf7b0	-
+Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusBuilding@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0xf830	-
+Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusCreature@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0xf7f0	-
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	98.7500	98.7500	98.7500	0x5330	tokens1:6e4a0bb36243
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x5320	tokens1:cbde19841b8b
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	98.7500	98.7500	98.7500	0x5310	tokens1:e5dd4511f867
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	98.7500	98.7500	98.7500	0x5350	tokens1:25b9a5348d8c
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0x5370	tokens1:869a4fe60d16
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSecondarySkill@@@Z	98.7500	98.7500	98.7500	0x5360	tokens1:ff6987be5060
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpell@@@Z	98.7500	98.7500	98.7500	0x5300	tokens1:e23f2f1e574d
+Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpellScroll@@@Z	98.7500	98.7500	98.7500	0x5340	tokens1:71e36756dfe0
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x5140	tokens1:42c8a8d7fcc7
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x5100	tokens1:08d88b8061c9
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x50c0	tokens1:e253fc40f4e4
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x51c0	tokens1:4ab8fbc0009b
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0x5240	tokens1:ba8b6d99e225
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x5200	tokens1:536b0d4b6bc7
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpell@@@Z	100.0000	100.0000	100.0000	0x5080	tokens1:bcab71a33c6a
+Campaign	?visit@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusSpellScroll@@@Z	100.0000	100.0000	100.0000	0x5180	tokens1:91a0d26eb93c
 CampaignDoc	??0?$auto_ptr@VTScenarioStartingBonus@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb050	-
 CampaignDoc	??0TReadFailure@TRawIStream@@QAE@H@Z	99.9206	99.9206	99.9206	0x11b0	-
 CampaignDoc	??0TScenarioHeroBonus@@QAE@H@Z	100.0000	100.0000	100.0000	0x11b00	-
@@ -23,7 +60,7 @@ CampaignDoc	??4?$auto_ptr@VTScenarioStartingBonus@@@std@@QAEAAV01@ABV01@@Z	100.0
 CampaignDoc	??5TRawIStream@@QAEAAV0@AAC@Z	99.7727	99.7727	99.7727	0x16dd0	-
 CampaignDoc	??5TRawIStream@@QAEAAV0@AAF@Z	99.7727	99.7727	99.7727	0x24db0	-
 CampaignDoc	??5TRawIStream@@QAEAAV0@AAJ@Z	99.7727	99.7727	99.7727	0xffd0	-
-CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	29.2494	29.2494	29.2494	0x115a0	tokens1:deb7f43ae64a
+CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	29.2864	29.2864	29.2864	0x115a0	tokens1:deb7f43ae64a
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	94.1613	94.1613	94.1613	0x11180	tokens1:d033e38cd802
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	96.9048	96.9048	96.9048	0x11100	tokens1:b123a7f0689a
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	95.1375	95.1375	95.1375	0x11010	tokens1:668eb293f27b

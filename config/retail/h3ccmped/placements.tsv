@@ -34,8 +34,19 @@ rva	size	kind	name	unit	evidence
 0x00003170	0xe0	func	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	artifact	referenced by ?test@?$bitset@$0JA@@std@@QBE_NI@Z at +0x11
 0x00003680	0x3	func	?Serialize@CObject@@UAEXAAVCArchive@@@Z	DIBSection	vtable ??_7CBitmap@@6B@ stored by ??0T16bppDIBSection@@QAE@XZ slot 2; ICF-folded with 1 identical bodies
 0x00004520	0xe	func	?free@?$TBitmap@GK@@UAEXPAG@Z	DIBSection	vtable ??_7?$TBitmap@GK@@6B@ stored by ??1T16bppDIBSection@@UAE@XZ slot 3
+0x000053b0	0x15	func	??1TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE@XZ	Campaign	masked body (21 bytes, 0 relocations) unique at a census start
+0x00005440	0xf	func	?accept@TScenarioBonusPrimarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start
+0x000054a0	0xf	func	?accept@TScenarioBonusSecondarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start
+0x000054d0	0xe	func	?accept@TScenarioBonusResource@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (14 bytes, 0 relocations) unique at a census start
 0x0000afa0	0x13	func	??1?$auto_ptr@VBitmap16Bit@@@std@@QAE@XZ	resourcemanager	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
 0x0000b050	0x16	func	??0?$auto_ptr@VTScenarioStartingBonus@@@std@@QAE@ABV01@@Z	CampaignDoc	masked body (22 bytes, 0 relocations) unique at a census start
+0x0000d7f0	0xf	func	?accept@TScenarioBonusSpell@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start
+0x0000d8d0	0xf	func	?accept@TScenarioBonusCreature@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start
+0x0000d8e0	0xb9	func	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusBuilding@@@Z	Campaign	masked body (185 bytes, 7 relocations) unique at a census start
+0x0000d9a0	0xf	func	?accept@TScenarioBonusBuilding@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start
+0x0000da80	0xf	func	?accept@TScenarioBonusArtifact@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start
+0x0000db60	0xf	func	?accept@TScenarioBonusSpellScroll@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start
+0x0000dd30	0xbf	func	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusResource@@@Z	Campaign	masked body (191 bytes, 7 relocations) unique at a census start
 0x0000e250	0x125	func	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	resourcemanager	masked body (293 bytes, 12 relocations) unique at a census start
 0x0000e380	0x1ba	func	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0xeb
 0x0000e610	0x63	func	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	resourcemanager	masked body (99 bytes, 2 relocations) unique at a census start
@@ -45,6 +56,9 @@ rva	size	kind	name	unit	evidence
 0x0000f1f0	0x38	func	?_Decref@facet@locale@std@@QAEPAV123@XZ	resourcemanager	masked body (56 bytes, 2 relocations) unique at a census start
 0x0000f4a0	0x3a	func	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	resourcemanager	masked body (58 bytes, 2 relocations) unique at a census start
 0x0000f5c0	0x51	func	??4?$auto_ptr@VTScenarioStartingBonus@@@std@@QAEAAV01@ABV01@@Z	CampaignDoc	masked body (81 bytes, 0 relocations) unique at a census start
+0x0000f7b0	0x34	func	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusArtifact@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	Campaign	masked body (52 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
+0x0000f7f0	0x3e	func	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusCreature@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	Campaign	masked body (62 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x0000f830	0x1a	func	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusBuilding@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	Campaign	masked body (26 bytes, 0 relocations) unique at a census start
 0x0000ffd0	0x3b	func	??5TRawIStream@@QAEAAV0@AAJ@Z	CampaignDoc	masked body (59 bytes, 3 relocations) unique at a census start
 0x00010500	0x2f	func	??Bid@locale@std@@QAEIXZ	resourcemanager	masked body (47 bytes, 4 relocations) unique at a census start
 0x00011ae0	0x17	func	??0TAllocationFailure@@QAE@XZ	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x25

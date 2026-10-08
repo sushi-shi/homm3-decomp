@@ -3,6 +3,7 @@
 #ifndef HOMM3_CAMPAIGN_EDITOR_CAMPAIGN_H
 #define HOMM3_CAMPAIGN_EDITOR_CAMPAIGN_H
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -47,7 +48,11 @@ public:
 
     virtual ~TScenarioStartingBonus() {}
     virtual void accept(TVisitor& visitor) const = 0;
+
+    std::auto_ptr<TScenarioStartingBonus> clone() const;
 };
+
+bool operator==(const TScenarioStartingBonus& lhs, const TScenarioStartingBonus& rhs);
 
 class TScenarioHeroBonus : public TScenarioStartingBonus {
 public:
@@ -60,7 +65,12 @@ class TScenarioBonusSpell : public TScenarioHeroBonus {
 public:
     TScenarioBonusSpell(int hero, int spell) : TScenarioHeroBonus(hero), m_spell(spell) {}
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusSpell& other) const
+    {
+        return m_hero == other.m_hero && m_spell == other.m_spell;
+    }
 
     int m_spell;
 };
@@ -70,7 +80,12 @@ public:
     TScenarioBonusCreature(int hero, int creature, int count)
         : TScenarioHeroBonus(hero), m_creature(creature), m_count(count) {}
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusCreature& other) const
+    {
+        return m_hero == other.m_hero && m_creature == other.m_creature && m_count == other.m_count;
+    }
 
     int m_creature;
     int m_count;
@@ -80,7 +95,12 @@ class TScenarioBonusBuilding : public TScenarioStartingBonus {
 public:
     explicit TScenarioBonusBuilding(int building) : m_building(building) {}
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusBuilding& other) const
+    {
+        return m_building == other.m_building;
+    }
 
     int m_building;
 };
@@ -89,7 +109,12 @@ class TScenarioBonusArtifact : public TScenarioHeroBonus {
 public:
     TScenarioBonusArtifact(int hero, int artifact) : TScenarioHeroBonus(hero), m_artifact(artifact) {}
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusArtifact& other) const
+    {
+        return m_hero == other.m_hero && m_artifact == other.m_artifact;
+    }
 
     int m_artifact;
 };
@@ -98,7 +123,12 @@ class TScenarioBonusSpellScroll : public TScenarioHeroBonus {
 public:
     TScenarioBonusSpellScroll(int hero, int spell) : TScenarioHeroBonus(hero), m_spell(spell) {}
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusSpellScroll& other) const
+    {
+        return m_hero == other.m_hero && m_spell == other.m_spell;
+    }
 
     int m_spell;
 };
@@ -107,7 +137,12 @@ class TScenarioBonusPrimarySkill : public TScenarioHeroBonus {
 public:
     TScenarioBonusPrimarySkill(int hero, const int aSkills[kNumPrimarySkills]);
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusPrimarySkill& other) const
+    {
+        return m_hero == other.m_hero && std::equal(m_skills, m_skills + kNumPrimarySkills, other.m_skills);
+    }
 
     int m_skills[kNumPrimarySkills];
 };
@@ -116,7 +151,12 @@ class TScenarioBonusSecondarySkill : public TScenarioHeroBonus {
 public:
     TScenarioBonusSecondarySkill(int hero, int skill, int level);
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusSecondarySkill& other) const
+    {
+        return m_hero == other.m_hero && m_skill == other.m_skill && m_level == other.m_level;
+    }
 
     int m_skill;
     int m_level;
@@ -126,7 +166,12 @@ class TScenarioBonusResource : public TScenarioStartingBonus {
 public:
     TScenarioBonusResource(int resource, int amount);
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    bool operator==(const TScenarioBonusResource& other) const
+    {
+        return m_resource == other.m_resource && m_amount == other.m_amount;
+    }
 
     int m_resource;
     int m_amount;
@@ -159,7 +204,7 @@ public:
 
 class TScenarioOptionsBonus : public TScenarioStartingOptions {
 public:
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
     int m_player;
     std::vector<std::auto_ptr<TScenarioStartingBonus> > m_bonuses;
@@ -172,7 +217,7 @@ public:
         int m_player;
     };
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
     std::vector<TChoice> m_choices;
 };
@@ -184,7 +229,7 @@ public:
         int m_player;
     };
 
-    virtual void accept(TVisitor& visitor) const;
+    virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
     std::vector<TChoice> m_choices;
 };
