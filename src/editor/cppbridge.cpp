@@ -17,6 +17,12 @@
 #include "editor/cppbridge.h"
 #include "editor/EditRumorDlg.h"
 #include "editor/EditTimedEventSheet.h"
+#include "editor/MapSpecsLossCondPage.h"
+#include "editor/MapSpecsPlayerSpecsPage.h"
+#include "editor/MapSpecsRumorsPage.h"
+#include "editor/MapSpecsSheet.h"
+#include "editor/MapSpecsTeamsPage.h"
+#include "editor/MapSpecsTimedEventsPage.h"
 #include "editor/Hero.h"
 #include "editor/MapDoc.h"
 #include "editor/MapEditWnd.h"
@@ -1060,6 +1066,14 @@ void on_menuitem_tools_objects_treasures_activate(GtkMenuItem* menuitem, gpointe
 }
 
 
+void on_menuitem_tools_mapspecifications_activate(GtkMenuItem* menuitem, gpointer user_data)
+{
+    GtkWidget* mapSpecsWidget = _widget("map_specs");
+    mapSpecsSheet = new TMapSpecsSheet(mapSpecsWidget, mapView->getPDocument()->getPMap());
+    mapSpecsSheet->OnInitDialog();
+    gtk_widget_show(mapSpecsWidget);
+}
+
 void on_menuitem_tools_validatemap_activate(GtkMenuItem* menuitem, gpointer user_data)
 {
     mapView->OnToolsValidateMap();
@@ -2097,6 +2111,38 @@ void on_options_cancel_clicked(GtkButton* button, gpointer user_data)
 }
 
 
+gboolean on_map_specs_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
+{
+    gtk_widget_hide(_widget("map_specs"));
+    delete mapSpecsSheet;
+    mapSpecsSheet = NULL;
+    return TRUE;
+}
+
+void on_map_specs_apply_clicked(GtkButton* button, gpointer user_data)
+{
+    mapView->OnToolsMapSpecificationsOK(*mapSpecsSheet);
+    mapView->updateMapStatus();
+    GtkToggleButton* undergroundButton = GTK_TOGGLE_BUTTON(_widget("underground_button"));
+    bool bTwoLayer = mapView->getPDocument()->getPMap()->isTwoLayer();
+    gtk_widget_set_sensitive(GTK_WIDGET(undergroundButton), bTwoLayer ? TRUE : FALSE);
+}
+
+void on_map_specs_ok_clicked(GtkButton* button, gpointer user_data)
+{
+    on_map_specs_apply_clicked(button, user_data);
+    gtk_widget_hide(_widget("map_specs"));
+    delete mapSpecsSheet;
+    mapSpecsSheet = NULL;
+}
+
+void on_map_specs_cancel_clicked(GtkButton* button, gpointer user_data)
+{
+    gtk_widget_hide(_widget("map_specs"));
+    delete mapSpecsSheet;
+    mapSpecsSheet = NULL;
+}
+
 void on_edit_rumor_ok_clicked(GtkButton* button, gpointer user_data)
 {
     if (rumorDlgModal)
@@ -2131,6 +2177,30 @@ void on_timed_event_cancel_clicked(GtkButton* button, gpointer user_data)
 {
     if (timedEventSheetModal)
         timedEventSheetModal->OnCancel();
+}
+
+void on_losscond_none_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    if (gtk_toggle_button_get_active(togglebutton))
+        mapSpecsSheet->getLossCondPage()->OnLoseNullToggled();
+}
+
+void on_losscond_town_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    if (gtk_toggle_button_get_active(togglebutton))
+        mapSpecsSheet->getLossCondPage()->OnLoseTownToggled();
+}
+
+void on_losscond_hero_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    if (gtk_toggle_button_get_active(togglebutton))
+        mapSpecsSheet->getLossCondPage()->OnLoseHeroToggled();
+}
+
+void on_losscond_time_toggled(GtkToggleButton* togglebutton, gpointer user_data)
+{
+    if (gtk_toggle_button_get_active(togglebutton))
+        mapSpecsSheet->getLossCondPage()->OnLoseTimeToggled();
 }
 
 void on_validation_ok_clicked(GtkButton* button, gpointer user_data)
@@ -2198,6 +2268,26 @@ void on_export_text_cancel_clicked(GtkButton* button, gpointer user_data)
     gtk_widget_hide(GTK_WIDGET(fileSelection));
 }
 
+void on_players_entry_changed(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pPlayerSpecsPage->OnSelChangePlayerCombo();
+}
+
+void on_generate_hero_check_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pPlayerSpecsPage->OnGenerateHeroCheck();
+}
+
+void on_human_playable_check_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pPlayerSpecsPage->OnHumanPlayableCheck();
+}
+
+void on_computer_playable_check_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pPlayerSpecsPage->OnComputerPlayableCheck();
+}
+
 void on_new_map_ok_clicked(GtkButton* button, gpointer user_data)
 {
     TGameMap::TSize size;
@@ -2237,6 +2327,116 @@ gboolean on_minimapwnd_enter_notify_event(GtkWidget* widget, GdkEventCrossing* e
 {
     miniMapWnd->OnMouseEnter();
     return FALSE;
+}
+
+void on_enable_teams_check_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnEnableTeamsCheck();
+}
+
+void on_numteams_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnNumTeamsRadio();
+}
+
+void on_player1_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer1TeamRadio();
+}
+
+void on_player2_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer2TeamRadio();
+}
+
+void on_player3_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer3TeamRadio();
+}
+
+void on_player4_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer4TeamRadio();
+}
+
+void on_player5_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer5TeamRadio();
+}
+
+void on_player6_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer6TeamRadio();
+}
+
+void on_player7_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer7TeamRadio();
+}
+
+void on_player8_radio_toggled(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTeamsPage->OnPlayer8TeamRadio();
+}
+
+void on_rumors_list_select_child(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pRumorsPage->OnSelChangeRumorListbox();
+}
+
+void on_add_rumor_button_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pRumorsPage->OnAddRumorButton();
+}
+
+void on_edit_rumor_button_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pRumorsPage->OnEditRumorButton();
+}
+
+void on_remove_rumor_button_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pRumorsPage->OnRemoveRumorButton();
+}
+
+void on_remall_rumor_button_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pRumorsPage->OnRemoveAllRumorButton();
+}
+
+void on_timed_events_add_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTimedEventsPage->OnAddEventButton();
+}
+
+void on_timed_events_edit_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTimedEventsPage->OnEditEventButton();
+}
+
+void on_timed_events_remove_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTimedEventsPage->OnRemoveEventButton();
+}
+
+void on_timed_events_remall_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTimedEventsPage->OnRemoveAllEventButton();
+}
+
+void on_timed_events_moveup_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTimedEventsPage->OnMoveUpButton();
+}
+
+void on_timed_events_movedown_clicked(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTimedEventsPage->OnMoveDownButton();
+}
+
+void on_timed_events_list_select_child(GtkWidget* widget, gpointer user_data)
+{
+    mapSpecsSheet->_m_pTimedEventsPage->OnSelChangeEventsListbox();
 }
 
 gboolean on_options_dlg_delete_event(GtkWidget* widget, GdkEvent* event, gpointer user_data)
