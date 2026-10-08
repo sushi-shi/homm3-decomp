@@ -119,6 +119,21 @@ class IcfAliasRewriteTest(unittest.TestCase):
         self.assertEqual(parsed.symbols[parsed.relocations[0].symbol_index].name,
                          "??1TwinA")
 
+    def test_a_single_twin_beside_the_surviving_name_is_retargeted_per_site(self):
+        # random/sRandom fold: one site calls the twin, another the label;
+        # renaming the target's symbol would relabel both sites.
+        base = coff(CALL * 2, [("??_GA", 0), ("??_GB", 6)],
+                    [(1, "??1TwinA"), (7, "??1Folded")], ["??1TwinA", "??1Folded"])
+        target = coff(CALL * 2, [("??_GA", 0), ("??_GB", 6)],
+                      [(1, "??1Folded"), (7, "??1Folded")], ["??1Folded"])
+        index = ({"??1TwinA": JUMP_ONLY}, {"??1Folded": FOLDED})
+        new_base, new_target, count = _canonicalize_icf_aliases(
+            base, target, self.rvas, index)
+        self.assertEqual((new_target, count), (target, 1))
+        parsed = canon.CoffObject(new_base)
+        self.assertEqual([parsed.symbols[r.symbol_index].name for r in parsed.relocations],
+                         ["??1Folded", "??1Folded"])
+
     def test_a_twin_with_its_own_retail_address_stays_visible(self):
         base = coff(CALL, [("??_GA", 0)], [(1, "??1TwinA")], ["??1TwinA"])
         target = coff(CALL, [("??_GA", 0)], [(1, "??1Folded")], ["??1Folded"])

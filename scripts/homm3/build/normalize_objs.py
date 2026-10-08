@@ -914,8 +914,12 @@ def _canonicalize_icf_aliases(
             continue
         undefined = [symbol.index for symbol in target.symbols.values()
                      if symbol.name == label and symbol.section == 0]
+        # Renaming the target symbol renames every site; when the candidate
+        # also references the surviving name itself, retarget the twin's
+        # sites instead.
         if (verified == twins and len(twins) == 1 and undefined
-                and next(iter(twins)) not in target_names):
+                and next(iter(twins)) not in target_names
+                and label not in base_by_name):
             renames.update((symbol, next(iter(twins))) for symbol in undefined)
         else:
             # Each verified twin's sites name the surviving label; a twin
