@@ -13,6 +13,7 @@
 #include <functional>
 #include <iostream.h>
 #include <limits>
+#include <numeric>
 #include <map>
 
 #include "adventureobjecttype.h"
@@ -389,6 +390,8 @@ private:
     unsigned int _pickAvailableTeam() const;
     void _onPlayableAdded(const TPlayableObject& playable);
     void _onRemovingPlayable(const TPlayableObject& playable);
+    void _onTownAdded(const TTown& town, bool bSecondLayer, unsigned int objID);
+    void _onRemovingTown(const TTown& town, bool bSecondLayer, unsigned int objID);
     void _onGeneralObjectAdded(const TGameObject& obj);
     void _onRemovingGeneralObject(const TGameObject& obj);
     void _onHolyGrailAdded(const THolyGrail& holyGrail);
@@ -466,7 +469,7 @@ private:
         unsigned int m_numUnits;
         set<TMapObjectRef> m_townRefs;
         unsigned int m_numRandomTowns;
-        TArray<unsigned int, kNumPlayers> m_aNumTownsOfType;
+        TArray<unsigned int, kNumTownTypes> m_aNumTownsOfType;
         unsigned int m_numHeroes;
         unsigned int m_numRandomHeroes;
         TArray<unsigned int, kNumPlayers> m_aNumHeroesOfType;
@@ -474,13 +477,14 @@ private:
 
     static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
 
+    typedef TRefCountingPtr<_TProperties> _TPProperties;
     typedef TRefCountingPtr<_TBookkeeping> _TPBookkeeping;
 
     TClient* _m_pClient;
     const TObjectFactory* _m_pObjectFactory;
     TSize _m_size;
     bool _m_bTwoLayer;
-    TRefCountingPtr<_TProperties> _m_pProperties;
+    _TPProperties _m_pProperties;
     vector<TLayer> _m_aLayer;
     _TPBookkeeping _m_pBookkeeping;
     TArray<TRefCountingPtr<_TPlayerBookkeeping>, kNumPlayers> _m_apPlayerBookkeeping;
@@ -1151,6 +1155,32 @@ TMapLayerObjectID TGameMap::_TImpl::_placeSign(bool bSecondLayer, const TSign& s
     return result;
 }
 
+void TGameMap::_TImpl::_removeObjectHelper(bool bSecondLayer, unsigned int objID)
+{
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    const TGameObject& obj = pLayer->getObject(objID);
+    if (const THero* pHero = dynamic_cast<const THero*>(&obj)) {
+        onRemovingHero(*pHero);
+    } else if (const TTown* pTown = dynamic_cast<const TTown*>(&obj)) {
+        if (pTown->getPVisitingHero() != NULL)
+            onRemovingHero(*pTown->getPVisitingHero());
+        _onRemovingTown(*pTown, bSecondLayer, objID);
+    } else if (const THolyGrail* pHolyGrail = dynamic_cast<const THolyGrail*>(&obj)) {
+        _onRemovingHolyGrail(*pHolyGrail);
+    } else if (const TMine* pMine = dynamic_cast<const TMine*>(&obj)) {
+        _onRemovingMine(*pMine);
+    } else if (const TGenerator* pGenerator = dynamic_cast<const TGenerator*>(&obj)) {
+        _onRemovingGenerator(*pGenerator);
+    } else if (const TSign* pSign = dynamic_cast<const TSign*>(&obj)) {
+        _onRemovingSign(*pSign);
+    } else {
+        _onRemovingGeneralObject(obj);
+    }
+    pLayer->_removeObject(objID);
+    onObjectRemoved();
+    _m_pClient->onMapObjectRemoved(bSecondLayer, objID);
+}
+
 void TGameMap::_TImpl::_onGeneralObjectAdded(const TGameObject& obj)
 {
     TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = kCappedObjectTypeInfoMap.find(obj.getType());
@@ -1274,6 +1304,65 @@ void TGameMap::_TImpl::_onRemovingPlayable(const TPlayableObject& playable)
         }
     }
     _onRemovingGeneralObject(playable);
+}
+
+void TGameMap::_TImpl::_onTownAdded(const TTown& town, bool bSecondLayer, unsigned int objID)
+{
+#line 4314
+    assert(objID != TLayer::s_kInvalidObjID);
+    assert(&getLayer( bSecondLayer ).getObject( objID ) == &town);
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numTowns < s_kMaxTownsOnMap);
+    _onPlayableAdded(town);
+    _m_pBookkeeping->m_numTowns++;
+    if (town.getOwner() != ePlayerNone) {
+        _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[town.getOwner()];
+#line 4327
+        assert(playerBookkeeping.m_townRefs.find( TMapObjectRef( bSecondLayer, objID ) ) == playerBookkeeping.m_townRefs.end());
+#line 4333
+        assert(std::accumulate( playerBookkeeping.m_aNumTownsOfType.begin(), playerBookkeeping.m_aNumTownsOfType.end(), 0U ) + playerBookkeeping.m_numRandomTowns == playerBookkeeping.m_townRefs.size());
+        playerBookkeeping.m_townRefs.insert(TMapObjectRef(bSecondLayer, objID));
+        if (town.getType() == TOWN) {
+            playerBookkeeping.m_aNumTownsOfType[town.getTownType()]++;
+        } else {
+#line 4346
+            assert(town.getType() == RANDOM_TOWN);
+            playerBookkeeping.m_numRandomTowns++;
+        }
+    }
+}
+
+void TGameMap::_TImpl::_onRemovingTown(const TTown& town, bool bSecondLayer, unsigned int objID)
+{
+#line 4355
+    assert(objID != TLayer::s_kInvalidObjID);
+    assert(&getLayer( bSecondLayer ).getObject( objID ) == &town);
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numTowns > 0);
+    if (town.getOwner() != ePlayerNone) {
+        _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[town.getOwner()];
+#line 4363
+        assert(playerBookkeeping.m_townRefs.find( TMapObjectRef( bSecondLayer, objID ) ) != playerBookkeeping.m_townRefs.end());
+        if (town.getType() == TOWN) {
+#line 4368
+            assert(playerBookkeeping.m_aNumTownsOfType[ town.getTownType() ] > 0);
+            playerBookkeeping.m_aNumTownsOfType[town.getTownType()]--;
+        } else {
+#line 4374
+            assert(town.getType() == RANDOM_TOWN);
+            assert(playerBookkeeping.m_numRandomTowns > 0);
+            playerBookkeeping.m_numRandomTowns--;
+        }
+        const TPlayerInfo& constPlayer = static_cast<const _TPProperties&>(_m_pProperties)->m_players[town.getOwner()];
+        if (constPlayer.getBGenerateHero() && constPlayer.getMainTownRef() == TMapObjectRef(bSecondLayer, objID)) {
+            TPlayerInfo& player = _m_pProperties->m_players[town.getOwner()];
+            player.setMainTownRef(TMapObjectRef());
+            player.setBGenerateHero(false);
+        }
+        playerBookkeeping.m_townRefs.erase(TMapObjectRef(bSecondLayer, objID));
+#line 4397
+        assert(std::accumulate( playerBookkeeping.m_aNumTownsOfType.begin(), playerBookkeeping.m_aNumTownsOfType.end(), 0U ) + playerBookkeeping.m_numRandomTowns == playerBookkeeping.m_townRefs.size());
+    }
+    _m_pBookkeeping->m_numTowns--;
+    _onRemovingPlayable(town);
 }
 
 void TGameMap::_TImpl::_onHolyGrailAdded(const THolyGrail& holyGrail)
