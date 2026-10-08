@@ -23,6 +23,9 @@
 #include "editor/Hero.h"
 #include "editor/Monster.h"
 #include "editor/ObjectSpecializations.h"
+#include "editor/BlackBox.h"
+#include "editor/Event.h"
+#include "editor/SeersHut.h"
 #include "editor/Town.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
@@ -1701,6 +1704,491 @@ const TGameMap::TLayer* TGameMap::_TImpl::getPLayer(unsigned int num) const
     assert(num == 0 || ( _m_bTwoLayer && num < 2 ));
     assert(_m_aLayer.size() == ( _m_bTwoLayer ? 2 : 1 ));
     return &_m_aLayer[num];
+}
+
+TGameObject* TGameMap::_TImpl::createObject(const TObjectType& objType, TPlayer player,
+                                            void* (*pfnAllocator)(unsigned int)) const
+{
+#line 2437
+    assert(player >= ePlayerNone && player < kNumPlayers);
+    assert(pfnAllocator != NULL);
+    assert(_m_pBookkeeping->m_numHeroes <= s_kMaxHeroesOnMap);
+    assert(_m_pBookkeeping->m_numTowns <= s_kMaxTownsOnMap);
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = kCappedObjectTypeInfoMap.find(objType.getType());
+    if (pCappedObjTypeInfo != kCappedObjectTypeInfoMap.end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second.m_ordinal;
+#line 2447
+        assert(typeOrdinal < _m_pBookkeeping->m_aNumObjsOfCappedType.size());
+        if (_m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal] >= pCappedObjTypeInfo->second.m_cap)
+            throw TCreateObjFailureTooManyInstancesOfTypeOnMap(objType.getType(), pCappedObjTypeInfo->second.m_cap);
+    }
+    switch (objType.getType()) {
+    case HERO:
+        {
+#line 2456
+            assert(objType.getExtra() >= 0 && objType.getExtra() < kNumHeroClasses);
+            if (_m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                throw TCreateObjFailureTooManyHeroesOnMap();
+            if (player == ePlayerNone)
+                throw TCreateObjFailureNoOwnerForHero();
+            unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+            if (_m_pProperties->m_players[player].getBGenerateHero())
+                numHeroes++;
+            if (numHeroes >= s_kMaxHeroesPerPlayer)
+                throw TCreateObjFailureTooManyHeroesForPlayer();
+            unsigned int protoNum = _pickAvailableHero(THeroClass(objType.getExtra()));
+            if (protoNum >= THero::s_akClassTraits[objType.getExtra()].m_numPrototypes)
+                throw TCreateObjFailureNoAvailableHeroesInClass();
+            TNonRandomHero* pHero = _m_pObjectFactory->createNonRandomHero(objType, player, protoNum, pfnAllocator);
+            if (pHero == NULL)
+#line 2479
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pHero;
+        }
+
+    case RANDOM_HERO:
+        {
+            if (_m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                throw TCreateObjFailureTooManyHeroesOnMap();
+            if (player == ePlayerNone)
+                throw TCreateObjFailureNoOwnerForHero();
+            unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+            if (_m_pProperties->m_players[player].getBGenerateHero())
+                numHeroes++;
+            if (numHeroes >= s_kMaxHeroesPerPlayer)
+                throw TCreateObjFailureTooManyHeroesForPlayer();
+            TRandomHero* pHero = _m_pObjectFactory->createRandomHero(objType, player, pfnAllocator);
+            if (pHero == NULL)
+#line 2500
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pHero;
+        }
+
+    case PRISON:
+        {
+            if (_m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                throw TCreateObjFailureTooManyHeroesOnMap();
+            unsigned int protoNum;
+            unsigned int heroClass = 0;
+            while ((protoNum = _pickAvailableHero(THeroClass(heroClass))) >= THero::s_akClassTraits[heroClass].m_numPrototypes) {
+                heroClass++;
+                if (heroClass >= kNumHeroClasses)
+                    throw TCreateObjFailureTooManyHeroesOnMap();
+            }
+            TPrison* pPrison = _m_pObjectFactory->createPrison(objType, THeroClass(heroClass), protoNum, pfnAllocator);
+            if (pPrison == NULL)
+#line 2520
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pPrison;
+        }
+
+    case RANDOM_TOWN:
+    case TOWN:
+        {
+#line 2527
+            assert(objType.getType() == RANDOM_TOWN || ( objType.getExtra() >= 0 && objType.getExtra() < kNumTownTypes ));
+            if (_m_pBookkeeping->m_numTowns == s_kMaxTownsOnMap)
+                throw TCreateObjFailureTooManyTownsOnMap();
+            TTown* pTown = _m_pObjectFactory->createTown(objType, player, pfnAllocator);
+            if (pTown == NULL)
+#line 2534
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pTown;
+        }
+
+    case MONSTER:
+    case RANDOM_MONSTER:
+    case RANDOM_MONSTER_1:
+    case RANDOM_MONSTER_2:
+    case RANDOM_MONSTER_3:
+    case RANDOM_MONSTER_4:
+    case RANDOM_MONSTER_5:
+    case RANDOM_MONSTER_6:
+    case RANDOM_MONSTER_7:
+        {
+            TMonster* pMonster = _m_pObjectFactory->createMonster(objType, pfnAllocator);
+            if (pMonster == NULL)
+#line 2550
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pMonster;
+        }
+
+    case EVENT:
+        {
+            TEvent* pEvent = _m_pObjectFactory->createEvent(objType, pfnAllocator);
+            if (pEvent == NULL)
+#line 2558
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pEvent;
+        }
+
+    case OCEAN_BOTTLE:
+    case SIGN:
+        {
+            if (_m_pBookkeeping->m_numSigns >= s_kMaxSignsOnMap)
+                throw TCreateObjFailureTooManySignsOnMap();
+            TSign* pSign = _m_pObjectFactory->createSign(objType, pfnAllocator);
+            if (pSign == NULL)
+#line 2570
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pSign;
+        }
+
+    case SHIPYARD:
+        {
+            TFlaggableObject* pFlaggable = _m_pObjectFactory->createFlaggable(objType, player, pfnAllocator);
+            if (pFlaggable == NULL)
+#line 2578
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pFlaggable;
+        }
+
+    case LIGHTHOUSE:
+    case MINE:
+        {
+            if (_m_pBookkeeping->m_numMines >= s_kMaxMinesOnMap)
+                throw TCreateObjFailureTooManyMinesOnMap();
+            TMine* pMine;
+            if (objType.getType() != MINE || objType.getExtra() < kNumGameResourceTypes)
+                pMine = _m_pObjectFactory->createMine(objType, player, pfnAllocator);
+            else {
+#line 2593
+                assert(objType.getExtra() == kNumGameResourceTypes);
+                pMine = _m_pObjectFactory->createAbandonedMine(objType, pfnAllocator);
+            }
+            if (pMine == NULL)
+#line 2597
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pMine;
+        }
+
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        {
+            if (_m_pBookkeeping->m_numGenerators >= s_kMaxGeneratorsOnMap)
+                throw TCreateObjFailureTooManyGeneratorsOnMap();
+            TGenerator* pGenerator = _m_pObjectFactory->createGenerator(objType, player, pfnAllocator);
+            if (pGenerator == NULL)
+#line 2609
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pGenerator;
+        }
+
+    case GARRISON:
+        {
+            TGarrison* pGarrison = _m_pObjectFactory->createGarrison(objType, player, pfnAllocator);
+            if (pGarrison == NULL)
+#line 2617
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pGarrison;
+        }
+
+    case ARTIFACT:
+    case RANDOM_ARTIFACT:
+    case RANDOM_ARTIFACT_1:
+    case RANDOM_ARTIFACT_2:
+    case RANDOM_ARTIFACT_3:
+    case RANDOM_ARTIFACT_4:
+        {
+            TGameArtifact* pArtifact = _m_pObjectFactory->createArtifact(objType, pfnAllocator);
+            if (pArtifact == NULL)
+#line 2630
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pArtifact;
+        }
+
+    case SPELL_SCROLL:
+        {
+            TSpellScroll* pSpellScroll = _m_pObjectFactory->createSpellScroll(objType, pfnAllocator);
+            if (pSpellScroll == NULL)
+#line 2638
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pSpellScroll;
+        }
+
+    case RANDOM_RESOURCE:
+    case RESOURCE:
+        {
+            TGameResource* pResource = _m_pObjectFactory->createResource(objType, pfnAllocator);
+            if (pResource == NULL)
+#line 2647
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pResource;
+        }
+
+    case BLACK_BOX:
+        {
+            TBlackBox* pBlackBox = _m_pObjectFactory->createBlackBox(objType, pfnAllocator);
+            if (pBlackBox == NULL)
+#line 2655
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pBlackBox;
+        }
+
+    case SCHOLAR:
+        {
+            TScholar* pScholar = _m_pObjectFactory->createScholar(objType, pfnAllocator);
+            if (pScholar == NULL)
+#line 2663
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pScholar;
+        }
+
+    case SEER:
+        {
+            TSeersHut* pSeersHut = _m_pObjectFactory->createSeersHut(objType, pfnAllocator);
+            if (pSeersHut == NULL)
+#line 2671
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pSeersHut;
+        }
+
+    case HOLY_GRAIL:
+        {
+            if (_m_pBookkeeping->m_bGrailPlaced)
+                throw TCreateObjFailureHolyGrailAlreadyPlaced();
+            THolyGrail* pHolyGrail = _m_pObjectFactory->createHolyGrail(objType, pfnAllocator);
+            if (pHolyGrail == NULL)
+#line 2682
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pHolyGrail;
+        }
+
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3:
+        {
+            TShrine* pShrine = _m_pObjectFactory->createShrine(objType, pfnAllocator);
+            if (pShrine == NULL)
+#line 2692
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pShrine;
+        }
+
+    default:
+        {
+            TGenericObject* pGeneric = _m_pObjectFactory->createGenericObject(objType, pfnAllocator);
+            if (pGeneric == NULL)
+#line 2699
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pGeneric;
+        }
+    }
+}
+
+TGameObject* TGameMap::_TImpl::_createObject(const TObjectType& objType, TRawIStream* pIStream, int version,
+                                             void* (*pfnAllocator)(unsigned int)) const
+{
+#line 2706
+    assert(pIStream != NULL);
+    switch (objType.getType()) {
+    case HERO:
+        {
+            TNonRandomHero* pHero = _m_pObjectFactory->createNonRandomHero(objType, pIStream, version, pfnAllocator);
+            if (pHero == NULL)
+#line 2714
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pHero;
+        }
+
+    case RANDOM_HERO:
+        {
+            TRandomHero* pHero = _m_pObjectFactory->createRandomHero(objType, pIStream, version, pfnAllocator);
+            if (pHero == NULL)
+#line 2722
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pHero;
+        }
+
+    case PRISON:
+        {
+            TPrison* pPrison = _m_pObjectFactory->createPrison(objType, pIStream, version, pfnAllocator);
+            if (pPrison == NULL)
+#line 2730
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pPrison;
+        }
+
+    case RANDOM_TOWN:
+    case TOWN:
+        {
+            TTown* pTown = _m_pObjectFactory->createTown(objType, pIStream, version, pfnAllocator);
+            if (pTown == NULL)
+#line 2739
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pTown;
+        }
+
+    case MONSTER:
+    case RANDOM_MONSTER:
+    case RANDOM_MONSTER_1:
+    case RANDOM_MONSTER_2:
+    case RANDOM_MONSTER_3:
+    case RANDOM_MONSTER_4:
+    case RANDOM_MONSTER_5:
+    case RANDOM_MONSTER_6:
+    case RANDOM_MONSTER_7:
+        {
+            TMonster* pMonster = _m_pObjectFactory->createMonster(objType, pIStream, version, pfnAllocator);
+            if (pMonster == NULL)
+#line 2755
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pMonster;
+        }
+
+    case EVENT:
+        {
+            TEvent* pEvent = _m_pObjectFactory->createEvent(objType, pIStream, version, pfnAllocator);
+            if (pEvent == NULL)
+#line 2763
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pEvent;
+        }
+
+    case OCEAN_BOTTLE:
+    case SIGN:
+        {
+            TSign* pSign = _m_pObjectFactory->createSign(objType, pIStream, version, pfnAllocator);
+            if (pSign == NULL)
+#line 2772
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pSign;
+        }
+
+    case SHIPYARD:
+        {
+            TFlaggableObject* pFlaggable = _m_pObjectFactory->createFlaggable(objType, pIStream, version, pfnAllocator);
+            if (pFlaggable == NULL)
+#line 2780
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pFlaggable;
+        }
+
+    case LIGHTHOUSE:
+    case MINE:
+        {
+            TMine* pMine;
+            if (objType.getType() != MINE || objType.getExtra() < kNumGameResourceTypes)
+                pMine = _m_pObjectFactory->createMine(objType, pIStream, version, pfnAllocator);
+            else {
+#line 2792
+                assert(objType.getExtra() == kNumGameResourceTypes);
+                pMine = _m_pObjectFactory->createAbandonedMine(objType, pIStream, version, pfnAllocator);
+            }
+            if (pMine == NULL)
+#line 2796
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pMine;
+        }
+
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        {
+            TGenerator* pGenerator = _m_pObjectFactory->createGenerator(objType, pIStream, version, pfnAllocator);
+            if (pGenerator == NULL)
+#line 2805
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pGenerator;
+        }
+
+    case GARRISON:
+        {
+            TGarrison* pGarrison = _m_pObjectFactory->createGarrison(objType, pIStream, version, pfnAllocator);
+            if (pGarrison == NULL)
+#line 2813
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pGarrison;
+        }
+
+    case ARTIFACT:
+    case RANDOM_ARTIFACT:
+    case RANDOM_ARTIFACT_1:
+    case RANDOM_ARTIFACT_2:
+    case RANDOM_ARTIFACT_3:
+    case RANDOM_ARTIFACT_4:
+        {
+            TGameArtifact* pArtifact = _m_pObjectFactory->createArtifact(objType, pIStream, version, pfnAllocator);
+            if (pArtifact == NULL)
+#line 2826
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pArtifact;
+        }
+
+    case SPELL_SCROLL:
+        {
+            TSpellScroll* pSpellScroll = _m_pObjectFactory->createSpellScroll(objType, pIStream, version, pfnAllocator);
+            if (pSpellScroll == NULL)
+#line 2834
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pSpellScroll;
+        }
+
+    case RANDOM_RESOURCE:
+    case RESOURCE:
+        {
+            TGameResource* pResource = _m_pObjectFactory->createResource(objType, pIStream, version, pfnAllocator);
+            if (pResource == NULL)
+#line 2843
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pResource;
+        }
+
+    case BLACK_BOX:
+        {
+            TBlackBox* pBlackBox = _m_pObjectFactory->createBlackBox(objType, pIStream, version, pfnAllocator);
+            if (pBlackBox == NULL)
+#line 2851
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pBlackBox;
+        }
+
+    case SCHOLAR:
+        {
+            TScholar* pScholar = _m_pObjectFactory->createScholar(objType, pIStream, version, pfnAllocator);
+            if (pScholar == NULL)
+#line 2859
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pScholar;
+        }
+
+    case SEER:
+        {
+            TSeersHut* pSeersHut = _m_pObjectFactory->createSeersHut(objType, pIStream, version, pfnAllocator);
+            if (pSeersHut == NULL)
+#line 2867
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pSeersHut;
+        }
+
+    case HOLY_GRAIL:
+        {
+            THolyGrail* pHolyGrail = _m_pObjectFactory->createHolyGrail(objType, pIStream, version, pfnAllocator);
+            if (pHolyGrail == NULL)
+#line 2875
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pHolyGrail;
+        }
+
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3:
+        {
+            TShrine* pShrine = _m_pObjectFactory->createShrine(objType, pIStream, version, pfnAllocator);
+            if (pShrine == NULL)
+#line 2885
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pShrine;
+        }
+
+    default:
+        {
+            TGenericObject* pGeneric = _m_pObjectFactory->createGenericObject(objType, pIStream, version, pfnAllocator);
+            if (pGeneric == NULL)
+#line 2892
+                throw TAllocationFailure(__FILE__, __LINE__);
+            return pGeneric;
+        }
+    }
 }
 
 bool TGameMap::_TImpl::canCreate(const TObjectType& objType, TPlayer player) const
