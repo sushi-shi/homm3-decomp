@@ -555,7 +555,7 @@ struct TSpellTraits {
     // +0x44, nine faction weights used by town::initialize_spells.
     // RoE has eight towns (Conflux came with Armageddon's Blade): Loki's
     // InitializeSpellTraits reads columns 16..23 into this row.
-    int m_townProbability[8];
+    int m_townGetsItChance[8];
     // A SECOND per-mastery dword row: get_enchantment_value indexes it
     // as spell*34 + mastery dwords from the table base (0x423cab) =
     // record +0x68 + mastery*4. Distinct from mastery_bonus - both

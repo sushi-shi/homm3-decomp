@@ -871,7 +871,7 @@ void town::initializeSpells(const TownExtra* townSetup)
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
                     totalWeight +=
-                        g_spellTraits[spell].m_townProbability[m_type];
+                        g_spellTraits[spell].m_townGetsItChance[m_type];
                     if (townSetup->m_fixedSpells[spell]) {
                         m_mageGuildSpells[level - 1][slot] =
                             static_cast<ESpellId>(spell); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
@@ -891,7 +891,7 @@ void town::initializeSpells(const TownExtra* townSetup)
             for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
-                    roll -= g_spellTraits[spell].m_townProbability[m_type];
+                    roll -= g_spellTraits[spell].m_townGetsItChance[m_type];
                     if (roll <= 0)
                         break;
                 }

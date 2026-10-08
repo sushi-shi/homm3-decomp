@@ -205,7 +205,7 @@ static void InitializeSpellTraits(int id, const vector<char*>& resource)
 #line 397
     assert(col == 16);
     for (i = 0; i < 8; i++) {
-        traits->m_townProbability[i] = atoi(resource[col]);
+        traits->m_townGetsItChance[i] = atoi(resource[col]);
         col++;
     }
 #line 406

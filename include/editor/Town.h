@@ -8,9 +8,10 @@
 // creature generators' traits (TGeneratorTraits*, an abstract class with
 // absolute and indeterminate kinds in Town.cpp). TTown::TTimedEvent adds
 // the buildings to build (+0x44) and the generator bonuses (+0x4c) to a
-// map timed event. Enumerator names of TBuilding and TGeneratorType, and
-// TBuildingTraits' first two fields, are not recovered; the hall, castle,
-// shipyard and grail buildings map validation tests are named by role.
+// map timed event. The buildings are named by role from their rows of
+// bldgneut.txt, bldgspec.txt and dwelling.txt and their prerequisites (the
+// image proves no enumerator); TGeneratorType's enumerators and
+// TBuildingTraits' first two fields are not recovered.
 #ifndef HOMM3_EDITOR_TOWN_H
 #define HOMM3_EDITOR_TOWN_H
 
@@ -39,8 +40,41 @@ enum TBuilding {
     eBuildingFort = 3,
     eBuildingCitadel = 4,
     eBuildingCastle = 5,
+    eBuildingTavern = 6,
+    eBuildingBlacksmith = 7,
+    eBuildingMarketplace = 8,
+    eBuildingResourceSilo = 9,
+    eBuildingArtifactMerchant = 10,
+    eBuildingMageGuild1 = 11,
+    eBuildingMageGuild2 = 12,
+    eBuildingMageGuild3 = 13,
+    eBuildingMageGuild4 = 14,
+    eBuildingMageGuild5 = 15,
     eBuildingShipyard = 16,
     eBuildingGrail = 17,
+    eBuildingSpecial1 = 18,
+    eBuildingSpecial2 = 19,
+    eBuildingSpecial3 = 20,
+    eBuildingSpecial4 = 21,
+    eBuildingDwelling1 = 22,
+    eBuildingUpgradedDwelling1 = 23,
+    eBuildingHorde1 = 24,
+    eBuildingDwelling2 = 25,
+    eBuildingUpgradedDwelling2 = 26,
+    eBuildingHorde2 = 27,
+    eBuildingDwelling3 = 28,
+    eBuildingUpgradedDwelling3 = 29,
+    eBuildingHorde3 = 30,
+    eBuildingDwelling4 = 31,
+    eBuildingUpgradedDwelling4 = 32,
+    eBuildingHorde4 = 33,
+    eBuildingDwelling5 = 34,
+    eBuildingUpgradedDwelling5 = 35,
+    eBuildingHorde5 = 36,
+    eBuildingDwelling6 = 37,
+    eBuildingUpgradedDwelling6 = 38,
+    eBuildingDwelling7 = 39,
+    eBuildingUpgradedDwelling7 = 40,
     kNumBuildings = 41
 };
 
@@ -50,7 +84,8 @@ public:
     enum TGeneratorType {
     };
 
-    static const unsigned int s_kNumGeneratorTypes = 7;
+    static const int s_kNumGeneratorTypes = 7;
+    static const unsigned int s_kMaxNameLen = 12;
     static const int s_kMaxTimedEvents = 50;
 
     // A building's state in a town: built, or disabled for this town.
@@ -88,14 +123,18 @@ public:
         TBuilding m_building;
     };
 
+    // The creatures a town type's generator makes: absolute for the eight
+    // town types, indeterminate (crgenerc.txt) for the random town.
     class TGeneratorTraits {
     public:
-        TGeneratorTraits() {}
+        virtual const char* getBaseCreatureName() const = 0;
+        virtual const char* getUpgradeCreatureName() const = 0;
     };
 
     struct TTypeTraits {
         TTypeTraits(const TBuildingTraits (&aBuildingTraits)[kNumBuildings],
-                    const TGeneratorTraits* const (&apGeneratorTraits)[s_kNumGeneratorTypes]);
+                    const TGeneratorTraits* const (&apGeneratorTraits)[s_kNumGeneratorTypes])
+            : m_akBuildingTraits(aBuildingTraits), m_apGeneratorTraits(apGeneratorTraits) {}
 
         bool hasMageGuildLevel(unsigned int level) const;
 
@@ -128,6 +167,14 @@ public:
         const TGeneratorBonuses& getGeneratorBonuses() const { return _m_generatorBonuses; }
         void setGeneratorBonuses(const TGeneratorBonuses& newBonuses) { _m_generatorBonuses = newBonuses; }
 
+        TTimedEvent& operator=(const TTimedEvent& other)
+        {
+            ::TTimedEvent::operator=(other);
+            _m_buildMask = other._m_buildMask;
+            _m_generatorBonuses = other._m_generatorBonuses;
+            return *this;
+        }
+
         bool operator==(const TTimedEvent& other) const
         {
             return static_cast<const ::TTimedEvent&>(*this) == other && _m_buildMask == other._m_buildMask
@@ -156,32 +203,31 @@ public:
     virtual bool hasText() const;
     virtual void exportText(ostream* pOStream) const;
 
-    TTownType getTownType() const;
-    const TTypeTraits& getTownTypeTraits() const;
-
-    bool getBCustomName() const { return _m_bCustomName; }
     void setBCustomName(bool bCustom) { _m_bCustomName = bCustom; }
-    bool getBCustomGarrison() const { return _m_bCustomGarrison; }
     void setBCustomGarrison(bool bCustom) { _m_bCustomGarrison = bCustom; }
-    bool getBCustomBuildings() const { return _m_bCustomBuildings; }
     void setBCustomBuildings(bool bCustom) { _m_bCustomBuildings = bCustom; }
-    bool getBGroupedFormation() const { return _m_bGroupedFormation; }
     void setBGroupedFormation(bool bGrouped) { _m_bGroupedFormation = bGrouped; }
-
-    const string& getName() const { return _m_name; }
     void setName(const string& newName);
+    void setGarrison(const TArmy& newGarrison);
+    void setBuildingStates(const TArray<TBuildingState, kNumBuildings>& newBuildingStates);
+    void setDisabledSpellsMask(const bitset<kNumSpells>& newMask);
+    void setTimedEvents(const vector<TTimedEvent>& newTimedEvents);
+    THero* getPVisitingHero() { return _m_pVisitingHero; }
+    void setVisitingHero(const THero* pNewVisitingHero);
+
+    TTownType getTownType() const;
+    const TTypeTraits& getTownTypeTraits() const { return s_akTypeTraits[getTownType()]; }
+    bool getBCustomName() const { return _m_bCustomName; }
+    bool getBCustomGarrison() const { return _m_bCustomGarrison; }
+    bool getBCustomBuildings() const { return _m_bCustomBuildings; }
+    bool getBGroupedFormation() const { return _m_bGroupedFormation; }
+    const string& getName() const { return _m_name; }
     const TArmy& getGarrison() const { return _m_garrison; }
-    void setGarrison(const TArmy& newGarrison) { _m_garrison = newGarrison; }
     const TArray<TBuildingState, kNumBuildings>& getBuildingStates() const { return _m_aBuildingState; }
-    void setBuildingStates(const TArray<TBuildingState, kNumBuildings>& aNewBuildingState);
     bool getBIsBuildingDisabled(TBuilding building) const;
     const bitset<kNumSpells>& getDisabledSpellsMask() const { return _m_disabledSpellsMask; }
-    void setDisabledSpellsMask(const bitset<kNumSpells>& newMask);
     const vector<TTimedEvent>& getTimedEvents() const { return _m_events; }
-    void setTimedEvents(const vector<TTimedEvent>& newTimedEvents);
     const THero* getPVisitingHero() const { return _m_pVisitingHero; }
-    THero* getPVisitingHero() { return _m_pVisitingHero; }
-    void setVisitingHero(const THero* pHero);
 
 private:
     bool _m_bCustomName : 1;

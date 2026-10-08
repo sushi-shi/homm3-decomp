@@ -32,7 +32,7 @@ BOOL TTownPropsSpellsPage::OnInitDialog()
     const TTown::TTypeTraits& typeTraits = _m_town.getTownTypeTraits();
     for (unsigned int spell = 0; spell < kNumSpells; spell++) {
         if (akSpellTraits[spell].m_school != 0 && typeTraits.hasMageGuildLevel(akSpellTraits[spell].m_level - 1)) {
-            if (townType >= kNumTownTypes || akSpellTraits[spell].m_townProbability[townType] > 0) {
+            if (townType >= kNumTownTypes || akSpellTraits[spell].m_townGetsItChance[townType] > 0) {
                 gchar* text[2] = { (gchar*)akSpellTraits[spell].m_name, NULL };
                 gint row = gtk_clist_append(_m_spellList, text);
                 _m_numRows++;
