@@ -53,59 +53,33 @@ enum EResourceType {
     RESOURCE_TYPE_PALETTE = 96
 };
 
-// PROVEN layout (retail ctor 0x558720): vptr, Name char[13]@4 (12-char
-// strncpy + forced NUL at +0x10), resType@0x14, ReferenceCount@0x18 -
-// the Dreamcast roster verbatim, size 0x1c. Retail vtable 0x640ffc:
-//   slot 0  0x558770  scalar deleting destructor (uncarved entry)
-//   slot 1  0x55d0f0  Dispose - the base cache-removal body
-//   slot 2  _purecall - the resource-size query; concrete derived bodies
-//                     return their fixed extent plus owned data bytes
-// Complete adds the Dispose/GetSize virtual interface. Pinned DC resource
-// types 0x1037/0x1dc9 (field lists 0x1860/0x1dca) have only destructor
-// virtuals at slot 0, and ordinary AddRef/Release; neither added method is
-// present. DC's full derived-class records also lack these overrides.
-// Bitmap816's zBufferDraw starts at DC slot 1, shifted to retail slot 3,
-// independently confirming the two inserted resource slots. The exact
-// Windows-only filters cite each retained body's retail vtable slot.
+// Loki h3maped (object 49, RoE source): Name char[13]@0 (12-char strncpy
+// + forced NUL), resType@0x10, ReferenceCount@0x14 and g++ 2.95's vptr
+// last at 0x18 - the Dreamcast field roster verbatim. The vtable holds only
+// the destructor; Complete's Dispose/GetSize slots are later additions.
+// The accessors are in-class inlines (Dreamcast resrce.h:36); the 2.95.2
+// release compiler emits them as strong .text globals in resource.o, the
+// unit that defines the vtable, after the constructor and destructor.
 class resource {
 public:
-    resource(const char* newName, EResourceType newType);
-    virtual ~resource();  // slot 0
+    resource(const char* name, EResourceType type);
+    virtual ~resource();
 
-    DC_ADDRESS(0x0d9f94, 0x4)
-    EResourceType getResType() const { return m_resType; }
-
-    DC_ADDRESS(0x074060, 0x6)
-    const char* getName() const { return m_name; }
-
-    // E:\gamedcs\resrce.h:36
-    DC_ADDRESS(0x122af0, 0x8)
-    int addRef() { return ++m_referenceCount; }
-
-    DC_ADDRESS(0x122af8, 0x10)
-    int release()
+    EResourceType get_resType() const { return resType; }
+    const char* get_Name() const { return Name; }
+    int AddRef() { return ++ReferenceCount; }
+    int Release()
     {
-        if (m_referenceCount > 0)
-            --m_referenceCount;
-        return m_referenceCount;
+        if (ReferenceCount > 0)
+            --ReferenceCount;
+        return ReferenceCount;
     }
-    // DC resource::GetReferenceCount is public const; retail disposal
-    // callers test the reference-count field through this inline boundary.
-    // Retail dispose paths test this reference-count field.
-    // The DC declaration survives, but no body source location does.
-    // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x185c
-    int getReferenceCount() const { return m_referenceCount; }
+    int GetReferenceCount() const { return ReferenceCount; }
 
 private:
-    char m_name[13];
-    EResourceType m_resType;
-    int m_referenceCount;
-
-public:
-    virtual void dispose();  // slot 1, base body 0x55d0f0
-    virtual unsigned int getSize() const = 0;  // slot 2, pure at the base
+    char Name[13];
+    EResourceType resType;
+    int ReferenceCount;
 };
-SIZE(resource, 28);
 
 #endif  /* HOMM3_RESRCE_H */
