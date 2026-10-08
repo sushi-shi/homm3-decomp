@@ -21,7 +21,8 @@
 // The Windows SDK that gcc_prefix.h imports for the shared game source is
 // not part of Loki's port: its FALSE/TRUE (0/1) would shadow GLib's (0)
 // and (!FALSE) (MoveWindow's assert text is "(0)"), and its MessageBox
-// macro would rename CWnd::MessageBox.
+// macro would rename CWnd::MessageBox; its SB_ scroll codes are not the
+// shim's.
 //
 // Only gtkwidget.h (with gdk.h, GtkObject, GtkAdjustment and GtkStyle) is
 // global: the dialogs and cppbridge.cpp include the rest of <gtk/gtk.h>
@@ -33,6 +34,20 @@
 #undef FALSE
 #undef TRUE
 #undef MessageBox
+#undef SB_LINEUP
+#undef SB_LINELEFT
+#undef SB_LINEDOWN
+#undef SB_LINERIGHT
+#undef SB_PAGEUP
+#undef SB_PAGELEFT
+#undef SB_PAGEDOWN
+#undef SB_PAGERIGHT
+#undef SB_THUMBPOSITION
+#undef SB_THUMBTRACK
+#undef SB_TOP
+#undef SB_LEFT
+#undef SB_BOTTOM
+#undef SB_RIGHT
 #include <gtk/gtkwidget.h>
 
 #include "terrain.h"
@@ -59,7 +74,31 @@ typedef bool BOOL;
 extern "C" void doMessageBox(const char* message);
 namespace {
 extern "C" GtkWidget* _widget(char* name);
+// cppbridge.cpp: the byte pitch of a 16-bit GdkImage, for CSprite drawing.
+extern "C" int getImgPitch(GdkImage* img);
 }
+
+// The scroll codes the shim passes to OnVScroll/OnHScroll: the
+// adjustments' value_changed handlers pass 42, the main window's arrow and
+// page keys 0x30-0x37; the palette handles the vertical ones (its jump
+// table spans 42-55 and skips 44, 45 and 48-51). MFC's SB_ names; Loki's
+// spelling and the order within each pair are not proven.
+enum {
+    SB_THUMBTRACK = 42,
+    SB_THUMBPOSITION,
+    SB_LEFT,
+    SB_RIGHT,
+    SB_TOP,
+    SB_BOTTOM,
+    SB_LINELEFT,
+    SB_LINERIGHT,
+    SB_PAGELEFT,
+    SB_PAGERIGHT,
+    SB_LINEUP,
+    SB_LINEDOWN,
+    SB_PAGEUP,
+    SB_PAGEDOWN
+};
 // cppbridge.cpp's allocated colours, which the rulers draw with, and the
 // initialized red the mini map crosses out an empty map with.
 extern GdkColor _m_white;
