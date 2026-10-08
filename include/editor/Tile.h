@@ -37,4 +37,14 @@ struct TGroundTilesetTraits {
 // Indexed by TTerrainType.
 extern const TGroundTilesetTraits* akGroundTilesetTraits;
 
+// The map views' zoom levels: full size, half and quarter. Only kNumZooms
+// is proven (Loki's ruler asserts); the saved zoom option is reset to the
+// first when it is out of range.
+enum TZoom {
+    eZoom100,
+    eZoom50,
+    eZoom25,
+    kNumZooms
+};
+
 #endif  /* HOMM3_EDITOR_TILE_H */
