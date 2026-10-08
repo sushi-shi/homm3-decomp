@@ -346,6 +346,8 @@ public:
     void removeFloatingObject(bool bSecondLayer);
     void removeSecondLayer();
     void addSecondLayer();
+    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                              TTileExtent* pUpdatedExtent);
     const TLinkableObject* getPLinkableObject(int linkID) const;
 
     bitset<kNumHeroes> getHeroesOnMap() const { return _m_pBookkeeping->m_heroesOnMap; }
@@ -882,6 +884,76 @@ void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
     _removeObjectHelper(bSecondLayer, getPLayer(bSecondLayer)->getFloatingObjID());
 }
 
+// A cell's new terrain removes the objects whose blocking cells (or an
+// underlay's cells) it no longer allows, and a shipyard left without water.
+VA(0x004205b9, 0x34e)
+bool TGameMap::_TImpl::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y,
+                                            TTerrainType oldTerrainType, TTileExtent* pUpdatedExtent)
+{
+    bool bObjectsRemoved = false;
+    const TLayer& layer = getLayer(bSecondLayer);
+    TTerrainType newTerrainType = layer.getCell(x, y).getTerrainType();
+    unsigned int numObjs = layer.getNumObjectIDsAtCell(x, y);
+    static vector<int> aObjID;
+    aObjID.clear();
+    aObjID.reserve(numObjs);
+    for (unsigned int i = 0; i < numObjs; i++)
+        aObjID.push_back(layer.getObjectIDAtCell(x, y, i));
+    for (vector<int>::const_iterator pObjID = aObjID.begin(); pObjID != aObjID.end(); ++pObjID) {
+        const TGameObject& obj = layer.getObject(*pObjID);
+        if (!obj.getTerrainMask()[newTerrainType]) {
+            TTilePoint objLoc = layer.getObjectLoc(*pObjID);
+            unsigned int i = objLoc.x() - x;
+            unsigned int j = objLoc.y() - y;
+            if (obj.getBUnderlay() ? obj.getBCellPlaced(i, j) : !obj.getBCellPassable(i, j)) {
+                TTileExtent removedExtent;
+                removeObject(bSecondLayer, *pObjID, &removedExtent);
+                if (!bObjectsRemoved) {
+                    *pUpdatedExtent = removedExtent;
+                    bObjectsRemoved = true;
+                } else {
+                    *pUpdatedExtent |= removedExtent;
+                }
+            }
+        }
+    }
+    if (oldTerrainType == eTerrainWater) {
+        bool abAdjacent[8];
+        computeAdjacentDirs(layer.getWidth(), layer.getHeight(), x, y, abAdjacent);
+        for (unsigned int dir = 0; dir < 8; dir++) {
+            if (!abAdjacent[dir])
+                continue;
+            TTilePoint adjLoc = TPoint<int>(x, y) + akAdjOffset[dir];
+            if (layer.getCell(adjLoc).getTerrainType() != eTerrainWater) {
+                unsigned int numAdjObjs = layer.getNumObjectIDsAtCell(adjLoc.x(), adjLoc.y());
+                static vector<int> aAdjObjID;
+                aAdjObjID.clear();
+                aAdjObjID.reserve(numAdjObjs);
+                for (unsigned int i = 0; i < numAdjObjs; i++)
+                    aAdjObjID.push_back(layer.getObjectIDAtCell(adjLoc.x(), adjLoc.y(), i));
+                for (vector<int>::const_iterator pObjID = aAdjObjID.begin(); pObjID != aAdjObjID.end();
+                     ++pObjID) {
+                    const TGameObject& obj = layer.getObject(*pObjID);
+                    if (obj.getType() == SHIPYARD) {
+                        TTilePoint objLoc = layer.getObjectLoc(*pObjID);
+                        if (!_isValidShipyardPlacement(layer, obj, objLoc.x(), objLoc.y())) {
+                            TTileExtent removedExtent;
+                            removeObject(bSecondLayer, *pObjID, &removedExtent);
+                            if (!bObjectsRemoved) {
+                                *pUpdatedExtent = removedExtent;
+                                bObjectsRemoved = true;
+                            } else {
+                                *pUpdatedExtent |= removedExtent;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return bObjectsRemoved;
+}
+
 VA(0x00421259, 0x64)
 void TGameMap::_TImpl::removeSecondLayer()
 {
@@ -1236,6 +1308,13 @@ VA(0x00429f1e, 0x21)
 void TGameMap::removeFloatingObject(bool bSecondLayer)
 {
     _m_pImpl->removeFloatingObject(bSecondLayer);
+}
+
+VA(0x00429f3f, 0x30)
+bool TGameMap::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                                    TTileExtent* pUpdatedExtent)
+{
+    return _m_pImpl->onTerrainTypeChanged(bSecondLayer, x, y, oldTerrainType, pUpdatedExtent);
 }
 
 VA(0x0042a16d, 0x1b)

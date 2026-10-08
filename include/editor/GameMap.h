@@ -270,6 +270,8 @@ public:
     void removeFloatingObject(bool bSecondLayer);
     void removeSecondLayer();
     void addSecondLayer();
+    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                              TTileExtent* pUpdatedExtent);
 
     void save(std::streambuf* pStreamBuf) const;
     void exportText(std::ostream* pOStream) const;
