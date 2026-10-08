@@ -21,6 +21,11 @@
 
 class CSprite;
 
+// The side of a tile in pixels at full zoom (the first zoom row's 32). Every
+// Loki object that includes this header emits it at the end of its .rodata;
+// the name is inferred.
+const unsigned int kTileSize = 32;
+
 struct TGroundTilesetTraits {
     struct TTileTraits {
         bool m_bAnimated;

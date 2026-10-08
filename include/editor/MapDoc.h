@@ -28,6 +28,11 @@
 #include <exception>
 #include <memory>
 
+// The map file format version MapDoc.cpp reads and writes. Declared before
+// GameMap.h: MapDoc.o and cppbridge.o emit it ahead of every constant that
+// header brings in.
+const int kMapFileVersion = 14;
+
 #include "editor/GameMap.h"
 #include "editor/TerrainPlacement.h"
 #include "editor/RiverPlacement.h"

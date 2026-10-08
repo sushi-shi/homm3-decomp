@@ -15,13 +15,13 @@
 #include <string.h>
 #include <string>
 
+#include "editor/ObjectPaletteWnd.h"
+#include "editor/Colors.h"
 #include "adventureobjecttype.h"
 #include "artifact.h"
 #include "creaturetype.h"
 #include "csprite.h"
 #include "objnames.h"
-#include "editor/ObjectPaletteWnd.h"
-#include "editor/Colors.h"
 #include "editor/GameResource.h"
 #include "editor/Hero.h"
 #include "editor/ObjectSpecializations.h"

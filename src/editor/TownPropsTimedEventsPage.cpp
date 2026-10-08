@@ -7,7 +7,6 @@
 #include "editor/stdafx.h"
 
 #include <stdio.h>
-#include <vector>
 
 #include "editor/cppbridge.h"
 #include "editor/EditTownEventSheet.h"

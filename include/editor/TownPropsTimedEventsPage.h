@@ -13,10 +13,10 @@
 
 #include "editor/stdafx.h"
 
-#include <vector>
-
 #include "editor/Player.h"
 #include "editor/Town.h"
+
+#include <vector>
 
 class TTownPropsTimedEventsPage {
 public:

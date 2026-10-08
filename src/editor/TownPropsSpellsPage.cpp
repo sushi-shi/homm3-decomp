@@ -5,9 +5,9 @@
 // immediates.
 #include "editor/stdafx.h"
 
+#include "editor/TownPropsSpellsPage.h"
 #include "spelldefs.h"
 #include "editor/cppbridge.h"
-#include "editor/TownPropsSpellsPage.h"
 
 TTownPropsSpellsPage::TTownPropsSpellsPage(const TTown& town)
     : _m_town(town),

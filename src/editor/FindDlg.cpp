@@ -14,13 +14,13 @@ namespace {
 
 #include "adventureobjecttype.h"
 #include "artifact.h"
-#include "creaturetype.h"
 #include "objnames.h"
 #include "editor/cppbridge.h"
 #include "editor/FindDlg.h"
 #include "editor/GameResource.h"
-#include "editor/Hero.h"
 #include "editor/ObjectSpecializations.h"
+#include "creaturetype.h"
+#include "editor/Hero.h"
 #include "editor/Town.h"
 
 namespace {

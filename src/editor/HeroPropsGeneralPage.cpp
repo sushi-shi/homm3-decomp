@@ -4,6 +4,7 @@
 // 24-bit image on 24-bit visuals); the portrait scroll bar's handler shows
 // the selected one. The assert lines come from the retail immediates.
 #include "editor/stdafx.h"
+#include "editor/HeroPropsGeneralPage.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +21,6 @@ namespace {
 #include "resourceptr.h"
 #include "editor/cppbridge.h"
 #include "editor/Digits.h"
-#include "editor/HeroPropsGeneralPage.h"
 #include "editor/MapEditorText.h"
 
 // The page whose portrait scroll bar is connected.

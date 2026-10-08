@@ -16,8 +16,8 @@
 #include <string>
 
 #include "editor/cppbridge.h"
-#include "editor/GameMap.h"
 #include "editor/MapDoc.h"
+#include "editor/GameMap.h"
 #include "editor/ArtifactPropsSheet.h"
 #include "editor/EditArtifactDlg.h"
 #include "editor/EditTownEventBuildingsPage.h"

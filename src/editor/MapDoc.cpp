@@ -16,8 +16,8 @@
 #include <string>
 
 #include "exceptions.h"
-#include "editor/GameMap.h"
 #include "editor/MapDoc.h"
+#include "editor/GameMap.h"
 #include "editor/GUIGameObject.h"
 #include "editor/MapEditorText.h"
 #include "editor/MapView.h"
@@ -31,7 +31,6 @@ set<TMapDoc*> allMapDocs;
 }  // namespace
 
 const unsigned int kMaxUndoQueueSize = 32;
-const int kMapFileVersion = 14;
 
 unsigned int TMapDoc::_s_autosaveInterval = 0;
 unsigned int TMapDoc::_s_specialTileFrequency = 4;

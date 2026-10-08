@@ -17,8 +17,8 @@
 #include <memory>
 #include <vector>
 
-#include "editor/MapObjectRef.h"
 #include "editor/VictoryCondition.h"
+#include "editor/MapObjectRef.h"
 
 class TGameMap;
 
