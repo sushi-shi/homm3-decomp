@@ -10,6 +10,7 @@
 #include "army.h"
 #include "border.h"
 #include "button.h"
+#include "creaturegenerator4.h"
 #include "creaturetype.h"
 #include "exec.h"
 #include "game.h"
@@ -1878,10 +1879,10 @@ TOverviewWindow::TOverviewWindow()
             addFlaggableItem(g_game->m_generators[i].m_genType);
         } else {
             switch (g_game->m_generators[i].m_genType) {
-            case 0:
+            case CREATURE_GENERATOR_4_ELEMENTAL_CONFLUX:
                 addFlaggableItem('P');
                 break;
-            case 1:
+            case CREATURE_GENERATOR_4_GOLEM_FACTORY:
                 addFlaggableItem('Q');
                 break;
             }
