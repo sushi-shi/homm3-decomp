@@ -15,6 +15,7 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+Colors	?initColors@@YAXXZ	99.8913	99.8913	99.8913	0xcba4	tokens1:50621faedd82
 Player	?InitializePlayerTraitsTable@@YA_NXZ	90.0516	90.0516	90.0516	0x94324	tokens1:e8d8c496355c
 adler32	@adler32@12	100.0000	100.0000	100.0000	0xd6dd0	-
 artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x2215	-
@@ -259,6 +260,8 @@ resourcemanager	?Close@ResourceManager@@YAXXZ	100.0000	100.0000	100.0000	0xdc060
 resourcemanager	?Expunge@ResourceManager@@YAXXZ	100.0000	100.0000	100.0000	0xdd340	-
 resourcemanager	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	96.7059	96.7059	96.7059	0xdc2b0	-
 resourcemanager	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	79.3415	79.3415	79.3415	0xdb090	-
+resourcemanager	?GetPalette24@ResourceManager@@YAPAVTPalette24@@PBD@Z	0.0000	0.0000	0.0000	0xdc78d	-
+resourcemanager	?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD@Z	100.0000	100.0000	100.0000	0xdc830	-
 resourcemanager	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0xdccc0	-
 resourcemanager	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	85.6385	85.6385	85.6385	0xdcd20	-
 resourcemanager	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	99.7368	99.7368	99.7368	0xdca60	-
@@ -295,7 +298,9 @@ resourcemanager	?findSpriteResource@@YAPAVLODFile@@PBD@Z	99.8913	99.8913	99.8913
 resourcemanager	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	44.0000	44.0000	44.0000	0x3583e	-
 resourcemanager	?imbue@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEXABVlocale@2@@Z	100.0000	100.0000	100.0000	0x11916	-
 resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	93.0417	93.0417	93.0417	0xdd6e0	-
-resourcemanager	?loadFont@ResourceManager@@YAPAVfont@@PBD@Z	28.5000	28.5000	28.5000	0xdc900	-
+resourcemanager	?loadFont@ResourceManager@@YAPAVfont@@PBD@Z	28.5625	28.5625	28.5625	0xdc900	-
+resourcemanager	?loadPalette@ResourceManager@@YAPAVTPalette16@@PBD@Z	26.3235	26.3235	26.3235	0xdc6d0	-
+resourcemanager	?loadPaletteData@ResourceManager@@YAPAVTPalette16@@PBDPAVTAbstractFile@@@Z	80.9296	80.9296	80.9296	0xdc5b0	-
 resourcemanager	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	29.4000	29.4000	29.4000	0xdcb30	-
 resourcemanager	?loadSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	-	0.0000	0.0000	0xdcc08	-
 resourcemanager	?loadSpreadsheetData@ResourceManager@@YAPAVTSpreadsheetResource@@PBDPAVTAbstractFile@@H@Z	99.9057	99.9057	99.9057	0xdca90	-
@@ -305,8 +310,8 @@ resourcemanager	?openArchiveResource@@YA_NH@Z	99.8305	99.8305	99.8305	0xdb160	-
 resourcemanager	?overflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x49c5e	-
 resourcemanager	?overflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	0.0000	0.0000	0.0000	0x61401	-
 resourcemanager	?pbackfail@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	46.8621	46.8621	46.8621	0x61544	-
-resourcemanager	?read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0xdac80	-
-resourcemanager	?read@t_stdio_file_adapter@ResourceManager@@UAEHPAXH@Z	99.5000	99.5000	99.5000	0xdac60	-
+resourcemanager	?read@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0xdac80	-
+resourcemanager	?read@t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	99.5000	99.5000	99.5000	0xdac60	-
 resourcemanager	?reportMissingResource@@YAXPBD00@Z	99.8485	99.8485	99.8485	0xdb320	-
 resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	96.3870	96.3870	96.3870	0xdb560	-
 resourcemanager	?seekoff@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	39.1111	39.1111	39.1111	0xf777f	-
@@ -322,7 +327,7 @@ resourcemanager	?str@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@
 resourcemanager	?truename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	44.0000	44.0000	44.0000	0x35806	-
 resourcemanager	?underflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x49c67	-
 resourcemanager	?underflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHXZ	54.5946	54.5946	54.5946	0x6158c	-
-resourcemanager	?write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xdaca0	-
+resourcemanager	?write@t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xdaca0	-
 rmg	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x78f3	-
 rmg	??0?$vector@PAUTRmgTemplateZone@@V?$allocator@PAUTRmgTemplateZone@@@std@@@std@@QAE@ABV?$allocator@PAUTRmgTemplateZone@@@1@@Z	100.0000	100.0000	100.0000	0xae177	-
 rmg	??0TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x99e65	-
