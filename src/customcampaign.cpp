@@ -2844,9 +2844,10 @@ bool SCampaign::campaignComplete()
 // homes. Signed index and late bare declaration are flat; naming the score
 // row loses ground. The register model's heroId/pool declaration swap also
 // worsens the residual, so retain the native acquisition order.
-// 2026-10-08 trace: since getHero's DC else-arm the garrison push_back gets
-// 1275/20 = 63 against insert's 64 and stays a call (retail expands it);
-// it needs three more caller cb units. A braced guard or loop body adds two.
+// Every guarded statement is braced. Braces add front-end cost without code:
+// the garrison push_back's insert wrapper needs a caller cb of at least
+// 1042 (1039 unbraced) to expand as retail, and getScore's later size() at
+// least 1050, once that insert spends its share (99.78 -> 99.98%).
 VA(0x00489820, 0x600)
 MAC_ADDRESS(0x098484, 0x4b0)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::completeCurrentMap(
@@ -2854,8 +2855,9 @@ void SCampaign::completeCurrentMap(
 {
     CampaignScenarioInfo& scenario = *getCurrentScenario();
 
-    if (scenario.m_completed)
+    if (scenario.m_completed) {
         return;
+    }
 
     scenario.m_days = g_game->getCurrentTurn();
     scenario.m_completed = true;
@@ -2872,8 +2874,9 @@ void SCampaign::completeCurrentMap(
 
     for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
         if (m_mapScores[i].m_completed
-            && m_mapScores[i].m_completeOrder > scenario.m_completeOrder)
+            && m_mapScores[i].m_completeOrder > scenario.m_completeOrder) {
             scenario.m_completeOrder = m_mapScores[i].m_completeOrder;
+        }
     }
     ++scenario.m_completeOrder;
 
@@ -2884,8 +2887,9 @@ void SCampaign::completeCurrentMap(
             std::vector<hero>& pooled = getCrossoverHeroes(pool);
             int which = pooled.size();
             while (which--) {
-                if (pooled[which].m_id == heroId)
+                if (pooled[which].m_id == heroId) {
                     break;
+                }
             }
             if (which >= 0) {
                 pooled.erase(pooled.begin() + which);
@@ -2898,35 +2902,43 @@ void SCampaign::completeCurrentMap(
 
     int gamePos;
     for (gamePos = 0; gamePos < NUM_PLAYERS; ++gamePos) {
-        if (g_game->m_players[gamePos].isHuman())
+        if (g_game->m_players[gamePos].isHuman()) {
             break;
+        }
     }
 
     playerData* player = &g_game->m_players[gamePos];
-    for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex)
+    for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         crossover.push_back(*g_game->getHero(player->m_heroes[heroIndex]));
+    }
 
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         town* thisTown = g_game->getTown(player->m_townIds[townIndex]);
-        if (thisTown->m_garrisonHeroId >= 0)
+        if (thisTown->m_garrisonHeroId >= 0) {
             crossover.push_back(*g_game->getHero(thisTown->m_garrisonHeroId));
+        }
     }
 
     if (m_currentCampaign == g_campaignOrdinal07
         && m_currentMap == g_campaignMapOrdinal06) {
-        if (g_game->getHero(155)->m_owner != gamePos)
+        if (g_game->getHero(155)->m_owner != gamePos) {
             crossover.push_back(*g_game->getHero(155));
+        }
     }
     if (m_currentCampaign == g_campaignOrdinal18
         && m_currentMap == g_campaignMapOrdinal07) {
-        if (g_game->getHero(27)->m_owner != gamePos)
+        if (g_game->getHero(27)->m_owner != gamePos) {
             crossover.push_back(*g_game->getHero(27));
-        if (g_game->getHero(102)->m_owner != gamePos)
+        }
+        if (g_game->getHero(102)->m_owner != gamePos) {
             crossover.push_back(*g_game->getHero(102));
-        if (g_game->getHero(148)->m_owner != gamePos)
+        }
+        if (g_game->getHero(148)->m_owner != gamePos) {
             crossover.push_back(*g_game->getHero(148));
-        if (g_game->getHero(96)->m_owner != gamePos)
+        }
+        if (g_game->getHero(96)->m_owner != gamePos) {
             crossover.push_back(*g_game->getHero(96));
+        }
     }
 
     getCrossoverArtifacts(m_crossoverArrayIndex).clear();
@@ -2937,8 +2949,9 @@ void SCampaign::completeCurrentMap(
             && m_currentCampaign < g_campaignOrdinal13 && !m_isCheater) {
             // Mac completeCurrentMap +0x480 calls the retained getScore
             // body, then compares its result with 350.
-            if (getScore() >= 350)
+            if (getScore() >= 350) {
                 m_secretActive = 1;
+            }
         }
     }
 
