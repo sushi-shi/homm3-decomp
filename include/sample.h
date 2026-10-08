@@ -25,18 +25,15 @@ struct MemorySampleStructure {
 };
 SIZE(MemorySampleStructure, 0x18);
 
+// Loki h3maped object 50 (RoE): sample(const char*, char*, int, long, long,
+// long) and an ordinary virtual destructor; no getSize slot yet.
 class sample : public resource {
 public:
-    // Original Dreamcast/NH3API member memSample; PC resource base is 0x1c.
-    MemorySampleStructure m_memSample;
+    // Original Dreamcast/NH3API member memSample; the resource base is 0x1c.
+    MemorySampleStructure memSample;
 
-    sample(const char* newName, const void* src, long len,
-           long channel, long volume, long loop);
-    // DC records an ordinary destructor. Complete resource's virtual
-    // destructor requires this override; slot 0 of 0x6416d0 proves it.
+    sample(const char* name, char* src, int len, long channel, long volume, long loop);
     virtual ~sample();
-    virtual unsigned int getSize() const;
 };
-SIZE(sample, 0x34);
 
 #endif  /* HOMM3_SAMPLE_H */
