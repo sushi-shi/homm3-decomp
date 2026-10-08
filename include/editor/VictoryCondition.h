@@ -339,8 +339,10 @@ public:
     static bool equivalent(const TLossCondition& lhs, const TLossCondition& rhs);
 
 protected:
-    // Each kind's constructor stores its 1-based ordinal here; nothing in
-    // the image reads it back, and its name is not recorded.
+    // Each kind's constructor stores its 1-based ordinal here (0 is no
+    // condition); TMapSpecsLossCondPage::OnInitDialog reads it back to pick
+    // its radio button. Its name is not recorded.
+    friend class TMapSpecsLossCondPage;
     int _m_kind;
 };
 
