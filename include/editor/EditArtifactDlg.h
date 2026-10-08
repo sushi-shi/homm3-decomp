@@ -25,10 +25,10 @@ public:
     TEditArtifactDlg(CWnd* pParent, const TArtifactSlotSet& unusedSlots, bool bBackpackFull,
                      TArtifact artifact, TArtifactSlot slot);
 
+    virtual BOOL OnInitDialog();
     virtual void OnOK();
     virtual void OnCancel();
     int DoModal();
-    virtual BOOL OnInitDialog();
     void OnSelChangeWhereCombo();
     void OnSelChangeArtifactCombo();
 
