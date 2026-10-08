@@ -201,7 +201,7 @@ void TTileVRuler::OnPaint(const CRect& rect)
                                 (tileHeight - textSize.cy) / 2 + posY + tensHeight, tensText);
             gdk_draw_string(_m_pBackBuffer, _m_pFont, gc,
                             (_m_hWnd->allocation.width - textSize.cx) / 2,
-                            (tileHeight - textSize.cy) / 2 + 1 + posY + tensHeight + onesHeight,
+                            (tileHeight - textSize.cy) / 2 + (posY + 1) + tensHeight + onesHeight,
                             onesText);
             if (y == _m_highlight)
                 gdk_gc_set_foreground(gc, &_m_black);

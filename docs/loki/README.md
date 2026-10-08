@@ -243,7 +243,9 @@ available.
   `x - (w - 1)` becomes `(x + 1) - w` (`incl`/`leal 1` on `x`), while
   `x + 1 - w` becomes `x - (w + -1)` (`decl` on `w`). Pick the spelling
   whose folded shape the image shows (`_TImpl`'s streamed constructor,
-  `_computeObjExtent`).
+  `_computeObjExtent`). Additions associate the same way: `a + 1 + b`
+  becomes `a + (b + 1)`, while `a + (b + 1)` becomes `(a + 1) + b`
+  (TileVRuler's ones-digit offset).
 - A cast of an lvalue binds a `const T&` parameter without a temporary,
   even across modes: `stream << (long) _s_akDimension[_m_size]` pushes the
   element's address (`movl $sym,%edx; addl %edx,%eax`), and
