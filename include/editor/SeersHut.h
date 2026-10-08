@@ -8,6 +8,8 @@
 #define HOMM3_EDITOR_SEERSHUT_H
 
 #include "editor/GameObject.h"
+#include "exceptions.h"
+#include "editor/BlackBox.h"
 
 #include <assert.h>
 
@@ -36,27 +38,7 @@ public:
     class TSpellReward;
     class TCreatureReward;
 
-    class TReward {
-    public:
-        class TVisitor {
-        public:
-            virtual void visit(const TExperienceReward& reward) = 0;
-            virtual void visit(const TManaReward& reward) = 0;
-            virtual void visit(const TMoraleReward& reward) = 0;
-            virtual void visit(const TLuckReward& reward) = 0;
-            virtual void visit(const TResourceReward& reward) = 0;
-            virtual void visit(const TPrimarySkillReward& reward) = 0;
-            virtual void visit(const TSecondarySkillReward& reward) = 0;
-            virtual void visit(const TArtifactReward& reward) = 0;
-            virtual void visit(const TSpellReward& reward) = 0;
-            virtual void visit(const TCreatureReward& reward) = 0;
-        };
-
-        virtual void accept(TVisitor* pVisitor) const = 0;
-
-        static TReward* clone(const TReward& reward, void* (*pfnAllocator)(unsigned int));
-        static bool equivalent(const TReward& lhs, const TReward& rhs);
-    };
+    class TReward;
 
     TSeersHut(const TObjectType& objType);
     TSeersHut(const TObjectType& objType, TRawIStream* pIStream, int version);
@@ -66,15 +48,38 @@ public:
     virtual void write(TRawOStream* pOStream) const;
     virtual bool isCustomized() const;
 
-    TArtifact getQuestArtifact() const { return _m_questArtifact; }
     void setQuestArtifact(TArtifact newArtifact);
-    const TReward* getPQuestReward() const { return _m_pQuestReward; }
     TReward* getPQuestReward() { return _m_pQuestReward; }
     void setQuestReward(const TReward* pNewReward);
+
+    TArtifact getQuestArtifact() const { return _m_questArtifact; }
+    const TReward* getPQuestReward() const { return _m_pQuestReward; }
 
 private:
     TArtifact _m_questArtifact;
     TReward* _m_pQuestReward;
+};
+
+class TSeersHut::TReward {
+public:
+    class TVisitor {
+    public:
+        virtual void visit(const TExperienceReward& reward) = 0;
+        virtual void visit(const TManaReward& reward) = 0;
+        virtual void visit(const TMoraleReward& reward) = 0;
+        virtual void visit(const TLuckReward& reward) = 0;
+        virtual void visit(const TResourceReward& reward) = 0;
+        virtual void visit(const TPrimarySkillReward& reward) = 0;
+        virtual void visit(const TSecondarySkillReward& reward) = 0;
+        virtual void visit(const TArtifactReward& reward) = 0;
+        virtual void visit(const TSpellReward& reward) = 0;
+        virtual void visit(const TCreatureReward& reward) = 0;
+    };
+
+    virtual void accept(TVisitor* pVisitor) const = 0;
+
+    static TReward* clone(const TReward& reward, void* (*pfnAllocator)(unsigned int));
+    static bool equivalent(const TReward& lhs, const TReward& rhs);
 };
 
 template<int s_kMaxBonus>
@@ -132,10 +137,10 @@ public:
 
     TResourceReward(TGameResourceType type, unsigned int quantity);
 
-    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
-
     TGameResourceType getType() const { return _m_type; }
     unsigned int getQuantity() const { return _m_quantity; }
+
+    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     friend bool operator==(const TResourceReward& lhs, const TResourceReward& rhs)
     {
@@ -151,9 +156,9 @@ class TSeersHut::TPrimarySkillReward : public TSimpleBonusReward<99> {
 public:
     TPrimarySkillReward(TPrimarySkill skill, int bonus);
 
-    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
-
     TPrimarySkill getSkill() const { return _m_skill; }
+
+    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     friend bool operator==(const TPrimarySkillReward& lhs, const TPrimarySkillReward& rhs)
     {
@@ -168,10 +173,10 @@ class TSeersHut::TSecondarySkillReward : public TSeersHut::TReward {
 public:
     TSecondarySkillReward(TSecondarySkill skill, TSkillMastery mastery);
 
-    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
-
     TSecondarySkill getSkill() const { return _m_skill; }
     TSkillMastery getMastery() const { return _m_mastery; }
+
+    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     friend bool operator==(const TSecondarySkillReward& lhs, const TSecondarySkillReward& rhs)
     {
@@ -187,9 +192,9 @@ class TSeersHut::TArtifactReward : public TSeersHut::TReward {
 public:
     TArtifactReward(TArtifact artifact);
 
-    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
-
     TArtifact getArtifact() const { return _m_artifact; }
+
+    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     friend bool operator==(const TArtifactReward& lhs, const TArtifactReward& rhs)
     {
@@ -204,9 +209,9 @@ class TSeersHut::TSpellReward : public TSeersHut::TReward {
 public:
     TSpellReward(SpellID spell);
 
-    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
-
     SpellID getSpell() const { return _m_spell; }
+
+    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     friend bool operator==(const TSpellReward& lhs, const TSpellReward& rhs)
     {
@@ -221,9 +226,9 @@ class TSeersHut::TCreatureReward : public TSeersHut::TReward {
 public:
     TCreatureReward(const TCreatureStack& creatureStack) : _m_creatureStack(creatureStack) {}
 
-    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
-
     const TCreatureStack& getCreatureStack() const { return _m_creatureStack; }
+
+    virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
     friend bool operator==(const TCreatureReward& lhs, const TCreatureReward& rhs)
     {

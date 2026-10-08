@@ -81,66 +81,6 @@ private:
     TSeersHut::TReward* _m_pClone;
 };
 
-class TRewardRHSDispatcherBase : public TSeersHut::TReward::TVisitor {
-public:
-    virtual void visit(const TSeersHut::TExperienceReward& rhs) {}
-    virtual void visit(const TSeersHut::TManaReward& rhs) {}
-    virtual void visit(const TSeersHut::TMoraleReward& rhs) {}
-    virtual void visit(const TSeersHut::TLuckReward& rhs) {}
-    virtual void visit(const TSeersHut::TResourceReward& rhs) {}
-    virtual void visit(const TSeersHut::TPrimarySkillReward& rhs) {}
-    virtual void visit(const TSeersHut::TSecondarySkillReward& rhs) {}
-    virtual void visit(const TSeersHut::TArtifactReward& rhs) {}
-    virtual void visit(const TSeersHut::TSpellReward& rhs) {}
-    virtual void visit(const TSeersHut::TCreatureReward& rhs) {}
-};
-
-template<class T>
-class TRewardRHSDispatcher : public TRewardRHSDispatcherBase {
-public:
-    TRewardRHSDispatcher(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
-
-    bool getBEquivalent() const { return _m_bEquivalent; }
-
-    virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
-
-private:
-    const T& _m_lhs;
-    bool _m_bEquivalent;
-};
-
-class TRewardLHSDispatcher : public TSeersHut::TReward::TVisitor {
-public:
-    TRewardLHSDispatcher(const TSeersHut::TReward& rhs) : _m_rhs(rhs) {}
-
-    bool getBEquivalent() const { return _m_bEquivalent; }
-
-private:
-    template<class T>
-    void _rhsDispatch(const T& lhs)
-    {
-        TRewardRHSDispatcher<T> rhsDispatcher(lhs);
-        _m_rhs.accept(&rhsDispatcher);
-        _m_bEquivalent = rhsDispatcher.getBEquivalent();
-    }
-
-public:
-    virtual void visit(const TSeersHut::TExperienceReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TManaReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TMoraleReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TLuckReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TResourceReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TPrimarySkillReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TSecondarySkillReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TArtifactReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TSpellReward& lhs) { _rhsDispatch(lhs); }
-    virtual void visit(const TSeersHut::TCreatureReward& lhs) { _rhsDispatch(lhs); }
-
-private:
-    const TSeersHut::TReward& _m_rhs;
-    bool _m_bEquivalent;
-};
-
 class TRewardWriter : public TSeersHut::TReward::TVisitor {
 public:
     TRewardWriter(TRawOStream* pOStream) : _m_pOStream(pOStream)
@@ -231,6 +171,66 @@ void TRewardWriter::visit(const TSeersHut::TCreatureReward& reward)
     writeType(eRewardCreature);
     *_m_pOStream << reward.getCreatureStack();
 }
+
+class TRewardRHSDispatcherBase : public TSeersHut::TReward::TVisitor {
+public:
+    virtual void visit(const TSeersHut::TExperienceReward& rhs) {}
+    virtual void visit(const TSeersHut::TManaReward& rhs) {}
+    virtual void visit(const TSeersHut::TMoraleReward& rhs) {}
+    virtual void visit(const TSeersHut::TLuckReward& rhs) {}
+    virtual void visit(const TSeersHut::TResourceReward& rhs) {}
+    virtual void visit(const TSeersHut::TPrimarySkillReward& rhs) {}
+    virtual void visit(const TSeersHut::TSecondarySkillReward& rhs) {}
+    virtual void visit(const TSeersHut::TArtifactReward& rhs) {}
+    virtual void visit(const TSeersHut::TSpellReward& rhs) {}
+    virtual void visit(const TSeersHut::TCreatureReward& rhs) {}
+};
+
+template<class T>
+class TRewardRHSDispatcher : public TRewardRHSDispatcherBase {
+public:
+    TRewardRHSDispatcher(const T& lhs) : _m_lhs(lhs), _m_bEquivalent(false) {}
+
+    bool getBEquivalent() const { return _m_bEquivalent; }
+
+    virtual void visit(const T& rhs) { _m_bEquivalent = _m_lhs == rhs; }
+
+private:
+    const T& _m_lhs;
+    bool _m_bEquivalent;
+};
+
+class TRewardLHSDispatcher : public TSeersHut::TReward::TVisitor {
+public:
+    TRewardLHSDispatcher(const TSeersHut::TReward& rhs) : _m_rhs(rhs) {}
+
+    bool getBEquivalent() const { return _m_bEquivalent; }
+
+private:
+    template<class T>
+    void _rhsDispatch(const T& lhs)
+    {
+        TRewardRHSDispatcher<T> rhsDispatcher(lhs);
+        _m_rhs.accept(&rhsDispatcher);
+        _m_bEquivalent = rhsDispatcher.getBEquivalent();
+    }
+
+public:
+    virtual void visit(const TSeersHut::TExperienceReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TManaReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TMoraleReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TLuckReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TResourceReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TPrimarySkillReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TSecondarySkillReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TArtifactReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TSpellReward& lhs) { _rhsDispatch(lhs); }
+    virtual void visit(const TSeersHut::TCreatureReward& lhs) { _rhsDispatch(lhs); }
+
+private:
+    const TSeersHut::TReward& _m_rhs;
+    bool _m_bEquivalent;
+};
 
 }  // namespace
 

@@ -16,10 +16,10 @@
 #include "herospec.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
+#include "editor/RefCountingPtr.h"
 #include "editor/Hero.h"
 #include "editor/Army.h"
 #include "editor/Array.h"
-#include "editor/RefCountingPtr.h"
 #include "editor/ResourceQuantities.h"
 
 class TRawIStream;
