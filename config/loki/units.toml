@@ -524,3 +524,8 @@ source = "src/editor/MapDoc.cpp"
 name = "MapView"
 object = 53
 source = "src/editor/MapView.cpp"
+
+[[unit]]
+name = "LinePlacement"
+object = 17
+source = "src/editor/LinePlacement.cpp"
