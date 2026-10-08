@@ -597,7 +597,7 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "artifact"
-source = "src/artifact.cpp"
+source = "src/Artifact.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
