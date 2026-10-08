@@ -158,6 +158,18 @@ const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
 `MAX_PATH`.
 
 
+## Access specifiers
+
+Member access (`public`, `protected`, `private`) in the editor-only
+classes is inferred: from the naming conventions (`_m_`/`_` for private
+members), the call sites, the friends a member needs and the pImpl split.
+GCC 2.95 mangling and the stripped image do not record it. Only base-class
+access and virtual bases are proven, by the RTTI base lists that
+`__rtti_class` receives (each base's access in the top bits: TMapDoc's
+`TGameMap::TClient` base is private, its other bases public). Shared engine
+classes take member access from the game's Dreamcast CodeView where it is
+available.
+
 ## Code-generation patterns (g++ 2.95.2 -O0)
 
 - A `const` local is initialized through a pseudo register. The value is
