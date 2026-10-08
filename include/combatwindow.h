@@ -67,25 +67,25 @@ public:
 
 public:
     virtual ~TCombatWindow();
-    virtual void close(unsigned char update);
+    virtual void close(bool update);
     virtual void handleWidgetHover(widget* currentWidget);
     // Original DC DrawWindow@TCombatWindow@@UAAX_NHH@Z proves bool.
     virtual void drawWindow(bool update, int low, int high);
     void clearCombatMessages();
     static int convertID2HelpID(int id);
-    unsigned char processRightSelect(const message& msg);
+    bool processRightSelect(const message& msg);
     void setRollover(const char* newText);
     void showMessages(long start);
     void scrollRollover(long delta);
     static int scrollUp(message& msg);
     static int scrollDown(message& msg);
-    TCombatWindow(unsigned char doPlacement);
+    TCombatWindow(bool doPlacement);
     void endPlacementPhase();
     void combatMessage(const char* newText, bool keep,
                         bool priority);
-    void drawChatText(unsigned char update);
-    void drawChatEdit(unsigned char update);
-    void onChatActivate(unsigned char active);
+    void drawChatText(bool update);
+    void drawChatEdit(bool update);
+    void onChatActivate(bool active);
 
 };
 SIZE(TCombatWindow, 0x8c);

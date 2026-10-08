@@ -16,6 +16,7 @@
 #include "hero.h"
 #include "magicterrain.h"
 #include "misc.h"
+#include "terrain.h"
 #include "town.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
@@ -79,7 +80,7 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
 // rewritten as the new total over that pre-image.
 DC_ADDRESS(0x029a30, 0x162)
 MAC_ADDRESS(0x025f6c, 0x10c)
-void type_monster_data::castEnchantment(long spellValue, unsigned char increase)
+void type_monster_data::castEnchantment(long spellValue, bool increase)
 {
     double previous = m_totalValue * m_combatValuePerHit;
     // 64-bit local, not a long: retail spills the __alldiv result's
@@ -395,7 +396,7 @@ type_speed_catagory type_AI_combat_data::getCatagory(
 VA(0x00424880, 0xDB)
 DC_ADDRESS(0x02a588, 0xba)
 MAC_ADDRESS(0x026c54, 0x130)
-void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
+void type_AI_combat_data::adjustArmy(bool dismissHero)
 {
     if (m_totalCombatValue == 0) {
         for (short i = 0; i != armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
@@ -611,7 +612,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
 // castSpell and changed its later mass-damage expansion decisions.
 DC_ADDRESS(0x02ab3c, 0x4c)
 MAC_ADDRESS(0x02744c, 0x4c)
-unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
+bool type_AI_combat_data::hasCreature(TCreatureType creature) const
 {
     for (long i = m_creatures.size(); i-- > 0; ) {
         if (m_creatures[i].m_type == creature && m_creatures[i].m_number > 0)
@@ -742,7 +743,7 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
 VA(0x004258a0, 0x269)
 DC_ADDRESS(0x02ae60, 0xa2)
 MAC_ADDRESS(0x027880, 0xd8)
-void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero* castingHero, unsigned char increase)
+void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero* castingHero, bool increase)
 {
     long value;
     if (spellTargetsASingleArmy(choice.m_spell, choice.m_mastery)) {
@@ -1031,7 +1032,7 @@ void type_AI_combat_data::inflictDamage(long damage, long blockerSpeed)
 VA(0x00426390, 0xBB)
 DC_ADDRESS(0x02b624, 0x196)
 MAC_ADDRESS(0x0282c4, 0xf4)
-long type_AI_combat_data::getAttack(type_speed_catagory speedLimit, unsigned char shootersBlocked) const
+long type_AI_combat_data::getAttack(type_speed_catagory speedLimit, bool shootersBlocked) const
 {
     long value = 0;
     for (long i = m_creatures.size(); i-- > 0; ) {

@@ -7,7 +7,7 @@
 
 // E:\gamedcs\AdventureMapWindow.h:238
 DC_ADDRESS(0x0bd0a0, 0x14)
-inline void TAdventureMapWindow::setBackgroundAnimation(unsigned char enable)
+inline void TAdventureMapWindow::setBackgroundAnimation(bool enable)
 {
     m_animateInBackground = enable;
 }

@@ -343,7 +343,7 @@ const int g_gameDifficultyImpossible = 4;
 VA(0x004b8410, 0x33)
 DC_ADDRESS(0x0a2af8, 0x62)
 MAC_ADDRESS(0x0c9fa8, 0xa0)
-unsigned char initializeRandomTavernText()
+bool initializeRandomTavernText()
 {
     g_randomTavernText = ResourceManager::getText(
         DATA_COMPGEN(0x00677d20, randomTavernTextName, "randtvrn.txt"));
@@ -1239,7 +1239,7 @@ bool playerData::hasCapitol()
 VA(0x004b9fc0, 0x167)
 DC_ADDRESS(0x0a4ee8, 0x1c2)
 MAC_ADDRESS(0x0cc4fc, 0x1bc)
-unsigned char playerData::addGarrisonHero(town* ourTown)
+bool playerData::addGarrisonHero(town* ourTown)
 {
     int i;
     hero* ourHero;
@@ -1369,7 +1369,7 @@ static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
 
 // Mac 0xccce0..0xccd60 constructs a local mask, reads two packed bytes,
 // expands the decoder and copies the mask through a second temporary into
-// the member. The existing readPackedBits return and nested decodePackedBits
+// the member. The inline readPackedBits return and its own decode loop
 // preserve those boundaries; its source name is inferred. Windows stays exact.
 VA(0x004ba260, 0x401)
 DC_ADDRESS(0x0a51b0, 0x3f6)
@@ -6484,6 +6484,10 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // bitset::set spelling used by the scenario reader lowers this saved-header
 // reader from 90.8783% to 90.13% (84 to 83 exact CFG blocks); retail's
 // retained bitset<8>::_Xran call still does not appear. Keep the proxy form.
+// Mac 0xdc644..0xdc6f8 builds the availability from a two-temporary
+// conditional: the expanded packed read or a default bitset flipped by
+// operator~. An if/else with availability.set() reaches 96.40% but
+// contradicts that flip; the if/else with operator~ falls to 94.02%.
 VA(0x004c5630, 0x7CD)
 DC_ADDRESS(0x0b0754, 0x752)
 MAC_ADDRESS(0x0dbef4, 0x8b8)  // DC Load + saved-header callers + helper edges
@@ -6650,6 +6654,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         // Four HeroId reader-result/local models keep both reader bodies
         // exact but lower this caller to 91.6362%; their result domain has
         // no surviving native signature, so the numeric interface remains.
+        // Mac dc60c..dc61c has no loadHeroId call, but writing the byte and
+        // 0xff test in place (as NewSMapHeader::read now does) lowers VC6
+        // 94.62 -> 92.46%; the helper call stays.
         int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
 
         std::string strTemp = readLengthPrefixedString(infile);
@@ -9300,7 +9307,7 @@ VA(0x004cbd40, 0xA83)
 DC_ADDRESS(0x0b85c4, 0xe44)
 MAC_ADDRESS(0x0e31b0, 0xc0c)  // retail body +  source shape
 int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
-                          unsigned char inGame, unsigned char isDiff)
+                          bool inGame, bool isDiff)
 {
     CNetMsgHandlerPause netMsgHandlerPause;
     g_advManager->trimLoopingSounds(4);
@@ -10189,7 +10196,7 @@ void game::checkForTownEvent()
 VA(0x004cdb80, 0x231)
 DC_ADDRESS(0x0bb0e4, 0x2fc)
 MAC_ADDRESS(0x0e52e0, 0x2cc)
-unsigned char game::getRandomLith(const std::vector<type_point>& points,
+bool game::getRandomLith(const std::vector<type_point>& points,
                                     type_point& result, long cellType,
                                     long excluded) const
 {
@@ -10244,7 +10251,7 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
 VA(0x004cddc0, 0x22)
 DC_ADDRESS(0x0bb3e0, 0x3c)
 MAC_ADDRESS(0x0e55ac, 0x38)
-unsigned char game::getRandomLithExit(long color, type_point& result) const
+bool game::getRandomLithExit(long color, type_point& result) const
 {
     return getRandomLith(getLithExits(color), result, 0x2c, -1);
 }
@@ -10252,7 +10259,7 @@ unsigned char game::getRandomLithExit(long color, type_point& result) const
 VA(0x004cddf0, 0x24)
 DC_ADDRESS(0x0bb41c, 0x3e)
 MAC_ADDRESS(0x0e55e4, 0x3c)
-unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
+bool game::getRandomLith(long color, long excluded, type_point& result) const
 {
     return getRandomLith(getLiths(color), result, 0x2d, excluded);
 }
@@ -10260,7 +10267,7 @@ unsigned char game::getRandomLith(long color, long excluded, type_point& result)
 VA(0x004cde20, 0x1D)
 DC_ADDRESS(0x0bb45c, 0x32)
 MAC_ADDRESS(0x0e5620, 0x30)
-unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
+bool game::getRandomWhirlpool(long excluded, type_point& result) const
 {
     return getRandomLith(getWhirlpools(), result, 0x6f, excluded);
 }

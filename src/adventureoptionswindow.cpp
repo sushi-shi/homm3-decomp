@@ -10,6 +10,7 @@
 #include "message.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"

@@ -11,6 +11,7 @@
 #include "misc.h"
 #include "savegame.h"
 #include "scenarioinfo.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "town.h"
 #include "window.h"

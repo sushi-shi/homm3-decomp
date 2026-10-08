@@ -32,6 +32,7 @@
 #include "resourcemanager.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "town.h"
 #include "townmgr.h"
@@ -1047,7 +1048,7 @@ void army::removeBinding()
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
 MAC_ADDRESS(0x04abf0, 0x118)  // DC reads the side directly; Mac 0x4ac24's load is the same field read.
-unsigned char army::setInsideAreaEffect(unsigned char arg)
+bool army::setInsideAreaEffect(bool arg)
 {
     if (m_isAreaEffectTarget == arg)
         return 0;
@@ -2336,7 +2337,7 @@ long army::getDefenseModifier() const
 // compilers erase the constant-returning call, so bytes alone cannot prove it.
 DC_ADDRESS(0x0478fc, 0x8)
 inline double army::getDefenseDamageModifier(
-    unsigned char rangedAttack) const
+    bool rangedAttack) const
 {
     return 1.0;
 }
@@ -2366,7 +2367,7 @@ hero* army::getOwner() const
 // E:\gamedcs\army.cpp:2708
 DC_ADDRESS(0x047944, 0xd0)
 MAC_ADDRESS(0x04e538, 0xe4)
-unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
+bool isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
 {
     switch (attacker) {
     case CREATURE_ANGEL:
@@ -2658,7 +2659,7 @@ float army::getFireShieldStrength() const
 VA(0x00443160, 0x1BF)
 DC_ADDRESS(0x048524, 0x168)
 MAC_ADDRESS(0x04f02c, 0x204)
-int army::computeBaseDamage(unsigned char simulateOnly) const
+int army::computeBaseDamage(bool simulateOnly) const
 {
     int num;
     if (m_spellInfluence[61] > 0 && is(creatureShootingArmy))

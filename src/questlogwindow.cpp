@@ -15,6 +15,7 @@
 #include "quest.h"
 #include "seerhut.h"
 #include "slider.h"
+#include "terrain.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"

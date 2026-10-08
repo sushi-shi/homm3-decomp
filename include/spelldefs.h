@@ -11,7 +11,7 @@
 // Its header definition and get_spell_work_chance line 505 establish the
 // canonical accessor boundary; Complete expands this bit test in the caller.
 DC_ADDRESS(0x04fd34, 0x20)
-inline unsigned char isMindSpell(int spell)
+inline bool isMindSpell(int spell)
 {
     return (g_spellTraits[spell].m_flags & 0x400) != 0;
 }
@@ -30,7 +30,7 @@ enum ESpellTargetFlags {
 };
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
-unsigned char initializeSpellTraitsTable();
+bool initializeSpellTraitsTable();
 
 // Mutable implementation storage filled from sptraits.txt. The public
 // akSpellTraits pointer/reference cell is at 0x687f58; retail writes this

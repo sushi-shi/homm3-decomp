@@ -200,7 +200,7 @@ public:
     // exact standalone body and avoids a byte temporary in Update's expansion.
     VA(0x005112c0, 0x1C)  // exact selected COMDAT
     DC_ADDRESS(0x101d58, 0x2a)
-    unsigned char isJoinDisabled()
+    bool isJoinDisabled()
     {
         if (m_flags & 0x20)
             return 1;
@@ -212,7 +212,7 @@ public:
     }
 
     DC_ADDRESS(0x101d84, 0x14)
-    unsigned char isPasswordProtected()
+    bool isPasswordProtected()
     {
         if (m_flags & 0x400)
             return 1;
@@ -281,7 +281,7 @@ public:
     // early size guard, conditional delete, allocation, and size store; retail's
     // inlined cmp/jb fixes this equivalent operand order.
     DC_ADDRESS(0x08bdcc, 0x40)
-    unsigned char allocSize(unsigned long dSize)
+    bool allocSize(unsigned long dSize)
     {
         if (dSize < m_dataSize)
             return 1;
@@ -293,7 +293,7 @@ public:
     }
 
     DC_ADDRESS(0x08be0c, 0x2c)
-    unsigned char destroy()
+    bool destroy()
     {
         if (!m_data)
             return 0;
@@ -396,55 +396,55 @@ class CDPlay {
 public:
     CDPlay();
     virtual ~CDPlay();
-    virtual unsigned char init();
-    virtual unsigned char initConnection(CDPlayConnection* connection);
-    virtual unsigned char hostSession(char* sessionName,
+    virtual bool init();
+    virtual bool initConnection(CDPlayConnection* connection);
+    virtual bool hostSession(char* sessionName,
         unsigned long flags, unsigned long maxPlayers, char* password);
-    virtual unsigned char joinSession(GUID* sessionGuid, char* password);
-    virtual unsigned char startSession(unsigned long groupId);
-    virtual unsigned char closeSession();
+    virtual bool joinSession(GUID* sessionGuid, char* password);
+    virtual bool startSession(unsigned long groupId);
+    virtual bool closeSession();
     virtual unsigned long createPlayer(char* playerName, void* data,
         unsigned long size, void* eventHandle);
-    virtual unsigned char destroyPlayer(unsigned long playerId);
+    virtual bool destroyPlayer(unsigned long playerId);
     virtual unsigned long createGroup(char* groupName, void* data,
-        unsigned long size, unsigned char stagingArea);
-    virtual unsigned char destroyGroup(unsigned long groupId);
-    virtual unsigned char deleteGroupFromGroup(unsigned long parentId,
+        unsigned long size, bool stagingArea);
+    virtual bool destroyGroup(unsigned long groupId);
+    virtual bool deleteGroupFromGroup(unsigned long parentId,
         unsigned long groupId);
-    virtual unsigned char setGroupName(unsigned long groupId, char* shortName,
+    virtual bool setGroupName(unsigned long groupId, char* shortName,
         char* longName, unsigned long flags);
-    virtual unsigned char setGroupData(unsigned long groupId, void* data,
+    virtual bool setGroupData(unsigned long groupId, void* data,
         unsigned long size, unsigned long flags);
-    virtual unsigned char setPlayerName(unsigned long playerId,
+    virtual bool setPlayerName(unsigned long playerId,
         char* shortName, char* longName, unsigned long flags);
-    virtual unsigned char setPlayerData(unsigned long playerId, void* data,
+    virtual bool setPlayerData(unsigned long playerId, void* data,
         unsigned long size, unsigned long flags);
     virtual void* getGroupData(unsigned long groupId, unsigned long* size,
         unsigned long flags);
-    virtual unsigned char getGroupName(unsigned long groupId, char* shortName,
+    virtual bool getGroupName(unsigned long groupId, char* shortName,
         int maxShort, char* longName, int maxLong);
     virtual void* getPlayerData(unsigned long playerId, unsigned long* size,
         unsigned long flags);
-    virtual unsigned char getPlayerName(unsigned long playerId,
+    virtual bool getPlayerName(unsigned long playerId,
         char* shortName, int maxShort, char* longName, int maxLong);
     virtual unsigned long createGroupInGroup(unsigned long parentId,
         char* groupName, void* data, unsigned long size,
-        unsigned char stagingArea);
-    virtual unsigned char addPlayerToGroup(unsigned long groupId,
+        bool stagingArea);
+    virtual bool addPlayerToGroup(unsigned long groupId,
         unsigned long playerId);
-    virtual unsigned char deletePlayerFromGroup(unsigned long groupId,
+    virtual bool deletePlayerFromGroup(unsigned long groupId,
         unsigned long playerId);
-    virtual unsigned char updateSessionDesc(DPSESSIONDESC2* session);
+    virtual bool updateSessionDesc(DPSESSIONDESC2* session);
     virtual DPSESSIONDESC2* getCurrSession();
-    virtual unsigned char enumConnections(
+    virtual bool enumConnections(
         CAutoArray<CDPlayConnection>* connections);
-    virtual unsigned char enumSessions(CAutoArray<CDPlaySession>* sessions,
+    virtual bool enumSessions(CAutoArray<CDPlaySession>* sessions,
         unsigned long timeout, unsigned long flags);
-    virtual unsigned char enumGroups(CAutoArray<CDPlayGroup>* groups,
+    virtual bool enumGroups(CAutoArray<CDPlayGroup>* groups,
         GUID* instance, unsigned long flags);
-    virtual unsigned char enumPlayers(CAutoArray<CDPlayPlayer>* players,
+    virtual bool enumPlayers(CAutoArray<CDPlayPlayer>* players,
         GUID* instance, unsigned long flags);
-    virtual unsigned char enumGroupPlayers(CAutoArray<CDPlayPlayer>* players,
+    virtual bool enumGroupPlayers(CAutoArray<CDPlayPlayer>* players,
         unsigned long groupId, GUID* instance, unsigned long flags);
 
     VA(0x00496c70, 0x21)
@@ -464,11 +464,11 @@ public:
     // E:\gamedcs\dxplay.h:375
     DC_ADDRESS(0x101d98, 0x6)
     long getLastError() { return m_res; }
-    virtual unsigned char send(void* data, unsigned long size,
-        unsigned long fromId, unsigned long toId, unsigned char guaranteed);
-    virtual unsigned char sendChat(char* message, unsigned long fromId,
+    virtual bool send(void* data, unsigned long size,
+        unsigned long fromId, unsigned long toId, bool guaranteed);
+    virtual bool sendChat(char* message, unsigned long fromId,
         unsigned long toId);
-    virtual unsigned char receive(unsigned long* fromId, unsigned long* toId,
+    virtual bool receive(unsigned long* fromId, unsigned long* toId,
         CDPlayMsg* message, unsigned long flags);
     virtual void getErrorDesc(long error, char* description);
 
@@ -478,10 +478,10 @@ public:
     {
         return m_isHost;
     }
-    virtual unsigned char flushReceiveQueue();
+    virtual bool flushReceiveQueue();
     virtual unsigned char* getPlayerAddress(
         unsigned long playerId, unsigned long* size);
-    virtual unsigned char getCaps(DPCAPS* caps, unsigned char guaranteed);
+    virtual bool getCaps(DPCAPS* caps, bool guaranteed);
     virtual unsigned char getSendQueueSize(
         unsigned long fromId, unsigned long toId,
         unsigned long* numMessages, unsigned long* numBytes);
@@ -493,16 +493,16 @@ protected:
 
     VA(0x00496cc0, 0x5)
     DC_ADDRESS(0x08bf14, 0x4)
-    virtual unsigned char receiveMsg(unsigned long from, unsigned long to, CDPlayMsg* msg)
+    virtual bool receiveMsg(unsigned long from, unsigned long to, CDPlayMsg* msg)
     {
         return 1;
     }
-    virtual unsigned char receiveSystemMsg(
+    virtual bool receiveSystemMsg(
         unsigned long toId, CDPlayMsg* message);
 
     VA(0x00496cd0, 0x5)
     DC_ADDRESS(0x08bf18, 0x4)
-    virtual unsigned char sysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* sysMsg, unsigned long toID)
+    virtual bool sysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* sysMsg, unsigned long toID)
     {
         return 1;
     }
@@ -512,7 +512,7 @@ protected:
     // in-class virtual defaults remain distinct source methods.
     // Original: CDPlay::SysMsgAddPlayerToGroup; dxplay.h:441
     DC_ADDRESS(0x08bf1c, 0x4)
-    virtual unsigned char sysMsgAddPlayerToGroup(
+    virtual bool sysMsgAddPlayerToGroup(
         DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId)
     {
         return 1;
@@ -520,7 +520,7 @@ protected:
 
     // Original: CDPlay::SysMsgChat; dxplay.h:442
     DC_ADDRESS(0x08bf20, 0x4)
-    virtual unsigned char sysMsgChat(
+    virtual bool sysMsgChat(
         DPMSG_CHAT* message, unsigned long toId)
     {
         return 1;
@@ -528,7 +528,7 @@ protected:
 
     // Original: CDPlay::SysMsgDeleteGroupFromGroup; dxplay.h:443
     DC_ADDRESS(0x08bf24, 0x4)
-    virtual unsigned char sysMsgDeleteGroupFromGroup(
+    virtual bool sysMsgDeleteGroupFromGroup(
         DPMSG_ADDGROUPTOGROUP* message, unsigned long toId)
     {
         return 1;
@@ -536,7 +536,7 @@ protected:
 
     // Original: CDPlay::SysMsgDeletePlayerFromGroup; dxplay.h:444
     DC_ADDRESS(0x08bf28, 0x4)
-    virtual unsigned char sysMsgDeletePlayerFromGroup(
+    virtual bool sysMsgDeletePlayerFromGroup(
         DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId)
     {
         return 1;
@@ -544,7 +544,7 @@ protected:
 
     // Original: CDPlay::SysMsgSecureMessage; dxplay.h:445
     DC_ADDRESS(0x08bf2c, 0x4)
-    virtual unsigned char sysMsgSecureMessage(
+    virtual bool sysMsgSecureMessage(
         DPMSG_SECUREMESSAGE* message, unsigned long toId)
     {
         return 1;
@@ -552,7 +552,7 @@ protected:
 
     // Original: CDPlay::SysMsgSessionLost; dxplay.h:446
     DC_ADDRESS(0x08bf30, 0x4)
-    virtual unsigned char sysMsgSessionLost(
+    virtual bool sysMsgSessionLost(
         DPMSG_GENERIC* message, unsigned long toId)
     {
         return 1;
@@ -560,7 +560,7 @@ protected:
 
     // Original: CDPlay::SysMsgSetPlayerOrGroupData; dxplay.h:447
     DC_ADDRESS(0x08bf34, 0x4)
-    virtual unsigned char sysMsgSetPlayerOrGroupData(
+    virtual bool sysMsgSetPlayerOrGroupData(
         DPMSG_SETPLAYERORGROUPDATA* message, unsigned long toId)
     {
         return 1;
@@ -568,7 +568,7 @@ protected:
 
     // Original: CDPlay::SysMsgSetPlayerOrGroupName; dxplay.h:448
     DC_ADDRESS(0x08bf38, 0x4)
-    virtual unsigned char sysMsgSetPlayerOrGroupName(
+    virtual bool sysMsgSetPlayerOrGroupName(
         DPMSG_SETPLAYERORGROUPNAME* message, unsigned long toId)
     {
         return 1;
@@ -576,7 +576,7 @@ protected:
 
     // Original: CDPlay::SysMsgSetSessionDesc; dxplay.h:449
     DC_ADDRESS(0x08bf3c, 0x4)
-    virtual unsigned char sysMsgSetSessionDesc(
+    virtual bool sysMsgSetSessionDesc(
         DPMSG_SETSESSIONDESC* message, unsigned long toId)
     {
         return 1;
@@ -584,16 +584,16 @@ protected:
 
     // Original: CDPlay::SysMsgStartSession; dxplay.h:450
     DC_ADDRESS(0x08bf40, 0x4)
-    virtual unsigned char sysMsgStartSession(
+    virtual bool sysMsgStartSession(
         DPMSG_STARTSESSION* message, unsigned long toId)
     {
         return 1;
     }
-    virtual unsigned char sysMsgHost(
+    virtual bool sysMsgHost(
         DPMSG_GENERIC* message, unsigned long toId);
-    virtual unsigned char sysMsgCreatePlayerOrGroup(
+    virtual bool sysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
-    virtual unsigned char sysMsgDestroyPlayerOrGroup(
+    virtual bool sysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
 
 public:
@@ -622,13 +622,13 @@ protected:
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
     // these virtuals through the lpContext object; keep them reachable without
     // reordering (vtable slots 58-61 are unchanged).
-    virtual unsigned char addGroupEnum(
+    virtual bool addGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
-    virtual unsigned char addPlayerEnum(
+    virtual bool addPlayerEnum(
         unsigned long playerId, const DPNAME* name, unsigned long flags);
-    virtual unsigned char addSessionEnum(
+    virtual bool addSessionEnum(
         const DPSESSIONDESC2* session, unsigned long flags);
-    virtual unsigned char addConnectionEnum(
+    virtual bool addConnectionEnum(
         const GUID* serviceProvider, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
@@ -655,7 +655,7 @@ class CDPlayLobby : public CDPlay {
 public:
     CDPlayLobby();
     virtual ~CDPlayLobby();
-    virtual unsigned char init();
+    virtual bool init();
     virtual unsigned char registerApp(
         char* appName, char* fileName, char* commandLine,
         GUID appGuid, char* executableName);
@@ -669,37 +669,37 @@ public:
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
     DPLCONNECTION* getConnectionSettings(
         unsigned long appId, unsigned long* size);
-    unsigned char setConnectionSettings(
+    bool setConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
-    unsigned char connect();
-    unsigned char sendStandardLobbyMsg(unsigned long appId, void* data,
+    bool connect();
+    bool sendStandardLobbyMsg(unsigned long appId, void* data,
                                        unsigned long size);
-    unsigned char sendLobbyMsg(unsigned long appId, void* data, unsigned long size);
-    unsigned char receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg);
+    bool sendLobbyMsg(unsigned long appId, void* data, unsigned long size);
+    bool receiveLobbyMsg(unsigned long appId, CDPlayMsg* msg);
     bool testLobbied();
-    virtual unsigned char enumLobbyConnections(
+    virtual bool enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
-    virtual unsigned char setGroupConnectionSettings(
+    virtual bool setGroupConnectionSettings(
         unsigned long groupId, DPLCONNECTION* connection);
     virtual DPLCONNECTION* getGroupConnectionSettings(
         unsigned long groupId);
-    virtual unsigned char enumGroupsInGroup(
+    virtual bool enumGroupsInGroup(
         CAutoArray<CDPlayGroup>* groups,
         unsigned long parentId, unsigned long flags);
-    virtual unsigned char enumGroupPlayers(
+    virtual bool enumGroupPlayers(
         CAutoArray<CDPlayPlayer>* players,
         unsigned long groupId, unsigned long flags);
-    virtual unsigned char enumGroupPlayersRemote(
+    virtual bool enumGroupPlayersRemote(
         CAutoArray<CDPlayPlayer>* players, unsigned long groupId,
         GUID* instance, unsigned long flags);
-    virtual unsigned char enumAddress(
+    virtual bool enumAddress(
         void* connection, unsigned long size,
         CAutoArray<CDPlayAddressElement>* addresses);
-    virtual unsigned char getIPAddress(
+    virtual bool getIPAddress(
         unsigned long playerId, char* ipAddress);
 
 protected:
-    virtual unsigned char handleSystemLobbyMsg(
+    virtual bool handleSystemLobbyMsg(
         unsigned long appId, CDPlayMsg* message);
 
 public:
@@ -711,7 +711,7 @@ protected:
     void* m_lobby;  // +0x58
     CAutoArray<CDPlayAddressElement>* m_addressArray;  // +0x5c
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
-    virtual unsigned char addAddressEnum(
+    virtual bool addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
 
 };

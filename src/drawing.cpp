@@ -22,6 +22,7 @@
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "town.h"
@@ -570,7 +571,7 @@ void combatManager::updateMouseGrid(int iNewMouseGridIndex,
 
 // E:\gamedcs\drawing.cpp:1141
 // RETAIL_LOCATED(0x00494440, 0x7d5): not reconstructed; anchor-global, dc 0x84e2c
-void combatManager::drawFrame(unsigned char update, unsigned char bLimitCreatureEffect, unsigned char bLimitDraw, int iDelay, unsigned char bRefreshBackground, unsigned char bDoDelayTil)
+void combatManager::drawFrame(bool update, bool bLimitCreatureEffect, bool bLimitDraw, int iDelay, bool bRefreshBackground, bool bDoDelayTil)
 {
     // @stub
 }
@@ -591,35 +592,35 @@ void combatManager::drawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
 
 // E:\gamedcs\drawing.cpp:1661
 // RETAIL_LIVE(0x00495090, 0x114): reconstructed below; dc caller edge, dc 0x85978
-int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, bool isFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1699
 // RETAIL_LIVE(0x004951b0, 0xfd): reconstructed below; caller-edge, dc 0x85a48
-int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, unsigned char isFlipped, int iColor)
+int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, bool isFlipped, int iColor)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1772
 // RETAIL_LIVE(0x004952b0, 0xfb): reconstructed below; caller-edge, dc 0x85c2c
-int combatManager::drawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+int combatManager::drawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, bool isFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1804
 // RETAIL_LIVE(0x004953b0, 0x144): reconstructed below; caller-edge, dc 0x85d00
-int combatManager::drawSpellEffect(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped, unsigned char isAlpha)
+int combatManager::drawSpellEffect(const CSprite* sprite, int frame, int x, int y, bool isFlipped, bool isAlpha)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1836
 // RETAIL_LIVE(0x00495500, 0x142): reconstructed below; caller-edge, dc 0x85e3c
-int combatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped)
+int combatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int y, bool isFlipped)
 {
     // @stub
 }
@@ -1006,6 +1007,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // are VC6 byte-flat at 98.0274%; all 117 blocks, 75 branches and 31 calls
 // align. The by-value update's scratch selection still adds an EDI save;
 // preserve the canonical helper instead of pasting its four arguments.
+// DC 1376-1384 and Mac 0xa65ec..0xa6690 test the limited update first and
+// call the plain updateCombatArea from its else arm (VC6 byte-flat).
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)
 DC_ADDRESS(0x084e2c, 0x5c8)
@@ -1183,13 +1186,12 @@ void combatManager::drawFrame(bool update,
     }
 
     if (update) {
-        if (!limitCreatureEffect && !limitDraw) {
+        if (limitCreatureEffect || limitDraw) {
+            m_extent.clip(combatManager::s_combatAreaLimits);
+            updateCombatArea(m_extent);
+        } else {
             updateCombatArea();
-            return;
         }
-
-        m_extent.clip(combatManager::s_combatAreaLimits);
-        updateCombatArea(m_extent);
     }
 
     if (limitCreatureEffect || limitDraw)
@@ -2132,7 +2134,7 @@ void combatManager::computeMaxExtent()
 
 // E:\gamedcs\drawing.cpp:2214
 // RETAIL_LOCATED(0x00495f50, 0x17c): not reconstructed; dc-bracket forced, dc 0x866ac
-void combatManager::computeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, unsigned char SaveBiggestExtent)
+void combatManager::computeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, bool SaveBiggestExtent)
 {
     // @stub
 }

@@ -13,6 +13,7 @@
 #include "game.h"
 #include "iconwdgt.h"
 #include "kb.h"
+#include "terrain.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"

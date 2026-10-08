@@ -22,15 +22,16 @@
 #include "mousemgr.h"
 #include "recruit.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "town.h"
 #include "tradpost.h"
 
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
-                              unsigned char equipped, unsigned char exact);
+                              bool equipped, bool exact);
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
-                        unsigned char exact);
+                        bool exact);
 void aiSetHeroBonuses(hero* ourHero);
 void aiEquipArtifacts(hero* currentHero);
 int aiChooseDestination(hero* currentHero, long maxDistance,
@@ -1027,7 +1028,7 @@ static int valueOfArena(const hero* currentHero, NewmapCell* cell)
 // call here, contrary to retail; CodeWarrior retains the call either way.
 DC_ADDRESS(0x110408, 0x16a)
 MAC_ADDRESS(0x142010, 0x1d8)
-static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
+static int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 {
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
             >= HERO_BACKPACK_CAPACITY)
@@ -1101,7 +1102,7 @@ static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 // CodeWarrior retains the call with either declaration.
 DC_ADDRESS(0x1105d8, 0x230)
 MAC_ADDRESS(0x1422c4, 0x2d8)
-static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
+static int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
 {
     // Both native builds initialize value before the retained data accessor.
     int value = 0;
@@ -1225,6 +1226,11 @@ int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 // the local creature swapper, the same-owner and same-team arms, and the
 // combat fallback. Complete adds the removable-troops and early-campaign
 // gates plus the Angelic Alliance input used by its widened swapper method.
+// Mac aiValueOfEvent calls this helper (and valueOfIdol) out of line, like
+// the ten ordinary event helpers around them, but dropping inline here or on
+// valueOfIdol lowers VC6 aiValueOfEvent 96.69 -> 92.23 / 91.08%: retail VC6
+// still expands both, so their inline qualifier stays pending a source model
+// that supplies that budget.
 DC_ADDRESS(0x110cf8, 0xbc)
 MAC_ADDRESS(0x142c74, 0x164)
 inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
@@ -1311,7 +1317,7 @@ int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 // into the event arm without changing that shape.
 DC_ADDRESS(0x111028, 0x32)
 MAC_ADDRESS(0x142fac, 0x34)
-inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
+int valueOfLeanTo(NewmapCell* cell, playerData* player)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
@@ -1328,7 +1334,7 @@ inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
 // movement-cost guard around the friendly-army increase check.
 DC_ADDRESS(0x111328, 0x1cc)
 MAC_ADDRESS(0x1432e8, 0x2e8)
-inline long valueOfHeroEvent(const hero* currentHero,
+long valueOfHeroEvent(const hero* currentHero,
                                        NewmapCell* cell, short x, short y,
                                        short z, short moveCost)
 {
@@ -1398,7 +1404,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
 // Complete's elemental-upgrade restriction.
 DC_ADDRESS(0x1114f4, 0x13a)
 MAC_ADDRESS(0x1435d0, 0x298)
-inline long valueOfHillFort(const hero* currentHero,
+long valueOfHillFort(const hero* currentHero,
                                       long moveCost)
 {
     int funds[NUM_RESOURCES];
@@ -1448,7 +1454,7 @@ inline long valueOfHillFort(const hero* currentHero,
 // two power values, two knowledge values, and one tenth of the army value.
 DC_ADDRESS(0x11173c, 0x94)
 MAC_ADDRESS(0x143aa4, 0xb0)
-inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
+int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_libraryFlags & (1UL << cell->m_extraInfo))
         return 0;
@@ -1467,7 +1473,7 @@ inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 // the same OnSameTeam boundary.
 DC_ADDRESS(0x1117d0, 0x36)
 MAC_ADDRESS(0x143b54, 0x80)
-inline int valueOfLighthouse(NewmapCell* cell)
+int valueOfLighthouse(NewmapCell* cell)
 {
     if (g_game->onSameTeam(
             g_game->getMine(cell->m_extraInfo)->m_playerOwner,
@@ -1482,7 +1488,7 @@ inline int valueOfLighthouse(NewmapCell* cell)
 // and retains the static experience accessor call.
 DC_ADDRESS(0x1118f8, 0x78)
 MAC_ADDRESS(0x143cb8, 0x84)
-inline int valueOfMercenaryCamp(const hero* currentHero,
+int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell)
 {
     if (currentHero->m_mercCampFlags & (1UL << cell->m_extraInfo))
@@ -1513,7 +1519,7 @@ int valueOfMoveSource(const hero* currentHero, long flag,
 // both boundaries into AI_value_of_event's HUT_OF_MAGI arm.
 DC_ADDRESS(0x111e18, 0x1c)
 MAC_ADDRESS(0x1442e4, 0x14)
-inline long valueOfMagusHut(long playerId)
+long valueOfMagusHut(long playerId)
 {
     return g_aiPlayers[playerId].getMagusHutValue();
 }
@@ -1545,7 +1551,7 @@ int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
 // the helper/accessor but retains value_of_learning as a real call.
 DC_ADDRESS(0x1125ec, 0x1e)
 MAC_ADDRESS(0x144b3c, 0x2c)
-inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
+int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
@@ -2082,6 +2088,8 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // relocations agree. The only residual is two SIB base/index encodings in the
 // expanded upgradeCreatures debit loop: [edx+eax] versus retail [eax+edx],
 // including the following store at displacement -4. No semantic divergence.
+// compile-m: C2's phase flag at 0 gives retail exactly (phase-flag.md 7a), but
+// every function compiled above leaves 1; no source arrangement found yet.
 VA(0x005253d0, 0x60c)
 DC_ADDRESS(0x10e3f8, 0x280)
 MAC_ADDRESS(0x13f8dc, 0x368)  // MAC_ABSTRACTION_FROM(tokens1:46b741d4bc9b,95.5275): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
@@ -2909,7 +2917,7 @@ int aiVisitSirens(const hero* currentHero, armyGroup& army)
 VA(0x00527f60, 0x73)
 DC_ADDRESS(0x112dd4, 0x10c)
 MAC_ADDRESS(0x145890, 0xe0)
-unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
+bool aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
     TCreatureType type, short amount, long goldCost)
 {
     armyGroup monsterArmy(type, amount);
@@ -2923,7 +2931,7 @@ unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
 VA(0x00527fe0, 0x51)
 DC_ADDRESS(0x112ee0, 0x8a)
 MAC_ADDRESS(0x145970, 0xac)
-unsigned char aiChooseResourceOrExperience(const hero* currentHero,
+bool aiChooseResourceOrExperience(const hero* currentHero,
     EGameResource resource, int amount, int experience)
 {
     long experienceValue = static_cast<long>(
@@ -4202,7 +4210,7 @@ DC_ADDRESS(0x114a5c, 0x7e)
 MAC_ADDRESS(0x146e80, 0xf4)
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
     TSecondarySkill first, TSecondarySkill second,
-    unsigned char complexChoice)
+    bool complexChoice)
 {
     if ((ourHero->getSecondarySkill(first) > 0)
             == (ourHero->getSecondarySkill(second) > 0)) {

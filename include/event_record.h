@@ -265,7 +265,7 @@ public:
     virtual void replay(bool draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     type_record_show_hero(hero* who, char newOwner, type_point location,
-                          unsigned char onBoat);
+                          bool onBoat);
 
     DC_ADDRESS(0x08f118, 0x6c)
     type_record_show_hero() {}

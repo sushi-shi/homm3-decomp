@@ -15,6 +15,7 @@
 #include "message.h"
 #include "misc.h"
 #include "prefs.h"
+#include "terrain.h"
 #include "textresource.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
@@ -798,7 +799,7 @@ DC_ADDRESS(0x08d708, 0xb6)
 MAC_ADDRESS(0x0c0e4c, 0xb8)
 inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
                                                     type_point location,
-                                                    unsigned char onBoat)
+                                                    bool onBoat)
     : type_record_hide_hero(who, newOwner, 0)
 {
     m_previousBoat = (who->m_flags >> 18) & 1;
@@ -1161,7 +1162,7 @@ VA(0x0049cb20, 0x226)
 DC_ADDRESS(0x08e1d0, 0xa0)
 MAC_ADDRESS(0x0c2058, 0xe4)
 void game::recordShowHero(hero* who, signed char player, type_point point,
-                            unsigned char reset)
+                            bool reset)
 {
     m_eventRecords.push_back(new type_record_show_hero(who, player, point,
                                                      reset));
@@ -1209,7 +1210,7 @@ DC_ADDRESS(0x08e33c, 0x210)
 MAC_ADDRESS(0x0c2314, 0x3bc)  // anchor-global (0x63df7c + GetMapExtraPtr)
 void game::setVisibility(const int startX, const int startY, const int z,
                          const int whichPlayer,
-                         int range, unsigned char remoteMove)
+                         int range, bool remoteMove)
 {
     if (whichPlayer < 0 || whichPlayer >= 8)
         return;
@@ -1409,7 +1410,7 @@ void game::playRecordedEvents()
 VA(0x0049da70, 0x41)
 DC_ADDRESS(0x08ea88, 0x46)
 MAC_ADDRESS(0x0c2f98, 0x50)
-unsigned char game::replayAvailable() const
+bool game::replayAvailable() const
 {
     for (unsigned i = 0; i < m_eventRecords.size(); ++i) {
         if (m_eventRecords[i]->getPlayerId() != g_netLocalGamePos)

@@ -11,6 +11,7 @@
 #include "herospec.h"
 #include "kb.h"
 #include "quest.h"
+#include "terrain.h"
 
 // DC struct.h proves the const-reference comparison operators. Their canonical
 // definitions now live in struct.h; use them directly instead of TU-local
@@ -100,7 +101,7 @@ int aiResourceCost(const playerData* player, const int* resources);
 VA(0x0056a360, 0x9E)
 DC_ADDRESS(0x12b3f0, 0xb6)
 MAC_ADDRESS(0x1618b4, 0xe4)  // exhaustive search.obj order-map
-unsigned char checkAdjacentMonster(const hero* currentHero,
+bool checkAdjacentMonster(const hero* currentHero,
                                      pathCell& entryPoint,
                                      type_search_type searchType)
 {
@@ -317,7 +318,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
 VA(0x0056aad0, 0x68)
 DC_ADDRESS(0x12bbc8, 0x74)
 MAC_ADDRESS(0x162388, 0x104)
-unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
+bool searchArray::enterHostileTrigger(const hero* currentHero,
                                               pathCell& cell)
 {
     if (cell.m_point != cell.m_monster) {
@@ -359,7 +360,7 @@ unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
 VA(0x0056ab40, 0x50C)
 DC_ADDRESS(0x12bc3c, 0x29e)
 MAC_ADDRESS(0x16248c, 0x560)  // exhaustive search.obj order-map
-unsigned char searchArray::enterTrigger(const hero* currentHero,
+bool searchArray::enterTrigger(const hero* currentHero,
                                          pathCell& cell, long limit,
                                          type_search_type searchType)
 {
@@ -373,7 +374,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
         if (searchType < const_AI_search)
             return 0;
     case BORDER_GATE: {
-        unsigned char visited =
+        bool visited =
             (g_game->m_borderTentVisitFlags[mapCell->m_objectIndex]
              & g_curPlayerBit)
             != 0;
@@ -586,10 +587,10 @@ DC_ADDRESS(0x12c36c, 0x728)
 MAC_ADDRESS(0x1631a0, 0xbac)  // exhaustive search.obj order-map
 void searchArray::seedPosition(hero* currentHero, type_point start,
                                type_point target, int maxMobility,
-                               unsigned char isBoat,
+                               bool isBoat,
                                type_search_type searchType,
                                int curTempMobility,
-                               unsigned char seedContinuation)
+                               bool seedContinuation)
 {
     TSkillMastery pathfinding =
         currentHero->getSecondarySkill(eSecSkillPathfinding);
@@ -664,17 +665,19 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 
     if (!seedContinuation) {
         g_advManager->m_fullySeeded = 0;
-        int flyLevel;
+        // Mac 0x1634fc/0x163590 calls clear from each search-type arm;
+        // DC 708 records no fly-level local (VC6 byte-flat).
         if (searchType == const_normal_search) {
-            flyLevel = m_waterWalkLevel > eMasteryInvalid
-                        || m_flightLevel > eMasteryInvalid;
+            clear(m_waterWalkLevel > eMasteryInvalid
+                      || m_flightLevel > eMasteryInvalid,
+                  0, g_game->getNumMapLevels());
         } else {
-            flyLevel = m_waterWalkLevel > eMasteryInvalid
-                        || m_flightLevel > eMasteryInvalid
-                        || m_canCastTeleport || m_canCastFlight
-                        || m_canCastWaterWalk;
+            clear(m_waterWalkLevel > eMasteryInvalid
+                      || m_flightLevel > eMasteryInvalid
+                      || m_canCastTeleport || m_canCastFlight
+                      || m_canCastWaterWalk,
+                  0, g_game->getNumMapLevels());
         }
-        clear(flyLevel, 0, g_game->getNumMapLevels());
     }
 
     g_advManager->m_seedingValid = 1;

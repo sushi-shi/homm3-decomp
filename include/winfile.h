@@ -55,15 +55,15 @@ public:
 
     // Defined inline in winfile.cpp: no retail body, it survives only
     // inlined into Delete and Open as `_access(sFilename, 0) == 0`.
-    static unsigned char exists(const char* filename);
+    static bool exists(const char* filename);
     static unsigned char deleteFile(const char* filename);
-    unsigned char rename(char* oldName, char* newName);                      // dc 0x198508, no retail body
-    unsigned char setAttribute(char* filename, FileAttribute fileAttribute);  // dc 0x198544, no retail body
+    bool rename(char* oldName, char* newName);                      // dc 0x198508, no retail body
+    bool setAttribute(char* filename, FileAttribute fileAttribute);  // dc 0x198544, no retail body
     FileAttribute getAttribute(char* filename);
 
-    virtual unsigned char close();
-    virtual unsigned char open(const char* filename, FileMode mode);
-    virtual unsigned char isOpen();
+    virtual bool close();
+    virtual bool open(const char* filename, FileMode mode);
+    virtual bool isOpen();
     virtual unsigned long read(void* data, unsigned long dBytes);
     virtual unsigned long write(void* data, unsigned long dBytes);
     virtual unsigned long seek(unsigned long dBytesToSeek, unsigned long dStart);
@@ -109,18 +109,18 @@ class CFindFile {
 public:
     CFindFile();                              // dc 0x198748
     ~CFindFile();                             // dc 0x198768
-    unsigned char findFile(const char* fileName);  // dc 0x198778
-    unsigned char findNext();                 // dc 0x19877c
+    bool findFile(const char* fileName);  // dc 0x198778
+    bool findNext();                 // dc 0x19877c
     void close();                             // dc 0x198798
     unsigned long getLength();                // dc 0x1987bc
     char* getFilename();                      // dc 0x1987d4
-    unsigned char isReadOnly();               // dc 0x1987dc
-    unsigned char isSystem();                 // dc 0x1987ec
-    unsigned char isNormal();                 // dc 0x1987fc
-    unsigned char isDots();                   // dc 0x198810
-    unsigned char isDirectory();              // dc 0x198814
-    unsigned char isHidden();                 // dc 0x198830
-    unsigned char isArchived();               // dc 0x198840
+    bool isReadOnly();               // dc 0x1987dc
+    bool isSystem();                 // dc 0x1987ec
+    bool isNormal();                 // dc 0x1987fc
+    bool isDots();                   // dc 0x198810
+    bool isDirectory();              // dc 0x198814
+    bool isHidden();                 // dc 0x198830
+    bool isArchived();               // dc 0x198840
 
 protected:
     void* m_searchHandle;

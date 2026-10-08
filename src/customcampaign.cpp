@@ -42,6 +42,7 @@
 #include "smackmgr.h"
 #include "soundmgr.h"
 #include "sskilltraits.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "town.h"
 #include "winmgr.h"
@@ -341,6 +342,10 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 // Reversing the equivalent comparison to heroPower(candidate) >
 // heroPower(best) preserves those source calls but moves VC6 from 98.3704%
 // to 96.19%; keep the natural best-first expression and both helper sites.
+// Mac 0x91f1c..0x91f40 tests the first hero id against -1 only once, inside
+// getHero's expansion, and 0x91f6c..0x91f7c branches straight to the exit
+// for an owned hero (early-return owner test). Reusing `best` for the
+// chosen hero also matches Mac but drops VC6 to 92.11%.
 VA(0x004840d0, 0x155)
 MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
@@ -362,14 +367,14 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
     case CAMPAIGN_BONUS_HERO_FIRST:
         if (player->m_numHeroes == 0)
             return 0;
-        if (player->m_heroes[0] == -1)
-            return 0;
         return g_game->getHero(player->m_heroes[0]);
     case CAMPAIGN_BONUS_HERO_NONE:
         return 0;
     }
     hero* chosen = g_game->getHero(heroSelector);
-    return chosen->m_owner == whichPlayer ? chosen : 0;
+    if (chosen->m_owner != whichPlayer)
+        return 0;
+    return chosen;
 }
 
 // The two spell rows share the general-text pair 708/709: the campaign
@@ -1068,9 +1073,11 @@ int TCampaignStartCrossoverOption::getCount() const
 // Mac 0x93878, 0x9394c and 0x93bd8 expand the same choice-to-score lookup:
 // sign-extend the scenario byte, then read that score's crossover-pool index.
 // This option-owned accessor's name and private boundary are inferred.
-// All three callers are in this TU, supporting an ordinary source body;
-// keep the existing virtual getCrossoverPoolIndex as the public option interface.
-int TCampaignStartCrossoverOption::getCrossoverSlot(
+// All three callers are in this TU, supporting a source body; CodeWarrior
+// keeps an ordinary body out of line at -O3 and -O4, so Mac's expansions mark
+// it inline (VC6 byte-flat; pasting it drops getText 92.51 -> 66.90%).
+// Keep the existing virtual getCrossoverPoolIndex as the public option interface.
+inline int TCampaignStartCrossoverOption::getCrossoverSlot(
     const SCampaign& campaign, int which) const
 {
     return campaign.m_mapScores[m_choices[which].m_scenario].m_index;
@@ -2085,6 +2092,12 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 // in readPackedBits reproduces every other decision near cb 650..710; the
 // copy loop's legacy dereference still differs. DC and Mac show no extra
 // accessor calls in this Complete-only reader.
+// 2026-10-06: with readPackedBits' own decode loop (84.44 -> 89.67) and the
+// option records assigned straight to m_options instead of through a
+// `record` local (-> 90.63), retail still keeps bitset<145>'s
+// reference::operator=, the hero-option constructor and both option-vector
+// constructors called, and calls vector<unsigned char>::insert(P, x) from
+// push_back: this body still has more /Ob2 budget than retail's.
 VA(0x00487e40, 0x586)
 MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
@@ -2101,6 +2114,8 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
     prerequisiteBits = LITTLE_ENDIAN_LONG(prerequisiteBits);
     for (int prereq = 0; prereq < numScenarios; ++prereq) {
+        // Mac 0x961a8 calls the iterator-returning insert(end(), value) per
+        // bit; spelling that here drops VC6 89.67 -> 86.15%, so push_back stays.
         m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
     }
 
@@ -2156,19 +2171,15 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     }
 
     unsigned char optionType = readValue<unsigned char>(infile);
-    TCampaignStartOption* record;
     switch (optionType) {
     case CAMPAIGN_START_OPTION_BONUS:
-        record = new TCampaignStartBonusOption;
-        m_options = record;
+        m_options = new TCampaignStartBonusOption;
         break;
     case CAMPAIGN_START_OPTION_CROSSOVER:
-        record = new TCampaignStartCrossoverOption;
-        m_options = record;
+        m_options = new TCampaignStartCrossoverOption;
         break;
     case CAMPAIGN_START_OPTION_HERO:
-        record = new TCampaignStartHeroOption;
-        m_options = record;
+        m_options = new TCampaignStartHeroOption;
         break;
     default:
         m_options = 0;
@@ -2238,6 +2249,18 @@ MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
     clearScenarios();
+}
+
+// Complete expands this shared cleanup in both load and the destructor;
+// Mac retains it between them (0x96afc) and calls it from both.
+MAC_ADDRESS(0x096afc, 0x78)
+void TCampaignBrief::CampaignHeaderStruct::clearScenarios()
+{
+    for (unsigned int scenarioIndex = 0;
+         scenarioIndex < m_scenarios.size(); ++scenarioIndex)
+        delete m_scenarios[scenarioIndex];
+    m_scenarios.clear();
+    freeData();
 }
 
 // Complete-only; also reached from the custom-campaign list scanner
@@ -2335,7 +2358,10 @@ int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 // currentDirectory to the file-open scope leaves the score at 53.9715%.
 // Keep reads through TAbstractFile*: retail uses the virtual slot at +4.
 // Calling streamFile.read directly instead devirtualizes and expands them.
-void TCampaignBrief::CampaignHeaderStruct::readScenario(
+// Mac load expands this record step (new, ScenarioStruct::read, append)
+// with no readScenario call; inline is VC6 byte-flat, while pasting the
+// statements into load drops VC6 87.64 -> 78.68%.
+inline void TCampaignBrief::CampaignHeaderStruct::readScenario(
     TAbstractFile* file, int numScenarios)
 {
     TCampaignBrief::ScenarioStruct* scenario =

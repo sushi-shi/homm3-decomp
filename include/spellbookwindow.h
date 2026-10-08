@@ -110,7 +110,7 @@ public:
                      TSpellContext context, int magicTerrain);
     virtual ~TSpellbookWindow();
     virtual int open(int newPriority, bool update);
-    virtual void close(unsigned char update);
+    virtual void close(bool update);
 
     // E:\gamedcs\SpellbookWindow.h:222
     DC_ADDRESS(0x14d32c, 0x10)
@@ -187,7 +187,7 @@ private:
 
     std::string getSpellDescription(SpellID spell,
                                       const hero* currentHero,
-                                      unsigned char rollover);
+                                      bool rollover);
 
     int convertID2HelpID(int id) const;
     static int getPositionFromSchool(unsigned schoolMask);

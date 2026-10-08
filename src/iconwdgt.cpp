@@ -49,8 +49,8 @@ iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
 // source interface without writing that obsolete controller-state slot.
 DC_ADDRESS(0x0d93f4, 0x6e)
 void iconWidget::initialize(int x, int y, int w, int h, int id,
-    const char* image, int frame, int sequence, unsigned char flipped,
-    unsigned int backColor, int style, unsigned char focusable)
+    const char* image, int frame, int sequence, bool flipped,
+    unsigned int backColor, int style, bool focusable)
 {
     widget::initialize(x, y, w, h, id, style);
     m_sprite = ResourceManager::getSprite(image);

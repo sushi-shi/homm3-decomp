@@ -12,6 +12,7 @@
 #include "misc.h"
 #include "sample.h"
 #include "spells.h"
+#include "terrain.h"
 
 // Initial contents recovered from the pinned Complete image.
 DATA(0x00660858) long g_hypnotizeTurns[4] = { 1, 1, 2, 3 };
@@ -625,7 +626,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
 VA(0x00436840, 0xEA)
 DC_ADDRESS(0x03d440, 0xe2)
 MAC_ADDRESS(0x03e070, 0x1a0)
-unsigned char type_AI_attack_hex_chooser::findAttackHex()
+bool type_AI_attack_hex_chooser::findAttackHex()
 {
     m_bestValue = 0;
     m_bestHex = -1;
@@ -725,7 +726,7 @@ DC_ADDRESS(0x03d6f0, 0x72)
 MAC_ADDRESS(0x03e41c, 0x84)
 type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
                                                 combatManager* combat, long side,
-                                                unsigned char creatureSpell)
+                                                bool creatureSpell)
     : m_estimate(combat, side)
 {
     m_isCreatureSpell = creatureSpell;
@@ -762,7 +763,7 @@ VA(0x004369c0, 0x22B)
 DC_ADDRESS(0x03d604, 0xec)
 MAC_ADDRESS(0x03e330, 0xec)  // anchor-callee
 type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
-                                         unsigned char creatureSpell)
+                                         bool creatureSpell)
     : m_estimate(combat, side)
 {
     m_isCreatureSpell = creatureSpell;
@@ -798,7 +799,7 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // the condition also reproduces retail VC6's Teleport stack homes exactly.
 DC_ADDRESS(0x03d7b0, 0x86)
 MAC_ADDRESS(0x03e528, 0xd8)
-unsigned char type_AI_spellcaster::isLastAction() const
+bool type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
     for (long j = 0; j < g_combatManager->m_numArmies[m_side]; j++) {
@@ -816,7 +817,7 @@ unsigned char type_AI_spellcaster::isLastAction() const
 VA(0x00436c60, 0x1C4)
 DC_ADDRESS(0x03d838, 0x132)
 MAC_ADDRESS(0x03e600, 0x1d4) // MAC_ABSTRACTION_FROM(tokens1:aa0e7a89ae41,95.7265): isIncapacitated now reads durations through getSpellTime; native Mac 0x3e738 expands spell slots 62/70/74.
-unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
+bool type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 {
     if (m_estimate.m_killsOnly)
         return 1;
@@ -1855,7 +1856,7 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
 // forgetfulness, with defense boost passing zero for movedThisTurn.
 DC_ADDRESS(0x040130, 0x118)
 MAC_ADDRESS(0x042038, 0x94)
-double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
+double type_AI_spellcaster::getDuration(long turns, bool movedThisTurn) const
 {
     double result;
     if (turns >= m_estimate.m_roundsLeft)
@@ -3020,7 +3021,7 @@ void type_AI_spellcaster::checkSimulation()
 // ordinary helper into 0x43c800; the bracket has no retained body for it.
 DC_ADDRESS(0x042610, 0xa0)
 MAC_ADDRESS(0x0465d8, 0x8c)
-unsigned char type_AI_spellcaster::spellsNotRequired() const
+bool type_AI_spellcaster::spellsNotRequired() const
 {
     if (!m_winLikely)
         return 0;

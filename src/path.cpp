@@ -9,7 +9,7 @@
 VA(0x005239d0, 0x96)
 DC_ADDRESS(0x10c918, 0x8a)
 MAC_ADDRESS(0x13cd64, 0xe8)
-int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)
+int army::findPath(int fpTargetCellIndex, int maxMoves, bool moveUnlimited, bool literalTarget)
 {
     if (!combatManager::validHex(fpTargetCellIndex))
         return 0;
@@ -29,7 +29,7 @@ int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimi
 VA(0x00523a70, 0xA8)
 DC_ADDRESS(0x10c9a4, 0x48)
 MAC_ADDRESS(0x13ce4c, 0x9c)
-unsigned char army::validPath(int destIndex, unsigned char literalTest)
+bool army::validPath(int destIndex, bool literalTest)
 {
     if (!combatManager::validHex(destIndex))
         return 0;

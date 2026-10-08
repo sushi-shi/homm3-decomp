@@ -27,7 +27,7 @@
 
 class CTextEntrySave : public Bitmap16Bit {
 private:
-    unsigned char m_saved;  // Original project spelling: bSaved; retail +0x38.
+    bool m_saved;  // Original project spelling: bSaved; retail +0x38.
 
 public:
     // E:\gamedcs\textntry.cpp:38 ()
@@ -44,7 +44,7 @@ public:
 
     // E:\gamedcs\textntry.cpp:50
     DC_ADDRESS(0x16377c, 0xa)
-    unsigned char isSaved() { return m_saved; }
+    bool isSaved() { return m_saved; }
 };
 
 // Original: textEntryWidget::textEntryWidget; textntry.cpp:60
@@ -547,7 +547,7 @@ void textEntryWidget::saveBackground() const
 VA(0x005bbac0, 0x82)
 DC_ADDRESS(0x16367c, 0x90)
 MAC_ADDRESS(0x1b08a0, 0x8c)
-void textEntryWidget::setAutoDraw(unsigned char b)
+void textEntryWidget::setAutoDraw(bool b)
 {
     m_autoDraw = b;
     if (b && !m_textBack && !m_saveBack)

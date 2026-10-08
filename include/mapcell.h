@@ -803,7 +803,7 @@ public:
     void setWagon(TArtifact artifact);
     void emptyTomb();
     TArtifact getTombArtifact() const;
-    unsigned char tombIsFull() const;
+    bool tombIsFull() const;
     void setTomb(TArtifact artifact);
     short getWheelGold() const;
     void setWheelGold(short amount);
@@ -1347,6 +1347,10 @@ private:
     NewmapCell* zCell(int x, int y, int z);
 
 public:
+    // DC Init/Load/Read/Save(..., bool) declare two_layers bool. Complete's
+    // callers push NewSMapHeader::m_hasTwoLayers unchanged; a bool parameter
+    // with the byte field normalizes it (game::load 100 -> 99.79), and a bool
+    // field too drops NewSMapHeader::load and game.obj's bitset<8>::set body.
     int load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
     int save(TAbstractFile* outfile, int size, unsigned char twoLayers);
@@ -1497,7 +1501,7 @@ public:
     ~NewfullMap();
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
     void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
-    int placeObject(int objectIndex, unsigned char setExtraInfo);
+    int placeObject(int objectIndex, bool setExtraInfo);
     int placeObjects();
 };
 
@@ -1912,7 +1916,7 @@ inline TArtifact ExtraInfoUnion::getTombArtifact() const
 }
 
 DC_ADDRESS(0x09c9b0, 0x6)
-inline unsigned char ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
+inline bool ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
 
 // DC 1209..1211 writes artifact, fullness, visit bits. Complete widens
 // the artifact to ten bits; RandomizeEvents expands all three stores.

@@ -46,7 +46,7 @@ public:
 
     TSplitWindow(int x2, int y2, TCreatureType thisArmy);
     virtual ~TSplitWindow();
-    void updateSplitArmy(unsigned char update);
+    void updateSplitArmy(bool update);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);
 };

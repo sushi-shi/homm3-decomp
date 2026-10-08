@@ -79,34 +79,34 @@ extern const char* g_specialBuildingNames[10][11];
 // 0x6a74f0. The faction-name subtable starts at element one (0x6a74f4).
 extern const char* g_townTypeNames[10];
 
-unsigned char initializeGeneralText();               // 0x5b90f0
-unsigned char initializeCustomCampaignText();        // 0x5b9110
-unsigned char initializeMineEventText();             // 0x5b9150
-unsigned char initializeCampaignRegionNames();       // 0x5b9180
-unsigned char initializeHighScoreDefaults();         // 0x5b91d0
-unsigned char initializeTerrainNames();              // 0x5b92a0
-unsigned char initializeAdvObjNames();               // 0x5b92d0
-unsigned char initializeResourceNames();             // 0x5b9310
-unsigned char initializeMineNames();                 // 0x5b9340
-unsigned char initializePlayerColors();              // 0x5b9370
-unsigned char initializePrimaryStatNames();          // 0x5b93c0
-unsigned char initializeSecondarySkillLevelNames();  // 0x5b93f0
-unsigned char initializeNeutralBuildingText();       // 0x5b9450
-unsigned char initializeSpecialBuildingText();       // 0x5b94e0
-unsigned char initializeDwellingText();              // 0x5b9570
-unsigned char initializeTownNameText();              // 0x5b9600
-unsigned char initializeHeroBioText();               // 0x5b9680
-unsigned char initializeCastleText();                // 0x5b96c0
-unsigned char initializeTavernText();                // 0x5b96f0
-unsigned char initializeHallText();                  // 0x5b9720
-unsigned char initializeTownText();                  // 0x5b9750
-unsigned char initializeOverviewText();              // 0x5b9790
-unsigned char initializeHeroText();                  // 0x5b97c0
-unsigned char initializeCampaignDialogText();        // 0x5b9800
-unsigned char initializeCreditsText();               // 0x5b9840
+bool initializeGeneralText();               // 0x5b90f0
+bool initializeCustomCampaignText();        // 0x5b9110
+bool initializeMineEventText();             // 0x5b9150
+bool initializeCampaignRegionNames();       // 0x5b9180
+bool initializeHighScoreDefaults();         // 0x5b91d0
+bool initializeTerrainNames();              // 0x5b92a0
+bool initializeAdvObjNames();               // 0x5b92d0
+bool initializeResourceNames();             // 0x5b9310
+bool initializeMineNames();                 // 0x5b9340
+bool initializePlayerColors();              // 0x5b9370
+bool initializePrimaryStatNames();          // 0x5b93c0
+bool initializeSecondarySkillLevelNames();  // 0x5b93f0
+bool initializeNeutralBuildingText();       // 0x5b9450
+bool initializeSpecialBuildingText();       // 0x5b94e0
+bool initializeDwellingText();              // 0x5b9570
+bool initializeTownNameText();              // 0x5b9600
+bool initializeHeroBioText();               // 0x5b9680
+bool initializeCastleText();                // 0x5b96c0
+bool initializeTavernText();                // 0x5b96f0
+bool initializeHallText();                  // 0x5b9720
+bool initializeTownText();                  // 0x5b9750
+bool initializeOverviewText();              // 0x5b9790
+bool initializeHeroText();                  // 0x5b97c0
+bool initializeCampaignDialogText();        // 0x5b9800
+bool initializeCreditsText();               // 0x5b9840
 // Complete-only: tentcolr.txt, the border-guard tent colour names.
 unsigned char initializeTentColorText();             // 0x5b9880
-unsigned char initializeHelpText();                  // 0x5b98b0
-unsigned char initializeArrayText();                 // 0x5b9cc0
+bool initializeHelpText();                  // 0x5b98b0
+bool initializeArrayText();                 // 0x5b9cc0
 
 #endif  /* HOMM3_TEXT_H */

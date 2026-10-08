@@ -26,11 +26,11 @@ extern int g_heroLimits[5];
 extern int g_globalLimits[5];
 
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
-                              unsigned char equipped, unsigned char exact);
+                              bool equipped, bool exact);
 long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
 void aiSwapArtifacts(hero* source, hero* destination);
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
-                        unsigned char exact);
+                        bool exact);
 // This overload values the artifact across a player's heroes. CodeView
 // proves the const reference and long player id; retail retains 0x433aa0.
 // E:\gamedcs\ai_player.cpp:5684
@@ -300,8 +300,8 @@ class type_artifact_effect {
 public:
     type_artifact_effect();
     virtual ~type_artifact_effect();
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const = 0;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const = 0;
 };
 
 // Dreamcast names this table `const_artifact_effects`; retail indexes the
@@ -346,38 +346,38 @@ extern const int g_aiArtifactEffectDefinitions[];
 class type_scouting_artifact : public type_artifact_effect {
 public:
     type_scouting_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     long m_bonus;
 };
 
 class type_combat_artifact : public type_artifact_effect {
 public:
     type_combat_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     long m_bonus;
 };
 
 class type_might_artifact : public type_combat_artifact {
 public:
     type_might_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_power_artifact : public type_combat_artifact {
 public:
     type_power_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_knowledge_artifact : public type_combat_artifact {
 public:
     type_knowledge_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 // The recovered Complete type inventory names this no-data base. Mac retains
@@ -387,64 +387,64 @@ public:
 class type_base_necromancy_artifact : public type_combat_artifact {
 public:
     type_base_necromancy_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                          unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                          bool exact) const;
 };
 
 class type_necromancy_artifact : public type_base_necromancy_artifact {
 public:
     type_necromancy_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_movement_artifact : public type_combat_artifact {
 public:
     type_movement_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_spellcaster_artifact : public type_combat_artifact {
 public:
     type_spellcaster_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_morale_artifact : public type_combat_artifact {
 public:
     type_morale_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_luck_artifact : public type_combat_artifact {
 public:
     type_luck_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_antimorale_artifact : public type_artifact_effect {
 public:
     type_antimorale_artifact();
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_antiluck_artifact : public type_artifact_effect {
 public:
     type_antiluck_artifact();
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_creature_growth_artifact : public type_artifact_effect {
 public:
     type_creature_growth_artifact(long newLevel, long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     // This concrete type's +4 word is its dwelling level; its growth bonus
     // is the second constructor argument stored at +8.
     long m_bonus;
@@ -455,30 +455,30 @@ class type_undead_king_cloak_artifact
     : public type_base_necromancy_artifact {
 public:
     type_undead_king_cloak_artifact();
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_duration_artifact : public type_power_artifact {
 public:
     type_duration_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_school_artifact : public type_power_artifact {
 public:
     type_school_artifact(TSpellSchool newSchool, long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     TSpellSchool m_school;
 };
 
 class type_antimagic_artifact : public type_artifact_effect {
 public:
     type_antimagic_artifact(long maxLevel);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     long m_bonus;
 };
 
@@ -489,44 +489,44 @@ public:
 class type_spell_artifact : public type_artifact_effect {
 public:
     type_spell_artifact(SpellID newSpell);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     SpellID m_spell;
 };
 
 class type_shooter_bonus_artifact : public type_combat_artifact {
 public:
     type_shooter_bonus_artifact(long newBonus);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_angelic_alliance_artifact : public type_might_artifact {
 public:
     type_angelic_alliance_artifact();
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_elixir_of_life_artifact : public type_artifact_effect {
 public:
     type_elixir_of_life_artifact();
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_statue_of_legion_artifact : public type_artifact_effect {
 public:
     type_statue_of_legion_artifact();
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
 };
 
 class type_tome_artifact : public type_combat_artifact {
 public:
     type_tome_artifact(TSpellSchool newSchool);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     TSpellSchool m_school;
 };
 
@@ -538,8 +538,8 @@ public:
 class type_income_artifact : public type_artifact_effect {
 public:
     type_income_artifact(long newAmount, enum EGameResource newResource);
-    virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+    virtual long getValue(const hero* owner, bool equipped,
+                           bool exact) const;
     long m_amount;
     enum EGameResource m_resource;
 };

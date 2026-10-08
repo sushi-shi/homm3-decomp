@@ -490,7 +490,7 @@ public:
     // type_monster_join_window's sets to 1; SetCommandAndText 0x5d05f0
     // rides it through both troop runs as select_army's third argument
     // and SetArmyCommand's second.
-    unsigned char m_isJoinDialog;
+    bool m_isJoinDialog;
     // Dreamcast is_join_dialog is a byte at +0x64; retail places it
     // at +0x6c. These three bytes align the 0x70-byte base extent.
     char m_tailPadding[3];
@@ -646,7 +646,7 @@ public:
     virtual ~TTavernWindow();
     void setRolloverText(int id);
     virtual int open(int zOrder, bool update);  // slot 1
-    virtual void close(unsigned char update);            // slot 2
+    virtual void close(bool update);            // slot 2
     virtual int windowHandler(message& msg) OVERRIDE;    // slot 9, 0x5d7b30
 };
 
@@ -909,7 +909,7 @@ public:
     // DC public ?DrawTown@townManager@@QAAXHH_N@Z; NB11 lowers bool to a byte.
     void drawTown(int update, int incFrame, bool drawHotspots);
     void newStrips();
-    void armyCommand(strip* whichStrip, int i, int shift, unsigned char joinDialog);
+    void armyCommand(strip* whichStrip, int i, int shift, bool joinDialog);
     void swapHeroes();
     void moveHeroToGarrison();
     // +0x1cc, seven bytes - the dwelling slot each of the fort page's
@@ -923,8 +923,8 @@ public:
     void resetStrips();
     void setCommandAndText(message& msg);
     void showText();
-    void setArmyCommand(int splitEnabled, unsigned char joinDialog);
-    void doCommand(int inCommand, unsigned char isGarrison,
+    void setArmyCommand(int splitEnabled, bool joinDialog);
+    void doCommand(int inCommand, bool isGarrison,
                    type_garrison_base_window* garrisonWindow);
     void cycleOutline(const int objectIndex, const int x, const int y,
                       const int w, const int h);
@@ -963,7 +963,7 @@ public:
 private:
     void doSkeletonTransformer();
     void doHall();
-    void selectArmy(strip* fromStrip, long slot, unsigned char isOwnerCell);
+    void selectArmy(strip* fromStrip, long slot, bool isOwnerCell);
     void showBuildingInfo(int buildingId, unsigned char rightClick);
 
 public:

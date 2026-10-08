@@ -32,6 +32,6 @@ extern const TCampaignMapTraits (&g_campaignMapTraits)[21];
 extern TCampaignMapTraits g_campaignMapTraitsImp[21];
 extern TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21];
 
-unsigned char initializeCampaignMapTraitsTable();
+bool initializeCampaignMapTraitsTable();
 
 #endif  /* HOMM3_CAMPAIGNMAP_H */

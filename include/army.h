@@ -852,7 +852,7 @@ public:
     hero* getOwner() const;
     hero* getController() const;
     inline double getDefenseDamageModifier(
-        unsigned char rangedAttack) const;
+        bool rangedAttack) const;
     long getDefenseModifier() const;
     long getClockwise(long direction) const;
     long getCounterClockwise(long direction) const;
@@ -879,20 +879,20 @@ public:
     void newTurn();
     void setAIExpectedDamage(long arg);
     int findPath(int fpTargetCellIndex, int maxMoves,
-                 unsigned char moveUnlimited,
-                 unsigned char literalTarget);
+                 bool moveUnlimited,
+                 bool literalTarget);
     void setRetaliationCount();
     int validAttack(int currIndex, int direction, int criteria,
                     int literalIndex, int* testCellIndex) const;
     void resetPath();
-    unsigned char validPath(int destIndex, unsigned char literalTest);
+    bool validPath(int destIndex, bool literalTest);
     // Original ValidFlight@@QBA_NH_N.
     bool validFlight(int destIndex, bool literalTest) const;
     int validRange(int destIndex);
     inline long damageEnemy(army* enemy, int* damageOut, int* killed,
                             bool isShot);
     int damage(int damage);
-    int computeBaseDamage(unsigned char simulateOnly) const;
+    int computeBaseDamage(bool simulateOnly) const;
     int computeAttackerDamageBonuses(int baseDamage,
                                      bool isShooting,
                                      army* defender,
@@ -945,7 +945,7 @@ public:
                                    long enemyHex) const;
     long getSpellTime(int spell) const;
     TSkillMastery getSpellLevel(int spell) const;
-    unsigned char setInsideAreaEffect(unsigned char arg);
+    bool setInsideAreaEffect(bool arg);
     void playSample(TSampleID id);
     void stopSample(TSampleID id);
     void waitSample(TSampleID which);
@@ -959,12 +959,12 @@ public:
     void setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                  const town* ownerTown, const hero* otherHero,
                  const armyGroup* otherGroup, int magicTerrain);
-    int getLuck(unsigned char applyLimits) const;
+    int getLuck(bool applyLimits) const;
     void setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain,
                    unsigned char groupAlignments);
-    int getMorale(unsigned char applyLimits) const;
+    int getMorale(bool applyLimits) const;
     int getSpeed() const;
 
     int getMagicMirrorChance() const;
@@ -1012,8 +1012,8 @@ private:
 #if 0  // superseded unordered/view-fragmented declaration reconstruction
 
     int findPath(int fpTargetCellIndex, int maxMoves,
-                 unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
-    unsigned char validPath(int destIndex, unsigned char bLiteralTest);
+                 bool bMoveUnlimited, bool bLiteralTarget);
+    bool validPath(int destIndex, bool bLiteralTest);
     // Both const (?GetAttackMask@army@@QBAIHHH@Z,
     // ?ValidAttack@army@@QBAHHHHHPAH@Z); neither body writes through
     // `this` and both drive GetAdjacentCellIndex, already const.
@@ -1071,7 +1071,7 @@ private:
     // answer as "did anything change". `_N_N` on the DC public
     // (?set_inside_area_effect@army@@QAA_N_N@Z) is both the byte
     // argument and the byte return.
-    unsigned char setInsideAreaEffect(unsigned char arg);  // 0x43efe0
+    bool setInsideAreaEffect(bool arg);  // 0x43efe0
     void playSample(TSampleID id);          // 0x43d540
     void stopSample(TSampleID id);          // 0x43d580
     void waitSample(TSampleID which);
@@ -1387,8 +1387,8 @@ public:
     // combatManager::GetCommand (command.obj) is a caller of both.
     // Both const (?can_cast_resurrect@army@@QBA_NJ@Z,
     // ?can_cast_spell@army@@QBA_NJ@Z).
-    unsigned char canCastResurrect(long hex) const;
-    unsigned char canCastSpell(long hex) const;
+    bool canCastResurrect(long hex) const;
+    bool canCastSpell(long hex) const;
     long getLossCombatValue(long lowest_attack, long lowest_defense,
                                bool ranged, long damage,
                                bool kills_only) const; // 0x442fd0
@@ -1440,7 +1440,7 @@ public:
     // the damage range (hero-attack-scaled for a ballista), then the
     // Bless / Curse / simulation / dice arms. Const
     // (?ComputeBaseDamage@army@@QBAH_N@Z).
-    int computeBaseDamage(unsigned char simulate_only) const;
+    int computeBaseDamage(bool simulate_only) const;
     // 0x443d90: the multiplier a defender's own Shield / Air Shield,
     // petrification and hero defense skill put on incoming damage.
     // Const (?ComputeDefenderDamageReduction@army@@QBAN_N@Z), and so is
@@ -1563,12 +1563,12 @@ public:
     // Header-inline declarations. Their exact positions in the LF_FIELDLIST
     // are audited separately; their bodies follow the class in Army.h source
     // order; keep them instead of TU-specific score scaffolding.
-    unsigned char canCastResurrect() const;
-    int getMorale(unsigned char apply_limits) const;
-    int getLuck(unsigned char apply_limits) const;
+    bool canCastResurrect() const;
+    int getMorale(bool apply_limits) const;
+    int getLuck(bool apply_limits) const;
     int offsetToFront(int direction) const;
     void clearAIValues();
-    unsigned char needToTurn(int direction) const;
+    bool needToTurn(int direction) const;
     unsigned char is(unsigned attribute) const;
     long getAIExpectedDamage() const;
     const army* getAITarget() const;
@@ -1581,17 +1581,17 @@ public:
     const char* getName(int count) const;
     long getSpellTime(int spell) const;
     TSkillMastery getSpellLevel(int spell) const;
-    unsigned char isActive() const;
-    unsigned char isInAura() const;
-    unsigned char isIncapacitated() const;
-    unsigned char canRetaliate(const army& attacker) const;
-    unsigned char cannotAttack() const;
+    bool isActive() const;
+    bool isInAura() const;
+    bool isIncapacitated() const;
+    bool canRetaliate(const army& attacker) const;
+    bool cannotAttack() const;
     long getAdjacentHex(long direction) const;
     long getAttackDirection(const army* enemy) const;
-    unsigned char isInAreaHighlight() const;
+    bool isInAreaHighlight() const;
 
 private:
-    unsigned char leavesNoBody() const;
+    bool leavesNoBody() const;
 
     // LF_FIELDLIST 0x205b entries 237..249: the private data tail follows
     // every public and private method declaration.  The names at +0x4e8,
@@ -1630,14 +1630,14 @@ inline bool army::canCastResurrect() const
 
     // E:\gamedcs\Army.h:724
 DC_ADDRESS(0x0429c0, 0x34)
-inline int army::getMorale(unsigned char applyLimits) const
+inline int army::getMorale(bool applyLimits) const
     {
         return applyLimits ? limit(-3, m_morale, 3) : m_morale;
     }
 
     // E:\gamedcs\Army.h:730
 DC_ADDRESS(0x0429f4, 0x34)
-inline int army::getLuck(unsigned char applyLimits) const
+inline int army::getLuck(bool applyLimits) const
     {
         return applyLimits ? limit(-3, m_luck, 3) : m_luck;
     }

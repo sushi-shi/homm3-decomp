@@ -28,6 +28,7 @@
 #include "spellbookwindow.h"
 #include "sskilltraits.h"
 #include "text.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "window.h"

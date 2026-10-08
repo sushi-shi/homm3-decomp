@@ -86,7 +86,7 @@ public:
 
     // Original: TPickANumber::IsAvailable; includes.h:166
     DC_ADDRESS(0x0fe374, 0x24)
-    unsigned char isAvailable(int number) const
+    bool isAvailable(int number) const
     {
         return m_available[number - m_low];
     }

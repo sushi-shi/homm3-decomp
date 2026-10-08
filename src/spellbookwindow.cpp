@@ -138,7 +138,7 @@ VA(0x0059baa0, 0x341)
 DC_ADDRESS(0x14bcf4, 0x194)
 MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c;
 std::string TSpellbookWindow::getSpellDescription(
-    SpellID spell, const hero* currentHero, unsigned char rollover)
+    SpellID spell, const hero* currentHero, bool rollover)
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
     std::string result;
@@ -402,7 +402,7 @@ int TSpellbookWindow::open(int newPriority, bool update)
 VA(0x0059c990, 0x10)
 DC_ADDRESS(0x14c8f0, 0x12)
 MAC_ADDRESS(0x18c5b8, 0x20)
-void TSpellbookWindow::close(unsigned char update)
+void TSpellbookWindow::close(bool update)
 {
     heroWindow::close(update);
 }

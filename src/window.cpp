@@ -115,7 +115,7 @@ int heroWindow::open(int newPriority, bool update)
 VA(0x005fec60, 0x49)
 DC_ADDRESS(0x1972e0, 0x3c)
 MAC_ADDRESS(0x20b158, 0x78)
-void heroWindow::close(unsigned char update)
+void heroWindow::close(bool update)
 {
     if ((m_type & WINDOW_FLAG_SAVE_BACKGROUND) && (m_status & WINDOW_STATE_OPEN))
         restoreBackground(update);
@@ -358,7 +358,7 @@ int heroWindow::saveBackground()
 VA(0x005ff1c0, 0x7E)
 DC_ADDRESS(0x1977dc, 0x98)
 MAC_ADDRESS(0x20b790, 0xe0)
-void heroWindow::restoreBackground(unsigned char update)
+void heroWindow::restoreBackground(bool update)
 {
     if (!m_background)
         return;
@@ -499,7 +499,7 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
 
 // Original: heroWindow::EnableAllWidgets; window.cpp:893
 DC_ADDRESS(0x197bdc, 0x2a)
-void heroWindow::enableAllWidgets(unsigned char enable)
+void heroWindow::enableAllWidgets(bool enable)
 {
     widget* current = m_headWidget;
     while (current) {
@@ -625,7 +625,7 @@ VA_COMPGEN(0x005ff6b0, 0x21, SCALAR_DELETING_DTOR, CHeroWindowEx)
 VA(0x005ff6e0, 0xAE)
 DC_ADDRESS(0x197d9c, 0xba)
 MAC_ADDRESS(0x20beb0, 0x130)
-unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
+bool CHeroWindowEx::processHover(int mouseX, int mouseY)
 {
     textWidget* rollover = getRolloverWidget();
     if (!rollover)
@@ -656,7 +656,7 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
 VA(0x005ff790, 0x82)
 DC_ADDRESS(0x197e58, 0x5a)
 MAC_ADDRESS(0x20bfe0, 0xb4)
-unsigned char CHeroWindowEx::processRightSelect(int id)
+bool CHeroWindowEx::processRightSelect(int id)
 {
     widget* current = getWidget(id);
     if (!current)
@@ -741,7 +741,7 @@ void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
 VA(0x005ff960, 0xC3)
 DC_ADDRESS(0x197fd8, 0x158)
 MAC_ADDRESS(0x20c224, 0x200)
-unsigned char initializeWinSetupText()
+bool initializeWinSetupText()
 {
     TTextResource* textResource = ResourceManager::getText(
         DATA_COMPGEN(0x0068c838, winSetupTextName, "jktext.txt"));

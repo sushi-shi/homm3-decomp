@@ -25,6 +25,7 @@ profile; Loki is GCC 2.95.2 `-O2 -funroll-loops -fno-exceptions`.
 | `bool` vs `unsigned char` parameter (simple use) | erased | erased | kept |
 | early returns vs nested single exit | kept | kept | erased |
 | `bool` local vs direct test | erased | erased | erased |
+| `inline` keyword vs ordinary helper (same body) | kept: changes /Ob2 candidacy | kept | kept |
 | assigned vs discarded call result | kept | kept | kept |
 
 How the kept cases look in Mac code:
@@ -43,6 +44,14 @@ How the kept cases look in Mac code:
   public (`_N` versus `E`, from the `?…Z` strings in `H3.EXE`) before changing
   an interface.
 
+The `inline` row is a lane measurement, not a probe. Dropping `inline` from
+philai's `valueOfGarrison`/`valueOfIdol` took `aiValueOfEvent` from 96.69% to
+92.23%/91.08%, even though Mac calls both out of line. On VC6 the keyword
+changes inlining decisions, while erasing the inline-versus-pasted
+distinction. CodeWarrior keeps an ordinary body out of line at `-O3` and
+`-O4`, so a Mac expansion implies the keyword, except for the small free
+functions that `-O3` auto-inlines.
+
 ## Inline depth: the leftover call shows how many wrappers there were
 
 CodeWarrior expands inline functions only to a fixed depth and leaves the next
@@ -57,6 +66,11 @@ Example: our `TTextResource::operator[]` calls `getText`, which indexes a
 | :-------------- | :------------------------ |
 | `g_generalText->getText(i)` | `vector_pod<unsigned long>::data()` |
 | `(*g_generalText)[i]` | `vector_pod<unsigned long>::operator[]` (retail 0x2a0c) |
+
+The same rule closed a Windows wall. Mac `hero::load` expands the packed-bit
+reader, and the only call left is `bitset::set`, one level shallower than our
+`decodePackedBits` wrapper. Moving the decode loop into the inline reader took
+`hero::load` from 94.92% to 100% and raised three other readers by 3–5 points.
 
 Retail sites call 0x2a0c, so under our header model the original indexed
 through `operator[]`. This only measures depth: if the original `getText`

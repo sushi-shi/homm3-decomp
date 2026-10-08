@@ -18,6 +18,7 @@
 #include "message.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
@@ -435,7 +436,7 @@ int TCombatResultsWindow::open(int newPriority, bool update)
 VA(0x00471b50, 0x1B)
 DC_ADDRESS(0x069244, 0x24)
 MAC_ADDRESS(0x07fbb8, 0x44)
-void TCombatResultsWindow::close(unsigned char update)
+void TCombatResultsWindow::close(bool update)
 {
     videoClose();
     heroWindow::close(update);

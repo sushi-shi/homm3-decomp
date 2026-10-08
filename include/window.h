@@ -92,7 +92,7 @@ public:
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
     void moveWindow(int deltaX, int deltaY);
-    void enableAllWidgets(unsigned char enable);
+    void enableAllWidgets(bool enable);
     void removeAndDeleteWidget(int id);
     int broadcastMessage(message& msg);
     int broadcastMessage(int id, int codeX, int codeY, int extra);
@@ -114,7 +114,7 @@ protected:
 
 private:
     int saveBackground();
-    void restoreBackground(unsigned char update);
+    void restoreBackground(bool update);
 
 public:
     void sleepAllWidgets(unsigned char sleep);
@@ -122,7 +122,7 @@ public:
     virtual ~heroWindow();
     // Original DC public ?Open@heroWindow@@UAAHH_N@Z proves bool update.
     virtual int open(int zOrder, bool update);
-    virtual void close(unsigned char update);         // slot 2, retail 0x5fec60
+    virtual void close(bool update);         // slot 2, retail 0x5fec60
     virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
     virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
     // Original DC DrawWindow@@UAAX_NHH@Z proves bool despite lowered 0x20.
@@ -205,8 +205,8 @@ public:
         return windowHandler(msg);
     }
     virtual int windowHandler(message& msg);                            // slot 9
-    virtual unsigned char processHover(int mouseX, int mouseY);         // slot 10
-    virtual unsigned char processRightSelect(int id);                   // slot 11
+    virtual bool processHover(int mouseX, int mouseY);         // slot 10
+    virtual bool processRightSelect(int id);                   // slot 11
     // Original SetHelpText@@QAAXPAUTHelpText@@HH_N forwards a bool.
     void setHelpText(THelpText* helpText, int start, int stop, bool copyText);
 
@@ -215,7 +215,7 @@ protected:
     virtual textWidget* getRolloverWidget();                            // slot 13
 };
 
-unsigned char initializeWinSetupText();
+bool initializeWinSetupText();
 void setWinText(heroWindow* win, int winId);
 
 #endif  /* HOMM3_WINDOW_H */

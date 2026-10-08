@@ -8,6 +8,7 @@
 
 #include "events.h"
 
+#include "terrain.h"
 #include "advmgr.h"
 #include "advmgr_objects.h"
 #include "cmbtmgr.h"
@@ -55,7 +56,7 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point, int fiz
 
 // E:\gamedcs\events.cpp:317
 // RETAIL_LOCATED(0x0049e2e0, 0x38B)  // located @stub (promoted to active VA), dc 0x903b4
-void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::doEventShipyard(NewmapCell* cell, type_point point, bool human_player)
 {
     // @stub
 }
@@ -420,7 +421,7 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
 
 // E:\gamedcs\events.cpp:5264
 // RETAIL_LOCATED(0x004aafd0, 0x431)  // linkorder, dc 0x99eb0
-void advManager::townEvent(NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::townEvent(NewmapCell* cell, type_point point, bool human_player)
 {
     // @stub
 }
@@ -441,7 +442,7 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
 
 // E:\gamedcs\events.cpp:5661
 // RETAIL_LOCATED(0x004abdc0, 0x6D0)  // located @stub (promoted to active VA), dc 0x9a898
-int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, unsigned char human_player)
+int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, bool human_player)
 {
     // @stub
 }
@@ -511,14 +512,14 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 
 // E:\gamedcs\events.cpp:6725
 // RETAIL_LOCATED(0x004aeb50, 0x390)  // located @stub (promoted to active VA), dc 0x9c35c
-void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, int toWhoNetPos, int iWinner, unsigned char bRetreatWin, unsigned char bCombatSurrender)
+void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, int toWhoNetPos, int iWinner, bool bRetreatWin, bool bCombatSurrender)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:6781
 // RETAIL_LOCATED(0x004aeee0, 0x3DF)  // located @stub (promoted to active VA), dc 0x9c554
-void advManager::receiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromWho, type_point* point, hero** leftHero, armyGroup** leftArmyGroup, int* right_player, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* iSeed, signed char* iWinner, unsigned char* bRetreatWin, unsigned char* bCombatSurrender)
+void advManager::receiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromWho, type_point* point, hero** leftHero, armyGroup** leftArmyGroup, int* right_player, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* iSeed, signed char* iWinner, bool* bRetreatWin, bool* bCombatSurrender)
 {
     // @stub
 }
@@ -619,10 +620,13 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
 // short stores are close but order the packing differently. The 3-arg
 // type_point constructor measured WORSE (85.51). A packed-bitfield store
 // ordering wall.
+// DC events.cpp:343-370 and Mac 0xa9810..0xa9968 nest the purchase inside
+// the build and affordability tests, with both refusals in trailing else
+// arms (VC6 byte-flat).
 VA(0x0049e2e0, 0x38B)
 DC_ADDRESS(0x0903b4, 0x2a4)
 MAC_ADDRESS(0x0a9580, 0x400)  // dc-bracket forced, ret 0xc=p4
-void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned char humanPlayer)
+void advManager::doEventShipyard(NewmapCell* cell, type_point point, bool humanPlayer)
 {
     mobilizeCurrHero(0, 0, 1);
 
@@ -652,29 +656,28 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
 
     NewmapCell* boatCell = g_game->getCell(boatPoint);
 
-    if (boatCell->m_isTrigger
-        && (boatCell->m_type == BOAT || boatCell->m_type == HERO
-            || g_game->getBoatsBuilt() >= 64)) {
+    if (!boatCell->m_isTrigger
+        || (boatCell->m_type != BOAT && boatCell->m_type != HERO
+            && g_game->getBoatsBuilt() < 64)) {
+        if (g_game->m_players[g_netLocalGamePos].m_resources[GOLD] >= 1000
+            && g_game->m_players[g_netLocalGamePos].m_resources[WOOD] >= 10) {
+            doShipyard(0);
+            if (g_windowManager->m_dialogReturn == DIALOG_RETURN_OK) {
+                if (g_game->createBoat(
+                        cell->m_shipyardInfo.m_boatX,
+                        cell->m_shipyardInfo.m_boatY,
+                        boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
+                    g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
+                    g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
+                }
+            }
+        } else {
+            normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD],
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else {
         normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_BUILD_BLOCKED],
                      1, 208, 40, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
-    }
-
-    if (g_game->m_players[g_netLocalGamePos].m_resources[GOLD] < 1000
-        || g_game->m_players[g_netLocalGamePos].m_resources[WOOD] < 10) {
-        normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD],
-                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
-    }
-
-    doShipyard(0);
-    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_OK
-        && g_game->createBoat(
-               cell->m_shipyardInfo.m_boatX,
-               cell->m_shipyardInfo.m_boatY,
-               boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
-        g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
-        g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
     }
 }
 
@@ -1994,7 +1997,7 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
 DC_ADDRESS(0x091fec, 0xf4)
 MAC_ADDRESS(0x0abcec, 0x138)
 inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
-                                           unsigned char humanPlayer)
+                                           bool humanPlayer)
 {
     unsigned char visitedFlags =
         g_game->m_borderTentVisitFlags[cell->m_objectIndex];
@@ -2034,7 +2037,7 @@ void advManager::doEventBorderGate(type_point, NewmapCell* cell,
 DC_ADDRESS(0x0920e0, 0xa6)
 MAC_ADDRESS(0x0abec0, 0x130)
 inline void advManager::doEventBorderTent(NewmapCell* cell,
-                                          unsigned char humanPlayer)
+                                          bool humanPlayer)
 {
     if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
         & g_curPlayerBit) {
@@ -2054,7 +2057,7 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
 DC_ADDRESS(0x092188, 0x96)
 MAC_ADDRESS(0x0abff0, 0x1f0)
 inline void advManager::doEventBouy(hero* currentHero, NewmapCell* cell,
-                                    unsigned char humanPlayer)
+                                    bool humanPlayer)
 {
     if (currentHero->m_flags & 4) {
         if (humanPlayer)
@@ -2076,7 +2079,7 @@ DC_ADDRESS(0x092220, 0xc8)
 MAC_ADDRESS(0x0ac1e0, 0x1fc)
 inline void advManager::doEventCloverField(hero* currentHero,
                                            NewmapCell* cell,
-                                           unsigned char humanPlayer)
+                                           bool humanPlayer)
 {
     if (currentHero->m_flags & 8) {
         if (humanPlayer)
@@ -2099,7 +2102,7 @@ DC_ADDRESS(0x092f08, 0x9e)
 MAC_ADDRESS(0x0ad764, 0x200)
 inline void advManager::doEventFaerieRing(hero* currentHero,
                                           NewmapCell* cell,
-                                          unsigned char humanPlayer)
+                                          bool humanPlayer)
 {
     if (currentHero->m_flags & 0x2000) {
         if (humanPlayer)
@@ -3414,7 +3417,7 @@ void advManager::doEventTrainingGrounds(hero* currentHero, NewmapCell* cell,
 
 // The AI arm of DoTreasureDialog reaches this philai helper before the
 // declaration accompanying its later tree-of-knowledge callers.
-unsigned char aiChooseResourceOrExperience(const hero* currentHero,
+bool aiChooseResourceOrExperience(const hero* currentHero,
                                                EGameResource resource,
                                                int cost, int value);
 
@@ -3598,7 +3601,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
 
 TCreatureType upgradedCreatureType(TCreatureType type);
 TCreatureType downgradedCreatureType(TCreatureType type);
-int isBaseCreature(TCreatureType type);
+bool isBaseCreature(TCreatureType type);
 
 VA(0x004a6b30, 0x12A)
 DC_ADDRESS(0x096994, 0x180)
@@ -3679,7 +3682,7 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
 }
 
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
-unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
+bool aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
                                 TCreatureType type, short amount,
                                 long goldCost);
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
@@ -4277,7 +4280,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
 DC_ADDRESS(0x093d34, 0x7a)
 MAC_ADDRESS(0x0af094, 0x114)
 inline void advManager::doEventLighthouse(NewmapCell* cell,
-                                          unsigned char humanPlayer)
+                                          bool humanPlayer)
 {
     if (!g_game->onSameTeam(g_game->getMine(cell->m_extraInfo)->m_playerOwner,
                             g_netLocalGamePos)) {
@@ -4293,7 +4296,7 @@ inline void advManager::doEventLighthouse(NewmapCell* cell,
 DC_ADDRESS(0x094274, 0x9e)
 MAC_ADDRESS(0x0afd30, 0x200)
 inline void advManager::doEventMermaid(hero* currentHero, NewmapCell* cell,
-                                       unsigned char humanPlayer)
+                                       bool humanPlayer)
 {
     if (currentHero->m_flags & 0x8000) {
         if (humanPlayer)
@@ -4315,7 +4318,7 @@ DC_ADDRESS(0x0981ec, 0x60)
 MAC_ADDRESS(0x0b5aa4, 0x80)
 inline void advManager::doEventWhirlpool(hero* currentHero,
                                            NewmapCell* cell,
-                                           unsigned char humanPlayer)
+                                           bool humanPlayer)
 {
     type_point exitPoint;
     if (g_game->getRandomWhirlpool(cell->m_extraInfo, exitPoint)) {
@@ -5083,7 +5086,7 @@ VA(0x004aafd0, 0x431)
 DC_ADDRESS(0x099eb0, 0x3d8)
 MAC_ADDRESS(0x0b80c4, 0x4e4)
 void advManager::townEvent(NewmapCell* cell, type_point point,
-                           unsigned char humanPlayer)
+                           bool humanPlayer)
 {
     town* thisTown = g_game->getTown(
         g_game->getTownId(point.m_x, point.m_y, point.m_z));
@@ -5422,7 +5425,7 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 VA(0x004abdc0, 0x6D0)
 DC_ADDRESS(0x09a898, 0x532)
 MAC_ADDRESS(0x0b8ca8, 0x618)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6
-int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_point point, unsigned char humanPlayer)
+int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_point point, bool humanPlayer)
 {
     type_creature_bank& bank = cell->getCreatureBank();
     TCreatureType leaderMonster = CREATURE_NONE;
@@ -5547,7 +5550,7 @@ DC_ADDRESS(0x09adcc, 0x166)
 MAC_ADDRESS(0x0b9324, 0x15c)
 void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const char* questionText, const char* emptyText, const char* rewardText, unsigned long visitedFlag, type_point point)
 {
-    unsigned char humanPlayer = currentHero->belongsToHuman();
+    bool humanPlayer = currentHero->belongsToHuman();
     if (humanPlayer) {
         normalDialog(questionText, 2, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
@@ -6386,7 +6389,7 @@ combatFinished:
 VA(0x004aeb50, 0x390)
 DC_ADDRESS(0x09c35c, 0x1f8)
 MAC_ADDRESS(0x0bc6c0, 0xc54)
-void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, int toWhoNetPos, int winner, unsigned char retreatWin, unsigned char combatSurrender)
+void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, int toWhoNetPos, int winner, bool retreatWin, bool combatSurrender)
 {
     CCombatInitMsg combatInitMsg;
     combatInitMsg.m_point = point;
@@ -6430,7 +6433,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
 VA(0x004aeee0, 0x3DF)
 DC_ADDRESS(0x09c554, 0x224)
 MAC_ADDRESS(0x0bd314, 0xbe4)
-void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point& point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, unsigned char* retreatWin, unsigned char* combatSurrender)
+void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho, type_point& point, hero** leftHero, armyGroup** leftArmyGroup, int* rightPlayer, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* seed, signed char* winner, bool* retreatWin, bool* combatSurrender)
 {
     *leftHero = 0;
     *leftArmyGroup = 0;

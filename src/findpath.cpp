@@ -842,7 +842,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
 // half of an enemy. Preserve the source definitions without inventing a
 // standalone retail address or replacing Complete's different teleport scan.
 DC_ADDRESS(0x0a02c8, 0xc6)
-unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
+bool searchArray::validMoveAdjacent(const army* currentArmy, int hex)
 {
     for (long i = 0; i < 6; i++) {
         int adjacent = g_combatManager->m_adjacentCells[hex][i];
@@ -863,7 +863,7 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
 
 // Original: searchArray::valid_move_adjacent; findpath.cpp:905
 DC_ADDRESS(0x0a0390, 0x6c)
-unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
+bool searchArray::validMoveAdjacent(const army* currentArmy,
                                             const army& enemy)
 {
     if (validMoveAdjacent(currentArmy, enemy.m_gridIndex))

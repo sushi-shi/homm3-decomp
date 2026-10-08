@@ -36,6 +36,7 @@
 #include "kbwin.h"
 #include "misc.h"
 #include "slider.h"
+#include "terrain.h"
 #include "textscroller.h"
 #include "textwdgt.h"
 #include "winmgr.h"

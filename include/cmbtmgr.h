@@ -675,7 +675,7 @@ public:
     // while the byte below is set. Both names await a writer.
     int m_magicTerrain;  // +0x53c0
     unsigned char m_onAntiMagicGarrison;  // +0x53c4
-    unsigned char m_isSurrounded;  // +0x53c5
+    bool m_isSurrounded;  // +0x53c5
     // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
     // Name remains ordinal until its writer is reconstructed.
     unsigned char m_onBoats;  // +0x53c6
@@ -1082,8 +1082,8 @@ public:
     unsigned char m_obstacleAttackVisited[COMBAT_GRID_CELLS];  // +0x14031
 
     combatManager();
-    unsigned char isWinner(int thisSide) const;
-    unsigned char combatIsOver() const;
+    bool isWinner(int thisSide) const;
+    bool combatIsOver() const;
     void resetHitByCreature();
     // DC LF_MFUNCTION records have no this type: these are static helpers.
     static TWallTargetId getTargetWallIndex(int gridIndex);
@@ -1109,7 +1109,7 @@ public:
     // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
     // routine with the creature-cast selector passed by command.cpp.
     void initiateSpell(ESpellId spellToCast, int creatureSpell);
-    unsigned char placeObstacle(int obstacleId);
+    bool placeObstacle(int obstacleId);
     void beginObstacleTraversal(army* stack);  // 0x46a520
     bool checkObstacleAttacks(army* thisArmy, bool isWalking);
     void lootDeadHero(int side,
@@ -1117,7 +1117,7 @@ public:
     void calculateGainedExperience(int side, int* experienceGained);
     bool checkFireWall(long hex, army* currentArmy, bool isWalking);
     bool checkLandmine(long hex, army* currentArmy, bool isWalking);
-    unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
+    bool shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
     bool isQuickCombat() const;
@@ -1177,7 +1177,7 @@ public:
 private:
     void loadIcons();
     void freeIcons();
-    unsigned char doorCanBeLowered() const;
+    bool doorCanBeLowered() const;
 
 public:
     // Complete-only moat damage worker; its sole caller passes the entered
@@ -1203,7 +1203,7 @@ private:
 public:
     int placeLargeObstacle(unsigned terrainMask,
                            unsigned specialTerrainMask);
-    static unsigned char loadWallTraitsTable();
+    static bool loadWallTraitsTable();
     void raiseSkeletons(int side);
     void learnSpellFromEagleEye(int side);
     void resetLimitCreature();
@@ -1354,25 +1354,28 @@ public:
     CSprite* loadSpellEffect(int effect);  // 0x5a92f0
 
 private:
-    unsigned char chooseToRun(const army* ourArmy,
+    bool chooseToRun(const army* ourArmy,
                                 const long* enemyAttacks,
                                 const searchArray* currentSearchArray);  // 0x4208f0
     long getAttackChange(const army* currentArmy, const army* enemy,
                            type_AI_combat_parameters& data);  // 0x41f3b0
     void markFirewalls(const army* currentArmy, long* enemyAttacks,
                         type_AI_combat_parameters* estimate);  // 0x4214f0
-    unsigned char moveToward(const army* currentArmy, long targetHex,
+    // DC move_toward(..., bool) declares consider_waiting bool, but
+    // chooseMeleeTarget's retail call pushes the 0/1 int of its && test
+    // unconverted; a bool parameter inserts test/setne (100 -> 97.63).
+    bool moveToward(const army* currentArmy, long targetHex,
                               const long* enemyAttacks,
                               unsigned char considerWaiting);  // 0x41f580
 
 public:
     void markMoat(const army* currentArmy, long* enemyAttacks,
                    type_AI_combat_parameters* estimate);  // 0x421590
-    unsigned char chooseCyclopsAction(long bestValue, long side,
+    bool chooseCyclopsAction(long bestValue, long side,
                                         type_AI_combat_parameters& estimate);  // 0x41eea0
 
 private:
-    unsigned char chooseCreatureSpell(const army* currentArmy,
+    bool chooseCreatureSpell(const army* currentArmy,
                                         long& bestValue,
                                         type_AI_combat_parameters& estimate);  // 0x420d20
     bool chooseMeleeTarget(const army* currentArmy,
@@ -1415,7 +1418,7 @@ public:
     void berserkAttack(army* currentArmy, const army* target);  // 0x4222c0
     long chooseMeleeAction(const army* currentArmy, bool teleport,
                              bool simulated, long side);  // 0x421f80
-    unsigned char failedSiege();  // 0x41e440
+    bool failedSiege();  // 0x41e440
     // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
     // here - `homm3 sema rva` files it under seg_0002. The DC roster
     // puts combatManager::find_AI_targets in ai.obj (ai.cpp:2608, dc
@@ -1433,19 +1436,19 @@ public:
                          unsigned char meleeOnly,
                          const type_AI_combat_parameters* data,
                          searchArray* currentSearchArray);
-    unsigned char isValidTeleport(const army* thisArmy, long newHex);
-    void simulateCombat(long side, unsigned char simulated);  // 0x422a40
+    bool isValidTeleport(const army* thisArmy, long newHex);
+    void simulateCombat(long side, bool simulated);  // 0x422a40
     bool validWallTarget(TWallTargetId wall);  // 0x476440
     void doCompAI(int whichGroup);  // 0x4221f0
     // command.cpp calls this ai.obj leaf from CheckGetAIMove.
-    unsigned char doSpellAI();  // 0x422da0
+    bool doSpellAI();  // 0x422da0
     // command.cpp:3038. The retail call at 0x477f3d occupies the exact
     // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
     // helper's other retail caller sits in ai.obj.
     bool aiCheckRetreat();  // 0x41e570
     void clearEffects();  // 0x5a66b0
     void checkGetAIMove();
-    unsigned char ableToSummonElemental(SpellID spell, long side);
+    bool ableToSummonElemental(SpellID spell, long side);
     int getNextChainLightningTarget(army* lastTargetArmy,
                                     int useSRandom);  // 0x5a61f0
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
@@ -1471,7 +1474,7 @@ private:
                                      searchArray* currentSearchArray);  // 0x4205d0
     void chooseShooterAction(const army* currentArmy,
                                bool simulated, long side);  // 0x41f060
-    unsigned char hasRangedAdvantage(
+    bool hasRangedAdvantage(
         type_AI_combat_parameters& data);  // 0x420a80
     void placeShooter(const army* currentArmy);  // 0x422060
     unsigned char shouldStayInCastle(
@@ -1551,7 +1554,7 @@ public:
     long computeSpellDamage(SpellID spell, long spellPower, long mastery,
                             hero* castingHero, hero* targetHero,
                             const army* target,
-                            unsigned char simulated) const;  // 0x5a7890
+                            bool simulated) const;  // 0x5a7890
     long modifySpellDamage(long baseDamage, SpellID spell,
                            const hero* castingHero, const hero* targetHero,
                            const army* target,
@@ -1687,6 +1690,9 @@ public:
                         const army* target,
                         bool redirected,
                         long creatureSpell) const;  // 0x5a8640
+    // DC find_resurrection_target(int, int, bool) and CastSpell's bool
+    // monster flag predate Complete's integer creatureSpell: retail pushes
+    // the whole dword on to spellCastWorkChance (a bool zero-extends it).
     army* findResurrectionTarget(int armyGroup, int targetIndex,
                                    long creatureSpell);
     army* findAnimateDeadTarget(int armyGroup, int targetIndex);
@@ -1867,7 +1873,7 @@ private:
     // DC ?LoadArmies@combatManager@@AAAX_N@Z - PRIVATE on the Dreamcast
     // (`A` access), which costs nothing here and is recorded rather than
     // acted on: this header keeps one public block.
-    void loadArmies(unsigned char isSurrounded);
+    void loadArmies(bool isSurrounded);
     void checkNativeTerrain();
     void combineGroups(armyGroup* src, armyGroup* dest);
 
@@ -1909,7 +1915,7 @@ private:
     bool automateFirstAidTent();
     bool automateTower();
     void processFirstAid(army* currentArmy);
-    unsigned char processMoveThenAttack(message& msg);
+    bool processMoveThenAttack(message& msg);
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
@@ -1933,10 +1939,10 @@ extern combatManager* g_combatManager;
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
 extern long g_surrenderCost;
-extern unsigned char g_combatRetreated;
+extern bool g_combatRetreated;
 // Set while the combat action pump is active; process_move_then_attack clears
 // it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
-extern unsigned char g_combatSurrendered;
+extern bool g_combatSurrendered;
 DATA(0x006989ec) extern int g_processingCombatAction;
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed

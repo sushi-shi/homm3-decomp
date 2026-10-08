@@ -20,6 +20,7 @@
 #include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
 #include "slider.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textscroller.h"
 #include "textwdgt.h"
@@ -581,7 +582,7 @@ void CScenarioInfoDlg::setDifficultyHiLite()
 VA(0x005699C0, 0x320)
 DC_ADDRESS(0x12ac28, 0x368)
 MAC_ADDRESS(0x1606a0, 0x390)
-unsigned char CScenarioInfoDlg::processRightSelect(int id)
+bool CScenarioInfoDlg::processRightSelect(int id)
 {
     switch (id) {
     case SCENARIO_INFO_TEAM_ID: {

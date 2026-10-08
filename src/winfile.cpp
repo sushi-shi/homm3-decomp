@@ -44,14 +44,14 @@ File::~File()
 
 VA(0x005ffb60, 0xB)
 DC_ADDRESS(0x19849c, 0xa)
-unsigned char File::isOpen()
+bool File::isOpen()
 {
     return m_file != NULL;
 }
 
 VA(0x005ffb70, 0x20)
 DC_ADDRESS(0x1984a8, 0x26)
-unsigned char File::close()
+bool File::close()
 {
     if (!m_file)
         return FALSE;
@@ -64,7 +64,7 @@ unsigned char File::close()
 // E:\gamedcs\winfile.cpp:70 - no retail body; inlined into Delete and
 // Open below (the one-pass inliner needs the body before its callers).
 DC_ADDRESS(0x1984ec, 0x4)
-inline unsigned char File::exists(const char* filename)
+inline bool File::exists(const char* filename)
 {
     return _access(filename, 0) == 0;
 }
@@ -86,7 +86,7 @@ unsigned char File::deleteFile(const char* filename)
 
 VA(0x005ffbc0, 0x84)
 DC_ADDRESS(0x198568, 0x4e)
-unsigned char File::open(const char* filename, FileMode mode)
+bool File::open(const char* filename, FileMode mode)
 {
     File::close();
 

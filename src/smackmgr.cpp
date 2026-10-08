@@ -668,7 +668,7 @@ std::string getDriveArchivePath()
 VA(0x00598210, 0x223)
 DC_ADDRESS(0x14ac68, 0x4)
 MAC_ADDRESS(0x25ed6c, 0x2c4)
-unsigned char loadAnimHeaders()
+bool loadAnimHeaders()
 {
     DWORD nread;
 
@@ -733,7 +733,7 @@ void deleteAnimHeaders()
 VA(0x005984a0, 0x240)
 DC_ADDRESS(0x14aca0, 0x26)
 MAC_ADDRESS(0x25f0b8, 0x31c)
-unsigned char loadSoundHeaders()
+bool loadSoundHeaders()
 {
     DWORD nread;
     char path[52];

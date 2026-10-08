@@ -21,6 +21,7 @@
 #include "slider.h"
 #include "soundmgr.h"
 #include "text.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "winfile.h"
 #include "winmgr.h"
@@ -28,8 +29,8 @@
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x0069ca28) TMultiPlayerWindow* g_multiPlayerWindow;
 
-unsigned char initRemote(eNetGameType netGameType, const char* userName);
-unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
+bool initRemote(eNetGameType netGameType, const char* userName);
+bool initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
 void remoteCleanup();
 
 // Original: AddHelp; multiplayerwindow.cpp:94
@@ -246,7 +247,7 @@ public:
     virtual ~CMPInputDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     virtual textWidget* getRolloverWidget();
-    unsigned char onOK();
+    bool onOK();
     virtual void updateOK();  // slot 14, retail 0x510980
     inline void disableOK();
 };
@@ -302,7 +303,7 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
 // Complete emits no standalone body, but the retail caller contains exactly
 // its active-field/empty-text guard, proving that VC6 inlined the boundary.
 DC_ADDRESS(0x1027b4, 0x38)
-inline unsigned char CMPInputDlg::onOK()
+inline bool CMPInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
         if (!strlen(m_field1->getText()))
@@ -1397,7 +1398,7 @@ bool TMultiPlayerWindow::onJoin()
 VA(0x005112e0, 0x101)
 DC_ADDRESS(0x101780, 0x4)
 MAC_ADDRESS(0x21c3e8, 0xc0)
-unsigned char getIPAddress(char* ipAddress)
+bool getIPAddress(char* ipAddress)
 {
     WSADATA wsaData;
     char hostName[256];
@@ -1561,7 +1562,7 @@ bool TMultiPlayerWindow::onHotSeat()
 // Original: TMultiPlayerWindow::IsNT; multiplayerwindow.cpp:2061
 // The ordinary platform query uses the PC ANSI OSVERSIONINFO representation.
 DC_ADDRESS(0x101cfc, 0x5c)
-unsigned char TMultiPlayerWindow::isNT()
+bool TMultiPlayerWindow::isNT()
 {
     OSVERSIONINFOA versionInfo;
     versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
@@ -1665,7 +1666,7 @@ int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
 
 VA(0x00512470, 0xB2)
 DC_ADDRESS(0x102d88, 0x94)
-unsigned char CHotSeatDlg::onOK()
+bool CHotSeatDlg::onOK()
 {
     g_hotSeatMan = new CHotSeatMan;
 
