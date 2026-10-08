@@ -34,5 +34,5 @@ Inspect the raw normalized objects for this specific residual before changing
 control flow or inventing an operation.
 
 Recovered source models and cleanup audits live in
-[reconstruction](../README.md#reconstruction); outstanding work lives in
-[todos](../README.md#outstanding-work).
+[improving a function](../README.md#improve-a-function); outstanding work lives in
+[todos](../todos/).
