@@ -84,6 +84,20 @@ def data(name: str, *, internal: bool, decorated: bool = False) -> str:
     return mask(out)
 
 
+def vc5_data(name: str, *, internal: bool) -> str:
+    """cl 11's spelling of a `data()` name, for units compiled by VC5.
+
+    VC5 spells an array's storage `P` where cl 12 and Clang write `Q`, and
+    gives a file-static datum its C name plus a `$S<n>` ordinal, masked here
+    to the `$S` family (pinned by victor.obj's g_victorLeadingBits and
+    g_victorJpegZigzagOrder).
+    """
+    out = ARRAY_STORAGE.sub(r"@@\1P", name)
+    if internal and not out.startswith("?") and not out.endswith("$S"):
+        out += "$S"
+    return out
+
+
 def anonymous_static(identifier: str) -> str:
     """cl 12's spelling of a `static` variable declared directly in a source
     file's anonymous namespace: the C name `_identifier`, as for a file

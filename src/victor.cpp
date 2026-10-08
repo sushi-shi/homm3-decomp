@@ -300,17 +300,6 @@ int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
 // and palette, plus pixels unless a DIB section supplies the pixel buffer.
 // Dimensions are checked for zero only; the signed stride arithmetic and
 // failure cleanup below follow the pinned executable's actual contract.
-// Residual (88.04%): all 24 blocks have the same topology and all calls
-// agree, but VC6 lowers the depth switch with subtraction, saves the color
-// count instead of its byte size, and schedules return values/restores
-// differently. The equivalent chained negative depth guard scores 78.26%;
-// signed versus unsigned paletteBytes is byte-flat.
-// An 18-state JSON/Python batch crossed switch/positive/negative depth
-// guards, signed/unsigned/depth-derived palette sizes and header/descriptor
-// count reloads. None improved 88.04%; the descriptor reload reached 86.46%.
-// A later 60-state color-count/guard/product cross emits six objects; every
-// named color lifetime collapses to the retained direct-member object and no
-// state improves the peak.
 VA(0x006035c0, 0x1d6)  // anchor-caller allocimage + imgdes / bitmap header / Win32 allocation
 int __cdecl victorAllocateImage(imgdes* image, int width, int height,
                                int bitsPerPixel, unsigned int useDibSection)
@@ -318,14 +307,9 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
     memset(image, 0, sizeof(*image));
     if (bitsPerPixel == victorFourBitColor)
         bitsPerPixel = victorIndexedColor;
-    switch (bitsPerPixel) {
-    case victorMonochrome:
-    case victorIndexedColor:
-    case victorTrueColor:
-        break;
-    default:
+    if (bitsPerPixel != victorMonochrome && bitsPerPixel != victorIndexedColor
+        && bitsPerPixel != victorTrueColor)
         return victorUnsupportedBitDepth;
-    }
     if (!width || !height)
         return -1;
     image->m_colors = bitsPerPixel == victorTrueColor ? 0 : 1 << bitsPerPixel;
@@ -380,15 +364,6 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
 // The public release API validates the readable header range, releases
 // global-memory and optional DIB-section ownership, then clears imgdes.
 // This ordinary C++ reconstruction retains the two GlobalHandle calls.
-// Residual (90.0976%): VC6 saves/restores ESI only inside the header-release branch;
-// retail saves it at entry. An early read-error return, C compilation and
-// /G5 or /G6 tuning leave that difference. No guard or dummy use is added
-// merely to extend the import-pointer register's lifetime.
-// /O2 /Os and /O1 /Oi give 105 different bytes; /O2 /Og- gives 155.
-// /G3, /G4 and an explicit HGLOBAL local for both release calls are flat.
-// An explicit read-error goto to the final return also preserves 90.0976%;
-// spelling a shared exit does not move the conditional ESI save/restore.
-// Compiling this body alone with the same headers and flags is byte-identical.
 // Dreamcast's PCX stub independently confirms the public void result;
 // the incidental EAX value does not justify changing that interface.
 VA(0x006037a0, 0x6e)  // anchor-caller PCX importers + Win32 ownership calls; external Victor library
@@ -533,16 +508,6 @@ void __stdcall victorInitializeGrayscalePalette(imgdes* image)
 // height then width. The unsigned inclusive extents and ordered stores are
 // byte-proven. Its returned EAX is overwritten by the caller, so the source
 // models a void result rather than inventing a value to reserve EAX.
-// Residual (85.8333%): VC6 loads the last height comparison into EAX and hoists the
-// register restores; retail compares memory before one shared epilogue.
-// Braced conditionals and C compilation are flat; /G6 changes the schedule
-// further. Preserve the direct field calculations and conditional stores.
-// /O2 /Os and /O1 /Oi give 65 different bytes; /O2 /Og- gives 122.
-// /G3, /G4 and named first-image extent locals are byte-flat.
-// Inverting the final height test into an early return or goto exit retains
-// 85.8333%; assigning a conditional minimum instead lowers it to 80.2778%.
-// These exit spellings do not recover retail's memory compare and epilogue.
-// Compiling this body alone with the same headers and flags is byte-identical.
 VA(0x00603ac0, 0x4d)  // anchor-caller flipimage + unsigned extent semantics; external Victor library
 void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
                                       unsigned int* height, unsigned int* width)
@@ -572,17 +537,6 @@ void __cdecl victorReleaseNothing()
 // successful open clears it even when the header signature is rejected.
 // Retail deliberately ignores the short-read result and always closes an
 // opened file. Preserve that behavior and the planar four-bit normalization.
-// Residual 99.05%: a 60-state extent/store/normalization family identifies
-// the four named coordinate snapshots below, raising the body from 83.14% by
-// restoring retail's load schedule. Exhausting all 24 metadata orders against
-// three normalization forms then identifies planes/stride/palette/depth order.
-// Reading the stored output depth for the fallback restores retail's exact
-// ten-block CFG. Only its byte reload and the EBX/EDI save order remain.
-// Snapshot, predicate and entry-declaration follow-ups are flat or worse.
-// Sixty raw-header equality trees and sixty one-value range predicates do not
-// improve this peak: XOR keeps retail's flow/DL home but emits XOR, while CMP
-// forms regain C2's extra jump. Minimal inline assembly blocks global C2 and
-// is much worse, so the natural stored-output form remains the bounded result.
 VA(0x006042a0, 0x127)  // anchor-caller PCX importers + OpenFile/header offsets
 int __stdcall pcxinfo(const char* filename, PcxData* data)
 {
@@ -597,12 +551,8 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
     if (header.m_manufacturer == victorPcxManufacturer
         && header.m_encoding == victorPcxRleEncoding) {
         data->m_pcXvers = header.m_version;
-        unsigned int minX = header.m_minX;
-        unsigned int maxX = header.m_maxX;
-        unsigned int minY = header.m_minY;
-        unsigned int maxY = header.m_maxY;
-        data->m_width = maxX - minX + 1;
-        data->m_length = maxY - minY + 1;
+        data->m_width = header.m_maxX - header.m_minX + 1;
+        data->m_length = header.m_maxY - header.m_minY + 1;
         data->m_nplanes = header.m_planes;
         data->m_bytesPerLine = header.m_bytesPerLine;
         data->m_palInt = header.m_paletteType;
@@ -610,7 +560,7 @@ int __stdcall pcxinfo(const char* filename, PcxData* data)
         data->m_vbitcount = data->m_bpPixel * data->m_nplanes;
         if ((header.m_bitsPerPixel == victorMonochrome
              && header.m_planes == victorPcxEgaPlanes)
-            || static_cast<unsigned char>(data->m_bpPixel) == victorFourBitColor)
+            || header.m_bitsPerPixel == victorFourBitColor)
             data->m_vbitcount = victorIndexedColor;
     } else {
         status = -16;
@@ -761,73 +711,49 @@ void __cdecl victorDestroyLock7()
 // Retail-only bit-range insertion, called by flipimage. The first and last
 // destination bytes retain bits outside the inclusive range. Signed count
 // division and the two-stage loop follow retail, including zero counts.
-// Residual 94.44%: local shift and destination cursors retain saved bits
-// in AL and recover retail's register allocation. Declaring shift before the
-// cursor places the saved mask in retail's dead offset-parameter home. Staging
-// the shifted byte before updating count raises 90.70% to 94.41%; retail still
-// uses one LEA where VC6 emits LEA/add. JSON batches measured shift types, cursor
-// lifetimes and eight count/store schedules. /Og-, /Os and /O1 are worse.
-// A further nine-state batch of reassociated/unsigned count arithmetic and
-// separate source/destination byte reads does not improve 94.41%.
-// Rechecking ten shift-type/store combinations after the cursor fix still
-// favors signed int plus staged byte. The declaration-home family emits two
-// objects across ten forms and identifies the shift-first gain; rebased seven-
-// schedule, eight-byte-lifetime and twenty-arithmetic families emit only two,
-// one and one objects and do not fuse the remaining count update. /Ol- and
-// /G5 controls are byte-flat. Thirty-six loop-count/end-position ownership
-// states and a fresh seventy-state post-fix source-byte/schedule cross each
-// emit two objects; neither improves the retained parameter-count form. /G6
-// lowers insertion to 75.24% and extraction to 66.24%.
+// It advances its destination and source parameters directly, like the
+// paired extractor.
 VA(0x00604720, 0x84)  // anchor-caller flipimage + paired bit-mask tables
 void __stdcall victorInsertBits(unsigned char* destination,
                                 const unsigned char* source, int offset, int count)
 {
     int shift = offset & 7;
-    unsigned char* target = destination;
     unsigned char mask = g_victorTrailingBits[(shift + count - 1) & 7];
-    unsigned char saved = target[(shift + count - 1) / 8] & mask;
-    *target &= g_victorLeadingBits[shift];
+    unsigned char saved = destination[(shift + count - 1) / 8] & mask;
+    *destination &= g_victorLeadingBits[shift];
     while (count > 0) {
         unsigned char bits = *source >> shift;
         count += shift - 8;
-        *target |= bits;
+        *destination |= bits;
         if (count <= 0)
             break;
-        *++target = *source << (8 - shift);
+        *++destination = *source << (8 - shift);
         count -= shift;
         ++source;
     }
-    *target = (*target & ~mask) | saved;
+    *destination = (*destination & ~mask) | saved;
 }
 
 // Retail-only bit-range extraction, paired with victorInsertBits by
 // flipimage. It left-aligns the source range and clears the trailing bits.
-// Residual 74.24%: the same offset-8 invariant consumes an extra register;
-// retail saves EBX/EDI before the empty-count branch and uses no EBP.
-// Nine JSON-batched loop/count spellings did not improve the match. A later
-// exhaustive 60-state cross of six empty-tail/cursor structures and ten
-// equivalent count updates emitted four objects and likewise retained 74.24%.
-// Sixteen cursor/shift lifetime combinations favor a local destination
-// cursor (74.24% versus 70.70%); count/source locals do not improve it.
-// Seven byte-store/count-update schedules are flat. Explicit empty-count
-// returns and do/for loop forms also fail to improve the retained version.
+// Advancing the destination parameter itself (no cursor copy) reproduces
+// retail's separate empty-count tail, which still addresses the parameter.
 VA(0x006047b0, 0x73)  // anchor-caller flipimage + trailing bit-mask table
 void __stdcall victorExtractBits(unsigned char* destination,
                                  const unsigned char* source, int offset, int count)
 {
-    unsigned char* target = destination;
     offset &= 7;
     unsigned char mask = g_victorTrailingBits[(count - 1) & 7];
     while (count > 0) {
-        *target = *source << offset;
+        *destination = *source << offset;
         count += offset - 8;
         if (count <= 0)
             break;
-        *target |= *++source >> (8 - offset);
+        *destination |= *++source >> (8 - offset);
         count -= offset;
         if (count <= 0)
             break;
-        ++target;
+        ++destination;
     }
-    *target &= ~mask;
+    *destination &= ~mask;
 }

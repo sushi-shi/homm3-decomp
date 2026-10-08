@@ -26,6 +26,8 @@ zlib_o2_ml_gr_c_windows = [
   "/D_WINDOWS",
 ]
 
+# Victor library objects are VC5 SP3 output (compiler = "msvc5.0" on their
+# units; docs/vc6/victor-library.md). /Ob2 expands the palette helper.
 victor_o2_ml_gd_windows = [
   "/nologo",
   "/c",
@@ -36,6 +38,8 @@ victor_o2_ml_gd_windows = [
   "/D_WINDOWS",
 ]
 
+# The PCX kernels keep the RLE decoder's EBX save only with global
+# optimization off, under VC5 as under VC6.
 victor_kernels_o2_ogoff_ml_gd_windows = [
   "/nologo",
   "/c",
@@ -817,24 +821,28 @@ flags = "game_o2_mt_gr_windows"
 unit = "victor"
 module = "victor"
 source = "src/victor.cpp"
+compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 
 [[unit]]
 unit = "victor_flip"
 module = "victor"
 source = "src/victor_flip.cpp"
+compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 
 [[unit]]
 unit = "victor_loadpcx"
 module = "victor"
 source = "src/victor_loadpcx.cpp"
+compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 
 [[unit]]
 unit = "victor_pcx_kernels"
 module = "victor"
 source = "src/victor_pcx_kernels.cpp"
+compiler = "msvc5.0"
 flags = "victor_kernels_o2_ogoff_ml_gd_windows"
 
 [[unit]]

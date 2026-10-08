@@ -131,6 +131,22 @@
         '';
       };
 
+      # Visual C++ 5.0 SP3 (C1XX/C2 11.00.7303) for units whose manifest entry
+      # names compiler = "msvc5.0": the statically linked Victor library was
+      # built with it (docs/vc6/victor-library.md). This is the same pinned
+      # archive as the Gruntz project's toolchain.
+      vc5-toolchain = pkgs.runCommand "gruntz-toolchain-vc50" {
+        src = pkgs.fetchurl {
+          name = "gruntz-toolchain-vc50.tar.xz";
+          url = "https://github.com/sushi-shi/gruntz-decomp/releases/download/toolchain-vc50-sp3-r3/gruntz-toolchain-vc50.tar.xz";
+          sha256 = "sha256-sZgl957g2+6wlrAPxIa1OcaDqlcG8PXsXVOKWc5KeZ8=";
+        };
+        nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];
+      } ''
+        mkdir -p "$out"
+        tar xf "$src" -C "$out" --strip-components=1
+      '';
+
       # The current directory's checkout wins over an inherited HOMM3_DIR
       # naming another checkout (scripts/project-root.sh --select).
       homm3-cli = pkgs.writeShellScriptBin "homm3" ''
@@ -221,6 +237,7 @@
           shellHook = commonShellHook + ''
             export HOMM3_TOOLCHAIN="''${HOMM3_TOOLCHAIN:-$HOMM3_DIR/build/homm3-toolchain-vc6-sp3}"
             export MSVC_DIR="$HOMM3_TOOLCHAIN/msvc"
+            export HOMM3_MSVC5_DIR="''${HOMM3_MSVC5_DIR:-${vc5-toolchain}/msvc}"
             export WINEPREFIX="$HOMM3_DIR/build/wineprefix"
             export WINEDEBUG="fixme-all,err-kerberos"
             export WINEDLLOVERRIDES="mscoree,mshtml="

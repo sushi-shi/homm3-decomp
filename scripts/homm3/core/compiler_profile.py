@@ -40,6 +40,13 @@ class Profiles:
         self.includes = ([self.mirror] if self.mirror else []) + project.includes
         self.by_source = {u['source']: u for u in self.data.get('unit', [])}
 
+    def compiler_for_source(self, path):
+        """The manifest compiler that emits `path`'s unit (the [build] default
+        for unadmitted sources)."""
+        relative = path.resolve().relative_to(self.project.root).as_posix()
+        default = self.data['build'].get('compiler', 'msvc6.0')
+        return self.by_source.get(relative, {}).get('compiler', default)
+
     def for_source(self, path):
         relative = path.resolve().relative_to(self.project.root).as_posix()
         unit = self.by_source.get(relative)

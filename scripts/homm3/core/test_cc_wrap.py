@@ -210,3 +210,46 @@ class WinepathFailureTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UnitCompilerTests(unittest.TestCase):
+    """A unit naming a non-default compiler compiles with that toolchain."""
+
+    def tree(self, tmp):
+        root = Path(tmp)
+        (root / "config").mkdir()
+        (root / "src").mkdir()
+        (root / "config/units.toml").write_text(
+            '[build]\ncompiler = "msvc6.0"\n'
+            '[[unit]]\nunit = "lib"\nsource = "src/lib.cpp"\n'
+            'compiler = "msvc5.0"\nflags = "p"\n'
+            '[[unit]]\nunit = "game"\nsource = "src/game.cpp"\nflags = "p"\n')
+        (root / "config/project.toml").write_text(
+            '[toolchain]\nlocations = ["build/vc6/msvc"]\n'
+            '[toolchain.compilers."msvc5.0"]\nenv = "TEST_VC5"\n'
+            'locations = ["build/vc5/msvc"]\n')
+        for name in ("vc5", "vc6"):
+            (root / "build" / name / "msvc/bin").mkdir(parents=True)
+            (root / "build" / name / "msvc/bin/CL.EXE").write_bytes(b"")
+        return root
+
+    def test_named_compiler_selects_its_toolchain(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self.tree(tmp)
+            with patch.dict(os.environ, {"MSVC_DIR": str(root / "build/vc6/msvc")}):
+                self.assertEqual(cc_wrap.unit_compiler(root / "src/lib.cpp", root), "msvc5.0")
+                self.assertEqual(cc_wrap.source_msvc_dir(root / "src/lib.cpp", root),
+                                 root / "build/vc5/msvc")
+                self.assertIsNone(cc_wrap.unit_compiler(root / "src/game.cpp", root))
+                self.assertEqual(cc_wrap.source_msvc_dir(root / "src/game.cpp", root),
+                                 root / "build/vc6/msvc")
+                self.assertIsNone(cc_wrap.unit_compiler(root / "probe.cpp", root))
+
+    def test_environment_names_the_compiler_tree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self.tree(tmp)
+            other = root / "nix/msvc"
+            (other / "bin").mkdir(parents=True)
+            (other / "bin/cl.exe").write_bytes(b"")
+            with patch.dict(os.environ, {"TEST_VC5": str(other)}):
+                self.assertEqual(cc_wrap.compiler_dir("msvc5.0", root), other)

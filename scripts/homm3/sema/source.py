@@ -249,7 +249,7 @@ def _recorded_source(filename: str | None, tu_path: Path,
     if not path.is_absolute():
         path = common.HOMM3_DIR / path
     path = path.resolve()
-    compiler_include = (cc_wrap.msvc_dir() / "include").resolve()
+    compiler_include = (cc_wrap.source_msvc_dir(tu_path) / "include").resolve()
     # Wine resolves <xtree> to the pinned XTREE file case-insensitively,
     # while /Z7 retains the include spelling. Resolve only a unique filename
     # inside the pinned compiler tree; never guess a project dependency.

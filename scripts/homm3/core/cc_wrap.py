@@ -96,6 +96,65 @@ def msvc_dir(root=HOMM3_DIR):
     candidates.extend(root / path for path in locations or ["build/toolchain/msvc"])
     return next((path for path in candidates
                  if find_ci(path / "bin", "cl.exe")), candidates[0])
+
+
+def unit_compiler(src, root=HOMM3_DIR):
+    """The non-default manifest compiler of the unit whose source is `src`.
+
+    A unit may name `compiler`; units without one, and probe or reference
+    sources outside the manifest, use the [build] default and return None.
+    Resolving against `root` keeps an isolated candidate tree's unit on its
+    own compiler.
+    """
+    from homm3 import manifest
+    root = Path(root).resolve()
+    try:
+        relative = Path(src).resolve().relative_to(root).as_posix()
+    except ValueError:
+        return None
+    path = root / "config/units.toml"
+    if not path.is_file():
+        return None
+    data = manifest.load(path)
+    default = data.get("build", {}).get("compiler", "msvc6.0")
+    for unit in data.get("unit", []):
+        if unit.get("source") == relative:
+            compiler = unit.get("compiler", default)
+            return None if compiler == default else compiler
+    return None
+
+
+def compiler_dir(compiler, root=HOMM3_DIR):
+    """The msvc/ root of a non-default manifest compiler.
+
+    config/project.toml [toolchain.compilers."<name>"] names an environment
+    variable (exported by `nix develop .#build`) and fallback tree locations.
+    MSVC_DIR does not replace a named compiler: it selects the default
+    toolchain or one of its A/B overlays.
+    """
+    from homm3.core.project import Project
+    spec = Project(root).specification.get("toolchain", {}).get("compilers", {})
+    entry = spec.get(compiler)
+    if entry is None:
+        die(f"unknown compiler {compiler!r}: add it to config/project.toml "
+            "[toolchain.compilers]")
+    candidates = []
+    if os.environ.get(entry.get("env", "")):
+        candidates.append(Path(os.environ[entry["env"]]))
+    candidates.extend(Path(root) / path for path in entry.get("locations", []))
+    found = next((path for path in candidates if find_ci(path / "bin", "cl.exe")), None)
+    if found is None:
+        die(f"{compiler} toolchain not found; set {entry.get('env')} "
+            "(run inside `nix develop .#build`)")
+    return found
+
+
+def source_msvc_dir(src, root=HOMM3_DIR):
+    """The msvc/ root that compiles `src`: its unit's compiler, else msvc_dir()."""
+    compiler = unit_compiler(src, root)
+    return compiler_dir(compiler, root) if compiler else msvc_dir(root)
+
+
 class WineUnavailable(SystemExit):
     """Wine could not translate a path, so no Wine tool can run here.
 
@@ -234,11 +293,11 @@ def main():
     ap.add_argument("flags", nargs=argparse.REMAINDER)
     a = ap.parse_args()
     flags = a.flags[1:] if a.flags and a.flags[0] == "--" else a.flags
-    msvc = msvc_dir(); cl = find_ci(msvc / "bin", "cl.exe")
-    if not cl: die(f"CL.EXE not under {msvc}/bin - run inside `nix develop .#build`.")
-    if shutil.which("wine") is None: die("wine not found - run inside `nix develop .#build`.")
     src = Path(a.src).resolve(); out = Path(a.out).resolve()
     if not src.exists(): die(f"source missing: {src}")
+    msvc = source_msvc_dir(src); cl = find_ci(msvc / "bin", "cl.exe")
+    if not cl: die(f"CL.EXE not under {msvc}/bin - run inside `nix develop .#build`.")
+    if shutil.which("wine") is None: die("wine not found - run inside `nix develop .#build`.")
     out.parent.mkdir(parents=True, exist_ok=True)
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
     anchor_wine_prefix()

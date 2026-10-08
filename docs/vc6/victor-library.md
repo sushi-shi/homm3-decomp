@@ -8,6 +8,34 @@ kernels in `src/victor_pcx_kernels.cpp`, with explicitly provisional grouping
 filenames and separate profiles. Original library source and object filenames
 remain unknown; the vendor directory is unchanged.
 
+## Compiler: Visual C++ 5.0 SP3
+
+The Victor objects were not built by the game's VC6 SP3. The retail Rich
+header counts 145 C++ objects from C2 8447 (the game), 26 from 8168 and 69
+unmarked objects; compilers before VC6 do not emit `@comp.id`. Every map
+editor build carries 80 unmarked objects whatever its own compiler (RoE VC6
+RTM through Buka 2003 VC6 SP5), and the SoD-era editors contain the same
+Victor bytes as the game: a prebuilt library linked unchanged.
+
+Compiling the unchanged `src/victor.cpp` with each available compiler and
+`/O2 /Ob2 /ML /Gd` gives 11 exact functions under VC6 SP3 (VC6 RTM is
+identical), 2 under VC4.0 and VC4.1, and 14 under VC5.0 SP3 (C1XX/C2
+11.00.7303). VC5 alone makes `freeimage` and `victorMinimumDimensions` exact:
+it saves ESI at entry and compares through memory before one shared epilogue,
+the two residuals that no VC6 source or flag reproduced. Under VC5 `/O2`
+equals `/Ox`, `/G5` is flat, `/G6` and `/Oy-` are worse, and `/Ob2` improves
+the inlined palette initializer. The kernels still need `/Og-` for the RLE
+decoder's EBX save. The four Victor units therefore name
+`compiler = "msvc5.0"` in `config/units.toml`; `nix develop .#build` exports
+the toolchain as `HOMM3_MSVC5_DIR` (the pinned Gruntz VC5 SP3 archive), and
+`homm3.core.cc_wrap` selects it from the unit owning the compiled source.
+
+The register, schedule and tail-merge findings below were measured with VC6
+SP3 before this identification. Treat them as history: re-measure a residual
+under VC5 before relying on one.
+
+## Calling conventions and kernels
+
 The public allocation and validation wrappers use `stdcall`; the allocation
 worker and dimension helper use `cdecl`. The 37-byte `allocimage` wrapper
 loads the process-wide mode, forwards five stack arguments, cleans the worker's

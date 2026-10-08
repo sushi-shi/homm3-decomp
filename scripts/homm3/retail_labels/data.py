@@ -104,6 +104,9 @@ def _declarations(path: Path, profiles, *, bodies=False, reached=None):
         else:
             name = msvc_names.data(cursor.mangled_name, decorated=True,
                                    internal=cursor.linkage != cx.LinkageKind.EXTERNAL)
+        if profiles.compiler_for_source(path) == 'msvc5.0':
+            name = msvc_names.vc5_data(
+                name, internal=cursor.linkage != cx.LinkageKind.EXTERNAL)
         fact = dict(name=name, size=size, type=cursor.type.spelling,
                     defined=cursor.is_definition(),
                     internal=cursor.linkage != cx.LinkageKind.EXTERNAL,

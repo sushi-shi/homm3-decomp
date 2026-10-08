@@ -56,3 +56,11 @@ locations = ["build/homm3-toolchain-vc6-sp3/msvc", "build/toolchain/msvc"]
 "include/afxodlgs.h" = "8d766ff1a320790f487143e096d4970cb01bf45bfd7ac524bcb2e51bee3b2367"
 "include/afxwin1.inl" = "0aac8da0f7e2df2ba770328696a61523cdc43c17a95d2e29161dceaca002cd37"
 "lib/nafxcw.lib" = "967ffe73dd6a8197bd30c7d5c481d51d31cf266c82cebd808db0f7edcf4307c8"
+
+# Units that name a non-default `compiler` in config/units.toml. `env` is
+# exported by `nix develop .#build`; `locations` are manually unpacked trees.
+# msvc5.0: Visual C++ 5.0 SP3 (C1XX/C2 11.00.7303), the compiler of the
+# statically linked Victor library objects (see docs/vc6/victor-library.md).
+[toolchain.compilers."msvc5.0"]
+env = "HOMM3_MSVC5_DIR"
+locations = ["build/homm3-toolchain-vc5-sp3/msvc"]

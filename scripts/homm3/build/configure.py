@@ -24,6 +24,12 @@ from homm3.core.common import HOMM3_DIR as ROOT
 from homm3.core.images import path as _image_path
 
 
+def declared_compilers() -> dict:
+    """Non-default compilers declared in config/project.toml."""
+    from homm3.core.project import Project
+    return Project(ROOT).specification.get("toolchain", {}).get("compilers", {})
+
+
 def load_manifest() -> tuple[dict, dict[str, list[str]], list[dict]]:
     """Parse via homm3.manifest, then apply the manifest GATES (this module
     owns them: required keys, duplicate units, known flag profiles, existing
@@ -57,6 +63,10 @@ def load_manifest() -> tuple[dict, dict[str, list[str]], list[dict]]:
         if Path(name).name != name:
             raise SystemExit("[configure] unit names must be plain filenames: " + name)
         seen.add(name)
+        compiler = unit.get("compiler", build.get("compiler", "msvc6.0"))
+        if compiler != build.get("compiler", "msvc6.0") and compiler not in declared_compilers():
+            raise SystemExit("[configure] unknown compiler for %s: %s (declare it in "
+                             "config/project.toml [toolchain.compilers])" % (name, compiler))
         if unit["flags"] not in profiles:
             raise SystemExit("[configure] unknown flag profile for %s: %s" %
                              (name, unit["flags"]))
@@ -237,7 +247,7 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
                             if norm_target.is_file() else "./dummy.obj"),
             "scratch": {
                 "platform": build.get("platform", "win32"),
-                "compiler": build.get("compiler", "msvc6.0"),
+                "compiler": unit.get("compiler", build.get("compiler", "msvc6.0")),
             },
         })
     (directory / "objdiff.json").write_text(json.dumps({
