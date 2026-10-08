@@ -34,6 +34,9 @@
 #include "editor/Point.h"
 #include "editor/RefCountingPtr.h"
 #include "editor/Uncopyable.h"
+#include "editor/GameObject.h"
+#include "editor/TimedEvent.h"
+#include "editor/VictoryCondition.h"
 
 class istream;
 class ostream;
