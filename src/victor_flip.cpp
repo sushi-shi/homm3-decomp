@@ -16,18 +16,9 @@
 // temporary so source and destination may be the same image. Monochrome
 // regions use two bit-range temporaries to preserve neighboring pixels.
 // Dreamcast has only the public API stub; all Windows semantics are retail.
-// Residual 77.86%: all nine named calls agree, named depth snapshots recover
-// the retail compare exactly, and a destination-stride snapshot improves the
-// allocation setup. Stack-local allocation, address arithmetic and status/
-// return scheduling still differ. JSON-batched status, pointer, row-distance,
-// declaration-order and register-hint families leave the nested scopes best;
-// early validation and allocation returns score 76.21%.
-// Boundary repair: a one-row region can otherwise step its top pointer
-// before separate DIB storage. Stop after the last paired copy, in both
-// depth branches. Three-form family: break 73.8105%, remaining-pair guard
-// 69.2661%, unchecked 77.8629% (retained in HIST).
-// The three-state relative-row family reproduces all objects: integral byte
-// offsets score 61.1976%, multiplied row indices 48.6694%; neither improves.
+// Like retail, each loop steps all four row pointers after every copied
+// pair, including the last; the pointers are not read again. The header
+// snapshots exist only for the depth check, destination first.
 VA(0x00603b20, 0x2d2)  // anchor-caller PCX importers + paired row/bit helper calls
 int __stdcall flipimage(imgdes* source, imgdes* destination)
 {
@@ -35,9 +26,9 @@ int __stdcall flipimage(imgdes* source, imgdes* destination)
     if (!status) {
         status = victorValidateBitmap(destination);
         if (!status) {
-            unsigned short sourceDepth = source->m_bmh->biBitCount;
-            unsigned short destinationDepth = destination->m_bmh->biBitCount;
-            if (sourceDepth != destinationDepth)
+            BITMAPINFOHEADER* destinationHeader = destination->m_bmh;
+            BITMAPINFOHEADER* sourceHeader = source->m_bmh;
+            if (sourceHeader->biBitCount != destinationHeader->biBitCount)
                 return victorUnsupportedBitDepth;
             unsigned int width, height;
             victorMinimumDimensions(source, destination, &height, &width);
@@ -73,8 +64,6 @@ int __stdcall flipimage(imgdes* source, imgdes* destination)
                         memcpy(temporary, sourceTop, rowBytes);
                         memcpy(destinationTop, sourceBottom, rowBytes);
                         memcpy(destinationBottom, temporary, rowBytes);
-                        if (!rows)
-                            break;
                         sourceTop -= source->m_buffwidth;
                         destinationTop -= destination->m_buffwidth;
                         sourceBottom += source->m_buffwidth;
@@ -87,8 +76,6 @@ int __stdcall flipimage(imgdes* source, imgdes* destination)
                         victorExtractBits(secondTemporary, sourceTop, source->m_stx, width);
                         victorInsertBits(destinationTop, temporary, destination->m_stx, width);
                         victorInsertBits(destinationBottom, secondTemporary, destination->m_stx, width);
-                        if (!rows)
-                            break;
                         sourceTop -= source->m_buffwidth;
                         destinationTop -= destination->m_buffwidth;
                         sourceBottom += source->m_buffwidth;

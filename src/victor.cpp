@@ -588,8 +588,8 @@ int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
                 palette->rgbRed = source[0];
                 palette->rgbGreen = source[1];
                 palette->rgbBlue = source[2];
-                source += 3;
                 ++palette;
+                source += 3;
             }
             _lclose(file);
         }
