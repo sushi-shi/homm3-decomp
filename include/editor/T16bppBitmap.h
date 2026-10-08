@@ -16,6 +16,11 @@
 #ifndef HOMM3_EDITOR_T16BPPBITMAP_H
 #define HOMM3_EDITOR_T16BPPBITMAP_H
 
+// Two one-byte constants follow every includer's .rodata (1, then 2): the
+// bytes per pixel of the two formats. Names and type are inferred.
+const unsigned char k8bppBytesPerPixel = 1;
+const unsigned char k16bppBytesPerPixel = 2;
+
 template <class TPixel>
 class TBitmapBase {
 public:

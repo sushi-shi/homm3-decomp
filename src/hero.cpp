@@ -6650,7 +6650,7 @@ void hero::applyCreatureStatBonuses(int creatureType,
                 traits->m_defenseSkill = static_cast<int>(
                     ceil(g_creatureTypeTraits[creatureType].m_defenseSkill * scale)
                     + traits->m_defenseSkill);
-                if (!(traits->m_attributes & g_ctaSiegeWeapon))
+                if (!(traits->m_attributes & creatureSiegeWeapon))
                     traits->m_speed++;
             } else {
                 traits->m_attackSkill += ability.m_creatureAttackBonus;
@@ -6673,7 +6673,7 @@ void hero::applyCreatureStatBonuses(int creatureType,
         break;
     }
 
-    if (!(traits->m_attributes & g_ctaSiegeWeapon))
+    if (!(traits->m_attributes & creatureSiegeWeapon))
         traits->m_speed += getCombatSpeedBonus();
     traits->m_hitPoints += getHitPointBonus(creatureType);
 }

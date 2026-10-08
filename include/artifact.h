@@ -46,13 +46,16 @@ enum TArtifactSlot {
 // The artifact classes artraits.txt column 20 names by letter: S(pecial),
 // T(reasure), N (minor), J (major), R(elic). The Loki asserts spell
 // ArtifactClassSpecial; the other four follow it.
-enum TArtifactClass {
-    ArtifactClassSpecial = 1,
-    ArtifactClassTreasure = 2,
-    ArtifactClassMinor = 4,
-    ArtifactClassMajor = 8,
-    ArtifactClassRelic = 0x10
-};
+// The classes are namespace-scope constants: every Loki object that
+// includes this header emits 1, 2, 4, 8 and 16 in this order at the end of
+// its .rodata.
+typedef unsigned int TArtifactClass;
+
+const TArtifactClass ArtifactClassSpecial = 1;
+const TArtifactClass ArtifactClassTreasure = 2;
+const TArtifactClass ArtifactClassMinor = 4;
+const TArtifactClass ArtifactClassMajor = 8;
+const TArtifactClass ArtifactClassRelic = 0x10;
 
 // RoE has 127 artifacts ("id >= 0 && id < kNumArtifacts").
 enum {

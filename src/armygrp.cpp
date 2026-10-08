@@ -407,7 +407,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         return 1.0f;
     }
-    if (attrs & g_ctaSiegeWeapon) {
+    if (attrs & creatureSiegeWeapon) {
         if (spellRec->m_flags & 0x1000)
             return 0.0f;
     }
@@ -419,7 +419,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
                 && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
             || targetArmyType == CREATURE_TROGLODYTE
             || targetArmyType == CREATURE_INFERNAL_TROGLODYTE
-            || (attrs & g_ctaUndead))
+            || (attrs & creatureUndead))
             return 0.0f;
         break;
     case SPELL_BERSERK:
@@ -447,7 +447,7 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     case SPELL_CURSE:
-        if (attrs & g_ctaUndead)
+        if (attrs & creatureUndead)
             return 0.0f;
         if (creatureRec->m_damageHighBound == 0)
             return 0.0f;
@@ -456,11 +456,11 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     case SPELL_RESURRECTION:
-        if (attrs & g_ctaUndead)
+        if (attrs & creatureUndead)
             return 0.0f;
         break;
     case SPELL_BLESS:
-        if (attrs & g_ctaUndead)
+        if (attrs & creatureUndead)
             return 0.0f;
     case SPELL_FORTUNE:
     case SPELL_MISFORTUNE:
@@ -469,24 +469,24 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
             return 0.0f;
         break;
     case SPELL_ANIMATE_DEAD:
-        if (!(attrs & g_ctaUndead))
+        if (!(attrs & creatureUndead))
             return 0.0f;
         break;
     case SPELL_DEATH_RIPPLE:
-        if ((attrs & g_ctaUndead)
+        if ((attrs & creatureUndead)
             || (targetHero
                 && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE)))
             return 0.0f;
         break;
     case SPELL_DESTROY_UNDEAD:
-        if ((!(attrs & g_ctaUndead))
+        if ((!(attrs & creatureUndead))
             || (targetHero
                 && targetHero->isWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH)))
             return 0.0f;
         break;
     case SPELL_MIRTH:
     case SPELL_SORROW:
-        if (attrs & g_ctaNoMorale)
+        if (attrs & creatureNoMorale)
             return 0.0f;
         break;
     case SPELL_STONE:
@@ -629,7 +629,7 @@ unsigned char armyGroup::hasAllUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (!(g_creatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead))
+        if (!(g_creatureTypeTraits[m_armies[i]].m_attributes & creatureUndead))
             return 0;
     }
     return 1;
@@ -646,7 +646,7 @@ unsigned char armyGroup::hasSomeUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (g_creatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead)
+        if (g_creatureTypeTraits[m_armies[i]].m_attributes & creatureUndead)
             return 1;
     }
     return 0;
@@ -695,7 +695,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         if (creature == CREATURE_NONE)
             continue;
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
-        if (traits.m_attributes & g_ctaSiegeWeapon)
+        if (traits.m_attributes & creatureSiegeWeapon)
             continue;
         int alignment = g_game->getAlignment(creature);
         alignments[alignment + 1]++;
@@ -938,7 +938,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
-    if (g_creatureTypeTraits[m_armies[index]].m_attributes & g_ctaNoMorale)
+    if (g_creatureTypeTraits[m_armies[index]].m_attributes & creatureNoMorale)
         return 0;
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
@@ -1250,7 +1250,7 @@ std::string armyGroup::getMoraleDescription(
     // reference makes VC6 materialise the ADDRESS instead - one extra
     // `add` per use, a stack slot of its own, and the table base loaded
     // BEFORE the index chain rather than after it.
-    if (g_creatureTypeTraits[creature].m_attributes & g_ctaNoMorale)
+    if (g_creatureTypeTraits[creature].m_attributes & creatureNoMorale)
         return g_moraleInfo[28];
 
     int currentMorale = getMorale(

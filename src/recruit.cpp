@@ -568,7 +568,7 @@ void recruitUnit::update(bool newMonster, long slot)
     g_recruitWindow->broadcastMessage(msg);
 
     m_numAvail = m_available[slot];
-    if (g_creatureTypeTraits[m_monsterType].m_attributes & g_ctaSiegeWeapon) {
+    if (g_creatureTypeTraits[m_monsterType].m_attributes & creatureSiegeWeapon) {
         *m_numAvail = 1 - m_thisHero->hasArtifact(
             siegeMonsterToSiegeArtifact(m_monsterType));
         if (*m_numAvail < 0)
@@ -945,7 +945,7 @@ int recruitUnit::main(message& msg)
                     return finishRecruitUnit(msg);
 
                 if (g_creatureTypeTraits[m_monsterType].m_attributes
-                    & g_ctaSiegeWeapon) {
+                    & creatureSiegeWeapon) {
                     if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
                         > 64) {
                         normalDialog((*g_generalText)[GENERAL_TEXT_RECRUIT_BACKPACK_FULL],

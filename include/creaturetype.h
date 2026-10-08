@@ -12,7 +12,9 @@
 // fills from crtraits.txt (costs, fight and AI values and the horde growth
 // as shorts).
 
-enum { kNumCreatureTypesPerTown = 7 };
+// A namespace-scope constant: every Loki object that includes this header
+// emits its 4 bytes at the end of .rodata.
+const int kNumCreatureTypesPerTown = 7;
 
 struct TCreatureTypeTraits {
     TTownType townType;

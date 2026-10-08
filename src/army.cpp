@@ -4581,7 +4581,7 @@ void army::newTurn()
             || m_creatureType == ARMY_CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
             || ((g_creatureTypeTraits[m_creatureType].m_attributes
-                 & g_ctaAlive)
+                 & creatureAlive)
                 && g_combatManager->m_heroes[m_combatSide] != 0
                 && g_combatManager->m_heroes[m_combatSide]
                        ->isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))) {

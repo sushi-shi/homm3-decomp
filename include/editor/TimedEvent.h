@@ -19,7 +19,14 @@ class ostream;
 class TRawIStream;
 class TRawOStream;
 
-const unsigned int kNumDaysPerYear = 336;
+// The calendar: "newDay < kNumDaysPerYear * 2", "newInterval <=
+// kNumDaysPerYear". Every Loki object that includes this header emits 7, 4,
+// 28, 12 and 336 in this order; the other four names are inferred.
+const unsigned int kNumDaysPerWeek = 7;
+const unsigned int kNumWeeksPerMonth = 4;
+const unsigned int kNumDaysPerMonth = kNumDaysPerWeek * kNumWeeksPerMonth;
+const unsigned int kNumMonthsPerYear = 12;
+const unsigned int kNumDaysPerYear = kNumDaysPerMonth * kNumMonthsPerYear;
 
 class TTimedEvent {
 public:

@@ -2386,7 +2386,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
                 TCreatureType current = m_army->m_armyTypes[index];
                 if (current != CREATURE_NONE
                     && !(g_creatureTypeTraits[current].m_attributes
-                         & g_ctaNoMorale)
+                         & creatureNoMorale)
                     && current != CREATURE_MINOTAUR
                     && current != CREATURE_MINOTAUR_KING) {
                     moraleArmyValue +=
@@ -2394,7 +2394,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
                         * m_army->m_numTroops[index];
                 }
             }
-            if (!(traits->m_attributes & g_ctaNoMorale)
+            if (!(traits->m_attributes & creatureNoMorale)
                 && type != CREATURE_MINOTAUR
                 && type != CREATURE_MINOTAUR_KING) {
                 moraleArmyValue += value;

@@ -12,7 +12,9 @@ enum TPlayer {
     ePlayerNone = -1
 };
 
-const int kNumPlayers = 8;
+// An enumerator, not a constant object: Player.o and its includers emit no
+// data for it.
+enum { kNumPlayers = 8 };
 
 // One bit per player: TEditTimedEventGeneralPage's constructor prints its
 // parameter as "const TPlayerMask &" and mangles bitset<8, unsigned long>.

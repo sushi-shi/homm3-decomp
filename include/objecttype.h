@@ -33,13 +33,14 @@ enum TSlotCategory {
     kNumSlotCategories = 6
 };
 
+// The object footprint bounds ("x < kMaxObjWidth", "y < kMaxObjHeight").
+// Namespace-scope constants: every Loki object that includes this header
+// ends its .rodata with 8 and 6.
+const int kMaxObjWidth = 8;
+const int kMaxObjHeight = 6;
+
 class TObjectType {
 public:
-    enum {
-        kMaxObjWidth = 8,
-        kMaxObjHeight = 6
-    };
-
     TObjectType();
 
     TObjectType& setImageName(const string& newImageName);

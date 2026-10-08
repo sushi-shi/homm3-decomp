@@ -292,8 +292,8 @@ ostream& operator<<(ostream& os, const TObjectType& objectType)
 istream& operator>>(istream& is, TObjectType& objectType)
 {
     string imageName;
-    bitset<TObjectType::kMaxObjWidth * TObjectType::kMaxObjHeight> passableMask;
-    bitset<TObjectType::kMaxObjWidth * TObjectType::kMaxObjHeight> triggerMask;
+    bitset<kMaxObjWidth * kMaxObjHeight> passableMask;
+    bitset<kMaxObjWidth * kMaxObjHeight> triggerMask;
     bitset<kNumTerrainTypes - 1> terrainMask;
     bitset<kNumTerrainTypes - 1> recommendedTerrainMask;
     int type;
@@ -334,8 +334,8 @@ TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType)
 TRawIStream& operator>>(TRawIStream& stream, TObjectType& objectType)
 {
     string imageName;
-    bitset<TObjectType::kMaxObjWidth * TObjectType::kMaxObjHeight> passableMask;
-    bitset<TObjectType::kMaxObjWidth * TObjectType::kMaxObjHeight> triggerMask;
+    bitset<kMaxObjWidth * kMaxObjHeight> passableMask;
+    bitset<kMaxObjWidth * kMaxObjHeight> triggerMask;
     bitset<kNumTerrainTypes - 1> terrainMask;
     bitset<kNumTerrainTypes - 1> recommendedTerrainMask;
     stream >> imageName;

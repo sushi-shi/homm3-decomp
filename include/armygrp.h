@@ -604,19 +604,12 @@ enum EMagicTerrain {
 // 7-slot loops and the CREATURE_NONE sentinel in
 // GetNumArmies (0x44acc0) / IsMember (0x44ab80).
 
-// attributes bits proven by retail tests: 0x40000 by HasAllUndead
-// (0x44ab20); 0x40 by GetAlignments (0x44abb0), which skips such
-// creatures in the alignment census - the war-machine bit.
-const unsigned int g_ctaUndead = 0x40000;
-const unsigned int g_ctaSiegeWeapon = 0x40;
-// 0x20000 zeroes a stack's morale outright (GetArmyMorale 0x44b11e) -
-// the no-morale trait (undead/elemental/war-machine family).
-const unsigned int g_ctaNoMorale = 0x20000;
-// Bit 4, byte-proven by army::new_turn (0x446e30): the Elixir of Life
-// regenerates a stack only when its traits row carries this bit - the
-// living-creature marker (the Elixir does nothing for the undead and
-// the war machines).
-const unsigned int g_ctaAlive = 0x10;
+// The attribute bits the army code tests are creatureFlags enumerators
+// (creature_flags.h): creatureUndead (HasAllUndead 0x44ab20),
+// creatureSiegeWeapon (GetAlignments 0x44abb0), creatureNoMorale
+// (GetArmyMorale 0x44b11e) and creatureAlive (army::new_turn 0x446e30).
+// They are no namespace-scope constants here: the Loki h3maped objects
+// that include this header emit no such data.
 
 // Artifact ids as the IsWieldingArtifact gates surface them (NH3API
 // artifact.hpp spellings; every name is corroborated by the byte-

@@ -75,7 +75,7 @@ void copyCustomizations(const THero& hero, THero* pNewHero)
     pNewHero->setPatrol(hero.getPatrol());
 }
 
-void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[TObjectType::kMaxObjWidth][TObjectType::kMaxObjHeight])
+void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[kMaxObjWidth][kMaxObjHeight])
 {
     for (unsigned int x = 0; x < obj.getWidth(); x++) {
         unsigned int height = obj.getBUnderlay() ? 0 : 1;
@@ -2629,7 +2629,7 @@ bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject&
     static vector<unsigned int> aHigherObjIDs;
     aLowerObjIDs.clear();
     aHigherObjIDs.clear();
-    unsigned int heightMap[TObjectType::kMaxObjWidth][TObjectType::kMaxObjHeight];
+    unsigned int heightMap[kMaxObjWidth][kMaxObjHeight];
     constructObjectHeightMap(obj, heightMap);
     for (unsigned int i = 0; i < obj.getWidth(); i++) {
         unsigned int cellX = x - i;
@@ -4276,7 +4276,7 @@ void TGameMap::TLayer::_TImpl::_stampObject(const TGameObject* pObj, const TTile
 #line 5763
     assert(pObj != __null);
     const TTileExtent objExtent = _computeObjExtent(loc, TPoint<unsigned int>(pObj->getWidth(), pObj->getHeight()));
-    unsigned int heightMap[TObjectType::kMaxObjWidth][TObjectType::kMaxObjHeight];
+    unsigned int heightMap[kMaxObjWidth][kMaxObjHeight];
     constructObjectHeightMap(*pObj, heightMap);
     for (unsigned int x = 0; x < pObj->getWidth(); x++) {
         unsigned int mapX = loc.x() - x;
