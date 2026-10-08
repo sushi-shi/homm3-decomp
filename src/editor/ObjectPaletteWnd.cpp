@@ -371,6 +371,9 @@ void TObjectPaletteWnd::OnPaint(const CRect& rect)
                                            frameRect.top + (frameRect.Height() - dstHeight) / 2,
                                            dstWidth, dstHeight);
                         } else {
+                            // Dead local: retail keeps an unused 4-byte frame
+                            // slot above pSrc. Type and name are unproven.
+                            int unused;
                             guint32* pSrc;
                             guint32* pDst;
                             double xScale;
