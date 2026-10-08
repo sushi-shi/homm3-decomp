@@ -3514,7 +3514,7 @@ bool game::saveGame(const char* filename, bool determineSuffix,
         }
         saveGameTimer.stop();
         return 1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (const TGzFile::TOpenFailure&) {
         normalDialog(
             formatString(
                 g_generalText->GetText(g_saveGameFailureGeneralText),
@@ -3618,7 +3618,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 
         load(&infile);
         return 1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (const TGzFile::TOpenFailure&) {
         return 0;
     }
 }
@@ -4119,7 +4119,7 @@ unsigned char game::newMap(const char* mapPath, const char* mapName,
             g_text, DATA_COMPGEN(0x00677d6c, newMapGzReadMode, "rb"));
         newMap(&mapFile, playerHeroFaces, NULL, gameVersion);
         return 1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (const TGzFile::TOpenFailure&) {
         return 0;
     }
 }
@@ -6683,7 +6683,7 @@ int NewSMapHeader::get(const char* path, const char* filename,
         int result = read(&infile, campaignMap);
         if (result < 0)
             return -1;
-    } catch (TGzFile::TOpenFailure) {
+    } catch (const TGzFile::TOpenFailure&) {
         return -1;
     }
     return 0;
@@ -9041,7 +9041,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                               DATA_COMPGEN(0x00677f9c,
                                            xferDiffWriteMode, "wb6"));
                 returnValue = compressedFile.write(diff, diffSize);
-            } catch (TGzFile::TOpenFailure) {
+            } catch (const TGzFile::TOpenFailure&) {
                 fileError(diffFilename);
                 shutDown(0);
             }
@@ -9563,7 +9563,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                 diffFilename,
                 DATA_COMPGEN(0x00677d6c, gzReadMode, "rb"));
             bytesRead = gzfile.read(newSave, diffSize);
-        } catch (TGzFile::TOpenFailure) {
+        } catch (const TGzFile::TOpenFailure&) {
             fileError(diffFilename);
             shutDown(0);
         }
