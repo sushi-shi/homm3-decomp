@@ -183,7 +183,7 @@ protected:
 // 0x641b14 names three of its four bodies outright (0x577090 scalar deleting
 // destructor, 0x577300 SetTotal, 0x577320 Advance); the constructor 0x576f00
 // and the repaint 0x577180 reach the rest.  Ordinal name.
-class TRandomMapProgress : public TProgressSink {
+class TRandomMapProgress : public type_progress_bar {
 public:
     std::vector<widget*> m_widgets;   // +0x0c
     heroWindow* m_window;             // +0x1c

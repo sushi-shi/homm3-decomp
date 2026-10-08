@@ -46,7 +46,7 @@ class Native:
     def __init__(self, sources):
         # Load the ordinary TU with its real Windows compiler profile. Its
         # includes contain the inline treasure constructors and hero domain.
-        sources.definition('src/rmg.cpp', 'TRmgGenerator::initializeObjectGenerators')
+        sources.definition('src/rmg.cpp', 'type_random_map_generator::initializeObjectGenerators')
         self.tu, _, self.bad, self.errors = sources.units['src/rmg.cpp']
         self.nodes = list(self.tu.cursor.walk_preorder())
 
@@ -69,7 +69,7 @@ class Native:
                                 f'{constructor}::{constructor}')
         call = one((n for n in node.get_children()
                     if n.kind == cx.CursorKind.CALL_EXPR
-                    and n.spelling == 'TRmgTreasureDef'),
+                    and n.spelling == 'type_treasure_def'),
                    f'{constructor}: treasure base initializer')
         args = list(call.get_arguments())
         if len(args) != 4:
@@ -106,19 +106,19 @@ def generate(sources):
     native = Native(sources)
     values = {}
     defaults = {
-        'ARTIFACT': 'TRmgArtifactDef',
-        'CREATURE': 'TRmgBlackBoxCreatureDef',
-        'EXPERIENCE_BOX': 'TRmgBlackBoxExperienceDef',
-        'GOLD_BOX': 'TRmgBlackBoxGoldDef',
-        'SPELL_BOX': 'TRmgBlackBoxSpellsDef',
-        'KEY_TENT': 'TRmgKeyTentDef',
-        'DWELLING': 'TRmgDwellingDef',
-        'PRISON': 'TRmgPrisonDef',
-        'SCHOLAR': 'TRmgScholarDef',
-        'QUEST': 'TRmgQuestExperienceDef',
-        'SHRINE': 'TRmgShrineDef',
-        'WITCH_HUT': 'TRmgWitchHutDef',
-        'SCROLL': 'TRmgSpellScrollDef',
+        'ARTIFACT': 'type_artifact_def',
+        'CREATURE': 'type_black_box_creature_def',
+        'EXPERIENCE_BOX': 'type_black_box_experience_def',
+        'GOLD_BOX': 'type_black_box_gold_def',
+        'SPELL_BOX': 'type_black_box_spells_def',
+        'KEY_TENT': 'type_key_tent_def',
+        'DWELLING': 'type_flaggable_def',
+        'PRISON': 'type_prison_def',
+        'SCHOLAR': 'type_scholar_def',
+        'QUEST': 'type_quest_experience_def',
+        'SHRINE': 'type_shrine_def',
+        'WITCH_HUT': 'type_witch_hut_def',
+        'SCROLL': 'type_spell_scroll_def',
     }
     for name, constructor in defaults.items():
         suffix = '_DENSITY' if name.endswith('_BOX') else '_REWARD_DENSITY'
@@ -128,7 +128,7 @@ def generate(sources):
 
     # Both non-creature seer recipes share the same density in the native
     # implementation. Keep that relationship checked by the host compiler.
-    quest_gold_density = native.base_argument('TRmgQuestGoldDef', 3)
+    quest_gold_density = native.base_argument('type_quest_gold_def', 3)
 
     field = native.declaration(cx.CursorKind.FIELD_DECL,
                                'TRmgBorderConnection::m_guardColor')
@@ -136,7 +136,7 @@ def generate(sources):
         raise ValueError('border guard colour must remain a bounded bitfield')
     values['RMG_BORDER_COLOR_BITS'] = str(field.get_bitfield_width())
     offsets = sources.definition('src/rmg.cpp',
-                                 'TRmgGenerator::placeMonolithBorderGuard::offsets')
+                                 'type_random_map_generator::placeMonolithBorderGuard::offsets')
     values['RMG_PORTAL_BORDER_OFFSET_COUNT'] = str(array_count(offsets))
 
     spell_count = one((n for n in native.nodes
@@ -154,7 +154,7 @@ def generate(sources):
         values[f'OBJECT_SLOT_CATEGORY_{category}'] = str(entry.enum_value)
 
     constructor = native.declaration(cx.CursorKind.CONSTRUCTOR,
-                                     'TRmgGenerator::TRmgGenerator')
+                                     'type_random_map_generator::type_random_map_generator')
     limits = {}
     for scope in ('Zone', 'Map'):
         name = f'g_rmg{scope}ObjectLimits'

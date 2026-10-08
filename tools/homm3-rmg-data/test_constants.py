@@ -18,18 +18,18 @@ class ConstantExtractionTests(unittest.TestCase):
 
     def native(self, body):
         (self.root / 'src/rmg.cpp').write_text('''
-struct TRmgGenerator { void initializeObjectGenerators(); };
-void TRmgGenerator::initializeObjectGenerators() {}
-struct TRmgTreasureDef { TRmgTreasureDef(int, int, int, int); };
+struct type_random_map_generator { void initializeObjectGenerators(); };
+void type_random_map_generator::initializeObjectGenerators() {}
+struct type_treasure_def { type_treasure_def(int, int, int, int); };
 ''' + body)
         profiles = SimpleNamespace(for_source=lambda path: ['-x', 'c++', '-std=c++14'])
         return Native(Sources(self.root, profiles))
 
     def test_base_default_ignores_constructor_calls_in_body(self):
         native = self.native('''
-struct Reward : TRmgTreasureDef {
-    Reward() : TRmgTreasureDef(0, 0, 40 + 2, 7 * 3) {
-        TRmgTreasureDef unrelated(0, 0, 999, 888);
+struct Reward : type_treasure_def {
+    Reward() : type_treasure_def(0, 0, 40 + 2, 7 * 3) {
+        type_treasure_def unrelated(0, 0, 999, 888);
     }
 };
 ''')
@@ -38,8 +38,8 @@ struct Reward : TRmgTreasureDef {
 
     def test_dynamic_argument_cannot_become_a_scalar_default(self):
         native = self.native('''
-struct Reward : TRmgTreasureDef {
-    Reward(int density) : TRmgTreasureDef(0, 0, 42, density) {}
+struct Reward : type_treasure_def {
+    Reward(int density) : type_treasure_def(0, 0, 42, density) {}
 };
 ''')
         with self.assertRaisesRegex(ValueError, 'unsupported 32-bit integer constant expression'):
@@ -50,8 +50,8 @@ struct Reward : TRmgTreasureDef {
                            'static_cast<int>(1)', '(int)1'):
             with self.subTest(expression=expression):
                 native = self.native('''
-struct Reward : TRmgTreasureDef {
-    Reward() : TRmgTreasureDef(0, 0, 42, ''' + expression + ''') {}
+struct Reward : type_treasure_def {
+    Reward() : type_treasure_def(0, 0, 42, ''' + expression + ''') {}
 };
 ''')
                 with self.assertRaisesRegex(ValueError, 'unsupported 32-bit integer constant expression'):
@@ -70,9 +70,9 @@ struct Reward : TRmgTreasureDef {
 
     def test_ambiguous_constructor_is_rejected(self):
         native = self.native('''
-struct Reward : TRmgTreasureDef {
-    Reward() : TRmgTreasureDef(0, 0, 42, 3) {}
-    Reward(int) : TRmgTreasureDef(0, 0, 42, 4) {}
+struct Reward : type_treasure_def {
+    Reward() : type_treasure_def(0, 0, 42, 3) {}
+    Reward(int) : type_treasure_def(0, 0, 42, 4) {}
 };
 ''')
         with self.assertRaisesRegex(ValueError, 'expected one'):
@@ -90,8 +90,8 @@ void initialize(int* limits, int index) {
 
     def test_invalid_selected_constructor_is_rejected(self):
         native = self.native('''
-struct Reward : TRmgTreasureDef { Reward(); };
-Reward::Reward() : TRmgTreasureDef(0, 0, 42, 3) { missing(); }
+struct Reward : type_treasure_def { Reward(); };
+Reward::Reward() : type_treasure_def(0, 0, 42, 3) { missing(); }
 ''')
         with self.assertRaisesRegex(ValueError, 'invalid body'):
             native.base_argument('Reward', 3)

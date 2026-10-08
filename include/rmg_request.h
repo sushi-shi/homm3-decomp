@@ -7,7 +7,7 @@
 #include "homm3_int.h"
 #include "town_type.h"
 class TAbstractFile;
-class TProgressSink;
+class type_progress_bar;
 
 // Generation result; the lobby shows a general-text message for each failure.
 enum ERandomMapResult {
@@ -65,8 +65,8 @@ public:
     TRandomMapRequest(s32 width, s32 height, s32 levels);
     // The optional progress sink is borrowed. generateToFile changes both
     // player counts to one when their sum is below two, even on later failure.
-    ERandomMapResult generate(const char* fileName, TProgressSink* progress);
-    ERandomMapResult generateToFile(TAbstractFile* outputFile, TProgressSink* progress);
+    ERandomMapResult generate(const char* fileName, type_progress_bar* progress);
+    ERandomMapResult generateToFile(TAbstractFile* outputFile, type_progress_bar* progress);
 #if defined(HOMM3_RMG_HOTFIX)
     // Settings the lobby can produce; the generator relies on them.
     bool isSupported() const;

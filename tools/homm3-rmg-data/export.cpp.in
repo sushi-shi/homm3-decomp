@@ -39,7 +39,7 @@ static const int riverDeltaSnow[@count] =
 // @rmg initializer src/rmg.cpp g_rmgSnowRiverDeltaIndex
 ;
 static const TRmgRiverDeltaOffset riverDeltaOffsets[@count] =
-// @rmg initializer src/rmg.cpp TRmgGenerator::createRiverToOutlet::riverDeltaOffsets
+// @rmg initializer src/rmg.cpp type_random_map_generator::createRiverToOutlet::riverDeltaOffsets
 ;
 static const int decorationTypes[@count] =
 // @rmg initializer src/rmg.cpp g_rmgDecorationTypes
@@ -66,7 +66,7 @@ static const TPoint directions[@count] =
 ;
 
 static const TPoint portalBorderOffsets[RMG_PORTAL_BORDER_OFFSET_COUNT] =
-// @rmg initializer src/rmg.cpp TRmgGenerator::placeMonolithBorderGuard::offsets
+// @rmg initializer src/rmg.cpp type_random_map_generator::placeMonolithBorderGuard::offsets
 ;
 static const TPoint shipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] =
 // @rmg initializer src/rmg.cpp g_rmgShipyardWaterOffsets
@@ -305,7 +305,7 @@ static const int creatureRewardValues[@count] =
 // @rmg initializer src/rmg.cpp g_rmgCreatureValueByLevel
 ;
 static const int keyTentValues[] =
-// @rmg tent_values src/rmg.cpp TRmgGenerator::initializeObjectGenerators
+// @rmg tent_values src/rmg.cpp type_random_map_generator::initializeObjectGenerators
 ;
 // These adapters export constructor arguments, preserving their source order.
 static void emitTreasureDef(int kind, int subtype, int value, int density)
@@ -356,10 +356,10 @@ static void emitTreasureRecipes()
 {
     std::printf("#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum TreasureRecipe { Plain(i32,i32,i32,i32), Artifact(i32,i32), Experience(i32,i32), Gold(i32,i32), Spells(i32,i32,i32,i32), Prison(i32,i32), Resource(i32,i32,i32,i32), Scholar, Shrine(i32,i32), Scroll(i32,i32), WitchHut, CreatureBoxes, KeyTents, Dwellings, Seers }\n");
     std::printf("pub const TREASURE_RECIPES: &[TreasureRecipe] = &[");
-// @rmg recipes src/rmg.cpp TRmgGenerator::initializeObjectGenerators
+// @rmg recipes src/rmg.cpp type_random_map_generator::initializeObjectGenerators
     std::printf("];\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum SeerRewardRecipe { Experience(i32,i32), Gold(i32,i32) }\npub const SEER_REWARD_RECIPES: &[SeerRewardRecipe] = &[");
 #define RMG_SEER_REWARD(Type, value, amount) std::printf("SeerRewardRecipe::" #Type "(%d,%d),", value, amount);
-// @rmg seer_rewards src/rmg.cpp TRmgGenerator::initializeObjectGenerators
+// @rmg seer_rewards src/rmg.cpp type_random_map_generator::initializeObjectGenerators
 #undef RMG_SEER_REWARD
     std::printf("];\n");
 }

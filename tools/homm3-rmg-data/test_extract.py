@@ -63,37 +63,37 @@ void Generator::second() { static int offsets[] = {3, 4}; }
 
     def test_conditional_fixed_recipe_is_not_flattened(self):
         source = self.source('''
-struct TRmgScholarDef {};
-struct List { void push_back(TRmgScholarDef*); };
+struct type_scholar_def {};
+struct List { void push_back(type_scholar_def*); };
 struct G { List m_objectGenerators; void run(); };
-void G::run() { if (true) m_objectGenerators.push_back(new TRmgScholarDef()); }
+void G::run() { if (true) m_objectGenerators.push_back(new type_scholar_def()); }
 ''')
         with self.assertRaisesRegex(ValueError, 'conditional'):
             expand('// @rmg recipes input.cpp G::run', source)
 
     def test_ordered_recipes_keep_dynamic_groups_and_reward_arguments(self):
         code = '''
-struct TRmgScholarDef {};
-struct TRmgBlackBoxCreatureDef { TRmgBlackBoxCreatureDef(int); };
-struct TRmgKeyTentDef { TRmgKeyTentDef(int, int); };
-struct TRmgMapDwellingDef { TRmgMapDwellingDef(int); };
-struct TRmgQuestCreatureDef { TRmgQuestCreatureDef(int, int); };
-struct TRmgQuestExperienceDef { TRmgQuestExperienceDef(int, int, int); };
-struct TRmgQuestGoldDef { TRmgQuestGoldDef(int, int, int); };
+struct type_scholar_def {};
+struct type_black_box_creature_def { type_black_box_creature_def(int); };
+struct type_key_tent_def { type_key_tent_def(int, int); };
+struct type_map_dwelling_def { type_map_dwelling_def(int); };
+struct type_quest_creature_def { type_quest_creature_def(int, int); };
+struct type_quest_experience_def { type_quest_experience_def(int, int, int); };
+struct type_quest_gold_def { type_quest_gold_def(int, int, int); };
 struct List { template<class T> void push_back(T*); };
 struct G { List m_objectGenerators; void run(); };
 void G::run() {
-    m_objectGenerators.push_back(new TRmgScholarDef());
-    for (int i = 2; i--;) m_objectGenerators.push_back(new TRmgBlackBoxCreatureDef(i));
+    m_objectGenerators.push_back(new type_scholar_def());
+    for (int i = 2; i--;) m_objectGenerators.push_back(new type_black_box_creature_def(i));
     for (int i = 2; i--;) {
-        m_objectGenerators.push_back(new TRmgKeyTentDef(i, 5000));
-        m_objectGenerators.push_back(new TRmgKeyTentDef(i, 7500));
+        m_objectGenerators.push_back(new type_key_tent_def(i, 5000));
+        m_objectGenerators.push_back(new type_key_tent_def(i, 7500));
     }
-    for (int i = 2; i--;) m_objectGenerators.push_back(new TRmgMapDwellingDef(i));
+    for (int i = 2; i--;) m_objectGenerators.push_back(new type_map_dwelling_def(i));
     for (int p = 0; p < 2; ++p) {
-        for (int i = 2; i--;) m_objectGenerators.push_back(new TRmgQuestCreatureDef(i, p));
-        m_objectGenerators.push_back(new TRmgQuestExperienceDef(p, 2000, 5000));
-        m_objectGenerators.push_back(new TRmgQuestGoldDef(p, 5333, 10000));
+        for (int i = 2; i--;) m_objectGenerators.push_back(new type_quest_creature_def(i, p));
+        m_objectGenerators.push_back(new type_quest_experience_def(p, 2000, 5000));
+        m_objectGenerators.push_back(new type_quest_gold_def(p, 5333, 10000));
     }
 }
 '''
@@ -105,7 +105,7 @@ void G::run() {
             'std::printf("TreasureRecipe::Dwellings,");',
             'std::printf("TreasureRecipe::Seers,");',
         ]))
-        loop = 'for (int i = 2; i--;) m_objectGenerators.push_back(new TRmgBlackBoxCreatureDef(i));'
+        loop = 'for (int i = 2; i--;) m_objectGenerators.push_back(new type_black_box_creature_def(i));'
         expected = expand('// @rmg recipes input.cpp G::run', source)
         scoped = self.source(code.replace(loop, '{ int count = 2; ' + loop + ' }'))
         self.assertEqual(expand('// @rmg recipes input.cpp G::run', scoped), expected)
@@ -113,12 +113,12 @@ void G::run() {
         self.assertEqual(expand('// @rmg tent_values input.cpp G::run', source), '{5000, 7500}')
         self.assertEqual(expand('// @rmg seer_rewards input.cpp G::run', source),
                          'RMG_SEER_REWARD(Experience, 2000, 5000)\nRMG_SEER_REWARD(Gold, 5333, 10000)')
-        creature = 'for (int i = 2; i--;) m_objectGenerators.push_back(new TRmgQuestCreatureDef(i, p));'
-        reward = 'm_objectGenerators.push_back(new TRmgQuestExperienceDef(p, 2000, 5000));'
+        creature = 'for (int i = 2; i--;) m_objectGenerators.push_back(new type_quest_creature_def(i, p));'
+        reward = 'm_objectGenerators.push_back(new type_quest_experience_def(p, 2000, 5000));'
         swapped = code.replace(creature, 'CREATURE').replace(reward, creature).replace('CREATURE', reward)
         with self.assertRaisesRegex(ValueError, 'must precede'):
             expand('// @rmg recipes input.cpp G::run', self.source(swapped))
-        for constructor in ('TRmgKeyTentDef(i, 5000)', 'TRmgQuestGoldDef(p, 5333, 10000)'):
+        for constructor in ('type_key_tent_def(i, 5000)', 'type_quest_gold_def(p, 5333, 10000)'):
             append = f'm_objectGenerators.push_back(new {constructor});'
             conditional = code.replace(append, f'if (true) {{ {append} }}')
             with self.subTest(constructor=constructor), self.assertRaisesRegex(ValueError, 'unconditional'):

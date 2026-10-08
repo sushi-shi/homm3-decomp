@@ -506,7 +506,7 @@ void CTeamAlignmentDlg::getTeams()
 VA(0x00576F00, 0x190)
 MAC_ADDRESS(0x16d654, 0x21c)
 TRandomMapProgress::TRandomMapProgress(int totalSteps)
-    : TProgressSink(totalSteps)
+    : type_progress_bar(totalSteps)
 {
     m_barSprite = ResourceManager::GetSprite(
         DATA_COMPGEN(0x0067F5AC, progressBarSpriteName, "loadprog.def"));

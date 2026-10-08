@@ -18,6 +18,11 @@ from homm3.core.project import Project
 from homm3.retail_labels.data import _error_bodies
 
 
+def _recipe_name(spelling):
+    """Original `type_scholar_def` spelling -> the generated `ScholarDef` stem."""
+    return ''.join(part.capitalize() for part in spelling.removeprefix('type_').split('_'))
+
+
 def qualified(cursor):
     names = []
     while cursor and cursor.kind != cx.CursorKind.TRANSLATION_UNIT:
@@ -109,16 +114,16 @@ def constructors(node):
 
 
 FIXED = {
-    'TRmgTreasureDef': 4, 'TRmgArtifactDef': 2, 'TRmgBlackBoxExperienceDef': 2,
-    'TRmgBlackBoxGoldDef': 2, 'TRmgBlackBoxSpellsDef': 4, 'TRmgPrisonDef': 2,
-    'TRmgResourceLumpDef': 4, 'TRmgScholarDef': 0, 'TRmgShrineDef': 2,
-    'TRmgSpellScrollDef': 2, 'TRmgWitchHutDef': 0,
+    'type_treasure_def': 4, 'type_artifact_def': 2, 'type_black_box_experience_def': 2,
+    'type_black_box_gold_def': 2, 'type_black_box_spells_def': 4, 'type_prison_def': 2,
+    'type_resource_lump_def': 4, 'type_scholar_def': 0, 'type_shrine_def': 2,
+    'type_spell_scroll_def': 2, 'type_witch_hut_def': 0,
 }
 GROUPS = {
-    frozenset(['TRmgBlackBoxCreatureDef']): 'CreatureBoxes',
-    frozenset(['TRmgKeyTentDef']): 'KeyTents',
-    frozenset(['TRmgMapDwellingDef']): 'Dwellings',
-    frozenset(['TRmgQuestCreatureDef', 'TRmgQuestExperienceDef', 'TRmgQuestGoldDef']): 'Seers',
+    frozenset(['type_black_box_creature_def']): 'CreatureBoxes',
+    frozenset(['type_key_tent_def']): 'KeyTents',
+    frozenset(['type_map_dwelling_def']): 'Dwellings',
+    frozenset(['type_quest_creature_def', 'type_quest_experience_def', 'type_quest_gold_def']): 'Seers',
 }
 
 
@@ -132,9 +137,9 @@ def validate_group(loop, group):
     if group == 'Seers':
         first, calls = allocations.pop(0)
         if (first.kind not in (cx.CursorKind.FOR_STMT, cx.CursorKind.WHILE_STMT)
-                or len(calls) != 1 or calls[0].spelling != 'TRmgQuestCreatureDef'):
+                or len(calls) != 1 or calls[0].spelling != 'type_quest_creature_def'):
             raise ValueError(f'{loop.location}: seer creature loop must precede direct rewards')
-    permitted = ('TRmgKeyTentDef',) if group == 'KeyTents' else ('TRmgQuestExperienceDef', 'TRmgQuestGoldDef')
+    permitted = ('type_key_tent_def',) if group == 'KeyTents' else ('type_quest_experience_def', 'type_quest_gold_def')
     for statement, calls in allocations:
         if (statement.kind not in (cx.CursorKind.UNEXPOSED_EXPR, cx.CursorKind.CALL_EXPR)
                 or len(calls) != 1 or calls[0].spelling not in permitted):
@@ -180,7 +185,7 @@ def recipes(method):
                 raise ValueError(f'{statement.location}: unsupported dynamic recipe group {sorted(kinds)}')
             if group in ('CreatureBoxes', 'Dwellings') and len(calls) != 1:
                 raise ValueError(f'{statement.location}: repeated allocation in {group}')
-            if group == 'Seers' and sum(c.spelling == 'TRmgQuestCreatureDef' for c in calls) != 1:
+            if group == 'Seers' and sum(c.spelling == 'type_quest_creature_def' for c in calls) != 1:
                 raise ValueError(f'{statement.location}: repeated seer creature allocation')
             validate_group(statement, group)
             groups.append(group)
@@ -192,14 +197,14 @@ def recipes(method):
         args = arguments(call)
         if FIXED.get(call.spelling) != len(args):
             raise ValueError(f'{call.location}: unsupported recipe {call.spelling}/{len(args)}')
-        emitted.append(f'emit{call.spelling.removeprefix("TRmg")}({", ".join(args)});')
+        emitted.append(f'emit{_recipe_name(call.spelling)}({", ".join(args)});')
     if sorted(groups) != sorted(GROUPS.values()):
         raise ValueError(f'{method.location}: missing or repeated dynamic recipe groups: {groups}')
     return '\n'.join(emitted)
 
 
 def tent_values(method):
-    calls = [c for c in constructors(method) if c.spelling == 'TRmgKeyTentDef']
+    calls = [c for c in constructors(method) if c.spelling == 'type_key_tent_def']
     if not calls:
         raise ValueError(f'{method.location}: missing tent recipes')
     values = []
@@ -214,12 +219,12 @@ def tent_values(method):
 def seer_rewards(method):
     emitted = []
     for call in constructors(method):
-        if call.spelling not in ('TRmgQuestExperienceDef', 'TRmgQuestGoldDef'):
+        if call.spelling not in ('type_quest_experience_def', 'type_quest_gold_def'):
             continue
         args = arguments(call)
         if len(args) != 3:
             raise ValueError(f'{call.location}: unsupported seer constructor')
-        kind = call.spelling.removeprefix('TRmgQuest').removesuffix('Def')
+        kind = _recipe_name(call.spelling).removeprefix('Quest').removesuffix('Def')
         emitted.append(f'RMG_SEER_REWARD({kind}, {args[1]}, {args[2]})')
     if not emitted:
         raise ValueError(f'{method.location}: missing seer rewards')

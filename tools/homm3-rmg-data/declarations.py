@@ -223,7 +223,7 @@ def generate(sources):
     """Return declarations.h, sharing Sources' parsed TUs and dependencies."""
     declarations = Declarations(sources)
     for filename, anchor in (
-            ('src/rmg.cpp', 'TRmgGenerator::initializeObjectGenerators'),
+            ('src/rmg.cpp', 'type_random_map_generator::initializeObjectGenerators'),
             ('src/rmg_terrain.cpp', 'g_rmgTerrainPatterns'),
             ('src/game.cpp', 'g_creatureGenerator1Types')):
         sources.definition(filename, anchor)
