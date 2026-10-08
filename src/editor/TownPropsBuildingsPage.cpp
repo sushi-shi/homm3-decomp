@@ -9,15 +9,6 @@
 #include "editor/cppbridge.h"
 #include "editor/TownPropsBuildingsPage.h"
 
-// The Windows word macros of the MFC original, as the assert texts expand
-// HIWORD ("((( itemData ) & 0xFFFF0000) >> 16)").
-#undef LOWORD
-#undef HIWORD
-#undef MAKELONG
-#define LOWORD(l) ((l) & 0xFFFF)
-#define HIWORD(l) (((l) & 0xFFFF0000) >> 16)
-#define MAKELONG(lo, hi) (((hi) << 16) | (lo))
-
 namespace {
 
 enum {

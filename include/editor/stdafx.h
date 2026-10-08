@@ -50,6 +50,16 @@
 #undef SB_RIGHT
 #include <gtk/gtkwidget.h>
 
+// The Windows word macros of the MFC original, uncast, as the assert texts
+// expand HIWORD ("((( itemData ) & 0xFFFF0000) >> 16) == 0"; the town
+// building pages).
+#undef LOWORD
+#undef HIWORD
+#undef MAKELONG
+#define LOWORD(l) ((l) & 0xFFFF)
+#define HIWORD(l) (((l) & 0xFFFF0000) >> 16)
+#define MAKELONG(lo, hi) (((hi) << 16) | (lo))
+
 #include "terrain.h"
 
 // The sized integer names of the editor's source: __PRETTY_FUNCTION__
