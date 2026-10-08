@@ -1497,13 +1497,10 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
 // DrawAdvObjWithFlagAlpha is the only member of this class with that argument
 // order - DrawAdvObjImpl takes hflip in slot 12 and its flag color last.
 
-// Residual (98.00%): 83 of 83 blocks, 42 of 42 branches and both returns
-// agree, and the call multiset is empty on both sides. The two size-only
-// blocks are one register pair transposed across the row-loop setup - retail
-// forms `sy + sh` with `lea ebx,[edx+ecx]` and keeps the cell-entry mask in
-// ECX where this compile uses the two the other way round - which is B-family
-// homing on values that arrive as parameters, the same class DrawTileShadow
-// left behind two rows up.
+// Loki's h3maped (GCC -O0) computes each row's cell source before the
+// skipped-pixel base `sx & ~31`; that statement order closed the row-setup
+// register transposition (98.00 -> 100). Its flag blend also evaluates the
+// flag term before the destination term.
 // DC records palette and aCellOffset as read-only pointers; lines
 // 2462/2463 load the map table and bind pal+0x1c before either row loop.
 // A single native row cursor restores 98.0000%; a fixed base plus row offset
@@ -1539,10 +1536,10 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 
                 for (int y = sy; y < sy + sh; ++y) {
                     unsigned short* out = lineDst;
-                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
                         m_map + cellOffset[y * cellsPerLine +
                                           (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     unsigned char packet = *src;
                     unsigned char code = packet >> 5;
                     unsigned int run = (packet & 31) + 1;
@@ -1577,8 +1574,8 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                         } else if (code == eRleControlOutline5 && flagcolor) {
                             unsigned int count = run;
                             do {
-                                *out = (s_div2mask & (*out >> 1))
-                                     + (s_div2mask & (flagcolor >> 1));
+                                *out = (s_div2mask & (flagcolor >> 1))
+                                     + (s_div2mask & (*out >> 1));
                                 ++out;
                             } while (--count);
                         } else {
@@ -1604,10 +1601,10 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 
                 for (int y = sy; y < sy + sh; ++y) {
                     unsigned short* out = lineDst;
-                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
                         m_map + cellOffset[y * cellsPerLine +
                                           (static_cast<unsigned int>(sx) >> 5)];
+                    unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     unsigned char packet = *src;
                     unsigned char code = packet >> 5;
                     unsigned int run = (packet & 31) + 1;
@@ -1643,8 +1640,8 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 --out;
-                                *out = (s_div2mask & (*out >> 1))
-                                     + (s_div2mask & (flagcolor >> 1));
+                                *out = (s_div2mask & (flagcolor >> 1))
+                                     + (s_div2mask & (*out >> 1));
                             } while (--count);
                         } else {
                             out -= run;
