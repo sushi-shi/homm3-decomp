@@ -692,9 +692,6 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
-// TU-state residual: this body matched until the #154 header extraction
-// (35d95264b). Retail spills canShoot into the dead `owner` home
-// ([ebp+0xc]); since that change this compile keeps it in a register.
 VA(0x0046dc30, 0x2C2)
 DC_ADDRESS(0x066648, 0x2a0)
 MAC_ADDRESS(0x07acc8, 0x3b4)  // roster order + "%d(%d)" pair + the three spell icons
@@ -710,7 +707,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         const TCreatureTypeTraits& normalTraits =
             akCreatureTypeTraits[info.m_creatureType];
 
-        unsigned char canShoot = info.canShoot(0);
+        bool canShoot = info.canShoot(0);
         long attack = info.getAdjustedAttack(0, canShoot);
         int defense = info.getAdjustedDefense(0, 1);
         if (canShoot)
