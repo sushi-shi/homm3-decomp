@@ -373,6 +373,16 @@ private:
     void _write(TRawOStream* pOStream, const TLCLoseHero& lc) const;
     void _write(TRawOStream* pOStream, const TLCTimeExpires& lc) const;
 
+    TMapLayerObjectID _placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
+                                          unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeHolyGrail(bool bSecondLayer, const THolyGrail& holyGrail, unsigned int x,
+                                      unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeMine(bool bSecondLayer, const TMine& mine, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeGenerator(bool bSecondLayer, const TGenerator& generator, unsigned int x,
+                                      unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeSign(bool bSecondLayer, const TSign& sign, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
     bool _isHeroAvailable(THeroClass heroClass, unsigned int protoNum) const;
     unsigned int _pickAvailableHero(THeroClass heroClass) const;
@@ -1044,6 +1054,101 @@ const set<TMapObjectRef>& TGameMap::_TImpl::getPlayerTownRefs(TPlayer player) co
 #line 3034
     assert(player >= 0 && player < kNumPlayers);
     return _m_apPlayerBookkeeping[player]->m_townRefs;
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
+                                                        unsigned int y, TTileExtent* pUpdatedExtent)
+{
+#line 3739
+    assert(pUpdatedExtent != NULL);
+    assert(!bSecondLayer || _m_bTwoLayer);
+    const _TPBookkeeping& pConstBookkeeping = _m_pBookkeeping;
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = kCappedObjectTypeInfoMap.find(obj.getType());
+    if (pCappedObjTypeInfo != kCappedObjectTypeInfoMap.end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second.m_ordinal;
+#line 3752
+        assert(typeOrdinal < pConstBookkeeping->m_aNumObjsOfCappedType.size());
+        if (pConstBookkeeping->m_aNumObjsOfCappedType[typeOrdinal] >= pCappedObjTypeInfo->second.m_cap)
+            throw TPlaceObjFailureTooManyInstancesOfTypeOnMap(obj.getType(), pCappedObjTypeInfo->second.m_cap);
+    }
+    TLayer& layer = *getPLayer(bSecondLayer);
+    if (!_isValidPlacement(layer, obj, x, y))
+        throw TPlaceObjFailureInvalidPlacement();
+    TMapLayerObjectID result = layer._placeObject(obj, x, y);
+#line 3764
+    assert(result != TLayer::s_kInvalidObjID);
+    *pUpdatedExtent = layer.getObjectExtent(result);
+    return result;
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placeHolyGrail(bool bSecondLayer, const THolyGrail& holyGrail, unsigned int x,
+                                                    unsigned int y, TTileExtent* pUpdatedExtent)
+{
+    const _TPBookkeeping& pConstBookkeeping = _m_pBookkeeping;
+    if (pConstBookkeeping->m_bGrailPlaced)
+        throw TPlaceObjFailureHolyGrailAlreadyPlaced();
+    if (!(x >= 9 && y >= 9 && x < getWidth() - 9 && y < getHeight() - 9))
+        throw TPlaceObjFailureHolyGrailTooCloseToEdge();
+    TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, holyGrail, x, y, pUpdatedExtent);
+#line 3991
+    assert(result != TLayer::s_kInvalidObjID);
+    const TLayer* pLayer = getPLayer(bSecondLayer);
+    const THolyGrail* pHolyGrail = dynamic_cast<const THolyGrail*>(pLayer->getPObject(result));
+#line 3995
+    assert(pHolyGrail != NULL);
+    _onHolyGrailAdded(*pHolyGrail);
+    return result;
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placeMine(bool bSecondLayer, const TMine& mine, unsigned int x, unsigned int y,
+                                               TTileExtent* pUpdatedExtent)
+{
+    const _TPBookkeeping& pConstBookkeeping = _m_pBookkeeping;
+    if (pConstBookkeeping->m_numMines >= s_kMaxMinesOnMap)
+        throw TPlaceObjFailureTooManyMinesOnMap();
+    TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, mine, x, y, pUpdatedExtent);
+#line 4017
+    assert(result != TLayer::s_kInvalidObjID);
+    const TLayer* pLayer = getPLayer(bSecondLayer);
+    const TMine* pMine = dynamic_cast<const TMine*>(pLayer->getPObject(result));
+#line 4021
+    assert(pMine != NULL);
+    _onMineAdded(*pMine);
+    return result;
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placeGenerator(bool bSecondLayer, const TGenerator& generator, unsigned int x, unsigned int y,
+                                               TTileExtent* pUpdatedExtent)
+{
+    const _TPBookkeeping& pConstBookkeeping = _m_pBookkeeping;
+    if (pConstBookkeeping->m_numGenerators >= s_kMaxGeneratorsOnMap)
+        throw TPlaceObjFailureTooManyGeneratorsOnMap();
+    TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, generator, x, y, pUpdatedExtent);
+#line 4043
+    assert(result != TLayer::s_kInvalidObjID);
+    const TLayer* pLayer = getPLayer(bSecondLayer);
+    const TGenerator* pGenerator = dynamic_cast<const TGenerator*>(pLayer->getPObject(result));
+#line 4047
+    assert(pGenerator != NULL);
+    _onGeneratorAdded(*pGenerator);
+    return result;
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placeSign(bool bSecondLayer, const TSign& sign, unsigned int x, unsigned int y,
+                                               TTileExtent* pUpdatedExtent)
+{
+    const _TPBookkeeping& pConstBookkeeping = _m_pBookkeeping;
+    if (pConstBookkeeping->m_numSigns >= s_kMaxSignsOnMap)
+        throw TPlaceObjFailureTooManySignsOnMap();
+    TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, sign, x, y, pUpdatedExtent);
+#line 4069
+    assert(result != TLayer::s_kInvalidObjID);
+    const TLayer* pLayer = getPLayer(bSecondLayer);
+    const TSign* pSign = dynamic_cast<const TSign*>(pLayer->getPObject(result));
+#line 4073
+    assert(pSign != NULL);
+    _onSignAdded(*pSign);
+    return result;
 }
 
 void TGameMap::_TImpl::_onGeneralObjectAdded(const TGameObject& obj)
