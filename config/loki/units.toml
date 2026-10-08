@@ -394,3 +394,8 @@ source = "src/editor/HeroPropsCreaturesPage.cpp"
 name = "HeroPropsSecSkillsPage"
 object = 87
 source = "src/editor/HeroPropsSecSkillsPage.cpp"
+
+[[unit]]
+name = "MapSpecsPlayerSpecsPage"
+object = 72
+source = "src/editor/MapSpecsPlayerSpecsPage.cpp"
