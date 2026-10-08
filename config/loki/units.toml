@@ -52,7 +52,7 @@ source = "src/lodfile.cpp"
 [[unit]]
 name = "textresource"
 object = 43
-source = "src/textresource.cpp"
+source = "src/TextResource.cpp"
 
 [[unit]]
 name = "cspriteframe"

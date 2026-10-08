@@ -3,6 +3,7 @@
 
 #include "va.h"
 
+#include <assert.h>
 #include <vector>
 
 #include "resource.h"
@@ -882,78 +883,67 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_ANGELIC_ALLIANCE_RECOVERED = 764
 };
 
-// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
-// the text pointer vector begins at +0x1c and its Dinkumware _First
-// member is loaded from +0x20. This is the same retail vector layout as
-// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
-// +0x2c position follows the adjacent vector/data members used by both
-// text-resource variants.
+// Loki h3maped object 43 (TextResource.cpp, RoE source). Member names are
+// the Dreamcast/assert spellings (Text, Spreadsheet, Data); the vectors are
+// SGI's 12-byte ones, so Data sits at +0x28. The accessors below are
+// in-class inlines with asserts that the 2.95.2 release compiler emits in
+// TextResource.cpp (the vtable unit); their __FILE__ and __LINE__ come from
+// the original header, which the #line directives restore.
+#line 60 "TextResource.h"
 class TTextResource : public resource {
 public:
-    typedef std::vector<char*> TTextArray;
+    typedef vector<char*> TTextArray;
+
     TTextResource();
     TTextResource(const char* name, int size, const char* data);
     virtual ~TTextResource();
-    virtual unsigned int getSize() const;
 
-    // E:\gamedcs\TextResource.h:66
-    VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT
-    DC_ADDRESS(0x002d74, 0x18)
-    const char* getText(int r) const { return m_text[r]; }
-
-    // E:\gamedcs\TextResource.h:73
-    DC_ADDRESS(0x002d8c, 0x18)
-    const char* operator[](int i) const { return getText(i); }
+    const char* GetText(int r) const;
+    int GetNumberOfStrings() const { return Text.size(); }
+    const char* operator[](int i) const { return GetText(i); }
 
 private:
-    TTextArray m_text;  // +0x1c (_First +0x20)
-    char* m_data;  // +0x2c
+    TTextArray Text;  // +0x1c
+    char* Data;       // +0x28
 };
-SIZE(TTextResource, 48);
 
-// PROVEN layout (retail monframeinfo parser 0x50c810/0x50ca00): the
-// Spreadsheet row vector sits at +0x1c on the resource base - VC6
-// Dinkumware vector, so _First lands at +0x20 and _Last at +0x24
-// (size()'s null-check ternary appears verbatim at 0x50c82c; the
-// Dreamcast build's 12-byte STLport vector has no such check) - and
-// rows index *4, so the elements are heap TStringVector pointers.
-// Dreamcast type 0x1a41 names the members (Spreadsheet@28, Data@40
-// with the STLport layout; Dinkumware puts them at 0x1c/0x2c, sizeof
-// 0x30 vs the DC 44). GetNumberOfRows/GetRow are the TextResource.h
-// header inlines (dc 0x5088c/0x508a4), inlined into callers by /Ob2.
 class TSpreadsheetResource : public resource {
 public:
-    typedef std::vector<char*> TStringVector;
-    typedef std::vector<TStringVector*> TArray;
+    typedef vector<char*> TStringVector;
+    typedef vector<TStringVector*> TArray;
+
     TSpreadsheetResource();
     TSpreadsheetResource(const char* name, int size, const char* data);
     virtual ~TSpreadsheetResource();
-    virtual unsigned int getSize() const;
 
-    DC_ADDRESS(0x05088c, 0x18)
-    int getNumberOfRows() const { return m_spreadsheet.size(); }
+    int GetNumberOfRows() const { return Spreadsheet.size(); }
 
-    // Original: TSpreadsheetResource::GetNumberOfColumns; TextResource.h:113
-    DC_ADDRESS(0x162910, 0x24)
-    int getNumberOfColumns(int row) const { return m_spreadsheet[row]->size(); }
-
-    // DC TextResource.h:120/124 (text.obj) returns const char* and
-    // indexes the row and cell vectors directly. High-score defaults call
-    // this accessor; their char* table entries require the explicit cast.
-    DC_ADDRESS(0x162934, 0x28)
-    const char* getSpreadsheet(int r, int c) const {
-        return (*m_spreadsheet[r])[c];
+#line 107 "TextResource.h"
+    int GetNumberOfColumns(int r) const
+    {
+        assert(( r >= 0 ) && ( r < Spreadsheet.size() ));
+        return Spreadsheet[r]->size();
     }
 
-    DC_ADDRESS(0x0508a4, 0x18)
-    const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
+    const char* GetSpreadsheet(int r, int c) const
+    {
+#line 116 "TextResource.h"
+        assert(( r >= 0 ) && ( r < Spreadsheet.size() ));
+        assert(( c >= 0 ) && ( c < Spreadsheet[r]->size() ));
+        return (*Spreadsheet[r])[c];
+    }
+
+    const TStringVector& GetRow(int r) const
+    {
+#line 124 "TextResource.h"
+        assert(( r >= 0 ) && ( r < Spreadsheet.size() ));
+        return *Spreadsheet[r];
+    }
 
 private:
-    TArray m_spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
-    char* m_data;  // +0x2c
-    int m_dataSize;  // +0x30, retail constructor stores size here
+    TArray Spreadsheet;  // +0x1c
+    char* Data;          // +0x28
 };
-SIZE(TSpreadsheetResource, 52);
 
 // DC ?GameText@@3PBVTTextResource@@B proves a pointer-to-const resource.
 extern const TTextResource* g_generalText;  // retail .data 0x6a5d5c

@@ -128,7 +128,7 @@ unsigned char initializeSpellTraitsTable()
     if (!resource)
         return 0;
 
-    if (resource->getNumberOfRows() < 92) {
+    if (resource->GetNumberOfRows() < 92) {
         ResourceManager::Dispose(resource);
         return 0;
     }
@@ -136,12 +136,12 @@ unsigned char initializeSpellTraitsTable()
     int spell = 0;
     int row = 5;
     for (; spell < 10; ++spell, ++row)
-        initializeSpellTraits(spell, resource->getRow(row));
+        initializeSpellTraits(spell, resource->GetRow(row));
 
     row += 3;
     int count = 60;
     while (count--) {
-        initializeSpellTraits(spell, resource->getRow(row));
+        initializeSpellTraits(spell, resource->GetRow(row));
         ++spell;
         ++row;
     }
@@ -149,7 +149,7 @@ unsigned char initializeSpellTraitsTable()
     row += 3;
     count = 11;
     while (count--) {
-        initializeSpellTraits(spell, resource->getRow(row));
+        initializeSpellTraits(spell, resource->GetRow(row));
         ++spell;
         ++row;
     }
