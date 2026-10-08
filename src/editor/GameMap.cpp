@@ -1516,6 +1516,68 @@ TMapLayerObjectID TGameMap::_TImpl::_placeHero(bool bSecondLayer, const THero& h
     return result;
 }
 
+TMapLayerObjectID TGameMap::_TImpl::_placeTown(bool bSecondLayer, const TTown& town, unsigned int x, unsigned int y,
+                                               TTileExtent* pUpdatedExtent)
+{
+    const _TPBookkeeping& pConstBookkeeping = _m_pBookkeeping;
+#line 3896
+    assert(pConstBookkeeping->m_numTowns <= s_kMaxTownsOnMap);
+    if (pConstBookkeeping->m_numTowns == s_kMaxTownsOnMap)
+        throw TPlaceObjFailureTooManyTownsOnMap();
+    const THero* pVisitingHero = town.getPVisitingHero();
+    if (pVisitingHero != NULL) {
+#line 3904
+        assert(town.getOwner() >= 0 && town.getOwner() < kNumPlayers);
+        if (pConstBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+            throw TPlaceObjFailureTooManyHeroesOnMap();
+        const _TPPlayerBookkeeping& pConstPlayerBookkeeping = _m_apPlayerBookkeeping[town.getOwner()];
+        unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
+        if (getPlayers()[town.getOwner()].getBGenerateHero())
+            numHeroes++;
+        if (numHeroes >= s_kMaxHeroesPerPlayer)
+            throw TPlaceObjFailureTooManyHeroesForPlayer();
+        if (dynamic_cast<const TRandomHero*>(pVisitingHero) == NULL
+            && !_isHeroAvailable(pVisitingHero->getClass(), pVisitingHero->getProtoNum())) {
+            auto_ptr<TGameObject> pObjCopy(town.clone(::operator new));
+            if (pObjCopy.get() == NULL)
+#line 3927
+                throw TAllocationFailure(__FILE__, __LINE__);
+            TTown* pTownCopy = dynamic_cast<TTown*>(pObjCopy.get());
+#line 3930
+            assert(pTownCopy != NULL);
+            unsigned int protoNum = _pickAvailableHero(pVisitingHero->getClass());
+            if (protoNum < THero::s_akClassTraits[pVisitingHero->getClass()].m_numPrototypes) {
+                auto_ptr<THero> pNewHero(_m_pObjectFactory->createNonRandomHero(
+                    pVisitingHero->getObjectType(), pTownCopy->getOwner(), protoNum, ::operator new));
+                if (pNewHero.get() == NULL)
+#line 3937
+                    throw TAllocationFailure(__FILE__, __LINE__);
+                copyCustomizations(*pVisitingHero, pNewHero.get());
+                pTownCopy->setVisitingHero(pNewHero.get());
+#line 3942
+                assert(pTownCopy->getPVisitingHero() != __null);
+            } else {
+                pTownCopy->setVisitingHero(NULL);
+            }
+            TMapLayerObjectID result = _placeTown(bSecondLayer, *pTownCopy, x, y, pUpdatedExtent);
+#line 3949
+            assert(result != TLayer::s_kInvalidObjID);
+            return result;
+        }
+    }
+    TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, town, x, y, pUpdatedExtent);
+#line 3956
+    assert(result != TLayer::s_kInvalidObjID);
+    const TLayer* pLayer = getPLayer(bSecondLayer);
+    const TTown* pTown = dynamic_cast<const TTown*>(pLayer->getPObject(result));
+#line 3960
+    assert(pTown != NULL);
+    _onTownAdded(*pTown, bSecondLayer, result);
+    if (pTown->getPVisitingHero() != NULL)
+        onHeroAdded(*pTown->getPVisitingHero());
+    return result;
+}
+
 TMapLayerObjectID TGameMap::_TImpl::_placeHolyGrail(bool bSecondLayer, const THolyGrail& holyGrail, unsigned int x,
                                                     unsigned int y, TTileExtent* pUpdatedExtent)
 {
