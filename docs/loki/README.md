@@ -13,7 +13,8 @@ the game ledger or the README score block.
 homm3 loki init --exe /path/to/h3maped --debs DIR --sgi-stl DIR
 homm3 loki census --check      # retail facts are current
 homm3 loki build -v            # compile, delink, canonicalize, objdiff
-homm3 loki disasm _getC__13TGzInflateBuf
+homm3 loki disasm _getC__13TGzInflateBuf   # references named as compared
+homm3 loki diff Error __11TDebugBreak      # one function, base | retail
 ```
 
 `--debs` holds the eight Debian 2.2 "potato" i386 packages pinned in
@@ -95,8 +96,15 @@ through the same canonical form (`homm3.loki.cmpobj`) before objdiff sees it:
   `_GLOBAL_.I.*`/`_GLOBAL_.D.*` keep their role.
 
 Nothing is masked: an unnamed reference keeps a distinct name and differs.
-File-static functions without a source claim are named `sub_<address>` and stay
-unpaired until claimed.
+The image has no names for file-static functions. g++ 2.95 at `-O0` emits an
+object's `.text` in source order, so `homm3.loki.delink.pair_statics` uses the
+functions both sides name as anchors and gives the k-th retail static between
+two anchors the name of the k-th compiled local function there, when both gaps
+hold the same number. Other statics stay `sub_<address>` and unpaired.
+
+Units compile from their source's directory with the bare file name, as Loki
+did: `__FILE__` in assert text and `TRuntimeError(__FILE__, __LINE__, ...)`
+sites is `"GzBuf.cpp"`, never a path.
 
 ## Shared engine source
 

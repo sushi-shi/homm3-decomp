@@ -68,8 +68,11 @@ def include_flags() -> list[str]:
 def compile_unit(unit: Unit) -> tuple[Path, str | None]:
     out = OUT / "obj" / f"{unit.name}.o"
     out.parent.mkdir(parents=True, exist_ok=True)
-    command = toolchain.driver_command("-c", *unit.flags, *include_flags(), str(unit.source), "-o", str(out))
-    completed = subprocess.run(command, env=toolchain.environment(), capture_output=True, text=True)
+    # Loki compiled each file from its own directory: every __FILE__ (assert
+    # text, TRuntimeError sites) is a bare name such as "GzBuf.cpp".
+    command = toolchain.driver_command("-c", *unit.flags, *include_flags(), unit.source.name, "-o", str(out))
+    completed = subprocess.run(command, env=toolchain.environment(), capture_output=True, text=True,
+                               cwd=unit.source.parent)
     (OUT / "obj" / f"{unit.name}.log").write_text(completed.stdout + completed.stderr)
     if completed.returncode:
         out.unlink(missing_ok=True)
@@ -108,13 +111,19 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False)
     ready = []
     for unit, (obj, error) in zip(chosen, compiled):
         delink_path = OBJDIFF / "target" / f"{unit.name}.o"
-        objwriter.write(delink_path, delink.target_sections(unit.obj, image))
+        target = delink.target_sections(unit.obj, image)
         base_path = OBJDIFF / "base" / f"{unit.name}.o"
         if error:
+            objwriter.write(delink_path, target)
             base_path.unlink(missing_ok=True)
             print(f"[loki] {unit.name}: compile failed: {error}")
             continue
-        objwriter.write(base_path, delink.base_sections(obj.read_bytes()))
+        base = delink.base_sections(obj.read_bytes())
+        unpaired = delink.pair_statics(base, target)
+        if unpaired and verbose:
+            print(f"[loki] {unit.name}: unpaired file-static functions: {', '.join(unpaired)}")
+        objwriter.write(delink_path, target)
+        objwriter.write(base_path, base)
         ready.append(unit.name)
     objdiff_config([u.name for u in chosen], set(ready))
     data = report()

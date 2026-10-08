@@ -200,3 +200,46 @@ def base_sections(data: bytes) -> list[CodeSection]:
                 put(section, field.offset, rel.type, name, delta - 4 if rel.type == R_386_PC32 else delta)
         out.append(section)
     return out
+
+
+def pair_statics(base: list[CodeSection], target: list[CodeSection]) -> list[str]:
+    """Name the retail object's file-static functions after the compiled ones.
+
+    The image keeps no names for file-static functions (`sub_<address>`).
+    g++ 2.95 at -O0 emits an object's .text in source order, so the named
+    functions both sides share are anchors, and between two consecutive
+    anchors the k-th retail static is the k-th compiled local function when
+    both gaps hold the same number. A gap with different counts stays
+    unpaired (and is returned for the report): the bytes still decide every
+    pairing, since objdiff compares the paired bodies."""
+    base_text = next((s for s in base if s.name == ".text"), None)
+    target_text = next((s for s in target if s.name == ".text"), None)
+    if base_text is None or target_text is None:
+        return []
+    shared = {f.name for f in base_text.functions} & {f.name for f in target_text.functions}
+
+    def gaps(functions: list[Function], unnamed) -> dict[str | None, list[Function]]:
+        out: dict[str | None, list[Function]] = {}
+        anchor = None
+        for function in sorted(functions, key=lambda f: f.offset):
+            if function.name in shared:
+                anchor = function.name
+            elif unnamed(function):
+                out.setdefault(anchor, []).append(function)
+        return out
+
+    retail = gaps(target_text.functions, lambda f: f.name.startswith("sub_"))
+    compiled = gaps(base_text.functions, lambda f: not f.bind_global)
+    unpaired = []
+    for anchor, statics in retail.items():
+        locals_ = compiled.get(anchor, [])
+        if len(locals_) != len(statics):
+            unpaired += [f.name for f in statics]
+            continue
+        for static, local in zip(statics, locals_):
+            renamed = {static.name: local.name}
+            static.name = local.name
+            for section in target:
+                for reloc in section.relocs:
+                    reloc.target = renamed.get(reloc.target, reloc.target)
+    return unpaired
