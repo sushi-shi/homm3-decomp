@@ -41,19 +41,23 @@ SIZE(LODHeader, 0x5c);
 
 // Canonical retail layout. The constructor and clear/open/read bodies account
 // for every field and DoNewGame's static storage proves the total 0x18c size.
+// Loki h3maped object 42 (RoE source, file name inferred from the class):
+// the editor reads and writes LOD archives, so it keeps the editing members
+// (create, addItem, deleteItem, pack, squishme) the game's VC6 link drops.
+// SGI's 12-byte vector puts the size at 0x188.
 class LODFile {
 private:
-    FILE* m_fileptr;
-    char m_lodFileName[256];
-    int m_opened;
-    unsigned char* m_dataBuffer;
-    unsigned long m_dataBufferSize;
-    int m_dataItemIndex;
-    int m_dataPos;
-    int m_matchindex;
-    LODHeader m_header;
+    FILE* m_fileptr;               // +0x000
+    char m_lodFileName[256];       // +0x004
+    int m_opened;                  // +0x104
+    unsigned char* m_dataBuffer;   // +0x108
+    unsigned long m_dataBufferSize;  // +0x10c
+    int m_dataItemIndex;           // +0x110
+    int m_dataPos;                 // +0x114
+    int m_matchindex;              // +0x118
+    LODHeader m_header;            // +0x11c
 
-    void find(unsigned begin, unsigned end, const char* itemName);
+    void Find(unsigned begin, unsigned end, const char* itemName);
     void* getDataPtr(const char* itemName);
 
 public:
@@ -65,20 +69,30 @@ public:
         LOD_ITEM_NOT_FOUND = 4,
         LOD_NO_IO_BUFFER = 5
     };
-    int m_numEntries;
-    std::vector<LODEntry> m_subindex;
-    unsigned char exist(const char* itemName);
-    char* getErrorString(int lodError);
-    void sort();
+    // create and pack write a fresh index of this many empty entries.
+    enum { LOD_MAX_ENTRIES = 10000 };
+
+    int m_numEntries;              // +0x178
+    vector<LODEntry> m_subindex;   // +0x17c
+
     void clear();
-    bool pointAt(const char* itemName);
-    int read(void* dest, int numBytes);
+    long GetFileSize();
+    int create(const char* filename);
     LODEntry* getItemIndex(const char* itemName);
-    int open(const char* filename, int flags);
+    bool exist(const char* itemName);
+    char* getErrorString(int lodError);
+    int addItem(LODEntry& entry, void* data, int noReplace, bool compressItem);
+    int deleteItem(const char* itemName);
 
     LODFile();
     ~LODFile();
+
+    int open(const char* filename, int flags);
+    void sort();
+    int pack();
+    int squishme();
+    bool pointAt(const char* itemName);
+    int read(void* dest, int numBytes);
 };
-SIZE(LODFile, 0x18c);
 
 #endif  /* HOMM3_LODFILE_H */
