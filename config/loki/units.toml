@@ -143,3 +143,8 @@ source = "src/Artifact.cpp"
 name = "creaturetype"
 object = 9
 source = "src/CreatureType.cpp"
+
+[[unit]]
+name = "Army"
+object = 4
+source = "src/editor/Army.cpp"
