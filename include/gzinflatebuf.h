@@ -35,15 +35,22 @@ public:
     // three-slot copy of Dinkumware's {deleting dtor, what, _Doraise}.
     class TDataError;
 
-    std::streambuf* m_source;      // +0x38
+    // Original member, parameter and helper spellings: Loki h3maped's
+    // assert text (`_m_pSrcBuf != __null`, `pSrcBuf != __null`,
+    // `_m_zstream.next_in > reinterpret_cast< Bytef * >( _m_pInBuf )`,
+    // `_m_zstream.next_out == reinterpret_cast< Bytef * >( _m_pOutBuf )`,
+    // `static_cast< char >( *( _m_zstream.next_in - 1 ) ) == c`) and its
+    // symbols `_getC__13TGzInflateBuf`, `_putBackC__13TGzInflateBufc` and
+    // `_mustGetC__13TGzInflateBuf`.
+    std::streambuf* _m_pSrcBuf;    // +0x38
     // zlib 1.1.3's z_stream, 56 B: next_in/avail_in at +0x3c/+0x40 are what
     // the get-byte helper refills, next_out/avail_out at +0x48/+0x4c are the
     // window underflow drains, and the destructor calls inflateEnd on it.
     // The vendored zlib-1.1.3 IS retail's library (it matches 100%), so its
     // own header is the record - cc_wrap puts that directory on INCLUDE.
-    z_stream m_stream;             // +0x3c
-    unsigned char* m_buffer;       // +0x74, new[0x400]
-    unsigned char* m_outBuffer;   // +0x78, buffer + 0x200
+    z_stream _m_zstream;           // +0x3c
+    unsigned char* _m_pInBuf;      // +0x74, new[0x400]
+    unsigned char* _m_pOutBuf;     // +0x78, buffer + 0x200
     unsigned long m_crc;           // +0x7c
     unsigned char m_ok;            // +0x80
     unsigned char m_sourceEof;    // +0x81
@@ -51,9 +58,9 @@ public:
     char m_open;
 
 private:
-    int getByte();              // 0x4d5fd0
-    void ungetByte(signed char value); // Mac 0x220ac8
-    int readByte();             // 0x4d6ba0
+    int _getC();                // 0x4d5fd0
+    void _putBackC(signed char c); // Mac 0x220ac8
+    int _mustGetC();            // 0x4d6ba0
 };
 SIZE(TGzInflateBuf, 0x84);
 
