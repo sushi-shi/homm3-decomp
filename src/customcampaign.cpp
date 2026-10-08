@@ -2549,7 +2549,7 @@ void TCampaignBrief::MapTextStruct::play()
     if (m_audio != -1)
         music = g_campaignMusicTraits[m_audio].m_name;
 
-    g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
+    g_windowManager->m_screenBitmap->FillRect(0, 0, 800, 600, 0);
 
     if (m_subtitles.length() > 0 && (g_config.m_videoSubtitles || !speechName)) {
         if (textHeight < g_campaignSubtitleHeight)
@@ -2558,9 +2558,9 @@ void TCampaignBrief::MapTextStruct::play()
                                 textHeight + g_bigFont->m_fs.m_height);
         if (!strip)
             memError();
-        strip->fillRect(0, 0, strip->getWidth(), strip->getHeight(), 0);
+        strip->FillRect(0, 0, strip->GetWidth(), strip->GetHeight(), 0);
         g_bigFont->drawBoundedString(m_subtitles.c_str(), strip, 0, 0,
-                                     strip->getWidth(), strip->getHeight(),
+                                     strip->GetWidth(), strip->GetHeight(),
                                      font::TColor(g_campaignSubtitleColor),
                                      font::CENTER_JUSTIFIED, -1);
     }
@@ -2613,39 +2613,39 @@ void TCampaignBrief::MapTextStruct::play()
                                             - g_campaignSubtitleScrollMargin)
                         ++scrollY;
                 }
-                strip->fillRect(g_campaignSubtitleX, g_campaignSubtitleY,
+                strip->FillRect(g_campaignSubtitleX, g_campaignSubtitleY,
                                 g_campaignSubtitleWidth,
                                 g_campaignSubtitleHeight, 0);
                 if (scrollDelay) {
-                    strip->draw(0, 0, g_campaignSubtitleWidth,
+                    strip->Draw(0, 0, g_campaignSubtitleWidth,
                                 g_campaignSubtitleHeight - scrollDelay,
-                                g_windowManager->m_screenBitmap->getMap(0, 0),
+                                g_windowManager->m_screenBitmap->GetMap(0, 0),
                                 g_campaignSubtitleX,
                                 g_campaignSubtitleY + scrollDelay,
-                                g_windowManager->m_screenBitmap->getWidth(),
-                                g_windowManager->m_screenBitmap->getHeight(),
-                                g_windowManager->m_screenBitmap->getPitch(), false);
+                                g_windowManager->m_screenBitmap->GetWidth(),
+                                g_windowManager->m_screenBitmap->GetHeight(),
+                                g_windowManager->m_screenBitmap->GetPitch(), false);
                 } else {
                     // Mac retains separate draws at 0:0x97b20 and 0:0x97b84.
                     if (scrollY < textHeight - g_campaignSubtitleHeight) {
-                        strip->draw(0, scrollY, g_campaignSubtitleWidth,
+                        strip->Draw(0, scrollY, g_campaignSubtitleWidth,
                                     g_campaignSubtitleHeight,
-                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_windowManager->m_screenBitmap->GetMap(0, 0),
                                     g_campaignSubtitleX, g_campaignSubtitleY,
-                                    g_windowManager->m_screenBitmap->getWidth(),
-                                    g_windowManager->m_screenBitmap->getHeight(),
-                                    g_windowManager->m_screenBitmap->getPitch(), false);
+                                    g_windowManager->m_screenBitmap->GetWidth(),
+                                    g_windowManager->m_screenBitmap->GetHeight(),
+                                    g_windowManager->m_screenBitmap->GetPitch(), false);
                     } else {
                         if (!textDone)
                             textEnd = GameTime::get();
                         textDone = 1;
-                        strip->draw(0, scrollY, g_campaignSubtitleWidth,
+                        strip->Draw(0, scrollY, g_campaignSubtitleWidth,
                                     g_campaignSubtitleHeight,
-                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_windowManager->m_screenBitmap->GetMap(0, 0),
                                     g_campaignSubtitleX, g_campaignSubtitleY,
-                                    g_windowManager->m_screenBitmap->getWidth(),
-                                    g_windowManager->m_screenBitmap->getHeight(),
-                                    g_windowManager->m_screenBitmap->getPitch(), false);
+                                    g_windowManager->m_screenBitmap->GetWidth(),
+                                    g_windowManager->m_screenBitmap->GetHeight(),
+                                    g_windowManager->m_screenBitmap->GetPitch(), false);
                     }
                 }
                 if (redraw) {

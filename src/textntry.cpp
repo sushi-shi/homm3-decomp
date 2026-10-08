@@ -39,7 +39,7 @@ public:
     void save(int saveX, int saveY)
     {
         m_saved = 1;
-        grab(g_windowManager->m_screenBitmap, saveX, saveY);
+        Grab(g_windowManager->m_screenBitmap, saveX, saveY);
     }
 
     // E:\gamedcs\textntry.cpp:50
@@ -418,14 +418,14 @@ void textEntryWidget::draw() const
         return;
 
     if (m_textBack) {
-        m_textBack->draw(0, 0, m_boxWidth, m_boxHeight,
+        m_textBack->Draw(0, 0, m_boxWidth, m_boxHeight,
             g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
     } else if (m_saveBack) {
         if (!m_saveBack->isSaved())
             saveBackground();
         else
-            m_saveBack->draw(0, 0, m_boxWidth, m_boxHeight,
+            m_saveBack->Draw(0, 0, m_boxWidth, m_boxHeight,
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
     }

@@ -1759,7 +1759,7 @@ public:
         void save(int x, int y)
         {
             m_saved = 1;
-            grab(g_windowManager->m_screenBitmap, x, y);
+            Grab(g_windowManager->m_screenBitmap, x, y);
         }
 
         DC_ADDRESS(0x148c8c, 0x12)
@@ -1797,7 +1797,7 @@ public:
     DC_ADDRESS(0x148e98, 0x74)
     void restoreBackground() const
     {
-        m_save->draw(0, 0, m_width, m_height,
+        m_save->Draw(0, 0, m_width, m_height,
                      g_windowManager->m_screenBitmap,
                      m_x + m_parentWindow->m_x,
                      m_y + m_parentWindow->m_y, false);
@@ -2072,8 +2072,8 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     bitmapBorder16* tempBack16 = new bitmapBorder16(
         0, 0, 800, 600, 100, g_text, 0x800);
     m_widgets.push_back(tempBack16);
-    tempBack16->m_image->draw(0, 0, tempBack16->m_image->getWidth(),
-        tempBack16->m_image->getHeight(), g_windowManager->m_screenBitmap,
+    tempBack16->m_image->Draw(0, 0, tempBack16->m_image->GetWidth(),
+        tempBack16->m_image->GetHeight(), g_windowManager->m_screenBitmap,
         tempBack16->m_x + m_x, tempBack16->m_y + m_y, 0);
 
     // DC2072..2095 reuses bitmapBorder* tempBack for drawn AND hidden
@@ -2083,8 +2083,8 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     // DC2073 names push_back; retain the canonical append rather than the
     // earlier insert(end(), ...) spelling chosen only for its inline depth.
     m_widgets.push_back(tempBack);
-    tempBack->m_image->draw(0, 0, tempBack->m_image->getWidth(),
-        tempBack->m_image->getHeight(), g_windowManager->m_screenBitmap,
+    tempBack->m_image->Draw(0, 0, tempBack->m_image->GetWidth(),
+        tempBack->m_image->GetHeight(), g_windowManager->m_screenBitmap,
         tempBack->m_x + m_x, tempBack->m_y + m_y, 0);
 
     tempBack = new bitmapBorder(3, 6, 575, 585, 101,
@@ -7556,7 +7556,7 @@ void TSingleSelectionWindow::onNameClick(int pos)
     textWidget* w = static_cast<textWidget*>(getWidget(pos + 353));
     int colorPos = calcPosition(pos);
     if (w) {
-        m_panels[pos]->draw(w->m_x - 57, w->m_y - 128 - colorPos * 50,
+        m_panels[pos]->Draw(w->m_x - 57, w->m_y - 128 - colorPos * 50,
                           w->m_width, w->m_height,
                           g_windowManager->m_screenBitmap, 57,
                           128 + colorPos * 50, true);
@@ -8355,8 +8355,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
     if (position == -1)
         position = calcPosition(playerPos);
     getWidget(playerPos + 263)->draw();
-    m_panels[playerPos]->draw(0, 0, m_panels[0]->getWidth(),
-                                 m_panels[0]->getHeight(),
+    m_panels[playerPos]->Draw(0, 0, m_panels[0]->GetWidth(),
+                                 m_panels[0]->GetHeight(),
                                  g_windowManager->m_screenBitmap, 57,
                                  position * 50 + 128, 1);
     getWidget(playerPos + 199)->draw();
@@ -8373,15 +8373,15 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16, font::WHITE, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
-            m_heroPix[face]->draw(0, 0, m_heroPix[0]->getWidth(),
-                m_heroPix[0]->getHeight(), g_windowManager->m_screenBitmap,
+            m_heroPix[face]->Draw(0, 0, m_heroPix[0]->GetWidth(),
+                m_heroPix[0]->GetHeight(), g_windowManager->m_screenBitmap,
                 252, position * 50 + 130, 0);
             const char* name = getHeroName(playerPos);
             g_tinyFont->drawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
         } else {
-            m_noHeroBmp->draw(0, 0, m_noHeroBmp->getWidth(), m_noHeroBmp->getHeight(),
+            m_noHeroBmp->Draw(0, 0, m_noHeroBmp->GetWidth(), m_noHeroBmp->GetHeight(),
                 g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
             g_tinyFont->drawBoundedString(g_generalText->GetText(GENERAL_TEXT_NO_HERO),
                 g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16, font::WHITE, 5,
@@ -8432,8 +8432,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             rite->hide();
         }
         if (town == -1) {
-            m_randomTownBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
-                m_randomHeroBmp->getHeight(), g_windowManager->m_screenBitmap,
+            m_randomTownBmp->Draw(0, 0, m_randomHeroBmp->GetWidth(),
+                m_randomHeroBmp->GetHeight(), g_windowManager->m_screenBitmap,
                 176, position * 50 + 130, 0);
             g_tinyFont->drawBoundedString(g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
@@ -8469,15 +8469,15 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 noHero = 1;
             if (canChooseHero == 0 && (town != -1 || noHero != 0)
                     && !hasRandomHero(playerPos)) {
-                m_noHeroBmp->draw(0, 0, m_noHeroBmp->getWidth(), m_noHeroBmp->getHeight(),
+                m_noHeroBmp->Draw(0, 0, m_noHeroBmp->GetWidth(), m_noHeroBmp->GetHeight(),
                     g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
                 g_tinyFont->drawBoundedString(
                     g_generalText->GetText(GENERAL_TEXT_NO_HERO),
                     g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71,
                     16, font::WHITE, 5, -1);
             } else {
-                m_randomHeroBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
-                    m_randomHeroBmp->getHeight(),
+                m_randomHeroBmp->Draw(0, 0, m_randomHeroBmp->GetWidth(),
+                    m_randomHeroBmp->GetHeight(),
                     g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
                 g_tinyFont->drawBoundedString(
                     g_generalText->GetText(GENERAL_TEXT_RANDOM_HERO),
@@ -8486,8 +8486,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             }
         } else {
             const char* name = getHeroName(playerPos);
-            m_heroPix[face]->draw(0, 0, m_heroPix[0]->getWidth(),
-                m_heroPix[0]->getHeight(), g_windowManager->m_screenBitmap,
+            m_heroPix[face]->Draw(0, 0, m_heroPix[0]->GetWidth(),
+                m_heroPix[0]->GetHeight(), g_windowManager->m_screenBitmap,
                 252, position * 50 + 130, 0);
             g_tinyFont->drawBoundedString(name,
                 g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16,

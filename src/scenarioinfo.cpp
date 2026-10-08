@@ -390,10 +390,10 @@ void CScenarioPlayerInfoWidget::draw() const
     int windowX = m_parentWindow->m_x;
     int windowY = m_parentWindow->m_y;
 
-    m_panel->draw(0, 0, m_panel->getWidth(), m_panel->getHeight(),
+    m_panel->Draw(0, 0, m_panel->GetWidth(), m_panel->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 windowX + 54, windowY + m_playerPosition * 50 + 122, 1);
-    m_flag->draw(0, 0, m_flag->getWidth(), m_flag->getHeight(),
+    m_flag->Draw(0, 0, m_flag->GetWidth(), m_flag->GetHeight(),
                g_windowManager->m_screenBitmap,
                windowX + 11, windowY + m_playerPosition * 50 + 124, 1);
 
@@ -426,7 +426,7 @@ void CScenarioPlayerInfoWidget::draw() const
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
 
     if (m_heroPortrait) {
-        m_heroPortrait->draw(0, 0, m_heroPortrait->getWidth(), m_heroPortrait->getHeight(),
+        m_heroPortrait->Draw(0, 0, m_heroPortrait->GetWidth(), m_heroPortrait->GetHeight(),
                            g_windowManager->m_screenBitmap,
                            windowX + 249,
                            windowY + m_playerPosition * 50 + 124, 0);

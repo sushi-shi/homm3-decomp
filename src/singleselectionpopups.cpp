@@ -210,7 +210,7 @@ bool CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTi
         return 0;
     add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
-    add(new CBitmapWidget((m_width - image->getWidth()) / 2, 60, image));
+    add(new CBitmapWidget((m_width - image->GetWidth()) / 2, 60, image));
     add(new textWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
     add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
@@ -234,7 +234,7 @@ DC_ADDRESS(0x12f1fc, 0x70)
 MAC_ADDRESS(0x16d144, 0x68)
 void CBitmapWidget::draw() const
 {
-    m_image->draw(0, 0, m_image->getWidth(), m_image->getHeight(),
+    m_image->Draw(0, 0, m_image->GetWidth(), m_image->GetHeight(),
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
         m_y + m_parentWindow->m_y, 1);
 }
@@ -248,8 +248,8 @@ CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
     m_image = image;
     m_x = xPos;
     m_y = yPos;
-    m_width = image->getWidth();
-    m_height = image->getHeight();
+    m_width = image->GetWidth();
+    m_height = image->GetHeight();
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:121
@@ -293,7 +293,7 @@ bool CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* spe
     add(new textWidget(30, 26, m_width - 60, 36,
         g_generalText->GetText(GENERAL_TEXT_SCENARIO_STARTING_HERO_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
-    add(new CBitmapWidget((m_width - heroPick->getWidth()) / 2, 56, heroPick));
+    add(new CBitmapWidget((m_width - heroPick->GetWidth()) / 2, 56, heroPick));
 
     sprintf(tempText, DATA_COMPGEN(
         0x0066033c, rolloverOwnedObjectFormat, "%s - %s"), heroName, desc);

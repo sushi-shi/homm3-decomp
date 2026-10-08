@@ -275,19 +275,19 @@ void videoRealignBuffers()
                             ? SMACKBUFFER565 : SMACKBUFFER555;
     if (SmackManager::g_playingSmack.m_smack)
         SmackToBuffer(SmackManager::g_playingSmack.m_smack, SmackManager::g_playingSmack.m_x, SmackManager::g_playingSmack.m_y,
-            g_windowManager->m_screenBitmap->getPitch(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+            g_windowManager->m_screenBitmap->GetPitch(),
+            g_windowManager->m_screenBitmap->GetHeight(),
+            g_windowManager->m_screenBitmap->GetMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     if (SmackManager::g_playingSmack.m_smack2)
         SmackToBuffer(SmackManager::g_playingSmack.m_smack2, SmackManager::g_playingSmack.m_x, SmackManager::g_playingSmack.m_y,
-            g_windowManager->m_screenBitmap->getPitch(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+            g_windowManager->m_screenBitmap->GetPitch(),
+            g_windowManager->m_screenBitmap->GetHeight(),
+            g_windowManager->m_screenBitmap->GetMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     BinkManager::g_surfaceType = BinkDDSurfaceType(g_ddsBack);
-    BinkManager::g_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
+    BinkManager::g_playingBink.m_screen = g_windowManager->m_screenBitmap->GetMap(
         BinkManager::g_playingBink.m_x, BinkManager::g_playingBink.m_y);
-    BinkManager::g_playingBink.m_pitch = g_windowManager->m_screenBitmap->getPitch();
-    BinkManager::g_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
+    BinkManager::g_playingBink.m_pitch = g_windowManager->m_screenBitmap->GetPitch();
+    BinkManager::g_playingBink.m_height = g_windowManager->m_screenBitmap->GetHeight();
 }
 
 VA(0x005972d0, 0x29D)
@@ -956,9 +956,9 @@ void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDra
         SmackVolumePan(SmackManager::g_playingSmack.m_smack2, SMACKTRACKS,
             3640 * g_config.m_soundVolume, 0x8000);
         SmackToBuffer(SmackManager::g_playingSmack.m_smack2, x, y,
-            g_windowManager->m_screenBitmap->getPitch(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+            g_windowManager->m_screenBitmap->GetPitch(),
+            g_windowManager->m_screenBitmap->GetHeight(),
+            g_windowManager->m_screenBitmap->GetMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     }
 
     SmackManager::g_playingSmack.m_smack = openSmackerTrack(g_videoDescriptors[id].m_smkStem,
@@ -981,14 +981,14 @@ void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDra
     SmackVolumePan(SmackManager::g_playingSmack.m_smack, SMACKTRACKS,
         3640 * g_config.m_soundVolume, 0x8000);
     SmackToBuffer(SmackManager::g_playingSmack.m_smack, x, y,
-        g_windowManager->m_screenBitmap->getPitch(),
-        g_windowManager->m_screenBitmap->getHeight(),
-        g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+        g_windowManager->m_screenBitmap->GetPitch(),
+        g_windowManager->m_screenBitmap->GetHeight(),
+        g_windowManager->m_screenBitmap->GetMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     if (SmackManager::g_playingSmack.m_smack2)
         SmackToBuffer(SmackManager::g_playingSmack.m_smack2, x, y,
-            g_windowManager->m_screenBitmap->getPitch(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+            g_windowManager->m_screenBitmap->GetPitch(),
+            g_windowManager->m_screenBitmap->GetHeight(),
+            g_windowManager->m_screenBitmap->GetMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     SmackManager::g_playingSmacker = 1;
 }
 
@@ -1112,9 +1112,9 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
         pos.x = SmackManager::g_playingSmack.m_x;
         pos.y = SmackManager::g_playingSmack.m_y;
         SmackToBuffer(SmackManager::g_playingSmack.m_smack, SmackManager::g_playingSmack.m_x, SmackManager::g_playingSmack.m_y,
-            g_windowManager->m_screenBitmap->getPitch(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+            g_windowManager->m_screenBitmap->GetPitch(),
+            g_windowManager->m_screenBitmap->GetHeight(),
+            g_windowManager->m_screenBitmap->GetMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
         aborted = 0;
         g_inputManager->flush();
         while (1) {

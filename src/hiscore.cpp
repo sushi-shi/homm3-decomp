@@ -705,7 +705,7 @@ void THighScoreWindow::update()
         getWidget(CAMPAIGN_ID)->sendMessage(widget::WIDGET_SET_STATUS,
                                              widget::WIDGET_HIGHLIGHTED);
 
-    m_hiScoreBack[m_isStandard]->draw(m_x, m_y, m_width, m_height,
+    m_hiScoreBack[m_isStandard]->Draw(m_x, m_y, m_width, m_height,
                                    g_windowManager->m_screenBitmap, 0, 0,
                                    false);
 

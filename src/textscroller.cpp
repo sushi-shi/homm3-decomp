@@ -154,7 +154,7 @@ int type_text_scroller::main(message& msg)
         case WIDGET_DRAW:
             if (!m_background) {
                 m_background = new Bitmap16Bit(m_width, m_height);
-                m_background->grab(g_windowManager->m_screenBitmap,
+                m_background->Grab(g_windowManager->m_screenBitmap,
                     m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
             }
             break;
@@ -178,7 +178,7 @@ VA(0x005BA600, 0xD7)
 MAC_ADDRESS(0x25b7b8, 0x120)
 void type_text_scroller::refresh(int firstLine)
 {
-    m_background->draw(0, 0, m_width - 16, m_height,
+    m_background->Draw(0, 0, m_width - 16, m_height,
                      g_windowManager->m_screenBitmap,
                      m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
                      false);

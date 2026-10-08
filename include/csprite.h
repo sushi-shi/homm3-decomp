@@ -307,8 +307,8 @@ public:
               Bitmap16Bit* dst, int dx, int dy, bool hflip,
               bool tblit) const
     {
-        Draw(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-             dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip,
+        Draw(seqnum, framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+             dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip,
              tblit);
     }
 
@@ -318,8 +318,8 @@ public:
                       int sh, Bitmap16Bit* dst, int dx, int dy,
                       bool hflip, unsigned short outcolor) const
     {
-        DrawCreature(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                     dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, outcolor);
+        DrawCreature(seqnum, framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                     dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip, outcolor);
     }
 
     // Original: CSprite::DrawCreatureAlpha; CSprite.h:348
@@ -329,8 +329,8 @@ public:
         unsigned short outcolor) const
     {
         DrawCreatureAlpha(seqnum, framenum, sx, sy, sw, sh,
-            dst->getMap(0, 0), dx, dy, dst->getWidth(), dst->getHeight(),
-            dst->getPitch(), hflip, outcolor);
+            dst->GetMap(0, 0), dx, dy, dst->GetWidth(), dst->GetHeight(),
+            dst->GetPitch(), hflip, outcolor);
     }
 
     // DC CSprite.h:355 calls all four Bitmap16Bit accessors before the
@@ -339,8 +339,8 @@ public:
     void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     Bitmap16Bit* dst, int dx, int dy, bool hflip) const
     {
-        DrawAdvObj(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                   dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+        DrawAdvObj(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                   dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
     DC_ADDRESS(0x01f3c8, 0xb8)
@@ -348,8 +348,8 @@ public:
                             Bitmap16Bit* dst, int dx, int dy,
                             unsigned short outcolor, bool hflip) const
     {
-        DrawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                           dst->getWidth(), dst->getHeight(), dst->getPitch(), outcolor,
+        DrawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                           dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), outcolor,
                            hflip);
     }
 
@@ -358,8 +358,8 @@ public:
                           Bitmap16Bit* dst, int dx, int dy,
                           bool hflip) const
     {
-        DrawAdvObjShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                         dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+        DrawAdvObjShadow(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                         dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
     // CSprite.h:378..381: bitmap DrawPointer facade.
@@ -367,8 +367,8 @@ public:
     void DrawPointer(int framenum, Bitmap16Bit* dst, int dx, int dy,
                      bool hflip) const
     {
-        DrawPointer(framenum, dst->getMap(0, 0), dx, dy,
-                    dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+        DrawPointer(framenum, dst->GetMap(0, 0), dx, dy,
+                    dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
     // Header wrapper (DC CSprite.h:385). KeyAccel's four expanded call sites
@@ -378,8 +378,8 @@ public:
                        Bitmap16Bit* dst, int dx, int dy,
                        bool hflip) const
     {
-        DrawInterface(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+        DrawInterface(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                      dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
     // DC CSprite.h:393 forwards through the same four bitmap accessors.
@@ -388,8 +388,8 @@ public:
                   Bitmap16Bit* dst, int dx, int dy, bool hflip,
                   bool vflip) const
     {
-        DrawTile(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                 dst->getWidth(), dst->getHeight(), dst->getPitch(),
+        DrawTile(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                 dst->GetWidth(), dst->GetHeight(), dst->GetPitch(),
                  hflip, vflip);
     }
 
@@ -398,8 +398,8 @@ public:
                         Bitmap16Bit* dst, int dx, int dy,
                         bool hflip, bool vflip) const
     {
-        DrawTileShadow(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);
+        DrawTileShadow(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                       dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip, vflip);
     }
 
     DC_ADDRESS(0x01f738, 0xb8)
@@ -407,8 +407,8 @@ public:
                         Bitmap16Bit* dst, int dx, int dy,
                         bool hflip, bool vflip) const
     {
-        DrawShroudTile(framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip, vflip);
+        DrawShroudTile(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                       dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip, vflip);
     }
 
     // Header wrapper (DC CSprite.h:426): retail advmgr inlines this view,
@@ -417,8 +417,8 @@ public:
     void DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                   Bitmap16Bit* dst, int dx, int dy, bool hflip) const
     {
-        DrawHero(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                 dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+        DrawHero(seqnum, framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                 dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
     // DC publics at 0x1f8a4 and 0x72d98 encode _N for hflip in both
@@ -428,8 +428,8 @@ public:
                         int sh, Bitmap16Bit* dst, int dx, int dy,
                         bool hflip) const
     {
-        DrawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                       dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+        DrawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                       dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
     // E:\\gamedcs\\CSprite.h:438. DrawCursorAlpha reaches the bitmap
     // overload four times; Dreamcast's line table shows this header boundary
@@ -444,8 +444,8 @@ public:
                        int sh, Bitmap16Bit* dst, int dx, int dy,
                        bool hflip) const
     {
-        DrawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                      dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip);
+        DrawHeroAlpha(seqnum, framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                      dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
     // DC CSprite.h:444/445: const bitmap facade.
@@ -457,8 +457,8 @@ public:
                         int sh, Bitmap16Bit* dst, int dx, int dy,
                         bool hflip) const
     {
-        DrawCreature(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
-                     dst->getWidth(), dst->getHeight(), dst->getPitch(),
+        DrawCreature(seqnum, framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                     dst->GetWidth(), dst->GetHeight(), dst->GetPitch(),
                      hflip, 0);
     }
 
@@ -470,9 +470,9 @@ public:
                          int sh, Bitmap16Bit* dst, int dx, int dy,
                          bool hflip, bool alpha) const
     {
-        DrawSpellEffect(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0),
-                        dx, dy, dst->getWidth(), dst->getHeight(),
-                        dst->getPitch(), hflip, alpha);
+        DrawSpellEffect(seqnum, framenum, sx, sy, sw, sh, dst->GetMap(0, 0),
+                        dx, dy, dst->GetWidth(), dst->GetHeight(),
+                        dst->GetPitch(), hflip, alpha);
     }
 };
 

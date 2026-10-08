@@ -5647,24 +5647,24 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
     int x;
     switch (g_mapHeight) {
     case MAP_DIMENSION_SMALL:
-        destRow = g_windowManager->m_screenBitmap->getMap(
+        destRow = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + firstRow / 4);
         xOffset = firstColumn / 4;
         break;
     case MAP_DIMENSION_MEDIUM:
-        destRow = g_windowManager->m_screenBitmap->getMap(
+        destRow = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + firstRow / 2);
         xOffset = firstColumn / 2;
         break;
     case MAP_DIMENSION_LARGE:
-        destRow = g_windowManager->m_screenBitmap->getMap(
+        destRow = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + (firstRow * 4 + 2) / 3);
         xOffset = (firstColumn * 4 + 2) / 3;
         blockPhase = firstColumn % 3;
         rowPhase = firstRow % 3;
         break;
     default:
-        destRow = g_windowManager->m_screenBitmap->getMap(
+        destRow = g_windowManager->m_screenBitmap->GetMap(
             rectX, rectY + firstRow);
         xOffset = firstColumn;
         break;
@@ -5678,29 +5678,29 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
         case MAP_DIMENSION_SMALL:
             destRow = reinterpret_cast<unsigned short*>(
                 reinterpret_cast<unsigned char*>(destRow)
-                + 4 * g_windowManager->m_screenBitmap->getPitch());
+                + 4 * g_windowManager->m_screenBitmap->GetPitch());
             break;
         case MAP_DIMENSION_MEDIUM:
             destRow = reinterpret_cast<unsigned short*>(
                 reinterpret_cast<unsigned char*>(destRow)
-                + 2 * g_windowManager->m_screenBitmap->getPitch());
+                + 2 * g_windowManager->m_screenBitmap->GetPitch());
             break;
         case MAP_DIMENSION_LARGE:
             destRow = reinterpret_cast<unsigned short*>(
                 reinterpret_cast<unsigned char*>(destRow)
-                + g_windowManager->m_screenBitmap->getPitch());
+                + g_windowManager->m_screenBitmap->GetPitch());
             if (++rowPhase > 2)
                 rowPhase = 0;
             if (rowPhase == 0) {
                 destRow = reinterpret_cast<unsigned short*>(
                     reinterpret_cast<unsigned char*>(destRow)
-                    + g_windowManager->m_screenBitmap->getPitch());
+                    + g_windowManager->m_screenBitmap->GetPitch());
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
             destRow = reinterpret_cast<unsigned short*>(
                 reinterpret_cast<unsigned char*>(destRow)
-                + g_windowManager->m_screenBitmap->getPitch());
+                + g_windowManager->m_screenBitmap->GetPitch());
             break;
         }
         int z = origin.m_z;
@@ -7449,8 +7449,8 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
     Bitmap816* const bmp = ResourceManager::getBitmap816("AdvMap.pcx");
 
     if (bmp) {
-        setPlayerPaletteColors(bmp->getPalette().m_colors.m_data, playerId);
-        bmp->draw(0, 0, bmp->getWidth(), bmp->getHeight(),
+        setPlayerPaletteColors(bmp->GetPalette().m_colors.m_data, playerId);
+        bmp->Draw(0, 0, bmp->GetWidth(), bmp->GetHeight(),
                   g_windowManager->m_screenBitmap, 0, 0, 0);
         bmp->dispose();
         m_heroLogoShowing = 0;
@@ -9052,7 +9052,7 @@ void advManager::viewPuzzle()
         type_point centre = g_game->getPuzzleOrigin();
         puzzleDraw(centre.m_x, centre.m_y, centre.m_z,
                    g_game->m_ultimateArtifactX, g_game->m_ultimateArtifactY);
-        g_windowManager->m_screenBitmap->colorize(8, 8, 592, 544, 0.625f,
+        g_windowManager->m_screenBitmap->Colorize(8, 8, 592, 544, 0.625f,
                                                 0.0f);
         int revealed = puzzle.updatePuzzle(0);
         drawAdventureMapGems();

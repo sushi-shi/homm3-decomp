@@ -237,8 +237,8 @@ void showProgressBar()
         g_progressCount = 0;
     }
     if (g_loadBar) {
-        g_loadBar->draw(0, 0, g_loadBar->getWidth(),
-                        g_loadBar->getHeight(),
+        g_loadBar->Draw(0, 0, g_loadBar->GetWidth(),
+                        g_loadBar->GetHeight(),
                         g_windowManager->m_screenBitmap, 0, 0, 0);
         drawProgressCount();
         g_windowManager->updateScreen(0, 0, 800, 600);
@@ -525,18 +525,18 @@ void creditsWait()
     Bitmap16Bit* background = new Bitmap16Bit(328, 580);
     if (!background)
         memError();
-    g_windowManager->m_screenBitmap->draw(
-        460, 10, g_windowManager->m_screenBitmap->getWidth(),
-        g_windowManager->m_screenBitmap->getHeight(), background->getMap(0, 0),
-        0, 0, background->getWidth(), background->getHeight(),
-        background->getPitch(), 1);
+    g_windowManager->m_screenBitmap->Draw(
+        460, 10, g_windowManager->m_screenBitmap->GetWidth(),
+        g_windowManager->m_screenBitmap->GetHeight(), background->GetMap(0, 0),
+        0, 0, background->GetWidth(), background->GetHeight(),
+        background->GetPitch(), 1);
     Bitmap16Bit* credits =
         new Bitmap16Bit(328, textHeight + creditsFont->m_fs.m_height);
     if (!credits)
         memError();
-    credits->fillRect(0, 0, credits->getWidth(), credits->getHeight(), 1);
+    credits->FillRect(0, 0, credits->GetWidth(), credits->GetHeight(), 1);
     creditsFont->drawBoundedString(g_credits[0], credits, 0, 0,
-                                   credits->getWidth(), credits->getHeight(),
+                                   credits->GetWidth(), credits->GetHeight(),
                                    font::TColor(284), 5, -1);
     g_inputManager->flush();
     if (videoNeedsUpdate())
@@ -559,30 +559,30 @@ void creditsWait()
         default:
             if (videoNeedsUpdate()) {
                 Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-                background->draw(0, 0, background->getWidth(),
-                                 background->getHeight(), screen->getMap(0, 0),
-                                 460, 10, screen->getWidth(), screen->getHeight(),
-                                 screen->getPitch(), 0);
+                background->Draw(0, 0, background->GetWidth(),
+                                 background->GetHeight(), screen->GetMap(0, 0),
+                                 460, 10, screen->GetWidth(), screen->GetHeight(),
+                                 screen->GetPitch(), 0);
                 if (startOffset) {
                     startOffset -= 2;
                     screen = g_windowManager->m_screenBitmap;
-                    credits->draw(0, 0, 328, 580 - startOffset,
-                                  screen->getMap(0, 0), 460, startOffset + 10,
-                                  screen->getWidth(), screen->getHeight(),
-                                  screen->getPitch(), 1);
+                    credits->Draw(0, 0, 328, 580 - startOffset,
+                                  screen->GetMap(0, 0), 460, startOffset + 10,
+                                  screen->GetWidth(), screen->GetHeight(),
+                                  screen->GetPitch(), 1);
                 } else if (yOffset < textHeight - 580) {
                     yOffset += 2;
                     screen = g_windowManager->m_screenBitmap;
-                    credits->draw(0, yOffset, 328, 580, screen->getMap(0, 0), 460,
-                                  10, screen->getWidth(), screen->getHeight(),
-                                  screen->getPitch(), 1);
+                    credits->Draw(0, yOffset, 328, 580, screen->GetMap(0, 0), 460,
+                                  10, screen->GetWidth(), screen->GetHeight(),
+                                  screen->GetPitch(), 1);
                 } else if (endOffset >= 0) {
                     endOffset -= 2;
                     yOffset += 2;
                     screen = g_windowManager->m_screenBitmap;
-                    credits->draw(0, yOffset, 328, endOffset, screen->getMap(0, 0),
-                                  460, 10, screen->getWidth(), screen->getHeight(),
-                                  screen->getPitch(), 1);
+                    credits->Draw(0, yOffset, 328, endOffset, screen->GetMap(0, 0),
+                                  460, 10, screen->GetWidth(), screen->GetHeight(),
+                                  screen->GetPitch(), 1);
                     if (endOffset < 435)
                         g_smallFont->drawBoundedString(
                             g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
@@ -753,7 +753,7 @@ static void playFramedVideo(int videoId, const char* frameName)
     Bitmap16Bit* frame = ResourceManager::getBitmap16(frameName);
 
     videoOpen(videoId, 80, 187, 0, 0, 0, 0, 1);
-    frame->draw(0, 0, frame->getWidth(), frame->getHeight(),
+    frame->Draw(0, 0, frame->GetWidth(), frame->GetHeight(),
                 g_windowManager->m_screenBitmap, 0, 0, false);
     videoNextFrame();
     g_inputManager->flush();
@@ -928,11 +928,11 @@ MAC_ADDRESS(0x10f884, 0xdc)
 void showCredits()
 {
     videoDrawCurrentFrame();
-    g_mainBack->draw(0, 0, g_mainBack->getWidth(), g_mainBack->getHeight(),
+    g_mainBack->Draw(0, 0, g_mainBack->GetWidth(), g_mainBack->GetHeight(),
                    g_windowManager->m_screenBitmap, 460, 0, false);
     creditsWait();
     videoDrawCurrentFrame();
-    g_mainBack->draw(0, 0, g_mainBack->getWidth(), g_mainBack->getHeight(),
+    g_mainBack->Draw(0, 0, g_mainBack->GetWidth(), g_mainBack->GetHeight(),
                    g_windowManager->m_screenBitmap, 460, 0, false);
 }
 
@@ -1059,7 +1059,7 @@ int oldmain()
             writePrefs();
     }
 
-    g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
+    g_windowManager->m_screenBitmap->FillRect(0, 0, 800, 600, 0);
     g_windowManager->updateScreen(0, 0, 800, 600);
 
     if (!g_lobbyLaunched) {
@@ -1098,8 +1098,8 @@ int oldmain()
         }
         videoNextFrame();
         videoDrawCurrentFrame();
-        g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
-                             g_gameSelectBack->getHeight(),
+        g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
+                             g_gameSelectBack->GetHeight(),
                              g_windowManager->m_screenBitmap, 0, 0, false);
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
         if (g_gameCommand != TMainMenu::QUIT_ID)
@@ -1178,7 +1178,7 @@ int oldmain()
             g_highScoreManager->viewHiScore();
             videoResume();
             videoRestart();
-            g_mainBack->draw(0, 0, g_mainBack->getWidth(), g_mainBack->getHeight(),
+            g_mainBack->Draw(0, 0, g_mainBack->GetWidth(), g_mainBack->GetHeight(),
                            g_windowManager->m_screenBitmap, 0, 0, false);
             continue;
 
@@ -1449,8 +1449,8 @@ static int doNewGame()
     g_game->m_isTutorial = 0;
     g_setupGameType = 0;
 
-    g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
-                         g_gameSelectBack->getHeight(),
+    g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
+                         g_gameSelectBack->GetHeight(),
                          g_windowManager->m_screenBitmap, 0, 0, false);
 
     int exitNewGame = 0;
@@ -1546,8 +1546,8 @@ static int doNewGame()
         if (!exitNewGame) {
             videoResume();
             videoRestart();
-            g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
-                                 g_gameSelectBack->getHeight(),
+            g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
+                                 g_gameSelectBack->GetHeight(),
                                  g_windowManager->m_screenBitmap,
                                  0, 0, false);
         }
@@ -1602,8 +1602,8 @@ static unsigned char doCampaignWindow()
 {
     unsigned char exitCampaigns = 0;
 
-    g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
-                         g_gameSelectBack->getHeight(),
+    g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
+                         g_gameSelectBack->GetHeight(),
                          g_windowManager->m_screenBitmap, 0, 0, false);
 
     while (1) {
@@ -1662,8 +1662,8 @@ static unsigned char doCampaignWindow()
 
         videoResume();
         videoRestart();
-        g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
-                             g_gameSelectBack->getHeight(),
+        g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
+                             g_gameSelectBack->GetHeight(),
                              g_windowManager->m_screenBitmap, 0, 0, false);
         if (exitCampaigns)
             return 0;
@@ -1738,8 +1738,8 @@ static int doLoadGame()
     g_game->m_isTutorial = 0;
     g_setupGameType = 1;
 
-    g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
-                         g_gameSelectBack->getHeight(),
+    g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
+                         g_gameSelectBack->GetHeight(),
                          g_windowManager->m_screenBitmap, 0, 0, false);
 
     int exitLoadGame = 0;
@@ -1791,8 +1791,8 @@ static int doLoadGame()
         if (!exitLoadGame) {
             videoResume();
             videoRestart();
-            g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
-                                 g_gameSelectBack->getHeight(),
+            g_gameSelectBack->Draw(0, 0, g_gameSelectBack->GetWidth(),
+                                 g_gameSelectBack->GetHeight(),
                                  g_windowManager->m_screenBitmap,
                                  0, 0, false);
         }

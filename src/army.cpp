@@ -820,12 +820,12 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         if (g_combatManager->drawObject(
                 g_combatManager->m_combatGridBitmap, numboxX, numboxY)) {
             if (m_numSpellInfluences == 0) {
-                g_windowManager->m_screenBitmap->colorize(
+                g_windowManager->m_screenBitmap->Colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9, 0.75f, 0.8f);
             } else {
                 // DC army.cpp:830 places ComputeKarma and Colorize on one
                 // statement row. The direct call is Windows byte-flat.
-                g_windowManager->m_screenBitmap->colorize(
+                g_windowManager->m_screenBitmap->Colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9,
                     static_cast<float>((computeKarma() + 1.0) * 0.1667f),
                     0.8f);
@@ -1235,14 +1235,14 @@ void army::animateMissile(army* armyToAttack)
                 unsigned long nextFrameTime =
                     GameTime::get() + missileperiod;
                 if (frame != 0) {
-                    saved.draw(0, 0, width, height,
+                    saved.Draw(0, 0, width, height,
                                g_windowManager->m_screenBitmap, x, y, false);
                     // Mac 0x4b3f4 constructs and copies the rectangle value.
                     updateArea = SLimitData(x, y, x + width - 1, y + height - 1);
                     x += stepX;
                     y += stepY;
                 }
-                saved.grab(g_windowManager->m_screenBitmap, x, y);
+                saved.Grab(g_windowManager->m_screenBitmap, x, y);
                 m_missileIcon->Draw(0, missileFrame, 0, 0, width, height,
                                   g_windowManager->m_screenBitmap, x, y,
                                   targetX < startX, 1);
@@ -1256,7 +1256,7 @@ void army::animateMissile(army* armyToAttack)
                 GameTime::delayTil(nextFrameTime);
             }
         }
-        saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
+        saved.Draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
         g_combatManager->updateCombatArea(x, y, width, height);  // DC army.cpp:1348
     }
 }
@@ -4417,7 +4417,7 @@ void army::setupAnimation()
     m_letsPretendImNotHere = 1;
     g_combatManager->drawFrame(0, 0, 0, 0, 1, 0);
     m_letsPretendImNotHere = 0;
-    g_windowManager->m_screenBitmap->draw(
+    g_windowManager->m_screenBitmap->Draw(
         0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid, 0, 0, false);
     g_combatManager->m_backgroundDrawn = 0;
 }
@@ -4452,7 +4452,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
     for (m_currFrameIndex = startFrame;
          m_currFrameIndex < nframes + startFrame; m_currFrameIndex++) {
         SLimitData frame = bounds;
-        g_combatManager->m_saveScreenPostGrid->draw(
+        g_combatManager->m_saveScreenPostGrid->Draw(
             frame.m_minX, frame.m_minY,
             frame.width(),
             frame.height(),

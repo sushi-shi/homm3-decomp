@@ -91,10 +91,10 @@ int heroWindow::open(int newPriority, bool update)
     }
     m_priority = newPriority;
     if (m_type & WINDOW_FLAG_SHADOWED) {
-        g_windowManager->m_screenBitmap->darken(m_x + m_width, m_y + 9, 7, m_height - 9);
-        g_windowManager->m_screenBitmap->darken(m_x + m_width, m_y + 8, 8, m_height - 8);
-        g_windowManager->m_screenBitmap->darken(m_x + 9, m_y + m_height, m_width - 2, 7);
-        g_windowManager->m_screenBitmap->darken(m_x + 8, m_y + m_height, m_width, 8);
+        g_windowManager->m_screenBitmap->Darken(m_x + m_width, m_y + 9, 7, m_height - 9);
+        g_windowManager->m_screenBitmap->Darken(m_x + m_width, m_y + 8, 8, m_height - 8);
+        g_windowManager->m_screenBitmap->Darken(m_x + 9, m_y + m_height, m_width - 2, 7);
+        g_windowManager->m_screenBitmap->Darken(m_x + 8, m_y + m_height, m_width, 8);
     }
     if (videoPlaying()) {
         drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -351,7 +351,7 @@ int heroWindow::saveBackground()
         m_background = new Bitmap16Bit(m_width + 8, m_height + 8);
     else
         m_background = new Bitmap16Bit(m_width, m_height);
-    m_background->grab(g_windowManager->m_screenBitmap, m_x, m_y);
+    m_background->Grab(g_windowManager->m_screenBitmap, m_x, m_y);
     return 0;
 }
 
@@ -362,13 +362,13 @@ void heroWindow::restoreBackground(unsigned char update)
 {
     if (!m_background)
         return;
-    m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
-                     g_windowManager->m_screenBitmap->getMap(0, 0), m_x, m_y,
-                     g_windowManager->m_screenBitmap->getWidth(),
-                     g_windowManager->m_screenBitmap->getHeight(),
-                     g_windowManager->m_screenBitmap->getPitch(), 0);
+    m_background->Draw(0, 0, m_background->GetWidth(), m_background->GetHeight(),
+                     g_windowManager->m_screenBitmap->GetMap(0, 0), m_x, m_y,
+                     g_windowManager->m_screenBitmap->GetWidth(),
+                     g_windowManager->m_screenBitmap->GetHeight(),
+                     g_windowManager->m_screenBitmap->GetPitch(), 0);
     if (update)
-        g_windowManager->updateScreen(m_x, m_y, m_background->getWidth(), m_background->getHeight());
+        g_windowManager->updateScreen(m_x, m_y, m_background->GetWidth(), m_background->GetHeight());
     delete m_background;
     m_background = 0;
 }
@@ -394,11 +394,11 @@ void heroWindow::moveWindow(int deltaX, int deltaY)
         newX = WINDOW_SCREEN_WIDTH - m_width;
     if (m_height + newY > WINDOW_SCREEN_HEIGHT)
         newY = WINDOW_SCREEN_HEIGHT - m_height;
-    m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+    m_background->Draw(0, 0, m_background->GetWidth(), m_background->GetHeight(),
                        g_windowManager->m_screenBitmap, m_x, m_y, false);
     m_x = newX;
     m_y = newY;
-    m_background->grab(g_windowManager->m_screenBitmap, m_x, m_y);
+    m_background->Grab(g_windowManager->m_screenBitmap, m_x, m_y);
     drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     startW += abs(m_x - startX);
     startH += abs(m_y - startY);
@@ -450,11 +450,11 @@ void heroWindow::centerWindow(int centerX, int centerY)
         m_x = centerX;
         m_y = centerY;
     } else {
-        m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+        m_background->Draw(0, 0, m_background->GetWidth(), m_background->GetHeight(),
                            g_windowManager->m_screenBitmap, m_x, m_y, false);
         m_x = centerX;
         m_y = centerY;
-        m_background->grab(g_windowManager->m_screenBitmap, m_x, m_y);
+        m_background->Grab(g_windowManager->m_screenBitmap, m_x, m_y);
         drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         startW += abs(m_x - startX);
         startH += abs(m_y - startY);

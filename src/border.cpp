@@ -154,7 +154,7 @@ void coloredBorder::zBufferDraw(unsigned short* zBuffer, int id) const {}
 DC_ADDRESS(0x054618, 0x38)
 void coloredBorder::draw() const
 {
-    g_windowManager->m_screenBitmap->fillRect(m_x + m_parentWindow->m_x,
+    g_windowManager->m_screenBitmap->FillRect(m_x + m_parentWindow->m_x,
         m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
@@ -201,10 +201,10 @@ MAC_ADDRESS(0x05e618, 0xa4)
 void coloredBorderFrame::draw() const
 {
     if (m_colorize)
-        g_windowManager->m_screenBitmap->colorize(m_x + m_parentWindow->m_x,
+        g_windowManager->m_screenBitmap->Colorize(m_x + m_parentWindow->m_x,
             m_y + m_parentWindow->m_y, m_width, m_height, m_color);
     else
-        g_windowManager->m_screenBitmap->frameRect(m_x + m_parentWindow->m_x,
+        g_windowManager->m_screenBitmap->FrameRect(m_x + m_parentWindow->m_x,
             m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
@@ -279,7 +279,7 @@ MAC_ADDRESS(0x05e934, 0x70)
 void bitmapBorder::draw() const
 {
     if (m_image)
-        m_image->draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
+        m_image->Draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 1);
 }
 
@@ -292,7 +292,7 @@ void bitmapBorder::setPalette(const char* paletteName)
     if (m_image) {
         TPalette16* newPalette = ResourceManager::getPalette(paletteName);
         if (newPalette) {
-            m_image->setPalette(newPalette->Palette);
+            m_image->SetPalette(newPalette->Palette);
             ResourceManager::dispose(newPalette);
         }
     }
@@ -304,7 +304,7 @@ MAC_ADDRESS(0x05e9a4, 0x1c)
 int bitmapBorder::getRealWidth() const
 {
     if (m_image)
-        return m_image->getWidth();
+        return m_image->GetWidth();
     return 0;
 }
 
@@ -314,7 +314,7 @@ MAC_ADDRESS(0x05e9c0, 0x1c)
 int bitmapBorder::getRealHeight() const
 {
     if (m_image)
-        return m_image->getHeight();
+        return m_image->GetHeight();
     return 0;
 }
 
@@ -336,8 +336,8 @@ DC_ADDRESS(0x0549ec, 0x34)
 MAC_ADDRESS(0x05eabc, 0x50)
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
-    ::setPlayerPaletteColors(m_image->getPalette().m_colors.m_data, whichPlayer);
-    ::setPlayerPaletteColors(m_image->getPalette24(), whichPlayer);
+    ::setPlayerPaletteColors(m_image->GetPalette().m_colors.m_data, whichPlayer);
+    ::setPlayerPaletteColors(m_image->GetPalette24(), whichPlayer);
 }
 
 VA(0x00450550, 0x132)
@@ -404,7 +404,7 @@ void bitmapBorder16::draw() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_image->draw(0, 0, m_width, m_height, screen,
+        m_image->Draw(0, 0, m_width, m_height, screen,
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, false);
     }
 }
@@ -416,7 +416,7 @@ void bitmapBorder16::draw2() const
 {
     if (m_image) {
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_image->draw(0, 0, m_width, m_height, screen, m_x, m_y, false);
+        m_image->Draw(0, 0, m_width, m_height, screen, m_x, m_y, false);
     }
 }
 
@@ -427,7 +427,7 @@ DC_ADDRESS(0x054c2c, 0x20)
 MAC_ADDRESS(0x05ee04, 0x1c)
 int bitmapBorder16::getRealWidth() const
 {
-    return m_image ? m_image->getWidth() : 0;
+    return m_image ? m_image->GetWidth() : 0;
 }
 
 // Original: bitmapBorder16::GetRealHeight; border.cpp:436
@@ -436,7 +436,7 @@ DC_ADDRESS(0x054c4c, 0x20)
 MAC_ADDRESS(0x05ee20, 0x1c)
 int bitmapBorder16::getRealHeight() const
 {
-    return m_image ? m_image->getHeight() : 0;
+    return m_image ? m_image->GetHeight() : 0;
 }
 
 // E:\gamedcs\border.cpp:449 - located in retail, slot 2 of vtable

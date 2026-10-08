@@ -3029,7 +3029,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 (deltaY - flatness * (nframes - step)) * step
                 / static_cast<double>(nframes) + startY);
         }
-        saved.grab(g_windowManager->m_screenBitmap, x, y);
+        saved.Grab(g_windowManager->m_screenBitmap, x, y);
         missile->Draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, false, true);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
@@ -3037,7 +3037,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                  true, true, true);  // DC 3717
         updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);
-        saved.draw(0, 0, width, height,
+        saved.Draw(0, 0, width, height,
                    g_windowManager->m_screenBitmap, x, y, false);
         ++frame;
         if (frame >= missile->GetNumFrames(0))
@@ -3131,7 +3131,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     for (int step = 0; step < nframes; step++) {
         unsigned long nextFrameTime = GameTime::get() + arrowDelay;
         if (step != 0) {
-            saved.draw(0, 0, width, height,
+            saved.Draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x743e0 constructs and copies the four-word bounds.
             updateArea = SLimitData(
@@ -3139,7 +3139,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             x += addX;
             y += addY;
         }
-        saved.grab(g_windowManager->m_screenBitmap, x, y);
+        saved.Grab(g_windowManager->m_screenBitmap, x, y);
         missile->Draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         scrollTo(x, y, x + width - 1, y + height - 1,
@@ -3154,7 +3154,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         GameTime::delayTil(nextFrameTime);
     }
 
-    saved.draw(0, 0, width, height,
+    saved.Draw(0, 0, width, height,
                g_windowManager->m_screenBitmap, x, y, false);
     updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:3890
     ResourceManager::dispose(missile);
@@ -3269,7 +3269,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     for (int step = 0; step < nframes; step++) {
         unsigned long nextFrameTime = GameTime::get() + arrowDelay;
         if (step != 0) {
-            saved.draw(0, 0, width, height,
+            saved.Draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
             // Retaining those expressions also matches the Windows loop schedule.
@@ -3277,7 +3277,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             x += addX;
             y += addY;
         }
-        saved.grab(g_windowManager->m_screenBitmap, x, y);
+        saved.Grab(g_windowManager->m_screenBitmap, x, y);
         // DC cmbtmgr.cpp:4008 calls the const bitmap-forwarding overload
         // from CSprite.h:324, retained at dc 0x1f268.
         missile->Draw(0, frame, 0, 0, width, height,
@@ -3290,7 +3290,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         GameTime::delayTil(nextFrameTime);
     }
 
-    saved.draw(0, 0, width, height,
+    saved.Draw(0, 0, width, height,
                g_windowManager->m_screenBitmap, x, y, false);
     updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:4033
 }

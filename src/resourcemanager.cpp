@@ -156,9 +156,9 @@ VA(0x005594f0, 0x14)  // anchor-caller + emitted COFF public, retail-only
 void basic_ostringstream::`vbase destructor'();
 #endif
 
-DATA(0x00694d60) unsigned int Bitmap16Bit::s_greenMask;
-DATA(0x00694d64) unsigned int Bitmap16Bit::s_blueMask;
-DATA(0x00694d68) unsigned int Bitmap16Bit::s_redMask;
+DATA(0x00694d60) unsigned int Bitmap16Bit::green_mask;
+DATA(0x00694d64) unsigned int Bitmap16Bit::blue_mask;
+DATA(0x00694d68) unsigned int Bitmap16Bit::red_mask;
 DATA(0x0069cc60) unsigned int TPalette16::green_mask;
 DATA(0x0069cc64) unsigned int TPalette16::red_mask;
 DATA(0x0069cc68) unsigned int TPalette16::blue_mask;
@@ -347,7 +347,7 @@ void ResourceManager::remapGraphics()
         case RESOURCE_TYPE_BITMAP16: {
             std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->get_Name()));
             if (loaded.get()) {
-                loaded->draw(0, 0, loaded->getWidth(), loaded->getHeight(),
+                loaded->Draw(0, 0, loaded->GetWidth(), loaded->GetHeight(),
                              static_cast<Bitmap16Bit*>(value), 0, 0, false);
             }
             break;
@@ -364,7 +364,7 @@ void ResourceManager::remapGraphics()
             break;
 
         case RESOURCE_TYPE_BITMAP:
-            static_cast<Bitmap816*>(value)->resetPalette();
+            static_cast<Bitmap816*>(value)->ResetPalette();
             break;
 
         case RESOURCE_TYPE_FONT: {
@@ -401,7 +401,7 @@ void ResourceManager::saturateGraphics()
         case RESOURCE_TYPE_BITMAP16: {
             std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->get_Name()));
             if (loaded.get()) {
-                loaded->draw(0, 0, loaded->getWidth(), loaded->getHeight(),
+                loaded->Draw(0, 0, loaded->GetWidth(), loaded->GetHeight(),
                              static_cast<Bitmap16Bit*>(value), 0, 0, false);
             }
             break;
@@ -422,8 +422,8 @@ void ResourceManager::saturateGraphics()
 
         case RESOURCE_TYPE_BITMAP: {
             Bitmap816* bitmap = static_cast<Bitmap816*>(value);
-            bitmap->getPalette24().AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-            bitmap->resetPalette();
+            bitmap->GetPalette24().AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            bitmap->ResetPalette();
             break;
         }
 
@@ -629,7 +629,7 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
                                      unsigned long blueMask)
 {
     CSprite::SetPixelFormat(redMask, greenMask, blueMask);
-    Bitmap16Bit::setPixelFormat(redMask, greenMask, blueMask);
+    Bitmap16Bit::SetPixelFormat(redMask, greenMask, blueMask);
     TPalette16::SetPixelFormat(redMask, greenMask, blueMask);
     g_spriteMaskFirst = redMask;
     g_spriteMaskGreen = greenMask;
@@ -764,7 +764,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
                 name, bmpHeader.m_width, bmpHeader.m_height, data.get(),
                 &palette16, bmpHeader.m_dataSize);
             if (result)
-                result->setPalette(&palette24);
+                result->SetPalette(&palette24);
         }
 
         if (result)
@@ -801,11 +801,11 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
         std::auto_ptr<Bitmap24Bit> source(
             new Bitmap24Bit(name, g_resourcePath.c_str()));
         if (g_graphicsSaturated)
-            source->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            source->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
         result = new Bitmap16Bit(
-            name, source->getWidth(), source->getHeight());
-        source->draw(0, 0, source->getWidth(), source->getHeight(),
+            name, source->GetWidth(), source->GetHeight());
+        source->Draw(0, 0, source->GetWidth(), source->GetHeight(),
                      result, 0, 0);
         return result;
     } else {
@@ -838,11 +838,11 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
         std::auto_ptr<Bitmap24Bit> source(new Bitmap24Bit(
             name, header.m_width, header.m_height, data.get(), header.m_dataSize));
         if (g_graphicsSaturated)
-            source->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            source->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
         result = new Bitmap16Bit(
-            name, source->getWidth(), source->getHeight());
-        source->draw(0, 0, source->getWidth(), source->getHeight(),
+            name, source->GetWidth(), source->GetHeight());
+        source->Draw(0, 0, source->GetWidth(), source->GetHeight(),
                      result, 0, 0);
         return result;
     }
@@ -1782,7 +1782,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
 {
     Bitmap816* source = getBitmap816(resName);
     if (source) {
-        source->draw(0, 0, source->getWidth(), source->getHeight(),
+        source->Draw(0, 0, source->GetWidth(), source->GetHeight(),
                      destBmap, 0, 0, false);
         ResourceManager::dispose(source);
     } else {

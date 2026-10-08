@@ -694,7 +694,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
     if (m_debugShowBlockedHexes) {
         for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
             if (m_cells[i].m_attributes & hexcell::blocked) {
-                m_combatShadowBitmap->draw(
+                m_combatShadowBitmap->Draw(
                     0, 0, 45, 52, m_saveScreenPostGrid,
                     m_cells[i].m_hexUlx, m_cells[i].m_hexUly, true);
                 update = 1;
@@ -744,7 +744,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 
                 updateLimits.clip(combatManager::s_gridAreaLimits);
 
-                m_saveScreenPreGrid->draw(
+                m_saveScreenPreGrid->Draw(
                     updateLimits.m_minX - 58,
                     updateLimits.m_minY - 86,
                     updateLimits.width(), updateLimits.height(),
@@ -757,7 +757,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
         if (newGrid) {
             for (i = 0; i < COMBAT_GRID_CELLS; i++) {
                 if (m_curDrawGridShade[i]) {
-                    m_saveScreenPostGrid->darken(
+                    m_saveScreenPostGrid->Darken(
                         m_cells[i].m_hexUlx, m_cells[i].m_hexUly, 45, 52,
                         m_combatShadowBitmap, 0, 0);
                     update = 1;
@@ -770,9 +770,9 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
             && (!g_combatGridPosted || update)) {
         for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
             if (!inInvisibleColumn(i)) {
-                m_combatCellGridBitmap->draw(
-                    0, 0, m_combatCellGridBitmap->getWidth(),
-                    m_combatCellGridBitmap->getHeight(), m_saveScreenPostGrid,
+                m_combatCellGridBitmap->Draw(
+                    0, 0, m_combatCellGridBitmap->GetWidth(),
+                    m_combatCellGridBitmap->GetHeight(), m_saveScreenPostGrid,
                     m_cells[i].m_hexUlx, m_cells[i].m_hexUly, true);
             }
         }
@@ -801,7 +801,7 @@ void combatManager::drawBackground()
         const SElevationOverlay* overlay = &s_elevationOverlay[index];
         Bitmap816* bitmap = ResourceManager::getBitmap816(
             overlay->m_fileName);
-        bitmap->draw(0, 0, bitmap->getWidth(), bitmap->getHeight(), m_saveScreenPostGrid,
+        bitmap->Draw(0, 0, bitmap->GetWidth(), bitmap->GetHeight(), m_saveScreenPostGrid,
                      overlay->m_x, overlay->m_y, true);
         ResourceManager::dispose(bitmap);
     }
@@ -811,8 +811,8 @@ void combatManager::drawBackground()
             &s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
         Bitmap816* bitmap = m_wallImages[WALL_TRAITS_ROW_MOAT][0];
         if (bitmap) {
-            bitmap->draw(
-                0, 0, bitmap->getWidth(), bitmap->getHeight(), m_saveScreenPostGrid,
+            bitmap->Draw(
+                0, 0, bitmap->GetWidth(), bitmap->GetHeight(), m_saveScreenPostGrid,
                 traits->m_x, traits->m_y, true);
         }
 
@@ -820,16 +820,16 @@ void combatManager::drawBackground()
                               [WALL_TRAITS_ROW_MOAT + 1];
         bitmap = m_wallImages[WALL_TRAITS_ROW_MOAT + 1][0];
         if (bitmap) {
-            bitmap->draw(
-                0, 0, bitmap->getWidth(), bitmap->getHeight(), m_saveScreenPostGrid,
+            bitmap->Draw(
+                0, 0, bitmap->GetWidth(), bitmap->GetHeight(), m_saveScreenPostGrid,
                 traits->m_x, traits->m_y, true);
         }
     }
 
-    m_saveScreenPostGrid->draw(0x3a, 0x56, 0x2ab, 0x1d8,
+    m_saveScreenPostGrid->Draw(0x3a, 0x56, 0x2ab, 0x1d8,
                      m_saveScreenPreGrid, 0, 0, false);
     updateGrid(1, 0);
-    m_saveScreenPostGrid->draw(0, 0, 800, 556,
+    m_saveScreenPostGrid->Draw(0, 0, 800, 556,
                      g_windowManager->m_screenBitmap, 0, 0, false);
     m_backgroundDrawn = 1;
 }
@@ -875,7 +875,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         if (cell.m_hexUly > 504)
             copyHeight = 556 - cell.m_hexUly;
 
-        m_combatMouseBackground->draw(
+        m_combatMouseBackground->Draw(
             cell.m_backgroundOffset * 45, 0, 45, copyHeight,
             m_saveScreenPostGrid, cell.m_hexUlx, cell.m_hexUly, false);
         cell.m_backgroundOffset = -1;
@@ -895,14 +895,14 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         if (cell.m_hexUly > 504)
             copyHeight = 556 - cell.m_hexUly;
 
-        m_saveScreenPostGrid->draw(
+        m_saveScreenPostGrid->Draw(
             cell.m_hexUlx, cell.m_hexUly, 45, copyHeight,
             m_combatMouseBackground, offset * 45, 0, false);
     }
 
     for (i = 0; i < hexes.size(); ++i) {
         hexcell& cell = m_cells[hexes[i]];
-        m_saveScreenPostGrid->darken(cell.m_hexUlx, cell.m_hexUly, 45, 52,
+        m_saveScreenPostGrid->Darken(cell.m_hexUlx, cell.m_hexUly, 45, 52,
                            m_combatShadowBitmap, 0, 0);
     }
 
@@ -925,7 +925,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     }
 
     m_extent.clip(combatManager::s_combatAreaLimits);
-    m_saveScreenPostGrid->draw(
+    m_saveScreenPostGrid->Draw(
         m_extent.m_minX, m_extent.m_minY,
         m_extent.width(), m_extent.height(),
         g_windowManager->m_screenBitmap,
@@ -1031,7 +1031,7 @@ void combatManager::drawFrame(bool update,
     if (g_chatMan.chatChanged()) {
         limitCreatureEffect = limitDraw = m_limitToExtent = 0;
         if (m_backgroundDrawn) {
-            m_saveScreenPostGrid->draw(
+            m_saveScreenPostGrid->Draw(
                 m_combatWindow->m_chatWidget->m_x,
                 m_combatWindow->m_chatWidget->m_y,
                 m_combatWindow->m_chatWidget->m_width,
@@ -1045,13 +1045,13 @@ void combatManager::drawFrame(bool update,
     } else if (refreshBackground) {
         if (m_backgroundDrawn) {
             if (limitCreatureEffect || limitDraw || m_limitToExtent) {
-                m_saveScreenPostGrid->draw(
+                m_saveScreenPostGrid->Draw(
                     m_extent.m_minX, m_extent.m_minY,
                     m_extent.width(), m_extent.height(),
                     g_windowManager->m_screenBitmap,
                     m_extent.m_minX, m_extent.m_minY, false);
             } else {
-                m_saveScreenPostGrid->draw(0, 0, 800, 556,
+                m_saveScreenPostGrid->Draw(0, 0, 800, 556,
                                  g_windowManager->m_screenBitmap,
                                  0, 0, false);
             }
@@ -1245,18 +1245,18 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     || (hexIndex == wallHex && !gridY(wallHex))) {
                 const int sw = m_cells[wallHex].m_hexUlx - traits.m_x;
                 if (sw > 0)
-                    drawWall(image, 0, 0, sw, image->getHeight(),
+                    drawWall(image, 0, 0, sw, image->GetHeight(),
                              traits.m_x, traits.m_y);
             } else if (hexIndex
                     == wallHex - dx * COMBAT_GRID_ROW_STRIDE
                         - rowIsOdd(gridY(wallHex)) + 1) {
                 const hexcell& cell = m_cells[wallHex];
-                const int sw = image->getWidth() - cell.m_hexUlx + traits.m_x
+                const int sw = image->GetWidth() - cell.m_hexUlx + traits.m_x
                                - COMBAT_WALL_HEX_WIDTH;
                 if (sw > 0) {
                     const int sx = cell.m_hexUlx - traits.m_x
                                    + COMBAT_WALL_HEX_WIDTH;
-                    drawWall(image, sx, 0, sw, image->getHeight(),
+                    drawWall(image, sx, 0, sw, image->GetHeight(),
                              cell.m_hexUlx + COMBAT_WALL_HEX_WIDTH, traits.m_y);
                 }
             }
@@ -1271,10 +1271,10 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     destX = traits.m_x;
                     sourceX = 0;
                 }
-                int remainingWidth = image->getWidth() - sourceX;
+                int remainingWidth = image->GetWidth() - sourceX;
                 if (width > remainingWidth)
                     width = remainingWidth;
-                drawWall(image, sourceX, 0, width, image->getHeight(),
+                drawWall(image, sourceX, 0, width, image->GetHeight(),
                          destX, traits.m_y);
             }
         }
@@ -1323,7 +1323,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                 }
             }
 
-            drawWall(image, 0, 0, image->getWidth(), image->getHeight(),
+            drawWall(image, 0, 0, image->GetWidth(), image->GetHeight(),
                      traits.m_x, traits.m_y);
         }
     }
@@ -1636,7 +1636,7 @@ int combatManager::drawWall(const Bitmap816* image, int x, int y,
             return 0;
     }
 
-    image->draw(x, y, width, limits.m_maxY - dy + 1,
+    image->Draw(x, y, width, limits.m_maxY - dy + 1,
                 g_windowManager->m_screenBitmap, dx, dy, true);
     return 1;
 }
@@ -1647,8 +1647,8 @@ MAC_ADDRESS(0x0a797c, 0x1b0)
 int combatManager::drawObject(const Bitmap816* image, int x, int y)
 {
     SLimitData limits(x, y,
-                      x + image->getWidth() - 1,
-                      y + image->getHeight() - 1);
+                      x + image->GetWidth() - 1,
+                      y + image->GetHeight() - 1);
 
     limits.clip(combatManager::s_combatAreaLimits);
 
@@ -1664,7 +1664,7 @@ int combatManager::drawObject(const Bitmap816* image, int x, int y)
             return 0;
     }
 
-    image->draw(0, 0, image->getWidth(), limits.m_maxY - y + 1,
+    image->Draw(0, 0, image->GetWidth(), limits.m_maxY - y + 1,
                 g_windowManager->m_screenBitmap, x, y, true);
     return 1;
 }
@@ -1687,8 +1687,8 @@ int combatManager::drawMoatOverlay(int index)
 
     SLimitData imageExtent(
         traits.m_x, traits.m_y,
-        traits.m_x + image->getWidth() - 1,
-        traits.m_y + image->getHeight() - 1);
+        traits.m_x + image->GetWidth() - 1,
+        traits.m_y + image->GetHeight() - 1);
     moatExtent.clip(imageExtent);
     if (moatExtent.isEmpty())
         return 0;
@@ -1715,7 +1715,7 @@ int combatManager::drawMoatOverlay(int index)
         moatExtent.m_minY = traits.m_y;
     }
 
-    image->draw(sourceX, sourceY,
+    image->Draw(sourceX, sourceY,
                 moatExtent.width(), moatExtent.height(),
                 g_windowManager->m_screenBitmap,
                 moatExtent.m_minX, moatExtent.m_minY, true);

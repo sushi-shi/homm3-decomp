@@ -1,6 +1,6 @@
 [[data]]
 retail_va = 0x00694d68
-mac_symbol = "s_redMask__11Bitmap16Bit"
+mac_symbol = "red_mask__11Bitmap16Bit"
 source = "src/resourcemanager.cpp"
 declaration_only = true
 mac_section = 1
@@ -11,7 +11,7 @@ evidence = "Bitmap16Bit::s_redMask external storage. Canonical ResourceManager::
 
 [[data]]
 retail_va = 0x00694d60
-mac_symbol = "s_greenMask__11Bitmap16Bit"
+mac_symbol = "green_mask__11Bitmap16Bit"
 source = "src/resourcemanager.cpp"
 declaration_only = true
 mac_section = 1
@@ -22,7 +22,7 @@ evidence = "Bitmap16Bit::s_greenMask external storage. Canonical ResourceManager
 
 [[data]]
 retail_va = 0x00694d64
-mac_symbol = "s_blueMask__11Bitmap16Bit"
+mac_symbol = "blue_mask__11Bitmap16Bit"
 source = "src/resourcemanager.cpp"
 declaration_only = true
 mac_section = 1

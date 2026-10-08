@@ -181,8 +181,8 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
     if (destY + g_viewWorldScale < 8 || destY >= 552)
         return;
 
-    int mwidth = g_memoryBuffer->getWidth();
-    int swidth = g_windowManager->m_screenBitmap->getWidth();
+    int mwidth = g_memoryBuffer->GetWidth();
+    int swidth = g_windowManager->m_screenBitmap->GetWidth();
 
     int screenX = destX;
     int screenY = destY;
@@ -196,8 +196,8 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
         screenY = 552;
 
     unsigned short* screenBufferLineStart =
-        g_windowManager->m_screenBitmap->getMap(screenX, screenY);
-    unsigned short* sourceBufferLineStart = g_memoryBuffer->getMap(0, 0);
+        g_windowManager->m_screenBitmap->GetMap(screenX, screenY);
+    unsigned short* sourceBufferLineStart = g_memoryBuffer->GetMap(0, 0);
 
     for (int y = 0; y < g_viewWorldScale; ++y) {
         if (destY + y < 8 || destY + y >= 552)
@@ -215,7 +215,7 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
         }
         // The retained call in the river/road expansions precedes the
         // row-offset calculation; keep that evaluation order explicit.
-        sourceBufferLineStart = g_memoryBuffer->getMap(0, 0);
+        sourceBufferLineStart = g_memoryBuffer->GetMap(0, 0);
         sourceBufferLineStart += mwidth * g_scaleLine[y];
         screenBufferLineStart += swidth;
     }
@@ -234,11 +234,11 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
         return;
     }
 
-    int mwidth = g_memoryBuffer->getWidth();
-    int swidth = g_windowManager->m_screenBitmap->getWidth();
+    int mwidth = g_memoryBuffer->GetWidth();
+    int swidth = g_windowManager->m_screenBitmap->GetWidth();
     unsigned short* screenBufferLineStart =
-        g_windowManager->m_screenBitmap->getMap(destX, destY);
-    unsigned short* sourceBufferLineStart = g_memoryBuffer->getMap(0, 0);
+        g_windowManager->m_screenBitmap->GetMap(destX, destY);
+    unsigned short* sourceBufferLineStart = g_memoryBuffer->GetMap(0, 0);
 
     for (int y = 0; y < g_viewWorldScale; ++y) {
         unsigned short* screenBuffer = screenBufferLineStart;
@@ -249,7 +249,7 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
             ++screenBuffer;
         }
         sourceBufferLineStart =
-            g_memoryBuffer->getMap(0, 0) + mwidth * g_scaleLine[y];
+            g_memoryBuffer->GetMap(0, 0) + mwidth * g_scaleLine[y];
         screenBufferLineStart += swidth;
     }
 }
@@ -526,8 +526,8 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     unsigned char foundBoat =
         scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
-    memset(g_memoryBuffer->getMap(0, 0), 0,
-           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+    memset(g_memoryBuffer->GetMap(0, 0), 0,
+           g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
     int drewSomething = 0;
 
     if (thisCell->m_objects.size() > 0) {
@@ -772,8 +772,8 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
         scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
     int drewSomething = 0;
-    memset(g_memoryBuffer->getMap(0, 0), 0,
-           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+    memset(g_memoryBuffer->GetMap(0, 0), 0,
+           g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
     for (int numObj = 0; numObj < thisCell->m_objects.size(); ++numObj) {
         NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
@@ -878,8 +878,8 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    memset(g_memoryBuffer->getMap(0, 0), 0,
-           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+    memset(g_memoryBuffer->GetMap(0, 0), 0,
+           g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
     m_riverTileset[thisCell->m_riverSet]->DrawTile(
         thisCell->m_riverIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
@@ -920,8 +920,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    memset(g_memoryBuffer->getMap(0, 0), 0,
-           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+    memset(g_memoryBuffer->GetMap(0, 0), 0,
+           g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
     m_roadTileset[thisCell->m_roadSet]->DrawTile(
         thisCell->m_roadIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
@@ -977,8 +977,8 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
         drawShroud = true;
         lookup = g_completeDrawAllCells ? 0 : getCloudLookup(srcX, srcY, z);
         if (!lookup) {
-            ZeroMemory(g_memoryBuffer->getMap(0, 0),
-                   g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+            ZeroMemory(g_memoryBuffer->GetMap(0, 0),
+                   g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
             m_starTileset->DrawShroudTile(
                 ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, g_memoryBuffer,
                 0, 0, false, false);
@@ -1002,8 +1002,8 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
     if (!drawShroud)
         return;
 
-    ZeroMemory(g_memoryBuffer->getMap(0, 0),
-           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+    ZeroMemory(g_memoryBuffer->GetMap(0, 0),
+           g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
     m_cloudIcons->DrawShroudTile(
         lookup - 1, 0, 0, 32, 32, g_memoryBuffer, 0, 0, hflip, false);
     vwScaleToScreenBuffer(baseX, baseY + 8);
@@ -1031,8 +1031,8 @@ void advManager::vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    memset(g_memoryBuffer->getMap(0, 0), 0,
-           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+    memset(g_memoryBuffer->GetMap(0, 0), 0,
+           g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
     int drewSomething = 0;
 
@@ -1111,16 +1111,16 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
         if (frame == -1)
             frame = (srcX + 16) % 4 + 4 * ((srcY + 16) % 4);
 
-        memset(g_memoryBuffer->getMap(0, 0), 0,
-               g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+        memset(g_memoryBuffer->GetMap(0, 0), 0,
+               g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
         m_borderTileset->DrawTile(
             frame, 0, 0, 32, 32, g_memoryBuffer, 0, 0, false, false);
 
         vwScaleToScreenBuffer(baseX, baseY + 8);
     } else {
-        memset(g_memoryBuffer->getMap(0, 0), 0,
-               g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+        memset(g_memoryBuffer->GetMap(0, 0), 0,
+               g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
         m_groundTileset[thisCell->m_groundSet]->DrawTile(
             thisCell->m_groundIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
@@ -1557,7 +1557,7 @@ void advManager::vwCompleteDraw(int startX, int startY, int z, int drawwidth,
     int row;
     int col;
 
-    g_windowManager->m_screenBitmap->fillRect(8, 8, 592, 544, 0);
+    g_windowManager->m_screenBitmap->FillRect(8, 8, 592, 544, 0);
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
             vwDrawGround(startX + col, startY + row, z, col, row);

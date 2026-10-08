@@ -137,7 +137,7 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
         m_x + m_parentWindow->m_x,
         endY,
         0);
-    m_sliderBitmap->draw(
+    m_sliderBitmap->Draw(
         x3, 0, m_width, m_length - m_knobStart * 2,
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, 0);
@@ -503,7 +503,7 @@ void slider::draw() const
                 m_y + m_parentWindow->m_y, 0);
         }
 
-        m_sliderBitmap->draw(
+        m_sliderBitmap->Draw(
             0, 0, m_length - m_knobStart * 2, m_height,
             g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x + m_knobStart, m_y + m_parentWindow->m_y, 0);
@@ -539,7 +539,7 @@ void slider::draw() const
                 m_y + m_parentWindow->m_y + m_length - m_knobStart, 0);
         }
 
-        m_sliderBitmap->draw(
+        m_sliderBitmap->Draw(
             0, 0, m_width, m_length - m_knobStart * 2,
             g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, 0);

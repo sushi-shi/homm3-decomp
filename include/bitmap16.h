@@ -46,9 +46,9 @@ public:
     // ResourceManager::setPixelFormat stores its arguments at 0x694d68,
     // 0x694d60 and 0x694d64 respectively. PCX bytes are BGR, so its first
     // byte uses s_blueMask; the earlier global names reversed red and blue.
-    static unsigned int s_redMask;
-    static unsigned int s_greenMask;
-    static unsigned int s_blueMask;
+    static unsigned int red_mask;
+    static unsigned int green_mask;
+    static unsigned int blue_mask;
 
     // Slot 0 is the scalar deleting destructor: heroWindow deletes its
     // background through [vptr]+flag 1. Slot 2 reports the resource's
@@ -57,13 +57,13 @@ public:
     void clear();
 
 private:
-    int m_dataSize;
-    int m_imageSize;
-    int m_width;
-    int m_height;
-    int m_pitch;
-    unsigned short* m_map;
-    unsigned char m_referenced;
+    int DataSize;
+    int ImageSize;
+    int Width;
+    int Height;
+    int Pitch;
+    unsigned short* map;
+    unsigned char referenced;
 
 public:
     virtual unsigned int getSize() const;
@@ -74,79 +74,79 @@ public:
     Bitmap16Bit(const char* name, const char* path);
     void import(int w, int h, const unsigned short* data, int size);
     void reference(int w, int h, int pitch, unsigned short* data);
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
-    void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
+    void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
+    void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
     // callers pin it: textWidget::Draw's back-colour fill, and
     // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push
     // run is the DC signature verbatim.
-    void fillRect(int x, int y, int w, int h, unsigned short color);
+    void FillRect(int x, int y, int w, int h, unsigned short color);
     // Retail bodies 0x44e540 / 0x44e780, both reached from
     // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
     // the DC signature verbatim, and the truncating `mov dx, [ecx+0x30]`
     // load off an int member is what fixes the 16-bit colour parameter.
-    void frameRect(int x, int y, int w, int h, unsigned short color);
-    void darken(int x, int y, int w, int h);
+    void FrameRect(int x, int y, int w, int h, unsigned short color);
+    void Darken(int x, int y, int w, int h);
     // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
     // 0x44e6a0 independently preserve this masked darken overload.
-    void darken(int x, int y, int w, int h, Bitmap816* mask,
+    void Darken(int x, int y, int w, int h, Bitmap816* mask,
                 int sx, int sy);
-    void colorize(int x, int y, int width, int height, unsigned short color);
+    void Colorize(int x, int y, int width, int height, unsigned short color);
     // The float overload, DC bitmap16.cpp:873. advManager::ViewPuzzle is the
     // retail caller that proves the (hue, saturation) pair as raw dwords.
-    void colorize(int x, int y, int w, int h, float hue, float saturation);
-    void gray(int x, int y, int w, int h);
-    void grabAndBlur(const Bitmap16Bit* src, int sx, int sy);
+    void Colorize(int x, int y, int w, int h, float hue, float saturation);
+    void Gray(int x, int y, int w, int h);
+    void GrabAndBlur(const Bitmap16Bit* src, int sx, int sy);
 
     // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
     // inline because Complete's ResourceManager expands them into its
     // bitmap-remap blit rather than calling the emitted DC copies.
     DC_ADDRESS(0x01f100, 0xc)
-    int getWidth() const { return m_width; }
+    int GetWidth() const { return Width; }
 
     DC_ADDRESS(0x01f10c, 0xc)
-    int getHeight() const { return m_height; }
+    int GetHeight() const { return Height; }
 
     DC_ADDRESS(0x01f118, 0xc)
-    int getPitch() const { return m_pitch; }
+    int GetPitch() const { return Pitch; }
 
     // Original: Bitmap16Bit::SetPixelFormat; Bitmap16.h:142
     DC_ADDRESS(0x122b8c, 0x1c)
-    static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
+    static void SetPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
     {
-        s_redMask = red;
-        s_greenMask = green;
-        s_blueMask = blue;
+        red_mask = red;
+        green_mask = green;
+        blue_mask = blue;
     }
 
     VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
     DC_ADDRESS(0x01f124, 0x22)
-    unsigned short* getMap(int x, int y)
+    unsigned short* GetMap(int x, int y)
     {
         // Bitmap16.h:151 (dc 0x1f124): add the byte row stride, then
         // the pixel offset. Retail's retained body has the same order.
         return reinterpret_cast<unsigned short*>(
-            reinterpret_cast<unsigned char*>(m_map) + y * m_pitch
-            + x * sizeof(*m_map));
+            reinterpret_cast<unsigned char*>(map) + y * Pitch
+            + x * sizeof(*map));
     }
 
     // DC Bitmap16.h:156-157 has the same one-expression pixel address:
     // y advances bytes by pitch; x advances unsigned-short pixels.
     DC_ADDRESS(0x04ca7c, 0x10)
-    const unsigned short* getMap(int x, int y) const
+    const unsigned short* GetMap(int x, int y) const
     {
         return reinterpret_cast<const unsigned short*>(
-            reinterpret_cast<const unsigned char*>(m_map) + y * m_pitch
-            + x * sizeof(*m_map));
+            reinterpret_cast<const unsigned char*>(map) + y * Pitch
+            + x * sizeof(*map));
     }
 
     VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
     DC_ADDRESS(0x04ca8c, 0x90)
-    void draw(int srcX, int srcY, int srcWidth, int srcHeight,
+    void Draw(int srcX, int srcY, int srcWidth, int srcHeight,
               Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
     {
-        draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
-             dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
+        Draw(srcX, srcY, srcWidth, srcHeight, dst->GetMap(0, 0),
+             dstX, dstY, dst->GetWidth(), dst->GetHeight(), dst->GetPitch(),
              flipped);
     }
 
@@ -155,12 +155,12 @@ public:
     // six-argument Grab. Complete's ShootAnimatedMissile expands it into
     // the retained raw call at 0x0044e3f0.
     DC_ADDRESS(0x04cb1c, 0x74)
-    void grab(const Bitmap16Bit* src, int srcX, int srcY)
+    void Grab(const Bitmap16Bit* src, int srcX, int srcY)
     {
-        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
-             src->getPitch());
+        Grab(src->GetMap(0, 0), srcX, srcY, src->GetWidth(), src->GetHeight(),
+             src->GetPitch());
     }
-    void remap(int oldGreenBits);
+    void Remap(int oldGreenBits);
 
 private:
     int importPCXFile(const char* filename);

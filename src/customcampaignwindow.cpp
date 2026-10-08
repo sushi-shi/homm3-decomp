@@ -60,7 +60,7 @@ TCustomCampaignWindow::TCustomCampaignWindow()
         DATA_COMPGEN(0x00675594, customCampaignBackground, "CamCust.pcx"),
         0x800);
     m_widgets.push_back(border);
-    border->m_image->draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0,
+    border->m_image->Draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0,
                         false);
 
     textWidget* title = new textWidget(
