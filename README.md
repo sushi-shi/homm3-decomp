@@ -17,7 +17,7 @@ executables.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,503 |   98.77% | last measured score                            |
+| CUR   |           4,502 |   98.77% | last measured score                            |
 | MAX   |           4,505 |   98.78% | best result for each function's current source |
 | HIST  |           4,538 |   99.02% | all-time peak across source revisions          |
 
@@ -30,7 +30,7 @@ MAX by module:
 | `network`    |     4 |   274 / 280 (97.9%) |    99.46% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
 | `codec`      |     4 |    43 / 43 (100.0%) |   100.00% |
-| `victor`     |     5 |    26 / 26 (100.0%) |   100.00% |
+| `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 

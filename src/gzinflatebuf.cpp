@@ -58,6 +58,14 @@ DATA(0x0063e6fc) static const int g_gzMagic[2] = {0x1f, 0x8b};
 #define GZ_WINDOW_SIZE 512
 #endif
 
+// The deflating half views its char windows as zlib's bytes through one
+// helper: a character buffer seen as unsigned characters, not an integer
+// carrier. (The inflating half below keeps its retail-exact spelling.)
+static Bytef* zlibBytes(char* window)
+{
+    return static_cast<Bytef*>(static_cast<void*>(window));
+}
+
 // Loki GzBuf.cpp defines the deflating buffer first. Its asserts are
 // compiled out of the release game, like every assert in this build.
 TGzDeflateBuf::TGzDeflateBuf(std::streambuf* pDestBuf, int level, int strategy)
@@ -75,9 +83,9 @@ TGzDeflateBuf::TGzDeflateBuf(std::streambuf* pDestBuf, int level, int strategy)
     setg(0, 0, 0);
     setp(_m_pInBuf, _m_pInBuf + GZ_WINDOW_SIZE);
 
-    _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+    _m_zstream.next_in = zlibBytes(_m_pInBuf);
     _m_zstream.avail_in = 0;
-    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+    _m_zstream.next_out = zlibBytes(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
     _m_zstream.zalloc = 0;
     _m_zstream.zfree = 0;
@@ -99,14 +107,14 @@ TGzDeflateBuf::TGzDeflateBuf(std::streambuf* pDestBuf, int level, int strategy)
 
 TGzDeflateBuf::~TGzDeflateBuf()
 {
-    _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+    _m_zstream.next_in = zlibBytes(_m_pInBuf);
     _m_zstream.avail_in = pptr() - _m_pInBuf;
     m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
 
     int result;
     while ((result = deflate(&_m_zstream, Z_FINISH)) == Z_OK || result == Z_BUF_ERROR) {
         _m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out);
-        _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+        _m_zstream.next_out = zlibBytes(_m_pOutBuf);
         _m_zstream.avail_out = GZ_WINDOW_SIZE;
     }
     _m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out);
@@ -129,7 +137,7 @@ void TGzDeflateBuf::_putLong(unsigned long x)
 
 int TGzDeflateBuf::sync()
 {
-    _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+    _m_zstream.next_in = zlibBytes(_m_pInBuf);
     _m_zstream.avail_in = pptr() - _m_pInBuf;
     m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
 
@@ -140,13 +148,13 @@ int TGzDeflateBuf::sync()
         if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
                 < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
             return traits_type::eof();
-        _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+        _m_zstream.next_out = zlibBytes(_m_pOutBuf);
         _m_zstream.avail_out = GZ_WINDOW_SIZE;
     }
     if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
             < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
         return traits_type::eof();
-    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+    _m_zstream.next_out = zlibBytes(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
 
     if (_m_pDestBuf->pubsync() == traits_type::eof())
@@ -158,7 +166,7 @@ int TGzDeflateBuf::sync()
 int TGzDeflateBuf::overflow(int c)
 {
     if (c != traits_type::eof()) {
-        _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+        _m_zstream.next_in = zlibBytes(_m_pInBuf);
         _m_zstream.avail_in = pptr() - _m_pInBuf;
         m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
 
@@ -169,7 +177,7 @@ int TGzDeflateBuf::overflow(int c)
             if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
                     < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
                 return traits_type::eof();
-            _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+            _m_zstream.next_out = zlibBytes(_m_pOutBuf);
             _m_zstream.avail_out = GZ_WINDOW_SIZE;
         }
 
