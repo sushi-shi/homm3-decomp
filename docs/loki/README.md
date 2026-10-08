@@ -374,25 +374,32 @@ unit and runs binutils 2.9.1.0.25's `ld` directly, with what the image proves:
 | libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2`, against Red Hat 6.0's glibc 2.1.1-6 headers (its `<bits/string2.h>` turns every `memset(p, 0, n)` into a `__bzero` call and leaves `memset(p, -1, 12)` a call, as the image's libxml does at all 12 and 5 sites; glibc 2.1.1 final and later inline both): the five libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
 | GLib/GTK+ 1.2.8, zlib 1.0.8 | Red Hat 6.2's egcs 1.1.2 (egcs-1.1.2-30; it emits `.p2align 4,,7` for jump targets, Slackware's `.align 16`) and assembler (binutils-2.9.5.0.22-6: the image's GDK uses the `a0`/`a2` moffs byte moves and its nop fills) at Red Hat's `-O2 -m486 -fno-strength-reduce`, GTK+ with Red Hat's ahiguti i18n patch (the word breaks of GtkEntry, GtkLabel and GtkText call `iswpunct`/`iswcntrl`, which no GTK+ 1.2.x release does), GTK+ `--with-xinput=xfree` (libXi) and NLS on (the image imports `bindtextdomain` and `_nl_msg_cat_cntr`; Slackware 7.1's gettext 0.10.35 is on `PATH` while GTK+ configures). zlib at `-O2 -fno-strength-reduce`: all 14 members exact (`zlibVersion()` "1.0.8"). GLib 18 of 21 members, GModule 1/1, GDK 18 of 20, GTK+ 92 of 98. |
 
-Still different (the linked file has the image's size, sections, PLT,
-`.dynsym` order and `.comment` runs; with the first three items below
-patched by hand as an experiment, only 202 `.dynsym` bytes differ):
+The linked file has the image's size, sections, PLT, `.dynsym` order,
+`.comment` runs and every byte of `.text`. ObjectPaletteWnd.o's `.rodata`
+ran 1 to 32 zero bytes past ours (GzBuf's 32-byte aligned `.rodata`
+started 0x20 later); file constants are written last, in declaration order,
+so the source ends its includes with a 4-byte zero constant,
+`kInitialScrollPos`, whose name and type are not proven (MapObjectRef.h's
+`kNullObjectID` is the same shape).
+
+Two differences remain, stated as reviewed retail facts in
+`config/retail/h3maped-loki/link-differences.toml` (region, byte count,
+cause, evidence and the media that would close each):
 
 - zlib's `deflate_copyright` is " deflate 1.0.4 Copyright 1995-1996
   Jean-loup Gailly " in `.data` (non-const, before deflateInit2_'s
   `my_version`), while deflate.o's code is 1.0.8's and inflate_copyright
   is 1.0.8's const string: Loki's zlib 1.0.8 carried 1.0.4's copyright
-  line. The source of that zlib is not known.
-- ObjectPaletteWnd.o's `.rodata` ran 1 to 32 zero bytes past ours (GzBuf's
-  32-byte aligned `.rodata` started 0x20 later). File constants are written
-  last, in declaration order, so the source now ends its includes with a
-  4-byte zero constant, `kInitialScrollPos`; its name and type are not
-  proven (MapObjectRef.h's `kNullObjectID` is the same shape).
-- The imported X symbols' `st_size` values: 170 of 194 match Red Hat 6.0's
-  XFree86 3.3.3.1-49 libraries, whose `.dynsym` order does not match; the
-  order matches Red Hat 6.2's libX11/libXi and XFree86 4's libXext (only
-  it references XGetVisualInfo). The image's X libraries are a build
-  between those (a Red Hat 6.0 erratum?) not found yet.
+  line. No zlib.net release from 1.0.4 to 1.0.9 has that combination
+  (1.0.4 and 1.0.5 declare a non-const string of their own version, 1.0.6
+  on a const one); the tree Loki used is not found. The 1.0.8 string
+  lengthens `.rodata` by 0x40 and shortens `.data` by 0x40: 135 bytes.
+- The imported X symbols' `st_size` values (202 bytes): 170 of 194 match
+  Red Hat 6.0's XFree86 3.3.3.1-49 libraries, whose `.dynsym` order does
+  not match; the order matches Red Hat 6.2's libX11/libXi and XFree86 4's
+  libXext (only it references XGetVisualInfo). The link host's X libraries
+  are a build between those, presumably a Red Hat 6.0 erratum
+  (XFree86-libs-3.3.3.1-52 or 3.3.5-0.6.0), of which no copy is found.
 
 `homm3 loki link-diff` reads the linked file (or a path) and reports the
 total differing bytes over the file; the ELF header and program headers; every
@@ -403,7 +410,20 @@ the PLT's import order; the `.comment` runs; and the C libraries' exported
 functions in the image's address order (longest run kept in order). With the
 link map beside the file it also sizes each `.text` group (start files,
 project objects, C libraries, libstdc++/libgcc, linkonce) against the image's.
-It is not a gate yet.
+
+It then runs the link gate, which `homm3 loki link` and a full `homm3 loki
+build` (when the link media are staged) also run; a failing gate fails the
+command. A raw comparison would count one displaced object once for every
+byte after it, so the gate aligns each allocated section with the image
+piece by piece: the exported `.dynsym` symbols anchor the pieces, and
+between two anchors with different displacements the split points (with at
+most one intermediate displacement) that leave the fewest differing bytes
+are chosen. A differing 4-byte word is accepted only when it is the image's
+word translated by that map: an absolute address, or a PIC GOT-relative
+offset, of a displaced byte. Every byte that still differs (headers and
+padding included), and every linked byte that no image byte maps to, must
+lie in a stated region and within its byte count; anything else fails as
+UNSTATED.
 
 Anonymous-namespace names are random per compile: `append_random_chars`
 (gcc/tree.c) adds `(tv_usec << 16) ^ tv_sec ^ getpid()` to a static sum and

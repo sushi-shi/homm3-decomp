@@ -19,10 +19,13 @@
         image's; units named or -v print the aligned lists
   link [-j N] [--no-compile]
         link the 103 project objects with the staged link media (toolchain --libs) in the
-        image's order with binutils 2.9.1 ld: build/h3maped-loki/link/h3maped and its map
-  link-diff [-v] [PATH]
+        image's order with binutils 2.9.1 ld: build/h3maped-loki/link/h3maped and its map,
+        then run the link gate (below); a failing gate fails the command
+  link-diff [-v] [--gate-only] [PATH]
         compare the linked image (or PATH) with retail: headers, every section, .text by
-        census object, .dynsym/PLT order, .comment, C library member order
+        census object, .dynsym/PLT order, .comment, C library member order; then the link
+        gate: every byte that an address-translating, section-by-section alignment leaves
+        different must be stated in config/retail/h3maped-loki/link-differences.toml
   disasm SELECTOR
         disassemble a retail function by address or mangled-name substring,
         with its references named as in the comparison object
@@ -77,6 +80,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("link-diff", help="compare the linked image with retail, section by section")
     p.add_argument("path", nargs="?", help="linked ELF (default build/h3maped-loki/link/h3maped)")
     p.add_argument("-v", "--verbose", action="store_true")
+    p.add_argument("--gate-only", action="store_true", help="only the gate, not the section report")
     p = sub.add_parser("disasm", help="disassemble a retail function")
     p.add_argument("selector")
     p = sub.add_parser("diff", help="side-by-side base/retail listing of one function")
@@ -117,8 +121,11 @@ def main(argv=None) -> int:
             path = Path(args.path) if args.path else link.IMAGE
             if not path.is_file():
                 raise RuntimeError(f"{path} does not exist; run `homm3 loki link`")
-            linkdiff.report(path, args.verbose)
-            return 0
+            if not args.gate_only:
+                linkdiff.report(path, args.verbose)
+            ok, lines = linkdiff.check(path)
+            print("\n".join(lines))
+            return 0 if ok else 1
         if args.command == "disasm":
             return _disasm(args.selector)
         if args.command == "diff":

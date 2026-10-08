@@ -106,4 +106,7 @@ def main(jobs: int = 3, compile_units: bool = True) -> int:
         return 1
     print(f"[loki] linked {IMAGE.relative_to(build.ROOT)} ({IMAGE.stat().st_size} bytes); "
           f"map {MAP.relative_to(build.ROOT)}")
-    return 0
+    from homm3.loki import linkdiff
+    ok, lines = linkdiff.check(IMAGE)
+    print("\n".join(lines))
+    return 0 if ok else 1

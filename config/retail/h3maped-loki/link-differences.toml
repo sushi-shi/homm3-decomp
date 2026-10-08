@@ -1,0 +1,82 @@
+# The differences between `homm3 loki link`'s output and the Loki h3maped image that no pinned
+# link input closes: reviewed retail facts, checked by `homm3 loki link-diff` (the link gate).
+#
+# The gate aligns each allocated section with the image piece by piece (exported .dynsym
+# symbols anchor the pieces) and accepts a differing word only as the image's address (or
+# GOT-relative offset) translated by that alignment. Every other differing byte, and every
+# linked byte with no image counterpart, must lie in a region below and stay within its byte
+# count. Regions are image addresses unless `linked = true`; ELF header and section headers are
+# file offsets. Keep each count at what the link produces: a smaller count fails nothing but
+# should be tightened, a larger one fails the gate.
+
+[[difference]]
+id = "zlib-deflate-copyright"
+cause = """
+The image's zlib is 1.0.8 except for one line: deflate.o's deflate_copyright is zlib 1.0.4's
+non-const " deflate 1.0.4 Copyright 1995-1996 Jean-loup Gailly ", so it sits in .data before
+deflateInit2_'s my_version. The link builds zlib 1.0.8 as released, whose const 1.0.8 string
+is in .rodata. .rodata is therefore 0x40 longer (the string and the alignment before trees.o's
+32-byte aligned .rodata), .data 0x40 shorter (the string, and 8 bytes of zutil.o's alignment
+the shorter deflate.o no longer needs), and the segment and section sizes and offsets follow."""
+evidence = """
+All 14 linked zlib members' code is 1.0.8's: deflateInit2_ checks the static my_version
+(1.0.6 on), deflateEnd checks the stream status (1.0.6 on), zlibVersion() returns "1.0.8" and
+inflate_copyright is 1.0.8's const string. The .dynsym entry deflate_copyright (OBJECT, 53
+bytes) is in .data at 0x084245a0. No zlib.net release from 1.0.4 to 1.0.9 has this
+combination: 1.0.4 and 1.0.5 declare a non-const string of their own version, 1.0.6 on a
+const one. Hand-substituting 1.0.4's line into deflate.c (an experiment, never a build input)
+removes every byte of this difference."""
+closes = """
+The zlib tree Loki linked (1.0.8 with 1.0.4's copyright line). Searched: zlib.net fossils
+1.0.4 to 1.0.9, the Loki setup source mirror, web and archive.org searches for the string; not
+found."""
+
+[[difference.region]]
+where = ".data"
+start = 0x084245a0          # deflate_copyright through zutil.o's 32-byte aligned .data
+end = 0x08424620
+bytes = 53
+
+[[difference.region]]
+where = ".rodata"
+linked = true               # the 1.0.8 string at the head of deflate.o's .rodata, and alignment
+start = 0x08414754
+end = 0x08414794
+bytes = 64
+
+[[difference.region]]
+where = ".dynsym"
+symbols = ["deflate_copyright"]   # st_value (.data vs .rodata) and st_shndx
+bytes = 4
+
+[[difference.region]]
+where = "ELF header"        # text segment filesz/memsz, data segment offset/filesz/memsz
+bytes = 9
+
+[[difference.region]]
+where = "section headers"   # .rodata sh_size, .data sh_offset and sh_size
+bytes = 5
+
+[[difference]]
+id = "x-import-sizes"
+cause = """
+ld copies each imported symbol's st_size from the shared library that defines it at link time.
+The link uses Red Hat 6.2's libX11/libXi (XFree86-libs-3.3.6-20) and Red Hat 7.0's libXext
+(XFree86-libs-4.0.1-1) because their .dynsym order gives the image's import order; their
+function sizes are not the link host's."""
+evidence = """
+170 of the 194 imported X functions' st_size values match Red Hat 6.0's XFree86-libs-3.3.3.1-49,
+whose .dynsym order does not give the image's import order; Red Hat 6.2's and 7.0's libraries
+give the order (XGetVisualInfo between XShmDetach and XIfEvent is XFree86 4 libXext's own
+reference) but not the sizes. Every other import (libc, libm, libdl) carries Red Hat 6.0
+glibc-2.1.1-6's sizes exactly. The link host's X libraries are a build between those."""
+closes = """
+Red Hat 6.0's X library errata (XFree86-libs-3.3.3.1-52, XFree86-libs-3.3.5-0.6.0 or
+-1.6.0 from updates.redhat.com, named in Red Hat's 1999 advisories). Searched: archived
+updates.redhat.com and Red Hat archive mirrors, rpm indexes, web searches; no copy found."""
+
+[[difference.region]]
+where = ".dynsym"
+imports = "X"
+field = "st_size"
+bytes = 202

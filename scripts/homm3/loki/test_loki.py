@@ -286,5 +286,30 @@ class LinkLibrariesTest(unittest.TestCase):
                                   "libstdc++/libgcc": 0x20, "linkonce": 0x80})
 
 
+class LinkGateTest(unittest.TestCase):
+    def test_split_finds_an_inserted_block(self):
+        image = bytes(range(1, 41))
+        linked = image[:16] + b"\xee" * 8 + image[16:]
+        pieces = linkdiff._split(image, linked, 0x1000, 0x1000, 0x1000, 0x1000 + len(image), 0, 8)
+        self.assertEqual(pieces, [linkdiff.Piece(0x1010, 8)])
+
+    def test_compare_accepts_only_translated_words(self):
+        image = (0x2000).to_bytes(4, "little") + (0x3000).to_bytes(4, "little") + b"abcd"
+        linked = (0x2040).to_bytes(4, "little") + (0x3041).to_bytes(4, "little") + b"abce"
+        translate = {0x2000: 0x2040, 0x3000: 0x3040}
+        explains = lambda r, o: r != o and translate.get(r) == o
+        self.assertEqual(linkdiff._compare(image, linked, [(0, 12, 0)], explains), [4, 11])
+
+    def test_stated_differences_parse(self):
+        import tomllib
+        with linkdiff.FACTS.open("rb") as stream:
+            entries = tomllib.load(stream)["difference"]
+        for entry in entries:
+            self.assertTrue(entry["cause"].strip() and entry["evidence"].strip() and entry["closes"].strip())
+            for region in entry["region"]:
+                self.assertIn("bytes", region)
+                self.assertEqual("start" in region, "end" in region)
+
+
 if __name__ == "__main__":
     unittest.main()

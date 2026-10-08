@@ -187,7 +187,27 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False,
         changed = ledger.write_readme(rows)
         print(f"[loki] banked {len(built)} units into {ledger.LEDGER.relative_to(ROOT)}"
               + ("; README Loki block refreshed" if changed else ""))
+    if selected is None:
+        return link_gate(jobs, len(ready) == len(chosen))
     return 0
+
+
+def link_gate(jobs: int, compiled: bool) -> int:
+    """A full build links the image and runs the link gate (homm3.loki.linkdiff.check) whenever
+    the link media are staged."""
+    if not toolchain.link_staged():
+        print("[loki] link gate not run: link media not staged (`homm3 loki toolchain --libs DIR`)")
+        return 0
+    if not compiled:
+        print("[loki] link gate FAIL: not every unit compiled")
+        return 1
+    for unit, _ in link_only_units():
+        _, error = compile_unit(unit)
+        if error:
+            print(f"[loki] link gate FAIL: {unit.name}: {error}")
+            return 1
+    from homm3.loki import link
+    return link.main(jobs, compile_units=False)
 
 
 def compare_data(selected: set[str], image: LokiImage, verbose: bool = False) -> list[datacmp.UnitData]:

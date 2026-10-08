@@ -127,6 +127,16 @@ image: `.rodata`, `.data`, `.bss`, exception tables, constructors and
 vtables. `homm3 loki emitorder` checks function emission order against the
 image's.
 
+## Link
+
+`homm3 loki toolchain --libs DIR` stages the era link media pinned in
+[config/loki/toolchain.toml](config/loki/toolchain.toml); `homm3 loki link`
+then links the image and runs the link gate. Every byte the linked file
+still differs in must be a reviewed retail fact in
+[config/retail/h3maped-loki/link-differences.toml](config/retail/h3maped-loki/link-differences.toml):
+today zlib's 1.0.4 copyright line and the X libraries' import sizes, whose
+original media are not found.
+
 ## Documentation
 
 - [Loki h3maped image](docs/loki/README.md): toolchain, flags, census, ledger
