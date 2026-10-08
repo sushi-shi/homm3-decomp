@@ -359,3 +359,8 @@ source = "src/editor/MapSpecsTeamsPage.cpp"
 name = "EditTownEventCreaturesPage"
 object = 99
 source = "src/editor/EditTownEventCreaturesPage.cpp"
+
+[[unit]]
+name = "TreasurePropsGuardiansPage"
+object = 102
+source = "src/editor/TreasurePropsGuardiansPage.cpp"
