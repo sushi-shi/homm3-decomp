@@ -49,6 +49,27 @@ def _link() -> int:
                 _image_path("build/exe/HEROES3.candidate.EXE"))
 
 
+def _link_diff() -> list[str]:
+    """The link-diff ceiling gate (homm3.verify.link_diff) over the game's
+    candidate; other images have no reconstructed link line yet."""
+    import os
+    from homm3.core.images import DEFAULT_IMAGE, IMAGE_ENV
+    if os.environ.get(IMAGE_ENV, DEFAULT_IMAGE) != DEFAULT_IMAGE:
+        return []
+    from homm3.verify import link_diff
+    try:
+        report = link_diff.measure()
+    except (OSError, ValueError) as exc:
+        print(f"[build] link-diff: unavailable: {exc}", file=sys.stderr)
+        return ["link-diff (unavailable)"]
+    print("[link-diff] " + ", ".join(f"{name} {report.counts[name]}"
+                                     for name in link_diff.GATED))
+    findings = link_diff.gate_findings(report, link_diff.read_ceiling())
+    for line in findings:
+        print(f"[build] link-diff: {line}", file=sys.stderr)
+    return [f"link-diff ({len(findings)} finding(s))"] if findings else []
+
+
 def _selected_units(ninja_args: list[str]) -> set[str]:
     """Manifest units named as Ninja targets; options and other targets select none."""
     from homm3 import manifest as units_manifest
@@ -246,6 +267,8 @@ def _main(argv: list[str]) -> int:
     failures = []
     if _link() != 0:
         failures.append("candidate link")
+    else:
+        failures += _link_diff()
     phase("candidate linked")
 
     # banked_rows runs alongside cmd_check, not inside it: the ratchet

@@ -129,65 +129,58 @@ game units and are counted in the game score. The library verification found
 
 ## Link readiness
 
-`homm3 link` already links all 153 objects with the pinned LINK 6.00.8447,
-using no `/FORCE`, with no unresolved or duplicate symbols. It is a layout
-study. A byte-identical link like HoMM1's and HoMM2's would also need the
-following.
+`homm3 link` links the game on the retail link line with the pinned LINK
+6.00.8447, using no `/FORCE`, with no unresolved or duplicate symbols
+(`homm3.build.link`):
 
-**Flags.** Read from the retail headers: LINK 6.00; `/SUBSYSTEM:WINDOWS`
-(4.0); `/BASE:0x400000`; stack and heap reserve/commit `0x100000`/`0x1000`
-(defaults); no `.reloc` (EXE default `/FIXED`); file alignment `0x1000` (VC6
-default); no debug directory, so no `/DEBUG`. ICF-folded runtime COMDATs
-(`icf` rows) mean `/OPT:REF` with folding, not the study's
-`/OPT:NOREF /OPT:NOICF`. With `/OPT:REF` the study already drops LIBCMT
-`qsort.obj` (referenced from `lodfile`) and `rewind.obj` (zlib `gzio`), which
-retail does not link. The entry point is LIBCMT's `WinMainCRTStartup`
-(`0x21a2b4`).
+- **Flags**, read from the retail headers: LINK 6.00; `/SUBSYSTEM:WINDOWS`
+  (4.0); `/BASE:0x400000`; default stack and heap; no `.reloc` (EXE default
+  `/FIXED`); file alignment `0x1000`; no `/DEBUG`; `/OPT:REF` with COMDAT
+  folding (the ICF-folded runtime COMDATs); no `/ENTRY`, so LINK uses the
+  CRT's `WinMainCRTStartup`.
+- **Default libraries.** The game objects are `/MT` (LIBCMT) and the zlib and
+  victor objects `/ML`; `/NODEFAULTLIB:LIBC` leaves LIBCMT, LIBCPMT and
+  OLDNAMES from the objects' directives.
+- **Object order** (`homm3.build.link_order`): each unit's key is the lowest
+  retail RVA of a function only its object defines (a NODUPLICATES COMDAT
+  with a unique, unfolded retail address). Retail's order is the original
+  source names' alphabetical order; `config/retail/link-order.tsv` places
+  units without retail-placed code.
+- **Libraries.** victor and zlib units (`library = ...` in
+  `config/units.toml`) are archived and linked as libraries: retail places
+  their members after every game object, in LINK's pull order. The library
+  line is read from the import-descriptor order (VERSION, WINMM, mss32,
+  smackw32, DDRAW, WSOCK32, then the VC6 AppWizard line from KERNEL32 to
+  ole32, then binkw32, IFC20). LIBCMT's `delete.obj` at `0x20ab30` is
+  byte-identical to LIBCPMT's `delop.obj`; the candidate pulls the latter,
+  which puts all of LIBCPMT before LIBCMT as retail has it.
 
-**Default libraries.** The game objects are `/MT` (LIBCMT), and zlib and
-victor are `/ML` (LIBC). Retail links only LIBCMT, so the link needs
-`/NODEFAULTLIB:LIBC` (as HoMM1 does), or the study's blanket `/NODEFAULTLIB`
-with explicit libraries.
+`homm3 verify link-diff` compares the candidate with retail and `homm3
+build` gates on `config/link_diff.tsv` (a down-only ceiling per region).
+The target is retail with the post-link edits of
+`config/retail/post-link-edits.tsv` reverted to LINK's bytes. While
+non-exact functions change size, every later address moves, so the gated
+code and data regions compare each contribution at its own retail address,
+with relocated fields compared through the placement of their targets. The
+plain file comparison is printed as information.
 
-**Order.** The `.text` order is game objects, then zlib (`0x204830`), then
-LIBCMT `delete.obj` (`0x20ab30`), then LIBCPMT members (`0x20ab3b`), then the
-rest of LIBCMT (`0x216e8d`). The LIBCPMT funclets follow at
-`0x238568`. `runtime-contributions.tsv` records each library member's
-position. Game object order still has to be derived. Sorting by first claimed
-function gives 138 units in 290 runs; 40 units appear in more than one run,
-mostly header COMDATs claimed by a unit other than the first object that
-emitted them. The study passes objects in name order. The Rich header has 6
-more SP3 C++ objects than our build compiles, which marks missing translation
-units.
+### Post-link edits
 
-**Inputs not yet pinned.**
-
-- An RTM-compiled zlib (see above).
-- The vendor import libraries: mss32, binkw32, smackw32 and IFC20 are
-  currently synthesized from the import directory. The 4 `Linker600` 8168
-  objects and the extra `@comp.id`-less objects suggest real SDK `.lib`
-  files.
-- The `.res` (CVTRES 1735, not the pinned 1736).
-- The 12 OLDNAMES spellings.
-
-**Post-link edits.** These are not producible by LINK. The pinned GOG image
-differs from the same-timestamp Collector's Edition executable in 467 bytes
+The pinned GOG image differs from the same-timestamp Collector's Edition
+executable in 467 bytes
 ([import-table-post-link-edits.md](../todos/import-table-post-link-edits.md)).
-Beyond that note, the header carries:
-
-- `IMAGE_FILE_UP_SYSTEM_ONLY` (Characteristics `0x410f`; Collector's has
-  `0x10f`, which is what LINK emits);
-- a Load Configuration directory entry (`0x2a0`, 64 bytes) that points into
-  the headers;
-- a stale checksum, `0x2a540c` stored against `0x2aaeb3` computed (Collector's
-  stores 0);
-- SafeDisc metadata at file offset `0xfd4`;
-- the import anomalies, the `.text` tail bytes and the `setupCDDrive` patch.
-
-A link-diff gate therefore needs a decision. One option is a target of
-"Collector's-equivalent link output plus the documented edits". The other is
-per-region ceilings that state the edited bytes explicitly. Either way, no
-binary is patched to pass.
+`config/retail/post-link-edits.tsv` states those LINK cannot produce, each
+with the Collector's byte as LINK's: `IMAGE_FILE_UP_SYSTEM_ONLY`
+(Characteristics `0x410f` against `0x10f`), the Load Configuration entry
+pointing into the headers and the header bytes behind it, the stale checksum
+(`0x2a540c` stored, `0x2aaeb3` computed), the SafeDisc 1.50.020 signature
+at `0xfd4`, the larger `.text`, `.rdata` and `.rsrc` VirtualSizes, the
+`strlen` and `05 43 5f` at the end of `.text`, the version-info text and
+tail bytes at the end of `.rsrc`, the import-table rules (mixed-case
+`KeRNeL32.dll`, zero KERNEL32/USER32 hints, descriptor timestamps, the
+`GetSysteminfo` orphan) and the no-CD code edits in `earlySetup`,
+`readPrefsFromRegistry` and `setupCDDrive`. The arithmetic and sample-rate
+differences are reproduced by the source and are not stated.
 
 ## Import inventory
 

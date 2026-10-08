@@ -1,0 +1,14 @@
+# Highest count each gated region of `homm3 verify link-diff` may reach.
+# Written by `homm3 verify link-diff --update`; lower it when the link
+# moves closer to retail, never raise it to admit a regression.
+region	count
+headers	277
+rich	115
+imports	278
+code-exact	3979
+code-order	318
+code-unplaced	87488
+code-absent	111305
+data	28716
+data-unplaced	23930
+rsrc	33784

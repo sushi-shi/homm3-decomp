@@ -13,6 +13,7 @@ COMMANDS = {
     'generated-code': 'generated_code',
     'data-worklist': 'game_bytes',
     'padding': 'padding',
+    'link-diff': 'link_diff',
 }
 
 

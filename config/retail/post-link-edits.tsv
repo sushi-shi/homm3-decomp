@@ -1,0 +1,52 @@
+# MANUALLY MANAGED - reviewed bytes of the pinned GOG HEROES3.EXE that no
+# LINK run produces: edits made after linking. `homm3 verify link-diff`
+# compares the candidate link with retail whose stated bytes are reverted
+# to `link`, after checking that retail holds `retail` there.
+#
+# Evidence: the archived European Collector's Edition HEROES3.EXE (SHA-256
+# 0da1c7772567f2ad4bf2314d07e8b617c40893c80601b39607cafdf025eb6247, see
+# docs/todos/import-table-post-link-edits.md) has the same PE timestamp
+# 0x39b83835, entry point and section starts: it is the same link. Every
+# `link` value below is its byte, and LINK's own behaviour agrees (zero
+# checksum without /RELEASE, no load-configuration directory, Characteristics
+# 0x10f, zero-filled FileAlignment tails).
+#
+# kind `bytes`: `offset` is a file offset, `size` bytes long; `retail` and
+# `link` are the bytes in hex. kind `import-*` rows state an import-table
+# rule instead, since those bytes move with the import data:
+#   import-dll-name  dll  spelling   retail spells the DLL name `retail`
+#   import-hints     dll  0          every hint of the DLL is zero in retail;
+#                                    LINK writes the import library's hint
+#   import-timestamp *    hex        retail descriptor TimeDateStamp; LINK 0
+#   import-orphan    rva  name       a hint/name string no thunk references
+#
+# Not stated here, because the source reproduces them: the arithmetic and
+# default sample-rate differences the same comparison shows
+# (combatManager::chooseBallistaTarget, combatManager::keepAttack, .data
+# 0x684aa8/0x684ab0) follow the pinned target.
+kind	offset	size	retail	link	what	evidence
+bytes	0x11e	2	0f41	0f01	Characteristics IMAGE_FILE_UP_SYSTEM_ONLY	Collector's 0x10f; LINK has no option for 0x4000
+bytes	0x160	4	0c542a00	00000000	CheckSum	stale: computed 0x2aaeb3; LINK writes 0 without /RELEASE; Collector's 0
+bytes	0x1d0	8	a002000040000000	0000000000000000	Load Configuration directory entry	points at 64 header bytes (0x2a0) holding no load-config structure; Collector's has none
+bytes	0x208	4	12862300	fa852300	.text VirtualSize	0x238612 covers the 24-byte strlen tail; LINK's end of the last contribution is 0x2385fa (Collector's)
+bytes	0x230	4	29390200	1c390200	.rdata VirtualSize	0x23929 covers the GetSysteminfo orphan string; Collector's 0x2391c
+bytes	0x280	4	3e840000	f8830000	.rsrc VirtualSize	0x843e covers the appended version-info text; Collector's 0x83f8
+bytes	0x2d0	1	01	00	header bytes behind the load-configuration entry	SafeDisc-era header data; Collector's zero
+bytes	0x2e0	8	2c02690000000001	0000000000000000	header bytes behind the load-configuration entry	SafeDisc-era header data; Collector's zero
+bytes	0xfd4	18	426f475f202a39302e30262121202059793e	000000000000000000000000000000000000	SafeDisc signature	BoG_ *90.0&!!  Yy> (BurnOutSharp GetSafeDiscVersion)
+bytes	0xff4	12	010000003200000014000000	000000000000000000000000	SafeDisc version 1.50.020	version DWORDs 1, 50, 20 after the signature
+bytes	0xed9df	1	eb	75	earlySetup: CD check jne made jmp	no-CD edit; Collector's jne
+bytes	0x10bd64	29	a1c4856900a338886900eb1d9090909090909090909090909090909090	85c07425bf1012690083c9ff33c0f2aef7d12bf98bc18bf7bf38886900	readPrefsFromRegistry: CD path test replaced, NOP fill	no-CD edit; Collector's test/repne scasb sequence
+bytes	0x10c1c0	6	b807000000c3	558bec81ec3c	setupCDDrive entry made mov eax,7; ret	no-CD edit over the original prologue; the original body stays behind it
+bytes	0x10c2a9	1	03	05	setupCDDrive: drive-type compare	no-CD edit (DRIVE_CDROM 5 made DRIVE_FIXED 3); Collector's 5
+bytes	0x10c2f7	2	9090	7412	setupCDDrive: je removed	no-CD edit; Collector's je
+bytes	0x10c34d	1	03	05	setupCDDrive: drive-type compare	no-CD edit; Collector's 5
+bytes	0x2395fa	24	8b4c24048a118d410184d274078a104084d275f92bc148c3	000000000000000000000000000000000000000000000000	strlen beyond LINK's .text end	no relocation, call or word refers to it; Collector's zero
+bytes	0x239ffd	3	05435f	000000	.text FileAlignment tail	LINK zero-fills the tail; Collector's zero
+bytes	0x29a3f8	69	700072006f007000650072007400790020006f0066002000740068006500690072002000720065007300700065006300740069007600650020006f0077006e006500720073	000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000	version-info text after VS_VERSIONINFO's end	"property of their respective owners" outside every declared length; Collector's zero
+bytes	0x29affd	2	29b0	0000	.rsrc FileAlignment tail	LINK zero-fills the tail; Collector's zero
+import-dll-name	KERNEL32.dll	-	KeRNeL32.dll	KERNEL32.dll	mixed-case DLL name	pinned KERNEL32.LIB and Collector's spell KERNEL32.dll
+import-hints	KERNEL32.dll	-	0	library	all 105 KERNEL32 hints zero	pinned KERNEL32.LIB and Collector's carry real hints
+import-hints	USER32.dll	-	0	library	all 56 USER32 hints zero	pinned USER32.LIB and Collector's carry real hints
+import-timestamp	*	-	ad2b0000	00000000	descriptor TimeDateStamp of all 14 DLLs	an unbound LINK writes 0; Collector's 0
+import-orphan	0x25d91c	-	GetSysteminfo	-	hint/name string no thunk references	Collector's zero; already in the protected Shadow of Death 3.0 image
