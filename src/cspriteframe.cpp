@@ -1018,34 +1018,18 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 // half-alpha blending.  Encoded control runs darken the destination by one
 // half or one quarter-plus-half, or install the caller's outline color.
 
-// Residual (95.90%): the dispatch, clipping, decoder, and every forward shade
-// block now agree instruction-for-instruction.
-// MEASURED AND REJECTED 2026-09-05: dropping the `unsigned int color = out[-1]`
-// widening from the two reverse half-shade arms - the one line that took
-// DrawTileShadow 97.90 -> 99.93 and DrawAdvObjShadowImpl 98.58 -> 99.94 - costs
-// 0.57 HERE (95.9000 -> 95.3300, three blocks size-only). The renderers really
-// do spell the same blend two different ways; do not carry the lever across. Retail deliberately widens one
-// ushort blend-mask access to a dword AND whose low half alone is stored; the
-// explicit dword view below recovers that C1 value-range decision and aligns
-// both CFGs at 128 blocks. The cast-free `TBlendMask` view records Complete's
-// word write/dword read while retaining CodeView's static-member name and
-// ownership; CodeView also proves the function-scope `TOffset`/`TDstPixel`
-// identities (`unsigned int`/`unsigned short`) and that `aLineOffset` precedes
-// the const `kOpaqueRunCode`. Using `TOffset` for the row table is byte-flat.
-// The remaining delta is the
-// Clip/setup register permutation and reverse half-shade/default-tail
-// scheduling. After this new allocator lever, moving the line table into the
-// positive guard scores 95.83%, block-scoping the row destination 95.54%, and
-// all one-sided/symmetric reverse ushort or direct-expression variants score
-// lower. `why-reg --model --il-order` still finds identical first definitions
-// (EDI=sw, ESI=sx, EBX=sh), bounding the residual past the minimum source-order
-// slice.
-// Loki probes: a drawTile-style `palette` local is byte-flat here, and
-// assigning the line table inside the positive extent guard (where retail
-// and Loki load m_map) scores 93.52%; RoE's body also differs in its tail.
-// The native per-row destination lifetime also appears in the exact adjacent
-// adventure renderer. Advancing that cursor directly restores 95.9000%;
-// splitting its address into a base and offset leaves 94.7302%.
+// Residual (99.95%): all 126 blocks and 61 branches agree. Loki's h3maped
+// (GCC -O0) supplies the shape that closed the rest together: m_map and the
+// palette load inside the positive-extent guard, a row cursor `lineDst`
+// separate from the `dst` parameter, the source row read before `skipped`,
+// and the reverse half shade reading through the decremented cursor without
+// a widening local. Measured singly in older TU states each of these lost
+// (93.52%, 94.73%, 95.33%); together they take 95.85 -> 99.95. CodeView also
+// proves the function-scope `TOffset`/`TDstPixel` identities and that
+// `aLineOffset` precedes the const `kOpaqueRunCode`. What remains is the
+// three-quarter blends' `and bx,word[div4mask]`, emitted here as a dword AND
+// (the .bss alignment DrawTileShadow records), and the jump-table entries
+// those four bytes shift.
 VA(0x0047c9e0, 0x6BC)
 DC_ADDRESS(0x075b20, 0x540)
 MAC_ADDRESS(0x08bb40, 0x6f4)  // unique PC/DC renderer identity; retail byte verdict
@@ -1074,24 +1058,27 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
     }
 
     const TOffset* lineOffset;
+    const unsigned short* palette;
     // Retail construction guard 0x6968b4; the copied run code at 0x6968b5.
     DATA_COMPGEN_GUARD(0x006968b4, creatureOpaqueRunCodeGuard, opaqueRunCode)
     DATA(0x006968b5)
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
-    lineOffset =
-        static_cast<const TOffset*>(static_cast<const void*>(m_map));
     if (sw > 0 && sh > 0) {
+        lineOffset =
+            static_cast<const TOffset*>(static_cast<const void*>(m_map));
+        palette = pal.m_data;
         if (!hflip) {
-            dst = static_cast<unsigned short*>(static_cast<void*>(
+            unsigned short* lineDst =
+                static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + dx * 2));
 
             for (int y = sy; y < sy + sh; ++y) {
-                unsigned short* out = dst;
-                unsigned int skipped = 0;
+                unsigned short* out = lineDst;
                 const unsigned char* src = m_map + lineOffset[y];
+                unsigned int skipped = 0;
                 unsigned char code = *src++;
                 unsigned int run = *src++ + 1;
 
@@ -1115,12 +1102,12 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         unsigned int count = run;
                         if (!alpha) {
                             do {
-                                *out++ = pal.m_data[*src++];
+                                *out++ = palette[*src++];
                             } while (--count);
                         } else {
                             do {
                                 *out = (s_div2mask
-                                        & (pal.m_data[*src++] >> 1))
+                                        & (palette[*src++] >> 1))
                                      + (s_div2mask & (*out >> 1));
                                 ++out;
                             } while (--count);
@@ -1131,8 +1118,8 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         case eRleControlOutline7: {
                             unsigned int count = run;
                             do {
-                                *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask);
+                                *out = ((*out >> 1) & s_div2mask)
+                                     + ((*out >> 2) & s_div4mask);
                                 ++out;
                             } while (--count);
                             break;
@@ -1141,8 +1128,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         case eRleControlOutline6: {
                             unsigned int count = run;
                             do {
-                                unsigned int color = *out;
-                                *out = (color >> 1) & s_div2mask;
+                                *out = (*out >> 1) & s_div2mask;
                                 ++out;
                             } while (--count);
                             break;
@@ -1156,8 +1142,8 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         case eRleControlShadow75: {
                             unsigned int count = run;
                             do {
-                                *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask);
+                                *out = ((*out >> 1) & s_div2mask)
+                                     + ((*out >> 2) & s_div4mask);
                                 ++out;
                             } while (--count);
                             break;
@@ -1165,8 +1151,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         case eRleControlShadow50: {
                             unsigned int count = run;
                             do {
-                                unsigned int color = *out;
-                                *out = (color >> 1) & s_div2mask;
+                                *out = (*out >> 1) & s_div2mask;
                                 ++out;
                             } while (--count);
                             break;
@@ -1192,18 +1177,19 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst)) + dpitch));
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
             }
         } else {
-            dst = static_cast<unsigned short*>(static_cast<void*>(
+            unsigned short* lineDst =
+                static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + (dx + sw) * 2));
 
             for (int y = sy; y < sy + sh; ++y) {
-                unsigned short* out = dst;
-                unsigned int skipped = 0;
+                unsigned short* out = lineDst;
                 const unsigned char* src = m_map + lineOffset[y];
+                unsigned int skipped = 0;
                 unsigned char code = *src++;
                 unsigned int run = *src++ + 1;
 
@@ -1227,13 +1213,13 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         unsigned int count = run;
                         if (!alpha) {
                             do {
-                                *--out = pal.m_data[*src++];
+                                *--out = palette[*src++];
                             } while (--count);
                         } else {
                             do {
                                 --out;
                                 *out = (s_div2mask
-                                        & (pal.m_data[*src++] >> 1))
+                                        & (palette[*src++] >> 1))
                                      + (s_div2mask & (*out >> 1));
                             } while (--count);
                         }
@@ -1244,8 +1230,8 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 --out;
-                                *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask);
+                                *out = ((*out >> 1) & s_div2mask)
+                                     + ((*out >> 2) & s_div4mask);
                             } while (--count);
                             break;
                         }
@@ -1253,9 +1239,8 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         case eRleControlOutline6: {
                             unsigned int count = run;
                             do {
-                                unsigned int color = out[-1];
                                 --out;
-                                *out = (color >> 1) & s_div2mask;
+                                *out = (*out >> 1) & s_div2mask;
                             } while (--count);
                             break;
                         }
@@ -1269,17 +1254,16 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 --out;
-                                *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask);
+                                *out = ((*out >> 1) & s_div2mask)
+                                     + ((*out >> 2) & s_div4mask);
                             } while (--count);
                             break;
                         }
                         case eRleControlShadow50: {
                             unsigned int count = run;
                             do {
-                                unsigned int color = out[-1];
                                 --out;
-                                *out = (color >> 1) & s_div2mask;
+                                *out = (*out >> 1) & s_div2mask;
                             } while (--count);
                             break;
                         }
@@ -1304,8 +1288,8 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst)) + dpitch));
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
             }
         }
     }
