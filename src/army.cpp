@@ -750,29 +750,29 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         TPalette16 saved;
         unsigned char restore = 0;
         if (is(creatureRedColoring)) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
+            memcpy(saved.Palette, m_stdIcon->getPalette(), 0x200);
             TPalette16 tinted(m_stdIcon->getPalette());
-            tinted.adjustHSV(0, m_paletteEffect, m_paletteEffect + 1.0f,
+            tinted.AdjustHSV(0, m_paletteEffect, m_paletteEffect + 1.0f,
                              m_paletteEffect + 1.0f);
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            memcpy(m_stdIcon->getPalette(), tinted.Palette, 0x200);
             restore = 1;
         } else if (is(creatureGreyColoring)) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
+            memcpy(saved.Palette, m_stdIcon->getPalette(), 0x200);
             TPalette16 tinted(m_stdIcon->getPalette());
-            tinted.adjustSaturation(m_paletteEffect);
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            tinted.AdjustSaturation(m_paletteEffect);
+            memcpy(m_stdIcon->getPalette(), tinted.Palette, 0x200);
             restore = 1;
         } else if (m_spellInfluence[SPELL_STONE] > 0) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
+            memcpy(saved.Palette, m_stdIcon->getPalette(), 0x200);
             TPalette16 tinted(m_stdIcon->getPalette());
-            tinted.gray();
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            tinted.Gray();
+            memcpy(m_stdIcon->getPalette(), tinted.Palette, 0x200);
             restore = 1;
         } else if (is(creatureClone)) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
+            memcpy(saved.Palette, m_stdIcon->getPalette(), 0x200);
             TPalette16 tinted(m_stdIcon->getPalette());
-            tinted.adjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            tinted.AdjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
+            memcpy(m_stdIcon->getPalette(), tinted.Palette, 0x200);
             restore = 1;
         }
 
@@ -781,10 +781,10 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         long drawY = y - 267;
         g_combatManager->drawCreature(
             m_stdIcon, m_currFrameType, m_currFrameIndex, drawX, drawY, 0,
-            m_gridIndex, m_facing == 0, g_systemPalette->m_data[highlight]);
+            m_gridIndex, m_facing == 0, g_systemPalette->Palette[highlight]);
 
         if (restore)
-            memcpy(m_stdIcon->getPalette(), saved.m_data, 0x200);
+            memcpy(m_stdIcon->getPalette(), saved.Palette, 0x200);
     }
 
     if (g_combatManager->m_computeExtentOnly != 0

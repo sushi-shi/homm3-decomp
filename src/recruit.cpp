@@ -126,13 +126,13 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         0x800));
 
     m_widgets.push_back(new coloredBorderFrame(0x40, 0xde, 0x63, 0x4c,
-        0x227, g_systemPalette->m_data[31], 0x400));
+        0x227, g_systemPalette->Palette[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0x142, 0xde, 0x63, 0x4c,
-        0x228, g_systemPalette->m_data[31], 0x400));
+        0x228, g_systemPalette->Palette[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0xac, 0xde, 0x43, 0x2a,
-        0x229, g_systemPalette->m_data[31], 0x400));
+        0x229, g_systemPalette->Palette[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0xf6, 0xde, 0x43, 0x2a,
-        0x22a, g_systemPalette->m_data[31], 0x400));
+        0x22a, g_systemPalette->Palette[31], 0x400));
 
     m_widgets.push_back(new textWidget(0xf, 0x14, 0x1c8, 0x1a,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
@@ -332,7 +332,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
     m_widgets.push_back(m_creatureWidgets[slot]);
 
     m_widgets.push_back(new coloredBorderFrame(startX - 1, startY - 1,
-        102, 132, slot + 0x21a, g_systemPalette->m_data[31], 0x400));
+        102, 132, slot + 0x21a, g_systemPalette->Palette[31], 0x400));
 }
 
 VA(0x0054fea0, 0x42E)
@@ -662,31 +662,31 @@ void recruitUnit::update(bool newMonster, long slot)
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_0_ID;
-    msg.m_extra = g_systemPalette->m_data[31];
+    msg.m_extra = g_systemPalette->Palette[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_1_ID;
-    msg.m_extra = g_systemPalette->m_data[31];
+    msg.m_extra = g_systemPalette->Palette[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_2_ID;
-    msg.m_extra = g_systemPalette->m_data[31];
+    msg.m_extra = g_systemPalette->Palette[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_3_ID;
-    msg.m_extra = g_systemPalette->m_data[31];
+    msg.m_extra = g_systemPalette->Palette[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = m_selectedPosition + RECRUIT_CREATURE_0_ID;
-    msg.m_extra = g_systemPalette->m_data[36];
+    msg.m_extra = g_systemPalette->Palette[36];
     g_recruitWindow->broadcastMessage(msg);
 }
 

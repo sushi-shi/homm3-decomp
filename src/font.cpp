@@ -94,9 +94,9 @@ void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
             unsigned char pix = *src++;
             if (pix != 0) {
                 if (pix == GLYPH_PIXEL_SOLID)
-                    *out = m_palette.m_data[color];
+                    *out = m_palette.Palette[color];
                 else
-                    *out = m_palette.m_data[32];
+                    *out = m_palette.Palette[32];
             }
             out++;
         }

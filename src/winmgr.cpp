@@ -935,7 +935,7 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 
     Bitmap16Bit savedDest(sw, sh);
     savedDest.grab(m_screenBitmap, dx, dy);
-    const unsigned short* sourcePalette = srcBitmap->getPalette().m_data;
+    const unsigned short* sourcePalette = srcBitmap->getPalette().Palette;
     for (int frame = 1; frame <= frames; ++frame) {
         unsigned long nextFrameTime = GameTime::get() + period;
         const int factor = (frame << 16) / frames;

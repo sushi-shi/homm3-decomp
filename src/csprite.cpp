@@ -151,7 +151,7 @@ DC_ADDRESS(0x072538, 0x52)
 MAC_ADDRESS(0x08a684, 0xa8)
 void CSprite::resetPalette()
 {
-    TPalette24 palette24(m_p24->m_palette);
+    TPalette24 palette24(m_p24->Palette);
 #ifdef __clang__
     TPalette16 palette16(palette24);
     setPalette(palette16);
@@ -170,7 +170,7 @@ DC_ADDRESS(0x07258c, 0x2c)
 MAC_ADDRESS(0x08a72c, 0x1c)  // vtable-era TU order + p/data layout
 unsigned short* CSprite::getPalette()
 {
-    return m_p ? m_p->m_data : 0;
+    return m_p ? m_p->Palette : 0;
 }
 
 // Original: CSprite::GetPalette; csprite.cpp:232
@@ -179,7 +179,7 @@ unsigned short* CSprite::getPalette()
 DC_ADDRESS(0x0725b8, 0x70)
 const unsigned short* CSprite::getPalette() const
 {
-    return m_p ? m_p->m_data : 0;
+    return m_p ? m_p->Palette : 0;
 }
 
 VA(0x0047bcd0, 0x1b)
@@ -187,7 +187,7 @@ DC_ADDRESS(0x072628, 0x3c)
 MAC_ADDRESS(0x08a748, 0x24)
 void CSprite::colorCycle(int begin, int end, int step)
 {
-    m_p->cycle(begin, end, step);
+    m_p->Cycle(begin, end, step);
 }
 
 VA(0x0047bcf0, 0x52)

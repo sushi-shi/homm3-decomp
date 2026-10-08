@@ -299,11 +299,11 @@ void TCampaignBrief::addBonusIcons()
         static_cast<font::TColor>(4), 242, 5, 0, 8));
 
     m_startBonusBorders[0] = new coloredBorderFrame(
-        475, 454, 60, 66, 232, g_systemPalette->m_data[45], 0x400);
+        475, 454, 60, 66, 232, g_systemPalette->Palette[45], 0x400);
     m_startBonusBorders[1] = new coloredBorderFrame(
-        543, 454, 60, 66, 233, g_systemPalette->m_data[45], 0x400);
+        543, 454, 60, 66, 233, g_systemPalette->Palette[45], 0x400);
     m_startBonusBorders[2] = new coloredBorderFrame(
-        611, 454, 60, 66, 234, g_systemPalette->m_data[45], 0x400);
+        611, 454, 60, 66, 234, g_systemPalette->Palette[45], 0x400);
 
     m_bitmapBonusImages[0] = new bitmapBorder(
         476, 455, 58, 64, 226, 0, 0x800);

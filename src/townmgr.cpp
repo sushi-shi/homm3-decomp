@@ -6331,11 +6331,11 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
 {
     g_outlinedTownObjectId = m_townObjects[objectIndex]->m_objId;
     TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->getPalette();
-    unsigned short saved = pal.m_data[96];
+    unsigned short saved = pal.Palette[96];
 
     for (int i = 128; i < 135; i++) {
         unsigned long nextFrame = GameTime::get() + 100;
-        pal.m_data[96] = g_systemPalette->m_data[i];
+        pal.Palette[96] = g_systemPalette->Palette[i];
 
         drawTown(0, 1, 1);
 
@@ -6344,7 +6344,7 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
         GameTime::delayTil(nextFrame);
     }
 
-    pal.m_data[96] = saved;
+    pal.Palette[96] = saved;
 
     drawTown(0, 1, 1);
 

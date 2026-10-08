@@ -1999,7 +1999,7 @@ MAC_ADDRESS(0x111ebc, 0x6c)
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
     EGameResource newResource, long newQualifier)
-    : coloredBorderFrame(x, y, w, h, id, g_systemPalette->m_data[45], 0x400)
+    : coloredBorderFrame(x, y, w, h, id, g_systemPalette->Palette[45], 0x400)
 {
     m_resource = newResource;
     m_qualifier = newQualifier;

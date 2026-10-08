@@ -71,7 +71,7 @@ DC_ADDRESS(0x198af4, 0x26)
 MAC_ADDRESS(0x20c684, 0x44)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 {
-    memcpy(pal + 224, &g_playerPalette->m_data[whichPlayer * 32],
+    memcpy(pal + 224, &g_playerPalette->Palette[whichPlayer * 32],
            32 * sizeof(unsigned short));
 }
 
@@ -81,7 +81,7 @@ DC_ADDRESS(0x198b1c, 0x2a)
 MAC_ADDRESS(0x20c6c8, 0x44)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map
 void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 {
-    memcpy(pal.m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
+    memcpy(pal.Palette + 224 * 3, g_playerPalette24->Palette + whichPlayer * 32 * 3,
            32 * 3);
 }
 

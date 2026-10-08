@@ -166,7 +166,7 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
     }
 
     for (int i = 0; i < 256; ++i) {
-        m_p16.m_data[i] =
+        m_p16.Palette[i] =
             static_cast<unsigned short>(
                 ((pcxfile.m_palette[i].rgbRed >> (8 - rbits)) << rshift) |
                 ((pcxfile.m_palette[i].rgbGreen >> (8 - gbits)) << gshift) |
@@ -258,7 +258,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                 for (int x = 0; x < sw; ++x) {
                     unsigned char pixel = *in++;
                     if (pixel)
-                        *out = m_p16.m_data[pixel];
+                        *out = m_p16.Palette[pixel];
                     ++out;
                 }
                 dst = static_cast<unsigned short*>(static_cast<void*>(
@@ -271,7 +271,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                 unsigned short* out = dst;
                 const unsigned char* in = src;
                 for (int x = 0; x < sw; ++x) {
-                    *out++ = m_p16.m_data[*in++];
+                    *out++ = m_p16.Palette[*in++];
                 }
                 dst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(dst))
@@ -316,7 +316,7 @@ DC_ADDRESS(0x05427c, 0x18)
 MAC_ADDRESS(0x05dfe0, 0x34)
 void Bitmap816::setPalette(const unsigned short* pal)
 {
-    memcpy(m_p16.m_data, pal, sizeof(m_p16.m_data));
+    memcpy(m_p16.Palette, pal, sizeof(m_p16.Palette));
 }
 
 VA(0x0044fe60, 0x16)
@@ -333,5 +333,5 @@ MAC_ADDRESS(0x05e038, 0x4c)
 void Bitmap816::resetPalette()
 {
     TPalette16 converted(getPalette24());
-    setPalette(converted.m_data);
+    setPalette(converted.Palette);
 }

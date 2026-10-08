@@ -934,12 +934,12 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     if (code == opaqueRunCode) {
                         unsigned int count = run;
                         do {
-                            *out++ = pal.m_data[*src++];
+                            *out++ = pal.Palette[*src++];
                         } while (--count);
                     } else if (tblit) {
                         out += run;
                     } else {
-                        unsigned short color = pal.m_data[code];
+                        unsigned short color = pal.Palette[code];
                         unsigned int count = run;
                         do {
                             *out++ = color;
@@ -987,12 +987,12 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     if (code == opaqueRunCode) {
                         unsigned int count = run;
                         do {
-                            *--out = pal.m_data[*src++];
+                            *--out = pal.Palette[*src++];
                         } while (--count);
                     } else if (tblit) {
                         out -= run;
                     } else {
-                        unsigned short color = pal.m_data[code];
+                        unsigned short color = pal.Palette[code];
                         unsigned int count = run;
                         do {
                             *--out = color;
@@ -1115,12 +1115,12 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         unsigned int count = run;
                         if (!alpha) {
                             do {
-                                *out++ = pal.m_data[*src++];
+                                *out++ = pal.Palette[*src++];
                             } while (--count);
                         } else {
                             do {
                                 *out = (s_div2mask
-                                        & (pal.m_data[*src++] >> 1))
+                                        & (pal.Palette[*src++] >> 1))
                                      + (s_div2mask & (*out >> 1));
                                 ++out;
                             } while (--count);
@@ -1227,13 +1227,13 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         unsigned int count = run;
                         if (!alpha) {
                             do {
-                                *--out = pal.m_data[*src++];
+                                *--out = pal.Palette[*src++];
                             } while (--count);
                         } else {
                             do {
                                 --out;
                                 *out = (s_div2mask
-                                        & (pal.m_data[*src++] >> 1))
+                                        & (pal.Palette[*src++] >> 1))
                                      + (s_div2mask & (*out >> 1));
                             } while (--count);
                         }
@@ -1350,7 +1350,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
 
             cellsPerLine = static_cast<unsigned int>(m_croppedWidth) >> 5;
             cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
-            palette = pal.m_data;
+            palette = pal.Palette;
 
             if (!hflip) {
                 unsigned short* lineDst =
@@ -1529,7 +1529,7 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
             cellsPerLine = static_cast<unsigned int>(m_croppedWidth) >> 5;
             cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
 
-            palette = pal.m_data;
+            palette = pal.Palette;
 
             if (!hflip) {
                 unsigned short* lineDst =
@@ -1903,7 +1903,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
         if (sh > 0) {
             const unsigned short* const lineOffset = static_cast<const unsigned short*>(
                 static_cast<const void*>(m_map));
-            const unsigned short* const palette = pal.m_data;
+            const unsigned short* const palette = pal.Palette;
             if (!vflip) {
                 if (!hflip) {
                     unsigned short* lineDst =
@@ -2696,7 +2696,7 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
     if (sw > 0 && sh > 0) {
         lineOffset =
             static_cast<const unsigned int*>(static_cast<const void*>(m_map));
-        palette = pal.m_data;
+        palette = pal.Palette;
         if (!hflip) {
             unsigned short* lineDst =
                 static_cast<unsigned short*>(static_cast<void*>(
@@ -2884,7 +2884,7 @@ void CSpriteFrame::drawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
         return;
     unsigned int cellsPerLine = m_croppedWidth >> 5;
     const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
     for (int y = sy; y < sy + sh; y += 2) {
         unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
@@ -3064,7 +3064,7 @@ void CSpriteFrame::drawTileScaled50(int sx, int sy, int sw, int sh,
     if (sw <= 0 || sh <= 0)
         return;
     const unsigned short* const lineOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     if (!vflip) {
         if (!hflip) {
             unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
@@ -3455,7 +3455,7 @@ void CSpriteFrame::drawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
         return;
     unsigned int cellsPerLine = m_croppedWidth >> 5;
     const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
     for (int y = sy; y < sy + sh; y += 4) {
         unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
@@ -3651,7 +3651,7 @@ void CSpriteFrame::drawTileScaled25(int sx, int sy, int sw, int sh,
     if (sw <= 0 || sh <= 0)
         return;
     const unsigned short* const lineOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     if (!vflip) {
         if (!hflip) {
             unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
