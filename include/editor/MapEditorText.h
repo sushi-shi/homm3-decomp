@@ -20,7 +20,7 @@ extern const char* const& kVersionFmtStr;
 extern const char* const& kMapFileFilterStr;
 extern const char* const& kMapFileRegNameStr;
 extern const char* const& kMapSpecsSheetCaptionStr;
-extern const char* const& kObjectPropertiesCaptionFmtStr;
+DATA(0x005a14e4) extern const char* const& kObjectPropertiesCaptionFmtStr;
 extern const char* const& kEditTimedEventSheetCaptionStr;
 extern const char* const& kSelNoneStr;
 extern const char* const& kRandomStr;
@@ -621,7 +621,7 @@ extern const char* const& kCustomSpellRadioStr;
 
 namespace SSignPropsDlgText {
 enum { kNumStrings = 1 };
-extern const char* const& kMessageStaticStr;
+DATA(0x005a0ab8) extern const char* const& kMessageStaticStr;
 }
 
 namespace STownPropsGeneralPageText {

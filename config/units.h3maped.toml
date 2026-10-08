@@ -350,3 +350,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "EditRumorDlg"
 source = "src/editor/EditRumorDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "SignPropsDlg"
+source = "src/editor/SignPropsDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
