@@ -4,6 +4,8 @@
 #ifndef HOMM3_OBJECTTYPE_H
 #define HOMM3_OBJECTTYPE_H
 
+#include "va.h"
+
 #include <bitset>
 #include <string>
 #include <vector>
