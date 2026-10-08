@@ -14,6 +14,11 @@ defines = ["HOMM3_TARGET_LOKI=1"]
 prefix = "include/gcc_prefix.h"
 
 [[unit]]
+name = "Error"
+object = 10
+source = "src/Error.cpp"
+
+[[unit]]
 name = "spelldefs"
 object = 30
 source = "src/spelldefs.cpp"

@@ -117,3 +117,14 @@ pairs 378 retail functions and finds 101 exact, among them
 Differences seen so far are real: for example `Bitmap16Bit(char const*, char
 const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
 `MAX_PATH`.
+
+## Known toolchain residual
+
+SGI STL 3.3 declares `static const char* __get_c_string(const string&)` in
+`stl_string_fwd.h` and defines it `inline` in `<string>`. Every object that
+includes `<string>` emits it first in `.text` (about 90 objects). Loki's copies
+keep the parameter on the stack, the code g++ gives a non-inline function;
+the Debian 2.95.2-13.1 compiler (a 20000220 branch snapshot) treats the
+inline definition as inline and loads the parameter into `%ebx`. Loki's
+`.comment` says `19991024 (release)`. The difference is in the compiler, not
+the source; a vanilla 2.95.2 release build is the candidate fix.
