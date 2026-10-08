@@ -187,17 +187,7 @@ public:
 
     int Width() const { return right - left; }
     int Height() const { return bottom - top; }
-    CSize Size() const { return CSize(Width(), Height()); }
     CPoint& TopLeft() { return *new CPoint(left, top); }
-
-    void DeflateRect(int x, int y) { DeflateRect(x, y, x, y); }
-    void DeflateRect(int l, int t, int r, int b)
-    {
-        left += l;
-        right -= r;
-        top += t;
-        bottom -= b;
-    }
 
     bool IntersectRect(const CRect* pRect1, const CRect* pRect2)
     {
@@ -227,6 +217,17 @@ public:
         return Width() > 0 && Height() > 0;
     }
     bool UnionRect(CRect& rect1, CRect& rect2) { return UnionRect(&rect1, &rect2); }
+
+    CSize Size() const { return CSize(Width(), Height()); }
+
+    void DeflateRect(int x, int y) { DeflateRect(x, y, x, y); }
+    void DeflateRect(int l, int t, int r, int b)
+    {
+        left += l;
+        right -= r;
+        top += t;
+        bottom -= b;
+    }
 
     static void CRect_to_gdk_rectangle(const CRect* pRect, GdkRectangle* pGdkRect)
     {
