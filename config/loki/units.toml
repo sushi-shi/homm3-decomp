@@ -329,3 +329,8 @@ source = "src/editor/SelectHeroClassDlg.cpp"
 name = "EditArtifactDlg"
 object = 82
 source = "src/editor/EditArtifactDlg.cpp"
+
+[[unit]]
+name = "ArmyDlg"
+object = 88
+source = "src/editor/ArmyDlg.cpp"
