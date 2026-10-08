@@ -765,6 +765,7 @@ class TGUIStandardSpecializedObject : public T, public TGUISpecializedObject {
 public:
     TGUIStandardSpecializedObject(const TObjectType& objType);
     TGUIStandardSpecializedObject(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUIStandardSpecializedObject() {}
 
     virtual bool edit(TEditContext* pEditContext, unsigned int objID);
     virtual TGameObject* clone(void* (*pfnAllocator)(unsigned int)) const;
@@ -806,6 +807,7 @@ class TGUIOwnableSpecializedObject : public T, public TGUISpecializedObject {
 public:
     TGUIOwnableSpecializedObject(const TObjectType& objType, TPlayer owner);
     TGUIOwnableSpecializedObject(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUIOwnableSpecializedObject() {}
 
     virtual bool edit(TEditContext* pEditContext, unsigned int objID);
     virtual TGameObject* clone(void* (*pfnAllocator)(unsigned int)) const;
