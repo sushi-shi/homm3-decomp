@@ -73,8 +73,6 @@ target = "i386-linux"
 #   glibc.tgz      Slackware 7.1 d1 glibc 2.1.3 (md5 acb259fe03473ac48d0432662d48f575):
 #                  crt1.o, crti.o, crtn.o, libc_nonshared.a, built with egcs 1.1.2 like the
 #                  image's first two and last .comment entries. Shared libc/libm/libdl: potato's.
-#   xbin.tgz       Slackware 7.1 x1 XFree86 3.3.6 (md5 e7ce2d545e79345770c04a1ba28feb88):
-#                  libX11.so.6, libXext.so.6, libXi.so.6 (DT_NEEDED; the launch test).
 #   gettext.tgz    Slackware 7.1 d1 gettext 0.10.35 (md5 7dfb1d56c0ea1bbd5a12b0aa0f04a576): its
 #                  msgfmt/xgettext on PATH while GTK+ configures, so NLS is on, as the image's
 #                  bindtextdomain (gtk_init_check) and _nl_msg_cat_cntr imports show.
@@ -82,6 +80,17 @@ target = "i386-linux"
 #                  Red Hat 6.2: the egcs 1.1.2 that compiled GLib, GTK+ and zlib (it emits
 #                  `.p2align 4,,7` for jump targets, Slackware's egcs `.align 16`), and the X
 #                  headers GTK+ is configured with.
+#   binutils-2.9.5.0.22-6.i386.rpm
+#                  Red Hat 6.2: the as beside that egcs (GDK's `a0`/`a2` byte moves, nop fills).
+#   XFree86-libs-3.3.6-20.i386.rpm
+#                  Red Hat 6.2: libX11.so.6, libXext.so.6, libXi.so.6 (DT_NEEDED; the launch
+#                  test). ld records the X imports in these libraries' .dynsym order, which the
+#                  image's .dynsym follows (XGetDeviceMotionEvents, XFreeDeviceList, ... _init).
+#   gtk+-1.2.10-ahiguti.patch
+#                  Red Hat's GTK+ i18n patch (Fedora dist-git): iswpunct/iswcntrl word breaks.
+#   glibc-devel-2.1.1-6.i386.rpm
+#                  Red Hat 6.0: the headers libxml and libglade were compiled against
+#                  (glibc 2.1's memset → __bzero macro).
 #   glib-1.2.8.tar.gz, gtk+-1.2.8.tar.gz
 #                  the image's GLib/GTK+ (gtk_*_version 1.2.8, glib_*_version 1.2.8), built at
 #                  Red Hat's -O2 -m486 -fno-strength-reduce, --with-xinput=xfree (libXi).
@@ -97,7 +106,6 @@ target = "i386-linux"
 "binutils.tgz" = "70a0560e929fdd4cab4b204876e6f5eb2fdb6debe5da4429b5ff12c78f8d73db"
 "glibc.tgz" = "b86371883c38349f50aff0307a8ed91c6ffc31a9b97187f5525e3e7b880b955e"
 "gettext.tgz" = "4e43568815665782a17e53e6e02c4542dbb8d0e46a65a382fc5e869aeb034d10"
-"xbin.tgz" = "96e7e9976a59cf014e7f9088354fd45c9d0b0eaf97193edb30d2e4f7b318eb7b"
 "egcs-1.1.2-30.i386.rpm" = "49186e499fff63d319402c3a6edc586c7e9ccd3527f854b24fc6bb4ec944dae6"
 "cpp-1.1.2-30.i386.rpm" = "531384004d915180b5399020b25b4642dd2e7e8c89a50328994ac0ea6fb6ca3a"
 "XFree86-devel-3.3.6-20.i386.rpm" = "a385830593c427e6e8142c962c3ffdaea9bcd4daf1ffd09d7dfd92c4964d7178"
@@ -109,4 +117,5 @@ target = "i386-linux"
 "libxml-1.8.9.tar.gz" = "110b419d81101a301e3b5b11749b5618d31568b04c9c4e4394fff636a2d8fcb6"
 "binutils-2.9.5.0.22-6.i386.rpm" = "35d4941294c9bc0487853f41dc3c9ccaf4d697d0dd6b7f8d9b7a8a0d59435b80"
 "gtk+-1.2.10-ahiguti.patch" = "fee67bbc147a98220d4acc136540de64fe8664a8d92a5141ee4bce8d47d27f22"
+"XFree86-libs-3.3.6-20.i386.rpm" = "879a761cbce1f75db691b1ebd8f26b3751a4300ceff1e77d42bf2c37968a21ce"
 "glibc-devel-2.1.1-6.i386.rpm" = "42c53fe875f2ec071654f5aa33fa0fd06a143ff05cb73ba2c7d5769a7602f1bc"

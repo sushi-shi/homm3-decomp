@@ -8,7 +8,7 @@ build/loki/toolchain/link/:
               crtbegin.o crtend.o libgcc.a libstdc++.a       (GCC 2.95.2, i686)
               libglade.a libxml.a                             (GCC 2.95.2 -O2)
               libgtk.a libgdk.a libgmodule.a libglib.a libz.a (egcs 1.1.2)
-    xlib/     libX11.so.6, libXext.so.6, libXi.so.6
+    xlib/     libX11.so.6, libXext.so.6, libXi.so.6 (Red Hat 6.2 XFree86-libs)
     libexec/  ld (binutils 2.9.1.0.25)
     build.log every configure and make
 
@@ -324,7 +324,11 @@ def build(link: Path, media: dict[str, bytes], jobs: int = 2) -> None:
     # libc.so is a linker script naming /lib/libc.so.6; ld 2.9.1 has no --sysroot.
     (lib / "libc.so").write_text(f"/* GNU ld script (staged) */\n"
                                  f"GROUP ( {tc.SYSROOT}/lib/libc.so.6 {lib}/libc_nonshared.a )\n")
-    tc._unpack(media["xbin.tgz"], {f"usr/X11R6/lib/{name}": xlib / name for name in X_LIBRARIES})
+    _install_rpm(media["XFree86-libs-3.3.6-20.i386.rpm"], xlib.parent / "xlibs-rpm",
+                 lambda name: name in {f"usr/X11R6/lib/{x}" for x in X_LIBRARIES})
+    xlib.mkdir(parents=True, exist_ok=True)
+    for name in X_LIBRARIES:
+        shutil.copyfile(xlib.parent / "xlibs-rpm/usr/X11R6/lib" / name, xlib / name)
     for name, stem in X_LIBRARIES.items():
         for alias in (f"{stem}.so.6", f"{stem}.so"):
             (xlib / alias).symlink_to(name)
