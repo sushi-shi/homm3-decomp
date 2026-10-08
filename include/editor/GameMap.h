@@ -261,7 +261,7 @@ private:
         std::vector<T>& operator*() { return *get(); }
         const std::vector<T>* get() const
         {
-            return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
+            return _m_pWrapper == NULL ? NULL : &_m_pWrapper->m_a;
         }
         const std::vector<T>& operator*() const { return *get(); }
 

@@ -11,6 +11,7 @@
 #define HOMM3_EDITOR_ARRAY_H
 
 #include <algorithm>
+#include <new>
 
 template<class T, unsigned int N>
 class TArray {
@@ -22,15 +23,31 @@ public:
     typedef const T& const_reference;
     typedef unsigned int size_type;
 
-    TArray() {}
-    // Windows constructs the elements in place: h3maped's fills and copies
-    // null-check each element (TResourceQuantitiesDlg's ctor 0x4b34a0,
-    // TTimedEvent's implicit copy 0x417060), the shape of Dinkumware's
-    // uninitialized_fill/_copy, where Loki's port assigns. Retail stores the
-    // first element before its loop; an isolated compile checks it too, so
-    // that peel belongs to the callers' context.
-    explicit TArray(const T& value) { uninitialized_fill(begin(), end(), value); }
-    TArray(const TArray& other) { uninitialized_copy(other.begin(), other.end(), begin()); }
+    // Windows' array is its first element, a member, followed by storage
+    // for the rest, which the class constructs and destroys itself.
+    // h3maped proves it in every constructor and destructor: the cell
+    // segment's default constructor (0x43900a) constructs element 0 and
+    // only then registers its unwind (~T on this), placement-news elements
+    // 1..N-1 in a null-checked loop (placement delete on unwind), and its
+    // destructor (0x439067) destroys N-1..1 in reverse before the member
+    // element 0; the fill (player bookkeeping 0x438696, the resource
+    // dialog 0x4b34a0) and the copy (TTimedEvent 0x417060) store element 0
+    // first, then loop; a POD array's destructor (0x438787) leaves the
+    // dead `end()` of its emptied loop. Loki's port assigns into a plain
+    // array.
+    TArray() { for (iterator p = begin() + 1; p != end(); ++p) new (p) T; }
+    explicit TArray(const T& value) : _m_first(value) { uninitialized_fill(begin() + 1, end(), value); }
+    TArray(const TArray& other) : _m_first(other._m_first)
+    {
+        uninitialized_copy(other.begin() + 1, other.end(), begin() + 1);
+    }
+    ~TArray()
+    {
+        for (iterator p = end(); p != begin() + 1; ) {
+            --p;
+            p->~T();
+        }
+    }
 
     TArray& operator=(const TArray& other)
     {
@@ -39,14 +56,14 @@ public:
         return *this;
     }
 
-    iterator begin() throw() { return _m_elements; }
-    const_iterator begin() const throw() { return _m_elements; }
-    iterator end() throw() { return _m_elements + N; }
-    const_iterator end() const throw() { return _m_elements + N; }
+    iterator begin() throw() { return &_m_first; }
+    const_iterator begin() const throw() { return &_m_first; }
+    iterator end() throw() { return begin() + N; }
+    const_iterator end() const throw() { return begin() + N; }
     static size_type size() throw() { return N; }
 
-    reference operator[](size_type i) throw() { return _m_elements[i]; }
-    const_reference operator[](size_type i) const throw() { return _m_elements[i]; }
+    reference operator[](size_type i) throw() { return begin()[i]; }
+    const_reference operator[](size_type i) const throw() { return begin()[i]; }
 
     template<class U>
     bool operator==(const TArray<U, N>& other) const
@@ -55,7 +72,9 @@ public:
     }
 
 private:
-    T _m_elements[N];
+    T _m_first;
+    // Elements 1..N-1, raw until the constructors build them in place.
+    char _m_aRestStorage[(N - 1) * sizeof(T)];
 };
 
 #endif  /* HOMM3_EDITOR_ARRAY_H */

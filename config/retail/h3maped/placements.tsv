@@ -63,7 +63,6 @@ rva	size	kind	name	unit	evidence
 0x0002a75a	0xca	func	?_split@_TObjectLink@_TImpl@TLayer@TGameMap@@AAEXXZ	GameMap	masked body (202 bytes, 16 relocations) unique at a census start
 0x0002aad8	0x90	func	?setObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QAEXV?$auto_ptr@VTGameObject@@@std@@@Z	GameMap	masked body (144 bytes, 11 relocations) unique at a census start
 0x0002abe8	0x2a	func	?clearObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QAEXXZ	GameMap	masked body (42 bytes, 2 relocations) unique at a census start
-0x0002af44	0x3c	func	?getBCellShadow@TObjectType@@QBE_NII@Z	GameMap	masked body (60 bytes, 1 relocations) unique at a census start
 0x0002b042	0x5b	func	?construct@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEXXZ	GameMap	masked body (91 bytes, 6 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x0002b119	0xe	func	?getPObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QBEPBVTGameObject@@XZ	GameMap	masked body (14 bytes, 0 relocations) unique at a census start
 0x0002b2cc	0x27	func	?clear@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEXXZ	GameMap	masked body (39 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -122,7 +121,7 @@ rva	size	kind	name	unit	evidence
 0x00034acb	0x84	func	?_split@?$TRefCountingPtr@V_TCellGrid@_TImpl@TLayer@TGameMap@@@@AAEXXZ	GameMap	referenced by ??0_TImpl@TLayer@TGameMap@@QAE@W4TSize@2@@Z at +0x54
 0x00034b4f	0x20	func	??1?$TRefCountingPtr@V?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@@@QAE@XZ	GameMap	referenced by ??1_TImpl@TLayer@TGameMap@@QAE@XZ at +0x19
 0x00034b6f	0x7c	func	?_split@?$TRefCountingPtr@V?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@@@AAEXXZ	GameMap	referenced by ??0_TImpl@TLayer@TGameMap@@QAE@W4TSize@2@@Z at +0x72
-0x00034beb	0x77	func	??0?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@QAE@XZ	GameMap	referenced by ?resize@_TCellGrid@_TImpl@TLayer@TGameMap@@QAEXII@Z at +0x1d
+0x00034beb	0x77	func	??0?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@QAE@XZ	GameMap	masked body (119 bytes, 10 relocations) unique at a census start
 0x00034c62	0x20	func	??1?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@QAE@XZ	GameMap	referenced by ?resize@_TCellGrid@_TImpl@TLayer@TGameMap@@QAEXII@Z at +0x44
 0x00034c82	0x7f	func	?_split@?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@AAEXXZ	GameMap	masked body (127 bytes, 10 relocations) unique at a census start
 0x000357ef	0x17	func	?falsename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	resourcemanager	masked body (23 bytes, 0 relocations) unique at a census start
@@ -166,10 +165,15 @@ rva	size	kind	name	unit	evidence
 0x00038b1a	0x83	func	??_4?$TExtent@II@@QAEAAV0@ABV0@@Z	GameMap	masked body (131 bytes, 1 relocations) unique at a census start
 0x00038f0e	0x36	func	??4?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@QAEAAV0@ABV0@@Z	GameMap	referenced by ?erase@?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAEPAV?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@PAV3@0@Z at +0x1e
 0x00038f99	0x71	func	??0?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@QAE@ABV0@@Z	GameMap	referenced by ?_split@?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@AAEXXZ at +0x39
+0x0003900a	0x5d	func	??0?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@QAE@XZ	GameMap	masked body (93 bytes, 5 relocations) unique at a census start
+0x00039067	0x4a	func	??1?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@QAE@XZ	GameMap	masked body (74 bytes, 5 relocations) unique at a census start
+0x0003956e	0x5a	func	??0?$TArray@VTCell@TLayer@TGameMap@@$05@@QAE@XZ	GameMap	masked body (90 bytes, 5 relocations) unique at a census start
 0x000395c8	0x11	func	??0TCell@TLayer@TGameMap@@QAE@XZ	GameMap	masked body (17 bytes, 0 relocations) unique at a census start
+0x000395d9	0x59	func	??1?$TArray@VTCell@TLayer@TGameMap@@$05@@QAE@XZ	GameMap	masked body (89 bytes, 6 relocations) unique at a census start
 0x00039632	0x24	func	??1?$_TPVector@I@TCell@TLayer@TGameMap@@QAE@XZ	GameMap	masked body (36 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00039656	0xc7	func	??0TCell@TLayer@TGameMap@@QAE@ABV012@@Z	GameMap	masked body (199 bytes, 0 relocations) unique at a census start
 0x0003971d	0x36	func	??1TCell@TLayer@TGameMap@@QAE@XZ	GameMap	masked body (54 bytes, 5 relocations) unique at a census start
+0x00039753	0x1c	func	??_GTCell@TLayer@TGameMap@@QAEPAXI@Z	GameMap	referenced by ??1?$TArray@VTCell@TLayer@TGameMap@@$05@@QAE@XZ at +0x29
 0x0003bee8	0x4d	func	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	rmg	masked body (77 bytes, 1 relocations) unique at a census start
 0x0003bf35	0x5a	func	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	rmg	referenced by ?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z at +0x11
 0x00049461	0x3e	func	?_putLong@TGzDeflateBuf@@AAEXK@Z	gzinflatebuf	masked body (62 bytes, 4 relocations) unique at a census start
@@ -210,7 +214,6 @@ rva	size	kind	name	unit	evidence
 0x00061e4b	0x1e	func	?_Tidy@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@IAEXXZ	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x1c6
 0x00070324	0x2f	func	??Breference@?$bitset@$0JA@@std@@QBE_NXZ	rmg	masked body (47 bytes, 1 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000744b1	0xe	func	?begin@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@XZ	resourcemanager	masked body (14 bytes, 0 relocations) unique at a census start
-0x0007451b	0x202	func	?insert@?$vector@U_TObjectCellInfo@TLayer@TGameMap@@V?$allocator@U_TObjectCellInfo@TLayer@TGameMap@@@std@@@std@@QAEXPAU_TObjectCellInfo@TLayer@TGameMap@@IABU345@@Z	GameMap	masked prefix (506 fixed bytes agree, 514 compiled, 514 retail)
 0x0007fed3	0x13	func	??ZTRmgMapPosition@@QAEAAU0@ABUTPoint@@@Z	rmg	masked body (19 bytes, 0 relocations) unique at a census start
 0x00081a8d	0x47	func	??1TSignPropsDlg@@UAE@XZ	SignPropsDlg	referenced by ??_GTSignPropsDlg@@UAEPAXI@Z at +0x4
 0x000876ce	0x17	func	?SelectObject@CDC@@QAEPAVCBitmap@@PAV2@@Z	MemoryDC	masked body (23 bytes, 1 relocations) unique at a census start

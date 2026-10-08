@@ -457,10 +457,7 @@ public:
     unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
     unsigned int getNumObjectIDsAtCell(const TTilePoint& loc) const { return getNumObjectIDsAtCell(loc.x(), loc.y()); }
     TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
-    TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const
-    {
-        return getObjectIDAtCell(loc.x(), loc.y(), which);
-    }
+    TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const;
     unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
     TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
 
@@ -906,6 +903,14 @@ TMapLayerObjectID TGameMap::TLayer::_TImpl::_findObject(const TTilePoint& loc,
             return objID;
     }
     return s_kInvalidObjID;
+}
+
+// Defined after _findObject, its first user, which therefore calls it.
+VA(0x0042b53c, 0x17)
+TMapLayerObjectID TGameMap::TLayer::_TImpl::getObjectIDAtCell(const TTilePoint& loc,
+                                                                    unsigned int which) const
+{
+    return getObjectIDAtCell(loc.x(), loc.y(), which);
 }
 
 VA(0x0042b553, 0x51)
