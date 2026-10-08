@@ -162,16 +162,16 @@ def call(rva, site, target):
     return b"\xe8" + struct.pack("<i", target - (rva + site + 5))
 
 
-class CallVoteTests(unittest.TestCase):
-    """A voter withdrawn only for unrelocated bytes still pairs its calls."""
+class SiteVoteTests(unittest.TestCase):
+    """A voter withdrawn only for unrelocated bytes still pairs its sites."""
 
-    def collect(self, functions, retail):
+    def collect(self, functions, retail, sites=()):
         objects = {"u": rp.CandidateObject(coff(
             [(name, body, relocs) for name, body, relocs, _rva in functions]))}
         voters = [rp.Voter("u", name, rva, len(retail[rva]))
                   for name, _body, _relocs, rva in functions]
         return rp.collect(voters, objects.get,
-                          lambda rva, size: retail.get(rva), [], BASE)
+                          lambda rva, size: retail.get(rva), list(sites), BASE)
 
     def test_stack_slot_difference_keeps_direct_call_votes(self):
         # mov [ebp-0x14], eax vs retail's [ebp-0x10]; then call ?b, call ?a.
@@ -202,11 +202,25 @@ class CallVoteTests(unittest.TestCase):
             [("_f", longer, [(2, "?a@@YAXXZ", REL32)], 0x1000)],
             {0x1000: call(0x1000, 0, 0x3100) + b"\xc3"})
         self.assertEqual((votes, withdrawn), ([], {"instruction: longer": 1}))
-        body = b"\x89\x45\xec" + mov_eax(0) + b"\xc3"
-        votes, _w, _a = self.collect(
-            [("_f", body, [(4, "?g_a@@3HA", DIR32)], 0x1000)],
-            {0x1000: b"\x89\x45\xf0" + mov_eax(BASE + 0x5000) + b"\xc3"})
-        self.assertEqual(votes, [])
+
+    def test_data_site_only_names_a_confirmed_claims_outside_operand(self):
+        # spriteNames[id - 22] (const char *[9]): retail's operand lands on
+        # the string literal 0x58 bytes before the claimed array.
+        body = b"\x89\x45\xec" + mov_eax(-0x58 & 0xFFFFFFFF) + mov_eax(0) + b"\xc3"
+        retail = (b"\x89\x45\xf0" + mov_eax(BASE + 0x5000 - 0x58)
+                  + mov_eax(BASE + 0x6000) + b"\xc3")
+        votes, _w, admitted = self.collect(
+            [("_f", body, [(4, "?g_names@@3PAPBDA", DIR32), (9, "?g_b@@3HA", DIR32)],
+              0x1000)], {0x1000: retail}, sites=[0x1004, 0x1009])
+        self.assertEqual(admitted, 0)
+        self.assertTrue(all(v.site_only for v in votes))
+        claims = {0x5000: "?g_names@@3PAPBDA"}
+        pairings, aliases = rp.decide(
+            votes, region_of=lambda rva: "data", claimed_name_at=claims.get,
+            claimed_rva_of=lambda name: None, extent_of={0x5000: (0x24, 4)}.get)
+        self.assertEqual(pairings, [])     # never admits ?g_b at 0x6000
+        self.assertEqual([(a.symbol, a.target, a.addend) for a in aliases],
+                         [("?g_names@@3PAPBDA", 0x5000 - 0x58, -0x58)])
 
 
 def vote(symbol, target, addend=0, function=0x1000, site=None, typ=DIR32):
@@ -446,8 +460,12 @@ class OutsideOperandTests(unittest.TestCase):
     def test_interior_and_distant_operands_are_left_alone(self):
         _p, aliases = self.aliases([vote("_g_t", 0x6004, addend=4),
                                     vote("_g_t", 0x6018, addend=0x18),
-                                    vote("_g_t", 0x5ff0, addend=-0x10)], (0x10, 4))
+                                    vote("_g_t", 0x5fef, addend=-0x11)], (0x10, 4))
         self.assertEqual(aliases, [])
+
+    def test_folded_index_offsets_reach_k_elements_before(self):
+        _p, aliases = self.aliases([vote("_g_t", 0x5fa8, addend=-0x58)], (0x24, 4))
+        self.assertEqual(aliases, [(0x5fa8, -0x58)])
 
     def test_non_array_allows_exactly_one_past_the_end(self):
         _p, aliases = self.aliases([vote("_g_t", 0x6008, addend=8),

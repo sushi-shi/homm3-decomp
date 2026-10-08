@@ -2844,6 +2844,9 @@ bool SCampaign::campaignComplete()
 // homes. Signed index and late bare declaration are flat; naming the score
 // row loses ground. The register model's heroId/pool declaration swap also
 // worsens the residual, so retain the native acquisition order.
+// 2026-10-08 trace: since getHero's DC else-arm the garrison push_back gets
+// 1275/20 = 63 against insert's 64 and stays a call (retail expands it);
+// it needs three more caller cb units. A braced guard or loop body adds two.
 VA(0x00489820, 0x600)
 MAC_ADDRESS(0x098484, 0x4b0)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::completeCurrentMap(

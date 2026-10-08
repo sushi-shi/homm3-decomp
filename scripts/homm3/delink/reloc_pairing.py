@@ -20,11 +20,12 @@ Each relocation of a voter pairs candidate `S + a` with the retail operand
 `V`; the vote is `S` at owner address `V - a`. Only spellings both comparison
 sides keep verbatim vote.
 
-CALL VOTES. A function whose only difference is unrelocated instruction
+SITE VOTES. A function whose only difference is unrelocated instruction
 bytes (a stack slot, a register) still has every relocation at the retail
-site. Its direct `call`/`jmp rel32` sites, the same opcode on both sides,
-vote for a code symbol that no voter names (`call_votes`). They only
-propose a code pairing: a fold still needs the body proof below.
+site (`site_votes`). Its direct `call`/`jmp rel32` sites, the same opcode on
+both sides, vote for a code symbol that no voter names; they only propose a
+code pairing, and a fold still needs the body proof below. Its absolute
+sites only name a confirmed claim's outside operand (`decide`).
 
 DATA PAIRINGS (`decide`). A data owner is admitted only when every vote for
 `S` names one address, every vote for that address names `S`, no other name
@@ -97,6 +98,7 @@ class Vote(NamedTuple):
     function: str
     private: bool = False   # the candidate symbol is private to `unit`
     raw: str = ""           # the candidate's own spelling, when respelled
+    site_only: bool = False  # paired by site in a body differing in bytes
 
 
 @dataclass
@@ -339,6 +341,13 @@ def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | Non
                           [site - voter.rva for site in retail_sites])
     if reason:
         return [], reason
+    return _operand_votes(voter, candidate, body, relocs, retail, image_base, rename), ""
+
+
+def _operand_votes(voter: Voter, candidate: CandidateObject, body: bytes, relocs: list,
+                   retail: bytes, image_base: int,
+                   rename: Callable[[str], str] = lambda name: name,
+                   site_only: bool = False) -> list[Vote]:
     votes = []
     for site, typ, name, addend, target in operand_targets(
             body, relocs, retail, voter.rva, image_base):
@@ -357,33 +366,32 @@ def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | Non
             continue
         votes.append(Vote(rename(name), target - addend, target, addend,
                           voter.rva, voter.rva + site, typ, voter.unit, voter.name,
-                          private, raw))
-    return votes, ""
+                          private, raw, site_only))
+    return votes
 
 
-def call_votes(voter: Voter, candidate: CandidateObject, retail: bytes | None,
+def site_votes(voter: Voter, candidate: CandidateObject, retail: bytes | None,
                image_base: int) -> list[Vote]:
-    """Direct-call votes of a voter withdrawn only for instruction bytes.
+    """Votes of a voter withdrawn only for unrelocated instruction bytes.
 
     `compare_body` already proved the same length and every relocation at
-    the retail site; each `call`/`jmp rel32` site whose opcode both sides
-    share pairs the candidate callee with the retail target. Compiland-
-    private callees do not vote."""
+    the retail site. A `call`/`jmp rel32` site whose opcode both sides share
+    pairs the candidate callee with the retail target (a public callee only).
+    An absolute site is marked `site_only`: it can name a confirmed claim's
+    operand outside its extent, never admit or contradict a pairing."""
     found = candidate.functions.get(voter.name)
     if found is None or retail is None:
         return []
     body, relocs = found
     votes = []
-    for site, typ, name, addend, target in operand_targets(
-            body, relocs, retail, voter.rva, image_base):
-        if typ != REL32 or site < 1 or body[site - 1] != retail[site - 1] \
-                or body[site - 1] not in (0xE8, 0xE9):
-            continue
-        if (name in candidate.eh_thunks or unit_local(name)
-                or compiland_private(name, candidate) or not stable_name(name)):
-            continue
-        votes.append(Vote(name, target - addend, target, addend, voter.rva,
-                          voter.rva + site, typ, voter.unit, voter.name))
+    for vote in _operand_votes(voter, candidate, body, relocs, retail, image_base,
+                               site_only=True):
+        site = vote.site_rva - voter.rva
+        if vote.typ == DIR32:
+            votes.append(vote)
+        elif (not vote.private and site >= 1 and body[site - 1] == retail[site - 1]
+              and body[site - 1] in (0xE8, 0xE9)):
+            votes.append(vote._replace(site_only=False))
     return votes
 
 
@@ -408,23 +416,24 @@ def collect(voters: Iterable[Voter], objects: Callable[[str], CandidateObject | 
         if reason:
             withdrawn[reason] += 1
             if reason == "instruction: bytes":
-                calls.extend(call_votes(voter, candidate, retail, image_base))
+                calls.extend(site_votes(voter, candidate, retail, image_base))
             continue
         admitted += 1
         votes.extend(found)
     named = {vote.symbol for vote in votes}
-    votes.extend(vote for vote in calls if vote.symbol not in named)
+    votes.extend(vote for vote in calls if vote.site_only or vote.symbol not in named)
     return votes, dict(withdrawn), admitted
 
 
 def outside_operand(addend: int, extent: tuple[int, int] | None) -> bool:
-    """A claimed object's operand just outside its extent, as cl forms it.
+    """A claimed object's operand outside its extent, as cl forms it.
 
     `extent` is (size, element): an array's element stride, or the object
     size for a non-array. One past the end is `object + sizeof`; a
     strength-reduced loop bound adds the field offset to it
-    (`&a[N].field`), and a folded `a[i - 1]` starts one element before the
-    array. Anything further out is not read as this object."""
+    (`&a[N].field`), and a folded `a[i - k]` starts k elements before the
+    array (`names[week - 1]`, `spriteNames[id - 22]`). A non-array is only
+    read one past its end."""
     if extent is None:
         return False
     size, element = extent
@@ -432,7 +441,8 @@ def outside_operand(addend: int, extent: tuple[int, int] | None) -> bool:
         return False
     if element == size:
         return addend == size
-    return size <= addend < size + element or -element <= addend < 0
+    return size <= addend < size + element or (addend < 0 and addend % element == 0) \
+        or -element <= addend < 0
 
 
 def claim_extent(size: int | None, type_spelling: str) -> tuple[int, int] | None:
@@ -466,6 +476,8 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
     """
     by_symbol: dict[str, list[Vote]] = defaultdict(list)
     by_owner: dict[int, set[tuple[str, str]]] = defaultdict(set)
+    site_only = [vote for vote in votes if vote.site_only]
+    votes = [vote for vote in votes if not vote.site_only]
     for vote in votes:
         by_symbol[vote.symbol].append(vote)
         if not content_named(vote.symbol):
@@ -571,6 +583,13 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
                 pairing.verdict, pairing.reason = "admitted", ""
             if pairing.verdict == "admitted":
                 aliases.extend(v for v in mine if v.addend and v.typ == DIR32)
+    from homm3.core.msvc_names import mask
+    for vote in site_only:
+        claimed = claimed_name_at(vote.owner)
+        if (vote.typ == DIR32 and claimed is not None
+                and (claimed == vote.symbol or vote.private and mask(claimed) == mask(vote.symbol))
+                and outside_operand(vote.addend, extent_of(vote.owner))):
+            aliases.append(vote)
     return pairings, aliases
 
 
