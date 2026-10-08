@@ -9,6 +9,8 @@ namespace {
 #include <gtk/gtk.h>
 }
 
+#include "editor/FindDlg.h"
+
 #include <bitset>
 #include <vector>
 
@@ -16,7 +18,6 @@ namespace {
 #include "artifact.h"
 #include "objnames.h"
 #include "editor/cppbridge.h"
-#include "editor/FindDlg.h"
 #include "editor/GameResource.h"
 #include "editor/ObjectSpecializations.h"
 #include "creaturetype.h"
