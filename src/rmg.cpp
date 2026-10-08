@@ -4182,8 +4182,7 @@ bool TRmgTemplateZone::isUsable() const
     s32 treasureDensities[RMG_TREASURE_BAND_COUNT];
     s32 treasureCounts[RMG_TREASURE_BAND_COUNT] = {0};
     for (s32 band = 0; band < RMG_TREASURE_BAND_COUNT; ++band)
-        treasureDensities[band] = m_treasure[band].m_maximum >= RMG_TREASURE_MINIMUM_VALUE
-            && m_treasure[band].m_density > 0 ? m_treasure[band].m_density : 0;
+        treasureDensities[band] = m_treasure[band].isActive() ? m_treasure[band].m_density : 0;
     return hasRepresentableRmgDensities(treasureDensities, treasureCounts, RMG_TREASURE_BAND_COUNT);
 }
 
@@ -9466,6 +9465,11 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     return 1;
 }
 
+// The step loop's active-band test is a free inline site after the early
+// return: it divides that path's destructor budget so both vector _Destroy
+// calls stay out of line, leaving the first discard enough to expand reset.
+// The same call in the first loop shrinks this body's own budget and loses
+// that (73.06% against 95.66%). Mac 0x24b844 clears the counts by memset.
 VA(0x00547360, 0x460)
 MAC_ADDRESS(0x24b6e8, 0x358)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
@@ -9491,10 +9495,11 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         spacing = static_cast<int>(sqrt(static_cast<double>(1600 / density)));
     else
         spacing = static_cast<int>(sqrt(static_cast<double>(800 / density)));
-    int count[3] = {0, 0, 0};
+    int count[3];
+    memset(count, 0, sizeof(count));
     int step[3];
     for (band = 0; band < 3; ++band) {
-        if (slot->m_treasure[band].m_maximum >= 100 && slot->m_treasure[band].m_density > 0)
+        if (slot->m_treasure[band].isActive())
             step[band] = product / slot->m_treasure[band].m_density;
     }
     for (;;) {

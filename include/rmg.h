@@ -608,6 +608,11 @@ struct TRmgTreasureRange {
     int m_minimum;
     int m_maximum;
     int m_density;
+
+    bool isActive() const
+    {
+        return m_maximum >= RMG_TREASURE_MINIMUM_VALUE && m_density > 0;
+    }
 };
 
 // ReadRmgTemplateZones allocates 0xd4 bytes and constructs connections at
