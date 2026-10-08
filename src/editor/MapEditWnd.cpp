@@ -97,70 +97,6 @@ bool TGameObjectDataSource::OnRenderFileData()
     return true;
 }
 
-// The mouse wheel's scroll line count (MFC's _AfxGetMouseScrollLines),
-// not implemented on Loki.
-class TGetMouseScrollLinesFunc {
-public:
-    TGetMouseScrollLinesFunc()
-        : _m_bGotScrollLines(false),
-          _m_bRegisteredMessage(false),
-          _m_cachedScrollLines(0),
-          _m_msgGetScrollLines(0),
-          _m_registeredMessage(0)
-    {
-    }
-
-    unsigned int operator()();
-
-private:
-    bool _m_bGotScrollLines;
-    bool _m_bRegisteredMessage;
-    unsigned int _m_cachedScrollLines;
-    unsigned int _m_msgGetScrollLines;
-    uword _m_registeredMessage;
-};
-
-unsigned int TGetMouseScrollLinesFunc::operator()()
-{
-    g_warning("TGetMouseScrollLinesFunc::operator() ...not implemented!\n");
-    return 0;
-}
-
-TGetMouseScrollLinesFunc getMouseScrollLines;
-
-// A cell's tile rectangle hatched with every third pixel of each row in
-// color, clipped to pImage.
-inline void drawCellHatchedRect(const CPoint& pos, uword color, TZoom zoom, GdkImage* pImage)
-{
-    unsigned int tileSize = akZoomTraits[zoom].m_tileSize;
-    int left = pos.x;
-    int top = pos.y;
-    int right = left + tileSize;
-    int bottom = top + tileSize;
-    int phase = 3;
-    if (left < 0)
-        left = 0;
-    if (top < 0)
-        top = 0;
-    if (right > pImage->width)
-        right = pImage->width;
-    if (bottom > pImage->height)
-        bottom = pImage->height;
-    right--;
-    bottom--;
-    guchar* pBits = (guchar*)pImage->mem;
-    guchar* pRow = pBits + pImage->bpl * top + pImage->bpp * left;
-    guchar* pEnd = pBits + pImage->bpl * bottom + pImage->bpp * right;
-    uword* p;
-    unsigned int span = pImage->bpp * (right - left);
-    for (; pRow < pEnd; pRow += pImage->bpl) {
-        for (p = (uword*)(pRow + span) - phase; p >= (uword*)pRow; p -= 3)
-            *p = color;
-        if (--phase <= 0)
-            phase = 3;
-    }
-}
-
 // The grid's one-pixel lines and the black beyond the map's edges, drawn
 // into the 16-bit off-screen image.
 static inline void fillRect(const CRect& rect, uword color, GdkImage* pImage)
@@ -204,6 +140,70 @@ static inline void drawVLine(int x, uword color, GdkImage* pImage)
         p += pImage->width;
     }
 }
+
+// A cell's tile rectangle hatched with every third pixel of each row in
+// color, clipped to pImage.
+inline void drawCellHatchedRect(const CPoint& pos, uword color, TZoom zoom, GdkImage* pImage)
+{
+    unsigned int tileSize = akZoomTraits[zoom].m_tileSize;
+    int left = pos.x;
+    int top = pos.y;
+    int right = left + tileSize;
+    int bottom = top + tileSize;
+    int phase = 3;
+    if (left < 0)
+        left = 0;
+    if (top < 0)
+        top = 0;
+    if (right > pImage->width)
+        right = pImage->width;
+    if (bottom > pImage->height)
+        bottom = pImage->height;
+    right--;
+    bottom--;
+    guchar* pBits = (guchar*)pImage->mem;
+    guchar* pRow = pBits + pImage->bpl * top + pImage->bpp * left;
+    guchar* pEnd = pBits + pImage->bpl * bottom + pImage->bpp * right;
+    uword* p;
+    unsigned int span = pImage->bpp * (right - left);
+    for (; pRow < pEnd; pRow += pImage->bpl) {
+        for (p = (uword*)(pRow + span) - phase; p >= (uword*)pRow; p -= 3)
+            *p = color;
+        if (--phase <= 0)
+            phase = 3;
+    }
+}
+
+// The mouse wheel's scroll line count (MFC's _AfxGetMouseScrollLines),
+// not implemented on Loki.
+class TGetMouseScrollLinesFunc {
+public:
+    TGetMouseScrollLinesFunc()
+        : _m_bGotScrollLines(false),
+          _m_bRegisteredMessage(false),
+          _m_cachedScrollLines(0),
+          _m_msgGetScrollLines(0),
+          _m_registeredMessage(0)
+    {
+    }
+
+    unsigned int operator()();
+
+private:
+    bool _m_bGotScrollLines;
+    bool _m_bRegisteredMessage;
+    unsigned int _m_cachedScrollLines;
+    unsigned int _m_msgGetScrollLines;
+    uword _m_registeredMessage;
+};
+
+unsigned int TGetMouseScrollLinesFunc::operator()()
+{
+    g_warning("TGetMouseScrollLinesFunc::operator() ...not implemented!\n");
+    return 0;
+}
+
+TGetMouseScrollLinesFunc getMouseScrollLines;
 
 }  // namespace
 
