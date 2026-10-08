@@ -1,0 +1,123 @@
+# Loki h3maped census (homm3 loki census); image sha256 0d5614c407a9977d877bbe2ee7e35c476670b006cd88981ca40366fe2138559d
+# object	kind	text_start	text_end	functions	static	linkonce	file	evidence
+0	project	0812ebd0	0812f107	4	0	0		
+1	project	0812f110	0812f517	5	2	0		
+2	project	0812f520	08135e8c	137	7	571	GUIGameObject.cpp	__FILE__ x201
+3	project	08135e90	08136352	3	2	9	AdvObjectTypeTraits.cpp	__FILE__ x3
+4	project	08136360	08136754	9	3	27	Army.cpp	__FILE__ x2
+5	project	08136760	08137dd8	8	7	19	Artifact.cpp	__FILE__ x3
+6	project	08137de0	08137e4c	2	1	7		class T16bppPalette x1 (file name inferred)
+7	project	08137e50	08139b30	30	3	176	BlackBox.cpp	__FILE__ x23
+8	project	08139b30	0813a0d8	4	3	0	Colors.cpp	__FILE__ x3
+9	project	0813a0e0	0813af6f	10	5	5	CreatureType.cpp	__FILE__ x4
+10	project	0813af70	0813b27e	6	1	2	Error.cpp	anonymous namespace x1
+11	project	0813b280	0813bc54	13	3	38	Event.cpp	__FILE__ x6
+12	project	0813bc60	08157c08	278	13	1287	GameMap.cpp	__FILE__ x339
+13	project	08157c10	081584d0	30	4	24	GameObject.cpp	__FILE__ x1
+14	project	081584d0	08158972	3	2	0	GameResource.cpp	__FILE__ x3
+15	project	08158980	08161d38	98	25	95	Hero.cpp	__FILE__ x46
+16	project	08161d40	08162c8a	11	8	4	HeroDefs.cpp	__FILE__ x6
+17	project	08162c90	08164805	22	1	24	LinePlacement.cpp	__FILE__ x26
+18	project	08164810	0816f19f	60	57	0	MapEditorText.cpp	__FILE__ x115
+19	project	0816f1a0	08170728	26	3	17	Monster.cpp	__FILE__ x17
+20	project	08170730	08170af4	4	3	0		
+21	project	08170b00	081770f0	119	9	64	ObjectSpecializations.cpp	__FILE__ x100
+22	project	081770f0	08177d40	11	5	43	ObjectSprites.cpp	__FILE__ x7
+23	project	08177d40	08177fb8	5	4	1		
+24	project	08177fc0	0817891d	4	3	0	Player.cpp	__FILE__ x5
+25	project	08178920	08178cc4	7	3	2	ResourceQuantities.cpp	__FILE__ x3
+26	project	08178cd0	081791fc	8	3	1	ResourceQuantitiesDlg.cpp	__FILE__ x1
+27	project	08179200	08179f9c	31	4	12	RiverPlacement.cpp	__FILE__ x9
+28	project	08179fa0	0817ad3c	31	4	6	RoadPlacement.cpp	__FILE__ x9
+29	project	0817ad40	0817c1e8	33	3	160	SeersHut.cpp	__FILE__ x23
+30	project	0817c1f0	0817ce4a	7	5	4	SpellDefs.cpp	__FILE__ x7
+31	project	0817ce50	08183634	43	4	111	TerrainPlacement.cpp	__FILE__ x65
+32	project	08183640	08184ee0	17	6	2	Tile.cpp	__FILE__ x13
+33	project	08184ee0	081851d8	3	2	1	TilePoint.cpp	__FILE__ x5
+34	project	081851e0	08186574	15	3	12	TimedEvent.cpp	__FILE__ x12
+35	project	08186580	0818dc34	50	7	158	Town.cpp	__FILE__ x40
+36	project	0818dc40	0818dedc	5	1	181	VictoryCondition.cpp	__FILE__ x3
+37	project	0818dee0	08191f14	39	9	64	ResourceManager.cpp	__FILE__ x1
+38	project	08191f20	08192b99	26	0	2		class Bitmap816 x14 (file name inferred)
+39	project	08192ba0	081950d4	38	2	2	Bitmap16.cpp	__FILE__ x6
+40	project	081950e0	08196045	21	4	1	Bitmap24.cpp	__FILE__ x2
+41	project	08196050	0819653c	16	1	1	Bitmap8.cpp	__FILE__ x1
+42	project	08196540	08197c5c	22	1	48		class LODFile x18 (file name inferred)
+43	project	08197c60	081988e1	14	1	56	TextResource.cpp	__FILE__ x3
+44	project	081988f0	0819ba5b	84	0	1		class CSprite x24 (file name inferred)
+45	project	0819ba60	081a5094	58	2	1	CSpriteFrame.cpp	__FILE__ x71
+46	project	081a50a0	081a54ed	7	0	0		class CSequence x7 (file name inferred)
+47	project	081a54f0	081a7720	29	7	235	ObjectType.cpp	__FILE__ x18
+48	project	081a7720	081aa5d4	38	3	2		class TPalette16 x24 (file name inferred)
+49	project	081aa5e0	081aa6e4	7	0	1		class resource x4 (file name inferred)
+50	project	081aa6f0	081aa7f4	2	0	1		class sample x2 (file name inferred)
+51	project	081aa800	081b421c	411	6	19	cppbridge.cpp	__FILE__ x11
+52	project	081b4220	081b4339	4	0	1		class TGenericResource x2 (file name inferred)
+53	project	081b4340	081bb914	144	4	118	MapView.cpp	__FILE__ x143
+54	project	081bb920	081bd304	46	3	7	MapFrameWnd.cpp	__FILE__ x59
+55	project	081bd310	081c523c	95	7	32	MapEditWnd.cpp	__FILE__ x99
+56	project	081c5240	081c6654	20	3	5	MiniMapWnd.cpp	__FILE__ x13
+57	project	081c6660	081ca51c	60	4	161	MapDoc.cpp	__FILE__ x114
+58	project	081ca520	081cb40c	17	3	3	TileHRuler.cpp	__FILE__ x16
+59	project	081cb410	081cc18c	17	3	1	TileVRuler.cpp	__FILE__ x16
+60	project	081cc190	081cd478	19	1	1	Font.cpp	__FILE__ x1
+61	project	081cd480	081ce2cc	16	3	5	ToolkitWnd.cpp	__FILE__ x12
+62	project	081ce2d0	081ce584	5	3	0	ToolkitBase.cpp	__FILE__ x2
+63	project	081ce590	081ce9ac	6	3	1	EraseToolkit.cpp	__FILE__ x1
+64	project	081ce9b0	081cedcc	6	3	1	RoadToolkit.cpp	__FILE__ x1
+65	project	081cedd0	081cf1ec	6	3	1	RiverToolkit.cpp	__FILE__ x1
+66	project	081cf1f0	081cf4e8	7	3	1		class TTerrainToolkit x3 (file name inferred)
+67	project	081cf4f0	081d231c	21	5	99	ObjectPaletteWnd.cpp	__FILE__ x38
+68	project	081d2320	081d40d9	14	1	5	GzBuf.cpp	__FILE__ x29
+69	project	081d40e0	081d5868	10	3	27	MapSpecsSheet.cpp	__FILE__ x8
+70	project	081d5870	081d6360	15	5	2	MapSpecsGeneralPage.cpp	__FILE__ x3
+71	project	081d6360	081d8310	28	4	15	MapSpecsLossCondPage.cpp	__FILE__ x21
+72	project	081d8310	081da754	17	3	35	MapSpecsPlayerSpecsPage.cpp	__FILE__ x29
+73	project	081da760	081db59c	16	3	10	MapSpecsRumorsPage.cpp	__FILE__ x9
+74	project	081db5a0	081dcf84	52	7	5	MapSpecsTeamsPage.cpp	__FILE__ x18
+75	project	081dcf90	081de5b4	20	3	8	MapSpecsTimedEventsPage.cpp	__FILE__ x20
+76	project	081de5c0	081defec	13	3	1	EditRumorDlg.cpp	__FILE__ x2
+77	project	081deff0	081e6284	28	3	16	MapValidation.cpp	__FILE__ x26
+78	project	081e6290	081e6d3c	11	4	36	FindDlg.cpp	__FILE__ x4
+79	project	081e6d40	081e76c0	12	3	1	EditTimedEventSheet.cpp	__FILE__ x2
+80	project	081e76c0	081e87e8	18	4	2	EditTimedEventGeneralPage.cpp	__FILE__ x5
+81	project	081e87f0	081e8c94	10	3	1	EditTimedEventResourcesPage.cpp	__FILE__ x1
+82	project	081e8ca0	081e9a24	14	3	62	EditArtifactDlg.cpp	__FILE__ x7
+83	project	081e9a30	081eb34c	34	3	11	HeroPropsSheet.cpp	__FILE__ x14
+84	project	081eb350	081ee6a0	39	4	27	HeroPropsGeneralPage.cpp	__FILE__ x32
+85	project	081ee6a0	081ef154	28	3	3	HeroPropsCreaturesPage.cpp	__FILE__ x4
+86	project	081ef160	081f0dc4	25	3	27	HeroPropsArtifactsPage.cpp	__FILE__ x21
+87	project	081f0dd0	081f323c	36	5	30	HeroPropsSecSkillsPage.cpp	__FILE__ x14
+88	project	081f3240	081f5c5c	38	3	5	ArmyDlg.cpp	__FILE__ x22
+89	project	081f5c60	081f6248	9	3	1	SignPropsDlg.cpp	__FILE__ x1
+90	project	081f6250	081f68fc	12	3	5	SelectHeroClassDlg.cpp	__FILE__ x4
+91	project	081f6900	081f8d30	32	3	7	TownPropsBuildingsPage.cpp	__FILE__ x35
+92	project	081f8d30	081f9398	12	3	1	TownPropsGarrisonPage.cpp	__FILE__ x1
+93	project	081f93a0	081fc0a4	22	3	4	TownPropsGeneralPage.cpp	__FILE__ x28
+94	project	081fc0b0	081fd304	10	3	1	TownPropsSheet.cpp	__FILE__ x10
+95	project	081fd310	081fda10	10	3	3	TownPropsSpellsPage.cpp	__FILE__ x2
+96	project	081fda10	081ff40c	19	3	17	TownPropsTimedEventsPage.cpp	__FILE__ x28
+97	project	081ff410	08200100	8	3	2	EditTownEventSheet.cpp	__FILE__ x5
+98	project	08200100	08200c0c	15	3	3	EditTownEventBuildingsPage.cpp	__FILE__ x8
+99	project	08200c10	08201164	9	3	2	EditTownEventCreaturesPage.cpp	__FILE__ x2
+100	project	08201170	082019d8	10	3	1	ArtifactPropsSheet.cpp	__FILE__ x3
+101	project	082019e0	082020cc	9	3	1		class TArtifactPropsGeneralPage x4 (file name inferred)
+102	project	082020d0	08202730	12	3	1	TreasurePropsGuardiansPage.cpp	__FILE__ x1
+104	libstdc++	083278e0	08327d26	22	0	0		class filebuf x22 (file name inferred)
+105	libstdc++	08327d30	0832a8d2	109	2	8		class istream x51 (file name inferred)
+106	libstdc++	0832a8e0	0832ad7f	4	0	0		class istream x3 (file name inferred)
+107	libstdc++	0832ad80	0832af26	2	0	0		class istream x2 (file name inferred)
+108	libstdc++	0832af28	0832af81	2	0	0		class streambuf x2 (file name inferred)
+109	libstdc++	0832af90	0832be37	136	0	5		class streambuf x78 (file name inferred)
+110	libstdc++	0832be40	0832ce85	39	2	9		class strstreambuf x21 (file name inferred)
+111	libstdc++	0832ce90	0832cf4b	2	0	0		class _IO_istream_withassign x1 (file name inferred)
+113	libstdc++	0832cf4c	0832cf55	1	0	0		class ios x1 (file name inferred)
+114	libstdc++	0832cf64	0832db3d	24	9	0		
+115	libstdc++	0832de34	0832e5bf	23	0	2		class exception x2 (file name inferred)
+116	libstdc++	0832f464	0832f4df	4	0	2		
+117	libstdc++	0832f4e4	0832f579	1	0	0		
+118	libstdc++	0832f584	0832f6d9	1	0	0		
+119	libstdc++	0832f6e4	0832f779	1	0	0		
+120	libstdc++	0832f784	0832f829	1	0	0		
+121	libstdc++	0832f834	0832fd71	18	0	9		class type_info x2 (file name inferred)
+122	libstdc++	0832fd84	08330919	27	0	14		
