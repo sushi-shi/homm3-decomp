@@ -11,9 +11,9 @@
 // from their users; their names are not proven.
 #include <assert.h>
 #include <stdlib.h>
-#include <limits>
 #include <set>
 #include <vector>
+#include <limits>
 
 #include "editor/TerrainPlacement.h"
 #include "editor/Clamp.h"
