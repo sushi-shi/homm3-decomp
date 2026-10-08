@@ -73,7 +73,7 @@ void checkCombatCheatCode(std::string& chatString)
     }
 
     if (recognized) {
-        chatString = g_generalText->getText(GENERAL_TEXT_CHEATER);
+        chatString = g_generalText->GetText(GENERAL_TEXT_CHEATER);
         markGameAsCheated();
     }
 }

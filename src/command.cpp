@@ -1690,7 +1690,7 @@ void combatManager::doCommand(int command)
             if (spell == -1)
                 break;
             if (m_spellsCast[m_currentSide] && !m_debugNoSpellLimit) {
-                normalDialog(g_generalText->getText(
+                normalDialog(g_generalText->GetText(
                                  GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST),
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
@@ -1758,12 +1758,12 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
         if (rewards.size() == 0) {
             // General text 222 is the "<hero> learns <spell>" opener;
             // its enum name describes those two arguments.
-            msg = formatString(g_generalText->getText(GENERAL_TEXT_EAGLE_EYE_LEARNS_SPELL_FORMAT), winner->m_name,
+            msg = formatString(g_generalText->GetText(GENERAL_TEXT_EAGLE_EYE_LEARNS_SPELL_FORMAT), winner->m_name,
                                 g_spellTraits[spell].m_name);
         } else {
             if (x == m_eagleEyeData[winningGroup].end()
                 || rewards.size() == VICTORY_DIALOG_PAGE_SIZE - 1)
-                msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                msg += g_generalText->GetText(GENERAL_TEXT_LIST_AND);
             else
                 msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             msg += g_spellTraits[spell].m_name;
@@ -1810,7 +1810,7 @@ void combatManager::showLootedArtifacts(
                               sRandom(1, 7))
                     .c_str(),
                 -1, 3);
-            extendedDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_CAPTURED_ARTIFACT), rewards, -1, -1,
+            extendedDialog(g_generalText->GetText(GENERAL_TEXT_COMBAT_CAPTURED_ARTIFACT), rewards, -1, -1,
                             dialogTimeout);
             rewards.clear();
         }
@@ -2025,7 +2025,7 @@ MAC_ADDRESS(0x085c98, 0xd4)
 inline int combatManager::doSurrender()
 {
     g_surrenderCost = getSurrenderCost();
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_SURRENDER_OFFER_FORMAT),
+    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_SURRENDER_OFFER_FORMAT),
             m_heroes[1 - m_currentSide]->m_name, g_surrenderCost);
     normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
@@ -2501,7 +2501,7 @@ void combatManager::processFirstAid(army* currentArmy)
                 DATA_COMPGEN(0x00660a94, regenerSampleName,
                              "Regener.wav"));
             std::string text = formatString(
-                g_generalText->getText(GENERAL_TEXT_FIRST_AID_HEAL_FORMAT), currentArmy->getName(),
+                g_generalText->GetText(GENERAL_TEXT_FIRST_AID_HEAL_FORMAT), currentArmy->getName(),
                 targetArmy->getName(), result);
             m_combatWindow->combatMessage(text.c_str(), 1, 0);
             spellEffect(eSpellEffectRegeneration, targetArmy, 100, 0);
@@ -2918,12 +2918,12 @@ std::string combatManager::getTowerString(TWallSection wall, long archers,
 {
     if (m_wallLevel[wall] <= 0) {
         return formatString(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT),
+            g_generalText->GetText(GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT),
             s_wallTraits[m_defendingTown->m_type][wall].m_name);
     }
 
     return formatString(
-        g_generalText->getText(GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT),
+        g_generalText->GetText(GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT),
         s_wallTraits[m_defendingTown->m_type][wall].m_name,
         skill, archers * 2, archers * 3);
 }
@@ -2969,7 +2969,7 @@ bool combatManager::handleCombatPlayerDrop(unsigned long dpid, message& msg)
 
     if (gamePos == m_playerIds[0]) {
         normalDialogTimeOut(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED),
+            g_generalText->GetText(GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED),
             1, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
         msg.m_id = 0x4000;
         msg.m_codeX = 1;
@@ -2977,7 +2977,7 @@ bool combatManager::handleCombatPlayerDrop(unsigned long dpid, message& msg)
     }
 
     normalDialogTimeOut(
-        g_generalText->getText(GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED),
+        g_generalText->GetText(GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED),
         1, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
     m_sideRetreated[1] = 1;
     resetCycleTimers();

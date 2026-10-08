@@ -203,7 +203,7 @@ unsigned char initializeCampaignMusicTable()
     unsigned strSize = 0;
     unsigned cue;
     for (cue = 0; cue < CAMPAIGN_MUSIC_CUE_COUNT; ++cue)
-        strSize += strlen(textResource->getText(cue)) + 1;
+        strSize += strlen(textResource->GetText(cue)) + 1;
 
     DATA_COMPGEN_GUARD(0x00694e18, campaignMusicTracksGuard, campaignMusicTracks)
 
@@ -215,7 +215,7 @@ unsigned char initializeCampaignMusicTable()
 
     char* destination = campaignMusicTracks.get();
     for (cue = 0; cue < CAMPAIGN_MUSIC_CUE_COUNT; ++cue) {
-        const char* source = textResource->getText(cue);
+        const char* source = textResource->GetText(cue);
         unsigned length = strlen(source) + 1;
         memcpy(destination, source, length);
         g_campaignMusicCues[cue].m_track = destination;

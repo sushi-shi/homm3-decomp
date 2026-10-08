@@ -580,7 +580,7 @@ void THillFortWindow::handleClick(message& msg)
     switch (msg.m_codeY) {
     case HERO_PORTRAIT_ID:
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                g_generalText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                 g_game->getCurrHero()->m_name, g_game->getCurrHero()->getClassName());
         if (rightClick)
             normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);

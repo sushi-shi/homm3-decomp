@@ -1412,7 +1412,7 @@ MAC_ADDRESS(0x1f4d28, 0x120)
 void doFreelancersGuild(town* currentTown)
 {
     if (currentTown->m_visitingHeroId == -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT),
                 g_specialBuildingNames[currentTown->m_type][4]);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
@@ -2033,10 +2033,10 @@ void TGiveResourceWindow::update(bool update)
 
     switch (g_marketSource) {
     case MARKET_SOURCE_MARKETPLACE:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_MARKETPLACE));
+        strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_MARKETPLACE));
         break;
     case MARKET_SOURCE_TRADING_POST:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADING_POST));
+        strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_TRADING_POST));
         break;
     case MARKET_SOURCE_FREELANCER:
         strcpy(g_text, g_quickViewText[213]);
@@ -2046,10 +2046,10 @@ void TGiveResourceWindow::update(bool update)
     broadcastMessage(msg);
 
     msg.m_codeY = 14;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_KINGDOM_RESOURCES));
+    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_KINGDOM_RESOURCES));
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_PLAYERS));
+    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_PLAYERS));
     msg.m_codeX = 3;
     msg.m_codeY = 15;
     msg.m_extraText = g_text;
@@ -2425,10 +2425,10 @@ void TSellArtifactWindow::update(bool update)
                 (g_backpackStart + g_selectedArtifact - 18)
                 % g_marketHero->getNumberInBackpack(1)).m_artifactId;
         }
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_RESOURCE_FOR_ARTIFACT_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_TRADE_RESOURCE_FOR_ARTIFACT_FORMAT),
                 rightQty,
-                (rightQty > 1) ? g_generalText->getText(GENERAL_TEXT_UNITS)
-                                : g_generalText->getText(GENERAL_TEXT_UNIT),
+                (rightQty > 1) ? g_generalText->GetText(GENERAL_TEXT_UNITS)
+                                : g_generalText->GetText(GENERAL_TEXT_UNIT),
                 g_resourceNames[g_leftResource], g_artifactTraits[art].m_name);
     } else if (g_leftDenominated) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
@@ -2446,10 +2446,10 @@ void TSellArtifactWindow::update(bool update)
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_ARTIFACTS_FORMAT), g_marketHero->m_name);
+    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_HERO_ARTIFACTS_FORMAT), g_marketHero->m_name);
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_AVAILABLE));
+    strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_TRADE_AVAILABLE));
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;

@@ -116,7 +116,7 @@ bool initializeSeerHutText()
     if (!sheet)
         return 0;
 
-    if (sheet->getNumberOfRows() < 60)
+    if (sheet->GetNumberOfRows() < 60)
         return 0;
 
     for (int c = 0; c < 3; ++c) {
@@ -124,8 +124,8 @@ bool initializeSeerHutText()
         loadSeerHutTextColumn(sheet, &g_seerHutTextA[c], c + 4);
     }
 
-    for (int row = 50; row < sheet->getNumberOfRows(); ++row) {
-        const char* name = sheet->getRow(row)[0];
+    for (int row = 50; row < sheet->GetNumberOfRows(); ++row) {
+        const char* name = sheet->GetRow(row)[0];
         if (!name[0] || name[0] == ' ')
             continue;
         g_seerHutNames.push_back(name);
@@ -2420,7 +2420,7 @@ std::string TSeerHut::getRolloverText(int player) const
 
     std::string text;
     text = formatString(
-        g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
+        g_generalText->GetText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
         getName());
 
     if (m_quest) {
@@ -2440,7 +2440,7 @@ std::string TSeerHut::getQuickInfoText(int player) const
 
     std::string text;
     text = formatString(
-        g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
+        g_generalText->GetText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
         getName());
 
     if (m_quest) {

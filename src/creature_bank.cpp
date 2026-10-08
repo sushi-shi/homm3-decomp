@@ -83,7 +83,7 @@ unsigned char initializeCreatureBankTraits()
     if (!sheet)
         return 0;
     // DC retains ResourceManager::Dispose; Complete expands the wrapper.
-    if (sheet->getNumberOfRows() < 13) {
+    if (sheet->GetNumberOfRows() < 13) {
         ResourceManager::dispose(sheet);
         return 0;
     }
@@ -114,7 +114,7 @@ unsigned char initializeCreatureBankTraits()
     int row = 2;
     for (int bank = 0; bank < CREATURE_BANK_COUNT; ++bank) {
         type_creature_bank_traits* traits = &g_creatureBankTraits[bank];
-        const TSpreadsheetResource::TStringVector& resource = sheet->getRow(row);
+        const TSpreadsheetResource::TStringVector& resource = sheet->GetRow(row);
         traits->m_name = resource[0];
 
         type_creature_bank_level* level = traits->m_levels;
@@ -128,7 +128,7 @@ unsigned char initializeCreatureBankTraits()
             }
             level->m_rewardCreature = rewardTypes[bank];
 
-            initializeCreatureBankLevel(*level, sheet->getRow(row));
+            initializeCreatureBankLevel(*level, sheet->GetRow(row));
 
             ++row;
             ++level;

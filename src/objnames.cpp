@@ -145,7 +145,7 @@ void initializeAdventureObjectTraits()
     unsigned int total = 0;
     unsigned int line;
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line)
-        total += strlen(names->getText(line)) + 1;
+        total += strlen(names->GetText(line)) + 1;
 
     nameBuffer = TAutoArrayPtr<char>(new char[total]);
     if (nameBuffer.get() == 0)
@@ -153,7 +153,7 @@ void initializeAdventureObjectTraits()
 
     char* next = nameBuffer.get();
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line) {
-        const char* text = names->getText(line);
+        const char* text = names->GetText(line);
         unsigned int size = strlen(text) + 1;
         memcpy(next, text, size);
         g_adventureObjectTraitRows[line].m_name = next;

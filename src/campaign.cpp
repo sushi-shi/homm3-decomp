@@ -150,7 +150,7 @@ MAC_ADDRESS(0x21e638, 0xb8)
 static int campaignSetSodHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
+        normalDialog(g_generalText->GetText(TCampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -168,7 +168,7 @@ MAC_ADDRESS(0x21e6f0, 0xb8)
 static int campaignSetArmHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
+        normalDialog(g_generalText->GetText(TCampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -186,7 +186,7 @@ MAC_ADDRESS(0x21e7a8, 0xb8)
 static int campaignSetCusHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
+        normalDialog(g_generalText->GetText(TCampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -204,7 +204,7 @@ MAC_ADDRESS(0x21e860, 0xb8)
 static int campaignSetExitHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
+        normalDialog(g_generalText->GetText(TCampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
                      -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -222,7 +222,7 @@ MAC_ADDRESS(0x21e918, 0xb8)
 static int campaignSetRoeHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
-        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
+        normalDialog(g_generalText->GetText(TCampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }

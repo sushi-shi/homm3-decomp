@@ -1453,13 +1453,13 @@ void showBuildingRewards(const town* thisTown,
     for (int i = 0; i < rewards.size(); i++) {
         if (i > 0) {
             if (i == rewards.size() - 1)
-                text += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                text += g_generalText->GetText(GENERAL_TEXT_LIST_AND);
             else
                 text += ", ";
         }
         text += getBuildingName(thisTown->m_type, rewards[i].m_qualifier);
     }
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
+    text = formatString(g_generalText->GetText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
@@ -1492,7 +1492,7 @@ void showCreatureRewards(const town* thisTown,
         int creature = static_cast<unsigned short>(rewards[i].m_qualifier);
         if (i > 0) {
             if (i == rewards.size() - 1)
-                msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                msg += g_generalText->GetText(GENERAL_TEXT_LIST_AND);
             else
                 msg += ", ";
         }
@@ -1500,7 +1500,7 @@ void showCreatureRewards(const town* thisTown,
         msg += getArmyName(creature, count);
     }
     long firstCount = rewards[0].m_qualifier >> 16;
-    msg = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
+    msg = formatString(g_generalText->GetText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
                          firstCount, msg.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
@@ -2081,14 +2081,14 @@ bool town::initializeBuildingCostsTables()
         row += 2;
         for (int special = 0; special < 9; ++special) {
             initializeBuildingCosts(s_specialBuildingCosts[type][special],
-                                    sheet->getRow(row));
+                                    sheet->GetRow(row));
             ++row;
         }
     }
 
     row += 3;
     for (int neutral = 0; neutral < SPECIAL_BUILDING_ID; ++neutral) {
-        initializeBuildingCosts(s_neutralBuildingCosts[neutral], sheet->getRow(row));
+        initializeBuildingCosts(s_neutralBuildingCosts[neutral], sheet->GetRow(row));
         ++row;
     }
 
@@ -2097,7 +2097,7 @@ bool town::initializeBuildingCostsTables()
         row += 2;
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
             initializeBuildingCosts(s_dwellingCosts[dwellingType][dwelling],
-                                    sheet->getRow(row));
+                                    sheet->GetRow(row));
             ++row;
         }
     }

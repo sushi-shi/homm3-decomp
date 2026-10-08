@@ -256,11 +256,11 @@ void TSplitWindow::setRolloverText(int codeY)
     switch (codeY) {
     case DIALOG_RETURN_SPLIT_CANCEL:
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_SPLIT_OTHER_ROLLOVER));
+                g_generalText->GetText(GENERAL_TEXT_SPLIT_OTHER_ROLLOVER));
         break;
     case DIALOG_RETURN_SPLIT_ACCEPT:
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
+                g_generalText->GetText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
                 g_creatureTypeTraits[m_creature].m_pluralName);
         break;
     default:

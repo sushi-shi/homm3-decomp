@@ -404,15 +404,15 @@ bool initializeArtifactTraitsTable()
             DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
                          "artraits.txt"));
         TResourcePtr<TSpreadsheetResource> traitsSheetGuard(traitsSheet);
-        if (!traitsSheet || traitsSheet->getNumberOfRows() < 146) {
+        if (!traitsSheet || traitsSheet->GetNumberOfRows() < 146) {
             return 0;
         }
 
         unsigned stringBytes = 0;
         int row;
         for (row = 2; row < 146; ++row) {
-            const char* name = traitsSheet->getSpreadsheet(row, 0);
-            const char* description = traitsSheet->getSpreadsheet(row, 22);
+            const char* name = traitsSheet->GetSpreadsheet(row, 0);
+            const char* description = traitsSheet->GetSpreadsheet(row, 22);
             stringBytes += strlen(description) + strlen(name) + 2;
         }
 
@@ -434,7 +434,7 @@ bool initializeArtifactTraitsTable()
         int id = 0;
         for (row = 2; row < 146; ++row) {
             const TSpreadsheetResource::TStringVector& values =
-                traitsSheet->getRow(row);
+                traitsSheet->GetRow(row);
             TArtifactTraits& traits = g_artifactTraitsStorage[id];
             const char* source = values[0];
             unsigned length = strlen(source) + 1;
@@ -488,14 +488,14 @@ bool initializeArtifactTraitsTable()
             DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
                          "artslots.txt"));
         TResourcePtr<TSpreadsheetResource> slotsSheetGuard(slotsSheet);
-        if (!slotsSheet || slotsSheet->getNumberOfRows() < 19) {
+        if (!slotsSheet || slotsSheet->GetNumberOfRows() < 19) {
             return 0;
         }
 
         unsigned stringBytes = 0;
         int slot;
         for (slot = 0; slot < 19; ++slot)
-            stringBytes += strlen(slotsSheet->getRow(slot)[0]) + 1;
+            stringBytes += strlen(slotsSheet->GetRow(slot)[0]) + 1;
 
         VA_COMPGEN(0x0044d340, 0x16, STATIC_DTOR, artifactSlotStrings)
         DATA(0x00694c98)
@@ -505,7 +505,7 @@ bool initializeArtifactTraitsTable()
 
         char* destination = artifactSlotStrings.get();
         for (slot = 0; slot < 19; ++slot) {
-            const char* source = slotsSheet->getRow(slot)[0];
+            const char* source = slotsSheet->GetRow(slot)[0];
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
             g_artifactSlotTraitsStorage[slot].m_name = destination;

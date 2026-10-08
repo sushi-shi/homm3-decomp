@@ -379,14 +379,14 @@ VA(0x00484230, 0x46)
 MAC_ADDRESS(0x092074, 0x70)
 std::string TCampaignSpellBonus::getText() const
 {
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x00484280, 0x46)
 MAC_ADDRESS(0x0920e4, 0x70)
 std::string TCampaignSpellScrollBonus::getText() const
 {
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SCROLL_FORMAT), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_SCROLL_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x004842d0, 0x3B)
@@ -489,7 +489,7 @@ std::string TCampaignCreatureBonus::getText() const
         name = g_creatureTypeTraits[m_creature].m_name;
     else
         name = g_creatureTypeTraits[m_creature].m_pluralName;
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 
 VA(0x004845f0, 0x24)
@@ -553,7 +553,7 @@ VA(0x004847a0, 0x3C)
 MAC_ADDRESS(0x092790, 0x70)
 std::string TCampaignBuildingBonus::getText() const
 {
-    const char* format = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT);
+    const char* format = g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT);
     return formatString(format, getBuildingName(m_town, m_building));
 }
 
@@ -582,7 +582,7 @@ VA(0x00484820, 0x40)
 MAC_ADDRESS(0x092840, 0x6c)
 std::string TCampaignArtifactBonus::getText() const
 {
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
                          g_artifactTraits[m_artifact].m_name);
 }
 
@@ -657,12 +657,12 @@ std::string TCampaignPrimarySkillBonus::getText() const
                 m_skills[stat], g_statNames[stat]);
             --remaining;
             if (remaining == 1)
-                list += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                list += g_generalText->GetText(GENERAL_TEXT_LIST_AND);
             else if (remaining > 0)
                 list += ", ";
         }
     }
-    list = formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), list.c_str());
+    list = formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), list.c_str());
     return list;
 }
 
@@ -717,7 +717,7 @@ VA(0x00484c50, 0x4B)
 MAC_ADDRESS(0x092d3c, 0x80)
 std::string TCampaignSecondarySkillBonus::getText() const
 {
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SKILL_FORMAT),
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_SKILL_FORMAT),
                          g_secondarySkillLevels[m_level - 1],
                          g_sSkillTraits[m_skill].m_name);
 }
@@ -799,15 +799,15 @@ std::string TCampaignResourceBonus::getText() const
         name = g_resourceNames[m_resource];
         break;
     case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
-        name = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_WOOD_AND_ORE);
+        name = g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_WOOD_AND_ORE);
         break;
     case CAMPAIGN_BONUS_RESOURCE_RARE:
-        name = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_RARE_RESOURCES);
+        name = g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_RARE_RESOURCES);
         break;
     case CAMPAIGN_BONUS_RESOURCE_NONE:
         break;
     }
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_amount, name);
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_amount, name);
 }
 
 VA(0x00484e20, 0xDE)
@@ -1129,7 +1129,7 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     campaign->loadScenario(source, &mapHeader);
     const char* mapName = mapHeader.m_mapName.c_str();
     return formatString(
-        g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT),
+        g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT),
         mapName);
 }
 
@@ -1228,8 +1228,8 @@ MAC_ADDRESS(0x093cf0, 0xa4)
 std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
 {
     if (m_choices[which].m_hero == -1)
-        return g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_RANDOM_HERO);
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
+        return g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_RANDOM_HERO);
+    return formatString(g_generalText->GetText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
                          g_heroTraits[m_choices[which].m_hero].m_defaultName);
 }
 
@@ -2414,7 +2414,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         m_regionMap = readValue<unsigned char>(file);
         m_campaignName = readLengthPrefixedString(file);
         if (m_campaignName.length() == 0)
-            m_campaignName = g_generalText->getText(GENERAL_TEXT_UNNAMED);
+            m_campaignName = g_generalText->GetText(GENERAL_TEXT_UNNAMED);
         m_campaignDesc = readLengthPrefixedString(file);
         m_variableDifficulty = readValue<signed char>(file) != 0;
         if (m_campaignVersion < 5)

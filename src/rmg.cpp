@@ -3501,8 +3501,8 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 #if defined(HOMM3_RMG_HOTFIX)
     s32 tableRows = countRmgPlacementRuleRows(sheet);
 #endif
-    for (; row < sheet->getNumberOfRows();) {
-        const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+    for (; row < sheet->GetNumberOfRows();) {
+        const TSpreadsheetResource::TStringVector& values = sheet->GetRow(row);
 #if defined(HOMM3_RMG_HOTFIX)
         if (row == RMG_FIRST_DATA_ROW + tableRows)
             break;
@@ -3558,7 +3558,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     }
 #else
     for (row = 3; row < ruleCount + 3; ++row) {
-        const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+        const TSpreadsheetResource::TStringVector& values = sheet->GetRow(row);
         TRmgObjectPlacementRule& rule = m_placementRules[row - 3];
         rule.m_adjacentScores.resize(ruleCount, 0);
         for (int index = 0; index < ruleCount; ++index)
@@ -4079,7 +4079,7 @@ static void readRmgTemplateConnections(const TSpreadsheetResource* sheet,
     int humanPlayers, int computerPlayers)
 {
     for (int connectionRow = firstRow; connectionRow < endRow; ++connectionRow) {
-        const TSpreadsheetResource::TStringVector& fields = sheet->getRow(connectionRow);
+        const TSpreadsheetResource::TStringVector& fields = sheet->GetRow(connectionRow);
         if (fields.size() > 84 && fields[76][0]
             && fields[76][0] != ' ' && fields[77][0]) {
             int firstZone = atoi(fields[76]);
@@ -4255,8 +4255,8 @@ void TRmgGenerator::loadTemplates()
     int row = 3;
     if (m_waterContent == RMG_WATER_ISLANDS)
         mapSize = max(mapSize / 2, 1);
-    for (; row < sheet->getNumberOfRows();) {
-        const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+    for (; row < sheet->GetNumberOfRows();) {
+        const TSpreadsheetResource::TStringVector& values = sheet->GetRow(row);
 #if defined(HOMM3_RMG_HOTFIX)
         if (values.size() <= 2)
 #else
@@ -4271,8 +4271,8 @@ void TRmgGenerator::loadTemplates()
         mapTemplate->m_maximumSize = atoi(values[2]);
         mapTemplate->m_name = values[0];
         int endRow = row + 1;
-        while (endRow < sheet->getNumberOfRows()
-            && (!sheet->getRow(endRow)[0][0] || sheet->getRow(endRow)[0][0] == ' '))
+        while (endRow < sheet->GetNumberOfRows()
+            && (!sheet->GetRow(endRow)[0][0] || sheet->GetRow(endRow)[0][0] == ' '))
             ++endRow;
         bool accepted = mapSize >= mapTemplate->m_minimumSize
             && mapSize <= mapTemplate->m_maximumSize;
@@ -4308,7 +4308,7 @@ void readRmgTemplateZones(
     int mapVersion)
 {
     for (int row = firstRow; row < endRow; ++row) {
-        const TSpreadsheetResource::TStringVector& values = sheet->getRow(row);
+        const TSpreadsheetResource::TStringVector& values = sheet->GetRow(row);
 #if defined(HOMM3_RMG_HOTFIX)
         if (values.size() > 3 && isRmgTemplateFieldSet(values[3]) &&
 #else

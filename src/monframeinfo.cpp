@@ -36,80 +36,80 @@ unsigned char initializeCreatureAnimationTraitsTable()
         DATA_COMPGEN(0x0067ff28, cranimSpreadsheetName, "cranim.txt"));
     if (!sheet)
         return 0;
-    if (sheet->getNumberOfRows() < 179) {
+    if (sheet->GetNumberOfRows() < 179) {
         ResourceManager::dispose(sheet);
         return 0;
     }
     int id = 0;
     int row = 2;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 6; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 13; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 4; ++t) {
-        initializeCreatureAnimationTraits(id, sheet->getRow(row));
+        initializeCreatureAnimationTraits(id, sheet->GetRow(row));
         ++id;
         ++row;
     } }

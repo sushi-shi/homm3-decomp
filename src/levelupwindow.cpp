@@ -67,7 +67,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         171, 66, 58, 64, PORTRAIT_ID,
         g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
+    sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
             thisHero->m_name);
     m_widgets.push_back(new textWidget(
         23, 22, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
@@ -100,7 +100,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             TEXT4_ID, 1, 0, 8));
         m_widgets.push_back(new textWidget(
             169, 325, 50, 46,
-            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_OR),
+            g_generalText->GetText(GENERAL_TEXT_LEVEL_UP_OR),
             "medfont.fnt", font::PRIMARY, TEXT5_ID, 5, 0, 8));
 
         m_widgets.push_back(new coloredBorderFrame(

@@ -305,7 +305,7 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
         {
             char tempText[256];
             sprintf(tempText,
-                    g_generalText->getText(GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
+                    g_generalText->GetText(GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
                     GameTime::elapsedSince(
                         static_cast<CPingMsg*>(netMsg)->m_pingTime));
             receiveChat(tempText, netMsg->m_from);
@@ -325,7 +325,7 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
             if (dpid == g_thisNetPlayerInfo.m_dpid) {
                 remoteCleanup();
                 normalDialog(
-                    g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
+                    g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 shutDown(0);
             }
@@ -555,7 +555,7 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
 
             if (retries >= 5) {
                 normalDialogTimeOut(
-                    g_generalText->getText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT),
+                    g_generalText->GetText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT),
                     2, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
                 if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
                     shutDown(0);
@@ -795,7 +795,7 @@ void __cdecl CChatManager::systemMsg(const char* format, ...)
     sprintf(
         finalText,
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+        g_generalText->GetText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
     m_isSysMsg = 1;
@@ -817,7 +817,7 @@ void CChatManager::playerDropMsg(const char* format, ...)
     sprintf(
         finalText,
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+        g_generalText->GetText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
     m_isSysMsg = 1;
@@ -839,7 +839,7 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
     sprintf(
         finalText,
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+        g_generalText->GetText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
     m_isSysMsg = 1;
@@ -1323,11 +1323,11 @@ MAC_ADDRESS(0x212d70, 0x220)
 void sendChat(const char* chatString, int toWho)
 {
     if (_strcmpi(chatString,
-                 g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
+                 g_generalText->GetText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
-            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
+            g_chatMan.systemMsg(g_generalText->GetText(GENERAL_TEXT_CHAT_PING_ALL));
         } else {
-            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
+            g_chatMan.systemMsg(g_generalText->GetText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
                 g_game->getPlayerName(toWho));
         }
 
@@ -1350,13 +1350,13 @@ void sendChat(const char* chatString, int toWho)
             DATA_COMPGEN(0x00682b44, chatNonHumanLineFormat,
                          "%s: (%s:%s) %s"),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
-            g_generalText->getText(GENERAL_TEXT_CHAT_WHISPER_TO_LINE_TAG),
+            g_generalText->GetText(GENERAL_TEXT_CHAT_WHISPER_TO_LINE_TAG),
             recipientName,
             chatString);
         sprintf(
             transformedChat,
             DATA_COMPGEN(0x00682b3c, chatNonHumanWireFormat, "(%s) %s"),
-            g_generalText->getText(GENERAL_TEXT_CHAT_WHISPER_WIRE_TAG),
+            g_generalText->GetText(GENERAL_TEXT_CHAT_WHISPER_WIRE_TAG),
             chatString);
         outgoingChat = transformedChat;
     } else {
@@ -1565,7 +1565,7 @@ void CWaitForReadyPlayersDlg::wait()
     while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
         creature = sRandom(0, 111);
 
-    setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
+    setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
     doModal(0);
 
@@ -1652,11 +1652,11 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
                     return onPlayerDrop(netMsg, msg);
 
                 case RS_SET_AS_HOST:
-                    g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
+                    g_chatMan.systemMsg(g_generalText->GetText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
                     break;
 
                 case RS_SESSION_LOST:
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
+                    normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                                  1, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
                     shutDown(0);
@@ -1892,7 +1892,7 @@ unsigned char handleMPlayerLaunch()
         sessions.destroy(1);
 
         if (!connected) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_RECONNECT_FAILED), 1,
+            normalDialog(g_generalText->GetText(GENERAL_TEXT_RECONNECT_FAILED), 1,
                          -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             remoteCleanup();
             return 0;
@@ -2058,7 +2058,7 @@ void updateCurrentPlayers()
         g_game->m_players[i].m_isHuman = 0;
         g_game->m_players[i].m_isLocal = 0;
         strcpy(g_game->m_players[i].m_name,
-               g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
+               g_generalText->GetText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     }
 
     g_numHumanPlayers = playerArray.getCount();
@@ -2078,7 +2078,7 @@ void handlePlayerDrop(unsigned long dpid)
                             "Handling player drop [%d]"),
                 dpid);
     g_chatMan.playerDropMsg(
-                  g_generalText->getText(GENERAL_TEXT_PLAYER_DROPPED_FORMAT),
+                  g_generalText->GetText(GENERAL_TEXT_PLAYER_DROPPED_FORMAT),
                   g_game->m_players[playerPos].m_name);
     updateCurrentPlayers();
 
@@ -2128,7 +2128,7 @@ void handleNewHost()
                 &msg, g_netLocalGamePos, false, true);
         }
     }
-    g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
+    g_chatMan.systemMsg(g_generalText->GetText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
 }
 
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
@@ -2202,7 +2202,7 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
         remoteCleanup();
 
         if (showMsg) {
-            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_DEFEATED));
+            strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_PLAYER_DEFEATED));
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
         }
@@ -2211,7 +2211,7 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
         g_gameOver = 1;
     } else {
         if (!g_goSolo && showMsg) {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
                     g_game->getPlayerName(deadGuy));
             normalDialog(g_text, 1, -1, -1, 10, deadGuy, -1, -1,
                          -1, 5000, -1, 0);
@@ -2275,12 +2275,12 @@ void handleNormalWinMsg(CNetMsg* netMsg)
     int localPlayer = g_game->getLocalPlayerGamePos();
 
     if (g_game->onSameTeam(message->m_gamePos, localPlayer)) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_TEAM_VICTORY), 1, -1, -1,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_TEAM_VICTORY), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_defeatedAllPlayers = 1;
         g_normalVictory = 1;
     } else {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_TEAM_DEFEAT), 1, -1, -1,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_TEAM_DEFEAT), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_defeatedAllPlayers = 0;
     }
@@ -2307,7 +2307,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
     while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
         creature = sRandom(0, 111);
 
-    setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
+    setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
     doModal(0);
 }
@@ -2338,7 +2338,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
                 break;
 
             case RS_SESSION_LOST:
-                normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
+                normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 shutDown(0);
@@ -2418,7 +2418,7 @@ void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     m_playerPos = playerPos;
     int creature = sRandom(0, 111);
-    setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
+    setup(g_generalText->GetText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 12);
     doModal(0);
 }
@@ -2442,11 +2442,11 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
                 return onPlayerDrop(netMsg, msg);
 
             case RS_SET_AS_HOST:
-                g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
+                g_chatMan.systemMsg(g_generalText->GetText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
                 break;
 
             case RS_SESSION_LOST:
-                normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
+                normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 shutDown(0);
@@ -2590,9 +2590,9 @@ void CGameTransferSmack::setPercentage(float pct)
     char text[256];
     char percentageText[256];
     if (m_sending)
-        strcpy(text, g_generalText->getText(GENERAL_TEXT_SENDING_GAME));
+        strcpy(text, g_generalText->GetText(GENERAL_TEXT_SENDING_GAME));
     else
-        strcpy(text, g_generalText->getText(GENERAL_TEXT_RECEIVING_GAME));
+        strcpy(text, g_generalText->GetText(GENERAL_TEXT_RECEIVING_GAME));
     sprintf(percentageText,
             DATA_COMPGEN(0x00682e40, transferPercentageFormat, "\n%0.0f%%"),
             pct * 100.0f);
@@ -2746,7 +2746,7 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         break;
 
     case RS_SESSION_LOST:
-        normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
+        normalDialog(g_generalText->GetText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         shutDown(0);
         break;

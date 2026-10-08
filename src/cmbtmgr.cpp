@@ -624,7 +624,7 @@ unsigned char combatManager::loadWallTraitsTable()
         DATA_COMPGEN(0x0066fec0, wallsSpreadsheetName, "walls.txt"));
     if (!sheet)
         return 0;
-    if (sheet->getNumberOfRows() < 179) {
+    if (sheet->GetNumberOfRows() < 179) {
         ResourceManager::dispose(sheet);
         return 0;
     }
@@ -634,7 +634,7 @@ unsigned char combatManager::loadWallTraitsTable()
         row += 2;
         for (int wall = 0; wall < 18; wall++) {
             const TSpreadsheetResource::TStringVector& values =
-                sheet->getRow(row);
+                sheet->GetRow(row);
             s_wallTraits[townType][wall].m_name = values[0];
             s_wallTraits[townType][wall].m_hitpoints =
                 static_cast<short>(atoi(values[1]));
@@ -777,7 +777,7 @@ int combatManager::open(int newPriority)
                    .m_placementHelpEnabled
             && !isQuickCombat()) {
         normalDialogTimeOut(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_PLACEMENT_HELP),
+            g_generalText->GetText(GENERAL_TEXT_COMBAT_PLACEMENT_HELP),
             1, 10000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
         g_game->m_players[m_playerIds[m_currentSide]].m_placementHelpEnabled = 0;
     }
@@ -1597,7 +1597,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
         SAMPLE2 sample = loadPlaySample(
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         spellEffect(20, stack, 100, 0);
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
+        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
             stack->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
@@ -1620,7 +1620,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
-                        g_generalText->getText(GENERAL_TEXT_BAD_MORALE_FORMAT),
+                        g_generalText->GetText(GENERAL_TEXT_BAD_MORALE_FORMAT),
                         stack->getName());
                     m_combatWindow->combatMessage(g_text, 1, 0);
                     spellEffect(30, stack, 100, 1);
@@ -1661,7 +1661,7 @@ unsigned char combatManager::applyAzureDragonFear(army* selected)
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x0066ff88, fearSampleName, "Fear.wav"));
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
+                g_generalText->GetText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
                 getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
                 selected->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
@@ -1883,13 +1883,13 @@ void combatManager::setNextArmy(int group, int index)
                     std::string result;
                     if (stack->m_numTroops == 1)
                         result = formatString(
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE_FORMAT),
                             stack->getName(),
                             drained->m_name);
                     else
                         result = formatString(
-                            g_generalText->getText(
+                            g_generalText->GetText(
                                 GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY_FORMAT),
                             stack->getName(),
                             drained->m_name);
@@ -2171,7 +2171,7 @@ void combatManager::keepAttack(int towerPos)
 
     int killed = target->damage(damage);
     damageMessage(
-        g_generalText->getText(GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER),
+        g_generalText->GetText(GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER),
         1, damage, target, killed);
     target->cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_DAMAGE);
     powEffect(eSpellEffectNone, 1);
@@ -3854,11 +3854,11 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     std::string message;
     if (attackerQty == 1)
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER_FORMAT),
+            g_generalText->GetText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER_FORMAT),
             attacker, damage);
     else
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS_FORMAT),
+            g_generalText->GetText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS_FORMAT),
             attacker, damage);
 
     if (deaths > 0) {
@@ -3869,23 +3869,23 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
             name = defender->getName(deaths);
             if (defender->is(creatureSiegeWeapon)) {
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT_FORMAT),
+                    g_generalText->GetText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT_FORMAT),
                     name);
                 stackWipedOut = true;
             }
         } else {
             if (deaths == 1)
-                name = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_SINGULAR);
+                name = g_generalText->GetText(GENERAL_TEXT_GENERIC_CREATURE_SINGULAR);
             else
-                name = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
+                name = g_generalText->GetText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
         }
         if (!stackWipedOut) {
             if (deaths == 1)
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH_FORMAT), name);
+                    g_generalText->GetText(GENERAL_TEXT_COMBAT_ONE_DEATH_FORMAT), name);
             else
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS_FORMAT),
+                    g_generalText->GetText(GENERAL_TEXT_COMBAT_MANY_DEATHS_FORMAT),
                     deaths, name);
         }
         message += deathText;
