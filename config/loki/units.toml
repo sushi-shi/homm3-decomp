@@ -198,3 +198,8 @@ source = "src/editor/MapEditorText.cpp"
 name = "GameObject"
 object = 13
 source = "src/editor/GameObject.cpp"
+
+[[unit]]
+name = "ObjectHelp"
+object = 20
+source = "src/editor/ObjectHelp.cpp"
