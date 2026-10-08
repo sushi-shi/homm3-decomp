@@ -188,6 +188,38 @@ def _system_runtime(prefix: Path) -> Path:
     return system / "msvcrt.dll"
 
 
+def _server_zones(prefix: Path) -> list[str | None]:
+    """The TZ of every running wineserver of `prefix`."""
+    zones = []
+    for proc in Path("/proc").iterdir():
+        if not proc.name.isdigit():
+            continue
+        try:
+            if not (proc / "exe").resolve().name.startswith("wineserver"):
+                continue
+            environ = dict(item.split("=", 1) for item in
+                           (proc / "environ").read_bytes().decode("latin-1").split("\0")
+                           if "=" in item)
+        except OSError:
+            continue
+        if Path(environ.get("WINEPREFIX", "")).resolve() == prefix.resolve():
+            zones.append(environ.get("TZ"))
+    return zones
+
+
+def utc_wineserver(prefix: Path) -> None:
+    """Make the prefix's wineserver run in UTC: the native runtime's time()
+    converts LINK's clock through the server's zone, and the header
+    TimeDateStamp must be retail's UTC value."""
+    if any(zone != "UTC" for zone in _server_zones(prefix)):
+        _wine_server_of(prefix)
+    server = shutil.which("wineserver")
+    if server:
+        subprocess.run([server, "-p60"], env={**os.environ, "WINEPREFIX": str(prefix), "TZ": "UTC"},
+                       check=False, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+
+
 def install_linker_runtime(prefix: Path, runtime: Path) -> None:
     """Put the native runtime in the prefix's 32-bit system directory,
     restarting its wineserver when the file changes."""
@@ -235,6 +267,7 @@ def native_crt_linker(link: Path) -> Path:
     # Install the runtime last: starting a wine process can update the prefix
     # and restore wine's placeholder.
     install_linker_runtime(prefix, runtime)
+    utc_wineserver(prefix)
     return copy
 
 
