@@ -177,7 +177,16 @@ private:
 // A garrison (army +8); its kind is the object type's subtype.
 class TGarrison : public TFlaggableObject {
 public:
-    struct TTypeTraits;
+    // One name per garrison kind (the palette's tooltip).
+    struct TTypeTraits {
+        const char* m_name;
+    };
+
+    enum {
+        s_kNumTypes = 2
+    };
+
+    static const TTypeTraits* s_akTypeTraits;
 
     static void initializeTypeTraitsTable();
 
@@ -233,10 +242,36 @@ private:
     SpellID _m_spell;
 };
 
+// One name per creature bank kind (ObjectSpecializations.cpp's
+// aCreatureBankTypeTraitsImp; the palette's tooltip).
+enum {
+    kNumCreatureBankTypes = 7
+};
+
+struct TCreatureBankTypeTraits {
+    const char* m_name;
+};
+
+extern const TCreatureBankTypeTraits* akCreatureBankTypeTraits;
+
 // A creature generator; its kind is the object type's subtype.
 class TGenerator : public TFlaggableObject {
 public:
-    struct TTypeTraits;
+    // 8-byte rows of the two generator tables ("const struct
+    // TGenerator::TGeneratorTypeTraits & TGenerator::getGeneratorTypeTraits()
+    // const"); the name is the second word. The first word is not decoded.
+    struct TGeneratorTypeTraits {
+        unsigned int m_unknown;
+        const char* m_name;
+    };
+
+    enum {
+        s_kNumGenerator1Types = 59,
+        s_kNumGenerator4Types = 2
+    };
+
+    static const TGeneratorTypeTraits* s_akGenerator1TypeTraits;
+    static const TGeneratorTypeTraits* s_akGenerator4TypeTraits;
 
     static void initializeTypeTraitsTables();
 
@@ -245,7 +280,7 @@ public:
 
     virtual string getTypeName() const;
 
-    const TTypeTraits& getGeneratorTypeTraits() const;
+    const TGeneratorTypeTraits& getGeneratorTypeTraits() const;
     int getGenerator1Type() const;
     int getGenerator4Type() const;
 };
@@ -253,7 +288,16 @@ public:
 // A mine; its kind is the object type's subtype.
 class TMine : public TFlaggableObject {
 public:
-    struct TTypeTraits;
+    // One name per mine kind (the palette's tooltip).
+    struct TTypeTraits {
+        const char* m_name;
+    };
+
+    enum {
+        s_kNumMineTypes = 8
+    };
+
+    static const TTypeTraits* s_akMineTypeTraits;
 
     static void initializeTypeTraitsTable();
 
