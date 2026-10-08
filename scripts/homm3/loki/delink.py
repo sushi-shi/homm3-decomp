@@ -247,10 +247,11 @@ def pair_statics(base: list[CodeSection], target: list[CodeSection]) -> list[str
             unpaired += [f.name for f in statics]
             continue
         for static, local in zip(statics, locals_):
-            renamed = {static.name: local.name}
-            static.name = local.name
+            old, static.name = static.name, local.name
             for section in target:
                 for reloc in section.relocs:
-                    reloc.target = renamed.get(reloc.target, reloc.target)
+                    # The static's own jump tables are named after it too.
+                    if reloc.target == old or reloc.target.startswith(old + "$jt"):
+                        reloc.target = local.name + reloc.target[len(old):]
     return unpaired
 
