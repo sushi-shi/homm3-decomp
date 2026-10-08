@@ -10,8 +10,8 @@
 
 #include "editor/stdafx.h"
 
-#include "editor/ArmyDlg.h"
 #include "editor/Hero.h"
+#include "editor/ArmyDlg.h"
 
 // The sheet's OK button follows whether a customized army has a stack.
 class THeroPropsCreaturesPageParentSheet {

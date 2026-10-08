@@ -10,9 +10,9 @@
 #include <vector>
 
 #include "editor/cppbridge.h"
+#include "editor/MapSpecsTimedEventsPage.h"
 #include "editor/EditTimedEventSheet.h"
 #include "editor/MapEditorText.h"
-#include "editor/MapSpecsTimedEventsPage.h"
 
 namespace {
 

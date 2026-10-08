@@ -12,11 +12,11 @@
 #include "editor/Hero.h"
 #include "editor/GameMap.h"
 #include "editor/MapObjectRef.h"
+#include "editor/TownPropsSheet.h"
 #include "editor/Town.h"
 #include "editor/TownPropsBuildingsPage.h"
 #include "editor/TownPropsGarrisonPage.h"
 #include "editor/TownPropsGeneralPage.h"
-#include "editor/TownPropsSheet.h"
 #include "editor/TownPropsSpellsPage.h"
 #include "editor/TownPropsTimedEventsPage.h"
 

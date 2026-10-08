@@ -6,8 +6,8 @@
 
 #include "exceptions.h"
 #include "editor/cppbridge.h"
-#include "editor/ArmyDlg.h"
 #include "editor/TownPropsGarrisonPage.h"
+#include "editor/ArmyDlg.h"
 
 TTownPropsGarrisonPage::TTownPropsGarrisonPage(const TTown& town)
     : _m_customizeCheck(GTK_TOGGLE_BUTTON(_widget("town_props_garrison_customize"))),

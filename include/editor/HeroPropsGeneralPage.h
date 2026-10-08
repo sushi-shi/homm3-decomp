@@ -35,18 +35,6 @@ public:
     virtual void onDisableOK() = 0;
 };
 
-// Told when the specific hero page picks another hero of the class.
-class TNonRandomHeroPropsGeneralPageParentSheet : public virtual THeroPropsGeneralPageParentSheet {
-public:
-    virtual void onSetNewProtoNum(unsigned int newProtoNum) = 0;
-};
-
-// Told when the prison page picks another class or hero.
-class TPrisonPropsGeneralPageParentSheet : public virtual THeroPropsGeneralPageParentSheet {
-public:
-    virtual void onSetNewIdentity(THeroClass newHeroClass, unsigned int newProtoNum) = 0;
-};
-
 class THeroPropsGeneralPage {
 public:
     THeroPropsGeneralPage(unsigned int idTemplate, THeroPropsGeneralPageParentSheet* pParentSheet, const THero& hero);
@@ -113,6 +101,12 @@ private:
     TPlayer _m_owner;
 };
 
+// Told when the specific hero page picks another hero of the class.
+class TNonRandomHeroPropsGeneralPageParentSheet : public virtual THeroPropsGeneralPageParentSheet {
+public:
+    virtual void onSetNewProtoNum(unsigned int newProtoNum) = 0;
+};
+
 class TNonRandomHeroPropsGeneralPage : public THeroPropsGeneralPage {
 public:
     TNonRandomHeroPropsGeneralPage(TNonRandomHeroPropsGeneralPageParentSheet* pParentSheet, const TNonRandomHero& hero,
@@ -135,6 +129,12 @@ private:
     string _m_className;
     TPlayer _m_owner;
     unsigned int _m_protoNum;
+};
+
+// Told when the prison page picks another class or hero.
+class TPrisonPropsGeneralPageParentSheet : public virtual THeroPropsGeneralPageParentSheet {
+public:
+    virtual void onSetNewIdentity(THeroClass newHeroClass, unsigned int newProtoNum) = 0;
 };
 
 class TPrisonPropsGeneralPage : public THeroPropsGeneralPage {
