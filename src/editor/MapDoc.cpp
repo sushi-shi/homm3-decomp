@@ -12,7 +12,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fstream.h>
-#include <set>
 #include <string>
 
 #include "exceptions.h"

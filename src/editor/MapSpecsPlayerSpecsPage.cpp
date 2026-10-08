@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <algorithm>
 #include <iterator>
-#include <set>
 #include <vector>
 
 #include "editor/cppbridge.h"

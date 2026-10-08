@@ -403,8 +403,9 @@ classes is inferred: from the naming conventions (`_m_`/`_` for private
 members), the call sites, the friends a member needs and the pImpl split.
 GCC 2.95 mangling and the stripped image do not record it. Only base-class
 access and virtual bases are proven, by the RTTI base lists that
-`__rtti_class` receives (each base's access in the top bits: TMapDoc's
-`TGameMap::TClient` base is private, its other bases public). Shared engine
+`__rtti_class` receives (each base's access in the top bits, 0x40 public,
+0xc0 private: TMapDoc inherits all four of its clients privately, TMapView
+everything but CWnd, the line operations their line clients). Shared engine
 classes take member access from the game's Dreamcast CodeView where it is
 available.
 

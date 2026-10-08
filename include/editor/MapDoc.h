@@ -67,9 +67,9 @@ private:
 };
 
 class TMapDoc : private TGameMap::TClient,
-                public TTerrainPlacementOpClient,
-                public TRiverPlacementOpClient,
-                public TRoadPlacementOpClient {
+                private TTerrainPlacementOpClient,
+                private TRiverPlacementOpClient,
+                private TRoadPlacementOpClient {
 public:
     struct TUpdateParams {
         TUpdateParams(const CRect& rect, bool bSecondLayer) : m_rect(rect), m_bSecondLayer(bSecondLayer) {}
