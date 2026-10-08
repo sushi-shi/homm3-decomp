@@ -15,7 +15,23 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
-Colors	?initColors@@YAXXZ	99.8913	99.8913	99.8913	0xcba4	tokens1:50621faedd82
+Colors	?initColors@@YAXXZ	99.7826	99.8913	99.8913	0xcba4	tokens1:50621faedd82
+DIBSection	??0T16bppDIBSection@@QAE@II@Z	100.0000	100.0000	100.0000	0xd1ea	tokens1:b9624ac570ea
+DIBSection	??0T16bppDIBSection@@QAE@XZ	100.0000	100.0000	100.0000	0xd1c2	tokens1:c0225f6bdb3c
+DIBSection	??1?$TBitmap@GK@@UAE@XZ	100.0000	100.0000	100.0000	0xd4a8	tokens1:7a80888d25be
+DIBSection	??1?$TBitmapBase@G@@UAE@XZ	100.0000	100.0000	100.0000	0xd38f	tokens1:6331113567a6
+DIBSection	??1T16bppDIBSection@@UAE@XZ	99.8438	99.8438	99.8438	0xd243	tokens1:fd600db45ca0
+DIBSection	??4?$TBitmapBase@G@@UAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd3cf	tokens1:008640a64def
+DIBSection	??4T16bppDIBSection@@UAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd2b3	tokens1:a1d989fd4f70
+DIBSection	??_GT16bppDIBSection@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd173	-
+DIBSection	?allocate@?$TBitmap@GK@@UAEPAGII@Z	99.7500	99.7500	99.7500	0xd4db	tokens1:763233f735bb
+DIBSection	?allocate@T16bppDIBSection@@UAEPAGII@Z	99.5333	99.5333	99.5333	0xd2cb	tokens1:a268f1fa1d84
+DIBSection	?computePitch@?$TBitmap@GK@@UBEII@Z	100.0000	100.0000	100.0000	0xd537	tokens1:86d3010c5e2d
+DIBSection	?copy@?$TBitmapBase@G@@QAEXHHABV1@HHIII@Z	95.2044	95.2044	95.2044	0xd544	tokens1:1e57b7dfa38b
+DIBSection	?create@?$TBitmapBase@G@@QAEXII@Z	100.0000	100.0000	100.0000	0xd43d	tokens1:ee121d40a382
+DIBSection	?destroy@?$TBitmapBase@G@@QAEXXZ	100.0000	100.0000	100.0000	0xd486	tokens1:f296ddcb5d2a
+DIBSection	?free@?$TBitmap@GK@@UAEXPAG@Z	100.0000	100.0000	100.0000	0xd52a	tokens1:34616bc6ba23
+DIBSection	?free@T16bppDIBSection@@UAEXPAG@Z	99.0000	99.0000	99.0000	0xd37d	tokens1:5111b89ec100
 EditRumorDlg	??0TEditRumorDlg@@QAE@PAVCWnd@@ABVTRumor@@@Z	100.0000	100.0000	100.0000	0x1593f	tokens1:fa6f036e9c33
 EditRumorDlg	??0TRumor@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x15a3f	-
 EditRumorDlg	??1TEditRumorDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x15aaa	-
@@ -45,6 +61,18 @@ GameMap	?getPCell@TLayer@TGameMap@@QBEPBVTCell@12@II@Z	100.0000	100.0000	100.000
 GameMap	?getPCell@_TCellGrid@_TImpl@TLayer@TGameMap@@QBEPBVTCell@34@II@Z	100.0000	100.0000	100.0000	0x2a4d0	tokens1:91a3900eb4de
 GameMap	?isBeachBorder@?A0xaab635a5f3ca1b91@@YA_NABVTLayer@TGameMap@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1e799	tokens1:75b1893af93c
 HeroPrototypePropsGeneralPage	?_isspace@@YA_NABVCString@@@Z	100.0000	100.0000	100.0000	0x55d02	tokens1:d25d22e246fc
+MemoryDC	??0?$TGDIObjectSelector@VCBitmap@@@@QAE@PAVCDC@@PAVCBitmap@@@Z	99.8148	99.8148	99.8148	0x51fdd	tokens1:1952c6fb6bad
+MemoryDC	??0TError@?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	99.2857	99.2857	99.2857	0x520ca	tokens1:760d3a8d42d7
+MemoryDC	??0TError@TMemoryDC@@QAE@XZ	99.2857	99.2857	99.2857	0x8701e	tokens1:1a9bc1fac8e7
+MemoryDC	??0TGDIObjectSelectorError@@QAE@XZ	99.2857	99.2857	99.2857	0x87030	tokens1:1fb997825f90
+MemoryDC	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x52022	tokens1:a499df6024c1
+MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HH@Z	100.0000	100.0000	100.0000	0x87521	tokens1:52f0d023492a
+MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HHK@Z	55.4046	55.4046	55.4046	0x87042	tokens1:ac0e289f2e0a
+MemoryDC	?getFirstMenuItem@@YAIPAVCMenu@@@Z	0.0000	0.0000	0.0000	0x875d4	tokens1:524b1c06c1e1
+MemoryDC	?getTransparentColor@@YAKPAVCBitmap@@@Z	100.0000	100.0000	100.0000	0x86fb4	tokens1:82437037c163
+MemoryDC	?isPixelColor@@YA_NPAVCBitmap@@HHK@Z	100.0000	100.0000	100.0000	0x87543	tokens1:0151ed410c8e
+MemoryDC	?isTransparentPixel@@YA_NPAVCBitmap@@HH@Z	100.0000	100.0000	100.0000	0x875b5	tokens1:203150634ddb
+MemoryDC	?setMenuItemText@@YA_NPAVCMenu@@AAIVCString@@@Z	74.2121	74.2121	74.2121	0x87613	tokens1:0a37ff0b275b
 Options	?load@SOptions@@YAXXZ	99.4521	99.4521	99.4521	0x92edb	tokens1:3e243b9b282d
 Options	?save@SOptions@@YAXXZ	98.6111	98.6111	98.6111	0x93022	tokens1:6d7c3c5dc78f
 Options	?setAnimation@SOptions@@YAX_N@Z	100.0000	100.0000	100.0000	0x92ffa	tokens1:c5a3a18daf48
@@ -63,16 +91,16 @@ OptionsDlg	?OnCreate@TOptionsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	
 OptionsDlg	?OnInitDialog@TOptionsDlg@@MAEHXZ	99.9709	99.9709	99.9709	0x933de	tokens1:39bd6bd56e97
 OptionsDlg	?OnKillFocusMinutesEdit@TOptionsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x9375b	tokens1:30fe7e40b473
 OptionsDlg	?OnOK@TOptionsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x93627	tokens1:49e40b0b4d6d
-Player	?InitializePlayerTraitsTable@@YA_NXZ	90.3097	90.3097	90.3097	0x94324	tokens1:681eba712e3e
+Player	?InitializePlayerTraitsTable@@YA_NXZ	90.2774	90.3097	90.3097	0x94324	tokens1:681eba712e3e
 Player	__h3cg$Player$static_dtor$aColorNames	100.0000	100.0000	100.0000	0x94529	-
 Player	__h3cg$Player$static_dtor$aNames	100.0000	100.0000	100.0000	0x9453d	-
-SelectArtifactDlg	??0TSelectArtifactDlg@@QAE@PAVCWnd@@HH@Z	100.0000	100.0000	100.0000	0xb7deb	tokens1:4551865f57c6
+SelectArtifactDlg	??0TSelectArtifactDlg@@QAE@PAVCWnd@@W4EGameVersion@@H@Z	100.0000	100.0000	100.0000	0xb7deb	tokens1:370f33c9540c
 SelectArtifactDlg	??_GTSelectArtifactDlg@@UAEPAXI@Z	99.5455	99.5455	99.5455	0xb7e5f	-
 SelectArtifactDlg	?DoDataExchange@TSelectArtifactDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xb7e7b	tokens1:6b6df0a522ab
 SelectArtifactDlg	?GetMessageMap@TSelectArtifactDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb7ea6	tokens1:7b20c843631a
 SelectArtifactDlg	?OnCreate@TSelectArtifactDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0xb7eac	tokens1:a61a20683357
 SelectArtifactDlg	?OnDblClkArtifactList@TSelectArtifactDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb803d	tokens1:5f4483e1e64c
-SelectArtifactDlg	?OnInitDialog@TSelectArtifactDlg@@MAEHXZ	100.0000	100.0000	100.0000	0xb7ed1	tokens1:7182ed3bf398
+SelectArtifactDlg	?OnInitDialog@TSelectArtifactDlg@@MAEHXZ	100.0000	100.0000	100.0000	0xb7ed1	tokens1:90204ffcb8a2
 SelectArtifactDlg	?OnOK@TSelectArtifactDlg@@MAEXXZ	100.0000	100.0000	100.0000	0xb7fee	tokens1:acf4e485ebb1
 SelectArtifactDlg	?OnSelCancelArtifactList@TSelectArtifactDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb802f	tokens1:08e35a94fdc6
 SelectArtifactDlg	?OnSelChangeArtifactList@TSelectArtifactDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb8021	tokens1:02495cda5694
@@ -208,7 +236,7 @@ objecttype	??0?$bitset@$0DA@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x90e94	-
 objecttype	??0?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@std@@QAE@ABU01@@Z	100.0000	100.0000	100.0000	0x926fd	-
 objecttype	??0TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x90012	-
 objecttype	??0TObjectType@@QAE@XZ	100.0000	100.0000	100.0000	0x90366	-
-objecttype	??0TRuntimeError@@QAE@XZ	100.0000	100.0000	100.0000	0x1ff8	-
+objecttype	??0TRuntimeError@@QAE@XZ	-	100.0000	100.0000	0x1ff8	-
 objecttype	??0invalid_argument@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x916f9	-
 objecttype	??0istrstream@std@@QAE@PBD@Z	99.8809	99.8809	99.8809	0x90d31	-
 objecttype	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x2055	-
@@ -275,7 +303,7 @@ objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@
 objecttype	?insert@?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@QAEPAU_TImageInfo@TObjectType@@PAU34@ABU34@@Z	100.0000	100.0000	100.0000	0x915a6	-
 objecttype	?insert@?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@QAEXPAU_TImageInfo@TObjectType@@IABU34@@Z	100.0000	100.0000	100.0000	0x91ad5	-
 objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	31.0345	31.0345	31.0345	0x2cb17	-
-objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	91.3571	91.3571	91.3571	0x90c4c	-
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	91.2857	91.3571	91.3571	0x90c4c	-
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	99.8193	99.8193	99.8193	0x9125b	-
 objecttype	?resize@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXIABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x2be1b	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x91327	-

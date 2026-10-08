@@ -18,7 +18,6 @@ rva	size	kind	name	unit	evidence
 0x00001f18	0xd	func	?what@logic_error@std@@UBEPBDXZ	resource	vtable ??_7out_of_range@std@@6B@ stored by ?_Xran@?$bitset@$0DA@@std@@ABEXXZ slot 1; ICF-folded with 1 identical bodies
 0x00001f25	0x1d	func	?_Doraise@runtime_error@std@@MBEXXZ	rmg_support	vtable ??_7TAllocationFailure@@6B@ stored by ??0TTerrainPlacementOp@@QAE@PAVTAbstractMap@0@HH@Z slot 2
 0x00001f9b	0x5d	func	??0runtime_error@std@@QAE@ABV01@@Z	rmg_support	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0xb
-0x00001ff8	0x5d	func	??0TRuntimeError@@QAE@XZ	objecttype	masked body (93 bytes, 8 relocations) unique at a census start
 0x00002055	0x64	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	objecttype	referenced by ??0TRuntimeError@@QAE@XZ at +0x36
 0x00002215	0x12	func	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	artifact	masked body (18 bytes, 0 relocations) unique at a census start
 0x00003245	0x38	func	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	artifact	masked prefix (44 fixed bytes agree, 88 compiled, 56 retail)
