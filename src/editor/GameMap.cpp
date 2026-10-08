@@ -505,6 +505,8 @@ private:
     };
 
     static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
+    static bool _isValidShipyardPlacement(const TLayer& layer, const TGameObject& shipyard, unsigned int x,
+                                          unsigned int y);
 
     typedef TRefCountingPtr<_TProperties> _TPProperties;
     typedef TRefCountingPtr<_TBookkeeping> _TPBookkeeping;
@@ -1419,6 +1421,99 @@ unsigned int TGameMap::_TImpl::getNumObelisksOnMap() const
     return _m_pBookkeeping->m_aNumObjsOfCappedType[obeliskOrdinal];
 }
 
+
+bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y)
+{
+    static vector<unsigned int> aLowerObjIDs;
+    static vector<unsigned int> aHigherObjIDs;
+    aLowerObjIDs.clear();
+    aHigherObjIDs.clear();
+    unsigned int heightMap[TObjectType::kMaxObjWidth][TObjectType::kMaxObjHeight];
+    constructObjectHeightMap(obj, heightMap);
+    for (unsigned int i = 0; i < obj.getWidth(); i++) {
+        unsigned int cellX = x - i;
+        for (unsigned int j = 0; j < obj.getHeight(); j++) {
+            unsigned int cellY = y - j;
+            if (cellX >= layer.getWidth() || cellY >= layer.getHeight()) {
+                if (obj.getBCellTrigger(i, j))
+                    return false;
+                continue;
+            }
+            if (!obj.getBCellPlaced(i, j))
+                continue;
+            unsigned int height = heightMap[i][j];
+            const TLayer::TCell& cell = layer.getCell(cellX, cellY);
+            const vector<TLayer::_TObjectCellInfo>* paObjInfo = cell._m_paObjInfo.get();
+            if (paObjInfo != NULL) {
+                const vector<TLayer::_TObjectCellInfo>& aObjInfo = *paObjInfo;
+                vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
+                for (; pObjInfo != aObjInfo.end() && pObjInfo->m_height < height; ++pObjInfo)
+                    if (find(aLowerObjIDs.begin(), aLowerObjIDs.end(), pObjInfo->m_objID) == aLowerObjIDs.end())
+                        aLowerObjIDs.push_back(pObjInfo->m_objID);
+                for (; pObjInfo != aObjInfo.end() && pObjInfo->m_height <= height; ++pObjInfo)
+#line 3616
+                    assert(pObjInfo->m_height == height);
+                for (; pObjInfo != aObjInfo.end(); ++pObjInfo) {
+#line 3621
+                    assert(pObjInfo->m_height > height);
+                    if (find(aHigherObjIDs.begin(), aHigherObjIDs.end(), pObjInfo->m_objID) == aHigherObjIDs.end())
+                        aHigherObjIDs.push_back(pObjInfo->m_objID);
+                }
+            }
+            bool bPassable = obj.getBCellPassable(i, j);
+            if ((!bPassable || obj.getBUnderlay()) && !obj.getTerrainMask()[cell.getTerrainType()])
+                return false;
+            if (!bPassable && paObjInfo != NULL) {
+                const vector<TLayer::_TObjectCellInfo>& aObjInfo = *paObjInfo;
+                if (obj.getBCellTrigger(i, j)) {
+                    for (vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
+                         pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                        const TGameObject& otherObj = layer.getObject(pObjInfo->m_objID);
+                        TTilePoint otherLoc = layer.getObjectLoc(pObjInfo->m_objID);
+                        unsigned int otherI = otherLoc.x() - cellX;
+                        unsigned int otherJ = otherLoc.y() - cellY;
+                        if (!otherObj.getBCellPassable(otherI, otherJ))
+                            return false;
+                    }
+                } else {
+                    for (vector<TLayer::_TObjectCellInfo>::const_iterator pObjInfo = aObjInfo.begin();
+                         pObjInfo != aObjInfo.end(); ++pObjInfo) {
+                        const TGameObject& otherObj = layer.getObject(pObjInfo->m_objID);
+                        TTilePoint otherLoc = layer.getObjectLoc(pObjInfo->m_objID);
+                        unsigned int otherI = otherLoc.x() - cellX;
+                        unsigned int otherJ = otherLoc.y() - cellY;
+                        if (otherObj.getBCellTrigger(otherI, otherJ))
+                            return false;
+                    }
+                }
+            }
+        }
+    }
+    for (vector<unsigned int>::const_iterator pObjID = aLowerObjIDs.begin(); pObjID != aLowerObjIDs.end(); ++pObjID)
+        if (find(aHigherObjIDs.begin(), aHigherObjIDs.end(), *pObjID) != aHigherObjIDs.end())
+            return false;
+    return obj.getType() != SHIPYARD || _isValidShipyardPlacement(layer, obj, x, y);
+}
+
+bool TGameMap::_TImpl::_isValidShipyardPlacement(const TLayer& layer, const TGameObject& shipyard, unsigned int x,
+                                                 unsigned int y)
+{
+#line 3695
+    assert(shipyard.getType() == SHIPYARD);
+    static const TPoint<int> akWaterOffset[] = {
+        TPoint<int>(1, 1), TPoint<int>(1, 0), TPoint<int>(1, -1), TPoint<int>(0, 1), TPoint<int>(0, -1),
+        TPoint<int>(-1, 1), TPoint<int>(-1, -1), TPoint<int>(-2, 1), TPoint<int>(-2, -1), TPoint<int>(-3, 1),
+        TPoint<int>(-3, 0), TPoint<int>(-3, -1)
+    };
+    for (unsigned int i = 0; i < sizeof(akWaterOffset) / sizeof(akWaterOffset[0]); i++) {
+        TTilePoint loc = TPoint<int>(x, y) + akWaterOffset[i];
+        if (loc.x() >= layer.getWidth() || loc.y() >= layer.getHeight())
+            continue;
+        if (layer.getCell(loc).getTerrainType() == eTerrainWater)
+            return true;
+    }
+    return false;
+}
 
 TMapLayerObjectID TGameMap::_TImpl::_placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
                                                         unsigned int y, TTileExtent* pUpdatedExtent)
