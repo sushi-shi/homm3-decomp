@@ -4,6 +4,6 @@
 
 T16bppPalette::T16bppPalette(const TRGB* rgb)
 {
-    for (unsigned short* entry = m_entries; entry < m_entries + 256; entry++)
+    for (unsigned short* entry = m_entries; entry < m_entries + T8bppBitmapBase<unsigned char>::kNumColors; entry++)
         *entry = rgbToEntry(*rgb++);
 }

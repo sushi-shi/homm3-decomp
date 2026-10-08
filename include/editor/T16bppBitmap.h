@@ -33,6 +33,9 @@ class TBitmap : public TBitmapBase<TPixel> {
 
 template <class TPaletteIndex>
 class T8bppBitmapBase : public TBitmap<unsigned char, TPaletteIndex> {
+public:
+    // One colour per value of the 8-bit pixel.
+    enum { kNumColors = 256 };
 };
 
 template <class TPaletteIndex>

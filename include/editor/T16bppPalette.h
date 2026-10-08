@@ -25,7 +25,10 @@ public:
              | ((rgb.blue >> (8 - Format::blueBits())) << Format::blueShift());
     }
 
-    unsigned short m_entries[256];
+    // One 16-bit entry per colour of an 8-bit bitmap: the array bound
+    // completes T8bppBitmapBase<unsigned char> before rgbToEntry completes
+    // the 16-bit format, the order of T16bppPalette.o's type names.
+    unsigned short m_entries[T8bppBitmapBase<unsigned char>::kNumColors];
 };
 
 #endif  /* HOMM3_EDITOR_T16BPPPALETTE_H */
