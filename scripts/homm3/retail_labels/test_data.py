@@ -18,7 +18,8 @@ class LocalDataTypesTest(unittest.TestCase):
             profiles = SimpleNamespace(
                 project=SimpleNamespace(root=root, image=SimpleNamespace(image_base=0x400000)),
                 for_source=lambda _: ['-x', 'c++', '-std=c++98',
-                                       '--target=i686-pc-windows-msvc', '-fms-extensions'])
+                                       '--target=i686-pc-windows-msvc', '-fms-extensions'],
+                compiler_for_source=lambda _: 'msvc6.0')
             return _uncached_declarations(path, profiles)
 
     def test_unrelated_body_error_keeps_clean_local_type(self):
