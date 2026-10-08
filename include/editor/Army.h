@@ -23,10 +23,20 @@ public:
     unsigned int getQuantity() const { return _m_quantity; }
     void setQuantity(unsigned int newQuantity);
 
+    friend bool operator==(const TCreatureStack& lhs, const TCreatureStack& rhs)
+    {
+        return lhs._m_creatureType == rhs._m_creatureType && lhs._m_quantity == rhs._m_quantity;
+    }
+
 private:
     TCreatureType _m_creatureType;
     unsigned int _m_quantity;
 };
+
+inline bool operator!=(const TCreatureStack& lhs, const TCreatureStack& rhs)
+{
+    return !(lhs == rhs);
+}
 
 TRawOStream& operator<<(TRawOStream& stream, const TCreatureStack& stack);
 TRawIStream& operator>>(TRawIStream& stream, TCreatureStack& stack);
