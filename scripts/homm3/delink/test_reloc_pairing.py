@@ -158,6 +158,57 @@ class VoteTests(unittest.TestCase):
         self.assertEqual((votes, reason), ([], ""))
 
 
+def call(rva, site, target):
+    return b"\xe8" + struct.pack("<i", target - (rva + site + 5))
+
+
+class CallVoteTests(unittest.TestCase):
+    """A voter withdrawn only for unrelocated bytes still pairs its calls."""
+
+    def collect(self, functions, retail):
+        objects = {"u": rp.CandidateObject(coff(
+            [(name, body, relocs) for name, body, relocs, _rva in functions]))}
+        voters = [rp.Voter("u", name, rva, len(retail[rva]))
+                  for name, _body, _relocs, rva in functions]
+        return rp.collect(voters, objects.get,
+                          lambda rva, size: retail.get(rva), [], BASE)
+
+    def test_stack_slot_difference_keeps_direct_call_votes(self):
+        # mov [ebp-0x14], eax vs retail's [ebp-0x10]; then call ?b, call ?a.
+        body = b"\x89\x45\xec" + b"\xe8\0\0\0\0" + b"\xe8\0\0\0\0" + b"\xc3"
+        retail = (b"\x89\x45\xf0" + call(0x1000, 3, 0x3000)
+                  + call(0x1000, 8, 0x3100) + b"\xc3")
+        votes, withdrawn, admitted = self.collect(
+            [("_f", body, [(4, "?b@@YAXXZ", REL32), (9, "?a@@YAXXZ", REL32)], 0x1000)],
+            {0x1000: retail})
+        self.assertEqual((withdrawn, admitted), ({"instruction: bytes": 1}, 0))
+        self.assertEqual(sorted((v.symbol, v.owner) for v in votes),
+                         [("?a@@YAXXZ", 0x3100), ("?b@@YAXXZ", 0x3000)])
+
+    def test_a_voter_names_the_symbol_first(self):
+        exact = b"\xe8\0\0\0\0\xc3"
+        differs = b"\x89\x45\xec" + b"\xe8\0\0\0\0" + b"\xc3"
+        votes, _withdrawn, admitted = self.collect(
+            [("_g", exact, [(1, "?a@@YAXXZ", REL32)], 0x2000),
+             ("_f", differs, [(4, "?a@@YAXXZ", REL32)], 0x1000)],
+            {0x2000: call(0x2000, 0, 0x3100) + b"\xc3",
+             0x1000: b"\x89\x45\xf0" + call(0x1000, 3, 0x3200) + b"\xc3"})
+        self.assertEqual(admitted, 1)
+        self.assertEqual([(v.symbol, v.owner) for v in votes], [("?a@@YAXXZ", 0x3100)])
+
+    def test_other_differences_and_data_operands_do_not_vote(self):
+        longer = b"\x90\xe8\0\0\0\0\xc3"
+        votes, withdrawn, _ = self.collect(
+            [("_f", longer, [(2, "?a@@YAXXZ", REL32)], 0x1000)],
+            {0x1000: call(0x1000, 0, 0x3100) + b"\xc3"})
+        self.assertEqual((votes, withdrawn), ([], {"instruction: longer": 1}))
+        body = b"\x89\x45\xec" + mov_eax(0) + b"\xc3"
+        votes, _w, _a = self.collect(
+            [("_f", body, [(4, "?g_a@@3HA", DIR32)], 0x1000)],
+            {0x1000: b"\x89\x45\xf0" + mov_eax(BASE + 0x5000) + b"\xc3"})
+        self.assertEqual(votes, [])
+
+
 def vote(symbol, target, addend=0, function=0x1000, site=None, typ=DIR32):
     return rp.Vote(symbol, target - addend, target, addend, function,
                    site if site is not None else function + target % 0x100, typ, "u", "_f")
@@ -383,6 +434,14 @@ class OutsideOperandTests(unittest.TestCase):
                                   claimed_rva_of=lambda name: None,
                                   extent_of={0x6000: (0x10, 4)}.get)[1]], [])
         self.assertEqual(row[3:5], ["_g_t", "0xfffffffc"])
+
+    def test_compiland_private_claim_names_its_outside_operand(self):
+        # A function-local `static char *names[4]` read as names[week - 1]:
+        # retail's names - 4 falls inside the preceding string literal.
+        pairings, aliases = self.aliases(
+            [vote("_g_t", 0x5ffc, addend=-4)._replace(private=True)], (0x10, 4))
+        self.assertEqual((pairings[0].unit, pairings[0].verdict), ("u", "confirmed"))
+        self.assertEqual(aliases, [(0x5ffc, -4)])
 
     def test_interior_and_distant_operands_are_left_alone(self):
         _p, aliases = self.aliases([vote("_g_t", 0x6004, addend=4),

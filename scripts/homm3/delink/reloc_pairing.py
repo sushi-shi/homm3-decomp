@@ -20,6 +20,12 @@ Each relocation of a voter pairs candidate `S + a` with the retail operand
 `V`; the vote is `S` at owner address `V - a`. Only spellings both comparison
 sides keep verbatim vote.
 
+CALL VOTES. A function whose only difference is unrelocated instruction
+bytes (a stack slot, a register) still has every relocation at the retail
+site. Its direct `call`/`jmp rel32` sites, the same opcode on both sides,
+vote for a code symbol that no voter names (`call_votes`). They only
+propose a code pairing: a fold still needs the body proof below.
+
 DATA PAIRINGS (`decide`). A data owner is admitted only when every vote for
 `S` names one address, every vote for that address names `S`, no other name
 claims the address, `S` is bound nowhere else, and the owner is anchored:
@@ -355,12 +361,39 @@ def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | Non
     return votes, ""
 
 
+def call_votes(voter: Voter, candidate: CandidateObject, retail: bytes | None,
+               image_base: int) -> list[Vote]:
+    """Direct-call votes of a voter withdrawn only for instruction bytes.
+
+    `compare_body` already proved the same length and every relocation at
+    the retail site; each `call`/`jmp rel32` site whose opcode both sides
+    share pairs the candidate callee with the retail target. Compiland-
+    private callees do not vote."""
+    found = candidate.functions.get(voter.name)
+    if found is None or retail is None:
+        return []
+    body, relocs = found
+    votes = []
+    for site, typ, name, addend, target in operand_targets(
+            body, relocs, retail, voter.rva, image_base):
+        if typ != REL32 or site < 1 or body[site - 1] != retail[site - 1] \
+                or body[site - 1] not in (0xE8, 0xE9):
+            continue
+        if (name in candidate.eh_thunks or unit_local(name)
+                or compiland_private(name, candidate) or not stable_name(name)):
+            continue
+        votes.append(Vote(name, target - addend, target, addend, voter.rva,
+                          voter.rva + site, typ, voter.unit, voter.name))
+    return votes
+
+
 def collect(voters: Iterable[Voter], objects: Callable[[str], CandidateObject | None],
             read_retail: Callable[[int, int], bytes | None],
             retail_sites: list[int], image_base: int,
             ) -> tuple[list[Vote], dict[str, int], int]:
     sites = sorted(retail_sites)
     votes: list[Vote] = []
+    calls: list[Vote] = []
     withdrawn: dict[str, int] = defaultdict(int)
     admitted = 0
     for voter in voters:
@@ -370,14 +403,17 @@ def collect(voters: Iterable[Voter], objects: Callable[[str], CandidateObject | 
             continue
         lo = bisect.bisect_left(sites, voter.rva)
         hi = bisect.bisect_left(sites, voter.rva + voter.size)
-        found, reason = function_votes(
-            voter, candidate, read_retail(voter.rva, voter.size), sites[lo:hi],
-            image_base)
+        retail = read_retail(voter.rva, voter.size)
+        found, reason = function_votes(voter, candidate, retail, sites[lo:hi], image_base)
         if reason:
             withdrawn[reason] += 1
+            if reason == "instruction: bytes":
+                calls.extend(call_votes(voter, candidate, retail, image_base))
             continue
         admitted += 1
         votes.extend(found)
+    named = {vote.symbol for vote in votes}
+    votes.extend(vote for vote in calls if vote.symbol not in named)
     return votes, dict(withdrawn), admitted
 
 
@@ -423,9 +459,10 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
     ``extent_of(rva)`` -> (size, element) of the claim there.
     Code votes are returned as 'code' pairings for `identities` to prove.
 
-    A confirmed claim's operand just outside its extent (`outside_operand`)
-    becomes an exact-site alias: retail's image names that address by the
-    neighbouring object, the candidate by this one plus its addend.
+    A confirmed claim's operand just outside its extent (`outside_operand`),
+    compiland-private or not, becomes an exact-site alias: retail's image
+    names that address by the neighbouring object, the candidate by this
+    one plus its addend.
     """
     by_symbol: dict[str, list[Vote]] = defaultdict(list)
     by_owner: dict[int, set[tuple[str, str]]] = defaultdict(set)
@@ -440,8 +477,12 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
         if not unit_local(symbol) and any(v.private for v in rows):
             for unit in sorted({v.unit for v in rows}):
                 mine = [v for v in rows if v.unit == unit]
-                pairings.append(_private_pairing(
-                    symbol, unit, mine, by_owner, region_of, claimed_name_at))
+                pairing = _private_pairing(
+                    symbol, unit, mine, by_owner, region_of, claimed_name_at)
+                pairings.append(pairing)
+                if pairing.verdict == "confirmed":
+                    aliases.extend(v for v in mine if v.typ == DIR32
+                                   and outside_operand(v.addend, extent_of(pairing.owner)))
             continue
         if unit_local(symbol):
             guard = bool(LOCAL_GUARD.fullmatch(symbol))
