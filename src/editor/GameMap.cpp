@@ -15,6 +15,7 @@
 #include <limits>
 #include <numeric>
 #include <map>
+#include <memory>
 
 #include "adventureobjecttype.h"
 #include "editor/GameMap.h"
@@ -55,6 +56,23 @@ bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
 // The height of each placed cell of an object: an underlay lies at 0,
 // anything else rises by one per row from its front, and a passable cell
 // that continues a blocked one to its left takes that cell's height.
+void copyCustomizations(const THero& hero, THero* pNewHero)
+{
+    pNewHero->setBCustomName(hero.getBCustomName());
+    pNewHero->setBCustomPortrait(hero.getBCustomPortrait());
+    pNewHero->setBCustomArmy(hero.getBCustomArmy());
+    pNewHero->setBCustomSecondarySkills(hero.getBCustomSecondarySkills());
+    pNewHero->setBCustomArtifacts(hero.getBCustomArtifacts());
+    pNewHero->setName(hero.getCustomName());
+    pNewHero->setPortrait(hero.getCustomPortrait());
+    pNewHero->setArmy(hero.getArmy());
+    pNewHero->setSecondarySkills(hero.getCustomSecondarySkills());
+    pNewHero->setArtifacts(hero.getCustomArtifacts());
+    pNewHero->setExperience(hero.getExperience());
+    pNewHero->setBGroupedFormation(hero.getBGroupedFormation());
+    pNewHero->setPatrol(hero.getPatrol());
+}
+
 void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[TObjectType::kMaxObjWidth][TObjectType::kMaxObjHeight])
 {
     for (unsigned int x = 0; x < obj.getWidth(); x++) {
@@ -1424,6 +1442,77 @@ TMapLayerObjectID TGameMap::_TImpl::_placeGeneralObject(bool bSecondLayer, const
 #line 3764
     assert(result != TLayer::s_kInvalidObjID);
     *pUpdatedExtent = layer.getObjectExtent(result);
+    return result;
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placeNonRandomHero(bool bSecondLayer, const TNonRandomHero& hero, unsigned int x,
+                                                        unsigned int y, TTileExtent* pUpdatedExtent)
+{
+    if (!_isHeroAvailable(hero.getClass(), hero.getProtoNum())) {
+        unsigned int protoNum = _pickAvailableHero(hero.getClass());
+        if (protoNum >= THero::s_akClassTraits[hero.getClass()].m_numPrototypes)
+            throw TPlaceObjFailureNoAvailableHeroesInClass();
+        auto_ptr<THero> pNewHero(
+            _m_pObjectFactory->createNonRandomHero(hero.getObjectType(), hero.getOwner(), protoNum, ::operator new));
+        if (pNewHero.get() == NULL)
+#line 3791
+            throw TAllocationFailure(__FILE__, __LINE__);
+        copyCustomizations(hero, pNewHero.get());
+        return _placeHero(bSecondLayer, *pNewHero, x, y, pUpdatedExtent);
+    }
+    return _placeHero(bSecondLayer, hero, x, y, pUpdatedExtent);
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placePrison(bool bSecondLayer, const TPrison& prison, unsigned int x, unsigned int y,
+                                                 TTileExtent* pUpdatedExtent)
+{
+    if (!_isHeroAvailable(prison.getClass(), prison.getProtoNum())) {
+        unsigned int heroClass = prison.getClass();
+        unsigned int protoNum = _pickAvailableHero(THeroClass(heroClass));
+        if (protoNum >= THero::s_akClassTraits[heroClass].m_numPrototypes) {
+            for (heroClass = 0;;) {
+                protoNum = _pickAvailableHero(THeroClass(heroClass));
+                if (protoNum < THero::s_akClassTraits[heroClass].m_numPrototypes)
+                    break;
+                if (++heroClass >= kNumHeroClasses)
+                    throw TPlaceObjFailureNoAvailableHeroesInClass();
+            }
+        }
+        auto_ptr<THero> pNewPrison(
+            _m_pObjectFactory->createPrison(prison.getObjectType(), THeroClass(heroClass), protoNum, ::operator new));
+        if (pNewPrison.get() == NULL)
+#line 3831
+            throw TAllocationFailure(__FILE__, __LINE__);
+        copyCustomizations(prison, pNewPrison.get());
+        return _placeHero(bSecondLayer, *pNewPrison, x, y, pUpdatedExtent);
+    }
+    return _placeHero(bSecondLayer, prison, x, y, pUpdatedExtent);
+}
+
+TMapLayerObjectID TGameMap::_TImpl::_placeHero(bool bSecondLayer, const THero& hero, unsigned int x, unsigned int y,
+                                               TTileExtent* pUpdatedExtent)
+{
+    const _TPBookkeeping& pConstBookkeeping = _m_pBookkeeping;
+#line 3854
+    assert(pConstBookkeeping->m_numHeroes <= s_kMaxHeroesOnMap);
+    if (pConstBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+        throw TPlaceObjFailureTooManyHeroesOnMap();
+    if (hero.getOwner() != ePlayerNone) {
+        const _TPPlayerBookkeeping& pConstPlayerBookkeeping = _m_apPlayerBookkeeping[hero.getOwner()];
+        unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
+        if (getPlayers()[hero.getOwner()].getBGenerateHero())
+            numHeroes++;
+        if (numHeroes >= s_kMaxHeroesPerPlayer)
+            throw TPlaceObjFailureTooManyHeroesForPlayer();
+    }
+    TMapLayerObjectID result = _placeGeneralObject(bSecondLayer, hero, x, y, pUpdatedExtent);
+#line 3874
+    assert(result != TLayer::s_kInvalidObjID);
+    const TLayer* pLayer = getPLayer(bSecondLayer);
+    const THero* pHero = dynamic_cast<const THero*>(pLayer->getPObject(result));
+#line 3878
+    assert(pHero != NULL);
+    onHeroAdded(*pHero);
     return result;
 }
 
