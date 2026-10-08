@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <stdexcept>
+#include <limits>
 #include "bitmap8.h"
 
 Bitmap8Bit::Bitmap8Bit()
