@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "editor/cppbridge.h"
-#include "editor/EditRumorDlg.h"
 #include "editor/MapSpecsRumorsPage.h"
+#include "editor/EditRumorDlg.h"
 
 TMapSpecsRumorsPage::TMapSpecsRumorsPage(const TGameMap& map)
     : _m_map(map)
