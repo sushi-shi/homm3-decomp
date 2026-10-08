@@ -364,3 +364,8 @@ source = "src/editor/EditTownEventCreaturesPage.cpp"
 name = "TreasurePropsGuardiansPage"
 object = 102
 source = "src/editor/TreasurePropsGuardiansPage.cpp"
+
+[[unit]]
+name = "EditTownEventBuildingsPage"
+object = 98
+source = "src/editor/EditTownEventBuildingsPage.cpp"
