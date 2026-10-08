@@ -74,6 +74,11 @@ object = 50
 source = "src/sample.cpp"
 
 [[unit]]
+name = "GzBuf"
+object = 68
+source = "src/GzBuf.cpp"
+
+[[unit]]
 name = "font"
 object = 60
 source = "src/font.cpp"

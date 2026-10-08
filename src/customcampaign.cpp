@@ -24,7 +24,7 @@
 #include "campaignbrief.h"
 #include "castle.h"
 #include "customcampaign_legacy.h"
-#include "gzinflatebuf.h"
+#include "GzBuf.h"
 #include "hero.h"
 #include "bitmap16.h"
 #include "campaignmap.h"
