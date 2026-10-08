@@ -198,7 +198,7 @@ extern const char* const& kFindCaptionStr;
 extern const char* const& kMapValidationCaptionStr;
 extern const char* const& kNewMapCaptionStr;
 extern const char* const& kOptionsCaptionStr;
-extern const char* const& kSelectArtifactCaptionStr;
+DATA(0x005a1914) extern const char* const& kSelectArtifactCaptionStr;
 extern const char* const& kSelectHeroClassCaptionStr;
 extern const char* const& kSelectSpellCaptionStr;
 extern const char* const& kCustomizeCheckStr;
