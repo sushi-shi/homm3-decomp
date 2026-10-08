@@ -161,6 +161,13 @@ void computeLineShape(const bool* abAdjLine, const TLineTilesetTraits& traits,
         }
         *pbHFlipped = false;
     } else {
+        // Dead local: retail builds this 8-byte table in %eax:%edx at -O0 and
+        // never reads it (the loop reads the namespace table). Only a
+        // `register` local whose scope closes before the call does that; its
+        // name is unproven.
+        {
+            register const bool akFlipsCopy[4][2] = { { false, false }, { false, true }, { true, false }, { true, true } };
+        }
         bool bHasDiagTiles = traits.getNumTilesOfLineShape(eLS_esDiag) > 0;
         for (unsigned int i = 0; i < 4; ++i) {
             const unsigned int* akDir = akFlippedDir[akFlips[i][0]][akFlips[i][1]];
@@ -182,15 +189,17 @@ void computeLineShape(const bool* abAdjLine, const TLineTilesetTraits& traits,
                 *pLineShape = eLS_e;
                 *pbHFlipped = abAdjLine[6];
                 *pbVFlipped = false;
-            } else if (abAdjLine[4]) {
+                return;
+            }
+            if (abAdjLine[4]) {
                 *pLineShape = eLS_s;
                 *pbHFlipped = false;
                 *pbVFlipped = false;
-            } else {
-                *pLineShape = eLS_s;
-                *pbHFlipped = false;
-                *pbVFlipped = true;
+                return;
             }
+            *pLineShape = eLS_s;
+            *pbHFlipped = false;
+            *pbVFlipped = true;
         } else {
             *pLineShape = abAdjLine[6] || abAdjLine[2] ? eLS_ew : eLS_ns;
             *pbHFlipped = false;

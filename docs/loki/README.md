@@ -278,3 +278,12 @@ available.
   follow its content accessors.
 - `while (n > 0) { --n; ... }` tests then decrements (`cmpb $0`, `decb`
   in the body); `while (n-- > 0)` copies, decrements and tests the copy.
+- `-O0` uses stupid register allocation (`stupid.c`): a `register` local
+  lives for its whole scope, a compiler temporary from first to last
+  mention. A dead `register` local whose block closes before a call takes
+  call-clobbered registers (`%eax:%edx` for an 8-byte table); one whose
+  scope crosses the call takes `%ebx:%esi`, and the extra saved register
+  shrinks the frame by 4 (`computeLineShape`'s unused flip table).
+- `if (...) { ...; return; }` jumps straight to the epilogue, where an
+  `if/else` arm jumps to the end of the enclosing `if` first; a `return`
+  in an `else if` arm still leaves the jump over the following `else`.
