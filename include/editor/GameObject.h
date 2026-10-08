@@ -13,6 +13,7 @@
 
 #include <iosfwd>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "objecttype.h"
@@ -27,7 +28,9 @@ public:
     TGameObject& operator=(const TGameObject& other);
 
     virtual void importText(std::istream* pIStream) {}
-    virtual TGameObject* clone(void* (*pfnAllocator)(unsigned int)) const = 0;
+    // Windows returns the clone in an auto_ptr (h3maped 0x42a75a calls
+    // slot 2 with a result slot and no allocator); Loki passes one.
+    virtual std::auto_ptr<TGameObject> clone() const = 0;
     virtual void write(TRawOStream* pOStream) const = 0;
     virtual std::string getTypeName() const;
     virtual bool isCustomized() const { return false; }
@@ -42,6 +45,14 @@ public:
     bool getBCellPassable(unsigned int x, unsigned int y) const
     {
         return _m_objectTypeIter->first.getBCellPassable(x, y);
+    }
+    bool getBCellShadow(unsigned int x, unsigned int y) const
+    {
+        return _m_objectTypeIter->first.getBCellShadow(x, y);
+    }
+    bool getBCellTrigger(unsigned int x, unsigned int y) const
+    {
+        return _m_objectTypeIter->first.getBCellTrigger(x, y);
     }
     bool getBUnderlay() const { return _m_objectTypeIter->first.getBUnderlay() != 0; }
     unsigned int getWidth() const { return _m_objectTypeIter->first.getWidth(); }

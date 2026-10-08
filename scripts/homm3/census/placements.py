@@ -384,15 +384,25 @@ def derive(log=print, want_suggestions=False):
         if row is not None:
             place_table(symbol, row["rva"], f"vtable of {cls} (RTTI)")
 
-    def same_operand(body, rva, site):
+    def same_operand(body, rva, site, context=1):
         """A relocation site whose instruction bytes before the field agree
         with retail: a placed body that differs elsewhere still names its
-        referents there, and nowhere else."""
-        start = max(0, site - 1)
-        theirs = blob(rva + start, site - start)
-        fields = [other for other in relocs_of[id(body)] if other != site]
-        return all(theirs[k - start] == body[k] for k in range(start, site)
-                   if not any(other <= k < other + 4 for other in fields))
+        referents there, and nowhere else. `context` counts the fixed bytes
+        compared, other relocation fields skipped."""
+        fields = set()
+        for other in relocs_of[id(body)]:
+            if other != site:
+                fields.update(range(other, other + 4))
+        offsets = []
+        k = site - 1
+        while k >= 0 and len(offsets) < context:
+            if k not in fields:
+                offsets.append(k)
+            k -= 1
+        if not offsets:
+            return True
+        theirs = blob(rva + offsets[-1], site - offsets[-1])
+        return all(theirs[k - offsets[-1]] == body[k] for k in offsets)
 
     # reference propagation to a fixpoint over uniquely placed functions
     done = set()
@@ -418,6 +428,21 @@ def derive(log=print, want_suggestions=False):
                 out[a] = b
         return out
 
+    def divergence(body, relocs, rva):
+        """The first offset where a placed body's fixed bytes leave retail's:
+        past it an absolute operand's offset
+        need not name the same instruction in retail, however its opcode
+        byte agrees (two `push imm32` of one throw swap places), so the
+        instruction bytes before it must agree further back."""
+        theirs = blob(rva, min(len(body), functions[rva]))
+        fields = set()
+        for site in relocs:
+            fields.update(range(site, site + 4))
+        for k, byte in enumerate(theirs):
+            if k not in fields and body[k] != byte:
+                return k
+        return len(theirs)
+
     def propagate():
         while True:
             moved = 0
@@ -428,10 +453,12 @@ def derive(log=print, want_suggestions=False):
                 (rva,) = rvas
                 body, relocs = bodies[name]
                 order = None
+                diverged = divergence(body, relocs, rva)
                 for site, (ref, kind) in relocs.items():
                     value = word(rva + site)
                     at = f"+0x{site:x}"
-                    if value is None or not same_operand(body, rva, site):
+                    if (value is None or not same_operand(
+                            body, rva, site, 4 if kind == DIR32 and site >= diverged else 1)):
                         if kind != DIR32:
                             continue
                         if order is None:

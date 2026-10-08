@@ -12,6 +12,7 @@
 #define HOMM3_EDITOR_GAMEMAP_H
 
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,8 @@
 #include "va.h"
 #include "editor/Point.h"
 #include "editor/RefCountingPtr.h"
+
+class TGameObject;
 
 typedef unsigned int TMapLayerObjectID;
 
@@ -150,6 +153,9 @@ private:
     friend class TLayer;
 };
 
+// One level of the map: its cells and the objects placed on them. The
+// objects are numbered from 1 and kept in a list in placement order; a
+// layer floats at most one object, taken off its cells while it moves.
 class TGameMap::TLayer {
 public:
     // One object's footprint record in a cell: the object and the
@@ -163,26 +169,60 @@ public:
 
     class TCell;
 
+    TLayer(TSize size);
+    ~TLayer();
+
+    TCell* getPCell(unsigned int x, unsigned int y);
+    TGameObject* getPObject(unsigned int objID);
     unsigned int getWidth() const;
     unsigned int getHeight() const;
     const TCell* getPCell(unsigned int x, unsigned int y) const;
     const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
     VA(0x0041e82b, 0x20)  // an out-of-line copy after its first user
     const TCell& getCell(const TTilePoint& loc) const { return getCell(loc.x(), loc.y()); }
+    const TGameObject* getPObject(unsigned int objID) const;
+    const TGameObject& getObject(unsigned int objID) const { return *getPObject(objID); }
+    TTilePoint getObjectLoc(unsigned int objID) const;
+    TTileExtent getObjectExtent(unsigned int objID) const;
+    TMapLayerObjectID getFloatingObjID() const;
+    TMapLayerObjectID getFirstObjectID() const;
+    TMapLayerObjectID getLastObjectID() const;
+    TMapLayerObjectID getNextObjectID(unsigned int objID) const;
+    TMapLayerObjectID getPrevObjectID(unsigned int objID) const;
+    unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
+    TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
+    unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
+    TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
 
 private:
     class _TImpl;
     friend class TGameMap;
+    friend class TGameMap::_TImpl;
+    friend class TCell;
+
+    // Windows hands the layer its own clone of the object (h3maped
+    // 0x42b793 passes an auto_ptr by value); Loki's port clones a const
+    // reference inside.
+    TMapLayerObjectID _placeObject(std::auto_ptr<TGameObject> pObj, const TTilePoint& loc);
 
     TRefCountingPtr<_TImpl> _m_pImpl;
 };
 
 class TGameMap::TLayer::TCell {
 public:
+    // A new cell is plain water (h3maped 0x4395c8 stores the word 8).
+    TCell() : _m_terrainType(eTerrainWater), _m_riverType(0), _m_roadType(0), _m_tileNum(0),
+              _m_riverTileNum(0), _m_roadTileNum(0), _m_bHFlipped(false), _m_bVFlipped(false),
+              _m_bRiverHFlipped(false), _m_bRiverVFlipped(false), _m_bRoadHFlipped(false),
+              _m_bRoadVFlipped(false) {}
+
     TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
 
 private:
-    // A lazily created, shared and copy-on-write vector.
+    friend class TGameMap::TLayer::_TImpl;
+
+    // A lazily created, shared and copy-on-write vector. One template for
+    // Loki's two classes: h3maped folds their creation (0x42b042).
     template<class T>
     class _TPVector {
     public:
@@ -198,11 +238,54 @@ private:
                 delete _m_pWrapper;
         }
 
+        void construct()
+        {
+            if ((_m_pWrapper = new _TWrapper) == NULL)
+                _fail();
+        }
+        void clear()
+        {
+            if (--_m_pWrapper->m_refCnt == 0)
+                delete _m_pWrapper;
+            _m_pWrapper = NULL;
+        }
+
+        std::vector<T>* get()
+        {
+            if (_m_pWrapper == NULL)
+                construct();
+            else if (_m_pWrapper->m_refCnt > 1)
+                _split();
+            return &_m_pWrapper->m_a;
+        }
+        std::vector<T>& operator*() { return *get(); }
+        const std::vector<T>* get() const
+        {
+            return _m_pWrapper != NULL ? &_m_pWrapper->m_a : NULL;
+        }
+        const std::vector<T>& operator*() const { return *get(); }
+
     private:
         struct _TWrapper {
+            _TWrapper() : m_refCnt(1) {}
+            _TWrapper(const std::vector<T>& a) : m_refCnt(1), m_a(a) {}
+
             unsigned int m_refCnt;
             std::vector<T> m_a;
         };
+
+        void _split()
+        {
+            _TWrapper* pNewWrapper = new _TWrapper(_m_pWrapper->m_a);
+            if (pNewWrapper == NULL)
+                _fail();
+            --_m_pWrapper->m_refCnt;
+            _m_pWrapper = pNewWrapper;
+        }
+        void _fail()
+        {
+            throw TAllocationFailure();
+        }
 
         _TWrapper* _m_pWrapper;
     };
