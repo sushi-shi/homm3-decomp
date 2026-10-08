@@ -83,9 +83,12 @@ static const int g_angelicAllianceSecondMap = 9;
 // Keep the campaign reference, native artifact-vector lifetime, and explicit
 // GetTeam/IsHumanTeam calls (DC line 41). The ordinary path rejects the wrong
 // condition, an absent current player, and a disabled player separately.
+// DC's first guard returns from a braced block (line 34, two nested scopes).
 // With those guard scopes VC6 expands out_of_range's constructor inside
 // bitset::test while retaining logic_error, matching retail +0x4c1. Joining
 // the guards emits the same game logic but leaves out_of_range out of line.
+// That expansion needs a final test-site budget of 181..183 (inline trace):
+// unbraced guards leave 177 since getHero's DC else-arm; bracing all three, 189.
 // Component predicate spelling and discarding erase's result did not close
 // that boundary; the complete separated-guard body matches Windows exactly.
 // Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
@@ -142,8 +145,9 @@ bool VictoryConditionStruct::checkForArtifactWin()
         return 0;
     }
 
-    if (m_type != VICTORY_CONDITION_ARTIFACT)
+    if (m_type != VICTORY_CONDITION_ARTIFACT) {
         return 0;
+    }
     if (!g_currentPlayer)
         return 0;
     if (g_game->m_playerDisabled[g_netLocalGamePos])
