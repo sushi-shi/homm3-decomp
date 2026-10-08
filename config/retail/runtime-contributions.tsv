@@ -2152,8 +2152,8 @@ rva	size	kind	library	member	section	symbol	evidence
 0x2aba74	4	bss	LIBCMT.LIB	w_loc.obj	1	_?f_use@?1??__crtGetLocaleInfoW@@9@9	-
 0x2aba78	4	bss	LIBCMT.LIB	a_loc.obj	1	_?f_use@?1??__crtGetLocaleInfoA@@9@9	-
 0x2aba7c	1	common	game	objecttype.obj	0	??_B?1???id@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@$D@@9@51	third-guard-of-initializer-0x51b830
-0x2aba7d	1	common	game	objecttype.obj	0	??_B?1??getObjectImageCache@@YIAAV?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TObjectType@@@std@@@std@@XZ@51	guards-imageCache-at-0x514703
-0x2aba80	16	common	game	objecttype.obj	0	?imageCache@?1??getObjectImageCache@@YIAAV?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TObjectType@@@std@@@std@@XZ@4V23@A	witness=0x514930
+0x2aba7d	1	common	game	objecttype.obj	0	??_B?1??getObjectImageCache@@YIAAV?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@XZ@51	guards-imageCache-at-0x514703
+0x2aba80	16	common	game	objecttype.obj	0	?imageCache@?1??getObjectImageCache@@YIAAV?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@XZ@4V23@A	witness=0x514930
 0x2aba90	1	common	game	customcampaign.obj	0	??_B?1???id@?$codecvt@DDH@std@@$D@@9@51	witness=0x48f5f0,0x4b8000
 0x2aba94	4	common	LIBCPMT.LIB	iostream.obj	0	?_Stinit@?1??_Init@?$basic_filebuf@DU?$char_traits@D@std@@@std@@IAEXPAU_iobuf@@W4_Initfl@23@@Z@4HA	declared-by=1,game-declares=2,witness=0x48bd50
 0x2aba98	1	common	game	bottomviewsubwindow.obj	0	??_B?1???id@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@$D@@9@51	witness=0x52f490,0x530d40

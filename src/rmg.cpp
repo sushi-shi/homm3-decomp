@@ -963,7 +963,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, unsigned char water
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
         int direction = 8;
         if (current->isObjectEntrance()) {
-            int objectType = current->m_objects[0]->m_properties->m_prototype->getObjectType();
+            int objectType = current->m_objects[0]->m_properties->m_prototype->getType();
             if (!g_adventureObjectTraits[objectType].m_enterableFromNorth)
                 direction = 5;
         }
@@ -979,7 +979,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, unsigned char water
                 || next->getLandType() == eTerrainRock)
                 continue;
             if (next->isObjectEntrance()) {
-                int objectType = next->m_objects[0]->m_properties->m_prototype->getObjectType();
+                int objectType = next->m_objects[0]->m_properties->m_prototype->getType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_clearedOnVisit)
                     continue;
@@ -1056,14 +1056,14 @@ unsigned char TRmgMap::isPlacementBlocked(
         for (unsigned int x = 0; x < prototype.getWidth(); ++x, --nearby.m_x) {
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
-            if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
+            if (prototype.getBCellTrigger(maskPoint.m_x, maskPoint.m_y)) {
                 if (!item->isPassable()
                     || item->isObjectEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (rejectObstacleFill && item->hasObstacleFill())
                     return 1;
             }
-            if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
+            if (!prototype.getBCellPassable(maskPoint.m_x, maskPoint.m_y)) {
                 if (!item->isPassable()
                     || item->isObjectEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
@@ -1152,7 +1152,7 @@ unsigned char TRmgMap::canPlaceObject(
     int zoneIndex = zone->m_templateZone->m_zoneIndex;
     if (isPlacementBlocked(properties, position, zoneIndex, 0))
         return 0;
-    int objectType = prototype.getObjectType();
+    int objectType = prototype.getType();
     properties->buildOutline();
     if (!hasConnectedOutline(properties->m_outline, position,
             g_adventureObjectTraits[objectType].m_clearedOnVisit && g_adventureObjectTraits[objectType].m_enterableFromNorth,
@@ -1175,7 +1175,7 @@ unsigned char TRmgMap::canPlaceObject(
     if (item->m_zoneState.m_zone != zoneIndex)
         return 0;
     if (item->isObjectEntrance()) {
-        int entranceType = item->m_objects[0]->m_properties->m_prototype->getObjectType();
+        int entranceType = item->m_objects[0]->m_properties->m_prototype->getType();
         if (!g_adventureObjectTraits[entranceType].m_clearedOnVisit)
             return 0;
     }
@@ -1223,14 +1223,14 @@ void TRmgMap::addObject(TRmgObject& object, TRmgMapPosition position)
                 continue;
             TRmgGridPoint maskPoint(x, y);
             TRmgMapItem* item = getMapItem(nearby);
-            if (prototype.isTriggerCell(maskPoint.m_x, maskPoint.m_y)) {
+            if (prototype.getBCellTrigger(maskPoint.m_x, maskPoint.m_y)) {
                 item->m_tileData.m_objectEntrance = 1;
                 if (!item->m_connection.m_present) {
                     item->m_tileData.m_obstacleFill = 0;
                     item->m_tileData.m_pathClearance = 1;
                 }
                 item->m_objects.push_back(&object);
-            } else if (!prototype.isPassableCell(maskPoint.m_x, maskPoint.m_y)) {
+            } else if (!prototype.getBCellPassable(maskPoint.m_x, maskPoint.m_y)) {
                 item->m_tileData.m_passable = 0;
                 item->m_objects.push_back(&object);
             }
@@ -1730,7 +1730,7 @@ void TRmgObjectPropertiesRef::buildOutline()
     position.m_y = 0;
     position.m_x = 0;
     while (static_cast<unsigned int>(-position.m_x) < m_prototype->getWidth()) {
-        if (!m_prototype->isPassableCell(-position.m_x, 0) || m_prototype->isTriggerCell(-position.m_x, 0))
+        if (!m_prototype->getBCellPassable(-position.m_x, 0) || m_prototype->getBCellTrigger(-position.m_x, 0))
             break;
         --position.m_x;
     }
@@ -1749,7 +1749,7 @@ void TRmgObjectPropertiesRef::buildOutline()
             if (nearby.m_x > 0 || static_cast<unsigned int>(-nearby.m_x) >= m_prototype->getWidth()
                 || nearby.m_y > 0 || static_cast<unsigned int>(-nearby.m_y) >= m_prototype->getHeight())
                 break;
-            if (m_prototype->isPassableCell(-nearby.m_x, -nearby.m_y) && !m_prototype->isTriggerCell(-nearby.m_x, -nearby.m_y))
+            if (m_prototype->getBCellPassable(-nearby.m_x, -nearby.m_y) && !m_prototype->getBCellTrigger(-nearby.m_x, -nearby.m_y))
                 break;
         } while (++attempts < 4);
         position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
@@ -1765,21 +1765,21 @@ void TRmgObjectPropertiesRef::buildOverlapPriorities()
         return;
     m_prioritiesInitialized = 1;
     for (unsigned int x = 0; x < m_prototype->getWidth(); ++x) {
-        int priority = !m_prototype->isUnderlay();
+        int priority = !m_prototype->getBUnderlay();
         unsigned int y = 0;
         for (;;) {
-            if (m_prototype->isDrawCell(x, y))
+            if (m_prototype->getBCellPlaced(x, y))
                 m_overlapPriorities[x][y] = priority;
             if (++y >= m_prototype->getHeight())
                 break;
-            if (!m_prototype->isUnderlay()) {
-                if (m_prototype->isPassableCell(x, y)) {
-                    if (x > 0 && !m_prototype->isPassableCell(x - 1, y))
+            if (!m_prototype->getBUnderlay()) {
+                if (m_prototype->getBCellPassable(x, y)) {
+                    if (x > 0 && !m_prototype->getBCellPassable(x - 1, y))
                         priority = m_overlapPriorities[x - 1][y];
                     else
                         ++priority;
                 } else {
-                    if (m_prototype->isPassableCell(x, y - 1))
+                    if (m_prototype->getBCellPassable(x, y - 1))
                         priority = 1;
                     else
                         ++priority;
@@ -2946,7 +2946,7 @@ MAC_ADDRESS(0x233d18, 0x60)
 unsigned char TRmgTreasureGroup::objectsAllowEntrances() const
 {
     for (unsigned int index = 0; index < m_objects.size(); ++index) {
-        int objectType = m_objects[index]->m_properties->m_prototype->getObjectType();
+        int objectType = m_objects[index]->m_properties->m_prototype->getType();
         if (!g_adventureObjectTraits[objectType].m_clearedOnVisit)
             return 0;
     }
@@ -3005,7 +3005,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
         TRmgMapPosition entrance = object->getPosition();
         entrance -= TPoint(prototype->m_triggerCell.m_x,
             prototype->m_triggerCell.m_y);
-        unsigned int direction = g_adventureObjectTraits[prototype->getObjectType()].m_enterableFromNorth
+        unsigned int direction = g_adventureObjectTraits[prototype->getType()].m_enterableFromNorth
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
             TRmgMapPosition position = entrance + g_rmgDirections[direction];
@@ -3044,7 +3044,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
     addObject(guard, guardPosition);
     guardPosition.m_x -= prototype->m_triggerCell.m_x;
     guardPosition.m_y -= prototype->m_triggerCell.m_y;
-    int guardType = guardProperties->m_prototype->getObjectType();
+    int guardType = guardProperties->m_prototype->getType();
     for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
         TPoint point = g_rmgDirections[direction]
             + TRmgVector(guardPosition.m_x, guardPosition.m_y);
@@ -3148,7 +3148,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
     TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
-    int objectType = prototype->getObjectType();
+    int objectType = prototype->getType();
     TObjectType::TPoint trigger = prototype->m_triggerCell;
     TRmgVector origin(position.m_x, position.m_y);
     origin.m_x -= trigger.m_x;
@@ -3165,7 +3165,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
             TPoint nearby = g_rmgDirections[direction] + origin;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (item->isObjectEntrance()) {
-                int neighborType = item->m_objects[0]->m_properties->m_prototype->getObjectType();
+                int neighborType = item->m_objects[0]->m_properties->m_prototype->getType();
                 if (!g_adventureObjectTraits[neighborType].m_clearedOnVisit
                     || !g_adventureObjectTraits[neighborType].m_enterableFromNorth)
                     goto placementFailure;
@@ -3230,7 +3230,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(TRmgObject* object)
             existingPrototype->m_triggerCell.m_y);
         int end;
         int first;
-        if (g_adventureObjectTraits[existingPrototype->getObjectType()].m_enterableFromNorth) {
+        if (g_adventureObjectTraits[existingPrototype->getType()].m_enterableFromNorth) {
             end = 8;
             first = 0;
         } else {
@@ -3407,13 +3407,13 @@ void TRmgGeneratorBase::loadObjectPrototypes()
     m_objectsTxt.load("objects.txt");
     unsigned int index = 0;
     for (; index < m_objectsTxt.m_objectTypes.size(); ++index) {
-        int type = m_objectsTxt.m_objectTypes[index].getObjectType();
+        int type = m_objectsTxt.m_objectTypes[index].getType();
         if (m_mapVersion < 2 && type >= 222)
             continue;
         if (m_mapVersion < 1 && type >= 165)
             continue;
         if (m_mapVersion < 2 && (type == LITH_TWOWAY || type == LITH_ONEWAY_ENTRANCE || type == LITH_ONEWAY_EXIT)
-            && m_objectsTxt.m_objectTypes[index].getSubtype() >= 3)
+            && m_objectsTxt.m_objectTypes[index].getExtra() >= 3)
             continue;
         if (type < 0 || type >= 232)
             continue;
@@ -3432,7 +3432,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
 #endif
     for (index = 0; index < m_objectPrototypes[54].size() - 1; ++index) {
         for (unsigned int second = index + 1; second < m_objectPrototypes[54].size(); ++second) {
-            if (m_objectPrototypes[54][index]->m_prototype->getSubtype() > m_objectPrototypes[54][second]->m_prototype->getSubtype()) {
+            if (m_objectPrototypes[54][index]->m_prototype->getExtra() > m_objectPrototypes[54][second]->m_prototype->getExtra()) {
                 std::swap(m_objectPrototypes[54][index]->m_prototype, m_objectPrototypes[54][second]->m_prototype);
             }
         }
@@ -3604,7 +3604,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             }
             properties->m_preferredTerrain = terrain;
             if (terrain != eTerrainRock) {
-                subtype = prototype->getSubtype();
+                subtype = prototype->getExtra();
                 int mappedType;
                 // Same canonical byte table used by readObjectType: the
                 // dword at +8 remaps aliases to their objnames.txt row.
@@ -3677,13 +3677,13 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             int x = position.m_x - column;
             if (x < 0 || x >= m_map.m_mapWidth)
                 continue;
-            if (!prototype->isDrawCell(column, row))
+            if (!prototype->getBCellPlaced(column, row))
                 continue;
             marks[column + 1][row + 1] |= RMG_PLACEMENT_OVERLAP;
-            if (!prototype->isPassableCell(column, row)) {
+            if (!prototype->getBCellPassable(column, row)) {
                 marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
                 TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-                if (!prototype->m_terrainMask[item->getLandType()])
+                if (!prototype->_m_terrainMask[item->getLandType()])
                     return RMG_PLACEMENT_INVALID;
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
@@ -3861,7 +3861,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                 if (!properties->m_placementRule
                     || properties->m_placementRule->m_terrainScores[terrain] <= RMG_PLACEMENT_INVALID)
                     continue;
-                if (!isRmgObjectAvailableInVersion(prototype->getObjectType(), m_mapVersion))
+                if (!isRmgObjectAvailableInVersion(prototype->getType(), m_mapVersion))
                     continue;
                 TRmgZoneBounds bounds;
                 bounds.m_minimumX = position.m_x;
@@ -3874,7 +3874,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                     candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
                     for (candidatePosition.m_x = bounds.m_minimumX;
                         candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
-                        if (prototype->isPassableCell(
+                        if (prototype->getBCellPassable(
                                 candidatePosition.m_x - position.m_x, candidatePosition.m_y - position.m_y))
                             continue;
                         int score = scoreObjectPlacement(properties, candidatePosition);
@@ -6506,7 +6506,7 @@ void TRmgGenerator::addObject(TRmgObject* object, TRmgMapPosition position)
 {
     TRmgGeneratorBase::addObject(object, position);
     TObjectType* prototype = object->m_properties->m_prototype;
-    int objectType = prototype->getObjectType();
+    int objectType = prototype->getType();
     ++m_objectCountByType[objectType];
     if (prototype->m_hasTrigger) {
         TObjectType::TPoint trigger = prototype->m_triggerCell;
@@ -6755,7 +6755,7 @@ TRmgObject* TRmgGenerator::createGuard(int value, TRmgZone* zone)
     memset(prototypeIndices, -1, sizeof(prototypeIndices));
     for (unsigned int index = 0; index < m_objectPrototypes[MONSTER].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][index];
-        prototypeIndices[properties->m_prototype->getSubtype()] = index;
+        prototypeIndices[properties->m_prototype->getExtra()] = index;
     }
     int eligibleCount = 0;
     int creature = RMG_CREATURE_TYPE_COUNT;
@@ -6805,7 +6805,7 @@ int TRmgGenerator::placeBorderGuard(
     int color = m_nextKeyTentColor;
     int index = 0;
     for (; index < m_objectPrototypes[BORDER_TENT].size(); ++index) {
-        if (m_objectPrototypes[BORDER_TENT][index]->m_prototype->getSubtype() == color)
+        if (m_objectPrototypes[BORDER_TENT][index]->m_prototype->getExtra() == color)
             break;
     }
     if (index == m_objectPrototypes[BORDER_TENT].size())
@@ -6814,7 +6814,7 @@ int TRmgGenerator::placeBorderGuard(
 
     index = 0;
     for (; index < m_objectPrototypes[BORDER_GUARD].size(); ++index) {
-        if (m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getSubtype() == color)
+        if (m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getExtra() == color)
             break;
     }
     if (index == m_objectPrototypes[BORDER_GUARD].size())
@@ -7888,7 +7888,7 @@ void TRmgGenerator::connectZones()
 
         for (int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
             TRmgObject* object = m_objects[objectIndex];
-            if (object->m_properties->m_prototype->getObjectType() == SHIPYARD) {
+            if (object->m_properties->m_prototype->getType() == SHIPYARD) {
                 position = object->getPosition();
                 if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
                     floodShipyardWater(object);
@@ -8779,14 +8779,14 @@ unsigned char TRmgGenerator::tryPlaceMine(TRmgZone* zone,
     for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
         properties = m_objectPrototypes[MINE][i];
         prototype = properties->m_prototype;
-        if (prototype->getSubtype() == resource && prototype->isRecommendedTerrain(terrain))
+        if (prototype->getExtra() == resource && prototype->isRecommendedTerrain(terrain))
             candidates.push_back(properties);
     }
     if (!candidates.size()) {
         for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
             properties = m_objectPrototypes[MINE][i];
             prototype = properties->m_prototype;
-            if (prototype->getSubtype() == resource)
+            if (prototype->getExtra() == resource)
                 candidates.push_back(properties);
         }
     }
@@ -8958,7 +8958,7 @@ TRmgObjectPropertiesRef* TRmgGenerator::selectObjectPrototype(
     for (unsigned int index = 0; index < m_objectPrototypes[objectType].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
         const TObjectType* prototype = properties->m_prototype;
-        if (prototype->getSubtype() != subtype)
+        if (prototype->getExtra() != subtype)
             continue;
         if (prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_4
             || prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_5) {
@@ -8983,7 +8983,7 @@ static int countRmgOccupiedCells(const TObjectType* prototype)
     int occupied = 0;
     for (unsigned int x = 0; x < prototype->getWidth(); ++x) {
         for (unsigned int y = 0; y < prototype->getHeight(); ++y) {
-            if (!prototype->isPassableCell(x, y) || prototype->isTriggerCell(x, y))
+            if (!prototype->getBCellPassable(x, y) || prototype->getBCellTrigger(x, y))
                 ++occupied;
         }
     }
@@ -9390,7 +9390,7 @@ unsigned char TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
             for (point.m_y = workingPosition.m_y - 1; point.m_y <= workingPosition.m_y + 1; ++point.m_y) {
                 TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
                 if (item->isObjectEntrance()
-                    && item->m_objects[0]->m_properties->m_prototype->getObjectType() == MONSTER)
+                    && item->m_objects[0]->m_properties->m_prototype->getType() == MONSTER)
                     return 0;
             }
         }
@@ -9403,7 +9403,7 @@ unsigned char TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition entrance = lastObject->getPosition();
     entrance.m_x -= prototype->m_triggerCell.m_x;
     entrance.m_y -= prototype->m_triggerCell.m_y;
-    if (!g_adventureObjectTraits[prototype->getObjectType()].m_enterableFromNorth) {
+    if (!g_adventureObjectTraits[prototype->getType()].m_enterableFromNorth) {
         firstDirection = 1;
         lastDirection = 4;
     }
@@ -9630,7 +9630,7 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
         if (objectEntrance) {
             TRmgObject* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
-            int objectType = prototype->getObjectType();
+            int objectType = prototype->getType();
             if (!g_adventureObjectTraits[objectType].m_enterableFromNorth
                 && !g_adventureObjectTraits[objectType].m_clearedOnVisit)
                 direction = 5;
@@ -9638,10 +9638,10 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
             switch (objectType) {
             case LITH_ONEWAY_ENTRANCE:
             case LITH_ONEWAY_EXIT: {
-                int subtype = prototype->getSubtype();
+                int subtype = prototype->getExtra();
                 for (int i = 0; i < m_monolithsOneWay.size(); ++i) {
                     TRmgObject* destination = m_monolithsOneWay[i];
-                    if (destination->m_properties->m_prototype->getSubtype() != subtype)
+                    if (destination->m_properties->m_prototype->getExtra() != subtype)
                         continue;
 
                     TRmgMapPosition nextPosition = destination->m_position;
@@ -9658,10 +9658,10 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
             }
 
             case LITH_TWOWAY: {
-                int subtype = prototype->getSubtype();
+                int subtype = prototype->getExtra();
                 for (int i = 0; i < m_monolithsTwoWay.size(); ++i) {
                     TRmgObject* destination = m_monolithsTwoWay[i];
-                    if (destination->m_properties->m_prototype->getSubtype() != subtype)
+                    if (destination->m_properties->m_prototype->getExtra() != subtype)
                         continue;
 
                     TRmgMapPosition nextPosition = destination->m_position;
@@ -9712,7 +9712,7 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
                 nextMapItem->m_tileData.m_objectEntrance;
             if (nextObjectEntrance) {
                 int objectType =
-                    nextMapItem->m_objects[0]->m_properties->m_prototype->getObjectType();
+                    nextMapItem->m_objects[0]->m_properties->m_prototype->getType();
                 const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_clearedOnVisit)
                     continue;
@@ -10211,9 +10211,9 @@ void TRmgGenerator::markRiverJoinTargets()
     for (unsigned int index = 0; index < m_objects.size(); ++index) {
         TRmgObject* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
-        if (prototype->getObjectType() == TERRAIN_MOUNTAIN
-            || prototype->getObjectType() == TERRAIN_LAKE
-            || (prototype->getObjectType() == MINE && prototype->getSubtype() == GEMS)) {
+        if (prototype->getType() == TERRAIN_MOUNTAIN
+            || prototype->getType() == TERRAIN_LAKE
+            || (prototype->getType() == MINE && prototype->getExtra() == GEMS)) {
             TRmgMapPosition position = object->m_position;
             int offsetX;
             int offsetY;
@@ -10247,7 +10247,7 @@ void TRmgGenerator::createRivers()
     for (unsigned int index = 0; index < m_objects.size(); ++index) {
         TRmgObject* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
-        if (prototype->getObjectType() == WATER_WHEEL) {
+        if (prototype->getType() == WATER_WHEEL) {
             TObjectType::TPoint trigger = prototype->m_triggerCell;
             TRmgMapPosition position = object->m_position;
             position.m_x -= trigger.m_x;
@@ -10886,12 +10886,12 @@ unsigned char TRmgGenerator::writeMap(TAbstractFile* outfile)
     }
     for (unsigned int first = 0; first < m_objects.size(); ++first) {
         TRmgObject* object = m_objects[first];
-        if (g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_isDecoration)
+        if (g_adventureObjectTraits[object->m_properties->m_prototype->getType()].m_isDecoration)
             object->write(outfile, m_mapVersion);
     }
     for (unsigned int second = 0; second < m_objects.size(); ++second) {
         TRmgObject* object = m_objects[second];
-        if (!g_adventureObjectTraits[object->m_properties->m_prototype->getObjectType()].m_isDecoration)
+        if (!g_adventureObjectTraits[object->m_properties->m_prototype->getType()].m_isDecoration)
             object->write(outfile, m_mapVersion);
     }
     if (m_progress)
@@ -10929,7 +10929,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         int bit = 0;
         for (y = 6; y--;)
             for (x = 7; x >= 0; --x) {
-                if (prototype->isPassableCell(x, y))
+                if (prototype->getBCellPassable(x, y))
                     mask[bit / 8] |= 1 << (bit % 8);
                 ++bit;
             }
@@ -10941,7 +10941,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         int bit = 0;
         for (y = 6; y--;)
             for (x = 7; x >= 0; --x) {
-                if (prototype->isTriggerCell(x, y))
+                if (prototype->getBCellTrigger(x, y))
                     mask[bit / 8] |= 1 << (bit % 8);
                 ++bit;
             }
@@ -10951,7 +10951,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         terrainMask[0] = 0;
         terrainMask[1] = 0;
         for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->m_terrainMask.test(terrain))
+            if (prototype->_m_terrainMask.test(terrain))
                 terrainMask[terrain / 8] |= 1 << (terrain % 8);
         outfile->write(terrainMask, sizeof(terrainMask));
     }
@@ -10964,11 +10964,11 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         outfile->write(terrainMask, sizeof(terrainMask));
     }
     {
-        int value = prototype->getObjectType();
+        int value = prototype->getType();
         outfile->write(&value, sizeof(value));
     }
     {
-        int value = prototype->getSubtype();
+        int value = prototype->getExtra();
         outfile->write(&value, sizeof(value));
     }
     {
@@ -10976,7 +10976,7 @@ void __fastcall writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* pro
         outfile->write(&value, sizeof(value));
     }
     {
-        char value = prototype->isUnderlay();
+        char value = prototype->getBUnderlay();
         outfile->write(&value, sizeof(value));
     }
     int reserved[4];
@@ -11158,7 +11158,7 @@ unsigned char TRmgGenerator::placeSeerHutForArtifact(TRmgQuestArtifactObject* ob
     seerHut->m_artifact = artifact;
     unsigned int prototypeIndex = 0;
     while (prototypeIndex < m_objectPrototypes[ARTIFACT].size()
-        && m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->getSubtype() != artifact)
+        && m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->getExtra() != artifact)
         ++prototypeIndex;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
     --object->m_properties->m_refCount;
@@ -11212,10 +11212,10 @@ VA(0x0054B8C0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334) // anchor-callee 0x5338e0; retail-only
 unsigned char TRmgGenerator::placeKeyTentGuard(TRmgObject* object, int maxValue)
 {
-    int color = object->m_properties->m_prototype->getSubtype();
+    int color = object->m_properties->m_prototype->getExtra();
     unsigned int index = 0;
     while (index < m_objectPrototypes[BORDER_GUARD].size()
-        && m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getSubtype() != color)
+        && m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getExtra() != color)
         ++index;
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
@@ -11269,8 +11269,8 @@ void TRmgGenerator::removeObject(TRmgObject* object)
 #endif
     {
         m_objects.erase(found);
-        --m_objectCountByType[prototype->getObjectType()];
-        TAdventureObjectType objectType = prototype->getObjectType();
+        --m_objectCountByType[prototype->getType()];
+        TAdventureObjectType objectType = prototype->getType();
         TObjectType::TPoint trigger = prototype->m_triggerCell;
         int zone = m_map.getMapItem(position.m_x - trigger.m_x,
             position.m_y - trigger.m_y, position.m_z)->m_zoneState.m_zone;
@@ -11278,8 +11278,8 @@ void TRmgGenerator::removeObject(TRmgObject* object)
             m_zones[zone]->decrementObjectCount(objectType);
         }
     }
-    if (prototype->getObjectType() == BORDER_GUARD) {
-        m_disabledKeyTents[prototype->getSubtype()] = 0;
+    if (prototype->getType() == BORDER_GUARD) {
+        m_disabledKeyTents[prototype->getExtra()] = 0;
         m_nextKeyTentColor = 0;
         while (m_nextKeyTentColor < m_disabledKeyTents.size()
             && m_disabledKeyTents[m_nextKeyTentColor])
@@ -11296,8 +11296,8 @@ void TRmgGenerator::removeObject(TRmgObject* object)
             mapPosition.m_x = position.m_x - cell.m_x;
             if (mapPosition.m_x < 0 || mapPosition.m_x >= m_map.m_mapWidth)
                 continue;
-            if (!prototype->isPassableCell(cell.m_x, cell.m_y)
-                || prototype->isTriggerCell(cell.m_x, cell.m_y)) {
+            if (!prototype->getBCellPassable(cell.m_x, cell.m_y)
+                || prototype->getBCellTrigger(cell.m_x, cell.m_y)) {
                 TRmgMapItem* item = m_map.getMapItem(mapPosition);
                 std::vector<TRmgObject*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
 #if defined(HOMM3_RMG_HOTFIX)
