@@ -11,6 +11,7 @@
 #include "herospec.h"
 #include "kb.h"
 #include "quest.h"
+#include "terrain.h"
 
 // DC struct.h proves the const-reference comparison operators. Their canonical
 // definitions now live in struct.h; use them directly instead of TU-local

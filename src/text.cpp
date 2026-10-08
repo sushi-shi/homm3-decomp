@@ -8,6 +8,7 @@
 #include "hiscore.h"
 #include "objnames.h"
 #include "resourcemanager.h"
+#include "terrain.h"
 #include "textresource.h"
 
 // --- the resource holders and destination tables the loaders below

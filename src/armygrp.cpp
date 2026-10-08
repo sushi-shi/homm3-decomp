@@ -24,6 +24,7 @@
 #include "message.h"
 #include "misc.h"
 #include "spelldefs.h"
+#include "terrain.h"
 #include "textntry.h"
 #include "textwdgt.h"
 #include "town.h"

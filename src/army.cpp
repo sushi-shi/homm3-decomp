@@ -32,6 +32,7 @@
 #include "resourcemanager.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "town.h"
 #include "townmgr.h"

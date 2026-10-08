@@ -14,6 +14,7 @@
 #include "prefs.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "winmgr.h"
 
 // GameTime, glTimers and gCombatAreaLimits all reach this TU through

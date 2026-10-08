@@ -21,6 +21,7 @@ static int campaignBriefHandler(message& msg);
 #include "palette.h"
 #include "soundmgr.h"
 #include "text.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textscroller.h"
 #include "textwdgt.h"

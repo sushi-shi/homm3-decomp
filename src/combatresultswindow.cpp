@@ -18,6 +18,7 @@
 #include "message.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"

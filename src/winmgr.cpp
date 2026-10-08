@@ -13,6 +13,7 @@
 #include "mousemgr.h"
 #include "remote.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "widget.h"
 #include "window.h"
 #include "wingraph.h"

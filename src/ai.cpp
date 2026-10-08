@@ -16,6 +16,7 @@
 #include "prefs.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "terrain.h"
 
 // THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
 // between the compiland's ten terrain.h bitset initializers

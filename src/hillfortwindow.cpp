@@ -18,6 +18,7 @@
 #include "mousemgr.h"
 #include "recruit.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "viewarmywindow.h"

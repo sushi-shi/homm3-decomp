@@ -36,6 +36,7 @@
 #include "smackmgr.h"
 #include "soundmgr.h"
 #include "strip.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "town.h"

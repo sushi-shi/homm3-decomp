@@ -15,6 +15,7 @@
 #include "message.h"
 #include "misc.h"
 #include "sskilltraits.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "widget.h"
 #include "winmgr.h"

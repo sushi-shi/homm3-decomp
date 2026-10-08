@@ -12,6 +12,7 @@
 #include "misc.h"
 #include "sample.h"
 #include "spells.h"
+#include "terrain.h"
 
 // Initial contents recovered from the pinned Complete image.
 DATA(0x00660858) long g_hypnotizeTurns[kNumMasteries] = { 1, 1, 2, 3 };

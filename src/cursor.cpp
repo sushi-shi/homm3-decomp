@@ -13,6 +13,7 @@
 #include "remote.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "winmgr.h"
 

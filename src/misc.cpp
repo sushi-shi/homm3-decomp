@@ -9,6 +9,7 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "prefs.h"
+#include "terrain.h"
 #include "wingraph.h"
 
 // Initial contents recovered from the pinned Complete image.

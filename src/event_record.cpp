@@ -15,6 +15,7 @@
 #include "message.h"
 #include "misc.h"
 #include "prefs.h"
+#include "terrain.h"
 #include "textresource.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp

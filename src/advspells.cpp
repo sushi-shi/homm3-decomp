@@ -18,6 +18,7 @@
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "spellbookwindow.h"
+#include "terrain.h"
 #include "towngatewindow.h"
 #include "winmgr.h"
 
