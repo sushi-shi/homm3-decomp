@@ -1,7 +1,10 @@
 // MiniMapWnd.h - the mini map (Loki MiniMapWnd.cpp), a viewing window over
-// one map layer. Methods as the image declares them; return types from
-// __PRETTY_FUNCTION__ texts or the retail bodies. Data members are not
-// declared yet (cppbridge.cpp allocates 0x34 bytes).
+// one map layer, drawn through a back-buffer pixmap at a fixed client size.
+// Methods as the image declares them; return types from __PRETTY_FUNCTION__
+// texts or the retail bodies. The assert texts name _m_pController, _m_pMap
+// and _m_bSecondLayer, and s_kClientSize is the image's symbol; the view
+// rectangle, drag flag and back buffer names are not proven (TMapView's
+// OnInitialUpdate allocates 0x30 bytes).
 #ifndef HOMM3_EDITOR_MINIMAPWND_H
 #define HOMM3_EDITOR_MINIMAPWND_H
 
@@ -12,11 +15,11 @@ class TGameMap;
 class TMiniMapWnd : public TMapViewingWnd {
 public:
     TMiniMapWnd(GtkWidget* thisWidget, TMapViewingWnd::TController* pController,
-                const TGameMap* pMap, bool bUnderground);
+                const TGameMap* pMap, bool bSecondLayer);
     virtual ~TMiniMapWnd();
 
     void clearMap();
-    void setMapLayer(const TGameMap* pMap, bool bUnderground);
+    void setMapLayer(const TGameMap* pMap, bool bSecondLayer);
     void moveViewRect(const CPoint& pos);
     void sizeViewRect(const CSize& size);
     void update(const CRect& rect);
@@ -33,6 +36,16 @@ public:
 
 private:
     void _processDrag(const CPoint& point);
+
+    static const CSize s_kClientSize;
+
+    TMapViewingWnd::TController* _m_pController;
+    const TGameMap* _m_pMap;
+    bool _m_bSecondLayer;
+    CPoint _m_viewPos;
+    CSize _m_viewSize;
+    bool _m_bDragging;
+    GdkPixmap* _m_pBackBuffer;
 };
 
 #endif  /* HOMM3_EDITOR_MINIMAPWND_H */
