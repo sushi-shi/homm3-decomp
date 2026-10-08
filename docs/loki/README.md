@@ -142,3 +142,22 @@ Differences seen so far are real: for example `Bitmap16Bit(char const*, char
 const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
 `MAX_PATH`.
 
+
+## Code-generation patterns (g++ 2.95.2 -O0)
+
+- A `const` local is initialized through a pseudo register. The value is
+  computed into a fresh register or a spilled temporary and then stored, a
+  float goes through `fstps tmp; flds tmp`, and the extra pseudo changes
+  register choice around it (callee-saved `%ebx/%esi/%edi` for successive
+  const initializers, `this` spilled). The Loki palette, bitmap and font
+  bodies use `const` for channel, scale, norm, colour and HSV locals.
+- Calls inside an expression are expanded first. A function that returns a
+  named local switches the C++ front end to a single jump at each later
+  `return`; a `switch` switches it back to the three-jump epilogue (two for
+  `void`). The state persists from one function to the next, and the
+  release compiler makes a class's inline members' RTL when the class is
+  parsed, so function order and header order are visible in the bytes
+  (`Font.cpp` includes `font.h` first).
+- Variables of sibling blocks reuse frame slots, last allocated first.
+- A clip of the form `width -= -x` emits `neg; sub`, distinct from
+  `width += x`.
