@@ -6,17 +6,18 @@
 // clone, write, getTypeName, isCustomized, hasText, exportText; the props
 // dialogs' captions call getTypeName through slot 4.
 //
-// Ported so far: the declarations the props dialogs need.
+// Ported so far: the virtual interface the props dialogs call. The data
+// member, an iterator into the map keyed by TObjectType, waits for the
+// editor's TObjectType: the game's objecttype.h brings mapcell.h, whose
+// CObject collides with MFC's.
 #ifndef HOMM3_EDITOR_GAMEOBJECT_H
 #define HOMM3_EDITOR_GAMEOBJECT_H
 
 #include <iosfwd>
-#include <map>
 #include <string>
 
-#include "objecttype.h"
-
 class TRawOStream;
+struct TObjectType;
 
 class TGameObject {
 public:
@@ -32,13 +33,6 @@ public:
     virtual bool isCustomized() const { return false; }
     virtual bool hasText() const { return false; }
     virtual void exportText(std::ostream* pOStream) const {}
-
-private:
-    typedef std::map<TObjectType, unsigned int, std::less<TObjectType> > _TObjectTypeMap;
-
-    static _TObjectTypeMap _s_objectTypeMap;
-
-    _TObjectTypeMap::iterator _m_objectTypeIter;
 };
 
 #endif  /* HOMM3_EDITOR_GAMEOBJECT_H */
