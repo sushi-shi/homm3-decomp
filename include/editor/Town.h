@@ -42,6 +42,7 @@ public:
     };
 
     static const unsigned int s_kNumGeneratorTypes = 7;
+    static const int s_kMaxTimedEvents = 50;
 
     // A building's state in a town: built, or disabled for this town.
     class TBuildingState {
@@ -117,7 +118,11 @@ public:
         const TGeneratorBonuses& getGeneratorBonuses() const { return _m_generatorBonuses; }
         void setGeneratorBonuses(const TGeneratorBonuses& newBonuses) { _m_generatorBonuses = newBonuses; }
 
-        bool operator==(const TTimedEvent& other) const;
+        bool operator==(const TTimedEvent& other) const
+        {
+            return static_cast<const ::TTimedEvent&>(*this) == other && _m_buildMask == other._m_buildMask
+                   && _m_generatorBonuses == other._m_generatorBonuses;
+        }
         bool operator!=(const TTimedEvent& other) const { return !(*this == other); }
 
     private:
