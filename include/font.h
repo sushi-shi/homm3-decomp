@@ -6,6 +6,11 @@
 
 class Bitmap16Bit;
 
+// The palette entry a glyph's shadow pixels take (every value other than
+// 0 and GLYPH_PIXEL_SOLID). Loki's Font.o and ResourceManager.o end their
+// .rodata with it.
+const int kFontShadowColor = 32;
+
 // resource base + the dtor-proven tail: an embedded TPalette16 at
 // 0x103c (destroyed by the implicit member dtor) and the glyph data
 // pointer at 0x1258 (deleted when set). The 0x1020 span before the

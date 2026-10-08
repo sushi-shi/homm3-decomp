@@ -84,7 +84,7 @@ void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
                 if (pix == GLYPH_PIXEL_SOLID)
                     *out = m_palette.m_data[color];
                 else
-                    *out = m_palette.m_data[32];
+                    *out = m_palette.m_data[kFontShadowColor];
             }
             out++;
         }
