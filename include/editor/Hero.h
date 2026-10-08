@@ -16,7 +16,6 @@
 #define HOMM3_EDITOR_HERO_H
 
 #include <map>
-#include <bitset>
 #include <string>
 #include <vector>
 
@@ -45,16 +44,14 @@ public:
     public:
         TArtifactContainer() : _m_aSlot(eArtifactNone) {}
 
-        TArtifact getSlot(TArtifactSlot slot) const { return _m_aSlot[slot]; }
         void setSlot(TArtifactSlot slot, TArtifact artifact);
-        const vector<TArtifact>& getBackpack() const { return _m_backpack; }
         vector<TArtifact>* getPBackpack() { return &_m_backpack; }
         void setBackpack(const vector<TArtifact>& newBackpack);
 
-        friend bool operator==(const TArtifactContainer& lhs, const TArtifactContainer& rhs)
-        {
-            return lhs._m_aSlot == rhs._m_aSlot && lhs._m_backpack == rhs._m_backpack;
-        }
+        TArtifact getSlot(TArtifactSlot slot) const { return _m_aSlot[slot]; }
+        const vector<TArtifact>& getBackpack() const { return _m_backpack; }
+
+        friend bool operator==(const TArtifactContainer& lhs, const TArtifactContainer& rhs);
 
     private:
         TArray<TArtifact, kNumArtifactSlots> _m_aSlot;
@@ -244,8 +241,8 @@ public:
     TRandomHero(const TObjectType& objType, TPlayer owner);
     TRandomHero(const TObjectType& objType, TRawIStream* pIStream, int version);
 
-    virtual THeroClass getClass() const { return kNumHeroClasses; }
     virtual void setProtoNum() {}
+    virtual THeroClass getClass() const { return kNumHeroClasses; }
 };
 
 // A hero in a prison, of any class (+0xc8).
@@ -260,5 +257,12 @@ public:
 private:
     THeroClass _m_class;
 };
+
+// Defined after the hero classes: Hero.o instantiates vector<TArtifact>'s
+// comparison helpers after TPrison's members.
+inline bool operator==(const THeroPrototype::TArtifactContainer& lhs, const THeroPrototype::TArtifactContainer& rhs)
+{
+    return lhs._m_aSlot == rhs._m_aSlot && lhs._m_backpack == rhs._m_backpack;
+}
 
 #endif  /* HOMM3_EDITOR_HERO_H */

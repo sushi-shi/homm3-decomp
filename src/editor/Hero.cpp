@@ -35,30 +35,6 @@ const unsigned int kNumHeroReserved = 16;
 namespace {
 TObjectTypeTable aHeroObjType(kNumHeroClasses + 1);
 
-THero::TClassTraits aHeroClassTraitsImp[kNumHeroClasses + 1] = {
-    THero::TClassTraits(aHeroObjType[eClassKnight], eHeroGier, eTownCastle),
-    THero::TClassTraits(aHeroObjType[eClassCleric], eHeroRion, eTownCastle),
-    THero::TClassTraits(aHeroObjType[eClassRanger], eHeroMephala, eTownRampart),
-    THero::TClassTraits(aHeroObjType[eClassDruid], eHeroCoronius, eTownRampart),
-    THero::TClassTraits(aHeroObjType[eClassAlchemist], eHeroPiquedram, eTownTower),
-    THero::TClassTraits(aHeroObjType[eClassWizard], eHeroAstral, eTownTower),
-    THero::TClassTraits(aHeroObjType[eClassPagan], eHeroFion, eTownInferno),
-    THero::TClassTraits(aHeroObjType[eClassHeretic], eHeroAyden, eTownInferno),
-    THero::TClassTraits(aHeroObjType[eClassDeathKnight], eHeroStraker, eTownNecropolis),
-    THero::TClassTraits(aHeroObjType[eClassNecromancer], eHeroSeptienna, eTownNecropolis),
-    THero::TClassTraits(aHeroObjType[eClassOverlord], eHeroLorelei, eTownDungeon),
-    THero::TClassTraits(aHeroObjType[eClassWarlock], eHeroAlamar, eTownDungeon),
-    THero::TClassTraits(aHeroObjType[eClassBarbarian], eHeroYog, eTownStronghold),
-    THero::TClassTraits(aHeroObjType[eClassBattleMage], eHeroGird, eTownStronghold),
-    THero::TClassTraits(aHeroObjType[eClassBeastmaster], eHeroBron, eTownFortress),
-    THero::TClassTraits(aHeroObjType[eClassWitch], eHeroMirlanda, eTownFortress),
-    THero::TClassTraits(aHeroObjType[kNumHeroClasses], eHeroNone, kNumTownTypes)
-};
-
-THero::TPrimarySkillTraits aHeroPrimarySkillTraitsImp[kNumPrimarySkills];
-THero::TSecondarySkillTraits aHeroSecondarySkillTraitsImp[kNumSecSkills];
-THero::TSkillMasteryTraits aHeroSkillMasteryTraitsImp[kNumMasteries];
-
 // A hero's prototype as the game's hero table describes it.
 class TCopiedProto : public THeroPrototype {
 public:
@@ -86,6 +62,31 @@ TCopiedProto::TCopiedProto(THeroID heroID)
         artifacts.setSlot(eArtifactSlotSpellbook, eArtifactSpellbook);
     setArtifacts(artifacts);
 }
+
+THero::TClassTraits aHeroClassTraitsImp[kNumHeroClasses + 1] = {
+    THero::TClassTraits(aHeroObjType[eClassKnight], eHeroGier, eTownCastle),
+    THero::TClassTraits(aHeroObjType[eClassCleric], eHeroRion, eTownCastle),
+    THero::TClassTraits(aHeroObjType[eClassRanger], eHeroMephala, eTownRampart),
+    THero::TClassTraits(aHeroObjType[eClassDruid], eHeroCoronius, eTownRampart),
+    THero::TClassTraits(aHeroObjType[eClassAlchemist], eHeroPiquedram, eTownTower),
+    THero::TClassTraits(aHeroObjType[eClassWizard], eHeroAstral, eTownTower),
+    THero::TClassTraits(aHeroObjType[eClassPagan], eHeroFion, eTownInferno),
+    THero::TClassTraits(aHeroObjType[eClassHeretic], eHeroAyden, eTownInferno),
+    THero::TClassTraits(aHeroObjType[eClassDeathKnight], eHeroStraker, eTownNecropolis),
+    THero::TClassTraits(aHeroObjType[eClassNecromancer], eHeroSeptienna, eTownNecropolis),
+    THero::TClassTraits(aHeroObjType[eClassOverlord], eHeroLorelei, eTownDungeon),
+    THero::TClassTraits(aHeroObjType[eClassWarlock], eHeroAlamar, eTownDungeon),
+    THero::TClassTraits(aHeroObjType[eClassBarbarian], eHeroYog, eTownStronghold),
+    THero::TClassTraits(aHeroObjType[eClassBattleMage], eHeroGird, eTownStronghold),
+    THero::TClassTraits(aHeroObjType[eClassBeastmaster], eHeroBron, eTownFortress),
+    THero::TClassTraits(aHeroObjType[eClassWitch], eHeroMirlanda, eTownFortress),
+    THero::TClassTraits(aHeroObjType[kNumHeroClasses], eHeroNone, kNumTownTypes)
+};
+
+THero::TPrimarySkillTraits aHeroPrimarySkillTraitsImp[kNumPrimarySkills];
+THero::TSecondarySkillTraits aHeroSecondarySkillTraitsImp[kNumSecSkills];
+THero::TSkillMasteryTraits aHeroSkillMasteryTraitsImp[kNumMasteries];
+
 }
 
 THero::TClassTraits* THero::s_akClassTraits = aHeroClassTraitsImp;
