@@ -23,7 +23,7 @@ public:
     // ownership-transferring assignment of the pre-standard auto_ptr.
     TResourcePtr& operator=(const TResourcePtr& rhs)
     {
-        if (&rhs != this) {
+        if (this != &rhs) {
             if (m_ptr != rhs.m_ptr) {
                 if (m_owns && m_ptr)
                     ResourceManager::Dispose(m_ptr);

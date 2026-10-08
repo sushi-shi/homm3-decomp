@@ -18,8 +18,10 @@ void initializeObjectSprites();
 
 class TObjectSpritePtr {
 public:
-    TObjectSpritePtr(const TObjectType& objType)
-        : _m_objType(objType), _m_pSprite(_lockSprite(_m_objType)) {}
+    TObjectSpritePtr(const TObjectType& objType) : _m_objType(objType)
+    {
+        _m_pSprite = _lockSprite(_m_objType);
+    }
     ~TObjectSpritePtr()
     {
         if (_m_pSprite != NULL)
@@ -39,8 +41,10 @@ private:
 
 class THeroFlagSpritePtr {
 public:
-    THeroFlagSpritePtr(TPlayer player)
-        : _m_player(player), _m_pSprite(_lockSprite(_m_player)) {}
+    THeroFlagSpritePtr(TPlayer player) : _m_player(player)
+    {
+        _m_pSprite = _lockSprite(_m_player);
+    }
     ~THeroFlagSpritePtr()
     {
         if (_m_pSprite != NULL)

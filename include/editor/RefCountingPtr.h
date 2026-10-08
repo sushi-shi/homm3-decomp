@@ -3,10 +3,15 @@
 // owned object. Copies share the wrapper; the non-const accessors split a
 // shared wrapper first, the const ones never do. A failed allocation throws
 // TAllocationFailure from this file (RefCountingPtr.h:67 in the wrapper,
-// :75 in the handle). Every member is inline; the instantiations are
-// linkonce bodies of their first users (TBlackBox::TContents in
-// GUIGameObject.cpp and BlackBox.cpp, the map's implementation objects in
-// GameMap.cpp). No assert names the members; their names are not recorded.
+// :75 in the handle). Every member but _split is inline; _split is defined
+// out of the class, so every unit that instantiates the non-const get (any
+// includer of BlackBox.h, through getPContents) emits it and the copy chain
+// behind it: GUIGameObject.o owns _split, both _fail bodies, the wrapper's
+// copying constructor and TContents' copy constructor without a get of its
+// own. The instantiations are linkonce bodies of their first users
+// (TBlackBox::TContents in GUIGameObject.cpp and BlackBox.cpp, the map's
+// implementation objects in GameMap.cpp). No assert names the members;
+// their names are not recorded.
 #ifndef HOMM3_EDITOR_REFCOUNTINGPTR_H
 #define HOMM3_EDITOR_REFCOUNTINGPTR_H
 
@@ -94,16 +99,19 @@ private:
         throw TAllocationFailure(__FILE__, __LINE__);
     }
 
-    void _split()
-    {
-        _TWrapper* pNewWrapper = new _TWrapper(*_m_pWrapper->m_pObject);
-        if (pNewWrapper == NULL)
-            _fail();
-        --_m_pWrapper->m_refCnt;
-        _m_pWrapper = pNewWrapper;
-    }
+    void _split();
 
     _TWrapper* _m_pWrapper;
 };
+
+template <class T>
+void TRefCountingPtr<T>::_split()
+{
+    _TWrapper* pNewWrapper = new _TWrapper(*_m_pWrapper->m_pObject);
+    if (pNewWrapper == NULL)
+        _fail();
+    --_m_pWrapper->m_refCnt;
+    _m_pWrapper = pNewWrapper;
+}
 
 #endif  /* HOMM3_EDITOR_REFCOUNTINGPTR_H */

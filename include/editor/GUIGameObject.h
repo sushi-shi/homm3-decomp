@@ -9,12 +9,16 @@
 // TGameObject). Its layout is the virtual base pointer, a byte the
 // constructor fills from rand() (getAnimOffset), then its own vtable
 // pointer; the virtuals are in the order of __vt_14TGUIGameObject, with the
-// signatures of their __PRETTY_FUNCTION__ texts. The animation byte's name
-// and the parameter names other than terrainType are not proven.
+// signatures of their __PRETTY_FUNCTION__ texts and the parameter names of
+// their asserts. The animation byte's name is not proven.
+//
+// TGUIGameObjectFactory is the map's object factory: each create function
+// places the matching GUI object (GUIGameObject.cpp's anonymous classes).
 #ifndef HOMM3_EDITOR_GUIGAMEOBJECT_H
 #define HOMM3_EDITOR_GUIGAMEOBJECT_H
 
 #include "editor/stdafx.h"
+#include "editor/GameMap.h"
 #include "editor/GameObject.h"
 #include "editor/Tile.h"
 #include "terrain.h"
@@ -65,24 +69,109 @@ public:
 
     TGUIGameObject(const TObjectType& objType);
 
-    virtual bool edit(TEditContext* pContext, unsigned int objID);
-    virtual void draw(unsigned int frameNum, GdkGC* gc, GdkImage* image, int x, int y,
+    virtual bool edit(TEditContext* pEditContext, unsigned int objID);
+    virtual void draw(unsigned int frameNum, GdkGC* gc, GdkImage* pDestBmp, int x, int y,
                       TZoom zoom) const;
-    virtual void drawShadow(unsigned int frameNum, GdkGC* gc, GdkImage* image, int x, int y,
+    virtual void drawShadow(unsigned int frameNum, GdkGC* gc, GdkImage* pDestBmp, int x, int y,
                             TZoom zoom) const;
     virtual void drawCell(unsigned int frameNum, unsigned int cellX, unsigned int cellY, GdkGC* gc,
-                          GdkImage* image, int x, int y, TZoom zoom) const;
+                          GdkImage* pDestBmp, int x, int y, TZoom zoom) const;
     virtual void drawCellShadow(unsigned int frameNum, unsigned int cellX, unsigned int cellY,
-                                GdkGC* gc, GdkImage* image, int x, int y, TZoom zoom) const;
+                                GdkGC* gc, GdkImage* pDestBmp, int x, int y, TZoom zoom) const;
     virtual bool hitTest(unsigned int frameNum, int x, int y, TZoom zoom) const;
     virtual TColor miniMapColor(TTerrainType terrainType) const;
     virtual bool isAnimated() const;
     virtual bool isOwnable() const;
 
-    unsigned int getAnimOffset() const;
+    unsigned int getAnimOffset() const { return _m_animOffset; }
 
 private:
     ubyte _m_animOffset;
+};
+
+class TGUIGameObjectFactory : public TGameMap::TObjectFactory {
+public:
+    virtual TGenericObject* createGenericObject(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGenericObject* createGenericObject(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TNonRandomHero* createNonRandomHero(const TObjectType& objType, TPlayer owner, unsigned int protoNum,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TNonRandomHero* createNonRandomHero(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TRandomHero* createRandomHero(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TRandomHero* createRandomHero(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TPrison* createPrison(const TObjectType& objType, THeroClass heroClass, unsigned int protoNum,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TPrison* createPrison(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TTown* createTown(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TTown* createTown(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TEvent* createEvent(const TObjectType& objType, void* (*pfnAllocator)(unsigned int)) const;
+    virtual TEvent* createEvent(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TMonster* createMonster(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TMonster* createMonster(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TSign* createSign(const TObjectType& objType, void* (*pfnAllocator)(unsigned int)) const;
+    virtual TSign* createSign(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TFlaggableObject* createFlaggable(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TFlaggableObject* createFlaggable(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TMine* createMine(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TMine* createMine(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TAbandonedMine* createAbandonedMine(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TAbandonedMine* createAbandonedMine(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGenerator* createGenerator(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGenerator* createGenerator(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGarrison* createGarrison(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGarrison* createGarrison(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGameArtifact* createArtifact(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGameArtifact* createArtifact(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TSpellScroll* createSpellScroll(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TSpellScroll* createSpellScroll(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGameResource* createResource(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TGameResource* createResource(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TBlackBox* createBlackBox(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TBlackBox* createBlackBox(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TScholar* createScholar(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TScholar* createScholar(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TSeersHut* createSeersHut(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TSeersHut* createSeersHut(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual THolyGrail* createHolyGrail(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual THolyGrail* createHolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
+    virtual TShrine* createShrine(const TObjectType& objType, void* (*pfnAllocator)(unsigned int)) const;
+    virtual TShrine* createShrine(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const;
 };
 
 #endif  /* HOMM3_EDITOR_GUIGAMEOBJECT_H */

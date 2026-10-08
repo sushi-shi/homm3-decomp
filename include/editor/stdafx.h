@@ -84,8 +84,10 @@ typedef bool BOOL;
 extern "C" void doMessageBox(const char* message);
 namespace {
 extern "C" GtkWidget* _widget(char* name);
-// cppbridge.cpp: the byte pitch of a 16-bit GdkImage, for CSprite drawing.
+// cppbridge.cpp: the byte pitch of a 16-bit GdkImage and the address of
+// one of its lines, for CSprite drawing.
 extern "C" int getImgPitch(GdkImage* img);
+extern "C" guchar* getImgLine(GdkImage* img, int line);
 }
 
 // The scroll codes the shim passes to OnVScroll/OnHScroll: the
