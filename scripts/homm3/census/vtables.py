@@ -44,8 +44,9 @@ def locator(c, rva):
     return offset, cd_offset, name, chd - base
 
 
-def base_names(c, chd):
-    """[(name, mdisp)] of a Class Hierarchy Descriptor's base classes."""
+def base_names(c, chd, virtual=False):
+    """[(name, mdisp)] of a Class Hierarchy Descriptor's base classes;
+    with `virtual`, [(name, mdisp, reached through a virtual base)]."""
     base = c.image.image_base
     count, array = c.dword(chd + 8), c.dword(chd + 12)
     if count is None or array is None or not 0 < count < 256:
@@ -57,7 +58,12 @@ def base_names(c, chd):
             break
         td, mdisp = c.dword(bcd - base), c.dword(bcd - base + 8)
         name = type_name(c, td - base) if td else None
-        out.append((name, struct.unpack("<i", struct.pack("<I", mdisp or 0))[0]))
+        mdisp = struct.unpack("<i", struct.pack("<I", mdisp or 0))[0]
+        if virtual:
+            pdisp = c.dword(bcd - base + 12)
+            out.append((name, mdisp, pdisp is not None and pdisp != 0xFFFFFFFF))
+        else:
+            out.append((name, mdisp))
     return out
 
 
@@ -66,6 +72,7 @@ def census(c, starts):
     rdata = next(s for s in image.sections if s.name == ".rdata")
     lo, hi = rdata.rva, rdata.rva + rdata.size
     found = {}
+    cols = []
     for rva in range(lo, hi - 4, 4):
         v = c.dword(rva)
         if v is None or not lo <= v - base < hi:
@@ -76,12 +83,23 @@ def census(c, starts):
         first = c.dword(rva + 4)
         if first is None or (first - base) not in starts:
             continue
-        offset, _cd, name, chd = col
+        cols.append((rva + 4, col))
+    # A class whose tables sit at several non-virtual base offsets
+    # qualifies every one, its primary too, by the base at that offset
+    # (MSVC's `??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@`).
+    def named_base(chd, offset):
+        bases = [n for n, m, virtual in base_names(c, chd, True)[1:]
+                 if m == offset and n and not virtual]
+        return bases[0] if bases else None
+    several = {col[2] for _rva, col in cols if col[0] and named_base(col[3], col[0])}
+    for rva, (offset, _cd, name, chd) in cols:
         cls = name
         if offset:
             bases = [n for n, m in base_names(c, chd)[1:] if m == offset and n]
             cls = f"??_7{name}@@6B{bases[0]}@@@" if bases else ""
-        found[rva + 4] = cls
+        elif name in several and named_base(chd, 0):
+            cls = f"??_7{name}@@6B{named_base(chd, 0)}@@@"
+        found[rva] = cls
     # vptr stores: `mov dword ptr [reg(+d)], offset VT`
     for s0, seen in c.reached.items():
         for r in seen:

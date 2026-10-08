@@ -15,7 +15,7 @@ rva	function_count	class
 0x12feec	3	TRuntimeError
 0x12fefc	3	TReadFailure@TRawIStream
 0x12ff0c	3	TWriteFailure@TRawOStream
-0x1300fc	52	TArmyDlg
+0x1300fc	52	??_7TArmyDlg@@6BCDialog@@@
 0x1301d0	1	??_7TArmyDlg@@6BTArmyDlgClient@@@
 0x1301d8	1	TArmyDlgClient
 0x1301e0	46	CSpinButtonCtrl
@@ -43,7 +43,7 @@ rva	function_count	class
 0x131adc	60	TBlackBoxPropsGeneralPage
 0x131bf4	49	TBlackBoxPropsSheet
 0x131e08	3	??_7T16bppDIBSection@@6BCBitmap@@@
-0x131e18	6	T16bppDIBSection
+0x131e18	6	??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@
 0x131e34	3	CBitmap
 0x131e44	3	CGdiObject
 0x131e54	5	?$TBitmapBase@G
@@ -63,7 +63,7 @@ rva	function_count	class
 0x132f2c	55	TQuestBelongToASpecificPlayerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\EditQuestDlg.cpp2607015843
 0x13300c	1	??_7TEditQuestDlg@@6BTClient@TQuestTypeDlg@@@
 0x133014	9	??_7TEditQuestDlg@@6BTVisitor@TQuest@@@
-0x13303c	52	TEditQuestDlg
+0x13303c	52	??_7TEditQuestDlg@@6BCDialog@@@
 0x133110	1	TClient@TQuestTypeDlg
 0x133118	9	TVisitor@TQuest
 0x1333cc	1	TRewardExperience@TSeersHut
@@ -85,20 +85,20 @@ rva	function_count	class
 0x133c94	54	TRewardSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\EditRewardDlg.cpp1654426747
 0x133d70	54	TRewardSpellDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\EditRewardDlg.cpp1654426747
 0x133e4c	10	??_7TEditRewardDlg@@6BTVisitor@TReward@TSeersHut@@@
-0x133e78	52	TEditRewardDlg
+0x133e78	52	??_7TEditRewardDlg@@6BCDialog@@@
 0x133f4c	10	TVisitor@TReward@TSeersHut
 0x133fe4	52	TEditRumorDlg
 0x13413c	60	TEditTimedEventGeneralPage
 0x134284	60	TEditTimedEventResourcesPage
 0x13439c	2	??_7TEditTimedEventSheet@@6BTEditTimedEventGeneralPageParentSheet@@@
-0x1343a8	49	TEditTimedEventSheet
+0x1343a8	49	??_7TEditTimedEventSheet@@6BCPropertySheet@@@
 0x134470	2	TEditTimedEventGeneralPageParentSheet
 0x1344cc	60	TEditTownEventBuildingsPage
 0x1345c0	46	CTreeCtrl
 0x1346f4	60	TEditTownEventCreaturesPage
 0x1347e8	46	CStatic
 0x1348c4	2	??_7TEditTownEventSheet@@6BTEditTimedEventGeneralPageParentSheet@@@
-0x1348d0	49	TEditTownEventSheet
+0x1348d0	49	??_7TEditTownEventSheet@@6BCPropertySheet@@@
 0x1349bc	52	TEraseToolkit
 0x134aa4	8	
 0x134b14	60	TEventPropsGeneralPage
@@ -184,7 +184,7 @@ rva	function_count	class
 0x1357a8	2	TRandomlyLeveledGenerator
 0x1357c4	8	
 0x1357e8	2	??_7TRandomGenerator@@6BTAbstractRandomlyLeveledGenerator@@@
-0x1357f4	2	TRandomGenerator
+0x1357f4	2	??_7TRandomGenerator@@6BTAbstractRandomlyAlignedGenerator@@@
 0x135954	3	TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x135964	8	
 0x135988	9	TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
@@ -195,7 +195,7 @@ rva	function_count	class
 0x135a70	14	TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x135ab4	8	
 0x135ad8	14	??_7TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
-0x135b14	1	TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x135b14	1	??_7TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTHeroPlaceholder@@@
 0x135b2c	8	
 0x135b50	1	THeroPlaceholder
 0x135b60	8	
@@ -204,35 +204,35 @@ rva	function_count	class
 0x135bc0	8	
 0x135be4	14	??_7TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
 0x135c20	1	??_7TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTBasicHero@@@
-0x135c28	5	TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x135c28	5	??_7TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTNonRandomHero@@@
 0x135c58	8	
 0x135c7c	1	??_7TNonRandomHero@@6BTBasicHero@@@
-0x135c84	5	TNonRandomHero
+0x135c84	5	??_7TNonRandomHero@@6BTIdentifiedHero@@@
 0x135cac	8	
 0x135cd0	1	??_7TIdentifiedHero@@6BTBasicHero@@@
-0x135cd8	5	TIdentifiedHero
+0x135cd8	5	??_7TIdentifiedHero@@6BTHero@@@
 0x135d00	8	
 0x135d24	1	??_7THero@@6BTBasicHero@@@
-0x135d2c	4	THero
+0x135d2c	4	??_7THero@@6BTLinkableObject@@@
 0x135d50	8	
 0x135d74	2	TLinkableObject
 0x135d88	8	
 0x135dac	14	??_7TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
 0x135de8	1	??_7TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTBasicHero@@@
-0x135df0	4	TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x135df0	4	??_7TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTRandomHero@@@
 0x135e1c	8	
 0x135e40	1	??_7TRandomHero@@6BTBasicHero@@@
-0x135e48	4	TRandomHero
+0x135e48	4	??_7TRandomHero@@6BTHero@@@
 0x135e6c	8	
 0x135e90	12	??_7TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
 0x135ec4	1	??_7TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTBasicHero@@@
-0x135ecc	5	TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x135ecc	5	??_7TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTPrison@@@
 0x135efc	8	
 0x135f20	1	??_7TPrison@@6BTBasicHero@@@
-0x135f28	5	TPrison
+0x135f28	5	??_7TPrison@@6BTIdentifiedHero@@@
 0x135f50	8	
 0x135f74	12	??_7TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
-0x135fa8	2	TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x135fa8	2	??_7TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTTown@@@
 0x135fcc	8	
 0x135ff0	12	TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x136034	8	
@@ -250,7 +250,7 @@ rva	function_count	class
 0x136268	12	?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x1362ac	8	
 0x1362d0	12	??_7?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
-0x136304	2	?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x136304	2	??_7?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTMonster@@@
 0x136320	8	
 0x136344	12	?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x136388	8	
@@ -271,24 +271,24 @@ rva	function_count	class
 0x136684	12	?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x1366c8	8	
 0x1366ec	12	??_7?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
-0x136720	1	?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x136720	1	??_7?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTSeersHut@@@
 0x136738	8	
 0x13675c	12	?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x1367a0	8	
 0x1367c4	12	?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x136808	8	
 0x13682c	12	??_7?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
-0x136860	2	?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x136860	2	??_7?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTRandomlyAlignedGenerator@@@
 0x136884	8	
 0x1368a8	12	??_7?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
-0x1368dc	2	?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x1368dc	2	??_7?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTRandomlyLeveledGenerator@@@
 0x136900	8	
 0x136924	12	??_7?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
 0x136958	2	??_7?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTAbstractRandomlyLeveledGenerator@@@
-0x136964	2	?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x136964	2	??_7?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTRandomGenerator@@@
 0x136990	8	
 0x1369b4	12	??_7?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@@
-0x1369e8	1	?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
+0x1369e8	1	??_7?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTQuestGuard@@@
 0x136a00	8	
 0x136a24	12	?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662
 0x136a68	8	
@@ -315,7 +315,7 @@ rva	function_count	class
 0x136f14	60	THeroPropsArtifactsPage
 0x137044	60	THeroPropsBiographyPage
 0x1371a4	1	??_7THeroPropsCreaturesPage@@6BTArmyDlgClient@@@
-0x1371ac	60	THeroPropsCreaturesPage
+0x1371ac	60	??_7THeroPropsCreaturesPage@@6BCPropertyPage@@@
 0x1373dc	60	THeroPropsGeneralPage
 0x1374d0	60	TRandomHeroPropsGeneralPage
 0x1375c4	60	TIdentifiedHeroPropsGeneralPage
@@ -327,17 +327,17 @@ rva	function_count	class
 0x13790c	60	THeroPropsPriSkillsPage
 0x137a3c	60	THeroPropsSecSkillsPage
 0x137b54	2	??_7THeroPropsSheet@@6BTHeroPropsCreaturesPageParentSheet@@@
-0x137b60	49	THeroPropsSheet
+0x137b60	49	??_7THeroPropsSheet@@6BCPropertySheet@@@
 0x137c28	2	THeroPropsCreaturesPageParentSheet
 0x137c34	2	??_7TRandomHeroPropsSheet@@6BTHeroPropsCreaturesPageParentSheet@@@
-0x137c40	49	TRandomHeroPropsSheet
+0x137c40	49	??_7TRandomHeroPropsSheet@@6BTHeroPropsSheet@@@
 0x137d08	3	??_7TNonRandomHeroPropsSheet@@6BTIdentifiedHeroPropsGeneralPageParentSheet@@@
 0x137d18	2	??_7TNonRandomHeroPropsSheet@@6BTHeroPropsCreaturesPageParentSheet@@@
-0x137d24	49	TNonRandomHeroPropsSheet
+0x137d24	49	??_7TNonRandomHeroPropsSheet@@6BTHeroPropsSheet@@@
 0x137dec	3	TIdentifiedHeroPropsGeneralPageParentSheet
 0x137dfc	3	??_7TPrisonPropsSheet@@6BTIdentifiedHeroPropsGeneralPageParentSheet@@@
 0x137e0c	2	??_7TPrisonPropsSheet@@6BTHeroPropsCreaturesPageParentSheet@@@
-0x137e18	49	TPrisonPropsSheet
+0x137e18	49	??_7TPrisonPropsSheet@@6BTHeroPropsSheet@@@
 0x137f1c	60	THeroPropsSpellsPage
 0x138034	60	THeroPrototypePropsArtifactsPage
 0x13814c	60	THeroPrototypePropsBiographyPage
@@ -345,12 +345,12 @@ rva	function_count	class
 0x1384bc	60	THeroPrototypePropsPriSkillsPage
 0x1385d4	60	THeroPrototypePropsSecSkillsPage
 0x1386ec	2	??_7THeroPrototypePropsSheet@@6BTParentSheet@THeroPrototypePropsGeneralPage@@@
-0x1386f8	49	THeroPrototypePropsSheet
+0x1386f8	49	??_7THeroPrototypePropsSheet@@6BCPropertySheet@@@
 0x1387c0	2	TParentSheet@THeroPrototypePropsGeneralPage
 0x1387ec	60	THeroPrototypePropsSpellsPage
 0x138934	52	THolyGrailPropsDlg
 0x138bbc	5	??_7TMainFrame@@6BTStatusUI@TMapView@@@
-0x138bd4	23	TMainFrame
+0x138bd4	23	??_7TMainFrame@@6BCFrameWnd@@@
 0x138ccc	5	TStatusUI@TMapView
 0x138ce4	3	TError@?$TGDIObjectSelector@VCFont@@
 0x138f04	35	TMapDocTemplate@?%C:\Dev\Heroes 3 Exp 2\Editor\Map Editor.cpp284242958
@@ -365,7 +365,7 @@ rva	function_count	class
 0x13952c	7	TAbstractMap@TRiverOp
 0x13954c	7	TRoadMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000
 0x13956c	7	TAbstractMap@TRoadOp
-0x13958c	52	TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000
+0x13958c	52	??_7TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@6BCDialog@@@
 0x139660	3	??_7TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@6Btype_progress_bar@@@
 0x139670	46	CProgressCtrl
 0x13972c	7	_TTerrainPlacementOp@TMapDoc
@@ -375,7 +375,7 @@ rva	function_count	class
 0x1397ac	7	_TRoadPlacementOp@TMapDoc
 0x1397cc	7	_TRoadEraseOp@TMapDoc
 0x1397ec	1	??_7TMapDoc@@6BTClient@TGameMap@@@
-0x1397f4	44	TMapDoc
+0x1397f4	44	??_7TMapDoc@@6BCDocument@@@
 0x1398a8	1	TClient@TGameMap
 0x1398b0	1	TMapDocLoadFailure
 0x1398c8	1	TMapDocInvalidFileVersion
@@ -387,7 +387,7 @@ rva	function_count	class
 0x139950	7	TRepaintMapOp@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000
 0x139970	1	?$basic_ios@DU?$char_traits@D@std@@@std
 0x139d14	3	??_7TMapEditWnd@@6BTPannerCtrlClient@@@
-0x139d24	46	TMapEditWnd
+0x139d24	46	??_7TMapEditWnd@@6BTMapEditingWnd@@@
 0x139de0	3	TPannerCtrlClient
 0x139df0	46	TMapEditingWnd
 0x139eac	3	CBrush
@@ -397,7 +397,7 @@ rva	function_count	class
 0x139ef0	5	CMenu
 0x139f08	3	TError@?$TGDIObjectSelector@VCPen@@
 0x139f6c	17	??_7TMapFrameWnd@@6BTController@TMapEditingWnd@@@
-0x139fb4	46	TMapFrameWnd
+0x139fb4	46	??_7TMapFrameWnd@@6BTMapEditingWnd@@@
 0x13a070	17	TController@TMapEditingWnd
 0x13a0f4	60	TMapSpecsArtifactsPage
 0x13a1e8	53	CCheckListBox
@@ -405,7 +405,7 @@ rva	function_count	class
 0x13a4a4	60	TMapSpecsGeneralPage
 0x13a598	7	TTerrainPlacementMapAdapter@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsGeneralPage.cpp2959323531
 0x13a6cc	4	??_7TMapSpecsLossCondPage@@6BTVisitor@TLossCondition@@@
-0x13a6e0	60	TMapSpecsLossCondPage
+0x13a6e0	60	??_7TMapSpecsLossCondPage@@6BCPropertyPage@@@
 0x13a7d4	53	TNullLossConditionDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417
 0x13a8ac	53	TLoseTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417
 0x13a984	53	TLossConditionDlg
@@ -415,7 +415,7 @@ rva	function_count	class
 0x13afc4	60	TMapSpecsRumorsPage
 0x13b0f4	60	TMapSpecsSecSkillsPage
 0x13b20c	2	??_7TMapSpecsSheet@@6BTParentSheet@TMapSpecsPlayerSpecsPage@@@
-0x13b218	49	TMapSpecsSheet
+0x13b218	49	??_7TMapSpecsSheet@@6BCPropertySheet@@@
 0x13b2e0	2	TParentSheet@TMapSpecsPlayerSpecsPage
 0x13b324	60	TMapSpecsSpellsPage
 0x13c6d4	60	TMapSpecsTeamsPage
@@ -427,7 +427,7 @@ rva	function_count	class
 0x13cf40	53	TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
 0x13d018	53	TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
 0x13d0f0	12	??_7TMapSpecsVictoryCondPage@@6BTVisitor@TVictoryCondition@@@
-0x13d124	60	TMapSpecsVictoryCondPage
+0x13d124	60	??_7TMapSpecsVictoryCondPage@@6BCPropertyPage@@@
 0x13d218	53	TFlagAllMinesDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
 0x13d2f0	53	TFlagAllCreatureGeneratorsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
 0x13d3c8	53	TNullVictoryConditionDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
@@ -438,12 +438,12 @@ rva	function_count	class
 0x13d800	53	TDefeatMonsterDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
 0x13d8d8	53	TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498
 0x13d9e8	4	??_7TMapValidationFunc@@6BTVisitor@TLossCondition@@@
-0x13d9fc	12	TMapValidationFunc
+0x13d9fc	12	??_7TMapValidationFunc@@6BTVisitor@TVictoryCondition@@@
 0x13eafc	9	TObstaclePlacerMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553
 0x13eb24	25	??_7TMapView@@6BTEditContext@TGUIGameObject@@@
 0x13eb8c	2	??_7TMapView@@6BTToolkitWndClient@@@
 0x13eb98	17	??_7TMapView@@6BTController@TMapEditingWnd@@@
-0x13ebe0	66	TMapView
+0x13ebe0	66	??_7TMapView@@6BCView@@@
 0x13ecec	25	TEditContext@TGUIGameObject
 0x13ed54	2	TToolkitWndClient
 0x13ed60	52	TObjectPropsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553
@@ -600,7 +600,7 @@ rva	function_count	class
 0x143e70	46	TToolkitBaseToolBar
 0x143f2c	4	TToolBarCmdUI@?%C:\Dev\Heroes 3 Exp 2\Editor\ToolkitBase.cpp94647960
 0x143f7c	2	??_7TToolkitWnd@@6BTObjectPaletteWndClient@@@
-0x143f88	46	TToolkitWnd
+0x143f88	46	??_7TToolkitWnd@@6BCWnd@@@
 0x144044	2	TObjectPaletteWndClient
 0x144064	8	
 0x144088	2	TTown
@@ -608,7 +608,7 @@ rva	function_count	class
 0x1442cc	60	TTownPropsGarrisonPage
 0x144474	60	TTownPropsGeneralPage
 0x14458c	2	??_7TTownPropsSheet@@6BTTownPropsGeneralPageParentSheet@@@
-0x144598	49	TTownPropsSheet
+0x144598	49	??_7TTownPropsSheet@@6BCPropertySheet@@@
 0x144660	2	TTownPropsGeneralPageParentSheet
 0x1446d4	60	TTownPropsSpellsPage
 0x1448dc	60	TTownPropsTimedEventsPage
