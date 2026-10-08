@@ -55,6 +55,13 @@ inline const TPoint<T1> operator-(const TPoint<T1>& lhs, const TPoint<T2>& rhs)
     return result -= rhs;
 }
 
+// Row-major order (y, then x): the order of TerrainPlacement.cpp's tile sets.
+template<class T1, class T2>
+inline bool operator<(const TPoint<T1>& lhs, const TPoint<T2>& rhs)
+{
+    return lhs.y() < rhs.y() || (lhs.y() == rhs.y() && lhs.x() < rhs.x());
+}
+
 template<class TCoord, class TDim>
 class TExtent {
 public:
