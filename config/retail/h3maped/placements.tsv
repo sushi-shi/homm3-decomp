@@ -125,9 +125,9 @@ rva	size	kind	name	unit	evidence
 0x0004ce90	0x14b	func	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (331 bytes, 19 relocations) unique at a census start
 0x0004cfef	0xf1	func	?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (241 bytes, 25 relocations) unique at a census start
 0x00058755	0x98	func	??0TRmgLinePatternTable@@QAE@IPBH@Z	rmg_support	masked body (152 bytes, 4 relocations) unique at a census start
-0x00058d37	0x2f	func	??0TRmgLineWalker@@QAE@PAVTRmgLinePainterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	masked body (47 bytes, 1 relocations) unique at a census start
+0x00058d37	0x2f	func	??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	masked body (47 bytes, 1 relocations) unique at a census start
 0x00058d66	0xfb	func	?drawTo@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	masked body (251 bytes, 3 relocations) unique at a census start
-0x00058e61	0xf1	func	?paintPoint@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	referenced by ??0TRmgLineWalker@@QAE@PAVTRmgLinePainterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z at +0x25
+0x00058e61	0xf1	func	?paintPoint@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	referenced by ??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABU?$TRmgCoordinatePoint@I@@@Z at +0x25
 0x0005b3bc	0xf	func	??1?$TAutoArrayPtr@D@@QAE@XZ	resourcemanager	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x1b
 0x00060ed8	0x6a	func	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x58
 0x00060f42	0xb	func	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	resourcemanager	referenced by ??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ at +0xe
@@ -395,11 +395,11 @@ rva	size	kind	name	unit	evidence
 0x000af10b	0x57	func	??0TRmgObjectPlacementRule@@QAE@ABU0@@Z	rmg	masked body (87 bytes, 5 relocations) unique at a census start
 0x000af162	0x12d	func	??4?$vector@HV?$allocator@H@std@@@std@@QAEAAV01@ABV01@@Z	rmg	masked body (301 bytes, 2 relocations) unique at a census start
 0x000afaea	0x3d	func	?erase@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEPAUTPoint@@PAU3@@Z	rmg	masked body (61 bytes, 0 relocations) unique at a census start
-0x000b3bbd	0x33	func	?setTile@TRmgRiverLinePainter@@UAEXABU?$TRmgCoordinatePoint@I@@ABUTRmgTerrainTile@@@Z	rmg_support	masked body (51 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b3bf0	0x13	func	?setLineType@TRmgRiverLinePainter@@UAEXABU?$TRmgCoordinatePoint@I@@H@Z	rmg_support	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b3c03	0x3c	func	?getTile@TRmgRiverLinePainter@@UAEXABU?$TRmgCoordinatePoint@I@@AAUTRmgTerrainTile@@@Z	rmg_support	masked body (60 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b3c3f	0xf	func	?getLineType@TRmgRiverLinePainter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b4223	0x20	func	?isBlocked@TRmgRiverLinePainter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (32 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3bbd	0x33	func	?setTile@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@ABUTRmgTerrainTile@@@Z	rmg_support	masked body (51 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3bf0	0x13	func	?setLineType@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@H@Z	rmg_support	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3c03	0x3c	func	?getTile@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@AAUTRmgTerrainTile@@@Z	rmg_support	masked body (60 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3c3f	0xf	func	?getLineType@TRiverOp@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b4223	0x20	func	?isBlocked@TRiverOp@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (32 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000b9221	0x8a	func	?InitializeSpellTraitsTable@@YAEXZ	spelldefs	masked body (138 bytes, 6 relocations) unique at a census start
 0x000b92ab	0x290	func	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	spelldefs	masked body (656 bytes, 43 relocations) unique at a census start
 0x000b953b	0x6	func	??0?$bitset@$09@std@@QAE@XZ	objecttype	referenced by ??0TObjectType@@QAE@XZ at +0x41; ICF-folded with 3 identical bodies

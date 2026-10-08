@@ -19,7 +19,7 @@
 // The common painter prefix owns only the two dimensions and virtual API.
 // Both retained final constructors obtain the adapter size before building
 // this base, then store their own adapter at +0xc. Keep one ordinary helper.
-TRmgLinePainterInterface::TRmgLinePainterInterface(const TRmgGridPoint& size)
+TMapLineFilter::TMapLineFilter(const TRmgGridPoint& size)
     : m_size(size)
 {
 }
@@ -171,21 +171,21 @@ void selectRmgLinePattern(
 
 VA(0x0055eda0, 0x07)
 MAC_ADDRESS(0x253ccc, 0x60)
-TRmgRiverPainter::~TRmgRiverPainter()
+TRiverPlacementOp::~TRiverPlacementOp()
 {
 }
 
 // All river types use the same pattern table, so the argument is ignored.
 VA(0x0055edb0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)  // vtables 0x641174/0x641190; Complete-only
-TRmgLinePatternTable* TRmgRiverLinePainter::getPatternTable(s32)
+TRmgLinePatternTable* TRiverOp::getPatternTable(s32)
 {
     return &g_rmgRiverPatternTable;
 }
 
 VA(0x0055edc0, 0x36)
 MAC_ADDRESS(0x253ae0, 0x54) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
-void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
+void TRiverOp::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
@@ -194,13 +194,13 @@ void TRmgRiverLinePainter::setTile(const TRmgGridPoint& point, const TRmgTerrain
 }
 
 MAC_ADDRESS(0x253b34, 0x30)
-void TRmgRiverLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
+void TRiverOp::setLineType(const TRmgGridPoint& point, s32 value)
 {
     m_adapter->setLineType(point, value);
 }
 
 MAC_ADDRESS(0x253ba8, 0x88)
-void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
+void TRiverOp::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
@@ -209,7 +209,7 @@ void TRmgRiverLinePainter::getTile(const TRmgGridPoint& point, TRmgTerrainTile& 
 // Roads and rivers cannot be painted over water or rock terrain.
 VA(0x0055ee00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
-s32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
+s32 TRiverOp::isBlocked(const TRmgGridPoint& point)
 {
     s32 terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
@@ -219,35 +219,35 @@ s32 TRmgRiverLinePainter::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055ee30, 0x13)
 MAC_ADDRESS(0x253c30, 0x30)
-s32 TRmgRiverLinePainter::getLineType(const TRmgGridPoint& point)
+s32 TRiverOp::getLineType(const TRmgGridPoint& point)
 {
     return m_adapter->getLineType(point);
 }
 
 VA(0x0055ee50, 0x76)
 MAC_ADDRESS(0x253c60, 0x6c)
-TRmgRiverPainter::TRmgRiverPainter(
-    TRmgRiverMapAdapterInterface* newAdapter,
+TRiverPlacementOp::TRiverPlacementOp(
+    TRiverOp::TAbstractMap* newAdapter,
     s32 newRiverType,
     const TRmgGridPoint& newStart)
-    : TRmgRiverLinePainter(newAdapter),
+    : TRiverOp(newAdapter),
       TRmgLineWalker(this, newRiverType, newStart)
 {
 }
 
-VA_COMPGEN(0x0055eed0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
+VA_COMPGEN(0x0055eed0, 0x21, SCALAR_DELETING_DTOR, TRiverPlacementOp)
 
 // Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
 // at 0x6411ac. The road painter's first virtual slot returns that table.
 VA(0x0055f320, 0x08)
 MAC_ADDRESS(0x253fc0, 0x8)  // vtables 0x6411f0/0x64120c; Complete-only
-TRmgLinePatternTable* TRmgRoadLinePainter::getPatternTable(s32)
+TRmgLinePatternTable* TRoadOp::getPatternTable(s32)
 {
     return &g_rmgRoadPatternTable;
 }
 
 MAC_ADDRESS(0x253fc8, 0x54)
-void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
+void TRoadOp::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
@@ -256,7 +256,7 @@ void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const TRmgTerrainT
 }
 
 MAC_ADDRESS(0x25404c, 0x44)
-s32 TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
+s32 TRoadOp::isBlocked(const TRmgGridPoint& point)
 {
     s32 terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
@@ -266,14 +266,14 @@ s32 TRmgRoadLinePainter::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055f330, 0x17)
 MAC_ADDRESS(0x25401c, 0x30)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-only
-void TRmgRoadLinePainter::setLineType(const TRmgGridPoint& point, s32 value)
+void TRoadOp::setLineType(const TRmgGridPoint& point, s32 value)
 {
     m_adapter->setLineType(point, value);
 }
 
 VA(0x0055f350, 0x34)
 MAC_ADDRESS(0x254090, 0x88) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
-void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
+void TRoadOp::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
@@ -283,7 +283,7 @@ void TRmgRoadLinePainter::getTile(const TRmgGridPoint& point, TRmgTerrainTile& t
 // adapter getLineType forwarding shape in slot 5.
 VA(0x0055f390, 0x13)
 MAC_ADDRESS(0x254118, 0x30)  // Complete-only road painter
-s32 TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
+s32 TRoadOp::getLineType(const TRmgGridPoint& point)
 {
     return m_adapter->getLineType(point);
 }
@@ -293,11 +293,11 @@ s32 TRmgRoadLinePainter::getLineType(const TRmgGridPoint& point)
 // is passed unchanged to walker 0x4fa280, whose subobject begins at +0x10.
 VA(0x0055f3b0, 0x76)
 MAC_ADDRESS(0x254148, 0x6c) // anchor-callee 0x548143; Complete-only, thiscall ret 0xc
-TRmgRoadPainter::TRmgRoadPainter(
-    TRmgRoadMapAdapterInterface* newAdapter,
+TRoadPlacementOp::TRoadPlacementOp(
+    TRoadOp::TAbstractMap* newAdapter,
     s32 newRoadType,
     const TRmgGridPoint& newStart)
-    : TRmgRoadLinePainter(newAdapter),
+    : TRoadOp(newAdapter),
       TRmgLineWalker(this, newRoadType, newStart)
 {
 }
@@ -305,14 +305,14 @@ TRmgRoadPainter::TRmgRoadPainter(
 // Recovering the real constructor emits the final vtable and this wrapper
 // naturally. Its 33 bytes call the retained destructor, test the deleting
 // flag, conditionally release this, and return the original object pointer.
-VA_COMPGEN(0x0055f430, 0x21, SCALAR_DELETING_DTOR, TRmgRoadPainter)
+VA_COMPGEN(0x0055f430, 0x21, SCALAR_DELETING_DTOR, TRoadPlacementOp)
 
 // The road painter's empty derived destructor restores its distinct base
 // vtable at 0x6411f0. The road builder at 0x548040 constructs this parallel
 // hierarchy; its scalar deleting destructor is retained at 0x55f430.
 VA(0x0055f460, 0x07)
 MAC_ADDRESS(0x2541b4, 0x60)  // road painter cleanup; Complete-only RMG helper
-TRmgRoadPainter::~TRmgRoadPainter()
+TRoadPlacementOp::~TRoadPlacementOp()
 {
 }
 

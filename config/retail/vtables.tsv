@@ -327,12 +327,12 @@ rva	function_count	class
 0x2409e8	7	TAbstractMap@TTerrainPlacementOp
 # retail slots 1:0x532360, 2:0x5323d0, 4:0x532410, 5:0x532480, 6:0x5324b0 are the candidate type_road_map slot functions; no other census row pairs
 0x240a04	7	type_road_map
-# ??_7 site paired in order: 0x532350 ??1TRmgRoadMapAdapterInterface@@UAE@XZ; 0x537940 ??_GTRmgRoadMapAdapterInterface@@UAEPAXI@Z
-0x240a20	7	TRmgRoadMapAdapterInterface
+# ??_7 site paired in order: 0x532350 ??1TAbstractMap@TRoadOp@@UAE@XZ; 0x537940 ??_GTAbstractMap@TRoadOp@@UAEPAXI@Z
+0x240a20	7	TAbstractMap@TRoadOp
 # ??_7 site paired in order: 0x548500 ?createRiverToObject@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z; 0x548df0 ?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z
 0x240a3c	7	type_river_map
-# ??_7 site paired in order: 0x532510 ??1TRmgRiverMapAdapterInterface@@UAE@XZ; 0x537910 ??_GTRmgRiverMapAdapterInterface@@UAEPAXI@Z (+2 more)
-0x240a58	7	TRmgRiverMapAdapterInterface
+# ??_7 site paired in order: 0x532510 ??1TAbstractMap@TRiverOp@@UAE@XZ; 0x537910 ??_GTAbstractMap@TRiverOp@@UAEPAXI@Z (+2 more)
+0x240a58	7	TAbstractMap@TRiverOp
 # ??_7 site paired in order: 0x5330e0 ??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z; 0x533120 ??_Gtype_object@@UAEPAXI@Z (+30 more)
 0x240a74	4	type_object
 # ??_7 site paired in order: 0x540b20 ?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z
@@ -438,16 +438,21 @@ rva	function_count	class
 0x241128	3	t_lod_file_adapter@?A0xd38fcb16638c5270@ResourceManager
 # ??_7 site paired in order: 0x55b8d0 ?loadFont@ResourceManager@@YIPAVfont@@PBD@Z; 0x55bb90 ?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z (+1 more)
 0x241134	3	t_stdio_file_adapter@?A0xd38fcb16638c5270@ResourceManager
-# ??_7 site paired in order: 0x55ee50 TRmgRiverPainter ctor; 0x55eda0 ~TRmgRiverPainter.
+# ??_7 site paired in order: 0x55ee50 TRiverPlacementOp ctor; 0x55eda0 ~TRiverPlacementOp.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
-0x241174	7	TRmgRiverLinePainter
-# ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgRiverMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
-0x241190	7	TRmgRiverPainter
-# ??_7 site paired in order: 0x55f3b0 TRmgRoadPainter ctor; 0x55f460 ~TRmgRoadPainter.
+# 2026-10-08: the map editor names both line operations, their placement
+# subclasses and their maps (h3maped RTTI TRiverOp/TRiverPlacementOp at
+# 0x54183c/0x54185c, TRoadOp/TRoadPlacementOp at 0x5419d4/0x5419f4, whose
+# slots are these classes' bodies; their hierarchies list TMapLineFilter
+# and TUncopyable as bases).
+0x241174	7	TRiverOp
+# ??_7 site paired in order: 0x55ee50 ??0TRiverPlacementOp@@QAE@PAVTAbstractMap@TRiverOp@@HABU?$TRmgCoordinatePoint@I@@@Z
+0x241190	7	TRiverPlacementOp
+# ??_7 site paired in order: 0x55f3b0 TRoadPlacementOp ctor; 0x55f460 ~TRoadPlacementOp.
 # Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
-0x2411f0	7	TRmgRoadLinePainter
-# ??_7 site paired in order: 0x55f3b0 ??0TRmgRoadPainter@@QAE@PAVTRmgRoadMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
-0x24120c	7	TRmgRoadPainter
+0x2411f0	7	TRoadOp
+# ??_7 site paired in order: 0x55f3b0 ??0TRoadPlacementOp@@QAE@PAVTAbstractMap@TRoadOp@@HABU?$TRmgCoordinatePoint@I@@@Z
+0x24120c	7	TRoadPlacementOp
 # ??_7 site paired in order: 0x560380 ?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z
 0x241540	14	type_doll_slot_widget
 # ??_7 site paired in order: 0x560380 ?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z

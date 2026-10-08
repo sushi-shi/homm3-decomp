@@ -215,7 +215,7 @@ unreached targets `(79,0,0)` and `(38,0,0)` respectively. Their source-to-target
 searches had no valid predecessor chain, but drawing proceeded anyway.
 
 The captured retail call chain is `createRiverToOutlet` → `TRmgLineWalker::drawTo` →
-`paintPoint` → `refreshRmgLinePoint` → `TRmgRiverLinePainter::getLineType` →
+`paintPoint` → `refreshRmgLinePoint` → `TRiverOp::getLineType` →
 `TRmgRiverMapAdapter::getLineType`. Candidate faults at the corresponding instruction
 with the same coordinates. This is not a candidate-only reconstruction error.
 

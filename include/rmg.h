@@ -195,6 +195,17 @@ enum ERmgBranchSeedPattern {
 //   t_abstract_random_generator    was TRmgGeneratorBase (editor vtable 0x540cb0)
 //   type_random_map_generator      was TRmgGenerator (editor vtable 0x540cbc)
 //   type_flaggable_def             was TRmgDwellingDef (base of type_map_dwelling_def)
+// The map editor's own objects name the placement operations the generator
+// shares with it (RTTI vtables and class hierarchy descriptors):
+//   TTerrainPlacementOp            was TRmgTerrainBrush (terrainplacement.h)
+//   TTerrainPlacementOp::TAbstractMap was TRmgMapInterface (editor vtable 0x53974c)
+//   TMapLineFilter                 was TRmgLinePainterInterface (base of both line ops)
+//   TRiverOp                       was TRmgRiverLinePainter (editor vtable 0x54183c)
+//   TRiverOp::TAbstractMap         was TRmgRiverMapAdapterInterface (editor vtable 0x53952c)
+//   TRiverPlacementOp              was TRmgRiverPainter (editor vtable 0x54185c)
+//   TRoadOp                        was TRmgRoadLinePainter (editor vtable 0x5419d4)
+//   TRoadOp::TAbstractMap          was TRmgRoadMapAdapterInterface (editor vtable 0x53956c)
+//   TRoadPlacementOp               was TRmgRoadPainter (editor vtable 0x5419f4)
 class TAbstractFile;
 class TSpreadsheetResource;
 class type_random_map_generator;
@@ -1317,33 +1328,6 @@ struct TRmgMapItem {
     }
 };
 
-class TRmgRiverMapAdapterInterface {
-public:
-    virtual ~TRmgRiverMapAdapterInterface();
-    virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
-    virtual TRmgGridPoint getSize() = 0;
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLineType(const TRmgGridPoint& point) = 0;
-    virtual int getTerrain(const TRmgGridPoint& point) = 0;
-};
-
-// The road-decoration adapter has the same seven-slot shape but a distinct
-// abstract vtable at 0x640a20. Its concrete subclass writes the packed road
-// fields through the bodies beginning at 0x532360.
-class TRmgRoadMapAdapterInterface {
-public:
-    virtual ~TRmgRoadMapAdapterInterface();
-    virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
-    virtual TRmgGridPoint getSize() = 0;
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLineType(const TRmgGridPoint& point) = 0;
-    virtual int getTerrain(const TRmgGridPoint& point) = 0;
-};
-
 class type_random_map : public TTerrainPlacementOp::TAbstractMap {
 public:
     unsigned char m_ownsMapItems;           // +0x04
@@ -1475,42 +1459,6 @@ struct TRmgTreasureGroup {
 };
 SIZE(TRmgTreasureGroup, 0x64);
 
-// Complete-only road adapter, provisional role name. Vtable 0x640a04 has
-// the seven-slot road interface; 0x548120 constructs the eight-byte object
-// with the address of a type_random_map view at +4. Its methods independently
-// index that map's 0x30-byte cells and read/write the road packed fields.
-class type_road_map : public TRmgRoadMapAdapterInterface {
-public:
-    type_random_map* m_map;
-
-    type_road_map(type_random_map* map) : m_map(map) {}
-    virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual TRmgGridPoint getSize();
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLineType(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
-};
-
-// Retail retains these support bodies outside CreateRiver while the adapter
-// and map-view construction remains expanded at the call site.  Keeping the
-// class definitions shared but the retained bodies in rmg_support.cpp
-// reproduces that ordinary translation-unit visibility boundary.
-class type_river_map : public TRmgRiverMapAdapterInterface {
-public:
-    type_random_map* m_map;
-
-    inline type_river_map(type_random_map* newMap) : m_map(newMap) {}
-
-    virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual TRmgGridPoint getSize();
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLineType(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
-};
-
 // Cinit 0x55ed70/0x55f2f0 passes a frame count and an array of frame pattern IDs to
 // the retained constructor at 0x4f9be0. That constructor allocates the copied
 // pattern ids, then records the first index and occurrence count for each of
@@ -1551,11 +1499,11 @@ struct TRmgLinePainterTile;
 // This common abstract prefix is a retail-derived source model; the original
 // Complete-only interface spelling is unknown. It has no virtual destructor
 // slot: the two painters below append slot 6 as a pure destructor.
-class TRmgLinePainterInterface {
+class TMapLineFilter {
 public:
     TRmgGridPoint m_size;
 
-    TRmgLinePainterInterface(const TRmgGridPoint& size);
+    TMapLineFilter(const TRmgGridPoint& size);
     virtual TRmgLinePatternTable* getPatternTable(int value) = 0;
     virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
     virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
@@ -1572,10 +1520,10 @@ public:
 // twelve-byte record is expanded at its entry and in 0x4fa080/0x4fa3c0.
 // These Complete-only names describe roles, not recovered original spellings.
 struct TRmgLinePainterTile {
-    TRmgLinePainterInterface* m_painter;
+    TMapLineFilter* m_painter;
     TRmgGridPoint m_point;
 
-    TRmgLinePainterTile(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
+    TRmgLinePainterTile(TMapLineFilter* painter, const TRmgGridPoint& point);
     int getLineType();
     void getTile(TRmgTerrainTile& tile);
     void setTile(const TRmgTerrainTile& tile);
@@ -1596,22 +1544,36 @@ struct TRmgGridRectangle {
 SIZE(TRmgGridRectangle, 0x10);
 
 // Shared fastcall refresh reached by the rectangle clear and point walker.
-void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
-void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle);
+void refreshRmgLinePoint(TMapLineFilter* painter, const TRmgGridPoint& point);
+void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle);
 
-class TRmgRiverLinePainter : public TRmgLinePainterInterface {
+class TRiverOp : public TMapLineFilter {
 public:
-    TRmgRiverMapAdapterInterface* m_adapter;
+    // The map a river operation paints (h3maped RTTI
+    // `TAbstractMap@TRiverOp`, vtable 0x53952c).
+    class TAbstractMap {
+    public:
+        virtual ~TAbstractMap();
+        virtual void setTile(
+            const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
+        virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
+        virtual TRmgGridPoint getSize() = 0;
+        virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
+        virtual int getLineType(const TRmgGridPoint& point) = 0;
+        virtual int getTerrain(const TRmgGridPoint& point) = 0;
+    };
 
-    inline TRmgRiverLinePainter(TRmgRiverMapAdapterInterface* newAdapter)
-        : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
+    TAbstractMap* m_adapter;
+
+    inline TRiverOp(TAbstractMap* newAdapter)
+        : TMapLineFilter(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
     // Retail's table 0x641174 has seven slots and the seventh is _purecall,
     // where the river painter's 0x641190 has its deleting destructor: the
     // destructor is pure here, as TRmgTerrainRule's is. Its empty body is
-    // still expanded in ~TRmgRiverPainter (vptr store at 0x55eda0).
-    virtual ~TRmgRiverLinePainter() = 0;
+    // still expanded in ~TRiverPlacementOp (vptr store at 0x55eda0).
+    virtual ~TRiverOp() = 0;
 
     virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
@@ -1625,7 +1587,7 @@ public:
     virtual int getLineType(const TRmgGridPoint& point);
 };
 
-inline TRmgRiverLinePainter::~TRmgRiverLinePainter() {}
+inline TRiverOp::~TRiverOp() {}
 
 // The retained walk at 0x4fa2b0 builds two three-dword records, selects them
 // by distance, then updates their coordinate and step through those pointers.
@@ -1653,12 +1615,12 @@ SIZE(TRmgLineWalkAxis, 0x0c);
 
 class TRmgLineWalker {
 public:
-    TRmgLinePainterInterface* m_painter;
+    TMapLineFilter* m_painter;
     int m_lineType;
     TRmgGridPoint m_position;
 
     TRmgLineWalker(
-        TRmgLinePainterInterface* newPainter,
+        TMapLineFilter* newPainter,
         int newLineType,
         const TRmgGridPoint& start);
     void drawTo(const TRmgGridPoint& destination);
@@ -1666,30 +1628,44 @@ public:
     void paintPoint(const TRmgGridPoint& point);
 };
 
-class TRmgRiverPainter : public TRmgRiverLinePainter, public TRmgLineWalker {
+class TRiverPlacementOp : public TRiverOp, public TRmgLineWalker {
 public:
-    TRmgRiverPainter(
-        TRmgRiverMapAdapterInterface* newAdapter,
+    TRiverPlacementOp(
+        TRiverOp::TAbstractMap* newAdapter,
         int newRiverType,
         const TRmgGridPoint& start);
-    virtual ~TRmgRiverPainter();
+    virtual ~TRiverPlacementOp();
 };
 
 // The road-building cluster at 0x548040 uses a parallel painter hierarchy.
 // Its base and derived vtables at 0x6411f0/0x64120c differ from the river
 // hierarchy's 0x641174/0x641190 tables, while retaining the same line-painting
 // interface shape. Original Complete-only class spellings are unavailable.
-class TRmgRoadLinePainter : public TRmgLinePainterInterface {
+class TRoadOp : public TMapLineFilter {
 public:
-    TRmgRoadMapAdapterInterface* m_adapter;
+    // The map a road operation paints (h3maped RTTI
+    // `TAbstractMap@TRoadOp`, vtable 0x53956c).
+    class TAbstractMap {
+    public:
+        virtual ~TAbstractMap();
+        virtual void setTile(
+            const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
+        virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
+        virtual TRmgGridPoint getSize() = 0;
+        virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
+        virtual int getLineType(const TRmgGridPoint& point) = 0;
+        virtual int getTerrain(const TRmgGridPoint& point) = 0;
+    };
 
-    inline TRmgRoadLinePainter(TRmgRoadMapAdapterInterface* newAdapter)
-        : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
+    TAbstractMap* m_adapter;
+
+    inline TRoadOp(TAbstractMap* newAdapter)
+        : TMapLineFilter(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
     // Table 0x6411f0's seventh slot is _purecall as well (0x64120c has
-    // ??_GTRmgRoadPainter there).
-    virtual ~TRmgRoadLinePainter() = 0;
+    // ??_GTRoadPlacementOp there).
+    virtual ~TRoadOp() = 0;
 
     virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
@@ -1700,15 +1676,51 @@ public:
     virtual int getLineType(const TRmgGridPoint& point);
 };
 
-inline TRmgRoadLinePainter::~TRmgRoadLinePainter() {}
+inline TRoadOp::~TRoadOp() {}
 
-class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {
+class TRoadPlacementOp : public TRoadOp, public TRmgLineWalker {
 public:
-    TRmgRoadPainter(
-        TRmgRoadMapAdapterInterface* newAdapter,
+    TRoadPlacementOp(
+        TRoadOp::TAbstractMap* newAdapter,
         int newRoadType,
         const TRmgGridPoint& start);
-    virtual ~TRmgRoadPainter();
+    virtual ~TRoadPlacementOp();
+};
+
+// Complete-only road adapter, provisional role name. Vtable 0x640a04 has
+// the seven-slot road interface; 0x548120 constructs the eight-byte object
+// with the address of a type_random_map view at +4. Its methods independently
+// index that map's 0x30-byte cells and read/write the road packed fields.
+class type_road_map : public TRoadOp::TAbstractMap {
+public:
+    type_random_map* m_map;
+
+    type_road_map(type_random_map* map) : m_map(map) {}
+    virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual TRmgGridPoint getSize();
+    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
+};
+
+// Retail retains these support bodies outside CreateRiver while the adapter
+// and map-view construction remains expanded at the call site.  Keeping the
+// class definitions shared but the retained bodies in rmg_support.cpp
+// reproduces that ordinary translation-unit visibility boundary.
+class type_river_map : public TRiverOp::TAbstractMap {
+public:
+    type_random_map* m_map;
+
+    inline type_river_map(type_random_map* newMap) : m_map(newMap) {}
+
+    virtual void setTile(
+        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual TRmgGridPoint getSize();
+    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLineType(const TRmgGridPoint& point);
+    virtual int getTerrain(const TRmgGridPoint& point);
 };
 
 // A generated zone owns both its template metadata and the Complete-only
@@ -2207,15 +2219,15 @@ SIZE(type_flaggable, 0x1c);
 SIZE(TRmgMapItem, 0x30);
 SIZE(type_random_map, 0x18);
 SIZE(TTerrainPlacementOp::TAbstractMap, 0x04);
-SIZE(TRmgRiverMapAdapterInterface, 0x04);
-SIZE(TRmgRoadMapAdapterInterface, 0x04);
+SIZE(TRiverOp::TAbstractMap, 0x04);
+SIZE(TRoadOp::TAbstractMap, 0x04);
 SIZE(type_river_map, 0x08);
-SIZE(TRmgLinePainterInterface, 0x0c);
-SIZE(TRmgRiverLinePainter, 0x10);
-SIZE(TRmgRoadLinePainter, 0x10);
+SIZE(TMapLineFilter, 0x0c);
+SIZE(TRiverOp, 0x10);
+SIZE(TRoadOp, 0x10);
 SIZE(TRmgLineWalker, 0x10);
-SIZE(TRmgRiverPainter, 0x20);
-SIZE(TRmgRoadPainter, 0x20);
+SIZE(TRiverPlacementOp, 0x20);
+SIZE(TRoadPlacementOp, 0x20);
 SIZE(type_random_map_generator, 0x14e0);
 
 // Retail 0x6824e0 is indexed by the creature-traits level dword before

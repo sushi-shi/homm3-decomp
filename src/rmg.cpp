@@ -1308,11 +1308,11 @@ int type_random_map::getFrame(const TRmgGridPoint& point)
 
 VA(0x00532350, 0x07)
 MAC_ADDRESS(0x22ec98, 0x48)
-TRmgRoadMapAdapterInterface::~TRmgRoadMapAdapterInterface()
+TRoadOp::TAbstractMap::~TAbstractMap()
 {
 }
 
-VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRmgRoadMapAdapterInterface)
+VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRoadOp__TAbstractMap)
 
 VA(0x00532360, 0x6E)
 MAC_ADDRESS(0x22ece0, 0x6c)
@@ -1384,11 +1384,11 @@ VA_COMPGEN(0x00532320, 0x21, SCALAR_DELETING_DTOR, type_road_map)
 
 VA(0x00532510, 0x07)
 MAC_ADDRESS(0x22eeec, 0x48)
-TRmgRiverMapAdapterInterface::~TRmgRiverMapAdapterInterface()
+TRiverOp::TAbstractMap::~TAbstractMap()
 {
 }
 
-VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgRiverMapAdapterInterface)
+VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRiverOp__TAbstractMap)
 
 // Vtable 0x640a3c slot 0 and the 0x08 concrete adapter layout identify this
 // scalar deleting wrapper. The retained body delegates to the adapter-interface
@@ -9721,7 +9721,7 @@ unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int
         if (position.m_z == level) {
             position = previous;
             type_road_map adapter(&levelMap);
-            TRmgRoadPainter painter(
+            TRoadPlacementOp painter(
                 &adapter, roadType, TRmgGridPoint(position.m_x, position.m_y));
             painted = 1;
             for (;;) {
@@ -9874,7 +9874,7 @@ void type_random_map_generator::createRiverToJoin(TRmgMapPosition source)
     type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.getWidth(), m_map.getHeight());
     type_river_map mapAdapter(&levelMap);
-    TRmgRiverPainter riverPainter(
+    TRiverPlacementOp riverPainter(
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
     while (mapItem->m_movement.m_cost > 0) {
         position = mapItem->m_previousTile;
@@ -10090,7 +10090,7 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
     type_random_map levelMap(m_map.getMapItem(0, 0, nextPosition.m_z),
         m_map.m_mapWidth, m_map.m_mapHeight);
     type_river_map mapAdapter(&levelMap);
-    TRmgRiverPainter riverPainter(
+    TRiverPlacementOp riverPainter(
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
 
     if (mapItem->m_tileData.m_blockedDirections) {

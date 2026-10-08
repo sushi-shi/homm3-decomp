@@ -43,7 +43,7 @@ b8 TRmgTableTerrainRule::isSpecialFrame(s32) { return 0; }
 // walker's first neighbour pass its retained compound add (78.03 against
 // 87.12%); the factory and rectangle clear are byte-identical either way.
 TRmgLinePainterTile::TRmgLinePainterTile(
-    TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
+    TMapLineFilter* painter, const TRmgGridPoint& point)
     : m_painter(painter), m_point(point)
 {
 }
@@ -118,7 +118,7 @@ s32 selectRmgLinePattern(
 
 VA(0x004f9f00, 0x146)
 MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
-void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
+void refreshRmgLinePoint(TMapLineFilter* painter, const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
     s32 oldType = tile.getLineType();
@@ -148,7 +148,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
 }
 
 VA(0x004fa050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
-TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
+TRmgLinePainterTile TMapLineFilter::at(const TRmgGridPoint& point)
 {
     return TRmgLinePainterTile(this, point);
 }
@@ -169,7 +169,7 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 // by refresh and the walker. Restoring that outer boundary currently retains
 // extra grid conversion/addition calls in refresh and grid-constructor/proxy
 // calls in the walker (84.8077% / 78.8527%); its source calls need joint recovery.
-s32 TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, u32 direction)
+s32 TMapLineFilter::getNeighbourLineType(const TRmgGridPoint& point, u32 direction)
 {
     TRmgGridPoint nearby = point + g_tileDirections[direction];
     return at(nearby).getLineType();
@@ -182,7 +182,7 @@ s32 TRmgLinePainterInterface::getNeighbourLineType(const TRmgGridPoint& point, u
 //   1 4 4 4 2
 VA(0x004fa080, 0x1fb)
 MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
-void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRectangle& rectangle)
+void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle)
 {
     TRmgGridPoint point;
     for (point.m_y = rectangle.m_origin.m_y;
@@ -237,7 +237,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
 VA(0x004fa280, 0x30)
 MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
 TRmgLineWalker::TRmgLineWalker(
-    TRmgLinePainterInterface* newPainter,
+    TMapLineFilter* newPainter,
     s32 newLineType,
     const TRmgGridPoint& start)
     : m_painter(newPainter), m_lineType(newLineType), m_position(start)
@@ -294,7 +294,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     b8 matches[TILE_DIR_COUNT];
     u32 direction;
     {
-        TRmgLinePainterInterface* painter = m_painter;
+        TMapLineFilter* painter = m_painter;
         b8 available[TILE_DIR_COUNT];
         buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
                                point.m_x, point.m_y, available);
