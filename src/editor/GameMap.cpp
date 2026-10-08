@@ -11,11 +11,16 @@
 #include <algorithm>
 #include <functional>
 #include <iostream.h>
+#include <limits>
 #include <map>
 
 #include "adventureobjecttype.h"
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
+#include "editor/Hero.h"
+#include "editor/Monster.h"
+#include "editor/ObjectSpecializations.h"
+#include "editor/Town.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 #include "editor/TilePoint.h"
@@ -90,6 +95,35 @@ public:
 };
 
 TCappedObjectTypeInfoMap kCappedObjectTypeInfoMap;
+
+inline bool isHero(const TGameObject& obj)
+{
+    return dynamic_cast<const THero*>(&obj) != NULL;
+}
+
+inline bool isTown(const TGameObject& obj)
+{
+    return dynamic_cast<const TTown*>(&obj) != NULL;
+}
+
+inline bool isMonster(const TGameObject& obj)
+{
+    return dynamic_cast<const TMonster*>(&obj) != NULL;
+}
+
+inline bool isHeroOrTown(const TGameObject& obj)
+{
+    return isHero(obj) || isTown(obj);
+}
+
+inline bool isArtifact(const TGameObject& obj)
+{
+    int type = obj.getType();
+    return type == ARTIFACT || type == SPELL_SCROLL || type == BLACK_BOX;
+}
+
+struct TVictoryConditionData;
+struct TLossConditionData;
 
 }  // namespace
 
@@ -190,6 +224,107 @@ public:
     unsigned int getNumObelisksOnMap() const;
 
 private:
+    class _TVictoryConditionValidater : public TVictoryCondition::TVisitor {
+    public:
+        _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+        bool isValid() const { return _m_bValid; }
+
+        virtual void visit(const TVCAquireArtifact& vc);
+        virtual void visit(const TVCAccumulateCreature& vc);
+        virtual void visit(const TVCAccumulateResource& vc);
+        virtual void visit(const TVCUpgradeTown& vc);
+        virtual void visit(const TVCBuildHolyGrailStruct& vc);
+        virtual void visit(const TVCDefeatHero& vc);
+        virtual void visit(const TVCCaptureTown& vc);
+        virtual void visit(const TVCDefeatMonster& vc);
+        virtual void visit(const TVCFlagAllCreatureGenerators& vc);
+        virtual void visit(const TVCFlagAllMines& vc);
+        virtual void visit(const TVCTransportArtifact& vc);
+
+    private:
+        bool _isArtifact(const TMapObjectRef& objRef) const;
+        bool _isTown(const TMapObjectRef& objRef) const;
+
+        const _TImpl& _m_map;
+        bool _m_bValid;
+    };
+
+    class _TLossConditionValidater : public TLossCondition::TVisitor {
+    public:
+        _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+        bool isValid() const { return _m_bValid; }
+
+        virtual void visit(const TLCLoseTown& lc);
+        virtual void visit(const TLCLoseHero& lc);
+        virtual void visit(const TLCTimeExpires& lc);
+
+    private:
+        const _TImpl& _m_map;
+        bool _m_bValid;
+    };
+
+    class _TVictoryConditionWriter : public TVictoryCondition::TVisitor {
+    public:
+        _TVictoryConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
+
+        virtual void visit(const TVCAquireArtifact& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCAccumulateCreature& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCAccumulateResource& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCUpgradeTown& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCBuildHolyGrailStruct& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCDefeatHero& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCCaptureTown& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCDefeatMonster& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCFlagAllCreatureGenerators& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCFlagAllMines& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCTransportArtifact& vc) { _m_map._write(_m_pOStream, vc); }
+
+    private:
+        const _TImpl& _m_map;
+        TRawOStream* _m_pOStream;
+    };
+
+    class _TLossConditionWriter : public TLossCondition::TVisitor {
+    public:
+        _TLossConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
+
+        virtual void visit(const TLCLoseTown& lc) { _m_map._write(_m_pOStream, lc); }
+        virtual void visit(const TLCLoseHero& lc) { _m_map._write(_m_pOStream, lc); }
+        virtual void visit(const TLCTimeExpires& lc) { _m_map._write(_m_pOStream, lc); }
+
+    private:
+        const _TImpl& _m_map;
+        TRawOStream* _m_pOStream;
+    };
+
+    friend class _TVictoryConditionValidater;
+    friend class _TLossConditionValidater;
+    friend class _TVictoryConditionWriter;
+    friend class _TLossConditionWriter;
+
+    bool _isValid(const TVictoryCondition& vc) const;
+    bool _isValid(const TLossCondition& lc) const;
+    void _write(TRawOStream* pOStream, const TMapObjectRef& objRef) const;
+    void _writeVictoryCondition(TRawOStream* pOStream) const;
+    void _write(TRawOStream* pOStream, const TVictoryCondition& vc, int type) const;
+    void _write(TRawOStream* pOStream, const TVCAquireArtifact& vc) const;
+    void _write(TRawOStream* pOStream, const TVCAccumulateCreature& vc) const;
+    void _write(TRawOStream* pOStream, const TVCAccumulateResource& vc) const;
+    void _write(TRawOStream* pOStream, const TVCUpgradeTown& vc) const;
+    void _write(TRawOStream* pOStream, const TVCBuildHolyGrailStruct& vc) const;
+    void _write(TRawOStream* pOStream, const TVCDefeatHero& vc) const;
+    void _write(TRawOStream* pOStream, const TVCCaptureTown& vc) const;
+    void _write(TRawOStream* pOStream, const TVCDefeatMonster& vc) const;
+    void _write(TRawOStream* pOStream, const TVCFlagAllCreatureGenerators& vc) const;
+    void _write(TRawOStream* pOStream, const TVCFlagAllMines& vc) const;
+    void _write(TRawOStream* pOStream, const TVCTransportArtifact& vc) const;
+    void _writeLossCondition(TRawOStream* pOStream) const;
+    void _write(TRawOStream* pOStream, const TLCLoseTown& lc) const;
+    void _write(TRawOStream* pOStream, const TLCLoseHero& lc) const;
+    void _write(TRawOStream* pOStream, const TLCTimeExpires& lc) const;
+
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
     bool _isMapPlayable() const;
     TMapLayerObjectID _findObject(bool bSecondLayer, const TTilePoint& loc,
@@ -275,6 +410,139 @@ private:
     TRefCountingPtr<_TBookkeeping> _m_pBookkeeping;
     TArray<TRefCountingPtr<_TPlayerBookkeeping>, kNumPlayers> _m_apPlayerBookkeeping;
 };
+
+namespace {
+
+// An object's trigger cell as the map file records it.
+struct TMapLoc {
+    ubyte m_x;
+    ubyte m_y;
+    ubyte m_layer;
+};
+
+TRawIStream& operator>>(TRawIStream& stream, TMapLoc& loc)
+{
+    stream >> loc.m_x >> loc.m_y >> loc.m_layer;
+    return stream;
+}
+
+// A victory condition as the map file stores it.
+struct TVictoryConditionData {
+    signed char m_type;
+    signed char m_bAllowNormalVictory;
+    signed char m_bAppliesToComputer;
+    union {
+        struct {
+            signed char m_artifact;
+        } m_aquireArtifact;
+        struct {
+            signed char m_creatureType;
+            long m_quantity;
+        } m_accumulateCreature;
+        struct {
+            signed char m_resourceType;
+            long m_quantity;
+        } m_accumulateResource;
+        struct {
+            TMapLoc m_townLoc;
+            signed char m_hallLevel;
+            signed char m_castleLevel;
+        } m_upgradeTown;
+        struct {
+            TMapLoc m_townLoc;
+        } m_buildHolyGrailStruct;
+        struct {
+            TMapLoc m_heroLoc;
+        } m_defeatHero;
+        struct {
+            TMapLoc m_townLoc;
+        } m_captureTown;
+        struct {
+            TMapLoc m_monsterLoc;
+        } m_defeatMonster;
+        struct {
+            signed char m_artifact;
+            TMapLoc m_townLoc;
+        } m_transportArtifact;
+    };
+};
+
+TRawIStream& operator>>(TRawIStream& stream, TVictoryConditionData& vcData)
+{
+    stream >> vcData.m_type;
+#line 358
+    assert(vcData.m_type >= eVCNone && vcData.m_type < kNumVictoryConditionTypes);
+    if (vcData.m_type != eVCNone) {
+        stream >> vcData.m_bAllowNormalVictory >> vcData.m_bAppliesToComputer;
+        switch (vcData.m_type) {
+        case eVCAquireArtifact:
+            stream >> vcData.m_aquireArtifact.m_artifact;
+            break;
+        case eVCAccumulateCreature:
+            stream >> vcData.m_accumulateCreature.m_creatureType >> vcData.m_accumulateCreature.m_quantity;
+            break;
+        case eVCAccumulateResource:
+            stream >> vcData.m_accumulateResource.m_resourceType >> vcData.m_accumulateResource.m_quantity;
+            break;
+        case eVCUpgradeTown:
+            stream >> vcData.m_upgradeTown.m_townLoc >> vcData.m_upgradeTown.m_hallLevel
+                   >> vcData.m_upgradeTown.m_castleLevel;
+            break;
+        case eVCBuildHolyGrailStruct:
+            stream >> vcData.m_buildHolyGrailStruct.m_townLoc;
+            break;
+        case eVCDefeatHero:
+            stream >> vcData.m_defeatHero.m_heroLoc;
+            break;
+        case eVCCaptureTown:
+            stream >> vcData.m_captureTown.m_townLoc;
+            break;
+        case eVCDefeatMonster:
+            stream >> vcData.m_defeatMonster.m_monsterLoc;
+            break;
+        case eVCFlagAllCreatureGenerators:
+        case eVCFlagAllMines:
+            break;
+        case eVCTransportArtifact:
+            stream >> vcData.m_transportArtifact.m_artifact >> vcData.m_transportArtifact.m_townLoc;
+            break;
+        }
+    }
+    return stream;
+}
+
+// A loss condition as the map file stores it.
+struct TLossConditionData {
+    signed char m_type;
+    union {
+        TMapLoc m_townLoc;
+        TMapLoc m_heroLoc;
+        short m_numDays;
+    };
+};
+
+TRawIStream& operator>>(TRawIStream& stream, TLossConditionData& lcData)
+{
+    stream >> lcData.m_type;
+#line 433
+    assert(lcData.m_type >= eLCNone && lcData.m_type < kNumLossConditionTypes);
+    if (lcData.m_type != eLCNone) {
+        switch (lcData.m_type) {
+        case eLCLoseTown:
+            stream >> lcData.m_townLoc;
+            break;
+        case eLCLoseHero:
+            stream >> lcData.m_heroLoc;
+            break;
+        case eLCTimeExpires:
+            stream >> lcData.m_numDays;
+            break;
+        }
+    }
+    return stream;
+}
+
+}  // namespace
 
 void TRumor::setNameAndText(const string& newName, const string& newText)
 {
@@ -460,6 +728,118 @@ TPlaceObjFailureTooManySignsOnMap::TPlaceObjFailureTooManySignsOnMap()
 {
 }
 
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCAquireArtifact& vc)
+{
+#line 1278
+    assert(vc.getArtifact() >= 0 && vc.getArtifact() < kNumArtifacts);
+    _m_bValid = true;
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCAccumulateCreature& vc)
+{
+#line 1285
+    assert(vc.getCreatureType() >= 0 && vc.getCreatureType() < kNumCreatureTypes);
+    _m_bValid = true;
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCAccumulateResource& vc)
+{
+#line 1292
+    assert(vc.getResourceType() >= 0 && vc.getResourceType() < kNumGameResourceTypes);
+    _m_bValid = true;
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCUpgradeTown& vc)
+{
+    _m_bValid = _isTown(vc.getTownRef());
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCBuildHolyGrailStruct& vc)
+{
+    _m_bValid = vc.getTownRef() == TMapObjectRef() || _isTown(vc.getTownRef());
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCDefeatHero& vc)
+{
+    const TGameObject* pObj = _m_map.getPObject(vc.getHeroRef());
+    if (pObj != NULL) {
+        if (isHero(*pObj)) {
+            _m_bValid = true;
+        } else {
+            const TTown* pTown = dynamic_cast<const TTown*>(pObj);
+            _m_bValid = pTown != NULL && pTown->getPVisitingHero() != NULL;
+        }
+    } else {
+        _m_bValid = false;
+    }
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCCaptureTown& vc)
+{
+    _m_bValid = _isTown(vc.getTownRef());
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCDefeatMonster& vc)
+{
+    const TGameObject* pObj = _m_map.getPObject(vc.getMonsterRef());
+    _m_bValid = pObj != NULL && isMonster(*pObj);
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCFlagAllCreatureGenerators& vc)
+{
+    _m_bValid = true;
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCFlagAllMines& vc)
+{
+    _m_bValid = true;
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCTransportArtifact& vc)
+{
+#line 1354
+    assert(vc.getArtifact() >= 0 && vc.getArtifact() < kNumArtifacts);
+    _m_bValid = _isTown(vc.getTownRef());
+}
+
+bool TGameMap::_TImpl::_TVictoryConditionValidater::_isArtifact(const TMapObjectRef& objRef) const
+{
+    const TGameObject* pObj = _m_map.getPObject(objRef);
+    return pObj != NULL && isArtifact(*pObj);
+}
+
+bool TGameMap::_TImpl::_TVictoryConditionValidater::_isTown(const TMapObjectRef& objRef) const
+{
+    const TGameObject* pObj = _m_map.getPObject(objRef);
+    return pObj != NULL && isTown(*pObj);
+}
+
+void TGameMap::_TImpl::_TLossConditionValidater::visit(const TLCLoseTown& lc)
+{
+    const TGameObject* pObj = _m_map.getPObject(lc.getTownRef());
+    _m_bValid = pObj != NULL && dynamic_cast<const TTown*>(pObj) != NULL;
+}
+
+void TGameMap::_TImpl::_TLossConditionValidater::visit(const TLCLoseHero& lc)
+{
+    const TGameObject* pObj = _m_map.getPObject(lc.getHeroRef());
+    if (pObj != NULL) {
+        if (isHero(*pObj)) {
+            _m_bValid = true;
+        } else {
+            const TTown* pTown = dynamic_cast<const TTown*>(pObj);
+            _m_bValid = pTown != NULL && pTown->getPVisitingHero() != NULL;
+        }
+    } else {
+        _m_bValid = false;
+    }
+}
+
+void TGameMap::_TImpl::_TLossConditionValidater::visit(const TLCTimeExpires& lc)
+{
+    _m_bValid = true;
+}
+
 void TGameMap::_TImpl::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
 {
 #line 1438
@@ -604,6 +984,151 @@ const set<TMapObjectRef>& TGameMap::_TImpl::getPlayerTownRefs(TPlayer player) co
 bool TGameMap::_TImpl::_isMapPlayable() const
 {
     return _m_pBookkeeping->m_numPlayableSlots != 0;
+}
+
+bool TGameMap::_TImpl::_isValid(const TVictoryCondition& vc) const
+{
+    _TVictoryConditionValidater validater(*this);
+    vc.accept(&validater);
+    return validater.isValid();
+}
+
+bool TGameMap::_TImpl::_isValid(const TLossCondition& lc) const
+{
+    _TLossConditionValidater validater(*this);
+    lc.accept(&validater);
+    return validater.isValid();
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TMapObjectRef& objRef) const
+{
+#line 4575
+    assert(!objRef.getBSecondLayer() || _m_bTwoLayer);
+    if (objRef.getObjectID() != TLayer::s_kInvalidObjID) {
+        const TLayer& layer = getLayer(objRef.getBSecondLayer());
+        const TGameObject& obj = layer.getObject(objRef.getObjectID());
+#line 4580
+        assert(obj.hasTrigger());
+        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID()) - obj.getTriggerLoc();
+        *pOStream << static_cast<ubyte>(loc.x()) << static_cast<ubyte>(loc.y())
+                  << static_cast<ubyte>(objRef.getBSecondLayer());
+    } else {
+        *pOStream << std::numeric_limits<ubyte>::max() << std::numeric_limits<ubyte>::max()
+                  << std::numeric_limits<ubyte>::max();
+    }
+}
+
+void TGameMap::_TImpl::_writeVictoryCondition(TRawOStream* pOStream) const
+{
+    if (_m_pProperties->m_pVictoryCondition != NULL) {
+#line 4600
+        assert(_isValid( *_m_pProperties->m_pVictoryCondition ));
+        _TVictoryConditionWriter writer(*this, pOStream);
+        _m_pProperties->m_pVictoryCondition->accept(&writer);
+    } else {
+        *pOStream << static_cast<signed char>(eVCNone);
+    }
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVictoryCondition& vc, int type) const
+{
+    *pOStream << (const signed char&) type << static_cast<signed char>(vc.getBAllowNormalVictory())
+              << static_cast<signed char>(vc.getBAppliesToComputer());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCAquireArtifact& vc) const
+{
+    _write(pOStream, vc, eVCAquireArtifact);
+    *pOStream << static_cast<signed char>(vc.getArtifact());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCAccumulateCreature& vc) const
+{
+    _write(pOStream, vc, eVCAccumulateCreature);
+    *pOStream << static_cast<signed char>(vc.getCreatureType()) << static_cast<long>(vc.getQuantity());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCAccumulateResource& vc) const
+{
+    _write(pOStream, vc, eVCAccumulateResource);
+    *pOStream << static_cast<signed char>(vc.getResourceType()) << static_cast<long>(vc.getQuantity());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCUpgradeTown& vc) const
+{
+    _write(pOStream, vc, eVCUpgradeTown);
+    _write(pOStream, vc.getTownRef());
+    *pOStream << static_cast<signed char>(vc.getHallLevel()) << static_cast<signed char>(vc.getCastleLevel());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCBuildHolyGrailStruct& vc) const
+{
+    _write(pOStream, vc, eVCBuildHolyGrailStruct);
+    _write(pOStream, vc.getTownRef());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCDefeatHero& vc) const
+{
+    _write(pOStream, vc, eVCDefeatHero);
+    _write(pOStream, vc.getHeroRef());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCCaptureTown& vc) const
+{
+    _write(pOStream, vc, eVCCaptureTown);
+    _write(pOStream, vc.getTownRef());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCDefeatMonster& vc) const
+{
+    _write(pOStream, vc, eVCDefeatMonster);
+    _write(pOStream, vc.getMonsterRef());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCFlagAllCreatureGenerators& vc) const
+{
+    _write(pOStream, vc, eVCFlagAllCreatureGenerators);
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCFlagAllMines& vc) const
+{
+    _write(pOStream, vc, eVCFlagAllMines);
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TVCTransportArtifact& vc) const
+{
+    _write(pOStream, vc, eVCTransportArtifact);
+    *pOStream << (const signed char&) vc.getArtifact();
+    _write(pOStream, vc.getTownRef());
+}
+
+void TGameMap::_TImpl::_writeLossCondition(TRawOStream* pOStream) const
+{
+    if (_m_pProperties->m_pLossCondition != NULL) {
+#line 4698
+        assert(_isValid( *_m_pProperties->m_pLossCondition ));
+        _TLossConditionWriter writer(*this, pOStream);
+        _m_pProperties->m_pLossCondition->accept(&writer);
+    } else {
+        *pOStream << static_cast<signed char>(eLCNone);
+    }
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TLCLoseTown& lc) const
+{
+    *pOStream << static_cast<signed char>(eLCLoseTown);
+    _write(pOStream, lc.getTownRef());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TLCLoseHero& lc) const
+{
+    *pOStream << static_cast<signed char>(eLCLoseHero);
+    _write(pOStream, lc.getHeroRef());
+}
+
+void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TLCTimeExpires& lc) const
+{
+    *pOStream << static_cast<signed char>(eLCTimeExpires) << static_cast<short>(lc.getNumDays());
 }
 
 TMapLayerObjectID TGameMap::_TImpl::_findObject(bool bSecondLayer, const TTilePoint& loc,
