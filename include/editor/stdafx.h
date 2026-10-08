@@ -22,10 +22,18 @@
 // not part of Loki's port: its FALSE/TRUE (0/1) would shadow GLib's (0)
 // and (!FALSE) (MoveWindow's assert text is "(0)"), and its MessageBox
 // macro would rename CWnd::MessageBox.
+//
+// Only gtkwidget.h (with gdk.h, GtkObject, GtkAdjustment and GtkStyle) is
+// global: the dialogs and cppbridge.cpp include the rest of <gtk/gtk.h>
+// inside an anonymous namespace, so their GtkCombo, GtkCTreeNode, GtkCList
+// and GtkButton are {anonymous} types (ArmyDlg.cpp's findCreatureIndex
+// mangles PQ2_GLOBAL_.N.ArmyDlg.cpp..9_GtkCombo; cppbridge.cpp's asserts
+// print "struct GtkWidget * {anonymous}::_widget(char *)" beside
+// "{anonymous}::GtkButton *").
 #undef FALSE
 #undef TRUE
 #undef MessageBox
-#include <gtk/gtk.h>
+#include <gtk/gtkwidget.h>
 
 #include "terrain.h"
 
