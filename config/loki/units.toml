@@ -404,3 +404,8 @@ source = "src/editor/MapSpecsPlayerSpecsPage.cpp"
 name = "TownPropsGeneralPage"
 object = 93
 source = "src/editor/TownPropsGeneralPage.cpp"
+
+[[unit]]
+name = "TownPropsTimedEventsPage"
+object = 96
+source = "src/editor/TownPropsTimedEventsPage.cpp"
