@@ -5443,6 +5443,9 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 // The compiled scanline body agrees with an independent BFS on all 13,824
 // in-bounds seed/3x3 grid/level/water-mode cases, with address and undefined-
 // behavior sanitizers. That oracle covers filling and flags, not seed clipping.
+// The scan reads the cursor through the point accessors: three free /Ob2
+// sites after the pop_back take erase's body budget under std::copy's cost,
+// which retail calls (97.10%; every call matches).
 VA(0x0053D380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
 void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first)
@@ -5488,15 +5491,15 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
         TRmgMapItem* item = m_map.getMapItem(position);
         unsigned char upperSpan = 0;
         unsigned char lowerSpan = 0;
-        while (position.m_x > 0 && (item - 1)->m_zoneState.m_zone == -1) {
+        while (position.getX() > 0 && (item - 1)->m_zoneState.m_zone == -1) {
             --item;
             --position.m_x;
         }
-        while (position.m_x < m_map.getWidth() && item->m_zoneState.m_zone == -1) {
+        while (position.getX() < m_map.getWidth() && item->m_zoneState.m_zone == -1) {
             item->m_zoneState.m_zone = zoneIndex;
             if (m_waterContent != RMG_WATER_ISLANDS || position.m_z == 1)
                 item->m_tileData.m_paintZoneTerrain = 1;
-            if (position.m_y > 0) {
+            if (position.getY() > 0) {
                 if ((item - m_map.getWidth())->m_zoneState.m_zone == -1) {
                     if (!upperSpan) {
                         upper = position;
