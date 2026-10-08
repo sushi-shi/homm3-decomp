@@ -481,6 +481,11 @@ object = 15
 source = "src/editor/Hero.cpp"
 
 [[unit]]
+name = "GUIGameObject"
+object = 2
+source = "src/editor/GUIGameObject.cpp"
+
+[[unit]]
 name = "Town"
 object = 35
 source = "src/editor/Town.cpp"
