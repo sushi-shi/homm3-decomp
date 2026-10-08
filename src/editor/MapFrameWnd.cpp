@@ -28,25 +28,30 @@ TMapFrameWnd::TMapFrameWnd(GtkWidget* thisWidget, TMapEditingWnd::TController* p
     assert(pMap != NULL);
     assert(!bSecondLayer || pMap->isTwoLayer());
     _m_hWnd = NULL;
-    GtkWidget* editWidget = _widget("mapeditwnd");
-    if ((_m_pEditWnd = new TMapEditWnd(editWidget, this, id, pMap, bSecondLayer, zoom, bShowGrid,
-                                       bShowPassability, pHAdjustment, pVAdjustment)) == NULL)
+    try {
+        GtkWidget* editWidget = _widget("mapeditwnd");
+        if ((_m_pEditWnd = new TMapEditWnd(editWidget, this, id, pMap, bSecondLayer, zoom, bShowGrid,
+                                           bShowPassability, pHAdjustment, pVAdjustment)) == NULL)
 #line 69
-        throw TAllocationFailure(__FILE__, __LINE__);
-    GtkWidget* statusBarWidget = _widget("statusbar");
-    GtkStyle* s = gtk_widget_get_style(statusBarWidget);
+            throw TAllocationFailure(__FILE__, __LINE__);
+        GtkWidget* statusBarWidget = _widget("statusbar");
+        GtkStyle* s = gtk_widget_get_style(statusBarWidget);
 #line 78
-    assert(s != NULL);
-    GdkFont* font = s->font;
-    assert(font != NULL);
-    GtkWidget* hRulerWidget = _widget("hruler");
-    if ((_m_pHRuler = new TTileHRuler(hRulerWidget, pMap->getWidth(), zoom, font)) == NULL)
+        assert(s != NULL);
+        GdkFont* font = s->font;
+        assert(font != NULL);
+        GtkWidget* hRulerWidget = _widget("hruler");
+        if ((_m_pHRuler = new TTileHRuler(hRulerWidget, pMap->getWidth(), zoom, font)) == NULL)
 #line 85
-        throw TAllocationFailure(__FILE__, __LINE__);
-    GtkWidget* vRulerWidget = _widget("vruler");
-    if ((_m_pVRuler = new TTileVRuler(vRulerWidget, pMap->getHeight(), zoom, font)) == NULL)
+            throw TAllocationFailure(__FILE__, __LINE__);
+        GtkWidget* vRulerWidget = _widget("vruler");
+        if ((_m_pVRuler = new TTileVRuler(vRulerWidget, pMap->getHeight(), zoom, font)) == NULL)
 #line 90
-        throw TAllocationFailure(__FILE__, __LINE__);
+            throw TAllocationFailure(__FILE__, __LINE__);
+    } catch (...) {
+        _deleteAll();
+        throw;
+    }
     _m_pHRuler->setStartTile(0);
     _m_pVRuler->setStartTile(0);
 }
