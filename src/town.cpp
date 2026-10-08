@@ -507,7 +507,7 @@ void town::setSummoningGenerator()
         }
         m_summoningType = thisGenerator.m_type[i];
         m_summoningPopulation =
-            g_creatureTypeTraits[m_summoningType].m_growthRate;
+            akCreatureTypeTraits[m_summoningType].m_growthRate;
     }
 }
 
@@ -686,7 +686,7 @@ void town::giveSpells(hero* forceHero) const
                         && (hasBuilding(HOLY_GRAIL_ID, true))) {
                         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                             if (!m_spells.test(spell)
-                                && g_spellTraits[spell].m_level
+                                && akSpellTraits[spell].m_level
                                     < currentHero->getSecondarySkill(
                                         eSecSkillWisdom) + 3
                                 && spell != SPELL_TITANS_LIGHTNING_BOLT)
@@ -869,9 +869,9 @@ void town::initializeSpells(const TownExtra* townSetup)
             int spell;
             for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                 if (!prohibited[spell]
-                    && g_spellTraits[spell].m_level == level) {
+                    && akSpellTraits[spell].m_level == level) {
                     totalWeight +=
-                        g_spellTraits[spell].m_townProbability[m_type];
+                        akSpellTraits[spell].m_townProbability[m_type];
                     if (townSetup->m_fixedSpells[spell]) {
                         m_mageGuildSpells[level - 1][slot] =
                             static_cast<ESpellId>(spell); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
@@ -890,8 +890,8 @@ void town::initializeSpells(const TownExtra* townSetup)
             int roll = random(1, totalWeight);
             for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                 if (!prohibited[spell]
-                    && g_spellTraits[spell].m_level == level) {
-                    roll -= g_spellTraits[spell].m_townProbability[m_type];
+                    && akSpellTraits[spell].m_level == level) {
+                    roll -= akSpellTraits[spell].m_townProbability[m_type];
                     if (roll <= 0)
                         break;
                 }
@@ -974,7 +974,7 @@ type_building_id town::createBuilding(type_building_id building)
 
     if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
         short slot = building - DWELLING_0_ID;
-        m_population[slot] = g_creatureTypeTraits[g_dwellingType[m_type][slot]].m_growthRate;
+        m_population[slot] = akCreatureTypeTraits[g_dwellingType[m_type][slot]].m_growthRate;
     }
     if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
         short slot = building - DWELLING_0_UPG_ID;
@@ -1194,9 +1194,9 @@ MAC_ADDRESS(0x1b4c20, 0x8c)
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
     return hasBuilding(CASTLE_CASTLE_ID, false)
-        ? g_creatureTypeTraits[creature].m_growthRate
+        ? akCreatureTypeTraits[creature].m_growthRate
         : hasBuilding(CASTLE_CITADEL_ID, false)
-            ? g_creatureTypeTraits[creature].m_growthRate / 2 : 0;
+            ? akCreatureTypeTraits[creature].m_growthRate / 2 : 0;
 }
 
 // Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
@@ -1266,7 +1266,7 @@ long town::getAssembledLegionBonus(long dwelling) const
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
         TCreatureType creature = g_dwellingType[m_type][dwelling];
-        long growth = g_creatureTypeTraits[creature].m_growthRate;
+        long growth = akCreatureTypeTraits[creature].m_growthRate;
         bonus = getCastleGrowthBonus(creature);
         bonus += growth;
         bonus /= 2;
@@ -1363,7 +1363,7 @@ short town::getGrowthRate(short dwelling) const
         return 0;
 
     TCreatureType creature = g_dwellingType[m_type][dwellingIndex];
-    short growth = g_creatureTypeTraits[creature].m_growthRate;
+    short growth = akCreatureTypeTraits[creature].m_growthRate;
     growth += getCastleGrowthBonus(creature);
 
     if (m_owner >= 0) {

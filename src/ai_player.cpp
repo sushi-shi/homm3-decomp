@@ -507,7 +507,7 @@ void type_AI_player::calculateDemand()
     int valueCreature;
     for (valueCreature = 0; valueCreature < 145; valueCreature++)
         creatures[valueCreature].m_value = creatures[valueCreature].m_amount
-            * g_creatureTypeTraits[valueCreature].m_aiValue;
+            * akCreatureTypeTraits[valueCreature].m_aiValue;
 
     std::sort(creatures.begin(), creatures.end(),
               std::greater<type_creature_value>());
@@ -519,7 +519,7 @@ void type_AI_player::calculateDemand()
         int costResource;
         for (costResource = 0; costResource < 7; costResource++)
             m_resourceDemand[costResource] +=
-                g_creatureTypeTraits[creatureInfo.m_type].m_cost[costResource]
+                akCreatureTypeTraits[creatureInfo.m_type].m_cost[costResource]
                 * creatureInfo.m_amount;
     }
 
@@ -901,7 +901,7 @@ void type_AI_player::calculateReserve()
                 creatureInfo.m_type = g_dwellingType[currentTown->m_type][dwelling];
                 creatureInfo.m_amount = *population;
                 creatureInfo.m_value = static_cast<short>(creatureInfo.m_amount
-                    * g_creatureTypeTraits[creatureInfo.m_type].m_aiValue);
+                    * akCreatureTypeTraits[creatureInfo.m_type].m_aiValue);
                 creatures.push_back(creatureInfo);
             }
         }
@@ -940,7 +940,7 @@ static long sumPlayerDwellings(long playerId)
             long growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
                 TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
-                value += g_creatureTypeTraits[creature].m_aiValue * growth;
+                value += akCreatureTypeTraits[creature].m_aiValue * growth;
             }
         }
     }
@@ -1002,11 +1002,11 @@ void fillProhibitedArray(playerData* player, bool* prohibited)
             // Mac 0x2d36c retains the same isHumanAlly expansion as
             // 0x2d248 above: getTeam followed by isHumanTeam.
             if (!g_game->isHumanAlly(g_netLocalGamePos)) {
-                if (g_creatureTypeTraits[creature].m_level
+                if (akCreatureTypeTraits[creature].m_level
                         == TOWN_DWELLING_COUNT - 1)
                     prohibited[creature] = 1;
-                if (g_creatureTypeTraits[creature].m_growthRate
-                            * g_creatureTypeTraits[creature].m_aiValue
+                if (akCreatureTypeTraits[creature].m_growthRate
+                            * akCreatureTypeTraits[creature].m_aiValue
                         + localGrowth
                         > humanStrength) {
                     prohibited[creature] = 1;
@@ -1646,7 +1646,7 @@ long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* e
     TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
     if (prohibited[creature])
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
     long growth = traits.m_growthRate;
     if (g_game->m_day >= 5)
         growth = currentTown->getCastleGrowthBonus(creature) + 2 * growth;
@@ -1666,8 +1666,8 @@ long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
     long amount = currentTown->m_population[baseDwelling];
     if (g_game->m_day >= 5)
         amount += currentTown->getGrowthRate(baseDwelling);
-    const TCreatureTypeTraits& baseTraits = g_creatureTypeTraits[creature];
-    const TCreatureTypeTraits& upgradedTraits = g_creatureTypeTraits[upgraded];
+    const TCreatureTypeTraits& baseTraits = akCreatureTypeTraits[creature];
+    const TCreatureTypeTraits& upgradedTraits = akCreatureTypeTraits[upgraded];
     for (int i = 0; i < 7; i++)
         extraCost[i] += (upgradedTraits.m_cost[i]
                           - baseTraits.m_cost[i]) * amount;
@@ -1694,10 +1694,10 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
             if (currentTown->getGrowthRate(dwelling) > 0) {
                 int creature = g_dwellingType[currentTown->m_type][dwelling];
                 const TCreatureTypeTraits* traits =
-                    g_creatureTypeTraits + creature;
+                    akCreatureTypeTraits + creature;
                 for (int i = 0; i < 7; ++i)
                     extraCost[i] += traits->m_cost[i];
-                value += g_creatureTypeTraits[creature].m_aiValue;
+                value += akCreatureTypeTraits[creature].m_aiValue;
             }
         }
     }
@@ -1713,7 +1713,7 @@ long valueOfHorde(town* currentTown, type_building_id building, bool* prohibited
     TCreatureType creature = horde->m_creature;
     if (prohibited[creature])
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
     for (int i = 0; i < 7; i++)
         extraCost[i] += horde->m_bonus * traits.m_cost[i];
     return traits.m_aiValue * horde->m_bonus;
@@ -1732,7 +1732,7 @@ long valueOfHordeUpgrade(town* currentTown, type_building_id building, bool* pro
     TCreatureType creature = horde->m_creature;
     if (prohibited[creature])
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
     for (int i = 0; i < 7; i++)
         extraCost[i] += horde->m_bonus * traits.m_cost[i];
     return traits.m_aiValue * horde->m_bonus;
@@ -1892,7 +1892,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
          building <= DWELLING_6_ID; building++) {
         if (buildMask & g_bitNumber[building]) {
             creature = g_dwellingType[currentTown->m_type][building - DWELLING_0_ID];
-            traits = &g_creatureTypeTraits[creature];
+            traits = &akCreatureTypeTraits[creature];
             int* cost = currentTown->getBuildCostArray(
                 static_cast<type_building_id>(building));
             unsigned char affordable = 1;
@@ -1985,11 +1985,11 @@ static void moveCreatures(armyGroup* army, TCreatureType type, short amount)
         return;
     if (army->add(type, amount, -1))
         return;
-    long weakestValue = -g_creatureTypeTraits[type].m_aiValue * amount;
+    long weakestValue = -akCreatureTypeTraits[type].m_aiValue * amount;
     short weakestSlot = -1;
     for (short candidate = 0;
          candidate < armyGroup::ARMY_GROUP_SLOT_COUNT; ++candidate) {
-        long value = -g_creatureTypeTraits[army->m_armyTypes[candidate]].m_aiValue
+        long value = -akCreatureTypeTraits[army->m_armyTypes[candidate]].m_aiValue
             * army->m_numTroops[candidate];
         if (value > weakestValue) {
             weakestValue = value;
@@ -2061,9 +2061,9 @@ void type_AI_creature_swapper::addCreatures(
     TCreatureType type, short amount, short slot)
 {
     TCreatureType oldType = m_army->m_armyTypes[slot];
-    m_armyValueIncrease += g_creatureTypeTraits[type].m_aiValue * amount;
+    m_armyValueIncrease += akCreatureTypeTraits[type].m_aiValue * amount;
     if (oldType != type && oldType != CREATURE_NONE) {
-        m_armyValueIncrease -= g_creatureTypeTraits[oldType].m_aiValue
+        m_armyValueIncrease -= akCreatureTypeTraits[oldType].m_aiValue
             * static_cast<short>(m_army->m_numTroops[slot]);
         short oldAmount = m_army->m_numTroops[slot];
 
@@ -2288,7 +2288,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
          ++shooterSlot) {
         TCreatureType type = m_army->m_armyTypes[shooterSlot];
         if (type != CREATURE_NONE
-            && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
+            && (akCreatureTypeTraits[type].m_attributes & g_ctaShooter)) {
             ++shooterCount;
         }
     }
@@ -2305,7 +2305,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
             continue;
 
         int groupedAlignment;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[type];
         if (checkAlignments) {
             int alignment = g_game->getAlignment(type);
             groupedAlignment = normalizeAlignment(alignment);
@@ -2353,7 +2353,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     TCreatureType type, short count, short& slot,
     bool mustReplaceCreature)
 {
-    const TCreatureTypeTraits* traits = &g_creatureTypeTraits[type];
+    const TCreatureTypeTraits* traits = &akCreatureTypeTraits[type];
     long value = traits->m_aiValue * count;
     bool badMorale = false;
     long moraleArmyValue = 0;
@@ -2385,12 +2385,12 @@ long type_AI_creature_swapper::valueOfAddingArmy(
                  ++index) {
                 TCreatureType current = m_army->m_armyTypes[index];
                 if (current != CREATURE_NONE
-                    && !(g_creatureTypeTraits[current].m_attributes
+                    && !(akCreatureTypeTraits[current].m_attributes
                          & g_ctaNoMorale)
                     && current != CREATURE_MINOTAUR
                     && current != CREATURE_MINOTAUR_KING) {
                     moraleArmyValue +=
-                        g_creatureTypeTraits[current].m_aiValue
+                        akCreatureTypeTraits[current].m_aiValue
                         * m_army->m_numTroops[index];
                 }
             }
@@ -2409,7 +2409,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         TCreatureType current = m_army->m_armyTypes[index];
         if (current != CREATURE_NONE) {
             slowestSpeed = min(
-                slowestSpeed, g_creatureTypeTraits[current].m_speed);
+                slowestSpeed, akCreatureTypeTraits[current].m_speed);
         }
     }
     if (slowestSpeed > traits->m_speed) {
@@ -2446,7 +2446,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         (traits->m_attributes & g_ctaShooter) != 0, badMorale);
     if (slot < 0)
         return 0;
-    return value - g_creatureTypeTraits[m_army->m_armyTypes[slot]].m_aiValue
+    return value - akCreatureTypeTraits[m_army->m_armyTypes[slot]].m_aiValue
         * m_army->m_numTroops[slot];
 }
 
@@ -2464,7 +2464,7 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
         if (type != CREATURE_NONE) {
             m_creatures.push_back(type_creature_source(
                 type, &currentGenerator->m_population[i],
-                g_creatureTypeTraits[type].m_level == 0));
+                akCreatureTypeTraits[type].m_level == 0));
         }
     }
 }
@@ -2729,7 +2729,7 @@ void aiArrangeArmy(armyGroup& currentArmy)
         if (type != CREATURE_NONE) {
             entry.m_type = type;
             entry.m_amount = static_cast<short>(currentArmy.m_numTroops[i]);
-            entry.m_value = g_creatureTypeTraits[type].m_speed;
+            entry.m_value = akCreatureTypeTraits[type].m_speed;
             values.push_back(entry);
             currentArmy.dismiss(i);
         }
@@ -2740,7 +2740,7 @@ void aiArrangeArmy(armyGroup& currentArmy)
     for (int shooter = static_cast<int>(values.size()) - 1; shooter >= 0;
          --shooter) {
         entry = values[shooter];
-        if (g_creatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter) {
+        if (akCreatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter) {
             currentArmy.add(entry.m_type, entry.m_amount, slot);
             slot += 2;
             if (slot >= armyGroup::ARMY_GROUP_SLOT_COUNT)
@@ -2751,7 +2751,7 @@ void aiArrangeArmy(armyGroup& currentArmy)
     int freeSlot = 0;
     for (unsigned int walker = 0; walker < values.size(); ++walker) {
         entry = values[walker];
-        if (!(g_creatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter)) {
+        if (!(akCreatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter)) {
             while (currentArmy.m_armyTypes[freeSlot] != CREATURE_NONE)
                 ++freeSlot;
             currentArmy.add(entry.m_type, entry.m_amount, freeSlot);
@@ -2795,9 +2795,9 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
         if (type == CREATURE_NONE)
             continue;
         long value = static_cast<long>(
-            enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
+            enemy.m_numTroops[k] * akCreatureTypeTraits[type].m_aiValue
             * ratio);
-        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
+        if (akCreatureTypeTraits[type].m_attributes & g_ctaShooter) {
             ++enemyShooterCount;
             enemyShooterValue += value;
         }
@@ -2809,7 +2809,7 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     for (slot = 0; slot < 7; ++slot) {
         TCreatureType type = currentArmy.m_armyTypes[slot];
         if (type != CREATURE_NONE
-            && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
+            && (akCreatureTypeTraits[type].m_attributes & g_ctaShooter)) {
             openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
                                      openSlots);
             if (openSlots == 0) {
@@ -2828,9 +2828,9 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
         TCreatureType type = currentArmy.m_armyTypes[m];
         if (type == CREATURE_NONE)
             continue;
-        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+        if (akCreatureTypeTraits[type].m_attributes & g_ctaShooter)
             heroShooterValue += currentArmy.m_numTroops[m]
-                * g_creatureTypeTraits[type].m_aiValue;
+                * akCreatureTypeTraits[type].m_aiValue;
         else
             ++walkerCount;
     }
@@ -2851,7 +2851,7 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
         TCreatureType type = currentArmy.m_armyTypes[slot];
         if (type == CREATURE_NONE)
             continue;
-        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+        if (akCreatureTypeTraits[type].m_attributes & g_ctaShooter)
             continue;
         openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
                                openSlots);
@@ -2882,7 +2882,7 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
                 short openSlots)
 {
     TCreatureType type = currentArmy->m_armyTypes[index];
-    int pieces = g_creatureTypeTraits[type].m_aiValue
+    int pieces = akCreatureTypeTraits[type].m_aiValue
         * currentArmy->m_numTroops[index] / limit;
     if (pieces > openSlots + 1)
         pieces = openSlots + 1;
@@ -3054,7 +3054,7 @@ static void markStrategicMap(
         }
 
         wasTrigger = cell->m_isTrigger;
-        if (g_adventureObjectTraits[type].m_blocksLanding)
+        if (akAdvObjectTypeTraits[type].m_blocksLanding)
             cell->m_isTrigger = 0;
 
         rect.left = max(0L, static_cast<long>(point.m_point.m_x) - 5);
@@ -3069,7 +3069,7 @@ static void markStrategicMap(
             59999, 0);
 
         short nearbyCost;
-        if (!g_adventureObjectTraits[type].m_blocksLanding) {
+        if (!akAdvObjectTypeTraits[type].m_blocksLanding) {
             nearbyCost = 0;
         } else {
             cell->m_isTrigger = wasTrigger;
@@ -3663,7 +3663,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
     type_point point = destination.m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
-    if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding
+    if (cell->m_isTrigger && akAdvObjectTypeTraits[type].m_blocksLanding
         && (getMapExtra(point) & g_curPlayerBit)) {
         // Mac0x32b48/0x32b4c snapshots the last point before the
         // movement refund at0x32b50..0x32b5c. Keep the same source order.
@@ -3684,7 +3684,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
         value += currentPathCell->m_dangerValue;
 
     type_point monsterPos;
-    if (!g_adventureObjectTraits[type].m_blocksLanding) {
+    if (!akAdvObjectTypeTraits[type].m_blocksLanding) {
         point = destination.m_point;
         if (g_advManager->findAdjacentMonster(point, monsterPos, point)) {
             if (currentPathCell->m_monster != monsterPos
@@ -3931,7 +3931,7 @@ static unsigned char attemptTeleport(hero* currentHero,
 
     long mastery = currentHero->getSpellLevel(SPELL_DIMENSION_DOOR);
     if (currentHero->m_dWalkSpellsCast
-        >= g_spellTraits[SPELL_DIMENSION_DOOR].m_masteryBonus[mastery]) {
+        >= akSpellTraits[SPELL_DIMENSION_DOOR].m_masteryBonus[mastery]) {
         if (path[step].m_dimensionDoor) {
             if (step == 0)
                 currentHero->m_movePoints = 0;
@@ -4403,7 +4403,7 @@ bool considerHiring(long playerId, hero* candidate)
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         TCreatureType type = candidate->m_army.m_armyTypes[slot];
         if (type != CREATURE_NONE) {
-            const int* creatureCost = g_creatureTypeTraits[type].m_cost;
+            const int* creatureCost = akCreatureTypeTraits[type].m_cost;
             double troops = candidate->m_army.m_numTroops[slot];
             for (int resource = 0; resource < 7; ++resource)
                 total = static_cast<long>(
@@ -4811,9 +4811,9 @@ long type_school_artifact::getValue(const hero* owner, unsigned char equipped,
     for (SpellID spell = 0; spell < 70; spell++) {
         if (!owner->spellIsAvailable(spell))
             continue;
-        if (!(g_spellTraits[spell].m_schoolBits & m_school))
+        if (!(akSpellTraits[spell].m_schoolBits & m_school))
             continue;
-        if (!(g_spellTraits[spell].m_flags & 0x200))
+        if (!(akSpellTraits[spell].m_flags & 0x200))
             continue;
 
         caster.setPower(power);
@@ -4899,7 +4899,7 @@ long type_tome_artifact::getValue(const hero* owner, unsigned char equipped,
             continue;
         if (!equipped && owner->spellIsAvailable(spell))
             continue;
-        if (!(g_spellTraits[spell].m_schoolBits & m_school))
+        if (!(akSpellTraits[spell].m_schoolBits & m_school))
             continue;
 
         long value = caster.getRawSpellValue(spell);
@@ -4943,7 +4943,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
         TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
-        return g_creatureTypeTraits[creature].m_aiValue * m_growthBonus;
+        return akCreatureTypeTraits[creature].m_aiValue * m_growthBonus;
     }
 
     for (int i = 0; i < player.m_numTowns; ++i) {
@@ -4955,7 +4955,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
             dwelling += TOWN_DWELLING_COUNT;
         TCreatureType creature = g_dwellingType[currentTown->m_type][dwelling];
         value = max(
-            value, g_creatureTypeTraits[creature].m_aiValue * m_growthBonus);
+            value, akCreatureTypeTraits[creature].m_aiValue * m_growthBonus);
     }
     return value;
 }
@@ -4998,8 +4998,8 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
     long total = 0;
     for (int i = 0; i < 7; i++) {
         int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureShootingArmy))
-            total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
+        if (type != -1 && (akCreatureTypeTraits[type].m_attributes & creatureShootingArmy))
+            total += akCreatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
     }
     return m_bonus * total / 100;
 }
@@ -5024,7 +5024,7 @@ long type_angelic_alliance_artifact::getValue(
                 continue;
             int alignment = g_game->getAlignment(creature);
             if (alignment != -1 && alliedAlignments.test(alignment)) {
-                total += g_creatureTypeTraits[creature].m_aiValue
+                total += akCreatureTypeTraits[creature].m_aiValue
                          * currentHero->m_army.m_numTroops[heroSlot];
             }
         }
@@ -5042,7 +5042,7 @@ long type_angelic_alliance_artifact::getValue(
                 continue;
             int alignment = g_game->getAlignment(creature);
             if (alignment != -1 && alliedAlignments.test(alignment)) {
-                total += g_creatureTypeTraits[creature].m_aiValue
+                total += akCreatureTypeTraits[creature].m_aiValue
                          * townArmy.m_numTroops[townSlot];
             }
         }
@@ -5080,9 +5080,9 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
     }
 
     float multiplier =
-        (static_cast<float>(g_creatureTypeTraits[creature].m_aiValue) -
-         static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue)) /
-        static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue);
+        (static_cast<float>(akCreatureTypeTraits[creature].m_aiValue) -
+         static_cast<float>(akCreatureTypeTraits[CREATURE_SKELETON].m_aiValue)) /
+        static_cast<float>(akCreatureTypeTraits[CREATURE_SKELETON].m_aiValue);
     long value = type_base_necromancy_artifact::getValue(
         owner, equipped, exact);
     return static_cast<long>(value * multiplier);
@@ -5095,8 +5095,8 @@ long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, un
     long total = 0;
     for (int i = 0; i < 7; i++) {
         int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureAlive))
-            total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
+        if (type != -1 && (akCreatureTypeTraits[type].m_attributes & creatureAlive))
+            total += akCreatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
     }
     return total / 8;
 }
@@ -5123,9 +5123,9 @@ long type_statue_of_legion_artifact::getValue(
                 dwellingSlot += TOWN_DWELLING_COUNT;
             }
             TCreatureType creature = g_dwellingType[currentTown->m_type][dwellingSlot];
-            long growth = g_creatureTypeTraits[creature].m_growthRate;
+            long growth = akCreatureTypeTraits[creature].m_growthRate;
             growth += currentTown->getCastleGrowthBonus(creature);
-            total += g_creatureTypeTraits[creature].m_aiValue * growth / 2;
+            total += akCreatureTypeTraits[creature].m_aiValue * growth / 2;
         }
     }
     return total;
@@ -5186,8 +5186,8 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             TCreatureType creature = owner->m_army.m_armyTypes[i];
             if (creature != CREATURE_NONE
-                && (g_creatureTypeTraits[creature].m_attributes & g_ctaShooter)) {
-                value += g_creatureTypeTraits[creature].m_aiValue
+                && (akCreatureTypeTraits[creature].m_attributes & g_ctaShooter)) {
+                value += akCreatureTypeTraits[creature].m_aiValue
                          * owner->m_army.m_numTroops[i] / 40;
             }
         }
@@ -5201,7 +5201,7 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
             TCreatureType creature = owner->m_army.m_armyTypes[i];
             if (creature != CREATURE_NONE) {
                 const TCreatureTypeTraits& traits =
-                    g_creatureTypeTraits[creature];
+                    akCreatureTypeTraits[creature];
                 if (firstAid >= traits.m_hitPoints)
                     value = max(static_cast<int>(value),
                                 static_cast<int>(traits.m_aiValue));
@@ -5234,7 +5234,7 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
             owner, equipped, exact);
     }
 
-    int combination = g_artifactTraits[artifact.m_artifactId].m_comboType;
+    int combination = akArtifactTraits[artifact.m_artifactId].m_comboType;
     if (combination != -1) {
         const std::bitset<144>& components =
             g_combinationArtifacts[combination].m_components;
@@ -5382,7 +5382,7 @@ long getFullValue(const hero* ourHero)
             value = static_cast<long>(
                 (aiValueOfMorale(0, morale) + 1.0) *
                     (aiValueOfLuck(0, luck) + 1.0) *
-                    (g_creatureTypeTraits[creature].m_aiValue *
+                    (akCreatureTypeTraits[creature].m_aiValue *
                      ourHero->m_army.m_numTroops[i]) +
                 value);
         }

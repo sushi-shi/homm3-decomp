@@ -170,7 +170,7 @@ TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
 }
 
 DATA(0x006747b0)
-const TCreatureTypeTraits (&g_creatureTypeTraits)[150] = g_creatureTypeTraitsStorage;
+const TCreatureTypeTraits (&akCreatureTypeTraits)[150] = g_creatureTypeTraitsStorage;
 
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
@@ -181,7 +181,7 @@ void initializeCreatureTypeTraits(int id,
 MAC_ADDRESS(0x0888d0, 0x70)
 static int getCreatureDwellingIndex(TCreatureType type)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+    const TCreatureTypeTraits& traits = akCreatureTypeTraits[type];
     int townType = traits.m_townType;
     if (townType == -1)
         return -1;
@@ -222,7 +222,7 @@ TCreatureType upgradedCreatureType(TCreatureType type)
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 0 || creatureIndex >= 7)
         return CREATURE_NONE;
-    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex + 7];
+    return g_dwellingType[akCreatureTypeTraits[type].m_townType][creatureIndex + 7];
 }
 
 VA(0x0047B220, 0x6D)
@@ -232,13 +232,13 @@ TCreatureType downgradedCreatureType(TCreatureType type)
     int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 7)
         return CREATURE_NONE;
-    return g_dwellingType[g_creatureTypeTraits[type].m_townType][creatureIndex - 7];
+    return g_dwellingType[akCreatureTypeTraits[type].m_townType][creatureIndex - 7];
 }
 
 VA(0x0047b290, 0x1E9)
 DC_ADDRESS(0x071968, 0x1d8)
 MAC_ADDRESS(0x088a70, 0x37c)
-unsigned char initializeCreatureTypeTraitsTable()
+unsigned char InitializeCreatureTypeTraitsTable()
 {
     TSpreadsheetResource* traitsSheet = ResourceManager::GetSpreadsheet(
         DATA_COMPGEN(0x00675514, creatureTraitsSpreadsheetName,

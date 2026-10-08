@@ -607,7 +607,7 @@ SIZE(SSpellTraits, 136);
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-extern const SSpellTraits (&g_spellTraits)[81];
+extern const SSpellTraits (&akSpellTraits)[81];
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 
@@ -702,7 +702,7 @@ const unsigned int g_ctaAlive = 0x10;
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
+extern const TCreatureTypeTraits (&akCreatureTypeTraits)[150];
 
 // CreatureBackgroundNames: neutral first, then the nine town alignments.
 // Index with alignment + 1 so neutral alignment -1 selects the first entry.

@@ -314,10 +314,10 @@ const TArtifactSlotMask g_artifactSlotMasks[15] = {
 };
 
 DATA(0x00660b64)
-const TArtifactSlotTraits (&g_artifactSlotTraits)[19] = g_artifactSlotTraitsStorage;
+const TArtifactSlotTraits (&akArtifactSlotTraits)[19] = g_artifactSlotTraitsStorage;
 
 DATA(0x00660b68)
-const TArtifactTraits (&g_artifactTraits)[144] = g_artifactTraitsStorage;
+const TArtifactTraits (&akArtifactTraits)[144] = g_artifactTraitsStorage;
 
 DATA(0x00660b6c)
 const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
@@ -397,7 +397,7 @@ static void initializeArtifactTraits(int id,
 VA(0x0044cd50, 0x5E8)
 DC_ADDRESS(0x04fec0, 0x126)
 MAC_ADDRESS(0x05a70c, 0x7ec)  // anchor-strings/caller
-bool initializeArtifactTraitsTable()
+bool InitializeArtifactTraitsTable()
 {
     {
         TSpreadsheetResource* traitsSheet = ResourceManager::GetSpreadsheet(

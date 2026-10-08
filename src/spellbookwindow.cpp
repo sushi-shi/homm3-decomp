@@ -122,7 +122,7 @@ static const char* getLevelString(SpellID spell)
     // exact. Flattening it back into the subscript leaves that caller at
     // 96.8000% by expanding its final basic_string::_Tidy. A level value,
     // trait pointer or trait reference also reproduces the exact caller.
-    int index = g_spellTraits[spell].m_level - 1;
+    int index = akSpellTraits[spell].m_level - 1;
     return levelStrings[index];
 }
 
@@ -140,7 +140,7 @@ MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Com
 std::string TSpellbookWindow::getSpellDescription(
     SpellID spell, const hero* currentHero, unsigned char rollover)
 {
-    const SSpellTraits* traits = &g_spellTraits[spell];
+    const SSpellTraits* traits = &akSpellTraits[spell];
     std::string result;
     int mastery = 0;
     if (currentHero)
@@ -427,10 +427,10 @@ void TSpellbookWindow::gotoPage(int page)
 
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         if (m_hero->spellIsAvailable(spell)
-            && (m_school & g_spellTraits[spell].m_school)
-            && (m_contextMask & g_spellTraits[spell].m_flags)) {
+            && (m_school & akSpellTraits[spell].m_school)
+            && (m_contextMask & akSpellTraits[spell].m_flags)) {
             TSpellSchool highestSchool =
-                m_hero->getHighestSchool(g_spellTraits[spell].m_school);
+                m_hero->getHighestSchool(akSpellTraits[spell].m_school);
             TSpellSchool school = m_school;
             if (school == eSchoolAll)
                 school = highestSchool;
@@ -491,7 +491,7 @@ void TSpellbookWindow::gotoPage(int page)
             sprintf(g_text,
                     DATA_COMPGEN(0x00684bec, spellInfoWithMastery,
                                  "{%s}\n%s/%s\n%s: %d"),
-                    g_spellTraits[displaySpell].m_name,
+                    akSpellTraits[displaySpell].m_name,
                     getLevelString(displaySpell),
                     g_abbSecondarySkillLevels[entry.m_mastery - 1],
                     (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_LABEL],
@@ -501,7 +501,7 @@ void TSpellbookWindow::gotoPage(int page)
             sprintf(g_text,
                     DATA_COMPGEN(0x00684bdc, spellInfoWithoutMastery,
                                  "{%s}\n%s\n%s: %d"),
-                    g_spellTraits[displaySpell].m_name,
+                    akSpellTraits[displaySpell].m_name,
                     getLevelString(displaySpell), (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_LABEL],
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
@@ -827,8 +827,8 @@ DC_ADDRESS(0x14d290, 0x90)
 MAC_ADDRESS(0x18d858, 0xa8)
 bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) const
 {
-    const SSpellTraits* traits = &g_spellTraits[m_id];
-    const SSpellTraits* yTraits = &g_spellTraits[y.m_id];
+    const SSpellTraits* traits = &akSpellTraits[m_id];
+    const SSpellTraits* yTraits = &akSpellTraits[y.m_id];
     if (traits->m_level < yTraits->m_level)
         return true;
     if (traits->m_level > yTraits->m_level)

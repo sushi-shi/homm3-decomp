@@ -1585,7 +1585,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 slot = i + TOWN_DWELLING_COUNT;
 
             creature = g_dwellingType[currTown->m_type][slot];
-            long growth = g_creatureTypeTraits[creature].m_growthRate;
+            long growth = akCreatureTypeTraits[creature].m_growthRate;
             offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name = getArmyName(creature, 1);
 
@@ -1621,7 +1621,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                     if (legionBonus > 0) {
                         rightText += formatString(
                             DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                            g_artifactTraits[0x85].m_name, legionBonus);
+                            akArtifactTraits[0x85].m_name, legionBonus);
                         offsetToMon -= legionBonus;
                     }
                     long generatorBonus = currTown->getLegionBonus(slot);
@@ -1655,7 +1655,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                         }
                         rightText += formatString(
                             DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                            g_artifactTraits[artifact].m_name, generatorBonus);
+                            akArtifactTraits[artifact].m_name, generatorBonus);
                         offsetToMon -= generatorBonus;
                     }
                 }
@@ -2110,7 +2110,7 @@ void townManager::setupTown(bool fade)
         else
             m_currentDwellingIdOff[slot] = slot;
         m_monPix[slot] = ResourceManager::GetSprite(
-            g_creatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[slot]]]
+            akCreatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[slot]]]
                 .m_spriteName);
     }
 
@@ -3451,7 +3451,7 @@ void TMageGuildWindow::setRolloverText(int codeY)
             strcpy(g_text, "");
         } else {
             strcpy(g_text,
-                   g_spellTraits[thisTown->m_mageGuildSpells[level][slot]].m_name);
+                   akSpellTraits[thisTown->m_mageGuildSpells[level][slot]].m_name);
         }
     } else if (codeY == EXIT_BUTTON_ID) {
         strcpy(g_text, g_generalText->GetText(GENERAL_TEXT_EXIT_MAGE_GUILD));
@@ -3543,7 +3543,7 @@ int TMageGuildWindow::windowHandler(message& msg)
                 if (column >= thisTown->m_mageGuildSpellCounts[level])
                     return 1;
                 int spell = thisTown->m_mageGuildSpells[level][column];
-                normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
+                normalDialog(akSpellTraits[spell].m_levelDescriptions[0],
                              qualifier ? 4 : 1, -1, -1, 9, spell,
                              -1, 0, -1, 0, -1, 0);
                 return 1;
@@ -4190,7 +4190,7 @@ MAC_ADDRESS(0x1cd298, 0xc54)
 TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
-    int cost = g_creatureTypeTraits[g_blacksmithMachines[inTownType]].m_cost[6];
+    int cost = akCreatureTypeTraits[g_blacksmithMachines[inTownType]].m_cost[6];
     m_townType = inTownType;
     ResourceManager::del_Spr_from_Cache();  // DC townmgr.cpp:5218
     m_widgets.reserve(12);
@@ -4199,7 +4199,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
                                        "TPSmith.pcx", 0x800));
 
     sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_NEW_FORMAT),
-            g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+            akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
     m_widgets.push_back(new textWidget(0, 15, m_width, 30, g_text, "bigfont.fnt",
                                      font::HEADING, 1, 1, 0, 8));
     m_widgets.push_back(new textWidget(0, 210, m_width, 30, 0, "medfont.fnt",
@@ -4214,7 +4214,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
                                        "tpsmitbk.pcx", 0x800));
     m_machineIcon = new iconWidget(
         64, 50, 200, 150, 6,
-        g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_spriteName,
+        akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_spriteName,
         0, 2, 0, 0, 0x12);
     m_widgets.push_back(m_machineIcon);
 
@@ -4302,11 +4302,11 @@ void TBlacksmithWindow::setRolloverText(int id)
     switch (id) {
     case CANCEL_BUTTON_ID:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
-                g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+                akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
         break;
     case BUY_BUTTON_ID:
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_BUILD_FORMAT),
-                g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+                akCreatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
         break;
     default:
         strcpy(g_text, "");
@@ -4409,11 +4409,11 @@ void doBlacksmith(int heroId, int townType)
         g_game->getHero(heroId)->giveArtifact(
             g_blacksmithArtifacts[townType], 1, 1);
         const int* cost =
-            g_creatureTypeTraits[g_blacksmithMachines[townType]].m_cost;
+            akCreatureTypeTraits[g_blacksmithMachines[townType]].m_cost;
         for (int i = 0; i < 7; i++)
             g_currentPlayer->m_resources[6] -= cost[i];
         sprintf(g_text, g_townCommand[31],
-                g_creatureTypeTraits[g_blacksmithMachines[townType]].m_name);
+                akCreatureTypeTraits[g_blacksmithMachines[townType]].m_name);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
@@ -6924,7 +6924,7 @@ unsigned char doTavern()
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
         msg.m_codeY = 5;
         msg.m_extraText =
-            g_heroTraits[g_game->getHero(player->m_recruits[0])->m_portrait]
+            akHeroTraits[g_game->getHero(player->m_recruits[0])->m_portrait]
                 .m_largePortraitName;
         g_tavernWindow->broadcastMessage(msg);
     }
@@ -6935,7 +6935,7 @@ unsigned char doTavern()
     } else {
         msg.m_codeY = 6;
         msg.m_extraText =
-            g_heroTraits[g_game->getHero(player->m_recruits[1])->m_portrait]
+            akHeroTraits[g_game->getHero(player->m_recruits[1])->m_portrait]
                 .m_largePortraitName;
         g_tavernWindow->broadcastMessage(msg);
         if (g_tavernHero == 0)
@@ -7242,35 +7242,35 @@ TCastleWindow::TCastleWindow()
     }
 
     m_spriteWidget[0] = new iconWidget(169, 26, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[0]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[0]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[1] = new iconWidget(563, 26, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[1]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[1]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[2] = new iconWidget(169, 159, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[2]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[2]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[3] = new iconWidget(563, 159, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[3]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[3]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[4] = new iconWidget(169, 292, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[4]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[4]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[5] = new iconWidget(563, 292, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[5]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[5]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     if (m_use8) {
         m_spriteWidget[6] = new iconWidget(169, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[6]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[6]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
         m_spriteWidget[7] = new iconWidget(563, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[
+                                     akCreatureTypeTraits[
                      g_townManager->m_townToView->m_summoningType].m_spriteName,
                                      0, 2, 0, 0, 0x12);
         m_widgets.push_back(m_spriteWidget[7]);
     } else {
         m_spriteWidget[6] = new iconWidget(365, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[6]]].m_spriteName,
+                                     akCreatureTypeTraits[g_dwellingType[whichTown][g_townManager->m_currentDwellingIdOff[6]]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     }
 
@@ -8050,7 +8050,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
             g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]];
         const char* creatureName;
         if (rowCreature >= 0 && rowCreature <= 150)
-            creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
+            creatureName = akCreatureTypeTraits[rowCreature].m_pluralName;
         else
             creatureName = "";
         strcpy(g_text, creatureName);
@@ -8070,7 +8070,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         if (g_townManager->m_townToView->m_summoningType >= 0
             && g_townManager->m_townToView->m_summoningType <= 150)
             summonName =
-                g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
+                akCreatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
         else
             summonName = "";
         strcpy(g_text, summonName);
@@ -8080,7 +8080,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         TCreatureTypeTraits monInfo =
-            g_creatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]]];
+            akCreatureTypeTraits[g_dwellingType[m_townToView->m_type][m_currentDwellingIdOff[i]]];
         sprintf(g_text, "%d", monInfo.m_attackSkill);
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
@@ -8118,7 +8118,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     if (wellWin->m_use8) {
         TCreatureTypeTraits monInfo =
-            g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType];
+            akCreatureTypeTraits[g_townManager->m_townToView->m_summoningType];
         sprintf(g_text, "%d", monInfo.m_attackSkill);
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
@@ -8309,7 +8309,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                 m_widgets.push_back(new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,
-                    g_heroTraits[portraitHero->m_portrait].m_smallPortraitName,
+                    akHeroTraits[portraitHero->m_portrait].m_smallPortraitName,
                     0x800));
                 addWidget(m_widgets.back(), -1);
             }
@@ -8372,11 +8372,11 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                             for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (t->getArmy().m_armies[slot] != -1
                                     && t->getArmy().m_numTroops[slot] > 0
-                                    && g_creatureTypeTraits[t->getArmy().m_armies[slot]]
+                                    && akCreatureTypeTraits[t->getArmy().m_armies[slot]]
                                                .m_aiValue
                                            > bestValue) {
                                     bestCreature = t->getArmy().m_armies[slot];
-                                    bestValue = g_creatureTypeTraits[
+                                    bestValue = akCreatureTypeTraits[
                                         t->getArmy().m_armies[slot]].m_aiValue;
                                     g_creatureArmies[column] = t->getArmy();
                                     g_creatureWidgetMap1[column] = slot;
@@ -8389,11 +8389,11 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                             for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (h->m_army.m_armies[slot] != -1
                                     && h->m_army.m_numTroops[slot] > 0
-                                    && g_creatureTypeTraits[h->m_army.m_armies[slot]]
+                                    && akCreatureTypeTraits[h->m_army.m_armies[slot]]
                                                .m_aiValue
                                            > bestValue) {
                                     bestCreature = h->m_army.m_armies[slot];
-                                    bestValue = g_creatureTypeTraits[
+                                    bestValue = akCreatureTypeTraits[
                                         h->m_army.m_armies[slot]].m_aiValue;
                                     g_creatureArmies[column] = h->m_army;
                                     g_creatureWidgetMap1[column] = slot;

@@ -365,7 +365,7 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         add(portrait);
         portrait->setIconFrame(creature + 2);
         add(new textWidget(iconX - 10, 193, 52, 32,
-            g_creatureTypeTraits[creature].m_name, "tiny.fnt",
+            akCreatureTypeTraits[creature].m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
     }
@@ -379,7 +379,7 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         add(portrait);
         portrait->setIconFrame(creature + 2);
         add(new textWidget(iconX - 10, 267, 52, 32,
-            g_creatureTypeTraits[creature].m_name, "tiny.fnt",
+            akCreatureTypeTraits[creature].m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
     }

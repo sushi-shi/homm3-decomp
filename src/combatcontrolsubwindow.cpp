@@ -452,7 +452,7 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
     hero& mutableInfo = const_cast<hero&>(info);
 
     m_backgroundWidget->setPlayerPaletteColors(info.m_owner);
-    m_portrait->setImage(g_heroTraits[info.m_portrait].m_largePortraitName);
+    m_portrait->setImage(akHeroTraits[info.m_portrait].m_largePortraitName);
 
     sprintf(buffer, "%d", info.getPrimarySkill(0));
     m_attackText->setText(buffer);
@@ -705,7 +705,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
     if (m_viewLevel == 1) {
         m_creatureIcon->setIconFrame(info.m_creatureType + 2);
         const TCreatureTypeTraits& normalTraits =
-            g_creatureTypeTraits[info.m_creatureType];
+            akCreatureTypeTraits[info.m_creatureType];
 
         unsigned char canShoot = info.canShoot(0);
         long attack = info.getAdjustedAttack(0, canShoot);

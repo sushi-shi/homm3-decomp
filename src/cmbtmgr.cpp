@@ -853,8 +853,8 @@ void combatManager::loadIcons()
         if (m_heroes[side]) {
             m_creatureSprites[side] = ResourceManager::GetSprite(
                 g_combatHeroSprites[
-                    g_heroClasses[m_heroes[side]->m_heroClass].m_townType][
-                    g_heroTraits[m_heroes[side]->m_id].m_sex].m_defName);
+                    akHeroClassTraits[m_heroes[side]->m_heroClass].m_townType][
+                    akHeroTraits[m_heroes[side]->m_id].m_sex].m_defName);
             m_heroFlagSprites[side] = ResourceManager::GetSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
                 : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));
@@ -2129,7 +2129,7 @@ void combatManager::keepAttack(int towerPos)
         sprintf(g_text,
                 DATA_COMPGEN(0x0066ffa4, towerShotSampleFormat,
                              "%sshot.82m"),
-                g_creatureTypeTraits[archer->m_type].m_samplePrefix);
+                akCreatureTypeTraits[archer->m_type].m_samplePrefix);
         sample = loadPlaySample(g_text);
 
         const int frames = info->m_attackFrames > 0
@@ -2232,7 +2232,7 @@ int combatManager::experienceValueOfStack(int whichGroup)
         const army& a = m_armies[whichGroup][slot];
         if (a.m_creatureType != -1 && !a.is(creatureSummoned) && !a.is(creatureSiegeWeapon))
             total += (a.m_origNumTroops - a.m_numTroops)
-                * g_creatureTypeTraits[a.m_creatureType].m_hitPoints;
+                * akCreatureTypeTraits[a.m_creatureType].m_hitPoints;
     }
     if (m_heroes[whichGroup])
         total += 500;
@@ -2597,7 +2597,7 @@ void combatManager::initializeArchers()
     const TArcherTraits& info = s_archerTraits[m_defendingTown->m_type];
     TArcherLoadState locals;
     locals.m_spriteName =
-        g_creatureTypeTraits[info.m_creatureType].m_spriteName;
+        akCreatureTypeTraits[info.m_creatureType].m_spriteName;
 
     archer->m_type = info.m_creatureType;
     locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
@@ -3680,7 +3680,7 @@ void combatManager::checkRebirth()
 
             stack->m_monInfo.m_attributes |= creatureDone;
             if (!isQuickCombat())
-                launchSample(g_spellTraits[SPELL_RESURRECTION].m_sample,
+                launchSample(akSpellTraits[SPELL_RESURRECTION].m_sample,
                               -1, 3);
             resurrect(stack, stack->m_monInfo.m_hitPoints * resurrected, 0);
         }
@@ -3985,7 +3985,7 @@ void combatManager::learnSpellFromEagleEye(int side)
          it != m_eagleEyeData[side].end(); it++) {
         SpellID spell = *it;
         if (m_heroes[side]->isWieldingArtifact(ARTIFACT_SPELLBOOK)
-            && g_spellTraits[spell].m_level
+            && akSpellTraits[spell].m_level
                 <= m_heroes[side]->getSecondarySkill(eSecSkillWisdom) + 2)
             m_heroes[side]->addSpell(spell);
     }

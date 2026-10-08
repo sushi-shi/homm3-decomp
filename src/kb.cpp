@@ -341,19 +341,19 @@ static palette* g_palette;
 unsigned char initializeRandomTavernText();
 unsigned char initializeCreatureBankTraits();
 unsigned char initializeCreatureGeneratorNames();
-unsigned char initializeCreatureTypeTraitsTable();
-void initializeAdventureObjectTraits();
+unsigned char InitializeCreatureTypeTraitsTable();
+void InitializeAdvObjectTypeTraitsTable();
 unsigned char initializeExtraInfoText();
 unsigned char initializeHeroSpecificAbilitiesTable();
 unsigned char initializeCampaignMusicTable();
 int interpretCommandLine();
 bool initializeAdventureEventText();
-unsigned char initializeSpellTraitsTable();
-unsigned char initializeHeroTraitsTable();
-bool initializeHeroClassTraitsTable();
+unsigned char InitializeSpellTraitsTable();
+unsigned char InitializeHeroTraitsTable();
+bool InitializeHeroClassTraitsTable();
 unsigned char initializeBallisticsTable();
-bool initializeSSkillTraitsTable();
-bool initializeArtifactTraitsTable();
+bool InitializeSSkillTraitsTable();
+bool InitializeArtifactTraitsTable();
 bool initializeVCDescriptions();
 bool initializeLCDescriptions();
 bool initializeTurnDurationText();
@@ -2080,7 +2080,7 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
             break;
         }
         case RES_SPELL:
-            normalDialog(g_spellTraits[m_qualifier].m_levelDescriptions[0],
+            normalDialog(akSpellTraits[m_qualifier].m_levelDescriptions[0],
                          NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
@@ -2088,7 +2088,7 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
             int skill = m_qualifier / 3;
             int mastery = m_qualifier % 3;
 
-            normalDialog(g_sSkillTraits[skill - 1].m_levelNames[mastery],
+            normalDialog(akSSkillTraits[skill - 1].m_levelNames[mastery],
                          NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
@@ -2493,11 +2493,11 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ALLIED_ARTIFACT_VICTORY_FORMAT),
                                 g_game->getPlayerName(
                                     victoryCondition.m_playerWinner),
-                                g_artifactTraits[
+                                akArtifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     } else {
                         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOCAL_ARTIFACT_VICTORY_FORMAT),
-                                g_artifactTraits[
+                                akArtifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     }
                 } else {
@@ -2505,16 +2505,16 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                         if (getTeamNames(victoryCondition.m_playerWinner,
                                          names)) {
                             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_TEAM_ARTIFACT_VICTORY_FORMAT), names,
-                                    g_artifactTraits[
+                                    akArtifactTraits[
                                         victoryCondition.m_artifactNum].m_name);
                         } else {
                             sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_REMOTE_PLAYER_ARTIFACT_VICTORY_FORMAT), names,
-                                    g_artifactTraits[
+                                    akArtifactTraits[
                                         victoryCondition.m_artifactNum].m_name);
                         }
                     } else {
                         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_ENEMY_ARTIFACT_VICTORY_FORMAT),
-                                g_artifactTraits[
+                                akArtifactTraits[
                                     victoryCondition.m_artifactNum].m_name);
                     }
                 }
@@ -3341,20 +3341,20 @@ static unsigned char loadGameData()
         return 0;
     if (!initializeRandomTavernText())
         return 0;
-    if (!initializeCreatureTypeTraitsTable())
+    if (!InitializeCreatureTypeTraitsTable())
         return 0;
-    initializeAdventureObjectTraits();
-    if (!initializeArtifactTraitsTable())
+    InitializeAdvObjectTypeTraitsTable();
+    if (!InitializeArtifactTraitsTable())
         return 0;
-    if (!initializeSpellTraitsTable())
+    if (!InitializeSpellTraitsTable())
         return 0;
-    if (!initializeHeroTraitsTable())
+    if (!InitializeHeroTraitsTable())
         return 0;
-    if (!initializeHeroClassTraitsTable())
+    if (!InitializeHeroClassTraitsTable())
         return 0;
     if (!initializeBallisticsTable())
         return 0;
-    if (!initializeSSkillTraitsTable())
+    if (!InitializeSSkillTraitsTable())
         return 0;
     if (!town::initializeBuildingCostsTables())
         return 0;
@@ -3907,7 +3907,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 case APP_MENU_SPELL_SCHOOL_THIRD:
                 case APP_MENU_SPELL_SCHOOL_FOURTH: {
                     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-                        if (g_spellTraits[spell].m_schoolBits
+                        if (akSpellTraits[spell].m_schoolBits
                                 & (1 << (idItem - APP_MENU_SPELL_SCHOOL_FIRST)))
                             currentHero->addSpell(spell);
                     }
@@ -3920,7 +3920,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 case APP_MENU_SPELL_LEVEL_FOUR:
                 case APP_MENU_SPELL_LEVEL_FIVE: {
                     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-                        if (g_spellTraits[spell].m_level
+                        if (akSpellTraits[spell].m_level
                                 == idItem - APP_MENU_SPELL_LEVEL_BASE)
                             currentHero->addSpell(spell);
                     }
@@ -4155,14 +4155,14 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
         break;
 
     case RES_ARTIFACT:
-        m_text = g_artifactTraits[static_cast<unsigned short>(m_qualifier)].m_name;
+        m_text = akArtifactTraits[static_cast<unsigned short>(m_qualifier)].m_name;
         m_spriteName = DATA_COMPGEN(
             0x00660214, dialogArtifactSprite, "artifact.def");
         m_spriteFrameIndex = static_cast<unsigned short>(m_qualifier);
         break;
 
     case RES_SPELL:
-        m_text = g_spellTraits[m_qualifier].m_name;
+        m_text = akSpellTraits[m_qualifier].m_name;
         m_spriteName = DATA_COMPGEN(
             0x00660104, dialogSpellSprite, "spellScr.def");
         m_spriteFrameIndex = m_qualifier;
@@ -4215,7 +4215,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     case RES_SECONDARY_SKILL:
         m_text = g_secondarySkillLevels[m_qualifier % 3];
         m_text += DATA_COMPGEN(0x00660330, dialogSkillSeparator, " ");
-        m_text += g_sSkillTraits[m_qualifier / 3 - 1].m_name;
+        m_text += akSSkillTraits[m_qualifier / 3 - 1].m_name;
         m_spriteName = DATA_COMPGEN(
             0x006600f8, dialogSecondarySkillSprite, "secsk82.def");
         m_spriteFrameIndex = m_qualifier;

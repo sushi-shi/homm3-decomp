@@ -964,7 +964,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, unsigned char water
         int direction = 8;
         if (current->isObjectEntrance()) {
             int objectType = current->m_objects[0]->m_properties->m_prototype->getType();
-            if (!g_adventureObjectTraits[objectType].m_enterableFromNorth)
+            if (!akAdvObjectTypeTraits[objectType].m_enterableFromNorth)
                 direction = 5;
         }
         while (direction--) {
@@ -980,7 +980,7 @@ void TRmgMap::floodConnectionCosts(TRmgMapPosition position, unsigned char water
                 continue;
             if (next->isObjectEntrance()) {
                 int objectType = next->m_objects[0]->m_properties->m_prototype->getType();
-                const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
+                const TAdvObjectTraits& traits = akAdvObjectTypeTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_clearedOnVisit)
                     continue;
                 if (!traits.m_enterableFromNorth && direction > 0 && direction < 4)
@@ -1155,7 +1155,7 @@ unsigned char TRmgMap::canPlaceObject(
     int objectType = prototype.getType();
     properties->buildOutline();
     if (!hasConnectedOutline(properties->m_outline, position,
-            g_adventureObjectTraits[objectType].m_clearedOnVisit && g_adventureObjectTraits[objectType].m_enterableFromNorth,
+            akAdvObjectTypeTraits[objectType].m_clearedOnVisit && akAdvObjectTypeTraits[objectType].m_enterableFromNorth,
             zone, 0))
         return 0;
     if (!prototype.m_hasTrigger)
@@ -1176,7 +1176,7 @@ unsigned char TRmgMap::canPlaceObject(
         return 0;
     if (item->isObjectEntrance()) {
         int entranceType = item->m_objects[0]->m_properties->m_prototype->getType();
-        if (!g_adventureObjectTraits[entranceType].m_clearedOnVisit)
+        if (!akAdvObjectTypeTraits[entranceType].m_clearedOnVisit)
             return 0;
     }
     unsigned char result = (item->getLandType() == eTerrainWater) == (zone->m_terrain == eTerrainWater);
@@ -2568,8 +2568,8 @@ TRmgBlackBoxCreatureDef::TRmgBlackBoxCreatureDef(int newCreatureType)
       m_creatureType(newCreatureType)
 {
     m_creatureCount =
-        g_rmgCreatureValueByLevel[g_creatureTypeTraits[newCreatureType].m_level]
-        / g_creatureTypeTraits[newCreatureType].m_aiValue;
+        g_rmgCreatureValueByLevel[akCreatureTypeTraits[newCreatureType].m_level]
+        / akCreatureTypeTraits[newCreatureType].m_aiValue;
 
     if (m_creatureCount > 50)
         m_creatureCount = ((m_creatureCount + 5) / 10) * 10;
@@ -2587,10 +2587,10 @@ MAC_ADDRESS(0x231f04, 0x6c)
 int TRmgBlackBoxCreatureDef::getValue(
     TRmgZone* zone, TRmgGenerator* generator)
 {
-    int alignment = g_creatureTypeTraits[m_creatureType].m_townType;
+    int alignment = akCreatureTypeTraits[m_creatureType].m_townType;
     if (alignment != zone->m_creatureTownType)
         return -1;
-    int value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
+    int value = akCreatureTypeTraits[m_creatureType].m_aiValue * m_creatureCount;
     int alignmentCount = 0;
     if (alignment != -1)
         alignmentCount = generator->m_primaryTownZoneCountsByAlignment[alignment];
@@ -2640,9 +2640,9 @@ TRmgObject* TRmgBlackBoxSpellsDef::generate(TRmgObjectPropertiesRef* properties,
     TRmgBlackBoxObject* object = new TRmgBlackBoxObject(properties);
     for (int level = m_maximumLevel; level >= m_minimumLevel; --level) {
         for (long spell = 0; spell < 70; ++spell) {
-            if (!(g_spellTraits[spell].m_flags & 0x2000)
-                && g_spellTraits[spell].m_level == level
-                && (g_spellTraits[spell].m_school & m_schoolMask))
+            if (!(akSpellTraits[spell].m_flags & 0x2000)
+                && akSpellTraits[spell].m_level == level
+                && (akSpellTraits[spell].m_school & m_schoolMask))
                 object->m_spells.push_back(spell);
         }
     }
@@ -2663,7 +2663,7 @@ MAC_ADDRESS(0x23237c, 0x88)
 int TRmgMapDwellingDef::getValue(TRmgZone* zone, TRmgGenerator* generator)
 {
     const TCreatureTypeTraits& creature =
-        g_creatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
+        akCreatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
     if (creature.m_townType != zone->m_creatureTownType)
         return -1;
 
@@ -2839,16 +2839,16 @@ TRmgObject* TRmgSpellScrollDef::generate(TRmgObjectPropertiesRef* properties,
     int count = 0;
     int spell;
     for (spell = 0; spell < 70; ++spell) {
-        if (!(g_spellTraits[spell].m_flags & 0x2000)
-            && g_spellTraits[spell].m_schoolBits
-            && g_spellTraits[spell].m_level == m_spellLevel)
+        if (!(akSpellTraits[spell].m_flags & 0x2000)
+            && akSpellTraits[spell].m_schoolBits
+            && akSpellTraits[spell].m_level == m_spellLevel)
             ++count;
     }
     int selected = rand() % count;
     for (spell = 0; spell < 70; ++spell) {
-        if (!(g_spellTraits[spell].m_flags & 0x2000)
-            && g_spellTraits[spell].m_schoolBits
-            && g_spellTraits[spell].m_level == m_spellLevel) {
+        if (!(akSpellTraits[spell].m_flags & 0x2000)
+            && akSpellTraits[spell].m_schoolBits
+            && akSpellTraits[spell].m_level == m_spellLevel) {
             if (selected-- <= 0)
                 break;
         }
@@ -2947,7 +2947,7 @@ unsigned char TRmgTreasureGroup::objectsAllowEntrances() const
 {
     for (unsigned int index = 0; index < m_objects.size(); ++index) {
         int objectType = m_objects[index]->m_properties->m_prototype->getType();
-        if (!g_adventureObjectTraits[objectType].m_clearedOnVisit)
+        if (!akAdvObjectTypeTraits[objectType].m_clearedOnVisit)
             return 0;
     }
     return 1;
@@ -3005,7 +3005,7 @@ unsigned char TRmgTreasureGroup::addGuard(TRmgObject* guard)
         TRmgMapPosition entrance = object->getPosition();
         entrance -= TPoint(prototype->m_triggerCell.m_x,
             prototype->m_triggerCell.m_y);
-        unsigned int direction = g_adventureObjectTraits[prototype->getType()].m_enterableFromNorth
+        unsigned int direction = akAdvObjectTypeTraits[prototype->getType()].m_enterableFromNorth
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
             TRmgMapPosition position = entrance + g_rmgDirections[direction];
@@ -3153,7 +3153,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
     TRmgVector origin(position.m_x, position.m_y);
     origin.m_x -= trigger.m_x;
     origin.m_y -= trigger.m_y;
-    if (!g_adventureObjectTraits[objectType].m_enterableFromNorth) {
+    if (!akAdvObjectTypeTraits[objectType].m_enterableFromNorth) {
         for (int direction = 5; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
             if (m_map.getMapItem(nearby.m_x, nearby.m_y)->isObjectEntrance())
@@ -3166,8 +3166,8 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (item->isObjectEntrance()) {
                 int neighborType = item->m_objects[0]->m_properties->m_prototype->getType();
-                if (!g_adventureObjectTraits[neighborType].m_clearedOnVisit
-                    || !g_adventureObjectTraits[neighborType].m_enterableFromNorth)
+                if (!akAdvObjectTypeTraits[neighborType].m_clearedOnVisit
+                    || !akAdvObjectTypeTraits[neighborType].m_enterableFromNorth)
                     goto placementFailure;
             }
         }
@@ -3230,7 +3230,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(TRmgObject* object)
             existingPrototype->m_triggerCell.m_y);
         int end;
         int first;
-        if (g_adventureObjectTraits[existingPrototype->getType()].m_enterableFromNorth) {
+        if (akAdvObjectTypeTraits[existingPrototype->getType()].m_enterableFromNorth) {
             end = 8;
             first = 0;
         } else {
@@ -3394,7 +3394,7 @@ static bool isUsableRmgPrototype(const TObjectType& prototype)
     if (column == prototype.getWidth())
         return false;
     s32 mappedType;
-    memcpy(&mappedType, &g_adventureObjectTraits[prototype.getObjectType()].m_nameRow, sizeof(mappedType));
+    memcpy(&mappedType, &akAdvObjectTypeTraits[prototype.getObjectType()].m_nameRow, sizeof(mappedType));
     return mappedType != MONSTER || (prototype.getSubtype() >= 0
         && prototype.getSubtype() < RMG_CREATURE_TYPE_COUNT);
 }
@@ -3423,7 +3423,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
 #endif
         TRmgObjectPropertiesRef* properties =
             new TRmgObjectPropertiesRef(&m_objectsTxt.m_objectTypes[index]);
-        memcpy(&type, &g_adventureObjectTraits[type].m_nameRow, sizeof(type));
+        memcpy(&type, &akAdvObjectTypeTraits[type].m_nameRow, sizeof(type));
         m_objectPrototypes[type].push_back(properties);
     }
 #if defined(HOMM3_RMG_HOTFIX)
@@ -3608,7 +3608,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
                 int mappedType;
                 // Same canonical byte table used by readObjectType: the
                 // dword at +8 remaps aliases to their objnames.txt row.
-                memcpy(&mappedType, &g_adventureObjectTraits[objectType].m_nameRow,
+                memcpy(&mappedType, &akAdvObjectTypeTraits[objectType].m_nameRow,
                        sizeof(mappedType));
                 int match = rulesByType[mappedType][terrain].size();
                 while (match-- && *std::vector<int>::reverse_iterator(
@@ -4035,12 +4035,12 @@ TRmgGenerator::TRmgGenerator(
         memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
         initializeObjectGenerators();
         for (int hero = 0; hero < 156; ++hero) {
-            if (g_heroTraits[hero].m_availability.m_special)
+            if (akHeroTraits[hero].m_availability.m_special)
                 m_disabledHeroes[hero] = 1;
             else if (m_mapVersion >= 1) {
-                if (!g_heroTraits[hero].m_availability.m_availableInExpansion)
+                if (!akHeroTraits[hero].m_availability.m_availableInExpansion)
                     m_disabledHeroes[hero] = 1;
-            } else if (!g_heroTraits[hero].m_availability.m_availableInOriginal)
+            } else if (!akHeroTraits[hero].m_availability.m_availableInOriginal)
                 m_disabledHeroes[hero] = 1;
         }
         for (int zoneObjectType = 0; zoneObjectType < 232; ++zoneObjectType)
@@ -4426,7 +4426,7 @@ void TRmgGenerator::initializeObjectGenerators()
     {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
+            if (akCreatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
                     new TRmgBlackBoxCreatureDef(creature));
         }
@@ -4545,7 +4545,7 @@ void TRmgGenerator::initializeObjectGenerators()
     for (int seerSubtype = 0; seerSubtype < m_objectPrototypes[83].size(); ++seerSubtype) {
         int creatureCount = m_mapVersion >= 1 ? 145 : 118;
         for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
+            if (akCreatureTypeTraits[creature].m_level >= 0)
                 m_objectGenerators.push_back(
                     new TRmgQuestCreatureDef(creature, seerSubtype));
         }
@@ -6764,7 +6764,7 @@ TRmgObject* TRmgGenerator::createGuard(int value, TRmgZone* zone)
             prototypeIndices[creature] = -1;
     }
     for (--creature; creature >= 0; --creature) {
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature];
         if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
             && traits.m_level >= 0 && allowed[traits.m_townType + 1]) {
@@ -6788,7 +6788,7 @@ TRmgObject* TRmgGenerator::createGuard(int value, TRmgZone* zone)
     // Retail bug: if the counts disagree, creature can reach -1.
 #endif
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][prototypeIndices[creature]];
-    int aiValue = g_creatureTypeTraits[creature].m_aiValue;
+    int aiValue = akCreatureTypeTraits[creature].m_aiValue;
     int count = (value + aiValue / 2) / aiValue;
     int variation = count / 4 + 1;
     if (variation > 1) {
@@ -9012,8 +9012,8 @@ TRmgObject* TRmgGenerator::createTreasureObject(TRmgZone* zone,
     for (unsigned int index = 0; index < m_objectGenerators.size(); ++index) {
         TRmgTreasureDef* definition = m_objectGenerators[index];
         int objectType = definition->m_objectType;
-        if (!primary && g_adventureObjectTraits[objectType].m_blocksLanding
-            && !g_adventureObjectTraits[objectType].m_clearedOnVisit)
+        if (!primary && akAdvObjectTypeTraits[objectType].m_blocksLanding
+            && !akAdvObjectTypeTraits[objectType].m_clearedOnVisit)
             continue;
         if (!allowLinkedPlacement && definition->requiresLinkedPlacement())
             continue;
@@ -9403,7 +9403,7 @@ unsigned char TRmgGenerator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition entrance = lastObject->getPosition();
     entrance.m_x -= prototype->m_triggerCell.m_x;
     entrance.m_y -= prototype->m_triggerCell.m_y;
-    if (!g_adventureObjectTraits[prototype->getType()].m_enterableFromNorth) {
+    if (!akAdvObjectTypeTraits[prototype->getType()].m_enterableFromNorth) {
         firstDirection = 1;
         lastDirection = 4;
     }
@@ -9631,8 +9631,8 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
             TRmgObject* object = mapItem->m_objects[0];
             TObjectType* prototype = object->m_properties->m_prototype;
             int objectType = prototype->getType();
-            if (!g_adventureObjectTraits[objectType].m_enterableFromNorth
-                && !g_adventureObjectTraits[objectType].m_clearedOnVisit)
+            if (!akAdvObjectTypeTraits[objectType].m_enterableFromNorth
+                && !akAdvObjectTypeTraits[objectType].m_clearedOnVisit)
                 direction = 5;
 
             switch (objectType) {
@@ -9713,7 +9713,7 @@ void TRmgGenerator::buildRoadCostMap(TRmgMapPosition position)
             if (nextObjectEntrance) {
                 int objectType =
                     nextMapItem->m_objects[0]->m_properties->m_prototype->getType();
-                const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
+                const TAdvObjectTraits& traits = akAdvObjectTypeTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_clearedOnVisit)
                     continue;
                 if (!traits.m_enterableFromNorth && !traits.m_clearedOnVisit
@@ -10748,7 +10748,7 @@ void TRmgGenerator::writeMapHeader(TAbstractFile* outfile)
     std::bitset<144> disabledArtifacts;
     for (int artifactIndex = 0; artifactIndex < 144; ++artifactIndex) {
         disabledArtifacts[artifactIndex] =
-            g_artifactTraits[artifactIndex].m_comboType != -1;
+            akArtifactTraits[artifactIndex].m_comboType != -1;
     }
     // Retail 0x54a78d/0x54a790 sets bit 0 of word 4 and bit 31 of
     // word 3, relative to the bitset base at [ebp-0x64]: IDs 128 and 127.
@@ -10886,12 +10886,12 @@ unsigned char TRmgGenerator::writeMap(TAbstractFile* outfile)
     }
     for (unsigned int first = 0; first < m_objects.size(); ++first) {
         TRmgObject* object = m_objects[first];
-        if (g_adventureObjectTraits[object->m_properties->m_prototype->getType()].m_isDecoration)
+        if (akAdvObjectTypeTraits[object->m_properties->m_prototype->getType()].m_isDecoration)
             object->write(outfile, m_mapVersion);
     }
     for (unsigned int second = 0; second < m_objects.size(); ++second) {
         TRmgObject* object = m_objects[second];
-        if (!g_adventureObjectTraits[object->m_properties->m_prototype->getType()].m_isDecoration)
+        if (!akAdvObjectTypeTraits[object->m_properties->m_prototype->getType()].m_isDecoration)
             object->write(outfile, m_mapVersion);
     }
     if (m_progress)
@@ -11138,8 +11138,8 @@ unsigned char TRmgGenerator::placeSeerHutForArtifact(TRmgQuestArtifactObject* ob
     int available = 0;
     int artifact;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+        if (!akArtifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
+            && (akArtifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
             ++available;
         }
     }
@@ -11149,8 +11149,8 @@ unsigned char TRmgGenerator::placeSeerHutForArtifact(TRmgQuestArtifactObject* ob
         return 0;
     int selected = rand() % available;
     for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
-        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
-            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+        if (!akArtifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
+            && (akArtifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
             if (selected-- <= 0)
                 break;
         }
@@ -11376,8 +11376,8 @@ static inline u32 findRmgPrototypeSubtypeIndex(
 
 static bool isRmgQuestArtifactEligible(s32 artifact)
 {
-    return !g_artifactTraits[artifact].m_disabled
-        && (g_artifactTraits[artifact].m_artifactClass & 2);
+    return !akArtifactTraits[artifact].m_disabled
+        && (akArtifactTraits[artifact].m_artifactClass & 2);
 }
 
 // The request settings the lobby can produce. The generator relies on them:

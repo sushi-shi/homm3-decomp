@@ -33,7 +33,7 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
     g_townGateWindow = this;
 
     const char* title = m_adventureSpell
-        ? g_spellTraits[SPELL_TOWN_PORTAL].m_name : 0;
+        ? akSpellTraits[SPELL_TOWN_PORTAL].m_name : 0;
     const char* selectTown = m_adventureSpell
         ? g_generalText->GetText(GENERAL_TEXT_SELECT_DESTINATION) : 0;
 

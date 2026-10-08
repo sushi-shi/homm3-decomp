@@ -578,7 +578,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             break;
 
         default:
-            if (g_adventureObjectTraits[destCell->m_type].m_blocksLanding
+            if (akAdvObjectTypeTraits[destCell->m_type].m_blocksLanding
                 && (!curr->isFlying(1)))
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
@@ -671,7 +671,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             && eventCell->m_type == ANCHOR_POINT)) {
         if ((!curr->isFlying(0)
              || curr->getTarget() == triggerPoint)
-            && (!g_adventureObjectTraits[eventCell->m_type].m_blocksLanding
+            && (!akAdvObjectTypeTraits[eventCell->m_type].m_blocksLanding
                 || !curr->isFlying(1)
                 || eventCell->m_type == BOAT))
             returnCell = eventCell;
@@ -855,12 +855,12 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
     int stepsSouth = dirMask & 0x38;
     if (dirMask & 0x83) {
         if (srcCell->cellIsTrigger()
-                && !g_adventureObjectTraits[srcCell->getMapObject()].m_enterableFromNorth)
+                && !akAdvObjectTypeTraits[srcCell->getMapObject()].m_enterableFromNorth)
             return 0;
     }
     if (stepsSouth) {
         if (destCell->cellIsTrigger()
-                && !g_adventureObjectTraits[destCell->getMapObject()].m_enterableFromNorth)
+                && !akAdvObjectTypeTraits[destCell->getMapObject()].m_enterableFromNorth)
             return 0;
     }
 

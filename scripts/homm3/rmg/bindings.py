@@ -20,9 +20,9 @@ SERVICES = {
     '?load@TObjectTypeTable@@QAEXPAD@Z',
 }
 DATA_SERVICES = {
-    'g_adventureObjectTraits', 'TAllocationFailure::_s_kMessage', 'g_artifactTraits',
-    'g_creatureGenerator1Types', 'g_creatureTypeTraits', 'g_heroTraits',
-    'g_spellTraits', 'g_tileDirections',
+    'akAdvObjectTypeTraits', 'TAllocationFailure::_s_kMessage', 'akArtifactTraits',
+    'g_creatureGenerator1Types', 'akCreatureTypeTraits', 'akHeroTraits',
+    'akSpellTraits', 'g_tileDirections',
 }
 RUNTIME = {
     '??0_Lockit@std@@QAE@XZ', '??1_Lockit@std@@QAE@XZ',

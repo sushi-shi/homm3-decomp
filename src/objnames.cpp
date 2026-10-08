@@ -22,11 +22,11 @@
 // The rows themselves: retail .data 0x691698. The pointer cell at
 // 0x660428 holds this address; readers and the loader share the same record.
 DATA(0x00691698)
-TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+TAdvObjectTraits aAdvObjectTypeTraitsImp[ADVENTURE_OBJECT_TRAIT_COUNT];
 // Initial contents recovered from the pinned Complete image.
 // Retail pointer cell used by the readers; the loader owns the rows.
-DATA(0x00660428) const TAdvObjectTraits* g_adventureObjectTraits =
-    g_adventureObjectTraitRows;
+DATA(0x00660428) const TAdvObjectTraits* akAdvObjectTypeTraits =
+    aAdvObjectTypeTraitsImp;
 
 
 // The five .rdata override tables the loader replays over the zeroed
@@ -91,7 +91,7 @@ static const int g_adventureObjectEnterableFromNorthIds[] = {
 // the original inline qualifier. Moving the body to exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
 VA(0x0041b500, 0x28B)
 MAC_ADDRESS(0x21d350, 0x6dc)
-void initializeAdventureObjectTraits()
+void InitializeAdvObjectTypeTraitsTable()
 {
     // Mac 0:0x21d918/0x21d95c retains array-owner assignment/cleanup.
     // Retail guards the static with bit 0 of 0x691690 and registers its
@@ -103,7 +103,7 @@ void initializeAdventureObjectTraits()
     static TAutoArrayPtr<char> nameBuffer;
 
     int i;
-    TAdvObjectTraits* row = g_adventureObjectTraitRows;
+    TAdvObjectTraits* row = aAdvObjectTypeTraitsImp;
     for (i = 0; i < ADVENTURE_OBJECT_TRAIT_COUNT; ++i, ++row) {
         row->m_enterableFromNorth = 0;
         row->m_clearedOnVisit = 0;
@@ -115,25 +115,25 @@ void initializeAdventureObjectTraits()
 
     for (i = 0; i < sizeof(g_adventureObjectNameRows)
                         / sizeof(g_adventureObjectNameRows[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectNameRows[i].m_objectType]
+        aAdvObjectTypeTraitsImp[g_adventureObjectNameRows[i].m_objectType]
             .m_nameRow = g_adventureObjectNameRows[i].m_nameRow;
     }
     for (i = 0; i < sizeof(g_adventureObjectDecorationIds)
                         / sizeof(g_adventureObjectDecorationIds[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectDecorationIds[i]].m_isDecoration = 1;
+        aAdvObjectTypeTraitsImp[g_adventureObjectDecorationIds[i]].m_isDecoration = 1;
     }
     for (i = 0; i < sizeof(g_adventureObjectClearedOnVisitIds)
                         / sizeof(g_adventureObjectClearedOnVisitIds[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectClearedOnVisitIds[i]].m_clearedOnVisit = 1;
+        aAdvObjectTypeTraitsImp[g_adventureObjectClearedOnVisitIds[i]].m_clearedOnVisit = 1;
     }
     for (i = 0; i < sizeof(g_adventureObjectLandBlockedIds)
                         / sizeof(g_adventureObjectLandBlockedIds[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectLandBlockedIds[i]]
+        aAdvObjectTypeTraitsImp[g_adventureObjectLandBlockedIds[i]]
             .m_blocksLanding = 1;
     }
     for (i = 0; i < sizeof(g_adventureObjectEnterableFromNorthIds)
                         / sizeof(g_adventureObjectEnterableFromNorthIds[0]); ++i) {
-        g_adventureObjectTraitRows[g_adventureObjectEnterableFromNorthIds[i]].m_enterableFromNorth = 1;
+        aAdvObjectTypeTraitsImp[g_adventureObjectEnterableFromNorthIds[i]].m_enterableFromNorth = 1;
     }
 
     TTextResource* names = ResourceManager::GetText(
@@ -156,7 +156,7 @@ void initializeAdventureObjectTraits()
         const char* text = names->GetText(line);
         unsigned int size = strlen(text) + 1;
         memcpy(next, text, size);
-        g_adventureObjectTraitRows[line].m_name = next;
+        aAdvObjectTypeTraitsImp[line].m_name = next;
         next += size;
     }
 }

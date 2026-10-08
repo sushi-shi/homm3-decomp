@@ -288,7 +288,7 @@ bool combatManager::aiCheckRetreat()
                         combatValue += max(
                             artifactValue,
                             static_cast<long>(
-                                g_artifactTraits[artifact.m_artifactId].m_cost / 2));
+                                akArtifactTraits[artifact.m_artifactId].m_cost / 2));
                     }
                 }
                 { for (long i = 0; i < 64; i++) {
@@ -300,7 +300,7 @@ bool combatManager::aiCheckRetreat()
                         combatValue += max(
                             artifactValue,
                             static_cast<long>(
-                                g_artifactTraits[artifact.m_artifactId].m_cost / 2));
+                                akArtifactTraits[artifact.m_artifactId].m_cost / 2));
                     }
                 }
                 if (combatValue >= 1000
@@ -1401,16 +1401,16 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters& data)
         int archerLevel;
         m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
         if (m_wallLevel[14] > 0)
-            shooterValue[1] += g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
+            shooterValue[1] += akCreatureTypeTraits[CREATURE_ARCHER].m_aiValue
                                 * numArchers;
         if (m_fortificationLevel == eFortificationCastle) {
             if (m_wallLevel[13] > 0)
                 shooterValue[1] +=
-                    g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
+                    akCreatureTypeTraits[CREATURE_ARCHER].m_aiValue
                     * (numArchers + 1) / 2;
             if (m_wallLevel[5] > 0)
                 shooterValue[1] +=
-                    g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
+                    akCreatureTypeTraits[CREATURE_ARCHER].m_aiValue
                     * (numArchers + 1) / 2;
         }
     }

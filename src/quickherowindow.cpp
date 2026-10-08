@@ -73,7 +73,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
 
     widgets.push_back(new bitmapBorder(
         12, 13, 58, 64, PORTRAIT_ID,
-        g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
+        akHeroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
     widgets.push_back(new textWidget(
         75, 13, 107, 17, thisHero->m_name, "smalfont.fnt", font::WHITE,
@@ -123,8 +123,8 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                 // above.  Preserve that byte-proven source-level wart.
                 if (slot != CREATURE_NONE &&
                     (disguiseCreature == CREATURE_NONE ||
-                     g_creatureTypeTraits[creature].m_aiValue >
-                         g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                     akCreatureTypeTraits[creature].m_aiValue >
+                         akCreatureTypeTraits[disguiseCreature].m_aiValue))
                     disguiseCreature = creature;
             }
         } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
@@ -138,8 +138,8 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                     : -1;
                 if (townType == alignment &&
                     (disguiseCreature == CREATURE_NONE ||
-                     g_creatureTypeTraits[creature].m_aiValue >
-                         g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                     akCreatureTypeTraits[creature].m_aiValue >
+                         akCreatureTypeTraits[disguiseCreature].m_aiValue))
                     disguiseCreature = static_cast<TCreatureType>(creature); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
             }
         }

@@ -70,7 +70,7 @@ mac_section = 1
 mac_offset = 0x52450
 mac_size = 4
 sha256 = "25349d1ff00af3f97683cdaa7ec881a93d65789a88e135e03ab662a73c8da758"
-evidence = "The Mac spell arm loads TOC 1+0x6c8 -> pointer cell 1+0x52450 at 0x116b04, then indexes traits with a 0x88 stride and reads name +0x10. The source-owned reference-to-array identifies g_spellTraits; only its external pointer cell is bound."
+evidence = "The Mac spell arm loads TOC 1+0x6c8 -> pointer cell 1+0x52450 at 0x116b04, then indexes traits with a 0x88 stride and reads name +0x10. The source-owned reference-to-array identifies akSpellTraits; only its external pointer cell is bound."
 
 [[data]]
 retail_va = 0x0067f578

@@ -458,7 +458,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
                    searchType);
         return 1;
     }
-    return g_adventureObjectTraits[type].m_blocksLanding == 0;
+    return akAdvObjectTypeTraits[type].m_blocksLanding == 0;
 }
 
 // E:\gamedcs\search.cpp:494

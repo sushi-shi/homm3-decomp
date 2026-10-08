@@ -65,7 +65,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
     m_widgets.push_back(new bitmapBorder(
         171, 66, 58, 64, PORTRAIT_ID,
-        g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
+        akHeroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
     sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
             thisHero->m_name);
@@ -92,9 +92,9 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     if (secondChoice != -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
                 g_secondarySkillLevels[firstChoice % 3],
-                g_sSkillTraits[firstChoice / 3 - 1].m_name,
+                akSSkillTraits[firstChoice / 3 - 1].m_name,
                 g_secondarySkillLevels[secondChoice % 3],
-                g_sSkillTraits[secondChoice / 3 - 1].m_name);
+                akSSkillTraits[secondChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8));
@@ -123,19 +123,19 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             secondChoice, 0, 0, 0, 0x10));
 
         sprintf(g_text, "%s\n%s", g_secondarySkillLevels[firstChoice % 3],
-                g_sSkillTraits[firstChoice / 3 - 1].m_name);
+                akSSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             102, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8));
         sprintf(g_text, "%s\n%s", g_secondarySkillLevels[secondChoice % 3],
-                g_sSkillTraits[secondChoice / 3 - 1].m_name);
+                akSSkillTraits[secondChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT7_ID, 5, 0, 8));
     } else if (firstChoice != -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE_FORMAT],
                 g_secondarySkillLevels[firstChoice % 3],
-                g_sSkillTraits[firstChoice / 3 - 1].m_name);
+                akSSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8));
@@ -146,7 +146,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
             firstChoice, 0, 0, 0, 0x10));
         sprintf(g_text, "%s\n%s", g_secondarySkillLevels[firstChoice % 3],
-                g_sSkillTraits[firstChoice / 3 - 1].m_name);
+                akSSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             149, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8));
@@ -257,14 +257,14 @@ int TLevelUpWindow::windowHandler(message& msg)
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID:
                 normalDialog(
-                    g_sSkillTraits[g_levelUpWindow->m_leftSkill / 3 - 1]
+                    akSSkillTraits[g_levelUpWindow->m_leftSkill / 3 - 1]
                         .m_levelNames[g_levelUpWindow->m_leftSkill % 3],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             case SKILLICON_2_ID:
             case SKILLBORDER_2_ID:
                 normalDialog(
-                    g_sSkillTraits[g_levelUpWindow->m_rightSkill / 3 - 1]
+                    akSSkillTraits[g_levelUpWindow->m_rightSkill / 3 - 1]
                         .m_levelNames[g_levelUpWindow->m_rightSkill % 3],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;

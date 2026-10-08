@@ -171,7 +171,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             ATTACKER_NAME, 0, 0, 8));
         m_widgets.push_back(new bitmapBorder(
             21, 38, 58, 64, ATTACKER_PORTRAIT,
-            g_heroTraits[attacker->m_portrait].m_largePortraitName, 0x800));
+            akHeroTraits[attacker->m_portrait].m_largePortraitName, 0x800));
     } else {
         // No hero on this side: name the side's strongest surviving stack
         // instead, ranked by the embedded traits row's AI value, and say it
@@ -215,7 +215,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             DEFENDER_NAME, 2, 0, 8));
         m_widgets.push_back(new bitmapBorder(
             392, 38, 58, 64, DEFENDER_PORTRAIT,
-            g_heroTraits[defender->m_portrait].m_largePortraitName, 0x800));
+            akHeroTraits[defender->m_portrait].m_largePortraitName, 0x800));
     } else {
         amount = 0;
         type = TCreatureType(0);

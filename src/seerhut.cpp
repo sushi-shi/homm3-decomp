@@ -954,7 +954,7 @@ std::string type_artifact_quest::getRequirementText()
 {
     std::vector<std::string> requirements;
     for (unsigned i = 0; i < m_artifacts.size(); ++i)
-        requirements.push_back(g_artifactTraits[m_artifacts[i]].m_name);
+        requirements.push_back(akArtifactTraits[m_artifacts[i]].m_name);
     return joinTextList(requirements);
 }
 
@@ -1006,7 +1006,7 @@ void type_artifact_quest::doProgressDialog(hero* currentHero)
     for (i = 0; i < m_artifacts.size(); ++i) {
         if (!currentHero->hasArtifact(m_artifacts[i])) {
             missingArtifacts.push_back(m_artifacts[i]);
-            requirements.push_back(g_artifactTraits[m_artifacts[i]].m_name);
+            requirements.push_back(akArtifactTraits[m_artifacts[i]].m_name);
         }
     }
 
@@ -1150,7 +1150,7 @@ int type_creature_quest::getAIPaymentValue(int player)
     int total = 0;
 
     for (unsigned i = 0; i < m_types.size(); ++i)
-        total += g_creatureTypeTraits[m_types[i]].m_aiValue * m_counts[i];
+        total += akCreatureTypeTraits[m_types[i]].m_aiValue * m_counts[i];
     return total;
 }
 
@@ -2211,7 +2211,7 @@ int TSeerReward::getValue(const hero* currentHero)
         return currentHero->valueOfSpell(m_value.m_dwords[0]);
 
     case eRewardCreature:
-        return g_creatureTypeTraits[m_value.m_creature.m_creatureType].m_aiValue
+        return akCreatureTypeTraits[m_value.m_creature.m_creatureType].m_aiValue
             * m_value.m_creature.m_count;
 
     default:
@@ -2294,7 +2294,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 
     case eRewardSpell:
         if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)
-            && g_spellTraits[m_value.m_dwords[0]].m_level
+            && akSpellTraits[m_value.m_dwords[0]].m_level
                 <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
             && !currentHero->isInSpellbook(m_value.m_dwords[0]))
             currentHero->addSpell(m_value.m_dwords[0]);

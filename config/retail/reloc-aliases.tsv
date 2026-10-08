@@ -7,7 +7,7 @@ function_rva	target_rva	site_rva	owner	addend	occurrences
 0x00031360	0x0026052c	0x0003141e	?g_globalLimits@@3PAHA	0x0	1
 0x00031360	0x0027814c	0x000313a5	?g_heroGoldCost@@3HA	0x0	1
 0x00031360	0x002994e8	*	?g_game@@3PAVgame@@A	0x0	6
-0x00069fe0	0x00287f58	0x0006a02a	?g_spellTraits@@3AAY0FB@$$CBUSSpellTraits@@A	0x0	1
+0x00069fe0	0x00287f58	0x0006a02a	?akSpellTraits@@3AAY0FB@$$CBUSSpellTraits@@A	0x0	1
 0x00073c00	0x0023be60	*	?s_wallTargets@combatManager@@2QBUTWallTarget@1@B	0x0	1
 0x00073c00	0x0023be68	*	?s_wallTargets@combatManager@@2QBUTWallTarget@1@B	0x8	6
 0x00073c00	0x0023be8c	*	?s_wallTargets@combatManager@@2QBUTWallTarget@1@B	0x2c	1

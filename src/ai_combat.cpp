@@ -63,7 +63,7 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
     long turns = choice.m_duration;
     if (turns > 5)
         turns = 5;
-    long value = g_spellTraits[choice.m_spell].m_masteryValues[choice.m_mastery];
+    long value = akSpellTraits[choice.m_spell].m_masteryValues[choice.m_mastery];
     float chance = getSpellWorkChance(choice.m_spell, m_type, castingHero, targetHero);
     return static_cast<long>(value * turns * m_totalValue * chance / 500.0);
 }
@@ -107,10 +107,10 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
     if (getSpellWorkChance(choice.m_spell, m_type, castingHero, castingHero) == 0.0)
         return 0;
     long value = choice.getMasteryValue()
-                 + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                 + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     if (castingHero)
         value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
-            choice.m_spell, g_creatureTypeTraits[m_type].m_level, value);
+            choice.m_spell, akCreatureTypeTraits[m_type].m_level, value);
     long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
                            m_originalNumber - m_number);
     return resurrected * m_value;
@@ -286,7 +286,7 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
             continue;
 
         int creatureId = creature;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[creatureId];
         hitPoints = traits.m_hitPoints;
         if (m_currentHero) {
             hitBonus = m_currentHero->getHitPointBonus(creatureId);
@@ -380,7 +380,7 @@ type_speed_catagory type_AI_combat_data::getCatagory(
     TCreatureType creature,
     long speed) const
 {
-    unsigned int attributes = g_creatureTypeTraits[creature].m_attributes;
+    unsigned int attributes = akCreatureTypeTraits[creature].m_attributes;
     if (attributes & g_ctaShooter)
         return const_ranged;
 
@@ -511,7 +511,7 @@ MAC_ADDRESS(0x027064, 0x12c)
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
-                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = defender.m_creatures.size(); i-- > 0; ) {
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.m_currentHero, damage);
@@ -584,7 +584,7 @@ MAC_ADDRESS(0x02731c, 0x130)  // MAC_ABSTRACTION_FROM(tokens1:2e83d8cf12a8,47.75
 void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
-                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
         choice.m_spell, m_currentHero, defender.m_currentHero, damage);
     defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
@@ -627,7 +627,7 @@ long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const he
 {
     long value = 0;
     long damage = choice.getMasteryValue()
-                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = m_creatures.size(); i-- > 0; )
         value += m_creatures[i].getSpellDamage(choice.m_spell, castingHero, m_currentHero, damage);
     return value;
@@ -671,7 +671,7 @@ void type_AI_combat_data::castMassDamageSpell(
 {
     long value = 0;
     long damage = choice.getMasteryValue()
-                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
+                  + akSpellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = m_creatures.size(); i-- > 0; ) {
         value += m_creatures[i].getSpellDamage(
             choice.m_spell, castingHero, m_currentHero, damage);
@@ -733,7 +733,7 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
         choice.m_target = -1;
         return;
     }
-    if (g_spellTraits[choice.m_spell].m_karma > 0)
+    if (akSpellTraits[choice.m_spell].m_karma > 0)
         getEnchantmentValue(choice, m_currentHero);
     else
         defender.getEnchantmentValue(choice, m_currentHero);
@@ -777,7 +777,7 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
             castEnchantment(choice, m_currentHero, 1);
             defender.castEnchantment(choice, m_currentHero, 0);
         }
-    } else if (g_spellTraits[choice.m_spell].m_karma > 0) {
+    } else if (akSpellTraits[choice.m_spell].m_karma > 0) {
         castEnchantment(choice, m_currentHero, 1);
     } else {
         defender.castEnchantment(choice, m_currentHero, 0);
@@ -869,10 +869,10 @@ void type_AI_combat_data::castSpell(
         if (!m_currentHero->spellIsAvailable(spell))
             continue;
 
-        if (g_spellTraits[spell].m_level > 1
+        if (akSpellTraits[spell].m_level > 1
             && m_terrain == MAGIC_TERRAIN_CURSED_GROUND)
             continue;
-        if (g_spellTraits[spell].m_level > 2 && recantersCloak)
+        if (akSpellTraits[spell].m_level > 2 && recantersCloak)
             continue;
 
         mastery = m_currentHero->getSpellLevel(spell, m_terrain);
@@ -882,7 +882,7 @@ void type_AI_combat_data::castSpell(
 
         type_spell_choice choice(static_cast<ESpellId>(spell), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                                   mastery, spellPower, spellDuration);
-        switch (g_spellTraits[spell].m_flags & g_aiSpellClassMask) {
+        switch (akSpellTraits[spell].m_flags & g_aiSpellClassMask) {
         case g_aiSpellDirectDamage:
             getDamageSpellValue(choice, defender);
             break;
@@ -914,7 +914,7 @@ void type_AI_combat_data::castSpell(
     if (defender.m_currentHero && defender.hasCreature(CREATURE_FAMILIAR))
         defender.m_mana += bestManaCost / 5;
 
-    switch (g_spellTraits[bestChoice.m_spell].m_flags
+    switch (akSpellTraits[bestChoice.m_spell].m_flags
             & g_aiSpellClassMask) {
     case g_aiSpellDirectDamage:
     case g_aiSpellOpeningDamage:
@@ -1247,7 +1247,7 @@ static void doEagleEye(hero* winner, hero* loser)
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;
-            const SSpellTraits& traits = g_spellTraits[spell];
+            const SSpellTraits& traits = akSpellTraits[spell];
             if (winner->getSecondarySkill(eSecSkillEagleEye) + 1
                 < traits.m_level)
                 continue;
@@ -1279,12 +1279,12 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
     factor += 0.02f;
     TCreatureType skeleton = const_cast<hero*>(currentHero)->getNecromancyCreature();
     long total = 0;
-    long skeletonHitPoints = g_creatureTypeTraits[skeleton].m_hitPoints;
+    long skeletonHitPoints = akCreatureTypeTraits[skeleton].m_hitPoints;
     float skeletonHitPointsF = static_cast<float>(skeletonHitPoints);
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         long creature = deadArmy->m_armies[i];
         long count = deadArmy->m_numTroops[i];
-        long hitPoints = g_creatureTypeTraits[creature].m_hitPoints;
+        long hitPoints = akCreatureTypeTraits[creature].m_hitPoints;
         if (hitPoints > skeletonHitPoints)
             hitPoints = skeletonHitPoints;
         long raised = static_cast<long>(static_cast<float>(hitPoints * count)

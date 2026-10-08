@@ -41,10 +41,10 @@ struct TAdvObjectNameRow {
     int m_nameRow;
 };
 
-extern TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+extern TAdvObjectTraits aAdvObjectTypeTraitsImp[ADVENTURE_OBJECT_TRAIT_COUNT];
 
-extern const TAdvObjectTraits* g_adventureObjectTraits;
+extern const TAdvObjectTraits* akAdvObjectTypeTraits;
 
-void initializeAdventureObjectTraits();
+void InitializeAdvObjectTypeTraitsTable();
 
 #endif  /* HOMM3_OBJNAMES_H */

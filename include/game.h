@@ -2100,7 +2100,7 @@ inline int game::getAlignment(int creature) const
         if (isBaseElemental(creature))
             return -1;
     }
-    return g_creatureTypeTraits[creature].m_townType;
+    return akCreatureTypeTraits[creature].m_townType;
 }
 
 // Original: game::get_alignment; game.h:1375. The public

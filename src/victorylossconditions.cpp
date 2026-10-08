@@ -160,7 +160,7 @@ bool VictoryConditionStruct::checkForArtifactWin()
                 return 1;
             }
         }
-        int comboIdx = g_artifactTraits[m_artifactNum].m_comboType;
+        int comboIdx = akArtifactTraits[m_artifactNum].m_comboType;
         if (comboIdx == -1)
             return 0;
 
@@ -491,7 +491,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
                 m_gameWon = 1;
                 return 1;
             }
-            int comboIdx = g_artifactTraits[m_artifactNum].m_comboType;
+            int comboIdx = akArtifactTraits[m_artifactNum].m_comboType;
             if (comboIdx == -1)
                 return 0;
 

@@ -13,7 +13,7 @@
 DC_ADDRESS(0x04fd34, 0x20)
 inline unsigned char isMindSpell(int spell)
 {
-    return (g_spellTraits[spell].m_flags & 0x400) != 0;
+    return (akSpellTraits[spell].m_flags & 0x400) != 0;
 }
 
 // Retail spell-class flag roles in SSpellTraits::field_c. Names are
@@ -30,7 +30,7 @@ enum ESpellTargetFlags {
 };
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
-unsigned char initializeSpellTraitsTable();
+unsigned char InitializeSpellTraitsTable();
 
 // Mutable implementation storage filled from sptraits.txt. The public
 // akSpellTraits pointer/reference cell is at 0x687f58; retail writes this
