@@ -528,14 +528,17 @@ def resolve_instances(definitions, requests, unit, root, args):
         d = definitions[index]
         name = f'__homm3_va_instance_{index}'
         constructor = re.fullmatch(
-            r'([A-Za-z_][\w:<>, *&]*<[^()]+>)::([A-Za-z_]\w*)\(([^()]*)\)',
+            r'([A-Za-z_][\w:<>, *&]*<[^()]+>(?:::[A-Za-z_]\w*)*)::([A-Za-z_]\w*)\(([^()]*)\)',
             d.instance)
         function = re.fullmatch(
             r'((?:[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*|operator<)\s*'
             r'<[\w:<>, *&]+>)', d.instance)
         if constructor:
             owner, member, arguments = constructor.groups()
-            if member != owner.split('<', 1)[0].rpartition('::')[2]:
+            plain = owner
+            while '<' in plain:
+                plain = re.sub(r'<[^<>]*>', '', plain)
+            if member != plain.rpartition('::')[2]:
                 errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid constructor selector {d.instance!r}')
                 continue
             parameters, start, depth = [], 0, 0
