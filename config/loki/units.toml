@@ -153,3 +153,8 @@ source = "src/editor/Army.cpp"
 name = "ResourceQuantities"
 object = 25
 source = "src/editor/ResourceQuantities.cpp"
+
+[[unit]]
+name = "GameMap"
+object = 12
+source = "src/editor/GameMap.cpp"
