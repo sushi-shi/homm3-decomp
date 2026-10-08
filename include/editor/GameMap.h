@@ -11,6 +11,7 @@
 #ifndef HOMM3_EDITOR_GAMEMAP_H
 #define HOMM3_EDITOR_GAMEMAP_H
 
+#include <string>
 #include <vector>
 
 #include "terrain_type.h"
@@ -19,6 +20,24 @@
 #include "editor/RefCountingPtr.h"
 
 typedef unsigned int TMapLayerObjectID;
+
+// A rumor: a name and a text of at most s_kMaxTextLen characters, either
+// both empty or both with something besides white space. The rumor
+// editor's OnInitDialog limits its text edit to 300 characters.
+class TRumor {
+public:
+    enum { s_kMaxTextLen = 300 };
+
+    TRumor() {}
+
+    const std::string& getName() const { return _m_name; }
+    const std::string& getText() const { return _m_text; }
+    void setNameAndText(const std::string& newName, const std::string& newText);
+
+private:
+    std::string _m_name;
+    std::string _m_text;
+};
 
 class TGameMap {
 public:
