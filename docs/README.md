@@ -43,3 +43,4 @@ iterate on a function.
 - [Save-game oracle](todos/save-game-oracle.md)
 - [Tooling](todos/tooling.md)
 - [VC6 out-of-line helpers](todos/vc6-budget-free-out-of-line-functions.md)
+- [VC6 name-keyed compiler state](todos/vc6-name-keyed-state.md)
