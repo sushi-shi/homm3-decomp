@@ -32,6 +32,7 @@ class THero;
 
 enum TBuilding {
     eBuildingNone = -1,
+    eBuildingFort = 3,
     kNumBuildings = 41
 };
 
@@ -67,14 +68,15 @@ public:
 
     // The town pages build their building trees from these: a building whose
     // name is unset is not available in this town type, and m_building is
-    // the building it hangs under (eBuildingNone for the roots).
+    // the building it hangs under (eBuildingNone for the roots); the second
+    // field is the description the town buildings page shows.
     struct TBuildingTraits {
-        TBuildingTraits(TBuilding building) : m_pName(0), m_unknown4(0), m_building(building) {}
+        TBuildingTraits(TBuilding building) : m_pName(0), m_pDescription(0), m_building(building) {}
 
         bool isDisallowed() const { return m_pName == 0; }
 
         const char* m_pName;
-        unsigned int m_unknown4;
+        const char* m_pDescription;
         TBuilding m_building;
     };
 
