@@ -29,15 +29,7 @@ namespace {
 #include <gtk/gtk.h>
 }
 
-class TObjectPaletteWnd;
-
-class TObjectPaletteWndClient {
-public:
-    virtual bool onPaletteCanCreateObject(TObjectPaletteWnd* pPaletteWnd,
-                                          const TObjectType& objType) = 0;
-    virtual void onPaletteGrabObject(TObjectPaletteWnd* pPaletteWnd,
-                                     const TObjectType& objType) = 0;
-};
+class TObjectPaletteWndClient;
 
 class TObjectPaletteWnd : public CWnd {
 public:
@@ -88,6 +80,14 @@ private:
     TArray<_TSlotInfo, kNumObjectSlots> _m_aSlotInfo;
     TPlayer _m_player;
     int _m_hotTool;
+};
+
+class TObjectPaletteWndClient {
+public:
+    virtual bool onPaletteCanCreateObject(TObjectPaletteWnd* pPaletteWnd,
+                                          const TObjectType& objType) = 0;
+    virtual void onPaletteGrabObject(TObjectPaletteWnd* pPaletteWnd,
+                                     const TObjectType& objType) = 0;
 };
 
 #endif  /* HOMM3_EDITOR_OBJECTPALETTEWND_H */

@@ -23,6 +23,26 @@
 // namespace-scope typedef (a class member typedef prints as "int").
 typedef int int_type;
 
+class TGzDeflateBuf : public streambuf {
+public:
+    TGzDeflateBuf(streambuf* pDestBuf, int level = Z_DEFAULT_COMPRESSION,
+                  int strategy = Z_DEFAULT_STRATEGY);
+    virtual ~TGzDeflateBuf();
+
+protected:
+    virtual int sync();
+    virtual int overflow(int c);
+
+private:
+    void _putLong(uLong x);
+
+    streambuf* _m_pDestBuf;     // +0x98
+    z_stream _m_zstream;        // +0x9c
+    char* _m_pInBuf;            // +0xd4, the put area
+    char* _m_pOutBuf;           // +0xd8, deflate's output window
+    uLong _m_crc;               // +0xdc
+};
+
 class TGzInflateBuf : public streambuf {
 public:
     // Thrown for a truncated or malformed gzip member.
@@ -51,26 +71,6 @@ private:
     bool _m_bGzip;              // +0xe0, false: raw pass-through
     bool _m_bSrcEOF;            // +0xe1
     bool _m_bInflating;         // +0xe2, inflateInit2 succeeded
-};
-
-class TGzDeflateBuf : public streambuf {
-public:
-    TGzDeflateBuf(streambuf* pDestBuf, int level = Z_DEFAULT_COMPRESSION,
-                  int strategy = Z_DEFAULT_STRATEGY);
-    virtual ~TGzDeflateBuf();
-
-protected:
-    virtual int sync();
-    virtual int overflow(int c);
-
-private:
-    void _putLong(uLong x);
-
-    streambuf* _m_pDestBuf;     // +0x98
-    z_stream _m_zstream;        // +0x9c
-    char* _m_pInBuf;            // +0xd4, the put area
-    char* _m_pOutBuf;           // +0xd8, deflate's output window
-    uLong _m_crc;               // +0xdc
 };
 
 #endif  /* HOMM3_GZBUF_H */

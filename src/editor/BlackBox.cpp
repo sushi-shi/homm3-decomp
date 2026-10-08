@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "adventureobjecttype.h"
+#include "exceptions.h"
 #include "editor/BlackBox.h"
 #include "editor/RawStream.h"
 

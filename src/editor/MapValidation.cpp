@@ -24,9 +24,9 @@
 #include "editor/MapEditorText.h"
 #include "editor/Monster.h"
 #include "editor/ObjectSpecializations.h"
+#include "editor/Town.h"
 #include "editor/SeersHut.h"
 #include "editor/TilePoint.h"
-#include "editor/Town.h"
 
 TMapValidationFunc::TMapValidationFunc(const TGameMap& map) : _m_map(map), _m_numNotes(0)
 {

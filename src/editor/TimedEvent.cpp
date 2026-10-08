@@ -9,9 +9,9 @@
 #include <string>
 
 #include "terrain.h"
+#include "editor/TimedEvent.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
-#include "editor/TimedEvent.h"
 
 TTimedEvent::TTimedEvent()
     : _m_bApplyToPlayer(~bitset<kNumPlayers>(0)),
