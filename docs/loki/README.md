@@ -253,6 +253,13 @@ Applied:
   (LinePlacement's and TerrainPlacement's `akFlippedDir`). An 8-byte local
   static constant (a non-BLKmode one) is first built in `%eax:%edx` and
   written to `.rodata` only when its address is taken.
+- Namespace-scope `.bss` is written at the end of the file namespace by
+  namespace, the first-created namespace last: MapEditorText.cpp opens its
+  anonymous namespace before including MapEditorText.h, so
+  akGeneralStringImp follows every `S...Text` namespace's akStringImp.
+- A namespace-scope non-const variable is written at its definition, its
+  string literals with it (GUIGameObject's unreferenced check-mark rows,
+  SpellDefs' akSpellEffectTraits after aSpellTraitsImp's sounds).
 - Open: in GameMap, RiverPlacement, RoadPlacement and TerrainPlacement the
   image names TRuntimeError after VictoryCondition.h's classes, while Event
   and Hero name it right after `<stdexcept>`'s. GameMap.h reaches
