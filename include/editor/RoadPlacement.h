@@ -16,17 +16,6 @@
 #include "editor/GameMap.h"
 #include "editor/LinePlacement.h"
 
-class TRoadOpClient {
-public:
-    virtual void onRoadsUpdated(bool bUnderground, unsigned int left, unsigned int top,
-                                unsigned int width, unsigned int height) = 0;
-};
-
-class TRoadPlacementOpClient : public TRoadOpClient {
-public:
-    virtual void onPlacingRoad(bool bUnderground, unsigned int x, unsigned int y) = 0;
-};
-
 // The roads of one map layer as a line filter: the cells' road type,
 // tile number and flips (the river and road vtables share TMapLineFilter's
 // slots and add a pure virtual destructor last: the slot is __pure_virtual).
@@ -56,6 +45,17 @@ protected:
 
     TGameMap* _m_pMap;
     bool _m_bSecondLayer;
+};
+
+class TRoadOpClient {
+public:
+    virtual void onRoadsUpdated(bool bUnderground, unsigned int left, unsigned int top,
+                                unsigned int width, unsigned int height) = 0;
+};
+
+class TRoadPlacementOpClient : public TRoadOpClient {
+public:
+    virtual void onPlacingRoad(bool bUnderground, unsigned int x, unsigned int y) = 0;
 };
 
 class TRoadPlacementOp : public TRoadOp, public TLinePlacementOpClient {

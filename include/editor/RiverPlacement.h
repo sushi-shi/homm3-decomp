@@ -16,17 +16,6 @@
 #include "editor/GameMap.h"
 #include "editor/LinePlacement.h"
 
-class TRiverOpClient {
-public:
-    virtual void onRiversUpdated(bool bUnderground, unsigned int left, unsigned int top,
-                                unsigned int width, unsigned int height) = 0;
-};
-
-class TRiverPlacementOpClient : public TRiverOpClient {
-public:
-    virtual void onPlacingRiver(bool bUnderground, unsigned int x, unsigned int y) = 0;
-};
-
 // The rivers of one map layer as a line filter: the cells' river type,
 // tile number and flips (the river and road vtables share TMapLineFilter's
 // slots and add a pure virtual destructor last: the slot is __pure_virtual).
@@ -56,6 +45,17 @@ protected:
 
     TGameMap* _m_pMap;
     bool _m_bSecondLayer;
+};
+
+class TRiverOpClient {
+public:
+    virtual void onRiversUpdated(bool bUnderground, unsigned int left, unsigned int top,
+                                unsigned int width, unsigned int height) = 0;
+};
+
+class TRiverPlacementOpClient : public TRiverOpClient {
+public:
+    virtual void onPlacingRiver(bool bUnderground, unsigned int x, unsigned int y) = 0;
 };
 
 class TRiverPlacementOp : public TRiverOp, public TLinePlacementOpClient {
