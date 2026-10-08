@@ -70,7 +70,8 @@ def _parse_overlay_trace(text: str, symbol: str) -> dict:
     caller, sites, candidates = None, [], []
     for line in lines:
         if line.startswith("main "):
-            _, address, estimate = line.split()
+            # Later shims append phase/key fields after the estimate.
+            _, address, estimate, *_extra = line.split()
             if caller is not None or names.get(address) != symbol:
                 raise ValueError("trace does not identify exactly one selected function")
             cb = int(estimate.removeprefix("cb="))
