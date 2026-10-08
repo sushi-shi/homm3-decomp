@@ -289,3 +289,8 @@ source = "src/editor/EditRumorDlg.cpp"
 name = "cppbridge"
 object = 51
 source = "src/editor/cppbridge.cpp"
+
+[[unit]]
+name = "EditTimedEventResourcesPage"
+object = 81
+source = "src/editor/EditTimedEventResourcesPage.cpp"
