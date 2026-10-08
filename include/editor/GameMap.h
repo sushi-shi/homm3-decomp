@@ -567,6 +567,7 @@ public:
         unsigned int getHeight() const;
         TCell* getPCell(unsigned int x, unsigned int y);
         const TCell* getPCell(unsigned int x, unsigned int y) const;
+        TCell* getPCell(const TTilePoint& loc) { return getPCell(loc.x(), loc.y()); }
         const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
         const TCell& getCell(const TTilePoint& loc) const { return getCell(loc.x(), loc.y()); }
         TGameObject* getPObject(unsigned int objID);

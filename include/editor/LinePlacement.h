@@ -113,17 +113,17 @@ public:
     virtual const TLineTilesetTraits& getTilesetTraits(unsigned int type) const = 0;
 
 protected:
-    virtual void _setCellInfo(const TPoint<unsigned int>& loc, const TCellInfo& info);
-    virtual void _setCellType(const TPoint<unsigned int>& loc, unsigned int type) = 0;
-    virtual void _setCellTileNum(const TPoint<unsigned int>& loc, unsigned int tileNum) = 0;
-    virtual void _setCellBHFlipped(const TPoint<unsigned int>& loc, bool bHFlipped) = 0;
-    virtual void _setCellBVFlipped(const TPoint<unsigned int>& loc, bool bVFlipped) = 0;
-    virtual bool _isCellBlocked(const TPoint<unsigned int>& loc) const = 0;
-    virtual void _getCellInfo(const TPoint<unsigned int>& loc, TCellInfo* pInfo) const;
-    virtual unsigned int _getCellType(const TPoint<unsigned int>& loc) const = 0;
-    virtual unsigned int _getCellTileNum(const TPoint<unsigned int>& loc) const = 0;
-    virtual bool _getCellBHFlipped(const TPoint<unsigned int>& loc) const = 0;
-    virtual bool _getCellBVFlipped(const TPoint<unsigned int>& loc) const = 0;
+    virtual void _setCellInfo(const TTilePoint& loc, const TCellInfo& info);
+    virtual void _setCellType(const TTilePoint& loc, unsigned int type) = 0;
+    virtual void _setCellTileNum(const TTilePoint& loc, unsigned int tileNum) = 0;
+    virtual void _setCellBHFlipped(const TTilePoint& loc, bool bHFlipped) = 0;
+    virtual void _setCellBVFlipped(const TTilePoint& loc, bool bVFlipped) = 0;
+    virtual bool _isCellBlocked(const TTilePoint& loc) const = 0;
+    virtual void _getCellInfo(const TTilePoint& loc, TCellInfo* pInfo) const;
+    virtual unsigned int _getCellType(const TTilePoint& loc) const = 0;
+    virtual unsigned int _getCellTileNum(const TTilePoint& loc) const = 0;
+    virtual bool _getCellBHFlipped(const TTilePoint& loc) const = 0;
+    virtual bool _getCellBVFlipped(const TTilePoint& loc) const = 0;
 
 private:
     unsigned int _m_mapWidth;
