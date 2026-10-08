@@ -209,7 +209,9 @@ class Builder:
             if completed.returncode:
                 raise BuildError(f"GTK+ patch failed in {tree} (see {self.log})")
         env = self.env("egcc", REDHAT_CFLAGS)
-        self.run(["./configure", "--prefix=/usr", "--disable-shared", f"--with-glib-prefix={glib_prefix}",
+        # Red Hat's configure macro: --sysconfdir=/etc (the image's gtkrc reads "/etc" + "/gtk/gtkrc").
+        self.run(["./configure", "--prefix=/usr", "--sysconfdir=/etc", "--disable-shared",
+                  f"--with-glib-prefix={glib_prefix}",
                   "--with-xinput=xfree", f"--x-includes={x_headers}", f"--x-libraries={self.xlib}",
                   "i386-redhat-linux"], tree, env)
         self.run(["make", f"-j{self.jobs}", "libgdk.la"], tree / "gdk", env)
