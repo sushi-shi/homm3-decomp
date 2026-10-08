@@ -568,7 +568,7 @@ def resolve_instances(definitions, requests, unit, root, args):
         owner, separator, member = d.instance.rpartition('::')
         if (not separator or '<' not in owner
                 or not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', owner)
-                or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\))', member)):
+                or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\)|operator=)', member)):
             errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid class-member selector {d.instance!r}')
             continue
         if member.startswith('~'):
