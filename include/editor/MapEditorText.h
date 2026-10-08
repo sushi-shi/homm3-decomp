@@ -374,9 +374,9 @@ extern const char* const& kFindPrevButtonStr;
 
 namespace SFlaggablePropsDlgText {
 enum { kNumStrings = 3 };
-extern const char* const& kOwnerStaticStr;
-extern const char* const& kNoneRadioStr;
-extern const char* const& kPlayerRadioFmtStr;
+DATA(0x005a15ec) extern const char* const& kOwnerStaticStr;
+DATA(0x005a1600) extern const char* const& kNoneRadioStr;
+DATA(0x005a15f0) extern const char* const& kPlayerRadioFmtStr;
 }
 
 namespace SHeroPropsGeneralPageText {
