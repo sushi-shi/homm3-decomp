@@ -15,11 +15,20 @@ Keys compared, per FDE:
 - an exported function: its symbol (anonymous-namespace suffix dropped);
 - a kept linkonce copy of another object, i.e. a discarded slot: its size;
 - a file-static function: its size.
+
+The object's `.rodata` keeps its strings in parse order, so two string
+sequences also follow the original source (`--headers`, `--types`): the
+`__FILE__` names of assert and TRuntimeError sites give the include order,
+and the g++ type names (`__ti` nodes' names, in class definition and use
+order) the order of the class definitions. The image's sequence is read
+from the end of the previous object's compiled `.rodata` to the next
+object's base, so strings before the voted base still count.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import struct
 
 from homm3.loki.datacmp import symbol_key
@@ -200,6 +209,100 @@ def render(order: Order, names: dict[str, str] | None = None,
         lines += [f"- {show(e)}" for e in order.image[i1:i2]]
         lines += [f"+ {show(e)}" for e in order.ours[j1:j2]]
     return lines
+
+
+_STRING = re.compile(rb"[\x20-\x7e]{2,}\x00")
+_SOURCE_FILE = re.compile(r"[\w+-]+\.(?:h|hpp|c|cpp)")
+_IDENTIFIER = re.compile(r"[A-Za-z_$][\w$]*")
+_TEMPLATE = re.compile(r"t\d+[A-Za-z_][\w$]*")
+
+
+def rodata_strings(raw: bytes) -> list[str]:
+    return [m.group()[:-1].decode() for m in _STRING.finditer(raw)]
+
+
+def is_source_file(text: str) -> bool:
+    """A bare `__FILE__` name (units compile from their own directory)."""
+    return _SOURCE_FILE.fullmatch(text) is not None
+
+
+def is_type_name(text: str) -> bool:
+    """A g++ 2.95 type name: `<length><identifier>`, a `Q<n>` qualified
+    name of such parts, or a `t<length><name>...` template instance."""
+    def part(at: int) -> int | None:
+        if text.startswith("t", at):
+            return len(text) if _TEMPLATE.fullmatch(text, at) else None
+        digits = re.match(r"\d+", text[at:])
+        if digits is None:
+            return None
+        start = at + digits.end()
+        end = start + int(digits.group())
+        return end if end <= len(text) and _IDENTIFIER.fullmatch(text, start, end) else None
+    at, count = 0, 1
+    qualified = re.match(r"Q(?:(\d)|_(\d+)_)", text)
+    if qualified:
+        at, count = qualified.end(), int(qualified.group(1) or qualified.group(2))
+    for _ in range(count):
+        at = part(at) if at is not None and at < len(text) else None
+    return at == len(text)
+
+
+@dataclass
+class Strings:
+    unit: str
+    image: list[str]
+    ours: list[str]
+
+    @property
+    def opcodes(self):
+        return lcs_opcodes(self.image, self.ours)
+
+    @property
+    def identical(self) -> bool:
+        return self.image == self.ours
+
+
+def string_orders(objects: dict[str, tuple[int, Path]], keep, image: LokiImage | None = None) -> list[Strings]:
+    """Each object's `.rodata` strings that `keep` selects, image against ours."""
+    from homm3.loki import datacmp
+    layout = datacmp.build_layout(objects, image)
+    out, previous_end = [], None
+    for compiled, header in layout.sequence(".rodata"):
+        base = layout.base.get((compiled.obj, header.index))
+        following = datacmp._next_base(layout, compiled, header)
+        start = previous_end if previous_end is not None and base is not None and previous_end <= base else base
+        previous_end = None if base is None else base + header.size
+        if start is None or following is None:
+            continue
+        theirs = [s for s in rodata_strings(layout.index.read(start, following - start)) if keep(s)]
+        ours = [s for s in rodata_strings(compiled.elf.bytes(header)) if keep(s)]
+        out.append(Strings(compiled.unit, theirs, ours))
+    return out
+
+
+def strings_main(units: list[str], kind: str) -> int:
+    from homm3.loki import build
+    objects = {u.name: (u.obj, build.OUT / "obj" / f"{u.name}.o") for u in build.units()}
+    keep = is_source_file if kind == "headers" else is_type_name
+    results = string_orders(objects, keep)
+    identical = 0
+    for result in results:
+        identical += result.identical
+        if units and result.unit not in units or result.identical and not units:
+            continue
+        same = sum(i2 - i1 for tag, i1, i2, _j1, _j2 in result.opcodes if tag == "equal")
+        print(f"[loki] {result.unit:24} {same:4}/{len(result.image):<4} {kind} in order"
+              f"  -{len(result.image) - same} image-only  +{len(result.ours) - same} ours-only")
+        for tag, i1, i2, j1, j2 in result.opcodes:
+            if tag == "equal":
+                print(f"      = {i2 - i1}: {' '.join(result.image[i1:i2]) if kind == 'headers' else result.image[i1] + ' .. ' + result.image[i2 - 1]}")
+                continue
+            for text in result.image[i1:i2]:
+                print(f"      - {text}")
+            for text in result.ours[j1:j2]:
+                print(f"      + {text}")
+    print(f"[loki] {identical}/{len(results)} objects keep the image's {kind} sequence")
+    return 0
 
 
 def main(units: list[str], verbose: bool = False) -> int:

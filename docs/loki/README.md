@@ -176,6 +176,14 @@ functions compare by name, discarded slots and file-static functions by
 size. Naming units (or `-v`) prints the aligned lists, image-only lines
 `-`, ours-only `+`.
 
+An object's `.rodata` keeps its strings in parse order, so two string
+sequences follow the original source too. `homm3 loki emitorder --headers`
+compares the `__FILE__` names of the assert and `TRuntimeError` sites (the
+include order); `--types` compares the g++ type names of the `__ti` nodes
+(the order in which classes are defined and first used). The image's
+sequence runs from the end of the previous object's compiled `.rodata` to
+the next object's base, so a string before the voted base still counts.
+
 ## Ledger and README block
 
 `homm3 loki build --bank` records every built unit's functions in

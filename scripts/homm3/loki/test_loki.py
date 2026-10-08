@@ -181,6 +181,19 @@ class CompiledBaseTest(unittest.TestCase):
         self.assertTrue(order.identical)
         self.assertFalse(any(line.startswith(("-", "+")) for line in emitorder.render(order)))
 
+    def test_rodata_string_sequences_pick_source_files_and_type_names(self):
+        raw = (b"Q28TGameMap7TClient\0GzBuf.cpp\0bad_alloc\0" b"9TBitmap16\0"
+               b"t6vector2ZiZt9allocator1Zi\0%d of %d\0" b"12\0x\0Map View.h\0")
+        strings = emitorder.rodata_strings(raw)
+        self.assertEqual([s for s in strings if emitorder.is_source_file(s)], ["GzBuf.cpp"])
+        self.assertEqual([s for s in strings if emitorder.is_type_name(s)],
+                         ["Q28TGameMap7TClient", "9TBitmap16", "t6vector2ZiZt9allocator1Zi"])
+        self.assertFalse(emitorder.is_type_name("9bad_alloc+"))
+        self.assertFalse(emitorder.is_type_name("Q28TGameMap"))     # one part short
+        order = emitorder.Strings("t", ["A.h", "B.h"], ["B.h", "A.h"])
+        self.assertFalse(order.identical)
+        self.assertEqual([tag for tag, *_ in order.opcodes], ["delete", "equal", "insert"])
+
 
 if __name__ == "__main__":
     unittest.main()

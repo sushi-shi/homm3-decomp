@@ -461,12 +461,16 @@ def run(objects: dict[str, tuple[int, Path]], selected: set[str] | None = None,
         image: LokiImage | None = None) -> list[UnitData]:
     """Compare the data of `selected` units (all when None); every available
     project object takes part in the layout (linkonce ownership, slices)."""
+    layout = build_layout(objects, image)
+    return [compare(c, layout) for c in layout.objects if selected is None or c.unit in selected]
+
+
+def build_layout(objects: dict[str, tuple[int, Path]], image: LokiImage | None = None) -> Layout:
+    """The image layout of every available project object."""
     from homm3.loki.delink import census
     from homm3.loki.delink import objects as census_objects
-    image = image or LokiImage()
-    index = ImageIndex(image)
+    index = ImageIndex(image or LokiImage())
     loaded = [c for name, (obj, path) in objects.items() if (c := load(name, obj, path)) is not None]
     text_start = {obj: start for obj, (start, _end, _file) in census_objects().items()}
     functions = {symbol_key(f.name): (f.address, f.obj) for f in census() if f.name}
-    layout = Layout(loaded, index, text_start, functions)
-    return [compare(c, layout) for c in layout.objects if selected is None or c.unit in selected]
+    return Layout(loaded, index, text_start, functions)

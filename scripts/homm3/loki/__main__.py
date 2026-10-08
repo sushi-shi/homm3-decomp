@@ -12,7 +12,7 @@
         then compare their data with the image slices (homm3.loki.datacmp);
         --bank records the built units' functions and data bytes in
         config/loki/match_baseline.tsv and refreshes the README Loki block
-  emitorder [UNIT ...] [-v]
+  emitorder [UNIT ...] [-v] [--headers | --types]
         each built object's emitted functions (its .eh_frame list, discarded
         linkonce slots and __tf type_info functions included) against the
         image's; units named or -v print the aligned lists
@@ -57,6 +57,10 @@ def main(argv=None) -> int:
     p = sub.add_parser("emitorder", help="emitted function lists against the image's")
     p.add_argument("units", nargs="*")
     p.add_argument("-v", "--verbose", action="store_true", help="aligned lists of every differing object")
+    p.add_argument("--headers", dest="strings", action="store_const", const="headers",
+                   help="compare the .rodata source-file name sequence (include order) instead")
+    p.add_argument("--types", dest="strings", action="store_const", const="types",
+                   help="compare the .rodata type-name sequence (class definition order) instead")
     p = sub.add_parser("disasm", help="disassemble a retail function")
     p.add_argument("selector")
     p = sub.add_parser("diff", help="side-by-side base/retail listing of one function")
@@ -83,6 +87,8 @@ def main(argv=None) -> int:
             return build.run(args.units or None, jobs=args.jobs, verbose=args.verbose, bank=args.bank)
         if args.command == "emitorder":
             from homm3.loki import emitorder
+            if args.strings:
+                return emitorder.strings_main(args.units, args.strings)
             return emitorder.main(args.units, args.verbose)
         if args.command == "disasm":
             return _disasm(args.selector)
