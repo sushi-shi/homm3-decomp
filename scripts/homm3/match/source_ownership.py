@@ -916,6 +916,9 @@ def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
     admitted = {u['source'] for u in units}
     digest = hashlib.sha256(Path(__file__).read_bytes())
     digest.update(str(root.resolve()).encode())
+    # each image parses the shared sources with its own profiles
+    from homm3.core import paths as image_paths
+    digest.update(f'image={image_paths.image_key()}'.encode())
     for dependency in ('scripts/homm3/core/clang.py', 'scripts/homm3/vc6/_source.py',
                        'scripts/homm3/manifest.py', 'scripts/homm3/retail_labels/source.py',
                        'scripts/homm3/core/compiler_profile.py', 'scripts/homm3/core/project.py'):
@@ -959,7 +962,8 @@ def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
     # Fragment attribution follows the owners' include positions, which the
     # TU that includes the fragment need not reach.
     digest.update(json.dumps(sorted(fragments.items())).encode())
-    cache = root / 'build/source-ownership/units'
+    cache = root / ('build/source-ownership/units' if image_paths.is_game()
+                    else f'build/{image_paths.image_key()}/source-ownership/units')
     cache.mkdir(parents=True, exist_ok=True)
     key = digest.hexdigest()
 
