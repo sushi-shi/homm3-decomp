@@ -39,7 +39,7 @@ void load()
     bAnimationImp = pApp->GetProfileInt("Settings", "Animation", bAnimationImp) != 0;
     bCyclingImp = pApp->GetProfileInt("Settings", "Cycling", bCyclingImp) != 0;
     autosaveMinutesImp = pApp->GetProfileInt("Settings", "Autosave", autosaveMinutesImp);
-    if (autosaveMinutesImp > 60)
+    if (autosaveMinutesImp > kMaxAutosaveMinutes)
         autosaveMinutesImp = 0;
     specialTileFrequencyImp = pApp->GetProfileInt("Settings", "SpecialTileFreq", specialTileFrequencyImp);
     if (specialTileFrequencyImp > 8)

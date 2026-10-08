@@ -10,6 +10,10 @@
 #include "va.h"
 
 namespace SOptions {
+// The longest autosave period in minutes; a longer saved one turns
+// autosave off.
+const unsigned int kMaxAutosaveMinutes = 60;
+
 DATA(0x005a23d4) extern const int& kZoom;
 DATA(0x005a23d0) extern const bool& kGrid;
 DATA(0x005a23cc) extern const bool& kPassability;
