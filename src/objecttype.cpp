@@ -426,28 +426,28 @@ VA(0x00514610, 0x317)
 MAC_ADDRESS(0x223aa4, 0x2b8)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
-                            std::allocator<char> >& name)
+                            std::allocator<char> >& newImageName)
 {
     TPoint emptySize = { 0, 0 };
-    TObjectImageNameTable& imageNames = getObjectImageNames();
+    TObjectImageNameTable& imageNameSet = getObjectImageNames();
 
-    unsigned int oldCount = imageNames.getCount();
-    _m_imageNum = imageNames.getOrAddIndex(name);
+    unsigned int setSize = imageNameSet.getCount();
+    _m_imageNum = imageNameSet.getOrAddIndex(newImageName);
 
-    std::vector<_TImageInfo>& imageCache = getObjectImageCache();
+    std::vector<_TImageInfo>& aImageInfo = getObjectImageCache();
 
-    if (_m_imageNum == oldCount) {
-        imageCache.push_back(_TImageInfo(emptySize));
-        _TImageInfo* record = &imageCache[oldCount];
+    if (_m_imageNum == setSize) {
+        aImageInfo.push_back(_TImageInfo(emptySize));
+        _TImageInfo& imageInfo = aImageInfo[setSize];
 
         // Retail keeps the suffix as .rdata array storage (0x640280), while
         // "default.msk" below remains a pooled .data literal.
         DATA(0x00640280) static const char maskExtension[] = ".msk";
         std::basic_string<char, std::char_traits<char>,
-                          std::allocator<char> > maskName(name);
-        std::string::size_type dot = maskName.rfind('.');
-        if (dot != std::string::npos) {
-            maskName.replace(dot, maskName.size() - dot, maskExtension);
+                          std::allocator<char> > maskName = newImageName;
+        std::string::size_type dotPos = maskName.find_last_of('.');
+        if (dotPos != std::string::npos) {
+            maskName.replace(dotPos, maskName.size() - dotPos, maskExtension);
         } else {
             maskName += maskExtension;
         }
@@ -458,32 +458,32 @@ TObjectType& TObjectType::setImageName(
             maskFile = ResourceManager::PointToSpriteResource("default.msk");
         }
         if (maskFile != 0) {
-            unsigned int cell = 0;
+            unsigned int bit = 0;
             char width;
             char height;
-            unsigned char drawBits[6];
+            unsigned char placedBits[6];
             unsigned char shadowBits[6];
 
             ResourceManager::ReadFromBitmapResource(maskFile, &width, 1);
             ResourceManager::ReadFromBitmapResource(maskFile, &height, 1);
-            ResourceManager::ReadFromBitmapResource(maskFile, drawBits, 6);
+            ResourceManager::ReadFromBitmapResource(maskFile, placedBits, 6);
             ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
-            record->m_objectSize.m_x = width;
-            record->m_objectSize.m_y = height;
-            for (; cell < 48; ++cell) {
-                unsigned int byteIndex = cell >> 3;
-                unsigned char bit =
-                    static_cast<unsigned char>(1 << (cell & 7));
-                record->m_drawMask[cell] = (drawBits[byteIndex] & bit) != 0;
-                record->m_shadowMask[cell] = (shadowBits[byteIndex] & bit) != 0;
+            imageInfo.m_objectSize.m_x = width;
+            imageInfo.m_objectSize.m_y = height;
+            for (; bit < 48; ++bit) {
+                unsigned int byteNum = bit >> 3;
+                unsigned char bitMask =
+                    static_cast<unsigned char>(1 << (bit & 7));
+                imageInfo.m_drawMask[bit] = (placedBits[byteNum] & bitMask) != 0;
+                imageInfo.m_shadowMask[bit] = (shadowBits[byteNum] & bitMask) != 0;
             }
         }
     }
 
-    m_imageInfo.m_objectSize.m_x = imageCache[_m_imageNum].m_objectSize.m_x;
-    m_imageInfo.m_objectSize.m_y = imageCache[_m_imageNum].m_objectSize.m_y;
-    m_imageInfo.m_drawMask = imageCache[_m_imageNum].m_drawMask;
-    m_imageInfo.m_shadowMask = imageCache[_m_imageNum].m_shadowMask;
+    m_imageInfo.m_objectSize.m_x = aImageInfo[_m_imageNum].m_objectSize.m_x;
+    m_imageInfo.m_objectSize.m_y = aImageInfo[_m_imageNum].m_objectSize.m_y;
+    m_imageInfo.m_drawMask = aImageInfo[_m_imageNum].m_drawMask;
+    m_imageInfo.m_shadowMask = aImageInfo[_m_imageNum].m_shadowMask;
     return *this;
 }
 
