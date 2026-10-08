@@ -10,6 +10,8 @@
 #ifndef HOMM3_EDITOR_MAPEDITORTEXT_H
 #define HOMM3_EDITOR_MAPEDITORTEXT_H
 
+#include "va.h"
+
 enum { kNumGeneralStrings = 208 };
 extern const char* const& kRegistryKeyStr;
 extern const char* const& kAppTitleStr;
@@ -167,9 +169,9 @@ extern const char* const& kToolbarCaptionStr;
 extern const char* const& kModeBarCaptionStr;
 extern const char* const& kOneWhirlpoolStr;
 extern const char* const& kObjectIsUnreachableFmtStr;
-extern const char* const& kOKStr;
-extern const char* const& kCancelStr;
-extern const char* const& kHelpStr;
+DATA(0x005a0850) extern const char* const& kOKStr;
+DATA(0x005a0844) extern const char* const& kCancelStr;
+DATA(0x005a0f58) extern const char* const& kHelpStr;
 extern const char* const& kGeneralPageCaptionStr;
 extern const char* const& kContentsPageCaptionStr;
 extern const char* const& kResourcesPageCaptionStr;
@@ -190,7 +192,7 @@ extern const char* const& kArtifactsPageCaptionStr;
 extern const char* const& kAboutBoxCaptionStr;
 extern const char* const& kEditArtifactCaptionStr;
 extern const char* const& kEditCreatureStackCaptionStr;
-extern const char* const& kEditRumorCaptionStr;
+DATA(0x005a15e8) extern const char* const& kEditRumorCaptionStr;
 extern const char* const& kEditSecondarySkillCaptionStr;
 extern const char* const& kFindCaptionStr;
 extern const char* const& kMapValidationCaptionStr;
@@ -359,8 +361,8 @@ extern const char* const& kArtifactStaticStr;
 
 namespace SEditRumorDlgText {
 enum { kNumStrings = 2 };
-extern const char* const& kNameStaticStr;
-extern const char* const& kTextStaticStr;
+DATA(0x005a18a0) extern const char* const& kNameStaticStr;
+DATA(0x005a189c) extern const char* const& kTextStaticStr;
 }
 
 namespace SFindDlgText {

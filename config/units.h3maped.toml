@@ -345,3 +345,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "TilePoint"
 source = "src/editor/TilePoint.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EditRumorDlg"
+source = "src/editor/EditRumorDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
