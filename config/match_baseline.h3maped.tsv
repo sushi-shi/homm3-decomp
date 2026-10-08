@@ -183,6 +183,7 @@ GameMap	??C?$TRefCountingPtr@V_TImpl@TGameMap@@@@QAEPAV_TImpl@TGameMap@@XZ	100.0
 GameMap	??C?$TRefCountingPtr@V_TImpl@TLayer@TGameMap@@@@QAEPAV_TImpl@TLayer@TGameMap@@XZ	100.0000	100.0000	100.0000	0x2c00f	-
 GameMap	??ETObjectIDIter@TLayer@TGameMap@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x212bd	-
 GameMap	??_4?$TExtent@II@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x38b1a	-
+GameMap	??_5?$TExtent@II@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x340bd	-
 GameMap	??_GTCell@TLayer@TGameMap@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x39753	-
 GameMap	??_GTRumor@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x36c2b	-
 GameMap	??_GTTimedEvent@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x36c47	-
@@ -227,6 +228,8 @@ GameMap	?_findObject@_TImpl@TLayer@TGameMap@@QBEIABV?$TPoint@I@@P6A_NABVTGameObj
 GameMap	?_floatObject@_TImpl@TLayer@TGameMap@@QAEXI@Z	100.0000	100.0000	100.0000	0x2b32a	tokens1:29de507a0ec8
 GameMap	?_getObjectLoc@_TImpl@TGameMap@@QBEXABVTMapObjectRef@@PAUTMapLoc@?A0xaab635a5f3ca1b91@@@Z	84.7250	84.7250	84.7250	0x2921c	tokens1:99937f78f920
 GameMap	?_isTown@_TVictoryConditionValidater@_TImpl@TGameMap@@ABE_NABVTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x1f0df	tokens1:73ea467ca19e
+GameMap	?_isValidPlacement@_TImpl@TGameMap@@SA_NABVTLayer@2@ABVTGameObject@@II@Z	67.1402	67.1402	67.1402	0x2650e	tokens1:fee791acd5ec
+GameMap	?_isValidShipyardPlacement@_TImpl@TGameMap@@SA_NABVTLayer@2@ABVTGameObject@@II@Z	99.9432	99.9432	99.9432	0x2693b	tokens1:02c33056d3b9
 GameMap	?_placeObject@TLayer@TGameMap@@AAEIV?$auto_ptr@VTGameObject@@@std@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x2b793	tokens1:efc2251a5709
 GameMap	?_placeObject@_TImpl@TLayer@TGameMap@@QAEIV?$auto_ptr@VTGameObject@@@std@@ABV?$TPoint@I@@@Z	77.1186	77.1186	77.1186	0x2a93e	tokens1:37561e2ea356
 GameMap	?_removeObject@_TImpl@TLayer@TGameMap@@QAEXI@Z	100.0000	100.0000	100.0000	0x2ab68	tokens1:b000fe580d0a
@@ -349,8 +352,10 @@ GameMap	?isObjectIDValid@_TImpl@TLayer@TGameMap@@QBE_NI@Z	100.0000	100.0000	100.
 GameMap	?isPlayerPresent@TGameMap@@QBE_NW4TPlayer@@@Z	100.0000	100.0000	100.0000	0x2a340	tokens1:2a62c054a81c
 GameMap	?isTwoLayer@TGameMap@@QBE_NXZ	100.0000	100.0000	100.0000	0x2a1f9	tokens1:2ba00168ab9e
 GameMap	?isValid@_TVictoryConditionValidater@_TImpl@TGameMap@@QAE_NPBVTVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x1ef90	tokens1:c88e4bc39a64
-GameMap	?isValidPlacement@TGameMap@@QBE_NABVTGameObject@@_NII@Z	99.6154	99.6154	99.6154	0x2a43a	tokens1:4d5852b6ee87
+GameMap	?isValidPlacement@TGameMap@@QBE_NABVTGameObject@@_NII@Z	100.0000	100.0000	100.0000	0x2a43a	tokens1:4d5852b6ee87
 GameMap	?onObjectRemoved@_TImpl@TGameMap@@QAEXXZ	67.1818	67.1818	67.1818	0x27661	tokens1:10c13225b583
+GameMap	?onTerrainTypeChanged@TGameMap@@QAE_N_NIIW4TTerrainType@@PAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x29f3f	tokens1:75795a71f790
+GameMap	?onTerrainTypeChanged@_TImpl@TGameMap@@QAE_N_NIIW4TTerrainType@@PAV?$TExtent@II@@@Z	92.7537	92.7537	92.7537	0x205b9	tokens1:a413be235220
 GameMap	?placeObject@TGameMap@@QAEI_NV?$auto_ptr@VTGameObject@@@std@@II@Z	99.8333	99.8333	99.8333	0x29dc7	tokens1:5ee6144c2062
 GameMap	?push_back@?$vector@VTLayer@TGameMap@@V?$allocator@VTLayer@TGameMap@@@std@@@std@@QAEXABVTLayer@TGameMap@@@Z	100.0000	100.0000	100.0000	0x2c3d2	-
 GameMap	?removeFloatingObject@TGameMap@@QAEX_N@Z	100.0000	100.0000	100.0000	0x29f1e	tokens1:271bf4b8f0c7
@@ -359,6 +364,7 @@ GameMap	?removeObject@TGameMap@@QAEX_NIPAV?$TExtent@II@@@Z	100.0000	100.0000	100
 GameMap	?removeObject@_TImpl@TGameMap@@QAEX_NIPAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x2029b	tokens1:37fc5fe38d73
 GameMap	?removeSecondLayer@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x2a16d	tokens1:389ac66b633a
 GameMap	?removeSecondLayer@_TImpl@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x21259	tokens1:87e9db829921
+GameMap	?reserve@?$vector@HV?$allocator@H@std@@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x2c94d	-
 GameMap	?reserve@?$vector@UTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@V?$allocator@UTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x2c28f	-
 GameMap	?resize@?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAEXIABV?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@Z	100.0000	100.0000	100.0000	0x2c9da	-
 GameMap	?resize@?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@QAEXIABV_TObjectLink@_TImpl@TLayer@TGameMap@@@Z	100.0000	100.0000	100.0000	0x2ca39	-
@@ -392,7 +398,7 @@ GameMap	?setVictoryCondition@_TImpl@TGameMap@@QAEXV?$auto_ptr@VTVictoryCondition
 GameMap	?streamObject@_TImpl@TGameMap@@SAXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@ABVTGameObject@@@Z	99.7826	99.7826	99.7826	0x1f1ee	tokens1:dd71dea48888
 GameMap	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x2ccc6	-
 GameMap	?unfloatObject@TGameMap@@QAEX_NIIPAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x29ef1	tokens1:e0c4260b24b6
-GameMap	?unfloatObject@_TImpl@TGameMap@@QAEX_NIIPAV?$TExtent@II@@@Z	99.7573	99.7573	99.7573	0x203ce	tokens1:3c4ee0d892f2
+GameMap	?unfloatObject@_TImpl@TGameMap@@QAEX_NIIPAV?$TExtent@II@@@Z	99.8058	99.8058	99.8058	0x203ce	tokens1:3c4ee0d892f2
 GameMap	?visit@_TGetLossConditionDataFunc@_TImpl@TGameMap@@UAEXABVTLCLoseHero@@@Z	100.0000	100.0000	100.0000	0x1ef54	tokens1:2c3fc2ab09dd
 GameMap	?visit@_TGetLossConditionDataFunc@_TImpl@TGameMap@@UAEXABVTLCLoseTown@@@Z	100.0000	100.0000	100.0000	0x1ef34	tokens1:995c54ed0629
 GameMap	?visit@_TGetLossConditionDataFunc@_TImpl@TGameMap@@UAEXABVTLCTimeExpires@@@Z	100.0000	100.0000	100.0000	0x1ef77	tokens1:cd406e06bc30
