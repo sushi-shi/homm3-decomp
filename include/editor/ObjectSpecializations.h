@@ -43,7 +43,7 @@ public:
 // Objects with an owner (+4).
 class TPlayableObject : public virtual TGameObject {
 public:
-    TPlayableObject(const TObjectType& objType, TPlayer owner);
+    TPlayableObject(const TObjectType& objType, TPlayer owner = ePlayerNone);
     TPlayableObject(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
@@ -74,13 +74,15 @@ private:
 // flag +0x10, army +0x14).
 class TTreasure : public virtual TGameObject {
 public:
+    static const unsigned int s_kMaxMessageLen = 300;
+
     TTreasure(const TObjectType& objType);
     TTreasure(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void importText(istream* pIStream);
     virtual void write(TRawOStream* pOStream) const;
     virtual bool isCustomized() const;
-    virtual bool hasText() const;
+    virtual bool hasText() const { return !getMessage().empty(); }
     virtual void exportText(ostream* pOStream) const;
 
     const string& getMessage() const { return _m_message; }
@@ -88,7 +90,7 @@ public:
     bool getBCustomGuardians() const { return _m_bCustomGuardians; }
     void setBCustomGuardians(bool bCustom) { _m_bCustomGuardians = bCustom; }
     const TArmy& getGuardians() const { return _m_guardians; }
-    void setGuardians(const TArmy& newGuardians) { _m_guardians = newGuardians; }
+    void setGuardians(const TArmy& newGuardians);
 
 protected:
     void read(TRawIStream* pIStream, int version);
@@ -129,6 +131,8 @@ private:
 // A resource pile (quantity +0x4c); its type is the object type's subtype.
 class TGameResource : public TTreasure {
 public:
+    static const unsigned int s_kMaxQuantity = 99999;
+
     TGameResource(const TObjectType& objType);
     TGameResource(const TObjectType& objType, TRawIStream* pIStream, int version);
 
@@ -145,18 +149,26 @@ private:
 };
 
 // The scholar: what it teaches (+4) and the primary skill (+8), secondary
-// skill (+0xc) or spell (+0x10). TRewardType's enumerators are not
-// recovered.
+// skill (+0xc) or spell (+0x10). TRewardType's random and count names
+// are the asserts'; the other three are named by role.
 class TScholar : public virtual TGameObject {
 public:
     enum TRewardType {
+        eRewardRandom = -1,
+        eRewardPrimarySkill = 0,
+        eRewardSecondarySkill = 1,
+        eRewardSpell = 2
+    };
+
+    enum {
+        s_kNumRewardTypes = 3
     };
 
     TScholar(const TObjectType& objType);
     TScholar(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const;
+    virtual bool isCustomized() const { return _m_rewardType != eRewardRandom; }
 
     TRewardType getRewardType() const { return _m_rewardType; }
     void setRewardType(TRewardType newRewardType);
@@ -190,7 +202,7 @@ public:
 
     static void initializeTypeTraitsTable();
 
-    TGarrison(const TObjectType& objType, TPlayer owner);
+    TGarrison(const TObjectType& objType, TPlayer owner = ePlayerNone);
     TGarrison(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
@@ -198,9 +210,9 @@ public:
     virtual string getTypeName() const;
 
     int getType() const { return getExtra(); }
-    const TTypeTraits& getTypeTraits() const;
+    const TTypeTraits& getTypeTraits() const { return s_akTypeTraits[getType()]; }
     const TArmy& getArmy() const { return _m_army; }
-    void setArmy(const TArmy& newArmy) { _m_army = newArmy; }
+    void setArmy(const TArmy& newArmy);
 
 private:
     TArmy _m_army;
@@ -209,12 +221,14 @@ private:
 // A sign or ocean bottle with its text (+4).
 class TSign : public virtual TGameObject {
 public:
+    static const unsigned int s_kMaxTextLen = 150;
+
     TSign(const TObjectType& objType);
     TSign(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void importText(istream* pIStream);
     virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return !getText().empty(); }
+    virtual bool isCustomized() const { return !_m_text.empty(); }
     virtual bool hasText() const { return true; }
     virtual void exportText(ostream* pOStream) const;
 
@@ -234,7 +248,7 @@ public:
     virtual void write(TRawOStream* pOStream) const;
     virtual bool isCustomized() const;
 
-    unsigned int getSpellLevel() const;
+    int getSpellLevel() const;
     SpellID getSpell() const { return _m_spell; }
     void setSpell(SpellID newSpell);
 
@@ -275,10 +289,18 @@ class TGenerator : public TFlaggableObject {
 public:
     // 8-byte rows of the two generator tables ("const struct
     // TGenerator::TGeneratorTypeTraits & TGenerator::getGeneratorTypeTraits()
-    // const"); the name is the second word. The first word is not decoded.
+    // const"); the name is the second word. The first is whether the
+    // generator can be flagged (the constructors clear the owner when it
+    // is not); its name is not recorded.
     struct TGeneratorTypeTraits {
-        unsigned int m_unknown;
+        bool m_bFlaggable;
         const char* m_name;
+    };
+
+    enum TGenerator1Type {
+    };
+
+    enum TGenerator4Type {
     };
 
     enum {
@@ -291,14 +313,14 @@ public:
 
     static void initializeTypeTraitsTables();
 
-    TGenerator(const TObjectType& objType, TPlayer owner);
+    TGenerator(const TObjectType& objType, TPlayer owner = ePlayerNone);
     TGenerator(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual string getTypeName() const;
 
     const TGeneratorTypeTraits& getGeneratorTypeTraits() const;
-    int getGenerator1Type() const;
-    int getGenerator4Type() const;
+    TGenerator1Type getGenerator1Type() const;
+    TGenerator4Type getGenerator4Type() const;
 };
 
 // A mine; its kind is the object type's subtype.
@@ -317,7 +339,7 @@ public:
 
     static void initializeTypeTraitsTable();
 
-    TMine(const TObjectType& objType, TPlayer owner);
+    TMine(const TObjectType& objType, TPlayer owner = ePlayerNone);
     TMine(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual string getTypeName() const;
@@ -330,21 +352,23 @@ public:
     TAbandonedMine(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return _m_abIsPotentialResource != _s_kabDefaultPotentialResource; }
+    virtual bool isCustomized() const { return _m_abPotentialResource != _s_kabDefaultPotentialResource; }
 
     bool getBIsPotentialResource(TGameResourceType type) const;
     void setBIsPotentialResource(TGameResourceType type, bool bIsPotential);
-    unsigned int getNumPotentialResources() const { return _m_abIsPotentialResource.count(); }
+    unsigned int getNumPotentialResources() const { return _m_abPotentialResource.count(); }
 
 private:
     static const bitset<kNumGameResourceTypes> _s_kabDefaultPotentialResource;
 
-    bitset<kNumGameResourceTypes> _m_abIsPotentialResource;
+    bitset<kNumGameResourceTypes> _m_abPotentialResource;
 };
 
 // The grail and its dig radius (+4).
 class THolyGrail : public virtual TGameObject {
 public:
+    static const unsigned int s_kMaxRadius = 127;
+
     THolyGrail(const TObjectType& objType);
     THolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version);
 
