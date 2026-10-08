@@ -231,7 +231,7 @@ TRiverPlacementOp::TRiverPlacementOp(
     s32 newRiverType,
     const TRmgGridPoint& newStart)
     : TRiverOp(newAdapter),
-      TRmgLineWalker(this, newRiverType, newStart)
+      m_walker(this, newRiverType, newStart)
 {
 }
 
@@ -298,7 +298,7 @@ TRoadPlacementOp::TRoadPlacementOp(
     s32 newRoadType,
     const TRmgGridPoint& newStart)
     : TRoadOp(newAdapter),
-      TRmgLineWalker(this, newRoadType, newStart)
+      m_walker(this, newRoadType, newStart)
 {
 }
 

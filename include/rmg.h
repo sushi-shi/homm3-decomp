@@ -1499,6 +1499,10 @@ struct TRmgLinePainterTile;
 // This common abstract prefix is a retail-derived source model; the original
 // Complete-only interface spelling is unknown. It has no virtual destructor
 // slot: the two painters below append slot 6 as a pure destructor.
+// The map editor's RTTI lists TUncopyable below this class in both line
+// operations' hierarchies, as Loki's LinePlacement.h derives it privately.
+// The empty base is left out here: declaring it moves VC6's choices in
+// type_random_map_generator::loadTemplates (83.21 -> 83.19).
 class TMapLineFilter {
 public:
     TRmgGridPoint m_size;
@@ -1628,13 +1632,17 @@ public:
     void paintPoint(const TRmgGridPoint& point);
 };
 
-class TRiverPlacementOp : public TRiverOp, public TRmgLineWalker {
+// The editor's RTTI lists only TRiverOp's lineage as bases: the line walker
+// the constructor builds at +0x10 is a member.
+class TRiverPlacementOp : public TRiverOp {
 public:
     TRiverPlacementOp(
         TRiverOp::TAbstractMap* newAdapter,
         int newRiverType,
         const TRmgGridPoint& start);
     virtual ~TRiverPlacementOp();
+
+    TRmgLineWalker m_walker;
 };
 
 // The road-building cluster at 0x548040 uses a parallel painter hierarchy.
@@ -1678,13 +1686,17 @@ public:
 
 inline TRoadOp::~TRoadOp() {}
 
-class TRoadPlacementOp : public TRoadOp, public TRmgLineWalker {
+// The editor's RTTI lists only TRoadOp's lineage as bases: the line walker
+// the constructor builds at +0x10 is a member.
+class TRoadPlacementOp : public TRoadOp {
 public:
     TRoadPlacementOp(
         TRoadOp::TAbstractMap* newAdapter,
         int newRoadType,
         const TRmgGridPoint& start);
     virtual ~TRoadPlacementOp();
+
+    TRmgLineWalker m_walker;
 };
 
 // Complete-only road adapter, provisional role name. Vtable 0x640a04 has

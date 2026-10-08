@@ -9733,7 +9733,7 @@ unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int
                     || (position.m_x != previous.m_x && position.m_y != previous.m_y))
                     break;
                 painted = 1;
-                painter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
+                painter.m_walker.drawTo(TRmgGridPoint(position.m_x, position.m_y));
                 previous = position;
             }
         }
@@ -9879,7 +9879,7 @@ void type_random_map_generator::createRiverToJoin(TRmgMapPosition source)
     while (mapItem->m_movement.m_cost > 0) {
         position = mapItem->m_previousTile;
         mapItem = m_map.getMapItem(position);
-        riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
+        riverPainter.m_walker.drawTo(TRmgGridPoint(position.m_x, position.m_y));
     }
 }
 
@@ -10141,11 +10141,11 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
                 nextPosition.m_z));
 
         nextPosition = nextPosition + g_rmgDirections[direction * 2];
-        riverPainter.drawTo(TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
+        riverPainter.m_walker.drawTo(TRmgGridPoint(nextPosition.m_x, nextPosition.m_y));
         mapItem = m_map.getMapItem(nextPosition);
         mapItem->m_tileData.m_riverOutletTarget = 1;
 
-        riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
+        riverPainter.m_walker.drawTo(TRmgGridPoint(position.m_x, position.m_y));
         mapItem = m_map.getMapItem(position);
     }
 
@@ -10153,7 +10153,7 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
         position = mapItem->m_previousTile;
         mapItem = m_map.getMapItem(position);
         mapItem->m_tileData.m_riverOutletTarget = 1;
-        riverPainter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
+        riverPainter.m_walker.drawTo(TRmgGridPoint(position.m_x, position.m_y));
     }
 }
 
