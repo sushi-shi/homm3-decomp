@@ -486,17 +486,40 @@ def run_predict_tu(args) -> int:
                           "stale": stale, "oracle": report["oracle"],
                           "trace": report["directory"]}, indent=2))
         return 1 if rows else 0
+    from homm3.vc6 import inline_replay
     sites = sum(len(r["sites"]) for r in report["roots"])
+    replayed = sum(1 for r in report["roots"] if inline_replay.reproduces(r))
     print(f"[predict-inline --tu] {unit}: {len(report['roots'])} roots, {sites} budget "
           f"tests, identical C2 object; {report['directory']}/trace.json")
+    print(f"[replay] the budget rule reproduces {replayed}/{len(report['roots'])} roots")
     if stale:
         print(f"[stale] {len(stale)} traced root(s) differ from the build object; rebuild")
     if args.root:
+        extra = {}
+        for item in args.add or ():
+            index, _, count = item.partition(":")
+            try:
+                extra[int(index)] = extra.get(int(index), 0) + int(count)
+            except ValueError:
+                _common.die(f"--add expects INDEX:COUNT, not {item}")
         for root in report["roots"]:
-            if args.root in root["symbol"]:
-                print(f"{root['symbol']} cb={root['cb']} budget={root['initial_budget']}")
-                for site in root["sites"]:
-                    print(_site_line(site))
+            if args.root not in root["symbol"]:
+                continue
+            print(f"{root['symbol']} cb={root['cb']} budget={root['initial_budget']}")
+            if not extra and args.cb is None:
+                for index, site in enumerate(root["sites"]):
+                    print(f"{index:4}" + _site_line(site)[2:])
+                continue
+            changed = 0
+            for row in inline_replay.replay(root, cb=args.cb, extra_sites=extra):
+                site = row["site"]
+                recorded = site["budget_allows"] and site["running"] < inline_replay.SIZE_CAP
+                if row["expands"] != recorded:
+                    changed += 1
+                    verdict = "expands" if row["expands"] else "refused"
+                    print(f"{site['index']:4}   d{site['depth']} budget {site['budget']} -> "
+                          f"{row['budget']} cb={site['cb']} now {verdict}: {site['symbol']}")
+            print(f"[replay] {changed} decision(s) change")
     if args.callee:
         for root in report["roots"]:
             hits = [s for s in root["sites"] if args.callee in s["symbol"]]

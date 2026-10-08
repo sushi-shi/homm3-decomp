@@ -105,6 +105,11 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="--tu: print every budget test of the roots matching TEXT")
     pp.add_argument("--callee", metavar="TEXT",
                     help="--tu: print every budget test of callees matching TEXT, by root")
+    pp.add_argument("--add", metavar="INDEX:COUNT", action="append", default=[],
+                    help="--tu --root: replay with COUNT free sites inserted after trace "
+                         "site INDEX and print the decisions that change")
+    pp.add_argument("--cb", type=int, metavar="N",
+                    help="--tu --root: replay with the root's cb (budget 2 x cb) set to N")
 
     pw = ss.add_parser("why-reg", help="which knob fixes a register binding")
     _solver_arguments(pw)

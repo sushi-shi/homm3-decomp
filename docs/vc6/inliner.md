@@ -2085,7 +2085,48 @@ one lane (2026-10-08):
 
 A useful corollary: shrinking a caller (an inline helper replacing open
 code) costs twice its cb reduction in budget, so a site added for its
-remaining-count effect can still lose by making the caller smaller.
+remaining-count effect can still lose by making the caller smaller. The
+converse bites as well: each accessor call added for its site raises the
+caller's cb a little, so a budget that was one unit short can stay short
+until one more site is added (canPlaceTreasureGroup needed 16).
+
+#### The replay (`homm3.vc6.inline_replay`)
+
+The full rule, validated against every root of two whole-unit traces (rmg
+497/497, town 90/90: each recorded budget, verdict and running size):
+
+- running budgets and nested bodies as above;
+- the root's running size starts at its cb; every expanded site adds its
+  cost, and a site costing over 40 adds it again once per enclosing
+  expansion (a constructor expanded inside a derived constructor counts
+  twice);
+- once that size reaches 35000, nothing more expands, although later
+  sites are still budget-tested. initializeObjectGenerators reaches it
+  after about 100 of its 127 generator push_backs, so the tail keeps every
+  push_back and constructor call; retail reaches it one statement later.
+
+`--tu` prints how many roots the replay reproduces. With `--root TEXT`,
+`--add INDEX:COUNT` (free sites after a trace index; repeatable) and
+`--cb N` replay a what-if and list the decisions that change, which is how
+the site counts above were found before compiling. Children of a refused
+site are unknown to the trace, so a what-if that expands one counts only
+its own cost.
+
+What-ifs that did not close (2026-10-08):
+
+- initializeObjectGenerators: retail's push_back threshold crossings match
+  a replay with about eight more remaining sites after the last
+  threshold-sensitive push_back, but the size cap then falls one statement
+  short of retail's; no cb or site change satisfies both.
+- createRiverToOutlet: refusing all three operator+ constructors, keeping
+  the early-return `_Destroy` calls out of line and expanding the final
+  position-vector destructor (retail's tail merge) has no single free-site
+  placement; the early-return `_Destroy` and the delta constructor conflict.
+- writeMapHeader: one fewer free site between the 156-bit encoder and the
+  artifact copy fixes the encoder's `test`, but no single deletion/addition
+  pair also gives retail's one extra range-error string expansion.
+- tryPlaceMine: placeGuard's getMapItem needs three more sites after the
+  call, but accessor reads there raise cb enough to cancel them.
 
 ## Free accessor sites are the lever behind retail's refused calls
 
