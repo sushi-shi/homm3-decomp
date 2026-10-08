@@ -57,12 +57,12 @@ source = "src/TextResource.cpp"
 [[unit]]
 name = "cspriteframe"
 object = 45
-source = "src/cspriteframe.cpp"
+source = "src/CSpriteFrame.cpp"
 
 [[unit]]
 name = "csequence"
 object = 46
-source = "src/csequence.cpp"
+source = "src/CSequence.cpp"
 
 [[unit]]
 name = "palette"

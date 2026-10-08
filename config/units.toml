@@ -427,7 +427,7 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "csprite"
-source = "src/csprite.cpp"
+source = "src/CSprite.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
@@ -458,7 +458,7 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "cspriteframe"
 module = "codec"
-source = "src/cspriteframe.cpp"
+source = "src/CSpriteFrame.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
@@ -663,7 +663,7 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "csequence"
-source = "src/csequence.cpp"
+source = "src/CSequence.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
