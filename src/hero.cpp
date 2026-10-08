@@ -5482,11 +5482,14 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // reads the human byte inline; that direct row reproduces the guard-free
 // block (94.67%, 95.32% with the byte read) but moves the bitset range-check
 // out_of_range expansion, so the guarded helper call is kept for now.
-// 2026-10-08 TU trace: the only retained-call difference is bitset
-// reference::operator= (cb 43) inside hasCombinationArtifactComponents,
-// whose body gets (1036 - 120) / 11 = 83, leaving 42 after operator[].
-// Retail expands it: four more caller cb units (a braced guard adds two)
-// or one fewer later depth-1 candidate would do; neither is evidenced.
+// DC 0x0d3e18 nests two lexical scopes around CheckEndGame: the end check is
+// a braced guard inside a braced checkEnd test. That raises this body's cb
+// from 518 to 527, so the bitset reference::operator= inside
+// hasCombinationArtifactComponents expands as retail (95.91 -> 96.54%).
+// The remaining difference is the first bitset<12>::_Xran's out_of_range
+// constructor (cb 58), refused at 50 where retail expands it. The replay
+// needs a caller cb of 539..544 for that alone; a comboType local lowers
+// cb to 520.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)  // MAC_ABSTRACTION_FROM(tokens1:3d82fe0d0468,25.0000): Restore the canonical playerData::isHuman call for Mac's expanded human-query byte body at 0x103f74.
@@ -5537,9 +5540,11 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
         g_game->m_players[m_owner].m_assembledCombinations[
             akArtifactTraits[artifact.m_artifactId].m_comboType] = true;
 
-    if (checkEnd &&
-        g_game->m_mapHeader.m_victoryCondition.checkForArtifactWin())
-        checkEndGame(0);
+    if (checkEnd) {
+        if (g_game->m_mapHeader.m_victoryCondition.checkForArtifactWin()) {
+            checkEndGame(0);
+        }
+    }
     return 1;
 }
 
