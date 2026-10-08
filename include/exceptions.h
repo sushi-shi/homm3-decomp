@@ -43,17 +43,18 @@ public:
     TRuntimeError(const char* text);  // retained at 0x49a0c0
 };
 
-// One .rdata copy at 0x63de60 serves the retained constructor and every
-// expanded throw (objnames, rmg_support, rmg_terrain); it sits in the
-// .rdata band of the unit that owns TRuntimeError(const char*), so the
-// message is that unit's const array, not a per-object pooled literal.
-extern const char g_allocationFailureText[];
-
 class TAllocationFailure : public TRuntimeError {
 public:
+    // One .rdata copy at 0x63de60 serves the retained constructor and every
+    // expanded throw (objnames, rmg_support, rmg_terrain); it sits in the
+    // .rdata band of the unit that owns TRuntimeError(const char*), so the
+    // message is that unit's const array, not a per-object pooled literal.
+    // Loki h3maped names it: OBJECT _18TAllocationFailure._s_kMessage
+    // (TAllocationFailure::_s_kMessage, 20 bytes at 0x839865d).
+    static const char _s_kMessage[];
 
     VA(0x004d6b80, 0x17)  // anchor-callee 0x49a0c0 + anchor-vtable 0x63aba8, retail-only
-    TAllocationFailure() : TRuntimeError(g_allocationFailureText) {}
+    TAllocationFailure() : TRuntimeError(_s_kMessage) {}
 };
 
 #endif  /* HOMM3_EXCEPTIONS_H */

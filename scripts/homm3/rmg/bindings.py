@@ -20,7 +20,7 @@ SERVICES = {
     '?load@TObjectTypeTable@@QAEXPAD@Z',
 }
 DATA_SERVICES = {
-    'g_adventureObjectTraits', 'g_allocationFailureText', 'g_artifactTraits',
+    'g_adventureObjectTraits', 'TAllocationFailure::_s_kMessage', 'g_artifactTraits',
     'g_creatureGenerator1Types', 'g_creatureTypeTraits', 'g_heroTraits',
     'g_spellTraits', 'g_tileDirections',
 }
@@ -54,7 +54,7 @@ def data_addresses(root: Path) -> dict[str, int]:
                 # Stop before an initializer, body, or next declaration.
                 declaration = re.split(r'[;={]', masked[end:], maxsplit=1)[0]
                 for name in DATA_SERVICES:
-                    if re.search(r'\b' + name + r'\b', declaration):
+                    if re.search(r'\b' + re.escape(name) + r'\b', declaration):
                         found.setdefault(name, set()).add(int(args[0], 16))
     if set(found) != DATA_SERVICES or any(len(v) != 1 for v in found.values()):
         raise ValueError(f'missing or ambiguous external DATA annotations: {found}')
@@ -91,10 +91,12 @@ def resolve(root: Path, paths: list[Path], retail: bytes) -> dict[str, int]:
                 raise ValueError(f'forbidden retail RMG binding: {name}')
             result[name] = int(row['rva'], 16) + 0x400000
         else:
-            match = re.match(r'^\?(g_\w+)@@', name)
-            if not match or match[1] not in DATA_SERVICES:
+            # A global (?name@@) or a class static member (?name@Class@@).
+            match = re.match(r'^\?(\w+)@(?:(\w+)@)?@', name)
+            qualified = match and (f'{match[2]}::{match[1]}' if match[2] else match[1])
+            if not match or qualified not in DATA_SERVICES:
                 raise ValueError(f'unresolved candidate dependency (no retail fallback): {name}')
-            result[name] = data[match[1]]
+            result[name] = data[qualified]
     return result
 
 
