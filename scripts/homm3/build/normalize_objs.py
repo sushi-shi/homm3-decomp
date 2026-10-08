@@ -1714,7 +1714,66 @@ def canonicalize_pair(base_payload: bytes, target_payload: bytes, unit: str,
         normalized, paired_target, symbol_rvas, identities[0], unit=unit,
         library_names=identities[1])
     counts["identity"] += identity_count
+    normalized, fold_count = _canonicalize_proven_fold_calls(
+        normalized, paired_target, symbol_rvas, identities[0], unit)
+    counts["fold"] += fold_count
     return normalized, paired_target, counts
+
+
+def _canonicalize_proven_fold_calls(
+        base_payload: bytes, target_payload: bytes,
+        symbol_rvas: dict[str, tuple[int, str]],
+        identities: dict[tuple[str, str], set[int]], unit: str = "",
+        ) -> tuple[bytes, int]:
+    """Name every candidate call to a proven fold by retail's label.
+
+    `address_identities.tsv` proves some unclaimed names at a claimed retail
+    function: an identical-body fold (`getArmy` and `getArmy const`,
+    `sRandom` and `random`), a library alias or an import thunk. Every call
+    to such a name reaches that one function, so the candidate's REL32
+    references to it take the claimed label, at shifted sites too (the paired
+    passes already cover the aligned ones). Only an undefined candidate
+    symbol with no claim of its own is renamed, only to the single claimed
+    function at its proven address, and only when the retail object
+    references that label. Returns (base, rewritten references).
+    """
+    from homm3.build import identity_relocations
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+    target_names = {symbol.name for symbol in target.symbols.values()}
+    labels: dict[int, set[str]] = {}
+    for name, (rva, kind) in symbol_rvas.items():
+        if kind == "func":
+            labels.setdefault(rva, set()).add(name)
+    retargets: list[tuple[canon.Relocation, str]] = []
+    for relocation in base.relocations:
+        if relocation.typ != REL32:
+            continue
+        symbol = base.symbols[relocation.symbol_index]
+        name = symbol.name
+        if (symbol.section != 0 or name in symbol_rvas or name in target_names):
+            continue
+        rva = identity_relocations.resolve_name(name, symbol_rvas, identities, unit)
+        names = labels.get(rva) if rva is not None else None
+        if not names or len(names) != 1:
+            continue
+        (label,) = names
+        if label != name and label in target_names:
+            retargets.append((relocation, label))
+    if not retargets:
+        return base_payload, 0
+    existing: dict[str, int] = {}
+    for symbol in sorted(base.symbols.values(), key=lambda row: row.index):
+        if symbol.storage_class == EXTERNAL_STORAGE:
+            existing.setdefault(symbol.name, symbol.index)
+    missing = sorted({label for _r, label in retargets if label not in existing})
+    if missing:
+        base_payload, appended = _append_undefined_symbols(base_payload, missing)
+        existing.update(appended)
+    data = bytearray(base_payload)
+    for relocation, label in retargets:
+        struct.pack_into("<I", data, relocation.offset + 4, existing[label])
+    return bytes(data), len(retargets)
 
 
 def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None,
@@ -1843,6 +1902,7 @@ def normalize_all(units: set[str] | None = None) -> Counter:
           f"{counts['zero_literal']} zero literal(s) given retail sections "
           f"{counts['address']} equivalent data address(es) named "
           f"{counts['identity']} relocation(s) compared by proven address "
+          f"{counts['fold']} proven-fold call(s) named "
           f"-> {OBJDIFF / 'normalized'}")
     counts.update(wrote=wrote, skipped=skipped)
     return counts

@@ -4,6 +4,7 @@ import unittest
 
 from homm3.build import canonicalize_data_symbols as canon
 from homm3.build.normalize_objs import (FunctionBody, _canonicalize_icf_aliases,
+                                        _canonicalize_proven_fold_calls,
                                         _icf_identical)
 
 TEXT = 0x60500020
@@ -150,6 +151,34 @@ class IcfAliasRewriteTest(unittest.TestCase):
         self.assertEqual(_canonicalize_icf_aliases(
             base, target, self.rvas, index, lambda rva: twins.get(rva, ())),
             (base, target, 0))
+
+
+class ProvenFoldCallTest(unittest.TestCase):
+    rvas = {"?random": (0x30, "func"), "?f": (0x10, "func"), "?g": (0x20, "func")}
+    identities = {("", "?sRandom"): {0x30}}
+
+    def names(self, payload):
+        parsed = canon.CoffObject(payload)
+        return [parsed.symbols[r.symbol_index].name for r in parsed.relocations]
+
+    def test_shifted_call_to_a_fold_takes_the_retail_label(self):
+        # The candidate's ?g calls the fold one instruction earlier than retail.
+        base = coff(CALL + b"\x90" + CALL, [("?f", 0), ("?g", 6)],
+                    [(1, "?random"), (8, "?sRandom")], ["?random", "?sRandom"])
+        target = coff(CALL + CALL + b"\x90", [("?f", 0), ("?g", 6)],
+                      [(1, "?random"), (7, "?random")], ["?random"])
+        new_base, count = _canonicalize_proven_fold_calls(
+            base, target, self.rvas, self.identities)
+        self.assertEqual((count, self.names(new_base)), (1, ["?random", "?random"]))
+
+    def test_unproven_or_unreferenced_labels_stay_visible(self):
+        base = coff(CALL, [("?f", 0)], [(1, "?sRandom")], ["?sRandom"])
+        target = coff(CALL, [("?f", 0)], [(1, "?other")], ["?other"])
+        self.assertEqual(_canonicalize_proven_fold_calls(
+            base, target, self.rvas, self.identities), (base, 0))
+        self.assertEqual(_canonicalize_proven_fold_calls(
+            base, coff(CALL, [("?f", 0)], [(1, "?random")], ["?random"]),
+            self.rvas, {}), (base, 0))
 
 
 if __name__ == "__main__":

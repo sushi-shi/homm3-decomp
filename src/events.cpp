@@ -6141,6 +6141,11 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // and retail re-indexes the player row for the second byte store; that
 // costs the constructor 69 inline units, which leaves the final pause
 // destructor 68 of its 72 (96.22%, against 96.99% for a shared-row helper).
+// 2026-10-08 TU trace: retail expands the final CTurnDurationPause
+// destructor (cb 72, budget 68 here: two more caller cb units would do it,
+// per inline_replay) and one of the three string _Tidy calls this body keeps
+// inside the town/hero copy-and-delete chains; the nearest needs 152 against
+// 130, beyond any small cb change.
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
