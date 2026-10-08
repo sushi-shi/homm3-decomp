@@ -7,6 +7,8 @@
 #ifndef HOMM3_EDITOR_SEERSHUT_H
 #define HOMM3_EDITOR_SEERSHUT_H
 
+#include "editor/GameObject.h"
+
 #include <assert.h>
 
 #include "artifact_type.h"
@@ -16,7 +18,6 @@
 #include "secondaryskill.h"
 #include "editor/Army.h"
 #include "artifact.h"
-#include "editor/GameObject.h"
 #include "editor/GameResource.h"
 
 class TRawIStream;

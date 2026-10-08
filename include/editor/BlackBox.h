@@ -7,6 +7,8 @@
 #ifndef HOMM3_EDITOR_BLACKBOX_H
 #define HOMM3_EDITOR_BLACKBOX_H
 
+#include "editor/ObjectSpecializations.h"
+
 #include <vector>
 
 #include "armygrp.h"
@@ -17,7 +19,6 @@
 #include "editor/Hero.h"
 #include "editor/Army.h"
 #include "editor/Array.h"
-#include "editor/ObjectSpecializations.h"
 #include "editor/RefCountingPtr.h"
 #include "editor/ResourceQuantities.h"
 

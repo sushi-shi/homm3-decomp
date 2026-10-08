@@ -3,6 +3,8 @@
 // the random hero), the class, primary skill, secondary skill and mastery
 // name tables, and the heroes on the map: specific heroes, random heroes
 // and prisons. Assert and throw lines come from the retail immediates.
+#include "editor/Hero.h"
+
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
@@ -20,7 +22,6 @@
 #include "resourcemanager.h"
 #include "resourceptr.h"
 #include "sskilltraits.h"
-#include "editor/Hero.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 #include "textresource.h"

@@ -3,12 +3,13 @@
 // and written through their visitors (the cloner, the left and right
 // dispatchers and the writer, as VictoryCondition.cpp does for the
 // conditions). Assert lines come from the retail immediates.
+#include "editor/SeersHut.h"
+
 #include <assert.h>
 #include <new>
 
 #include "adventureobjecttype.h"
 #include "exceptions.h"
-#include "editor/SeersHut.h"
 #include "editor/RawStream.h"
 
 namespace {

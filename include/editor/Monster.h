@@ -6,11 +6,12 @@
 #ifndef HOMM3_EDITOR_MONSTER_H
 #define HOMM3_EDITOR_MONSTER_H
 
+#include "editor/GameObject.h"
+
 #include <string>
 
 #include "armygrp.h"
 #include "artifact_type.h"
-#include "editor/GameObject.h"
 #include "editor/GameResource.h"
 #include "editor/Array.h"
 

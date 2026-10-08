@@ -16,13 +16,13 @@
 #include <bitset>
 #include <string>
 
+#include "editor/GameObject.h"
 #include "armygrp.h"
 #include "artifact_type.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
 #include "editor/Army.h"
 #include "artifact.h"
-#include "editor/GameObject.h"
 #include "editor/GameResource.h"
 #include "editor/Player.h"
 
