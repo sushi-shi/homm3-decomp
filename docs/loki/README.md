@@ -242,3 +242,21 @@ const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
 - Declarations in `if (T* p = ...)` conditions are block-scoped temporaries;
   a dispatch that declares each pointer at function scope allocates them
   all before any expression temporary (`placeObject`'s frame).
+- `return` of a declaration (a named local, a parameter, or the result
+  slot of a class-returning function) at statement level sets the C++
+  front end's `current_function_return_value`; a user label or a `case`
+  label clears it, and nothing else does, so the state crosses function
+  boundaries. When it is clear at `finish_function`, g++ adds a
+  `goto no_return_label` and a jump to the return label: two extra `jmp`s
+  before the epilogue, also in the compiler-generated bodies at the end
+  of the object (static initialization, `_GLOBAL_.I`, type_info
+  functions). MapValidation.cpp's eight misses are this state.
+- A constructor that owns heap state and reads it from a stream guards
+  the reading with `try { ... } catch (...) { delete p; throw; }`
+  (`__start_cp_handler`, `__uncatch_exception`; TSeersHut's streamed
+  constructor).
+- The strong in-class inline members a class emits with its vtable come
+  out in declaration order: TBlackBox's virtual `isCustomized`/`hasText`
+  follow its content accessors.
+- `while (n > 0) { --n; ... }` tests then decrements (`cmpb $0`, `decb`
+  in the body); `while (n-- > 0)` copies, decrements and tests the copy.
