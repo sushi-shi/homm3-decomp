@@ -17,7 +17,7 @@ Two compilers build them, both 2000-era binaries run through potato's loader:
 - GCC 2.95.2 release (the compile toolchain's cc1/cc1plus), with Loki's
   i686 default `-mcpu=pentiumpro`: libgcc, crtstuff, libio/libstdc++ 2.10 the
   way the 2.95.2 tree builds its target libraries (`-g -O2`), then libxml 1.8.9
-  and libglade 0.14 at `-O2`;
+  and libglade 0.14 at `-O2` against Red Hat 6.0's glibc 2.1.1-6 headers;
 - egcs 1.1.2 of Red Hat 6.2 (egcs-1.1.2-30, its cpp and cc1, binutils-2.9.5.0.22-6's
   as): GLib/GTK+ 1.2.8 (with Red Hat's ahiguti i18n patch) at
   Red Hat's `-O2 -m486 -fno-strength-reduce`, zlib 1.0.8 at
@@ -132,6 +132,13 @@ class Builder:
             tc._script(self.bin / name, self._driver_script(program, prefixes, includes))
             tc._script(self.bin / f"{name}-i686", self._driver_script(program, prefixes, includes,
                                                                       GCC_CFLAGS_I686))
+        # libxml and libglade were compiled against Red Hat 6.0's glibc 2.1.1-6 headers: its
+        # <bits/string2.h> turns every memset(p, 0, n) into a __bzero call (no __builtin_memset
+        # macro, no small-size inline memset), as the image's libxml members call __bzero and
+        # memset. The potato headers stay underneath for the kernel headers.
+        tc._script(self.bin / "cc-i686-rh60", self._driver_script(
+            tc.SYSROOT / "usr/bin/gcc", prefixes, [gcc_lib / "include", self.link / "rh60-include"],
+            GCC_CFLAGS_I686))
         egcs = self.link / "egcs"
         wrappers = egcs / "libexec"
         for name in ("cpp", "cc1", "collect2"):
@@ -292,7 +299,8 @@ class Builder:
                                                "-lglib -ldl -lXi -lXext -lX11 -lm")):
             tc._script(self.bin / name, "#!/bin/sh\nfor a in \"$@\"; do case $a in --version) echo 1.2.8;; "
                        f"--cflags) echo \"{cflags}\";; --libs) echo \"{libraries}\";; esac; done\n")
-        env = self.env("cc-i686", XML_GLADE_CFLAGS, CPPFLAGS=f"-I{self.link}/include", LDFLAGS=f"-L{self.lib}")
+        env = self.env("cc-i686-rh60", XML_GLADE_CFLAGS, CPPFLAGS=f"-I{self.link}/include",
+                       LDFLAGS=f"-L{self.lib}")
         configure = ["./configure", f"--prefix={self.link}", "--disable-shared", "--enable-static",
                      "i686-pc-linux-gnu"]
         xml = self.unpack(xml_source)
@@ -325,6 +333,10 @@ def build(link: Path, media: dict[str, bytes], jobs: int = 2) -> None:
                  lambda name: name.startswith("usr/X11R6/include/"))
     _install_rpm(media["binutils-2.9.5.0.22-6.i386.rpm"], link / "redhat-binutils",
                  lambda name: name in ("usr/bin/as", "usr/lib/libbfd-2.9.5.0.22.so"))
+    shutil.copytree(tc.SYSROOT / "usr/include", link / "rh60-include", symlinks=True)
+    _install_rpm(media["glibc-devel-2.1.1-6.i386.rpm"], link / "rh60-glibc",
+                 lambda name: name.startswith("usr/include/"))
+    shutil.copytree(link / "rh60-glibc/usr/include", link / "rh60-include", symlinks=True, dirs_exist_ok=True)
     egcs = link / "egcs"
     for package in ("egcs-1.1.2-30.i386.rpm", "cpp-1.1.2-30.i386.rpm"):
         _install_rpm(media[package], egcs,

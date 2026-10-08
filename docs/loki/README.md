@@ -371,18 +371,15 @@ unit and runs binutils 2.9.1.0.25's `ld` directly, with what the image proves:
 | flags | `-export-dynamic` (12,052 defined `.dynsym` entries; libglade connects handlers by name), interpreter `/lib/ld-linux.so.2`, no `.symtab` (`-s`). |
 | ld 2.9.1 | `.gcc_except_table` precedes `.eh_frame`, both after `.data`: ld 2.9.1's default script has neither, and an orphan goes right after `.data`, so the later one lands first. 2.9.5's script names `.eh_frame` first. The assembler is already 2.9.1.0.25. |
 | GCC runtime | crtbegin.o, libgcc and libio/libstdc++ 2.10 come from an i686-pc-linux-gnu bootstrap of 2.95.2 (`-g -O2`, default `-mcpu=pentiumpro`, libgcc `-fPIC` per `config/t-linux`, so its type_info objects go through the 63 `R_386_GLOB_DAT` GOT entries; threads off: no pthread imports). The recipe reproduces crtbegin's `__do_global_dtors_aux`, 12 of 13 linked libgcc members and all 9 libstdc++ members. |
-| libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2`: the five libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
+| libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2`, against Red Hat 6.0's glibc 2.1.1-6 headers (its `<bits/string2.h>` turns every `memset(p, 0, n)` into a `__bzero` call and leaves `memset(p, -1, 12)` a call, as the image's libxml does at all 12 and 5 sites; glibc 2.1.1 final and later inline both): the five libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
 | GLib/GTK+ 1.2.8, zlib 1.0.8 | Red Hat 6.2's egcs 1.1.2 (egcs-1.1.2-30; it emits `.p2align 4,,7` for jump targets, Slackware's `.align 16`) and assembler (binutils-2.9.5.0.22-6: the image's GDK uses the `a0`/`a2` moffs byte moves and its nop fills) at Red Hat's `-O2 -m486 -fno-strength-reduce`, GTK+ with Red Hat's ahiguti i18n patch (the word breaks of GtkEntry, GtkLabel and GtkText call `iswpunct`/`iswcntrl`, which no GTK+ 1.2.x release does), GTK+ `--with-xinput=xfree` (libXi) and NLS on (the image imports `bindtextdomain` and `_nl_msg_cat_cntr`; Slackware 7.1's gettext 0.10.35 is on `PATH` while GTK+ configures). zlib at `-O2 -fno-strength-reduce`: all 14 members exact (`zlibVersion()` "1.0.8"). GLib 18 of 21 members, GModule 1/1, GDK 18 of 20, GTK+ 92 of 98. |
 
-Still different (`.text` layout: C libraries 0x40 bytes shorter,
-libstdc++/libgcc 0x10 longer, linkonce 3 bytes shorter):
+Still different (`.text` layout: libstdc++/libgcc 0x10 longer):
 
-- libxml's xmlIO, nanohttp, nanoftp, valid, tree and the HTML members call
-  `__bzero` for every `memset(p, 0, n)` (12 sites) and `memset` for
-  `memset(p, -1, 12)`: glibc 2.1's `<bits/string2.h>` (no `__bzero` →
-  `__builtin_memset` macro, no small-size `__memset_gc`); glibc 2.1.1 and
-  later headers inline both.
-- libgcc's `exception::what()` has no null test before `typeid(*this)`.
+- libgcc's `exception::what()` has no null test before `typeid(*this)`;
+  g++ 2.95.2 (release and Debian's 20000220) tests `this` there
+  (`fixed_type_or_null` falls through from `INDIRECT_REF` to the
+  constructor check).
 
 `homm3 loki link-diff` reads the linked file (or a path) and reports the
 total differing bytes over the file; the ELF header and program headers; every
