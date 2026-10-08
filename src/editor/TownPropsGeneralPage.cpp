@@ -11,13 +11,12 @@
 #include "editor/cppbridge.h"
 #include "editor/TownPropsGeneralPage.h"
 
+#include "editor/Town.h"
 #include "exceptions.h"
-#include "editor/Hero.h"
 #include "editor/GameMap.h"
 #include "editor/HeroPropsSheet.h"
 #include "editor/MapEditorText.h"
 #include "editor/SelectHeroClassDlg.h"
-#include "editor/Town.h"
 
 TTownPropsGeneralPage::TTownPropsGeneralPage(TTown* pTown, const TGameMap& map, bool bIsMainTown)
     : _m_playerCombo(GTK_COMBO(_widget("town_props_general_player_combo"))),

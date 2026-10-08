@@ -14,10 +14,10 @@
 
 #include <string>
 
+#include "editor/Hero.h"
 #include "editor/Player.h"
 
 class TGameMap;
-class THero;
 class TTown;
 
 class TTownPropsGeneralPage : public CWnd {
