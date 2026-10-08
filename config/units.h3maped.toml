@@ -182,24 +182,49 @@ flags = "zlib_o2_ml_gr_c_windows"
 unit = "victor"
 module = "victor"
 source = "src/victor.cpp"
+compiler = "msvc5.0"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_pcxinfo"
+module = "victor"
+source = "src/victor_pcxinfo.cpp"
+compiler = "msvc5.0"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_locks"
+module = "victor"
+source = "src/victor_locks.cpp"
+compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 
 [[unit]]
 unit = "victor_flip"
 module = "victor"
 source = "src/victor_flip.cpp"
+compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 
 [[unit]]
 unit = "victor_loadpcx"
 module = "victor"
 source = "src/victor_loadpcx.cpp"
+compiler = "msvc5.0"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_bits"
+module = "victor"
+source = "src/victor_bits.cpp"
+compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 
 [[unit]]
 unit = "victor_pcx_kernels"
 module = "victor"
 source = "src/victor_pcx_kernels.cpp"
+compiler = "msvc5.0"
 flags = "victor_kernels_o2_ogoff_ml_gd_windows"
 
 # The Libraries archive (one compile, linked into both editors)
