@@ -7,7 +7,7 @@
 // editor offers no choice (retail's constructors pass the constants).
 // The vtable orders are retail's (__vt_Q217TVictoryCondition8TVisitor and
 // the anonymous RHS dispatchers). A loss condition records its kind in
-// _m_type (eLCNone and kNumLossConditionTypes are the assert spellings;
+// an ordinal (eLCNone and kNumLossConditionTypes are the assert spellings;
 // the three kinds are named after their classes). Member names follow
 // the getters; THallLevel/TCastleLevel's enumerators are not recovered.
 #ifndef HOMM3_EDITOR_VICTORYCONDITION_H
@@ -275,7 +275,7 @@ public:
 
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
 
-    TArtifact getArtifact() const { return _m_artifact; }
+    const TArtifact& getArtifact() const { return _m_artifact; }
     const TMapObjectRef& getTownRef() const { return _m_townRef; }
 
     friend bool operator==(const TVCTransportArtifact& lhs, const TVCTransportArtifact& rhs)
@@ -290,8 +290,27 @@ private:
     TMapObjectRef _m_townRef;
 };
 
+// The kinds as the map file numbers them (GameMap.cpp's readers assert
+// "vcData.m_type >= eVCNone && vcData.m_type < kNumVictoryConditionTypes"
+// and the loss counterpart against -1..10 and -1..2).
+enum TVictoryConditionType {
+    eVCNone = -1,
+    eVCAquireArtifact,
+    eVCAccumulateCreature,
+    eVCAccumulateResource,
+    eVCUpgradeTown,
+    eVCBuildHolyGrailStruct,
+    eVCDefeatHero,
+    eVCCaptureTown,
+    eVCDefeatMonster,
+    eVCFlagAllCreatureGenerators,
+    eVCFlagAllMines,
+    eVCTransportArtifact,
+    kNumVictoryConditionTypes
+};
+
 enum TLossConditionType {
-    eLCNone,
+    eLCNone = -1,
     eLCLoseTown,
     eLCLoseHero,
     eLCTimeExpires,
@@ -320,7 +339,9 @@ public:
     static bool equivalent(const TLossCondition& lhs, const TLossCondition& rhs);
 
 protected:
-    TLossConditionType _m_type;
+    // Each kind's constructor stores its 1-based ordinal here; nothing in
+    // the image reads it back, and its name is not recorded.
+    int _m_kind;
 };
 
 class TLCLoseTown : public TLossCondition {
@@ -328,7 +349,7 @@ public:
     TLCLoseTown(const TMapObjectRef& townRef)
         : _m_townRef(townRef)
     {
-        _m_type = eLCLoseTown;
+        _m_kind = 1;
     }
 
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
@@ -349,7 +370,7 @@ public:
     TLCLoseHero(const TMapObjectRef& heroRef)
         : _m_heroRef(heroRef)
     {
-        _m_type = eLCLoseHero;
+        _m_kind = 2;
     }
 
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
@@ -370,7 +391,7 @@ public:
     TLCTimeExpires(unsigned int numDays)
         : _m_numDays(numDays)
     {
-        _m_type = eLCTimeExpires;
+        _m_kind = 3;
     }
 
     virtual void accept(TVisitor* pVisitor) const { pVisitor->visit(*this); }
