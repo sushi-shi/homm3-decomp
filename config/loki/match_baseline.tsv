@@ -412,8 +412,8 @@
 08178adc	25	ResourceQuantities	__static_initialization_and_destruction_0	459	100.0000	100.0000	100.0000	e47ba3cbbc7e
 08178ca8	25	ResourceQuantities	_GLOBAL_.I	28	100.0000	100.0000	100.0000	88b33006cfa1
 0817c1f0	30	spelldefs	__get_c_string__FRCt12basic_string3ZcZt11char_traits1ZcZt9allocator1Zc	36	100.0000	100.0000	100.0000	266506fbaf36
-0817c214	30	spelldefs	SpellTargetsASingleArmy__Fii	107	87.2250	87.2250	87.2250	4c61f6686baf
-0817c280	30	spelldefs	InitializeSpellTraitsTable__Fv	340	99.9569	99.9569	99.9569	b220959b3381
+0817c214	30	spelldefs	SpellTargetsASingleArmy__Fii	107	100.0000	100.0000	100.0000	3335ebc97fe1
+0817c280	30	spelldefs	InitializeSpellTraitsTable__Fv	340	100.0000	100.0000	100.0000	1715f495dfff
 0817c3d4	30	spelldefs	__tcf_0	104	100.0000	100.0000	100.0000	31e950c3eeae
 0817c43c	30	spelldefs	__tcf_1	96	100.0000	100.0000	100.0000	beff6cde7c9d
 0817c49c	30	spelldefs	__tcf_2	96	100.0000	100.0000	100.0000	b4ea3beb6d27
