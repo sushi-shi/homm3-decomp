@@ -6,12 +6,14 @@
 #include "editor/stdafx.h"
 
 #include <assert.h>
+#include <stdlib.h>
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
 
 #include "va.h"
+#include "artifact.h"
 #include "herotraits.h"
 #include "editor/Array.h"
 #include "editor/GameMap.h"
@@ -399,11 +401,22 @@ public:
     void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
     void removeFloatingObject(bool bSecondLayer);
+    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                              TTileExtent* pUpdatedExtent);
+    void setPlaceholderHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID);
+    void clearPlaceholderHeroID(bool bSecondLayer, unsigned int objID);
+    void setPlaceholderOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner);
+    void setHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID);
+    void setHeroOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner);
+    void setVisitingHero(const THero* pHero, bool bSecondLayer, unsigned int objID);
+    void removeVisitingHero(bool bSecondLayer, unsigned int objID);
+    void setTownOwner(TPlayer newOwner, bool bSecondLayer, unsigned int objID);
+    void linkGeneratorToTown(const TMapObjectRef& generatorRef, const TMapObjectRef& townRef);
+    void unlinkGenerator(const TMapObjectRef& generatorRef);
+    void setQuest(const TMapObjectRef& questLocationRef, auto_ptr<TQuest> pQuest);
     void clearQuest(const TMapObjectRef& questLocationRef);
     void removeSecondLayer();
     void addSecondLayer();
-    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
-                              TTileExtent* pUpdatedExtent);
     const TLinkableObject* getPLinkableObject(int linkID) const;
 
     bitset<kNumHeroes> getHeroesOnMap() const { return _m_pBookkeeping->m_heroesOnMap; }
@@ -509,6 +522,9 @@ public:
     void _onRemovingIdentifiedHero(const TIdentifiedHero* pHero);
     void _onHolyGrailAdded(const THolyGrail* pHolyGrail, bool bSecondLayer, unsigned int objID);
     void _onRemovingHolyGrail(const THolyGrail* pHolyGrail);
+    bool _isPlayable() const;
+    bool _isHeroAvailable(THeroID heroID) const;
+    THeroID _pickRandomHero(THeroClass heroClass) const;
     unsigned int _pickAvailableTeam() const;
     void _makeLinkIDUnique(TLinkableObject& linkable) const;
     const TLinkableObject* _findLinkableObject(unsigned int linkID) const;
@@ -516,6 +532,7 @@ public:
 
     void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
     void _readHeroSettings(TRawIStream* pIStream, int version);
+    void _writeHeroSettings(TRawOStream* pOStream, int version) const;
     TMapObjectRef _findObject(const TMapLoc& loc, bool (*pfnPredicate)(const TGameObject&)) const;
     auto_ptr<TVictoryCondition> _reconstructVictoryCondition(const TVictoryConditionData& vcData) const;
     auto_ptr<TLossCondition> _reconstructLossCondition(const TLossConditionData& lcData) const;
@@ -1096,6 +1113,170 @@ bool TGameMap::_TImpl::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, u
         }
     }
     return bObjectsRemoved;
+}
+
+// A placeholder's hero leaves the books before the new one enters.
+VA(0x0042091b, 0x150)
+void TGameMap::_TImpl::setPlaceholderHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID)
+{
+    THeroPlaceholder* pPlaceholder = dynamic_cast<THeroPlaceholder*>(getPLayer(bSecondLayer)->getPObject(objID));
+    _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[pPlaceholder->getOwner()];
+    if (pPlaceholder->getHeroID() != -1) {
+        THeroID heroID = pPlaceholder->getHeroID();
+        playerBookkeeping.m_aNumHeroesOfType[THero::s_akClassTraits[THero::s_akTraits[heroID].m_class].m_townType]--;
+        playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
+        _m_pBookkeeping->m_heroesOnMap.set(heroID, false);
+    } else {
+        playerBookkeeping.m_numHeroPlaceholders--;
+    }
+    pPlaceholder->setHeroID(newHeroID);
+    _m_pBookkeeping->m_heroesOnMap.set(newHeroID, true);
+    playerBookkeeping.m_paHeroPlaceholderID->insert(newHeroID);
+    playerBookkeeping.m_aNumHeroesOfType[THero::s_akClassTraits[THero::s_akTraits[newHeroID].m_class].m_townType]++;
+}
+
+VA(0x00420a6b, 0xf7)
+void TGameMap::_TImpl::clearPlaceholderHeroID(bool bSecondLayer, unsigned int objID)
+{
+    THeroPlaceholder* pPlaceholder = dynamic_cast<THeroPlaceholder*>(getPLayer(bSecondLayer)->getPObject(objID));
+    _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[pPlaceholder->getOwner()];
+    THeroID heroID = pPlaceholder->getHeroID();
+    THeroClass heroClass = THero::s_akTraits[heroID].m_class;
+    _m_apPlayerBookkeeping[pPlaceholder->getOwner()]
+        ->m_aNumHeroesOfType[THero::s_akClassTraits[heroClass].m_townType]--;
+    playerBookkeeping.m_paHeroPlaceholderID->erase(heroID);
+    _m_pBookkeeping->m_heroesOnMap.set(heroID, false);
+    pPlaceholder->setHeroID(-1);
+}
+
+VA(0x00420b62, 0x6c)
+void TGameMap::_TImpl::setPlaceholderOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner)
+{
+    THeroPlaceholder* pPlaceholder = dynamic_cast<THeroPlaceholder*>(getPLayer(bSecondLayer)->getPObject(objID));
+    _onRemovingHeroPlaceholder(pPlaceholder);
+    pPlaceholder->setOwner(newOwner);
+    _onHeroPlaceholderAdded(pPlaceholder, bSecondLayer, objID);
+}
+
+// The hero may stand on the map or visit a town there.
+VA(0x00420bce, 0x1fc)
+void TGameMap::_TImpl::setHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID)
+{
+    TIdentifiedHero* pHero = dynamic_cast<TIdentifiedHero*>(getPLayer(bSecondLayer)->getPObject(objID));
+    if (pHero == NULL)
+        pHero = static_cast<TIdentifiedHero*>(
+            dynamic_cast<TTown*>(getPLayer(bSecondLayer)->getPObject(objID))->getPVisitingHero());
+    THeroID oldHeroID = pHero->getHeroID();
+    if (pHero->getOwner() != ePlayerNone) {
+        _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[pHero->getOwner()];
+        playerBookkeeping.m_aNumHeroesOfType[THero::s_akClassTraits[THero::s_akTraits[oldHeroID].m_class].m_townType]--;
+        playerBookkeeping.m_paHeroID->erase(oldHeroID);
+    }
+    _m_pBookkeeping->m_paHeroRef->erase(oldHeroID);
+    _m_pBookkeeping->m_heroesOnMap.set(oldHeroID, false);
+    pHero->setHeroID(newHeroID);
+    _m_pBookkeeping->m_heroesOnMap.set(newHeroID, true);
+    _m_pBookkeeping->m_paHeroRef->insert(map<THeroID, TMapObjectRef>::value_type(newHeroID,
+                                                                                 TMapObjectRef(bSecondLayer, objID)));
+    if (pHero->getOwner() != ePlayerNone) {
+        _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[pHero->getOwner()];
+        playerBookkeeping.m_paHeroID->insert(newHeroID);
+        playerBookkeeping.m_aNumHeroesOfType[THero::s_akClassTraits[THero::s_akTraits[newHeroID].m_class].m_townType]++;
+    }
+}
+
+VA(0x00420dca, 0xa1)
+void TGameMap::_TImpl::setHeroOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner)
+{
+    THero* pHero = dynamic_cast<THero*>(getPLayer(bSecondLayer)->getPObject(objID));
+    TRandomHero* pRandomHero = dynamic_cast<TRandomHero*>(pHero);
+    if (pRandomHero != NULL)
+        _onRemovingRandomHero(pRandomHero);
+    else
+        _onRemovingIdentifiedHero(static_cast<TIdentifiedHero*>(pHero));
+    pHero->setOwner(newOwner);
+    if (pRandomHero != NULL)
+        _onRandomHeroAdded(pRandomHero, bSecondLayer, objID);
+    else
+        _onIdentifiedHeroAdded(static_cast<TIdentifiedHero*>(pHero), bSecondLayer, objID);
+}
+
+// The town keeps its own copy of the hero.
+VA(0x00420e6b, 0x98)
+void TGameMap::_TImpl::setVisitingHero(const THero* pHero, bool bSecondLayer, unsigned int objID)
+{
+    TTown* pTown = dynamic_cast<TTown*>(getPLayer(bSecondLayer)->getPObject(objID));
+    pTown->setVisitingHero(pHero);
+    TRandomHero* pRandomHero = dynamic_cast<TRandomHero*>(pTown->getPVisitingHero());
+    if (pRandomHero != NULL)
+        _onRandomHeroAdded(pRandomHero, bSecondLayer, objID);
+    else
+        _onIdentifiedHeroAdded(static_cast<TIdentifiedHero*>(pTown->getPVisitingHero()), bSecondLayer, objID);
+}
+
+VA(0x00420f03, 0x92)
+void TGameMap::_TImpl::removeVisitingHero(bool bSecondLayer, unsigned int objID)
+{
+    TTown* pTown = dynamic_cast<TTown*>(getPLayer(bSecondLayer)->getPObject(objID));
+    TRandomHero* pRandomHero = dynamic_cast<TRandomHero*>(pTown->getPVisitingHero());
+    if (pRandomHero != NULL)
+        _onRemovingRandomHero(pRandomHero);
+    else
+        _onRemovingIdentifiedHero(static_cast<TIdentifiedHero*>(pTown->getPVisitingHero()));
+    pTown->setVisitingHero(NULL);
+    onObjectRemoved();
+}
+
+// The visiting hero changes owner with the town.
+VA(0x00420f95, 0xe7)
+void TGameMap::_TImpl::setTownOwner(TPlayer newOwner, bool bSecondLayer, unsigned int objID)
+{
+    TTown* pTown = dynamic_cast<TTown*>(getPLayer(bSecondLayer)->getPObject(objID));
+    THero* pVisitingHero = pTown->getPVisitingHero();
+    if (pVisitingHero != NULL) {
+        TRandomHero* pRandomHero = dynamic_cast<TRandomHero*>(pVisitingHero);
+        if (pRandomHero != NULL)
+            _onRemovingRandomHero(pRandomHero);
+        else
+            _onRemovingIdentifiedHero(static_cast<TIdentifiedHero*>(pVisitingHero));
+    }
+    _onRemovingTown(pTown);
+    pTown->setOwner(newOwner);
+    if (pVisitingHero != NULL)
+        pVisitingHero->setOwner(newOwner);
+    _onTownAdded(pTown, bSecondLayer, objID);
+    if (pVisitingHero != NULL) {
+        TRandomHero* pRandomHero = dynamic_cast<TRandomHero*>(pVisitingHero);
+        if (pRandomHero != NULL)
+            _onRandomHeroAdded(pRandomHero, bSecondLayer, objID);
+        else
+            _onIdentifiedHeroAdded(static_cast<TIdentifiedHero*>(pVisitingHero), bSecondLayer, objID);
+    }
+}
+
+VA(0x0042107c, 0xa6)
+void TGameMap::_TImpl::linkGeneratorToTown(const TMapObjectRef& generatorRef, const TMapObjectRef& townRef)
+{
+    TAbstractRandomlyAlignedGenerator* pGenerator = dynamic_cast<TAbstractRandomlyAlignedGenerator*>(
+        getPLayer(generatorRef.getBSecondLayer())->getPObject(generatorRef.getObjectID()));
+    TTown* pTown = dynamic_cast<TTown*>(getPLayer(townRef.getBSecondLayer())->getPObject(townRef.getObjectID()));
+    pGenerator->setTownLinkID(pTown->getLinkID());
+}
+
+VA(0x00421122, 0x55)
+void TGameMap::_TImpl::unlinkGenerator(const TMapObjectRef& generatorRef)
+{
+    TAbstractRandomlyAlignedGenerator* pGenerator = dynamic_cast<TAbstractRandomlyAlignedGenerator*>(
+        getPLayer(generatorRef.getBSecondLayer())->getPObject(generatorRef.getObjectID()));
+    pGenerator->setTownLinkID(TLinkableObject::s_kNoLinkID);
+}
+
+VA(0x00421177, 0x8f)
+void TGameMap::_TImpl::setQuest(const TMapObjectRef& questLocationRef, auto_ptr<TQuest> pQuest)
+{
+    TQuestLocation* pQuestLocation = dynamic_cast<TQuestLocation*>(
+        getPLayer(questLocationRef.getBSecondLayer())->getPObject(questLocationRef.getObjectID()));
+    pQuestLocation->setQuest(pQuest);
 }
 
 // A linked quest whose target leaves the map goes with it (0x4278a6).
@@ -1713,6 +1894,161 @@ void TGameMap::_TImpl::_onRemovingObject(const TGameObject& obj, TObjectTypesFro
     }
 }
 
+// Each hero the map customizes, member by member where it differs from the
+// game's definition (_readHeroSettings reads it back).
+VA(0x00428892, 0x237)
+void TGameMap::_TImpl::_writeHeroSettings(TRawOStream* pOStream, int version) const
+{
+    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        const THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
+        const THeroPrototype& gamePrototype = THero::s_akTraits[heroID].m_prototype;
+        bool bCustomized = !(prototype == gamePrototype);
+        *pOStream << static_cast<unsigned char>(bCustomized);
+        if (bCustomized) {
+            if (prototype.getExperience() != gamePrototype.getExperience()) {
+                *pOStream << true;
+                *pOStream << prototype.getExperience();
+            } else {
+                *pOStream << false;
+            }
+            if (prototype.getSecondarySkills() != gamePrototype.getSecondarySkills()) {
+                *pOStream << true;
+                prototype.getSecondarySkills().write(pOStream, version);
+            } else {
+                *pOStream << false;
+            }
+            if (prototype.getArtifacts() != gamePrototype.getArtifacts()) {
+                *pOStream << true;
+                prototype.getArtifacts().write(pOStream, version);
+            } else {
+                *pOStream << false;
+            }
+            if (prototype.getBiography() != gamePrototype.getBiography()) {
+                *pOStream << true;
+                *pOStream << prototype.getBiography();
+            } else {
+                *pOStream << false;
+            }
+            int sex = prototype.getSex();
+            if (sex == gamePrototype.getSex())
+                sex = -1;
+            *pOStream << static_cast<signed char>(sex);
+            if (prototype.getSpells() != gamePrototype.getSpells()) {
+                *pOStream << true;
+                prototype.getSpells().write(pOStream, version);
+            } else {
+                *pOStream << false;
+            }
+            if (!(prototype.getPrimarySkills() == gamePrototype.getPrimarySkills())) {
+                *pOStream << true;
+                prototype.getPrimarySkills().write(pOStream, version);
+            } else {
+                *pOStream << false;
+            }
+        }
+    }
+}
+
+// Whether the game can play the map: someone plays it, enough heroes are
+// enabled to fill the taverns and towns, and some artifact is left for the
+// random ones once the special artifacts and those that quests or the
+// victory condition ask for are set aside.
+VA(0x00428b34, 0x211)
+bool TGameMap::_TImpl::_isPlayable() const
+{
+    if (_m_pBookkeeping->m_numPlayableSlots == 0)
+        return false;
+    if ((~_m_pProperties->m_disabledHeroes).count()
+        < _m_pBookkeeping->m_numTowns + _m_pBookkeeping->m_numPlayableSlots * 10)
+        return false;
+    bitset<kNumArtifacts> availableArtifacts = ~_m_pProperties->m_disabledArtifacts;
+    for (int artifact = 0; artifact < kNumArtifacts; artifact++)
+        if (akArtifactTraits[artifact].m_class & ArtifactClassSpecial)
+            availableArtifacts.set(artifact, false);
+    unsigned int numLayers = _m_bTwoLayer ? 2 : 1;
+    for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+        const TLayer* pLayer = getPLayer(layerNum);
+        for (TLayer::TObjectIDIter iter = pLayer->objectIDBegin(); iter != pLayer->objectIDEnd(); ++iter) {
+            const TQuestLocation* pQuestLocation = dynamic_cast<const TQuestLocation*>(pLayer->getPObject(*iter));
+            if (pQuestLocation != NULL && pQuestLocation->getPQuest() != NULL
+                && dynamic_cast<const TQuestBringArtifacts*>(pQuestLocation->getPQuest()) != NULL) {
+                const multiset<TArtifact>& artifacts =
+                    static_cast<const TQuestBringArtifacts*>(pQuestLocation->getPQuest())->getArtifacts();
+                for (multiset<TArtifact>::const_iterator pArtifact = artifacts.begin(); pArtifact != artifacts.end();
+                     ++pArtifact)
+                    availableArtifacts.set(*pArtifact, false);
+            }
+        }
+    }
+    const TVictoryCondition* pVictoryCondition = _m_pProperties->m_pVictoryCondition.get();
+    if (pVictoryCondition != NULL) {
+        if (dynamic_cast<const TVCAquireArtifact*>(pVictoryCondition) != NULL)
+            availableArtifacts.set(static_cast<const TVCAquireArtifact*>(pVictoryCondition)->getArtifact(), false);
+        else if (dynamic_cast<const TVCTransportArtifact*>(pVictoryCondition) != NULL)
+            availableArtifacts.set(static_cast<const TVCTransportArtifact*>(pVictoryCondition)->getArtifact(), false);
+    }
+    return availableArtifacts.any();
+}
+
+// Whether any cell the object covers lies on the map; the object's
+// location is its bottom right cell.
+VA(0x00428d45, 0xa9)
+bool TGameMap::_TImpl::_isOnMap(const TGameObject& obj, unsigned int x, unsigned int y) const
+{
+    if (x + 1 >= obj.getWidth() && x + 1 - obj.getWidth() >= getWidth())
+        return false;
+    if (y + 1 >= obj.getHeight() && y + 1 - obj.getHeight() >= getHeight())
+        return false;
+    for (unsigned int j = 0; j < obj.getHeight(); j++) {
+        if (y - j < getHeight()) {
+            for (unsigned int i = 0; i < obj.getWidth(); i++) {
+                if (x - i < getWidth() && obj.getBCellPlaced(i, j))
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+// A hero the map's version has, not yet on the map and not disabled.
+VA(0x00428dee, 0x98)
+bool TGameMap::_TImpl::_isHeroAvailable(THeroID heroID) const
+{
+    return THero::s_akTraits[heroID].m_gameVersions.test(_m_version) && !_m_pBookkeeping->m_heroesOnMap.test(heroID)
+           && !_m_pProperties->m_disabledHeroes.test(heroID);
+}
+
+// A random available hero of the class, a special one only when no other
+// is left; none (-1) when the class has none.
+VA(0x00428e86, 0x1ec)
+THeroID TGameMap::_TImpl::_pickRandomHero(THeroClass heroClass) const
+{
+    const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
+    vector<THeroID> candidates;
+    candidates.reserve(classTraits.m_heroes.size());
+    set<int>::const_iterator pHeroID;
+    for (pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end(); ++pHeroID) {
+        const THero::TTraits& traits = THero::s_akTraits[*pHeroID];
+        if (traits.m_gameVersions.test(_m_version) && !traits.m_bSpecial
+            && !_m_pBookkeeping->m_heroesOnMap.test(*pHeroID) && !_m_pProperties->m_disabledHeroes.test(*pHeroID))
+            candidates.push_back(*pHeroID);
+    }
+    if (candidates.empty()) {
+        for (pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end(); ++pHeroID) {
+            const THero::TTraits& traits = THero::s_akTraits[*pHeroID];
+            if (traits.m_gameVersions.test(_m_version) && traits.m_bSpecial
+                && !_m_pBookkeeping->m_heroesOnMap.test(*pHeroID) && !_m_pProperties->m_disabledHeroes.test(*pHeroID))
+                candidates.push_back(*pHeroID);
+        }
+    }
+    THeroID result;
+    if (candidates.size() == 0)
+        result = -1;
+    else
+        result = candidates[rand() % candidates.size()];
+    return result;
+}
+
 // The smallest team.
 VA(0x00429072, 0x89)
 unsigned int TGameMap::_TImpl::_pickAvailableTeam() const
@@ -2063,6 +2399,72 @@ bool TGameMap::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned 
                                     TTileExtent* pUpdatedExtent)
 {
     return _m_pImpl->onTerrainTypeChanged(bSecondLayer, x, y, oldTerrainType, pUpdatedExtent);
+}
+
+VA(0x00429f6f, 0x29)
+void TGameMap::setPlaceholderHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID)
+{
+    _m_pImpl->setPlaceholderHeroID(bSecondLayer, objID, newHeroID);
+}
+
+VA(0x00429f98, 0x25)
+void TGameMap::clearPlaceholderHeroID(bool bSecondLayer, unsigned int objID)
+{
+    _m_pImpl->clearPlaceholderHeroID(bSecondLayer, objID);
+}
+
+VA(0x00429fbd, 0x29)
+void TGameMap::setPlaceholderOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner)
+{
+    _m_pImpl->setPlaceholderOwner(bSecondLayer, objID, newOwner);
+}
+
+VA(0x00429fe6, 0x29)
+void TGameMap::setHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID)
+{
+    _m_pImpl->setHeroID(bSecondLayer, objID, newHeroID);
+}
+
+VA(0x0042a00f, 0x29)
+void TGameMap::setHeroOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner)
+{
+    _m_pImpl->setHeroOwner(bSecondLayer, objID, newOwner);
+}
+
+VA(0x0042a038, 0x29)
+void TGameMap::setVisitingHero(const THero* pHero, bool bSecondLayer, unsigned int objID)
+{
+    _m_pImpl->setVisitingHero(pHero, bSecondLayer, objID);
+}
+
+VA(0x0042a061, 0x25)
+void TGameMap::removeVisitingHero(bool bSecondLayer, unsigned int objID)
+{
+    _m_pImpl->removeVisitingHero(bSecondLayer, objID);
+}
+
+VA(0x0042a086, 0x29)
+void TGameMap::setTownOwner(TPlayer newOwner, bool bSecondLayer, unsigned int objID)
+{
+    _m_pImpl->setTownOwner(newOwner, bSecondLayer, objID);
+}
+
+VA(0x0042a0af, 0x25)
+void TGameMap::linkGeneratorToTown(const TMapObjectRef& generatorRef, const TMapObjectRef& townRef)
+{
+    _m_pImpl->linkGeneratorToTown(generatorRef, townRef);
+}
+
+VA(0x0042a0d4, 0x21)
+void TGameMap::unlinkGenerator(const TMapObjectRef& generatorRef)
+{
+    _m_pImpl->unlinkGenerator(generatorRef);
+}
+
+VA(0x0042a0f5, 0x57)
+void TGameMap::setQuest(const TMapObjectRef& questLocationRef, auto_ptr<TQuest> pQuest)
+{
+    _m_pImpl->setQuest(questLocationRef, pQuest);
 }
 
 VA(0x0042a14c, 0x21)

@@ -54,6 +54,8 @@ public:
     const std::string& getName() const { return _m_name; }
     const TArmy& getGarrison() const { return _m_garrison; }
     THero* getPVisitingHero() { return _m_pVisitingHero; }
+    // Keeps a clone of the hero, or none (0x4c242d).
+    void setVisitingHero(const THero* pHero);
     const THero* getPVisitingHero() const { return _m_pVisitingHero; }
 
 private:

@@ -27,6 +27,7 @@ public:
     TPlayableObject(const TObjectType& objType, TPlayer owner);
 
     TPlayer getOwner() const { return _m_owner; }
+    void setOwner(TPlayer newOwner) { _m_owner = newOwner; }
 
 private:
     TPlayer _m_owner;

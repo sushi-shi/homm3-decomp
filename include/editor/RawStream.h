@@ -60,8 +60,24 @@ public:
         return *this;
     }
 
+    TRawOStream& write(const char* pData, unsigned int count)
+    {
+        int nWritten = m_pStreamBuf->sputn(pData, count);
+        if (nWritten < count)
+            throw TWriteFailure(nWritten);
+        return *this;
+    }
+
 private:
     std::streambuf* m_pStreamBuf;
 };
+
+// A string: its length, then its characters (h3maped 0x428afc, cdecl).
+inline TRawOStream& operator<<(TRawOStream& stream, const std::string& value)
+{
+    stream << static_cast<int>(value.length());
+    stream.write(value.c_str(), value.length());
+    return stream;
+}
 
 #endif  /* HOMM3_EDITOR_RAWSTREAM_H */

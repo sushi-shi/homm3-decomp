@@ -47,6 +47,7 @@ public:
     class TSecondarySkills : public std::map<TSecondarySkill, TSkillMastery> {
     public:
         void read(TRawIStream* pIStream, int version);
+        void write(TRawOStream* pOStream, int version) const;
     };
 
     // The worn artifact per slot (none: -1) and the backpack, a multiset
@@ -59,11 +60,16 @@ public:
         }
 
         void read(TRawIStream* pIStream, int version);
+        void write(TRawOStream* pOStream, int version) const;
 
         TArtifact getSlot(TArtifactSlot slot) const { return _m_aSlot[slot]; }
         const std::multiset<TArtifact>& getBackpack() const { return _m_backpack; }
 
-        friend bool operator==(const TArtifactContainer& lhs, const TArtifactContainer& rhs);
+        friend bool operator==(const TArtifactContainer& lhs, const TArtifactContainer& rhs)
+        {
+            return lhs._m_aSlot == rhs._m_aSlot && lhs._m_backpack == rhs._m_backpack;
+        }
+        friend bool operator!=(const TArtifactContainer& lhs, const TArtifactContainer& rhs) { return !(lhs == rhs); }
 
     private:
         TArray<TArtifact, kNumArtifactSlots + 1> _m_aSlot;
@@ -76,12 +82,15 @@ public:
         TSpells(TRawIStream* pIStream, int version) { read(pIStream, version); }
 
         void read(TRawIStream* pIStream, int version);
+        void write(TRawOStream* pOStream, int version) const;
     };
 
     // The four primary skills, a byte each in a map (0x44a4f3).
     class TPrimarySkills : public TArray<int, kNumPrimarySkills> {
     public:
         TPrimarySkills(TRawIStream* pIStream, int version);
+
+        void write(TRawOStream* pOStream, int version) const;
     };
 
     void setBiography(const std::string& newBiography);
@@ -93,6 +102,13 @@ public:
     void setExperience(int newExperience);
     void setAvailability(const TPlayerMask& newAvailability);
 
+    const std::string& getBiography() const { return _m_pImpl->m_biography; }
+    const TSecondarySkills& getSecondarySkills() const { return *_m_pImpl->m_pSecondarySkills; }
+    const TArtifactContainer& getArtifacts() const { return *_m_pImpl->m_pArtifacts; }
+    const TSpells& getSpells() const { return _m_pImpl->m_spells; }
+    const TPrimarySkills& getPrimarySkills() const { return _m_pImpl->m_aPrimarySkill; }
+    int getSex() const { return _m_pImpl->m_sex; }
+    int getExperience() const { return _m_pImpl->m_experience; }
     const TPlayerMask& getAvailability() const { return _m_pImpl->m_availability; }
 
     friend bool operator==(const THeroPrototype& lhs, const THeroPrototype& rhs);
@@ -103,8 +119,8 @@ private:
         std::string m_biography;
         TRefCountingPtr<TSecondarySkills> m_pSecondarySkills;
         TRefCountingPtr<TArtifactContainer> m_pArtifacts;
-        std::bitset<kNumSpells> m_spells;
-        TArray<int, kNumPrimarySkills> m_aPrimarySkill;
+        TSpells m_spells;
+        TPrimarySkills m_aPrimarySkill;
         int m_sex;
         int m_portrait;
         int m_experience;
@@ -172,6 +188,11 @@ public:
     // h3maped 0x5857d8: points at the eighteen rows (one per THeroClass).
     static TClassTraits* s_akClassTraits;
 
+    // The hero's id as the map stores it, a byte (a random hero has none,
+    // 0xff, and ignores a new one; 0x44bf12, 0x45726f).
+    virtual void setStoredHeroID(unsigned char heroID) = 0;
+    virtual unsigned char getStoredHeroID() const = 0;
+
 private:
     bool _m_bCustomName : 1;
     bool _m_bCustomPortrait : 1;
@@ -205,6 +226,9 @@ class TRandomHero : public THero {
 class TIdentifiedHero : public THero {
 public:
     virtual THeroID getHeroID() const { return _m_heroID; }
+    virtual void setStoredHeroID(unsigned char heroID) { setHeroID(heroID); }
+    virtual unsigned char getStoredHeroID() const { return _m_heroID; }
+    virtual void setHeroID(THeroID newHeroID) { _m_heroID = newHeroID; }
 
     THeroClass getHeroClass() const { return s_akTraits[_m_heroID].m_class; }
 

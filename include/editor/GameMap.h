@@ -37,6 +37,8 @@ class TTimedEvent;
 class TVictoryCondition;
 class TLossCondition;
 class TLinkableObject;
+class THero;
+class TQuest;
 
 typedef unsigned int TMapLayerObjectID;
 
@@ -285,12 +287,26 @@ public:
     void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
     void removeFloatingObject(bool bSecondLayer);
-    // The quest location's quest is gone (its props dialog, 0x4994c6).
+    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                              TTileExtent* pUpdatedExtent);
+    // The props dialogs' edits that move an object between the books: a
+    // hero placeholder's hero and owner, a hero's id and owner, a town's
+    // visiting hero and owner, a random dwelling's town and a quest
+    // location's quest (its props dialog clears it, 0x4994c6).
+    void setPlaceholderHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID);
+    void clearPlaceholderHeroID(bool bSecondLayer, unsigned int objID);
+    void setPlaceholderOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner);
+    void setHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID);
+    void setHeroOwner(bool bSecondLayer, unsigned int objID, TPlayer newOwner);
+    void setVisitingHero(const THero* pHero, bool bSecondLayer, unsigned int objID);
+    void removeVisitingHero(bool bSecondLayer, unsigned int objID);
+    void setTownOwner(TPlayer newOwner, bool bSecondLayer, unsigned int objID);
+    void linkGeneratorToTown(const TMapObjectRef& generatorRef, const TMapObjectRef& townRef);
+    void unlinkGenerator(const TMapObjectRef& generatorRef);
+    void setQuest(const TMapObjectRef& questLocationRef, std::auto_ptr<TQuest> pQuest);
     void clearQuest(const TMapObjectRef& questLocationRef);
     void removeSecondLayer();
     void addSecondLayer();
-    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
-                              TTileExtent* pUpdatedExtent);
 
     void save(std::streambuf* pStreamBuf) const;
     void exportText(std::ostream* pOStream) const;

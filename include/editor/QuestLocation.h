@@ -23,6 +23,8 @@ public:
     virtual void resetQuestTerms();
 
     const TQuest* getPQuest() const { return _m_pQuest.get(); }
+    // Takes the quest (0x496ba4).
+    void setQuest(std::auto_ptr<TQuest> pQuest);
     // No quest, and no deadline or messages (0x496bbd).
     void clearQuest();
 
