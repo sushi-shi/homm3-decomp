@@ -34,6 +34,7 @@ public:
 
     virtual void OnOK();
     virtual void EnableWindow(bool bEnable) { OnEnable(bEnable); }
+    virtual void onNumOccupiedStacksChanged(unsigned int newNum, unsigned int oldNum) {}
     BOOL IsWindowEnabled() { return _m_bEnabled; }
     virtual BOOL OnInitDialog();
 
@@ -72,8 +73,6 @@ private:
         int m_quantityItemData[_s_kMaxComboItems];
         GtkSpinButton* m_quantitySpin;
     };
-
-    virtual void onNumOccupiedStacksChanged(unsigned int newNum, unsigned int oldNum) {}
 
     void _retrieveStackQuantities();
     void _onSelChangeTypeCombo(unsigned int stackNum);
