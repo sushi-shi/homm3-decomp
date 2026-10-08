@@ -531,9 +531,9 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
         &g_game->m_mapHeader.m_playerSlotAttributes[whichPlayer];
     if (player->m_numTowns == 0)
         return;
-    if (g_game->m_campaign.m_currentCampaign == g_buildingBonusAllTownsCampaign &&
-        g_game->m_campaign.m_currentMap == g_buildingBonusAllTownsScenario &&
-        m_building == 0) {
+    if (g_game->m_campaign.isCurrentScenario(g_buildingBonusAllTownsCampaign,
+                                             g_buildingBonusAllTownsScenario)
+        && m_building == 0) {
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* each = g_game->getTown(player->m_townIds[townIndex]);
             each->buildBuilding(m_building, 0, 0);
@@ -1539,8 +1539,8 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     currentHero->m_portrait = sourceHero->m_portrait;
 
     if (g_inCampaign) {
-        if (currentCampaign->m_currentCampaign == g_crossoverBonusCampaign
-            && currentCampaign->m_currentMap == g_crossoverBonusScenario
+        if (currentCampaign->isCurrentScenario(g_crossoverBonusCampaign,
+                                               g_crossoverBonusScenario)
             && sourceHero->m_id == g_crossoverBonusHero) {
             currentHero->m_portrait = g_crossoverBonusPortrait;
             currentHero->setPrimarySkill(

@@ -1089,24 +1089,11 @@ void hero::initialize(short index)
 // The enum-valued backpack fill constructs each empty artifact inside the
 // loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
 // reads the field directly, without an additional getArtifact helper call.
-// The remaining mismatch includes string::assign expanding where retail
-// retains it. Shared/local loop indices, literal/sizeof backpack bounds,
-// assignment/assign and an unnamed/named level leave that boundary unchanged.
-// A reproduced VC6 trace admits assign's 307-byte body with 346 bytes left
-// in its inline budget. An array-derived unsigned fill count also leaves it inlined.
-// 2026-10-07 trace arithmetic: operator= is depth-1 site 5 of 5 with budget
-// 1730, so its nested assign gets 1730/5 = 346 >= 307. Retail's retained
-// assign needs either a sixth saved candidate after this site (346 -> 288)
-// or about 196 more budget spent before it. Mac retail also keeps the
-// primary-skill loop rolled where this source's CodeWarrior build unrolls it.
-// 2026-10-07 diagnostic: any one extra depth-1 candidate after the custom-name
-// assignment (a throwaway isMale() test) retains assign and lifts this body
-// to 98.71%, so the missing candidate is real; Mac 0xf4948..0xf4a50 and DC
-// 10049..10053 show no accessor for it (direct level read, one getMobility).
-// 2026-10-08 trace: the depth-1 sites after operator= are getHero,
-// getExperience, getMaxMana and getMobility; giveExperience and checkLevel
-// are defined later in hero.cpp (retail order too) and never become
-// candidates, so neither can be the missing sixth site.
+// The start-level campaign test is SCampaign::isCurrentScenario, the
+// campaign/map pair compare repeated across the campaign code. Its call is
+// the sixth depth-1 candidate after the custom-name operator= that retail's
+// budget needs: the nested string::assign gets 1730/6 = 288 against its 307
+// and stays a call as retail (75.29 -> 100%).
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
@@ -1203,8 +1190,8 @@ void hero::initialize(const HeroExtra* setup)
         // VC6 expands the same canonical helper even though its emitted body
         // follows initialize. Both compilers preserve their retail call shape.
         if (g_inCampaign
-            && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
-            && g_game->m_campaign.m_currentMap == g_startLevelScenario) {
+            && g_game->m_campaign.isCurrentScenario(g_startLevelCampaign,
+                                                    g_startLevelScenario)) {
             // Mac 0xf4998..0xf49a4 separates the hero-row address from the
             // level load. This fixed valid ID folds getHero's null guard.
             int level = g_game->getHero(g_startLevelHeroId)->m_level

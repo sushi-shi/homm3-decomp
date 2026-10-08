@@ -119,6 +119,12 @@ private:
     std::vector<std::vector<type_artifact> > m_carryoverArtifact;
 
 public:
+    // The campaign/map pair test the campaign code repeats; the name is
+    // inferred.
+    bool isCurrentScenario(int campaign, int map) const
+    {
+        return m_currentCampaign == campaign && m_currentMap == map;
+    }
     // Native 0x93878/0x98ae4 expands these indexed pool lookups. Campaign
     // methods own the outer vectors; scenario handoff accesses one pool.
     // Names and header boundaries are inferred. Ordinary source definitions

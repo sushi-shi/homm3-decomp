@@ -1396,8 +1396,8 @@ void swapManager::handleArtifactClick(long side, long id, bool rightClick)
 
     if (g_inCampaign
         && oldArtifact.m_artifactId == ARTIFACT_ARMAGEDDONS_BLADE
-        && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
-        && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
+        && g_game->m_campaign.isCurrentScenario(ARMAGEDDONS_BLADE_CAMPAIGN,
+                                                ARMAGEDDONS_BLADE_MAP)
         && ourHero->m_id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
         normalDialog(g_generalText->GetText(GENERAL_TEXT_ARMAGEDDONS_BLADE_GELU_ONLY), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
