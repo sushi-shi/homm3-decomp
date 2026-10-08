@@ -4,6 +4,8 @@
 // teams, the object bookkeeping and the binary and text forms.
 //
 // Reconstruction in progress: the layer handle and the cell come first.
+#include "editor/GameMap.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -16,7 +18,6 @@
 #include <memory>
 
 #include "adventureobjecttype.h"
-#include "editor/GameMap.h"
 #include "editor/RawStream.h"
 #include "editor/GameObject.h"
 #include "editor/Hero.h"
@@ -123,42 +124,42 @@ struct TCappedObjectType {
     unsigned int m_cap;
 };
 
-const TCappedObjectType akCappedObjectTypes[] = {
-    { EVENT, 200 },
-    { BLACK_BOX, 200 },
-    { OBELISK, 48 },
-    { BOAT, 64 },
-    { GARRISON, 48 },
-    { TRAINING_GROUNDS, 32 },
-    { DEFENSE_TOWER, 32 },
-    { GARDEN_OF_REVELATION, 32 },
-    { MERC_CAMP, 32 },
-    { POWER_SCHOOL, 32 },
-    { TREE_OF_KNOWLEDGE, 32 },
-    { LIBRARY, 32 },
-    { ARENA, 32 },
-    { MAGIC_SCHOOL, 32 },
-    { WAR_SCHOOL, 32 },
-    { UNIVERSITY, 32 },
-    { WITCH_HUT, 32 },
-    { SHRINE1, 32 },
-    { SHRINE2, 32 },
-    { SHRINE3, 32 },
-    { SIREN, 32 },
-    { MYSTICAL_GARDEN, 32 },
-    { WATER_WHEEL, 32 },
-    { WINDMILL, 32 },
-    { MAGIC_SPRING, 32 },
-    { DEAD_GUY, 32 },
-    { LEAN_TO, 32 },
-    { WARRIOR_TOMB, 32 },
-    { WAGON, 32 },
-    { SEER, 48 },
-    { BLACK_MARKET, 32 },
-};
-
 TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 {
+    static const TCappedObjectType akCappedObjectTypes[] = {
+        { EVENT, 200 },
+        { BLACK_BOX, 200 },
+        { OBELISK, 48 },
+        { BOAT, 64 },
+        { GARRISON, 48 },
+        { TRAINING_GROUNDS, 32 },
+        { DEFENSE_TOWER, 32 },
+        { GARDEN_OF_REVELATION, 32 },
+        { MERC_CAMP, 32 },
+        { POWER_SCHOOL, 32 },
+        { TREE_OF_KNOWLEDGE, 32 },
+        { LIBRARY, 32 },
+        { ARENA, 32 },
+        { MAGIC_SCHOOL, 32 },
+        { WAR_SCHOOL, 32 },
+        { UNIVERSITY, 32 },
+        { WITCH_HUT, 32 },
+        { SHRINE1, 32 },
+        { SHRINE2, 32 },
+        { SHRINE3, 32 },
+        { SIREN, 32 },
+        { MYSTICAL_GARDEN, 32 },
+        { WATER_WHEEL, 32 },
+        { WINDMILL, 32 },
+        { MAGIC_SPRING, 32 },
+        { DEAD_GUY, 32 },
+        { LEAN_TO, 32 },
+        { WARRIOR_TOMB, 32 },
+        { WAGON, 32 },
+        { SEER, 48 },
+        { BLACK_MARKET, 32 },
+    };
+
     for (unsigned int i = 0; i < sizeof(akCappedObjectTypes) / sizeof(akCappedObjectTypes[0]); i++)
         insert(value_type(akCappedObjectTypes[i].m_type, TCappedObjectTypeInfo(i, akCappedObjectTypes[i].m_cap)));
 }
@@ -195,348 +196,6 @@ struct TVictoryConditionData;
 struct TLossConditionData;
 
 }  // namespace
-
-class TGameMap::_TImpl {
-public:
-    static const unsigned int s_kMaxHeroesOnMap = 128;
-    static const unsigned int s_kMaxHeroesPerPlayer = 8;
-    static const unsigned int s_kMaxTownsOnMap = 48;
-    static const unsigned int s_kMaxMinesOnMap = 144;
-    static const unsigned int s_kMaxGeneratorsOnMap = 144;
-    static const unsigned int s_kMaxSignsOnMap = 128;
-    static const unsigned int s_kMaxNameLen = 30;
-    static const unsigned int s_kMaxDescLen = 300;
-    static const unsigned int s_kMaxRumors = 30;
-    static const unsigned int s_kMaxTimedEvents = 50;
-
-    static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
-    static const TMapLayerObjectID s_kInvalidObjID;
-
-    static void streamObject(streambuf* pStreamBuf, const TGameObject& obj);
-
-    _TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, TSize size, bool bTwoLayer);
-    _TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, streambuf* pStreamBuf, int version);
-    ~_TImpl();
-
-    void importText(istream* pIStream);
-    void exportText(ostream* pOStream) const;
-    void save(streambuf* pStreamBuf) const;
-
-    unsigned int getWidth() const { return _s_akDimension[_m_size]; }
-    unsigned int getHeight() const { return _s_akDimension[_m_size]; }
-    bool isTwoLayer() const { return _m_bTwoLayer; }
-    void removeSecondLayer();
-    void addSecondLayer();
-    TLayer* getPLayer(unsigned int num);
-    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
-    const TLayer* getPLayer(unsigned int num) const;
-    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
-    const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
-    const TLayer& getLayer(bool bSecondLayer) const { return *getPLayer(bSecondLayer); }
-
-    const string& getName() const { return _m_pProperties->m_name; }
-    void setName(const string& newName);
-    const string& getDesc() const { return _m_pProperties->m_desc; }
-    void setDesc(const string& newDesc);
-    TDifficulty getDifficulty() const { return _m_pProperties->m_difficulty; }
-    void setDifficulty(TDifficulty newDifficulty);
-    const TArray<TPlayerInfo, kNumPlayers>& getPlayers() const { return _m_pProperties->m_players; }
-    void setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers);
-    const TTeamInfo& getTeamInfo() const { return _m_pProperties->m_teamInfo; }
-    void setTeamInfo(const TTeamInfo& newTeamInfo);
-    const vector<TRumor>& getRumors() const { return _m_pProperties->m_rumors; }
-    void setRumors(const vector<TRumor>& newRumors);
-    const vector<TTimedEvent>& getTimedEvents() const { return _m_pProperties->m_timedEvents; }
-    void setTimedEvents(const vector<TTimedEvent>& newTimedEvents);
-    const TVictoryCondition* getPVictoryCondition() const { return _m_pProperties->m_pVictoryCondition; }
-    void setVictoryCondition(const TVictoryCondition* pNewVictoryCondition);
-    const TLossCondition* getPLossCondition() const { return _m_pProperties->m_pLossCondition; }
-    void setLossCondition(const TLossCondition* pNewLossCondition);
-    bool isPlayerPresent(TPlayer player) const { return _m_apPlayerBookkeeping[player]->m_numUnits != 0; }
-    unsigned int getNumPlayableSlots() const { return _m_pBookkeeping->m_numPlayableSlots; }
-
-    TMapLayerObjectID placeObject(bool bSecondLayer, const TGameObject& obj, unsigned int x, unsigned int y,
-                                  TTileExtent* pUpdatedExtent);
-    void removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
-    void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
-    void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
-    void removeFloatingObject(bool bSecondLayer);
-    bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const
-    {
-        return _isValidPlacement(getLayer(bSecondLayer), obj, x, y);
-    }
-    const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
-    const TGameObject* getPObject(const TMapObjectRef& objRef) const
-    {
-        return getPObject(objRef.getBSecondLayer(), objRef.getObjectID());
-    }
-    TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
-
-    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
-                              TTileExtent* pUpdatedExtent);
-    void onObjectRemoved();
-    void onHeroAdded(const THero& hero);
-    void onRemovingHero(const THero& hero);
-    void onHeroProtoChanged(THeroClass heroClass, unsigned int oldProtoNum, unsigned int newProtoNum);
-    void onHeroClassChanged(THeroClass oldHeroClass, unsigned int oldProtoNum, THeroClass newHeroClass,
-                            unsigned int newProtoNum);
-    void onHeroOwnerChanged(const THero& hero, TPlayer oldOwner);
-    void onTownOwnerChanged(const TTown& town, bool bSecondLayer, unsigned int objID, TPlayer oldOwner);
-
-    TGameObject* createObject(const TObjectType& objType, TPlayer player, void* (*pfnAllocator)(unsigned int)) const;
-    TGameObject* reconstructObject(streambuf* pStreamBuf, int version, void* (*pfnAllocator)(unsigned int)) const;
-    bool canCreate(const TObjectType& objType, TPlayer player) const;
-    bool isHeroOnMap(THeroID heroID) const;
-    set<unsigned int> getAvailableHeroesInClass(THeroClass heroClass) const;
-    bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
-    const set<TMapObjectRef>& getPlayerTownRefs(TPlayer player) const;
-    unsigned int getNumTownsOnMap() const { return _m_pBookkeeping->m_numTowns; }
-    bool isGrailOnMap() const { return _m_pBookkeeping->m_bGrailPlaced; }
-    unsigned int getNumObelisksOnMap() const;
-
-private:
-    class _TVictoryConditionValidater : public TVictoryCondition::TVisitor {
-    public:
-        _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
-
-        bool isValid() const { return _m_bValid; }
-
-        virtual void visit(const TVCAquireArtifact& vc);
-        virtual void visit(const TVCAccumulateCreature& vc);
-        virtual void visit(const TVCAccumulateResource& vc);
-        virtual void visit(const TVCUpgradeTown& vc);
-        virtual void visit(const TVCBuildHolyGrailStruct& vc);
-        virtual void visit(const TVCDefeatHero& vc);
-        virtual void visit(const TVCCaptureTown& vc);
-        virtual void visit(const TVCDefeatMonster& vc);
-        virtual void visit(const TVCFlagAllCreatureGenerators& vc);
-        virtual void visit(const TVCFlagAllMines& vc);
-        virtual void visit(const TVCTransportArtifact& vc);
-
-    private:
-        bool _isArtifact(const TMapObjectRef& objRef) const;
-        bool _isTown(const TMapObjectRef& objRef) const;
-
-        const _TImpl& _m_map;
-        bool _m_bValid;
-    };
-
-    class _TLossConditionValidater : public TLossCondition::TVisitor {
-    public:
-        _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
-
-        bool isValid() const { return _m_bValid; }
-
-        virtual void visit(const TLCLoseTown& lc);
-        virtual void visit(const TLCLoseHero& lc);
-        virtual void visit(const TLCTimeExpires& lc);
-
-    private:
-        const _TImpl& _m_map;
-        bool _m_bValid;
-    };
-
-    class _TVictoryConditionWriter : public TVictoryCondition::TVisitor {
-    public:
-        _TVictoryConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
-
-        virtual void visit(const TVCAquireArtifact& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCAccumulateCreature& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCAccumulateResource& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCUpgradeTown& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCBuildHolyGrailStruct& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCDefeatHero& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCCaptureTown& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCDefeatMonster& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCFlagAllCreatureGenerators& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCFlagAllMines& vc) { _m_map._write(_m_pOStream, vc); }
-        virtual void visit(const TVCTransportArtifact& vc) { _m_map._write(_m_pOStream, vc); }
-
-    private:
-        const _TImpl& _m_map;
-        TRawOStream* _m_pOStream;
-    };
-
-    class _TLossConditionWriter : public TLossCondition::TVisitor {
-    public:
-        _TLossConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
-
-        virtual void visit(const TLCLoseTown& lc) { _m_map._write(_m_pOStream, lc); }
-        virtual void visit(const TLCLoseHero& lc) { _m_map._write(_m_pOStream, lc); }
-        virtual void visit(const TLCTimeExpires& lc) { _m_map._write(_m_pOStream, lc); }
-
-    private:
-        const _TImpl& _m_map;
-        TRawOStream* _m_pOStream;
-    };
-
-    friend class _TVictoryConditionValidater;
-    friend class _TLossConditionValidater;
-    friend class _TVictoryConditionWriter;
-    friend class _TLossConditionWriter;
-
-    bool _isValid(const TVictoryCondition& vc) const;
-    bool _isValid(const TLossCondition& lc) const;
-    void _write(TRawOStream* pOStream, const TMapObjectRef& objRef) const;
-    void _writeVictoryCondition(TRawOStream* pOStream) const;
-    void _write(TRawOStream* pOStream, const TVictoryCondition& vc, int type) const;
-    void _write(TRawOStream* pOStream, const TVCAquireArtifact& vc) const;
-    void _write(TRawOStream* pOStream, const TVCAccumulateCreature& vc) const;
-    void _write(TRawOStream* pOStream, const TVCAccumulateResource& vc) const;
-    void _write(TRawOStream* pOStream, const TVCUpgradeTown& vc) const;
-    void _write(TRawOStream* pOStream, const TVCBuildHolyGrailStruct& vc) const;
-    void _write(TRawOStream* pOStream, const TVCDefeatHero& vc) const;
-    void _write(TRawOStream* pOStream, const TVCCaptureTown& vc) const;
-    void _write(TRawOStream* pOStream, const TVCDefeatMonster& vc) const;
-    void _write(TRawOStream* pOStream, const TVCFlagAllCreatureGenerators& vc) const;
-    void _write(TRawOStream* pOStream, const TVCFlagAllMines& vc) const;
-    void _write(TRawOStream* pOStream, const TVCTransportArtifact& vc) const;
-    void _writeLossCondition(TRawOStream* pOStream) const;
-    void _write(TRawOStream* pOStream, const TLCLoseTown& lc) const;
-    void _write(TRawOStream* pOStream, const TLCLoseHero& lc) const;
-    void _write(TRawOStream* pOStream, const TLCTimeExpires& lc) const;
-
-    TGameObject* _createObject(const TObjectType& objType, TRawIStream* pIStream, int version,
-                               void* (*pfnAllocator)(unsigned int)) const;
-    TMapLayerObjectID _placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
-                                          unsigned int y, TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placeNonRandomHero(bool bSecondLayer, const TNonRandomHero& hero, unsigned int x,
-                                          unsigned int y, TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placePrison(bool bSecondLayer, const TPrison& prison, unsigned int x, unsigned int y,
-                                   TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placeHero(bool bSecondLayer, const THero& hero, unsigned int x, unsigned int y,
-                                 TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placeTown(bool bSecondLayer, const TTown& town, unsigned int x, unsigned int y,
-                                 TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placeHolyGrail(bool bSecondLayer, const THolyGrail& holyGrail, unsigned int x,
-                                      unsigned int y, TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placeMine(bool bSecondLayer, const TMine& mine, unsigned int x, unsigned int y,
-                                 TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placeGenerator(bool bSecondLayer, const TGenerator& generator, unsigned int x,
-                                      unsigned int y, TTileExtent* pUpdatedExtent);
-    TMapLayerObjectID _placeSign(bool bSecondLayer, const TSign& sign, unsigned int x, unsigned int y,
-                                 TTileExtent* pUpdatedExtent);
-    void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
-    bool _isHeroAvailable(THeroClass heroClass, unsigned int protoNum) const;
-    unsigned int _pickAvailableHero(THeroClass heroClass) const;
-    unsigned int _pickAvailableTeam() const;
-    void _onPlayableAdded(const TPlayableObject& playable);
-    void _onRemovingPlayable(const TPlayableObject& playable);
-    void _onTownAdded(const TTown& town, bool bSecondLayer, unsigned int objID);
-    void _onRemovingTown(const TTown& town, bool bSecondLayer, unsigned int objID);
-    void _onGeneralObjectAdded(const TGameObject& obj);
-    void _onRemovingGeneralObject(const TGameObject& obj);
-    void _onHolyGrailAdded(const THolyGrail& holyGrail);
-    void _onRemovingHolyGrail(const THolyGrail& holyGrail);
-    void _onMineAdded(const TMine& mine);
-    void _onRemovingMine(const TMine& mine);
-    void _onGeneratorAdded(const TGenerator& generator);
-    void _onRemovingGenerator(const TGenerator& generator);
-    void _onSignAdded(const TSign& sign);
-    void _onRemovingSign(const TSign& sign);
-    bool _isMapPlayable() const;
-    TMapLayerObjectID _findObject(bool bSecondLayer, const TTilePoint& loc,
-                                  bool (*pfnPredicate)(const TGameObject&)) const;
-    TVictoryCondition* _reconstructVictoryCondition(const TVictoryConditionData& vcData) const;
-    TLossCondition* _reconstructLossCondition(const TLossConditionData& lcData) const;
-    const TNonRandomHero* _findPlayersNonRandomHero(TPlayer player) const;
-    TRawIStream& readContainer(TRawIStream& stream, vector<TRumor>& aRumor);
-    TRawIStream& readContainer(TRawIStream& stream, vector<TTimedEvent>& aTimedEvent);
-
-    struct _TProperties {
-        _TProperties()
-            : m_difficulty(TDifficulty(1)), m_pVictoryCondition(NULL), m_pLossCondition(NULL) {}
-        _TProperties(const _TProperties& other)
-            : m_name(other.m_name), m_desc(other.m_desc), m_difficulty(other.m_difficulty),
-              m_players(other.m_players), m_teamInfo(other.m_teamInfo), m_rumors(other.m_rumors),
-              m_timedEvents(other.m_timedEvents), m_pVictoryCondition(NULL), m_pLossCondition(NULL)
-        {
-            if (other.m_pVictoryCondition != NULL)
-                if ((m_pVictoryCondition = TVictoryCondition::clone(*other.m_pVictoryCondition, ::operator new)) == NULL)
-#line 926
-                    throw TAllocationFailure(__FILE__, __LINE__);
-            if (other.m_pLossCondition != NULL)
-                if ((m_pLossCondition = TLossCondition::clone(*other.m_pLossCondition, ::operator new)) == NULL)
-#line 929
-                    throw TAllocationFailure(__FILE__, __LINE__);
-        }
-        ~_TProperties()
-        {
-            assert(m_pVictoryCondition == __null && m_pLossCondition == __null);
-        }
-
-        string m_name;
-        string m_desc;
-        TDifficulty m_difficulty;
-        TArray<TPlayerInfo, kNumPlayers> m_players;
-        TTeamInfo m_teamInfo;
-        vector<TRumor> m_rumors;
-        vector<TTimedEvent> m_timedEvents;
-        TVictoryCondition* m_pVictoryCondition;
-        TLossCondition* m_pLossCondition;
-    };
-
-    struct _TBookkeeping {
-        // Which prototypes of each hero class are still free to place.
-        class TAABHeroAvailable : public TArray<bitset<8>, kNumHeroClasses> {
-        public:
-            TAABHeroAvailable()
-            {
-                for (unsigned int heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
-                    bitset<8>& abHeroAvailable = (*this)[heroClass];
-                    for (unsigned int protoNum = 0; protoNum < THero::s_akClassTraits[heroClass].m_numPrototypes;
-                         protoNum++)
-                        abHeroAvailable[protoNum] = true;
-                }
-            }
-        };
-
-        _TBookkeeping()
-            : m_numPlayableSlots(0), m_numTowns(0), m_numHeroes(0), m_bGrailPlaced(false), m_numMines(0),
-              m_numGenerators(0), m_numSigns(0), m_aNumObjsOfCappedType(kCappedObjectTypeInfoMap.size(), 0U) {}
-
-        unsigned int m_numPlayableSlots;
-        unsigned int m_numTowns;
-        unsigned int m_numHeroes;
-        bool m_bGrailPlaced;
-        unsigned int m_numMines;
-        unsigned int m_numGenerators;
-        unsigned int m_numSigns;
-        vector<unsigned int> m_aNumObjsOfCappedType;
-        TAABHeroAvailable m_aabHeroAvailable;
-    };
-
-    struct _TPlayerBookkeeping {
-        _TPlayerBookkeeping()
-            : m_numUnits(0), m_numRandomTowns(0), m_aNumTownsOfType(0), m_numHeroes(0), m_numRandomHeroes(0),
-              m_aNumHeroesOfType(0) {}
-
-        unsigned int m_numUnits;
-        set<TMapObjectRef> m_townRefs;
-        unsigned int m_numRandomTowns;
-        TArray<unsigned int, kNumTownTypes> m_aNumTownsOfType;
-        unsigned int m_numHeroes;
-        unsigned int m_numRandomHeroes;
-        TArray<unsigned int, kNumTownTypes> m_aNumHeroesOfType;
-    };
-
-    static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
-    static bool _isValidShipyardPlacement(const TLayer& layer, const TGameObject& shipyard, unsigned int x,
-                                          unsigned int y);
-
-    typedef TRefCountingPtr<_TProperties> _TPProperties;
-    typedef TRefCountingPtr<_TBookkeeping> _TPBookkeeping;
-    typedef TRefCountingPtr<_TPlayerBookkeeping> _TPPlayerBookkeeping;
-
-    TClient* _m_pClient;
-    const TObjectFactory* _m_pObjectFactory;
-    TSize _m_size;
-    bool _m_bTwoLayer;
-    _TPProperties _m_pProperties;
-    vector<TLayer> _m_aLayer;
-    _TPBookkeeping _m_pBookkeeping;
-    TArray<_TPPlayerBookkeeping, kNumPlayers> _m_apPlayerBookkeeping;
-};
 
 namespace {
 
@@ -801,6 +460,348 @@ TRawOStream& operator<<(TRawOStream& stream, const TTeamInfo& teamInfo)
     }
     return stream;
 }
+
+class TGameMap::_TImpl {
+public:
+    static const unsigned int s_kMaxHeroesOnMap = 128;
+    static const unsigned int s_kMaxHeroesPerPlayer = 8;
+    static const unsigned int s_kMaxTownsOnMap = 48;
+    static const unsigned int s_kMaxMinesOnMap = 144;
+    static const unsigned int s_kMaxGeneratorsOnMap = 144;
+    static const unsigned int s_kMaxSignsOnMap = 128;
+    static const unsigned int s_kMaxNameLen = 30;
+    static const unsigned int s_kMaxDescLen = 300;
+    static const unsigned int s_kMaxRumors = 30;
+    static const unsigned int s_kMaxTimedEvents = 50;
+
+    static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
+    static const TMapLayerObjectID s_kInvalidObjID;
+
+    static void streamObject(streambuf* pStreamBuf, const TGameObject& obj);
+
+    _TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, TSize size, bool bTwoLayer);
+    _TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, streambuf* pStreamBuf, int version);
+    ~_TImpl();
+
+    void importText(istream* pIStream);
+    void exportText(ostream* pOStream) const;
+    void save(streambuf* pStreamBuf) const;
+
+    unsigned int getWidth() const { return _s_akDimension[_m_size]; }
+    unsigned int getHeight() const { return _s_akDimension[_m_size]; }
+    bool isTwoLayer() const { return _m_bTwoLayer; }
+    void removeSecondLayer();
+    void addSecondLayer();
+    TLayer* getPLayer(unsigned int num);
+    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer* getPLayer(unsigned int num) const;
+    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
+    const TLayer& getLayer(bool bSecondLayer) const { return *getPLayer(bSecondLayer); }
+
+    const string& getName() const { return _m_pProperties->m_name; }
+    void setName(const string& newName);
+    const string& getDesc() const { return _m_pProperties->m_desc; }
+    void setDesc(const string& newDesc);
+    TDifficulty getDifficulty() const { return _m_pProperties->m_difficulty; }
+    void setDifficulty(TDifficulty newDifficulty);
+    const TArray<TPlayerInfo, kNumPlayers>& getPlayers() const { return _m_pProperties->m_players; }
+    void setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers);
+    const TTeamInfo& getTeamInfo() const { return _m_pProperties->m_teamInfo; }
+    void setTeamInfo(const TTeamInfo& newTeamInfo);
+    const vector<TRumor>& getRumors() const { return _m_pProperties->m_rumors; }
+    void setRumors(const vector<TRumor>& newRumors);
+    const vector<TTimedEvent>& getTimedEvents() const { return _m_pProperties->m_timedEvents; }
+    void setTimedEvents(const vector<TTimedEvent>& newTimedEvents);
+    const TVictoryCondition* getPVictoryCondition() const { return _m_pProperties->m_pVictoryCondition; }
+    void setVictoryCondition(const TVictoryCondition* pNewVictoryCondition);
+    const TLossCondition* getPLossCondition() const { return _m_pProperties->m_pLossCondition; }
+    void setLossCondition(const TLossCondition* pNewLossCondition);
+    bool isPlayerPresent(TPlayer player) const { return _m_apPlayerBookkeeping[player]->m_numUnits != 0; }
+    unsigned int getNumPlayableSlots() const { return _m_pBookkeeping->m_numPlayableSlots; }
+
+    TMapLayerObjectID placeObject(bool bSecondLayer, const TGameObject& obj, unsigned int x, unsigned int y,
+                                  TTileExtent* pUpdatedExtent);
+    void removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
+    void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
+    void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
+    void removeFloatingObject(bool bSecondLayer);
+    bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const
+    {
+        return _isValidPlacement(getLayer(bSecondLayer), obj, x, y);
+    }
+    const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
+    const TGameObject* getPObject(const TMapObjectRef& objRef) const
+    {
+        return getPObject(objRef.getBSecondLayer(), objRef.getObjectID());
+    }
+    TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
+
+    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                              TTileExtent* pUpdatedExtent);
+    void onObjectRemoved();
+    void onHeroAdded(const THero& hero);
+    void onRemovingHero(const THero& hero);
+    void onHeroProtoChanged(THeroClass heroClass, unsigned int oldProtoNum, unsigned int newProtoNum);
+    void onHeroClassChanged(THeroClass oldHeroClass, unsigned int oldProtoNum, THeroClass newHeroClass,
+                            unsigned int newProtoNum);
+    void onHeroOwnerChanged(const THero& hero, TPlayer oldOwner);
+    void onTownOwnerChanged(const TTown& town, bool bSecondLayer, unsigned int objID, TPlayer oldOwner);
+
+    TGameObject* createObject(const TObjectType& objType, TPlayer player, void* (*pfnAllocator)(unsigned int)) const;
+    TGameObject* reconstructObject(streambuf* pStreamBuf, int version, void* (*pfnAllocator)(unsigned int)) const;
+    bool canCreate(const TObjectType& objType, TPlayer player) const;
+    bool isHeroOnMap(THeroID heroID) const;
+    set<unsigned int> getAvailableHeroesInClass(THeroClass heroClass) const;
+    bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
+    const set<TMapObjectRef>& getPlayerTownRefs(TPlayer player) const;
+    unsigned int getNumTownsOnMap() const { return _m_pBookkeeping->m_numTowns; }
+    bool isGrailOnMap() const { return _m_pBookkeeping->m_bGrailPlaced; }
+    unsigned int getNumObelisksOnMap() const;
+
+private:
+    class _TVictoryConditionWriter : public TVictoryCondition::TVisitor {
+    public:
+        _TVictoryConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
+
+        virtual void visit(const TVCAquireArtifact& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCAccumulateCreature& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCAccumulateResource& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCUpgradeTown& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCBuildHolyGrailStruct& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCDefeatHero& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCCaptureTown& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCDefeatMonster& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCFlagAllCreatureGenerators& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCFlagAllMines& vc) { _m_map._write(_m_pOStream, vc); }
+        virtual void visit(const TVCTransportArtifact& vc) { _m_map._write(_m_pOStream, vc); }
+
+    private:
+        const _TImpl& _m_map;
+        TRawOStream* _m_pOStream;
+    };
+
+    class _TLossConditionWriter : public TLossCondition::TVisitor {
+    public:
+        _TLossConditionWriter(const _TImpl& map, TRawOStream* pOStream) : _m_map(map), _m_pOStream(pOStream) {}
+
+        virtual void visit(const TLCLoseTown& lc) { _m_map._write(_m_pOStream, lc); }
+        virtual void visit(const TLCLoseHero& lc) { _m_map._write(_m_pOStream, lc); }
+        virtual void visit(const TLCTimeExpires& lc) { _m_map._write(_m_pOStream, lc); }
+
+    private:
+        const _TImpl& _m_map;
+        TRawOStream* _m_pOStream;
+    };
+
+    class _TVictoryConditionValidater : public TVictoryCondition::TVisitor {
+    public:
+        _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+        bool isValid() const { return _m_bValid; }
+
+        virtual void visit(const TVCAquireArtifact& vc);
+        virtual void visit(const TVCAccumulateCreature& vc);
+        virtual void visit(const TVCAccumulateResource& vc);
+        virtual void visit(const TVCUpgradeTown& vc);
+        virtual void visit(const TVCBuildHolyGrailStruct& vc);
+        virtual void visit(const TVCDefeatHero& vc);
+        virtual void visit(const TVCCaptureTown& vc);
+        virtual void visit(const TVCDefeatMonster& vc);
+        virtual void visit(const TVCFlagAllCreatureGenerators& vc);
+        virtual void visit(const TVCFlagAllMines& vc);
+        virtual void visit(const TVCTransportArtifact& vc);
+
+    private:
+        bool _isArtifact(const TMapObjectRef& objRef) const;
+        bool _isTown(const TMapObjectRef& objRef) const;
+
+        const _TImpl& _m_map;
+        bool _m_bValid;
+    };
+
+    class _TLossConditionValidater : public TLossCondition::TVisitor {
+    public:
+        _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+        bool isValid() const { return _m_bValid; }
+
+        virtual void visit(const TLCLoseTown& lc);
+        virtual void visit(const TLCLoseHero& lc);
+        virtual void visit(const TLCTimeExpires& lc);
+
+    private:
+        const _TImpl& _m_map;
+        bool _m_bValid;
+    };
+
+    friend class _TVictoryConditionValidater;
+    friend class _TLossConditionValidater;
+    friend class _TVictoryConditionWriter;
+    friend class _TLossConditionWriter;
+
+    bool _isValid(const TVictoryCondition& vc) const;
+    bool _isValid(const TLossCondition& lc) const;
+    void _write(TRawOStream* pOStream, const TMapObjectRef& objRef) const;
+    void _writeVictoryCondition(TRawOStream* pOStream) const;
+    void _write(TRawOStream* pOStream, const TVictoryCondition& vc, int type) const;
+    void _write(TRawOStream* pOStream, const TVCAquireArtifact& vc) const;
+    void _write(TRawOStream* pOStream, const TVCAccumulateCreature& vc) const;
+    void _write(TRawOStream* pOStream, const TVCAccumulateResource& vc) const;
+    void _write(TRawOStream* pOStream, const TVCUpgradeTown& vc) const;
+    void _write(TRawOStream* pOStream, const TVCBuildHolyGrailStruct& vc) const;
+    void _write(TRawOStream* pOStream, const TVCDefeatHero& vc) const;
+    void _write(TRawOStream* pOStream, const TVCCaptureTown& vc) const;
+    void _write(TRawOStream* pOStream, const TVCDefeatMonster& vc) const;
+    void _write(TRawOStream* pOStream, const TVCFlagAllCreatureGenerators& vc) const;
+    void _write(TRawOStream* pOStream, const TVCFlagAllMines& vc) const;
+    void _write(TRawOStream* pOStream, const TVCTransportArtifact& vc) const;
+    void _writeLossCondition(TRawOStream* pOStream) const;
+    void _write(TRawOStream* pOStream, const TLCLoseTown& lc) const;
+    void _write(TRawOStream* pOStream, const TLCLoseHero& lc) const;
+    void _write(TRawOStream* pOStream, const TLCTimeExpires& lc) const;
+
+    TGameObject* _createObject(const TObjectType& objType, TRawIStream* pIStream, int version,
+                               void* (*pfnAllocator)(unsigned int)) const;
+    TMapLayerObjectID _placeGeneralObject(bool bSecondLayer, const TGameObject& obj, unsigned int x,
+                                          unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNonRandomHero(bool bSecondLayer, const TNonRandomHero& hero, unsigned int x,
+                                          unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placePrison(bool bSecondLayer, const TPrison& prison, unsigned int x, unsigned int y,
+                                   TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeHero(bool bSecondLayer, const THero& hero, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeTown(bool bSecondLayer, const TTown& town, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeHolyGrail(bool bSecondLayer, const THolyGrail& holyGrail, unsigned int x,
+                                      unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeMine(bool bSecondLayer, const TMine& mine, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeGenerator(bool bSecondLayer, const TGenerator& generator, unsigned int x,
+                                      unsigned int y, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeSign(bool bSecondLayer, const TSign& sign, unsigned int x, unsigned int y,
+                                 TTileExtent* pUpdatedExtent);
+    void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
+    bool _isHeroAvailable(THeroClass heroClass, unsigned int protoNum) const;
+    unsigned int _pickAvailableHero(THeroClass heroClass) const;
+    unsigned int _pickAvailableTeam() const;
+    void _onPlayableAdded(const TPlayableObject& playable);
+    void _onRemovingPlayable(const TPlayableObject& playable);
+    void _onTownAdded(const TTown& town, bool bSecondLayer, unsigned int objID);
+    void _onRemovingTown(const TTown& town, bool bSecondLayer, unsigned int objID);
+    void _onGeneralObjectAdded(const TGameObject& obj);
+    void _onRemovingGeneralObject(const TGameObject& obj);
+    void _onHolyGrailAdded(const THolyGrail& holyGrail);
+    void _onRemovingHolyGrail(const THolyGrail& holyGrail);
+    void _onMineAdded(const TMine& mine);
+    void _onRemovingMine(const TMine& mine);
+    void _onGeneratorAdded(const TGenerator& generator);
+    void _onRemovingGenerator(const TGenerator& generator);
+    void _onSignAdded(const TSign& sign);
+    void _onRemovingSign(const TSign& sign);
+    bool _isMapPlayable() const;
+    TMapLayerObjectID _findObject(bool bSecondLayer, const TTilePoint& loc,
+                                  bool (*pfnPredicate)(const TGameObject&)) const;
+    TVictoryCondition* _reconstructVictoryCondition(const TVictoryConditionData& vcData) const;
+    TLossCondition* _reconstructLossCondition(const TLossConditionData& lcData) const;
+    const TNonRandomHero* _findPlayersNonRandomHero(TPlayer player) const;
+    TRawIStream& readContainer(TRawIStream& stream, vector<TRumor>& aRumor);
+    TRawIStream& readContainer(TRawIStream& stream, vector<TTimedEvent>& aTimedEvent);
+
+    struct _TProperties {
+        _TProperties()
+            : m_difficulty(TDifficulty(1)), m_pVictoryCondition(NULL), m_pLossCondition(NULL) {}
+        _TProperties(const _TProperties& other)
+            : m_name(other.m_name), m_desc(other.m_desc), m_difficulty(other.m_difficulty),
+              m_players(other.m_players), m_teamInfo(other.m_teamInfo), m_rumors(other.m_rumors),
+              m_timedEvents(other.m_timedEvents), m_pVictoryCondition(NULL), m_pLossCondition(NULL)
+        {
+            if (other.m_pVictoryCondition != NULL)
+                if ((m_pVictoryCondition = TVictoryCondition::clone(*other.m_pVictoryCondition, ::operator new)) == NULL)
+#line 926
+                    throw TAllocationFailure(__FILE__, __LINE__);
+            if (other.m_pLossCondition != NULL)
+                if ((m_pLossCondition = TLossCondition::clone(*other.m_pLossCondition, ::operator new)) == NULL)
+#line 929
+                    throw TAllocationFailure(__FILE__, __LINE__);
+        }
+        ~_TProperties()
+        {
+            assert(m_pVictoryCondition == __null && m_pLossCondition == __null);
+        }
+
+        string m_name;
+        string m_desc;
+        TDifficulty m_difficulty;
+        TArray<TPlayerInfo, kNumPlayers> m_players;
+        TTeamInfo m_teamInfo;
+        vector<TRumor> m_rumors;
+        vector<TTimedEvent> m_timedEvents;
+        TVictoryCondition* m_pVictoryCondition;
+        TLossCondition* m_pLossCondition;
+    };
+
+    struct _TBookkeeping {
+        // Which prototypes of each hero class are still free to place.
+        class TAABHeroAvailable : public TArray<bitset<8>, kNumHeroClasses> {
+        public:
+            TAABHeroAvailable()
+            {
+                for (unsigned int heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
+                    bitset<8>& abHeroAvailable = (*this)[heroClass];
+                    for (unsigned int protoNum = 0; protoNum < THero::s_akClassTraits[heroClass].m_numPrototypes;
+                         protoNum++)
+                        abHeroAvailable[protoNum] = true;
+                }
+            }
+        };
+
+        _TBookkeeping()
+            : m_numPlayableSlots(0), m_numTowns(0), m_numHeroes(0), m_bGrailPlaced(false), m_numMines(0),
+              m_numGenerators(0), m_numSigns(0), m_aNumObjsOfCappedType(kCappedObjectTypeInfoMap.size(), 0U) {}
+
+        unsigned int m_numPlayableSlots;
+        unsigned int m_numTowns;
+        unsigned int m_numHeroes;
+        bool m_bGrailPlaced;
+        unsigned int m_numMines;
+        unsigned int m_numGenerators;
+        unsigned int m_numSigns;
+        vector<unsigned int> m_aNumObjsOfCappedType;
+        TAABHeroAvailable m_aabHeroAvailable;
+    };
+
+    struct _TPlayerBookkeeping {
+        _TPlayerBookkeeping()
+            : m_numUnits(0), m_numRandomTowns(0), m_aNumTownsOfType(0), m_numHeroes(0), m_numRandomHeroes(0),
+              m_aNumHeroesOfType(0) {}
+
+        unsigned int m_numUnits;
+        set<TMapObjectRef> m_townRefs;
+        unsigned int m_numRandomTowns;
+        TArray<unsigned int, kNumTownTypes> m_aNumTownsOfType;
+        unsigned int m_numHeroes;
+        unsigned int m_numRandomHeroes;
+        TArray<unsigned int, kNumTownTypes> m_aNumHeroesOfType;
+    };
+
+    static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
+    static bool _isValidShipyardPlacement(const TLayer& layer, const TGameObject& shipyard, unsigned int x,
+                                          unsigned int y);
+
+    typedef TRefCountingPtr<_TProperties> _TPProperties;
+    typedef TRefCountingPtr<_TBookkeeping> _TPBookkeeping;
+    typedef TRefCountingPtr<_TPlayerBookkeeping> _TPPlayerBookkeeping;
+
+    TClient* _m_pClient;
+    const TObjectFactory* _m_pObjectFactory;
+    TSize _m_size;
+    bool _m_bTwoLayer;
+    _TPProperties _m_pProperties;
+    vector<TLayer> _m_aLayer;
+    _TPBookkeeping _m_pBookkeeping;
+    TArray<_TPPlayerBookkeeping, kNumPlayers> _m_apPlayerBookkeeping;
+};
 
 TCreateObjFailureTooManyHeroesOnMap::TCreateObjFailureTooManyHeroesOnMap()
     : TCreateObjFailureTooManyInstancesOfTypeOnMap(HERO, TGameMap::_TImpl::s_kMaxHeroesOnMap)
