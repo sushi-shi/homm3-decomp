@@ -476,6 +476,11 @@ object = 11
 source = "src/editor/Event.cpp"
 
 [[unit]]
+name = "Hero"
+object = 15
+source = "src/editor/Hero.cpp"
+
+[[unit]]
 name = "Monster"
 object = 19
 source = "src/editor/Monster.cpp"
