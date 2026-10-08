@@ -6,12 +6,15 @@
 #include "editor/stdafx.h"
 
 #include <assert.h>
+#include <map>
+#include <vector>
 
 #include "va.h"
 #include "editor/Array.h"
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
 #include "editor/TilePoint.h"
+#include "retailobjecttype.h"
 
 namespace {
 
@@ -64,6 +67,117 @@ void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[
             }
         }
     }
+}
+
+// The object types the map caps: each info's type, its ordinal in the
+// bookkeeping's counts and its cap. Complete lets up to four types share
+// one cap (one info), so the map keys every type to its shared info.
+struct TCappedObjectTypeInfo {
+    TCappedObjectTypeInfo(int type, unsigned int ordinal, unsigned int cap)
+        : m_type(type), m_ordinal(ordinal), m_cap(cap) {}
+
+    int m_type;
+    unsigned int m_ordinal;
+    unsigned int m_cap;
+};
+
+class TCappedObjectTypeInfoMap : public std::map<int, const TCappedObjectTypeInfo*> {
+public:
+    TCappedObjectTypeInfoMap();
+
+private:
+    std::vector<TCappedObjectTypeInfo> _m_aInfo;
+};
+
+// One type and its cap.
+struct TCappedObjectType {
+    int m_type;
+    unsigned int m_cap;
+};
+
+// Types sharing one cap.
+template<unsigned int N>
+struct TCappedObjectTypeGroup {
+    int m_aType[N];
+    unsigned int m_cap;
+};
+
+DATA(0x00535128)
+static const TCappedObjectType akCappedObjectTypes[] = {
+    { EVENT, 200 },
+    { BLACK_BOX, 200 },
+    { OBELISK, 48 },
+    { BOAT, 64 },
+    { TRAINING_GROUNDS, 32 },
+    { DEFENSE_TOWER, 32 },
+    { GARDEN_OF_REVELATION, 32 },
+    { MERC_CAMP, 32 },
+    { POWER_SCHOOL, 32 },
+    { TREE_OF_KNOWLEDGE, 32 },
+    { LIBRARY, 32 },
+    { ARENA, 32 },
+    { MAGIC_SCHOOL, 32 },
+    { WAR_SCHOOL, 32 },
+    { SIREN, 32 },
+    { MYSTICAL_GARDEN, 32 },
+    { MAGIC_SPRING, 32 },
+    { DEAD_GUY, 32 },
+    { LEAN_TO, 32 },
+    { SEER, 48 },
+    { BLACK_MARKET, 32 },
+};
+
+DATA(0x005351d0)
+static const TCappedObjectTypeGroup<2> akCappedObjectTypePairs[] = {
+    { { SIGN, OCEAN_BOTTLE }, 128 },
+    { { GARRISON, GARRISON2 }, 48 },
+};
+
+DATA(0x005351e8)
+static const TCappedObjectTypeGroup<3> kCappedMineTypes = { { MINE, LIGHTHOUSE, ABANDONED_MINE }, 144 };
+
+DATA(0x005351f8)
+static const TCappedObjectTypeGroup<5> kCappedGeneratorTypes = {
+    { CREATURE_GENERATOR_1, CREATURE_GENERATOR_4, RANDOM_DWELLING_LVL, RANDOM_DWELLING_FACTION,
+      RANDOM_DWELLING },
+    144
+};
+
+VA(0x0041e98d, 0x28d)
+TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
+{
+    const unsigned int kNumSingles = sizeof(akCappedObjectTypes) / sizeof(akCappedObjectTypes[0]);
+    const unsigned int kNumPairs = sizeof(akCappedObjectTypePairs) / sizeof(akCappedObjectTypePairs[0]);
+    _m_aInfo.reserve(kNumSingles + kNumPairs + 2);
+    unsigned int ordinal = 0;
+    unsigned int i;
+    for (i = 0; i < kNumSingles; i++)
+        _m_aInfo.push_back(TCappedObjectTypeInfo(akCappedObjectTypes[i].m_type, ordinal++,
+                                                 akCappedObjectTypes[i].m_cap));
+    for (i = 0; i < kNumPairs; i++)
+        _m_aInfo.push_back(TCappedObjectTypeInfo(akCappedObjectTypePairs[i].m_aType[0], ordinal++,
+                                                 akCappedObjectTypePairs[i].m_cap));
+    _m_aInfo.push_back(TCappedObjectTypeInfo(kCappedMineTypes.m_aType[0], ordinal++,
+                                             kCappedMineTypes.m_cap));
+    _m_aInfo.push_back(TCappedObjectTypeInfo(kCappedGeneratorTypes.m_aType[0], ordinal++,
+                                             kCappedGeneratorTypes.m_cap));
+
+    unsigned int which = 0;
+    for (i = 0; i < kNumSingles; i++)
+        insert(value_type(akCappedObjectTypes[i].m_type, &_m_aInfo[which++]));
+    for (i = 0; i < kNumPairs; i++, which++) {
+        insert(value_type(akCappedObjectTypePairs[i].m_aType[0], &_m_aInfo[which]));
+        insert(value_type(akCappedObjectTypePairs[i].m_aType[1], &_m_aInfo[which]));
+    }
+    insert(value_type(kCappedMineTypes.m_aType[0], &_m_aInfo[which]));
+    insert(value_type(kCappedMineTypes.m_aType[1], &_m_aInfo[which]));
+    insert(value_type(kCappedMineTypes.m_aType[2], &_m_aInfo[which]));
+    which++;
+    insert(value_type(kCappedGeneratorTypes.m_aType[0], &_m_aInfo[which]));
+    insert(value_type(kCappedGeneratorTypes.m_aType[1], &_m_aInfo[which]));
+    insert(value_type(kCappedGeneratorTypes.m_aType[2], &_m_aInfo[which]));
+    insert(value_type(kCappedGeneratorTypes.m_aType[3], &_m_aInfo[which]));
+    insert(value_type(kCappedGeneratorTypes.m_aType[4], &_m_aInfo[which]));
 }
 
 }  // namespace
