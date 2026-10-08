@@ -83,10 +83,12 @@ target = "i386-linux"
 #   binutils-2.9.5.0.22-6.i386.rpm
 #                  Red Hat 6.2: the as beside that egcs (GDK's `a0`/`a2` byte moves, nop fills).
 #   XFree86-libs-3.3.6-20.i386.rpm, XFree86-libs-4.0.1-1.i386.rpm
-#                  Red Hat 6.2's libX11.so.6 and libXi.so.6, Red Hat 7.0's libXext.so.6 (DT_NEEDED;
-#                  the launch test). ld records the X imports in these libraries' .dynsym order,
-#                  which the image's .dynsym follows (XGetDeviceMotionEvents, XFreeDeviceList,
-#                  ... _init; XGetVisualInfo after XShmDetach, as XFree86 4's libXext has it).
+#                  Red Hat 6.2's libX11.so.6 and libXi.so.6, Red Hat 7.0's libXext.so.6, for GTK+'s
+#                  configure and the launch test. Their .dynsym order is the image's import order
+#                  (XGetDeviceMotionEvents, XFreeDeviceList, ... _init; XGetVisualInfo after
+#                  XShmDetach, as XFree86 4's libXext has it), not its sizes: h3maped links
+#                  against stubs generated from the image (homm3.loki.xstubs,
+#                  config/retail/h3maped-loki/x-imports.tsv).
 #   gtk+-1.2.10-ahiguti.patch
 #                  Red Hat's GTK+ i18n patch (Fedora dist-git): iswpunct/iswcntrl word breaks.
 #   glibc-devel-2.1.1-6.i386.rpm, glibc-2.1.1-6.i386.rpm
@@ -98,7 +100,8 @@ target = "i386-linux"
 #                  Red Hat's -O2 -m486 -fno-strength-reduce, --with-xinput=xfree (libXi).
 #   zlib-1.0.8.tar.gz
 #                  the image's zlibVersion() "1.0.8"; egcs -O2 -fno-strength-reduce reproduces
-#                  all 14 members' .text.
+#                  all 14 members' .text. Patched with 1.0.4's deflate_copyright line, as the
+#                  image holds it (config/loki/patches/zlib-1.0.8-deflate-copyright.patch).
 #   gcc-2.95.2.tar.gz
 #                  libgcc, crtbegin/crtend and libio/libstdc++ 2.10 as a plain `make` of an
 #                  i686-pc-linux-gnu 2.95.2 tree builds them: stage-1 cc1/cc1plus compiled by

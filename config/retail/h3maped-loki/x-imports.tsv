@@ -1,0 +1,229 @@
+# The symbols of the X libraries h3maped was linked against, as the image's .dynsym records
+# them; `homm3 loki link` generates its stub libXi, libXext and libX11 from this table
+# (homm3.loki.xstubs), Red Hat 6.0's X libraries being lost (docs/loki/README.md, Link).
+#
+# Rows 6 to 203 are the image's .dynsym entries 6 to 203: the runs ld 2.9.1 added while it read
+# libXi, libXext and libX11 (DT_NEEDED order; libdl's run is 1 to 5). ld enters a shared
+# library's symbol in the output's .dynsym, in that library's .dynsym order, the first time a
+# library names a symbol the program already references or defines, and copies a function's
+# st_size from the library that defines it. XInput functions are libXi's, MIT-SHM and SHAPE
+# ones libXext's, the rest Xlib's (libX11). libXi's run also holds XFree, and libXext's
+# XGetVisualInfo and XIfEvent: Xlib functions those libraries call (undefined there). libXi's
+# run holds _DYNAMIC, _init, _fini and _GLOBAL_OFFSET_TABLE_ too, which every ld-built library
+# defines and the executable's own definitions override (st_size 0, the executable's type).
+#
+# A row named `symbol@VERSION` is an undefined versioned reference of the library to a glibc
+# symbol. ld 2.9.1 enters such a reference in its hash table as `symbol@@VERSION`, the name
+# under which glibc's definition is later entered, and allocates PLT slots in hash-table order
+# (each bucket newest entry first): strrchr@@GLIBC_2.0 and _IO_link_in@@GLIBC_2.0 share a
+# bucket, and the image gives _IO_link_in (286) the PLT slot before strrchr's (367), which
+# needs strrchr@@GLIBC_2.0 entered before libc.so.6, whose .dynsym defines _IO_link_in first:
+# by an X library (Red Hat's libX11 calls strrchr). No other reference is proven; the index
+# is that of the symbol's own .dynsym entry.
+#
+#   index      the image's .dynsym index
+#   symbol, type, size
+#              the image's st_name (and version), st_info type and st_size
+#   library    the library whose .dynsym names the symbol (whose run holds it)
+#   defined    the library that defines it, which gives its st_size
+#
+# index	symbol	type	size	library	defined
+6	_DYNAMIC	OBJECT	0	libXi	libXi
+7	XGetDeviceMotionEvents	FUNC	655	libXi	libXi
+8	XFreeDeviceList	FUNC	34	libXi	libXi
+9	XQueryDeviceState	FUNC	863	libXi	libXi
+10	_init	FUNC	0	libXi	libXi
+11	XListInputDevices	FUNC	1138	libXi	libXi
+12	XFreeDeviceMotionEvents	FUNC	29	libXi	libXi
+13	XFree	FUNC	34	libXi	libX11
+14	XFreeDeviceState	FUNC	29	libXi	libXi
+15	XOpenDevice	FUNC	357	libXi	libXi
+16	_fini	FUNC	0	libXi	libXi
+17	XSelectExtensionEvent	FUNC	237	libXi	libXi
+18	XUngrabDevice	FUNC	187	libXi	libXi
+19	_GLOBAL_OFFSET_TABLE_	OBJECT	0	libXi	libXi
+20	XGrabDevice	FUNC	296	libXi	libXi
+21	XShmDetach	FUNC	180	libXext	libXext
+22	XGetVisualInfo	FUNC	773	libXext	libX11
+23	XIfEvent	FUNC	264	libXext	libX11
+24	XShapeCombineRectangles	FUNC	268	libXext	libXext
+25	XShapeGetRectangles	FUNC	532	libXext	libXext
+26	XShapeCombineMask	FUNC	206	libXext	libXext
+27	XShmCreateImage	FUNC	284	libXext	libXext
+28	XShmPutImage	FUNC	344	libXext	libXext
+29	XShmAttach	FUNC	213	libXext	libXext
+30	XShmQueryVersion	FUNC	269	libXext	libXext
+31	XFreePixmap	FUNC	127	libX11	libX11
+32	XSetWMProtocols	FUNC	80	libX11	libX11
+33	XSetWMIconName	FUNC	37	libX11	libX11
+34	XLowerWindow	FUNC	140	libX11	libX11
+35	XCreateFontCursor	FUNC	105	libX11	libX11
+36	XCopyGC	FUNC	673	libX11	libX11
+37	XTextWidth16	FUNC	560	libX11	libX11
+38	XSetWindowBackground	FUNC	140	libX11	libX11
+39	XSetTransientForHint	FUNC	46	libX11	libX11
+40	XChangeActivePointerGrab	FUNC	140	libX11	libX11
+41	XDrawString	FUNC	642	libX11	libX11
+42	XGrabKeyboard	FUNC	182	libX11	libX11
+43	XSync	FUNC	195	libX11	libX11
+44	XDrawLines	FUNC	385	libX11	libX11
+45	XUnsetICFocus	FUNC	38	libX11	libX11
+46	XDefineCursor	FUNC	140	libX11	libX11
+47	XFreeCursor	FUNC	127	libX11	libX11
+48	XDrawPoint	FUNC	249	libX11	libX11
+49	XMapWindow	FUNC	127	libX11	libX11
+50	XSetClipRectangles	FUNC	106	libX11	libX11
+51	XCloseDisplay	FUNC	197	libX11	libX11
+52	XRaiseWindow	FUNC	140	libX11	libX11
+53	XPending	FUNC	95	libX11	libX11
+54	XGetIMValues	FUNC	89	libX11	libX11
+55	XGetICValues	FUNC	105	libX11	libX11
+56	XOpenIM	FUNC	67	libX11	libX11
+57	XSetClassHint	FUNC	224	libX11	libX11
+58	XSetSelectionOwner	FUNC	139	libX11	libX11
+59	XCreateSimpleWindow	FUNC	216	libX11	libX11
+60	XCreateImage	FUNC	335	libX11	libX11
+61	XSetForeground	FUNC	99	libX11	libX11
+62	XFillPolygon	FUNC	387	libX11	libX11
+63	XFreeColormap	FUNC	139	libX11	libX11
+64	XGetWindowAttributes	FUNC	490	libX11	libX11
+65	XmbTextListToTextProperty	FUNC	62	libX11	libX11
+66	XSetICValues	FUNC	99	libX11	libX11
+67	XResizeWindow	FUNC	145	libX11	libX11
+68	XQueryTree	FUNC	286	libX11	libX11
+69	XFreeGC	FUNC	191	libX11	libX11
+70	XCopyArea	FUNC	202	libX11	libX11
+71	XSetClipMask	FUNC	111	libX11	libX11
+72	XConvertCase	FUNC	791	libX11	libX11
+73	XmbLookupString	FUNC	60	libX11	libX11
+74	XCreateFontSet	FUNC	220	libX11	libX11
+75	XMoveResizeWindow	FUNC	157	libX11	libX11
+76	XDeleteProperty	FUNC	133	libX11	libX11
+77	XStoreColors	FUNC	271	libX11	libX11
+78	XKeysymToString	FUNC	348	libX11	libX11
+79	XGetWMColormapWindows	FUNC	159	libX11	libX11
+80	XUngrabServer	FUNC	121	libX11	libX11
+81	XConvertSelection	FUNC	151	libX11	libX11
+82	XGrabPointer	FUNC	201	libX11	libX11
+83	XGetImage	FUNC	433	libX11	libX11
+84	XGetWMHints	FUNC	240	libX11	libX11
+85	XwcTextExtents	FUNC	44	libX11	libX11
+86	XwcDrawString	FUNC	53	libX11	libX11
+87	XTextWidth	FUNC	465	libX11	libX11
+88	XStoreColor	FUNC	170	libX11	libX11
+89	XwcFreeStringList	FUNC	43	libX11	libX11
+90	XwcTextPropertyToTextList	FUNC	62	libX11	libX11
+91	XLookupString	FUNC	462	libX11	libX11
+92	XDrawString16	FUNC	657	libX11	libX11
+93	XmbTextPropertyToTextList	FUNC	66	libX11	libX11
+94	XSetLocaleModifiers	FUNC	113	libX11	libX11
+95	XMoveWindow	FUNC	145	libX11	libX11
+96	XFreeStringList	FUNC	52	libX11	libX11
+97	XSetRegion	FUNC	259	libX11	libX11
+98	XDrawArc	FUNC	199	libX11	libX11
+99	XCreateBitmapFromData	FUNC	218	libX11	libX11
+100	XSendEvent	FUNC	221	libX11	libX11
+101	XQueryPointer	FUNC	245	libX11	libX11
+102	XSetWMHints	FUNC	114	libX11	libX11
+103	XmbTextExtents	FUNC	44	libX11	libX11
+104	XAutoRepeatOff	FUNC	53	libX11	libX11
+105	XGetGCValues	FUNC	399	libX11	libX11
+106	XTextExtents	FUNC	579	libX11	libX11
+107	XGetMotionEvents	FUNC	359	libX11	libX11
+108	XReparentWindow	FUNC	147	libX11	libX11
+109	XGetKeyboardControl	FUNC	215	libX11	libX11
+110	XGetWindowProperty	FUNC	524	libX11	libX11
+111	XBell	FUNC	127	libX11	libX11
+112	XFreeColors	FUNC	186	libX11	libX11
+113	XAllocClassHint	FUNC	47	libX11	libX11
+114	XFontsOfFontSet	FUNC	31	libX11	libX11
+115	XSetErrorHandler	FUNC	112	libX11	libX11
+116	XAllocColorCells	FUNC	209	libX11	libX11
+117	XSetIOErrorHandler	FUNC	112	libX11	libX11
+118	XFreeFontSet	FUNC	32	libX11	libX11
+119	XSetDashes	FUNC	235	libX11	libX11
+120	XChangeProperty	FUNC	968	libX11	libX11
+121	XDestroyWindow	FUNC	127	libX11	libX11
+122	XDestroyIC	FUNC	91	libX11	libX11
+123	XGetSelectionOwner	FUNC	156	libX11	libX11
+124	XSetWindowColormap	FUNC	140	libX11	libX11
+125	XSetBackground	FUNC	99	libX11	libX11
+126	XCreateColormap	FUNC	198	libX11	libX11
+127	XStringToKeysym	FUNC	488	libX11	libX11
+128	XParseColor	FUNC	705	libX11	libX11
+129	XRefreshKeyboardMapping	FUNC	573	libX11	libX11
+130	XListFonts	FUNC	537	libX11	libX11
+131	XFreeFont	FUNC	234	libX11	libX11
+132	XChangeWindowAttributes	FUNC	157	libX11	libX11
+133	XSetICFocus	FUNC	38	libX11	libX11
+134	XSetSubwindowMode	FUNC	99	libX11	libX11
+135	XTextExtents16	FUNC	716	libX11	libX11
+136	XSetWindowBackgroundPixmap	FUNC	140	libX11	libX11
+137	XSynchronize	FUNC	118	libX11	libX11
+138	XServerVendor	FUNC	11	libX11	libX11
+139	XDrawLine	FUNC	270	libX11	libX11
+140	XFilterEvent	FUNC	196	libX11	libX11
+141	XUnregisterIMInstantiateCallback	FUNC	66	libX11	libX11
+142	XGrabServer	FUNC	121	libX11	libX11
+143	XLoadQueryFont	FUNC	377	libX11	libX11
+144	XGetErrorText	FUNC	311	libX11	libX11
+145	XSetTSOrigin	FUNC	123	libX11	libX11
+146	XTranslateCoordinates	FUNC	229	libX11	libX11
+147	XSetIMValues	FUNC	89	libX11	libX11
+148	XQueryColors	FUNC	372	libX11	libX11
+149	XSetWMNormalHints	FUNC	37	libX11	libX11
+150	XSetCloseDownMode	FUNC	127	libX11	libX11
+151	XDrawPoints	FUNC	688	libX11	libX11
+152	XSupportsLocale	FUNC	36	libX11	libX11
+153	XListExtensions	FUNC	390	libX11	libX11
+154	XGetAtomName	FUNC	271	libX11	libX11
+155	XClearArea	FUNC	161	libX11	libX11
+156	XVaCreateNestedList	FUNC	63	libX11	libX11
+157	XCloseIM	FUNC	95	libX11	libX11
+158	XInternAtom	FUNC	240	libX11	libX11
+159	XAllocColor	FUNC	208	libX11	libX11
+160	XCreatePixmapCursor	FUNC	219	libX11	libX11
+161	XmbDrawString	FUNC	53	libX11	libX11
+162	XSetFont	FUNC	109	libX11	libX11
+163	XSetFunction	FUNC	99	libX11	libX11
+164	XFillArc	FUNC	273	libX11	libX11
+165	XSetTile	FUNC	104	libX11	libX11
+166	XCreateIC	FUNC	102	libX11	libX11
+167	XWithdrawWindow	FUNC	102	libX11	libX11
+168	XCreateWindow	FUNC	255	libX11	libX11
+169	XwcTextEscapement	FUNC	38	libX11	libX11
+170	XNextEvent	FUNC	122	libX11	libX11
+171	XFreeExtensionList	FUNC	51	libX11	libX11
+172	XAutoRepeatOn	FUNC	53	libX11	libX11
+173	XDrawRectangle	FUNC	270	libX11	libX11
+174	XSelectInput	FUNC	140	libX11	libX11
+175	XGetGeometry	FUNC	247	libX11	libX11
+176	XSetWMColormapWindows	FUNC	80	libX11	libX11
+177	XSetLineAttributes	FUNC	153	libX11	libX11
+178	XwcTextListToTextProperty	FUNC	62	libX11	libX11
+179	XSetClipOrigin	FUNC	123	libX11	libX11
+180	XDrawSegments	FUNC	479	libX11	libX11
+181	XmbSetWMProperties	FUNC	261	libX11	libX11
+182	XClearWindow	FUNC	155	libX11	libX11
+183	XFillRectangle	FUNC	259	libX11	libX11
+184	XDisplayName	FUNC	55	libX11	libX11
+185	XSetStipple	FUNC	104	libX11	libX11
+186	XQueryExtension	FUNC	238	libX11	libX11
+187	XSetGraphicsExposures	FUNC	99	libX11	libX11
+188	XBaseFontNameListOfFontSet	FUNC	11	libX11	libX11
+189	XUngrabKeyboard	FUNC	127	libX11	libX11
+190	XCheckIfEvent	FUNC	320	libX11	libX11
+191	XFreeFontNames	FUNC	88	libX11	libX11
+192	XCreatePixmapFromBitmapData	FUNC	269	libX11	libX11
+193	XmbTextEscapement	FUNC	38	libX11	libX11
+194	XRegisterIMInstantiateCallback	FUNC	67	libX11	libX11
+195	XGetFontProperty	FUNC	62	libX11	libX11
+196	XUngrabPointer	FUNC	127	libX11	libX11
+197	XPutImage	FUNC	726	libX11	libX11
+198	XCreatePixmap	FUNC	165	libX11	libX11
+199	XUnmapWindow	FUNC	127	libX11	libX11
+200	XAllocWMHints	FUNC	30	libX11	libX11
+201	XSetFillStyle	FUNC	99	libX11	libX11
+202	XCreateGC	FUNC	379	libX11	libX11
+203	XOpenDisplay	FUNC	3884	libX11	libX11
+367	strrchr@GLIBC_2.0	FUNC	441	libX11	libc.so.6

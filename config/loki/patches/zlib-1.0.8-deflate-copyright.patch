@@ -1,0 +1,29 @@
+Loki's zlib: 1.0.8 with zlib 1.0.4's deflate_copyright line.
+
+Reconstructed from the h3maped image, not taken from a found tree: Loki's
+zlib source is lost. All 14 linked zlib members' code is 1.0.8's
+(deflateInit2_ checks the static my_version, deflateEnd the stream status,
+zlibVersion() returns "1.0.8", inflate_copyright is 1.0.8's const string),
+but deflate.o's .dynsym entry deflate_copyright (OBJECT, 53 bytes) is in
+.data at 0x084245a0, before deflateInit2_'s my_version, and holds
+" deflate 1.0.4 Copyright 1995-1996 Jean-loup Gailly ". That is zlib 1.0.4's
+line: a non-const char array (1.0.4 and 1.0.5 declare it so; 1.0.6 on make
+it const, in .rodata). No zlib.net release from 1.0.4 to 1.0.9 has the
+combination. The other members hold only 1.0.8 strings.
+
+Applied with `patch -p1` in the unpacked zlib-1.0.8 tree by
+homm3.loki.linklibs before libz.a is built.
+
+--- a/deflate.c
++++ b/deflate.c
+@@ -51,8 +51,8 @@
+ 
+ #include "deflate.h"
+ 
+-const char deflate_copyright[] =
+-   " deflate 1.0.8 Copyright 1995-1998 Jean-loup Gailly ";
++char deflate_copyright[] =
++   " deflate 1.0.4 Copyright 1995-1996 Jean-loup Gailly ";
+ /*
+   If you use the zlib library in a product, an acknowledgment is welcome
+   in the documentation of your product. If for some reason you cannot

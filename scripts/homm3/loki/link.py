@@ -4,6 +4,7 @@ version object and the staged libraries.
     build/h3maped-loki/link/h3maped        the linked, stripped executable
     build/h3maped-loki/link/h3maped.map    ld's link map (input sections, archive members)
     build/h3maped-loki/link/link.log       the ld command and its output
+    build/h3maped-loki/link/xstub/         the X libraries linked against (homm3.loki.xstubs)
 
 The image's own facts fix the command (docs/loki/README.md, "Link"):
 
@@ -13,7 +14,8 @@ The image's own facts fix the command (docs/loki/README.md, "Link"):
   libxml, GTK+, GDK, GModule, GLib, zlib, libstdc++, libgcc, then crtend.o, crtn.o;
 - DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc, in that order (libm first
   from g++'s `-lstdc++ -lm` tail: an earlier -lm versions libstdc++'s clog), so those
-  six are the only shared libraries; everything else is static;
+  six are the only shared libraries; everything else is static. The X libraries are
+  stubs generated from the image's .dynsym (homm3.loki.xstubs), Red Hat 6.0's being lost;
 - `--export-dynamic` (libglade connects signal handlers by name through .dynsym),
   the `/lib/ld-linux.so.2` interpreter, and no .symtab (`-s`);
 - binutils 2.9.1's ld (orphan .gcc_except_table before .eh_frame, after .data).
@@ -25,12 +27,13 @@ from pathlib import Path
 import re
 import subprocess
 
-from homm3.loki import build, toolchain
+from homm3.loki import build, toolchain, xstubs
 
 OUT = build.OUT / "link"
 IMAGE = OUT / "h3maped"
 MAP = OUT / "h3maped.map"
 LOG = OUT / "link.log"
+XSTUB = OUT / "xstub"
 
 # Static archives after the project objects, in the image's member order.
 ARCHIVES_BEFORE = ("libglade.a", "libxml.a", "libgtk.a", "libgdk.a", "libgmodule.a", "libglib.a")
@@ -49,7 +52,7 @@ def project_objects() -> list[Path]:
 def command(output: Path = IMAGE, map_path: Path = MAP) -> list[str]:
     lib = toolchain.LINK / "lib"
     sysroot = toolchain.SYSROOT
-    library_dirs = [toolchain.LINK / "glibc", lib, toolchain.LINK / "xlib", sysroot / "usr/lib", sysroot / "lib"]
+    library_dirs = [toolchain.LINK / "glibc", lib, XSTUB, sysroot / "usr/lib", sysroot / "lib"]
     return [str(toolchain.LINK / "libexec/ld"), "-m", "elf_i386",
             "-export-dynamic", "-dynamic-linker", "/lib/ld-linux.so.2", "-s",
             "-o", str(output), "-Map", str(map_path),
@@ -87,6 +90,7 @@ def link(jobs: int = 3, compile_units: bool = True) -> tuple[int, list[str]]:
     if missing:
         raise RuntimeError(f"missing objects (run `homm3 loki build`): {', '.join(missing[:5])}")
     OUT.mkdir(parents=True, exist_ok=True)
+    xstubs.write(XSTUB)
     IMAGE.unlink(missing_ok=True)
     argv = command()
     completed = subprocess.run(argv, env=toolchain.environment(), capture_output=True, text=True)

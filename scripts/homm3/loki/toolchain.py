@@ -250,12 +250,16 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
 LINK = DESTINATION / "link"
 LINK_STAMP = LINK / "staged.sha256"
 # Recipe version: bump when what stage_libraries() builds changes for the same media.
-LINK_RECIPE = "12"
+LINK_RECIPE = "13"
+# Source patches the recipe applies (homm3.loki.linklibs), reconstructed in the repository.
+LINK_PATCHES = ROOT / "config/loki/patches"
 
 
 def _link_digest(spec: dict) -> str:
     pins = "".join(f"{k}={v}\n" for k, v in sorted(spec["link"].items()))
-    return hashlib.sha256(f"{_digest(spec)}\n{pins}recipe={LINK_RECIPE}\n".encode()).hexdigest()
+    patches = "".join(f"{p.name}={hashlib.sha256(p.read_bytes()).hexdigest()}\n"
+                      for p in sorted(LINK_PATCHES.glob("*.patch")))
+    return hashlib.sha256(f"{_digest(spec)}\n{pins}{patches}recipe={LINK_RECIPE}\n".encode()).hexdigest()
 
 
 def link_staged() -> bool:

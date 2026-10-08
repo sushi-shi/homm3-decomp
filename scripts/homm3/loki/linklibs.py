@@ -8,7 +8,9 @@ build/loki/toolchain/link/:
               crtbegin.o crtend.o libgcc.a libstdc++.a       (GCC 2.95.2, i686)
               libglade.a libxml.a                             (GCC 2.95.2 -O2)
               libgtk.a libgdk.a libgmodule.a libglib.a libz.a (egcs 1.1.2)
-    xlib/     libX11.so.6, libXi.so.6 (Red Hat 6.2), libXext.so.6 (Red Hat 7.0)
+    xlib/     libX11.so.6, libXi.so.6 (Red Hat 6.2), libXext.so.6 (Red Hat 7.0), for configure's
+              test programs and the launch test; h3maped links against the stubs of
+              homm3.loki.xstubs, which carry the image's X symbol sizes
     glibc/    libc.so.6, libm.so.6, libdl.so.2 (Red Hat 6.0 glibc 2.1.1-6), for h3maped's link
     libexec/  ld (binutils 2.9.1.0.25)
     build.log every configure and make
@@ -28,9 +30,10 @@ Two compilers build them, both 2000-era binaries run through potato's loader:
   (stage 3) or release cc1plus emits it;
 - egcs 1.1.2 of Red Hat 6.2 (egcs-1.1.2-30, its cpp and cc1, binutils-2.9.5.0.22-6's
   as): GLib/GTK+ 1.2.8 (with Red Hat's ahiguti i18n patch) at
-  Red Hat's `-O2 -m486 -fno-strength-reduce`, zlib 1.0.8 at
-  `-O2 -fno-strength-reduce`. It emits `.p2align 4,,7` for jump targets, as the
-  image's C libraries show (Slackware's egcs emits `.align 16`).
+  Red Hat's `-O2 -m486 -fno-strength-reduce`, zlib 1.0.8 (with 1.0.4's
+  deflate_copyright line, config/loki/patches) at `-O2 -fno-strength-reduce`.
+  It emits `.p2align 4,,7` for jump targets, as the image's C libraries show
+  (Slackware's egcs emits `.align 16`).
 """
 from __future__ import annotations
 
@@ -49,6 +52,7 @@ GCC_CFLAGS_I686 = "-mcpu=pentiumpro"  # TARGET_CPU_DEFAULT of an i686-pc-linux-g
 XML_GLADE_CFLAGS = "-O2"
 REDHAT_CFLAGS = "-O2 -m486 -fno-strength-reduce"  # Red Hat 6.2 RPM_OPT_FLAGS (i386)
 ZLIB_CFLAGS = "-O2 -fno-strength-reduce"
+ZLIB_PATCH = "zlib-1.0.8-deflate-copyright.patch"
 X_LIBRARIES = {"libX11.so.6.1": "libX11", "libXext.so.6.4": "libXext", "libXi.so.6.0": "libXi"}
 
 
@@ -186,12 +190,23 @@ class Builder:
         if completed.returncode:
             raise BuildError(f"{' '.join(command[:3])} failed in {cwd} (see {self.log})")
 
+    def patch(self, tree: Path, patch: bytes) -> None:
+        completed = subprocess.run(["patch", "-p1", "--no-backup-if-mismatch"], cwd=tree, input=patch,
+                                   capture_output=True)
+        with self.log.open("ab") as stream:
+            stream.write(f"$ (cd {tree}) patch -p1\n".encode() + completed.stdout + completed.stderr)
+        if completed.returncode:
+            raise BuildError(f"patch failed in {tree} (see {self.log})")
+
     def unpack(self, archive: bytes) -> Path:
         return tc._unpack_source(archive, self.src)
 
     # -- libraries -----------------------------------------------------------------------------
     def zlib(self, source: bytes) -> None:
         tree = self.unpack(source)
+        # Loki's zlib is 1.0.8 with 1.0.4's non-const deflate_copyright (in .data), as the image
+        # holds it; the patch is reconstructed from the image (config/loki/patches).
+        self.patch(tree, (tc.LINK_PATCHES / ZLIB_PATCH).read_bytes())
         env = self.env("egcc", ZLIB_CFLAGS)
         self.run(["./configure"], tree, env)
         self.run(["make", f"-j{self.jobs}", f"CC={self.bin / 'egcc'}", f"CFLAGS={ZLIB_CFLAGS}", "libz.a"],
@@ -214,12 +229,7 @@ class Builder:
     def gtk(self, source: bytes, glib_prefix: Path, x_headers: Path, patches: list[bytes]) -> None:
         tree = self.unpack(source)
         for patch in patches:
-            completed = subprocess.run(["patch", "-p1", "--no-backup-if-mismatch"], cwd=tree, input=patch,
-                                       capture_output=True)
-            with self.log.open("ab") as stream:
-                stream.write(b"$ patch -p1\n" + completed.stdout + completed.stderr)
-            if completed.returncode:
-                raise BuildError(f"GTK+ patch failed in {tree} (see {self.log})")
+            self.patch(tree, patch)
         env = self.env("egcc", REDHAT_CFLAGS)
         # Red Hat's configure macro: --sysconfdir=/etc (the image's gtkrc reads "/etc" + "/gtk/gtkrc").
         self.run(["./configure", "--prefix=/usr", "--sysconfdir=/etc", "--disable-shared",

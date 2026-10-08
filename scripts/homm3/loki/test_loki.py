@@ -7,7 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.loki import cmpobj, datacmp, delink, emitorder, ledger, link, linkdiff, linklibs, objwriter, toolchain
+from homm3.core import inputs
+from homm3.loki import (cmpobj, datacmp, delink, emitorder, image, ledger, link, linkdiff, linklibs, objwriter,
+                        toolchain, xstubs)
 from homm3.loki.cmpobj import CodeSection, Function
 from homm3.loki.elf import R_386_32, R_386_PC32, SHT_REL, SHT_SYMTAB, Elf
 
@@ -231,6 +233,65 @@ class LinkTest(unittest.TestCase):
         self.assertNotEqual(toolchain._link_digest(spec), toolchain._link_digest(changed))
         self.assertEqual(toolchain._link_digest(spec), toolchain._link_digest(dict(spec)))
 
+    def test_link_media_digest_covers_the_patches(self):
+        spec = toolchain.specification()
+        self.assertTrue((toolchain.LINK_PATCHES / linklibs.ZLIB_PATCH).is_file())
+        with tempfile.TemporaryDirectory() as tmp:
+            original = toolchain.LINK_PATCHES
+            try:
+                toolchain.LINK_PATCHES = Path(tmp)
+                empty = toolchain._link_digest(spec)
+                (Path(tmp) / "x.patch").write_text("--- a/x\n")
+                self.assertNotEqual(toolchain._link_digest(spec), empty)
+            finally:
+                toolchain.LINK_PATCHES = original
+
+
+class XStubTest(unittest.TestCase):
+    def test_stubs_list_the_table_in_order(self):
+        table = xstubs.rows()
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = xstubs.write(Path(tmp))
+            self.assertEqual([p.name for p in paths], list(xstubs.LIBRARIES.values()))
+            for library, soname in xstubs.LIBRARIES.items():
+                stub = Elf((Path(tmp) / soname).read_bytes())
+                self.assertTrue((Path(tmp) / f"{library}.so").is_symlink())
+                listed = [r for r in table if r.library == library]
+                names = [s.name for s in stub.dynsym[1:]]
+                self.assertEqual(names[:len(listed)], [r.name for r in listed])
+                self.assertEqual(len(names), len(set(names)))
+                self.assertTrue(set(xstubs.STRUCTURE) <= set(names))
+                symbols = {s.name: s for s in stub.dynsym}
+                for row in table:
+                    if row.defined == library:
+                        self.assertEqual((symbols[row.name].size, symbols[row.name].type),
+                                         (row.size, xstubs.TYPES[row.type]), row)
+                        if row.name not in xstubs.STRUCTURE:
+                            self.assertNotEqual(symbols[row.name].shndx, 0, row)
+                    elif row.library == library:
+                        self.assertEqual(symbols[row.name].shndx, 0, row)
+                dynamic = stub.bytes(stub.section(".dynamic"))
+                tags = [int.from_bytes(dynamic[i:i + 4], "little") for i in range(0, len(dynamic), 8)]
+                self.assertIn(xstubs.DT_SONAME, tags)
+                versioned = any(r.version for r in listed)
+                self.assertEqual(any(s.name == ".gnu.version_r" for s in stub.sections), versioned)
+
+    @unittest.skipUnless(inputs.is_staged(image.executable()), inputs.requires_staged(image.executable()))
+    def test_table_is_the_image_dynsym(self):
+        retail = image.LokiImage().elf
+        table = xstubs.rows()
+        runs = [r for r in table if r.version is None]
+        self.assertEqual([r.index for r in runs], list(range(6, 204)))
+        self.assertEqual([r.library for r in runs], sorted((r.library for r in runs),
+                         key=list(xstubs.LIBRARIES).index))
+        kinds = {v: k for k, v in xstubs.TYPES.items()}
+        for row in table:
+            symbol = retail.dynsym[row.index]
+            self.assertEqual((symbol.name, kinds[symbol.type], symbol.size), (row.name, row.type, row.size), row)
+            self.assertIn(row.defined, (*xstubs.LIBRARIES, "libc.so.6"))
+        x_imports = {s.name for s in retail.dynsym if s.shndx == 0 and s.name.startswith("X")}
+        self.assertEqual(x_imports, {r.name for r in runs if r.name.startswith("X")})
+
 
 class LinkDiffTest(unittest.TestCase):
     def test_differing_counts_bytes_and_length(self):
@@ -303,7 +364,7 @@ class LinkGateTest(unittest.TestCase):
     def test_stated_differences_parse(self):
         import tomllib
         with linkdiff.FACTS.open("rb") as stream:
-            entries = tomllib.load(stream)["difference"]
+            entries = tomllib.load(stream).get("difference", [])
         for entry in entries:
             self.assertTrue(entry["cause"].strip() and entry["evidence"].strip() and entry["closes"].strip())
             for region in entry["region"]:

@@ -85,11 +85,14 @@ image's.
 
 `homm3 loki toolchain --libs DIR` stages the era link media pinned in
 [config/loki/toolchain.toml](config/loki/toolchain.toml); `homm3 loki link`
-then links the image and runs the link gate. Every byte the linked file
-still differs in must be a reviewed retail fact in
-[config/retail/h3maped-loki/link-differences.toml](config/retail/h3maped-loki/link-differences.toml):
-today zlib's 1.0.4 copyright line and the X libraries' import sizes, whose
-original media are not found.
+then links the image and runs the link gate. The linked file is
+byte-identical to the image. Two inputs whose original media are lost are
+reconstructed from the image itself: zlib's 1.0.4 copyright line, a patch in
+[config/loki/patches](config/loki/patches), and stub X libraries generated
+from the image's `.dynsym`
+([config/retail/h3maped-loki/x-imports.tsv](config/retail/h3maped-loki/x-imports.tsv)).
+Any byte a future link differs in must be a reviewed retail fact in
+[config/retail/h3maped-loki/link-differences.toml](config/retail/h3maped-loki/link-differences.toml).
 
 ## Documentation
 

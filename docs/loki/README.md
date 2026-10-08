@@ -367,39 +367,67 @@ unit and runs binutils 2.9.1.0.25's `ld` directly, with what the image proves:
 | Fact | Evidence |
 | :--- | :------- |
 | link order | `.comment` (one entry per linked object) runs 2 egcs, 122 GCC 2.95.2, 155 egcs, 23 GCC 2.95.2, 1 egcs, 1 GCC 2.95.2, 1 egcs: crt1.o and crti.o (glibc 2.1.3, egcs 1.1.2), crtbegin.o, the 103 project objects, libglade and libxml (GCC 2.95.2 C, no `.eh_frame`), GTK+, GDK, GModule, GLib and zlib (egcs), libstdc++ and libgcc, libc_nonshared, crtend.o, crtn.o. `.text` agrees: `glade_init` follows the last project object at 0x08202730, then libxml, `gtk_accel_group_new` (0x0823ead0), GDK, GModule/GLib, zlib (0x083206b0), libstdc++ (0x083278e0). All 2,481 exported C-library functions of the image are linked, in its order. |
-| shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order. The link host's are Red Hat 6.0's glibc 2.1.1-6 (every imported libc/libm/libdl `st_size` matches) and X libraries ordered as Red Hat 6.2's libX11/libXi and XFree86 4's libXext (ld records imports in each library's `.dynsym` order). Everything else is static. libm is first named by g++'s own `-lstdc++ -lm` tail, after libstdc++.a: the image exports libstdc++'s `clog` stream unversioned, where an earlier `-lm` makes ld 2.9.1 give it libm's `clog@@GLIBC_2.1` version and a `.gnu.version_d`. |
+| shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order. The link host's are Red Hat 6.0's glibc 2.1.1-6 (every imported libc/libm/libdl `st_size` matches) and X libraries whose copies are lost, reconstructed as stubs from the image's `.dynsym` (below). The X imports first follow Red Hat 6.2's libX11/libXi and XFree86 4's libXext (ld records imports in each library's `.dynsym` order). Everything else is static. libm is first named by g++'s own `-lstdc++ -lm` tail, after libstdc++.a: the image exports libstdc++'s `clog` stream unversioned, where an earlier `-lm` makes ld 2.9.1 give it libm's `clog@@GLIBC_2.1` version and a `.gnu.version_d`. |
 | flags | `-export-dynamic` (12,052 defined `.dynsym` entries; libglade connects handlers by name), interpreter `/lib/ld-linux.so.2`, no `.symtab` (`-s`). |
 | ld 2.9.1 | `.gcc_except_table` precedes `.eh_frame`, both after `.data`: ld 2.9.1's default script has neither, and an orphan goes right after `.data`, so the later one lands first. 2.9.5's script names `.eh_frame` first. The assembler is already 2.9.1.0.25. |
 | GCC runtime | crtbegin.o, libgcc and libio/libstdc++ 2.10 come from a plain `make` (no bootstrap) of an i686-pc-linux-gnu 2.95.2 tree on the Red Hat link host: its stage-1 cc1/cc1plus, compiled by egcs 1.1.2 at configure's default `-g -O2` with the host assembler's alignment features, build the target libraries at `-g -O2` (default `-mcpu=pentiumpro`, libgcc `-fPIC` per `config/t-linux`, so its type_info objects go through the 63 `R_386_GLOB_DAT` GOT entries; threads off: no pthread imports). 2.95.2's `build_x_typeid` reads an uninitialized `nonnull` (`fixed_type_or_null` returns early for `*this` without setting it), so whether `typeid(*this)` tests `this` depends on the stack the compiling cc1plus leaves: this stage-1 cc1plus omits the test in `exception::what()`, as the image does, where a bootstrapped (stage 3), a release or an egcs `-g` cc1plus emits it. The recipe reproduces crtbegin's `__do_global_dtors_aux` and every linked libgcc and libstdc++ member. |
 | libglade 0.14, libxml 1.8.9 | Built by Loki with the same GCC 2.95.2 at `-O2`, against Red Hat 6.0's glibc 2.1.1-6 headers (its `<bits/string2.h>` turns every `memset(p, 0, n)` into a `__bzero` call and leaves `memset(p, -1, 12)` a call, as the image's libxml does at all 12 and 5 sites; glibc 2.1.1 final and later inline both): the five libglade members are byte-exact in `.text`, and so are libxml's parser, SAX, entities, encoding and error. `xmlParserVersion` is "1.8.9"; libglade exports 0.14's `glade_set_custom_handler`. |
-| GLib/GTK+ 1.2.8, zlib 1.0.8 | Red Hat 6.2's egcs 1.1.2 (egcs-1.1.2-30; it emits `.p2align 4,,7` for jump targets, Slackware's `.align 16`) and assembler (binutils-2.9.5.0.22-6: the image's GDK uses the `a0`/`a2` moffs byte moves and its nop fills) at Red Hat's `-O2 -m486 -fno-strength-reduce`, GTK+ with Red Hat's ahiguti i18n patch (the word breaks of GtkEntry, GtkLabel and GtkText call `iswpunct`/`iswcntrl`, which no GTK+ 1.2.x release does), GTK+ `--with-xinput=xfree` (libXi) and NLS on (the image imports `bindtextdomain` and `_nl_msg_cat_cntr`; Slackware 7.1's gettext 0.10.35 is on `PATH` while GTK+ configures). zlib at `-O2 -fno-strength-reduce`: all 14 members exact (`zlibVersion()` "1.0.8"). GLib 18 of 21 members, GModule 1/1, GDK 18 of 20, GTK+ 92 of 98. |
+| GLib/GTK+ 1.2.8, zlib 1.0.8 | Red Hat 6.2's egcs 1.1.2 (egcs-1.1.2-30; it emits `.p2align 4,,7` for jump targets, Slackware's `.align 16`) and assembler (binutils-2.9.5.0.22-6: the image's GDK uses the `a0`/`a2` moffs byte moves and its nop fills) at Red Hat's `-O2 -m486 -fno-strength-reduce`, GTK+ with Red Hat's ahiguti i18n patch (the word breaks of GtkEntry, GtkLabel and GtkText call `iswpunct`/`iswcntrl`, which no GTK+ 1.2.x release does), GTK+ `--with-xinput=xfree` (libXi) and NLS on (the image imports `bindtextdomain` and `_nl_msg_cat_cntr`; Slackware 7.1's gettext 0.10.35 is on `PATH` while GTK+ configures). zlib at `-O2 -fno-strength-reduce`, with 1.0.4's `deflate_copyright` line (below): all 14 members exact (`zlibVersion()` "1.0.8"). GLib 18 of 21 members, GModule 1/1, GDK 18 of 20, GTK+ 92 of 98. |
 
-The linked file has the image's size, sections, PLT, `.dynsym` order,
-`.comment` runs and every byte of `.text`. ObjectPaletteWnd.o's `.rodata`
-ran 1 to 32 zero bytes past ours (GzBuf's 32-byte aligned `.rodata`
-started 0x20 later); file constants are written last, in declaration order,
-so the source ends its includes with a 4-byte zero constant,
-`kInitialScrollPos`, whose name and type are not proven (MapObjectRef.h's
-`kNullObjectID` is the same shape).
+The linked file is byte-identical to the image (4,970,572 bytes; `homm3
+loki link-diff` reports 0 differing bytes and the link gate states none).
+ObjectPaletteWnd.o's `.rodata` ran 1 to 32 zero bytes past ours (GzBuf's
+32-byte aligned `.rodata` started 0x20 later); file constants are written
+last, in declaration order, so the source ends its includes with a 4-byte
+zero constant, `kInitialScrollPos`, whose name and type are not proven
+(MapObjectRef.h's `kNullObjectID` is the same shape).
 
-Two differences remain, stated as reviewed retail facts in
-`config/retail/h3maped-loki/link-differences.toml` (region, byte count,
-cause, evidence and the media that would close each):
+### Reconstructed link inputs
 
-- zlib's `deflate_copyright` is " deflate 1.0.4 Copyright 1995-1996
-  Jean-loup Gailly " in `.data` (non-const, before deflateInit2_'s
-  `my_version`), while deflate.o's code is 1.0.8's and inflate_copyright
-  is 1.0.8's const string: Loki's zlib 1.0.8 carried 1.0.4's copyright
-  line. No zlib.net release from 1.0.4 to 1.0.9 has that combination
-  (1.0.4 and 1.0.5 declare a non-const string of their own version, 1.0.6
-  on a const one); the tree Loki used is not found. The 1.0.8 string
-  lengthens `.rodata` by 0x40 and shortens `.data` by 0x40: 135 bytes.
-- The imported X symbols' `st_size` values (202 bytes): 170 of 194 match
-  Red Hat 6.0's XFree86 3.3.3.1-49 libraries, whose `.dynsym` order does
-  not match; the order matches Red Hat 6.2's libX11/libXi and XFree86 4's
-  libXext (only it references XGetVisualInfo). The link host's X libraries
-  are a build between those, presumably a Red Hat 6.0 erratum
-  (XFree86-libs-3.3.3.1-52 or 3.3.5-0.6.0), of which no copy is found.
+Two link inputs are lost and are reconstructed from the image's own bytes,
+the way the project reconstructs source (and HoMM1 its import libraries from
+stub DLLs); nothing edits a built file.
+
+- **zlib's `deflate_copyright`.** The image holds " deflate 1.0.4 Copyright
+  1995-1996 Jean-loup Gailly " as deflate.o's `deflate_copyright` (OBJECT, 53
+  bytes) in `.data` at 0x084245a0, non-const, before deflateInit2_'s
+  `my_version`, while deflate.o's code is 1.0.8's (the static `my_version`
+  check, deflateEnd's status check), `zlibVersion()` returns "1.0.8" and
+  inflate_copyright is 1.0.8's const string: Loki's zlib 1.0.8 carried
+  1.0.4's copyright line. No zlib.net release from 1.0.4 to 1.0.9 has that
+  combination (1.0.4 and 1.0.5 declare a non-const string of their own
+  version, 1.0.6 on a const one), and Loki's tree is not found.
+  `config/loki/patches/zlib-1.0.8-deflate-copyright.patch` gives 1.0.8's
+  deflate.c that declaration; `homm3.loki.linklibs` applies it before
+  building libz.a, and the link media digest covers the patch. The other
+  zlib members hold only 1.0.8 strings.
+- **The X libraries.** 170 of the 194 imported X functions' `st_size` values
+  match Red Hat 6.0's XFree86 3.3.3.1-49 libraries, whose `.dynsym` order
+  does not give the image's; the libraries that give the order (Red Hat 6.2's
+  libX11/libXi, XFree86 4's libXext, the only one that calls XGetVisualInfo)
+  do not give the sizes. The link host's were a build between, presumably a
+  Red Hat 6.0 erratum (XFree86-libs-3.3.3.1-52 or 3.3.5-0.6.0), of which no
+  copy is found. ld takes from a shared library only its soname and its
+  dynamic symbols (order, type, size, versions), so `homm3 loki link`
+  generates stub libXi.so.6, libXext.so.6 and libX11.so.6
+  (`homm3.loki.xstubs`, into `build/h3maped-loki/link/xstub/`) from
+  `config/retail/h3maped-loki/x-imports.tsv`: the image's `.dynsym` entries
+  6 to 203, the runs ld added while reading each library, with each
+  symbol's type and size and the library that names and defines it. Each
+  stub lists its rows in the image's order (a function another library
+  defines as an undefined reference: libXi's XFree, libXext's XGetVisualInfo
+  and XIfEvent), then its definitions of what an earlier library names, then
+  the absolute symbols ld defines in every library (the image records
+  `_etext`, `_edata`, `__bss_start` and `_end` where ld assigns them, which
+  it does only for a symbol a shared library names). The X imports are
+  unversioned (versym 0), so the stubs define no versions. One versioned
+  reference is proven: ld 2.9.1 enters libX11's reference to `strrchr` as
+  `strrchr@@GLIBC_2.0`, in the hash bucket of `_IO_link_in@@GLIBC_2.0`, and
+  allocates PLT slots in hash-table order (each bucket newest first); the
+  image's `_IO_link_in` slot precedes `strrchr`'s, so `strrchr@@GLIBC_2.0`
+  was entered before libc.so.6, by an X library. libX11's stub carries it
+  with its `.gnu.version_r`. The staged Red Hat 6.2/7.0 libraries stay in
+  `link/xlib` for GTK+'s configure and the launch test.
 
 `homm3 loki link-diff` reads the linked file (or a path) and reports the
 total differing bytes over the file; the ELF header and program headers; every
