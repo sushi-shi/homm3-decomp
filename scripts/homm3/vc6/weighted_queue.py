@@ -13,6 +13,7 @@ import json
 from homm3.core import common
 from homm3.match import status, universe
 from homm3.vc6.queue import EXACT, _compiled_functions
+from homm3.core.images import path as _image_path
 
 
 def ranked_rows(report, baseline, categories, sizes, compiled):
@@ -59,7 +60,7 @@ def ranked_rows(report, baseline, categories, sizes, compiled):
 
 def main():
     root = common.HOMM3_DIR
-    report = json.loads((root / "build/objdiff/report.json").read_text())
+    report = json.loads((root / _image_path("build/objdiff/report.json")).read_text())
     baseline = status.load_baseline()
     categories, sizes = universe.classify()
     rows = ranked_rows(report, baseline, categories, sizes,

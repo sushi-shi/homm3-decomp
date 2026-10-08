@@ -18,8 +18,9 @@ import tomllib
 from pathlib import Path
 
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
-MANIFEST = common.HOMM3_DIR / "config/units.toml"
+MANIFEST = common.HOMM3_DIR / _image_path("config/units.toml")
 
 
 def load(path: Path | None = None) -> dict:

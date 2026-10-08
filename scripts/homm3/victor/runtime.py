@@ -7,6 +7,7 @@ from homm3.core.cc_wrap import find_ci, msvc_dir, winepath_w
 from homm3.core.common import HOMM3_DIR as ROOT
 from homm3.rmg.__main__ import run_command, write_json, file_digest
 from homm3.rmg.bindings import absolute_object, prepare_calls, undefined_symbols, DRIVER_BASE
+from homm3.core.images import path as _image_path
 
 UNITS = ('victor', 'victor_flip', 'victor_loadpcx', 'victor_pcx_kernels')
 
@@ -30,7 +31,7 @@ def resolve(paths):
 def build_driver(out: Path):
     log = out / 'build.log'
     run_command([sys.executable, '-m', 'homm3.build.configure'], log)
-    objects = [ROOT / 'build/objdiff/base' / (unit + '.obj') for unit in UNITS]
+    objects = [ROOT / _image_path('build/objdiff/base') / (unit + '.obj') for unit in UNITS]
     run_command(['ninja', *(str(p.relative_to(ROOT)) for p in objects)], log)
     driver = out / 'driver.obj'
     run_command([sys.executable, '-m', 'homm3.core.cc_wrap', '--src',

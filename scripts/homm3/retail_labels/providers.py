@@ -16,13 +16,28 @@ from pathlib import Path
 from homm3.core import common
 from homm3.core.tsv import read as read_tsv
 from homm3.retail_labels import Claim
+from homm3.core.images import path as _image_path
 
-ZLIB_MAP = common.HOMM3_DIR / "config/retail/zlib-map.tsv"
-RUNTIME_MAP = common.HOMM3_DIR / "config/retail/runtime-map.tsv"
-RELOC_ALIASES = common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
+ZLIB_MAP = common.HOMM3_DIR / _image_path("config/retail/zlib-map.tsv")
+RUNTIME_MAP = common.HOMM3_DIR / _image_path("config/retail/runtime-map.tsv")
+RELOC_ALIASES = common.HOMM3_DIR / _image_path("config/retail/reloc-aliases.tsv")
 RUNTIME_CONTRIBUTIONS = (common.HOMM3_DIR
-                         / "config/retail/runtime-contributions.tsv")
-RELOC_EVIDENCE = common.HOMM3_DIR / "config/retail/reloc-evidence.tsv"
+                         / _image_path("config/retail/runtime-contributions.tsv"))
+PLACEMENTS = common.HOMM3_DIR / _image_path("config/retail/placements.tsv")
+RELOC_EVIDENCE = common.HOMM3_DIR / _image_path("config/retail/reloc-evidence.tsv")
+
+
+def placements(path: Path | None = None) -> list[Claim]:
+    """Another image's placed shared-unit functions (homm3.census.placements):
+    channel `placement`, the census extent, the defining unit. The game has
+    no such table (its addresses are spelled in source)."""
+    path = path or PLACEMENTS
+    if not path.is_file():
+        return []
+    _b, _h, raw = read_tsv(path)
+    return [Claim(int(r["rva"], 16), r["name"], r["kind"], "placement",
+                  int(r["size"], 16), r["unit"], {"evidence": r["evidence"]})
+            for r in raw]
 
 
 def zlib_map(path: Path | None = None) -> list[Claim]:

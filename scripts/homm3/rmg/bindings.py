@@ -7,6 +7,7 @@ import struct
 from pathlib import Path
 
 from homm3.build.canonicalize_data_symbols import CoffObject
+from homm3.core.images import path as _image_path
 
 DRIVER_BASE = 0x30000000
 
@@ -64,7 +65,7 @@ def data_addresses(root: Path) -> dict[str, int]:
 def resolve(root: Path, paths: list[Path], retail: bytes) -> dict[str, int]:
     from .bootstrap import offset
     rows = list(csv.DictReader(line for line in
-                (root / 'build/gen/symbol_names.csv').read_text().splitlines()
+                (root / _image_path('build/gen/symbol_names.csv')).read_text().splitlines()
                 if not line.startswith('#')))
     inventory = {row['name']: row for row in rows}
     data = data_addresses(root)

@@ -12,6 +12,7 @@ import hashlib
 import os
 import pickle
 from pathlib import Path
+from homm3.core.images import path as _image_path
 
 
 def content_key(*parts: bytes | str | Path) -> str:
@@ -29,7 +30,7 @@ def cache_dir(root: Path | None = None) -> Path:
     if root is None:
         from homm3.core import common
         root = common.HOMM3_DIR
-    return root / "build/gen/cache"
+    return root / _image_path("build/gen/cache")
 
 
 def load(name: str, root: Path | None = None) -> dict:

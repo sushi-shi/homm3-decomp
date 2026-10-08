@@ -26,11 +26,12 @@ import subprocess
 from homm3 import manifest
 from homm3.core import common
 from homm3.sema._common import die
+from homm3.core.images import path as _image_path
 
-BASE = common.HOMM3_DIR / "build/objdiff/base"
-TARGET = common.HOMM3_DIR / "build/objdiff/target"
-NORMAL_BASE = common.HOMM3_DIR / "build/objdiff/normalized/base"
-NORMAL_TARGET = common.HOMM3_DIR / "build/objdiff/normalized/target"
+BASE = common.HOMM3_DIR / _image_path("build/objdiff/base")
+TARGET = common.HOMM3_DIR / _image_path("build/objdiff/target")
+NORMAL_BASE = common.HOMM3_DIR / _image_path("build/objdiff/normalized/base")
+NORMAL_TARGET = common.HOMM3_DIR / _image_path("build/objdiff/normalized/target")
 
 
 # --- producer 1: llvm-objdump over pipeline COFF objects ---------------------------

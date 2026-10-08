@@ -17,9 +17,10 @@ from pathlib import Path
 
 from homm3.core import common
 from homm3.core.tsv import read as read_tsv
+from homm3.core.images import path as _image_path
 
-FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
-VTABLES = common.HOMM3_DIR / "config/retail/vtables.tsv"
+FUNCTIONS = common.HOMM3_DIR / _image_path("config/retail/functions.tsv")
+VTABLES = common.HOMM3_DIR / _image_path("config/retail/vtables.tsv")
 
 
 def functions(path: Path | None = None) -> list[dict]:

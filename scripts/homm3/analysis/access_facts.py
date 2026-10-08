@@ -43,6 +43,7 @@ from homm3.build import compilation_database
 from homm3.core import clang, common
 from homm3.core.project import Project
 from homm3.core.nb11_types import Types
+from homm3.core.images import path as _image_path
 
 
 # DC method property -> comparable family.  A C++ source cannot spell whether a
@@ -363,7 +364,7 @@ def main() -> int:
     print(f"# DC recorded members: {sum(map(len, dc.values()))}", file=sys.stderr)
 
     commands = compilation_database.commands(
-        manifest.load(root / "config/units.toml"), root, clang.clang_bin(),
+        manifest.load(root / _image_path("config/units.toml")), root, clang.clang_bin(),
         [mirror, *Project(root).includes])
     commands = [r for r in commands if Path(r["file"]).exists()]
     if args.module:

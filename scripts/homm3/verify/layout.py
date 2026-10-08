@@ -42,6 +42,7 @@ import os
 from typing import NamedTuple
 
 from homm3.core.paths import BUILD
+from homm3.core.images import path as _image_path
 
 CACHE = BUILD / "gen/data_layout.json"
 
@@ -403,8 +404,8 @@ def _header_hash() -> str:
     h = hashlib.sha1()
     h.update(__import__('pathlib').Path(__file__).read_bytes())
     h.update(__import__('pathlib').Path(msvc_names.__file__).read_bytes())
-    h.update((REPO / 'config/units.toml').read_bytes())
-    for root in ("src", "include", "vendor", "build/gen/msvc-include"):
+    h.update((REPO / _image_path('config/units.toml')).read_bytes())
+    for root in ("src", "include", "vendor", _image_path("build/gen/msvc-include")):
         for p in sorted((REPO / root).rglob("*")):
             if p.is_file() and (p.suffix in (".h", ".hpp", ".inl") or root.endswith('msvc-include')):
                 h.update(str(p.relative_to(REPO)).encode())

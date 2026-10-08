@@ -29,12 +29,13 @@ import struct
 import sys
 
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
-FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
-RUNTIME_MAP = common.HOMM3_DIR / "config/retail/runtime-map.tsv"
-ZLIB_MAP = common.HOMM3_DIR / "config/retail/zlib-map.tsv"
-FUNCLETS = common.HOMM3_DIR / "config/retail/funclets.tsv"
-INIT_THUNKS = common.HOMM3_DIR / "config/retail/init-thunks.tsv"
+FUNCTIONS = common.HOMM3_DIR / _image_path("config/retail/functions.tsv")
+RUNTIME_MAP = common.HOMM3_DIR / _image_path("config/retail/runtime-map.tsv")
+ZLIB_MAP = common.HOMM3_DIR / _image_path("config/retail/zlib-map.tsv")
+FUNCLETS = common.HOMM3_DIR / _image_path("config/retail/funclets.tsv")
+INIT_THUNKS = common.HOMM3_DIR / _image_path("config/retail/init-thunks.tsv")
 
 EXCLUDED_NOTES = {
     "eh-funclet": "compiler EH unwind funclets; match with their parent "

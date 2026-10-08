@@ -21,6 +21,7 @@ from homm3.core import common
 from homm3.match import status
 from homm3.vc6._unit import compile_text
 from homm3.vc6 import tu_state_sweep as scoring
+from homm3.core.images import path as _image_path
 
 REPO = common.HOMM3_DIR
 
@@ -192,7 +193,7 @@ def run(args) -> int:
         raise ValueError(f"manifest expands to {count} states, above --limit {args.limit}")
     # A newly admitted target can be in the focused report before its first
     # full checkpoint. Include those rows so the runner can finish admissions.
-    report = json.loads((REPO / "build/objdiff/report.json").read_text())
+    report = json.loads((REPO / _image_path("build/objdiff/report.json")).read_text())
     scored = tuple((unit, fn["name"]) for entry in report["units"]
                    if entry["name"] == unit for fn in entry.get("functions", []))
     symbols = [name for _, name in scored]
@@ -202,7 +203,7 @@ def run(args) -> int:
     if len(matches) != 1:
         raise ValueError(f"{unit}:{selector}: expected one scored symbol, found {matches}")
     symbol = matches[0]
-    target = REPO / "build/objdiff/target" / f"{unit}.c.obj"
+    target = REPO / _image_path("build/objdiff/target") / f"{unit}.c.obj"
     target_bytes = target.read_bytes()
     context = ScoreContext(unit, scoring._first_pass(unit, target_bytes), scored)
     fingerprint = scoring._shared_inputs_digest()

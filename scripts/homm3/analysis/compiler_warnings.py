@@ -27,6 +27,7 @@ from homm3 import manifest
 from homm3.build.compilation_database import commands
 from homm3.core import cc_wrap, clang, common
 from homm3.vc6 import _toolchain
+from homm3.core.images import path as _image_path
 
 
 CLANG_OPTIONS = [
@@ -146,7 +147,7 @@ def aggregate(jobs: list[dict], root: Path, msvc: Path, mirror: Path) -> list[di
 
 def source_inventory(root: Path) -> dict[str, str]:
     paths = subprocess.check_output(
-        ["git", "ls-files", "--", "src", "include", "vendor", "config/units.toml"],
+        ["git", "ls-files", "--", "src", "include", "vendor", _image_path("config/units.toml")],
         cwd=root, text=True).splitlines()
     return {name: hashlib.sha256((root / name).read_bytes()).hexdigest()
             for name in paths if (root / name).is_file()}
@@ -280,7 +281,7 @@ def main(argv=None) -> int:
     if args.jobs < 1 or args.timeout <= 0:
         parser.error("jobs and timeout must be positive")
     root = common.HOMM3_DIR.resolve()
-    data = manifest.load(root / "config/units.toml")
+    data = manifest.load(root / _image_path("config/units.toml"))
     units = data["unit"]
     if args.unit:
         unknown = set(args.unit) - {r["unit"] for r in units}

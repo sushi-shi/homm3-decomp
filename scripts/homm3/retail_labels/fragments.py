@@ -24,8 +24,9 @@ from pathlib import Path
 from homm3.core import common
 from homm3.core.tsv import read as read_tsv
 from homm3.retail_labels import Claim
+from homm3.core.images import path as _image_path
 
-FRAGMENTS = common.HOMM3_DIR / "build/gen/claims"
+FRAGMENTS = common.HOMM3_DIR / _image_path("build/gen/claims")
 
 HEADER = ["rva", "size", "name", "kind", "channel", "raw", "dtor",
           "ckind", "owner", "type", "defined", "source", "internal"]

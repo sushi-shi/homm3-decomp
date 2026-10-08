@@ -34,6 +34,7 @@ from homm3.build import normalize_objs as normalize
 from homm3.core import common
 from homm3.match import status
 from homm3.vc6._unit import compile_text, source_for_unit
+from homm3.core.images import path as _image_path
 
 
 GENERATOR_VERSION = 7
@@ -251,7 +252,7 @@ def _shared_inputs_digest() -> str:
     paths.extend((root / "src").rglob("*.h"))
     paths.extend((normalize.OBJDIFF / "target").glob("*.c.obj"))
     paths.extend(path for path in (
-        root / "config/units.toml", root / "config/project.toml", normalize.COMPGEN_MANIFEST,
+        root / _image_path("config/units.toml"), root / "config/project.toml", normalize.COMPGEN_MANIFEST,
         normalize.SYMBOL_NAMES) if path.is_file())
     compiler = msvc_dir()
     for relative in ("bin", "include"):

@@ -22,6 +22,7 @@ Usage (emitted into build.ninja by homm3.build.configure):
 import argparse, os, re, shutil, signal, subprocess, sys, tempfile
 from pathlib import Path
 from homm3.core.common import HOMM3_DIR
+from homm3.core.images import path as _image_path
 
 _INC_RE = re.compile(r'^[ \t]*#[ \t]*include[ \t]*[<"]([^>"]+)[>"]', re.M)
 
@@ -249,7 +250,7 @@ def main():
         src, *scan_header_deps(src, *incs),
         *[p for p in (msvc / 'bin').iterdir()
           if p.is_file() and p.suffix.lower() in ('.exe', '.dll')],
-        HOMM3_DIR / 'config/units.toml', HOMM3_DIR / 'config/project.toml',
+        HOMM3_DIR / _image_path('config/units.toml'), HOMM3_DIR / 'config/project.toml',
         Path(__file__), Path(compile_receipt.__file__),
     ])
     # The receipt covers every byte that decides the object (source, scanned

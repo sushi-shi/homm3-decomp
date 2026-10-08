@@ -4,8 +4,25 @@
 Run inside the Nix dev shell (the `homm3` wrapper, or `python3 -m homm3`).
 Compiling and linking need the toolchain shell: `nix develop .#build`.
 
+Images
+------
+  --image KEY (before the subcommand) selects the linked program: `game`
+  (HEROES3.EXE, the default) or another `image = true` pin in
+  config/project.toml, such as `h3maped` (the GOG Complete map editor). Its
+  tables live under config/retail/<KEY>/, its units in config/units.<KEY>.toml,
+  its ledger in config/match_baseline.<KEY>.tsv and its state under
+  build/<KEY>/ (homm3.core.images, homm3.core.paths).
+
 Subcommands
 -----------
+  census [--write] [--check]
+        Derive a non-game image's function universe, vtables and relocation
+        manifest from its pinned executable (homm3.census).
+
+  placements [--write] [--check]
+        Place the functions of a non-game image's shared units by masked body
+        identity, retail references and RTTI vtables (homm3.census.placements).
+
   init [--exe PATH] [--dreamcast-exe PATH] [--mac-exe PATH]
        [--mac-toolchain PATH] [--force] [--no-smoke]
         One-time local setup so a fresh checkout goes straight to `homm3 build`:
@@ -119,6 +136,7 @@ import sys
 from pathlib import Path
 
 from homm3.core import root as _root
+from homm3.core.images import path as _image_path
 
 ROOT = _root.process_root(_root.code_root(__file__) or Path(__file__).resolve().parents[2])
 
@@ -138,6 +156,30 @@ def run_module(module: str, *args: str) -> int:
 def cmd_init(args) -> int:
     from homm3.core import inputs, nb11
     from homm3.mac import toolchain as mac_toolchain
+    from homm3.core import paths
+    if not paths.is_game():
+        # Another image needs only its own pinned executable and directories;
+        # the toolchain, Wine prefix and game inputs are shared with the game.
+        try:
+            staged = inputs.stage_executable(inputs.RETAIL, args.exe)
+        except inputs.InputError as exc:
+            log(f"ERROR: {exc}")
+            return 1
+        for d in ("build/gen", "build/objdiff/base"):
+            (ROOT / _image_path(d)).mkdir(parents=True, exist_ok=True)
+        log(f"{paths.image_key()}: input verified: {staged}")
+        from homm3.init import mfc_sp3
+        mfc = args.mfc_sp3 or os.environ.get("HOMM3_MFC_SP3")
+        if mfc:
+            try:
+                log(f"SP3 MFC overlay verified and staged: {mfc_sp3.stage(mfc)}")
+            except (ValueError, OSError) as exc:
+                log(f"ERROR: {exc}")
+                return 1
+        elif not mfc_sp3.staged():
+            log("SP3 MFC overlay not staged; pass --mfc-sp3 DIR (the extracted "
+                "VS6 SP3 vc98/mfc) or set HOMM3_MFC_SP3")
+        return 0
     try:
         retail = inputs.stage_executable(inputs.RETAIL, args.exe)
         dreamcast = inputs.stage_executable(inputs.DREAMCAST, args.dreamcast_exe)
@@ -148,7 +190,7 @@ def cmd_init(args) -> int:
         log(f"ERROR: {exc}")
         return 1
     log(f"inputs verified: {retail}, {dreamcast} (with embedded debug symbols), {mac}")
-    for d in ("build/gen", "build/objdiff/base", "build/exe", "build/smoke"):
+    for d in (_image_path("build/gen"), _image_path("build/objdiff/base"), _image_path("build/exe"), "build/smoke"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
     if run_module("homm3.build.configure"):
         return 1
@@ -290,6 +332,10 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.worktree", *argv[1:])
     if argv and argv[0] == "evidence":
         return run_module("homm3.evidence", *argv[1:])
+    if argv and argv[0] == "census":
+        return run_module("homm3.census", *argv[1:])
+    if argv and argv[0] == "placements":
+        return run_module("homm3.census.placements", *argv[1:])
 
     ap = argparse.ArgumentParser(
         prog="homm3", description=__doc__,
@@ -306,6 +352,12 @@ def _dispatch(argv: list[str]) -> int:
                         "(homm3 worktree --help)")
     sub.add_parser("evidence", add_help=False,
                    help="one-shot matching evidence pass for selectors (homm3 evidence --help)")
+    sub.add_parser("placements", add_help=False,
+                   help="place shared units' functions in another image "
+                        "(homm3 --image KEY placements --help)")
+    sub.add_parser("census", add_help=False,
+                   help="derive another image's function/vtable/relocation census "
+                        "(homm3 --image KEY census --help)")
 
     p = sub.add_parser("init", help="one-time local setup (executables, symbols, toolchain)")
     p.add_argument("--exe", metavar="PATH",
@@ -316,6 +368,9 @@ def _dispatch(argv: list[str]) -> int:
                    help="Classic Mac Heroes_III_raw.pef (otherwise HOMM3_MAC_EXE or staged copy)")
     p.add_argument("--mac-toolchain", metavar="PATH",
                    help="directory with pinned CodeWarrior tools (otherwise HOMM3_MAC_TOOLCHAIN or staged copy)")
+    p.add_argument("--mfc-sp3", metavar="DIR",
+                   help="with --image: the extracted VS6 SP3 vc98/mfc directory "
+                        "(otherwise HOMM3_MFC_SP3 or the staged build/mfc-sp3)")
     p.add_argument("--force", action="store_true", help="re-init the wine prefix")
     p.add_argument("--no-smoke", action="store_true", help="skip the smoke compile")
     p.set_defaults(fn=cmd_init)
@@ -411,10 +466,32 @@ def _dispatch(argv: list[str]) -> int:
     return args.fn(args)
 
 
+def _select_image(argv: list[str]) -> list[str]:
+    """Strip a leading `--image KEY` / `--image=KEY` and export it as
+    $HOMM3_IMAGE before any module reads the image (homm3.core.images). Child
+    processes inherit the selection."""
+    from homm3.core import images
+    key = None
+    if argv[:1] == ["--image"] and len(argv) > 1:
+        key, argv = argv[1], argv[2:]
+    elif argv and argv[0].startswith("--image="):
+        key, argv = argv[0].split("=", 1)[1], argv[1:]
+    if key is not None:
+        if key not in images.images(ROOT):
+            print(f"[homm3] unknown image {key!r}; pinned images: "
+                  f"{', '.join(images.images(ROOT))}", file=sys.stderr)
+            raise SystemExit(1)
+        os.environ[images.IMAGE_ENV] = key
+    return argv
+
+
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    argv = _select_image(argv)
     from homm3.core import usage
     import shlex
-    argv = list(sys.argv[1:] if argv is None else argv)
+    image = os.environ.get("HOMM3_IMAGE")
+    shown = ["homm3", *([f"--image={image}"] if image and image != "game" else []), *argv]
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
     failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "mac", "rmg", "victor"} else 1
@@ -423,7 +500,7 @@ def main(argv: list[str] | None = None) -> int:
     return usage.run_logged(
         _dispatch, argv,
         lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",
-                                       shlex.join(["homm3", *argv]), rc, **meta),
+                                       shlex.join(shown), rc, **meta),
         failure_rc=failure_rc, scope="cli",
         difference_codes=(3, 4) if audit else ())
 

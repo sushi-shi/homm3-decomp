@@ -16,6 +16,7 @@ from hashlib import sha256
 
 from homm3.core import compile_receipt, msvc_names
 from homm3.delink.coffx import Obj
+from homm3.core.images import path as _image_path
 
 CODE = 0x20
 COMDAT_CODE_FILL = 0x90
@@ -54,7 +55,7 @@ class Objects:
         if spec is None or not path.is_file():
             return None
         root = self.project.root
-        required = [root / spec['source'], root / 'config/units.toml',
+        required = [root / spec['source'], root / _image_path('config/units.toml'),
                     root / 'config/project.toml', *self.compiler,
                     *self.scan(root / spec['source'], self.project.toolchain / 'include',
                                *self.project.includes)]
@@ -80,7 +81,7 @@ class Objects:
         import json
         if unit not in self.aliases:
             self.aliases[unit] = {}
-            base = self.project.root / 'build/objdiff/normalized/base'
+            base = self.project.root / _image_path('build/objdiff/normalized/base')
             stamp, sidecar = base / f'{unit}.obj.stamp.json', base / f'{unit}.symbols.tsv'
             try:
                 record = json.loads(stamp.read_text())

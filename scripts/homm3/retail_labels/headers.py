@@ -32,8 +32,14 @@ def equivalent_emitter(mangled: str, emitters: set[str]) -> str | None:
 
 def claim_files(root: Path = common.HOMM3_DIR) -> list[Path]:
     from homm3.retail_labels import source
+    from homm3.core import paths as image_paths
     head, _arity, _prototype = source.MACRO_HEADS['VA']
-    return [path for path in sorted((root / 'include').rglob('*'))
+    # Shared headers spell the game's addresses; another image claims only
+    # through its own include/<image>/ tree.
+    tree = root / 'include' if image_paths.is_game() else root / 'include' / image_paths.image_key()
+    if not tree.is_dir():
+        return []
+    return [path for path in sorted(tree.rglob('*'))
             if path.is_file() and path.suffix.lower() in {'.h', '.hpp', '.inl'}
             and head.search(source.mask_lexical_noise(path.read_text(errors='replace')))]
 

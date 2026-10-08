@@ -22,6 +22,7 @@ from typing import TypedDict
 
 from homm3.core import common, clang
 from homm3 import manifest
+from homm3.core.images import path as _image_path
 
 ROOT = common.HOMM3_DIR
 InlineOrigin = tuple[int, int] | tuple[()]
@@ -897,7 +898,7 @@ def _default_jobs() -> int:
 
 
 def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
-    units = [u for u in manifest.units(root / 'config/units.toml')
+    units = [u for u in manifest.units(root / _image_path('config/units.toml'))
              if u['source'].startswith('src/')]
     # Each cached TU records every file clang reached (its own source, the
     # headers and included sources, mirrored standard headers) with content
@@ -1447,7 +1448,7 @@ def audit(root: Path = ROOT, jobs: int | None = None, fresh: bool = False, *, or
     claims = all_claims(project.fragments)
     from homm3.match.status import load_baseline
     errors.extend(header_claim_ownership(
-        definitions, claims, load_baseline(root / 'config/match_baseline.tsv'), image_base=image_base))
+        definitions, claims, load_baseline(root / _image_path('config/match_baseline.tsv')), image_base=image_base))
     errors.extend(claim_identity(definitions, claims, image_base=image_base))
     return {'definitions': len(definitions), 'counts': counts, 'violations': errors,
             'unpaired_generated_claims': unpaired_generated_claims(claims, image_base=image_base), 'reached': reached}

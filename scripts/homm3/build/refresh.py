@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from pathlib import Path
 import subprocess
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
 
-NINJA_FILE = common.HOMM3_DIR / "build.ninja"
+NINJA_FILE = common.HOMM3_DIR / _image_path("build.ninja")
 REFRESH_LOCK = common.HOMM3_DIR / "build/.sema-refresh.lock"
 
 @dataclass(frozen=True)
@@ -66,6 +67,6 @@ def refresh_unit(unit: str, *, run=subprocess.run) -> RefreshResult:
         if not compiled and not counts["wrote"]:
             return RefreshResult(unit)
         from homm3.build.report import generate
-        report = generate(root / 'build/objdiff', run=run)
+        report = generate(root / _image_path('build/objdiff'), run=run)
     return RefreshResult(unit, compiled, bool(counts["wrote"]), report,
                          time.time() - started)

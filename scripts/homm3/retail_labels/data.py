@@ -14,6 +14,7 @@ import os
 import tempfile
 
 from homm3.core import msvc_names
+from homm3.core.images import path as _image_path
 
 
 def _error_bodies(tu, path, diagnostics):
@@ -172,11 +173,11 @@ def _shared_fingerprint(profiles) -> str:
     if shared is None:
         digest = hashlib.sha256(Path(__file__).read_bytes() + Path(msvc_names.__file__).read_bytes())
         digest.update(b'dependency-scoped\0')
-        units = root / 'config/units.toml'
+        units = root / _image_path('config/units.toml')
         if units.is_file():
             digest.update(str(units.relative_to(root)).encode())
             digest.update(units.read_bytes())
-        for directory in ('include', 'vendor', 'build/gen/msvc-include'):
+        for directory in ('include', 'vendor', _image_path('build/gen/msvc-include')):
             for file in sorted(p for p in (root / directory).rglob('*') if p.is_file()):
                 digest.update(str(file.relative_to(root)).encode())
                 if directory.startswith('build/'):

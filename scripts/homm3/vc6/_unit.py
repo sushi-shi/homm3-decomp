@@ -21,8 +21,9 @@ from pathlib import Path
 
 from homm3.sema import _asm
 from homm3.vc6 import _common
+from homm3.core.images import path as _image_path
 
-_UNITS_TOML = _common.REPO / "config/units.toml"
+_UNITS_TOML = _common.REPO / _image_path("config/units.toml")
 
 
 @lru_cache(maxsize=1)

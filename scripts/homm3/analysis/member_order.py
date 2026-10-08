@@ -29,6 +29,7 @@ from homm3.core import clang, common
 from homm3.core.project import Project
 from homm3.core.nb11_types import Types
 from homm3.retail_labels.source import mask_lexical_noise
+from homm3.core.images import path as _image_path
 
 
 def digest(source):
@@ -254,7 +255,7 @@ def make_plan(modules):
     types = Types.from_symbols(load_symbols())
     ranks, conflicts = recorded_order(types)
     dc = access.dc_visibility(types)
-    commands = compilation_database.commands(manifest.load(root / "config/units.toml"), root,
+    commands = compilation_database.commands(manifest.load(root / _image_path("config/units.toml")), root,
         clang.clang_bin(), [mirror, *Project(root).includes])
     commands = [r for r in commands if Path(r["file"]).exists()
                 and (not modules or Path(r["file"]).stem in modules)]

@@ -42,6 +42,7 @@ from pathlib import Path
 
 from homm3.build.normalized_freshness import write_stamp
 from homm3.core import msvc_names
+from homm3.core.images import path as _image_path
 
 
 SYMBOL_SIZE = 18
@@ -57,7 +58,7 @@ ANON_NS_SCOPE_RE = re.compile(r"\?%([^@]+)@")
 
 def anon_ns_stamp_inputs() -> dict[str, Path]:
     from homm3.core import common
-    path = common.HOMM3_DIR / "config/retail/anon-ns-paths.tsv"
+    path = common.HOMM3_DIR / _image_path("config/retail/anon-ns-paths.tsv")
     return {"anon_ns_paths": path} if path.is_file() else {}
 
 
@@ -150,7 +151,7 @@ def _anon_ns_renames(
                     symbol.section, symbol.value, size, size, 0,
                     hashlib.sha256(new_name.encode("latin-1")).hexdigest(),
                     "retail-rtti-path; unit=" + str(unit),
-                    "config/retail/anon-ns-paths.tsv",
+                    _image_path("config/retail/anon-ns-paths.tsv"),
                 ))
         previous = owners.get(new_name)
         if previous is not None and previous != symbol.name:

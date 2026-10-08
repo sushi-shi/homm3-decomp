@@ -12,6 +12,7 @@ import struct
 from homm3.core import compile_receipt, msvc_names
 from homm3.delink import coffx
 from homm3.verify.startup_bodies import Candidate, bindings, match
+from homm3.core.images import path as _image_path
 
 
 def definitions(obj):
@@ -117,7 +118,7 @@ def recover(model, project, base_dir):
             continue
         path = base_dir / f'{unit}.obj'
         source = project.root / row['source']
-        required = [source, project.root / 'config/units.toml',
+        required = [source, project.root / _image_path('config/units.toml'),
                     project.root / 'config/project.toml', *compiler,
                     *scan_header_deps(source, project.toolchain / 'include',
                                      *project.includes, cache=headers)]

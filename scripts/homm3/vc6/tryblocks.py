@@ -35,6 +35,7 @@ import bisect
 import struct
 
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
 EH_MAGICS = (0x19930520, 0x19930521, 0x19930522)
 _FUNCINFO_CB = 28
@@ -202,7 +203,7 @@ def carved_functions():
     """[(rva, size)] from the admitted carve, ascending."""
     rows = []
     header = None
-    path = common.HOMM3_DIR / "config/retail/functions.tsv"
+    path = common.HOMM3_DIR / _image_path("config/retail/functions.tsv")
     for line in path.read_text().splitlines():
         if line.startswith("#") or not line.strip():
             continue
@@ -253,7 +254,7 @@ def census(image):
 def _baseline():
     """retail rva -> (unit, symbol, cur, max)."""
     out = {}
-    path = common.HOMM3_DIR / "config/match_baseline.tsv"
+    path = common.HOMM3_DIR / _image_path("config/match_baseline.tsv")
     for line in path.read_text().splitlines():
         if line.startswith("#"):
             continue

@@ -47,6 +47,7 @@ from pathlib import Path
 
 from homm3.core.cc_wrap import (HOMM3_DIR, ensure_wineserver, find_ci, msvc_dir,
                                 winepath_w)
+from homm3.core.images import path as _image_path
 
 
 def die(msg: str) -> None:
@@ -126,10 +127,10 @@ def link_succeeded(output: str, rc: int, exists: bool) -> bool:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="VC6 link.exe wrapper (candidate link).")
-    ap.add_argument("--out", default="build/exe/HEROES3.candidate.EXE")
+    ap.add_argument("--out", default=_image_path("build/exe/HEROES3.candidate.EXE"))
     ap.add_argument("--map", dest="mapfile", default=None,
                     help="map path (default: <out> with .map suffix).")
-    ap.add_argument("--objs-dir", default="build/objdiff/base")
+    ap.add_argument("--objs-dir", default=_image_path("build/objdiff/base"))
     ap.add_argument("--obj", action="append", help="explicit obj (repeatable).")
     ap.add_argument("--order", help="file listing obj stems/paths in link order.")
     ap.add_argument("--lib", action="append", default=[],

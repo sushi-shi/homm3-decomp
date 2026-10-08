@@ -19,11 +19,12 @@ import struct
 
 from homm3.core import common
 from homm3.sema._common import die
+from homm3.core.images import path as _image_path
 
-SYMCSV = common.HOMM3_DIR / "build/gen/symbol_names.csv"
-RELOCS = common.HOMM3_DIR / "config/retail/relocs.tsv"
-VTABLES = common.HOMM3_DIR / "config/retail/vtables.tsv"
-REPORT = common.HOMM3_DIR / "build/objdiff/report.json"
+SYMCSV = common.HOMM3_DIR / _image_path("build/gen/symbol_names.csv")
+RELOCS = common.HOMM3_DIR / _image_path("config/retail/relocs.tsv")
+VTABLES = common.HOMM3_DIR / _image_path("config/retail/vtables.tsv")
+REPORT = common.HOMM3_DIR / _image_path("build/objdiff/report.json")
 
 
 class SymbolDb:

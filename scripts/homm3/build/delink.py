@@ -28,19 +28,20 @@ from homm3.build import configure, normalize_objs, synth_pdb
 from homm3.delink import data_manifest
 from homm3.core import common
 from homm3.retail_labels import source as labels_source
+from homm3.core.images import path as _image_path
 
-DELINK_DIR = common.HOMM3_DIR / "build/delink"
-TARGET_DIR = common.HOMM3_DIR / "build/objdiff/target"
+DELINK_DIR = common.HOMM3_DIR / _image_path("build/delink")
+TARGET_DIR = common.HOMM3_DIR / _image_path("build/objdiff/target")
 
 
 def _prune_normalized(units):
-    normalized = common.HOMM3_DIR / 'build/objdiff/normalized'
+    normalized = common.HOMM3_DIR / _image_path('build/objdiff/normalized')
     for side in ('base', 'target'):
         directory = normalized / side
         expected = set()
         for unit in units:
             name = Path(unit['unit'] + ('.obj' if side == 'base' else '.c.obj'))
-            raw = common.HOMM3_DIR / 'build/objdiff' / side / name
+            raw = common.HOMM3_DIR / _image_path('build/objdiff') / side / name
             if raw.is_file():
                 expected.update((name, name.with_suffix('.symbols.tsv'),
                                  name.with_name(name.name + '.stamp.json')))
@@ -70,7 +71,7 @@ def run(only_units: list[str] | None = None) -> DelinkResult:
     from homm3.delink import reloc_pairing
     aliases = reloc_pairing.write_aliases(reloc_pairing._STATE) \
         if reloc_pairing._STATE is not None else \
-        common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
+        common.HOMM3_DIR / _image_path("config/retail/reloc-aliases.tsv")
     pdb = synth_pdb.generate(inventory)
     data_manifest.generate(resolved)
     data = data_manifest.OUTPUT
@@ -84,7 +85,7 @@ def run(only_units: list[str] | None = None) -> DelinkResult:
          "--output-path", str(DELINK_DIR),
          "--engine-path", "c:\\proj\\",
          "--reloc-manifest", str(common.HOMM3_DIR /
-                                 "config/retail/relocs.tsv"),
+                                 _image_path("config/retail/relocs.tsv")),
          "--reloc-alias-manifest", str(aliases),
          "--data-manifest", str(data),
          "--data-section-manifest", str(data_manifest.SECTION_OUTPUT)],

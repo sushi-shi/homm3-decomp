@@ -19,6 +19,7 @@ import hashlib
 import sys
 from pathlib import Path
 
+from homm3.core import images as _images
 from homm3.core import root as _root
 from homm3.core.project import Project
 
@@ -28,8 +29,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 HOMM3_DIR = _root.process_root(_root.code_root(__file__) or SCRIPT_DIR)
 
 # Offline annotation/provenance facts are admitted project data. Operations
-# that read executable bytes use Project.image and its parsed layout.
-_spec = Project(HOMM3_DIR).specification['inputs']['retail']
+# that read executable bytes use Project.image and its parsed layout. The
+# selected image (homm3.core.images, `homm3 --image`) chooses the pin.
+IMAGE = _images.selected(HOMM3_DIR)
+_spec = Project(HOMM3_DIR).specification['inputs'][_images.input_key(IMAGE)]
 TARGET_SHA256 = _spec['sha256']
 TARGET_SIZE = _spec['size']
 IMAGE_BASE = _spec['image_base']

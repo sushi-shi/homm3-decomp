@@ -55,6 +55,7 @@ from pathlib import Path
 from typing import Callable, Iterable, NamedTuple
 
 from homm3.core import msvc_names
+from homm3.core.images import path as _image_path
 
 DIR32 = 0x0006
 REL32 = 0x0014
@@ -740,7 +741,7 @@ def alias_rows(aliases: list[Vote], reviewed: list[dict]) -> list[list[str]]:
 
 def _gen_dir() -> Path:
     from homm3.core import common
-    return common.HOMM3_DIR / "build/gen"
+    return common.HOMM3_DIR / _image_path("build/gen")
 
 
 PAIRINGS_OUT = "reloc_pairings.tsv"
@@ -807,7 +808,7 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
     global _STATE
     from homm3.core import common
     from homm3.delink.image import retail
-    base_dir = Path(base_dir or common.HOMM3_DIR / "build/objdiff/base")
+    base_dir = Path(base_dir or common.HOMM3_DIR / _image_path("build/objdiff/base"))
     img = retail()
     voters = [Voter(c.unit, c.name, c.rva, sizes[c.rva]) for c in claims
               if c.kind == "func" and c.channel in ("src-VA+ir", "src-VA+base")
@@ -937,7 +938,7 @@ def address_identities(model, state: State | None = None,
     from homm3.verify.byte_accounting import library_ranges
     from homm3.verify.startup_bodies import Candidate, match
     state = state or _STATE
-    base_dir = Path(base_dir or common.HOMM3_DIR / "build/objdiff/base")
+    base_dir = Path(base_dir or common.HOMM3_DIR / _image_path("build/objdiff/base"))
     rows: list[tuple[int, str, str, str, str]] = []
     _ranges, _summary, defined = library_ranges(image(), model)
     for rva, names in sorted(defined.items()):

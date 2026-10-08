@@ -50,9 +50,10 @@ from homm3.build.canonicalize_data_symbols import normalize_anon_ns_name
 from homm3.core import common
 from homm3.retail_labels import censuses, fragments, iat, providers
 from homm3.retail_labels import source as labels_source
+from homm3.core.images import path as _image_path
 
-OUT = common.HOMM3_DIR / "build/gen/symbol_names.csv"
-COMPGEN_OUT = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
+OUT = common.HOMM3_DIR / _image_path("build/gen/symbol_names.csv")
+COMPGEN_OUT = common.HOMM3_DIR / _image_path("build/gen/compgen_claims.tsv")
 
 BUCKET_SHIFT = 16
 VOLATILE_E_RE = re.compile(r"^_?\$E[0-9]+$")
@@ -148,6 +149,7 @@ def resolve(rows=None) -> Model:
                      if c.meta.get('internal') == '1'}
     channels = {'src-VA': 'src', 'src-VA+ir': 'src', 'src-VA+base': 'src',
                 'src-VA_COMPGEN': 'src_compgen', 'zlib-map': 'functions_zlib',
+                'placement': 'src',
                 'zlib-data-map': 'data_zlib',
                 'runtime-map': 'functions_static_libs', 'src-DATA': 'src',
                 'src-DATA_COMPGEN': 'src_data_compgen',
@@ -456,6 +458,11 @@ def _collect_inventory():
             pooled[c.rva] = c.unit
         put(c.rva, name, c.unit, c.size if c.size is not None else "",
             c.kind, c.channel)
+
+    # 1b. another image's placed shared-unit functions (its src claims, when
+    # any, spell its own addresses and come first)
+    for c in providers.placements():
+        put(c.rva, c.name, c.unit, c.size, c.kind, c.channel)
 
     # 2. zlib map - the admitted table carries the owning TU (unit column),
     # so the delinked objects pair 1:1 against our compiled base objs

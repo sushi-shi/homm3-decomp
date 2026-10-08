@@ -17,6 +17,7 @@ import collections
 import json
 
 from homm3.vc6 import _common, diagnose
+from homm3.core.images import path as _image_path
 
 HEADER = ("class", "recoverable", "max_fuzzy", "hist_fuzzy", "headroom",
           "current_fuzzy", "size", "unit", "fn", "route", "knob")
@@ -37,13 +38,13 @@ def _size(fn):
 
 def _load_maxima(path=None):
     from homm3.match.status import load_baseline
-    path = path or (_common.REPO / "config/match_baseline.tsv")
+    path = path or (_common.REPO / _image_path("config/match_baseline.tsv"))
     return {key: row.max for key, row in load_baseline(path).items()}
 
 
 def _load_history(path=None):
     from homm3.match.status import load_baseline
-    path = path or (_common.REPO / "config/match_baseline.tsv")
+    path = path or (_common.REPO / _image_path("config/match_baseline.tsv"))
     return {key: row.hist for key, row in load_baseline(path).items()}
 
 
@@ -162,7 +163,7 @@ def _partition_targets(data, maxima, compiled):
 
 
 def _targets(maxima):
-    rep = _common.REPO / "build/objdiff/report.json"
+    rep = _common.REPO / _image_path("build/objdiff/report.json")
     if not rep.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build` first")
     data = json.loads(rep.read_text())
@@ -234,8 +235,8 @@ def _admission_rows_from_text(data, baseline_text, category, sizes):
 
 
 def _admission_rows(image=None):
-    report = _common.REPO / "build/objdiff/report.json"
-    baseline = _common.REPO / "config/match_baseline.tsv"
+    report = _common.REPO / _image_path("build/objdiff/report.json")
+    baseline = _common.REPO / _image_path("config/match_baseline.tsv")
     if not report.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build` first")
     if not baseline.is_file():
@@ -288,8 +289,8 @@ def _run_admission(args) -> int:
 def _run_smallest(args) -> int:
     from homm3.match import status, universe
 
-    report_path = _common.REPO / "build/objdiff/report.json"
-    baseline_path = _common.REPO / "config/match_baseline.tsv"
+    report_path = _common.REPO / _image_path("build/objdiff/report.json")
+    baseline_path = _common.REPO / _image_path("config/match_baseline.tsv")
     parked_path = _common.REPO / "config/matching/parked.tsv"
     if not report_path.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build` first")

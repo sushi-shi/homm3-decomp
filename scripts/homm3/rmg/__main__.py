@@ -24,6 +24,7 @@ from .bindings import DRIVER_BASE, prepare_calls, resolve, absolute_object
 from .bootstrap import patch_winmain
 from .cases import (load_cases, validate_case, job_bytes, digest, compare_runs,
                     compare_outputs, decode_result)
+from homm3.core.images import path as _image_path
 
 UNITS = ('rmg', 'rmg_support', 'rmg_terrain')
 DLLS = ('BINKW32.DLL', 'MSS32.DLL', 'SMACKW32.DLL', 'IFC20.dll')
@@ -81,7 +82,7 @@ def driver_include_flags() -> list[str]:
 def build_driver(out: Path, retail: bytes) -> dict:
     # Ninja owns per-TU compiler profiles and header dependency freshness.
     run_command([sys.executable, '-m', 'homm3.build.configure'], out / 'build.log')
-    objects = [ROOT / 'build/objdiff/base' / f'{unit}.obj' for unit in UNITS]
+    objects = [ROOT / _image_path('build/objdiff/base') / f'{unit}.obj' for unit in UNITS]
     run_command(['ninja', *(str(path.relative_to(ROOT)) for path in objects)], out / 'build.log')
     run_command([sys.executable, '-m', 'homm3.model'], out / 'build.log')
     driver = out / 'driver.obj'
@@ -273,7 +274,7 @@ def compare(args) -> int:
                   'driverSources': {path.name: digest(path.read_bytes())
                                     for path in Path(__file__).parent.iterdir()
                                     if path.suffix in ('.cpp', '.py')},
-                  'unitsManifestSha256': digest((ROOT / 'config/units.toml').read_bytes())}
+                  'unitsManifestSha256': digest((ROOT / _image_path('config/units.toml')).read_bytes())}
     write_json(out / 'provenance.json', provenance)
     provenance['objects'] = build_driver(out, retail)
     provenance['driverSha256'] = digest((out / 'rmg-driver.dll').read_bytes())

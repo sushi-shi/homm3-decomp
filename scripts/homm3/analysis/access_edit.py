@@ -31,6 +31,7 @@ from homm3.core import clang, common
 from homm3.core.project import Project
 from homm3.core.nb11_types import Types
 from homm3.retail_labels.source import mask_lexical_noise
+from homm3.core.images import path as _image_path
 
 
 def qualified_owner(cursor, ci) -> str:
@@ -233,7 +234,7 @@ def main() -> int:
     print(f"# DC member names: {len(dc)}", file=sys.stderr)
 
     commands = compilation_database.commands(
-        manifest.load(root / "config/units.toml"), root, clang.clang_bin(),
+        manifest.load(root / _image_path("config/units.toml")), root, clang.clang_bin(),
         [mirror, *Project(root).includes])
     commands = [r for r in commands if Path(r["file"]).exists()]
     if args.module:

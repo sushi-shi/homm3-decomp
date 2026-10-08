@@ -96,10 +96,11 @@ from typing import Any, Iterable, TextIO
 
 from homm3.analysis import dc_asm, dc_lines, dc_srclines, dc_source_layout, debug_shape
 from homm3.core import common, inputs, undname
+from homm3.core.images import path as _image_path
 
 
 SRC_DIR = common.HOMM3_DIR / "src"
-RETAIL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
+RETAIL_NAMES = common.HOMM3_DIR / _image_path("build/gen/symbol_names.csv")
 LOG = common.HOMM3_DIR / "build/homm3_dreamcast.log"
 MAX_RENDERED_MATCHES = 8
 

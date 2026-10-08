@@ -52,11 +52,12 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
-OBJDIFF_DIR = common.HOMM3_DIR / "build/objdiff"
+OBJDIFF_DIR = common.HOMM3_DIR / _image_path("build/objdiff")
 REPORT = OBJDIFF_DIR / "report.json"
-BASELINE = common.HOMM3_DIR / "config/match_baseline.tsv"
-SYMBOL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
+BASELINE = common.HOMM3_DIR / _image_path("config/match_baseline.tsv")
+SYMBOL_NAMES = common.HOMM3_DIR / _image_path("build/gen/symbol_names.csv")
 EPS = 0.01
 SCORE_POLICY = "gruntz-data-v1-relocs-all-addends"
 
@@ -170,7 +171,9 @@ def pending_build_edges(units: set[str] | None = None) -> tuple[int, str]:
     """
     targets = sorted(units) if units else ["objects"]
     try:
-        result = subprocess.run(["ninja", "-n", *targets], cwd=common.HOMM3_DIR,
+        from homm3.build.configure import ninja_selection
+        result = subprocess.run(["ninja", *ninja_selection(), "-n", *targets],
+                                cwd=common.HOMM3_DIR,
                                 env=dict(os.environ, NINJA_STATUS=_PENDING),
                                 capture_output=True, text=True)
     except FileNotFoundError:
@@ -1068,7 +1071,7 @@ def cmd_check(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = None
 def _pending_function_records() -> dict:
     """{owner: {unit, bytes}} from the last byte accounting, if any."""
     import json
-    path = common.HOMM3_DIR / "build/gen/pending_function_records.json"
+    path = common.HOMM3_DIR / _image_path("build/gen/pending_function_records.json")
     try:
         return json.loads(path.read_text())
     except (OSError, ValueError):
@@ -1077,6 +1080,50 @@ def _pending_function_records() -> dict:
 
 RM_START, RM_END = "<!-- match-score:start -->", "<!-- match-score:end -->"
 README_PATH = common.HOMM3_DIR / "README.md"
+
+
+def readme_markers(image: str | None = None) -> tuple[str, str]:
+    """The README sentinels of an image's score block: `match-score` for the
+    game, `<image>-match-score` for another image."""
+    from homm3.core import paths
+    key = image or paths.image_key()
+    if paths.is_game(key):
+        return RM_START, RM_END
+    return (f"<!-- {key}-match-score:start -->", f"<!-- {key}-match-score:end -->")
+
+
+def image_title(image: str | None = None) -> str:
+    """`Windows `HEROES3.EXE`` for the game; the pin's name and file otherwise."""
+    from homm3.core import images, paths
+    key = image or paths.image_key()
+    if paths.is_game(key):
+        return "Windows `HEROES3.EXE`"
+    pin = images.pins(common.HOMM3_DIR)[images.input_key(key)]
+    return f"{pin['name']} `{Path(pin['path']).name}`"
+
+
+def image_data_line(image: str | None = None) -> str | None:
+    """Another image's data line: named data objects (its placements and its
+    own DATA() claims) over the relocation targets of its census. A pure
+    function of config/ like the rest of the block."""
+    from homm3.core import paths
+    key = image or paths.image_key()
+    if paths.is_game(key):
+        return None
+    retail = paths.retail_dir(key)
+    evidence = retail / "reloc-evidence.tsv"
+    if not evidence.is_file():
+        return None
+    from homm3.core.tsv import read as read_tsv
+    _b, _h, rows = read_tsv(evidence)
+    targets = {r["value"] for r in rows if r["disposition"] == "kept"
+               and r["target_class"] in ("data", "literal-start")}
+    placed = 0
+    if (retail / "placements.tsv").is_file():
+        _b, _h, placements = read_tsv(retail / "placements.tsv")
+        placed = sum(1 for r in placements if r["kind"] == "data")
+    return (f"**Data:** {placed:,} / {len(targets):,} referenced data objects "
+            "claimed (placements and the image's own `DATA()` claims).")
 
 
 def module_of(source: str) -> str:
@@ -1108,9 +1155,10 @@ def _previous_byte_accountability() -> str | None:
         text = README_PATH.read_text()
     except OSError:
         return None
-    if RM_START not in text or RM_END not in text:
+    start, end = readme_markers()
+    if start not in text or end not in text:
         return None
-    block = text.split(RM_START, 1)[1].split(RM_END, 1)[0]
+    block = text.split(start, 1)[1].split(end, 1)[0]
     return next((line for line in block.splitlines()
                  if line.startswith("**Byte accountability:**")), None)
 
@@ -1202,8 +1250,9 @@ def readme_block(rows: dict, *, data_accounting: dict | None = None,
 
     exe_pct = weighted(total("wmax"))
     pct_max = 100.0 * total("exact_max") / denominator if denominator else 0.0
-    block = [RM_START, "",
-             f"**Windows `HEROES3.EXE`: {exe_pct:.2f}% matched (MAX)** — "
+    start, end = readme_markers()
+    block = [start, "",
+             f"**{image_title()}: {exe_pct:.2f}% matched (MAX)** — "
              f"{total('exact_max'):,} / {denominator:,} functions exact ({pct_max:.1f}%), "
              f"weighted by size over {unfiltered_bytes:,} bytes of code.", ""]
     block += _md_table([["Score", "Functions exact", "Weighted", "Meaning"],
@@ -1254,7 +1303,10 @@ def readme_block(rows: dict, *, data_accounting: dict | None = None,
         # Byte accounting is opt-in (`homm3 build --data`); keep its last
         # measured line rather than dropping it from the README.
         block += ["", previous_accountability]
-    block += ["", RM_END]
+    data_line = image_data_line()
+    if data_line:
+        block += ["", data_line]
+    block += ["", end]
     return block
 
 
@@ -1271,10 +1323,18 @@ def write_readme(*, data_accounting: dict | None = None,
     block = readme_block(rows, data_accounting=data_accounting,
                          previous_accountability=_previous_byte_accountability())
     text = README_PATH.read_text()
-    if RM_START in text and RM_END in text:
-        head, rest = text.split(RM_START, 1)
-        _old, tail = rest.split(RM_END, 1)
+    start, end = readme_markers()
+    if start in text and end in text:
+        head, rest = text.split(start, 1)
+        _old, tail = rest.split(end, 1)
         new = head + "\n".join(block) + tail
+    elif start != RM_START and RM_END in text:
+        # Another image's block follows the game's blocks (and the Mac
+        # reference block when present).
+        anchor = "<!-- mac-match-score:end -->" if "<!-- mac-match-score:end -->" in text \
+            else RM_END
+        head, tail = text.split(anchor, 1)
+        new = head + anchor + "\n\n" + "\n".join(block) + tail
     else:
         lines = text.splitlines(keepends=True)
         at = next((i for i, line in enumerate(lines)

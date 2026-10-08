@@ -34,6 +34,7 @@ from types import SimpleNamespace
 
 from homm3.sema import _asm
 from homm3.vc6 import _align, _common, _flow, report
+from homm3.core.images import path as _image_path
 
 
 def _behavioral() -> tuple[bool, str]:
@@ -91,7 +92,7 @@ def _tool_distance(unit: str, fn: str):
 
 def _consistency(sample: int) -> tuple[bool, list[str]]:
     """Spot-check tool-distance vs objdiff on exact + plateaued functions."""
-    rep = _common.REPO / "build/objdiff/report.json"
+    rep = _common.REPO / _image_path("build/objdiff/report.json")
     if not rep.is_file():
         return True, ["(no report.json - skipped)"]
     data = json.loads(rep.read_text())

@@ -35,11 +35,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from homm3.vc6 import _common, _toolchain
+from homm3.core.images import path as _image_path
 
 RECORD_SIZE = 0x14
 TSV_PATH = _common.EVIDENCE / "cl-option-spec.tsv"
 SHIM_LOG = _common.REPO / "build/vc6/shim/argv.log"
-UNITS_TOML = _common.REPO / "config/units.toml"
+UNITS_TOML = _common.REPO / _image_path("config/units.toml")
 
 # ---------------------------------------------------------------------------
 # table decoding

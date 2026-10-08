@@ -22,7 +22,10 @@ class Project:
     @cached_property
     def manifest(self) -> dict:
         from homm3 import manifest
-        return manifest.load(self.root / 'config/units.toml')
+        from homm3.core import images
+        key = images.selected(self.root)
+        name = 'units.toml' if key == images.DEFAULT_IMAGE else f'units.{key}.toml'
+        return manifest.load(self.root / 'config' / name)
 
     @property
     def includes(self) -> list[Path]:
@@ -35,7 +38,10 @@ class Project:
 
     @property
     def fragments(self) -> Path:
-        return self.root / 'build/gen/claims'
+        from homm3.core import images
+        key = images.selected(self.root)
+        build = 'build' if key == images.DEFAULT_IMAGE else f'build/{key}'
+        return self.root / build / 'gen/claims'
 
     def executable(self, key):
         from homm3.core.inputs import Executable
@@ -50,8 +56,10 @@ class Project:
     def image(self):
         from homm3.core.inputs import stage_executable
         from homm3.core.image import Image
-        image = Image(stage_executable(self.executable('retail')))
-        expected = self.specification['inputs']['retail'].get('image_base')
+        from homm3.core import images
+        key = images.input_key(images.selected(self.root))
+        image = Image(stage_executable(self.executable(key)))
+        expected = self.specification['inputs'][key].get('image_base')
         if expected is not None and image.image_base != expected:
             raise ValueError(f'image base {image.image_base:#x} != admitted {expected:#x}')
         return image

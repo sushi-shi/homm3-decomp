@@ -34,6 +34,7 @@ from pathlib import Path
 
 from homm3.sema import _asm
 from homm3.vc6 import _common, _solver, _unit, reg_model
+from homm3.core.images import path as _image_path
 
 # a REL32 reloc names a call / tail-jump target; DIR32 is data - exclude it.
 _REL32 = re.compile(r"IMAGE_REL_I386_REL32\s+(\S+)")
@@ -385,7 +386,7 @@ def _current_report_score(unit: str | None, symbol: str,
     """Fresh objdiff score for the exact build object being diagnosed."""
     if not unit:
         return None
-    report = _common.REPO / "build/objdiff/report.json"
+    report = _common.REPO / _image_path("build/objdiff/report.json")
     try:
         report_mtime = report.stat().st_mtime_ns
         target_obj = _asm.TARGET / f"{unit}.c.obj"

@@ -48,8 +48,9 @@ import sys
 from pathlib import Path
 
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
-FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
+FUNCTIONS = common.HOMM3_DIR / _image_path("config/retail/functions.tsv")
 BASELINE = common.HOMM3_DIR / "config/source/va-claims-baseline.tsv"
 ROOTS = ("src", "include")
 EXTS = {".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".inl"}

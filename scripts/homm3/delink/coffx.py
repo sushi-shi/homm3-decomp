@@ -26,8 +26,9 @@ class Obj:
     .bss) that the candidate section manifest is derived from.
     """
 
-    def __init__(self, path: Path | str):
-        self.buf = b = Path(path).read_bytes()
+    def __init__(self, path: Path | str | bytes):
+        # An archive member arrives as its bytes.
+        self.buf = b = path if isinstance(path, bytes) else Path(path).read_bytes()
         if struct.unpack_from("<H", b, 0)[0] != 0x14C:
             raise ValueError(f"{path}: not an i386 COFF")
         self.nsec = struct.unpack_from("<H", b, 2)[0]

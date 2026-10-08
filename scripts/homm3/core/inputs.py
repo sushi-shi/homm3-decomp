@@ -13,6 +13,7 @@ import sys
 import tempfile
 
 from homm3.core import common
+from homm3.core import images as _images
 from homm3.core.project import Project
 
 
@@ -31,7 +32,10 @@ class Executable:
 
 
 _project = Project(common.HOMM3_DIR)
-RETAIL = _project.executable('retail')
+#: The selected image's executable (homm3.core.images); the game by default.
+RETAIL = _project.executable(_images.input_key(common.IMAGE))
+#: The game executable, whatever image is selected.
+GAME = _project.executable(_images.GAME_INPUT)
 DREAMCAST = _project.executable('dreamcast')
 MAC = _project.executable('mac')
 

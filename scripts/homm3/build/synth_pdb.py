@@ -36,9 +36,10 @@ from collections import defaultdict
 from pathlib import Path
 
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
-INVENTORY = common.HOMM3_DIR / "build/gen/symbol_names.csv"
-OUT = common.HOMM3_DIR / "build/pdb/HEROES3.pdb"
+INVENTORY = common.HOMM3_DIR / _image_path("build/gen/symbol_names.csv")
+OUT = common.HOMM3_DIR / _image_path("build/pdb/HEROES3.pdb")
 ENGINE_PREFIX = "c:\\proj\\"
 DATA_UNIT = "_data"
 RUNTIME_UNIT = "_runtime"

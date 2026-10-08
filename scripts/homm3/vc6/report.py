@@ -28,6 +28,7 @@ from pathlib import Path
 from homm3.sema import _asm
 from homm3.sema.context import get_context
 from homm3.vc6 import _align, _common, _flow, reg_model
+from homm3.core.images import path as _image_path
 
 try:
     from homm3.vc6 import flow_model  # noqa: F401  (kept for parity/imports)
@@ -37,7 +38,7 @@ except Exception:
 
 def _plateaus(lo: float, unit_filter: str | None):
     import json
-    rep = _common.REPO / "build/objdiff/report.json"
+    rep = _common.REPO / _image_path("build/objdiff/report.json")
     if not rep.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build --fast`")
     data = json.loads(rep.read_text())

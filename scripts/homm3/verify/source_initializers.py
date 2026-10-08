@@ -15,6 +15,7 @@ from capstone.x86 import X86_OP_MEM
 from homm3.core import compile_receipt
 from homm3.core.tsv import read
 from homm3.delink.coffx import Obj
+from homm3.core.images import path as _image_path
 
 
 @dataclass(frozen=True)
@@ -200,7 +201,7 @@ def compare(project, pe, model, *, header='include/terrain.h', witness='iconwdgt
         result['gaps'].append('witness unit not admitted'); return result
     source, header = root / unit['source'], (root / header).resolve()
     objpath = root / f'build/objdiff/base/{witness}.obj'
-    required = [source, header, root / 'config/units.toml', root / 'config/project.toml',
+    required = [source, header, root / _image_path('config/units.toml'), root / 'config/project.toml',
                 *scan_header_deps(source, project.toolchain / 'include', *project.includes),
                 *[p for p in (project.toolchain / 'bin').iterdir()
                   if p.is_file() and p.suffix.lower() in ('.exe', '.dll')]]
@@ -215,7 +216,7 @@ def compare(project, pe, model, *, header='include/terrain.h', witness='iconwdgt
     patterns = candidate_patterns(Obj(objpath), owners)
     if not patterns:
         result['gaps'].append('no supported source initializer emitted'); return result
-    roots = verified_roots(pe, read(root / 'config/retail/init-thunks.tsv')[2])
+    roots = verified_roots(pe, read(root / _image_path('config/retail/init-thunks.tsv'))[2])
     if not roots:
         result['gaps'].append('retail CRT table does not verify'); return result
     sizes = {row['rva']: row['size'] for row in functions()}

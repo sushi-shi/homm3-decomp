@@ -1,0 +1,107 @@
+# Images: more than one linked program
+
+The repository reconstructs the game, `HEROES3.EXE`, and the programs built
+from the same source tree. Each program is an **image**. The game is the
+default image `game`. Another image is a pin in `config/project.toml` with
+`image = true`; its key selects it on the command line:
+
+```sh
+homm3 --image h3maped census --write
+homm3 --image h3maped placements --write
+homm3 --image h3maped delink
+```
+
+`--image KEY` comes before the subcommand. It sets `$HOMM3_IMAGE`, which every
+child process inherits (`homm3.core.images`). Without it every command works
+on the game exactly as before.
+
+| Image | Executable | Compiler profile |
+| --- | --- | --- |
+| `game` | GOG Complete 4.0 `HEROES3.EXE` | `/O2 /Ob2 /Oy- /Op /MT /Gr /GX` |
+| `h3maped` | GOG Complete 4.0 `h3maped.exe` (map editor) | `/O1 /Ob2 /GR` for its own objects; `/O2 /GR` for the prebuilt Libraries archive; zlib and Victor reuse the game's objects |
+
+## Where an image keeps its state
+
+| What | Game | Another image |
+| --- | --- | --- |
+| Retail tables | `config/retail/` | `config/retail/<image>/` |
+| Units and profiles | `config/units.toml` | `config/units.<image>.toml` |
+| Score ledger | `config/match_baseline.tsv` | `config/match_baseline.<image>.tsv` |
+| Generated state | `build/{gen,objdiff,delink,pdb}` | `build/<image>/{gen,objdiff,delink,pdb}` |
+| Ninja graph | `build.ninja` | `build/<image>/build.ninja` |
+| README block | `match-score` | `<image>-match-score` |
+
+The toolchain, the Wine prefix, the staged executables under `build/orig/`
+and the Dreamcast and Mac evidence are shared. `homm3.core.images.path()`
+maps a game-relative per-image path (`build/gen/...`, `config/retail/...`,
+the ledger, the manifest) to the selected image's spelling; for the game it
+returns the path unchanged, so the game's files, scores and gates do not move.
+
+## The census of another image
+
+The game's census was carved once and is hand-owned. Another image derives
+its census from its pinned executable (`homm3.census`):
+
+- `functions.tsv`: function starts from recursive descent over seeds of
+  decreasing strength (entry, EH funclets, call and tail targets, the code
+  after a zero-displacement `jmp`, runs of code pointers in data, immediate
+  code addresses, isolated data pointers, then the code after each decoded
+  extent). Extents partition `.text` to the next start minus padding.
+- `vtables.tsv`: RTTI vtables (the dword before each is its Complete Object
+  Locator, which names the class) and tables that code stores as a vptr.
+- `relocs.tsv` and `reloc-evidence.tsv`: the vendored `find_relocs` channels.
+  A data dword pointing into a function's interior is dropped.
+- `funclets.tsv` and `init-thunks.tsv`: EH funclets with their parent
+  functions (the function whose `__ehhandler` stub names their FuncInfo),
+  and the `.CRT$XCU` initializer table (the larger table the CRT hands to
+  `_initterm`).
+- `runtime-map.tsv`: statically linked library functions, each the unique
+  masked match of a LIBCMT, LIBCPMT or SP3 NAFXCW member function. They are
+  named, not matched, and excluded from the scores.
+
+`homm3 --image KEY census --check` fails when the committed tables no longer
+match the derivation.
+
+## Shared units and placements
+
+A unit that the game also compiles is the same source file. Its `VA()`
+claims spell game addresses, so another image never reads them. The image
+compiles the file with its own profile and **places** its functions
+(`homm3.census.placements`, `config/retail/<image>/placements.tsv`):
+
+1. a compiled body that equals exactly one census function of the same size,
+   relocation fields masked;
+2. the callees and referents named by the relocations of each placed body,
+   read from the retail bytes;
+3. the slots of each RTTI-named vtable.
+
+A name that reaches two addresses, or an address that receives two names, is
+dropped. The label model reads the table as the image's claims (channel
+`placement`). Sources only the image compiles (`src/editor/...`) spell the
+image's own addresses in `VA()`/`DATA()` and are extracted like game sources.
+
+## The SP3 MFC overlay
+
+The shared toolchain carries the RTM MFC (`mfc/LIB/NAFXCW.LIB`, members
+stamped C++ 8168). The editors link SP3's library (members stamped 8447) and
+compile against SP3's changed headers. `homm3 --image h3maped init --mfc-sp3
+DIR` verifies the pinned files of the extracted `vc98/mfc` from VS6 SP3
+(`config/project.toml [toolchain.mfc_sp3.files]`, the TechNet disc the
+toolchain release already uses) and copies them to `build/mfc-sp3/`. The
+image's units put `build/mfc-sp3/include` ahead of the toolchain's MFC headers,
+and the census names MFC code from `build/mfc-sp3/lib/nafxcw.lib`.
+
+## Building an image
+
+```sh
+homm3 --image h3maped init --exe /path/to/h3maped.exe --mfc-sp3 /path/to/vc98/mfc
+homm3 --image h3maped census --write        # after a census-tool change
+homm3 --image h3maped configure
+ninja -f build/h3maped/build.ninja -j4 objects
+homm3 --image h3maped placements --write    # after a compile of shared units
+homm3 --image h3maped delink
+homm3 --image h3maped status update --write-readme
+```
+
+The game's commands, ledger, README block and gates are unchanged by any of
+these.

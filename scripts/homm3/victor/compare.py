@@ -14,6 +14,7 @@ from homm3.rmg.bootstrap import patch_winmain
 from homm3.rmg.__main__ import DLLS, file_digest, write_json
 from .runtime import build_driver
 from .protocol import decode, verify_pixels
+from homm3.core.images import path as _image_path
 
 
 def run_batch(out, inputs, label, libraries, timeout, allocation):
@@ -97,7 +98,7 @@ def compare(corpus: Path, out: Path, limit: int | None, timeout: float, allocati
     provenance = dict(allocation=allocation, timeoutSeconds=timeout,
                       winePrefix=os.environ['WINEPREFIX'],
                       wineVersion=subprocess.check_output(['wine', '--version'], text=True).strip(),
-                      unitsManifestSha256=file_digest(ROOT / 'config/units.toml'),
+                      unitsManifestSha256=file_digest(ROOT / _image_path('config/units.toml')),
                       patchedHostSha256=file_digest(out / 'victor-host.exe'), corpusSha256=file_digest(corpus / 'inventory.json'),
                       retailSha256=file_digest(inputs.RETAIL.destination),
                       libraries={p.name: file_digest(p) for p in libraries},

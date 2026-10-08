@@ -78,9 +78,10 @@ from homm3.core import cc_wrap
 from homm3.sema import _asm
 from homm3.vc6 import _align, _common, _flow, _toolchain
 from homm3.vc6.shim import build as shim_build
+from homm3.core.images import path as _image_path
 
 SCRATCH = _common.REPO / "build/vc6/genab"
-UNITS_TOML = _common.REPO / "config/units.toml"
+UNITS_TOML = _common.REPO / _image_path("config/units.toml")
 
 # The RTM compiler binaries, staged OUTSIDE the repo (game/toolchain bytes
 # never enter git).  Provenance: archive.org item

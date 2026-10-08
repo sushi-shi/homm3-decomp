@@ -12,6 +12,7 @@ import struct
 
 from homm3.core import compile_receipt
 from homm3.delink import coffx
+from homm3.core.images import path as _image_path
 
 
 @dataclass(frozen=True)
@@ -113,7 +114,7 @@ def _candidates(project, base_dir, *, witnesses=None):
         inputs = None
         if row:
             source = project.root / row['source']
-            required = [source, project.root / 'config/units.toml',
+            required = [source, project.root / _image_path('config/units.toml'),
                         project.root / 'config/project.toml', *compiler_files,
                         *scan_header_deps(source, project.toolchain / 'include',
                                           *project.includes, cache=headers)]

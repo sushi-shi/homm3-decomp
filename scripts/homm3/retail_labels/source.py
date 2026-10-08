@@ -90,6 +90,7 @@ from pathlib import Path
 from homm3.core import clang, common, msvc_names
 from homm3.core.tsv import write as write_tsv
 from homm3.retail_labels.fragments import FRAGMENTS, HEADER, fragment_path
+from homm3.core.images import path as _image_path
 
 SRC_DIR = common.HOMM3_DIR / "src"
 SOURCE_SUFFIXES = frozenset({".c", ".cc", ".cpp", ".cxx"})
@@ -2772,13 +2773,30 @@ def _fragment_rows(rows: list[dict]) -> list[list[str]]:
     return out
 
 
+def image_owned_sources() -> list:
+    """Another image's claim space: the sources of its manifest units that
+    the game does not compile (src/editor/...). Their VA()/DATA() spell that
+    image's addresses; shared sources keep spelling the game's."""
+    from homm3 import manifest
+    from homm3.core import paths as image_paths
+    game = {u["source"] for u in manifest.units(image_paths.manifest("game"))}
+    return sorted(common.HOMM3_DIR / u["source"]
+                  for u in manifest.units(image_paths.manifest())
+                  if u["source"] not in game and u["source"].startswith("src/"))
+
+
 def src_files() -> list:
     """The extraction universe: regular C/C++ files, one unit per stem.
     A stem collision would silently merge two files' claims into one
     fragment - fatal, has never existed. Directories such as a transient
-    ``src/.codex`` workspace must never enter the source universe."""
-    paths = sorted(p for p in SRC_DIR.iterdir()
-                   if p.is_file() and p.suffix.lower() in SOURCE_SUFFIXES)
+    ``src/.codex`` workspace must never enter the source universe.
+    Another image extracts only the sources it alone compiles."""
+    from homm3.core import paths as image_paths
+    if image_paths.is_game():
+        paths = sorted(p for p in SRC_DIR.iterdir()
+                       if p.is_file() and p.suffix.lower() in SOURCE_SUFFIXES)
+    else:
+        paths = image_owned_sources()
     stems = [p.stem for p in paths]
     for stem in stems:
         if stems.count(stem) > 1:
@@ -2858,6 +2876,14 @@ def run(only_units: list[str] | None = None,
     todo = [p for p in paths
             if only_units is None or p.stem in only_units or header_paths]
     changed, pruned, problems = [], [], []
+    if not todo and not header_paths:
+        # Another image that compiles no source of its own yet: its claims
+        # are its placements, and no fragment survives.
+        if only_units is None and FRAGMENTS.is_dir():
+            for stale in sorted(FRAGMENTS.glob("*.tsv")):
+                stale.unlink()
+                pruned.append(stale.stem)
+        return changed, pruned, problems
 
     if clang.clang_bin() is None:
         problems.append("clang is not on PATH and $HOMM3_CLANG is unset - "
@@ -2899,7 +2925,7 @@ def run(only_units: list[str] | None = None,
     with ThreadPoolExecutor(max_workers=jobs or min(8, os.cpu_count() or 4)) as pool:
         data_errors = list(pool.map(
             lambda path: data_labels.enrich(path, rows_by_unit[path.stem], data_profiles), todo))
-    issues_path = common.HOMM3_DIR / 'build/gen/data_extraction_issues.tsv'
+    issues_path = common.HOMM3_DIR / _image_path('build/gen/data_extraction_issues.tsv')
     retained_issues = []
     if only_units is not None and issues_path.is_file():
         import csv
@@ -2908,7 +2934,7 @@ def run(only_units: list[str] | None = None,
             retained_issues = [[row['unit'], row['issue']] for row in csv.DictReader(
                 (line for line in stream if not line.startswith('#')), delimiter='\t')
                 if row['unit'] not in selected_units]
-    write_tsv(common.HOMM3_DIR / 'build/gen/data_extraction_issues.tsv',
+    write_tsv(common.HOMM3_DIR / _image_path('build/gen/data_extraction_issues.tsv'),
               ['# GENERATED: explicit data type coverage gaps, not matched bytes.'],
               ['unit', 'issue'],
               retained_issues + [[path.stem, error] for path, errors in zip(todo, data_errors)
@@ -2941,20 +2967,27 @@ def sweep_sites() -> dict:
     """Tree-wide macro-site census over src/ + include/ (comments blanked,
     va.h's own #defines excluded): {macro: {rva: ['file:line', ...]}}."""
     out: dict = {}
-    for base in ("src", "include"):
-        root = common.HOMM3_DIR / base
-        if not root.is_dir():
+    from homm3.core import paths as image_paths
+    if image_paths.is_game():
+        files = [path for base in ("src", "include")
+                 if (common.HOMM3_DIR / base).is_dir()
+                 for path in sorted((common.HOMM3_DIR / base).rglob("*"))]
+    else:
+        # another image's claim space: its own sources and their headers
+        files = list(image_owned_sources())
+        owned = common.HOMM3_DIR / "include" / image_paths.image_key()
+        if owned.is_dir():
+            files += sorted(owned.rglob("*"))
+    for path in files:
+        if path.suffix not in (".c", ".cpp", ".cxx", ".h") \
+                or path.name == "va.h":
             continue
-        for path in sorted(root.rglob("*")):
-            if path.suffix not in (".c", ".cpp", ".cxx", ".h") \
-                    or path.name == "va.h":
-                continue
-            text = mask_lexical_noise(path.read_text(errors="replace"))
-            for m in MACRO_SITE_RE.finditer(text):
-                lineno = text.count("\n", 0, m.start()) + 1
-                rva = int(m.group(2), 16) - common.IMAGE_BASE
-                out.setdefault(m.group(1), {}).setdefault(rva, []).append(
-                    f"{path.relative_to(common.HOMM3_DIR)}:{lineno}")
+        text = mask_lexical_noise(path.read_text(errors="replace"))
+        for m in MACRO_SITE_RE.finditer(text):
+            lineno = text.count("\n", 0, m.start()) + 1
+            rva = int(m.group(2), 16) - common.IMAGE_BASE
+            out.setdefault(m.group(1), {}).setdefault(rva, []).append(
+                f"{path.relative_to(common.HOMM3_DIR)}:{lineno}")
     return out
 
 
@@ -3735,7 +3768,10 @@ def extract(only_units=None, jobs=None) -> int:
     from homm3.manifest import header_comparisons
     policy = carrier_policy(load_baseline(), reviewed=header_comparisons())
     changed, pruned, problems = run(only_units, jobs, policy=policy)
-    if only_units is None:
+    from homm3.core import paths as image_paths
+    # The completeness gate judges the game tree (every src/ file a unit,
+    # every header claim parsed); another image's claim space is its own.
+    if only_units is None and image_paths.is_game():
         # The gate proves it can fail before it judges the tree.
         broken = selftest()
         if broken:

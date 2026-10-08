@@ -46,10 +46,11 @@ from pathlib import Path
 from homm3.build import canonicalize_data_symbols as canon
 from homm3.build.normalized_freshness import freshness_problems, write_stamp, ValidationContext
 from homm3.core import common
+from homm3.core.images import path as _image_path
 
-OBJDIFF = common.HOMM3_DIR / "build/objdiff"
-COMPGEN_MANIFEST = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
-DATA_MANIFEST = common.HOMM3_DIR / 'build/gen/delink_data_manifest.tsv'
+OBJDIFF = common.HOMM3_DIR / _image_path("build/objdiff")
+COMPGEN_MANIFEST = common.HOMM3_DIR / _image_path("build/gen/compgen_claims.tsv")
+DATA_MANIFEST = common.HOMM3_DIR / _image_path('build/gen/delink_data_manifest.tsv')
 
 CNT_CODE = 0x00000020
 INITIALIZED_DATA = 0x00000040
@@ -63,10 +64,10 @@ REL32 = 0x0014
 TEXT_PAD_TRIM_LIMIT = 15
 ASSOCIATIVE_COMDAT = 5
 UNWIND_OWNER = re.compile(r"(?:^|_)unwind[0-9]+$")
-SYMBOL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
-ADDRESS_IDENTITIES = common.HOMM3_DIR / "build/gen/address_identities.tsv"
-FUNCLETS = common.HOMM3_DIR / "config/retail/funclets.tsv"
-FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
+SYMBOL_NAMES = common.HOMM3_DIR / _image_path("build/gen/symbol_names.csv")
+ADDRESS_IDENTITIES = common.HOMM3_DIR / _image_path("build/gen/address_identities.tsv")
+FUNCLETS = common.HOMM3_DIR / _image_path("config/retail/funclets.tsv")
+FUNCTIONS = common.HOMM3_DIR / _image_path("config/retail/functions.tsv")
 
 
 @dataclass(frozen=True)

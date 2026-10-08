@@ -15,6 +15,7 @@ from homm3.core import compile_receipt, msvc_names
 from homm3.core.tsv import read
 from homm3.delink.coffx import Obj
 from homm3.verify.source_initializers import verified_roots
+from homm3.core.images import path as _image_path
 
 
 @dataclass(frozen=True)
@@ -189,7 +190,7 @@ def compare(project, pe, model, enrolled):
     from homm3.delink.image import Image
     from homm3.retail_labels.censuses import functions
     result = dict(matches=[], comparisons=[], dependencies=[], gaps=[])
-    roots = verified_roots(pe, read(project.root / 'config/retail/init-thunks.tsv')[2])
+    roots = verified_roots(pe, read(project.root / _image_path('config/retail/init-thunks.tsv'))[2])
     if not roots:
         result['gaps'].append('retail CRT table does not verify'); return result
     image = Image(pe)
@@ -213,7 +214,7 @@ def compare(project, pe, model, enrolled):
         selected = [(name, anchors) for name, anchors in selected if anchors]
         if not selected:
             continue
-        required = [source, project.root / 'config/units.toml',
+        required = [source, project.root / _image_path('config/units.toml'),
                     project.root / 'config/project.toml', *compiler_files,
                     *scan_header_deps(source, project.toolchain / 'include', *project.includes)]
         inputs = compile_receipt.current(path, flags=project.manifest['flags'][unit['flags']],

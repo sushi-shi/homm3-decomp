@@ -27,6 +27,7 @@ import time
 
 from homm3.build.normalized_freshness import ValidationContext
 from homm3.core import common, inputs
+from homm3.core.images import path as _image_path
 
 ROOT = common.HOMM3_DIR
 
@@ -37,14 +38,14 @@ def _run(*command: str) -> int:
 
 def _link() -> int:
     return _run(sys.executable, "-m", "homm3.build.link", "--out",
-                "build/exe/HEROES3.candidate.EXE")
+                _image_path("build/exe/HEROES3.candidate.EXE"))
 
 
 def _selected_units(ninja_args: list[str]) -> set[str]:
     """Manifest units named as Ninja targets; options and other targets select none."""
     from homm3 import manifest as units_manifest
     manifest_units = {unit["unit"] for unit in
-                      units_manifest.load(ROOT / "config/units.toml")["unit"]}
+                      units_manifest.load(ROOT / _image_path("config/units.toml"))["unit"]}
     return {arg for arg in ninja_args if arg in manifest_units}
 
 
@@ -69,7 +70,7 @@ def _main(argv: list[str]) -> int:
     from homm3.build import configure, normalize_objs
     from homm3.match import status
 
-    if fast and not any((ROOT / "build/objdiff/target").glob("*.c.obj")):
+    if fast and not any((ROOT / _image_path("build/objdiff/target")).glob("*.c.obj")):
         print("[build] retail targets missing; run `homm3 build` before `--fast`",
               file=sys.stderr)
         return 1
@@ -84,7 +85,7 @@ def _main(argv: list[str]) -> int:
 
     selected = _selected_units(ninja_args) if fast else set()
     configure.configure()
-    if _run("ninja", *ninja_args):
+    if _run("ninja", *configure.ninja_selection(), *ninja_args):
         return 1
     context = None
     if fast:

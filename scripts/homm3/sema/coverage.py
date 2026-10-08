@@ -10,6 +10,7 @@ from pathlib import Path
 import struct
 
 from homm3.core import common, tsv
+from homm3.core.images import path as _image_path
 
 
 CATEGORIES = ('object', 'system', 'padding', 'provisional', 'unknown', 'overlap')
@@ -141,20 +142,20 @@ def generate(root, image):
     data = image.data
     sections, regions, optional = pe_regions(data)
     claims = system_claims(data, sections, optional)
-    inputs = ['config/retail/vtables.tsv', 'config/retail/relocs.tsv',
-              'config/retail/reloc-evidence.tsv', 'config/retail/data-extents.tsv']
+    inputs = [_image_path('config/retail/vtables.tsv'), _image_path('config/retail/relocs.tsv'),
+              _image_path('config/retail/reloc-evidence.tsv'), _image_path('config/retail/data-extents.tsv')]
     # Older vtable rows omit the optional trailing class column.
     rows = list(csv.DictReader(io.StringIO('\n'.join(
         line for line in (root / inputs[0]).read_text().splitlines()
         if line.strip() and not line.startswith('#'))), delimiter='\t'))
     claims += [dict(rva=int(r['rva'], 0), size=int(r['function_count']) * 4,
-                    category='object', evidence='config/retail/vtables.tsv') for r in rows]
+                    category='object', evidence=_image_path('config/retail/vtables.tsv')) for r in rows]
     for row in tsv.read(root / inputs[3])[2]:
         if not row['evidence'].strip():
             raise ValueError('reviewed data extent requires evidence')
         claims.append(dict(rva=int(row['rva'], 0), size=int(row['size'], 0),
                            category=row['category'], evidence=row['evidence']))
-    symbols_path = root / 'build/gen/symbol_names.csv'
+    symbols_path = root / _image_path('build/gen/symbol_names.csv')
     symbols = []
     if symbols_path.exists():
         symbols = list(csv.DictReader(io.StringIO('\n'.join(
