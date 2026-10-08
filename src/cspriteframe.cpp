@@ -471,9 +471,14 @@ void CSpriteFrame::encode(TEncodingMethod method)
 DC_ADDRESS(0x0750d8, 0x1b2)
 void CSpriteFrame::encodeGeneral()
 {
+    // Both copies are dynamically initialized from the file statics. DC
+    // CodeView places EncodeGeneral's kOpaqueRunCode and kMaxRunLength in
+    // its .bss segment beside Draw's, and Loki's h3maped guards and copies
+    // both at entry. Retail does not link this function, but its statics stay
+    // in the compiland's .bss: they fill retail's unreferenced bytes around
+    // the blend masks and so place div4mask at 2 mod 4, as retail has it.
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
-    // DC's cspriteframe.cpp:47 initializer is max<unsigned char>() + 1.
-    static const unsigned int maxRunLength = 256;
+    static const unsigned int maxRunLength = g_generalRleMaxRunLength;
     unsigned int newDataSize = m_croppedHeight * sizeof(unsigned int);
     unsigned int linesToGo = m_croppedHeight;
     unsigned char* source = m_map;
@@ -1018,7 +1023,7 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 // half-alpha blending.  Encoded control runs darken the destination by one
 // half or one quarter-plus-half, or install the caller's outline color.
 
-// Residual (99.95%): all 126 blocks and 61 branches agree. Loki's h3maped
+// Exact. Loki's h3maped
 // (GCC -O0) supplies the shape that closed the rest together: m_map and the
 // palette load inside the positive-extent guard, a row cursor `lineDst`
 // separate from the `dst` parameter, the source row read before `skipped`,
@@ -1026,10 +1031,9 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
 // a widening local. Measured singly in older TU states each of these lost
 // (93.52%, 94.73%, 95.33%); together they take 95.85 -> 99.95. CodeView also
 // proves the function-scope `TOffset`/`TDstPixel` identities and that
-// `aLineOffset` precedes the const `kOpaqueRunCode`. What remains is the
-// three-quarter blends' `and bx,word[div4mask]`, emitted here as a dword AND
-// (the .bss alignment DrawTileShadow records), and the jump-table entries
-// those four bytes shift.
+// `aLineOffset` precedes the const `kOpaqueRunCode`. The last four bytes,
+// the three-quarter blends' word AND of div4mask, came from EncodeGeneral's
+// missing .bss static (99.95 -> 100).
 VA(0x0047c9e0, 0x6BC)
 DC_ADDRESS(0x075b20, 0x540)
 MAC_ADDRESS(0x08bb40, 0x6f4)  // unique PC/DC renderer identity; retail byte verdict
@@ -1665,12 +1669,11 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 // half blend first at 0x47db45, the quarter-plus-half second at 0x47db5f),
 // which is what a compare-chain switch does regardless of source order.
 
-// Residual (99.98%): 86 of 86 blocks EXACT, 42 of 42 branches, both returns,
-// empty call multiset. Loki's h3maped (GCC -O0) reads the row's cell source
-// before its skipped-pixel base and evaluates the three-quarter blend's
-// div2mask term first; the latter took 99.92 -> 99.98. All that is left is
-// that blend's `and bx,word[div4mask]`, which VC6 emits as a dword AND - the
-// .bss alignment DrawTileShadow below records. The half blend DID have a
+// Loki's h3maped (GCC -O0) reads the row's cell source before its
+// skipped-pixel base and evaluates the three-quarter blend's div2mask term
+// first; the latter took 99.92 -> 99.98. The blend's word AND of div4mask
+// then came from EncodeGeneral's missing .bss static (-> 100), as
+// DrawTileShadow below records. The half blend DID have a
 // source cause: the widening `unsigned int color =
 // out[-1]` spelling cost nine flow-kind blocks and a whole missing block, and
 // dropping it took this row 98.5765 -> 99.9400 on one line.
@@ -2287,11 +2290,12 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // Loki's h3maped (GCC -O0) evaluates the three-quarter blend's div2mask term
 // first; that order puts the div4mask term in the copy register as retail
 // does (99.90 -> 99.97). Which term VC6 schedules first follows TU symbol
-// state, so this was byte-flat in earlier TU states. What remains is that
-// term's AND width: retail `and bx,word[div4mask]`, here a dword. VC6 widens
-// a ushort global's AND to a dword only when the object places that global
-// on a 4-byte boundary; retail's div4mask sits at 0x6968aa, ours lands
-// aligned. That is the compiland's name-hashed .bss order, not this body.
+// state, so this was byte-flat in earlier TU states. The term's AND width
+// is not this body either: VC6 widens a ushort global's AND to a dword only
+// when the object places that global on a 4-byte boundary. Retail's div4mask
+// sits at 0x6968aa (2 mod 4, `and bx,word[div4mask]`); ours did too once
+// EncodeGeneral's dynamically initialized kMaxRunLength joined the .bss
+// (99.97 -> 100).
 // The half blend written
 // `unsigned int color = out[-1]; --out; *out = (color >> 1) & mask;`
 // emits a widening `xor eax,eax / mov ax,` pair retail does not have.
