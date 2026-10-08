@@ -1081,6 +1081,20 @@ build build/objdiff/base/victor.obj: cl src/victor.cpp | $
   flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS /DNO_STRICT
   unit = victor
 build victor: phony build/objdiff/base/victor.obj
+build build/objdiff/base/victor_pcxinfo.obj: cl src/victor_pcxinfo.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS /DNO_STRICT
+  unit = victor_pcxinfo
+build victor_pcxinfo: phony build/objdiff/base/victor_pcxinfo.obj
+build build/objdiff/base/victor_locks.obj: cl src/victor_locks.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /ML /Gd /D_WINDOWS /DNO_STRICT
+  unit = victor_locks
+build victor_locks: phony build/objdiff/base/victor_locks.obj
 build build/objdiff/base/victor_flip.obj: cl src/victor_flip.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     scripts/homm3/core/compile_receipt.py config/units.toml $
@@ -2314,6 +2328,22 @@ build build/mac/obj/victor.o: mwcc src/victor.cpp | $
     scripts/homm3/mac/object.py config/mac/units.toml
   unit = victor
 build mac$:victor: phony build/mac/obj/victor.o
+build build/mac/obj/victor_pcxinfo.o: mwcc src/victor_pcxinfo.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = victor_pcxinfo
+build mac$:victor_pcxinfo: phony build/mac/obj/victor_pcxinfo.o
+build build/mac/obj/victor_locks.o: mwcc src/victor_locks.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = victor_locks
+build mac$:victor_locks: phony build/mac/obj/victor_locks.o
 build build/mac/obj/victor_flip.o: mwcc src/victor_flip.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
@@ -2422,6 +2452,7 @@ build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
     build/mac/obj/gzinflatebuf.o build/mac/obj/netmsg.o $
     build/mac/obj/campaign.o build/mac/obj/campaignmusic.o $
     build/mac/obj/tiles.o build/mac/obj/victor.o $
+    build/mac/obj/victor_pcxinfo.o build/mac/obj/victor_locks.o $
     build/mac/obj/victor_flip.o build/mac/obj/victor_loadpcx.o $
     build/mac/obj/victor_bits.o build/mac/obj/victor_pcx_kernels.o $
     build/mac/obj/log.o
@@ -2511,7 +2542,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
     build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/victor.obj build/objdiff/base/victor_pcxinfo.obj $
+    build/objdiff/base/victor_locks.obj build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_bits.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
@@ -2601,7 +2633,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
     build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/victor.obj build/objdiff/base/victor_pcxinfo.obj $
+    build/objdiff/base/victor_locks.obj build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_bits.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
@@ -2692,7 +2725,8 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
     build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
     build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_flip.obj $
+    build/objdiff/base/victor.obj build/objdiff/base/victor_pcxinfo.obj $
+    build/objdiff/base/victor_locks.obj build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_bits.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj | $

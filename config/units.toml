@@ -869,6 +869,22 @@ compiler = "msvc5.0"
 flags = "victor_o2_ml_gd_windows"
 
 [[unit]]
+unit = "victor_pcxinfo"
+module = "victor"
+library = "victor"
+source = "src/victor_pcxinfo.cpp"
+compiler = "msvc5.0"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_locks"
+module = "victor"
+library = "victor"
+source = "src/victor_locks.cpp"
+compiler = "msvc5.0"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
 unit = "victor_flip"
 module = "victor"
 library = "victor"

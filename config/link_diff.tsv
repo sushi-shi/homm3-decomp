@@ -3,12 +3,12 @@
 # moves closer to retail, never raise it to admit a regression.
 region	count
 headers	0
-rich	83
+rich	81
 imports	264
 rsrc	0
-code-exact	4285
-code-order	313
-code-unplaced	86304
-code-absent	111294
-data	28766
+code-exact	4254
+code-order	311
+code-unplaced	86176
+code-absent	110514
+data	28765
 data-unplaced	23930

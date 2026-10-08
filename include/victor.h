@@ -92,7 +92,8 @@ SIZE(VictorLock, 0x1c);
 
 // Victor module cleanups reached only through g_victorModuleCleanups:
 // 0x603b10 is a bare `ret`; victorReleaseLock<N> is the cleanup of the Nth
-// VictorLock by address. Names are invented; bodies in src/victor.cpp.
+// VictorLock by address. Names are invented; bodies in src/victor.cpp and
+// src/victor_locks.cpp.
 void __cdecl victorReleaseNothing();
 void __cdecl victorDestroyLock0();
 void __cdecl victorDestroyLock1();
@@ -102,6 +103,16 @@ void __cdecl victorDestroyLock4();
 void __cdecl victorDestroyLock5();
 void __cdecl victorDestroyLock6();
 void __cdecl victorDestroyLock7();
+
+// The records the lock cleanups release (defined in src/victor.cpp).
+extern VictorLock g_victorLock0;
+extern VictorLock g_victorLock1;
+extern VictorLock g_victorLock2;
+extern VictorLock g_victorLock3;
+extern VictorLock g_victorLock4;
+extern VictorLock g_victorLock5;
+extern VictorLock g_victorLock6;
+extern VictorLock g_victorLock7;
 
 // TIFF 6.0 field layouts. The in-memory IFD image keeps the on-disk packing
 // (2-byte count, 12-byte entries at 2-byte offsets, next-IFD offset).

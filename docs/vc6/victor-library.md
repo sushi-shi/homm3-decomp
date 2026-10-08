@@ -312,9 +312,26 @@ reproduce for byte arrays; the zero bytes before those starts remain
 unclaimed. So do the unnamed statics between the locks and the
 unstructured `.data` words.
 
-The cleanup table points at nine bodies that `src/victor.cpp` claims:
-`victorReleaseNothing`, a bare `ret` at 0x603b10, and `victorDestroyLock0`..
-`7`, eight 31-byte `if (m_initialized) { DeleteCriticalSection(&m_section);
+The cleanup table points at nine bodies: `src/victor.cpp` claims
+`victorReleaseNothing`, a bare `ret` at 0x603b10, and `src/victor_locks.cpp`
+`victorDestroyLock0`..`7`, eight 31-byte `if (m_initialized) { DeleteCriticalSection(&m_section);
 m_initialized = 0; }` cleanups at 0x604620-0x604700, one per `VictorLock` in
 address order. With the bodies claimed the table's raw initializer
 comparison resolves every pointer.
+
+## Library members
+
+The game links Victor as a library (`library = "victor"`), so LINK places
+its members after every game object in the order it pulls them. Retail's
+`.text` shows that order: the allocation and validation run
+(0x603590-0x603b10), `flipimage`, `loadpcx`, the `pcxinfo` pair, the PCX
+kernels, the lock cleanups and the bit helpers. Each is therefore a separate
+member, and the units follow it: `victor` (allocation and validation),
+`victor_flip`, `victor_loadpcx`, `victor_pcxinfo`, `victor_pcx_kernels`,
+`victor_locks` and `victor_bits`. The candidate pulls the kernels last: the
+cleanup table in `victor.cpp` references the locks and `flipimage` the bit
+helpers before `loadpcx` references the kernels, so in the original the table
+and the references are spread over members the reconstruction does not have.
+Retail's Rich header counts 69 objects without `@comp.id`; the VC5-compiled
+Victor members account for most of them, the data-only members of the tables
+above included.
