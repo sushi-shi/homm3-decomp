@@ -36,6 +36,9 @@ sha256 = "4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37"
 env = "HOMM3_H3MAPED_EXE"
 option = "--exe"
 image_base = 0x400000
+# Its own sources and headers: src/editor/ and include/editor/, the
+# original's `C:\Dev\Heroes 3 Exp 2\Editor\` (RTTI anonymous-namespace paths).
+sources = "editor"
 
 # Positive CodeView/source spelling equivalences reviewed for this project.
 # Used only by the Dreamcast source-fact audit, never by the generic comparator.

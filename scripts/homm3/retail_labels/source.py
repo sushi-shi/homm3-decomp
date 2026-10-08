@@ -2968,14 +2968,17 @@ def sweep_sites() -> dict:
     va.h's own #defines excluded): {macro: {rva: ['file:line', ...]}}."""
     out: dict = {}
     from homm3.core import paths as image_paths
+    from homm3.core import images
     if image_paths.is_game():
         files = [path for base in ("src", "include")
                  if (common.HOMM3_DIR / base).is_dir()
-                 for path in sorted((common.HOMM3_DIR / base).rglob("*"))]
+                 for path in sorted((common.HOMM3_DIR / base).rglob("*"))
+                 if not images.foreign(path, common.HOMM3_DIR)]
     else:
         # another image's claim space: its own sources and their headers
         files = list(image_owned_sources())
-        owned = common.HOMM3_DIR / "include" / image_paths.image_key()
+        owned = common.HOMM3_DIR / "include" / images.source_dir(
+            image_paths.image_key(), common.HOMM3_DIR)
         if owned.is_dir():
             files += sorted(owned.rglob("*"))
     for path in files:

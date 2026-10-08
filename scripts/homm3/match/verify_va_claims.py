@@ -216,27 +216,47 @@ def selftest() -> list[str]:
 
 # --- entry points -----------------------------------------------------------------
 
+def _files():
+    """The selected image's claim space: the game's src/ and include/
+    without other images' trees, or another image's own sources and
+    include/<its source directory>."""
+    from homm3.core import images, paths
+    if paths.is_game():
+        return [path for root in ROOTS if (common.HOMM3_DIR / root).is_dir()
+                for path in sorted((common.HOMM3_DIR / root).rglob("*"))
+                if not images.foreign(path, common.HOMM3_DIR)]
+    from homm3.retail_labels.source import image_owned_sources
+    owned = common.HOMM3_DIR / "include" / images.source_dir(paths.image_key(),
+                                                             common.HOMM3_DIR)
+    return list(image_owned_sources()) + (sorted(owned.rglob("*")) if owned.is_dir() else [])
+
+
 def _scan():
+    from homm3.core import paths
     claims_by_file = {}
     total = 0
-    for root in ROOTS:
-        base = common.HOMM3_DIR / root
-        if not base.is_dir():
+    for path in _files():
+        if path.suffix not in EXTS or not path.is_file():
             continue
-        for path in sorted(base.rglob("*")):
-            if path.suffix not in EXTS or not path.is_file():
-                continue
-            claims = parse_claims(path.read_text(errors="ignore"))
-            if claims:
-                claims_by_file[str(path.relative_to(common.HOMM3_DIR))] = claims
-                total += len(claims)
+        claims = parse_claims(path.read_text(errors="ignore"))
+        if claims:
+            claims_by_file[str(path.relative_to(common.HOMM3_DIR))] = claims
+            total += len(claims)
     from homm3.match import universe
     from homm3.match.source_ownership import collect, claim_definitions, read_filter
     classes, _sizes = universe.classify()
-    definitions, errors, _reached = collect()
-    inline_claims = {(d.file, d.va) for d in claim_definitions(definitions) if d.inline and d.va is not None}
-    rows, placement_errors = read_filter(common.HOMM3_DIR / 'config/source/va-order-placements.tsv',
-                                         ('file', 'va', 'previous_va'))
+    if paths.is_game():
+        definitions, errors, _reached = collect()
+        inline_claims = {(d.file, d.va) for d in claim_definitions(definitions)
+                         if d.inline and d.va is not None}
+    else:
+        # the source-ownership model is the game's; another image's inline
+        # bodies are ordered with the rest of its claims
+        errors, inline_claims = [], set()
+    # reviewed source-order exceptions are the game's
+    rows, placement_errors = (read_filter(common.HOMM3_DIR / 'config/source/va-order-placements.tsv',
+                                          ('file', 'va', 'previous_va'))
+                              if paths.is_game() else ([], []))
     placements = set()
     for path, va_text, previous_text in rows:
         try:
@@ -256,7 +276,8 @@ def run_gate() -> list[str]:
     if broken:
         return [f"va-claims SELFTEST BROKEN: {b}" for b in broken]
     claims_by_file, total, violations = _scan()
-    backlog = load_backlog()
+    from homm3.core import paths
+    backlog = load_backlog() if paths.is_game() else set()
     known = [v for v in violations if (v[0], v[1]) in backlog]
     fatal = [msg for kind, va, msg in violations
              if (kind, va) not in backlog]

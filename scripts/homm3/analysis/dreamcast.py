@@ -188,9 +188,11 @@ def _source_claims(src_dir: Path = SRC_DIR, *, functions=None) -> list[Claim]:
         from homm3.analysis.dc_extract import corpus_rows
         functions = corpus_rows()[0]
     modules = {_integer(row['offset']): row['module'] for row in functions}
+    from homm3.core import images
     paths = [p for base in (src_dir, src_dir.parent / 'include')
              for p in base.rglob('*')
-             if p.suffix.lower() in {'.cpp', '.c', '.cxx', '.h', '.hpp', '.inl'}]
+             if p.suffix.lower() in {'.cpp', '.c', '.cxx', '.h', '.hpp', '.inl'}
+             and not images.foreign(p, src_dir.parent)]
     for path in sorted(paths):
         text = path.read_text(errors="replace")
         for claim in dc_srclines.source_claims(text):

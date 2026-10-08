@@ -36,11 +36,14 @@ def claim_files(root: Path = common.HOMM3_DIR) -> list[Path]:
     head, _arity, _prototype = source.MACRO_HEADS['VA']
     # Shared headers spell the game's addresses; another image claims only
     # through its own include/<image>/ tree.
-    tree = root / 'include' if image_paths.is_game() else root / 'include' / image_paths.image_key()
+    from homm3.core import images
+    tree = (root / 'include' if image_paths.is_game()
+            else root / 'include' / images.source_dir(image_paths.image_key(), root))
     if not tree.is_dir():
         return []
     return [path for path in sorted(tree.rglob('*'))
             if path.is_file() and path.suffix.lower() in {'.h', '.hpp', '.inl'}
+            and not images.foreign(path, root)
             and head.search(source.mask_lexical_noise(path.read_text(errors='replace')))]
 
 

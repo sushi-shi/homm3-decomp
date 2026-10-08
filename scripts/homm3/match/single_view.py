@@ -31,7 +31,7 @@ import re
 import sys
 from pathlib import Path
 
-from homm3.core import common
+from homm3.core import common, images
 # One comment/string/char stripper for every source gate - the board owns
 # it (incl. the backtick-apostrophe lesson); do not fork the semantics.
 from homm3.cleanliness.board import _strip
@@ -131,7 +131,8 @@ def _scan() -> list:
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*")):
-            if path.suffix in EXTS and path.is_file():
+            if path.suffix in EXTS and path.is_file() \
+                    and not images.foreign(path, common.HOMM3_DIR):
                 files.append((str(path.relative_to(common.HOMM3_DIR)),
                               path.read_text(errors="ignore")))
     return splits(collect(files))

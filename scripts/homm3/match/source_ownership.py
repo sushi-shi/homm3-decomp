@@ -871,9 +871,11 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
 
 
 def unadmitted_sources(root: Path, admitted: set[str]) -> list[str]:
+    from homm3.core import images
     return [path.relative_to(root).as_posix()
             for path in sorted((root / 'src').rglob('*'))
             if path.suffix.lower() in {'.c', '.cpp', '.cxx'}
+            and not images.foreign(path, root)
             and path.relative_to(root).as_posix() not in admitted]
 
 
@@ -1025,9 +1027,11 @@ def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
 
     results = scan_all(units)
     reached = {p for _, _, paths in results for p in paths}
+    from homm3.core import images
     orphan_headers = [dict(source=p.relative_to(root).as_posix())
                       for p in sorted((root / 'include').rglob('*'))
                       if p.suffix.lower() in {'.h', '.hpp', '.inl'}
+                      and not images.foreign(p, root)
                       and p.relative_to(root).as_posix() not in reached]
     results.extend(scan_all(orphan_headers))
     unique = {}

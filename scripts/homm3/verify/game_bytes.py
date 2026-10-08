@@ -530,8 +530,11 @@ def annotations(root):
     """{rva: (file:line, kind, text of the declaration line)} of DATA macros."""
     root = Path(root)
     out = {}
+    from homm3.core import images
     for path in sorted([*root.joinpath('src').rglob('*.cpp'),
                         *root.joinpath('include').rglob('*.h')]):
+        if images.foreign(path, root):
+            continue
         lines = path.read_text(encoding='latin-1').split('\n')
         for number, line in enumerate(lines, 1):
             for m in _ANNOTATION.finditer(line):

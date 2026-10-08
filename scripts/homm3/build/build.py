@@ -18,6 +18,14 @@ its last README line.
 normalizes and fingerprints only the selected units, so their projected MAX
 movements equal the full projection; other units' MAX is held. Run a full
 build first to establish those targets.
+
+Images (docs/tooling/images.md): a full game build then builds every other
+pinned image whose executable is staged, each in its own process
+(`homm3 --image KEY build`): configure -> ninja -> placements check ->
+delink -> report -> ledger -> banked-rows and VA-claim gates -> README
+block. An image that is not staged is skipped with a note. `--fast` and
+`--image KEY build` build only the selected image, so the game's inner loop
+never waits for an editor.
 """
 from __future__ import annotations
 
@@ -58,11 +66,103 @@ def main(argv=None) -> int:
         return _main(argv)
 
 
+def _jobs(ninja_args: list[str]) -> list[str]:
+    """The Ninja job options of a build, passed on to each image's build."""
+    out = []
+    for k, arg in enumerate(ninja_args):
+        if arg == "-j" and k + 1 < len(ninja_args):
+            out += [arg, ninja_args[k + 1]]
+        elif arg.startswith("-j") or arg.startswith("-l"):
+            out.append(arg)
+    return out
+
+
+def _build_images(ninja_args: list[str]) -> list[str]:
+    """Build every other staged image in its own process; the failed ones."""
+    from homm3.core import images
+    from homm3.init import mfc_sp3
+    failures = []
+    for key in images.images(ROOT)[1:]:
+        pin = images.pins(ROOT)[images.input_key(key)]
+        if not (ROOT / pin["path"]).is_file() or not mfc_sp3.staged():
+            print(f"[build] image {key}: not staged (`homm3 --image {key} init`); skipped")
+            continue
+        print(f"[build] image {key}: building", flush=True)
+        if _run(sys.executable, "-m", "homm3", "--image", key, "build",
+                *(["--", *_jobs(ninja_args)] if _jobs(ninja_args) else [])):
+            failures.append(f"image {key}")
+    return failures
+
+
+def _image_main(fast: bool, ninja_args: list[str]) -> int:
+    """`homm3 --image KEY build`: one non-game image, its ledger and block."""
+    from homm3.build import configure, normalize_objs
+    from homm3.core import paths
+    from homm3.match import status
+    key = paths.image_key()
+    if fast and not any((ROOT / _image_path("build/objdiff/target")).glob("*.obj")):
+        print(f"[build] {key}: retail targets missing; run `homm3 --image {key} build` "
+              "before `--fast`", file=sys.stderr)
+        return 1
+    try:
+        inputs.stage_executable(inputs.RETAIL)
+    except inputs.InputError as exc:
+        print(f"[build] {exc}", file=sys.stderr)
+        return 1
+    selected = _selected_units(ninja_args) if fast else set()
+    configure.configure()
+    if _run("ninja", *configure.ninja_selection(), *ninja_args):
+        return 1
+    failures = []
+    context = None
+    if fast:
+        normalize_objs.normalize_all(selected or None)
+    else:
+        from homm3.census import placements
+        if placements.main(["--check"]):
+            failures.append("placements (`homm3 --image "
+                            f"{key} placements --write` after a shared-source change)")
+        from homm3.build import delink
+        delink.run()
+    report = status.refresh_report(context)
+    fingerprint_pair = status.source_hash_pair(only_units=selected or None)
+    print(f"[build] {key}: {status.overall_line(report, fingerprint_pair=fingerprint_pair)}")
+    if fast:
+        status.fast_max_movements(report, selected or None, fingerprint_pair)
+        return 0
+    history_patch = status.baseline_history()
+    status.cmd_check(report, fingerprint_pair=fingerprint_pair)
+    status.cmd_update(report, fingerprint_pair=fingerprint_pair, history_patch=history_patch)
+    from homm3.match import banked_rows, verify_va_claims
+    for gate in (banked_rows, verify_va_claims):
+        try:
+            fatal = (gate.run_gate(history_patch=history_patch) if gate is banked_rows
+                     else gate.run_gate())
+        except (inputs.InputError, OSError) as exc:
+            fatal = [f"{gate.__name__}: evidence unavailable: {exc}"]
+        if fatal:
+            failures.append(f"{gate.__name__.rsplit('.', 1)[-1]} ({len(fatal)} finding(s))")
+            for line in fatal:
+                print(f"[build] {key}: {line}", file=sys.stderr)
+    try:
+        status.write_readme()
+    except Exception as exc:  # the score block must never fail a build
+        print(f"[build] {key}: README block skipped: {exc}")
+    if failures:
+        print(f"[build] {key}: FAILED gates: " + "; ".join(failures), file=sys.stderr)
+        return 1
+    print(f"[build] {key}: all gates passed")
+    return 0
+
+
 def _main(argv: list[str]) -> int:
     fast = "--fast" in argv
     data = "--data" in argv
     ninja_args = [a for a in argv if a not in ("--fast", "--data")]
     started = time.monotonic()
+    from homm3.core import paths
+    if not paths.is_game():
+        return _image_main(fast, ninja_args)
 
     def phase(name: str) -> None:
         print(f"[build] {name} ({time.monotonic() - started:.0f}s elapsed)", flush=True)
@@ -219,6 +319,7 @@ def _main(argv: list[str]) -> int:
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 
+    failures += _build_images(ninja_args)
     phase("finished")
     print("[build] Mac pairs are not part of `homm3 build`; run `homm3 mac build` "
           "for the Classic Mac preservation checkpoint")

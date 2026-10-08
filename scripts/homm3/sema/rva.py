@@ -32,6 +32,9 @@ def _src_locs(va: int, limit: int = 3):
         for path in sorted(root.rglob("*")):
             if path.suffix not in (".c", ".cpp", ".h", ".hpp"):
                 continue
+            from homm3.core import images
+            if images.foreign(path, common.HOMM3_DIR):
+                continue
             try:
                 lines = path.read_text(errors="replace").splitlines()
             except OSError:

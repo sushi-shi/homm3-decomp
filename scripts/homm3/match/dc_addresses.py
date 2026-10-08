@@ -65,6 +65,9 @@ def validate_source_sites(root, definitions):
         for path in sorted((root / directory).rglob('*')):
             if path.suffix.lower() not in {'.h', '.hpp', '.inl', '.c', '.cpp', '.cxx'}:
                 continue
+            from homm3.core import images
+            if images.foreign(path, root):
+                continue
             text = path.read_text()
             masked = mask_lexical_noise(text)
             relative = path.relative_to(root).as_posix()

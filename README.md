@@ -51,24 +51,24 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 14.17% matched (MAX)** — 270 / 10,376 functions exact (2.6%), weighted by size over 940,876 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 14.19% matched (MAX)** — 272 / 10,376 functions exact (2.6%), weighted by size over 940,876 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |             270 |   14.17% | last measured score                            |
-| MAX   |             270 |   14.17% | best result for each function's current source |
-| HIST  |             270 |   14.17% | all-time peak across source revisions          |
+| CUR   |             272 |   14.19% | last measured score                            |
+| MAX   |             272 |   14.19% | best result for each function's current source |
+| HIST  |             272 |   14.19% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `rmg`         |     3 |   124 / 283 (43.8%) |    91.76% |
-| `game`        |    12 |    86 / 197 (43.7%) |    86.20% |
+| `rmg`         |     3 |   125 / 283 (44.2%) |    91.77% |
+| `game`        |    13 |    87 / 199 (43.7%) |    86.25% |
 | `zlib-1.1.3`  |    12 |     43 / 56 (76.8%) |    99.97% |
 | `codec`       |     3 |     12 / 34 (35.3%) |    93.07% |
 | `victor`      |     4 |      5 / 14 (35.7%) |    79.06% |
-| `(unmatched)` |     — |    0 / 9,792 (0.0%) |      0.0% |
+| `(unmatched)` |     — |    0 / 9,790 (0.0%) |      0.0% |
 
 Excluded from the scores (generated or library code):
 
@@ -79,7 +79,7 @@ Excluded from the scores (generated or library code):
 | `init/cleanup thunks` |     2,356 |   23,808 | compiler-generated CRT initializer/cleanup bodies                  |
 | `import thunks`       |        13 |       78 | FF 25 jumps through the IAT                                        |
 
-**Data:** 117 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
+**Data:** 118 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
 <!-- h3maped-match-score:end -->
 

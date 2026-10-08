@@ -298,8 +298,10 @@ def source_paths(root: Path) -> list[Path]:
     """Authored sources directly under src/, and project headers."""
     paths = sorted(path for path in (root / "src").iterdir()
                    if path.is_file() and path.suffix.lower() in {".c", ".cc", ".cpp", ".cxx"})
+    from homm3.core import images
     paths += sorted(path for path in (root / "include").rglob("*")
-                    if path.is_file() and path.suffix.lower() in {".h", ".hpp", ".inl"})
+                    if path.is_file() and path.suffix.lower() in {".h", ".hpp", ".inl"}
+                    and not images.foreign(path, root))
     return paths
 
 

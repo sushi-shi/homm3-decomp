@@ -20,6 +20,7 @@ path = "build/orig/dreamcast/H3.EXE"
 name = "GOG Complete map editor"
 image = true
 path = "build/orig/h3maped.exe"
+sources = "editor"
 """
 
 
@@ -30,6 +31,16 @@ class ImagesTest(unittest.TestCase):
         self.root = Path(self.tmp.name)
         (self.root / "config").mkdir()
         (self.root / "config/project.toml").write_text(PROJECT)
+
+    def test_each_image_reads_only_its_own_source_trees(self):
+        editor = [self.root / "src/editor/GameMap.cpp", self.root / "include/editor/GameMap.h"]
+        shared = [self.root / "src/rmg.cpp", self.root / "include/rmg.h"]
+        with patch.dict(os.environ, {images.IMAGE_ENV: "game"}):
+            self.assertEqual(images.source_dir("h3maped", self.root), "editor")
+            self.assertTrue(all(images.foreign(p, self.root) for p in editor))
+            self.assertFalse(any(images.foreign(p, self.root) for p in shared))
+        with patch.dict(os.environ, {images.IMAGE_ENV: "h3maped"}):
+            self.assertFalse(any(images.foreign(p, self.root) for p in editor + shared))
 
     def test_only_image_pins_are_images(self):
         self.assertEqual(images.images(self.root), ["game", "h3maped"])

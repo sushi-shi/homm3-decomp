@@ -294,6 +294,11 @@ source = "src/herodefs.cpp"
 flags = "h3maped_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "error"
+source = "src/error.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "spelldefs"
 source = "src/spelldefs.cpp"
 flags = "h3maped_o1_ob2_gr_windows"

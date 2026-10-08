@@ -538,7 +538,10 @@ def _guard_owners(root):
     head = re.compile(r'\bDATA_COMPGEN_GUARD\s*\(\s*0x[0-9a-fA-F]+\s*,\s*(\w+)\s*,\s*(\w+)\s*\)')
     data = re.compile(r'\bDATA\s*\(\s*(0x[0-9a-fA-F]+)\s*\)')
     out = {}
+    from homm3.core import images
     for path in sorted(Path(root, 'src').rglob('*.cpp')):
+        if images.foreign(path, root):
+            continue
         unit = path.stem
         text = path.read_text(encoding='latin-1')
         for m in head.finditer(text):

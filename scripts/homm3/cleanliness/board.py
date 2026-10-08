@@ -119,7 +119,7 @@ from __future__ import annotations
 import re
 import sys
 
-from homm3.core import common
+from homm3.core import common, images
 
 REPO = common.HOMM3_DIR
 ROOTS = ("src", "include")
@@ -629,7 +629,7 @@ def count(per_file: bool = False, *, dc_origins=None):
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*")):
-            if path.suffix not in EXTS or not path.is_file():
+            if path.suffix not in EXTS or not path.is_file() or images.foreign(path, REPO):
                 continue
             try:
                 code = _strip(path.read_text(errors="ignore"))

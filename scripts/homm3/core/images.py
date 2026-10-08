@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import tomllib
+from functools import lru_cache
 from pathlib import Path
 
 #: Environment variable carrying the selected image to every child process.
@@ -24,7 +25,10 @@ GAME_INPUT = "retail"
 
 
 def pins(root: Path) -> dict:
-    with (Path(root) / "config/project.toml").open("rb") as stream:
+    project = Path(root) / "config/project.toml"
+    if not project.is_file():
+        return {}                         # a bare tree pins only the game
+    with project.open("rb") as stream:
         return tomllib.load(stream).get("inputs", {})
 
 
@@ -44,6 +48,39 @@ def selected(root: Path) -> str:
         raise RuntimeError(f"${IMAGE_ENV}={key!r} is not a pinned image "
                            f"(config/project.toml: {known})")
     return key
+
+
+def source_dir(image: str, root: Path) -> str:
+    """The directory name of an image's own sources and headers, under src/
+    and include/: the pin's `sources` (the original's directory, such as
+    the map editor's `editor`), else its key."""
+    return pins(root).get(input_key(image), {}).get("sources", image)
+
+
+def foreign_trees(root: Path) -> tuple[Path, ...]:
+    """The src/ and include/ subdirectories of every image but the selected
+    one: their VA()/DATA() claims spell another image's addresses, so the
+    selected image's scans never read them."""
+    return _foreign_trees(str(Path(root).resolve()), selected(root))
+
+
+@lru_cache(maxsize=8)
+def _foreign_trees(root: str, chosen: str) -> tuple[Path, ...]:
+    out = []
+    for key in images(Path(root))[1:]:
+        if key != chosen:
+            name = source_dir(key, Path(root))
+            out += [Path(root) / "src" / name, Path(root) / "include" / name]
+    return tuple(out)
+
+
+def foreign(path: Path, root: Path) -> bool:
+    """Whether `path` lies in another image's source tree (foreign_trees)."""
+    trees = foreign_trees(root)
+    if not trees:
+        return False
+    path = Path(path).resolve()
+    return any(tree in path.parents for tree in trees)
 
 
 def input_key(image: str) -> str:

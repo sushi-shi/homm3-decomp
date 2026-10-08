@@ -431,7 +431,10 @@ def source_literals(root, pe) -> Records:
     literal = re.compile(r'"((?:[^"\\\n]|\\.)*)"\s*')
     out = Records()
     seen = {}
+    from homm3.core import images
     for path in sorted([*Path(root, 'src').rglob('*.cpp'), *Path(root, 'include').rglob('*.h')]):
+        if images.foreign(path, root):
+            continue
         text = path.read_text(encoding='latin-1')
         for m in head.finditer(text):
             at, parts = m.end(), []
