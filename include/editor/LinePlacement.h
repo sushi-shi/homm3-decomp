@@ -5,37 +5,110 @@
 // virtuals in vtable order, as TRiverOp's and TRoadOp's vtables list
 // them). TLinePlacementOp draws a line from the last point to each new one,
 // TLineEraseOp clears a rectangle; both report through the line clients
-// (one and two pure virtuals, as their vtables show). The data members
-// known so far are the ones the constructors initialize; the cell and
-// tileset types' members are not declared yet.
+// (one and two pure virtuals, as their vtables show). A tileset lists each
+// tile's line shape; the shapes' enumerators other than eLS_e (an assert)
+// are not proven, nor are the members the asserts do not name.
 #ifndef HOMM3_EDITOR_LINEPLACEMENT_H
 #define HOMM3_EDITOR_LINEPLACEMENT_H
 
 #include "editor/Point.h"
 #include "editor/Uncopyable.h"
 
+// No line in a cell.
+const unsigned int kLineTypeNone = 0;
+
+// A line tile's shape, by the neighbours it joins (before flipping).
 enum TLineShape {
+    eLS_s,
+    eLS_e,
+    eLS_ns,
+    eLS_ew,
+    eLS_es,
+    eLS_esDiag,
+    eLS_nes,
+    eLS_esw,
+    eLS_nesw,
+    kNumLineShapes
 };
 
 class TLineTilesetTraits {
 public:
-    TLineTilesetTraits(unsigned int numTiles, const TLineShape* pLineShapes);
+    TLineTilesetTraits(unsigned int numTiles, const TLineShape* akTileLineShape);
     ~TLineTilesetTraits();
 
-    TLineShape pickRandom(TLineShape lineShape) const;
+    TLineShape getLineShape(unsigned int tileNum) const { return _m_aTileLineShape[tileNum]; }
+    unsigned int getNumTilesOfLineShape(TLineShape lineShape) const
+    {
+        return _m_aLineShapeProps[lineShape].m_numTiles;
+    }
+    unsigned int pickRandom(TLineShape lineShape) const;
+
+private:
+    struct _TLineShapeProps {
+        unsigned int m_firstTile;
+        unsigned int m_numTiles;
+    };
+
+    unsigned int _m_numTiles;
+    TLineShape* _m_aTileLineShape;
+    _TLineShapeProps _m_aLineShapeProps[kNumLineShapes];
 };
 
 class TMapLineFilter : private TUncopyable {
 public:
     struct TCellInfo {
-        TCellInfo();
-        TCellInfo(unsigned int type, unsigned int tileNum, bool bHFlipped, bool bVFlipped);
+        TCellInfo() {}
+        TCellInfo(unsigned int type, unsigned int tileNum, bool bHFlipped, bool bVFlipped)
+            : m_type(type), m_tileNum(tileNum), m_bHFlipped(bHFlipped), m_bVFlipped(bVFlipped) {}
+
+        unsigned int m_type;
+        unsigned int m_tileNum;
+        bool m_bHFlipped;
+        bool m_bVFlipped;
     };
 
-    TMapLineFilter(unsigned int width, unsigned int height);
+    // A cell of the filter, read through its virtuals.
+    class TCellConstRef {
+    public:
+        TCellConstRef(const TMapLineFilter& mapFilter, const TTilePoint& loc)
+            : _m_pMapFilter(&mapFilter), _m_loc(loc) {}
 
-    unsigned int getWidth() const;
-    unsigned int getHeight() const;
+        bool isBlocked() const { return _m_pMapFilter->_isCellBlocked(_m_loc); }
+        void getInfo(TCellInfo* pInfo) const { _m_pMapFilter->_getCellInfo(_m_loc, pInfo); }
+        unsigned int getType() const { return _m_pMapFilter->_getCellType(_m_loc); }
+
+    protected:
+        const TMapLineFilter* _m_pMapFilter;
+        TTilePoint _m_loc;
+    };
+
+    friend class TCellConstRef;
+
+    class TCellRef : public TCellConstRef {
+    public:
+        TCellRef(TMapLineFilter* pMapFilter, const TTilePoint& loc) : TCellConstRef(*pMapFilter, loc) {}
+
+        void setInfo(const TCellInfo& info) const
+        {
+            const_cast<TMapLineFilter*>(_m_pMapFilter)->_setCellInfo(_m_loc, info);
+        }
+        void setType(unsigned int type) const
+        {
+            const_cast<TMapLineFilter*>(_m_pMapFilter)->_setCellType(_m_loc, type);
+        }
+    };
+
+    friend class TCellRef;
+
+    TMapLineFilter(unsigned int width, unsigned int height) : _m_mapWidth(width), _m_mapHeight(height) {}
+
+    unsigned int getWidth() const { return _m_mapWidth; }
+    unsigned int getHeight() const { return _m_mapHeight; }
+
+    TCellRef getCell(const TTilePoint& tilePoint);
+    TCellConstRef getCell(const TTilePoint& tilePoint) const;
+    TCellRef getCell(unsigned int x, unsigned int y) { return getCell(TTilePoint(x, y)); }
+    TCellConstRef getCell(unsigned int x, unsigned int y) const { return getCell(TTilePoint(x, y)); }
 
     virtual const TLineTilesetTraits& getTilesetTraits(unsigned int type) const = 0;
 
@@ -53,8 +126,8 @@ protected:
     virtual bool _getCellBVFlipped(const TPoint<unsigned int>& loc) const = 0;
 
 private:
-    unsigned int _m_width;
-    unsigned int _m_height;
+    unsigned int _m_mapWidth;
+    unsigned int _m_mapHeight;
 };
 
 class TLineOpClient {
