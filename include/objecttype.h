@@ -144,23 +144,24 @@ struct less<TObjectType> : public binary_function<TObjectType, TObjectType, bool
 // slot and one per non-generic category.
 // TMapView's Tools/Objects handlers select them in this order (Dirt 0 ..
 // Water 8, all terrain 9, towns 10 .. treasures 14); the assert texts name
-// kNumObjectSlots. The enumerator names are not proven.
+// kNumObjectSlots and eSlotHeroes; the other enumerator names follow that
+// pattern but are not proven.
 enum TObjectSlot {
-    eObjectSlotDirt,
-    eObjectSlotSand,
-    eObjectSlotGrass,
-    eObjectSlotSnow,
-    eObjectSlotSwamp,
-    eObjectSlotRough,
-    eObjectSlotSubterranean,
-    eObjectSlotLava,
-    eObjectSlotWater,
-    eObjectSlotAllTerrain,
-    eObjectSlotTowns,
-    eObjectSlotMonsters,
-    eObjectSlotHeroes,
-    eObjectSlotArtifacts,
-    eObjectSlotTreasures,
+    eSlotDirt,
+    eSlotSand,
+    eSlotGrass,
+    eSlotSnow,
+    eSlotSwamp,
+    eSlotRough,
+    eSlotSubterranean,
+    eSlotLava,
+    eSlotWater,
+    eSlotAllTerrain,
+    eSlotTowns,
+    eSlotMonsters,
+    eSlotHeroes,
+    eSlotArtifacts,
+    eSlotTreasures,
     kNumObjectSlots
 };
 
