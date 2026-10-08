@@ -31,6 +31,7 @@
 #include "editor/Player.h"
 #include "editor/Point.h"
 #include "editor/RefCountingPtr.h"
+#include "editor/Uncopyable.h"
 
 class istream;
 class ostream;
@@ -41,6 +42,26 @@ class TGameObject;
 class TObjectType;
 class THero;
 class TTown;
+class TGenericObject;
+class TNonRandomHero;
+class TRandomHero;
+class TPrison;
+class TEvent;
+class TMonster;
+class TSign;
+class TFlaggableObject;
+class TMine;
+class TAbandonedMine;
+class TGenerator;
+class TGarrison;
+class TGameArtifact;
+class TSpellScroll;
+class TGameResource;
+class TBlackBox;
+class TScholar;
+class TSeersHut;
+class THolyGrail;
+class TShrine;
 class TVictoryCondition;
 class TLossCondition;
 class TTimedEvent;
@@ -626,6 +647,97 @@ private:
 class TGameMap::TClient {
 public:
     virtual void onMapObjectRemoved(bool bUnderground, TMapLayerObjectID objID) = 0;
+};
+
+// Creates the map's objects (TGUIGameObjectFactory in the editor): for each
+// kind a fresh object and one read from a stream, both placed with
+// pfnAllocator. The vtable order is TGUIGameObjectFactory's; the
+// constructor builds a TUncopyable first, and the vtable pointer follows
+// that empty base at +4.
+class TGameMap::TObjectFactory : private TUncopyable {
+public:
+    virtual ~TObjectFactory() {}
+    virtual TGenericObject* createGenericObject(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGenericObject* createGenericObject(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TNonRandomHero* createNonRandomHero(const TObjectType& objType, TPlayer owner, unsigned int protoNum,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TNonRandomHero* createNonRandomHero(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TRandomHero* createRandomHero(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TRandomHero* createRandomHero(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TPrison* createPrison(const TObjectType& objType, THeroClass heroClass, unsigned int protoNum,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TPrison* createPrison(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TTown* createTown(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TTown* createTown(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TEvent* createEvent(const TObjectType& objType, void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TEvent* createEvent(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TMonster* createMonster(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TMonster* createMonster(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TSign* createSign(const TObjectType& objType, void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TSign* createSign(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TFlaggableObject* createFlaggable(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TFlaggableObject* createFlaggable(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TMine* createMine(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TMine* createMine(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TAbandonedMine* createAbandonedMine(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TAbandonedMine* createAbandonedMine(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGenerator* createGenerator(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGenerator* createGenerator(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGarrison* createGarrison(const TObjectType& objType, TPlayer owner,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGarrison* createGarrison(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGameArtifact* createArtifact(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGameArtifact* createArtifact(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TSpellScroll* createSpellScroll(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TSpellScroll* createSpellScroll(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGameResource* createResource(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TGameResource* createResource(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TBlackBox* createBlackBox(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TBlackBox* createBlackBox(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TScholar* createScholar(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TScholar* createScholar(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TSeersHut* createSeersHut(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TSeersHut* createSeersHut(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual THolyGrail* createHolyGrail(const TObjectType& objType,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual THolyGrail* createHolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TShrine* createShrine(const TObjectType& objType, void* (*pfnAllocator)(unsigned int)) const = 0;
+    virtual TShrine* createShrine(const TObjectType& objType, TRawIStream* pIStream, int version,
+        void* (*pfnAllocator)(unsigned int)) const = 0;
 };
 
 void readCellData(TRawIStream& stream, TGameMap::TLayer* pLayer);
