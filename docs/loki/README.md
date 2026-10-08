@@ -246,6 +246,19 @@ Applied:
   after the object headers, or a nested class the original defined after
   its enclosing class (`TGameMap::TLayer`, `TLayer::TCell`, the map
   windows' controllers).
+- A function-local static constant is written when its declaration is
+  compiled (`cp_finish_decl`), a namespace-scope `const` with internal
+  linkage only at the end of the file. A table the image places between
+  two functions' strings is therefore a local static of the later function
+  (LinePlacement's and TerrainPlacement's `akFlippedDir`). An 8-byte local
+  static constant (a non-BLKmode one) is first built in `%eax:%edx` and
+  written to `.rodata` only when its address is taken.
+- Open: in GameMap, RiverPlacement, RoadPlacement and TerrainPlacement the
+  image names TRuntimeError after VictoryCondition.h's classes, while Event
+  and Hero name it right after `<stdexcept>`'s. GameMap.h reaches
+  exceptions.h through RefCountingPtr.h before GameObject.h; RefCountingPtr.h
+  cannot drop it (g++ 2.95 binds its `throw TAllocationFailure(...)` at the
+  template definition).
 - exceptions.h's never-called `TRuntimeError()` (`runtime_error(string())`)
   is inferred from rule 6: every includer queues `allocator<char>()`, the
   `__default_alloc_template::allocate` chain, `~basic_string` and
