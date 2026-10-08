@@ -62,10 +62,10 @@ rva	function_count	class
 0x87eb0	5	?$ctype@D@std
 0x87ec8	1	facet@locale@std
 0x87fac	1	TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197
-0x87fb4	1	TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197
+0x87fb4	1	??_7TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@
 0x87fbc	1	??_7TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTCampaignScenarioMap@@@
 0x87fc4	13	??_7TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTGzInflateBuf@@@
-0x87ffc	1	TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197
+0x87ffc	1	??_7TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@
 0x88004	1	TStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197
 0x8800c	13	strstreambuf@std
 0x88044	8	TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197
@@ -87,10 +87,10 @@ rva	function_count	class
 0x886d0	47	CButton
 0x88790	50	CComboBox
 0x888f4	3	??_7TCampaignView@@6BTCampaignMapWndClient@@@
-0x88904	66	TCampaignView
+0x88904	66	??_7TCampaignView@@6BCView@@@
 0x88a10	3	TCampaignMapWndClient
 0x88b60	3	??_7T16bppDIBSection@@6BCBitmap@@@
-0x88b70	6	T16bppDIBSection
+0x88b70	6	??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@
 0x88b8c	5	?$TBitmapBase@G
 0x88ba4	5	?$TBitmap@GK
 0x88bf4	52	TEditCrossoverScenarioOptionDlg
@@ -107,7 +107,7 @@ rva	function_count	class
 0x89838	55	TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184
 0x89918	1	??_7TEditStartingBonusDlg@@6BTClient@TStartingBonusTypeDlg@@@
 0x89920	8	??_7TEditStartingBonusDlg@@6BTVisitor@TScenarioStartingBonus@@@
-0x89944	52	TEditStartingBonusDlg
+0x89944	52	??_7TEditStartingBonusDlg@@6BCDialog@@@
 0x89a18	1	TClient@TStartingBonusTypeDlg
 0x89a20	8	TVisitor@TScenarioStartingBonus
 0x89a7c	52	TEditStartingHeroOptionDlg
@@ -115,7 +115,7 @@ rva	function_count	class
 0x89ba4	3	TDataError@TGzInflateBuf
 0x89bb4	13	TGzInflateBuf
 0x89d2c	1	??_7TMainFrame@@6BTStatusUI@TCampaignView@@@
-0x89d34	61	TMainFrame
+0x89d34	61	??_7TMainFrame@@6BCFrameWnd@@@
 0x89e2c	1	TStatusUI@TCampaignView
 0x89e34	3	TError@?$TGDIObjectSelector@VCFont@@
 0x89e44	13	TMFCFileBuf
@@ -129,7 +129,7 @@ rva	function_count	class
 0x8a628	64	TScenarioPropsProloguePage
 0x8a72c	64	TScenarioPropsEpiloguePage
 0x8a854	2	??_7TScenarioPropsSheet@@6BTParentSheet@TScenarioPropsGeneralPage@@@
-0x8a860	49	TScenarioPropsSheet
+0x8a860	49	??_7TScenarioPropsSheet@@6BCPropertySheet@@@
 0x8a928	2	TParentSheet@TScenarioPropsGeneralPage
 0x8ac3c	8	TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400
 0x8ac60	59	TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400
@@ -137,7 +137,7 @@ rva	function_count	class
 0x8ae40	59	TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400
 0x8af30	59	TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400
 0x8b020	3	??_7TScenarioPropsStartingOptionsPage@@6BTVisitor@TScenarioStartingOptions@@@
-0x8b030	60	TScenarioPropsStartingOptionsPage
+0x8b030	60	??_7TScenarioPropsStartingOptionsPage@@6BCPropertyPage@@@
 0x8b124	3	TVisitor@TScenarioStartingOptions
 0x8c344	2	TAbsoluteGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698
 0x8c350	2	TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698

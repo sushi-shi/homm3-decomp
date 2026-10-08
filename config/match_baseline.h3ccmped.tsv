@@ -27,10 +27,24 @@ CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\Campai
 CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	83.1442	83.1442	83.1442	0x11c80	tokens1:609997297888
 CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsStartingHero@@@Z	83.1442	83.1442	83.1442	0x11da0	tokens1:c81cdc2c148c
 CampaignDoc	?write@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXABVTScenarioStartingBonus@@AAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x10f30	tokens1:6ffee2429f90
+DIBSection	??0T16bppDIBSection@@QAE@II@Z	99.9091	99.9091	99.9091	0x1d090	-
+DIBSection	??0T16bppDIBSection@@QAE@XZ	100.0000	100.0000	100.0000	0x1d060	-
+DIBSection	??1T16bppDIBSection@@UAE@XZ	99.8113	99.8113	99.8113	0x1d140	-
+DIBSection	??4?$TBitmapBase@G@@UAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x1d4d0	-
+DIBSection	??4T16bppDIBSection@@UAEAAV0@ABV0@@Z	82.9487	82.9487	82.9487	0x1d200	-
+DIBSection	??_ET16bppDIBSection@@WBE@AEPAXI@Z	97.5000	97.5000	97.5000	0x1d670	-
+DIBSection	?Serialize@CObject@@UAEXAAVCArchive@@@Z	100.0000	100.0000	100.0000	0x3680	-
+DIBSection	?allocate@?$TBitmap@GK@@UAEPAGII@Z	100.0000	100.0000	100.0000	0x1d5f0	-
+DIBSection	?allocate@T16bppDIBSection@@UAEPAGII@Z	99.3491	99.3491	99.3491	0x1d2c0	-
+DIBSection	?computePitch@?$TBitmap@GK@@UBEII@Z	100.0000	100.0000	100.0000	0x1d630	-
+DIBSection	?free@?$TBitmap@GK@@UAEXPAG@Z	100.0000	100.0000	100.0000	0x4520	-
+DIBSection	?free@T16bppDIBSection@@UAEXPAG@Z	99.0000	99.0000	99.0000	0x1d460	-
+MemoryDC	??0CGdiObject@@QAE@XZ	100.0000	100.0000	100.0000	0x293e0	-
+MemoryDC	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x293f0	-
 Player	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x156c0	-
 Player	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	99.8828	99.8828	99.8828	0x18da0	-
 Player	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0x29c00	-
-Player	?InitializePlayerTraitsTable@@YA_NXZ	81.6827	81.6827	81.6827	0x29890	-
+Player	?InitializePlayerTraitsTable@@YA_NXZ	81.7831	81.7831	81.7831	0x29890	-
 Player	__h3cg$Player$static_dtor$aNames	99.1667	99.1667	99.1667	0x29be0	-
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x402e0	-
 artifact	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	99.8828	99.8828	99.8828	0x1df70	-
@@ -87,6 +101,7 @@ deflate	@read_buf@12	100.0000	100.0000	100.0000	0x3f240	-
 error	??0TDebugBreak@@QAE@XZ	100.0000	100.0000	100.0000	0x22520	-
 error	??0TRuntimeError@@QAE@PBD@Z	99.9450	99.9450	99.9450	0x22530	-
 font	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	99.8809	99.8809	99.8809	0x4a8f0	-
+gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0x11ae0	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	99.9153	99.9153	99.9153	0x25cb0	-
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	99.8889	99.8889	99.8889	0x1bb0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV01@@Z	99.8819	99.8819	99.8819	0x1020	-
@@ -97,7 +112,7 @@ gzinflatebuf	?_getC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0x25670	-
 gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	99.5833	99.5833	99.5833	0x262a0	-
 gzinflatebuf	?_putBackC@TGzInflateBuf@@AAEXD@Z	100.0000	100.0000	100.0000	0x256e0	-
 gzinflatebuf	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	99.8750	99.8750	99.8750	0x1a90	-
-gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	70.2941	70.2941	70.2941	0x26040	-
+gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	70.3209	70.3209	70.3209	0x26040	-
 herodefs	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.7581	99.7581	99.7581	0x26600	-
 herodefs	?InitializeHeroClassTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x263d0	-
 herodefs	?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.6667	99.6667	99.6667	0x264b0	-
@@ -224,7 +239,6 @@ resourcemanager	?falsename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_trait
 resourcemanager	?findBitmapResource@@YAPAVLODFile@@PBD@Z	99.5652	99.5652	99.5652	0x44730	-
 resourcemanager	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0xf4a0	-
 resourcemanager	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x48d00	-
-resourcemanager	?imbue@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEXABVlocale@2@@Z	100.0000	100.0000	100.0000	0x3680	-
 resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	92.8750	92.8750	92.8750	0x46940	-
 resourcemanager	?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z	96.6549	96.6549	96.6549	0x45610	-
 resourcemanager	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	29.4000	29.4000	29.4000	0x45c00	-
@@ -297,7 +311,7 @@ uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x4c800	-
 victor	?allocimage@@YGHPAUimgdes@@HHH@Z	99.6154	99.6154	99.6154	0x62b30	-
 victor	?freeimage@@YGXPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x62d40	-
 victor	?pcxinfo@@YGHPBDPAUPcxData@@@Z	100.0000	100.0000	100.0000	0x63840	-
-victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	99.3429	99.3429	99.3429	0x62b60	-
+victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	99.9714	99.9714	99.9714	0x62b60	-
 victor	?victorInitializeGrayscalePalette@@YGXPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x62f60	-
 victor	?victorMinimumDimensions@@YAXPAUimgdes@@0PAI1@Z	100.0000	100.0000	100.0000	0x63060	-
 victor	?victorReadPcxPalette@@YGHPBDPAUtagRGBQUAD@@@Z	100.0000	100.0000	100.0000	0x63970	-
@@ -305,7 +319,7 @@ victor	?victorUploadPalette@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x62db0
 victor	?victorValidateBitmap@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x62f40	-
 victor	?victorValidateImage@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x62e50	-
 victor_flip	?flipimage@@YGHPAUimgdes@@0@Z	99.9194	99.9194	99.9194	0x630c0	-
-victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	92.5756	92.5756	92.5756	0x633a0	-
+victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	99.9867	99.9867	99.9867	0x633a0	-
 victor_pcx_kernels	?victorConvertRgbPlanesToBgr@@YAXPAEPBEH@Z	100.0000	100.0000	100.0000	0x63b80	-
 victor_pcx_kernels	?victorDecodeRleBytes@@YAHPAE0H@Z	100.0000	100.0000	100.0000	0x63ab0	-
 victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x63b10	-
