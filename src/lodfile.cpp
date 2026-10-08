@@ -41,20 +41,23 @@ DC_ADDRESS(0x0e9154, 0x42)
 MAC_ADDRESS(0x11b680, 0x70)
 LODEntry* LODFile::getItemIndex(const char* itemName)
 {
-    if (opened) {
-        Find(0, numEntries, itemName);
-        if (matchindex >= 0)
-            return &subindex[matchindex];
-    }
+    if (!opened)
+        return 0;
+    Find(0, numEntries, itemName);
+    if (matchindex >= 0)
+        return &subindex[matchindex];
     return 0;
 }
 
 // Original: LODFile::exist; lodfile.cpp:112
 DC_ADDRESS(0x0e9198, 0x26)
-unsigned char LODFile::exist(const char* itemName)
+// Loki h3maped (exist__7LODFilePCc) returns bool through an explicit pair.
+bool LODFile::exist(const char* itemName)
 {
     Find(0, numEntries, itemName);
-    return matchindex >= 0;
+    if (matchindex >= 0)
+        return true;
+    return false;
 }
 
 // Mac retains both recursive calls at 0x11b770 and 0x11b7d8. The Windows
@@ -70,6 +73,7 @@ void LODFile::Find(unsigned begin, unsigned end, const char* itemName)
     }
 
     unsigned half = (end - begin) / 2;
+    unsigned i;
     int order = _strcmpi(itemName, subindex[begin + half].name);
     if (order == 0) {
         matchindex = begin + half;
@@ -78,30 +82,26 @@ void LODFile::Find(unsigned begin, unsigned end, const char* itemName)
     if (order < 0) {
         if (end - begin > 4) {
             Find(begin, begin + half, itemName);
-            return;
         } else {
-            for (unsigned i = begin; i < end; i++) {
+            for (i = begin; i < end; i++) {
                 if (_strcmpi(itemName, subindex[i].name) == 0) {
                     matchindex = i;
                     return;
                 }
             }
             matchindex = -1;
-            return;
         }
     } else {
         if (end - begin > 4) {
             Find(begin + half, end, itemName);
-            return;
         } else {
-            for (unsigned j = begin; j < end; j++) {
-                if (_strcmpi(itemName, subindex[j].name) == 0) {
-                    matchindex = j;
+            for (i = begin; i < end; i++) {
+                if (_strcmpi(itemName, subindex[i].name) == 0) {
+                    matchindex = i;
                     return;
                 }
             }
             matchindex = -1;
-            return;
         }
     }
 }
@@ -230,13 +230,14 @@ bool LODFile::pointAt(const char* itemName)
         dataItemIndex = -1;
         dataPos = -1;
         return false;
+    } else {
+        dataItemIndex = matchindex;
+        dataPos = 0;
+        delete[] dataBuffer;
+        dataBuffer = 0;
+        dataBufferSize = 0;
+        return true;
     }
-    dataItemIndex = matchindex;
-    dataPos = 0;
-    delete[] dataBuffer;
-    dataBuffer = 0;
-    dataBufferSize = 0;
-    return true;
 }
 
 VA(0x004fab20, 0x114)
@@ -250,7 +251,8 @@ int LODFile::read(void* dest, int numBytes)
         return -1;
 
     LODEntry entry = subindex[dataItemIndex];
-    if (entry.csize) {
+    bool compressed = entry.csize != 0;
+    if (compressed) {
         if (dataBuffer == 0) {
             dataBuffer = new unsigned char[entry.size];
             dataBufferSize = entry.size;
@@ -259,7 +261,7 @@ int LODFile::read(void* dest, int numBytes)
             fread(packed, 1, entry.csize, fileptr);
             unsigned long destLen = dataBufferSize;
             uncompress(dataBuffer, &destLen, packed, entry.csize);
-            delete packed;
+            delete[] packed;
         }
         memcpy(dest, dataBuffer + dataPos, numBytes);
         dataPos += numBytes;

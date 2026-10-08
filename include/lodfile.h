@@ -67,7 +67,7 @@ public:
     };
     int numEntries;
     std::vector<LODEntry> subindex;
-    unsigned char exist(const char* itemName);
+    bool exist(const char* itemName);
     char* getErrorString(int lodError);
     void sort();
     void clear();
