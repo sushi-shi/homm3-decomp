@@ -31,6 +31,7 @@ class TRawOStream;
 class THero;
 
 enum TBuilding {
+    eBuildingNone = -1,
     kNumBuildings = 41
 };
 
@@ -63,12 +64,15 @@ public:
         bool _m_bDisabled : 1;
     };
 
+    // The town pages build their building trees from these: a building whose
+    // name is unset is not available in this town type, and m_building is
+    // the building it hangs under (eBuildingNone for the roots).
     struct TBuildingTraits {
-        TBuildingTraits(TBuilding building) : m_unknown0(0), m_unknown4(0), m_building(building) {}
+        TBuildingTraits(TBuilding building) : m_pName(0), m_unknown4(0), m_building(building) {}
 
-        bool isDisallowed() const { return m_unknown0 == 0; }
+        bool isDisallowed() const { return m_pName == 0; }
 
-        unsigned int m_unknown0;
+        const char* m_pName;
         unsigned int m_unknown4;
         TBuilding m_building;
     };
@@ -83,11 +87,17 @@ public:
                     const TGeneratorTraits* const (&apGeneratorTraits)[s_kNumGeneratorTypes]);
 
         bool hasMageGuildLevel(unsigned int level) const;
+
+        const char* m_pName;
+        const TBuildingTraits (&m_akBuildingTraits)[kNumBuildings];
+        const TGeneratorTraits* const (&m_apGeneratorTraits)[s_kNumGeneratorTypes];
     };
 
     // A bonus to each generator's weekly growth, up to s_kMax.
     class TGeneratorBonuses {
     public:
+        static const int s_kMax = 9999;
+
         TGeneratorBonuses() : _m_bonuses(0) {}
 
         unsigned int get(TGeneratorType type) const;
@@ -103,6 +113,7 @@ public:
     class TTimedEvent : public ::TTimedEvent {
     public:
         const bitset<kNumBuildings>& getBuildMask() const { return _m_buildMask; }
+        void setBuildMask(const bitset<kNumBuildings>& newMask) { _m_buildMask = newMask; }
         const TGeneratorBonuses& getGeneratorBonuses() const { return _m_generatorBonuses; }
         void setGeneratorBonuses(const TGeneratorBonuses& newBonuses) { _m_generatorBonuses = newBonuses; }
 
