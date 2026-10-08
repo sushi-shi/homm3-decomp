@@ -84,8 +84,8 @@ seerhut.obj	0x12d8c0	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary
 slider.obj	0x14a380	3d5058c1519f	10	Complete exact widget API symbol encodes message*; Dreamcast records message&.
 slider.obj	0x14a508	3d5058c1519f	10	Complete exact widget API symbol encodes message*; Dreamcast records message&.
 smackmgr.obj	0x14ac3c	4d09cc013568	10	Complete exact VideoOpen symbol encodes eight int parameters; Dreamcast records the last two as unsigned char.
-spelldefs.obj	0x14e39c	37a632789123	8	TSpellTraits is the older nominal name of Complete's shared SSpellTraits model; a cosmetic local alias is not structural recovery.
-spells.obj	0x153d2c	bdf23f1dd15b	8	TSpellTraits is the older nominal name of Complete's shared SSpellTraits model; the recovered const-reference shape is already retained.
+spelldefs.obj	0x14e39c	37a632789123	8	TSpellTraits is the older nominal name of Complete's shared TSpellTraits model; a cosmetic local alias is not structural recovery.
+spells.obj	0x153d2c	bdf23f1dd15b	8	TSpellTraits is the older nominal name of Complete's shared TSpellTraits model; the recovered const-reference shape is already retained.
 swapmgr.obj	0x15cd2c	06e5754fd35b	9	Dreamcast keeps a type_artifact local, while Complete's exact body immediately extracts and operates on the scalar artifact ID; this representation changed between versions.
 town.obj	0x168bb8	a6a00e7b7ca0	10	Const pointer return changes VC6's symbol to QBEQBDXZ; Complete exact retail identity is QBEPBDXZ.
 town.obj	0x165988	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary; Complete writes through the retail-proven TAbstractFile virtual interface.
@@ -129,17 +129,17 @@ textntry.obj	0x1629e8	0c6f21407457	9	Dreamcast records a mutable character point
 textntry.obj	0x1629e8	32a83301a989	9	Dreamcast records a mutable character pointer, while Complete callers pass immutable text/font/resource names and the retail implementation only reads them; retain the const-correct Complete boundary.
 textntry.obj	0x1629e8	5aea66813414	9	Dreamcast records a mutable character pointer, while Complete callers pass immutable text/font/resource names and the retail implementation only reads them; retain the const-correct Complete boundary.
 spells.obj	0x15627c	0e20ec26a536	9	Dreamcast records a const hex local in its older summoning implementation; Complete retail repeatedly assigns the selected candidate hex before using it, so the local cannot be const.
-advspells.obj	0x21b84	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven SSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
-advspells.obj	0x22054	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven SSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
-advspells.obj	0x2225c	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven SSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
-advspells.obj	0x22510	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven SSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
+advspells.obj	0x21b84	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven TSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
+advspells.obj	0x22054	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven TSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
+advspells.obj	0x2225c	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven TSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
+advspells.obj	0x22510	079d788c8a04	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven TSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
 events.obj	0x94760	9eeebb4f3919	6	Dreamcast has a THeroID enum, while the current Complete model still uses int and extends the roster beyond the older 128 heroes; park for a dedicated 156-entry hero-id domain recovery.
 game.obj	0xa68d8	8d7b3a69a856	6	Dreamcast has a THeroID enum, while the current Complete model still uses int and extends the roster beyond the older 128 heroes; park for a dedicated 156-entry hero-id domain recovery.
 game.obj	0xb5cdc	d197d49617ad	6	Dreamcast has a THeroID enum, while the current Complete model still uses int and extends the roster beyond the older 128 heroes; park for a dedicated 156-entry hero-id domain recovery.
 mapcell.obj	0xf0df4	d197d49617ad	6	Dreamcast has a THeroID enum, while the current Complete model still uses int and extends the roster beyond the older 128 heroes; park for a dedicated 156-entry hero-id domain recovery.
-philai.obj	0x10f810	a6cd8454b1ad	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven SSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
+philai.obj	0x10f810	a6cd8454b1ad	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven TSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
 singleselectionwindow.obj	0x143444	8d7b3a69a856	6	Dreamcast has a THeroID enum, while the current Complete model still uses int and extends the roster beyond the older 128 heroes; park for a dedicated 156-entry hero-id domain recovery.
-spells.obj	0x151b44	7148ce3cc0c3	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven SSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
+spells.obj	0x151b44	7148ce3cc0c3	7	Dreamcast names the traits record TSpellTraits; Complete currently retains the retail-proven TSpellTraits layout under a provisional project spelling, so defer the cross-tree type rename.
 town.obj	0x168b54	a6c636f1c666	6	Dreamcast has a THeroID enum, while the current Complete model still uses int and extends the roster beyond the older 128 heroes; park for a dedicated 156-entry hero-id domain recovery.
 armygrp.obj	0x4f708	3bed883191d8	10	Dreamcast lacks Complete's added alignment/town-domain entry; Complete retail requires the ten-byte alignment table.
 bitmap816.obj	0x53b0c	3050f065a375	9	Dreamcast and Complete use different platform path-buffer extents; Complete retail retains the 264-byte filename buffer.

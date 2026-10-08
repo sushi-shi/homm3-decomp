@@ -3931,7 +3931,7 @@ static unsigned char attemptTeleport(hero* currentHero,
 
     long mastery = currentHero->getSpellLevel(SPELL_DIMENSION_DOOR);
     if (currentHero->m_dWalkSpellsCast
-        >= akSpellTraits[SPELL_DIMENSION_DOOR].m_masteryBonus[mastery]) {
+        >= akSpellTraits[SPELL_DIMENSION_DOOR].m_mastery_bonus[mastery]) {
         if (path[step].m_dimensionDoor) {
             if (step == 0)
                 currentHero->m_movePoints = 0;

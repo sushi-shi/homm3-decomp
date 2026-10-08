@@ -16,7 +16,7 @@ inline unsigned char isMindSpell(int spell)
     return (akSpellTraits[spell].m_flags & 0x400) != 0;
 }
 
-// Retail spell-class flag roles in SSpellTraits::field_c. Names are
+// Retail spell-class flag roles in TSpellTraits::field_c. Names are
 // behavior-derived; values and mastery thresholds are byte-proven by
 // SpellTargetsASingleArmy.
 enum ESpellTargetFlags {
@@ -36,6 +36,6 @@ unsigned char InitializeSpellTraitsTable();
 // akSpellTraits pointer/reference cell is at 0x687f58; retail writes this
 // adjacent 81*136-byte backing array directly. Name is provisional because
 // only the public DC array name survives.
-extern SSpellTraits g_spellTraitsImp[81];
+extern TSpellTraits g_spellTraitsImp[81];
 
 #endif  /* HOMM3_SPELLDEFS_H */

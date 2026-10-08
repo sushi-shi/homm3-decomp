@@ -2476,10 +2476,10 @@ MAC_ADDRESS(0x140f90, 0x180)
 long type_spellvalue::getDamageSpellValue(SpellID spell, TSkillMastery mastery,
     long timesCastable, long combatValue) const
 {
-    long damage = akSpellTraits[spell].m_masteryValues[mastery]
+    long damage = akSpellTraits[spell].m_AI_value[mastery]
         * (m_power + mastery);
     if (spell == SPELL_TITANS_LIGHTNING_BOLT)
-        damage = akSpellTraits[SPELL_TITANS_LIGHTNING_BOLT].m_masteryBonus[0];
+        damage = akSpellTraits[SPELL_TITANS_LIGHTNING_BOLT].m_mastery_bonus[0];
     damage = const_cast<hero*>(m_ourHero)->modifySpellDamage(spell, damage, 0);
 
     double ratio = static_cast<double>(damage * 10);
@@ -2532,7 +2532,7 @@ MAC_ADDRESS(0x141254, 0x158)
 long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
-    const SSpellTraits* traits = &akSpellTraits[spell];
+    const TSpellTraits* traits = &akSpellTraits[spell];
     unsigned char coversWholeArmy = !spellTargetsASingleArmy(spell, mastery);
     long totalDuration = m_duration * timesCastable;
     if (coversWholeArmy) {
@@ -2553,7 +2553,7 @@ long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
         if (traits->m_karma > 0
             && getSpellWorkChance(ESpellId(spell), m_list[i].m_type, m_ourHero, 0) == 0.0)
             continue;
-        total += traits->m_masteryValues[mastery] * m_list[i].m_value
+        total += traits->m_AI_value[mastery] * m_list[i].m_value
             * totalDuration;
     }
     return total / 700;
@@ -2564,7 +2564,7 @@ DC_ADDRESS(0x10fa84, 0x1e6)
 MAC_ADDRESS(0x14145c, 0x1fc)
 long type_spellvalue::getRawSpellValue(SpellID spell) const
 {
-    const SSpellTraits* traits = &akSpellTraits[spell];
+    const TSpellTraits* traits = &akSpellTraits[spell];
     hero* caster = const_cast<hero*>(m_ourHero);
     int mastery = caster->getSpellLevel(spell);
     int cost = const_cast<hero*>(m_ourHero)->getManaCost(spell, 0, -1);
@@ -2586,13 +2586,13 @@ long type_spellvalue::getRawSpellValue(SpellID spell) const
         return getEnchantmentValue(spell, TSkillMastery(mastery),
                                    timesCastable);
     case SPELL_VALUE_SUMMONING: {
-        long damage = traits->m_masteryValues[mastery] * (m_power + mastery);
+        long damage = traits->m_AI_value[mastery] * (m_power + mastery);
         return getSummoningValue(damage, timesCastable);
     }
     case SPELL_VALUE_SPECIAL:
         return static_cast<long>(
             (sqrt(static_cast<double>(timesCastable)) * 0.001 + 0.009)
-            * static_cast<double>(traits->m_masteryValues[mastery]
+            * static_cast<double>(traits->m_AI_value[mastery]
                                   * m_stackValue));
     }
     return 1;

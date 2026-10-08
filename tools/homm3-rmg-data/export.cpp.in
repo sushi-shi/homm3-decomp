@@ -126,7 +126,7 @@ static const TArtifactSlotMask artifactSlotMasks[@count] =
 static const TCreatureTypeTraits creatureTraits[@count] =
 // @rmg initializer src/creaturetype.cpp g_creatureTypeTraitsStorage
 ;
-static const SSpellTraits spellTraits[@count] =
+static const TSpellTraits spellTraits[@count] =
 // @rmg initializer src/spelldefs.cpp g_spellTraitsImp
 ;
 

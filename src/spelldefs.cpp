@@ -12,7 +12,7 @@
 // Retail initial spell traits retain sample names, effects and flags before
 // sptraits.txt supplies localized text, costs and probabilities.
 DATA(0x00685450)
-SSpellTraits g_spellTraitsImp[81] = {
+TSpellTraits g_spellTraitsImp[81] = {
     { 0, "SummBoat.wav", eSpellEffectNone, 0x100002, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
     { 0, "ScutBoat.wav", eSpellEffectNone, 0x2, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
     { 0, "Visions.wav", eSpellEffectNone, 0x2, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
@@ -96,7 +96,7 @@ SSpellTraits g_spellTraitsImp[81] = {
     { -1, "Acid.wav", eSpellEffectPoof, 0x18, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 };
 
-DATA(0x00687f58) const SSpellTraits (&akSpellTraits)[81] = g_spellTraitsImp;
+DATA(0x00687f58) const TSpellTraits (&akSpellTraits)[81] = g_spellTraitsImp;
 
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);
@@ -203,7 +203,7 @@ MAC_ADDRESS(0x18e8f4, 0x3a4)
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource)
 {
-    SSpellTraits& traits = g_spellTraitsImp[id];
+    TSpellTraits& traits = g_spellTraitsImp[id];
 
     DATA_COMPGEN_GUARD(0x006a3650, spellStringsGuard, spellNames)
     DATA(0x006a350c)
@@ -218,7 +218,7 @@ static void initializeSpellTraits(
 
     abbreviatedSpellNames[id].set(new char[strlen(resource[1]) + 1]);
     strcpy(abbreviatedSpellNames[id].get(), resource[1]);
-    traits.m_abbreviatedName = abbreviatedSpellNames[id].get();
+    traits.m_abbreviated_name = abbreviatedSpellNames[id].get();
 
     traits.m_level = atoi(resource[2]);
     traits.m_schoolBits = 0;
@@ -238,20 +238,20 @@ static void initializeSpellTraits(
         ++column;
     }
 
-    traits.m_powerFactor = atoi(resource[column++]);
+    traits.m_power_factor = atoi(resource[column++]);
 
     for (i = 0; i < 4; ++i) {
-        traits.m_masteryBonus[i] = atoi(resource[column]);
+        traits.m_mastery_bonus[i] = atoi(resource[column]);
         ++column;
     }
 
     for (i = 0; i < 9; ++i) {
-        traits.m_townProbability[i] = atoi(resource[column]);
+        traits.m_townGetsItChance[i] = atoi(resource[column]);
         ++column;
     }
 
     for (i = 0; i < 4; ++i) {
-        traits.m_masteryValues[i] = atoi(resource[column]);
+        traits.m_AI_value[i] = atoi(resource[column]);
         ++column;
     }
 
@@ -262,7 +262,7 @@ static void initializeSpellTraits(
         spellDescriptions[id][i].set(
             new char[strlen(resource[column]) + 1]);
         strcpy(spellDescriptions[id][i].get(), resource[column]);
-        traits.m_levelDescriptions[i] = spellDescriptions[id][i].get();
+        traits.m_description[i] = spellDescriptions[id][i].get();
         ++column;
     }
 }
