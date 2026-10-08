@@ -444,3 +444,8 @@ source = "src/editor/HeroPropsSheet.cpp"
 name = "HeroPropsGeneralPage"
 object = 84
 source = "src/editor/HeroPropsGeneralPage.cpp"
+
+[[unit]]
+name = "MiniMapWnd"
+object = 56
+source = "src/editor/MiniMapWnd.cpp"
