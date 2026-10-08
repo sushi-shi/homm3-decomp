@@ -29,6 +29,12 @@
 #include "editor/ObjectSprites.h"
 #include "editor/Town.h"
 
+// A zero file constant: the image's .rodata of this object runs 1 to 32 zero
+// bytes past TimedEvent.h's kNumDaysPerYear (GzBuf's 32-byte aligned .rodata
+// follows), and file constants are written last, in declaration order. Its
+// name and type are not proven; nothing in the object reads it.
+const unsigned int kInitialScrollPos = 0;
+
 // The element count the tooltip's assert expands (its text keeps the
 // spacing of the expansion); the macro's name is not proven.
 #define ELEMENTS(a) ( sizeof( a ) / sizeof( ( a )[ 0 ] ) )

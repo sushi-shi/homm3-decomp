@@ -389,9 +389,11 @@ patched by hand as an experiment, only 202 `.dynsym` bytes differ):
   `my_version`), while deflate.o's code is 1.0.8's and inflate_copyright
   is 1.0.8's const string: Loki's zlib 1.0.8 carried 1.0.4's copyright
   line. The source of that zlib is not known.
-- ObjectPaletteWnd.o's `.rodata` is 1 to 32 zero bytes longer than ours
-  (GzBuf's 32-byte aligned `.rodata` starts 0x20 later): a zero-valued
-  file constant after TimedEvent.h's, of unknown name and type.
+- ObjectPaletteWnd.o's `.rodata` ran 1 to 32 zero bytes past ours (GzBuf's
+  32-byte aligned `.rodata` started 0x20 later). File constants are written
+  last, in declaration order, so the source now ends its includes with a
+  4-byte zero constant, `kInitialScrollPos`; its name and type are not
+  proven (MapObjectRef.h's `kNullObjectID` is the same shape).
 - The imported X symbols' `st_size` values: 170 of 194 match Red Hat 6.0's
   XFree86 3.3.3.1-49 libraries, whose `.dynsym` order does not match; the
   order matches Red Hat 6.2's libX11/libXi and XFree86 4's libXext (only
