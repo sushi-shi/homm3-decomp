@@ -8,7 +8,7 @@ kernels in `src/victor_pcx_kernels.cpp`, with explicitly provisional grouping
 filenames and separate profiles. Original library source and object filenames
 remain unknown; the vendor directory is unchanged.
 
-## Compiler: Visual C++ 5.0 SP3
+## Compiler: Visual C++ 5.0 SP3 (confirmed)
 
 The Victor objects were not built by the game's VC6 SP3. The retail Rich
 header counts 145 C++ objects from C2 8447 (the game), 26 from 8168 and 69
@@ -29,6 +29,12 @@ decoder's EBX save. The four Victor units therefore name
 `compiler = "msvc5.0"` in `config/units.toml`; `nix develop .#build` exports
 the toolchain as `HOMM3_MSVC5_DIR` (the pinned Gruntz VC5 SP3 archive), and
 `homm3.core.cc_wrap` selects it from the unit owning the compiled source.
+
+Until the last two functions closed, the service pack was unconfirmed: SP3
+was only the best fit, and the RTM, SP1 and SP2 compilers were not
+available. Both residuals then closed under SP3 with ordinary source (see
+"Closing the last two functions" below), so every Victor function is
+byte-exact with SP3 and the earlier service packs were not needed.
 
 The register, schedule and tail-merge findings below were measured with VC6
 SP3 before this identification. Treat them as history: re-measure a residual
@@ -257,6 +263,35 @@ decode-state and allocation-success declarations while preserving runtime
 initialization order. All 64 sources emit the same 78.4456% object. Two prior
 60-state crosses likewise show that parameter/status/consumed ownership and a
 meaningful reuse of status as the consumed-byte count are byte-flat.
+
+## Closing the last two functions
+
+A classified permutation campaign under SP3 (about 3,300 compiled states over
+statement order, declaration order and scope, types, temporaries,
+expression forms, inline helper boundaries, `register`, unit context,
+includes and flags) closed both remaining functions. The levers were
+statement order, declaration order and one expression form; every other
+dimension was flat or worse:
+
+- `victorAllocateImage` (99.37%): computing the palette byte count before
+  the row stride gives retail's EBP/EDI width and height and its separate
+  palette-size/total registers.
+- `loadpcx` (92.59%): computing the destination before the copy width
+  (95.82%), initializing the row count and read index before the refill
+  counts (97.57%), declaring the locals C-style at the top of the function
+  (98.71%), and writing the refill point as `limit = buffered - 2 * rowBytes;
+  refillAt = limit <= 0 ? buffered : limit;` (100%). With top declarations,
+  VC5's register choices follow declaration order: the refill counts precede
+  the input buffer, which precedes its read index. Natural orders that break
+  either relation lose 0.03-1.4%.
+
+Under SP3 the 64 type combinations that keep the semantics compile
+identically, and `register`, include sets and probe declarations
+before the function never move the allocation. Flags other than the
+pinned profile (`/G6`, `/Oa`, `/Ow`, `/Oi-`, `/Oy-`, `/Og-`, `/Os`, `/O1`)
+are all worse. Compiling the same source with the C front end gives the
+same allocation, so the C++ build is kept. Probe and
+search scripts were disposable and are not kept.
 
 ## Linked data of unlinked Victor code
 

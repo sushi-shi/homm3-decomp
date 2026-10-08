@@ -24,28 +24,57 @@ DATA(0x0068d2d0) unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 // The nibble arm jumps to the indexed row copy, which the converted RGB
 // row falls into; partial RGB planes continue without advancing the row.
 // Every handled row steps the destination up one stride, as retail does.
-// Residual (VC5): register and schedule choices around the validation
-// status, the zero-initialised decode state and the destination offset.
+// Victor is C: every local is declared at the top of the function, and
+// VC5 allocates registers by that declaration order (the input buffer
+// precedes its read index, the refill counts precede both). The refill
+// point is the buffered count less two encoded rows, unless that is not
+// positive.
 VA(0x00603e00, 0x494)  // anchor-caller PCX importers + RLE/plane/palette helper sequence
 int __stdcall loadpcx(const char* filename, imgdes* image)
 {
-    int status = victorValidateBitmap(image);
+    int status;
+    PcxData data;
+    HFILE file;
+    OFSTRUCT fileInfo;
+    unsigned int height;
+    unsigned int width;
+    int mode;
+    unsigned int rowsRemaining;
+    unsigned int refillAt;
+    int buffered;
+    int encodedRowBytes;
+    int planesRemaining;
+    int remaining;
+    int limit;
+    unsigned char* input;
+    int consumed;
+    unsigned char* decoded;
+    unsigned char* planeStart;
+    unsigned char* plane;
+    int decodeBytes;
+    unsigned int offset;
+    unsigned char* destination;
+    unsigned int copyBytes;
+    int pixels;
+    unsigned char* packed;
+    int value;
+    int i;
+
+    status = victorValidateBitmap(image);
     if (!status) {
-        PcxData data;
         status = pcxinfo(filename, &data);
         if (status)
             return status;
-        OFSTRUCT fileInfo;
-        HFILE file = OpenFile(filename, &fileInfo, OF_SHARE_DENY_WRITE);
+        file = OpenFile(filename, &fileInfo, OF_SHARE_DENY_WRITE);
         if (file < 0)
             return -4;
-        unsigned int height = image->m_endy - image->m_sty + 1;
+        height = image->m_endy - image->m_sty + 1;
         if (height > data.m_length)
             height = data.m_length;
-        unsigned int width = image->m_endx - image->m_stx + 1;
+        width = image->m_endx - image->m_stx + 1;
         if (width > data.m_width)
             width = data.m_width;
-        int mode = victorPcxInvalidMode;
+        mode = victorPcxInvalidMode;
         if (data.m_nplanes == victorPcxSinglePlane) {
             if (data.m_bpPixel == victorIndexedColor)
                 mode = victorPcxIndexedMode;
@@ -61,45 +90,43 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
         status = mode;
         if (mode != victorPcxInvalidMode) {
             _llseek(file, 128, 0);
-            unsigned int refillAt = 0;
-            int buffered = 0;
-            int encodedRowBytes = data.m_bytesPerLine * data.m_nplanes;
-            unsigned int rowsRemaining = height;
-            int consumed = 0;
-            int planesRemaining = victorPcxRgbPlanes;
-            unsigned char* input = static_cast<unsigned char*>(malloc(victorPcxInputCapacity
+            rowsRemaining = height;
+            consumed = 0;
+            refillAt = 0;
+            buffered = 0;
+            encodedRowBytes = data.m_bytesPerLine * data.m_nplanes;
+            planesRemaining = victorPcxRgbPlanes;
+            input = static_cast<unsigned char*>(malloc(victorPcxInputCapacity
                 + g_victorPcxScratchRows[mode - 1] * encodedRowBytes));
             if (!input) {
                 status = -14;
             } else {
-                unsigned char* decoded = input + victorPcxInputCapacity;
-                unsigned char* planeStart = input + victorPcxInputCapacity + encodedRowBytes;
-                unsigned char* plane = planeStart;
-                int decodeBytes = mode == victorPcxRgbMode ? data.m_bytesPerLine : encodedRowBytes;
-                unsigned int offset = (image->m_bmh->biHeight - image->m_sty - 1)
+                decoded = input + victorPcxInputCapacity;
+                planeStart = input + victorPcxInputCapacity + encodedRowBytes;
+                plane = planeStart;
+                decodeBytes = mode == victorPcxRgbMode ? data.m_bytesPerLine : encodedRowBytes;
+                offset = (image->m_bmh->biHeight - image->m_sty - 1)
                     * image->m_buffwidth + (image->m_bmh->biBitCount * image->m_stx >> 3);
-                unsigned int copyBytes = (image->m_bmh->biBitCount >> 3) * width;
-                unsigned char* destination = image->m_ibuff + offset;
+                destination = image->m_ibuff + offset;
+                copyBytes = (image->m_bmh->biBitCount >> 3) * width;
                 while (rowsRemaining) {
-                    if (static_cast<unsigned int>(consumed) >= refillAt) {
-                        int remaining = buffered - consumed >= 0 ? buffered - consumed : 0;
+                    if (consumed >= refillAt) {
+                        remaining = buffered - consumed >= 0 ? buffered - consumed : 0;
                         memcpy(input, input + consumed, remaining);
                         buffered = _lread(file, input + remaining,
                                           victorPcxInputCapacity - remaining) + remaining;
                         if (!buffered)
                             break;
-                        refillAt = buffered;
-                        if (buffered - 2 * encodedRowBytes > 0)
-                            refillAt = buffered - 2 * encodedRowBytes;
+                        limit = buffered - 2 * encodedRowBytes;
+                        refillAt = limit <= 0 ? buffered : limit;
                         consumed = 0;
                     }
                     consumed += victorDecodeRleBytes(decoded, input + consumed, decodeBytes);
                     switch (mode) {
-                    case victorPcxNibbleMode: {
-                        int pixels = width;
-                        unsigned char* packed = decoded + (pixels + 1) / 2 - 1;
+                    case victorPcxNibbleMode:
+                        pixels = width;
+                        packed = decoded + (pixels + 1) / 2 - 1;
                         do {
-                            int value;
                             if (!(pixels & 1)) {
                                 value = *packed & 15;
                             } else {
@@ -109,7 +136,6 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
                             decoded[pixels - 1] = value;
                         } while (--pixels);
                         goto copyRow;
-                    }
                     case victorPcxFourPlaneMode:
                         victorUnpackFourPlanes(destination, decoded, data.m_bytesPerLine, width);
                         break;
@@ -148,7 +174,7 @@ int __stdcall loadpcx(const char* filename, imgdes* image)
             if (!image->m_colors) {
                 if (image->m_palette && (mode == victorPcxFourPlaneMode || mode == victorPcxNibbleMode)) {
                     image->m_colors = victorPcxHeaderColors;
-                    for (int i = 0; i < image->m_colors; ++i) {
+                    for (i = 0; i < image->m_colors; ++i) {
                         image->m_palette[i].rgbRed = g_victorPcxDefaultPalette[i * 3];
                         image->m_palette[i].rgbGreen = g_victorPcxDefaultPalette[i * 3 + 1];
                         image->m_palette[i].rgbBlue = g_victorPcxDefaultPalette[i * 3 + 2];
