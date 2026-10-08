@@ -27,7 +27,7 @@ TGDIObjectSelectorError::TGDIObjectSelectorError()
 {
 }
 
-VA(0x00487042, 0x4df)
+VA(0x00487042, 0x454)
 void drawTransparentBitmap(CDC* pDC, CBitmap* pBitmap, int x, int y, COLORREF transparentColor)
 {
     BITMAP bitmap;
