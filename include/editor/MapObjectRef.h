@@ -37,4 +37,10 @@ struct less<TMapObjectRef> : public binary_function<TMapObjectRef, TMapObjectRef
     }
 };
 
+// Inline: the map specifications' player page keeps the linkonce copy.
+inline bool operator!=(const TMapObjectRef& lhs, const TMapObjectRef& rhs)
+{
+    return !(lhs == rhs);
+}
+
 #endif  /* HOMM3_EDITOR_MAPOBJECTREF_H */
