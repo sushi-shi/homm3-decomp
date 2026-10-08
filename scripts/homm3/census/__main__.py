@@ -84,7 +84,11 @@ def derive(log=print):
     toolchain = paths.msvc_dir() / "lib"
     archives = {"LIBCMT": toolchain / "LIBCMT.LIB", "LIBCPMT": toolchain / "LIBCPMT.LIB",
                 "NAFXCW": paths.SHARED_BUILD / "mfc-sp3/lib/nafxcw.lib"}
-    runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log)
+    from homm3.retail_labels.iat import iat_slots
+    imports = {name: slot for slot, (name, _channel)
+               in iat_slots(common.resolve_exe(), toolchain).items()}
+    runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log,
+                               imports=imports)
     log(f"[census] {len(funclets)} funclets with parents ({orphans} without), "
         f"{len(thunks)} .CRT$XCU initializers")
     log(f"[census] {len(rows)} functions, {len(vt)} vtables "
