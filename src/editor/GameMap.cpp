@@ -1026,6 +1026,19 @@ void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
     _removeObjectHelper(bSecondLayer, objID);
 }
 
+void TGameMap::_TImpl::onObjectRemoved()
+{
+    const _TPProperties& pConstProperties = _m_pProperties;
+    if (pConstProperties->m_pLossCondition != NULL && !_isValid(*pConstProperties->m_pLossCondition)) {
+        delete _m_pProperties->m_pLossCondition;
+        _m_pProperties->m_pLossCondition = NULL;
+    }
+    if (pConstProperties->m_pVictoryCondition != NULL && !_isValid(*pConstProperties->m_pVictoryCondition)) {
+        delete _m_pProperties->m_pVictoryCondition;
+        _m_pProperties->m_pVictoryCondition = NULL;
+    }
+}
+
 void TGameMap::_TImpl::onHeroAdded(const THero& hero)
 {
 #line 2215
@@ -1088,6 +1101,94 @@ void TGameMap::_TImpl::onRemovingHero(const THero& hero)
     }
     _m_pBookkeeping->m_numHeroes--;
     _onRemovingPlayable(hero);
+}
+
+void TGameMap::_TImpl::onHeroProtoChanged(THeroClass heroClass, unsigned int oldProtoNum, unsigned int newProtoNum)
+{
+#line 2309
+    assert(heroClass >= 0 && heroClass < kNumHeroClasses);
+    assert(oldProtoNum < THero::s_akClassTraits[ heroClass ].m_numPrototypes);
+    assert(newProtoNum < THero::s_akClassTraits[ heroClass ].m_numPrototypes);
+#line 2313
+    assert(!_m_pBookkeeping->m_aabHeroAvailable[ heroClass ][ oldProtoNum ]);
+    assert(_m_pBookkeeping->m_aabHeroAvailable[ heroClass ][ newProtoNum ]);
+    _m_pBookkeeping->m_aabHeroAvailable[heroClass][oldProtoNum] = true;
+    _m_pBookkeeping->m_aabHeroAvailable[heroClass][newProtoNum] = false;
+}
+
+void TGameMap::_TImpl::onHeroClassChanged(THeroClass oldHeroClass, unsigned int oldProtoNum, THeroClass newHeroClass,
+                                          unsigned int newProtoNum)
+{
+#line 2322
+    assert(oldHeroClass >= 0 && oldHeroClass < kNumHeroClasses);
+    assert(oldProtoNum < THero::s_akClassTraits[ oldHeroClass ].m_numPrototypes);
+    assert(newHeroClass >= 0 && newHeroClass < kNumHeroClasses);
+    assert(newProtoNum < THero::s_akClassTraits[ newHeroClass ].m_numPrototypes);
+#line 2327
+    assert(!_m_pBookkeeping->m_aabHeroAvailable[ oldHeroClass ][ oldProtoNum ]);
+    _m_pBookkeeping->m_aabHeroAvailable[oldHeroClass][oldProtoNum] = true;
+#line 2330
+    assert(_m_pBookkeeping->m_aabHeroAvailable[ newHeroClass ][ newProtoNum ]);
+    _m_pBookkeeping->m_aabHeroAvailable[newHeroClass][newProtoNum] = false;
+}
+
+void TGameMap::_TImpl::onHeroOwnerChanged(const THero& hero, TPlayer oldOwner)
+{
+#line 2337
+    assert(oldOwner >= 0 && oldOwner < kNumPlayers);
+    TPlayer newOwner = hero.getOwner();
+    THero* pHero = const_cast<THero*>(&hero);
+    pHero->setOwner(oldOwner);
+    onRemovingHero(hero);
+    pHero->setOwner(newOwner);
+    onHeroAdded(hero);
+}
+
+void TGameMap::_TImpl::onTownOwnerChanged(const TTown& town, bool bSecondLayer, unsigned int objID, TPlayer oldOwner)
+{
+#line 2352
+    assert(objID != TLayer::s_kInvalidObjID);
+    assert(&getLayer( bSecondLayer ).getObject( objID ) == &town);
+    assert(oldOwner >= ePlayerNone && oldOwner < kNumPlayers);
+    TPlayer savedOwner = town.getOwner();
+    TTown* pTown = const_cast<TTown*>(&town);
+    THero* pVisitingHero = pTown->getPVisitingHero();
+    if (pVisitingHero != NULL) {
+#line 2362
+        assert(pVisitingHero->getOwner() == savedOwner);
+        pVisitingHero->setOwner(oldOwner);
+        onRemovingHero(*pVisitingHero);
+    }
+    pTown->setOwner(oldOwner);
+    _onRemovingTown(town, bSecondLayer, objID);
+    pTown->setOwner(savedOwner);
+    _onTownAdded(town, bSecondLayer, objID);
+    if (pVisitingHero != NULL) {
+        pVisitingHero->setOwner(savedOwner);
+        onHeroAdded(*pVisitingHero);
+    }
+}
+
+void TGameMap::_TImpl::removeSecondLayer()
+{
+#line 2383
+    assert(isTwoLayer());
+    TLayer* pLayer = getPLayer(true);
+    TLayer::TObjectIDIter iter = pLayer->objectIDBegin();
+    while (iter != pLayer->objectIDEnd()) {
+        TMapLayerObjectID objID = *iter++;
+        _removeObjectHelper(true, objID);
+    }
+    _m_aLayer.pop_back();
+    _m_bTwoLayer = false;
+}
+
+void TGameMap::_TImpl::addSecondLayer()
+{
+#line 2401
+    assert(!isTwoLayer());
+    _m_bTwoLayer = true;
+    _m_aLayer.push_back(TLayer(_m_size));
 }
 
 const TGameObject* TGameMap::_TImpl::getPObject(bool bSecondLayer, unsigned int objID) const
