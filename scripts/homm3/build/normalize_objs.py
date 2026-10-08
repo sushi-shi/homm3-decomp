@@ -1169,7 +1169,10 @@ def _associative_parents(coff: canon.CoffObject) -> dict[int, int]:
 #: same with `mov eax, fs:[0]` scheduled before `push -1` (its `__except_list`
 #: displacement is the absolute 0).
 EH_PROLOGUES = (b"\x55\x8b\xec\x6a\xff\x68",
-                b"\x55\x8b\xec\x64\xa1\x00\x00\x00\x00\x6a\xff\x68")
+                b"\x55\x8b\xec\x64\xa1\x00\x00\x00\x00\x6a\xff\x68",
+                # /O2 without a frame pointer (the campaign editor)
+                b"\x6a\xff\x68",
+                b"\x64\xa1\x00\x00\x00\x00\x6a\xff\x68")
 
 
 #: The `/O1` form (the map editor): `mov eax, offset handler; call
@@ -1236,9 +1239,17 @@ def _eh_handler_candidates(coff: canon.CoffObject) -> tuple[EhHandlerOwnerRewrit
         if not labels or labels[-1].index != handler.index:
             continue
         prior = [row for row in labels if row.value < handler.value]
-        if not prior:
-            continue
-        funclet = prior[-1]
+        if prior:
+            funclet = prior[-1]
+        else:
+            # a lone cleanup at the section start carries no label of its
+            # own; the section symbol names that offset
+            funclet = next((row for row in coff.symbols.values()
+                            if row.section == handler.section and row.value == 0
+                            and row.storage_class == 3 and row.name == child.name),
+                           None)
+            if funclet is None:
+                continue
         child_bytes = coff.section_bytes(child)
         if (handler.value + 10 != child.raw_size or
                 child_bytes[handler.value] != 0xB8 or
