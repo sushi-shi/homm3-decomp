@@ -51,13 +51,6 @@ public:
     void OnMouseMove(unsigned int flags, CPoint point);
 
 private:
-    void _setupTools(int firstRow);
-    void _removeAllTools();
-    unsigned int _computeRows() const
-    {
-        return (_m_aSlotInfo[_m_slot].m_objTypes.size() + 2) / 3;
-    }
-
     // A slot's saved scroll position (pixels) and its object types.
     struct _TSlotInfo {
         _TSlotInfo() : m_scrollPos(0) {}
@@ -65,6 +58,13 @@ private:
         unsigned int m_scrollPos;
         vector<const TObjectType*> m_objTypes;
     };
+
+    void _setupTools(int firstRow);
+    void _removeAllTools();
+    unsigned int _computeRows() const
+    {
+        return (_m_aSlotInfo[_m_slot].m_objTypes.size() + 2) / 3;
+    }
 
     static const CSize s_kObjFrameSize;
 

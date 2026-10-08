@@ -214,6 +214,14 @@ inline bool objectTypeInSlot(const TObjectType& objType, TObjectSlot slot)
     return apObjectSlotTraits[slot]->contains(objType);
 }
 
+// objectTypeInSlot as an adaptable predicate (the palette binds the slot).
+struct TObjectTypeInSlotPred : public binary_function<TObjectType, TObjectSlot, bool> {
+    bool operator()(const TObjectType& objType, TObjectSlot slot) const
+    {
+        return objectTypeInSlot(objType, slot);
+    }
+};
+
 void loadObjectTypeTable();
 
 #endif  /* HOMM3_OBJECTTYPE_H */

@@ -37,13 +37,6 @@ namespace {
 GdkCursor* hOpenHandCursor = NULL;
 }
 
-struct TObjectTypeInSlotPred : public binary_function<TObjectType, TObjectSlot, bool> {
-    bool operator()(const TObjectType& objType, TObjectSlot slot) const
-    {
-        return objectTypeInSlot(objType, slot);
-    }
-};
-
 // The two file-static helpers after _computeRows (names not proven).
 static inline int max(int a, int b)
 {
