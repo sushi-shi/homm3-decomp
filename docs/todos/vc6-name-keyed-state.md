@@ -34,20 +34,36 @@ doesn't model this channel.
   names, not on one name being original. The rename diff is not kept; it is
   reproducible from the Loki symbol table.
 
-## Hypothesis
+## Mechanism (cspriteframe case, 2026-10-08)
 
-C1XX or C2 hashes decorated names into an internal table, and some decision
-walks that table in hash order. A spelling that lands in another bucket then
-changes the order. This parallels the period-64 handle effect: the
-regalloc-setup constant hash `0x2c6ce` at `.bssbe 0x9d750`, documented in
-`docs/vc6/handle-period.md` (#186). The scoped symbol table `0x14bf4` (1,024
-buckets, key at `+0x28`) is a candidate. It was ruled out for the period-64
-effect, but not for names.
+The name effect in `cspriteframe` goes through **data layout**, not code paths:
+
+- VC6 orders a unit's `.bss` objects by a name hash, so a spelling change can
+  move a static.
+- A `u16` global gets the dword form `and ebx, dword ptr [mask]` only when it
+  sits 4-aligned in the object; otherwise VC6 emits `and bx, word ptr [mask]`.
+- Retail has `div2mask` at `0x6968a4` (aligned) and `div4mask` at `0x6968aa`
+  (2 mod 4). `Draw` happens to align ours like retail for `div2mask`; the full
+  Loki spellings put both masks at 2 mod 4.
+- Retail's unit `.bss` also has three unreferenced holes (`0x69689d–a3`,
+  `a8–a9`, `ac–af`). These are statics our source doesn't define yet, and they
+  are needed to reproduce retail's layout with the original names.
+- The blend-term order VC6 picks also follows the names.
+
+See [behavior-catalog C12](../vc6/behavior-catalog.md).
+
+## Hypothesis for other units
+
+Where a name change moves bytes, first check whether it moved a `.bss` or
+`.data` object's alignment. Only otherwise suspect a symbol-table walk such as
+the scoped table `0x14bf4` (1,024 buckets, key at `+0x28`). That parallels the
+period-64 handle effect (`docs/vc6/handle-period.md`, #186).
 
 ## Plan
 
-1. Locate where decorated names are hashed and which decision consumes the
-   order. Use the in-process C2 shim and IL replay (#186), and diff C2 state
+1. Recover the three missing `cspriteframe` `.bss` statics, then retry the
+   Loki-proven spellings. Separately, locate the `.bss` name hash, and any other
+   name-ordered decision. Use the in-process C2 shim and IL replay (#186), and diff C2 state
    at the affected functions' entry between `Draw` and `draw`.
 2. From the mechanism, compute which functions any name change can affect,
    and which names they are sensitive to, without renaming at random.
