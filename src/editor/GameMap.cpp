@@ -33,6 +33,21 @@
 #include "editor/UniqueSet.h"
 #include "editor/VictoryCondition.h"
 
+// The reserved bytes after each object record and after the map's header,
+// and the zeros that end the map file.
+const unsigned int kNumObjectReserved = 5;
+const unsigned int kNumMapReserved = 31;
+const unsigned int kNumMapTrailer = 124;
+
+// A cell record's flag bits.
+const unsigned char kCellHFlipped = 0x01;
+const unsigned char kCellVFlipped = 0x02;
+const unsigned char kCellRiverHFlipped = 0x04;
+const unsigned char kCellRiverVFlipped = 0x08;
+const unsigned char kCellRoadHFlipped = 0x10;
+const unsigned char kCellRoadVFlipped = 0x20;
+const unsigned char kCellBeachBorder = 0x40;
+
 namespace {
 
 inline bool isAllSpace(const string& text)
@@ -1032,7 +1047,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, const TObjectFactory* pObjectFactory,
     signed char unused;
     TVictoryConditionData vcData;
     TLossConditionData lcData;
-    signed char aReserved[31];
+    signed char aReserved[kNumMapReserved];
     if (version > 9) {
         signed char bAnyPlayers;
         stream >> bAnyPlayers;
@@ -1111,7 +1126,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, const TObjectFactory* pObjectFactory,
         ubyte y;
         ubyte layerNum;
         long typeID;
-        signed char aObjReserved[5];
+        signed char aObjReserved[kNumObjectReserved];
         stream >> x >> y >> layerNum >> typeID >> aObjReserved;
         for (;;) {
 #line 1655
@@ -2383,7 +2398,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
                 aHeroAvailable[heroNum / 8] |= 1 << heroNum % 8;
     }
     stream << aHeroAvailable;
-    signed char aReserved[31];
+    signed char aReserved[kNumMapReserved];
     fill_n(aReserved, sizeof(aReserved), 0);
     stream << aReserved;
     writeContainer(stream, _m_pProperties->m_rumors);
@@ -2422,7 +2437,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     stream << (long) objTypes.numItems();
     for (unsigned int typeID = 0; typeID < objTypes.numItems(); typeID++)
         stream << objTypes.get(typeID);
-    signed char aObjReserved[5];
+    signed char aObjReserved[kNumObjectReserved];
     fill_n(aObjReserved, sizeof(aObjReserved), 0);
     objNum = 0;
     stream << numObjs;
@@ -2446,7 +2461,7 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
 #line 3283
     assert(objNum == numObjs);
     writeContainer(stream, _m_pProperties->m_timedEvents);
-    signed char aTrailer[124];
+    signed char aTrailer[kNumMapTrailer];
     fill_n(aTrailer, sizeof(aTrailer), 0);
     stream << aTrailer;
 }
@@ -3915,6 +3930,50 @@ bool TGameMap::isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsig
 const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
 
 class TGameMap::TLayer::_TImpl {
+public:
+    _TImpl(TGameMap::TSize size);
+    _TImpl(const _TImpl& other);
+    ~_TImpl();
+    _TImpl& operator=(const _TImpl& other);
+
+    unsigned int getWidth() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
+    unsigned int getHeight() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
+    TCell* getPCell(unsigned int x, unsigned int y);
+    TCell* getPCell(const TTilePoint& loc) { return getPCell(loc.x(), loc.y()); }
+    const TCell* getPCell(unsigned int x, unsigned int y) const;
+    const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
+    TGameObject* getPObject(unsigned int objID);
+    const TGameObject* getPObject(unsigned int objID) const;
+    const TGameObject& getObject(unsigned int objID) const { return *getPObject(objID); }
+    TTilePoint getObjectLoc(unsigned int objID) const;
+    TTileExtent getObjectExtent(unsigned int objID) const;
+    TMapLayerObjectID getFloatingObjID() const { return _m_floatingObjID; }
+    bool isObjectIDValid(unsigned int objID) const
+    {
+        return objID < _m_paObjectLink->size() && (*_m_paObjectLink)[objID].getPObject() != NULL;
+    }
+    TMapLayerObjectID getFirstObjectID() const { return (*_m_paObjectLink)[0].m_next; }
+    TMapLayerObjectID getLastObjectID() const { return (*_m_paObjectLink)[0].m_prev; }
+#line 5375
+    TMapLayerObjectID getNextObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_next; }
+    TMapLayerObjectID getPrevObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_prev; }
+    unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
+    unsigned int getNumObjectIDsAtCell(const TTilePoint& loc) const { return getNumObjectIDsAtCell(loc.x(), loc.y()); }
+    TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
+    TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const
+    {
+        return getObjectIDAtCell(loc.x(), loc.y(), which);
+    }
+    unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
+    TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
+
+    TMapLayerObjectID _placeObject(const TGameObject& obj, const TTilePoint& loc);
+    void _removeObject(unsigned int objID);
+    void _floatObject(unsigned int objID);
+    void _unfloatObject(const TTilePoint& loc);
+    TMapLayerObjectID _findObject(const TTilePoint& loc, bool (*pfnPredicate)(const TGameObject&)) const;
+
+private:
     // A slot in the layer's object list: the doubly linked order of placed
     // objects (slot 0 is the list head), the object's location and its shared,
     // copy-on-write clone.
@@ -4049,51 +4108,6 @@ class TGameMap::TLayer::_TImpl {
         unsigned int _m_widthInSegments;
         vector<TRefCountingPtr<_TSegment> > _m_aSegment;
     };
-
-public:
-    _TImpl(TGameMap::TSize size);
-    _TImpl(const _TImpl& other);
-    ~_TImpl();
-    _TImpl& operator=(const _TImpl& other);
-
-    unsigned int getWidth() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
-    unsigned int getHeight() const { return TGameMap::_TImpl::_s_akDimension[_m_size]; }
-    TCell* getPCell(unsigned int x, unsigned int y);
-    TCell* getPCell(const TTilePoint& loc) { return getPCell(loc.x(), loc.y()); }
-    const TCell* getPCell(unsigned int x, unsigned int y) const;
-    const TCell& getCell(unsigned int x, unsigned int y) const { return *getPCell(x, y); }
-    TGameObject* getPObject(unsigned int objID);
-    const TGameObject* getPObject(unsigned int objID) const;
-    const TGameObject& getObject(unsigned int objID) const { return *getPObject(objID); }
-    TTilePoint getObjectLoc(unsigned int objID) const;
-    TTileExtent getObjectExtent(unsigned int objID) const;
-    TMapLayerObjectID getFloatingObjID() const { return _m_floatingObjID; }
-    bool isObjectIDValid(unsigned int objID) const
-    {
-        return objID < _m_paObjectLink->size() && (*_m_paObjectLink)[objID].getPObject() != NULL;
-    }
-    TMapLayerObjectID getFirstObjectID() const { return (*_m_paObjectLink)[0].m_next; }
-    TMapLayerObjectID getLastObjectID() const { return (*_m_paObjectLink)[0].m_prev; }
-#line 5375
-    TMapLayerObjectID getNextObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_next; }
-    TMapLayerObjectID getPrevObjectID(unsigned int objID) const { assert(objID < _m_paObjectLink->size()); return (*_m_paObjectLink)[objID].m_prev; }
-    unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
-    unsigned int getNumObjectIDsAtCell(const TTilePoint& loc) const { return getNumObjectIDsAtCell(loc.x(), loc.y()); }
-    TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
-    TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const
-    {
-        return getObjectIDAtCell(loc.x(), loc.y(), which);
-    }
-    unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
-    TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
-
-    TMapLayerObjectID _placeObject(const TGameObject& obj, const TTilePoint& loc);
-    void _removeObject(unsigned int objID);
-    void _floatObject(unsigned int objID);
-    void _unfloatObject(const TTilePoint& loc);
-    TMapLayerObjectID _findObject(const TTilePoint& loc, bool (*pfnPredicate)(const TGameObject&)) const;
-
-private:
     void _stampObject(const TGameObject* pObj, const TTilePoint& loc, unsigned int objID);
     void _unstampObject(unsigned int objID);
     TTileExtent _computeObjExtent(const TTilePoint& loc, const TPoint<unsigned int>& size) const;
@@ -4684,13 +4698,13 @@ void readCell(TRawIStream* pIStream, TGameMap::TLayer::TCell* pCell)
 
 void writeCell(TRawOStream* pOStream, const TGameMap::TLayer::TCell& cell, bool bBeachBorder)
 {
-    unsigned char flags = (cell.getBHFlipped() ? 1 : 0)
-                        | (cell.getBVFlipped() ? 2 : 0)
-                        | (cell.getBRiverHFlipped() ? 4 : 0)
-                        | (cell.getBRiverVFlipped() ? 8 : 0)
-                        | (cell.getBRoadHFlipped() ? 0x10 : 0)
-                        | (cell.getBRoadVFlipped() ? 0x20 : 0)
-                        | (bBeachBorder ? 0x40 : 0);
+    unsigned char flags = (cell.getBHFlipped() ? kCellHFlipped : 0)
+                        | (cell.getBVFlipped() ? kCellVFlipped : 0)
+                        | (cell.getBRiverHFlipped() ? kCellRiverHFlipped : 0)
+                        | (cell.getBRiverVFlipped() ? kCellRiverVFlipped : 0)
+                        | (cell.getBRoadHFlipped() ? kCellRoadHFlipped : 0)
+                        | (cell.getBRoadVFlipped() ? kCellRoadVFlipped : 0)
+                        | (bBeachBorder ? kCellBeachBorder : 0);
     *pOStream << static_cast<signed char>(cell.getTerrainType())
               << static_cast<signed char>(cell.getTileNum())
               << static_cast<signed char>(cell.getRiverType())
