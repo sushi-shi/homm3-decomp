@@ -13,22 +13,22 @@ class ds_memsample;
 // its byte count at +0x24, and clears the handle at +0x1c.
 struct MemorySampleStructure {
     // Miles handle assigned by soundManager::memorySample.
-    ds_memsample* m_memSampleHandle;
+    ds_memsample* memHSample;
     void* m_data;
     // NH3API size (size_t); retail getSize 0x566e90 adds this byte count
     // to sizeof(sample).
     unsigned int m_size;
     // Sound-channel range, volume, and AIL loop count for playback.
-    int m_memCindex;
-    int m_memVolume;
-    int m_memLooping;
+    int memCindex;
+    int memVolume;
+    int memLooping;
 };
 SIZE(MemorySampleStructure, 0x18);
 
 class sample : public resource {
 public:
     // Original Dreamcast/NH3API member memSample; PC resource base is 0x1c.
-    MemorySampleStructure m_memSample;
+    MemorySampleStructure memSample;
 
     sample(const char* newName, const void* src, long len,
            long channel, long volume, long loop);

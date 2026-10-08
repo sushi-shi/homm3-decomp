@@ -146,7 +146,7 @@ void army::stopSample(army::TSampleID id)
 {
     if (!g_combatManager->isQuickCombat()
         && m_armySample[id]) {
-        g_soundManager->stopSample(m_armySample[id]->m_memSample.m_memSampleHandle);
+        g_soundManager->stopSample(m_armySample[id]->memSample.memHSample);
     }
 }
 
@@ -231,7 +231,7 @@ inline void army::waitSample(army::TSampleID which)
 {
     if (!g_combatManager->isQuickCombat()
         && m_armySample[which]) {
-        g_soundManager->waitSample(m_armySample[which]->m_memSample.m_memSampleHandle, -1);
+        g_soundManager->waitSample(m_armySample[which]->memSample.memHSample, -1);
     }
 }
 
@@ -411,9 +411,9 @@ void army::loadResources()
 
     for (int i = 0; i < 8; i++) {
         if (m_armySample[i]) {
-            m_armySample[i]->m_memSample.m_memVolume = 64;
-            m_armySample[i]->m_memSample.m_memCindex = 3;
-            m_armySample[i]->m_memSample.m_memLooping = i != 0;
+            m_armySample[i]->memSample.memVolume = 64;
+            m_armySample[i]->memSample.memCindex = 3;
+            m_armySample[i]->memSample.memLooping = i != 0;
         }
     }
 
@@ -1077,7 +1077,7 @@ void army::endWalk()
         playSample(POST_WALK_SAMPLE);
         if (m_armySample[WALK_SAMPLE])
             g_soundManager->stopSample(
-                m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
+                m_armySample[WALK_SAMPLE]->memSample.memHSample);
         playAnimation(cs_postwalk, -1, 0);
         playAnimation(cs_wait, 1, 0);
     }

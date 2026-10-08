@@ -13,9 +13,9 @@ TBlendMask CSpriteFrame::s_div2mask = {0};
 unsigned short CSpriteFrame::s_div4mask = 0;
 
 resource::resource(const char* newName, EResourceType newType)
-    : m_resType(newType), m_referenceCount(0) {
-    std::strncpy(m_name, newName ? newName : "", 12);
-    m_name[12] = '\0';
+    : resType(newType), ReferenceCount(0) {
+    std::strncpy(Name, newName ? newName : "", 12);
+    Name[12] = '\0';
 }
 
 resource::~resource() = default;

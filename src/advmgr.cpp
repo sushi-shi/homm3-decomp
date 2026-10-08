@@ -1062,7 +1062,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
             m_heroSamples[getCell(currHero->getLocation())->m_groundSet];
         if (currHero->isFlying(0))
             sampleToPlay = m_heroSamples[10];
-        sampleToPlay->m_memSample.m_memLooping = 0;
+        sampleToPlay->memSample.memLooping = 0;
         g_walkSample = g_soundManager->memorySample(sampleToPlay);
 
         seedTo(currHero->getTarget());
@@ -7893,7 +7893,7 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
         if (m_soundArray[i].m_soundId != LOOPING_SOUND_INVALID) {
             if (reset) {
                 g_soundManager->stopSample(
-                    m_loopedSample[m_soundArray[i].m_soundId]->m_memSample.m_memSampleHandle);
+                    m_loopedSample[m_soundArray[i].m_soundId]->memSample.memHSample);
                 m_soundArray[i].m_soundId = LOOPING_SOUND_INVALID;
                 m_soundArray[i].m_priority = 0x7f;
             } else {
@@ -7932,13 +7932,13 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
         if (m_soundArray[i].m_soundId != LOOPING_SOUND_INVALID
             && m_soundArray[i].m_priority > 5) {
             g_soundManager->stopSample(
-                m_loopedSample[m_soundArray[i].m_soundId]->m_memSample.m_memSampleHandle);
+                m_loopedSample[m_soundArray[i].m_soundId]->memSample.memHSample);
             m_soundArray[i].m_soundId = LOOPING_SOUND_INVALID;
         }
         if (m_soundArray[i].m_soundId != LOOPING_SOUND_INVALID
             && (m_touchedSounds & (1 << m_soundArray[i].m_soundId))) {
             g_soundManager->modifySample(
-                m_loopedSample[m_soundArray[i].m_soundId]->m_memSample.m_memSampleHandle, 100,
+                m_loopedSample[m_soundArray[i].m_soundId]->memSample.memHSample, 100,
                 g_soundVolumes[m_soundArray[i].m_priority]);
         }
     }
@@ -8241,16 +8241,16 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
 
     if (m_soundArray[best].m_soundId != LOOPING_SOUND_INVALID)
         g_soundManager->stopSample(
-            m_loopedSample[m_soundArray[best].m_soundId]->m_memSample.m_memSampleHandle);
+            m_loopedSample[m_soundArray[best].m_soundId]->memSample.memHSample);
 
     m_soundArray[best].m_soundId = idNum;
     m_soundArray[best].m_priority = soundPriority;
 
     checkLoadSample(idNum);
 
-    m_loopedSample[idNum]->m_memSample.m_memVolume = g_soundVolumes[soundPriority];
-    m_loopedSample[idNum]->m_memSample.m_memLooping = 0;
-    m_loopedSample[idNum]->m_memSample.m_memCindex = 3;
+    m_loopedSample[idNum]->memSample.memVolume = g_soundVolumes[soundPriority];
+    m_loopedSample[idNum]->memSample.memLooping = 0;
+    m_loopedSample[idNum]->memSample.memCindex = 3;
     g_soundManager->memorySample(m_loopedSample[idNum]);
     m_touchedSounds ^= 1 << m_soundArray[best].m_soundId;
 }

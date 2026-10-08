@@ -73,21 +73,21 @@ public:
     virtual ~resource();  // slot 0
 
     DC_ADDRESS(0x0d9f94, 0x4)
-    EResourceType getResType() const { return m_resType; }
+    EResourceType get_resType() const { return resType; }
 
     DC_ADDRESS(0x074060, 0x6)
-    const char* getName() const { return m_name; }
+    const char* get_Name() const { return Name; }
 
     // E:\gamedcs\resrce.h:36
     DC_ADDRESS(0x122af0, 0x8)
-    int addRef() { return ++m_referenceCount; }
+    int AddRef() { return ++ReferenceCount; }
 
     DC_ADDRESS(0x122af8, 0x10)
-    int release()
+    int Release()
     {
-        if (m_referenceCount > 0)
-            --m_referenceCount;
-        return m_referenceCount;
+        if (ReferenceCount > 0)
+            --ReferenceCount;
+        return ReferenceCount;
     }
     // DC resource::GetReferenceCount is public const; retail disposal
     // callers test the reference-count field through this inline boundary.
@@ -95,12 +95,12 @@ public:
     // The DC declaration survives, but no body source location does.
     // Header ownership is provisional; no source order is claimed.
     // @dc-declaration-only: 0x185c
-    int getReferenceCount() const { return m_referenceCount; }
+    int GetReferenceCount() const { return ReferenceCount; }
 
 private:
-    char m_name[13];
-    EResourceType m_resType;
-    int m_referenceCount;
+    char Name[13];
+    EResourceType resType;
+    int ReferenceCount;
 
 public:
     virtual void dispose();  // slot 1, base body 0x55d0f0

@@ -13,14 +13,14 @@ MAC_ADDRESS(0x151400, 0x7c)
 resource::resource(const char* newName, EResourceType newType)
 {
     if (newName) {
-        strncpy(m_name, newName, 12);
-        m_name[12] = 0;
-        m_resType = newType;
-        m_referenceCount = 0;
+        strncpy(Name, newName, 12);
+        Name[12] = 0;
+        resType = newType;
+        ReferenceCount = 0;
     } else {
-        m_name[0] = 0;
-        m_resType = RESOURCE_TYPE_NONE;
-        m_referenceCount = -1;
+        Name[0] = 0;
+        resType = RESOURCE_TYPE_NONE;
+        ReferenceCount = -1;
     }
 }
 

@@ -2666,7 +2666,7 @@ void TCampaignBrief::MapTextStruct::play()
             } else if (mp3Started) {
                 if (speech && !speechDone) {
                     speechDone = g_soundManager->getSampleInfo(
-                                      speech->m_memSample.m_memSampleHandle,
+                                      speech->memSample.memHSample,
                                       g_campaignSpeechSampleStatus)
                                   == 0;
                     if (speechDone)
@@ -2715,7 +2715,7 @@ void TCampaignBrief::MapTextStruct::play()
     }
 
     if (speech) {
-        g_soundManager->stopSample(speech->m_memSample.m_memSampleHandle);
+        g_soundManager->stopSample(speech->memSample.memHSample);
         speech->dispose();
     }
     delete strip;

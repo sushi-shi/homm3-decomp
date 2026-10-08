@@ -651,7 +651,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             getCell(curr->getLocation())->m_groundSet];
         if (curr->isFlying(0))
             walkSample = m_heroSamples[10];
-        walkSample->m_memSample.m_memLooping = 0;
+        walkSample->memSample.memLooping = 0;
         if (m_cursorFrameCount) {
             g_newWalkSample = walkSample;
         } else {
