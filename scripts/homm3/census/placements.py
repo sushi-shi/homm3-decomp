@@ -106,11 +106,16 @@ def _data_of(obj):
         if sec["characteristics"] & 0x20 or sec["name"].startswith((".debug", ".drectve")):
             continue
         number = sec["index"]
-        members = sorted((off, name) for off, name, scl in obj.section_members(number)
+        rows = obj.section_members(number)
+        members = sorted((off, name) for off, name, scl in rows
                          if scl == 2 and not name.startswith(("$", ".", "??_7", "??_R")))
+        # every symbol bounds the one before it: a function-local static or
+        # guard after the last external is not part of it
+        bounds = sorted({off for off, _name, _scl in rows})
         payload = None if sec["characteristics"] & 0x80 else obj.section_payload(number)
-        for i, (off, name) in enumerate(members):
-            end = members[i + 1][0] if i + 1 < len(members) else sec["size"]
+        for off, name in members:
+            later = bounds[bisect.bisect_right(bounds, off):]
+            end = later[0] if later else sec["size"]
             if end > off:
                 out.setdefault(name, (end - off, payload[off:end] if payload else None))
     return out
