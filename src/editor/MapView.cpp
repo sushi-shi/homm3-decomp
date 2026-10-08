@@ -40,8 +40,26 @@
 
 // The GTK status bar behind TMapView::TStatusUI: "<object> / <player> /
 // <width>x<height> with[out] underground". Only inline members (linkonce
-// bodies owned by this object); the member names are not proven.
+// bodies owned by this object); the member names are not proven. The
+// private updateStatus comes first: MapView.o writes it before the
+// destructor, in the pass after the constructor.
 class TStatusUIImpl : public CWnd, public TMapView::TStatusUI {
+    void updateStatus()
+    {
+        const char* objectName = _m_objectName;
+        const char* playerName = _m_playerName;
+        if (_m_objectName == NULL || *_m_objectName == '\0')
+            objectName = "No object selected";
+        if (_m_playerName == NULL || *_m_playerName == '\0')
+            playerName = "No player selected";
+        char status[strlen(objectName) + strlen(playerName)
+                    + strlen("%s / %s / %ux%u with%s underground") + 35];
+        sprintf(status, "%s / %s / %ux%u with%s underground", objectName, playerName,
+                _m_mapWidth, _m_mapHeight, _m_bTwoLayer ? "" : "out");
+        gtk_statusbar_pop(GTK_STATUSBAR(_m_hWnd), _m_contextID);
+        gtk_statusbar_push(GTK_STATUSBAR(_m_hWnd), _m_contextID, status);
+    }
+
 public:
     TStatusUIImpl(GtkWidget* statusBar);
     virtual ~TStatusUIImpl()
@@ -87,22 +105,6 @@ public:
     }
 
 private:
-    void updateStatus()
-    {
-        const char* objectName = _m_objectName;
-        const char* playerName = _m_playerName;
-        if (_m_objectName == NULL || *_m_objectName == '\0')
-            objectName = "No object selected";
-        if (_m_playerName == NULL || *_m_playerName == '\0')
-            playerName = "No player selected";
-        char status[strlen(objectName) + strlen(playerName)
-                    + strlen("%s / %s / %ux%u with%s underground") + 35];
-        sprintf(status, "%s / %s / %ux%u with%s underground", objectName, playerName,
-                _m_mapWidth, _m_mapHeight, _m_bTwoLayer ? "" : "out");
-        gtk_statusbar_pop(GTK_STATUSBAR(_m_hWnd), _m_contextID);
-        gtk_statusbar_push(GTK_STATUSBAR(_m_hWnd), _m_contextID, status);
-    }
-
     guint _m_contextID;
     char* _m_objectName;
     char* _m_playerName;
