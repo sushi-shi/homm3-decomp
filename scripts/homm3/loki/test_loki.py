@@ -181,6 +181,13 @@ class CompiledBaseTest(unittest.TestCase):
         self.assertTrue(order.identical)
         self.assertFalse(any(line.startswith(("-", "+")) for line in emitorder.render(order)))
 
+    def test_anonymous_namespace_suffixes_compare_like_symbols(self):
+        ours = bytearray(b"Q229_GLOBAL_.N.SeersHut.cppjSyidb13TRewardCloner\0" b"_GLOBAL_.N.Hero.cppABCDEF\0")
+        image = b"Q229_GLOBAL_.N.SeersHut.cppPBS6wb13TRewardCloner\0" b"_GLOBAL_.N.Town.cppABCDEF\0"
+        datacmp.anonymous_suffixes_agree(ours, image)
+        self.assertEqual(bytes(ours[:50]), image[:50])
+        self.assertNotEqual(bytes(ours[50:]), image[50:])     # another namespace stays different
+
     def test_rodata_string_sequences_pick_source_files_and_type_names(self):
         raw = (b"Q28TGameMap7TClient\0GzBuf.cpp\0bad_alloc\0" b"9TBitmap16\0"
                b"t6vector2ZiZt9allocator1Zi\0%d of %d\0" b"12\0x\0Map View.h\0")

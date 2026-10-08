@@ -159,6 +159,9 @@ link order too.
   for the section's base. Kept linkonce data is compared in the first
   project object that defines it; a COMMON symbol must exist with the same
   size. Jump tables count with their functions and are left out.
+- The type name of a class in an anonymous namespace spells the
+  namespace's six random characters; where both sides spell the same
+  `_GLOBAL_.N.<file>` at the same place, they compare as the symbols do.
 
 Each unit reports matching data bytes over the image's bytes, and `-v`
 lists the differing symbols and anonymous gaps (`.rodata+0x40`). `--bank`

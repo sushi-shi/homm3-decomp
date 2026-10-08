@@ -51,6 +51,21 @@ LINKONCE = {".gnu.linkonce.d.": ".data", ".gnu.linkonce.r.": ".rodata"}
 _ANONYMOUS = re.compile(r"(_GLOBAL_\.N\.[\w.+-]*?\.(?:cpp|cc|c))[A-Za-z0-9]{6}")
 
 
+_ANONYMOUS_BYTES = re.compile(rb"_GLOBAL_\.N\.[\w.+-]*?\.(?:cpp|cc|c)([A-Za-z0-9]{6})")
+
+
+def anonymous_suffixes_agree(expected: bytearray, actual: bytes) -> None:
+    """Take the image's six random characters wherever the compiled bytes
+    spell an anonymous namespace (a type_info name of a class inside one)
+    and the image spells the same namespace at the same place: the
+    characters are drawn per compile, as `symbol_key` drops them."""
+    for found in _ANONYMOUS_BYTES.finditer(bytes(expected)):
+        start, end = found.start(), found.end()
+        tail = actual[found.start(1):end]
+        if actual[start:found.start(1)] == expected[start:found.start(1)] and len(tail) == 6 and tail.isalnum():
+            expected[found.start(1):end] = tail
+
+
 def symbol_key(name: str) -> str:
     """A symbol's name without the six random characters g++ 2.95 appends
     to an anonymous namespace (`_GLOBAL_.N.<file><random>`). The compiled
@@ -385,6 +400,7 @@ def compare(compiled: Compiled, layout: Layout) -> UnitData:
                     continue
                 struct.pack_into("<I", expected, rel.offset, (target + addend) & 0xffffffff)
             actual = index.read(base, size)
+            anonymous_suffixes_agree(expected, actual)
             bad = _bss_mismatches(compiled, header, layout, base) if header.type == SHT_NOBITS else set()
             for item in items:
                 if any(item.offset <= place < item.offset + item.size for place in bad):
