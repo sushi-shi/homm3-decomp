@@ -44,13 +44,15 @@ private:
 template<class T1, class T2>
 inline const TPoint<T1> operator+(const TPoint<T1>& lhs, const TPoint<T2>& rhs)
 {
-    return TPoint<T1>(lhs) += rhs;
+    TPoint<T1> result = lhs;
+    return result += rhs;
 }
 
 template<class T1, class T2>
 inline const TPoint<T1> operator-(const TPoint<T1>& lhs, const TPoint<T2>& rhs)
 {
-    return TPoint<T1>(lhs) -= rhs;
+    TPoint<T1> result = lhs;
+    return result -= rhs;
 }
 
 template<class TCoord, class TDim>
@@ -77,6 +79,45 @@ private:
     TPoint<TCoord> _m_topLeft;
     TPoint<TDim> _m_size;
 };
+
+// Out of the class: not inline, so g++ keeps `other` in its stack slot.
+template<class TCoord, class TDim>
+TExtent<TCoord, TDim>& TExtent<TCoord, TDim>::operator&=(const TExtent& other)
+{
+    TPoint<TCoord> br = bottomRight();
+    left(left() > other.left() ? left() : other.left());
+    top(top() > other.top() ? top() : other.top());
+    br.x(br.x() < other.right() ? br.x() : other.right());
+    br.y(br.y() < other.bottom() ? br.y() : other.bottom());
+    _m_size = br - _m_topLeft;
+    return *this;
+}
+
+template<class TCoord, class TDim>
+TExtent<TCoord, TDim>& TExtent<TCoord, TDim>::operator|=(const TExtent& other)
+{
+    TPoint<TCoord> br = bottomRight();
+    left(left() < other.left() ? left() : other.left());
+    top(top() < other.top() ? top() : other.top());
+    br.x(br.x() > other.right() ? br.x() : other.right());
+    br.y(br.y() > other.bottom() ? br.y() : other.bottom());
+    _m_size = br - _m_topLeft;
+    return *this;
+}
+
+template<class TCoord1, class TDim1, class TCoord2, class TDim2>
+inline const TExtent<TCoord1, TDim1> operator&(const TExtent<TCoord1, TDim1>& lhs, const TExtent<TCoord2, TDim2>& rhs)
+{
+    TExtent<TCoord1, TDim1> result = lhs;
+    return result &= rhs;
+}
+
+template<class TCoord1, class TDim1, class TCoord2, class TDim2>
+inline const TExtent<TCoord1, TDim1> operator|(const TExtent<TCoord1, TDim1>& lhs, const TExtent<TCoord2, TDim2>& rhs)
+{
+    TExtent<TCoord1, TDim1> result = lhs;
+    return result |= rhs;
+}
 
 template<class TCoord1, class TDim1, class TCoord2, class TDim2>
 inline bool intersect(const TExtent<TCoord1, TDim1>& lhs, const TExtent<TCoord2, TDim2>& rhs)
