@@ -328,6 +328,27 @@ Applied:
   is inferred from rule 6: every includer queues `allocator<char>()`, the
   `__default_alloc_template::allocate` chain, `~basic_string` and
   `~allocator` right after TRuntimeError's implicit members.
+- Rule 6 again: GameMap's `_TImpl::_TProperties` declares an uncalled
+  `operator=` after its destructor, whose member assignments instantiate
+  `vector<TRumor>` and `vector<TTimedEvent>`'s `operator=` (pass 0) right
+  after the copy constructor's vector copies.
+- The first use of a non-inline template member fixes its pass-0 place:
+  `string::assign(const char*, const char*)` comes from Town.h's timed event
+  assignment, so the four objects that parse both Town.h and BlackBox.h
+  (GameMap, MapView, MapValidation, GUIGameObject) include Town.h first.
+- The editor's bitmap formats are explicit specializations
+  (`T8bppBitmapBase<unsigned char>`, `T16bppBitmapBase<unsigned char>`):
+  completed where T16bppBitmap.h defines them, with the 16-bit accessors
+  queued right there (cppbridge.o's pixel-format masks precede CPoint).
+- Inline members defined after their class are queued after its bodies:
+  `TGameMap::getLayer`, `TCell::TCell()`, `_TImpl`'s condition visitors
+  (defined as `class TGameMap::_TImpl::_TVictoryConditionWriter`) and
+  `_TImpl::isValidPlacement` (defined between getNumObelisksOnMap and save).
+- `.gcc_except_table` records where each `try` region starts, so a
+  statement before or inside a `try` shows even though the code is the
+  same: MapView's OnInitialUpdate creates the frame window before its `try`,
+  onEditPlaceObject backs up the map before it, and the find commands
+  assert the find type before it.
 
 ## Link
 
