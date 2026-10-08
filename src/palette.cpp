@@ -375,9 +375,9 @@ void TPalette16::AdjustHue(float hue, float amount)
         float h;
         float s;
         float v;
-        rgbToHSV(r, g, b, &h, &s, &v);
+        RGBToHSV(r, g, b, &h, &s, &v);
         adjustPaletteHue(h, hue, amount);
-        hsvToRGB(h, s, v, &r, &g, &b);
+        HSVToRGB(h, s, v, &r, &g, &b);
         Palette[i] = static_cast<unsigned short>(
             ((r / redNorm) & red_mask) |
             ((g / greenNorm) & green_mask) |
@@ -405,7 +405,7 @@ void TPalette16::AdjustSaturation(float amount)
         float h;
         float s;
         float v;
-        rgbToHSV(r, g, b, &h, &s, &v);
+        RGBToHSV(r, g, b, &h, &s, &v);
 
         if (amount <= 1.0f) {
             s *= amount;
@@ -413,7 +413,7 @@ void TPalette16::AdjustSaturation(float amount)
             s = 1.0f - (1.0f - s) / amount;
         }
 
-        hsvToRGB(h, s, v, &r, &g, &b);
+        HSVToRGB(h, s, v, &r, &g, &b);
 
         Palette[i] = static_cast<unsigned short>(
             ((r / redNorm) & red_mask) |
@@ -461,9 +461,9 @@ void TPalette16::AdjustValue(float amount)
         float h;
         float s;
         float v;
-        rgbToHSV(r, g, b, &h, &s, &v);
+        RGBToHSV(r, g, b, &h, &s, &v);
         adjustPaletteComponent(v, amount);
-        hsvToRGB(h, s, v, &r, &g, &b);
+        HSVToRGB(h, s, v, &r, &g, &b);
         Palette[i] = static_cast<unsigned short>(
             ((r / redNorm) & red_mask) |
             ((g / greenNorm) & green_mask) |
@@ -492,7 +492,7 @@ void TPalette16::AdjustHSV(float hue, float hueAdjust,
         float h;
         float s;
         float v;
-        rgbToHSV(r, g, b, &h, &s, &v);
+        RGBToHSV(r, g, b, &h, &s, &v);
 
         if (hueAdjust >= 0.0f) {
             float delta = hue - h;
@@ -525,7 +525,7 @@ void TPalette16::AdjustHSV(float hue, float hueAdjust,
             }
         }
 
-        hsvToRGB(h, s, v, &r, &g, &b);
+        HSVToRGB(h, s, v, &r, &g, &b);
 
         Palette[i] = static_cast<unsigned short>(
             ((r / redNorm) & red_mask) |
@@ -727,7 +727,7 @@ void TPalette24::AdjustHSV(float hue, float hueAdjust,
         float h;
         float s;
         float v;
-        rgbToHSV(r, g, b, &h, &s, &v);
+        RGBToHSV(r, g, b, &h, &s, &v);
 
         if (hueAdjust >= 0.0f) {
             float delta = hue - h;
@@ -762,7 +762,7 @@ void TPalette24::AdjustHSV(float hue, float hueAdjust,
             }
         }
 
-        hsvToRGB(h, s, v, &r, &g, &b);
+        HSVToRGB(h, s, v, &r, &g, &b);
 
         Palette[3 * i + 0] = static_cast<unsigned char>(r / redNorm);
         Palette[3 * i + 1] = static_cast<unsigned char>(g / greenNorm);
@@ -774,7 +774,7 @@ void TPalette24::AdjustHSV(float hue, float hueAdjust,
 VA(0x00523190, 0x160)
 DC_ADDRESS(0x10c370, 0x1f2)
 MAC_ADDRESS(0x13c794, 0x1c8)
-void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
+void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
               float* h, float* s, float* v)
 {
     static const float redHue = 0.0f;
@@ -817,7 +817,7 @@ void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
 VA(0x005232f0, 0x2EC)
 DC_ADDRESS(0x10c564, 0x34c)
 MAC_ADDRESS(0x13c95c, 0x248)
-void hsvToRGB(float h, float s, float v,
+void HSVToRGB(float h, float s, float v,
               unsigned int* r, unsigned int* g, unsigned int* b)
 {
     if (s != 0.0f) {
@@ -933,14 +933,14 @@ void TPalette24::adjustHSV(float hue, float hue_adjust, float saturation_adjust,
 
 // E:\gamedcs\palette.cpp:827
 // Retail body reconstructed above at 0x00523190; dc 0x10c370.
-void rgbToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
+void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:862
 // Retail body reconstructed above at 0x005232f0; dc 0x10c564.
-void hsvToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
+void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
 {
     // @stub
 }

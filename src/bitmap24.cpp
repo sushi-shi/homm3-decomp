@@ -30,9 +30,9 @@ static long ftol(double d)
     return *static_cast<long*>(static_cast<void*>(&d));
 }
 
-static void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
+static void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
                      float* h, float* s, float* v);
-static void hsvToRGB(float h, float s, float v,
+static void HSVToRGB(float h, float s, float v,
                      unsigned int* r, unsigned int* g, unsigned int* b);
 
 VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
@@ -247,7 +247,7 @@ void Bitmap24Bit::AdjustHSV(int x, int y, int w, int h, float hue,
             float h;
             float s;
             float v;
-            rgbToHSV(r, g, b, &h, &s, &v);
+            RGBToHSV(r, g, b, &h, &s, &v);
 
             if (hueAdjust >= 0.0f) {
                 float delta = hue - h;
@@ -281,7 +281,7 @@ void Bitmap24Bit::AdjustHSV(int x, int y, int w, int h, float hue,
                 }
             }
 
-            hsvToRGB(h, s, v, &r, &g, &b);
+            HSVToRGB(h, s, v, &r, &g, &b);
 
             pixel[2] = static_cast<unsigned char>(r / redNorm);
             pixel[1] = static_cast<unsigned char>(g / greenNorm);
@@ -296,7 +296,7 @@ void Bitmap24Bit::AdjustHSV(int x, int y, int w, int h, float hue,
 // Original: RGBToHSV; bitmap24.cpp:446
 DC_ADDRESS(0x052ecc, 0x1b6)
 MAC_ADDRESS(0x05d520, 0x1c8)
-static void rgbToHSV(unsigned int r, unsigned int g,
+static void RGBToHSV(unsigned int r, unsigned int g,
                             unsigned int b, float* h, float* s, float* v)
 {
     static const float redHue = 0.0f;
@@ -336,7 +336,7 @@ static void rgbToHSV(unsigned int r, unsigned int g,
 // Original: HSVToRGB; bitmap24.cpp:481
 DC_ADDRESS(0x053084, 0x32c)
 MAC_ADDRESS(0x05d6e8, 0x248)
-static void hsvToRGB(float h, float s, float v,
+static void HSVToRGB(float h, float s, float v,
                             unsigned int* r, unsigned int* g, unsigned int* b)
 {
     if (s != 0.0f) {
