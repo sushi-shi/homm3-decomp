@@ -120,8 +120,11 @@ def _image_main(fast: bool, ninja_args: list[str]) -> int:
     else:
         from homm3.census import placements
         if placements.main(["--check"]):
+            # the delink below reads the committed table: after `--write`,
+            # build the image again so its labels carry the new names
             failures.append("placements (`homm3 --image "
-                            f"{key} placements --write` after a shared-source change)")
+                            f"{key} placements --write` after a shared-source change, "
+                            f"then `homm3 --image {key} build` again)")
         from homm3.build import delink
         delink.run()
     report = status.refresh_report(context)
