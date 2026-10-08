@@ -25,6 +25,15 @@
 #include "editor/GUIGameObject.h"
 #include "editor/Tile.h"
 
+// A brush drag repaints two tiles around the pointer; a pressed object is
+// grabbed when the pointer leaves the 100-pixel square around the press or
+// when the grab timer fires; the auto-scroll timer ticks every 50 ms.
+const int kBrushRepaintMargin = 2;
+const int kGrabDragSize = 100;
+const int kGrabTimer = 4;
+const int kAutoScrollTimer = 5;
+const int kAutoScrollPeriod = 50;
+
 namespace {
 
 TMapEditWnd* mapwindow = NULL;
@@ -673,7 +682,7 @@ void TMapEditWnd::_turnAutoScrollOn()
 {
 #line 1173
     assert(!_m_bAutoScrollOn);
-    if (SetTimer(5, 50, NULL)) {
+    if (SetTimer(kAutoScrollTimer, kAutoScrollPeriod, NULL)) {
         GetCursorPos(&_m_autoScrollPoint);
         ScreenToClient(&_m_autoScrollPoint);
         _m_autoScrollTime = getCurrentTime();
@@ -687,7 +696,7 @@ void TMapEditWnd::_turnAutoScrollOff()
 {
 #line 1192
     assert(_m_bAutoScrollOn);
-    gtk_timeout_remove(_m_timers[5]);
+    gtk_timeout_remove(_m_timers[kAutoScrollTimer]);
     _m_bAutoScrollOn = false;
 }
 
@@ -1614,18 +1623,18 @@ void TMapEditWnd::OnMouseMove(unsigned int flags, CPoint point)
             }
         } else if (_m_potentialGrabID != TGameMap::TLayer::s_kInvalidObjID) {
             bool bGrab = false;
-            int dragWidth = 100;
+            int dragWidth = kGrabDragSize;
             int left = _m_potentialGrabPoint.x - dragWidth / 2;
             if (point.x < left || point.x >= left + dragWidth)
                 bGrab = true;
             else {
-                int dragHeight = 100;
+                int dragHeight = kGrabDragSize;
                 int top = _m_potentialGrabPoint.y - dragHeight / 2;
                 if (point.y < top || point.y >= top + dragHeight)
                     bGrab = true;
             }
             if (bGrab)
-                OnTimer(4);
+                OnTimer(kGrabTimer);
         }
         break;
     case _eModeBrush: {
@@ -1637,7 +1646,7 @@ void TMapEditWnd::OnMouseMove(unsigned int flags, CPoint point)
                 assert(GetCapture() == this);
                 assert(_m_pController != NULL);
                 _m_pController->onEditBrushDrag(this, CRect(_m_brushPos, _m_brushSize));
-                int margin = tileSize * 2;
+                int margin = tileSize * kBrushRepaintMargin;
                 CRect dirtyRect(point.x - margin, point.y - margin, point.x + margin, point.y + margin);
                 OnPaint(dirtyRect);
             }
@@ -1678,7 +1687,7 @@ void TMapEditWnd::OnLButtonDown(unsigned int flags, CPoint point)
             _m_potentialGrabID = objID;
             _m_bPotentialCopy = (flags & 4) != 0;
             _m_potentialGrabPoint = point;
-            if (SetTimer(4, delay, NULL))
+            if (SetTimer(kGrabTimer, delay, NULL))
                 SetCapture();
         }
         break;
@@ -1765,11 +1774,11 @@ void TMapEditWnd::OnMButtonDown(unsigned int flags, CPoint point)
 gint TMapEditWnd::OnTimer(unsigned int id)
 {
     switch (id) {
-    case 4: {
+    case kGrabTimer: {
         TMapLayerObjectID grabID = _m_potentialGrabID;
         bool bCopy = _m_bPotentialCopy;
         if (GetCapture() != this) {
-            gtk_timeout_remove(_m_timers[4]);
+            gtk_timeout_remove(_m_timers[kGrabTimer]);
             return 1;
         }
         ReleaseCapture();
@@ -1783,7 +1792,7 @@ gint TMapEditWnd::OnTimer(unsigned int id)
             _m_pController->onEditGrabObject(this, grabID);
         break;
     }
-    case 5:
+    case kAutoScrollTimer:
         if (_m_bAutoScrollOn) {
             if (!button1Down()) {
                 CPoint point;
@@ -1957,7 +1966,7 @@ void TMapEditWnd::OnCaptureChanged(GtkWidget* pWidget)
                 OnPaint(floatingObjRect);
             _setCursor(khArrowCursor);
         } else if (_m_potentialGrabID != TGameMap::TLayer::s_kInvalidObjID) {
-            gtk_timeout_remove(_m_timers[4]);
+            gtk_timeout_remove(_m_timers[kGrabTimer]);
             _m_potentialGrabID = TGameMap::TLayer::s_kInvalidObjID;
         }
         break;
