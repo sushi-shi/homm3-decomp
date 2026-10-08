@@ -2400,6 +2400,107 @@ void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TLCTimeExpires& lc) c
     *pOStream << static_cast<signed char>(eLCTimeExpires) << static_cast<short>(lc.getNumDays());
 }
 
+TVictoryCondition* TGameMap::_TImpl::_reconstructVictoryCondition(const TVictoryConditionData& vcData) const
+{
+    if (vcData.m_type == eVCNone)
+        return NULL;
+    TVictoryCondition* result;
+    switch (vcData.m_type) {
+    case eVCAquireArtifact:
+        result = new TVCAquireArtifact(vcData.m_bAppliesToComputer != 0, TArtifact(vcData.m_aquireArtifact.m_artifact));
+        break;
+    case eVCAccumulateCreature:
+        result = new TVCAccumulateCreature(vcData.m_bAllowNormalVictory != 0, vcData.m_bAppliesToComputer != 0,
+                                           TCreatureType(vcData.m_accumulateCreature.m_creatureType),
+                                           vcData.m_accumulateCreature.m_quantity);
+        break;
+    case eVCAccumulateResource:
+        result = new TVCAccumulateResource(vcData.m_bAllowNormalVictory != 0, vcData.m_bAppliesToComputer != 0,
+                                           TGameResourceType(vcData.m_accumulateResource.m_resourceType),
+                                           vcData.m_accumulateResource.m_quantity);
+        break;
+    case eVCUpgradeTown: {
+        const TMapLoc& townLoc = vcData.m_upgradeTown.m_townLoc;
+        TMapLayerObjectID townID = _findObject(townLoc.m_layer != 0, TTilePoint(townLoc.m_x, townLoc.m_y), isTown);
+#line 4762
+        assert(townID != TLayer::s_kInvalidObjID);
+        result = new TVCUpgradeTown(vcData.m_bAllowNormalVictory != 0, TMapObjectRef(townLoc.m_layer != 0, townID),
+                                    TVCUpgradeTown::THallLevel(vcData.m_upgradeTown.m_hallLevel),
+                                    TVCUpgradeTown::TCastleLevel(vcData.m_upgradeTown.m_castleLevel));
+        break;
+    }
+    case eVCBuildHolyGrailStruct: {
+        TMapObjectRef townRef;
+        const TMapLoc& townLoc = vcData.m_buildHolyGrailStruct.m_townLoc;
+        if (townLoc.m_layer != numeric_limits<ubyte>::max()) {
+            TMapLayerObjectID townID =
+                _findObject(townLoc.m_layer != 0, TTilePoint(townLoc.m_x, townLoc.m_y), isTown);
+#line 4778
+            assert(townID != TLayer::s_kInvalidObjID);
+            townRef = TMapObjectRef(townLoc.m_layer != 0, townID);
+        } else {
+#line 4783
+            assert(townLoc.m_x == std::numeric_limits< ubyte >::max());
+            assert(townLoc.m_y == std::numeric_limits< ubyte >::max());
+        }
+        result = new TVCBuildHolyGrailStruct(townRef);
+        break;
+    }
+    case eVCDefeatHero: {
+        const TMapLoc& heroLoc = vcData.m_defeatHero.m_heroLoc;
+        TMapLayerObjectID heroID =
+            _findObject(heroLoc.m_layer != 0, TTilePoint(heroLoc.m_x, heroLoc.m_y), isHeroOrTown);
+#line 4794
+        assert(heroID != TLayer::s_kInvalidObjID);
+        result = new TVCDefeatHero(TMapObjectRef(heroLoc.m_layer != 0, heroID));
+        break;
+    }
+    case eVCCaptureTown: {
+        const TMapLoc& townLoc = vcData.m_captureTown.m_townLoc;
+        TMapLayerObjectID townID = _findObject(townLoc.m_layer != 0, TTilePoint(townLoc.m_x, townLoc.m_y), isTown);
+#line 4803
+        assert(townID != TLayer::s_kInvalidObjID);
+        result = new TVCCaptureTown(vcData.m_bAllowNormalVictory != 0, vcData.m_bAppliesToComputer != 0,
+                                    TMapObjectRef(townLoc.m_layer != 0, townID));
+        break;
+    }
+    case eVCDefeatMonster: {
+        const TMapLoc& monsterLoc = vcData.m_defeatMonster.m_monsterLoc;
+        TMapLayerObjectID monsterID =
+            _findObject(monsterLoc.m_layer != 0, TTilePoint(monsterLoc.m_x, monsterLoc.m_y), isMonster);
+#line 4815
+        assert(monsterID != TLayer::s_kInvalidObjID);
+        result = new TVCDefeatMonster(vcData.m_bAllowNormalVictory != 0, TMapObjectRef(monsterLoc.m_layer != 0, monsterID));
+        break;
+    }
+    case eVCFlagAllCreatureGenerators:
+        result = new TVCFlagAllCreatureGenerators(vcData.m_bAllowNormalVictory != 0, vcData.m_bAppliesToComputer != 0);
+        break;
+    case eVCFlagAllMines:
+        result = new TVCFlagAllMines(vcData.m_bAllowNormalVictory != 0, vcData.m_bAppliesToComputer != 0);
+        break;
+    case eVCTransportArtifact: {
+        const TMapLoc& townLoc = vcData.m_transportArtifact.m_townLoc;
+        TMapLayerObjectID townID = _findObject(townLoc.m_layer != 0, TTilePoint(townLoc.m_x, townLoc.m_y), isTown);
+#line 4834
+        assert(townID != TLayer::s_kInvalidObjID);
+        result = new TVCTransportArtifact(vcData.m_bAppliesToComputer != 0,
+                                          TArtifact(vcData.m_transportArtifact.m_artifact),
+                                          TMapObjectRef(townLoc.m_layer != 0, townID));
+        break;
+    }
+    default:
+#line 4843
+        assert(false);
+    }
+    if (result == NULL)
+#line 4847
+        throw TAllocationFailure(__FILE__, __LINE__);
+#line 4849
+    assert(_isValid( *result ));
+    return result;
+}
+
 TLossCondition* TGameMap::_TImpl::_reconstructLossCondition(const TLossConditionData& lcData) const
 {
     if (lcData.m_type == eLCNone)
