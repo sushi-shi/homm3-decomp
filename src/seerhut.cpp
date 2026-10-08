@@ -234,6 +234,11 @@ void type_quest::load(TAbstractFile* file, int version)
 // units spent before it), the second at or above 152, and the final assign
 // below 307. Three extra root sites costing 79..196 each, one per reader
 // call, satisfy all four; no candidate source for them is known.
+// Replay (2026-10-08): two free (<= 40) root candidates after the third
+// operator= give exactly retail's split, as does one inside the third
+// statement plus one anywhere after the first destructor. One alone, or any
+// placed before the first destructor, does not. The body is below the
+// 1000-unit floor, so caller cost (braces, locals) cannot substitute.
 VA(0x0056ce50, 0x11E)
 MAC_ADDRESS(0x1642ac, 0xe0)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)

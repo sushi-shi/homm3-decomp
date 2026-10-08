@@ -4216,6 +4216,11 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // shape but drops to 74.82%. By the traced budgets retail needs four depth-1
 // candidates from the second applyHeaderToGame on, which that single index
 // makes two short; the missing ones are not yet identified.
+// Replay (2026-10-08): one more free depth-1 candidate anywhere after the
+// second applyHeaderToGame reproduces both remaining retail decisions (the
+// random arm's second assign and the selected arm's _Eos refused); a
+// candidate before it, or two after it, does not. Caller cb is below the
+// 1000-unit floor here, so braces cannot stand in for it.
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Mac retains this shared transfer at code 0:0x17b0b0. VC6 expands it in
