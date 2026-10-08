@@ -284,3 +284,8 @@ source = "src/editor/TileVRuler.cpp"
 name = "EditRumorDlg"
 object = 76
 source = "src/editor/EditRumorDlg.cpp"
+
+[[unit]]
+name = "cppbridge"
+object = 51
+source = "src/editor/cppbridge.cpp"
