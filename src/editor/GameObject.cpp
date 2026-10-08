@@ -1,8 +1,6 @@
 // GameObject.cpp - Loki h3maped object 13: TGameObject's reference-counted
 // interning of object types, its type name and, with its vtable, the
 // inline members of GameObject.h.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 
 #include "objnames.h"

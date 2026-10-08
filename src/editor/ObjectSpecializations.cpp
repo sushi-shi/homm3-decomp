@@ -4,8 +4,6 @@
 // grail, shrine) and the creature bank, monolith, mine, generator and
 // garrison name tables, filled from the game's text resources at start-up.
 // Assert and throw lines come from the retail immediates.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <string.h>
 #include <algorithm>

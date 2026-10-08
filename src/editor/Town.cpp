@@ -3,8 +3,6 @@
 // building and dwelling spreadsheets), the town's generator bonuses and
 // timed events, and the town on the map. Assert and throw lines come from
 // the retail immediates.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>

@@ -1,8 +1,6 @@
 // Monster.cpp - Loki h3maped object 19: a wandering monster, its size,
 // disposition and flags, and the message, resources and artifact it may
 // guard. Assert lines come from the retail immediates.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <algorithm>
 #include <iostream.h>

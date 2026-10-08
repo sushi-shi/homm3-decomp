@@ -3,10 +3,9 @@
 // copy-constructs the visited kind into storage from the caller's
 // allocator; equivalence dispatches on the left kind, then on the right,
 // and compares two conditions of the same kind with their operator==.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <new>
+#include <stdexcept>
 
 #include "editor/VictoryCondition.h"
 

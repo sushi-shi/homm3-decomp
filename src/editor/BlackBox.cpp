@@ -1,8 +1,6 @@
 // BlackBox.cpp - Loki h3maped object 7: Pandora's box, its copy-on-write
 // contents, and the primary skill bonuses and secondary skill records the
 // box and the heroes share. Assert lines come from the retail immediates.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <algorithm>
 #include <vector>

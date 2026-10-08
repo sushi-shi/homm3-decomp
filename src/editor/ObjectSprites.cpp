@@ -3,8 +3,6 @@
 // Sprites load on first lock and stay loaded; unlocking only checks the
 // table. The tables are released by a function-local TInitializer that
 // initializeObjectSprites registers for exit.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <new>
 #include <string>

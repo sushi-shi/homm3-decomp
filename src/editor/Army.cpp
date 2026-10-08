@@ -1,8 +1,6 @@
 // Army.cpp - Loki h3maped object 4: the creature stack's validated setters
 // and the binary form of a stack (type as a signed char, quantity as a
 // short) and of an army (its seven stacks in order).
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <function.h>
 

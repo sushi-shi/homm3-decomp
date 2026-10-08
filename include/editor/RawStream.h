@@ -10,6 +10,8 @@
 #ifndef HOMM3_EDITOR_RAWSTREAM_H
 #define HOMM3_EDITOR_RAWSTREAM_H
 
+#include "editor/stdafx.h"
+
 #include <bitset>
 #include <string>
 #include <string.h>

@@ -3,8 +3,6 @@
 // the random hero), the class, primary skill, secondary skill and mastery
 // name tables, and the heroes on the map: specific heroes, random heroes
 // and prisons. Assert and throw lines come from the retail immediates.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>

@@ -4,8 +4,6 @@
 // teams, the object bookkeeping and the binary and text forms.
 //
 // Reconstruction in progress: the layer handle and the cell come first.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include <ctype.h>

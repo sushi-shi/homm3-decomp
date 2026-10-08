@@ -13,6 +13,8 @@
 #ifndef HOMM3_EDITOR_VICTORYCONDITION_H
 #define HOMM3_EDITOR_VICTORYCONDITION_H
 
+#include "artifact.h"
+#include "creaturetype.h"
 #include "armygrp.h"
 #include "artifact_type.h"
 #include "editor/GameResource.h"

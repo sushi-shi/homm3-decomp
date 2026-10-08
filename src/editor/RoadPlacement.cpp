@@ -5,8 +5,6 @@
 // over it and report the changed rectangle to their client. Assert and
 // throw lines come from the retail immediates; the tileset's name is not
 // proven.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 
 #include "exceptions.h"

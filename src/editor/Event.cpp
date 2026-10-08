@@ -1,8 +1,6 @@
 // Event.cpp - Loki h3maped object 11: the map event, a Pandora's box that
 // fires for the players it allows and may cancel itself after a visit.
 // Assert lines come from the retail immediates.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <bitset>
 #include <string>

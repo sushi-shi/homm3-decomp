@@ -9,8 +9,6 @@
 // come from the retail immediates. The traits' flags, the tables, the
 // ground shapes other than eGS_full and the transition types are named
 // from their users; their names are not proven.
-#include "editor/stdafx.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include <limits>

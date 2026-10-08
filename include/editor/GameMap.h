@@ -25,6 +25,7 @@
 
 #include "artifact.h"
 #include "herodefs.h"
+#include "terrain.h"
 #include "terrain_type.h"
 #include "exceptions.h"
 #include "editor/Array.h"
