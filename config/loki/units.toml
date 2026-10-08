@@ -434,3 +434,8 @@ source = "src/editor/MapSpecsSheet.cpp"
 name = "HeroPropsArtifactsPage"
 object = 86
 source = "src/editor/HeroPropsArtifactsPage.cpp"
+
+[[unit]]
+name = "HeroPropsSheet"
+object = 83
+source = "src/editor/HeroPropsSheet.cpp"
