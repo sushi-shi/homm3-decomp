@@ -481,6 +481,11 @@ object = 15
 source = "src/editor/Hero.cpp"
 
 [[unit]]
+name = "MapFrameWnd"
+object = 54
+source = "src/editor/MapFrameWnd.cpp"
+
+[[unit]]
 name = "GUIGameObject"
 object = 2
 source = "src/editor/GUIGameObject.cpp"
