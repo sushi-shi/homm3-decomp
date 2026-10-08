@@ -88,6 +88,19 @@ class CompiledBaseTest(unittest.TestCase):
         self.assertIn("helper__Fi", targets)              # GAS resolved it; canonical form relocates it
         self.assertTrue(any(t.startswith('$s"hello"#') for t in targets))
 
+    def test_one_past_the_end_names_the_next_object(self):
+        source = ('extern const int a[4];\nextern const int b;\n'
+                  'const int a[4] = { 1, 2, 3, 4 };\nconst int b = 5;\n'
+                  'const int* end() { return a + 4; }\n')
+        with tempfile.TemporaryDirectory() as directory:
+            src = Path(directory) / "t.cpp"
+            obj = Path(directory) / "t.o"
+            src.write_text(source)
+            subprocess.run(toolchain.driver_command("-c", "-O0", "-mcpu=pentiumpro", str(src), "-o", str(obj)),
+                           env=toolchain.environment(), check=True)
+            (text,) = [s for s in delink.base_sections(obj.read_bytes()) if s.name == ".text"]
+        self.assertEqual([(r.target, r.addend) for r in text.relocs], [("b", 0)])
+
 
 if __name__ == "__main__":
     unittest.main()

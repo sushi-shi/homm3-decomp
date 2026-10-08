@@ -245,6 +245,12 @@ def base_sections(data: bytes) -> list[CodeSection]:
                     addend += target.value
                     target = next(s for s in symbols if s.type == STT_SECTION and s.shndx == target.shndx)
                 if target.type != STT_SECTION:
+                    if (rel.type == R_386_32 and target.type == STT_OBJECT and 0 < target.shndx < 0xff00
+                            and not 0 <= addend < max(target.size, 1)
+                            and (owner := containing(target.shndx, target.value + addend)) is not None):
+                        # One past the end of an array is the next object's
+                        # address; the image can only name it that way.
+                        target, addend = owner, target.value + addend - owner.value
                     put(section, field.offset, rel.type, target.name, addend)
                     continue
                 place = addend + 4 if rel.type == R_386_PC32 else addend
