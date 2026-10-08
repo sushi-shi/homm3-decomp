@@ -81,11 +81,6 @@ private:
     TArtifactContainer _m_artifacts;
 };
 
-inline bool operator!=(const THeroPrototype::TArtifactContainer& lhs, const THeroPrototype::TArtifactContainer& rhs)
-{
-    return !(lhs == rhs);
-}
-
 // A set of hero classes, the random class included
 // ("TSelectHeroClassDlg::TSelectHeroClassDlg(GtkWidget *, const THeroClassMask &)").
 typedef bitset<kNumHeroClasses + 1> THeroClassMask;
@@ -263,6 +258,11 @@ private:
 inline bool operator==(const THeroPrototype::TArtifactContainer& lhs, const THeroPrototype::TArtifactContainer& rhs)
 {
     return lhs._m_aSlot == rhs._m_aSlot && lhs._m_backpack == rhs._m_backpack;
+}
+
+inline bool operator!=(const THeroPrototype::TArtifactContainer& lhs, const THeroPrototype::TArtifactContainer& rhs)
+{
+    return !(lhs == rhs);
 }
 
 #endif  /* HOMM3_EDITOR_HERO_H */
