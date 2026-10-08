@@ -20,29 +20,6 @@
 #include "editor/Hero.h"
 
 class THeroPropsSecSkillsPage {
-public:
-    THeroPropsSecSkillsPage(const THero& hero);
-    ~THeroPropsSecSkillsPage();
-
-    void setIdentity(THeroClass newHeroClass, unsigned int newProtoNum);
-
-    virtual void OnOK();
-    virtual BOOL OnInitDialog();
-    void UpdateData(bool bSaveAndValidate);
-    void OnCustomizeCheck();
-    void OnSelChangeSkill1Combo();
-    void OnSelChangeSkill2Combo();
-    void OnSelChangeSkill3Combo();
-    void OnSelChangeSkill4Combo();
-    void OnSelChangeSkill5Combo();
-    void OnSelChangeSkill6Combo();
-    void OnSelChangeSkill7Combo();
-    void OnSelChangeSkill8Combo();
-
-    bool getBCustomSecondarySkills() const { return _m_bCustomSecondarySkills; }
-    const map<TSecondarySkill, TSkillMastery>& getSecondarySkills() const { return _m_secondarySkills; }
-    bool wasModified() const { return _m_bModified; }
-
 private:
     static const int _s_kNumSkillSlots = 8;
 
@@ -70,6 +47,30 @@ private:
         int skillItemData[30];
     };
 
+public:
+    THeroPropsSecSkillsPage(const THero& hero);
+    ~THeroPropsSecSkillsPage();
+
+    void setIdentity(THeroClass newHeroClass, unsigned int newProtoNum);
+
+    virtual void OnOK();
+    virtual BOOL OnInitDialog();
+    void UpdateData(bool bSaveAndValidate);
+    void OnCustomizeCheck();
+    void OnSelChangeSkill1Combo();
+    void OnSelChangeSkill2Combo();
+    void OnSelChangeSkill3Combo();
+    void OnSelChangeSkill4Combo();
+    void OnSelChangeSkill5Combo();
+    void OnSelChangeSkill6Combo();
+    void OnSelChangeSkill7Combo();
+    void OnSelChangeSkill8Combo();
+
+    bool getBCustomSecondarySkills() const { return _m_bCustomSecondarySkills; }
+    const map<TSecondarySkill, TSkillMastery>& getSecondarySkills() const { return _m_secondarySkills; }
+    bool wasModified() const { return _m_bModified; }
+
+private:
     static TSlotData _s_akSlotData[_s_kNumSkillSlots];
 
     void _setSlotControlData(const _TSkillArray& skills);
