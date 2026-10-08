@@ -70,6 +70,10 @@ def canonical_symbol(name: str) -> str:
         digits = found
         while digits > index and name[digits - 1].isdigit():
             digits -= 1
+        # `Q2` + `29_GLOBAL_...`: a single-digit qualifier count is not part
+        # of the component's length.
+        if digits > index and name[digits - 1] == "Q" and digits < found:
+            digits += 1
         if digits == found:
             out.append(name[index:found + 11])
             index = found + 11

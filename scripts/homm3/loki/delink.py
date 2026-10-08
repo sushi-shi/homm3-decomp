@@ -243,3 +243,4 @@ def pair_statics(base: list[CodeSection], target: list[CodeSection]) -> list[str
                 for reloc in section.relocs:
                     reloc.target = renamed.get(reloc.target, reloc.target)
     return unpaired
+

@@ -85,7 +85,11 @@ def objdiff_config(names: list[str], built: set[str]) -> None:
     config = {
         "$schema": "https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json",
         "build_base": False, "build_target": False,
-        "options": {"functionRelocDiffs": "all"},
+        # objdiff's report merges sections by name prefix unless told not
+        # to; merged .gnu.linkonce.t.* bodies pair same-sized strangers
+        # (`_._12length_error` took `_._Q213TGzInflateBuf10TDataError`).
+        "options": {"functionRelocDiffs": "all", "combineTextSections": False,
+                    "combineDataSections": False},
         "units": [{"name": name, "target_path": f"./target/{name}.o",
                    **({"base_path": f"./base/{name}.o"} if name in built else {})}
                   for name in names],
