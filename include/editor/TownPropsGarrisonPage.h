@@ -34,7 +34,12 @@ private:
     const TTown& _m_town;
     bool _m_bModified;
     bool _m_bCustomGarrison;
+
+public:
+    // cppbridge.cpp's glade handlers reach through it.
     TArmyDlg* _m_pArmyDlg;
+
+private:
     bool _m_bGroupedFormation;
 };
 

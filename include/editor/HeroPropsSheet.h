@@ -33,7 +33,8 @@ public:
     virtual void OnOK();
     virtual void OnCancel();
 
-protected:
+public:
+    // cppbridge.cpp's hero general page handlers call it.
     virtual THeroPropsGeneralPage* _getPGeneralPage() = 0;
     virtual const THeroPropsGeneralPage* _getPGeneralPage() const = 0;
 
@@ -51,7 +52,13 @@ private:
 
     volatile int _m_result;
     THero* _m_pHero;
+
+public:
+    // cppbridge.cpp's creatures page handlers read it directly (+0x10), where
+    // they call getPSecSkillsPage and getPArtifactsPage.
     THeroPropsCreaturesPage* _m_pCreaturesPage;
+
+private:
     THeroPropsSecSkillsPage* _m_pSecSkillsPage;
     THeroPropsArtifactsPage* _m_pArtifactsPage;
     unsigned int _m_disableOKCtr;

@@ -30,7 +30,12 @@ public:
 private:
     BOOL _m_bCustomizeCheck;
     const TTreasure& _m_treasure;
+
+public:
+    // cppbridge.cpp's glade handlers reach through it.
     TArmyDlg* _m_pArmyDlg;
+
+private:
     bool _m_bCustomGuardians;
     bool _m_bModified;
     GtkToggleButton* _m_customizeCheck;

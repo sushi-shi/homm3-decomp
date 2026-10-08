@@ -27,7 +27,12 @@ private:
 
     TGameArtifact* _m_pArtifact;
     TArtifactPropsGeneralPage* _m_pGeneralPage;
+
+public:
+    // cppbridge.cpp's glade handlers reach through it.
     TTreasurePropsGuardiansPage* _m_pGuardiansPage;
+
+private:
     int _m_result;
 };
 
