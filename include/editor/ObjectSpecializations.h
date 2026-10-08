@@ -10,8 +10,24 @@
 #include <string>
 
 #include "editor/GameObject.h"
+#include "editor/Player.h"
 
 class TRawIStream;
+
+// A map object a player can own: the owner follows the vbptr.
+class TFlaggableObject : public virtual TGameObject {
+public:
+    TFlaggableObject(const TObjectType& objType, TPlayer owner);
+    TFlaggableObject(const TObjectType& objType, TRawIStream* pIStream, int version);
+
+    virtual void write(TRawOStream* pOStream) const;
+
+    void setOwner(TPlayer newOwner) { _m_owner = newOwner; }
+    TPlayer getOwner() const { return _m_owner; }
+
+private:
+    TPlayer _m_owner;
+};
 
 // A sign: its message, at most s_kMaxTextLen characters (the sign dialog's
 // OnInitDialog limits its edit control to 150).
