@@ -112,6 +112,7 @@ rva	size	kind	name	unit	evidence
 0x00032a60	0x2b	func	?do_toupper@?$ctype@D@std@@MBEPBDPADPBD@Z	objecttype	vtable ??_7?$ctype@D@std@@6B@ stored by ??1?$ctype@D@std@@UAE@XZ slot 3
 0x00032aa7	0x20	func	??1?$ctype@D@std@@UAE@XZ	objecttype	masked body (32 bytes, 3 relocations) unique at a census start
 0x00032ca3	0x5d	func	??0?$TRefCountingPtr@V_TImpl@TLayer@TGameMap@@@@QAE@ABV_TImpl@TLayer@TGameMap@@@Z	GameMap	masked body (93 bytes, 7 relocations) unique at a census start
+0x00032d00	0x20	func	??1?$TRefCountingPtr@V_TImpl@TLayer@TGameMap@@@@QAE@XZ	GameMap	referenced by ??1TLayer@TGameMap@@QAE@XZ at +0x1
 0x00032d56	0x60	func	?_split@?$TRefCountingPtr@V_TImpl@TLayer@TGameMap@@@@AAEXXZ	GameMap	masked body (96 bytes, 7 relocations) unique at a census start
 0x0003369c	0x5d	func	??0?$TRefCountingPtr@V?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@@@QAE@XZ	GameMap	masked body (93 bytes, 6 relocations) unique at a census start
 0x00034477	0x89	func	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	resourcemanager	referenced by ?openArchiveResource@@YA_NH@Z at +0x3f
