@@ -389,3 +389,8 @@ source = "src/editor/TownPropsSpellsPage.cpp"
 name = "HeroPropsCreaturesPage"
 object = 85
 source = "src/editor/HeroPropsCreaturesPage.cpp"
+
+[[unit]]
+name = "HeroPropsSecSkillsPage"
+object = 87
+source = "src/editor/HeroPropsSecSkillsPage.cpp"
