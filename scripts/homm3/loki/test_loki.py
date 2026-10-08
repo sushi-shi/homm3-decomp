@@ -52,6 +52,14 @@ class ComparisonObjectTest(unittest.TestCase):
         self.assertTrue(named.startswith('$t2[$s"dirttl.def"#'))
         self.assertEqual(named, cmpobj.table_name([cmpobj.literal_name(s) for s in strings]))
 
+    def test_pointer_tables_are_named_by_their_targets(self):
+        targets = {0x200: "aCastle", 0x204: "aRampart"}
+        read = lambda address, size: bytes(size)
+        named = cmpobj.literal_for(read, 0x200, 0, targets.get)
+        self.assertEqual(named, cmpobj.pointer_table_name(["aCastle", "aRampart"]))
+        base_list = cmpobj.literal_for(read, 0x200, 0, {0x200: "__ti5THero"}.get)
+        self.assertEqual(base_list, "$p__ti5THero+00000000")
+
     def test_function_local_statics_pair_by_order(self):
         def section(functions, relocs, local_data=()):
             text = CodeSection(".text", bytearray(0x40), functions, local_data=set(local_data))

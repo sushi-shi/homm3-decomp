@@ -153,6 +153,13 @@ def table_name(elements: list[str]) -> str:
     return f"$t{len(elements)}[{elements[0]}...]#{digest}"
 
 
+def pointer_table_name(targets: list[str]) -> str:
+    """A table of symbol addresses, named by its targets in order (their
+    canonical names, so anonymous-namespace suffixes do not count)."""
+    digest = hashlib.sha1("\0".join(map(canonical_symbol, targets)).encode()).hexdigest()[:8]
+    return f"$P{len(targets)}[{targets[0]}...]#{digest}"
+
+
 def literal_for(read, address: int, access_size: int, pointer=None, table=None) -> str:
     """Name a .rodata reference by what the instruction uses: the bytes a
     memory operand loads, or the C string whose address is taken.
@@ -167,7 +174,16 @@ def literal_for(read, address: int, access_size: int, pointer=None, table=None) 
     if pointer is not None:
         target = pointer(address)
         if target is not None:
-            return f"$p{target}+{read(address + 4, 4).hex()}"
+            if pointer(address + 4) is None:
+                return f"$p{target}+{read(address + 4, 4).hex()}"
+            # A table of addresses (`T* const apTable[] = { a, b, ... }`):
+            # named by every consecutive symbol it points to.
+            targets = []
+            while target is not None:
+                targets.append(target)
+                address += 4
+                target = pointer(address)
+            return pointer_table_name(targets)
     if table is not None:
         # `table(address)` names the consecutive address-sized fields that
         # point into .rodata (relocations against it in the compiled object,
