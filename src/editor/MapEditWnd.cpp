@@ -39,7 +39,7 @@ GdkCursor* hClosedHandCursor = NULL;
 class TGameObjectDataSource {
 public:
     TGameObjectDataSource(const TGameObject* pObject);
-    virtual ~TGameObjectDataSource();
+    ~TGameObjectDataSource();
 
     virtual bool OnRenderFileData();
 

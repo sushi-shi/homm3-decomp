@@ -29,11 +29,11 @@ public:
 
 // The roads of one map layer as a line filter: the cells' road type,
 // tile number and flips (the river and road vtables share TMapLineFilter's
-// slots and add the destructor last).
+// slots and add a pure virtual destructor last: the slot is __pure_virtual).
 class TRoadOp : private TMapLineFilter {
 public:
     TRoadOp(TGameMap* pMap, bool bSecondLayer);
-    virtual ~TRoadOp();
+    virtual ~TRoadOp() = 0;
 
     virtual const TLineTilesetTraits& getTilesetTraits(unsigned int type) const;
 
