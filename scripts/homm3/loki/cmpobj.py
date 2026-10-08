@@ -53,6 +53,7 @@ class CodeSection:
     data: bytearray
     functions: list[Function] = field(default_factory=list)
     relocs: list[Reloc] = field(default_factory=list)
+    local_data: set[str] = field(default_factory=set)   # file-local data symbols (base side)
 
 
 def canonical_symbol(name: str) -> str:

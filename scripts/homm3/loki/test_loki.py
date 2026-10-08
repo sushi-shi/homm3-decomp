@@ -52,6 +52,24 @@ class ComparisonObjectTest(unittest.TestCase):
         self.assertTrue(named.startswith('$t2[$s"dirttl.def"#'))
         self.assertEqual(named, cmpobj.table_name([cmpobj.literal_name(s) for s in strings]))
 
+    def test_function_local_statics_pair_by_order(self):
+        def section(functions, relocs, local_data=()):
+            text = CodeSection(".text", bytearray(0x40), functions, local_data=set(local_data))
+            for offset, target in relocs:
+                cmpobj.put(text, offset, R_386_32, target, 0)
+            return text
+        base = [section([Function("__tcf_0", 0, 0x10, False), Function("f__Fv", 0x10, 0x30, True)],
+                        [(0x14, "a.12"), (0x18, "_.tmp_0.13"), (0x1c, "callee__Fv"),
+                         (0x20, "__tcf_0"), (0x24, "g_mask"), (0x28, "b.14")],
+                        ["a.12", "_.tmp_0.13", "b.14", "g_mask"])]
+        target = [section([Function("sub_00002000", 0, 0x10, False), Function("f__Fv", 0x10, 0x30, True)],
+                          [(0x14, "data_00001000"), (0x18, "data_0000100c"), (0x1c, "callee__Fv"),
+                           (0x20, "sub_00002000"), (0x24, "data_00003000"), (0x28, "data_00001010")])]
+        delink.pair_locals(base, target)
+        self.assertEqual([r.target for r in target[0].relocs],
+                         ["a.12", "_.tmp_0.13", "callee__Fv", "__tcf_0", "data_00003000", "b.14"])
+        self.assertEqual(target[0].functions[0].name, "__tcf_0")
+
 
 @unittest.skipUnless(toolchain.is_staged(), "GCC 2.95.2 not staged (homm3 loki toolchain)")
 class CompiledBaseTest(unittest.TestCase):

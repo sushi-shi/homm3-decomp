@@ -8,6 +8,8 @@ same canonical form (see cmpobj) so objdiff compares like with like.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import difflib
+import re
 import struct
 
 from homm3.core import common
@@ -214,6 +216,7 @@ def base_sections(data: bytes) -> list[CodeSection]:
         if not (header.flags & SHF_EXECINSTR and header.flags & SHF_ALLOC) or header.size == 0:
             continue
         section = CodeSection(header.name, bytearray(elf.bytes(header)))
+        section.local_data = {s.name for s in symbols if s.type == STT_OBJECT and s.bind == 0}
         functions = sorted((s for s in by_section.get(index, ()) if s.type == STT_FUNC), key=lambda s: s.value)
         for symbol in functions:
             section.functions.append(Function(symbol.name, symbol.value, symbol.size, symbol.bind != 0))
@@ -320,6 +323,86 @@ def _is_unnamed_data(name: str) -> bool:
     return len(name) == 13 and name.startswith("data_") and all(c in "0123456789abcdef" for c in name[5:])
 
 
+def _relocs_by_function(sections: list[CodeSection]) -> dict[str, list]:
+    out: dict[str, list] = {}
+    for section in sections:
+        relocs = sorted(section.relocs, key=lambda r: r.offset)
+        for function in section.functions:
+            end = function.offset + function.size
+            # Keyed canonically: an anonymous-namespace function's name
+            # differs between the two sides in its random suffix.
+            out[cmpobj.canonical_symbol(function.name)] = [
+                r for r in relocs if function.offset <= r.offset < end]
+    return out
+
+
+# g++ 2.95 names a function-local static `<name>.<uid>` (its guard flag
+# `_.tmp_<n>.<uid>`) and the destructor it registers with atexit `__tcf_<n>`.
+_LOCAL_STATIC = re.compile(r"[A-Za-z_$][\w$.]*\.\d+")
+_LOCAL_CLEANUP = re.compile(r"__tcf_\d+")
+
+
+def _is_unnamed_function(name: str) -> bool:
+    return len(name) == 12 and name.startswith("sub_") and all(c in "0123456789abcdef" for c in name[4:])
+
+
+def pair_locals(base: list[CodeSection], target: list[CodeSection]) -> dict[str, tuple[str, int]]:
+    """Name the retail object's function-local statics after the compiled ones.
+
+    The image names neither a function-local static (`data_<address>`) nor
+    the `__tcf_<n>` cleanup g++ 2.95 emits for it (`sub_<address>`), and both
+    belong to the one function that declares them. For each function both
+    sides define, the two relocation lists are aligned with every unnamed
+    retail reference and every compiled function-local static as a
+    placeholder of its kind (file-local data or function); the k-th
+    placeholder of an aligned run pairs the k-th. Only function-local statics are named this
+    way, and only when every aligned use agrees one to one; file-static data
+    stays with pair_data, other statics with pair_statics."""
+    local_data = set().union(*(s.local_data for s in base))
+
+    def key(reloc, compiled: bool):
+        name = reloc.target
+        if compiled and name in local_data or not compiled and _is_unnamed_data(name):
+            return "\0data"
+        if compiled and _LOCAL_CLEANUP.fullmatch(name) or not compiled and _is_unnamed_function(name):
+            return "\0function"
+        return cmpobj.canonical_symbol(name), reloc.addend
+
+    left, right = _relocs_by_function(base), _relocs_by_function(target)
+    votes: dict[str, set[tuple[str, int]]] = {}
+    for name, retail in right.items():
+        compiled = left.get(name)
+        if not compiled:
+            continue
+        a = [key(r, True) for r in compiled]
+        b = [key(r, False) for r in retail]
+        matcher = difflib.SequenceMatcher(None, a, b, autojunk=False)
+        for i, j, size in matcher.get_matching_blocks():
+            for c, t in zip(compiled[i:i + size], retail[j:j + size]):
+                if _LOCAL_STATIC.fullmatch(c.target):
+                    address = int(t.target[5:], 16) + t.addend
+                    votes.setdefault(f"data_{address:08x}", set()).add((c.target, c.addend))
+                elif _LOCAL_CLEANUP.fullmatch(c.target) and t.addend == c.addend:
+                    votes.setdefault(t.target, set()).add((c.target, 0))
+    mapping = {name: next(iter(found)) for name, found in votes.items() if len(found) == 1}
+    counterparts = list(mapping.values())
+    mapping = {name: found for name, found in mapping.items() if counterparts.count(found) == 1}
+    for section in target:
+        for function in section.functions:
+            if function.name in mapping:
+                function.name = mapping[function.name][0]
+        for reloc in section.relocs:
+            if _is_unnamed_function(reloc.target) and reloc.target in mapping:
+                reloc.target = mapping[reloc.target][0]
+            elif _is_unnamed_data(reloc.target):
+                address = int(reloc.target[5:], 16) + reloc.addend
+                found = mapping.get(f"data_{address:08x}")
+                if found is not None:
+                    reloc.target, reloc.addend = found
+                    struct.pack_into("<i", section.data, reloc.offset, found[1])
+    return mapping
+
+
 def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, tuple[str, int]]:
     """Name the retail object's file-static data after the compiled object's.
 
@@ -330,19 +413,7 @@ def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, t
     retail address is renamed only when every such function agrees on its
     counterpart (and no two addresses share one); everything else stays
     `data_<address>`, so a wrong layout still shows as a difference."""
-    def by_function(sections: list[CodeSection]) -> dict[str, list]:
-        out: dict[str, list] = {}
-        for section in sections:
-            relocs = sorted(section.relocs, key=lambda r: r.offset)
-            for function in section.functions:
-                end = function.offset + function.size
-                # Keyed canonically: an anonymous-namespace function's name
-                # differs between the two sides in its random suffix.
-                out[cmpobj.canonical_symbol(function.name)] = [
-                    r for r in relocs if function.offset <= r.offset < end]
-        return out
-
-    left, right = by_function(base), by_function(target)
+    left, right = _relocs_by_function(base), _relocs_by_function(target)
     votes: dict[str, set[tuple[str, int]]] = {}
     for name, retail in right.items():
         compiled = left.get(name)

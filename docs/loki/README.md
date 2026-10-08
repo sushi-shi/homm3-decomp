@@ -115,6 +115,12 @@ object's `.text` in source order, so `homm3.loki.delink.pair_statics` uses the
 functions both sides name as anchors and gives the k-th retail static between
 two anchors the name of the k-th compiled local function there, when both gaps
 hold the same number. Other statics stay `sub_<address>` and unpaired.
+Function-local statics (`<name>.<uid>`, their `_.tmp_<n>` guards and the
+`__tcf_<n>` cleanups registered with `atexit`) belong to one function:
+`homm3.loki.delink.pair_locals` aligns that function's two relocation lists,
+unnamed retail references and compiled file-local data standing as
+placeholders, and pairs the k-th of an aligned run with the k-th, when every
+aligned use agrees one to one.
 
 Units compile from their source's directory with the bare file name, as Loki
 did: `__FILE__` in assert text and `TRuntimeError(__FILE__, __LINE__, ...)`

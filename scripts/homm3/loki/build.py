@@ -130,6 +130,7 @@ def run(selected: list[str] | None = None, jobs: int = 3, verbose: bool = False,
             print(f"[loki] {unit.name}: compile failed: {error}")
             continue
         base = delink.base_sections(obj.read_bytes())
+        delink.pair_locals(base, target)
         unpaired = delink.pair_statics(base, target)
         delink.pair_data(base, target)
         if unpaired and verbose:
