@@ -18,35 +18,7 @@
 // and type; Complete fixes the 0x6a7540 address and all four indexed readers.
 extern const char* g_statDesc[kNumPrimarySkills];
 
-// Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
-// retail GetNewHeroId extends it with the two Conflux classes, indexes all
-// eighteen class-traits rows, and uses 18 as the no-class sentinel.
-// Before normalization (Dreamcast enumerators): eClassKnight, eClassCleric,
-// eClassRanger, eClassDruid, eClassAlchemist, eClassWizard, eClassPagan,
-// eClassHeretic, eClassDeathKnight, eClassNecromancer, eClassOverlord,
-// eClassWarlock, eClassBarbarian, eClassBattleMage, eClassBeastmaster,
-// eClassWitch, eClassPlanesWalker, eClassElementalist.
-enum THeroClass {
-    classKnight = 0,
-    classCleric = 1,
-    classRanger = 2,
-    classDruid = 3,
-    classAlchemist = 4,
-    classWizard = 5,
-    classPagan = 6,
-    classHeretic = 7,
-    classDeathKnight = 8,
-    classNecromancer = 9,
-    classOverlord = 10,
-    classWarlock = 11,
-    classBarbarian = 12,
-    classBattleMage = 13,
-    classBeastmaster = 14,
-    classWitch = 15,
-    classPlanesWalker = 16,
-    classElementalist = 17,
-    kNumHeroClasses = 18
-};
+#include "heroclass.h"
 
 // Dreamcast names the hero-ID domain THeroID; Complete uses 156 hero slots.
 // The -1 sentinel is serialized as0xff; hero.cpp independently identifies

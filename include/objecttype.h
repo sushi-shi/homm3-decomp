@@ -8,7 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "mapcell.h"
+#include "adventureobjecttype.h"
+#include "objectmask.h"
+#include "terrain_type.h"
 
 class TObjectTypeFilter;
 
@@ -97,28 +99,34 @@ public:
     // narrowing it to char. Direct field access folds those into byte
     // loads in VC6; ordinary integer accessors retain the observed boundary.
     // Their role names are provisional: this editor type is Complete-only.
+    static unsigned _getBitPos(unsigned x, unsigned y)
+    {
+        return OBJECT_MASK_CELLS - 1 - y * OBJECT_MASK_WIDTH - x;
+    }
     int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
     // Mac CObjectType conversion 0x128c7c..0x128d24 expands these four
     // coordinate-to-mask queries before assigning the destination cells.
-    // The names and member boundaries are inferred; getBitPos owns the
-    // shared 8-by-6 coordinate mapping. Mac placement 0x22e090..0x22e17c
+    // The names and member boundaries are inferred; _getBitPos is the
+    // shared 8-by-6 coordinate mapping (CObjectType::getBitPos's formula,
+    // Loki's TObjectType spelling), so the map editor's MFC objects can use
+    // these records without mapcell.h's CObject. Mac placement 0x22e090..0x22e17c
     // expands the same trigger/passability queries; both Windows TUs need
     // their definitions visible here.
     bool getBCellPlaced(unsigned x, unsigned y) const
     {
-        return m_imageInfo.m_drawMask.test(CObjectType::getBitPos(x, y));
+        return m_imageInfo.m_drawMask.test(_getBitPos(x, y));
     }
     bool getBCellPassable(unsigned x, unsigned y) const
     {
-        return m_passableMask.test(CObjectType::getBitPos(x, y));
+        return m_passableMask.test(_getBitPos(x, y));
     }
     bool getBCellShadow(unsigned x, unsigned y) const
     {
-        return m_imageInfo.m_shadowMask.test(CObjectType::getBitPos(x, y));
+        return m_imageInfo.m_shadowMask.test(_getBitPos(x, y));
     }
     bool getBCellTrigger(unsigned x, unsigned y) const
     {
-        return m_triggerMask.test(CObjectType::getBitPos(x, y));
+        return m_triggerMask.test(_getBitPos(x, y));
     }
     // Project name for the Complete-only terrain query. The non-const
     // subscript uses VC6's reference proxy, preserving the checked bitset

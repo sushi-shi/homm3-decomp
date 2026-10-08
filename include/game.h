@@ -739,14 +739,7 @@ struct CampaignScenarioPreview : public NewSMapHeader {
 };
 SIZE(CampaignScenarioPreview, 0x4d4);
 
-// Product generation recorded in SavedGameHeader::gameVersion.  The save
-// loader derives the same three rungs from the on-disk format version when an
-// older header does not carry the field explicitly.
-enum EGameVersion {
-    GAME_VERSION_ROE = 0,
-    GAME_VERSION_AB = 1,
-    GAME_VERSION_SOD = 2
-};
+#include "gameversion.h"
 
 // Placement recovery control: moving this class beside its inline bodies,
 // or embedding the same bodies inside it there, does not recover the
