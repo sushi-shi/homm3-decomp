@@ -831,7 +831,7 @@ public:
     NewfullMap* m_fullMap;
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
-    CSprite* m_groundTileset[NUM_TERRAIN_TYPES];  // +0x60
+    CSprite* m_groundTileset[kNumTerrainTypes];  // +0x60
     CSprite* m_riverTileset[5];  // +0x88
     CSprite* m_roadTileset[4];  // +0x9c
     CSprite* m_borderTileset;  // +0xac

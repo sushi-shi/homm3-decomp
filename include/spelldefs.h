@@ -36,6 +36,6 @@ unsigned char InitializeSpellTraitsTable();
 // akSpellTraits pointer/reference cell is at 0x687f58; retail writes this
 // adjacent 81*136-byte backing array directly. Name is provisional because
 // only the public DC array name survives.
-extern TSpellTraits g_spellTraitsImp[NUM_SPELLS_AND_CREATURE_EFFECTS];
+extern TSpellTraits g_spellTraitsImp[kNumSpellsAndCreatureEffects];
 
 #endif  /* HOMM3_SPELLDEFS_H */

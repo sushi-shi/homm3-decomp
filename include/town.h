@@ -89,9 +89,9 @@ enum type_building_id {
 // primary resources are the width of every cost row - GOLD = 6 is the
 // column get_gold_income reads out of the silo table (0x688ecc =
 // 0x688eb4 + 6*4).
-// NUM_RESOURCES is a source constant, not an EGameResource member: the
-// complete Dreamcast CodeView enum does not contain it. It is defined in
-// armygrp.h, whose creature cost row is the first table it sizes.
+// NUM_RESOURCES is not an EGameResource member: the complete Dreamcast
+// CodeView enum does not contain it. armygrp.h's EGameResourceCount
+// defines it, since the creature cost row is the first table it sizes.
 enum EGameResource {
     const_no_resource = -1,
     WOOD = 0,

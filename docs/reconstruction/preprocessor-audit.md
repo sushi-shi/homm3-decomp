@@ -163,10 +163,15 @@ switch arms or multi-statement common code. The remaining definitions in
 | `crt_stdio.h`: `SEEK_SET`, `SEEK_END` | 2 | CRT compatibility constants. |
 | `pcx.h`: `NOMINMAX` | 1 | Controls the Windows header interface. |
 | `advmgr.h`: `VIEW_WORLD_TILE_SCALE_FULL/MID/FAR` | 3 | Floating constants; the owning comment records VC6's failed `const float` folding control. |
-| `town.h`: `NUM_RESOURCES` | 1 | Shared resource-count constant, not a common-code macro. |
+| `town.h`: `NUM_RESOURCES` | 1 | Later replaced by the `EGameResourceCount` enumerator in `armygrp.h`. |
 
 This header search is a disposition of the common-code category, not a claim
-that every header constant needs preprocessor syntax. The requested source
+that every header constant needs preprocessor syntax. Name coupled counts
+with enumerators, not object-like `#define`s. Use the domain enum when the
+original enum carries the count (Dreamcast's `kNum...` members, such as
+`kNumCreatureTypes` and `kNumTerrainTypes`). Otherwise use a small named
+enum tied to the domain, such as `EPlayerCount` and `EGameResourceCount`.
+`homm3 constants` ranks enumerator candidates first. The requested source
 directive review and the tree-wide search for common-code macros are complete.
 
 ## Validation

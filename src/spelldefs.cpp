@@ -12,7 +12,7 @@
 // Retail initial spell traits retain sample names, effects and flags before
 // sptraits.txt supplies localized text, costs and probabilities.
 DATA(0x00685450)
-TSpellTraits g_spellTraitsImp[NUM_SPELLS_AND_CREATURE_EFFECTS] = {
+TSpellTraits g_spellTraitsImp[kNumSpellsAndCreatureEffects] = {
     { 0, "SummBoat.wav", eSpellEffectNone, 0x100002, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
     { 0, "ScutBoat.wav", eSpellEffectNone, 0x2, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
     { 0, "Visions.wav", eSpellEffectNone, 0x2, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
@@ -96,7 +96,7 @@ TSpellTraits g_spellTraitsImp[NUM_SPELLS_AND_CREATURE_EFFECTS] = {
     { -1, "Acid.wav", eSpellEffectPoof, 0x18, 0, 0, 0, { TSpellSchool(0) }, { 0, 0, 0, 0 }, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
 };
 
-DATA(0x00687f58) const TSpellTraits (&akSpellTraits)[NUM_SPELLS_AND_CREATURE_EFFECTS] = g_spellTraitsImp;
+DATA(0x00687f58) const TSpellTraits (&akSpellTraits)[kNumSpellsAndCreatureEffects] = g_spellTraitsImp;
 
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);
@@ -207,14 +207,14 @@ static void initializeSpellTraits(
 
     DATA_COMPGEN_GUARD(0x006a3650, spellStringsGuard, spellNames)
     DATA(0x006a350c)
-    static TAutoStrPtr spellNames[NUM_SPELLS_AND_CREATURE_EFFECTS];
+    static TAutoStrPtr spellNames[kNumSpellsAndCreatureEffects];
 
     spellNames[id].set(new char[strlen(resource[0]) + 1]);
     strcpy(spellNames[id].get(), resource[0]);
     traits.m_name = spellNames[id].get();
 
     DATA(0x006a3654)
-    static TAutoStrPtr abbreviatedSpellNames[NUM_SPELLS_AND_CREATURE_EFFECTS];
+    static TAutoStrPtr abbreviatedSpellNames[kNumSpellsAndCreatureEffects];
 
     abbreviatedSpellNames[id].set(new char[strlen(resource[1]) + 1]);
     strcpy(abbreviatedSpellNames[id].get(), resource[1]);
@@ -256,7 +256,7 @@ static void initializeSpellTraits(
     }
 
     DATA(0x006a3798)
-    static TAutoStrPtr spellDescriptions[NUM_SPELLS_AND_CREATURE_EFFECTS][4];
+    static TAutoStrPtr spellDescriptions[kNumSpellsAndCreatureEffects][4];
 
     for (i = 0; i < 4; ++i) {
         spellDescriptions[id][i].set(

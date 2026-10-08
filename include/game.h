@@ -34,13 +34,14 @@
 #include "victorylossconditions.h"
 
 // Red through pink: the length of game::players and playerDead, of the map
-// header's per-player tables and of every per-player loop. Like
-// NUM_RESOURCES this is a source constant: no Dreamcast enum carries it
-// (NH3API spells it MAX_PLAYERS, which CHotSeatMan and CNetPlayerHandler
-// use for their own member constants). A macro here rather than a new
-// header: adding a file to the include set reschedules
-// advManager::doCombat.
-#define NUM_PLAYERS 8
+// header's per-player tables and of every per-player loop. No Dreamcast
+// enum carries it (NH3API spells it EPlayerColor::MAX_PLAYERS, which
+// CHotSeatMan and CNetPlayerHandler use for their own member constants).
+// Declared here rather than in a new header: adding a file to the include
+// set reschedules advManager::doCombat.
+enum EPlayerCount {
+    NUM_PLAYERS = 8
+};
 
 // The one decoded value of game::field_1f63e shared by events.obj and
 // philai.obj: Sunday is the seventh day.  DoEventTemple doubles its morale

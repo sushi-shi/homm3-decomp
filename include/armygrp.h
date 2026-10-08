@@ -12,8 +12,11 @@
 #include "terrain_type.h"
 
 // The seven primary resources (wood .. gold), the width of every cost
-// row; town.h's EGameResource names the columns.
-#define NUM_RESOURCES 7
+// row; town.h's EGameResource names the columns. Dreamcast's complete
+// EGameResource carries no count, so this enum stands beside it.
+enum EGameResourceCount {
+    NUM_RESOURCES = 7
+};
 
 namespace std {
 template<class T> class allocator;
@@ -181,6 +184,11 @@ enum TCreatureType {
     // spelling.
     CREATURE_ROGUE = 0x8f,
     CREATURE_CATAPULT = 0x91,
+    // Dreamcast TCreatureType::kNumCreatureTypes (= eCreatureCatapult): the
+    // creature types before the war machines, 145 in Complete. It sizes the
+    // AI's creature value tables and the campaign crossover creature mask
+    // (NH3API MAX_CREATURES).
+    kNumCreatureTypes = CREATURE_CATAPULT,
     CREATURE_BALLISTA = 0x92,
     CREATURE_FIRST_AID_TENT = 0x93,
     CREATURE_AMMO_CART = 0x94,
@@ -538,15 +546,13 @@ enum ESpellId {
     // iPostPowSpellToCast gated on the victim's defenseSkill being
     // positive - the defense-eating half of Acid Breath. NH3API
     // spelling.
-    SPELL_ACID_BREATH_DEFENSE = 0x50
+    SPELL_ACID_BREATH_DEFENSE = 0x50,
+    // Dreamcast SpellID::kNumSpellsAndCreatureEffects (80 there, before Acid
+    // Breath): spell ids 0 .. SPELL_ACID_BREATH_DEFENSE, the rows of the
+    // spell-traits table and the width of each stack's influence/level
+    // arrays.
+    kNumSpellsAndCreatureEffects = SPELL_ACID_BREATH_DEFENSE + 1
 };
-
-// Spell ids 0 .. SPELL_ACID_BREATH_DEFENSE: the rows of the spell-traits
-// table and the width of each stack's influence/level arrays. The
-// Dreamcast spells it kNumSpellsAndCreatureEffects (80, before Acid
-// Breath); an ESpellId enumerator changes initializeGameData's code, so
-// it is a source constant like NUM_RESOURCES.
-#define NUM_SPELLS_AND_CREATURE_EFFECTS 81
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
 // by get_spell_work_chance's spell*17*8 indexing at 0x44a4e2): only

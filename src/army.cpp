@@ -891,7 +891,7 @@ double army::computeKarma() const
         return 0.0;
     long sum = 0;
     long absSum = 0;
-    for (long i = 0; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
+    for (long i = 0; i < kNumSpellsAndCreatureEffects; i++) {
         if (m_spellInfluence[i] != 0) {
             sum += akSpellTraits[i].m_karma;
             absSum += abs(akSpellTraits[i].m_karma);
@@ -3375,7 +3375,7 @@ MAC_ADDRESS(0x050c24, 0x68)
 // Mac 0x50c48 reads row i; DC makes no get_spell_time call (see army.h).
 void army::cancelAllSpells()
 {
-    for (int i = 0; i < NUM_SPELLS_AND_CREATURE_EFFECTS; i++) {
+    for (int i = 0; i < kNumSpellsAndCreatureEffects; i++) {
         if (m_spellInfluence[i] > 0)
             cancelIndividualSpell(i);
     }
@@ -3512,7 +3512,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         break;
     case SPELL_ANTI_MAGIC: {
         m_antiMagicSpellLevel = amount;
-        for (int j = 0; j < NUM_SPELLS_AND_CREATURE_EFFECTS; j++) {
+        for (int j = 0; j < kNumSpellsAndCreatureEffects; j++) {
             if (akSpellTraits[j].m_level < m_antiMagicSpellLevel
                 && akSpellTraits[j].m_karma < 0
                 && !(akSpellTraits[j].m_flags & 8))
@@ -3657,7 +3657,7 @@ MAC_ADDRESS(0x051434, 0x98)
 // makes no get_spell_time call (see army.h getSpellTime).
 void army::decrementSpellRounds()
 {
-    for (int spell = 0; spell < NUM_SPELLS_AND_CREATURE_EFFECTS; spell++) {
+    for (int spell = 0; spell < kNumSpellsAndCreatureEffects; spell++) {
         if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
             if (m_spellInfluence[spell] == 1)
                 cancelIndividualSpell(spell);

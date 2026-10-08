@@ -69,8 +69,8 @@ private:
     std::bitset<OBJECT_MASK_CELLS> m_passableMask;
     std::bitset<OBJECT_MASK_CELLS> m_triggerMask;
 public:
-    std::bitset<NUM_TERRAIN_TYPES> _m_terrainMask;
-    std::bitset<NUM_TERRAIN_TYPES> m_recommendedTerrainMask;
+    std::bitset<kNumTerrainTypes> _m_terrainMask;
+    std::bitset<kNumTerrainTypes> m_recommendedTerrainMask;
 private:
     TAdventureObjectType m_objectType;
     int m_subtype;
@@ -154,8 +154,8 @@ public:
     // the two setters above and expands this ordered field/invariant chain.
     // The corresponding ordinary definitions live in objecttype.cpp.
     TObjectType& _setPassableMask(const std::bitset<OBJECT_MASK_CELLS>& mask);
-    TObjectType& setTerrainMask(const std::bitset<NUM_TERRAIN_TYPES>& mask);
-    TObjectType& setRecommendedTerrainMask(const std::bitset<NUM_TERRAIN_TYPES>& mask);
+    TObjectType& setTerrainMask(const std::bitset<kNumTerrainTypes>& mask);
+    TObjectType& setRecommendedTerrainMask(const std::bitset<kNumTerrainTypes>& mask);
     TObjectType& setType(TAdventureObjectType type);
     TObjectType& setExtra(int subtype);
     TObjectType& setSlotCategory(int category);

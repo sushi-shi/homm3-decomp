@@ -10,10 +10,6 @@
 // Complete extends the Dreamcast creature-name domain through id 0x96.
 // GetArmyName's retail range guard proves the inclusive upper bound.
 const int g_creatureTypeLast = 0x96;
-// The 145 creature types before the war machines (CREATURE_CATAPULT is the
-// first): the width of the AI's creature value tables and of the campaign
-// crossover creature mask (NH3API MAX_CREATURES).
-const int g_creatureTypeCount = CREATURE_CATAPULT;
 
 // E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
 // events.cpp also expands this at monsters_flee/join/sell_out, passing a

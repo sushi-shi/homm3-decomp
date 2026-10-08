@@ -130,6 +130,25 @@ class LiteralTests(unittest.TestCase):
             self.assertEqual(found[("src/t.cpp", 8)], (1, "index"))
             self.assertIn("kNumThings", {e.name for e in rows[0].candidates})
 
+    def test_enumerators_rank_before_defines(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "src").mkdir()
+            body = root / "src/t.cpp"
+            body.write_text(
+                "#define NUM_THINGS 9\n"
+                "static const int g_thingCount = 9;\n"
+                "enum EThingCount { kNumThings = 9 };\n"
+                "void f(int n) { if (n < 9) return; }\n")
+            raws = scan_source(body.read_text(), "src/t.cpp")
+            resolve(raws)
+            index = Index([Entry(r.value, r.name, r.kind, "tree", r.where, r.scope,
+                                 " ".join(r.expression)) for r in raws])
+            rows = scan_literals(index, root, [body])
+            row = next(r for r in rows if r.line == 4)
+            self.assertEqual([e.kind for e in row.candidates],
+                             ["enumerator", "const", "define"])
+
 
 if __name__ == "__main__":
     unittest.main()

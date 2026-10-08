@@ -150,7 +150,7 @@ DATA(0x0063d8c8) static const int g_legacyCampaignScenarioIndices[7][4] = {
 // widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
 // the narrow plane below it.
 static const int g_campaignVersionWideArtifacts = 6;
-static const int g_crossoverCreatureBits = g_creatureTypeCount;
+static const int g_crossoverCreatureBits = kNumCreatureTypes;
 static const int g_crossoverArtifactBits = ARTIFACT_COUNT;
 static const int g_crossoverLegacyArtifactBits = 129;
 

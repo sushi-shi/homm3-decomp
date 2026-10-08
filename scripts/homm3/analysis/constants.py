@@ -33,6 +33,13 @@ Queries
         other literal with a candidate name scores 1. Annotation macros (VA, DATA, SIZE, ...)
         and the definitions themselves are not reported.
 
+Name a coupled count with an enumerator: in its domain enum when the
+original enum carries it (Dreamcast's kNum... members), otherwise in a small
+named enum tied to that domain (``enum EPlayerCount { NUM_PLAYERS = 8 };``).
+Do not add object-like ``#define`` constants. Candidates are therefore ranked
+enumerator, integral const, then numeric #define; the defines remain indexed
+so SDK and vendor spellings can still be looked up.
+
 The index is cached under build/gen/cache, keyed on the content of every
 scanned file, the Dreamcast executable and this implementation.
 """
@@ -63,6 +70,9 @@ ANNOTATIONS = frozenset({
 })
 COUNT_NAME = re.compile(
     r"(COUNT|NUM|MAX|CAPACITY|SIZE|LIMIT|TOTAL|LAST|LENGTH|kNum|kMax|Count|Num|Max|Total)")
+#: Preferred spelling of a named constant, best first: enumerators over
+#: integral consts over numeric #defines (array lengths are not names).
+KIND_RANK = {"enumerator": 0, "const": 1, "define": 2, "array-length": 3}
 BOUND_OPERATORS = frozenset({"<", "<=", ">", ">=", "==", "!="})
 SIZE_CALLS = frozenset({"memset", "memcpy", "memmove", "memcmp", "MEMSET",
                         "MEMSET_LOCAL", "MEMCPY", "strncpy", "reserve", "resize"})
@@ -778,7 +788,9 @@ def scan_literals(index: Index, root: Path, files: list[Path], *, minimum: int =
             else:
                 continue
             candidates.sort(key=lambda e: (not COUNT_NAME.search(e.name),
-                                           ORIGINS.index(e.origin), e.qualified))
+                                           ORIGINS.index(e.origin),
+                                           KIND_RANK.get(e.kind, len(KIND_RANK)),
+                                           e.qualified))
             results.append(Literal(relative, tok.line, tok.text, value, context, score,
                                    same_length, candidates,
                                    lines[tok.line - 1].strip() if tok.line <= len(lines) else ""))
@@ -845,7 +857,8 @@ def main(argv=None) -> int:
 
     for value in args.values:
         rows = sorted(index.values(value, origins),
-                      key=lambda e: (ORIGINS.index(e.origin), e.kind, e.qualified))
+                      key=lambda e: (ORIGINS.index(e.origin),
+                                     KIND_RANK.get(e.kind, len(KIND_RANK)), e.qualified))
         payload[str(value)] = clip(rows)
     for needle in args.name:
         rows = sorted(index.names(needle, origins), key=lambda e: (e.origin, e.qualified))

@@ -105,7 +105,7 @@ DATA(0x00691680) int g_sandAnim;
 DATA(0x00677958) const char* g_resourceObjectDefs[NUM_RESOURCES] = { "avtwood0.def", "avtmerc0.def", "avtore0.def", "avtsulf0.def", "avtcrys0.def", "avtgems0.def", "avtgold0.def" };
 // Original DC name: HoleSpriteFilenames. Terrain order is dirt through rock;
 // water and rock have no digging sprite. The retained retail table is unused.
-DATA(0x006779e4) const char* g_holeSpriteFilenames[NUM_TERRAIN_TYPES] = {
+DATA(0x006779e4) const char* g_holeSpriteFilenames[kNumTerrainTypes] = {
     "avlhold0.def", "avlhlds0.def", "avlholg0.def", "avlhlsn0.def",
     "avlhols0.def", "avlholr0.def", "avlholx0.def", "avlholl0.def", "", ""
 };
