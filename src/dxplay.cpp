@@ -1500,28 +1500,3 @@ void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __
 
 // CAutoArray<CDPlayAddressElement> scalar deleting destructor (vtable slot 0).
 VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
-
-// TRuntimeError's retained message constructor sits after the DxPlay family.
-// The physical dxplay.cpp allocation follows that retail band; RTTI proves
-// the class name, while the original Windows source filename is unknown.
-// Objnames' 0x41b500 expands the derived allocation-error initialization
-// around a call here; gzinflatebuf retains and calls 0x4d6b80.
-
-DATA(0x0063de60) const char TAllocationFailure::_s_kMessage[] =
-    "Allocation failure.";
-
-// The body is the base list. RTTI proves the empty TDebugBreak base;
-// its default constructor is declared in exceptions.h. The
-VA(0x0049a0c0, 0xF9)
-MAC_ADDRESS(0x2207bc, 0x94)
-TRuntimeError::TRuntimeError(const char* text)
-    : std::runtime_error(text)
-{
-}
-
-// The retained empty-base calls at 0x41b62a and 0x514dbd reach a body
-// folded with philAI::philAI at 0x524360. Its original TU is unknown.
-MAC_ADDRESS(0x2207b8, 0x4)
-TDebugBreak::TDebugBreak()
-{
-}
