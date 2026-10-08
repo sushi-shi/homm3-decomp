@@ -555,23 +555,17 @@ int heroWindow::heroWindowHandler(message& msg)
     return msg.m_window->handleMessage(msg);
 }
 
-// Project-inferred common object deletion. Terminal window destructors leave
-// the pointer vector intact until its own destruction. The existing full
-// cleanup operation below additionally clears it after all deletes finish.
-void heroWindow::deleteWidgetObjects()
-{
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
-}
-
+// DC window.cpp:943..945 and Mac 0x20bc50 run the delete loop in place,
+// with begin/end expanded and no further helper boundary.
 VA(0x005ff510, 0x60)
 DC_ADDRESS(0x197c8c, 0x48)
 MAC_ADDRESS(0x20bc50, 0x7c)
 void heroWindow::deleteWidgets()
 {
-    deleteWidgetObjects();
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
     m_widgets.clear();
 }
 

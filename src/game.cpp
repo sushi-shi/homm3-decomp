@@ -408,9 +408,9 @@ bool generator::load(TAbstractFile* infile)
         return 0;
 
     for (int slot = 0; slot < 4; slot++) {
-        int creature = readValue<unsigned char>(infile);
-        m_type[slot] = TCreatureType(creature);
-        if (creature == g_savedCreatureNone)
+        // Mac 0xca270 reloads the stored type for the saved-none test.
+        m_type[slot] = TCreatureType(readValue<unsigned char>(infile));
+        if (m_type[slot] == g_savedCreatureNone)
             m_type[slot] = CREATURE_NONE;
     }
 
@@ -7561,7 +7561,7 @@ static HeroId getNewHero(THeroClass heroClass)
 // constructor reverses the two stores in this caller.
 VA(0x004c8450, 0x248)
 DC_ADDRESS(0x0b3e60, 0x1ee)
-MAC_ADDRESS(0x0df0ac, 0x238)
+MAC_ADDRESS(0x0df0ac, 0x238)  // MAC_ABSTRACTION_FROM(tokens1:1f05a99c1752,29.3706): DC function-scope hero, class, id and backpack locals restore the Windows lifetimes; CW allocates them differently (masked 88 -> 81 of 142).
 void game::setWeeklyRecruits(int playerPos)
 {
     playerData* player = &m_players[playerPos];

@@ -47,21 +47,6 @@ static const int g_combatActionAttackWall = 9;
 static const int g_combatActionCastCreatureSpell = 10;
 static const int g_combatActionFirstAid = 11;
 
-// Project-inferred action operations shared by UI, automation and AI.
-// A targeted order retains the secondary spell target. Complete tuple writes
-// also occur when receiving an action or restoring a simulation snapshot.
-void combatManager::prepareAction(int action, int extra)
-{
-    m_nextAction = action;
-    m_nextActionExtra = extra;
-}
-
-void combatManager::setTargetAction(int action, int extra, int targetHex)
-{
-    prepareAction(action, extra);
-    m_nextActionGridIndex = targetHex;
-}
-
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
 // TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
@@ -204,7 +189,11 @@ bool combatManager::automateCatapult()
 
 
 issueCatapultOrder:
-    setTargetAction(9, -1, s_wallTargets[target].m_targetHex);
+    // Mac 0x81d04 +0x3c4 stores the action before loading the target hex;
+    // the same pasted tuple appears in the bombard-wall command below.
+    m_nextAction = 9;
+    m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
+    m_nextActionExtra = -1;
     return 1;
 }
 

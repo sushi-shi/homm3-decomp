@@ -133,9 +133,6 @@ public:
     virtual void doModal(bool fadeIn);
 
 protected:
-    // Project-inferred terminal cleanup. Delete the objects in order without
-    // clearing the vector or unlinking widgets from the message stream.
-    void deleteWidgetObjects();
     void deleteWidgets();
     virtual void addWidgetsToMessageStream();
 
