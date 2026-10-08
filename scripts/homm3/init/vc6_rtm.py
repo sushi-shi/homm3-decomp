@@ -40,13 +40,31 @@ def destination() -> Path:
     return common.HOMM3_DIR / spec()["locations"][0]
 
 
+def _main_worktree() -> Path | None:
+    import subprocess
+    try:
+        common_dir = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            cwd=common.HOMM3_DIR, capture_output=True, text=True, timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return Path(common_dir).parent if common_dir else None
+
+
 def source_dir(override: str | Path | None = None) -> Path:
-    """`override`, else $HOMM3_VC6_RTM_SOURCE, else the pinned `source`."""
+    """`override`, else $HOMM3_VC6_RTM_SOURCE, else the pinned `source`
+    beside this checkout or, for a worktree elsewhere, beside the
+    repository's main worktree."""
     import os
     override = override or os.environ.get("HOMM3_VC6_RTM_SOURCE")
     if override:
         return Path(override).expanduser().resolve()
-    return (common.HOMM3_DIR / spec()["source"]).resolve()
+    candidates = [common.HOMM3_DIR / spec()["source"]]
+    main = _main_worktree()
+    if main is not None:
+        candidates.append(main / spec()["source"])
+    return next((path.resolve() for path in candidates if path.is_dir()),
+                candidates[0].resolve())
 
 
 def verify(source: Path) -> dict[str, Path]:
