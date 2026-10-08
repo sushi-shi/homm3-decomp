@@ -9129,7 +9129,8 @@ void TRmgMapItem::setTerrain(int terrain, int frame,
 VA(0x00546990, 0x1E) // anchor-callee reset expansions; Complete-only helper
 TRmgMapItem* type_random_map::getMapItem(int x, int y)
 {
-    return &m_mapItems[y * m_mapWidth + x];
+    int index = y * m_mapWidth + x;
+    return &m_mapItems[index];
 }
 
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
