@@ -4128,13 +4128,13 @@ MAC_ADDRESS(0x00f7a8, 0x1a0)
 void advManager::drawAdventureMapGems()
 {
     int player = g_game->getLocalPlayerGamePos();
-    m_gemIcons[0]->draw(0, player, 0, 0, 46, 46,
+    m_gemIcons[0]->Draw(0, player, 0, 0, 46, 46,
                       g_windowManager->m_screenBitmap, 6, 6, 0, 1);
-    m_gemIcons[1]->draw(0, player, 0, 0, 46, 46,
+    m_gemIcons[1]->Draw(0, player, 0, 0, 46, 46,
                       g_windowManager->m_screenBitmap, 556, 6, 0, 1);
-    m_gemIcons[2]->draw(0, player, 0, 0, 46, 46,
+    m_gemIcons[2]->Draw(0, player, 0, 0, 46, 46,
                       g_windowManager->m_screenBitmap, 6, 508, 0, 1);
-    m_gemIcons[3]->draw(0, player, 0, 0, 46, 46,
+    m_gemIcons[3]->Draw(0, player, 0, 0, 46, 46,
                       g_windowManager->m_screenBitmap, 556, 508, 0, 1);
 }
 
@@ -4452,46 +4452,46 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!heroCell->m_isBeachBorder) {
-            m_boatFrothIcons[currBoat->m_type]->drawHero(
+            m_boatFrothIcons[currBoat->m_type]->DrawHero(
                 currHero->getStandSequence(),
                 m_animCtr
-                    % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                    % m_boatFrothIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
                 tilex + (2 - heroCellY) * 32,
                 tiley - heroCellX * 32 + 32, tilew, tileh,
                 g_windowManager->m_screenBitmap, baseX, baseY + 8,
                 currHero->getHflip());
         }
 
-        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->drawHero(
+        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->DrawHero(
             currHero->getStandSequence(),
             m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
-                                ->getNumFrames(hs_stand_n),
+                                ->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
-        m_boatIcons[currBoat->m_type]->drawHero(
+        m_boatIcons[currBoat->m_type]->DrawHero(
             currHero->getStandSequence(),
             m_animCtr
-                % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                % m_boatIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
     } else if (currHero->m_owner >= 0 && currHero->m_owner < 8) {
-        m_flagIcons[currHero->m_owner]->drawHero(
+        m_flagIcons[currHero->m_owner]->DrawHero(
             currHero->getStandSequence(),
-            m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
+            m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
-        m_cursorIcons[currHero->m_heroClass]->drawHero(
+        m_cursorIcons[currHero->m_heroClass]->DrawHero(
             currHero->getStandSequence(),
             m_animCtr
-                % m_cursorIcons[currHero->m_heroClass]->getNumFrames(hs_stand_n),
+                % m_cursorIcons[currHero->m_heroClass]->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
@@ -4519,46 +4519,46 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
         NewmapCell* heroCell = getCell(currHero->getLocation());
 
         if (!heroCell->m_isBeachBorder) {
-            m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
+            m_boatFrothIcons[currBoat->m_type]->DrawHeroShadow(
                 currHero->getStandSequence(),
                 m_animCtr
-                    % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                    % m_boatFrothIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
                 tilex + (2 - heroCellY) * 32,
                 tiley - heroCellX * 32 + 32, tilew, tileh,
                 g_windowManager->m_screenBitmap, baseX, baseY + 8,
                 currHero->getHflip());
         }
 
-        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->drawHeroShadow(
+        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->DrawHeroShadow(
             currHero->getStandSequence(),
             m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
-                                ->getNumFrames(hs_stand_n),
+                                ->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
-        m_boatIcons[currBoat->m_type]->drawHeroShadow(
+        m_boatIcons[currBoat->m_type]->DrawHeroShadow(
             currHero->getStandSequence(),
             m_animCtr
-                % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                % m_boatIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
     } else if (currHero->m_owner >= 0 && currHero->m_owner < 8) {
-        m_flagIcons[currHero->m_owner]->drawHeroShadow(
+        m_flagIcons[currHero->m_owner]->DrawHeroShadow(
             currHero->getStandSequence(),
-            m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
+            m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
-        m_cursorIcons[currHero->m_heroClass]->drawHeroShadow(
+        m_cursorIcons[currHero->m_heroClass]->DrawHeroShadow(
             currHero->getStandSequence(),
             m_animCtr
-                % m_cursorIcons[currHero->m_heroClass]->getNumFrames(hs_stand_n),
+                % m_cursorIcons[currHero->m_heroClass]->GetNumFrames(hs_stand_n),
             tilex + (2 - heroCellY) * 32,
             tiley - heroCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
@@ -4581,19 +4581,19 @@ void advManager::drawBoatPart(int part, TDrawParts& boatParts, int baseX,
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     if (!getCell(currBoat->getLocation())->m_isBeachBorder) {
-        m_boatFrothIcons[currBoat->m_type]->drawHero(
+        m_boatFrothIcons[currBoat->m_type]->DrawHero(
             currBoat->getStandSequence(),
             m_animCtr
-                % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                % m_boatFrothIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currBoat->getHflip());
     }
 
-    m_boatIcons[currBoat->m_type]->drawHero(
+    m_boatIcons[currBoat->m_type]->DrawHero(
         currBoat->getStandSequence(),
-        m_animCtr % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+        m_animCtr % m_boatIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
@@ -4611,19 +4611,19 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     if (!getCell(currBoat->getLocation())->m_isBeachBorder) {
-        m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
+        m_boatFrothIcons[currBoat->m_type]->DrawHeroShadow(
             currBoat->getStandSequence(),
             m_animCtr
-                % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                % m_boatFrothIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currBoat->getHflip());
     }
 
-    m_boatIcons[currBoat->m_type]->drawHeroShadow(
+    m_boatIcons[currBoat->m_type]->DrawHeroShadow(
         currBoat->getStandSequence(),
-        m_animCtr % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+        m_animCtr % m_boatIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
@@ -4769,8 +4769,8 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     int frame = (m_animCtr
                                  + m_fullMap->m_objects[objCell->m_objectIndex]
                                        .m_animationOffset)
-                                % sprite->getNumFrames(0);
-                    sprite->drawAdvObj(
+                                % sprite->GetNumFrames(0);
+                    sprite->DrawAdvObj(
                         frame,
                         tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                         tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -4791,8 +4791,8 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         int frame = (m_animCtr
                                      + m_fullMap->m_objects[objCell->m_objectIndex]
                                            .m_animationOffset)
-                                    % sprite->getNumFrames(0);
-                        sprite->drawAdvObjWithFlag(
+                                    % sprite->GetNumFrames(0);
+                        sprite->DrawAdvObjWithFlag(
                             frame,
                             tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                             tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -4802,7 +4802,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     } else {
                         if (objCell->m_objectIndex == m_movingObjectIndex) {
 
-                            m_movingObjectSprite->drawAdvObj(
+                            m_movingObjectSprite->DrawAdvObj(
                                 m_movingObjectSequence * 2 + m_movingObjectFrame,
                                 tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                                 tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -4814,8 +4814,8 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                                          + m_fullMap
                                                ->m_objects[objCell->m_objectIndex]
                                                .m_animationOffset)
-                                        % sprite->getNumFrames(0);
-                            sprite->drawAdvObj(
+                                        % sprite->GetNumFrames(0);
+                            sprite->DrawAdvObj(
                                 frame,
                                 tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                                 tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -5020,8 +5020,8 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
             int frame = (m_animCtr
                          + m_fullMap->m_objects[objCell->m_objectIndex]
                                .m_animationOffset)
-                        % sprite->getNumFrames(0);
-            sprite->drawAdvObjShadow(
+                        % sprite->GetNumFrames(0);
+            sprite->DrawAdvObjShadow(
                 frame,
                 tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                 tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -5029,7 +5029,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
                 baseX, baseY + 8, false);
         } else {
             if (objCell->m_objectIndex == m_movingObjectIndex) {
-                m_movingObjectSprite->drawAdvObjShadow(
+                m_movingObjectSprite->DrawAdvObjShadow(
                     m_movingObjectSequence * 2 + m_movingObjectFrame,
                     tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                     tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -5039,8 +5039,8 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
-                            % sprite->getNumFrames(0);
-                sprite->drawAdvObjShadow(
+                            % sprite->GetNumFrames(0);
+                sprite->DrawAdvObjShadow(
                     frame,
                     tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                     tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -5123,7 +5123,7 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    m_riverTileset[thisCell->m_riverSet]->drawTile(
+    m_riverTileset[thisCell->m_riverSet]->DrawTile(
         thisCell->m_riverIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
         thisCell->m_riverFlippedHorizontal,
@@ -5168,7 +5168,7 @@ void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    m_roadTileset[thisCell->m_roadSet]->drawTile(
+    m_roadTileset[thisCell->m_roadSet]->DrawTile(
         thisCell->m_roadIndex, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8,
         thisCell->m_roadFlippedHorizontal,
@@ -5217,7 +5217,7 @@ void advManager::drawArrowShadow(int srcX, int srcY, int z, int destX,
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    m_arrowTileset->drawTileShadow(arrow - 1, tilex, tiley, tilew, tileh,
+    m_arrowTileset->DrawTileShadow(arrow - 1, tilex, tiley, tilew, tileh,
                                  g_windowManager->m_screenBitmap, baseX,
                                  baseY + 8, 0, 0);
 }
@@ -5262,7 +5262,7 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    m_arrowTileset->drawTile(arrow - 1, tilex, tiley, tilew, tileh,
+    m_arrowTileset->DrawTile(arrow - 1, tilex, tiley, tilew, tileh,
                            g_windowManager->m_screenBitmap, baseX, baseY + 8,
                            0, 0);
 }
@@ -5331,14 +5331,14 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
             ++lookup;
         if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
             lookup = CLOUD_DRAW_FRAME_4;
-        m_cloudIcons->drawShroudTile(
+        m_cloudIcons->DrawShroudTile(
             lookup - 1, tilex, tiley, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8, hflip, false);
         return;
     } while (0);
 
     int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
-    m_starTileset->drawShroudTile(
+    m_starTileset->DrawShroudTile(
         frame, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8, false, false);
 }
@@ -5431,9 +5431,9 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
-                            % sprite->getNumFrames(0);
+                            % sprite->GetNumFrames(0);
 
-                sprite->drawAdvObjWithFlag(
+                sprite->DrawAdvObjWithFlag(
                     frame,
                     tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                     tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -5444,9 +5444,9 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
-                            % sprite->getNumFrames(0);
+                            % sprite->GetNumFrames(0);
 
-                sprite->drawAdvObj(
+                sprite->DrawAdvObj(
                     frame,
                     tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
                     tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
@@ -5491,7 +5491,7 @@ void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 
     if (srcX >= 0 && srcY >= 0 && srcX < g_mapWidth
         && srcY < g_mapHeight) {
-        m_groundTileset[thisCell->m_groundSet]->drawTile(
+        m_groundTileset[thisCell->m_groundSet]->DrawTile(
             thisCell->m_groundIndex, tilex, tiley, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             thisCell->m_flags0011 & 1,
@@ -5525,7 +5525,7 @@ void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
     if (frame == -1)
         frame = (srcX + 16) % 4 + 4 * ((srcY + 16) % 4);
 
-    m_borderTileset->drawTile(
+    m_borderTileset->DrawTile(
         frame, tilex, tiley, tilew, tileh,
         g_windowManager->m_screenBitmap, baseX, baseY + 8, false, false);
 }
@@ -5721,7 +5721,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             if (!(viewTowns && cell->m_type == TOWN) && !revealed) {
                 colour = 0;
             } else {
-                colour = m_groundTileset[cell->m_groundSet]->getPaletteColor(8);
+                colour = m_groundTileset[cell->m_groundSet]->GetPaletteColor(8);
                 if (x == heroX && y == heroY) {
                     colour = g_systemPalette->m_data[64 + currentHero->m_owner];
                 } else if (cell->m_type == HERO
@@ -5753,7 +5753,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                     case TERRAIN_YUCCA_TREE:
                         if (!cell->m_passable)
                             colour = m_groundTileset[cell->m_groundSet]
-                                         ->getPaletteColor(9);
+                                         ->GetPaletteColor(9);
                         break;
                     case TOWN:
                         if (!cell->m_passable || cell->m_isTrigger) {
@@ -5948,23 +5948,23 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
     int srcY = origin.m_y < 0 ? -scale * origin.m_y : 0;
 
     CSprite* icons = m_radarIcons;
-    int drawWidth = icons->getWidth() - srcX;
-    int drawHeight = icons->getHeight() - srcY;
+    int drawWidth = icons->GetWidth() - srcX;
+    int drawHeight = icons->GetHeight() - srcY;
 
     int destX = origin.m_x < 0 ? rectX : rectX + origin.m_x * scale;
     int destY = origin.m_y < 0 ? rectY : rectY + origin.m_y * scale;
 
-    if (icons->getWidth() + destX > rectX + rectWidth)
-        drawWidth += rectWidth - icons->getWidth() - destX + rectX;
-    if (icons->getHeight() + destY > rectY + rectHeight)
-        drawHeight += rectHeight - icons->getHeight() - destY + rectY;
+    if (icons->GetWidth() + destX > rectX + rectWidth)
+        drawWidth += rectWidth - icons->GetWidth() - destX + rectX;
+    if (icons->GetHeight() + destY > rectY + rectHeight)
+        drawHeight += rectHeight - icons->GetHeight() - destY + rectY;
     if (drawWidth < 0)
         drawWidth = 0;
     if (drawHeight < 0)
         drawHeight = 0;
 
     if (!suppressIcon)
-        icons->drawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
+        icons->DrawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
                              g_windowManager->m_screenBitmap, destX, destY,
                              false);
 
@@ -9081,10 +9081,10 @@ void advManager::puzzleDraw(int startX, int startY, int z, int ultX, int ultY)
     g_drawingPuzzle = 1;
     completeDraw(startX, startY, z, 0, 0);
     g_drawingPuzzle = 0;
-    m_arrowTileset->drawTile(
+    m_arrowTileset->DrawTile(
         0, 0, 0, 32, 32, g_windowManager->m_screenBitmap,
-        (ultX - startX) * 32 + (32 - m_arrowTileset->getWidth()) / 2,
-        (ultY - startY) * 32 + (32 - m_arrowTileset->getHeight()) / 2,
+        (ultX - startX) * 32 + (32 - m_arrowTileset->GetWidth()) / 2,
+        (ultY - startY) * 32 + (32 - m_arrowTileset->GetHeight()) / 2,
         false, false);
 }
 

@@ -414,8 +414,8 @@ void CScenarioPlayerInfoWidget::draw() const
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     }
 
-    m_townSprite->draw(0, m_townType * 2 + 2, 0, 0,
-                     m_townSprite->getWidth(), m_townSprite->getHeight(),
+    m_townSprite->Draw(0, m_townType * 2 + 2, 0, 0,
+                     m_townSprite->GetWidth(), m_townSprite->GetHeight(),
                      g_windowManager->m_screenBitmap,
                      windowX + 173, windowY + m_playerPosition * 50 + 124,
                      0, 1);
@@ -461,8 +461,8 @@ void CScenarioPlayerInfoWidget::draw() const
         bonusFrame = 10;
         break;
     }
-    m_bonusSprite->draw(0, bonusFrame, 0, 0,
-                      m_bonusSprite->getWidth(), m_bonusSprite->getHeight(),
+    m_bonusSprite->Draw(0, bonusFrame, 0, 0,
+                      m_bonusSprite->GetWidth(), m_bonusSprite->GetHeight(),
                       g_windowManager->m_screenBitmap,
                       windowX + 325, windowY + m_playerPosition * 50 + 124,
                       0, 1);

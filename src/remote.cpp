@@ -1426,17 +1426,17 @@ void CAnimatedDlg::calcSpriteDimensions(
     int width = 0;
     int height = 0;
 
-    int numFrames = sprite->getNumFrames(m_seq);
-    CSpriteFrame* firstFrame = sprite->getFrame(m_seq, 0);
-    int baseX = firstFrame->getCroppedX();
-    int baseY = firstFrame->getCroppedY();
+    int numFrames = sprite->GetNumFrames(m_seq);
+    CSpriteFrame* firstFrame = sprite->GetFrame(m_seq, 0);
+    int baseX = firstFrame->GetCroppedX();
+    int baseY = firstFrame->GetCroppedY();
 
     for (int i = 0; i < numFrames; ++i) {
-        CSpriteFrame* frame = sprite->getFrame(m_seq, i);
-        int frameHeight = frame->getCroppedHeight();
-        int frameWidth = frame->getCroppedWidth();
-        int frameX = frame->getCroppedX() - baseX;
-        int frameY = frame->getCroppedY() - baseY;
+        CSpriteFrame* frame = sprite->GetFrame(m_seq, i);
+        int frameHeight = frame->GetCroppedHeight();
+        int frameWidth = frame->GetCroppedWidth();
+        int frameX = frame->GetCroppedX() - baseX;
+        int frameY = frame->GetCroppedY() - baseY;
         if (frameX < minX)
             minX = frameX;
         if (frameY < minY)
@@ -1484,13 +1484,13 @@ DC_ADDRESS(0x11d490, 0xc8)
 MAC_ADDRESS(0x2132e4, 0xd8)
 void CAnimatedDlg::drawSprite()
 {
-    int s0x = m_sprite->getCroppedX(m_seq, m_spriteFrame);
-    int s0y = m_sprite->getCroppedY(m_seq, m_spriteFrame);
-    int sw = m_sprite->getCroppedWidth(m_seq, m_spriteFrame);
-    int sh = m_sprite->getCroppedHeight(m_seq, m_spriteFrame);
-    int dx = m_x + m_spriteX + s0x - m_sprite->getCroppedX(m_seq, 0);
-    int dy = m_y + m_spriteY + s0y - m_sprite->getCroppedY(m_seq, 0);
-    m_sprite->drawCreature(
+    int s0x = m_sprite->GetCroppedX(m_seq, m_spriteFrame);
+    int s0y = m_sprite->GetCroppedY(m_seq, m_spriteFrame);
+    int sw = m_sprite->GetCroppedWidth(m_seq, m_spriteFrame);
+    int sh = m_sprite->GetCroppedHeight(m_seq, m_spriteFrame);
+    int dx = m_x + m_spriteX + s0x - m_sprite->GetCroppedX(m_seq, 0);
+    int dy = m_y + m_spriteY + s0y - m_sprite->GetCroppedY(m_seq, 0);
+    m_sprite->DrawCreature(
         m_seq, m_spriteFrame, s0x, s0y, sw, sh,
         g_windowManager->m_screenBitmap, dx, dy, 0, 0);
 }
@@ -1513,7 +1513,7 @@ void CAnimatedDlg::tickAnimation()
     unsigned long lastTick = m_lastTick;
     if (GameTime::elapsedSince(lastTick) >= 200) {
         m_spriteFrame = (m_spriteFrame + 1)
-                      % m_sprite->getNumFrames(m_seq);
+                      % m_sprite->GetNumFrames(m_seq);
         m_lastTick = currentTime;
         drawWindow(0, 0xffff0001, 0xffff);
         g_windowManager->updateScreen(m_x, m_y, m_width, m_height);

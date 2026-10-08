@@ -114,7 +114,7 @@ void button::setPalette(const char* paletteName)
 {
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
-        m_buttonIcon->setPalette(newPalette->m_data);
+        m_buttonIcon->SetPalette(newPalette->m_data);
         ResourceManager::dispose(newPalette);
     }
 }
@@ -353,14 +353,14 @@ int button::deselect(message& msg)
 DC_ADDRESS(0x057910, 0x12)
 int button::getRealWidth() const
 {
-    return m_buttonIcon->getWidth();
+    return m_buttonIcon->GetWidth();
 }
 
 // E:\gamedcs\button.cpp:435
 DC_ADDRESS(0x057924, 0x12)
 int button::getRealHeight() const
 {
-    return m_buttonIcon->getHeight();
+    return m_buttonIcon->GetHeight();
 }
 
 // E:\gamedcs\button.cpp:441
@@ -384,7 +384,7 @@ void button::draw() const
     if (!(m_status & WIDGET_DRAWN))
         return;
     int frame = m_normalFrame;
-    int frameCount = m_buttonIcon->getNumFrames(0);
+    int frameCount = m_buttonIcon->GetNumFrames(0);
     if ((m_status & WIDGET_HIGHLIGHTED) && !(m_status & WIDGET_SELECTED)) {
         frame = m_highlightedFrame;
     } else if (!(m_status & (WIDGET_DIMMED | WIDGET_DISABLED))) {
@@ -395,7 +395,7 @@ void button::draw() const
     }
     if (frame >= frameCount)
         frame = 0;
-    m_buttonIcon->drawInterface(frame, 0, 0, m_buttonIcon->getWidth(), m_buttonIcon->getHeight(),
+    m_buttonIcon->DrawInterface(frame, 0, 0, m_buttonIcon->GetWidth(), m_buttonIcon->GetHeight(),
                               g_windowManager->m_screenBitmap,
                               m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
                               false);
@@ -416,8 +416,8 @@ DC_ADDRESS(0x057a28, 0x32)
 MAC_ADDRESS(0x0637e8, 0x54)  // anchor-global
 void button::setPlayerPaletteColors(int whichPlayer)
 {
-    ::setPlayerPaletteColors(m_buttonIcon->getPalette(), whichPlayer);
-    ::setPlayerPaletteColors(m_buttonIcon->getPalette24(), whichPlayer);
+    ::setPlayerPaletteColors(m_buttonIcon->GetPalette(), whichPlayer);
+    ::setPlayerPaletteColors(m_buttonIcon->GetPalette24(), whichPlayer);
 }
 
 // Retail-only (no DC roster entry - DC's widget has no 13th virtual).

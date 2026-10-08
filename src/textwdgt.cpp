@@ -250,8 +250,8 @@ void iconBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
     int drawY = m_y + m_parentWindow->m_y;
-    m_background->drawInterface(m_backgroundFrame, 0, 0,
-        m_background->getWidth(), m_background->getHeight(),
+    m_background->DrawInterface(m_backgroundFrame, 0, 0,
+        m_background->GetWidth(), m_background->GetHeight(),
         g_windowManager->m_screenBitmap, drawX, drawY, 0);
     textWidget::draw();
 }

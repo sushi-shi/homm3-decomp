@@ -46,8 +46,19 @@ The name effect in `cspriteframe` goes through **data layout**, not code paths:
   (2 mod 4). `Draw` happens to align ours like retail for `div2mask`; the full
   Loki spellings put both masks at 2 mod 4.
 - Retail's unit `.bss` also has three unreferenced holes (`0x69689d–a3`,
-  `a8–a9`, `ac–af`). These are statics our source doesn't define yet, and they
-  are needed to reproduce retail's layout with the original names.
+  `a8–a9`, `ac–af`). Part of them is `EncodeGeneral`'s pair of local statics:
+  DC CodeView puts its `kOpaqueRunCode` and `kMaxRunLength` in `.bss`, and
+  Loki's h3maped guards and copies both from the file statics. Retail does
+  not link `EncodeGeneral`, but its statics stay in the compiland's `.bss`.
+  With `kMaxRunLength` dynamically initialized, the DC names for the file and
+  local statics (`kGeneralRLEOpaqueRunCode`, `kGeneralRLEMaxRunLength`,
+  `kOpaqueRunCode`, `kMaxRunLength`) and the Loki/DC spellings for every
+  `CSprite`/`CSpriteFrame` method, member and static, the unit places
+  `div2mask` at 8 and `div4mask` at 0xe as retail does, and all 14
+  `cspriteframe` functions are exact.
+- Our layout is still 2 bytes shorter and orders the guards differently. One
+  4-byte slot (retail `0x6968ac–af`) has no retail user and no DC or Loki
+  counterpart, so it stays undefined.
 - The blend-term order VC6 picks also follows the names.
 
 See [behavior-catalog C12](../vc6/behavior-catalog.md).
@@ -83,9 +94,8 @@ period-64 handle effect (`docs/vc6/handle-period.md`, #186).
 
 ## Plan
 
-1. Recover the three missing `cspriteframe` `.bss` statics, then retry the
-   Loki-proven spellings. Separately, locate the `.bss` name hash, and any other
-   name-ordered decision. Use the in-process C2 shim and IL replay (#186), and diff C2 state
+1. Done for `cspriteframe` (2026-10-08, above). Separately, locate the `.bss`
+   name hash, and any other name-ordered decision. Use the in-process C2 shim and IL replay (#186), and diff C2 state
    at the affected functions' entry between `Draw` and `draw`.
 2. From the mechanism, compute which functions any name change can affect,
    and which names they are sensitive to, without renaming at random.

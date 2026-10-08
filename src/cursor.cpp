@@ -95,31 +95,31 @@ void advManager::drawCursor(int cellX, int cellY)
             boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
 
             if (!getCell(curr->getLocation())->m_isBeachBorder) {
-                m_boatFrothIcons[currBoat->m_type]->drawHero(
+                m_boatFrothIcons[currBoat->m_type]->DrawHero(
                     m_cursorSequence, m_cursorFrameCount,
                     cellX * 32, cellY * 32, 32, 32,
                     g_windowManager->m_screenBitmap,
                     refX, refY, curr->getHflip());
             }
             m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
-                ->drawHero(
+                ->DrawHero(
                     m_cursorSequence,
                     (m_animCtr + m_cursorFrameCount) % 8,
                     cellX * 32, cellY * 32, 32, 32,
                     g_windowManager->m_screenBitmap,
                     refX, refY, curr->getHflip());
-            m_boatIcons[currBoat->m_type]->drawHero(
+            m_boatIcons[currBoat->m_type]->DrawHero(
                 m_cursorSequence, m_cursorFrameCount,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
                 refX, refY, curr->getHflip());
         } else {
-            m_flagIcons[curr->m_owner]->drawHero(
+            m_flagIcons[curr->m_owner]->DrawHero(
                 m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
                 refX, refY, curr->getHflip());
-            m_cursorIcons[curr->m_heroClass]->drawHero(
+            m_cursorIcons[curr->m_heroClass]->DrawHero(
                 m_cursorSequence, m_cursorFrameCount,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
@@ -145,13 +145,13 @@ void advManager::drawCursorShadow(int cellX, int cellY)
     if (curr) {
         if (curr->m_flags & 0x40000) {
             boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
-            m_boatIcons[currBoat->m_type]->drawHeroShadow(
+            m_boatIcons[currBoat->m_type]->DrawHeroShadow(
                 m_cursorSequence, m_cursorFrameCount,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
                 refX, refY, curr->getHflip());
         } else {
-            m_cursorIcons[curr->m_heroClass]->drawHeroShadow(
+            m_cursorIcons[curr->m_heroClass]->DrawHeroShadow(
                 m_cursorSequence, m_cursorFrameCount,
                 cellX * 32, cellY * 32, 32, 32,
                 g_windowManager->m_screenBitmap,
@@ -192,25 +192,25 @@ void advManager::drawCursorAlpha()
 
             if (curr->m_flags & 0x40000) {
                 boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
-                m_boatFlagIcons[currBoat->m_type][curr->m_owner]->drawHeroAlpha(
+                m_boatFlagIcons[currBoat->m_type][curr->m_owner]->DrawHeroAlpha(
                     m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                     clipx, clipy, 96 - rightClip - clipx,
                     64 - bottomClip - clipy,
                     g_windowManager->m_screenBitmap, refX, refY,
                     curr->getHflip());
-                m_boatIcons[currBoat->m_type]->drawHeroAlpha(
+                m_boatIcons[currBoat->m_type]->DrawHeroAlpha(
                     m_cursorSequence, m_cursorFrameCount, clipx, clipy,
                     96 - rightClip - clipx, 64 - bottomClip - clipy,
                     g_windowManager->m_screenBitmap, refX, refY,
                     curr->getHflip());
             } else {
-                m_flagIcons[curr->m_owner]->drawHeroAlpha(
+                m_flagIcons[curr->m_owner]->DrawHeroAlpha(
                     m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                     clipx, clipy, 96 - rightClip - clipx,
                     64 - bottomClip - clipy,
                     g_windowManager->m_screenBitmap, refX, refY,
                     curr->getHflip());
-                m_cursorIcons[curr->m_heroClass]->drawHeroAlpha(
+                m_cursorIcons[curr->m_heroClass]->DrawHeroAlpha(
                     m_cursorSequence, m_cursorFrameCount, clipx, clipy,
                     96 - rightClip - clipx, 64 - bottomClip - clipy,
                     g_windowManager->m_screenBitmap, refX, refY,

@@ -761,7 +761,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             castX = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
                 g_heroTraits[castingHero->m_id].m_sex].m_castX - 43;
         else
-            castX = m_creatureSprites[1]->getWidth()
+            castX = m_creatureSprites[1]->GetWidth()
                 - g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
                 g_heroTraits[castingHero->m_id].m_sex].m_castX + 693;
         castY = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
@@ -1641,7 +1641,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // the same completion loop, state reset, final DrawFrame, and selector
     // update in this order.
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
-        int nframes = m_creatureSprites[m_currentSide]->getNumFrames(4);
+        int nframes = m_creatureSprites[m_currentSide]->GetNumFrames(4);
         for (int frame = g_combatHeroSprites[g_heroClasses[castingHero->m_heroClass].m_townType][
                 g_heroTraits[castingHero->m_id].m_sex].m_castFrame;
              frame < nframes; ++frame) {
@@ -3033,7 +3033,7 @@ void combatManager::armageddon(int level, int power)
         loadSpellEffect(spellTraits.m_effect);
         int maxFrames;
         if (m_powSprite)
-            maxFrames = m_powSprite->getNumFrames(0);
+            maxFrames = m_powSprite->GetNumFrames(0);
         else
             maxFrames = 0;
 
@@ -3045,17 +3045,17 @@ void combatManager::armageddon(int level, int power)
                 army* currentArmy = &m_armies[side][i];
                 if (m_effected[side][i]) {
                     if (currentArmy->m_numTroops <= 0) {
-                        if (currentArmy->m_stdIcon->getNumFrames(cs_death)
+                        if (currentArmy->m_stdIcon->GetNumFrames(cs_death)
                             > maxFrames)
                             maxFrames =
-                                currentArmy->m_stdIcon->getNumFrames(cs_death);
+                                currentArmy->m_stdIcon->GetNumFrames(cs_death);
                         currentArmy->m_currFrameType = cs_death;
                         currentArmy->playSample(army::DIE_SAMPLE);
                     } else {
-                        if (currentArmy->m_stdIcon->getNumFrames(cs_wince)
+                        if (currentArmy->m_stdIcon->GetNumFrames(cs_wince)
                             > maxFrames)
                             maxFrames =
-                                currentArmy->m_stdIcon->getNumFrames(cs_wince);
+                                currentArmy->m_stdIcon->GetNumFrames(cs_wince);
                         currentArmy->m_currFrameType = cs_wince;
                         currentArmy->playSample(army::WINCE_SAMPLE);
                     }
@@ -3064,8 +3064,8 @@ void combatManager::armageddon(int level, int power)
             } }
         } }
 
-        const int twidth = m_powSprite->getWidth();
-        const int theight = m_powSprite->getHeight();
+        const int twidth = m_powSprite->GetWidth();
+        const int theight = m_powSprite->GetHeight();
         const int xtiles = (twidth + 799) / twidth;
         const int ytiles = (theight + 599) / theight;
         { for (int frame = 0; frame < maxFrames; frame++) {
@@ -3077,7 +3077,7 @@ void combatManager::armageddon(int level, int power)
                         // sequence runs out; a dying one holds its last
                         // frame, which is why only cs_wince is reset.
                         if (currentArmy->m_currFrameIndex
-                            < currentArmy->m_stdIcon->getNumFrames(
+                            < currentArmy->m_stdIcon->GetNumFrames(
                                   currentArmy->m_currFrameType) - 1) {
                             currentArmy->m_currFrameIndex++;
                         } else if (currentArmy->m_currFrameType == cs_wince) {
@@ -3088,7 +3088,7 @@ void combatManager::armageddon(int level, int power)
                 } }
             } }
             drawFrame(0, 0, 0, 100, 1, 1);
-            if (m_powSprite && frame < m_powSprite->getNumFrames(0)) {
+            if (m_powSprite && frame < m_powSprite->GetNumFrames(0)) {
                 { for (int ty = 0; ty < ytiles; ty++) {
                     const int dy = ty * theight;
                     const int sh = theight <= 556 - dy
@@ -3097,7 +3097,7 @@ void combatManager::armageddon(int level, int power)
                         const int dx = tx * twidth;
                         const int sw = twidth > 800 - dx
                             ? 800 - dx : twidth;
-                        m_powSprite->drawSpellEffect(
+                        m_powSprite->DrawSpellEffect(
                             0, frame, 0, 0, sw, sh,
                             g_windowManager->m_screenBitmap, dx, dy, 0, 0);
                     } }
@@ -3693,7 +3693,7 @@ done:
             long frames;
             {
                 CSprite* icon = currentArmy->m_stdIcon;
-                frames = icon->getNumFrames(currentArmy->m_currFrameType);
+                frames = icon->GetNumFrames(currentArmy->m_currFrameType);
             }
             long frameDelay = currentArmy->m_monFrameInfo.m_attackStartCycleTime / frames;
             while (currentArmy->m_currFrameIndex < frames) {
@@ -3706,7 +3706,7 @@ done:
             {
                 CSprite* icon = currentArmy->m_stdIcon;
                 currentArmy->m_currFrameIndex =
-                    icon->getNumFrames(currentArmy->m_currFrameType) - 1;
+                    icon->GetNumFrames(currentArmy->m_currFrameType) - 1;
             }
         }
         g_mouseManager->showPointer(false);
@@ -4012,7 +4012,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
     if (!isQuickCombat()) {
         loadSpellEffect(spellEffect);
         if (m_powSprite)
-            frames = m_powSprite->getNumFrames(cs_walk);
+            frames = m_powSprite->GetNumFrames(cs_walk);
         else
             frames = 0;
         for (int side = 0; side < 2; side++) {
@@ -4023,12 +4023,12 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                 if (showWince && effected[side][i]
                     && stack.m_currFrameType != cs_wince) {
                     if (stack.m_numTroops <= 0) {
-                        if (stack.m_stdIcon->getNumFrames(cs_death) > frames)
-                            frames = stack.m_stdIcon->getNumFrames(cs_death);
+                        if (stack.m_stdIcon->GetNumFrames(cs_death) > frames)
+                            frames = stack.m_stdIcon->GetNumFrames(cs_death);
                         stack.playSample(army::DIE_SAMPLE);
                     } else {
-                        if (stack.m_stdIcon->getNumFrames(cs_wince) > frames)
-                            frames = stack.m_stdIcon->getNumFrames(cs_wince);
+                        if (stack.m_stdIcon->GetNumFrames(cs_wince) > frames)
+                            frames = stack.m_stdIcon->GetNumFrames(cs_wince);
                         stack.playSample(army::WINCE_SAMPLE);
                     }
                 }
@@ -4059,7 +4059,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                     if (showWince && effected[side][i]) {
                         int sequence = stack.m_currFrameType;
                         if (stack.m_currFrameIndex
-                            < stack.m_stdIcon->getNumFrames(sequence) - 1) {
+                            < stack.m_stdIcon->GetNumFrames(sequence) - 1) {
                             stack.m_currFrameIndex++;
                         } else if (sequence == cs_wince) {
                             stack.m_currFrameType = cs_wait;
@@ -4067,7 +4067,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
                         }
                     }
                     if (m_powSprite
-                        && frame + 1 < m_powSprite->getNumFrames(cs_walk))
+                        && frame + 1 < m_powSprite->GetNumFrames(cs_walk))
                         m_powFrameIndex = frame;
                 }
             } }
@@ -4455,9 +4455,9 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 
         int effect = g_spellTraits[SPELL_RESURRECTION].m_effect;
         loadSpellEffect(effect);
-        long powFrames = m_powSprite ? m_powSprite->getNumFrames(0) : 0;
+        long powFrames = m_powSprite ? m_powSprite->GetNumFrames(0) : 0;
         long deathFrames =
-            targetArmy->m_stdIcon->getNumFrames(cs_death);
+            targetArmy->m_stdIcon->GetNumFrames(cs_death);
         long frames = max(powFrames, deathFrames);
         targetArmy->m_showPowEffect = 1;
         playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
@@ -4777,7 +4777,7 @@ void combatManager::earthquake(int level)
             combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 15.0f);
         CSprite* blast = ResourceManager::getSprite("SGEXPL.DEF");
         launchSample("WallHit.82m", -1, 3);
-        for (int frame = 0; frame < blast->getNumFrames(0); frame++) {
+        for (int frame = 0; frame < blast->GetNumFrames(0); frame++) {
             unsigned long frameTil = GameTime::get() + frameDelay;
             drawFrame(0, 0, 1, 0, 0, 0);
             for (int i = 0; i < WALL_TARGET_COUNT; i++) {
@@ -4787,18 +4787,18 @@ void combatManager::earthquake(int level)
                 long y = s_wallTargets[i].m_hitY;
                 SLimitData* bounds = &m_extent;
                 *bounds = SLimitData(
-                    x - blast->getWidth() / 2,
-                    y - blast->getHeight() / 2,
-                    x - blast->getWidth() / 2 + blast->getWidth() - 1,
-                    y - blast->getHeight() / 2 + blast->getHeight() - 1);
+                    x - blast->GetWidth() / 2,
+                    y - blast->GetHeight() / 2,
+                    x - blast->GetWidth() / 2 + blast->GetWidth() - 1,
+                    y - blast->GetHeight() / 2 + blast->GetHeight() - 1);
                 bounds->clip(combatManager::s_combatAreaLimits);
                 if (frame == g_earthquakeImpactFrame) {
                     damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
                 }
-                blast->draw(0, frame, 0, 0,
+                blast->Draw(0, frame, 0, 0,
                             bounds->width(), bounds->height(),
                             g_windowManager->m_screenBitmap,
-                            x - blast->getWidth() / 2, y - blast->getHeight() / 2,
+                            x - blast->GetWidth() / 2, y - blast->GetHeight() / 2,
                             0, 1);
                 // DC spells.cpp:5292/5293 passes *bounds by value through
                 // the global combat manager, matching the Mac update body.

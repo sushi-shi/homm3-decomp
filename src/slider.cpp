@@ -44,13 +44,13 @@ void slider::initialize(const char* resourceName)
         m_sliderSprite = ResourceManager::getSprite(resourceName);
         m_sliderBitmap = ResourceManager::getBitmap816(
             DATA_COMPGEN(0x00683980, sliderHorizontalBitmap, "slider.pcx"));
-        m_knobStart = m_sliderSprite->getWidth();
+        m_knobStart = m_sliderSprite->GetWidth();
     } else {
         m_length = m_height;
         m_sliderSprite = ResourceManager::getSprite(resourceName);
         m_sliderBitmap = ResourceManager::getBitmap816(
             DATA_COMPGEN(0x00683974, sliderVerticalBitmap, "sliderV.pcx"));
-        m_knobStart = m_sliderSprite->getHeight();
+        m_knobStart = m_sliderSprite->GetHeight();
     }
 
     m_knobPos = m_knobStart;
@@ -123,16 +123,16 @@ MAC_ADDRESS(0x18951c, 0x3e8)
 void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 {
     m_status |= WIDGET_SELECTED;
-    m_sliderSprite->drawInterface(
-        x1, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+    m_sliderSprite->DrawInterface(
+        x1, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
         0);
     int endY = m_parentWindow->m_y + m_y;
     endY -= m_knobStart;
     endY += m_length;
-    m_sliderSprite->drawInterface(
-        x2, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+    m_sliderSprite->DrawInterface(
+        x2, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x,
         endY,
@@ -141,8 +141,8 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
         x3, 0, m_width, m_length - m_knobStart * 2,
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, 0);
-    m_sliderSprite->drawInterface(
-        x4, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+    m_sliderSprite->DrawInterface(
+        x4, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
         g_windowManager->m_screenBitmap,
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobPos,
         0);
@@ -456,11 +456,11 @@ int slider::deselect(message* msg)
 // Original: slider::GetRealWidth; slider.cpp:602
 // These accessors share iconWidget's retail representatives 0x4eab20/30.
 DC_ADDRESS(0x14a67c, 0x16)
-int slider::getRealWidth() const { return m_sliderSprite->getWidth(); }
+int slider::getRealWidth() const { return m_sliderSprite->GetWidth(); }
 
 // Original: slider::GetRealHeight; slider.cpp:606
 DC_ADDRESS(0x14a694, 0x16)
-int slider::getRealHeight() const { return m_sliderSprite->getHeight(); }
+int slider::getRealHeight() const { return m_sliderSprite->GetHeight(); }
 
 // Original: slider::zBufferDraw; slider.cpp:610
 // CodeView's formal type proves this two-argument const hook; retail folds
@@ -477,27 +477,27 @@ void slider::draw() const
 {
     if (m_width > m_height) {
         if ((m_status & WIDGET_SELECTED) && m_clickX - m_x < m_knobStart) {
-            m_sliderSprite->drawInterface(
-                1, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                1, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
         } else {
-            m_sliderSprite->drawInterface(
-                0, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                0, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
         }
 
         if ((m_status & WIDGET_SELECTED)
             && m_clickX - m_x > m_length - m_knobStart) {
-            m_sliderSprite->drawInterface(
-                3, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                3, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x + m_length - m_knobStart,
                 m_y + m_parentWindow->m_y, 0);
         } else {
-            m_sliderSprite->drawInterface(
-                2, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                2, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x + m_length - m_knobStart,
                 m_y + m_parentWindow->m_y, 0);
@@ -507,33 +507,33 @@ void slider::draw() const
             0, 0, m_length - m_knobStart * 2, m_height,
             g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x + m_knobStart, m_y + m_parentWindow->m_y, 0);
-        m_sliderSprite->drawInterface(
-            4, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+        m_sliderSprite->DrawInterface(
+            4, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
             g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x + m_knobPos, m_y + m_parentWindow->m_y, 0);
     } else {
         if ((m_status & WIDGET_SELECTED) && m_clickY - m_y < m_knobStart) {
-            m_sliderSprite->drawInterface(
-                1, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                1, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
         } else {
-            m_sliderSprite->drawInterface(
-                0, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                0, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
         }
 
         if ((m_status & WIDGET_SELECTED)
             && m_clickY - m_y > m_length - m_knobStart) {
-            m_sliderSprite->drawInterface(
-                3, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                3, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x,
                 m_y + m_parentWindow->m_y + m_length - m_knobStart, 0);
         } else {
-            m_sliderSprite->drawInterface(
-                2, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+            m_sliderSprite->DrawInterface(
+                2, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
                 g_windowManager->m_screenBitmap,
                 m_x + m_parentWindow->m_x,
                 m_y + m_parentWindow->m_y + m_length - m_knobStart, 0);
@@ -543,8 +543,8 @@ void slider::draw() const
             0, 0, m_width, m_length - m_knobStart * 2,
             g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobStart, 0);
-        m_sliderSprite->drawInterface(
-            4, 0, 0, m_sliderSprite->getWidth(), m_sliderSprite->getHeight(),
+        m_sliderSprite->DrawInterface(
+            4, 0, 0, m_sliderSprite->GetWidth(), m_sliderSprite->GetHeight(),
             g_windowManager->m_screenBitmap,
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y + m_knobPos, 0);
     }

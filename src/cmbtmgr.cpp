@@ -858,7 +858,7 @@ void combatManager::loadIcons()
             m_heroFlagSprites[side] = ResourceManager::getSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
                 : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));
-            setPlayerPaletteColors(m_heroFlagSprites[side]->getPalette(),
+            setPlayerPaletteColors(m_heroFlagSprites[side]->GetPalette(),
                 m_playerIds[side]);
         } else {
             m_creatureSprites[side] = 0;
@@ -2134,7 +2134,7 @@ void combatManager::keepAttack(int towerPos)
 
         const int frames = info->m_attackFrames > 0
             ? info->m_attackFrames
-            : archer->m_sprite->getNumFrames(armyDir);
+            : archer->m_sprite->GetNumFrames(armyDir);
         archer->m_sequence = armyDir;
         delay = info->m_attackStartCycleTime / frames;
 
@@ -2178,7 +2178,7 @@ void combatManager::keepAttack(int towerPos)
 
     if (!isQuickCombat()) {
         while (archer->m_frame
-                < archer->m_sprite->getNumFrames(armyDir) - 1) {
+                < archer->m_sprite->GetNumFrames(armyDir) - 1) {
             archer->m_frame++;
             drawFrame(1, 1, 0, delay, 1, 1);
         }
@@ -3004,8 +3004,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     const double flatness =
         2.0 * abs(deltaX) / static_cast<double>(nframes);
 
-    int width = missile->getWidth();
-    int height = missile->getHeight();
+    int width = missile->GetWidth();
+    int height = missile->GetHeight();
     startX -= width / 2;
     startY -= height / 2;
     int x = startX;
@@ -3030,7 +3030,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 / static_cast<double>(nframes) + startY);
         }
         saved.grab(g_windowManager->m_screenBitmap, x, y);
-        missile->draw(0, frame, 0, 0, width, height,
+        missile->Draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, false, true);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         scrollTo(x, y, x + width - 1, y + height - 1,
@@ -3040,7 +3040,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         saved.draw(0, 0, width, height,
                    g_windowManager->m_screenBitmap, x, y, false);
         ++frame;
-        if (frame >= missile->getNumFrames(0))
+        if (frame >= missile->GetNumFrames(0))
             frame = 0;
         GameTime::delayTil(nextFrameTime);
     }
@@ -3116,8 +3116,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     }
 
     CSprite* const missile = ResourceManager::getSprite(fileNames[spriteIndex]);
-    int width = missile->getWidth();
-    int height = missile->getHeight();
+    int width = missile->GetWidth();
+    int height = missile->GetHeight();
     int x = startX - width / 2;
     int y = startY - height / 2;
 
@@ -3140,7 +3140,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             y += addY;
         }
         saved.grab(g_windowManager->m_screenBitmap, x, y);
-        missile->draw(0, frame, 0, 0, width, height,
+        missile->Draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         scrollTo(x, y, x + width - 1, y + height - 1,
                  true, true, true);  // DC 3865
@@ -3149,7 +3149,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         updateArea.clip(combatManager::s_combatAreaLimits);
         updateCombatArea(updateArea);  // DC 3874, by-value extent
         ++frame;
-        if (frame >= missile->getNumFrames(0))
+        if (frame >= missile->GetNumFrames(0))
             frame = 0;
         GameTime::delayTil(nextFrameTime);
     }
@@ -3224,15 +3224,15 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         addY = deltaY;
     }
 
-    int width = missile->getWidth();
-    int height = missile->getHeight();
+    int width = missile->GetWidth();
+    int height = missile->GetHeight();
     int x = startX - width / 2;
     int y = startY - height / 2;
 
     int frame;
     if (deltaX == 0) {
         if (deltaY > 0)
-            frame = missile->getNumFrames(0) - 1;
+            frame = missile->GetNumFrames(0) - 1;
         else
             frame = 0;
     } else {
@@ -3250,14 +3250,14 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                     * 57.2957763671875;
         angle = static_cast<float>(degrees);
         int index;
-        for (index = 1; index < missile->getNumFrames(0); ++index) {
+        for (index = 1; index < missile->GetNumFrames(0); ++index) {
             if ((angles[index - 1] + angles[index]) / 2.0f < angle)
                 break;
         }
-        if (index < missile->getNumFrames(0))
+        if (index < missile->GetNumFrames(0))
             frame = index - 1;
         else
-            frame = missile->getNumFrames(0) - 1;
+            frame = missile->GetNumFrames(0) - 1;
     }
 
     Bitmap16Bit saved(width, height);
@@ -3280,7 +3280,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         saved.grab(g_windowManager->m_screenBitmap, x, y);
         // DC cmbtmgr.cpp:4008 calls the const bitmap-forwarding overload
         // from CSprite.h:324, retained at dc 0x1f268.
-        missile->draw(0, frame, 0, 0, width, height,
+        missile->Draw(0, frame, 0, 0, width, height,
                       g_windowManager->m_screenBitmap, x, y, flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         scrollTo(x, y, x + width - 1, y + height - 1,
@@ -3435,7 +3435,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     else
                         stack.m_nextFrameType = cs_wince;
                     stack.m_remainingFramesToPlay = static_cast<signed char>(
-                        stack.m_stdIcon->getNumFrames(stack.m_nextFrameType));
+                        stack.m_stdIcon->GetNumFrames(stack.m_nextFrameType));
                     if (stack.m_nextFrameType == stack.m_currFrameType)
                         stack.m_remainingFramesToPlay--;
                     if (stack.m_drawPriority < 5)
@@ -3463,7 +3463,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
 
         int numFrames = 0;
         if (showSomePowEffect)
-            numFrames = m_powSprite->getNumFrames(0);
+            numFrames = m_powSprite->GetNumFrames(0);
 
         int attackFrames = 0;
         int winceFrames = 0;
@@ -3472,14 +3472,14 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                 army& stack = m_armies[side][slot];
                 if (stack.m_showAttackFrames)
                     attackFrames = max(attackFrames,
-                        stack.m_stdIcon->getNumFrames(
+                        stack.m_stdIcon->GetNumFrames(
                             stack.m_showAttackFrameType));
                 else if (stack.m_allUnitsKilled)
                     winceFrames = max(winceFrames,
-                        stack.m_stdIcon->getNumFrames(cs_death));
+                        stack.m_stdIcon->GetNumFrames(cs_death));
                 else if (stack.m_someUnitsDamaged)
                     winceFrames = max(winceFrames,
-                        stack.m_stdIcon->getNumFrames(cs_wince));
+                        stack.m_stdIcon->GetNumFrames(cs_wince));
             }
         }
         numFrames = max(max(numFrames, winceFrames), attackFrames);
@@ -3511,7 +3511,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     if (stack.m_showRangeFrames
                             && stack.m_currFrameType != cs_wait) {
                         if (stack.m_currFrameIndex
-                                < stack.m_stdIcon->getNumFrames(
+                                < stack.m_stdIcon->GetNumFrames(
                                     stack.m_currFrameType) - 1) {
                             stack.m_currFrameIndex++;
                         } else {
@@ -3527,7 +3527,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                                 || (!attackFrames
                                     && (stack.m_currFrameType != cs_wince
                                         || stack.m_currFrameIndex
-                                            < stack.m_stdIcon->getNumFrames(
+                                            < stack.m_stdIcon->GetNumFrames(
                                                 stack.m_currFrameType) - 1)))) {
                             if (stack.m_currFrameType != stack.m_nextFrameType) {
                                 if (!isQuickCombat()) {
@@ -3543,7 +3543,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                                 stack.m_currFrameType = stack.m_nextFrameType;
                                 stack.m_currFrameIndex = 0;
                             } else if (stack.m_currFrameIndex
-                                    < stack.m_stdIcon->getNumFrames(
+                                    < stack.m_stdIcon->GetNumFrames(
                                         stack.m_currFrameType) - 1) {
                                 stack.m_currFrameIndex++;
                             } else if (stack.m_currFrameType != cs_wait
@@ -3558,7 +3558,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             }
 
             if (showSomePowEffect
-                    && frameCount < m_powSprite->getNumFrames(0))
+                    && frameCount < m_powSprite->GetNumFrames(0))
                 m_powFrameIndex = frameCount;
 
             drawFrame(0, 1, 0, 100, 1, 1);
@@ -3588,7 +3588,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
                     army& stack = m_armies[side][slot];
                     if (stack.m_currFrameType != cs_wait) {
                         if (stack.m_currFrameIndex
-                                < stack.m_stdIcon->getNumFrames(
+                                < stack.m_stdIcon->GetNumFrames(
                                     stack.m_currFrameType) - 1) {
                             stack.m_currFrameIndex++;
                             framesChanged = 1;
@@ -3779,7 +3779,7 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
     }
 
     if (missile) {
-        int frames = missile->getNumFrames(0);
+        int frames = missile->GetNumFrames(0);
         int frame = 1;
         while (frame < frames
                 && (monFrameInfo.m_arrowAngle[frame - 1] + monFrameInfo.m_arrowAngle[frame]) / 2.0f

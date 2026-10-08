@@ -360,7 +360,7 @@ void ResourceManager::remapGraphics()
         case RESOURCE_TYPE_POINTER:
         case RESOURCE_TYPE_INTERFACE:
         case RESOURCE_TYPE_COMBAT_HERO:
-            static_cast<CSprite*>(value)->resetPalette();
+            static_cast<CSprite*>(value)->ResetPalette();
             break;
 
         case RESOURCE_TYPE_BITMAP:
@@ -415,8 +415,8 @@ void ResourceManager::saturateGraphics()
         case RESOURCE_TYPE_INTERFACE:
         case RESOURCE_TYPE_COMBAT_HERO: {
             CSprite* sprite = static_cast<CSprite*>(value);
-            sprite->getPalette24().adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-            sprite->resetPalette();
+            sprite->GetPalette24().adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            sprite->ResetPalette();
             break;
         }
 
@@ -628,7 +628,7 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
                                      unsigned long greenMask,
                                      unsigned long blueMask)
 {
-    CSprite::setPixelFormat(redMask, greenMask, blueMask);
+    CSprite::SetPixelFormat(redMask, greenMask, blueMask);
     Bitmap16Bit::setPixelFormat(redMask, greenMask, blueMask);
     TPalette16::setPixelFormat(redMask, greenMask, blueMask);
     g_spriteMaskFirst = redMask;
@@ -1478,18 +1478,18 @@ sample* ResourceManager::getSample(const char* name)
 DC_ADDRESS(0x073b64, 0x48)
 inline void addPal16(CSprite* sprite, const TPalette16* pal)
 {
-    if (sprite->m_p)
-        delete sprite->m_p;
-    sprite->m_p = new TPalette16(pal);
+    if (sprite->p)
+        delete sprite->p;
+    sprite->p = new TPalette16(pal);
 }
 
 // Original: addPal24; csprite.cpp:986
 DC_ADDRESS(0x073bac, 0x48)
 inline void addPal24(CSprite* sprite, const TPalette24* pal)
 {
-    if (sprite->m_p24)
-        delete sprite->m_p24;
-    sprite->m_p24 = new TPalette24(pal);
+    if (sprite->p24)
+        delete sprite->p24;
+    sprite->p24 = new TPalette24(pal);
 }
 
 // Dreamcast GetSprite proves GetFromCache, SpriteDefHeader
@@ -1616,7 +1616,7 @@ CSprite* ResourceManager::getSprite(const char* name)
         // Retail saves this value before allocateSeq and retains it through
         // frame acquisition; Mac 15421c/154410 likewise owns it in r22.
         int sequenceNumber = sequence.m_sequenceNumber;
-        sprite->allocateSeq(sequenceNumber, sequence.m_numFrames);
+        sprite->AllocateSeq(sequenceNumber, sequence.m_numFrames);
 
         int frameIndex;
         int frameNameOffset = 0;
@@ -1693,7 +1693,7 @@ CSprite* ResourceManager::getSprite(const char* name)
                 addToCache(frame);
             }
 
-            sprite->addFrame(sequenceNumber, frame);
+            sprite->AddFrame(sequenceNumber, frame);
             delete[] frameData;
         }
     }
@@ -1880,12 +1880,12 @@ void CSprite::dispose()
     if (this) {
         release();
         if (getReferenceCount() == 0) {
-            int sequenceCount = getNumSeqs(getResType());
+            int sequenceCount = GetNumSeqs(getResType());
             for (int sequence = 0; sequence < sequenceCount; ++sequence) {
-                if (isValidSeq(sequence)) {
-                    int frameCount = getNumFrames(sequence);
+                if (IsValidSeq(sequence)) {
+                    int frameCount = GetNumFrames(sequence);
                     for (int frame = 0; frame < frameCount; ++frame) {
-                        CSpriteFrame* image = getFrame(sequence, frame);
+                        CSpriteFrame* image = GetFrame(sequence, frame);
                         if (image)
                             // DC 0x122652 uses the resource facade in the
                             // older free sprite-disposal function. Complete

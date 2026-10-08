@@ -889,7 +889,7 @@ int highScoreWindowHandler(message& msg)
             iconWidget*& creature = g_highScoreWindow
                 ->m_creatures[g_highScoreWindow->m_isStandard][frame];
             ++frameNumber;
-            if (frameNumber >= creature->m_sprite->getNumFrames(0))
+            if (frameNumber >= creature->m_sprite->GetNumFrames(0))
                 frameNumber = 0;
             creature->sendMessage(widget::WIDGET_SET_ICON_FRAME, frameNumber);
         }

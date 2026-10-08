@@ -233,7 +233,7 @@ DC_ADDRESS(0x055448, 0x64)
 MAC_ADDRESS(0x05f6c0, 0xe4)
 void TBottomViewNewTurn::animate()
 {
-    if (m_frame == m_icon->m_sprite->getNumFrames(0) - 1)
+    if (m_frame == m_icon->m_sprite->GetNumFrames(0) - 1)
         return;
 
     unsigned long lastStep = m_lastStepTime;
@@ -291,8 +291,8 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
     if (res >= 0) {
         CSprite* sprite = ResourceManager::getSprite("resour82.def");
 
-        m_widgets.push_back(new iconWidget((m_width - sprite->getWidth()) / 2, 50,
-            sprite->getWidth(), sprite->getHeight(), 0x837, "resour82.def", res,
+        m_widgets.push_back(new iconWidget((m_width - sprite->GetWidth()) / 2, 50,
+            sprite->GetWidth(), sprite->GetHeight(), 0x837, "resour82.def", res,
             0, 0, 0, 0x10));
 
         std::ostrstream quantityText;
@@ -302,7 +302,7 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         int fontHeight = g_smallFont->m_fs.m_height;
 
         m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
-            sprite->getHeight() + 55, textWidth, fontHeight,
+            sprite->GetHeight() + 55, textWidth, fontHeight,
             quantityText.str(), "smalfont.fnt", font::PRIMARY, 0x836,
             1, 0, 8));
 
@@ -1047,7 +1047,7 @@ void TBottomViewEnemyTurn::animate()
     if (GameTime::elapsedSince(lastStep) < m_frameDelay)
         return;
 
-    int numFrames = m_hourGlass->m_sprite->getNumFrames(0);
+    int numFrames = m_hourGlass->m_sprite->GetNumFrames(0);
 
     m_lastStepTime = GameTime::get();
 
@@ -1089,7 +1089,7 @@ void TBottomViewEnemyTurn::animate()
         m_step++;
 
     m_frame++;
-    if (m_frame >= m_sand->m_sprite->getNumFrames(0))
+    if (m_frame >= m_sand->m_sprite->GetNumFrames(0))
         m_frame = 0;
 
     m_hourGlass->setIconFrame(m_step);

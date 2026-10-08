@@ -201,7 +201,7 @@ int army::fly(int destIndex)
         g_combatManager->removeArmyFromGrid(*this);
 
         m_currFrameType = 0;
-        int numFlapFrames = m_stdIcon->getNumFrames(cs_walk);
+        int numFlapFrames = m_stdIcon->GetNumFrames(cs_walk);
         float x = static_cast<float>(startX);
         float y = static_cast<float>(startY);
         const int flyPeriod = static_cast<long>(

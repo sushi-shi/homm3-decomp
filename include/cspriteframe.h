@@ -79,24 +79,24 @@ public:
                  int cw, int ch, int cx, int cy);
     virtual ~CSpriteFrame();
     void clear();
-    unsigned char getPixel(int x, int y) const;
-    int crop();
-    void encode(TEncodingMethod method);
-    static unsigned short s_div2mask;
-    static unsigned short s_div4mask;
+    unsigned char GetPixel(int x, int y) const;
+    int Crop();
+    void Encode(TEncodingMethod method);
+    static unsigned short div2mask;
+    static unsigned short div4mask;
 
 private:
-    int m_dataSize;
-    int m_imageSize;
-    TEncodingMethod m_encodingMethod;
-    int m_width;
-    int m_height;
-    int m_croppedWidth;
-    int m_croppedHeight;
-    int m_croppedX;
-    int m_croppedY;
-    int m_pitch;
-    unsigned char* m_map;
+    int DataSize;
+    int ImageSize;
+    TEncodingMethod EncodingMethod;
+    int Width;
+    int Height;
+    int CroppedWidth;
+    int CroppedHeight;
+    int CroppedX;
+    int CroppedY;
+    int Pitch;
+    unsigned char* map;
 
 public:
     virtual unsigned int getSize() const;
@@ -111,107 +111,107 @@ public:
     // CSpriteFrame.h:87-90.  DC emits standalone copies, while retail's
     // consumers expand these one-field accessors in place.
     DC_ADDRESS(0x04cb90, 0x4)
-    int getCroppedWidth() const { return m_croppedWidth; }
+    int GetCroppedWidth() const { return CroppedWidth; }
 
     DC_ADDRESS(0x08734c, 0x4)
-    int getCroppedHeight() const { return m_croppedHeight; }
+    int GetCroppedHeight() const { return CroppedHeight; }
 
     DC_ADDRESS(0x04cb94, 0x4)
-    int getCroppedX() const { return m_croppedX; }
+    int GetCroppedX() const { return CroppedX; }
 
     DC_ADDRESS(0x04cb98, 0x4)
-    int getCroppedY() const { return m_croppedY; }
+    int GetCroppedY() const { return CroppedY; }
 
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
     // standalone function; retail inlines its fixed zero-alpha forwarding.
     DC_ADDRESS(0x074068, 0x68)
-    void drawCreature(int sx, int sy, int sw, int sh,
+    void DrawCreature(int sx, int sy, int sw, int sh,
                       unsigned short* dst, int dx, int dy, int dw, int dh,
                       int dpitch, TPalette16& pal, bool hflip,
                       unsigned short outcolor) const
     {
-        drawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+        DrawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                          pal, hflip, outcolor, 0);
     }
 
     // Original: CSpriteFrame::DrawCreatureAlpha; CSpriteFrame.h:152
     DC_ADDRESS(0x0740d0, 0x68)
-    void drawCreatureAlpha(int sx, int sy, int sw, int sh,
+    void DrawCreatureAlpha(int sx, int sy, int sw, int sh,
                            unsigned short* dst, int dx, int dy, int dw, int dh,
                            int dpitch, TPalette16& pal, bool hflip,
                            unsigned short outcolor) const
     {
-        drawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+        DrawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                          pal, hflip, outcolor, 1);
     }
 
     // DC CSpriteFrame.h:157..179 records each public forwarding boundary.
     // Retail CSprite 0x47bdc0..0x47c0d0 expands them and calls the private impls.
     DC_ADDRESS(0x074138, 0x60)
-    void drawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, bool hflip) const
     {
-        drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
+        DrawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
     }
 
     DC_ADDRESS(0x074198, 0x64)
-    void drawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned short flagcolor, bool hflip) const
     {
-        drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, flagcolor);
+        DrawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, flagcolor);
     }
-    void drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
+    void DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                  unsigned short* dst, int dx, int dy,
                                  int dw, int dh, int dpitch, TPalette16& pal,
                                  unsigned short flagcolor,
                                  bool hflip) const;
 
     DC_ADDRESS(0x0741fc, 0x5c)
-    void drawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, bool hflip) const
     {
-        drawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
+        DrawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
     }
-    void drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                   int dx, int dy, int dw, int dh, int dpitch,
                   TPalette16& pal, bool hflip,
                   bool vflip) const;
-    void drawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
                         TPalette16& pal, bool hflip,
                         bool vflip) const;
 
     DC_ADDRESS(0x074258, 0x60)
-    void drawHero(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawHero(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, bool hflip) const
     {
-        drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
+        DrawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
     }
 
     DC_ADDRESS(0x0742b8, 0x5c)
-    void drawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, bool hflip) const
     {
-        drawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
+        DrawAdvObjShadowImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip);
     }
-    void drawSpellEffect(int sx, int sy, int sw, int sh,
+    void DrawSpellEffect(int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, TPalette16& pal, bool hflip,
                          bool alpha) const;
 
     // Original: CSpriteFrame::DrawPointer; CSpriteFrame.h:182
-    // Complete expands this whole-frame transparent draw in CSprite::drawPointer.
+    // Complete expands this whole-frame transparent draw in CSprite::DrawPointer.
     DC_ADDRESS(0x074314, 0x68)
-    void drawPointer(unsigned short* dst, int dx, int dy, int dw, int dh,
+    void DrawPointer(unsigned short* dst, int dx, int dy, int dw, int dh,
                      int dpitch, TPalette16& pal, bool hflip) const
     {
-        Draw(0, 0, m_width, m_height, dst, dx, dy, dw, dh, dpitch,
+        Draw(0, 0, Width, Height, dst, dx, dy, dw, dh, dpitch,
              pal, hflip, 1);
     }
 
     // Original: CSpriteFrame::DrawInterface; CSpriteFrame.h:187
     DC_ADDRESS(0x07437c, 0x60)
-    void drawInterface(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawInterface(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch,
                        TPalette16& pal, bool hflip) const
     {
@@ -222,84 +222,84 @@ public:
     // The original public ends in _N2: both flip parameters are bool.
     // Its palette/frame parameter lifetimes span both retained retail calls.
     DC_ADDRESS(0x0743dc, 0xa8)
-    void drawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
                         TPalette16& pal, bool hflip,
                         bool vflip) const
     {
-        drawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, vflip);
-        drawTileShadow(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+        DrawTile(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, vflip);
+        DrawTileShadow(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                        pal, hflip, vflip);
     }
     // DC CSpriteFrame field list records these public const accessors;
-    // CSprite::drawPointer expands the corresponding retail width/height loads.
-    // Width loads in retail CSprite::drawPointer identify this field.
+    // CSprite::DrawPointer expands the corresponding retail width/height loads.
+    // Width loads in retail CSprite::DrawPointer identify this field.
     // The DC declaration survives, but no body source location does.
     // Header ownership is provisional; no source order is claimed.
     // @dc-declaration-only: 0x1799
-    int getWidth() const { return m_width; }
-    // Height loads in retail CSprite::drawPointer identify this field.
+    int GetWidth() const { return Width; }
+    // Height loads in retail CSprite::DrawPointer identify this field.
     // The DC declaration survives, but no body source location does.
     // Header ownership is provisional; no source order is claimed.
     // @dc-declaration-only: 0x1799
-    int getHeight() const { return m_height; }
+    int GetHeight() const { return Height; }
 
     // DC CSpriteFrame.h:198..200: canonical zero-flag wrapper.
     // DrawSpellEffect calls it at DC line 3792; retail expands the wrapper
     // and calls DrawAdvObjWithFlagAlpha with flagcolor=0 at 0x47efca.
     DC_ADDRESS(0x074484, 0x60)
-    void drawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst,
+    void DrawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch,
                        TPalette16& pal, bool hflip) const
     {
-        drawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+        DrawAdvObjWithFlagAlpha(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                                 pal, 0, hflip);
     }
-    void drawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
+    void DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal, unsigned short flagcolor) const;
-    void drawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
+    void DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal, unsigned short flagcolor) const;
-    void drawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
+    void DrawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal) const;
-    void drawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
+    void DrawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal) const;
-    void drawTileScaled50(int sx, int sy, int sw, int sh,
+    void DrawTileScaled50(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal, bool hflip, bool vflip) const;
-    void drawTileScaled25(int sx, int sy, int sw, int sh,
+    void DrawTileScaled25(int sx, int sy, int sw, int sh,
         unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
         TPalette16& pal, bool hflip, bool vflip) const;
-    static void setPixelFormat(unsigned rmask, unsigned gmask,
+    static void SetPixelFormat(unsigned rmask, unsigned gmask,
                                unsigned bmask);
 
 private:
     int importPCXFile(const char* filename);
     int importCroppedPCXFile(const char* filename);
-    void encodeGeneral();
-    void encodeTileset();
-    void encodeAdvObj();
-    void clipScaled25(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+    void EncodeGeneral();
+    void EncodeTileset();
+    void EncodeAdvObj();
+    void ClipScaled25(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
         int dw, int dh, bool hflip, bool vflip) const;
-    void clipScaled50(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+    void ClipScaled50(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
         int dw, int dh, bool hflip, bool vflip) const;
-    void drawCreatureImpl(int sx, int sy, int sw, int sh,
+    void DrawCreatureImpl(int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, TPalette16& pal,
                           bool hflip, unsigned short outcolor,
                           bool alpha) const;
-    void drawAdvObjImpl(int sx, int sy, int sw, int sh,
+    void DrawAdvObjImpl(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, TPalette16& pal, bool hflip,
                         unsigned short flagcolor) const;
-    void drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
+    void DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                               unsigned short* dst, int dx, int dy, int dw,
                               int dh, int dpitch, TPalette16& pal,
                               bool hflip) const;
-    void clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+    void Clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, bool hflip,
               bool vflip) const;
 };

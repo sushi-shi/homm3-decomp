@@ -666,9 +666,9 @@ void TMultiPlayerWindow::update()
                 // DC line 1125 computes the row coordinate; VC6 hoists its base
                 // and advances it by 25. Keep that reduction out of the source.
                 int rowY = wy + 0x70 + row * 0x19;
-                m_gameState->draw(0, status, 0, 0,
-                                g_multiPlayerWindow->m_gameState->getWidth(),
-                                g_multiPlayerWindow->m_gameState->getHeight(),
+                m_gameState->Draw(0, status, 0, 0,
+                                g_multiPlayerWindow->m_gameState->GetWidth(),
+                                g_multiPlayerWindow->m_gameState->GetHeight(),
                                 g_windowManager->m_screenBitmap, wx + 0x12,
                                 rowY, 0, 1);
                 int fontColor = isSelected ? 5 : 1;

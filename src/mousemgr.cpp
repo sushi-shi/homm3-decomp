@@ -320,8 +320,8 @@ void mouseManager::update(bool forceIt)
     newRect.left = m_imageX;
     newRect.top = m_imageY;
     // DC 587/588 records these CSprite dimension accessors.
-    newRect.right = m_imageX + m_sprite->getWidth();
-    newRect.bottom = m_imageY + m_sprite->getHeight();
+    newRect.right = m_imageX + m_sprite->GetWidth();
+    newRect.bottom = m_imageY + m_sprite->GetHeight();
     if (newRect.left < 0)
         newRect.left = 0;
     if (newRect.top < 0)
@@ -594,7 +594,7 @@ void mouseManager::checkUpdate()
     if (GameTime::isPast(animateTime) && !isBusy()) {
         animateTime = GameTime::nextFrameTime(animateTime, 100);
         if (m_set == SPELL_SET) {
-            loadFrame((m_frame + 1) % m_sprite->getNumFrames(0));
+            loadFrame((m_frame + 1) % m_sprite->GetNumFrames(0));
             update(1);
         }
     }
@@ -630,7 +630,7 @@ void mouseManager::loadFrame(int newFrame)
             surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
         CSprite* sprite = m_sprite;
-        sprite->drawPointer(newFrame, &bitmap, 0, 0, false);
+        sprite->DrawPointer(newFrame, &bitmap, 0, 0, false);
         g_ddsMouseSurface->Unlock(0);
         m_frame = newFrame;
     }

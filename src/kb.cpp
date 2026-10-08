@@ -201,9 +201,9 @@ void drawProgressCount()
     if (!g_progDots)
         return;
     for (int i = 0; i < g_progressCount; i++) {
-        g_progDots->draw(0, i, 0, 0,
-                         g_progDots->getWidth(),
-                         g_progDots->getHeight(),
+        g_progDots->Draw(0, i, 0, 0,
+                         g_progDots->GetWidth(),
+                         g_progDots->GetHeight(),
                          g_windowManager->m_screenBitmap,
                          395 + i * 18, 548, 0, 0);
     }
@@ -276,22 +276,22 @@ void pollSound()
                 g_timers[7] = GameTime::get() + 200;
             if (g_colorCyclingEnabled) {
                 if (g_advManager->m_groundTileset[8]) {
-                    g_advManager->m_groundTileset[8]->colorCycle(0xe5, 0xf0, -1);
-                    g_advManager->m_groundTileset[8]->colorCycle(0xf2, 0xfd, -1);
+                    g_advManager->m_groundTileset[8]->ColorCycle(0xe5, 0xf0, -1);
+                    g_advManager->m_groundTileset[8]->ColorCycle(0xf2, 0xfd, -1);
                 }
                 if (g_advManager->m_groundTileset[7])
-                    g_advManager->m_groundTileset[7]->colorCycle(0xf6, 0xfe, -1);
+                    g_advManager->m_groundTileset[7]->ColorCycle(0xf6, 0xfe, -1);
                 if (g_advManager->m_riverTileset[1]) {
-                    g_advManager->m_riverTileset[1]->colorCycle(0xb7, 0xc2, -1);
-                    g_advManager->m_riverTileset[1]->colorCycle(0xc3, 0xc8, -1);
+                    g_advManager->m_riverTileset[1]->ColorCycle(0xb7, 0xc2, -1);
+                    g_advManager->m_riverTileset[1]->ColorCycle(0xc3, 0xc8, -1);
                 }
                 if (g_advManager->m_riverTileset[3]) {
-                    g_advManager->m_riverTileset[3]->colorCycle(0xe4, 0xef, -1);
-                    g_advManager->m_riverTileset[3]->colorCycle(0xb7, 0xbc, -1);
-                    g_advManager->m_riverTileset[3]->colorCycle(0xf0, 0xf5, -1);
+                    g_advManager->m_riverTileset[3]->ColorCycle(0xe4, 0xef, -1);
+                    g_advManager->m_riverTileset[3]->ColorCycle(0xb7, 0xbc, -1);
+                    g_advManager->m_riverTileset[3]->ColorCycle(0xf0, 0xf5, -1);
                 }
                 if (g_advManager->m_riverTileset[4])
-                    g_advManager->m_riverTileset[4]->colorCycle(0xf0, 0xf8, -1);
+                    g_advManager->m_riverTileset[4]->ColorCycle(0xf0, 0xf8, -1);
             }
         }
         if (GameTime::isPast(g_timers[5])) {
@@ -4284,8 +4284,8 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     }
 
     CSprite* image = ResourceManager::getSprite(m_spriteName.c_str());
-    m_spriteWidth = image->getWidth() + 2;
-    m_spriteHeight = image->getHeight() + 2;
+    m_spriteWidth = image->GetWidth() + 2;
+    m_spriteHeight = image->GetHeight() + 2;
     ResourceManager::dispose(image);
 
     if (!m_text.length())

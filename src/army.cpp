@@ -421,7 +421,7 @@ void army::loadResources()
         ResourceManager::getSprite(g_creatureTypeTraits[m_creatureType]
                                        .m_spriteName);
     m_stdIcon = icon;
-    m_imageHeight = 267 - m_stdIcon->getFrame(cs_wait, 0)->getCroppedY();
+    m_imageHeight = 267 - m_stdIcon->GetFrame(cs_wait, 0)->GetCroppedY();
 
     if (is(creatureShootingArmy)) {
         const char* missileName;
@@ -696,7 +696,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     y += m_ySpecialMod;
     x += m_xSpecialMod;
     if (m_currFrameType == cs_walk && !is(creatureFlyingArmy)) {
-        int frames = m_stdIcon->getNumFrames(0);
+        int frames = m_stdIcon->GetNumFrames(0);
         long stepY = m_currFrameIndex * 42 / frames;
         long stepX = m_currFrameIndex * 44 / frames;
         switch (m_walkDirection) {
@@ -750,41 +750,41 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         TPalette16 saved;
         unsigned char restore = 0;
         if (is(creatureRedColoring)) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            memcpy(saved.m_data, m_stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(m_stdIcon->GetPalette());
             tinted.adjustHSV(0, m_paletteEffect, m_paletteEffect + 1.0f,
                              m_paletteEffect + 1.0f);
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            memcpy(m_stdIcon->GetPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (is(creatureGreyColoring)) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            memcpy(saved.m_data, m_stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(m_stdIcon->GetPalette());
             tinted.adjustSaturation(m_paletteEffect);
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            memcpy(m_stdIcon->GetPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (m_spellInfluence[SPELL_STONE] > 0) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            memcpy(saved.m_data, m_stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(m_stdIcon->GetPalette());
             tinted.gray();
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            memcpy(m_stdIcon->GetPalette(), tinted.m_data, 0x200);
             restore = 1;
         } else if (is(creatureClone)) {
-            memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
-            TPalette16 tinted(m_stdIcon->getPalette());
+            memcpy(saved.m_data, m_stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(m_stdIcon->GetPalette());
             tinted.adjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
-            memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
+            memcpy(m_stdIcon->GetPalette(), tinted.m_data, 0x200);
             restore = 1;
         }
 
         int drawX =
-            m_facing == 0 ? x - m_stdIcon->getWidth() + 196 : x - 196;
+            m_facing == 0 ? x - m_stdIcon->GetWidth() + 196 : x - 196;
         long drawY = y - 267;
         g_combatManager->drawCreature(
             m_stdIcon, m_currFrameType, m_currFrameIndex, drawX, drawY, 0,
             m_gridIndex, m_facing == 0, g_systemPalette->m_data[highlight]);
 
         if (restore)
-            memcpy(m_stdIcon->getPalette(), saved.m_data, 0x200);
+            memcpy(m_stdIcon->GetPalette(), saved.m_data, 0x200);
     }
 
     if (g_combatManager->m_computeExtentOnly != 0
@@ -845,29 +845,29 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
 
     if (m_showPowEffect != 0 && numBoxOnly == 0) {
         if (g_combatManager->m_powFrameIndex
-            < g_combatManager->m_powSprite->getNumFrames(0)) {
+            < g_combatManager->m_powSprite->GetNumFrames(0)) {
             // The effect flags also recycle x ([ebp+8] again, this
             // time read back unsigned for the >>8 below).
             x = g_spellEffectTraits[g_combatManager->m_powSpellEffect]
                     .m_flags;
             switch (x & 0xf) {
             case SPELL_EFFECT_PLACE_OVERHEAD:
-                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                powY = bottomY() - g_combatManager->m_powSprite->getHeight();
+                powX = midX() - g_combatManager->m_powSprite->GetWidth() / 2;
+                powY = bottomY() - g_combatManager->m_powSprite->GetHeight();
                 break;
             case SPELL_EFFECT_PLACE_CENTERED:
-                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
+                powX = midX() - g_combatManager->m_powSprite->GetWidth() / 2;
+                powY = midY() - g_combatManager->m_powSprite->GetHeight() / 2;
                 break;
             case SPELL_EFFECT_PLACE_ABOVE:
-                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                powY = topY() - g_combatManager->m_powSprite->getHeight();
+                powX = midX() - g_combatManager->m_powSprite->GetWidth() / 2;
+                powY = topY() - g_combatManager->m_powSprite->GetHeight();
                 break;
             case SPELL_EFFECT_PLACE_FLANK:
                 powX = frontX();
                 if (m_facing == 0)
-                    powX -= g_combatManager->m_powSprite->getWidth();
-                powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
+                    powX -= g_combatManager->m_powSprite->GetWidth();
+                powY = midY() - g_combatManager->m_powSprite->GetHeight() / 2;
                 break;
             }
             g_combatManager->drawSpellEffect(
@@ -1054,7 +1054,7 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
     m_isAreaEffectTarget = arg;
     g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     if (m_isAreaEffectTarget) {
-        if (m_stdIcon->isValidSeq(cs_fidget)
+        if (m_stdIcon->IsValidSeq(cs_fidget)
             && m_currFrameType != cs_fidget) {
             m_currFrameType = cs_fidget;
             m_currFrameIndex = 0;
@@ -1171,7 +1171,7 @@ void army::animateMissile(army* armyToAttack)
     if (m_monFrameInfo.m_attackFrames > 0)
         frames = m_monFrameInfo.m_attackFrames;
     else
-        frames = m_stdIcon->getNumFrames(m_currFrameType);
+        frames = m_stdIcon->GetNumFrames(m_currFrameType);
     long delay = m_monFrameInfo.m_attackStartCycleTime / frames;
     for (m_currFrameIndex = 0; m_currFrameIndex < frames; m_currFrameIndex++) {
         g_combatManager->drawFrame(1, 1, 0, delay, 1, 1);
@@ -1208,8 +1208,8 @@ void army::animateMissile(army* armyToAttack)
                                 arrowtraveldist / 15 + 15, 1, 0, 10,
                                 0);
     } else {
-        int width = m_missileIcon->getWidth();
-        int height = m_missileIcon->getHeight();
+        int width = m_missileIcon->GetWidth();
+        int height = m_missileIcon->GetHeight();
 
         int nframes = (arrowtraveldist + 20) / 40;
         int stepX;
@@ -1243,7 +1243,7 @@ void army::animateMissile(army* armyToAttack)
                     y += stepY;
                 }
                 saved.grab(g_windowManager->m_screenBitmap, x, y);
-                m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
+                m_missileIcon->Draw(0, missileFrame, 0, 0, width, height,
                                   g_windowManager->m_screenBitmap, x, y,
                                   targetX < startX, 1);
                 // DC army.cpp:1326-1327 constructs this rectangle, then calls
@@ -1302,12 +1302,12 @@ void army::rangeAttack(army* armyToAttack)
             CSprite* spr =
                 ResourceManager::getSprite(g_spellEffectTraits[effect]
                                                .m_name);
-            long x = armyToAttack->midX() - spr->getWidth() / 2;
-            long y = armyToAttack->midY() - spr->getHeight() / 2;
+            long x = armyToAttack->midX() - spr->GetWidth() / 2;
+            long y = armyToAttack->midY() - spr->GetHeight() / 2;
             g_combatManager->scrollTo(
-                x + spr->getWidth() / 2,
-                y + spr->getHeight() / 2, 1, 1, 1);
-            for (long frame = 0; frame < spr->getNumFrames(0); frame++) {
+                x + spr->GetWidth() / 2,
+                y + spr->GetHeight() / 2, 1, 1, 1);
+            for (long frame = 0; frame < spr->GetNumFrames(0); frame++) {
                 g_combatManager->drawFrame(0, 0, 0, 50, 1, 1);
                 g_combatManager->drawSpellEffect(spr, frame, x, y, 0, 0);
                 g_combatManager->updateCombatArea();
@@ -1368,9 +1368,9 @@ void army::rangeAttack(army* armyToAttack)
             CSprite* spr =
                 ResourceManager::getSprite(g_spellEffectTraits[effect]
                                                .m_name);
-            long x = armyToAttack->midX() - spr->getWidth() / 2;
-            long y = armyToAttack->midY() - spr->getHeight() / 2;
-            for (long frame = 0; frame < spr->getNumFrames(0); frame++) {
+            long x = armyToAttack->midX() - spr->GetWidth() / 2;
+            long y = armyToAttack->midY() - spr->GetHeight() / 2;
+            for (long frame = 0; frame < spr->GetNumFrames(0); frame++) {
                 g_combatManager->drawFrame(0, 0, 0, 100, 1, 1);
                 g_combatManager->drawSpellEffect(spr, frame, x, y, 0, 0);
                 g_combatManager->updateCombatArea();
@@ -1984,7 +1984,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         if (direction == COMBAT_DIRECTION_WIDE_UPPER
             || direction == COMBAT_DIRECTION_5
             || direction == COMBAT_DIRECTION_0) {
-            if (behind && m_stdIcon->isValidSeq(cs_special_ur))
+            if (behind && m_stdIcon->IsValidSeq(cs_special_ur))
                 m_showAttackFrameType = cs_special_ur;
             else if (m_creatureType == ARMY_CREATURE_BALLISTA)
                 m_showAttackFrameType = cs_range_ur;
@@ -1992,7 +1992,7 @@ bool army::doAttack(army* armyToAttack, int direction)
                 m_showAttackFrameType = cs_attack_ur;
         } else if (direction == COMBAT_DIRECTION_1
                    || direction == COMBAT_DIRECTION_4) {
-            if (behind && m_stdIcon->isValidSeq(cs_special_r)) {
+            if (behind && m_stdIcon->IsValidSeq(cs_special_r)) {
                 m_showAttackFrameType = cs_special_r;
             } else if (m_creatureType == ARMY_CREATURE_BALLISTA) {
                 m_showAttackFrameType = cs_range_r;
@@ -2000,7 +2000,7 @@ bool army::doAttack(army* armyToAttack, int direction)
                 m_showAttackFrameType = cs_attack_r;
             }
         } else {
-            if (behind && m_stdIcon->isValidSeq(cs_special_dr))
+            if (behind && m_stdIcon->IsValidSeq(cs_special_dr))
                 m_showAttackFrameType = cs_special_dr;
             else if (m_creatureType == ARMY_CREATURE_BALLISTA)
                 m_showAttackFrameType = cs_range_dr;
@@ -4155,7 +4155,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         g_soundManager->memorySample(m_armySample[SHOOT_SAMPLE]);
 
     const int numFrames = m_monFrameInfo.m_attackFrames <= 0
-                           ? m_stdIcon->getNumFrames(m_currFrameType)
+                           ? m_stdIcon->GetNumFrames(m_currFrameType)
                            : m_monFrameInfo.m_attackFrames;
     long delay = m_monFrameInfo.m_attackStartCycleTime / numFrames;
     for (m_currFrameIndex = 0; m_currFrameIndex < numFrames; m_currFrameIndex++) {
@@ -4176,23 +4176,23 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     // while forming the constructor arguments. Mac 0x52348..0x523b0
     // expands them and copies the four-word temporary into the bounds.
     g_combatManager->m_extent = SLimitData(
-        destX - explosion->getWidth() / 2,
-        destY - explosion->getHeight() / 2,
-        destX - explosion->getWidth() / 2 + explosion->getWidth() - 1,
-        destY - explosion->getHeight() / 2 + explosion->getHeight() - 1);
+        destX - explosion->GetWidth() / 2,
+        destY - explosion->GetHeight() / 2,
+        destX - explosion->GetWidth() / 2 + explosion->GetWidth() - 1,
+        destY - explosion->GetHeight() / 2 + explosion->GetHeight() - 1);
     g_combatManager->m_extent.clip(combatManager::s_combatAreaLimits);
 
-    for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
+    for (long frame = 0; frame < explosion->GetNumFrames(0); frame++) {
         if (frame == combatManager::WALL_EXPLOSION_HIT_FRAME
             && levelsDestroyed != 0)
             g_combatManager->damageWall(wall, levelsDestroyed);
         g_combatManager->drawFrame(0, 0, 1, 100, 0, 1);
-        explosion->draw(0, frame, 0, 0,
+        explosion->Draw(0, frame, 0, 0,
                         g_combatManager->m_extent.width(),
                         g_combatManager->m_extent.height(),
                         g_windowManager->m_screenBitmap,
-                        destX - explosion->getWidth() / 2,
-                        destY - explosion->getHeight() / 2, 0, 1);
+                        destX - explosion->GetWidth() / 2,
+                        destY - explosion->GetHeight() / 2, 0, 1);
         // DC army.cpp:4719/4720: the fixed-viewport scroll and area update.
         if (!g_combatManager->scrollTo(g_combatManager->m_extent,
                                        true, true, true))
@@ -4280,10 +4280,10 @@ int army::rightX() const
 {
     int offset;
     if (m_facing == 0)
-        offset = 196 - m_stdIcon->getCroppedX(cs_wait, 0);
+        offset = 196 - m_stdIcon->GetCroppedX(cs_wait, 0);
     else
-        offset = m_stdIcon->getCroppedX(cs_wait, 0)
-                 + m_stdIcon->getCroppedWidth(cs_wait, 0) - 196;
+        offset = m_stdIcon->GetCroppedX(cs_wait, 0)
+                 + m_stdIcon->GetCroppedWidth(cs_wait, 0) - 196;
     return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
 
@@ -4293,10 +4293,10 @@ int army::leftX() const
 {
     int offset;
     if (m_facing == 0)
-        offset = 196 - m_stdIcon->getCroppedX(cs_wait, 0)
-                 - m_stdIcon->getCroppedWidth(cs_wait, 0);
+        offset = 196 - m_stdIcon->GetCroppedX(cs_wait, 0)
+                 - m_stdIcon->GetCroppedWidth(cs_wait, 0);
     else
-        offset = m_stdIcon->getCroppedX(cs_wait, 0) - 196;
+        offset = m_stdIcon->GetCroppedX(cs_wait, 0) - 196;
     return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
 
@@ -4306,8 +4306,8 @@ DC_ADDRESS(0x04b2e4, 0x6e)
 MAC_ADDRESS(0x052808, 0x6c)
 int army::frontX() const
 {
-    int offset = m_stdIcon->getCroppedX(cs_wait, 0)
-                 + m_stdIcon->getCroppedWidth(cs_wait, 0) - 196;
+    int offset = m_stdIcon->GetCroppedX(cs_wait, 0)
+                 + m_stdIcon->GetCroppedWidth(cs_wait, 0) - 196;
     if (m_facing == 0)
         return g_combatManager->m_cells[m_gridIndex].m_refX - offset;
     else
@@ -4436,14 +4436,14 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
     if (g_combatManager->isQuickCombat())
         return;
     if (nframes < 0)
-        nframes = m_stdIcon->getNumFrames(sequence) - startFrame;
+        nframes = m_stdIcon->GetNumFrames(sequence) - startFrame;
     m_currFrameType = sequence;
     int frameDelay;
     if (sequence == 0)
         frameDelay = static_cast<int>(
             static_cast<float>(m_monFrameInfo.m_walkCycleTime)
             * combatManager::s_combatSpeedMod[g_config.m_combatSpeed]
-            / static_cast<float>(m_stdIcon->getNumFrames(0)));
+            / static_cast<float>(m_stdIcon->GetNumFrames(0)));
     else
         frameDelay = static_cast<int>(
             combatManager::s_combatSpeedMod[g_config.m_combatSpeed] * 100.0f);
@@ -5135,7 +5135,7 @@ void army::castSpell(long hex)
             m_currFrameType = cs_special_r;
         else
             m_currFrameType = cs_special_dr;
-        long frames = m_stdIcon->getNumFrames(m_currFrameType);
+        long frames = m_stdIcon->GetNumFrames(m_currFrameType);
         if (frames == 0) {
             if (angle > 25.0f)
                 m_currFrameType = cs_attack_ur;
@@ -5143,7 +5143,7 @@ void army::castSpell(long hex)
                 m_currFrameType = cs_attack_r;
             else
                 m_currFrameType = cs_attack_dr;
-            frames = m_stdIcon->getNumFrames(m_currFrameType);
+            frames = m_stdIcon->GetNumFrames(m_currFrameType);
         }
         playSample(SHOOT_SAMPLE);
         long delay = m_monFrameInfo.m_attackStartCycleTime / frames;

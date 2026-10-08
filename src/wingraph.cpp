@@ -209,7 +209,7 @@ void robAppBlit(tagRECT* combRect)
                 if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x119);
-                g_mouseManager->m_sprite->draw(0, g_mouseManager->getFrame(),
+                g_mouseManager->m_sprite->Draw(0, g_mouseManager->getFrame(),
                     pointerRect.left - g_mouseManager->m_imageX,
                     pointerRect.top - g_mouseManager->m_imageY,
                     pointerRect.right - pointerRect.left,

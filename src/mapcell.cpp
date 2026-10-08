@@ -4557,7 +4557,7 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
     for (it = thisCell->m_objects.rbegin(); it != thisCell->m_objects.rend();
          ++it) {
         CObject* object = &m_objects[it->m_objectIndex];
-        if (m_sprites[object->m_typeIndex]->getNumFrames(0) > 1)
+        if (m_sprites[object->m_typeIndex]->GetNumFrames(0) > 1)
             thisCell->m_animated = 1;
     }
 

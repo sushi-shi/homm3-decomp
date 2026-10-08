@@ -2104,7 +2104,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
     if (currentArmy) {
         m_highlighterIndex = currentArmy->m_gridIndex;
         m_highlighterOn = 1;
-        if (currentArmy->m_stdIcon->isValidSeq(cs_fidget)
+        if (currentArmy->m_stdIcon->IsValidSeq(cs_fidget)
                 && currentArmy->m_currFrameType != cs_fidget) {
             currentArmy->m_currFrameType = cs_fidget;
             currentArmy->m_currFrameIndex = 0;

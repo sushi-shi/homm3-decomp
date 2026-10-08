@@ -4528,20 +4528,20 @@ void TSingleSelectionWindow::drawBasicMapInfo()
     g_smallFont->drawBoundedString(lcText,
         g_windowManager->m_screenBitmap, 456, 364, 288, 32, font::WHITE, 4, -1);
     if (vc->m_type >= 0 && vc->m_type <= 11)
-        m_victoryIcon->draw(0, vc->m_type, 0, 0,
-            m_victoryIcon->getWidth(), m_victoryIcon->getHeight(),
+        m_victoryIcon->Draw(0, vc->m_type, 0, 0,
+            m_victoryIcon->GetWidth(), m_victoryIcon->GetHeight(),
             g_windowManager->m_screenBitmap, 420, 308, 0, 1);
     else
-        m_victoryIcon->draw(0, 11, 0, 0,
-            m_victoryIcon->getWidth(), m_victoryIcon->getHeight(),
+        m_victoryIcon->Draw(0, 11, 0, 0,
+            m_victoryIcon->GetWidth(), m_victoryIcon->GetHeight(),
             g_windowManager->m_screenBitmap, 420, 308, 0, 1);
     if (lc->m_type >= 0)
-        m_lossIcon->draw(0, lc->m_type, 0, 0,
-            m_lossIcon->getWidth(), m_lossIcon->getHeight(),
+        m_lossIcon->Draw(0, lc->m_type, 0, 0,
+            m_lossIcon->GetWidth(), m_lossIcon->GetHeight(),
             g_windowManager->m_screenBitmap, 420, 365, 0, 1);
     else
-        m_lossIcon->draw(0, 3, 0, 0,
-            m_lossIcon->getWidth(), m_lossIcon->getHeight(),
+        m_lossIcon->Draw(0, 3, 0, 0,
+            m_lossIcon->GetWidth(), m_lossIcon->GetHeight(),
             g_windowManager->m_screenBitmap, 420, 365, 0, 1);
 }
 
@@ -4645,8 +4645,8 @@ int TSingleSelectionWindow::update()
                             text, g_windowManager->m_screenBitmap,
                             59, y - 1, 30, 25, font::TColor(color), 5, -1);
                         if (frame >= 0)
-                            m_versionIcon->draw(0, frame, 0, 0,
-                                m_versionIcon->getWidth(), m_versionIcon->getHeight(),
+                            m_versionIcon->Draw(0, frame, 0, 0,
+                                m_versionIcon->GetWidth(), m_versionIcon->GetHeight(),
                                 g_windowManager->m_screenBitmap, 91, y, 0, 1);
                         g_smallFont->drawBoundedString(
                             getMapName(m_currentIndex + i),
@@ -4654,26 +4654,26 @@ int TSingleSelectionWindow::update()
                             125, y - 1, 184, 25, font::TColor(color), 5, -1);
                         if (hdr->m_header.m_victoryCondition.m_type >= 0
                                 && hdr->m_header.m_victoryCondition.m_type <= 11)
-                            m_victoryIcon->draw(0,
+                            m_victoryIcon->Draw(0,
                                 hdr->m_header.m_victoryCondition.m_type, 0, 0,
-                                m_victoryIcon->getWidth(),
-                                m_victoryIcon->getHeight(),
+                                m_victoryIcon->GetWidth(),
+                                m_victoryIcon->GetHeight(),
                                 g_windowManager->m_screenBitmap, 309, y, 0, 1);
                         else
-                            m_victoryIcon->draw(0, 11, 0, 0,
-                                m_victoryIcon->getWidth(),
-                                m_victoryIcon->getHeight(),
+                            m_victoryIcon->Draw(0, 11, 0, 0,
+                                m_victoryIcon->GetWidth(),
+                                m_victoryIcon->GetHeight(),
                                 g_windowManager->m_screenBitmap, 309, y, 0, 1);
                         if (hdr->m_header.m_lossCondition.m_type >= 0)
-                            m_lossIcon->draw(0,
+                            m_lossIcon->Draw(0,
                                 hdr->m_header.m_lossCondition.m_type, 0, 0,
-                                m_lossIcon->getWidth(),
-                                m_lossIcon->getHeight(),
+                                m_lossIcon->GetWidth(),
+                                m_lossIcon->GetHeight(),
                                 g_windowManager->m_screenBitmap, 342, y, 0, 1);
                         else
-                            m_lossIcon->draw(0, 3, 0, 0,
-                                m_lossIcon->getWidth(),
-                                m_lossIcon->getHeight(),
+                            m_lossIcon->Draw(0, 3, 0, 0,
+                                m_lossIcon->GetWidth(),
+                                m_lossIcon->GetHeight(),
                                 g_windowManager->m_screenBitmap, 342, y, 0, 1);
                     }
                     ++i;
@@ -8366,8 +8366,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         p = m_players.getCompPlayerInPos(playerPos);
     if (m_loadMode != 0) {
         int townType = g_game->m_setup.m_alignment[playerPos];
-        m_townPix->draw(0, townType * 2 + 2, 0, 0, m_townPix->getWidth(),
-                        m_townPix->getHeight(), g_windowManager->m_screenBitmap,
+        m_townPix->Draw(0, townType * 2 + 2, 0, 0, m_townPix->GetWidth(),
+                        m_townPix->GetHeight(), g_windowManager->m_screenBitmap,
                         176, position * 50 + 130, 0, 1);
         g_tinyFont->drawBoundedString(townManager::getTownTypeName(townType),
             g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16, font::WHITE, 5, -1);
@@ -8403,8 +8403,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             sprite = 10;
             break;
         }
-        m_resource->draw(0, sprite, 0, 0, m_resource->getWidth(),
-                         m_resource->getHeight(),
+        m_resource->Draw(0, sprite, 0, 0, m_resource->GetWidth(),
+                         m_resource->GetHeight(),
                          g_windowManager->m_screenBitmap, 328, position * 50 + 130, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
             g_tinyFont->drawBoundedString(g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
@@ -8439,8 +8439,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         } else {
-            m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->getWidth(),
-                m_townPix->getHeight(), g_windowManager->m_screenBitmap, 176,
+            m_townPix->Draw(0, town * 2 + 2, 0, 0, m_townPix->GetWidth(),
+                m_townPix->GetHeight(), g_windowManager->m_screenBitmap, 176,
                 position * 50 + 130, 0, 1);
             g_tinyFont->drawBoundedString(townManager::getTownTypeName(town),
                 g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
@@ -8527,8 +8527,8 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             g_tinyFont->drawBoundedString(g_agrText[bonus],
                 g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
-        m_resource->draw(0, frame, 0, 0, m_resource->getWidth(),
-            m_resource->getHeight(), g_windowManager->m_screenBitmap, 328,
+        m_resource->Draw(0, frame, 0, 0, m_resource->GetWidth(),
+            m_resource->GetHeight(), g_windowManager->m_screenBitmap, 328,
             position * 50 + 130, 0, 1);
         unsigned char townChosen = 1;
         if (town == -1)

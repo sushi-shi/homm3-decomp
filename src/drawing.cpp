@@ -1296,7 +1296,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                 if (archer->m_sprite) {
                     int drawX;
                     if (!archer->m_facing) {
-                        drawX = archer->m_x - archer->m_sprite->getWidth();
+                        drawX = archer->m_x - archer->m_sprite->GetWidth();
                         drawX += COMBAT_ARCHER_X_BIAS;
                         if (g_creatureTypeTraits[archer->m_type].m_attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
@@ -1415,8 +1415,8 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
     if (colorRow)
         paletteIndex = 96;
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-    sprite->drawCreature(
-        sequence, frame, 0, 0, sprite->getWidth(), 232, screen,
+    sprite->DrawCreature(
+        sequence, frame, 0, 0, sprite->GetWidth(), 232, screen,
         x, y, isFlipped, g_systemPalette->m_data[paletteIndex]);
     return 1;
 }
@@ -1445,8 +1445,8 @@ int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
     }
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-    sprite->drawCreature(
-        sequence, frame, 0, 0, sprite->getWidth(), sprite->getHeight(), screen,
+    sprite->DrawCreature(
+        sequence, frame, 0, 0, sprite->GetWidth(), sprite->GetHeight(), screen,
         x, y, isFlipped, color);
     return 1;
 }
@@ -1469,8 +1469,8 @@ int combatManager::drawCreatureAlpha(const CSprite* sprite, int sequence,
         if (!limits->intersects(m_extent))
             return 0;
     }
-    sprite->drawCreatureAlpha(sequence, frame, 0, 0,
-        sprite->getWidth(), sprite->getHeight(), g_windowManager->m_screenBitmap,
+    sprite->DrawCreatureAlpha(sequence, frame, 0, 0,
+        sprite->GetWidth(), sprite->GetHeight(), g_windowManager->m_screenBitmap,
         x, y, isFlipped, static_cast<unsigned short>(color));
     return 1;
 }
@@ -1500,8 +1500,8 @@ int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
     }
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-    sprite->drawCombatHero(
-        sequence, frame, 0, 0, sprite->getWidth(), sprite->getHeight(), screen,
+    sprite->DrawCombatHero(
+        sequence, frame, 0, 0, sprite->GetWidth(), sprite->GetHeight(), screen,
         x, y, isFlipped);
     return 1;
 }
@@ -1514,8 +1514,8 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
                                    bool isFlipped,
                                    bool isAlpha)
 {
-    SLimitData limits(x, y, x + sprite->getWidth() - 1,
-                      y + sprite->getHeight() - 1);
+    SLimitData limits(x, y, x + sprite->GetWidth() - 1,
+                      y + sprite->GetHeight() - 1);
     limits.clip(combatManager::s_combatAreaLimits);
 
     // DC drawing.cpp:1809 calls ScrollTo before extent accumulation.
@@ -1535,8 +1535,8 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
     }
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-    sprite->drawSpellEffect(
-        0, frame, 0, 0, sprite->getWidth(), limits.m_maxY - y + 1,
+    sprite->DrawSpellEffect(
+        0, frame, 0, 0, sprite->GetWidth(), limits.m_maxY - y + 1,
         screen, x, y, isFlipped, isAlpha);
     return 1;
 }
@@ -1548,8 +1548,8 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
                                     int x, int y,
                                     bool isFlipped)
 {
-    SLimitData limits(x, y, x + sprite->getWidth() - 1,
-                      y + sprite->getHeight() - 1);
+    SLimitData limits(x, y, x + sprite->GetWidth() - 1,
+                      y + sprite->GetHeight() - 1);
 
     limits.clip(combatManager::s_combatAreaLimits);
 
@@ -1566,8 +1566,8 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
     }
 
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-    sprite->draw(
-        0, frame, 0, 0, sprite->getWidth(), limits.m_maxY - y + 1,
+    sprite->Draw(
+        0, frame, 0, 0, sprite->GetWidth(), limits.m_maxY - y + 1,
         screen, x, y, isFlipped, true);
     return 1;
 }
@@ -1610,7 +1610,7 @@ int combatManager::drawObstacle(const hexcell& cell)
     int yOffset = 42 * (obstacle.m_shape->m_minRow - 1);
     return drawSpriteObject(
         obstacle.m_sprite,
-        m_obstacleAnimationFrame % obstacle.m_sprite->getNumFrames(0),
+        m_obstacleAnimationFrame % obstacle.m_sprite->GetNumFrames(0),
         cell.m_hexUlx, cell.m_hexUly - yOffset, 0);
 }
 
@@ -1758,10 +1758,10 @@ void combatManager::computeMaxExtent()
         for (TObstacle* obstacle = m_obstacles.begin();
              obstacle != m_obstacles.end(); obstacle++) {
             CSprite* sprite = obstacle->m_sprite;
-            if (sprite && sprite->getNumFrames(0) > 1) {
+            if (sprite && sprite->GetNumFrames(0) > 1) {
                 int yOffset = 42 * (obstacle->m_shape->m_minRow - 1);
                 computeExtent(
-                    sprite, 0, m_obstacleAnimationFrame % sprite->getNumFrames(0),
+                    sprite, 0, m_obstacleAnimationFrame % sprite->GetNumFrames(0),
                     m_cells[obstacle->m_hex].m_hexUlx,
                     m_cells[obstacle->m_hex].m_hexUly - yOffset,
                     0, 0, 1);
@@ -1776,7 +1776,7 @@ void combatManager::computeMaxExtent()
             TArcher& archer = m_archers[archerIndex];
             int drawX;
             if (!archer.m_facing) {
-                drawX = archer.m_x - archer.m_sprite->getWidth()
+                drawX = archer.m_x - archer.m_sprite->GetWidth()
                          + COMBAT_ARCHER_X_BIAS;
                 if (g_creatureTypeTraits[archer.m_type].m_attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
@@ -1815,19 +1815,19 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
         limits = &dummy;
 
     if (isFlipped) {
-        limits->m_minX = x + sprite->getWidth()
-            - sprite->getCroppedX(sequence, frame)
-            - sprite->getCroppedWidth(sequence, frame);
-        limits->m_maxX = x + sprite->getWidth()
-            - sprite->getCroppedX(sequence, frame) - 1;
+        limits->m_minX = x + sprite->GetWidth()
+            - sprite->GetCroppedX(sequence, frame)
+            - sprite->GetCroppedWidth(sequence, frame);
+        limits->m_maxX = x + sprite->GetWidth()
+            - sprite->GetCroppedX(sequence, frame) - 1;
     } else {
-        limits->m_minX = x + sprite->getCroppedX(sequence, frame);
-        limits->m_maxX = x + sprite->getCroppedX(sequence, frame)
-            + sprite->getCroppedWidth(sequence, frame) - 1;
+        limits->m_minX = x + sprite->GetCroppedX(sequence, frame);
+        limits->m_maxX = x + sprite->GetCroppedX(sequence, frame)
+            + sprite->GetCroppedWidth(sequence, frame) - 1;
     }
-    limits->m_minY = y + sprite->getCroppedY(sequence, frame);
-    limits->m_maxY = y + sprite->getCroppedY(sequence, frame)
-        + sprite->getCroppedHeight(sequence, frame) - 1;
+    limits->m_minY = y + sprite->GetCroppedY(sequence, frame);
+    limits->m_maxY = y + sprite->GetCroppedY(sequence, frame)
+        + sprite->GetCroppedHeight(sequence, frame) - 1;
 
     limits->clip(combatManager::s_combatAreaLimits);
     if (saveBiggestExtent)
@@ -1846,7 +1846,7 @@ void combatManager::cycleCombatScreen()
         if (m_heroFlagSprites[side] && m_heroes[side]) {
             m_cmbtHeroFlagFrame[side] =
                 (m_cmbtHeroFlagFrame[side] + 1)
-                    % m_heroFlagSprites[side]->getNumFrames(0);
+                    % m_heroFlagSprites[side]->GetNumFrames(0);
             m_flagEffect[side] = 1;
         }
     }
@@ -1882,7 +1882,7 @@ void combatManager::cycleCombatScreen()
                     && stack->m_creatureType != army::ARMY_CREATURE_ARROW_TOWER
                     && (stack->m_currFrameType == cs_fidget
                         || (stack->m_currFrameType == cs_wait
-                            && stack->m_stdIcon->getNumFrames(cs_fidget) > 0
+                            && stack->m_stdIcon->GetNumFrames(cs_fidget) > 0
                             && GameTime::elapsedSince(stack->m_lastFidgetTime)
                                 > stack->m_monFrameInfo.m_fidgetFrequency))) {
                 markCreatureEffect(side, slot);
@@ -1916,7 +1916,7 @@ void combatManager::cycleCombatScreen()
                 m_playYeah[side] = 0;
                 m_playDoh[side] = 0;
                 m_dohPlayedThisRound[side] = 1;
-                if (m_creatureSprites[side]->getNumFrames(
+                if (m_creatureSprites[side]->GetNumFrames(
                         COMBAT_HERO_FRAME_EVENT_2) > 0) {
                     nextCmbtHeroFrameType[side] =
                         COMBAT_HERO_FRAME_EVENT_2;
@@ -1933,7 +1933,7 @@ void combatManager::cycleCombatScreen()
                 m_playYeah[side] = 0;
                 m_playDoh[side] = 0;
                 m_yeahPlayedThisRound[side] = 1;
-                if (m_creatureSprites[side]->getNumFrames(
+                if (m_creatureSprites[side]->GetNumFrames(
                         COMBAT_HERO_FRAME_EVENT_3) > 0) {
                     m_heroEffect[side] = 1;
                     nextCmbtHeroFrameType[side] =
@@ -1970,7 +1970,7 @@ void combatManager::cycleCombatScreen()
                         && safeRandom(0, 100) >= 8)
                     stack->m_currFrameIndex++;
                 if (stack->m_currFrameIndex
-                        >= stack->m_stdIcon->getNumFrames(cs_fidget)) {
+                        >= stack->m_stdIcon->GetNumFrames(cs_fidget)) {
                     stack->m_currFrameType = cs_wait;
                     stack->m_currFrameIndex = 0;
                     stack->m_lastFidgetTime = GameTime::get();
@@ -1995,7 +1995,7 @@ void combatManager::cycleCombatScreen()
         } else {
             m_cmbtHeroFrameIndex[side]++;
             if (m_cmbtHeroFrameIndex[side]
-                    >= m_creatureSprites[side]->getNumFrames(
+                    >= m_creatureSprites[side]->GetNumFrames(
                            m_cmbtHeroFrameType[side])) {
                 m_cmbtHeroFrameType[side] = COMBAT_HERO_FRAME_IDLE;
                 m_cmbtHeroFrameIndex[side] = 0;
@@ -2039,23 +2039,23 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
     int frame = 0;
     if (doWince) {
         targetArmy->m_currFrameType = cs_wince;
-        while (frame < targetArmy->m_stdIcon->getNumFrames(cs_wince)) {
+        while (frame < targetArmy->m_stdIcon->GetNumFrames(cs_wince)) {
             targetArmy->m_currFrameIndex = frame;
-            if (frame < m_powSprite->getNumFrames(cs_walk))
+            if (frame < m_powSprite->GetNumFrames(cs_walk))
                 m_powFrameIndex = frame;
             else
-                m_powFrameIndex = m_powSprite->getNumFrames(cs_walk);
+                m_powFrameIndex = m_powSprite->GetNumFrames(cs_walk);
             drawFrame(1, 0, 0, 100, 1, 1);
             frame++;
         }
         targetArmy->m_currFrameType = cs_wait;
         targetArmy->m_currFrameIndex = 0;
-        if (frame >= m_powSprite->getNumFrames(cs_walk))
+        if (frame >= m_powSprite->GetNumFrames(cs_walk))
             drawFrame(1, 0, 0, 0, 1, 0);
     }
 
     playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
-    while (frame < m_powSprite->getNumFrames(cs_walk)) {
+    while (frame < m_powSprite->GetNumFrames(cs_walk)) {
         m_powFrameIndex = frame;
         drawFrame(1, 0, 0, delay, 1, 1);
         frame++;
@@ -2089,30 +2089,30 @@ void combatManager::spellEffect(int effect, int hex, int delay,
     int y;
     switch (traits.m_flags & 0xf) {
     case SPELL_EFFECT_PLACE_OVERHEAD:
-        x = m_cells[hex].m_refX - m_powSprite->getWidth() / 2;
-        y = m_cells[hex].m_hexUly - m_powSprite->getHeight() + 52;
+        x = m_cells[hex].m_refX - m_powSprite->GetWidth() / 2;
+        y = m_cells[hex].m_hexUly - m_powSprite->GetHeight() + 52;
         break;
     case SPELL_EFFECT_PLACE_CENTERED:
-        x = m_cells[hex].m_refX - m_powSprite->getWidth() / 2;
-        y = m_cells[hex].m_refY - m_powSprite->getHeight() / 2 - 37;
+        x = m_cells[hex].m_refX - m_powSprite->GetWidth() / 2;
+        y = m_cells[hex].m_refY - m_powSprite->GetHeight() / 2 - 37;
         break;
     case SPELL_EFFECT_PLACE_HEX:
         x = m_cells[hex].m_hexUlx;
-        y = m_cells[hex].m_hexUly - m_powSprite->getHeight() + 52;
+        y = m_cells[hex].m_hexUly - m_powSprite->GetHeight() + 52;
         break;
     }
 
     playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
-    for (int frame = 0; frame < m_powSprite->getNumFrames(cs_walk); frame++) {
+    for (int frame = 0; frame < m_powSprite->GetNumFrames(cs_walk); frame++) {
         drawFrame(0, 0, 0, delay, 1, 1);
 
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
-        m_powSprite->drawSpellEffect(
-            0, frame, 0, 0, m_powSprite->getWidth(), m_powSprite->getHeight(),
+        m_powSprite->DrawSpellEffect(
+            0, frame, 0, 0, m_powSprite->GetWidth(), m_powSprite->GetHeight(),
             screen, x, y, false, (traits.m_flags >> 8) & 1);
         // DC drawing.cpp:2650 uses the CSprite bitmap overload; 2653/2654
         // update only when ScrollTo did not redraw the viewport.
-        if (!scrollTo(x, y, m_powSprite->getWidth(), m_powSprite->getHeight(),
+        if (!scrollTo(x, y, m_powSprite->GetWidth(), m_powSprite->GetHeight(),
                       true, true, true))
             updateCombatArea();
     }

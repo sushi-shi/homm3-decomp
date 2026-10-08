@@ -949,9 +949,9 @@ townObject::townObject(int townType, int objPos, const char* basename)
     sprintf(defName, DATA_COMPGEN(0x0068c1c4, townObjectSpriteFormat,
                                   "%s.def"), basename);
     m_objIcon = ResourceManager::getSprite(defName);
-    m_numFrames = m_objIcon->getNumFrames(0);
-    m_w = m_objIcon->getWidth();
-    m_h = m_objIcon->getHeight();
+    m_numFrames = m_objIcon->GetNumFrames(0);
+    m_w = m_objIcon->GetWidth();
+    m_h = m_objIcon->GetHeight();
 
     if (objPos != -1) {
         m_objBorder = new border(m_x, m_y, m_w, m_h, objPos, 1);
@@ -1037,12 +1037,12 @@ void townObject::draw(int incFrame, bool drawHotspots)
         town* currTown = g_townManager->m_townToView;
         if (currTown->m_type == TOWN_DUNGEON && m_objId == EXTRA_0_ID) {
             if (currTown->hasBuilding(MAGE_GUILD5_ID, false)) {
-                m_objIcon->draw(0, GUILD_LIT_FIRST_FRAME, 0, 0,
-                              m_objIcon->getWidth(), m_objIcon->getHeight(),
+                m_objIcon->Draw(0, GUILD_LIT_FIRST_FRAME, 0, 0,
+                              m_objIcon->GetWidth(), m_objIcon->GetHeight(),
                               g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (m_currFrame != GUILD_LIT_FIRST_FRAME)
-                    m_objIcon->draw(0, m_currFrame, 0, 0, m_objIcon->getWidth(),
-                                  m_objIcon->getHeight(),
+                    m_objIcon->Draw(0, m_currFrame, 0, 0, m_objIcon->GetWidth(),
+                                  m_objIcon->GetHeight(),
                                   g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (incFrame == 1) {
                     m_currFrame++;
@@ -1050,12 +1050,12 @@ void townObject::draw(int incFrame, bool drawHotspots)
                         m_currFrame = GUILD_LIT_FIRST_FRAME;
                 }
             } else {
-                m_objIcon->draw(0, 0, 0, 0, m_objIcon->getWidth(),
-                              m_objIcon->getHeight(),
+                m_objIcon->Draw(0, 0, 0, 0, m_objIcon->GetWidth(),
+                              m_objIcon->GetHeight(),
                               g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (m_currFrame != 0)
-                    m_objIcon->draw(0, m_currFrame, 0, 0, m_objIcon->getWidth(),
-                                  m_objIcon->getHeight(),
+                    m_objIcon->Draw(0, m_currFrame, 0, 0, m_objIcon->GetWidth(),
+                                  m_objIcon->GetHeight(),
                                   g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (incFrame == 1) {
                     m_currFrame++;
@@ -1072,12 +1072,12 @@ void townObject::draw(int incFrame, bool drawHotspots)
                     m_currFrame = 0;
             }
             if (m_numFrames > 2) {
-                m_objIcon->draw(0, 0, 0, 0, m_objIcon->getWidth(),
-                              m_objIcon->getHeight(),
+                m_objIcon->Draw(0, 0, 0, 0, m_objIcon->GetWidth(),
+                              m_objIcon->GetHeight(),
                               g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (m_currFrame != 0)
-                    m_objIcon->draw(0, m_currFrame, 0, 0, m_objIcon->getWidth(),
-                                  m_objIcon->getHeight(),
+                    m_objIcon->Draw(0, m_currFrame, 0, 0, m_objIcon->GetWidth(),
+                                  m_objIcon->GetHeight(),
                                   g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (incFrame == 1) {
                     m_currFrame++;
@@ -1087,12 +1087,12 @@ void townObject::draw(int incFrame, bool drawHotspots)
             } else {
                 // Mac retains separate calls at 0:0x1b95d4 and 0:0x1b9644.
                 if (m_numFrames == 0)
-                    m_objIcon->draw(0, 0, 0, 0,
-                                  m_objIcon->getWidth(), m_objIcon->getHeight(),
+                    m_objIcon->Draw(0, 0, 0, 0,
+                                  m_objIcon->GetWidth(), m_objIcon->GetHeight(),
                                   g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 else
-                    m_objIcon->draw(0, m_currFrame, 0, 0,
-                                  m_objIcon->getWidth(), m_objIcon->getHeight(),
+                    m_objIcon->Draw(0, m_currFrame, 0, 0,
+                                  m_objIcon->GetWidth(), m_objIcon->GetHeight(),
                                   g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
             }
         }
@@ -4589,7 +4589,7 @@ int TShipWindow::windowHandler(message& msg)
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
             max(100, elapsed);
         m_boatFrame++;
-        if (m_boatFrame >= m_boatIcon->m_sprite->getNumFrames(7))
+        if (m_boatFrame >= m_boatIcon->m_sprite->GetNumFrames(7))
             m_boatFrame = 0;
         m_boatIcon->setIconFrame(m_boatFrame);
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -6182,7 +6182,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     window->broadcastMessage(msg);
 
     CSprite* resourceIcon = ResourceManager::getSprite("Resource.def");
-    int thisWidth = resourceIcon->getWidth();
+    int thisWidth = resourceIcon->GetWidth();
     for (i = 0; i < numResources; i++) {
         sprintf(g_text, "%d", amounts[i]);
         textWidget* amountText = new textWidget(

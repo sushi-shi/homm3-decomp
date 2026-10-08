@@ -155,7 +155,7 @@ bool CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const c
         return 0;
     add(new textWidget(10, 26, m_width - 20, 36, title, "medfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
-    add(new CSpriteWidget((m_width - sprite->getWidth()) / 2, 60, sprite, frame));
+    add(new CSpriteWidget((m_width - sprite->GetWidth()) / 2, 60, sprite, frame));
     add(new textWidget(10, 95, m_width - 20, 18, botTitle, "smalfont.fnt",
         font::PRIMARY, -1, 1, 0, 8));
     add(new textWidget(15, 120, m_width - 30, m_height - 120, description,
@@ -171,7 +171,7 @@ DC_ADDRESS(0x12f0c8, 0x54)
 MAC_ADDRESS(0x16d230, 0x9c)
 void CSpriteWidget::draw() const
 {
-    m_sprite->draw(0, m_frame, 0, 0, m_width, m_height,
+    m_sprite->Draw(0, m_frame, 0, 0, m_width, m_height,
         g_windowManager->m_screenBitmap, m_x + m_parentWindow->m_x,
         m_y + m_parentWindow->m_y, 0, 1);
 }
@@ -187,9 +187,9 @@ CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* sprite, int frameArg)
     m_frame = frameArg;
     m_x = xPos;
     m_y = yPos;
-    m_width = sprite->getWidth();
-    m_height = sprite->getHeight();
-    m_frame %= sprite->getNumFrames(0);
+    m_width = sprite->GetWidth();
+    m_height = sprite->GetHeight();
+    m_frame %= sprite->GetNumFrames(0);
 }
 
 // Original: CSpriteWidget::zBufferDraw; singleselectionpopups.cpp:67
@@ -303,9 +303,9 @@ bool CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* spe
     add(new textWidget(30, 122, m_width - 60, 36,
         g_generalText->getText(GENERAL_TEXT_SCENARIO_HERO_SPECIALTY_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
-    add(new CSpriteWidget((m_width - specialtyIcon->getWidth()) / 2, 149,
+    add(new CSpriteWidget((m_width - specialtyIcon->GetWidth()) / 2, 149,
         specialtyIcon, frame));
-    add(new textWidget(30, specialtyIcon->getHeight() + 151, m_width - 60, 36,
+    add(new textWidget(30, specialtyIcon->GetHeight() + 151, m_width - 60, 36,
         specialtyName, "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
     return 1;
 }
@@ -346,7 +346,7 @@ bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
     add(new textWidget(10, 26, m_width - 20, 36,
         g_generalText->getText(GENERAL_TEXT_SCENARIO_TOWN_ALIGNMENT_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
-    add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
+    add(new CSpriteWidget((m_width - town->GetWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
         townManager::getTownTypeName(townType), "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
@@ -565,13 +565,13 @@ void TRandomMapProgress::updateProgressBar()
     m_window->drawWindow(0, 0xffff0001, 0xffff);
 
     for (int i = 0; i < fullRow; i++) {
-        m_barSprite->draw(0, i, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
+        m_barSprite->Draw(0, i, 0, 0, m_barSprite->GetWidth(), m_barSprite->GetHeight(),
                         g_windowManager->m_screenBitmap,
                         m_window->m_x + i * 18 + 16, m_window->m_y + 0x3c,
                         false, false);
     }
     for (int j = 0; j < partialRow; j++) {
-        m_barSprite->draw(0, j, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
+        m_barSprite->Draw(0, j, 0, 0, m_barSprite->GetWidth(), m_barSprite->GetHeight(),
                         g_windowManager->m_screenBitmap,
                         m_window->m_x + j * 18 + 16, m_window->m_y + 0x50,
                         false, false);
