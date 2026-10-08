@@ -4325,7 +4325,10 @@ void combatManager::removeCorpse(army* corpse)
 }
 
 // Project-inferred shared message; preserve the separate native format branches.
-void combatManager::showResurrectionMessage(const army* target, long raised)
+// Mac demonicResurrection keeps two vector_pod::data calls (0x1985e4,
+// 0x198650): one inline layer above GetText, which CodeWarrior expands only
+// for an inline body.
+inline void combatManager::showResurrectionMessage(const army* target, long raised)
 {
     if (raised != 1)
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
@@ -4346,7 +4349,7 @@ void combatManager::showResurrectionMessage(const army* target, long raised)
 // contradicts both source-order witnesses, so keep the authored order.
 VA(0x005a7390, 0x1CB)
 DC_ADDRESS(0x1566f8, 0x148)
-MAC_ADDRESS(0x1984ec, 0x200)
+MAC_ADDRESS(0x1984ec, 0x200)  // MAC_ABSTRACTION_FROM(tokens1:efc3df953409,54.2969): the inline showResurrectionMessage depth leaves retail's two vector_pod::data calls (0x5eec); masked shape 123/128 vs 116/128 pasted, and only the SAMPLE2 temporary copy shifts the bytes.
 void combatManager::demonicResurrection(const army* caster, army* target)
 {
     SAMPLE2 sound;

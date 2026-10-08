@@ -111,11 +111,14 @@ inline int readLittleEndianValue(TAbstractFile* infile, T& value)
 
 // Value readers intentionally discard the native byte count, like readValue<T>.
 // Mac quest load/loadFromMap decode their deadline immediately after read;
-// neither native caller tests the count before lwbrx.
+// neither native caller tests the count before lwbrx. They byte-reverse the
+// read slot itself (0x1642e4), so the value is read in place, not copied
+// from readValue<T>'s returned temporary.
 template <class T>
 inline T readLittleEndianValue(TAbstractFile* infile)
 {
-    T value = readValue<T>(infile);
+    T value;
+    readValue(infile, value);
 #if defined(__POWERPC__)
     if (sizeof(T) == sizeof(unsigned short))
         value = static_cast<T>(__lhbrx(&value, 0));

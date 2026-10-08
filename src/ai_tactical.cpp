@@ -359,9 +359,11 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     }
 }
 
+// Mac expands this body in its callers; CodeWarrior expands only bodies
+// declared inline (VC6 output is unchanged).
 // Project-inferred shared restoration priority for creature and hero spells.
 // Keep each caller's base valuation and rejection rules outside this operation.
-long type_AI_combat_parameters::getRestorationPriorityValue(long value) const
+inline long type_AI_combat_parameters::getRestorationPriorityValue(long value) const
 {
     if (m_awakeFriendlyValue > m_awakeEnemyValue && m_roundsLeft <= 1)
         value += value;
@@ -678,9 +680,11 @@ long type_enchant_data::getMasteryValue() const
     return akSpellTraits[m_spell].m_mastery_bonus[m_mastery];
 }
 
+// Mac expands this body in its callers; CodeWarrior expands only bodies
+// declared inline (VC6 output is unchanged).
 // Project-inferred shared constructor stores. Target interpretation belongs
 // to the consumer: tactical hexes and simulated-combat vector indices differ.
-void type_spell_choice::initializeSelection()
+inline void type_spell_choice::initializeSelection()
 {
     m_value = 0;
     m_target = -1;
@@ -2270,9 +2274,11 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
     }
 }
 
+// Mac expands this body in its callers; CodeWarrior expands only bodies
+// declared inline (VC6 output is unchanged).
 // Project-inferred shared restoration timing. Preserve this short-circuit
 // order and the existing isLastAction helper, including its own current-army read.
-bool type_AI_spellcaster::shouldRestoreNow(const army* restoredArmy) const
+inline bool type_AI_spellcaster::shouldRestoreNow(const army* restoredArmy) const
 {
     return restoredArmy == g_combatManager->getCurrentArmy()
         || m_winLikely
