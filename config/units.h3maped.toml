@@ -5,9 +5,19 @@
 # (config/retail/h3maped/placements.tsv), never from the game's VA() claims.
 #
 # Profiles (editor-plan.md section 4, fingerprinted against retail):
-#   map editor objects          /O1 /Ob2 /GR (frame pointers omitted)
-#   prebuilt Libraries archive  /O2 /GR (ResourceManager and the graphics
-#                               and resource classes)
+#   map editor objects          /O1 /Ob2 /GR, default __cdecl, NDEBUG:
+#                               GameMap.cpp's anonymous helpers and
+#                               computeAdjacentDirs take stack arguments
+#                               and the caller pops them; no assert text
+#                               survives although Loki's same functions
+#                               assert. Error.cpp, ObjectType.cpp,
+#                               GzBuf.cpp and the traits files are editor
+#                               objects (h3maped InitializeHeroTraits and
+#                               ResourceManager callers use __cdecl).
+#   random map generator        /O1 /Ob2 /GR /Gr: flipRmgEdge (0x4cc68e)
+#                               reads its argument from ecx
+#   prebuilt Libraries archive  /O2 /GR, default __cdecl (GetText 0x4dca60
+#                               reads its name from the stack)
 #   zlib and Victor             the game's prebuilt objects, byte-identical
 
 [build]
@@ -72,13 +82,25 @@ h3maped_o1_ob2_gr_windows = [
   "/D_WINDOWS",
 ]
 
+editor_o1_ob2_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O1",
+  "/Ob2",
+  "/Op",
+  "/MT",
+  "/GX",
+  "/GR",
+  "/DNDEBUG",
+  "/D_WINDOWS",
+]
+
 libraries_o2_gr_windows = [
   "/nologo",
   "/c",
   "/O2",
   "/Op",
   "/MT",
-  "/Gr",
   "/GX",
   "/GR",
   "/D_WINDOWS",
@@ -270,35 +292,35 @@ flags = "h3maped_o1_ob2_gr_windows"
 [[unit]]
 unit = "objecttype"
 source = "src/objecttype.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "gzinflatebuf"
 module = "codec"
 source = "src/gzinflatebuf.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "artifact"
 source = "src/artifact.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "creaturetype"
 source = "src/creaturetype.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "herodefs"
 source = "src/herodefs.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "error"
 source = "src/error.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "spelldefs"
 source = "src/spelldefs.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
