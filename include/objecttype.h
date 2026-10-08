@@ -135,7 +135,10 @@ TRawIStream& operator>>(TRawIStream& stream, TObjectType& objectType);
 
 // Object types are ordered member by member (image, type, subtype, slot
 // category, underlay, then the masks) so they can key a map.
-template<> bool less<TObjectType>::operator()(const TObjectType& lhs, const TObjectType& rhs) const;
+template<>
+struct less<TObjectType> : public binary_function<TObjectType, TObjectType, bool> {
+    bool operator()(const TObjectType& lhs, const TObjectType& rhs) const;
+};
 
 // The object palette's slots: one per terrain but rock, the all-terrain
 // slot and one per non-generic category.

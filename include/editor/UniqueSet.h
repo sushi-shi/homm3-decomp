@@ -31,14 +31,13 @@ size_t TUniqueSet<T>::add(const T& item)
         pair<TMap::iterator, bool> insResult = _m_map.insert(TMap::value_type(item, _m_idMap.size()));
 #line 59 "UniqueSet.h"
         assert(insResult.second);
-        it = insResult.first;
-        _m_idMap.push_back(it);
+        _m_idMap.push_back(it = insResult.first);
     }
     return it->second;
 }
 
 template<class T>
-const T& TUniqueSet<T>::get(unsigned int id) const
+inline const T& TUniqueSet<T>::get(unsigned int id) const
 {
 #line 78 "UniqueSet.h"
     assert(id < _m_idMap.size());

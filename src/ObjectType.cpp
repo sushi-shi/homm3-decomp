@@ -154,7 +154,7 @@ TObjectType& TObjectType::setImageName(const string& newImageName)
         aImageInfo.push_back(_TImageInfo());
         _TImageInfo& imageInfo = aImageInfo[setSize];
 
-        string maskName(newImageName);
+        string maskName = newImageName;
         unsigned int dotPos = maskName.find_last_of('.');
         if (dotPos != string::npos)
             maskName.replace(dotPos, maskName.size() - dotPos, ".msk");
@@ -321,10 +321,10 @@ TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType)
     writeBitset(stream, objectType._m_triggerMask);
     writeBitset(stream, bitset<kNumTerrainTypes - 1>(objectType._m_terrainMask.to_ulong()));
     writeBitset(stream, bitset<kNumTerrainTypes - 1>(objectType._m_recommendedTerrainMask.to_ulong()));
-    stream << reinterpret_cast<const long&>(objectType._m_type)
-           << reinterpret_cast<const long&>(objectType._m_extra)
-           << reinterpret_cast<const signed char&>(objectType._m_slotCategory)
-           << reinterpret_cast<const signed char&>(objectType._m_bUnderlay);
+    stream.operator<< <long>(objectType._m_type)
+          .operator<< <long>(objectType._m_extra)
+          .operator<< <signed char>(objectType._m_slotCategory)
+          .operator<< <signed char>(objectType._m_bUnderlay);
     signed char reserved[16];
     fill_n(reserved, sizeof(reserved), 0);
     stream << reserved;
@@ -363,7 +363,7 @@ TRawIStream& operator>>(TRawIStream& stream, TObjectType& objectType)
 }
 
 template<size_t N>
-bool isLessThan(const bitset<N>& lhs, const bitset<N>& rhs)
+inline bool isLessThan(const bitset<N>& lhs, const bitset<N>& rhs)
 {
     size_t bit = N;
     while (bit != 0) {
@@ -376,7 +376,6 @@ bool isLessThan(const bitset<N>& lhs, const bitset<N>& rhs)
     return false;
 }
 
-template<>
 bool less<TObjectType>::operator()(const TObjectType& lhs, const TObjectType& rhs) const
 {
     if (lhs._m_imageNum < rhs._m_imageNum)
