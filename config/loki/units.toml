@@ -399,3 +399,8 @@ source = "src/editor/HeroPropsSecSkillsPage.cpp"
 name = "MapSpecsPlayerSpecsPage"
 object = 72
 source = "src/editor/MapSpecsPlayerSpecsPage.cpp"
+
+[[unit]]
+name = "TownPropsGeneralPage"
+object = 93
+source = "src/editor/TownPropsGeneralPage.cpp"

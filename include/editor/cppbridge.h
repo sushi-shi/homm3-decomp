@@ -29,6 +29,7 @@ bool askYesNoQuestion(char* question);
 void on_artifact_props_guardians_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data);
 void on_edit_town_event_buildings_build_toggled(GtkToggleButton* togglebutton, gpointer user_data);
 void on_creatures_customize_toggled(GtkToggleButton* togglebutton, gpointer user_data);
+void on_town_props_general_player_name_changed(GtkEditable* editable, gpointer user_data);
 void on_hero_secskills_type_entry_0_changed(GtkEditable* editable, gpointer user_data);
 void on_hero_secskills_type_entry_1_changed(GtkEditable* editable, gpointer user_data);
 void on_hero_secskills_type_entry_2_changed(GtkEditable* editable, gpointer user_data);
