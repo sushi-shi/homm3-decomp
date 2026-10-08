@@ -825,8 +825,16 @@ name) has the same effect. Removing `drawSpellEffect`'s own `draw` call does
 not, so it is not a call-site conversion. Treat a residual that flips with an
 unrelated symbol's spelling as name-keyed compiler state, not missing source:
 the project's normalized names cannot reproduce the original table.
-- evidence: `src/cspriteframe.cpp` drawSpellEffect note
-- status: observed, mechanism (C1 vs C2 symbol hashing) unmodelled
+The width follows the mask's `.bss` placement (2026-10-08): VC6 ANDs a
+`unsigned short` global as `and r32,dword [g]` only when the object places
+it on a 4-byte boundary, and as `and r16,word [g]` at 2 mod 4. Retail puts
+`div2mask` at 0x6968a4 (dword ANDs) and `div4mask` at 0x6968aa (word ANDs);
+renaming the TU's statics moved both masks to 2 mod 4 and every AND became a
+word. `.bss` order is name-hashed ([data layout](data-layout.md)), hence the
+name sensitivity. Which blend term VC6 schedules first also moved with TU
+names in `cspriteframe`.
+- evidence: `src/cspriteframe.cpp` drawSpellEffect and drawTileShadow notes
+- status: observed; the width is the global's placement, the order behind it unmodelled
 - probe: none (needs the full TU)
 
 ### C9. Measurement hygiene the corpus depends on (model-training caveats)
