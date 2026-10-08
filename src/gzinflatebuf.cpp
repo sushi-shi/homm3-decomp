@@ -259,25 +259,14 @@ TGzInflateBuf::~TGzInflateBuf()
 // caller from 81.1204% to 81.4346%. std::_cpp_min on copied local counts
 // adds operand homes and scores 79.1832%; keep the direct value expression.
 
-// Residual: retail expands _mustGetC at trailer positions 1,2,5,6 and calls
-// it at 3,4,7,8. The current body expands all eight. A passive VC6 trace
-// measures caller cb=604, budget=1208, and _mustGetC cb=56 before this fix.
-// Two provisional four-byte readers, following vendored gzio.c::getLong,
-// give a 3-expanded/1-called first group and a 2/2 second group (26.1623%).
-// Addition, OR and separate byte locals emit identical bytes. Combining
-// that helper with std::_cpp_min produces both 2/2 groups but moves the
-// error blocks and adds reference-selection loads (24.4660%; local count
-// copies 29.0419%). No such helper is retained: the repeated pattern is a
-// hypothesis for its boundary, not proof of the original reader body.
-// The candidate also shares its 0x20 exception slot where retail reserves
-// 0x3c. An explicit refill-buffer local is byte-neutral; a separate CRC
-// byte-count local scores 81.3560% and does not resolve the trailer calls.
-// Mac expands all eight checked byte reads without a visible group boundary.
-// A success-first _mustGetC return and swapping the refill member assignments
-// are separately byte-flat under both compilers; neither restores VC6
-// exception-slot separation or the retained trailer calls.
-// Binding _m_zstream through a local reference or pointer is not the missing
-// receiver lifetime: both controls fall 81.9005 -> 73.1728% in VC6.
+// The gzip trailer is two _mustGetLong reads, as Loki h3maped retains
+// TGzInflateBuf::_mustGetLong (0x81d4070: four _mustGetC calls summed with
+// shifts 0/8/16/24). Inlined twice, it gives retail's expanded/called
+// _mustGetC pattern (expanded at trailer reads 1,2,5,6, called at 3,4,7,8)
+// and its separate exception slots. Loki's refill also stores next_in
+// before avail_in (0x81d3ba1..0x81d3bb0); with the helper, that order is
+// retail's ecx load of the input buffer. 81.80% -> 100%. Mac expands all
+// eight checked reads without a visible group boundary.
 VA(0x004d6920, 0x251)
 MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
@@ -290,8 +279,8 @@ int TGzInflateBuf::underflow()
                 static_cast<char*>(static_cast<void*>(_m_pInBuf)), GZ_WINDOW_SIZE);
             if (count < GZ_WINDOW_SIZE)
                 m_sourceEof = 1;
-            _m_zstream.avail_in = count;
             _m_zstream.next_in = _m_pInBuf;
+            _m_zstream.avail_in = count;
         }
         if (_m_zstream.avail_in > 0) {
             if (m_ok) {
@@ -316,14 +305,8 @@ int TGzInflateBuf::underflow()
                     if (status == Z_STREAM_END) {
                         inflateEnd(&_m_zstream);
                         m_inflating = 0;
-                        _mustGetC();
-                        _mustGetC();
-                        _mustGetC();
-                        _mustGetC();
-                        _mustGetC();
-                        _mustGetC();
-                        _mustGetC();
-                        _mustGetC();
+                        _mustGetLong();
+                        _mustGetLong();
                         break;
                     }
                 }
@@ -364,6 +347,17 @@ int TGzInflateBuf::_mustGetC()
     if (c == -1)
         throw TDataError();
     return c;
+}
+
+// Loki h3maped 0x81d4070 retains this little-endian reader right after
+// _mustGetC. Retail has no out-of-line copy: underflow expands both calls.
+unsigned long TGzInflateBuf::_mustGetLong()
+{
+    unsigned long x = _mustGetC();
+    x += _mustGetC() << 8;
+    x += _mustGetC() << 16;
+    x += _mustGetC() << 24;
+    return x;
 }
 
 VA_COMPGEN(0x0041ba90, 0x162, CLASS_CTOR, runtime_error)
