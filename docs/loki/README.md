@@ -185,3 +185,10 @@ const*)` builds its path in `char[4096]` (Linux `PATH_MAX`) where Windows uses
   them from `8(%ebp)`. A helper whose parameters live in registers was
   declared `inline`; a non-inline spelling of it never matches. Locals
   stay on the stack either way.
+- Functions are only `.align 4`, but labels after a jump get
+  `.p2align 4,,7`: the padding inside a function depends on where it sits
+  modulo 16 in its object's `.text`, so it follows the sizes of every
+  function before it. A body that differs from retail only in `leal
+  (%esi),%esi`/`movl %esi,%esi` padding and the jump offsets around it is
+  usually right; it converges once the functions before it in the object
+  are complete (GameMap.cpp's TLayer bodies while the file is partial).
