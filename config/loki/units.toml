@@ -279,3 +279,8 @@ source = "src/editor/TileHRuler.cpp"
 name = "TileVRuler"
 object = 59
 source = "src/editor/TileVRuler.cpp"
+
+[[unit]]
+name = "EditRumorDlg"
+object = 76
+source = "src/editor/EditRumorDlg.cpp"
