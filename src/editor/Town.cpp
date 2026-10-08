@@ -16,14 +16,14 @@
 #include "adventureobjecttype.h"
 #include "autoarrayptr.h"
 #include "creaturetype.h"
-#include "exceptions.h"
 #include "resourcemanager.h"
 #include "resourceptr.h"
 #include "editor/Hero.h"
 #include "editor/MapEditorText.h"
-#include "editor/RawStream.h"
-#include "textresource.h"
 #include "editor/Town.h"
+#include "editor/RawStream.h"
+#include "exceptions.h"
+#include "textresource.h"
 
 #define ARRAY_SIZE( a ) ( sizeof( a ) / sizeof( ( a )[ 0 ] ) )
 

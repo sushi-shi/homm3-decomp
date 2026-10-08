@@ -21,6 +21,7 @@
 
 #include "armygrp.h"
 #include "town_type.h"
+#include "editor/Hero.h"
 #include "editor/Army.h"
 #include "editor/Array.h"
 #include "editor/ObjectSpecializations.h"

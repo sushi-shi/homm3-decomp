@@ -11,12 +11,12 @@ namespace {
 }
 
 #include "exceptions.h"
-#include "editor/EraseToolkit.h"
 #include "editor/ObjectPaletteWnd.h"
+#include "editor/ToolkitWnd.h"
+#include "editor/EraseToolkit.h"
 #include "editor/RiverToolkit.h"
 #include "editor/RoadToolkit.h"
 #include "editor/TerrainToolkit.h"
-#include "editor/ToolkitWnd.h"
 
 TToolkitWnd::TToolkitWnd(GtkWidget* thisWidget, TToolkitWndClient* pClient)
     : _m_pClient(pClient),

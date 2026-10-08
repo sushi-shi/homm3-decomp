@@ -11,16 +11,11 @@
 #include "editor/ObjectPaletteWnd.h"
 
 class TToolkitWnd;
+class TToolkitWndClient;
 class TTerrainToolkit;
 class TRiverToolkit;
 class TRoadToolkit;
 class TEraseToolkit;
-
-class TToolkitWndClient {
-public:
-    virtual bool onToolkitCanCreateObject(TToolkitWnd* pToolkitWnd, const TObjectType& objType) = 0;
-    virtual void onToolkitGrabObject(TToolkitWnd* pToolkitWnd, const TObjectType& objType) = 0;
-};
 
 class TToolkitWnd : public CWnd, public TObjectPaletteWndClient {
 public:
@@ -51,6 +46,12 @@ private:
     TRoadToolkit* _m_pRoadToolkit;
     TEraseToolkit* _m_pEraseToolkit;
     TObjectPaletteWnd* _m_pObjectPaletteWnd;
+};
+
+class TToolkitWndClient {
+public:
+    virtual bool onToolkitCanCreateObject(TToolkitWnd* pToolkitWnd, const TObjectType& objType) = 0;
+    virtual void onToolkitGrabObject(TToolkitWnd* pToolkitWnd, const TObjectType& objType) = 0;
 };
 
 #endif  /* HOMM3_EDITOR_TOOLKITWND_H */

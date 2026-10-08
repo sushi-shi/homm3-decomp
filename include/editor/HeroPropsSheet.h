@@ -17,8 +17,8 @@
 #include <set>
 
 #include "editor/HeroPropsArtifactsPage.h"
-#include "editor/HeroPropsCreaturesPage.h"
 #include "editor/HeroPropsGeneralPage.h"
+#include "editor/HeroPropsCreaturesPage.h"
 #include "editor/HeroPropsSecSkillsPage.h"
 
 class THeroPropsSheet : protected virtual THeroPropsGeneralPageParentSheet, THeroPropsCreaturesPageParentSheet {
