@@ -3734,12 +3734,6 @@ int gameUnsaved()
 // These menu cheats perform the same game/campaign marking operation as
 // both chat handlers and the combat cheat worker. Keep their canonical
 // free helper, including its second global load for the campaign store.
-// Residual 99.3051% (inline/fold wall): DC kb.cpp calls GetCurrHeroId and
-// then GetCurrHero before GiveArmy. VC6 drops getCurrHero's redundant -1
-// test but still adds the m_army offset after the merged arms; retail
-// folds it into one lea (0x216b1). Unguarded getHeroReference or direct
-// m_heroes indexing reproduces 100% but discards DC's GetCurrHero call,
-// so the canonical helper path is kept.
 VA(0x004f4350, 0x7F2)
 DC_ADDRESS(0x0e49b0, 0x79c)
 int handleAppSpecificMenuCommands(int idItem)
@@ -3858,9 +3852,8 @@ int handleAppSpecificMenuCommands(int idItem)
             markGameAsCheated();
             if (g_game->getCurrHeroId() != -1) {
                 g_game->giveArmy(
-                                 &g_game->getCurrHero()->m_army,
-                                 idItem - APP_MENU_ARMY_FIRST,
-                                 APP_MENU_ARMY_QUANTITY, -1);
+                    &g_game->getHeroReference(g_game->getCurrHeroId()).m_army,
+                    idItem - APP_MENU_ARMY_FIRST, APP_MENU_ARMY_QUANTITY, -1);
                 g_advManager->updBottomView(1, 1, 1);
             }
             break;
