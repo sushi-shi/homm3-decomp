@@ -23,7 +23,14 @@ public:
     typedef unsigned int size_type;
 
     TArray() {}
-    explicit TArray(const T& value) { fill(begin(), end(), value); }
+    // Windows constructs the elements in place: h3maped's fills and copies
+    // null-check each element (TResourceQuantitiesDlg's ctor 0x4b34a0,
+    // TTimedEvent's implicit copy 0x417060), the shape of Dinkumware's
+    // uninitialized_fill/_copy, where Loki's port assigns. Retail stores the
+    // first element before its loop; an isolated compile checks it too, so
+    // that peel belongs to the callers' context.
+    explicit TArray(const T& value) { uninitialized_fill(begin(), end(), value); }
+    TArray(const TArray& other) { uninitialized_copy(other.begin(), other.end(), begin()); }
 
     TArray& operator=(const TArray& other)
     {
