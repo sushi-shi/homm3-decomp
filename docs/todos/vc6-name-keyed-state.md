@@ -26,6 +26,14 @@ doesn't model this channel.
   from real type effects. Earlier, retyping `army::is` was byte-neutral
   tree-wide.
 
+- **Original spellings alone don't reproduce retail.** On 2026-10-08, every
+  `CSpriteFrame` method and static was renamed to its Loki-proven spelling
+  (`Draw*`, `Clip`, `Crop`, `GetMap`, `div2mask`…). That lost all of `Draw`'s
+  gains: `drawSpellEffect` went back to 99.34, and `DrawTileShadow` fell from
+  its 99.90 MAX to 99.87. So the result depends on the unit's whole set of
+  names, not on one name being original. The rename diff is not kept; it is
+  reproducible from the Loki symbol table.
+
 ## Hypothesis
 
 C1XX or C2 hashes decorated names into an internal table, and some decision
