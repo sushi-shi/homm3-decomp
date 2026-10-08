@@ -470,7 +470,7 @@ rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZ
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	99.1751	99.1751	99.1751	0xa5c07	-
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	93.1254	93.1254	93.1254	0xa7605	-
 rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	96.9458	96.9458	96.9458	0xab6ac	-
-rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9484	83.9484	83.9484	0xabd5f	-
+rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9579	83.9579	83.9579	0xabd5f	-
 rmg	?createRivers@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac4ae	-
 rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5710	89.5710	89.5710	0xa696b	-
@@ -555,7 +555,7 @@ rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMa
 rmg	?loadObjectPrototypes@t_abstract_random_generator@@QAEXXZ	77.2231	77.2231	77.2231	0x9da08	-
 rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	84.5722	84.5722	84.5722	0x9f0cd	-
 rmg	?markCoastalTiles@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x9a1ef	-
-rmg	?markRiverCoastTarget@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	66.5470	66.5470	66.5470	0xaba05	-
+rmg	?markRiverCoastTarget@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	84.3425	84.3425	84.3425	0xaba05	-
 rmg	?markRiverJoinTargets@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac3df	-
 rmg	?markRiverOutletTargets@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xabc20	-
 rmg	?objectsAllowEntrances@TRmgTreasureGroup@@QBEEXZ	99.8214	99.8214	99.8214	0x9d65c	-
@@ -747,7 +747,7 @@ uncompr	@uncompress@16	100.0000	100.0000	100.0000	0xe5ba0	-
 victor	?allocimage@@YGHPAUimgdes@@HHH@Z	99.6154	100.0000	100.0000	0xfbdd0	-
 victor	?freeimage@@YGXPAUimgdes@@@Z	100.0000	100.0000	100.0000	0xfbfe0	-
 victor	?pcxinfo@@YGHPBDPAUPcxData@@@Z	100.0000	100.0000	100.0000	0xfcae0	-
-victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	99.3429	99.3429	99.3429	0xfbe00	-
+victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	99.9714	99.9714	99.9714	0xfbe00	-
 victor	?victorInitializeGrayscalePalette@@YGXPAUimgdes@@@Z	100.0000	100.0000	100.0000	0xfc200	-
 victor	?victorInsertBits@@YGXPAEPBEHH@Z	-	94.2593	94.2593	0xfcf60	-
 victor	?victorMinimumDimensions@@YAXPAUimgdes@@0PAI1@Z	100.0000	100.0000	100.0000	0xfc300	-
@@ -756,7 +756,7 @@ victor	?victorUploadPalette@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0xfc050
 victor	?victorValidateBitmap@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0xfc1e0	-
 victor	?victorValidateImage@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0xfc0f0	-
 victor_flip	?flipimage@@YGHPAUimgdes@@0@Z	99.9194	99.9597	99.9597	0xfc360	-
-victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	92.5756	92.5756	92.5756	0xfc640	-
+victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	99.9867	99.9867	99.9867	0xfc640	-
 victor_pcx_kernels	?victorConvertRgbPlanesToBgr@@YAXPAEPBEH@Z	100.0000	100.0000	100.0000	0xfce20	-
 victor_pcx_kernels	?victorDecodeRleBytes@@YAHPAE0H@Z	100.0000	100.0000	100.0000	0xfcd50	-
 victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.0000	0xfcdb0	-
