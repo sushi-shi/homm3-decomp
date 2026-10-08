@@ -317,9 +317,20 @@ findings under [docs/vc6/](docs/vc6/README.md), without a separate chronological
 
 ## Matching data ownership
 
-Preserve original semantic names where evidence exists, preferring Dreamcast
-source names and using NH3API as a fallback. Drop Hungarian type prefixes and
-normalize the semantic part of project-owned identifiers to lowerCamelCase.
+This decomp shows how the original code was, so a **proven original spelling
+wins** over every convention below. That includes original case, Hungarian
+prefixes and member styles such as `_m_pInBuf`. Spellings are proven by native
+symbols: the Loki Linux editor `h3maped` (g++ 2.95 mangled names, `__PRETTY_FUNCTION__`
+and assert strings), the Loki game, Dreamcast decorated and CodeView names, and
+Mac symbols. VC6 codegen can depend on identifier spelling (behavior-catalog C12),
+so refresh targets with `homm3 delink --unit` after a rename and compare each
+function. The cross-platform port normalizes names to its own consistent format
+later; that is not done here.
+
+Where no original spelling is proven, preserve original semantic names where
+evidence exists, preferring Dreamcast source names and using NH3API as a
+fallback. Drop Hungarian type prefixes and normalize the semantic part of
+project-owned identifiers to lowerCamelCase.
 Use scope prefixes consistently: `m_` for instance data members, `s_` for static
 data members, and `g_` for globals (including file-static globals). Locals,
 parameters, and ordinary functions use lowerCamelCase without these prefixes.
