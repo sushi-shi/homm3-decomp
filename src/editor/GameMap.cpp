@@ -1488,6 +1488,65 @@ const TGameMap::TLayer* TGameMap::_TImpl::getPLayer(unsigned int num) const
     return &_m_aLayer[num];
 }
 
+bool TGameMap::_TImpl::canCreate(const TObjectType& objType, TPlayer player) const
+{
+#line 2899
+    assert(player >= ePlayerNone && player < kNumPlayers);
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = kCappedObjectTypeInfoMap.find(objType.getType());
+    if (pCappedObjTypeInfo != kCappedObjectTypeInfoMap.end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second.m_ordinal;
+#line 2906
+        assert(typeOrdinal < _m_pBookkeeping->m_aNumObjsOfCappedType.size());
+        if (_m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal] >= pCappedObjTypeInfo->second.m_cap)
+            return false;
+    }
+    switch (objType.getType()) {
+    case HERO: {
+#line 2915
+        assert(objType.getExtra() >= 0 && objType.getExtra() < kNumHeroClasses);
+        if (player == ePlayerNone || _m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+            return false;
+        unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+        if (_m_pProperties->m_players[player].getBGenerateHero())
+            numHeroes++;
+        bool bHeroAvailable = false;
+        bitset<8> abHeroAvailable = _m_pBookkeeping->m_aabHeroAvailable[objType.getExtra()];
+        for (int protoNum = 0; protoNum < 8; protoNum++)
+            if (abHeroAvailable[protoNum])
+                bHeroAvailable = true;
+        return numHeroes < s_kMaxHeroesPerPlayer && bHeroAvailable;
+    }
+    case RANDOM_HERO: {
+        if (player == ePlayerNone || _m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+            return false;
+        unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+        if (_m_pProperties->m_players[player].getBGenerateHero())
+            numHeroes++;
+        return numHeroes < s_kMaxHeroesPerPlayer;
+    }
+    case PRISON:
+        return _m_pBookkeeping->m_numHeroes < s_kMaxHeroesOnMap;
+    case TOWN:
+    case RANDOM_TOWN:
+#line 2952
+        assert(objType.getType() == RANDOM_TOWN || ( objType.getExtra() >= 0 && objType.getExtra() < kNumTownTypes ));
+        return _m_pBookkeeping->m_numTowns < s_kMaxTownsOnMap;
+    case HOLY_GRAIL:
+        return !_m_pBookkeeping->m_bGrailPlaced;
+    case MINE:
+    case LIGHTHOUSE:
+        return _m_pBookkeeping->m_numMines < s_kMaxMinesOnMap;
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        return _m_pBookkeeping->m_numGenerators < s_kMaxGeneratorsOnMap;
+    case SIGN:
+    case OCEAN_BOTTLE:
+        return _m_pBookkeeping->m_numSigns < s_kMaxSignsOnMap;
+    default:
+        return true;
+    }
+}
+
 TGameObject* TGameMap::_TImpl::reconstructObject(streambuf* pStreamBuf, int version,
                                                  void* (*pfnAllocator)(unsigned int)) const
 {
