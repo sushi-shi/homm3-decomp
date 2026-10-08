@@ -16,9 +16,9 @@
 
 namespace {
 
-bitset<kNumPlayers> getPlayerPresentMask(const TGameMap& map)
+TPlayerMask getPlayerPresentMask(const TGameMap& map)
 {
-    bitset<kNumPlayers> mask;
+    TPlayerMask mask;
     for (unsigned int player = 0; player < kNumPlayers; player++)
         mask[player] = map.isPlayerPresent(TPlayer(player));
     return mask;
