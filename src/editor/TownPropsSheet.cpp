@@ -43,11 +43,11 @@ TTownPropsSheet::TTownPropsSheet(GtkWidget* thisWidget, TTown* pTown, TGameMap* 
     bool bIsMainTown = _m_pTown->getOwner() != ePlayerNone
                        && _m_pMap->getPlayers()[_m_pTown->getOwner()].getMainTownRef()
                               == TMapObjectRef(bSecondLayer, objID);
-    try {
-        _m_pGeneralPage = new TTownPropsGeneralPage(_m_pTown, *_m_pMap, bIsMainTown);
+    _m_pGeneralPage = new TTownPropsGeneralPage(_m_pTown, *_m_pMap, bIsMainTown);
 #line 70
-        if (!_m_pGeneralPage)
-            throw TAllocationFailure(__FILE__, __LINE__);
+    if (!_m_pGeneralPage)
+        throw TAllocationFailure(__FILE__, __LINE__);
+    try {
         _m_pGarrisonPage = new TTownPropsGarrisonPage(*_m_pTown);
 #line 79
         if (!_m_pGarrisonPage)

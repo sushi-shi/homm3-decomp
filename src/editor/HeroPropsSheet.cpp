@@ -22,11 +22,11 @@ THeroPropsSheet::THeroPropsSheet(char* pszCaption, CWnd* pParentWnd, THero* pHer
 {
 #line 43
     assert(_m_pHero != NULL);
-    try {
-        _m_pCreaturesPage = new THeroPropsCreaturesPage(this, *_m_pHero);
-        if (_m_pCreaturesPage == NULL)
+    _m_pCreaturesPage = new THeroPropsCreaturesPage(this, *_m_pHero);
+    if (_m_pCreaturesPage == NULL)
 #line 56
-            throw TAllocationFailure(__FILE__, __LINE__);
+        throw TAllocationFailure(__FILE__, __LINE__);
+    try {
         _m_pSecSkillsPage = new THeroPropsSecSkillsPage(*_m_pHero);
         if (_m_pSecSkillsPage == NULL)
 #line 63

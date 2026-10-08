@@ -20,11 +20,11 @@ TEditTimedEventSheet::TEditTimedEventSheet(const TPlayerMask& playersPresent, co
       _m_pGeneralPage(NULL),
       _m_pResourcesPage(NULL)
 {
-    try {
-        _m_pGeneralPage = new TEditTimedEventGeneralPage(this, _m_event, playersPresent);
+    _m_pGeneralPage = new TEditTimedEventGeneralPage(this, _m_event, playersPresent);
 #line 47
-        if (!_m_pGeneralPage)
-            throw TAllocationFailure(__FILE__, __LINE__);
+    if (!_m_pGeneralPage)
+        throw TAllocationFailure(__FILE__, __LINE__);
+    try {
         _m_pResourcesPage = new TEditTimedEventResourcesPage(_m_event);
 #line 56
         if (!_m_pResourcesPage)

@@ -71,12 +71,12 @@ void TMapSpecsSheet::OnInitDialog()
         }
     }
 
-    try {
-        _m_pGeneralPage = new TMapSpecsGeneralPage(*_m_pMap);
-        if (!_m_pGeneralPage)
+    _m_pGeneralPage = new TMapSpecsGeneralPage(*_m_pMap);
+    if (!_m_pGeneralPage)
 #line 108
-            throw TAllocationFailure(__FILE__, __LINE__);
-        _m_pGeneralPage->OnInitDialog();
+        throw TAllocationFailure(__FILE__, __LINE__);
+    _m_pGeneralPage->OnInitDialog();
+    try {
         _m_pPlayerSpecsPage = new TMapSpecsPlayerSpecsPage(*_m_pMap);
         if (!_m_pPlayerSpecsPage)
 #line 118

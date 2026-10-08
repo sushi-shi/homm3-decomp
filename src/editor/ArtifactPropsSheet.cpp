@@ -23,11 +23,11 @@ TArtifactPropsSheet::TArtifactPropsSheet(void* pParent, TGameArtifact* pArtifact
 {
 #line 44
     assert(pArtifact != NULL);
-    try {
-        _m_pGeneralPage = new TArtifactPropsGeneralPage(*_m_pArtifact);
+    _m_pGeneralPage = new TArtifactPropsGeneralPage(*_m_pArtifact);
 #line 51
-        if (!_m_pGeneralPage)
-            throw TAllocationFailure(__FILE__, __LINE__);
+    if (!_m_pGeneralPage)
+        throw TAllocationFailure(__FILE__, __LINE__);
+    try {
         _m_pGuardiansPage = new TTreasurePropsGuardiansPage(*_m_pArtifact, 0);
 #line 60
         if (!_m_pGuardiansPage)

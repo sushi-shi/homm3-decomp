@@ -28,11 +28,11 @@ TEditTownEventSheet::TEditTownEventSheet(GtkWidget* pParent, const TPlayerMask& 
 {
 #line 50
     assert(townType >= 0 && townType <= kNumTownTypes);
-    try {
-        _m_pGeneralPage = new TEditTimedEventGeneralPage(this, _m_event, playersPresent);
+    _m_pGeneralPage = new TEditTimedEventGeneralPage(this, _m_event, playersPresent);
 #line 57
-        if (!_m_pGeneralPage)
-            throw TAllocationFailure(__FILE__, __LINE__);
+    if (!_m_pGeneralPage)
+        throw TAllocationFailure(__FILE__, __LINE__);
+    try {
         _m_pResourcesPage = new TEditTimedEventResourcesPage(_m_event);
 #line 66
         if (!_m_pResourcesPage)
