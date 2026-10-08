@@ -370,3 +370,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "SelectArtifactDlg"
 source = "src/editor/SelectArtifactDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "Options"
+source = "src/editor/Options.cpp"
+flags = "editor_o1_ob2_gr_windows"
