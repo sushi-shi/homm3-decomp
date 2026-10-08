@@ -284,7 +284,12 @@ enum TCreatureType {
     // is `terrain == 1 -> terrain = 0` - it erases terrain 1's movement
     // penalty, terrain 1 is Sand (terrain.h's ten-mask permutation),
     // and Nomads are the creature that cancels the sand penalty.
-    CREATURE_NOMAD = 0x8e
+    CREATURE_NOMAD = 0x8e,
+    // Dreamcast TCreatureType::kNumSiegeWeaponTypes and
+    // kNumCreatureAndSiegeWeaponTypes: the war machines that follow
+    // kNumCreatureTypes, and the creature ids through the Ammo Cart.
+    kNumSiegeWeaponTypes = 4,
+    kNumCreatureAndSiegeWeaponTypes = kNumCreatureTypes + kNumSiegeWeaponTypes
 };
 
 // The spell-id domain (the full roster gets its own header when spell
@@ -551,7 +556,15 @@ enum ESpellId {
     // Breath): spell ids 0 .. SPELL_ACID_BREATH_DEFENSE, the rows of the
     // spell-traits table and the width of each stack's influence/level
     // arrays.
-    kNumSpellsAndCreatureEffects = SPELL_ACID_BREATH_DEFENSE + 1
+    kNumSpellsAndCreatureEffects = SPELL_ACID_BREATH_DEFENSE + 1,
+    // Dreamcast SpellID's range enumerators: ten adventure spells from 0,
+    // sixty combat spells from 10, then the creature effects.
+    kNumSpells = 70,
+    eSpellFirstAdventureSpell = SPELL_SUMMON_BOAT,
+    eSpellFirstCombatSpell = SPELL_QUICKSAND,
+    kNumAdventureSpells = eSpellFirstCombatSpell - eSpellFirstAdventureSpell,
+    kNumCombatSpells = kNumSpells - eSpellFirstCombatSpell,
+    kNumCreatureEffects = kNumSpellsAndCreatureEffects - kNumSpells
 };
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven

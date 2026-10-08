@@ -19,7 +19,11 @@ enum TTerrainType {
     eTerrainRock = 9,
     // Dreamcast TTerrainType::kNumTerrainTypes: the length of the
     // per-terrain tables and masks.
-    kNumTerrainTypes = 10
+    kNumTerrainTypes = 10,
+    // Dreamcast TTerrainType's three special grounds after the table.
+    eTerrainBeach = 12,
+    eTerrainMagicPlains = 13,
+    eTerrainCursedGround = 14
 };
 
 #endif  // HOMM3_TERRAIN_TYPE_H

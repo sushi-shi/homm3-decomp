@@ -285,6 +285,15 @@ includes `rmg`.
   before that point (`town.h` and its include set) with ours, and look for
   missing or extra declarations whose cost lands in the window. Do not add
   padding.
+* 2026-10-08: removing the invented `message::setWidgetCommand` (3 handles)
+  moved the unit to a 90.14% class; retail was then 11..24 handles ahead.
+  The Dreamcast enumerators our chain enums lacked supply 12: TTerrainType's
+  beach/magic-plains/cursed-ground, TTownType's `kNumTownTypes`, SpellID's
+  six range enumerators and TCreatureType's two siege-weapon counts. The
+  function is exact again. The same shift moves `doCombat` 96.22 -> 95.78
+  and `aiEnterTown` 99.96 -> 99.93 (MAX held). Every later edit to these
+  enums (the remaining DC artifact, creature and building enumerators)
+  moves the unit again; recheck with `compile-m initialize`.
 
 **For any function** whose CUR moves between commits that did not touch its
 TU, check with `homm3 vc6 compile-m` whether its assemblies are period-64

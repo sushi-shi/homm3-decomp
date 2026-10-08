@@ -18,7 +18,9 @@ enum TTownType {
     TOWN_DUNGEON = 0x5,
     TOWN_STRONGHOLD = 0x6,
     TOWN_FORTRESS = 0x7,
-    TOWN_CONFLUX = 0x8
+    TOWN_CONFLUX = 0x8,
+    // Dreamcast TTownType::kNumTownTypes, after Complete's Conflux.
+    kNumTownTypes
 };
 
 #endif
