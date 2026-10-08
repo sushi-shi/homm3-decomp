@@ -108,14 +108,14 @@ DC_ADDRESS(0x0724c8, 0x18)
 MAC_ADDRESS(0x08a5d4, 0x30)
 int CSprite::addFrame(int seqnum, CSpriteFrame* frame)
 {
-    return m_s[seqnum]->addFrame(frame);
+    return m_s[seqnum]->AddFrame(frame);
 }
 
 // Original: CSprite::AddFrame; csprite.cpp:187
 DC_ADDRESS(0x072418, 0x18)
 void CSprite::addFrame(int seqnum, const char* name)
 {
-    m_s[seqnum]->addFrame(name);
+    m_s[seqnum]->AddFrame(name);
 }
 
 // Original: CSprite::AddFrame; csprite.cpp:194
@@ -124,7 +124,7 @@ int CSprite::addFrame(int seqnum, const char* name, int w, int h,
                       unsigned char* data, int csize, TEncodingMethod encoding,
                       int croppedWidth, int croppedHeight, int croppedX, int croppedY)
 {
-    return m_s[seqnum]->addFrame(name, w, h, data, csize, encoding,
+    return m_s[seqnum]->AddFrame(name, w, h, data, csize, encoding,
                                 croppedWidth, croppedHeight, croppedX, croppedY);
 }
 
@@ -133,7 +133,7 @@ DC_ADDRESS(0x07248c, 0x3a)
 int CSprite::addFrame(int seqnum, const char* name, int w, int h,
                       unsigned char* data, int csize, TEncodingMethod encoding)
 {
-    return m_s[seqnum]->addFrame(name, w, h, data, csize, encoding);
+    return m_s[seqnum]->AddFrame(name, w, h, data, csize, encoding);
 }
 
 VA(0x0047bb80, 0x79)
@@ -197,7 +197,7 @@ void CSprite::draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                    unsigned short* dst, int dx, int dy, int dw, int dh,
                    int dpitch, bool hflip, bool tblit) const
 {
-    m_s[seqnum]->m_f[framenum]->draw(
+    m_s[seqnum]->f[framenum]->draw(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, tblit);
 }
 
@@ -216,7 +216,7 @@ void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy,
                            int dx, int dy, int dw, int dh, int dpitch,
                            bool hflip, unsigned short outcolor) const
 {
-    m_s[seqnum]->m_f[framenum]->drawCreature(
+    m_s[seqnum]->f[framenum]->drawCreature(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
         *m_p, hflip, outcolor);
 }
@@ -228,7 +228,7 @@ void CSprite::drawCreatureAlpha(int seqnum, int framenum, int sx, int sy,
                                 int dx, int dy, int dw, int dh, int dpitch,
                                 bool hflip, unsigned short outcolor) const
 {
-    m_s[seqnum]->m_f[framenum]->drawCreatureAlpha(
+    m_s[seqnum]->f[framenum]->drawCreatureAlpha(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, outcolor);
 }
 
@@ -239,7 +239,7 @@ void CSprite::drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, bool hflip) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObj(
+    m_s[0]->f[framenum]->drawAdvObj(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -252,7 +252,7 @@ void CSprite::drawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
                                  unsigned short outcolor,
                                  bool hflip) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObjWithFlag(
+    m_s[0]->f[framenum]->drawAdvObjWithFlag(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, outcolor, hflip);
 }
 
@@ -264,7 +264,7 @@ void CSprite::drawAdvObjWithFlagAlpha(int framenum, int sx, int sy,
                                      unsigned short outcolor,
                                      bool hflip) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObjWithFlagAlpha(
+    m_s[0]->f[framenum]->drawAdvObjWithFlagAlpha(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, outcolor, hflip);
 }
 
@@ -275,7 +275,7 @@ void CSprite::drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                                unsigned short* dst, int dx, int dy, int dw,
                                int dh, int dpitch, bool hflip) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObjShadow(
+    m_s[0]->f[framenum]->drawAdvObjShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -285,7 +285,7 @@ MAC_ADDRESS(0x08aa78, 0x8c)  // full-frame pointer draw through sequence zero
 void CSprite::drawPointer(int framenum, unsigned short* dst, int dx, int dy,
                           int dw, int dh, int dpitch, bool hflip) const
 {
-    m_s[0]->m_f[framenum]->drawPointer(
+    m_s[0]->f[framenum]->drawPointer(
         dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -296,7 +296,7 @@ void CSprite::drawInterface(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
                             int dh, int dpitch, bool hflip) const
 {
-    m_s[0]->m_f[framenum]->drawInterface(
+    m_s[0]->f[framenum]->drawInterface(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -307,7 +307,7 @@ void CSprite::drawTile(int framenum, int sx, int sy, int sw, int sh,
                        unsigned short* dst, int dx, int dy, int dw, int dh,
                        int dpitch, bool hflip, bool vflip) const
 {
-    m_s[0]->m_f[framenum]->drawTile(
+    m_s[0]->f[framenum]->drawTile(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
@@ -319,7 +319,7 @@ void CSprite::drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                              int dh, int dpitch, bool hflip,
                              bool vflip) const
 {
-    m_s[0]->m_f[framenum]->drawTileShadow(
+    m_s[0]->f[framenum]->drawTileShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
@@ -331,7 +331,7 @@ void CSprite::drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
                              int dh, int dpitch, bool hflip,
                              bool vflip) const
 {
-    m_s[0]->m_f[framenum]->drawShroudTile(
+    m_s[0]->f[framenum]->drawShroudTile(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
@@ -342,7 +342,7 @@ void CSprite::drawHero(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
                        int dh, int dpitch, bool hflip) const
 {
-    m_s[seqnum]->m_f[framenum]->drawHero(
+    m_s[seqnum]->f[framenum]->drawHero(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -354,7 +354,7 @@ void CSprite::drawHeroShadow(int seqnum, int framenum, int sx, int sy,
                              int dx, int dy, int dw, int dh, int dpitch,
                              bool hflip) const
 {
-    m_s[seqnum]->m_f[framenum]->drawHeroShadow(
+    m_s[seqnum]->f[framenum]->drawHeroShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -366,7 +366,7 @@ void CSprite::drawHeroAlpha(int seqnum, int framenum, int sx, int sy,
                             int dx, int dy, int dw, int dh, int dpitch,
                             bool hflip) const
 {
-    m_s[seqnum]->m_f[framenum]->drawHeroAlpha(
+    m_s[seqnum]->f[framenum]->drawHeroAlpha(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
@@ -378,7 +378,7 @@ void CSprite::drawCombatHero(int seqnum, int framenum, int sx, int sy,
                              int dx, int dy, int dw, int dh, int dpitch,
                              bool hflip) const
 {
-    m_s[seqnum]->m_f[framenum]->drawCreature(
+    m_s[seqnum]->f[framenum]->drawCreature(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 0);
 }
 
@@ -390,7 +390,7 @@ void CSprite::drawSpellEffect(int seqnum, int framenum, int sx, int sy,
                               int dx, int dy, int dw, int dh, int dpitch,
                               bool hflip, bool alpha) const
 {
-    m_s[seqnum]->m_f[framenum]->drawSpellEffect(
+    m_s[seqnum]->f[framenum]->drawSpellEffect(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, alpha);
 }
 
@@ -400,7 +400,7 @@ void CSprite::drawAdvObjWithFlagScaled50(int framenum, int sx, int sy, int sw,
     int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     unsigned short outcolor) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObjWithFlagScaled50(
+    m_s[0]->f[framenum]->drawAdvObjWithFlagScaled50(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, outcolor);
 }
 
@@ -409,7 +409,7 @@ DC_ADDRESS(0x073060, 0x78)
 void CSprite::drawAdvObjShadowScaled50(int framenum, int sx, int sy, int sw,
     int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObjShadowScaled50(
+    m_s[0]->f[framenum]->drawAdvObjShadowScaled50(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p);
 }
 
@@ -419,7 +419,7 @@ void CSprite::drawTileScaled50(int framenum, int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     bool hflip, bool vflip) const
 {
-    m_s[0]->m_f[framenum]->drawTileScaled50(
+    m_s[0]->f[framenum]->drawTileScaled50(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
@@ -429,7 +429,7 @@ void CSprite::drawAdvObjWithFlagScaled25(int framenum, int sx, int sy, int sw,
     int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     unsigned short outcolor) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObjWithFlagScaled25(
+    m_s[0]->f[framenum]->drawAdvObjWithFlagScaled25(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, outcolor);
 }
 
@@ -438,7 +438,7 @@ DC_ADDRESS(0x0731e8, 0x78)
 void CSprite::drawAdvObjShadowScaled25(int framenum, int sx, int sy, int sw,
     int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch) const
 {
-    m_s[0]->m_f[framenum]->drawAdvObjShadowScaled25(
+    m_s[0]->f[framenum]->drawAdvObjShadowScaled25(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p);
 }
 
@@ -448,7 +448,7 @@ void CSprite::drawTileScaled25(int framenum, int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     bool hflip, bool vflip) const
 {
-    m_s[0]->m_f[framenum]->drawTileScaled25(
+    m_s[0]->f[framenum]->drawTileScaled25(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 

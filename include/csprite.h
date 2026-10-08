@@ -120,25 +120,25 @@ public:
     DC_ADDRESS(0x04cb9c, 0x44)
     int getCroppedX(int seq, int frame) const
     {
-        return m_s[seq]->m_f[frame]->getCroppedX();
+        return m_s[seq]->f[frame]->getCroppedX();
     }
 
     DC_ADDRESS(0x04cbe0, 0x44)
     int getCroppedY(int seq, int frame) const
     {
-        return m_s[seq]->m_f[frame]->getCroppedY();
+        return m_s[seq]->f[frame]->getCroppedY();
     }
 
     DC_ADDRESS(0x04cc24, 0x44)
     int getCroppedWidth(int seq, int frame) const
     {
-        return m_s[seq]->m_f[frame]->getCroppedWidth();
+        return m_s[seq]->f[frame]->getCroppedWidth();
     }
 
     DC_ADDRESS(0x087350, 0x44)
     int getCroppedHeight(int seq, int frame) const
     {
-        return m_s[seq]->m_f[frame]->getCroppedHeight();
+        return m_s[seq]->f[frame]->getCroppedHeight();
     }
 
     // DC CSprite.h:154 proves this non-const header accessor.
@@ -146,7 +146,7 @@ public:
     DC_ADDRESS(0x122ba8, 0xe)
     CSpriteFrame* getFrame(int sequence, int frame)
     {
-        return m_s[sequence]->m_f[frame];
+        return m_s[sequence]->f[frame];
     }
 
     // Original: CSprite::SetPixelFormat; CSprite.h:157
@@ -288,7 +288,7 @@ public:
     DC_ADDRESS(0x01f1dc, 0x58)
     int getNumFrames(int seq) const
     {
-        return isValidSeq(seq) ? m_s[seq]->m_numFrames : 0;
+        return isValidSeq(seq) ? m_s[seq]->numFrames : 0;
     }
 
     // E:\gamedcs\CSprite.h:294
