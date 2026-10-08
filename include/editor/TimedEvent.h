@@ -63,6 +63,12 @@ private:
     unsigned int _m_subsequentInterval;
 };
 
+// Inline: the map specifications' timed events page keeps the linkonce copy.
+inline bool operator!=(const TTimedEvent& lhs, const TTimedEvent& rhs)
+{
+    return !(lhs == rhs);
+}
+
 TRawOStream& operator<<(TRawOStream& stream, const TTimedEvent& event);
 TRawIStream& operator>>(TRawIStream& stream, TTimedEvent& event);
 
