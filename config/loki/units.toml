@@ -309,3 +309,8 @@ source = "src/editor/EditTimedEventSheet.cpp"
 name = "ArtifactPropsGeneralPage"
 object = 101
 source = "src/editor/ArtifactPropsGeneralPage.cpp"
+
+[[unit]]
+name = "ArtifactPropsSheet"
+object = 100
+source = "src/editor/ArtifactPropsSheet.cpp"

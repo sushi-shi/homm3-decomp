@@ -18,8 +18,8 @@ public:
     TArtifactPropsGeneralPage(const TGameArtifact& artifact);
     ~TArtifactPropsGeneralPage();
 
-    virtual BOOL OnInitDialog();
     virtual void OnOK();
+    virtual BOOL OnInitDialog();
 
     string getMessage() const { return _m_message; }
     bool wasModified() const { return _m_bModified; }
