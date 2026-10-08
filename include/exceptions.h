@@ -19,6 +19,14 @@ public:
 
 class TRuntimeError : public TDebugBreak, public std::runtime_error {
 public:
+    // Never called. Every Loki object that includes this header queues
+    // allocator<char>(), __default_alloc_template::allocate's callees,
+    // ~basic_string and ~allocator in that order right after TRuntimeError's
+    // implicit members: the instantiation chain of a default-constructed
+    // std::string temporary (basic_string(const allocator&) builds
+    // _String_base(alloc, 8) before it needs ~_String_base). The member is
+    // inferred from that emission order; its form is not proven.
+    TRuntimeError() : std::runtime_error(std::string()) {}
     TRuntimeError(const char* text);
     TRuntimeError(const std::string& text);
     // The file/line forms prefix the message with formatDebugMessage's
