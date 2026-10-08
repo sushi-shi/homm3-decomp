@@ -2447,6 +2447,49 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     stream << aTrailer;
 }
 
+void TGameMap::_TImpl::exportText(ostream* pOStream) const
+{
+#line 3488
+    assert(pOStream != NULL);
+    static const string kSectionStart("===== ");
+    static const string kSectionEnd(" =====");
+    *pOStream << kSectionStart + kMapNameStr + kSectionEnd << '\n' << getName() << "\n\n";
+    string desc = getDesc();
+    replace(desc.begin(), desc.end(), '\n', '\t');
+    *pOStream << kSectionStart + kMapDescriptionStr + kSectionEnd << '\n' << desc << "\n\n";
+    *pOStream << kSectionStart + kRumorsStr + kSectionEnd << '\n';
+    for (vector<TRumor>::const_iterator pRumor = getRumors().begin(); pRumor != getRumors().end(); pRumor++) {
+        *pOStream << '\n';
+        pRumor->exportText(pOStream);
+    }
+    *pOStream << '\n';
+    *pOStream << kSectionStart + kTimedEventsStr + kSectionEnd << '\n';
+    for (vector<TTimedEvent>::const_iterator pTimedEvent = getTimedEvents().begin();
+         pTimedEvent != getTimedEvents().end(); pTimedEvent++) {
+        *pOStream << '\n';
+        pTimedEvent->exportText(pOStream);
+    }
+    *pOStream << '\n';
+    *pOStream << kSectionStart + kObjectsStr + kSectionEnd << '\n';
+    unsigned int numLayers = isTwoLayer() ? 2 : 1;
+    for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+        const TLayer& layer = getLayer(layerNum);
+        for (TLayer::TObjectIDIter iter = layer.objectIDBegin(); iter != layer.objectIDEnd(); ++iter) {
+            const TGameObject& obj = layer.getObject(*iter);
+            if (obj.hasText()) {
+                TTilePoint loc = layer.getObjectLoc(*iter);
+                if (obj.hasTrigger())
+                    loc -= obj.getTriggerLoc();
+                *pOStream << "\n(" << (int) loc.x() << ", " << (int) loc.y() << ", " << (int) layerNum << ") "
+                          << string("***") + obj.getTypeName() + string("***") << '\n';
+                obj.exportText(pOStream);
+            }
+        }
+    }
+    *pOStream << '\n';
+    *pOStream << kSectionStart + kEndOfFileStr + kSectionEnd << '\n';
+}
+
 bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y)
 {
     static vector<unsigned int> aLowerObjIDs;
