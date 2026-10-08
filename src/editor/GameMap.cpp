@@ -7,6 +7,7 @@
 #include "editor/stdafx.h"
 
 #include <assert.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <algorithm>
 #include <functional>
@@ -373,6 +374,11 @@ private:
     void _write(TRawOStream* pOStream, const TLCTimeExpires& lc) const;
 
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
+    bool _isHeroAvailable(THeroClass heroClass, unsigned int protoNum) const;
+    unsigned int _pickAvailableHero(THeroClass heroClass) const;
+    unsigned int _pickAvailableTeam() const;
+    void _onPlayableAdded(const TPlayableObject& playable);
+    void _onRemovingPlayable(const TPlayableObject& playable);
     void _onGeneralObjectAdded(const TGameObject& obj);
     void _onRemovingGeneralObject(const TGameObject& obj);
     void _onHolyGrailAdded(const THolyGrail& holyGrail);
@@ -1064,6 +1070,33 @@ void TGameMap::_TImpl::_onRemovingGeneralObject(const TGameObject& obj)
     }
 }
 
+void TGameMap::_TImpl::_onPlayableAdded(const TPlayableObject& playable)
+{
+    _onGeneralObjectAdded(playable);
+    TPlayer owner = playable.getOwner();
+#line 4168
+    assert(owner >= ePlayerNone && owner < kNumPlayers);
+    if (owner != ePlayerNone && ++_m_apPlayerBookkeeping[owner]->m_numUnits == 1) {
+        TPlayerInfo& player = _m_pProperties->m_players[owner];
+#line 4174
+        assert(!player.getBPresent());
+        if (_m_pBookkeeping->m_numPlayableSlots == 0) {
+#line 4178
+            assert(!_m_pProperties->m_teamInfo.getBHasTeams());
+            player.setBHumanPlayable(true);
+            player.setBComputerPlayable(true);
+        } else {
+            if (_m_pProperties->m_teamInfo.getBHasTeams()) {
+#line 4188
+                assert(_m_pBookkeeping->m_numPlayableSlots >= TTeamInfo::s_kMinTeams);
+                _m_pProperties->m_teamInfo.setPlayerTeam(owner, _pickAvailableTeam());
+            }
+            player.setBComputerPlayable(true);
+        }
+        _m_pBookkeeping->m_numPlayableSlots++;
+    }
+}
+
 void TGameMap::_TImpl::_onHolyGrailAdded(const THolyGrail& holyGrail)
 {
 #line 4409
@@ -1132,6 +1165,52 @@ bool TGameMap::_TImpl::_isMapPlayable() const
 {
     return _m_pBookkeeping->m_numPlayableSlots != 0;
 }
+
+bool TGameMap::_TImpl::_isHeroAvailable(THeroClass heroClass, unsigned int protoNum) const
+{
+#line 4495
+    assert(heroClass >= 0 && heroClass < kNumHeroClasses);
+    assert(protoNum >= 0 && protoNum < THero::s_akClassTraits[ heroClass ].m_numPrototypes);
+    return _m_pBookkeeping->m_aabHeroAvailable[heroClass][protoNum];
+}
+
+unsigned int TGameMap::_TImpl::_pickAvailableHero(THeroClass heroClass) const
+{
+#line 4504
+    assert(heroClass >= 0 && heroClass < kNumHeroClasses);
+    if (_m_pBookkeeping->m_aabHeroAvailable[heroClass].none())
+        return THero::s_akClassTraits[heroClass].m_numPrototypes;
+    unsigned int pick = rand() % _m_pBookkeeping->m_aabHeroAvailable[heroClass].count();
+    unsigned int result;
+    for (result = 0;; result++)
+        if (_m_pBookkeeping->m_aabHeroAvailable[heroClass][result] && pick-- == 0)
+            break;
+#line 4519
+    assert(result < THero::s_akClassTraits[ heroClass ].m_numPrototypes);
+    return result;
+}
+
+unsigned int TGameMap::_TImpl::_pickAvailableTeam() const
+{
+    const TTeamInfo& teamInfo = _m_pProperties->m_teamInfo;
+#line 4528
+    assert(teamInfo.getBHasTeams());
+    unsigned int aTeamSize[TTeamInfo::s_kMaxTeams];
+    fill_n(aTeamSize, teamInfo.getNumTeams(), 0U);
+    for (unsigned int player = 0; player < kNumPlayers; player++) {
+        if (_m_pProperties->m_players[player].getBPresent()) {
+            unsigned int team = teamInfo.getPlayerTeam(TPlayer(player));
+            if (team < teamInfo.getNumTeams())
+                aTeamSize[team]++;
+        }
+    }
+    unsigned int result = 0;
+    for (unsigned int team = 1; team < teamInfo.getNumTeams(); team++)
+        if (aTeamSize[team] < aTeamSize[result])
+            result = team;
+    return result;
+}
+
 
 bool TGameMap::_TImpl::_isValid(const TVictoryCondition& vc) const
 {
