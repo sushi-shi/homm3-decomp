@@ -268,6 +268,44 @@ The two reachable walls are both phase cases:
 No wall needs a declaration offset or a callee prefix. The 226 are source
 differences: unrelated edits cannot reach retail for them.
 
+## State scan of the non-exact functions (2026-10-08)
+
+`homm3 vc6 state-scan --offset-units FILE` compiled the 63 in-scope units
+that have a function below 100 (CUR or MAX), with `terrain.h` in its
+evidenced units. Each axis was swept alone from the captured state: phase
+0/1, offsets 1..63 only in the 13 units the handle census found sensitive,
+and callee-prefix rounds up to the longest prefix among the non-exact
+functions. Every assembly was scored with the build's paired normalization
+and objdiff, so the scores are the numbers the ledger banks.
+
+Of 516 state-sensitive functions, 100 are not exact. 15 have an assembly
+that scores higher than the current one:
+
+| function | current | best | state | verdict |
+| --- | ---: | ---: | --- | --- |
+| `initializeGameData` | 94.07 | 100 | offset 13..26 | real handles not yet identified |
+| `aiEnterTown` | 99.96 | 100 | phase 0 | no arrangement gives 0 (see below) |
+| `transmitSaveGame` | 97.40 | 97.43 (= MAX) | offset 5, 8, 9.. | lead only |
+| `aiCheckRetreat`, `purchaseBuilding`, `hero::initialize`, `type_dialog_icon::set`, `TCampaignBrief` ctor, `setupDynamicStuff` | | +0.003..+0.47 | phase 0 | not first in their TU |
+| `TSingleSelectionWindow` ctor, `getHeaders` | 96.41, 94.69 | 96.90, 95.79 | callee prefix | reachability unconfirmed |
+| `aiAttemptMove`, `giveArtifact`, `type_quest::loadFromMap`, `type_skill_quest::doProgressDialog` | | +0.02..+1.03 | callee prefix with template members | reachability unconfirmed |
+
+**Phase 0 mid-TU.** Seven functions are closer to retail with phase 0, and
+none of them is the first function in its TU. `aiEnterTown` is exact
+there. Under the model, every function compiled above them leaves 1. All
+seven have a predecessor with a loop, but so do 21 of the 78 functions that
+need 1, so loops do not explain it. This is open for the phase-flag
+mechanism.
+
+**The callee-prefix axis over-generates.** A captured site dump in
+singleselectionwindow shows bit `0x800` still clear at `getHeaders` for
+implicit members that the object compiles earlier: `~NewSMapHeader`,
+`??0GameSelectionHeadersStruct`, `~SavedGameHeader`. Meanwhile template
+members such as `~basic_string` do carry it in mapcell. "Compiled earlier"
+therefore does not decide the bit. The rounds remain a superset (the fuzz
+runs found no escapes), but a variant reached only through a callee prefix
+needs a real edit to show that it can be reached.
+
 ## Limits
 
 * `compile-m` sweeps the three axes separately. Phase × offset is a full
