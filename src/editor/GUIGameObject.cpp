@@ -12,6 +12,7 @@
 #include <new>
 #include <bitset>
 #include <string>
+#include <map>
 
 #include "adventureobjecttype.h"
 #include "csprite.h"
