@@ -6,6 +6,7 @@
 #ifndef HOMM3_EDITOR_ARMY_H
 #define HOMM3_EDITOR_ARMY_H
 
+#include "creaturetype.h"
 #include "armygrp.h"
 #include "editor/Array.h"
 

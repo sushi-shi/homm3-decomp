@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "artifact.h"
 #include "artifact_type.h"
 #include "herodefs.h"
 #include "herospec.h"
