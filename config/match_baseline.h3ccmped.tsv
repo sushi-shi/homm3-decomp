@@ -15,7 +15,15 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+CampaignDoc	??0?$auto_ptr@VTScenarioStartingBonus@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb050	-
+CampaignDoc	??0TReadFailure@TRawIStream@@QAE@H@Z	99.9206	99.9206	99.9206	0x11b0	-
+CampaignDoc	??0TScenarioHeroBonus@@QAE@H@Z	100.0000	100.0000	100.0000	0x11b00	-
 CampaignDoc	??0TWriteFailure@TRawOStream@@QAE@H@Z	99.9206	99.9206	99.9206	0x1280	-
+CampaignDoc	??4?$auto_ptr@VTScenarioStartingBonus@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0xf5c0	-
+CampaignDoc	??5TRawIStream@@QAEAAV0@AAC@Z	99.7727	99.7727	99.7727	0x16dd0	-
+CampaignDoc	??5TRawIStream@@QAEAAV0@AAF@Z	99.7727	99.7727	99.7727	0x24db0	-
+CampaignDoc	??5TRawIStream@@QAEAAV0@AAJ@Z	99.7727	99.7727	99.7727	0xffd0	-
+CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	29.2494	29.2494	29.2494	0x115a0	tokens1:deb7f43ae64a
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	94.1613	94.1613	94.1613	0x11180	tokens1:d033e38cd802
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	96.9048	96.9048	96.9048	0x11100	tokens1:b123a7f0689a
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	95.1375	95.1375	95.1375	0x11010	tokens1:668eb293f27b

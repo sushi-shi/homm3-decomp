@@ -51,11 +51,15 @@ public:
 
 class TScenarioHeroBonus : public TScenarioStartingBonus {
 public:
+    explicit TScenarioHeroBonus(int hero) : m_hero(hero) {}
+
     int m_hero;
 };
 
 class TScenarioBonusSpell : public TScenarioHeroBonus {
 public:
+    TScenarioBonusSpell(int hero, int spell) : TScenarioHeroBonus(hero), m_spell(spell) {}
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_spell;
@@ -63,6 +67,9 @@ public:
 
 class TScenarioBonusCreature : public TScenarioHeroBonus {
 public:
+    TScenarioBonusCreature(int hero, int creature, int count)
+        : TScenarioHeroBonus(hero), m_creature(creature), m_count(count) {}
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_creature;
@@ -71,6 +78,8 @@ public:
 
 class TScenarioBonusBuilding : public TScenarioStartingBonus {
 public:
+    explicit TScenarioBonusBuilding(int building) : m_building(building) {}
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_building;
@@ -78,6 +87,8 @@ public:
 
 class TScenarioBonusArtifact : public TScenarioHeroBonus {
 public:
+    TScenarioBonusArtifact(int hero, int artifact) : TScenarioHeroBonus(hero), m_artifact(artifact) {}
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_artifact;
@@ -85,6 +96,8 @@ public:
 
 class TScenarioBonusSpellScroll : public TScenarioHeroBonus {
 public:
+    TScenarioBonusSpellScroll(int hero, int spell) : TScenarioHeroBonus(hero), m_spell(spell) {}
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_spell;
@@ -92,6 +105,8 @@ public:
 
 class TScenarioBonusPrimarySkill : public TScenarioHeroBonus {
 public:
+    TScenarioBonusPrimarySkill(int hero, const int aSkills[kNumPrimarySkills]);
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_skills[kNumPrimarySkills];
@@ -99,6 +114,8 @@ public:
 
 class TScenarioBonusSecondarySkill : public TScenarioHeroBonus {
 public:
+    TScenarioBonusSecondarySkill(int hero, int skill, int level);
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_skill;
@@ -107,6 +124,8 @@ public:
 
 class TScenarioBonusResource : public TScenarioStartingBonus {
 public:
+    TScenarioBonusResource(int resource, int amount);
+
     virtual void accept(TVisitor& visitor) const;
 
     int m_resource;
