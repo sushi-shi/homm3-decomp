@@ -124,18 +124,16 @@ TTown::TBuildingTraits aCastleBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aCastleGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreaturePikeman, eCreatureHalberdier),
-    TAbsoluteGeneratorTraits(eCreatureLightCrossbowman, eCreatureHeavyCrossbowman),
-    TAbsoluteGeneratorTraits(eCreatureGriffin, eCreatureRoyalGriffin),
-    TAbsoluteGeneratorTraits(eCreatureSwordsman, eCreatureCrusader),
-    TAbsoluteGeneratorTraits(eCreatureMonk, eCreatureZealot),
-    TAbsoluteGeneratorTraits(eCreatureCavalier, eCreatureChampion),
-    TAbsoluteGeneratorTraits(eCreatureAngel, eCreatureArchangel)
-};
+const TAbsoluteGeneratorTraits castleGenerator1(eCreaturePikeman, eCreatureHalberdier);
+const TAbsoluteGeneratorTraits castleGenerator2(eCreatureLightCrossbowman, eCreatureHeavyCrossbowman);
+const TAbsoluteGeneratorTraits castleGenerator3(eCreatureGriffin, eCreatureRoyalGriffin);
+const TAbsoluteGeneratorTraits castleGenerator4(eCreatureSwordsman, eCreatureCrusader);
+const TAbsoluteGeneratorTraits castleGenerator5(eCreatureMonk, eCreatureZealot);
+const TAbsoluteGeneratorTraits castleGenerator6(eCreatureCavalier, eCreatureChampion);
+const TAbsoluteGeneratorTraits castleGenerator7(eCreatureAngel, eCreatureArchangel);
 
 const TTown::TGeneratorTraits* const apCastleGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aCastleGeneratorTraits[0], &aCastleGeneratorTraits[1], &aCastleGeneratorTraits[2], &aCastleGeneratorTraits[3], &aCastleGeneratorTraits[4], &aCastleGeneratorTraits[5], &aCastleGeneratorTraits[6]
+    &castleGenerator1, &castleGenerator2, &castleGenerator3, &castleGenerator4, &castleGenerator5, &castleGenerator6, &castleGenerator7
 };
 
 TTown::TBuildingTraits aRampartBuildingTraits[kNumBuildings] = {
@@ -155,18 +153,16 @@ TTown::TBuildingTraits aRampartBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aRampartGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreatureCentaur, eCreatureEliteCentaur),
-    TAbsoluteGeneratorTraits(eCreatureDwarf, eCreatureBattleDwarf),
-    TAbsoluteGeneratorTraits(eCreatureWoodElf, eCreatureGrandElf),
-    TAbsoluteGeneratorTraits(eCreaturePegasus, eCreatureSilverPegasus),
-    TAbsoluteGeneratorTraits(eCreatureTreefolk, eCreatureBriarTreefolk),
-    TAbsoluteGeneratorTraits(eCreatureUnicorn, eCreatureWarUnicorn),
-    TAbsoluteGeneratorTraits(eCreatureGreenDragon, eCreatureGoldDragon)
-};
+const TAbsoluteGeneratorTraits rampartGenerator1(eCreatureCentaur, eCreatureEliteCentaur);
+const TAbsoluteGeneratorTraits rampartGenerator2(eCreatureDwarf, eCreatureBattleDwarf);
+const TAbsoluteGeneratorTraits rampartGenerator3(eCreatureWoodElf, eCreatureGrandElf);
+const TAbsoluteGeneratorTraits rampartGenerator4(eCreaturePegasus, eCreatureSilverPegasus);
+const TAbsoluteGeneratorTraits rampartGenerator5(eCreatureTreefolk, eCreatureBriarTreefolk);
+const TAbsoluteGeneratorTraits rampartGenerator6(eCreatureUnicorn, eCreatureWarUnicorn);
+const TAbsoluteGeneratorTraits rampartGenerator7(eCreatureGreenDragon, eCreatureGoldDragon);
 
 const TTown::TGeneratorTraits* const apRampartGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aRampartGeneratorTraits[0], &aRampartGeneratorTraits[1], &aRampartGeneratorTraits[2], &aRampartGeneratorTraits[3], &aRampartGeneratorTraits[4], &aRampartGeneratorTraits[5], &aRampartGeneratorTraits[6]
+    &rampartGenerator1, &rampartGenerator2, &rampartGenerator3, &rampartGenerator4, &rampartGenerator5, &rampartGenerator6, &rampartGenerator7
 };
 
 TTown::TBuildingTraits aTowerBuildingTraits[kNumBuildings] = {
@@ -186,18 +182,16 @@ TTown::TBuildingTraits aTowerBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aTowerGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreatureApprenticeGremlin, eCreatureMasterGremlin),
-    TAbsoluteGeneratorTraits(eCreatureStoneGargoyle, eCreatureObsidianGargoyle),
-    TAbsoluteGeneratorTraits(eCreatureStoneGolem, eCreatureIronGolem),
-    TAbsoluteGeneratorTraits(eCreatureMage, eCreatureArchMage),
-    TAbsoluteGeneratorTraits(eCreatureGenie, eCreatureCaliph),
-    TAbsoluteGeneratorTraits(eCreatureNagaSentinel, eCreatureNagaGuardian),
-    TAbsoluteGeneratorTraits(eCreatureLesserTitan, eCreatureGreaterTitan)
-};
+const TAbsoluteGeneratorTraits towerGenerator1(eCreatureApprenticeGremlin, eCreatureMasterGremlin);
+const TAbsoluteGeneratorTraits towerGenerator2(eCreatureStoneGargoyle, eCreatureObsidianGargoyle);
+const TAbsoluteGeneratorTraits towerGenerator3(eCreatureStoneGolem, eCreatureIronGolem);
+const TAbsoluteGeneratorTraits towerGenerator4(eCreatureMage, eCreatureArchMage);
+const TAbsoluteGeneratorTraits towerGenerator5(eCreatureGenie, eCreatureCaliph);
+const TAbsoluteGeneratorTraits towerGenerator6(eCreatureNagaSentinel, eCreatureNagaGuardian);
+const TAbsoluteGeneratorTraits towerGenerator7(eCreatureLesserTitan, eCreatureGreaterTitan);
 
 const TTown::TGeneratorTraits* const apTowerGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aTowerGeneratorTraits[0], &aTowerGeneratorTraits[1], &aTowerGeneratorTraits[2], &aTowerGeneratorTraits[3], &aTowerGeneratorTraits[4], &aTowerGeneratorTraits[5], &aTowerGeneratorTraits[6]
+    &towerGenerator1, &towerGenerator2, &towerGenerator3, &towerGenerator4, &towerGenerator5, &towerGenerator6, &towerGenerator7
 };
 
 TTown::TBuildingTraits aInfernoBuildingTraits[kNumBuildings] = {
@@ -217,18 +211,16 @@ TTown::TBuildingTraits aInfernoBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aInfernoGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreatureImp, eCreatureFamiliar),
-    TAbsoluteGeneratorTraits(eCreatureGog, eCreatureMagog),
-    TAbsoluteGeneratorTraits(eCreatureHellHound, eCreatureCerberus),
-    TAbsoluteGeneratorTraits(eCreatureSingleHornedDemon, eCreatureDualHornedDemon),
-    TAbsoluteGeneratorTraits(eCreaturePitFiend, eCreaturePitFoe),
-    TAbsoluteGeneratorTraits(eCreatureEfreet, eCreatureEfreetSultan),
-    TAbsoluteGeneratorTraits(eCreatureDevil, eCreatureArchDevil)
-};
+const TAbsoluteGeneratorTraits infernoGenerator1(eCreatureImp, eCreatureFamiliar);
+const TAbsoluteGeneratorTraits infernoGenerator2(eCreatureGog, eCreatureMagog);
+const TAbsoluteGeneratorTraits infernoGenerator3(eCreatureHellHound, eCreatureCerberus);
+const TAbsoluteGeneratorTraits infernoGenerator4(eCreatureSingleHornedDemon, eCreatureDualHornedDemon);
+const TAbsoluteGeneratorTraits infernoGenerator5(eCreaturePitFiend, eCreaturePitFoe);
+const TAbsoluteGeneratorTraits infernoGenerator6(eCreatureEfreet, eCreatureEfreetSultan);
+const TAbsoluteGeneratorTraits infernoGenerator7(eCreatureDevil, eCreatureArchDevil);
 
 const TTown::TGeneratorTraits* const apInfernoGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aInfernoGeneratorTraits[0], &aInfernoGeneratorTraits[1], &aInfernoGeneratorTraits[2], &aInfernoGeneratorTraits[3], &aInfernoGeneratorTraits[4], &aInfernoGeneratorTraits[5], &aInfernoGeneratorTraits[6]
+    &infernoGenerator1, &infernoGenerator2, &infernoGenerator3, &infernoGenerator4, &infernoGenerator5, &infernoGenerator6, &infernoGenerator7
 };
 
 TTown::TBuildingTraits aNecropolisBuildingTraits[kNumBuildings] = {
@@ -248,18 +240,16 @@ TTown::TBuildingTraits aNecropolisBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aNecropolisGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreatureSkeleton, eCreatureSkeletonWarrior),
-    TAbsoluteGeneratorTraits(eCreatureZombie, eCreatureZombieLord),
-    TAbsoluteGeneratorTraits(eCreatureWight, eCreatureWraith),
-    TAbsoluteGeneratorTraits(eCreatureVampire, eCreatureNosferatu),
-    TAbsoluteGeneratorTraits(eCreatureLich, eCreaturePowerLich),
-    TAbsoluteGeneratorTraits(eCreatureBlackKnight, eCreatureBlackLord),
-    TAbsoluteGeneratorTraits(eCreatureBoneDragon, eCreatureGhostDragon)
-};
+const TAbsoluteGeneratorTraits necropolisGenerator1(eCreatureSkeleton, eCreatureSkeletonWarrior);
+const TAbsoluteGeneratorTraits necropolisGenerator2(eCreatureZombie, eCreatureZombieLord);
+const TAbsoluteGeneratorTraits necropolisGenerator3(eCreatureWight, eCreatureWraith);
+const TAbsoluteGeneratorTraits necropolisGenerator4(eCreatureVampire, eCreatureNosferatu);
+const TAbsoluteGeneratorTraits necropolisGenerator5(eCreatureLich, eCreaturePowerLich);
+const TAbsoluteGeneratorTraits necropolisGenerator6(eCreatureBlackKnight, eCreatureBlackLord);
+const TAbsoluteGeneratorTraits necropolisGenerator7(eCreatureBoneDragon, eCreatureGhostDragon);
 
 const TTown::TGeneratorTraits* const apNecropolisGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aNecropolisGeneratorTraits[0], &aNecropolisGeneratorTraits[1], &aNecropolisGeneratorTraits[2], &aNecropolisGeneratorTraits[3], &aNecropolisGeneratorTraits[4], &aNecropolisGeneratorTraits[5], &aNecropolisGeneratorTraits[6]
+    &necropolisGenerator1, &necropolisGenerator2, &necropolisGenerator3, &necropolisGenerator4, &necropolisGenerator5, &necropolisGenerator6, &necropolisGenerator7
 };
 
 TTown::TBuildingTraits aDungeonBuildingTraits[kNumBuildings] = {
@@ -279,18 +269,16 @@ TTown::TBuildingTraits aDungeonBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aDungeonGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreatureTroglodyte, eCreatureInfernalTroglodyte),
-    TAbsoluteGeneratorTraits(eCreatureHarpy, eCreatureHarpyHag),
-    TAbsoluteGeneratorTraits(eCreatureBeholder, eCreatureEvilEye),
-    TAbsoluteGeneratorTraits(eCreatureMedusa, eCreatureMedusaQueen),
-    TAbsoluteGeneratorTraits(eCreatureMinotaur, eCreatureMinotaurKing),
-    TAbsoluteGeneratorTraits(eCreatureManticore, eCreatureScorpicore),
-    TAbsoluteGeneratorTraits(eCreatureRedDragon, eCreatureBlackDragon)
-};
+const TAbsoluteGeneratorTraits dungeonGenerator1(eCreatureTroglodyte, eCreatureInfernalTroglodyte);
+const TAbsoluteGeneratorTraits dungeonGenerator2(eCreatureHarpy, eCreatureHarpyHag);
+const TAbsoluteGeneratorTraits dungeonGenerator3(eCreatureBeholder, eCreatureEvilEye);
+const TAbsoluteGeneratorTraits dungeonGenerator4(eCreatureMedusa, eCreatureMedusaQueen);
+const TAbsoluteGeneratorTraits dungeonGenerator5(eCreatureMinotaur, eCreatureMinotaurKing);
+const TAbsoluteGeneratorTraits dungeonGenerator6(eCreatureManticore, eCreatureScorpicore);
+const TAbsoluteGeneratorTraits dungeonGenerator7(eCreatureRedDragon, eCreatureBlackDragon);
 
 const TTown::TGeneratorTraits* const apDungeonGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aDungeonGeneratorTraits[0], &aDungeonGeneratorTraits[1], &aDungeonGeneratorTraits[2], &aDungeonGeneratorTraits[3], &aDungeonGeneratorTraits[4], &aDungeonGeneratorTraits[5], &aDungeonGeneratorTraits[6]
+    &dungeonGenerator1, &dungeonGenerator2, &dungeonGenerator3, &dungeonGenerator4, &dungeonGenerator5, &dungeonGenerator6, &dungeonGenerator7
 };
 
 TTown::TBuildingTraits aStrongholdBuildingTraits[kNumBuildings] = {
@@ -310,18 +298,16 @@ TTown::TBuildingTraits aStrongholdBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aStrongholdGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreatureGoblin, eCreatureHobgoblin),
-    TAbsoluteGeneratorTraits(eCreatureGoblinWolfRider, eCreatureHobgoblinWolfRider),
-    TAbsoluteGeneratorTraits(eCreatureOrc, eCreatureOrcChieftain),
-    TAbsoluteGeneratorTraits(eCreatureOgre, eCreatureOgreMage),
-    TAbsoluteGeneratorTraits(eCreatureRoc, eCreatureThunderbird),
-    TAbsoluteGeneratorTraits(eCreatureCyclops, eCreatureCyclopsLord),
-    TAbsoluteGeneratorTraits(eCreatureYoungBehemoth, eCreatureAncientBehemoth)
-};
+const TAbsoluteGeneratorTraits strongholdGenerator1(eCreatureGoblin, eCreatureHobgoblin);
+const TAbsoluteGeneratorTraits strongholdGenerator2(eCreatureGoblinWolfRider, eCreatureHobgoblinWolfRider);
+const TAbsoluteGeneratorTraits strongholdGenerator3(eCreatureOrc, eCreatureOrcChieftain);
+const TAbsoluteGeneratorTraits strongholdGenerator4(eCreatureOgre, eCreatureOgreMage);
+const TAbsoluteGeneratorTraits strongholdGenerator5(eCreatureRoc, eCreatureThunderbird);
+const TAbsoluteGeneratorTraits strongholdGenerator6(eCreatureCyclops, eCreatureCyclopsLord);
+const TAbsoluteGeneratorTraits strongholdGenerator7(eCreatureYoungBehemoth, eCreatureAncientBehemoth);
 
 const TTown::TGeneratorTraits* const apStrongholdGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aStrongholdGeneratorTraits[0], &aStrongholdGeneratorTraits[1], &aStrongholdGeneratorTraits[2], &aStrongholdGeneratorTraits[3], &aStrongholdGeneratorTraits[4], &aStrongholdGeneratorTraits[5], &aStrongholdGeneratorTraits[6]
+    &strongholdGenerator1, &strongholdGenerator2, &strongholdGenerator3, &strongholdGenerator4, &strongholdGenerator5, &strongholdGenerator6, &strongholdGenerator7
 };
 
 TTown::TBuildingTraits aFortressBuildingTraits[kNumBuildings] = {
@@ -341,18 +327,16 @@ TTown::TBuildingTraits aFortressBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TAbsoluteGeneratorTraits aFortressGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TAbsoluteGeneratorTraits(eCreatureGnoll, eCreatureGnollMarauder),
-    TAbsoluteGeneratorTraits(eCreaturePrimitiveLizardman, eCreatureAdvancedLizardman),
-    TAbsoluteGeneratorTraits(eCreatureSerpentFly, eCreatureDragonFly),
-    TAbsoluteGeneratorTraits(eCreatureBasilisk, eCreatureGreaterBasilisk),
-    TAbsoluteGeneratorTraits(eCreatureCopperGorgon, eCreatureBronzeGorgon),
-    TAbsoluteGeneratorTraits(eCreatureWyvern, eCreatureWyvernMonarch),
-    TAbsoluteGeneratorTraits(eCreatureHydra, eCreatureChaosHydra)
-};
+const TAbsoluteGeneratorTraits fortressGenerator1(eCreatureGnoll, eCreatureGnollMarauder);
+const TAbsoluteGeneratorTraits fortressGenerator2(eCreaturePrimitiveLizardman, eCreatureAdvancedLizardman);
+const TAbsoluteGeneratorTraits fortressGenerator3(eCreatureSerpentFly, eCreatureDragonFly);
+const TAbsoluteGeneratorTraits fortressGenerator4(eCreatureBasilisk, eCreatureGreaterBasilisk);
+const TAbsoluteGeneratorTraits fortressGenerator5(eCreatureCopperGorgon, eCreatureBronzeGorgon);
+const TAbsoluteGeneratorTraits fortressGenerator6(eCreatureWyvern, eCreatureWyvernMonarch);
+const TAbsoluteGeneratorTraits fortressGenerator7(eCreatureHydra, eCreatureChaosHydra);
 
 const TTown::TGeneratorTraits* const apFortressGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aFortressGeneratorTraits[0], &aFortressGeneratorTraits[1], &aFortressGeneratorTraits[2], &aFortressGeneratorTraits[3], &aFortressGeneratorTraits[4], &aFortressGeneratorTraits[5], &aFortressGeneratorTraits[6]
+    &fortressGenerator1, &fortressGenerator2, &fortressGenerator3, &fortressGenerator4, &fortressGenerator5, &fortressGenerator6, &fortressGenerator7
 };
 
 TTown::TBuildingTraits aRandomBuildingTraits[kNumBuildings] = {
@@ -372,19 +356,16 @@ TTown::TBuildingTraits aRandomBuildingTraits[kNumBuildings] = {
     TTown::TBuildingTraits(eBuildingNone), TTown::TBuildingTraits(eBuildingDwelling7)
 };
 
-const TIndeterminateGeneratorTraits aRandomGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    TIndeterminateGeneratorTraits(TTown::TGeneratorType(0)),
-    TIndeterminateGeneratorTraits(TTown::TGeneratorType(1)),
-    TIndeterminateGeneratorTraits(TTown::TGeneratorType(2)),
-    TIndeterminateGeneratorTraits(TTown::TGeneratorType(3)),
-    TIndeterminateGeneratorTraits(TTown::TGeneratorType(4)),
-    TIndeterminateGeneratorTraits(TTown::TGeneratorType(5)),
-    TIndeterminateGeneratorTraits(TTown::TGeneratorType(6))
-};
+const TIndeterminateGeneratorTraits randomGenerator1(TTown::TGeneratorType(0));
+const TIndeterminateGeneratorTraits randomGenerator2(TTown::TGeneratorType(1));
+const TIndeterminateGeneratorTraits randomGenerator3(TTown::TGeneratorType(2));
+const TIndeterminateGeneratorTraits randomGenerator4(TTown::TGeneratorType(3));
+const TIndeterminateGeneratorTraits randomGenerator5(TTown::TGeneratorType(4));
+const TIndeterminateGeneratorTraits randomGenerator6(TTown::TGeneratorType(5));
+const TIndeterminateGeneratorTraits randomGenerator7(TTown::TGeneratorType(6));
 
 const TTown::TGeneratorTraits* const apRandomGeneratorTraits[TTown::s_kNumGeneratorTypes] = {
-    &aRandomGeneratorTraits[0], &aRandomGeneratorTraits[1], &aRandomGeneratorTraits[2], &aRandomGeneratorTraits[3],
-    &aRandomGeneratorTraits[4], &aRandomGeneratorTraits[5], &aRandomGeneratorTraits[6]
+    &randomGenerator1, &randomGenerator2, &randomGenerator3, &randomGenerator4, &randomGenerator5, &randomGenerator6, &randomGenerator7
 };
 
 TTown::TTypeTraits aTownTypeTraitsImp[kNumTownTypes + 1] = {
