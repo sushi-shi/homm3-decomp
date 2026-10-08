@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream.h>
+#include <map>
 
 #include "adventureobjecttype.h"
 #include "editor/GameMap.h"
@@ -18,6 +19,8 @@
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 #include "editor/TilePoint.h"
+#include "editor/TimedEvent.h"
+#include "editor/VictoryCondition.h"
 
 namespace {
 
@@ -72,6 +75,22 @@ void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[
     }
 }
 
+// The object types the map caps, each with its ordinal in the bookkeeping
+// and its cap.
+struct TCappedObjectTypeInfo {
+    TCappedObjectTypeInfo(unsigned int ordinal, unsigned int cap) : m_ordinal(ordinal), m_cap(cap) {}
+
+    unsigned int m_ordinal;
+    unsigned int m_cap;
+};
+
+class TCappedObjectTypeInfoMap : public map<int, TCappedObjectTypeInfo> {
+public:
+    TCappedObjectTypeInfoMap();
+};
+
+TCappedObjectTypeInfoMap kCappedObjectTypeInfoMap;
+
 }  // namespace
 
 const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
@@ -85,6 +104,169 @@ public:
     static const unsigned int s_kMaxSignsOnMap = 128;
 
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
+
+    static void streamObject(streambuf* pStreamBuf, const TGameObject& obj);
+
+    _TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, TSize size, bool bTwoLayer);
+    _TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, streambuf* pStreamBuf, int version);
+    ~_TImpl();
+
+    void importText(istream* pIStream);
+    void exportText(ostream* pOStream) const;
+    void save(streambuf* pStreamBuf) const;
+
+    unsigned int getWidth() const { return _s_akDimension[_m_size]; }
+    unsigned int getHeight() const { return _s_akDimension[_m_size]; }
+    bool isTwoLayer() const { return _m_bTwoLayer; }
+    void removeSecondLayer();
+    void addSecondLayer();
+    TLayer* getPLayer(unsigned int num);
+    TLayer* getPLayer(bool bSecondLayer) { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer* getPLayer(unsigned int num) const;
+    const TLayer* getPLayer(bool bSecondLayer) const { return getPLayer(bSecondLayer ? 1U : 0U); }
+    const TLayer& getLayer(unsigned int num) const { return *getPLayer(num); }
+    const TLayer& getLayer(bool bSecondLayer) const { return *getPLayer(bSecondLayer); }
+
+    const string& getName() const { return _m_pProperties->m_name; }
+    void setName(const string& newName);
+    const string& getDesc() const { return _m_pProperties->m_desc; }
+    void setDesc(const string& newDesc);
+    TDifficulty getDifficulty() const { return _m_pProperties->m_difficulty; }
+    void setDifficulty(TDifficulty newDifficulty);
+    const TArray<TPlayerInfo, kNumPlayers>& getPlayers() const { return _m_pProperties->m_players; }
+    void setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers);
+    const TTeamInfo& getTeamInfo() const { return _m_pProperties->m_teamInfo; }
+    void setTeamInfo(const TTeamInfo& newTeamInfo);
+    const vector<TRumor>& getRumors() const { return _m_pProperties->m_rumors; }
+    void setRumors(const vector<TRumor>& newRumors);
+    const vector<TTimedEvent>& getTimedEvents() const { return _m_pProperties->m_timedEvents; }
+    void setTimedEvents(const vector<TTimedEvent>& newTimedEvents);
+    const TVictoryCondition* getPVictoryCondition() const { return _m_pProperties->m_pVictoryCondition; }
+    void setVictoryCondition(const TVictoryCondition* pNewVictoryCondition);
+    const TLossCondition* getPLossCondition() const { return _m_pProperties->m_pLossCondition; }
+    void setLossCondition(const TLossCondition* pNewLossCondition);
+    bool isPlayerPresent(TPlayer player) const { return _m_apPlayerBookkeeping[player]->m_numUnits != 0; }
+    unsigned int getNumPlayableSlots() const { return _m_pBookkeeping->m_numPlayableSlots; }
+
+    TMapLayerObjectID placeObject(bool bSecondLayer, const TGameObject& obj, unsigned int x, unsigned int y,
+                                  TTileExtent* pUpdatedExtent);
+    void removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
+    void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
+    void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
+    void removeFloatingObject(bool bSecondLayer);
+    bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const
+    {
+        return _isValidPlacement(getLayer(bSecondLayer), obj, x, y);
+    }
+    const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
+    const TGameObject* getPObject(const TMapObjectRef& objRef) const
+    {
+        return getPObject(objRef.getBSecondLayer(), objRef.getObjectID());
+    }
+    TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
+
+    bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                              TTileExtent* pUpdatedExtent);
+    void onObjectRemoved();
+    void onHeroAdded(const THero& hero);
+    void onRemovingHero(const THero& hero);
+    void onHeroProtoChanged(THeroClass heroClass, unsigned int oldProtoNum, unsigned int newProtoNum);
+    void onHeroClassChanged(THeroClass oldHeroClass, unsigned int oldProtoNum, THeroClass newHeroClass,
+                            unsigned int newProtoNum);
+    void onHeroOwnerChanged(const THero& hero, TPlayer oldOwner);
+    void onTownOwnerChanged(const TTown& town, bool bSecondLayer, unsigned int objID, TPlayer oldOwner);
+
+    TGameObject* createObject(const TObjectType& objType, TPlayer player, void* (*pfnAllocator)(unsigned int)) const;
+    TGameObject* reconstructObject(streambuf* pStreamBuf, int version, void* (*pfnAllocator)(unsigned int)) const;
+    bool canCreate(const TObjectType& objType, TPlayer player) const;
+    bool isHeroOnMap(THeroID heroID) const;
+    set<unsigned int> getAvailableHeroesInClass(THeroClass heroClass) const;
+    bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
+    const set<TMapObjectRef>& getPlayerTownRefs(TPlayer player) const;
+    unsigned int getNumTownsOnMap() const { return _m_pBookkeeping->m_numTowns; }
+    bool isGrailOnMap() const { return _m_pBookkeeping->m_bGrailPlaced; }
+    unsigned int getNumObelisksOnMap() const;
+
+private:
+    struct _TProperties {
+        _TProperties()
+            : m_difficulty(TDifficulty(1)), m_pVictoryCondition(NULL), m_pLossCondition(NULL) {}
+        _TProperties(const _TProperties& other)
+            : m_name(other.m_name), m_desc(other.m_desc), m_difficulty(other.m_difficulty),
+              m_players(other.m_players), m_teamInfo(other.m_teamInfo), m_rumors(other.m_rumors),
+              m_timedEvents(other.m_timedEvents), m_pVictoryCondition(NULL), m_pLossCondition(NULL)
+        {
+            if (other.m_pVictoryCondition != NULL)
+                if ((m_pVictoryCondition = TVictoryCondition::clone(*other.m_pVictoryCondition, ::operator new)) == NULL)
+#line 926
+                    throw TAllocationFailure(__FILE__, __LINE__);
+            if (other.m_pLossCondition != NULL)
+                if ((m_pLossCondition = TLossCondition::clone(*other.m_pLossCondition, ::operator new)) == NULL)
+#line 929
+                    throw TAllocationFailure(__FILE__, __LINE__);
+        }
+        ~_TProperties()
+        {
+            assert(m_pVictoryCondition == __null && m_pLossCondition == __null);
+        }
+
+        string m_name;
+        string m_desc;
+        TDifficulty m_difficulty;
+        TArray<TPlayerInfo, kNumPlayers> m_players;
+        TTeamInfo m_teamInfo;
+        vector<TRumor> m_rumors;
+        vector<TTimedEvent> m_timedEvents;
+        TVictoryCondition* m_pVictoryCondition;
+        TLossCondition* m_pLossCondition;
+    };
+
+    struct _TBookkeeping {
+        // Which prototypes of each hero class are still free to place.
+        class TAABHeroAvailable : public TArray<bitset<8>, kNumHeroClasses> {
+        public:
+            TAABHeroAvailable();
+        };
+
+        _TBookkeeping()
+            : m_numPlayableSlots(0), m_numTowns(0), m_numHeroes(0), m_bGrailPlaced(false), m_numMines(0),
+              m_numGenerators(0), m_numSigns(0), m_aNumObjsOfCappedType(kCappedObjectTypeInfoMap.size(), 0U) {}
+
+        unsigned int m_numPlayableSlots;
+        unsigned int m_numTowns;
+        unsigned int m_numHeroes;
+        bool m_bGrailPlaced;
+        unsigned int m_numMines;
+        unsigned int m_numGenerators;
+        unsigned int m_numSigns;
+        vector<unsigned int> m_aNumObjsOfCappedType;
+        TAABHeroAvailable m_aabHeroAvailable;
+    };
+
+    struct _TPlayerBookkeeping {
+        _TPlayerBookkeeping()
+            : m_numUnits(0), m_numRandomTowns(0), m_aNumTownsOfType(0), m_numHeroes(0), m_numRandomHeroes(0),
+              m_aNumHeroesOfType(0) {}
+
+        unsigned int m_numUnits;
+        set<TMapObjectRef> m_townRefs;
+        unsigned int m_numRandomTowns;
+        TArray<unsigned int, kNumPlayers> m_aNumTownsOfType;
+        unsigned int m_numHeroes;
+        unsigned int m_numRandomHeroes;
+        TArray<unsigned int, kNumPlayers> m_aNumHeroesOfType;
+    };
+
+    static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
+
+    TClient* _m_pClient;
+    const TObjectFactory* _m_pObjectFactory;
+    TSize _m_size;
+    bool _m_bTwoLayer;
+    TRefCountingPtr<_TProperties> _m_pProperties;
+    vector<TLayer> _m_aLayer;
+    TRefCountingPtr<_TBookkeeping> _m_pBookkeeping;
+    TArray<TRefCountingPtr<_TPlayerBookkeeping>, kNumPlayers> _m_apPlayerBookkeeping;
 };
 
 void TRumor::setNameAndText(const string& newName, const string& newText)
@@ -269,6 +451,43 @@ TPlaceObjFailureTooManyGeneratorsOnMap::TPlaceObjFailureTooManyGeneratorsOnMap()
 TPlaceObjFailureTooManySignsOnMap::TPlaceObjFailureTooManySignsOnMap()
     : TPlaceObjFailureTooManyInstancesOfTypeOnMap(SIGN, TGameMap::_TImpl::s_kMaxSignsOnMap)
 {
+}
+
+void TGameMap::_TImpl::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
+{
+#line 1438
+    assert(pStreamBuf != NULL);
+    TRawOStream stream(pStreamBuf);
+    stream << obj.getObjectType();
+    obj.write(&stream);
+}
+
+TGameMap::_TImpl::_TImpl(TClient* pClient, const TObjectFactory* pObjectFactory, TSize size, bool bTwoLayer)
+    : _m_pClient(pClient), _m_pObjectFactory(pObjectFactory), _m_size(size), _m_bTwoLayer(bTwoLayer)
+{
+#line 1452
+    assert(_m_pClient != NULL);
+    assert(_m_pObjectFactory != NULL);
+    assert((int) _m_size >= (int) 0 && (int) _m_size < (int) s_kNumSizes);
+    _m_aLayer.resize(_m_bTwoLayer ? 2 : 1, TLayer(_m_size));
+}
+
+TGameMap::_TImpl::~_TImpl()
+{
+#line 1798
+    assert(_m_aLayer.size() == ( _m_bTwoLayer ? 2 : 1 ));
+    delete _m_pProperties->m_pLossCondition;
+    _m_pProperties->m_pLossCondition = NULL;
+    delete _m_pProperties->m_pVictoryCondition;
+    _m_pProperties->m_pVictoryCondition = NULL;
+}
+
+TGameMap::TLayer* TGameMap::_TImpl::getPLayer(unsigned int num)
+{
+#line 1810
+    assert(num < 1 || ( _m_bTwoLayer && num < 2 ));
+    assert(_m_aLayer.size() == ( _m_bTwoLayer ? 2 : 1 ));
+    return &_m_aLayer[num];
 }
 
 class TGameMap::TLayer::_TImpl {
@@ -461,6 +680,321 @@ private:
     TRefCountingPtr<vector<_TObjectLink> > _m_paObjectLink;
     TMapLayerObjectID _m_floatingObjID;
 };
+
+void TGameMap::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
+{
+    _TImpl::streamObject(pStreamBuf, obj);
+}
+
+TGameMap::TGameMap(const TGameMap& other)
+    : _m_pImpl(other._m_pImpl)
+{
+}
+
+TGameMap::TGameMap(TClient* pClient, const TObjectFactory* pObjectFactory, TSize size, bool bTwoLayer)
+    : _m_pImpl(_TImpl(pClient, pObjectFactory, size, bTwoLayer))
+{
+}
+
+TGameMap::TGameMap(TClient* pClient, const TObjectFactory* pObjectFactory, streambuf* pStreamBuf, int version)
+    : _m_pImpl(_TImpl(pClient, pObjectFactory, pStreamBuf, version))
+{
+}
+
+TGameMap::~TGameMap()
+{
+}
+
+TGameMap& TGameMap::operator=(const TGameMap& other)
+{
+    _m_pImpl = other._m_pImpl;
+    return *this;
+}
+
+void TGameMap::importText(istream* pIStream)
+{
+    _m_pImpl->importText(pIStream);
+}
+
+TGameMap::TLayer* TGameMap::getPLayer(unsigned int num)
+{
+    return _m_pImpl->getPLayer(num);
+}
+
+void TGameMap::setName(const string& newName)
+{
+    _m_pImpl->setName(newName);
+}
+
+void TGameMap::setDesc(const string& newDesc)
+{
+    _m_pImpl->setDesc(newDesc);
+}
+
+void TGameMap::setDifficulty(TDifficulty newDifficulty)
+{
+    _m_pImpl->setDifficulty(newDifficulty);
+}
+
+void TGameMap::setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers)
+{
+    _m_pImpl->setPlayers(newPlayers);
+}
+
+void TGameMap::setTeamInfo(const TTeamInfo& newTeamInfo)
+{
+    _m_pImpl->setTeamInfo(newTeamInfo);
+}
+
+void TGameMap::setRumors(const vector<TRumor>& newRumors)
+{
+    _m_pImpl->setRumors(newRumors);
+}
+
+void TGameMap::setTimedEvents(const vector<TTimedEvent>& newTimedEvents)
+{
+    _m_pImpl->setTimedEvents(newTimedEvents);
+}
+
+void TGameMap::setVictoryCondition(const TVictoryCondition* pNewVictoryCondition)
+{
+    _m_pImpl->setVictoryCondition(pNewVictoryCondition);
+}
+
+void TGameMap::setLossCondition(const TLossCondition* pNewLossCondition)
+{
+    _m_pImpl->setLossCondition(pNewLossCondition);
+}
+
+TMapLayerObjectID TGameMap::placeObject(bool bSecondLayer, const TGameObject& obj, unsigned int x, unsigned int y,
+                                        TTileExtent* pUpdatedExtent)
+{
+    return _m_pImpl->placeObject(bSecondLayer, obj, x, y, pUpdatedExtent);
+}
+
+void TGameMap::removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+    _m_pImpl->removeObject(bSecondLayer, objID, pUpdatedExtent);
+}
+
+void TGameMap::floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+    _m_pImpl->floatObject(bSecondLayer, objID, pUpdatedExtent);
+}
+
+void TGameMap::unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent)
+{
+    _m_pImpl->unfloatObject(bSecondLayer, x, y, pUpdatedExtent);
+}
+
+void TGameMap::removeFloatingObject(bool bSecondLayer)
+{
+    _m_pImpl->removeFloatingObject(bSecondLayer);
+}
+
+bool TGameMap::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
+                                    TTileExtent* pUpdatedExtent)
+{
+    return _m_pImpl->onTerrainTypeChanged(bSecondLayer, x, y, oldTerrainType, pUpdatedExtent);
+}
+
+void TGameMap::onObjectRemoved()
+{
+    _m_pImpl->onObjectRemoved();
+}
+
+void TGameMap::onHeroAdded(const THero& hero)
+{
+    _m_pImpl->onHeroAdded(hero);
+}
+
+void TGameMap::onRemovingHero(const THero& hero)
+{
+    _m_pImpl->onRemovingHero(hero);
+}
+
+void TGameMap::onHeroProtoChanged(THeroClass heroClass, unsigned int oldProtoNum, unsigned int newProtoNum)
+{
+    _m_pImpl->onHeroProtoChanged(heroClass, oldProtoNum, newProtoNum);
+}
+
+void TGameMap::onHeroClassChanged(THeroClass oldHeroClass, unsigned int oldProtoNum, THeroClass newHeroClass,
+                                  unsigned int newProtoNum)
+{
+    _m_pImpl->onHeroClassChanged(oldHeroClass, oldProtoNum, newHeroClass, newProtoNum);
+}
+
+void TGameMap::onHeroOwnerChanged(const THero& hero, TPlayer oldOwner)
+{
+    _m_pImpl->onHeroOwnerChanged(hero, oldOwner);
+}
+
+void TGameMap::onTownOwnerChanged(const TTown& town, bool bSecondLayer, unsigned int objID, TPlayer oldOwner)
+{
+    _m_pImpl->onTownOwnerChanged(town, bSecondLayer, objID, oldOwner);
+}
+
+void TGameMap::removeSecondLayer()
+{
+    _m_pImpl->removeSecondLayer();
+}
+
+void TGameMap::addSecondLayer()
+{
+    _m_pImpl->addSecondLayer();
+}
+
+void TGameMap::save(streambuf* pStreamBuf) const
+{
+    _m_pImpl->save(pStreamBuf);
+}
+
+void TGameMap::exportText(ostream* pOStream) const
+{
+    _m_pImpl->exportText(pOStream);
+}
+
+unsigned int TGameMap::getWidth() const
+{
+    return _m_pImpl->getWidth();
+}
+
+unsigned int TGameMap::getHeight() const
+{
+    return _m_pImpl->getHeight();
+}
+
+bool TGameMap::isTwoLayer() const
+{
+    return _m_pImpl->isTwoLayer();
+}
+
+const TGameObject* TGameMap::getPObject(bool bSecondLayer, unsigned int objID) const
+{
+    return _m_pImpl->getPObject(bSecondLayer, objID);
+}
+
+TTilePoint TGameMap::getObjectLoc(bool bSecondLayer, unsigned int objID) const
+{
+    return _m_pImpl->getObjectLoc(bSecondLayer, objID);
+}
+
+const TGameMap::TLayer* TGameMap::getPLayer(unsigned int num) const
+{
+    return _m_pImpl->getPLayer(num);
+}
+
+const string& TGameMap::getName() const
+{
+    return _m_pImpl->getName();
+}
+
+const string& TGameMap::getDesc() const
+{
+    return _m_pImpl->getDesc();
+}
+
+TGameMap::TDifficulty TGameMap::getDifficulty() const
+{
+    return _m_pImpl->getDifficulty();
+}
+
+const TArray<TPlayerInfo, kNumPlayers>& TGameMap::getPlayers() const
+{
+    return _m_pImpl->getPlayers();
+}
+
+const TTeamInfo& TGameMap::getTeamInfo() const
+{
+    return _m_pImpl->getTeamInfo();
+}
+
+const vector<TRumor>& TGameMap::getRumors() const
+{
+    return _m_pImpl->getRumors();
+}
+
+const vector<TTimedEvent>& TGameMap::getTimedEvents() const
+{
+    return _m_pImpl->getTimedEvents();
+}
+
+const TVictoryCondition* TGameMap::getPVictoryCondition() const
+{
+    return _m_pImpl->getPVictoryCondition();
+}
+
+const TLossCondition* TGameMap::getPLossCondition() const
+{
+    return _m_pImpl->getPLossCondition();
+}
+
+bool TGameMap::isPlayerPresent(TPlayer player) const
+{
+    return _m_pImpl->isPlayerPresent(player);
+}
+
+unsigned int TGameMap::getNumPlayableSlots() const
+{
+    return _m_pImpl->getNumPlayableSlots();
+}
+
+TGameObject* TGameMap::createObject(const TObjectType& objType, TPlayer player,
+                                    void* (*pfnAllocator)(unsigned int)) const
+{
+    return _m_pImpl->createObject(objType, player, pfnAllocator);
+}
+
+TGameObject* TGameMap::reconstructObject(streambuf* pStreamBuf, int version,
+                                         void* (*pfnAllocator)(unsigned int)) const
+{
+    return _m_pImpl->reconstructObject(pStreamBuf, version, pfnAllocator);
+}
+
+bool TGameMap::canCreate(const TObjectType& objType, TPlayer player) const
+{
+    return _m_pImpl->canCreate(objType, player);
+}
+
+bool TGameMap::isHeroOnMap(THeroID heroID) const
+{
+    return _m_pImpl->isHeroOnMap(heroID);
+}
+
+set<unsigned int> TGameMap::getAvailableHeroesInClass(THeroClass heroClass) const
+{
+    return _m_pImpl->getAvailableHeroesInClass(heroClass);
+}
+
+bitset<kNumPlayers> TGameMap::getAvailableHeroOwnersMask() const
+{
+    return _m_pImpl->getAvailableHeroOwnersMask();
+}
+
+const set<TMapObjectRef>& TGameMap::getPlayerTownRefs(TPlayer player) const
+{
+    return _m_pImpl->getPlayerTownRefs(player);
+}
+
+unsigned int TGameMap::getNumTownsOnMap() const
+{
+    return _m_pImpl->getNumTownsOnMap();
+}
+
+bool TGameMap::isGrailOnMap() const
+{
+    return _m_pImpl->isGrailOnMap();
+}
+
+unsigned int TGameMap::getNumObelisksOnMap() const
+{
+    return _m_pImpl->getNumObelisksOnMap();
+}
+
+bool TGameMap::isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const
+{
+    return _m_pImpl->isValidPlacement(obj, bSecondLayer, x, y);
+}
 
 TGameMap::TLayer::_TImpl::_TImpl(const _TImpl& other)
     : _m_size(other._m_size), _m_pCellGrid(other._m_pCellGrid), _m_nextAvail(other._m_nextAvail),
