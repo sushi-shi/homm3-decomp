@@ -260,12 +260,40 @@ Applied:
 - A namespace-scope non-const variable is written at its definition, its
   string literals with it (GUIGameObject's unreferenced check-mark rows,
   SpellDefs' akSpellEffectTraits after aSpellTraitsImp's sounds).
-- Open: in GameMap, RiverPlacement, RoadPlacement and TerrainPlacement the
-  image names TRuntimeError after VictoryCondition.h's classes, while Event
-  and Hero name it right after `<stdexcept>`'s. GameMap.h reaches
-  exceptions.h through RefCountingPtr.h before GameObject.h; RefCountingPtr.h
-  cannot drop it (g++ 2.95 binds its `throw TAllocationFailure(...)` at the
-  template definition).
+- GameMap.h includes exceptions.h and RefCountingPtr.h after
+  VictoryCondition.h, so every GameMap.h includer names TRuntimeError after
+  the condition classes; units that name it right after `<stdexcept>`'s
+  (Event, Hero) reach exceptions.h first.
+- Namespace-scope constants with internal linkage are written at the end of
+  the file in declaration order, header by header: an object's `.rodata`
+  ends with them, so the tail proves which headers define constants (and in
+  which include order) and which names are enumerators instead
+  (`kNumPlayers`, `kNumCreatureTypesPerTown` is a constant). The map record
+  readers' reserved byte counts are such file constants.
+- Inline SGI helpers that are not templates (`destroy(char*, char*)`,
+  `uninitialized_copy(const char*, const char*, char*)`, `min<unsigned>`
+  through `lexicographical_compare`) and the `_Base_bitset<1>` and
+  `allocator<char>` specializations' members enter the queue where their
+  header is first parsed: whether `<string>` (and with it `<stdexcept>`)
+  comes before `<algorithm>`, `<vector>` (`stl_range_errors.h`) or `<bitset>`
+  is visible in every object's emission order.
+- The class members follow the original declaration order: the map
+  objects declare their setters (and non-const accessors) before their
+  getters and their accessors before their inline virtuals; inline members
+  defined after a class (TObjectType's setters) or nested classes defined
+  outside it (TSeersHut::TReward) are queued after the class's own bodies.
+- A namespace-scope template use outside a function body (an array
+  initializer calling `vector::operator[]`) and the non-inline members a
+  function instantiates go to the pending list in first-use order; the
+  image's pass-0 template order therefore fixes the order of such
+  definitions in the file (Hero.cpp's TCopiedProto before the class traits
+  table).
+- `build/` tooling note: an instrumented cc1plus (the release source with
+  `fprintf` at mark_inline_for_output, instantiate_decl, rest_of_compilation,
+  assemble_start_function and output_constant_def_contents, configured
+  i686-pc-linux-gnu with the gas alignment features) produces the same
+  objects and logs the queue, the instantiations, the passes and every
+  string constant.
 - exceptions.h's never-called `TRuntimeError()` (`runtime_error(string())`)
   is inferred from rule 6: every includer queues `allocator<char>()`, the
   `__default_alloc_template::allocate` chain, `~basic_string` and
