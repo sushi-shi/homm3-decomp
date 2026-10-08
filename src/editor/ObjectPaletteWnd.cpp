@@ -5,10 +5,9 @@
 // drawn translucent on black. Hovering names the object in the label under
 // the palette. Assert lines come from the retail immediates.
 //
-// Not exact: setSlot and OnSize compute upper - (page_size - 1) where
-// these spellings fold to (upper - page_size) + 1; the static initializer, _GLOBAL_.I and the type_info
-// function end with retail's three-jump epilogue state, which this file
-// does not reach.
+// Not exact: OnPaint's scaled copy keeps an unused 4-byte frame slot above
+// its source and destination pointers that this spelling does not
+// allocate.
 #include "editor/stdafx.h"
 
 #include <functional>
@@ -123,8 +122,8 @@ void TObjectPaletteWnd::setSlot(TObjectSlot newSlot)
     _m_vAdjust->upper = max(_computeRows() * s_kObjFrameSize.cy - 1, 0);
     _m_vAdjust->page_size = clientRect.Height();
     _m_vAdjust->value = min(_m_aSlotInfo[_m_slot].m_scrollPos,
-                            max(0, (unsigned int)_m_vAdjust->upper
-                                       - (unsigned int)_m_vAdjust->page_size + 1));
+                            max(0, (unsigned int)_m_vAdjust->upper + 1
+                                       - (unsigned int)_m_vAdjust->page_size));
     gtk_adjustment_changed(_m_vAdjust);
     gtk_adjustment_value_changed(_m_vAdjust);
     _m_aSlotInfo[_m_slot].m_scrollPos = (unsigned int)_m_vAdjust->value;
@@ -229,8 +228,8 @@ void TObjectPaletteWnd::OnSize(unsigned int type, int cx, int cy)
     _m_vAdjust->upper = _computeRows() * s_kObjFrameSize.cy - 1;
     _m_vAdjust->page_size = cy;
     _m_vAdjust->value = min(_m_aSlotInfo[_m_slot].m_scrollPos,
-                            max(0, (unsigned int)_m_vAdjust->upper
-                                       - (unsigned int)_m_vAdjust->page_size + 1));
+                            max(0, (unsigned int)_m_vAdjust->upper + 1
+                                       - (unsigned int)_m_vAdjust->page_size));
     gtk_adjustment_changed(_m_vAdjust);
     gtk_adjustment_value_changed(_m_vAdjust);
     _m_aSlotInfo[_m_slot].m_scrollPos = (unsigned int)_m_vAdjust->value;
