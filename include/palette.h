@@ -18,11 +18,6 @@ struct TRGBA {
 };
 SIZE(TRGBA, 4);
 
-void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
-              float* h, float* s, float* v);
-void hsvToRGB(float h, float s, float v,
-              unsigned int* r, unsigned int* g, unsigned int* b);
-
 // Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
 // lives at +0x1c past the resource head (same shape CSprite::GetPalette
 // exposes); Dispose is the shared resource slot 1.
@@ -51,102 +46,76 @@ public:
     TPalette24(const unsigned char* data);
     TPalette24(const TRGBA* rgba);
     TPalette24(const tagRGBQUAD* quad);
-    // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
-    // Retail copies the same 0x300-byte payload; preserve the native array.
-    unsigned char m_palette[768];
-    TPalette24(const TPalette24* copy);
+    TPalette24(const TPalette24& copy);
     TPalette24& operator=(const TPalette24& from);
-    // NO exception specification: Bitmap816::~Bitmap816's retail unwind map
-    // keeps a {p16, resource} cleanup chain across the ~TPalette24 call,
-    // which VC6 only emits when that call is allowed to throw. A throw()
-    // here erases that chain (the map collapses to one entry).
+    // Loki's resource has only the virtual destructor (vtable 0x8427334).
     virtual ~TPalette24();
-    virtual unsigned int getSize() const;
-    void cycle(int begin, int end, int step);
-    void colorize(float hue, float saturation);
-    void gray();
-    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+    void Cycle(int begin, int end, int step);
+    void Colorize(float hue, float saturation);
+    void Gray();
+    void AdjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
+
+    // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
+    unsigned char m_palette[768];
 };
 SIZE(TPalette24, 0x31c);
 
 class TPalette16 : public resource {
-    // Dreamcast CodeView names these three class statics directly. Retail's
-    // SetPixelFormat stores its red/green/blue arguments at the corresponding
-    // three addresses, and every 16-bit palette transform reads them back.
-private:
-    static unsigned int s_redMask;
-    static unsigned int s_greenMask;
-    static unsigned int s_blueMask;
-
 public:
-    union {
-        unsigned short m_data[256];
-        palette m_colors;
-    };
     TPalette16();
     TPalette16(const unsigned short* data);
+    TPalette16(const TPalette24& p24, int rbits, int rshift,
+               int gbits, int gshift, int bbits, int bshift);
+    TPalette16(const TRGBA* rgba, int rbits, int rshift,
+               int gbits, int gshift, int bbits, int bshift);
+    TPalette16(const tagRGBQUAD* quad, int rbits, int rshift,
+               int gbits, int gshift, int bbits, int bshift);
+    TPalette16(const char* name, const TPalette24& p24,
+               int rbits, int rshift, int gbits, int gshift,
+               int bbits, int bshift);
     TPalette16(const TPalette24& p24);
     TPalette16(const TRGBA* rgba);
     TPalette16(const tagRGBQUAD* quad);
     TPalette16(const char* name, const TPalette24& p24);
-    TPalette16(const tagRGBQUAD* quad, int rbits, int rshift,
-               int gbits, int gshift, int bbits, int bshift);
-    TPalette16(const TPalette24& p24,
-               int rbits, int rshift, int gbits, int gshift,
-               int bbits, int bshift);
-    TPalette16(const TRGBA* rgba,
-               int rbits, int rshift, int gbits, int gshift,
-               int bbits, int bshift);
-    TPalette16(const char* name, const TPalette24& p24,
-               int rbits, int rshift, int gbits, int gshift,
-               int bbits, int bshift);
-
-    // Retail 0x522650 (22 B): the resource base with an empty name and
-    // type 0, plus the vptr store. Declared here because font embeds a
-    // TPalette16 BY VALUE (DC LF_MEMBER `Palette`, offset 0x103c) and
-    // its constructor 0x4b5070 runs this body on that subobject as a
-    // member initializer. Declaration only - the body stays palette's.
-    // DC Palette.h:137-140. No receiver; three mask stores.
-    // Retail ResourceManager::setPixelFormat expands this header helper.
-    DC_ADDRESS(0x122b08, 0x1c)
-    static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
-    {
-        s_redMask = red;
-        s_greenMask = green;
-        s_blueMask = blue;
-    }
-    TPalette16(const TPalette16* copy);
-
-    // Retail 0x522940 reinstalls the TPalette16 vptr and tail-calls the
-    // resource destructor. Keeping this out-of-line declaration is also
-    // codegen-significant for owners of embedded palettes (font::~font).
+    TPalette16(const TPalette16& copy);
+    TPalette16& operator=(const TPalette16& from);
+    // Loki's resource has only the virtual destructor (vtable 0x8427324).
     virtual ~TPalette16();
 
-    virtual unsigned int getSize() const;
-
-    TPalette16* operator=(const TPalette16* from);
-    void cycle(int begin, int end, int step);
-    void gray();
-    void adjustSaturation(float amount);
-    void colorize(float hue, float saturation);
-    void adjustHue(float hue, float amount);
-    void adjustValue(float amount);
-    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
-                   float valueAdjust);
-
-private:
-    // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
-    // /Ob2 expanded it into each of its constructor call sites - but the
-    // boundary is the DC roster's own, not an invention.
-    void convertRGBAto16(const TRGBA* rgba, int rbits, int rshift,
-                         int gbits, int gshift, int bbits, int bshift);
-    void convertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift,
-                            int gbits, int gshift, int bbits, int bshift);
-    // Project-inferred overload shared by the default-format RGB constructors.
-    void convert24to16WithMasks(const unsigned char* p24);
-    void convert24to16(const unsigned char* p24, int rbits, int rshift,
+    void Convert24to16(const unsigned char* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift);
+    void ConvertRGBAto16(const TRGBA* rgba, int rbits, int rshift,
+                         int gbits, int gshift, int bbits, int bshift);
+    void ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift,
+                            int gbits, int gshift, int bbits, int bshift);
+    void Cycle(int begin, int end, int step);
+    void Colorize(float hue, float saturation);
+    void AdjustHue(float hue, float amount);
+    void AdjustSaturation(float amount);
+    void AdjustValue(float amount);
+    void AdjustHSV(float hue, float hueAdjust, float saturationAdjust,
+                   float valueAdjust);
+    void Gray();
+
+    // Loki exports these statics as TPalette16::red_mask/green_mask/blue_mask.
+    // DC Palette.h:137-140; Loki emits it after palette.cpp's own functions.
+    DC_ADDRESS(0x122b08, 0x1c)
+    static void SetPixelFormat(unsigned int red, unsigned int green,
+                               unsigned int blue)
+    {
+        red_mask = red;
+        green_mask = green;
+        blue_mask = blue;
+    }
+    static unsigned int red_mask;
+    static unsigned int green_mask;
+    static unsigned int blue_mask;
+
+    union {
+        unsigned short m_data[256];
+        palette m_colors;
+    };
 };
 
 // The system palette pointer, re-declared here beside its type for
