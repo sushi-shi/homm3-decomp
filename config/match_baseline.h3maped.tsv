@@ -345,7 +345,7 @@ resourcemanager	?falsename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_trait
 resourcemanager	?findBitmapResource@@YAPAVLODFile@@PBD@Z	99.8913	99.8913	99.8913	0xdb2a0	-
 resourcemanager	?findSpriteResource@@YAPAVLODFile@@PBD@Z	99.8913	99.8913	99.8913	0xdb220	-
 resourcemanager	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	44.0000	44.0000	44.0000	0x3583e	-
-resourcemanager	?imbue@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEXABVlocale@2@@Z	-	100.0000	100.0000	0x11916	-
+resourcemanager	?imbue@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEXABVlocale@2@@Z	100.0000	100.0000	100.0000	0x11916	-
 resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	93.0417	93.0417	93.0417	0xdd6e0	-
 resourcemanager	?loadFont@ResourceManager@@YAPAVfont@@PBD@Z	28.5625	28.5625	28.5625	0xdc900	-
 resourcemanager	?loadPalette@ResourceManager@@YAPAVTPalette16@@PBD@Z	26.3235	26.3235	26.3235	0xdc6d0	-
