@@ -464,3 +464,13 @@ source = "src/editor/MapValidation.cpp"
 name = "ObjectSpecializations"
 object = 21
 source = "src/editor/ObjectSpecializations.cpp"
+
+[[unit]]
+name = "BlackBox"
+object = 7
+source = "src/editor/BlackBox.cpp"
+
+[[unit]]
+name = "Event"
+object = 11
+source = "src/editor/Event.cpp"
