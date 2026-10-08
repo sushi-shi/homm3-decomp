@@ -101,6 +101,10 @@ class Target:
             for field in cmpobj.fields(bytes(data), local_start, local_start + function.size):
                 if field.kind == "rel":
                     destination = start + field.end + field.value
+                    if destination == function.address and field.mnemonic == "call":
+                        # Recursion: the compiled object keeps a relocation.
+                        put(section, field.offset, R_386_PC32, _symbol_name(function), -4)
+                        continue
                     if function.address <= destination < function.address + function.size:
                         continue
                     resolved = self.name(destination, field, function, tables)
@@ -171,6 +175,9 @@ def base_sections(data: bytes) -> list[CodeSection]:
                 if rel is None:
                     if field.kind == "rel":
                         destination = field.end + field.value
+                        if destination == symbol.value and field.mnemonic == "call":
+                            put(section, field.offset, R_386_PC32, symbol.name, -4)
+                            continue
                         if symbol.value <= destination < symbol.value + symbol.size:
                             continue
                         callee = containing(index, destination)
