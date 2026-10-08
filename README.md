@@ -80,16 +80,15 @@ decomp-complete-4.0 ----> decomp-loki-1.0 (you are here)
 
 ## Pinned executables
 
-`h3maped` is this branch's target. The game tooling still uses `HEROES3.EXE`
-and its Dreamcast and Mac references. Hashes are also pinned in
+`h3maped` is this branch's target; the game tooling still uses `HEROES3.EXE`
+and its Dreamcast and Mac references. Supply your own
+copies; sizes and SHA-256 hashes are pinned in
 [config/project.toml](config/project.toml).
 
-| Role | File | Size (B) | SHA-256 |
-| :--- | :--- | -------: | :------ |
-| Target: Loki Linux map editor 1.0, ELF i386, GCC 2.95.2 | `h3maped` | 4,970,572 | `0d5614c407a9977d877bbe2ee7e35c476670b006cd88981ca40366fe2138559d` |
-| Game target: English Complete 4.0 (engine 3.2), MSVC 6.0, Sep 2000 | `HEROES3.EXE` | 2,732,032 | `057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274` |
-| Reference: Dreamcast port, SH-4 with CodeView symbols, Aug 2000 | `H3.EXE` | 8,425,752 | `cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736` |
-| Reference: Classic Mac OS port, PowerPC CodeWarrior, Dec 2000 | `Heroes_III_raw.pef` | 3,418,835 | `650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86` |
+- `h3maped`: Loki Linux map editor 1.0 (ELF i386, GCC 2.95.2)
+- `HEROES3.EXE`: English Complete 4.0, engine 3.2 (MSVC 6.0, Sep 2000)
+- `H3.EXE`: Dreamcast port, SH-4 with CodeView symbols (Aug 2000)
+- `Heroes_III_raw.pef`: Classic Mac OS port, PowerPC CodeWarrior (Dec 2000)
 
 ## Quickstart
 
