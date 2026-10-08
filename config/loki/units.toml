@@ -474,3 +474,13 @@ source = "src/editor/BlackBox.cpp"
 name = "Event"
 object = 11
 source = "src/editor/Event.cpp"
+
+[[unit]]
+name = "Monster"
+object = 19
+source = "src/editor/Monster.cpp"
+
+[[unit]]
+name = "SeersHut"
+object = 29
+source = "src/editor/SeersHut.cpp"
