@@ -518,8 +518,8 @@ void creditsWait()
     message msg;
     font* creditsFont = ResourceManager::getFont("Credits.fnt");
     int done = 0;
-    int textHeight = creditsFont->lineLength(g_credits[0], 328)
-        * creditsFont->m_fs.m_height;
+    int textHeight = creditsFont->LineLength(g_credits[0], 328)
+        * creditsFont->fs.height;
     int yOffset = 0;
     int startOffset = 580;
     Bitmap16Bit* background = new Bitmap16Bit(328, 580);
@@ -531,11 +531,11 @@ void creditsWait()
         0, 0, background->GetWidth(), background->GetHeight(),
         background->GetPitch(), 1);
     Bitmap16Bit* credits =
-        new Bitmap16Bit(328, textHeight + creditsFont->m_fs.m_height);
+        new Bitmap16Bit(328, textHeight + creditsFont->fs.height);
     if (!credits)
         memError();
     credits->FillRect(0, 0, credits->GetWidth(), credits->GetHeight(), 1);
-    creditsFont->drawBoundedString(g_credits[0], credits, 0, 0,
+    creditsFont->DrawBoundedString(g_credits[0], credits, 0, 0,
                                    credits->GetWidth(), credits->GetHeight(),
                                    font::TColor(284), 5, -1);
     g_inputManager->flush();
@@ -584,7 +584,7 @@ void creditsWait()
                                   460, 10, screen->GetWidth(), screen->GetHeight(),
                                   screen->GetPitch(), 1);
                     if (endOffset < 435)
-                        g_smallFont->drawBoundedString(
+                        g_smallFont->DrawBoundedString(
                             g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
                             328, 580, font::CHAT, 8, -1);
                 } else {
@@ -3525,7 +3525,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
     videoDrawCurrentFrame();
     for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
         x = i * 160;
-        currentFont->drawBoundedString(labels[i], g_windowManager->m_screenBitmap,
+        currentFont->DrawBoundedString(labels[i], g_windowManager->m_screenBitmap,
                                  x, 450, 160, 100, font::TColor(281), 5, -1);
         switch (i) {
         case CONGRATS_COLUMN_DAYS:
@@ -3547,7 +3547,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
             strcpy(temp, rank);
             break;
         }
-        currentFont->drawBoundedString(temp, g_windowManager->m_screenBitmap,
+        currentFont->DrawBoundedString(temp, g_windowManager->m_screenBitmap,
                                  x, 540, 160, 50, font::TColor(281), 5, -1);
     }
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -3569,7 +3569,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
             if (videoNeedsUpdate()) {
                 for (i = 0; i < CONGRATS_COLUMN_COUNT; i++) {
                     x = i * 160;
-                    currentFont->drawBoundedString(labels[i],
+                    currentFont->DrawBoundedString(labels[i],
                                              g_windowManager->m_screenBitmap,
                                              x, 450, 160, 100, font::TColor(281), 5, -1);
                     switch (i) {
@@ -3593,7 +3593,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                         strcpy(temp, rank);
                         break;
                     }
-                    currentFont->drawBoundedString(temp,
+                    currentFont->DrawBoundedString(temp,
                                              g_windowManager->m_screenBitmap,
                                              x, 540, 160, 50, font::TColor(281), 5, -1);
                 }
@@ -4300,7 +4300,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 
         int wordWidth = 2;
         while (*current && *current != ' ') {
-            wordWidth += g_smallFont->getCharacterWidth(*current);
+            wordWidth += g_smallFont->GetCharacterWidth(*current);
             ++current;
         }
         if (wordWidth > m_textWidth)
@@ -4308,16 +4308,16 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     }
 
     m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
-    int lines = g_smallFont->lineLength(m_text.c_str(), m_textWidth);
-    m_textHeight = g_smallFont->m_fs.m_height * lines;
+    int lines = g_smallFont->LineLength(m_text.c_str(), m_textWidth);
+    m_textHeight = g_smallFont->fs.height * lines;
 
     while (lines > 1 && m_textHeight > m_textWidth * 2 / 3) {
         // Both retail and the Dreamcast delay slot store the grown width
         // before entering min; the clamp is a second assignment.
         m_textWidth = m_textWidth * 3 / 2;
         m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
-        lines = g_smallFont->lineLength(m_text.c_str(), m_textWidth);
-        m_textHeight = g_smallFont->m_fs.m_height * lines;
+        lines = g_smallFont->LineLength(m_text.c_str(), m_textWidth);
+        m_textHeight = g_smallFont->fs.height * lines;
         if (m_textWidth == g_dialogIconMaxTextWidth)
             break;
     }
@@ -4431,16 +4431,16 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
     font* currentFont = g_mediumFont;
     dialogInfo.m_textExpansion = false;
     dialogInfo.m_textWidgetWidth = max(
-        256, currentFont->longestWordLength(dialogInfo.m_dialogText.c_str()));
+        256, currentFont->longest_word_length(dialogInfo.m_dialogText.c_str()));
     int maximumWidth =
-        currentFont->longestLineWidth(dialogInfo.m_dialogText.c_str());
+        currentFont->LongestLineWidth(dialogInfo.m_dialogText.c_str());
     // DC 5282 clears this byte; 5300 sets it after growth and 5308 tests it.
     unsigned char widthChanged;
     do {
         widthChanged = 0;
-        int lines = currentFont->lineLength(dialogInfo.m_dialogText.c_str(),
+        int lines = currentFont->LineLength(dialogInfo.m_dialogText.c_str(),
                                     dialogInfo.m_textWidgetWidth);
-        dialogInfo.m_textWidgetHeight = currentFont->m_fs.m_height * lines;
+        dialogInfo.m_textWidgetHeight = currentFont->fs.height * lines;
         if (maximumWidth <= dialogInfo.m_textWidgetWidth) {
             dialogInfo.m_textWidgetWidth = maximumWidth;
             break;
@@ -4454,7 +4454,7 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
             widthChanged = 1;
         } else {
             dialogInfo.m_textWidgetWidth =
-                currentFont->longestWrappedLineWidth(
+                currentFont->LongestWrappedLineWidth(
                     dialogInfo.m_dialogText.c_str(),
                     dialogInfo.m_textWidgetWidth);
         }
@@ -4896,9 +4896,9 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
     }
 
     if (dialogInfo.m_special == 1) {
-        long textWidth = g_mediumFont->lineWidth(
+        long textWidth = g_mediumFont->LineWidth(
             g_generalText->GetText(GENERAL_TEXT_LEVEL_UP_OR));
-        long textHeight = g_mediumFont->m_fs.m_height;
+        long textHeight = g_mediumFont->fs.height;
         long textX = (dialogInfo.m_width - textWidth) / 2;
         long textY = dialogInfo.m_icons[0].m_textY - textHeight;
         textWidget* special = new textWidget(

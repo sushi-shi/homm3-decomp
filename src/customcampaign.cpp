@@ -2528,13 +2528,13 @@ void TCampaignBrief::MapTextStruct::play()
     int mp3Started = 0;
     int savedVolume = g_config.m_musicVolume;
     long nextScroll = GameTime::get() + g_campaignScrollInterval;
-    int textHeight = g_bigFont->lineLength(m_subtitles.c_str(),
+    int textHeight = g_bigFont->LineLength(m_subtitles.c_str(),
                                             g_campaignSubtitleWidth)
-                      * g_bigFont->m_fs.m_height;
+                      * g_bigFont->fs.height;
 
     Bitmap16Bit* strip = 0;
     int scrollY = 0;
-    int scrollDelay = g_bigFont->m_fs.m_height;
+    int scrollDelay = g_bigFont->fs.height;
     unsigned char videoDone = 0;
     unsigned char redraw = 1;
     const char* music = 0;
@@ -2555,11 +2555,11 @@ void TCampaignBrief::MapTextStruct::play()
         if (textHeight < g_campaignSubtitleHeight)
             textHeight = g_campaignSubtitleHeight;
         strip = new Bitmap16Bit(g_campaignSubtitleWidth,
-                                textHeight + g_bigFont->m_fs.m_height);
+                                textHeight + g_bigFont->fs.height);
         if (!strip)
             memError();
         strip->FillRect(0, 0, strip->GetWidth(), strip->GetHeight(), 0);
-        g_bigFont->drawBoundedString(m_subtitles.c_str(), strip, 0, 0,
+        g_bigFont->DrawBoundedString(m_subtitles.c_str(), strip, 0, 0,
                                      strip->GetWidth(), strip->GetHeight(),
                                      font::TColor(g_campaignSubtitleColor),
                                      font::CENTER_JUSTIFIED, -1);

@@ -672,14 +672,14 @@ void TMultiPlayerWindow::update()
                                 g_windowManager->m_screenBitmap, wx + 0x12,
                                 rowY, 0, 1);
                 int fontColor = isSelected ? 5 : 1;
-                g_smallFont->drawBoundedString(
+                g_smallFont->DrawBoundedString(
                     nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, rowY,
                     0x80, 0x16, font::TColor(fontColor), 5, -1);
-                g_smallFont->drawBoundedString(
+                g_smallFont->DrawBoundedString(
                     userBuf, g_windowManager->m_screenBitmap, wx + 0xad, rowY,
                     0x80, 0x16, font::TColor(fontColor), 5, -1);
                 sprintf(countBuf, "%d", numPlayers);
-                g_smallFont->drawBoundedString(
+                g_smallFont->DrawBoundedString(
                     countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
                     rowY, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
             }

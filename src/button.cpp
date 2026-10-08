@@ -491,7 +491,7 @@ void textButton::draw() const
         drawX = m_x + parent->m_x + 1;
     else
         drawX = m_x + parent->m_x;
-    m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+    m_font->DrawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
                             drawX, drawY, m_width, m_height, font::TColor(color), 5, -1);
 }
 

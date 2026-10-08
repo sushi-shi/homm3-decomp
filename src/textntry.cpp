@@ -291,7 +291,7 @@ int textEntryWidget::onKeyPress(message* msg)
                     strcpy(core, temp);
                     m_cursorIndex++;
                     if (m_type != FIELD_68_SCROLLED) {
-                        if (m_font->lineLength(m_text.c_str(), m_boxWidth) > m_textLines) {
+                        if (m_font->LineLength(m_text.c_str(), m_boxWidth) > m_textLines) {
                             strcpy(core, save);
                             m_cursorIndex--;
                         }
@@ -434,24 +434,24 @@ void textEntryWidget::draw() const
         char shown[600];
         strcpy(shown, m_text.substr(m_displayStart).c_str());
         int len = strlen(shown);
-        while (m_font->lineWidth(shown) > m_boxWidth)
+        while (m_font->LineWidth(shown) > m_boxWidth)
             shown[--len] = 0;
         if (m_hasFocus)
-            m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
+            m_font->DrawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
                 m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, m_cursorIndex);
         else
-            m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
+            m_font->DrawBoundedString(shown, g_windowManager->m_screenBitmap,
                 m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
                 m_boxWidth, m_boxHeight, font::TColor(m_color), m_justify, -1);
     } else if (m_hasFocus) {
-        m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+        m_font->DrawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
             font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
             m_justify, m_cursorIndex);
     } else {
-        m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+        m_font->DrawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
             m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
             m_boxWidth, m_boxHeight,
             font::TColor((m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color),
@@ -481,16 +481,16 @@ void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorInde
         char shown[300];
         for (;;) {
             strcpy(shown, m_text.substr(m_displayStart).c_str());
-            if (m_font->lineWidth(shown) <= m_boxWidth)
+            if (m_font->LineWidth(shown) <= m_boxWidth)
                 break;
             shown[inCursorIndex - m_displayStart + 1] = 0;
-            if (m_font->lineWidth(shown) <= m_boxWidth)
+            if (m_font->LineWidth(shown) <= m_boxWidth)
                 break;
             m_displayStart++;
         }
         if (m_displayStart > 0) {
             strcpy(shown, m_text.substr(m_displayStart - 1).c_str());
-            if (m_font->lineWidth(shown) <= m_boxWidth)
+            if (m_font->LineWidth(shown) <= m_boxWidth)
                 m_displayStart--;
         }
     }

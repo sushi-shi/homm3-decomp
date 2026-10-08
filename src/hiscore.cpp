@@ -709,11 +709,11 @@ void THighScoreWindow::update()
                                    g_windowManager->m_screenBitmap, 0, 0,
                                    false);
 
-    g_mediumFont->drawBoundedString(
+    g_mediumFont->DrawBoundedString(
         g_generalText->GetText(GENERAL_TEXT_HIGH_SCORE_RANK), g_windowManager->m_screenBitmap,
         0x58, 0xb, 0x3a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
-    g_mediumFont->drawBoundedString(
+    g_mediumFont->DrawBoundedString(
         g_generalText->GetText(GENERAL_TEXT_PLAYER), g_windowManager->m_screenBitmap,
         0xa3, 0xb, 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -722,7 +722,7 @@ void THighScoreWindow::update()
         landHeading = g_generalText->GetText(GENERAL_TEXT_LAND);
     else
         landHeading = g_generalText->GetText(GENERAL_TEXT_CAMPAIGN);
-    g_mediumFont->drawBoundedString(
+    g_mediumFont->DrawBoundedString(
         landHeading, g_windowManager->m_screenBitmap,
         0x12f, 0xb, 0xd2, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -732,12 +732,12 @@ void THighScoreWindow::update()
         valueHeading = g_generalText->GetText(GENERAL_TEXT_DAYS);
     else
         valueHeading = g_generalText->GetText(GENERAL_TEXT_HIGH_SCORE_SCORE);
-    g_mediumFont->drawBoundedString(
+    g_mediumFont->DrawBoundedString(
         valueHeading, g_windowManager->m_screenBitmap,
         0x213, 0xb, m_isStandard ? 0x34 : 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     if (m_isStandard) {
-        g_mediumFont->drawBoundedString(
+        g_mediumFont->DrawBoundedString(
             g_generalText->GetText(GENERAL_TEXT_HIGH_SCORE_SCORE), g_windowManager->m_screenBitmap,
             0x259, 0xb, 0x34, 0x1a, font::PRIMARY,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -753,15 +753,15 @@ void THighScoreWindow::update()
 
         sprintf(g_text, DATA_COMPGEN(0x00660a1c, highScoreDecimalFormat, "%d"),
                 i + 1);
-        g_mediumFont->drawBoundedString(
+        g_mediumFont->DrawBoundedString(
             g_text, g_windowManager->m_screenBitmap,
             0x58, y, 0x3a, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
-        g_mediumFont->drawBoundedString(
+        g_mediumFont->DrawBoundedString(
             currentRec.m_playerName, g_windowManager->m_screenBitmap,
             0xa3, y, 0x7a, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
-        g_mediumFont->drawBoundedString(
+        g_mediumFont->DrawBoundedString(
             currentRec.m_land, g_windowManager->m_screenBitmap,
             0x12f, y, 0xd2, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -773,7 +773,7 @@ void THighScoreWindow::update()
             value = currentRec.m_score;
         sprintf(g_text, DATA_COMPGEN(0x00660a1c, highScoreDecimalFormat, "%d"),
                 value);
-        g_mediumFont->drawBoundedString(
+        g_mediumFont->DrawBoundedString(
             g_text, g_windowManager->m_screenBitmap,
             0x213, y, m_isStandard ? 0x34 : 0x7a, 0x1a, font::TColor(color),
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -782,7 +782,7 @@ void THighScoreWindow::update()
             sprintf(g_text,
                     DATA_COMPGEN(0x00660a1c, highScoreDecimalFormat, "%d"),
                     currentRec.m_score);
-            g_mediumFont->drawBoundedString(
+            g_mediumFont->DrawBoundedString(
                 g_text, g_windowManager->m_screenBitmap,
                 0x259, y, 0x34, 0x1a, font::TColor(color),
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);

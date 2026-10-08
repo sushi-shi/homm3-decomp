@@ -452,7 +452,7 @@ void TCombatWindow::combatMessage(const char* newText,
         m_combatMessages.push_back(new std::string(temp));
     } else {
         temp[split] = ' ';
-        if (g_smallFont->lineLength(
+        if (g_smallFont->LineLength(
                 temp.c_str(), m_controlSubWindow->m_rolloverWidget->m_width) < 2) {
             m_combatMessages.push_back(new std::string(temp));
         } else {

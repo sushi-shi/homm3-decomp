@@ -6091,7 +6091,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
                 lineStart = g_text;
             } else {
                 strcat(g_text, DATA_COMPGEN(0x00660db4, commaText, ","));
-                if (currentFont->getStringWidth(lineStart) > m_rolloverText->m_width) {
+                if (currentFont->get_string_width(lineStart) > m_rolloverText->m_width) {
                     namePos[-1] = '\n';
                     lineStart = namePos;
                 }
@@ -6100,7 +6100,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
             ++count;
             namePos = lineStart + strlen(lineStart);
             strcat(g_text, getBuildingName(currentTown->m_type, j));
-            if (currentFont->getStringWidth(lineStart) > m_rolloverText->m_width) {
+            if (currentFont->get_string_width(lineStart) > m_rolloverText->m_width) {
                 namePos[-1] = '\n';
                 lineStart = namePos;
             }

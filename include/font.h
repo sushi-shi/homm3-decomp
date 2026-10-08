@@ -34,30 +34,30 @@ public:
         // because other lanes' sources already spell them that way; the
         // identity is recorded rather than renamed.
         struct myABC {
-            int m_abcA;
-            unsigned int m_abcB;
-            int m_abcC;
+            int abcA;
+            unsigned int abcB;
+            int abcC;
         };
 
-        unsigned char m_first;
-        unsigned char m_last;
-        unsigned char m_depth;
-        char m_xspace;
-        char m_yspace;
+        unsigned char first;
+        unsigned char last;
+        unsigned char depth;
+        char xspace;
+        char yspace;
         // Glyph row count (DrawCharacter's outer loop bound).
-        unsigned char m_height;
+        unsigned char height;
         // The signed vertical bearing DrawStringExecute adds to `y`
         // before clipping - retail reads it with
         // `movsx eax, byte ptr [esi+0x22]`.
-        char m_baseyoffset;
+        char baseyoffset;
         // Aligns numpal at +8 after seven byte fields.
-        char m_pad;
-        unsigned long m_numpal;
-        unsigned short* m_pal[5];
-        myABC m_abc[256];
+        char pad;
+        unsigned long numpal;
+        unsigned short* pal[5];
+        myABC abc[256];
         // Per-character offsets into `data` (DrawCharacter indexes this
         // at font+0xc3c).
-        unsigned long m_offset[256];
+        unsigned long Offset[256];
     };
     SIZE(TFontSpec, 0x1020);
     // Glyph pixel encoding (byte-derived from DrawCharacter 0x4b51a0):
@@ -103,16 +103,16 @@ public:
         CUSTOM_COLOR = 256
     };
     // DC LF_MEMBER `fs`, offset 28.
-    TFontSpec m_fs;
+    TFontSpec fs;
 
 private:
     // DC LF_MEMBER `Palette`, offset 4156 = 0x103c, held BY VALUE - the
     // retail constructor 0x4b5070 runs TPalette16's default constructor
     // on this+0x103c as a member initializer (unwind state 1, funclet
     // 0x62b4d8 destroys exactly this subobject).
-    TPalette16 m_palette;
+    TPalette16 Palette;
     // DC LF_MEMBER `Data`.
-    void* m_data;
+    void* Data;
 
 public:
     // The glyph payload's byte count, byte-proven by GetSize below: the
@@ -127,24 +127,24 @@ public:
          unsigned char* d);  // retail 0x4b5070
     virtual ~font();
     virtual unsigned int getSize() const;
-    void setPalette(const TPalette16& newPalette);
-    void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
-    void drawString(const char* text, Bitmap16Bit* bitmap, int x, int y, TColor color);
-    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
-    int lineLength(const char* str, int boxWidth) const;
-    int lineWidth(const char* text) const;
-    int longestLineWidth(const char* str) const;
-    int longestWrappedLineWidth(const char* str, int boxWidth) const;
-    int longestWordLength(const char* str) const;
-    int getCharacterWidth(unsigned char currChar) const;
+    void SetPalette(const TPalette16& newPalette);
+    void DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
+    void DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, TColor color);
+    void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
+    int LineLength(const char* str, int boxWidth) const;
+    int LineWidth(const char* text) const;
+    int LongestLineWidth(const char* str) const;
+    int LongestWrappedLineWidth(const char* str, int boxWidth) const;
+    int longest_word_length(const char* str) const;
+    int GetCharacterWidth(unsigned char currChar) const;
     // Original DrawCursor, font.cpp:123; ordinary member, expanded in retail.
-    void drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
+    void DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
                     int clipX, int clipY, int clipWidth, int clipHeight,
                     bool highlighted);
-    long getStringWidth(const char* arg) const;
+    long get_string_width(const char* arg) const;
 
 private:
-    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+    void DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
 
 public:
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
@@ -156,7 +156,7 @@ public:
 
 private:
     // Original GetColor, font.cpp:56; ordinary member.
-    int getColor(font::TColor colorScheme, bool highlighted);
+    int GetColor(font::TColor colorScheme, bool highlighted);
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1

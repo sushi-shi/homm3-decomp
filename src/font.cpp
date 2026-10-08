@@ -9,7 +9,7 @@
 
 // Original: font::font; font.cpp:33
 DC_ADDRESS(0x0a1ba8, 0x5c)
-font::font() : resource("", RESOURCE_TYPE_FONT), m_data(0)
+font::font() : resource("", RESOURCE_TYPE_FONT), Data(0)
 {
 }
 
@@ -22,12 +22,12 @@ DC_ADDRESS(0x0a1c04, 0x90)
 MAC_ADDRESS(0x0c8cdc, 0xb8)  // anchor-global
 font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
            unsigned char* d)
-    : resource(name, RESOURCE_TYPE_FONT), m_fs(fontspec)
+    : resource(name, RESOURCE_TYPE_FONT), fs(fontspec)
 {
-    m_data = new unsigned char[dsize];
+    Data = new unsigned char[dsize];
     m_dataSize = dsize;
-    if (m_data)
-        memcpy(m_data, d, dsize);
+    if (Data)
+        memcpy(Data, d, dsize);
 }
 
 // Mac 0:0xc8dc8 uses array delete for the new[] glyph buffer.
@@ -36,8 +36,8 @@ DC_ADDRESS(0x0a1c94, 0x4e)
 MAC_ADDRESS(0x0c8d94, 0x7c)
 font::~font()
 {
-    if (m_data)
-        delete[] m_data;
+    if (Data)
+        delete[] Data;
 }
 
 // E:\gamedcs\font.cpp:56..76. Original name: GetColor.
@@ -46,7 +46,7 @@ font::~font()
 // color test and palette bias. Keep the shared return and nested highlight.
 DC_ADDRESS(0x0a1ce4, 0x30)
 MAC_ADDRESS(0x0c8e10, 0x3c)
-int font::getColor(font::TColor colorScheme, bool highlighted)
+int font::GetColor(font::TColor colorScheme, bool highlighted)
 {
     int color;
     if (!(colorScheme & CUSTOM_COLOR)) {
@@ -65,38 +65,38 @@ int font::getColor(font::TColor colorScheme, bool highlighted)
 VA(0x004b5180, 0x16)
 DC_ADDRESS(0x0a1d14, 0x44)
 MAC_ADDRESS(0x0c8e4c, 0x24)  // anchor-global
-void font::setPalette(const TPalette16& newPalette)
+void font::SetPalette(const TPalette16& newPalette)
 {
     // DC82 calls the reference copy assignment; Complete 0x4b5180 calls
     // the retained pointer assignment at 0x522910, which copies palette
     // data through that canonical overload. Keep the source's ref formal.
-    m_palette = &newPalette;
+    Palette = &newPalette;
 }
 
 VA(0x004b51a0, 0xA9)
 DC_ADDRESS(0x0a1d58, 0xd6)
 MAC_ADDRESS(0x0c8e70, 0xd0)
-void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
+void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
 {
     if (c < 0)
         return;
     if (c >= 256)
         return;
-    int width = m_fs.m_abc[c].m_abcB;
-    int height = m_fs.m_height;
-    unsigned char* src = static_cast<unsigned char*>(m_data) + m_fs.m_offset[c];
+    int width = fs.abc[c].abcB;
+    int height = fs.height;
+    unsigned char* src = static_cast<unsigned char*>(Data) + fs.Offset[c];
     unsigned char* dst = static_cast<unsigned char*>(
                              static_cast<void*>(bmp->GetMap(0, 0)))
-                         + y * bmp->GetPitch() + 2 * (x + m_fs.m_abc[c].m_abcA);
+                         + y * bmp->GetPitch() + 2 * (x + fs.abc[c].abcA);
     for (int row = 0; row < height; row++) {
         unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(dst));
         for (int col = 0; col < width; col++) {
             unsigned char pix = *src++;
             if (pix != 0) {
                 if (pix == GLYPH_PIXEL_SOLID)
-                    *out = m_palette.Palette[color];
+                    *out = Palette.Palette[color];
                 else
-                    *out = m_palette.Palette[32];
+                    *out = Palette.Palette[32];
             }
             out++;
         }
@@ -117,18 +117,18 @@ unsigned int font::getSize() const
 // call sites. The decorated bool (_N) remains the highlight interface.
 DC_ADDRESS(0x0a1e30, 0x2c)
 MAC_ADDRESS(0x0c8f40, 0x44)
-void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
+void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
                       int clipX, int clipY, int clipWidth, int clipHeight,
                       bool highlighted)
 {
-    drawCharacter('_', bitmap, x, y, color + highlighted);
+    DrawCharacter('_', bitmap, x, y, color + highlighted);
 }
 
 // E:\gamedcs\font.cpp:138
 VA(0x004b5260, 0x22E)
 DC_ADDRESS(0x0a1e5c, 0x240)
 MAC_ADDRESS(0x0c8f90, 0x2a8)
-void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
+void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
                              int x, int y, font::TColor colorScheme, int clipX,
                              int clipY, int clipWidth, int clipHeight,
                              int cursorPos)
@@ -137,27 +137,27 @@ void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
     bool highlighted;
     unsigned char c;
 
-    y += m_fs.m_baseyoffset;
-    if (*text && m_fs.m_abc[static_cast<unsigned char>(*text)].m_abcA < 0)
-        x -= m_fs.m_abc[static_cast<unsigned char>(*text)].m_abcA;
+    y += fs.baseyoffset;
+    if (*text && fs.abc[static_cast<unsigned char>(*text)].abcA < 0)
+        x -= fs.abc[static_cast<unsigned char>(*text)].abcA;
 
     if (y < clipY)
         return;
-    if (y + m_fs.m_height > clipY + clipHeight)
+    if (y + fs.height > clipY + clipHeight)
         return;
 
     while (count > 0) {
-        if (x + m_fs.m_abc[static_cast<unsigned char>(*text)].m_abcA >= clipX)
+        if (x + fs.abc[static_cast<unsigned char>(*text)].abcA >= clipX)
             break;
-        x += getCharacterWidth(*text);
+        x += GetCharacterWidth(*text);
         text++;
         count--;
     }
 
-    const int color = getColor(colorScheme, false);
+    const int color = GetColor(colorScheme, false);
 
     if (count == 0 && cursorPos != -1) {
-        drawCursor(bitmap, x, y, color, clipX, clipY,
+        DrawCursor(bitmap, x, y, color, clipX, clipY,
                    clipWidth, clipHeight, false);
         return;
     }
@@ -171,26 +171,26 @@ void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
         } else if (c == '}') {
             highlighted = 0;
         } else {
-            if (x + getCharacterWidth(c) > clipX + clipWidth)
+            if (x + GetCharacterWidth(c) > clipX + clipWidth)
                 break;
             switch (colorScheme) {
             case PRIMARY:
             case WHITE:
             case HEADING:
             case WHITE_PLAYER:
-                drawCharacter(c, bitmap, x, y, color + highlighted);
+                DrawCharacter(c, bitmap, x, y, color + highlighted);
                 if (cursorPos == currPos)
-                    drawCursor(bitmap, x, y, color, clipX, clipY,
+                    DrawCursor(bitmap, x, y, color, clipX, clipY,
                    clipWidth, clipHeight, false);
                 break;
             default:
-                drawCharacter(c, bitmap, x, y, color + highlighted);
+                DrawCharacter(c, bitmap, x, y, color + highlighted);
                 if (cursorPos == currPos)
-                    drawCursor(bitmap, x, y, color, clipX, clipY,
+                    DrawCursor(bitmap, x, y, color, clipX, clipY,
                    clipWidth, clipHeight, false);
                 break;
             }
-            x += getCharacterWidth(c);
+            x += GetCharacterWidth(c);
         }
         text++;
         count--;
@@ -198,16 +198,16 @@ void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
     }
 
     if (cursorPos == currPos)
-        drawCursor(bitmap, x, y, color, clipX, clipY,
+        DrawCursor(bitmap, x, y, color, clipX, clipY,
                    clipWidth, clipHeight, highlighted);
 }
 
 // Original: font::DrawString; font.cpp:246
 DC_ADDRESS(0x0a209c, 0x6a)
-void font::drawString(const char* text, Bitmap16Bit* bitmap,
+void font::DrawString(const char* text, Bitmap16Bit* bitmap,
                       int x, int y, TColor color)
 {
-    drawStringExecute(text, strlen(text), bitmap, x, y, color,
+    DrawStringExecute(text, strlen(text), bitmap, x, y, color,
                       0, 0, bitmap->GetWidth(), bitmap->GetHeight(), -1);
 }
 
@@ -253,7 +253,7 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
 VA(0x004b5490, 0x308)
 DC_ADDRESS(0x0a2108, 0x316)
 MAC_ADDRESS(0x0c9238, 0x3c8)  // anchor-global
-void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
+void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
                              font::TColor colorScheme, unsigned justification,
                              int cursorPos)
@@ -272,7 +272,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     pos = 0;
     if (limit == 0) {
         if (cursorPos != -1) {
-            drawCursor(bitmap, x, y, getColor(colorScheme, false),
+            DrawCursor(bitmap, x, y, GetColor(colorScheme, false),
                        x, y, boxWidth, boxHeight, false);
         }
         return;
@@ -282,8 +282,8 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         int total;
 
         justification &= ~VERT_CENTER_JUSTIFIED;
-        height = m_fs.m_height;
-        total = lineLength(str, boxWidth) * height;
+        height = fs.height;
+        total = LineLength(str, boxWidth) * height;
         if (total < boxHeight)
             currY = (boxHeight - total) / 2;
         else if (boxHeight < height * 2)
@@ -293,7 +293,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         int total;
 
         justification &= ~BOTTOM_JUSTIFIED;
-        total = lineLength(str, boxWidth) * m_fs.m_height;
+        total = LineLength(str, boxWidth) * fs.height;
         if (total < boxHeight)
             currY = boxHeight - total;
     }
@@ -306,7 +306,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 
         if (str[pos] == 0)
             return;
-        height = m_fs.m_height;
+        height = fs.height;
         if (currY + height > boxHeight && currY != 0)
             return;
         width = 0;
@@ -314,23 +314,23 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         while (str[pos] == '{' || str[pos] == '}')
             ++pos;
         if (str[pos] != 0
-            && m_fs.m_abc[static_cast<unsigned char>(str[pos])].m_abcA < 0)
-            width = -m_fs.m_abc[str[pos]].m_abcA;
+            && fs.abc[static_cast<unsigned char>(str[pos])].abcA < 0)
+            width = -fs.abc[str[pos]].abcA;
         while (str[pos] != 0 && str[pos] != '\n' && width <= boxWidth) {
             if (str[pos] != '{' && str[pos] != '}')
-                width += getCharacterWidth(str[pos]);
+                width += GetCharacterWidth(str[pos]);
             ++pos;
         }
         k = pos - 1;
         while ((str[k] == '{' || str[k] == '}') && k > lineStart)
             --k;
-        if (pos > 0 && m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
-            width -= m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC;
+        if (pos > 0 && fs.abc[static_cast<unsigned char>(str[k])].abcC < 0)
+            width -= fs.abc[static_cast<unsigned char>(str[k])].abcC;
         if (width > boxWidth) {
             int origPixelWidth = width;
             int okWidthIndex = 0;
-            if (m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
-                width += m_fs.m_abc[str[k]].m_abcC;
+            if (fs.abc[static_cast<unsigned char>(str[k])].abcC < 0)
+                width += fs.abc[str[k]].abcC;
             pos = k;
             for (;;) {
                 if (str[pos] == ' ')
@@ -338,7 +338,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                 if (pos < lineStart)
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
-                    width -= getCharacterWidth(str[pos]);
+                    width -= GetCharacterWidth(str[pos]);
                     if (currY + 2 * height > boxHeight && width < boxWidth)
                         break;
                     if (okWidthIndex == 0 && width < boxWidth)
@@ -351,7 +351,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                 width = origPixelWidth;
             }
             if (str[pos] == ' ')
-                width -= getCharacterWidth(' ');
+                width -= GetCharacterWidth(' ');
         }
         currX = 0;
         switch (justification) {
@@ -365,10 +365,10 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
             currX = boxWidth - width;
             break;
         }
-        drawStringExecute(str + lineStart, pos - lineStart, bitmap, x + currX,
+        DrawStringExecute(str + lineStart, pos - lineStart, bitmap, x + currX,
                           y + currY, colorScheme, x, y, boxWidth, boxHeight,
                           cursorPos);
-        currY += m_fs.m_height;
+        currY += fs.height;
         ++pos;
     }
 }
@@ -377,27 +377,27 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 VA(0x004b57a0, 0x25)
 DC_ADDRESS(0x0a2420, 0x18)
 MAC_ADDRESS(0x0c9600, 0x28)
-int font::getCharacterWidth(unsigned char currChar) const
+int font::GetCharacterWidth(unsigned char currChar) const
 {
-    const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
-    return record->m_abcA + record->m_abcB + record->m_abcC;
+    const TFontSpec::myABC* record = &fs.abc[currChar];
+    return record->abcA + record->abcB + record->abcC;
 }
 
 VA(0x004b57d0, 0x44)
 DC_ADDRESS(0x0a2438, 0x34)
 MAC_ADDRESS(0x0c9628, 0x68)
-long font::getStringWidth(const char* arg) const
+long font::get_string_width(const char* arg) const
 {
     long width = 0;
     for (const char* p = arg; *p;)
-        width += getCharacterWidth(*p++);
+        width += GetCharacterWidth(*p++);
     return width;
 }
 
 VA(0x004b5820, 0xF2)
 DC_ADDRESS(0x0a246c, 0xe6)
 MAC_ADDRESS(0x0c9690, 0x14c)
-int font::lineLength(const char* str, int boxWidth) const
+int font::LineLength(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
     int count = 0;
@@ -407,7 +407,7 @@ int font::lineLength(const char* str, int boxWidth) const
         int lineStart = pos;
         while (str[pos] != 0 && str[pos] != '\n' && width <= boxWidth) {
             if (str[pos] != '{' && str[pos] != '}')
-                width += getCharacterWidth(str[pos]);
+                width += GetCharacterWidth(str[pos]);
             pos++;
         }
         if (width > boxWidth) {
@@ -419,7 +419,7 @@ int font::lineLength(const char* str, int boxWidth) const
                 if (pos < lineStart)
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
-                    width -= getCharacterWidth(str[pos]);
+                    width -= GetCharacterWidth(str[pos]);
                     if (candidate == 0 && width < boxWidth)
                         candidate = pos;
                 }
@@ -427,7 +427,7 @@ int font::lineLength(const char* str, int boxWidth) const
             if (pos <= lineStart)
                 pos = candidate;
             if (str[pos] == ' ')
-                width -= getCharacterWidth(' ');
+                width -= GetCharacterWidth(' ');
         }
         pos++;
         count++;
@@ -438,7 +438,7 @@ int font::lineLength(const char* str, int boxWidth) const
 VA(0x004b5920, 0x64)
 DC_ADDRESS(0x0a2554, 0x74)
 MAC_ADDRESS(0x0c97dc, 0xac)
-int font::lineWidth(const char* text) const
+int font::LineWidth(const char* text) const
 {
     int len = strlen(text);
     int idx = 0;
@@ -446,7 +446,7 @@ int font::lineWidth(const char* text) const
     while (idx < len && text[idx] != 0) {
         while (text[idx] != 0 && text[idx] != '\n') {
             if (text[idx] != '{' && text[idx] != '}')
-                width += getCharacterWidth(text[idx]);
+                width += GetCharacterWidth(text[idx]);
             idx++;
         }
     }
@@ -458,7 +458,7 @@ int font::lineWidth(const char* text) const
 VA(0x004b5990, 0x76)
 DC_ADDRESS(0x0a25c8, 0x86)
 MAC_ADDRESS(0x0c9888, 0xc4)
-int font::longestLineWidth(const char* str) const
+int font::LongestLineWidth(const char* str) const
 {
     int len = strlen(str);
     int pos = 0;
@@ -467,7 +467,7 @@ int font::longestLineWidth(const char* str) const
         int lineWidth = 0;
         while (str[pos] != 0 && str[pos] != '\n') {
             if (str[pos] != '{' && str[pos] != '}')
-                lineWidth += getCharacterWidth(str[pos]);
+                lineWidth += GetCharacterWidth(str[pos]);
             pos++;
         }
         if (lineWidth > best)
@@ -480,7 +480,7 @@ int font::longestLineWidth(const char* str) const
 VA(0x004b5a10, 0x6F)
 DC_ADDRESS(0x0a2650, 0x84)
 MAC_ADDRESS(0x0c994c, 0xd4)
-int font::longestWordLength(const char* str) const
+int font::longest_word_length(const char* str) const
 {
     int best = 0;
     const char* p = str;
@@ -491,7 +491,7 @@ int font::longestWordLength(const char* str) const
                 p++;
             while (*p != 0 && *p != ' ' && *p != '\n') {
                 if (*p != '{' && *p != '}')
-                    wordWidth += getCharacterWidth(*p);
+                    wordWidth += GetCharacterWidth(*p);
                 p++;
             }
             if (wordWidth > best)
@@ -504,7 +504,7 @@ int font::longestWordLength(const char* str) const
 VA(0x004b5a80, 0x110)
 DC_ADDRESS(0x0a26d4, 0xf0)
 MAC_ADDRESS(0x0c9a20, 0x158)
-int font::longestWrappedLineWidth(const char* str, int boxWidth) const
+int font::LongestWrappedLineWidth(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
     int maxWidth = 0;
@@ -518,7 +518,7 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
             if (width > boxWidth)
                 break;
             if (str[pos] != '{' && str[pos] != '}')
-                width += getCharacterWidth(str[pos]);
+                width += GetCharacterWidth(str[pos]);
             pos++;
         }
         if (width > boxWidth) {
@@ -530,7 +530,7 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
                 if (pos < lineStart)
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
-                    width -= getCharacterWidth(str[pos]);
+                    width -= GetCharacterWidth(str[pos]);
                     if (candidate == 0 && width < boxWidth)
                         candidate = pos;
                 }
@@ -539,7 +539,7 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
             if (pos <= lineStart)
                 pos = candidate;
             if (str[pos] == ' ')
-                width -= getCharacterWidth(' ');
+                width -= GetCharacterWidth(' ');
         }
         if (width > maxWidth)
             maxWidth = width;
@@ -576,7 +576,7 @@ void font::fillLinesVector(const char* str, int boxWidth,
     while (*p != 0) {
         spaceWidth = 0;
         spaceCount = 0;
-        int blankWidth = getCharacterWidth(' ');
+        int blankWidth = GetCharacterWidth(' ');
         while (*p == ' ' || *p == '\n') {
             if (*p == '\n') {
                 result.push_back(line);
@@ -593,7 +593,7 @@ void font::fillLinesVector(const char* str, int boxWidth,
         wordWidth = 0;
         wordEnd = p;
         while (*wordEnd != 0 && *wordEnd != ' ' && *wordEnd != '\n') {
-            wordWidth += getCharacterWidth(*wordEnd);
+            wordWidth += GetCharacterWidth(*wordEnd);
             wordEnd++;
         }
         if (spaceWidth + wordWidth + lineWidth > boxWidth) {
@@ -606,7 +606,7 @@ void font::fillLinesVector(const char* str, int boxWidth,
             spaceWidth = 0;
             while (wordWidth > boxWidth) {
                 while (*p != 0 && *p != ' ' && *p != '\n') {
-                    int charWidth = getCharacterWidth(*p);
+                    int charWidth = GetCharacterWidth(*p);
                     if (lineWidth + charWidth > boxWidth)
                         break;
                     line += *p;

@@ -197,12 +197,12 @@ void CTextDialog::calcDimensions(const char* text, font* currentFont,
                                  int& winX, int& winY,
                                  int& winWidth, int& winHeight)
 {
-    int lines = currentFont->lineLength(text, 344);
-    winHeight = currentFont->m_fs.m_height;
+    int lines = currentFont->LineLength(text, 344);
+    winHeight = currentFont->fs.height;
     winHeight *= lines;
-    winWidth = currentFont->longestLineWidth(text);
+    winWidth = currentFont->LongestLineWidth(text);
     if (winWidth > 344)
-        winWidth = currentFont->longestWrappedLineWidth(text, 344);
+        winWidth = currentFont->LongestWrappedLineWidth(text, 344);
 
     winWidth = ((winWidth + EDGE_SIZE - 1) & ~(EDGE_SIZE - 1)) + 40;
     winHeight += 40;
