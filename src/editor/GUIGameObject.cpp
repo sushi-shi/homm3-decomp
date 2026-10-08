@@ -1089,8 +1089,8 @@ TColor TGUIGameObject::miniMapColor(TTerrainType terrainType) const
     assert(terrainType >= 0 && terrainType < kNumTerrainTypes);
     static const TMiniMapTypeFlags typeFlags;
     if (typeFlags[getType()])
-        return akTerrainColors[terrainType][1];
-    return akTerrainColors[terrainType][0];
+        return akTerrainColors[terrainType].m_obstacleColor;
+    return akTerrainColors[terrainType].m_color;
 }
 
 bool TGUIGameObject::isAnimated() const

@@ -11,11 +11,11 @@
 #include "editor/Tile.h"
 
 namespace {
-unsigned short aTerrainColorsImp[10][2];
+TTerrainColors aTerrainColorsImp[10];
 unsigned short aPlayerColorImp[9];
 }
 
-const unsigned short (* const akTerrainColors)[2] = aTerrainColorsImp;
+const TTerrainColors* const akTerrainColors = aTerrainColorsImp;
 const unsigned short* const akPlayerColor = aPlayerColorImp;
 
 void initColors()
@@ -25,8 +25,8 @@ void initColors()
         assert(akGroundTilesetTraits[ tilesetNum ].m_pSprite != NULL);
         const unsigned short* aColors = akGroundTilesetTraits[tilesetNum].m_pSprite->GetPalette();
         assert(aColors != NULL);
-        aTerrainColorsImp[tilesetNum][0] = aColors[8];
-        aTerrainColorsImp[tilesetNum][1] = aColors[9];
+        aTerrainColorsImp[tilesetNum].m_color = aColors[8];
+        aTerrainColorsImp[tilesetNum].m_obstacleColor = aColors[9];
     }
     TPalette16* pPalette = ResourceManager::GetPalette("game.pal", false);
     if (!pPalette)
