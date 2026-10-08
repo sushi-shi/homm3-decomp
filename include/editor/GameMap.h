@@ -451,6 +451,12 @@ public:
     // Walks a layer's placed objects in link order.
     class TObjectIDIter : public forward_iterator<TMapLayerObjectID, ptrdiff_t> {
     public:
+        bool operator==(const TObjectIDIter& other) const
+        {
+            return _m_pLayer == other._m_pLayer && _m_objID == other._m_objID;
+        }
+        bool operator!=(const TObjectIDIter& other) const { return !(*this == other); }
+
         TObjectIDIter(const TLayer* pLayer, unsigned int objID) : _m_pLayer(pLayer), _m_objID(objID) {}
 
         TMapLayerObjectID operator*() const { return _m_objID; }
@@ -465,11 +471,6 @@ public:
             ++*this;
             return result;
         }
-        bool operator==(const TObjectIDIter& other) const
-        {
-            return _m_pLayer == other._m_pLayer && _m_objID == other._m_objID;
-        }
-        bool operator!=(const TObjectIDIter& other) const { return !(*this == other); }
 
     private:
         const TLayer* _m_pLayer;
