@@ -314,6 +314,12 @@ public:
     class TClient;
     class TObjectFactory;
 
+    // importText's failure: a section, a frame line or an object header
+    // that does not read back (the rumor, timed event and object failures
+    // are translated to it).
+    class TImportTextFailure : public exception {
+    };
+
     enum TSize {
         s_kNumSizes = 4
     };
