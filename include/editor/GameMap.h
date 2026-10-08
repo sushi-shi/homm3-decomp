@@ -9,17 +9,18 @@
 //
 // Declared so far: the members the matched code of GameMap.cpp proves
 // with their mangled signatures and __PRETTY_FUNCTION__ return types.
-// getAvailableHeroesInClass and getAvailableHeroOwnersMask return a class
-// by value whose type is not recovered yet; they are left out, as are the
-// hero notifications and isHeroOnMap until THeroClass/THeroID come with the
-// RoE herodefs.h.
+// getAvailableHeroesInClass returns the set of free prototype numbers of a
+// class, getAvailableHeroOwnersMask a bitset indexed by player (its users
+// test `getAvailableHeroOwnersMask()[ _m_owner ]`).
 #ifndef HOMM3_EDITOR_GAMEMAP_H
 #define HOMM3_EDITOR_GAMEMAP_H
 
+#include <bitset>
 #include <set>
 #include <string>
 #include <vector>
 
+#include "herodefs.h"
 #include "terrain_type.h"
 #include "editor/Array.h"
 #include "editor/Player.h"
@@ -209,11 +210,20 @@ public:
     bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
                               TTileExtent* pUpdatedExtent);
     void onObjectRemoved();
+    void onHeroAdded(const THero& hero);
+    void onRemovingHero(const THero& hero);
+    void onHeroProtoChanged(THeroClass heroClass, unsigned int oldProtoNum, unsigned int newProtoNum);
+    void onHeroClassChanged(THeroClass oldHeroClass, unsigned int oldProtoNum, THeroClass newHeroClass,
+                            unsigned int newProtoNum);
+    void onHeroOwnerChanged(const THero& hero, TPlayer oldOwner);
     void onTownOwnerChanged(const TTown& town, bool bSecondLayer, unsigned int objID, TPlayer oldOwner);
 
     TGameObject* createObject(const TObjectType& objType, TPlayer player, void* (*pfnAllocator)(unsigned int)) const;
     TGameObject* reconstructObject(streambuf* pStreamBuf, int version, void* (*pfnAllocator)(unsigned int)) const;
     bool canCreate(const TObjectType& objType, TPlayer player) const;
+    bool isHeroOnMap(THeroID heroID) const;
+    set<unsigned int> getAvailableHeroesInClass(THeroClass heroClass) const;
+    bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
     const set<TMapObjectRef>& getPlayerTownRefs(TPlayer player) const;
     unsigned int getNumTownsOnMap() const;
     bool isGrailOnMap() const;
