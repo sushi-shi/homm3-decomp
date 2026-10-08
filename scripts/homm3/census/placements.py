@@ -51,6 +51,7 @@ import bisect
 import struct
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 from homm3.core import common, paths
 
@@ -145,17 +146,30 @@ def _vtable_slots(obj):
 GAME_COMPGEN = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
 
 
-def _compgen_names(path, unit: str) -> dict[str, str]:
+def _owner_compgen(source: str) -> Path:
+    """The compiler-function claims of the image that owns a shared source:
+    the game's, or those of the image whose source tree holds it (built
+    before this one by `homm3 build`)."""
+    from homm3.core import images
+    for key in images.images(paths.ROOT)[1:]:
+        tree = paths.ROOT / "src" / images.source_dir(key, paths.ROOT)
+        if tree in (paths.ROOT / source).parents:
+            return paths.ROOT / images.path("build/gen/compgen_claims.tsv", key)
+    return GAME_COMPGEN
+
+
+def _compgen_names(path, unit: str, source: str) -> dict[str, str]:
     """{volatile `$E` symbol: `__h3cg$` name} of a shared unit's object: the
-    game's claims for the unit, bound by the comparison's relocation roles
-    (homm3.compare.canonicalize) and unsized, since this image's compile
-    need not give the game's body sizes."""
+    owning image's claims for the unit, bound by the comparison's relocation
+    roles (homm3.compare.canonicalize) and unsized, since this image's
+    compile need not give the owner's body sizes."""
     import warnings
     from homm3.compare import canonicalize as canon
-    if not GAME_COMPGEN.is_file():
+    claims_path = _owner_compgen(source)
+    if not claims_path.is_file():
         return {}
     claims = tuple(canon.CompgenClaim(c.name, c.kind, c.owner, 0)
-                   for c in canon.load_compgen_claims(GAME_COMPGEN, unit))
+                   for c in canon.load_compgen_claims(claims_path, unit))
     if not claims:
         return {}
     coff = canon.CoffObject(path.read_bytes())
@@ -189,10 +203,13 @@ def derive(log=print, want_suggestions=False):
     base = image.image_base
     retail = paths.retail_dir()
     functions = {r["rva"]: r["size"] for r in censuses.functions(retail / "functions.tsv")}
-    # statically linked library code is named by the runtime map, never placed
+    # statically linked library code is named by the runtime map, never
+    # placed, and a name the runtime map gives one address reaches no other
     from homm3.retail_labels import providers
+    library_names = set()
     for claim in providers.runtime_map(retail / "runtime-map.tsv"):
         functions.pop(claim.rva, None)
+        library_names.add(claim.name)
     vtables = censuses.vtables(retail / "vtables.tsv")
     vt_by_class = {r["class"]: r for r in vtables if r["class"]}
 
@@ -211,8 +228,12 @@ def derive(log=print, want_suggestions=False):
 
     units = manifest.units(paths.manifest())
     # the image's own units spell their addresses in VA()/DATA(); their
-    # placements are suggestions for that source, never table rows
+    # placements are suggestions for that source, never table rows. A unit
+    # the game or another image owns is shared.
+    from homm3.core import images
     shared_sources = {u["source"] for u in manifest.units(paths.manifest("game"))}
+    shared_sources |= {u["source"] for u in units
+                       if images.foreign(paths.ROOT / u["source"], paths.ROOT)}
     owned = {u["unit"] for u in units if u["source"] not in shared_sources}
     compiled = []                         # (unit, name, body, relocs)
     definers = defaultdict(list)          # function name -> units, manifest order
@@ -224,7 +245,8 @@ def derive(log=print, want_suggestions=False):
             log(f"[placements] {unit['unit']}: no object at {path}; build it first")
             continue
         obj = Obj(path)
-        semantic = _compgen_names(path, unit["unit"]) if unit["source"] in shared_sources else {}
+        semantic = (_compgen_names(path, unit["unit"], unit["source"])
+                    if unit["source"] in shared_sources else {})
         for name, _sec, _off, body, relocs in _functions_of(obj):
             name = semantic.get(name, name)
             relocs = {site: (semantic.get(ref, ref), kind) for site, (ref, kind) in relocs.items()}
@@ -547,7 +569,7 @@ def derive(log=print, want_suggestions=False):
 
     rows, conflicts = [], 0
     for name, rvas in sorted(names.items()):
-        if len(rvas) != 1:
+        if len(rvas) != 1 or name in library_names:
             conflicts += 1
             continue
         (rva,) = rvas

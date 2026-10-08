@@ -21,6 +21,12 @@ name = "GOG Complete map editor"
 image = true
 path = "build/orig/h3maped.exe"
 sources = "editor"
+
+[inputs.h3ccmped]
+name = "GOG Complete campaign editor"
+image = true
+path = "build/orig/h3ccmped.exe"
+sources = "campaign_editor"
 """
 
 
@@ -42,8 +48,17 @@ class ImagesTest(unittest.TestCase):
         with patch.dict(os.environ, {images.IMAGE_ENV: "h3maped"}):
             self.assertFalse(any(images.foreign(p, self.root) for p in editor + shared))
 
+    def test_a_third_image_shares_another_images_tree(self):
+        editor = [self.root / "src/editor/Player.cpp", self.root / "include/editor/Player.h"]
+        campaign = [self.root / "src/campaign_editor/CampaignDoc.cpp"]
+        with patch.dict(os.environ, {images.IMAGE_ENV: "h3ccmped"}):
+            self.assertTrue(all(images.foreign(p, self.root) for p in editor))
+            self.assertFalse(any(images.foreign(p, self.root) for p in campaign))
+        with patch.dict(os.environ, {images.IMAGE_ENV: "h3maped"}):
+            self.assertTrue(all(images.foreign(p, self.root) for p in campaign))
+
     def test_only_image_pins_are_images(self):
-        self.assertEqual(images.images(self.root), ["game", "h3maped"])
+        self.assertEqual(images.images(self.root), ["game", "h3maped", "h3ccmped"])
 
     def test_selection_defaults_to_the_game_and_rejects_unknown_keys(self):
         with patch.dict(os.environ, {}, clear=False):

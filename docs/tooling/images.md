@@ -19,6 +19,7 @@ on the game exactly as before.
 | --- | --- | --- |
 | `game` | GOG Complete 4.0 `HEROES3.EXE` | `/O2 /Ob2 /Oy- /Op /MT /Gr /GX` |
 | `h3maped` | GOG Complete 4.0 `h3maped.exe` (map editor) | `/O1 /Ob2 /GR` for its own objects; `/O2 /GR` for the prebuilt Libraries archive; zlib and Victor reuse the game's objects |
+| `h3ccmped` | GOG Complete 4.0 `h3ccmped.exe` (campaign editor) | `/O2 /GR` for its own objects and the prebuilt Libraries archive; zlib and Victor reuse the game's objects |
 
 ## Where an image keeps its state
 
@@ -72,8 +73,13 @@ match the derivation.
 
 ## Shared units and placements
 
-A unit that the game also compiles is the same source file. Its `VA()`
-claims spell game addresses, so another image never reads them. The image
+A unit that the game or another image also compiles is the same source
+file. Its `VA()` claims spell its owner's addresses, so the image never reads
+them: the campaign editor compiles the map editor's `src/editor/Player.cpp`
+and places it like a game source. The `$E` initializers and static
+destructors of such a unit take the owner's compiler-function names (the
+owner's `build/<image>/gen/compgen_claims.tsv`, so `homm3 build` builds the
+images in pin order). The image
 compiles the file with its own profile and **places** its functions
 (`homm3.census.placements`, `config/retail/<image>/placements.tsv`):
 
@@ -99,7 +105,8 @@ Steps 2 and 3 follow every other step. A placed body names a referent only
 where the opcode byte before its relocation field agrees with retail, so a
 body that differs elsewhere still names its callees where it agrees. Steps 4
 and 5 never contradict an earlier placement. A name that reaches two
-addresses, or an address that receives two names, is dropped, except an
+addresses (or one the runtime map already gives a library address), or an
+address that receives two names, is dropped, except an
 `/OPT:ICF` fold: when the names that reach only that address have compiled
 bodies that agree byte for byte, the first of them places it, and the
 comparison names the others' references after it (`vector<T*>::push_back`
@@ -110,9 +117,11 @@ reads the table as the image's claims (channel `placement`).
 Sources only the image compiles spell the image's own addresses in
 `VA()`/`DATA()` and are extracted like game sources. They live in the
 image's source directory, the pin's `sources` key (`editor` for h3maped, the
-original's `Editor\` directory): `src/editor/` and `include/editor/`. The
-game's claim, ownership, cleanliness and accounting scans skip those trees
-(`homm3.core.images.foreign`); the image's scans read only them.
+original's `Editor\` directory, `src/editor/` and `include/editor/`;
+`campaign_editor` for h3ccmped, the original's `CampaignEditor\`). The
+game's and every other image's claim, ownership, cleanliness and accounting
+scans skip those trees (`homm3.core.images.foreign`); the image's scans read
+only them.
 
 ## The SP3 MFC overlay
 

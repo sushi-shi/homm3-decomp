@@ -2800,14 +2800,17 @@ def _fragment_rows(rows: list[dict]) -> list[list[str]]:
 
 def image_owned_sources() -> list:
     """Another image's claim space: the sources of its manifest units that
-    the game does not compile (src/editor/...). Their VA()/DATA() spell that
-    image's addresses; shared sources keep spelling the game's."""
+    neither the game nor another image owns (src/editor/... for the map
+    editor). Their VA()/DATA() spell that image's addresses; shared sources
+    keep spelling their owner's."""
     from homm3 import manifest
+    from homm3.core import images
     from homm3.core import paths as image_paths
     game = {u["source"] for u in manifest.units(image_paths.manifest("game"))}
     return sorted(common.HOMM3_DIR / u["source"]
                   for u in manifest.units(image_paths.manifest())
-                  if u["source"] not in game and u["source"].startswith("src/"))
+                  if u["source"] not in game and u["source"].startswith("src/")
+                  and not images.foreign(common.HOMM3_DIR / u["source"], common.HOMM3_DIR))
 
 
 def src_files() -> list:

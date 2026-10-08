@@ -364,20 +364,27 @@ def _write_compgen(src_claims) -> None:
 def _placed_compgen() -> list[list[str]]:
     """Another image's claims for its shared units' compiler functions: each
     `__h3cg$` name its placements put (homm3.census.placements), with the
-    game claim's kind and owner and no size (the image's compile has its
-    own)."""
-    from homm3.core import paths
+    owning image's claim kind and owner and no size (the image's compile has
+    its own). The owner is the game or another image whose sources it
+    shares."""
+    from homm3.core import images, paths
     if paths.is_game():
         return []
     from homm3.census.placements import GAME_COMPGEN
-    if not GAME_COMPGEN.is_file():
-        return []
-    with GAME_COMPGEN.open(newline="") as stream:
-        game = {(r["unit"], r["name"]): r for r in csv.DictReader(
-            (line for line in stream if not line.startswith("#")), delimiter="\t")}
+    owners = [GAME_COMPGEN] + [paths.ROOT / images.path("build/gen/compgen_claims.tsv", key)
+                               for key in images.images(paths.ROOT)[1:]
+                               if key != paths.image_key()]
+    known = {}
+    for path in owners:
+        if not path.is_file():
+            continue
+        with path.open(newline="") as stream:
+            for r in csv.DictReader((line for line in stream if not line.startswith("#")),
+                                    delimiter="\t"):
+                known.setdefault((r["unit"], r["name"]), r)
     rows = []
     for c in providers.placements():
-        claim = game.get((c.unit, c.name))
+        claim = known.get((c.unit, c.name))
         if claim is not None:
             rows.append([c.unit, c.name, claim["kind"], claim["owner"], "0x0"])
     return sorted(rows)
