@@ -515,6 +515,14 @@ def derive(log=print, want_suggestions=False):
     for name, rvas in names.items():
         for rva in rvas:
             by_rva[rva].add(name)
+    # A template body the image's own unit also emits (its suggestions) does
+    # not compete with a shared unit's copy at the same address: the shared
+    # name places it, and the own unit's VA() claims read the suggestion.
+    for rva, group in by_rva.items():
+        shared = {name for name in group
+                  if any(unit not in owned for unit in definers.get(name, ()))}
+        if shared and shared != group:
+            by_rva[rva] = shared
     def folded(rva):
         """The one name of an address that several compiled bodies reach:
         /OPT:ICF folded the bodies that reach only this address when they
