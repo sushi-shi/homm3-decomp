@@ -103,3 +103,12 @@ source = "../orig/vc6-rtm"
 # LINK/LIB 6.00.8168: the linker that wrote retail's Linker600 8168 import
 # objects (homm3.build.import_libraries).
 "LINK.EXE" = "08d3a4c9701c8f6c871b2c48bd74d07422aa1f86e5d9a4ddb2c9bd6a88b857e7"
+
+# The C runtime LINK.EXE runs against for the game link (homm3.build.link):
+# LINK sorts each DLL's import thunks with this runtime's qsort, so it decides
+# the IAT order. VC6 SP3's MSVCRT.DLL 6.00.8397, from the pinned SP3 media's
+# cabinets (os/system/msvcrt.dll); staged in build/linker-runtime/.
+[toolchain.linker_runtime]
+media = "../orig/toolchain-media/sp3/cabs"
+member = "os/system/msvcrt.dll"
+sha256 = "2d5670881a6d13a100e37da297f6eeb876f68b63073a28eb5d650625c60f9bf7"

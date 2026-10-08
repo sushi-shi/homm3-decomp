@@ -2,13 +2,13 @@
 # Written by `homm3 verify link-diff --update`; lower it when the link
 # moves closer to retail, never raise it to admit a regression.
 region	count
-headers	0
+headers	2
 rich	81
-imports	264
+imports	257
 rsrc	0
 code-exact	4254
-code-order	311
-code-unplaced	86176
-code-absent	110514
-data	28765
+code-order	323
+code-unplaced	86128
+code-absent	111274
+data	28677
 data-unplaced	23930

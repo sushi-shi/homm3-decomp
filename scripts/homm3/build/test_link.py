@@ -33,6 +33,8 @@ class LinkDiagnosticsTest(unittest.TestCase):
                 return '', 0
             patches = {
                 'homm3.build.link.retail_clock': lambda: {'FAKETIME': 'retail'},
+                'homm3.build.link.native_crt_linker': lambda link: link,
+                'homm3.build.link.runtime_intact': lambda: True,
                 'homm3.build.link.shutil.which': lambda _: 'wine',
                 'homm3.build.link.msvc_dir': lambda: root,
                 'homm3.build.link.find_ci': lambda parent, name: parent / name,

@@ -131,6 +131,113 @@ def retail_clock() -> dict[str, str]:
             "FAKETIME_DONT_FAKE_MONOTONIC": "1"}
 
 
+#: LINK sorts each DLL's import thunks with its C runtime's qsort, so the
+#: runtime decides the IAT order within a DLL. Wine's builtin msvcrt and the
+#: Windows runtime pick different pivots; retail was linked on Windows. The
+#: game links against the VC6 SP3 MSVCRT.DLL (6.00.8397) from the pinned SP3
+#: media (config/project.toml [toolchain.linker_runtime]).
+NATIVE_CRT_LINKER = "link-native-crt.exe"
+
+
+def _wine_server_of(prefix: Path) -> None:
+    """Stop the wineserver of `prefix` so the next one maps the runtime."""
+    server = shutil.which("wineserver")
+    if server:
+        subprocess.run([server, "-k"], env={**os.environ, "WINEPREFIX": str(prefix)},
+                       check=False, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+
+
+def linker_runtime() -> Path:
+    """The pinned native MSVCRT.DLL, staged in build/linker-runtime/ from the
+    pinned VC6 SP3 media and hash-checked."""
+    import hashlib
+    from homm3.core.project import Project
+    spec = Project(HOMM3_DIR).specification.get("toolchain", {}).get("linker_runtime", {})
+    if not spec:
+        die("config/project.toml has no [toolchain.linker_runtime]")
+    staged = HOMM3_DIR / "build/linker-runtime/MSVCRT.DLL"
+
+    def pinned(path: Path) -> bool:
+        return path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == spec["sha256"]
+
+    if pinned(staged):
+        return staged
+    media = Path(os.environ.get("HOMM3_SP3_MEDIA") or HOMM3_DIR / spec["media"]).resolve()
+    if not media.is_dir():
+        from homm3.init.vc6_rtm import _main_worktree
+        main = _main_worktree()
+        if main is not None:
+            media = (main / spec["media"]).resolve()
+    staged.parent.mkdir(parents=True, exist_ok=True)
+    for cab in sorted(media.glob("*.cab")):
+        subprocess.run(["7z", "e", "-y", f"-o{staged.parent}", str(cab), spec["member"]],
+                       check=False, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+        extracted = staged.parent / Path(spec["member"]).name
+        if extracted.is_file() and pinned(extracted):
+            extracted.replace(staged)
+            return staged
+    die(f"the pinned linker runtime ({spec['member']}, sha256 {spec['sha256']}) "
+        f"is not in {media}; set HOMM3_SP3_MEDIA to the SP3 cab directory")
+
+
+def _system_runtime(prefix: Path) -> Path:
+    windows = prefix / "drive_c/windows"
+    system = windows / "syswow64" if (windows / "syswow64").is_dir() else windows / "system32"
+    return system / "msvcrt.dll"
+
+
+def install_linker_runtime(prefix: Path, runtime: Path) -> None:
+    """Put the native runtime in the prefix's 32-bit system directory,
+    restarting its wineserver when the file changes."""
+    import filecmp
+    target = _system_runtime(prefix)
+    if not (target.is_file() and filecmp.cmp(target, runtime, shallow=False)):
+        _wine_server_of(prefix)
+        shutil.copyfile(runtime, target)
+
+
+def runtime_intact() -> bool:
+    """True while the prefix still holds the pinned native runtime."""
+    import filecmp
+    prefix = Path(os.environ.get("WINEPREFIX") or HOMM3_DIR / "build/wineprefix")
+    target = _system_runtime(prefix)
+    return target.is_file() and filecmp.cmp(target, linker_runtime(), shallow=False)
+
+
+def native_crt_linker(link: Path) -> Path:
+    """A copy of LINK.EXE that loads the pinned native MSVCRT.DLL.
+
+    MSVCRT is a KnownDLL, so wine loads it from the prefix's 32-bit system
+    directory: the native file goes there and a Wine AppDefaults override
+    selects it for NATIVE_CRT_LINKER alone; every other program keeps the
+    builtin runtime. The wineserver maps KnownDLLs when it starts, so it is
+    restarted when the file changes (the prefix is this worktree's own).
+    """
+    import filecmp
+    runtime = linker_runtime()
+    prefix = Path(os.environ.get("WINEPREFIX") or HOMM3_DIR / "build/wineprefix")
+    folder = HOMM3_DIR / "build/exe/native-crt"
+    folder.mkdir(parents=True, exist_ok=True)
+    for path in link.parent.iterdir():
+        if path.name.lower() in ("mspdb60.dll", "msobj10.dll", "msdis110.dll", "cvtres.exe"):
+            copy = folder / path.name
+            if not (copy.is_file() and filecmp.cmp(copy, path, shallow=False)):
+                shutil.copyfile(path, copy)
+    copy = folder / NATIVE_CRT_LINKER
+    if not (copy.is_file() and filecmp.cmp(copy, link, shallow=False)):
+        shutil.copyfile(link, copy)
+    key = rf"HKEY_CURRENT_USER\Software\Wine\AppDefaults\{NATIVE_CRT_LINKER}\DllOverrides"
+    output, _rc = run_wine(["wine", "reg", "query", key, "/v", "msvcrt"], folder)
+    if "native" not in output:
+        run_wine(["wine", "reg", "add", key, "/v", "msvcrt", "/d", "native", "/f"], folder)
+    # Install the runtime last: starting a wine process can update the prefix
+    # and restore wine's placeholder.
+    install_linker_runtime(prefix, runtime)
+    return copy
+
+
 def game_objects(objs_dir: Path | None = None) -> tuple[dict[str, Path], dict[str, list[str]]]:
     """({unit: object} linked as objects, {library: [units]} archived), in
     manifest order; a unit's `library` key names its archive."""
@@ -326,8 +433,11 @@ def main(argv: list[str] | None = None) -> int:
     rsp = out.parent / (out.stem + ".objs.rsp")
     rsp.write_text("\n".join(rsp_lines) + "\n")
 
-    output, rc = run_wine(["wine", str(link), f"@{winepath_w(rsp)}"],
+    linker = link if study else native_crt_linker(link)
+    output, rc = run_wine(["wine", str(linker), f"@{winepath_w(rsp)}"],
                           out.parent, env=None if study else retail_clock())
+    if not study and not runtime_intact():
+        die("wine replaced the native linker runtime during the link; relink")
 
     log = out.with_suffix(".link.log")
     log.write_text(output)
