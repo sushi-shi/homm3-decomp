@@ -945,6 +945,8 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // retail keeps this no-draw-first order. DC 1045's bCloudFlip store before
 // baseX/baseY is +0.04 only. Retail's frame is 0x10 against our 0xc: hflip
 // and lookup get real locals where this body reuses the parameter homes.
+// DC's unsigned-char bCloudFlip is a lowered bool: retail hands it to
+// DrawShroudTile's bool parameter unconverted (86.72 -> 88.36%).
 VA(0x005f9940, 0x44A)
 DC_ADDRESS(0x194b48, 0x284)
 MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer)
@@ -966,7 +968,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
     int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
     int lookup = 0;
-    unsigned char hflip = false;
+    bool hflip = false;
     unsigned char drawShroud;
 
     if (!g_completeDrawAllCells
