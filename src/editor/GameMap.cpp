@@ -744,6 +744,30 @@ private:
         {
             assert(m_pVictoryCondition == __null && m_pLossCondition == __null);
         }
+        // Never called, so never written: its member assignments are what
+        // instantiate vector<TRumor> and vector<TTimedEvent>'s operator= and
+        // queue TArray<TPlayerInfo, 8>'s here, after the copy constructor.
+        _TProperties& operator=(const _TProperties& other)
+        {
+            m_name = other.m_name;
+            m_desc = other.m_desc;
+            m_difficulty = other.m_difficulty;
+            m_players = other.m_players;
+            m_teamInfo = other.m_teamInfo;
+            m_rumors = other.m_rumors;
+            m_timedEvents = other.m_timedEvents;
+            delete m_pVictoryCondition;
+            m_pVictoryCondition = NULL;
+            if (other.m_pVictoryCondition != NULL)
+                if ((m_pVictoryCondition = TVictoryCondition::clone(*other.m_pVictoryCondition, ::operator new)) == NULL)
+                    throw TAllocationFailure(__FILE__, __LINE__);
+            delete m_pLossCondition;
+            m_pLossCondition = NULL;
+            if (other.m_pLossCondition != NULL)
+                if ((m_pLossCondition = TLossCondition::clone(*other.m_pLossCondition, ::operator new)) == NULL)
+                    throw TAllocationFailure(__FILE__, __LINE__);
+            return *this;
+        }
 
         string m_name;
         string m_desc;
