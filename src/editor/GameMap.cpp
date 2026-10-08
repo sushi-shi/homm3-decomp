@@ -179,6 +179,7 @@ struct TLossConditionData;
 class TGameMap::_TImpl {
 public:
     static const unsigned int s_kMaxHeroesOnMap = 128;
+    static const unsigned int s_kMaxHeroesPerPlayer = 8;
     static const unsigned int s_kMaxTownsOnMap = 48;
     static const unsigned int s_kMaxMinesOnMap = 144;
     static const unsigned int s_kMaxGeneratorsOnMap = 144;
@@ -472,7 +473,7 @@ private:
         TArray<unsigned int, kNumTownTypes> m_aNumTownsOfType;
         unsigned int m_numHeroes;
         unsigned int m_numRandomHeroes;
-        TArray<unsigned int, kNumPlayers> m_aNumHeroesOfType;
+        TArray<unsigned int, kNumTownTypes> m_aNumHeroesOfType;
     };
 
     static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
@@ -1023,6 +1024,70 @@ void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
 #line 2075
     assert(objID != TLayer::s_kInvalidObjID);
     _removeObjectHelper(bSecondLayer, objID);
+}
+
+void TGameMap::_TImpl::onHeroAdded(const THero& hero)
+{
+#line 2215
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numHeroes < s_kMaxHeroesOnMap);
+    _onPlayableAdded(hero);
+    _m_pBookkeeping->m_numHeroes++;
+    if (hero.getOwner() != ePlayerNone) {
+        _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[hero.getOwner()];
+#line 2230
+        assert(std::accumulate( playerBookkeeping.m_aNumHeroesOfType.begin(), playerBookkeeping.m_aNumHeroesOfType.end(), 0U ) + playerBookkeeping.m_numRandomHeroes == playerBookkeeping.m_numHeroes);
+#line 2233
+        assert(playerBookkeeping.m_numHeroes + getPlayers()[ hero.getOwner() ].getBGenerateHero() ? 1 : 0 < s_kMaxHeroesPerPlayer);
+        playerBookkeeping.m_numHeroes++;
+    } else {
+#line 2237
+        assert(dynamic_cast< TPrison const * >( &hero ) != __null);
+    }
+    if (dynamic_cast<const TRandomHero*>(&hero) == NULL) {
+#line 2242
+        assert(_m_pBookkeeping->m_aabHeroAvailable[ hero.getClass() ][ hero.getProtoNum() ]);
+        _m_pBookkeeping->m_aabHeroAvailable[hero.getClass()][hero.getProtoNum()] = false;
+        if (hero.getOwner() != ePlayerNone)
+            _m_apPlayerBookkeeping[hero.getOwner()]->m_aNumHeroesOfType[hero.getClassTraits().m_townType]++;
+    } else {
+#line 2252
+        assert(hero.getOwner() != ePlayerNone);
+        _m_apPlayerBookkeeping[hero.getOwner()]->m_numRandomHeroes++;
+    }
+}
+
+void TGameMap::_TImpl::onRemovingHero(const THero& hero)
+{
+#line 2260
+    assert(static_cast< _TPBookkeeping const & >( _m_pBookkeeping )->m_numHeroes > 0);
+    if (dynamic_cast<const TRandomHero*>(&hero) == NULL) {
+        if (hero.getOwner() != ePlayerNone) {
+#line 2267
+            assert(_m_apPlayerBookkeeping[ hero.getOwner() ]->m_aNumHeroesOfType[ hero.getClassTraits().m_townType ] > 0);
+            _m_apPlayerBookkeeping[hero.getOwner()]->m_aNumHeroesOfType[hero.getClassTraits().m_townType]--;
+        }
+#line 2272
+        assert(!_m_pBookkeeping->m_aabHeroAvailable[ hero.getClass() ][ hero.getProtoNum() ]);
+        _m_pBookkeeping->m_aabHeroAvailable[hero.getClass()][hero.getProtoNum()] = true;
+    } else {
+#line 2278
+        assert(hero.getOwner() != ePlayerNone);
+        assert(_m_apPlayerBookkeeping[ hero.getOwner() ]->m_numRandomHeroes > 0);
+        _m_apPlayerBookkeeping[hero.getOwner()]->m_numRandomHeroes--;
+    }
+    if (hero.getOwner() != ePlayerNone) {
+        _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[hero.getOwner()];
+#line 2288
+        assert(playerBookkeeping.m_numHeroes > 0);
+        playerBookkeeping.m_numHeroes--;
+#line 2296
+        assert(std::accumulate( playerBookkeeping.m_aNumHeroesOfType.begin(), playerBookkeeping.m_aNumHeroesOfType.end(), 0U ) + playerBookkeeping.m_numRandomHeroes == playerBookkeeping.m_numHeroes);
+    } else {
+#line 2299
+        assert(dynamic_cast< TPrison const * >( &hero ) != __null);
+    }
+    _m_pBookkeeping->m_numHeroes--;
+    _onRemovingPlayable(hero);
 }
 
 const TGameObject* TGameMap::_TImpl::getPObject(bool bSecondLayer, unsigned int objID) const
