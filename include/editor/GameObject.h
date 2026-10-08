@@ -31,7 +31,8 @@ public:
     // Windows returns the clone in an auto_ptr (h3maped 0x42a75a calls
     // slot 2 with a result slot and no allocator); Loki passes one.
     virtual std::auto_ptr<TGameObject> clone() const = 0;
-    virtual void write(TRawOStream* pOStream) const = 0;
+    // The map format version follows the stream (h3maped 0x41f217 passes 2).
+    virtual void write(TRawOStream* pOStream, int version) const = 0;
     virtual std::string getTypeName() const;
     virtual bool isCustomized() const { return false; }
     virtual bool hasText() const { return false; }
@@ -64,5 +65,8 @@ private:
 
     _TObjectTypeMap::iterator _m_objectTypeIter;
 };
+
+// An object type's identity in the map format (h3maped 0x490944).
+TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objType);
 
 #endif  /* HOMM3_EDITOR_GAMEOBJECT_H */

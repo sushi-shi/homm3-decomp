@@ -16,9 +16,13 @@
 #include "editor/Array.h"
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
+#include "editor/Hero.h"
+#include "editor/Monster.h"
 #include "editor/ObjectSpecializations.h"
+#include "editor/RawStream.h"
 #include "editor/TilePoint.h"
 #include "editor/TimedEvent.h"
+#include "editor/Town.h"
 #include "editor/VictoryCondition.h"
 #include "retailobjecttype.h"
 
@@ -259,6 +263,10 @@ class TGameMap::_TImpl {
 public:
     class _TGetVictoryConditionDataFunc;
     class _TGetLossConditionDataFunc;
+    class _TVictoryConditionValidater;
+    class _TLossConditionValidater;
+
+    static void streamObject(streambuf* pStreamBuf, const TGameObject& obj);
 
     // The caps the failures report (h3maped 0x41ec98: 156 heroes; 0x41ecb8:
     // 48 towns).
@@ -291,7 +299,7 @@ public:
     {
         return getLayer(bSecondLayer).getObjectLoc(objID);
     }
-    TMapObjectRef getLinkableObjectRef(unsigned int linkID) const { return _m_paLinkableObjectRef->find(linkID)->second; }
+    TMapObjectRef getLinkableObjectRef(int linkID) const { return _m_paLinkableObjectRef->find(linkID)->second; }
 
     const string& getName() const { return _m_pProperties->m_name; }
     void setName(const string& newName);
@@ -336,6 +344,9 @@ public:
     void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
     void removeFloatingObject(bool bSecondLayer);
+    void removeSecondLayer();
+    void addSecondLayer();
+    const TLinkableObject* getPLinkableObject(int linkID) const;
 
     bitset<kNumHeroes> getHeroesOnMap() const { return _m_pBookkeeping->m_heroesOnMap; }
     bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
@@ -357,8 +368,11 @@ public:
 
     bool _isOnMap(const TGameObject& obj, unsigned int x, unsigned int y) const;
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
+    void _onRemovingObject(const TGameObject& obj, bool bReplacing);
 
     void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
+
+    void onObjectRemoved();
 
 private:
     // The map's specifications (0x7c bytes; h3maped 0x43334a constructs
@@ -583,6 +597,153 @@ void TGameMap::_TImpl::_TGetLossConditionDataFunc::visit(const TLCTimeExpires& l
     _m_pData->m_timeExpires.m_numDays = lc.getNumDays();
 }
 
+// Whether a condition still names objects of the right kinds; a missing
+// condition is valid. The two validaters' isValid bodies fold (0x41ef90).
+class TGameMap::_TImpl::_TVictoryConditionValidater : public TVictoryCondition::TVisitor {
+public:
+    _TVictoryConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+    bool isValid(const TVictoryCondition* pVC);
+
+    virtual void visit(const TVCAquireArtifact& vc) { _m_bValid = true; }
+    virtual void visit(const TVCAccumulateCreature& vc) { _m_bValid = true; }
+    virtual void visit(const TVCAccumulateResource& vc) { _m_bValid = true; }
+    virtual void visit(const TVCUpgradeTown& vc);
+    virtual void visit(const TVCBuildHolyGrailStruct& vc);
+    virtual void visit(const TVCDefeatHero& vc);
+    virtual void visit(const TVCCaptureTown& vc);
+    virtual void visit(const TVCDefeatMonster& vc);
+    virtual void visit(const TVCFlagAllCreatureGenerators& vc) { _m_bValid = true; }
+    virtual void visit(const TVCFlagAllMines& vc) { _m_bValid = true; }
+    virtual void visit(const TVCTransportArtifact& vc);
+
+private:
+    bool _isTown(const TMapObjectRef& objRef) const;
+
+    const _TImpl& _m_map;
+    bool _m_bValid;
+};
+
+class TGameMap::_TImpl::_TLossConditionValidater : public TLossCondition::TVisitor {
+public:
+    _TLossConditionValidater(const _TImpl& map) : _m_map(map), _m_bValid(false) {}
+
+    bool isValid(const TLossCondition* pLC);
+
+    virtual void visit(const TLCLoseTown& lc);
+    virtual void visit(const TLCLoseHero& lc);
+    virtual void visit(const TLCTimeExpires& lc) { _m_bValid = true; }
+
+private:
+    const _TImpl& _m_map;
+    bool _m_bValid;
+};
+
+VA(0x0041ef90, 0x20)
+bool TGameMap::_TImpl::_TVictoryConditionValidater::isValid(const TVictoryCondition* pVC)
+{
+    if (pVC == NULL)
+        return true;
+    pVC->accept(this);
+    bool bValid = _m_bValid;
+    _m_bValid = false;
+    return bValid;
+}
+
+bool TGameMap::_TImpl::_TLossConditionValidater::isValid(const TLossCondition* pLC)
+{
+    if (pLC == NULL)
+        return true;
+    pLC->accept(this);
+    bool bValid = _m_bValid;
+    _m_bValid = false;
+    return bValid;
+}
+
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCUpgradeTown& vc)
+{
+    _m_bValid = _isTown(vc.getTownRef());
+}
+
+VA(0x0041efb0, 0x2f)
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCBuildHolyGrailStruct& vc)
+{
+    _m_bValid = vc.getTownRef() == TMapObjectRef() || _isTown(vc.getTownRef());
+}
+
+VA(0x0041efdf, 0x7f)
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCDefeatHero& vc)
+{
+    const TGameObject* pObj = _m_map.getPObject(vc.getHeroRef());
+    if (pObj != NULL) {
+        if (dynamic_cast<const TBasicHero*>(pObj) != NULL) {
+            _m_bValid = true;
+        } else {
+            const TTown* pTown = dynamic_cast<const TTown*>(pObj);
+            _m_bValid = pTown != NULL && pTown->getPVisitingHero() != NULL;
+        }
+    } else {
+        _m_bValid = false;
+    }
+}
+
+VA(0x0041f05e, 0x17)
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCCaptureTown& vc)
+{
+    _m_bValid = _isTown(vc.getTownRef());
+}
+
+VA(0x0041f075, 0x4c)
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCDefeatMonster& vc)
+{
+    const TGameObject* pObj = _m_map.getPObject(vc.getMonsterRef());
+    _m_bValid = pObj != NULL && dynamic_cast<const TMonster*>(pObj) != NULL;
+}
+
+VA(0x0041f0c8, 0x17)
+void TGameMap::_TImpl::_TVictoryConditionValidater::visit(const TVCTransportArtifact& vc)
+{
+    _m_bValid = _isTown(vc.getTownRef());
+}
+
+VA(0x0041f0df, 0x44)
+bool TGameMap::_TImpl::_TVictoryConditionValidater::_isTown(const TMapObjectRef& objRef) const
+{
+    const TGameObject* pObj = _m_map.getPObject(objRef);
+    return pObj != NULL && dynamic_cast<const TTown*>(pObj) != NULL;
+}
+
+VA(0x0041f123, 0x4c)
+void TGameMap::_TImpl::_TLossConditionValidater::visit(const TLCLoseTown& lc)
+{
+    const TGameObject* pObj = _m_map.getPObject(lc.getTownRef());
+    _m_bValid = pObj != NULL && dynamic_cast<const TTown*>(pObj) != NULL;
+}
+
+VA(0x0041f16f, 0x7f)
+void TGameMap::_TImpl::_TLossConditionValidater::visit(const TLCLoseHero& lc)
+{
+    const TGameObject* pObj = _m_map.getPObject(lc.getHeroRef());
+    if (pObj != NULL) {
+        if (dynamic_cast<const TBasicHero*>(pObj) != NULL) {
+            _m_bValid = true;
+        } else {
+            const TTown* pTown = dynamic_cast<const TTown*>(pObj);
+            _m_bValid = pTown != NULL && pTown->getPVisitingHero() != NULL;
+        }
+    } else {
+        _m_bValid = false;
+    }
+}
+
+VA(0x0041f1ee, 0x2f)
+void TGameMap::_TImpl::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
+{
+    TRawOStream stream(pStreamBuf);
+    stream << obj.getObjectType();
+    obj.write(&stream, 2);
+}
+
 // A new map: one or two layers of plain water, and every hero the edition
 // does not offer, or that only campaigns use, disabled.
 VA(0x0041f21d, 0x133)
@@ -717,6 +878,73 @@ VA(0x0042059b, 0x1e)
 void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
 {
     _removeObjectHelper(bSecondLayer, getPLayer(bSecondLayer)->getFloatingObjID());
+}
+
+VA(0x00421259, 0x64)
+void TGameMap::_TImpl::removeSecondLayer()
+{
+    TLayer* pLayer = getPLayer(true);
+    TLayer::TObjectIDIter iter = pLayer->objectIDBegin();
+    while (iter != pLayer->objectIDEnd()) {
+        TMapLayerObjectID objID = *iter++;
+        _removeObjectHelper(true, objID);
+    }
+    _m_aLayer.pop_back();
+    _m_bTwoLayer = false;
+}
+
+VA(0x004212d6, 0x43)
+void TGameMap::_TImpl::addSecondLayer()
+{
+    _m_bTwoLayer = true;
+    _m_aLayer.push_back(TLayer(_m_size));
+}
+
+VA(0x004214ea, 0x39)
+const TGameObject* TGameMap::_TImpl::getPObject(bool bSecondLayer, unsigned int objID) const
+{
+    const TLayer& layer = getLayer(bSecondLayer);
+    if (!layer.isObjectIDValid(objID))
+        return NULL;
+    return layer.getPObject(objID);
+}
+
+// The object a link id names: the map keeps where each linkable object
+// lies, and a town holds its visiting hero's id as well.
+VA(0x00421523, 0x69)
+const TLinkableObject* TGameMap::_TImpl::getPLinkableObject(int linkID) const
+{
+    TMapObjectRef objRef = _m_paLinkableObjectRef->find(linkID)->second;
+    const TLinkableObject* pLinkable = dynamic_cast<const TLinkableObject*>(
+        &getLayer(objRef.getBSecondLayer()).getObject(objRef.getObjectID()));
+    while (pLinkable->getLinkID() != linkID)
+        pLinkable = pLinkable->getPContainedObject();
+    return pLinkable;
+}
+
+VA(0x00427600, 0x61)
+void TGameMap::_TImpl::_removeObjectHelper(bool bSecondLayer, unsigned int objID)
+{
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    _onRemovingObject(pLayer->getObject(objID), false);
+    pLayer->_removeObject(objID);
+    onObjectRemoved();
+    _m_pClient->onMapObjectRemoved(bSecondLayer, objID);
+}
+
+// A removed object may have been a condition's town, hero or monster.
+VA(0x00427661, 0x101)
+void TGameMap::_TImpl::onObjectRemoved()
+{
+    const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
+    if (!_TLossConditionValidater(*this).isValid(pConstProperties->m_pLossCondition.get())) {
+        TRefCountingAutoPtr<TLossCondition> pNoLossCondition((auto_ptr<TLossCondition>()));
+        _m_pProperties->m_pLossCondition = pNoLossCondition;
+    }
+    if (!_TVictoryConditionValidater(*this).isValid(pConstProperties->m_pVictoryCondition.get())) {
+        TRefCountingAutoPtr<TVictoryCondition> pNoVictoryCondition((auto_ptr<TVictoryCondition>()));
+        _m_pProperties->m_pVictoryCondition = pNoVictoryCondition;
+    }
 }
 
 VA(0x0042921c, 0x70)
@@ -905,6 +1133,18 @@ void TGameMap::removeFloatingObject(bool bSecondLayer)
     _m_pImpl->removeFloatingObject(bSecondLayer);
 }
 
+VA(0x0042a16d, 0x1b)
+void TGameMap::removeSecondLayer()
+{
+    _m_pImpl->removeSecondLayer();
+}
+
+VA(0x0042a188, 0x1b)
+void TGameMap::addSecondLayer()
+{
+    _m_pImpl->addSecondLayer();
+}
+
 VA(0x0042a1c4, 0x11)
 void TGameMap::save(streambuf* pStreamBuf) const
 {
@@ -953,9 +1193,15 @@ TTilePoint TGameMap::getObjectLoc(bool bSecondLayer, unsigned int objID) const
 }
 
 VA(0x0042a248, 0x35)
-TMapObjectRef TGameMap::getLinkableObjectRef(unsigned int linkID) const
+TMapObjectRef TGameMap::getLinkableObjectRef(int linkID) const
 {
     return _m_pImpl->getLinkableObjectRef(linkID);
+}
+
+VA(0x0042a27d, 0x11)
+const TLinkableObject* TGameMap::getPLinkableObject(int linkID) const
+{
+    return _m_pImpl->getPLinkableObject(linkID);
 }
 
 VA(0x0042a28e, 0xf)
@@ -1660,6 +1906,11 @@ VA(0x0042b68a, 0x6)
 TMapLayerObjectID TGameMap::TLayer::getFloatingObjID() const
 {
     return _m_pImpl->getFloatingObjID();
+}
+
+bool TGameMap::TLayer::isObjectIDValid(unsigned int objID) const
+{
+    return _m_pImpl->isObjectIDValid(objID);
 }
 
 VA(0x0042b690, 0xb)

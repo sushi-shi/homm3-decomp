@@ -36,6 +36,7 @@ class TObjectType;
 class TTimedEvent;
 class TVictoryCondition;
 class TLossCondition;
+class TLinkableObject;
 
 typedef unsigned int TMapLayerObjectID;
 
@@ -267,6 +268,8 @@ public:
     void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
     void removeFloatingObject(bool bSecondLayer);
+    void removeSecondLayer();
+    void addSecondLayer();
 
     void save(std::streambuf* pStreamBuf) const;
     void exportText(std::ostream* pOStream) const;
@@ -276,7 +279,8 @@ public:
     bool isTwoLayer() const;
     const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
     TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
-    TMapObjectRef getLinkableObjectRef(unsigned int linkID) const;
+    TMapObjectRef getLinkableObjectRef(int linkID) const;
+    const TLinkableObject* getPLinkableObject(int linkID) const;
     const TLayer* getPLayer(unsigned int num) const;
     const std::string& getName() const;
     const std::string& getDesc() const;
@@ -325,6 +329,37 @@ public:
 
     class TCell;
 
+    // Walks a layer's placed objects in link order (Loki's iterator; the
+    // map's second-layer removal steps one out of line, h3maped 0x4212bd).
+    class TObjectIDIter {
+    public:
+        TObjectIDIter& operator++()
+        {
+            _m_objID = _m_pLayer->getNextObjectID(_m_objID);
+            return *this;
+        }
+        TObjectIDIter operator++(int)
+        {
+            TObjectIDIter result = *this;
+            ++*this;
+            return result;
+        }
+        TMapLayerObjectID operator*() const { return _m_objID; }
+        bool operator==(const TObjectIDIter& other) const
+        {
+            return _m_pLayer == other._m_pLayer && _m_objID == other._m_objID;
+        }
+        bool operator!=(const TObjectIDIter& other) const { return !(*this == other); }
+
+    private:
+        friend class TLayer;
+
+        TObjectIDIter(const TLayer* pLayer, unsigned int objID) : _m_pLayer(pLayer), _m_objID(objID) {}
+
+        const TLayer* _m_pLayer;
+        TMapLayerObjectID _m_objID;
+    };
+
     // The no-object id (h3maped 0x535228): defined after the map's users
     // of it, which read it from memory.
     static const TMapLayerObjectID s_kInvalidObjID;
@@ -345,10 +380,13 @@ public:
     TTilePoint getObjectLoc(unsigned int objID) const;
     TTileExtent getObjectExtent(unsigned int objID) const;
     TMapLayerObjectID getFloatingObjID() const;
+    bool isObjectIDValid(unsigned int objID) const;
     TMapLayerObjectID getFirstObjectID() const;
     TMapLayerObjectID getLastObjectID() const;
     TMapLayerObjectID getNextObjectID(unsigned int objID) const;
     TMapLayerObjectID getPrevObjectID(unsigned int objID) const;
+    TObjectIDIter objectIDBegin() const { return TObjectIDIter(this, getFirstObjectID()); }
+    TObjectIDIter objectIDEnd() const { return TObjectIDIter(this, s_kInvalidObjID); }
     unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
     TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
     unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;

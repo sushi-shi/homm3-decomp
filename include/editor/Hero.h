@@ -23,6 +23,7 @@
 #include "primaryskill.h"
 #include "town_type.h"
 #include "editor/Array.h"
+#include "editor/ObjectSpecializations.h"
 #include "editor/Player.h"
 #include "editor/RefCountingPtr.h"
 
@@ -78,7 +79,33 @@ typedef TRefCountingPtr<THeroPrototype> TPHeroPrototype;
 // Two handles' definitions are equal (h3maped 0x44a77a, cdecl).
 bool operator==(const TPHeroPrototype& lhs, const TPHeroPrototype& rhs);
 
-class THero {
+// What heroes and hero placeholders share: an owner and the hero they
+// stand for (RTTI TBasicHero: its vtable, then the playable base; slot 0
+// answers no hero, 0x44ad60).
+class TBasicHero : public TPlayableObject {
+public:
+    TBasicHero(const TObjectType& objType, TPlayer owner);
+
+    virtual THeroID getHeroID() const { return -1; }
+};
+
+// A placeholder for a hero the campaign carries over: a hero id, or none
+// and the power rank of the hero to place (h3maped's constructor 0x44ad64
+// sets rank 1 and no hero; the copy constructor 0x440342).
+class THeroPlaceholder : public TBasicHero {
+public:
+    THeroPlaceholder(const TObjectType& objType, TPlayer owner);
+
+    virtual THeroID getHeroID() const { return _m_heroID; }
+    void setHeroID(THeroID newHeroID);
+
+private:
+    unsigned int _m_powerRank;
+    THeroID _m_heroID;
+};
+
+// A hero on the map: linkable (+0) and a basic hero (+0xc).
+class THero : public TLinkableObject, public TBasicHero {
 public:
     struct TClassTraits {
         TClassTraits(const TObjectType& objType, TTownType townType)
