@@ -159,6 +159,12 @@ def main(argv: list[str] | None = None) -> int:
     os.environ.setdefault("WINEDLLOVERRIDES", "mscoree,mshtml=")
 
     ensure_toolchain()
+    from homm3.init import vc6_rtm
+    try:
+        log(f"VC6 RTM compiler: {vc6_rtm.build()}")
+    except ValueError as exc:
+        log(f"VC6 RTM compiler unavailable ({exc}); the zlib units cannot "
+            "compile until it is staged")
     init_prefix(force=args.force)
     if not args.no_smoke:
         smoke_test()
