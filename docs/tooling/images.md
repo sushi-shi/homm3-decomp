@@ -123,6 +123,18 @@ game's and every other image's claim, ownership, cleanliness and accounting
 scans skip those trees (`homm3.core.images.foreign`); the image's scans read
 only them.
 
+The image's own units take part in placement too. A function or datum an
+own unit places is normally a suggestion for its `VA()`/`DATA()` claim
+(`placements --suggest UNIT`), never a table row. The exception is a
+pick-any COMDAT (`IMAGE_COMDAT_SELECT_ANY`: a header inline, a template
+instance, a ThrowInfo or a string literal; `/Gy` packages ordinary
+functions as no-duplicates COMDATs instead): its header may sit in another
+image's tree, whose claims spell that image's addresses, so no source can
+claim it. Such a placement is a table row when no own source claims its
+address, no shared unit's name labels it, and no other own name reaches it
+(the campaign editor's inline `TRawOStream::TWriteFailure(int)`, which every
+writer in CampaignDoc.cpp calls, is placed this way).
+
 ## The SP3 MFC overlay
 
 The shared toolchain carries the RTM MFC (`mfc/LIB/NAFXCW.LIB`, members

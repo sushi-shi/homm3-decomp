@@ -50,7 +50,7 @@ import argparse
 import bisect
 import struct
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from homm3.core import common, paths
@@ -182,6 +182,31 @@ def _compgen_names(path, unit: str, source: str) -> dict[str, str]:
     return {coff.symbols[index].name: name for index, name in renames.items()}
 
 
+#: IMAGE_COMDAT_SELECT_ANY: inline functions, template instances and
+#: compiler-generated records. /Gy packages ordinary functions as
+#: IMAGE_COMDAT_SELECT_NODUPLICATES instead.
+COMDAT_SELECT_ANY = 2
+
+
+def _any_comdats(obj) -> set[str]:
+    """The external names an object defines in pick-any COMDAT sections."""
+    out = set()
+    for sec in obj.section_table:
+        if sec["comdat"] != COMDAT_SELECT_ANY:
+            continue
+        for _off, name, scl in obj.section_members(sec["index"]):
+            if scl == 2:
+                out.add(name)
+    return out
+
+
+def _own_claimed_rvas() -> set[int]:
+    """Every address the selected image's own sources claim with VA()/DATA()
+    and their compiler-function forms (the lexical site sweep)."""
+    from homm3.retail_labels.source import sweep_sites
+    return {rva for sites in sweep_sites().values() for rva in sites}
+
+
 def portable(text: str, unit: str) -> str:
     """`text` with each anonymous-namespace scope in its checkout-independent
     spelling (homm3.compare.canonicalize), so the table does not depend on
@@ -236,6 +261,7 @@ def derive(log=print, want_suggestions=False):
                        if images.foreign(paths.ROOT / u["source"], paths.ROOT)}
     owned = {u["unit"] for u in units if u["source"] not in shared_sources}
     compiled = []                         # (unit, name, body, relocs)
+    inline_comdats = set()                # own units' pick-any COMDAT names
     definers = defaultdict(list)          # function name -> units, manifest order
     tables = {}                           # vtable symbol -> slots
     data_definers = {}                    # data name -> (unit, size, bytes)
@@ -247,6 +273,9 @@ def derive(log=print, want_suggestions=False):
         obj = Obj(path)
         semantic = (_compgen_names(path, unit["unit"], unit["source"])
                     if unit["source"] in shared_sources else {})
+        if unit["unit"] in owned:
+            inline_comdats.update(portable(name, unit["unit"])
+                                  for name in _any_comdats(obj))
         for name, _sec, _off, body, relocs in _functions_of(obj):
             name = semantic.get(name, name)
             relocs = {site: (semantic.get(ref, ref), kind) for site, (ref, kind) in relocs.items()}
@@ -601,8 +630,22 @@ def derive(log=print, want_suggestions=False):
         rows.append((rva, size, "data", portable(name, unit), unit,
                      portable(data_evidence[(name, rva)], unit)))
     rows.sort()
-    suggestions = [row for row in rows if row[4] in owned]
-    rows = [row for row in rows if row[4] not in owned]
+    # An own unit's pick-any COMDAT is a header inline, a template or a
+    # compiler-generated record: no source of the image can claim it (its
+    # header may be another image's), so its placement is a table row unless
+    # the image's own sources already claim that address.
+    # A shared unit's name at the same address wins, and two such names for
+    # one address (an /OPT:ICF fold) place neither.
+    own_claims = _own_claimed_rvas()
+    labelled = Counter(row[0] for row in rows if row[4] not in owned)
+    candidates = Counter(row[0] for row in rows if row[4] in owned and row[3] in inline_comdats)
+
+    def promoted(row):
+        return (row[4] in owned and row[3] in inline_comdats and row[0] not in own_claims
+                and not labelled[row[0]] and candidates[row[0]] == 1)
+
+    suggestions = [row for row in rows if row[4] in owned and not promoted(row)]
+    rows = [row for row in rows if row[4] not in owned or promoted(row)]
     placed_functions -= sum(row[2] == "func" for row in suggestions)
     log(f"[placements] {placed_functions} functions and {len(rows) - placed_functions} "
         f"data objects placed from {len(compiled)} compiled bodies of {len(units)} "
