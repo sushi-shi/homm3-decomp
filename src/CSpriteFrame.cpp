@@ -27,6 +27,15 @@ static const unsigned int kGeneralRLEMaxRunLength =
 // kCellWidth == 0"); the unsigned constant makes the cell arithmetic unsigned.
 static const unsigned int kCellWidth = 32;
 
+// The tileset and adventure-object encodings mark raw runs with code 7 in
+// a pixel's top three bits and cap a run at 32 pixels. CSpriteFrame.o ends
+// its .rodata with both pairs after kCellWidth; the encoders keep them in
+// registers.
+static const int kTilesetRLERawCode = 7;
+static const unsigned int kTilesetRLEMaxRunLength = 32;
+static const int kAdvObjRLERawCode = 7;
+static const unsigned int kAdvObjRLEMaxRunLength = 32;
+
 
 CSpriteFrame::CSpriteFrame()
     : resource(0, RESOURCE_TYPE_NONE),
@@ -408,8 +417,8 @@ void CSpriteFrame::EncodeTileset()
         }
     }
     if (hasControlPixels) {
-        register const int kRawCode = 7;
-        register const unsigned int kMaxRunLength = 32;
+        register const int kRawCode = kTilesetRLERawCode;
+        register const unsigned int kMaxRunLength = kTilesetRLEMaxRunLength;
 
         unsigned int newDataSize = CroppedHeight * sizeof(unsigned short);
         unsigned char* source = map;
@@ -478,8 +487,8 @@ void CSpriteFrame::EncodeTileset()
 
 void CSpriteFrame::EncodeAdvObj()
 {
-    register const int kRawCode = 7;
-    register const unsigned int kMaxRunLength = 32;
+    register const int kRawCode = kAdvObjRLERawCode;
+    register const unsigned int kMaxRunLength = kAdvObjRLEMaxRunLength;
 
     int right = CroppedX + CroppedWidth;
     int newCroppedX = CroppedX - CroppedX % kCellWidth;
