@@ -258,3 +258,9 @@ name = "support"
 object = 1
 profile = "glade-c"
 source = "src/editor/loki/support.c"
+
+[[unit]]
+name = "main"
+object = 0
+profile = "glade-c"
+source = "src/editor/loki/main.c"
