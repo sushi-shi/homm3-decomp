@@ -87,7 +87,7 @@ inline TRawOStream& writeFromIter(TRawOStream& stream, InputIterator first, Inpu
 }
 
 template<class Container>
-TRawOStream& writeContainer(TRawOStream& stream, const Container& container)
+inline TRawOStream& writeContainer(TRawOStream& stream, const Container& container)
 {
     stream << static_cast<long>(container.size());
     return writeFromIter(stream, container.begin(), container.end());
