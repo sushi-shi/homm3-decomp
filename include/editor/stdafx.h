@@ -61,6 +61,7 @@
 #define MAKELONG(lo, hi) (((hi) << 16) | (lo))
 
 #include "terrain.h"
+#include "editor/Uncopyable.h"
 // GUIGameObject.o, the first object that includes this header, owns the
 // type_info functions of TRuntimeError and TAllocationFailure, then of both
 // bitmap formats and their bases, then CWnd's: the classes are completed in
