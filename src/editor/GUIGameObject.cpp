@@ -35,6 +35,23 @@
 
 #define ARRAY_SIZE( a ) ( sizeof( a ) / sizeof( ( a )[ 0 ] ) )
 
+// A 9x9 check mark, one string per pixel row ('!' outline, '.' fill, '-'
+// clear), in a 16-entry row table. Nothing in the image reads it; the
+// layout is GUIGameObject's whole .data (nine row pointers, seven null
+// entries) and the rows' strings precede drawSprite's in .rodata. The
+// name is not proven.
+static const char* akCheckMarkRows[16] = {
+    "-------!-",
+    "------!.!",
+    "-!---!..!",
+    "!.!-!...!",
+    "!..!...!-",
+    "!.....!--",
+    "-!...!---",
+    "--!.!----",
+    "---!-----"
+};
+
 // The clip rectangle a draw call honours: the GC's clip mask, or the whole
 // image.
 static inline void getClipRect(GdkGC* gc, CRect& clipRect, GdkImage* pImage)
