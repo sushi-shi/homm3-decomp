@@ -9,6 +9,7 @@
 #ifndef HOMM3_EDITOR_TERRAINPLACEMENT_H
 #define HOMM3_EDITOR_TERRAINPLACEMENT_H
 
+#include <limits>
 #include <set>
 
 #include "terrain_type.h"
