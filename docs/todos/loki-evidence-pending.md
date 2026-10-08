@@ -43,6 +43,30 @@ likely unblock it.
     does not change.
   - *Unblock:* the missing artifact.cpp statics or a located name-keyed
     mechanism, as the EncodeGeneral statics did for cspriteframe.
+- **artifact.cpp has no missing `.bss` statics (2026-10-08).** Retail's
+  artifact `.bss` runs from 0x693898 to 0x694ca0 with no unclaimed byte.
+  - *Retail order:* `g_artifactSlotMasks` (0x693898), the
+    `artifactStrings` guard (0x6938d4), `g_combinationArtifactTable`,
+    the traits storage (0x6939f8), the slot-traits storage (0x694bf8),
+    then `artifactStrings` (0x694c90) and `artifactSlotStrings`
+    (0x694c98).
+  - *Ours:* the same 0x1408 bytes and the same 8-byte alignment classes,
+    but VC6's name-hashed order differs: `artifactStrings` first, then
+    masks, guard, combination table, `artifactSlotStrings`, traits and slot
+    traits.
+  - *So:* the cspriteframe lever does not apply. No unreferenced hole
+    exists, and no object changes its alignment class.
+  - *Name probe:* Loki's `aArtifactTraitsImp`/`aArtifactSlotTraitsImp` for
+    the two storage arrays still leaves a non-retail order, and gives 89.31
+    (from 89.40).
+  - *Also:* the 89.40 ↔ 89.36 movements follow the declaration offset
+    (period 64, docs/vc6/handle-period.md), not `.bss` layout. On one tree
+    the row also flipped between full rebuilds with byte-identical
+    candidate and delinked target objects.
+  - *Real residual:* inlining. Retail expands bitset<19>'s `_Tidy`,
+    `reference::operator=` and the first `operator==`, which we call, and
+    calls `assign` where we copy-construct. That is source budget, not
+    `.bss`.
 - **`ResourceManager::RedMask`…`BlueBits` declarations.**
   - *Loki:* exports nine `ResourceManager::` objects.
   - *Why not:* declaring the nine in `resourcemanager.h` (what the
