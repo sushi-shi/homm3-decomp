@@ -1,9 +1,6 @@
 #ifndef HOMM3_FONT_H
 #define HOMM3_FONT_H
 
-#include <string>
-#include <vector>
-
 #include "palette.h"
 #include "resource.h"
 
@@ -106,57 +103,40 @@ public:
     TFontSpec m_fs;
 
 private:
-    // DC LF_MEMBER `Palette`, offset 4156 = 0x103c, held BY VALUE - the
-    // retail constructor 0x4b5070 runs TPalette16's default constructor
-    // on this+0x103c as a member initializer (unwind state 1, funclet
-    // 0x62b4d8 destroys exactly this subobject).
+    // DC LF_MEMBER `Palette`, offset 4156 = 0x103c, held by value.
     TPalette16 m_palette;
     // DC LF_MEMBER `Data`.
     void* m_data;
 
 public:
-    // The glyph payload's byte count, byte-proven by GetSize below: the
-    // whole class is 0x1260 and the only member past `data` is the dword
-    // at 0x125c that the size query adds to it. DC has no such member -
-    // its port left the resource size query on a different slot shape.
-    int m_dataSize;
-
-public:
     font();
     font(const char* name, const TFontSpec& fontspec, int dsize,
-         unsigned char* d);  // retail 0x4b5070
+         unsigned char* d);
+    // Loki's vtable (0x84277ec) holds only the destructor.
     virtual ~font();
-    virtual unsigned int getSize() const;
-    void setPalette(const TPalette16& newPalette);
-    void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
-    void drawString(const char* text, Bitmap16Bit* bitmap, int x, int y, TColor color);
-    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
-    int lineLength(const char* str, int boxWidth) const;
-    int lineWidth(const char* text) const;
-    int longestLineWidth(const char* str) const;
-    int longestWrappedLineWidth(const char* str, int boxWidth) const;
-    int longestWordLength(const char* str) const;
-    int getCharacterWidth(unsigned char currChar) const;
-    // Original DrawCursor, font.cpp:123; ordinary member, expanded in retail.
-    void drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
+    int GetColor(TColor colorScheme, bool highlighted);
+    void SetPalette(const TPalette16& newPalette);
+    void DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
+    void DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
                     int clipX, int clipY, int clipWidth, int clipHeight,
                     bool highlighted);
-    long getStringWidth(const char* arg) const;
-
-private:
-    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
-
-public:
-    // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
-    // at this+0x1bc/0x1c0/0x1c4 is what types the receiver as a font and
-    // the second parameter as a pixel box width; NH3API corroborates the
-    // name and the three-parameter shape only.
-    void fillLinesVector(const char* str, int boxWidth,
-                         std::vector<std::string>& result);
-
-private:
-    // Original GetColor, font.cpp:56; ordinary member.
-    int getColor(font::TColor colorScheme, bool highlighted);
+    void DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
+                           int x, int y, TColor colorScheme, int clipX,
+                           int clipY, int clipWidth, int clipHeight,
+                           int cursorPos);
+    void DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y,
+                    TColor color);
+    void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y,
+                           int boxWidth, int boxHeight, TColor colorScheme,
+                           unsigned justification, int cursorPos);
+    int GetCharacterWidth(unsigned char currChar) const;
+    long get_string_width(const char* arg) const;
+    int LineLength(const char* str, int boxWidth) const;
+    int LineWidth(const char* text) const;
+    int LongestLineWidth(const char* str) const;
+    int longest_word_length(const char* str) const;
+    int LongestWrappedLineWidth(const char* str, int boxWidth) const;
+    const TPalette16& GetPalette() const { return m_palette; }
 };
 
 // Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1
