@@ -37,17 +37,6 @@ namespace {
 GdkCursor* hOpenHandCursor = NULL;
 }
 
-// The two file-static helpers after _computeRows (names not proven).
-static inline int max(int a, int b)
-{
-    return b >= a ? b : a;
-}
-
-static inline int min(int a, int b)
-{
-    return b <= a ? b : a;
-}
-
 const CSize TObjectPaletteWnd::s_kObjFrameSize(66, 66);
 
 TObjectPaletteWnd::TObjectPaletteWnd(GtkWidget* thisWidget, TObjectPaletteWndClient* pClient,
@@ -100,6 +89,18 @@ TObjectPaletteWnd::TObjectPaletteWnd(GtkWidget* thisWidget, TObjectPaletteWndCli
 
 TObjectPaletteWnd::~TObjectPaletteWnd()
 {
+}
+
+// The two file-static helpers setSlot uses, defined after the destructor
+// (names not proven).
+static inline int max(int a, int b)
+{
+    return b >= a ? b : a;
+}
+
+static inline int min(int a, int b)
+{
+    return b <= a ? b : a;
 }
 
 void TObjectPaletteWnd::setSlot(TObjectSlot newSlot)
