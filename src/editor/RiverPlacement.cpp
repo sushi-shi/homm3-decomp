@@ -7,8 +7,8 @@
 // proven.
 #include <assert.h>
 
-#include "exceptions.h"
 #include "editor/RiverPlacement.h"
+#include "exceptions.h"
 
 // The river tileset: the line shape of each of its 13 tiles.
 static const TLineShape akRiverTileLineShape[] = {

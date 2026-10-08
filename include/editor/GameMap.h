@@ -29,14 +29,14 @@
 #include "herodefs.h"
 #include "terrain.h"
 #include "terrain_type.h"
-#include "exceptions.h"
 #include "editor/Array.h"
 #include "editor/MapObjectRef.h"
 #include "editor/Player.h"
 #include "editor/Point.h"
-#include "editor/RefCountingPtr.h"
 #include "editor/Uncopyable.h"
 #include "editor/VictoryCondition.h"
+#include "exceptions.h"
+#include "editor/RefCountingPtr.h"
 
 class istream;
 class ostream;

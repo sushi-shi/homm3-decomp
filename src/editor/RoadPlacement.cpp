@@ -7,8 +7,8 @@
 // proven.
 #include <assert.h>
 
-#include "exceptions.h"
 #include "editor/RoadPlacement.h"
+#include "exceptions.h"
 
 // The road tileset: the line shape of each of its 17 tiles.
 static const TLineShape akRoadTileLineShape[] = {

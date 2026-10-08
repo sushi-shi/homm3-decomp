@@ -23,7 +23,7 @@
 
 namespace {
 
-const unsigned int kNumDirs = 8;
+enum { kNumDirs = 8 };
 
 // The tile shapes of a terrain's tileset: full tiles, then the dirt and the
 // sand transitions (corner, vertical and horizontal edge, inner corner and
