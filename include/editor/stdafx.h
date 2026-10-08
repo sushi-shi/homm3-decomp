@@ -66,12 +66,8 @@
 // type_info functions of TRuntimeError and TAllocationFailure, then of both
 // bitmap formats and their bases, then CWnd's: the classes are completed in
 // that order, so the runtime errors and the formats come before the shim.
-// How the original completed the two formats is not proven; their sizes
-// stand in for it.
 #include "exceptions.h"
 #include "editor/T16bppBitmap.h"
-
-enum { kBitmapFormatSizes = sizeof(T8bppBitmapBase<unsigned char>) + sizeof(T16bppBitmapBase<unsigned char>) };
 
 // The sized integer names of the editor's source: __PRETTY_FUNCTION__
 // texts spell uword (Tile.cpp's drawing functions take a uword* buffer)

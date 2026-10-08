@@ -31,15 +31,26 @@ template <class TPixel, class TPaletteIndex>
 class TBitmap : public TBitmapBase<TPixel> {
 };
 
+// The editor's two formats are explicit specializations: each is
+// completed where it is defined (the includers' type names follow the
+// 8-bit format with the 16-bit one), and the 16-bit accessors are compiled
+// and queued right there, before stdafx.h's CPoint (cppbridge.o writes the
+// masks it passes to ResourceManager::SetPixelFormat in that place).
 template <class TPaletteIndex>
-class T8bppBitmapBase : public TBitmap<unsigned char, TPaletteIndex> {
+class T8bppBitmapBase;
+
+template <>
+class T8bppBitmapBase<unsigned char> : public TBitmap<unsigned char, unsigned char> {
 public:
     // One colour per value of the 8-bit pixel.
     enum { kNumColors = 256 };
 };
 
 template <class TPaletteIndex>
-class T16bppBitmapBase : public TBitmap<unsigned short, TPaletteIndex> {
+class T16bppBitmapBase;
+
+template <>
+class T16bppBitmapBase<unsigned char> : public TBitmap<unsigned short, unsigned char> {
 public:
     static int redBits() { return 5; }
     static int redShift() { return 10; }

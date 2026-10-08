@@ -25,9 +25,7 @@ public:
              | ((rgb.blue >> (8 - Format::blueBits())) << Format::blueShift());
     }
 
-    // One 16-bit entry per colour of an 8-bit bitmap: the array bound
-    // completes T8bppBitmapBase<unsigned char> before rgbToEntry completes
-    // the 16-bit format, the order of T16bppPalette.o's type names.
+    // One 16-bit entry per colour of an 8-bit bitmap.
     unsigned short m_entries[T8bppBitmapBase<unsigned char>::kNumColors];
 };
 
