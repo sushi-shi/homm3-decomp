@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "palette.h"
+#include "hsv.h"
 
 // The Loki port's own RGBQUAD: the Windows SDK's layout and tag, which the
 // TPalette16/TPalette24 constructors' mangled names keep.
@@ -24,9 +25,10 @@ struct tagRGBQUAD {
 static void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
                      float* h, float* s, float* v);
 
-// The hues of red, green and blue as fractions of the colour wheel. Loki's
-// object keeps the three constants at the end of its .rodata, after the
-// type names, as g++ 2.95 emits a namespace-scope const (names unproven).
+// The hues of red, green and blue as fractions of the colour wheel, which
+// RGBToHSV adds. The object keeps the three constants at the end of its
+// .rodata after the type names, where g++ 2.95 emits a namespace-scope
+// const; Bitmap16's object, which shares hsv.h, has none (names unproven).
 const float kRedHue = 0.0f;
 const float kGreenHue = 1.0f / 3.0f;
 const float kBlueHue = 2.0f / 3.0f;

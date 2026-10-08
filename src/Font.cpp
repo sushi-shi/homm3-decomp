@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "exceptions.h"
+#include <stdexcept>
 #include "bitmap16.h"
 
 DC_ADDRESS(0x0a1ba8, 0x5c)

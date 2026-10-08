@@ -3,7 +3,6 @@
 
 #include "va.h"
 
-#include "hsv.h"
 #include "resource.h"
 
 // Dreamcast CodeView type 0x184c; retail's TPalette24 constructor consumes

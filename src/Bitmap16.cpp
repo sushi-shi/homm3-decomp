@@ -11,7 +11,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "exceptions.h"
+#include <stdexcept>
 #include "bitmap16.h"
 
 #include "bitmap816.h"

@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "exceptions.h"
+#include <stdexcept>
 #include "bitmap8.h"
 
 Bitmap8Bit::Bitmap8Bit()
