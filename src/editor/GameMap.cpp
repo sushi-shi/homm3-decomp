@@ -434,6 +434,8 @@ private:
     bool _isMapPlayable() const;
     TMapLayerObjectID _findObject(bool bSecondLayer, const TTilePoint& loc,
                                   bool (*pfnPredicate)(const TGameObject&)) const;
+    TVictoryCondition* _reconstructVictoryCondition(const TVictoryConditionData& vcData) const;
+    TLossCondition* _reconstructLossCondition(const TLossConditionData& lcData) const;
     const TNonRandomHero* _findPlayersNonRandomHero(TPlayer player) const;
     TRawIStream& readContainer(TRawIStream& stream, vector<TRumor>& aRumor);
     TRawIStream& readContainer(TRawIStream& stream, vector<TTimedEvent>& aTimedEvent);
@@ -2396,6 +2398,44 @@ void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TLCLoseHero& lc) cons
 void TGameMap::_TImpl::_write(TRawOStream* pOStream, const TLCTimeExpires& lc) const
 {
     *pOStream << static_cast<signed char>(eLCTimeExpires) << static_cast<short>(lc.getNumDays());
+}
+
+TLossCondition* TGameMap::_TImpl::_reconstructLossCondition(const TLossConditionData& lcData) const
+{
+    if (lcData.m_type == eLCNone)
+        return NULL;
+    TLossCondition* result;
+    switch (lcData.m_type) {
+    case eLCLoseTown: {
+        const TMapLoc& townLoc = lcData.m_townLoc;
+        TMapLayerObjectID townID = _findObject(townLoc.m_layer != 0, TTilePoint(townLoc.m_x, townLoc.m_y), isTown);
+#line 4867
+        assert(townID != TLayer::s_kInvalidObjID);
+        result = new TLCLoseTown(TMapObjectRef(townLoc.m_layer != 0, townID));
+        break;
+    }
+    case eLCLoseHero: {
+        const TMapLoc& heroLoc = lcData.m_heroLoc;
+        TMapLayerObjectID heroID =
+            _findObject(heroLoc.m_layer != 0, TTilePoint(heroLoc.m_x, heroLoc.m_y), isHeroOrTown);
+#line 4876
+        assert(heroID != TLayer::s_kInvalidObjID);
+        result = new TLCLoseHero(TMapObjectRef(heroLoc.m_layer != 0, heroID));
+        break;
+    }
+    case eLCTimeExpires:
+        result = new TLCTimeExpires(lcData.m_numDays);
+        break;
+    default:
+#line 4886
+        assert(false);
+    }
+    if (result == NULL)
+#line 4890
+        throw TAllocationFailure(__FILE__, __LINE__);
+#line 4892
+    assert(_isValid( *result ));
+    return result;
 }
 
 TMapLayerObjectID TGameMap::_TImpl::_findObject(bool bSecondLayer, const TTilePoint& loc,
