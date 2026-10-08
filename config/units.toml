@@ -286,7 +286,7 @@ flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "creaturetype"
-source = "src/creaturetype.cpp"
+source = "src/CreatureType.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]

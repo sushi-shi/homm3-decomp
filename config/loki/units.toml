@@ -123,3 +123,8 @@ source = "src/editor/Colors.cpp"
 name = "artifact"
 object = 5
 source = "src/Artifact.cpp"
+
+[[unit]]
+name = "creaturetype"
+object = 9
+source = "src/CreatureType.cpp"

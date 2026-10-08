@@ -1,55 +1,48 @@
 #ifndef HOMM3_CREATURETYPE_H
 #define HOMM3_CREATURETYPE_H
 
-#include "va.h"
-
 #include "armygrp.h"
-#include "creaturetype_fwd.h"
-#include "town.h"
+#include "creature_flags.h"
+#include "town_type.h"
 
-// Complete extends the Dreamcast creature-name domain through id 0x96.
-// GetArmyName's retail range guard proves the inclusive upper bound.
-const int g_creatureTypeLast = 0x96;
+// CreatureType.h of the Loki port (RoE source). Field names are the
+// Dreamcast CodeView ones; the layout is the 96-byte record CreatureType.cpp
+// fills from crtraits.txt (costs, fight and AI values and the horde growth
+// as shorts).
 
-// E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
-// events.cpp also expands this at monsters_flee/join/sell_out, passing a
-// literal count so each singular/plural selection folds at its call site.
-// DC 299..307 keeps the else arm (row 303 is its own jump); the guard-return
-// spelling costs /Ob2 more and pushed getArmyHelpText's appends out of line.
-VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup
-DC_ADDRESS(0x01ef94, 0x5c)
-inline const char* getArmyName(int type, int count)
-{
-    if (type < 0 || type > g_creatureTypeLast) {
-        return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
-    } else {
-        return count == 1 ? g_creatureTypeTraits[type].m_name
-                          : g_creatureTypeTraits[type].m_pluralName;
-    }
-}
+enum { kNumCreatureTypesPerTown = 7 };
 
-// Windows combatMonsterEvent retains four equality arms for this predicate.
-// Keep its canonical membership expression: the unsigned-range spelling
-// loses the retail expansions in army alignment, morale, luck and terrain.
-// Mac can lower equivalent membership tests differently; it is a reference.
-#define isBaseElemental(type) \
-    ((type) == CREATURE_AIR_ELEMENTAL \
-        || (type) == CREATURE_EARTH_ELEMENTAL \
-        || (type) == CREATURE_FIRE_ELEMENTAL \
-        || (type) == CREATURE_WATER_ELEMENTAL)
+struct TCreatureTypeTraits {
+    TTownType townType;
+    int level;
+    const char* cSamplePrefix;
+    const char* m_sprite_name;
+    unsigned long attributes;
+    const char* m_name;
+    const char* m_plural_name;
+    const char* special_ability;
+    short cost[7];
+    short baseFightValue;
+    short AI_value;
+    int growthRate;
+    short horde_growth_rate;
+    int hitPoints;
+    int speed;
+    int attackSkill;
+    int defenseSkill;
+    int damageLowBound;
+    int damageHighBound;
+    int numShots;
+    int wanderingLow;
+    int wanderingHigh;
+};
 
-// Original GetBaseCreature: creaturetype.cpp:202. The two
-// CTownDlg::CreateWin calls are named at DC lines 326/342. Complete Mac
-// expands the same row lookup at 0x16c924/0x16ca40, as does Windows; a
-// shared header body/inline linkage are inferred for Complete's cross-TU
-// expansion, not proven by the older DC declaration.
-// The older DC body returns zero outside 0..6. Complete's popup expansions
-// have no such fallback; their two loops supply valid dwelling indices.
-// Complete's behavior for an invalid dwelling index remains unproven.
-DC_ADDRESS(0x0718dc, 0x20)
-inline TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
-{
-    return g_dwellingType[townType][baseCreatureNbr];
-}
+extern TCreatureTypeTraits akCreatureTypeTraits[kNumCreatureAndSiegeWeaponTypes];
+
+TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
+bool IsBaseCreature(TCreatureType type);
+bool IsSiegeWeapon(TCreatureType type);
+TCreatureType UpgradedCreatureType(TCreatureType type);
+bool InitializeCreatureTypeTraitsTable();
 
 #endif  /* HOMM3_CREATURETYPE_H */
