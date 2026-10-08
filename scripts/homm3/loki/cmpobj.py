@@ -87,6 +87,11 @@ def canonical_symbol(name: str) -> str:
 
 
 def literal_name(content: bytes) -> str:
+    # A type_info name of a class in an anonymous namespace spells the
+    # namespace's `_GLOBAL_.N.<file><random>` component; compare it as the
+    # symbols are compared.
+    if b"_GLOBAL_.N." in content:
+        content = canonical_symbol(content.decode("latin-1")).encode("latin-1")
     digest = hashlib.sha1(content).hexdigest()[:8]
     body = content[:-1] if content.endswith(b"\0") else None
     if body is not None and body and all(32 <= c < 127 for c in body) and b"\0" not in body:

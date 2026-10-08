@@ -38,6 +38,9 @@ class ComparisonObjectTest(unittest.TestCase):
 
     def test_literal_names_carry_content(self):
         self.assertTrue(cmpobj.literal_name(b"GzBuf.cpp\0").startswith('$s"GzBuf.cpp"#'))
+        self.assertEqual(
+            cmpobj.literal_name(b"Q231_GLOBAL_.N.ObjectType.cppIWVf1b18TTerrainSlotTraits\0"),
+            cmpobj.literal_name(b"Q231_GLOBAL_.N.ObjectType.cppULngUc18TTerrainSlotTraits\0"))
         self.assertEqual(cmpobj.literal_name(b"\0\0\0\0\0\0\xf0\x3f"), "$d000000000000f03f")
 
 

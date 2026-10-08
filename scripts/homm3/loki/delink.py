@@ -299,7 +299,10 @@ def pair_data(base: list[CodeSection], target: list[CodeSection]) -> dict[str, t
             relocs = sorted(section.relocs, key=lambda r: r.offset)
             for function in section.functions:
                 end = function.offset + function.size
-                out[function.name] = [r for r in relocs if function.offset <= r.offset < end]
+                # Keyed canonically: an anonymous-namespace function's name
+                # differs between the two sides in its random suffix.
+                out[cmpobj.canonical_symbol(function.name)] = [
+                    r for r in relocs if function.offset <= r.offset < end]
         return out
 
     left, right = by_function(base), by_function(target)
