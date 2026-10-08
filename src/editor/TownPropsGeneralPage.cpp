@@ -14,6 +14,7 @@
 #include "exceptions.h"
 #include "editor/GameMap.h"
 #include "editor/Hero.h"
+#include "editor/HeroPropsSheet.h"
 #include "editor/MapEditorText.h"
 #include "editor/SelectHeroClassDlg.h"
 #include "editor/Town.h"
@@ -206,6 +207,31 @@ void TTownPropsGeneralPage::OnVisitingAddButton()
     }
 }
 
+void TTownPropsGeneralPage::OnVisitingEditButton()
+{
+#line 406
+    assert(_m_pVisitingHero != NULL);
+    TNonRandomHero* pNonRandomHero = dynamic_cast<TNonRandomHero*>(_m_pVisitingHero);
+    if (pNonRandomHero) {
+        unsigned int oldProtoNum = pNonRandomHero->getProtoNum();
+        TNonRandomHeroPropsSheet sheet(this, pNonRandomHero, bitset<kNumPlayers>(),
+                                       _m_pMap->getAvailableHeroesInClass(pNonRandomHero->getClass()));
+        sheet.DoModal();
+        _m_bVisitingHeroModified = _m_bVisitingHeroModified || sheet.wasModified();
+        if (pNonRandomHero->getProtoNum() != oldProtoNum)
+            _m_pMap->onHeroProtoChanged(pNonRandomHero->getClass(), oldProtoNum, pNonRandomHero->getProtoNum());
+    } else {
+#line 425
+        assert(dynamic_cast< TRandomHero * >( _m_pVisitingHero ) != NULL);
+        TRandomHero* pRandomHero = static_cast<TRandomHero*>(_m_pVisitingHero);
+        TRandomHeroPropsSheet sheet(this, pRandomHero, bitset<kNumPlayers>());
+        sheet.DoModal();
+        _m_bVisitingHeroModified = _m_bVisitingHeroModified || sheet.wasModified();
+    }
+    _m_visitingHeroName = _m_pVisitingHero->getName().c_str();
+    UpdateData(false);
+}
+
 void TTownPropsGeneralPage::OnVisitingRemoveButton()
 {
 #line 440
@@ -290,7 +316,7 @@ void TTownPropsGeneralPage::OnSelChangePlayerCombo()
     if (newOwner != _m_owner) {
         if (_m_pVisitingHero
             && (newOwner == ePlayerNone || !_m_pMap->getAvailableHeroOwnersMask()[newOwner])) {
-            const char* reason = newOwner == ePlayerNone ? kHeroesNeedOwnerStr : kPlayerHasMaxHeroesStr;
+            const char* const reason = newOwner == ePlayerNone ? kHeroesNeedOwnerStr : kPlayerHasMaxHeroesStr;
             char message[1024];
             snprintf(message, 1024, kContinuingWillDeleteHeroFmtStr, reason);
             if (!askYesNoQuestion(message)) {
