@@ -2556,12 +2556,19 @@ recorded in the source catalogs, not recovered lexical text.
 Both const-reference and by-value extent controls reproduce Fly, so Fly
 alone cannot establish the parameter type. Other Complete callers do: an
 expanded by-value `SLimitData` parameter still gets its own sixteen-byte
-copy, which moves the frame and callee-saved register roles. With the
-Windows overload taking `const SLimitData&`, army::attackWall,
-combatManager::powEffect, drawFrame and updateMouseGrid reproduce retail
-(96.05/98.54/98.03/96.34% by value), earthquake rises 89.14 -> 91.21%,
-and Fly is unchanged. CE's by-value signature belongs to its older
-scrolling implementation. The narrow family
+copy, which moves the frame and callee-saved register roles. The Windows
+extent overload therefore takes `const SLimitData&` and calls
+`updateScreen` once instead of forwarding through the four-int overload,
+and the seven-argument coordinate `scrollTo` is a fixed-viewport stub
+like the extent one. Every extra expansion level in that chain costs the
+missile animators the budget for their final bitmap Draw's `getMap`.
+Together these reproduce the three combatManager missile animators,
+army::animateMissile, army::attackWall, powEffect, drawFrame and
+updateMouseGrid (91-98.5% under the CE chain); earthquake rises
+89.14 -> 91.21% and Fly is unchanged. Defining the stub in the class body
+rather than with the other out-of-class Windows definitions perturbs
+events.cpp's unrelated doCombat (95.53 -> 95.36%) through TU state.
+The narrow family
 reproduces three distinct objects across all 22 affected TUs; all 1102 Fly
 bytes and 54 relocation operands agree with retail. Ordinary definitions of
 its two local search helpers and removal of the redundant outer loop block

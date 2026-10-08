@@ -359,21 +359,13 @@ public:
     }
 
     // DC drawing.cpp:679/680 constructs the extent and delegates. The
-    // Complete combat missile callers expand this across translation units;
-    // Mac's contiguous drawing bodies leave no retained coordinate facade.
-    // Visibility here is a platform inference, not a recovered inline word.
+    // Complete combat missile callers keep the call (DC 3717/3865/4016) and
+    // expand this across translation units; Mac's contiguous drawing bodies
+    // leave no retained coordinate facade. The Windows body is with the
+    // other fixed-viewport definitions at the end of this header.
     DC_ADDRESS(0x084248, 0x60)
-    // Lead (2026-10-07): the forwarding body costs the missile animators'
-    // later Draw expansions their getMap budget. A Windows stub returning
-    // false gives shootBallisticMissile 91.31 -> 94.19 and shootMissile
-    // 96.70 -> 99.23 (removing the calls: 91.72/99.23); neither Mac nor
-    // retail retains a body that decides between delegation and stub.
     bool scrollTo(int x, int y, int width, int height, bool draw,
-                  bool doscrollX, bool doscrollY)
-    {
-        return scrollTo(SLimitData(x, y, x + width, y + height),
-                        draw, doscrollX, doscrollY);
-    }
+                  bool doscrollX, bool doscrollY);
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
     enum TWallSection {
@@ -2086,20 +2078,28 @@ extern const long g_castleWallGateTargets[5];   // 0x63abe0
 
 // Windows fixed-viewport implementations. CE drawing.cpp:513/514 forwards
 // a by-value extent to the four-int UpdateCombatArea (dc 0x83ec0/0x83ee8).
-// Preserve that call and inclusive dimensions. The Windows extent overload
-// takes the rectangle by const reference: VC6 materializes a by-value
-// inlined parameter as a sixteen-byte copy, which retail's frames lack.
-// With the reference, attackWall, powEffect and drawFrame reproduce
-// exactly and updateMouseGrid reaches 99.98%; Fly is unchanged. CE's
-// by-value signature is from the older viewport implementation. The CE leaf clips/translates
+// Preserve the inclusive dimensions. The CE leaf clips/translates
 // viewport offsets, calls six-int Window::UpdateScreen and redraws a combat
 // window; retail Fly instead calls four-int updateScreen at 0x4b4df3.
 // Likewise CE ScrollTo (drawing.cpp:598, dc 0x8405c) moves/redraws a viewport;
 // retail Fly has neither its scrolling work nor a scrolled-result branch.
 // One shared Windows definition accounts for those cross-TU expansions.
 // Header placement is a platform visibility inference, not recovered lexical
-// source. dc_only.tsv retains the CE origins separately. Both parameter
-// forms reproduce all 1102 Fly bytes.
+// source. dc_only.tsv retains the CE origins separately.
+//
+// Retail fixes three Windows departures from the CE chain. The extent
+// overload takes the rectangle by const reference: VC6 gives an expanded
+// by-value SLimitData parameter its own sixteen-byte copy, which retail's
+// frames lack. It presents the rectangle with one updateScreen call rather
+// than through the four-int overload, and the coordinate scrollTo facade
+// is a fixed-viewport stub like the extent one instead of building and
+// forwarding a rectangle. Each extra expansion level costs the missile
+// animators the budget for their final bitmap Draw's getMap; together
+// they reproduce shootBallisticMissile, shootAnimatedMissile, shootMissile,
+// army::animateMissile and attackWall, powEffect, drawFrame and
+// updateMouseGrid exactly (91-98.5% under the CE chain). Fly reproduces
+// under both. Defining the stub in the class body instead perturbs
+// events.cpp's unrelated doCombat (95.53 -> 95.36%).
 inline void combatManager::updateCombatArea(int x, int y, int width, int height)
 {
     g_windowManager->updateScreen(x, y, width, height);
@@ -2107,10 +2107,15 @@ inline void combatManager::updateCombatArea(int x, int y, int width, int height)
 
 inline void combatManager::updateCombatArea(const SLimitData& area)
 {
-    updateCombatArea(area.m_minX, area.m_minY, area.width(), area.height());
+    g_windowManager->updateScreen(area.m_minX, area.m_minY, area.width(), area.height());
 }
 
 inline bool combatManager::scrollTo(SLimitData, bool, bool, bool)
+{
+    return false;
+}
+
+inline bool combatManager::scrollTo(int, int, int, int, bool, bool, bool)
 {
     return false;
 }

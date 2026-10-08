@@ -1136,11 +1136,11 @@ void army::walk(int direction, bool endWalk, bool initialWalk)
 // The DC1252..1348 projectile scope owns its saved bitmap and update bounds;
 // Mac0x4afa0 likewise joins the Enchanter, ray and projectile arms at exit.
 // Keep the corresponding if/else branches and the bitmap/sprite wrappers
-// (DC1303/1317/1322), rectangle Include/Clip and by-value update helpers.
+// (DC1303/1317/1322), rectangle Include/Clip and update helpers.
 // Mac0x4b008 also expands getOwningSide before markCreatureEffect.
-// Residual95.1085%: all52 block flows and25 branches agree; rectangle/target
-// scratch placement and the internal switch reference still differ.
-// Nine const-pixel-address/mode-scope combinations preserve that score.
+// The Windows fixed-viewport update/scroll definitions in cmbtmgr.h
+// reproduce retail; the CE forwarding chain left rectangle/target scratch
+// placement different (95.14%).
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
 MAC_ADDRESS(0x04afa0, 0x68c)
@@ -1250,7 +1250,7 @@ void army::animateMissile(army* armyToAttack)
                 // SLimitData::Include and Clip; VC6 expands both methods.
                 updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
                 updateArea.clip(combatManager::s_combatAreaLimits);
-                // DC army.cpp:1335/1336 retains the by-value extent calls.
+                // DC army.cpp:1335/1336 retains the extent calls.
                 if (!g_combatManager->scrollTo(updateArea, true, true, true))
                     g_combatManager->updateCombatArea(updateArea);
                 GameTime::delayTil(nextFrameTime);

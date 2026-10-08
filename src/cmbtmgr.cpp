@@ -2978,12 +2978,11 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // call after clipping the same four-word rectangle.
 // DC 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw
 // forwarding overloads. The four-word NullLimits copy permits either copy
-// initialization or default construction followed by assignment. Combined
-// with the original ScrollTo arguments, the latter lets VC6 expand
-// GetNumFrames and measures 91.3063%. Its nested IsValidSeq and the final
-// Draw's GetMap still remain calls; retail expands both. The frame remains
-// 0x8c vs retail 0x9c. Naming the previous-frame rectangle inside its guard,
-// typed-row GetMap and native operand-order alternatives are byte-flat.
+// initialization or default construction followed by assignment; the
+// latter lets VC6 expand GetNumFrames. With the Windows fixed-viewport
+// update and scroll definitions (cmbtmgr.h) the nested IsValidSeq and the
+// final Draw's GetMap expand as in retail, and the body reproduces exactly
+// (91.3063% under the CE forwarding chain, with a 0x8c frame).
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3050,10 +3049,10 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // one before constructing the old bounds. Mac 0x744a4..0x744b4 forms
 // the current inclusive endpoints for Include. Keep those expressions
 // and the ordinary indexed loop; right/bottom induction counters were
-// compiler substitutions. VC6 is byte-flat at 94.71%; all 54 blocks,
-// 29 branches and 17 named calls align. The first residual is Include's
-// lowering at +0x333, with rectangle scratch/stack differences following.
-// The canonical bitmap, sprite, rectangle and resource calls stay intact.
+// compiler substitutions. The canonical bitmap, sprite, rectangle and
+// resource calls stay intact; with the Windows fixed-viewport update and
+// scroll definitions (cmbtmgr.h) this reproduces retail. The CE forwarding
+// chain stopped at 94.71% from Include's lowering at +0x333 onward.
 // DC 3794/3796 and Mac 0x7428c..0x742ac separate the count guard
 // from the inner angle break; unordered angles continue that loop.
 // The inner-break restoration is VC6 byte-identical. Eight rectangle
@@ -3189,10 +3188,9 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 // Retain that comparison rather than the combined >= guard, including its
 // unordered-input behavior. The natural for loop and count-only while with
 // inner break produce identical VC6 bytes: lane Windows 96.57%, Mac 65.8784%.
-// The final bitmap Draw now expands; nested Bitmap16Bit::getMap and the final
-// four-coordinate updateCombatArea remain out of line. All 62 CFG blocks and
-// 33 branches align. The merged header/TU context also expands that Draw
-// before this loop restoration (96.56%); these are lane measurements.
+// The final bitmap Draw expands. Under the CE forwarding update/scroll
+// chain its nested Bitmap16Bit::getMap stayed out of line (96.70%); the
+// Windows fixed-viewport definitions in cmbtmgr.h reproduce retail.
 // Moving ARROW_DELAY before drawFrame regressed to 92.65% and contradicts
 // DC 3974 (NullLimits construction), 3978 (DrawFrame), 3980 (delay math),
 // and Mac 0x74960..0x74994. Preserve the native draw-before-delay order.
