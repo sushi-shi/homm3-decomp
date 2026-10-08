@@ -42,6 +42,10 @@ TRawOStream& operator<<(TRawOStream& stream, const TCreatureStack& stack);
 TRawIStream& operator>>(TRawIStream& stream, TCreatureStack& stack);
 
 class TArmy : public TArray<TCreatureStack, 7> {
+public:
+    // Named after TArmyDlg's _s_kNumCreatureStacks; TArmy's own name for
+    // its size is not recorded.
+    static const unsigned int s_kNumCreatureStacks = 7;
 };
 
 TRawOStream& operator<<(TRawOStream& stream, const TArmy& army);

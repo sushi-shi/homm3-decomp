@@ -9,7 +9,8 @@
 // absolute and indeterminate kinds in Town.cpp). TTown::TTimedEvent adds
 // the buildings to build (+0x44) and the generator bonuses (+0x4c) to a
 // map timed event. Enumerator names of TBuilding and TGeneratorType, and
-// TBuildingTraits' first two fields, are not recovered.
+// TBuildingTraits' first two fields, are not recovered; the hall, castle,
+// shipyard and grail buildings map validation tests are named by role.
 #ifndef HOMM3_EDITOR_TOWN_H
 #define HOMM3_EDITOR_TOWN_H
 
@@ -32,7 +33,14 @@ class THero;
 
 enum TBuilding {
     eBuildingNone = -1,
+    eBuildingTownHall = 0,
+    eBuildingCityHall = 1,
+    eBuildingCapitol = 2,
     eBuildingFort = 3,
+    eBuildingCitadel = 4,
+    eBuildingCastle = 5,
+    eBuildingShipyard = 16,
+    eBuildingGrail = 17,
     kNumBuildings = 41
 };
 

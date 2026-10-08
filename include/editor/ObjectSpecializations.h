@@ -254,6 +254,22 @@ struct TCreatureBankTypeTraits {
 
 extern const TCreatureBankTypeTraits* akCreatureBankTypeTraits;
 
+// One name per two-way and per one-way monolith kind (the object type's
+// subtype; ObjectSpecializations.cpp's aMonolithTypeTraitsImp and
+// aOneWayMonolithTypeTraitsImp, 12 bytes each). The bounds are the
+// validation asserts'; the row type's name is not recorded.
+enum {
+    kNumMonolithTypes = 3,
+    kNumOneWayMonolithTypes = 3
+};
+
+struct TMonolithTypeTraits {
+    const char* m_name;
+};
+
+extern const TMonolithTypeTraits* akMonolithTypeTraits;
+extern const TMonolithTypeTraits* akOneWayMonolithTypeTraits;
+
 // A creature generator; its kind is the object type's subtype.
 class TGenerator : public TFlaggableObject {
 public:

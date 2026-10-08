@@ -43,13 +43,14 @@ enum TArtifactSlot {
 // Complete-era fields at +0x14..+0x1d. hero::remove_artifact corroborates the
 // allowable-slot class, combination indices and spell-list flag.
 // The artifact classes artraits.txt column 20 names by letter: S(pecial),
-// T(reasure), N (minor), J (major), R(elic).
+// T(reasure), N (minor), J (major), R(elic). The Loki asserts spell
+// ArtifactClassSpecial; the other four follow it.
 enum TArtifactClass {
-    eArtifactClassSpecial = 1,
-    eArtifactClassTreasure = 2,
-    eArtifactClassMinor = 4,
-    eArtifactClassMajor = 8,
-    eArtifactClassRelic = 0x10
+    ArtifactClassSpecial = 1,
+    ArtifactClassTreasure = 2,
+    ArtifactClassMinor = 4,
+    ArtifactClassMajor = 8,
+    ArtifactClassRelic = 0x10
 };
 
 // RoE has 127 artifacts ("id >= 0 && id < kNumArtifacts").

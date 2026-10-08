@@ -107,17 +107,17 @@ static void InitializeArtifactTraits(int id, const vector<char*>& resource)
     traits->m_slots[0] = *resource[19] && *resource[19] != ' ';
 
     if (*resource[20] == 'R')
-        traits->m_class = eArtifactClassRelic;
+        traits->m_class = ArtifactClassRelic;
     else if (*resource[20] == 'J')
-        traits->m_class = eArtifactClassMajor;
+        traits->m_class = ArtifactClassMajor;
     else if (*resource[20] == 'N')
-        traits->m_class = eArtifactClassMinor;
+        traits->m_class = ArtifactClassMinor;
     else if (*resource[20] == 'T')
-        traits->m_class = eArtifactClassTreasure;
+        traits->m_class = ArtifactClassTreasure;
     else {
 #line 163
         assert(*resource[20] == 'S');
-        traits->m_class = eArtifactClassSpecial;
+        traits->m_class = ArtifactClassSpecial;
     }
 
     static TAutoStrPtr descriptions[kNumArtifacts];

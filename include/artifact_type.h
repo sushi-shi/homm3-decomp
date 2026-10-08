@@ -21,6 +21,8 @@ enum TArtifact {
     // (`cmp eax,2`, `test eax,eax`, then 3/4/5/6) - the "not a real,
     // transferable artifact" set. DC spelling eArtifactHolyGrail.
     ARTIFACT_HOLY_GRAIL = 2,
+    // The Loki editor's asserts print this spelling (MapValidation.cpp:452).
+    eArtifactHolyGrail = 2,
     // Retail witness: hero::remove_artifact(TArtifact) 0x4e2dd0 opens
     // `cmp ebx,1 / je <return 0>` - a scroll cannot be removed by id,
     // because what distinguishes two scrolls is the `spell` dword, not

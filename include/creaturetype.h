@@ -1,6 +1,8 @@
 #ifndef HOMM3_CREATURETYPE_H
 #define HOMM3_CREATURETYPE_H
 
+#include <assert.h>
+
 #include "armygrp.h"
 #include "creature_flags.h"
 #include "town_type.h"
@@ -47,5 +49,17 @@ bool IsBaseCreature(TCreatureType type);
 bool IsSiegeWeapon(TCreatureType type);
 TCreatureType UpgradedCreatureType(TCreatureType type);
 bool InitializeCreatureTypeTraitsTable();
+
+// The singular or plural name of a creature type; an out-of-range type
+// that passes the assert names nothing. The editor's copy (MapValidation.cpp
+// is its first user) is a weak linkonce body.
+inline const char* GetArmyName(int type, int count = 2)
+{
+#line 294 "CreatureType.h"
+    assert( ( type >= 0 ) && ( type < kNumCreatureAndSiegeWeaponTypes ) );
+    if (type < 0 || type > kNumCreatureAndSiegeWeaponTypes)
+        return "";
+    return count == 1 ? akCreatureTypeTraits[type].m_name : akCreatureTypeTraits[type].m_plural_name;
+}
 
 #endif  /* HOMM3_CREATURETYPE_H */
