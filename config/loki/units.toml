@@ -339,3 +339,8 @@ source = "src/editor/ArmyDlg.cpp"
 name = "MapSpecsGeneralPage"
 object = 70
 source = "src/editor/MapSpecsGeneralPage.cpp"
+
+[[unit]]
+name = "MapSpecsRumorsPage"
+object = 73
+source = "src/editor/MapSpecsRumorsPage.cpp"
