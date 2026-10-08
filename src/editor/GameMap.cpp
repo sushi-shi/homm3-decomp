@@ -4247,8 +4247,8 @@ TMapLayerObjectID TGameMap::TLayer::_TImpl::_placeObject(const TGameObject& obj,
     } else {
         objID = aObjectLink.size();
         aObjectLink.push_back(_TObjectLink());
+        aObjectLink[objID].m_next = _m_nextAvail;
     }
-    aObjectLink[objID].m_next = _m_nextAvail;
     try {
         aObjectLink[objID].setObject(&obj);
     } catch (...) {
