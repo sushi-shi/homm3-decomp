@@ -658,6 +658,14 @@ public:
     bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const;
     const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
     TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
+    const TGameObject* getPObject(const TMapObjectRef& ref) const
+    {
+        return getPObject(ref.getBSecondLayer(), ref.getObjectID());
+    }
+    TTilePoint getObjectLoc(const TMapObjectRef& ref) const
+    {
+        return getObjectLoc(ref.getBSecondLayer(), ref.getObjectID());
+    }
 
     bool onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldTerrainType,
                               TTileExtent* pUpdatedExtent);
