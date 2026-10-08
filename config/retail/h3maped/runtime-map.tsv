@@ -325,7 +325,9 @@ rva	name	library	member
 0xe7349	__cfltcvt_init	LIBCMT	fpinit.obj
 0xe7390	_memchr	LIBCMT	memchr.obj
 0xe7440	_strcspn	LIBCMT	strcspn.obj
+0xe747e	_strtol	LIBCMT	strtol.obj
 0xe7495	_strtoxl	LIBCMT	strtol.obj
+0xe769a	_strtoul	LIBCMT	strtol.obj
 0xe76b1	__dosmaperr	LIBCMT	dosmap.obj
 0xe7724	__errno	LIBCMT	dosmap.obj
 0xe772d	___doserrno	LIBCMT	dosmap.obj
@@ -483,6 +485,7 @@ rva	name	library	member
 0xed24f	__toupper_lk	LIBCMT	toupper.obj
 0xed31b	__fltin2	LIBCMT	cfin.obj
 0xed39a	___loctotime_t	LIBCMT	dtoxtime.obj
+0xed45c	__getcwd	LIBCMT	getcwd.obj
 0xed483	__getdcwd_lk	LIBCMT	getcwd.obj
 0xed558	__validdrive	LIBCMT	getcwd.obj
 0xed58f	__callnewh	LIBCMT	handler.obj
@@ -611,6 +614,7 @@ rva	name	library	member
 0xf181b	?_ValidateRead@@YAHPBXI@Z	LIBCMT	validate.obj
 0xf1837	?_ValidateWrite@@YAHPAXI@Z	LIBCMT	validate.obj
 0xf1853	?_ValidateExecute@@YAHP6GHXZ@Z	LIBCMT	validate.obj
+0xf1882	_mbtowc	LIBCMT	mbtowc.obj
 0xf18df	__mbtowc_lk	LIBCMT	mbtowc.obj
 0xf19b0	__allshl	LIBCMT	llshl.obj
 0xf19cf	_ungetc	LIBCMT	ungetc.obj
@@ -830,6 +834,7 @@ rva	name	library	member
 0xfef48	?_EnableToolTips@CWnd@@QAEHHI@Z	NAFXCW	tooltip.obj
 0xfefeb	?EnableToolTips@CWnd@@QAEHH@Z	NAFXCW	tooltip.obj
 0xfeff9	?_AfxRelayToolTipMessage@@YGXPAVCToolTipCtrl@@PAUtagMSG@@@Z	NAFXCW	tooltip.obj
+0xff07b	?_FilterToolTipMessage@CWnd@@SGXPAUtagMSG@@PAV1@@Z	NAFXCW	tooltip.obj
 0xff08b	?FilterToolTipMessage@CWnd@@QAEXPAUtagMSG@@@Z	NAFXCW	tooltip.obj
 0xff4f7	??0CArchiveStream@@QAE@PAVCArchive@@@Z	NAFXCW	arcstrm.obj
 0xff558	?Read@CArchiveStream@@UAGJPAXKPAK@Z	NAFXCW	arcstrm.obj
@@ -843,8 +848,10 @@ rva	name	library	member
 0xfffaf	?AfxDlgProc@@YGHPAUHWND__@@IIJ@Z	NAFXCW	dlgcore.obj
 0xfffef	?PreTranslateMessage@CDialog@@UAEHPAUtagMSG@@@Z	NAFXCW	dlgcore.obj
 0x10010d	??0CDialog@@QAE@XZ	NAFXCW	dlgcore.obj
+0x10014b	??1CDialog@@UAE@XZ	NAFXCW	dlgcore.obj
 0x100189	?Create@CDialog@@QAEHPBDPAVCWnd@@@Z	NAFXCW	dlgcore.obj
 0x1001d8	?CreateIndirect@CDialog@@IAEHPAXPAVCWnd@@PAUHINSTANCE__@@@Z	NAFXCW	dlgcore.obj
+0x1001fb	?CreateIndirect@CDialog@@QAEHPBUDLGTEMPLATE@@PAVCWnd@@PAX@Z	NAFXCW	dlgcore.obj
 0x100211	?CreateIndirect@CDialog@@IAEHPBUDLGTEMPLATE@@PAVCWnd@@PAXPAUHINSTANCE__@@@Z	NAFXCW	dlgcore.obj
 0x10023c	?CreateDlgIndirect@CWnd@@IAEHPBUDLGTEMPLATE@@PAV1@PAUHINSTANCE__@@@Z	NAFXCW	dlgcore.obj
 0x10045e	?SetOccDialogInfo@CDialog@@MAEHPAU_AFX_OCC_DIALOG_INFO@@@Z	NAFXCW	dlgcore.obj
@@ -861,6 +868,7 @@ rva	name	library	member
 0x10082e	?OnOK@CDialog@@MAEXXZ	NAFXCW	dlgcore.obj
 0x100847	?OnCancel@CDialog@@MAEXXZ	NAFXCW	dlgcore.obj
 0x10084f	?CheckAutoCenter@CDialog@@UAEHXZ	NAFXCW	dlgcore.obj
+0x1008cb	?OnCtlColor@CDialog@@IAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z	NAFXCW	dlgcore.obj
 0x1008df	?OnCommandHelp@CDialog@@IAEJIJ@Z	NAFXCW	dlgcore.obj
 0x10091d	?OnHelpHitTest@CDialog@@IAEJIJ@Z	NAFXCW	dlgcore.obj
 0x100a3e	??0CWnd@@QAE@XZ	NAFXCW	wincore.obj
@@ -1029,6 +1037,7 @@ rva	name	library	member
 0x104a05	??H@YG?AVCString@@ABV0@PBD@Z	NAFXCW	strcore.obj
 0x104a79	?ConcatInPlace@CString@@IAEXHPBD@Z	NAFXCW	strcore.obj
 0x104ad8	??YCString@@QAEABV0@PBD@Z	NAFXCW	strcore.obj
+0x104aff	??YCString@@QAEABV0@D@Z	NAFXCW	strcore.obj
 0x104b14	??YCString@@QAEABV0@ABV0@@Z	NAFXCW	strcore.obj
 0x104b2c	?GetBuffer@CString@@QAEPADH@Z	NAFXCW	strcore.obj
 0x104b7b	?ReleaseBuffer@CString@@QAEXH@Z	NAFXCW	strcore.obj
@@ -1622,6 +1631,7 @@ rva	name	library	member
 0x115652	?Free@CSharedFile@@MAEXPAE@Z	NAFXCW	fileshrd.obj
 0x11566b	?Detach@CSharedFile@@QAEPAXXZ	NAFXCW	fileshrd.obj
 0x11567a	??0_AFX_CHECKLIST_STATE@@QAE@XZ	NAFXCW	winctrl3.obj
+0x115737	??1_AFX_CHECKLIST_STATE@@UAE@XZ	NAFXCW	winctrl3.obj
 0x115752	?SetCheck@CCheckListBox@@QAEXHH@Z	NAFXCW	winctrl3.obj
 0x1157cd	?GetCheck@CCheckListBox@@QAEHH@Z	NAFXCW	winctrl3.obj
 0x1157f2	?Enable@CCheckListBox@@QAEXHH@Z	NAFXCW	winctrl3.obj
@@ -1712,6 +1722,7 @@ rva	name	library	member
 0x1187cd	?CreateObject@?$CThreadLocal@VAFX_MODULE_THREAD_STATE@@@@SGPAVCNoTrackObject@@XZ	NAFXCW	afxstate.obj
 0x1187e3	?CreateObject@?$CProcessLocal@V_AFX_BASE_MODULE_STATE@@@@SGPAVCNoTrackObject@@XZ	NAFXCW	afxstate.obj
 0x118826	??1_AFX_BASE_MODULE_STATE@@UAE@XZ	NAFXCW	afxstate.obj
+0x11882b	?CreateObject@CFrameWnd@@SGPAVCObject@@XZ	NAFXCW	winfrm.obj
 0x118866	?_AfxGetComCtlVersion@@YGKXZ	NAFXCW	bartool.obj
 0x1188d4	?_AfxGetDropDownWidth@@YGHXZ	NAFXCW	bartool.obj
 0x118955	??0CToolBar@@QAE@XZ	NAFXCW	bartool.obj
@@ -1767,6 +1778,7 @@ rva	name	library	member
 0x11a06c	??_G_AFX_CTL3D_THREAD@@UAEPAXI@Z	NAFXCW	app3d.obj
 0x11a093	?ProcessShellCommand@CWinApp@@QAEHAAVCCommandLineInfo@@@Z	NAFXCW	appui2.obj
 0x11a1d4	?Unregister@CWinApp@@QAEHXZ	NAFXCW	appui2.obj
+0x11a303	?DelRegTree@CWinApp@@QAEJPAUHKEY__@@ABVCString@@@Z	NAFXCW	appui2.obj
 0x11a313	?AfxDelRegTreeHelper@@YGJPAUHKEY__@@ABVCString@@@Z	NAFXCW	appui2.obj
 0x11a3e5	?EnableShellOpen@CWinApp@@IAEXXZ	NAFXCW	appui2.obj
 0x11a40f	?RegisterShellFileTypes@CWinApp@@IAEXH@Z	NAFXCW	appui2.obj

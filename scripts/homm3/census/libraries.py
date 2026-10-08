@@ -119,6 +119,7 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
             m or a == b for a, b, m in zip(theirs, code, mask))
 
     hits = defaultdict(set)          # rva -> {(name, library, member)}
+    hit_relocs = {}                  # (rva, name) -> the step-1 member's relocs
     covering = []                    # step 2: (rva, name, library, member)
     pending = []                     # step 3: (name, library, member, relocs, found)
     for library, path in archives.items():
@@ -141,6 +142,7 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
                     covering.append((cover[0], name, library, member))
             elif len(found) == 1 and fixed >= MIN_FIXED:
                 hits[found[0]].add((name, library, member))
+                hit_relocs[found[0], name] = relocs
             elif found and any(kind == REL32 or ref in imports
                                for ref, kind in relocs.values()):
                 pending.append((name, library, member, relocs, found))
@@ -162,23 +164,33 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
     for rva, names in hits.items():
         if len({n for n, _l, _m in names}) == 1:
             named_rvas[next(iter(names))[0]].add(rva)
+    def agrees(rva, relocs):
+        for site, (ref, kind) in relocs.items():
+            value = struct.unpack_from("<i", blob(rva + site, 4))[0]
+            if kind == REL32:
+                if named_rvas.get(ref) != {(rva + site + 4 + value) & 0xFFFFFFFF}:
+                    return False
+            elif ref in imports and imports[ref] != value - image.image_base:
+                return False
+            elif kind == DIR32 and VTABLE.match(ref) \
+                    and VTABLE.match(ref).group(1) in vtables \
+                    and vtables[VTABLE.match(ref).group(1)] != value - image.image_base:
+                return False
+        return True
+
     for name, library, member, relocs, found in pending:
-        agree = []
-        for rva in found:
-            for site, (ref, kind) in relocs.items():
-                value = struct.unpack_from("<i", blob(rva + site, 4))[0]
-                if kind == REL32:
-                    if named_rvas.get(ref) != {(rva + site + 4 + value) & 0xFFFFFFFF}:
-                        break
-                elif ref in imports and imports[ref] != value - image.image_base:
-                    break
-                elif kind == DIR32 and VTABLE.match(ref) and VTABLE.match(ref).group(1) in vtables \
-                        and vtables[VTABLE.match(ref).group(1)] != value - image.image_base:
-                    break
-            else:
-                agree.append(rva)
+        agree = [rva for rva in found if agrees(rva, relocs)]
         if len(agree) == 1 and agree[0] >= band and agree[0] not in hits:
             hits[agree[0]].add((name, library, member))
+
+    # Members whose masked bytes all name one address (the MFC destructors
+    # of classes with the same body) keep the names whose fields agree.
+    for rva, names in hits.items():
+        if len({n for n, _l, _m in names}) > 1 and rva >= band:
+            kept = {(n, l, m) for n, l, m in names
+                    if (rva, n) in hit_relocs and agrees(rva, hit_relocs[rva, n])}
+            if len({n for n, _l, _m in kept}) == 1:
+                hits[rva] = kept
 
     rows, ambiguous = [], 0
     for rva, names in sorted(hits.items()):
