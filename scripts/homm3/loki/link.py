@@ -11,7 +11,8 @@ The image's own facts fix the command (docs/loki/README.md, "Link"):
   1.1.2, glibc 2.1.3), crtbegin.o, the project objects in census order, the
   version object (game_version; GCC 2.95.2, no .text or CIE), libglade,
   libxml, GTK+, GDK, GModule, GLib, zlib, libstdc++, libgcc, then crtend.o, crtn.o;
-- DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc, in that order, so those
+- DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc, in that order (libm first
+  from g++'s `-lstdc++ -lm` tail: an earlier -lm versions libstdc++'s clog), so those
   six are the only shared libraries; everything else is static;
 - `--export-dynamic` (libglade connects signal handlers by name through .dynsym),
   the `/lib/ld-linux.so.2` interpreter, and no .symtab (`-s`);
@@ -33,7 +34,7 @@ LOG = OUT / "link.log"
 
 # Static archives after the project objects, in the image's member order.
 ARCHIVES_BEFORE = ("libglade.a", "libxml.a", "libgtk.a", "libgdk.a", "libgmodule.a", "libglib.a")
-SHARED = ("-ldl", "-lXi", "-lXext", "-lX11", "-lm")
+SHARED = ("-ldl", "-lXi", "-lXext", "-lX11")
 UNDEFINED = re.compile(r"undefined reference to `([^']+)'")
 
 

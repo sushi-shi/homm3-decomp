@@ -367,7 +367,7 @@ unit and runs binutils 2.9.1.0.25's `ld` directly, with what the image proves:
 | Fact | Evidence |
 | :--- | :------- |
 | link order | `.comment` (one entry per linked object) runs 2 egcs, 122 GCC 2.95.2, 155 egcs, 23 GCC 2.95.2, 1 egcs, 1 GCC 2.95.2, 1 egcs: crt1.o and crti.o (glibc 2.1.3, egcs 1.1.2), crtbegin.o, the 103 project objects, libglade and libxml (GCC 2.95.2 C, no `.eh_frame`), GTK+, GDK, GModule, GLib and zlib (egcs), libstdc++ and libgcc, libc_nonshared, crtend.o, crtn.o. `.text` agrees: `glade_init` follows the last project object at 0x08202730, then libxml, `gtk_accel_group_new` (0x0823ead0), GDK, GModule/GLib, zlib (0x083206b0), libstdc++ (0x083278e0). All 2,481 exported C-library functions of the image are linked, in its order. |
-| shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order: `gtk-config --libs`' tail (`-ldl -lXi -lXext -lX11 -lm`) and libc. Everything else is static. |
+| shared libraries | DT_NEEDED is libdl, libXi, libXext, libX11, libm, libc in that order. Everything else is static. libm is first named by g++'s own `-lstdc++ -lm` tail, after libstdc++.a: the image exports libstdc++'s `clog` stream unversioned, where an earlier `-lm` makes ld 2.9.1 give it libm's `clog@@GLIBC_2.1` version and a `.gnu.version_d`. |
 | flags | `-export-dynamic` (12,052 defined `.dynsym` entries; libglade connects handlers by name), interpreter `/lib/ld-linux.so.2`, no `.symtab` (`-s`). |
 | ld 2.9.1 | `.gcc_except_table` precedes `.eh_frame`, both after `.data`: ld 2.9.1's default script has neither, and an orphan goes right after `.data`, so the later one lands first. 2.9.5's script names `.eh_frame` first. The assembler is already 2.9.1.0.25. |
 | GCC runtime | crtbegin.o, libgcc and libio/libstdc++ 2.10 come from an i686-pc-linux-gnu bootstrap of 2.95.2 (`-g -O2`, default `-mcpu=pentiumpro`, libgcc `-fPIC` per `config/t-linux`, so its type_info objects go through the 63 `R_386_GLOB_DAT` GOT entries; threads off: no pthread imports). The recipe reproduces crtbegin's `__do_global_dtors_aux`, 12 of 13 linked libgcc members and all 9 libstdc++ members. |
@@ -391,8 +391,6 @@ libstdc++/libgcc 0x10, linkonce 0xd shorter):
   image exports `game_version`, `TGameMap::s_kInvalidObjID` and
   `TGameMap::TLayer::_TImpl::s_kInvalidObjID`, which the project objects
   do not define yet.
-- The linked `.dynsym` gains `clog@@GLIBC_2.1` (and a `.gnu.version_d`):
-  potato's libm exports a versioned `clog`, the image's link saw none.
 
 `homm3 loki link-diff` reads the linked file (or a path) and reports the
 total differing bytes over the file; the ELF header and program headers; every
