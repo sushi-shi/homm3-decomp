@@ -6069,7 +6069,8 @@ inline CTurnDurationPause::CTurnDurationPause()
 {
     g_turnDuration.pause();
     if (g_goSolo) {
-        g_game->m_players[g_soloPos].setLocalHuman();
+        g_game->m_players[g_soloPos].m_isLocal = 1;
+        g_game->m_players[g_soloPos].m_isHuman = 1;
     }
 }
 
@@ -6132,6 +6133,13 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // selects the defeated hero directly (Mac 0xbaf6c's draw check scores 92.78%).
 // Original DC public ?DoCombat@advManager@@QAAHUtype_point@@PAVhero@@
 // PAVarmyGroup@@JPAVtown@@12H_N4@Z proves both trailing flags bool.
+// Retail calls SRandom for the default seed. The replay flag is cleared and
+// then set under both solo conditions (retail `xor al,al` ahead of the
+// tests), not selected by a ternary: 95.53 -> 96.99%. DC 6255/6256 write the
+// pause's solo-seat marking as two statements in events.cpp, isLocal first,
+// and retail re-indexes the player row for the second byte store; that
+// costs the constructor 69 inline units, which leaves the final pause
+// destructor 68 of its 72 (96.22%, against 96.99% for a shared-row helper).
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
@@ -6146,11 +6154,13 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         rightPlayer >= 0 && g_game->isHuman(rightPlayer);
     unsigned char leftHuman = leftPlayer >= 0 && g_game->isHuman(leftPlayer);
     if (seed == -1)
-        seed = random(1, 1000);
+        seed = sRandom(1, 1000);
     demobilizeCurrHero(0, 1);
     reseed(0, 0);
 
-    unsigned char replay = (g_goSolo && g_goSoloTest) ? 1 : 0;
+    unsigned char replay = 0;
+    if (g_goSolo && g_goSoloTest)
+        replay = 1;
     if (!rightHuman && !leftHuman && !replay) {
         int winner;
         NewmapCell* target = g_game->getCell(point);
