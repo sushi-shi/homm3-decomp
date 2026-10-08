@@ -7,12 +7,13 @@
 #ifndef HOMM3_EDITOR_TIMEDEVENT_H
 #define HOMM3_EDITOR_TIMEDEVENT_H
 
-#include <bitset>
 #include <exception>
 #include <string>
 
-#include "editor/Player.h"
 #include "editor/ResourceQuantities.h"
+#include "editor/Player.h"
+
+#include <bitset>
 
 class istream;
 class ostream;
@@ -37,23 +38,24 @@ public:
 
     TTimedEvent();
 
-    const string& getName() const { return _m_name; }
     void setName(const string& newName);
-    const string& getMessage() const { return _m_message; }
     void setMessage(const string& newMessage);
-    const TResourceQuantities& getResourceQuantities() const { return _m_resourceQuantities; }
     void setResourceQuantities(const TResourceQuantities& newQuantities)
     {
         _m_resourceQuantities = newQuantities;
     }
-    bool getBApplyToPlayer(TPlayer player) const;
     void setBApplyToPlayer(TPlayer player, bool bApply);
-    bool getBApplyToComputer() const { return _m_bApplyToComputer; }
     void setBApplyToComputer(bool bApply) { _m_bApplyToComputer = bApply; }
-    unsigned int getFirstOccurence() const { return _m_firstOccurence; }
     void setFirstOccurence(unsigned int newDay);
-    unsigned int getSubsequentInterval() const { return _m_subsequentInterval; }
     void setSubsequentInterval(unsigned int newInterval);
+
+    const string& getName() const { return _m_name; }
+    const string& getMessage() const { return _m_message; }
+    const TResourceQuantities& getResourceQuantities() const { return _m_resourceQuantities; }
+    bool getBApplyToPlayer(TPlayer player) const;
+    bool getBApplyToComputer() const { return _m_bApplyToComputer; }
+    unsigned int getFirstOccurence() const { return _m_firstOccurence; }
+    unsigned int getSubsequentInterval() const { return _m_subsequentInterval; }
 
     void importText(istream* pIStream);
     void exportText(ostream* pOStream) const;

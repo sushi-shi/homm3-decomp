@@ -1,6 +1,8 @@
 // TimedEvent.cpp - Loki h3maped object 34: the timed event's validated
 // setters, its text import/export (map editor clipboard) and its binary
 // form. Assert lines come from the retail immediates.
+#include "editor/TimedEvent.h"
+
 #include <assert.h>
 #include <ctype.h>
 #include <algorithm>
@@ -9,7 +11,6 @@
 #include <string>
 
 #include "terrain.h"
-#include "editor/TimedEvent.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 
