@@ -215,7 +215,9 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
             inputs=objects,
             implicit=["scripts/homm3/build/link.py",
                       "scripts/homm3/build/link_order.py",
-                      "config/retail/link-order.tsv"],
+                      "scripts/homm3/build/resources.py",
+                      "config/retail/link-order.tsv",
+                      "src/heroes3.rc"],
         )
         writer.build("candidate", "phony",
                      inputs=[_image_path("build/exe/HEROES3.candidate.EXE")])

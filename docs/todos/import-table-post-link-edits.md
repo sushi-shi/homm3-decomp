@@ -7,6 +7,10 @@ relationship between the anomalies below have not been established. Until
 this is explained, `homm3 verify data-coverage` reports those bytes in a
 separate `import-structure` category rather than as verified linker output.
 
+`config/retail/post-link-edits.tsv` states these edits for the link-diff
+gate (`homm3 verify link-diff`), with the Collector's Edition byte as LINK's.
+That does not change the byte-accounting categories below.
+
 ## Current accounting
 
 All addresses are RVAs in the pinned `HEROES3.EXE`.

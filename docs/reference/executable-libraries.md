@@ -70,15 +70,15 @@ the pinned members' own `@comp.id` alongside:
 
 | Rich entry (product/build, count) | Producer | Linked members that carry it |
 |---|---|---|
-| `Utc12_CPP` 8447, 145 | VC6 SP3 C++ | game C++ objects; our build has 139 (135 game + 4 victor) |
-| `Utc12_C` 8168, 178 | VC6 RTM C compiler | 153 LIBCMT + 6 LIBCPMT C members, 14 zlib objects, 5 unidentified |
+| `Utc12_CPP` 8447, 145 | VC6 SP3 C++ | game C++ objects; the candidate link reads 136 (victor's VC5 objects carry no `@comp.id`) |
+| `Utc12_C` 8168, 178 | VC6 RTM C compiler | LIBCMT/LIBCPMT C members and the 14 RTM-compiled zlib objects; the candidate link reads 175 |
 | `Utc12_CPP` 8168, 26 | VC6 RTM C++ | 13 LIBCMT + 13 LIBCPMT C++ members: exact |
 | `Masm613` 7299, 41 | MASM 6.13 | 41 LIBCMT assembler members: exact |
 | `AliasObj60` 7291, 12 | OLDNAMES aliases | 12 `OLDNAMES.LIB` weak-alias members |
 | `Linker512` 8034, 19 | import descriptors | 9 system DLLs x 2 + the null descriptor |
 | `Linker512` 9049, 3 | import descriptors | DirectX 7 `DDRAW.LIB` |
 | `Linker600` 8168, 4 | LIB 6.00 RTM | 4 objects that no pinned library contains (vendor import libraries are the likely source) |
-| `Cvtres500` 1735, 1 | resource converter | the `.res`; the pinned toolchain has CVTRES 5.00.1736 |
+| `Cvtres500` 1735, 1 | resource converter | the `.res`: the pinned CVTRES 5.00.1736 stamps `@comp.id` 6/1735 (VS6 RTM's is 5.00.1720) |
 
 The SP3 service pack rebuilt only three LIBCMT members (`strftime`, `tzset`,
 `undname`), and kept build 8168 for them. The Rich header therefore cannot
@@ -87,19 +87,27 @@ separate SP3 from RTM. The bytes can: `strftime` and `tzset` match only the SP3
 `lib/LIBCMT.LIB` (SP3), `lib/LIBCPMT.LIB`, `lib/OLDNAMES.LIB`, `lib/UUID.LIB`,
 `lib/DXGUID.LIB` (DirectX 7), and the system import libraries.
 
-Two counts point to differences in the build inputs, not in code bytes:
+Two counts pointed to differences in the build inputs, not in code bytes;
+the build now follows both:
 
 - **zlib was compiled by the RTM C compiler.** The 14 zlib objects compiled by
-  `orig/vc6-rtm` (C1/C2 12.00.8168) are section-for-section identical to our
+  `orig/vc6-rtm` (C1/C2 12.00.8168) are section-for-section identical to the
   SP3-compiled objects, including relocations, and carry `@comp.id` 10/8168.
-  Retail has no 10/8447 entry, so it linked an RTM-built zlib (with `/ML`,
-  probably as a prebuilt library).
-- **The game used 12 old POSIX names.** Our objects pull one OLDNAMES alias
-  (`stricmp` in `csprite`). Retail pulled 12. The underscore names that our
-  game objects reference and that have OLDNAMES aliases are exactly 12:
+  Retail has no 10/8447 entry. The zlib units name `compiler = "msvc6-rtm"`
+  (`homm3.init.vc6_rtm`) and are archived into `zlib.lib`.
+- **The game used 12 old POSIX names.** Retail pulled 12 OLDNAMES aliases:
   `access chdir close getcwd open read strcmpi stricmp strnicmp strrev strupr
-  write`. The original source most likely spelled these without the
-  underscore. This changes no code byte; it is source-spelling evidence.
+  write`, exactly the underscore names the game objects reference that have
+  aliases. The source spells them without the underscore, and normalization
+  binds an old name to its CRT function as LINK does.
+
+What the candidate's Rich header still lacks, at the current link: nine
+`Utc12_CPP` 8447 objects (game translation units the reconstruction does not
+yet have: units whose retail code interleaves, such as the victor, rmg and
+singleselection families, mark where one source file stands for several
+original ones), three `Utc12_C` 8168 objects, and the vendor import
+libraries' shapes (`Linker600` 8168 x4, the unmarked objects and the 270
+short imports).
 
 ## Per-function runtime verdicts
 
@@ -155,14 +163,53 @@ game units and are counted in the game score. The library verification found
   byte-identical to LIBCPMT's `delop.obj`; the candidate pulls the latter,
   which puts all of LIBCPMT before LIBCMT as retail has it.
 
+- **Resources.** `src/heroes3.rc` compiles with the pinned RC to payloads
+  equal to retail's (`homm3.build.resources`); LINK converts the `.res` with
+  the pinned CVTRES.
+- **Clock.** LINK runs under libfaketime at retail's TimeDateStamp
+  `0x39b83835`.
+
 `homm3 verify link-diff` compares the candidate with retail and `homm3
 build` gates on `config/link_diff.tsv` (a down-only ceiling per region).
 The target is retail with the post-link edits of
 `config/retail/post-link-edits.tsv` reverted to LINK's bytes. While
-non-exact functions change size, every later address moves, so the gated
-code and data regions compare each contribution at its own retail address,
-with relocated fields compared through the placement of their targets. The
-plain file comparison is printed as information.
+non-exact functions change size, every later address moves, so the code and
+data regions compare each contribution at its own retail address, with
+relocated fields compared through the placement of their targets. Only the
+regions that measure the link's own inputs fail the build (`headers`, `rich`,
+`imports`, `rsrc`); the code and data regions are banked and reported, and
+each becomes a gate when it reaches 0. The plain file comparison is printed
+as information.
+
+Open items, in the order they block a byte-identical link:
+
+- **Code sizes.** 125 functions still compile to a different size, so every
+  later address differs; their own bytes are the matching backlog.
+- **Object partition.** `code-order` breaks where retail places a header
+  COMDAT in another object than ours (our earlier object emits a body the
+  original did not) and where one of our units holds functions of several
+  original objects. victor is an example: retail pulls its members as
+  allocate/validate, flip, loadpcx, pcxinfo, the PCX kernels, the lock
+  destructors and the bit helpers, so `victor.cpp` stands for at least three
+  original members. Nine 8447 C++ objects are missing.
+- **zlib pull order.** Retail places `deflate.obj` first, yet no game code
+  calls a `deflate.obj` function: an original game object referenced one from
+  code `/OPT:REF` removed. The candidate pulls `inflate.obj` first.
+- **No-CD code edits.** `setupCDDrive`'s source returns 7 in six bytes;
+  retail keeps the original body behind the patched entry
+  (`0x50c1c6..0x50c599`), so the original function is the source a
+  byte-identical link needs, with the stated entry edit on top. The same
+  holds for the CD edits in `earlySetup` and `readPrefsFromRegistry`, both
+  non-exact today; `mciSendStringA` (WINMM) is referenced only from that body.
+- **Vendor import libraries.** Retail's mss32, binkw32 and smackw32 imports
+  keep the decorated `_Name@n` export names, which VC6 `LIB /DEF` cannot
+  produce (it prefixes another underscore or emits NOPREFIX names); the
+  binkw32, smackw32 and IFC20 hints equal the shipped DLLs' export indices,
+  mss32's come from an older export table. HoMM1's stub-DLL `/IMPLIB`
+  method (homm1.graph.implib) and its long-format findings are the
+  precedent.
+- **IAT order.** LINK sorts each DLL's thunks with its C runtime's `qsort`;
+  HoMM1's editor needed a native VC6 MSVCRT.DLL for the retail order.
 
 ### Post-link edits
 
