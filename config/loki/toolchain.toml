@@ -100,8 +100,10 @@ target = "i386-linux"
 #                  the image's zlibVersion() "1.0.8"; egcs -O2 -fno-strength-reduce reproduces
 #                  all 14 members' .text.
 #   gcc-2.95.2.tar.gz
-#                  libgcc, crtbegin/crtend and libio/libstdc++ 2.10 as an i686-pc-linux-gnu
-#                  2.95.2 bootstrap builds them (-g -O2, default -mcpu=pentiumpro, libgcc -fPIC).
+#                  libgcc, crtbegin/crtend and libio/libstdc++ 2.10 as a plain `make` of an
+#                  i686-pc-linux-gnu 2.95.2 tree builds them: stage-1 cc1/cc1plus compiled by
+#                  egcs 1.1.2 at -g -O2, target libraries at -g -O2 (default -mcpu=pentiumpro,
+#                  libgcc -fPIC); that cc1plus omits exception::what()'s null test, as the image.
 #   libglade-0.14.tar.gz, libxml-1.8.9.tar.gz
 #                  built with the release cc1 at -O2 -mcpu=pentiumpro, as Loki built them.
 [link]

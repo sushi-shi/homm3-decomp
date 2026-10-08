@@ -15,10 +15,17 @@ build/loki/toolchain/link/:
 
 Two compilers build them, both 2000-era binaries run through potato's loader:
 
-- GCC 2.95.2 release (the compile toolchain's cc1/cc1plus), with Loki's
-  i686 default `-mcpu=pentiumpro`: libgcc, crtstuff, libio/libstdc++ 2.10 the
-  way the 2.95.2 tree builds its target libraries (`-g -O2`), then libxml 1.8.9
-  and libglade 0.14 at `-O2` against Red Hat 6.0's glibc 2.1.1-6 headers;
+- GCC 2.95.2: the release (the compile toolchain's cc1/cc1plus), with Loki's
+  i686 default `-mcpu=pentiumpro`, builds libxml 1.8.9 and libglade 0.14 at
+  `-O2` against Red Hat 6.0's glibc 2.1.1-6 headers; the stage-1 cc1/cc1plus of
+  an i686-pc-linux-gnu 2.95.2 tree, compiled by egcs 1.1.2 at configure's
+  default `-g -O2` (a plain `make`, no bootstrap), builds libgcc, crtstuff and
+  libio/libstdc++ 2.10 the way that tree builds its target libraries
+  (`-g -O2`). 2.95.2's build_x_typeid reads an uninitialized `nonnull`
+  (fixed_type_or_null never sets it for `*this`), so whether `typeid(*this)`
+  tests `this` depends on the stack the compiling cc1plus left: this one omits
+  the test in libgcc's `exception::what()`, as the image does; a bootstrapped
+  (stage 3) or release cc1plus emits it;
 - egcs 1.1.2 of Red Hat 6.2 (egcs-1.1.2-30, its cpp and cc1, binutils-2.9.5.0.22-6's
   as): GLib/GTK+ 1.2.8 (with Red Hat's ahiguti i18n patch) at
   Red Hat's `-O2 -m486 -fno-strength-reduce`, zlib 1.0.8 at
@@ -107,6 +114,7 @@ class Builder:
         self.link, self.jobs = link, jobs
         self.lib, self.xlib, self.bin = link / "lib", link / "xlib", link / "bin"
         self.src, self.log = link / "src", link / "build.log"
+        self.stage1 = link / "gcc-build/gcc"
         self.run_path = f"{tc.SYSROOT}/lib:{tc.SYSROOT}/usr/lib:{self.xlib}"
 
     # -- compilers -----------------------------------------------------------------------------
@@ -133,6 +141,9 @@ class Builder:
             tc._script(self.bin / name, self._driver_script(program, prefixes, includes))
             tc._script(self.bin / f"{name}-i686", self._driver_script(program, prefixes, includes,
                                                                       GCC_CFLAGS_I686))
+            # The stage-1 cc1/cc1plus that gcc_runtime builds: the driver searches the last -B first.
+            tc._script(self.bin / f"{name}-i686-stage1", self._driver_script(
+                program, [*prefixes, self.stage1], includes, GCC_CFLAGS_I686))
         # libxml and libglade were compiled against Red Hat 6.0's glibc 2.1.1-6 headers: its
         # <bits/string2.h> turns every memset(p, 0, n) into a __bzero call (no __builtin_memset
         # macro, no small-size inline memset), as the image's libxml members call __bzero and
@@ -221,19 +232,28 @@ class Builder:
         shutil.copyfile(tree / "gtk/.libs/libgtk.a", self.lib / "libgtk.a")
 
     def gcc_runtime(self, source: bytes) -> None:
-        """libgcc.a, crtbegin.o, crtend.o and libstdc++.a as an i686-pc-linux-gnu 2.95.2 builds them."""
+        """libgcc.a, crtbegin.o, crtend.o and libstdc++.a as a plain `make` of an i686-pc-linux-gnu
+        2.95.2 tree builds them: its stage-1 compilers, built by the host's egcs 1.1.2 at
+        configure's default CFLAGS for a GCC host (`-g -O2`)."""
         top = self.unpack(source)
         objdir = self.link / "gcc-build"
         objdir.mkdir()
         host = "i686-pc-linux-gnu"
-        env = self.env("cc", "-g -O2")
+        # A native configure finds the host's /usr/bin/as and enables its .balign/.p2align (with
+        # maximum skip) features; without them labels lose their `.p2align 4,,7`.
+        env = self.env("egcc", "-g -O2", AS=str(self.link / "egcs/libexec/as"))
         self.run([str(top / "configure"), "--prefix=/usr", "--enable-languages=c,c++", host], objdir, env)
         gcc_dir = objdir / "gcc"
+        assert gcc_dir == self.stage1
+        # The top-level make passes its CFLAGS (configure's -g -O2) down; gcc/Makefile alone says -g.
+        self.run(["make", f"-j{self.jobs}", "all-libiberty"], objdir, env)
+        self.run(["make", f"-j{self.jobs}", "CFLAGS=-g -O2", "cc1", "cc1plus"], gcc_dir, env)
         self.libgcc(top / "gcc", gcc_dir)
         target = objdir / host
-        target_env = self.env("cc-i686", "-g -O2", CXX=str(self.bin / "c++-i686"),
+        cc, cxx = self.bin / "cc-i686-stage1", self.bin / "c++-i686-stage1"
+        target_env = self.env(cc.name, "-g -O2", CXX=str(cxx),
                               CXXFLAGS="-g -O2 -fvtable-thunks -D_GNU_SOURCE", AR="ar", RANLIB="ranlib")
-        make_vars = [f"CC={self.bin / 'cc-i686'}", f"CXX={self.bin / 'c++-i686'}", "CFLAGS=-g -O2",
+        make_vars = [f"CC={cc}", f"CXX={cxx}", "CFLAGS=-g -O2",
                      "CXXFLAGS=-g -O2 -fvtable-thunks -D_GNU_SOURCE"]
         for directory in ("libiberty", "libio", "libstdc++"):
             build = target / directory
@@ -245,7 +265,7 @@ class Builder:
         shutil.copyfile(target / "libstdc++/libstdc++.a.2.10.0", self.lib / "libstdc++.a")
 
     def libgcc(self, source: Path, gcc_dir: Path) -> None:
-        """The libgcc2.a and crtstuff rules of gcc/Makefile, with the release compiler for xgcc."""
+        """The libgcc2.a and crtstuff rules of gcc/Makefile, with the stage-1 compilers for xgcc."""
         makefile = (gcc_dir / "Makefile").read_text()
         joined = makefile.replace("\\\n", " ")
 
@@ -254,14 +274,14 @@ class Builder:
             matches = re.findall(rf"^{name}\s*=(.*)$", joined, re.M)
             return matches[-1].split() if matches else []
 
-        cc = str(self.bin / "cc-i686")
+        cc = str(self.bin / "cc-i686-stage1")
         gcc_cflags = ["-DIN_GCC", "-g", "-O2", "-I./include"]
         libgcc2 = ["-O2", *gcc_cflags, *variable("TARGET_LIBGCC2_CFLAGS"), *variable("LIBGCC2_DEBUG_CFLAGS"),
                    "-DIN_LIBGCC2", "-D__GCC_FLOAT_NOT_NEEDED"]
         includes = ["-I.", f"-I{source}", f"-I{source}/config", f"-I{source.parent}/include"]
         out = gcc_dir / "libgcc-objs"
         out.mkdir()
-        env = self.env("cc-i686", "-g -O2")
+        env = self.env("cc-i686-stage1", "-g -O2")
         members = []
 
         def compile_(name: str, *arguments: str, source_file: Path = source / "libgcc2.c") -> None:
