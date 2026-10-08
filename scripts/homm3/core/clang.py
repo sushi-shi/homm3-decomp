@@ -50,7 +50,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 9
+PATCH_VERSION = 10
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -192,9 +192,18 @@ def _implicit_int_typedef(text: str) -> str:
     return text.replace("typedef __RPC_FAR *LPFONTEVENTS;", "typedef int __RPC_FAR *LPFONTEVENTS;")
 
 
+def _message_map_handlers(text: str) -> str:
+    """afxmsg_.h's message-map entry macros take the handler's address
+    unqualified (`&memberFxn`, `&OnCreate`), which cl resolves in the
+    enclosing class's scope and Clang rejects. The entries are data
+    initializers whose values name nothing, so Clang reads null handlers."""
+    return re.sub(r"&(memberFxn|On\w+)\b", "0", text)
+
+
 #: The staged library headers' rewrites (lowercase_include), as PATCHES.
 LIBRARY_PATCHES = {
     "afxwin1.inl": _implicit_int_comparisons,
+    "afxmsg_.h": _message_map_handlers,
 }
 PATCHES["ocidl.h"] = _implicit_int_typedef
 
