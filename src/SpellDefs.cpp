@@ -1,11 +1,11 @@
 // SpellDefs.cpp of the Loki port (Loki object 30): the RoE spell traits
 // table and its sptraits.txt loader, in Loki's function order.
+#include "spelldefs.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
-
-#include "spelldefs.h"
 
 #include "resourcemanager.h"
 #include "textresource.h"

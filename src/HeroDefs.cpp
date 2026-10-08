@@ -1,11 +1,11 @@
 // HeroDefs.cpp of the Loki port (Loki object 16): the RoE hero, hero-class
 // and secondary-skill traits tables and their spreadsheet loaders.
+#include "herodefs.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
-
-#include "herodefs.h"
 
 #include "resourcemanager.h"
 #include "textresource.h"

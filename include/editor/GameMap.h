@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "artifact.h"
 #include "herodefs.h"
 #include "terrain_type.h"
 #include "exceptions.h"

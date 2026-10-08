@@ -1,11 +1,11 @@
 // CreatureType.cpp of the Loki port (Loki object 9): the RoE creature
 // traits table, its static columns and the crtraits.txt loader.
+#include "creaturetype.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
-
-#include "creaturetype.h"
 
 #include "resourcemanager.h"
 #include "textresource.h"

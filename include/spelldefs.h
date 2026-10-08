@@ -1,6 +1,8 @@
 #ifndef HOMM3_SPELLDEFS_H
 #define HOMM3_SPELLDEFS_H
 
+#include "creaturetype.h"
+
 #include <vector>
 
 #include "armygrp.h"

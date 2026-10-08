@@ -1,6 +1,7 @@
 #ifndef HOMM3_HERODEFS_H
 #define HOMM3_HERODEFS_H
 
+#include "creaturetype.h"
 #include "armygrp.h"
 #include "herospec.h"
 #include "secondaryskill.h"
