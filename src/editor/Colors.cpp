@@ -2,11 +2,11 @@
 #include <assert.h>
 #include <string>
 
+#include "terrain.h"
 #include "exceptions.h"
 #include "csprite.h"
 #include "palette.h"
 #include "resourcemanager.h"
-#include "terrain.h"
 #include "editor/Colors.h"
 #include "editor/Tile.h"
 
