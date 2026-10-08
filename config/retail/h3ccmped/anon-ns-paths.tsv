@@ -1,0 +1,22 @@
+# Canonical paths for VC6 anonymous namespace scopes (?%<path><number>@) of
+# the campaign editor (docs/vc6/anonymous-namespace-names.md).
+#
+# Evidence: each scope as the editor's RTTI type descriptors spell it in
+# h3ccmped.exe; the file offset of its first `?%` spelling is given per row.
+# The editor's own units take their original file stem (`CampaignDoc`).
+# `Campaign Editor.cpp` is absent: a unit name has no space.
+#
+# Campaign Editor.cpp: `?%` at file offset 0xa57ef
+# Campaign: `?%` at file offset 0xa5b64
+# CampaignDoc: `?%` at file offset 0xa6881
+# EditStartingBonusDlg: `?%` at file offset 0xb7702
+# ScenarioPropsStartingOptionsPage: `?%` at file offset 0xbd47e
+# TownTypeTraits: `?%` at file offset 0xc0f25
+# resourcemanager: `?%` at file offset 0xc34a7
+unit	source_basename	canonical_scope
+Campaign	campaign.cpp	C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830
+CampaignDoc	campaigndoc.cpp	C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197
+EditStartingBonusDlg	editstartingbonusdlg.cpp	C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184
+ScenarioPropsStartingOptionsPage	scenariopropsstartingoptionspage.cpp	C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400
+TownTypeTraits	towntypetraits.cpp	C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698
+resourcemanager	resourcemanager.cpp	C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485

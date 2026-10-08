@@ -15,6 +15,18 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	93.9194	93.9194	93.9194	0x11180	tokens1:d033e38cd802
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	96.6667	96.6667	96.6667	0x11100	tokens1:b123a7f0689a
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	94.8875	94.8875	94.8875	0x11010	tokens1:668eb293f27b
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusPrimarySkill@@@Z	96.0714	96.0714	96.0714	0x11300	tokens1:373f8774e56c
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusResource@@@Z	84.1613	84.1613	84.1613	0x114c0	tokens1:bf1a81df68e8
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSecondarySkill@@@Z	94.8875	94.8875	94.8875	0x113d0	tokens1:d340e36fbb56
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpell@@@Z	93.9194	93.9194	93.9194	0x10f50	tokens1:19217ba01321
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpellScroll@@@Z	93.9194	93.9194	93.9194	0x11240	tokens1:22a73ae3e4ea
+CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsBonus@@@Z	95.8022	95.8022	95.8022	0x11b80	tokens1:44bc385628bd
+CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	78.8173	78.8173	78.8173	0x11c80	tokens1:699cfd6a58fa
+CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsStartingHero@@@Z	79.4711	79.4711	79.4711	0x11da0	tokens1:11a27c3210a2
+CampaignDoc	?write@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXABVTScenarioStartingBonus@@AAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x10f30	tokens1:6ffee2429f90
 Player	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x156c0	-
 Player	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	99.8828	99.8828	99.8828	0x18da0	-
 Player	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0x29c00	-
@@ -225,8 +237,8 @@ resourcemanager	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	100.0
 resourcemanager	?overflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x15980	-
 resourcemanager	?overflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x46350	-
 resourcemanager	?pbackfail@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x46500	-
-resourcemanager	?read@t_lod_file_adapter@?A0xd38fcb16638c5270@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x44190	-
-resourcemanager	?read@t_stdio_file_adapter@?A0xd38fcb16638c5270@ResourceManager@@UAEHPAXH@Z	99.5000	99.5000	99.5000	0x44170	-
+resourcemanager	?read@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x44190	-
+resourcemanager	?read@t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	99.5000	99.5000	99.5000	0x44170	-
 resourcemanager	?reportMissingResource@@YAXPBD00@Z	99.8485	99.8485	99.8485	0x447b0	-
 resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	96.4231	96.4231	96.4231	0x449f0	-
 resourcemanager	?seekoff@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	100.0000	100.0000	100.0000	0x15b20	-
