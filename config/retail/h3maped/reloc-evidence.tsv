@@ -10860,7 +10860,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x6f6ed	0x5a1c30	code	test	data	-	kept
 0x6f6f5	0x5938e8	code	mov	data	-	kept
 0x6f6fb	0x5a1c30	code	or	data	-	kept
-0x6f701	0x46f900	code	push	code-interior	-	kept
+0x6f701	0x46f900	code	push	code-start	-	kept
 0x6f706	0x5a1c2c	code	mov	data	-	kept
 0x6f711	0x5a1c2c	code	mov	data	-	kept
 0x6f725	0x52f5f4	code	call	data	-	kept
@@ -13676,7 +13676,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x9436e	0x5a24e8	code	test	data	-	kept
 0x94377	0x5a24e8	code	or	data	-	kept
 0x94383	0x5a24a8	code	push	data	-	kept
-0x9438d	0x494529	code	push	code-interior	-	kept
+0x9438d	0x494529	code	push	code-start	-	kept
 0x94398	0x58d318	code	push	literal-start	-	kept
 0x943c2	0x55c5f8	code	push	data	-	kept
 0x943f9	0x5a24a8	code	lea	data	-	kept
@@ -15760,7 +15760,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xbe60c	0x402215	code	push	code-start	-	kept
 0xbe611	0x4be6e6	code	push	code-start	-	kept
 0xbe61a	0x5a4fb8	code	push	data	-	kept
-0xbe624	0x4be6aa	code	push	code-interior	-	kept
+0xbe624	0x4be6aa	code	push	code-start	-	kept
 0xbe62f	0x5a4fbc	code	mov	data	-	kept
 0xbe637	0x5438e8	code	push	data	-	kept
 0xbe673	0x5a4fe8	code	mov	data	-	kept
@@ -17230,7 +17230,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xcb5db	0x45b3bc	code	push	code-start	-	kept
 0xcb5e0	0x4be6e6	code	push	code-start	-	kept
 0xcb5e9	0x5a5200	code	push	data	-	kept
-0xcb5f3	0x4cb868	code	push	code-interior	-	kept
+0xcb5f3	0x4cb868	code	push	code-start	-	kept
 0xcb5fe	0x42c92d	code	push	code-start	-	kept
 0xcb603	0x49e1ab	code	push	code-start	-	kept
 0xcb62d	0x5a5204	code	mov	data	-	kept

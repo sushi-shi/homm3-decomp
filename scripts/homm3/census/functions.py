@@ -9,8 +9,10 @@ strength, each later seed admitted only outside the bodies already decoded:
   2. code pointers in runs of data pointers (vtables, initializer and
      dispatch tables);
   3. code addresses decoded code loads as immediates (callbacks, atexit
-     thunks, `__ehhandler` stubs); a catch funclet's `mov eax, offset L; ret`
-     instead names a continuation L of its parent, never a function;
+     thunks, `__ehhandler` stubs), even inside a decoded body when they
+     follow a call there (a call that never returns); a catch funclet's
+     `mov eax, offset L; ret` instead names a continuation L of its parent,
+     never a function;
   4. isolated data pointers into .text;
   5. the first non-padding byte after a body's decoded extent (unreferenced
      neighbours), repeated to a fixpoint.
@@ -343,6 +345,20 @@ def run(image, log=print):
     for t, s in run_targets:
         work.append((t, f"table@0x{s:x}"))
     drain(True)
+    index()
+    # an address code loads as an immediate that is the fall-through of a
+    # call is a function the descent ran into past a call that never
+    # returns (`_CxxThrowException`, then the `atexit` destructor thunk of
+    # the thrower's local static array)
+    ends = {}
+    for seen in c.reached.values():
+        for r in seen:
+            ins = c.insn(r)
+            if ins.mnemonic == "call":
+                ends[r + ins.size] = r
+    for t in sorted(c.imms):
+        if t in covered and t in ends and c.in_text(t):
+            take(t, "imm-after-call", check=False)
     index()
     for t in sorted(c.imms):
         work.append((t, "imm"))

@@ -250,7 +250,6 @@ rva	name	library	member
 0xd46fc	?_AfxGetChildControl@@YGPAVCWnd@@PAV1@0@Z	NAFXCW	occdlg.obj
 0xd4755	?_AfxNextControl@@YGPAVCWnd@@PAV1@0I@Z	NAFXCW	occdlg.obj
 0xd4831	?IsMatchingMnemonic@COccManager@@SAHPAVCWnd@@PAUtagMSG@@@Z	NAFXCW	occdlg.obj
-0xd4850	?_AfxFindNextMnem@@YGPAVCWnd@@PAV1@0PAUtagMSG@@@Z	NAFXCW	occdlg.obj
 0xd48d5	?IsLabelControl@COccManager@@SAHPAVCWnd@@@Z	NAFXCW	occdlg.obj
 0xd48fb	?_AfxGetNextMnem@@YGPAVCWnd@@PAV1@0PAUtagMSG@@@Z	NAFXCW	occdlg.obj
 0xd4970	?UIActivateControl@COccManager@@KAXPAVCWnd@@@Z	NAFXCW	occdlg.obj
@@ -1226,7 +1225,6 @@ rva	name	library	member
 0x10d641	?FindBar@CDockBar@@QAEHPAVCControlBar@@H@Z	NAFXCW	bardock.obj
 0x10d66f	?ShowAll@CDockBar@@QAEXH@Z	NAFXCW	bardock.obj
 0x10d6b0	?GetDockedControlBar@CDockBar@@IBEPAVCControlBar@@H@Z	NAFXCW	bardock.obj
-0x10d6cc	?Insert@CDockBar@@IAEHPAVCControlBar@@VCRect@@VCPoint@@@Z	NAFXCW	bardock.obj
 0x10d80b	?EnableDocking@CControlBar@@QAEXK@Z	NAFXCW	bardock.obj
 0x10d870	?OnMouseActivate@CMiniDockFrameWnd@@QAEHPAVCWnd@@II@Z	NAFXCW	bardock.obj
 0x10d88b	??0CMiniDockFrameWnd@@QAE@XZ	NAFXCW	bardock.obj
