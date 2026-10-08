@@ -4,7 +4,6 @@
 // neighbours' line shapes from the line cells around them, picks a random
 // tile of that shape and reports the changed rectangle. Assert and throw
 // lines come from the retail immediates.
-#include "editor/stdafx.h"
 
 #include <assert.h>
 #include <stdlib.h>
