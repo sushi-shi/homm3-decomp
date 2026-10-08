@@ -1220,6 +1220,81 @@ void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
     _removeObjectHelper(bSecondLayer, objID);
 }
 
+bool TGameMap::_TImpl::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y,
+                                            TTerrainType oldTerrainType, TTileExtent* pUpdatedExtent)
+{
+#line 2083
+    assert(!bSecondLayer || _m_bTwoLayer);
+    assert(x < getWidth());
+    assert(y < getHeight());
+    assert(oldTerrainType >= 0 && oldTerrainType < kNumTerrainTypes);
+    assert(pUpdatedExtent != NULL);
+    bool bObjectsRemoved = false;
+    const TLayer& layer = getLayer(bSecondLayer);
+    TTerrainType newTerrainType = layer.getCell(x, y).getTerrainType();
+#line 2093
+    assert(newTerrainType != oldTerrainType);
+    unsigned int numObjs = layer.getNumObjectIDsAtCell(x, y);
+    static vector<unsigned int> aObjID;
+    aObjID.clear();
+    aObjID.reserve(numObjs);
+    for (unsigned int i = 0; i < numObjs; i++)
+        aObjID.push_back(layer.getObjectIDAtCell(x, y, i));
+    for (vector<unsigned int>::const_iterator pObjID = aObjID.begin(); pObjID != aObjID.end(); ++pObjID) {
+        const TGameObject& obj = layer.getObject(*pObjID);
+        if (obj.getTerrainMask()[newTerrainType])
+            continue;
+        TTilePoint objLoc = layer.getObjectLoc(*pObjID);
+        unsigned int i = objLoc.x() - x;
+        unsigned int j = objLoc.y() - y;
+        if (obj.getBUnderlay() ? obj.getBCellPlaced(i, j) : !obj.getBCellPassable(i, j)) {
+            TTileExtent removedExtent;
+            removeObject(bSecondLayer, *pObjID, &removedExtent);
+            if (!bObjectsRemoved) {
+                *pUpdatedExtent = removedExtent;
+                bObjectsRemoved = true;
+            } else {
+                *pUpdatedExtent |= removedExtent;
+            }
+        }
+    }
+    if (oldTerrainType == eTerrainWater) {
+        bool abAdjacent[8];
+        computeAdjacentDirs(layer.getWidth(), layer.getHeight(), x, y, abAdjacent);
+        for (unsigned int dir = 0; dir < 8; dir++) {
+            if (!abAdjacent[dir])
+                continue;
+            TTilePoint adjLoc = TPoint<int>(x, y) + akAdjOffset[dir];
+            if (layer.getCell(adjLoc).getTerrainType() != eTerrainWater) {
+                unsigned int numAdjObjs = layer.getNumObjectIDsAtCell(adjLoc);
+                static vector<unsigned int> aAdjObjID;
+                aAdjObjID.clear();
+                aAdjObjID.reserve(numAdjObjs);
+                for (unsigned int i = 0; i < numAdjObjs; i++)
+                    aAdjObjID.push_back(layer.getObjectIDAtCell(adjLoc, i));
+                for (vector<unsigned int>::const_iterator pObjID = aAdjObjID.begin(); pObjID != aAdjObjID.end();
+                     ++pObjID) {
+                    const TGameObject& obj = layer.getObject(*pObjID);
+                    if (obj.getType() == SHIPYARD) {
+                        TTilePoint objLoc = layer.getObjectLoc(*pObjID);
+                        if (!_isValidShipyardPlacement(layer, obj, objLoc.x(), objLoc.y())) {
+                            TTileExtent removedExtent;
+                            removeObject(bSecondLayer, *pObjID, &removedExtent);
+                            if (!bObjectsRemoved) {
+                                *pUpdatedExtent = removedExtent;
+                                bObjectsRemoved = true;
+                            } else {
+                                *pUpdatedExtent |= removedExtent;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return bObjectsRemoved;
+}
+
 void TGameMap::_TImpl::onObjectRemoved()
 {
     const _TPProperties& pConstProperties = _m_pProperties;
