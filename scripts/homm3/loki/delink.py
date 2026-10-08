@@ -84,10 +84,17 @@ class Target:
                 if value not in tables:
                     tables.append(value)
                 return f"{_symbol_name(function)}$jt{tables.index(value)}", 0
-            return cmpobj.literal_for(self.image.elf.read, value, field.access_size), 0
+            return cmpobj.literal_for(self.image.elf.read, value, field.access_size, self.pointer), 0
         section = self.image.elf.section_at(value)
         if section is not None:
             return f"data_{value:08x}", 0
+        return None
+
+    def pointer(self, address: int) -> str | None:
+        (word,) = struct.unpack("<I", self.image.elf.read(address, 4))
+        exported = self.image.object_at(word)
+        if exported is not None and exported.value == word:
+            return exported.name
         return None
 
     def section(self, name: str, start: int, end: int, members: list[CensusFunction]) -> CodeSection:
@@ -154,6 +161,14 @@ def base_sections(data: bytes) -> list[CodeSection]:
                 return symbol
         return None
 
+    def pointer_in(index: int):
+        def pointer(offset: int) -> str | None:
+            for r in rels.get(index, ()):
+                if r.offset == offset and r.type == R_386_32 and symbols[r.symbol].type != STT_SECTION:
+                    return symbols[r.symbol].name
+            return None
+        return pointer
+
     def is_jump_table(index: int, offset: int) -> bool:
         return any(r.offset == offset and symbols[r.symbol].type == STT_SECTION
                    and elf.sections[symbols[r.symbol].shndx].flags & SHF_EXECINSTR
@@ -209,7 +224,8 @@ def base_sections(data: bytes) -> list[CodeSection]:
                 elif kind.name.startswith(".rodata"):
                     # A file-static constant has no name in the image either:
                     # both sides name it by the bytes the operand uses.
-                    name, delta = cmpobj.literal_for(read_section(target.shndx), place, field.access_size), 0
+                    name, delta = cmpobj.literal_for(read_section(target.shndx), place, field.access_size,
+                                                     pointer_in(target.shndx)), 0
                 else:
                     name, delta = f"{kind.name}+{place:x}", 0
                 put(section, field.offset, rel.type, name, delta - 4 if rel.type == R_386_PC32 else delta)

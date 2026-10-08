@@ -139,9 +139,19 @@ def put(section: CodeSection, offset: int, rtype: int, target: str, addend: int)
     struct.pack_into("<i", section.data, offset, addend)
 
 
-def literal_for(read, address: int, access_size: int) -> str:
+def literal_for(read, address: int, access_size: int, pointer=None) -> str:
     """Name a .rodata reference by what the instruction uses: the bytes a
-    memory operand loads, or the C string whose address is taken."""
+    memory operand loads, or the C string whose address is taken.
+
+    `pointer(address)` names an address-sized field that holds a symbol's
+    address (a relocation in the compiled object, an exported address in
+    the image). A table whose address is taken and whose first field is
+    such a pointer (the base list `__rtti_class` takes) is named by that
+    symbol and the field after it, not by bytes the link fills in."""
     if access_size:
         return literal_name(read(address, access_size))
+    if pointer is not None:
+        target = pointer(address)
+        if target is not None:
+            return f"$p{target}+{read(address + 4, 4).hex()}"
     return literal_name(c_string(read, address))
