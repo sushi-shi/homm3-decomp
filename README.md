@@ -83,6 +83,39 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:end -->
 
+<!-- h3ccmped-match-score:start -->
+
+**GOG Complete campaign editor `h3ccmped.exe`: 22.26% matched (MAX)** — 171 / 2,330 functions exact (7.3%), weighted by size over 294,625 bytes of code.
+
+| Score | Functions exact | Weighted | Meaning                                        |
+| :---- | --------------: | -------: | :--------------------------------------------- |
+| CUR   |             171 |   22.26% | last measured score                            |
+| MAX   |             171 |   22.26% | best result for each function's current source |
+| HIST  |             171 |   22.26% | all-time peak across source revisions          |
+
+MAX by module:
+
+| Module        | Units | Functions exact MAX | Fuzzy MAX |
+| :------------ | ----: | ------------------: | --------: |
+| `game`        |    16 |   104 / 189 (55.0%) |    94.95% |
+| `zlib-1.1.3`  |    12 |     43 / 56 (76.8%) |    99.97% |
+| `codec`       |     3 |     13 / 24 (54.2%) |    95.69% |
+| `victor`      |     4 |     11 / 15 (73.3%) |    97.79% |
+| `(unmatched)` |     — |    0 / 2,046 (0.0%) |      0.0% |
+
+Library and compiler-generated code (outside the scores; each function verified against what produced it):
+
+| Category              | Functions | Verified | Code (B) | Status                                   | How verified                                                                                          |
+| :-------------------- | --------: | -------: | -------: | :--------------------------------------- | :---------------------------------------------------------------------------------------------------- |
+| `CRT/C++ runtime`     |     1,723 |        — |  202,681 | excluded                                 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv)                                    |
+| `EH unwind funclets`  |     1,705 |        0 |   21,746 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section) |
+| `init/cleanup thunks` |       354 |        4 |    3,977 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
+| `import thunks`       |        13 |        0 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
+
+**Data:** 131 / 9,383 referenced data objects claimed (placements and the image's own `DATA()` claims).
+
+<!-- h3ccmped-match-score:end -->
+
 Scores satisfy CUR ≤ MAX ≤ HIST. Editing a function resets its MAX to its new
 CUR; HIST above MAX marks a lost peak worth recovering.
 
@@ -103,6 +136,7 @@ copies; sizes and SHA-256 hashes are pinned in
 
 - `HEROES3.EXE`: English Complete 4.0, engine 3.2 (MSVC 6.0, Sep 2000)
 - `h3maped.exe`: English Complete 4.0 map editor (MSVC 6.0 SP3, MFC 4.2, Sep 2000)
+- `h3ccmped.exe`: English Complete 4.0 campaign editor (MSVC 6.0 SP3, MFC 4.2, Sep 2000)
 - `H3.EXE`: Dreamcast port, SH-4 with CodeView symbols (Aug 2000)
 - `Heroes_III_raw.pef`: Classic Mac OS port, PowerPC CodeWarrior (Dec 2000)
 

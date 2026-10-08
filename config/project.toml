@@ -40,6 +40,23 @@ image_base = 0x400000
 # original's `C:\Dev\Heroes 3 Exp 2\Editor\` (RTTI anonymous-namespace paths).
 sources = "editor"
 
+# The GOG Complete 4.0 campaign editor (identical in the Collector's and
+# Platinum pressings; the SoD 3.0 build differs): VC6 SP3, MFC 4.2 (SP3
+# NAFXCW) linked statically.
+[inputs.h3ccmped]
+name = "GOG Complete campaign editor"
+image = true
+path = "build/orig/h3ccmped.exe"
+size = 1212416
+sha256 = "93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1"
+env = "HOMM3_H3CCMPED_EXE"
+option = "--exe"
+image_base = 0x400000
+# Its own sources and headers: src/campaign_editor/ and
+# include/campaign_editor/, the original's
+# `C:\Dev\Heroes 3 Exp 2\CampaignEditor\` (RTTI anonymous-namespace paths).
+sources = "campaign_editor"
+
 # Positive CodeView/source spelling equivalences reviewed for this project.
 # Used only by the Dreamcast source-fact audit, never by the generic comparator.
 [type_aliases.dreamcast]
