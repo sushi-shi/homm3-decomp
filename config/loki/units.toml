@@ -1,0 +1,74 @@
+# Units of the Loki h3maped image (GCC 2.95.2, ELF i386): one per compiled
+# Loki object (config/retail/h3maped-loki/objects.tsv `object`). Engine units
+# compile the game's own src/ file: one source for both programs.
+
+# The editor's own objects were built with GCC 2.95.2 (i686-configured, so the
+# default -mcpu=pentiumpro), exceptions and RTTI on, no optimization:
+# `leave`-free epilogues and cltd sign extension single out pentiumpro, and
+# -fno-exceptions or -O1 lose every exact body (docs/loki/README.md).
+# -fpermissive only admits the VC6 dialect of the shared source; it does not
+# change code generation.
+[profiles.editor]
+flags = ["-O0", "-mcpu=pentiumpro", "-fpermissive"]
+defines = ["HOMM3_TARGET_LOKI=1"]
+prefix = "include/gcc_prefix.h"
+
+[[unit]]
+name = "spelldefs"
+object = 30
+source = "src/spelldefs.cpp"
+
+[[unit]]
+name = "bitmap816"
+object = 38
+source = "src/bitmap816.cpp"
+
+[[unit]]
+name = "bitmap16"
+object = 39
+source = "src/bitmap16.cpp"
+
+[[unit]]
+name = "bitmap24"
+object = 40
+source = "src/bitmap24.cpp"
+
+[[unit]]
+name = "lodfile"
+object = 42
+source = "src/lodfile.cpp"
+
+[[unit]]
+name = "textresource"
+object = 43
+source = "src/textresource.cpp"
+
+[[unit]]
+name = "cspriteframe"
+object = 45
+source = "src/cspriteframe.cpp"
+
+[[unit]]
+name = "csequence"
+object = 46
+source = "src/csequence.cpp"
+
+[[unit]]
+name = "palette"
+object = 48
+source = "src/palette.cpp"
+
+[[unit]]
+name = "resource"
+object = 49
+source = "src/resource.cpp"
+
+[[unit]]
+name = "sample"
+object = 50
+source = "src/sample.cpp"
+
+[[unit]]
+name = "font"
+object = 60
+source = "src/font.cpp"
