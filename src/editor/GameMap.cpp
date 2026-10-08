@@ -12,10 +12,13 @@
 #include <vector>
 
 #include "va.h"
+#include "herotraits.h"
 #include "editor/Array.h"
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
+#include "editor/ObjectSpecializations.h"
 #include "editor/TilePoint.h"
+#include "editor/TimedEvent.h"
 #include "editor/VictoryCondition.h"
 #include "retailobjecttype.h"
 
@@ -257,13 +260,168 @@ public:
     class _TGetVictoryConditionDataFunc;
     class _TGetLossConditionDataFunc;
 
-    void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
-
     // The caps the failures report (h3maped 0x41ec98: 156 heroes; 0x41ecb8:
     // 48 towns).
     enum { s_kMaxHeroesOnMap = 156, s_kMaxTownsOnMap = 48 };
 
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
+
+    _TImpl(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer);
+    _TImpl(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion);
+    ~_TImpl();
+
+    void importText(istream* pIStream);
+    void exportText(ostream* pOStream) const;
+    void save(streambuf* pStreamBuf) const;
+
+    TLayer* getPLayer(unsigned int num) { return &_m_aLayer[num]; }
+    TLayer* getPLayer(bool bSecondLayer);
+    const TLayer* getPLayer(unsigned int num) const { return &_m_aLayer[num]; }
+    const TLayer& getLayer(bool bSecondLayer) const { return _m_aLayer[bSecondLayer ? 1U : 0U]; }
+    EGameVersion getVersion() const { return _m_version; }
+    unsigned int getWidth() const { return _s_akDimension[_m_size]; }
+    unsigned int getHeight() const { return _s_akDimension[_m_size]; }
+    bool isTwoLayer() const { return _m_bTwoLayer; }
+    const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
+    const TGameObject* getPObject(const TMapObjectRef& objRef) const
+    {
+        return getPObject(objRef.getBSecondLayer(), objRef.getObjectID());
+    }
+    TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const
+    {
+        return getLayer(bSecondLayer).getObjectLoc(objID);
+    }
+    TMapObjectRef getLinkableObjectRef(unsigned int linkID) const { return _m_paLinkableObjectRef->find(linkID)->second; }
+
+    const string& getName() const { return _m_pProperties->m_name; }
+    void setName(const string& newName);
+    const string& getDesc() const { return _m_pProperties->m_desc; }
+    void setDesc(const string& newDesc);
+    TDifficulty getDifficulty() const { return _m_pProperties->m_difficulty; }
+    void setDifficulty(TDifficulty newDifficulty) { _m_pProperties->m_difficulty = newDifficulty; }
+    unsigned int getMaxHeroLevel() const { return _m_pProperties->m_maxHeroLevel; }
+    void setMaxHeroLevel(unsigned int newMaxHeroLevel) { _m_pProperties->m_maxHeroLevel = newMaxHeroLevel; }
+    const TArray<TPlayerInfo, kNumPlayers>& getPlayers() const { return *_m_pProperties->m_paPlayer; }
+    void setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers);
+    const TTeamInfo& getTeamInfo() const { return *_m_pProperties->m_pTeamInfo; }
+    void setTeamInfo(const TTeamInfo& newTeamInfo);
+    const vector<TRumor>& getRumors() const { return *_m_pProperties->m_paRumor; }
+    void setRumors(const vector<TRumor>& newRumors);
+    const vector<TTimedEvent>& getTimedEvents() const { return *_m_pProperties->m_paTimedEvent; }
+    void setTimedEvents(const vector<TTimedEvent>& newTimedEvents);
+    const TVictoryCondition* getPVictoryCondition() const { return _m_pProperties->m_pVictoryCondition.get(); }
+    void setVictoryCondition(auto_ptr<TVictoryCondition> pNewVictoryCondition);
+    const TLossCondition* getPLossCondition() const { return _m_pProperties->m_pLossCondition.get(); }
+    void setLossCondition(auto_ptr<TLossCondition> pNewLossCondition);
+    const bitset<kNumHeroes>& getDisabledHeroes() const { return _m_pProperties->m_disabledHeroes; }
+    void setDisabledHeroes(const bitset<kNumHeroes>& newMask) { _m_pProperties->m_disabledHeroes = newMask; }
+    const bitset<kNumArtifacts>& getDisabledArtifacts() const { return _m_pProperties->m_disabledArtifacts; }
+    void setDisabledArtifacts(const bitset<kNumArtifacts>& newMask)
+    {
+        _m_pProperties->m_disabledArtifacts = newMask;
+    }
+    const bitset<kNumSpells>& getDisabledSpells() const { return _m_pProperties->m_disabledSpells; }
+    void setDisabledSpells(const bitset<kNumSpells>& newMask) { _m_pProperties->m_disabledSpells = newMask; }
+    const bitset<kNumSecSkills>& getDisabledSkills() const { return _m_pProperties->m_disabledSkills; }
+    void setDisabledSkills(const bitset<kNumSecSkills>& newMask) { _m_pProperties->m_disabledSkills = newMask; }
+    const TPHeroPrototype& getHeroPrototype(THeroID heroID) const { return (*_m_pProperties->m_apHeroPrototype)[heroID]; }
+    void setHeroPrototype(THeroID heroID, const TPHeroPrototype& pNewPrototype);
+    bool isPlayerPresent(TPlayer player) const { return _m_apPlayerBookkeeping[player]->m_numUnits > 0; }
+    unsigned int getNumPlayableSlots() const { return _m_pBookkeeping->m_numPlayableSlots; }
+
+    TMapLayerObjectID placeObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, unsigned int x, unsigned int y);
+    void removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID insertObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, const TTilePoint& loc);
+    void eraseObject(bool bSecondLayer, unsigned int objID);
+    void floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
+    void unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent);
+    void removeFloatingObject(bool bSecondLayer);
+
+    bitset<kNumHeroes> getHeroesOnMap() const { return _m_pBookkeeping->m_heroesOnMap; }
+    bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
+    const set<TMapObjectRef>& getPlayerTownRefs(TPlayer player) const
+    {
+        return _m_apPlayerBookkeeping[player]->m_townRefs;
+    }
+    unsigned int getNumTownsOnMap() const { return _m_pBookkeeping->m_numTowns; }
+    bool isGrailOnMap() const { return _m_pBookkeeping->m_bGrailPlaced; }
+    unsigned int getNumObelisksOnMap() const;
+    TPlayerInfo::TTownTypes getDefaultTownTypes(TPlayer player) const;
+
+    bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const
+    {
+        return _isValidPlacement(getLayer(bSecondLayer), obj, x, y);
+    }
+
+    static bool _isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y);
+
+    bool _isOnMap(const TGameObject& obj, unsigned int x, unsigned int y) const;
+    void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
+
+    void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
+
+private:
+    // The map's specifications (0x7c bytes; h3maped 0x43334a constructs
+    // them): each container is a handle of its own, so the dialogs' edits
+    // copy only what they change.
+    struct _TProperties {
+        _TProperties();
+
+        string m_name;
+        string m_desc;
+        TDifficulty m_difficulty;
+        unsigned int m_maxHeroLevel;
+        TRefCountingPtr<TArray<TPlayerInfo, kNumPlayers> > m_paPlayer;
+        TRefCountingPtr<TTeamInfo> m_pTeamInfo;
+        TRefCountingPtr<vector<TRumor> > m_paRumor;
+        TRefCountingPtr<vector<TTimedEvent> > m_paTimedEvent;
+        TRefCountingAutoPtr<TVictoryCondition> m_pVictoryCondition;
+        TRefCountingAutoPtr<TLossCondition> m_pLossCondition;
+        bitset<kNumHeroes> m_disabledHeroes;
+        bitset<kNumArtifacts> m_disabledArtifacts;
+        bitset<kNumSpells> m_disabledSpells;
+        bitset<kNumSecSkills> m_disabledSkills;
+        TRefCountingPtr<TArray<TPHeroPrototype, kNumHeroes> > m_apHeroPrototype;
+    };
+
+    // The counts behind the caps (0x38 bytes; 0x4338c8).
+    struct _TBookkeeping {
+        _TBookkeeping();
+
+        unsigned int m_numPlayableSlots;
+        unsigned int m_numTowns;
+        unsigned int m_numHeroes;
+        bool m_bGrailPlaced;
+        vector<unsigned int> m_aNumObjsOfCappedType;
+        bitset<kNumHeroes> m_heroesOnMap;
+        TRefCountingPtr<map<THeroID, TMapObjectRef> > m_paHeroRef;
+    };
+
+    // One player's counts (0x74 bytes; 0x438696).
+    struct _TPlayerBookkeeping {
+        _TPlayerBookkeeping();
+
+        unsigned int m_numUnits;
+        set<TMapObjectRef> m_townRefs;
+        unsigned int m_numRandomTowns;
+        TArray<unsigned int, kNumTownTypes> m_aNumTownsOfType;
+        unsigned int m_numHeroes;
+        unsigned int m_numRandomHeroes;
+        unsigned int m_numHeroPlaceholders;
+        TRefCountingPtr<set<THeroID> > m_paHeroID;
+        TRefCountingPtr<set<THeroID> > m_paHeroPlaceholderID;
+        TArray<unsigned int, kNumTownTypes> m_aNumHeroesOfType;
+    };
+
+    TClient* _m_pClient;
+    EGameVersion _m_version;
+    TSize _m_size;
+    bool _m_bTwoLayer;
+    TRefCountingPtr<_TProperties> _m_pProperties;
+    vector<TLayer> _m_aLayer;
+    TRefCountingPtr<_TBookkeeping> _m_pBookkeeping;
+    TArray<TRefCountingPtr<_TPlayerBookkeeping>, kNumPlayers> _m_apPlayerBookkeeping;
+    TRefCountingPtr<map<unsigned int, TMapObjectRef> > _m_paLinkableObjectRef;
 };
 
 VA(0x0041ec98, 0x20)
@@ -425,8 +583,536 @@ void TGameMap::_TImpl::_TGetLossConditionDataFunc::visit(const TLCTimeExpires& l
     _m_pData->m_timeExpires.m_numDays = lc.getNumDays();
 }
 
+// A new map: one or two layers of plain water, and every hero the edition
+// does not offer, or that only campaigns use, disabled.
+VA(0x0041f21d, 0x133)
+TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer)
+    : _m_pClient(pClient), _m_version(version), _m_size(size), _m_bTwoLayer(bTwoLayer)
+{
+    _m_aLayer.resize(_m_bTwoLayer ? 2 : 1, TLayer(_m_size));
+    int edition = _m_version >= GAME_VERSION_AB;
+    for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+        const THeroTraits& traits = akHeroTraits[heroID];
+        _m_pProperties->m_disabledHeroes.set(heroID, traits.m_availability.m_special
+                                                     || !traits.m_abAvailableIn[edition]);
+    }
+}
+
+VA(0x0041fee1, 0x5d)
+TGameMap::_TImpl::~_TImpl()
+{
+}
+
+VA(0x0041ff3e, 0x2d)
+void TGameMap::_TImpl::setName(const string& newName)
+{
+    _m_pProperties->m_name = newName;
+}
+
+VA(0x0041ff6b, 0x2d)
+void TGameMap::_TImpl::setDesc(const string& newDesc)
+{
+    _m_pProperties->m_desc = newDesc;
+}
+
+VA(0x0041ff98, 0x5a)
+void TGameMap::_TImpl::setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers)
+{
+    *_m_pProperties->m_paPlayer = newPlayers;
+}
+
+VA(0x0041fff2, 0x38)
+void TGameMap::_TImpl::setTeamInfo(const TTeamInfo& newTeamInfo)
+{
+    *_m_pProperties->m_pTeamInfo = newTeamInfo;
+}
+
+VA(0x00420062, 0x38)
+void TGameMap::_TImpl::setRumors(const vector<TRumor>& newRumors)
+{
+    *_m_pProperties->m_paRumor = newRumors;
+}
+
+VA(0x0042009a, 0x38)
+void TGameMap::_TImpl::setTimedEvents(const vector<TTimedEvent>& newTimedEvents)
+{
+    *_m_pProperties->m_paTimedEvent = newTimedEvents;
+}
+
+VA(0x004200d2, 0x7b)
+void TGameMap::_TImpl::setVictoryCondition(auto_ptr<TVictoryCondition> pNewVictoryCondition)
+{
+    TRefCountingAutoPtr<TVictoryCondition> pVictoryCondition(pNewVictoryCondition);
+    _m_pProperties->m_pVictoryCondition = pVictoryCondition;
+}
+
+VA(0x0042014d, 0x7b)
+void TGameMap::_TImpl::setLossCondition(auto_ptr<TLossCondition> pNewLossCondition)
+{
+    TRefCountingAutoPtr<TLossCondition> pLossCondition(pNewLossCondition);
+    _m_pProperties->m_pLossCondition = pLossCondition;
+}
+
+VA(0x004201c8, 0x5a)
+void TGameMap::_TImpl::setHeroPrototype(THeroID heroID, const TPHeroPrototype& pNewPrototype)
+{
+    if (!(pNewPrototype == getHeroPrototype(heroID)))
+        (*_m_pProperties->m_apHeroPrototype)[heroID] = pNewPrototype;
+}
+
+VA(0x0042029b, 0x45)
+void TGameMap::_TImpl::removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    *pUpdatedExtent = pLayer->getObjectExtent(objID);
+    _removeObjectHelper(bSecondLayer, objID);
+}
+
+VA(0x004202e0, 0x58)
+TMapLayerObjectID TGameMap::_TImpl::insertObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, const TTilePoint& loc)
+{
+    return getPLayer(bSecondLayer)->_placeObject(pObj, loc);
+}
+
+VA(0x00420338, 0x12)
+TGameMap::TLayer* TGameMap::_TImpl::getPLayer(bool bSecondLayer)
+{
+    return &_m_aLayer[bSecondLayer ? 1U : 0U];
+}
+
+VA(0x0042034a, 0x31)
+void TGameMap::_TImpl::eraseObject(bool bSecondLayer, unsigned int objID)
+{
+    getPLayer(bSecondLayer)->_removeObject(objID);
+}
+
+VA(0x0042037b, 0x53)
+void TGameMap::_TImpl::floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    *pUpdatedExtent = pLayer->getObjectExtent(objID);
+    pLayer->_floatObject(objID);
+}
+
+VA(0x004203ce, 0x11b)
+void TGameMap::_TImpl::unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent)
+{
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    TMapLayerObjectID objID = pLayer->getFloatingObjID();
+    const TGameObject& obj = pLayer->getObject(objID);
+    if (!_isOnMap(obj, x, y))
+        throw TPlaceObjFailurePlacementNotOnMap();
+    if (!(x >= 9 && y >= 9 && x < getWidth() - 9 && y < getHeight() - 9)) {
+        const THolyGrail* pHolyGrail = dynamic_cast<const THolyGrail*>(&obj);
+        if (pHolyGrail != NULL)
+            throw TPlaceObjFailureHolyGrailTooCloseToEdge();
+    }
+    if (!_isValidPlacement(*pLayer, obj, x, y))
+        throw TPlaceObjFailureInvalidPlacement();
+    pLayer->_unfloatObject(TTilePoint(x, y));
+    *pUpdatedExtent = pLayer->getObjectExtent(objID);
+}
+
+VA(0x0042059b, 0x1e)
+void TGameMap::_TImpl::removeFloatingObject(bool bSecondLayer)
+{
+    _removeObjectHelper(bSecondLayer, getPLayer(bSecondLayer)->getFloatingObjID());
+}
+
+VA(0x0042921c, 0x70)
+void TGameMap::_TImpl::_getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const
+{
+    if (objRef.getObjectID() != TLayer::s_kInvalidObjID) {
+        const TLayer& layer = getLayer(objRef.getBSecondLayer());
+        const TObjectType::TPoint& triggerLoc = layer.getObject(objRef.getObjectID()).getTriggerLoc();
+        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID());
+        pLoc->m_x = loc.x() - triggerLoc.m_x;
+        pLoc->m_y = loc.y() - triggerLoc.m_y;
+        pLoc->m_layer = objRef.getBSecondLayer() ? 1 : 0;
+    } else {
+        pLoc->m_x = -1;
+        pLoc->m_y = -1;
+        pLoc->m_layer = -1;
+    }
+}
+
+VA(0x00429a12, 0x4e)
+TGameMap::TGameMap(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer)
+    : _m_pImpl(_TImpl(pClient, version, size, bTwoLayer))
+{
+}
+
+VA(0x00429a60, 0x4e)
+TGameMap::TGameMap(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion)
+    : _m_pImpl(_TImpl(pClient, version, pStreamBuf, fileVersion))
+{
+}
+
+VA(0x00429aae, 0x5)
+TGameMap::~TGameMap()
+{
+}
+
+VA(0x00429ab3, 0x12)
+TGameMap& TGameMap::operator=(const TGameMap& other)
+{
+    _m_pImpl = other._m_pImpl;
+    return *this;
+}
+
+VA(0x00429ac5, 0x21)
+void TGameMap::importText(istream* pIStream)
+{
+    _m_pImpl->importText(pIStream);
+}
+
+VA(0x00429ae6, 0x1f)
+TGameMap::TLayer* TGameMap::getPLayer(unsigned int num)
+{
+    return _m_pImpl->getPLayer(num);
+}
+
+VA(0x00429b05, 0x21)
+void TGameMap::setName(const string& newName)
+{
+    _m_pImpl->setName(newName);
+}
+
+VA(0x00429b26, 0x21)
+void TGameMap::setDesc(const string& newDesc)
+{
+    _m_pImpl->setDesc(newDesc);
+}
+
+VA(0x00429b47, 0x2f)
+void TGameMap::setDifficulty(TDifficulty newDifficulty)
+{
+    _m_pImpl->setDifficulty(newDifficulty);
+}
+
+VA(0x00429b76, 0x2f)
+void TGameMap::setMaxHeroLevel(unsigned int newMaxHeroLevel)
+{
+    _m_pImpl->setMaxHeroLevel(newMaxHeroLevel);
+}
+
+VA(0x00429ba5, 0x21)
+void TGameMap::setPlayers(const TArray<TPlayerInfo, kNumPlayers>& newPlayers)
+{
+    _m_pImpl->setPlayers(newPlayers);
+}
+
+VA(0x00429bc6, 0x21)
+void TGameMap::setTeamInfo(const TTeamInfo& newTeamInfo)
+{
+    _m_pImpl->setTeamInfo(newTeamInfo);
+}
+
+VA(0x00429be7, 0x21)
+void TGameMap::setRumors(const vector<TRumor>& newRumors)
+{
+    _m_pImpl->setRumors(newRumors);
+}
+
+VA(0x00429c08, 0x21)
+void TGameMap::setTimedEvents(const vector<TTimedEvent>& newTimedEvents)
+{
+    _m_pImpl->setTimedEvents(newTimedEvents);
+}
+
+VA(0x00429c29, 0x54)
+void TGameMap::setVictoryCondition(auto_ptr<TVictoryCondition> pNewVictoryCondition)
+{
+    _m_pImpl->setVictoryCondition(pNewVictoryCondition);
+}
+
+VA(0x00429c7d, 0x54)
+void TGameMap::setLossCondition(auto_ptr<TLossCondition> pNewLossCondition)
+{
+    _m_pImpl->setLossCondition(pNewLossCondition);
+}
+
+VA(0x00429cd1, 0x36)
+void TGameMap::setDisabledHeroes(const bitset<kNumHeroes>& newMask)
+{
+    _m_pImpl->setDisabledHeroes(newMask);
+}
+
+VA(0x00429d07, 0x36)
+void TGameMap::setDisabledArtifacts(const bitset<kNumArtifacts>& newMask)
+{
+    _m_pImpl->setDisabledArtifacts(newMask);
+}
+
+VA(0x00429d3d, 0x34)
+void TGameMap::setDisabledSpells(const bitset<kNumSpells>& newMask)
+{
+    _m_pImpl->setDisabledSpells(newMask);
+}
+
+VA(0x00429d71, 0x31)
+void TGameMap::setDisabledSkills(const bitset<kNumSecSkills>& newMask)
+{
+    _m_pImpl->setDisabledSkills(newMask);
+}
+
+VA(0x00429da2, 0x25)
+void TGameMap::setHeroPrototype(THeroID heroID, const TPHeroPrototype& pNewPrototype)
+{
+    _m_pImpl->setHeroPrototype(heroID, pNewPrototype);
+}
+
+VA(0x00429dc7, 0x5b)
+TMapLayerObjectID TGameMap::placeObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, unsigned int x,
+                                        unsigned int y)
+{
+    return _m_pImpl->placeObject(bSecondLayer, pObj, x, y);
+}
+
+VA(0x00429e22, 0x29)
+void TGameMap::removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+    _m_pImpl->removeObject(bSecondLayer, objID, pUpdatedExtent);
+}
+
+VA(0x00429e4b, 0x58)
+TMapLayerObjectID TGameMap::insertObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, const TTilePoint& loc)
+{
+    return _m_pImpl->insertObject(bSecondLayer, pObj, loc);
+}
+
+VA(0x00429ea3, 0x25)
+void TGameMap::eraseObject(bool bSecondLayer, unsigned int objID)
+{
+    _m_pImpl->eraseObject(bSecondLayer, objID);
+}
+
+VA(0x00429ec8, 0x29)
+void TGameMap::floatObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
+{
+    _m_pImpl->floatObject(bSecondLayer, objID, pUpdatedExtent);
+}
+
+VA(0x00429ef1, 0x2d)
+void TGameMap::unfloatObject(bool bSecondLayer, unsigned int x, unsigned int y, TTileExtent* pUpdatedExtent)
+{
+    _m_pImpl->unfloatObject(bSecondLayer, x, y, pUpdatedExtent);
+}
+
+VA(0x00429f1e, 0x21)
+void TGameMap::removeFloatingObject(bool bSecondLayer)
+{
+    _m_pImpl->removeFloatingObject(bSecondLayer);
+}
+
+VA(0x0042a1c4, 0x11)
+void TGameMap::save(streambuf* pStreamBuf) const
+{
+    _m_pImpl->save(pStreamBuf);
+}
+
+VA(0x0042a1d5, 0x11)
+void TGameMap::exportText(ostream* pOStream) const
+{
+    _m_pImpl->exportText(pOStream);
+}
+
+VA(0x0042a1e6, 0x6)
+EGameVersion TGameMap::getVersion() const
+{
+    return _m_pImpl->getVersion();
+}
+
+VA(0x0042a1ec, 0xd)
+unsigned int TGameMap::getWidth() const
+{
+    return _m_pImpl->getWidth();
+}
+
+unsigned int TGameMap::getHeight() const
+{
+    return _m_pImpl->getHeight();
+}
+
+VA(0x0042a1f9, 0x6)
+bool TGameMap::isTwoLayer() const
+{
+    return _m_pImpl->isTwoLayer();
+}
+
+VA(0x0042a1ff, 0x15)
+const TGameObject* TGameMap::getPObject(bool bSecondLayer, unsigned int objID) const
+{
+    return _m_pImpl->getPObject(bSecondLayer, objID);
+}
+
+VA(0x0042a214, 0x34)
+TTilePoint TGameMap::getObjectLoc(bool bSecondLayer, unsigned int objID) const
+{
+    return _m_pImpl->getObjectLoc(bSecondLayer, objID);
+}
+
+VA(0x0042a248, 0x35)
+TMapObjectRef TGameMap::getLinkableObjectRef(unsigned int linkID) const
+{
+    return _m_pImpl->getLinkableObjectRef(linkID);
+}
+
+VA(0x0042a28e, 0xf)
+const TGameMap::TLayer* TGameMap::getPLayer(unsigned int num) const
+{
+    return _m_pImpl->getPLayer(num);
+}
+
+VA(0x0042a29d, 0x9)
+const string& TGameMap::getName() const
+{
+    return _m_pImpl->getName();
+}
+
+VA(0x0042a2a6, 0x9)
+const string& TGameMap::getDesc() const
+{
+    return _m_pImpl->getDesc();
+}
+
+VA(0x0042a2af, 0x9)
+TGameMap::TDifficulty TGameMap::getDifficulty() const
+{
+    return _m_pImpl->getDifficulty();
+}
+
+VA(0x0042a2b8, 0x9)
+unsigned int TGameMap::getMaxHeroLevel() const
+{
+    return _m_pImpl->getMaxHeroLevel();
+}
+
+VA(0x0042a2c1, 0xc)
+const TArray<TPlayerInfo, kNumPlayers>& TGameMap::getPlayers() const
+{
+    return _m_pImpl->getPlayers();
+}
+
+VA(0x0042a2cd, 0xc)
+const TTeamInfo& TGameMap::getTeamInfo() const
+{
+    return _m_pImpl->getTeamInfo();
+}
+
+VA(0x0042a2d9, 0xc)
+const vector<TRumor>& TGameMap::getRumors() const
+{
+    return _m_pImpl->getRumors();
+}
+
+VA(0x0042a2e5, 0xc)
+const vector<TTimedEvent>& TGameMap::getTimedEvents() const
+{
+    return _m_pImpl->getTimedEvents();
+}
+
+VA(0x0042a2f1, 0xc)
+const TVictoryCondition* TGameMap::getPVictoryCondition() const
+{
+    return _m_pImpl->getPVictoryCondition();
+}
+
+VA(0x0042a2fd, 0xc)
+const TLossCondition* TGameMap::getPLossCondition() const
+{
+    return _m_pImpl->getPLossCondition();
+}
+
+VA(0x0042a309, 0x9)
+const bitset<kNumHeroes>& TGameMap::getDisabledHeroes() const
+{
+    return _m_pImpl->getDisabledHeroes();
+}
+
+VA(0x0042a312, 0x9)
+const bitset<kNumArtifacts>& TGameMap::getDisabledArtifacts() const
+{
+    return _m_pImpl->getDisabledArtifacts();
+}
+
+VA(0x0042a31b, 0x9)
+const bitset<kNumSpells>& TGameMap::getDisabledSpells() const
+{
+    return _m_pImpl->getDisabledSpells();
+}
+
+VA(0x0042a324, 0x9)
+const bitset<kNumSecSkills>& TGameMap::getDisabledSkills() const
+{
+    return _m_pImpl->getDisabledSkills();
+}
+
+VA(0x0042a32d, 0x13)
+const TPHeroPrototype& TGameMap::getHeroPrototype(THeroID heroID) const
+{
+    return _m_pImpl->getHeroPrototype(heroID);
+}
+
+VA(0x0042a340, 0x16)
+bool TGameMap::isPlayerPresent(TPlayer player) const
+{
+    return _m_pImpl->isPlayerPresent(player);
+}
+
+VA(0x0042a356, 0x9)
+unsigned int TGameMap::getNumPlayableSlots() const
+{
+    return _m_pImpl->getNumPlayableSlots();
+}
+
+VA(0x0042a3d7, 0x1a)
+bitset<kNumHeroes> TGameMap::getHeroesOnMap() const
+{
+    return _m_pImpl->getHeroesOnMap();
+}
+
+VA(0x0042a40e, 0x10)
+const set<TMapObjectRef>& TGameMap::getPlayerTownRefs(TPlayer player) const
+{
+    return _m_pImpl->getPlayerTownRefs(player);
+}
+
+VA(0x0042a41e, 0x9)
+unsigned int TGameMap::getNumTownsOnMap() const
+{
+    return _m_pImpl->getNumTownsOnMap();
+}
+
+VA(0x0042a427, 0x9)
+bool TGameMap::isGrailOnMap() const
+{
+    return _m_pImpl->isGrailOnMap();
+}
+
+VA(0x0042a430, 0xa)
+unsigned int TGameMap::getNumObelisksOnMap() const
+{
+    return _m_pImpl->getNumObelisksOnMap();
+}
+
+VA(0x0042a43a, 0x29)
+bool TGameMap::isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const
+{
+    return _m_pImpl->isValidPlacement(obj, bSecondLayer, x, y);
+}
+
+VA(0x0042a463, 0x29)
+TPlayerInfo::TTownTypes TGameMap::getDefaultTownTypes(TPlayer player) const
+{
+    return _m_pImpl->getDefaultTownTypes(player);
+}
+
 DATA(0x00535214)
 const unsigned int TGameMap::_TImpl::_s_akDimension[TGameMap::s_kNumSizes] = { 36, 72, 108, 144 };
+
+DATA(0x00535228)
+const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
 
 // A layer's implementation: its size and its cells.
 class TGameMap::TLayer::_TImpl {
@@ -1043,6 +1729,21 @@ VA(0x0042b793, 0x55)
 TMapLayerObjectID TGameMap::TLayer::_placeObject(auto_ptr<TGameObject> pObj, const TTilePoint& loc)
 {
     return _m_pImpl->_placeObject(pObj, loc);
+}
+
+inline void TGameMap::TLayer::_removeObject(unsigned int objID)
+{
+    _m_pImpl->_removeObject(objID);
+}
+
+inline void TGameMap::TLayer::_floatObject(unsigned int objID)
+{
+    _m_pImpl->_floatObject(objID);
+}
+
+inline void TGameMap::TLayer::_unfloatObject(const TTilePoint& loc)
+{
+    _m_pImpl->_unfloatObject(loc);
 }
 
 // The capped-type map's and info vector's template members, emitted here; the

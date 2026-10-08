@@ -29,6 +29,13 @@ private:
     TPlayer _m_owner;
 };
 
+// The Grail's site: it may not lie within nine cells of the map's edge
+// (TGameMap's placements throw TPlaceObjFailureHolyGrailTooCloseToEdge).
+class THolyGrail : public virtual TGameObject {
+public:
+    THolyGrail(const TObjectType& objType);
+};
+
 // A sign: its message, at most s_kMaxTextLen characters (the sign dialog's
 // OnInitDialog limits its edit control to 150).
 class TSign : public virtual TGameObject {

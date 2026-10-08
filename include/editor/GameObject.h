@@ -54,6 +54,7 @@ public:
     {
         return _m_objectTypeIter->first.getBCellTrigger(x, y);
     }
+    const TObjectType::TPoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
     bool getBUnderlay() const { return _m_objectTypeIter->first.getBUnderlay() != 0; }
     unsigned int getWidth() const { return _m_objectTypeIter->first.getWidth(); }
     unsigned int getHeight() const { return _m_objectTypeIter->first.getHeight(); }

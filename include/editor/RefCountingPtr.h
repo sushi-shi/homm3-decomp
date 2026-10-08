@@ -14,6 +14,8 @@
 
 #include <stddef.h>
 
+#include <memory>
+
 #include "exceptions.h"
 
 // The count and the object. A namespace-scope template rather than Loki's
@@ -99,5 +101,58 @@ void TRefCountingPtr<T>::_split()
     --_m_pWrapper->m_refCnt;
     _m_pWrapper = pNewWrapper;
 }
+
+// A shared object owned through an auto_ptr: the count and the auto_ptr
+// (owner flag, then pointer) share one wrapper, built from an auto_ptr
+// passed by value (the map's condition holders, h3maped 0x432ffa and
+// 0x43308b; the wrapper constructor 0x4370f4 is the one the layer's object
+// links fold with). Copies share the wrapper and the object is never
+// split. The name is not proven.
+template<class T>
+class TRefCountingAutoPtr {
+public:
+    TRefCountingAutoPtr(std::auto_ptr<T> pObject) : _m_pWrapper(new _TWrapper(pObject))
+    {
+        if (_m_pWrapper == NULL)
+            _fail();
+    }
+
+    TRefCountingAutoPtr(const TRefCountingAutoPtr& other) : _m_pWrapper(other._m_pWrapper)
+    {
+        ++_m_pWrapper->m_refCnt;
+    }
+
+    ~TRefCountingAutoPtr()
+    {
+        if (--_m_pWrapper->m_refCnt == 0)
+            delete _m_pWrapper;
+    }
+
+    TRefCountingAutoPtr& operator=(const TRefCountingAutoPtr& other)
+    {
+        ++other._m_pWrapper->m_refCnt;
+        if (--_m_pWrapper->m_refCnt == 0)
+            delete _m_pWrapper;
+        _m_pWrapper = other._m_pWrapper;
+        return *this;
+    }
+
+    T* get() const { return _m_pWrapper->m_pObject.get(); }
+
+private:
+    struct _TWrapper {
+        _TWrapper(std::auto_ptr<T> pObject) : m_refCnt(1), m_pObject(pObject) {}
+
+        unsigned int m_refCnt;
+        std::auto_ptr<T> m_pObject;
+    };
+
+    void _fail()
+    {
+        throw TAllocationFailure();
+    }
+
+    _TWrapper* _m_pWrapper;
+};
 
 #endif  /* HOMM3_EDITOR_REFCOUNTINGPTR_H */
