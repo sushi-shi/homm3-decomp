@@ -8,6 +8,7 @@
 #include <iostream.h>
 #include <string>
 
+#include "terrain.h"
 #include "editor/MapEditorText.h"
 #include "editor/RawStream.h"
 #include "editor/TimedEvent.h"
