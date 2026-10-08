@@ -49,8 +49,8 @@ public:
     // The vendored zlib-1.1.3 IS retail's library (it matches 100%), so its
     // own header is the record - cc_wrap puts that directory on INCLUDE.
     z_stream _m_zstream;           // +0x3c
-    unsigned char* _m_pInBuf;      // +0x74, new[0x400]
-    unsigned char* _m_pOutBuf;     // +0x78, buffer + 0x200
+    char* _m_pInBuf;               // +0x74, new[0x400]
+    char* _m_pOutBuf;              // +0x78, buffer + 0x200
     unsigned long m_crc;           // +0x7c
     bool m_ok;             // +0x80
     bool m_sourceEof;     // +0x81
@@ -59,7 +59,7 @@ public:
 
 private:
     int _getC();                // 0x4d5fd0
-    void _putBackC(signed char c); // Mac 0x220ac8
+    void _putBackC(char c);        // Mac 0x220ac8
     int _mustGetC();            // 0x4d6ba0
     unsigned long _mustGetLong();
 };

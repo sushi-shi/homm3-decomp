@@ -53,13 +53,10 @@ DATA(0x0063e6fc) static const int g_gzMagic[2] = {0x1f, 0x8b};
 #define GZ_WINDOW_SIZE 512
 #endif
 
-// Refill from the source streambuf and return a stream-traits integer byte.
-// Capturing that converted value before separately advancing next_in preserves
-// this retained body's 100% and recovers the constructor from 91.0739% to
-// 98.9360%. A byte local converted only at return leaves 97.0985%; folding the
-// pointer increment into the conversion argument leaves 94.9951%.
-// The native Mac 0x220a18 frame is also reproduced; its byte load is scheduled
-// after the pointer advance, leaving a separate compiler-order residual.
+// Refill from the source streambuf and return the next byte. Loki's
+// `Bytef c = *next_in++; int result = c;` capture is retail's: it stores the
+// advanced cursor before widening, and its inline cost is what leaves the
+// constructor's last FHCRC read as the one TDataError expansion.
 VA(0x004d5fd0, 0x74)
 MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::_getC()
@@ -68,26 +65,26 @@ int TGzInflateBuf::_getC()
         if (m_sourceEof)
             return -1;
         int count = _m_pSrcBuf->sgetn(
-            static_cast<char*>(static_cast<void*>(_m_pInBuf)), GZ_WINDOW_SIZE);
+            _m_pInBuf, GZ_WINDOW_SIZE);
         if (count < GZ_WINDOW_SIZE)
             m_sourceEof = true;
-        _m_zstream.next_in = _m_pInBuf;
+        _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
         _m_zstream.avail_in = count;
         // Mac 0x220a80 reloads the unsigned stream member for this guard.
         if (_m_zstream.avail_in == 0)
             return -1;
     }
-    int_type c = traits_type::to_int_type(*_m_zstream.next_in);
-    ++_m_zstream.next_in;
+    Bytef c = *_m_zstream.next_in++;
+    int result = c;
     --_m_zstream.avail_in;
-    return c;
+    return result;
 }
 
 // CodeWarrior retains this helper immediately after _getC and calls it
 // twice from the constructor's gzip-magic fallback. Its byte argument is
 // passed at both call sites but the helper only rewinds the input cursor.
 MAC_ADDRESS(0x220ac8, 0x1c)
-void TGzInflateBuf::_putBackC(signed char)
+void TGzInflateBuf::_putBackC(char)
 {
     --_m_zstream.next_in;
     ++_m_zstream.avail_in;
@@ -116,8 +113,11 @@ void TGzInflateBuf::_putBackC(signed char)
 // loop (0x2210dc/0x221154), then tests the decoded byte at 0x221140/0x2211b8;
 // CodeWarrior does not peel these conditions. Both forms keep the canonical
 // _mustGetC helper. The stream-traits byte snapshot below recovers 98.9360%:
-// all 61 CFG blocks and the exception expansion sequence agree. The two
-// initial magic-byte reads retain pointer/register scheduling differences.
+// all 61 CFG blocks and the exception expansion sequence agree. VC6 gives a
+// nested callee (caller budget - callee cb) / remaining sites; Loki's plain
+// `if (flags & 0x04)` tests, unnamed method check and named inflateInit2
+// result shrink this body so that only the second FHCRC read expands
+// TDataError, as in retail.
 VA(0x004d6050, 0x58A)
 MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
@@ -129,17 +129,17 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
       m_sourceEof(false),
       m_inflating(false)
 {
-    _m_pInBuf = new unsigned char[2 * GZ_WINDOW_SIZE];
+    _m_pInBuf = new char[2 * GZ_WINDOW_SIZE];
     if (_m_pInBuf == 0)
         throw TAllocationFailure();
-    TAutoArrayPtr<unsigned char> ownedBuffer(_m_pInBuf);
+    TAutoArrayPtr<char> ownedBuffer(_m_pInBuf);
     _m_pOutBuf = _m_pInBuf + GZ_WINDOW_SIZE;
-    setg(static_cast<char*>(static_cast<void*>(_m_pOutBuf)),
-         static_cast<char*>(static_cast<void*>(_m_pOutBuf)),
-         static_cast<char*>(static_cast<void*>(_m_pOutBuf)));
+    setg(_m_pOutBuf,
+         _m_pOutBuf,
+         _m_pOutBuf);
     setp(0, 0);
-    _m_zstream.next_out = _m_pOutBuf;
-    _m_zstream.next_in = _m_pInBuf;
+    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+    _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
     _m_zstream.avail_in = 0;
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
     _m_zstream.zalloc = 0;
@@ -157,44 +157,44 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
             if (nextMagic == -1)
                 throw false;
             if (nextMagic != g_gzMagic[1]) {
-                _putBackC(static_cast<signed char>(nextMagic));
+                _putBackC(nextMagic);
                 throw false;
             }
         } catch (bool) {
-            _putBackC(static_cast<signed char>(magic));
+            _putBackC(magic);
             throw;
         }
     } catch (bool) {
         m_ok = false;
     }
     if (m_ok) {
-        int method = _mustGetC();
-        if (method != Z_DEFLATED)
+        if (_mustGetC() != Z_DEFLATED)
             throw TDataError();
         int flags = _mustGetC();
-        if ((flags & 0xe0) != 0)
+        if (flags & 0xe0)
             throw TDataError();
         for (int skip = 6; skip > 0; --skip)
             _mustGetC();
-        if ((flags & 4) != 0) {
+        if (flags & 0x04) {
             unsigned extra = _mustGetC();
             extra += _mustGetC() << 8;
             while (extra-- > 0)
                 _mustGetC();
         }
-        if ((flags & 8) != 0) {
+        if (flags & 0x08) {
             while (_mustGetC() != 0) {
             }
         }
-        if ((flags & 0x10) != 0) {
+        if (flags & 0x10) {
             while (_mustGetC() != 0) {
             }
         }
-        if ((flags & 2) != 0) {
+        if (flags & 0x02) {
             _mustGetC();
             _mustGetC();
         }
-        if (inflateInit2(&_m_zstream, -MAX_WBITS) == Z_MEM_ERROR)
+        int result = inflateInit2(&_m_zstream, -MAX_WBITS);
+        if (result == Z_MEM_ERROR)
             throw TAllocationFailure();
         m_inflating = true;
     }
@@ -280,10 +280,10 @@ int TGzInflateBuf::underflow()
             break;
         if (_m_zstream.avail_in == 0) {
             int count = _m_pSrcBuf->sgetn(
-                static_cast<char*>(static_cast<void*>(_m_pInBuf)), GZ_WINDOW_SIZE);
+                _m_pInBuf, GZ_WINDOW_SIZE);
             if (count < GZ_WINDOW_SIZE)
                 m_sourceEof = true;
-            _m_zstream.next_in = _m_pInBuf;
+            _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
             _m_zstream.avail_in = count;
         }
         if (_m_zstream.avail_in > 0) {
@@ -325,11 +325,11 @@ int TGzInflateBuf::underflow()
             }
         }
     }
-    setg(static_cast<char*>(static_cast<void*>(_m_pOutBuf)),
-         static_cast<char*>(static_cast<void*>(_m_pOutBuf)),
-         static_cast<char*>(static_cast<void*>(_m_pOutBuf))
+    setg(_m_pOutBuf,
+         _m_pOutBuf,
+         _m_pOutBuf
              + GZ_WINDOW_SIZE - _m_zstream.avail_out);
-    _m_zstream.next_out = _m_pOutBuf;
+    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
     // Mac 0x221970..0x221974 loads the get pointer then widens its byte
     // unsigned, the same canonical traits conversion used by _getC.
