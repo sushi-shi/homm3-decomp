@@ -42,9 +42,9 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                     long& bestRawValue, bool exploreMode);
 static void moveHero(hero* currentHero, unsigned char isLastHero,
-                     unsigned char& exploreMode);
+                     bool& exploreMode);
 static void moveHero(hero* currentHero, long* dangerZones,
-                     unsigned char isLastHero, unsigned char& exploreMode);
+                     unsigned char isLastHero, bool& exploreMode);
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
                                  EGameResource* bestResource);
@@ -682,7 +682,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown,
 // DC records both helpers as file-static with explore_mode by reference.
 DC_ADDRESS(0x10e9a8, 0x2b0)
 static void moveHero(hero* currentHero, unsigned char isLastHero,
-                     unsigned char& exploreMode)
+                     bool& exploreMode)
 {
     HeroDestination destination;
     type_point oldTarget = currentHero->getTarget();
@@ -759,7 +759,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
         && (getMapExtra(originalDestination)
             & g_curPlayerBit)) {
         g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
-        exploreMode = 0;
+        exploreMode = false;
         for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i)
             g_game->getHero(g_currentPlayer->m_heroes[i])->m_isSleeping = 0;
     }
@@ -850,9 +850,9 @@ MAC_ADDRESS(0x140b60, 0xcc)
 static void moveAllHeroes(long playerId, long* dangerZones)
 {
     unsigned char isLastHero = 0;
-    unsigned char exploreMode = 1;
+    bool exploreMode = true;
     if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
-        exploreMode = 0;
+        exploreMode = false;
     hero* currentHero;
     while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0) {
         moveHero(currentHero, dangerZones, isLastHero, exploreMode);
@@ -2351,7 +2351,7 @@ VA(0x005261f0, 0x5ba)
 DC_ADDRESS(0x10ec58, 0x258)
 MAC_ADDRESS(0x14057c, 0x374)  // anchor-callee
 static void moveHero(hero* currentHero, long* dangerZones,
-                     unsigned char isLastHero, unsigned char& exploreMode)
+                     unsigned char isLastHero, bool& exploreMode)
 {
     unsigned char mouseWasVisible = g_mouseManager->isVis();
     playerData* player = &g_game->m_players[currentHero->m_owner];
@@ -2426,7 +2426,7 @@ static void moveHero(hero* currentHero, long* dangerZones,
 VA(0x005267b0, 0x2da)
 MAC_ADDRESS(0x1401d8, 0x3a4)
 static void moveHero(hero* currentHero, unsigned char isLastHero,
-                     unsigned char& exploreMode);
+                     bool& exploreMode);
 
 VA(0x00526a90, 0x1d4)
 MAC_ADDRESS(0x1408f0, 0x270)
