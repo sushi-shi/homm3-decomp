@@ -1,5 +1,9 @@
-// gzinflatebuf.cpp - the gzip-inflating streambuf Complete reads .h3c
-// campaign payloads and compressed maps through.
+// gzinflatebuf.cpp - the gzip streambufs: the deflating one Loki's map
+// editor saves with, and the inflating one Complete reads .h3c campaign
+// payloads and compressed maps through. The editor's GzBuf.cpp is this
+// file; the game links the deflating half unreferenced, so /OPT:REF drops
+// its code while its zlib references still pull deflate.obj and crc32.obj
+// ahead of inflate.obj, as retail's zlib order shows.
 
 // THIS COMPILAND IS ABSENT FROM THE DREAMCAST ROSTER. Retail's object is
 // the one the cinit run 0x4d5f70..0x4d5fb0 opens and the next unit's cinit
@@ -26,6 +30,7 @@
 // _Locimp::_Init; the /MT game profile exposes that external-lock view.
 #include "va.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
@@ -52,6 +57,128 @@ DATA(0x0063e6fc) static const int g_gzMagic[2] = {0x1f, 0x8b};
 #else
 #define GZ_WINDOW_SIZE 512
 #endif
+
+// Loki GzBuf.cpp defines the deflating buffer first. Its asserts are
+// compiled out of the release game, like every assert in this build.
+TGzDeflateBuf::TGzDeflateBuf(std::streambuf* pDestBuf, int level, int strategy)
+    : _m_pDestBuf(pDestBuf),
+      _m_pInBuf(0),
+      _m_pOutBuf(0),
+      m_crc(crc32(0, 0, 0))
+{
+    _m_pInBuf = new char[2 * GZ_WINDOW_SIZE];
+    if (_m_pInBuf == 0)
+        throw TAllocationFailure();
+    TAutoArrayPtr<char> ownedBuffer(_m_pInBuf);
+    _m_pOutBuf = _m_pInBuf + GZ_WINDOW_SIZE;
+
+    setg(0, 0, 0);
+    setp(_m_pInBuf, _m_pInBuf + GZ_WINDOW_SIZE);
+
+    _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+    _m_zstream.avail_in = 0;
+    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+    _m_zstream.avail_out = GZ_WINDOW_SIZE;
+    _m_zstream.zalloc = 0;
+    _m_zstream.zfree = 0;
+
+    int result = deflateInit2(&_m_zstream, level, Z_DEFLATED, -MAX_WBITS, 8, strategy);
+    if (result == Z_MEM_ERROR)
+        throw TAllocationFailure();
+
+    char header[10];
+    std::fill_n(header, sizeof(header), '\0');
+    header[0] = static_cast<char>(g_gzMagic[0]);
+    header[1] = static_cast<char>(g_gzMagic[1]);
+    header[2] = Z_DEFLATED;
+    header[9] = 0x0b;   // OS_CODE: Win32
+    _m_pDestBuf->sputn(header, sizeof(header));
+
+    ownedBuffer.release();
+}
+
+TGzDeflateBuf::~TGzDeflateBuf()
+{
+    _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+    _m_zstream.avail_in = pptr() - _m_pInBuf;
+    m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
+
+    int result;
+    while ((result = deflate(&_m_zstream, Z_FINISH)) == Z_OK || result == Z_BUF_ERROR) {
+        _m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out);
+        _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+        _m_zstream.avail_out = GZ_WINDOW_SIZE;
+    }
+    _m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out);
+
+    _putLong(m_crc);
+    _putLong(_m_zstream.total_in);
+
+    deflateEnd(&_m_zstream);
+
+    delete[] _m_pInBuf;
+}
+
+void TGzDeflateBuf::_putLong(unsigned long x)
+{
+    _m_pDestBuf->sputc(static_cast<char>(x));
+    _m_pDestBuf->sputc(static_cast<char>(x >> 8));
+    _m_pDestBuf->sputc(static_cast<char>(x >> 16));
+    _m_pDestBuf->sputc(static_cast<char>(x >> 24));
+}
+
+int TGzDeflateBuf::sync()
+{
+    _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+    _m_zstream.avail_in = pptr() - _m_pInBuf;
+    m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
+
+    for (;;) {
+        deflate(&_m_zstream, Z_SYNC_FLUSH);
+        if (_m_zstream.avail_in == 0)
+            break;
+        if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
+                < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
+            return traits_type::eof();
+        _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+        _m_zstream.avail_out = GZ_WINDOW_SIZE;
+    }
+    if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
+            < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
+        return traits_type::eof();
+    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+    _m_zstream.avail_out = GZ_WINDOW_SIZE;
+
+    if (_m_pDestBuf->pubsync() == traits_type::eof())
+        return traits_type::eof();
+    setp(_m_pInBuf, _m_pInBuf + GZ_WINDOW_SIZE);
+    return 0;
+}
+
+int TGzDeflateBuf::overflow(int c)
+{
+    if (c != traits_type::eof()) {
+        _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
+        _m_zstream.avail_in = pptr() - _m_pInBuf;
+        m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
+
+        for (;;) {
+            deflate(&_m_zstream, Z_NO_FLUSH);
+            if (_m_zstream.avail_in == 0)
+                break;
+            if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
+                    < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
+                return traits_type::eof();
+            _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
+            _m_zstream.avail_out = GZ_WINDOW_SIZE;
+        }
+
+        setp(_m_pInBuf, _m_pInBuf + GZ_WINDOW_SIZE);
+        *_m_pInBuf = static_cast<char>(c);
+        pbump(1);
+    }
+    return traits_type::not_eof(c);
+}
 
 // Refill from the source streambuf and return the next byte. Loki's
 // `Bytef c = *next_in++; int result = c;` capture is retail's: it stores the

@@ -189,18 +189,23 @@ Open items, in the order they block a byte-identical link:
   COMDAT in another object than ours (our earlier object emits a body the
   original did not) and where one of our units holds functions of several
   original objects. Units whose owned functions retail places in separate
-  runs are separate original objects: the RMG Voronoi, river and road
-  objects now have their own units and the line walker sits with the line
-  pattern table. Two interleavings remain: seerhuttext's 0x56c120/0x56c960
+  runs are separate original objects: the RMG Voronoi run (0x5fceb0..,
+  rmg_support plus rmg.cpp's tail, after viewwrld), the river and road
+  painters with their pattern tables (0x55ed70.., 0x55f2f0..), and the line
+  walker (rmg_terrain's 0x4f9f00..), which belongs with rmg_support's
+  pattern table. Two more interleavings: seerhuttext's 0x56c120/0x56c960
   around seerhut's `initializeSeerHutText` (0x56c3e0; Dreamcast places it in
   seerhut.cpp, so the two units are probably one object), and
   singleselectionwindow's 0x576e00/0x576e80 inside singleselectionpopups' run.
   The victor units follow retail's member pull order except the PCX kernels,
   which retail references before the lock cleanups and the bit helpers
   ([victor-library.md](../vc6/victor-library.md)).
-- **zlib pull order.** Retail places `deflate.obj` first, yet no game code
-  calls a `deflate.obj` function: an original game object referenced one from
-  code `/OPT:REF` removed. The candidate pulls `inflate.obj` first.
+- **zlib pull order.** `gzinflatebuf.cpp` is the Loki editor's `GzBuf.cpp`,
+  which also defines `TGzDeflateBuf`. The game links that class
+  unreferenced, so `/OPT:REF` drops its code while its references pull
+  `deflate.obj` and `crc32.obj` ahead of `inflate.obj`, as retail does.
+  Retail still pulls `compress.obj` before `uncompr.obj`: some object before
+  lodfile referenced `compress2`.
 - **No-CD code edits.** `setupCDDrive`'s source returns 7 in six bytes;
   retail keeps the original body behind the patched entry
   (`0x50c1c6..0x50c599`), so the original function is the source a
@@ -221,7 +226,7 @@ Open items, in the order they block a byte-identical link:
   follow the imports and reference order the reconstruction still lacks.
 - **Rich header.** Retail counts 69 objects without `@comp.id`; the
   VC5-compiled Victor library members are most of them
-  ([victor-library.md](../vc6/victor-library.md)). Six `Utc12_CPP` 8447 and
+  ([victor-library.md](../vc6/victor-library.md)). Nine `Utc12_CPP` 8447 and
   three `Utc12_C` 8168 objects are still missing; their code is either
   absent from retail (removed by `/OPT:REF`) or folded into other units.
 

@@ -1,5 +1,7 @@
-// gzinflatebuf.h - the gzip-inflating stream buffer shared by Complete's
-// campaign loaders. Its retail band lies between gametypewindow and hero;
+// gzinflatebuf.h - the gzip stream buffers: TGzDeflateBuf writes a gzip
+// member, TGzInflateBuf reads one (shared by Complete's campaign loaders).
+// One original file holds both: the Loki map editor's GzBuf.cpp (object 68)
+// defines the deflating buffer first, and the game links it too. Its retail band lies between gametypewindow and hero;
 // the class has no Dreamcast CodeView counterpart. The campaign-only
 // TAbstractFile adapter is defined with its callers in customcampaign.cpp.
 #ifndef HOMM3_GZINFLATEBUF_H
@@ -9,6 +11,32 @@
 
 #include <streambuf>
 #include <zlib.h>
+
+// A std::streambuf that deflates its put area into a gzip member written to
+// another streambuf; Loki's editor saves maps with it. The game never builds
+// one, so /OPT:REF drops its code, but its zlib references are why retail
+// pulls deflate.obj and crc32.obj first. Member names are Loki's assert text
+// (`_m_pDestBuf`, `_m_zstream`, `_m_pInBuf`, `_m_pOutBuf`) and its
+// constructor parameter `pDestBuf`.
+class TGzDeflateBuf : public std::streambuf {
+public:
+    TGzDeflateBuf(std::streambuf* pDestBuf, int level = Z_DEFAULT_COMPRESSION,
+                  int strategy = Z_DEFAULT_STRATEGY);
+    virtual ~TGzDeflateBuf();
+
+protected:
+    virtual int sync();
+    virtual int overflow(int c);
+
+private:
+    void _putLong(unsigned long x);
+
+    std::streambuf* _m_pDestBuf;
+    z_stream _m_zstream;
+    char* _m_pInBuf;               // the put area
+    char* _m_pOutBuf;              // deflate's output window
+    unsigned long m_crc;
+};
 
 // A std::streambuf that inflates a gzip member out of another streambuf.
 // LAYOUT BYTE-PROVEN by the constructor 0x4d6050 and destructor 0x4d6820:
