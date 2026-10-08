@@ -92,10 +92,23 @@ public:
     void importText(istream* pIStream);
     void exportText(ostream* pOStream) const;
 
+    friend bool operator==(const TRumor& lhs, const TRumor& rhs);
+
 private:
     string _m_name;
     string _m_text;
 };
+
+// Inline: the map specifications' rumors page keeps the linkonce copies.
+inline bool operator==(const TRumor& lhs, const TRumor& rhs)
+{
+    return lhs._m_name == rhs._m_name && lhs._m_text == rhs._m_text;
+}
+
+inline bool operator!=(const TRumor& lhs, const TRumor& rhs)
+{
+    return !(lhs == rhs);
+}
 
 TRawIStream& operator>>(TRawIStream& stream, TRumor& rumor);
 TRawOStream& operator<<(TRawOStream& stream, const TRumor& rumor);
@@ -150,12 +163,25 @@ public:
 
     friend TRawIStream& operator>>(TRawIStream& stream, TTeamInfo& teamInfo);
     friend TRawOStream& operator<<(TRawOStream& stream, const TTeamInfo& teamInfo);
+    friend bool operator==(const TTeamInfo& lhs, const TTeamInfo& rhs);
 
 private:
     bool _m_bHasTeams;
     unsigned int _m_numTeams;
     TArray<unsigned int, kNumPlayers> _m_aPlayerTeam;
 };
+
+// Inline: the map specifications' teams page keeps the linkonce copies.
+inline bool operator==(const TTeamInfo& lhs, const TTeamInfo& rhs)
+{
+    return lhs._m_bHasTeams == rhs._m_bHasTeams && lhs._m_numTeams == rhs._m_numTeams
+           && lhs._m_aPlayerTeam == rhs._m_aPlayerTeam;
+}
+
+inline bool operator!=(const TTeamInfo& lhs, const TTeamInfo& rhs)
+{
+    return !(lhs == rhs);
+}
 
 // Why an object could not be created...
 class TCreateObjectFailure : public exception {
