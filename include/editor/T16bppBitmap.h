@@ -1,16 +1,33 @@
-// T16bppBitmap.h - the editor's 16-bit pixel format template (Loki h3maped).
+// T16bppBitmap.h - the editor's bitmap format templates (Loki h3maped).
 //
-// RTTI proves the shape: __tf for T16bppBitmapBase<unsigned char> registers
-// a single public base TBitmap<unsigned short, unsigned char> (__rtti_si).
-// The format accessors are static inline members, kept out of line in the
-// Loki linkonce block: RGB 5:5:5 (bits 5/5/5, shifts 10/5/0, masks
-// 0x7c00/0x3e0/0x1f). TBitmap's own members are not recovered yet; the file
-// name follows the class and is not proven.
+// RTTI proves the shapes: the type_info functions register
+// TBitmapBase<TPixel> without bases (__rtti_user), TBitmap<TPixel,
+// TPaletteIndex> with the single public base TBitmapBase<TPixel>, and
+// T8bppBitmapBase<unsigned char> / T16bppBitmapBase<unsigned char> with the
+// single public bases TBitmap<unsigned char, unsigned char> /
+// TBitmap<unsigned short, unsigned char> (__rtti_si). GUIGameObject.o emits
+// all six unreferenced, with no vtable anywhere in the image: g++ 2.95 does
+// that when a polymorphic class is completed (set_rtti_entry), so the
+// hierarchy is polymorphic; the virtual destructor stands for its unknown
+// virtual members. The 16-bit format accessors are static inline members,
+// kept out of line in the Loki linkonce block: RGB 5:5:5 (bits 5/5/5,
+// shifts 10/5/0, masks 0x7c00/0x3e0/0x1f). The other members are not
+// recovered; the file name follows the class and is not proven.
 #ifndef HOMM3_EDITOR_T16BPPBITMAP_H
 #define HOMM3_EDITOR_T16BPPBITMAP_H
 
+template <class TPixel>
+class TBitmapBase {
+public:
+    virtual ~TBitmapBase() {}
+};
+
 template <class TPixel, class TPaletteIndex>
-class TBitmap {
+class TBitmap : public TBitmapBase<TPixel> {
+};
+
+template <class TPaletteIndex>
+class T8bppBitmapBase : public TBitmap<unsigned char, TPaletteIndex> {
 };
 
 template <class TPaletteIndex>
