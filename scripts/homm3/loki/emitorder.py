@@ -262,6 +262,19 @@ class Strings:
         return self.image == self.ours
 
 
+def _kept(strings: list[str], keep) -> list[str]:
+    """The strings `keep` selects; a string that runs on from the byte
+    before it (no NUL between, e.g. `@11TRandomHero` after a 0x40) counts
+    without that byte."""
+    out = []
+    for text in strings:
+        if keep(text):
+            out.append(text)
+        elif len(text) > 2 and keep(text[1:]):
+            out.append(text[1:])
+    return out
+
+
 def string_orders(objects: dict[str, tuple[int, Path]], keep, image: LokiImage | None = None) -> list[Strings]:
     """Each object's `.rodata` strings that `keep` selects, image against ours."""
     from homm3.loki import datacmp
@@ -274,8 +287,8 @@ def string_orders(objects: dict[str, tuple[int, Path]], keep, image: LokiImage |
         previous_end = None if base is None else base + header.size
         if start is None or following is None:
             continue
-        theirs = [s for s in rodata_strings(layout.index.read(start, following - start)) if keep(s)]
-        ours = [s for s in rodata_strings(compiled.elf.bytes(header)) if keep(s)]
+        theirs = _kept(rodata_strings(layout.index.read(start, following - start)), keep)
+        ours = _kept(rodata_strings(compiled.elf.bytes(header)), keep)
         out.append(Strings(compiled.unit, theirs, ours))
     return out
 
