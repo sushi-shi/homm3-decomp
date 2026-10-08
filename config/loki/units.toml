@@ -194,6 +194,11 @@ object = 33
 source = "src/editor/TilePoint.cpp"
 
 [[unit]]
+name = "TerrainPlacement"
+object = 31
+source = "src/editor/TerrainPlacement.cpp"
+
+[[unit]]
 name = "Tile"
 object = 32
 source = "src/editor/Tile.cpp"
