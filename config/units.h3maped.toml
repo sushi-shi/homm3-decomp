@@ -1,0 +1,299 @@
+# The GOG Complete map editor image (`homm3 --image h3maped`): h3maped.exe,
+# config/project.toml [inputs.h3maped]. One unit per compiled object; a unit
+# whose source the game also compiles is the SAME file, built here with this
+# image's profile. Its function addresses come from the image's placements
+# (config/retail/h3maped/placements.tsv), never from the game's VA() claims.
+#
+# Profiles (editor-plan.md section 4, fingerprinted against retail):
+#   map editor objects          /O1 /Ob2 /GR (frame pointers omitted)
+#   prebuilt Libraries archive  /O2 /GR (ResourceManager and the graphics
+#                               and resource classes)
+#   zlib and Victor             the game's prebuilt objects, byte-identical
+
+[build]
+compiler = "msvc6.0"
+platform = "win32"
+# The SP3 MFC overlay (homm3.init.mfc_sp3) precedes the toolchain's RTM MFC
+# headers; both precede the project's.
+includes = [
+  "build/mfc-sp3/include",
+  "build/homm3-toolchain-vc6-sp3/msvc/mfc/INCLUDE",
+  "include",
+  "vendor/bink-0.5a/include",
+  "vendor/ifc-2.0.3/include",
+  "vendor/miles-5.0e/include",
+  "vendor/smacker-3.2h/include",
+  "vendor/zlib-1.1.3",
+]
+analysis_profile = "h3maped_o1_ob2_gr_windows"
+
+[flags]
+
+zlib_o2_ml_gr_c_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/ML",
+  "/Gr",
+  "/TC",
+  "/D_WINDOWS",
+]
+
+victor_o2_ml_gd_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Ob2",
+  "/ML",
+  "/Gd",
+  "/D_WINDOWS",
+]
+
+victor_kernels_o2_ogoff_ml_gd_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Og-",
+  "/ML",
+  "/Gd",
+  "/D_WINDOWS",
+]
+
+h3maped_o1_ob2_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O1",
+  "/Ob2",
+  "/Op",
+  "/MT",
+  "/Gr",
+  "/GX",
+  "/GR",
+  "/D_WINDOWS",
+]
+
+libraries_o2_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Op",
+  "/MT",
+  "/Gr",
+  "/GX",
+  "/GR",
+  "/D_WINDOWS",
+]
+
+# zlib 1.1.3, the game's prebuilt objects
+[[unit]]
+unit = "adler32"
+source = "vendor/zlib-1.1.3/adler32.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "compress"
+source = "vendor/zlib-1.1.3/compress.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "crc32"
+source = "vendor/zlib-1.1.3/crc32.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "deflate"
+source = "vendor/zlib-1.1.3/deflate.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "gzio"
+source = "vendor/zlib-1.1.3/gzio.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "infblock"
+source = "vendor/zlib-1.1.3/infblock.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "infcodes"
+source = "vendor/zlib-1.1.3/infcodes.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "inffast"
+source = "vendor/zlib-1.1.3/inffast.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "inflate"
+source = "vendor/zlib-1.1.3/inflate.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "inftrees"
+source = "vendor/zlib-1.1.3/inftrees.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "infutil"
+source = "vendor/zlib-1.1.3/infutil.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "trees"
+source = "vendor/zlib-1.1.3/trees.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "uncompr"
+source = "vendor/zlib-1.1.3/uncompr.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "zutil"
+source = "vendor/zlib-1.1.3/zutil.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+# Victor, byte-identical to the game's
+[[unit]]
+unit = "victor"
+module = "victor"
+source = "src/victor.cpp"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_flip"
+module = "victor"
+source = "src/victor_flip.cpp"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_loadpcx"
+module = "victor"
+source = "src/victor_loadpcx.cpp"
+flags = "victor_o2_ml_gd_windows"
+
+[[unit]]
+unit = "victor_pcx_kernels"
+module = "victor"
+source = "src/victor_pcx_kernels.cpp"
+flags = "victor_kernels_o2_ogoff_ml_gd_windows"
+
+# The Libraries archive (one compile, linked into both editors)
+[[unit]]
+unit = "resourcemanager"
+source = "src/resourcemanager.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "lodfile"
+module = "codec"
+source = "src/lodfile.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "resource"
+source = "src/resource.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "sample"
+source = "src/sample.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "textresource"
+source = "src/textresource.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "csprite"
+source = "src/csprite.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "cspriteframe"
+module = "codec"
+source = "src/cspriteframe.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "csequence"
+source = "src/csequence.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "bitmap16"
+source = "src/bitmap16.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "bitmap24"
+source = "src/bitmap24.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "bitmap816"
+source = "src/bitmap816.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "palette"
+source = "src/palette.cpp"
+flags = "libraries_o2_gr_windows"
+
+[[unit]]
+unit = "font"
+source = "src/font.cpp"
+flags = "libraries_o2_gr_windows"
+
+# Game sources compiled into the map editor
+[[unit]]
+unit = "rmg"
+module = "rmg"
+source = "src/rmg.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "rmg_support"
+module = "rmg"
+source = "src/rmg_support.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "rmg_terrain"
+module = "rmg"
+source = "src/rmg_terrain.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "objecttype"
+source = "src/objecttype.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "gzinflatebuf"
+module = "codec"
+source = "src/gzinflatebuf.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "artifact"
+source = "src/artifact.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "creaturetype"
+source = "src/creaturetype.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "herodefs"
+source = "src/herodefs.cpp"
+flags = "h3maped_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "spelldefs"
+source = "src/spelldefs.cpp"
+flags = "h3maped_o1_ob2_gr_windows"

@@ -24,6 +24,19 @@ sha256 = "650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86"
 env = "HOMM3_MAC_EXE"
 option = "--mac-exe"
 
+# Further linked programs (`image = true`), selected with `homm3 --image KEY`.
+# The GOG Complete 4.0 map editor (identical in the Collector's and Platinum
+# pressings): VC6 SP3, /O1 /Ob2 /GR, MFC 4.2 (SP3 NAFXCW) linked statically.
+[inputs.h3maped]
+name = "GOG Complete map editor"
+image = true
+path = "build/orig/h3maped.exe"
+size = 2134016
+sha256 = "4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37"
+env = "HOMM3_H3MAPED_EXE"
+option = "--exe"
+image_base = 0x400000
+
 # Positive CodeView/source spelling equivalences reviewed for this project.
 # Used only by the Dreamcast source-fact audit, never by the generic comparator.
 [type_aliases.dreamcast]
@@ -33,3 +46,13 @@ TWallTraits = "combatManager::TWallTraits"
 
 [toolchain]
 locations = ["build/homm3-toolchain-vc6-sp3/msvc", "build/toolchain/msvc"]
+
+# The VC6 SP3 MFC overlay the editor images compile and link against
+# (homm3.init.mfc_sp3): TNSB9908.iso, VSTUDIO/SP3/Vs6sp3_1.cab, vc98/mfc.
+# `homm3 --image h3maped init --mfc-sp3 DIR` stages it in build/mfc-sp3/.
+[toolchain.mfc_sp3.files]
+"include/afxbld_.h" = "622f4215d17479dccc82f971380ef3a52463655d85245f7915a49f52abe1ba67"
+"include/afxisapi.h" = "32fc64158900b8f5181e4ecb19786f34e55c7198f6560f75dd47fe5cc0efd16e"
+"include/afxodlgs.h" = "8d766ff1a320790f487143e096d4970cb01bf45bfd7ac524bcb2e51bee3b2367"
+"include/afxwin1.inl" = "0aac8da0f7e2df2ba770328696a61523cdc43c17a95d2e29161dceaca002cd37"
+"lib/nafxcw.lib" = "967ffe73dd6a8197bd30c7d5c481d51d31cf266c82cebd808db0f7edcf4307c8"
