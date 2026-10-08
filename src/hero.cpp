@@ -5011,6 +5011,7 @@ void hero::transferArtifacts(hero* src)
 // reference reader before each id load: vacancy plus both capacity scans.
 // Retaining getArtifact at these readonly sites holds Windows at 98.7339%;
 // the remaining outer-loop exit/epilogue frontier is unchanged.
+// A do/while(slot++, --remaining) outer loop also gives 95.49%.
 VA(0x004e2550, 0x2EC)
 MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
@@ -5475,6 +5476,10 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // retain the desktop result and flag behavior while restoring the reference.
 // With both placement helpers returning bool, a bool placed local still
 // lowers Windows 95.9069% to 95.3968%; it does not close the caller's residual.
+// Retail indexes g_game->m_players[m_owner] here without getPlayer's guard and
+// reads the human byte inline; that direct row reproduces the guard-free
+// block (94.67%, 95.32% with the byte read) but moves the bitset range-check
+// out_of_range expansion, so the guarded helper call is kept for now.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)  // MAC_ABSTRACTION_FROM(tokens1:3d82fe0d0468,25.0000): Restore the canonical playerData::isHuman call for Mac's expanded human-query byte body at 0x103f74.

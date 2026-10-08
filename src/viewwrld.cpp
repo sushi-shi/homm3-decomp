@@ -749,6 +749,11 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // Bool foundHero/foundBoat locals fed by the restored bool scan helper are
 // also byte-flat (89.05%); native local primitive 0x20 does not distinguish
 // their original spelling, and the extra nested GetMap remains.
+// 2026-10-08: GetMap spelled `reinterpret_cast<unsigned short*>(byte row) + x`
+// (cb 43, as are C-style and Pitch*y forms; static_cast-via-void* is 45)
+// admits that third expansion and matches the call set (87.86%), and lifts
+// vwDrawShroud to 89.19%, but drops kb::oldmain 88.59 -> 87.95 and five exact
+// winmgr/smackmgr/customcampaign bodies, which retail keeps calling it.
 VA(0x005f8be0, 0x636)
 DC_ADDRESS(0x1943ec, 0x462)
 MAC_ADDRESS(0x204ea0, 0x5e4)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer)
