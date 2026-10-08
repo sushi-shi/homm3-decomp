@@ -578,7 +578,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         (objType->m_width - objCell->m_cellX - 1) * 32,
                         (objType->m_height - objCell->m_cellY - 1) * 32,
                         32, 32, g_memoryBuffer, 0, 0,
-                        g_systemPalette->m_data[64 + owner], false);
+                        g_systemPalette->Palette[64 + owner], false);
                 } else {
                     sprPtr->DrawAdvObj(
                         (m_animCtr

@@ -159,9 +159,9 @@ void basic_ostringstream::`vbase destructor'();
 DATA(0x00694d60) unsigned int Bitmap16Bit::s_greenMask;
 DATA(0x00694d64) unsigned int Bitmap16Bit::s_blueMask;
 DATA(0x00694d68) unsigned int Bitmap16Bit::s_redMask;
-DATA(0x0069cc60) unsigned int TPalette16::s_greenMask;
-DATA(0x0069cc64) unsigned int TPalette16::s_redMask;
-DATA(0x0069cc68) unsigned int TPalette16::s_blueMask;
+DATA(0x0069cc60) unsigned int TPalette16::green_mask;
+DATA(0x0069cc64) unsigned int TPalette16::red_mask;
+DATA(0x0069cc68) unsigned int TPalette16::blue_mask;
 DATA(0x0069e598) unsigned long g_spriteMaskFirst;
 DATA(0x0069e59c) unsigned long g_spriteMaskGreen;
 // Toggled by the retail adventure-map command that dispatches
@@ -415,14 +415,14 @@ void ResourceManager::saturateGraphics()
         case RESOURCE_TYPE_INTERFACE:
         case RESOURCE_TYPE_COMBAT_HERO: {
             CSprite* sprite = static_cast<CSprite*>(value);
-            sprite->GetPalette24().adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            sprite->GetPalette24().AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
             sprite->ResetPalette();
             break;
         }
 
         case RESOURCE_TYPE_BITMAP: {
             Bitmap816* bitmap = static_cast<Bitmap816*>(value);
-            bitmap->getPalette24().adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            bitmap->getPalette24().AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
             bitmap->resetPalette();
             break;
         }
@@ -630,7 +630,7 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
 {
     CSprite::SetPixelFormat(redMask, greenMask, blueMask);
     Bitmap16Bit::setPixelFormat(redMask, greenMask, blueMask);
-    TPalette16::setPixelFormat(redMask, greenMask, blueMask);
+    TPalette16::SetPixelFormat(redMask, greenMask, blueMask);
     g_spriteMaskFirst = redMask;
     g_spriteMaskGreen = greenMask;
     g_spriteMaskLast = blueMask;
@@ -680,7 +680,7 @@ template <class T>
 static void adjustLoadedResourceSaturation(T* value)
 {
     if (g_graphicsSaturated)
-        value->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+        value->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 }
 
 // Mac 0:0x152df8..0x152fc8 calls the retained findBitmapResource helper
@@ -750,9 +750,9 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             lodFile->read(data.get(), bmpHeader.m_dataSize);
 
             TPalette24 palette24;
-            lodFile->read(palette24.m_palette, sizeof(palette24.m_palette));
+            lodFile->read(palette24.Palette, sizeof(palette24.Palette));
             if (g_graphicsSaturated)
-                palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+                palette24.AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
             TPalette16 palette16(
                 palette24,

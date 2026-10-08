@@ -23,7 +23,7 @@ void resource::dispose() {}
 
 TPalette16::TPalette16(const unsigned short* source)
     : resource("", RESOURCE_TYPE_NONE) {
-    std::memcpy(m_data, source, sizeof(m_data));
+    std::memcpy(Palette, source, sizeof(Palette));
 }
 
 TPalette16::~TPalette16() = default;

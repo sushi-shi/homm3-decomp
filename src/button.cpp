@@ -114,7 +114,7 @@ void button::setPalette(const char* paletteName)
 {
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
-        m_buttonIcon->SetPalette(newPalette->m_data);
+        m_buttonIcon->SetPalette(newPalette->Palette);
         ResourceManager::dispose(newPalette);
     }
 }

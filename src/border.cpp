@@ -292,7 +292,7 @@ void bitmapBorder::setPalette(const char* paletteName)
     if (m_image) {
         TPalette16* newPalette = ResourceManager::getPalette(paletteName);
         if (newPalette) {
-            m_image->setPalette(newPalette->m_data);
+            m_image->setPalette(newPalette->Palette);
             ResourceManager::dispose(newPalette);
         }
     }

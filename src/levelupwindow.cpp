@@ -105,13 +105,13 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
         m_widgets.push_back(new coloredBorderFrame(
             122, 325, 47, 46, SKILLBORDER_1_ID,
-            g_systemPalette->m_data[45], 0x400));
+            g_systemPalette->Palette[45], 0x400));
         widget* addedLeft = m_widgets.back();
         addedLeft->setVisible(0);
 
         m_widgets.push_back(new coloredBorderFrame(
             220, 325, 47, 46, SKILLBORDER_2_ID,
-            g_systemPalette->m_data[45], 0x400));
+            g_systemPalette->Palette[45], 0x400));
         widget* addedRight = m_widgets.back();
         addedRight->setVisible(0);
 
@@ -141,7 +141,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             TEXT4_ID, 1, 0, 8));
         m_widgets.push_back(new coloredBorderFrame(
             169, 325, 47, 46, SKILLBORDER_1_ID,
-            g_systemPalette->m_data[45], 0x400));
+            g_systemPalette->Palette[45], 0x400));
         m_widgets.push_back(new iconWidget(
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
             firstChoice, 0, 0, 0, 0x10));

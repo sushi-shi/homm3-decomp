@@ -271,7 +271,7 @@ public:
     DC_ADDRESS(0x01f1a0, 0x3c)
     unsigned short GetPaletteColor(unsigned char index) const
     {
-        return p->m_data[index];
+        return p->Palette[index];
     }
 
     // Header inline, DC CSprite.h:293 (emitted into

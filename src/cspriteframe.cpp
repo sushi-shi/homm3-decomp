@@ -939,12 +939,12 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
                     if (code == kOpaqueRunCode) {
                         unsigned int count = run;
                         do {
-                            *out++ = pal.m_data[*src++];
+                            *out++ = pal.Palette[*src++];
                         } while (--count);
                     } else if (tblit) {
                         out += run;
                     } else {
-                        unsigned short color = pal.m_data[code];
+                        unsigned short color = pal.Palette[code];
                         unsigned int count = run;
                         do {
                             *out++ = color;
@@ -992,12 +992,12 @@ void CSpriteFrame::Draw(int sx, int sy, int sw, int sh,
                     if (code == kOpaqueRunCode) {
                         unsigned int count = run;
                         do {
-                            *--out = pal.m_data[*src++];
+                            *--out = pal.Palette[*src++];
                         } while (--count);
                     } else if (tblit) {
                         out -= run;
                     } else {
-                        unsigned short color = pal.m_data[code];
+                        unsigned short color = pal.Palette[code];
                         unsigned int count = run;
                         do {
                             *--out = color;
@@ -1072,7 +1072,7 @@ void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh,
     if (sw > 0 && sh > 0) {
         lineOffset =
             static_cast<const TOffset*>(static_cast<const void*>(map));
-        palette = pal.m_data;
+        palette = pal.Palette;
         if (!hflip) {
             unsigned short* lineDst =
                 static_cast<unsigned short*>(static_cast<void*>(
@@ -1338,7 +1338,7 @@ void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh,
 
             cellsPerLine = static_cast<unsigned int>(CroppedWidth) >> 5;
             cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(map));
-            palette = pal.m_data;
+            palette = pal.Palette;
 
             if (!hflip) {
                 unsigned short* lineDst =
@@ -1514,7 +1514,7 @@ void CSpriteFrame::DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
             cellsPerLine = static_cast<unsigned int>(CroppedWidth) >> 5;
             cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(map));
 
-            palette = pal.m_data;
+            palette = pal.Palette;
 
             if (!hflip) {
                 unsigned short* lineDst =
@@ -1860,7 +1860,7 @@ void CSpriteFrame::DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // rows and indexed encoded for-rows recover all behavior. Retail and
 // Dreamcast agree on the surprising general-RLE delegation
 // `Draw(sw, sy, sw, ...)`. Loki's GCC 2.95 build (no auto-inlining or
-// cross-branch hoisting) loads `pal.m_data` once, right after the line-table
+// cross-branch hoisting) loads `pal.Palette` once, right after the line-table
 // pointer and before the flip dispatch, as the sibling decoders' `palette`
 // local does; restoring that local took retail from 81.42% to 98.27%. DC
 // attributes both raw-row advances to one line (2938); advancing the
@@ -1890,7 +1890,7 @@ void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
         if (sh > 0) {
             const unsigned short* const lineOffset = static_cast<const unsigned short*>(
                 static_cast<const void*>(map));
-            const unsigned short* const palette = pal.m_data;
+            const unsigned short* const palette = pal.Palette;
             if (!vflip) {
                 if (!hflip) {
                     unsigned short* lineDst =
@@ -2687,7 +2687,7 @@ void CSpriteFrame::DrawSpellEffect(int sx, int sy, int sw, int sh,
     if (sw > 0 && sh > 0) {
         lineOffset =
             static_cast<const unsigned int*>(static_cast<const void*>(map));
-        palette = pal.m_data;
+        palette = pal.Palette;
         if (!hflip) {
             unsigned short* lineDst =
                 static_cast<unsigned short*>(static_cast<void*>(
@@ -2875,7 +2875,7 @@ void CSpriteFrame::DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
         return;
     unsigned int cellsPerLine = CroppedWidth >> 5;
     const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
     for (int y = sy; y < sy + sh; y += 2) {
         unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
@@ -3055,7 +3055,7 @@ void CSpriteFrame::DrawTileScaled50(int sx, int sy, int sw, int sh,
     if (sw <= 0 || sh <= 0)
         return;
     const unsigned short* const lineOffset = static_cast<const unsigned short*>(static_cast<const void*>(map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     if (!vflip) {
         if (!hflip) {
             unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
@@ -3446,7 +3446,7 @@ void CSpriteFrame::DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
         return;
     unsigned int cellsPerLine = CroppedWidth >> 5;
     const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
     for (int y = sy; y < sy + sh; y += 4) {
         unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
@@ -3642,7 +3642,7 @@ void CSpriteFrame::DrawTileScaled25(int sx, int sy, int sw, int sh,
     if (sw <= 0 || sh <= 0)
         return;
     const unsigned short* const lineOffset = static_cast<const unsigned short*>(static_cast<const void*>(map));
-    const unsigned short* const palette = pal.m_data;
+    const unsigned short* const palette = pal.Palette;
     if (!vflip) {
         if (!hflip) {
             unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))

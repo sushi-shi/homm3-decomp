@@ -4798,7 +4798,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                             tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                             tilew, tileh, g_windowManager->m_screenBitmap,
                             baseX, baseY + 8,
-                            g_systemPalette->m_data[64 + owner], false);
+                            g_systemPalette->Palette[64 + owner], false);
                     } else {
                         if (objCell->m_objectIndex == m_movingObjectIndex) {
 
@@ -5439,7 +5439,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                     tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8,
-                    g_systemPalette->m_data[64 + owner], false);
+                    g_systemPalette->Palette[64 + owner], false);
             } else {
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
@@ -5723,10 +5723,10 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             } else {
                 colour = m_groundTileset[cell->m_groundSet]->GetPaletteColor(8);
                 if (x == heroX && y == heroY) {
-                    colour = g_systemPalette->m_data[64 + currentHero->m_owner];
+                    colour = g_systemPalette->Palette[64 + currentHero->m_owner];
                 } else if (cell->m_type == HERO
                            && cell->m_isTrigger) {
-                    colour = g_systemPalette->m_data[64 +
+                    colour = g_systemPalette->Palette[64 +
                         g_game->m_heroAvailability[cell->m_extraInfo]];
                 } else {
                     switch (cell->getMapObject()) {
@@ -5761,7 +5761,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             if (trigger) {
                                 int owner = g_game->m_towns[
                                     trigger->getMapExtraInfo()].m_owner;
-                                colour = g_systemPalette->m_data[64 + owner];
+                                colour = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
@@ -5772,7 +5772,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             if (trigger) {
                                 int owner = g_game->getMine(
                                     trigger->getMapExtraInfo())->m_playerOwner;
-                                colour = g_systemPalette->m_data[64 + owner];
+                                colour = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
@@ -5783,7 +5783,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                             if (trigger) {
                                 int owner = g_game->m_generators[
                                     trigger->getMapExtraInfo()].getOwner();
-                                colour = g_systemPalette->m_data[64 + owner];
+                                colour = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
@@ -5795,7 +5795,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                                 // rather than calling its GetGarrison inline.
                                 int owner = g_game->m_garrisons[
                                     trigger->getMapExtraInfo()].m_playerOwner;
-                                colour = g_systemPalette->m_data[64 + owner];
+                                colour = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
@@ -5807,7 +5807,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                                 ExtraInfoUnion cellExtra;
                                 cellExtra.m_extraInfo = extraInfo;
                                 int owner = cellExtra.m_shipyardInfo.m_owner;
-                                colour = g_systemPalette->m_data[64 + owner];
+                                colour = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;

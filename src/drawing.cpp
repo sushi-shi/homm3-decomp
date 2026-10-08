@@ -1417,7 +1417,7 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
     Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
     sprite->DrawCreature(
         sequence, frame, 0, 0, sprite->GetWidth(), 232, screen,
-        x, y, isFlipped, g_systemPalette->m_data[paletteIndex]);
+        x, y, isFlipped, g_systemPalette->Palette[paletteIndex]);
     return 1;
 }
 
@@ -2005,8 +2005,8 @@ void combatManager::cycleCombatScreen()
     }
 
     m_obstacleAnimationFrame++;
-    g_systemPalette->cycle(96, 103, -1);
-    g_systemPalette->cycle(112, 119, -1);
+    g_systemPalette->Cycle(96, 103, -1);
+    g_systemPalette->Cycle(112, 119, -1);
     drawFrame(1, 1, 0, 0, 1, 0);
     GameTime::get();
     g_timers[8] =

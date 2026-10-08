@@ -11,10 +11,10 @@
 struct tagRGBQUAD;
 
 struct TRGBA {
-    unsigned char m_red;
-    unsigned char m_green;
-    unsigned char m_blue;
-    unsigned char m_alpha;
+    unsigned char Red;
+    unsigned char Green;
+    unsigned char Blue;
+    unsigned char Alpha;
 };
 SIZE(TRGBA, 4);
 
@@ -53,7 +53,7 @@ public:
     TPalette24(const tagRGBQUAD* quad);
     // DC LF_MEMBER Palette at +0x1c, type 0x1a26: unsigned char[768].
     // Retail copies the same 0x300-byte payload; preserve the native array.
-    unsigned char m_palette[768];
+    unsigned char Palette[768];
     TPalette24(const TPalette24* copy);
     TPalette24& operator=(const TPalette24& from);
     // NO exception specification: Bitmap816::~Bitmap816's retail unwind map
@@ -62,10 +62,10 @@ public:
     // here erases that chain (the map collapses to one entry).
     virtual ~TPalette24();
     virtual unsigned int getSize() const;
-    void cycle(int begin, int end, int step);
-    void colorize(float hue, float saturation);
-    void gray();
-    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+    void Cycle(int begin, int end, int step);
+    void Colorize(float hue, float saturation);
+    void Gray();
+    void AdjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
 };
 SIZE(TPalette24, 0x31c);
@@ -75,13 +75,13 @@ class TPalette16 : public resource {
     // SetPixelFormat stores its red/green/blue arguments at the corresponding
     // three addresses, and every 16-bit palette transform reads them back.
 private:
-    static unsigned int s_redMask;
-    static unsigned int s_greenMask;
-    static unsigned int s_blueMask;
+    static unsigned int red_mask;
+    static unsigned int green_mask;
+    static unsigned int blue_mask;
 
 public:
     union {
-        unsigned short m_data[256];
+        unsigned short Palette[256];
         palette m_colors;
     };
     TPalette16();
@@ -110,11 +110,11 @@ public:
     // DC Palette.h:137-140. No receiver; three mask stores.
     // Retail ResourceManager::setPixelFormat expands this header helper.
     DC_ADDRESS(0x122b08, 0x1c)
-    static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
+    static void SetPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
     {
-        s_redMask = red;
-        s_greenMask = green;
-        s_blueMask = blue;
+        red_mask = red;
+        green_mask = green;
+        blue_mask = blue;
     }
     TPalette16(const TPalette16* copy);
 
@@ -126,26 +126,26 @@ public:
     virtual unsigned int getSize() const;
 
     TPalette16* operator=(const TPalette16* from);
-    void cycle(int begin, int end, int step);
-    void gray();
-    void adjustSaturation(float amount);
-    void colorize(float hue, float saturation);
-    void adjustHue(float hue, float amount);
-    void adjustValue(float amount);
-    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+    void Cycle(int begin, int end, int step);
+    void Gray();
+    void AdjustSaturation(float amount);
+    void Colorize(float hue, float saturation);
+    void AdjustHue(float hue, float amount);
+    void AdjustValue(float amount);
+    void AdjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust);
 
 private:
     // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
     // /Ob2 expanded it into each of its constructor call sites - but the
     // boundary is the DC roster's own, not an invention.
-    void convertRGBAto16(const TRGBA* rgba, int rbits, int rshift,
+    void ConvertRGBAto16(const TRGBA* rgba, int rbits, int rshift,
                          int gbits, int gshift, int bbits, int bshift);
-    void convertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift,
+    void ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift,
                             int gbits, int gshift, int bbits, int bshift);
     // Project-inferred overload shared by the default-format RGB constructors.
     void convert24to16WithMasks(const unsigned char* p24);
-    void convert24to16(const unsigned char* p24, int rbits, int rshift,
+    void Convert24to16(const unsigned char* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift);
 };
 

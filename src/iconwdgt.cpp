@@ -388,7 +388,7 @@ void iconWidget::setPalette(const char* paletteName)
 {
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
-        m_sprite->SetPalette(newPalette->m_data);
+        m_sprite->SetPalette(newPalette->Palette);
         ResourceManager::dispose(newPalette);
     }
 }
