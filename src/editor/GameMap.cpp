@@ -10,6 +10,7 @@
 #include "va.h"
 #include "editor/Array.h"
 #include "editor/GameMap.h"
+#include "editor/GameObject.h"
 #include "editor/TilePoint.h"
 
 namespace {
@@ -29,6 +30,40 @@ bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
             return true;
     }
     return false;
+}
+
+// The largest object footprint; h3maped's height map rows are six cells.
+enum { kMaxObjWidth = 8, kMaxObjHeight = 6 };
+
+// The height of each placed cell of an object: an underlay lies at 0,
+// anything else rises by one per row from its front, and a passable cell
+// that continues a blocked one to its left takes that cell's height.
+VA(0x0041e84b, 0xca)
+void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[kMaxObjWidth][kMaxObjHeight])
+{
+    for (unsigned int x = 0; x < obj.getWidth(); x++) {
+        unsigned int height = obj.getBUnderlay() ? 0 : 1;
+        unsigned int y = 0;
+        for (;;) {
+            if (obj.getBCellPlaced(x, y))
+                heightMap[x][y] = height;
+            if (++y >= obj.getHeight())
+                break;
+            if (!obj.getBUnderlay()) {
+                if (obj.getBCellPassable(x, y)) {
+                    if (x != 0 && !obj.getBCellPassable(x - 1, y))
+                        height = heightMap[x - 1][y];
+                    else
+                        height++;
+                } else {
+                    if (obj.getBCellPassable(x, y - 1))
+                        height = 1;
+                    else
+                        height++;
+                }
+            }
+        }
+    }
 }
 
 }  // namespace
