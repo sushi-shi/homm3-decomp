@@ -727,8 +727,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
                     if (artifact.m_artifactId == ARTIFACT_NONE) {
                         message msg;
-                        msg.setWidgetCommand(widget::WIDGET_CLEAR_STATUS,
-                                             rowWidgetId + item + 119);
+                        msg.m_id = MESSAGE_WIDGET;
+                        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                        msg.m_codeY = rowWidgetId + item + 119;
                         msg.m_extra = widget::WIDGET_DRAWN;
                         g_overWin->broadcastMessage(msg);
                     }

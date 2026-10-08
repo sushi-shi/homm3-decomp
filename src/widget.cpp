@@ -10,15 +10,6 @@
 #include "window.h"
 #include "winmgr.h"
 
-// Project-inferred widget protocol operation. Keep the caller's existing
-// modifiers, mouse coordinates, payload and window, including borrowed text.
-void message::setWidgetCommand(int command, int widgetId)
-{
-    m_id = MESSAGE_WIDGET;
-    m_codeX = command;
-    m_codeY = widgetId;
-}
-
 // Project-inferred initialization operations. Neither releases owned text nor
 // removes a live widget from its window; they only initialize these fields.
 void widget::initializeLinks()
@@ -210,7 +201,9 @@ MAC_ADDRESS(0x20aa0c, 0x74)
 int widget::sendMessage(widget::ECommands command, int extra)
 {
     message msg;
-    msg.setWidgetCommand(command, m_id);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = command;
+    msg.m_codeY = m_id;
     msg.m_extra = extra;
     msg.m_window = m_parentWindow;
     return main(msg);
