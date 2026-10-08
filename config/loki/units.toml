@@ -294,3 +294,8 @@ source = "src/editor/cppbridge.cpp"
 name = "EditTimedEventResourcesPage"
 object = 81
 source = "src/editor/EditTimedEventResourcesPage.cpp"
+
+[[unit]]
+name = "EditTimedEventGeneralPage"
+object = 80
+source = "src/editor/EditTimedEventGeneralPage.cpp"
