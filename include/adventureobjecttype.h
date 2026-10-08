@@ -28,6 +28,8 @@ enum TAdventureObjectType {
     COVER_OF_DARKNESS          = 15,
     CREATURE_BANK              = 16,
     CREATURE_GENERATOR_1       = 17,
+    CREATURE_GENERATOR_2       = 18,
+    CREATURE_GENERATOR_3       = 19,
     CREATURE_GENERATOR_4       = 20,
     CURSED_GROUND              = 21,
     DEAD_GUY                   = 22,
