@@ -113,3 +113,8 @@ source = "src/editor/GameResource.cpp"
 name = "Player"
 object = 24
 source = "src/editor/Player.cpp"
+
+[[unit]]
+name = "Colors"
+object = 8
+source = "src/editor/Colors.cpp"
