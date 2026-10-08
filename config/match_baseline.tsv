@@ -4639,7 +4639,7 @@ university_window	?updateSkillButton@type_university_window@@IAEXAAUtype_univers
 victor	?allocimage@@YGHPAUimgdes@@HHH@Z	100.0000	100.0000	100.0000	0x203590	tokens1:1e64e3542de2
 victor	?freeimage@@YGXPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x2037a0	tokens1:63238359053e
 victor	?pcxinfo@@YGHPBDPAUPcxData@@@Z	100.0000	100.0000	100.0000	0x2042a0	tokens1:094ace48e4e9
-victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	99.3714	99.3714	99.3714	0x2035c0	tokens1:3845c759f53f
+victor	?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z	100.0000	100.0000	100.0000	0x2035c0	tokens1:d94fa491415c
 victor	?victorDestroyLock0@@YAXXZ	100.0000	100.0000	100.0000	0x204620	tokens1:5cad0ff401fa
 victor	?victorDestroyLock1@@YAXXZ	100.0000	100.0000	100.0000	0x204640	tokens1:9e1bd69edabc
 victor	?victorDestroyLock2@@YAXXZ	100.0000	100.0000	100.0000	0x204660	tokens1:f768c255d726

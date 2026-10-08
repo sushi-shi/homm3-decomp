@@ -308,8 +308,8 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
     if (!width || !height)
         return -1;
     image->m_colors = bitsPerPixel == victorTrueColor ? 0 : 1 << bitsPerPixel;
-    int stride = ((bitsPerPixel * width + 31) >> 3) & ~3;
     unsigned int paletteBytes = image->m_colors * sizeof(RGBQUAD);
+    int stride = ((bitsPerPixel * width + 31) >> 3) & ~3;
     int imageBytes = stride * height;
     unsigned int bytes = sizeof(BITMAPINFOHEADER) + paletteBytes;
     if (!useDibSection)
