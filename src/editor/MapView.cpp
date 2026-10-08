@@ -21,11 +21,11 @@
 #include "editor/MapView.h"
 #include "editor/MapDoc.h"
 #include "editor/GameMap.h"
+#include "editor/Town.h"
 #include "editor/Event.h"
 #include "editor/FindDlg.h"
 #include "editor/GUIGameObject.h"
 #include "editor/Hero.h"
-#include "editor/Town.h"
 #include "editor/HeroPropsSheet.h"
 #include "editor/ArtifactPropsSheet.h"
 #include "editor/MapEditorText.h"
@@ -418,8 +418,8 @@ void TMapView::onEditPlaceObject(TMapEditingWnd* pEditingWnd, const TGUIGameObje
             }
         }
     } else {
+        getPDocument()->backupMap();
         try {
-            getPDocument()->backupMap();
             _placeObjectWithExceptionHandlingImpl(*_m_pFloatingObj, x, y);
         } catch (const TPlaceObjFailureHolyGrailTooCloseToEdge& e) {
             size_t len = strlen(kGrailPlacedTooCloseToEdgeFmtStr) + 100;
@@ -1041,11 +1041,11 @@ void TMapView::OnInitialUpdate(GtkAdjustment* hadj, GtkAdjustment* vadj)
         assert(hadj != vadj);
         assert(_m_pMiniMapWnd == NULL);
         assert(_m_pToolkitWnd == NULL);
-        try {
-            if ((_m_pMapFrameWnd = new TMapFrameWnd(NULL, this, 14, pMap, false, _s_zoom, _s_bViewGrid,
-                                                    _s_bViewPassability, hadj, vadj)) == NULL)
+        if ((_m_pMapFrameWnd = new TMapFrameWnd(NULL, this, 14, pMap, false, _s_zoom, _s_bViewGrid,
+                                                _s_bViewPassability, hadj, vadj)) == NULL)
 #line 1682
-                throw TAllocationFailure(__FILE__, __LINE__);
+            throw TAllocationFailure(__FILE__, __LINE__);
+        try {
             GtkWidget* miniMapWidget = _widget("minimapwnd");
             if ((_m_pMiniMapWnd = new TMiniMapWnd(miniMapWidget, this, pMap, false)) == NULL)
 #line 1692
@@ -1540,9 +1540,9 @@ void TMapView::OnEditFindNext()
     _m_lastFindSubtype = _m_pFindDlg->getFindExtra();
     delete _m_pFindDlg;
     if (_m_mode == _eModeObjects && _m_lastFindType != NOTHING) {
-        try {
 #line 2846
-            assert(_m_lastFindType > NOTHING && _m_lastFindType < MAX_EVENT_TYPE);
+        assert(_m_lastFindType > NOTHING && _m_lastFindType < MAX_EVENT_TYPE);
+        try {
             const TGameMap* const pMap = getPDocument()->getPMap();
             bool abLayerHasObjects[2];
             abLayerHasObjects[0] =
@@ -1596,9 +1596,9 @@ void TMapView::OnEditFindPrev()
     _m_lastFindSubtype = _m_pFindDlg->getFindExtra();
     delete _m_pFindDlg;
     if (_m_mode == _eModeObjects && _m_lastFindType != NOTHING) {
-        try {
 #line 2928
-            assert(_m_lastFindType > NOTHING && _m_lastFindType < MAX_EVENT_TYPE);
+        assert(_m_lastFindType > NOTHING && _m_lastFindType < MAX_EVENT_TYPE);
+        try {
             const TGameMap* const pMap = getPDocument()->getPMap();
             bool abLayerHasObjects[2];
             abLayerHasObjects[0] =
