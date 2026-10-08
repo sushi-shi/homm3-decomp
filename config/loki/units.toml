@@ -319,3 +319,8 @@ source = "src/editor/ArtifactPropsSheet.cpp"
 name = "SignPropsDlg"
 object = 89
 source = "src/editor/SignPropsDlg.cpp"
+
+[[unit]]
+name = "SelectHeroClassDlg"
+object = 90
+source = "src/editor/SelectHeroClassDlg.cpp"
