@@ -285,17 +285,17 @@ public:
             dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
-    void DrawTile(int framenum, Bitmap16Bit* dst, int dx, int dy, bool hflip,
-                  bool vflip) const
-    {
-        DrawTile(framenum, dst->GetMap(0, 0), dx, dy, dst->GetPitch(), hflip, vflip);
-    }
-
     void DrawTile(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
                   int dy, bool hflip, bool vflip) const
     {
         DrawTile(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy, dst->GetWidth(),
             dst->GetHeight(), dst->GetPitch(), hflip, vflip);
+    }
+
+    void DrawTile(int framenum, Bitmap16Bit* dst, int dx, int dy, bool hflip,
+                  bool vflip) const
+    {
+        DrawTile(framenum, dst->GetMap(0, 0), dx, dy, dst->GetPitch(), hflip, vflip);
     }
 
     void DrawTileShadow(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
