@@ -6,10 +6,10 @@
 // Assert and throw lines come from the retail immediates.
 #include <assert.h>
 #include <string.h>
+#include <string>
 #include <algorithm>
 #include <functional>
 #include <iostream.h>
-#include <string>
 
 #include "adventureobjecttype.h"
 #include "autoarrayptr.h"

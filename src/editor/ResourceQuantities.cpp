@@ -1,11 +1,11 @@
 // ResourceQuantities.cpp - Loki h3maped object 25: the validated accessors
 // and the binary form (seven longs in resource order).
+#include "editor/ResourceQuantities.h"
 #include "editor/stdafx.h"
 
 #include <assert.h>
 
 #include "editor/RawStream.h"
-#include "editor/ResourceQuantities.h"
 
 void TResourceQuantities::set(TGameResourceType resourceType, int newQuantity)
 {

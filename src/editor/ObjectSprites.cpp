@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <new>
 #include <string>
+#include <bitset>
 #include <vector>
 
 #include "exceptions.h"
@@ -73,13 +74,12 @@ void TObjectSpritePtr::_unlockSprite(const TObjectType& objType)
 
 const CSprite* THeroFlagSpritePtr::_lockSprite(TPlayer player)
 {
+#line 111
+    assert(player >= 0 && player < kNumPlayers);
     static const char* const akFlagSpriteNames[kNumPlayers] = {
         "af00e.def", "af01e.def", "af02e.def", "af03e.def",
         "af04e.def", "af05e.def", "af06e.def", "af07e.def"
     };
-
-#line 111
-    assert(player >= 0 && player < kNumPlayers);
     if (apHeroFlagSprite[player] == NULL) {
         apHeroFlagSprite[player] = ResourceManager::GetSprite(akFlagSpriteNames[player]);
         if (apHeroFlagSprite[player] == NULL)
