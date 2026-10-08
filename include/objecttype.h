@@ -173,6 +173,13 @@ public:
 
 extern const TObjectSlotTraits* const apObjectSlotTraits[];
 
+// Whether objType belongs in the palette slot (a kept linkonce body, first
+// in ObjectPaletteWnd.cpp).
+inline bool objectTypeInSlot(const TObjectType& objType, TObjectSlot slot)
+{
+    return apObjectSlotTraits[slot]->contains(objType);
+}
+
 // The object types of objects.txt, in file order.
 class TObjectTypeTable : public vector<TObjectType> {
 public:
