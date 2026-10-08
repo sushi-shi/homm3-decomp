@@ -99,6 +99,8 @@ For a class-static member, place DATA on its canonical declaration and supply
 the emitted `mac_symbol` in its declaration-only row. Its qualified source
 name is derived from the enclosing class; the ordinary game header supplies
 the declaration, without injecting an out-of-class definition or initializer.
+A variable inside a named namespace follows the same rule, with or without
+`static`; its qualified name comes from the enclosing namespaces.
 An emitted candidate initializer cannot silently use this address-only path.
 A CodeWarrior vtable can use a reviewed `config/mac/vtables/<TU>.toml`
 binding. The binder checks the canonical and Mac virtual declarations, full

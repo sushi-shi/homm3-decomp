@@ -436,6 +436,44 @@ evidence="externally linked zero storage with reviewed owner"
             with self.assertRaises(SourceError):
                 load_data(root)
 
+    def test_scoped_data_claims_accept_namespace_variables_and_static_members(self):
+        from homm3.mac.source import SourceError, load_data
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / "config/mac/data"
+            folder.mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            row = ('[[data]]\nretail_va=0x00400100\nsource="source.cpp"\n'
+                   'declaration_only=true\nmac_section=1\nmac_offset=16\nmac_size=4\n'
+                   f'sha256="{sha256(bytes(4)).hexdigest()}"\nevidence="address proof"\n')
+            manifest = folder / "scoped.toml"
+            pinned = row.replace("declaration_only=true",
+                                 'mac_symbol="Bits__7Manager"\ndeclaration_only=true')
+            for text, name in (
+                    ("namespace Manager {\nDATA(0x00400100) int Bits;\n}\n", "Manager::Bits"),
+                    ("namespace Manager {\nDATA(0x00400100) static int Bits;\n}\n", "Manager::Bits"),
+                    ("namespace Outer {\nnamespace Manager {\nDATA(0x00400100) int Bits;\n}\n}\n",
+                     "Outer::Manager::Bits"),
+                    ("class Manager {\nDATA(0x00400100) static int Bits;\n};\n", "Manager::Bits")):
+                with self.subTest(text=text):
+                    (root / "source.cpp").write_text(text)
+                    manifest.write_text(pinned)
+                    pair, = load_data(root)
+                    self.assertEqual(pair.name, name)
+                    self.assertEqual(pair.mac_symbol, "Bits__7Manager")
+                    # A qualified name needs its pinned emitted symbol.
+                    manifest.write_text(row)
+                    with self.assertRaises(SourceError):
+                        load_data(root)
+            manifest.write_text(pinned)
+            for text in ("class Manager {\nDATA(0x00400100) int Bits;\n};\n",
+                         "namespace Manager {\nDATA(0x00400100) int Other::Bits;\n}\n",
+                         "namespace {\nDATA(0x00400100) int Bits;\n}\n",
+                         "void f() {\nDATA(0x00400100) static int Bits;\n}\n"):
+                with self.subTest(text=text), self.assertRaises(SourceError):
+                    (root / "source.cpp").write_text(text)
+                    load_data(root)
+
     def test_direct_toc_address_fixup_preserves_opcode_and_checks_addend(self):
         code = CodeHunk(".format", bytes.fromhex("388200004e800020"),
                         ((0, "HUNK_XREF_16BIT", "@format"),))

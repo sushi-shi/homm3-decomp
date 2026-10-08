@@ -61,20 +61,25 @@ def data_rows(root: Path, kind: str) -> list[dict]:
     return rows
 
 
-def _data_scope(masked: str, position: int) -> tuple[str, ...]:
+def _data_scope(masked: str, position: int) -> tuple[tuple[str, str], ...]:
     """Resolve ordinary named class/namespace scopes; reject local/complex ones.
 
-    This is a deliberately bounded declarator reader, not a C++ parser. Never
-    turn a function-local or template member into an unqualified global merely
-    because its DATA declaration has a familiar spelling.
+    Each scope is returned as ``(kind, name)``, kind being ``class``,
+    ``struct`` or ``namespace``. This is a deliberately bounded declarator
+    reader, not a C++ parser. Never turn a function-local or template member
+    into an unqualified global merely because its DATA declaration has a
+    familiar spelling.
     """
     stack = []
     previous = 0
     for token in re.finditer(r'[{};]', masked[:position]):
         if token[0] == "{":
             head = masked[previous:token.start()]
-            match = re.search(r'\b(?:class|struct|namespace)\s+(\w+)\s*(?::[^{};<>]*)?$', head)
-            scope = match[1] if match and not re.search(r'[<>()=]', head) else None
+            match = re.search(r'\b(class|struct|namespace)\s+(\w+)\s*(?::[^{};<>]*)?$', head)
+            scope = (match[1], match[2]) if match and not re.search(r'[<>()=]', head) else None
+            # A namespace has no base clause.
+            if scope and scope[0] == "namespace" and not re.search(r'\bnamespace\s+\w+\s*$', head):
+                scope = None
             stack.append(scope)
         elif token[0] == "}":
             if not stack:
@@ -221,9 +226,14 @@ def load_data(root: Path) -> list[DataPair]:
         if end < 0 or match is None:
             raise SourceError(f"{source}: unsupported Mac data definition at {va:#x}")
         if scope:
-            if "::" in name or not re.match(r'\s*static\b', declaration):
-                raise SourceError(f"{source}: scoped DATA claim {va:#x} must be an ordinary static member")
-            name = "::".join((*scope, name))
+            # Inside a class the claim is a static member declaration. Inside
+            # a named namespace it is an ordinary namespace-scope variable,
+            # which may have either linkage; its qualified name is the same.
+            if "::" in name or (scope[-1][0] != "namespace"
+                                and not re.match(r'\s*static\b', declaration)):
+                raise SourceError(f"{source}: scoped DATA claim {va:#x} must be an ordinary "
+                                  "static member or namespace-scope variable")
+            name = "::".join((*(scope_name for _, scope_name in scope), name))
         if "::" in name:
             if local_owner is not None:
                 raise SourceError(f"{source}: qualified DATA initializers require file scope")
