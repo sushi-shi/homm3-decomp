@@ -9292,13 +9292,12 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // recover the caller lowering.
 // Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
 // preserve that canonical addition as well (byte-flat with these predicates).
-// Wall (inliner, 2026-10-08): retail keeps operator+'s three-int position
-// constructor as a call at the guard translation. The trace gives it
-// (1981 - 56) / 27 = 71 against cost 48; retail needs about 41 remaining
-// sites or a much smaller budget. Exact callers expand the same constructor
-// at nested budgets 70..210 (floodWaterZoneDistances 70), so a constructor
-// cost change cannot separate them; markRiverCoastTarget (72/81) and
-// createRiverToOutlet (55/72) share this wall.
+// Retail keeps operator+'s three-int position constructor as a call at the
+// guard translation; with direct fields its nested budget was 71 against
+// cost 48. Reading the guard bounds, the 3x3 scan limits, the entrance and
+// the outline bounds through the point and map accessors adds the free /Ob2
+// sites that refuse it (99.94%). The residual is the frame: retail keeps
+// three locals that share one 4-byte home here in separate slots (0x48).
 VA(0x00546C70, 0x452)
 MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
@@ -9317,14 +9316,14 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     if (group->m_hasGuard) {
         TPoint localGuard = group->m_guardPosition;
         workingPosition = position + localGuard;
-        if (workingPosition.m_x < 1 || workingPosition.m_x + 1 >= m_map.m_mapWidth
-            || workingPosition.m_y < 1 || workingPosition.m_y + 1 >= m_map.m_mapHeight)
+        if (workingPosition.getX() < 1 || workingPosition.getX() + 1 >= m_map.getWidth()
+            || workingPosition.getY() < 1 || workingPosition.getY() + 1 >= m_map.getHeight())
             return 0;
         TRmgMapPosition point;
         point.m_z = workingPosition.m_z;
-        for (point.m_x = workingPosition.m_x - 1; point.m_x <= workingPosition.m_x + 1; ++point.m_x) {
-            for (point.m_y = workingPosition.m_y - 1; point.m_y <= workingPosition.m_y + 1; ++point.m_y) {
-                TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
+        for (point.m_x = workingPosition.getX() - 1; point.m_x <= workingPosition.getX() + 1; ++point.m_x) {
+            for (point.m_y = workingPosition.getY() - 1; point.m_y <= workingPosition.getY() + 1; ++point.m_y) {
+                TRmgMapItem* item = m_map.getMapItem(point.getX(), point.getY(), point.m_z);
                 if (item->isObjectEntrance()
                     && item->m_objects[0]->m_properties->m_prototype->getType() == MONSTER)
                     return 0;
@@ -9345,15 +9344,15 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     }
     int direction;
     for (direction = firstDirection; direction < lastDirection; ++direction) {
-        TPoint point = g_rmgDirections[direction] + TRmgVector(entrance.m_x, entrance.m_y);
+        TPoint point = g_rmgDirections[direction] + TRmgVector(entrance.getX(), entrance.getY());
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
         if (!source->hasPathClearance() || !source->isPassable() || source->isObjectEntrance()
             || !source->isPlacementOutline())
             continue;
         point.m_x += position.m_x;
         point.m_y += position.m_y;
-        if (point.m_x < 0 || point.m_x >= m_map.m_mapWidth
-            || point.m_y < 0 || point.m_y >= m_map.m_mapHeight)
+        if (point.getX() < 0 || point.getX() >= m_map.getWidth()
+            || point.getY() < 0 || point.getY() >= m_map.getHeight())
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->getLandType() == eTerrainWater) == waterZone
@@ -9373,7 +9372,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             if (!source->hasPathClearance()) {
                 int x = point.m_x + position.m_x;
                 int y = point.m_y + position.m_y;
-                if (x < m_map.m_mapWidth && y < m_map.m_mapHeight
+                if (x < m_map.getWidth() && y < m_map.getHeight()
                     && m_map.getMapItem(x, y, position.m_z)->isObjectEntrance())
                     return 0;
             }
