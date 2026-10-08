@@ -12,6 +12,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <set>
+#include "editor/Uncopyable.h"
+#include "terrain.h"
 #include <vector>
 #include <limits>
 
