@@ -1,13 +1,15 @@
 # homm3-decomp
 
-Binary-matching decompilation of **Heroes of Might and Magic III Complete**
-(New World Computing, 2000). The goal is C++ source that compiles with the
-original MSVC 6.0 to the same machine code as the retail `HEROES3.EXE`, and
-that reads like the original developers wrote it.
+> **Work in progress.** Most functions of `HEROES3.EXE` match; the remaining
+> functions and data are being reconstructed.
 
-This repository does **not** contain the game's executables or resources.
-Supply your own copies of the three [pinned executables](#pinned-executables)
-and the pinned CodeWarrior tools.
+C++ reconstruction of **Heroes of Might and Magic III Complete**
+(`HEROES3.EXE`, New World Computing, 2000), built with the original Visual C++
+6.0 SP3 toolchain under Wine. The Dreamcast and Classic Mac ports are references
+for source structure. Retail bytes are authoritative. Supply your own
+executables.
+
+## Match status
 
 <!-- match-score:start -->
 
@@ -47,53 +49,36 @@ Excluded from the scores (generated or library code):
 
 <!-- mac-match-score:end -->
 
-Scores always satisfy CUR ≤ MAX ≤ HIST. Editing a function resets its MAX to
-its new CUR; other CUR dips leave MAX alone. HIST above MAX marks a lost peak
-worth recovering. `homm3 status check` reports score changes, and
-`homm3 status merge-baseline` resolves a conflicted score ledger.
+Scores satisfy CUR ≤ MAX ≤ HIST. Editing a function resets its MAX to its new
+CUR; HIST above MAX marks a lost peak worth recovering.
 
-See the [documentation](docs/README.md) and the
-[reconstruction debt checklist](docs/todos/reconstruction_debt.md).
+## Branches
+
+```text
+decomp-complete-4.0 (you are here) ----> decomp-loki-1.0
+```
+
+- [`decomp-complete-4.0`](https://github.com/sushi-shi/homm3-decomp/tree/decomp-complete-4.0#branches) — Complete 4.0 `HEROES3.EXE` (Sep 2000), VC6 SP3
+- [`decomp-loki-1.0`](https://github.com/sushi-shi/homm3-decomp/tree/decomp-loki-1.0#branches) — Loki Linux 1.0 map editor `h3maped`, GCC 2.95.2
 
 ## Pinned executables
 
 The Windows executable is the matching target. The Dreamcast and Mac builds
-are references used to recover source structure; they are not matched as games.
+are references; they are not matched as games. Hashes are also pinned in
+[config/project.toml](config/project.toml).
 
-```
-role        matching target
-file        HEROES3.EXE
-size        2,732,032 bytes
-sha256      057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274
-format      PE32, x86, MSVC 6.0
-built       2000-09-08
-source      English GOG Heroes III Complete 4.0 (engine 3.2)
-```
-
-```
-role        reference: debug symbols and source line tables
-file        H3.EXE
-size        8,425,752 bytes
-sha256      cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736
-format      PE32, SH-4 (Windows CE), CodeView debug information
-built       2000-08-11
-source      Dreamcast port
-```
-
-```
-role        reference: lightly optimized helper and call structure
-file        Heroes_III_raw.pef
-size        3,418,835 bytes
-sha256      650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86
-format      PEF, PowerPC, CodeWarrior
-built       2000-12-08
-source      Classic Mac OS port
-```
+| Role | File | Size (B) | SHA-256 |
+| :--- | :--- | -------: | :------ |
+| Target: English Complete 4.0 (engine 3.2), MSVC 6.0, Sep 2000 | `HEROES3.EXE` | 2,732,032 | `057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274` |
+| Reference: Dreamcast port, SH-4 with CodeView symbols, Aug 2000 | `H3.EXE` | 8,425,752 | `cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736` |
+| Reference: Classic Mac OS port, PowerPC CodeWarrior, Dec 2000 | `Heroes_III_raw.pef` | 3,418,835 | `650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86` |
 
 ## Quickstart
 
-You need Nix with flakes enabled, the three executables above, and the pinned
-CodeWarrior tools. From the repository root:
+With Nix flakes enabled, the three executables and the pinned CodeWarrior
+tools, run from the repository root. `homm3 init` verifies the inputs and both
+compilers and sets up Wine; `homm3 build` compiles and compares every Windows
+module and runs the checks. It does not yet produce a playable game.
 
 ```sh
 nix develop .#build
@@ -103,79 +88,55 @@ HOMM3_DREAMCAST_EXE=/absolute/path/to/H3.EXE \
 HOMM3_MAC_EXE=/absolute/path/to/Heroes_III_raw.pef \
 HOMM3_MAC_TOOLCHAIN=/absolute/path/to/CodeWarrior/tools \
   homm3 init
-
-homm3 build          # compile and compare every Windows module, run the checks
+homm3 build
 ```
 
-`homm3 init` verifies the executables and both compilers and sets up Wine.
-The build compiles and compares the reconstructed code; it does not yet produce
-a playable game.
-
-### IDE setup
-
-Launch your editor from the development shell and open the repository root
-with clangd enabled. The shell provides clangd and keeps
-`compile_commands.json` up to date. Run `homm3 init` first so the compiler
-headers are available for code navigation.
+Retail inputs, the toolchain, Wine state and generated reports stay in ignored
+`build/`. The shell also provides clangd and keeps `compile_commands.json` up
+to date for editors.
 
 ## Improve a function
 
-The example uses `0x00524dd0` from `src/philai.cpp`; substitute your target.
+Pick a function whose MAX is below 100%, read the retail assembly and the
+Dreamcast evidence, edit the C++, and rebuild its unit. The example uses
+`0x00524dd0` from `src/philai.cpp`:
 
-1. Pick a function whose MAX is below 100%:
+```sh
+homm3 status functions
+homm3 sema disasm 0x00524dd0
+homm3 dreamcast show 0x00524dd0
+homm3 dreamcast asm 0x00524dd0 --blocks
+homm3 build --fast philai
+homm3 sema diff 0x00524dd0 --summary
+homm3 status update --write-readme   # bank the scores and regenerate this README
+```
 
-   ```sh
-   homm3 status functions
-   ```
-
-2. Read the evidence before editing: the retail assembly, then the Dreamcast
-   dossier and its source-line blocks.
-
-   ```sh
-   homm3 sema disasm 0x00524dd0
-   homm3 dreamcast show 0x00524dd0
-   homm3 dreamcast asm 0x00524dd0 --blocks
-   ```
-
-3. Edit the C++, rebuild its unit, and inspect what still differs:
-
-   ```sh
-   homm3 build --fast philai
-   homm3 sema diff 0x00524dd0 --summary
-   ```
-
-4. Repeat until the function matches, then bank the scores, regenerate this
-   README, and commit:
-
-   ```sh
-   homm3 status update --write-readme
-   ```
-
-If the function has a Mac counterpart, `homm3 mac show 0x00524dd0`,
-`homm3 mac diff 0x00524dd0` and `homm3 mac calls 0x00524dd0` show its
-CodeWarrior body, byte differences and call targets. `homm3 mac build philai`
-scores the unit's Mac pairs; run it occasionally, not on every edit. See the
-[Mac tooling guide](docs/tooling/mac-matching-roadmap.md).
-
-The [matching guide](AGENTS.md) covers the full evidence pass and the
-reconstruction rules.
+`homm3 mac show`, `mac diff` and `mac calls` show a function's Mac counterpart;
+`homm3 mac build philai` scores the unit's Mac pairs. `homm3 status check`
+reports score changes and `homm3 status merge-baseline` resolves a conflicted
+score ledger.
 
 ## Data matching
 
 `homm3 compare` compares existing objects without rebuilding.
 `homm3 build --data` adds byte accounting: unclaimed bytes, overlapping ranges
-and initializer differences. See [data matching](docs/tooling/data-matching.md).
+and initializer differences.
+
+## Documentation
+
+- [Documentation index](docs/README.md) and
+  [reconstruction debt](docs/todos/reconstruction_debt.md)
+- [Data matching](docs/tooling/data-matching.md) and the
+  [Mac tooling guide](docs/tooling/mac-matching-roadmap.md)
+- Contributor rules and the full evidence pass are in [AGENTS.md](AGENTS.md)
 
 ## License
 
-Project-authored reconstruction source and tooling are dedicated to the public
-domain under [CC0 1.0](LICENSE), to the extent the contributors can do so.
-Files carrying separate copyright or license notices — notably everything under
-`vendor/` — retain those terms. No binary game assets are stored in this
-repository.
+Project-authored source and tooling use [CC0 1.0](LICENSE). Files with their
+own notices, notably everything under `vendor/`, keep their terms; retail
+inputs, compiler binaries and game assets are excluded.
 
 ## Thanks
 
-Thanks to [NH3API](https://github.com/void2012/NH3API) for documenting game
-structures and their layouts, and for naming references that supplement
-the Dreamcast debug symbols.
+[NH3API](https://github.com/void2012/NH3API) documented game structures and
+their layouts, and supplied naming references beyond the Dreamcast symbols.
