@@ -8,7 +8,7 @@ build/loki/toolchain/link/:
               crtbegin.o crtend.o libgcc.a libstdc++.a       (GCC 2.95.2, i686)
               libglade.a libxml.a                             (GCC 2.95.2 -O2)
               libgtk.a libgdk.a libgmodule.a libglib.a libz.a (egcs 1.1.2)
-    xlib/     libX11.so.6, libXext.so.6, libXi.so.6 (Red Hat 6.2 XFree86-libs)
+    xlib/     libX11.so.6, libXi.so.6 (Red Hat 6.2), libXext.so.6 (Red Hat 7.0)
     libexec/  ld (binutils 2.9.1.0.25)
     build.log every configure and make
 
@@ -41,7 +41,7 @@ GCC_CFLAGS_I686 = "-mcpu=pentiumpro"  # TARGET_CPU_DEFAULT of an i686-pc-linux-g
 XML_GLADE_CFLAGS = "-O2"
 REDHAT_CFLAGS = "-O2 -m486 -fno-strength-reduce"  # Red Hat 6.2 RPM_OPT_FLAGS (i386)
 ZLIB_CFLAGS = "-O2 -fno-strength-reduce"
-X_LIBRARIES = {"libX11.so.6.1": "libX11", "libXext.so.6.3": "libXext", "libXi.so.6.0": "libXi"}
+X_LIBRARIES = {"libX11.so.6.1": "libX11", "libXext.so.6.4": "libXext", "libXi.so.6.0": "libXi"}
 
 
 class BuildError(tc.ToolchainError):
@@ -324,11 +324,17 @@ def build(link: Path, media: dict[str, bytes], jobs: int = 2) -> None:
     # libc.so is a linker script naming /lib/libc.so.6; ld 2.9.1 has no --sysroot.
     (lib / "libc.so").write_text(f"/* GNU ld script (staged) */\n"
                                  f"GROUP ( {tc.SYSROOT}/lib/libc.so.6 {lib}/libc_nonshared.a )\n")
-    _install_rpm(media["XFree86-libs-3.3.6-20.i386.rpm"], xlib.parent / "xlibs-rpm",
-                 lambda name: name in {f"usr/X11R6/lib/{x}" for x in X_LIBRARIES})
+    # libX11 and libXi of Red Hat 6.2 (XFree86 3.3.6), libXext of Red Hat 7.0 (XFree86 4.0.1, built
+    # against glibc 2.0 symbols only): ld records the X imports in these libraries' .dynsym order,
+    # and the image's .dynsym places XGetVisualInfo between libXext's XShmDetach and XIfEvent, an
+    # undefined reference only XFree86 4's libXext (its XEVI client) has.
     xlib.mkdir(parents=True, exist_ok=True)
-    for name in X_LIBRARIES:
-        shutil.copyfile(xlib.parent / "xlibs-rpm/usr/X11R6/lib" / name, xlib / name)
+    for package, names in (("XFree86-libs-3.3.6-20.i386.rpm", ("libX11.so.6.1", "libXi.so.6.0")),
+                           ("XFree86-libs-4.0.1-1.i386.rpm", ("libXext.so.6.4",))):
+        _install_rpm(media[package], xlib.parent / "xlibs-rpm",
+                     lambda name, names=names: name in {f"usr/X11R6/lib/{x}" for x in names})
+        for name in names:
+            shutil.copyfile(xlib.parent / "xlibs-rpm/usr/X11R6/lib" / name, xlib / name)
     for name, stem in X_LIBRARIES.items():
         for alias in (f"{stem}.so.6", f"{stem}.so"):
             (xlib / alias).symlink_to(name)

@@ -82,10 +82,11 @@ target = "i386-linux"
 #                  headers GTK+ is configured with.
 #   binutils-2.9.5.0.22-6.i386.rpm
 #                  Red Hat 6.2: the as beside that egcs (GDK's `a0`/`a2` byte moves, nop fills).
-#   XFree86-libs-3.3.6-20.i386.rpm
-#                  Red Hat 6.2: libX11.so.6, libXext.so.6, libXi.so.6 (DT_NEEDED; the launch
-#                  test). ld records the X imports in these libraries' .dynsym order, which the
-#                  image's .dynsym follows (XGetDeviceMotionEvents, XFreeDeviceList, ... _init).
+#   XFree86-libs-3.3.6-20.i386.rpm, XFree86-libs-4.0.1-1.i386.rpm
+#                  Red Hat 6.2's libX11.so.6 and libXi.so.6, Red Hat 7.0's libXext.so.6 (DT_NEEDED;
+#                  the launch test). ld records the X imports in these libraries' .dynsym order,
+#                  which the image's .dynsym follows (XGetDeviceMotionEvents, XFreeDeviceList,
+#                  ... _init; XGetVisualInfo after XShmDetach, as XFree86 4's libXext has it).
 #   gtk+-1.2.10-ahiguti.patch
 #                  Red Hat's GTK+ i18n patch (Fedora dist-git): iswpunct/iswcntrl word breaks.
 #   glibc-devel-2.1.1-6.i386.rpm
@@ -118,4 +119,5 @@ target = "i386-linux"
 "binutils-2.9.5.0.22-6.i386.rpm" = "35d4941294c9bc0487853f41dc3c9ccaf4d697d0dd6b7f8d9b7a8a0d59435b80"
 "gtk+-1.2.10-ahiguti.patch" = "fee67bbc147a98220d4acc136540de64fe8664a8d92a5141ee4bce8d47d27f22"
 "XFree86-libs-3.3.6-20.i386.rpm" = "879a761cbce1f75db691b1ebd8f26b3751a4300ceff1e77d42bf2c37968a21ce"
+"XFree86-libs-4.0.1-1.i386.rpm" = "efa0920420091ca6ea3c65a76fe993ffb9a8e6391f6e27f1e185643e42d3f212"
 "glibc-devel-2.1.1-6.i386.rpm" = "42c53fe875f2ec071654f5aa33fa0fd06a143ff05cb73ba2c7d5769a7602f1bc"

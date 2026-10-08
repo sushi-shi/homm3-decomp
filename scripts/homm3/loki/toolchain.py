@@ -250,7 +250,7 @@ def stage(debs: str | Path | None = None, sgi_stl: str | Path | None = None,
 LINK = DESTINATION / "link"
 LINK_STAMP = LINK / "staged.sha256"
 # Recipe version: bump when what stage_libraries() builds changes for the same media.
-LINK_RECIPE = "8"
+LINK_RECIPE = "9"
 
 
 def _link_digest(spec: dict) -> str:
