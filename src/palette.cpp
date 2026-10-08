@@ -23,6 +23,13 @@ struct tagRGBQUAD {
 
 static void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
                      float* h, float* s, float* v);
+
+// The hues of red, green and blue as fractions of the colour wheel. Loki's
+// object keeps the three constants at the end of its .rodata, after the
+// type names, as g++ 2.95 emits a namespace-scope const (names unproven).
+const float kRedHue = 0.0f;
+const float kGreenHue = 1.0f / 3.0f;
+const float kBlueHue = 2.0f / 3.0f;
 static void HSVToRGB(float h, float s, float v,
                      unsigned int* r, unsigned int* g, unsigned int* b);
 
@@ -656,11 +663,11 @@ static void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
         const float gc = (max - g) / delta;
         const float bc = (max - b) / delta;
         if (r == max)
-            *h = (bc - gc) / 6.0f + 0.0f;
+            *h = (bc - gc) / 6.0f + kRedHue;
         else if (g == max)
-            *h = (rc - bc) / 6.0f + 1.0f / 3.0f;
+            *h = (rc - bc) / 6.0f + kGreenHue;
         else
-            *h = (gc - rc) / 6.0f + 2.0f / 3.0f;
+            *h = (gc - rc) / 6.0f + kBlueHue;
         if (*h < 0.0f)
             *h += 1.0f;
     } else {
