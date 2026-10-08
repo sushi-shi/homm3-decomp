@@ -203,3 +203,8 @@ source = "src/editor/GameObject.cpp"
 name = "ObjectHelp"
 object = 20
 source = "src/editor/ObjectHelp.cpp"
+
+[[unit]]
+name = "ObjectSprites"
+object = 22
+source = "src/editor/ObjectSprites.cpp"
