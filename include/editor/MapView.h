@@ -38,9 +38,9 @@ class TMapSpecsSheet;
 class TFindDlg;
 
 class TMapView : public CWnd,
-                 public TMapEditingWnd::TController,
-                 public TToolkitWndClient,
-                 public TGUIGameObject::TEditContext {
+                 private TMapEditingWnd::TController,
+                 private TToolkitWndClient,
+                 private TGUIGameObject::TEditContext {
 public:
     class TStatusUI {
     public:

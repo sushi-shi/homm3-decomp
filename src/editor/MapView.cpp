@@ -12,7 +12,6 @@
 #include <string.h>
 #include <algorithm>
 #include <functional>
-#include <set>
 #include <string>
 #include <gtk/gtk.h>
 
@@ -44,14 +43,7 @@
 // bodies owned by this object); the member names are not proven.
 class TStatusUIImpl : public CWnd, public TMapView::TStatusUI {
 public:
-    TStatusUIImpl(GtkWidget* statusBar)
-        : _m_objectName(NULL), _m_playerName(NULL), _m_mapWidth(0), _m_mapHeight(0),
-          _m_bTwoLayer(false), _m_bShowObjectName(false)
-    {
-        _m_hWnd = statusBar;
-        _m_contextID = gtk_statusbar_get_context_id(GTK_STATUSBAR(statusBar), "default");
-        updateStatus();
-    }
+    TStatusUIImpl(GtkWidget* statusBar);
     virtual ~TStatusUIImpl()
     {
         if (_m_objectName)
@@ -119,6 +111,16 @@ private:
     bool _m_bTwoLayer;
     bool _m_bShowObjectName;
 };
+
+// Defined after the class: its "default" follows updateStatus's texts.
+inline TStatusUIImpl::TStatusUIImpl(GtkWidget* statusBar)
+    : _m_objectName(NULL), _m_playerName(NULL), _m_mapWidth(0), _m_mapHeight(0),
+      _m_bTwoLayer(false), _m_bShowObjectName(false)
+{
+    _m_hWnd = statusBar;
+    _m_contextID = gtk_statusbar_get_context_id(GTK_STATUSBAR(statusBar), "default");
+    updateStatus();
+}
 
 namespace {
 
