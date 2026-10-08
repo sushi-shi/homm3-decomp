@@ -839,13 +839,15 @@ def _canonicalize_icf_aliases(
     function, the two bodies are ICF-identical, and the candidate name has
     no retail address of its own, and retail keeps no identical copy of the
     surviving body elsewhere (`twins_of`) unless reloc_pairing's twin rule
-    admitted the fold of every candidate twin at that address (`folded_at`:
-    each identical retail twin is independently another function). A single
-    twin's
-    undefined target reference is renamed to the twin; otherwise the
-    candidate relocations point at the surviving label, appended to the
-    candidate object as an undefined external when absent. Every other
-    difference stays visible. Returns (base, target, rewritten references).
+    admitted the fold of that candidate twin at that address (`folded_at`:
+    each identical retail twin is independently another function). Each
+    candidate twin paired with a label is judged alone, so a differing
+    overload at one site leaves the verified twins' sites canonical. When
+    the label's only twin verifies, its undefined target reference is
+    renamed to the twin; otherwise the verified twins' candidate
+    relocations point at the surviving label, appended to the candidate
+    object as an undefined external when absent. Every other difference
+    stays visible. Returns (base, target, rewritten references).
     """
     base = canon.CoffObject(base_payload)
     target = canon.CoffObject(target_payload)
@@ -870,7 +872,7 @@ def _canonicalize_icf_aliases(
         if symbol.storage_class == EXTERNAL_STORAGE:
             base_by_name.setdefault(symbol.name, symbol.index)
     candidates, retail = index
-    sites: dict[str, list[canon.Relocation]] = {}
+    sites: dict[tuple[str, str], list[canon.Relocation]] = {}
     aliases: dict[str, set[str]] = {}
     for key, target_relocation in target_rows.items():
         base_relocation = base_rows.get(key)
@@ -881,24 +883,23 @@ def _canonicalize_icf_aliases(
         if twin == label:
             continue
         aliases.setdefault(label, set()).add(twin)
-        sites.setdefault(label, []).append(base_relocation)
+        sites.setdefault((label, twin), []).append(base_relocation)
     renames: dict[int, str] = {}
     retargets: list[tuple[canon.Relocation, int]] = []
-    pending: list[str] = []
+    pending: list[tuple[str, set[str]]] = []
     for label, twins in aliases.items():
         authority = symbol_rvas.get(label)
         surviving = retail.get(label)
         if authority is None or authority[1] != "func" or surviving is None:
             continue
-        if twins_of(authority[0]) and not all(folded_at(twin, authority[0])
-                                              for twin in twins):
-            # Retail keeps an identical copy elsewhere: unless the pairing
-            # rule identified every copy as another function, the candidate
-            # twin could equally be folded onto either, so the site stays
-            # visible.
-            continue
+        retail_copies = bool(twins_of(authority[0]))
         verified = set()
         for twin in twins:
+            if retail_copies and not folded_at(twin, authority[0]):
+                # Retail keeps an identical copy elsewhere: unless the pairing
+                # rule identified this twin as another function, it could
+                # equally be folded onto either, so its sites stay visible.
+                continue
             candidate = candidates.get(twin)
             if candidate is None or twin in symbol_rvas:
                 # Retail keeps some byte-identical bodies unfolded (_Ufill<int>
@@ -909,22 +910,27 @@ def _canonicalize_icf_aliases(
             if not _icf_identical(candidate, surviving):
                 continue
             verified.add(twin)
-        if verified != twins:
+        if not verified:
             continue
         undefined = [symbol.index for symbol in target.symbols.values()
                      if symbol.name == label and symbol.section == 0]
-        if len(twins) == 1 and undefined and next(iter(twins)) not in target_names:
+        if (verified == twins and len(twins) == 1 and undefined
+                and next(iter(twins)) not in target_names):
             renames.update((symbol, next(iter(twins))) for symbol in undefined)
         else:
-            pending.append(label)
+            # Each verified twin's sites name the surviving label; a twin
+            # that differs from it (another overload paired at a shifted
+            # site) keeps its own sites visible.
+            pending.append((label, verified))
     if pending:
-        missing = [label for label in pending if label not in base_by_name]
+        missing = [label for label, _twins in pending if label not in base_by_name]
         if missing:
             base_payload, appended = _append_undefined_symbols(base_payload, missing)
             base_by_name.update(appended)
-        for label in pending:
+        for label, verified in pending:
             retargets.extend((relocation, base_by_name[label])
-                             for relocation in sites[label])
+                             for twin in sorted(verified)
+                             for relocation in sites[(label, twin)])
     if retargets:
         data = bytearray(base_payload)
         for relocation, symbol in retargets:

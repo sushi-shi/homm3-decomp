@@ -92,6 +92,22 @@ class IcfAliasRewriteTest(unittest.TestCase):
         self.assertEqual(_canonicalize_icf_aliases(base, target, self.rvas, index),
                          (base, target, 0))
 
+    def test_a_differing_twin_leaves_the_verified_sites_canonical(self):
+        base = coff(CALL * 2, [("??_GA", 0), ("??_GB", 6)],
+                    [(1, "??1TwinA"), (7, "??1Other")], ["??1TwinA", "??1Other"])
+        target = coff(CALL * 2 + FOLDED.payload,
+                      [("??_GA", 0), ("??_GB", 6), ("??1Folded", 12)],
+                      [(1, "??1Folded"), (7, "??1Folded")])
+        stores_vtable = FunctionBody(b"\xc7\x01\0\0\0\0\xe9\0\0\0\0", (2, 7))
+        index = ({"??1TwinA": JUMP_ONLY, "??1Other": stores_vtable},
+                 {"??1Folded": FOLDED})
+        new_base, new_target, count = _canonicalize_icf_aliases(
+            base, target, self.rvas, index)
+        self.assertEqual((count, new_target), (1, target))
+        parsed = canon.CoffObject(new_base)
+        self.assertEqual([parsed.symbols[r.symbol_index].name
+                          for r in parsed.relocations], ["??1Folded", "??1Other"])
+
     def test_a_single_twin_names_the_undefined_target_reference(self):
         base = coff(CALL, [("??_GA", 0)], [(1, "??1TwinA")], ["??1TwinA"])
         target = coff(CALL, [("??_GA", 0)], [(1, "??1Folded")], ["??1Folded"])
