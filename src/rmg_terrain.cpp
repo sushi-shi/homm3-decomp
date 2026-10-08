@@ -1527,12 +1527,6 @@ void TRmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
-// These Complete-only diagonal callers retain the opposite upper-clamp
-// operand orientation under canonical tLimit. Spelling the comparison as
-// value > maximum makes these two callers exact but regresses the retained
-// helper and several Dreamcast-proven limit callers, so keep the shared helper
-// canonical and recover the caller-specific compiler state separately.
-// Min/max compositions do not recover these bodies.
 // An outer corner lies on a 45-degree edge when either diagonal beside it
 // (NE or SW of the canonical NW corner) has the cell's own terrain.
 // North is up; C is the cell, e an edge, o a probe, ? not tested.
@@ -1560,15 +1554,15 @@ b8 TRmgTerrainPainter::hasMatchingDiagonalNeighbour(
     s32 terrain = getTerrain(point);
     const TPoint* pair = firstDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby(
-        tLimit(
+        clampToRange(
             0, static_cast<s32>(point.getX()) + pair[0].getX(), static_cast<s32>(getWidth()) - 1),
-        tLimit(
+        clampToRange(
             0, static_cast<s32>(point.getY()) + pair[0].getY(), static_cast<s32>(getHeight()) - 1));
     if (getTerrain(nearby) == terrain)
         return 1;
-    nearby.setX(tLimit(
+    nearby.setX(clampToRange(
         0, static_cast<s32>(point.getX()) + pair[1].getX(), static_cast<s32>(getWidth()) - 1));
-    nearby.setY(tLimit(
+    nearby.setY(clampToRange(
         0, static_cast<s32>(point.getY()) + pair[1].getY(), static_cast<s32>(getHeight()) - 1));
     return getTerrain(nearby) == terrain;
 }
@@ -1596,13 +1590,13 @@ b8 TRmgTerrainPainter::hasDifferentOuterAxisNeighbour(
     s32 terrain = getTerrain(point);
     const TPoint& offset = secondDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby(
-        tLimit(0, static_cast<s32>(point.getX()) + offset.getX(), static_cast<s32>(getWidth()) - 1), point.getY());
+        clampToRange(0, static_cast<s32>(point.getX()) + offset.getX(), static_cast<s32>(getWidth()) - 1), point.getY());
     if (getTerrain(nearby) != terrain)
         return 1;
     nearby.setX(point.getX());
     s32 maximum = static_cast<s32>(getHeight()) - 1;
     s32 y = static_cast<s32>(point.getY()) + offset.getY();
-    nearby.setY(tLimit(0, y, maximum));
+    nearby.setY(clampToRange(0, y, maximum));
     return getPackedCell(nearby)->getTerrain() != terrain;
 }
 

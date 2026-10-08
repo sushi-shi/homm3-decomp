@@ -101,6 +101,25 @@ inline TPoint operator+(const TPoint& point, const TPoint& offset)
     return result += offset;
 }
 
+// The diagonal-neighbour probes clamp through a reference selector of their
+// own. Mac 0x258f18 keeps its operand order: value against minimum, then
+// value against maximum (cmpw value,maximum; ble), whereas the shared
+// includes.h tLimit (Mac 0x14cecc) tests maximum against value. Retail x86
+// shows the same split: cmp value,maximum; jg here, cmp maximum,value; jl
+// in tLimit's expansions.
+template <class T>
+inline const T& clampToRange(const T& minimum, const T& value,
+                             const T& maximum)
+{
+    if (value < minimum) {
+        return minimum;
+    } else if (value > maximum) {
+        return maximum;
+    } else {
+        return value;
+    }
+}
+
 // Retail adapter slots 1 and 4 exchange this three-dword value. The first
 // two dwords are the layer kind and frame fields: m_terrain holds terrain,
 // road or river kind according to the adapter. The low two bytes of the last
