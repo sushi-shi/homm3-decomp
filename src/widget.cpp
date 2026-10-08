@@ -10,16 +10,18 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Mac expands these bodies in their callers; CodeWarrior expands only
+// bodies declared inline (VC6 output is unchanged).
 // Project-inferred initialization operations. Neither releases owned text nor
 // removes a live widget from its window; they only initialize these fields.
-void widget::initializeLinks()
+inline void widget::initializeLinks()
 {
     m_parentWindow = 0;
     m_prevWidget = 0;
     m_nextWidget = 0;
 }
 
-void widget::initializeHelpText()
+inline void widget::initializeHelpText()
 {
     m_rollOver = 0;
     m_rightClick = 0;
@@ -220,7 +222,7 @@ void widget::dim() const
 
 // Project-inferred per-string replacement steps. Borrowed text is detached
 // without deletion; callers change the ownership flag only after both releases.
-void widget::releaseHelpText(char*& text)
+inline void widget::releaseHelpText(char*& text)
 {
     if (text) {
         if (m_freeText)
@@ -229,7 +231,7 @@ void widget::releaseHelpText(char*& text)
     }
 }
 
-void widget::copyHelpText(char*& destination, const char* source)
+inline void widget::copyHelpText(char*& destination, const char* source)
 {
     if (source) {
         destination = new char[strlen(source) + 1];

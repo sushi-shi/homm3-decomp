@@ -6,15 +6,17 @@
 
 #include "game.h"
 
+// Mac expands these bodies in their callers; CodeWarrior expands only
+// bodies declared inline (VC6 output is unchanged).
 // Project-inferred common gate; retain the null check before slot lookup.
-static bool canCheckCurrentPlayerVictory()
+static inline bool canCheckCurrentPlayerVictory()
 {
     return g_currentPlayer && !g_game->m_playerDisabled[g_netLocalGamePos];
 }
 
 // The human-team query precedes the computer-policy flag in these callers.
 // appliesToPlayer has a different short-circuit order and stays independent.
-bool VictoryConditionStruct::allowsCurrentPlayerVictory() const
+inline bool VictoryConditionStruct::allowsCurrentPlayerVictory() const
 {
     return g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer;
 }
@@ -38,13 +40,13 @@ void LossConditionStruct::resetForType(signed char type)
 
 // Project-inferred result operations shared by the individual condition
 // checks. No display, network message, type change or payload reset occurs.
-void VictoryConditionStruct::recordWin(signed char player)
+inline void VictoryConditionStruct::recordWin(signed char player)
 {
     m_playerWinner = player;
     m_gameWon = 1;
 }
 
-void LossConditionStruct::recordLoss(signed char player)
+inline void LossConditionStruct::recordLoss(signed char player)
 {
     m_playerLoser = player;
     m_gameLost = 1;
@@ -418,16 +420,21 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
     return 0;
 }
 
+// DC line 384 calls GetTeam and IsHumanTeam directly, and Mac 0x1fe810 and
+// 0x1fe9a4 expand both after a separate type guard and one joined player
+// guard, without materializing a predicate result. VC6 erases the difference.
 VA(0x005f2600, 0x117)
 DC_ADDRESS(0x190488, 0xb0)
 MAC_ADDRESS(0x1fe810, 0x194)
 unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
 {
-    if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS
-        || !canCheckCurrentPlayerVictory())
+    if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS)
+        return 0;
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    if (!allowsCurrentPlayerVictory())
+    if (!(g_game->isHumanTeam(g_game->getTeam(g_netLocalGamePos))
+            || m_appliesToComputer))
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
@@ -444,11 +451,13 @@ DC_ADDRESS(0x190538, 0xe6)
 MAC_ADDRESS(0x1fe9a4, 0x190)
 unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
 {
-    if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES
-        || !canCheckCurrentPlayerVictory())
+    if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES)
+        return 0;
+    if (!g_currentPlayer || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    if (!allowsCurrentPlayerVictory())
+    if (!(g_game->isHumanTeam(g_game->getTeam(g_netLocalGamePos))
+            || m_appliesToComputer))
         return 0;
 
     for (unsigned int i = 0; i < g_game->getMineCount(); ++i) {

@@ -771,7 +771,7 @@ void type_sacrifice_window::updateSlot(long slot)
 
 VA(0x005629e0, 0x33)
 DC_ADDRESS(0x125c34, 0x2a)
-MAC_ADDRESS(0x15938c, 0x7c)
+MAC_ADDRESS(0x15938c, 0x7c)  // MAC_ABSTRACTION_FROM(tokens1:9acbb51c4bc7,94.3548): canonical game::getGameVersion replaces the direct version read; same instructions, but the inline boundary grows the CW frame by 16 bytes.
 void type_sacrifice_window::updateAllSlots()
 {
     long slotCount = g_game->getGameVersion() >= 2 ? 19 : 18;
