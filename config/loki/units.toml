@@ -486,6 +486,11 @@ object = 35
 source = "src/editor/Town.cpp"
 
 [[unit]]
+name = "FindDlg"
+object = 78
+source = "src/editor/FindDlg.cpp"
+
+[[unit]]
 name = "Monster"
 object = 19
 source = "src/editor/Monster.cpp"
