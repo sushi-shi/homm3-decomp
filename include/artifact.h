@@ -77,4 +77,8 @@ extern const TArtifactTraits* akArtifactTraits;
 
 bool InitializeArtifactTraitsTable();
 
+// Whether an artifact may be worn in a slot. An inline of the editor's
+// Artifact.h (its assert names the header); Hero.cpp owns the image's copy.
+bool artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot);
+
 #endif  /* HOMM3_ARTIFACT_H */
