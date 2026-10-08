@@ -902,7 +902,11 @@ void TTown::importText(istream* pIStream)
             getline(*pIStream, line);
             if (!line.empty())
                 throw TImportTextFailure();
-            iter->importText(pIStream);
+            try {
+                iter->importText(pIStream);
+            } catch (const TTimedEvent::TImportTextFailure& failure) {
+                throw TImportTextFailure();
+            }
         }
     }
 }
