@@ -41,11 +41,39 @@ public:
     virtual string getTypeName() const;
 };
 
-// Objects with an owner (+4).
-class TPlayableObject : public virtual TGameObject {
+// One name per creature bank kind (ObjectSpecializations.cpp's
+// aCreatureBankTypeTraitsImp; the palette's tooltip).
+enum {
+    kNumCreatureBankTypes = 7
+};
+
+struct TCreatureBankTypeTraits {
+    const char* m_name;
+};
+
+extern const TCreatureBankTypeTraits* akCreatureBankTypeTraits;
+
+// One name per two-way and per one-way monolith kind (the object type's
+// subtype; ObjectSpecializations.cpp's aMonolithTypeTraitsImp and
+// aOneWayMonolithTypeTraitsImp, 12 bytes each). The bounds are the
+// validation asserts'; the row type's name is not recorded.
+enum {
+    kNumMonolithTypes = 3,
+    kNumOneWayMonolithTypes = 3
+};
+
+struct TMonolithTypeTraits {
+    const char* m_name;
+};
+
+extern const TMonolithTypeTraits* akMonolithTypeTraits;
+extern const TMonolithTypeTraits* akOneWayMonolithTypeTraits;
+
+// Objects that can be flagged by a player (+4).
+class TFlaggableObject : public virtual TGameObject {
 public:
-    TPlayableObject(const TObjectType& objType, TPlayer owner = ePlayerNone);
-    TPlayableObject(const TObjectType& objType, TRawIStream* pIStream, int version);
+    TFlaggableObject(const TObjectType& objType, TPlayer owner);
+    TFlaggableObject(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
 
@@ -56,11 +84,123 @@ private:
     TPlayer _m_owner;
 };
 
-// Objects that can be flagged by a player (+4).
-class TFlaggableObject : public virtual TGameObject {
+// A mine; its kind is the object type's subtype.
+class TMine : public TFlaggableObject {
 public:
-    TFlaggableObject(const TObjectType& objType, TPlayer owner);
-    TFlaggableObject(const TObjectType& objType, TRawIStream* pIStream, int version);
+    // One name per mine kind (the palette's tooltip).
+    struct TTypeTraits {
+        const char* m_name;
+    };
+
+    enum {
+        s_kNumMineTypes = 8
+    };
+
+    static const TTypeTraits* s_akMineTypeTraits;
+
+    static void initializeTypeTraitsTable();
+
+    TMine(const TObjectType& objType, TPlayer owner = ePlayerNone);
+    TMine(const TObjectType& objType, TRawIStream* pIStream, int version);
+
+    virtual string getTypeName() const;
+};
+
+// An abandoned mine and the resources it may hold (+8).
+class TAbandonedMine : public TMine {
+public:
+    TAbandonedMine(const TObjectType& objType);
+    TAbandonedMine(const TObjectType& objType, TRawIStream* pIStream, int version);
+
+    virtual void write(TRawOStream* pOStream) const;
+    virtual bool isCustomized() const { return _m_abPotentialResource != _s_kabDefaultPotentialResource; }
+
+    bool getBIsPotentialResource(TGameResourceType type) const;
+    void setBIsPotentialResource(TGameResourceType type, bool bIsPotential);
+    unsigned int getNumPotentialResources() const { return _m_abPotentialResource.count(); }
+
+private:
+    static const bitset<kNumGameResourceTypes> _s_kabDefaultPotentialResource;
+
+    bitset<kNumGameResourceTypes> _m_abPotentialResource;
+};
+
+// A creature generator; its kind is the object type's subtype.
+class TGenerator : public TFlaggableObject {
+public:
+    // 8-byte rows of the two generator tables ("const struct
+    // TGenerator::TGeneratorTypeTraits & TGenerator::getGeneratorTypeTraits()
+    // const"); the name is the second word. The first is whether the
+    // generator can be flagged (the constructors clear the owner when it
+    // is not); its name is not recorded.
+    struct TGeneratorTypeTraits {
+        bool m_bFlaggable;
+        const char* m_name;
+    };
+
+    enum TGenerator1Type {
+    };
+
+    enum TGenerator4Type {
+    };
+
+    enum {
+        s_kNumGenerator1Types = 59,
+        s_kNumGenerator4Types = 2
+    };
+
+    static const TGeneratorTypeTraits* s_akGenerator1TypeTraits;
+    static const TGeneratorTypeTraits* s_akGenerator4TypeTraits;
+
+    static void initializeTypeTraitsTables();
+
+    TGenerator(const TObjectType& objType, TPlayer owner = ePlayerNone);
+    TGenerator(const TObjectType& objType, TRawIStream* pIStream, int version);
+
+    virtual string getTypeName() const;
+
+    const TGeneratorTypeTraits& getGeneratorTypeTraits() const;
+    TGenerator1Type getGenerator1Type() const;
+    TGenerator4Type getGenerator4Type() const;
+};
+
+// A garrison (army +8); its kind is the object type's subtype.
+class TGarrison : public TFlaggableObject {
+public:
+    // One name per garrison kind (the palette's tooltip).
+    struct TTypeTraits {
+        const char* m_name;
+    };
+
+    enum {
+        s_kNumTypes = 2
+    };
+
+    static const TTypeTraits* s_akTypeTraits;
+
+    static void initializeTypeTraitsTable();
+
+    TGarrison(const TObjectType& objType, TPlayer owner = ePlayerNone);
+    TGarrison(const TObjectType& objType, TRawIStream* pIStream, int version);
+
+    virtual void write(TRawOStream* pOStream) const;
+    virtual bool isCustomized() const;
+    virtual string getTypeName() const;
+
+    int getType() const { return getExtra(); }
+    const TTypeTraits& getTypeTraits() const { return s_akTypeTraits[getType()]; }
+    const TArmy& getArmy() const { return _m_army; }
+    void setArmy(const TArmy& newArmy);
+
+private:
+    TArmy _m_army;
+};
+
+// Objects with an owner (+4).
+class TPlayableObject : public virtual TGameObject {
+public:
+    TPlayableObject(const TObjectType& objType, TPlayer owner = ePlayerNone);
+    TPlayableObject(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
 
@@ -149,6 +289,27 @@ private:
     unsigned int _m_quantity;
 };
 
+// A sign or ocean bottle with its text (+4).
+class TSign : public virtual TGameObject {
+public:
+    static const unsigned int s_kMaxTextLen = 150;
+
+    TSign(const TObjectType& objType);
+    TSign(const TObjectType& objType, TRawIStream* pIStream, int version);
+
+    virtual void importText(istream* pIStream);
+    virtual void write(TRawOStream* pOStream) const;
+    virtual bool isCustomized() const { return !_m_text.empty(); }
+    virtual bool hasText() const { return true; }
+    virtual void exportText(ostream* pOStream) const;
+
+    const string& getText() const { return _m_text; }
+    void setText(const string& newText);
+
+private:
+    string _m_text;
+};
+
 // The scholar: what it teaches (+4) and the primary skill (+8), secondary
 // skill (+0xc) or spell (+0x10). TRewardType's random and count names
 // are the asserts'; the other three are named by role.
@@ -187,57 +348,22 @@ private:
     SpellID _m_spell;
 };
 
-// A garrison (army +8); its kind is the object type's subtype.
-class TGarrison : public TFlaggableObject {
+// The grail and its dig radius (+4).
+class THolyGrail : public virtual TGameObject {
 public:
-    // One name per garrison kind (the palette's tooltip).
-    struct TTypeTraits {
-        const char* m_name;
-    };
+    static const unsigned int s_kMaxRadius = 127;
 
-    enum {
-        s_kNumTypes = 2
-    };
-
-    static const TTypeTraits* s_akTypeTraits;
-
-    static void initializeTypeTraitsTable();
-
-    TGarrison(const TObjectType& objType, TPlayer owner = ePlayerNone);
-    TGarrison(const TObjectType& objType, TRawIStream* pIStream, int version);
+    THolyGrail(const TObjectType& objType);
+    THolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const;
-    virtual string getTypeName() const;
+    virtual bool isCustomized() const { return _m_radius != 0; }
 
-    int getType() const { return getExtra(); }
-    const TTypeTraits& getTypeTraits() const { return s_akTypeTraits[getType()]; }
-    const TArmy& getArmy() const { return _m_army; }
-    void setArmy(const TArmy& newArmy);
+    unsigned int getRadius() const { return _m_radius; }
+    void setRadius(unsigned int newRadius);
 
 private:
-    TArmy _m_army;
-};
-
-// A sign or ocean bottle with its text (+4).
-class TSign : public virtual TGameObject {
-public:
-    static const unsigned int s_kMaxTextLen = 150;
-
-    TSign(const TObjectType& objType);
-    TSign(const TObjectType& objType, TRawIStream* pIStream, int version);
-
-    virtual void importText(istream* pIStream);
-    virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return !_m_text.empty(); }
-    virtual bool hasText() const { return true; }
-    virtual void exportText(ostream* pOStream) const;
-
-    const string& getText() const { return _m_text; }
-    void setText(const string& newText);
-
-private:
-    string _m_text;
+    unsigned int _m_radius;
 };
 
 // A shrine and its spell (+4).
@@ -255,132 +381,6 @@ public:
 
 private:
     SpellID _m_spell;
-};
-
-// One name per creature bank kind (ObjectSpecializations.cpp's
-// aCreatureBankTypeTraitsImp; the palette's tooltip).
-enum {
-    kNumCreatureBankTypes = 7
-};
-
-struct TCreatureBankTypeTraits {
-    const char* m_name;
-};
-
-extern const TCreatureBankTypeTraits* akCreatureBankTypeTraits;
-
-// One name per two-way and per one-way monolith kind (the object type's
-// subtype; ObjectSpecializations.cpp's aMonolithTypeTraitsImp and
-// aOneWayMonolithTypeTraitsImp, 12 bytes each). The bounds are the
-// validation asserts'; the row type's name is not recorded.
-enum {
-    kNumMonolithTypes = 3,
-    kNumOneWayMonolithTypes = 3
-};
-
-struct TMonolithTypeTraits {
-    const char* m_name;
-};
-
-extern const TMonolithTypeTraits* akMonolithTypeTraits;
-extern const TMonolithTypeTraits* akOneWayMonolithTypeTraits;
-
-// A creature generator; its kind is the object type's subtype.
-class TGenerator : public TFlaggableObject {
-public:
-    // 8-byte rows of the two generator tables ("const struct
-    // TGenerator::TGeneratorTypeTraits & TGenerator::getGeneratorTypeTraits()
-    // const"); the name is the second word. The first is whether the
-    // generator can be flagged (the constructors clear the owner when it
-    // is not); its name is not recorded.
-    struct TGeneratorTypeTraits {
-        bool m_bFlaggable;
-        const char* m_name;
-    };
-
-    enum TGenerator1Type {
-    };
-
-    enum TGenerator4Type {
-    };
-
-    enum {
-        s_kNumGenerator1Types = 59,
-        s_kNumGenerator4Types = 2
-    };
-
-    static const TGeneratorTypeTraits* s_akGenerator1TypeTraits;
-    static const TGeneratorTypeTraits* s_akGenerator4TypeTraits;
-
-    static void initializeTypeTraitsTables();
-
-    TGenerator(const TObjectType& objType, TPlayer owner = ePlayerNone);
-    TGenerator(const TObjectType& objType, TRawIStream* pIStream, int version);
-
-    virtual string getTypeName() const;
-
-    const TGeneratorTypeTraits& getGeneratorTypeTraits() const;
-    TGenerator1Type getGenerator1Type() const;
-    TGenerator4Type getGenerator4Type() const;
-};
-
-// A mine; its kind is the object type's subtype.
-class TMine : public TFlaggableObject {
-public:
-    // One name per mine kind (the palette's tooltip).
-    struct TTypeTraits {
-        const char* m_name;
-    };
-
-    enum {
-        s_kNumMineTypes = 8
-    };
-
-    static const TTypeTraits* s_akMineTypeTraits;
-
-    static void initializeTypeTraitsTable();
-
-    TMine(const TObjectType& objType, TPlayer owner = ePlayerNone);
-    TMine(const TObjectType& objType, TRawIStream* pIStream, int version);
-
-    virtual string getTypeName() const;
-};
-
-// An abandoned mine and the resources it may hold (+8).
-class TAbandonedMine : public TMine {
-public:
-    TAbandonedMine(const TObjectType& objType);
-    TAbandonedMine(const TObjectType& objType, TRawIStream* pIStream, int version);
-
-    virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return _m_abPotentialResource != _s_kabDefaultPotentialResource; }
-
-    bool getBIsPotentialResource(TGameResourceType type) const;
-    void setBIsPotentialResource(TGameResourceType type, bool bIsPotential);
-    unsigned int getNumPotentialResources() const { return _m_abPotentialResource.count(); }
-
-private:
-    static const bitset<kNumGameResourceTypes> _s_kabDefaultPotentialResource;
-
-    bitset<kNumGameResourceTypes> _m_abPotentialResource;
-};
-
-// The grail and its dig radius (+4).
-class THolyGrail : public virtual TGameObject {
-public:
-    static const unsigned int s_kMaxRadius = 127;
-
-    THolyGrail(const TObjectType& objType);
-    THolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version);
-
-    virtual void write(TRawOStream* pOStream) const;
-    virtual bool isCustomized() const { return _m_radius != 0; }
-
-    unsigned int getRadius() const { return _m_radius; }
-    void setRadius(unsigned int newRadius);
-
-private:
-    unsigned int _m_radius;
 };
 
 // The creature bank and monolith type tables, filled at start-up by
