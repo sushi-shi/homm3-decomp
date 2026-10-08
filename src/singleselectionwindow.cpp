@@ -6736,10 +6736,15 @@ bool TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 // size() expansions (cb 42 each) starved the root budget so both request
 // constructors and the temp destructor stayed calls (85.86%). Without them
 // the third assignment is still refused (budget 238 < cb 257) and the tail
-// expands as retail does (90.52%). Residual: retail calls CNetMsg's
-// constructor inside BOTH request expansions; traced pools are 185/3 = 61
-// and 81/1 against its cb 59, so retail spent 23..81 more root budget before
-// `sel = temp` (or has one more cost-free root after the last request).
+// expands as retail does (90.52%). Assigning the selection row directly,
+// like the transfer and header rows, instead of through a `sel` reference
+// gives 91.19%. Residual: retail calls CNetMsg's constructor in the first
+// request and expands it in the second, where this compile does the
+// opposite; traced pools were 185/3 = 61 and 81/1 against its cb 59, so
+// retail spent more root budget before the selection assignment (or has
+// one more cost-free root after the last request). Controls: empty() for
+// the size test is flat; one shared `return 1` after both arms drops to
+// 86.73%.
 VA(0x00589710, 0x40F)
 DC_ADDRESS(0x140664, 0xa)
 MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg
@@ -6777,9 +6782,7 @@ bool TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
                 m_transferHeaders[mapFileNameMsg->m_number] = temp;
             else
                 m_headersA[mapFileNameMsg->m_number] = temp;
-            GameSelectionHeadersStruct& sel =
-                m_selectionHeaders[mapFileNameMsg->m_number];
-            sel = temp;
+            m_selectionHeaders[mapFileNameMsg->m_number] = temp;
         } else {
             CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
             transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
