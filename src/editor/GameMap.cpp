@@ -31,6 +31,7 @@
 #include "editor/RawStream.h"
 #include "editor/TilePoint.h"
 #include "editor/TimedEvent.h"
+#include "editor/UniqueSet.h"
 #include "editor/VictoryCondition.h"
 
 namespace {
@@ -2309,6 +2310,142 @@ unsigned int TGameMap::_TImpl::getNumObelisksOnMap() const
     return _m_pBookkeeping->m_aNumObjsOfCappedType[obeliskOrdinal];
 }
 
+
+void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
+{
+    TRawOStream stream(pStreamBuf);
+    stream << (signed char) _isMapPlayable() << (long) _s_akDimension[_m_size] << (signed char) _m_bTwoLayer
+           << _m_pProperties->m_name << _m_pProperties->m_desc << (const signed char&) _m_pProperties->m_difficulty;
+    for (unsigned int player = 0; player < kNumPlayers; player++) {
+        const _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[player];
+#line 3074
+        assert(playerBookkeeping.m_numHeroes + playerBookkeeping.m_townRefs.size() == playerBookkeeping.m_numUnits);
+        const TPlayerInfo& playerInfo = _m_pProperties->m_players[player];
+        stream << (signed char) playerInfo.getBHumanPlayable() << (signed char) playerInfo.getBComputerPlayable()
+               << (signed char) playerInfo.getBehaviorType();
+        ubyte alignmentMask = 0;
+        signed char bHasRandom = false;
+        if (playerInfo.getBPresent()) {
+#line 3087
+            assert(playerBookkeeping.m_numUnits > 0);
+            if (playerBookkeeping.m_townRefs.size() != 0) {
+                if (playerBookkeeping.m_numRandomTowns != 0) {
+                    alignmentMask = 0xff;
+                    bHasRandom = true;
+                } else {
+                    for (unsigned int townType = 0; townType < kNumTownTypes; townType++)
+                        if (playerBookkeeping.m_aNumTownsOfType[townType] != 0)
+                            alignmentMask |= 1 << townType;
+                    bHasRandom = false;
+                }
+            } else if (playerBookkeeping.m_numRandomHeroes != 0) {
+                alignmentMask = 0xff;
+                bHasRandom = true;
+            } else {
+                for (unsigned int townType = 0; townType < kNumTownTypes; townType++)
+                    if (playerBookkeeping.m_aNumHeroesOfType[townType] != 0)
+                        alignmentMask |= 1 << townType;
+                bHasRandom = false;
+            }
+        } else
+#line 3130
+            assert(playerBookkeeping.m_numUnits == 0);
+        stream << alignmentMask << bHasRandom << (signed char) playerInfo.getBGenerateHero();
+        if (playerInfo.getBGenerateHero()) {
+#line 3137
+            assert(playerInfo.getMainTownRef().getObjectID() != TLayer::s_kInvalidObjID);
+            _write(&stream, playerInfo.getMainTownRef());
+        }
+        stream << (signed char) (playerBookkeeping.m_numRandomHeroes != 0);
+        if (playerBookkeeping.m_numRandomHeroes < playerBookkeeping.m_numHeroes) {
+            const TNonRandomHero* pHero = _findPlayersNonRandomHero(TPlayer(player));
+#line 3145
+            assert(pHero != NULL);
+            signed char portrait = pHero->getBCustomPortrait() ? pHero->getCustomPortrait() : -1;
+            string name = pHero->getBCustomName() ? pHero->getCustomName() : string();
+            stream << (signed char) pHero->getIndivID() << portrait << name;
+        } else
+            stream << (signed char) -1;
+    }
+    _writeVictoryCondition(&stream);
+    _writeLossCondition(&stream);
+    stream << _m_pProperties->m_teamInfo;
+    ubyte aHeroAvailable[16];
+    fill_n(aHeroAvailable, sizeof(aHeroAvailable), 0);
+    for (unsigned int heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
+        unsigned int heroNum = heroClass * 8;
+        for (unsigned int protoNum = 0; protoNum < THero::s_akClassTraits[heroClass].m_numPrototypes; protoNum++, heroNum++)
+            if (_m_pBookkeeping->m_aabHeroAvailable[heroClass][protoNum])
+                aHeroAvailable[heroNum / 8] |= 1 << heroNum % 8;
+    }
+    stream << aHeroAvailable;
+    signed char aReserved[31];
+    fill_n(aReserved, sizeof(aReserved), 0);
+    stream << aReserved;
+    writeContainer(stream, _m_pProperties->m_rumors);
+    unsigned int numLayers = _m_bTwoLayer ? 2 : 1;
+    unsigned int layerNum;
+    long numObjs = 0;
+    for (layerNum = 0; layerNum < numLayers; layerNum++) {
+        writeCellData(stream, _m_aLayer[layerNum]);
+        for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd(); ++iter) {
+            numObjs++;
+            const TTown* pTown = dynamic_cast<const TTown*>(_m_aLayer[layerNum].getPObject(*iter));
+            if (pTown != NULL && pTown->getPVisitingHero() != NULL)
+                numObjs++;
+        }
+    }
+    TUniqueSet<TObjectType> objTypes;
+    static const TObjectTypeTable kObjTypeTable("objtmplt.txt");
+    for (vector<TObjectType>::const_iterator pObjType = kObjTypeTable.begin(); pObjType != kObjTypeTable.end(); pObjType++)
+        objTypes.add(*pObjType);
+    vector<long> aObjTypeID(numObjs);
+    long objNum = 0;
+    for (layerNum = 0; layerNum < numLayers; layerNum++) {
+        for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd(); ++iter) {
+            const TGameObject& obj = _m_aLayer[layerNum].getObject(*iter);
+            aObjTypeID[objNum++] = objTypes.add(obj.getObjectType());
+            const TTown* pTown = dynamic_cast<const TTown*>(&obj);
+            if (pTown != NULL) {
+                const THero* pHero = pTown->getPVisitingHero();
+                if (pHero != NULL)
+                    aObjTypeID[objNum++] = objTypes.add(pHero->getObjectType());
+            }
+        }
+    }
+#line 3237
+    assert(objNum == numObjs);
+    stream << (long) objTypes.numItems();
+    for (unsigned int typeID = 0; typeID < objTypes.numItems(); typeID++)
+        stream << objTypes.get(typeID);
+    signed char aObjReserved[5];
+    fill_n(aObjReserved, sizeof(aObjReserved), 0);
+    objNum = 0;
+    stream << numObjs;
+    for (layerNum = 0; layerNum < numLayers; layerNum++) {
+        for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd(); ++iter) {
+            TTilePoint loc = _m_aLayer[layerNum].getObjectLoc(*iter);
+            stream << (ubyte) loc.x() << (ubyte) loc.y() << (const ubyte&) layerNum << aObjTypeID[objNum++] << aObjReserved;
+            const TGameObject& obj = _m_aLayer[layerNum].getObject(*iter);
+            obj.write(&stream);
+            const TTown* pTown = dynamic_cast<const TTown*>(&obj);
+            if (pTown != NULL) {
+                const THero* pHero = pTown->getPVisitingHero();
+                if (pHero != NULL) {
+                    stream << (ubyte) loc.x() << (ubyte) loc.y() << (const ubyte&) layerNum << aObjTypeID[objNum++]
+                           << aObjReserved;
+                    pHero->write(&stream);
+                }
+            }
+        }
+    }
+#line 3283
+    assert(objNum == numObjs);
+    writeContainer(stream, _m_pProperties->m_timedEvents);
+    signed char aTrailer[124];
+    fill_n(aTrailer, sizeof(aTrailer), 0);
+    stream << aTrailer;
+}
 
 bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject& obj, unsigned int x, unsigned int y)
 {
