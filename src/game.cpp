@@ -7667,16 +7667,10 @@ void game::setRecruits()
 // DC 8543/8547 and Mac 0xdfa10..0xdfa2c write the signed fountain bitfield.
 // DC 8462/8464/8466 records the ordinary z/y/x loops. Do not reproduce
 // optimizer induction or cast m_extraInfo through void* to call base helpers.
-// The native receiver model currently leaves clearRecruits out of line in
-// setRecruits' expansion; retail expands it and retains getHero. Prior raw
-// aliases scored 96.9467%; the canonical model scores 94.1719%. The native
-// loop spelling, obscuringHero initialization and helper body placement are
-// byte-flat for that boundary. Historical 99.8370% is a TU-context lead.
-// 2026-10-07 trace: setRecruits is depth-1 site 16 (budget 1874, cb 112),
-// giving clearRecruits (1874 - 112) / 16 = 110 against cb 116. Fifteen
-// remaining sites (117) or clearRecruits cb <= 110 would expand it; the
-// literal flag, -1 store, != none test and post-increment spellings all
-// leave cb 116.
+// DC 8563 and retail's guard-free pointer walk take the weekly-visit hero
+// row directly, not through getHero. Without that getHero site, setRecruits'
+// nested clearRecruits gets (1874 - 112) / 15 = 117 against its cb 116 and
+// expands as retail, retaining its own getHero call.
 VA(0x004c8780, 0x7B7)
 DC_ADDRESS(0x0b41e0, 0x5d8)
 MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees
@@ -7839,7 +7833,7 @@ void game::perWeek()
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        currHero = getHero(i);
+        currHero = &m_heroes[i];
         if (currHero->m_flags & g_heroWeeklyVisitFlag)
             currHero->m_flags -= g_heroWeeklyVisitFlag;
     }
