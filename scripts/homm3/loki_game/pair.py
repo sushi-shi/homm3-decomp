@@ -55,6 +55,35 @@ class Pairing:
         self.lib = refs.windows_runtime()
         self.plt = self.game.plt
         self.pairs: dict[int, tuple[int, str]] = {}
+        # Call-graph evidence pairs project code only: Loki's linkonce and
+        # runtime bands hold libstdc++ templates (bastring, SGI containers)
+        # with no Dinkumware counterpart, and Windows rows without a ledger
+        # entry are its runtime.
+        self.k_project = {a for a in self.K if self.game.band(a) == "text"}
+        self.w_project = {a for a in self.W if a in self.ledger}
+        self.k_twins = self._twins()
+
+    def _twins(self) -> set[int]:
+        """Loki bodies identical to another but for call targets and absolute
+        addresses (file-static copies in several objects, each with its own
+        constants): call graphs cannot tell them apart."""
+        import hashlib
+        import re as _re
+        import capstone
+        decoder = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+        address_like = _re.compile(r"0x8[0-9a-f]{6}")
+        seen: dict[bytes, list[int]] = {}
+        for address in self.k_project:
+            size = self.K[address].size
+            if size < 16:
+                continue
+            digest = hashlib.sha256()
+            for insn in decoder.disasm(self.game.read(address, size), address):
+                operands = address_like.sub("A", insn.op_str) if insn.mnemonic not in ("call", "jmp") \
+                    or not insn.op_str.startswith("0x") else "T"
+                digest.update(f"{insn.mnemonic} {operands};".encode())
+            seen.setdefault(digest.digest(), []).append(address)
+        return {a for group in seen.values() if len(group) > 1 for a in group}
 
     # -- bookkeeping --------------------------------------------------------
     def k2w(self) -> dict[int, int]:
@@ -65,6 +94,9 @@ class Pairing:
         new = 0
         for w, (k, evidence) in found.items():
             if w in self.pairs or k in taken:
+                continue
+            if evidence.startswith("call-graph") and (k not in self.k_project or w not in self.w_project
+                                                      or k in self.k_twins):
                 continue
             self.pairs[w] = (k, evidence)
             taken[k] = w

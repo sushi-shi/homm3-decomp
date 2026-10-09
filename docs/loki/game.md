@@ -49,14 +49,17 @@ The image has no project symbols, so pairs come from retail evidence
 | `string` | 207 | the only users of a shared C string on both sides |
 | `vtable-signature` | 45 | the same set of classes holds it in its vtable |
 | `vtable-slot` | 118 | equal-length slot runs between paired slots of a class |
-| `call-graph` | 368 | equal-length runs between paired callees of a paired caller |
-| `call-graph-intersection` | 46 | the only unpaired callee all paired callers share |
-| `call-graph-alignment` | 214 | aligned in two or more paired callers' call sequences |
+| `call-graph` | 328 | equal-length runs between paired callees of a paired caller |
+| `call-graph-intersection` | 43 | the only unpaired callee all paired callers share |
+| `call-graph-alignment` | 168 | aligned in two or more paired callers' call sequences |
 
-1,054 pairs (1,048 ledger rows; 60 of the 281 non-exact Windows functions).
+965 pairs, all ledger rows (59 of the 281 non-exact Windows functions). Call-graph
+evidence pairs project code only: Loki's linkonce and runtime bands hold
+libstdc++ templates with no Dinkumware counterpart, and bodies identical up
+to addresses (file-static copies) stay unpaired.
 Holdout check: without the fingerprint seeds the other evidence recovers 17
 of the 56 fingerprint pairs and contradicts one (an alignment pair that chose
-one of two identical Loki copies of `RGBToHSV`). A Windows vtable holds the
+the wrong one of two near-identical Loki copies of `RGBToHSV`). A Windows vtable holds the
 scalar deleting destructor; GCC's single destructor slot is paired with the
 class's `??1` instead.
 

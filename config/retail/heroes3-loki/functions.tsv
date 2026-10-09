@@ -328,7 +328,7 @@ address	size	band	win_rva	evidence	win_name
 0x0804d740	98	text			
 0x0804d7ac	114	text	0x15cf50	call-graph-alignment	?PointToSpriteResource@ResourceManager@@YIPAVLODFile@@PBD@Z
 0x0804d820	56	text			
-0x0804d860	33	text	0x15d600	call-graph-alignment	?str@?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ
+0x0804d860	33	text			
 0x0804d884	155	text			
 0x0804d930	77	text			
 0x0804d980	16	text			
@@ -436,7 +436,7 @@ address	size	band	win_rva	evidence	win_name
 0x0805285c	221	text			
 0x0805293c	38	text			
 0x08052964	25	text			
-0x08052980	77	text	0x1ff5b0	call-graph-alignment	?sleepAllWidgets@heroWindow@@QAEXE@Z
+0x08052980	77	text			
 0x080529d0	2092	text	0x2450	string	?checkAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
 0x08053228	4566	text	0x1510	string	??0TAdventureMapWindow@@QAE@XZ
 0x0805444c	82	text	0x2b10	vtable-slot:TAdventureMapWindow	??1TAdventureMapWindow@@UAE@XZ
@@ -505,9 +505,9 @@ address	size	band	win_rva	evidence	win_name
 0x0805cae4	184	text			
 0x0805cba4	164	text	0xdcc0	call-graph-alignment	?setWitchHutHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z
 0x0805cc54	310	text	0xd75d0	call-graph-alignment	?obscureCell@type_obscuring_object@@IAEXW4TAdventureObjectType@@J@Z
-0x0805cd90	30	text	0xafb0	call-graph	?getTriggerCell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z
+0x0805cd90	30	text			
 0x0805cdb0	49	text			
-0x0805cde4	289	text			
+0x0805cde4	289	text	0xafb0	call-graph-alignment	?getTriggerCell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z
 0x0805cf08	104	text			
 0x0805cf70	132	text	0xb0e0	call-graph-alignment	?drawRolloverText@advManager@@QAEXPAD@Z
 0x0805cff4	7626	text	0xb150	string	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z
@@ -515,7 +515,7 @@ address	size	band	win_rva	evidence	win_name
 0x0805f258	115	text			
 0x0805f2cc	233	text			
 0x0805f3c0	2402	text			
-0x0805fd54	17	text	0xec80	call-graph	?reseed@advManager@@QAEXHH@Z
+0x0805fd54	17	text	0xbab90	call-graph-alignment	?hasMobileHero@playerData@@QAE_NXZ
 0x0805fd68	1746	text	0xec90	string	?processSearch@advManager@@QAEHHHH@Z
 0x08060444	126	text	0xf270	call-graph-alignment	?updateScreen@advManager@@QAEXHH@Z
 0x080604c4	332	text	0xf2f0	call-graph-intersection	?drawAdventureMapGems@advManager@@QAEXXZ
@@ -587,7 +587,7 @@ address	size	band	win_rva	evidence	win_name
 0x0806cb54	824	text	0x19e00	call-graph	?startLocalPlayerTurn@advManager@@QAEXXZ
 0x0806ce94	224	text	0x1a100	call-graph	?loadRemote@advManager@@QAEXE@Z
 0x0806cf74	608	text	0x1a1e0	call-graph-alignment	?trimLoopingSounds@advManager@@QAEXH@Z
-0x0806d1d4	274	text	0x1a2e0	call-graph	?disableButtons@advManager@@QAEXXZ
+0x0806d1d4	274	text			
 0x0806d2e8	274	text			
 0x0806d3fc	559	text			
 0x0806d62c	274	text	0x1a660	call-graph	?computeAdvNetControl@@YIXXZ
@@ -669,9 +669,9 @@ address	size	band	win_rva	evidence	win_name
 0x08076230	58	text			
 0x0807626c	191	text			
 0x08076334	68	text			
-0x08076378	261	text			
-0x08076480	871	text			
-0x080767ec	234	text			
+0x08076378	261	text	0x23ee0	call-graph-alignment	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z
+0x08076480	871	text	0x24120	call-graph	?initializeCreatures@type_AI_combat_data@@IAEXNPBVhero@@@Z
+0x080767ec	234	text	0x24790	call-graph	?checkWallArcheryPenalty@type_AI_combat_data@@IAEXPBVtown@@@Z
 0x080768d8	90	text			
 0x08076934	294	text			
 0x08076a60	98	text			
@@ -705,11 +705,11 @@ address	size	band	win_rva	evidence	win_name
 0x08077cf8	90	text			
 0x08077d54	267	text			
 0x08077e68	414	text			
-0x08078008	192	text			
+0x08078008	192	text	0x26bc0	call-graph	?simulateCombat@type_AI_combat_data@@QAEXAAV1@@Z
 0x080780cc	262	text			
 0x080781d4	122	text			
 0x08078250	484	text			
-0x08078434	254	text	0x270c0	call-graph	?aiQuickCombat@@YI_NPAVhero@@0AAVarmyGroup@@PAVtown@@PAVNewmapCell@@@Z
+0x08078434	254	text			
 0x08078534	247	text			
 0x0807862c	1004	text			
 0x08078a18	60	text			
@@ -783,7 +783,7 @@ address	size	band	win_rva	evidence	win_name
 0x080802d4	1166	text			
 0x08080764	530	text			
 0x0808097c	1080	text			
-0x08080dbc	66	text	0x2db20	call-graph-alignment	?aiArrangeArmyForCombat@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z
+0x08080dbc	66	text			
 0x08080e00	188	text			
 0x08080ebc	521	text			
 0x080810c8	194	text			
@@ -971,7 +971,7 @@ address	size	band	win_rva	evidence	win_name
 0x0808f604	25	text			
 0x0808f620	428	text			
 0x0808f7cc	92	text			
-0x0808f828	67	text	0x3d540	call-graph-alignment	?playSample@army@@QAEXW4TSampleID@1@@Z
+0x0808f828	67	text			
 0x0808f86c	68	text	0x3d580	call-graph	?stopSample@army@@QAEXW4TSampleID@1@@Z
 0x0808f8b0	70	text			
 0x0808f8f8	307	text			
@@ -1097,7 +1097,7 @@ address	size	band	win_rva	evidence	win_name
 0x0809c25c	808	text	0x4a4d0	call-graph-alignment	?getSpellWorkChance@@YIMHW4TCreatureType@@QBVhero@@1@Z
 0x0809c5b0	72	text			
 0x0809c600	72	text			
-0x0809c650	28	text	0x4aa80	call-graph-alignment	??0armyGroup@@QAE@XZ
+0x0809c650	28	text			
 0x0809c66c	104	text			
 0x0809c6d4	49	text	0x4ab00	call-graph-intersection	?initialize@armyGroup@@QAEXXZ
 0x0809c708	206	text			
@@ -1222,8 +1222,8 @@ address	size	band	win_rva	evidence	win_name
 0x080a2d3c	75	text			
 0x080a2d88	35	text			
 0x080a2dac	340	text			
-0x080a2f00	611	text	0x4fc70	call-graph	?Draw@Bitmap816@@QBEXHHHHPAGHHHHH_N@Z
-0x080a3164	79	text	0x4fdb0	call-graph-intersection	?Draw@Bitmap816@@QBEXHHHHPAVBitmap16Bit@@HH_N@Z
+0x080a2f00	611	text			
+0x080a3164	79	text			
 0x080a31b4	75	text			
 0x080a3200	28	text			
 0x080a321c	31	text	0x4fe60	call-graph	?SetPalette@Bitmap816@@QAEXPAVTPalette24@@@Z
@@ -1241,7 +1241,7 @@ address	size	band	win_rva	evidence	win_name
 0x080a33a0	25	text			
 0x080a33bc	25	text			
 0x080a33d8	25	text			
-0x080a3400	35	text	0x1fe410	call-graph-alignment	??0widget@@QAE@XZ
+0x080a3400	35	text			
 0x080a3424	65	text	0x4ff10	call-graph	??0border@@QAE@HHHHHH@Z
 0x080a3468	33	text			
 0x080a348c	55	text	0x1fe480	call-graph-alignment	?initialize@widget@@QAEXHHHHHH@Z
@@ -1263,7 +1263,7 @@ address	size	band	win_rva	evidence	win_name
 0x080a39c8	24	text			
 0x080a39e8	24	text			
 0x080a3a08	79	text			
-0x080a3a58	51	text	0x504c0	call-graph	?setImage@bitmapBorder@@QAEXPBD@Z
+0x080a3a58	51	text			
 0x080a3a8c	57	text	0x50520	call-graph-intersection	?setPlayerPaletteColors@bitmapBorder@@QAEXH@Z
 0x080a3ac8	154	text			
 0x080a3b70	116	text	0x50690	call-graph	??0bitmapBorder16@@QAE@HHHHHPBDH@Z
@@ -1368,7 +1368,7 @@ address	size	band	win_rva	evidence	win_name
 0x080b002c	423	text			
 0x080b01d4	1288	text			
 0x080b06dc	151	text	0x639e0	call-graph	?freeArmies@combatManager@@QAEXXZ
-0x080b0774	1805	text	0x639f0	call-graph	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHH_N@Z
+0x080b0774	1805	text			
 0x080b0eb0	1214	text			
 0x080b1388	204	text			
 0x080b1454	402	text			
@@ -1490,7 +1490,7 @@ address	size	band	win_rva	evidence	win_name
 0x080bef3c	89	text	0x71a70	vtable-slot:TCombatResultsWindow	??1TCombatResultsWindow@@UAE@XZ
 0x080bef98	114	text	0x71af0	vtable-slot:TCombatResultsWindow	?open@TCombatResultsWindow@@UAEHH_N@Z
 0x080bf00c	42	text	0x71b50	vtable-slot:TCombatResultsWindow	?close@TCombatResultsWindow@@UAEXE@Z
-0x080bf038	32	text	0x71b70	call-graph-alignment	?doModal@TCombatResultsWindow@@QAEXXZ
+0x080bf038	32	text			
 0x080bf058	147	text			
 0x080bf0ec	132	text			
 0x080bf170	25	text			
@@ -1582,7 +1582,7 @@ address	size	band	win_rva	evidence	win_name
 0x080c963c	76	text			
 0x080c9688	89	text			
 0x080c96e4	105	text			
-0x080c9754	36	text	0x7b8a0	call-graph	?AddFrame@CSequence@@AAEHPAVCSpriteFrame@@@Z
+0x080c9754	36	text			
 0x080c9778	132	text			
 0x080c97fc	25	text			
 0x080c9820	88	text			
@@ -1593,13 +1593,13 @@ address	size	band	win_rva	evidence	win_name
 0x080c9ac0	35	text			
 0x080c9ae4	80	text			
 0x080c9b34	64	text			
-0x080c9b74	35	text	0x7bb60	call-graph	?AddFrame@CSprite@@QAEHHPAVCSpriteFrame@@@Z
+0x080c9b74	35	text			
 0x080c9b98	73	text			
 0x080c9be4	147	text	0x7bc00	fingerprint	?ResetPalette@CSprite@@QAEXXZ
-0x080c9c78	22	text	0x7bcc0	call-graph	?GetPalette@CSprite@@QAEPAGXZ
+0x080c9c78	22	text			
 0x080c9c90	22	text			
 0x080c9ca8	38	text	0x7bcd0	fingerprint	?ColorCycle@CSprite@@QAEXHHH@Z
-0x080c9cd0	112	text	0x7bcf0	call-graph-alignment	?Draw@CSprite@@QBEXHHHHHHPAGHHHHH_N1@Z
+0x080c9cd0	112	text			
 0x080c9d40	115	text	0x7bd60	fingerprint	?DrawCreature@CSprite@@QBEXHHHHHHPAGHHHHH_NG@Z
 0x080c9db4	115	text			
 0x080c9e28	99	text	0x7bdc0	fingerprint	?DrawAdvObj@CSprite@@QBEXHHHHHPAGHHHHH_N@Z
@@ -1618,7 +1618,7 @@ address	size	band	win_rva	evidence	win_name
 0x080ca2dc	107	text	0x7c0d0	fingerprint	?DrawHeroShadow@CSprite@@QBEXHHHHHHPAGHHHHH_N@Z
 0x080ca348	103	text	0x7c120	fingerprint	?DrawHeroAlpha@CSprite@@QBEXHHHHHHPAGHHHHH_N@Z
 0x080ca3b0	110	text			
-0x080ca420	112	text	0x7c170	call-graph	?DrawSpellEffect@CSprite@@QBEXHHHHHHPAGHHHHH_N1@Z
+0x080ca420	112	text			
 0x080ca490	99	text			
 0x080ca4f4	89	text			
 0x080ca550	108	text			
@@ -1647,7 +1647,7 @@ address	size	band	win_rva	evidence	win_name
 0x080cb2e8	30	text			
 0x080cb308	13	text			
 0x080cb318	49	text			
-0x080cb34c	35	text	0x1a92f0	call-graph-alignment	?loadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z
+0x080cb34c	35	text			
 0x080cb370	98	text			
 0x080cb3d4	97	text			
 0x080cb438	97	text			
@@ -1697,7 +1697,7 @@ address	size	band	win_rva	evidence	win_name
 0x080cf6a4	1885	text	0x7d930	call-graph	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z
 0x080cfe24	3133	text	0x7dd40	call-graph	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z
 0x080d0a78	3454	text	0x7e820	call-graph	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z
-0x080d1850	1801	text	0x7ef60	call-graph	?DrawSpellEffect@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z
+0x080d1850	1801	text			
 0x080d1f64	467	text			
 0x080d2138	819	text			
 0x080d2474	1072	text			
@@ -1766,7 +1766,7 @@ address	size	band	win_rva	evidence	win_name
 0x080d8720	72	text			
 0x080d8768	89	text			
 0x080d87c4	1359	text			
-0x080d8d14	249	text	0x89500	call-graph-alignment	??0SCampaign@@QAE@XZ
+0x080d8d14	249	text			
 0x080d8e10	90	text			
 0x080d8e6c	225	text			
 0x080d8f50	140	text			
@@ -1774,8 +1774,8 @@ address	size	band	win_rva	evidence	win_name
 0x080d9094	8479	text			
 0x080db29c	132	text			
 0x080db320	25	text			
-0x080db340	82	text	0x8fdc0	call-graph-alignment	??0TDialogBox@@QAE@HHHHI@Z
-0x080db394	55	text	0x8fe60	call-graph-alignment	??0TDialogBox@@QAE@I@Z
+0x080db340	82	text			
+0x080db394	55	text	0x8fe60	call-graph	??0TDialogBox@@QAE@I@Z
 0x080db3cc	79	text	0x8fe90	vtable-signature	??1TDialogBox@@UAE@XZ
 0x080db41c	3031	text	0x8ff00	string	?setup@TDialogBox@@UAEEHHHH@Z
 0x080dc020	71	text			
@@ -2056,24 +2056,24 @@ address	size	band	win_rva	evidence	win_name
 0x080f6f70	4450	text			
 0x080f8120	275	text			
 0x080f823c	2619	text			
-0x080f8c78	230	text	0xac930	call-graph-alignment	?heroLoses@advManager@@QAEXPAVhero@@H@Z
+0x080f8c78	230	text			
 0x080f8d60	630	text			
 0x080f8fd8	264	text			
 0x080f90e4	290	text			
 0x080f9208	537	text	0xacd70	call-graph	?doNetCombat@advManager@@QAEHPAVCNetMsg@@@Z
-0x080f9424	3370	text	0xad470	call-graph	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12H_N4@Z
-0x080fa170	776	text	0xaeb50	call-graph-alignment	?sendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z
-0x080fa47c	497	text	0xaeee0	call-graph-intersection	?receiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHAAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z
+0x080f9424	3370	text			
+0x080fa170	776	text			
+0x080fa47c	497	text			
 0x080fa670	132	text			
 0x080fa6f4	25	text			
 0x080fa710	37	text			
 0x080fa738	168	text			
 0x080fa7e0	165	text			
 0x080fa888	551	text			
-0x080faab0	178	text	0xb0b20	call-graph-alignment	?addManager@executive@@QAEHPAVbaseManager@@H@Z
-0x080fab6c	110	text	0xb0bf0	call-graph-alignment	?removeManager@executive@@QAEXPAVbaseManager@@@Z
-0x080fabdc	328	text	0xb0c70	call-graph	?callManager@executive@@QAEXPAVbaseManager@@@Z
-0x080fad24	360	text	0xb0e40	call-graph	?mainLoop@executive@@QAEXXZ
+0x080faab0	178	text			
+0x080fab6c	110	text			
+0x080fabdc	328	text			
+0x080fad24	360	text			
 0x080fae90	132	text			
 0x080faf14	25	text			
 0x080faf30	165	text			
@@ -2151,7 +2151,7 @@ address	size	band	win_rva	evidence	win_name
 0x08101aec	543	text			
 0x08101d10	86	text			
 0x08101d68	86	text			
-0x08101dc0	45	text	0x4150	call-graph-alignment	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z
+0x08101dc0	45	text			
 0x08101df0	323	text			
 0x08101f34	119	text	0xb9f40	call-graph	?hasCapitol@playerData@@QAE_NXZ
 0x08101fb4	376	text			
@@ -2171,7 +2171,7 @@ address	size	band	win_rva	evidence	win_name
 0x081030dc	168	text	0xbaa10	call-graph	?findTown@playerData@@QBEHH@Z
 0x08103188	462	text	0xbaa40	call-graph	?nextHero@playerData@@QAEHXZ
 0x08103364	148	text	0xbab40	call-graph	?nextTown@playerData@@QAEHXZ
-0x081033f8	28	text	0xbab90	call-graph	?hasMobileHero@playerData@@QAE_NXZ
+0x081033f8	28	text			
 0x08103414	109	text			
 0x08103484	202	text			
 0x08103550	389	text	0xbabd0	call-graph-alignment	?numOfGivenArtifact@playerData@@QBEHH@Z
@@ -2212,7 +2212,7 @@ address	size	band	win_rva	evidence	win_name
 0x08106a88	57	text			
 0x08106ac4	4495	text	0xbc350	string	?reset@SavedGameHeader@@QAEXXZ
 0x08107c64	803	text	0xbeea0	string	?saveGame@game@@QAE_NPBD_N111@Z
-0x08107f90	682	text	0xbf1a0	call-graph-alignment	?setupOrigData@game@@QAEXXZ
+0x08107f90	682	text			
 0x0810823c	551	text	0xbf330	call-graph	?loadGame@game@@QAEHPBDHH@Z
 0x08108468	961	text			
 0x08108830	294	text			
@@ -2255,7 +2255,7 @@ address	size	band	win_rva	evidence	win_name
 0x08110234	43	text			
 0x08110260	69	text	0xc6f40	call-graph	?startAITheme@@YIXXZ
 0x081102a8	27	text	0xc6f80	call-graph	?turnOnAIMusic@game@@QAEXXZ
-0x081102c4	19	text	0xc6fd0	call-graph	?turnOffAIMusic@game@@QAEXXZ
+0x081102c4	19	text			
 0x081102d8	2520	text	0xc6fe0	call-graph	?nextPlayer@game@@QAEXXZ
 0x08110cc0	940	text			
 0x08111078	197	text			
@@ -2319,12 +2319,12 @@ address	size	band	win_rva	evidence	win_name
 0x08119820	3204	text	0xcdf20	call-graph	??0game@@QAE@XZ
 0x0811a4a4	3527	text			
 0x0811b280	66	text			
-0x0811b2c4	48	text	0xce940	call-graph-alignment	?isHuman@game@@QBE_NH@Z
+0x0811b2c4	48	text			
 0x0811b2f4	50	text	0xce970	call-graph	?isLocalHuman@game@@QBE_NH@Z
 0x0811b328	44	text	0xce9b0	call-graph	?getLocalPlayer@game@@QAEPAVplayerData@@XZ
 0x0811b354	92	text	0xcea20	call-graph-alignment	?getLocalPlayerGamePos@game@@QBEHXZ
 0x0811b3b4	271	text			
-0x0811b4c4	48	text	0xceb60	call-graph	?getPlayerName@game@@QAEPADH@Z
+0x0811b4c4	48	text			
 0x0811b4f4	135	text	0xcec20	call-graph	?getGamePosFromDPID@game@@QBEHK@Z
 0x0811b58c	218	text	0xcec50	call-graph	?isLastHuman@game@@QBE_NH@Z
 0x0811b668	31	text	0xcec90	call-graph	?isMultiplayer@game@@QBE_NXZ
@@ -2365,7 +2365,7 @@ address	size	band	win_rva	evidence	win_name
 0x0811d00c	325	text			
 0x0811d154	2016	text			
 0x0811d93c	2254	text			
-0x0811e210	593	text	0xd85f0	call-graph	??0hero@@QAE@XZ
+0x0811e210	593	text			
 0x0811e464	741	text			
 0x0811e74c	47	text			
 0x0811e77c	141	text			
@@ -2389,7 +2389,7 @@ address	size	band	win_rva	evidence	win_name
 0x0811f974	47	text	0xda420	call-graph	?getExperienceIncrement@hero@@SIHH@Z
 0x0811f9a4	244	text			
 0x0811fa9c	529	text	0xda510	call-graph	?applyBattleWinTemps@hero@@QAEXXZ
-0x0811fcb0	22	text	0xda710	call-graph	?applyBattleLossTemps@hero@@QAEXXZ
+0x0811fcb0	22	text			
 0x0811fcc8	1316	text	0xdad00	call-graph-alignment	?getSkillAward@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z
 0x081201f8	1716	text	0xda720	string	?checkLevel@hero@@QAEXXZ
 0x081208b8	158	text			
@@ -2450,7 +2450,7 @@ address	size	band	win_rva	evidence	win_name
 0x0812a370	81	text			
 0x0812a3c4	95	text			
 0x0812a424	81	text			
-0x0812a478	81	text			
+0x0812a478	81	text	0xe48b0	call-graph-alignment	?getIntelligenceFactor@hero@@QBEMXZ
 0x0812a4cc	81	text			
 0x0812a520	1133	text	0xe4990	call-graph	?getMobility@hero@@QBEH_N@Z
 0x0812a990	39	text	0xe4d90	call-graph-alignment	?getMobility@hero@@QBEHXZ
@@ -2491,7 +2491,7 @@ address	size	band	win_rva	evidence	win_name
 0x0812c044	1037	text			
 0x0812c454	200	text			
 0x0812c520	200	text			
-0x0812c5f0	808	text	0x217c3a	call-graph-alignment	
+0x0812c5f0	808	text			
 0x0812c918	132	text			
 0x0812c99c	25	text			
 0x0812c9c0	51	text			
@@ -2545,7 +2545,7 @@ address	size	band	win_rva	evidence	win_name
 0x08130f88	46	text			
 0x08130fb8	70	text			
 0x08131000	64	text			
-0x08131040	51	text	0xeb030	call-graph	?setSprite@iconWidget@@QAEXPBD@Z
+0x08131040	51	text			
 0x08131074	366	text			
 0x081311e4	200	text			
 0x081312b0	132	text			
@@ -2627,7 +2627,7 @@ address	size	band	win_rva	evidence	win_name
 0x08138ccc	7	text			
 0x08138cd4	61	text			
 0x08138d18	662	text			
-0x08138fb0	121	text	0xf4ba0	call-graph	?getNextHumanPlayer@@YIHH@Z
+0x08138fb0	121	text			
 0x08139030	278	text	0xf4c00	call-graph	?handleRemoteDeadPlayerExit@@YIXHE@Z
 0x0813914c	32	text			
 0x0813916c	7055	text	0xf4eb0	string	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z
@@ -2666,7 +2666,7 @@ address	size	band	win_rva	evidence	win_name
 0x0813e710	142	text	0xfa590	fingerprint	?clear@LODFile@@QAEXXZ
 0x0813e7a0	60	text			
 0x0813e7dc	105	text			
-0x0813e848	68	text			
+0x0813e848	68	text	0xfa610	call-graph-intersection	?getItemIndex@LODFile@@QAEPAULODEntry@@PBD@Z
 0x0813e890	51	text			
 0x0813e8cc	537	text	0xfa660	fingerprint	?Find@LODFile@@AAEXIIPBD@Z
 0x0813eaf4	69	text			
@@ -2676,7 +2676,7 @@ address	size	band	win_rva	evidence	win_name
 0x0813ed1c	56	text			
 0x0813ed54	350	text			
 0x0813eebc	26	text			
-0x0813eed8	124	text	0xfaa70	call-graph-alignment	?pointAt@LODFile@@QAE_NPBD@Z
+0x0813eed8	124	text	0xfaa70	call-graph-intersection	?pointAt@LODFile@@QAE_NPBD@Z
 0x0813ef58	275	text	0xfab20	call-graph	?read@LODFile@@QAEHPAXH@Z
 0x0813f070	132	text			
 0x0813f0f4	25	text			
@@ -2884,7 +2884,7 @@ address	size	band	win_rva	evidence	win_name
 0x0815b280	25	text			
 0x0815b2a0	39	text			
 0x0815b2c8	58	text			
-0x0815b304	84	text	0x1226d0	call-graph-alignment	??0TPalette16@@QAE@ABVTPalette24@@HHHHHH@Z
+0x0815b304	84	text	0x1226d0	call-graph	??0TPalette16@@QAE@ABVTPalette24@@HHHHHH@Z
 0x0815b358	81	text			
 0x0815b3ac	81	text			
 0x0815b400	86	text			
@@ -2892,9 +2892,9 @@ address	size	band	win_rva	evidence	win_name
 0x0815b5f4	397	text			
 0x0815b784	397	text			
 0x0815b914	414	text			
-0x0815bab4	69	text	0x1228e0	call-graph-alignment	??0TPalette16@@QAE@PBV0@@Z
+0x0815bab4	69	text	0x1228e0	call-graph	??0TPalette16@@QAE@PBV0@@Z
 0x0815bafc	35	text	0x122910	call-graph	??4TPalette16@@QAEPAV0@PBV0@@Z
-0x0815bb20	33	text	0x122940	call-graph-intersection	??1TPalette16@@UAE@XZ
+0x0815bb20	33	text			
 0x0815bb44	329	text			
 0x0815bc90	336	text			
 0x0815bde0	336	text			
@@ -2905,13 +2905,13 @@ address	size	band	win_rva	evidence	win_name
 0x0815c758	377	text			
 0x0815c8d8	633	text	0x122b50	fingerprint	?AdjustHSV@TPalette16@@QAEXMMMM@Z
 0x0815cb58	373	text	0x122d50	fingerprint	?Gray@TPalette16@@QAEXXZ
-0x0815ccd0	39	text	0x122e30	call-graph	??0TPalette24@@QAE@XZ
+0x0815ccd0	39	text			
 0x0815ccf8	58	text	0x122e80	call-graph-alignment	??0TPalette24@@QAE@PBE@Z
 0x0815cd34	281	text	0x122eb0	call-graph-alignment	??0TPalette24@@QAE@PBUTRGBA@@@Z
 0x0815ce50	285	text			
 0x0815cf70	69	text	0x1226a0	call-graph	??0TPalette16@@QAE@PBG@Z
 0x0815cfb8	35	text	0x122f30	call-graph	??4TPalette24@@QAEAAV0@ABV0@@Z
-0x0815cfdc	33	text	0x122f60	call-graph-intersection	??1TPalette24@@UAE@XZ
+0x0815cfdc	33	text			
 0x0815d000	1669	text			
 0x0815d688	516	text			
 0x0815d88c	202	text			
@@ -3104,7 +3104,7 @@ address	size	band	win_rva	evidence	win_name
 0x0816c344	81	text	0x130920	vtable-signature	??1TQuickTownWindow@@UAE@XZ
 0x0816c398	548	text	0x130990	call-graph	?initializeArmyDisplay@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z
 0x0816c5cc	173	text			
-0x0816c684	28	text	0x130d30	call-graph	?quickWindowWait@TQuickTownWindow@@QAEXXZ
+0x0816c684	28	text			
 0x0816c6a0	132	text			
 0x0816c724	25	text			
 0x0816c740	156	text			
@@ -3165,7 +3165,7 @@ address	size	band	win_rva	evidence	win_name
 0x08170bf0	215	text	0x153840	call-graph	?addChat@CChatManager@@QAAXPBDZZ
 0x08170cc8	224	text			
 0x08170da8	116	text	0x153aa0	call-graph	?systemMsg@CChatManager@@QAAXPBDZZ
-0x08170e1c	116	text	0x153b60	call-graph	?playerDropMsg@CChatManager@@QAAXPBDZZ
+0x08170e1c	116	text			
 0x08170e90	116	text			
 0x08170f04	105	text	0x19a030	call-graph-alignment	?getSampleInfo@soundManager@@QAEHPAVds_memsample@@F@Z
 0x08170f70	107	text	0x153d00	call-graph	?updateWidget@CChatManager@@QAEXPAVtextWidget@@_NH@Z
@@ -3208,7 +3208,7 @@ address	size	band	win_rva	evidence	win_name
 0x08172518	161	text	0x154e90	vtable-slot:CAnimatedDlg	?drawWindow@CAnimatedDlg@@UAEX_NHH@Z
 0x081725bc	567	text			
 0x081727f8	291	text			
-0x08172924	22	text	0x155910	call-graph-alignment	?destroyMsg@@YIXPAVCNetMsg@@@Z
+0x08172924	22	text			
 0x0817293c	9	text			
 0x08172948	9	text			
 0x08172954	137	text			
@@ -3222,29 +3222,29 @@ address	size	band	win_rva	evidence	win_name
 0x08173178	123	text			
 0x081731f4	83	text			
 0x08173248	192	text	0x1569f0	call-graph	?handleNormalWinMsg@@YIXPAVCNetMsg@@@Z
-0x0817330c	61	text	0x156ab0	call-graph	??0CLevelPickWaitDlg@@QAE@XZ
-0x0817334c	158	text	0x156ba0	call-graph	?waitForLevels@CLevelPickWaitDlg@@QAEXH@Z
+0x0817330c	61	text			
+0x0817334c	158	text			
 0x081733ec	280	text			
 0x08173510	97	text			
 0x08173574	90	text			
-0x081735d0	61	text	0x156f20	call-graph	??0CWaitForRemoteBattleDlg@@QAE@XZ
-0x08173610	109	text	0x157090	call-graph	?wait@CWaitForRemoteBattleDlg@@QAEXH@Z
+0x081735d0	61	text			
+0x08173610	109	text			
 0x08173680	316	text			
 0x081737c0	82	text			
 0x08173818	61	text			
 0x08173858	71	text			
 0x081738a0	124	text			
 0x0817391c	13	text			
-0x0817392c	42	text	0x157410	call-graph-alignment	??0CGameTransferSmack@@QAE@XZ
+0x0817392c	42	text			
 0x08173958	78	text	0x157430	call-graph	??1CGameTransferSmack@@QAE@XZ
-0x081739a8	35	text	0x157460	call-graph-alignment	?setup@CGameTransferSmack@@QAEXHHEE@Z
+0x081739a8	35	text			
 0x081739cc	53	text	0x157480	call-graph-alignment	?start@CGameTransferSmack@@QAEXXZ
 0x08173a04	323	text	0x1574b0	string	?setPercentage@CGameTransferSmack@@QAEXM@Z
 0x08173b4c	15	text			
 0x08173b5c	30	text	0x1575e0	call-graph-alignment	?stop@CGameTransferSmack@@QAEXXZ
-0x08173b7c	80	text	0x157600	call-graph-alignment	?saveScreen@CGameTransferSmack@@QAEXXZ
+0x08173b7c	80	text			
 0x08173bcc	36	text			
-0x08173bf0	58	text	0x157720	call-graph-alignment	??0CGameTransferDlg@@QAE@E@Z
+0x08173bf0	58	text			
 0x08173c2c	129	text	0x157790	vtable-slot:CGameTransferDlg	?calcDimensions@CGameTransferDlg@@UAEXPBDPAVfont@@AAH222@Z
 0x08173cb0	27	text	0x1577f0	call-graph	??0CNetMsgHandler@@QAE@XZ
 0x08173ccc	115	text	0x157860	vtable-signature	?checkHandleNet@CNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z
@@ -3303,19 +3303,19 @@ address	size	band	win_rva	evidence	win_name
 0x08175d84	450	text	0x15b060	call-graph	?loadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z
 0x08175f48	323	text	0x15b470	fingerprint	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z
 0x08176098	472	text	0x15b8d0	string	?loadFont@ResourceManager@@YIPAVfont@@PBD@Z
-0x0817627c	207	text	0x15bdd0	call-graph	?GetText@ResourceManager@@YIPAVTTextResource@@PBD@Z
-0x0817634c	207	text	0x15c0a0	call-graph	?GetSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z
+0x0817627c	207	text			
+0x0817634c	207	text			
 0x0817641c	569	text			
 0x0817665c	257	text	0x15c3c0	string	?loadSample@ResourceManager@@YIPAVsample@@PBD@Z
 0x08176764	2198	text	0x15c7b0	string	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z
 0x08177000	104	text	0x15cf00	string	?GetBackdrop@ResourceManager@@YIXPBDPAVBitmap16Bit@@@Z
 0x0817706c	94	text			
 0x081770cc	27	text			
-0x081770e8	31	text	0x15d0d0	call-graph-alignment	?ReadFromBitmapResource@ResourceManager@@YIHPAVLODFile@@PAXH@Z
+0x081770e8	31	text			
 0x08177108	27	text			
 0x08177124	31	text			
 0x08177144	30	text	0x15d070	fingerprint	?GetBitmapResourceSize@ResourceManager@@YIHPBD@Z
-0x08177164	1083	text	0x216ed2	call-graph-alignment	
+0x08177164	1083	text			
 0x081775c4	1513	text			
 0x08177bd4	219	text			
 0x08177cb0	82	text	0x15e330	call-graph	?find@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@ABVTCacheMapKey@ResourceManager@@@Z
@@ -3444,14 +3444,14 @@ address	size	band	win_rva	evidence	win_name
 0x0818623c	42	text			
 0x0818626c	132	text			
 0x081862f0	25	text			
-0x08186310	75	text	0x175220	call-graph	??0CHotspotWidget@@QAE@HHHHH@Z
+0x08186310	75	text			
 0x0818635c	267	text			
-0x0818646c	46	text	0x175410	call-graph	??0CBonusDlg@@QAE@_N@Z
+0x0818646c	46	text			
 0x0818649c	671	text	0x1754f0	call-graph	?createWin@CBonusDlg@@QAE_NPBDPAVCSprite@@H00@Z
 0x08186744	625	text	0x1757e0	call-graph-alignment	?createWin@CBonusDlg@@QAE_NPBDPAVBitmap816@@00@Z
-0x081869bc	46	text	0xd8f70	call-graph-alignment	?getClassName@hero@@QAEPBDXZ
+0x081869bc	46	text			
 0x081869ec	1045	text	0x175a90	call-graph-alignment	?createWin@CHeroDlg@@QAE_NPAVBitmap816@@PBDPAVCSprite@@H11@Z
-0x08186e14	46	text	0x175e10	call-graph-alignment	??0CTownDlg@@QAE@_N@Z
+0x08186e14	46	text			
 0x08186e44	1400	text	0x175e60	call-graph-alignment	?createWin@CTownDlg@@QAE_NPAVCSprite@@HW4TTownType@@@Z
 0x081873cc	58	text	0x1764d0	call-graph	??0CTeamAlignmentDlg@@QAE@_N@Z
 0x08187408	877	text	0x176540	call-graph	?createWin@CTeamAlignmentDlg@@QAE_NXZ
@@ -3580,8 +3580,8 @@ address	size	band	win_rva	evidence	win_name
 0x08197e80	350	text			
 0x08197ff0	498	text			
 0x081981e4	1391	text			
-0x0819875c	31	text	0x17d170	call-graph	?createRandomMapOptionWidgets@TSingleSelectionWindow@@QAEXXZ
-0x0819877c	593	text			
+0x0819875c	31	text			
+0x0819877c	593	text	0x18c960	call-graph	?updateNameLists@TSingleSelectionWindow@@QAEXXZ
 0x081989d0	484	text	0x18ca80	call-graph-intersection	?turnChatOn@TSingleSelectionWindow@@QAEX_N@Z
 0x08198bb4	463	text			
 0x08198d84	38	text			
@@ -3785,7 +3785,7 @@ address	size	band	win_rva	evidence	win_name
 0x081ae110	132	text			
 0x081ae194	25	text			
 0x081ae1b0	104	text	0x1a9d20	call-graph	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z
-0x081ae218	28	text	0x20ab30	call-graph-alignment	
+0x081ae218	28	text			
 0x081ae234	66	text			
 0x081ae278	368	text	0x1a9db0	call-graph	?drawIcons@strip@@QAEXEW4TCreatureType@@@Z
 0x081ae3e8	147	text			
@@ -3939,7 +3939,7 @@ address	size	band	win_rva	evidence	win_name
 0x081bf0b0	77	text	0x1bd700	call-graph-alignment	?getPortraitFrame@town@@QBEH_N@Z
 0x081bf100	429	text	0x1bd750	call-graph	?setSummoningGenerator@town@@QAEXXZ
 0x081bf2b8	1409	text	0x1bd8e0	call-graph-alignment	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z
-0x081bf83c	252	text	0x1bde80	call-graph	??0town@@QAE@XZ
+0x081bf83c	252	text			
 0x081bf938	214	text			
 0x081bfa10	54	text			
 0x081bfa48	392	text	0x1be030	call-graph-intersection	?giveSpells@town@@QBEXPAVhero@@@Z
@@ -4014,7 +4014,7 @@ address	size	band	win_rva	evidence	win_name
 0x081c6188	7921	text	0x1c34d0	string	??0TTownScreenWindow@@QAE@XZ
 0x081c8130	111	text	0x1c58e0	vtable-signature	??1TTownScreenWindow@@UAE@XZ
 0x081c81a0	375	text			
-0x081c831c	238	text	0x1c5aa0	call-graph	?updateTownLocators@TTownScreenWindow@@QAEXXZ
+0x081c831c	238	text			
 0x081c8410	84	text			
 0x081c8464	88	text			
 0x081c84bc	4292	text	0x1c5b40	string	?setBonusDisplay@TTownScreenWindow@@QAEXPAVtown@@@Z
@@ -4206,7 +4206,7 @@ address	size	band	win_rva	evidence	win_name
 0x081f1ffc	299	text	0x1f1c80	call-graph-alignment	?checkForTotalResources@VictoryConditionStruct@@QAEEXZ
 0x081f212c	386	text	0x1f1d40	call-graph	?checkForUpgradedTown@VictoryConditionStruct@@QAEEXZ
 0x081f22cc	758	text	0x1f1ef0	call-graph	?checkForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ
-0x081f25d0	80	text	0x1f2100	call-graph-alignment	?checkForHeroDefeatWin@VictoryConditionStruct@@QAE_NHPBVhero@@@Z
+0x081f25d0	80	text			
 0x081f2624	465	text			
 0x081f27f8	59	text			
 0x081f2838	337	text			
@@ -4214,7 +4214,7 @@ address	size	band	win_rva	evidence	win_name
 0x081f2abc	549	text			
 0x081f2ce4	370	text			
 0x081f2e60	516	text			
-0x081f3064	92	text	0x1f2e10	call-graph	?heroKilled@LossConditionStruct@@QAEEPBVhero@@@Z
+0x081f3064	92	text			
 0x081f30c8	325	text			
 0x081f3214	104	text	0x1f2f20	call-graph-alignment	?checkForTimeLimitExpired@LossConditionStruct@@QAE_NXZ
 0x081f327c	132	text			
@@ -4362,7 +4362,7 @@ address	size	band	win_rva	evidence	win_name
 0x08200a6c	29	text	0x202360	call-graph	?convertToHover@heroWindowManager@@QAEHAAVmessage@@@Z
 0x08200a8c	88	text			
 0x08200ae4	207	text	0x2023b0	call-graph-intersection	?addWindow@heroWindowManager@@QAEXPAVheroWindow@@H_N@Z
-0x08200bbc	154	text	0x217547	call-graph-alignment	
+0x08200bbc	154	text			
 0x08200c60	501	text	0x202520	call-graph	?doDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z
 0x08200e58	529	text			
 0x0820106c	341	text	0x202a40	call-graph-alignment	?doQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z
@@ -4600,7 +4600,7 @@ address	size	band	win_rva	evidence	win_name
 0x0820ea08	248	runtime			
 0x0820eb0c	203	runtime			
 0x0820ebd8	674	runtime			
-0x0820ee7c	172	runtime	0x53a30	call-graph	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
+0x0820ee7c	172	runtime			
 0x0820ef28	143	runtime			
 0x0820efb8	172	runtime			
 0x0820f064	143	runtime			
@@ -4608,17 +4608,17 @@ address	size	band	win_rva	evidence	win_name
 0x0820f1a8	144	runtime			
 0x0820f238	423	runtime			
 0x0820f3e8	427	runtime			
-0x0820f59c	395	runtime	0x54450	call-graph-alignment	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z
+0x0820f59c	395	runtime			
 0x0820f728	274	runtime			
 0x0820f840	164	runtime			
 0x0820f8ec	55	runtime			
 0x0820f924	62	runtime			
 0x0820f964	62	runtime			
-0x0820f9a4	48	runtime	0x543d0	call-graph-alignment	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ
+0x0820f9a4	48	runtime			
 0x0820f9d4	22	runtime			
 0x0820f9ec	212	runtime			
 0x0820fac8	70	runtime			
-0x0820fb10	34	runtime	0x53dd0	call-graph	?put@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV12@D@Z
+0x0820fb10	34	runtime			
 0x0820fb34	44	runtime			
 0x0820fb60	32	runtime			
 0x0820fb80	32	runtime			
@@ -4896,7 +4896,7 @@ address	size	band	win_rva	evidence	win_name
 0x08213628	10	linkonce			
 0x08213640	205	linkonce			
 0x08213720	230	linkonce			
-0x08213810	93	linkonce	0x40f0	call-graph-alignment	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z
+0x08213810	93	linkonce			
 0x08213870	441	linkonce			
 0x08213a30	125	linkonce			
 0x08213ab0	99	linkonce			
@@ -4907,16 +4907,16 @@ address	size	band	win_rva	evidence	win_name
 0x08213f70	1174	linkonce			
 0x08214440	218	linkonce			
 0x08214520	358	linkonce			
-0x08214690	241	linkonce	0x4860	call-graph-alignment	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z
-0x08214790	718	linkonce	0x4a90	call-graph-alignment	?_Grow@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAE_NI_N@Z
+0x08214690	241	linkonce			
+0x08214790	718	linkonce			
 0x08214a6c	136	linkonce			
 0x08214af4	44	linkonce			
 0x08214b20	170	linkonce			
 0x08214bcc	76	linkonce			
 0x08214c18	76	linkonce			
 0x08214c64	76	linkonce			
-0x08214cb0	473	linkonce	0x4200	call-graph-alignment	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z
-0x08214ea0	473	linkonce	0x14d120	call-graph-alignment	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z
+0x08214cb0	473	linkonce			
+0x08214ea0	473	linkonce			
 0x08215090	99	linkonce			
 0x082150f4	54	linkonce			
 0x08215130	76	linkonce			
@@ -4930,10 +4930,10 @@ address	size	band	win_rva	evidence	win_name
 0x082153c0	570	linkonce	0x22e0	string	?sendChat@CAdventurMapChatEdit@@UAEXPBDH@Z
 0x08215604	54	linkonce			
 0x08215640	195	linkonce			
-0x08215710	666	linkonce	0x14d330	call-graph	?insert@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEXPAUtype_artifact@@IABU3@@Z
+0x08215710	666	linkonce			
 0x082159c0	473	linkonce			
-0x08215bb0	703	linkonce	0x20ab3b	call-graph	
-0x08215e80	288	linkonce	0x1b250	call-graph-alignment	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z
+0x08215bb0	703	linkonce			
+0x08215e80	288	linkonce			
 0x08215fac	26	linkonce	0x1b120	vtable-signature	??1CAdvPopup@@UAE@XZ
 0x08215fc8	54	linkonce			
 0x08216000	77	linkonce			
@@ -4971,7 +4971,7 @@ address	size	band	win_rva	evidence	win_name
 0x08217c70	312	linkonce			
 0x08217db0	78	linkonce			
 0x08217e10	245	linkonce			
-0x08217f10	194	linkonce	0x23ee0	call-graph-alignment	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z
+0x08217f10	194	linkonce			
 0x08217fe0	348	linkonce			
 0x08218140	225	linkonce			
 0x08218230	117	linkonce			
@@ -4980,11 +4980,11 @@ address	size	band	win_rva	evidence	win_name
 0x08218410	235	linkonce			
 0x08218500	206	linkonce			
 0x082185d0	113	linkonce			
-0x08218650	283	linkonce	0x35240	call-graph	?_Median@std@@YI?AUtype_creature_value@@U2@00U?$greater@Utype_creature_value@@@1@@Z
+0x08218650	283	linkonce			
 0x08218770	58	linkonce			
 0x082187b0	344	linkonce			
 0x08218910	74	linkonce			
-0x08218960	125	linkonce	0x35290	call-graph	?_Unguarded_partition@std@@YIPAUtype_creature_value@@PAU2@0U2@U?$greater@Utype_creature_value@@@1@@Z
+0x08218960	125	linkonce			
 0x082189e0	54	linkonce			
 0x08218a20	800	linkonce			
 0x08218d50	117	linkonce			
@@ -5112,7 +5112,7 @@ address	size	band	win_rva	evidence	win_name
 0x0821e0c0	54	linkonce			
 0x0821e100	99	linkonce			
 0x0821e170	52	linkonce			
-0x0821e1b0	783	linkonce	0x6aeb0	call-graph	?insert@?$vector@UTObstacle@combatManager@@V?$allocator@UTObstacle@combatManager@@@std@@@std@@QAEXPAUTObstacle@combatManager@@IABU34@@Z
+0x0821e1b0	783	linkonce			
 0x0821e4d0	195	linkonce			
 0x0821e5a0	666	linkonce			
 0x0821e844	136	linkonce			
@@ -5122,12 +5122,12 @@ address	size	band	win_rva	evidence	win_name
 0x0821e9ac	87	linkonce			
 0x0821ea04	54	linkonce			
 0x0821ea3c	54	linkonce			
-0x0821ea80	58	linkonce	0xe48b0	call-graph	?getIntelligenceFactor@hero@@QBEMXZ
+0x0821ea80	58	linkonce			
 0x0821eacc	54	linkonce			
 0x0821eb04	54	linkonce			
 0x0821eb40	172	linkonce			
-0x0821ec00	473	linkonce	0x73600	call-graph-alignment	?insert@?$vector@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXPAPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABQAV32@@Z
-0x0821edf0	436	linkonce	0x73580	call-graph	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ
+0x0821ec00	473	linkonce			
+0x0821edf0	436	linkonce			
 0x0821efac	54	linkonce			
 0x0821efe4	26	linkonce			
 0x0821f000	87	linkonce			
@@ -5135,7 +5135,7 @@ address	size	band	win_rva	evidence	win_name
 0x0821f120	396	linkonce			
 0x0821f2b4	94	linkonce			
 0x0821f314	77	linkonce			
-0x0821f364	122	linkonce	0x4df0	call-graph-intersection	?onSetFocus@widget@@UAEXXZ
+0x0821f364	122	linkonce			
 0x0821f3e0	145	linkonce			
 0x0821f480	603	linkonce			
 0x0821f6e4	54	linkonce			
@@ -5257,7 +5257,7 @@ address	size	band	win_rva	evidence	win_name
 0x08227920	792	linkonce			
 0x08227c50	794	linkonce			
 0x08227f80	145	linkonce			
-0x08228020	884	linkonce	0xd2290	call-graph-alignment	?insert@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAEXPAUtype_creature_bank@@IABU3@@Z
+0x08228020	884	linkonce			
 0x08228398	12	linkonce			
 0x082283b0	262	linkonce			
 0x082284c0	156	linkonce			
@@ -5268,8 +5268,8 @@ address	size	band	win_rva	evidence	win_name
 0x0822900c	20	linkonce			
 0x08229020	16	linkonce			
 0x08229030	183	linkonce			
-0x082290f0	192	linkonce	0x6a650	call-graph-alignment	??1?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAE@XZ
-0x082291b0	377	linkonce	0x7ad90	call-graph-alignment	?initializeCreatureBank@@YIXAAUtype_creature_bank@@W4type_creature_bank_type@@@Z
+0x082290f0	192	linkonce			
+0x082291b0	377	linkonce			
 0x08229330	195	linkonce			
 0x08229400	184	linkonce			
 0x082294b8	54	linkonce			
@@ -5297,9 +5297,9 @@ address	size	band	win_rva	evidence	win_name
 0x08229e40	550	linkonce			
 0x0822a068	26	linkonce			
 0x0822a084	54	linkonce			
-0x0822a0c0	339	linkonce	0x217cbc	call-graph-alignment	
+0x0822a0c0	339	linkonce			
 0x0822a220	269	linkonce			
-0x0822a340	374	linkonce	0xf6810	call-graph-alignment	??0type_dialog_icon@@QAE@ABU0@@Z
+0x0822a340	374	linkonce			
 0x0822a4c0	261	linkonce			
 0x0822a5cc	54	linkonce			
 0x0822a610	229	linkonce			
@@ -5401,7 +5401,7 @@ address	size	band	win_rva	evidence	win_name
 0x08233980	493	linkonce			
 0x08233b74	13	linkonce	0x112530	vtable-slot:CHotSeatDlg	?getRolloverWidget@CHotSeatDlg@@UAEPAVtextWidget@@XZ
 0x08233b90	122	linkonce			
-0x08233c10	328	linkonce	0x112470	call-graph	?onOK@CHotSeatDlg@@QAEEXZ
+0x08233c10	328	linkonce			
 0x08233d58	16	linkonce			
 0x08233d68	54	linkonce			
 0x08233da0	54	linkonce			
