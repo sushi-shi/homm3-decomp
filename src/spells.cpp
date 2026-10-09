@@ -4440,13 +4440,15 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         targetArmy->turn(0);
 
     if (!isQuickCombat()) {
-        long raised = targetArmy->m_numTroops - oldCount;
-        if (raised != 1)
-            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    targetArmy->getName(raised));
+        // DC's only named local is hex: each use recomputes the raised count.
+        if (targetArmy->m_numTroops - oldCount != 1)
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT),
+                    targetArmy->m_numTroops - oldCount,
+                    targetArmy->getName(targetArmy->m_numTroops - oldCount));
         else
-            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    targetArmy->getName(raised));
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT),
+                    targetArmy->m_numTroops - oldCount,
+                    targetArmy->getName(targetArmy->m_numTroops - oldCount));
         m_combatWindow->combatMessage(g_text, 1, 0);
 
         int effect = akSpellTraits[SPELL_RESURRECTION].m_effect;
