@@ -4209,12 +4209,14 @@ void NewfullMap::rebuildObjectTypeIndex()
 // count (sp+0x30) owns read lengths and object-reader status; int v (sp+0x2c)
 // scans invalid placements. Keep the caller-owned count buffer and status
 // separate, including across the distinct empty/nonempty vector cleanups.
-// Mac's retained scalar decoding requires readLittleEndianValue at both reads.
-// VC6 currently retains the string constructor instead of expanding it to
-// _Tidy, and expands the first CObject-vector size call that retail retains.
-// Keeping the decode helper scores 93.7926%; direct native reads with the
-// same local ownership score 99.4554%. Explicit resize fill temporaries and
-// a native-forwarding helper body do not change this inline residual.
+// Mac 0x1272bc..0x1272f0 and 0x127540..0x127588 read each count with the
+// stream virtual, test it, then lwbrx-decode the slot and store it back
+// before copying it to numObjects: the caller decodes in place after the
+// guard (98.04%; the inferred readLittleEndianValue wrapper scored 93.79%).
+// VC6 still retains the string constructor instead of expanding it to _Tidy:
+// cb 942 needs 940 with no Dispose site in the release loop (100% with that
+// loop calling dispose() directly and braced guards, which DC's single
+// scopes at 3854/3893 do not show).
 // Naming the canonical GetSprite result inside the sprite loop also changes
 // the inline context; its direct vector assignment is the supported form.
 VA(0x00504470, 0x5C9)
@@ -4228,13 +4230,11 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     int x;
 
     g_invalidPlacementList.clear();
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
+    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
 
-    // Mac 0x1272bc..0x1272f0 and 0x127540..0x127588 read each count into
-    // the same caller-owned slot and decode it with lwbrx after the guard.
-    // The canonical reader keeps that count/decoding path on both platforms.
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
@@ -4274,9 +4274,10 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     incProgressBar(1);
 
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
+    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
 
     numObjects = intBuffer;
     m_objects.resize(numObjects);
