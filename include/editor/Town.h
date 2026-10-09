@@ -100,6 +100,9 @@ public:
     // A building's names in a town type, and the building it hangs under
     // in the town pages' trees (Loki's TBuildingTraits).
     struct TBuildingTraits {
+        VA(0x004c8b96, 0x13)
+        TBuildingTraits(TBuilding building) : m_pName(NULL), m_pDescription(NULL), m_building(building) {}
+
         bool isDisallowed() const { return m_pName == NULL; }
 
         const char* m_pName;
@@ -114,9 +117,18 @@ public:
         virtual const char* getUpgradeCreatureName() const = 0;
     };
 
+    // VC6 cannot parse a constructor parameter spelled as a reference to an
+    // array of const pointers, so TTypeTraits takes the generator table by
+    // name.
+    typedef const TGeneratorTraits* TGeneratorTraitsTable[s_kNumGeneratorTypes];
+
     // A town type's name, buildings and generators (12 bytes; the player
     // page reads the name, h3maped 0x47347f).
     struct TTypeTraits {
+        TTypeTraits(const TBuildingTraits (&akBuildingTraits)[s_kNumBuildings],
+                    const TGeneratorTraitsTable& apGeneratorTraits)
+            : m_akBuildingTraits(akBuildingTraits), m_apGeneratorTraits(apGeneratorTraits) {}
+
         const char* m_pName;
         const TBuildingTraits (&m_akBuildingTraits)[s_kNumBuildings];
         const TGeneratorTraits* const (&m_apGeneratorTraits)[s_kNumGeneratorTypes];

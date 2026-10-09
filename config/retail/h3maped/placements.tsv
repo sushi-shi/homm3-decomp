@@ -265,8 +265,8 @@ rva	size	kind	name	unit	evidence
 0x0002c8bf	0x1a	func	?find@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@std@@QBE?AVconst_iterator@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@2@ABI@Z	GameMap	masked body (26 bytes, 1 relocations) unique at a census start
 0x0002c8f6	0x1d	func	??1?$auto_ptr@VTRandomGenerator@@@std@@QAE@XZ	GameMap	referenced by ?_createObject@_TImpl@TGameMap@@QBE?AV?$auto_ptr@VTGameObject@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x8fc
 0x0002c913	0x1a	func	??1?$auto_ptr@VTAbandonedMine@@@std@@QAE@XZ	GameMap	masked body (26 bytes, 0 relocations) unique at a census start; ICF-folded with 15 identical bodies
-0x0002c92d	0x20	func	??1?$vector@EV?$allocator@E@std@@@std@@QAE@XZ	rmg	masked body (32 bytes, 1 relocations) unique at a census start; ICF-folded with 21 identical bodies
-0x0002c94d	0x8d	func	?reserve@?$vector@HV?$allocator@H@std@@@std@@QAEXI@Z	GameMap	masked body (141 bytes, 2 relocations) unique at a census start; ICF-folded with 2 identical bodies
+0x0002c92d	0x20	func	??1?$vector@EV?$allocator@E@std@@@std@@QAE@XZ	rmg	masked body (32 bytes, 1 relocations) unique at a census start; ICF-folded with 22 identical bodies
+0x0002c94d	0x8d	func	?reserve@?$vector@HV?$allocator@H@std@@@std@@QAEXI@Z	GameMap	masked body (141 bytes, 2 relocations) unique at a census start; ICF-folded with 3 identical bodies
 0x0002c9da	0x5f	func	?resize@?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAEXIABV?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@Z	GameMap	referenced by ?resize@_TCellGrid@_TImpl@TLayer@TGameMap@@QAEXII@Z at +0x38
 0x0002ca39	0x6d	func	?resize@?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@QAEXIABV_TObjectLink@_TImpl@TLayer@TGameMap@@@Z	GameMap	referenced by ??0_TImpl@TLayer@TGameMap@@QAE@W4TSize@2@@Z at +0x8d
 0x0002caa6	0x10	func	??A?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@QAEAAV_TObjectLink@_TImpl@TLayer@TGameMap@@I@Z	GameMap	masked body (16 bytes, 0 relocations) unique at a census start
@@ -853,7 +853,7 @@ rva	size	kind	name	unit	evidence
 0x00058d37	0x2f	func	??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABV?$TPoint@I@@@Z	rmg_support	masked body (47 bytes, 1 relocations) unique at a census start
 0x00058d66	0xfb	func	?drawTo@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	rmg_support	masked body (251 bytes, 3 relocations) unique at a census start
 0x00058e61	0xf1	func	?paintPoint@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	rmg_support	referenced by ??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABV?$TPoint@I@@@Z at +0x25
-0x0005b3bc	0xf	func	??1?$TAutoArrayPtr@D@@QAE@XZ	resourcemanager	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x1b
+0x0005b3bc	0xf	func	??1?$TAutoArrayPtr@D@@QAE@XZ	resourcemanager	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1f4
 0x0005b3dd	0x3d	func	??1TError@?$TGDIObjectSelector@VCFont@@@@UAE@XZ	TileHRuler	referenced by __TI6?AVTError@?$TGDIObjectSelector@VCFont@@@@ at +0x4
 0x0005b41a	0x2b	func	??0TError@?$TGDIObjectSelector@VCFont@@@@QAE@ABV01@@Z	TileHRuler	referenced by __CT??_R0?AVTError@?$TGDIObjectSelector@VCFont@@@@@8??0TError@?$TGDIObjectSelector@VCFont@@@@QAE@ABV01@@Z32 at +0x18
 0x0005c5c2	0x3d	func	??1TError@TMemoryDC@@UAE@XZ	MemoryDC	referenced by __TI5?AVTError@TMemoryDC@@ at +0x4
@@ -1328,7 +1328,7 @@ rva	size	kind	name	unit	evidence
 0x000bda8e	0x68	func	?_Dec@const_iterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAEXXZ	rmg_terrain	referenced by ?insert@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@_N@2@ABV?$TPoint@I@@@Z at +0xbb
 0x000bdaf6	0x57	func	?_Ubound@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@IBEPAU_Node@12@ABV?$TPoint@I@@@Z	rmg_terrain	masked body (87 bytes, 3 relocations) unique at a census start
 0x000bdb4d	0x80	func	?_Inc@const_iterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAEXXZ	rmg_terrain	referenced by ?erase@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAEIABV?$TPoint@I@@@Z at +0x31
-0x000be6e6	0x8	func	??_F?$TAutoArrayPtr@D@@QAEXXZ	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x20
+0x000be6e6	0x8	func	??_F?$TAutoArrayPtr@D@@QAEXXZ	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1f9
 0x000bf381	0x5	func	??_9@$BDA@AE	TileHRuler	referenced by ??1?$TDCAttributeSelector@K$1??_9@$BDA@AE@@QAE@XZ at +0x6
 0x000c06af	0x18	func	??0TImportTextFailure@TTimedEvent@@QAE@ABV01@@Z	TimedEvent	referenced by __CT??_R0?AVTImportTextFailure@TTimedEvent@@@8??0TImportTextFailure@TTimedEvent@@QAE@ABV01@@Z12 at +0x18
 0x000c095e	0x20	func	?replace@std@@YAXPAD0ABD1@Z	TimedEvent	masked body (32 bytes, 0 relocations) unique at a census start
@@ -1365,6 +1365,8 @@ rva	size	kind	name	unit	evidence
 0x000c85ce	0x5f	func	?_Eq@?$vector@VTTimedEvent@TTown@@V?$allocator@VTTimedEvent@TTown@@@std@@@std@@QBE_NABV12@@Z	TownPropsTimedEventsPage	masked body (95 bytes, 1 relocations) unique at a census start
 0x000c862d	0x35	func	?equal@std@@YA_NPBVTTimedEvent@TTown@@00@Z	TownPropsTimedEventsPage	masked body (53 bytes, 1 relocations) unique at a census start
 0x000c8662	0x4c	func	??8TTimedEvent@TTown@@QBE_NABV01@@Z	TownPropsTimedEventsPage	masked body (76 bytes, 2 relocations) unique at a census start
+0x000c8bc5	0x11	func	?getBaseCreatureName@TAbsoluteGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956@@UBEPBDXZ	TownTypeTraits	masked body (17 bytes, 1 relocations) unique at a census start
+0x000c8bd6	0x11	func	?getUpgradeCreatureName@TAbsoluteGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956@@UBEPBDXZ	TownTypeTraits	masked body (17 bytes, 1 relocations) unique at a census start
 0x000cc5ad	0x2e	func	?length@TRmgVector@@QBEHXZ	rmg_voronoi	referenced by ?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTRmgPoint@@0HHH@Z at +0xd0
 0x000cc5db	0x68	func	??0TRmgHalfEdge@@QAE@UTRmgPoint@@PAUTRmgZone@@01@Z	rmg_voronoi	masked body (104 bytes, 1 relocations) unique at a census start
 0x000cc643	0x2d	func	?splice@TRmgHalfEdge@@QAEXPAU1@@Z	rmg_voronoi	masked body (45 bytes, 0 relocations) unique at a census start
@@ -1553,7 +1555,6 @@ rva	size	kind	name	unit	evidence
 0x000e5470	0x2c2	func	??0TSpreadsheetResource@@QAE@PBDH0@Z	textresource	masked body (706 bytes, 12 relocations) unique at a census start
 0x000e5740	0x7	func	?getSize@TSpreadsheetResource@@UBEIXZ	textresource	vtable ??_7TSpreadsheetResource@@6B@ stored by ??0TSpreadsheetResource@@QAE@PBDH0@Z slot 2
 0x000e5750	0x7c	func	??1TSpreadsheetResource@@UAE@XZ	textresource	masked body (124 bytes, 6 relocations) unique at a census start
-0x000e57d0	0x22	func	??1?$vector@PADV?$allocator@PAD@std@@@std@@QAE@XZ	textresource	masked body (34 bytes, 1 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x000e5800	0x3	func	?_Destroy@?$vector@PADV?$allocator@PAD@std@@@std@@IAEXPAPAD0@Z	textresource	referenced by ??0TSpreadsheetResource@@QAE@PBDH0@Z at +0x1cd
 0x000e5a20	0x32	func	?erase@?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAEPAPAV?$vector@PADV?$allocator@PAD@std@@@2@PAPAV32@0@Z	textresource	masked body (50 bytes, 0 relocations) unique at a census start
 0x000e5a90	0x4b	func	??0resource@@QAE@PBDW4EResourceType@@@Z	resource	masked body (75 bytes, 2 relocations) unique at a census start
@@ -2446,6 +2447,7 @@ rva	size	kind	name	unit	evidence
 0x0018ab84	0xd	data	??_C@_0N@NKBE@hotraits?4txt?$AA@	herodefs	referenced by ?InitializeHeroTraitsTable@@YAEXZ at +0x2
 0x0018ab94	0xd	data	??_C@_0N@CEFF@hctraits?4txt?$AA@	herodefs	referenced by ?InitializeHeroClassTraitsTable@@YA_NXZ at +0x2
 0x0018aba4	0xd	data	??_C@_0N@ILGK@sstraits?4txt?$AA@	herodefs	referenced by ?InitializeSSkillTraitsTable@@YA_NXZ at +0x2
+0x0018b174	0xd	data	??_C@_0N@LAIG@crgenerc?4txt?$AA@	TownTypeTraits	referenced by 0x000c86ae at +0x39
 0x0018b908	0x8	data	??_C@_07JIOO@TMapDoc?$AA@	MapDoc	referenced by ?classTMapDoc@TMapDoc@@2UCRuntimeClass@@B at +0x0
 0x0018b914	0x1a	data	??_C@_0BK@MDDA@TMapDocInvalidFileVersion?$AA@	MapDoc	referenced by ?classTMapDocInvalidFileVersion@TMapDocInvalidFileVersion@@2UCRuntimeClass@@B at +0x0
 0x0018b930	0x13	data	??_C@_0BD@IOEO@TMapDocLoadFailure?$AA@	MapDoc	referenced by ?classTMapDocLoadFailure@TMapDocLoadFailure@@2UCRuntimeClass@@B at +0x0
@@ -2554,6 +2556,10 @@ rva	size	kind	name	unit	evidence
 0x001928e0	0xd	data	??_C@_0N@DFPD@ScutBoat?4wav?$AA@	spelldefs	referenced by ?g_spellTraitsImp@@3PAUTSpellTraits@@A at +0x8c
 0x001928f0	0xd	data	??_C@_0N@JEJC@SummBoat?4wav?$AA@	spelldefs	referenced by ?g_spellTraitsImp@@3PAUTSpellTraits@@A at +0x4
 0x00192900	0xd	data	??_C@_0N@LEPK@sptraits?4txt?$AA@	spelldefs	referenced by ?InitializeSpellTraitsTable@@YAEXZ at +0x2
+0x00192f18	0xd	data	??_C@_0N@EBJO@dwelling?4txt?$AA@	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1e6
+0x00192f28	0xd	data	??_C@_0N@COOK@bldgspec?4txt?$AA@	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1df
+0x00192f38	0xd	data	??_C@_0N@MANH@bldgneut?4txt?$AA@	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1d8
+0x00192f48	0xd	data	??_C@_0N@OEMK@towntype?4txt?$AA@	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x3d
 0x00194738	0x4	data	_?my_version@?1??deflateInit2_@@9@9	deflate	referenced by @deflateInit2_@32 at +0x1d
 0x0019473c	0x10	data	??_C@_0BA@FKCH@need?5dictionary?$AA@	inflate	referenced by @inflate@8 at +0x3bf
 0x0019474c	0x15	data	??_C@_0BF@OBFI@incorrect?5data?5check?$AA@	inflate	referenced by @inflate@8 at +0x297
