@@ -1716,11 +1716,12 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
 // distinct owners and the char/short/int buffers with int x. This recovers
 // retail's 93-block CFG and entry through +0x57, at 93.2220% overall; the
 // merged int list counter gave 95.5787%. STL expansion and stack homes remain.
-// Native Mac 0x12193c/0x121978/0x121a24 decodes checked int scalars;
-// 0x121d84 decodes the checked troop short after its guard. Keep the
-// canonical multibyte readers, and the unchecked artifact short conversion
-// at 0x121c34. This native reader family reproduces 92.7097% on Windows;
-// adding byte readValue calls gives 87.2296%. No list helper is removed.
+// Native Mac 0x12193c/0x121978/0x121a24 decodes checked int scalars and
+// 0x121d84 the checked troop short in place after each guard (stored back
+// to the buffer), as LITTLE_ENDIAN_LONG/SHORT spell it: 95.58% against the
+// inferred readLittleEndianValue wrapper's 95.45%. The unchecked artifact
+// short (0x121c34) keeps the value reader: decoding it in place gives
+// 93.22%. Adding byte readValue calls gives 87.2296%.
 // DC mapcell.cpp:1524 proves BlackBoxData&. Both Complete callers
 // supply their constructed stack records; retain that interface through
 // the versioned creature reader rather than introducing a nullable pointer.
@@ -1751,13 +1752,15 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
             return -1;
     }
 
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
+    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
     thisBox.m_experienceBonus = intBuffer;
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
+    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
     thisBox.m_manaBonus = intBuffer;
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
@@ -1770,9 +1773,10 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     thisBox.m_luckBonus = charBuffer;
 
     for (x = 0; x < NUM_RESOURCES; ++x) {
-        count = readLittleEndianValue(infile, intBuffer);
+        count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
             return -1;
+        intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
         thisBox.m_resQty[x] = intBuffer;
     }
     for (x = 0; x < kNumPrimarySkills; ++x) {
@@ -1858,9 +1862,10 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         thisBox.m_creatures.m_armies[x] =
             readMapCreatureId(infile, mapVersion);
 
-        count = readLittleEndianValue(infile, shortBuffer);
+        count = infile->read(&shortBuffer, sizeof(shortBuffer));
         if (count < sizeof(shortBuffer))
             return -1;
+        shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
         thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
 
