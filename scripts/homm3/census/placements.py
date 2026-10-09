@@ -123,6 +123,31 @@ def _data_of(obj):
     return out
 
 
+def _data_relocations(obj):
+    """{data name: {offset: (referent, kind)}} of the relocations inside each
+    datum `_data_of` reports (exception records name their catchable types
+    and those their copy constructors)."""
+    out = {}
+    for sec in obj.section_table:
+        if sec["characteristics"] & (0x20 | 0x80) or sec["name"].startswith((".debug", ".drectve")):
+            continue
+        number = sec["index"]
+        relocs = obj.typed_relocations(number)
+        if not relocs:
+            continue
+        rows = obj.section_members(number)
+        members = sorted((off, name) for off, name, scl in rows
+                         if scl in (2, 3) and not name.startswith(("$", ".", "??_7", "??_R")))
+        bounds = sorted({off for off, _name, _scl in rows})
+        for off, name in members:
+            later = bounds[bisect.bisect_right(bounds, off):]
+            end = later[0] if later else sec["size"]
+            own = {site - off: ref for site, ref in relocs.items() if off <= site < end}
+            if own:
+                out.setdefault(name, own)
+    return out
+
+
 def _vtable_slots(obj):
     """{`??_7...` vtable symbol: [slot symbol, ...]} from the object's
     compiled tables."""
@@ -240,6 +265,24 @@ def referrer(name: str, rva: int) -> str:
     return f"0x{rva:08x}" if "?%" in name else name
 
 
+def clip_data_extents(rows):
+    """`rows` with each data row ending where the next placed datum starts.
+
+    A datum's compiled extent runs to the next symbol of its section, and
+    the compiler need not lay a section out in the linked order: victor's
+    .bss holds g_victorCreateDibSection, g_victorSetDibColorTable and then
+    g_victorUseDibSection, which the editors' retail images (as the game)
+    place first, so its compiled extent of 8 covered its neighbour."""
+    data = sorted((row for row in rows if row[2] == "data"), key=lambda row: row[0])
+    starts = [row[0] for row in data]
+    clipped = {}
+    for k, row in enumerate(data):
+        later = [start for start in starts[k + 1:] if start > row[0]]
+        if later and row[0] + row[1] > later[0]:
+            clipped[id(row)] = (row[0], later[0] - row[0], *row[2:])
+    return [clipped.get(id(row), row) for row in rows]
+
+
 def derive(log=print, want_suggestions=False):
     from homm3 import manifest
     from homm3.core.image import Image
@@ -288,6 +331,7 @@ def derive(log=print, want_suggestions=False):
     definers = defaultdict(list)          # function name -> units, manifest order
     tables = {}                           # vtable symbol -> slots
     data_definers = {}                    # data name -> (unit, size, bytes)
+    data_relocs = {}                      # data name -> {offset: (referent, kind)}
     for unit in units:
         path = paths.BUILD / "objdiff/base" / f"{unit['unit']}.obj"
         if not path.is_file():
@@ -309,6 +353,8 @@ def derive(log=print, want_suggestions=False):
             tables.setdefault(name, slots)
         for name, (size, text) in _data_of(obj).items():
             data_definers.setdefault(name, (unit["unit"], size, text))
+        for name, relocs in _data_relocations(obj).items():
+            data_relocs.setdefault(name, relocs)
 
     by_size = defaultdict(list)
     for rva, size in functions.items():
@@ -476,9 +522,35 @@ def derive(log=print, want_suggestions=False):
     prove_late_calls = bool(_pins.pins(paths.ROOT).get(_pins.input_key(paths.image_key()), {})
                             .get("placements_prove_late_calls", False))
 
+    followed = set()
+
+    def follow_data():
+        """A placed datum's DIR32 fields name their referents, as a placed
+        body's do: a ThrowInfo its catchable-type array, that array its
+        catchable types, and each of those the exception's copy constructor."""
+        moved = 0
+        while True:
+            fresh = [(name, next(iter(rvas))) for name, rvas in list(data_names.items())
+                     if len(rvas) == 1 and name not in followed and name in data_relocs]
+            if not fresh:
+                return moved
+            for name, rva in fresh:
+                followed.add(name)
+                text = data_definers.get(name, (None, None, None))[2]
+                for site, (ref, kind) in data_relocs[name].items():
+                    value = word(rva + site)
+                    if kind != DIR32 or value is None or text is None or site + 4 > len(text):
+                        continue
+                    target = value - base - struct.unpack_from("<i", text, site)[0]
+                    why = f"referenced by {referrer(name, rva)} at +0x{site:x}"
+                    if ref in definers:
+                        moved += propose(ref, target, why)
+                    elif ref in data_definers:
+                        propose_data(ref, target, why)
+
     def propagate():
         while True:
-            moved = 0
+            moved = follow_data()
             for name, rvas in list(names.items()):
                 if len(rvas) != 1 or name in done or name not in bodies:
                     continue
@@ -533,7 +605,7 @@ def derive(log=print, want_suggestions=False):
                         moved += place_table(ref, target, f"vtable {ref} stored by {referrer(name, rva)}")
                     elif ref in data_definers and kind == DIR32:
                         propose_data(ref, target, f"referenced by {referrer(name, rva)} at {at}")
-            if not moved:
+            if not moved and not follow_data():
                 break
 
     propagate()
@@ -734,6 +806,7 @@ def derive(log=print, want_suggestions=False):
         unit, size, _text = data_definers[name]
         rows.append((rva, size, "data", portable(name, unit), unit,
                      portable(data_evidence[(name, rva)], unit)))
+    rows = clip_data_extents(rows)
     rows.sort()
     # An own unit's pick-any COMDAT is a header inline, a template or a
     # compiler-generated record: no source of the image can claim it (its

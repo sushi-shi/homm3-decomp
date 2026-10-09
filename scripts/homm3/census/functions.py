@@ -11,8 +11,9 @@ strength, each later seed admitted only outside the bodies already decoded:
   3. code addresses decoded code loads as immediates (callbacks, atexit
      thunks, `__ehhandler` stubs), even inside a decoded body when they
      follow a call there (a call that never returns); a catch funclet's
-     `mov eax, offset L; ret` (a `rep movsd` may sit between them) instead
-     names a continuation L of its parent, never a function;
+     `mov eax, offset L; ret` (statements that neither branch nor write
+     eax may sit between them) instead names a continuation L of its
+     parent, never a function;
   4. isolated data pointers into .text;
   5. the first non-padding byte after a body's decoded extent (unreferenced
      neighbours), repeated to a fixpoint.
@@ -378,8 +379,9 @@ def run(image, log=print, catch_bodies=False):
         work.extend((t, "tail") for t in tails)
         if why.startswith("funclet:catch"):
             # `mov eax, offset L; ret` hands the parent continuation L back;
-            # the handler's last copy (`rep movsd` of a returned object) may
-            # sit between the two
+            # the handler's last statements (a `rep movsd` of a returned
+            # object, a member store) may sit between the two, as long as
+            # none of them branches or writes eax
             for r in seen:
                 ins = c.insn(r)
                 if not (ins.mnemonic == "mov" and len(ins.operands) == 2
@@ -388,7 +390,15 @@ def run(image, log=print, catch_bodies=False):
                         and ins.operands[1].type == x86.X86_OP_IMM):
                     continue
                 nxt = c.insn(r + ins.size)
-                while nxt is not None and nxt.mnemonic in ("rep movsd", "movsd"):
+                for _ in range(4):
+                    if nxt is None or nxt.mnemonic == "ret" or nxt.mnemonic.startswith(
+                            ("j", "call", "loop", "int")) or nxt.mnemonic in ENDS:
+                        break
+                    if any(x86.X86_REG_EAX == reg or reg in (x86.X86_REG_AX, x86.X86_REG_AL,
+                                                              x86.X86_REG_AH)
+                           for reg in nxt.regs_access()[1]):
+                        nxt = None
+                        break
                     nxt = c.insn(nxt.address - image.image_base + nxt.size)
                 if nxt is not None and nxt.mnemonic == "ret":
                     c.continuations[(ins.operands[1].imm & 0xFFFFFFFF) - image.image_base] = start
