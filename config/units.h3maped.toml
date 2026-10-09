@@ -450,3 +450,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "MapSpecsTimedEventsPage"
 source = "src/editor/MapSpecsTimedEventsPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapSpecsRumorsPage"
+source = "src/editor/MapSpecsRumorsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"

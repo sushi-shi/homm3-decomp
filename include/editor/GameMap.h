@@ -61,6 +61,11 @@ public:
     const std::string& getText() const { return _m_text; }
     void setNameAndText(const std::string& newName, const std::string& newText);
 
+    friend bool operator==(const TRumor& lhs, const TRumor& rhs)
+    {
+        return lhs._m_name == rhs._m_name && lhs._m_text == rhs._m_text;
+    }
+
 private:
     std::string _m_name;
     std::string _m_text;
