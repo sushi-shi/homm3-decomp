@@ -11,8 +11,8 @@ strength, each later seed admitted only outside the bodies already decoded:
   3. code addresses decoded code loads as immediates (callbacks, atexit
      thunks, `__ehhandler` stubs), even inside a decoded body when they
      follow a call there (a call that never returns); a catch funclet's
-     `mov eax, offset L; ret` instead names a continuation L of its parent,
-     never a function;
+     `mov eax, offset L; ret` (a `rep movsd` may sit between them) instead
+     names a continuation L of its parent, never a function;
   4. isolated data pointers into .text;
   5. the first non-padding byte after a body's decoded extent (unreferenced
      neighbours), repeated to a fixpoint.
@@ -377,12 +377,20 @@ def run(image, log=print, catch_bodies=False):
         work.extend((t, "call") for t in calls)
         work.extend((t, "tail") for t in tails)
         if why.startswith("funclet:catch"):
-            # `mov eax, offset L; ret` hands the parent continuation L back
+            # `mov eax, offset L; ret` hands the parent continuation L back;
+            # the handler's last copy (`rep movsd` of a returned object) may
+            # sit between the two
             for r in seen:
                 ins = c.insn(r)
+                if not (ins.mnemonic == "mov" and len(ins.operands) == 2
+                        and ins.operands[0].type == x86.X86_OP_REG
+                        and ins.operands[0].reg == x86.X86_REG_EAX
+                        and ins.operands[1].type == x86.X86_OP_IMM):
+                    continue
                 nxt = c.insn(r + ins.size)
-                if ins.mnemonic == "mov" and nxt is not None and nxt.mnemonic == "ret" \
-                        and len(ins.operands) == 2 and ins.operands[1].type == x86.X86_OP_IMM:
+                while nxt is not None and nxt.mnemonic in ("rep movsd", "movsd"):
+                    nxt = c.insn(nxt.address - image.image_base + nxt.size)
+                if nxt is not None and nxt.mnemonic == "ret":
                     c.continuations[(ins.operands[1].imm & 0xFFFFFFFF) - image.image_base] = start
             imms = {i for i in imms if i not in c.continuations}
         c.imms.update(imms)
@@ -517,57 +525,208 @@ def extent_end(c, start):
 
 
 def catch_folds(c, parents):
-    """({handler: parent}, [(handler, parent or None, reason)]).
+    """({handler: parent}, [(handler, parent or None, reason)]): `merges`
+    with catch handlers only."""
+    merged, refused = merges(c, parents)
+    return merged, [(rva, owner, why) for rva, owner, _kind, why in refused]
 
-    VC6 emits a `catch` block inside its function's own COMDAT, after the
-    body, where the game's hand-owned census keeps it (config/retail/
-    funclets.tsv, the retired 0xe29dc row). A catch handler folds into its
-    parent only when the parent's own FuncInfo TryBlockMap names it
-    (`parents`: FuncInfo -> parent, homm3.census.eh.funcinfo_parents) and it
-    directly follows the parent's extent: the parent's body, or a catch
-    handler already folded into it, then only padding (or the decoded body
-    runs on past the handler, which it then embeds). Every other catch
-    handler stays a row of its own and is reported."""
+
+#: Instructions after which control never reaches the next byte.
+ENDS = ("jmp", "ret", "retf", "iret", "int3", "hlt", "ud2")
+
+
+def merges(c, parents, catches=True, tails=False, alignment=0):
+    """({piece: owner}, [(piece, owner or None, kind, reason)]): the census
+    starts that belong to the function before them, and every candidate
+    left as a row with its reason (kind "catch" or "tail").
+
+    Catch handlers (`catches`). VC6 emits a `catch` block inside its
+    function's own COMDAT, after the body, where the game's hand-owned census
+    keeps it (config/retail/funclets.tsv, the retired 0xe29dc row). A catch
+    handler folds into its parent only when the parent's own FuncInfo
+    TryBlockMap names it (`parents`: FuncInfo -> parent,
+    homm3.census.eh.funcinfo_parents) and it directly follows the parent's
+    extent: the parent's body, or a piece already merged into it, then only
+    padding (or the decoded body runs on past the handler, which it then
+    embeds).
+
+    Tails (`tails`). A start the descent took as a tail call while an early,
+    later dropped or embedded start bounded the function (a catch handler
+    inside the body, a weak seed) cuts the body at that jump target. Such a
+    piece joins the function before it when it directly follows that
+    function's extent (only padding between), does not start on a function
+    boundary of the image (`alignment`: /O2 starts every function on 16
+    bytes, /O1 on none), the function's own instructions jump or fall into it, and
+    nothing outside the function references it: no call, jump, immediate or
+    jump-table entry from another function, and no data pointer. The
+    function's own catch handlers are part of it. Candidates are the starts
+    the function before them reaches, and the census's tail-call starts
+    that directly follow it unaligned."""
+    if not tails:
+        return _merge_pass(c, parents, catches, None, {}, alignment)
+    flow = _flow(c)
+    vetoed = {}
+    while True:
+        merged, refused = _merge_pass(c, parents, catches, flow, vetoed, alignment)
+        found = _outside_references(c, parents, merged, flow, vetoed)
+        if not found:
+            break
+        vetoed.update(found)
+    refused += [(rva, owner, "tail", why) for rva, (owner, why) in vetoed.items()]
+    refused.sort(key=lambda row: row[0])
+    return merged, refused
+
+
+def _merge_pass(c, parents, catches, flow, vetoed, alignment):
     import bisect
     order = sorted(c.starts)
     stubs = sorted(c.stubs)
-    folds, refused = {}, []
-    for handler in order:
-        entry = c.funclets.get(handler)
-        if entry is None or entry[1] != "catch":
-            continue
-        parent = parents.get(entry[0])
-        if parent is None:
-            refused.append((handler, None, "no parent loads the handler's FuncInfo"))
-            continue
-        k = bisect.bisect_left(order, handler)
-        prev = order[k - 1] if k else None
-        owner = folds.get(prev, prev)
-        if owner != parent:
-            refused.append((handler, parent, f"follows 0x{prev:x}, not its parent"
-                            if prev is not None else "first start"))
-            continue
-        gap = extent_end(c, prev)
+    merged, refused, ends = {}, [], {}
+
+    def aligned(rva):
+        return alignment > 1 and not rva % alignment
+
+    def follows(prev, owner, piece):
+        """Why `piece` does not directly follow the extent of `owner` and the
+        pieces merged into it up to `prev`, else None."""
         s = bisect.bisect_right(stubs, prev)
-        if s < len(stubs) and stubs[s] < handler:
-            refused.append((handler, parent, "an EH registration stub separates it"))
-            continue
-        # the parent's decoded body may run on past a handler it embeds
-        # (the code after the try block, where the catch returns)
-        while gap < handler and c.byte(gap) in PAD:
+        if s < len(stubs) and stubs[s] < piece:
+            return "an EH registration stub separates it"
+        # the decoded body may run on past a piece it embeds (the code after
+        # the try block, where the catch returns)
+        gap = max(ends.get(owner, 0), extent_end(c, prev))
+        while gap < piece and c.byte(gap) in PAD:
             gap += 1
-        if gap < handler:
-            refused.append((handler, parent, f"non-padding bytes at 0x{gap:x}"))
+        return f"non-padding bytes at 0x{gap:x}" if gap < piece else None
+
+    for k, piece in enumerate(order):
+        prev = order[k - 1] if k else None
+        owner = merged.get(prev, prev)
+        entry = c.funclets.get(piece)
+        if entry is not None and entry[1] == "catch":
+            if not catches:
+                continue
+            parent = parents.get(entry[0])
+            if parent is None:
+                refused.append((piece, None, "catch", "no parent loads the handler's FuncInfo"))
+                continue
+            if owner != parent:
+                refused.append((piece, parent, "catch", f"follows 0x{prev:x}, not its parent"
+                                if prev is not None else "first start"))
+                continue
+            why = follows(prev, owner, piece)
+            if why is not None:
+                refused.append((piece, parent, "catch", why))
+                continue
+            merged[piece] = parent
+            ends[owner] = max(ends.get(owner, 0), extent_end(c, prev), extent_end(c, piece))
             continue
-        folds[handler] = parent
-    return folds, refused
+        if flow is None or prev is None or piece in vetoed:
+            continue
+        reached = any(r < piece and merged.get(order[bisect.bisect_right(order, r) - 1],
+                                                order[bisect.bisect_right(order, r) - 1]) == owner
+                      for r in flow.into.get(piece, ()))
+        why = follows(prev, owner, piece)
+        if not reached:
+            if why is None and not aligned(piece) and c.starts[piece] == "tail":
+                refused.append((piece, owner, "tail", f"0x{owner:x} never jumps or falls into it"))
+            continue
+        if why is None and aligned(piece):
+            why = f"starts on a {alignment}-byte boundary"
+        if why is not None:
+            refused.append((piece, owner, "tail", why))
+            continue
+        merged[piece] = owner
+        ends[owner] = max(ends.get(owner, 0), extent_end(c, prev), extent_end(c, piece))
+    return merged, refused
+
+
+class _Flow:
+    """The decoded instructions' control transfers and code references."""
+
+    def __init__(self):
+        self.into = defaultdict(set)    # target -> insns jumping or falling into it
+        self.refs = defaultdict(set)    # target -> (site, how) of any operand naming it
+
+
+def _flow(c):
+    base = c.image.image_base
+    flow = _Flow()
+    insns = set()
+    for seen in c.reached.values():
+        insns |= seen
+    for r in insns:
+        ins = c.insn(r)
+        mn = ins.mnemonic
+        for op in ins.operands:
+            if op.type == x86.X86_OP_IMM:
+                v = (op.imm & 0xFFFFFFFF) - base
+                how = "call" if mn == "call" else "jump" if mn.startswith(("j", "loop")) \
+                    else "immediate"
+                flow.refs[v].add((r, how))
+                # a jump that is its function's first instruction is a thunk's
+                # tail call (`Census.descend`), never a branch of its body
+                if how == "jump" and not (mn == "jmp" and r in c.starts):
+                    flow.into[v].add(r)
+            elif op.type == x86.X86_OP_MEM and op.mem.base == 0:
+                flow.refs[(op.mem.disp & 0xFFFFFFFF) - base].add((r, "operand"))
+        if mn not in ENDS and mn != "call":
+            flow.into[r + ins.size].add(r)
+        elif mn == "jmp" and ins.size == 5 and ins.bytes[1:] == b"\0\0\0\0":
+            # `jmp $+5` hands off to the next function (`Census` seeds)
+            flow.into[r + 5].discard(r)
+    for table, (owner, n, kind) in c.tables.items():
+        if kind == "jump":
+            for i in range(n // 4):
+                v = c.dword(table + 4 * i)
+                if v is not None:
+                    flow.refs[v - base].add((table + 4 * i, "jump table"))
+    # a string's tail can read as an address (`.?AVTScenario@@` ends in
+    # 0x0040406f): no pointer lives inside a literal
+    from homm3.census.find_relocs import literal_mask
+    masks = {sec.rva: (sec, literal_mask(c.image.blob(sec))) for sec in data_sections(c.image)}
+    for target, site in data_code_pointers(c):
+        sec, mask = masks[c.image.section_of(site).rva]
+        if not any(mask[site - sec.rva:site - sec.rva + 4]):
+            flow.refs[target].add((site, "data"))
+    return flow
+
+
+def _outside_references(c, parents, merged, flow, vetoed):
+    """{piece: (owner, reason)} for each joined tail something outside its
+    function references."""
+    import bisect
+    order = sorted(c.starts)
+    found = {}
+    for piece, owner in sorted(merged.items()):
+        entry = c.funclets.get(piece)
+        if piece in vetoed or (entry is not None and entry[1] == "catch"):
+            continue
+        for site, how in sorted(flow.refs.get(piece, ())):
+            if how == "data":
+                found[piece] = (owner, f"data reference at 0x{site:x}")
+                break
+            k = bisect.bisect_right(order, site) - 1
+            if not c.in_text(site) or k < 0:
+                found[piece] = (owner, f"{how} at 0x{site:x}")
+                break
+            at = order[k]
+            if merged.get(at, at) == owner:
+                continue
+            handler = c.funclets.get(at)
+            if handler is not None and handler[1] == "catch" \
+                    and parents.get(handler[0]) == owner:
+                continue
+            found[piece] = (owner, f"{how} at 0x{site:x} in 0x{at:x}")
+            break
+    return found
 
 
 def partition(c, folded=None):
     """[(start, size, decoded size)]: a function runs to the next start or EH
     registration stub minus trailing padding, and never ends before its
-    decoded extent. A catch handler in `folded` is part of its parent's
-    extent and no start of its own."""
+    decoded extent. A piece in `folded` (a catch handler or a joined tail,
+    `merges`) is part of its owner's extent and no start of its own."""
     import bisect
     folded = folded or {}
     order = sorted(r for r in c.starts if r not in folded)

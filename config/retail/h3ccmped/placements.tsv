@@ -7,7 +7,7 @@
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	kind	name	unit	evidence
 0x00001020	0x15d	func	??0runtime_error@std@@QAE@ABV01@@Z	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x9
-0x00001180	0xd	func	?what@logic_error@std@@UBEPBDXZ	resource	vtable ??_7out_of_range@std@@6B@ stored by ??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z slot 1; ICF-folded with 1 identical bodies
+0x00001180	0xd	func	?what@logic_error@std@@UBEPBDXZ	resource	vtable ??_7out_of_range@std@@6B@ stored by ?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ slot 1; ICF-folded with 1 identical bodies
 0x00001190	0x20	func	?_Doraise@runtime_error@std@@MBEXXZ	gzinflatebuf	vtable ??_7TRuntimeError@@6B@ stored by ??0TRuntimeError@@QAE@ABV0@@Z slot 2
 0x000011b0	0xcb	func	??0TReadFailure@TRawIStream@@QAE@H@Z	Campaign	referenced by ?read@TRawIStream@@QAEAAV1@PADI@Z at +0x22
 0x00001280	0xcb	func	??0TWriteFailure@TRawOStream@@QAE@H@Z	Campaign	referenced by ??6@YAAAVTRawOStream@@AAV0@ABVTScenarioPrologue@@@Z at +0x2c
@@ -21,8 +21,10 @@ rva	size	kind	name	unit	evidence
 0x00001800	0x108	func	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	resourcemanager	masked body (264 bytes, 8 relocations) unique at a census start
 0x00001a90	0x117	func	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	gzinflatebuf	masked body (279 bytes, 7 relocations) unique at a census start
 0x00001bb0	0x16c	func	??0TRuntimeError@@QAE@ABV0@@Z	gzinflatebuf	masked body (364 bytes, 20 relocations) unique at a census start
-0x000021e0	0x20	func	?_Doraise@out_of_range@std@@MBEXXZ	resource	vtable ??_7out_of_range@std@@6B@ stored by ??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z slot 2
+0x00001ee0	0x10b	func	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	artifact	masked body (267 bytes, 16 relocations) unique at a census start
+0x000021e0	0x20	func	?_Doraise@out_of_range@std@@MBEXXZ	resource	vtable ??_7out_of_range@std@@6B@ stored by ?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ slot 2
 0x00002200	0x15a	func	??0out_of_range@std@@QAE@ABV01@@Z	resource	referenced by ?_Doraise@out_of_range@std@@MBEXXZ at +0x9
+0x00002360	0x122	func	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	artifact	masked body (290 bytes, 16 relocations) unique at a census start
 0x000028d0	0x5f7	func	?InitializeArtifactTraitsTable@@YA_NXZ	artifact	string literal anchor (??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@, ??_C@_0N@GEJI@artraits?4txt?$AA@, ??_C@_0N@GIEN@artslots?4txt?$AA@)
 0x00002ef0	0x16	func	__h3cg$artifact$static_dtor$artifactStrings	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0xd1
 0x00002f10	0x12	func	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	artifact	masked body (18 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -335,7 +337,7 @@ rva	size	kind	name	unit	evidence
 0x00045d90	0x2e	func	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	resourcemanager	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0x7
 0x00045dc0	0x4c	func	?Expunge@ResourceManager@@YAXXZ	resourcemanager	masked body (76 bytes, 5 relocations) unique at a census start
 0x00045e10	0xab	func	?dispose@resource@@UAEXXZ	resourcemanager	vtable ??_7resource@@6B@ stored by ??0resource@@QAE@PBDW4EResourceType@@@Z slot 1
-0x00045ed0	0x177	func	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	resourcemanager	masked prefix (299 fixed bytes agree, 568 compiled, 375 retail)
+0x00045ed0	0x240	func	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	resourcemanager	masked prefix (456 fixed bytes agree, 568 compiled, 576 retail)
 0x00046110	0xc2	func	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	resourcemanager	masked body (194 bytes, 14 relocations) unique at a census start
 0x000461e0	0xca	func	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	resourcemanager	masked body (202 bytes, 11 relocations) unique at a census start
 0x000462b0	0x1e	func	?str@?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	resourcemanager	masked body (30 bytes, 1 relocations) unique at a census start
@@ -473,14 +475,14 @@ rva	size	kind	name	unit	evidence
 0x00098618	0x10	data	__TI5?AVTReadFailure@TRawIStream@@	Campaign	referenced by ?read@TRawIStream@@QAEAAV1@PADI@Z at +0x2b
 0x00098660	0x10	data	__TI2?AVruntime_error@std@@	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x12
 0x000986d8	0x10	data	__TI5?AVTWriteFailure@TRawOStream@@	Campaign	referenced by ??6@YAAAVTRawOStream@@AAV0@ABVTScenarioPrologue@@@Z at +0x35
-0x00098838	0x10	data	__TI3?AVout_of_range@std@@	resource	referenced by ?_Xran@?$bitset@$0BD@@std@@ABEXXZ at +0xc3
+0x00098838	0x10	data	__TI3?AVout_of_range@std@@	resource	referenced by ?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ at +0xc2
 0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xf9
 0x00098d08	0x10	data	__TI5?AVTAllocationFailure@@	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x2e
 0x0009a230	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x367
 0x0009a968	0x10	data	__TI5PAVTCampaignDocInvalidFileVersion@@	CampaignDoc	referenced by ?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z at +0xfb
 0x0009c610	0x10	data	__TI3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	referenced by ?_mustGetC@TGzInflateBuf@@AAEHXZ at +0x1b
 0x000a11f0	0x10	data	__TI1?AW4t_open_errors@ResourceManager@@	resourcemanager	referenced by ?Open@ResourceManager@@YA_N_N0PAH@Z at +0xda
-0x000a56b8	0x1b	data	??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@	resource	referenced by ?_Xran@?$bitset@$0BD@@std@@ABEXXZ at +0x24
+0x000a56b8	0x1b	data	??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@	resource	referenced by ?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ at +0x59
 0x000a56d4	0xd	data	??_C@_0N@GIEN@artslots?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x000a56e4	0xd	data	??_C@_0N@GEJI@artraits?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x000a6794	0x15	data	??_C@_0BF@MMAA@missing?5locale?5facet?$AA@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x355

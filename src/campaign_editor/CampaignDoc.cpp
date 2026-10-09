@@ -604,7 +604,7 @@ void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
     }
 }
 
-VA(0x00413600, 0x735)
+VA(0x00413600, 0x9e0)
 pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
 {
     auto_ptr<TCampaign> pCampaign;
@@ -746,7 +746,7 @@ void TCampaignDoc::Serialize(CArchive& ar)
     }
 }
 
-VA(0x00414390, 0x24b)
+VA(0x00414390, 0x4be)
 auto_ptr<TCampaignScenarioMap> TCampaignDoc::loadScenarioMap(const CString& pathName)
 {
     CWaitCursor wait;

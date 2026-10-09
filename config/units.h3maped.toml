@@ -467,6 +467,21 @@ source = "src/editor/EditTimedEventSheet.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "EditTownEventBuildingsPage"
+source = "src/editor/EditTownEventBuildingsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EditTownEventCreaturesPage"
+source = "src/editor/EditTownEventCreaturesPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EditTownEventSheet"
+source = "src/editor/EditTownEventSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "MapSpecsTimedEventsPage"
 source = "src/editor/MapSpecsTimedEventsPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
@@ -529,4 +544,49 @@ flags = "editor_o1_ob2_gr_windows"
 [[unit]]
 unit = "ArmyDlg"
 source = "src/editor/ArmyDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsGarrisonPage"
+source = "src/editor/TownPropsGarrisonPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsSpellsPage"
+source = "src/editor/TownPropsSpellsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsTimedEventsPage"
+source = "src/editor/TownPropsTimedEventsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsBuildingsPage"
+source = "src/editor/TownPropsBuildingsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "SelectHeroClassDlg"
+source = "src/editor/SelectHeroClassDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "ArtifactPropsGeneralPage"
+source = "src/editor/ArtifactPropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TreasurePropsGuardiansPage"
+source = "src/editor/TreasurePropsGuardiansPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "ArtifactPropsSheet"
+source = "src/editor/ArtifactPropsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsCreaturesPage"
+source = "src/editor/HeroPropsCreaturesPage.cpp"
 flags = "editor_o1_ob2_gr_windows"

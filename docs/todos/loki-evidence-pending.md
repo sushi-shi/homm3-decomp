@@ -276,19 +276,18 @@ names (`homm3 loki-game`, docs/loki/game.md on that branch;
 GCC at `-O2` keeps every non-inline helper as a call. Loki addresses below
 are image VAs; scores are CUR from full builds.
 
+### Taken
+
+- **`advManager::doCombat` (0x4ad470), 97.31 -> 97.82.** Loki (0x080f9ca9)
+  and Dreamcast (events.cpp:6569) build `CHeroLevelUpdateMsg` from the
+  hero's private stats array; `hero` befriends `advManager` and the
+  provisional `hero::copyPrimarySkills` goes. Held back while its removed
+  declaration moved `CEnterNameEdit::onKeyPress`/`onKillFocus` (name-keyed);
+  after the helper audit (4b94a4c58) the change is neutral everywhere else
+  in all three images.
+
 ### Tried and dropped
 
-- **`advManager::doCombat` (0x4ad470), 97.31.**
-  - *Loki and Dreamcast:* both build `CHeroLevelUpdateMsg` from the hero's
-    private stats array (Loki 0x080f9ca9, DC events.cpp:6569 dc 0x9bf56), the
-    way `textButton` reads `button::Text`: `hero` befriends `advManager`, and
-    the provisional `hero::copyPrimarySkills` goes.
-  - *Why not:* doCombat rises to 97.82, but on 5d2479d2d the removed
-    declaration moves `CEnterNameEdit::onKeyPress` 100 -> 99.89 and
-    `onKillFocus` 100 -> 99.87 (name-keyed; keeping the unused declaration
-    restores both). On 9d4709c63 the same change was neutral elsewhere.
-  - *Unblock:* the name-keyed mechanism. The change is on `work/loki-game`
-    (296af56fd).
 - **doCombat, Loki only:** a discarded `g_currentPlayer->isLocalHuman()` call
   after the right hero's `checkLevel` (0x080f9c3a). DC has none; adding it
   gives 92.59.
@@ -326,6 +325,49 @@ are image VAs; scores are CUR from full builds.
   source already calls.
 - **`TCastleWindow::TCastleWindow` (0x5d86f0), 99.64:** Loki 0x081d9d34 calls
   `vector<int>::insert` where Windows expands it (different libraries).
+
+### Compiled Loki bodies (work/loki-game, second stint)
+
+The game units now compile at the Loki profile (`include/loki/` port
+headers, `include/gcc_prefix.h`), and `homm3 loki-game score` compares each
+paired function's compiled body with its Loki body (relocated fields and
+outgoing calls masked, each body assembled at its image address modulo 16):
+130 of 972 pairs exact, 894 compiled from 101 of 117 units. None of the 58
+paired functions below 100% on Windows is exact, and every remaining
+difference read so far is an era fact the shared headers spell for
+Complete: class layouts and vtables (`game`, `combatManager`, the widget
+bases), record strides (spell traits 0x84 against 0x88, creature traits),
+counts (122 against 150 creatures, one resource case fewer) and flag
+values. Normal-form similarity, compiled against Loki:
+
+- **`CAdventurMapChatEdit::sendChat`, 98.92:** only `m_parentWindow` (+0x28
+  against +0x2c) and the `setFocus` slot (0x64 against 0x6c) differ; the
+  Windows wall (77.17) is the Dinkumware string site, outside Loki's reach.
+- **`game::setupPuzzlePieces`, 96.47; `type_dialog_icon::set`, 95.90;
+  `TRecruitWindow::TRecruitWindow`, 94.09; `TSystemOptionsWindow`, 90.34;
+  `combatManager::validSpellTarget`, 90.54:** control flow and call sets
+  equal; layout, constants and (validSpellTarget) RoE's `bool` final
+  parameter where Complete's mangled name has `long`.
+- **`advManager::updateRadar`:** Loki calls `NewfullMap::zCell` where retail
+  calls `getMapExtra`; otherwise the flag bytes differ (+0xd/+0xe).
+- **`combatManager::initiateSpell`:** RoE has no mouse-target update before
+  the dialog and tests the mirror as `duration && value >= random(1, 100)`
+  (fields +0x214/+0x4a0), so it does not settle Complete's
+  `getMagicMirrorChance`-before-`random` order (94.49).
+- **`getSkillValue` (86.50), `updateGameVars` (79.95):** era record strides
+  and RoE's header index indirection; Loki expands `applyHeaderToGame`
+  (inline in RoE) where Mac keeps it out of line (0x17b0b0), so its
+  inline-ness is not carried.
+- **Helpers Loki expands:** `clearOverviewWidget` and
+  `type_skeleton_window::clearCreatureSelection` have no out-of-line Loki
+  body; both were already folded by the helper audit.
+
+Four pairs the call graph had given to a neighbour were settled against
+the compiled bodies (`config/loki/game.toml [[pairs.reviewed]]`):
+`validSpellTarget` is 0x081a71c8 (0x081a797c is `hasValidSpellTarget`) and
+`updateRadar(type_point, ...)` is 0x0806511c (0x08065d04 is the `bool`
+overload). `combatManager::nextArmy`'s pair (0x08174190, a net-handler
+setup) is wrong and has no candidate yet.
 
 ### Not paired yet
 
