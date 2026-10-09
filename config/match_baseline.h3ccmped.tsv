@@ -593,7 +593,7 @@ resourcemanager	?write@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\Reso
 resourcemanager	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	100.0000	100.0000	100.0000	0x159e0	-
 resourcemanager	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x15a80	-
 spelldefs	?InitializeSpellTraitsTable@@YAEXZ	100.0000	100.0000	100.0000	0x326b0	-
-spelldefs	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x32760	-
+spelldefs	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.8936	100.0000	100.0000	0x32760	-
 spelldefs	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	100.0000	100.0000	100.0000	0x32ad0	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0000	0x32ab0	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x32af0	-
