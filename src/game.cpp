@@ -7942,19 +7942,19 @@ void game::perMonth()
 // loop, including its retained dereference and proxy assignment calls.
 // Six comparison interfaces produced six reproduced objects; the free
 // logical-OR comparison reaches 99.0237%, versus 85.9586% for the member.
-// The remaining count-to-random-bound move/decrement is a separate source
-// lead. No native declaration distinguishes free/member placement, and
+// No native declaration distinguishes free/member placement, and
 // Complete's range has no counterpart in the older DC body.
-// Bound probes (2026-10-07): --totalInClass gives dec-then-copy (97.60%),
-// count()-1 into totalInClass 97.60%, unsigned totalInClass 99.0237%,
-// curCount staging 94.61%; retail copies the count to edx and decrements.
+// The older DC body counted its TotalInClass local in the level loop;
+// Complete asks the bitset instead and passes count() - 1 straight to
+// Random, as Mac 0xe0204..0xe0214 does (count result moved, then -1).
+// Retail copies the count to edx and decrements (100%); a named
+// totalInClass gives lea (99.02%), --totalInClass dec-then-copy (97.60%).
 VA(0x004c92c0, 0x202)
 DC_ADDRESS(0x0b4b58, 0x12a)
 MAC_ADDRESS(0x0dfed4, 0x398)  // MAC_ABSTRACTION_FROM(tokens1:38ec85859b6c,28.1385): native iterator addition replaces the provisional fromOffset factory; by-value temporary copies shift CW stack and register allocation.
 TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 {
     int i;
-    int totalInClass;
     int curCount;
     int x;
 
@@ -7993,8 +7993,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
             monsterOk[i] = false;
     }
 
-    totalInClass = monsterOk.count();
-    curCount = random(0, totalInClass - 1);
+    curCount = random(0, monsterOk.count() - 1);
     x = 0;
     for (;;) {
         if (monsterOk[x]) {
