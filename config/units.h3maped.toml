@@ -595,3 +595,13 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "HeroPropsCreaturesPage"
 source = "src/editor/HeroPropsCreaturesPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "SecondarySkillsDlg"
+source = "src/editor/SecondarySkillsDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsSecSkillsPage"
+source = "src/editor/HeroPropsSecSkillsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"

@@ -74,7 +74,7 @@ BOOL TTreasurePropsGuardiansPage::OnInitDialog()
     GetDlgItem(IDC_CUSTOMIZE_CHECK)->SetWindowText(kCustomizeCheckStr);
     _m_bModified = false;
     _m_bCustomGuardians = _m_pTreasure->getBCustomGuardians();
-    _m_bCustomize = _m_bCustomGuardians;
+    _m_bCustomize = _m_bCustomGuardians ? TRUE : FALSE;
     CPropertyPage::OnInitDialog();
     CWnd* pFrame = GetDlgItem(IDC_FRAME);
     CRect rect;

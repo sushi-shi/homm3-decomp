@@ -226,6 +226,13 @@ public:
     static TClassTraits* s_akClassTraits;
     // h3maped 0x5857dc: points at the 28 rows (one per secondary skill).
     static TSecondarySkillTraits* s_akSecondarySkillTraits;
+    // One name per row of skilllev.txt, basic mastery first.
+    struct TSkillMasteryTraits {
+        const char* m_name;
+    };
+
+    // h3maped 0x59e66c: points at the three rows.
+    static TSkillMasteryTraits* s_akSkillMasteryTraits;
 
     static void initialize();
 
@@ -244,11 +251,16 @@ public:
 
     bool getBCustomName() const { return _m_bCustomName; }
     bool getBCustomPortrait() const { return _m_bCustomPortrait; }
+    bool getBCustomSecondarySkills() const { return _m_bCustomSecondarySkills; }
+    void setBCustomSecondarySkills(bool bCustomSecondarySkills) { _m_bCustomSecondarySkills = bCustomSecondarySkills; }
     bool getBCustomArmy() const { return _m_bCustomArmy; }
     void setBCustomArmy(bool bCustomArmy) { _m_bCustomArmy = bCustomArmy; }
     bool getBCustomBiography() const { return _m_bCustomBiography; }
     const std::string& getName() const { return _m_name; }
     int getPortrait() const { return _m_portrait; }
+    const THeroPrototype::TSecondarySkills& getSecondarySkills() const { return _m_secondarySkills; }
+    // h3maped 0x44b52b.
+    void setSecondarySkills(const THeroPrototype::TSecondarySkills& newSecondarySkills);
     const TArmy& getArmy() const { return _m_army; }
     // h3maped 0x44b53a.
     void setArmy(const TArmy& newArmy);
