@@ -352,6 +352,11 @@ flags = "editor_o1_ob2_gr_windows"
 
 # The map editor's own objects (src/editor/, the original's Editor\)
 [[unit]]
+unit = "Army"
+source = "src/editor/Army.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "Colors"
 source = "src/editor/Colors.cpp"
 flags = "editor_o1_ob2_gr_windows"
