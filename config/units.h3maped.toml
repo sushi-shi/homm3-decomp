@@ -20,6 +20,11 @@
 #                               reads its name from the stack)
 #   zlib and Victor             the game's prebuilt objects, byte-identical
 
+# Reviewed comparison carriers for header inlines whose retail copy sits
+# in an object the image does not compile yet.
+[header_comparisons]
+"0x0045c540" = "TileHRuler"
+
 [build]
 compiler = "msvc6.0"
 platform = "win32"
@@ -677,4 +682,14 @@ flags = "editor_o1_ob2_gr_windows"
 [[unit]]
 unit = "MapDoc"
 source = "src/editor/MapDoc.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TileHRuler"
+source = "src/editor/TileHRuler.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TileVRuler"
+source = "src/editor/TileVRuler.cpp"
 flags = "editor_o1_ob2_gr_windows"

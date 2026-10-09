@@ -22,11 +22,15 @@ public:
     public:
         // VA instance: TGDIObjectSelector<CBitmap>::TError::TError()
         VA(0x004520ca, 0x12)
+        // VA instance: TGDIObjectSelector<CFont>::TError::TError()
+        VA(0x0045b3cb, 0x12)
         TError() {}
     };
 
     // VA instance: TGDIObjectSelector<CBitmap>::TGDIObjectSelector(CDC*, CBitmap*)
     VA(0x00451fdd, 0x45)
+    // VA instance: TGDIObjectSelector<CFont>::TGDIObjectSelector(CDC*, CFont*)
+    VA(0x0045b375, 0x3a)
     TGDIObjectSelector(CDC* pDC, T* pObject)
         : _m_pDC(pDC)
     {
@@ -37,6 +41,8 @@ public:
 
     // VA instance: TGDIObjectSelector<CBitmap>::~TGDIObjectSelector
     VA(0x00452022, 0x16)
+    // VA instance: TGDIObjectSelector<CFont>::~TGDIObjectSelector
+    VA(0x0045b3af, 0xd)
     ~TGDIObjectSelector() { _m_pDC->SelectObject(_m_pOldObject); }
 
 private:

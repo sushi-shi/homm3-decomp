@@ -52,6 +52,8 @@ public:
 
     unsigned int getWidth() const { return _m_width; }
     unsigned int getHeight() const { return _m_height; }
+    unsigned int getPitch() const { return _m_pitch; }
+    TPixel* getPixels() { return _m_pPixels; }
 
     // VA instance: TBitmapBase<unsigned short>::create
     VA(0x0040d43d, 0x49)

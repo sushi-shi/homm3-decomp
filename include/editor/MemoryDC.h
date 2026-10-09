@@ -5,12 +5,13 @@
 // DC. The transparent blits treat one colour of a bitmap, by default its
 // top-left pixel, as see-through; the menu helpers skip separators.
 //
-// Ported so far: TMemoryDC's error class; the DC itself follows with the
-// shell.
+// The DC is compatible with another; its constructor is an inline
+// emitted in Map Editor.cpp's span (0x45c540) and its destructor is CDC's.
 #ifndef HOMM3_EDITOR_MEMORYDC_H
 #define HOMM3_EDITOR_MEMORYDC_H
 
 #include "exceptions.h"
+#include "va.h"
 
 class TMemoryDC : public CDC {
 public:
@@ -18,6 +19,13 @@ public:
     public:
         TError();
     };
+
+    VA(0x0045c540, 0x66)
+    TMemoryDC(CDC* pDC)
+    {
+        if (!Attach(::CreateCompatibleDC(pDC->GetSafeHdc())))
+            throw TError();
+    }
 };
 
 COLORREF getTransparentColor(CBitmap* pBitmap);
