@@ -159,7 +159,6 @@ TGenericObject::TGenericObject(const TObjectType& objType, TRawIStream* pIStream
 {
 }
 
-VA(0x00480b5f, 0x3)
 void TGenericObject::write(TRawOStream* pOStream, int version) const
 {
 }
