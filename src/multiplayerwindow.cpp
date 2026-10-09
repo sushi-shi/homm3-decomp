@@ -819,11 +819,10 @@ inline bool TMultiPlayerWindow::onModem()
 
 // Mac 0x21b068..0x21b0a0 and 0x21b0d0..0x21b108 retain the
 // cleanup/menu/redraw/update calls separately in the host and join arms.
-// Case-local exits also restore Windows' shared failure cleanup without
-// synthetic join labels (86.75% -> 91.57%). Return placement and nested
-// inlining still differ; all protocol and menu helpers remain canonical.
-// Coupling CANCEL/IPX branch exits with HOST/SEARCH/HOTSEAT returns in
-// 36 natural variants produced three reproduced objects and no gain.
+// DC 1197..1297 fixes every arm's shape: CANCEL tests m_inSessionList
+// positively, HOST nests its cancel test and host/join-screen test under
+// the failed OnHost with the success flag in the else arm, and every arm
+// leaves through break to the single return. That shape is exact.
 VA(0x0050f4e0, 0x458)
 DC_ADDRESS(0x1009a4, 0x276)
 MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect)
@@ -831,28 +830,26 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
     case CANCEL_ID:
-        if (!m_inSessionList) {
+        if (m_inSessionList) {
+            remoteCleanup();
+            goMainMenu();
+            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            update();
+        } else {
             exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             remoteCleanup();
-            break;
         }
-        remoteCleanup();
-        goMainMenu();
-        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        update();
         break;
 
-    case IPX_ID: {
+    case IPX_ID:
         goSessionList();
         if (!onIPX()) {
             exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             remoteCleanup();
-            break;
         }
-        return 1;
-    }
+        break;
 
     case TCP_ID:
         goSessionList();
@@ -860,7 +857,6 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
             remoteCleanup();
             exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
-            return 1;
         }
         break;
 
@@ -871,7 +867,7 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
             exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         }
-        return 1;
+        break;
 
     case DIRECT_ID:
         goSessionList();
@@ -880,57 +876,55 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
             exitFlag = 1;
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         }
-        return 1;
+        break;
 
     case ONLINE_ID:
         chdir("online");
         ShellExecuteA(g_hwndApp, "open", "autorun.exe", 0, 0, SW_SHOWNORMAL);
         shutDown(0);
-        return 1;
+        break;
 
     case HOST_ID:
-        if (onHost()) {
+        if (!onHost()) {
+            if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
+                g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+                remoteCleanup();
+                exitFlag = 1;
+            } else {
+                if (m_hostJoinScreen) {
+                    remoteCleanup();
+                    goMainMenu();
+                    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+                    update();
+                }
+            }
+        } else {
             exitFlag = 1;
-            return 1;
-        }
-        if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
-            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
-            remoteCleanup();
-            exitFlag = 1;
-            return 1;
-        }
-        if (m_hostJoinScreen) {
-            remoteCleanup();
-            goMainMenu();
-            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-            update();
         }
         break;
 
     case JOIN_ID:
         if (onJoin()) {
             exitFlag = 1;
-            return 1;
-        }
-        if (m_hostJoinScreen) {
-            remoteCleanup();
-            goMainMenu();
-            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-            update();
+        } else {
+            if (m_hostJoinScreen) {
+                remoteCleanup();
+                goMainMenu();
+                drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+                update();
+            }
         }
         break;
 
     case SEARCH_ID:
         if (onSearch()) {
             exitFlag = 1;
-            return 1;
         }
         break;
 
     case HOT_SEAT_ID:
         if (onHotSeat()) {
             exitFlag = 1;
-            return 1;
         }
         break;
 

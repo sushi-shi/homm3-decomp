@@ -276,10 +276,9 @@ static const long g_playerActiveUpdateInterval = 600000;
 
 // Mac 0x2109e4 handles the same ping, ping reply and player-drop subtypes;
 // its native transport supplies the incoming message. DC remote.cpp:318/331
-// names text lookups at the ping reply and destroyed-session messages;
-// Complete keeps the existing getText calls at 98.3470%.
-// A named CPingResponseMsg local is 98.29%: retail still loads m_dpidFrom
-// after the inline transmit stamps, while VC6 hoists it into esi.
+// names text lookups at the ping reply and destroyed-session messages.
+// The ping reply's m_dpidFrom load follows the expanded transmit stamps only
+// with transmitRemoteDataDPID's DC-nested compression guard.
 VA(0x00552db0, 0x28F)
 DC_ADDRESS(0x11bc88, 0xd2)
 MAC_ADDRESS(0x2109e4, 0x1a0)
@@ -457,10 +456,10 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
     return result;
 }
 
-// Windows retains one sendIt join after choosing the packet, then releases
-// the compressed temporary through destroyMsg. Mac 0x210f50/0x210f78
-// instead retains separate compressed/original sends (cleanup at0x210f60);
-// the common helper paths are preserved, but that Mac flow is not yet exact.
+// DC 509..514 scope the packet choice inside the compression guard, and
+// 569/571 brace the destroyMsg release. Windows retains one sendIt join; Mac
+// 0x210f50/0x210f78 threads the two guards into separate sends. The nested
+// guard also restores handleLowLevelMsg's expansion (98.32 -> 100).
 VA(0x00553370, 0x5C)
 DC_ADDRESS(0x11bfec, 0x60)
 MAC_ADDRESS(0x210ee4, 0xb4)
@@ -471,14 +470,16 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
     msg->m_from = g_localGamePos;
     CNetMsg* compressedMsg = 0;
     msg->m_dpidFrom = g_thisNetPlayerInfo.m_dpid;
-    if (compressMsg)
+    if (compressMsg) {
         compressedMsg = this->compressMsg(msg);
+        if (compressedMsg)
+            msg = compressedMsg;
+    }
 
-    if (compressedMsg)
-        msg = compressedMsg;
     bool result = sendIt(msg, dpidTo, guaranteed);
-    if (compressedMsg)
+    if (compressedMsg) {
         destroyMsg(compressedMsg);
+    }
     return result;
 }
 
@@ -489,9 +490,6 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
 // dialog (`retries >= 5 && !sent`). That compound header keeps retail's
 // unrotated loop (head `cmp retries,5`, `inc; jmp` tail): 88.86 -> 96.95.
 // Send returns unsigned char; a bool receiver adds a setne normalization.
-// Residual: queueMsg's nested memcpy schedules after the push_back
-// argument store; retail copies first. A pre-cast CNetMsg* storage local
-// does not move it and costs handleLowLevelMsg 6.5 points.
 // Mac 0x210f98 sends through its native transport once; Windows retains the
 // DirectPlay retry and error-dialog flow around the corresponding send.
 VA(0x005533d0, 0x1AB)
@@ -584,14 +582,17 @@ void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 // E:\gamedcs\remote.cpp:702. Retail keeps no standalone copy. /Ob2 expands
 // allocation/copy into both member drop paths; the standalone handler also
 // expands Dinkumware's push_back internals, while SendIt's nested occurrence
-// stops at that template boundary.
+// stops at that template boundary. DC 707 stores the copied buffer into
+// its CNetMsg* local before 709 queues it; that order keeps sendIt's nested
+// memcpy ahead of the push_back argument, as in retail.
 DC_ADDRESS(0x11c22c, 0x3a)
 MAC_ADDRESS(0x211088, 0x64)
 void CDPlayHeroes::queueMsg(CNetMsg* netMsg)
 {
     void* storage = new char[netMsg->m_size];
     memcpy(storage, netMsg, netMsg->m_size);
-    m_msgQueue.push_back(static_cast<CNetMsg*>(storage));
+    CNetMsg* newMsg = static_cast<CNetMsg*>(storage);
+    m_msgQueue.push_back(newMsg);
 }
 
 // DC788 records both guard tests together, followed by Copy at 789. The

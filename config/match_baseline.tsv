@@ -2713,7 +2713,7 @@ multiplayerwindow	?onSearch@TMultiPlayerWindow@@QAE_NXZ	89.7351	89.7351	94.1892	
 multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAE_NXZ	100.0000	100.0000	100.0000	0x1113f0	tokens1:42fcfe73f832
 multiplayerwindow	?onWidgetDeselect@CHotSeatDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x112420	tokens1:72c4f34fd0a0
 multiplayerwindow	?onWidgetDeselect@CMPInputDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x1108f0	tokens1:0fd31c226d1c
-multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHAA_N@Z	91.5668	91.5668	98.1199	0x10f4e0	tokens1:22058a60f067
+multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x10f4e0	tokens1:239a876888d6
 multiplayerwindow	?setFocus@CMPEdit@@UAEX_N@Z	100.0000	100.0000	100.0000	0x110890	tokens1:3beac8f1883f
 multiplayerwindow	?sliderGames@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x10ee10	tokens1:29d88b29863e
 multiplayerwindow	?update@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x10f0f0	tokens1:7d34652b8035
@@ -3088,7 +3088,7 @@ remote	?getAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100
 remote	?getNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0	tokens1:cdaa4027ee26
 remote	?getRemoteData@@YIPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x154400	tokens1:ac3d06ae9aaf
 remote	?getRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x153040	tokens1:c3ddb103e21f
-remote	?handleLowLevelMsg@CDPlayHeroes@@IAEEPAVCNetMsg@@@Z	98.3242	98.3242	100.0000	0x152db0	tokens1:d30543ebc0ef
+remote	?handleLowLevelMsg@CDPlayHeroes@@IAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x152db0	tokens1:d30543ebc0ef
 remote	?handleMPlayerLaunch@@YIEXZ	100.0000	100.0000	100.0000	0x155aa0	tokens1:6c154c958ab0
 remote	?handleMessage@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90	tokens1:b64e2255c13d
 remote	?handleMessage@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20	tokens1:9a82cb4b55f0
@@ -3135,7 +3135,7 @@ remote	?resumeTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154060	
 remote	?save@CSaveScreen@@QAEXHH@Z	100.0000	100.0000	100.0000	0x157350	tokens1:599adf53c347
 remote	?saveScreen@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x157600	tokens1:b0ad6404c6e3
 remote	?sendChat@@YIXPBDH@Z	100.0000	100.0000	100.0000	0x1547c0	tokens1:1a93342acb38
-remote	?sendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	96.9466	96.9466	96.9466	0x1533d0	tokens1:6d0cc1abcd45
+remote	?sendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	100.0000	100.0000	100.0000	0x1533d0	tokens1:6d0cc1abcd45
 remote	?setAbortPopupMsg@CNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x157910	tokens1:1c5840359c76
 remote	?setDuration@CTurnDuration@@QAEXK@Z	100.0000	100.0000	100.0000	0x157d70	tokens1:d9a1f9adda7f
 remote	?setMaxLines@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1540d0	tokens1:96dbe37e0198
@@ -3158,7 +3158,7 @@ remote	?tickAnimation@CAnimatedDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x154e10	t
 remote	?transmitRemoteData@@YIHPAVCNetMsg@@H_N1@Z	100.0000	100.0000	100.0000	0x1545f0	tokens1:4793df924d99
 remote	?transmitRemoteData@CDPlayHeroes@@QAE_NPAVCNetMsg@@H_N1@Z	100.0000	100.0000	100.0000	0x153220	tokens1:7fafa2aebcc8
 remote	?transmitRemoteDataDPID@@YIHPAVCNetMsg@@K_N1@Z	100.0000	100.0000	100.0000	0x154560	tokens1:a17312b11a33
-remote	?transmitRemoteDataDPID@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N1@Z	100.0000	100.0000	100.0000	0x153370	tokens1:48d4acb9c4ed
+remote	?transmitRemoteDataDPID@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N1@Z	100.0000	100.0000	100.0000	0x153370	tokens1:2960c460207c
 remote	?turnDurationMsg@CChatManager@@QAAXPBDZZ	100.0000	100.0000	100.0000	0x153960	tokens1:ef9d576dee7d
 remote	?updateCurrentPlayers@@YIXXZ	100.0000	100.0000	100.0000	0x1562e0	tokens1:fd64dd265a1d
 remote	?updateScreen@CChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x154200	tokens1:6eb3400318cb
