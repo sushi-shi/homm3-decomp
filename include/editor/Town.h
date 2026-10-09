@@ -37,6 +37,28 @@ public:
         bool _m_bDisabled : 1;
     };
 
+    // A building's names in a town type, and the building it hangs under
+    // in the town pages' trees (Loki's TBuildingTraits).
+    struct TBuildingTraits {
+        const char* m_pName;
+        const char* m_pDescription;
+        int m_building;
+    };
+
+    // The creatures one of a town type's generators makes.
+    class TGeneratorTraits;
+
+    // A town type's name, buildings and generators (12 bytes; the player
+    // page reads the name, h3maped 0x47347f).
+    struct TTypeTraits {
+        const char* m_pName;
+        const TBuildingTraits (&m_akBuildingTraits)[s_kNumBuildings];
+        const TGeneratorTraits* const (&m_apGeneratorTraits)[s_kNumGeneratorTypes];
+    };
+
+    // h3maped 0x5a50d0: points at the rows (one per town type).
+    static const TTypeTraits* s_akTypeTraits;
+
     // A town's timed event: the map's, plus the buildings it builds and
     // the creatures it adds to each generator (0x70 bytes; the town's
     // writer steps by 0x70, 0x4c2cf5).
@@ -51,6 +73,7 @@ public:
 
     // The faction: the object type's subtype for a town (0x4c2a24).
     TTownType getTownType() const;
+    const TTypeTraits& getTownTypeTraits() const { return s_akTypeTraits[getTownType()]; }
     const std::string& getName() const { return _m_name; }
     const TArmy& getGarrison() const { return _m_garrison; }
     THero* getPVisitingHero() { return _m_pVisitingHero; }

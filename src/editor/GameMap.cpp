@@ -1155,6 +1155,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
                 TPlayerInfo::TTownTypes townTypes;
                 townTypes.m_mask = slot.m_townTypes;
                 townTypes.m_bRandom = slot.m_bRandomTown;
+                playerInfo.setBCustomTownTypes(true);
                 playerInfo.setTownTypes(townTypes);
             }
             if (fileVersion >= 9 && slot.m_bHasMainTown) {

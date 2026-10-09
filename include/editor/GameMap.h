@@ -113,6 +113,7 @@ TRawOStream& operator<<(TRawOStream& stream, const TRumor& rumor);
 class TPlayerInfo {
 public:
     enum TBehaviorType {
+        s_kNumBehaviorTypes = 4
     };
 
     // Nobody plays it (h3maped 0x427ee8).
@@ -125,6 +126,14 @@ public:
     struct TTownTypes {
         TTownTypes() : m_bRandom(false) {}
 
+        // The player page's comparison of its players (h3maped 0x4747b2,
+        // after the page's code).
+        VA(0x004747b2, 0x35)
+        friend bool operator==(const TTownTypes& lhs, const TTownTypes& rhs)
+        {
+            return lhs.m_mask == rhs.m_mask && lhs.m_bRandom == rhs.m_bRandom;
+        }
+
         std::bitset<kNumTownTypes> m_mask;
         bool m_bRandom;
     };
@@ -132,11 +141,8 @@ public:
     void setBHumanPlayable(bool bPlayable) { _m_bHumanPlayable = bPlayable; }
     void setBComputerPlayable(bool bPlayable) { _m_bComputerPlayable = bPlayable; }
     void setBehaviorType(TBehaviorType newBehaviorType);
-    void setTownTypes(const TTownTypes& newTownTypes)
-    {
-        _m_bCustomTownTypes = true;
-        _m_townTypes = newTownTypes;
-    }
+    void setBCustomTownTypes(bool bCustomTownTypes) { _m_bCustomTownTypes = bCustomTownTypes; }
+    void setTownTypes(const TTownTypes& newTownTypes) { _m_townTypes = newTownTypes; }
     // The main town, where a hero may be generated (0x4942c6, 0x4942f3).
     void setMainTown(const TMapObjectRef& mainTownRef);
     void setBGenerateHero(bool bGenerateHero);
@@ -152,6 +158,17 @@ public:
     TBehaviorType getBehaviorType() const { return _m_behaviorType; }
     const TMapObjectRef& getMainTownRef() const { return _m_mainTownRef; }
     const TTownTypes& getTownTypes() const { return _m_townTypes; }
+
+    // Whether the main town is set is not compared (h3maped 0x47476f, after
+    // the player page's code).
+    VA(0x0047476f, 0x43)
+    friend bool operator==(const TPlayerInfo& lhs, const TPlayerInfo& rhs)
+    {
+        return lhs._m_bHumanPlayable == rhs._m_bHumanPlayable && lhs._m_bComputerPlayable == rhs._m_bComputerPlayable
+               && lhs._m_bGenerateHero == rhs._m_bGenerateHero
+               && lhs._m_bCustomTownTypes == rhs._m_bCustomTownTypes && lhs._m_behaviorType == rhs._m_behaviorType
+               && lhs._m_mainTownRef == rhs._m_mainTownRef && lhs._m_townTypes == rhs._m_townTypes;
+    }
 
 private:
     bool _m_bHumanPlayable : 1;
@@ -434,6 +451,8 @@ public:
     unsigned int getNumObelisksOnMap() const;
     bool isValidPlacement(const TGameObject& obj, bool bSecondLayer, unsigned int x, unsigned int y) const;
     TPlayerInfo::TTownTypes getDefaultTownTypes(TPlayer player) const;
+    const TLayer& getLayer(unsigned int num) const;
+    const TLayer& getLayer(bool bSecondLayer) const;
 
 private:
     friend class TLayer;
@@ -535,6 +554,16 @@ public:
     virtual std::auto_ptr<TWitchHut> createWitchHut(const TObjectType& objType, TRawIStream* pIStream,
                                                     int version) const = 0;
 };
+
+inline const TGameMap::TLayer& TGameMap::getLayer(unsigned int num) const
+{
+    return *getPLayer(num);
+}
+
+inline const TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer) const
+{
+    return *getPLayer(bSecondLayer ? 1U : 0U);
+}
 
 // One level of the map: its cells and the objects placed on them. The
 // objects are numbered from 1 and kept in a list in placement order; a
