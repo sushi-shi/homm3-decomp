@@ -430,3 +430,18 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "ResourceQuantitiesDlg"
 source = "src/editor/ResourceQuantitiesDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EditTimedEventGeneralPage"
+source = "src/editor/EditTimedEventGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EditTimedEventResourcesPage"
+source = "src/editor/EditTimedEventResourcesPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EditTimedEventSheet"
+source = "src/editor/EditTimedEventSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"

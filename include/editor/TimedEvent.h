@@ -5,7 +5,9 @@
 // copy (h3maped 0x417060) copies them in that order: the strings at +0
 // and +0x10, the resources at +0x20, the mask at +0x3c, the two flags at
 // +0x40/+0x41 and the days at +0x44/+0x48. Member names other than
-// _m_name are Loki's inferences.
+// _m_name are Loki's inferences. The string and flag setters are inline
+// (the event sheets assign the members); the player, day and interval
+// setters and the player test are TimedEvent.cpp's (0x4c0235..0x4c06c7).
 #ifndef HOMM3_EDITOR_TIMEDEVENT_H
 #define HOMM3_EDITOR_TIMEDEVENT_H
 
@@ -14,11 +16,33 @@
 #include "editor/Player.h"
 #include "editor/ResourceQuantities.h"
 
+// The calendar (Loki's TimedEvent.h: "newDay < kNumDaysPerYear * 2").
+const unsigned int kNumDaysPerWeek = 7;
+const unsigned int kNumWeeksPerMonth = 4;
+const unsigned int kNumDaysPerMonth = kNumDaysPerWeek * kNumWeeksPerMonth;
+const unsigned int kNumMonthsPerYear = 12;
+const unsigned int kNumDaysPerYear = kNumDaysPerMonth * kNumMonthsPerYear;
+
 class TTimedEvent {
 public:
+    enum { s_kMaxMessageLen = 300 };
+
+    void setName(const std::string& newName) { _m_name = newName; }
+    void setMessage(const std::string& newMessage) { _m_message = newMessage; }
+    void setResourceQuantities(const TResourceQuantities& newQuantities)
+    {
+        _m_resourceQuantities = newQuantities;
+    }
+    void setBApplyToPlayer(TPlayer player, bool bApply);
+    void setBApplyToHuman(bool bApply) { _m_bApplyToHuman = bApply; }
+    void setBApplyToComputer(bool bApply) { _m_bApplyToComputer = bApply; }
+    void setFirstOccurence(unsigned int newDay);
+    void setSubsequentInterval(unsigned int newInterval);
+
     const std::string& getName() const { return _m_name; }
     const std::string& getMessage() const { return _m_message; }
     const TResourceQuantities& getResourceQuantities() const { return _m_resourceQuantities; }
+    bool getBApplyToPlayer(TPlayer player) const;
     bool getBApplyToHuman() const { return _m_bApplyToHuman; }
     bool getBApplyToComputer() const { return _m_bApplyToComputer; }
     unsigned int getFirstOccurence() const { return _m_firstOccurence; }

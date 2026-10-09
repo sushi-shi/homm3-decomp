@@ -48,7 +48,7 @@ BOOL TSignPropsDlg::OnInitDialog()
     GetDlgItem(IDOK)->SetWindowText(kOKStr);
     GetDlgItem(IDCANCEL)->SetWindowText(kCancelStr);
     GetDlgItem(ID_HELP)->SetWindowText(kHelpStr);
-    GetDlgItem(IDC_SIGN_MESSAGE_STATIC)->SetWindowText(SSignPropsDlgText::kMessageStaticStr);
+    GetDlgItem(IDC_MESSAGE_STATIC)->SetWindowText(SSignPropsDlgText::kMessageStaticStr);
     _m_bModified = false;
     _m_text = _m_pSign->getText().c_str();
     _m_text.Replace("\n", "\r\n");
