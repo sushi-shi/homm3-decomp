@@ -200,24 +200,49 @@ public:
 
     virtual ~TScenarioStartingOptions() {}
     virtual void accept(TVisitor& visitor) const = 0;
+
+    std::auto_ptr<TScenarioStartingOptions> clone() const;
 };
+
+bool operator==(const TScenarioStartingOptions& lhs, const TScenarioStartingOptions& rhs);
 
 class TScenarioOptionsBonus : public TScenarioStartingOptions {
 public:
+    TScenarioOptionsBonus(int player, const std::vector<std::auto_ptr<TScenarioStartingBonus> >& bonuses);
+    TScenarioOptionsBonus(const TScenarioOptionsBonus& other);
+
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    void removeBonus(int index);
 
     int m_player;
     std::vector<std::auto_ptr<TScenarioStartingBonus> > m_bonuses;
 };
 
+bool operator==(const TScenarioOptionsBonus& lhs, const TScenarioOptionsBonus& rhs);
+
 class TScenarioOptionsCrossoverScenario : public TScenarioStartingOptions {
 public:
     struct TChoice {
+        bool operator==(const TChoice& other) const
+        {
+            return m_scenario == other.m_scenario && m_player == other.m_player;
+        }
+
         int m_scenario;
         int m_player;
     };
 
+    explicit TScenarioOptionsCrossoverScenario(const std::vector<TChoice>& choices) : m_choices(choices) {}
+
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    void removeChoice(int index);
+
+    bool operator==(const TScenarioOptionsCrossoverScenario& other) const
+    {
+        return m_choices == other.m_choices;
+    }
 
     std::vector<TChoice> m_choices;
 };
@@ -225,11 +250,25 @@ public:
 class TScenarioOptionsStartingHero : public TScenarioStartingOptions {
 public:
     struct TChoice {
+        bool operator==(const TChoice& other) const
+        {
+            return m_hero == other.m_hero && m_player == other.m_player;
+        }
+
         int m_hero;
         int m_player;
     };
 
+    explicit TScenarioOptionsStartingHero(const std::vector<TChoice>& choices) : m_choices(choices) {}
+
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
+
+    void removeChoice(int index);
+
+    bool operator==(const TScenarioOptionsStartingHero& other) const
+    {
+        return m_choices == other.m_choices;
+    }
 
     std::vector<TChoice> m_choices;
 };
