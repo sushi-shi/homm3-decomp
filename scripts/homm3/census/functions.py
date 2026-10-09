@@ -17,8 +17,8 @@ strength, each later seed admitted only outside the bodies already decoded:
   5. the first non-padding byte after a body's decoded extent (unreferenced
      neighbours), repeated to a fixpoint.
 
-A data or immediate seed that the final descent places inside another
-function's instruction is dropped again.
+A data or immediate seed is dropped again when the function before it,
+descended without it, falls into it or runs through it.
 
 Extents partition .text: a function runs to the next start minus trailing
 NOP/INT3 padding, and always covers its decoded instructions, jump tables
@@ -434,22 +434,41 @@ def run(image, log=print):
         res = c.descend(s)
         if res is not None:
             c.reached[s] = res[0] | c.extra.get(s, set())
-    # a weak seed (a code-looking data or immediate value) that the final
-    # descent puts inside another function's instruction is no start: the
-    # owner's earlier, shorter descent had left those bytes uncovered
-    inner = {}
-    for s0, seen in c.reached.items():
-        for r in seen:
-            for b in range(r + 1, r + c.insn(r).size):
-                inner[b] = s0
+    # a weak seed (a code-looking data or immediate value) is no start when
+    # the function before it, descended without it, falls into it or runs
+    # through it: the seed was taken before that descent covered it
+    import bisect
     for s in sorted(c.starts):
         why = c.starts[s]
-        if inner.get(s, s) != s and (why == "imm" or why.startswith("data@")):
-            del c.starts[s]
-            c.reached.pop(s, None)
-            c.calls.pop(s, None)
-            for t in [t for t, (owner, _n, _k) in c.tables.items() if owner == s]:
-                del c.tables[t]
+        if not (why == "imm" or why.startswith("data@")):
+            continue
+        order = sorted(c.starts)
+        k = bisect.bisect_left(order, s)
+        if k == 0:
+            continue
+        p = order[k - 1]
+        # a gap-filling neighbour may be data decoded as code: only its
+        # instructions' interiors are evidence against the seed
+        weak_p = c.starts[p].startswith("gap-after")
+        del c.starts[s]
+        res = c.descend(p)
+        # inside one of its instructions, or reached by falling through:
+        # a jump to it may still be a tail call
+        covers = res is not None and any(
+            r < s < r + c.insn(r).size
+            or (not weak_p and r + c.insn(r).size == s
+                and c.insn(r).mnemonic not in ("jmp", "ret", "retf", "int3"))
+            for r in res[0])
+        if not covers:
+            c.starts[s] = why
+            continue
+        c.reached[p] = res[0] | c.extra.get(p, set())
+        c.reached.pop(s, None)
+        c.calls.pop(s, None)
+        for t in [t for t, (owner, _n, _k) in c.tables.items() if owner == s]:
+            del c.tables[t]
+        for t, n, kind in res[1]:
+            c.tables[t] = (p, n, kind)
     log(f"[census] {len(c.starts)} starts, {rounds} gap rounds, {len(c.tables)} tables, "
         f"{len(c.continuations)} catch continuations")
     return c

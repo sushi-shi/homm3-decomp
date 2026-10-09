@@ -25294,7 +25294,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc4b60	0x414544	data	.data	code-interior	-	dropped
 0xc4b64	0x491fb0	data	.data	literal-interior	-	kept
 0xc4b88	0x491fa8	data	.data	literal-start	-	kept
-0xc4b8c	0x414e45	data	.data	code-start	-	kept
+0xc4b8c	0x414e45	data	.data	code-interior	-	dropped
 0xc4b90	0x491f9c	data	.data	literal-start	-	kept
 0xc4bb4	0x491f84	data	.data	literal-start	-	kept
 0xc4bb8	0x4e5345	data	.data	data	-	kept
@@ -25355,7 +25355,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc4e74	0x491fd0	data	.data	literal-start	-	kept
 0xc4e7c	0x491ed0	data	.data	literal-start	-	kept
 0xc4ea8	0x492134	data	.data	literal-interior	-	kept
-0xc4eac	0x415355	data	.data	code-start	-	kept
+0xc4eac	0x415355	data	.data	code-interior	-	dropped
 0xc4eb0	0x49212c	data	.data	literal-start	-	kept
 0xc4eb4	0x524247	data	.data	data	-	kept
 0xc4eb8	0x492124	data	.data	literal-start	-	kept
@@ -25397,14 +25397,14 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc4f48	0x492058	data	.data	literal-start	-	kept
 0xc4f4c	0x524247	data	.data	data	-	kept
 0xc4f50	0x492048	data	.data	literal-start	-	kept
-0xc4f54	0x415355	data	.data	code-start	-	kept
+0xc4f54	0x415355	data	.data	code-interior	-	dropped
 0xc4f58	0x492140	data	.data	data	-	kept
-0xc4f5c	0x415355	data	.data	code-start	-	kept
+0xc4f5c	0x415355	data	.data	code-interior	-	dropped
 0xc4f60	0x492544	data	.data	literal-start	-	kept
 0xc4f68	0x492530	data	.data	literal-start	-	kept
 0xc4f70	0x49251c	data	.data	literal-start	-	kept
 0xc4f78	0x492510	data	.data	literal-interior	-	kept
-0xc4f7c	0x414e45	data	.data	code-start	-	kept
+0xc4f7c	0x414e45	data	.data	code-interior	-	dropped
 0xc4f80	0x492508	data	.data	literal-start	-	kept
 0xc4f84	0x424c4e	data	.data	code-interior	-	dropped
 0xc4f88	0x4924fc	data	.data	literal-start	-	kept
@@ -25424,7 +25424,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc4fcc	0x424c4e	data	.data	code-interior	-	dropped
 0xc4fd0	0x492478	data	.data	literal-interior	-	kept
 0xc4fd8	0x49246c	data	.data	literal-start	-	kept
-0xc4fdc	0x414e45	data	.data	code-start	-	kept
+0xc4fdc	0x414e45	data	.data	code-interior	-	dropped
 0xc4fe0	0x49245c	data	.data	literal-interior	-	kept
 0xc4fe4	0x4c4e45	data	.data	data	-	kept
 0xc4fe8	0x492450	data	.data	literal-start	-	kept

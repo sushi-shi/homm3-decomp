@@ -59487,7 +59487,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x197220	0x54c2bc	data	.data	literal-start	-	kept
 0x197224	0x425246	data	.data	code-interior	-	dropped
 0x197228	0x54c270	data	.data	literal-start	-	kept
-0x19722c	0x4c4542	data	.data	code-start	-	kept
+0x19722c	0x4c4542	data	.data	code-interior	-	dropped
 0x19724c	0x54c268	data	.data	literal-interior	-	kept
 0x197250	0x414544	data	.data	code-interior	-	dropped
 0x197254	0x54c260	data	.data	literal-interior	-	kept
@@ -59521,7 +59521,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x197388	0x54c1fc	data	.data	literal-start	-	kept
 0x19738c	0x58554c	data	.data	literal-interior	-	kept
 0x1973ac	0x54c280	data	.data	literal-start	-	kept
-0x1973b0	0x415345	data	.data	code-start	-	kept
+0x1973b0	0x415345	data	.data	code-interior	-	dropped
 0x1973b4	0x54c1f4	data	.data	literal-start	-	kept
 0x1973b8	0x4e4150	data	.data	code-interior	-	dropped
 0x1973d8	0x54c258	data	.data	literal-start	-	kept
@@ -59565,7 +59565,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x19756c	0x54c180	data	.data	literal-start	-	kept
 0x197570	0x595250	data	.data	data	-	kept
 0x197598	0x54c3e4	data	.data	literal-interior	-	kept
-0x19759c	0x415355	data	.data	code-start	-	kept
+0x19759c	0x415355	data	.data	code-interior	-	dropped
 0x1975a0	0x54c3dc	data	.data	literal-start	-	kept
 0x1975a4	0x524247	data	.data	code-interior	-	dropped
 0x1975a8	0x54c3d4	data	.data	literal-start	-	kept
@@ -59607,9 +59607,9 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x197638	0x54c308	data	.data	literal-start	-	kept
 0x19763c	0x524247	data	.data	code-interior	-	dropped
 0x197640	0x54c2f8	data	.data	literal-start	-	kept
-0x197644	0x415355	data	.data	code-start	-	kept
+0x197644	0x415355	data	.data	code-interior	-	dropped
 0x197648	0x54c3f0	data	.data	data	-	kept
-0x19764c	0x415355	data	.data	code-start	-	kept
+0x19764c	0x415355	data	.data	code-interior	-	dropped
 0x197650	0x54c7f4	data	.data	literal-start	-	kept
 0x197654	0x554e45	data	.data	data	-	kept
 0x197658	0x54c7e0	data	.data	literal-start	-	kept
@@ -59643,7 +59643,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x1976c8	0x54c71c	data	.data	literal-start	-	kept
 0x1976cc	0x414e45	data	.data	code-interior	-	dropped
 0x1976d0	0x54c70c	data	.data	literal-interior	-	kept
-0x1976d4	0x4c4e45	data	.data	code-start	-	kept
+0x1976d4	0x4c4e45	data	.data	code-interior	-	dropped
 0x1976d8	0x54c700	data	.data	literal-start	-	kept
 0x1976dc	0x434e45	data	.data	code-interior	-	dropped
 0x1976e0	0x54c6ec	data	.data	literal-interior	-	kept
@@ -59659,7 +59659,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x197708	0x54c690	data	.data	literal-start	-	kept
 0x19770c	0x544e45	data	.data	data	-	kept
 0x197710	0x54c684	data	.data	literal-start	-	kept
-0x197714	0x474e45	data	.data	code-start	-	kept
+0x197714	0x474e45	data	.data	code-interior	-	dropped
 0x197718	0x54c678	data	.data	literal-interior	-	kept
 0x19771c	0x554e45	data	.data	data	-	kept
 0x197720	0x54c66c	data	.data	literal-start	-	kept
@@ -59677,7 +59677,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x197750	0x54c604	data	.data	literal-start	-	kept
 0x197754	0x434544	data	.data	code-interior	-	dropped
 0x197758	0x54c5f0	data	.data	literal-start	-	kept
-0x19775c	0x4c4544	data	.data	code-start	-	kept
+0x19775c	0x4c4544	data	.data	code-interior	-	dropped
 0x197760	0x54c5e0	data	.data	literal-start	-	kept
 0x197764	0x534544	data	.data	data	-	kept
 0x197768	0x54c5d0	data	.data	literal-start	-	kept
@@ -59719,7 +59719,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x1977f8	0x54c47c	data	.data	literal-start	-	kept
 0x1977fc	0x495345	data	.data	code-interior	-	dropped
 0x197800	0x54c46c	data	.data	literal-start	-	kept
-0x197804	0x415345	data	.data	code-start	-	kept
+0x197804	0x415345	data	.data	code-interior	-	dropped
 0x197808	0x54c458	data	.data	literal-start	-	kept
 0x19780c	0x5a5345	data	.data	data	-	kept
 0x197810	0x54c448	data	.data	literal-interior	-	kept
@@ -59735,7 +59735,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x197838	0x54c3f8	data	.data	literal-start	-	kept
 0x19783c	0x534544	data	.data	data	-	kept
 0x197840	0x54c3f4	data	.data	data	-	kept
-0x197844	0x474e45	data	.data	code-start	-	kept
+0x197844	0x474e45	data	.data	code-interior	-	dropped
 0x197848	0x54c3f0	data	.data	data	-	kept
 0x19784c	0x554e45	data	.data	data	-	kept
 0x197850	0x54c3ec	data	.data	data	-	kept
