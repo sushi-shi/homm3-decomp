@@ -259,12 +259,14 @@ int heroPower(hero* candidate)
 {
     int primary = candidate->getPrimarySkillTotal();
     int skills = 0;
+    // DC game.cpp:3281 reads the array in place, while every other DC
+    // caller retains hero::get_secondary_skill as a call. The accessor form
+    // differed only in the expanded additions' operand order (getCampaign-
+    // BonusHero 98.37%, both sort helpers 99.9%); the direct read is exact.
     for (int skill = 0; skill < g_crossoverSecondarySkills; ++skill)
-        skills += candidate->getSecondarySkill(TSecondarySkill(skill));
+        skills += candidate->m_skillLevel[skill];
     // DC line 3284 adds sec_skill to pri_skill; Mac 0x91d28 likewise
     // returns primary (r9) plus the accumulated secondary total (r10).
-    // This operand-order recovery is byte-flat: helper 100%, hero picker
-    // 98.3704%; its expanded additions still differ in register scheduling.
     return primary + skills;
 }
 
