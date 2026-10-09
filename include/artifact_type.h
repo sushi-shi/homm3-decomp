@@ -242,7 +242,30 @@ enum TArtifact {
     ARTIFACT_PENDANT_OF_TOTAL_RECALL = 0x6b,
     ARTIFACT_ORB_OF_INHIBITION = 0x7e,
     ARTIFACT_POWER_OF_THE_DRAGON_FATHER = 0x86,
-    ARTIFACT_BOW_OF_THE_SHARPSHOOTER = 0x89
+    ARTIFACT_BOW_OF_THE_SHARPSHOOTER = 0x89,
+    // The rest of the ids the game passes to its artifact predicates
+    // (hero::isWieldingArtifact, playerData::hasGivenArtifact): the luck
+    // and morale charms, the necromancy and movement artifacts, the
+    // no-retreat shackles and the two Shadow of Death combinations.
+    // Dreamcast TArtifact names every RoE/AB id at the same value
+    // (eArtifactStillEyeOfTheDragon .. eArtifactShacklesOfWar); NH3API
+    // spellings, and NH3API's numbering for 133 and 136.
+    ARTIFACT_STILL_EYE_OF_THE_DRAGON = 45,
+    ARTIFACT_CLOVER_OF_FORTUNE = 46,
+    ARTIFACT_CARDS_OF_PROPHECY = 47,
+    ARTIFACT_LADYBIRD_OF_LUCK = 48,
+    ARTIFACT_CREST_OF_VALOR = 50,
+    ARTIFACT_GLYPH_OF_GALLANTRY = 51,
+    ARTIFACT_AMULET_OF_THE_UNDERTAKER = 54,
+    ARTIFACT_EQUESTRIANS_GLOVES = 70,
+    ARTIFACT_NECKLACE_OF_OCEAN_GUIDANCE = 71,
+    ARTIFACT_ANGEL_WINGS = 72,
+    ARTIFACT_BOOTS_OF_LEVITATION = 90,
+    ARTIFACT_BOOTS_OF_SPEED = 98,
+    ARTIFACT_PENDANT_OF_COURAGE = 108,
+    ARTIFACT_SHACKLES_OF_WAR = 125,
+    ARTIFACT_STATUE_OF_LEGION = 133,
+    ARTIFACT_ADMIRALS_HAT = 136
 };
 
 #endif // HOMM3_ARTIFACT_TYPE_H

@@ -1270,7 +1270,7 @@ MAC_ADDRESS(0x1b5060, 0xc0)
 long town::getAssembledLegionBonus(long dwelling) const
 {
     long bonus = 0;
-    if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
+    if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(ARTIFACT_STATUE_OF_LEGION)) {
         TCreatureType creature = g_dwellingType[m_type][dwelling];
         long growth = akCreatureTypeTraits[creature].growthRate;
         bonus = getCastleGrowthBonus(creature);
@@ -1308,33 +1308,33 @@ long town::getLegionBonus(long dwelling) const
     switch (tier) {
     case TOWN_DWELLING_TIER_2:
         if (visitingHero)
-            bonus = 5 * visitingHero->isWieldingArtifact(0x76);
+            bonus = 5 * visitingHero->isWieldingArtifact(ARTIFACT_LEGS_OF_LEGION);
         if (garrisonHero)
-            bonus += 5 * garrisonHero->isWieldingArtifact(0x76);
+            bonus += 5 * garrisonHero->isWieldingArtifact(ARTIFACT_LEGS_OF_LEGION);
         break;
     case TOWN_DWELLING_TIER_3:
         if (visitingHero)
-            bonus = 4 * visitingHero->isWieldingArtifact(0x77);
+            bonus = 4 * visitingHero->isWieldingArtifact(ARTIFACT_LOINS_OF_LEGION);
         if (garrisonHero)
-            bonus += 4 * garrisonHero->isWieldingArtifact(0x77);
+            bonus += 4 * garrisonHero->isWieldingArtifact(ARTIFACT_LOINS_OF_LEGION);
         break;
     case TOWN_DWELLING_TIER_4:
         if (visitingHero)
-            bonus = 3 * visitingHero->isWieldingArtifact(0x78);
+            bonus = 3 * visitingHero->isWieldingArtifact(ARTIFACT_TORSO_OF_LEGION);
         if (garrisonHero)
-            bonus += 3 * garrisonHero->isWieldingArtifact(0x78);
+            bonus += 3 * garrisonHero->isWieldingArtifact(ARTIFACT_TORSO_OF_LEGION);
         break;
     case TOWN_DWELLING_TIER_5:
         if (visitingHero)
-            bonus = 2 * visitingHero->isWieldingArtifact(0x79);
+            bonus = 2 * visitingHero->isWieldingArtifact(ARTIFACT_ARMS_OF_LEGION);
         if (garrisonHero)
-            bonus += 2 * garrisonHero->isWieldingArtifact(0x79);
+            bonus += 2 * garrisonHero->isWieldingArtifact(ARTIFACT_ARMS_OF_LEGION);
         break;
     case TOWN_DWELLING_TIER_6:
         if (visitingHero)
-            bonus = visitingHero->isWieldingArtifact(0x7a);
+            bonus = visitingHero->isWieldingArtifact(ARTIFACT_HEAD_OF_LEGION);
         if (garrisonHero)
-            bonus += garrisonHero->isWieldingArtifact(0x7a);
+            bonus += garrisonHero->isWieldingArtifact(ARTIFACT_HEAD_OF_LEGION);
         break;
     }
     return bonus;

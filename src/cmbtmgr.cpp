@@ -1095,7 +1095,7 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
             m_sideIsAi[side] = g_game->isHuman(m_playerIds[side]);
             m_sideIsLocalHuman[side] = g_game->isLocalHuman(m_playerIds[side]);
             m_hasAngelicAlliance[side] =
-                g_game->m_players[m_playerIds[side]].hasGivenArtifact(0x81);
+                g_game->m_players[m_playerIds[side]].hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
         } else {
             m_sideIsAi[side] = 0;
             m_sideIsLocalHuman[side] = 0;

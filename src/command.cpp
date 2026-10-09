@@ -2629,8 +2629,8 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         break;
 
     case g_combatActionRetreat:
-        if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
-                || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
+        if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(ARTIFACT_SHACKLES_OF_WAR))
+                || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(ARTIFACT_SHACKLES_OF_WAR))) {
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT],
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
@@ -2643,8 +2643,8 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         break;
 
     case g_combatActionSurrender:
-        if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
-                || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
+        if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(ARTIFACT_SHACKLES_OF_WAR))
+                || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(ARTIFACT_SHACKLES_OF_WAR))) {
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT],
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,

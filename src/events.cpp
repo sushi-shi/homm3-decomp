@@ -679,7 +679,7 @@ void advManager::doEventAnchor(hero* currentHero, bool humanPlayer)
     if (currentHero->m_flags & 0x40000) {
         currentHero->m_flags &= ~0x40000;
         if (!(currentHero->m_flags & 0x1000000)) {
-            if (currentHero->isWieldingArtifact(0x88)) {
+            if (currentHero->isWieldingArtifact(ARTIFACT_ADMIRALS_HAT)) {
                 int oldMaxMovePoints = currentHero->m_maxMovePoints;
                 int oldMovePoints = currentHero->m_movePoints;
                 int newMaxMovePoints = currentHero->getMobility(0);
@@ -1314,7 +1314,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     }
     showRewards(msg, rewards, 1);
 
-    if (currentHero->isWieldingArtifact(0)) {
+    if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
             if (akSpellTraits[blackBox->m_spells[n]].m_level
                     <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
@@ -1506,7 +1506,7 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
     currentHero->m_flightLevel = eMasteryInvalid;
     currentHero->m_waterWalkLevel = eMasteryInvalid;
     if (!(currentHero->m_flags & 0x1000000)) {
-        if (currentHero->isWieldingArtifact(0x88)) {
+        if (currentHero->isWieldingArtifact(ARTIFACT_ADMIRALS_HAT)) {
             int oldMaxMovePoints = currentHero->m_maxMovePoints;
             int oldMovePoints = currentHero->m_movePoints;
             int newMaxMovePoints = currentHero->getMobility(1);

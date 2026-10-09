@@ -249,8 +249,8 @@ bool combatManager::aiCheckRetreat()
     if ((m_sideIsAi[m_currentSide]
             || (g_game->m_setup.m_difficulty
                 && (g_game->m_setup.m_difficulty != 1 || random(1, 100) > 50)))
-        && (!m_heroes[0] || !m_heroes[0]->isWieldingArtifact(0x7d))
-        && (!m_heroes[1] || !m_heroes[1]->isWieldingArtifact(0x7d))
+        && (!m_heroes[0] || !m_heroes[0]->isWieldingArtifact(ARTIFACT_SHACKLES_OF_WAR))
+        && (!m_heroes[1] || !m_heroes[1]->isWieldingArtifact(ARTIFACT_SHACKLES_OF_WAR))
         && (g_game->m_mapHeader.m_victoryCondition.m_type != VICTORY_CONDITION_DEFEAT_HERO
             || g_game->m_mapHeader.m_victoryCondition.m_heroId
                != m_heroes[m_currentSide]->m_id)) {
@@ -1573,7 +1573,7 @@ bool combatManager::chooseResurrectAction(const army* currentArmy, long& bestVal
         return 0;
     army demonArmy;  // Original: demon_army.
     if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
-        demonArmy.initialize(TCreatureType(CREATURE_DEMON), 1,
+        demonArmy.initialize(CREATURE_DEMON, 1,
                              m_heroes[estimate.getGroup()],
                              estimate.getGroup(), 0, 0);
     for (long i = m_numArmies[estimate.getGroup()]; i--; ) {

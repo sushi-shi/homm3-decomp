@@ -3092,23 +3092,23 @@ std::string hero::getMoraleDescription() const
         morale += 500;
     }
 
-    if (this->isWieldingArtifact(0x6c)) {
+    if (this->isWieldingArtifact(ARTIFACT_PENDANT_OF_COURAGE)) {
         result += g_moraleInfo[26];
         morale += 3;
     }
-    if (this->isWieldingArtifact(0x2d)) {
+    if (this->isWieldingArtifact(ARTIFACT_STILL_EYE_OF_THE_DRAGON)) {
         result += g_moraleInfo[4];
         morale++;
     }
-    if (this->isWieldingArtifact(0x31)) {
+    if (this->isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE)) {
         result += g_moraleInfo[5];
         morale++;
     }
-    if (this->isWieldingArtifact(0x32)) {
+    if (this->isWieldingArtifact(ARTIFACT_CREST_OF_VALOR)) {
         result += g_moraleInfo[6];
         morale++;
     }
-    if (this->isWieldingArtifact(0x33)) {
+    if (this->isWieldingArtifact(ARTIFACT_GLYPH_OF_GALLANTRY)) {
         result += g_moraleInfo[7];
         morale++;
     }
@@ -3269,23 +3269,23 @@ std::string hero::getLuckDescription() const
         luck += 500;
     }
 
-    if (this->isWieldingArtifact(0x6c)) {
+    if (this->isWieldingArtifact(ARTIFACT_PENDANT_OF_COURAGE)) {
         result += g_luckInfo[21];
         luck += 3;
     }
-    if (this->isWieldingArtifact(0x2d)) {
+    if (this->isWieldingArtifact(ARTIFACT_STILL_EYE_OF_THE_DRAGON)) {
         result += g_luckInfo[4];
         luck++;
     }
-    if (this->isWieldingArtifact(0x2e)) {
+    if (this->isWieldingArtifact(ARTIFACT_CLOVER_OF_FORTUNE)) {
         result += g_luckInfo[5];
         luck++;
     }
-    if (this->isWieldingArtifact(0x2f)) {
+    if (this->isWieldingArtifact(ARTIFACT_CARDS_OF_PROPHECY)) {
         result += g_luckInfo[6];
         luck++;
     }
-    if (this->isWieldingArtifact(0x30)) {
+    if (this->isWieldingArtifact(ARTIFACT_LADYBIRD_OF_LUCK)) {
         result += g_luckInfo[7];
         luck++;
     }
@@ -5641,15 +5641,15 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
             luck = static_cast<long>((m_level * 0.05f + 1.0f) * luck);
     }
 
-    if (isWieldingArtifact(0x6c))
+    if (isWieldingArtifact(ARTIFACT_PENDANT_OF_COURAGE))
         luck += 3;
-    if (isWieldingArtifact(0x2d))
+    if (isWieldingArtifact(ARTIFACT_STILL_EYE_OF_THE_DRAGON))
         luck++;
-    if (isWieldingArtifact(0x2e))
+    if (isWieldingArtifact(ARTIFACT_CLOVER_OF_FORTUNE))
         luck++;
-    if (isWieldingArtifact(0x2f))
+    if (isWieldingArtifact(ARTIFACT_CARDS_OF_PROPHECY))
         luck++;
-    if (isWieldingArtifact(0x30))
+    if (isWieldingArtifact(ARTIFACT_LADYBIRD_OF_LUCK))
         luck++;
 
     if (m_owner >= 0) {
@@ -5693,15 +5693,15 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
             morale = static_cast<long>((m_level * 0.05f + 1.0f) * morale);
     }
 
-    if (isWieldingArtifact(0x6c))
+    if (isWieldingArtifact(ARTIFACT_PENDANT_OF_COURAGE))
         morale += 3;
-    if (isWieldingArtifact(0x2d))
+    if (isWieldingArtifact(ARTIFACT_STILL_EYE_OF_THE_DRAGON))
         morale++;
-    if (isWieldingArtifact(0x31))
+    if (isWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE))
         morale++;
-    if (isWieldingArtifact(0x32))
+    if (isWieldingArtifact(ARTIFACT_CREST_OF_VALOR))
         morale++;
-    if (isWieldingArtifact(0x33))
+    if (isWieldingArtifact(ARTIFACT_GLYPH_OF_GALLANTRY))
         morale++;
 
     if (m_owner >= 0) {
@@ -5754,11 +5754,11 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
             ability.m_skill == eSecSkillNecromancy)
             factor = (m_level * 0.05f + 1.0f) * factor;
 
-        if (isWieldingArtifact(0x36))
+        if (isWieldingArtifact(ARTIFACT_AMULET_OF_THE_UNDERTAKER))
             factor += 0.05f;
-        if (isWieldingArtifact(0x37))
+        if (isWieldingArtifact(ARTIFACT_VAMPIRES_COWL))
             factor += 0.1f;
-        if (isWieldingArtifact(0x38))
+        if (isWieldingArtifact(ARTIFACT_DEAD_MANS_BOOTS))
             factor += 0.15f;
 
         if (m_owner >= 0) {
@@ -5773,7 +5773,7 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
                 }
             }
         }
-    } else if (isWieldingArtifact(0x82)) {
+    } else if (isWieldingArtifact(ARTIFACT_CLOAK_OF_THE_UNDEAD_KING)) {
         factor += 0.3f;
     }
 
@@ -6064,7 +6064,7 @@ int hero::getMobility(bool seaMovement) const
             mobility += g_game->mineTypesOwned(m_owner, 100) *
                         g_moveConstants.m_lighthouseBonus;
 
-        if (isWieldingArtifact(0x7b))
+        if (isWieldingArtifact(ARTIFACT_SEA_CAPTAINS_HAT))
             mobility += g_moveConstants.m_lighthouseBonus;
 
         for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
@@ -6073,7 +6073,7 @@ int hero::getMobility(bool seaMovement) const
                 mobility += g_moveConstants.m_lighthouseBonus;
         }
 
-        if (isWieldingArtifact(0x47))
+        if (isWieldingArtifact(ARTIFACT_NECKLACE_OF_OCEAN_GUIDANCE))
             mobility += g_moveConstants.m_oceanGuidanceBonus;
     } else {
         int slowest = 20;
@@ -6098,9 +6098,9 @@ int hero::getMobility(bool seaMovement) const
         mobility = g_moveConstants.m_land[slowest];
         mobility = static_cast<int>(mobility * getLogisticsFactor());
 
-        if (isWieldingArtifact(0x62))
+        if (isWieldingArtifact(ARTIFACT_BOOTS_OF_SPEED))
             mobility += g_moveConstants.m_bootsOfSpeedBonus;
-        if (isWieldingArtifact(0x46))
+        if (isWieldingArtifact(ARTIFACT_EQUESTRIANS_GLOVES))
             mobility += g_moveConstants.m_equestriansGlovesBonus;
         if (m_flags & 2)
             mobility += g_stablesMovementBonus;

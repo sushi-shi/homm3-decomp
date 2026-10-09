@@ -611,9 +611,9 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
     m_flightLevel = currentHero->m_flightLevel;
     m_waterWalkLevel = currentHero->m_waterWalkLevel;
 
-    if (currentHero->isWieldingArtifact(0x48))
+    if (currentHero->isWieldingArtifact(ARTIFACT_ANGEL_WINGS))
         m_flightLevel = eMasteryExpert;
-    if (currentHero->isWieldingArtifact(0x5a))
+    if (currentHero->isWieldingArtifact(ARTIFACT_BOOTS_OF_LEVITATION))
         m_waterWalkLevel = eMasteryExpert;
 
     unsigned char flying = m_flightLevel > eMasteryInvalid && !isBoat;
@@ -630,7 +630,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 
             m_canSummonBoat = checkSummonBoat(currentHero);
 
-            if (currentHero->isWieldingArtifact(0x48)) {
+            if (currentHero->isWieldingArtifact(ARTIFACT_ANGEL_WINGS)) {
                 m_canCastFlight = 1;
             } else {
                 m_canCastFlight =
@@ -640,7 +640,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 m_flightLevel = currentHero->getSpellLevel(SPELL_FLY);
             }
 
-            if (currentHero->isWieldingArtifact(0x5a)) {
+            if (currentHero->isWieldingArtifact(ARTIFACT_BOOTS_OF_LEVITATION)) {
                 m_canCastWaterWalk = 1;
             } else {
                 m_canCastWaterWalk =

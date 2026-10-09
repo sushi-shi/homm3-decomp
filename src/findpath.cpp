@@ -246,9 +246,9 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
     NewmapCell* dest = g_game->getCell(to);
     long flying = currentHero->m_flightLevel;
     long waterWalking = currentHero->m_waterWalkLevel;
-    if (currentHero->isWieldingArtifact(0x48))
+    if (currentHero->isWieldingArtifact(ARTIFACT_ANGEL_WINGS))
         flying = 3;
-    if (currentHero->isWieldingArtifact(0x5a))
+    if (currentHero->isWieldingArtifact(ARTIFACT_BOOTS_OF_LEVITATION))
         waterWalking = 3;
     if (currentHero->m_flags & 0x40000)
         waterWalking = flying = -1;
@@ -799,7 +799,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
                 cost = currentHero->getSpellLevel(8) == eMasteryExpert
                     ? 200 : 300;
             } else if (m_flightLevel <= m_waterWalkLevel) {
-                if (!currentHero->isWieldingArtifact(0x5a))
+                if (!currentHero->isWieldingArtifact(ARTIFACT_BOOTS_OF_LEVITATION))
                     dest.m_adjustedCost += 500;
                 dest.m_waterWalking = 1;
                 cost = calcTerrainCost(srcCell, direction, turnMobility,
@@ -809,7 +809,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
                                        hasNomad);
                 dest.m_moveLeft = m_landMovement - cost;
             } else {
-                if (!currentHero->isWieldingArtifact(0x48))
+                if (!currentHero->isWieldingArtifact(ARTIFACT_ANGEL_WINGS))
                     dest.m_adjustedCost += 500;
                 dest.m_flying = 1;
                 cost = calcTerrainCost(srcCell, direction, turnMobility,

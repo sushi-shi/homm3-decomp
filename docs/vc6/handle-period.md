@@ -301,6 +301,15 @@ includes `rmg`.
   `monstersSellOut` (retail k = 3..25 or 32..63) and `transmitSaveGame`
   (its better class at 3, 7, 26..28, 30..39, 48..59) at k = 0; the
   Dreamcast `e_looping_sound_id` names in advmgr.h (+50) restore both.
+* 2026-10-09: completing TCreatureType (the 57 ids the editors' town
+  generator tables and the game's narrow ai.h/advmgr_objects.h rosters
+  named; those rosters fold into it) alone took initializeGameData to
+  94.07. Measured window above that +57: k = +5..+18 is retail, +3 gives
+  97.04, +20..+26 96.06. The 16 artifact ids the game passes to its
+  artifact predicates (+16, artifact_type.h) land inside it. The same
+  edit moves `aiEnterTown` 99.9565 -> 99.9304 (MAX held): in philai's
+  frame its retail-closer class needs at least 4 more handles, which
+  initializeGameData's window excludes.
 
 **For any function** whose CUR moves between commits that did not touch its
 TU, check with `homm3 vc6 compile-m` whether its assemblies are period-64

@@ -55,27 +55,6 @@ enum EGarrisonType {
     GARRISON_ANTI_MAGIC = 1
 };
 
-// The dwellings of getSoundId's generator switch that no wider creature
-// enum names, each named by its generator sound. NH3API spellings,
-// Complete numbering; kept narrow like ai.h's roster.
-enum EGetSoundCreatureType {
-    CREATURE_SWORDSMAN = 6,
-    CREATURE_CENTAUR = 14,
-    CREATURE_UNICORN = 24,
-    CREATURE_GREMLIN = 28,
-    CREATURE_GIANT = 40,
-    CREATURE_HELL_HOUND = 46,
-    CREATURE_PIT_FIEND = 50,
-    CREATURE_MANTICORE = 80,
-    CREATURE_GOBLIN = 84,
-    CREATURE_WOLF_RIDER = 86,
-    CREATURE_OGRE = 90,
-    CREATURE_ROC = 92,
-    CREATURE_BEHEMOTH = 96,
-    CREATURE_GNOLL = 98,
-    CREATURE_GORGON = 102
-};
-
 extern const TCreatureType g_creatureGenerator1Types[];
 extern TCreatureType g_creatureGenerator4Types[][4];
 

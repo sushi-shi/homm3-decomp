@@ -374,7 +374,7 @@ void type_garrison_purchaser::markTown(town* ourTown) const
 {
     type_AI_creature_purchaser purchaser(m_currentPlayerId, ourTown);
     playerData* player = &g_game->m_players[m_currentPlayerId];
-    unsigned char hasAngelicAlliance = player->hasGivenArtifact(0x81);
+    unsigned char hasAngelicAlliance = player->hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&ourTown->getArmy(), 3, 0, player->m_resources,
                           1, hasAngelicAlliance);
