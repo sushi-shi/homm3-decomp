@@ -212,6 +212,81 @@ def _virtual_vftable_names(c, cols):
     return out
 
 
+def hierarchy(c, chd):
+    """A Class Hierarchy Descriptor's base classes as a tree of (name,
+    offset in the complete object, virtual, children), the class first;
+    None when the descriptor does not parse."""
+    base = c.image.image_base
+    count, array = c.dword(chd + 8), c.dword(chd + 12)
+    if count is None or array is None or not 0 < count < 256:
+        return None
+    entries = []
+    for i in range(count):
+        bcd = c.dword(array - base + 4 * i)
+        if bcd is None:
+            return None
+        td, contained = c.dword(bcd - base), c.dword(bcd - base + 4)
+        mdisp, pdisp = c.dword(bcd - base + 8), c.dword(bcd - base + 12)
+        if None in (td, contained, mdisp, pdisp):
+            return None
+        mdisp = struct.unpack("<i", struct.pack("<I", mdisp))[0]
+        entries.append((type_name(c, td - base), contained, mdisp, pdisp != 0xFFFFFFFF))
+
+    def build(i):
+        name, contained, mdisp, virtual = entries[i]
+        children, j, end = [], i + 1, i + 1 + contained
+        if end > len(entries):
+            raise ValueError("base count")
+        while j < end:
+            child, j = build(j)
+            children.append(child)
+        return (name, mdisp, virtual, children), end
+    try:
+        return build(0)[0]
+    except (ValueError, RecursionError):
+        return None
+
+
+def vfptr_names(tree, offsets):
+    """{offset: mangled path} of the vfptrs of a class without virtual
+    bases, from its own hierarchy descriptor alone (its bases need no
+    tables of their own in the image): a subobject at one of the class's
+    table `offsets` with no base there starts an empty path; a base passes
+    its paths up, remembering itself as the next base to mangle unless the
+    path already ends with it; at each class the paths left ambiguous take
+    their next base until all differ. A class deriving singly from one with
+    several tables thus keeps that class's names
+    (`??_7TRandomHeroPropsSheet@@6BCPropertySheet@@@`), and a vfptr alone
+    at every level has an empty path (`??_7TNonRandomHeroPropsSheet@@6B@`
+    for its second interface)."""
+    def paths(node):
+        _name, offset, _virtual, children = node
+        out = []
+        if offset in offsets and not any(m == offset for _n, m, _v, _c in children):
+            out.append([offset, [], None])
+        for child in children:
+            for at, mangled, nxt in paths(child):
+                if not mangled or mangled[-1] != child[0]:
+                    nxt = child[0]
+                out.append([at, list(mangled), nxt])
+        changed = True
+        while changed:
+            changed = False
+            buckets = {}
+            for p in out:
+                buckets.setdefault(tuple(p[1]), []).append(p)
+            for group in buckets.values():
+                if len(group) < 2:
+                    continue
+                for p in group:
+                    if p[2]:
+                        p[1].append(p[2])
+                        p[2] = None
+                        changed = True
+        return out
+    return {at: mangled for at, mangled, _nxt in paths(tree)}
+
+
 def census(c, starts):
     image, base = c.image, c.image.image_base
     rdata = next(s for s in image.sections if s.name == ".rdata")
@@ -238,10 +313,18 @@ def census(c, starts):
         return bases[0] if bases else None
     several = {col[2] for _rva, col in cols if col[0] and named_base(col[3], col[0])}
     virtual_names = _virtual_vftable_names(c, cols)
+    offsets = {}
+    for _rva, (offset, _cd, name, _chd) in cols:
+        offsets.setdefault(name, set()).add(offset)
     for rva, (offset, _cd, name, chd) in cols:
         cls = name
+        tree = (hierarchy(c, chd) if len(offsets[name]) > 1 and rva not in virtual_names
+                and not any(v for _n, _m, v in base_names(c, chd, True)[1:]) else None)
+        path = vfptr_names(tree, offsets[name]).get(offset) if tree is not None else None
         if rva in virtual_names:
             cls = virtual_names[rva]
+        elif path is not None:
+            cls = _mangled_vftable(name, path) if path else name
         elif offset:
             bases = [n for n, m in base_names(c, chd)[1:] if m == offset and n]
             cls = f"??_7{name}@@6B{bases[0]}@@@" if bases else ""
