@@ -139,6 +139,16 @@ class TTeamInfo {
 public:
     enum { s_kMinTeams = 2, s_kMaxTeams = 7 };
 
+    // No teams, and the minimum of them when enabled (h3maped 0x433635).
+    TTeamInfo() : _m_bHasTeams(false), _m_numTeams(s_kMinTeams), _m_aPlayerTeam(0) {}
+
+    friend bool operator==(const TTeamInfo& lhs, const TTeamInfo& rhs)
+    {
+        return lhs._m_bHasTeams == rhs._m_bHasTeams && lhs._m_numTeams == rhs._m_numTeams
+               && lhs._m_aPlayerTeam == rhs._m_aPlayerTeam;
+    }
+    friend bool operator!=(const TTeamInfo& lhs, const TTeamInfo& rhs) { return !(lhs == rhs); }
+
     bool getBHasTeams() const { return _m_bHasTeams; }
     unsigned int getNumTeams() const { return _m_numTeams; }
     void setBHasTeams(bool bHasTeams) { _m_bHasTeams = bHasTeams; }
