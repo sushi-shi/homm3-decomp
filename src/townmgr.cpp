@@ -7096,6 +7096,11 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // transposition from the sprite collection loop through the tail. A named
 // base-widget sprite local and unsigned index are byte-flat. A while-form
 // final widget traversal does not recover that boundary. Keep push_back.
+// DC 8622..8628, Mac retail and Windows retail all register the widgets in
+// place (retail calls vector begin/end, addWidget and memError here), not
+// through heroWindow::addWidgetsToMessageStream. Restoring the in-place
+// loop expands begin/end where retail keeps calls (95.52%); the budget left
+// at this tail is the open question, so the helper call stays for now.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
 MAC_ADDRESS(0x1d6668, 0xa4e0)
