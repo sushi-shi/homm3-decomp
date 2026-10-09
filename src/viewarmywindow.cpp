@@ -509,6 +509,10 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // Lead (2026-10-09): bracing every guarded statement restores the inline
 // luck append (99.13%), but DC 409/441..443/463..465/470/474 record single
 // scopes there, so the cost the luck += needs must come from elsewhere.
+// DC 598/602 brace both siege-frame arms (byte-flat; root cb 1586 -> 1590
+// of the >= 1600 the luck += needs). Reading m_influence at every spell use
+// also reaches 99.13%, but retail copies the selected value (mov eax, ecx)
+// and DC 551 assigns it, so the spell local stays.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)
 DC_ADDRESS(0x191804, 0x604)
@@ -667,10 +671,11 @@ int TViewArmyWindow::windowHandler(message& msg)
     }
 
     if (GameTime::isPast(g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
-        if (isSiegeWeapon(m_armyType))
+        if (isSiegeWeapon(m_armyType)) {
             m_spriteWidget->nextRandomSiegeEngineFrame();
-        else
+        } else {
             m_spriteWidget->nextRandomFrame();
+        }
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
             GameTime::nextFrameTime(
