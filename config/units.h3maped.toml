@@ -425,6 +425,11 @@ source = "src/editor/SkillMasteryTraits.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "TimedEvent"
+source = "src/editor/TimedEvent.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "ObjectSpecializations"
 source = "src/editor/ObjectSpecializations.cpp"
 flags = "editor_o1_ob2_gr_windows"
