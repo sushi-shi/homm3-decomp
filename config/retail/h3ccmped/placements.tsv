@@ -210,7 +210,7 @@ rva	size	kind	name	unit	evidence
 0x00016e10	0x3b	func	??6TRawOStream@@QAEAAV0@ABH@Z	CampaignDoc	masked body (59 bytes, 3 relocations) unique at a census start
 0x00016e80	0x8	func	??_ETStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WFE@AEPAXI@Z	CampaignDoc	vtable ??_7TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTGzInflateBuf@@@ stored by 0x00010d70 slot 0
 0x00016e90	0x8	func	??_ETGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WBA@AEPAXI@Z	CampaignDoc	vtable ??_7TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTCampaignScenarioMap@@@ stored by 0x00010c30 slot 0
-0x00018da0	0x167	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xdd
+0x00018da0	0x167	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	Player	referenced by ?initialize@SText@@YAXXZ at +0x6c
 0x00019100	0x31d	func	?initializeCampaignMapTraitsTable@@YAEXZ	campaignmap	masked body (797 bytes, 28 relocations) unique at a census start
 0x00019420	0x16	func	__h3cg$campaignmap$static_dtor$campaignNames	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x24
 0x0001b6c0	0x16e	func	?initializeCampaignMovieTraitsTable@@YAEXZ	campaignmovie	masked body (366 bytes, 18 relocations) unique at a census start
@@ -507,7 +507,7 @@ rva	size	kind	name	unit	evidence
 0x00098660	0x10	data	__TI2?AVruntime_error@std@@	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x12
 0x000986d8	0x10	data	__TI5?AVTWriteFailure@TRawOStream@@	Campaign	referenced by ??6@YAAAVTRawOStream@@AAV0@ABVTScenarioPrologue@@@Z at +0x35
 0x00098838	0x10	data	__TI3?AVout_of_range@std@@	resource	referenced by ?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ at +0xc2
-0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xf9
+0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	referenced by ?initialize@SText@@YAXXZ at +0x85
 0x00098d08	0x10	data	__TI5?AVTAllocationFailure@@	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x2e
 0x0009a230	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x367
 0x0009a968	0x10	data	__TI5PAVTCampaignDocInvalidFileVersion@@	CampaignDoc	referenced by 0x00013600 at +0xfb
@@ -521,6 +521,7 @@ rva	size	kind	name	unit	evidence
 0x000a6858	0x7	data	??_C@_06ELCD@?$HM?$CK?4?$CK?$HM?$HM?$AA@	CampaignDoc	referenced by 0x00010890 at +0x150
 0x000a6860	0x2	data	??_C@_01KALE@?$HM?$AA@	CampaignDoc	referenced by 0x00010890 at +0x11e
 0x000a6864	0x3	data	??_C@_02KJNG@?$HM?$CK?$AA@	CampaignDoc	referenced by 0x00010890 at +0xd5
+0x000a6d58	0xd	data	??_C@_0N@LOPG@CmpEditr?4txt?$AA@	CampaignEditorText	string literal referenced by ?initialize@SText@@YAXXZ
 0x000a93e8	0x150	data	?g_campaignMapTraitsImp@@3PAUTCampaignMapTraits@@A	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x1fe
 0x000a9538	0x4	data	?g_campaignMapTraits@@3AAY0BF@$$CBUTCampaignMapTraits@@A	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x8c
 0x000b166c	0xd	data	??_C@_0N@BOLI@camptext?4txt?$AA@	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x4f
@@ -621,7 +622,7 @@ rva	size	kind	name	unit	evidence
 0x000c7584	0x258	data	_?creatureTypeNames@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xf10867bd5b3ccba5@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x3d
 0x000c77dc	0x258	data	_?creatureTypePluralNames@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xf10867bd5b3ccba5@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xd0
 0x000c7a34	0x258	data	_?creatureTypeAbilities@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xf10867bd5b3ccba5@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x2a2
-0x000c7c8c	0x4	data	_?$S27@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x1f
+0x000c7c8c	0x1	data	_?$S27@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x1f
 0x000c7cb8	0x70	data	_?secondarySkillNames@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x36
 0x000c7d28	0x1	data	_?$S29@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x3
 0x000c7d2c	0x48	data	_?heroClassStrings@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x32
@@ -629,7 +630,7 @@ rva	size	kind	name	unit	evidence
 0x000c7fe4	0x1	data	_?$S31@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x2
 0x000c7fe8	0x1c0	data	?g_sSkillTraitsStorage@@3PAUTSSkillTraits@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x15
 0x000c81a8	0x150	data	_?secondarySkillLevelNames@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAY02VTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xbe
-0x000c82f8	0x1	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x9
+0x000c82f8	0x4	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x9
 0x000c8310	0x40	data	_?aNames@?1??InitializePlayerTraitsTable@@YA_NXZ@4PAV?$TAutoArrayPtr@D@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x35
 0x000c8350	0x40	data	_?aColorNames@?1??InitializePlayerTraitsTable@@YA_NXZ@4PAV?$TAutoArrayPtr@D@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x6d
 0x000c8390	0x40	data	?aPlayerTraitsImp@?A0x0e809e6c890d5ee5@@3PAUTPlayerTraits@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x1d8
