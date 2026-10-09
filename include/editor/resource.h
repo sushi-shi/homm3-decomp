@@ -85,6 +85,25 @@ enum {
     IDC_PAN_SOUTHWEST = 229
 };
 
+// The toolkits' pages and tool bars, and each page's label.
+enum {
+    IDD_TERRAIN_TOOLKIT = 133,
+    IDR_BRUSH_TOOLBAR = 137,
+    IDR_TERRAIN_TOOLBAR = 141,
+    IDD_ROAD_TOOLKIT = 147,
+    IDR_ROAD_TOOLBAR = 148,
+    IDD_RIVER_TOOLKIT = 150,
+    IDR_RIVER_TOOLBAR = 151,
+    IDD_ERASE_TOOLKIT = 156,
+    IDD_OBSTACLE_TOOLKIT = 347,
+    IDR_OBSTACLE_BRUSH_TOOLBAR = 350,
+    IDR_OBSTACLE_TOOLBAR = 352,
+    IDC_TOOLKIT_STATIC = 1001,
+    IDC_TERRAIN_TYPE_STATIC = 1192,
+    IDC_RIVER_TYPE_STATIC = 1194,
+    IDC_ROAD_TYPE_STATIC = 1195
+};
+
 // The map edit window's context menu.
 enum {
     IDR_CONTEXT_MENU = 214

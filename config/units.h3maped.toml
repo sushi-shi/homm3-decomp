@@ -721,6 +721,36 @@ source = "src/editor/MiniMapWnd.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "ToolkitBase"
+source = "src/editor/ToolkitBase.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EraseToolkit"
+source = "src/editor/EraseToolkit.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "RiverToolkit"
+source = "src/editor/RiverToolkit.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "RoadToolkit"
+source = "src/editor/RoadToolkit.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TerrainToolkit"
+source = "src/editor/TerrainToolkit.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "ObstacleToolkit"
+source = "src/editor/ObstacleToolkit.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "MapEditingWnd"
 source = "src/editor/MapEditingWnd.cpp"
 flags = "editor_o1_ob2_gr_windows"
