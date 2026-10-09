@@ -30,6 +30,7 @@ log log10 ltoa malloc memchr memcmp memcpy memmove memset pow printf putc qsort
 rand realloc rewind sin sprintf sqrt srand sscanf strcat strchr strcmp strcmpi
 strcpy strcspn stricmp strlen strlwr strncat strncmp strncpy strnicmp strrchr
 strspn strstr strtok strtol strtoul strupr tan time tolower toupper vsprintf
+min max swap
 """.split())
 
 _OPERATOR_NEW_DELETE = re.compile(r"operator\s*(?:new|delete)\b")

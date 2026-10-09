@@ -96,7 +96,7 @@ Subcommands
         retail function, address dossiers, literal evidence. Every
         invocation logs one line to build/homm3_sema.log.
 
-  dreamcast <show|lines|asm|find|gaps|inline-clues|stats|structure|audit|diff-locals> ...
+  dreamcast <show|lines|asm|find|gaps|inline-clues|stats|structure|audit|diff-locals|compare-calls> ...
         Source-shape navigation over the older WinCE/SH4 pressing:
         joined CodeView names/signatures/locals/scopes, breakpoint-labelled SH4
         assembly and CFG blocks, explicitly qualified retail correlations,

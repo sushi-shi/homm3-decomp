@@ -74,6 +74,13 @@ Subcommands
         disposable TU copy, compiles and scores it like `build --fast`, and
         reports the delta; nothing in the tree, report or ledger changes.
 
+  compare-calls [SELECTOR | --unit U | --module M | --all] [--limit N] [--json]
+        For functions with both Dreamcast and Mac claims: the game callees
+        one native build calls and the other does not, per function and in
+        aggregate, by normalised name (mangling, case and underscores
+        ignored; library, runtime and new/delete excluded). A Mac-only
+        callee shows Dreamcast's inline-clue trace when Dreamcast expanded it.
+
   structure [--module MODULE ...] [--output PATH] [--asm]
         Generate C++ browsing stubs and JSON with signatures, typed locals,
         lexical scope trees, source rows, inline evidence and SH4 control flow.
@@ -1374,6 +1381,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="show the raw audit without reviewed suppressions")
     from homm3.analysis import dc_diff_locals
     dc_diff_locals.add_parser(sub)
+    from homm3.analysis import dc_compare_calls
+    dc_compare_calls.add_parser(sub)
     structure = sub.add_parser("structure", help="export annotated C++ stubs and debug records")
     structure.add_argument("--module", action="append", dest="modules", metavar="MODULE",
                            help="module[.obj] to export; repeatable (default all)")
@@ -1446,7 +1455,7 @@ def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
 
 
 COMMANDS = ("show", "lines", "asm", "find", "gaps", "inline-clues", "stats", "structure",
-            "audit", "diff-locals")
+            "audit", "diff-locals", "compare-calls")
 
 # Wrong-namespace guesses the usage log recorded under `homm3 dreamcast`,
 # each with its real home.
@@ -1499,6 +1508,11 @@ def _dispatch(argv: list[str]) -> int:
         elif args.command == "diff-locals":
             from homm3.analysis import dc_diff_locals
             rc = dc_diff_locals.run(corpus, args)
+        elif args.command == "compare-calls":
+            from homm3.analysis import dc_compare_calls
+            if args.limit < 0:
+                raise DreamcastError("--limit must be >= 0")
+            rc = dc_compare_calls.run(corpus, args)
         elif args.command == "structure":
             from homm3.analysis import dc_structure
             try:

@@ -36,7 +36,7 @@ class CalleeKeyTest(unittest.TestCase):
     def test_plumbing_is_excluded(self):
         for name in (".__nw__FUl", ".__dla__FPv", "??2@YAPAXI@Z", "??_GFoo@@UAEPAXI@Z",
                      "operator new", "std::vector<int,std::allocator<int> >::size",
-                     ".__vc__Q23std6vectorFi", "__modls", "_sin", "memset", ".strcat",
+                     ".__vc__Q23std6vectorFi", "__modls", "_sin", "memset", ".strcat", "min",
                      ".mac_copy_lowercase_ascii_26afe8", None, "mac:0:0x1234"):
             self.assertIsNone(dc_callees.callee(name), name)
 

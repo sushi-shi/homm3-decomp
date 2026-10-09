@@ -281,6 +281,37 @@ it as ordinary source only when the remaining evidence supports it, then run
 the normal fast build. Probes need a staged worktree (retail targets); run
 them only when no build is using the same worktree.
 
+### Dreamcast versus Mac callees: `compare-calls`
+
+`homm3 dreamcast compare-calls` takes each retail function with both a
+Dreamcast source claim and a Mac `MAC_ADDRESS` claim and compares the game
+helpers the two native builds call. Names are normalized as for
+`diff-locals`: CodeWarrior and MSVC mangling dropped, case and underscores
+ignored, the last component compared. The standard library, C runtime,
+operator new/delete, the vendored zlib, import glue and compiler/runtime
+helpers are excluded. Mac call sites are decoded from the pinned PEF and
+named by the source claims, without a CodeWarrior compile; sites to
+unclaimed or indirect targets are counted as unnamed.
+
+```sh
+homm3 dreamcast compare-calls 0x004805e0
+homm3 dreamcast compare-calls --unit cursor
+homm3 dreamcast compare-calls --all --limit 40
+homm3 dreamcast compare-calls --all --json > /tmp/dc-mac-calls.json
+```
+
+Each function lists `Mac only` and `DC only` callees with both counts. A
+Mac-only callee carries Dreamcast's `inline-clues` trace when Dreamcast
+expanded that helper, which separates "Dreamcast inlined it" from "the
+older source did not call it". The aggregate tables rank callees by the
+number of functions that differ and how many lack the call entirely. A
+broad pass shows Dreamcast keeping small accessors as calls that Mac
+expands (`army::Is`, `town::HasBuilding`, `game::GetHero`, `GetWidth`/
+`GetHeight`, `GetNumFrames`, `game::GetTown`), and Mac calling some that
+Dreamcast does not (`widget::sendMessage`, the `textWidget`/`iconWidget`
+constructors, `hero::isWieldingArtifact` at some sites). Either side is
+helper-boundary evidence for the Windows source, not retail evidence.
+
 ### Generated source structure
 
 `homm3 dreamcast structure` materializes the reference as a Vostok-style C++
