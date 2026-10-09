@@ -2663,7 +2663,7 @@ address	size	band	win_rva	evidence	win_name
 0x0813e268	1009	text			
 0x0813e670	132	text			
 0x0813e6f4	25	text			
-0x0813e710	142	text			
+0x0813e710	142	text	0xfa590	fingerprint	?clear@LODFile@@QAEXXZ
 0x0813e7a0	60	text			
 0x0813e7dc	105	text			
 0x0813e848	68	text			
@@ -3289,7 +3289,7 @@ address	size	band	win_rva	evidence	win_name
 0x08174cd0	332	text	0x159020	call-graph	?clear@TResourceDisplay@@QAEXXZ
 0x08174e1c	132	text			
 0x08174ea0	25	text			
-0x08174ec0	442	text			
+0x08174ec0	442	text	0x159e30	fingerprint	?RemapGraphics@ResourceManager@@YIXXZ
 0x08175084	559	text	0x15a020	fingerprint	?SaturateGraphics@ResourceManager@@YIXXZ
 0x081752c4	758	text			
 0x081755bc	28	text			
@@ -3897,10 +3897,10 @@ address	size	band	win_rva	evidence	win_name
 0x081bd2ac	25	text			
 0x081bd2d0	124	text			
 0x081bd34c	802	text			
-0x081bd674	154	text			
+0x081bd674	154	text	0x1bbdd0	fingerprint	??1TTextResource@@UAE@XZ
 0x081bd714	124	text			
 0x081bd790	944	text			
-0x081bdb48	316	text			
+0x081bdb48	316	text	0x1bc170	fingerprint	??1TSpreadsheetResource@@UAE@XZ
 0x081bdc8c	132	text			
 0x081bdd10	23	text			
 0x081bdd28	21	text			

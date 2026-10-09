@@ -11,14 +11,25 @@
 
 [profile]
 flags = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]
+# libstdc++ 2.95's own headers, not SGI STL 3.2 first (the h3maped editor's):
+# the game's std::string is the reference-counted bastring (`lock xadd` on the
+# count, CAdventurMapChatEdit::sendChat at 0x082153c0), and every proof unit
+# that compiles against both scores equal or higher with libstdc++'s.
+stl = "libstdc++"
 # -fno-strength-reduce and -march=pentium give the same proof count: undecided.
 
 # Proof: the editor branch's engine units (byte-exact for Loki h3maped at -O0,
 # the same RoE-era Loki source family) compiled under each variant and
 # searched in the game image with only link-decided fields open
 # (`homm3 loki-game profile`). Counts are unique exact bodies, 2026-10-09.
+# Bitmap16/24/8, CSpriteFrame and palette include <limits>, which libstdc++
+# 2.95 lacks, so the libstdc++ variants compile 15 of the 22 units; on those
+# 15 the profile finds 141 bodies against SGI's 117 (124 with -D_REENTRANT,
+# whose thread-safe node allocator libstdc++'s headers enable themselves).
 # AdvObjectTypeTraits.cpp and GzBuf.cpp throw, so they only compile with
-# exceptions (the `exceptions` variant's larger total).
+# exceptions (the `exceptions` variant's larger total). Variants named sgi*
+# put SGI STL 3.2 first; the editor-era units that include <limits> compile
+# only with it.
 [proof]
 ref = "origin/decomp-loki-1.0"
 units = [
@@ -31,13 +42,17 @@ units = [
 ]
 
 [proof.variants]
-profile = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]         # 199 of 510
-exceptions = ["-O2", "-mcpu=pentium", "-funroll-loops"]                         # 178 of 634
-no-unroll = ["-O2", "-mcpu=pentium", "-fno-exceptions"]                         # 146 of 510
-unroll-all = ["-O2", "-mcpu=pentium", "-funroll-all-loops", "-fno-exceptions"]  # 179 of 510
-fast-math = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions", "-ffast-math"]  # 192 of 510
-O3 = ["-O3", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]              # 148 of 473
-O1 = ["-O1", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]              # 42 of 510
-pentiumpro = ["-O2", "-mcpu=pentiumpro", "-funroll-loops", "-fno-exceptions"]  # 92 of 510
-i486 = ["-O2", "-mcpu=i486", "-funroll-loops", "-fno-exceptions"]              # 105 of 510
-i386 = ["-O2", "-funroll-loops", "-fno-exceptions"]                            # 2 of 510 (leave epilogues)
+profile = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]  # 141 of 324
+exceptions = ["-O2", "-mcpu=pentium", "-funroll-loops"]  # 116 of 375
+no-unroll = ["-O2", "-mcpu=pentium", "-fno-exceptions"]  # 107 of 324
+unroll-all = ["-O2", "-mcpu=pentium", "-funroll-all-loops", "-fno-exceptions"]  # 114 of 324
+fast-math = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions", "-ffast-math"]  # 141 of 324 (sgi: 192 of 510)
+O3 = ["-O3", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]  # 80 of 295
+O1 = ["-O1", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]  # 30 of 324
+pentiumpro = ["-O2", "-mcpu=pentiumpro", "-funroll-loops", "-fno-exceptions"]  # 64 of 324
+i486 = ["-O2", "-mcpu=i486", "-funroll-loops", "-fno-exceptions"]  # 71 of 324
+i386 = ["-O2", "-funroll-loops", "-fno-exceptions"]  # 0 of 324 (leave epilogues)
+sgi-profile = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]  # 199 of 510
+sgi-exceptions = ["-O2", "-mcpu=pentium", "-funroll-loops"]  # 178 of 634
+sgi-pentiumpro = ["-O2", "-mcpu=pentiumpro", "-funroll-loops", "-fno-exceptions"]  # 92 of 510
+sgi-reentrant = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions", "-D_REENTRANT"]  # 206 of 510

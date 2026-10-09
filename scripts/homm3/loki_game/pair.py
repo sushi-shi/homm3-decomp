@@ -181,17 +181,16 @@ class Pairing:
             if key and rva in self.W:
                 wk[key].append(rva)
         scanner = Scanner(self.game)
-        hits, counts = {}, Counter()
+        hits = defaultdict(set)
         for path in objects:
             for name, body, mask in compiled_functions(path):
                 key = gnu_key(name)
                 found = scanner.search(body, mask)
                 if key and len(found) == 1:
-                    counts[key] += 1
-                    hits[key] = (found[0], name)
-        return self.add({wk[key][0]: (addr, "fingerprint")
-                         for key, (addr, name) in hits.items()
-                         if counts[key] == 1 and len(wk.get(key, ())) == 1})
+                    hits[key].add(found[0])
+        return self.add({wk[key][0]: (next(iter(addresses)), "fingerprint")
+                         for key, addresses in hits.items()
+                         if len(addresses) == 1 and len(wk.get(key, ())) == 1})
 
     # -- propagation --------------------------------------------------------
     def _wkey(self, c):
@@ -382,4 +381,7 @@ def load(path: Path = RETAIL / "functions.tsv") -> dict[int, tuple[int, str]]:
 
 
 def default_objects() -> list[Path]:
-    return sorted((BUILD / "profile/objects/profile").glob("*.o"))
+    """The profile's objects and the SGI-first ones (units that need <limits>);
+    an exact body is evidence whichever headers produced it."""
+    return sorted(p for tag in ("profile", "sgi-profile")
+                  for p in (BUILD / "profile/objects" / tag).glob("*.o"))

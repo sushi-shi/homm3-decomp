@@ -86,18 +86,30 @@ def stage_proof_sources(ref: str) -> Path:
     return root
 
 
+def driver_command(*arguments: str, stl: str = "libstdc++") -> list[str]:
+    """g++ 2.95.2 with libstdc++ 2.95's own headers (`stl = "libstdc++"`, the
+    game's: its std::string is the reference-counted bastring) or with SGI STL
+    3.2 first (`"sgi"`, the h3maped editor's)."""
+    from homm3.loki import toolchain
+    command = toolchain.driver_command(*arguments)
+    if stl == "libstdc++":
+        at = command.index(str(toolchain.SGI_STL))
+        del command[at - 1:at + 1]
+    return command
+
+
 def compile_units(root: Path, units: list[str], flags: list[str], out: Path,
-                  extra_includes: list[Path]) -> list[Path]:
+                  extra_includes: list[Path], stl: str = "libstdc++") -> list[Path]:
     from homm3.loki import toolchain
     out.mkdir(parents=True, exist_ok=True)
     objects = []
     for unit in units:
         obj = out / (Path(unit).stem + ".o")
-        command = toolchain.driver_command(
+        command = driver_command(
             *flags, "-fpermissive", "-w", "-DHOMM3_TARGET_LOKI=1",
             "-include", str(root / "include/gcc_prefix.h"),
             f"-I{root / 'include'}", f"-I{root / 'include/editor'}",
-            *(f"-I{p}" for p in extra_includes), "-c", Path(unit).name, "-o", str(obj))
+            *(f"-I{p}" for p in extra_includes), "-c", Path(unit).name, "-o", str(obj), stl=stl)
         done = subprocess.run(command, cwd=root / Path(unit).parent, env=toolchain.environment(),
                               capture_output=True, text=True)
         if done.returncode == 0:
@@ -118,7 +130,9 @@ def profile(variants: dict[str, list[str]] | None = None) -> dict[str, tuple[int
     scanner = Scanner()
     results = {}
     for tag, flags in variants.items():
-        objects = compile_units(root, spec["units"], flags, BUILD / "profile/objects" / tag, includes)
+        stl = "sgi" if tag.startswith("sgi") else "libstdc++"
+        objects = compile_units(root, spec["units"], flags, BUILD / "profile/objects" / tag,
+                                includes, stl)
         rows = scanner.scan(objects)
         results[tag] = (len(rows), sum(1 for _, _, hits in rows if len(hits) == 1))
         print(f"[loki-game] {tag:12} {' '.join(flags):55} {results[tag][1]:4} unique exact of {results[tag][0]}")

@@ -21,17 +21,22 @@ homm3 loki-game calls 0x2e0b0        # callees of a paired function, both sides
 ## Compiler profile
 
 `-O2 -mcpu=pentium -funroll-loops -fno-exceptions`, RTTI on, frame pointers
-kept, GCC 2.95.2 release `cc1plus` with SGI STL 3.2 (the h3maped toolchain).
+kept, GCC 2.95.2 release `cc1plus` with libstdc++ 2.95's own headers (the
+h3maped editor put SGI STL 3.2 first; the game's `std::string` is
+libstdc++'s reference-counted bastring, `lock xadd` on the count).
 
 - The game's project objects have no `.eh_frame` FDEs: all 11 CIEs describe
   the C++ runtime from 0x0820ce00 on. Type names and `__tf` functions exist.
 - `homm3 loki-game profile` compiles the h3maped branch's engine units (exact
   for h3maped at `-O0`) under each variant and counts bodies found exactly in
-  the game image with only link-decided fields open: 199 for the profile;
-  178 with exceptions, 179 with `-funroll-all-loops`, 146 without unrolling,
-  148 at `-O3`, 42 at `-O1`, 92 with `-mcpu=pentiumpro`, 105 with `i486` and
-  2 with the i386 default (`leave` epilogues). `-fno-strength-reduce` and
-  `-march=pentium` give the same count and stay undecided.
+  the game image with only link-decided fields open (config/loki/game.toml).
+  On the 15 units that compile against libstdc++'s headers: 141 for the
+  profile, 117 with SGI STL first; 116 with exceptions, 114 with
+  `-funroll-all-loops`, 107 without unrolling, 80 at `-O3`, 30 at `-O1`,
+  64 with `-mcpu=pentiumpro`, 71 with `i486`, 0 with the i386 default
+  (`leave` epilogues). With SGI STL first (all 22 units) `-ffast-math` loses
+  (192 against 199). `-fno-strength-reduce` and `-march=pentium` give the
+  same count and stay undecided.
 
 ## Pairing
 
@@ -40,7 +45,7 @@ The image has no project symbols, so pairs come from retail evidence
 
 | Evidence | Pairs | Meaning |
 | :-- | --: | :-- |
-| `fingerprint` | 52 | an engine unit compiled at the profile hits one body exactly |
+| `fingerprint` | 56 | an engine unit compiled at the profile hits one body exactly |
 | `string` | 207 | the only users of a shared C string on both sides |
 | `vtable-signature` | 45 | the same set of classes holds it in its vtable |
 | `vtable-slot` | 118 | equal-length slot runs between paired slots of a class |
@@ -48,9 +53,9 @@ The image has no project symbols, so pairs come from retail evidence
 | `call-graph-intersection` | 46 | the only unpaired callee all paired callers share |
 | `call-graph-alignment` | 214 | aligned in two or more paired callers' call sequences |
 
-1,050 pairs (1,044 ledger rows; 60 of the 281 non-exact Windows functions).
+1,054 pairs (1,048 ledger rows; 60 of the 281 non-exact Windows functions).
 Holdout check: without the fingerprint seeds the other evidence recovers 17
-of the 52 fingerprint pairs and contradicts one (an alignment pair that chose
+of the 56 fingerprint pairs and contradicts one (an alignment pair that chose
 one of two identical Loki copies of `RGBToHSV`). A Windows vtable holds the
 scalar deleting destructor; GCC's single destructor slot is paired with the
 class's `??1` instead.
