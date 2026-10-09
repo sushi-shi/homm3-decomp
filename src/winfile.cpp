@@ -131,34 +131,34 @@ unsigned long File::read(void* data, unsigned long dBytes)
     return ReadFile(m_file, data, dBytes, &dBytesRead, NULL) ? dBytesRead : 0;
 }
 
-// Project-inferred operation shared by the single-position virtual wrappers.
-unsigned long File::seekFrom(int distance, unsigned long origin)
-{
-    if (!m_file)
-        return 0;
-
-    return SetFilePointer(m_file, distance, NULL, origin);
-}
-
 VA(0x005ffcb0, 0x16)
 DC_ADDRESS(0x198610, 0x20)
 unsigned long File::seekEnd()
 {
-    return seekFrom(0, FILE_END);
+    if (!m_file)
+        return 0;
+
+    return SetFilePointer(m_file, 0, NULL, FILE_END);
 }
 
 VA(0x005ffcd0, 0x16)
 DC_ADDRESS(0x198630, 0x20)
 unsigned long File::seekBegin()
 {
-    return seekFrom(0, FILE_BEGIN);
+    if (!m_file)
+        return 0;
+
+    return SetFilePointer(m_file, 0, NULL, FILE_BEGIN);
 }
 
 VA(0x005ffcf0, 0x21)
 DC_ADDRESS(0x198650, 0x1e)
 unsigned long File::seekCur(int seekAmt)
 {
-    return seekFrom(seekAmt, FILE_CURRENT);
+    if (!m_file)
+        return 0;
+
+    return SetFilePointer(m_file, seekAmt, NULL, FILE_CURRENT);
 }
 
 VA(0x005ffd20, 0x4E)
@@ -179,7 +179,10 @@ VA(0x005ffd70, 0x16)
 DC_ADDRESS(0x1986e4, 0x20)
 unsigned long File::getPosition()
 {
-    return seekFrom(0, FILE_CURRENT);
+    if (!m_file)
+        return 0;
+
+    return SetFilePointer(m_file, 0, NULL, FILE_CURRENT);
 }
 
 VA(0x005ffd90, 0x32)

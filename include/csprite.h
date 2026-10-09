@@ -223,17 +223,9 @@ public:
     DC_ADDRESS(0x0744e4, 0x64)
     void SetPalette(TPalette16& pal)
     {
-        replacePalette(&pal);
-    }
-
-    // Project pointer form keeps the loader's palette-copy operation with
-    // the owning sprite. Preserve delete-before-copy and resource copy
-    // construction; a raw color-table setter has different input semantics.
-    void replacePalette(const TPalette16* pal)
-    {
         if (p)
             delete p;
-        p = new TPalette16(pal);
+        p = new TPalette16(&pal);
     }
     void ResetPalette();
     unsigned short* GetPalette();

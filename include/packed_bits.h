@@ -14,16 +14,6 @@ inline void decodePackedBits(const unsigned char* packed, std::bitset<N>& result
     }
 }
 
-// Project-inferred signed-index conversions used by map spell and object
-// masks. Keep division/modulo and direct bitset proxies from those callers;
-// the existing unsigned decoder above has separate native source evidence.
-template <size_t N>
-inline void decodeMapBits(const unsigned char* packed, std::bitset<N>& result)
-{
-    for (int index = 0; index < static_cast<int>(N); ++index)
-        result[index] = (packed[index / 8] & (1 << (index % 8))) != 0;
-}
-
 // Complete's map and campaign readers deserialize packed planes through a
 // returned bitset temporary. The source name and header location are inferred.
 // Mac hero::load (-O1, 0xf3400..0xf3478) expands this reader and its decode

@@ -82,8 +82,6 @@ protected:
     void updateError(char* errorText);  // dc 0x1984d8, no retail body
 
 private:
-    // Project-inferred shared operation; does not dispatch through seek().
-    unsigned long seekFrom(int distance, unsigned long origin);
 
     // E:\gamedcs\winfile.h:90-92 - the one header-defined method (the
     // DC winfile.obj contributor segment 0x198864-0x19886f is

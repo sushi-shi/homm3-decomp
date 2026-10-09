@@ -145,14 +145,6 @@ void heroWindow::handleWidgetHover(widget* current)
 {
 }
 
-// Project-inferred dynamic insertion. Ownership is recorded before opening the
-// widget; keep it in the vector even if addWidget's virtual open rejects it.
-void heroWindow::addOwnedWidget(widget* newWidget)
-{
-    m_widgets.push_back(newWidget);
-    addWidget(m_widgets.back(), -1);
-}
-
 VA(0x005fecb0, 0xA5)
 DC_ADDRESS(0x197324, 0x8e)
 MAC_ADDRESS(0x20b1dc, 0x124)
@@ -555,23 +547,15 @@ int heroWindow::heroWindowHandler(message& msg)
     return msg.m_window->handleMessage(msg);
 }
 
-// Project-inferred common object deletion. Terminal window destructors leave
-// the pointer vector intact until its own destruction. The existing full
-// cleanup operation below additionally clears it after all deletes finish.
-void heroWindow::deleteWidgetObjects()
-{
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
-}
-
 VA(0x005ff510, 0x60)
 DC_ADDRESS(0x197c8c, 0x48)
 MAC_ADDRESS(0x20bc50, 0x7c)
 void heroWindow::deleteWidgets()
 {
-    deleteWidgetObjects();
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
     m_widgets.clear();
 }
 

@@ -15,33 +15,6 @@
 #include "textntry.h"
 #include "winmgr.h"
 
-void message::setNoInput()
-{
-    m_id = 0;
-    m_codeY = 0;
-    m_codeX = 0;
-    m_qualifier = 0;
-}
-
-// Project-inferred queue commit shared by native and forced input. The event
-// is complete before this advances the tail; overflow discards the oldest slot.
-void inputManager::commitBufferedEvent()
-{
-    m_tail++;
-    m_tail %= 64;
-    if (m_head == m_tail) {
-        m_head++;
-        m_head %= 64;
-    }
-}
-
-// Reset indices only: opening owns the buffer wipe and flushing owns the pump.
-void inputManager::resetQueueIndices()
-{
-    m_tail = 0;
-    m_head = 0;
-}
-
 VA(0x004ec0e0, 0x1AB)
 DC_ADDRESS(0x0dc894, 0x20c)
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
@@ -181,7 +154,8 @@ MAC_ADDRESS(0x10e10c, 0x78)
 int inputManager::open(int keyboardFilter)
 {
     memset(m_buffer, 0, sizeof(m_buffer));
-    resetQueueIndices();
+    m_tail = 0;
+    m_head = 0;
     m_keyboardFilter = keyboardFilter;
     makeScanCodeTable();
     m_id = 4;
@@ -198,7 +172,8 @@ void inputManager::close()
 {
     if (m_status != 1)
         return;
-    resetQueueIndices();
+    m_tail = 0;
+    m_head = 0;
     m_keyboardFilter = 0;
     m_status = 0;
 }
@@ -217,25 +192,8 @@ MAC_ADDRESS(0x10e1b0, 0x38)
 void inputManager::flush()
 {
     process1WindowsMessage();
-    resetQueueIndices();
-}
-
-// Project-inferred common read. Callers construct their own return message
-// before sound polling; peeking retains its original head normalization.
-void inputManager::readBufferedEvent(message& msg, bool consume)
-{
-    pollSound();
-    if (m_status == STATUS_ACTIVE && m_head != m_tail) {
-        msg = m_buffer[m_head];
-        if (consume)
-            m_head = (m_head + 1) % 64;
-        else
-            m_head = m_head % 64;
-        if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
-            asciiConvert(&msg);
-    } else {
-        msg.setNoInput();
-    }
+    m_tail = 0;
+    m_head = 0;
 }
 
 VA(0x004ec590, 0xAE)
@@ -244,7 +202,19 @@ MAC_ADDRESS(0x10e1e8, 0x15c)
 message inputManager::getEvent()
 {
     message msg;
-    readBufferedEvent(msg, true);
+
+    pollSound();
+    if (m_status == STATUS_ACTIVE && m_head != m_tail) {
+        msg = m_buffer[m_head];
+        m_head = (m_head + 1) % 64;
+        if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
+            asciiConvert(&msg);
+    } else {
+        msg.m_id = 0;
+        msg.m_codeY = 0;
+        msg.m_codeX = 0;
+        msg.m_qualifier = 0;
+    }
     return msg;
 }
 
@@ -254,7 +224,19 @@ MAC_ADDRESS(0x10e344, 0x154)
 message inputManager::peekEvent()
 {
     message msg;
-    readBufferedEvent(msg, false);
+
+    pollSound();
+    if (m_status == STATUS_ACTIVE && m_head != m_tail) {
+        msg = m_buffer[m_head];
+        m_head = m_head % 64;
+        if (msg.m_id == MESSAGE_KEY_DOWN && m_keyCodeType == 0)
+            asciiConvert(&msg);
+    } else {
+        msg.m_id = 0;
+        msg.m_codeY = 0;
+        msg.m_codeX = 0;
+        msg.m_qualifier = 0;
+    }
     return msg;
 }
 
@@ -444,6 +426,8 @@ void inputManager::forceMouseMove()
     e->m_mouseY = e->m_codeY;
     quals = getCurrQuals();
     e->m_qualifier = quals;
-    commitBufferedEvent();
+    m_tail = (m_tail + 1) % 64;
+    if (m_head == m_tail)
+        m_head = (m_head + 1) % 64;
     m_bufferBusy = 0;
 }

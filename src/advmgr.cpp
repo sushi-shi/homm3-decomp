@@ -755,10 +755,10 @@ int advManager::open(int newPriority)
     m_radarIcons =
         ResourceManager::GetSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
 
-    for (i = 0; i < LOOPING_SOUND_COUNT; i++)
+    for (i = 0; i < max_environment_sounds; i++)
         m_loopedSample[i] = 0;
     for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
-        m_soundArray[i].m_soundId = LOOPING_SOUND_INVALID;
+        m_soundArray[i].m_soundId = invalid_sound;
         m_soundArray[i].m_priority = 0x7f;
         m_touchedSounds = 0;
     }
@@ -909,7 +909,7 @@ void advManager::close()
         }
     }
 
-    for (i = 0; i < LOOPING_SOUND_COUNT; i++) {
+    for (i = 0; i < max_environment_sounds; i++) {
         if (m_loopedSample[i]) {
             m_loopedSample[i]->dispose();
             m_loopedSample[i] = 0;
@@ -7941,15 +7941,6 @@ bool saveGame(bool campaignWinMode)
 DATA(0x0063a64c) static const int g_soundVolumes[8] = { 32, 28, 20, 10,
                                                         3,  2,  1,  0 };
 
-// Project-inferred operations from environment scans and slot replacement.
-// Playback and slot state have different lifetimes: stopping a sample does
-// not dispose its cached resource or alter the slot's priority/touched bit.
-void soundNode::reset()
-{
-    m_soundId = LOOPING_SOUND_INVALID;
-    m_priority = 0x7f;
-}
-
 VA(0x004183d0, 0x245)
 DC_ADDRESS(0x01b164, 0x3ba)
 MAC_ADDRESS(0x018a3c, 0x290)
@@ -7961,11 +7952,11 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
 
     int i;
     for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
-        if (m_soundArray[i].m_soundId != LOOPING_SOUND_INVALID) {
+        if (m_soundArray[i].m_soundId != invalid_sound) {
             if (reset) {
                 g_soundManager->stopSample(
                     m_loopedSample[m_soundArray[i].m_soundId]->memSample.memHSample);
-                m_soundArray[i].m_soundId = LOOPING_SOUND_INVALID;
+                m_soundArray[i].m_soundId = invalid_sound;
                 m_soundArray[i].m_priority = 0x7f;
             } else {
                 m_soundArray[i].m_priority = 0x7f;
@@ -8000,13 +7991,13 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
     }
 
     for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
-        if (m_soundArray[i].m_soundId != LOOPING_SOUND_INVALID
+        if (m_soundArray[i].m_soundId != invalid_sound
             && m_soundArray[i].m_priority > 5) {
             g_soundManager->stopSample(
                 m_loopedSample[m_soundArray[i].m_soundId]->memSample.memHSample);
-            m_soundArray[i].m_soundId = LOOPING_SOUND_INVALID;
+            m_soundArray[i].m_soundId = invalid_sound;
         }
-        if (m_soundArray[i].m_soundId != LOOPING_SOUND_INVALID
+        if (m_soundArray[i].m_soundId != invalid_sound
             && (m_touchedSounds & (1 << m_soundArray[i].m_soundId))) {
             g_soundManager->modifySample(
                 m_loopedSample[m_soundArray[i].m_soundId]->memSample.memHSample, 100,
@@ -8018,14 +8009,14 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
 // The looping-sound resource names, one per e_looping_sound_id row.
 // Consumed by InsertSound's lazy loader; owner TU unlocated, so the
 // nearest consumer declares (name provisional, role byte-proven).
-DATA(0x0065f794) const char* g_loopingSoundNames[LOOPING_SOUND_COUNT] = { "LoopAnim.wav", "LoopArch.wav", "LoopAren.wav", "LoopBehe.wav", "LoopBird.wav", "LoopBuoy.wav", "LoopCamp.wav", "LoopCave.wav", "LoopDead.wav", "LoopDevl.wav", "LoopDog.wav", "LoopDrag.wav", "LoopFact.wav", "LoopFall.wav", "LoopFire.wav", "LoopFlag.wav", "LoopFoun.wav", "LoopGemP.wav", "LoopGrem.wav", "LoopGrif.wav", "LoopHarp.wav", "LoopHors.wav", "LoopHydr.wav", "LoopLear.wav", "LoopLumb.wav", "LoopMagi.wav", "LoopMark.wav", "LoopMerc.wav", "LoopMill.wav", "LoopMine.wav", "LoopMon1.wav", "LoopMon2.wav", "LoopMonk.wav", "LoopMons.wav", "LoopOrc.wav", "LoopPega.wav", "LoopPike.wav", "LoopSanc.wav", "LoopShrin.wav", "LoopStar.wav", "LoopSulf.wav", "LoopSwar.wav", "LoopSwor.wav", "LoopTita.wav", "LoopUnic.wav", "LoopVolc.wav", "Loopair.wav", "loopcrys.wav", "loopcurs.wav", "loopden.wav", "loopdwar.wav", "loopeart.wav", "loopelf.wav", "loopfaer.wav", "loopgard.wav", "loopgate.wav", "loopgobl.wav", "looplepr.wav", "loopmant.wav", "loopmedu.wav", "loopnaga.wav", "loopogre.wav", "loopsire.wav", "loopskel.wav", "looptav.wav", "loopvent.wav", "loopwind.wav", "loopwhir.wav", "loopwolf.wav", "loopocea.wav" };
+DATA(0x0065f794) const char* g_loopingSoundNames[max_environment_sounds] = { "LoopAnim.wav", "LoopArch.wav", "LoopAren.wav", "LoopBehe.wav", "LoopBird.wav", "LoopBuoy.wav", "LoopCamp.wav", "LoopCave.wav", "LoopDead.wav", "LoopDevl.wav", "LoopDog.wav", "LoopDrag.wav", "LoopFact.wav", "LoopFall.wav", "LoopFire.wav", "LoopFlag.wav", "LoopFoun.wav", "LoopGemP.wav", "LoopGrem.wav", "LoopGrif.wav", "LoopHarp.wav", "LoopHors.wav", "LoopHydr.wav", "LoopLear.wav", "LoopLumb.wav", "LoopMagi.wav", "LoopMark.wav", "LoopMerc.wav", "LoopMill.wav", "LoopMine.wav", "LoopMon1.wav", "LoopMon2.wav", "LoopMonk.wav", "LoopMons.wav", "LoopOrc.wav", "LoopPega.wav", "LoopPike.wav", "LoopSanc.wav", "LoopShrin.wav", "LoopStar.wav", "LoopSulf.wav", "LoopSwar.wav", "LoopSwor.wav", "LoopTita.wav", "LoopUnic.wav", "LoopVolc.wav", "Loopair.wav", "loopcrys.wav", "loopcurs.wav", "loopden.wav", "loopdwar.wav", "loopeart.wav", "loopelf.wav", "loopfaer.wav", "loopgard.wav", "loopgate.wav", "loopgobl.wav", "looplepr.wav", "loopmant.wav", "loopmedu.wav", "loopnaga.wav", "loopogre.wav", "loopsire.wav", "loopskel.wav", "looptav.wav", "loopvent.wav", "loopwind.wav", "loopwhir.wav", "loopwolf.wav", "loopocea.wav" };
 
 // Original: advManager::CheckLoadSample; advmgr.cpp:9929
 DC_ADDRESS(0x01b520, 0x88)
 MAC_ADDRESS(0x018ccc, 0x6c)
 void advManager::checkLoadSample(e_looping_sound_id idNum)
 {
-    if (idNum <= LOOPING_SOUND_INVALID || idNum >= LOOPING_SOUND_COUNT)
+    if (idNum <= invalid_sound || idNum >= max_environment_sounds)
         return;
     if (!m_loopedSample[idNum]) {
         trimLoopingSounds(4);
@@ -8066,210 +8057,210 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
     NewmapCell* thisCell = m_fullMap->cell(x, y, z);
 
     if (thisCell->m_groundSet == eTerrainWater && thisCell->m_groundIndex < 21)
-        return LOOPING_SOUND_69;
+        return shore_sound;
 
     if (thisCell->m_isTrigger) {
         switch (thisCell->m_type) {
         case CREATURE_BANK:
             switch (thisCell->m_objectIndex) {
-            case GET_SOUND_BANK_0: return LOOPING_SOUND_7;
-            case GET_SOUND_BANK_1: return LOOPING_SOUND_50;
-            case GET_SOUND_BANK_2: return LOOPING_SOUND_19;
-            case GET_SOUND_BANK_3: return LOOPING_SOUND_14;
-            case GET_SOUND_BANK_4: return LOOPING_SOUND_59;
-            case GET_SOUND_BANK_5: return LOOPING_SOUND_60;
-            case GET_SOUND_BANK_6: return LOOPING_SOUND_23;
-            default: return LOOPING_SOUND_INVALID;
+            case GET_SOUND_BANK_0: return cyclops_bank_sound;
+            case GET_SOUND_BANK_1: return dwarf_bank_sound;
+            case GET_SOUND_BANK_2: return griffin_bank_sound;
+            case GET_SOUND_BANK_3: return imp_bank_sound;
+            case GET_SOUND_BANK_4: return medusa_bank_sound;
+            case GET_SOUND_BANK_5: return naga_bank_sound;
+            case GET_SOUND_BANK_6: return dragonfly_bank_sound;
+            default: return invalid_sound;
             }
         case MINE: {
             int type = g_game->getMine(thisCell->m_extraInfo)->m_type;
             unsigned char abandoned =
                 g_game->getMine(thisCell->m_extraInfo)->m_isAbandoned;
             if (abandoned)
-                return LOOPING_SOUND_7;
+                return abandoned_mine_sound;
             switch (type) {
-            case GET_SOUND_MINE_0: return LOOPING_SOUND_24;
-            case GET_SOUND_MINE_1: return LOOPING_SOUND_39;
-            case GET_SOUND_MINE_2: return LOOPING_SOUND_40;
-            case GET_SOUND_MINE_3: return LOOPING_SOUND_40;
-            case GET_SOUND_MINE_4: return LOOPING_SOUND_47;
-            case GET_SOUND_MINE_5: return LOOPING_SOUND_17;
-            case GET_SOUND_MINE_6: return LOOPING_SOUND_29;
-            default: return LOOPING_SOUND_INVALID;
+            case GET_SOUND_MINE_0: return wood_mine_sound;
+            case GET_SOUND_MINE_1: return mercury_mine_sound;
+            case GET_SOUND_MINE_2: return ore_mine_sound;
+            case GET_SOUND_MINE_3: return sulfur_mine_sound;
+            case GET_SOUND_MINE_4: return crystal_mine_sound;
+            case GET_SOUND_MINE_5: return gem_mine_sound;
+            case GET_SOUND_MINE_6: return gold_mine_sound;
+            default: return invalid_sound;
             }
         }
         case GARRISON:
             if (thisCell->m_objectIndex == GET_SOUND_GARRISON_0)
-                return LOOPING_SOUND_41;
+                return garrison_sound;
             if (thisCell->m_objectIndex == GET_SOUND_GARRISON_1)
-                return LOOPING_SOUND_25;
+                return anti_magic_garrison_sound;
             break;
         case WINDMILL:
-            return LOOPING_SOUND_66;
+            return windmill_sound;
         case WHIRLPOOL:
-            return LOOPING_SOUND_67;
+            return whirlpool_sound;
         case THIEVES_DEN:
-            return LOOPING_SOUND_49;
+            return thieves_guild_sound;
         case GARDEN_OF_REVELATION:
-            return LOOPING_SOUND_54;
+            return garden_of_revelation_sound;
         case ARENA:
-            return LOOPING_SOUND_2;
+            return arena_sound;
         case SIREN:
-            return LOOPING_SOUND_62;
+            return siren_sound;
         case BUOY:
-            return LOOPING_SOUND_5;
+            return buoy_sound;
         case CAMPFIRE:
-            return LOOPING_SOUND_6;
+            return campfire_sound;
         case UNDERGROUND_GATE:
-            return LOOPING_SOUND_55;
+            return underground_gate_sound;
         case SEPULCHER:
-            return LOOPING_SOUND_8;
+            return sepulcher_sound;
         case DRAGON_CITY:
-            return LOOPING_SOUND_11;
+            return dragon_city_sound;
         case WAR_MACHINE_FACTORY:
-            return LOOPING_SOUND_12;
+            return siege_weapon_factory_sound;
         case FOUNTAIN_OF_YOUTH:
-            return LOOPING_SOUND_13;
+            return fountain_of_youth_sound;
         case PILLAR_OF_FIRE:
-            return LOOPING_SOUND_14;
+            return pillar_of_fire_sound;
         case RALLY_FLAG:
-            return LOOPING_SOUND_15;
+            return rally_flag_sound;
         case FOUNTAIN_OF_FORTUNE:
-            return LOOPING_SOUND_16;
+            return fountain_of_fortune_sound;
         case MAGIC_SPRING:
-            return LOOPING_SOUND_16;
+            return magic_spring_sound;
         case STABLES:
-            return LOOPING_SOUND_21;
+            return stables_sound;
         case TRAINING_GROUNDS:
-            return LOOPING_SOUND_23;
+            return training_grounds_sound;
         case SHIPYARD:
-            return LOOPING_SOUND_24;
+            return shipyard_sound;
         case MYSTICAL_GARDEN:
-            return LOOPING_SOUND_57;
+            return mystical_garden_sound;
         case MAGIC_SCHOOL:
-            return LOOPING_SOUND_25;
+            return magic_school_sound;
         case FAERIE_RING:
-            return LOOPING_SOUND_53;
+            return faerie_ring_sound;
         case BLACK_MARKET:
-            return LOOPING_SOUND_26;
+            return black_market_sound;
         case TRADING_POST:
-            return LOOPING_SOUND_26;
+            return trading_post_sound;
         case TAVERN:
-            return LOOPING_SOUND_64;
+            return tavern_sound;
         case MERC_CAMP:
-            return LOOPING_SOUND_27;
+            return merc_camp_sound;
         case REFUGEE_CAMP:
-            return LOOPING_SOUND_27;
+            return refugee_camp_sound;
         case WATER_WHEEL:
-            return LOOPING_SOUND_28;
+            return water_wheel_sound;
         case LITH_ONEWAY_ENTRANCE:
         case LITH_ONEWAY_EXIT:
-            return LOOPING_SOUND_30;
+            return lith_one_way_sound;
         case LITH_TWOWAY:
-            return LOOPING_SOUND_31;
+            return lith_two_way_sound;
         case SANCTUARY:
-            return LOOPING_SOUND_37;
+            return sanctuary_sound;
         case TEMPLE:
-            return LOOPING_SOUND_37;
+            return temple_sound;
         case SHRINE1:
         case SHRINE2:
         case SHRINE3:
-            return LOOPING_SOUND_38;
+            return shrine_sound;
         case POWER_SCHOOL:
-            return LOOPING_SOUND_39;
+            return star_axis_sound;
         case WAR_SCHOOL:
-            return LOOPING_SOUND_41;
+            return war_school_sound;
         case DEFENSE_TOWER:
-            return LOOPING_SOUND_41;
+            return defense_tower_sound;
         case HILL_FORT:
-            return LOOPING_SOUND_41;
+            return hill_fort_sound;
         case CREATURE_GENERATOR_1:
             switch (g_creatureGenerator1Types[thisCell->m_objectIndex]) {
-            case GET_SOUND_CREATURE_106: return LOOPING_SOUND_33;
-            case GET_SOUND_CREATURE_096: return LOOPING_SOUND_3;
-            case GET_SOUND_CREATURE_074: return LOOPING_SOUND_7;
-            case GET_SOUND_CREATURE_066: return LOOPING_SOUND_8;
-            case GET_SOUND_CREATURE_068: return LOOPING_SOUND_11;
-            case GET_SOUND_CREATURE_010: return LOOPING_SOUND_21;
-            case GET_SOUND_CREATURE_014: return LOOPING_SOUND_21;
-            case GET_SOUND_CREATURE_112: return LOOPING_SOUND_46;
-            case GET_SOUND_CREATURE_012: return LOOPING_SOUND_37;
-            case GET_SOUND_CREATURE_094: return LOOPING_SOUND_7;
-            case GET_SOUND_CREATURE_054: return LOOPING_SOUND_9;
-            case GET_SOUND_CREATURE_104: return LOOPING_SOUND_23;
-            case GET_SOUND_CREATURE_016: return LOOPING_SOUND_50;
-            case GET_SOUND_CREATURE_113: return LOOPING_SOUND_51;
-            case GET_SOUND_CREATURE_052: return LOOPING_SOUND_65;
-            case GET_SOUND_CREATURE_018: return LOOPING_SOUND_52;
-            case GET_SOUND_CREATURE_114: return LOOPING_SOUND_14;
-            case GET_SOUND_CREATURE_030: return LOOPING_SOUND_19;
-            case GET_SOUND_CREATURE_036: return LOOPING_SOUND_25;
-            case GET_SOUND_CREATURE_086: return LOOPING_SOUND_68;
-            case GET_SOUND_CREATURE_098: return LOOPING_SOUND_34;
-            case GET_SOUND_CREATURE_084: return LOOPING_SOUND_56;
-            case GET_SOUND_CREATURE_044: return LOOPING_SOUND_65;
-            case GET_SOUND_CREATURE_102: return LOOPING_SOUND_0;
-            case GET_SOUND_CREATURE_026: return LOOPING_SOUND_11;
-            case GET_SOUND_CREATURE_004: return LOOPING_SOUND_19;
-            case GET_SOUND_CREATURE_072: return LOOPING_SOUND_20;
-            case GET_SOUND_CREATURE_046: return LOOPING_SOUND_10;
-            case GET_SOUND_CREATURE_110: return LOOPING_SOUND_22;
-            case GET_SOUND_CREATURE_042: return LOOPING_SOUND_14;
-            case GET_SOUND_CREATURE_100: return LOOPING_SOUND_1;
-            case GET_SOUND_CREATURE_034: return LOOPING_SOUND_25;
-            case GET_SOUND_CREATURE_080: return LOOPING_SOUND_58;
-            case GET_SOUND_CREATURE_076: return LOOPING_SOUND_59;
-            case GET_SOUND_CREATURE_078: return LOOPING_SOUND_0;
-            case GET_SOUND_CREATURE_008: return LOOPING_SOUND_32;
-            case GET_SOUND_CREATURE_038: return LOOPING_SOUND_60;
-            case GET_SOUND_CREATURE_048: return LOOPING_SOUND_7;
-            case GET_SOUND_CREATURE_090: return LOOPING_SOUND_61;
-            case GET_SOUND_CREATURE_088: return LOOPING_SOUND_34;
-            case GET_SOUND_CREATURE_050: return LOOPING_SOUND_14;
-            case GET_SOUND_CREATURE_082: return LOOPING_SOUND_11;
-            case GET_SOUND_CREATURE_092: return LOOPING_SOUND_4;
-            case GET_SOUND_CREATURE_028: return LOOPING_SOUND_18;
-            case GET_SOUND_CREATURE_040: return LOOPING_SOUND_43;
-            case GET_SOUND_CREATURE_022: return LOOPING_SOUND_54;
-            case GET_SOUND_CREATURE_070: return LOOPING_SOUND_7;
-            case GET_SOUND_CREATURE_115: return LOOPING_SOUND_16;
-            case GET_SOUND_CREATURE_060: return LOOPING_SOUND_8;
-            case GET_SOUND_CREATURE_108: return LOOPING_SOUND_33;
-            case GET_SOUND_CREATURE_020: return LOOPING_SOUND_35;
-            case GET_SOUND_CREATURE_024: return LOOPING_SOUND_44;
-            case GET_SOUND_CREATURE_064: return LOOPING_SOUND_8;
-            case GET_SOUND_CREATURE_062: return LOOPING_SOUND_8;
-            case GET_SOUND_CREATURE_056: return LOOPING_SOUND_63;
-            case GET_SOUND_CREATURE_058: return LOOPING_SOUND_8;
-            case GET_SOUND_CREATURE_000: return LOOPING_SOUND_36;
-            case GET_SOUND_CREATURE_002: return LOOPING_SOUND_1;
-            case GET_SOUND_CREATURE_006: return LOOPING_SOUND_42;
-            default: return LOOPING_SOUND_42;
+            case GET_SOUND_CREATURE_106: return basilisk_generator_sound;
+            case GET_SOUND_CREATURE_096: return behemoth_generator_sound;
+            case GET_SOUND_CREATURE_074: return beholder_generator_sound;
+            case GET_SOUND_CREATURE_066: return black_knight_generator_sound;
+            case GET_SOUND_CREATURE_068: return bone_dragon_generator_sound;
+            case GET_SOUND_CREATURE_010: return cavalier_generator_sound;
+            case GET_SOUND_CREATURE_014: return centaur_generator_sound;
+            case GET_SOUND_CREATURE_112: return air_elemental_generator_sound;
+            case GET_SOUND_CREATURE_012: return angel_generator_sound;
+            case GET_SOUND_CREATURE_094: return cyclops_generator_sound;
+            case GET_SOUND_CREATURE_054: return devil_generator_sound;
+            case GET_SOUND_CREATURE_104: return dragonfly_generator_sound;
+            case GET_SOUND_CREATURE_016: return dwarf_generator_sound;
+            case GET_SOUND_CREATURE_113: return earth_elemental_generator_sound;
+            case GET_SOUND_CREATURE_052: return efreet_generator_sound;
+            case GET_SOUND_CREATURE_018: return elf_generator_sound;
+            case GET_SOUND_CREATURE_114: return fire_elemental_generator_sound;
+            case GET_SOUND_CREATURE_030: return gargoyle_generator_sound;
+            case GET_SOUND_CREATURE_036: return genie_generator_sound;
+            case GET_SOUND_CREATURE_086: return wolf_rider_generator_sound;
+            case GET_SOUND_CREATURE_098: return gnoll_generator_sound;
+            case GET_SOUND_CREATURE_084: return goblin_generator_sound;
+            case GET_SOUND_CREATURE_044: return gog_generator_sound;
+            case GET_SOUND_CREATURE_102: return gorgon_generator_sound;
+            case GET_SOUND_CREATURE_026: return green_dragon_generator_sound;
+            case GET_SOUND_CREATURE_004: return griffin_generator_sound;
+            case GET_SOUND_CREATURE_072: return harpy_generator_sound;
+            case GET_SOUND_CREATURE_046: return hell_hound_generator_sound;
+            case GET_SOUND_CREATURE_110: return hydra_generator_sound;
+            case GET_SOUND_CREATURE_042: return imp_generator_sound;
+            case GET_SOUND_CREATURE_100: return lizardman_generator_sound;
+            case GET_SOUND_CREATURE_034: return mage_generator_sound;
+            case GET_SOUND_CREATURE_080: return manticore_generator_sound;
+            case GET_SOUND_CREATURE_076: return medusa_generator_sound;
+            case GET_SOUND_CREATURE_078: return minotaur_generator_sound;
+            case GET_SOUND_CREATURE_008: return monk_generator_sound;
+            case GET_SOUND_CREATURE_038: return naga_generator_sound;
+            case GET_SOUND_CREATURE_048: return demon_generator_sound;
+            case GET_SOUND_CREATURE_090: return ogre_generator_sound;
+            case GET_SOUND_CREATURE_088: return orc_generator_sound;
+            case GET_SOUND_CREATURE_050: return pit_fiend_generator_sound;
+            case GET_SOUND_CREATURE_082: return red_dragon_generator_sound;
+            case GET_SOUND_CREATURE_092: return roc_generator_sound;
+            case GET_SOUND_CREATURE_028: return gremlin_generator_sound;
+            case GET_SOUND_CREATURE_040: return titan_generator_sound;
+            case GET_SOUND_CREATURE_022: return treefolk_generator_sound;
+            case GET_SOUND_CREATURE_070: return troglodyte_generator_sound;
+            case GET_SOUND_CREATURE_115: return water_elemental_generator_sound;
+            case GET_SOUND_CREATURE_060: return wight_generator_sound;
+            case GET_SOUND_CREATURE_108: return wyvern_generator_sound;
+            case GET_SOUND_CREATURE_020: return pegasus_generator_sound;
+            case GET_SOUND_CREATURE_024: return unicorn_generator_sound;
+            case GET_SOUND_CREATURE_064: return lich_generator_sound;
+            case GET_SOUND_CREATURE_062: return vampire_generator_sound;
+            case GET_SOUND_CREATURE_056: return skeleton_generator_sound;
+            case GET_SOUND_CREATURE_058: return zombie_generator_sound;
+            case GET_SOUND_CREATURE_000: return pikeman_generator_sound;
+            case GET_SOUND_CREATURE_002: return crossbowman_generator_sound;
+            case GET_SOUND_CREATURE_006: return swordsman_generator_sound;
+            default: return swordsman_generator_sound;
             }
         case CREATURE_GENERATOR_4:
             if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_0)
-                return LOOPING_SOUND_43;
+                return elemental_conflux_sound;
             if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_1)
-                return LOOPING_SOUND_12;
+                return golem_factory_sound;
             break;
         default:
-            return LOOPING_SOUND_INVALID;
+            return invalid_sound;
         }
     } else {
         switch (thisCell->m_type) {
         case NOTHING:
             switch (thisCell->getSpecialTerrain()) {
             case CURSED_GROUND:
-                return LOOPING_SOUND_48;
+                return cursed_ground_sound;
             case MAGIC_PLAINS:
-                return LOOPING_SOUND_25;
+                return magic_plains_sound;
             }
             break;
         case TERRAIN_VOLCANO:
-            return LOOPING_SOUND_45;
+            return volcano_sound;
         }
     }
-    return LOOPING_SOUND_INVALID;
+    return invalid_sound;
 }
 
 VA(0x00418c10, 0x1B1)
@@ -8282,7 +8273,7 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
         return;
 
     e_looping_sound_id idNum = getSoundId(x, y, z);
-    if (idNum == LOOPING_SOUND_INVALID)
+    if (idNum == invalid_sound)
         return;
 
     int i;
@@ -8310,7 +8301,7 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
     if (best == -1)
         return;
 
-    if (m_soundArray[best].m_soundId != LOOPING_SOUND_INVALID)
+    if (m_soundArray[best].m_soundId != invalid_sound)
         g_soundManager->stopSample(
             m_loopedSample[m_soundArray[best].m_soundId]->memSample.memHSample);
 
@@ -8880,27 +8871,27 @@ void advManager::trimLoopingSounds(int maxSoundsAllowed)
     if (g_mapWidth != ADVENTURE_XLARGE_MAP_WIDTH)
         ++maxSoundsAllowed;
 
-    if (maxSoundsAllowed >= LOOPING_SOUND_COUNT)
+    if (maxSoundsAllowed >= max_environment_sounds)
         return;
 
     int soundsFound = 0;
-    char saveSounds[LOOPING_SOUND_COUNT];
+    char saveSounds[max_environment_sounds];
     memset(saveSounds, 0, sizeof(saveSounds));
 
     int i;
     for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; ++i) {
         int soundId = m_soundArray[i].m_soundId;
-        if (soundId >= LOOPING_SOUND_0 && soundId < LOOPING_SOUND_COUNT)
+        if (soundId >= minotaur_generator_sound && soundId < max_environment_sounds)
             ++saveSounds[soundId];
     }
 
-    for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
+    for (i = 0; i < max_environment_sounds; ++i) {
         if (saveSounds[i])
             ++soundsFound;
     }
 
     if (soundsFound < maxSoundsAllowed) {
-        for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
+        for (i = 0; i < max_environment_sounds; ++i) {
             if (!saveSounds[i] && m_loopedSample[i]) {
                 ++soundsFound;
                 ++saveSounds[i];
@@ -8910,7 +8901,7 @@ void advManager::trimLoopingSounds(int maxSoundsAllowed)
         }
     }
 
-    for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
+    for (i = 0; i < max_environment_sounds; ++i) {
         if (m_loopedSample[i] && !saveSounds[i]) {
             m_loopedSample[i]->dispose();
             m_loopedSample[i] = 0;

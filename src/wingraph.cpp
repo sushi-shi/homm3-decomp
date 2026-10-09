@@ -192,7 +192,8 @@ void robAppBlit(tagRECT* combRect)
         RECT pointerRect;
         RECT sourceRect;
         if (g_mouseManager) {
-            g_mouseManager->waitUntilIdle();
+            while (g_mouseManager->m_busy)
+                ;
             IntersectRect(&pointerRect, combRect,
                           &g_mouseManager->m_savedRect);
             sourceRect = pointerRect;

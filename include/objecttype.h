@@ -168,11 +168,14 @@ public:
     TObjectType& setSlotCategory(int category);
     TObjectType& setBUnderlay(bool underlay);
 
-    // Accessor boundary inferred from the existing property interface and
-    // external field operations; these additional names are project names.
+    // Loki h3maped TObjectType::getRecommendedTerrainMask/getSlotCategory/
+    // getTriggerLoc (0x8363ac0, 0x8363ad4, 0x8363b48).
+    const std::bitset<kNumTerrainTypes>& getRecommendedTerrainMask() const
+    {
+        return m_recommendedTerrainMask;
+    }
     int getSlotCategory() const { return m_slotCategory; }
     const TPoint& getTriggerLoc() const { return m_triggerCell; }
-    unsigned int getRecommendedTerrainCount() const { return m_recommendedTerrainMask.count(); }
 };
 SIZE(TObjectType, 0x4c);
 

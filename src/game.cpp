@@ -1150,30 +1150,6 @@ int game::saveObeliskPool(TAbstractFile* outfile)
     return 0;
 }
 
-// Project-inferred full-row payment shared by quests, building and
-// creature/engine purchases. Costs are int rows in quests/traits/buildings
-// and long rows from GetUpgradeCost. Keep their types and one subtraction loop without copying
-// or reinterpreting either row. Each read remains immediately before its
-// matching debit, including zero and negative entries.
-template <class Cost>
-static void subtractResourceCost(long* resources, const Cost* cost)
-{
-    for (int resource = 0; resource < NUM_RESOURCES; ++resource)
-        resources[resource] -= cost[resource];
-}
-
-// Ordinary owner-TU placement is provisional; these interfaces and the
-// implementation template do not claim original native helper identities.
-void playerData::payResourceCost(const int* cost)
-{
-    subtractResourceCost(m_resources, cost);
-}
-
-void playerData::payResourceCost(const long* cost)
-{
-    subtractResourceCost(m_resources, cost);
-}
-
 VA(0x004b9df0, 0x2D)
 DC_ADDRESS(0x0a4cc8, 0x90)
 MAC_ADDRESS(0x0cc2a0, 0x5c)

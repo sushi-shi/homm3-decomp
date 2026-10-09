@@ -81,9 +81,6 @@ public:
     type_spell_choice();
     type_spell_choice(ESpellId newSpell, TSkillMastery newMastery,
                       long newPower, long newDuration);
-
-    // Project-inferred constructor operation; retains the enchantment prefix.
-    void initializeSelection();
 };
 SIZE(type_spell_choice, 0x24);
 
@@ -123,8 +120,6 @@ public:
 
 public:
     type_AI_combat_parameters(const combatManager* combat, long side);
-    // Project-inferred shared priority adjustment for restoring troops.
-    long getRestorationPriorityValue(long value) const;
     long getExchangeEffect(const army& currentArmy, const army& enemy,
                              long distance) const;
 
@@ -408,9 +403,6 @@ protected:
     void addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
                   const army* enemy, bool ranged);
     unsigned char spellsNotRequired() const;
-
-    // Project-inferred timing rule shared by Resurrection and Sacrifice.
-    bool shouldRestoreNow(const army* restoredArmy) const;
 };
 SIZE(type_AI_spellcaster, 0x410);
 

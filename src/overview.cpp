@@ -86,20 +86,6 @@ DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
-// Project-inferred replacement operation for the overview's typed slots.
-// Bind the table itself: removeWidget calls virtual close, so the subsequent
-// delete and clear must reread a dynamic table that callback may replace.
-// Loki (0x08153aa0) and Mac expand it at every slot.
-template <class Slots>
-inline void clearOverviewWidget(Slots& slots, int index)
-{
-    if (slots[index]) {
-        g_overWin->removeWidget(slots[index]);
-        delete slots[index];
-        slots[index] = 0;
-    }
-}
-
 long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
@@ -169,19 +155,39 @@ void game::setupDynamicStuff(int update, int forceUpdate)
     for (row = 0; row < 4; row++) {
         for (item = 0; item < 70; item++) {
             int slot = row * 70 + item;
-            clearOverviewWidget(g_textWidgetDynamic, slot);
-            clearOverviewWidget(g_iconWidgetDynamic, slot);
-            clearOverviewWidget(g_bitmapBorderDynamic, slot);
+            if (g_textWidgetDynamic[slot]) {
+                g_overWin->removeWidget(g_textWidgetDynamic[slot]);
+                delete g_textWidgetDynamic[slot];
+                g_textWidgetDynamic[slot] = 0;
+            }
+            if (g_iconWidgetDynamic[slot]) {
+                g_overWin->removeWidget(g_iconWidgetDynamic[slot]);
+                delete g_iconWidgetDynamic[slot];
+                g_iconWidgetDynamic[slot] = 0;
+            }
+            if (g_bitmapBorderDynamic[slot]) {
+                g_overWin->removeWidget(g_bitmapBorderDynamic[slot]);
+                delete g_bitmapBorderDynamic[slot];
+                g_bitmapBorderDynamic[slot] = 0;
+            }
         }
 
         for (item = 0; item < 2; item++) {
             int slot = row * 2 + item;
-            clearOverviewWidget(g_buttonDynamic, slot);
+            if (g_buttonDynamic[slot]) {
+                g_overWin->removeWidget(g_buttonDynamic[slot]);
+                delete g_buttonDynamic[slot];
+                g_buttonDynamic[slot] = 0;
+            }
         }
 
         for (item = 0; item < 3; item++) {
             int slot = row * 3 + item;
-            clearOverviewWidget(g_textButtonDynamic, slot);
+            if (g_textButtonDynamic[slot]) {
+                g_overWin->removeWidget(g_textButtonDynamic[slot]);
+                delete g_textButtonDynamic[slot];
+                g_textButtonDynamic[slot] = 0;
+            }
         }
     }
 

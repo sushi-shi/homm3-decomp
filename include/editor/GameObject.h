@@ -78,6 +78,9 @@ public:
 private:
     typedef std::map<TObjectType, unsigned int, std::less<TObjectType> > _TObjectTypeMap;
 
+    // One entry per distinct object type, counting the objects that use it.
+    static _TObjectTypeMap _s_objectTypeMap;
+
     _TObjectTypeMap::iterator _m_objectTypeIter;
 };
 

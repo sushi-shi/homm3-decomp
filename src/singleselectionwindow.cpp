@@ -1162,15 +1162,6 @@ bool initializeTurnDurationText()
     return 1;
 }
 
-// Project-inferred start of a player-choice cycle, also used for its initial
-// inactive state. Keep m_unused reset alongside the saved assignment.
-void CNetPlayerHandler::beginPlayerCycle(int pos)
-{
-    m_playerPos = pos;
-    m_unused = -1;
-    m_assignedPos = -1;
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1005
 // Dreamcast: the two seat-array
 // constructions, the four seat counters and the human-seat colour /
@@ -1185,7 +1176,9 @@ MAC_ADDRESS(0x16ecc8, 0xd4)
 CNetPlayerHandler::CNetPlayerHandler()
 {
     m_playersCount = 0;
-    beginPlayerCycle(-1);
+    m_playerPos = -1;
+    m_unused = -1;
+    m_assignedPos = -1;
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         m_humanPlayers[i].m_color = i;
         strcpy(m_computerPlayers[i].m_name, g_generalText->GetText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
@@ -1206,29 +1199,32 @@ bool CNetPlayerHandler::setNextPlayer(int pos)
 
     if (player) {
         start = player->m_color + 1;
-        player->setPlayerPos(-1);
+        player->m_playerPos = -1;
     }
 
     if (pos == m_playerPos) {
         if (m_assignedPos != -1) {
-            player->setPlayerPos(m_assignedPos);
+            player->m_playerPos = m_assignedPos;
             m_assignedPos = -1;
         }
     } else {
-        beginPlayerCycle(pos);
+        m_playerPos = pos;
+        m_unused = -1;
+        m_assignedPos = -1;
     }
 
     if (start >= MAX_PLAYERS) {
-        player->setPlayerPos(-1);
+        player->m_playerPos = -1;
         return 1;
     }
 
     int i = start;
     while (i < MAX_PLAYERS) {
         if (m_humanPlayers[i].isHuman()) {
-            m_assignedPos = m_humanPlayers[i].getPlayerPos();
-            m_humanPlayers[i].setPlayerPos(pos);
-            m_humanPlayers[i].resetTownAndHero();
+            m_assignedPos = m_humanPlayers[i].m_playerPos;
+            m_humanPlayers[i].m_playerPos = pos;
+            m_humanPlayers[i].m_heroIndex = -1;
+            m_humanPlayers[i].m_townIndex = -1;
             return 1;
         }
         ++i;
@@ -1242,7 +1238,7 @@ MAC_ADDRESS(0x16ef34, 0x38)
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
-        if (m_humanPlayers[i].getPlayerPos() == pos)
+        if (m_humanPlayers[i].m_playerPos == pos)
             return &m_humanPlayers[i];
     return 0;
 }
@@ -1339,15 +1335,17 @@ DC_ADDRESS(0x130828, 0x70)
 MAC_ADDRESS(0x16f168, 0xa4)
 bool CNetPlayerHandler::isFaceTaken(int face, int exclude)
 {
+    CNetPlayerHandlerPlayer* pPlayer;
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (i != exclude) {
-            CNetPlayerHandlerPlayer* player = getPlayerInPos(i);
-            if (player && player->getHeroIndex() != -1 &&
-                player->m_availableHeroes[player->getHeroIndex()] == face)
-                return 1;
+        if (i == exclude)
+            continue;
+        pPlayer = getPlayerInPos(i);
+        if (pPlayer && pPlayer->m_heroIndex != -1) {
+            if (pPlayer->m_availableHeroes[pPlayer->m_heroIndex] == face)
+                return true;
         }
     }
-    return 0;
+    return false;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1193
@@ -7585,16 +7583,9 @@ void TSingleSelectionWindow::onNameClick(int pos)
 // the helper sequence.  Complete expands the roster broadcast and face
 // helpers in the network arm, and uses the PC setup.playerPos byte array for
 // the local seat exchange.
-// Residual: Complete's nested GetPlayerInPos/IsFaceTaken expansion inside
-// CheckFaces lowers to 38 retail blocks versus 46 here.  Chaining
-// GetWidget(...)->send_message raises the local score slightly, but destroys
-// DC's line-7574 widget* b local/statement group; keep the positive DC shape.
-// Traced (2026-10-05): checkFaces expands at depth 1 (budget 682, three
-// root sites left, cb 120), giving its children 187; getPlayerInPos (75)
-// then leaves 112 for isFaceTaken (108), which expands. Retail calls
-// isFaceTaken, so its pool was below 183: a fourth cost-free root site
-// after checkFaces or a checkFaces cost of at least 134. DC's function-scope
-// i/pPlayer and braced face test give cb 119; no evidenced site was found.
+// Retail calls isFaceTaken inside the expanded checkFaces. Its DC body
+// (continue, a nested face test and a function-scope pPlayer) costs enough
+// to be refused there; with i also declared before the loop it expands.
 // E:\gamedcs\singleselectionwindow.cpp:7512
 VA(0x0058B790, 0x2A3)
 DC_ADDRESS(0x142028, 0x180)

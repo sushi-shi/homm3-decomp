@@ -14,8 +14,8 @@ class heroWindow;
 // consumers prove values.
 enum EMessageId {
     // The empty-queue message. inputManager::GetEvent (0x4ec590) and its
-    // PeekEvent twin share `setNoInput()` - `id = 0; codeY = 0; codeX = 0;
-    // qualifier = 0` - whenever the ring is drained, and
+    // PeekEvent twin store `id = 0; codeY = 0; codeX = 0; qualifier = 0`
+    // whenever the ring is drained, and
     // advManager::Main cases on it to run the idle animation frame.
     MESSAGE_NONE = 0,
     MESSAGE_KEY_DOWN = 1,

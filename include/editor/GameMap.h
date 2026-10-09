@@ -321,6 +321,11 @@ class TPlaceObjFailureHolyGrailTooCloseToEdge : public TPlaceObjFailureInvalidPl
 class TPlaceObjFailureHolyGrailAlreadyPlaced : public TPlaceObjectFailure {
 };
 
+// The map file's format version per edition (14, 21 and 28): the document
+// stores the map's and checks a loaded file's against them; a Restoration
+// of Erathia map's treasure messages keep its length limit.
+DATA(0x00541460) extern const int akMapFileVersion[GAME_VERSION_SOD + 1];
+
 // The map: its specifications, its one or two layers and the bookkeeping
 // of what is placed on them. A handle to a copy-on-write implementation;
 // every member forwards to it (h3maped 0x429a12..0x42a43a, in this order).

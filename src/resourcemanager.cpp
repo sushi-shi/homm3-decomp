@@ -691,15 +691,6 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
-// Project-inferred saturation policy shared by loaded bitmaps and palettes.
-// Keep the pointer dereference inside the original saturation gate.
-template <class T>
-static void adjustLoadedResourceSaturation(T* value)
-{
-    if (ResourceManager::SaturatedGraphicsEasterEgg)
-        value->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-}
-
 // Mac 0:0x152df8..0x152fc8 calls the retained findBitmapResource helper
 // for name and default.pcx. The same two ordinary source calls auto-inline in
 // Complete. Dreamcast names the anonymous bmpHeader local but cannot fix its
@@ -885,15 +876,6 @@ Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
     return loaded;
 }
 
-// Project-inferred record read shared by the 16- and 24-bit palette loaders.
-// The callers retain their buffers and palette construction lifetimes.
-static void readPaletteRecord(TAbstractFile* stream, char (&header)[24],
-                              TRGBA (&data)[256])
-{
-    stream->read(header, sizeof(header));
-    stream->read(data, sizeof(data));
-}
-
 // Mac 0:0x153258 retains the reader immediately before loadPalette. It owns
 // the two stream reads, palette temporary, saturation and conversion; Complete
 // expands the same work in both its loose-file and archive paths. The helper
@@ -904,9 +886,11 @@ TPalette16* ResourceManager::loadPaletteData(const char* name,
 {
     char header[24];
     TRGBA paletteData[256];
-    readPaletteRecord(stream, header, paletteData);
+    stream->read(header, sizeof(header));
+    stream->read(paletteData, sizeof(paletteData));
     TPalette24 palette24(paletteData);
-    adjustLoadedResourceSaturation(&palette24);
+    if (ResourceManager::SaturatedGraphicsEasterEgg)
+        palette24.AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
     return new TPalette16(name, palette24,
         RedBits, RedShift,
         GreenBits, GreenShift,
@@ -985,10 +969,12 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 {
     char header[24];
     TRGBA rgba[256];
-    readPaletteRecord(stream, header, rgba);
+    stream->read(header, sizeof(header));
+    stream->read(rgba, sizeof(rgba));
 
     TPalette24* result = new TPalette24(rgba);
-    adjustLoadedResourceSaturation(result);
+    if (ResourceManager::SaturatedGraphicsEasterEgg)
+        result->AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
     return result;
 }
 
@@ -1088,16 +1074,6 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     return result.release();
 }
 
-// Project-inferred shared loose-resource operation. Preserve the unchecked
-// seek/tell/rewind sequence and the loaders' signed int size conversion.
-static int getResourceFileSize(FILE* file)
-{
-    fseek(file, 0, SEEK_END);
-    int size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-    return size;
-}
-
 // Mac 0:0x1538a8..0x153944 is this named loader's archive-only port: the
 // font getter calls it at 0x15396c, and it calls findBitmapResource for
 // name/default.fnt before getItemIndex(name) and Mac loadFontData at 0x153560.
@@ -1193,7 +1169,9 @@ TTextResource* ResourceManager::loadText(const char* name)
 
     if (file) {
         try {
-            int fileSize = getResourceFileSize(file);
+            fseek(file, 0, SEEK_END);
+            int fileSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
 
             TTextResource* result;
             {
@@ -1260,7 +1238,9 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 
     if (file) {
         try {
-            int fileSize = getResourceFileSize(file);
+            fseek(file, 0, SEEK_END);
+            int fileSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
 
             TSpreadsheetResource* result;
             {
@@ -1442,7 +1422,9 @@ sample* ResourceManager::loadSample(const char* name)
         sample* result;
         try {
             {
-                int size = getResourceFileSize(file);
+                fseek(file, 0, SEEK_END);
+                int size = ftell(file);
+                fseek(file, 0, SEEK_SET);
                 std::auto_ptr<char> data(new char[size]);
                 fread(data.get(), size, 1, file);
                 result = new sample(name, data.get(), size, 0, 127, 1);
@@ -1724,7 +1706,8 @@ CSprite* ResourceManager::GetSprite(const char* name)
     delete[] sequences;
 
     TPalette24 palette24(sdef.m_palette);
-    adjustLoadedResourceSaturation(&palette24);
+    if (ResourceManager::SaturatedGraphicsEasterEgg)
+        palette24.AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
     TPalette16 palette16(
         palette24,

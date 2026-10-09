@@ -93,10 +93,6 @@ public:
                  int fadeIn);
     int doDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                      TDialogHandler dialogDrawFunction, int fadeIn);
-    // Project-inferred callback completion: save the manager result, then
-    // emit the conventional widget/end message with codeY END_DIALOG.
-    // The caller still returns MESSAGE_DISPATCH_FORWARD and owns cleanup.
-    void finishDialog(message& msg, int result);
     void doQuickView(heroWindow* window);
     void sleepAllWindows(unsigned char sleep);
     // Original: heroWindowManager::UpdateScreen; DC winmgr.cpp:844.
@@ -161,10 +157,6 @@ public:
     // field_4C through the virtual slot-0 tail and nulls it.
     void releaseFizzleSource();
     int convertToHover(message& msg);
-    // Project-inferred hover-cache operations. Dispatch remains in callers;
-    // updateHover reports a change and saves the new ID before rollover work.
-    bool updateHover(int widgetId);
-    void invalidateHover();
     void fadeToBlack(int speed, unsigned char expectFadein);
     void fadeFromBlack(int speed);
 

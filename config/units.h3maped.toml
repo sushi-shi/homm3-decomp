@@ -352,6 +352,11 @@ flags = "editor_o1_ob2_gr_windows"
 
 # The map editor's own objects (src/editor/, the original's Editor\)
 [[unit]]
+unit = "Army"
+source = "src/editor/Army.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "Colors"
 source = "src/editor/Colors.cpp"
 flags = "editor_o1_ob2_gr_windows"
@@ -359,6 +364,21 @@ flags = "editor_o1_ob2_gr_windows"
 [[unit]]
 unit = "GameMap"
 source = "src/editor/GameMap.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "GameResource"
+source = "src/editor/GameResource.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "GameObject"
+source = "src/editor/GameObject.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "ObjectSpecializations"
+source = "src/editor/ObjectSpecializations.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]

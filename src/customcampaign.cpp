@@ -2278,7 +2278,7 @@ void TCampaignBrief::CampaignHeaderStruct::markRequiredCampaignHeroes(
 {
     memset(wanted, 0, game::HERO_COUNT);
     for (unsigned int mapIndex = 0; mapIndex < m_scenarios.size(); ++mapIndex) {
-        if (!g_game->m_campaign.getScenarioInfo(mapIndex).m_completed)
+        if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
             m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
     }
 }
@@ -2465,7 +2465,7 @@ bool TCampaignBrief::ScenarioStruct::prerequisitesMet() const
 {
     for (unsigned int i = 0; i < m_prerequisites.size(); ++i)
         if (m_prerequisites[i]
-            && !g_game->m_campaign.getScenarioInfo(i).m_completed)
+            && !g_game->m_campaign.m_mapScores[i].m_completed)
             return false;
     return true;
 }
@@ -2483,7 +2483,7 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
         available[i] = 1;
         if (!scenario->hasMap()) {
             available[i] = 0;
-            g_game->m_campaign.getScenarioInfo(i).m_completed = true;
+            g_game->m_campaign.m_mapScores[i].m_completed = true;
         } else if (!scenario->prerequisitesMet())
             available[i] = 0;
     }
@@ -3009,7 +3009,7 @@ void SCampaign::pruneCrossoverHeroes(const TCampaignBrief::CampaignHeaderStruct*
              scenarioIndex < header->getScenarioCount();
              ++scenarioIndex) {
             const TCampaignBrief::ScenarioStruct* scenario =
-                header->getScenario(scenarioIndex);
+                header->m_scenarios[scenarioIndex];
             // Mac 0x98a1c tests the caller's size before 0x98a30 calls
             // usesCrossoverPool, whose own 0x96074 guard remains distinct.
             if (!m_mapScores[scenarioIndex].m_completed

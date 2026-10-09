@@ -614,9 +614,6 @@ public:
     char m_caps[0x28];  // +0x04
 
 protected:
-    // Project-inferred shared replacement step; destruction only releases.
-    void releaseDirectPlay();
-
     void* m_dp;  // +0x2c
     GUID m_guid;  // +0x30
     // The DirectPlay enum trampolines are file-scope callbacks that forward to

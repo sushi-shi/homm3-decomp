@@ -141,13 +141,6 @@ public:
 
 private:
     void loadFrame(int newFrame);
-    // Project-inferred cleanup for SetPointer's two no-redraw exits.
-    void finishPointerWithoutRedraw();
-
-public:
-    // Accessor boundary inferred from the existing property interface and
-    // external field operations; these additional names are project names.
-    void waitUntilIdle() const { while (isBusy()) {} }
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).

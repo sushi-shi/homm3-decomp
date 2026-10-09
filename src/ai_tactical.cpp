@@ -359,15 +359,6 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     }
 }
 
-// Project-inferred shared restoration priority for creature and hero spells.
-// Keep each caller's base valuation and rejection rules outside this operation.
-long type_AI_combat_parameters::getRestorationPriorityValue(long value) const
-{
-    if (m_awakeFriendlyValue > m_awakeEnemyValue && m_roundsLeft <= 1)
-        value += value;
-    return value;
-}
-
 // DC ai_tactical.cpp:497 and Mac 0:0x3da40 retain AI_get_attack_damage;
 // Complete expands its troop-count calculation at this constructor site.
 VA(0x004360c0, 0xBC)
@@ -678,23 +669,16 @@ long type_enchant_data::getMasteryValue() const
     return akSpellTraits[m_spell].m_mastery_bonus[m_mastery];
 }
 
-// Project-inferred shared constructor stores. Target interpretation belongs
-// to the consumer: tactical hexes and simulated-combat vector indices differ.
-void type_spell_choice::initializeSelection()
-{
-    m_value = 0;
-    m_target = -1;
-    m_secondTargetHex = -1;
-    m_castNow = 0;
-}
-
 VA(0x00436950, 0x23)
 DC_ADDRESS(0x03d584, 0x2a)
 MAC_ADDRESS(0x03e254, 0x58)
 type_spell_choice::type_spell_choice()
     : type_enchant_data(SPELL_NONE, eMasteryNone, 0, 0)
 {
-    initializeSelection();
+    m_value = 0;
+    m_target = -1;
+    m_secondTargetHex = -1;
+    m_castNow = 0;
 }
 
 VA(0x00436980, 0x35)
@@ -704,7 +688,10 @@ MAC_ADDRESS(0x03e2ac, 0x48)
 type_spell_choice::type_spell_choice(ESpellId newSpell, TSkillMastery newMastery, long newPower, long newDuration)
     : type_enchant_data(newSpell, newMastery, newPower, newDuration)
 {
-    initializeSelection();
+    m_value = 0;
+    m_target = -1;
+    m_secondTargetHex = -1;
+    m_castNow = 0;
 }
 
 // Original: type_AI_spellcaster::initialize; ai_tactical.cpp:779
@@ -2270,15 +2257,6 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
     }
 }
 
-// Project-inferred shared restoration timing. Preserve this short-circuit
-// order and the existing isLastAction helper, including its own current-army read.
-bool type_AI_spellcaster::shouldRestoreNow(const army* restoredArmy) const
-{
-    return restoredArmy == g_combatManager->getCurrentArmy()
-        || m_winLikely
-        || isLastAction();
-}
-
 // E:\gamedcs\ai_tactical.cpp:2608
 // Resurrection and Animate Dead share one pricer: for each of our own
 // stacks the spell would land on, how many creatures come back and
@@ -2349,12 +2327,16 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
                                             m_estimate.m_lowestDefense,
                                             ourArmy->canShoot(0), 0)
             * healable);
-        value = m_estimate.getRestorationPriorityValue(value);
+        if (m_estimate.m_awakeFriendlyValue > m_estimate.m_awakeEnemyValue && m_estimate.m_roundsLeft <= 1)
+            value += value;
         if (value <= choice.m_value)
             continue;
         choice.m_value = value;
         choice.m_target = hex;
-        choice.m_castNow = shouldRestoreNow(ourArmy);
+        choice.m_castNow =
+            ourArmy == g_combatManager->getCurrentArmy()
+            || m_winLikely
+            || isLastAction();
     }
 }
 

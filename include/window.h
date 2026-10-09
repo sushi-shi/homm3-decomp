@@ -101,8 +101,6 @@ public:
     widget* findWidgetPtr(int mx, int my) const;
     int findWidget(int mx, int my) const;
     void addWidget(widget* newWidget, int newPriority);
-    // Project-inferred append followed by immediate default-priority registration.
-    void addOwnedWidget(widget* newWidget);
     void removeWidget(widget* killWidget);
     widget* getWidget(int id);
     void setFocus(int id);
@@ -133,9 +131,6 @@ public:
     virtual void doModal(bool fadeIn);
 
 protected:
-    // Project-inferred terminal cleanup. Delete the objects in order without
-    // clearing the vector or unlinking widgets from the message stream.
-    void deleteWidgetObjects();
     void deleteWidgets();
     virtual void addWidgetsToMessageStream();
 

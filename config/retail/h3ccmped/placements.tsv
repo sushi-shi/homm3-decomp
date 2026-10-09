@@ -312,6 +312,7 @@ rva	size	kind	name	unit	evidence
 0x00043db0	0x3b2	func	@inflate_fast@24	inffast	masked body (946 bytes, 8 relocations) unique at a census start
 0x00044170	0x1b	func	?read@t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	resourcemanager	masked body (27 bytes, 1 relocations) unique at a census start
 0x00044190	0x1f	func	?read@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	resourcemanager	masked body (31 bytes, 1 relocations) unique at a census start
+0x000441b0	0x5	func	?write@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPBXH@Z	resourcemanager	vtable ??_7t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@6B@ stored by ?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z slot 2; ICF-folded with 1 identical bodies
 0x000445a0	0x7e	func	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	resourcemanager	referenced by ?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x7
 0x00044620	0x44	func	?AddToCache@ResourceManager@@YAXPAVresource@@@Z	resourcemanager	referenced by ?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x23
 0x00044670	0xb2	func	?openArchiveResource@@YA_NH@Z	resourcemanager	masked body (178 bytes, 12 relocations) unique at a census start
@@ -473,6 +474,7 @@ rva	size	kind	name	unit	evidence
 0x00098660	0x10	data	__TI2?AVruntime_error@std@@	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x12
 0x000986d8	0x10	data	__TI5?AVTWriteFailure@TRawOStream@@	Campaign	referenced by ??6@YAAAVTRawOStream@@AAV0@ABVTScenarioPrologue@@@Z at +0x35
 0x00098838	0x10	data	__TI3?AVout_of_range@std@@	resource	referenced by ?_Xran@?$bitset@$0BD@@std@@ABEXXZ at +0xc3
+0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xf9
 0x00098d08	0x10	data	__TI5?AVTAllocationFailure@@	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x2e
 0x0009a230	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x367
 0x0009a968	0x10	data	__TI5PAVTCampaignDocInvalidFileVersion@@	CampaignDoc	referenced by ?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z at +0xfb
@@ -564,6 +566,7 @@ rva	size	kind	name	unit	evidence
 0x000c5578	0x5	data	?g_victorPcxScratchRows@@3PAEA	victor_loadpcx	referenced by ?loadpcx@@YGHPBDPAUimgdes@@@Z at +0x137
 0x000c5a28	0x1	data	??_C@_00A@?$AA@	gzio	referenced by ??0TDataError@TGzInflateBuf@@QAE@XZ at +0x45
 0x000c7fe8	0x1c0	data	?g_sSkillTraitsStorage@@3PAUTSSkillTraits@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x15
+0x000c8390	0x40	data	?aPlayerTraitsImp@?A0x0e809e6c890d5ee5@@3PAUTPlayerTraits@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x1d8
 0x000cc7f4	0x4	data	?GreenBits@ResourceManager@@3HA	resourcemanager	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0xad
 0x000cc7f8	0x4	data	?BlueMask@ResourceManager@@3KA	resourcemanager	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x54
 0x000cc7fc	0x4	data	?BlueShift@ResourceManager@@3HA	resourcemanager	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0xc4

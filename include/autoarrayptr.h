@@ -19,18 +19,22 @@ public:
     DC_ADDRESS(0x05b208, 0x20)
     ~TAutoArrayPtr() { if (m_owns) delete [] m_ptr; }
 
+    // Loki's h3maped form: an empty exception specification (the Windows
+    // editors keep no unwind state for the assigned temporary), the
+    // self-assignment test and release() (h3maped 0x4021d7).
     DC_ADDRESS(0x05b228, 0x58)
-    TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)
+    TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs) throw()
     {
-        if (m_ptr != rhs.m_ptr) {
-            if (m_owns)
-                delete [] m_ptr;
-            m_owns = rhs.m_owns;
-        } else if (rhs.m_owns) {
-            m_owns = 1;
+        if (this != &rhs) {
+            if (m_ptr != rhs.m_ptr) {
+                if (m_owns)
+                    delete [] m_ptr;
+                m_owns = rhs.m_owns;
+            } else if (rhs.m_owns) {
+                m_owns = 1;
+            }
+            m_ptr = rhs.release();
         }
-        m_ptr = rhs.m_ptr;
-        rhs.m_owns = 0;
         return *this;
     }
 

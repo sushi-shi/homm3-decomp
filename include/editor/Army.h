@@ -1,12 +1,20 @@
 // Army.h - a creature stack and the seven-stack army (Army.cpp; Loki
-// h3maped). TCreatureStack is a creature type and a quantity; TArmy is the
-// TArray of seven stacks (a town's garrison copies its eight-byte elements,
-// h3maped 0x4c1b6f).
+// h3maped). TCreatureStack is a creature type and a quantity (none and 0
+// when empty); TArmy is the TArray of seven stacks (a town's garrison copies
+// its eight-byte elements, h3maped 0x4c1b6f).
+//
+// The Windows editors read and write a stack by the map's version: from
+// map version 20 the creature type is a short, before it a byte whose 0xff
+// is no creature; the writers take the edition (a short from Armageddon's
+// Blade on).
 #ifndef HOMM3_EDITOR_ARMY_H
 #define HOMM3_EDITOR_ARMY_H
 
 #include "armygrp.h"
 #include "editor/Array.h"
+
+class TRawIStream;
+class TRawOStream;
 
 class TCreatureStack {
 public:
@@ -23,6 +31,9 @@ public:
     TCreatureType getCreatureType() const { return _m_creatureType; }
     unsigned int getQuantity() const { return _m_quantity; }
 
+    void read(TRawIStream* pIStream, int version);
+    void write(TRawOStream* pOStream, int version) const;
+
     friend bool operator==(const TCreatureStack& lhs, const TCreatureStack& rhs)
     {
         return lhs._m_creatureType == rhs._m_creatureType && lhs._m_quantity == rhs._m_quantity;
@@ -33,7 +44,17 @@ private:
     unsigned int _m_quantity;
 };
 
+inline bool operator!=(const TCreatureStack& lhs, const TCreatureStack& rhs)
+{
+    return !(lhs == rhs);
+}
+
 class TArmy : public TArray<TCreatureStack, 7> {
+public:
+    TArmy() {}
+    TArmy(TRawIStream* pIStream, int version);
+
+    void write(TRawOStream* pOStream, int version) const;
 };
 
 // The random creatures a stack may hold (crgenerc.txt, read by an

@@ -373,20 +373,6 @@ public:
         m_playerPos = -1;
         m_heroIndex = -1;
     }
-
-    // Project operation used when a map or seat changes. Unlike
-    // resetAdvancedOptions, this retains the assigned player position.
-    void resetTownAndHero()
-    {
-        m_heroIndex = -1;
-        m_townIndex = -1;
-    }
-
-    // Accessor boundary inferred from the existing property interface and
-    // external field operations; these additional names are project names.
-    int getPlayerPos() const { return m_playerPos; }
-    void setPlayerPos(int value) { m_playerPos = value; }
-    int getHeroIndex() const { return m_heroIndex; }
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
 
@@ -421,9 +407,6 @@ public:
     bool setComputer(int pos);
     int getUnassignedPlayerPos();
     int getPlayerCount(bool assignedOnly);
-
-    // Project-inferred complete cycle reset; same-position restoration is partial.
-    void beginPlayerCycle(int pos);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
