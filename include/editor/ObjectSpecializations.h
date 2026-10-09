@@ -199,6 +199,7 @@ private:
 class TLinkableObject : public virtual TGameObject {
 public:
     TLinkableObject(const TObjectType& objType);
+    TLinkableObject(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual TLinkableObject* getPContainedObject() { return NULL; }
     virtual const TLinkableObject* getPContainedObject() const { return NULL; }

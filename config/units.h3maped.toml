@@ -405,6 +405,11 @@ source = "src/editor/Hero.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "LinkableObject"
+source = "src/editor/LinkableObject.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "ObjectSpecializations"
 source = "src/editor/ObjectSpecializations.cpp"
 flags = "editor_o1_ob2_gr_windows"

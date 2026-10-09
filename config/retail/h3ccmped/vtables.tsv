@@ -74,10 +74,10 @@ rva	function_count	class
 0x88090	5	TCampaignDocInvalidFileVersion
 0x880a8	44	TCampaignDoc
 0x8815c	1	CFileException
-0x88174	1	
+0x88174	1	?$basic_ostream@DU?$char_traits@D@std@@@std
 0x8817c	1	?$basic_ios@DU?$char_traits@D@std@@@std
 0x8818c	1	ios_base@std
-0x88194	1	
+0x88194	1	?$basic_istream@DU?$char_traits@D@std@@@std
 0x881a4	13	?$basic_streambuf@DU?$char_traits@D@std@@@std
 0x88374	46	TCampaignMapWnd
 0x88430	5	CMenu
@@ -221,7 +221,7 @@ rva	function_count	class
 0x8fd14	6	XMessageFilter@COleMessageFilter
 0x8fd80	52	COleBusyDialog
 0x901e4	1	_AFX_OLE_STATE
-0x913f4	1	
+0x913f4	1	?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std
 0x913fc	13	?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std
 0x9143c	3	t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager
 0x9144c	3	t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager
@@ -240,8 +240,8 @@ rva	function_count	class
 0x915c4	3	failure@ios_base@std
 0x91610	1	_Locimp@locale@std
 0x91618	13	?$basic_filebuf@DU?$char_traits@D@std@@@std
-0x91650	1	
-0x91658	1	
+0x91650	1	?$basic_istream@GU?$char_traits@G@std@@@std
+0x91658	1	?$basic_ostream@GU?$char_traits@G@std@@@std
 0x91660	1	?$basic_ios@GU?$char_traits@G@std@@@std
 0x91678	13	?$basic_filebuf@GU?$char_traits@G@std@@@std
 0x916b0	13	?$basic_streambuf@GU?$char_traits@G@std@@@std
