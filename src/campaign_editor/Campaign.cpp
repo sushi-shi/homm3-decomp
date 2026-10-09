@@ -3,7 +3,54 @@
 #include "campaign_editor/stdafx.h"
 
 #include "va.h"
+#include "campaignmap.h"
 #include "campaign_editor/Campaign.h"
+
+class TCampaign::_TImpl {
+public:
+    explicit _TImpl(int type);
+
+    unsigned int getNumScenarios() const { return g_campaignMapTraits[m_type].m_numRegions; }
+
+    void setName(const string& newName);
+    void setDescription(const string& newDescription);
+    void setMusic(int newMusic);
+    void setScenarioMap(int scenario, auto_ptr<TCampaignScenarioMap> pMap);
+    void removeScenarioMap(int scenario);
+    void setBPrerequisite(int scenario, int prerequisite, bool bPrerequisite);
+    void setScenarioStartingOptions(int scenario, auto_ptr<TScenarioStartingOptions> pOptions);
+    bool getBPrerequisite(int scenario, int prerequisite) const;
+    bool getBDirectPrerequisite(int scenario, int prerequisite) const;
+
+    int m_type;
+    string m_name;
+    string m_description;
+    bool m_bDifficultyChoice;
+    int m_music;
+    vector<TScenario> m_scenarios;
+};
+
+class TScenario::_TImpl {
+public:
+    explicit _TImpl(int numScenarios);
+    _TImpl(const _TImpl& other);
+
+    void setStartingOptions(auto_ptr<TScenarioStartingOptions> pOptions);
+    void setPrologue(auto_ptr<TScenarioPrologue> pPrologue) { m_pPrologue = pPrologue; }
+    void removePrologue() { m_pPrologue = auto_ptr<TScenarioPrologue>(); }
+    void setEpilogue(auto_ptr<TScenarioPrologue> pEpilogue) { m_pEpilogue = pEpilogue; }
+    void removeEpilogue() { m_pEpilogue = auto_ptr<TScenarioPrologue>(); }
+
+    TRefCountingAutoPtr<TCampaignScenarioMap> m_pMap;
+    vector<bool> m_prerequisites;
+    int m_regionColor;
+    int m_difficulty;
+    string m_regionDesc;
+    auto_ptr<TScenarioPrologue> m_pPrologue;
+    auto_ptr<TScenarioPrologue> m_pEpilogue;
+    TScenarioCrossover m_crossover;
+    auto_ptr<TScenarioStartingOptions> m_pStartingOptions;
+};
 
 namespace {
 
@@ -401,4 +448,418 @@ void TScenarioOptionsCrossoverScenario::removeChoice(int index)
 void TScenarioOptionsStartingHero::removeChoice(int index)
 {
     m_choices.erase(m_choices.begin() + index);
+}
+
+VA(0x00405ce0, 0x193)
+TCampaign::_TImpl::_TImpl(int type)
+    : m_type(type), m_bDifficultyChoice(false), m_music(0x22)
+{
+    unsigned int numScenarios = getNumScenarios();
+    m_scenarios.resize(numScenarios, TScenario(numScenarios));
+}
+
+VA(0x00407180, 0x131)
+void TCampaign::_TImpl::setName(const string& newName)
+{
+    m_name = newName;
+}
+
+VA(0x004072c0, 0x131)
+void TCampaign::_TImpl::setDescription(const string& newDescription)
+{
+    m_description = newDescription;
+}
+
+VA(0x00407400, 0xa)
+void TCampaign::_TImpl::setMusic(int newMusic)
+{
+    m_music = newMusic;
+}
+
+VA(0x00407410, 0x63)
+void TCampaign::_TImpl::setScenarioMap(int scenario, auto_ptr<TCampaignScenarioMap> pMap)
+{
+    m_scenarios[scenario].setMap(pMap);
+}
+
+VA(0x00407480, 0xe4)
+void TCampaign::_TImpl::removeScenarioMap(int scenario)
+{
+    TScenario& rScenario = m_scenarios[scenario];
+    rScenario.removeMap();
+    for (unsigned int other = 0; other < getNumScenarios(); other++) {
+        if (other == scenario)
+            continue;
+        if (getBPrerequisite(scenario, other))
+            rScenario.setBPrerequisite(other, false);
+        TScenario& rOther = m_scenarios[other];
+        if (!getBPrerequisite(other, scenario))
+            continue;
+        rOther.setBPrerequisite(scenario, false);
+        const TScenarioOptionsCrossoverScenario* pCrossover =
+            dynamic_cast<const TScenarioOptionsCrossoverScenario*>(rOther.getStartingOptions());
+        if (pCrossover == NULL)
+            continue;
+        for (unsigned int choice = pCrossover->m_choices.size(); choice > 0;) {
+            --choice;
+            if (pCrossover->m_choices[choice].m_scenario == scenario) {
+                rOther.removeStartingOptionsChoice(choice);
+                break;
+            }
+        }
+    }
+}
+
+VA(0x00407570, 0x147)
+void TCampaign::_TImpl::setBPrerequisite(int scenario, int prerequisite, bool bPrerequisite)
+{
+    TScenario& rScenario = m_scenarios[scenario];
+    if (bPrerequisite == rScenario.getBPrerequisite(prerequisite))
+        return;
+    if (bPrerequisite) {
+        unsigned int other;
+        for (other = 0; other < getNumScenarios(); other++) {
+            if (other != scenario && other != prerequisite && getBDirectPrerequisite(other, scenario))
+                setBPrerequisite(other, prerequisite, true);
+        }
+        for (other = 0; other < getNumScenarios(); other++) {
+            if (other != scenario && other != prerequisite && getBPrerequisite(prerequisite, other))
+                rScenario.setBPrerequisite(other, true);
+        }
+    } else {
+        const TScenarioOptionsCrossoverScenario* pCrossover =
+            dynamic_cast<const TScenarioOptionsCrossoverScenario*>(rScenario.getStartingOptions());
+        if (pCrossover != NULL) {
+            for (unsigned int choice = pCrossover->m_choices.size(); choice > 0;) {
+                --choice;
+                if (pCrossover->m_choices[choice].m_scenario == prerequisite) {
+                    rScenario.removeStartingOptionsChoice(choice);
+                    break;
+                }
+            }
+        }
+    }
+    rScenario.setBPrerequisite(prerequisite, bPrerequisite);
+}
+
+VA(0x004076c0, 0x63)
+void TCampaign::_TImpl::setScenarioStartingOptions(int scenario, auto_ptr<TScenarioStartingOptions> pOptions)
+{
+    m_scenarios[scenario].setStartingOptions(pOptions);
+}
+
+VA(0x00407730, 0x17)
+bool TCampaign::_TImpl::getBPrerequisite(int scenario, int prerequisite) const
+{
+    return m_scenarios[scenario].getBPrerequisite(prerequisite);
+}
+
+VA(0x00407750, 0x73)
+bool TCampaign::_TImpl::getBDirectPrerequisite(int scenario, int prerequisite) const
+{
+    if (!getBPrerequisite(scenario, prerequisite))
+        return false;
+    for (unsigned int other = 0; other < getNumScenarios(); other++) {
+        if (other != scenario && other != prerequisite && getBPrerequisite(scenario, other)
+            && getBPrerequisite(other, prerequisite))
+            return false;
+    }
+    return true;
+}
+
+VA(0x004077e0, 0x18e)
+TCampaign::TCampaign(int type)
+    : _m_pImpl(_TImpl(type))
+{
+}
+
+VA(0x00407a50, 0xf2)
+TCampaign::~TCampaign()
+{
+}
+
+VA(0x00407b50, 0x3e)
+TCampaign& TCampaign::operator=(const TCampaign& other)
+{
+    _m_pImpl = other._m_pImpl;
+    return *this;
+}
+
+VA(0x00407bc0, 0x24)
+void TCampaign::setName(const string& newName)
+{
+    _m_pImpl->setName(newName);
+}
+
+VA(0x00407bf0, 0x24)
+void TCampaign::setDescription(const string& newDescription)
+{
+    _m_pImpl->setDescription(newDescription);
+}
+
+VA(0x00407c20, 0x2b)
+void TCampaign::setBDifficultyChoice(bool bDifficultyChoice)
+{
+    _m_pImpl->m_bDifficultyChoice = bDifficultyChoice;
+}
+
+VA(0x00407c50, 0x24)
+void TCampaign::setMusic(int newMusic)
+{
+    _m_pImpl->setMusic(newMusic);
+}
+
+VA(0x00407c80, 0x60)
+void TCampaign::setScenarioMap(int scenario, auto_ptr<TCampaignScenarioMap> pMap)
+{
+    _m_pImpl->setScenarioMap(scenario, pMap);
+}
+
+VA(0x00407ce0, 0x24)
+void TCampaign::removeScenarioMap(int scenario)
+{
+    _m_pImpl->removeScenarioMap(scenario);
+}
+
+VA(0x00407d10, 0x2e)
+void TCampaign::setBPrerequisite(int scenario, int prerequisite, bool bPrerequisite)
+{
+    _m_pImpl->setBPrerequisite(scenario, prerequisite, bPrerequisite);
+}
+
+VA(0x00407d40, 0x60)
+void TCampaign::setScenarioStartingOptions(int scenario, auto_ptr<TScenarioStartingOptions> pOptions)
+{
+    _m_pImpl->setScenarioStartingOptions(scenario, pOptions);
+}
+
+VA(0x00407da0, 0x21)
+TScenario& TCampaign::getScenario(int scenario)
+{
+    return _m_pImpl->m_scenarios[scenario];
+}
+
+VA(0x00407df0, 0x6)
+int TCampaign::getType() const
+{
+    return _m_pImpl->m_type;
+}
+
+VA(0x00407e00, 0x6)
+const string& TCampaign::getName() const
+{
+    return _m_pImpl->m_name;
+}
+
+VA(0x00407e10, 0x6)
+const string& TCampaign::getDescription() const
+{
+    return _m_pImpl->m_description;
+}
+
+VA(0x00407e20, 0x6)
+bool TCampaign::getBDifficultyChoice() const
+{
+    return _m_pImpl->m_bDifficultyChoice;
+}
+
+VA(0x00407e30, 0x6)
+int TCampaign::getMusic() const
+{
+    return _m_pImpl->m_music;
+}
+
+VA(0x00407e40, 0xf)
+const TScenario& TCampaign::getScenario(int scenario) const
+{
+    return _m_pImpl->m_scenarios[scenario];
+}
+
+VA(0x00407e50, 0x17)
+bool TCampaign::getBPrerequisite(int scenario, int prerequisite) const
+{
+    return _m_pImpl->getBPrerequisite(scenario, prerequisite);
+}
+
+VA(0x00407e70, 0x17)
+bool TCampaign::getBDirectPrerequisite(int scenario, int prerequisite) const
+{
+    return _m_pImpl->getBDirectPrerequisite(scenario, prerequisite);
+}
+
+VA(0x00407e90, 0x4c)
+TScenarioCrossover::TScenarioCrossover()
+{
+    m_retained.set(eRetainExperience);
+    m_retained.set(eRetainPrimarySkills);
+    m_retained.set(eRetainSecondarySkills);
+    m_retained.set(eRetainSpells);
+}
+
+VA(0x00408440, 0x1c)
+TScenarioPrologue::TScenarioPrologue()
+    : m_movie(0), m_music(0)
+{
+}
+
+VA(0x00408460, 0x137)
+TScenarioPrologue::TScenarioPrologue(int movie, int music, const string& text)
+    : m_movie(movie), m_music(music), m_text(text)
+{
+}
+
+VA(0x004089c0, 0x336)
+TScenario::_TImpl::_TImpl(const _TImpl& other)
+    : m_pMap(other.m_pMap), m_prerequisites(other.m_prerequisites),
+      m_regionColor(other.m_regionColor), m_difficulty(other.m_difficulty),
+      m_regionDesc(other.m_regionDesc), m_crossover(other.m_crossover)
+{
+    if (m_pMap.get() == NULL)
+        return;
+    if (other.m_pPrologue.get() != NULL) {
+        m_pPrologue = auto_ptr<TScenarioPrologue>(new TScenarioPrologue(*other.m_pPrologue));
+        if (m_pPrologue.get() == NULL)
+            throw TAllocationFailure();
+    }
+    if (other.m_pEpilogue.get() != NULL) {
+        m_pEpilogue = auto_ptr<TScenarioPrologue>(new TScenarioPrologue(*other.m_pEpilogue));
+        if (m_pEpilogue.get() == NULL)
+            throw TAllocationFailure();
+    }
+    m_pStartingOptions = other.m_pStartingOptions->clone();
+    if (m_pStartingOptions.get() == NULL)
+        throw TAllocationFailure();
+}
+
+VA(0x00408d00, 0xc4)
+TScenario::_TImpl::_TImpl(int numScenarios)
+    : m_pMap(auto_ptr<TCampaignScenarioMap>()), m_prerequisites(numScenarios),
+      m_regionColor(0), m_difficulty(1)
+{
+}
+
+VA(0x00409350, 0x92)
+void TScenario::_TImpl::setStartingOptions(auto_ptr<TScenarioStartingOptions> pOptions)
+{
+    m_pStartingOptions = pOptions;
+}
+
+VA(0x00409580, 0x1b0)
+TScenario::TScenario(int numScenarios)
+    : _m_pImpl(_TImpl(numScenarios))
+{
+}
+
+VA(0x00409850, 0x29)
+void TScenario::setRegionColor(int newRegionColor)
+{
+    _m_pImpl->m_regionColor = newRegionColor;
+}
+
+VA(0x00409880, 0x29)
+void TScenario::setDifficulty(int newDifficulty)
+{
+    _m_pImpl->m_difficulty = newDifficulty;
+}
+
+VA(0x004098b0, 0x141)
+void TScenario::setRegionDesc(const string& newRegionDesc)
+{
+    _m_pImpl->m_regionDesc = newRegionDesc;
+}
+
+VA(0x00409a00, 0x59)
+void TScenario::setPrologue(auto_ptr<TScenarioPrologue> pPrologue)
+{
+    _m_pImpl->setPrologue(pPrologue);
+}
+
+VA(0x00409b30, 0x1d)
+void TScenario::removePrologue()
+{
+    _m_pImpl->removePrologue();
+}
+
+VA(0x00409bc0, 0x59)
+void TScenario::setEpilogue(auto_ptr<TScenarioPrologue> pEpilogue)
+{
+    _m_pImpl->setEpilogue(pEpilogue);
+}
+
+VA(0x00409cf0, 0x1d)
+void TScenario::removeEpilogue()
+{
+    _m_pImpl->removeEpilogue();
+}
+
+VA(0x00409d80, 0x27)
+void TScenario::setCrossover(const TScenarioCrossover& newCrossover)
+{
+    _m_pImpl->m_crossover = newCrossover;
+}
+
+VA(0x00409db0, 0x9)
+const TCampaignScenarioMap* TScenario::getMap() const
+{
+    return _m_pImpl->m_pMap.get();
+}
+
+VA(0x00409dc0, 0x6)
+int TScenario::getRegionColor() const
+{
+    return _m_pImpl->m_regionColor;
+}
+
+VA(0x00409dd0, 0x6)
+int TScenario::getDifficulty() const
+{
+    return _m_pImpl->m_difficulty;
+}
+
+VA(0x00409de0, 0x6)
+const string& TScenario::getRegionDesc() const
+{
+    return _m_pImpl->m_regionDesc;
+}
+
+VA(0x00409df0, 0x6)
+const TScenarioPrologue* TScenario::getPrologue() const
+{
+    return _m_pImpl->m_pPrologue.get();
+}
+
+VA(0x00409e00, 0x6)
+const TScenarioPrologue* TScenario::getEpilogue() const
+{
+    return _m_pImpl->m_pEpilogue.get();
+}
+
+VA(0x00409e10, 0x6)
+const TScenarioCrossover& TScenario::getCrossover() const
+{
+    return _m_pImpl->m_crossover;
+}
+
+VA(0x00409e20, 0x6)
+const TScenarioStartingOptions* TScenario::getStartingOptions() const
+{
+    return _m_pImpl->m_pStartingOptions.get();
+}
+
+VA(0x0040a0a0, 0x23)
+void TScenario::setBPrerequisite(int scenario, bool bPrerequisite)
+{
+    _m_pImpl->m_prerequisites[scenario] = bPrerequisite;
+}
+
+VA(0x0040a0d0, 0x59)
+void TScenario::setStartingOptions(auto_ptr<TScenarioStartingOptions> pOptions)
+{
+    _m_pImpl->setStartingOptions(pOptions);
+}
+
+VA(0x0040a160, 0xd)
+bool TScenario::getBPrerequisite(int scenario) const
+{
+    return _m_pImpl->m_prerequisites[scenario];
 }

@@ -4,8 +4,15 @@
 #define HOMM3_CAMPAIGN_EDITOR_CAMPAIGN_H
 
 #include <algorithm>
+#include <bitset>
 #include <memory>
+#include <string>
 #include <vector>
+
+#include "editor/RefCountingPtr.h"
+
+class TRawIStream;
+class TRawOStream;
 
 class TScenarioBonusSpell;
 class TScenarioBonusCreature;
@@ -271,6 +278,123 @@ public:
     }
 
     std::vector<TChoice> m_choices;
+};
+
+// The map a scenario plays, as the campaign keeps it (RTTI
+// TCampaignScenarioMap; one virtual slot, the destructor).
+class TCampaignScenarioMap {
+public:
+    virtual ~TCampaignScenarioMap();
+};
+
+// A scenario's prologue or epilogue: a movie (a row of the movie table), a
+// music theme and the text shown over them.
+class TScenarioPrologue {
+public:
+    TScenarioPrologue();
+    TScenarioPrologue(int movie, int music, const std::string& text);
+
+    int m_movie;
+    int m_music;
+    std::string m_text;
+};
+
+TRawIStream& operator>>(TRawIStream& stream, TScenarioPrologue& prologue);
+TRawOStream& operator<<(TRawOStream& stream, const TScenarioPrologue& prologue);
+
+// What crosses over into the scenario from the previous one: which hero
+// properties are kept, and the creatures and artifacts the heroes keep.
+class TScenarioCrossover {
+public:
+    enum TRetained {
+        eRetainExperience,
+        eRetainPrimarySkills,
+        eRetainSecondarySkills,
+        eRetainSpells,
+        eRetainArtifacts,
+        kNumRetained
+    };
+
+    enum { kNumCreatures = 145, kNumArtifacts = 144 };
+
+    TScenarioCrossover();
+
+    void read(TRawIStream& stream, int version);
+    void write(TRawOStream& stream, int version) const;
+
+    std::bitset<kNumRetained> m_retained;
+    std::bitset<kNumCreatures> m_creatures;
+    std::bitset<kNumArtifacts> m_artifacts;
+};
+
+// A scenario of a campaign: a copy-on-write handle.
+class TScenario {
+public:
+    explicit TScenario(int numScenarios);
+
+    void setCrossover(const TScenarioCrossover& newCrossover);
+    const TCampaignScenarioMap* getMap() const;
+    int getRegionColor() const;
+    int getDifficulty() const;
+    const std::string& getRegionDesc() const;
+    const TScenarioPrologue* getPrologue() const;
+    const TScenarioPrologue* getEpilogue() const;
+    const TScenarioCrossover& getCrossover() const;
+    const TScenarioStartingOptions* getStartingOptions() const;
+    void setMap(std::auto_ptr<TCampaignScenarioMap> pMap);
+    void removeMap();
+    void setBPrerequisite(int scenario, bool bPrerequisite);
+    void setStartingOptions(std::auto_ptr<TScenarioStartingOptions> pOptions);
+    void removeStartingOptionsChoice(int index);
+    bool getBPrerequisite(int scenario) const;
+    void setRegionColor(int newRegionColor);
+    void setDifficulty(int newDifficulty);
+    void setRegionDesc(const std::string& newRegionDesc);
+    void setPrologue(std::auto_ptr<TScenarioPrologue> pPrologue);
+    void removePrologue();
+    void setEpilogue(std::auto_ptr<TScenarioPrologue> pEpilogue);
+    void removeEpilogue();
+
+private:
+    class _TImpl;
+
+    TRefCountingPtr<_TImpl> _m_pImpl;
+};
+
+// The campaign: a copy-on-write handle.
+class TCampaign {
+public:
+    class TImportTextFailure : public exception {
+    };
+
+    explicit TCampaign(int type);
+    TCampaign(const TCampaign& other);
+    ~TCampaign();
+
+    TCampaign& operator=(const TCampaign& other);
+
+    void setName(const std::string& newName);
+    void setDescription(const std::string& newDescription);
+    void setBDifficultyChoice(bool bDifficultyChoice);
+    void setMusic(int newMusic);
+    void setScenarioMap(int scenario, std::auto_ptr<TCampaignScenarioMap> pMap);
+    void removeScenarioMap(int scenario);
+    void setBPrerequisite(int scenario, int prerequisite, bool bPrerequisite);
+    void setScenarioStartingOptions(int scenario, std::auto_ptr<TScenarioStartingOptions> pOptions);
+    TScenario& getScenario(int scenario);
+    int getType() const;
+    const std::string& getName() const;
+    const std::string& getDescription() const;
+    bool getBDifficultyChoice() const;
+    int getMusic() const;
+    const TScenario& getScenario(int scenario) const;
+    bool getBPrerequisite(int scenario, int prerequisite) const;
+    bool getBDirectPrerequisite(int scenario, int prerequisite) const;
+
+private:
+    class _TImpl;
+
+    TRefCountingPtr<_TImpl> _m_pImpl;
 };
 
 #endif  /* HOMM3_CAMPAIGN_EDITOR_CAMPAIGN_H */
