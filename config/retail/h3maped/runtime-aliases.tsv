@@ -31,13 +31,6 @@ rva	name	library	member
 0x103013	?OnVScroll@CWnd@@IAEXIIPAVCScrollBar@@@Z	NAFXCW	wincore.obj
 0x108125	?SelectObject@CDC@@QAEPAVCBrush@@PAV2@@Z	NAFXCW	wingdi.obj
 0x108125	?SelectObject@CDC@@UAEPAVCFont@@PAV2@@Z	NAFXCW	wingdi.obj
-0x108a59	?Attach@CImageList@@QAEHPAU_IMAGELIST@@@Z	NAFXCW	winctrl2.obj
-0x108a59	?Attach@CMenu@@QAEHPAUHMENU__@@@Z	NAFXCW	winmenu.obj
-0x108a86	?Detach@CImageList@@QAEPAU_IMAGELIST@@XZ	NAFXCW	winctrl2.obj
-0x108a86	?Detach@CMenu@@QAEPAUHMENU__@@XZ	NAFXCW	winmenu.obj
-0x108ab0	?DeleteDC@CDC@@QAEHXZ	NAFXCW	wingdi.obj
-0x108ab0	?DeleteImageList@CImageList@@QAEHXZ	NAFXCW	winctrl2.obj
-0x108ab0	?DestroyMenu@CMenu@@QAEHXZ	NAFXCW	winmenu.obj
 0x10a782	?GetNextView@CDocument@@UBEPAVCView@@AAPAU__POSITION@@@Z	NAFXCW	doccore.obj
 0x10c79f	?OnWindowPosChanging@CStatusBar@@IAEXPAUtagWINDOWPOS@@@Z	NAFXCW	barstat.obj
 0x10dc9d	?CalcDynamicLayout@CReBar@@UAE?AVCSize@@HK@Z	NAFXCW	barcool.obj

@@ -329,6 +329,17 @@ def data_code_pointers(census):
     return out
 
 
+def rethrow_seeds(c, lone_targets, covered, ends):
+    """The isolated data pointers to the code after a call in a catch
+    funclet: the funclet's call is its rethrow (a catch funclet otherwise
+    ends in `mov eax, offset L; ret`), so the pointer starts a function
+    the descent ran into (a message map's handler after a rethrow)."""
+    return [(t, s) for t, s in lone_targets
+            if t in covered and t in ends
+            and c.starts.get(covered[t], "").startswith("funclet:catch")
+            and covered[t] == covered.get(ends[t])]
+
+
 def run(image, log=print, catch_bodies=False):
     c = Census(image, catch_bodies=catch_bodies)
     pe = struct.unpack_from("<I", image.data, 0x3C)[0]
@@ -447,6 +458,13 @@ def run(image, log=print, catch_bodies=False):
     index()
     for t, s in lone_targets:
         work.append((t, f"data@0x{s:x}"))
+    drain(True)
+    index()
+    # a catch funclet ends in `mov eax, offset L; ret` or in a rethrow: a
+    # data pointer to the code after one of its calls is a function the
+    # descent ran into past the rethrow (a message map's handler)
+    for t, s in rethrow_seeds(c, lone_targets, covered, ends):
+        take(t, f"data-after-rethrow@0x{s:x}", check=False)
     drain(True)
     index()
     rounds = 0

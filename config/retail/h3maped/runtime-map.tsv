@@ -1083,6 +1083,9 @@ rva	name	library	member
 0x104c9b	?afxMapHMENU@@YGPAVCHandleMap@@H@Z	NAFXCW	winmenu.obj
 0x104d0d	?FromHandle@CMenu@@SGPAV1@PAUHMENU__@@@Z	NAFXCW	winmenu.obj
 0x104d22	?FromHandlePermanent@CMenu@@SGPAV1@PAUHMENU__@@@Z	NAFXCW	winmenu.obj
+0x104d40	?Attach@CMenu@@QAEHPAUHMENU__@@@Z	NAFXCW	winmenu.obj
+0x104d6d	?Detach@CMenu@@QAEPAUHMENU__@@XZ	NAFXCW	winmenu.obj
+0x104d97	?DestroyMenu@CMenu@@QAEHXZ	NAFXCW	winmenu.obj
 0x104dad	??0CFile@@QAE@XZ	NAFXCW	filecore.obj
 0x104de3	??0CFile@@QAE@H@Z	NAFXCW	filecore.obj
 0x104e02	??1CFile@@UAE@XZ	NAFXCW	filecore.obj

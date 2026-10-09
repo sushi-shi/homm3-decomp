@@ -300,6 +300,13 @@ class DataSpellingTest(unittest.TestCase):
         self.assertEqual(vc6_data_name(vc6[:-1] + "A", {vc6}, "CampaignEditorText"), vc6)
         self.assertIsNone(vc6_data_name("?g@@3HA", {"?g@@3HB"}, "CampaignEditorText"))
 
+    def test_type_back_reference_to_the_anonymous_scope(self):
+        from homm3.retail_labels.source import vc6_data_name
+        clang = "?lines@?A0xD01D01FD@@3VTLinesFunc@?A0xD01D01FD@@A"
+        vc6 = r"?lines@?%Z:\tmp\src\editor\MapEditWnd.cpp1859@@3VTLinesFunc@1@A"
+        self.assertEqual(vc6_data_name(clang, {vc6}, "MapEditWnd"), vc6)
+        self.assertIsNone(vc6_data_name(clang.replace("TLinesFunc", "TOther"), {vc6}, "MapEditWnd"))
+
 
 if __name__ == '__main__':
     unittest.main()

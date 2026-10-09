@@ -33472,7 +33472,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x139b5c	0x46e1b7	data	.rdata	code-start	-	kept
 0x139b74	0x46f204	data	.rdata	code-start	-	kept
 0x139b8c	0x46e1cb	data	.rdata	code-start	-	kept
-0x139ba4	0x46e347	data	.rdata	code-interior	-	dropped
+0x139ba4	0x46e347	data	.rdata	code-start	-	kept
 0x139bbc	0x46f204	data	.rdata	code-start	-	kept
 0x139bd4	0x46f204	data	.rdata	code-start	-	kept
 0x139bec	0x46e384	data	.rdata	code-start	-	kept

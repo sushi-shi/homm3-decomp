@@ -1787,10 +1787,12 @@ def _parse_base_authority(data: bytes) -> tuple:
             if key:
                 ordered.append((section, key, name,
                                 section_sizes.get(section, 0)))
-            elif name.startswith("??"):
+            elif name.startswith("??") or "@?%" in name:
                 # The IR join already has the exact Clang-mangled spelling;
-                # keep other C++ operators in the authority set even when
-                # the weaker lexical-key join has no safe operator key.
+                # keep other C++ operators, and members of classes in an
+                # anonymous namespace (VC6's `?%<file><n>@` scope), in the
+                # authority set even when the weaker lexical-key join has
+                # no safe key for them.
                 ordered.append((section, "@mangled:" + name, name,
                                 section_sizes.get(section, 0)))
         aux = data[o + 17]
@@ -1881,17 +1883,26 @@ def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:
     def key(name: str) -> str:
         return msvc_names.LOCAL_STATIC_SCOPE.sub(msvc_names.CANONICAL_SCOPE, name)
     expected = key(clang_anon.sub("?anonymous@", mangled))
-    matches = []
+    matches, masked = [], []
     vc6_anon = re.compile(r"\?%([^@]+)@")
+    # VC6 back-references its `?%` scope where it recurs in the datum's
+    # type (`VTClass@1@`); Clang spells the hashed namespace out again.
+    backref = re.compile(r"@\d@")
+    anon_backref = re.compile(r"@\?anonymous@@(?=A$|B$)")
     for candidate in candidates:
         origins = [re.fullmatch(r"(.+\.(?:cpp|cxx|cc|c|h|hpp|inl))\d+", m.group(1), re.I)
                    for m in vc6_anon.finditer(candidate)]
         if any(not origin or Path(origin.group(1).replace('\\', '/')).stem.lower()
                != unit.lower() for origin in origins):
             continue
-        if key(vc6_anon.sub("?anonymous@", candidate)) == expected:
+        spelled = key(vc6_anon.sub("?anonymous@", candidate))
+        if spelled == expected:
             matches.append(candidate)
-    return matches[0] if len(matches) == 1 else None
+        elif backref.sub("@#@", spelled) == anon_backref.sub("@#@", backref.sub("@#@", expected)):
+            masked.append(candidate)
+    if matches:
+        return matches[0] if len(matches) == 1 else None
+    return masked[0] if len(masked) == 1 else None
 
 
 def ir_bind(unit: str, rows: list[dict], ir_names: dict,
