@@ -230,6 +230,16 @@ def portable(text: str, unit: str) -> str:
     return " ".join(normalize_anon_ns_name(word, unit) for word in text.split(" "))
 
 
+def referrer(name: str, rva: int) -> str:
+    """How an evidence note names the placed body that references a symbol:
+    its compiled name, or its address when that name spells an anonymous
+    namespace. VC6 writes such a scope as the compiled file's full path, and
+    a name that repeats it can pass the compiler's length limit in a
+    checkout with a longer path, where the object then holds a shortened,
+    hashed name: the note would depend on the checkout."""
+    return f"0x{rva:08x}" if "?%" in name else name
+
+
 def derive(log=print, want_suggestions=False):
     from homm3 import manifest
     from homm3.core.image import Image
@@ -518,11 +528,11 @@ def derive(log=print, want_suggestions=False):
                         # through the same field
                         continue
                     if ref in definers:
-                        moved += propose(ref, target, f"referenced by {name} at {at}")
+                        moved += propose(ref, target, f"referenced by {referrer(name, rva)} at {at}")
                     elif ref in tables:
-                        moved += place_table(ref, target, f"vtable {ref} stored by {name}")
+                        moved += place_table(ref, target, f"vtable {ref} stored by {referrer(name, rva)}")
                     elif ref in data_definers and kind == DIR32:
-                        propose_data(ref, target, f"referenced by {name} at {at}")
+                        propose_data(ref, target, f"referenced by {referrer(name, rva)} at {at}")
             if not moved:
                 break
 
@@ -591,7 +601,7 @@ def derive(log=print, want_suggestions=False):
         shown = ", ".join(sorted(literals))
         anchored += propose(name, rva, f"string literal anchor ({shown})")
         for ref in literals:
-            propose_data(ref, homes[ref], f"string literal referenced by {name}")
+            propose_data(ref, homes[ref], f"string literal referenced by {referrer(name, rva)}")
     propagate()
     # a literal's unique home is its address when a placed referrer reads it
     for unit, name, body, relocs in compiled:
@@ -600,7 +610,7 @@ def derive(log=print, want_suggestions=False):
         (rva,) = names[name]
         for ref, kind in relocs.values():
             if kind == DIR32 and ref in homes and rva in referrers[homes[ref]]:
-                propose_data(ref, homes[ref], f"string literal referenced by {name}")
+                propose_data(ref, homes[ref], f"string literal referenced by {referrer(name, rva)}")
 
     # 6. masked prefixes
     taken = claimed()
