@@ -2117,15 +2117,8 @@ void handleNewHost()
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
 // local CTextDialog/CHourGlass types. Retail independently fixes the recovery
 // filenames, general-text row, player-record updates and the two resume arms.
-// Residual (98.70642%): a 72-variant ordinary-source tree found this highest
-// pointer-lifetime form. Retail acquires its cached ESI after the first local
-// seat query; moving the declaration there reproduces the mask core but keeps
-// the pointer alive through NextPlayer and scores 98.11926%. Retail also folds
-// the empty CTextDialog destructor to its TDialogBox base; exposing that body
-// in the header regresses both this function and an exact caller, so it is
-// rejected. The refreshed structure pass has all 8 edges aligned (only B4 is
-// one instruction smaller); predict-inline independently isolates that same
-// TDialogBox cleanup as the sole real over-inline call boundary.
+// DC 2352..2359 (and Loki's body) store the seat globals directly from the
+// two local-seat queries, with the turn copy after the seat bit.
 VA(0x005565e0, 0x19E)
 DC_ADDRESS(0x11e1cc, 0x1d0)
 MAC_ADDRESS(0x21413c, 0x1d4)  // anchor-string + callgraph + dc-order-map
@@ -2143,28 +2136,27 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     CHourGlass hourGlass(1);
-    if (!g_game->loadGame(g_config.m_scFile, 0, 0))
+    if (!g_game->loadGame(g_config.m_scFile, 0, 0)) {
         g_game->loadGame(g_config.m_rcFile, 0, 0);
+    }
 
     dlg.close(1);
     hourGlass.stop();
     updateCurrentPlayers();
 
     int playerPos = g_game->getGamePosFromDPID(dpid);
-    if (playerPos != -1)
+    if (playerPos != -1) {
         g_game->m_players[playerPos].clearNetInfo();
+    }
 
-    // Retail keeps this gpGame read live across the two local-seat queries.
-    game* currentGame = g_game;
-    int localPlayer = currentGame->getLocalPlayerGamePos();
-    g_netLocalGamePos = localPlayer;
-    g_playerTurn = localPlayer;
-    g_currentPlayer = &g_game->m_players[localPlayer];
-    g_curPlayerBit = 1 << localPlayer;
+    g_netLocalGamePos = g_game->getLocalPlayerGamePos();
+    g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
+    g_curPlayerBit = 1 << g_netLocalGamePos;
 
-    int visiblePlayer = currentGame->getLocalPlayerGamePos();
-    g_curWatchPlayer = visiblePlayer;
-    g_mapVisibilityBit = 1 << visiblePlayer;
+    g_playerTurn = g_netLocalGamePos;
+
+    g_curWatchPlayer = g_game->getLocalPlayerGamePos();
+    g_mapVisibilityBit = 1 << g_curWatchPlayer;
 
     if (g_weMoved) {
         g_playerDrop = 1;
