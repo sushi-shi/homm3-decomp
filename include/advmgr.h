@@ -1509,11 +1509,6 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 void computeAdvNetControl();
 bool hasFlag(int objType);
 int getFlaggedObjectOwner(NewmapCell* thisCell);
-// Project operation shared by adventure layers and view-world icon drawing.
-// Trim source offsets/extents together with the clipped destination copies.
-void clipAdventureTile(int& baseX, int& baseY,
-                       int& tileX, int& tileY,
-                       int& tileWidth, int& tileHeight);
 // Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
 // prove this five-parameter /Gr help-text signature, but no surviving name.
 void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,

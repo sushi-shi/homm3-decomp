@@ -92,7 +92,7 @@ advmgr	?disableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	tok
 advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@AAUtype_point@@@Z	97.8295	97.8295	97.8295	0x7b80	tokens1:b3fc032a9868
 advmgr	?doAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	tokens1:b5da8b6a746f
 advmgr	?doSystemOptions@advManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1ac00	tokens1:0f630adffd6c
-advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	98.6206	98.6206	98.6206	0x10c00	tokens1:0fe7af08d8a0
+advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	98.6206	98.6206	98.6206	0x10c00	tokens1:8b7831bed5f6
 advmgr	?drawAdvObjShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11590	tokens1:0a240c8536b2
 advmgr	?drawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	tokens1:1abf48f14e54
 advmgr	?drawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	tokens1:ffe19ed8be1c

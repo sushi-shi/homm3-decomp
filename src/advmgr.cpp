@@ -4630,81 +4630,6 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
         currBoat->getHflip());
 }
 
-// Project-inferred rule shared by puzzle object and shadow drawing.
-// Roads, rivers, terrain holes and other object types are excluded; this is
-// narrower than the random-map decoration inventory.
-static bool isPuzzleMapObject(TAdventureObjectType type)
-{
-    switch (type) {
-    case TERRAIN_BRUSH:
-    case TERRAIN_BUSH:
-    case TERRAIN_CACTUS:
-    case TERRAIN_CANYON:
-    case TERRAIN_CRATER:
-    case TERRAIN_DEAD_VEGETATION:
-    case TERRAIN_FLOWER:
-    case TERRAIN_FROZEN_LAKE:
-    case TERRAIN_HEDGE:
-    case TERRAIN_HILL:
-    case TERRAIN_KELP:
-    case TERRAIN_LAKE:
-    case TERRAIN_LAVA_FLOW:
-    case TERRAIN_LAVA_LAKE:
-    case TERRAIN_MUSHROOM:
-    case TERRAIN_LOG:
-    case TERRAIN_MANDRAKE:
-    case TERRAIN_MOSS:
-    case TERRAIN_MOUND:
-    case TERRAIN_MOUNTAIN:
-    case TERRAIN_OAK_TREE:
-    case TERRAIN_OUTCROPPING:
-    case TERRAIN_PINE_TREE:
-    case TERRAIN_PLANT:
-    case TERRAIN_ROCK:
-    case TERRAIN_SAND_DUNE:
-    case TERRAIN_SAND_PIT:
-    case TERRAIN_SHRUB:
-    case TERRAIN_SKULL:
-    case TERRAIN_STALAGMITE:
-    case TERRAIN_STUMP:
-    case TERRAIN_TAR_PIT:
-    case TERRAIN_TREE:
-    case TERRAIN_VINE:
-    case TERRAIN_VOLCANIC_VENT:
-    case TERRAIN_VOLCANO:
-    case TERRAIN_WILLOW_TREE:
-    case TERRAIN_YUCCA_TREE:
-    case TERRAIN_REEF:
-        return true;
-    default:
-        return false;
-    }
-}
-
-// Project-inferred clipping shared by adventure layers and view-world icons.
-// Clip against x=[8,600), y=[0,544). Adventure layers add eight to the final
-// screen Y; view-world icons draw at their saved, unclipped origin. Callers
-// retain those choices, empty-area guards and layer-specific adjustments.
-// Ordinary source placement is provisional; no native inline qualifier is claimed.
-void clipAdventureTile(int& baseX, int& baseY,
-                       int& tileX, int& tileY,
-                       int& tileWidth, int& tileHeight)
-{
-    if (baseX < 8) {
-        tileX += 8 - baseX;
-        tileWidth -= 8 - baseX;
-        baseX = 8;
-    }
-    if (baseY < 0) {
-        tileY -= baseY;
-        tileHeight -= -baseY;
-        baseY = 0;
-    }
-    if (baseX + tileWidth > 600)
-        tileWidth = 600 - baseX;
-    if (baseY + tileHeight > 544)
-        tileHeight = 544 - baseY;
-}
 
 // E:\gamedcs\advmgr.cpp:5941
 // DC 6010 and Mac 0x11770..0x117bc use the signed TObjectCell nibble
@@ -4715,6 +4640,9 @@ void clipAdventureTile(int& baseX, int& baseY,
 // arm at 6069 before FindTrigger at 6074, matching Mac 0x11920..0x1193c.
 // Restoring these native expressions and byte-sized foundHero/foundBoat
 // improves 87.7661 -> 97.83%. Keep the canonical helper calls.
+// DC 5955..5979 clips in place (each update braced) and DC 6012/6015 tests
+// the puzzle object types in place; Mac retail calls neither former
+// project helper, so both operations stay in this body (byte-flat).
 // Earlier baseX/baseY swaps and both disposable declaration-forest
 // placements did not improve the former cached-receiver implementation.
 VA(0x00410c00, 0x98E)
@@ -4734,7 +4662,22 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     int tilew = 32;
     int tileh = 32;
 
-    clipAdventureTile(baseX, baseY, tilex, tiley, tilew, tileh);
+    if (baseX < 8) {
+        tilex += 8 - baseX;
+        tilew -= 8 - baseX;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley -= baseY;
+        tileh -= -baseY;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600) {
+        tilew = 600 - baseX;
+    }
+    if (baseY + tileh > 544) {
+        tileh = 544 - baseY;
+    }
     if (tilew <= 0 || tileh <= 0)
         return;
 
@@ -4763,8 +4706,50 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     continue;
 
                 if (g_drawingPuzzle) {
-                    if (!isPuzzleMapObject(objType->m_objectType))
+                    switch (objType->m_objectType) {
+                    case TERRAIN_BRUSH:
+                    case TERRAIN_BUSH:
+                    case TERRAIN_CACTUS:
+                    case TERRAIN_CANYON:
+                    case TERRAIN_CRATER:
+                    case TERRAIN_DEAD_VEGETATION:
+                    case TERRAIN_FLOWER:
+                    case TERRAIN_FROZEN_LAKE:
+                    case TERRAIN_HEDGE:
+                    case TERRAIN_HILL:
+                    case TERRAIN_KELP:
+                    case TERRAIN_LAKE:
+                    case TERRAIN_LAVA_FLOW:
+                    case TERRAIN_LAVA_LAKE:
+                    case TERRAIN_MUSHROOM:
+                    case TERRAIN_LOG:
+                    case TERRAIN_MANDRAKE:
+                    case TERRAIN_MOSS:
+                    case TERRAIN_MOUND:
+                    case TERRAIN_MOUNTAIN:
+                    case TERRAIN_OAK_TREE:
+                    case TERRAIN_OUTCROPPING:
+                    case TERRAIN_PINE_TREE:
+                    case TERRAIN_PLANT:
+                    case TERRAIN_ROCK:
+                    case TERRAIN_SAND_DUNE:
+                    case TERRAIN_SAND_PIT:
+                    case TERRAIN_SHRUB:
+                    case TERRAIN_SKULL:
+                    case TERRAIN_STALAGMITE:
+                    case TERRAIN_STUMP:
+                    case TERRAIN_TAR_PIT:
+                    case TERRAIN_TREE:
+                    case TERRAIN_VINE:
+                    case TERRAIN_VOLCANIC_VENT:
+                    case TERRAIN_VOLCANO:
+                    case TERRAIN_WILLOW_TREE:
+                    case TERRAIN_YUCCA_TREE:
+                    case TERRAIN_REEF:
+                        break;
+                    default:
                         continue;
+                    }
 
                     int frame = (m_animCtr
                                  + m_fullMap->m_objects[objCell->m_objectIndex]
