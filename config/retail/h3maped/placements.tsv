@@ -81,7 +81,7 @@ rva	size	kind	name	unit	evidence
 0x000072b5	0x202	func	?insert@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEXPAUTPoint@@IABU3@@Z	rmg	referenced by ?push_back@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEXABUTPoint@@@Z at +0xa
 0x00007605	0x38	func	??6TRawOStream@@QAEAAV0@ABC@Z	GameMap	referenced by ?_writeLossCondition@TGameMapHeader@@CAXABUTLossConditionData@@AAVTRawOStream@@W4EGameVersion@@@Z at +0x17
 0x0000763d	0x38	func	??5TRawIStream@@QAEAAV0@AAC@Z	GameMap	referenced by 0x0002b8bd at +0x25
-0x00007675	0x38	func	??5TRawIStream@@QAEAAV0@AAJ@Z	GameMap	referenced by ??0TGameResource@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x72; ICF-folded with 1 identical bodies
+0x00007675	0x38	func	??5TRawIStream@@QAEAAV0@AAJ@Z	GameMap	referenced by ??0TMonster@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x15d; ICF-folded with 1 identical bodies
 0x000076ad	0x38	func	??5TRawIStream@@QAEAAV0@AAY07C@Z	ObjectSpecializations	masked body (56 bytes, 3 relocations) unique at a census start
 0x000076e5	0x38	func	??5TRawIStream@@QAEAAV0@AAY02C@Z	Town	masked body (56 bytes, 3 relocations) unique at a census start
 0x0000771d	0x38	func	??6TRawOStream@@QAEAAV0@AAY03$$CBC@Z	Town	referenced by ?write@TTimedEvent@TTown@@QBEXPAVTRawOStream@@H@Z at +0x95; ICF-folded with 3 identical bodies
@@ -134,7 +134,7 @@ rva	size	kind	name	unit	evidence
 0x00018b8c	0x5	func	??1TFlaggablePropsDlg@@UAE@XZ	FlaggablePropsDlg	referenced by ??_GTFlaggablePropsDlg@@UAEPAXI@Z at +0x4
 0x00018c04	0x3	func	??0TDebugBreak@@QAE@XZ	error	referenced by ??0TRuntimeError@@QAE@XZ at +0x17
 0x00018c07	0x6c	func	??0TRuntimeError@@QAE@PBD@Z	error	masked body (108 bytes, 9 relocations) unique at a census start
-0x000190cb	0xb7	func	??5@YAAAVTRawIStream@@AAV0@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	GameMap	referenced by ?read@TTreasure@@IAEXPAVTRawIStream@@H@Z at +0x4f
+0x000190cb	0xb7	func	??5@YAAAVTRawIStream@@AAV0@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	GameMap	referenced by ??0TMonster@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x105
 0x000192c0	0x42	func	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEPADPAD0@Z	GameMap	masked body (66 bytes, 2 relocations) unique at a census start
 0x00019302	0x26	func	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	GameMap	masked body (38 bytes, 3 relocations) unique at a census start
 0x00019328	0x33	func	??0?$bitset@$07@std@@QAE@K@Z	GameMap	masked body (51 bytes, 1 relocations) unique at a census start
@@ -653,7 +653,7 @@ rva	size	kind	name	unit	evidence
 0x0003beb9	0x2f	func	??Breference@?$bitset@$0IA@@std@@QBE_NXZ	GameMap	masked body (47 bytes, 1 relocations) unique at a census start
 0x0003bee8	0x4d	func	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	rmg	masked body (77 bytes, 1 relocations) unique at a census start
 0x0003bf35	0x5a	func	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	rmg	referenced by ?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z at +0x11
-0x0003bf8f	0x38	func	??5TRawIStream@@QAEAAV0@AAY01E@Z	GameMap	referenced by ?readBitset@@YAXAAVTRawIStream@@AAV?$bitset@$08@std@@@Z at +0xc
+0x0003bf8f	0x38	func	??5TRawIStream@@QAEAAV0@AAY01C@Z	Monster	referenced by ??0TMonster@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x209; ICF-folded with 1 identical bodies
 0x0003bfc7	0x38	func	??5TRawIStream@@QAEAAV0@AAY00E@Z	GameMap	referenced by ?readBitset@@YAXAAVTRawIStream@@AAV?$bitset@$07@std@@@Z at +0xc
 0x0003bfff	0x38	func	??5TRawIStream@@QAEAAV0@AAY0BE@E@Z	GameMap	masked body (56 bytes, 3 relocations) unique at a census start
 0x0003c06f	0x38	func	??6TRawOStream@@QAEAAV0@AAY00$$CBE@Z	GameMap	referenced by ?writeBitset@@YAXAAVTRawOStream@@ABV?$bitset@$07@std@@@Z at +0x51
@@ -670,6 +670,7 @@ rva	size	kind	name	unit	evidence
 0x000422e5	0x20	func	??_GTFlaggableObject@@UAEPAXI@Z	ObjectSpecializations	masked body (32 bytes, 2 relocations) unique at a census start; ICF-folded with 4 identical bodies
 0x00043959	0xa4	func	?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEXABV12@@Z	Hero	referenced by ?getSecondarySkills@TSecondarySkillsDlg@@QBE?AVTSecondarySkills@THeroPrototype@@XZ at +0x8a
 0x00043a4a	0xa8	func	?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEPAU_Node@12@PAU312@0@Z	Hero	referenced by ?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEXABV12@@Z at +0x2c
+0x000440db	0x14	func	??1TMonster@@UAE@XZ	Monster	masked body (20 bytes, 1 relocations) unique at a census start
 0x00045a56	0x3	func	?hasText@TSign@@UBE_NXZ	ObjectSpecializations	referenced by ?hasText@TSign@@$4PPPPPPPM@A@BE_NXZ at +0x4
 0x00045f70	0x8	func	??_ETHero@@$4PPPPPPPM@A@AEPAXI@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 0
 0x00045fa9	0x8	func	?importText@THero@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 1
@@ -711,6 +712,15 @@ rva	size	kind	name	unit	evidence
 0x00046b08	0x8	func	?write@TGarrison@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	ObjectSpecializations	vtable ??_7TGarrison@@6B@ stored by ??0TGarrison@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 3
 0x00046b10	0x8	func	?getTypeName@TGarrison@@$4PPPPPPPM@A@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	ObjectSpecializations	vtable ??_7TGarrison@@6B@ stored by ??0TGarrison@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 4
 0x00046b18	0x8	func	?isCustomized@TGarrison@@$4PPPPPPPM@A@BE_NXZ	ObjectSpecializations	vtable ??_7TGarrison@@6B@ stored by ??0TGarrison@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 5
+0x00046f56	0x8	func	??_ETMonster@@$4PPPPPPPM@A@AEPAXI@Z	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 0
+0x00046f5e	0x2b	func	??_GTMonster@@UAEPAXI@Z	Monster	masked body (43 bytes, 3 relocations) unique at a census start
+0x00046f89	0x8	func	?importText@TMonster@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 1
+0x00046f91	0x8	func	?write@TMonster@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 3
+0x00046f99	0x8	func	?getTypeName@TMonster@@$4PPPPPPPM@A@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 4
+0x00046fa1	0x8	func	?isCustomized@TMonster@@$4PPPPPPPM@A@BE_NXZ	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 5
+0x00046fa9	0x8	func	?hasText@TMonster@@$4PPPPPPPM@A@BE_NXZ	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 6
+0x00046fb1	0x9	func	?hasText@TMonster@@UBE_NXZ	Monster	referenced by ?hasText@TMonster@@$4PPPPPPPM@A@BE_NXZ at +0x4
+0x00046fba	0x8	func	?exportText@TMonster@@$4PPPPPPPM@A@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 7
 0x000472ba	0x8	func	??_ETGameArtifact@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TGameArtifact@@6B@ stored by ??0TGameArtifact@@QAE@ABUTObjectType@@@Z slot 0
 0x00047518	0x8	func	?write@TGameResource@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	ObjectSpecializations	vtable ??_7TGameResource@@6B@ stored by ??0TGameResource@@QAE@ABUTObjectType@@@Z slot 3
 0x00047520	0x8	func	?getTypeName@TGameResource@@$4PPPPPPPM@A@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	ObjectSpecializations	vtable ??_7TGameResource@@6B@ stored by ??0TGameResource@@QAE@ABUTObjectType@@@Z slot 4
@@ -921,6 +931,7 @@ rva	size	kind	name	unit	evidence
 0x000876ce	0x17	func	?SelectObject@CDC@@QAEPAVCBitmap@@PAV2@@Z	MemoryDC	masked body (23 bytes, 1 relocations) unique at a census start
 0x000876e5	0x30	func	?BitBlt@CDC@@QAEHHHHHPAV1@HHK@Z	MemoryDC	masked body (48 bytes, 1 relocations) unique at a census start
 0x00087731	0x5	func	??_9@$BCM@AE	TileHRuler	referenced by ??1?$TDCAttributeSelector@K$1??_9@$BCM@AE@@QAE@XZ at +0x6
+0x00088ee5	0x29	func	?mismatch@std@@YA?AU?$pair@PBIPBI@1@PBI00@Z	Monster	masked body (41 bytes, 0 relocations) unique at a census start
 0x0008d21c	0x55	func	?resize@?$vector@EV?$allocator@E@std@@@std@@QAEXIABE@Z	rmg	masked body (85 bytes, 2 relocations) unique at a census start
 0x0008d27c	0x176	func	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	rmg	masked body (374 bytes, 2 relocations) unique at a census start
 0x0008d3f2	0x2c	func	?erase@?$vector@EV?$allocator@E@std@@@std@@QAEPAEPAE0@Z	rmg	masked body (44 bytes, 0 relocations) unique at a census start
@@ -1550,6 +1561,7 @@ rva	size	kind	name	unit	evidence
 0x001361e4	0x8	data	??_8TMine@@7B@	ObjectSpecializations	referenced by ??0TMine@@QAE@ABUTObjectType@@W4TPlayer@@@Z at +0x24
 0x00136a88	0x8	data	??_8TTreasure@@7B@	ObjectSpecializations	referenced by ??0TTreasure@@QAE@ABUTObjectType@@@Z at +0x29
 0x00136ab4	0x8	data	??_8TSign@@7B@	ObjectSpecializations	referenced by ??0TSign@@QAE@ABUTObjectType@@@Z at +0x24
+0x00136aec	0x8	data	??_8TMonster@@7B@	Monster	referenced by ??0TMonster@@QAE@ABUTObjectType@@@Z at +0x2a
 0x00136b18	0x8	data	??_8TGameArtifact@@7B@	ObjectSpecializations	referenced by ??0TGameArtifact@@QAE@ABUTObjectType@@@Z at +0x24
 0x00136b44	0x8	data	??_8TSpellScroll@@7B@	ObjectSpecializations	referenced by ??0TSpellScroll@@QAE@ABUTObjectType@@@Z at +0x24
 0x00136b70	0x8	data	??_8TGameResource@@7B@	ObjectSpecializations	referenced by ??0TGameResource@@QAE@ABUTObjectType@@@Z at +0x25
@@ -1783,7 +1795,7 @@ rva	size	kind	name	unit	evidence
 0x0019a744	0x258	data	_?creatureTypePluralNames@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xf10867bd5b3ccba5@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xa0
 0x0019a99c	0x258	data	_?creatureTypeAbilities@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xf10867bd5b3ccba5@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x231
 0x0019abf4	0x258	data	_?creatureTypeNames@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xf10867bd5b3ccba5@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x34
-0x0019ae4c	0x4	data	_?$S27@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x14
+0x0019ae4c	0x1	data	_?$S27@?1??initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x14
 0x0019ae80	0x4	data	?_Nil@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@1PAU_Node@12@A	GameMap	referenced by ?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z at +0x20
 0x0019e394	0x4	data	?_Nil@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@std@@U_Kfn@?$map@UTObjectType@@IU?$less@UTObjectType@@@std@@V?$allocator@I@3@@3@U?$less@UTObjectType@@@3@V?$allocator@I@3@@std@@1PAU_Node@12@A	GameMap	referenced by ?erase@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@std@@U_Kfn@?$map@UTObjectType@@IU?$less@UTObjectType@@@std@@V?$allocator@I@3@@3@U?$less@UTObjectType@@@3@V?$allocator@I@3@@std@@QAE?AViterator@12@V312@@Z at +0x2e
 0x0019e398	0x4	data	?_Nilrefs@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@std@@U_Kfn@?$map@UTObjectType@@IU?$less@UTObjectType@@@std@@V?$allocator@I@3@@3@U?$less@UTObjectType@@@3@V?$allocator@I@3@@std@@1IA	GameMap	referenced by ?_Init@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@std@@U_Kfn@?$map@UTObjectType@@IU?$less@UTObjectType@@@std@@V?$allocator@I@3@@3@U?$less@UTObjectType@@@3@V?$allocator@I@3@@std@@IAEXXZ at +0x48
@@ -1806,14 +1818,14 @@ rva	size	kind	name	unit	evidence
 0x0019f2f0	0x150	data	_?secondarySkillLevelNames@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAY02VTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x95
 0x0019f440	0x1	data	_?$S29@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x16
 0x0019f444	0x70	data	_?secondarySkillNames@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x32
-0x0019f4b4	0x4	data	_?$S31@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x15
+0x0019f4b4	0x3	data	_?$S31@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x15
 0x0019f4b8	0x1c0	data	?g_sSkillTraitsStorage@@3PAUTSSkillTraits@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xf
 0x0019f678	0x270	data	_?heroStrings@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x34
 0x0019f8e8	0x48	data	_?heroClassStrings@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x33
-0x0019f930	0x4	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x14
+0x0019f930	0x1	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x14
 0x0019fa68	0x4	data	?_Nil@?$_Tree@W4THeroClass@@W41@U_Kfn@?$set@W4THeroClass@@U?$less@W4THeroClass@@@std@@V?$allocator@W4THeroClass@@@3@@std@@U?$less@W4THeroClass@@@4@V?$allocator@W4THeroClass@@@4@@std@@1PAU_Node@12@A	HeroPropsGeneralPage	referenced by ?_Insert@?$_Tree@W4THeroClass@@W41@U_Kfn@?$set@W4THeroClass@@U?$less@W4THeroClass@@@std@@V?$allocator@W4THeroClass@@@3@@std@@U?$less@W4THeroClass@@@4@V?$allocator@W4THeroClass@@@4@@std@@IAE?AViterator@12@PAU_Node@12@0ABW4THeroClass@@@Z at +0x33
 0x0019feac	0x4	data	?_Nil@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMapDoc@@@std@@V?$allocator@PAVTMapDoc@@@3@@std@@U?$less@PAVTMapDoc@@@4@V?$allocator@PAVTMapDoc@@@4@@std@@1PAU_Node@12@A	MapDoc	referenced by ?_Inc@const_iterator@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMapDoc@@@std@@V?$allocator@PAVTMapDoc@@@3@@std@@U?$less@PAVTMapDoc@@@4@V?$allocator@PAVTMapDoc@@@4@@std@@QAEXXZ at +0x23
-0x001a2294	0x6	data	_?$S41@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4EA	objecttype	referenced by 0x0008ffdd at +0x2
+0x001a2294	0x8	data	_?$S41@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4EA	objecttype	referenced by 0x0008ffdd at +0x2
 0x001a22a8	0x10	data	_?emptyImageName@?1??getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ@4V34@A	objecttype	referenced by ?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ at +0x1c
 0x001a22b8	0x20	data	_?imageNameSet@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4V3@A	objecttype	referenced by 0x0008ffdd at +0x11
 0x001a2368	0x1	data	_?$S119@?1??getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ@4EA	objecttype	referenced by ?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ at +0x3
