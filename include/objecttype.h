@@ -215,6 +215,9 @@ public:
     // The map editor's writer keeps one loaded from objtmplt.txt (h3maped
     // 0x4242b1 constructs it in place, then loads it).
     explicit TObjectTypeTable(char* fileName) { load(fileName); }
+    // The map editor's hero class types: one per class and the random
+    // hero's, loaded at start-up (h3maped 0x44a035).
+    explicit TObjectTypeTable(unsigned int numTypes) : m_objectTypes(numTypes) {}
 
     std::vector<TObjectType> m_objectTypes;
     void load(char* fileName);

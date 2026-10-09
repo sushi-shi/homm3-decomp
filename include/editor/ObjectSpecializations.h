@@ -198,6 +198,8 @@ private:
 // an id (0x421523).
 class TLinkableObject : public virtual TGameObject {
 public:
+    TLinkableObject(const TObjectType& objType);
+
     virtual TLinkableObject* getPContainedObject() { return NULL; }
     virtual const TLinkableObject* getPContainedObject() const { return NULL; }
 
@@ -213,6 +215,13 @@ public:
 
     static const unsigned int s_kNoLinkID;
     static unsigned int s_nextLinkID;
+
+    // The link id, from Armageddon's Blade on.
+    virtual void write(TRawOStream* pOStream, int version) const;
+
+protected:
+    // The link id, in maps from version 15.
+    void read(TRawIStream* pIStream, int version);
 
 private:
     unsigned int _m_linkID;

@@ -377,6 +377,11 @@ source = "src/editor/GameObject.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "Hero"
+source = "src/editor/Hero.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "ObjectSpecializations"
 source = "src/editor/ObjectSpecializations.cpp"
 flags = "editor_o1_ob2_gr_windows"

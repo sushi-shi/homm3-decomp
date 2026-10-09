@@ -177,6 +177,8 @@ public:
     virtual TLinkableObject* getPContainedObject();
     virtual const TLinkableObject* getPContainedObject() const;
 
+    virtual void write(TRawOStream* pOStream, int version) const;
+
     // The faction: the object type's subtype for a town (0x4c2a24).
     TTownType getTownType() const;
     const TTypeTraits& getTownTypeTraits() const { return s_akTypeTraits[getTownType()]; }
