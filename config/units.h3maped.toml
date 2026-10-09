@@ -495,3 +495,13 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "MapSpecsVictoryCondPage"
 source = "src/editor/MapSpecsVictoryCondPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapSpecsAvailableHeroesPage"
+source = "src/editor/MapSpecsAvailableHeroesPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapSpecsSheet"
+source = "src/editor/MapSpecsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"

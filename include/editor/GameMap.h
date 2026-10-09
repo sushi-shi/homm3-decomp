@@ -357,6 +357,9 @@ public:
 
     TGameMap(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer);
     TGameMap(TClient* pClient, EGameVersion version, std::streambuf* pStreamBuf, int fileVersion);
+    // A copy sharing the map's state until either changes (h3maped
+    // 0x429a03; the map specifications sheet edits one).
+    TGameMap(const TGameMap& other);
     ~TGameMap();
     TGameMap& operator=(const TGameMap& other);
 
