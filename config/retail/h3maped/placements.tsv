@@ -1246,6 +1246,7 @@ rva	size	kind	name	unit	evidence
 0x000ad947	0x22b	func	?placeSeerHutForArtifact@type_random_map_generator@@QAEEPAVt_quest_artifact@@@Z	rmg	referenced by ?completePlacement@t_quest_artifact@@UAEEXZ at +0x8
 0x000adb72	0x204	func	?placeKeyTentGuard@type_random_map_generator@@QAEEPAVtype_object@@H@Z	rmg	referenced by ?completePlacement@type_key_tent@@UAEEXZ at +0x14
 0x000adfe1	0xe2	func	?generateToFile@TRandomMapRequest@@QAE?AW4ERandomMapResult@@PAVTAbstractFile@@PAVtype_progress_bar@@@Z	rmg	masked body (226 bytes, 8 relocations) unique at a census start
+0x000ae0c3	0x5f	func	?resize@?$vector@PBVCSprite@@V?$allocator@PBVCSprite@@@std@@@std@@QAEXIABQBVCSprite@@@Z	ObjectSprites	referenced by ?_lockSprite@TObjectSpritePtr@@CAPBVCSprite@@ABUTObjectType@@@Z at +0x37
 0x000ae122	0x33	func	??1?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAE@XZ	rmg	referenced by ??1t_abstract_random_generator@@UAE@XZ at +0xb3
 0x000ae177	0x18	func	??0?$vector@PAUTRmgTemplateZone@@V?$allocator@PAUTRmgTemplateZone@@@std@@@std@@QAE@ABV?$allocator@PAUTRmgTemplateZone@@@1@@Z	rmg	masked body (24 bytes, 0 relocations) unique at a census start
 0x000ae18f	0x5c	func	?resize@?$vector@FV?$allocator@F@std@@@std@@QAEXIABF@Z	rmg	masked body (92 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -1483,7 +1484,7 @@ rva	size	kind	name	unit	evidence
 0x000dcc90	0x25	func	?setf@ios_base@std@@QAEHHH@Z	resourcemanager	masked body (37 bytes, 0 relocations) unique at a census start
 0x000dccc0	0x2e	func	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	resourcemanager	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0xb
 0x000dccf0	0x10	func	??0ios_base@std@@IAE@XZ	resourcemanager	masked body (16 bytes, 1 relocations) unique at a census start
-0x000dcd20	0x5e6	func	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	resourcemanager	string literal anchor (??_C@_09EAAB@GetSprite?$AA@)
+0x000dcd20	0x5e6	func	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	resourcemanager	referenced by ?_lockSprite@TObjectSpritePtr@@CAPBVCSprite@@ABUTObjectType@@@Z at +0x65
 0x000dd320	0x14	func	?ReadFromBitmapResource@ResourceManager@@YAHPAVLODFile@@PAXH@Z	resourcemanager	masked body (20 bytes, 1 relocations) unique at a census start
 0x000dd340	0x4c	func	?Expunge@ResourceManager@@YAXXZ	resourcemanager	masked body (76 bytes, 5 relocations) unique at a census start
 0x000dd390	0xab	func	?dispose@resource@@UAEXXZ	resourcemanager	referenced by ?dispose@CSprite@@UAEXXZ at +0x77
@@ -2485,6 +2486,14 @@ rva	size	kind	name	unit	evidence
 0x0018d028	0xd	data	??_C@_0N@NFKE@TentColr?4txt?$AA@	ObjectSpecializations	referenced by ?InitializeKeymasterTentTypeTraitsTable@@YAXXZ at +0x11
 0x0018d038	0xd	data	??_C@_0N@OEIF@minename?4txt?$AA@	ObjectSpecializations	referenced by ?initializeTypeTraitsTable@TMine@@SAXXZ at +0x3a
 0x0018d048	0xd	data	??_C@_0N@FEIC@garrison?4txt?$AA@	ObjectSpecializations	referenced by ?initializeTypeTraitsTable@TGarrison@@SAXXZ at +0x3a
+0x0018d058	0xa	data	??_C@_09FMKO@af07e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0x1c
+0x0018d064	0xa	data	??_C@_09MJAO@af06e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0x18
+0x0018d070	0xa	data	??_C@_09HHOO@af05e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0x14
+0x0018d07c	0xa	data	??_C@_09OCEO@af04e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0x10
+0x0018d088	0xa	data	??_C@_09KCO@af03e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0xc
+0x0018d094	0xa	data	??_C@_09JPIO@af02e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0x8
+0x0018d0a0	0xa	data	??_C@_09CBGO@af01e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0x4
+0x0018d0ac	0xa	data	??_C@_09LEMO@af00e?4def?$AA@	ObjectSprites	referenced by _?akFlagSpriteNames@?1??_lockSprite@THeroFlagSpritePtr@@CAPBVCSprite@@W4TPlayer@@@Z@4QBQBDB at +0x0
 0x0018d1f4	0xc	data	??_C@_0M@DCAP@default?4msk?$AA@	objecttype	string literal referenced by ?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
 0x0018d264	0x17	data	??_C@_0BH@MNMO@invalid?5bitset?$DMN?$DO?5char?$AA@	objecttype	referenced by ?_Xinv@?$bitset@$0DA@@std@@ABEXXZ at +0x1f
 0x0018d27c	0xc	data	??_C@_0M@JBOE@objects?4txt?$AA@	rmg	string literal referenced by ?loadObjectPrototypes@t_abstract_random_generator@@QAEXXZ

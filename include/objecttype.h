@@ -89,6 +89,9 @@ private:
     _TImageInfo m_imageInfo;
 
 public:
+    // Loki h3maped TObjectType::getImageNum; the object sprite table's
+    // index (h3maped 0x48fcfb reads it inline).
+    unsigned int getImageNum() const { return _m_imageNum; }
     // The image-name registry lookup reads this record's image number;
     // lazy registry/empty-string initialization does not modify the record.
     // Constness is inferred from that ownership, not surviving DC types.

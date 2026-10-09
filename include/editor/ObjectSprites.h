@@ -2,8 +2,9 @@
 // h3maped ObjectSprites.cpp; h3maped 0x48fa1b..0x48fdc9). A sprite pointer
 // locks its sprite in the object's shared table on construction (loading
 // it on first use, h3maped 0x48fce9 and 0x48fd7c) and unlocks it when it
-// goes out of scope (an empty body on Windows, folded at 0x40ed06). The
-// members' names are not recorded.
+// goes out of scope (an empty body on Windows, folded at 0x40ed06); the
+// tables are released at exit by initializeObjectSprites' function-local
+// initializer. The members' names are not recorded.
 #ifndef HOMM3_EDITOR_OBJECTSPRITES_H
 #define HOMM3_EDITOR_OBJECTSPRITES_H
 
@@ -13,6 +14,8 @@
 
 class CSprite;
 struct TObjectType;
+
+void initializeObjectSprites();
 
 class TObjectSpritePtr {
 public:
