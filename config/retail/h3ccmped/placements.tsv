@@ -245,6 +245,13 @@ rva	size	kind	name	unit	evidence
 0x000265d0	0xa	func	??1TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x28; ICF-folded with 2 identical bodies
 0x00026600	0x166	func	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (358 bytes, 18 relocations) unique at a census start
 0x00026790	0x149	func	?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (329 bytes, 22 relocations) unique at a census start
+0x00028ae0	0x10a	func	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	MFCFileBuf	referenced by ?saveCampaign@?A0x14d14b60f51c421c@@YAXABVTCampaign@@HPAVCFile@@@Z at +0x2f
+0x00028c10	0xc0	func	??1TMFCFileBuf@@UAE@XZ	MFCFileBuf	masked body (192 bytes, 10 relocations) unique at a census start
+0x00028cd0	0x14d	func	?seekoff@TMFCFileBuf@@MAE?AV?$fpos@H@std@@JW4seekdir@ios_base@3@H@Z	MFCFileBuf	masked body (333 bytes, 17 relocations) unique at a census start
+0x00028e20	0x32	func	?seekpos@TMFCFileBuf@@MAE?AV?$fpos@H@std@@V23@H@Z	MFCFileBuf	masked body (50 bytes, 0 relocations) unique at a census start
+0x00028e60	0xa2	func	?sync@TMFCFileBuf@@MAEHXZ	MFCFileBuf	masked body (162 bytes, 7 relocations) unique at a census start
+0x00028f10	0x9f	func	?underflow@TMFCFileBuf@@MAEHXZ	MFCFileBuf	masked body (159 bytes, 7 relocations) unique at a census start
+0x00028fb0	0xd4	func	?overflow@TMFCFileBuf@@MAEHH@Z	MFCFileBuf	masked body (212 bytes, 8 relocations) unique at a census start
 0x000293e0	0x10	func	??0CGdiObject@@QAE@XZ	MemoryDC	masked body (16 bytes, 1 relocations) unique at a census start
 0x000293f0	0x22	func	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	MemoryDC	masked body (34 bytes, 2 relocations) unique at a census start
 0x00029890	0x344	func	?InitializePlayerTraitsTable@@YA_NXZ	Player	string literal anchor (??_C@_0N@EJOF@plcolors?4txt?$AA@)

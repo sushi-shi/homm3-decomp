@@ -261,14 +261,14 @@ CampaignDoc	?fill@std@@YAXPAV?$auto_ptr@VTScenarioStartingBonus@@@1@0ABV21@@Z	10
 CampaignDoc	?insert@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QAEPAUTChoice@TScenarioOptionsCrossoverScenario@@PAU34@ABU34@@Z	99.9706	99.9706	99.9706	0x15ff0	-
 CampaignDoc	?insert@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAEXPAUTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@IABU34@@Z	100.0000	100.0000	100.0000	0x16230	-
 CampaignDoc	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x15e10	-
-CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	90.4002	90.4002	90.4002	0x13600	tokens1:24a1fbd4beb2
+CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	90.4130	90.4130	90.4130	0x13600	tokens1:24a1fbd4beb2
 CampaignDoc	?loadScenarioMap@TCampaignDoc@@IAE?AV?$auto_ptr@VTCampaignScenarioMap@@@std@@ABVCString@@@Z	77.5614	77.5614	77.5614	0x14390	tokens1:66d6f778b00b
 CampaignDoc	?make_pair@std@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@1@ABV?$auto_ptr@VTCampaign@@@1@ABH@Z	100.0000	100.0000	100.0000	0x167f0	-
 CampaignDoc	?read@TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXAAVTRawIStream@@H@Z	68.9213	68.9213	68.9213	0x12400	tokens1:9d8b3b062912
 CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	29.2741	29.2864	29.2864	0x115a0	tokens1:deb7f43ae64a
 CampaignDoc	?readStartingOptions@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingOptions@@@std@@AAVTRawIStream@@H@Z	56.0911	56.0911	56.0911	0x11ee0	tokens1:dfb498fc3d9f
 CampaignDoc	?reportCreateFailure@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@ABVTCreateFailure@TCampaignScenarioMap@@PAVCWnd@@@Z	99.5346	99.5346	99.5346	0x12ca0	tokens1:0c93e1f1e0fb
-CampaignDoc	?saveCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABVTCampaign@@HPAVCFile@@@Z	77.4841	77.4841	77.4841	0x12e00	tokens1:327274e99f23
+CampaignDoc	?saveCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABVTCampaign@@HPAVCFile@@@Z	77.5053	77.5053	77.5053	0x12e00	tokens1:327274e99f23
 CampaignDoc	?setVersion@TCampaignDoc@@QAEXH@Z	100.0000	100.0000	100.0000	0x14a50	tokens1:0659db93c221
 CampaignDoc	?size@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x15bd0	-
 CampaignDoc	?size@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x16210	-
@@ -312,6 +312,13 @@ DIBSection	?allocate@T16bppDIBSection@@UAEPAGII@Z	99.3962	99.3962	99.3962	0x1d2c
 DIBSection	?computePitch@?$TBitmap@GK@@UBEII@Z	100.0000	100.0000	100.0000	0x1d630	-
 DIBSection	?free@?$TBitmap@GK@@UAEXPAG@Z	100.0000	100.0000	100.0000	0x4520	-
 DIBSection	?free@T16bppDIBSection@@UAEXPAG@Z	99.0000	99.0000	99.0000	0x1d460	-
+MFCFileBuf	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	74.5067	74.5067	74.5067	0x28ae0	-
+MFCFileBuf	??1TMFCFileBuf@@UAE@XZ	100.0000	100.0000	100.0000	0x28c10	-
+MFCFileBuf	?overflow@TMFCFileBuf@@MAEHH@Z	99.9398	99.9398	99.9398	0x28fb0	-
+MFCFileBuf	?seekoff@TMFCFileBuf@@MAE?AV?$fpos@H@std@@JW4seekdir@ios_base@3@H@Z	99.6847	99.6847	99.6847	0x28cd0	-
+MFCFileBuf	?seekpos@TMFCFileBuf@@MAE?AV?$fpos@H@std@@V23@H@Z	100.0000	100.0000	100.0000	0x28e20	-
+MFCFileBuf	?sync@TMFCFileBuf@@MAEHXZ	99.9206	99.9206	99.9206	0x28e60	-
+MFCFileBuf	?underflow@TMFCFileBuf@@MAEHXZ	99.9194	99.9194	99.9194	0x28f10	-
 MemoryDC	??0CGdiObject@@QAE@XZ	100.0000	100.0000	100.0000	0x293e0	-
 MemoryDC	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x293f0	-
 NewCampaignDlg	??0TNewCampaignDlg@@QAE@PAVCWnd@@HH@Z	100.0000	100.0000	100.0000	0x29470	tokens1:e3315cf39918

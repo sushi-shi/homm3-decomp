@@ -335,6 +335,11 @@ source = "src/editor/DIBSection.cpp"
 flags = "ccmped_o2_gr_windows"
 
 [[unit]]
+unit = "MFCFileBuf"
+source = "src/editor/MFCFileBuf.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
 unit = "MemoryDC"
 source = "src/editor/MemoryDC.cpp"
 flags = "ccmped_o2_gr_windows"
