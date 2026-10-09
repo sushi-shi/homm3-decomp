@@ -801,6 +801,24 @@ source = "src/rmg.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
+unit = "rmg_river"
+module = "rmg"
+source = "src/rmg_river.cpp"
+flags = "game_o2_mt_gr_windows"
+
+[[unit]]
+unit = "rmg_road"
+module = "rmg"
+source = "src/rmg_road.cpp"
+flags = "game_o2_mt_gr_windows"
+
+[[unit]]
+unit = "rmg_voronoi"
+module = "rmg"
+source = "src/rmg_voronoi.cpp"
+flags = "game_o2_mt_gr_windows"
+
+[[unit]]
 unit = "rmg_support"
 module = "rmg"
 source = "src/rmg_support.cpp"

@@ -997,6 +997,27 @@ build build/objdiff/base/rmg.obj: cl src/rmg.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = rmg
 build rmg: phony build/objdiff/base/rmg.obj
+build build/objdiff/base/rmg_river.obj: cl src/rmg_river.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = rmg_river
+build rmg_river: phony build/objdiff/base/rmg_river.obj
+build build/objdiff/base/rmg_road.obj: cl src/rmg_road.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = rmg_road
+build rmg_road: phony build/objdiff/base/rmg_road.obj
+build build/objdiff/base/rmg_voronoi.obj: cl src/rmg_voronoi.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = rmg_voronoi
+build rmg_voronoi: phony build/objdiff/base/rmg_voronoi.obj
 build build/objdiff/base/rmg_support.obj: cl src/rmg_support.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     scripts/homm3/core/compile_receipt.py config/units.toml $
@@ -2239,6 +2260,30 @@ build build/mac/obj/rmg.o: mwcc src/rmg.cpp | scripts/homm3/mac/cc_wrap.py $
     scripts/homm3/mac/object.py config/mac/units.toml
   unit = rmg
 build mac$:rmg: phony build/mac/obj/rmg.o
+build build/mac/obj/rmg_river.o: mwcc src/rmg_river.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = rmg_river
+build mac$:rmg_river: phony build/mac/obj/rmg_river.o
+build build/mac/obj/rmg_road.o: mwcc src/rmg_road.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = rmg_road
+build mac$:rmg_road: phony build/mac/obj/rmg_road.o
+build build/mac/obj/rmg_voronoi.o: mwcc src/rmg_voronoi.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = rmg_voronoi
+build mac$:rmg_voronoi: phony build/mac/obj/rmg_voronoi.o
 build build/mac/obj/rmg_support.o: mwcc src/rmg_support.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
@@ -2460,7 +2505,8 @@ build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
     build/mac/obj/hillfortwindow.o build/mac/obj/dxplay.o $
     build/mac/obj/error.o build/mac/obj/swapmgr.o build/mac/obj/tradpost.o $
     build/mac/obj/seerhut.o build/mac/obj/sacrifice_window.o $
-    build/mac/obj/rmg.o build/mac/obj/rmg_support.o $
+    build/mac/obj/rmg.o build/mac/obj/rmg_river.o build/mac/obj/rmg_road.o $
+    build/mac/obj/rmg_voronoi.o build/mac/obj/rmg_support.o $
     build/mac/obj/rmg_terrain.o build/mac/obj/objnames.o $
     build/mac/obj/forcefeedback.o build/mac/obj/objecttype.o $
     build/mac/obj/string_support.o build/mac/obj/gzfile.o $
@@ -2551,13 +2597,15 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/error.obj build/objdiff/base/swapmgr.obj $
     build/objdiff/base/tradpost.obj build/objdiff/base/seerhut.obj $
     build/objdiff/base/sacrifice_window.obj build/objdiff/base/rmg.obj $
-    build/objdiff/base/rmg_support.obj build/objdiff/base/rmg_terrain.obj $
-    build/objdiff/base/objnames.obj build/objdiff/base/forcefeedback.obj $
-    build/objdiff/base/objecttype.obj build/objdiff/base/string_support.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
-    build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_pcxinfo.obj $
+    build/objdiff/base/rmg_river.obj build/objdiff/base/rmg_road.obj $
+    build/objdiff/base/rmg_voronoi.obj build/objdiff/base/rmg_support.obj $
+    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
+    build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
+    build/objdiff/base/string_support.obj build/objdiff/base/gzfile.obj $
+    build/objdiff/base/gzinflatebuf.obj build/objdiff/base/netmsg.obj $
+    build/objdiff/base/campaign.obj build/objdiff/base/campaignmusic.obj $
+    build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
+    build/objdiff/base/victor_pcxinfo.obj $
     build/objdiff/base/victor_locks.obj build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_bits.obj $
@@ -2642,13 +2690,15 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/error.obj build/objdiff/base/swapmgr.obj $
     build/objdiff/base/tradpost.obj build/objdiff/base/seerhut.obj $
     build/objdiff/base/sacrifice_window.obj build/objdiff/base/rmg.obj $
-    build/objdiff/base/rmg_support.obj build/objdiff/base/rmg_terrain.obj $
-    build/objdiff/base/objnames.obj build/objdiff/base/forcefeedback.obj $
-    build/objdiff/base/objecttype.obj build/objdiff/base/string_support.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
-    build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_pcxinfo.obj $
+    build/objdiff/base/rmg_river.obj build/objdiff/base/rmg_road.obj $
+    build/objdiff/base/rmg_voronoi.obj build/objdiff/base/rmg_support.obj $
+    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
+    build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
+    build/objdiff/base/string_support.obj build/objdiff/base/gzfile.obj $
+    build/objdiff/base/gzinflatebuf.obj build/objdiff/base/netmsg.obj $
+    build/objdiff/base/campaign.obj build/objdiff/base/campaignmusic.obj $
+    build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
+    build/objdiff/base/victor_pcxinfo.obj $
     build/objdiff/base/victor_locks.obj build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_bits.obj $
@@ -2734,13 +2784,15 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/error.obj build/objdiff/base/swapmgr.obj $
     build/objdiff/base/tradpost.obj build/objdiff/base/seerhut.obj $
     build/objdiff/base/sacrifice_window.obj build/objdiff/base/rmg.obj $
-    build/objdiff/base/rmg_support.obj build/objdiff/base/rmg_terrain.obj $
-    build/objdiff/base/objnames.obj build/objdiff/base/forcefeedback.obj $
-    build/objdiff/base/objecttype.obj build/objdiff/base/string_support.obj $
-    build/objdiff/base/gzfile.obj build/objdiff/base/gzinflatebuf.obj $
-    build/objdiff/base/netmsg.obj build/objdiff/base/campaign.obj $
-    build/objdiff/base/campaignmusic.obj build/objdiff/base/tiles.obj $
-    build/objdiff/base/victor.obj build/objdiff/base/victor_pcxinfo.obj $
+    build/objdiff/base/rmg_river.obj build/objdiff/base/rmg_road.obj $
+    build/objdiff/base/rmg_voronoi.obj build/objdiff/base/rmg_support.obj $
+    build/objdiff/base/rmg_terrain.obj build/objdiff/base/objnames.obj $
+    build/objdiff/base/forcefeedback.obj build/objdiff/base/objecttype.obj $
+    build/objdiff/base/string_support.obj build/objdiff/base/gzfile.obj $
+    build/objdiff/base/gzinflatebuf.obj build/objdiff/base/netmsg.obj $
+    build/objdiff/base/campaign.obj build/objdiff/base/campaignmusic.obj $
+    build/objdiff/base/tiles.obj build/objdiff/base/victor.obj $
+    build/objdiff/base/victor_pcxinfo.obj $
     build/objdiff/base/victor_locks.obj build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_bits.obj $

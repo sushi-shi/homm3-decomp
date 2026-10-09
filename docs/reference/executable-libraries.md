@@ -188,12 +188,10 @@ Open items, in the order they block a byte-identical link:
 - **Object partition.** `code-order` breaks where retail places a header
   COMDAT in another object than ours (our earlier object emits a body the
   original did not) and where one of our units holds functions of several
-  original objects. Units whose owned functions retail places in separate
-  runs are separate original objects: the RMG Voronoi run (0x5fceb0..,
-  rmg_support plus rmg.cpp's tail, after viewwrld), the river and road
-  painters with their pattern tables (0x55ed70.., 0x55f2f0..), and the line
-  walker (rmg_terrain's 0x4f9f00..), which belongs with rmg_support's
-  pattern table. Two more interleavings: seerhuttext's 0x56c120/0x56c960
+  original objects. The RMG Voronoi run (0x5fceb0..), the river and road
+  placement operations with their pattern tables (0x55ed70.., 0x55f2f0..)
+  and the line walker (0x4f9f00.., with rmg_support's pattern table) are
+  their own units since 2026-10-09. Two more interleavings: seerhuttext's 0x56c120/0x56c960
   around seerhut's `initializeSeerHutText` (0x56c3e0; Dreamcast places it in
   seerhut.cpp, so the two units are probably one object), and
   singleselectionwindow's 0x576e00/0x576e80 inside singleselectionpopups' run.

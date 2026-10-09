@@ -25,7 +25,7 @@ Retail means English GOG Complete 4.0, fixed base `0x00400000`, 2,732,032 bytes,
 SHA-256 `057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274`.
 Addresses below are virtual addresses; `+` ranges are function-local and
 end-exclusive. The owning reconstruction is in
-[rmg_support.cpp](../../src/rmg_support.cpp), [rmg.cpp](../../src/rmg.cpp), and
+[rmg_voronoi.cpp](../../src/rmg_voronoi.cpp), [rmg.cpp](../../src/rmg.cpp), and
 [rmg.h](../../include/rmg.h). Its role-derived class/helper names are not recovered
 original spellings. Names printed by delinked disassembly come from those
 annotations, not from symbols shipped in the retail executable.

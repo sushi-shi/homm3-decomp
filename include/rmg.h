@@ -553,7 +553,7 @@ struct TPoint {
     {
         return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
     }
-    // The retained 33-byte add at 0x4fa540 (rmg_terrain.cpp) is this
+    // The retained 33-byte add at 0x4fa540 (rmg_support.cpp) is this
     // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
     // TPoint copy of a grid point with a tile direction. Declared last so
     // the earlier member handles are unchanged.
@@ -566,6 +566,16 @@ struct TPoint {
     int getY() const { return m_y; }
     TPoint& operator+=(const TPoint& offset);
 };
+
+// The terrain painter expands this add while the line walker's object keeps
+// the retained body: a header inline definition.
+VA(0x004fa540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
+inline TPoint& TPoint::operator+=(const TPoint& offset)
+{
+    m_x += offset.m_x;
+    m_y += offset.m_y;
+    return *this;
+}
 
 // The native distance callers pass the position's XY subobject as a TPoint
 // value, without constructing another point. This shared base reproduces
@@ -705,15 +715,58 @@ int getRmgGuardValue(int value, int strength);
 // Voronoi's circumcenter arithmetic separates displacement vectors from
 // positions: vector+vector is a member call, point+vector and point-point
 // are free calls. All carry two signed dwords; names remain provisional.
-TPoint operator+(TPoint point, TRmgVector offset);
-TRmgVector operator-(TPoint left, TPoint right);
+// Retail rmg.obj expands all five where its callers use them, while their
+// retained bodies sit in the Voronoi object after buildVertices: header
+// inline definitions, emitted by the object that still calls them.
+VA(0x005FDCB0, 0x1E) // caller 0x5fdc49; thiscall, hidden result + eight-byte operand
+inline TRmgVector TRmgVector::operator+(TRmgVector other) const
+{
+    return TRmgVector(m_x + other.m_x, m_y + other.m_y);
+}
+
+VA(0x005FDCD0, 0x1D) // caller 0x5fdc2f; thiscall, ret 8
+inline TRmgVector TRmgVector::operator*(int scale) const
+{
+    TRmgVector result;
+    result.m_x = m_x * scale;
+    result.m_y = m_y * scale;
+    return result;
+}
+
+VA(0x005FDCF0, 0x25) // callers 0x5fdc36/0x5fdc50; signed division, ret 8
+inline TRmgVector TRmgVector::operator/(int divisor) const
+{
+    return TRmgVector(m_x / divisor, m_y / divisor);
+}
+
+VA(0x005FDD20, 0x20)
+inline TPoint operator+(TPoint point, TRmgVector offset)
+{
+    return TPoint(point.m_x + offset.m_x, point.m_y + offset.m_y);
+}
+
+// The field-built result preserves all 32 retained bytes and improves the
+// carveBranchingPaths expansion without adding a second arithmetic helper.
+VA(0x005FDD40, 0x20)
+inline TRmgVector operator-(TPoint left, TPoint right)
+{
+    return TRmgVector(left.m_x - right.m_x, left.m_y - right.m_y);
+}
 
 // Complete-only Voronoi addSite 0x5fd790 passes whole site positions to
 // retained integer predicates. Aggregate-by-value arguments occupy the
 // stack under /Gr: orientation 0x5fdae0 returns with ret 0x18, distance
 // 0x5fdb10 with ret 0x10. Names describe the proven geometry operations.
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third);
-int getRmgSquaredDistance(TPoint first, TPoint second);
+// carveBranchingPaths expands the distance; addSite keeps its call.
+VA(0x005FDB10, 0x21)
+MAC_ADDRESS(0x25c3b4, 0x38) // anchor-callee addSite; Complete-only, ret 0x10
+inline int getRmgSquaredDistance(TPoint first, TPoint second)
+{
+    int dy = first.m_y - second.m_y;
+    int dx = first.m_x - second.m_x;
+    return dx * dx + dy * dy;
+}
 
 // The map-painting grid uses unsigned coordinates: the terrain set's lower
 // bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
@@ -762,6 +815,17 @@ template<class Coordinate> struct TRmgCoordinatePoint {
         return TPoint(m_x, m_y);
     }
 };
+
+// The terrain painter expands this conversion; the line walker's object
+// keeps the retained instance.
+template<class Coordinate>
+// VA instance: TRmgCoordinatePoint<u32>::TRmgCoordinatePoint(const TPoint&)
+VA(0x004fa520, 0x16)
+MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4
+inline TRmgCoordinatePoint<Coordinate>::TRmgCoordinatePoint(const TPoint& point)
+    : m_x(point.m_x), m_y(point.m_y)
+{
+}
 
 typedef TRmgCoordinatePoint<unsigned int> TRmgGridPoint;
 
@@ -1507,7 +1571,12 @@ class TMapLineFilter {
 public:
     TRmgGridPoint m_size;
 
-    TMapLineFilter(const TRmgGridPoint& size);
+    // Both retained final constructors obtain the adapter size before
+    // building this base, then store their own adapter at +0xc.
+    TMapLineFilter(const TRmgGridPoint& size)
+        : m_size(size)
+    {
+    }
     virtual TRmgLinePatternTable* getPatternTable(int value) = 0;
     virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
     virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
@@ -1718,8 +1787,8 @@ public:
 
 // Retail retains these support bodies outside CreateRiver while the adapter
 // and map-view construction remains expanded at the call site.  Keeping the
-// class definitions shared but the retained bodies in rmg_support.cpp
-// reproduces that ordinary translation-unit visibility boundary.
+// class definitions shared but the retained bodies in rmg_river.cpp and
+// rmg_road.cpp reproduces that ordinary translation-unit visibility boundary.
 class type_river_map : public TRiverOp::TAbstractMap {
 public:
     type_random_map* m_map;
@@ -1836,7 +1905,7 @@ struct TRmgHalfEdge {
         TRmgHalfEdge* twin);
     // Role-derived names: 0x5fcf60 exchanges forward/backward ring links;
     // 0x5fcfa0 applies it to each half-edge and its predecessor.
-    // Ordinary; both constructors expand it (see rmg_support.cpp).
+    // Ordinary; both constructors expand it (see rmg_voronoi.cpp).
     void initialize();
     void splice(TRmgHalfEdge* other);
     void detach();
