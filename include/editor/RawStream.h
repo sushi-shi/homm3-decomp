@@ -9,8 +9,10 @@
 #define HOMM3_EDITOR_RAWSTREAM_H
 
 #include <algorithm>
+#include <bitset>
 #include <streambuf>
 #include <string>
+#include <vector>
 
 #include "exceptions.h"
 
@@ -104,6 +106,42 @@ inline TRawOStream& operator<<(TRawOStream& stream, const std::string& value)
     stream << static_cast<int>(value.length());
     stream.write(value.c_str(), value.length());
     return stream;
+}
+
+// A bit set as the map format packs it: (N + 7) / 8 bytes, bit 0 of byte 0
+// first (the map's artifact and hero masks, a hero's spells: h3maped
+// 0x433db5, 0x434288).
+template <size_t N>
+void readBitset(TRawIStream& stream, std::bitset<N>& bits)
+{
+    unsigned char aByte[(N + 7) / 8];
+    stream >> aByte;
+    for (size_t i = 0; i < N; i++)
+        bits.set(i, (aByte[i / 8] & (1 << (i % 8))) != 0);
+}
+
+template <size_t N>
+void writeBitset(TRawOStream& stream, const std::bitset<N>& bits)
+{
+    unsigned char aByte[(N + 7) / 8] = { 0 };
+    for (size_t i = 0; i < N; i++)
+        if (bits.test(i))
+            aByte[i / 8] |= 1 << (i % 8);
+    stream << aByte;
+}
+
+// A counted sequence: the count, then each item (the map's rumors, 0x433f90).
+template <class T>
+void readContainer(TRawIStream& stream, std::vector<T>& aItem)
+{
+    aItem.erase(aItem.begin(), aItem.end());
+    unsigned int numItems;
+    stream >> numItems;
+    for (unsigned int i = 0; i < numItems; i++) {
+        T item;
+        stream >> item;
+        aItem.push_back(item);
+    }
 }
 
 #endif  /* HOMM3_EDITOR_RAWSTREAM_H */

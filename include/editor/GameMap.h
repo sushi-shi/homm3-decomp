@@ -32,6 +32,8 @@
 #include "editor/RefCountingPtr.h"
 
 class TGameObject;
+class TRawIStream;
+class TRawOStream;
 class TObjectType;
 class TTimedEvent;
 class TVictoryCondition;
@@ -64,6 +66,9 @@ private:
     std::string _m_text;
 };
 
+// A rumor in the map file: its name and text (h3maped 0x4b4ad0).
+TRawIStream& operator>>(TRawIStream& stream, TRumor& rumor);
+
 // Who may play a player, how the computer plays it, and its main town
 // (0x18 bytes). Complete adds the town types the player may start with:
 // the map's own default (0x423a2e) unless they are customized. The flags
@@ -89,6 +94,15 @@ public:
 
     void setBHumanPlayable(bool bPlayable) { _m_bHumanPlayable = bPlayable; }
     void setBComputerPlayable(bool bPlayable) { _m_bComputerPlayable = bPlayable; }
+    void setBehaviorType(TBehaviorType newBehaviorType);
+    void setTownTypes(const TTownTypes& newTownTypes)
+    {
+        _m_bCustomTownTypes = true;
+        _m_townTypes = newTownTypes;
+    }
+    // The main town, where a hero may be generated (0x4942c6, 0x4942f3).
+    void setMainTown(const TMapObjectRef& mainTownRef);
+    void setBGenerateHero(bool bGenerateHero);
     // No main town, and so no hero generated at it (0x4942db).
     void clearMainTown();
 
@@ -470,6 +484,30 @@ public:
               _m_bRoadVFlipped(false) {}
 
     TTerrainType getTerrainType() const { return TTerrainType(_m_terrainType); }
+    unsigned int getTileNum() const { return _m_tileNum; }
+    unsigned int getRiverType() const { return _m_riverType; }
+    unsigned int getRiverTileNum() const { return _m_riverTileNum; }
+    unsigned int getRoadType() const { return _m_roadType; }
+    unsigned int getRoadTileNum() const { return _m_roadTileNum; }
+    bool getBHFlipped() const { return _m_bHFlipped; }
+    bool getBVFlipped() const { return _m_bVFlipped; }
+    bool getBRiverHFlipped() const { return _m_bRiverHFlipped; }
+    bool getBRiverVFlipped() const { return _m_bRiverVFlipped; }
+    bool getBRoadHFlipped() const { return _m_bRoadHFlipped; }
+    bool getBRoadVFlipped() const { return _m_bRoadVFlipped; }
+
+    void setTerrainType(TTerrainType newTerrainType) { _m_terrainType = newTerrainType; }
+    void setTileNum(unsigned int newTileNum) { _m_tileNum = newTileNum; }
+    void setRiverType(unsigned int newRiverType) { _m_riverType = newRiverType; }
+    void setRiverTileNum(unsigned int newTileNum) { _m_riverTileNum = newTileNum; }
+    void setRoadType(unsigned int newRoadType) { _m_roadType = newRoadType; }
+    void setRoadTileNum(unsigned int newTileNum) { _m_roadTileNum = newTileNum; }
+    void setBHFlipped(bool bFlipped) { _m_bHFlipped = bFlipped; }
+    void setBVFlipped(bool bFlipped) { _m_bVFlipped = bFlipped; }
+    void setBRiverHFlipped(bool bFlipped) { _m_bRiverHFlipped = bFlipped; }
+    void setBRiverVFlipped(bool bFlipped) { _m_bRiverVFlipped = bFlipped; }
+    void setBRoadHFlipped(bool bFlipped) { _m_bRoadHFlipped = bFlipped; }
+    void setBRoadVFlipped(bool bFlipped) { _m_bRoadVFlipped = bFlipped; }
 
 private:
     friend class TGameMap::TLayer::_TImpl;

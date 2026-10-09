@@ -16,8 +16,10 @@
 #include "artifact.h"
 #include "herotraits.h"
 #include "editor/Array.h"
+#include "editor/BitsetIterator.h"
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
+#include "editor/GameMapHeader.h"
 #include "editor/Hero.h"
 #include "editor/Monster.h"
 #include "editor/ObjectSpecializations.h"
@@ -251,72 +253,6 @@ EGameVersion getRequiredVersion(const TObjectType& objType)
     return GAME_VERSION_ROE;
 }
 
-// An object's location as the map's condition records keep it: -1s for
-// no object (h3maped 0x42921c fills it).
-struct TMapLoc {
-    int m_x;
-    int m_y;
-    int m_layer;
-};
-
-// A victory condition as the map keeps it (h3maped's visitors write the
-// kind's ordinal as a dword, the two flags at +4/+5, the kind's data at +8).
-struct TVictoryConditionData {
-    int m_type;
-    bool m_bAllowNormalVictory;
-    bool m_bAppliesToComputer;
-    union {
-        struct {
-            TArtifact m_artifact;
-        } m_aquireArtifact;
-        struct {
-            TCreatureType m_creatureType;
-            unsigned int m_quantity;
-        } m_accumulateCreature;
-        struct {
-            TGameResourceType m_resourceType;
-            unsigned int m_quantity;
-        } m_accumulateResource;
-        struct {
-            TMapLoc m_townLoc;
-            int m_hallLevel;
-            int m_castleLevel;
-        } m_upgradeTown;
-        struct {
-            TMapLoc m_townLoc;
-        } m_buildHolyGrailStruct;
-        struct {
-            TMapLoc m_heroLoc;
-        } m_defeatHero;
-        struct {
-            TMapLoc m_townLoc;
-        } m_captureTown;
-        struct {
-            TMapLoc m_monsterLoc;
-        } m_defeatMonster;
-        struct {
-            TArtifact m_artifact;
-            TMapLoc m_townLoc;
-        } m_transportArtifact;
-    };
-};
-
-// A loss condition as the map keeps it.
-struct TLossConditionData {
-    int m_type;
-    union {
-        struct {
-            TMapLoc m_townLoc;
-        } m_loseTown;
-        struct {
-            TMapLoc m_heroLoc;
-        } m_loseHero;
-        struct {
-            unsigned int m_numDays;
-        } m_timeExpires;
-    };
-};
-
 // The kinds of object the map's conditions name; the reconstructions pass
 // them to the layers' searches (isTown h3maped 0x41fe17, isHeroOrTown
 // 0x4296c9, isMonster 0x4296a8).
@@ -341,6 +277,10 @@ inline bool isHeroOrTown(const TGameObject& obj)
 }
 
 }  // namespace
+
+// A layer's cells in the map file (defined with the layer, 0x42b7e8).
+void readCellData(TRawIStream& stream, TGameMap::TLayer* pLayer);
+void writeCellData(TRawOStream& stream, const TGameMap::TLayer& layer);
 
 // The object kinds the map keeps books on, the most derived first. Each
 // link of a dispatch over the list tries one kind with a dynamic_cast and
@@ -376,6 +316,7 @@ public:
     // The caps the failures report (h3maped 0x41ec98: 156 heroes; 0x41ecb8:
     // 48 towns).
     enum { s_kMaxHeroesOnMap = 156, s_kMaxTownsOnMap = 48, s_kMaxHeroesPerPlayer = 8 };
+    enum { s_kMaxNameLen = 30, s_kMaxDescLen = 300, s_kMaxRumors = 30 };
 
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
 
@@ -648,6 +589,7 @@ public:
 
     void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
     void _readHeroSettings(TRawIStream* pIStream, int version);
+    auto_ptr<TGameObject> _createObject(const TObjectType& objType, TRawIStream* pIStream, int version);
     void _writeHeroSettings(TRawOStream* pOStream, int version) const;
     TMapObjectRef _findObject(const TMapLoc& loc, bool (*pfnPredicate)(const TGameObject&)) const;
     auto_ptr<TVictoryCondition> _reconstructVictoryCondition(const TVictoryConditionData& vcData) const;
@@ -1037,6 +979,172 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, boo
         const THeroTraits& traits = akHeroTraits[heroID];
         _m_pProperties->m_disabledHeroes.set(heroID, traits.m_availability.m_special
                                                      || !traits.m_abAvailableIn[edition]);
+    }
+}
+
+// A map file: the header, the editor's settings by format version, the
+// cells, the object types and the objects (a town's visiting hero follows
+// it at its location), the timed events, then the players, teams,
+// conditions and the heroes the edition and the map leave available.
+VA(0x0041f350, 0xa6e)
+TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion)
+    : _m_pClient(pClient), _m_version(version)
+{
+    TRawIStream stream(pStreamBuf);
+    TGameMapHeader header(stream, fileVersion);
+    signed char aReserved[31];
+    stream >> aReserved;
+    _m_size = TSize(find(_s_akDimension, _s_akDimension + s_kNumSizes, header.m_dimension) - _s_akDimension);
+    _m_bTwoLayer = header.m_bTwoLayer;
+    _m_pProperties->m_name = header.m_name;
+    if (_m_pProperties->m_name.size() > s_kMaxNameLen)
+        _m_pProperties->m_name.erase(s_kMaxNameLen);
+    _m_pProperties->m_desc = header.m_desc;
+    if (_m_pProperties->m_desc.size() > s_kMaxDescLen)
+        _m_pProperties->m_desc.erase(s_kMaxDescLen);
+    _m_pProperties->m_difficulty = TDifficulty(header.m_difficulty);
+    _m_pProperties->m_maxHeroLevel = header.m_maxHeroLevel;
+    for (map<int, TGameMapHeader::TCustomHero>::const_iterator pCustomHero = header.m_customHeroes.begin();
+         pCustomHero != header.m_customHeroes.end(); ++pCustomHero) {
+        THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[pCustomHero->first];
+        if (pCustomHero->second.m_portrait != -1)
+            prototype.setPortrait(pCustomHero->second.m_portrait);
+        if (!pCustomHero->second.m_name.empty())
+            prototype.setName(pCustomHero->second.m_name);
+        prototype.setAvailability(TPlayerMask(pCustomHero->second.m_availability));
+    }
+    if (fileVersion >= 27) {
+        readBitset(stream, _m_pProperties->m_disabledArtifacts);
+    } else if (fileVersion >= 21) {
+        bitset<129> disabledArtifacts(0);
+        readBitset(stream, disabledArtifacts);
+        copy(TBitsetIterator<129>(disabledArtifacts, 0), TBitsetIterator<129>(disabledArtifacts, 129),
+             TBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 0));
+    } else if (fileVersion >= 20) {
+        bitset<127> disabledArtifacts(0);
+        readBitset(stream, disabledArtifacts);
+        copy(TBitsetIterator<127>(disabledArtifacts, 0), TBitsetIterator<127>(disabledArtifacts, 127),
+             TBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 0));
+    }
+    if (fileVersion >= 22) {
+        readBitset(stream, _m_pProperties->m_disabledSpells);
+        readBitset(stream, _m_pProperties->m_disabledSkills);
+    }
+    readContainer(stream, *_m_pProperties->m_paRumor);
+    if (_m_pProperties->m_paRumor->size() > s_kMaxRumors)
+        _m_pProperties->m_paRumor->resize(s_kMaxRumors, TRumor());
+    if (fileVersion >= 25)
+        _readHeroSettings(&stream, fileVersion);
+    _m_aLayer.resize(_m_bTwoLayer ? 2 : 1, TLayer(_m_size));
+    readCellData(stream, &_m_aLayer[0]);
+    if (_m_bTwoLayer)
+        readCellData(stream, &_m_aLayer[1]);
+    long numObjTypes;
+    stream >> numObjTypes;
+    vector<TObjectType> tempObjTypeTable;
+    tempObjTypeTable.resize(numObjTypes, TObjectType());
+    vector<TObjectType>::iterator iter = tempObjTypeTable.begin();
+    while (numObjTypes-- > 0)
+        stream >> *iter++;
+    long numObjs;
+    stream >> numObjs;
+    if (numObjs > 0) {
+        unsigned char x;
+        unsigned char y;
+        unsigned char layerNum;
+        long typeID;
+        signed char aObjReserved[5];
+        stream >> x >> y >> layerNum >> typeID >> aObjReserved;
+        for (;;) {
+            auto_ptr<TGameObject> pObj(_createObject(tempObjTypeTable[typeID], &stream, fileVersion));
+            if (!_isOnMap(*pObj, x, y)) {
+                if (--numObjs <= 0)
+                    break;
+                stream >> x >> y >> layerNum >> typeID >> aObjReserved;
+                continue;
+            }
+            TMapLayerObjectID placedObjID = _m_aLayer[layerNum]._placeObject(pObj, x, y);
+            TGameObject* pPlacedObj = _m_aLayer[layerNum].getPObject(placedObjID);
+            _onObjectAdded(*pPlacedObj, layerNum != 0, placedObjID, static_cast<TBookkeptObjectTypes*>(NULL));
+            if (--numObjs <= 0)
+                break;
+            if (dynamic_cast<TTown*>(pPlacedObj) != NULL) {
+                unsigned char nextX;
+                unsigned char nextY;
+                unsigned char nextLayerNum;
+                long nextTypeID;
+                stream >> nextX >> nextY >> nextLayerNum >> nextTypeID >> aObjReserved;
+                if (nextX == x && nextY == y && nextLayerNum == layerNum
+                    && (tempObjTypeTable[nextTypeID].getType() == HERO
+                        || tempObjTypeTable[nextTypeID].getType() == RANDOM_HERO)) {
+                    auto_ptr<TGameObject> pHeroObj(_createObject(tempObjTypeTable[nextTypeID], &stream, fileVersion));
+                    THero* pHero = dynamic_cast<THero*>(pHeroObj.get());
+                    setVisitingHero(pHero, layerNum != 0, placedObjID);
+                    if (--numObjs <= 0)
+                        break;
+                    stream >> nextX >> nextY >> nextLayerNum >> nextTypeID >> aObjReserved;
+                }
+                x = nextX;
+                y = nextY;
+                layerNum = nextLayerNum;
+                typeID = nextTypeID;
+            } else {
+                stream >> x >> y >> layerNum >> typeID >> aObjReserved;
+            }
+        }
+    }
+    {
+        unsigned int numTimedEvents;
+        stream >> numTimedEvents;
+        _m_pProperties->m_paTimedEvent->resize(numTimedEvents, TTimedEvent());
+        for (unsigned int event = 0; event < numTimedEvents; event++)
+            (*_m_pProperties->m_paTimedEvent)[event].read(&stream, fileVersion);
+    }
+    for (int player = 0; player < kNumPlayers; player++) {
+        const TGameMapHeader::TPlayerSlot& slot = header.m_aPlayer[player];
+        TPlayerInfo& playerInfo = (*_m_pProperties->m_paPlayer)[player];
+        if (playerInfo.getBPresent()) {
+            playerInfo.setBHumanPlayable(slot.m_bHumanPlayable);
+            playerInfo.setBehaviorType(slot.m_behaviorType);
+            if (fileVersion >= 26 && slot.m_bCustomTownTypes) {
+                TPlayerInfo::TTownTypes townTypes;
+                townTypes.m_mask = slot.m_townTypes;
+                townTypes.m_bRandom = slot.m_bRandomTown;
+                playerInfo.setTownTypes(townTypes);
+            }
+            if (fileVersion >= 9 && slot.m_bHasMainTown) {
+                TMapObjectRef mainTownRef = _findObject(slot.m_mainTownLoc, isTown);
+                playerInfo.setMainTown(mainTownRef);
+                playerInfo.setBGenerateHero(slot.m_bGenerateHero);
+            }
+        }
+    }
+    if (header.m_numTeams > 0) {
+        TTeamInfo& teamInfo = *_m_pProperties->m_pTeamInfo;
+        teamInfo.setBHasTeams(true);
+        teamInfo.setNumTeams(header.m_numTeams);
+        for (unsigned int player = 0; player < kNumPlayers; player++)
+            teamInfo.setPlayerTeam(TPlayer(player), header.m_aTeam[player]);
+    }
+    _m_pProperties->m_pVictoryCondition =
+        TRefCountingAutoPtr<TVictoryCondition>(_reconstructVictoryCondition(header.m_vcData));
+    _m_pProperties->m_pLossCondition = TRefCountingAutoPtr<TLossCondition>(_reconstructLossCondition(header.m_lcData));
+    int edition = _m_version >= GAME_VERSION_AB;
+    if (fileVersion >= 18) {
+        bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
+        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+            if (!heroesOnMap.test(heroID)
+                && (!header.m_availableHeroes.test(heroID) || !akHeroTraits[heroID].m_abAvailableIn[edition]
+                    || (fileVersion < 20 && akHeroTraits[heroID].m_availability.m_special)))
+                _m_pProperties->m_disabledHeroes.set(heroID, true);
+        }
+    } else {
+        bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
+        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+            if (!heroesOnMap[heroID]
+                && (akHeroTraits[heroID].m_availability.m_special || !akHeroTraits[heroID].m_abAvailableIn[edition]))
+                _m_pProperties->m_disabledHeroes.set(heroID, true);
+        }
     }
 }
 
@@ -3708,6 +3816,91 @@ TMapLayerObjectID TGameMap::TLayer::_placeObject(auto_ptr<TGameObject> pObj, con
 {
     return _m_pImpl->_placeObject(pObj, loc);
 }
+
+namespace {
+
+// A cell's flips in the map file's flags byte, and the beach border the
+// file keeps for the game.
+enum {
+    kCellHFlipped = 0x01,
+    kCellVFlipped = 0x02,
+    kCellRiverHFlipped = 0x04,
+    kCellRiverVFlipped = 0x08,
+    kCellRoadHFlipped = 0x10,
+    kCellRoadVFlipped = 0x20,
+    kCellBeachBorder = 0x40
+};
+
+void readCell(TRawIStream* pIStream, TGameMap::TLayer::TCell* pCell);
+void writeCell(TRawOStream* pOStream, const TGameMap::TLayer::TCell& cell, bool bBeachBorder);
+
+}  // namespace
+
+// A layer's cells, row by row.
+VA(0x0042b7e8, 0x58)
+void readCellData(TRawIStream& stream, TGameMap::TLayer* pLayer)
+{
+    for (unsigned int y = 0; y < pLayer->getHeight(); y++)
+        for (unsigned int x = 0; x < pLayer->getWidth(); x++)
+            readCell(&stream, pLayer->getPCell(x, y));
+}
+
+VA(0x0042b840, 0x7d)
+void writeCellData(TRawOStream& stream, const TGameMap::TLayer& layer)
+{
+    for (unsigned int y = 0; y < layer.getHeight(); y++)
+        for (unsigned int x = 0; x < layer.getWidth(); x++)
+            writeCell(&stream, layer.getCell(x, y), isBeachBorder(layer, TTilePoint(x, y)));
+}
+
+namespace {
+
+// Seven bytes: the terrain, river and road with their tiles, then the flips.
+VA(0x0042b8bd, 0xa0)
+void readCell(TRawIStream* pIStream, TGameMap::TLayer::TCell* pCell)
+{
+    signed char terrainType;
+    signed char tileNum;
+    signed char riverType;
+    signed char riverTileNum;
+    signed char roadType;
+    signed char roadTileNum;
+    unsigned char flags;
+    *pIStream >> terrainType >> tileNum >> riverType >> riverTileNum >> roadType >> roadTileNum >> flags;
+    pCell->setTerrainType(TTerrainType(terrainType));
+    pCell->setTileNum(tileNum);
+    pCell->setBHFlipped(flags & 1);
+    pCell->setBVFlipped((flags >> 1) & 1);
+    pCell->setRiverType(riverType);
+    pCell->setRiverTileNum(riverTileNum);
+    pCell->setBRiverHFlipped((flags >> 2) & 1);
+    pCell->setBRiverVFlipped((flags >> 3) & 1);
+    pCell->setRoadType(roadType);
+    pCell->setRoadTileNum(roadTileNum);
+    pCell->setBRoadHFlipped((flags >> 4) & 1);
+    pCell->setBRoadVFlipped((flags >> 5) & 1);
+}
+
+VA(0x0042b95d, 0xe9)
+void writeCell(TRawOStream* pOStream, const TGameMap::TLayer::TCell& cell, bool bBeachBorder)
+{
+    unsigned char flags = (cell.getBHFlipped() ? kCellHFlipped : 0)
+                        | (cell.getBVFlipped() ? kCellVFlipped : 0)
+                        | (cell.getBRiverHFlipped() ? kCellRiverHFlipped : 0)
+                        | (cell.getBRiverVFlipped() ? kCellRiverVFlipped : 0)
+                        | (cell.getBRoadHFlipped() ? kCellRoadHFlipped : 0)
+                        | (cell.getBRoadVFlipped() ? kCellRoadVFlipped : 0)
+                        | (bBeachBorder ? kCellBeachBorder : 0);
+    *pOStream << static_cast<signed char>(cell.getTerrainType())
+              << static_cast<signed char>(cell.getTileNum())
+              << static_cast<signed char>(cell.getRiverType())
+              << static_cast<signed char>(cell.getRiverTileNum())
+              << static_cast<signed char>(cell.getRoadType())
+              << static_cast<signed char>(cell.getRoadTileNum())
+              << flags;
+}
+
+}  // namespace
 
 inline TMapLayerObjectID TGameMap::TLayer::_findObject(const TTilePoint& loc,
                                                        bool (*pfnPredicate)(const TGameObject&)) const

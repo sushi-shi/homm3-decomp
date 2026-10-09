@@ -99,6 +99,8 @@ public:
     void setSpells(const std::bitset<kNumSpells>& newSpells);
     void setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills);
     void setSex(int newSex);
+    void setPortrait(int newPortrait);
+    void setName(const std::string& newName);
     void setExperience(int newExperience);
     void setAvailability(const TPlayerMask& newAvailability);
 

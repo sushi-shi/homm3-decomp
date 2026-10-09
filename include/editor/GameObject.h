@@ -18,6 +18,7 @@
 
 #include "objecttype.h"
 
+class TRawIStream;
 class TRawOStream;
 
 class TGameObject {
@@ -70,5 +71,6 @@ private:
 
 // An object type's identity in the map format (h3maped 0x490944).
 TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objType);
+TRawIStream& operator>>(TRawIStream& stream, TObjectType& objType);
 
 #endif  /* HOMM3_EDITOR_GAMEOBJECT_H */

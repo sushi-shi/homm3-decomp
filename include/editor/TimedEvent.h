@@ -16,6 +16,8 @@
 #include "editor/Player.h"
 #include "editor/ResourceQuantities.h"
 
+class TRawIStream;
+
 // The calendar (Loki's TimedEvent.h: "newDay < kNumDaysPerYear * 2").
 const unsigned int kNumDaysPerWeek = 7;
 const unsigned int kNumWeeksPerMonth = 4;
@@ -25,6 +27,11 @@ const unsigned int kNumDaysPerYear = kNumDaysPerMonth * kNumMonthsPerYear;
 
 class TTimedEvent {
 public:
+    TTimedEvent();
+
+    // The map file's record (TimedEvent.cpp, h3maped 0x4c025c).
+    void read(TRawIStream* pIStream, int version);
+
     enum { s_kMaxMessageLen = 300 };
 
     void setName(const std::string& newName) { _m_name = newName; }
