@@ -17,6 +17,9 @@
   calls WIN_RVA [LOKI_ADDRESS]
         ordered callees of a paired function on both sides, Loki callees
         annotated with their Windows pair and whether Windows calls it
+  compile UNIT ... [--scan]
+        compile src/UNIT.cpp at the game profile (build/heroes3-loki/objects/)
+        and, with --scan, search its bodies in the image
 """
 from __future__ import annotations
 
@@ -36,6 +39,9 @@ def main(argv=None) -> int:
     p = sub.add_parser("pair")
     p.add_argument("--no-fingerprint", action="store_true")
     sub.add_parser("vtables")
+    p = sub.add_parser("compile")
+    p.add_argument("units", nargs="+")
+    p.add_argument("--scan", action="store_true")
     p = sub.add_parser("calls")
     p.add_argument("win")
     p.add_argument("loki", nargs="?")
@@ -62,12 +68,35 @@ def main(argv=None) -> int:
                   ", ".join(f"{k} {v}" for k, v in counts.most_common()))
         elif args.command == "vtables":
             return _vtables()
+        elif args.command == "compile":
+            return _compile(args.units, args.scan)
         elif args.command == "calls":
             return _calls(int(args.win, 16), int(args.loki, 16) if args.loki else None)
     except (ValueError, OSError, RuntimeError, KeyError) as exc:
         print(f"[loki-game] ERROR: {exc}", file=sys.stderr)
         return 2
     return 0
+
+
+def _compile(units: list[str], scan: bool) -> int:
+    from homm3.loki_game import compile as cc
+    rc = 0
+    for unit in units:
+        obj, diagnostics = cc.compile_unit(unit)
+        errors = [line for line in diagnostics.splitlines() if ": " in line and "In file included" not in line]
+        if not obj.is_file() or errors and "error" in diagnostics.lower():
+            print(f"[loki-game] {unit}: compile failed")
+            for line in errors[:20]:
+                print("  " + line.replace(str(cc.ROOT) + "/", ""))
+            rc = 1
+            continue
+        print(f"[loki-game] {unit}: {obj}")
+        if scan:
+            from homm3.loki_game.scan import Scanner
+            for name, size, hits in Scanner().scan([obj]):
+                where = f"0x{hits[0]:08x}" if len(hits) == 1 else f"{len(hits)} hits"
+                print(f"  {size:6} {where:>12} {name}")
+    return rc
 
 
 def _vtables() -> int:

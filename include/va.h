@@ -101,6 +101,20 @@
 #define SIZE(type, bytes) \
     static_assert(sizeof(type) == (bytes), "sizeof(" #type ") != " #bytes)
 
+#elif defined(HOMM3_TARGET_LOKI)
+
+#define VA(addr, size)
+#define VA_COMPGEN(addr, size, kind, owner)
+#define DC_ADDRESS(offset, size)
+#define MAC_ADDRESS(offset, size)
+#define MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
+#define DATA(addr)
+#define DATA_COMPGEN(addr, name, value) value
+#define DATA_COMPGEN_GUARD(addr, name, owner)
+#define HOMM3_RELEASE_VERIFY(expression) static_cast<void>(expression)
+#define OVERRIDE
+#define SIZE(type, bytes) struct homm3_loki_size_unchecked
+
 #else
 
 #define VA(addr, size)

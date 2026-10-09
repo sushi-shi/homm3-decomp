@@ -71,6 +71,25 @@ extern "C" void showMacPlatformMessage(const char* message, const char* title);
 #undef MessageBox
 #define MessageBox(window, message, title, flags) \
     showMacPlatformMessage(message, title)
+#elif defined(HOMM3_TARGET_LOKI)
+// Loki game evidence builds (work/loki-game only): GCC 2.95.2 parses the
+// real Windows SDK declarations so the shared source compiles; no Windows
+// backend is supplied and nothing here reaches the VC6 build.
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#define _WIN32 1
+#define _M_PPC 1
+#define _STDCALL_SUPPORTED 1
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#define bool homm3_sdk_bool_member
+#include <windows.h>
+#include <ddraw.h>
+#include <mmsystem.h>
+#include <dsound.h>
+#include <shellapi.h>
+#undef bool
 #else
 #include <windows.h>
 #endif

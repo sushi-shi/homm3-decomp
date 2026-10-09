@@ -68,3 +68,25 @@ members); VC6 `/Ob2` also expands non-inline helpers. A Loki call to a
 function whose Windows counterpart the Windows caller expands therefore
 proves a helper boundary, and a body in the kept linkonce band (after
 libgcc's `__umoddi3`) proves an inline or template definition.
+
+## Compiling game units (not yet working)
+
+`homm3 loki-game compile UNIT [--scan]` compiles a game unit at the profile:
+`include/gcc_prefix.h` spells the Microsoft keywords, platform.h's
+`HOMM3_TARGET_LOKI` branch imports the Windows SDK declarations (VC6's
+include tree as `homm3 mac sdk` stages it, exposed in lower case after the
+Linux headers), and va.h's branch keeps the claim macros empty. No game unit
+compiles yet; the first blockers (kb.cpp, army.cpp) are:
+
+- the SDK's `_VARIANT_BOOL` member (objidl.h, oaidl.h), which wtypes.h spells
+  `/##/` for every compiler but MSVC;
+- anonymous structs inside unions (mapcell.h's cell flags), which g++ 2.95
+  does not merge into the enclosing scope;
+- Dinkumware spellings (armygrp.h forward-declares `char_traits`);
+- try/catch in headers (game.h's SavedGameHeader::load) under
+  `-fno-exceptions`;
+- RAD's Bink/Smacker headers' MSVC inline assembly; Loki played video
+  through smpeg, so those units differ by port anyway.
+
+Matching Loki bodies under GCC therefore starts with a Loki port layer on
+this branch only.
