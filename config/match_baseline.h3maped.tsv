@@ -107,7 +107,7 @@ EditRumorDlg	?GetMessageMap@TEditRumorDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.000
 EditRumorDlg	?OnChangeRumorNameEdit@TEditRumorDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x15dbc	tokens1:3f961027d81b
 EditRumorDlg	?OnCreate@TEditRumorDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x15c88	tokens1:3e6d8c014084
 EditRumorDlg	?OnInitDialog@TEditRumorDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x15cad	tokens1:762181d28d63
-EditRumorDlg	?OnOK@TEditRumorDlg@@MAEXXZ	99.9167	99.9167	99.9167	0x15b85	tokens1:c630125ceb55
+EditRumorDlg	?OnOK@TEditRumorDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x15b85	tokens1:c630125ceb55
 EditRumorDlg	?_checkStrings@TEditRumorDlg@@AAEXXZ	100.0000	100.0000	100.0000	0x15c41	tokens1:b9bfeaf0b63c
 EditTimedEventGeneralPage	??0CButton@@QAE@XZ	100.0000	100.0000	100.0000	0x1cda	-
 EditTimedEventGeneralPage	??0TEditTimedEventGeneralPage@@QAE@PAVTEditTimedEventGeneralPageParentSheet@@ABVTTimedEvent@@ABV?$bitset@$07@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x15ddd	tokens1:d3a364b3fbb7
@@ -722,7 +722,7 @@ GameMap	?erase@?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TOb
 GameMap	?eraseObject@TGameMap@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x29ea3	tokens1:18403b0b331d
 GameMap	?eraseObject@_TImpl@TGameMap@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x2034a	tokens1:2fbfcdd9f195
 GameMap	?exportText@TGameMap@@QBEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@@Z	100.0000	100.0000	100.0000	0x2a1d5	tokens1:85c8b40be7fd
-GameMap	?exportText@_TImpl@TGameMap@@QBEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@@Z	94.2494	94.2494	94.2494	0x25bbe	tokens1:4a403d8df4de
+GameMap	?exportText@_TImpl@TGameMap@@QBEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@@Z	94.2558	94.2558	94.2558	0x25bbe	tokens1:4a403d8df4de
 GameMap	?find@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x2dcd7	-
 GameMap	?find@?$_Tree@HU?$pair@$$CBHVTMapObjectRef@@@std@@U_Kfn@?$map@HVTMapObjectRef@@U?$less@H@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@H@2@V?$allocator@VTMapObjectRef@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x2e8fa	-
 GameMap	?find@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@QBE?AVconst_iterator@12@ABI@Z	100.0000	100.0000	100.0000	0x2ece6	-
@@ -817,7 +817,7 @@ GameMap	?getWidth@TGameMap@@QBEIXZ	100.0000	100.0000	100.0000	0x2a1ec	tokens1:36
 GameMap	?getWidth@TLayer@TGameMap@@QBEIXZ	100.0000	100.0000	100.0000	0x2b602	tokens1:ace3934fcd96
 GameMap	?getline@std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@1@AAV21@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@D@Z	99.9462	99.9462	99.9462	0x38c45	-
 GameMap	?importText@TGameMap@@QAEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@@Z	100.0000	100.0000	100.0000	0x29ac5	tokens1:74eafc9c998d
-GameMap	?importText@_TImpl@TGameMap@@QAEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@@Z	99.5757	99.5757	99.5757	0x24926	tokens1:eab376ffb68c
+GameMap	?importText@_TImpl@TGameMap@@QAEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@@Z	99.5793	99.5793	99.5793	0x24926	tokens1:eab376ffb68c
 GameMap	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z	100.0000	100.0000	100.0000	0x2d20d	-
 GameMap	?insert@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@_N@2@ABU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@Z	99.9474	100.0000	100.0000	0x2db3f	-
 GameMap	?insert@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@_N@2@ABU?$pair@$$CBIVTMapObjectRef@@@2@@Z	100.0000	100.0000	100.0000	0x2e934	-
@@ -2116,6 +2116,13 @@ RoadToolkit	??1TRoadToolkit@@UAE@XZ	100.0000	100.0000	100.0000	0xb45a9	tokens1:f
 RoadToolkit	??_GTRoadToolkit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb458d	-
 RoadToolkit	?DoDataExchange@TRoadToolkit@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xb45fa	tokens1:a19b40f54470
 RoadToolkit	?GetMessageMap@TRoadToolkit@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb460f	-
+Rumor	??0TImportTextFailure@TRumor@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb49a5	-
+Rumor	??5@YAAAVTRawIStream@@AAV0@AAVTRumor@@@Z	100.0000	100.0000	100.0000	0xb4ad0	tokens1:88529dd37b8a
+Rumor	??6@YAAAVTRawOStream@@AAV0@ABVTRumor@@@Z	100.0000	100.0000	100.0000	0xb4b8d	tokens1:44c5df95159f
+Rumor	?exportText@TRumor@@QBEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0xb49bd	tokens1:20acc4cde479
+Rumor	?importText@TRumor@@QAEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	99.9432	99.9432	99.9432	0xb465d	tokens1:487ceafefe9e
+Rumor	?isAllSpace@?A0xde868f8117a2c78b@@YA_NABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xb495c	tokens1:a7c48e1473ec
+Rumor	?setNameAndText@TRumor@@QAEXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z	100.0000	100.0000	100.0000	0xb4631	tokens1:85d4a02cae8d
 SecondarySkillsDlg	??0?$TArray@U_TSlot@TSecondarySkillsDlg@@$07@@QAE@XZ	100.0000	100.0000	100.0000	0xb5f5f	-
 SecondarySkillsDlg	??0?$TArray@U_TSlotControls@TSecondarySkillsDlg@@$07@@QAE@XZ	100.0000	100.0000	100.0000	0xb5e95	-
 SecondarySkillsDlg	??0TSecondarySkillsDlg@@QAE@PAVCWnd@@@Z	100.0000	100.0000	100.0000	0xb55b5	tokens1:7fb2b5137fe9
