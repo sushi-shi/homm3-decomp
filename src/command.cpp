@@ -2661,7 +2661,9 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
     case g_combatActionDefend:
         if (!currentArmy->is(creatureDone | creatureDefending)) {
             currentArmy->m_monInfo.attributes |= creatureDone;
-            if (!m_creaturePlacement && !currentArmy->is(creatureSiegeWeapon)) {
+            if (m_creaturePlacement || currentArmy->is(creatureSiegeWeapon)) {
+                currentArmy->m_defendBonus = 0;
+            } else {
                 std::string message;
                 currentArmy->m_monInfo.attributes |= creatureDefending;
                 currentArmy->m_defendBonus = max(
@@ -2676,8 +2678,6 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 m_combatWindow->combatMessage(message.c_str(), 1, 0);
-            } else {
-                currentArmy->m_defendBonus = 0;
             }
             currentArmy->m_monInfo.defenseSkill += currentArmy->m_defendBonus;
         }
@@ -2686,7 +2686,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         returnValue = 1;
         break;
 
-    case g_combatActionWait: {
+    case g_combatActionWait:
         currentArmy->m_monInfo.attributes |= creatureWaiting;
         if (!m_creaturePlacement) {
             std::string message;
@@ -2702,7 +2702,6 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         currentArmy->checkObstacleAttacks(0);
         returnValue = 1;
         break;
-    }
 
     case g_combatActionAttackWall:
         resetCyclingCreatures();

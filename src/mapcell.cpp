@@ -2833,9 +2833,10 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             tempTown.m_townArmy.m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            count = readLittleEndianValue(infile, shortBuffer);
+            count = infile->read(&shortBuffer, sizeof(shortBuffer));
             if (count < sizeof(shortBuffer))
                 return -1;
+            shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
             tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
