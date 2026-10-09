@@ -375,6 +375,14 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertEqual(rows, {})
         self.assertEqual(stats["retired"], 1)
 
+    def test_missing_zero_row_outside_census_targets_is_retired(self):
+        old = {("unit", "?folded@@YAXXZ"): MatchRow(None, 0.0, 0.0, 0x200),
+               ("unit", "?scored@@YAXXZ"): MatchRow(None, 40.0, 40.0, 0x300),
+               ("unit", "?kept@@YAXXZ"): MatchRow(None, 0.0, 0.0, 0x400)}
+        rows, stats = update_rows({}, old, {}, targets={0x400})
+        self.assertEqual(sorted(rows), [("unit", "?kept@@YAXXZ"), ("unit", "?scored@@YAXXZ")])
+        self.assertEqual(stats["retired"], 1)
+
     def test_separate_overload_claim_selects_unique_parameter_arity(self):
         from homm3.retail_labels.source import mask_lexical_noise
 

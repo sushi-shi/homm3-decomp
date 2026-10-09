@@ -466,16 +466,68 @@ def extent_end(c, start):
     return end
 
 
-def partition(c):
-    """[(start, size, decoded size)]: a function runs to the next start or EH
-    registration stub minus trailing padding, and never ends before its
-    decoded extent."""
+def catch_folds(c, parents):
+    """({handler: parent}, [(handler, parent or None, reason)]).
+
+    VC6 emits a `catch` block inside its function's own COMDAT, after the
+    body, where the game's hand-owned census keeps it (config/retail/
+    funclets.tsv, the retired 0xe29dc row). A catch handler folds into its
+    parent only when the parent's own FuncInfo TryBlockMap names it
+    (`parents`: FuncInfo -> parent, homm3.census.eh.funcinfo_parents) and it
+    directly follows the parent's extent: the parent's body, or a catch
+    handler already folded into it, then only padding (or the decoded body
+    runs on past the handler, which it then embeds). Every other catch
+    handler stays a row of its own and is reported."""
     import bisect
     order = sorted(c.starts)
     stubs = sorted(c.stubs)
+    folds, refused = {}, []
+    for handler in order:
+        entry = c.funclets.get(handler)
+        if entry is None or entry[1] != "catch":
+            continue
+        parent = parents.get(entry[0])
+        if parent is None:
+            refused.append((handler, None, "no parent loads the handler's FuncInfo"))
+            continue
+        k = bisect.bisect_left(order, handler)
+        prev = order[k - 1] if k else None
+        owner = folds.get(prev, prev)
+        if owner != parent:
+            refused.append((handler, parent, f"follows 0x{prev:x}, not its parent"
+                            if prev is not None else "first start"))
+            continue
+        gap = extent_end(c, prev)
+        s = bisect.bisect_right(stubs, prev)
+        if s < len(stubs) and stubs[s] < handler:
+            refused.append((handler, parent, "an EH registration stub separates it"))
+            continue
+        # the parent's decoded body may run on past a handler it embeds
+        # (the code after the try block, where the catch returns)
+        while gap < handler and c.byte(gap) in PAD:
+            gap += 1
+        if gap < handler:
+            refused.append((handler, parent, f"non-padding bytes at 0x{gap:x}"))
+            continue
+        folds[handler] = parent
+    return folds, refused
+
+
+def partition(c, folded=None):
+    """[(start, size, decoded size)]: a function runs to the next start or EH
+    registration stub minus trailing padding, and never ends before its
+    decoded extent. A catch handler in `folded` is part of its parent's
+    extent and no start of its own."""
+    import bisect
+    folded = folded or {}
+    order = sorted(r for r in c.starts if r not in folded)
+    stubs = sorted(c.stubs)
+    tails = {}
+    for handler, parent in folded.items():
+        tails[parent] = max(tails.get(parent, 0), extent_end(c, handler))
     rows = []
     for a, b in zip(order, order[1:] + [c.text_hi]):
-        reached = extent_end(c, a)
+        reached = max(extent_end(c, a), tails.get(a, 0))
         k = bisect.bisect_right(stubs, a)
         if k < len(stubs) and stubs[k] < b:
             b = stubs[k]

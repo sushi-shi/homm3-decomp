@@ -14,7 +14,11 @@ Reads the selected image's pinned executable and derives:
                   literals) with data pointers into a function's interior
                   dropped against the function census;
   funclets.tsv    rva, parent_rva, state: EH funclets and the function
-                  whose `__ehhandler` stub names their FuncInfo;
+                  whose `__ehhandler` stub names their FuncInfo; with the
+                  pin's `census_folds_catch_handlers`, a catch handler that
+                  directly follows its parent is part of the parent's
+                  functions.tsv extent instead (the game's rule), and the
+                  census reports the handlers it leaves as rows;
   init-thunks.tsv rva, slot: the `.CRT$XCU` initializer table, the body
                   after each `/O1` `jmp $+5` slot thunk, and the cleanups
                   those initializers register with `_atexit` (slot -);
@@ -51,13 +55,32 @@ EMPTY_TABLES = {
 }
 
 
+def folds_catch_handlers(image: str | None = None) -> bool:
+    """Whether the image's census folds catch handlers into their parents
+    (config/project.toml `census_folds_catch_handlers` on the image's pin)."""
+    from homm3.core import images
+    key = image or paths.image_key()
+    return bool(images.pins(paths.ROOT).get(images.input_key(key), {})
+                .get("census_folds_catch_handlers", False))
+
+
 def derive(log=print):
     from homm3.core.image import Image
     from homm3.census import find_relocs, functions, vtables
     image = Image(str(common.resolve_exe()))
     census = functions.run(image, log=log)
-    rows = functions.partition(census)
-    starts = {rva for rva, _size, _reached in rows}
+    from homm3.census import eh
+    folded = {}
+    if folds_catch_handlers():
+        folded, refused = functions.catch_folds(census, eh.funcinfo_parents(census))
+        log(f"[census] {len(folded)} catch handlers folded into their parents, "
+            f"{len(refused)} left as rows")
+        for handler, parent, reason in refused:
+            owner = f"0x{parent:x}" if parent is not None else "-"
+            log(f"[census]   catch 0x{handler:x} (parent {owner}) not folded: {reason}")
+    rows = functions.partition(census, folded)
+    # a folded handler is no function, but the FuncInfo still points at it
+    starts = {rva for rva, _size, _reached in rows} | set(folded)
     vt = vtables.census(census, starts)
 
     sites, masks = {}, {}
@@ -80,8 +103,8 @@ def derive(log=print):
             dropped += 1
             continue
         kept.append(rva)
-    from homm3.census import eh, libraries
-    funclets, orphans = eh.funclet_rows(census)
+    from homm3.census import libraries
+    funclets, orphans = eh.funclet_rows(census, folded)
     thunks = eh.initializer_rows(census)
     toolchain = paths.msvc_dir() / "lib"
     archives = {"LIBCMT": toolchain / "LIBCMT.LIB", "LIBCPMT": toolchain / "LIBCPMT.LIB",

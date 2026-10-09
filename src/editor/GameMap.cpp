@@ -1653,7 +1653,7 @@ void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
 }
 
 // A town brings its visiting hero along.
-VA(0x00426d00, 0xcd)
+VA(0x00426d00, 0xed)
 TMapLayerObjectID TGameMap::_TImpl::_placeTypedObject(bool bSecondLayer, TTown* pTown, const TTilePoint& loc,
                                                      TTileExtent* pUpdatedExtent)
 {
@@ -3344,7 +3344,7 @@ TMapLayerObjectID TGameMap::TLayer::_TImpl::getObjectIDAtCell(unsigned int x, un
     return (*paObjInfo)[which].m_objID;
 }
 
-VA(0x0042a93e, 0x146)
+VA(0x0042a93e, 0x19a)
 TMapLayerObjectID TGameMap::TLayer::_TImpl::_placeObject(auto_ptr<TGameObject> pObj, const TTilePoint& loc)
 {
     vector<_TObjectLink>& aObjectLink = *_m_paObjectLink;

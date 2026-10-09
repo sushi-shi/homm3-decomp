@@ -6,8 +6,8 @@ from collections import Counter
 from capstone import x86
 
 
-def funclet_rows(c):
-    """[(funclet rva, parent function rva, try state or unwind index)].
+def funcinfo_parents(c):
+    """{FuncInfo rva: parent function rva}.
 
     A function with C++ EH loads its `__ehhandler$` stub (`mov eax, offset
     FuncInfo; jmp ___CxxFrameHandler`) into eax before its frame setup; the
@@ -26,12 +26,24 @@ def funclet_rows(c):
                 target = (ins.operands[-1].imm & 0xFFFFFFFF) - base
                 if target in stub_info:
                     parent_of.setdefault(stub_info[target], start)
-    rows = []
+    return parent_of
+
+
+def funclet_rows(c, folded=()):
+    """[(funclet rva, parent function rva, try state or unwind index)], less
+    the catch handlers folded into their parents (`folded`), which are part
+    of the parent's extent and no longer funclets of the inventory."""
+    parent_of = funcinfo_parents(c)
+    rows, orphans = [], 0
     for rva, (info, kind, state) in sorted(c.funclets.items()):
+        if rva in folded:
+            continue
         parent = parent_of.get(info)
         if parent is not None:
             rows.append((rva, parent, state))
-    return rows, len(c.funclets) - len(rows)
+        else:
+            orphans += 1
+    return rows, orphans
 
 
 def initializer_rows(c):

@@ -11,6 +11,7 @@ rva	name	library	member
 0x1a72	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	LIBCPMT	ios.obj
 0x1aa7	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	LIBCPMT	ios.obj
 0x1b0e	?_Grow@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAE_NI_N@Z	LIBCPMT	ios.obj
+0x1bed	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	LIBCPMT	ios.obj
 0x41d6	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHABV12@@Z	LIBCPMT	locale0.obj
 0x41f8	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHIIPBDI@Z	LIBCPMT	locale.obj
 0x679e	??0COleDispatchDriver@@QAE@PAUIDispatch@@H@Z	NAFXCW	oledisp2.obj
@@ -96,6 +97,7 @@ rva	name	library	member
 0xce85b	??0CFixedAlloc@@QAE@II@Z	NAFXCW	fixalloc.obj
 0xce883	??1CFixedAlloc@@QAE@XZ	NAFXCW	fixalloc.obj
 0xce897	?FreeAll@CFixedAlloc@@QAEXXZ	NAFXCW	fixalloc.obj
+0xce8bf	?Alloc@CFixedAlloc@@QAEPAXXZ	NAFXCW	fixalloc.obj
 0xce94e	?Free@CFixedAlloc@@QAEXPAX@Z	NAFXCW	fixalloc.obj
 0xcea15	?Lock@CSyncObject@@UAEHK@Z	NAFXCW	mtcore.obj
 0xcec3c	?GetEventSinkEntry@CCmdTarget@@IAGPBUAFX_EVENTSINKMAP_ENTRY@@IPAUAFX_EVENT@@@Z	NAFXCW	occevent.obj
@@ -118,6 +120,7 @@ rva	name	library	member
 0xcf5f8	?SendDlgItemMessageA@COleControlContainer@@UAEJHIIJ@Z	NAFXCW	occcont.obj
 0xcf61d	?SetDlgItemInt@COleControlContainer@@UAEXHIH@Z	NAFXCW	occcont.obj
 0xcf65a	?SetDlgItemTextA@COleControlContainer@@UAEXHPBD@Z	NAFXCW	occcont.obj
+0xcf675	?IsDlgButtonChecked@COleControlContainer@@UBEIH@Z	NAFXCW	occcont.obj
 0xcf6f1	?QueryInterface@XOleIPFrame@COleControlContainer@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	occcont.obj
 0xcf708	?AddRef@XOleIPFrame@COleControlContainer@@UAGKXZ	NAFXCW	occcont.obj
 0xcf728	?GetWindow@XOleIPFrame@COleControlContainer@@UAGJPAPAUHWND__@@@Z	NAFXCW	occcont.obj
@@ -152,15 +155,20 @@ rva	name	library	member
 0xd0a31	?InvokeHelper@COleControlSite@@UAAXJGGPAXPBEZZ	NAFXCW	occsite.obj
 0xd0a51	?GetProperty@COleControlSite@@UBEXJGPAX@Z	NAFXCW	occsite.obj
 0xd0a6d	?SetProperty@COleControlSite@@UAAXJGZZ	NAFXCW	occsite.obj
+0xd0a84	?SafeSetProperty@COleControlSite@@UAAHJGZZ	NAFXCW	occsite.obj
+0xd0b8d	?GetExStyle@COleControlSite@@UBEKXZ	NAFXCW	occsite.obj
 0xd0bf5	?ModifyStyle@COleControlSite@@UAEHKKI@Z	NAFXCW	occsite.obj
 0xd0c85	?ModifyStyleEx@COleControlSite@@UAEHKKI@Z	NAFXCW	occsite.obj
 0xd0cd5	?SetWindowTextA@COleControlSite@@UAEXPBD@Z	NAFXCW	occsite.obj
+0xd0d08	?GetWindowTextA@COleControlSite@@UBEXAAVCString@@@Z	NAFXCW	occsite.obj
 0xd0d77	?GetWindowTextA@COleControlSite@@UBEHPADH@Z	NAFXCW	occsite.obj
 0xd0dd2	?GetWindowTextLengthA@COleControlSite@@UBEHXZ	NAFXCW	occsite.obj
 0xd0e17	?SetDlgCtrlID@COleControlSite@@UAEHH@Z	NAFXCW	occsite.obj
 0xd0e24	?MoveWindow@COleControlSite@@UAEXHHHHH@Z	NAFXCW	occsite.obj
 0xd0e9e	?SetWindowPos@COleControlSite@@UAEHPBVCWnd@@HHHHI@Z	NAFXCW	occsite.obj
 0xd0f53	?ShowWindow@COleControlSite@@UAEHH@Z	NAFXCW	occsite.obj
+0xd0f92	?IsWindowEnabled@COleControlSite@@UBEHXZ	NAFXCW	occsite.obj
+0xd0fe0	?EnableWindow@COleControlSite@@UAEHH@Z	NAFXCW	occsite.obj
 0xd1049	?SetFocus@COleControlSite@@UAEPAVCWnd@@XZ	NAFXCW	occsite.obj
 0xd1082	?EnableDSC@COleControlSite@@UAEXXZ	NAFXCW	occsite.obj
 0xd10d6	?BindDefaultProperty@COleControlSite@@UAEXJGPBDPAVCWnd@@@Z	NAFXCW	occsite.obj
@@ -262,6 +270,7 @@ rva	name	library	member
 0xd4b05	?_AfxRemoveDefaultButton@@YGXPAVCWnd@@0@Z	NAFXCW	occdlg.obj
 0xd4b67	?_AfxOriginalDefButton@@YGHPAVCWnd@@@Z	NAFXCW	occdlg.obj
 0xd4b94	?_AfxCheckDefPushButton@@YGXPAVCWnd@@00@Z	NAFXCW	occdlg.obj
+0xd4c81	?IsDialogMessageA@COccManager@@UAEHPAVCWnd@@PAUtagMSG@@@Z	NAFXCW	occdlg.obj
 0xd506c	?AfxCheckError@@YGXJ@Z	NAFXCW	olevar.obj
 0xd50ab	??0COleVariant@@QAE@PBDG@Z	NAFXCW	olevar.obj
 0xd5126	??0COleVariant@@QAE@FG@Z	NAFXCW	olevar.obj
@@ -1709,6 +1718,8 @@ rva	name	library	member
 0x1181b5	?CreateObject@CImageList@@SGPAVCObject@@XZ	NAFXCW	winctrl2.obj
 0x1182df	?CreateObject@CDC@@SGPAVCObject@@XZ	NAFXCW	wingdi.obj
 0x11830e	?CreateObject@CGdiObject@@SGPAVCObject@@XZ	NAFXCW	wingdi.obj
+0x11834c	?CreateObject@CTempDC@@SGPAVCObject@@XZ	NAFXCW	wingdi.obj
+0x11839d	?CreateObject@CTempGdiObject@@SGPAVCObject@@XZ	NAFXCW	wingdi.obj
 0x118488	??0_AFX_THREAD_STATE@@QAE@XZ	NAFXCW	afxstate.obj
 0x11849f	??_G_AFX_THREAD_STATE@@UAEPAXI@Z	NAFXCW	afxstate.obj
 0x1184ba	??1_AFX_THREAD_STATE@@UAE@XZ	NAFXCW	afxstate.obj
@@ -1754,6 +1765,7 @@ rva	name	library	member
 0x119462	?SetBarStyle@CControlBar@@QAEXK@Z	NAFXCW	barcore.obj
 0x119493	?AllocElements@CControlBar@@QAEHHH@Z	NAFXCW	barcore.obj
 0x1194cc	?CreateObject@CMenu@@SGPAVCObject@@XZ	NAFXCW	winmenu.obj
+0x1194ec	?CreateObject@CTempMenu@@SGPAVCObject@@XZ	NAFXCW	winmenu.obj
 0x11959d	?CreateObject@CDockState@@SGPAVCObject@@XZ	NAFXCW	dockstat.obj
 0x1195e5	?GetAppRegistryKey@CWinApp@@QAEPAUHKEY__@@XZ	NAFXCW	appui3.obj
 0x119679	?GetSectionKey@CWinApp@@QAEPAUHKEY__@@PBD@Z	NAFXCW	appui3.obj

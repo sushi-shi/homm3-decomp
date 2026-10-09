@@ -58,6 +58,8 @@ OBJDIFF_DIR = common.HOMM3_DIR / _image_path("build/objdiff")
 REPORT = OBJDIFF_DIR / "report.json"
 BASELINE = common.HOMM3_DIR / _image_path("config/match_baseline.tsv")
 SYMBOL_NAMES = common.HOMM3_DIR / _image_path("build/gen/symbol_names.csv")
+CENSUS_FUNCTIONS = common.HOMM3_DIR / _image_path("config/retail/functions.tsv")
+RUNTIME_MAP = common.HOMM3_DIR / _image_path("config/retail/runtime-map.tsv")
 EPS = 0.01
 SCORE_POLICY = "gruntz-data-v1-relocs-all-addends"
 
@@ -664,6 +666,24 @@ def function_rvas() -> dict[tuple[str, str], int]:
     return out
 
 
+def census_targets() -> set | None:
+    """The census's function starts less the runtime map's library code, or
+    None when the image has no census."""
+    if not CENSUS_FUNCTIONS.is_file():
+        return None
+
+    def rvas(path):
+        out = set()
+        for line in path.read_text().splitlines():
+            field = line.split("\t", 1)[0]
+            if field.startswith("0x"):
+                out.add(int(field, 16))
+        return out
+
+    library = rvas(RUNTIME_MAP) if RUNTIME_MAP.is_file() else set()
+    return rvas(CENSUS_FUNCTIONS) - library
+
+
 def load_baseline_comments() -> tuple:
     """Legacy rationale comments, anchored to the row they precede.
 
@@ -861,13 +881,18 @@ def _previous_row(key, rva, previous, by_rva):
 
 
 def update_rows(current: dict, previous: dict, rvas: dict,
-                hashes: dict | None = None) -> tuple[dict, dict]:
+                hashes: dict | None = None,
+                targets: set | None = None) -> tuple[dict, dict]:
     """Pure CUR/MAX/HIST update; stable RVA, not label, owns history.
 
     CUR <= MAX <= HIST. MAX is monotone only while the function's own source
     hash is unchanged; a proven edit starts a new implementation and resets
     MAX to CUR. HIST never forgets a peak reached by an older implementation.
     Unknown hashes are conservative: without proof of an edit, MAX is held.
+    `targets`, when given, is the census's reconstruction targets (function
+    starts less library code): a missing 0% row whose RVA left them (a catch
+    handler folded into its parent, code the runtime map now names) records
+    no matching achievement and retires.
     """
     hashes = hashes or {}
     by_rva = {}
@@ -916,6 +941,10 @@ def update_rows(current: dict, previous: dict, rvas: dict,
         # Old flat labels had no RVA. A missing 0% row records no matching
         # achievement, so label promotion may retire it without losing history.
         if old.rva is None and old.hist <= 1e-9:
+            stats["retired"] += 1
+            continue
+        if (targets is not None and old.rva is not None and old.rva not in targets
+                and old.hist <= 1e-9):
             stats["retired"] += 1
             continue
         rows[key] = MatchRow(
@@ -978,7 +1007,7 @@ def cmd_update(report: dict, *, fingerprint_pair: tuple[dict, dict] | None = Non
     hashes, legacy = fingerprint_pair if fingerprint_pair is not None else source_hash_pair()
     previous = migrate_source_hashes(previous, hashes, legacy)
     rows, stats = update_rows(
-        fn_fuzzy(report), previous, function_rvas(), hashes)
+        fn_fuzzy(report), previous, function_rvas(), hashes, census_targets())
     rows, losses = guard_peaks(previous, rows, allow_loss=allow_loss)
     report_peak_losses(losses, allowed=allow_loss)
     write_baseline(rows)

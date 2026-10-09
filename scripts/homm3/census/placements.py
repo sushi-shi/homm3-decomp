@@ -430,10 +430,11 @@ def derive(log=print, want_suggestions=False):
 
     def divergence(body, relocs, rva):
         """The first offset where a placed body's fixed bytes leave retail's:
-        past it an absolute operand's offset
-        need not name the same instruction in retail, however its opcode
-        byte agrees (two `push imm32` of one throw swap places), so the
-        instruction bytes before it must agree further back."""
+        past it a relocation's offset need not name the same instruction in
+        retail, however its opcode byte agrees (two `push imm32` of one throw
+        swap places; a call at the same offset of a body whose layout moved
+        reaches another callee), so the instruction bytes before it must
+        agree further back."""
         theirs = blob(rva, min(len(body), functions[rva]))
         fields = set()
         for site in relocs:
@@ -442,6 +443,23 @@ def derive(log=print, want_suggestions=False):
             if k not in fields and body[k] != byte:
                 return k
         return len(theirs)
+
+    def body_at(name, target):
+        """Whether `name`'s compiled body equals retail at the census start
+        `target`, relocation fields masked."""
+        if name not in bodies or functions.get(target) != len(bodies[name][0]):
+            return False
+        body, relocs = bodies[name]
+        mask = bytearray(len(body))
+        for site in relocs:
+            mask[site:site + 4] = b"\1\1\1\1"
+        return all(m or x == y for x, y, m in zip(blob(target, len(body)), body, mask))
+
+    # the image's pin decides whether a call past the divergence needs proof
+    # (config/project.toml `placements_prove_late_calls`)
+    from homm3.core import images as _pins
+    prove_late_calls = bool(_pins.pins(paths.ROOT).get(_pins.input_key(paths.image_key()), {})
+                            .get("placements_prove_late_calls", False))
 
     def propagate():
         while True:
@@ -458,17 +476,30 @@ def derive(log=print, want_suggestions=False):
                     value = word(rva + site)
                     at = f"+0x{site:x}"
                     if (value is None or not same_operand(
-                            body, rva, site, 4 if kind == DIR32 and site >= diverged else 1)):
-                        if kind != DIR32:
+                            body, rva, site, 4 if site >= diverged
+                            and (kind == DIR32 or prove_late_calls) else 1)):
+                        if kind == REL32:
+                            # past the divergence a call at the same offset
+                            # may reach another callee: the callee's own body,
+                            # equal at its target, proves the site; otherwise
+                            # the site may only name a callee nothing else has
+                            # placed, at an address nothing else names
+                            if value is None or site < diverged or not prove_late_calls:
+                                continue
+                            callee = (rva + site + 4 + value) & 0xFFFFFFFF
+                            if not body_at(ref, callee) and (names[ref] or named_at[callee]):
+                                continue
+                        elif kind != DIR32:
                             continue
-                        if order is None:
-                            order = paired_sites(body, relocs, rva)
-                        if site not in order:
-                            continue
-                        value = word(rva + order[site])
-                        at = f"+0x{site:x} (retail +0x{order[site]:x}, by operand order)"
-                        if value is None:
-                            continue
+                        else:
+                            if order is None:
+                                order = paired_sites(body, relocs, rva)
+                            if site not in order:
+                                continue
+                            value = word(rva + order[site])
+                            at = f"+0x{site:x} (retail +0x{order[site]:x}, by operand order)"
+                            if value is None:
+                                continue
                     if kind == REL32:
                         target = (rva + site + 4 + value) & 0xFFFFFFFF
                     elif kind == DIR32:
