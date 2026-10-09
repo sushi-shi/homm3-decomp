@@ -49,6 +49,12 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- mac-match-score:end -->
 
+<!-- loki-game-match-score:start -->
+
+**Loki Linux game `heroes3.dynamic` (evidence, GCC 2.95.2): 127 / 972 paired functions exact** — 894 compiled from 101 of 117 units; of the 59 paired functions below 100% on Windows, 0 exact (58 compiled). `homm3 loki-game score --readme`.
+
+<!-- loki-game-match-score:end -->
+
 <!-- h3maped-match-score:start -->
 
 **GOG Complete map editor `h3maped.exe`: 36.56% matched (MAX)** — 1,576 / 6,871 functions exact (22.9%), weighted by size over 852,607 bytes of code.

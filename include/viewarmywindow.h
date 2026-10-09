@@ -6,7 +6,11 @@
 #include "advmgr_popup.h"
 #include "armygrp.h"
 
+#if defined(HOMM3_TARGET_LOKI)
+#include "town_type.h"
+#else
 enum TTownType;
+#endif
 
 class army;
 class armyGroup;

@@ -1,0 +1,3 @@
+// streambuf - libstdc++ 2.95's stream buffer is libio's <streambuf.h>
+// (work/loki-game only).
+#include <streambuf.h>

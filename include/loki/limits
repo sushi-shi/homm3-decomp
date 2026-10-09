@@ -1,0 +1,30 @@
+// limits - libstdc++ 2.95.2 has no <limits>; the port reads the bounds the
+// shared source asks for from <limits.h> (work/loki-game only).
+#ifndef HOMM3_LOKI_LIMITS
+#define HOMM3_LOKI_LIMITS
+
+#include <limits.h>
+
+template<class T> struct numeric_limits;
+
+template<> struct numeric_limits<int> {
+    static int min() { return INT_MIN; }
+    static int max() { return INT_MAX; }
+};
+
+template<> struct numeric_limits<unsigned int> {
+    static unsigned int min() { return 0; }
+    static unsigned int max() { return UINT_MAX; }
+};
+
+template<> struct numeric_limits<short> {
+    static short min() { return SHRT_MIN; }
+    static short max() { return SHRT_MAX; }
+};
+
+template<> struct numeric_limits<unsigned char> {
+    static unsigned char min() { return 0; }
+    static unsigned char max() { return UCHAR_MAX; }
+};
+
+#endif

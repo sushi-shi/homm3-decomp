@@ -58,6 +58,7 @@ def main(argv=None) -> int:
     p.add_argument("--below-100", action="store_true")
     p.add_argument("--no-compile", action="store_true")
     p.add_argument("--all", action="store_true")
+    p.add_argument("--readme", action="store_true")
     p = sub.add_parser("calls")
     p.add_argument("win")
     p.add_argument("loki", nargs="?")
@@ -89,7 +90,7 @@ def main(argv=None) -> int:
         elif args.command == "diff":
             return _diff(int(args.win, 16), not args.no_compile)
         elif args.command == "score":
-            return _score(args.units, args.below_100, not args.no_compile, args.all)
+            return _score(args.units, args.below_100, not args.no_compile, args.all, args.readme)
         elif args.command == "calls":
             return _calls(int(args.win, 16), int(args.loki, 16) if args.loki else None)
     except (ValueError, OSError, RuntimeError, KeyError) as exc:
@@ -128,6 +129,9 @@ def _objects(units: list[str], build: bool, scorer=None, rows=None) -> dict[str,
     out = {}
     for unit in units:
         obj = BUILD / "objects" / f"{unit}.o"
+        if not (cc.ROOT / "src" / f"{unit}.cpp").is_file():
+            out[unit] = None
+            continue
         if build:
             obj, diagnostics = cc.compile_unit(unit)
             if not obj.is_file():
@@ -172,7 +176,7 @@ def _diff(win: int, build: bool) -> int:
     return 0
 
 
-def _score(units: list[str], below: bool, build: bool, every: bool) -> int:
+def _score(units: list[str], below: bool, build: bool, every: bool, readme: bool = False) -> int:
     from homm3.loki_game import score
     scorer = score.Scorer()
     rows = scorer.rows(set(units) if units else None)
@@ -200,7 +204,38 @@ def _score(units: list[str], below: bool, build: bool, every: bool) -> int:
     exact = sum(r.exact for r in found)
     print(f"[loki-game] score: {exact} exact / {len(found)} found / {len(rows)} paired"
           f" ({compiled} of {len(by_unit)} units compile)")
+    if readme:
+        if units or below:
+            print("[loki-game] --readme needs the whole score (no units, no --below-100)", file=sys.stderr)
+            return 2
+        walls = [r for r in rows if r.windows < 100]
+        _write_readme(exact, len(found), len(rows), compiled, len(by_unit),
+                      sum(r.exact for r in walls), sum(r.score is not None for r in walls), len(walls))
     return 0
+
+
+README_BLOCK = ("<!-- loki-game-match-score:start -->", "<!-- loki-game-match-score:end -->")
+
+
+def _write_readme(exact, found, paired, compiled, units, wall_exact, wall_found, walls) -> None:
+    """The Loki game block of README.md (work/loki-game only), after the Mac one."""
+    from homm3.loki_game import compile as cc
+    path = cc.ROOT / "README.md"
+    text = path.read_text()
+    body = (f"{README_BLOCK[0]}\n\n**Loki Linux game `heroes3.dynamic` (evidence, GCC 2.95.2): "
+            f"{exact:,} / {paired:,} paired functions exact** — {found:,} compiled from {compiled} of "
+            f"{units} units; of the {walls} paired functions below 100% on Windows, {wall_exact} "
+            f"exact ({wall_found} compiled). `homm3 loki-game score --readme`.\n\n{README_BLOCK[1]}")
+    if README_BLOCK[0] in text:
+        start = text.index(README_BLOCK[0])
+        end = text.index(README_BLOCK[1]) + len(README_BLOCK[1])
+        text = text[:start] + body + text[end:]
+    else:
+        anchor = "<!-- mac-match-score:end -->"
+        at = text.index(anchor) + len(anchor)
+        text = text[:at] + "\n\n" + body + text[at:]
+    path.write_text(text)
+    print("[loki-game] README.md Loki game block refreshed")
 
 
 def _vtables() -> int:
