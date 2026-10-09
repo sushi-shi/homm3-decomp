@@ -163,6 +163,7 @@ void TSecondarySkillsDlg::_onSelChangeSkillCombo(unsigned int slot)
 {
     int oldSkill = _m_aSlots[slot].m_skill;
     _TSlotControls& controls = _m_aSlotControls[slot];
+    CComboBox& masteryCombo = controls.m_masteryCombo;
     int newSkill = controls.m_skillCombo.GetItemData(controls.m_skillCombo.GetCurSel());
     if (newSkill == oldSkill)
         return;
@@ -170,11 +171,11 @@ void TSecondarySkillsDlg::_onSelChangeSkillCombo(unsigned int slot)
     unsigned int otherSlot;
     if (oldSkill == -1) {
         if (IsWindowEnabled())
-            controls.m_masteryCombo.EnableWindow(TRUE);
+            masteryCombo.EnableWindow(TRUE);
         int index = 0;
-        while (controls.m_masteryCombo.GetItemData(index) != eMasteryBasic)
+        while (masteryCombo.GetItemData(index) != eMasteryBasic)
             index++;
-        controls.m_masteryCombo.SetCurSel(index);
+        masteryCombo.SetCurSel(index);
         _m_aSlots[slot].m_mastery = eMasteryBasic;
     } else {
         for (otherSlot = 0; otherSlot < s_kNumSlots; otherSlot++) {
@@ -191,8 +192,8 @@ void TSecondarySkillsDlg::_onSelChangeSkillCombo(unsigned int slot)
     }
     if (newSkill == -1) {
         _m_aSlots[slot].m_mastery = eMasteryNone;
-        controls.m_masteryCombo.SetCurSel(-1);
-        controls.m_masteryCombo.EnableWindow(FALSE);
+        masteryCombo.SetCurSel(-1);
+        masteryCombo.EnableWindow(FALSE);
     } else {
         for (otherSlot = 0; otherSlot < s_kNumSlots; otherSlot++) {
             if (otherSlot != slot)
