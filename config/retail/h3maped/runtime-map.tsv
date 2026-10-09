@@ -400,6 +400,7 @@ rva	name	library	member
 0xe8c3d	__unlock_fhandle	LIBCMT	osfinfo.obj
 0xe8c5f	__fdopen	LIBCMT	fdopen.obj
 0xe8d52	_clearerr	LIBCMT	clearerr.obj
+0xe8d93	_fread	LIBCMT	fread.obj
 0xe8dc2	__fread_lk	LIBCMT	fread.obj
 0xe8ed9	__fwrite_lk	LIBCMT	fwrite.obj
 0xe8fe3	_fputs	LIBCMT	fputs.obj
@@ -434,6 +435,7 @@ rva	name	library	member
 0xe9b0d	__make_time_t	LIBCMT	mktime.obj
 0xe9cf1	_gmtime	LIBCMT	gmtime.obj
 0xe9dfb	_localtime	LIBCMT	localtim.obj
+0xe9f8c	_fopen	LIBCMT	fopen.obj
 0xe9f9f	_fputc	LIBCMT	fputc.obj
 0xe9fe0	__stricmp	LIBCMT	stricmp.obj
 0xea0b0	_atan2	LIBCMT	87ctriga.obj

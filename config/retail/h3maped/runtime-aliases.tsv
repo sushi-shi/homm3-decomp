@@ -6,6 +6,7 @@
 # date: 2026-10-09
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
+0xe9fe0	__strcmpi	LIBCMT	stricmp.obj
 0xfe5ce	?Create@CStatusBarCtrl@@QAEHKABUtagRECT@@PAVCWnd@@I@Z	NAFXCW	winctrl2.obj
 0xfe5ce	?Create@CToolBarCtrl@@QAEHKABUtagRECT@@PAVCWnd@@I@Z	NAFXCW	winctrl2.obj
 0xff514	?QueryInterface@XFontNotification@COleControl@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	ctlprop.obj

@@ -245,6 +245,8 @@ rva	name	library	member
 0x3e6f9	?_AfxOleDateFromTm@@YGHGGGGGGAAN@Z	NAFXCW	olevar.obj
 0x3e836	?SetDateTime@COleDateTime@@QAEHHHHHHH@Z	NAFXCW	olevar.obj
 0x3e884	?AfxOleUnlockAllControls@@YGXXZ	NAFXCW	occlock.obj
+0x4c890	?_Xlen@std@@YAXXZ	LIBCPMT	string.obj
+0x4c978	?_Xran@std@@YAXXZ	LIBCPMT	string.obj
 0x4ca14	??0_Lockit@std@@QAE@XZ	LIBCPMT	xlock.obj
 0x4ca92	?_CleanUp@std@@YAXXZ	LIBCPMT	xlock.obj
 0x4cab0	??1_Lockit@std@@QAE@XZ	LIBCPMT	xlock.obj
@@ -317,6 +319,7 @@ rva	name	library	member
 0x4f5ec	??1exception@@UAE@XZ	LIBCMT	stdexcpt.obj
 0x4f60f	??1type_info@@UAE@XZ	LIBCMT	typinfo.obj
 0x4f654	__CxxThrowException@8	LIBCMT	throw.obj
+0x4f690	_memmove	LIBCMT	memmove.obj
 0x4f9c5	?_JumpToContinuation@@YGXPAXPAUEHRegistrationNode@@@Z	LIBCMT	trnsctrl.obj
 0x4fa07	?_UnwindNestedFrames@@YGXPAUEHRegistrationNode@@PAUEHExceptionRecord@@@Z	LIBCMT	trnsctrl.obj
 0x4fa56	___CxxFrameHandler	LIBCMT	trnsctrl.obj
@@ -400,6 +403,7 @@ rva	name	library	member
 0x519f9	__unlock_fhandle	LIBCMT	osfinfo.obj
 0x51a1b	__fdopen	LIBCMT	fdopen.obj
 0x51b0e	_clearerr	LIBCMT	clearerr.obj
+0x51b4f	_fread	LIBCMT	fread.obj
 0x51b7e	__fread_lk	LIBCMT	fread.obj
 0x51c95	__fwrite_lk	LIBCMT	fwrite.obj
 0x51d9f	_fputs	LIBCMT	fputs.obj
@@ -440,6 +444,7 @@ rva	name	library	member
 0x52e3d	_mktime	LIBCMT	mktime.obj
 0x52e4b	__make_time_t	LIBCMT	mktime.obj
 0x5302f	_gmtime	LIBCMT	gmtime.obj
+0x5316a	_fopen	LIBCMT	fopen.obj
 0x53180	_memchr	LIBCMT	memchr.obj
 0x53230	_atan2	LIBCMT	87ctriga.obj
 0x5323a	__CIfmod	LIBCMT	87fmod.obj

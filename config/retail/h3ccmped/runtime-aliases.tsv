@@ -27,6 +27,7 @@ rva	name	library	member
 0x3e6cc	??4COleVariant@@QAEABV0@ABUtagVARIANT@@@Z	NAFXCW	olevar.obj
 0x3e6cc	??4COleVariant@@QAEABV0@ABV0@@Z	NAFXCW	olevar.obj
 0x3e6cc	??4COleVariant@@QAEABV0@PBUtagVARIANT@@@Z	NAFXCW	olevar.obj
+0x53270	__strcmpi	LIBCMT	stricmp.obj
 0x653a2	?QueryInterface@XFontNotification@COleControl@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	ctlprop.obj
 0x65537	??0CPtrList@@QAE@H@Z	NAFXCW	list_p.obj
 0x65537	??0CStringList@@QAE@H@Z	NAFXCW	list_s.obj

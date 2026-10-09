@@ -2475,7 +2475,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x25876	0x498d18	code	push	data	-	kept
 0x25885	0x489b64	code	cmp	data	-	kept
 0x25897	0x498d18	code	push	data	-	kept
-0x258bd	0x4258c9	code	mov	code-start	-	kept
+0x258bd	0x4258c9	code	mov	code-interior	-	kept
 0x25920	0x49c610	code	push	data	-	kept
 0x2592b	0x489ba4	code	mov	data	-	kept
 0x25974	0x49c610	code	push	data	-	kept
