@@ -1094,7 +1094,7 @@ command	?main@combatManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x740
 command	?processCombatMsg@combatManager@@QAEHAAVmessage@@@Z	94.9722	94.9722	94.9722	0x74d80	tokens1:dcaf242c2cf6
 command	?processFirstAid@combatManager@@AAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	tokens1:90c561f44b74
 command	?processMoveThenAttack@combatManager@@AAEEAAVmessage@@@Z	100.0000	100.0000	100.0000	0x78900	tokens1:994bdff31663
-command	?processNextAction@combatManager@@QAEHAAVmessage@@_N@Z	99.7272	99.7272	100.0000	0x78d80	tokens1:628d1b5ee638
+command	?processNextAction@combatManager@@QAEHAAVmessage@@_N@Z	99.7272	99.7272	100.0000	0x78d80	tokens1:6bec7e30ee91
 command	?resetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30	tokens1:7a5012c2987e
 command	?resetCyclingCreatures@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79de0	tokens1:cec2cc98f16e
 command	?resetMouse@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x78890	tokens1:515420875b18
@@ -2057,7 +2057,7 @@ game	?nextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	tokens1:a12
 game	?numOfGivenArtifact@playerData@@QBEHH@Z	100.0000	100.0000	100.0000	0xbabd0	tokens1:20443a1ab7bd
 game	?perDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	tokens1:2a6cfefcf451
 game	?perMonth@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc8f40	tokens1:876cab4ed84e
-game	?perWeek@game@@QAEXXZ	94.1719	94.1719	99.8370	0xc8780	tokens1:596e67bb3562
+game	?perWeek@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc8780	tokens1:ebdbcb1ee65f
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	tokens1:c7c5111c9b3c
 game	?processOnMapTowns@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcaa70	tokens1:753faa84817b
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	tokens1:5315678f9f97
