@@ -505,3 +505,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "MapSpecsSheet"
 source = "src/editor/MapSpecsSheet.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "ArmyDlg"
+source = "src/editor/ArmyDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"

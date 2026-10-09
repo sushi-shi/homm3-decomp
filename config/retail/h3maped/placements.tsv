@@ -24,14 +24,21 @@ rva	size	kind	name	unit	evidence
 0x00001f9b	0x5d	func	??0runtime_error@std@@QAE@ABV01@@Z	rmg_support	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0xb
 0x00002055	0x64	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	objecttype	referenced by ??0TRuntimeError@@QAE@XZ at +0x36
 0x00002215	0x12	func	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	artifact	masked body (18 bytes, 0 relocations) unique at a census start
+0x0000234e	0x24	func	??0?$TArray@VTCreatureStack@@$06@@QAE@XZ	ArmyDlg	masked body (36 bytes, 0 relocations) unique at a census start
 0x0000237c	0x38	func	??5TRawIStream@@QAEAAV0@AAF@Z	GameMap	masked prefix (44 fixed bytes agree, 56 compiled, 56 retail)
 0x000023b4	0x1b	func	??0TReadFailure@TRawIStream@@QAE@H@Z	GameMap	referenced by ?read@TRawIStream@@QAEAAV1@PADI@Z at +0x20
 0x00002461	0x38	func	??5TRawIStream@@QAEAAV0@AAE@Z	GameMap	referenced by ??5@YAAAVTRawIStream@@AAV0@AAUTMapLoc@@@Z at +0xf
 0x00002499	0x38	func	??6TRawOStream@@QAEAAV0@ABF@Z	GameMap	referenced by ?_writeLossCondition@TGameMapHeader@@CAXABUTLossConditionData@@AAVTRawOStream@@W4EGameVersion@@@Z at +0x36
 0x000024d1	0x1b	func	??0TWriteFailure@TRawOStream@@QAE@H@Z	GameMap	referenced by ?write@TRawOStream@@QAEAAV1@PBDI@Z at +0x20
 0x0000255d	0x38	func	??6TRawOStream@@QAEAAV0@ABE@Z	GameMap	referenced by ??6@YAAAVTRawOStream@@AAV0@ABUTMapLoc@@@Z at +0x17
+0x000026bc	0x3	func	?onNumOccupiedStacksChanged@TArmyDlg@@EAEXII@Z	ArmyDlg	vtable ??_7TArmyDlg@@6BTArmyDlgClient@@@ stored by ??0TArmyDlg@@QAE@ABVTArmy@@W4EGameVersion@@_N@Z slot 0
+0x000026db	0x5d	func	??0_TStackData@TArmyDlg@@QAE@XZ	ArmyDlg	masked body (93 bytes, 9 relocations) unique at a census start
+0x00002738	0x48	func	??1_TStackData@TArmyDlg@@QAE@XZ	ArmyDlg	masked body (72 bytes, 6 relocations) unique at a census start
+0x00002780	0x4c	func	??1TArmyDlg@@UAE@XZ	ArmyDlg	masked body (76 bytes, 6 relocations) unique at a census start
 0x00003170	0x8	func	?getDigits@?$TDigits@$0CKA@@@SAIXZ	EditTimedEventGeneralPage	referenced by ?OnInitDialog@TEditTimedEventGeneralPage@@UAEHXZ at +0x402; ICF-folded with 1 identical bodies
 0x00003178	0x4	func	?getDigits@?$TDigits@$05@@SAIXZ	OptionsDlg	referenced by ?OnInitDialog@TOptionsDlg@@MAEHXZ at +0x150; ICF-folded with 1 identical bodies
+0x0000317c	0x25	func	?copy@std@@YAPAVTCreatureStack@@PBV2@0PAV2@@Z	ArmyDlg	masked body (37 bytes, 0 relocations) unique at a census start
+0x000031bd	0x34	func	?equal@std@@YA_NPBVTCreatureStack@@00@Z	ArmyDlg	masked body (52 bytes, 0 relocations) unique at a census start
 0x00003245	0x58	func	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	artifact	masked body (88 bytes, 5 relocations) unique at a census start
 0x0000329d	0x68	func	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	artifact	masked body (104 bytes, 5 relocations) unique at a census start
 0x000036a8	0x457	func	?InitializeArtifactTraitsTable@@YA_NXZ	artifact	string literal anchor (??_C@_0N@GEJI@artraits?4txt?$AA@, ??_C@_0N@GIEN@artslots?4txt?$AA@)

@@ -15,6 +15,38 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+ArmyDlg	??0?$TArray@VTCreatureStack@@$06@@QAE@XZ	100.0000	100.0000	100.0000	0x234e	-
+ArmyDlg	??0TArmyDlg@@QAE@ABVTArmy@@W4EGameVersion@@_N@Z	100.0000	100.0000	100.0000	0x2629	tokens1:90c5675d6dbb
+ArmyDlg	??0TArmyDlg@@QAE@PAVTArmyDlgClient@@ABVTArmy@@W4EGameVersion@@_N@Z	100.0000	100.0000	100.0000	0x27cc	tokens1:dacaa251bce2
+ArmyDlg	??0_TStackData@TArmyDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x26db	-
+ArmyDlg	??1TArmyDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x2780	-
+ArmyDlg	??1_TStackData@TArmyDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x2738	-
+ArmyDlg	?DoDataExchange@TArmyDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x2857	tokens1:60bb839e7e1c
+ArmyDlg	?GetMessageMap@TArmyDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x2b0c	tokens1:de5c93d1b3a1
+ArmyDlg	?OnEnable@TArmyDlg@@IAEXH@Z	81.1140	81.1140	81.1140	0x2f93	tokens1:db6af6792782
+ArmyDlg	?OnInitDialog@TArmyDlg@@UAEHXZ	99.0228	99.0228	99.0228	0x2b12	tokens1:4d81e6fa5b39
+ArmyDlg	?OnKillFocusQtyEdit1@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3138	tokens1:d5e130eb5aaf
+ArmyDlg	?OnKillFocusQtyEdit2@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3140	tokens1:e0ce6a51f4a0
+ArmyDlg	?OnKillFocusQtyEdit3@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3148	tokens1:44714f06a2aa
+ArmyDlg	?OnKillFocusQtyEdit4@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3150	tokens1:babe1b2f0cd7
+ArmyDlg	?OnKillFocusQtyEdit5@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3158	tokens1:5069ba4e5409
+ArmyDlg	?OnKillFocusQtyEdit6@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3160	tokens1:190d62048f3f
+ArmyDlg	?OnKillFocusQtyEdit7@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3168	tokens1:54c864de5c22
+ArmyDlg	?OnOK@TArmyDlg@@UAEXXZ	99.7826	99.7826	99.7826	0x2f1d	tokens1:1dbed0cd9f45
+ArmyDlg	?OnSelChangeTypeCombo1@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3100	tokens1:f794c6ffc49a
+ArmyDlg	?OnSelChangeTypeCombo2@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3108	tokens1:187a1308ffec
+ArmyDlg	?OnSelChangeTypeCombo3@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3110	tokens1:cd8e49378583
+ArmyDlg	?OnSelChangeTypeCombo4@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3118	tokens1:340013e9bfc4
+ArmyDlg	?OnSelChangeTypeCombo5@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3120	tokens1:f36a819c7220
+ArmyDlg	?OnSelChangeTypeCombo6@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3128	tokens1:cf079d8ecf86
+ArmyDlg	?OnSelChangeTypeCombo7@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3130	tokens1:52496a0dda40
+ArmyDlg	?_onKillFocusQtyEdit@TArmyDlg@@AAEXI@Z	100.0000	100.0000	100.0000	0x2a41	tokens1:347c817de30e
+ArmyDlg	?_onSelChangeTypeCombo@TArmyDlg@@AAEXI@Z	100.0000	100.0000	100.0000	0x2973	tokens1:b2659872e304
+ArmyDlg	?_retrieveStackQuantities@TArmyDlg@@AAEXXZ	100.0000	100.0000	100.0000	0x28a3	tokens1:157ef04d2d15
+ArmyDlg	?addCreature@@YAXAAVCComboBox@@W4TCreatureType@@@Z	99.9020	99.9020	99.9020	0x25b1	tokens1:64040f31657b
+ArmyDlg	?copy@std@@YAPAVTCreatureStack@@PBV2@0PAV2@@Z	100.0000	100.0000	100.0000	0x317c	-
+ArmyDlg	?equal@std@@YA_NPBVTCreatureStack@@00@Z	100.0000	100.0000	100.0000	0x31bd	-
+ArmyDlg	?onNumOccupiedStacksChanged@TArmyDlg@@EAEXII@Z	100.0000	100.0000	100.0000	0x26bc	-
 Colors	??_3?$bitset@$09@std@@QAEAAV01@I@Z	100.0000	100.0000	100.0000	0x1783	-
 Colors	?initColors@@YAXXZ	99.7826	99.8913	99.8913	0xcba4	tokens1:50621faedd82
 DIBSection	??0T16bppDIBSection@@QAE@II@Z	100.0000	100.0000	100.0000	0xd1ea	tokens1:b9624ac570ea
