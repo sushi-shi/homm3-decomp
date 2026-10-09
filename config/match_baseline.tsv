@@ -1094,7 +1094,7 @@ command	?main@combatManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x740
 command	?processCombatMsg@combatManager@@QAEHAAVmessage@@@Z	94.9722	94.9722	94.9722	0x74d80	tokens1:dcaf242c2cf6
 command	?processFirstAid@combatManager@@AAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	tokens1:90c561f44b74
 command	?processMoveThenAttack@combatManager@@AAEEAAVmessage@@@Z	100.0000	100.0000	100.0000	0x78900	tokens1:994bdff31663
-command	?processNextAction@combatManager@@QAEHAAVmessage@@_N@Z	99.7272	99.7272	100.0000	0x78d80	tokens1:6bec7e30ee91
+command	?processNextAction@combatManager@@QAEHAAVmessage@@_N@Z	99.7272	99.7272	100.0000	0x78d80	tokens1:d70fa7f76940
 command	?resetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30	tokens1:7a5012c2987e
 command	?resetCyclingCreatures@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79de0	tokens1:cec2cc98f16e
 command	?resetMouse@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x78890	tokens1:515420875b18
@@ -2611,7 +2611,7 @@ mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.00
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270	tokens1:abcb8e413b4f
 mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff2f0	tokens1:aaa388572d8d
 mapcell	?readTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc000	tokens1:94dc771c868b
-mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	89.8415	89.8415	97.7852	0x1019f0	tokens1:7d6f4504590c
+mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	89.8415	89.8415	97.7852	0x1019f0	tokens1:7252dadc14d5
 mapcell	?readTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfee50	tokens1:cf09cc74c67c
 mapcell	?rebuildObjectTypeIndex@NewfullMap@@QAEXXZ	99.8854	99.8854	99.8854	0x1042c0	tokens1:295aaf0b511a
 mapcell	?resize@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEXIABVTSeerHut@@@Z	100.0000	100.0000	100.0000	0x106390	-
@@ -4242,7 +4242,7 @@ spells	?getNextChainLightningTarget@combatManager@@QAEHPAVarmy@@H@Z	100.0000	100
 spells	?handleCastSacrifice@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a2e90	tokens1:c9b9ba4a2626
 spells	?handleCastSpell@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a3070	tokens1:d29f1b68b4ae
 spells	?handleCastTeleport@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a3570	tokens1:cfe50881f6d5
-spells	?handleCastWallSpell@@YIHAAVmessage@@@Z	99.9703	99.9703	99.9703	0x1a3250	tokens1:d3c4e4cbcc35
+spells	?handleCastWallSpell@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a3250	tokens1:a4fdc2997cee
 spells	?handleGetTeleportDestination@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	tokens1:4b8741bcf77a
 spells	?handleSacrificeBeneficiary@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a2d00	tokens1:97abc108cec8
 spells	?hasValidSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@H_NJ@Z	100.0000	100.0000	100.0000	0x1a40d0	tokens1:49913ba2e9e1
