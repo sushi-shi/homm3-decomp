@@ -2740,7 +2740,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x28dc5	0x4915b8	code	mov	data	-	kept
 0x28dcb	0x4915bc	code	mov	data	-	kept
 0x28de5	0x4ce2a0	code	mov	data	-	kept
-0x28e00	0x428e07	code	mov	code-start	-	kept
+0x28e00	0x428e07	code	mov	code-interior	-	kept
 0x28e66	0x483760	code	push	code-interior	-	kept
 0x28ee9	0x428eee	code	mov	code-interior	-	kept
 0x28f16	0x483770	code	push	code-interior	-	kept

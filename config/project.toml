@@ -45,6 +45,11 @@ census_folds_catch_handlers = true
 # immediate seeds) are no tail calls, nor is a catch block's jump back into
 # its parent (homm3.census.functions.Census.tail_limit).
 census_joins_catch_bodies = true
+# A piece the census cut off at a jump target joins the function before it
+# when it directly follows it, that function's own instructions jump or fall
+# into it and nothing else references it (homm3.census.functions.merges).
+# /O1 pads no function to 16 bytes, so no alignment condition applies.
+census_joins_tails = true
 # A placed body's call past the first byte where it leaves retail names a
 # callee only when four bytes before it agree, the callee's own body equals
 # retail there, or nothing else names that callee or address
@@ -70,6 +75,14 @@ image_base = 0x400000
 # the census folds such a handler into its parent's extent, as the game's
 # hand-owned census does (homm3.census, funclets.tsv).
 census_folds_catch_handlers = true
+# A piece the census cut off at a jump target (a tail-call start taken while
+# an embedded catch handler or a dropped weak seed bounded the body) joins the
+# function before it when it directly follows it, that function's own
+# instructions jump or fall into it and nothing else references it
+# (homm3.census.functions.merges); /O2 starts every function on a 16-byte
+# boundary, so a piece there stays a row.
+census_joins_tails = true
+census_tail_alignment = 16
 # A placed body's call past the first byte where it leaves retail names a
 # callee only when four bytes before it agree, the callee's own body equals
 # retail there, or nothing else names that callee or address

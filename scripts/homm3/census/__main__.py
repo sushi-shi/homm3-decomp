@@ -18,7 +18,11 @@ Reads the selected image's pinned executable and derives:
                   pin's `census_folds_catch_handlers`, a catch handler that
                   directly follows its parent is part of the parent's
                   functions.tsv extent instead (the game's rule), and the
-                  census reports the handlers it leaves as rows;
+                  census reports the handlers it leaves as rows; with
+                  `census_joins_tails`, a piece the census cut off at a
+                  jump target joins the function before it (homm3.census.
+                  functions.merges) and the census reports each candidate
+                  it leaves as a row;
   init-thunks.tsv rva, slot: the `.CRT$XCU` initializer table, the body
                   after each `/O1` `jmp $+5` slot thunk, and the cleanups
                   those initializers register with `_atexit` (slot -);
@@ -55,13 +59,23 @@ EMPTY_TABLES = {
 }
 
 
-def folds_catch_handlers(image: str | None = None) -> bool:
-    """Whether the image's census folds catch handlers into their parents
-    (config/project.toml `census_folds_catch_handlers` on the image's pin)."""
+def pin_flag(name: str, image: str | None = None) -> bool:
+    """A census switch on the image's config/project.toml pin."""
     from homm3.core import images
     key = image or paths.image_key()
-    return bool(images.pins(paths.ROOT).get(images.input_key(key), {})
-                .get("census_folds_catch_handlers", False))
+    return bool(images.pins(paths.ROOT).get(images.input_key(key), {}).get(name, False))
+
+
+def folds_catch_handlers(image: str | None = None) -> bool:
+    """Whether the image's census folds catch handlers into their parents
+    (`census_folds_catch_handlers`)."""
+    return pin_flag("census_folds_catch_handlers", image)
+
+
+def joins_tails(image: str | None = None) -> bool:
+    """Whether the image's census joins the pieces it cut off at a jump
+    target to the function before them (`census_joins_tails`)."""
+    return pin_flag("census_joins_tails", image)
 
 
 def joins_catch_bodies(image: str | None = None) -> bool:
@@ -69,10 +83,16 @@ def joins_catch_bodies(image: str | None = None) -> bool:
     its catch blocks one function (config/project.toml
     `census_joins_catch_bodies` on the image's pin; see
     functions.Census.tail_limit)."""
+    return pin_flag("census_joins_catch_bodies", image)
+
+
+def tail_alignment(image: str | None = None) -> int:
+    """The function alignment a joined tail may not start on
+    (`census_tail_alignment`; 0: none, as /O1 pads no function)."""
     from homm3.core import images
     key = image or paths.image_key()
-    return bool(images.pins(paths.ROOT).get(images.input_key(key), {})
-                .get("census_joins_catch_bodies", False))
+    return int(images.pins(paths.ROOT).get(images.input_key(key), {})
+               .get("census_tail_alignment", 0))
 
 
 def derive(log=print):
@@ -82,13 +102,25 @@ def derive(log=print):
     census = functions.run(image, log=log, catch_bodies=joins_catch_bodies())
     from homm3.census import eh
     folded = {}
-    if folds_catch_handlers():
-        folded, refused = functions.catch_folds(census, eh.funcinfo_parents(census))
-        log(f"[census] {len(folded)} catch handlers folded into their parents, "
-            f"{len(refused)} left as rows")
-        for handler, parent, reason in refused:
-            owner = f"0x{parent:x}" if parent is not None else "-"
-            log(f"[census]   catch 0x{handler:x} (parent {owner}) not folded: {reason}")
+    catches, tails = folds_catch_handlers(), joins_tails()
+    if catches or tails:
+        folded, refused = functions.merges(census, eh.funcinfo_parents(census),
+                                           catches=catches, tails=tails,
+                                           alignment=tail_alignment())
+        for kind, verb in (("catch", "catch handlers folded into their parents"),
+                           ("tail", "tails joined to the function before them")):
+            if not (catches if kind == "catch" else tails):
+                continue
+            count = sum(1 for piece in folded if (piece in census.funclets) == (kind == "catch"))
+            left = [row for row in refused if row[2] == kind]
+            log(f"[census] {count} {verb}, {len(left)} left as rows")
+            if kind == "tail":
+                for piece, owner in sorted(folded.items()):
+                    if piece not in census.funclets:
+                        log(f"[census]   tail 0x{piece:x} joined to 0x{owner:x}")
+            for piece, owner, _kind, reason in left:
+                who = f"0x{owner:x}" if owner is not None else "-"
+                log(f"[census]   {kind} 0x{piece:x} (owner {who}) not merged: {reason}")
     rows = functions.partition(census, folded)
     # a folded handler is no function, but the FuncInfo still points at it
     starts = {rva for rva, _size, _reached in rows} | set(folded)
