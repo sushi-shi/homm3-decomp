@@ -213,6 +213,11 @@ public:
         std::set<int> m_heroes;
     };
 
+    // One name per row of priskill.txt (PrimarySkillTraits.cpp).
+    struct TPrimarySkillTraits {
+        const char* m_name;
+    };
+
     // One row per secondary skill: its name (Loki's TSecondarySkillTraits;
     // copied from the game's skill traits, 0x44af1b).
     struct TSecondarySkillTraits {
@@ -226,12 +231,15 @@ public:
     static TClassTraits* s_akClassTraits;
     // h3maped 0x5857dc: points at the 28 rows (one per secondary skill).
     static TSecondarySkillTraits* s_akSecondarySkillTraits;
-    // One name per row of skilllev.txt, basic mastery first.
+    // One name per row of skilllev.txt, basic mastery first
+    // (SkillMasteryTraits.cpp).
     struct TSkillMasteryTraits {
         const char* m_name;
     };
 
-    // h3maped 0x59e66c: points at the three rows.
+    // Points at the four rows.
+    static TPrimarySkillTraits* s_akPrimarySkillTraits;
+    // Points at the three rows.
     static TSkillMasteryTraits* s_akSkillMasteryTraits;
 
     static void initialize();
@@ -359,5 +367,13 @@ public:
     TPrison(const TObjectType& objType, THeroID heroID);
     TPrison(const TObjectType& objType, TRawIStream* pIStream, int version);
 };
+
+// The primary skill names (PrimarySkillTraits.cpp) and the skill mastery
+// names (SkillMasteryTraits.cpp); THero::initialize loads both.
+extern THero::TPrimarySkillTraits* akHeroPrimarySkillTraits;
+extern THero::TSkillMasteryTraits* akHeroSkillMasteryTraits;
+
+void InitializePrimarySkillTraitsTable();
+void InitializeSkillMasteryTraitsTable();
 
 #endif  /* HOMM3_EDITOR_HERO_H */

@@ -60,6 +60,8 @@ DATA(0x0059f274) THero::TSecondarySkillTraits aHeroSecondarySkillTraitsImp[kNumS
 DATA(0x005857d4) THero::TTraits* THero::s_akTraits = aHeroTraitsImp;
 DATA(0x005857d8) THero::TClassTraits* THero::s_akClassTraits = aHeroClassTraitsImp;
 DATA(0x005857dc) THero::TSecondarySkillTraits* THero::s_akSecondarySkillTraits = aHeroSecondarySkillTraitsImp;
+DATA(0x0059f2e8) THero::TPrimarySkillTraits* THero::s_akPrimarySkillTraits = akHeroPrimarySkillTraits;
+DATA(0x0059e66c) THero::TSkillMasteryTraits* THero::s_akSkillMasteryTraits = akHeroSkillMasteryTraits;
 
 VA(0x0044a2a6, 0x5b)
 void THeroPrototype::TSecondarySkills::read(TRawIStream* pIStream, int version)
@@ -371,9 +373,6 @@ void THeroPlaceholder::write(TRawOStream* pOStream, int version) const
     if (getHeroID() == -1)
         *pOStream << static_cast<signed char>(_m_powerRank);
 }
-
-void InitializePrimarySkillTraitsTable();
-void InitializeSkillMasteryTraitsTable();
 
 VA(0x0044af11, 0x2b)
 void THero::initialize()

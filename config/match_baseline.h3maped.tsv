@@ -1024,7 +1024,7 @@ Hero	?hasText@THero@@UBE_NXZ	100.0000	100.0000	100.0000	0x45fc9	-
 Hero	?importText@THero@@$4PPPPPPPM@3AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x461a9	-
 Hero	?importText@THero@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x45fa9	-
 Hero	?importText@THero@@UAEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	99.9440	99.9440	99.9440	0x4b5e5	tokens1:986111cfb2f8
-Hero	?initialize@THero@@SAXXZ	99.0909	99.0909	99.0909	0x4af11	tokens1:09ae1814b628
+Hero	?initialize@THero@@SAXXZ	100.0000	100.0000	100.0000	0x4af11	tokens1:09ae1814b628
 Hero	?initializeTraitsTable@?A0x29381d67a05c3f4f@@YAXXZ	75.9117	75.9117	75.9117	0x4a8b5	tokens1:21574a3a73ad
 Hero	?insert@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@_N@2@ABW4TArtifact@@@Z	100.0000	100.0000	100.0000	0x5ada	-
 Hero	?insert@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@_N@2@ABU?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@2@@Z	100.0000	100.0000	100.0000	0x4c468	-
@@ -1665,6 +1665,8 @@ Player	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0xbe6e6	-
 Player	?InitializePlayerTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x94324	tokens1:681eba712e3e
 Player	__h3cg$Player$static_dtor$aColorNames	100.0000	100.0000	100.0000	0x94529	-
 Player	__h3cg$Player$static_dtor$aNames	100.0000	100.0000	100.0000	0x9453d	-
+PrimarySkillTraits	?InitializePrimarySkillTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0x94c27	tokens1:5ba188de63f7
+PrimarySkillTraits	__h3cg$PrimarySkillTraits$static_dtor$pNames	100.0000	100.0000	100.0000	0x94d5d	-
 PrimarySkillsDlg	??0TPrimarySkillsDlg@@QAE@PAVCWnd@@@Z	100.0000	100.0000	100.0000	0x94745	tokens1:0ca670c05bef
 PrimarySkillsDlg	??0_TSkillControls@TPrimarySkillsDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x94802	-
 PrimarySkillsDlg	??1TPrimarySkillsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x94878	-
@@ -1706,7 +1708,7 @@ SecondarySkillsDlg	??_GTSecondarySkillsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000
 SecondarySkillsDlg	?DoDataExchange@TSecondarySkillsDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xb5aa2	tokens1:10720ac9ca44
 SecondarySkillsDlg	?GetMessageMap@TSecondarySkillsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb5ade	tokens1:69ffc6be3fc9
 SecondarySkillsDlg	?OnEnable@TSecondarySkillsDlg@@IAEXH@Z	100.0000	100.0000	100.0000	0xb5e2b	tokens1:2dfb03bede69
-SecondarySkillsDlg	?OnInitDialog@TSecondarySkillsDlg@@MAEHXZ	98.6264	98.6264	98.6264	0xb5ae4	tokens1:ceedee03b395
+SecondarySkillsDlg	?OnInitDialog@TSecondarySkillsDlg@@MAEHXZ	98.6453	98.6453	98.6453	0xb5ae4	tokens1:ceedee03b395
 SecondarySkillsDlg	?OnSelChangeMasteryCombo1@TSecondarySkillsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb5575	tokens1:ec19e8dd9411
 SecondarySkillsDlg	?OnSelChangeMasteryCombo2@TSecondarySkillsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb557d	tokens1:e8dadfabeb09
 SecondarySkillsDlg	?OnSelChangeMasteryCombo3@TSecondarySkillsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb5585	tokens1:91d171225be9
@@ -1761,6 +1763,8 @@ SignPropsDlg	?GetMessageMap@TSignPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.000
 SignPropsDlg	?OnCreate@TSignPropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0xb9004	tokens1:19fab24a7adf
 SignPropsDlg	?OnInitDialog@TSignPropsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0xb8ea3	tokens1:7136dc2c5b7a
 SignPropsDlg	?OnOK@TSignPropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0xb8f64	tokens1:c5645018df1d
+SkillMasteryTraits	?InitializeSkillMasteryTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0xb90b9	tokens1:c0773cc20d57
+SkillMasteryTraits	__h3cg$SkillMasteryTraits$static_dtor$pNames	100.0000	100.0000	100.0000	0xb91ef	-
 SpellsDlg	??0?$bitset@$0EG@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2bf37	-
 SpellsDlg	??0TSpellsDlg@@QAE@PAVCWnd@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0xba29b	tokens1:4b297b6ce2c1
 SpellsDlg	??1TSpellsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xba34d	-
@@ -1899,7 +1903,7 @@ crc32	@crc32@12	100.0000	100.0000	100.0000	0xd6670	-
 creaturetype	??1TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	100.0000	100.0000	100.0000	0x4ce70	-
 creaturetype	?GetNumberOfRows@TSpreadsheetResource@@QBEHXZ	100.0000	100.0000	100.0000	0xcdfe	-
 creaturetype	?InitializeCreatureTypeTraitsTable@@YAEXZ	100.0000	100.0000	100.0000	0xcc46	-
-creaturetype	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.9171	99.9171	99.9171	0xce11	-
+creaturetype	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.7514	99.9171	99.9171	0xce11	-
 csequence	??0CSequence@@AAE@H@Z	100.0000	100.0000	100.0000	0xe5b10	-
 csequence	??1CSequence@@AAE@XZ	100.0000	100.0000	100.0000	0xe5b60	-
 csprite	??0CSprite@@QAE@PBDHHH@Z	100.0000	100.0000	100.0000	0xde5b0	-
