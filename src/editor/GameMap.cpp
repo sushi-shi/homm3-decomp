@@ -24,6 +24,7 @@
 #include "editor/Generator.h"
 #include "editor/GameMapHeader.h"
 #include "editor/Hero.h"
+#include "editor/MapEditorText.h"
 #include "editor/Monster.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/Quest.h"
@@ -2273,6 +2274,95 @@ void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
     signed char aMapReserved[124];
     fill_n(aMapReserved, sizeof(aMapReserved), 0);
     stream << aMapReserved;
+}
+
+namespace {
+
+// The timed events' order in the map text: by their first day, ties kept in
+// the map's order (the stable sort's comparison, h3maped 0x439f46).
+struct TFirstOccurenceLess {
+    bool operator()(const TTimedEvent* pLhs, const TTimedEvent* pRhs) const
+    {
+        return pLhs->getFirstOccurence() < pRhs->getFirstOccurence();
+    }
+};
+
+}
+
+// The map's text for translation: its name, description, rumors, timed
+// events (by their first day), the Shadow of Death heroes' custom names and
+// biographies, and each object that has text, by its place and type. A
+// line break inside a field becomes a tab.
+VA(0x00425bbe, 0x936)
+void TGameMap::_TImpl::exportText(ostream* pOStream) const
+{
+    static const string kSectionStart("===== ");
+    static const string kSectionEnd(" =====");
+    *pOStream << kSectionStart + kMapNameStr + kSectionEnd << '\n' << getName() << "\n\n";
+    string desc = getDesc();
+    replace(desc.begin(), desc.end(), '\n', '\t');
+    *pOStream << kSectionStart + kMapDescriptionStr + kSectionEnd << '\n' << desc << "\n\n";
+    *pOStream << kSectionStart + kRumorsStr + kSectionEnd << '\n';
+    for (vector<TRumor>::const_iterator pRumor = getRumors().begin(); pRumor != getRumors().end(); pRumor++) {
+        *pOStream << '\n';
+        pRumor->exportText(pOStream, _m_version);
+    }
+    *pOStream << '\n';
+    *pOStream << kSectionStart + kTimedEventsStr + kSectionEnd << '\n';
+    {
+        const vector<TTimedEvent>& timedEvents = getTimedEvents();
+        vector<const TTimedEvent*> apTimedEvent;
+        apTimedEvent.reserve(timedEvents.size());
+        for (vector<TTimedEvent>::const_iterator pTimedEvent = timedEvents.begin(); pTimedEvent != timedEvents.end();
+             pTimedEvent++)
+            apTimedEvent.push_back(pTimedEvent);
+        stable_sort(apTimedEvent.begin(), apTimedEvent.end(), TFirstOccurenceLess());
+        for (vector<const TTimedEvent*>::const_iterator ppTimedEvent = apTimedEvent.begin();
+             ppTimedEvent != apTimedEvent.end(); ppTimedEvent++) {
+            *pOStream << '\n';
+            (*ppTimedEvent)->exportText(pOStream, _m_version);
+        }
+    }
+    *pOStream << '\n';
+    if (_m_version >= GAME_VERSION_SOD) {
+        *pOStream << kSectionStart + kHeroesPageCaptionStr + kSectionEnd << '\n';
+        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+            const THeroPrototype& prototype = getHeroPrototype(heroID);
+            bool bCustomName = prototype.getName() != THero::s_akTraits[heroID].m_prototype.getName();
+            bool bCustomBiography = prototype.getBiography() != THero::s_akTraits[heroID].m_prototype.getBiography();
+            if (bCustomName || bCustomBiography) {
+                *pOStream << '\n';
+                if (bCustomName)
+                    *pOStream << kNameStr << ':' << '\n' << prototype.getName() << '\n';
+                if (bCustomBiography) {
+                    string biography = prototype.getBiography();
+                    replace(biography.begin(), biography.end(), '\n', '\t');
+                    *pOStream << kBiographyStr << ':' << '\n' << biography << '\n';
+                }
+            }
+        }
+        *pOStream << '\n';
+    }
+    *pOStream << kSectionStart + kObjectsStr + kSectionEnd << '\n';
+    unsigned int numLayers = isTwoLayer() ? 2 : 1;
+    for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+        const TLayer& layer = _m_aLayer[layerNum];
+        for (TLayer::TObjectIDIter iter = layer.objectIDBegin(); iter != layer.objectIDEnd(); ++iter) {
+            const TGameObject& obj = layer.getObject(*iter);
+            if (obj.hasText()) {
+                TTilePoint loc = layer.getObjectLoc(*iter);
+                if (obj.hasTrigger()) {
+                    loc.x(loc.x() - obj.getTriggerLoc().m_x);
+                    loc.y(loc.y() - obj.getTriggerLoc().m_y);
+                }
+                *pOStream << "\n(" << (int) loc.x() << ", " << (int) loc.y() << ", " << (int) layerNum << ") "
+                          << string("***") + obj.getTypeName() + string("***") << '\n';
+                obj.exportText(pOStream, _m_version);
+            }
+        }
+    }
+    *pOStream << '\n';
+    *pOStream << kSectionStart + kEndOfFileStr + kSectionEnd << '\n';
 }
 
 // Whether an object fits at (x, y): its trigger cells on the map, its

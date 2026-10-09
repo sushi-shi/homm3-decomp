@@ -174,11 +174,11 @@ public:
     const std::string& getText() const { return _m_text; }
     void setText(const std::string& newText);
 
-    virtual void importText(std::istream* pIStream);
+    virtual void importText(std::istream* pIStream, EGameVersion version);
     virtual void write(TRawOStream* pOStream, int version) const;
     virtual bool isCustomized() const { return !_m_text.empty(); }
     virtual bool hasText() const { return true; }
-    virtual void exportText(std::ostream* pOStream) const;
+    virtual void exportText(std::ostream* pOStream, EGameVersion version) const;
 
 private:
     std::string _m_text;

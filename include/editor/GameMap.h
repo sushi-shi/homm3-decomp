@@ -88,6 +88,9 @@ public:
     const std::string& getName() const { return _m_name; }
     const std::string& getText() const { return _m_text; }
     void setNameAndText(const std::string& newName, const std::string& newText);
+    // The map text's rumor entry (h3maped 0x4b465d reads, 0x4b49bd writes).
+    void importText(std::istream* pIStream, EGameVersion version);
+    void exportText(std::ostream* pOStream, EGameVersion version) const;
 
     friend bool operator==(const TRumor& lhs, const TRumor& rhs)
     {

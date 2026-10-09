@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 
+#include "gameversion.h"
 #include "objecttype.h"
 
 class TRawIStream;
@@ -28,7 +29,10 @@ public:
     virtual ~TGameObject() = 0;
     TGameObject& operator=(const TGameObject& other);
 
-    virtual void importText(std::istream* pIStream) {}
+    // The text import and export pass the map's edition (the map's
+    // importText and exportText hand over _m_version; the empty bodies
+    // share one `ret 8`, 0x4026bc).
+    virtual void importText(std::istream* pIStream, EGameVersion version) {}
     // Windows returns the clone in an auto_ptr (h3maped 0x42a75a calls
     // slot 2 with a result slot and no allocator); Loki passes one.
     virtual std::auto_ptr<TGameObject> clone() const = 0;
@@ -37,7 +41,7 @@ public:
     virtual std::string getTypeName() const;
     virtual bool isCustomized() const { return false; }
     virtual bool hasText() const { return false; }
-    virtual void exportText(std::ostream* pOStream) const {}
+    virtual void exportText(std::ostream* pOStream, EGameVersion version) const {}
 
     const TObjectType& getObjectType() const { return _m_objectTypeIter->first; }
     bool getBCellPlaced(unsigned int x, unsigned int y) const
@@ -56,6 +60,7 @@ public:
     {
         return _m_objectTypeIter->first.getBCellTrigger(x, y);
     }
+    bool hasTrigger() const { return _m_objectTypeIter->first.m_hasTrigger != 0; }
     const TObjectType::TPoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
     const std::bitset<kNumTerrainTypes>& getTerrainMask() const { return _m_objectTypeIter->first._m_terrainMask; }
     TAdventureObjectType getType() const { return _m_objectTypeIter->first.getType(); }
