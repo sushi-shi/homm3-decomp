@@ -819,6 +819,7 @@ rva	name	library	member
 0xfe501	??0CTime@@QAE@ABU_SYSTEMTIME@@H@Z	NAFXCW	timecore.obj
 0xfe54d	??0CTime@@QAE@ABU_FILETIME@@H@Z	NAFXCW	timecore.obj
 0xfe599	?GetLocalTm@CTime@@QBEPAUtm@@PAU2@@Z	NAFXCW	timecore.obj
+0xfe5ce	?Create@CSliderCtrl@@QAEHKABUtagRECT@@PAVCWnd@@I@Z	NAFXCW	winctrl2.obj
 0xfe5ff	??1CToolBarCtrl@@UAE@XZ	NAFXCW	winctrl2.obj
 0xfe637	?AddBitmap@CToolBarCtrl@@QAEHHPAVCBitmap@@@Z	NAFXCW	winctrl2.obj
 0xfe66b	?OnCreate@CToolBarCtrl@@IAEHPAUtagCREATESTRUCTA@@@Z	NAFXCW	winctrl2.obj
@@ -857,14 +858,24 @@ rva	name	library	member
 0xff07b	?_FilterToolTipMessage@CWnd@@SGXPAUtagMSG@@PAV1@@Z	NAFXCW	tooltip.obj
 0xff08b	?FilterToolTipMessage@CWnd@@QAEXPAUtagMSG@@@Z	NAFXCW	tooltip.obj
 0xff4f7	??0CArchiveStream@@QAE@PAVCArchive@@@Z	NAFXCW	arcstrm.obj
+0xff514	?QueryInterface@CArchiveStream@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	arcstrm.obj
 0xff558	?Read@CArchiveStream@@UAGJPAXKPAK@Z	NAFXCW	arcstrm.obj
 0xff5b0	?Write@CArchiveStream@@UAGJPBXKPAK@Z	NAFXCW	arcstrm.obj
 0xff609	?Seek@CArchiveStream@@UAGJT_LARGE_INTEGER@@KPAT_ULARGE_INTEGER@@@Z	NAFXCW	arcstrm.obj
+0xff6a9	??0CByteArray@@QAE@XZ	NAFXCW	array_b.obj
+0xff912	??0CObList@@QAE@H@Z	NAFXCW	list_o.obj
+0xff951	?RemoveAll@CObList@@QAEXXZ	NAFXCW	list_o.obj
+0xff99a	?NewNode@CObList@@IAEPAUCNode@1@PAU21@0@Z	NAFXCW	list_o.obj
+0xffa0b	?AddTail@CObList@@QAEPAU__POSITION@@PAVCObject@@@Z	NAFXCW	list_o.obj
+0xffa8f	?Find@CObList@@QBEPAU__POSITION@@PAVCObject@@PAU2@@Z	NAFXCW	list_o.obj
 0xffab2	?Create@CPlex@@SGPAU1@AAPAU1@II@Z	NAFXCW	plex.obj
 0xffad2	?FreeDataChain@CPlex@@QAEXXZ	NAFXCW	plex.obj
 0xffbc4	?NewAssoc@CMapPtrToPtr@@IAEPAUCAssoc@1@XZ	NAFXCW	map_pp.obj
+0xffc2a	?GetAssocAt@CMapPtrToPtr@@IBEPAUCAssoc@1@PAXAAI@Z	NAFXCW	map_pp.obj
 0xffc5c	?GetValueAt@CMapPtrToPtr@@QBEPAXPAX@Z	NAFXCW	map_pp.obj
 0xffd21	?GetNextAssoc@CMapPtrToPtr@@QBEXAAPAU__POSITION@@AAPAX1@Z	NAFXCW	map_pp.obj
+0xffeb3	?GetAssocAt@CMapStringToOb@@IBEPAUCAssoc@1@PBDAAI@Z	NAFXCW	map_so.obj
+0xfff09	?Lookup@CMapStringToOb@@QBEHPBDAAPAVCObject@@@Z	NAFXCW	map_so.obj
 0xfffaf	?AfxDlgProc@@YGHPAUHWND__@@IIJ@Z	NAFXCW	dlgcore.obj
 0xfffef	?PreTranslateMessage@CDialog@@UAEHPAUtagMSG@@@Z	NAFXCW	dlgcore.obj
 0x10010d	??0CDialog@@QAE@XZ	NAFXCW	dlgcore.obj
@@ -933,6 +944,7 @@ rva	name	library	member
 0x1018cb	?OnDrawItem@CWnd@@IAEXHPAUtagDRAWITEMSTRUCT@@@Z	NAFXCW	wincore.obj
 0x101908	?OnCompareItem@CWnd@@IAEHHPAUtagCOMPAREITEMSTRUCT@@@Z	NAFXCW	wincore.obj
 0x101932	?OnDeleteItem@CWnd@@IAEXHPAUtagDELETEITEMSTRUCT@@@Z	NAFXCW	wincore.obj
+0x101952	?OnCharToItem@CWnd@@IAEHIPAVCListBox@@I@Z	NAFXCW	wincore.obj
 0x10197d	?TrackPopupMenu@CMenu@@QAEHIHHPAVCWnd@@PBUtagRECT@@@Z	NAFXCW	wincore.obj
 0x1019d1	?_AfxFindPopupMenuFromID@@YGPAVCMenu@@PAV1@I@Z	NAFXCW	wincore.obj
 0x101a34	?OnMeasureItem@CWnd@@IAEXHPAUtagMEASUREITEMSTRUCT@@@Z	NAFXCW	wincore.obj
@@ -957,6 +969,7 @@ rva	name	library	member
 0x1025f6	?MessageBoxA@CWnd@@QAEHPBD0I@Z	NAFXCW	wincore.obj
 0x102628	?GetDescendantWindow@CWnd@@SGPAV1@PAUHWND__@@HH@Z	NAFXCW	wincore.obj
 0x1026a1	?SendMessageToDescendants@CWnd@@SGXPAUHWND__@@IIJHH@Z	NAFXCW	wincore.obj
+0x102723	?GetScrollRange@CWnd@@QBEXHPAH0@Z	NAFXCW	wincore.obj
 0x102753	?GetScrollPos@CWnd@@QBEHH@Z	NAFXCW	wincore.obj
 0x10277b	?SetScrollInfo@CWnd@@QAEHHPAUtagSCROLLINFO@@H@Z	NAFXCW	wincore.obj
 0x1027c8	?GetScrollInfo@CWnd@@QAEHHPAUtagSCROLLINFO@@I@Z	NAFXCW	wincore.obj
@@ -978,6 +991,7 @@ rva	name	library	member
 0x102f3c	?OnHelpInfo@CWnd@@IAEHPAUtagHELPINFO@@@Z	NAFXCW	wincore.obj
 0x102fa0	?OnDisplayChange@CWnd@@IAEJIJ@Z	NAFXCW	wincore.obj
 0x102fe9	?OnDragList@CWnd@@IAEJIJ@Z	NAFXCW	wincore.obj
+0x103013	?OnHScroll@CWnd@@IAEXIIPAVCScrollBar@@@Z	NAFXCW	wincore.obj
 0x103034	?OnEnterIdle@CWnd@@IAEXIPAV1@@Z	NAFXCW	wincore.obj
 0x10307e	?OnCtlColor@CWnd@@IAEPAUHBRUSH__@@PAVCDC@@PAV1@I@Z	NAFXCW	wincore.obj
 0x1030a5	?OnGrayCtlColor@CWnd@@QAEPAUHBRUSH__@@PAVCDC@@PAV1@I@Z	NAFXCW	wincore.obj
@@ -1192,6 +1206,7 @@ rva	name	library	member
 0x108094	?RestoreDC@CDC@@UAEHH@Z	NAFXCW	wingdi.obj
 0x1080d2	?SelectGdiObject@CDC@@KGPAVCGdiObject@@PAUHDC__@@PAX@Z	NAFXCW	wingdi.obj
 0x1080e9	?SelectStockObject@CDC@@UAEPAVCGdiObject@@H@Z	NAFXCW	wingdi.obj
+0x108125	?SelectObject@CDC@@QAEPAVCPen@@PAV2@@Z	NAFXCW	wingdi.obj
 0x10816b	?SetBkColor@CDC@@UAEKK@Z	NAFXCW	wingdi.obj
 0x10819a	?SetBkMode@CDC@@QAEHH@Z	NAFXCW	wingdi.obj
 0x1081c8	?SetROP2@CDC@@QAEHH@Z	NAFXCW	wingdi.obj
@@ -1217,12 +1232,16 @@ rva	name	library	member
 0x1086a3	?ClientToScreen@CWnd@@QBEXPAUtagRECT@@@Z	NAFXCW	wingdi.obj
 0x1086df	?LPtoDP@CDC@@QBEXPAUtagSIZE@@@Z	NAFXCW	wingdi.obj
 0x108748	?DPtoLP@CDC@@QBEXPAUtagSIZE@@@Z	NAFXCW	wingdi.obj
+0x1087b1	??0CClientDC@@QAE@PAVCWnd@@@Z	NAFXCW	wingdi.obj
 0x108823	??1CClientDC@@UAE@XZ	NAFXCW	wingdi.obj
 0x1088d7	??1CWindowDC@@UAE@XZ	NAFXCW	wingdi.obj
 0x108919	??0CPaintDC@@QAE@PAVCWnd@@@Z	NAFXCW	wingdi.obj
 0x10898b	??1CPaintDC@@UAE@XZ	NAFXCW	wingdi.obj
 0x1089d2	?afxMapHGDIOBJ@@YGPAVCHandleMap@@H@Z	NAFXCW	wingdi.obj
 0x108a44	?FromHandle@CGdiObject@@SGPAV1@PAX@Z	NAFXCW	wingdi.obj
+0x108a59	?Attach@CGdiObject@@QAEHPAX@Z	NAFXCW	wingdi.obj
+0x108a86	?Detach@CGdiObject@@QAEPAXXZ	NAFXCW	wingdi.obj
+0x108ab0	?DeleteObject@CGdiObject@@QAEHXZ	NAFXCW	wingdi.obj
 0x108ac6	??0CPen@@QAE@HHK@Z	NAFXCW	wingdi.obj
 0x108b16	??0CBrush@@QAE@K@Z	NAFXCW	wingdi.obj
 0x108b79	??0CArchive@@QAE@PAVCFile@@IHPAX@Z	NAFXCW	arccore.obj
@@ -1280,6 +1299,7 @@ rva	name	library	member
 0x10a6d7	?OnCloseDocument@CDocument@@UAEXXZ	NAFXCW	doccore.obj
 0x10a72f	?AddView@CDocument@@QAEXPAVCView@@@Z	NAFXCW	doccore.obj
 0x10a74f	?RemoveView@CDocument@@QAEXPAVCView@@@Z	NAFXCW	doccore.obj
+0x10a782	?GetNextItem@COleDocument@@UBEPAVCDocItem@@AAPAU__POSITION@@@Z	NAFXCW	oledoc1.obj
 0x10a796	?UpdateAllViews@CDocument@@QAEXPAVCView@@JPAVCObject@@@Z	NAFXCW	doccore.obj
 0x10a7d7	?OnCmdMsg@CDocument@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z	NAFXCW	doccore.obj
 0x10a81a	??0CView@@IAE@XZ	NAFXCW	viewcore.obj
@@ -1364,6 +1384,7 @@ rva	name	library	member
 0x10c745	?OnChildNotify@CStatusBar@@MAEHIIJPAJ@Z	NAFXCW	barstat.obj
 0x10c773	?OnPaint@CStatusBar@@IAEXXZ	NAFXCW	barstat.obj
 0x10c788	?OnSize@CStatusBar@@IAEXIHH@Z	NAFXCW	barstat.obj
+0x10c79f	?OnWindowPosChanging@CDockBar@@IAEXPAUtagWINDOWPOS@@@Z	NAFXCW	bardock.obj
 0x10c7bf	?OnSetText@CStatusBar@@IAEJIJ@Z	NAFXCW	barstat.obj
 0x10c7eb	?OnGetText@CStatusBar@@IAEJIJ@Z	NAFXCW	barstat.obj
 0x10c83f	?OnGetTextLength@CStatusBar@@IAEJIJ@Z	NAFXCW	barstat.obj
@@ -1400,6 +1421,7 @@ rva	name	library	member
 0x10dbd4	??1CControlBar@@UAE@XZ	NAFXCW	barcore.obj
 0x10dc59	?PostNcDestroy@CControlBar@@UAEXXZ	NAFXCW	barcore.obj
 0x10dc6b	?CalcFixedLayout@CControlBar@@UAE?AVCSize@@HH@Z	NAFXCW	barcore.obj
+0x10dc9d	?CalcDynamicLayout@CControlBar@@UAE?AVCSize@@HK@Z	NAFXCW	barcore.obj
 0x10dcd3	?ResetTimer@CControlBar@@QAEXII@Z	NAFXCW	barcore.obj
 0x10dd09	?OnTimer@CControlBar@@QAEXI@Z	NAFXCW	barcore.obj
 0x10de79	?SetStatusText@CControlBar@@UAEHH@Z	NAFXCW	barcore.obj
@@ -1503,6 +1525,7 @@ rva	name	library	member
 0x111132	?OnInitDialog@CNewTypeDlg@@MAEHXZ	NAFXCW	docmgr.obj
 0x111240	?OnOK@CNewTypeDlg@@MAEXXZ	NAFXCW	docmgr.obj
 0x111288	?AddDocTemplate@CDocManager@@UAEXPAVCDocTemplate@@@Z	NAFXCW	docmgr.obj
+0x1112f1	?GetNextDoc@CMultiDocTemplate@@UBEPAVCDocument@@AAPAU__POSITION@@@Z	NAFXCW	docmulti.obj
 0x111301	?SaveAllModified@CDocManager@@UAEHXZ	NAFXCW	docmgr.obj
 0x111320	?CloseAllDocuments@CDocManager@@UAEXH@Z	NAFXCW	docmgr.obj
 0x11133e	?DoPromptFileName@CDocManager@@UAEHAAVCString@@IKHPAVCDocTemplate@@@Z	NAFXCW	docmgr.obj
@@ -1610,6 +1633,7 @@ rva	name	library	member
 0x114428	?OnInitMenu@CFrameWnd@@IAEXPAVCMenu@@@Z	NAFXCW	winfrm.obj
 0x114446	?OnInitMenuPopup@CFrameWnd@@IAEXPAVCMenu@@IH@Z	NAFXCW	winfrm.obj
 0x1145c7	?OnMenuSelect@CFrameWnd@@IAEXIIPAUHMENU__@@@Z	NAFXCW	winfrm.obj
+0x1146d8	?GetMessageString@CFrameWnd@@UBEXIAAVCString@@@Z	NAFXCW	winfrm.obj
 0x11471c	?OnPopMessageString@CFrameWnd@@IAEJIJ@Z	NAFXCW	winfrm.obj
 0x11473f	?OnSetMessageString@CFrameWnd@@IAEJIJ@Z	NAFXCW	winfrm.obj
 0x11480a	?GetMessageBar@CFrameWnd@@UAEPAVCWnd@@XZ	NAFXCW	winfrm.obj
@@ -1878,6 +1902,7 @@ rva	name	library	member
 0x11c2ce	?OnClone@CEnumArray@@MAEPAV1@XZ	NAFXCW	oleenum.obj
 0x11c314	?AddRef@XEnumVOID@CEnumArray@@UAGKXZ	NAFXCW	oleenum.obj
 0x11c323	?Release@XEnumVOID@CEnumArray@@UAGKXZ	NAFXCW	oleenum.obj
+0x11c332	?QueryInterface@XEnumVOID@CEnumArray@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	oleenum.obj
 0x11c349	?Next@XEnumVOID@CEnumArray@@UAGJKPAXPAK@Z	NAFXCW	oleenum.obj
 0x11c3d1	?Skip@XEnumVOID@CEnumArray@@UAGJK@Z	NAFXCW	oleenum.obj
 0x11c42f	?Reset@XEnumVOID@CEnumArray@@UAGJXZ	NAFXCW	oleenum.obj

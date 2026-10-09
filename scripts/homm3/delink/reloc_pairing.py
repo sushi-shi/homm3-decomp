@@ -982,6 +982,19 @@ def proof_targets(bindings, defined: dict[int, Iterable[str]],
     return targets
 
 
+def runtime_alias_identities(path: Path | None = None) -> list[tuple[int, str, str, str, str]]:
+    """The other names of an identical-code library fold (an image census's
+    runtime-aliases.tsv): its own bytes name that address alone."""
+    from homm3.core import common
+    from homm3.core.tsv import read as read_tsv
+    path = path or common.HOMM3_DIR / _image_path("config/retail/runtime-aliases.tsv")
+    if not path.is_file():
+        return []
+    return [(int(row["rva"], 16), row["name"], "library",
+             f"identical-code fold of {row['library']} {row['member']}", "")
+            for row in read_tsv(path)[2]]
+
+
 def address_identities(model, state: State | None = None,
                        base_dir: Path | None = None) -> list[tuple[int, str, str, str, str]]:
     """Phase 2 (resolved model): proven extra names of retail code addresses.
@@ -1004,6 +1017,7 @@ def address_identities(model, state: State | None = None,
     for rva, names in sorted(defined.items()):
         for name in sorted(names):
             rows.append((rva, name, "library", "verified library section", ""))
+    rows.extend(runtime_alias_identities())
     from homm3.core.project import Project
     from homm3.delink import exception_identities
     rows.extend(exception_identities.address_identities(

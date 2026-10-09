@@ -46,6 +46,16 @@ def anonymous_namespaces(name: str) -> str:
     return ANONYMOUS_NAMESPACE.sub(replace, name)
 
 
+#: a virtual-call thunk named as a template argument: Clang qualifies it with
+#: its class (`??_9CDC@@$BCM@AE`), VC6 does not (`??_9@$BCM@AE`).
+VCALL_THUNK = re.compile(r"\?\?_9(?:[A-Za-z_]\w*@)+@\$B")
+
+
+def vcall_thunks(name: str) -> str:
+    """VC6's spelling of the virtual-call thunks a Clang name mentions."""
+    return VCALL_THUNK.sub("??_9@$B", name)
+
+
 def decorate(name: str) -> str:
     """The i386 COFF global prefix LLVM applies to a name it did not mangle."""
     return name if name.startswith("?") else "_" + name

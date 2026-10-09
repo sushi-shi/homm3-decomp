@@ -20,7 +20,7 @@ import tempfile
 import tomllib
 from typing import TypedDict
 
-from homm3.core import common, clang
+from homm3.core import common, clang, msvc_names
 from homm3 import manifest
 from homm3.core.images import path as _image_path
 
@@ -435,6 +435,10 @@ def _qualified(cursor, kinds) -> str:
 
 def declaration_name(cursor) -> str:
     """Use the source destructor variant, not libclang's vbase closure name."""
+    return msvc_names.vcall_thunks(_declaration_name(cursor))
+
+
+def _declaration_name(cursor) -> str:
     from clang import cindex
     if cursor.kind != cindex.CursorKind.DESTRUCTOR:
         return cursor.mangled_name
@@ -622,6 +626,11 @@ def resolve_instances(definitions, requests, unit, root, args):
         index, offset = expected[cursor.spelling]
         d = definitions[index]
         targets = references(cursor)
+        if d.instance.rpartition('::')[2].startswith('~'):
+            # A template argument may itself name a member function (a
+            # pointer-to-member parameter); the probe selects the destructor.
+            targets = {key: ref for key, ref in targets.items()
+                       if ref.kind == kinds.DESTRUCTOR}
         if len(targets) != 1:
             errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: selector {d.instance!r} does not identify one member')
             continue

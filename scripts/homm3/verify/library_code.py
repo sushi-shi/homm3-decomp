@@ -30,12 +30,14 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from homm3.core.paths import BUILD, RETAIL
+from homm3.core.paths import BUILD, RETAIL, SHARED_BUILD
 from homm3.core.tsv import read as read_tsv
 
 INVENTORY = RETAIL / 'runtime-contributions.tsv'
 ZLIB_MAP = RETAIL / 'zlib-map.tsv'
 RUNTIME_LIBRARIES = ('LIBCMT.LIB', 'LIBCPMT.LIB')
+MFC_LIBRARY = 'NAFXCW.LIB'
+
 #: Platform SDK libraries of pure data: GUID definitions pulled in by the
 #: game's DirectPlay references (`GUID_NULL` from UUID.LIB, the DirectPlay
 #: identifiers from DXGUID.LIB's COMDATs).
@@ -287,6 +289,11 @@ def load_libraries(toolchain: Path | None = None, vendor_dir: Path | None = None
     for name, members in archives.items():
         if None in members:
             raise ValueError(f'{name}: duplicate member basenames')
+    # The editors link the staged SP3 MFC overlay's NAFXCW members.
+    mfc = SHARED_BUILD / 'mfc-sp3/lib/nafxcw.lib'
+    if mfc.is_file():
+        archives[MFC_LIBRARY] = {member: obj for member, obj in archive(mfc)[0].items()
+                                 if member is not None}
     vendor = {'zlib': {f'{u}.obj': CoffObject((Path(vendor_dir or BUILD / 'objdiff/base')
                                                 / f'{u}.obj').read_bytes())
                        for u in sorted(set(zlib_units))}}

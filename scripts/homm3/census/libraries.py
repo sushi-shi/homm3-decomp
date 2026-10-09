@@ -26,6 +26,13 @@ to the next external label (`_memcpy` past its interior `TrailUpVec`,
 The rows become the image's runtime-map.tsv (rva, name, library, member):
 named, not matched, and excluded from the scores like the game's runtime
 code.
+
+Several MFC members can name one address when /OPT:ICF folded identical
+library bodies (`CGdiObject::DeleteObject`, `CDC::DeleteDC` and
+`CMenu::DestroyMenu`). When every such member matched that address alone
+(step 1), the first name in sort order names it and the others become the
+image's runtime-aliases.tsv rows: the comparison treats a call to any of
+them as a call to the named function.
 """
 from __future__ import annotations
 
@@ -40,6 +47,9 @@ VOLATILE = re.compile(r"^_?\$E[0-9]+$")
 REL32 = 20
 DIR32 = 6
 EXTERNAL = 2
+#: The library whose identical-code folds the census names: the C++
+#: runtime's template bodies are the project units' to place.
+FOLDED_LIBRARY = "NAFXCW"
 #: A class's primary vtable symbol.
 VTABLE = re.compile(r"^\?\?_7(\w+)@@6B@$")
 
@@ -96,9 +106,12 @@ def archive_functions(path: Path):
 
 def derive(image, functions: dict[int, int], archives: dict[str, Path], log=print,
            imports: dict[str, int] | None = None,
-           vtables: dict[str, int] | None = None):
+           vtables: dict[str, int] | None = None,
+           aliases: list | None = None):
     """`imports` maps each `__imp_` symbol to its IAT slot rva; `vtables`
-    maps each RTTI-named class to its primary vtable's rva."""
+    maps each RTTI-named class to its primary vtable's rva. `aliases`, when
+    given, receives (rva, name, library, member) for the other members of
+    an identical-code fold."""
     imports = imports or {}
     vtables = vtables or {}
     by_size = defaultdict(list)
@@ -192,13 +205,50 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
             if len({n for n, _l, _m in kept}) == 1:
                 hits[rva] = kept
 
-    rows, ambiguous = [], 0
+    # Identical-code folds: every member's own masked bytes name this
+    # address and no other, and every member's relocated fields agree with
+    # it (callees named by the runtime map or by an earlier fold).
+    claimed = defaultdict(set)
+    for rva, names in hits.items():
+        for name, _library, _member in names:
+            claimed[name].add(rva)
+    candidates = {rva: names for rva, names in hits.items()
+                  if aliases is not None and rva >= band
+                  and len({n for n, _l, _m in names}) > 1
+                  and all(library == FOLDED_LIBRARY for _n, library, _m in names)
+                  and all((rva, n) in hit_relocs and claimed[n] == {rva}
+                          for n, _l, _m in names)}
+    folds = set()
+    changed = True
+    while changed:
+        changed = False
+        for rva, names in sorted(candidates.items()):
+            if rva in folds:
+                continue
+            if all(agrees(rva, hit_relocs[rva, n]) for n, _l, _m in names):
+                folds.add(rva)
+                for n, _l, _m in names:
+                    named_rvas[n].add(rva)
+                changed = True
+
+    rows, ambiguous, folded = [], 0, 0
     for rva, names in sorted(hits.items()):
         if len({n for n, _l, _m in names}) != 1:
-            ambiguous += 1
+            if rva not in folds:
+                ambiguous += 1
+                continue
+            ordered = sorted(names)
+            name, library, member = ordered[0]
+            rows.append((rva, name, library, member))
+            seen = {name}
+            for other in ordered[1:]:
+                if other[0] not in seen:
+                    seen.add(other[0])
+                    aliases.append((rva, *other))
+            folded += 1
             continue
         name, library, member = sorted(names)[0]
         rows.append((rva, name, library, member))
-    log(f"[libraries] {len(rows)} library functions named; {ambiguous} addresses "
-        "with competing names left unnamed")
+    log(f"[libraries] {len(rows)} library functions named ({folded} identical-code "
+        f"folds); {ambiguous} addresses with competing names left unnamed")
     return rows

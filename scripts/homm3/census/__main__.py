@@ -29,7 +29,9 @@ Reads the selected image's pinned executable and derives:
   runtime-map.tsv rva, name, library, member: statically linked library
                   functions named by unique masked identity with a member
                   of LIBCMT, LIBCPMT or the staged SP3 MFC NAFXCW
-                  (homm3.census.libraries); named, not matched.
+                  (homm3.census.libraries); named, not matched;
+  runtime-aliases.tsv rva, name, library, member: the other members of an
+                  identical-code fold the runtime map names once.
 
 Without --write it prints the counts. --write stores the tables under the
 image's config/retail/<image>/ (with an image-hash banner) and creates the
@@ -156,20 +158,30 @@ def derive(log=print):
     imports = {name: slot for slot, (name, _channel)
                in iat_slots(common.resolve_exe(), toolchain).items()}
     classes = {c: r for r, _n, c in vt if c and not c.startswith("??_7")}
+    aliases = []
     runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log,
-                               imports=imports, vtables=classes)
+                               imports=imports, vtables=classes, aliases=aliases)
     # reviewed names for identical library members the bytes cannot tell apart
     from homm3.core.tsv import read as read_tsv
     named = {r for r, _n, _l, _m in runtime}
     reviewed = paths.retail_dir() / "runtime-contributions.tsv"
     if reviewed.is_file():
         starts = {r for r, _s, _d in rows}
+        names_at = {r: n for r, n, _l, _m in runtime}
         for row in read_tsv(reviewed)[2]:
             rva = int(row["rva"], 16)
-            if row["kind"] == "code" and rva in starts and rva not in named:
-                runtime.append((rva, row["symbol"], row["library"].rsplit(".", 1)[0],
-                                row["member"]))
+            if row["kind"] != "code" or rva not in starts:
+                continue
+            library = row["library"].rsplit(".", 1)[0]
+            if rva not in names_at:
+                runtime.append((rva, row["symbol"], library, row["member"]))
+                names_at[rva] = row["symbol"]
+            elif names_at[rva] != row["symbol"]:
+                # another member of an identical-code fold the row's
+                # evidence reviews
+                aliases.append((rva, row["symbol"], library, row["member"]))
         runtime.sort()
+        aliases.sort()
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
         thunks += eh.cleanup_rows(census, {r for r, _k in thunks}, atexit)
@@ -190,6 +202,8 @@ def derive(log=print):
         "init-thunks.tsv": ("rva\tslot", [f"0x{r:x}\t{k}" for r, k in thunks]),
         "runtime-map.tsv": ("rva\tname\tlibrary\tmember",
                             [f"0x{r:x}\t{n}\t{lib}\t{m}" for r, n, lib, m in runtime]),
+        "runtime-aliases.tsv": ("rva\tname\tlibrary\tmember",
+                                [f"0x{r:x}\t{n}\t{lib}\t{m}" for r, n, lib, m in aliases]),
     }
 
 

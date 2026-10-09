@@ -802,6 +802,17 @@ class DefinitionScannerTest(unittest.TestCase):
         self.assertEqual(len(definitions), 1)
         self.assertEqual(definitions[0].mangled, '??1?$Owner@H@@QAE@XZ')
 
+    def test_destructor_instance_ignores_member_pointer_template_arguments(self):
+        definitions, errors, _ = self.scan_instance_fixture(
+            'struct Dc { virtual int set(int); };\n'
+            'template<class T, T (Dc::*pfn)(T)> struct Keep {\n'
+            ' // VA instance: Keep<int, &Dc::set>::~Keep\n'
+            ' VA(0x00401000, 3) ~Keep() {}\n'
+            '};\n')
+        self.assertEqual(errors, [])
+        self.assertEqual(len(definitions), 1)
+        self.assertEqual(definitions[0].mangled, '??1?$Keep@H$1??_9@$BA@AE@@QAE@XZ')
+
     def test_template_instance_cannot_borrow_another_physical_definition(self):
         for selector, extra in (
                 ('Bits<144>::other', ''),
