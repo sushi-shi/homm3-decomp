@@ -157,7 +157,7 @@ GameMap	??0TTimedEvent@@QAE@ABV0@@Z	78.3750	78.3750	78.3750	0x17008	-
 GameMap	??0TWriteFailure@TRawOStream@@QAE@H@Z	99.4444	99.4444	99.4444	0x24d1	-
 GameMap	??0_TBookkeeping@_TImpl@TGameMap@@QAE@ABU012@@Z	100.0000	100.0000	100.0000	0x37707	-
 GameMap	??0_TImpl@TGameMap@@QAE@ABV01@@Z	99.8809	99.8809	99.8809	0x3757f	-
-GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	92.6358	92.6358	92.6358	0x1f350	tokens1:3804b43191c9
+GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	92.6473	92.6473	92.6473	0x1f350	tokens1:3804b43191c9
 GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@W4TSize@1@_N@Z	85.0707	85.0707	85.0707	0x1f21d	tokens1:e44a59c0e9d4
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0x2a51c	tokens1:24283eca8797
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@W4TSize@2@@Z	100.0000	100.0000	100.0000	0x2a545	tokens1:c903595fa7af
@@ -883,7 +883,7 @@ MapSpecsPlayerSpecsPage	?OnFortressCheck@TMapSpecsPlayerSpecsPage@@IAEXXZ	100.00
 MapSpecsPlayerSpecsPage	?OnHasMainTownCheck@TMapSpecsPlayerSpecsPage@@IAEXXZ	100.0000	100.0000	100.0000	0x74051	tokens1:acf919e4fdee
 MapSpecsPlayerSpecsPage	?OnHumanPlayableCheck@TMapSpecsPlayerSpecsPage@@IAEXXZ	100.0000	100.0000	100.0000	0x741ea	tokens1:52341b735830
 MapSpecsPlayerSpecsPage	?OnInfernoCheck@TMapSpecsPlayerSpecsPage@@IAEXXZ	100.0000	100.0000	100.0000	0x72f82	tokens1:2d7765b006ea
-MapSpecsPlayerSpecsPage	?OnInitDialog@TMapSpecsPlayerSpecsPage@@UAEHXZ	99.9836	99.9836	99.9836	0x73bbc	tokens1:3a07e21013c7
+MapSpecsPlayerSpecsPage	?OnInitDialog@TMapSpecsPlayerSpecsPage@@UAEHXZ	100.0000	100.0000	100.0000	0x73bbc	tokens1:3a07e21013c7
 MapSpecsPlayerSpecsPage	?OnNecropolisCheck@TMapSpecsPlayerSpecsPage@@IAEXXZ	100.0000	100.0000	100.0000	0x72f8a	tokens1:42dbb6f63b28
 MapSpecsPlayerSpecsPage	?OnOK@TMapSpecsPlayerSpecsPage@@UAEXXZ	99.8571	99.8571	99.8571	0x73fa0	tokens1:5b899419a608
 MapSpecsPlayerSpecsPage	?OnRampartCheck@TMapSpecsPlayerSpecsPage@@IAEXXZ	100.0000	100.0000	100.0000	0x72f72	tokens1:a21eb08c2f91
