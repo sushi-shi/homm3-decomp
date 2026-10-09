@@ -35,6 +35,8 @@ rva	size	kind	name	unit	evidence
 0x00003680	0x3	func	?Serialize@CObject@@UAEXAAVCArchive@@@Z	DIBSection	vtable ??_7CBitmap@@6B@ stored by ??0T16bppDIBSection@@QAE@XZ slot 2; ICF-folded with 1 identical bodies
 0x00004520	0xe	func	?free@?$TBitmap@GK@@UAEXPAG@Z	DIBSection	vtable ??_7?$TBitmap@GK@@6B@ stored by ??1T16bppDIBSection@@UAE@XZ slot 3
 0x00004bb0	0x11a	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	Campaign	masked body (282 bytes, 12 relocations) unique at a census start
+0x00004cd0	0xd	func	?BeginModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable ??_7CComboBox@@6B@ stored by ??0TCampaignPropsDlg@@QAE@PAVCWnd@@PAVTCampaignDoc@@@Z slot 34
+0x00004ce0	0xd	func	?EndModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable ??_7CComboBox@@6B@ stored by ??0TCampaignPropsDlg@@QAE@PAVCWnd@@PAVTCampaignDoc@@@Z slot 35
 0x000053b0	0x15	func	??1TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE@XZ	Campaign	masked body (21 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x00005440	0xf	func	?accept@TScenarioBonusPrimarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000054a0	0xf	func	?accept@TScenarioBonusSecondarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -146,6 +148,7 @@ rva	size	kind	name	unit	evidence
 0x00010ed0	0x55	func	??1TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	masked body (85 bytes, 7 relocations) unique at a census start
 0x00011ae0	0x17	func	??0TAllocationFailure@@QAE@XZ	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x25
 0x00011b00	0x12	func	??0TScenarioHeroBonus@@QAE@H@Z	CampaignDoc	masked body (18 bytes, 1 relocations) unique at a census start
+0x000150a0	0x4c	func	??1TNewCampaignDlg@@UAE@XZ	CampaignDoc	masked body (76 bytes, 6 relocations) unique at a census start
 0x000152e0	0x10	func	??0ios_base@std@@IAE@XZ	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x2f
 0x000156c0	0x18	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV?$allocator@D@1@@Z	Player	masked body (24 bytes, 0 relocations) unique at a census start
 0x00015860	0xb	func	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	resourcemanager	referenced by ??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ at +0xe
@@ -159,6 +162,8 @@ rva	size	kind	name	unit	evidence
 0x00015b20	0x27	func	?seekoff@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	resourcemanager	masked body (39 bytes, 1 relocations) unique at a census start
 0x00015b50	0x27	func	?seekpos@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@V32@H@Z	resourcemanager	masked body (39 bytes, 1 relocations) unique at a census start
 0x00015b80	0x5	func	?setbuf@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEPAV12@PADH@Z	resourcemanager	vtable ??_7?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@6B@ stored by ?reportMissingResource@@YAXPBD00@Z slot 10
+0x00015b90	0x4	func	?IsModified@CDocument@@UAEHXZ	CampaignDoc	vtable ??_7TCampaignDoc@@6B@ stored by ??0TCampaignDoc@@IAE@XZ slot 22
+0x00015ba0	0xa	func	?SetModifiedFlag@CDocument@@UAEXH@Z	CampaignDoc	vtable ??_7TCampaignDoc@@6B@ stored by ??0TCampaignDoc@@IAE@XZ slot 23
 0x00015bd0	0x13	func	?size@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QBEIXZ	Campaign	masked body (19 bytes, 0 relocations) unique at a census start
 0x00015c20	0x10	func	??1?$TAutoArrayPtr@D@@QAE@XZ	resourcemanager	masked body (16 bytes, 1 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x00015cc0	0x2f	func	??_G?$basic_ostream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	resourcemanager	masked body (47 bytes, 3 relocations) unique at a census start
@@ -172,6 +177,7 @@ rva	size	kind	name	unit	evidence
 0x0001b6c0	0x16e	func	?initializeCampaignMovieTraitsTable@@YAEXZ	campaignmovie	masked body (366 bytes, 18 relocations) unique at a census start
 0x0001b880	0x16e	func	?initializeCampaignMusicTable@@YAEXZ	campaignmusic	masked body (366 bytes, 18 relocations) unique at a census start
 0x0001b9f0	0x16	func	__h3cg$campaignmusic$static_dtor$campaignMusicTracks	campaignmusic	referenced by ?initializeCampaignMusicTable@@YAEXZ at +0x9a
+0x0001bb90	0x111	func	??1TCampaignPropsDlg@@UAE@XZ	CampaignPropsDlg	masked body (273 bytes, 13 relocations) unique at a census start
 0x0001ca80	0x1ad	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	masked body (429 bytes, 14 relocations) unique at a census start
 0x0001cc30	0x31a	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	masked body (794 bytes, 52 relocations) unique at a census start
 0x0001d060	0x28	func	??0T16bppDIBSection@@QAE@XZ	DIBSection	masked body (40 bytes, 3 relocations) unique at a census start
@@ -451,6 +457,7 @@ rva	size	kind	name	unit	evidence
 0x000b16b8	0x328	data	?g_campaignMovieTraitsImp@@3PAUTCampaignMovieTraits@@A	campaignmovie	referenced by ?initializeCampaignMovieTraitsTable@@YAEXZ at +0xf0
 0x000b1f78	0xd	data	??_C@_0N@DHCD@CmpMovie?4txt?$AA@	campaignmovie	referenced by ?initializeCampaignMovieTraitsTable@@YAEXZ at +0x1d
 0x000b1f88	0x188	data	?g_campaignMusicCues@@3PAUSCampaignMusicCue@@A	campaignmusic	referenced by ?initializeCampaignMusicTable@@YAEXZ at +0xf0
+0x000b2110	0x4	data	?g_campaignMusicTraits@@3PBUSCampaignMusicCue@@B	campaignmusic	referenced by ?OnInitDialog@TCampaignPropsDlg@@MAEHXZ at +0x25e
 0x000b2388	0xd	data	??_C@_0N@DAPP@CmpMusic?4txt?$AA@	campaignmusic	referenced by ?initializeCampaignMusicTable@@YAEXZ at +0x1d
 0x000b2488	0x43f8	data	?g_creatureTypeTraitsStorage@?A0xf10867bd5b3ccba5@@3PAUTCreatureTypeTraits@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x19
 0x000b75e4	0xd	data	??_C@_0N@LPEN@crtraits?4txt?$AA@	creaturetype	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0x2

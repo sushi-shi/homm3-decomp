@@ -7,6 +7,9 @@
 #include "gzinflatebuf.h"
 #include "editor/RawStream.h"
 #include "campaign_editor/Campaign.h"
+#include "campaign_editor/CampaignDoc.h"
+#include "campaign_editor/CampaignEditorText.h"
+#include "campaign_editor/NewCampaignDlg.h"
 
 namespace {
 
@@ -289,4 +292,130 @@ void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsStartingHero& o
     }
 }
 
+
+// What a campaign file holds: the campaign and the file version it was
+// written with.
+struct TLoadedCampaign {
+    auto_ptr<TCampaign> m_pCampaign;
+    int m_version;
+};
+
+void saveCampaign(const TCampaign& campaign, int version, CFile* pFile);
+TLoadedCampaign loadCampaign(CFile* pFile);
+
+}
+
+// The supported campaign file versions; the last is the one written.
+enum { kCurrentFileVersion = 6 };
+
+// A new campaign is made for this campaign map unless the new campaign
+// dialog chose another.
+enum { kDefaultNewCampaignType = 1 };
+
+DATA(0x00487ee0)
+IMPLEMENT_DYNAMIC(TCampaignDocLoadFailure, CException)
+
+DATA(0x00487ef8)
+IMPLEMENT_DYNAMIC(TCampaignDocInvalidFileVersion, TCampaignDocLoadFailure)
+
+VA(0x00414020, 0x57)
+IMPLEMENT_DYNCREATE(TCampaignDoc, CDocument)
+
+VA(0x00414090, 0x6)
+BEGIN_MESSAGE_MAP(TCampaignDoc, CDocument)
+    ON_COMMAND(ID_FILE_REFRESH_SCENARIO_MAPS, OnRefreshScenarioMaps)
+    ON_COMMAND(ID_FILE_EXPORT_SCENARIO_MAPS, OnExportScenarioMaps)
+    ON_COMMAND(ID_FILE_EXPORT_TEXT, OnExportText)
+    ON_COMMAND(ID_FILE_IMPORT_TEXT, OnImportText)
+END_MESSAGE_MAP()
+
+VA(0x004140a0, 0x2b)
+TCampaignDoc::TCampaignDoc()
+    : _m_bNewCampaign(false), _m_newVersion(eCampaignVersionShadowOfDeath), _m_newType(kDefaultNewCampaignType)
+{
+}
+
+VA(0x004140f0, 0x6a)
+TCampaignDoc::~TCampaignDoc()
+{
+}
+
+VA(0x00414160, 0x12f)
+BOOL TCampaignDoc::OnNewDocument()
+{
+    if (!CDocument::OnNewDocument())
+        return FALSE;
+    _m_pCampaign = auto_ptr<TCampaign>(new TCampaign(_m_newType));
+    if (_m_pCampaign.get() == NULL)
+        throw TAllocationFailure();
+    _m_version = _m_newVersion;
+    _m_newVersion = eCampaignVersionShadowOfDeath;
+    _m_newType = kDefaultNewCampaignType;
+    return TRUE;
+}
+
+VA(0x00414290, 0xfc)
+void TCampaignDoc::Serialize(CArchive& ar)
+{
+    if (ar.IsStoring()) {
+        saveCampaign(*_m_pCampaign, _m_version, ar.GetFile());
+    } else {
+        TLoadedCampaign loaded = loadCampaign(ar.GetFile());
+        _m_pCampaign = loaded.m_pCampaign;
+        _m_version = loaded.m_version;
+    }
+}
+
+VA(0x00414a50, 0xa)
+void TCampaignDoc::setVersion(int newVersion)
+{
+    _m_version = newVersion;
+}
+
+VA(0x00414a60, 0x7d)
+void TCampaignDoc::DeleteContents()
+{
+    _m_pCampaign = auto_ptr<TCampaign>();
+    CDocument::DeleteContents();
+}
+
+VA(0x00414ae0, 0x13)
+BOOL TCampaignDoc::OnOpenDocument(LPCTSTR lpszPathName)
+{
+    if (!CDocument::OnOpenDocument(lpszPathName))
+        return FALSE;
+    return TRUE;
+}
+
+VA(0x00414b00, 0xda)
+void TCampaignDoc::ReportSaveLoadException(LPCTSTR lpszPathName, CException* e, BOOL bSaving, UINT nIDPDefault)
+{
+    CString prompt;
+    if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocInvalidFileVersion))) {
+        TCampaignDocInvalidFileVersion* pVersionFailure = static_cast<TCampaignDocInvalidFileVersion*>(e);
+        prompt.Format(kInvalidCampaignVersionFmtStr, pVersionFailure->m_currentVersion, pVersionFailure->m_fileVersion);
+        AfxMessageBox(prompt, MB_ICONEXCLAMATION);
+    } else if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocLoadFailure))) {
+        prompt = kInvalidCampaignFileStr;
+        AfxMessageBox(prompt, MB_ICONEXCLAMATION);
+    } else {
+        CDocument::ReportSaveLoadException(lpszPathName, e, bSaving, nIDPDefault);
+    }
+}
+
+VA(0x00414f70, 0x122)
+BOOL TCampaignDoc::SaveModified()
+{
+    bool bNewCampaign = _m_bNewCampaign;
+    _m_bNewCampaign = false;
+    if (!CDocument::SaveModified())
+        return FALSE;
+    if (bNewCampaign) {
+        TNewCampaignDlg dlg(AfxGetMainWnd(), eCampaignVersionShadowOfDeath, kDefaultNewCampaignType);
+        if (dlg.DoModal() != IDOK)
+            return FALSE;
+        _m_newVersion = dlg.getVersion();
+        _m_newType = dlg.getType();
+    }
+    return TRUE;
 }

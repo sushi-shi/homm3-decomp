@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "campaignmap.h"
 #include "editor/RefCountingPtr.h"
 
 class TRawIStream;
@@ -381,6 +382,9 @@ public:
     class TImportTextFailure : public exception {
     };
 
+    // The properties dialog's edit limits.
+    enum { s_kMaxNameLen = 60, s_kMaxDescriptionLen = 300 };
+
     explicit TCampaign(int type);
     TCampaign(const TCampaign& other);
     ~TCampaign();
@@ -397,6 +401,7 @@ public:
     void setScenarioStartingOptions(int scenario, std::auto_ptr<TScenarioStartingOptions> pOptions);
     TScenario& getScenario(int scenario);
     int getType() const;
+    const TCampaignMapTraits& getMapTraits() const { return g_campaignMapTraits[getType()]; }
     const std::string& getName() const;
     const std::string& getDescription() const;
     bool getBDifficultyChoice() const;

@@ -212,16 +212,30 @@ Campaign	?visit@TScenarioStartingOptionsEquivalencyTester@?%C:\Dev\Heroes 3 Exp 
 Campaign	?visit@TScenarioStartingOptionsEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x5580	tokens1:7e4de247869a
 Campaign	?visit@TScenarioStartingOptionsEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsStartingHero@@@Z	100.0000	100.0000	100.0000	0x55c0	tokens1:0d6c2ec780f0
 Campaign	?write@TScenarioCrossover@@QBEXAAVTRawOStream@@H@Z	60.7733	60.7733	60.7733	0x8250	tokens1:63c1308cf497
+CampaignDoc	??0TCampaignDoc@@IAE@XZ	100.0000	100.0000	100.0000	0x140a0	tokens1:52a498024735
 CampaignDoc	??0TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAE@HV?$auto_ptr@D@std@@@Z	100.0000	100.0000	100.0000	0x10bd0	tokens1:27e28741d777
 CampaignDoc	??0TScenarioHeroBonus@@QAE@H@Z	100.0000	100.0000	100.0000	0x11b00	-
+CampaignDoc	??1TCampaignDoc@@UAE@XZ	100.0000	100.0000	100.0000	0x140f0	tokens1:b7eb3681ac79
 CampaignDoc	??1TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	100.0000	100.0000	100.0000	0x10c10	tokens1:31e1b77d9a39
+CampaignDoc	??1TNewCampaignDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x150a0	-
 CampaignDoc	??1TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	100.0000	100.0000	100.0000	0x10ed0	tokens1:74757bf5e35b
 CampaignDoc	??1TStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	-	100.0000	100.0000	0x10e80	tokens1:f61c817bd697
 CampaignDoc	??5TRawIStream@@QAEAAV0@AAC@Z	100.0000	100.0000	100.0000	0x16dd0	-
 CampaignDoc	??5TRawIStream@@QAEAAV0@AAF@Z	100.0000	100.0000	100.0000	0x24db0	-
 CampaignDoc	??_ETStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WFE@AEPAXI@Z	97.5000	97.5000	97.5000	0x16e80	-
+CampaignDoc	?CreateObject@TCampaignDoc@@SGPAVCObject@@XZ	100.0000	100.0000	100.0000	0x14020	tokens1:99cecd69f848
+CampaignDoc	?DeleteContents@TCampaignDoc@@UAEXXZ	99.8864	99.8864	99.8864	0x14a60	tokens1:0a2f69d78660
+CampaignDoc	?GetMessageMap@TCampaignDoc@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x14090	tokens1:ff599d9991e0
+CampaignDoc	?IsModified@CDocument@@UAEHXZ	100.0000	100.0000	100.0000	0x15b90	-
+CampaignDoc	?OnNewDocument@TCampaignDoc@@UAEHXZ	87.2449	87.2449	87.2449	0x14160	tokens1:a78ddf216fa2
+CampaignDoc	?OnOpenDocument@TCampaignDoc@@UAEHPBD@Z	100.0000	100.0000	100.0000	0x14ae0	tokens1:bd83f349d792
+CampaignDoc	?ReportSaveLoadException@TCampaignDoc@@UAEXPBDPAVCException@@HI@Z	97.5797	97.5797	97.5942	0x14b00	tokens1:d7939f582cf2
+CampaignDoc	?SaveModified@TCampaignDoc@@UAEHXZ	100.0000	100.0000	100.0000	0x14f70	tokens1:aac487523ccf
+CampaignDoc	?Serialize@TCampaignDoc@@UAEXAAVCArchive@@@Z	99.8809	99.8809	99.8809	0x14290	tokens1:880e5279953f
+CampaignDoc	?SetModifiedFlag@CDocument@@UAEXH@Z	100.0000	100.0000	100.0000	0x15ba0	-
 CampaignDoc	?createInflateBuf@TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QBE?AV?$auto_ptr@V?$basic_streambuf@DU?$char_traits@D@std@@@std@@@std@@XZ	99.6812	99.6812	99.6812	0x10d70	tokens1:7cfc63a0572c
 CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	29.2864	29.2864	29.2864	0x115a0	tokens1:deb7f43ae64a
+CampaignDoc	?setVersion@TCampaignDoc@@QAEXH@Z	100.0000	100.0000	100.0000	0x14a50	tokens1:0659db93c221
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	94.4032	94.4032	94.4032	0x11180	tokens1:d033e38cd802
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	97.1429	97.1429	97.1429	0x11100	tokens1:b123a7f0689a
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	95.3875	95.3875	95.3875	0x11010	tokens1:668eb293f27b
@@ -234,6 +248,16 @@ CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\Campai
 CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	83.5289	83.5289	83.5289	0x11c80	tokens1:609997297888
 CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsStartingHero@@@Z	83.5289	83.5289	83.5289	0x11da0	tokens1:c81cdc2c148c
 CampaignDoc	?write@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXABVTScenarioStartingBonus@@AAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x10f30	tokens1:6ffee2429f90
+CampaignPropsDlg	??0TCampaignPropsDlg@@QAE@PAVCWnd@@PAVTCampaignDoc@@@Z	100.0000	100.0000	100.0000	0x1ba40	tokens1:f13c6e82a137
+CampaignPropsDlg	??1TCampaignPropsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1bb90	-
+CampaignPropsDlg	?BeginModalState@CWnd@@UAEXXZ	100.0000	100.0000	100.0000	0x4cd0	-
+CampaignPropsDlg	?DoDataExchange@TCampaignPropsDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1bcb0	tokens1:524b74b2d531
+CampaignPropsDlg	?DoModal@TCampaignPropsDlg@@UAEHXZ	100.0000	100.0000	100.0000	0x1bd80	tokens1:ea6350e977f1
+CampaignPropsDlg	?EndModalState@CWnd@@UAEXXZ	100.0000	100.0000	100.0000	0x4ce0	-
+CampaignPropsDlg	?GetMessageMap@TCampaignPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x1bd40	tokens1:5cc743db20de
+CampaignPropsDlg	?OnCreate@TCampaignPropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x1bd50	tokens1:4baf6b750042
+CampaignPropsDlg	?OnInitDialog@TCampaignPropsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x1be20	tokens1:79e83a6dcde4
+CampaignPropsDlg	?OnOK@TCampaignPropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x1c110	tokens1:4cd08d9c3910
 DIBSection	??0T16bppDIBSection@@QAE@II@Z	100.0000	100.0000	100.0000	0x1d090	-
 DIBSection	??0T16bppDIBSection@@QAE@XZ	100.0000	100.0000	100.0000	0x1d060	-
 DIBSection	??1T16bppDIBSection@@UAE@XZ	99.9057	99.9057	99.9057	0x1d140	-
@@ -248,6 +272,14 @@ DIBSection	?free@?$TBitmap@GK@@UAEXPAG@Z	100.0000	100.0000	100.0000	0x4520	-
 DIBSection	?free@T16bppDIBSection@@UAEXPAG@Z	99.0000	99.0000	99.0000	0x1d460	-
 MemoryDC	??0CGdiObject@@QAE@XZ	100.0000	100.0000	100.0000	0x293e0	-
 MemoryDC	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x293f0	-
+NewCampaignDlg	??0TNewCampaignDlg@@QAE@PAVCWnd@@HH@Z	100.0000	100.0000	100.0000	0x29470	tokens1:e3315cf39918
+NewCampaignDlg	?DoDataExchange@TNewCampaignDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x29510	tokens1:ad2237fd12f2
+NewCampaignDlg	?GetMessageMap@TNewCampaignDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x29540	tokens1:7a91975693b8
+NewCampaignDlg	?OnCreate@TNewCampaignDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x29550	tokens1:0dcdc57fd61c
+NewCampaignDlg	?OnDblclkMapList@TNewCampaignDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x29760	tokens1:3fca77e38d3d
+NewCampaignDlg	?OnInitDialog@TNewCampaignDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x29580	tokens1:ddefb35fdc96
+NewCampaignDlg	?OnOK@TNewCampaignDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x29710	tokens1:185a1efacf71
+NewCampaignDlg	?OnVersionRadio@TNewCampaignDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x29770	tokens1:aefc99075986
 Player	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x156c0	-
 Player	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	99.9219	99.9219	99.9219	0x18da0	-
 Player	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0x29c00	-

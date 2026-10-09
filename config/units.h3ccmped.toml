@@ -357,6 +357,11 @@ source = "src/campaign_editor/CampaignDoc.cpp"
 flags = "ccmped_o2_gr_windows"
 
 [[unit]]
+unit = "CampaignPropsDlg"
+source = "src/campaign_editor/CampaignPropsDlg.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
 unit = "NewCampaignDlg"
 source = "src/campaign_editor/NewCampaignDlg.cpp"
 flags = "ccmped_o2_gr_windows"
