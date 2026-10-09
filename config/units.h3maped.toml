@@ -460,3 +460,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "MapSpecsGeneralPage"
 source = "src/editor/MapSpecsGeneralPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapSpecsSpellsPage"
+source = "src/editor/MapSpecsSpellsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
