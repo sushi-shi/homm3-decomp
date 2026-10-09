@@ -2402,10 +2402,9 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
 // normalizes the target/callee result to zero or one. Keeping that operation
 // in a nested `return callee(...) != 0` gives 69.32%; its conditional-expression
 // equivalent gives 67.11%. All three source-family controls reproduced.
-// Sharing the selected spell-traits row across the two flag tests restores
-// its native address lifetime: 72.70% -> 73.55%. Nested and conditional
-// return variants remain worse when combined with that reference; the
-// canonical findSpellTarget call still expands more than retail.
+// DC records only attributes and base_row_is_odd as locals: both flag tests
+// index akSpellTraits[spellId] in place (96.60% with a shared traits
+// reference, 97.70% without; calls agree, one branch polarity remains).
 // Mac retains findSpellTarget, validSpellTargetArmy and getSpellWallHex in
 // the same order as this source. DC's ValidHex, InInvisibleColumn and GridY
 // audit leads are the lowercase canonical calls in the obstacle arms below.
@@ -2429,14 +2428,13 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
 {
     if (!validHex(targetIndex))
         return 0;
-    const TSpellTraits& traits = akSpellTraits[spellId];
-    if (traits.m_flags & 0x20070) {
+    if (akSpellTraits[spellId].m_flags & 0x20070) {
         army* target = findSpellTarget(spellId, castingSide, targetIndex,
                                          firstTarget, creatureSpell);
         return target && validSpellTargetArmy(spellId, castingSide, target,
                                               firstTarget, creatureSpell);
     }
-    if (traits.m_flags & 0x100) {
+    if (akSpellTraits[spellId].m_flags & 0x100) {
         if (m_cells[targetIndex].m_obstacleIndex >= 0) {
             switch (mastery) {
             case eMasteryNone:
