@@ -13,13 +13,13 @@ executables.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 98.86% matched (MAX)** — 4,523 / 4,785 functions exact (94.5%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 98.86% matched (MAX)** — 4,524 / 4,785 functions exact (94.5%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,520 |   98.86% | last measured score                            |
-| MAX   |           4,523 |   98.86% | best result for each function's current source |
-| HIST  |           4,547 |   99.06% | all-time peak across source revisions          |
+| CUR   |           4,521 |   98.86% | last measured score                            |
+| MAX   |           4,524 |   98.86% | best result for each function's current source |
+| HIST  |           4,548 |   99.06% | all-time peak across source revisions          |
 
 MAX by module:
 
@@ -27,7 +27,7 @@ MAX by module:
 | :----------- | ----: | ------------------: | --------: |
 | `game`       |   124 | 3799 / 3998 (95.0%) |    99.06% |
 | `rmg`        |     6 |   309 / 369 (83.7%) |    95.70% |
-| `network`    |     4 |   277 / 280 (98.9%) |    99.67% |
+| `network`    |     4 |   278 / 280 (99.3%) |    99.68% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
 | `codec`      |     4 |    43 / 43 (100.0%) |   100.00% |
 | `victor`     |     7 |    26 / 26 (100.0%) |   100.00% |

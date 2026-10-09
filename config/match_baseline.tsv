@@ -3118,7 +3118,7 @@ remote	?onEnter@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x154380	
 remote	?onEscape@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x1543c0	tokens1:b8c8c6ff6422
 remote	?onFunctionKey@CChatEdit@@UAEHVmessage@@H@Z	100.0000	100.0000	100.0000	0x154330	tokens1:92ba6ca6a8c1
 remote	?onKeyPress@CChatEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x154240	tokens1:1e0ca4ad3073
-remote	?onPlayerDropUpdateMsg@@YIXK@Z	98.6972	98.6972	98.7064	0x1565e0	tokens1:dba32f3f5337
+remote	?onPlayerDropUpdateMsg@@YIXK@Z	100.0000	100.0000	100.0000	0x1565e0	tokens1:a72964e50588
 remote	?pause@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157dd0	tokens1:9ab4e177b038
 remote	?pauseTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154050	tokens1:b221a7583654
 remote	?playerDropMsg@CChatManager@@QAAXPBDZZ	100.0000	100.0000	100.0000	0x153b60	tokens1:5bfaf5d2ff7a
