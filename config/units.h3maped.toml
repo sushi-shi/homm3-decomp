@@ -693,3 +693,13 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "TileVRuler"
 source = "src/editor/TileVRuler.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsGeneralPage"
+source = "src/editor/HeroPropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsSheet"
+source = "src/editor/HeroPropsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"

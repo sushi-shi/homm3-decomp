@@ -10,7 +10,7 @@
 #include "editor/MapEditorText.h"
 
 VA(0x0044f089, 0x11c)
-THeroPropsCreaturesPage::THeroPropsCreaturesPage(TParentSheet* pParentSheet, const THero* pOldHero,
+THeroPropsCreaturesPage::THeroPropsCreaturesPage(THeroPropsCreaturesPageParentSheet* pParentSheet, const THero* pOldHero,
                                                  THero* pNewHero, EGameVersion mapVersion, bool bRandomCreatures)
     : CPropertyPage(THeroPropsCreaturesPage::IDD),
       _m_pParentSheet(pParentSheet),

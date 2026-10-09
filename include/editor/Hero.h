@@ -258,7 +258,18 @@ public:
     virtual void exportText(std::ostream* pOStream, EGameVersion version) const;
 
     bool getBCustomName() const { return _m_bCustomName; }
+    void setBCustomName(bool bCustomName) { _m_bCustomName = bCustomName; }
     bool getBCustomPortrait() const { return _m_bCustomPortrait; }
+    void setBCustomPortrait(bool bCustomPortrait) { _m_bCustomPortrait = bCustomPortrait; }
+    bool getBCustomArtifacts() const { return _m_bCustomArtifacts; }
+    void setBCustomArtifacts(bool bCustomArtifacts) { _m_bCustomArtifacts = bCustomArtifacts; }
+    const THeroPrototype::TArtifactContainer& getArtifacts() const { return _m_artifacts; }
+    bool getBCustomExperience() const { return _m_bCustomExperience; }
+    void setBCustomExperience(bool bCustomExperience) { _m_bCustomExperience = bCustomExperience; }
+    int getExperience() const { return _m_experience; }
+    int getPatrolRadius() const { return _m_patrolRadius; }
+    void setPatrolRadius(int patrolRadius) { _m_patrolRadius = patrolRadius; }
+    int getSex() const { return _m_sex; }
     bool getBCustomSecondarySkills() const { return _m_bCustomSecondarySkills; }
     void setBCustomSecondarySkills(bool bCustomSecondarySkills) { _m_bCustomSecondarySkills = bCustomSecondarySkills; }
     bool getBCustomArmy() const { return _m_bCustomArmy; }

@@ -15,16 +15,16 @@
 
 class THero;
 
+// The sheet, told when its OK button may be pressed.
+class THeroPropsCreaturesPageParentSheet {
+public:
+    virtual void onEnableOK() = 0;
+    virtual void onDisableOK() = 0;
+};
+
 class THeroPropsCreaturesPage : public CPropertyPage, private TArmyDlgClient {
 public:
-    // The sheet, told when its OK button may be pressed.
-    class TParentSheet {
-    public:
-        virtual void onEnableOK() = 0;
-        virtual void onDisableOK() = 0;
-    };
-
-    THeroPropsCreaturesPage(TParentSheet* pParentSheet, const THero* pOldHero, THero* pNewHero,
+    THeroPropsCreaturesPage(THeroPropsCreaturesPageParentSheet* pParentSheet, const THero* pOldHero, THero* pNewHero,
                             EGameVersion mapVersion, bool bRandomCreatures);
     virtual ~THeroPropsCreaturesPage();
 
@@ -47,7 +47,7 @@ protected:
 private:
     virtual void onNumOccupiedStacksChanged(unsigned int newNum, unsigned int oldNum);
 
-    TParentSheet* _m_pParentSheet;
+    THeroPropsCreaturesPageParentSheet* _m_pParentSheet;
     const THero* _m_pOldHero;
     THero* _m_pNewHero;
     bool _m_bModified;
