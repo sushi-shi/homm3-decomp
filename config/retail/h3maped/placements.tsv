@@ -3,7 +3,7 @@
 # census, manifest or shared-source change.
 # generator: homm3.census.placements
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-09
+# date: 2026-10-10
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	kind	name	unit	evidence
 0x00001682	0x1c	func	?count@?$bitset@$09@std@@QBEIXZ	objecttype	masked body (28 bytes, 1 relocations) unique at a census start; ICF-folded with 1 identical bodies
