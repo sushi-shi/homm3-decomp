@@ -1862,13 +1862,18 @@ def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:
     """VC6's emitted spelling of a clang-typed DATA declaration, or None.
 
     Clang hashes an anonymous namespace (`?A0x<hash>@`) where VC6 embeds the
-    declaring file (`?%<path><n>@`), and the two number a function-local
-    static's lexical scope differently (`?1??` versus `?BC@??`). Everything
+    declaring file (`?%<path><n>@`), the two number a function-local
+    static's lexical scope differently (`?1??` versus `?BC@??`), and VC6
+    gives a reference to a const object the const storage class. Everything
     else must agree exactly, an anonymous scope must come from the owning
     unit's own source file, and exactly one emitted name may match.
     """
     if mangled in candidates:
         return mangled
+    # a reference to a const object: VC6 gives the variable the referent's
+    # const storage class (`?k@@3ABQBDB`), clang none (`...A`)
+    if re.search(r"@3AB.*A$", mangled) and mangled[:-1] + "B" in candidates:
+        return mangled[:-1] + "B"
     clang_anon = re.compile(r"\?A0x[0-9A-Fa-f]+@")
     if not (clang_anon.search(mangled) or msvc_names.LOCAL_STATIC_SCOPE.search(mangled)):
         return None

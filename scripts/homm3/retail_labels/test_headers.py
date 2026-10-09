@@ -294,6 +294,12 @@ class DataSpellingTest(unittest.TestCase):
         # Any other difference stays unbridged.
         self.assertIsNone(vc6_data_name(clang.replace("names", "other"), {vc6}, "herodefs"))
 
+    def test_a_reference_to_a_const_object_takes_the_const_storage_class(self):
+        from homm3.retail_labels.source import vc6_data_name
+        vc6 = "?kCaptionStr@SNewCampaignDlgText@@3ABQBDB"
+        self.assertEqual(vc6_data_name(vc6[:-1] + "A", {vc6}, "CampaignEditorText"), vc6)
+        self.assertIsNone(vc6_data_name("?g@@3HA", {"?g@@3HB"}, "CampaignEditorText"))
+
 
 if __name__ == '__main__':
     unittest.main()

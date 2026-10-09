@@ -396,10 +396,12 @@ _EMITTED: dict[str, set[str]] = {}
 def data_spelling(name: str, unit: str) -> str:
     """The owning object's emitted spelling of a clang-typed DATA name.
 
-    Clang and VC6 spell anonymous namespaces and local-static scopes
-    differently; `vc6_data_name` bridges only a unique, otherwise identical
-    emitted name of the declaring unit. Anything else keeps clang's name."""
-    if "?A0x" not in name and not msvc_names_scope(name):
+    Clang and VC6 spell anonymous namespaces, local-static scopes and the
+    storage class of a reference to a const object differently;
+    `vc6_data_name` bridges only a unique, otherwise identical emitted name
+    of the declaring unit. Anything else keeps clang's name."""
+    import re
+    if "?A0x" not in name and not msvc_names_scope(name) and not re.search(r"@3AB.*A$", name):
         return name
     if unit not in _EMITTED:
         from homm3.core.coff import Coff
