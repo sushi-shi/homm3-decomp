@@ -614,25 +614,28 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             mapTraits.m_regionTraits[regionIndex];
         ScenarioStruct* scenario = m_campaign->m_scenarios[regionIndex];
         if (scenario->hasMap()) {
-            // BOUND BY `const int&`: retail re-reads the scenario's colour
-            // at each of the three image-name subscripts.  88.3754 -> 89.0593.
-            const int& color = scenario->m_regionColor;
             if (g_game->m_campaign.m_mapScores[regionIndex].m_completed) {
                 widgets.push_back(new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
-                                region.m_conqueredImageName[color], 0x800));
+                                region.m_conqueredImageName[
+                                    scenario->m_regionColor],
+                                0x800));
                 m_scenarios[regionIndex].m_available = 0;
             }
             if (m_scenarios[regionIndex].m_available) {
                 widgets.push_back(new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_ENABLED_1_ID + regionIndex,
-                                region.m_enabledImageName[color], 0x800));
+                                region.m_enabledImageName[
+                                    scenario->m_regionColor],
+                                0x800));
                 widgets.push_back(new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_SELECTED_1_ID + regionIndex,
-                                region.m_selectedImageName[color], 0x800));
+                                region.m_selectedImageName[
+                                    scenario->m_regionColor],
+                                0x800));
             }
         } else {
             m_scenarios[regionIndex].m_available = 0;
