@@ -1748,7 +1748,7 @@ events	?monstersFight@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	
 events	?monstersFlee@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0	tokens1:03fb1495e96e
 events	?monstersGiveReward@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6b30	tokens1:60b7e83b8cba
 events	?monstersJoin@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000	tokens1:5a3d91531a51
-events	?monstersSellOut@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	tokens1:0439094c3a57
+events	?monstersSellOut@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	tokens1:0439094c3a57
 events	?payForArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@PBDFF_N@Z	100.0000	100.0000	100.0000	0x9ed50	tokens1:d63903e91f96
 events	?read@CCombatInitMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xad1f0	tokens1:b8c6d0c86fea
 events	?receiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHAAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	100.0000	100.0000	100.0000	0xaeee0	tokens1:79e9d94b9279

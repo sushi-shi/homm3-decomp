@@ -310,6 +310,11 @@ includes `rmg`.
   edit moves `aiEnterTown` 99.9565 -> 99.9304 (MAX held): in philai's
   frame its retail-closer class needs at least 4 more handles, which
   initializeGameData's window excludes.
+* 2026-10-09: Loki's `TObjectType::getImageNum` (objecttype.h, the map
+  editor's object sprite table) moves `monstersSellOut` 100 -> 99.9517
+  (MAX held). Measured after it: retail is k = 2..25 or 32..62, the
+  current state k = 0 (the edit cost the two handles from k = 62).
+  `onKillFocus` and initializeGameData stay exact.
 
 **For any function** whose CUR moves between commits that did not touch its
 TU, check with `homm3 vc6 compile-m` whether its assemblies are period-64
