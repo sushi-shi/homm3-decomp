@@ -37,14 +37,6 @@
 #include "university_window.h"
 #include "winmgr.h"
 
-// Complete sends the raw primary-skill bytes in DoCombat's level update;
-// getPrimarySkill would clamp them. This accessor is a provisional Windows
-// boundary carried from the target branch, with no known DC declaration.
-void hero::copyPrimarySkills(signed char* stats) const
-{
-    memcpy(stats, m_stats, sizeof(m_stats));
-}
-
 #if 0  // @carcass
 
 // E:\gamedcs\events.cpp:300
@@ -6300,10 +6292,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             && g_combatManager->m_winner == 1) {
             if (g_game->isLocalHuman(rightHero->m_owner)) {
                 rightHero->checkLevel();
-                signed char stats[kNumPrimarySkills];
-                rightHero->copyPrimarySkills(stats);
                 CHeroLevelUpdateMsg msg(rightHero->m_id, rightHero->m_skillCount,
-                                        rightHero->m_skillLevel, stats);
+                                        rightHero->m_skillLevel, rightHero->m_stats);
                 transmitRemoteData(&msg, g_netLocalGamePos, 0, 1);
             } else {
                 CLevelPickWaitDlg dlg2;
