@@ -169,7 +169,7 @@ rva	function_count	class
 0x1354d8	5	?$ctype@D@std
 0x1354f0	1	facet@locale@std
 0x1354f8	6	?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
-0x135518	9	?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+0x135518	10	?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
 0x135544	6	?$numpunct@D@std
 0x135560	8	TGameObject
 0x1355d4	52	TGarrisonPropsDlg
@@ -350,7 +350,7 @@ rva	function_count	class
 0x1387ec	60	THeroPrototypePropsSpellsPage
 0x138934	52	THolyGrailPropsDlg
 0x138bbc	5	??_7TMainFrame@@6BTStatusUI@TMapView@@@
-0x138bd4	23	??_7TMainFrame@@6BCFrameWnd@@@
+0x138bd4	61	??_7TMainFrame@@6BCFrameWnd@@@
 0x138ccc	5	TStatusUI@TMapView
 0x138ce4	3	TError@?$TGDIObjectSelector@VCFont@@
 0x138f04	35	TMapDocTemplate@?%C:\Dev\Heroes 3 Exp 2\Editor\Map Editor.cpp284242958
@@ -591,7 +591,7 @@ rva	function_count	class
 0x143764	6	TTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156
 0x143780	6	TNormalTerrainTypeTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156
 0x14379c	6	TRockTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TerrainPlacement.cpp1837512156
-0x1437dc	1	TTerrainToolkit
+0x1437dc	52	TTerrainToolkit
 0x143ae4	46	TTileHRuler
 0x143ba0	3	CFont
 0x143c1c	46	TTileVRuler
