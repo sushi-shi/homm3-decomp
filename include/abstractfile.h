@@ -81,11 +81,14 @@ inline int readValue(TAbstractFile* infile, T& value)
     return infile->read(&value, sizeof(value));
 }
 
+// The value readers call the stream directly. Mac type_quest::load/loadFromMap
+// (0x164178/0x1642ac) give each read one local, byte-reverse it straight into
+// the member and keep no copy slot; nesting the reference reader adds both.
 template <class T>
 inline T readValue(TAbstractFile* infile)
 {
     T value;
-    readValue(infile, value);
+    infile->read(&value, sizeof(value));
     return value;
 }
 
@@ -115,12 +118,13 @@ inline int readLittleEndianValue(TAbstractFile* infile, T& value)
 template <class T>
 inline T readLittleEndianValue(TAbstractFile* infile)
 {
-    T value = readValue<T>(infile);
+    T value;
+    infile->read(&value, sizeof(value));
 #if defined(__POWERPC__)
     if (sizeof(T) == sizeof(unsigned short))
-        value = static_cast<T>(__lhbrx(&value, 0));
+        return static_cast<T>(__lhbrx(&value, 0));
     else if (sizeof(T) == sizeof(unsigned long))
-        value = static_cast<T>(__lwbrx(&value, 0));
+        return static_cast<T>(__lwbrx(&value, 0));
 #endif
     return value;
 }
