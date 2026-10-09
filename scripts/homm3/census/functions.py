@@ -340,6 +340,24 @@ def rethrow_seeds(c, lone_targets, covered, ends):
             and covered[t] == covered.get(ends[t])]
 
 
+def table_seeds_after_calls(run_targets, covered, ends, sites, min_run=8):
+    """The code pointers in vtable-sized runs of code pointers that point to
+    the code right after a call inside the same decoded function: the call
+    never returns, so the pointer starts the next function. Short runs are
+    EH and SEH tables, whose handler addresses may follow calls."""
+    def run_length(s):
+        lo = s
+        while lo - 4 in sites:
+            lo -= 4
+        hi = s
+        while hi + 4 in sites:
+            hi += 4
+        return (hi - lo) // 4 + 1
+    return [(t, s) for t, s in run_targets
+            if t in covered and t in ends and covered.get(ends[t]) == covered[t]
+            and run_length(s) >= min_run]
+
+
 def run(image, log=print, catch_bodies=False):
     c = Census(image, catch_bodies=catch_bodies)
     pe = struct.unpack_from("<I", image.data, 0x3C)[0]
@@ -451,6 +469,10 @@ def run(image, log=print, catch_bodies=False):
     for t in sorted(c.imms):
         if t in covered and t in ends and c.in_text(t):
             take(t, "imm-after-call", check=False)
+    # a vtable or other table slot pointing past such a call is one too (a
+    # deleting destructor after its constructor's throw)
+    for t, s in table_seeds_after_calls(run_targets, covered, ends, sites):
+        take(t, f"table-after-call@0x{s:x}", check=False)
     index()
     for t in sorted(c.imms):
         work.append((t, "imm"))

@@ -30,5 +30,24 @@ class RethrowSeedsTest(unittest.TestCase):
         self.assertEqual(functions.rethrow_seeds(c, [(0x110a, 0x2000)], covered, {}), [])
 
 
+class TableSeedsAfterCallsTest(unittest.TestCase):
+    def test_vtable_slot_after_a_call_is_a_seed(self):
+        covered = {0x1005: 0x1000, 0x100a: 0x1000}
+        ends = {0x100a: 0x1005}
+        vtable = {0x3000 + 4 * i for i in range(10)}
+        self.assertEqual(functions.table_seeds_after_calls([(0x100a, 0x3000)], covered, ends, vtable),
+                         [(0x100a, 0x3000)])
+
+    def test_short_eh_table_slot_is_not(self):
+        covered = {0x1005: 0x1000, 0x100a: 0x1000}
+        ends = {0x100a: 0x1005}
+        scope = {0x3000, 0x3004}
+        self.assertEqual(functions.table_seeds_after_calls([(0x100a, 0x3000)], covered, ends, scope), [])
+
+    def test_slot_not_after_a_call_is_not(self):
+        covered = {0x100a: 0x1000}
+        self.assertEqual(functions.table_seeds_after_calls([(0x100a, 0x3000)], covered, {}, {0x3000}), [])
+
+
 if __name__ == '__main__':
     unittest.main()
