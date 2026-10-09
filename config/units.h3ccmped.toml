@@ -19,6 +19,13 @@
 #   prebuilt Libraries archive  /O2 /GR, the map editor's archive (the same
 #                               ResourceManager anonymous scope)
 #   zlib and Victor             the game's prebuilt objects, byte-identical
+#   GzBuf.cpp (gzinflatebuf)    /O2 /Ob2: retail expands _mustGetC and
+#                               zlibBytes in TGzInflateBuf's constructor and
+#                               underflow, as the game's /Ob2 build does
+#   zlib's API                  __fastcall, as the game's /Gr zlib objects
+#                               define it: the editors' __cdecl callers
+#                               reach @crc32@12 and @inflate@8, so their
+#                               profiles define ZEXPORT=__fastcall
 
 [build]
 compiler = "msvc6.0"
@@ -69,6 +76,20 @@ victor_kernels_o2_ogoff_ml_gd_windows = [
   "/D_WINDOWS",
 ]
 
+ccmped_o2_ob2_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Ob2",
+  "/Op",
+  "/MT",
+  "/GX",
+  "/GR",
+  "/DNDEBUG",
+  "/DZEXPORT=__fastcall",
+  "/D_WINDOWS",
+]
+
 ccmped_o2_gr_windows = [
   "/nologo",
   "/c",
@@ -78,6 +99,7 @@ ccmped_o2_gr_windows = [
   "/GX",
   "/GR",
   "/DNDEBUG",
+  "/DZEXPORT=__fastcall",
   "/D_WINDOWS",
 ]
 
@@ -89,6 +111,7 @@ libraries_o2_gr_windows = [
   "/MT",
   "/GX",
   "/GR",
+  "/DZEXPORT=__fastcall",
   "/D_WINDOWS",
 ]
 
@@ -286,7 +309,7 @@ flags = "libraries_o2_gr_windows"
 unit = "gzinflatebuf"
 module = "codec"
 source = "src/gzinflatebuf.cpp"
-flags = "ccmped_o2_gr_windows"
+flags = "ccmped_o2_ob2_gr_windows"
 
 [[unit]]
 unit = "campaignmap"

@@ -1,2 +1,8 @@
 # REVIEWED rows for the h3ccmped image; none admitted yet.
 rva	size	kind	library	member	section	symbol	evidence
+0x53270	208	code	LIBCMT.LIB	stricmp.obj	1	__strcmpi	stricmp.obj's __stricmp under its OLDNAMES spelling: the Libraries' LODFile::Find (0x449e40) calls strcmpi, which LINK binds to this body
+0x5316a	19	code	LIBCMT.LIB	fopen.obj	3	_fopen	fopen.obj and wfopen.obj assemble to the same 19 bytes and differ only in the opener they call; LODFile::open (0x44a080) calls _fopen here
+0x51b4f	47	code	LIBCMT.LIB	fread.obj	1	_fread	fread.obj and fwrite.obj assemble to the same 47 bytes; this one calls __fread_lk (0x451b7e), and LODFile::open and read (0x44a080, 0x44a270) call _fread here
+0x4f690	821	code	LIBCMT.LIB	memmove.obj	1	_memmove	memcpy.obj and memmove.obj assemble to the same 821 bytes; placed callers of _memmove reach this copy (runtime_error's copy constructor 0x401020, basic_string::erase 0x401a90)
+0x4c890	90	code	LIBCPMT.LIB	string.obj	3	?_Xlen@std@@YAXXZ	_Xlen and _Xran are the same 90 bytes but for their message; this one throws length_error with "string too long" (0x491590)
+0x4c978	90	code	LIBCPMT.LIB	string.obj	53	?_Xran@std@@YAXXZ	_Xran's copy: it throws out_of_range with "invalid string position" (0x4915a0)
