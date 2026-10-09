@@ -81,8 +81,17 @@ public:
     // One building's state: built, and disabled.
     class TBuildingState {
     public:
+        TBuildingState() : _m_bBuilt(false), _m_bDisabled(false) {}
+
         bool getBBuilt() const { return _m_bBuilt; }
         bool getBDisabled() const { return _m_bDisabled; }
+        void setBBuilt(bool bBuilt) { _m_bBuilt = bBuilt; }
+        void setBDisabled(bool bDisabled) { _m_bDisabled = bDisabled; }
+
+        bool operator==(const TBuildingState& other) const
+        {
+            return _m_bBuilt == other._m_bBuilt && _m_bDisabled == other._m_bDisabled;
+        }
 
     private:
         bool _m_bBuilt : 1;
@@ -112,6 +121,10 @@ public:
         const char* m_pName;
         const TBuildingTraits (&m_akBuildingTraits)[s_kNumBuildings];
         const TGeneratorTraits* const (&m_apGeneratorTraits)[s_kNumGeneratorTypes];
+
+        // Whether the town type's mage guild has the 0-based level
+        // (h3maped 0x4cb3c9).
+        bool hasMageGuildLevel(unsigned int level) const;
     };
 
     // h3maped 0x5a50d0: points at the rows (one per town type).
@@ -140,10 +153,21 @@ public:
 
     class TTimedEvent : public ::TTimedEvent {
     public:
+        // h3maped 0x4c22c1 and 0x4c323f.
+        TTimedEvent();
+        TTimedEvent& operator=(const TTimedEvent& other);
+
         void setBuildMask(const std::bitset<s_kNumBuildings>& newMask) { _m_buildMask = newMask; }
         void setGeneratorBonuses(const TGeneratorBonuses& newBonuses) { _m_generatorBonuses = newBonuses; }
         const std::bitset<s_kNumBuildings>& getBuildMask() const { return _m_buildMask; }
         const TGeneratorBonuses& getGeneratorBonuses() const { return _m_generatorBonuses; }
+
+        bool operator==(const TTimedEvent& other) const
+        {
+            return static_cast<const ::TTimedEvent&>(*this) == other && _m_buildMask == other._m_buildMask
+                   && _m_generatorBonuses == other._m_generatorBonuses;
+        }
+        bool operator!=(const TTimedEvent& other) const { return !(*this == other); }
 
     private:
         std::bitset<s_kNumBuildings> _m_buildMask;
@@ -158,6 +182,25 @@ public:
     const TTypeTraits& getTownTypeTraits() const { return s_akTypeTraits[getTownType()]; }
     const std::string& getName() const { return _m_name; }
     const TArmy& getGarrison() const { return _m_garrison; }
+    bool getBCustomGarrison() const { return _m_bCustomGarrison; }
+    bool getBCustomBuildings() const { return _m_bCustomBuildings; }
+    void setBCustomBuildings(bool bCustomBuildings) { _m_bCustomBuildings = bCustomBuildings; }
+    const TArray<TBuildingState, s_kNumBuildings>& getBuildingStates() const { return _m_aBuildingState; }
+    // h3maped 0x4c23d0.
+    void setBuildingStates(const TArray<TBuildingState, s_kNumBuildings>& newBuildingStates);
+    bool getBGroupedFormation() const { return _m_bGroupedFormation; }
+    void setBCustomGarrison(bool bCustomGarrison) { _m_bCustomGarrison = bCustomGarrison; }
+    void setBGroupedFormation(bool bGroupedFormation) { _m_bGroupedFormation = bGroupedFormation; }
+    // h3maped 0x4c23a4.
+    void setGarrison(const TArmy& newGarrison);
+    const std::bitset<kNumSpells>& getObligatorySpellsMask() const { return _m_obligatorySpellsMask; }
+    const std::bitset<kNumSpells>& getDisabledSpellsMask() const { return _m_disabledSpellsMask; }
+    // h3maped 0x4c23f3 and 0x4c2407.
+    void setObligatorySpellsMask(const std::bitset<kNumSpells>& newMask);
+    void setDisabledSpellsMask(const std::bitset<kNumSpells>& newMask);
+    const std::vector<TTimedEvent>& getTimedEvents() const { return _m_events; }
+    // h3maped 0x4c241b.
+    void setTimedEvents(const std::vector<TTimedEvent>& newTimedEvents);
     THero* getPVisitingHero() { return _m_pVisitingHero; }
     // Keeps a clone of the hero, or none (0x4c242d).
     void setVisitingHero(const THero* pHero);

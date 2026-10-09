@@ -545,3 +545,23 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "ArmyDlg"
 source = "src/editor/ArmyDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsGarrisonPage"
+source = "src/editor/TownPropsGarrisonPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsSpellsPage"
+source = "src/editor/TownPropsSpellsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsTimedEventsPage"
+source = "src/editor/TownPropsTimedEventsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsBuildingsPage"
+source = "src/editor/TownPropsBuildingsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"

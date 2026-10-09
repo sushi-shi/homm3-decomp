@@ -473,6 +473,7 @@ public:
     TPlayerInfo::TTownTypes getDefaultTownTypes(TPlayer player) const;
     const TLayer& getLayer(unsigned int num) const;
     const TLayer& getLayer(bool bSecondLayer) const;
+    TLayer& getLayer(bool bSecondLayer);
 
 private:
     friend class TLayer;
@@ -581,6 +582,11 @@ inline const TGameMap::TLayer& TGameMap::getLayer(unsigned int num) const
 }
 
 inline const TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer) const
+{
+    return *getPLayer(bSecondLayer ? 1U : 0U);
+}
+
+inline TGameMap::TLayer& TGameMap::getLayer(bool bSecondLayer)
 {
     return *getPLayer(bSecondLayer ? 1U : 0U);
 }
