@@ -83,8 +83,10 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
                     f"header VA(0x{rva + common.IMAGE_BASE:08x}) in {path.name}: "
                     f"no annotated active definition supplies its identity (FATAL)")
                 continue
-            emitters = {unit: mangled for unit in ir_maps
-                        if mangled is not None and mangled in authorities[unit]}
+            emitters = {unit: spelling for unit in ir_maps
+                        for spelling in [source.vc6_function_name(mangled, authorities[unit], unit)
+                                         if mangled is not None else None]
+                        if spelling is not None}
             carrier = policy.choose(rva, set(emitters), banked, anchors)
             if carrier not in emitters and rva not in policy.reviewed:
                 carrier = equivalent_emitter(mangled, set(emitters)) or carrier
@@ -98,7 +100,7 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
                                 f"comparison unit {carrier!r} is unavailable (FATAL)")
                 continue
             row['unit'] = carrier
-            row['joined'] = mangled
+            row['joined'] = emitters.get(carrier, mangled)
             row['channel'] = 'src-VA+base' if carrier in emitters else 'src-VA+ir'
             if carrier not in emitters:
                 problems.append(

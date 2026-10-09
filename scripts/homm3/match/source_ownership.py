@@ -534,9 +534,17 @@ def resolve_instances(definitions, requests, unit, root, args):
         constructor = re.fullmatch(
             r'([A-Za-z_][\w:<>, *&]*<[^()]+>(?:::[A-Za-z_]\w*)*)::([A-Za-z_]\w*)\(([^()]*)\)',
             d.instance)
+        # A function template instance. A return type and parameter list,
+        # `bool operator< <A, B>(const P<A>&, const P<B>&)`, pick it out of
+        # an overload set (another namespace's operator< templates) without
+        # instantiating the other candidates' parameter types.
         function = re.fullmatch(
+            r'(?:([A-Za-z_][\w:<>, *&]*?)\s+(?=(?:[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*|operator<)\s*<[\w:<>, *&]+>\())?'
             r'((?:[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*|operator<)\s*'
-            r'<[\w:<>, *&]+>)', d.instance)
+            r'<[\w:<>, *&]+>)(?:\(([^()]*)\))?', d.instance)
+        if function and (function.group(1) is None) != (function.group(3) is None):
+            errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: a function selector needs both its return type and parameters {d.instance!r}')
+            continue
         if constructor:
             owner, member, arguments = constructor.groups()
             plain = owner
@@ -568,6 +576,21 @@ def resolve_instances(definitions, requests, unit, root, args):
             probes.append(f'auto {name} = new {owner}({values});')
             expected[name] = (index, token_offset)
             continue
+        if function and function.group(3) is not None:
+            parameters, start, depth = [], 0, 0
+            for position, character in enumerate(function.group(3) + ','):
+                depth += (character == '<') - (character == '>')
+                if character == ',' and depth == 0:
+                    parameters.append(function.group(3)[start:position].strip())
+                    start = position + 1
+            if depth or any(not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', p)
+                            for p in parameters):
+                errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid function parameter types {d.instance!r}')
+                continue
+            probes.append(f'auto {name} = static_cast<{function.group(1)} (*)'
+                          f'({", ".join(parameters)})>(&{function.group(2)});')
+            expected[name] = (index, token_offset)
+            continue
         if function:
             probes.append(f'auto {name} = &{d.instance};')
             expected[name] = (index, token_offset)
@@ -575,7 +598,7 @@ def resolve_instances(definitions, requests, unit, root, args):
         owner, separator, member = d.instance.rpartition('::')
         if (not separator or '<' not in owner
                 or not re.fullmatch(r'[A-Za-z_][\w:<>, *&]*', owner)
-                or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\)|operator=)', member)):
+                or not re.fullmatch(r'(?:~?[A-Za-z_]\w*|operator\*|operator\(\)|operator[-+*/&|^]?=)', member)):
             errors.append(f'INSTANCE {d.file}:{d.line} {d.name}: invalid class-member selector {d.instance!r}')
             continue
         if member.startswith('~'):

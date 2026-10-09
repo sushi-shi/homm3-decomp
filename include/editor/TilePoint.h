@@ -4,7 +4,7 @@
 #ifndef HOMM3_EDITOR_TILEPOINT_H
 #define HOMM3_EDITOR_TILEPOINT_H
 
-#include "editor/Point.h"
+#include "Point.h"
 
 // The eight neighbour offsets, clockwise from north (0, -1). h3maped
 // constructs them at startup into .bss 0x5a5028 (eight 8-byte points):

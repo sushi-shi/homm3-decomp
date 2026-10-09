@@ -12,6 +12,7 @@
 #include "terrain_type.h"
 #include "progress_bar.h"
 #include "rmg_request.h"
+#include "Point.h"
 #include "terrainplacement.h"
 
 
@@ -213,7 +214,7 @@ class type_random_map_generator;
 struct TRmgTemplateZone;
 struct TRmgZone;
 struct TRmgTerrainTile;
-struct TPoint;
+struct TRmgPoint;
 struct TObjectType;
 struct TRmgObjectPropertiesRef;
 class type_object;
@@ -508,76 +509,59 @@ struct TRmgVector {
     }
 };
 
-// Retail's common direction table contains eight consecutive two-dword
-// offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
-// the absence of an atexit registration proves that destruction is trivial.
-// The comparator is independently used by the RMG set cluster.
-struct TPoint {
+// The random map generator's signed geometry point. Retail's RMG direction
+// table (cinit at 0x530da0) and the Voronoi code construct it by value,
+// which separates it from the TPoint<int> of the shared placement code
+// (Point.h), whose retained TPoint<unsigned int> constructor (0x5b76b0)
+// takes its coordinates by reference. The name is provisional. The absence
+// of an atexit registration proves that destruction is trivial. The
+// comparator is independently used by the RMG set cluster.
+struct TRmgPoint {
     int m_x;
     int m_y;
 
-    TPoint() {}
-    TPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
+    TRmgPoint() {}
+    TRmgPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
 
-    TPoint& operator+=(const TRmgVector& offset)
+    TRmgPoint& operator+=(const TRmgVector& offset)
     {
         m_x += offset.m_x;
         m_y += offset.m_y;
         return *this;
     }
-    bool operator==(const TPoint& other) const
+    bool operator==(const TRmgPoint& other) const
     {
         return m_x == other.m_x && m_y == other.m_y;
     }
-    bool operator!=(const TPoint& other) const
+    bool operator!=(const TRmgPoint& other) const
     {
         return !(*this == other);
     }
 
-    bool operator<(const TPoint& other) const
+    bool operator<(const TRmgPoint& other) const
     {
         return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
     }
-    // The retained 33-byte add at 0x4fa540 (rmg_support.cpp) is this
-    // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
-    // TPoint copy of a grid point with a tile direction. Declared last so
-    // the earlier member handles are unchanged.
-    // Coordinate accessors, used by the terrain painter's diagonal checks
-    // for the same site-count reason as the grid point's; declared after
-    // the data so the earlier member handles are unchanged. Adding them
-    // also returned rmg's quest-creature generate to 100% (include-set
-    // state, 99.73% before).
     int getX() const { return m_x; }
     int getY() const { return m_y; }
-    TPoint& operator+=(const TPoint& offset);
 };
 
-// The terrain painter expands this add while the line walker's object keeps
-// the retained body: a header inline definition.
-VA(0x004fa540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
-inline TPoint& TPoint::operator+=(const TPoint& offset)
-{
-    m_x += offset.m_x;
-    m_y += offset.m_y;
-    return *this;
-}
-
-// The native distance callers pass the position's XY subobject as a TPoint
+// The native distance callers pass the position's XY subobject as a TRmgPoint
 // value, without constructing another point. This shared base reproduces
 // that conversion; the retained Windows constructor keeps offsets 0/4/8
 // and the same twelve-byte position layout.
-struct TRmgMapPosition : TPoint {
+struct TRmgMapPosition : TRmgPoint {
     int m_z;
 
     TRmgMapPosition() {}
     TRmgMapPosition(int newX, int newY, int newZ);
 
-    TRmgMapPosition& operator+=(const TPoint& offset);
-    TRmgMapPosition& operator-=(const TPoint& offset);
+    TRmgMapPosition& operator+=(const TRmgPoint& offset);
+    TRmgMapPosition& operator-=(const TRmgPoint& offset);
 };
 
 // Native callers copy both operands before constructing the translated value.
-TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
+TRmgMapPosition operator+(TRmgMapPosition position, TRmgPoint offset);
 
 // Complete's zone-connection records are walked at a 0x1c-byte stride by
 // the connection pass.  The first pointer identifies the opposite template
@@ -725,15 +709,15 @@ inline TRmgVector TRmgVector::operator/(int divisor) const
 }
 
 VA(0x005FDD20, 0x20)
-inline TPoint operator+(TPoint point, TRmgVector offset)
+inline TRmgPoint operator+(TRmgPoint point, TRmgVector offset)
 {
-    return TPoint(point.m_x + offset.m_x, point.m_y + offset.m_y);
+    return TRmgPoint(point.m_x + offset.m_x, point.m_y + offset.m_y);
 }
 
 // The field-built result preserves all 32 retained bytes and improves the
 // carveBranchingPaths expansion without adding a second arithmetic helper.
 VA(0x005FDD40, 0x20)
-inline TRmgVector operator-(TPoint left, TPoint right)
+inline TRmgVector operator-(TRmgPoint left, TRmgPoint right)
 {
     return TRmgVector(left.m_x - right.m_x, left.m_y - right.m_y);
 }
@@ -742,81 +726,16 @@ inline TRmgVector operator-(TPoint left, TPoint right)
 // retained integer predicates. Aggregate-by-value arguments occupy the
 // stack under /Gr: orientation 0x5fdae0 returns with ret 0x18, distance
 // 0x5fdb10 with ret 0x10. Names describe the proven geometry operations.
-int getRmgPointOrientation(TPoint first, TPoint second, TPoint third);
+int getRmgPointOrientation(TRmgPoint first, TRmgPoint second, TRmgPoint third);
 // carveBranchingPaths expands the distance; addSite keeps its call.
 VA(0x005FDB10, 0x21)
 MAC_ADDRESS(0x25c3b4, 0x38) // anchor-callee addSite; Complete-only, ret 0x10
-inline int getRmgSquaredDistance(TPoint first, TPoint second)
+inline int getRmgSquaredDistance(TRmgPoint first, TRmgPoint second)
 {
     int dy = first.m_y - second.m_y;
     int dx = first.m_x - second.m_x;
     return dx * dx + dy * dy;
 }
-
-// The map-painting grid uses unsigned coordinates: the terrain set's lower
-// bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
-// at 0x5b76b0 reads both arguments through pointers. This role name is
-// provisional; the signed geometry TPoint is a separate recovered surface.
-// Those const-reference coordinates and the free comparator's position among
-// the retail template bodies support a generic coordinate owner. Its unsigned
-// specialization keeps both retained constructors exact and emits the comparator
-// after tree insertion, preserving the latter's lock exception frame. This is
-// a Complete/x86 source hypothesis, not a Dreamcast-proven original type name.
-template<class Coordinate> struct TRmgCoordinatePoint {
-    Coordinate m_x;
-    Coordinate m_y;
-
-    TRmgCoordinatePoint() {}
-
-    // The four late point constructions in RepairTerrainPoint pass x and y by
-    // reference. The retained two-store body is 24 bytes including ret 8.
-    // VA instance: TRmgCoordinatePoint<unsigned int>::TRmgCoordinatePoint(const unsigned int&, const unsigned int&)
-    VA(0x005B76B0, 0x18)
-    TRmgCoordinatePoint(const Coordinate& newX, const Coordinate& newY)
-        : m_x(newX), m_y(newY) {}
-    TRmgCoordinatePoint(const TPoint& point);
-
-    // Coordinate accessors: each use is a free inline site, and the terrain
-    // painter's diagonal checks need those sites to divide their budgets so
-    // that retail's retained cache reads stay calls (2026-09-12), and
-    // paintRectangle walks its rectangle through them so its body stays
-    // above the saved-body cliff. Every other body still reads the public
-    // fields, and each migration is measured on its own.
-    Coordinate getX() const { return m_x; }
-    Coordinate getY() const { return m_y; }
-    void setX(Coordinate newX) { m_x = newX; }
-    void setY(Coordinate newY) { m_y = newY; }
-
-    // paintTransitions steps one column with a grid-side compound add; the
-    // retained add at 0x4fa540 is TPoint's, so this one stays inline.
-    TRmgCoordinatePoint& operator+=(const TPoint& offset)
-    {
-        m_x += offset.m_x;
-        m_y += offset.m_y;
-        return *this;
-    }
-    operator TPoint() const
-    {
-        return TPoint(m_x, m_y);
-    }
-};
-
-// The terrain painter expands this conversion; the line walker's object
-// keeps the retained instance.
-template<class Coordinate>
-// VA instance: TRmgCoordinatePoint<u32>::TRmgCoordinatePoint(const TPoint&)
-VA(0x004fa520, 0x16)
-MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4
-inline TRmgCoordinatePoint<Coordinate>::TRmgCoordinatePoint(const TPoint& point)
-    : m_x(point.m_x), m_y(point.m_y)
-{
-}
-
-typedef TRmgCoordinatePoint<unsigned int> TRmgGridPoint;
-
-template<class Coordinate>
-bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
-    const TRmgCoordinatePoint<Coordinate>& right);
 
 struct TRmgZoneBounds {
     int m_minimumX;
@@ -824,15 +743,15 @@ struct TRmgZoneBounds {
     int m_maximumX;
     int m_maximumY;
 
-    bool contains(const TPoint& point) const
+    bool contains(const TRmgPoint& point) const
     {
         return point.m_x >= m_minimumX && point.m_x < m_maximumX &&
             point.m_y >= m_minimumY && point.m_y < m_maximumY;
     }
 };
 
-TPoint clipRmgBoundaryPoint(
-    const TRmgZoneBounds& bounds, TPoint point, TPoint toward);
+TRmgPoint clipRmgBoundaryPoint(
+    const TRmgZoneBounds& bounds, TRmgPoint point, TRmgPoint toward);
 
 // The terrain noise generator 0x53ed00 keeps a vector of nine-dword regions.
 // Its subdivision helper 0x53e9e0 copies each complete region, halves both
@@ -1011,7 +930,7 @@ struct TRmgObjectPropertiesRef {
     // Lazy builder 0x532c80 owns outline; 0x532e40
     // initializes overlapPriorities and the +0xe4 flag. +0xe5..e7 aligns the tail.
     TRmgObjectPlacementRule* m_placementRule; // +0x10
-    std::vector<TPoint> m_outline;         // +0x14
+    std::vector<TRmgPoint> m_outline;         // +0x14
     int m_overlapPriorities[8][6];         // +0x24
     unsigned char m_prioritiesInitialized; // +0xe4
     char m_pad00e5[3];
@@ -1405,7 +1324,7 @@ public:
     // orders were scored across all seven header consumers. Restoring the old
     // width/height/items order loses the island's constructor scheduling
     // (95.8947%); the separate caller-only control does not recover it.
-    // Paired TPoint/grid-point size arguments, by value/reference and in both
+    // Paired TRmgPoint/grid-point size arguments, by value/reference and in both
     // orders, leave the underground entry unchanged. Grouping the map's own
     // three dimensions as a position changes retry bodies but closes no further
     // function. Neither interface/layout change is adopted.
@@ -1422,16 +1341,16 @@ public:
     virtual ~type_random_map();
 
     virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setFrame(const TRmgGridPoint& point, int value);
+        const TTilePoint& point, const TRmgTerrainTile& tile);
+    virtual void setFrame(const TTilePoint& point, int value);
 #if defined(HOMM3_TARGET_MAC)
-    virtual TRmgGridPoint getSize();  // Mac 0x22eb84: hidden value result
+    virtual TTilePoint getSize();  // Mac 0x22eb84: hidden value result
 #else
-    virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
+    virtual TTilePoint& getSize(TTilePoint& output);
 #endif
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
-    virtual int getFrame(const TRmgGridPoint& point);
+    virtual TRmgTerrainTile getTile(const TTilePoint& point);
+    virtual int getTerrain(const TTilePoint& point);
+    virtual int getFrame(const TTilePoint& point);
 
     void clear();
     // Retail insertion supplies pointer prvalues to both STL reference
@@ -1455,10 +1374,10 @@ public:
     // helpers. Names describe the observed cell flags and ray traversal.
     void openPathPatch(int x, int y, int level);
     void markObstacleFillPatch(TRmgMapPosition position);
-    TPoint traceBranchEnd(TPoint from, TPoint toward, int level);
+    TRmgPoint traceBranchEnd(TRmgPoint from, TRmgPoint toward, int level);
 
     unsigned char hasConnectedOutline(
-        const std::vector<TPoint>& outline, TRmgMapPosition position,
+        const std::vector<TRmgPoint>& outline, TRmgMapPosition position,
         unsigned char allowEntrances, TRmgZone* zone, unsigned char requirePathClearance);
     unsigned char isPlacementBlocked(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position,
@@ -1477,14 +1396,14 @@ struct TRmgTreasureGroup {
     type_random_map m_map;                  // +0x00
     TRmgZoneBounds m_bounds;                // +0x18
     std::vector<type_object*> m_objects;    // +0x28
-    std::vector<TPoint> m_outline;           // +0x38
+    std::vector<TRmgPoint> m_outline;           // +0x38
     // with the guard's local coordinates; canPlaceTreasureGroup checks them.
     unsigned char m_hasGuard;               // +0x48, cleared by reset
     char m_padding0049[3];
     // addGuard stores x/y at 0x53556f.
     // canPlaceTreasureGroup reads x/y
     // from +0x4c/+0x50 before translating the guard's neighborhood.
-    TPoint m_guardPosition;                 // +0x4c
+    TRmgPoint m_guardPosition;                 // +0x4c
     // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
     TRmgMapPosition m_position;             // +0x54
     unsigned char m_ready;                  // +0x60, set after assembly
@@ -1502,7 +1421,7 @@ struct TRmgTreasureGroup {
     unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char tryAddObject(type_object* object);
     unsigned char objectsAllowEntrances() const;
-    void addObject(type_object* object, TPoint point);
+    void addObject(type_object* object, TRmgPoint point);
     void updateBounds();
     void traceOutline();
 };
@@ -1554,23 +1473,23 @@ struct TRmgLinePainterTile;
 // type_random_map_generator::loadTemplates (83.21 -> 83.19).
 class TMapLineFilter {
 public:
-    TRmgGridPoint m_size;
+    TTilePoint m_size;
 
     // Both retained final constructors obtain the adapter size before
     // building this base, then store their own adapter at +0xc.
-    TMapLineFilter(const TRmgGridPoint& size)
+    TMapLineFilter(const TTilePoint& size)
         : m_size(size)
     {
     }
     virtual TRmgLinePatternTable* getPatternTable(int value) = 0;
-    virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
-    virtual int isBlocked(const TRmgGridPoint& point) = 0;
-    virtual void getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile) = 0;
-    virtual int getLineType(const TRmgGridPoint& point) = 0;
+    virtual void setTile(const TTilePoint& point, const TRmgTerrainTile& tile) = 0;
+    virtual void setLineType(const TTilePoint& point, int value) = 0;
+    virtual int isBlocked(const TTilePoint& point) = 0;
+    virtual void getTile(const TTilePoint& point, TRmgTerrainTile& tile) = 0;
+    virtual int getLineType(const TTilePoint& point) = 0;
 
-    TRmgLinePainterTile at(const TRmgGridPoint& point);
-    int getNeighbourLineType(const TRmgGridPoint& point, unsigned int direction);
+    TRmgLinePainterTile at(const TTilePoint& point);
+    int getNeighbourLineType(const TTilePoint& point, unsigned int direction);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.
@@ -1579,9 +1498,9 @@ public:
 // These Complete-only names describe roles, not recovered original spellings.
 struct TRmgLinePainterTile {
     TMapLineFilter* m_painter;
-    TRmgGridPoint m_point;
+    TTilePoint m_point;
 
-    TRmgLinePainterTile(TMapLineFilter* painter, const TRmgGridPoint& point);
+    TRmgLinePainterTile(TMapLineFilter* painter, const TTilePoint& point);
     int getLineType();
     void getTile(TRmgTerrainTile& tile);
     void setTile(const TRmgTerrainTile& tile);
@@ -1594,15 +1513,15 @@ SIZE(TRmgLinePainterTile, 0x0c);
 // min/max bounds used for zones. The point walker builds a one-cell rectangle.
 // This Complete-only role name does not assert an original class spelling.
 struct TRmgGridRectangle {
-    TRmgGridPoint m_origin;
-    TRmgGridPoint m_size;
+    TTilePoint m_origin;
+    TTilePoint m_size;
 
-    TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGridPoint& size);
+    TRmgGridRectangle(const TTilePoint& origin, const TTilePoint& size);
 };
 SIZE(TRmgGridRectangle, 0x10);
 
 // Shared fastcall refresh reached by the rectangle clear and point walker.
-void refreshRmgLinePoint(TMapLineFilter* painter, const TRmgGridPoint& point);
+void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point);
 void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle);
 
 class TRiverOp : public TMapLineFilter {
@@ -1613,12 +1532,12 @@ public:
     public:
         virtual ~TAbstractMap();
         virtual void setTile(
-            const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-        virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
-        virtual TRmgGridPoint getSize() = 0;
-        virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-        virtual int getLineType(const TRmgGridPoint& point) = 0;
-        virtual int getTerrain(const TRmgGridPoint& point) = 0;
+            const TTilePoint& point, const TRmgTerrainTile& tile) = 0;
+        virtual void setLineType(const TTilePoint& point, int value) = 0;
+        virtual TTilePoint getSize() = 0;
+        virtual TRmgTerrainTile getTile(const TTilePoint& point) = 0;
+        virtual int getLineType(const TTilePoint& point) = 0;
+        virtual int getTerrain(const TTilePoint& point) = 0;
     };
 
     TAbstractMap* m_adapter;
@@ -1635,14 +1554,14 @@ public:
 
     virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual int isBlocked(const TRmgGridPoint& point);
+        const TTilePoint& point, const TRmgTerrainTile& tile);
+    virtual void setLineType(const TTilePoint& point, int value);
+    virtual int isBlocked(const TTilePoint& point);
     // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
     // retained wrapper 0x55f350 writes through its second explicit argument;
     // unlike the adapter, this interface does not return a tile by value.
-    virtual void getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile);
-    virtual int getLineType(const TRmgGridPoint& point);
+    virtual void getTile(const TTilePoint& point, TRmgTerrainTile& tile);
+    virtual int getLineType(const TTilePoint& point);
 };
 
 inline TRiverOp::~TRiverOp() {}
@@ -1675,15 +1594,15 @@ class TRmgLineWalker {
 public:
     TMapLineFilter* m_painter;
     int m_lineType;
-    TRmgGridPoint m_position;
+    TTilePoint m_position;
 
     TRmgLineWalker(
         TMapLineFilter* newPainter,
         int newLineType,
-        const TRmgGridPoint& start);
-    void drawTo(const TRmgGridPoint& destination);
+        const TTilePoint& start);
+    void drawTo(const TTilePoint& destination);
     // Shared by constructor 0x4fa280 and the two-axis walk 0x4fa2b0.
-    void paintPoint(const TRmgGridPoint& point);
+    void paintPoint(const TTilePoint& point);
 };
 
 // The editor's RTTI lists only TRiverOp's lineage as bases: the line walker
@@ -1693,7 +1612,7 @@ public:
     TRiverPlacementOp(
         TRiverOp::TAbstractMap* newAdapter,
         int newRiverType,
-        const TRmgGridPoint& start);
+        const TTilePoint& start);
     virtual ~TRiverPlacementOp();
 
     TRmgLineWalker m_walker;
@@ -1711,12 +1630,12 @@ public:
     public:
         virtual ~TAbstractMap();
         virtual void setTile(
-            const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-        virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
-        virtual TRmgGridPoint getSize() = 0;
-        virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-        virtual int getLineType(const TRmgGridPoint& point) = 0;
-        virtual int getTerrain(const TRmgGridPoint& point) = 0;
+            const TTilePoint& point, const TRmgTerrainTile& tile) = 0;
+        virtual void setLineType(const TTilePoint& point, int value) = 0;
+        virtual TTilePoint getSize() = 0;
+        virtual TRmgTerrainTile getTile(const TTilePoint& point) = 0;
+        virtual int getLineType(const TTilePoint& point) = 0;
+        virtual int getTerrain(const TTilePoint& point) = 0;
     };
 
     TAbstractMap* m_adapter;
@@ -1731,11 +1650,11 @@ public:
 
     virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual int isBlocked(const TRmgGridPoint& point);
-    virtual void getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile);
-    virtual int getLineType(const TRmgGridPoint& point);
+        const TTilePoint& point, const TRmgTerrainTile& tile);
+    virtual void setLineType(const TTilePoint& point, int value);
+    virtual int isBlocked(const TTilePoint& point);
+    virtual void getTile(const TTilePoint& point, TRmgTerrainTile& tile);
+    virtual int getLineType(const TTilePoint& point);
 };
 
 inline TRoadOp::~TRoadOp() {}
@@ -1747,7 +1666,7 @@ public:
     TRoadPlacementOp(
         TRoadOp::TAbstractMap* newAdapter,
         int newRoadType,
-        const TRmgGridPoint& start);
+        const TTilePoint& start);
     virtual ~TRoadPlacementOp();
 
     TRmgLineWalker m_walker;
@@ -1762,12 +1681,12 @@ public:
     type_random_map* m_map;
 
     type_road_map(type_random_map* map) : m_map(map) {}
-    virtual void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual TRmgGridPoint getSize();
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLineType(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
+    virtual void setTile(const TTilePoint& point, const TRmgTerrainTile& tile);
+    virtual void setLineType(const TTilePoint& point, int value);
+    virtual TTilePoint getSize();
+    virtual TRmgTerrainTile getTile(const TTilePoint& point);
+    virtual int getLineType(const TTilePoint& point);
+    virtual int getTerrain(const TTilePoint& point);
 };
 
 // Retail retains these support bodies outside CreateRiver while the adapter
@@ -1781,12 +1700,12 @@ public:
     inline type_river_map(type_random_map* newMap) : m_map(newMap) {}
 
     virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    virtual void setLineType(const TRmgGridPoint& point, int value);
-    virtual TRmgGridPoint getSize();
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLineType(const TRmgGridPoint& point);
-    virtual int getTerrain(const TRmgGridPoint& point);
+        const TTilePoint& point, const TRmgTerrainTile& tile);
+    virtual void setLineType(const TTilePoint& point, int value);
+    virtual TTilePoint getSize();
+    virtual TRmgTerrainTile getTile(const TTilePoint& point);
+    virtual int getLineType(const TTilePoint& point);
+    virtual int getTerrain(const TTilePoint& point);
 };
 
 // A generated zone owns both its template metadata and the Complete-only
@@ -1831,8 +1750,8 @@ struct TRmgZone {
     // +0x53dcb1 sets this zone's own index to zero. 0x53d9ae reads a
     // distance, adds one and relaxes connected zones. Role-derived name.
     std::vector<short> m_zoneDistances;// +0x3e4
-    std::vector<TPoint> m_boundary;    // +0x3f4: clipped polygon vertices
-    std::vector<TPoint> m_entrances;   // +0x404
+    std::vector<TRmgPoint> m_boundary;    // +0x3f4: clipped polygon vertices
+    std::vector<TRmgPoint> m_entrances;   // +0x404
 
     TRmgZone(TRmgTemplateZone* slot);
     void decrementObjectCount(TAdventureObjectType objectType);
@@ -1867,7 +1786,7 @@ struct TRmgHalfEdge {
     // copies a by-value point into +0/+4 and its zone into +8.
     // buildVertices 0x5fdb40 subtracts these site coordinates while
     // calculating the boundary point at +0x1c. Role-derived name.
-    TPoint m_sitePosition;               // +0x00
+    TRmgPoint m_sitePosition;               // +0x00
     TRmgZone* m_zone;                   // +0x08
     TRmgHalfEdge* m_twin;        // +0x0c
     TRmgHalfEdge* m_next;        // +0x10
@@ -1879,14 +1798,14 @@ struct TRmgHalfEdge {
     // writes the computed point, then sets it on three incident edges at
     // 0x5fdc7d/89/9e. +0x19..1b is natural alignment before the point.
     unsigned char m_vertexComputed;  // +0x18
-    TPoint m_vertex;                  // +0x1c
+    TRmgPoint m_vertex;                  // +0x1c
 
     // The 0x5fcef0 retained constructor takes two by-value point/zone
     // pairs (ret 0x18), allocating the opposite half-edge at +0x0c.
     // Its expanded twin constructor takes the existing edge pointer.
-    TRmgHalfEdge(TPoint sitePosition, TRmgZone* zone,
-        TPoint twinSitePosition, TRmgZone* twinZone);
-    TRmgHalfEdge(TPoint sitePosition, TRmgZone* zone,
+    TRmgHalfEdge(TRmgPoint sitePosition, TRmgZone* zone,
+        TRmgPoint twinSitePosition, TRmgZone* twinZone);
+    TRmgHalfEdge(TRmgPoint sitePosition, TRmgZone* zone,
         TRmgHalfEdge* twin);
     // Role-derived names: 0x5fcf60 exchanges forward/backward ring links;
     // 0x5fcfa0 applies it to each half-edge and its predecessor.
@@ -1921,11 +1840,11 @@ struct TRmgHalfEdge {
     {
         return m_next->m_twin;
     }
-    TPoint getSitePosition() const
+    TRmgPoint getSitePosition() const
     {
         return m_sitePosition;
     }
-    TPoint getOppositeSitePosition() const
+    TRmgPoint getOppositeSitePosition() const
     {
         return m_twin->m_sitePosition;
     }
@@ -1942,11 +1861,11 @@ struct TRmgHalfEdge {
     {
         return m_vertexComputed;
     }
-    void setPosition(const TPoint& position)
+    void setPosition(const TRmgPoint& position)
     {
         // A named snapshot gives buildVertices retail's final two-coordinate
         // transfer before each of its three expanded stores.
-        TPoint copy = position;
+        TRmgPoint copy = position;
         m_vertex = copy;
         m_vertexComputed = 1;
     }
@@ -1964,13 +1883,13 @@ public:
     TRmgVoronoi();
     ~TRmgVoronoi();
     // Retained 0x5fd390 creates and owns both halves; two point/zone pairs.
-    TRmgHalfEdge* createEdge(TPoint first, TRmgZone* firstZone,
-        TPoint second, TRmgZone* secondZone);
+    TRmgHalfEdge* createEdge(TRmgPoint first, TRmgZone* firstZone,
+        TRmgPoint second, TRmgZone* secondZone);
     TRmgHalfEdge* connectEdges(TRmgHalfEdge* first,
         TRmgHalfEdge* second);
     void removeEdge(TRmgHalfEdge* edge);
-    void addSite(TPoint point, TRmgZone* zone);
-    TRmgHalfEdge* locate(TPoint point);
+    void addSite(TRmgPoint point, TRmgZone* zone);
+    TRmgHalfEdge* locate(TRmgPoint point);
     void buildVertices();
 };
 SIZE(TRmgVoronoi, 0x14);
@@ -2129,12 +2048,12 @@ public:
     void insetIslandZone(TRmgZone* zone);
     // Complete-only 0x53cf50 marks the inset island interior; provisional name.
     void fillIslandInterior(TRmgZone* zone);
-    void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
+    void drawIslandBoundary(TRmgPoint from, TRmgPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
     unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
         int player, unsigned char hasFort, int spacing);
     void prepareJunctionZone(TRmgZone* zone);
-    void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
+    void connectJunctionEntrance(TRmgPoint from, TRmgPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
     type_object* createTreasureObject(TRmgZone* zone, int minimum, int maximum,
         int* value, unsigned char primary, unsigned char allowLinkedPlacement,
@@ -2184,9 +2103,9 @@ public:
     void filterZonePositions(
         TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, int mapSize);
     void drawIrregularZoneBoundary(
-        TPoint from, TPoint to, int zoneIndex, int level, int roughness);
+        TRmgPoint from, TRmgPoint to, int zoneIndex, int level, int roughness);
     void drawStraightZoneBoundary(
-        TPoint from, TPoint to, int zoneIndex, int level);
+        TRmgPoint from, TRmgPoint to, int zoneIndex, int level);
     void traceZoneBoundary(TRmgHalfEdge* first, unsigned char irregular);
     unsigned char createGroundConnection(
         TRmgZone* source,
@@ -2212,7 +2131,7 @@ public:
     void connectZones();
     // Retail 0x543e20: random midpoint displacement, queued side branches,
     // then terrain and border cleanup. No Dreamcast RMG names survive.
-    bool contains(const TPoint& point) const;
+    bool contains(const TRmgPoint& point) const;
     void carveBranchingPaths();
     void repairWaterZoneBorders();
     // Complete-only roles proved by the predecessor walk at 0x5408e0 and
@@ -2270,8 +2189,8 @@ public:
 };
 
 SIZE(TRmgMapPosition, 0x0c);
-SIZE(TPoint, 0x08);
-SIZE(TRmgGridPoint, 0x08);
+SIZE(TRmgPoint, 0x08);
+SIZE(TTilePoint, 0x08);
 SIZE(TRmgRiverDeltaOffset, 0x08);
 SIZE(TRmgMovementCost, 0x04);
 SIZE(TRmgZoneCellState, 0x04);

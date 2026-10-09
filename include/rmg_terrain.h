@@ -90,17 +90,6 @@ struct TRmgTerrainTransitionEntry {
 };
 
 
-// Grid points add tile directions through the signed TPoint: refresh and
-// both paintPoints build `point + g_tileDirections[d]` as a TPoint copy, the
-// retained TPoint::operator+= and a copied result, then convert back through
-// the retained TRmgGridPoint(const TPoint&) constructor at 0x4fa520. The sum
-// lives here with its only users; in rmg.h it perturbs rmg the same way.
-inline TPoint operator+(const TPoint& point, const TPoint& offset)
-{
-    TPoint result = point;
-    return result += offset;
-}
-
 // The diagonal-neighbour probes clamp through a reference selector of their
 // own. Mac 0x258f18 keeps its operand order: value against minimum, then
 // value against maximum (cmpw value,maximum; ble), whereas the shared
@@ -320,11 +309,11 @@ public:
     TTerrainPlacementOp::TAbstractMap* m_adapter;                // +0x00
     s32 m_paintTerrain;                               // +0x04
     s32 m_transitionStrength;                         // +0x08
-    TRmgGridPoint m_size;                             // +0x0c
+    TTilePoint m_size;                             // +0x0c
     // Cells of the painted terrain that may need gap repair.
-    std::set<TRmgGridPoint> m_repairPoints;            // +0x14
+    std::set<TTilePoint> m_repairPoints;            // +0x14
     // Adjacent cells of another terrain, checked after repair.
-    std::set<TRmgGridPoint> m_otherTerrainPoints;          // +0x24
+    std::set<TTilePoint> m_otherTerrainPoints;          // +0x24
     std::vector<TRmgPackedTerrainCell> m_packedCells;   // +0x34
 
     TRmgTerrainPainter(
@@ -339,45 +328,45 @@ public:
         u32 x, u32 y,
         u32 rectangleWidth, u32 rectangleHeight);
 
-    void initializePackedCell(const TRmgGridPoint& point, u32 index);
-    TRmgPackedTerrainCell* getPackedCell(const TRmgGridPoint& point);
-    s32 getTerrain(const TRmgGridPoint& point);
-    s32 getFrame(const TRmgGridPoint& point);
+    void initializePackedCell(const TTilePoint& point, u32 index);
+    TRmgPackedTerrainCell* getPackedCell(const TTilePoint& point);
+    s32 getTerrain(const TTilePoint& point);
+    s32 getFrame(const TTilePoint& point);
     // Provisional dimension accessors inferred from paintTransitions' scalar
     // loads and inline boundaries. Unused declarations are byte-neutral;
     // the source calls restore all but one of its retained cache reads.
     u32 getWidth() const;
     u32 getHeight() const;
     void paintTransitions();
-    s32 selectBaseFrame(const TRmgGridPoint& point, s32 terrain, s32 oldFrame);
-    void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
-    void paintBaseTile(const TRmgGridPoint& point);
+    s32 selectBaseFrame(const TTilePoint& point, s32 terrain, s32 oldFrame);
+    void setTile(const TTilePoint& point, const TRmgTerrainTile& tile);
+    void paintBaseTile(const TTilePoint& point);
     const s32& getPaintTerrain() const;
-    b8 isPaintTerrain(const TRmgGridPoint& point);
+    b8 isPaintTerrain(const TTilePoint& point);
 
-    void paintPoint(const TRmgGridPoint& point);
-    void queueOtherTerrainNeighbours(const TRmgGridPoint& point);
-    void repairTerrainPoint(const TRmgGridPoint& point);
+    void paintPoint(const TTilePoint& point);
+    void queueOtherTerrainNeighbours(const TTilePoint& point);
+    void repairTerrainPoint(const TTilePoint& point);
     // A gap cell C has other terrain x on both sides along one axis. North is up:
     //   horizontal  vertical
     //                   x
     //     x C x         C
     //                   x
-    b8 isHorizontalGap(const TRmgGridPoint& point, s32 terrain);
-    b8 isVerticalGap(const TRmgGridPoint& point, s32 terrain);
-    b8 isHorizontalGap(const TRmgGridPoint& point);
-    b8 isVerticalGap(const TRmgGridPoint& point);
-    b8 needsTerrainRepair(const TRmgGridPoint& point);
-    b8 hasSeparatedNeighbours(const TRmgGridPoint& point);
+    b8 isHorizontalGap(const TTilePoint& point, s32 terrain);
+    b8 isVerticalGap(const TTilePoint& point, s32 terrain);
+    b8 isHorizontalGap(const TTilePoint& point);
+    b8 isVerticalGap(const TTilePoint& point);
+    b8 needsTerrainRepair(const TTilePoint& point);
+    b8 hasSeparatedNeighbours(const TTilePoint& point);
     void buildMatchingNeighbourMask(
-        const TRmgGridPoint& point, b8* matches);
+        const TTilePoint& point, b8* matches);
 
-    void buildNeighbourKinds(const TRmgGridPoint& point, s32* neighbours);
+    void buildNeighbourKinds(const TTilePoint& point, s32* neighbours);
     b8 hasMatchingDiagonalNeighbour(
-        const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
+        const TTilePoint& point, const TRmgTerrainFlip& flip);
     b8 hasDifferentOuterAxisNeighbour(
-        const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    s32 getTransitionStrength(const TRmgGridPoint& point, s32 terrain);
+        const TTilePoint& point, const TRmgTerrainFlip& flip);
+    s32 getTransitionStrength(const TTilePoint& point, s32 terrain);
 };
 
 SIZE(TRmgTerrainTile, 0x0c);

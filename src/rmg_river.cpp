@@ -43,7 +43,7 @@ TRmgLinePatternTable* TRiverOp::getPatternTable(s32)
 
 VA(0x0055edc0, 0x36)
 MAC_ADDRESS(0x253ae0, 0x54) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
-void TRiverOp::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
+void TRiverOp::setTile(const TTilePoint& point, const TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
@@ -52,13 +52,13 @@ void TRiverOp::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 }
 
 MAC_ADDRESS(0x253b34, 0x30)
-void TRiverOp::setLineType(const TRmgGridPoint& point, s32 value)
+void TRiverOp::setLineType(const TTilePoint& point, s32 value)
 {
     m_adapter->setLineType(point, value);
 }
 
 MAC_ADDRESS(0x253ba8, 0x88)
-void TRiverOp::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
+void TRiverOp::getTile(const TTilePoint& point, TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
@@ -67,7 +67,7 @@ void TRiverOp::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
 // Roads and rivers cannot be painted over water or rock terrain.
 VA(0x0055ee00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
-s32 TRiverOp::isBlocked(const TRmgGridPoint& point)
+s32 TRiverOp::isBlocked(const TTilePoint& point)
 {
     s32 terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
@@ -77,7 +77,7 @@ s32 TRiverOp::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055ee30, 0x13)
 MAC_ADDRESS(0x253c30, 0x30)
-s32 TRiverOp::getLineType(const TRmgGridPoint& point)
+s32 TRiverOp::getLineType(const TTilePoint& point)
 {
     return m_adapter->getLineType(point);
 }
@@ -87,7 +87,7 @@ MAC_ADDRESS(0x253c60, 0x6c)
 TRiverPlacementOp::TRiverPlacementOp(
     TRiverOp::TAbstractMap* newAdapter,
     s32 newRiverType,
-    const TRmgGridPoint& newStart)
+    const TTilePoint& newStart)
     : TRiverOp(newAdapter),
       m_walker(this, newRiverType, newStart)
 {
