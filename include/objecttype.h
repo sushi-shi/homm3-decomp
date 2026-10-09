@@ -7,14 +7,13 @@
 #include "va.h"
 
 #include <bitset>
+#include <functional>
 #include <string>
 #include <vector>
 
 #include "adventureobjecttype.h"
 #include "objectmask.h"
 #include "terrain_type.h"
-
-class TObjectSlotTraits;
 
 // objects.txt begins with the number of object-template rows.
 enum EObjectTypeTextIndex {
@@ -25,8 +24,6 @@ enum EObjectSlotTraitsConstants {
     OBJECT_SLOT_TRAITS_COUNT = 15
 };
 
-// Loki h3maped apObjectSlotTraits.
-extern TObjectSlotTraits* const apObjectSlotTraits[OBJECT_SLOT_TRAITS_COUNT];
 
 // Map-editor/RMG object template consumed by the retail-identical
 // CObjectType conversion constructor at 0x506080. The public names are from
@@ -224,5 +221,53 @@ public:
     void load(char* fileName);
 };
 SIZE(TObjectTypeTable, 0x10);
+
+// The map editor's object palette slots: one per terrain but rock, the
+// all-terrain slot and one per non-generic category, in the order of
+// apObjectSlotTraits (Loki h3maped objecttype.h; the enumerator names
+// other than kNumObjectSlots and eSlotHeroes are not proven).
+enum TObjectSlot {
+    eSlotDirt,
+    eSlotSand,
+    eSlotGrass,
+    eSlotSnow,
+    eSlotSwamp,
+    eSlotRough,
+    eSlotSubterranean,
+    eSlotLava,
+    eSlotWater,
+    eSlotAllTerrain,
+    eSlotTowns,
+    eSlotMonsters,
+    eSlotHeroes,
+    eSlotArtifacts,
+    eSlotTreasures,
+    kNumObjectSlots
+};
+
+// Whether an object type belongs in a palette slot; objecttype.cpp defines
+// the traits family and the table (Loki h3maped ObjectType.cpp).
+class TObjectSlotTraits {
+public:
+    virtual ~TObjectSlotTraits();
+    virtual bool contains(const TObjectType& objectType) const = 0;
+};
+
+// Loki h3maped apObjectSlotTraits.
+extern TObjectSlotTraits* const apObjectSlotTraits[OBJECT_SLOT_TRAITS_COUNT];
+
+inline bool objectTypeInSlot(const TObjectType& objType, TObjectSlot slot)
+{
+    return apObjectSlotTraits[slot]->contains(objType);
+}
+
+// objectTypeInSlot as an adaptable predicate: the palette binds the slot
+// (h3maped 0x48d4c4, binder2nd's call operator).
+struct TObjectTypeInSlotPred : public std::binary_function<TObjectType, TObjectSlot, bool> {
+    bool operator()(const TObjectType& objType, TObjectSlot slot) const
+    {
+        return objectTypeInSlot(objType, slot);
+    }
+};
 
 #endif  /* HOMM3_OBJECTTYPE_H */

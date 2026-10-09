@@ -980,6 +980,9 @@ rva	size	kind	name	unit	evidence
 0x0008d21c	0x55	func	?resize@?$vector@EV?$allocator@E@std@@@std@@QAEXIABE@Z	rmg	masked body (85 bytes, 2 relocations) unique at a census start
 0x0008d27c	0x176	func	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	rmg	masked body (374 bytes, 2 relocations) unique at a census start
 0x0008d3f2	0x2c	func	?erase@?$vector@EV?$allocator@E@std@@@std@@QAEPAEPAE0@Z	rmg	masked body (44 bytes, 0 relocations) unique at a census start
+0x0008d41e	0x50	func	??0?$TArray@U_TSlotInfo@TObjectPaletteWnd@@$0P@@@QAE@XZ	ObjectPaletteWnd	masked body (80 bytes, 0 relocations) unique at a census start
+0x0008d46e	0x56	func	??1?$TArray@U_TSlotInfo@TObjectPaletteWnd@@$0P@@@QAE@XZ	ObjectPaletteWnd	masked body (86 bytes, 5 relocations) unique at a census start
+0x0008d4c4	0x16	func	??R?$binder2nd@UTObjectTypeInSlotPred@@@std@@QBE_NABUTObjectType@@@Z	ObjectPaletteWnd	masked body (22 bytes, 1 relocations) unique at a census start
 0x0008f903	0x33	func	??0?$bitset@$06@std@@QAE@K@Z	ObjectSpecializations	masked body (51 bytes, 1 relocations) unique at a census start
 0x0008f936	0x33	func	??0?$bitset@$0BM@@std@@QAE@K@Z	ObjectSpecializations	masked body (51 bytes, 1 relocations) unique at a census start
 0x0008f969	0xc	func	?flip@?$bitset@$06@std@@QAEAAV12@XZ	ObjectSpecializations	masked body (12 bytes, 0 relocations) unique at a census start
@@ -1489,6 +1492,8 @@ rva	size	kind	name	unit	evidence
 0x000de7d0	0x1a	func	?ColorCycle@CSprite@@QAEXHHH@Z	csprite	masked body (26 bytes, 1 relocations) unique at a census start
 0x000de7f0	0x6	func	?getSize@CSprite@@UBEIXZ	csprite	vtable ??_7CSprite@@6B@ stored by ??0CSprite@@QAE@PBDHHH@Z slot 2
 0x000de800	0x57	func	?DrawAdvObjWithFlag@CSprite@@QBEXHHHHHPAGHHHHHG_N@Z	csprite	masked body (87 bytes, 1 relocations) unique at a census start
+0x000de860	0x57	func	?DrawAdvObjWithFlagAlpha@CSprite@@QBEXHHHHHPAGHHHHHG_N@Z	csprite	referenced by ?OnPaint@TObjectPaletteWnd@@IAEXXZ at +0x29d
+0x000de8c0	0x52	func	?DrawAdvObjShadow@CSprite@@QBEXHHHHHPAGHHHHH_N@Z	csprite	referenced by ?OnPaint@TObjectPaletteWnd@@IAEXXZ at +0x380
 0x000deba0	0x70	func	?GetNumSeqs@CSprite@@SAHH@Z	csprite	masked body (112 bytes, 17 relocations) unique at a census start
 0x000dec70	0xad	func	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@@Z	cspriteframe	masked body (173 bytes, 7 relocations) unique at a census start
 0x000ded20	0xd4	func	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@HHHH@Z	cspriteframe	masked body (212 bytes, 8 relocations) unique at a census start
@@ -1498,7 +1503,7 @@ rva	size	kind	name	unit	evidence
 0x000df580	0x6fc	func	?DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z	cspriteframe	referenced by ?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z at +0x55
 0x000dfc80	0x4a3	func	?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z	cspriteframe	masked body (1187 bytes, 2 relocations) unique at a census start
 0x000e0130	0x475	func	?DrawAdvObjWithFlagAlpha@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G_N@Z	cspriteframe	masked body (1141 bytes, 4 relocations) unique at a census start
-0x000e05b0	0x44b	func	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z	cspriteframe	masked prefix (310 fixed bytes agree, 1101 compiled, 1099 retail)
+0x000e05b0	0x44b	func	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z	cspriteframe	referenced by ?DrawAdvObjShadow@CSprite@@QBEXHHHHHPAGHHHHH_N@Z at +0x4b
 0x000e0a00	0xb58	func	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	cspriteframe	referenced by ?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z at +0x497
 0x000e1560	0x21e	func	?ClipScaled50@CSpriteFrame@@ABEXAAH00000HH_N1@Z	cspriteframe	masked body (542 bytes, 0 relocations) unique at a census start
 0x000e1a00	0x295	func	?DrawAdvObjShadowScaled50@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@@Z	cspriteframe	masked prefix (66 fixed bytes agree, 646 compiled, 661 retail)
@@ -1619,6 +1624,7 @@ rva	size	kind	name	unit	evidence
 0x00136c88	0x8	data	_g_gzMagic	gzinflatebuf	referenced by ??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z at +0x131
 0x0013997c	0x8	data	??_8?$basic_istream@DU?$char_traits@D@std@@@std@@7B@	objecttype	referenced by ??0?$basic_istream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N@Z at +0x1e
 0x0013f974	0x8	data	?g_noTriggerCell@@3UTPoint@TObjectType@@B	objecttype	referenced by ??0TObjectType@@QAE@XZ at +0x5d
+0x0013f984	0x3c	data	?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B	objecttype	referenced by ??R?$binder2nd@UTObjectTypeInSlotPred@@@std@@QBE_NABUTObjectType@@@Z at +0xa
 0x0013f9f8	0x8	data	??_8istrstream@std@@7B@	objecttype	referenced by ??0istrstream@std@@QAE@PBD@Z at +0x23
 0x0013fb3c	0x9	data	??_C@_08BIGC@Settings?$AA@	Options	referenced by ?load@SOptions@@YAXXZ at +0x11
 0x0013fb48	0x5	data	??_C@_04IAJO@Zoom?$AA@	Options	referenced by ?load@SOptions@@YAXXZ at +0x18
@@ -2452,6 +2458,7 @@ rva	size	kind	name	unit	evidence
 0x0018c004	0x11	data	??_C@_0BB@NAAD@Magellan?5MSWHEEL?$AA@	MapEditWnd	referenced by 0x000692f7 at +0x4e
 0x0018c018	0x15	data	??_C@_0BF@ODOJ@MSH_SCROLL_LINES_MSG?$AA@	MapEditWnd	referenced by 0x000692f7 at +0x2d
 0x0018c0b0	0x44	data	??_C@_0EE@JDBB@Heroes?5of?5Might?5and?5Magic?5III?5Ma@	MapEditWnd	referenced by ??0TMapEditWnd@@QAE@PAVCWnd@@PAVTController@TMapEditingWnd@@HPBVTGameMap@@PBVTGameMapMask@@_NW4TZoom@@44@Z at +0x185
+0x0018cff0	0x3	data	??_C@_02DILL@?$CFs?$AA@	ObjectPaletteWnd	referenced by ?OnToolTipNeedText@TObjectPaletteWnd@@IAEHIPAUtagNMHDR@@PAJ@Z at +0x15e
 0x0018d00c	0xc	data	??_C@_0M@FOHH@crbanks?4txt?$AA@	ObjectSpecializations	referenced by ?InitializeCreatureBankTypeTraitsTable@@YAXXZ at +0x3a
 0x0018d018	0xd	data	??_C@_0N@KKLN@monolith?4txt?$AA@	ObjectSpecializations	referenced by ?InitializeMonolithTypeTraitsTables@@YAXXZ at +0x3a
 0x0018d028	0xd	data	??_C@_0N@NFKE@TentColr?4txt?$AA@	ObjectSpecializations	referenced by ?InitializeKeymasterTentTypeTraitsTable@@YAXXZ at +0x11
@@ -2661,6 +2668,21 @@ rva	size	kind	name	unit	evidence
 0x001a2294	0x1	data	_?$S41@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4EA	objecttype	referenced by 0x0008ffdd at +0x2
 0x001a22a8	0x10	data	_?emptyImageName@?1??getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ@4V34@A	objecttype	referenced by ?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ at +0x1c
 0x001a22b8	0x20	data	_?imageNameSet@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4V3@A	objecttype	referenced by 0x0008ffdd at +0x11
+0x001a22e8	0x8	data	?g_roughSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x14
+0x001a22f0	0x8	data	?g_lavaSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x1c
+0x001a22f8	0x8	data	?g_subterraneanSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x18
+0x001a2300	0x8	data	?g_allTerrainSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTAllTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x24
+0x001a2308	0x8	data	?g_category3SlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTCategorySlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x30
+0x001a2310	0x8	data	?g_category2SlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTCategorySlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x2c
+0x001a2318	0x8	data	?g_snowSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0xc
+0x001a2320	0x8	data	?g_category5SlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTCategorySlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x38
+0x001a2328	0x8	data	?g_category4SlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTCategorySlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x34
+0x001a2330	0x8	data	?g_grassSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x8
+0x001a2338	0x8	data	?g_category1SlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTCategorySlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x28
+0x001a2340	0x8	data	?g_waterSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x20
+0x001a2348	0x8	data	?g_swampSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x10
+0x001a2350	0x8	data	?g_dirtSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x0
+0x001a2358	0x8	data	?g_sandSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@3VTTerrainSlotTraits@1@A	objecttype	referenced by ?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B at +0x4
 0x001a2368	0x1	data	_?$S119@?1??getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ@4EA	objecttype	referenced by ?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ at +0x3
 0x001a2374	0x4	data	?_Nil@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@I@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@IU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@std@@1PAU_Node@12@A	objecttype	referenced by ?insert@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@I@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@IU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@I@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@IU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@std@@_N@2@ABU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@I@2@@Z at +0x2c
 0x001a2378	0x4	data	?_Nilrefs@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@I@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@IU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@std@@1IA	objecttype	referenced by ?_Init@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@I@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@IU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@I@2@@std@@IAEXXZ at +0x48

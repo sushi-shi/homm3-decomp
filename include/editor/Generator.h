@@ -16,6 +16,13 @@
 // A dwelling of a fixed level whose alignment is random.
 class TRandomlyAlignedGenerator : public TFlaggableObject, public TAbstractRandomlyAlignedGenerator {
 public:
+    // One name per level (getTypeName 0x43efa2, the palette's tooltip).
+    struct TTypeTraits {
+        const char* m_name;
+    };
+
+    DATA(0x00584458) static const TTypeTraits* s_akTypeTraits;
+
     virtual TFlaggableObject* getPFlaggableObject();
     virtual const TFlaggableObject* getPFlaggableObject() const;
 };
@@ -23,6 +30,13 @@ public:
 // A dwelling of a fixed alignment whose level is random.
 class TRandomlyLeveledGenerator : public TFlaggableObject, public TAbstractRandomlyLeveledGenerator {
 public:
+    // One name per alignment (getTypeName 0x43eeb2, the palette's tooltip).
+    struct TTypeTraits {
+        const char* m_name;
+    };
+
+    DATA(0x0058445c) static const TTypeTraits* s_akTypeTraits;
+
     virtual TFlaggableObject* getPFlaggableObject();
     virtual const TFlaggableObject* getPFlaggableObject() const;
 };

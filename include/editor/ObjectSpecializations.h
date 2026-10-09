@@ -134,6 +134,16 @@ private:
 // A creature generator; its kind is the object type's subtype (RTTI
 // TGenerator <- TFlaggableObject).
 class TGenerator : public TFlaggableObject {
+public:
+    // 8-byte rows of the two generator tables; the name is the second
+    // word (Loki's TGeneratorTypeTraits; the palette's tooltip).
+    struct TGeneratorTypeTraits {
+        bool m_bFlaggable;
+        const char* m_name;
+    };
+
+    DATA(0x00584450) static const TGeneratorTypeTraits* s_akGenerator1TypeTraits;
+    DATA(0x00584454) static const TGeneratorTypeTraits* s_akGenerator4TypeTraits;
 };
 
 // A garrison, its army and whether a visiting hero may take the army

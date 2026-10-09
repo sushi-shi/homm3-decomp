@@ -56,12 +56,6 @@ DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
 // eTerrainRock), the all-terrain traits, and five category traits for 1..5
 // (Loki asserts category > eCategoryGeneric && category <
 // kNumSlotCategories). The table at 0x640288 lists them in that order.
-class TObjectSlotTraits {
-public:
-    virtual ~TObjectSlotTraits();
-    virtual bool contains(const TObjectType& objectType) const = 0;
-};
-
 namespace {
 
 // Retail 0x5141b0: an unplaced object (category 0) whose recommended

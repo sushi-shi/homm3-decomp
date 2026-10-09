@@ -109,8 +109,10 @@ enum {
     IDR_CONTEXT_MENU = 214
 };
 
-// The map edit window's hand cursors over an object and while dragging one.
+// The hand cursors: the object palette's over an object, the map edit
+// window's while dragging one and over an object.
 enum {
+    IDC_OPEN_HAND = 316,
     IDC_CLOSED_HAND = 317,
     IDC_POINTING_HAND = 318
 };

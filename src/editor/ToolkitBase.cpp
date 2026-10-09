@@ -5,11 +5,8 @@
 #include "editor/stdafx.h"
 
 #include "va.h"
+#include "editor/AfxPrivMessages.h"
 #include "editor/ToolkitBase.h"
-
-// afxpriv.h's idle command-UI message: afxpriv.h includes ATL's
-// atlconv.h, which the toolchain does not carry.
-const UINT WM_IDLEUPDATECMDUI = 0x0363;
 
 namespace {
 
