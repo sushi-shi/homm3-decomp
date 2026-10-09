@@ -17,7 +17,7 @@ executables.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,504 |   98.81% | last measured score                            |
+| CUR   |           4,506 |   98.81% | last measured score                            |
 | MAX   |           4,509 |   98.81% | best result for each function's current source |
 | HIST  |           4,540 |   99.03% | all-time peak across source revisions          |
 
@@ -51,24 +51,24 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 31.63% matched (MAX)** — 1,343 / 6,871 functions exact (19.5%), weighted by size over 852,607 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 32.84% matched (MAX)** — 1,406 / 6,871 functions exact (20.5%), weighted by size over 852,607 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           1,338 |   31.61% | last measured score                            |
-| MAX   |           1,343 |   31.63% | best result for each function's current source |
-| HIST  |           1,343 |   31.63% | all-time peak across source revisions          |
+| CUR   |           1,387 |   32.81% | last measured score                            |
+| MAX   |           1,406 |   32.84% | best result for each function's current source |
+| HIST  |           1,406 |   32.84% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `game`        |    39 | 1030 / 1291 (79.8%) |    94.34% |
+| `game`        |    41 | 1093 / 1364 (80.1%) |    94.59% |
 | `rmg`         |     3 |   234 / 317 (73.8%) |    92.55% |
 | `zlib-1.1.3`  |    12 |     43 / 56 (76.8%) |    99.97% |
 | `codec`       |     3 |     21 / 36 (58.3%) |    95.07% |
 | `victor`      |     6 |     15 / 17 (88.2%) |    99.98% |
-| `(unmatched)` |     — |    0 / 5,154 (0.0%) |      0.0% |
+| `(unmatched)` |     — |    0 / 5,081 (0.0%) |      0.0% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 
