@@ -562,15 +562,17 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
                     foughtBattle, curMoveCost, nextMoveMinCost);
             break;
 
-        case TOWN: {
-            town* thisTown = g_game->getTown(destCell->m_extraInfo);
-            if (!g_game->onSameTeam(thisTown->m_owner, g_netLocalGamePos)
-                && thisTown->hasGarrison())
+        case TOWN:
+            // DC expands GetTown (game.h:1016..1018) once for the owner test
+            // and again for HasGarrison; there is no town local.
+            if (!g_game->onSameTeam(
+                    g_game->getTown(destCell->m_extraInfo)->m_owner,
+                    g_netLocalGamePos)
+                && g_game->getTown(destCell->m_extraInfo)->hasGarrison())
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
                     foughtBattle, curMoveCost, nextMoveMinCost);
             break;
-        }
 
         case BORDER_GATE:
             if (!(g_game->m_borderTentVisitFlags[destCell->m_objectIndex]
