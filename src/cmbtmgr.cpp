@@ -3327,7 +3327,9 @@ void combatManager::removeArmyFromGrid(const army& a)
 // DC 4071 reads the side field without a GetOwningSide call, and retail
 // loads only its low byte at both stores; Mac 0x74d6c loads and sign-extends
 // the second side before computing the front index, so that copy is a
-// narrowed local (Windows 99.77 -> 100%, Mac 85.64 -> 93.09%).
+// narrowed local (Windows 99.77 -> 100%, Mac 85.64 -> 93.09%). RoE-era
+// Loki 0x80b6258 instead loads it after offsetToFront's retained is() call;
+// the direct store there scores Windows 100% but Mac 81.91%.
 // The reversed offset/index sum is byte-flat on both compilers.
 VA(0x004687c0, 0x99)
 DC_ADDRESS(0x0623cc, 0xac)
