@@ -866,8 +866,8 @@ rva	size	kind	name	unit	evidence
 0x0005d4ca	0x65	func	??1TOptionsDlg@@UAE@XZ	OptionsDlg	masked body (101 bytes, 8 relocations) unique at a census start
 0x0005ed35	0x26	func	??0TNewMapParams@TMapDoc@@QAE@W4EGameVersion@@W4TSize@TGameMap@@_NV?$auto_ptr@UTRandomMapParams@TMapDoc@@@std@@@Z	MapDoc	masked body (38 bytes, 0 relocations) unique at a census start
 0x0005ed76	0x10	func	??1TNewMapParams@TMapDoc@@QAE@XZ	MapDoc	masked body (16 bytes, 1 relocations) unique at a census start
-0x0005f07c	0x4	func	?IsModified@TMapDoc@@UAEHXZ	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??0TMapDoc@@IAE@XZ slot 22
-0x0005f080	0xa	func	?SetModifiedFlag@TMapDoc@@UAEXH@Z	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??0TMapDoc@@IAE@XZ slot 23
+0x0005f07c	0x4	func	?IsModified@TMapDoc@@UAEHXZ	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??1TMapDoc@@UAE@XZ slot 22
+0x0005f080	0xa	func	?SetModifiedFlag@TMapDoc@@UAEXH@Z	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??1TMapDoc@@UAE@XZ slot 23
 0x0005f6da	0x1	func	??1TAbandonedMine@@UAE@XZ	ObjectSpecializations	referenced by ??_GTAbandonedMine@@UAEPAXI@Z at +0xb; ICF-folded with 1 identical bodies
 0x0005fa68	0x8	func	??1?$pair@IVTGameMap@@@std@@QAE@XZ	MapDoc	referenced by ?pop_front@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAEXXZ at +0xd
 0x00060a9c	0x15	func	??_D?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEXXZ	MapDoc	referenced by ?OnFileExportText@TMapDoc@@IAEXXZ at +0x136

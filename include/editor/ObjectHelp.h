@@ -4,7 +4,7 @@
 #ifndef HOMM3_EDITOR_OBJECTHELP_H
 #define HOMM3_EDITOR_OBJECTHELP_H
 
-class TObjectType;
+struct TObjectType;
 
 void displayObjectHelp(const TObjectType& objType);
 

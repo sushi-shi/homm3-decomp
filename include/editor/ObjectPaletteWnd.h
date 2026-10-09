@@ -20,6 +20,7 @@
 
 #include "va.h"
 #include "objecttype.h"
+#include "editor/ObjectTypeTable.h"
 #include "editor/Array.h"
 #include "editor/DIBSection.h"
 #include "editor/Player.h"
