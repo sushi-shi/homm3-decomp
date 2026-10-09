@@ -73,8 +73,7 @@ int TTownPropsGarrisonPage::OnCreate(LPCREATESTRUCT lpCreateStruct)
     return 0;
 }
 
-// h3maped 0x4c4e2f..0x4c4e46: the census ends this body before its `ret`
-// at a weak seed (0x4c4e45).
+VA(0x004c4e2f, 0x17)
 void TTownPropsGarrisonPage::OnDestroy()
 {
     _m_pArmyDlg->DestroyWindow();

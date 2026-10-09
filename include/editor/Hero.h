@@ -210,8 +210,15 @@ public:
 
     bool getBCustomName() const { return _m_bCustomName; }
     bool getBCustomPortrait() const { return _m_bCustomPortrait; }
+    bool getBCustomArmy() const { return _m_bCustomArmy; }
+    void setBCustomArmy(bool bCustomArmy) { _m_bCustomArmy = bCustomArmy; }
     const std::string& getName() const { return _m_name; }
     int getPortrait() const { return _m_portrait; }
+    const TArmy& getArmy() const { return _m_army; }
+    // h3maped 0x44b53a.
+    void setArmy(const TArmy& newArmy);
+    bool getBGroupedFormation() const { return _m_bGroupedFormation; }
+    void setBGroupedFormation(bool bGroupedFormation) { _m_bGroupedFormation = bGroupedFormation; }
 
 private:
     bool _m_bCustomName : 1;

@@ -585,3 +585,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "ArtifactPropsSheet"
 source = "src/editor/ArtifactPropsSheet.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsCreaturesPage"
+source = "src/editor/HeroPropsCreaturesPage.cpp"
+flags = "editor_o1_ob2_gr_windows"

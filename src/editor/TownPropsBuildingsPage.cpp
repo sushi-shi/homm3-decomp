@@ -302,8 +302,7 @@ void TTownPropsBuildingsPage::OnOK()
                    || !(pNewTown->getBuildingStates() == _m_pOldTown->getBuildingStates());
 }
 
-// h3maped 0x4c4541..0x4c4587: the census cuts this body at weak seeds
-// (0x4c4541, 0x4c4542).
+VA(0x004c4541, 0x46)
 void TTownPropsBuildingsPage::OnBuiltCheck()
 {
     HTREEITEM hItem = _m_buildingTree.GetSelectedItem();
@@ -358,8 +357,7 @@ void TTownPropsBuildingsPage::OnSelChangedBuildingTree(NMHDR* pNMHDR, LRESULT* p
     *pResult = 0;
 }
 
-// h3maped 0x4c4706..0x4c48bf: the census cuts this body at a weak seed
-// (0x4c4843).
+VA(0x004c4706, 0x1b9)
 void TTownPropsBuildingsPage::OnCustomizeCheck()
 {
     if (_m_customizeCheck.GetCheck()) {

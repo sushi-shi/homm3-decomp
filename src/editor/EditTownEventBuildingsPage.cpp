@@ -68,7 +68,7 @@ void TEditTownEventBuildingsPage::_buildItem(HTREEITEM hItem)
     _m_buildingTree.SetItem(hItem, TVIF_STATE, NULL, 0, 0, TVIS_BOLD, TVIS_BOLD, 0);
 }
 
-// h3maped 0x41781d..0x4178b1: the census cuts this body at weak seeds (0x417845, 0x41786f).
+VA(0x0041781d, 0x94)
 void TEditTownEventBuildingsPage::_demolishItem(HTREEITEM hItem)
 {
     for (HTREEITEM hChild = _m_buildingTree.GetChildItem(hItem); hChild != NULL;
