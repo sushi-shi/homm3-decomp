@@ -28,6 +28,7 @@
 #include "editor/RawStream.h"
 #include "editor/TilePoint.h"
 #include "editor/TimedEvent.h"
+#include "editor/UniqueSet.h"
 #include "editor/Town.h"
 #include "editor/VictoryCondition.h"
 #include "retailobjecttype.h"
@@ -589,6 +590,8 @@ public:
 
     void _getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc) const;
     void _readHeroSettings(TRawIStream* pIStream, int version);
+    const TNonRandomHero* _findPlayersNonRandomHero(TPlayer player) const;
+    const TIdentifiedHero* _findHero(THeroID heroID) const;
     auto_ptr<TGameObject> _createObject(const TObjectType& objType, TRawIStream* pIStream, int version);
     void _writeHeroSettings(TRawOStream* pOStream, int version) const;
     TMapObjectRef _findObject(const TMapLoc& loc, bool (*pfnPredicate)(const TGameObject&)) const;
@@ -677,8 +680,18 @@ TPlaceObjFailureTooManyTownsOnMap::TPlaceObjFailureTooManyTownsOnMap()
 // _TGetVictoryConditionDataFunc@_TImpl@TGameMap, twelve slots).
 class TGameMap::_TImpl::_TGetVictoryConditionDataFunc : public TVictoryCondition::TVisitor {
 public:
-    _TGetVictoryConditionDataFunc(const _TImpl& map, TVictoryConditionData* pData)
-        : _m_map(map), _m_pData(pData) {}
+    explicit _TGetVictoryConditionDataFunc(const _TImpl& map) : _m_map(map), _m_pData(NULL) {}
+
+    // The record of a condition, or of none.
+    void getData(const TVictoryCondition* pVC, TVictoryConditionData* pData)
+    {
+        if (pVC != NULL) {
+            _m_pData = pData;
+            pVC->accept(this);
+        } else {
+            pData->m_type = eVCNone;
+        }
+    }
 
     virtual void visit(const TVCAquireArtifact& vc);
     virtual void visit(const TVCAccumulateCreature& vc);
@@ -707,8 +720,17 @@ private:
 // ...and its loss-condition record (four slots).
 class TGameMap::_TImpl::_TGetLossConditionDataFunc : public TLossCondition::TVisitor {
 public:
-    _TGetLossConditionDataFunc(const _TImpl& map, TLossConditionData* pData)
-        : _m_map(map), _m_pData(pData) {}
+    explicit _TGetLossConditionDataFunc(const _TImpl& map) : _m_map(map), _m_pData(NULL) {}
+
+    void getData(const TLossCondition* pLC, TLossConditionData* pData)
+    {
+        if (pLC != NULL) {
+            _m_pData = pData;
+            pLC->accept(this);
+        } else {
+            pData->m_type = eLCNone;
+        }
+    }
 
     virtual void visit(const TLCLoseTown& lc);
     virtual void visit(const TLCLoseHero& lc);
@@ -1604,6 +1626,228 @@ const TLinkableObject* TGameMap::_TImpl::getPLinkableObject(int linkID) const
     while (pLinkable->getLinkID() != linkID)
         pLinkable = pLinkable->getPContainedObject();
     return pLinkable;
+}
+
+// A player's town types when the map does not choose them: those of its
+// towns, else of its heroes; any type when a town or hero is random or the
+// player has neither.
+VA(0x00423a2e, 0xf2)
+TPlayerInfo::TTownTypes TGameMap::_TImpl::getDefaultTownTypes(TPlayer player) const
+{
+    TPlayerInfo::TTownTypes result;
+    const _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[player];
+    int numTownTypes = _m_version != GAME_VERSION_ROE ? kNumTownTypes : kNumTownTypes - 1;
+    if (playerBookkeeping.m_townRefs.size() > 0) {
+        if (playerBookkeeping.m_numRandomTowns > 0) {
+            result.m_mask = ~bitset<kNumTownTypes>(0);
+            result.m_bRandom = true;
+            return result;
+        }
+        for (int townType = 0; townType < numTownTypes; townType++)
+            result.m_mask.set(townType, playerBookkeeping.m_aNumTownsOfType[townType] > 0);
+    } else if (playerBookkeeping.m_numRandomHeroes > 0
+               || find_if(playerBookkeeping.m_aNumHeroesOfType.begin(),
+                          playerBookkeeping.m_aNumHeroesOfType.begin() + numTownTypes,
+                          bind2nd(greater<unsigned int>(), 0U))
+                      == playerBookkeeping.m_aNumHeroesOfType.begin() + numTownTypes) {
+        result.m_mask = ~bitset<kNumTownTypes>();
+        result.m_bRandom = true;
+        return result;
+    } else {
+        for (int townType = 0; townType < numTownTypes; townType++)
+            result.m_mask.set(townType, playerBookkeeping.m_aNumHeroesOfType[townType] > 0);
+    }
+    result.m_bRandom = false;
+    return result;
+}
+
+// The map file: the header the scenario list reads, the editor's settings,
+// the cells, the numbered object types, the objects (a town's visiting hero
+// right after it), the timed events and the reserved tail.
+VA(0x00423b20, 0xc10)
+void TGameMap::_TImpl::save(streambuf* pStreamBuf) const
+{
+    TRawOStream stream(pStreamBuf);
+    TGameMapHeader header;
+    header.m_bPlayable = _isPlayable();
+    header.m_dimension = _s_akDimension[_m_size];
+    header.m_bTwoLayer = _m_bTwoLayer;
+    header.m_name = _m_pProperties->m_name;
+    header.m_desc = _m_pProperties->m_desc;
+    header.m_difficulty = _m_pProperties->m_difficulty;
+    header.m_maxHeroLevel = _m_pProperties->m_maxHeroLevel;
+    for (int player = 0; player < kNumPlayers; player++) {
+        const _TPlayerBookkeeping& playerBookkeeping = *_m_apPlayerBookkeeping[player];
+        const TPlayerInfo& playerInfo = (*_m_pProperties->m_paPlayer)[player];
+        TGameMapHeader::TPlayerSlot& slot = header.m_aPlayer[player];
+        slot.m_bHumanPlayable = playerInfo.getBHumanPlayable();
+        slot.m_bComputerPlayable = playerInfo.getBComputerPlayable();
+        slot.m_behaviorType = playerInfo.getBehaviorType();
+        if (playerInfo.getBPresent()) {
+            const TPlayerInfo::TTownTypes& townTypes = playerInfo.getBCustomTownTypes()
+                                                           ? playerInfo.getTownTypes()
+                                                           : getDefaultTownTypes(TPlayer(player));
+            slot.m_bCustomTownTypes = playerInfo.getBCustomTownTypes();
+            slot.m_townTypes = townTypes.m_mask;
+            slot.m_bRandomTown = townTypes.m_bRandom;
+        }
+        slot.m_bHasMainTown = playerInfo.getBHasMainTown();
+        if (playerInfo.getBHasMainTown()) {
+            slot.m_bGenerateHero = playerInfo.getBGenerateHero();
+            const TMapObjectRef& mainTownRef = playerInfo.getMainTownRef();
+            const TTown* pMainTown = dynamic_cast<const TTown*>(
+                getLayer(mainTownRef.getBSecondLayer()).getPObject(mainTownRef.getObjectID()));
+            slot.m_mainTownType = pMainTown->getType() != RANDOM_TOWN ? pMainTown->getTownType() : -1;
+            _getObjectLoc(mainTownRef, &slot.m_mainTownLoc);
+        }
+        slot.m_bRandomHero = playerBookkeeping.m_numRandomHeroes > 0;
+        if (playerBookkeeping.m_paHeroID->size() > 0) {
+            const TNonRandomHero* pHero = _findPlayersNonRandomHero(TPlayer(player));
+            slot.m_heroID = pHero->getHeroID();
+            slot.m_heroPortrait = pHero->getBCustomPortrait() ? pHero->getPortrait() : -1;
+            if (pHero->getBCustomName())
+                slot.m_heroName = pHero->getName();
+        } else {
+            slot.m_heroID = -1;
+        }
+        slot.m_numPlaceholders = playerBookkeeping.m_numHeroPlaceholders;
+        slot.m_heroes.reserve(playerBookkeeping.m_paHeroID->size() + playerBookkeeping.m_paHeroPlaceholderID->size());
+        set<THeroID>::const_iterator pHeroID;
+        for (pHeroID = playerBookkeeping.m_paHeroID->begin(); pHeroID != playerBookkeeping.m_paHeroID->end();
+             ++pHeroID) {
+            slot.m_heroes.resize(slot.m_heroes.size() + 1, TGameMapHeader::THeroIdentity());
+            slot.m_heroes.back().m_heroID = *pHeroID;
+            const TIdentifiedHero* pHero = _findHero(*pHeroID);
+            if (pHero->getBCustomName())
+                slot.m_heroes.back().m_name = pHero->getName();
+        }
+        for (pHeroID = playerBookkeeping.m_paHeroPlaceholderID->begin();
+             pHeroID != playerBookkeeping.m_paHeroPlaceholderID->end(); ++pHeroID) {
+            slot.m_heroes.resize(slot.m_heroes.size() + 1, TGameMapHeader::THeroIdentity());
+            slot.m_heroes.back().m_heroID = *pHeroID;
+        }
+    }
+    {
+        _TGetVictoryConditionDataFunc getVCData(*this);
+        getVCData.getData(_m_pProperties->m_pVictoryCondition.get(), &header.m_vcData);
+    }
+    {
+        _TGetLossConditionDataFunc getLCData(*this);
+        getLCData.getData(_m_pProperties->m_pLossCondition.get(), &header.m_lcData);
+    }
+    const TTeamInfo& teamInfo = *_m_pProperties->m_pTeamInfo;
+    header.m_numTeams = teamInfo.getBHasTeams() ? teamInfo.getNumTeams() : 0;
+    if (teamInfo.getBHasTeams()) {
+        for (player = 0; player < kNumPlayers; player++)
+            header.m_aTeam[player] = teamInfo.getPlayerTeam(TPlayer(player));
+    }
+    int numHeroes = _m_version != GAME_VERSION_ROE ? kNumHeroes : 128;
+    for (THeroID heroID = 0; heroID < numHeroes; heroID++)
+        header.m_availableHeroes.set(heroID, !_m_pBookkeeping->m_heroesOnMap.test(heroID)
+                                                 && !_m_pProperties->m_disabledHeroes.test(heroID));
+    unsigned int numPlaceholderHeroes = 0;
+    for (player = 0; player < kNumPlayers; player++)
+        numPlaceholderHeroes += _m_apPlayerBookkeeping[player]->m_paHeroPlaceholderID->size();
+    header.m_placeholderHeroIDs.reserve(numPlaceholderHeroes);
+    for (player = 0; player < kNumPlayers; player++) {
+        const set<THeroID>& placeholderHeroIDs = *_m_apPlayerBookkeeping[player]->m_paHeroPlaceholderID;
+        for (set<THeroID>::const_iterator pHeroID = placeholderHeroIDs.begin(); pHeroID != placeholderHeroIDs.end();
+             ++pHeroID)
+            header.m_placeholderHeroIDs.push_back(*pHeroID);
+    }
+    for (heroID = 0; heroID < kNumHeroes; heroID++) {
+        const THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
+        const THeroPrototype& gamePrototype = THero::s_akTraits[heroID].m_prototype;
+        if (prototype.getName() == gamePrototype.getName() && prototype.getPortrait() == gamePrototype.getPortrait()
+            && prototype.getAvailability() == gamePrototype.getAvailability())
+            continue;
+        TGameMapHeader::TCustomHero customHero;
+        if (prototype.getPortrait() != gamePrototype.getPortrait())
+            customHero.m_portrait = prototype.getPortrait();
+        if (prototype.getName() != gamePrototype.getName())
+            customHero.m_name = prototype.getName();
+        customHero.m_availability = prototype.getAvailability();
+        header.m_customHeroes.insert(map<int, TGameMapHeader::TCustomHero>::value_type(heroID, customHero));
+    }
+    header.write(stream, _m_version);
+    signed char aReserved[31];
+    fill_n(aReserved, sizeof(aReserved), 0);
+    stream << aReserved;
+    if (_m_version >= GAME_VERSION_SOD) {
+        writeBitset(stream, _m_pProperties->m_disabledArtifacts);
+    } else if (_m_version >= GAME_VERSION_AB) {
+        bitset<129> disabledArtifacts(0);
+        copy(TBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 0),
+             TBitsetIterator<kNumArtifacts>(_m_pProperties->m_disabledArtifacts, 129),
+             TBitsetIterator<129>(disabledArtifacts, 0));
+        writeBitset(stream, disabledArtifacts);
+    }
+    if (_m_version >= GAME_VERSION_SOD) {
+        writeBitset(stream, _m_pProperties->m_disabledSpells);
+        writeBitset(stream, _m_pProperties->m_disabledSkills);
+    }
+    writeContainer(stream, *_m_pProperties->m_paRumor);
+    if (_m_version >= GAME_VERSION_SOD)
+        _writeHeroSettings(&stream, _m_version);
+    long numObjs = 0;
+    unsigned int numLayers = _m_bTwoLayer ? 2 : 1;
+    unsigned int layerNum;
+    for (layerNum = 0; layerNum < numLayers; layerNum++) {
+        writeCellData(stream, _m_aLayer[layerNum]);
+        for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd();
+             ++iter) {
+            numObjs++;
+            const TTown* pTown = dynamic_cast<const TTown*>(_m_aLayer[layerNum].getPObject(*iter));
+            if (pTown != NULL && pTown->getPVisitingHero() != NULL)
+                numObjs++;
+        }
+    }
+    TUniqueSet<TObjectType> objTypes;
+    static const TObjectTypeTable kObjTypeTable("objtmplt.txt");
+    for (vector<TObjectType>::const_iterator pObjType = kObjTypeTable.m_objectTypes.begin();
+         pObjType != kObjTypeTable.m_objectTypes.end(); ++pObjType)
+        objTypes.add(*pObjType);
+    vector<long> aObjTypeID(numObjs);
+    long objNum = 0;
+    for (layerNum = 0; layerNum < numLayers; layerNum++) {
+        for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd();
+             ++iter) {
+            const TGameObject* pObj = _m_aLayer[layerNum].getPObject(*iter);
+            aObjTypeID[objNum++] = objTypes.add(pObj->getObjectType());
+            const TTown* pTown = dynamic_cast<const TTown*>(pObj);
+            if (pTown != NULL && pTown->getPVisitingHero() != NULL)
+                aObjTypeID[objNum++] = objTypes.add(pTown->getPVisitingHero()->getObjectType());
+        }
+    }
+    stream << static_cast<long>(objTypes.numItems());
+    for (unsigned int typeID = 0; typeID < objTypes.numItems(); typeID++)
+        stream << objTypes.get(typeID);
+    signed char aObjReserved[5];
+    fill_n(aObjReserved, sizeof(aObjReserved), 0);
+    objNum = 0;
+    stream << numObjs;
+    for (layerNum = 0; layerNum < numLayers; layerNum++) {
+        for (TLayer::TObjectIDIter iter = _m_aLayer[layerNum].objectIDBegin(); iter != _m_aLayer[layerNum].objectIDEnd();
+             ++iter) {
+            TTilePoint loc = _m_aLayer[layerNum].getObjectLoc(*iter);
+            stream << static_cast<unsigned char>(loc.x()) << static_cast<unsigned char>(loc.y())
+                   << static_cast<unsigned char>(layerNum) << aObjTypeID[objNum++] << aObjReserved;
+            const TGameObject* pObj = _m_aLayer[layerNum].getPObject(*iter);
+            pObj->write(&stream, _m_version);
+            const TTown* pTown = dynamic_cast<const TTown*>(pObj);
+            if (pTown != NULL && pTown->getPVisitingHero() != NULL) {
+                stream << static_cast<unsigned char>(loc.x()) << static_cast<unsigned char>(loc.y())
+                       << static_cast<unsigned char>(layerNum) << aObjTypeID[objNum++] << aObjReserved;
+                pTown->getPVisitingHero()->write(&stream, _m_version);
+            }
+        }
+    }
+    stream << static_cast<long>(_m_pProperties->m_paTimedEvent->size());
+    for (unsigned int event = 0; event < _m_pProperties->m_paTimedEvent->size(); event++)
+        (*_m_pProperties->m_paTimedEvent)[event].write(&stream, _m_version);
+    signed char aMapReserved[124];
+    fill_n(aMapReserved, sizeof(aMapReserved), 0);
+    stream << aMapReserved;
 }
 
 // Whether an object fits at (x, y): its trigger cells on the map, its
@@ -2712,6 +2956,44 @@ auto_ptr<TLossCondition> TGameMap::_TImpl::_reconstructLossCondition(const TLoss
     if (pResult == NULL)
         throw TAllocationFailure();
     return auto_ptr<TLossCondition>(pResult);
+}
+
+// The non-random hero a player starts with: one it owns on the map, or
+// visiting one of its towns.
+VA(0x00429854, 0x112)
+const TNonRandomHero* TGameMap::_TImpl::_findPlayersNonRandomHero(TPlayer player) const
+{
+    unsigned int numLayers = _m_bTwoLayer ? 2 : 1;
+    for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+        const TLayer* pLayer = getPLayer(layerNum);
+        for (TLayer::TObjectIDIter iter = pLayer->objectIDBegin(); iter != pLayer->objectIDEnd(); ++iter) {
+            const TPlayableObject* pPlayable = dynamic_cast<const TPlayableObject*>(pLayer->getPObject(*iter));
+            if (pPlayable != NULL && pPlayable->getOwner() == player) {
+                const TNonRandomHero* pHero = dynamic_cast<const TNonRandomHero*>(pPlayable);
+                if (pHero != NULL)
+                    return pHero;
+                const TTown* pTown = dynamic_cast<const TTown*>(pPlayable);
+                if (pTown != NULL && pTown->getPVisitingHero() != NULL) {
+                    pHero = dynamic_cast<const TNonRandomHero*>(pTown->getPVisitingHero());
+                    if (pHero != NULL)
+                        return pHero;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+// A specific hero on the map: standing there or visiting a town.
+VA(0x00429966, 0x77)
+const TIdentifiedHero* TGameMap::_TImpl::_findHero(THeroID heroID) const
+{
+    TMapObjectRef heroRef = _m_pBookkeeping->m_paHeroRef->find(heroID)->second;
+    const TGameObject* pObj = getLayer(heroRef.getBSecondLayer()).getPObject(heroRef.getObjectID());
+    const TIdentifiedHero* pHero = dynamic_cast<const TIdentifiedHero*>(pObj);
+    if (pHero == NULL)
+        pHero = static_cast<const TIdentifiedHero*>(dynamic_cast<const TTown*>(pObj)->getPVisitingHero());
+    return pHero;
 }
 
 VA(0x00429a12, 0x4e)

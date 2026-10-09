@@ -111,6 +111,8 @@ public:
     const TPrimarySkills& getPrimarySkills() const { return _m_pImpl->m_aPrimarySkill; }
     int getSex() const { return _m_pImpl->m_sex; }
     int getExperience() const { return _m_pImpl->m_experience; }
+    const std::string& getName() const { return _m_pImpl->m_name; }
+    int getPortrait() const { return _m_pImpl->m_portrait; }
     const TPlayerMask& getAvailability() const { return _m_pImpl->m_availability; }
 
     friend bool operator==(const THeroPrototype& lhs, const THeroPrototype& rhs);
@@ -194,6 +196,11 @@ public:
     // 0xff, and ignores a new one; 0x44bf12, 0x45726f).
     virtual void setStoredHeroID(unsigned char heroID) = 0;
     virtual unsigned char getStoredHeroID() const = 0;
+
+    bool getBCustomName() const { return _m_bCustomName; }
+    bool getBCustomPortrait() const { return _m_bCustomPortrait; }
+    const std::string& getName() const { return _m_name; }
+    int getPortrait() const { return _m_portrait; }
 
 private:
     bool _m_bCustomName : 1;

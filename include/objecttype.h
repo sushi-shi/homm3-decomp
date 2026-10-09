@@ -208,6 +208,11 @@ inline TObjectType::TObjectType()
 
 class TObjectTypeTable {
 public:
+    TObjectTypeTable() {}
+    // The map editor's writer keeps one loaded from objtmplt.txt (h3maped
+    // 0x4242b1 constructs it in place, then loads it).
+    explicit TObjectTypeTable(char* fileName) { load(fileName); }
+
     std::vector<TObjectType> m_objectTypes;
     void load(char* fileName);
 };

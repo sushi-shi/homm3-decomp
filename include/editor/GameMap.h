@@ -73,6 +73,7 @@ private:
 
 // A rumor in the map file: its name and text (h3maped 0x4b4ad0).
 TRawIStream& operator>>(TRawIStream& stream, TRumor& rumor);
+TRawOStream& operator<<(TRawOStream& stream, const TRumor& rumor);
 
 // Who may play a player, how the computer plays it, and its main town
 // (0x18 bytes). Complete adds the town types the player may start with:

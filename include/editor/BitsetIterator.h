@@ -17,6 +17,10 @@ public:
     typedef ptrdiff_t difference_type;
 
     TBitsetIterator(std::bitset<N>& bits, size_t pos) : _m_pBits(&bits), _m_pos(pos) {}
+    // A source range over a const set still reads through bitset::reference
+    // (h3maped's writer copies its 144 artifact bits that way, 0x470324).
+    TBitsetIterator(const std::bitset<N>& bits, size_t pos)
+        : _m_pBits(const_cast<std::bitset<N>*>(&bits)), _m_pos(pos) {}
 
     typename std::bitset<N>::reference operator*() const { return (*_m_pBits)[_m_pos]; }
     TBitsetIterator& operator++()

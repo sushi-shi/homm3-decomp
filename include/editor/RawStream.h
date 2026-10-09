@@ -144,4 +144,12 @@ void readContainer(TRawIStream& stream, std::vector<T>& aItem)
     }
 }
 
+template <class T>
+void writeContainer(TRawOStream& stream, const std::vector<T>& aItem)
+{
+    stream << static_cast<unsigned int>(aItem.size());
+    for (std::vector<T>::const_iterator pItem = aItem.begin(); pItem != aItem.end(); ++pItem)
+        stream << *pItem;
+}
+
 #endif  /* HOMM3_EDITOR_RAWSTREAM_H */

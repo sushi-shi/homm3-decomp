@@ -17,6 +17,7 @@
 #include "editor/ResourceQuantities.h"
 
 class TRawIStream;
+class TRawOStream;
 
 // The calendar (Loki's TimedEvent.h: "newDay < kNumDaysPerYear * 2").
 const unsigned int kNumDaysPerWeek = 7;
@@ -31,6 +32,7 @@ public:
 
     // The map file's record (TimedEvent.cpp, h3maped 0x4c025c).
     void read(TRawIStream* pIStream, int version);
+    void write(TRawOStream* pOStream, int version) const;
 
     enum { s_kMaxMessageLen = 300 };
 

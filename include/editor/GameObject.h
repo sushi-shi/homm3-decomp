@@ -72,5 +72,8 @@ private:
 // An object type's identity in the map format (h3maped 0x490944).
 TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objType);
 TRawIStream& operator>>(TRawIStream& stream, TObjectType& objType);
+// The object types' order, member by member (the less instance h3maped
+// keeps, 0x490b77, compares the type, subtype and masks in turn).
+bool operator<(const TObjectType& lhs, const TObjectType& rhs);
 
 #endif  /* HOMM3_EDITOR_GAMEOBJECT_H */

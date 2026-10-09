@@ -130,7 +130,10 @@ public:
         TPlayerMask m_availability;
     };
 
+    TGameMapHeader() {}
     TGameMapHeader(TRawIStream& stream, int version);
+
+    void write(TRawOStream& stream, int version) const;
 
     bool m_bPlayable;
     unsigned int m_dimension;
