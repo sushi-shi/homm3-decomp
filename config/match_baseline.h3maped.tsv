@@ -957,7 +957,7 @@ MemoryDC	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	100.0000	100.0000	100.0000	0
 MemoryDC	?BitBlt@CDC@@QAEHHHHHPAV1@HHK@Z	100.0000	100.0000	100.0000	0x876e5	-
 MemoryDC	?SelectObject@CDC@@QAEPAVCBitmap@@PAV2@@Z	100.0000	100.0000	100.0000	0x876ce	-
 MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HH@Z	100.0000	100.0000	100.0000	0x87521	tokens1:52f0d023492a
-MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HHK@Z	56.2178	56.2178	56.2178	0x87042	tokens1:ac0e289f2e0a
+MemoryDC	?drawTransparentBitmap@@YAXPAVCDC@@PAVCBitmap@@HHK@Z	56.3786	56.3786	56.3786	0x87042	tokens1:ac0e289f2e0a
 MemoryDC	?getFirstMenuItem@@YAIPAVCMenu@@@Z	0.0000	0.0000	0.0000	0x875d4	tokens1:524b1c06c1e1
 MemoryDC	?getTransparentColor@@YAKPAVCBitmap@@@Z	100.0000	100.0000	100.0000	0x86fb4	tokens1:82437037c163
 MemoryDC	?isPixelColor@@YA_NPAVCBitmap@@HHK@Z	100.0000	100.0000	100.0000	0x87543	tokens1:0151ed410c8e
@@ -1002,7 +1002,7 @@ PannerCtrl	?_draw@TPannerCtrl@@AAEXPAVCDC@@@Z	99.7297	99.7297	99.7297	0x93c6c	to
 PannerCtrl	?_setOffset@TPannerCtrl@@AAEXABVCSize@@@Z	100.0000	100.0000	100.0000	0x93edd	tokens1:bd61025070ba
 PannerCtrl	?_track@TPannerCtrl@@AAEXABVCPoint@@@Z	100.0000	100.0000	100.0000	0x93d50	tokens1:6b4d5f60da6d
 PannerCtrl	?loadCursors@@YAXXZ	100.0000	100.0000	100.0000	0x93839	tokens1:c5eeada51093
-PannerCtrl	?relayEvent@TPannerCtrl@@QAEXPBUtagMSG@@@Z	72.3429	72.3429	73.1970	0x93a8d	tokens1:55b4842ed3df
+PannerCtrl	?relayEvent@TPannerCtrl@@QAEXPBUtagMSG@@@Z	78.5918	78.5918	78.5918	0x93a8d	tokens1:55b4842ed3df
 PannerCtrl	__h3cg$PannerCtrl$static_dtor$className	100.0000	100.0000	100.0000	0x93a1e	-
 Player	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0xbe6e6	-
 Player	?InitializePlayerTraitsTable@@YA_NXZ	90.4387	90.4387	90.4387	0x94324	tokens1:681eba712e3e
@@ -1173,11 +1173,11 @@ objecttype	??0istrstream@std@@QAE@PBD@Z	99.8809	99.8809	99.8809	0x90d31	-
 objecttype	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x2055	-
 objecttype	??0strstreambuf@std@@QAE@PBDH@Z	100.0000	100.0000	100.0000	0x90da3	-
 objecttype	??1?$ctype@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x32aa7	-
-objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	56.4103	56.4103	56.4103	0x2bc12	-
+objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	100.0000	100.0000	100.0000	0x2bc12	-
 objecttype	??5@YAAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	82.4468	82.4468	82.4468	0x907c9	-
-objecttype	??5@YAAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$08@1@@Z	45.7143	45.7143	45.7143	0x91136	-
-objecttype	??5@YAAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$0DA@@1@@Z	41.4286	41.4286	41.4286	0x90f3f	-
-objecttype	??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	67.8161	67.8161	67.8161	0x91fa1	-
+objecttype	??5@YAAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$08@1@@Z	100.0000	100.0000	100.0000	0x91136	-
+objecttype	??5@YAAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$0DA@@1@@Z	100.0000	100.0000	100.0000	0x90f3f	-
+objecttype	??5std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@0@AAV10@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	100.0000	100.0000	100.0000	0x91fa1	-
 objecttype	??U@YA?AV?$bitset@$0DA@@std@@ABV01@0@Z	100.0000	100.0000	100.0000	0x90f10	-
 objecttype	??_4?$bitset@$09@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x2d030	-
 objecttype	??_4?$bitset@$0DA@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x91432	-
@@ -1234,7 +1234,7 @@ objecttype	?insert@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D
 objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXPAUTObjectType@@IABU3@@Z	100.0000	100.0000	100.0000	0x2ccf3	-
 objecttype	?insert@?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@QAEPAU_TImageInfo@TObjectType@@PAU34@ABU34@@Z	100.0000	100.0000	100.0000	0x915a6	-
 objecttype	?insert@?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@QAEXPAU_TImageInfo@TObjectType@@IABU34@@Z	100.0000	100.0000	100.0000	0x91ad5	-
-objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	92.3077	92.3077	92.3077	0x2cb17	-
+objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	100.0000	100.0000	100.0000	0x2cb17	-
 objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	99.8684	99.8684	99.8684	0x90c4c	-
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	99.8795	99.8795	99.8795	0x9125b	-
 objecttype	?resize@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXIABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x2be1b	-
