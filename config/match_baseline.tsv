@@ -3433,7 +3433,7 @@ rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	78.7719	78.7
 rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	90.2171	90.2171	90.2171	0x1318b0	tokens1:92135728f1f8
 rmg	?joinExtraZones@type_random_map_generator@@QAEXHPAVTRmgVoronoi@@@Z	76.2772	76.2772	79.6078	0x13dad0	tokens1:43be2d3aaac8
 rmg	?loadObjectPrototypes@t_abstract_random_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x136200	tokens1:2fd672de6240
-rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	83.2103	83.2103	83.2103	0x137ff0	tokens1:d755b803b7b1
+rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	83.2103	83.2103	83.2103	0x137ff0	tokens1:7ba18ca9e486
 rmg	?markBorderObjectArea@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	100.0000	100.0000	100.0000	0x140fc0	tokens1:0bcf3d0e86d0
 rmg	?markCoastalTiles@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131310	tokens1:e42507539cf1
 rmg	?markObstacleFillPatch@type_random_map@@QAEXUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x131bd0	tokens1:19e6a90d2c89

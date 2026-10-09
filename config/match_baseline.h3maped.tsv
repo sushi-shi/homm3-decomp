@@ -2419,7 +2419,7 @@ rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZ
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	99.1751	99.1751	99.1751	0xa5c07	-
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	93.1254	93.1254	93.1254	0xa7605	-
 rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	96.9458	96.9458	96.9458	0xab6ac	-
-rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9675	83.9675	83.9675	0xabd5f	-
+rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9579	83.9675	83.9675	0xabd5f	-
 rmg	?createRivers@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac4ae	-
 rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5710	89.5710	89.5710	0xa696b	-
@@ -2485,6 +2485,7 @@ rmg	?getValue@type_quest_creature_def@@UAEHPAUTRmgZone@@PAVtype_random_map_gener
 rmg	?getValue@type_quest_experience_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x9cb60	-
 rmg	?getValue@type_treasure_def@@UAEHPAUTRmgZone@@PAVtype_random_map_generator@@@Z	100.0000	100.0000	100.0000	0x9c54d	-
 rmg	?hasConnectedOutline@type_random_map@@QAEEABV?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@UTRmgMapPosition@@EPAUTRmgZone@@E@Z	100.0000	100.0000	100.0000	0x9a09c	-
+rmg	?hasPlayerSlots@TRmgTemplate@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x9ba1b	-
 rmg	?initializeObjectGenerators@type_random_map_generator@@QAEXXZ	90.0178	90.0178	90.0178	0x9f95a	-
 rmg	?initializeZones@type_random_map_generator@@QAEXPAUTRmgTemplate@@@Z	99.7210	99.7210	99.7210	0xa218c	-
 rmg	?insert@?$list@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAE?AViterator@12@V312@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0xae5a8	-
@@ -2503,7 +2504,7 @@ rmg	?insertRmgWorkItem@@YIXAAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPo
 rmg	?isPassable@TRmgMapItem@@QBEEXZ	100.0000	100.0000	100.0000	0x9a1d8	-
 rmg	?isPlacementBlocked@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@HE@Z	81.2857	81.2857	81.2857	0x9a6f9	-
 rmg	?loadObjectPrototypes@t_abstract_random_generator@@QAEXXZ	77.2231	77.2231	77.2231	0x9da08	-
-rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	84.5722	84.5722	84.5722	0x9f0cd	-
+rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	84.6804	84.6804	84.6804	0x9f0cd	-
 rmg	?markCoastalTiles@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x9a1ef	-
 rmg	?markRiverCoastTarget@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	84.3425	84.3425	84.3425	0xaba05	-
 rmg	?markRiverJoinTargets@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac3df	-

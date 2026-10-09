@@ -677,8 +677,8 @@ struct TRmgTemplate {
     TRmgTemplateZone* findZone(int zoneIndex);
 #if defined(HOMM3_RMG_HOTFIX)
     void getPlayerSlots(b8* humanSlots, b8* allSlots) const;
-    bool hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const;
 #endif
+    bool hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const;
 #if defined(HOMM3_RMG_HOTFIX)
     bool isUsable(s32 humanPlayers, s32 computerPlayers) const;
 #endif

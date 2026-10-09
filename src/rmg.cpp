@@ -1783,6 +1783,25 @@ TRmgTemplateZone* TRmgTemplate::findZone(int zoneIndex)
     return 0;
 }
 
+#if !defined(HOMM3_RMG_HOTFIX)
+// Mac keeps this body after findZone (0x23034c); Windows loadTemplates, its
+// one caller, expands it. Human slots, then every player slot.
+MAC_ADDRESS(0x23034c, 0xa0)
+bool TRmgTemplate::hasPlayerSlots(s32 humanPlayers, s32 computerPlayers) const
+{
+    int playerSlots = 0;
+    for (unsigned int slot = 0; slot < m_zones.size(); ++slot)
+        if (m_zones[slot]->m_kind == RMG_TEMPLATE_HUMAN)
+            ++playerSlots;
+    if (playerSlots < humanPlayers)
+        return false;
+    for (slot = 0; slot < m_zones.size(); ++slot)
+        if (m_zones[slot]->m_kind == RMG_TEMPLATE_COMPUTER)
+            ++playerSlots;
+    return playerSlots >= humanPlayers + computerPlayers;
+}
+#endif
+
 // Shipyard water probing copies all three fields from the object before
 // adding offsets. This ordinary value accessor models that copy boundary;
 // the source name is inferred from the Complete-only retail use.
@@ -4164,21 +4183,6 @@ bool TRmgTemplate::isUsable(s32 humanPlayers, s32 computerPlayers) const
 }
 #endif
 
-static bool hasRmgTemplatePlayerSlots(TRmgTemplate* mapTemplate,
-    int humanPlayers, int computerPlayers)
-{
-    int playerSlots = 0;
-    for (unsigned int slot = 0; slot < mapTemplate->m_zones.size(); ++slot)
-        if (mapTemplate->m_zones[slot]->m_kind == RMG_TEMPLATE_HUMAN)
-            ++playerSlots;
-    if (playerSlots < humanPlayers)
-        return false;
-    for (slot = 0; slot < mapTemplate->m_zones.size(); ++slot)
-        if (mapTemplate->m_zones[slot]->m_kind == RMG_TEMPLATE_COMPUTER)
-            ++playerSlots;
-    return playerSlots >= humanPlayers + computerPlayers;
-}
-
 // Retail-only rmg.txt coordinator. The normalized map volume uses 36*36
 // cells per size unit; islands halve it with a minimum of one. Rows 76..84
 // describe bidirectional connections after the canonical zone reader.
@@ -4193,6 +4197,15 @@ static bool hasRmgTemplatePlayerSlots(TRmgTemplate* mapTemplate,
 // separate island division are byte-flat. Flattened parsing/validation
 // passes score 22.20%, expanding findZone and vector calls retail retains.
 // Preserve the ordinary helpers and the single cleanup; no inline controls.
+// 2026-10-09: Mac keeps the player-slot check as a TRmgTemplate method after
+// findZone (byte-flat here). The four size() and the template push_back's
+// insert are retained in retail under ICF-folded labels; the only real
+// decision left is the name's assign(const char*, size_t), which retail
+// keeps. The replay refuses it with a root cb of at most 515 (now 556, the
+// 1000 floor included) or two more free sites after it, which then expands
+// the push_back insert unless the cb also falls. Separate size-reject and
+// slot-reject deletes (Mac's order) keep two destructor calls (81.00); a
+// nested accept with one fall-through delete gives 79.81.
 VA(0x00537FF0, 0x482)
 MAC_ADDRESS(0x2372ec, 0x304)
 void type_random_map_generator::loadTemplates()
@@ -4232,7 +4245,7 @@ void type_random_map_generator::loadTemplates()
 #if defined(HOMM3_RMG_HOTFIX)
             accepted = mapTemplate->isUsable(m_humanPlayerCount, m_computerPlayerCount);
 #else
-            accepted = hasRmgTemplatePlayerSlots(mapTemplate,
+            accepted = mapTemplate->hasPlayerSlots(
                 m_humanPlayerCount, m_computerPlayerCount);
 #endif
         }
@@ -8671,6 +8684,13 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // retains that lookup; decorateMapCell, openConnectionPath and the seer-hut
 // placement also retain one. The /Ob2 trace allows all of them here, so the
 // retail callers' budgets differ; no local spelling found.
+// 2026-10-09 replay: refusing placeGuard's lookup needs 4..6 more root sites
+// after placeGuard, and those also refuse the second scan's push_back insert
+// (budget 69, cost 64); raising the root cb restores the insert but lifts
+// placeGuard's budget with it. Retail's retained by-value lookups
+// (placeGuard's, openConnectionPath's first) pass a by-value position
+// parameter, the expanded ones locals; this compiler expands both forms, so
+// that is a lead for a source difference, not a gate.
 VA(0x00545990, 0x466)
 MAC_ADDRESS(0x249680, 0x5ac)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,

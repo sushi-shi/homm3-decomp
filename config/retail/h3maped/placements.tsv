@@ -1028,6 +1028,7 @@ rva	size	kind	name	unit	evidence
 0x0009b89c	0xc9	func	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	rmg	masked body (201 bytes, 4 relocations) unique at a census start
 0x0009b965	0x81	func	??1TRmgTemplate@@QAE@XZ	rmg	masked body (129 bytes, 7 relocations) unique at a census start
 0x0009b9e6	0x35	func	?findZone@TRmgTemplate@@QAEPAUTRmgTemplateZone@@H@Z	rmg	masked body (53 bytes, 0 relocations) unique at a census start
+0x0009ba1b	0x6e	func	?hasPlayerSlots@TRmgTemplate@@QBE_NHH@Z	rmg	masked body (110 bytes, 0 relocations) unique at a census start
 0x0009ba89	0x2a	func	??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z	rmg	masked body (42 bytes, 2 relocations) unique at a census start
 0x0009bab3	0x23	func	??_Gtype_object@@UAEPAXI@Z	rmg	masked body (35 bytes, 2 relocations) unique at a census start
 0x0009bae3	0x12	func	?clearPlacementMarks@type_object@@QAEXXZ	rmg	masked body (18 bytes, 0 relocations) unique at a census start
