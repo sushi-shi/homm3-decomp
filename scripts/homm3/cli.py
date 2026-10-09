@@ -38,13 +38,16 @@ Subcommands
         config/units.toml (homm3.build.configure; ninja also re-runs it as a
         generator rule).
 
-  build [--fast|--data] [TU ...] [-- <ninja args>]
+  build [--fast|--data] [--skip-image KEY] [TU ...] [-- <ninja args>]
         The final checkpoint (homm3.build.build): configure -> ninja (base objs via
         the pinned `wine cl`) -> delink and normalize comparison copies -> objdiff
         report -> overall %% line -> checkpoint-ledger refresh + observational
         dip report + fatal evidence/source gates + README score block.
         Windows only: Classic Mac pairs are the separate `homm3 mac build`.
         --data adds the complete byte accounting (`homm3 verify data-coverage`).
+        A full build also builds every pinned editor image and fails at once
+        when one's executable or SP3 MFC overlay is missing; --skip-image KEY
+        opts out explicitly and the summary names it.
         Normally use `homm3 build --fast TU` for the inner matching loop:
         compile and normalize only the selected manifest unit, keep existing
         retail targets, and report per-function projected MAX changes without
@@ -225,6 +228,8 @@ def cmd_build(args) -> int:
     if ninja_args and ninja_args[0] == "--":
         ninja_args = ninja_args[1:]
     extra = [flag for flag, on in (("--fast", args.fast), ("--data", args.data)) if on]
+    for key in args.skip_image or []:
+        extra += ["--skip-image", key]
     return run_module("homm3.build.build", *extra, *(ninja_args or []))
 
 
@@ -403,6 +408,9 @@ def _dispatch(argv: list[str]) -> int:
                    help="inner loop: normally supply a TU; stop after the objdiff %% line")
     p.add_argument("--data", action="store_true",
                    help="full build: also refresh the complete byte accounting")
+    p.add_argument("--skip-image", action="append", metavar="KEY",
+                   help="full build: do not build this pinned editor image (repeatable; "
+                        "the summary names it). Without it a missing image input fails")
     p.add_argument("ninja_args", nargs=argparse.REMAINDER,
                    help="manifest TU names or Ninja targets/arguments")
     p.set_defaults(fn=cmd_build)

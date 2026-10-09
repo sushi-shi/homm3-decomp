@@ -20,10 +20,12 @@ movements equal the full projection; other units' MAX is held. Run a full
 build first to establish those targets.
 
 Images (docs/tooling/images.md): a full game build then builds every other
-pinned image whose executable is staged, each in its own process
-(`homm3 --image KEY build`): configure -> ninja -> placements check ->
-delink -> report -> ledger -> banked-rows and VA-claim gates -> README
-block. An image that is not staged is skipped with a note. `--fast` and
+pinned image, each in its own process (`homm3 --image KEY build`):
+configure -> ninja -> placements check -> delink -> report -> ledger ->
+banked-rows and VA-claim gates -> README block. A pinned image whose
+executable (staged copy or `$HOMM3_<KEY>_EXE`) or SP3 MFC overlay is missing
+fails the build before anything compiles; `--skip-image KEY` is the only
+opt-out, and the summary names every skipped image. `--fast` and
 `--image KEY build` build only the selected image, so the game's inner loop
 never waits for an editor.
 """
@@ -101,16 +103,70 @@ def _jobs(ninja_args: list[str]) -> list[str]:
     return out
 
 
-def _build_images(ninja_args: list[str]) -> list[str]:
-    """Build every other staged image in its own process; the failed ones."""
+def _image_problems(skipped: set[str]) -> list[str]:
+    """Why a full build cannot build each pinned image it was not told to skip:
+    its executable has neither a staged copy nor an environment override, or
+    the SP3 MFC overlay is neither staged nor named by $HOMM3_MFC_SP3."""
+    import os
+    from homm3.core import images
+    from homm3.core.project import Project
+    from homm3.init import mfc_sp3
+    problems = []
+    project = Project(ROOT)
+    for key in images.images(ROOT)[1:]:
+        if key in skipped:
+            continue
+        executable = project.executable(images.input_key(key))
+        if not os.environ.get(executable.env_var) and not executable.destination.is_file():
+            problems.append(f"image {key}: {executable.name} not staged; set "
+                            f"${executable.env_var} or run `homm3 --image {key} init "
+                            f"--exe /path/to/{executable.destination.name}`")
+        if not mfc_sp3.staged() and not os.environ.get("HOMM3_MFC_SP3"):
+            problems.append(f"image {key}: SP3 MFC overlay not staged; set $HOMM3_MFC_SP3 "
+                            f"or run `homm3 --image {key} init --mfc-sp3 DIR`")
+    return problems
+
+
+def _skipped_images(argv: list[str]) -> tuple[set[str], list[str]]:
+    """`--skip-image KEY` (repeatable) and the remaining arguments; an
+    unknown or game key is an error, never a silent no-op."""
+    from homm3.core import images
+    known = images.images(ROOT)[1:]
+    skipped, rest, k = set(), [], 0
+    while k < len(argv):
+        arg = argv[k]
+        if arg == "--skip-image" or arg.startswith("--skip-image="):
+            if "=" in arg:
+                key = arg.partition("=")[2]
+            elif k + 1 < len(argv):
+                key = argv[k + 1]
+                k += 1
+            else:
+                raise ValueError("--skip-image needs an image key")
+            if key not in known:
+                raise ValueError(f"--skip-image {key}: not a pinned editor image "
+                                 f"(config/project.toml: {', '.join(known) or 'none'})")
+            skipped.add(key)
+        else:
+            rest.append(arg)
+        k += 1
+    return skipped, rest
+
+
+def _build_images(ninja_args: list[str], skipped: set[str]) -> list[str]:
+    """Build every other pinned image in its own process; the failed ones.
+    The preflight (_image_problems) already refused a missing input."""
+    import os
     from homm3.core import images
     from homm3.init import mfc_sp3
     failures = []
     for key in images.images(ROOT)[1:]:
-        pin = images.pins(ROOT)[images.input_key(key)]
-        if not (ROOT / pin["path"]).is_file() or not mfc_sp3.staged():
-            print(f"[build] image {key}: not staged (`homm3 --image {key} init`); skipped")
+        if key in skipped:
+            print(f"[build] image {key}: SKIPPED (--skip-image {key})")
             continue
+        if not mfc_sp3.staged():
+            print(f"[build] SP3 MFC overlay verified and staged: "
+                  f"{mfc_sp3.stage(os.environ['HOMM3_MFC_SP3'])}")
         print(f"[build] image {key}: building", flush=True)
         if _run(sys.executable, "-m", "homm3", "--image", key, "build",
                 *(["--", *_jobs(ninja_args)] if _jobs(ninja_args) else [])):
@@ -185,11 +241,29 @@ def _image_main(fast: bool, ninja_args: list[str]) -> int:
 def _main(argv: list[str]) -> int:
     fast = "--fast" in argv
     data = "--data" in argv
+    try:
+        skipped, argv = _skipped_images(argv)
+    except ValueError as exc:
+        print(f"[build] {exc}", file=sys.stderr)
+        return 1
     ninja_args = [a for a in argv if a not in ("--fast", "--data")]
     started = time.monotonic()
     from homm3.core import paths
     if not paths.is_game():
+        if skipped:
+            print("[build] --skip-image applies to the full game build only", file=sys.stderr)
+            return 1
         return _image_main(fast, ninja_args)
+    if not fast:
+        # A full build certifies every pinned image; one that cannot build
+        # fails here, before the game compiles, never silently later.
+        problems = _image_problems(skipped)
+        if problems:
+            for line in problems:
+                print(f"[build] {line}", file=sys.stderr)
+            print("[build] FAILED: pinned image inputs missing (stage them, or opt out "
+                  "explicitly with `--skip-image KEY`)", file=sys.stderr)
+            return 1
 
     def phase(name: str) -> None:
         print(f"[build] {name} ({time.monotonic() - started:.0f}s elapsed)", flush=True)
@@ -348,18 +422,20 @@ def _main(argv: list[str]) -> int:
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 
-    failures += _build_images(ninja_args)
+    failures += _build_images(ninja_args, skipped)
     phase("finished")
     print("[build] Mac pairs are not part of `homm3 build`; run `homm3 mac build` "
           "for the Classic Mac preservation checkpoint")
     if not data:
         print("[build] byte accounting skipped; run `homm3 build --data` "
               "to refresh data coverage")
+    note = (" (images NOT built: " + ", ".join(sorted(skipped)) + ", --skip-image)"
+            if skipped else "")
     if failures:
-        print("[build] FAILED gates (details above): " + "; ".join(failures),
+        print("[build] FAILED gates (details above): " + "; ".join(failures) + note,
               file=sys.stderr)
         return 1
-    print("[build] all gates passed")
+    print("[build] all gates passed" + note)
     return 0
 
 

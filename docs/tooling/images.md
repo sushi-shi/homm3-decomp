@@ -153,9 +153,14 @@ and the census names MFC code from `build/mfc-sp3/lib/nafxcw.lib`.
 
 ## Building an image
 
-A full `homm3 build` builds the game, then every other image whose
-executable and SP3 MFC overlay are staged, each in its own process; a
-failed image fails the build. `homm3 --image h3maped build [--fast TU]`
+A full `homm3 build` builds the game, then every other pinned image, each
+in its own process; a failed image fails the build. An image whose
+executable (staged copy or `$HOMM3_<KEY>_EXE`) or SP3 MFC overlay
+(`build/mfc-sp3` or `$HOMM3_MFC_SP3`) is missing fails the build before the
+game compiles, so a tree without the editors can never pass as green.
+`homm3 build --skip-image KEY` is the explicit opt-out; the closing summary
+names every skipped image. `homm3 worktree new` stages each image from the
+seed's copy or its `$HOMM3_<KEY>_EXE` override. `homm3 --image h3maped build [--fast TU]`
 builds one image alone: configure, ninja, the placements check, delink,
 report, ledger, the banked-rows and VA-claim gates and its README block.
 The game's `--fast` loop never builds an image. The steps by hand:

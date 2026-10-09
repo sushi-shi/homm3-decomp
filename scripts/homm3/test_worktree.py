@@ -202,5 +202,75 @@ class ForeignCodeTests(unittest.TestCase):
             self.main, {**environ, root.REEXEC_VARIABLE: str(self.tree)}, cwd=self.tree))
 
 
+_IMAGE_PINS = """
+[inputs.retail]
+name = "retail executable"
+path = "build/orig/HEROES3.EXE"
+size = 1
+sha256 = "0"
+env = "HOMM3_EXE"
+option = "--exe"
+
+[inputs.h3maped]
+name = "GOG Complete map editor"
+image = true
+path = "build/orig/h3maped.exe"
+size = 1
+sha256 = "0"
+env = "HOMM3_H3MAPED_EXE"
+option = "--exe"
+
+[inputs.h3ccmped]
+name = "GOG Complete campaign editor"
+image = true
+path = "build/orig/h3ccmped.exe"
+size = 1
+sha256 = "0"
+env = "HOMM3_H3CCMPED_EXE"
+option = "--exe"
+"""
+
+
+class StageImagesTests(unittest.TestCase):
+    """`worktree new` stages the editor images from the seed or the overrides."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory(prefix="homm3 images ")
+        base = Path(self._tmp.name).resolve()
+        self.seed, self.tree = base / "seed", base / "tree"
+        for checkout in (self.seed, self.tree):
+            (checkout / "config").mkdir(parents=True)
+            (checkout / "config/project.toml").write_text(_IMAGE_PINS)
+        (self.seed / "build/orig").mkdir(parents=True)
+        (self.seed / "build/orig/h3maped.exe").write_bytes(b"x")
+        self.environ = patch.dict("os.environ", {}, clear=False)
+        self.environ.start()
+        import os
+        for name in ("HOMM3_H3MAPED_EXE", "HOMM3_H3CCMPED_EXE", "HOMM3_MFC_SP3"):
+            os.environ.pop(name, None)
+
+    def tearDown(self):
+        self.environ.stop()
+        self._tmp.cleanup()
+
+    def test_seed_copy_then_environment_override_then_a_warning(self):
+        import os
+        self.assertEqual(worktree._image_sources(self.seed, self.tree),
+                         {"h3maped": self.seed / "build/orig/h3maped.exe", "h3ccmped": None})
+        with patch.object(worktree, "_homm3", return_value=0) as homm3:
+            lines = worktree._stage_images(self.seed, self.tree)
+        self.assertEqual(homm3.call_count, 1)
+        self.assertTrue(any("WARNING: image h3ccmped" in line for line in lines))
+
+        os.environ["HOMM3_H3CCMPED_EXE"] = "/store/h3ccmped.exe"
+        os.environ["HOMM3_MFC_SP3"] = "/store/mfc"
+        with patch.object(worktree, "_homm3", return_value=0) as homm3:
+            lines = worktree._stage_images(self.seed, self.tree)
+        calls = [call.args for call in homm3.call_args_list]
+        self.assertEqual(calls[1], (self.tree, "--image", "h3ccmped", "init",
+                                    "--exe", "/store/h3ccmped.exe"))
+        self.assertFalse(any("WARNING" in line for line in lines))
+
+
 if __name__ == "__main__":
     unittest.main()

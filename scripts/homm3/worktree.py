@@ -13,6 +13,10 @@ symlink, executable staging, Mac SDK copy, a full build before `--fast`):
    its verified Mac SDK; the SDK stager rejects symlinks, so it is a real copy.
 3. Run the new tree's own `homm3 init --no-smoke` with the seed's staged
    executables and CodeWarrior tools (hash-verified on staging, no download).
+   Each editor image (`homm3 --image KEY init`) is staged from the seed's
+   copy or its `$HOMM3_<KEY>_EXE` override, with the seed's SP3 MFC overlay
+   or `$HOMM3_MFC_SP3`; an image with neither is reported, since a full
+   `homm3 build` refuses to run without it.
 4. Seed comparison state so `homm3 build --fast TU` works immediately:
    * retail targets, normalized copies and build/gen label/model outputs
      from the seed. Targets come from the retail executable pinned in both
@@ -298,20 +302,39 @@ def _init_arguments(seed: Path) -> list[str]:
     return arguments + ["--no-smoke"]
 
 
-def _stage_images(seed: Path, tree: Path) -> list[str]:
-    """Stage every other image the seed has staged (`homm3 --image KEY init`,
-    hash-verified), with the seed's SP3 MFC overlay when it has one."""
+def _image_sources(seed: Path, tree: Path) -> dict[str, Path | None]:
+    """Each other image's executable for the new tree: the seed's staged copy,
+    else its `$HOMM3_<KEY>_EXE` override, else None."""
     from homm3.core import images
-    lines = []
     project = Project(seed)
-    mfc = seed / "build/mfc-sp3"
+    out = {}
     for key in images.images(tree)[1:]:
-        staged = project.executable(images.input_key(key)).destination
-        if not staged.is_file():
+        executable = project.executable(images.input_key(key))
+        override = os.environ.get(executable.env_var)
+        out[key] = (executable.destination if executable.destination.is_file()
+                    else Path(override).expanduser() if override else None)
+    return out
+
+
+def _stage_images(seed: Path, tree: Path) -> list[str]:
+    """Stage every other image (`homm3 --image KEY init`, hash-verified) from
+    the seed's staged copy or its `$HOMM3_<KEY>_EXE` override, with the seed's
+    SP3 MFC overlay or `$HOMM3_MFC_SP3`. An image with neither is reported:
+    a full `homm3 build` there refuses to run until it is staged."""
+    lines = []
+    mfc = seed / "build/mfc-sp3"
+    for key, source in _image_sources(seed, tree).items():
+        if source is None:
+            lines.append(f"WARNING: image {key}: no staged executable in {seed} and no "
+                         f"override; `homm3 build` fails there until `homm3 --image {key} "
+                         "init --exe PATH` (or `--skip-image " + key + "`)")
             continue
         extra = ["--mfc-sp3", str(mfc)] if mfc.is_dir() else []
-        rc = _homm3(tree, "--image", key, "init", "--exe", str(staged), *extra)
-        lines.append(f"image {key}: " + ("staged" if rc == 0 else
+        if not extra and not os.environ.get("HOMM3_MFC_SP3"):
+            lines.append(f"WARNING: image {key}: no SP3 MFC overlay in {seed} and no "
+                         f"$HOMM3_MFC_SP3; run `homm3 --image {key} init --mfc-sp3 DIR` there")
+        rc = _homm3(tree, "--image", key, "init", "--exe", str(source), *extra)
+        lines.append(f"image {key}: " + (f"staged from {source}" if rc == 0 else
                                           f"staging failed; run `homm3 --image {key} init` there"))
     return lines
 
