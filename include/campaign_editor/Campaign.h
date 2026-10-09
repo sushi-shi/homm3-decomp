@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "campaignmap.h"
+#include "primaryskill.h"
 #include "editor/RefCountingPtr.h"
 #include "editor/Uncopyable.h"
 
@@ -52,8 +53,6 @@ enum TScenarioBonusType {
     eBonusSecondarySkill,
     eBonusResource
 };
-
-enum { kNumPrimarySkills = 4 };
 
 class TScenarioStartingBonus {
 public:

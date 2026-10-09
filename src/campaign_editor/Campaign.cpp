@@ -7,6 +7,7 @@
 #include "va.h"
 #include "bitset_iterator.h"
 #include "campaignmap.h"
+#include "herotraits.h"
 #include "editor/RawStream.h"
 #include "campaign_editor/Campaign.h"
 
@@ -1145,4 +1146,45 @@ VA(0x0040a160, 0xf)
 bool TScenario::getBPrerequisite(int scenario) const
 {
     return _m_pImpl->m_prerequisites[scenario];
+}
+
+// A player that is not in the map is no human's and has no main town.
+VA(0x0040a170, 0x2e)
+void TCampaignScenarioMap::TPlayerInfo::setBPresent(bool bPresent)
+{
+    if (!bPresent) {
+        m_bHumanPlayable = false;
+        m_bHasMainTown = false;
+        m_numPlaceholders = 0;
+        m_mainTownType = -1;
+    }
+    m_bPresent = bPresent;
+}
+
+VA(0x0040a1a0, 0x10)
+void TCampaignScenarioMap::TPlayerInfo::setMainTown(int townType)
+{
+    m_bHasMainTown = true;
+    m_mainTownType = townType;
+}
+
+VA(0x0040a1b0, 0x33)
+void TCampaignScenarioMap::TPlayerInfo::setHeroes(const map<int, string>& newHeroes)
+{
+    m_heroes = newHeroes;
+}
+
+VA(0x0040abe0, 0x116)
+TCampaignScenarioMap::~TCampaignScenarioMap()
+{
+}
+
+// A hero's custom name in the map, else the hero's own.
+VA(0x0040ad00, 0x100)
+string TCampaignScenarioMap::getHeroName(int hero) const
+{
+    map<int, string>::const_iterator it = m_heroNames.find(hero);
+    if (it != m_heroNames.end())
+        return it->second;
+    return akHeroTraits[hero].m_defaultName;
 }
