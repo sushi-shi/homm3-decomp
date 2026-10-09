@@ -34,8 +34,6 @@ public:
 
     enum { s_kMaxMessageLen = 300 };
 
-    TTimedEvent();
-
     void setName(const std::string& newName) { _m_name = newName; }
     void setMessage(const std::string& newMessage) { _m_message = newMessage; }
     void setResourceQuantities(const TResourceQuantities& newQuantities)
