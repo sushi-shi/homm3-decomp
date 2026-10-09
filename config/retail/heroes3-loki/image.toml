@@ -1,0 +1,43 @@
+# The Loki Linux game image used as evidence for the Windows game
+# (config/project.toml [inputs.loki_heroes3]; `homm3 loki-game init --exe PATH`).
+#
+# Provenance: archive.org item `heroes3-linux` holds the Loki Heroes III 1.2 CD
+# (heroes3_linux.bin/.cue) and the official 1.3.1a updates. The CD's
+# bin/x86/heroes3 (md5 cab8b482abc1078124ce41e7b6578e9e) is the `oldsum` of
+# heroes3-1.3.1a-cdrom-x86.run's patch.dat; its xdelta payloads
+# data/heroes3.dynamic.0 and data/heroes3.0 were applied with Debian's
+# xdelta 1.1.3, and both results equal the patch's `newsum`. No Loki binary was
+# executed. The bytes are kept outside the repository
+# (~/Projects/retail/homm3/loki-1.3.1a/patched/, MANIFEST.tsv rows "DERIVED").
+#
+# Both images are stripped: .dynsym exports only _init/_fini, libgcc's
+# __divdi3/__udivdi3/__umoddi3 and libc data. Function boundaries therefore
+# come from a headless Ghidra census, pairing from retail evidence
+# (functions.tsv). heroes3.dynamic links SDL, SDL_mixer, smpeg and smjpeg
+# dynamically, so it carries fewer static libraries than heroes3.
+
+[heroes3_dynamic]
+size = 2396248
+md5 = "f24e74c0f70d02b13dd41551fb048e14"
+sha256 = "6fd0db595138cedacd2bcf03e3cb324d3e9807958fd9a06c592a10119d475925"
+needed = ["libSDL_mixer-1.2.so.0", "libsmjpeg-0.2.so.0", "libsmpeg-0.4.so.0", "libSDL-1.2.so.0",
+          "libpthread.so.0", "libXext.so.6", "libdl.so.2", "libX11.so.6", "libm.so.6", "libc.so.6"]
+# .comment runs in link order: crt1/crti, crtbegin + 121 project objects,
+# 14 C objects, libstdc++/libgcc, crtend/crtn.
+comment_runs = [["egcs-1.1.2", 2], ["2.95.2 19991024 (release)", 122], ["egcs-1.1.2", 14],
+                ["2.95.2 19991024 (release)", 25], ["egcs-1.1.2", 1]]
+
+[heroes3_static]
+size = 4027700
+md5 = "e4bd14e47de6ca2bfdeaa710c57a108b"
+sha256 = "745a465d19d5f54fd80bba1a9dcdc482371ecabc92e3527724da4acfb5e5f30f"
+
+[cd_1_2_heroes3]
+size = 3596112
+md5 = "cab8b482abc1078124ce41e7b6578e9e"
+sha256 = "6ac14c00be1704b9cb729b0eabc6100e3f566190e2c5ac5b5dd5f857450eed5c"
+
+[patch]
+file = "heroes3-1.3.1a-cdrom-x86.run"
+sha256 = "f87d78e09278e2f05cb15e2f79dfeaae2cef8fb147b83185dd4f818c0ab7759e"
+tool = "Debian xdelta 1.1.3"

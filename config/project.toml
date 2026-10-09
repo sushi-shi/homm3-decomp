@@ -70,6 +70,16 @@ census_folds_catch_handlers = true
 # `C:\Dev\Heroes 3 Exp 2\CampaignEditor\` (RTTI anonymous-namespace paths).
 sources = "campaign_editor"
 
+# The Loki Linux game 1.3.1a (GCC 2.95.2 ELF): evidence image for the Windows
+# game's walls, never a build target here (config/retail/heroes3-loki/).
+[inputs.loki_heroes3]
+name = "Loki Linux Heroes III 1.3.1a heroes3.dynamic (evidence image heroes3-loki)"
+path = "build/orig/loki/heroes3.dynamic"
+size = 2396248
+sha256 = "6fd0db595138cedacd2bcf03e3cb324d3e9807958fd9a06c592a10119d475925"
+env = "HOMM3_LOKI_HEROES3"
+option = "--exe"
+
 # Positive CodeView/source spelling equivalences reviewed for this project.
 # Used only by the Dreamcast source-fact audit, never by the generic comparator.
 [type_aliases.dreamcast]

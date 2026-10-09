@@ -118,6 +118,11 @@ Subcommands
   mac <labels|show|disasm|diff|build> ...
         Navigate and byte-compare admitted Classic Mac PowerPC counterparts.
 
+  loki-game <init|census|profile|pair|vtables|calls> ...
+        The Loki Linux game 1.3.1a (GCC 2.95.2 ELF) as evidence for the
+        Windows game: Ghidra census, compiler profile proof, name-free pairing
+        with HEROES3.EXE (config/retail/heroes3-loki/). Separate from `homm3 build`.
+
   link [<homm3.build.link args>] [-- <extra link flags>]
         Link the base objects with genuine VC6 on the retail link line (object
         order, victor/zlib libraries, /OPT:REF) into
@@ -329,6 +334,10 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.analysis.dreamcast", *argv[1:])
     if argv and argv[0] == "mac":
         return run_module("homm3.mac", *argv[1:])
+    if argv and argv[0] == "loki":
+        return run_module("homm3.loki", *argv[1:])
+    if argv and argv[0] == "loki-game":
+        return run_module("homm3.loki_game", *argv[1:])
     if argv and argv[0] == "warnings":
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
     if argv and argv[0] == "victor":
@@ -455,6 +464,10 @@ def _dispatch(argv: list[str]) -> int:
 
     sub.add_parser("mac", add_help=False,
                    help="Classic Mac exact target: labels / show / disasm / diff / build")
+    sub.add_parser("loki", add_help=False,
+                   help="Loki GCC 2.95.2 toolchain staging (toolchain); h3maped tooling lives on decomp-loki-1.0")
+    sub.add_parser("loki-game", add_help=False,
+                   help="Loki Linux game evidence: census / profile / pair / vtables / calls")
 
     p = sub.add_parser("vc6", help="compiler model + solvers: argv / il-diff / "
                        "predict-inline / why-reg / oracle / check (homm3.vc6)")
@@ -507,7 +520,7 @@ def main(argv: list[str] | None = None) -> int:
     shown = ["homm3", *([f"--image={image}"] if image and image != "game" else []), *argv]
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
-    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "mac", "rmg", "victor"} else 1
+    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "mac", "loki", "loki-game", "rmg", "victor"} else 1
     # `dreamcast audit` answers coverage gaps with 3 (gaps) or 4 (findings + gaps).
     audit = argv[:2] == ["dreamcast", "audit"]
     return usage.run_logged(
