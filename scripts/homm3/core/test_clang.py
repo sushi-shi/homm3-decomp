@@ -1,6 +1,67 @@
+import tempfile
+import threading
+import time
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
+from homm3.core import clang
 from homm3.core.clang import _fstream, _functional
+
+
+class PublishTests(unittest.TestCase):
+    """Concurrent clang tools share the generated include trees."""
+
+    def populate_counted(self, calls):
+        def populate(tmp):
+            calls.append(tmp)
+            time.sleep(0.05)
+            (tmp / 'header.h').write_text('int x;\n')
+        return populate
+
+    def test_concurrent_regeneration_never_exposes_a_missing_tree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            destination = Path(tmp) / 'msvc-include'
+            destination.mkdir()
+            (destination / 'header.h').write_text('int old;\n')
+            (destination / '.mirror-stamp').write_text('old\n')
+            calls, misses, stop = [], [], threading.Event()
+
+            def read():
+                while not stop.is_set():
+                    if not (destination / 'header.h').is_file():
+                        misses.append(time.monotonic())
+            reader = threading.Thread(target=read)
+            reader.start()
+            writers = [threading.Thread(target=clang._publish,
+                                        args=(destination, 'new\n', self.populate_counted(calls)))
+                       for _ in range(4)]
+            for writer in writers:
+                writer.start()
+            for writer in writers:
+                writer.join()
+            stop.set()
+            reader.join()
+            self.assertEqual(len(calls), 1)  # the others waited and found it fresh
+            self.assertEqual(misses, [])
+            self.assertEqual((destination / '.mirror-stamp').read_text(), 'new\n')
+            self.assertEqual((destination / 'header.h').read_text(), 'int x;\n')
+            self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()),
+                             ['.msvc-include.lock', 'msvc-include'])
+
+    def test_fresh_tree_is_not_rebuilt_and_fallback_swap_leaves_no_temporaries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            destination = Path(tmp) / 'msvc-include'
+            calls = []
+            clang._publish(destination, 'a\n', self.populate_counted(calls))
+            clang._publish(destination, 'a\n', self.populate_counted(calls))
+            self.assertEqual(len(calls), 1)
+            with patch.object(clang, '_exchange', return_value=False):
+                clang._publish(destination, 'b\n', self.populate_counted(calls))
+            self.assertEqual(len(calls), 2)
+            self.assertEqual((destination / '.mirror-stamp').read_text(), 'b\n')
+            self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()),
+                             ['.msvc-include.lock', 'msvc-include'])
 
 
 class FstreamMirrorTests(unittest.TestCase):

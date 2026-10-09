@@ -18,6 +18,13 @@ Clang header mirror and generated claims. It never borrows these from another
 checkout. CLI defaults still use `HOMM3_DIR`; executable and toolchain environment
 overrides remain supported. This is not a backend registry or plugin framework.
 
+Concurrent Clang tools share the generated header trees (`build/gen/msvc-include`,
+`build/gen/include-lower`). One process at a time regenerates a tree under its
+`.NAME.lock`, builds it aside and swaps it in whole, so a parse never sees a
+missing header. A parse stopped by a fatal diagnostic (a missing header) is
+never written to `build/cache/data-declarations`, and an entry holding one is
+reparsed.
+
 `core.compiler_profile` translates the unit's MSVC profile for all Clang
 consumers: the compilation database, source-fact ASTs, ownership and label IR.
 Consumers add only their actions and necessary parsing options. The translator

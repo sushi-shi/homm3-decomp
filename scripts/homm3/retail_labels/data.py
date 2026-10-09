@@ -198,7 +198,7 @@ def _lookup(path: Path, profiles):
     cache = profiles.project.root / 'build/cache/data-declarations' / (path.stem + '.json')
     try:
         saved = json.loads(cache.read_text())
-        if (saved['fingerprint'] == fingerprint
+        if (saved['fingerprint'] == fingerprint and not _incomplete(saved['errors'])
                 and all(digest is not None and _content_hash(profiles, file) == digest
                         for file, digest in saved['dependencies'].items())):
             return cache, fingerprint, ({int(k): v for k, v in saved['facts'].items()},
@@ -208,7 +208,19 @@ def _lookup(path: Path, profiles):
     return cache, fingerprint, None
 
 
+def _incomplete(errors) -> bool:
+    """A fatal diagnostic ("'x.h' file not found") stopped the parse early.
+
+    It describes the parse's environment (a header mirror being rebuilt by
+    a concurrent tool), not the source, so its result is returned but never
+    cached: a stored one would hide every DATA name of the TU until the TU
+    or a header it read changed."""
+    return any(': fatal error: ' in error for error in errors)
+
+
 def _store(cache: Path, fingerprint: str, profiles, reached, facts, errors) -> None:
+    if _incomplete(errors):
+        return
     dependencies = {file: _content_hash(profiles, file) for file in sorted(reached)}
     cache.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode='w', dir=cache.parent, delete=False) as f:
@@ -227,7 +239,8 @@ def declarations(path: Path, profiles):
     of all project/vendor headers: adding or removing one can change include
     resolution, so it reparses every TU. Profiles is command-scoped, so its
     shared digest and dependency hashes are safe to reuse between that
-    command's concurrent TU parses. Errors are cached too.
+    command's concurrent TU parses. Errors are cached too, except fatal ones
+    (see `_incomplete`).
     """
     cache, fingerprint, hit = _lookup(path, profiles)
     if hit is not None:

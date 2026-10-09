@@ -1,4 +1,5 @@
 """HoMM3 input adapters for the Gruntz data model."""
+import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -51,6 +52,28 @@ class InputAdapterTests(unittest.TestCase):
                 os.utime(source, ns=(before.st_atime_ns, before.st_mtime_ns))
                 self.assertEqual(data.declarations(source, profiles), answer)
                 self.assertEqual(parse.call_count, 2)
+
+    def test_type_cache_never_keeps_a_parse_stopped_by_a_missing_header(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / 'sample.cpp'; source.write_text('#include <vector>')
+            profiles = SimpleNamespace(project=SimpleNamespace(root=root),
+                                       for_source=lambda _path: ['-m32'])
+            failed = ({}, [f"{source}:1:10: fatal error: 'vector' file not found"])
+            answer = ({123: {'size': 4}}, [])
+            with patch.object(data, '_uncached_declarations',
+                              side_effect=[failed, answer, answer]) as parse:
+                self.assertEqual(data.declarations(source, profiles), failed)
+                self.assertEqual(data.declarations(source, profiles), answer)
+                self.assertEqual(data.declarations(source, profiles), answer)
+                self.assertEqual(parse.call_count, 2)
+            # An entry poisoned before this rule existed is a miss, too.
+            cache, fingerprint, _hit = data._lookup(source, profiles)
+            cache.write_text(json.dumps(dict(fingerprint=fingerprint, dependencies={},
+                                             facts={}, errors=failed[1])))
+            with patch.object(data, '_uncached_declarations', return_value=answer) as parse:
+                self.assertEqual(data.declarations(source, profiles), answer)
+                self.assertEqual(parse.call_count, 1)
 
     def test_type_cache_reparses_only_consumers_of_an_edited_header(self):
         with TemporaryDirectory() as tmp:

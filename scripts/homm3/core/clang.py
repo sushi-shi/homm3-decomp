@@ -234,21 +234,69 @@ def clang_bin() -> str | None:
     return exe if exe and Path(exe).exists() else None
 
 
+def _exchange(first: Path, second: Path) -> bool:
+    """Atomically swap two existing directories (Linux renameat2), or False."""
+    import ctypes
+    try:
+        renameat2 = ctypes.CDLL(None, use_errno=True).renameat2
+    except (OSError, AttributeError):
+        return False
+    AT_FDCWD, RENAME_EXCHANGE = -100, 2
+    return renameat2(AT_FDCWD, os.fsencode(first), AT_FDCWD, os.fsencode(second),
+                     RENAME_EXCHANGE) == 0
+
+
+def _publish(destination: Path, want: str, populate) -> Path:
+    """`destination` holding `populate`'s tree and a stamp equal to `want`.
+
+    Concurrent clang tools share these trees, and a reader must never see a
+    half-built or missing one: a parse that does caches "file not found" as a
+    TU's facts. So one process at a time regenerates (an exclusive lock, then
+    the stamp is checked again), the tree is built aside and swapped in
+    whole, and the old tree is removed only after it is out of the way."""
+    stamp = destination / ".mirror-stamp"
+
+    def fresh() -> bool:
+        try:
+            return stamp.read_text() == want
+        except OSError:
+            return False
+
+    if fresh():
+        return destination
+    import fcntl
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with open(destination.parent / f".{destination.name}.lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if fresh():
+            return destination
+        tmp = Path(tempfile.mkdtemp(dir=str(destination.parent), prefix=f".{destination.name}-"))
+        try:
+            populate(tmp)
+            (tmp / stamp.name).write_text(want)
+            if not destination.exists():
+                os.rename(tmp, destination)
+            elif not _exchange(tmp, destination):
+                aside = Path(tempfile.mkdtemp(dir=str(destination.parent),
+                                              prefix=f".{destination.name}-"))
+                os.replace(destination, aside / "old")
+                os.rename(tmp, destination)
+                shutil.rmtree(aside)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+    return destination
+
+
 def mirror(project_root=None, toolchain=None) -> Path | None:
     """The generated lowercase, conformance-patched VC6 include tree.
 
     Regenerated whenever the toolchain root or PATCH_VERSION changes; the
     symlinks cost nothing and only headers requiring conformance fixes are copied."""
     destination = MIRROR if project_root is None else project_root / "build/gen/msvc-include"
-    stamp = destination / ".mirror-stamp"
     root = (toolchain if toolchain is not None else msvc_dir(project_root or common.HOMM3_DIR)) / "include"
     if not root.is_dir():
         return None
-    want = f"{os.path.realpath(root)}\n{PATCH_VERSION}\n"
-    if stamp.is_file() and stamp.read_text() == want:
-        return destination
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    tmp = Path(tempfile.mkdtemp(dir=str(destination.parent)))
+
     def mirror_directory(source: Path, destination: Path) -> None:
         for entry in sorted(source.iterdir()):
             target = destination / entry.name.lower()
@@ -257,20 +305,19 @@ def mirror(project_root=None, toolchain=None) -> Path | None:
                 mirror_directory(entry, target)
             else:
                 target.symlink_to(entry)
-    mirror_directory(root, tmp)
-    for name, rewrite in PATCHES.items():
-        link = tmp / name
-        if not link.exists():
-            continue
-        text = link.resolve().read_text(errors="replace")
-        patched = rewrite(text)
-        link.unlink()
-        link.write_text(patched)
-    (tmp / stamp.name).write_text(want)
-    if destination.is_dir():
-        shutil.rmtree(destination)
-    tmp.replace(destination)
-    return destination
+
+    def populate(tmp: Path) -> None:
+        mirror_directory(root, tmp)
+        for name, rewrite in PATCHES.items():
+            link = tmp / name
+            if not link.exists():
+                continue
+            text = link.resolve().read_text(errors="replace")
+            patched = rewrite(text)
+            link.unlink()
+            link.write_text(patched)
+
+    return _publish(destination, f"{os.path.realpath(root)}\n{PATCH_VERSION}\n", populate)
 
 
 def lowercase_include(directory: Path, project_root: Path) -> Path:
@@ -287,25 +334,18 @@ def lowercase_include(directory: Path, project_root: Path) -> Path:
         return directory
     key = hashlib.sha256(os.path.realpath(directory).encode()).hexdigest()[:12]
     destination = project_root / "build/gen/include-lower" / f"{directory.name.lower()}-{key}"
-    stamp = destination / ".mirror-stamp"
-    want = f"{os.path.realpath(directory)}\n{PATCH_VERSION}\n"
-    if stamp.is_file() and stamp.read_text() == want:
-        return destination
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    tmp = Path(tempfile.mkdtemp(dir=str(destination.parent)))
-    for entry in sorted(directory.iterdir()):
-        if not entry.is_file():
-            continue
-        name = entry.name.lower()
-        if name in LIBRARY_PATCHES:
-            (tmp / name).write_text(LIBRARY_PATCHES[name](entry.read_text(errors="replace")))
-        else:
-            (tmp / name).symlink_to(entry.resolve())
-    (tmp / stamp.name).write_text(want)
-    if destination.is_dir():
-        shutil.rmtree(destination)
-    tmp.replace(destination)
-    return destination
+
+    def populate(tmp: Path) -> None:
+        for entry in sorted(directory.iterdir()):
+            if not entry.is_file():
+                continue
+            name = entry.name.lower()
+            if name in LIBRARY_PATCHES:
+                (tmp / name).write_text(LIBRARY_PATCHES[name](entry.read_text(errors="replace")))
+            else:
+                (tmp / name).symlink_to(entry.resolve())
+
+    return _publish(destination, f"{os.path.realpath(directory)}\n{PATCH_VERSION}\n", populate)
 
 
 def emit_ir(src: Path, extra_flags: list[str] | None = None, *, profiles=None) -> str | None:
