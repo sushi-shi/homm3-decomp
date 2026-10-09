@@ -365,13 +365,20 @@ keyword or assert an exact inline call stack: NB11 has no explicit inline-site
 records, and the helper name join uses nearby definition boundaries. Multiple
 overload/template candidates remain visible.
 
-`types.h` and `types.json` expose named type variants, class sizes, bases,
-members and offsets, bitfields, access, method signatures, virtual slot offsets,
-enums, pointer/reference qualifiers, arrays, function pointers, calling
-conventions and `this` adjustments. `types.json` retains every type record in
-decoded form, while `symbols.json` contains module globals, static data,
-typedefs, constants and compiler records. The global catalogues remain complete
-even in a filtered module export.
+`types.h` renders every named class, struct, union and enum as a readable
+declaration, in the style of Vostok's generated headers: bases with their
+access, `public:`/`protected:`/`private:` sections where access changes,
+member functions grouped by name (overloads together) with `virtual`,
+`static`, `= 0`, `const` and their vtable slot offset, then data members
+with a short `/* 0x0010 */` offset comment, bitfield positions and static
+members. Default `__thiscall`/`__shcall` conventions are omitted; any other
+convention is written. Identical records of one name (one per compiland that
+saw the type) are merged under a `// type 0x1a6e, 0x4d63` comment with the
+size; differing variants are listed in turn, and names with only forward
+records stay visible. `types.json` retains every type record in decoded form
+(attributes, type IDs, `this` adjustments), while `symbols.json` contains
+module globals, static data, typedefs, constants and compiler records. The
+global catalogues remain complete even in a filtered module export.
 
 Three LF_CLASS records in the pinned executable (`0x1cde`, `0x1ed7`, `0x4dba`)
 have truncated names after their large numeric size leaves. The independently

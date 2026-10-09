@@ -1,6 +1,7 @@
 """Reference rendering and regeneration boundaries, without proprietary inputs."""
 import json
 from pathlib import Path
+import struct
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -133,6 +134,93 @@ class ExportTest(unittest.TestCase):
                 "files": ["../keep.cpp"]}))
             with self.assertRaisesRegex(dreamcast.DreamcastError, "invalid generated file paths"):
                 self.run_export(output)
+
+
+def _record(leaf, body):
+    return struct.pack("<HH", len(body) + 2, leaf) + body
+
+
+def _name(value):
+    raw = value.encode("latin1")
+    return bytes([len(raw)]) + raw
+
+
+class ReadableTypesTest(unittest.TestCase):
+    def types(self):
+        base_fields = _record(0x1203, struct.pack("<HHIH", 0x1405, 3, 0x74, 0) + _name("m_id"))
+        args = _record(0x1201, struct.pack("<II", 1, 0x74))
+        no_args = _record(0x1201, struct.pack("<I", 0))
+        widget_ptr = _record(0x1002, struct.pack("<II", 0x1010, 10))
+        const_widget = _record(0x1001, struct.pack("<IH", 0x1010, 1))
+        const_widget_ptr = _record(0x1002, struct.pack("<II", 0x1007, 10))
+        # int Widget::get(int) const, virtual void Widget::draw(), Widget::Widget()
+        get = _record(0x1009, struct.pack("<IIIBBHIi", 0x74, 0x1010, 0x1008, 16, 0, 1, 0x1002, 0))
+        draw = _record(0x1009, struct.pack("<IIIBBHIi", 3, 0x1010, 0x1005, 16, 0, 0, 0x1003, 0))
+        ctor = _record(0x1009, struct.pack("<IIIBBHIi", 3, 0x1010, 0x1005, 16, 0, 0, 0x1003, 0))
+        bits = _record(0x1205, struct.pack("<IBB", 0x75, 3, 2))
+        fields = (struct.pack("<HHIH", 0x1400, 3, 0x1001, 0)
+                  + struct.pack("<HHI", 0x1409, 0, 0x1011)
+                  + struct.pack("<HHIi", 0x140b, 3 | (4 << 2), 0x1006, 8) + _name("draw")
+                  + struct.pack("<HHI", 0x140b, 3, 0x1009) + _name("Widget")
+                  + struct.pack("<HHI", 0x140b, 3, 0x1004) + _name("get")
+                  + struct.pack("<HHIH", 0x1405, 2, 0x74, 8) + _name("m_count")
+                  + struct.pack("<HHIH", 0x1405, 1, 0x100a, 12) + _name("m_flags")
+                  + struct.pack("<HHI", 0x1406, 1, 0x74) + _name("s_total"))
+        enum_fields = (struct.pack("<HHH", 0x403, 3, 0) + _name("RED")
+                       + struct.pack("<HHH", 0x403, 3, 2) + _name("BLUE") + b"\xf2\xf1")
+        records = {
+            0x1000: base_fields,
+            0x1001: _record(0x1005, struct.pack("<HHIIIH", 1, 0, 0x1000, 0, 0, 4) + _name("Base")),
+            0x1002: args,
+            0x1003: no_args,
+            0x1004: get,
+            0x1005: widget_ptr,
+            0x1006: draw,
+            0x1007: const_widget,
+            0x1008: const_widget_ptr,
+            0x1009: ctor,
+            0x100a: bits,
+            0x100b: _record(0x1203, fields),
+            0x100c: _record(0x1203, enum_fields),
+            0x1010: _record(0x1004, struct.pack("<HHIIIH", 8, 0, 0x100b, 0, 0, 16) + _name("Widget")),
+            0x1012: _record(0x1007, struct.pack("<HHII", 2, 0, 0x74, 0x100c) + _name("Colour")),
+            0x1013: _record(0x1007, struct.pack("<HHII", 2, 0, 0x74, 0x100c) + _name("Colour")),
+            0x1014: _record(0x1004, struct.pack("<HHIIIH", 0, 0x80, 0, 0, 0, 0) + _name("Opaque")),
+        }
+        return Types(records)
+
+    def test_classes_render_as_declarations_with_offsets_and_access(self):
+        text = dc_structure.render_types(self.types())
+        widget = text[text.index("class Widget"):]
+        widget = widget[:widget.index("};") + 2]
+        self.assertEqual(widget.splitlines(), [
+            "class Widget : public Base",
+            "{",
+            "public:",
+            "    virtual void draw(); // vtable +0x8",
+            "    Widget();",
+            "    int get(int) const;",
+            "",
+            "    /* 0x0000 */ // base Base",
+            "    // vftable pointer",
+            "",
+            "protected:",
+            "    /* 0x0008 */ int m_count;",
+            "",
+            "private:",
+            "    /* 0x000c */ unsigned int m_flags : 3; // bit 2",
+            "    static int s_total;",
+            "};",
+        ])
+        self.assertIn("// type 0x1010; sizeof 0x10", text)
+
+    def test_identical_records_merge_and_forward_only_names_stay_visible(self):
+        text = dc_structure.render_types(self.types())
+        self.assertEqual(text.count("enum Colour"), 1)
+        self.assertIn("// type 0x1012, 0x1013", text)
+        self.assertIn("enum Colour\n{\n    RED = 0,\n    BLUE = 2,\n};", text)
+        self.assertIn("class Opaque; // forward reference only", text)
+        self.assertNotIn("// long", text)  # no commented-out raw member records
 
 
 if __name__ == "__main__":

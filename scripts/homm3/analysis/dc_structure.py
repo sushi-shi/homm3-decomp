@@ -247,38 +247,146 @@ def render_function(payload: dict, types: Types) -> str:
     return "\n".join(rows)
 
 
+_VIRTUAL = ("virtual", "introducing virtual", "pure virtual", "pure introducing virtual")
+_DEFAULT_CALLS = ("__thiscall", "__shcall")
+
+
+def _method_declaration(types: Types, owner: str, entry: dict) -> str:
+    """One readable member-function declaration (no default calling convention)."""
+    name = _text(entry.get("name", ""))
+    function = types.get(entry["type"])
+    if function["kind"] != "function":
+        return f"{name}(/* signature unavailable: type 0x{entry['type']:04x} */);"
+    arguments = types.get(function["arguments"]).get("types", [])
+    args = ", ".join("..." if typ == 0 else types.declaration(typ) for typ in arguments)
+    suffix = ""
+    this = types.get(function.get("this", 0))
+    if this["kind"] == "pointer":
+        target = types.get(this["target"])
+        if target["kind"] == "modifier" and target["qualifiers"]:
+            suffix = " " + " ".join(target["qualifiers"])
+    call = function["calling_convention"]
+    declarator = (name if call in _DEFAULT_CALLS else f"{call} {name}") + f"({args}){suffix}"
+    short = owner.rsplit("::", 1)[-1].split("<", 1)[0]
+    if function["returns"] and name not in (short, "~" + short):
+        declarator = types.declaration(function["returns"], declarator)
+    prefix = {"static": "static ", "friend": "friend "}.get(entry["property"], "")
+    if entry["property"] in _VIRTUAL:
+        prefix = "virtual "
+    pure = " = 0" if entry["property"].startswith("pure") else ""
+    slot = (f" // vtable +0x{entry['vtable_offset']:x}" if "vtable_offset" in entry else "")
+    return f"{prefix}{declarator}{pure};{slot}"
+
+
+def _render_record(types: Types, index: int, item: dict) -> list[str]:
+    kind, name = item["kind"], _text(item["name"])
+    fields = types.fields(item["fields"])
+    if kind == "enum":
+        underlying = types.declaration(item["underlying"])
+        lines = [f"enum {name}" + (f" // underlying {underlying}" if underlying != "int" else ""), "{"]
+        lines += [f"    {_text(entry['name'])} = {entry['value']},"
+                  for entry in fields if entry["kind"] == "enumerator"]
+        lines.append("};")
+        return lines
+    bases = []
+    for entry in fields:
+        if entry["kind"] in ("base", "virtual_base"):
+            virtual = "virtual " if entry["kind"] == "virtual_base" else ""
+            bases.append(f"{entry['access']} {virtual}{types.declaration(entry['type'])}")
+    lines = [f"{kind} {name}" + (" : " + ", ".join(bases) if bases else ""), "{"]
+    current = "private" if kind == "class" else "public"
+
+    def access(value: str) -> None:
+        nonlocal current
+        if value in ("private", "protected", "public") and value != current:
+            if lines[-1] != "{":
+                lines.append("")
+            lines.append(f"{value}:")
+            current = value
+
+    for entry in fields:
+        if entry["kind"] == "nested_type":
+            access(entry.get("access", current))
+            lines.append(f"    // nested type {_text(entry['name'])}: "
+                         f"{_text(types.declaration(entry['type']))}")
+    methods: dict[str, list[dict]] = {}
+    for entry in fields:
+        if entry["kind"] == "method":
+            methods.setdefault(entry.get("name", ""), []).append(entry)
+    for group in methods.values():
+        for entry in group:
+            access(entry["access"])
+            lines.append("    " + _method_declaration(types, name, entry))
+    data = [entry for entry in fields if entry["kind"] in ("member", "static_member", "vfptr")]
+    if data and methods:
+        lines.append("")
+    for entry in fields:
+        if entry["kind"] in ("base", "virtual_base"):
+            where = (f"/* 0x{entry['offset']:04x} */ " if entry["kind"] == "base"
+                     else f"/* vbptr +0x{entry['vbptr_offset']:x} */ ")
+            lines.append(f"    {where}// base {types.declaration(entry['type'])}")
+    for entry in data:
+        if entry["kind"] == "vfptr":
+            lines.append("    // vftable pointer")
+            continue
+        access(entry["access"])
+        declaration = _text(types.declaration(entry["type"], _text(entry["name"])))
+        if entry["kind"] == "static_member":
+            lines.append(f"    static {declaration};")
+            continue
+        bits = types.get(entry["type"])
+        position = (f" // bit {bits['position']}" if bits["kind"] == "bitfield" else "")
+        lines.append(f"    /* 0x{entry['offset']:04x} */ {declaration};{position}")
+    if any(entry["kind"] == "unresolved" for entry in fields):
+        lines.append("    // undecoded field-list tail")
+    lines.append("};")
+    return lines
+
+
 def render_types(types: Types) -> str:
-    lines = [BANNER, "// All named NB11 type variants; sizes and offsets describe the Dreamcast build.", ""]
+    lines = [BANNER,
+             "// Named NB11 class/struct/union/enum records as declarations. Offsets and sizes",
+             "// describe the Dreamcast build; default __thiscall/__shcall conventions are omitted.",
+             "// Identical records of one name are merged; differing variants are listed in turn.",
+             "// Full decoded records (attributes, type IDs, method slots) are in types.json.", ""]
+    variants: dict[str, list[tuple[tuple[str, ...], list[int]]]] = {}
+    forward: dict[str, list[int]] = {}
     for index in sorted(types.records):
         item = types.get(index)
         if item["kind"] not in ("class", "struct", "union", "enum"):
             continue
         name = _text(item["name"])
-        lines.append(f"// TYPE 0x{index:04x}; size {types.size(index)}; properties 0x{item['flags']:04x}")
-        if item.get("name_truncated"):
-            lines.append(f"// Truncated LF_CLASS name {_text(item['recorded_name_prefix'])!r}; "
-                         f"name source: {item['name_source']}.")
         if item["forward"]:
-            lines.extend([f"{item['kind']} {name}; // forward reference", ""])
+            forward.setdefault(name, []).append(index)
             continue
-        lines.extend([f"{item['kind']} {name}", "{"])
-        for entry in types.fields(item["fields"]):
-            kind = entry["kind"]
-            field_name = _text(entry.get("name", ""))
-            if kind == "enumerator":
-                lines.append(f"    {field_name} = {entry['value']},")
-                continue
-            if kind == "method":
-                decl = types.function(entry["type"], field_name)
-            else:
-                decl = types.declaration(entry["type"], field_name) if "type" in entry else "unresolved"
-            detail = "; ".join(f"{key}={value}" for key, value in entry.items()
-                               if key not in ("name", "type", "leaf", "record_offset"))
-            lines.append(f"    // {_text(decl)}; // {detail}")
-        if item.get("vshape"):
-            lines.append(f"    // VTABLE SHAPE type 0x{item['vshape']:04x}: "
-                         + str(types.get(item["vshape"]).get("slots", [])))
-        lines.extend(["};", ""])
+        body = tuple(_render_record(types, index, item))
+        rows = variants.setdefault(name, [])
+        for existing, indices in rows:
+            if existing == body:
+                indices.append(index)
+                break
+        else:
+            rows.append((body, [index]))
+    for name in sorted(set(variants) | set(forward), key=lambda text: (text.casefold(), text)):
+        rows = variants.get(name)
+        if not rows:
+            kind = types.get(forward[name][0])["kind"]
+            lines.extend([f"{kind} {name}; // forward reference only", ""])
+            continue
+        for number, (body, indices) in enumerate(rows, 1):
+            item = types.get(indices[0])
+            ids = ", ".join(f"0x{index:04x}" for index in indices[:6])
+            if len(indices) > 6:
+                ids += f", +{len(indices) - 6} more"
+            variant = f"; variant {number} of {len(rows)}" if len(rows) > 1 else ""
+            size = types.size(indices[0])
+            size_text = f"; sizeof 0x{size:x}" if size is not None and item["kind"] != "enum" else ""
+            lines.append(f"// type {ids}{size_text}{variant}")
+            if item.get("name_truncated"):
+                lines.append(f"// truncated LF_CLASS name {_text(item['recorded_name_prefix'])!r}; "
+                             f"name source: {item['name_source']}")
+            lines.extend(body)
+            lines.append("")
     return "\n".join(lines)
 
 
@@ -389,8 +497,9 @@ def export(corpus, *, modules=None, output=DEFAULT_OUTPUT, assembly=False) -> di
             "Inline groups are positive/probable source-attribution evidence, not explicit inline-site",
             "records. Helper identities are source-location candidates. No clue proves absence of inlining,",
             "and an emitted standalone helper may also be expanded elsewhere. No `inline` keyword is invented.", "",
-            "`types.h` / `types.json` include every named class/struct/union/enum variant, field, base,",
-            "method, virtual slot and underlying type record. Three truncated class names are recovered",
+            "`types.h` declares every named class/struct/union/enum with bases, access sections, grouped",
+            "methods and offset-commented members (identical per-compiland records merged); `types.json`",
+            "keeps every decoded record, field, method, virtual slot and underlying type. Three truncated class names are recovered",
             "from independent `S_UDT` records and labelled. `symbols.json` retains module data, typedefs,",
             "constants and compiler metadata across the image. Unknown facts retain their type/record IDs.", "",
             "Regenerate all modules with `homm3 dreamcast structure`, or select modules with",
