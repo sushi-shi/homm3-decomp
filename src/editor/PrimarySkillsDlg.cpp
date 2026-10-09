@@ -74,7 +74,8 @@ TArray<int, kNumPrimarySkills> TPrimarySkillsDlg::getPrimarySkills() const
         _m_aSkillControls[skill].m_edit.GetWindowText(text);
         int value = 0;
         sscanf(text, "%d", &value);
-        skills[skill] = clamp(0, value, int(s_kMaxSkill));
+        value = clamp(0, value, int(s_kMaxSkill));
+        skills[skill] = value;
     }
     return skills;
 }
@@ -82,8 +83,8 @@ TArray<int, kNumPrimarySkills> TPrimarySkillsDlg::getPrimarySkills() const
 VA(0x004949f9, 0xaa)
 void TPrimarySkillsDlg::_onKillFocusSkillEdit(unsigned int skill)
 {
-    CEdit& edit = _m_aSkillControls[skill].m_edit;
     CString text;
+    CEdit& edit = _m_aSkillControls[skill].m_edit;
     edit.GetWindowText(text);
     int value = 0;
     sscanf(text, "%d", &value);

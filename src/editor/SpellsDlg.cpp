@@ -82,20 +82,21 @@ void TSpellsDlg::OnCheckChangeSpellsList()
     int curSel = _m_spellsList.GetCurSel();
     unsigned int spell = _m_spellsList.GetItemData(curSel);
     if (_m_mapVersion >= GAME_VERSION_SOD)
-        _m_spells.set(spell, _m_spellsList.GetCheck(curSel) != 0);
+        _m_spells[spell] = _m_spellsList.GetCheck(curSel) != 0;
     else if (_m_spellsList.GetCheck(curSel)) {
-        if (!_m_spells[spell]) {
-            _m_spells.set(spell, true);
+        std::bitset<kNumSpells>::reference bSpell = _m_spells[spell];
+        if (!bSpell) {
+            bSpell = true;
             int count = _m_spellsList.GetCount();
             for (int index = 0; index < count; index++) {
                 if (index != curSel && _m_spellsList.GetCheck(index)) {
                     unsigned int otherSpell = _m_spellsList.GetItemData(index);
                     _m_spellsList.SetCheck(index, 0);
-                    _m_spells.set(otherSpell, false);
+                    _m_spells[otherSpell] = false;
                     return;
                 }
             }
         }
     } else
-        _m_spells.set(spell, false);
+        _m_spells[spell] = false;
 }
