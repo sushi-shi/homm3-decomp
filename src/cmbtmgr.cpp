@@ -3324,27 +3324,24 @@ void combatManager::removeArmyFromGrid(const army& a)
 
 // Native Mac 0x74d4c/0x74dac selects integer 1/0 before narrowing;
 // Boolean assignments use branchless neg/cntlzw instead. VC6 is byte-flat.
-// Acquiring the second cell's side before computing its front index matches
-// Mac's early load at +0x5c: 81.91 -> 85.64%, with Windows byte-flat.
+// DC 4071 reads the side field without a GetOwningSide call, and retail
+// loads only its low byte at both stores; Mac 0x74d6c loads and sign-extends
+// the second side before computing the front index, so that copy is a
+// narrowed local (Windows 99.77 -> 100%, Mac 85.64 -> 93.09%).
 // The reversed offset/index sum is byte-flat on both compilers.
-// getOwningSide and offsetToFront remain the canonical shared helpers.
-// The Windows residual is two DWORD loads where retail reads a byte.
-// Twelve implicit/explicit narrowing and byte-local controls preserve the
-// helpers but do not improve 99.7727%; changing the helper's int return
-// would contradict its recorded interface.
 VA(0x004687c0, 0x99)
 DC_ADDRESS(0x0623cc, 0xac)
 MAC_ADDRESS(0x074d10, 0xbc)
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
+    m_cells[hex].m_armySide = static_cast<signed char>(a.m_combatSide);
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0 ? 1 : 0;
-        int owningSide = a.getOwningSide();
+        signed char owningSide = static_cast<signed char>(a.m_combatSide);
         int second = hex + a.offsetToFront(-1);
-        m_cells[second].m_armySide = static_cast<signed char>(owningSide);
+        m_cells[second].m_armySide = owningSide;
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
         m_cells[second].m_partOfDouble = a.m_facing != 0 ? 1 : 0;
     }

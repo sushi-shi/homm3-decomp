@@ -982,7 +982,7 @@ cmbtmgr	?markTowerForEffect@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100
 cmbtmgr	?nextArmy@combatManager@@QAE_N_N@Z	99.9020	99.9020	100.0000	0x65080	tokens1:6afc839b7e63
 cmbtmgr	?open@combatManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x62a20	tokens1:4b9268481c29
 cmbtmgr	?placeAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70	tokens1:68ef87a45bc4
-cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	99.7727	99.7727	100.0000	0x687c0	tokens1:9511cfd81a57
+cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0	tokens1:e069d96dd3d0
 cmbtmgr	?placeLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	tokens1:270d600e050d
 cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x66010	tokens1:1767300d91b6
 cmbtmgr	?placeObstacle@combatManager@@QAEXABUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	tokens1:08bb8ffb86af
