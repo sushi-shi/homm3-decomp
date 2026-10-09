@@ -257,9 +257,10 @@ the now-exact bytes.
 - **The object-traits loader.** `objnames`' function-local `nameBuffer`
   becomes Loki's `aNameBuffer`, and its text-resource local becomes
   `pTextResource`.
-- **`TUniqueSet<T>` (UniqueSet.h).** `add`/`numItems`/`get` for the
-  provisional `TObjectImageNameTable`, and `TUniqueSet<TObjectType>` in
-  the GameMap code.
+- **`TUniqueSet<T>` (UniqueSet.h).** Done 2026-10-09: the game's image
+  names are `TUniqueSet<std::string>` behind `{anonymous}::getImageNameSet`,
+  with Loki's `add` (h3maped 0x491eed exact; game setImageName 99.21 ->
+  94.36, controls beside it), and the object filters are Loki's slot traits.
 - **`TObjectType::_setTriggerMask`.** Loki's `goto found` scan with
   `_getBitPos(x, y)`, and the `setBCell*` setters.
 - **`TObjectTypeTable::load`.** Loki's `TRuntimeError` message and its

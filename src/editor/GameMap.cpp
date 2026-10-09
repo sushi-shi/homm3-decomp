@@ -35,7 +35,7 @@
 #include "editor/SeersHut.h"
 #include "editor/TilePoint.h"
 #include "editor/TimedEvent.h"
-#include "editor/UniqueSet.h"
+#include "UniqueSet.h"
 #include "editor/Town.h"
 #include "editor/VictoryCondition.h"
 #include "retailobjecttype.h"

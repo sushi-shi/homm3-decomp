@@ -31,6 +31,7 @@
 
 #include "objecttype.h"
 
+#include "UniqueSet.h"
 #include "advmgr_objects.h"
 #include "exceptions.h"
 #include "resourcemanager.h"
@@ -40,118 +41,57 @@
 // The only references are TObjectTypeTable::load's default object and
 // TObjectType::setTriggerMask's no-trigger path, both in this compiland.
 DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
-// Retail publishes this class's whole layout at the .bss object 0x69cb80
-// that both accessors address:
-//   +0x00  a 16-byte Dinkumware _Tree - allocator byte, comparator byte,
-//          _Head at +4, _Multi at +8, _Size at +0x0c - whose constructor
-//          allocates 0x24-byte nodes, i.e. a tree header plus
-//          pair<const string, int>;
-//   +0x10  a 16-byte vector whose elements are FOUR bytes wide.
-// The 4-byte element carries a map node address, modeled here with the
-// map's iterator. GetImageName reads `rows[i]` and adds 0x0c to reach the
-// key string; setImageName reads +0x1c to reach the mapped index. These
-// are exactly the iterator's `->first` and `->second` accesses. A probe
-// using the pinned STL's raw node-pointer type instead reproduces both
-// setImageName record-order checkpoints byte for byte, so these bytes
-// do not distinguish the two source representations. The
-// registry's growth path in setImageName confirms it from the other side:
-// it inserts into the tree and then push_backs the RETURNED ITERATOR.
+
+// --- the object slot traits ----------------------------------------------
 //
-// NAMES ARE PROVISIONAL - nothing attests this class; only the offsets, the
-// node size and the two accessors' arithmetic are retail-proven.
-class TObjectImageNameTable {
+// Loki h3maped names the family (ObjectType.cpp): TObjectSlotTraits and its
+// {anonymous}::TTerrainSlotTraits(TTerrainType), TAllTerrainSlotTraits() and
+// TCategorySlotTraits(TSlotCategory), each with a const `contains`, and the
+// fifteen-entry table apObjectSlotTraits. Retail fixes the rest: the base
+// vtable 0x6402cc holds {scalar deleting dtor, _purecall}, the three
+// concrete vtables (0x6402c4, 0x6402d4, 0x6402dc) hold {scalar deleting
+// dtor, contains}, and the fifteen dynamic initializers at
+// 0x514280..0x5145e0 give the source order and every constructor argument:
+// nine terrain traits for terrains 0..8 (Loki asserts terrainType <
+// eTerrainRock), the all-terrain traits, and five category traits for 1..5
+// (Loki asserts category > eCategoryGeneric && category <
+// kNumSlotCategories). The table at 0x640288 lists them in that order.
+class TObjectSlotTraits {
 public:
-    typedef std::map<std::string, int> TNameIndex;
-
-private:
-    TNameIndex m_nameIndex;
-
-    std::vector<TNameIndex::iterator> m_rows;
-
-public:
-    // Project names for indexed borrowing beside the retained getOrAddIndex helper.
-    unsigned int getCount() const { return m_rows.size(); }
-    const std::string& getName(int index) const { return m_rows[index]->first; }
-
-    // Provisional name and boundary inferred from retail setImageName:
-    // its first rows.size() expands, but this insertion path calls size,
-    // the pair constructor and row insert. Flattening this lookup into
-    // the caller expands the pair constructor and scores 47.77 vs 54.77.
-    // Keep the returned entry distinct from the iterator appended to m_rows.
-    // In setImageName this preserves retail's existing-
-    // entry EAX path and reloads only after insertion (fn+0xe8). With the
-    // ordinary registry accessor, returning the mapped value by value also
-    // restores the caller's scratch allocation; see setImageName's controls.
-    MAC_ADDRESS(0x2268d0, 0xc4)
-    int getOrAddIndex(const std::string& name)
-    {
-        TNameIndex::iterator found = m_nameIndex.find(name);
-        TNameIndex::iterator result = found;
-        if (found == m_nameIndex.end()) {
-            // Retail copies both returned fields, including the unused
-            // bool into a stack home. Extracting .first directly drops it.
-            std::pair<TNameIndex::iterator, bool> inserted = m_nameIndex.insert(
-                TNameIndex::value_type(name, m_rows.size()));
-            found = inserted.first;
-            m_rows.push_back(found);
-            result = found;
-        }
-        return result->second;
-    }
+    virtual ~TObjectSlotTraits();
+    virtual bool contains(const TObjectType& objectType) const = 0;
 };
 
-// --- the object-type filter family -----------------------------------------
-//
-// Fifteen file-scope filter objects and the fifteen-entry table of pointers
-// to them at 0x640288, all retail-proven and all Complete-only (no Dreamcast
-// row covers any of it), so every NAME below is a role description. What the
-// bytes fix: three concrete classes over one abstract base with a virtual
-// destructor and one pure virtual predicate; the base vtable 0x6402cc holds
-// {scalar deleting dtor, _purecall}, and the three concrete vtables
-// (0x6402c4, 0x6402d4, 0x6402dc) hold {scalar deleting dtor, the predicate}.
-// The fifteen dynamic initializers at 0x514280..0x5145e0 give the source
-// order and every constructor argument: nine of the first class with the
-// terrain ids 0..8 (rock, 9, is absent), one of the second, and five of the
-// third with 1..5 - and the pointer table lists them in exactly that order.
-class TObjectTypeFilter {
-public:
-    virtual ~TObjectTypeFilter();
-    // Retail 0x5141bd returns its literal zero through AL. The native-terrain
-    // override is exact with this byte result and a direct logical tail.
-    virtual unsigned char accepts(const TObjectType* objectType) const = 0;
-};
+namespace {
 
-// Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
-// TObjectType's slotCategory (+0x24) and recommendedTerrainMask (+0x18):
-// an unplaced object (category 0) whose recommended terrain set contains
-// this terrain and is SMALL - the `count() <= 3` arm, against the
-// any-terrain filter's `count() > 3` next door.
-class TNativeTerrainObjectFilter : public TObjectTypeFilter {
+// Retail 0x5141b0: an unplaced object (category 0) whose recommended
+// terrain set contains this terrain and is small.
+class TTerrainSlotTraits : public TObjectSlotTraits {
 public:
-    explicit TNativeTerrainObjectFilter(int terrain);
-    virtual unsigned char accepts(const TObjectType* objectType) const;
+    explicit TTerrainSlotTraits(TTerrainType terrainType);
+    virtual bool contains(const TObjectType& objectType) const;
 
-    int m_terrain;
+    TTerrainType m_terrainType;
 };
 
 // Retail 0x514220. No state - its constructor 0x5144b0 writes nothing but
-// the vptr - and the mirror of the filter above: an unplaced object whose
-// recommended terrain set is WIDE.
-class TAnyTerrainObjectFilter : public TObjectTypeFilter {
+// the vptr: an unplaced object whose recommended terrain set is wide.
+class TAllTerrainSlotTraits : public TObjectSlotTraits {
 public:
-    TAnyTerrainObjectFilter();
-    virtual unsigned char accepts(const TObjectType* objectType) const;
+    TAllTerrainSlotTraits();
+    virtual bool contains(const TObjectType& objectType) const;
 };
 
-// Retail 0x514260, the whole body a `sete` on one compare: the object's
-// slotCategory against the one this filter carries at +4.
-class TSlotCategoryObjectFilter : public TObjectTypeFilter {
+// Retail 0x514260, the whole body a `sete` on one compare.
+class TCategorySlotTraits : public TObjectSlotTraits {
 public:
-    explicit TSlotCategoryObjectFilter(int slotCategory);
-    virtual unsigned char accepts(const TObjectType* objectType) const;
+    explicit TCategorySlotTraits(int category);
+    virtual bool contains(const TObjectType& objectType) const;
 
-    int m_slotCategory;
+    int m_category;
 };
+
+} // namespace
 
 // The per-row parser TObjectTypeTable::load runs over each objects.txt
 // line, retail 0x514b80. Free and therefore __fastcall under /Gr: the
@@ -159,108 +99,120 @@ public:
 // so the caller can chain.
 std::istream& operator>>(std::istream& is, TObjectType& objectType);
 
+namespace {
+
+// Loki h3maped {anonymous}::getImageNameSet (0x81a5530). Retail 0x69cb80
+// holds the set (map at +0, numbering vector at +0x10); guard 0x69cb64.
 MAC_ADDRESS(0x223798, 0x78)
-static TObjectImageNameTable& getObjectImageNames()
+TUniqueSet<std::string>& getImageNameSet()
 {
-    // Inlined into both callers: bit 0 of 0x69cb64 guards the table and
-    // its destructor callback 0x514050 is registered with _atexit.
-    DATA_COMPGEN_GUARD(0x0069cb64, imageNamesGuard, imageNames)
+    DATA_COMPGEN_GUARD(0x0069cb64, imageNameSetGuard, imageNameSet)
     DATA(0x0069cb80)
-    static TObjectImageNameTable imageNames;
-    return imageNames;
+    static TUniqueSet<std::string> imageNameSet;
+    VA_COMPGEN(0x00514050, 0xA, STATIC_DTOR, imageNameSet)
+    return imageNameSet;
 }
 
-VA_COMPGEN(0x00517c30, 0x13F, PAIR_CTOR, string_int_pair)
+} // namespace
 
-// The registry's implicit default constructor, emitted as its own COMDAT:
-// the _Tree constructor (shared-nil refcount at 0x69cba0, nil node at
-// 0x69cba4, _Lockit around the head-node purchase) followed by the four
-// zero stores of the vector at +0x10. GetImageName's function-local static
-// and setImageName's are the same object, so both initialize through this.
-VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
+VA_COMPGEN(0x00517c30, 0x13F, PAIR_CTOR, string_uint_pair)
 
-// --- the object-type filter family -----------------------------------------
+// The set's implicit default constructor, emitted as its own COMDAT: the
+// _Tree constructor (shared-nil refcount at 0x69cba0, nil node at 0x69cba4,
+// _Lockit around the head-node purchase) followed by the four zero stores
+// of the vector at +0x10.
+VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TUniqueSet)
+
+// --- the object slot traits ----------------------------------------------
+namespace {
+
 VA(0x005141B0, 0x6E)
 MAC_ADDRESS(0x223910, 0x74)
-unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType) const
+bool TTerrainSlotTraits::contains(const TObjectType& objectType) const
 {
-    if (objectType->getSlotCategory() != 0)
-        return 0;
-    return objectType->getRecommendedTerrainMask()[m_terrain]
-        && objectType->getRecommendedTerrainMask().count() <= 3;
+    if (objectType.getSlotCategory() != 0)
+        return false;
+    const std::bitset<kNumTerrainTypes>& terrainMask =
+        objectType.getRecommendedTerrainMask();
+    return terrainMask[m_terrainType] && terrainMask.count() <= 3;
 }
 
 VA(0x00514220, 0x3D)
 MAC_ADDRESS(0x223984, 0x4c)
-unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
+bool TAllTerrainSlotTraits::contains(const TObjectType& objectType) const
 {
-    return objectType->getSlotCategory() == 0
-        && objectType->getRecommendedTerrainMask().count() > 3;
+    return objectType.getSlotCategory() == 0
+        && objectType.getRecommendedTerrainMask().count() > 3;
 }
 
 VA(0x00514260, 0x19)
 MAC_ADDRESS(0x2239d0, 0x18)
-unsigned char TSlotCategoryObjectFilter::accepts(const TObjectType* objectType) const
+bool TCategorySlotTraits::contains(const TObjectType& objectType) const
 {
-    return objectType->getSlotCategory() == m_slotCategory;
+    return objectType.getSlotCategory() == m_category;
 }
 
 VA(0x005142A0, 0x15)
-TNativeTerrainObjectFilter::TNativeTerrainObjectFilter(int terrain)
-    : m_terrain(terrain)
+TTerrainSlotTraits::TTerrainSlotTraits(TTerrainType terrainType)
+    : m_terrainType(terrainType)
 {
 }
 
-VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TNativeTerrainObjectFilter)
+VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TTerrainSlotTraits)
 
 VA(0x005144B0, 0x9)
-TAnyTerrainObjectFilter::TAnyTerrainObjectFilter()
+TAllTerrainSlotTraits::TAllTerrainSlotTraits()
 {
 }
 
-VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAnyTerrainObjectFilter)
+VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAllTerrainSlotTraits)
 
 VA(0x00514510, 0x15)
-TSlotCategoryObjectFilter::TSlotCategoryObjectFilter(int slotCategory)
-    : m_slotCategory(slotCategory)
+TCategorySlotTraits::TCategorySlotTraits(int category)
+    : m_category(category)
 {
 }
+
+} // namespace
 
 VA(0x00514530, 0x7)
 MAC_ADDRESS(0x224728, 0x48)
-TObjectTypeFilter::~TObjectTypeFilter()
+TObjectSlotTraits::~TObjectSlotTraits()
 {
 }
 
-// The fifteen filter objects, in the order their dynamic initializers run.
-// Terrain ids follow terrain_type.h; rock (9) has no filter.
-DATA(0x0069cb30) TNativeTerrainObjectFilter g_dirtObjectFilter(0);
-DATA(0x0069cb38) TNativeTerrainObjectFilter g_sandObjectFilter(1);
-DATA(0x0069cb10) TNativeTerrainObjectFilter g_grassObjectFilter(2);
-DATA(0x0069caf8) TNativeTerrainObjectFilter g_snowObjectFilter(3);
-DATA(0x0069cb28) TNativeTerrainObjectFilter g_swampObjectFilter(4);
-DATA(0x0069cac8) TNativeTerrainObjectFilter g_roughObjectFilter(5);
-DATA(0x0069cad8) TNativeTerrainObjectFilter g_subterraneanObjectFilter(6);
-DATA(0x0069cad0) TNativeTerrainObjectFilter g_lavaObjectFilter(7);
-DATA(0x0069cb20) TNativeTerrainObjectFilter g_waterObjectFilter(8);
-DATA(0x0069cae0) TAnyTerrainObjectFilter g_anyTerrainObjectFilter;
-DATA(0x0069cb18) TSlotCategoryObjectFilter g_slotCategory1ObjectFilter(1);
-DATA(0x0069caf0) TSlotCategoryObjectFilter g_slotCategory2ObjectFilter(2);
-DATA(0x0069cae8) TSlotCategoryObjectFilter g_slotCategory3ObjectFilter(3);
-DATA(0x0069cb08) TSlotCategoryObjectFilter g_slotCategory4ObjectFilter(4);
-DATA(0x0069cb00) TSlotCategoryObjectFilter g_slotCategory5ObjectFilter(5);
+namespace {
+
+// The fifteen traits objects, in the order their dynamic initializers run.
+DATA(0x0069cb30) TTerrainSlotTraits g_dirtSlotTraits(eTerrainDirt);
+DATA(0x0069cb38) TTerrainSlotTraits g_sandSlotTraits(eTerrainSand);
+DATA(0x0069cb10) TTerrainSlotTraits g_grassSlotTraits(eTerrainGrass);
+DATA(0x0069caf8) TTerrainSlotTraits g_snowSlotTraits(eTerrainSnow);
+DATA(0x0069cb28) TTerrainSlotTraits g_swampSlotTraits(eTerrainSwamp);
+DATA(0x0069cac8) TTerrainSlotTraits g_roughSlotTraits(eTerrainRough);
+DATA(0x0069cad8) TTerrainSlotTraits g_subterraneanSlotTraits(eTerrainSubterranean);
+DATA(0x0069cad0) TTerrainSlotTraits g_lavaSlotTraits(eTerrainLava);
+DATA(0x0069cb20) TTerrainSlotTraits g_waterSlotTraits(eTerrainWater);
+DATA(0x0069cae0) TAllTerrainSlotTraits g_allTerrainSlotTraits;
+DATA(0x0069cb18) TCategorySlotTraits g_category1SlotTraits(1);
+DATA(0x0069caf0) TCategorySlotTraits g_category2SlotTraits(2);
+DATA(0x0069cae8) TCategorySlotTraits g_category3SlotTraits(3);
+DATA(0x0069cb08) TCategorySlotTraits g_category4SlotTraits(4);
+DATA(0x0069cb00) TCategorySlotTraits g_category5SlotTraits(5);
+
+} // namespace
 
 // Retail 0x640288, fifteen relocations in the initializer order above.
 DATA(0x00640288)
-TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
-    &g_dirtObjectFilter,          &g_sandObjectFilter,
-    &g_grassObjectFilter,         &g_snowObjectFilter,
-    &g_swampObjectFilter,         &g_roughObjectFilter,
-    &g_subterraneanObjectFilter,  &g_lavaObjectFilter,
-    &g_waterObjectFilter,         &g_anyTerrainObjectFilter,
-    &g_slotCategory1ObjectFilter, &g_slotCategory2ObjectFilter,
-    &g_slotCategory3ObjectFilter, &g_slotCategory4ObjectFilter,
-    &g_slotCategory5ObjectFilter
+TObjectSlotTraits* const apObjectSlotTraits[OBJECT_SLOT_TRAITS_COUNT] = {
+    &g_dirtSlotTraits,         &g_sandSlotTraits,
+    &g_grassSlotTraits,        &g_snowSlotTraits,
+    &g_swampSlotTraits,        &g_roughSlotTraits,
+    &g_subterraneanSlotTraits, &g_lavaSlotTraits,
+    &g_waterSlotTraits,        &g_allTerrainSlotTraits,
+    &g_category1SlotTraits,    &g_category2SlotTraits,
+    &g_category3SlotTraits,    &g_category4SlotTraits,
+    &g_category5SlotTraits
 };
 
 // Provisional cache accessor: retail's independent guard at 0x6aba7d
@@ -422,6 +374,12 @@ VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, _TImageInfo)
 // in the 99.2095 body (the residual is instruction placement).
 // Remaining: counter initialization placement. No inline-depth controls or
 // release-elided operations are used.
+// The controls above predate TUniqueSet<std::string>: "GetIndex" and the
+// registry helper were the provisional TObjectImageNameTable::getOrAddIndex.
+// Loki's add (find; insResult; pItem = insResult.first; push_back(pItem);
+// return pItem->second) makes h3maped's retained add 0x491eed exact and
+// scores 94.36 here; the old separate result iterator, which Loki's
+// unoptimized add does not have, scores 99.15.
 VA(0x00514610, 0x317)
 MAC_ADDRESS(0x223aa4, 0x2b8)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
@@ -429,10 +387,10 @@ TObjectType& TObjectType::setImageName(
                             std::allocator<char> >& newImageName)
 {
     TPoint emptySize = { 0, 0 };
-    TObjectImageNameTable& imageNameSet = getObjectImageNames();
+    TUniqueSet<std::string>& imageNameSet = getImageNameSet();
 
-    unsigned int setSize = imageNameSet.getCount();
-    _m_imageNum = imageNameSet.getOrAddIndex(newImageName);
+    unsigned int setSize = imageNameSet.numItems();
+    _m_imageNum = imageNameSet.add(newImageName);
 
     std::vector<_TImageInfo>& aImageInfo = getObjectImageCache();
 
@@ -492,14 +450,15 @@ MAC_ADDRESS(0x223dcc, 0x80)
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
 TObjectType::getImageName() const
 {
-    // Bit 0 of 0x69cb70 guards the empty string; 0x514a10 releases it.
+    // Bit 0 of 0x69cb70 guards the empty string.
     DATA_COMPGEN_GUARD(0x0069cb70, emptyImageNameGuard, emptyImageName)
     DATA(0x0069cb48)
     static std::string emptyImageName;
-    TObjectImageNameTable& imageNames = getObjectImageNames();
+    VA_COMPGEN(0x00514a10, 0x45, STATIC_DTOR, emptyImageName)
+    TUniqueSet<std::string>& imageNameSet = getImageNameSet();
 
-    if (_m_imageNum < imageNames.getCount())
-        return imageNames.getName(_m_imageNum);
+    if (_m_imageNum < imageNameSet.numItems())
+        return imageNameSet.get(_m_imageNum);
     return emptyImageName;
 }
 
@@ -651,12 +610,10 @@ VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)
 
 // --- Dinkumware COMDAT pairings -------------------------------------------
 
-// COMDAT pairing: TObjectImageNameTable's implicit destructor, agreement
-// 0.915. The class's implicit constructor is already claimed at 0x514060 and
-// this is its mirror image - the vector at +0x10 freed, then _Tree::_Erase
-// over the head node - reached only through the two function-local statics.
-VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TObjectImageNameTable)
-MAC_COMPGEN_ADDRESS(0x223810, 0x88, IMPLICIT_DTOR, TObjectImageNameTable)
+// COMDAT pairing: TUniqueSet<std::string>'s implicit destructor, agreement
+// 0.915: the vector at +0x10 freed, then _Tree::_Erase over the head node.
+VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TUniqueSet)
+MAC_COMPGEN_ADDRESS(0x223810, 0x88, IMPLICIT_DTOR, TUniqueSet)
 
 // COMDAT pairing: basic_istream<char>'s streambuf constructor, agreement
 // 0.931 (the `_Bool` tie-parameter arm - the only istream ctor this object
@@ -678,7 +635,7 @@ VA_COMPGEN(0x00516130, 0x21, SCALAR_DELETING_DTOR, ctype)
 
 VA_COMPGEN(0x00516160, 0x24, IMPLICIT_DTOR, ctype)
 
-VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, TObjectTypeFilter)
+VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, TObjectSlotTraits)
 
 // COMDAT pairing: strstreambuf(const char*, int), agreement 0.957.
 VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
@@ -892,7 +849,7 @@ VA_COMPGEN(0x0051b690, 0x39, MAKLOCSTR, char)
 
 // COMDAT pairing: _Construct<pair<const string, int>>, agreement 0.962 -
 // the registry map's node initializer.
-VA_COMPGEN(0x0051b6d0, 0x15B, STD_CONSTRUCT, string_int_pair)
+VA_COMPGEN(0x0051b6d0, 0x15B, STD_CONSTRUCT, string_uint_pair)
 
 // COMDAT pairing: basic_string<char>'s two compare overloads, agreements
 // 0.976 and 1.000; the sizes (84 vs 106) agree with the mangled parameter

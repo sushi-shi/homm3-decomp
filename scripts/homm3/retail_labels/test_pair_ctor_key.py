@@ -74,6 +74,18 @@ class PairCtorKeyTest(unittest.TestCase):
                 "?_Construct@std@@YIXPAU?$pair@UCImmEnclosure@@UtagRECT@@@1@"
                 "ABU21@@Z"))
 
+    def test_an_unsigned_mapped_value_type_keys_apart(self):
+        # TUniqueSet<string>'s map<string, size_t>: the same two members
+        # over an unsigned second key as their own family
+        unsigned_ctor = PAIR_CTOR[:-len("ABH@Z")] + "ABI@Z"
+        self.assertEqual(source._demangle_key(unsigned_ctor),
+                         "string_uint_pair@pair_ctor")
+        self.assertEqual(
+            source._demangle_key(
+                f"?_Construct@std@@YIXPAU?$pair@$$CBV{STRING}@std@@I@1@"
+                "ABU21@@Z"),
+            "string_uint_pair@std_construct")
+
     def test_the_iterator_bool_constructor_is_left_to_the_generic_arm(self):
         # THE defect: without the bound, one object's two pair constructors
         # share a key and the group can only be split by length

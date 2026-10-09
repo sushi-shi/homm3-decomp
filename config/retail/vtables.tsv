@@ -293,15 +293,15 @@ rva	function_count	class
 0x240264	3	t_memory_file
 # ??_7 site paired in order: 0x512c20 ??0t_complex_net_message@@QAE@XZ; 0x512c50 ??0t_complex_net_message@@QAE@W4eRS_Messages@@@Z
 0x240270	2	t_complex_net_message
-# ??_7 site paired in order: 0x5142a0 ??0TNativeTerrainObjectFilter@@QAE@H@Z
-0x2402c4	2	TNativeTerrainObjectFilter
-# TObjectTypeFilter::~TObjectTypeFilter stores this vptr (0x514530).
+# ??_7 site paired in order: 0x5142a0 ??0TTerrainSlotTraits@?A0xc951d64d8fcc975a@@QAE@W4TTerrainType@@@Z
+0x2402c4	2	TTerrainSlotTraits@?A0xc951d64d8fcc975a
+# TObjectSlotTraits::~TObjectSlotTraits stores this vptr (0x514530).
 # Slots: its deleting destructor 0x516560 and _purecall 0x617d9a.
-0x2402cc	2	TObjectTypeFilter
-# ??_7 site paired in order: 0x5144b0 ??0TAnyTerrainObjectFilter@@QAE@XZ
-0x2402d4	2	TAnyTerrainObjectFilter
-# ??_7 site paired in order: 0x514510 ??0TSlotCategoryObjectFilter@@QAE@H@Z
-0x2402dc	2	TSlotCategoryObjectFilter
+0x2402cc	2	TObjectSlotTraits
+# ??_7 site paired in order: 0x5144b0 ??0TAllTerrainSlotTraits@?A0xc951d64d8fcc975a@@QAE@XZ
+0x2402d4	2	TAllTerrainSlotTraits@?A0xc951d64d8fcc975a
+# ??_7 site paired in order: 0x514510 ??0TCategorySlotTraits@?A0xc951d64d8fcc975a@@QAE@H@Z
+0x2402dc	2	TCategorySlotTraits@?A0xc951d64d8fcc975a
 # ??_7 site paired in order: 0x516f30 ??0invalid_argument@std@@QAE@ABV01@@Z; 0x516e40 ?_Xinv@?$bitset@$0DA@@std@@ABEXXZ (+1 more)
 0x2402f4	3	invalid_argument@std
 # ??_7 site paired in order: 0x51fa40 ??0TOverviewWindow@@QAE@XZ; 0x520d90 ??1TOverviewWindow@@UAE@XZ

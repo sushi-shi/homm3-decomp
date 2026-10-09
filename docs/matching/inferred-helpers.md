@@ -41,7 +41,7 @@ dropped a function) and **dead** (no remaining caller; removed).
 | --- | --- |
 | `TObjectType::getSlotCategory` | Loki `0x8363ad4`, called from the slot-traits `contains` bodies |
 | `TObjectType::getTriggerLoc` | Loki `0x8363b48`; editor `TGameObject::getTriggerLoc` forwards to it |
-| `TObjectImageNameTable::getCount` / `getName` | Loki `TObjectType::getImageName` calls `TUniqueSet<std::string>::numItems` and `get` on `{anonymous}::getImageNameSet()`; the class and its spellings are the pending `TUniqueSet` recovery in [loki-evidence-pending](../todos/loki-evidence-pending.md) |
+| `TObjectImageNameTable::getCount` / `getName` | Loki `TObjectType::getImageName` calls `TUniqueSet<std::string>::numItems` and `get` on `{anonymous}::getImageNameSet()`; replaced by `TUniqueSet<std::string>` (include/UniqueSet.h) |
 | `TSeerReward::getRewardType` | Mac body `0x16a4c4`; Mac `TSeerHut::doSeerEvent` calls it on the reward member |
 
 ## Unproven

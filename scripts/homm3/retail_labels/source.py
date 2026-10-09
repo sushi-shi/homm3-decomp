@@ -1512,6 +1512,11 @@ def _demangle_key(mangled: str):
             "?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@D")
             and mangled.endswith("H@1@ABU21@@Z")):
         return "string_int_pair@std_construct"
+    #: ...and TUniqueSet<string>'s map<string, size_t> value type.
+    if (mangled.startswith(
+            "?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@D")
+            and mangled.endswith("I@1@ABU21@@Z")):
+        return "string_uint_pair@std_construct"
     construct_vector = re.match(
         r"^\?_Construct@std@@YIXPAV\?\$vector@(?:V|U)([A-Za-z_]\w*)@",
         mangled)
@@ -1623,6 +1628,9 @@ def _demangle_key(mangled: str):
     if (mangled.startswith("??0?$pair@$$CBV?$basic_string@D")
             and mangled.endswith("@ABH@Z")):
         return "string_int_pair@pair_ctor"
+    if (mangled.startswith("??0?$pair@$$CBV?$basic_string@D")
+            and mangled.endswith("@ABI@Z")):
+        return "string_uint_pair@pair_ctor"
     if mangled.startswith("??_D"):
         # MSVC's `vbase destructor' closure. Claim-only carcass rows use
         # the compiler's own backtick spelling, which scan_file normalizes

@@ -760,8 +760,9 @@ Returned-string access and cleanup registers remain different from retail.
 
 ## Distinct return widths can keep an early exit ahead of register saves
 
-`TNativeTerrainObjectFilter::accepts` (0x5141b0) reached 100% from 77.3913%
-with an unsigned-char return and a direct logical tail. Retail's initial
+`TTerrainSlotTraits::contains` (0x5141b0, then `TNativeTerrainObjectFilter::accepts`)
+reached 100% from 77.3913% with a byte (now Loki's `bool`) return and a
+direct logical tail. Retail's initial
 slot-category rejection clears only AL and returns before saving ESI/EDI.
 The later bitset-test/count conjunction materializes a full-width logical
 result. The previous int declaration and explicit `if (...) return 1;

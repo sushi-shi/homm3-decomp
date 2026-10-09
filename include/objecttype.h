@@ -14,18 +14,19 @@
 #include "objectmask.h"
 #include "terrain_type.h"
 
-class TObjectTypeFilter;
+class TObjectSlotTraits;
 
 // objects.txt begins with the number of object-template rows.
 enum EObjectTypeTextIndex {
     OBJECT_TYPE_TEXT_COUNT = 0
 };
 
-enum EObjectTypeFilterConstants {
-    OBJECT_TYPE_FILTER_COUNT = 15
+enum EObjectSlotTraitsConstants {
+    OBJECT_SLOT_TRAITS_COUNT = 15
 };
 
-extern TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
+// Loki h3maped apObjectSlotTraits.
+extern TObjectSlotTraits* const apObjectSlotTraits[OBJECT_SLOT_TRAITS_COUNT];
 
 // Map-editor/RMG object template consumed by the retail-identical
 // CObjectType conversion constructor at 0x506080. The public names are from
