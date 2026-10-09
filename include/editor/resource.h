@@ -448,6 +448,21 @@ enum {
     IDC_CONFLUX_CHECK = 1955
 };
 
+// The map generation progress dialog (MapDoc.cpp).
+enum {
+    IDD_MAP_GENERATION_PROGRESS = 341,
+    IDC_GENERATION_PROGRESS = 1872,
+    IDC_GENERATING_MAP_STATIC = 1873
+};
+
+// Menu commands, as the image's menu resources and message maps spell them.
+enum {
+    ID_FILE_EXPORT_TEXT = 32901,
+    ID_FILE_IMPORT_TEXT = 32902,
+    ID_TOOLS_REPAINT_MAP = 32904,
+    ID_FILE_BATCH_CONVERT = 32905
+};
+
 // The guardians page's help contexts, one per treasure sheet.
 enum {
     IDH_ARTIFACT_GUARDIANS = 282

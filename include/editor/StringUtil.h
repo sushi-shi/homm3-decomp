@@ -9,4 +9,18 @@
 // True when text is empty or holds only white space.
 bool _isspace(const CString& text);
 
+// A string's buffer, released when it goes out of scope (MapDoc.cpp's
+// file name prompt hands it to the common file dialog).
+class TStringBuffer {
+public:
+    TStringBuffer(CString& string, int minLength) : _m_string(string), _m_pBuffer(string.GetBuffer(minLength)) {}
+    ~TStringBuffer() { _m_string.ReleaseBuffer(); }
+
+    operator LPTSTR() const { return _m_pBuffer; }
+
+private:
+    CString& _m_string;
+    LPTSTR _m_pBuffer;
+};
+
 #endif  /* HOMM3_EDITOR_STRINGUTIL_H */

@@ -673,3 +673,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "HeroPropsSpellsPage"
 source = "src/editor/HeroPropsSpellsPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapDoc"
+source = "src/editor/MapDoc.cpp"
+flags = "editor_o1_ob2_gr_windows"

@@ -10,6 +10,7 @@
 
 #include "advmgr_objects.h"
 #include "terrain_type.h"
+#include "progress_bar.h"
 #include "rmg_request.h"
 #include "terrainplacement.h"
 
@@ -216,22 +217,6 @@ struct TPoint;
 struct TObjectType;
 struct TRmgObjectPropertiesRef;
 class type_object;
-
-// The abstract progress sink driven by Complete's random-map generator.
-// Retail constructor 0x530e20 stores vtable 0x6409c0, the step total at +4,
-// and zero at +8. The vtable holds a scalar deleting destructor at 0x530e40,
-// SetTotal at 0x530e80, and _purecall in the Advance slot.
-class type_progress_bar {
-public:
-    int m_steps;
-    int m_done;
-
-    type_progress_bar(int totalSteps);
-    virtual ~type_progress_bar();
-    virtual void setTotal(int totalSteps);
-    virtual void advance(int amount) = 0;
-};
-SIZE(type_progress_bar, 0xc);
 
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
