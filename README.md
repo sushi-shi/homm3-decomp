@@ -51,24 +51,24 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 43.19% matched (MAX)** — 2,109 / 6,870 functions exact (30.7%), weighted by size over 852,607 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 43.25% matched (MAX)** — 2,134 / 6,870 functions exact (31.1%), weighted by size over 852,607 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           2,087 |   43.13% | last measured score                            |
-| MAX   |           2,109 |   43.19% | best result for each function's current source |
-| HIST  |           2,109 |   43.19% | all-time peak across source revisions          |
+| CUR   |           2,113 |   43.19% | last measured score                            |
+| MAX   |           2,134 |   43.25% | best result for each function's current source |
+| HIST  |           2,134 |   43.25% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `game`        |    70 | 1776 / 2120 (83.8%) |    96.12% |
+| `game`        |    71 | 1801 / 2129 (84.6%) |    96.13% |
 | `rmg`         |     5 |   241 / 317 (76.0%) |    92.59% |
 | `zlib-1.1.3`  |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`       |     3 |     21 / 36 (58.3%) |    95.09% |
 | `victor`      |     6 |     15 / 17 (88.2%) |    99.98% |
-| `(unmatched)` |     — |    0 / 4,324 (0.0%) |      0.0% |
+| `(unmatched)` |     — |    0 / 4,315 (0.0%) |      0.0% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 
@@ -79,25 +79,25 @@ Library and compiler-generated code (outside the scores; each function verified 
 | `init/cleanup thunks` |     3,593 |        2 |   80,415 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
 | `import thunks`       |        13 |        0 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
 
-**Data:** 334 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
+**Data:** 335 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
 <!-- h3maped-match-score:end -->
 
 <!-- h3ccmped-match-score:start -->
 
-**GOG Complete campaign editor `h3ccmped.exe`: 38.51% matched (MAX)** — 469 / 2,282 functions exact (20.6%), weighted by size over 297,151 bytes of code.
+**GOG Complete campaign editor `h3ccmped.exe`: 38.51% matched (MAX)** — 472 / 2,282 functions exact (20.7%), weighted by size over 297,151 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |             466 |   38.47% | last measured score                            |
-| MAX   |             469 |   38.51% | best result for each function's current source |
-| HIST  |             469 |   38.51% | all-time peak across source revisions          |
+| CUR   |             468 |   38.47% | last measured score                            |
+| MAX   |             472 |   38.51% | best result for each function's current source |
+| HIST  |             472 |   38.51% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `game`        |    23 |   382 / 499 (76.6%) |    94.54% |
+| `game`        |    23 |   385 / 499 (77.2%) |    94.54% |
 | `zlib-1.1.3`  |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`       |     3 |     17 / 29 (58.6%) |    88.61% |
 | `victor`      |     6 |     14 / 17 (82.4%) |    99.98% |
