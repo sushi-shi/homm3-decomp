@@ -706,6 +706,16 @@ source = "src/editor/MapDoc.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "MapEditingWnd"
+source = "src/editor/MapEditingWnd.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapViewingWnd"
+source = "src/editor/MapViewingWnd.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "TileHRuler"
 source = "src/editor/TileHRuler.cpp"
 flags = "editor_o1_ob2_gr_windows"
