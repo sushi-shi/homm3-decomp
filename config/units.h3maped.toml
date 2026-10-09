@@ -11,18 +11,30 @@
 #                               and the caller pops them; no assert text
 #                               survives although Loki's same functions
 #                               assert. Error.cpp, ObjectType.cpp,
-#                               GzBuf.cpp and the traits files are editor
-#                               objects (h3maped InitializeHeroTraits and
+#                               and the traits files are editor objects
+#                               (h3maped InitializeHeroTraits and
 #                               ResourceManager callers use __cdecl).
 #   random map generator        /O1 /Ob2 /GR /Gr: flipRmgEdge (0x4cc68e)
 #                               reads its argument from ecx
 #   prebuilt Libraries archive  /O2 /GR, default __cdecl (GetText 0x4dca60
 #                               reads its name from the stack)
 #   zlib and Victor             the game's prebuilt objects, byte-identical
-#   zlib's API                  __fastcall, as the game's /Gr zlib objects
-#                               define it: the editors' __cdecl callers
-#                               reach @crc32@12 and @inflate@8, so their
-#                               profiles define ZEXPORT=__fastcall
+#   zlib's callers              /Gr, as the game builds the same files:
+#                               GzBuf.cpp (gzinflatebuf, the map editor
+#                               profile plus /Gr) and lodfile.cpp (the
+#                               Libraries profile plus /Gr) reach the /Gr
+#                               zlib objects as @crc32@12, @inflate@8 and
+#                               @uncompress@16 through zlib.h's plain
+#                               prototypes. Neither object defines or calls
+#                               a free function without an explicit
+#                               convention, so nothing in them observes a
+#                               __cdecl default: GzBuf.cpp's one free
+#                               function (zlibBytes) is static and inlined,
+#                               its calls are members, operator new/delete
+#                               and the CRT; lodfile.cpp calls members, the
+#                               CRT and uncompress, and spells its qsort
+#                               callback `int __cdecl compare`, which only a
+#                               /Gr build needs.
 
 # Reviewed comparison carriers for header inlines whose retail copy sits
 # in an object the image does not compile yet.
@@ -101,7 +113,20 @@ editor_o1_ob2_gr_windows = [
   "/GX",
   "/GR",
   "/DNDEBUG",
-  "/DZEXPORT=__fastcall",
+  "/D_WINDOWS",
+]
+
+editor_fastcall_o1_ob2_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O1",
+  "/Ob2",
+  "/Op",
+  "/MT",
+  "/Gr",
+  "/GX",
+  "/GR",
+  "/DNDEBUG",
   "/D_WINDOWS",
 ]
 
@@ -113,7 +138,18 @@ libraries_o2_gr_windows = [
   "/MT",
   "/GX",
   "/GR",
-  "/DZEXPORT=__fastcall",
+  "/D_WINDOWS",
+]
+
+libraries_fastcall_o2_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Op",
+  "/MT",
+  "/Gr",
+  "/GX",
+  "/GR",
   "/D_WINDOWS",
 ]
 
@@ -248,7 +284,7 @@ flags = "libraries_o2_gr_windows"
 unit = "lodfile"
 module = "codec"
 source = "src/lodfile.cpp"
-flags = "libraries_o2_gr_windows"
+flags = "libraries_fastcall_o2_gr_windows"
 
 [[unit]]
 unit = "resource"
@@ -352,7 +388,7 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "gzinflatebuf"
 module = "codec"
 source = "src/gzinflatebuf.cpp"
-flags = "editor_o1_ob2_gr_windows"
+flags = "editor_fastcall_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "artifact"
