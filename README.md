@@ -13,19 +13,19 @@ executables.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 98.82% matched (MAX)** — 4,515 / 4,785 functions exact (94.4%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 98.84% matched (MAX)** — 4,517 / 4,785 functions exact (94.4%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,511 |   98.82% | last measured score                            |
-| MAX   |           4,515 |   98.82% | best result for each function's current source |
-| HIST  |           4,542 |   99.03% | all-time peak across source revisions          |
+| CUR   |           4,513 |   98.84% | last measured score                            |
+| MAX   |           4,517 |   98.84% | best result for each function's current source |
+| HIST  |           4,544 |   99.05% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   124 | 3793 / 3998 (94.9%) |    99.02% |
+| `game`       |   124 | 3795 / 3998 (94.9%) |    99.04% |
 | `rmg`        |     6 |   310 / 369 (84.0%) |    95.71% |
 | `network`    |     4 |   274 / 280 (97.9%) |    99.46% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |

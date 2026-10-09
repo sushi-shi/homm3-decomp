@@ -1094,7 +1094,7 @@ command	?main@combatManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x740
 command	?processCombatMsg@combatManager@@QAEHAAVmessage@@@Z	94.9722	94.9722	94.9722	0x74d80	tokens1:dcaf242c2cf6
 command	?processFirstAid@combatManager@@AAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	tokens1:90c561f44b74
 command	?processMoveThenAttack@combatManager@@AAEEAAVmessage@@@Z	100.0000	100.0000	100.0000	0x78900	tokens1:994bdff31663
-command	?processNextAction@combatManager@@QAEHAAVmessage@@_N@Z	99.7272	99.7272	100.0000	0x78d80	tokens1:d70fa7f76940
+command	?processNextAction@combatManager@@QAEHAAVmessage@@_N@Z	99.7272	99.7272	100.0000	0x78d80	tokens1:30536272a68b
 command	?resetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30	tokens1:7a5012c2987e
 command	?resetCyclingCreatures@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79de0	tokens1:cec2cc98f16e
 command	?resetMouse@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x78890	tokens1:515420875b18
@@ -1171,7 +1171,7 @@ cursor	?drawCursorShadow@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x7fb40
 cursor	?endMoveHero@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@_NJJ2PAH@Z	100.0000	100.0000	100.0000	0x80090	tokens1:f2e409c4eb4a
 cursor	?getMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	tokens1:2a6f30572bc2
 cursor	?handleStopOnTrigger@advManager@@AAEPAVNewmapCell@@PAVhero@@PAV2@_N2PAHJJ@Z	100.0000	100.0000	100.0000	0x80240	tokens1:a908189420fa
-cursor	?moveHero@advManager@@QAEPAVNewmapCell@@H_NAAUtype_point@@PAH020@Z	90.3704	90.3704	90.4498	0x805e0	tokens1:af6504996267
+cursor	?moveHero@advManager@@QAEPAVNewmapCell@@H_NAAUtype_point@@PAH020@Z	99.0062	99.0062	99.0062	0x805e0	tokens1:00b9748ebab9
 cursor	?onHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	tokens1:24db83f3e593
 cursor	?onMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	tokens1:cd35ccf3e4c9
 cursor	?processMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82010	tokens1:de740cdf2683
@@ -1990,7 +1990,7 @@ game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	100.0000	100.0000	100.0000
 game	?getRandomLith@game@@QBEEABV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@AAUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0xcdb80	tokens1:8c6f806f3294
 game	?getRandomLith@game@@QBEEJJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0	tokens1:b820b496cb6c
 game	?getRandomLithExit@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0	tokens1:66aad5f580c1
-game	?getRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	99.0533	99.0533	99.0533	0xc92c0	tokens1:6b86386462d1
+game	?getRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	100.0000	100.0000	100.0000	0xc92c0	tokens1:ab4d58a4fbf1
 game	?getRandomSpell@game@@QAE?AW4ESpellId@@V?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0	tokens1:6ad192f9e532
 game	?getRandomWhirlpool@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20	tokens1:93afd59e5fdc
 game	?getStartingHeroId@game@@QAE?AW4HeroId@@W4TTownType@@HH@Z	100.0000	100.0000	100.0000	0xbb400	tokens1:6053c4d8a677
@@ -4221,7 +4221,7 @@ spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	10
 spells	?animateMagicArrow@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	tokens1:960287a23de8
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	100.0000	100.0000	100.0000	0x1a4970	tokens1:974bcbfc1676
 spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:651c2851c573
-spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	95.5056	95.5056	95.5056	0x19fe30	tokens1:8abad9916df2
+spells	?castSpell@combatManager@@QAEXHHHHW4TSkillMastery@@J@Z	95.8191	95.8191	95.8191	0x19fe30	tokens1:dd4fe19f50c6
 spells	?chainLightning@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x1a6360	tokens1:7f66e958a51f
 spells	?checkFireWall@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:d3729c6dea49
 spells	?checkLandmine@combatManager@@QAE_NJPAVarmy@@_N@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:465f202b5a7f
@@ -4261,7 +4261,7 @@ spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	100.0000	1
 spells	?modifySpellDamageForSpells@combatManager@@QBEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0	tokens1:89031d6e4970
 spells	?removeCorpse@combatManager@@QAEXAAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320	tokens1:bce2a644841e
 spells	?resetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	98.5146	98.5146	98.5146	0x1a5260	tokens1:42833e30fc11
-spells	?resurrect@combatManager@@QAEXPAVarmy@@J_N@Z	97.4962	97.4962	97.4962	0x1a7560	tokens1:d3f592da332d
+spells	?resurrect@combatManager@@QAEXPAVarmy@@J_N@Z	100.0000	100.0000	100.0000	0x1a7560	tokens1:198ca4ffc14e
 spells	?setMassSpellInfluence@combatManager@@QAEXPBVhero@@HW4TSkillMastery@@JJJ@Z	100.0000	100.0000	100.0000	0x1a66d0	tokens1:54c0edee846c
 spells	?showMassSpell@combatManager@@QAEXAAY11BE@_NH_N@Z	96.3708	96.3708	96.3708	0x1a67c0	tokens1:1b2d588911a6
 spells	?showSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7576	98.7576	100.0000	0x1a8950	tokens1:11f2c44c0974
@@ -4270,7 +4270,7 @@ spells	?spellCastWorks@combatManager@@QBE_NHJPBVarmy@@_NJ@Z	100.0000	100.0000	10
 spells	?spellTargetMessage@combatManager@@QAEXHH_N@Z	100.0000	100.0000	100.0000	0x1a8690	tokens1:857cf661bb13
 spells	?summonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	100.0000	100.0000	100.0000	0x1a7080	tokens1:11132e1faa23
 spells	?updateSpellTarget@@YIHJ@Z	100.0000	100.0000	100.0000	0x19f700	tokens1:c856968dd457
-spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	96.5992	96.5992	96.5992	0x1a39c0	tokens1:c869b0eaa0e9
+spells	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z	97.6962	97.6962	97.6962	0x1a39c0	tokens1:332b07d06176
 spells	?validSpellTargetArmy@combatManager@@QBE_NHHPBVarmy@@_NJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:c11331729942
 spells	?viewSpells@combatManager@@QBEHXZ	100.0000	100.0000	100.0000	0x19e900	tokens1:c799d9f7bfb5
 string_support	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x115010	-
