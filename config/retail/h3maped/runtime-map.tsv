@@ -100,10 +100,13 @@ rva	name	library	member
 0xce8bf	?Alloc@CFixedAlloc@@QAEPAXXZ	NAFXCW	fixalloc.obj
 0xce94e	?Free@CFixedAlloc@@QAEXPAX@Z	NAFXCW	fixalloc.obj
 0xcea15	?Lock@CSyncObject@@UAEHK@Z	NAFXCW	mtcore.obj
+0xcea2a	?OnEvent@CCmdTarget@@QAEHIPAUAFX_EVENT@@PAUAFX_CMDHANDLERINFO@@@Z	NAFXCW	occevent.obj
 0xcec3c	?GetEventSinkEntry@CCmdTarget@@IAGPBUAFX_EVENTSINKMAP_ENTRY@@IPAUAFX_EVENT@@@Z	NAFXCW	occevent.obj
+0xcecb1	?InitControlContainer@CWnd@@IAEHXZ	NAFXCW	occcont.obj
 0xced66	??0COleControlContainer@@QAE@PAVCWnd@@@Z	NAFXCW	occcont.obj
 0xcede1	??1COleControlContainer@@UAE@XZ	NAFXCW	occcont.obj
 0xceebf	?CreateControl@COleControlContainer@@QAEHPAVCWnd@@ABU_GUID@@PBDKABUtagRECT@@IPAVCFile@@HPAGPAPAVCOleControlSite@@@Z	NAFXCW	occcont.obj
+0xcef20	?CreateControl@COleControlContainer@@QAEHPAVCWnd@@ABU_GUID@@PBDKPBUtagPOINT@@PBUtagSIZE@@IPAVCFile@@HPAGPAPAVCOleControlSite@@@Z	NAFXCW	occcont.obj
 0xcefdb	?FindItem@COleControlContainer@@UBEPAVCOleControlSite@@I@Z	NAFXCW	occcont.obj
 0xcf025	?GetAmbientProp@COleControlContainer@@UAEHPAVCOleControlSite@@JPAUtagVARIANT@@@Z	NAFXCW	occcont.obj
 0xcf22d	?CreateOleFont@COleControlContainer@@QAEXPAVCFont@@@Z	NAFXCW	occcont.obj
@@ -128,6 +131,7 @@ rva	name	library	member
 0xcf782	??1CEnumUnknown@@UAE@XZ	NAFXCW	occcont.obj
 0xcf812	?QueryInterface@XOleContainer@COleControlContainer@@UAGJABU_GUID@@PAPAX@Z	NAFXCW	occcont.obj
 0xcf838	?AddRef@XOleContainer@COleControlContainer@@UAGKXZ	NAFXCW	occcont.obj
+0xcf851	?EnumObjects@XOleContainer@COleControlContainer@@UAGJKPAPAUIEnumUnknown@@@Z	NAFXCW	occcont.obj
 0xcf965	??0COleControlSite@@QAE@PAVCOleControlContainer@@@Z	NAFXCW	occsite.obj
 0xcfa88	??1COleControlSite@@UAE@XZ	NAFXCW	occsite.obj
 0xcfbb4	?SetExtent@COleControlSite@@IAEHXZ	NAFXCW	occsite.obj
@@ -156,6 +160,7 @@ rva	name	library	member
 0xd0a51	?GetProperty@COleControlSite@@UBEXJGPAX@Z	NAFXCW	occsite.obj
 0xd0a6d	?SetProperty@COleControlSite@@UAAXJGZZ	NAFXCW	occsite.obj
 0xd0a84	?SafeSetProperty@COleControlSite@@UAAHJGZZ	NAFXCW	occsite.obj
+0xd0ad7	?GetStyle@COleControlSite@@UBEKXZ	NAFXCW	occsite.obj
 0xd0b8d	?GetExStyle@COleControlSite@@UBEKXZ	NAFXCW	occsite.obj
 0xd0bf5	?ModifyStyle@COleControlSite@@UAEHKKI@Z	NAFXCW	occsite.obj
 0xd0c85	?ModifyStyleEx@COleControlSite@@UAEHKKI@Z	NAFXCW	occsite.obj
@@ -217,6 +222,8 @@ rva	name	library	member
 0xd2269	?GetData@CRowset@ATL@@QAEJXZ	NAFXCW	occsite.obj
 0xd229d	?GetData@CRowset@ATL@@QAEJH@Z	NAFXCW	occsite.obj
 0xd22c0	?SetupOptionalRowsetInterfaces@CRowset@ATL@@QAEXXZ	NAFXCW	occsite.obj
+0xd22d5	?BindColumns@CDynamicAccessor@ATL@@QAEJPAUIUnknown@@@Z	NAFXCW	occsite.obj
+0xd2586	?AllocateAccessorMemory@CAccessorBase@ATL@@QAEJH@Z	NAFXCW	occsite.obj
 0xd25e2	?BindEntries@CAccessorBase@ATL@@SAJPAUtagDBBINDING@@HPAKKPAUIAccessor@@@Z	NAFXCW	occsite.obj
 0xd262c	?Bind@CAccessorBase@ATL@@SAXPAUtagDBBINDING@@KGKEEKKKKPAUtagDBOBJECT@@@Z	NAFXCW	occsite.obj
 0xd26ab	?CopyColumnID@CDataSourceControl@@QAEHPAUtagDBCOLUMNID@@PBU2@@Z	NAFXCW	occsite.obj
@@ -233,6 +240,7 @@ rva	name	library	member
 0xd3da4	?SetData@CRowset@ATL@@QBEJXZ	NAFXCW	occsite.obj
 0xd3dcc	?SetData@CRowset@ATL@@QBEJH@Z	NAFXCW	occsite.obj
 0xd3dfb	??1CManualAccessor@ATL@@QAE@XZ	NAFXCW	occsite.obj
+0xd3e12	?CreateAccessor@CManualAccessor@ATL@@QAEJHPAXK@Z	NAFXCW	occsite.obj
 0xd3e89	?AddBindEntry@CManualAccessor@ATL@@QAEXKGKPAX00@Z	NAFXCW	occsite.obj
 0xd3edd	?BindColumns@CManualAccessor@ATL@@QAEJPAUIUnknown@@@Z	NAFXCW	occsite.obj
 0xd3f75	??0CDataBoundProperty@@QAE@PAV0@JG@Z	NAFXCW	occsite.obj

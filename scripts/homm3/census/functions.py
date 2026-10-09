@@ -59,6 +59,8 @@ class Census:
     continuations: dict = field(default_factory=dict)  # label -> catch funclet
     imms: set = field(default_factory=set)
     stubs: dict = field(default_factory=dict)        # EH registration stub -> FuncInfo
+    #: the image pin's `census_joins_catch_bodies`: see `tail_limit`
+    catch_bodies: bool = False
 
     def __post_init__(self):
         text = next(s for s in self.image.sections if s.executable)
@@ -86,6 +88,29 @@ class Census:
             return None
         info = struct.unpack_from("<I", self.blob, o + 1)[0] - self.image.image_base
         return info if info in self.funcinfo else None
+
+    def is_catch(self, rva):
+        return self.funclets.get(rva, (None, None))[1] == "catch"
+
+    def tail_limit(self, start):
+        """The end of the range a jump stays inside [start, limit): the next
+        start. With `catch_bodies` a catch funclet is not the end: VC6 emits
+        a `catch` block inside its function's code (after the try block's
+        jump over it), so the parent's jumps run on past its own handlers;
+        nor is a weak seed (`is_weak`)."""
+        limit = self.next_start(start)
+        if self.catch_bodies:
+            while limit < self.text_hi and (self.is_catch(limit) or self.is_weak(limit)):
+                limit = self.next_start(limit)
+        return limit
+
+    def is_weak(self, rva):
+        """A start seeded only by a code-looking data or immediate value: it
+        may be data (a table of four-character codes) and never bounds a
+        known function's jumps; `run` drops it again when that function
+        runs through it."""
+        why = self.starts.get(rva, "")
+        return why == "imm" or why.startswith("data@")
 
     def next_start(self, start):
         import bisect
@@ -188,7 +213,13 @@ class Census:
                         if not self.in_text(t):
                             ok = False
                             break
-                        limit = self.next_start(start)
+                        limit = self.tail_limit(start)
+                        if self.catch_bodies and self.is_catch(start) \
+                                and not (start <= t < limit) and t not in self.starts:
+                            # a catch block jumps back into its parent's
+                            # body (a loop head, the code after the try):
+                            # the parent's code, never a tail call
+                            break
                         if (t in self.starts and t != start) or rva == start \
                                 or not start <= t < limit:
                             # a known start, a first-instruction thunk, or a
@@ -297,8 +328,8 @@ def data_code_pointers(census):
     return out
 
 
-def run(image, log=print):
-    c = Census(image)
+def run(image, log=print, catch_bodies=False):
+    c = Census(image, catch_bodies=catch_bodies)
     pe = struct.unpack_from("<I", image.data, 0x3C)[0]
     entry = struct.unpack_from("<I", image.data, pe + 24 + 16)[0]
     funclets = funcinfo_funclets(c)

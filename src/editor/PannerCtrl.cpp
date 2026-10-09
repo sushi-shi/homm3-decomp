@@ -69,7 +69,7 @@ TPannerCtrl::~TPannerCtrl()
 {
 }
 
-VA(0x00493a8d, 0x1ce)
+VA(0x00493a8d, 0x1df)
 void TPannerCtrl::relayEvent(const MSG* pMsg)
 {
     if (pMsg->message != WM_MBUTTONDOWN || _m_mode != eNone)
