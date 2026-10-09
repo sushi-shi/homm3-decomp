@@ -577,6 +577,7 @@ rva	size	kind	name	unit	evidence
 0x000690e6	0x13	func	??0?$auto_ptr@VTGameObject@@@std@@QAE@PAVTGameObject@@@Z	GameMap	masked body (19 bytes, 0 relocations) unique at a census start
 0x0006f24a	0x3a	func	??0?$TGDIObjectSelector@VCPen@@@@QAE@PAVCDC@@PAVCPen@@@Z	PannerCtrl	referenced by ?_draw@TPannerCtrl@@AAEXPAVCDC@@@Z at +0x66
 0x0006f2a5	0x12	func	??0TError@?$TGDIObjectSelector@VCPen@@@@QAE@XZ	PannerCtrl	referenced by ??0?$TGDIObjectSelector@VCPen@@@@QAE@PAVCDC@@PAVCPen@@@Z at +0x21
+0x000702f5	0x2f	func	??9?$bitset@$0JA@@std@@QBE_NABV01@@Z	MapSpecsArtifactsPage	masked body (47 bytes, 0 relocations) unique at a census start
 0x00070324	0x2f	func	??Breference@?$bitset@$0JA@@std@@QBE_NXZ	rmg	masked body (47 bytes, 1 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000744b1	0xe	func	?begin@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@XZ	resourcemanager	masked body (14 bytes, 0 relocations) unique at a census start
 0x000744bf	0xc	func	?end@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QBE?AVconst_iterator@12@XZ	GameMap	masked body (12 bytes, 0 relocations) unique at a census start
