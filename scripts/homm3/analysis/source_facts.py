@@ -273,6 +273,23 @@ def _line(source: str, offset: int) -> int:
     return source.count("\n", 0, offset) + 1
 
 
+_SCALARS = frozenset({"bool", "char", "signed char", "unsigned char", "short",
+                      "unsigned short", "int", "unsigned int", "long", "unsigned long",
+                      "float", "double", "long double", "__int64", "unsigned __int64",
+                      "wchar_t", "void"})
+
+
+def _extent(node: dict) -> dict:
+    """End-exclusive file offsets of a node; `macro` marks expansion-only text."""
+    span = node.get("range", {})
+    begin, end = span.get("begin", {}), span.get("end", {})
+    macro = any("spellingLoc" in item or "expansionLoc" in item for item in (begin, end))
+    begin, end = begin.get("expansionLoc", begin), end.get("expansionLoc", end)
+    return {"begin": begin.get("offset"),
+            "end": None if end.get("offset") is None else end["offset"] + end.get("tokLen", 0),
+            "macro": macro}
+
+
 def _type(node: dict) -> str:
     value = node.get("type", {})
     return value.get("desugaredQualType", value.get("qualType", ""))
@@ -387,7 +404,14 @@ def extract_function(documents: list[dict], mangled: str, path: Path,
                 "type": _type(child), "line": _line(source, _loc(child).get("offset", 0)),
                 "aliases": _aliases(source, child)})
 
-    def visit(node: dict, statement: int | None = None) -> None:
+    # Declaration, initializer and use extents let a caller rewrite a
+    # disposable source copy; the audit comparison never reads them.
+    locals_by_id: dict[str, dict] = {}
+    temporaries: dict[tuple[int, str], dict] = {}
+    result["temporaries"] = []
+
+    def visit(node: dict, statement: int | None = None, parent: dict | None = None,
+              position: int = 0) -> None:
         kind = node.get("kind")
         if node.get("isInvalid") or kind == "RecoveryExpr":
             raise ValueError("selected function contains invalid/recovered AST nodes")
@@ -398,29 +422,72 @@ def extract_function(documents: list[dict], mangled: str, path: Path,
         if kind == "CXXDefaultArgExpr":
             return  # supplied by a declaration, not written at this call site
         if kind == "VarDecl":
-            result["locals"].append({"name": node.get("name", ""),
+            local = {"name": node.get("name", ""),
                 "type": _type(node), "line": _line(source, _loc(node).get("offset", 0)),
-                "aliases": _aliases(source, node)})
+                "aliases": _aliases(source, node)}
+            sole = parent is not None and parent.get("kind") == "DeclStmt" \
+                and len(parent.get("inner", [])) == 1
+            initializer = node.get("inner", [])
+            local.update(
+                storage_class=node.get("storageClass"),
+                declaration=_extent(parent) if sole else None,
+                initializer=(_extent(initializer[-1])
+                             if node.get("init") == "c" and initializer else None),
+                uses=[])
+            result["locals"].append(local)
+            if node.get("id"):
+                locals_by_id[node["id"]] = local
             typ = type_facts(_type(node))
             if typ and not typ.indirections and node.get("storageClass") not in ("static", "extern") \
                     and not node.get("tls"):
                 result["automatic_objects"].append({"type": typ.base,
                     "line": _line(source, _loc(node).get("offset", 0))})
+        if kind == "DeclRefExpr":
+            local = locals_by_id.get(node.get("referencedDecl", {}).get("id"))
+            if local is not None:
+                parent_kind = (parent or {}).get("kind")
+                modifies = (
+                    (parent_kind == "CompoundAssignOperator" and position == 0)
+                    or (parent_kind == "BinaryOperator" and position == 0
+                        and parent.get("opcode") == "=")
+                    or (parent_kind == "UnaryOperator"
+                        and parent.get("opcode") in ("++", "--", "&")))
+                local["uses"].append({**_extent(node), "modifies": modifies})
         if kind == "CXXBindTemporaryExpr" and node.get("dtor"):
             typ = type_facts(_type(node))
             if typ:
                 result["automatic_objects"].append({"type": typ.base,
                     "line": _line(source, offset or 0)})
+        if kind in ("MaterializeTemporaryExpr", "CXXBindTemporaryExpr", "CXXTemporaryObjectExpr"):
+            typ = type_facts(_type(node))
+            if typ and offset is not None and not typ.indirections \
+                    and re.match(r"[A-Za-z_][\w:<>, ]*$", typ.base) \
+                    and typ.base not in _SCALARS \
+                    and (offset, typ.base) not in temporaries:
+                temporaries[(offset, typ.base)] = {
+                    "type": typ.base, "line": _line(source, offset), "offset": offset,
+                    "destructor": False}
+                result["temporaries"].append(temporaries[(offset, typ.base)])
+            if typ and (offset, typ.base) in temporaries and kind == "CXXBindTemporaryExpr":
+                temporaries[(offset, typ.base)]["destructor"] = True
         if kind in ("CallExpr", "CXXMemberCallExpr", "CXXOperatorCallExpr", "CXXConstructExpr", "CXXTemporaryObjectExpr"):
             name = _call_name(node, source)
             if name and offset is not None:
-                result["calls"].append({"name": name, "offset": offset,
-                    "line": _line(source, offset), "statement": statement})
+                call = {"name": name, "offset": offset,
+                        "line": _line(source, offset), "statement": statement}
+                if kind == "CXXConstructExpr":
+                    arguments = node.get("inner", [])
+                    own = type_facts(_type(node))
+                    other = type_facts(_type(arguments[0])) if len(arguments) == 1 else None
+                    # An authored copy/move construction is not a written
+                    # helper call; flag it so call inventories can skip it.
+                    call["copy"] = bool(own and other and own.base == other.base)
+                result["calls"].append(call)
             else:
                 result["gaps"].append(f"unresolved authored call at line {_line(source, offset or 0)}")
-        for child in node.get("inner", []):
+        for index, child in enumerate(node.get("inner", [])):
             child_statement = _begin(child).get("offset") if kind == "CompoundStmt" else statement
-            visit(child, child_statement)
+            visit(child, child_statement, node, index)
 
     for child in root.get("inner", []):
         if child.get("kind") in ("CompoundStmt", "CXXCtorInitializer"):

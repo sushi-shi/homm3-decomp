@@ -63,6 +63,17 @@ Subcommands
         reliable source-call order against positive Dreamcast facts. Reports
         coverage gaps separately; never compares SH4 and x86 structure.
 
+  diff-locals [SELECTOR ... | --unit U | --module M | --all] [--non-exact]
+              [--limit N] [--probe [--jobs N]] [--json]
+        For each Dreamcast-paired retail function, ranked by its ledger score:
+        locals and destructor-carrying temporaries our C++ declares that the
+        Dreamcast inventory lacks and the reverse (Hungarian/scope prefixes
+        normalised), and callees our source calls that Dreamcast does not and
+        the reverse, with Dreamcast inline traces for calls it expanded.
+        --probe substitutes each removable extra local into its uses in a
+        disposable TU copy, compiles and scores it like `build --fast`, and
+        reports the delta; nothing in the tree, report or ledger changes.
+
   structure [--module MODULE ...] [--output PATH] [--asm]
         Generate C++ browsing stubs and JSON with signatures, typed locals,
         lexical scope trees, source rows, inline evidence and SH4 control flow.
@@ -1361,6 +1372,8 @@ def _build_parser() -> argparse.ArgumentParser:
     suppression_group.add_argument(
         "--no-suppressions", action="store_const", dest="suppressions", const=None,
         help="show the raw audit without reviewed suppressions")
+    from homm3.analysis import dc_diff_locals
+    dc_diff_locals.add_parser(sub)
     structure = sub.add_parser("structure", help="export annotated C++ stubs and debug records")
     structure.add_argument("--module", action="append", dest="modules", metavar="MODULE",
                            help="module[.obj] to export; repeatable (default all)")
@@ -1432,7 +1445,8 @@ def _match_banner(index: int, rows: list[dict[str, str]]) -> None:
               f"{row['offset']} {row['name']} ====")
 
 
-COMMANDS = ("show", "lines", "asm", "find", "gaps", "inline-clues", "stats", "structure", "audit")
+COMMANDS = ("show", "lines", "asm", "find", "gaps", "inline-clues", "stats", "structure",
+            "audit", "diff-locals")
 
 # Wrong-namespace guesses the usage log recorded under `homm3 dreamcast`,
 # each with its real home.
@@ -1482,6 +1496,9 @@ def _dispatch(argv: list[str]) -> int:
                                       suppression_path=args.suppressions)
             except source_facts.SuppressionError as exc:
                 raise DreamcastError(str(exc)) from exc
+        elif args.command == "diff-locals":
+            from homm3.analysis import dc_diff_locals
+            rc = dc_diff_locals.run(corpus, args)
         elif args.command == "structure":
             from homm3.analysis import dc_structure
             try:

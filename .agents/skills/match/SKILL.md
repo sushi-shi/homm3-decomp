@@ -48,6 +48,12 @@ global label self-test/completeness gate is skipped for this focused refresh.
    missing calls or line gaps do not prove missing source. Do not force SH4/x86
    counts or candidate line layout to agree. For retail-only code, state that
    limitation and use retail and sibling evidence.
+   For a plateaued function, `homm3 dreamcast diff-locals <selector>` lists
+   locals, temporaries and callees our source has that Dreamcast lacks (and
+   the reverse); `--unit TU --non-exact` ranks a whole unit and `--probe`
+   scores removing each extra local in a disposable TU copy. Extra locals
+   were the most productive recent lever; keep a removal only when the
+   evidence supports it.
    Consult original decorated publics for byte-valued interfaces: Dreamcast's
    `T_UCHAR` / `0x20` record can be a lowered `bool` (`_N` in the public), so
    the primitive record or an x86 AL return alone does not prove unsigned char.

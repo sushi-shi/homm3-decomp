@@ -228,6 +228,59 @@ SH4 structure is never compared with candidate VC6 `/Z7` structure. Candidate
 `/Z7` lines serve only as labels on the candidate side of the independent x86
 candidate-vs-retail diff.
 
+### Inventory diffs: `diff-locals`
+
+`homm3 dreamcast diff-locals` compares each Dreamcast-paired retail function's
+authored C++ (Clang AST, as in `audit`) with the Dreamcast inventory and ranks
+the functions by their current ledger score: non-exact functions first,
+closest to 100% first, then exact and unscored ones.
+
+```sh
+homm3 dreamcast diff-locals 0x004805e0
+homm3 dreamcast diff-locals --unit cursor --non-exact --limit 20
+homm3 dreamcast diff-locals --module philai --json > /tmp/philai-diff.json
+homm3 dreamcast diff-locals --unit philai --non-exact --limit 5 --probe --jobs 2
+```
+
+Each function lists:
+
+* **locals** our source declares that the Dreamcast inventory lacks (`+ ours`)
+  and the reverse (`- DC`). Names pair first by case/underscore-folded
+  spelling or an owning `Before normalization:` alias, then by the documented
+  Hungarian/scope normalization (`pCurrentHero` = `currentHero`). Each local
+  pairs once, so a shadowed copy stays visible. Dreamcast `this` and hidden
+  return records of expanded helpers are not caller locals and are skipped.
+* **temporaries** with destructors: a class constructed and destroyed on one
+  Dreamcast statement row, against Clang's destructor-carrying temporaries.
+  Trivially destructible temporaries leave no Dreamcast trace and are not
+  compared.
+* **callees** whose call counts differ, by normalized last component
+  (`dc_callees.callee`: case and underscores ignored; constructors are their
+  class, destructors `~class`). The standard library, C runtime, operator
+  new/delete and compiler/runtime helpers are excluded, as are authored
+  copy constructions and destructors (Clang has no destructor call sites).
+  Dreamcast calls are counted across the whole procedure extent because SH
+  line attribution bleeds into expanded helpers; a call on an inline-residue
+  row names the candidate helper. A call only our source makes shows the
+  Dreamcast `inline-clues` trace of that callee when Dreamcast expanded it.
+
+The Dreamcast local inventory is a lower bound of an older SH4 build:
+register-only values can be absent. Every row is a lead to test, not a
+defect. `--probe` tests extra locals directly. For each one that is a sole,
+initialised declaration and is never reassigned, incremented, address-taken
+or produced by a macro, it substitutes the parenthesized initializer into
+every use and removes the declaration in a disposable copy of the unit's TU,
+compiles it with the unit's exact `config/units.toml` profile, normalizes and
+scores it exactly as `homm3 build --fast` does, and reports the target
+function's delta and any other function in the unit that moved. An
+unchanged-copy control compile is the baseline; a note reports functions
+where it differs from the last report. The copies live under
+`build/dreamcast/diff-locals-probe/` only while scoring; the authored tree,
+objects, report and ledger are never written. A gain is a hypothesis: adopt
+it as ordinary source only when the remaining evidence supports it, then run
+the normal fast build. Probes need a staged worktree (retail targets); run
+them only when no build is using the same worktree.
+
 ### Generated source structure
 
 `homm3 dreamcast structure` materializes the reference as a Vostok-style C++
