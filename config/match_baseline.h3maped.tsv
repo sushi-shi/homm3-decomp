@@ -115,6 +115,8 @@ GameMap	??0?$TRefCountingWrapper@V?$map@HVTMapObjectRef@@U?$less@H@std@@V?$alloc
 GameMap	??0?$TRefCountingWrapper@V?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@std@@@@QAE@ABV?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@std@@@Z	100.0000	100.0000	100.0000	0x37191	-
 GameMap	??0?$TRefCountingWrapper@V?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@@@QAE@ABV?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@@Z	100.0000	100.0000	100.0000	0x37158	-
 GameMap	??0?$TUniqueSet@UTObjectType@@@@QAE@XZ	100.0000	100.0000	100.0000	0x248ba	-
+GameMap	??0?$_Temp_iterator@PBVTTimedEvent@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x3a3c7	-
+GameMap	??0?$_Temp_iterator@PBVTTimedEvent@@@std@@QAE@H@Z	99.8438	99.8438	99.8438	0x391b3	-
 GameMap	??0?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@1@@Z	100.0000	100.0000	100.0000	0x2db19	-
 GameMap	??0?$auto_ptr@VTGameObject@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x2bfd0	-
 GameMap	??0?$auto_ptr@VTGameObject@@@std@@QAE@PAVTGameObject@@@Z	100.0000	100.0000	100.0000	0x690e6	-
@@ -128,6 +130,8 @@ GameMap	??0TArtifactContainer@THeroPrototype@@QAE@PAVTRawIStream@@H@Z	99.8529	99
 GameMap	??0TCappedObjectTypeInfoMap@?A0xaab635a5f3ca1b91@@QAE@XZ	82.6376	82.6376	82.6376	0x1e98d	tokens1:490280ebe79f
 GameMap	??0TCell@TLayer@TGameMap@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0x39656	-
 GameMap	??0TCell@TLayer@TGameMap@@QAE@XZ	100.0000	100.0000	100.0000	0x395c8	-
+GameMap	??0TCreateObjFailureTooManyInstancesOfTypeOnMap@@QAE@HI@Z	100.0000	100.0000	100.0000	0x226a4	-
+GameMap	??0TCreateObjectFailure@@QAE@XZ	100.0000	100.0000	100.0000	0x226c6	-
 GameMap	??0TCustomHero@TGameMapHeader@@QAE@ABU01@@Z	100.0000	100.0000	100.0000	0x2cab6	-
 GameMap	??0TCustomHero@TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x24730	-
 GameMap	??0TGameMap@@QAE@PAVTClient@0@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x29a60	tokens1:a80ab291ddf9
@@ -153,7 +157,7 @@ GameMap	??0TTimedEvent@@QAE@ABV0@@Z	78.3750	78.3750	78.3750	0x17008	-
 GameMap	??0TWriteFailure@TRawOStream@@QAE@H@Z	99.4444	99.4444	99.4444	0x24d1	-
 GameMap	??0_TBookkeeping@_TImpl@TGameMap@@QAE@ABU012@@Z	100.0000	100.0000	100.0000	0x37707	-
 GameMap	??0_TImpl@TGameMap@@QAE@ABV01@@Z	99.8809	99.8809	99.8809	0x3757f	-
-GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	91.8584	91.8584	91.8584	0x1f350	tokens1:7af7b81afcc0
+GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@H@Z	91.8699	91.8699	91.8699	0x1f350	tokens1:7af7b81afcc0
 GameMap	??0_TImpl@TGameMap@@QAE@PAVTClient@1@W4EGameVersion@@W4TSize@1@_N@Z	85.0707	85.0707	85.0707	0x1f21d	tokens1:e44a59c0e9d4
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0x2a51c	tokens1:24283eca8797
 GameMap	??0_TImpl@TLayer@TGameMap@@QAE@W4TSize@2@@Z	100.0000	100.0000	100.0000	0x2a545	tokens1:c903595fa7af
@@ -204,6 +208,7 @@ GameMap	??1?$TRefCountingWrapper@V_TCellGrid@_TImpl@TLayer@TGameMap@@@@QAE@XZ	10
 GameMap	??1?$TRefCountingWrapper@V_TImpl@TGameMap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x36c6b	-
 GameMap	??1?$TRefCountingWrapper@V_TImpl@TLayer@TGameMap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x36c73	-
 GameMap	??1?$_TPVector@I@TCell@TLayer@TGameMap@@QAE@XZ	100.0000	100.0000	100.0000	0x39632	-
+GameMap	??1?$_Temp_iterator@PBVTTimedEvent@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x391f9	-
 GameMap	??1?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2bf78	-
 GameMap	??1?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2c237	-
 GameMap	??1?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2c1df	-
@@ -212,6 +217,9 @@ GameMap	??1?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectR
 GameMap	??1?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x3872f	-
 GameMap	??1?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5a11	-
 GameMap	??1?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2bedf	-
+GameMap	??1?$auto_ptr@VTAbandonedMine@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2c913	-
+GameMap	??1?$auto_ptr@VTHeroPlaceholder@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xc6488	-
+GameMap	??1?$auto_ptr@VTRandomGenerator@@@std@@QAE@XZ	99.8333	99.8333	99.8333	0x2c8f6	-
 GameMap	??1?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x248af	-
 GameMap	??1?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHeroIdentity@TGameMapHeader@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2c025	-
 GameMap	??1?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x36d54	-
@@ -241,6 +249,8 @@ GameMap	??4?$TRefCountingPtr@U_TImpl@THeroPrototype@@@@QAEAAV0@ABV0@@Z	100.0000	
 GameMap	??4?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x38f0e	-
 GameMap	??4?$TRefCountingPtr@V_TImpl@TGameMap@@@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x32bf1	-
 GameMap	??4?$TRefCountingPtr@V_TImpl@TLayer@TGameMap@@@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x32d20	-
+GameMap	??4?$_Temp_iterator@PBVTTimedEvent@@@std@@QAEAAV01@ABQBVTTimedEvent@@@Z	100.0000	100.0000	100.0000	0x3a5e8	-
+GameMap	??4?$auto_ptr@VTGameObject@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x12041	-
 GameMap	??4?$vector@VTRumor@@V?$allocator@VTRumor@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x2c3f9	-
 GameMap	??4?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x2c609	-
 GameMap	??4TGameMap@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x29ab3	tokens1:587761de589b
@@ -270,6 +280,7 @@ GameMap	??6TRawOStream@@QAEAAV0@ABC@Z	99.7826	99.7826	99.7826	0x7605	-
 GameMap	??6TRawOStream@@QAEAAV0@ABE@Z	99.7826	99.7826	99.7826	0x255d	-
 GameMap	??6TRawOStream@@QAEAAV0@ABH@Z	99.7826	99.7826	99.7826	0x771d	-
 GameMap	??6TRawOStream@@QAEAAV0@AB_N@Z	99.7826	99.7826	99.7826	0x3c06f	-
+GameMap	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z	100.0000	100.0000	100.0000	0x3468f	-
 GameMap	??8?$TArray@H$03@@QBE_NABV0@@Z	100.0000	100.0000	100.0000	0x959fb	-
 GameMap	??8?$TArray@W4TArtifact@@$0BD@@@QBE_NABV0@@Z	100.0000	100.0000	100.0000	0x32afd	-
 GameMap	??8@YA_NABVTArtifactContainer@THeroPrototype@@0@Z	100.0000	100.0000	100.0000	0x28ac9	-
@@ -284,11 +295,17 @@ GameMap	??Breference@?$bitset@$0IB@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0x36
 GameMap	??C?$TRefCountingPtr@V_TImpl@TGameMap@@@@QAEPAV_TImpl@TGameMap@@XZ	100.0000	100.0000	100.0000	0x2bff9	-
 GameMap	??C?$TRefCountingPtr@V_TImpl@TLayer@TGameMap@@@@QAEPAV_TImpl@TLayer@TGameMap@@XZ	100.0000	100.0000	100.0000	0x2c00f	-
 GameMap	??ETObjectIDIter@TLayer@TGameMap@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x212bd	-
+GameMap	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@0@Z	90.3958	90.3958	90.3958	0x34500	-
 GameMap	??_4?$TExtent@II@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x38b1a	-
 GameMap	??_5?$TExtent@II@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x340bd	-
 GameMap	??_GTCell@TLayer@TGameMap@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x39753	-
 GameMap	??_GTRumor@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x36c2b	-
 GameMap	??_GTTimedEvent@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x36c47	-
+GameMap	?_Buffered_merge@std@@YAXPAPBVTTimedEvent@@00HHAAV?$_Temp_iterator@PBVTTimedEvent@@@1@UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x39bcf	-
+GameMap	?_Buffered_merge_sort@std@@YAXPAPBVTTimedEvent@@0HAAV?$_Temp_iterator@PBVTTimedEvent@@@1@UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x39b3d	-
+GameMap	?_Buffered_rotate@std@@YAPAPBVTTimedEvent@@PAPBV2@00HHAAV?$_Temp_iterator@PBVTTimedEvent@@@1@@Z	100.0000	100.0000	100.0000	0x3a4a9	-
+GameMap	?_Chunked_merge@std@@YAXPAPBVTTimedEvent@@0AAPAPBV2@HHUTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x3a07c	-
+GameMap	?_Chunked_merge@std@@YAXPAPBVTTimedEvent@@0AAV?$_Temp_iterator@PBVTTimedEvent@@@1@HHUTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x3a2f8	-
 GameMap	?_Construct@std@@YAXPAU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x36b55	-
 GameMap	?_Construct@std@@YAXPAU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x36b14	-
 GameMap	?_Construct@std@@YAXPAU?$pair@$$CBHVTMapObjectRef@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x36b7f	-
@@ -319,6 +336,8 @@ GameMap	?_Erase@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapOb
 GameMap	?_Erase@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x3101c	-
 GameMap	?_Erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x6092	-
 GameMap	?_Erase@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x2fa10	-
+GameMap	?_Ffmt@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KAPADPADDH@Z	100.0000	100.0000	100.0000	0x351ef	-
+GameMap	?_Ifmt@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KAPADPADDH@Z	100.0000	100.0000	100.0000	0x35500	-
 GameMap	?_Inc@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x12357	-
 GameMap	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x32475	-
 GameMap	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x2da99	-
@@ -328,6 +347,7 @@ GameMap	?_Inc@const_iterator@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@s
 GameMap	?_Inc@const_iterator@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x325a3	-
 GameMap	?_Inc@const_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x5f6e	-
 GameMap	?_Inc@const_iterator@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x32367	-
+GameMap	?_Init@?$_Temp_iterator@PBVTTimedEvent@@@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x39e90	-
 GameMap	?_Init@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x2d49a	-
 GameMap	?_Init@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x30930	-
 GameMap	?_Init@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x30406	-
@@ -341,11 +361,13 @@ GameMap	?_Insert@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@
 GameMap	?_Insert@?$_Tree@HU?$pair@$$CBHVTMapObjectRef@@@std@@U_Kfn@?$map@HVTMapObjectRef@@U?$less@H@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@H@2@V?$allocator@VTMapObjectRef@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBHVTMapObjectRef@@@2@@Z	100.0000	100.0000	100.0000	0x312af	-
 GameMap	?_Insert@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBIVTMapObjectRef@@@2@@Z	100.0000	100.0000	100.0000	0x3142b	-
 GameMap	?_Insert@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@std@@U_Kfn@?$map@UTObjectType@@IU?$less@UTObjectType@@@std@@V?$allocator@I@3@@3@U?$less@UTObjectType@@@3@V?$allocator@I@3@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBUTObjectType@@I@2@@Z	97.6641	97.6641	97.6641	0x37d5a	-
+GameMap	?_Insertion_sort_1@std@@YAXPAPBVTTimedEvent@@0UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@0@Z	100.0000	100.0000	100.0000	0x39f46	-
 GameMap	?_Lbound@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IBEPAU_Node@12@ABH@Z	100.0000	100.0000	100.0000	0x323e7	-
 GameMap	?_Lbound@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@IBEPAU_Node@12@ABH@Z	100.0000	100.0000	100.0000	0x31ac9	-
 GameMap	?_Lbound@?$_Tree@HU?$pair@$$CBHVTMapObjectRef@@@std@@U_Kfn@?$map@HVTMapObjectRef@@U?$less@H@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@H@2@V?$allocator@VTMapObjectRef@@@2@@std@@IBEPAU_Node@12@ABH@Z	100.0000	100.0000	100.0000	0x320d3	-
 GameMap	?_Lbound@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@IBEPAU_Node@12@ABI@Z	100.0000	100.0000	100.0000	0x32238	-
 GameMap	?_Lbound@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@IBEPAU_Node@12@ABVTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x324f5	-
+GameMap	?_Lower_bound@std@@YAPAPBVTTimedEvent@@PAPBV2@0ABQBV2@UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@PAH@Z	100.0000	100.0000	100.0000	0x3a7d9	-
 GameMap	?_Lrotate@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x3185c	-
 GameMap	?_Lrotate@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x31b10	-
 GameMap	?_Lrotate@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x3197a	-
@@ -364,6 +386,8 @@ GameMap	?_Max@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@std@@U_Kfn@?$map
 GameMap	?_Max@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@KAPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0x31cb9	-
 GameMap	?_Max@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@KAPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0x6354	-
 GameMap	?_Max@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@KAPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0x317cf	-
+GameMap	?_Merge_backward@std@@YAPAPBVTTimedEvent@@PAPBV2@0000UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x3a43a	-
+GameMap	?_Rotate@std@@YAXPAPBVTTimedEvent@@00PAH0@Z	100.0000	100.0000	100.0000	0x3aae1	-
 GameMap	?_Rrotate@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x318b6	-
 GameMap	?_Rrotate@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x31b9b	-
 GameMap	?_Rrotate@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x31a05	-
@@ -373,17 +397,21 @@ GameMap	?_Rrotate@?$_Tree@UTObjectType@@U?$pair@$$CBUTObjectType@@I@std@@U_Kfn@?
 GameMap	?_Rrotate@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x31cea	-
 GameMap	?_Rrotate@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x6385	-
 GameMap	?_Rrotate@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x31800	-
+GameMap	?_Stable_sort@std@@YAXPAPBVTTimedEvent@@0HAAV?$_Temp_iterator@PBVTTimedEvent@@@1@UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x393aa	-
+GameMap	?_Stable_sort@std@@YAXPAPBVTTimedEvent@@0PAH0UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x38d9b	-
 GameMap	?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xbbd2	-
 GameMap	?_Tidy@?$bitset@$0HP@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x2e294	-
 GameMap	?_Tidy@?$bitset@$0IB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x2e274	-
 GameMap	?_Ubound@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@IBEPAU_Node@12@ABH@Z	100.0000	100.0000	100.0000	0x3242e	-
 GameMap	?_Ubound@?$_Tree@HU?$pair@$$CBHVTMapObjectRef@@@std@@U_Kfn@?$map@HVTMapObjectRef@@U?$less@H@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@H@2@V?$allocator@VTMapObjectRef@@@2@@std@@IBEPAU_Node@12@ABH@Z	100.0000	100.0000	100.0000	0x32654	-
 GameMap	?_Ubound@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@IBEPAU_Node@12@ABVTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x3254c	-
+GameMap	?_Upper_bound@std@@YAPAPBVTTimedEvent@@PAPBV2@0ABQBV2@UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@PAH@Z	100.0000	100.0000	100.0000	0x3a820	-
 GameMap	?_Xran@?$bitset@$02@std@@ABEXXZ	100.0000	100.0000	100.0000	0x12919	-
 GameMap	?_Xran@?$bitset@$07@std@@ABEXXZ	80.0000	80.0000	80.0000	0x16bac	-
 GameMap	?_Xran@?$bitset@$0HP@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x37fdd	-
 GameMap	?_assignUniqueLinkID@_TImpl@TGameMap@@QBEXPAVTLinkableObject@@@Z	100.0000	100.0000	100.0000	0x26fad	tokens1:c29751644160
 GameMap	?_computeObjExtent@_TImpl@TLayer@TGameMap@@ABE?AV?$TExtent@II@@ABV?$TPoint@I@@0@Z	100.0000	100.0000	100.0000	0x2b432	tokens1:65c85a37c7e9
+GameMap	?_createObject@_TImpl@TGameMap@@QBE?AV?$auto_ptr@VTGameObject@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	99.9671	99.9671	99.9671	0x22868	tokens1:798bb604797b
 GameMap	?_findHero@_TImpl@TGameMap@@QBEPBVTIdentifiedHero@@H@Z	100.0000	100.0000	100.0000	0x29966	tokens1:df07a3426399
 GameMap	?_findLinkableObject@_TImpl@TGameMap@@QBEPBVTLinkableObject@@I@Z	90.6216	90.6216	90.6216	0x29137	tokens1:91ba2e373fbd
 GameMap	?_findObject@_TImpl@TGameMap@@QBE?AVTMapObjectRef@@ABUTMapLoc@@P6A_NABVTGameObject@@@Z@Z	87.8889	87.8889	87.8889	0x2928c	tokens1:c15d4a7597ff
@@ -502,6 +530,8 @@ GameMap	?add@?$TUniqueSet@UTObjectType@@@@QAEIABUTObjectType@@@Z	99.9057	99.9057
 GameMap	?addSecondLayer@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x2a188	tokens1:949622b87aa1
 GameMap	?addSecondLayer@_TImpl@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x212d6	tokens1:1ba6016300a0
 GameMap	?assignNewLinkID@TLinkableObject@@QAEXXZ	98.0000	98.0000	98.0000	0x26ffd	-
+GameMap	?canCreate@TGameMap@@QBE_NABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x2a3a3	tokens1:6a5584bb7401
+GameMap	?canCreate@_TImpl@TGameMap@@QBE_NABUTObjectType@@W4TPlayer@@@Z	68.6441	68.6441	68.6441	0x235e2	tokens1:1f5d4fe8546f
 GameMap	?clear@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x2b2cc	-
 GameMap	?clearObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x2abe8	-
 GameMap	?clearPlaceholderHeroID@TGameMap@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x29f98	tokens1:887614bf8602
@@ -510,7 +540,10 @@ GameMap	?clearQuest@TGameMap@@QAEXABVTMapObjectRef@@@Z	100.0000	100.0000	100.000
 GameMap	?clearQuest@_TImpl@TGameMap@@QAEXABVTMapObjectRef@@@Z	99.8333	99.8333	99.8333	0x21206	tokens1:ddd705bbe026
 GameMap	?construct@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x2b042	-
 GameMap	?constructObjectHeightMap@?A0xaab635a5f3ca1b91@@YAXABVTGameObject@@AAY175I@Z	100.0000	100.0000	100.0000	0x1e84b	tokens1:5818399997c6
+GameMap	?copy@std@@YA?AV?$_Temp_iterator@PBVTTimedEvent@@@1@PAPBVTTimedEvent@@0V21@@Z	100.0000	100.0000	100.0000	0x3a3e3	-
 GameMap	?count@?$bitset@$0JM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x2c184	-
+GameMap	?createObject@TGameMap@@QBE?AV?$auto_ptr@VTGameObject@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x2a35f	tokens1:199ad80e83dd
+GameMap	?createObject@_TImpl@TGameMap@@QBE?AV?$auto_ptr@VTGameObject@@@std@@ABUTObjectType@@W4TPlayer@@@Z	99.9054	99.9054	99.9054	0x2158c	tokens1:586c9bd1e907
 GameMap	?end@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QBE?AVconst_iterator@12@XZ	100.0000	100.0000	100.0000	0x744bf	-
 GameMap	?equal@std@@YA_NVconst_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@1@00@Z	100.0000	100.0000	100.0000	0x385dc	-
 GameMap	?erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x2d2fd	-
@@ -542,7 +575,8 @@ GameMap	?erase@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAE
 GameMap	?erase@?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@QAEPAV_TObjectLink@_TImpl@TLayer@TGameMap@@PAV3456@0@Z	100.0000	100.0000	100.0000	0x2f266	-
 GameMap	?eraseObject@TGameMap@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x29ea3	tokens1:18403b0b331d
 GameMap	?eraseObject@_TImpl@TGameMap@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x2034a	tokens1:2fbfcdd9f195
-GameMap	?exportText@TGameMap@@QBEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@@Z	99.0000	99.0000	99.0000	0x2a1d5	tokens1:85c8b40be7fd
+GameMap	?exportText@TGameMap@@QBEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@@Z	100.0000	100.0000	100.0000	0x2a1d5	tokens1:85c8b40be7fd
+GameMap	?exportText@_TImpl@TGameMap@@QBEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@@Z	94.2234	94.2234	94.2234	0x25bbe	tokens1:4a403d8df4de
 GameMap	?find@?$_Tree@HU?$pair@$$CBHPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@std@@U_Kfn@?$map@HPBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@U?$less@H@std@@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@4@@2@U?$less@H@2@V?$allocator@PBUTCappedObjectTypeInfo@?A0xaab635a5f3ca1b91@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x2dcd7	-
 GameMap	?find@?$_Tree@HU?$pair@$$CBHVTMapObjectRef@@@std@@U_Kfn@?$map@HVTMapObjectRef@@U?$less@H@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@H@2@V?$allocator@VTMapObjectRef@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x2e8fa	-
 GameMap	?find@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@QBE?AVconst_iterator@12@ABI@Z	100.0000	100.0000	100.0000	0x2ece6	-
@@ -557,6 +591,10 @@ GameMap	?get@?$TRefCountingPtr@U_TPlayerBookkeeping@_TImpl@TGameMap@@@@QAEPAU_TP
 GameMap	?get@?$TRefCountingPtr@U_TProperties@_TImpl@TGameMap@@@@QAEPAU_TProperties@_TImpl@TGameMap@@XZ	100.0000	100.0000	100.0000	0x2df99	-
 GameMap	?get@?$TRefCountingPtr@V?$TArray@VTPlayerInfo@@$07@@@@QAEPAV?$TArray@VTPlayerInfo@@$07@@XZ	100.0000	100.0000	100.0000	0x2dd11	-
 GameMap	?get@?$TRefCountingPtr@V?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@@@QAEPAV?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@XZ	100.0000	100.0000	100.0000	0x2efb3	-
+GameMap	?getAvailableHeroOwnersMask@TGameMap@@QBE?AV?$bitset@$07@std@@XZ	100.0000	100.0000	100.0000	0x2a3f1	tokens1:5ba022bdfa6d
+GameMap	?getAvailableHeroOwnersMask@_TImpl@TGameMap@@QBE?AV?$bitset@$07@std@@XZ	100.0000	100.0000	100.0000	0x23998	tokens1:9d1c10b4a4e0
+GameMap	?getAvailableHeroesInClass@TGameMap@@QBE?AV?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@W4THeroClass@@@Z	100.0000	100.0000	100.0000	0x2a3b8	tokens1:5e75dd3c93c5
+GameMap	?getAvailableHeroesInClass@_TImpl@TGameMap@@QBE?AV?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@W4THeroClass@@@Z	44.3274	44.3274	44.3274	0x2383f	tokens1:6de3e98f42be
 GameMap	?getBCellShadow@TObjectType@@QBE_NII@Z	100.0000	100.0000	100.0000	0x2af44	-
 GameMap	?getCappedObjectTypeInfoMap@?A0xaab635a5f3ca1b91@@YAABVTCappedObjectTypeInfoMap@1@XZ	98.0000	98.0000	98.0000	0x226d8	-
 GameMap	?getCell@TLayer@TGameMap@@QBEABVTCell@12@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1e82b	tokens1:11eec1851241
@@ -564,6 +602,7 @@ GameMap	?getDefaultTownTypes@TGameMap@@QBE?AUTTownTypes@TPlayerInfo@@W4TPlayer@@
 GameMap	?getDefaultTownTypes@_TImpl@TGameMap@@QBE?AUTTownTypes@TPlayerInfo@@W4TPlayer@@@Z	92.8925	92.8925	92.8925	0x23a2e	tokens1:4654ddca9d73
 GameMap	?getDesc@TGameMap@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x2a2a6	tokens1:52b8062390ac
 GameMap	?getDifficulty@TGameMap@@QBE?AW4TDifficulty@1@XZ	100.0000	100.0000	100.0000	0x2a2af	tokens1:7e7be27c4307
+GameMap	?getDimension@TGameMap@@SAIW4TSize@1@@Z	100.0000	100.0000	100.0000	0x299dd	tokens1:0c5e344f14dd
 GameMap	?getDisabledArtifacts@TGameMap@@QBEABV?$bitset@$0JA@@std@@XZ	100.0000	100.0000	100.0000	0x2a312	tokens1:faf094368c0d
 GameMap	?getDisabledHeroes@TGameMap@@QBEABV?$bitset@$0JM@@std@@XZ	100.0000	100.0000	100.0000	0x2a309	tokens1:5208e01e4bb0
 GameMap	?getDisabledSkills@TGameMap@@QBEABV?$bitset@$0BM@@std@@XZ	100.0000	100.0000	100.0000	0x2a324	tokens1:4e78ad331a0b
@@ -577,7 +616,8 @@ GameMap	?getLinkableObjectRef@TGameMap@@QBE?AVTMapObjectRef@@H@Z	100.0000	100.00
 GameMap	?getMaxHeroLevel@TGameMap@@QBEIXZ	100.0000	100.0000	100.0000	0x2a2b8	tokens1:5ac99424687f
 GameMap	?getName@TGameMap@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x2a29d	tokens1:d544d9bc6fbd
 GameMap	?getNextObjectID@TLayer@TGameMap@@QBEII@Z	100.0000	100.0000	100.0000	0x2b6a7	tokens1:c4ee6a2731eb
-GameMap	?getNumObelisksOnMap@TGameMap@@QBEIXZ	98.3333	98.3333	98.3333	0x2a430	tokens1:377d8ea47410
+GameMap	?getNumObelisksOnMap@TGameMap@@QBEIXZ	100.0000	100.0000	100.0000	0x2a430	tokens1:377d8ea47410
+GameMap	?getNumObelisksOnMap@_TImpl@TGameMap@@QBEIXZ	100.0000	100.0000	100.0000	0x239f7	tokens1:731587ffa09d
 GameMap	?getNumObjectIDsAtCell@TLayer@TGameMap@@QBEIII@Z	100.0000	100.0000	100.0000	0x2b6d2	tokens1:647eaf35524b
 GameMap	?getNumObjectIDsAtCell@_TImpl@TLayer@TGameMap@@QBEIII@Z	100.0000	100.0000	100.0000	0x2a8d9	tokens1:3fcbaa6c6c91
 GameMap	?getNumPlayableSlots@TGameMap@@QBEIXZ	100.0000	100.0000	100.0000	0x2a356	tokens1:7197fe1e179f
@@ -652,6 +692,8 @@ GameMap	?isValid@_TVictoryConditionValidater@_TImpl@TGameMap@@QAE_NPBVTVictoryCo
 GameMap	?isValidPlacement@TGameMap@@QBE_NABVTGameObject@@_NII@Z	100.0000	100.0000	100.0000	0x2a43a	tokens1:4d5852b6ee87
 GameMap	?linkGeneratorToTown@TGameMap@@QAEXABVTMapObjectRef@@0@Z	100.0000	100.0000	100.0000	0x2a0af	tokens1:c130e5d644de
 GameMap	?linkGeneratorToTown@_TImpl@TGameMap@@QAEXABVTMapObjectRef@@0@Z	66.5000	66.5000	66.5000	0x2107c	tokens1:4161fd5aa34f
+GameMap	?merge@std@@YA?AV?$_Temp_iterator@PBVTTimedEvent@@@1@PAPBVTTimedEvent@@000V21@UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x3a73e	-
+GameMap	?merge@std@@YAPAPBVTTimedEvent@@PAPBV2@0000UTFirstOccurenceLess@?A0xaab635a5f3ca1b91@@@Z	100.0000	100.0000	100.0000	0x3a14d	-
 GameMap	?mismatch@std@@YA?AU?$pair@Vconst_iterator@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@V123@@1@Vconst_iterator@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@1@00@Z	100.0000	100.0000	100.0000	0x39e56	-
 GameMap	?onObjectRemoved@_TImpl@TGameMap@@QAEXXZ	67.1818	67.1818	67.1818	0x27661	tokens1:10c13225b583
 GameMap	?onTerrainTypeChanged@TGameMap@@QAE_N_NIIW4TTerrainType@@PAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x29f3f	tokens1:75795a71f790
@@ -668,6 +710,8 @@ GameMap	?readBitset@@YAXAAVTRawIStream@@AAV?$bitset@$0IB@@std@@@Z	100.0000	100.0
 GameMap	?readBitset@@YAXAAVTRawIStream@@AAV?$bitset@$0JA@@std@@@Z	100.0000	100.0000	100.0000	0x33db5	-
 GameMap	?readCell@?A0xaab635a5f3ca1b91@@YAXPAVTRawIStream@@PAVTCell@TLayer@TGameMap@@@Z	100.0000	100.0000	100.0000	0x2b8bd	tokens1:c35f89fe91c2
 GameMap	?readCellData@@YAXAAVTRawIStream@@PAVTLayer@TGameMap@@@Z	100.0000	100.0000	100.0000	0x2b7e8	tokens1:dddd5e22117c
+GameMap	?reconstructObject@TGameMap@@QBE?AV?$auto_ptr@VTGameObject@@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@3@H@Z	100.0000	100.0000	100.0000	0x2a381	tokens1:48d556b2e29f
+GameMap	?reconstructObject@_TImpl@TGameMap@@QBE?AV?$auto_ptr@VTGameObject@@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@4@H@Z	99.8276	99.8276	99.8276	0x237f8	tokens1:3cfd8bf2c431
 GameMap	?removeFloatingObject@TGameMap@@QAEX_N@Z	100.0000	100.0000	100.0000	0x29f1e	tokens1:271bf4b8f0c7
 GameMap	?removeFloatingObject@_TImpl@TGameMap@@QAEX_N@Z	100.0000	100.0000	100.0000	0x2059b	tokens1:53594d0e51d0
 GameMap	?removeObject@TGameMap@@QAEX_NIPAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x29e22	tokens1:e3a19c9b0984
@@ -712,6 +756,7 @@ GameMap	?setMaxHeroLevel@TGameMap@@QAEXI@Z	100.0000	100.0000	100.0000	0x29b76	to
 GameMap	?setName@TGameMap@@QAEXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x29b05	tokens1:983acdbe2694
 GameMap	?setName@_TImpl@TGameMap@@QAEXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1ff3e	tokens1:d06866a8e1d4
 GameMap	?setObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QAEXV?$auto_ptr@VTGameObject@@@std@@@Z	100.0000	100.0000	100.0000	0x2aad8	-
+GameMap	?setObjectFactory@TGameMap@@SAXPBVTObjectFactory@1@@Z	100.0000	100.0000	100.0000	0x299e9	tokens1:b588d01f4819
 GameMap	?setPlaceholderHeroID@TGameMap@@QAEX_NIH@Z	100.0000	100.0000	100.0000	0x29f6f	tokens1:0539cdd313f0
 GameMap	?setPlaceholderHeroID@_TImpl@TGameMap@@QAEX_NIH@Z	81.3947	81.3947	81.3947	0x2091b	tokens1:60ae1f2fa6cb
 GameMap	?setPlaceholderOwner@TGameMap@@QAEX_NIW4TPlayer@@@Z	100.0000	100.0000	100.0000	0x29fbd	tokens1:c9b24dcd5bc9
@@ -734,6 +779,7 @@ GameMap	?setVictoryCondition@TGameMap@@QAEXV?$auto_ptr@VTVictoryCondition@@@std@
 GameMap	?setVictoryCondition@_TImpl@TGameMap@@QAEXV?$auto_ptr@VTVictoryCondition@@@std@@@Z	100.0000	100.0000	100.0000	0x200d2	tokens1:854ae52ca309
 GameMap	?setVisitingHero@TGameMap@@QAEXPBVTHero@@_NI@Z	100.0000	100.0000	100.0000	0x2a038	tokens1:a69083c1796d
 GameMap	?setVisitingHero@_TImpl@TGameMap@@QAEXPBVTHero@@_NI@Z	99.9107	99.9107	99.9107	0x20e6b	tokens1:c366cb4bbb81
+GameMap	?streamObject@TGameMap@@SAXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@ABVTGameObject@@@Z	100.0000	100.0000	100.0000	0x299f3	tokens1:c532eb1e9d8e
 GameMap	?streamObject@_TImpl@TGameMap@@SAXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@ABVTGameObject@@@Z	99.7826	99.7826	99.7826	0x1f1ee	tokens1:dd71dea48888
 GameMap	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x2ccc6	-
 GameMap	?test@?$bitset@$0JM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x2d8a8	-
@@ -1159,6 +1205,7 @@ objecttype	?_Xinv@?$bitset@$0DA@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x91666	-
 objecttype	?_Xran@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x2f6f4	-
 objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x900ca	-
 objecttype	?accepts@TSlotCategoryObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x900eb	-
+objecttype	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	94.1429	94.1429	94.1429	0x37d05	-
 objecttype	?count@?$bitset@$09@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1682	-
 objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAG@Z	100.0000	100.0000	100.0000	0x35adb	-
 objecttype	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAI@Z	100.0000	100.0000	100.0000	0x35ba7	-
@@ -1195,7 +1242,7 @@ objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@Q
 objecttype	?set@?$bitset@$08@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x2d05f	-
 objecttype	?set@?$bitset@$09@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x17b9	-
 objecttype	?set@?$bitset@$0DA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x91472	-
-objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.4944	91.4944	91.4944	0x903e8	-
+objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.5222	91.5222	91.5222	0x903e8	-
 objecttype	?setTerrainMask@TObjectType@@QAEAAU1@ABV?$bitset@$09@std@@@Z	100.0000	100.0000	100.0000	0x906de	-
 objecttype	?snextc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x2cc4c	-
 objecttype	?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z	30.4318	30.4318	30.4318	0x35855	-
@@ -1232,6 +1279,8 @@ resourcemanager	??1?$auto_ptr@VBitmap16Bit@@@std@@QAE@XZ	100.0000	100.0000	100.0
 resourcemanager	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x60f42	-
 resourcemanager	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	99.8438	99.8438	99.8438	0xdd5a0	-
 resourcemanager	??1?$numpunct@D@std@@UAE@XZ	50.7692	50.7692	50.7692	0x372e9	-
+resourcemanager	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	0.0000	0.0000	0.0000	0x2caf5	-
+resourcemanager	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	0.0000	0.0000	0.0000	0x2ba5e	-
 resourcemanager	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	0.0000	0.0000	0.0000	0x34825	-
 resourcemanager	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	0.0000	0.0000	0.0000	0x34477	-
 resourcemanager	??MTCacheMapKey@ResourceManager@@QBE_NABV01@@Z	-	83.5455	83.5455	0xdafb0	-
@@ -1269,6 +1318,10 @@ resourcemanager	?dispose@resource@@UAEXXZ	80.7241	80.8103	80.8103	0xdd390	-
 resourcemanager	?do_decimal_point@?$numpunct@D@std@@MBEDXZ	100.0000	100.0000	100.0000	0x37223	-
 resourcemanager	?do_falsename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	0.0000	0.0000	0.0000	0x37261	-
 resourcemanager	?do_grouping@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	0.0000	0.0000	0.0000	0x3722b	-
+resourcemanager	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DJ@Z	0.0000	0.0000	0.0000	0x34f79	-
+resourcemanager	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DK@Z	0.0000	0.0000	0.0000	0x34fd1	-
+resourcemanager	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DN@Z	20.0000	20.0000	20.0000	0x35029	-
+resourcemanager	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DO@Z	16.6102	16.6102	16.6102	0x350a7	-
 resourcemanager	?do_thousands_sep@?$numpunct@D@std@@MBEDXZ	100.0000	100.0000	100.0000	0x37227	-
 resourcemanager	?do_truename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	0.0000	0.0000	0.0000	0x37297	-
 resourcemanager	?erase@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0xddd40	-
@@ -1286,13 +1339,14 @@ resourcemanager	?loadSpreadsheetData@ResourceManager@@YAPAVTSpreadsheetResource@
 resourcemanager	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	87.0866	87.0866	87.0866	0xdc900	-
 resourcemanager	?loadTextData@ResourceManager@@YAPAVTTextResource@@PBDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xdc860	-
 resourcemanager	?openArchiveResource@@YA_NH@Z	99.9153	99.9153	99.9153	0xdb160	-
+resourcemanager	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	0.0000	0.0000	0.0000	0x2f2bc	-
 resourcemanager	?overflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x49c5e	-
 resourcemanager	?overflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	0.0000	0.0000	0.0000	0x61401	-
 resourcemanager	?pbackfail@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	46.8621	46.8621	46.8621	0x61544	-
 resourcemanager	?read@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0xdac80	-
 resourcemanager	?read@t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	99.5000	99.5000	99.5000	0xdac60	-
 resourcemanager	?reportMissingResource@@YAXPBD00@Z	99.8864	99.8864	99.8864	0xdb320	-
-resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	96.3990	96.3990	96.3990	0xdb560	-
+resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	96.4111	96.4111	96.4111	0xdb560	-
 resourcemanager	?seekoff@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	39.1111	39.1111	39.1111	0xf777f	-
 resourcemanager	?seekoff@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	59.5508	59.5508	59.5508	0x615dd	-
 resourcemanager	?seekpos@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@V32@H@Z	39.1111	39.1111	39.1111	0x49d72	-
