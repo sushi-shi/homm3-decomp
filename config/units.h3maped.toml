@@ -605,3 +605,28 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "HeroPropsSecSkillsPage"
 source = "src/editor/HeroPropsSecSkillsPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsBiographyPage"
+source = "src/editor/HeroPropsBiographyPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "PrimarySkillsDlg"
+source = "src/editor/PrimarySkillsDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsPriSkillsPage"
+source = "src/editor/HeroPropsPriSkillsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "SpellsDlg"
+source = "src/editor/SpellsDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPropsSpellsPage"
+source = "src/editor/HeroPropsSpellsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"

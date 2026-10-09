@@ -262,6 +262,21 @@ public:
     // h3maped 0x44b52b.
     void setSecondarySkills(const THeroPrototype::TSecondarySkills& newSecondarySkills);
     const TArmy& getArmy() const { return _m_army; }
+    bool getBCustomSpells() const { return _m_bCustomSpells; }
+    void setBCustomSpells(bool bCustomSpells) { _m_bCustomSpells = bCustomSpells; }
+    const std::bitset<kNumSpells>& getSpells() const { return _m_spells; }
+    // h3maped 0x44b58f.
+    void setSpells(const std::bitset<kNumSpells>& newSpells);
+    bool getBCustomPrimarySkills() const { return _m_bCustomPrimarySkills; }
+    void setBCustomPrimarySkills(bool bCustomPrimarySkills) { _m_bCustomPrimarySkills = bCustomPrimarySkills; }
+    const TArray<int, kNumPrimarySkills>& getPrimarySkills() const { return _m_aPrimarySkill; }
+    // h3maped 0x44b5a3.
+    void setPrimarySkills(const TArray<int, kNumPrimarySkills>& newPrimarySkills);
+    bool getBCustomBiography() const { return _m_bCustomBiography; }
+    void setBCustomBiography(bool bCustomBiography) { _m_bCustomBiography = bCustomBiography; }
+    const std::string& getBiography() const { return _m_biography; }
+    // h3maped 0x44b575.
+    void setBiography(const std::string& newBiography);
     // h3maped 0x44b53a.
     void setArmy(const TArmy& newArmy);
     bool getBGroupedFormation() const { return _m_bGroupedFormation; }
