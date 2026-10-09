@@ -463,6 +463,10 @@ _ANNOTATION_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|elif)\b")
 # It is introduced by the Mac compiler command line. A source #define/#undef
 # is still debt and must fail the zero floor.
 _MAC_TARGET_SWITCH = "HOMM3" + "_TARGET_MAC"
+# The Loki evidence build (work/loki-game only) names its platform the same
+# way; include/loki/ holds its platform headers, which VC6 never reads.
+_LOKI_TARGET_SWITCH = "HOMM3" + "_TARGET_LOKI"
+_LOKI_PORT_HEADERS = REPO / "include/loki"
 _TARGET_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|ifndef|elif)\b")
 # Reviewed whole-build feature switches (see the module docstring). Each
 # selects deliberate, documented non-retail behavior for every TU at once,
@@ -496,7 +500,8 @@ def _scaffold_preprocessor_sites(code: str, ctx) -> list:
             name = match.group()
             if name.endswith("_H") or name in legit:
                 continue
-            if name == _MAC_TARGET_SWITCH and _TARGET_CONDITIONAL.match(text):
+            if (name in (_MAC_TARGET_SWITCH, _LOKI_TARGET_SWITCH)
+                    and _TARGET_CONDITIONAL.match(text)):
                 continue
             if (name in _SANCTIONED_FEATURE_SWITCHES
                     and _TARGET_CONDITIONAL.match(text)):
@@ -630,6 +635,8 @@ def count(per_file: bool = False, *, dc_origins=None):
             continue
         for path in sorted(base.rglob("*")):
             if path.suffix not in EXTS or not path.is_file() or images.foreign(path, REPO):
+                continue
+            if _LOKI_PORT_HEADERS in path.parents:
                 continue
             try:
                 code = _strip(path.read_text(errors="ignore"))

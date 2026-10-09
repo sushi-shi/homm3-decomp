@@ -78,6 +78,11 @@ def definition_order(definition: Definition):
             definition.offset if definition.source_owner else -1)
 
 
+# The Loki evidence build's platform headers (work/loki-game): GCC 2.95 reads
+# them in place of the Windows SDK; the VC6 AST never includes them.
+LOKI_PORT_HEADERS = 'include/loki/'
+
+
 def fragment_owners(root: Path) -> dict[str, tuple[str, int]]:
     """Validate explicit source fragments at their canonical include positions.
 
@@ -1044,6 +1049,7 @@ def collect(root: Path = ROOT, jobs: int | None = None, fresh: bool = False):
                       for p in sorted(header_tree.rglob('*'))
                       if p.suffix.lower() in {'.h', '.hpp', '.inl'}
                       and not images.foreign(p, root)
+                      and not p.relative_to(root).as_posix().startswith(LOKI_PORT_HEADERS)
                       and p.relative_to(root).as_posix() not in reached]
     results.extend(scan_all(orphan_headers))
     unique = {}

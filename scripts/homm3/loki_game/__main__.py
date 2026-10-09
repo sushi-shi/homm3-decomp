@@ -20,6 +20,14 @@
   compile UNIT ... [--scan]
         compile src/UNIT.cpp at the game profile (build/heroes3-loki/objects/)
         and, with --scan, search its bodies in the image
+  diff WIN_RVA [--no-compile]
+        compile the function's Windows unit and list its body beside the
+        paired Loki body (normal form of homm3.loki_game.diff) with a score
+  score [UNIT ...] [--below-100] [--no-compile] [--all]
+        the Loki game score: paired Windows functions whose Loki body the
+        units reproduce (exact / found / paired); default units are those
+        with a paired function, --below-100 restricts to the functions not
+        exact on Windows; --all lists every row
 """
 from __future__ import annotations
 
@@ -42,6 +50,14 @@ def main(argv=None) -> int:
     p = sub.add_parser("compile")
     p.add_argument("units", nargs="+")
     p.add_argument("--scan", action="store_true")
+    p = sub.add_parser("diff")
+    p.add_argument("win")
+    p.add_argument("--no-compile", action="store_true")
+    p = sub.add_parser("score")
+    p.add_argument("units", nargs="*")
+    p.add_argument("--below-100", action="store_true")
+    p.add_argument("--no-compile", action="store_true")
+    p.add_argument("--all", action="store_true")
     p = sub.add_parser("calls")
     p.add_argument("win")
     p.add_argument("loki", nargs="?")
@@ -70,6 +86,10 @@ def main(argv=None) -> int:
             return _vtables()
         elif args.command == "compile":
             return _compile(args.units, args.scan)
+        elif args.command == "diff":
+            return _diff(int(args.win, 16), not args.no_compile)
+        elif args.command == "score":
+            return _score(args.units, args.below_100, not args.no_compile, args.all)
         elif args.command == "calls":
             return _calls(int(args.win, 16), int(args.loki, 16) if args.loki else None)
     except (ValueError, OSError, RuntimeError, KeyError) as exc:
@@ -97,6 +117,77 @@ def _compile(units: list[str], scan: bool) -> int:
                 where = f"0x{hits[0]:08x}" if len(hits) == 1 else f"{len(hits)} hits"
                 print(f"  {size:6} {where:>12} {name}")
     return rc
+
+
+def _objects(units: list[str], build: bool) -> dict[str, list]:
+    """unit -> its object's functions; a unit that does not compile maps to None."""
+    from homm3.loki_game import compile as cc, diff
+    from homm3.loki_game.image import BUILD
+    out = {}
+    for unit in units:
+        obj = BUILD / "objects" / f"{unit}.o"
+        if build:
+            obj, diagnostics = cc.compile_unit(unit)
+            if not obj.is_file():
+                (BUILD / "objects" / f"{unit}.log").write_text(diagnostics)
+        out[unit] = diff.object_functions(obj) if obj.is_file() else None
+    return out
+
+
+def _diff(win: int, build: bool) -> int:
+    from homm3.loki_game import diff, score
+    scorer = score.Scorer()
+    rows = [r for r in scorer.rows() if r.win == win]
+    if not rows:
+        print(f"[loki-game] 0x{win:x} is not paired", file=sys.stderr)
+        return 1
+    row = rows[0]
+    functions = _objects([row.unit], build)[row.unit]
+    if functions is None:
+        print(f"[loki-game] {row.unit} does not compile (build/heroes3-loki/objects/{row.unit}.log)")
+        return 1
+    scorer.score_unit([row], functions)
+    if row.symbol is None:
+        print(f"[loki-game] {row.name}: {row.note}")
+        return 1
+    mine = next(f for f in functions if diff.gnu_demangle([f.symbol])[f.symbol] == row.symbol)
+    target = scorer.body(row)
+    for line in diff.side_by_side(mine.body, target):
+        print(line)
+    print(f"WIN 0x{row.win:x} {row.windows:.2f}  LOKI 0x{row.loki:08x}  {row.symbol}")
+    print(f"loki score {row.score:.2f}{' (exact)' if row.exact else ''}"
+          f"  ({len(mine.body.code)} vs {len(target.code)} bytes)")
+    return 0
+
+
+def _score(units: list[str], below: bool, build: bool, every: bool) -> int:
+    from homm3.loki_game import score
+    scorer = score.Scorer()
+    rows = scorer.rows(set(units) if units else None)
+    if below:
+        rows = [r for r in rows if r.windows < 100]
+    by_unit: dict[str, list] = {}
+    for row in rows:
+        by_unit.setdefault(row.unit, []).append(row)
+    objects = _objects(sorted(by_unit), build)
+    compiled = 0
+    for unit, unit_rows in sorted(by_unit.items()):
+        if objects[unit] is None:
+            for row in unit_rows:
+                row.note = "unit does not compile"
+            continue
+        compiled += 1
+        scorer.score_unit(unit_rows, objects[unit])
+    for row in rows:
+        if every or (row.score is not None and not row.exact) or below:
+            score_text = "-" if row.score is None else f"{row.score:6.2f}"
+            print(f"{row.unit:24} 0x{row.win:06x} {row.windows:6.2f} {score_text:>6} "
+                  f"{'=' if row.exact else ' '} {(row.symbol or row.note)[:80]}")
+    found = [r for r in rows if r.score is not None]
+    exact = sum(r.exact for r in found)
+    print(f"[loki-game] score: {exact} exact / {len(found)} found / {len(rows)} paired"
+          f" ({compiled} of {len(by_unit)} units compile)")
+    return 0
 
 
 def _vtables() -> int:

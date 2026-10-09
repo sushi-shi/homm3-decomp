@@ -95,8 +95,7 @@ public:
     // The image-name registry lookup reads this record's image number;
     // lazy registry/empty-string initialization does not modify the record.
     // Constness is inferred from that ownership, not surviving DC types.
-    const std::basic_string<char, std::char_traits<char>,
-                            std::allocator<char> >& getImageName() const;
+    const std::string& getImageName() const;
     // CObjectType's conversion loads each dimension as a dword before
     // narrowing it to char. Direct field access folds those into byte
     // loads in VC6; ordinary integer accessors retain the observed boundary.
@@ -156,9 +155,7 @@ public:
     // (and, on a miss, loads the row's .msk to append one); setTriggerMask
     // stores `mask & ~passableMask`, sets `hasTrigger` from its any(), and
     // scans the 8x6 grid for the first set cell. NAMES ARE PROVISIONAL.
-    TObjectType& setImageName(
-        const std::basic_string<char, std::char_traits<char>,
-                                std::allocator<char> >& name);
+    TObjectType& setImageName(const std::string& name);
     TObjectType& _setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& mask);
     // Provisional fluent setter names: retail objects.txt extraction retains
     // the two setters above and expands this ordered field/invariant chain.

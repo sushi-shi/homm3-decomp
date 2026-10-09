@@ -1220,7 +1220,11 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
             unsigned short wordValue;
             if (readValue(infile, wordValue) < sizeof(wordValue))
                 return -1;
+#if defined(HOMM3_TARGET_LOKI)
+            thisCell->setCellFlags(wordValue);
+#else
             thisCell->m_cellFlags = wordValue;
+#endif
             if (readValue(infile, wordValue) < sizeof(wordValue))
                 return -1;
             thisCell->m_typeValue = wordValue;

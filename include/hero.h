@@ -265,8 +265,7 @@ public:
 // copy of the war machine's artifact record; hero.obj owns the
 // DEFINITION (0x4db3e0). Dreamcast LF_MFUNCTION 0x4d51 carries a const
 // type_artifact this pointer.
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        getDescription() const;
+    std::string getDescription() const;
 };
 
 class boat;
@@ -911,11 +910,9 @@ public:
     const char* getSpecificAbilityText();
     const char* getSpecificAbilityTextShort();
     int valueOfSpell(SpellID spell) const;
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        getLuckDescription() const;
+    std::string getLuckDescription() const;
     // hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0).
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        getMoraleDescription() const;
+    std::string getMoraleDescription() const;
     int getLuck(const hero* otherHero, bool onCursedGround,
                 bool applyLimits) const;
     int getMorale(const hero* otherHero, bool onCursedGround,

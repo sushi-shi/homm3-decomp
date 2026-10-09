@@ -642,7 +642,7 @@ SIZE(ExtraInfoUnion, 4);
 // bytes before Guardians stay implicit so generated copies skip them.
 class TreasureData {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
+    std::string m_message;
     unsigned char m_hasCustomGuardians;
     armyGroup m_guardians;
 
@@ -706,7 +706,7 @@ class TAbstractFile;
 // makes VC6's generated copies treat retail padding as a real member.
 class TTimedEvent {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
+    std::string Message;
     int ResQty[NUM_RESOURCES];
     unsigned char PlayerFlags;
     unsigned char m_applyToHuman;
@@ -777,8 +777,7 @@ public:
     // at DC offsets 0/12/13/16/24/32/40/48/52/56. Retail widens the leading
     // string from 12 to 16 bytes and every offset after it moves by four,
     // which saveObjectType then confirms one Write at a time.
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        m_imageName;
+    std::string m_imageName;
     // Dreamcast field list 0x309c records Width/Height as T_RCHAR.
     char m_width;
     char m_height;
@@ -937,6 +936,54 @@ public:
     // with `test word ptr [cell+0xc], 0x1000`. Both use the canonical
     // cellFlags overlay below. Earlier include-set experiments predated
     // this shared representation and do not justify a local offset view.
+#if defined(HOMM3_TARGET_LOKI)
+    // g++ 2.95 has no anonymous structs: the Loki port spells the word as
+    // the Dreamcast flag list, one declarator per bit.
+    unsigned short m_groundFlippedHorizontal : 1;
+    unsigned short m_groundFlippedVertical : 1;
+    unsigned short m_riverFlippedHorizontal : 1;
+    unsigned short m_riverFlippedVertical : 1;
+    unsigned short m_roadFlippedHorizontal : 1;
+    unsigned short m_roadFlippedVertical : 1;
+    unsigned short m_passable : 1;
+    unsigned short m_animated : 1;
+    unsigned short m_isBlocked : 1;
+    unsigned short m_isBeachBorder : 1;
+    unsigned short m_unusedBit : 1;
+    unsigned short m_canBuildShip : 1;
+    unsigned short m_isTrigger : 1;
+    unsigned short m_flags1315 : 3;
+
+    unsigned short getCellFlags() const
+    {
+        return m_groundFlippedHorizontal | m_groundFlippedVertical << 1
+            | m_riverFlippedHorizontal << 2 | m_riverFlippedVertical << 3
+            | m_roadFlippedHorizontal << 4 | m_roadFlippedVertical << 5
+            | m_passable << 6 | m_animated << 7 | m_isBlocked << 8
+            | m_isBeachBorder << 9 | m_unusedBit << 10 | m_canBuildShip << 11
+            | m_isTrigger << 12 | m_flags1315 << 13;
+    }
+    void setCellFlags(unsigned short flags)
+    {
+        m_groundFlippedHorizontal = flags;
+        m_groundFlippedVertical = flags >> 1;
+        m_riverFlippedHorizontal = flags >> 2;
+        m_riverFlippedVertical = flags >> 3;
+        m_roadFlippedHorizontal = flags >> 4;
+        m_roadFlippedVertical = flags >> 5;
+        m_passable = flags >> 6;
+        m_animated = flags >> 7;
+        m_isBlocked = flags >> 8;
+        m_isBeachBorder = flags >> 9;
+        m_unusedBit = flags >> 10;
+        m_canBuildShip = flags >> 11;
+        m_isTrigger = flags >> 12;
+        m_flags1315 = flags >> 13;
+    }
+// The shared source reads the word through these views.
+#define m_cellFlags getCellFlags()
+#define m_flags0011 getCellFlags()
+#else
     union {
         struct {
             unsigned short m_flags0011 : 12;
@@ -974,6 +1021,7 @@ public:
         };
         unsigned short m_cellFlags;
     };
+#endif
     // Retail mapcell.obj constructs and destroys a Dinkumware vector here.
     // Its empty allocator occupies +0x0e..+0x11 and its first/last/end
     // pointers are the three dwords at +0x12/+0x16/+0x1a. The four-byte
@@ -987,6 +1035,10 @@ public:
     struct TObjectCell {
         // denoted the same unsigned word, not alternative representations.
         unsigned short m_objectIndex;
+#if defined(HOMM3_TARGET_LOKI)
+        signed char m_cellX : 4;
+        signed char m_cellY : 4;
+#else
         union {
             unsigned char m_offsets;
             struct {
@@ -994,6 +1046,7 @@ public:
                 signed char m_cellY : 4;
             };
         };
+#endif
         signed char m_layer;
 
         CObject* getObject() const;
@@ -1029,9 +1082,26 @@ public:
         m_riverIndex = 0;
         m_roadSet = 0;
         m_roadIndex = 0;
+#if defined(HOMM3_TARGET_LOKI)
+        m_groundFlippedHorizontal = 0;
+        m_groundFlippedVertical = 0;
+        m_riverFlippedHorizontal = 0;
+        m_riverFlippedVertical = 0;
+        m_roadFlippedHorizontal = 0;
+        m_roadFlippedVertical = 0;
+        m_passable = 0;
+        m_animated = 0;
+        m_isBlocked = 0;
+        m_isBeachBorder = 0;
+        m_unusedBit = 0;
+        m_canBuildShip = 0;
+        m_isTrigger = 0;
+        m_flags1315 = 0;
+#else
         m_flags0011 = 0;
         m_isTrigger = 0;
         m_flags1315 = 0;
+#endif
         m_type = NOTHING;
         m_objectIndex = -1;
         m_extraInfo = 0;
@@ -1068,7 +1138,7 @@ enum EMonsterQuantityPreset {
 
 class MonsterData {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
+    std::string m_message;
     int m_resQty[NUM_RESOURCES];
     // DC type 0x30cb records public TArtifact Artifact. The map and save
     // formats encode different widths; decode those at the stream boundary.

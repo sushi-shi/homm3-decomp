@@ -12,6 +12,13 @@
 template <size_t N>
 class bitset_iterator {
 public:
+#if defined(HOMM3_TARGET_LOKI)
+    typedef std::forward_iterator_tag iterator_category;
+    typedef bool value_type;
+    typedef ptrdiff_t difference_type;
+    typedef bool* pointer;
+    typedef bool reference;
+#endif
     bitset_iterator()
         : m_bits(0), m_position(0)
     {

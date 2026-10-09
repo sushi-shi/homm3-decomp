@@ -1,0 +1,4 @@
+// strstream - Dinkumware's <strstream> brings in <string>; libstdc++'s does
+// not (work/loki-game only).
+#include <string>
+#include_next <strstream>

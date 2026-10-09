@@ -2520,8 +2520,7 @@ MAC_ADDRESS(0x0cefc0, 0x1b8)
 int game::loadRumours(TAbstractFile* infile)
 {
     unsigned char value;
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        current;
+    std::string current;
     if (loadString(infile, current) < 0)
         return -1;
 

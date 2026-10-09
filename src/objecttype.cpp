@@ -424,9 +424,7 @@ VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, _TImageInfo)
 // release-elided operations are used.
 VA(0x00514610, 0x317)
 MAC_ADDRESS(0x223aa4, 0x2b8)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
-TObjectType& TObjectType::setImageName(
-    const std::basic_string<char, std::char_traits<char>,
-                            std::allocator<char> >& newImageName)
+TObjectType& TObjectType::setImageName(const std::string& newImageName)
 {
     TPoint emptySize = { 0, 0 };
     TObjectImageNameTable& imageNameSet = getObjectImageNames();
@@ -443,8 +441,7 @@ TObjectType& TObjectType::setImageName(
         // Retail keeps the suffix as .rdata array storage (0x640280), while
         // "default.msk" below remains a pooled .data literal.
         DATA(0x00640280) static const char maskExtension[] = ".msk";
-        std::basic_string<char, std::char_traits<char>,
-                          std::allocator<char> > maskName = newImageName;
+        std::string maskName = newImageName;
         std::string::size_type dotPos = maskName.find_last_of('.');
         if (dotPos != std::string::npos) {
             maskName.replace(dotPos, maskName.size() - dotPos, maskExtension);
@@ -489,7 +486,7 @@ TObjectType& TObjectType::setImageName(
 
 VA(0x00514960, 0xAD)
 MAC_ADDRESS(0x223dcc, 0x80)
-const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
+const std::string&
 TObjectType::getImageName() const
 {
     // Bit 0 of 0x69cb70 guards the empty string; 0x514a10 releases it.

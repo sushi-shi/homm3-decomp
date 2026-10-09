@@ -1475,7 +1475,11 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
                        blackBox);
 
     if (cell->m_extraInfo & 0x80000) {
+#if defined(HOMM3_TARGET_LOKI)
+        cell->m_isTrigger = 0;
+#else
         cell->m_cellFlags &= 0xefff;
+#endif
         cell->m_extraInfo = 0;
         cell->m_typeValue = NOTHING;
     }

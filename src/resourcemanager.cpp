@@ -547,6 +547,8 @@ static LODFile* findBitmapResource(const char* name)
 // archive-index-one arm matches Mac's literal store and also preserves Windows
 // exactness. The Mac frame gap remains.
 // The flags arrive in ECX/EDX; ret 4 removes the added error-code pointer.
+// Loki evidence builds have no exceptions; the typed handler stays VC6-only.
+#if !defined(HOMM3_TARGET_LOKI)
 VA(0x0055a250, 0x2F1)
 DC_ADDRESS(0x12173c, 0x144)
 MAC_ADDRESS(0x152924, 0x210)  // sole retail caller + two flags/error output
@@ -608,6 +610,7 @@ bool ResourceManager::Open(bool openSprites, bool openBitmaps, int* errorCode)
 
     return true;
 }
+#endif
 
 VA(0x0055a550, 0x67)
 DC_ADDRESS(0x121880, 0x1c)

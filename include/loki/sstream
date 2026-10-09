@@ -1,0 +1,19 @@
+// sstream - libstdc++ 2.95.2 has no <sstream>; the port's string stream is
+// an ostrstream that hands its text out as a string (work/loki-game only).
+#ifndef HOMM3_LOKI_SSTREAM
+#define HOMM3_LOKI_SSTREAM
+
+#include <string>
+#include <strstream>
+
+class ostringstream : public ostrstream {
+public:
+    string str()
+    {
+        string text(ostrstream::str(), pcount());
+        freeze(0);
+        return text;
+    }
+};
+
+#endif

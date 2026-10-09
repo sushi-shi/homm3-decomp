@@ -18,11 +18,16 @@ enum EGameResourceCount {
     NUM_RESOURCES = 7
 };
 
+#if defined(HOMM3_TARGET_LOKI)
+#include <string>
+#else
 namespace std {
 template<class T> class allocator;
 template<class E> struct char_traits;
 template<class E, class Tr, class A> class basic_string;
+typedef basic_string<char, char_traits<char>, allocator<char> > string;
 }
+#endif
 
 // Bootstrap domain: only the sentinel is modeled; the full creature
 // roster gets its own header when a consumer needs the values.
@@ -825,24 +830,22 @@ public:
                     unsigned char applyLimits) const;
     // The older DC description publics also use _N for cursed ground.
     // Complete replaces it with the multi-valued magicTerrain argument.
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        getMoraleDescription(TCreatureType creature, int morale,
-                               const class hero* ownerHero,
-                               const class town* ownerTown,
-                               const class hero* otherHero,
-                               const armyGroup* otherGroup,
-                               int magicTerrain,
-                               unsigned char groupAlignments) const;
+    std::string getMoraleDescription(TCreatureType creature, int morale,
+                                     const class hero* ownerHero,
+                                     const class town* ownerTown,
+                                     const class hero* otherHero,
+                                     const armyGroup* otherGroup,
+                                     int magicTerrain,
+                                     unsigned char groupAlignments) const;
     // Retail Complete added CREATURE and widened the final magic-terrain
     // parameter relative to the older Dreamcast prototype. The body indexes
     // creature traits from the first argument and returns with `ret 20h`.
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        getLuckDescription(TCreatureType creature, int luck,
-                             const class hero* ourHero,
-                             const class town* ourTown,
-                             const class hero* enemyHero,
-                             const armyGroup* enemyGroup,
-                             int magicTerrain) const;
+    std::string getLuckDescription(TCreatureType creature, int luck,
+                                   const class hero* ourHero,
+                                   const class town* ourTown,
+                                   const class hero* enemyHero,
+                                   const armyGroup* enemyGroup,
+                                   int magicTerrain) const;
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile);
     int add(int armyType, int newNumTroops, int newIndex);

@@ -22,7 +22,7 @@
 #ifndef HOMM3_CRT_STDIO_H
 #define HOMM3_CRT_STDIO_H
 
-#if defined(HOMM3_TARGET_MAC)
+#if defined(HOMM3_TARGET_MAC) || defined(HOMM3_TARGET_LOKI)
 // Use MSL declarations; redeclaring its string functions makes lookup ambiguous.
 #include <stdio.h>
 #include <string.h>

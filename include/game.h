@@ -181,7 +181,7 @@ public:
     signed char m_patrolRadius;  // +0x305 - sign gates the patrol XY
     unsigned char m_customName;  // +0x306
 #pragma pack(pop)
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
+    std::string m_name;
     // +0x318 is the hero's SEX, not experience: hero::initialize gates it
     // on `!= -1` and stores it into hero::sex at +0x3d5. The real
     // Experience is the dword at +0x1c above. Renamed 2026-08-20.
@@ -584,7 +584,7 @@ public:
     char m_customArmies;
     armyGroup m_townArmy;
     char m_customName;
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_name;
+    std::string m_name;
     // A char in the Dreamcast record, a DWORD here: readTownData assigns it
     // from CObjectType::extra and from setup.alignment[], both int.
     int m_townType;
@@ -783,7 +783,7 @@ SIZE(TBlackMarket, 0x1c);
 class Sign {
 public:
     unsigned char m_hasText;
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_signText;
+    std::string m_signText;
 
     DC_ADDRESS(0x0bce54, 0x28)
     Sign() : m_hasText(0) {}
@@ -1029,7 +1029,7 @@ public:
     game();
     ~game();
     struct TRumour {
-        std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_text;
+        std::string m_text;
         unsigned char m_unavailable;
     };
     // +0x90, one byte: a shown-once latch on the "the Grail cannot be built
