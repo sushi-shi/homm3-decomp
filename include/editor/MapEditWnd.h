@@ -25,7 +25,7 @@
 #include "editor/Tile.h"
 
 class TGUIGameObject;
-class TObstacleArea;
+class TGameMapMask;
 
 class TMapEditWnd : public TMapEditingWnd, private TPannerCtrlClient {
 public:
@@ -36,13 +36,13 @@ public:
     };
 
     TMapEditWnd(CWnd* pParent, TMapEditingWnd::TController* pController, int id, const TGameMap* pMap,
-                const TObstacleArea* pObstacleArea, bool bSecondLayer, TZoom zoom, bool bShowGrid,
+                const TGameMapMask* pObstacleMask, bool bSecondLayer, TZoom zoom, bool bShowGrid,
                 bool bShowPassability);
     virtual ~TMapEditWnd();
     virtual BOOL PreTranslateMessage(MSG* pMsg);
 
     void clearMap();
-    void setMapLayer(const TGameMap* pMap, const TObstacleArea* pObstacleArea, bool bSecondLayer);
+    void setMapLayer(const TGameMap* pMap, const TGameMapMask* pObstacleMask, bool bSecondLayer);
     void moveViewRect(const CPoint& pos);
     void update(const CRect& rect);
     void setZoom(TZoom zoom);
@@ -137,7 +137,7 @@ private:
     TMapEditingWnd::TController* _m_pController;
     int _m_id;
     const TGameMap* _m_pMap;
-    const TObstacleArea* _m_pObstacleArea;
+    const TGameMapMask* _m_pObstacleMask;
     bool _m_bSecondLayer;
     TPannerCtrl* _m_pPanner;
     CToolTipCtrl* _m_pToolTip;

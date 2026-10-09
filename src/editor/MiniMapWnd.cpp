@@ -14,17 +14,17 @@
 #include "editor/GUIGameObject.h"
 #include "editor/MemoryDC.h"
 #include "editor/MiniMapWnd.h"
-#include "editor/ObstacleArea.h"
+#include "editor/GameMapMask.h"
 #include "editor/T16bppPalette.h"
 
 DATA(0x005a1ed0) const CSize TMiniMapWnd::s_kClientSize(144, 144);
 
 VA(0x004878ee, 0x12e)
 TMiniMapWnd::TMiniMapWnd(CWnd* pParent, TMapViewingWnd::TController* pController, const TGameMap* pMap,
-                         const TObstacleArea* pObstacleArea, bool bSecondLayer)
+                         const TGameMapMask* pObstacleMask, bool bSecondLayer)
     : _m_pController(pController),
       _m_pMap(pMap),
-      _m_pObstacleArea(pObstacleArea),
+      _m_pObstacleMask(pObstacleMask),
       _m_bSecondLayer(bSecondLayer),
       _m_viewPos(0, 0),
       _m_viewSize(0, 0),
@@ -55,14 +55,14 @@ VA(0x00487aae, 0x9)
 void TMiniMapWnd::clearMap()
 {
     _m_pMap = NULL;
-    _m_pObstacleArea = NULL;
+    _m_pObstacleMask = NULL;
 }
 
 VA(0x00487ab7, 0x33)
-void TMiniMapWnd::setMapLayer(const TGameMap* pMap, const TObstacleArea* pObstacleArea, bool bSecondLayer)
+void TMiniMapWnd::setMapLayer(const TGameMap* pMap, const TGameMapMask* pObstacleMask, bool bSecondLayer)
 {
     _m_pMap = pMap;
-    _m_pObstacleArea = pObstacleArea;
+    _m_pObstacleMask = pObstacleMask;
     _m_bSecondLayer = bSecondLayer;
     _m_viewPos = CPoint(0, 0);
     _m_viewSize = CSize(0, 0);
@@ -210,8 +210,8 @@ void TMiniMapWnd::OnPaint()
             if (pTopObj != NULL)
                 color = pTopObj->miniMapColor(terrainType);
             _m_backBuffer.fillRect(cellRect.left, cellRect.top, cellRect.Width(), cellRect.Height(), color);
-            if (_m_pObstacleArea->hasTiles(_m_bSecondLayer)) {
-                int state = _m_pObstacleArea->getTileState(tile.x, tile.y, _m_bSecondLayer);
+            if (_m_pObstacleMask->hasTiles(_m_bSecondLayer)) {
+                int state = _m_pObstacleMask->getTileState(tile.x, tile.y, _m_bSecondLayer);
                 if (state == 2) {
                     TRGB obstacleColor = {0, 0, 0xff};
                     _m_backBuffer.blendRect(cellRect.left, cellRect.top, cellRect.Width(), cellRect.Height(),

@@ -24,7 +24,7 @@
 #include "editor/MemoryDC.h"
 #include "editor/MFCFileBuf.h"
 #include "editor/ObjectHelp.h"
-#include "editor/ObstacleArea.h"
+#include "editor/GameMapMask.h"
 #include "editor/T16bppPalette.h"
 #include "editor/resource.h"
 
@@ -179,12 +179,12 @@ typedef TDCAttributeSelector<int, &CDC::SetBkMode> TBkModeSelector;
 
 VA(0x004695f2, 0x373)
 TMapEditWnd::TMapEditWnd(CWnd* pParent, TMapEditingWnd::TController* pController, int id, const TGameMap* pMap,
-                         const TObstacleArea* pObstacleArea, bool bSecondLayer, TZoom zoom, bool bShowGrid,
+                         const TGameMapMask* pObstacleMask, bool bSecondLayer, TZoom zoom, bool bShowGrid,
                          bool bShowPassability)
     : _m_pController(pController),
       _m_id(id),
       _m_pMap(pMap),
-      _m_pObstacleArea(pObstacleArea),
+      _m_pObstacleMask(pObstacleMask),
       _m_bSecondLayer(bSecondLayer),
       _m_pPanner(NULL),
       _m_pToolTip(NULL),
@@ -262,11 +262,11 @@ void TMapEditWnd::clearMap()
     if (_m_toolTipObjID != TGameMap::TLayer::s_kInvalidObjID)
         _clearToolTipObj();
     _m_pMap = NULL;
-    _m_pObstacleArea = NULL;
+    _m_pObstacleMask = NULL;
 }
 
 VA(0x00469a75, 0xdd)
-void TMapEditWnd::setMapLayer(const TGameMap* pNewMap, const TObstacleArea* pNewObstacleArea, bool bNewSecondLayer)
+void TMapEditWnd::setMapLayer(const TGameMap* pNewMap, const TGameMapMask* pNewObstacleMask, bool bNewSecondLayer)
 {
     if (_m_selectedObjID != TGameMap::TLayer::s_kInvalidObjID) {
         _m_selectedObjID = TGameMap::TLayer::s_kInvalidObjID;
@@ -275,7 +275,7 @@ void TMapEditWnd::setMapLayer(const TGameMap* pNewMap, const TObstacleArea* pNew
     if (_m_toolTipObjID != TGameMap::TLayer::s_kInvalidObjID)
         _clearToolTipObj();
     _m_pMap = pNewMap;
-    _m_pObstacleArea = pNewObstacleArea;
+    _m_pObstacleMask = pNewObstacleMask;
     _m_bSecondLayer = bNewSecondLayer;
     _m_viewPos = CPoint(0, 0);
     SetScrollPos(SB_HORZ, 0);
@@ -1065,7 +1065,7 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
                 }
             }
         }
-    if (_m_pObstacleArea->hasTiles(_m_bSecondLayer))
+    if (_m_pObstacleMask->hasTiles(_m_bSecondLayer))
         for (cell.y = cells.top; cell.y < cells.bottom; cell.y++) {
             int top = (cell.y - _m_viewPos.y) * tileSize;
             unsigned int cellHeight = tileSize;
@@ -1084,7 +1084,7 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
                 }
                 if (left + cellWidth > rect.right)
                     cellWidth = rect.right - left;
-                int state = _m_pObstacleArea->getTileState(cell.x, cell.y, _m_bSecondLayer);
+                int state = _m_pObstacleMask->getTileState(cell.x, cell.y, _m_bSecondLayer);
                 if (state == 2) {
                     TRGB color = {0, 0, 0xff};
                     _m_backBuffer.blendRect(left, top, cellWidth, cellHeight, T16bppPalette::rgbToEntry(color));

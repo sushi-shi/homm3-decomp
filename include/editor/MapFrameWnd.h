@@ -13,20 +13,20 @@
 
 class TGUIGameObject;
 class TMapEditWnd;
-class TObstacleArea;
+class TGameMapMask;
 class TTileHRuler;
 class TTileVRuler;
 
 class TMapFrameWnd : public TMapEditingWnd, private TMapEditingWnd::TController {
 public:
     TMapFrameWnd(CWnd* pParent, TMapEditingWnd::TController* pController, int id, const TGameMap* pMap,
-                 const TObstacleArea* pObstacleArea, bool bSecondLayer, TZoom zoom, bool bShowGrid,
+                 const TGameMapMask* pObstacleMask, bool bSecondLayer, TZoom zoom, bool bShowGrid,
                  bool bShowPassability);
     virtual ~TMapFrameWnd();
     virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
 
     void clearMap();
-    void setMapLayer(const TGameMap* pMap, const TObstacleArea* pObstacleArea, bool bSecondLayer);
+    void setMapLayer(const TGameMap* pMap, const TGameMapMask* pObstacleMask, bool bSecondLayer);
     void moveViewRect(const CPoint& pos);
     void update(const CRect& rect);
     void setZoom(TZoom zoom);

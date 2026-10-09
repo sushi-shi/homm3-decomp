@@ -11,16 +11,16 @@
 #include "editor/MapViewingWnd.h"
 
 class TGameMap;
-class TObstacleArea;
+class TGameMapMask;
 
 class TMiniMapWnd : public TMapViewingWnd {
 public:
     TMiniMapWnd(CWnd* pParent, TMapViewingWnd::TController* pController, const TGameMap* pMap,
-                const TObstacleArea* pObstacleArea, bool bSecondLayer);
+                const TGameMapMask* pObstacleMask, bool bSecondLayer);
     virtual ~TMiniMapWnd();
 
     void clearMap();
-    void setMapLayer(const TGameMap* pMap, const TObstacleArea* pObstacleArea, bool bSecondLayer);
+    void setMapLayer(const TGameMap* pMap, const TGameMapMask* pObstacleMask, bool bSecondLayer);
     void moveViewRect(const CPoint& pos);
     void sizeViewRect(const CSize& size);
     void update(const CRect& rect);
@@ -42,7 +42,7 @@ private:
 
     TMapViewingWnd::TController* _m_pController;
     const TGameMap* _m_pMap;
-    const TObstacleArea* _m_pObstacleArea;
+    const TGameMapMask* _m_pObstacleMask;
     bool _m_bSecondLayer;
     CPoint _m_viewPos;
     CSize _m_viewSize;

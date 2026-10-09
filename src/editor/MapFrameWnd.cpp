@@ -14,7 +14,7 @@
 
 VA(0x0046f6a2, 0x25e)
 TMapFrameWnd::TMapFrameWnd(CWnd* pParent, TMapEditingWnd::TController* pController, int id, const TGameMap* pMap,
-                           const TObstacleArea* pObstacleArea, bool bSecondLayer, TZoom zoom, bool bShowGrid,
+                           const TGameMapMask* pObstacleMask, bool bSecondLayer, TZoom zoom, bool bShowGrid,
                            bool bShowPassability)
     : _m_pController(pController),
       _m_pEditWnd(NULL),
@@ -28,7 +28,7 @@ TMapFrameWnd::TMapFrameWnd(CWnd* pParent, TMapEditingWnd::TController* pControll
         className = AfxRegisterWndClass(CS_DBLCLKS, ::LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_BTNFACE + 1));
     if (!Create(className, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, CRect(0, 0, 0, 0), pParent, 0))
         throw TRuntimeError();
-    _m_pEditWnd = new TMapEditWnd(this, this, id, pMap, pObstacleArea, bSecondLayer, zoom, bShowGrid,
+    _m_pEditWnd = new TMapEditWnd(this, this, id, pMap, pObstacleMask, bSecondLayer, zoom, bShowGrid,
                                   bShowPassability);
     if (_m_pEditWnd == NULL)
         throw TAllocationFailure();
@@ -64,11 +64,11 @@ void TMapFrameWnd::clearMap()
 }
 
 VA(0x0046f96d, 0x3e)
-void TMapFrameWnd::setMapLayer(const TGameMap* pMap, const TObstacleArea* pObstacleArea, bool bSecondLayer)
+void TMapFrameWnd::setMapLayer(const TGameMap* pMap, const TGameMapMask* pObstacleMask, bool bSecondLayer)
 {
     _m_pHRuler->setRange(pMap->getWidth());
     _m_pVRuler->setRange(pMap->getHeight());
-    _m_pEditWnd->setMapLayer(pMap, pObstacleArea, bSecondLayer);
+    _m_pEditWnd->setMapLayer(pMap, pObstacleMask, bSecondLayer);
 }
 
 VA(0x0046f9ab, 0x2b)

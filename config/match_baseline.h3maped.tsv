@@ -1339,7 +1339,7 @@ MapDoc	?unfloatObject@TMapDoc@@QAEX_NII@Z	100.0000	100.0000	100.0000	0x5fb51	tok
 MapDoc	?write@TStreamBufFile@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x5df8f	tokens1:d5350a7c29f4
 MapDoc	BEGIN_MESSAGE_MAP_5dfa2	0.0000	0.0000	0.0000	0x5dfa2	tokens1:53804c18b1e6
 MapEditWnd	??0TError@TMemoryDC@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5c5ff	-
-MapEditWnd	??0TMapEditWnd@@QAE@PAVCWnd@@PAVTController@TMapEditingWnd@@HPBVTGameMap@@PBVTObstacleArea@@_NW4TZoom@@44@Z	100.0000	100.0000	100.0000	0x695f2	tokens1:97f1127ebd53
+MapEditWnd	??0TMapEditWnd@@QAE@PAVCWnd@@PAVTController@TMapEditingWnd@@HPBVTGameMap@@PBVTGameMapMask@@_NW4TZoom@@44@Z	100.0000	100.0000	100.0000	0x695f2	tokens1:f6af46039054
 MapEditWnd	??1CRgn@@UAE@XZ	100.0000	100.0000	100.0000	0x6d098	-
 MapEditWnd	??1TMapEditWnd@@UAE@XZ	100.0000	100.0000	100.0000	0x699b4	tokens1:74ca8332b572
 MapEditWnd	??1TViewportOrgOffsetter@?%C:\Dev\Heroes 3 Exp 2\Editor\MapEditWnd.cpp618416512@@QAE@XZ	100.0000	100.0000	100.0000	0x6b66b	tokens1:e584818f7f6f
@@ -1396,7 +1396,7 @@ MapEditWnd	?_computeFloatingObjRect@TMapEditWnd@@ABE?AVCRect@@ABVCPoint@@@Z	100.
 MapEditWnd	?_computeViewRectSize@TMapEditWnd@@ABE?AVCSize@@HH@Z	100.0000	100.0000	100.0000	0x6c7cf	tokens1:3bd716007ed4
 MapEditWnd	?_copySelectedObject@TMapEditWnd@@AAE_NXZ	97.5833	97.5833	97.5833	0x6c484	tokens1:48b32a6dcd5e
 MapEditWnd	?_drawBrush@TMapEditWnd@@AAEXPAVCDC@@@Z	100.0000	100.0000	100.0000	0x6af50	tokens1:765029f473c6
-MapEditWnd	?_drawMap@TMapEditWnd@@AAEXPAVCDC@@AAVCRect@@@Z	89.8075	89.8075	89.8075	0x6b686	tokens1:5e4a22cf888e
+MapEditWnd	?_drawMap@TMapEditWnd@@AAEXPAVCDC@@AAVCRect@@@Z	89.8075	89.8075	89.8075	0x6b686	tokens1:24a70bedd0c6
 MapEditWnd	?_drawSelectionFrame@TMapEditWnd@@AAEXPAVCDC@@@Z	100.0000	100.0000	100.0000	0x6ae29	tokens1:ea68e5741b3b
 MapEditWnd	?_generateMouseMove@TMapEditWnd@@AAEXXZ	100.0000	100.0000	100.0000	0x6c386	tokens1:71baa2f4bdbd
 MapEditWnd	?_getMapLayer@TMapEditWnd@@ABEABVTLayer@TGameMap@@XZ	100.0000	100.0000	100.0000	0x6a5b2	tokens1:21de0bcf3ffa
@@ -1418,7 +1418,7 @@ MapEditWnd	?blendRect@?$T16bppBitmapBase@K@@QAEXHHIIG@Z	64.5405	64.5405	64.5405	
 MapEditWnd	?brushMode@TMapEditWnd@@QAEXABVCSize@@@Z	100.0000	100.0000	100.0000	0x6a722	tokens1:e69a08c2f462
 MapEditWnd	?canPanHorizontally@TMapEditWnd@@EAE_NXZ	100.0000	100.0000	100.0000	0x6cb61	tokens1:522c1870f0b0
 MapEditWnd	?canPanVertically@TMapEditWnd@@EAE_NXZ	100.0000	100.0000	100.0000	0x6cb96	tokens1:6f076cb041e4
-MapEditWnd	?clearMap@TMapEditWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x69a32	tokens1:e5fc49f24b9d
+MapEditWnd	?clearMap@TMapEditWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x69a32	tokens1:533c01714fd4
 MapEditWnd	?drawCellHatchedRect@@YAXPAVCDC@@PAVCPen@@PAVCBrush@@ABVCPoint@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x6c309	tokens1:e7bba4919761
 MapEditWnd	?fillMode@TMapEditWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x6a73b	tokens1:bd35d4d710ad
 MapEditWnd	?grabObject@TMapEditWnd@@QAEXPBVTGUIGameObject@@@Z	100.0000	100.0000	100.0000	0x69fbf	tokens1:9527f38de5bc
@@ -1431,7 +1431,7 @@ MapEditWnd	?resetAnimation@TMapEditWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x6a5c
 MapEditWnd	?selectObject@TMapEditWnd@@QAEXI@Z	100.0000	100.0000	100.0000	0x69f30	tokens1:1e9ec47505c4
 MapEditWnd	?selectionMode@TMapEditWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x6a71a	tokens1:3a0f631c0680
 MapEditWnd	?setContextMenuText@?%C:\Dev\Heroes 3 Exp 2\Editor\MapEditWnd.cpp618416512@@YAXPAVCMenu@@@Z	100.0000	100.0000	100.0000	0x69481	tokens1:4f7219166fd4
-MapEditWnd	?setMapLayer@TMapEditWnd@@QAEXPBVTGameMap@@PBVTObstacleArea@@_N@Z	100.0000	100.0000	100.0000	0x69a75	tokens1:d2a3f4bdc44d
+MapEditWnd	?setMapLayer@TMapEditWnd@@QAEXPBVTGameMap@@PBVTGameMapMask@@_N@Z	100.0000	100.0000	100.0000	0x69a75	tokens1:4ef30cd89762
 MapEditWnd	?setZoom@TMapEditWnd@@QAEXW4TZoom@@@Z	100.0000	100.0000	100.0000	0x69d54	tokens1:f4ce4b16d73e
 MapEditWnd	?showGrid@TMapEditWnd@@QAEX_N@Z	100.0000	100.0000	100.0000	0x69ef0	tokens1:00ea73a8007e
 MapEditWnd	?showPassability@TMapEditWnd@@QAEX_N@Z	100.0000	100.0000	100.0000	0x69f10	tokens1:21565d53f910
@@ -1439,7 +1439,7 @@ MapEditWnd	?tintRect@?$T16bppBitmapBase@K@@QAEXHHIIG@Z	70.7024	70.7024	70.7024	0
 MapEditWnd	?update@TMapEditWnd@@QAEXABVCRect@@@Z	100.0000	100.0000	100.0000	0x69cc8	tokens1:4202a2926b42
 MapEditWnd	__h3cg$MapEditWnd$static_dtor$className	100.0000	100.0000	100.0000	0x6998e	-
 MapEditingWnd	?GetMessageMap@TMapEditingWnd@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x62a5d	-
-MapFrameWnd	??0TMapFrameWnd@@QAE@PAVCWnd@@PAVTController@TMapEditingWnd@@HPBVTGameMap@@PBVTObstacleArea@@_NW4TZoom@@44@Z	100.0000	100.0000	100.0000	0x6f6a2	tokens1:65c5ea7d437d
+MapFrameWnd	??0TMapFrameWnd@@QAE@PAVCWnd@@PAVTController@TMapEditingWnd@@HPBVTGameMap@@PBVTGameMapMask@@_NW4TZoom@@44@Z	100.0000	100.0000	100.0000	0x6f6a2	tokens1:fdee90fa8159
 MapFrameWnd	??1TMapFrameWnd@@UAE@XZ	100.0000	100.0000	100.0000	0x6f926	tokens1:35d80d765380
 MapFrameWnd	??_GTMapFrameWnd@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6f90a	-
 MapFrameWnd	?GetMessageMap@TMapFrameWnd@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x6fc54	tokens1:288963fc70a5
@@ -1476,7 +1476,7 @@ MapFrameWnd	?onUndo@TMapFrameWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x6fa49	toke
 MapFrameWnd	?resetAnimation@TMapFrameWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x6fa73	tokens1:3100d53e8407
 MapFrameWnd	?selectObject@TMapFrameWnd@@QAEXI@Z	100.0000	100.0000	100.0000	0x6fa2b	tokens1:e031f7577887
 MapFrameWnd	?selectionMode@TMapFrameWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x6fa8a	tokens1:ebfa5cb8a910
-MapFrameWnd	?setMapLayer@TMapFrameWnd@@QAEXPBVTGameMap@@PBVTObstacleArea@@_N@Z	100.0000	100.0000	100.0000	0x6f96d	tokens1:0c8f8a136175
+MapFrameWnd	?setMapLayer@TMapFrameWnd@@QAEXPBVTGameMap@@PBVTGameMapMask@@_N@Z	100.0000	100.0000	100.0000	0x6f96d	tokens1:fce72341c178
 MapFrameWnd	?setZoom@TMapFrameWnd@@QAEXW4TZoom@@@Z	100.0000	100.0000	100.0000	0x6f9e5	tokens1:a28d5aed9255
 MapFrameWnd	?showGrid@TMapFrameWnd@@QAEX_N@Z	100.0000	100.0000	100.0000	0x6fa0d	tokens1:3f2e5c6df782
 MapFrameWnd	?showPassability@TMapFrameWnd@@QAEX_N@Z	100.0000	100.0000	100.0000	0x6fa1c	tokens1:3f34d7323a3c
@@ -1827,7 +1827,7 @@ MemoryDC	?getTransparentColor@@YAKPAVCBitmap@@@Z	100.0000	100.0000	100.0000	0x86
 MemoryDC	?isPixelColor@@YA_NPAVCBitmap@@HHK@Z	100.0000	100.0000	100.0000	0x87543	tokens1:0151ed410c8e
 MemoryDC	?isTransparentPixel@@YA_NPAVCBitmap@@HH@Z	100.0000	100.0000	100.0000	0x875b5	tokens1:203150634ddb
 MemoryDC	?setMenuItemText@@YA_NPAVCMenu@@AAIVCString@@@Z	74.2121	74.2121	74.2121	0x87613	tokens1:0a37ff0b275b
-MiniMapWnd	??0TMiniMapWnd@@QAE@PAVCWnd@@PAVTController@TMapViewingWnd@@PBVTGameMap@@PBVTObstacleArea@@_N@Z	100.0000	100.0000	100.0000	0x878ee	tokens1:0af943a97786
+MiniMapWnd	??0TMiniMapWnd@@QAE@PAVCWnd@@PAVTController@TMapViewingWnd@@PBVTGameMap@@PBVTGameMapMask@@_N@Z	100.0000	100.0000	100.0000	0x878ee	tokens1:358f94b09396
 MiniMapWnd	??1TMapViewingWnd@@UAE@XZ	100.0000	100.0000	100.0000	0x87a42	-
 MiniMapWnd	??1TMiniMapWnd@@UAE@XZ	100.0000	100.0000	100.0000	0x87a63	tokens1:c0c496dd57f4
 MiniMapWnd	??_GTMapViewingWnd@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87a47	-
@@ -1837,14 +1837,14 @@ MiniMapWnd	?OnCaptureChanged@TMiniMapWnd@@IAEXPAVCWnd@@@Z	100.0000	100.0000	100.
 MiniMapWnd	?OnLButtonDown@TMiniMapWnd@@IAEXIVCPoint@@@Z	100.0000	100.0000	100.0000	0x883f4	tokens1:50576b3f1a23
 MiniMapWnd	?OnLButtonUp@TMiniMapWnd@@IAEXIVCPoint@@@Z	100.0000	100.0000	100.0000	0x88421	tokens1:46b568776621
 MiniMapWnd	?OnMouseMove@TMiniMapWnd@@IAEXIVCPoint@@@Z	100.0000	100.0000	100.0000	0x8843b	tokens1:7fdc5e2b1677
-MiniMapWnd	?OnPaint@TMiniMapWnd@@IAEXXZ	98.4318	98.4318	98.4318	0x87ec1	tokens1:ea8fd3fbeb64
+MiniMapWnd	?OnPaint@TMiniMapWnd@@IAEXXZ	98.4318	98.4318	98.4318	0x87ec1	tokens1:b0ddf1d891de
 MiniMapWnd	?OnSize@TMiniMapWnd@@IAEXIHH@Z	100.0000	100.0000	100.0000	0x88459	tokens1:687b8b293198
 MiniMapWnd	?OnWindowPosChanging@TMiniMapWnd@@IAEXPAUtagWINDOWPOS@@@Z	100.0000	100.0000	100.0000	0x87eb1	tokens1:31f7ca31fe84
 MiniMapWnd	?_processDrag@TMiniMapWnd@@AAEXABVCPoint@@@Z	100.0000	100.0000	100.0000	0x87de3	tokens1:b7d2a56b4132
-MiniMapWnd	?clearMap@TMiniMapWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x87aae	tokens1:2747c39b6d0d
+MiniMapWnd	?clearMap@TMiniMapWnd@@QAEXXZ	100.0000	100.0000	100.0000	0x87aae	tokens1:646804f9df3d
 MiniMapWnd	?fillRect@?$T16bppBitmapBase@K@@QAEXHHIIG@Z	63.3210	63.3210	63.3210	0x88486	tokens1:49122247f721
 MiniMapWnd	?moveViewRect@TMiniMapWnd@@QAEXABVCPoint@@@Z	100.0000	100.0000	100.0000	0x87aea	tokens1:9782bd2acd23
-MiniMapWnd	?setMapLayer@TMiniMapWnd@@QAEXPBVTGameMap@@PBVTObstacleArea@@_N@Z	100.0000	100.0000	100.0000	0x87ab7	tokens1:5eb5001d21c6
+MiniMapWnd	?setMapLayer@TMiniMapWnd@@QAEXPBVTGameMap@@PBVTGameMapMask@@_N@Z	100.0000	100.0000	100.0000	0x87ab7	tokens1:07541b3f42c6
 MiniMapWnd	?sizeViewRect@TMiniMapWnd@@QAEXABVCSize@@@Z	100.0000	100.0000	100.0000	0x87c82	tokens1:1762385fa40e
 MiniMapWnd	?update@TMiniMapWnd@@QAEXABVCRect@@@Z	100.0000	100.0000	100.0000	0x87d5d	tokens1:683d224f8542
 MiniMapWnd	__h3cg$MiniMapWnd$static_dtor$className	100.0000	100.0000	100.0000	0x87a1c	-
