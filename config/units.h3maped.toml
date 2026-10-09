@@ -565,3 +565,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "TownPropsBuildingsPage"
 source = "src/editor/TownPropsBuildingsPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "SelectHeroClassDlg"
+source = "src/editor/SelectHeroClassDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"

@@ -96,6 +96,7 @@ rva	size	kind	name	unit	evidence
 0x0000ce11	0x277	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	masked body (631 bytes, 58 relocations) unique at a census start
 0x0000d513	0x17	func	??0TAllocationFailure@@QAE@XZ	rmg_support	referenced by ??0TRmgLinePatternTable@@QAE@IPBH@Z at +0x27
 0x0000d6cd	0x8	func	??_ET16bppDIBSection@@WBE@AEPAXI@Z	DIBSection	vtable ??_7T16bppDIBSection@@6BCBitmap@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 1
+0x0000ddad	0x2c	func	??Breference@?$bitset@$0BD@@std@@QBE_NXZ	SelectHeroClassDlg	masked body (44 bytes, 1 relocations) unique at a census start
 0x0000e70b	0x2e	func	??0TEmptyDialogTemplate@@QAE@XZ	MapSpecsLossCondPage	masked body (46 bytes, 0 relocations) unique at a census start
 0x0000ed06	0x1	func	?releaseReservation@type_object@@UAEXXZ	rmg	vtable ??_7type_object@@6B@ stored by ??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z slot 1
 0x00011916	0x3	func	?imbue@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEXABVlocale@2@@Z	resourcemanager	vtable ??_7?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@6B@ stored by ?reportMissingResource@@YAXPBD00@Z slot 12
