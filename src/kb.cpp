@@ -2946,6 +2946,9 @@ int getEnemyCount()
 // DC 3448/3452 and 3491/3493 record separate nested admission tests,
 // not one combined condition. Restoring those source boundaries is
 // Windows byte-flat at 79.0916% in the current TU context.
+// DC 3467/3472 and 3519/3524 record coincident scope pairs: both remote
+// game-over arms are braced. Restoring them raises this caller's inline
+// cost toward retail's decisions (79.09 -> 81.85%).
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
@@ -2964,10 +2967,11 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
                                       lossCondition.m_townY,
                                       lossCondition.m_townZ));
                 sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOSE_TOWN_DEFEAT_FORMAT), lostTown->m_name.c_str());
-                if (remoteCheck)
+                if (remoteCheck) {
                     g_gameOver = 1;
-                else
+                } else {
                     sendPlayerLost();
+                }
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
             }
@@ -2988,10 +2992,11 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
                         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_LOSS_HERO_DEFEATED_FORMAT), loserName,
                                 g_game->getHero(lossCondition.m_heroId)->m_name);
                 }
-                if (remoteCheck)
+                if (remoteCheck) {
                     g_gameOver = 1;
-                else
+                } else {
                     sendPlayerLost();
+                }
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
             }
