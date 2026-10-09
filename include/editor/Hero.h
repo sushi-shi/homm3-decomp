@@ -189,8 +189,16 @@ public:
 
     // h3maped 0x5857d4: points at the 156 hero rows (one per THeroID).
     static TTraits* s_akTraits;
+    // One row per secondary skill: its name (Loki's TSecondarySkillTraits;
+    // the hero table loader copies the skill traits' names in, 0x44af1b).
+    struct TSecondarySkillTraits {
+        const char* m_name;
+    };
+
     // h3maped 0x5857d8: points at the eighteen rows (one per THeroClass).
     static TClassTraits* s_akClassTraits;
+    // h3maped 0x5857dc: points at the 28 rows (one per secondary skill).
+    static TSecondarySkillTraits* s_akSecondarySkillTraits;
 
     // The hero's id as the map stores it, a byte (a random hero has none,
     // 0xff, and ignores a new one; 0x44bf12, 0x45726f).

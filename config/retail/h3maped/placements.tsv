@@ -60,6 +60,7 @@ rva	size	kind	name	unit	evidence
 0x00007894	0x5f	func	??0?$vector@U_TObjectCellInfo@TLayer@TGameMap@@V?$allocator@U_TObjectCellInfo@TLayer@TGameMap@@@std@@@std@@QAE@ABV01@@Z	GameMap	masked body (95 bytes, 1 relocations) unique at a census start
 0x000078f3	0x59	func	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV01@@Z	rmg	masked body (89 bytes, 1 relocations) unique at a census start
 0x000099d6	0x47	func	??1TSelectArtifactDlg@@UAE@XZ	SelectArtifactDlg	referenced by ??_GTSelectArtifactDlg@@UAEPAXI@Z at +0x4
+0x0000babd	0x2c	func	??Breference@?$bitset@$0BM@@std@@QBE_NXZ	MapSpecsSecSkillsPage	masked body (44 bytes, 1 relocations) unique at a census start
 0x0000bae9	0x2c	func	??Breference@?$bitset@$0EG@@std@@QBE_NXZ	MapSpecsSpellsPage	masked body (44 bytes, 1 relocations) unique at a census start
 0x0000bb15	0x11	func	?push_back@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEXABUTPoint@@@Z	rmg	referenced by ?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ at +0x8f
 0x0000bb26	0x11	func	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	rmg	referenced by ?generate@type_black_box_spells_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z at +0x73; ICF-folded with 4 identical bodies
@@ -584,6 +585,7 @@ rva	size	kind	name	unit	evidence
 0x0007522f	0x4e	func	?_Eq@?$vector@VTRumor@@V?$allocator@VTRumor@@@std@@@std@@QBE_NABV12@@Z	MapSpecsRumorsPage	masked body (78 bytes, 1 relocations) unique at a census start
 0x0007527d	0x36	func	?equal@std@@YA_NPBVTRumor@@00@Z	MapSpecsRumorsPage	masked body (54 bytes, 1 relocations) unique at a census start
 0x000752b3	0x30	func	??8@YA_NABVTRumor@@0@Z	MapSpecsRumorsPage	masked body (48 bytes, 2 relocations) unique at a census start
+0x0007583c	0xd	func	?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ	MapSpecsSecSkillsPage	masked body (13 bytes, 0 relocations) unique at a census start
 0x000786de	0x1e	func	?getEvent@TEditTimedEventSheet@@QBE?AVTTimedEvent@@XZ	MapSpecsTimedEventsPage	referenced by ?OnAddEventButton@TMapSpecsTimedEventsPage@@IAEXXZ at +0xa0
 0x00078c93	0x11	func	?push_back@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEXABVTTimedEvent@@@Z	MapSpecsTimedEventsPage	referenced by ?OnAddEventButton@TMapSpecsTimedEventsPage@@IAEXXZ at +0xac
 0x00078ca4	0x54	func	?erase@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEPAVTTimedEvent@@PAV3@@Z	MapSpecsTimedEventsPage	masked body (84 bytes, 2 relocations) unique at a census start
