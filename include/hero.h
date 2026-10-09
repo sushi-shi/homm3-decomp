@@ -893,7 +893,6 @@ public:
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     bool visitedArena(const NewmapCell* cell) const;
     void setVisitedArena(const NewmapCell* cell);
-    bool hasArenaVisit(unsigned long visitMask) const;
     unsigned char isWieldingArtifact(int whichArtifact) const;
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
@@ -1149,27 +1148,6 @@ public:
     type_point getTarget() const
     {
         return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
-    }
-
-    // Project property operations for the stored route target. Keep the
-    // full-width X/Y view for sentinel comparisons and temporary save/restore;
-    // getTarget() is the existing packed map-point view.
-    int getTargetX() const { return m_pathTargetX; }
-    int getTargetY() const { return m_pathTargetY; }
-    short getTargetZ() const { return m_pathTargetZ; }
-    void setTarget(int x, int y, int z)
-    {
-        m_pathTargetX = x;
-        m_pathTargetY = y;
-        m_pathTargetZ = z;
-    }
-    void setTarget(type_point point)
-    {
-        setTarget(point.m_x, point.m_y, point.m_z);
-    }
-    void clearTarget()
-    {
-        m_pathTargetX = m_pathTargetY = -1;
     }
 
     // DC hero.h:991 and the class signature record the const

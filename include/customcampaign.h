@@ -193,12 +193,6 @@ private:
     // Final serialized field of load; operates solely on this campaign's
     // assigned-hero list. Member ownership and name are inferred.
     void readAssignedHeroes(TAbstractFile* infile, int count);
-
-public:
-    // Accessor boundary inferred from the existing property interface and
-    // external field operations; these additional names are project names.
-    MapScore& getScenarioInfo(int index) { return m_mapScores[index]; }
-    const MapScore& getScenarioInfo(int index) const { return m_mapScores[index]; }
 };
 SIZE(SCampaign, 0x7c);
 

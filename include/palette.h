@@ -143,8 +143,6 @@ private:
                          int gbits, int gshift, int bbits, int bshift);
     void ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift,
                             int gbits, int gshift, int bbits, int bshift);
-    // Project-inferred overload shared by the default-format RGB constructors.
-    void convert24to16WithMasks(const unsigned char* p24);
     void Convert24to16(const unsigned char* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift);
 };

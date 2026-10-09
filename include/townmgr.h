@@ -760,11 +760,6 @@ extern const char* g_townTypeNames[10];
 class townManager : public baseManager {
 public:
 
-    // Project-inferred hover cache operations; ID-only invalidation retains
-    // the modifier cache used by the town screen and fort page.
-    bool updateHover(int widgetId, int qualifier);
-    void invalidateHover();
-
     // Original: townManager::SetTown; TownMgr.h:686
     // town::view0x5be210 expands the assignment to Complete's +0x38 field.
     DC_ADDRESS(0x168e24, 0x6)

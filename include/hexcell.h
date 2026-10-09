@@ -112,9 +112,6 @@ public:
     // const enemy_is_adjacent could not compile without it.
     army* getArmy() const;
     army* getDeadArmy(int i) const;
-    void clearArmy();
-    void resetArmy();
-    void resetObstacle();
 
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.

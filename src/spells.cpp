@@ -3492,20 +3492,6 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
     resetBoltAngle(bolt);
 }
 
-// Project-inferred union operation, called on both sides of pen movement.
-static void includeBoltInUpdateBounds(const SBolt& bolt, long& left,
-    long& top, long& right, int& bottom)
-{
-    if (bolt.m_pixelX > right)
-        right = bolt.m_pixelX;
-    if (bolt.m_pixelX < left)
-        left = bolt.m_pixelX;
-    if (bolt.m_pixelY > bottom)
-        bottom = bolt.m_pixelY;
-    if (bolt.m_pixelY < top)
-        top = bolt.m_pixelY;
-}
-
 // The bolt ANIMATOR: seed one bolt from the thirteen shape parameters,
 // then repeatedly draw every live bolt, push the union of what moved to
 // the screen, fork the bolts that still have room, and re-aim them all,
@@ -3581,11 +3567,23 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
             // have to enter the union.
             for (i = 0; i < maxBolt; i++) {
                 if (!bolts[i].m_atDestination) {
-                    includeBoltInUpdateBounds(bolts[i], updTLX, updTLY,
-                                              updBRX, updBRY);
+                    if (bolts[i].m_pixelX > updBRX)
+                        updBRX = bolts[i].m_pixelX;
+                    if (bolts[i].m_pixelX < updTLX)
+                        updTLX = bolts[i].m_pixelX;
+                    if (bolts[i].m_pixelY > updBRY)
+                        updBRY = bolts[i].m_pixelY;
+                    if (bolts[i].m_pixelY < updTLY)
+                        updTLY = bolts[i].m_pixelY;
                     drawBolt(&bolts[i], segmentLength);
-                    includeBoltInUpdateBounds(bolts[i], updTLX, updTLY,
-                                              updBRX, updBRY);
+                    if (bolts[i].m_pixelX > updBRX)
+                        updBRX = bolts[i].m_pixelX;
+                    if (bolts[i].m_pixelX < updTLX)
+                        updTLX = bolts[i].m_pixelX;
+                    if (bolts[i].m_pixelY > updBRY)
+                        updBRY = bolts[i].m_pixelY;
+                    if (bolts[i].m_pixelY < updTLY)
+                        updTLY = bolts[i].m_pixelY;
                 }
             }
 
@@ -4245,7 +4243,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     summoned.m_monInfo = akCreatureTypeTraits[monType];
     int leftColumn = 1;
     int rightColumn = 15;
-    summoned.setOwningSide(m_currentSide);
+    summoned.m_combatSide = m_currentSide;
     summoned.m_bitIndex = -1;
     summoned.m_facing = 1 - m_currentSide;
     int hex = -1;
@@ -4324,18 +4322,6 @@ void combatManager::removeCorpse(army* corpse)
                     corpse->m_combatSide, corpse->m_bitIndex);
 }
 
-// Project-inferred shared message; preserve the separate native format branches.
-void combatManager::showResurrectionMessage(const army* target, long raised)
-{
-    if (raised != 1)
-        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                target->getName(raised));
-    else
-        sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                target->getName(raised));
-    m_combatWindow->combatMessage(g_text, 1, 0);
-}
-
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
 // stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
 // combat skips its initialization; a zero-initialized ternary adds absent
@@ -4366,7 +4352,13 @@ void combatManager::demonicResurrection(const army* caster, army* target)
     if (!isQuickCombat()) {
         updateGrid(0, 1);
         drawFrame(1, 0, 0, 0, 1, 0);
-        showResurrectionMessage(demons, raised);
+        if (raised != 1)
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
+                    demons->getName(raised));
+        else
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
+                    demons->getName(raised));
+        m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sound, -1);
     }
 }

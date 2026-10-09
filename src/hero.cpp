@@ -1422,7 +1422,7 @@ void hero::useSpell(int cost)
 {
     int remainingMana = max(m_mana - cost, 0);
     m_mana = remainingMana;
-    if (g_advManager->getStatus() == baseManager::STATUS_ACTIVE &&
+    if (g_advManager->m_status == baseManager::STATUS_ACTIVE &&
         g_currentPlayer->isLocalHuman())
         g_advManager->m_advWindow->updateHeroLocator(-1, 1, 1);
 }
@@ -5604,7 +5604,7 @@ void hero::giveResource(int whichRes, int howMuch)
     }
 
     if (&g_game->m_players[m_owner] == g_currentPlayer
-        && g_advManager->getStatus() == baseManager::STATUS_ACTIVE)
+        && g_advManager->m_status == baseManager::STATUS_ACTIVE)
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
 
     g_game->isHuman(m_owner);
@@ -6322,17 +6322,12 @@ int hero::getManaFrame() const
     return frame;
 }
 
-bool hero::hasArenaVisit(unsigned long visitMask) const
-{
-    return (m_arenaFlags & visitMask) != 0;
-}
-
 VA(0x004e53c0, 0x1E)
 DC_ADDRESS(0x0d5060, 0x12)
 MAC_ADDRESS(0x1063d8, 0x28)
 bool hero::visitedArena(const NewmapCell* cell) const
 {
-    return hasArenaVisit(1 << cell->m_extraInfo);
+    return (m_arenaFlags & (1 << cell->m_extraInfo)) != 0;
 }
 
 VA(0x004e53e0, 0x18)

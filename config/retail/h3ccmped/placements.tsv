@@ -312,6 +312,7 @@ rva	size	kind	name	unit	evidence
 0x00043db0	0x3b2	func	@inflate_fast@24	inffast	masked body (946 bytes, 8 relocations) unique at a census start
 0x00044170	0x1b	func	?read@t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	resourcemanager	masked body (27 bytes, 1 relocations) unique at a census start
 0x00044190	0x1f	func	?read@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPAXH@Z	resourcemanager	masked body (31 bytes, 1 relocations) unique at a census start
+0x000441b0	0x5	func	?write@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPBXH@Z	resourcemanager	vtable ??_7t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@6B@ stored by ?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z slot 2; ICF-folded with 1 identical bodies
 0x000445a0	0x7e	func	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	resourcemanager	referenced by ?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x7
 0x00044620	0x44	func	?AddToCache@ResourceManager@@YAXPAVresource@@@Z	resourcemanager	referenced by ?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x23
 0x00044670	0xb2	func	?openArchiveResource@@YA_NH@Z	resourcemanager	masked body (178 bytes, 12 relocations) unique at a census start

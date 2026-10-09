@@ -186,8 +186,8 @@ unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType)
 {
     if (objectType->getSlotCategory() != 0)
         return 0;
-    return objectType->isRecommendedTerrain(m_terrain)
-        && objectType->getRecommendedTerrainCount() <= 3;
+    return objectType->getRecommendedTerrainMask()[m_terrain]
+        && objectType->getRecommendedTerrainMask().count() <= 3;
 }
 
 VA(0x00514220, 0x3D)
@@ -195,7 +195,7 @@ MAC_ADDRESS(0x223984, 0x4c)
 unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
     return objectType->getSlotCategory() == 0
-        && objectType->getRecommendedTerrainCount() > 3;
+        && objectType->getRecommendedTerrainMask().count() > 3;
 }
 
 VA(0x00514260, 0x19)

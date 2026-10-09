@@ -12,8 +12,11 @@ MAC_ADDRESS(0x1081cc, 0x2c)
 hexcell::hexcell()
 {
     int none = -1;
-    resetObstacle();
-    resetArmy();
+    m_obstacleIndex = none;
+    m_attributes = 0;
+    m_armySide = none;
+    m_armySlot = none;
+    m_partOfDouble = none;
     m_bodiesInHex = 0;
     m_mouseShaded = 0;
     m_backgroundOffset = none;
@@ -38,22 +41,4 @@ army* hexcell::getDeadArmy(int i) const
     if (m_deadArmySide[i] < 0)
         return 0;
     return &g_combatManager->m_armies[m_deadArmySide[i]][m_deadArmySlot[i]];
-}
-
-void hexcell::clearArmy()
-{
-    m_armySide = -1;
-    m_armySlot = -1;
-}
-
-void hexcell::resetArmy()
-{
-    clearArmy();
-    m_partOfDouble = -1;
-}
-
-void hexcell::resetObstacle()
-{
-    m_obstacleIndex = -1;
-    m_attributes = 0;
 }

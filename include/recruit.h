@@ -202,15 +202,6 @@ public:
 
     void update(bool newMonster, long slot);
     void setRolloverText(int codeY);
-
-    // Project-inferred constructor setup; town choices keep their distinct flow.
-    void initializeNonTownSource();
-    void initializeCreatureChoices(
-        TCreatureType monType1, short* numMon1,
-        TCreatureType monType2, short* numMon2,
-        TCreatureType monType3, short* numMon3,
-        TCreatureType monType4, short* numMon4);
-    void prepareInitialCost();
 };
 SIZE(recruitUnit, 188);
 

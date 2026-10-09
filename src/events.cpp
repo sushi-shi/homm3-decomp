@@ -5857,10 +5857,10 @@ DC_ADDRESS(0x09b670, 0x118)
 MAC_ADDRESS(0x0ba368, 0x134)
 void advManager::doAIEvent(NewmapCell* cell, hero* currentHero, type_point point)
 {
-    if (point.m_x == currentHero->getTargetX()
-        && point.m_y == currentHero->getTargetY()
-        && point.m_z == currentHero->getTargetZ())
-        currentHero->clearTarget();
+    if (point.m_x == currentHero->m_pathTargetX
+        && point.m_y == currentHero->m_pathTargetY
+        && point.m_z == currentHero->m_pathTargetZ)
+        currentHero->m_pathTargetX = currentHero->m_pathTargetY = -1;
 
     currentHero->m_movePoints = max(--currentHero->m_movePoints, 0);
     dispatchEvent(currentHero, cell, point, 0);

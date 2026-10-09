@@ -71,37 +71,6 @@ void TSubWindow::removeWidget(widget* killWidget)
     m_parentWindow->removeWidget(killWidget);
 }
 
-// Project-inferred registration of the already-owned widget vector. Ordinary
-// banners skip null entries; the combat popup constructors only guard the
-// flag change and still pass each entry to addWidget.
-void TSubWindow::addWidgetsToMessageStream()
-{
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
-}
-
-// Project-inferred dynamic insertion. The placement bar guards this operation
-// itself, while the control bar retains null entries in its owned vector.
-void TSubWindow::addOwnedWidget(widget* newWidget)
-{
-    m_widgets.push_back(newWidget);
-    if (newWidget)
-        addWidget(newWidget, -1);
-}
-
-// Project-inferred terminal operations. Combat information popups only
-// delete; replaceable control/bottom-view strips unlink each item immediately
-// before deleting it. Neither operation clears the pointer vector.
-void TSubWindow::deleteWidgetObjects()
-{
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
-}
-
 VA(0x005aa4f0, 0x63)
 DC_ADDRESS(0x158ed0, 0x7c)
 MAC_ADDRESS(0x19ba74, 0xa4)

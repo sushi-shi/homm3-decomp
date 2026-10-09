@@ -305,7 +305,7 @@ NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, bo
         m_radarOrigin.m_z = curr->m_z;
     }
 
-    curr->clearTarget();
+    curr->m_pathTargetX = curr->m_pathTargetY = -1;
     completeDraw(0);
     updateScreen(0, 0);
 
@@ -761,7 +761,8 @@ void advManager::checkAdjacentMon(int* foughtBattle)
 
     if (findAdjacentMonster(location, monster, monster)) {
         stopCursor(1);
-        curr->clearTarget();
+        curr->m_pathTargetY = -1;
+        curr->m_pathTargetX = -1;
         completeDraw(0);
         updateScreen(0, 0);
 

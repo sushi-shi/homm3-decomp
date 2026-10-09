@@ -294,6 +294,13 @@ includes `rmg`.
   and `aiEnterTown` 99.96 -> 99.93 (MAX held). Every later edit to these
   enums (the remaining DC artifact, creature and building enumerators)
   moves the unit again; recheck with `compile-m initialize`.
+* 2026-10-09: folding the invented `message` dialog/input helpers removed six
+  handles (initializeGameData 100 -> 94.07; retail then needed +6..+19).
+  Completing `type_building_id` with its 200 remaining Dreamcast
+  enumerators (+200, i.e. +8) restores it. The same edits left
+  `monstersSellOut` (retail k = 3..25 or 32..63) and `transmitSaveGame`
+  (its better class at 3, 7, 26..28, 30..39, 48..59) at k = 0; the
+  Dreamcast `e_looping_sound_id` names in advmgr.h (+50) restore both.
 
 **For any function** whose CUR moves between commits that did not touch its
 TU, check with `homm3 vc6 compile-m` whether its assemblies are period-64

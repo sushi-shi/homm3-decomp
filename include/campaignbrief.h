@@ -282,10 +282,6 @@ public:
 
     private:
         void readScenario(TAbstractFile* file, int numScenarios);
-
-    public:
-        // Inferred indexed access beside the existing scenario-count query.
-        ScenarioStruct* getScenario(int index) const { return m_scenarios[index]; }
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The

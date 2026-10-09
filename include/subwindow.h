@@ -28,13 +28,6 @@ public:
     void saveBackground();
     void restoreBackground();
 
-    // Project-inferred collection operations. None clears the vector.
-    // Registration retains its distinct null policies.
-    void addWidgetsToMessageStream();
-    // Record ownership even for null entries; only non-null widgets register.
-    void addOwnedWidget(widget* newWidget);
-    void deleteWidgetObjects();
-
     // DC field-list order: the data follows the methods.
 public:
     int m_x;

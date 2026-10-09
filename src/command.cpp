@@ -445,7 +445,8 @@ void combatManager::setCombatDirections(int hex)
     currentArmy = getCurrentArmy();
     oldSide = currentArmy->m_side;
     oldSlot = currentArmy->m_slot;
-    currentArmy->clearAttackTarget();
+    currentArmy->m_side = -1;
+    currentArmy->m_slot = -1;
 
     g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                      currentArmy->getSpeed(), 0, -1);
@@ -546,7 +547,8 @@ void combatManager::setCombatDirections(int hex)
         }
     }
 
-    currentArmy->setAttackTarget(oldSide, oldSlot);
+    currentArmy->m_side = oldSide;
+    currentArmy->m_slot = oldSlot;
 }
 
 VA_COMPGEN(0x0047a670, 0x11, TREE_BEGIN, int_set)

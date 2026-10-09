@@ -1104,24 +1104,6 @@ void townObject::draw(int incFrame, bool drawHotspots)
     }
 }
 
-// Project-inferred shared cache transition. The town screen supplies its
-// z-buffer-resolved ID; the fort page supplies the dispatched widget ID.
-// Save both values whenever either changes, before calling rollover code.
-// Ordinary owner-TU placement is provisional, without a native helper claim.
-bool townManager::updateHover(int widgetId, int qualifier)
-{
-    if (m_lastHover == widgetId && m_lastQualifier == qualifier)
-        return false;
-    m_lastHover = widgetId;
-    m_lastQualifier = qualifier;
-    return true;
-}
-
-void townManager::invalidateHover()
-{
-    m_lastHover = -1;
-}
-
 // The manager constructor, and with it the whole class layout. It is
 // the only body in the compiland that calls baseManager's constructor
 // and the only one that stores vtable 0x643720, whose three slots -

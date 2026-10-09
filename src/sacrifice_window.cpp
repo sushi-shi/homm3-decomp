@@ -939,23 +939,6 @@ void type_sacrifice_window::updateCreatureOffering(
     }
 }
 
-// Project-inferred display operations shared by creature-mode initialization
-// and completed sacrifice. Preserve the native update helper and the
-// source-frame-before-offering-frame hide order; no native identity claimed.
-void type_sacrifice_window::updateUnselectedCreatureOffering(
-    type_creature_offering& creature)
-{
-    updateCreatureOffering(creature);
-    creature.m_sourceSelectionFrame->setVisible(0);
-    creature.m_offeringSelectionFrame->setVisible(0);
-}
-
-void type_sacrifice_window::clearCurrentCreature()
-{
-    m_currentCreature.m_group = -1;
-    updateCreatureOffering(m_currentCreature);
-}
-
 VA(0x00563150, 0x141)
 DC_ADDRESS(0x126064, 0x180)
 MAC_ADDRESS(0x1599bc, 0x1f4)
@@ -1404,10 +1387,13 @@ int type_sacrifice_window::sacrifice(message& msg)
                 if (army->m_numTroops[group] <= 0)
                     army->dismiss(group);
                 window->m_creatureOfferings[group].m_amount = 0;
-                window->updateUnselectedCreatureOffering(
+                window->updateCreatureOffering(
                     window->m_creatureOfferings[group]);
+                window->m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
+                window->m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
             }
-            window->clearCurrentCreature();
+            window->m_currentCreature.m_group = -1;
+            window->updateCreatureOffering(window->m_currentCreature);
             window->m_creatureNameWidget->setVisible(0);
             window->m_allCreaturesButton->enable(
                 army->getCreatureTotal() > 1);
@@ -1836,15 +1822,6 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
-// Project helper for the selection pair only. In creatureClick the old
-// indices remain live through both updates, after the border was hidden;
-// unselect() therefore cannot replace the entire intervening sequence.
-void type_skeleton_window::clearCreatureSelection()
-{
-    m_selectedGroup = -1;
-    m_selectedIndex = -1;
-}
-
 // DC proves push_back; its text subscripts forward to getText. At 98.3508%,
 // the final rollover append's growth path retains an extra vector::size.
 // Removing the vector alias or binding its pointer argument locally does
@@ -1859,7 +1836,8 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_selectedCreatures.initialize();
     m_armies[0] = newArmy;
     m_armies[1] = &m_selectedCreatures;
-    clearCreatureSelection();
+    m_selectedGroup = -1;
+    m_selectedIndex = -1;
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 485, widgetId++, "SkTrnBk.pcx", 0x800);
@@ -1953,7 +1931,8 @@ void type_skeleton_window::unselect()
     if (m_selectedGroup < 0)
         return;
     m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
-    clearCreatureSelection();
+    m_selectedGroup = -1;
+    m_selectedIndex = -1;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
@@ -2114,7 +2093,9 @@ DC_ADDRESS(0x128080, 0x16)
 MAC_ADDRESS(0x15cc44, 0x2c)
 int type_skeleton_window::exitDialog(message& msg)
 {
-    g_windowManager->finishDialog(msg, 0);
+    msg.m_id = MESSAGE_WIDGET;
+    g_windowManager->m_dialogReturn = 0;
+    msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 

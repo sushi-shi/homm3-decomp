@@ -1632,6 +1632,7 @@ objecttype	?_Xinv@?$bitset@$08@std@@ABEXXZ	99.8214	99.8214	99.8214	0x91d2c	-
 objecttype	?_Xinv@?$bitset@$0DA@@std@@ABEXXZ	99.8214	99.8214	99.8214	0x91666	-
 objecttype	?_Xran@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x2f6f4	-
 objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x900ca	-
+objecttype	?accepts@TNativeTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x9007e	-
 objecttype	?accepts@TSlotCategoryObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x900eb	-
 objecttype	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	94.1429	94.1429	94.1429	0x37d05	-
 objecttype	?count@?$bitset@$09@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1682	-
@@ -1686,6 +1687,7 @@ palette	??0TPalette24@@QAE@XZ	100.0000	100.0000	100.0000	0xe4a30	-
 palette	??1TPalette16@@UAE@XZ	100.0000	100.0000	100.0000	0xe48c0	-
 palette	??1TPalette24@@UAE@XZ	100.0000	100.0000	100.0000	0xe4b30	-
 palette	??4TPalette24@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xe4b10	-
+palette	?AdjustHSV@TPalette24@@QAEXMMMM@Z	91.1889	91.1889	91.1889	0xe4b50	-
 palette	?Convert24to16@TPalette16@@AAEXPBEHHHHHH@Z	100.0000	100.0000	100.0000	0xe48d0	-
 palette	?Cycle@TPalette16@@QAEXHHH@Z	100.0000	100.0000	100.0000	0xe4960	-
 palette	?getSize@TPalette16@@UBEIXZ	100.0000	100.0000	100.0000	0xe4a20	-
@@ -1717,11 +1719,11 @@ resourcemanager	??_G?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@
 resourcemanager	?AddToCache@ResourceManager@@YAXPAVresource@@@Z	81.5833	81.5833	81.5833	0xdb110	-
 resourcemanager	?Close@ResourceManager@@YAXXZ	100.0000	100.0000	100.0000	0xdc060	-
 resourcemanager	?Expunge@ResourceManager@@YAXXZ	100.0000	100.0000	100.0000	0xdd340	-
-resourcemanager	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	96.7511	96.7511	96.7511	0xdc2b0	-
+resourcemanager	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	96.7964	96.7964	96.7964	0xdc2b0	-
 resourcemanager	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	79.3415	79.3415	79.3415	0xdb090	-
 resourcemanager	?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD@Z	100.0000	100.0000	100.0000	0xdc830	-
 resourcemanager	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0xdccc0	-
-resourcemanager	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	85.6596	85.6596	85.6596	0xdcd20	-
+resourcemanager	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	85.6808	85.6808	85.6808	0xdcd20	-
 resourcemanager	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0xdca60	-
 resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	99.9737	99.9737	99.9737	0xdbe40	-
 resourcemanager	?ReadFromBitmapResource@ResourceManager@@YAHPAVLODFile@@PAXH@Z	100.0000	100.0000	100.0000	0xdd320	-
@@ -1761,10 +1763,10 @@ resourcemanager	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits
 resourcemanager	?imbue@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEXABVlocale@2@@Z	100.0000	100.0000	100.0000	0x11916	-
 resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	93.0417	93.0417	93.0417	0xdd6e0	-
 resourcemanager	?loadPalette@ResourceManager@@YAPAVTPalette16@@PBD@Z	94.5966	94.5966	94.5966	0xdc6d0	-
-resourcemanager	?loadPaletteData@ResourceManager@@YAPAVTPalette16@@PBDPAVTAbstractFile@@@Z	81.0704	81.0704	81.0704	0xdc5b0	-
-resourcemanager	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	86.2992	86.2992	86.2992	0xdcb30	-
+resourcemanager	?loadPaletteData@ResourceManager@@YAPAVTPalette16@@PBDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xdc5b0	-
+resourcemanager	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	98.1890	98.1890	98.1890	0xdcb30	-
 resourcemanager	?loadSpreadsheetData@ResourceManager@@YAPAVTSpreadsheetResource@@PBDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xdca90	-
-resourcemanager	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	87.0866	87.0866	87.0866	0xdc900	-
+resourcemanager	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	98.1890	98.1890	98.1890	0xdc900	-
 resourcemanager	?loadTextData@ResourceManager@@YAPAVTTextResource@@PBDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xdc860	-
 resourcemanager	?openArchiveResource@@YA_NH@Z	99.9153	99.9153	99.9153	0xdb160	-
 resourcemanager	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	0.0000	0.0000	0.0000	0x2f2bc	-
@@ -1788,7 +1790,7 @@ resourcemanager	?str@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@
 resourcemanager	?truename@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	44.0000	44.0000	44.0000	0x35806	-
 resourcemanager	?underflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x49c67	-
 resourcemanager	?underflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHXZ	54.5946	54.5946	54.5946	0x6158c	-
-resourcemanager	?write@t_stdio_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xdaca0	-
+resourcemanager	?write@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0xdaca0	-
 rmg	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x78f3	-
 rmg	??0?$vector@PAUTRmgTemplateZone@@V?$allocator@PAUTRmgTemplateZone@@@std@@@std@@QAE@ABV?$allocator@PAUTRmgTemplateZone@@@1@@Z	100.0000	100.0000	100.0000	0xae177	-
 rmg	??0TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x99e65	-

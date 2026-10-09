@@ -7,6 +7,7 @@ iterate on a function.
 
 - [Source ownership](matching/source-ownership.md) and [source facts](matching/source-facts.md)
 - [Dreamcast line tables](matching/dc-line-tables.md)
+- [Project-inferred helper audit](matching/inferred-helpers.md)
 - [Classic Mac second target and labeling](matching/mac-second-target-plan.md)
 - [Naming conventions](matching/naming.md)
 - [Source hypothesis runner](matching/source-hypotheses.md)
