@@ -203,6 +203,54 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
     insert(value_type(kCappedGeneratorTypes.m_aType[4], &_m_aInfo[which]));
 }
 
+// The first edition that has the object's type: Armageddon's Blade added
+// the types from 165 and some subtypes (artifacts from 127, the eighth
+// town, the Conflux dwellings, hero classes and monsters); Shadow of Death
+// the types from 222, the combination artifacts from 129 and the new
+// monoliths.
+VA(0x0041ec1f, 0x79)
+EGameVersion getRequiredVersion(const TObjectType& objType)
+{
+    if (objType.getType() >= CLOVER_FIELD_2)
+        return GAME_VERSION_SOD;
+    if (objType.getType() >= MAX_EVENT_TYPE)
+        return GAME_VERSION_AB;
+    switch (objType.getType()) {
+    case ARTIFACT:
+        if (objType.getExtra() >= 129)
+            return GAME_VERSION_SOD;
+        if (objType.getExtra() >= 127)
+            return GAME_VERSION_AB;
+        break;
+    case CREATURE_GENERATOR_1:
+        if (objType.getExtra() >= 59)
+            return GAME_VERSION_AB;
+        break;
+    case HERO:
+        if (objType.getExtra() >= 16)
+            return GAME_VERSION_AB;
+        break;
+    case LITH_ONEWAY_ENTRANCE:
+    case LITH_ONEWAY_EXIT:
+        if (objType.getExtra() >= 3)
+            return GAME_VERSION_SOD;
+        break;
+    case LITH_TWOWAY:
+        if (objType.getExtra() >= 3)
+            return GAME_VERSION_SOD;
+        break;
+    case MONSTER:
+        if (objType.getExtra() >= 118)
+            return GAME_VERSION_AB;
+        break;
+    case TOWN:
+        if (objType.getExtra() >= 8)
+            return GAME_VERSION_AB;
+        break;
+    }
+    return GAME_VERSION_ROE;
+}
+
 // An object's location as the map's condition records keep it: -1s for
 // no object (h3maped 0x42921c fills it).
 struct TMapLoc {
@@ -294,7 +342,6 @@ inline bool isHeroOrTown(const TGameObject& obj)
 
 }  // namespace
 
-// The map's implementation: so far only the dimension of each size.
 // The object kinds the map keeps books on, the most derived first. Each
 // link of a dispatch over the list tries one kind with a dynamic_cast and
 // otherwise hands the object on with a null pointer to the rest of the
@@ -316,6 +363,7 @@ typedef TObjectTypeList<THeroPlaceholder,
         TObjectTypeList<TNonRandomHero,
         TObjectTypeList<TPrison, TObjectTypesFromTown> > > > TBookkeptObjectTypes;
 
+// The map's implementation: so far only the dimension of each size.
 class TGameMap::_TImpl {
 public:
     class _TGetVictoryConditionDataFunc;
@@ -327,7 +375,7 @@ public:
 
     // The caps the failures report (h3maped 0x41ec98: 156 heroes; 0x41ecb8:
     // 48 towns).
-    enum { s_kMaxHeroesOnMap = 156, s_kMaxTownsOnMap = 48 };
+    enum { s_kMaxHeroesOnMap = 156, s_kMaxTownsOnMap = 48, s_kMaxHeroesPerPlayer = 8 };
 
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
 
@@ -394,7 +442,8 @@ public:
     bool isPlayerPresent(TPlayer player) const { return _m_apPlayerBookkeeping[player]->m_numUnits > 0; }
     unsigned int getNumPlayableSlots() const { return _m_pBookkeeping->m_numPlayableSlots; }
 
-    TMapLayerObjectID placeObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, unsigned int x, unsigned int y);
+    TMapLayerObjectID placeObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, const TTilePoint& loc,
+                                  TTileExtent* pUpdatedExtent);
     void removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     TMapLayerObjectID insertObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, const TTilePoint& loc);
     void eraseObject(bool bSecondLayer, unsigned int objID);
@@ -417,6 +466,7 @@ public:
     void clearQuest(const TMapObjectRef& questLocationRef);
     void removeSecondLayer();
     void addSecondLayer();
+    void setVersion(EGameVersion newVersion);
     const TLinkableObject* getPLinkableObject(int linkID) const;
 
     bitset<kNumHeroes> getHeroesOnMap() const { return _m_pBookkeeping->m_heroesOnMap; }
@@ -441,6 +491,72 @@ public:
 
     bool _isOnMap(const TGameObject& obj, unsigned int x, unsigned int y) const;
     void _removeObjectHelper(bool bSecondLayer, unsigned int objID);
+
+    // Placement dispatches over the same kinds: each kind's checks may
+    // adjust or refuse the new object before the layer takes it, and the
+    // books follow; a failed placement deletes the object.
+    template <class TObject, class TRest>
+    TMapLayerObjectID _placeObject(bool bSecondLayer, TGameObject* pObj, const TTilePoint& loc,
+                                   TTileExtent* pUpdatedExtent, TObjectTypeList<TObject, TRest>*)
+    {
+        TObject* pTypedObj = dynamic_cast<TObject*>(pObj);
+        if (pTypedObj != NULL)
+            return _placeTypedObject(bSecondLayer, pTypedObj, loc, pUpdatedExtent);
+        return _placeObject(bSecondLayer, pObj, loc, pUpdatedExtent, static_cast<TRest*>(NULL));
+    }
+    TMapLayerObjectID _placeObject(bool bSecondLayer, TGameObject* pObj, const TTilePoint& loc,
+                                   TTileExtent* pUpdatedExtent, TNoObjectTypes*)
+    {
+        return _placeTypedObject(bSecondLayer, pObj, loc, pUpdatedExtent);
+    }
+    template <class TObject>
+    TMapLayerObjectID _placeTypedObject(bool bSecondLayer, TObject* pObj, const TTilePoint& loc,
+                                        TTileExtent* pUpdatedExtent)
+    {
+        TMapLayerObjectID objID;
+        try {
+            objID = _placeNewObject(bSecondLayer, pObj, loc, pUpdatedExtent);
+        } catch (...) {
+            delete pObj;
+            throw;
+        }
+        _onObjectAdded(dynamic_cast<const TObject*>(getLayer(bSecondLayer).getPObject(objID)), bSecondLayer, objID);
+        return objID;
+    }
+    // A town brings its visiting hero along.
+    TMapLayerObjectID _placeTypedObject(bool bSecondLayer, TTown* pTown, const TTilePoint& loc,
+                                        TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TGameObject* pObj, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TBasicHero* pHero, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, THeroPlaceholder* pPlaceholder, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TRandomHero* pHero, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent)
+    {
+        _assignUniqueLinkID(pHero);
+        return _placeNewObject(bSecondLayer, static_cast<TBasicHero*>(pHero), loc, pUpdatedExtent);
+    }
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TNonRandomHero* pHero, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TPrison* pPrison, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TTown* pTown, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, THolyGrail* pHolyGrail, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TAbstractRandomlyAlignedGenerator* pGenerator,
+                                      const TTilePoint& loc, TTileExtent* pUpdatedExtent);
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TLinkableObject* pLinkable, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent)
+    {
+        _assignUniqueLinkID(pLinkable);
+        return _placeNewObject(bSecondLayer, static_cast<TGameObject*>(pLinkable), loc, pUpdatedExtent);
+    }
+    TMapLayerObjectID _placeNewObject(bool bSecondLayer, TQuestLocation* pQuestLocation, const TTilePoint& loc,
+                                      TTileExtent* pUpdatedExtent);
+    void _assignUniqueLinkID(TLinkableObject* pLinkable) const;
 
     template <class TObject, class TRest>
     void _onObjectAdded(const TGameObject& obj, bool bSecondLayer, unsigned int objID,
@@ -986,6 +1102,14 @@ void TGameMap::_TImpl::setHeroPrototype(THeroID heroID, const THeroPrototype& ne
         (*_m_pProperties->m_aHeroPrototype)[heroID] = newPrototype;
 }
 
+// The placement dispatch takes the object over.
+VA(0x00420222, 0x79)
+TMapLayerObjectID TGameMap::_TImpl::placeObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, const TTilePoint& loc,
+                                               TTileExtent* pUpdatedExtent)
+{
+    return _placeObject(bSecondLayer, pObj.release(), loc, pUpdatedExtent, static_cast<TBookkeptObjectTypes*>(NULL));
+}
+
 VA(0x0042029b, 0x45)
 void TGameMap::_TImpl::removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent)
 {
@@ -1308,6 +1432,50 @@ void TGameMap::_TImpl::addSecondLayer()
     _m_aLayer.push_back(TLayer(_m_size));
 }
 
+// One edition at a time. Armageddon's Blade enables the heroes Restoration
+// lacked, moves hero 4 to its new id 144 and disables the heroes it lacks.
+VA(0x00421319, 0x1d1)
+void TGameMap::_TImpl::setVersion(EGameVersion newVersion)
+{
+    if (newVersion - _m_version > 1)
+        setVersion(EGameVersion(newVersion - 1));
+    EGameVersion oldVersion = _m_version;
+    if (oldVersion == GAME_VERSION_ROE && newVersion == GAME_VERSION_AB) {
+        bitset<kNumHeroes>& disabledHeroes = _m_pProperties->m_disabledHeroes;
+        for (unsigned int heroID = 0; heroID < kNumHeroes; heroID++) {
+            if (!akHeroTraits[heroID].m_availability.m_availableInOriginal
+                && !akHeroTraits[heroID].m_availability.m_special)
+                disabledHeroes.set(heroID, false);
+        }
+    }
+    _m_version = newVersion;
+    if (oldVersion == GAME_VERSION_ROE && newVersion == GAME_VERSION_AB) {
+        unsigned int numLayers = _m_bTwoLayer ? 2 : 1;
+        for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+            TLayer* pLayer = getPLayer(layerNum);
+            for (TLayer::TObjectIDIter iter = pLayer->objectIDBegin(); iter != pLayer->objectIDEnd(); ++iter) {
+                TGameObject* pObj = pLayer->getPObject(*iter);
+                TIdentifiedHero* pHero = dynamic_cast<TIdentifiedHero*>(pObj);
+                if (pHero == NULL) {
+                    TTown* pTown = dynamic_cast<TTown*>(pObj);
+                    if (pTown != NULL && pTown->getPVisitingHero() != NULL)
+                        pHero = dynamic_cast<TIdentifiedHero*>(pTown->getPVisitingHero());
+                }
+                if (pHero != NULL && pHero->getHeroID() == 4) {
+                    setHeroID(layerNum != 0, *iter, 144);
+                    goto heroMoved;
+                }
+            }
+        }
+    heroMoved:
+        bitset<kNumHeroes>& disabledHeroes = _m_pProperties->m_disabledHeroes;
+        for (unsigned int heroID = 0; heroID < kNumHeroes; heroID++) {
+            if (!akHeroTraits[heroID].m_availability.m_availableInExpansion)
+                disabledHeroes.set(heroID, true);
+        }
+    }
+}
+
 VA(0x004214ea, 0x39)
 const TGameObject* TGameMap::_TImpl::getPObject(bool bSecondLayer, unsigned int objID) const
 {
@@ -1482,6 +1650,219 @@ void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
         if (bHasPrimarySkills)
             prototype.setPrimarySkills(THeroPrototype::TPrimarySkills(pIStream, version));
     }
+}
+
+// A town brings its visiting hero along.
+VA(0x00426d00, 0xcd)
+TMapLayerObjectID TGameMap::_TImpl::_placeTypedObject(bool bSecondLayer, TTown* pTown, const TTilePoint& loc,
+                                                     TTileExtent* pUpdatedExtent)
+{
+    TMapLayerObjectID objID;
+    try {
+        objID = _placeNewObject(bSecondLayer, pTown, loc, pUpdatedExtent);
+    } catch (...) {
+        delete pTown;
+        throw;
+    }
+    const TTown* pPlacedTown = dynamic_cast<const TTown*>(getLayer(bSecondLayer).getPObject(objID));
+    _onTownAdded(pPlacedTown, bSecondLayer, objID);
+    if (pPlacedTown->getPVisitingHero() != NULL) {
+        const TNonRandomHero* pNonRandomHero = dynamic_cast<const TNonRandomHero*>(pPlacedTown->getPVisitingHero());
+        if (pNonRandomHero != NULL)
+            _onIdentifiedHeroAdded(pNonRandomHero, bSecondLayer, objID);
+        else
+            _onRandomHeroAdded(static_cast<const TRandomHero*>(pPlacedTown->getPVisitingHero()), bSecondLayer, objID);
+    }
+    return objID;
+}
+
+// What every object must pass: it lies on the map, the map's edition has
+// it, its type's cap has room and its cells take it. The layer then owns
+// it, and the cells it covers are the update.
+VA(0x00426ded, 0x15a)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TGameObject* pObj, const TTilePoint& loc,
+                                                   TTileExtent* pUpdatedExtent)
+{
+    if (!_isOnMap(*pObj, loc.x(), loc.y()))
+        throw TPlaceObjFailurePlacementNotOnMap();
+    EGameVersion requiredVersion = getRequiredVersion(pObj->getObjectType());
+    if (_m_version < requiredVersion)
+        throw TPlaceObjFailureNotSupportedByReleaseVersion(requiredVersion);
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = getCappedObjectTypeInfoMap().find(pObj->getType());
+    if (pCappedObjTypeInfo != getCappedObjectTypeInfoMap().end()) {
+        const TCappedObjectTypeInfo* pInfo = pCappedObjTypeInfo->second;
+        const TRefCountingPtr<_TBookkeeping>& pConstBookkeeping = _m_pBookkeeping;
+        if (pConstBookkeeping->m_aNumObjsOfCappedType[pInfo->m_ordinal] >= pInfo->m_cap)
+            throw TPlaceObjFailureTooManyInstancesOfTypeOnMap(pInfo->m_type, pInfo->m_cap);
+    }
+    TLayer* pLayer = getPLayer(bSecondLayer);
+    if (!_isValidPlacement(*pLayer, *pObj, loc.x(), loc.y()))
+        throw TPlaceObjFailureInvalidPlacement();
+    TMapLayerObjectID objID = pLayer->_placeObject(auto_ptr<TGameObject>(pObj), loc);
+    *pUpdatedExtent = pLayer->getObjectExtent(objID);
+    return objID;
+}
+
+VA(0x00426fad, 0x50)
+void TGameMap::_TImpl::_assignUniqueLinkID(TLinkableObject* pLinkable) const
+{
+    map<unsigned int, TMapObjectRef>::const_iterator pObjRef = _m_paLinkableObjectRef->find(pLinkable->getLinkID());
+    while (pObjRef != _m_paLinkableObjectRef->end()) {
+        pLinkable->assignNewLinkID();
+        pObjRef = _m_paLinkableObjectRef->find(pLinkable->getLinkID());
+    }
+}
+
+// No more heroes than the map's cap, nor than eight for a player, counting
+// the hero a player's main town generates.
+VA(0x00427025, 0x93)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TBasicHero* pHero, const TTilePoint& loc,
+                                                   TTileExtent* pUpdatedExtent)
+{
+    const TRefCountingPtr<_TBookkeeping>& pConstBookkeeping = _m_pBookkeeping;
+    if (pConstBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+        throw TPlaceObjFailureTooManyHeroesOnMap();
+    if (pHero->getOwner() != ePlayerNone) {
+        const TRefCountingPtr<_TPlayerBookkeeping>& pConstPlayerBookkeeping =
+            _m_apPlayerBookkeeping[pHero->getOwner()];
+        unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
+        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
+        if ((*pConstProperties->m_paPlayer)[pHero->getOwner()].getBGenerateHero())
+            numHeroes++;
+        if (numHeroes >= s_kMaxHeroesPerPlayer)
+            throw TPlaceObjFailureTooManyHeroesForPlayer();
+    }
+    return _placeNewObject(bSecondLayer, static_cast<TPlayableObject*>(pHero), loc, pUpdatedExtent);
+}
+
+// A placeholder's hero must be free, or the placeholder falls back to its
+// power rank.
+VA(0x0042710f, 0x47)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, THeroPlaceholder* pPlaceholder,
+                                                   const TTilePoint& loc, TTileExtent* pUpdatedExtent)
+{
+    if (pPlaceholder->getHeroID() != -1 && !_isHeroAvailable(pPlaceholder->getHeroID()))
+        pPlaceholder->setHeroID(-1);
+    return _placeNewObject(bSecondLayer, static_cast<TBasicHero*>(pPlaceholder), loc, pUpdatedExtent);
+}
+
+// A hero that is taken becomes another of its class.
+VA(0x00427156, 0x87)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TNonRandomHero* pHero, const TTilePoint& loc,
+                                                   TTileExtent* pUpdatedExtent)
+{
+    if (!_isHeroAvailable(pHero->getHeroID())) {
+        THeroID heroID = _pickRandomHero(pHero->getHeroClass());
+        if (heroID == -1)
+            throw TPlaceObjFailureNoAvailableHeroesInClass();
+        pHero->setHeroID(heroID);
+    }
+    _assignUniqueLinkID(pHero);
+    return _placeNewObject(bSecondLayer, static_cast<TBasicHero*>(pHero), loc, pUpdatedExtent);
+}
+
+// A prisoner that is taken becomes another of its class, or of any.
+VA(0x00427207, 0xa2)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TPrison* pPrison, const TTilePoint& loc,
+                                                   TTileExtent* pUpdatedExtent)
+{
+    if (!_isHeroAvailable(pPrison->getHeroID())) {
+        THeroID heroID = _pickRandomHero(pPrison->getHeroClass());
+        if (heroID == -1) {
+            for (int heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
+                heroID = _pickRandomHero(THeroClass(heroClass));
+                if (heroID != -1)
+                    break;
+            }
+            if (heroID == -1)
+                throw TPlaceObjFailureNoAvailableHeroesInClass();
+        }
+        pPrison->setHeroID(heroID);
+    }
+    _assignUniqueLinkID(pPrison);
+    return _placeNewObject(bSecondLayer, static_cast<TBasicHero*>(pPrison), loc, pUpdatedExtent);
+}
+
+// The town cap, and the visiting hero's: a taken visitor becomes another of
+// its class or leaves.
+VA(0x004272a9, 0x16e)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TTown* pTown, const TTilePoint& loc,
+                                                   TTileExtent* pUpdatedExtent)
+{
+    const TRefCountingPtr<_TBookkeeping>& pConstBookkeeping = _m_pBookkeeping;
+    if (pConstBookkeeping->m_numTowns == s_kMaxTownsOnMap)
+        throw TPlaceObjFailureTooManyTownsOnMap();
+    THero* pVisitingHero = pTown->getPVisitingHero();
+    if (pVisitingHero != NULL) {
+        if (pConstBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+            throw TPlaceObjFailureTooManyHeroesOnMap();
+        const TRefCountingPtr<_TPlayerBookkeeping>& pConstPlayerBookkeeping =
+            _m_apPlayerBookkeeping[pTown->getOwner()];
+        unsigned int numHeroes = pConstPlayerBookkeeping->m_numHeroes;
+        const TRefCountingPtr<_TProperties>& pConstProperties = _m_pProperties;
+        if ((*pConstProperties->m_paPlayer)[pTown->getOwner()].getBGenerateHero())
+            numHeroes++;
+        if (numHeroes >= s_kMaxHeroesPerPlayer)
+            throw TPlaceObjFailureTooManyHeroesForPlayer();
+        TIdentifiedHero* pIdentifiedHero = dynamic_cast<TIdentifiedHero*>(pVisitingHero);
+        if (pIdentifiedHero != NULL && !_isHeroAvailable(pIdentifiedHero->getHeroID())) {
+            THeroID heroID = _pickRandomHero(pIdentifiedHero->getHeroClass());
+            if (heroID != -1)
+                pIdentifiedHero->setHeroID(heroID);
+            else
+                pTown->setVisitingHero(NULL);
+        }
+        _assignUniqueLinkID(pVisitingHero);
+    }
+    _assignUniqueLinkID(pTown);
+    return _placeNewObject(bSecondLayer, static_cast<TPlayableObject*>(pTown), loc, pUpdatedExtent);
+}
+
+// One Grail, at least nine cells from every edge.
+VA(0x00427444, 0x89)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, THolyGrail* pHolyGrail, const TTilePoint& loc,
+                                                   TTileExtent* pUpdatedExtent)
+{
+    if (isGrailOnMap())
+        throw TPlaceObjFailureHolyGrailAlreadyPlaced();
+    if (!(loc.x() >= 9 && loc.y() >= 9 && loc.x() < getWidth() - 9 && loc.y() < getHeight() - 9))
+        throw TPlaceObjFailureHolyGrailTooCloseToEdge();
+    return _placeNewObject(bSecondLayer, static_cast<TGameObject*>(pHolyGrail), loc, pUpdatedExtent);
+}
+
+// A dwelling keeps its town only if that is a random town on the map.
+VA(0x004274f7, 0x54)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TAbstractRandomlyAlignedGenerator* pGenerator,
+                                                   const TTilePoint& loc, TTileExtent* pUpdatedExtent)
+{
+    if (pGenerator->getTownLinkID() != TLinkableObject::s_kNoLinkID && !_isRandomTownLink(pGenerator->getTownLinkID()))
+        pGenerator->setTownLinkID(TLinkableObject::s_kNoLinkID);
+    return _placeNewObject(bSecondLayer, static_cast<TGameObject*>(pGenerator->getPFlaggableObject()), loc,
+                           pUpdatedExtent);
+}
+
+// A defeat quest keeps its target only if the map still has it.
+VA(0x0042754b, 0xb5)
+TMapLayerObjectID TGameMap::_TImpl::_placeNewObject(bool bSecondLayer, TQuestLocation* pQuestLocation,
+                                                   const TTilePoint& loc, TTileExtent* pUpdatedExtent)
+{
+    if (pQuestLocation->getPQuest() != NULL) {
+        const TQuestDefeatHero* pDefeatHero = dynamic_cast<const TQuestDefeatHero*>(pQuestLocation->getPQuest());
+        if (pDefeatHero != NULL) {
+            const TLinkableObject* pTarget = _findLinkableObject(pDefeatHero->getHeroLinkID());
+            if (pTarget == NULL || dynamic_cast<const THero*>(pTarget) == NULL)
+                pQuestLocation->clearQuest();
+        } else {
+            const TQuestDefeatMonster* pDefeatMonster =
+                dynamic_cast<const TQuestDefeatMonster*>(pQuestLocation->getPQuest());
+            if (pDefeatMonster != NULL) {
+                const TLinkableObject* pTarget = _findLinkableObject(pDefeatMonster->getMonsterLinkID());
+                if (pTarget == NULL || dynamic_cast<const TMonster*>(pTarget) == NULL)
+                    pQuestLocation->clearQuest();
+            }
+        }
+    }
+    return _placeNewObject(bSecondLayer, static_cast<TGameObject*>(pQuestLocation), loc, pUpdatedExtent);
 }
 
 VA(0x00427600, 0x61)
@@ -2352,10 +2733,10 @@ void TGameMap::setHeroPrototype(THeroID heroID, const THeroPrototype& newPrototy
 }
 
 VA(0x00429dc7, 0x5b)
-TMapLayerObjectID TGameMap::placeObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, unsigned int x,
-                                        unsigned int y)
+TMapLayerObjectID TGameMap::placeObject(bool bSecondLayer, auto_ptr<TGameObject> pObj, const TTilePoint& loc,
+                                        TTileExtent* pUpdatedExtent)
 {
-    return _m_pImpl->placeObject(bSecondLayer, pObj, x, y);
+    return _m_pImpl->placeObject(bSecondLayer, pObj, loc, pUpdatedExtent);
 }
 
 VA(0x00429e22, 0x29)
@@ -2483,6 +2864,12 @@ VA(0x0042a188, 0x1b)
 void TGameMap::addSecondLayer()
 {
     _m_pImpl->addSecondLayer();
+}
+
+VA(0x0042a1a3, 0x21)
+void TGameMap::setVersion(EGameVersion newVersion)
+{
+    _m_pImpl->setVersion(newVersion);
 }
 
 VA(0x0042a1c4, 0x11)

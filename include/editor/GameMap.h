@@ -193,6 +193,14 @@ private:
 };
 
 class TPlaceObjFailureNotSupportedByReleaseVersion : public TPlaceObjectFailure {
+public:
+    explicit TPlaceObjFailureNotSupportedByReleaseVersion(EGameVersion requiredVersion)
+        : _m_requiredVersion(requiredVersion) {}
+
+    EGameVersion getRequiredVersion() const { return _m_requiredVersion; }
+
+private:
+    EGameVersion _m_requiredVersion;
 };
 
 class TPlaceObjFailureInvalidPlacement : public TPlaceObjectFailure {
@@ -279,8 +287,8 @@ public:
     void setDisabledSkills(const std::bitset<kNumSecSkills>& newMask);
     void setHeroPrototype(THeroID heroID, const THeroPrototype& pNewPrototype);
 
-    TMapLayerObjectID placeObject(bool bSecondLayer, std::auto_ptr<TGameObject> pObj, unsigned int x,
-                                  unsigned int y);
+    TMapLayerObjectID placeObject(bool bSecondLayer, std::auto_ptr<TGameObject> pObj, const TTilePoint& loc,
+                                  TTileExtent* pUpdatedExtent);
     void removeObject(bool bSecondLayer, unsigned int objID, TTileExtent* pUpdatedExtent);
     TMapLayerObjectID insertObject(bool bSecondLayer, std::auto_ptr<TGameObject> pObj, const TTilePoint& loc);
     void eraseObject(bool bSecondLayer, unsigned int objID);
@@ -307,6 +315,7 @@ public:
     void clearQuest(const TMapObjectRef& questLocationRef);
     void removeSecondLayer();
     void addSecondLayer();
+    void setVersion(EGameVersion newVersion);
 
     void save(std::streambuf* pStreamBuf) const;
     void exportText(std::ostream* pOStream) const;

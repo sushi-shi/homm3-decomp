@@ -41,4 +41,26 @@ private:
     std::multiset<TArtifact> _m_artifacts;
 };
 
+// Defeat a hero or a monster: the target's link id follows the vtable (the
+// map reads it in place when it places a quest location, 0x42757b).
+class TQuestDefeatHero : public TLinkedQuest {
+public:
+    virtual unsigned int getLinkID() const;
+
+    unsigned int getHeroLinkID() const { return _m_heroLinkID; }
+
+private:
+    unsigned int _m_heroLinkID;
+};
+
+class TQuestDefeatMonster : public TLinkedQuest {
+public:
+    virtual unsigned int getLinkID() const;
+
+    unsigned int getMonsterLinkID() const { return _m_monsterLinkID; }
+
+private:
+    unsigned int _m_monsterLinkID;
+};
+
 #endif  /* HOMM3_EDITOR_QUEST_H */
