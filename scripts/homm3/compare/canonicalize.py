@@ -949,6 +949,9 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
         return any(
             name == "_" + owner or
             name.startswith("?" + owner + "@@") or
+            # A datum in an anonymous namespace: VC6 spells the scope as
+            # the declaring file (`?owner@?%<path><n>@@...`).
+            name.startswith("?" + owner + "@?%") or
             # Function-local statics use `_?name@?1??function...` rather
             # than the external-data `?name@@...` spelling.
             name.startswith("_?" + owner + "@?")
@@ -1088,14 +1091,23 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
         return False
 
     assigned = {}
-    deferred = []
-    for claim in pending:
-        candidates = [index for index in volatile
-                      if index not in assigned and has_role(index, claim)]
-        if len(candidates) != 1:
-            deferred.append((claim, len(candidates)))
-            continue
-        assigned[candidates[0]] = claim
+    # Bind every claim with a single candidate, then retry the others
+    # without the bound functions: a table initializer that takes the
+    # address of several initialized arrays (TownTypeTraits.obj's type
+    # table) is itself claimed, and must not compete for theirs.
+    deferred = [(claim, 0) for claim in pending]
+    progress = True
+    while progress:
+        progress = False
+        retry, deferred = deferred, []
+        for claim, _count in retry:
+            candidates = [index for index in volatile
+                          if index not in assigned and has_role(index, claim)]
+            if len(candidates) != 1:
+                deferred.append((claim, len(candidates)))
+                continue
+            assigned[candidates[0]] = claim
+            progress = True
     # Second pass: a STATIC_DTOR the owner-relocation arms could not see at
     # all. Deferring it keeps the relaxed shape from competing with any
     # claim the strict arms already bound.

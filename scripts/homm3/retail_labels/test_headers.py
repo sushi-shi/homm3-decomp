@@ -294,6 +294,22 @@ class DataSpellingTest(unittest.TestCase):
         # Any other difference stays unbridged.
         self.assertIsNone(vc6_data_name(clang.replace("names", "other"), {vc6}, "herodefs"))
 
+    def test_a_namespace_scope_const_object_takes_its_bare_c_name(self):
+        from homm3.retail_labels.source import vc6_data_name
+        clang = "?castleGenerator2@?A0xC560F696@@3VTAbsoluteGeneratorTraits@?A0xC560F696@@B"
+        self.assertEqual(vc6_data_name(clang, {"_castleGenerator2"}, "TownTypeTraits"),
+                         "_castleGenerator2")
+        # A non-const object keeps its decorated spelling.
+        self.assertIsNone(vc6_data_name(clang[:-1] + "A", {"_castleGenerator2"}, "TownTypeTraits"))
+
+    def test_a_local_class_in_a_local_static_s_type_loses_its_scope(self):
+        from homm3.retail_labels.source import vc6_data_name
+        clang = ("_?akBuildingTextRef@?1??InitializeTownTypeTraitsTable@@YAXXZ@4QAY0CJ@"
+                 "$$CBUTBuildingTextRef@?1??1@YAXXZ@A")
+        vc6 = ("_?akBuildingTextRef@?1??InitializeTownTypeTraitsTable@@YAXXZ@4QAY0CJ@"
+               "$$CBUTBuildingTextRef@@A")
+        self.assertEqual(vc6_data_name(clang, {vc6}, "TownTypeTraits"), vc6)
+
     def test_a_reference_to_a_const_object_takes_the_const_storage_class(self):
         from homm3.retail_labels.source import vc6_data_name
         vc6 = "?kCaptionStr@SNewCampaignDlgText@@3ABQBDB"

@@ -1869,8 +1869,10 @@ def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:
 
     Clang hashes an anonymous namespace (`?A0x<hash>@`) where VC6 embeds the
     declaring file (`?%<path><n>@`), the two number a function-local
-    static's lexical scope differently (`?1??` versus `?BC@??`), and VC6
-    gives a reference to a const object the const storage class. Everything
+    static's lexical scope differently (`?1??` versus `?BC@??`), VC6
+    gives a reference to a const object the const storage class, and VC6
+    emits a namespace-scope const object (internal linkage) under its bare
+    C name. Everything
     else must agree exactly, an anonymous scope must come from the owning
     unit's own source file, and exactly one emitted name may match.
     """
@@ -1881,11 +1883,21 @@ def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:
     if re.search(r"@3AB.*A$", mangled) and mangled[:-1] + "B" in candidates:
         return mangled[:-1] + "B"
     clang_anon = re.compile(r"\?A0x[0-9A-Fa-f]+@")
+    # a namespace-scope const object has internal linkage, and VC6 emits it
+    # under its bare C name (`_castleGenerator2`), whatever its namespace
+    internal = re.fullmatch(r"\?(\w+)@(?:\?A0x[0-9A-Fa-f]+@)?@3.*B", mangled)
+    if internal and "_" + internal.group(1) in candidates:
+        return "_" + internal.group(1)
     if not (clang_anon.search(mangled) or msvc_names.LOCAL_STATIC_SCOPE.search(mangled)):
         return None
 
+    # VC6 names a function-local class in a local static's type without its
+    # scope (`UTBuildingTextRef@@A`), clang with it (`...@?1??1@YAXXZ@A`)
+    local_type = re.compile(r"@\?(?:[0-9]|[A-P]+@)\?\?(?:[0-9]@|[^@]+@@)[A-Z0-9_$]*@(?=[AB]$)")
+
     def key(name: str) -> str:
-        return msvc_names.LOCAL_STATIC_SCOPE.sub(msvc_names.CANONICAL_SCOPE, name)
+        return msvc_names.LOCAL_STATIC_SCOPE.sub(msvc_names.CANONICAL_SCOPE,
+                                                 local_type.sub("@@", name))
     expected = key(clang_anon.sub("?anonymous@", mangled))
     matches, masked = [], []
     vc6_anon = re.compile(r"\?%([^@]+)@")

@@ -158,3 +158,35 @@ class OwnerlessStaticDtorTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnonymousNamespaceOwnerTest(unittest.TestCase):
+    def test_a_static_ctor_binds_to_an_owner_in_an_anonymous_namespace(self):
+        # TownTypeTraits.obj: VC6 spells the anonymous scope as the file
+        # (`?aCastleBuildingTraits@?%<path><n>@@...`); its jmp thunk names
+        # only the body, so the body is the single candidate.
+        claim = cds.CompgenClaim(
+            name="__h3cg$TownTypeTraits$static_ctor$aCastleBuildingTraits",
+            kind="STATIC_CTOR", owner="aCastleBuildingTraits", size=0)
+        symbols = [_fn(1, "_$E273", 0), _fn(2, "_$E272", 0x10),
+                   _local_data(3, r"?aCastleBuildingTraits@?%C:\Editor\TownTypeTraits.cpp373414956"
+                                  r"@@3PAUTBuildingTraits@TTown@@A")]
+        relocations = [cds.Relocation(section=1, site=1, symbol_index=2, typ=0x14),
+                       _reloc(0x12, 3)]
+        renames, _rows, caught = _renames(symbols, relocations, (claim,))
+        self.assertEqual(renames, {2: claim.name})
+        self.assertEqual(caught, [])
+
+    def test_a_claimed_table_initializer_does_not_compete_for_its_arrays(self):
+        # the type table's initializer takes the array's address too; once
+        # its own claim binds it, the array's initializer is the only one
+        array = cds.CompgenClaim(name="__h3cg$T$static_ctor$aArray", kind="STATIC_CTOR",
+                                 owner="aArray", size=0)
+        table = cds.CompgenClaim(name="__h3cg$T$static_ctor$aTable", kind="STATIC_CTOR",
+                                 owner="aTable", size=0)
+        symbols = [_fn(1, "_$E10", 0), _fn(2, "_$E11", 0x20),
+                   _local_data(3, "_aArray"), _local_data(4, "_aTable")]
+        relocations = [_reloc(2, 3), _reloc(0x22, 3), _reloc(0x26, 4)]
+        renames, _rows, caught = _renames(symbols, relocations, (array, table))
+        self.assertEqual(renames, {1: array.name, 2: table.name})
+        self.assertEqual(caught, [])
