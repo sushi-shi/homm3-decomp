@@ -50,7 +50,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 10
+PATCH_VERSION = 11
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -111,6 +111,23 @@ def _sstream(text: str) -> str:
     text = text.replace("openmode _W = in | out)",
                         "openmode _W = ios_base::in | ios_base::out)")
     return text
+
+
+def _deque(text: str) -> str:
+    """<deque>'s nested `iterator` derives from `const_iterator`, a member
+    of the class template, and reads its members (`_Next`, `_First`,
+    `_Last`, `_Map`, `_Add`) unqualified. cl looks them up in that base at
+    instantiation; clang does not look into the dependent base and binds
+    `_First`, `_Last` and `_Map` to deque's own protected members of the
+    same names. Qualifying them with `this->` inside `iterator` names the
+    same members; no entity or mangling changes."""
+    start = text.find("\tclass iterator : public const_iterator {")
+    end = text.find("\n\t\t};", start)
+    if start < 0 or end < 0:
+        return text
+    body = re.sub(r"(?<![.>\w])(_Next|_First|_Last|_Map|_Add)\b", r"this->\1",
+                  text[start:end])
+    return text[:start] + body + text[end:]
 
 
 def _functional(text: str) -> str:
@@ -176,6 +193,7 @@ PATCHES = {
     "fstream": _fstream,
     "limits": _limits,
     "functional": _functional,
+    "deque": _deque,
 }
 
 

@@ -1836,7 +1836,11 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
     if not clang_anon.search(mangled):
         return None
     expected = clang_anon.sub("@?anonymous@", mangled)
-    matches = []
+    # VC6 counts its `?%` scope as a name for back-references and Clang does
+    # not count `?A0x`, so a later class name reused in the signature can
+    # carry a different back-reference digit (`ABV2@` against `ABV1@`).
+    backref = re.compile(r"(?<=[VU])\d(?=@)|(?<=W4)\d(?=@)")
+    exact, masked = [], []
     for candidate in candidates:
         anon = re.search(r"@\?%([^@]+)@", candidate)
         if not anon:
@@ -1844,9 +1848,14 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
         origin = re.fullmatch(r"(.+\.(?:cpp|cxx|cc|c|h|hpp|inl))\d+", anon.group(1), re.I)
         if not origin or Path(origin.group(1).replace('\\', '/')).stem.lower() != unit.lower():
             continue
-        if candidate[:anon.start()] + "@?anonymous@" + candidate[anon.end():] == expected:
-            matches.append(candidate)
-    return matches[0] if len(matches) == 1 else None
+        spelled = candidate[:anon.start()] + "@?anonymous@" + candidate[anon.end():]
+        if spelled == expected:
+            exact.append(candidate)
+        elif backref.sub("#", spelled) == backref.sub("#", expected):
+            masked.append(candidate)
+    if exact:
+        return exact[0] if len(exact) == 1 else None
+    return masked[0] if len(masked) == 1 else None
 
 
 def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:

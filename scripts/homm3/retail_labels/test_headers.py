@@ -225,6 +225,13 @@ class AnonymousNamespaceIdentityTest(unittest.TestCase):
                 self.assertIsNone(vc6_function_name(self.clang, candidates, 'forcefeedback'))
         self.assertIsNone(vc6_function_name('ordinary', [self.vc6], 'forcefeedback'))
 
+    def test_back_reference_after_the_scope_may_differ(self):
+        from homm3.retail_labels.source import vc6_function_name
+        clang = '?mutexName@?A0xD71F6C0B@@YA?AVCString@@ABV1@@Z'
+        vc6 = r'?mutexName@?%C:\Dev\MapDoc.cpp166062000@@YA?AVCString@@ABV2@@Z'
+        self.assertEqual(vc6_function_name(clang, [vc6], 'MapDoc'), vc6)
+        self.assertIsNone(vc6_function_name(clang, [vc6.replace('ABV2', 'AAV2')], 'MapDoc'))
+
     def test_claim_and_object_join_share_the_same_resolution(self):
         from types import SimpleNamespace
         from unittest.mock import patch
