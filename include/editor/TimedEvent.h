@@ -34,6 +34,8 @@ public:
 
     enum { s_kMaxMessageLen = 300 };
 
+    TTimedEvent();
+
     void setName(const std::string& newName) { _m_name = newName; }
     void setMessage(const std::string& newMessage) { _m_message = newMessage; }
     void setResourceQuantities(const TResourceQuantities& newQuantities)
@@ -54,6 +56,8 @@ public:
     bool getBApplyToComputer() const { return _m_bApplyToComputer; }
     unsigned int getFirstOccurence() const { return _m_firstOccurence; }
     unsigned int getSubsequentInterval() const { return _m_subsequentInterval; }
+
+    friend bool operator==(const TTimedEvent& lhs, const TTimedEvent& rhs);
 
 private:
     std::string _m_name;

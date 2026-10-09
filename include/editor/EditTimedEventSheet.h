@@ -23,7 +23,7 @@ public:
 
     virtual int DoModal();
 
-    const TTimedEvent& getEvent() const { return _m_event; }
+    TTimedEvent getEvent() const { return _m_event; }
 
     virtual void onEnableOK() { GetDlgItem(IDOK)->EnableWindow(TRUE); }
     virtual void onDisableOK() { GetDlgItem(IDOK)->EnableWindow(FALSE); }
