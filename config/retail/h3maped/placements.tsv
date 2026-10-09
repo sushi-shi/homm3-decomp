@@ -1140,6 +1140,7 @@ rva	size	kind	name	unit	evidence
 0x0017c5a0	0x11	data	??_C@_0BB@NCJF@?$AA?$AB?$AB?$AC?$AB?$AC?$AC?$AD?$AB?$AC?$AC?$AD?$AC?$AD?$AD?$AE?$AA@	objecttype	referenced by ?count@?$bitset@$09@std@@QBEIXZ at +0x10
 0x0017c610	0x1b	data	??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@	resource	referenced by ?_Xran@?$bitset@$0DA@@std@@ABEXXZ at +0x1f
 0x0017c7c0	0x3	data	??_C@_02MECO@?$CFd?$AA@	OptionsDlg	referenced by ?OnInitDialog@TOptionsDlg@@MAEHXZ at +0x1ad
+0x0017c7c4	0x2	data	??_C@_01FBAH@1?$AA@	MapSpecsGeneralPage	referenced by ?OnLimitHeroLevelCheck@TMapSpecsGeneralPage@@IAEXXZ at +0x3a
 0x0017c7cc	0x4	data	?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A	artifact	referenced by ?OnInitDialog@TSelectArtifactDlg@@MAEHXZ at +0x8f
 0x0017c7d0	0x4	data	?g_combinationArtifacts@@3PBUTCombinationArtifact@@B	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0x1be (retail +0x273, by operand order)
 0x0017c7d4	0xd	data	??_C@_0N@GIEN@artslots?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ

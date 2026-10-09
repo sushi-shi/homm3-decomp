@@ -455,3 +455,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "MapSpecsRumorsPage"
 source = "src/editor/MapSpecsRumorsPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapSpecsGeneralPage"
+source = "src/editor/MapSpecsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
