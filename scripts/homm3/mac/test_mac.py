@@ -97,7 +97,9 @@ class TestMacTarget(unittest.TestCase):
                                     score=score, exact=False, source_hash=source_hash,
                                     target_sha256="t", mac_symbol=".f", resolved_calls=(),
                                     removed_reload_slots=(), first_difference="+0x0")
-            with patch.object(build, "BASELINE", baseline):
+            with patch.object(build, "BASELINE", baseline), \
+                 patch.object(build, "PROFILES", Path(directory) / "match_profiles.tsv"), \
+                 patch.object(build.profiles, "flags", return_value=("-O3", "-nolink")):
                 build._checkpoint([result("0x00400200", 30.0, "tokens1:new"),
                                    result("0x00400300", 15.0, "tokens1:same"),
                                    result("0x00400400", 5.0, "tokens1:b")])
@@ -146,6 +148,66 @@ class TestMacTarget(unittest.TestCase):
             legacy = {"0x00400100": later["0x00400100"][:8]}
             problems, _ = build._preservation_problems([], inventory, [], legacy)
             self.assertFalse(problems)  # pre-gate historical gap
+
+    def test_preservation_gate_separates_profile_changes_from_source_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "owner.cpp"
+            source.write_text("VA(0x00400100, 4) MAC_ADDRESS(0x100, 4)\n")
+            pair = pairs.Pair(0x400100, "unit", source, "owner::helper", 0,
+                              0x100, 4, ".helper", "va:0x00400100", line=1)
+            inventory = pairs.Inventory((pair,), (), {}, {}, ())
+            old = {"0x00400100": ["0x00400100", "unit", "0", "0x100", "60.0000",
+                                   "60.0000", "60.0000", "tokens1:abc", "1"]}
+            same = build.Result(retail_va="0x00400100", unit="unit", signature="owner::helper",
+                                mac_section=0, mac_offset="0x100", size=4,
+                                candidate_size=4, matching_bytes=2, score=50.0,
+                                exact=False, source_hash="tokens1:abc", target_sha256="t",
+                                mac_symbol=".helper", resolved_calls=(), removed_reload_slots=(),
+                                first_difference="+0x2")
+            o3, o1 = {"unit": "-O3 -nolink"}, {"unit": "-O1 -nolink"}
+            problems, exceptions = build._preservation_problems([same], inventory, [], old, o3, o1)
+            self.assertFalse(problems)
+            self.assertIn("profile '-O3 -nolink' -> '-O1 -nolink'", exceptions[0])
+            for before, after in ((o3, o3), ({}, o1)):
+                problems, exceptions = build._preservation_problems(
+                    [same], inventory, [], old, before, after)
+                self.assertEqual(len(problems), 1)  # unchanged or unrecorded profile
+            edited = build.Result(**{**same.__dict__, "source_hash": "tokens1:def"})
+            problems, _ = build._preservation_problems([edited], inventory, [], old, o3, o1)
+            self.assertEqual(len(problems), 1)  # a source edit needs its own review
+
+            problems, _ = build._preservation_problems([], inventory, [], old)
+            self.assertIn("unavailable", problems[0])
+            source.write_text("VA(0x00400100, 4) MAC_ADDRESS(0x100, 4) "
+                              "// MAC_ABSTRACTION_FROM(tokens1:abc,60.0000): "
+                              "retail's object split makes this a header inline body\n")
+            problems, exceptions = build._preservation_problems([], inventory, [], old)
+            self.assertFalse(problems)
+            self.assertIn("unavailable", exceptions[0])
+            unemitted = pairs.Inventory((), ({"retail_va": "0x00400100", "unit": "unit",
+                                              "file": "owner.cpp", "line": 1,
+                                              "reason": "not_emitted"},), {}, {}, ())
+            with patch.object(build, "ROOT", Path(directory)):
+                problems, exceptions = build._preservation_problems([], unemitted, [], old)
+            self.assertFalse(problems)
+            self.assertIn("not_emitted", exceptions[0])
+
+    def test_checkpoint_records_unit_profiles(self):
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = Path(directory) / "match_baseline.tsv"
+            recorded = Path(directory) / "match_profiles.tsv"
+            recorded.write_text("# header\n# columns\nkept\t-O3 -nolink\nunit\t-O3 -nolink\n")
+            row = build.Result(retail_va="0x00400100", unit="unit", signature="f", mac_section=0,
+                               mac_offset="0x0", size=4, candidate_size=4, matching_bytes=4,
+                               score=100.0, exact=True, source_hash="tokens1:a",
+                               target_sha256="t", mac_symbol=".f", resolved_calls=(),
+                               removed_reload_slots=(), first_difference=None)
+            with patch.object(build, "BASELINE", baseline), \
+                 patch.object(build, "PROFILES", recorded), \
+                 patch.object(build.profiles, "flags", return_value=("-O1", "-nolink")):
+                build._checkpoint([row])
+                self.assertEqual(build._previous_profiles(),
+                                 {"kept": "-O3 -nolink", "unit": "-O1 -nolink"})
 
     def test_selector_accepts_va_mac_offset_and_name(self):
         pair = pairs.Pair(0x4e51c0, "hero", Path("src/hero.cpp"), "hero::getHighestSchool",

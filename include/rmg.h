@@ -745,7 +745,7 @@ inline TRmgVector operator-(TPoint left, TPoint right)
 int getRmgPointOrientation(TPoint first, TPoint second, TPoint third);
 // carveBranchingPaths expands the distance; addSite keeps its call.
 VA(0x005FDB10, 0x21)
-MAC_ADDRESS(0x25c3b4, 0x38) // anchor-callee addSite; Complete-only, ret 0x10
+MAC_ADDRESS(0x25c3b4, 0x38) // anchor-callee addSite; Complete-only, ret 0x10; MAC_ABSTRACTION_FROM(tokens1:311342e68a5c,100.0000): aa93e92de's retail object split makes the squared distance a header inline body that carveBranchingPaths expands; CodeWarrior emits no out-of-line copy for addSite's call.
 inline int getRmgSquaredDistance(TPoint first, TPoint second)
 {
     int dy = first.m_y - second.m_y;
@@ -806,7 +806,7 @@ template<class Coordinate> struct TRmgCoordinatePoint {
 template<class Coordinate>
 // VA instance: TRmgCoordinatePoint<u32>::TRmgCoordinatePoint(const TPoint&)
 VA(0x004fa520, 0x16)
-MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4
+MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4; MAC_ABSTRACTION_FROM(tokens1:0e00ed15f0a6,100.0000): aa93e92de's retail object split makes this conversion a header inline body that the terrain painter expands; CodeWarrior emits no out-of-line copy for the retained call.
 inline TRmgCoordinatePoint<Coordinate>::TRmgCoordinatePoint(const TPoint& point)
     : m_x(point.m_x), m_y(point.m_y)
 {

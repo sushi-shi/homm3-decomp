@@ -25,7 +25,14 @@ not mistaken for new losses. A reviewed move to a higher-level canonical
 helper can carry a one-checkpoint exception on its `MAC_ADDRESS` line:
 `// MAC_ABSTRACTION_FROM(tokens1:<old-hash>,<old-cur>): <specific reason>`.
 The hash and score must match the preceding ledger; a later drop needs new
-evidence. Unit-selected Mac builds remain diagnostic and do not update this checkpoint.
+evidence. The same note covers a reviewed source change after which
+CodeWarrior no longer emits the claimed body. Each checkpoint also writes the
+per-unit CodeWarrior flags to `config/mac/match_profiles.tsv`; a lower score
+whose definition fingerprint is unchanged, in a unit whose flags changed since
+that record, is reported as a profile exception, so a retail-backed profile
+change in `config/mac/units.toml` banks without per-function notes while a
+source edit in the same checkpoint still needs its own review.
+Unit-selected Mac builds remain diagnostic and do not update this checkpoint.
 
 Call targets resolve from the same join: every symbol a full-TU object emits
 or references names the claim of the one definition it mangles, plus the

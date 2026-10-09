@@ -51,7 +51,7 @@ static const int g_angelicAllianceSecondMap = 9;
 // the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
 DC_ADDRESS(0x18fdf8, 0x9e)
-MAC_ADDRESS(0x1fd3cc, 0x44c)
+MAC_ADDRESS(0x1fd3cc, 0x44c)  // MAC_ABSTRACTION_FROM(tokens1:db1ab8f0ef7c,61.2100): the DC-braced separate guards keep the Windows out_of_range expansion inside bitset::test (retail +0x4c1, exact); Mac joins them into one shared failure exit.
 bool VictoryConditionStruct::checkForArtifactWin()
 {
     SCampaign& campaign = g_game->m_campaign;
@@ -235,8 +235,8 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
         break;
     }
     if (hallOk && castleOk) {
-        m_playerWinner = owner;
         m_gameWon = 1;
+        m_playerWinner = owner;
         return 1;
     }
     return 0;

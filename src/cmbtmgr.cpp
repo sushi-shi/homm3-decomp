@@ -3062,7 +3062,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // helper-preserving model; retain the ordinary member initializer/if form.
 VA(0x00467db0, 0x46A)
 DC_ADDRESS(0x0619a8, 0x4b8)
-MAC_ADDRESS(0x0740cc, 0x588)
+MAC_ADDRESS(0x0740cc, 0x588)  // MAC_ABSTRACTION_FROM(tokens1:4dc9747a4bbe,49.0113): Windows recovery of the SLimitData/s_combatAreaLimits identities and the DC sprite-angle loop; CW reallocates the body (masked 160 -> 109 of 354).
 void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                                          int destY, int nsprites,
                                          const float* angles,
@@ -3199,7 +3199,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
 VA(0x00468220, 0x48F)
 DC_ADDRESS(0x061e60, 0x45c)
-MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global
+MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global; MAC_ABSTRACTION_FROM(tokens1:b764eb463ab5,65.8784): Windows recovery of the SLimitData/s_combatAreaLimits identities and DC 4016's scrollTo extent; CW reallocates the body (masked 214 -> 149 of 369).
 void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                                  const float* angles, const CSprite* missile)
 {

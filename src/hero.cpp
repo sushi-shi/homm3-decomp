@@ -2984,7 +2984,7 @@ MAC_ADDRESS(0x0f8638, 0xb4)
 void hero::disassembleCombinationArtifact(long slot)
 {
     int combination =
-        akArtifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
+        akArtifactTraits[m_equipped[slot].m_artifactId].m_comboType;
     removeArtifact(slot);
 
     const std::bitset<ARTIFACT_COUNT>& components =
@@ -3030,7 +3030,7 @@ void hero::offerCombinationArtifactAssembly(long slot)
     // Mac 0xf8734 owns comboType through its proxy write, then
     // 0xf8770..0xf8780 repeats the canonical equipped-record lookup.
     int comboType =
-        akArtifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
+        akArtifactTraits[m_equipped[slot].m_artifactId].m_comboType;
 
     if (comboType != -1) {
         player.m_assembledCombinations[comboType] = true;
@@ -3038,7 +3038,7 @@ void hero::offerCombinationArtifactAssembly(long slot)
     }
 
     int targetCombo =
-        akArtifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_targetCombo;
+        akArtifactTraits[m_equipped[slot].m_artifactId].m_targetCombo;
     if (targetCombo == -1)
         return;
     if (player.m_assembledCombinations[targetCombo])
@@ -5726,7 +5726,7 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
 // before the skill tests and table indices. Preserve the canonical typed
 // Hero.h:981 getSecondarySkill boundary throughout these specialty readers.
 VA(0x004e3c60, 0x70)
-MAC_ADDRESS(0x104904, 0x84)
+MAC_ADDRESS(0x104904, 0x84)  // MAC_ABSTRACTION_FROM(tokens1:1e1c32ce6d8d,53.0303): canonical Hero.h:981 getSecondarySkill reads replace the direct packed-mastery loads; same lbz/extsb tests, but the inline boundary grows the CW frame by 16 bytes.
 TCreatureType hero::getNecromancyCreature()
 {
     if (isWieldingArtifact(ARTIFACT_CLOAK_OF_THE_UNDEAD_KING)) {
@@ -6126,7 +6126,7 @@ MAC_ADDRESS(0x105be0, 0x38)
 // predicate call where CodeWarrior would keep one for a hero.cpp helper.
 int hero::getMobility() const
 {
-    return getMobility((m_flags & 0x40000) != 0);
+    return getMobility(m_flags & 0x40000);
 }
 
 VA(0x004e4db0, 0x10D)

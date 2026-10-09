@@ -194,7 +194,7 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 
 VA(0x004fc6a0, 0xC8)
 DC_ADDRESS(0x0ebbbc, 0xd4)
-MAC_ADDRESS(0x11dbd8, 0x1f0)
+MAC_ADDRESS(0x11dbd8, 0x1f0)  // MAC_ABSTRACTION_FROM(tokens1:c60394e17b2f,33.0645): only DC member spellings changed in this body (615ff6cdd); retail's 496-byte body expands more of the string read than the shared canonical game::loadString call.
 int TTimedEvent::Load(TAbstractFile* infile, int saveVersion)
 {
     if (game::loadString(infile, Message) < 0)
@@ -2547,7 +2547,7 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // Mac 0x123e64..0x123e6c and Windows mask 0x87fbffff prove that store.
 VA(0x005013b0, 0x3DC)
 DC_ADDRESS(0x0f0390, 0x358)
-MAC_ADDRESS(0x123b10, 0x3dc)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing
+MAC_ADDRESS(0x123b10, 0x3dc)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing; MAC_ABSTRACTION_FROM(tokens1:e0d3baad5b6f,42.5703): native little-endian readers replace the pasted read/swap pairs; Mac swaps before its count test, so the reader order costs masked 180 -> 172 of 247.
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
     int customIndex = m_customMonsterList.size();

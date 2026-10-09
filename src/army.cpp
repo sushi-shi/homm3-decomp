@@ -1144,7 +1144,7 @@ void army::walk(int direction, bool endWalk, bool initialWalk)
 // placement different (95.14%).
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
-MAC_ADDRESS(0x04afa0, 0x68c)
+MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): Windows recovery of the SLimitData/s_combatAreaLimits identities and DC's else-if missile chain; CW reallocates the restructured body (masked 255 -> 241 of 419).
 void army::animateMissile(army* armyToAttack)
 {
     if (g_combatManager->isQuickCombat())
@@ -2965,7 +2965,7 @@ double army::computeDefenderDamageReduction(bool isShooting) const
 // model reproduces all 257 Windows bytes while retaining both bonus calls.
 // The two reduction products keep their evidenced operand orientation.
 VA(0x00443e30, 0x101)
-MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value
+MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value; MAC_ABSTRACTION_FROM(tokens1:c55baa363583,55.5556): DC-backed bool ranged interface and accumulated damage local; masked shape rises from 40 to 48 of 61 retail instructions.
                        // functions) + arity ret 0x10, retail-only slot
 // Complete-only bool inference: its two AI callers use canShoot's logical
 // result, and retail forwards the shooting flag unchanged to the independently

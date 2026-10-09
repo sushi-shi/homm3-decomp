@@ -2032,7 +2032,7 @@ game	?load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	94.6169	94.6169	95.2296	0xc5
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260	tokens1:a8fa2eacd515
 game	?load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	tokens1:797e58b7e94b
 game	?load@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbcda0	tokens1:fbbe967bb08f
-game	?load@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	tokens1:bb5f098cb043
+game	?load@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0	tokens1:85944f064e6e
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	tokens1:4693e6d52372
 game	?loadBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	tokens1:38293cd45fcd
 game	?loadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	tokens1:b9df1937f0c7
@@ -2201,7 +2201,7 @@ hero	?checkLevel@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda720	tokens1:e1f335b
 hero	?creatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	tokens1:7db86bb24e67
 hero	?deallocate@hero@@QAEX_N0@Z	100.0000	100.0000	100.0000	0xd9ec0	tokens1:e0e1d5c01c56
 hero	?destroySiegeWeaponArtifact@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9260	tokens1:a1b71316a811
-hero	?disassembleCombinationArtifact@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070	tokens1:f9be5890d3b2
+hero	?disassembleCombinationArtifact@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070	tokens1:c622b4e69684
 hero	?end@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEPAPAVwidget@@XZ	100.0000	100.0000	100.0000	0xe64f0	tokens1:3d89f67f1437
 hero	?equipArtifact@hero@@QAE_NABUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0xe2a00	tokens1:94b912f04c00
 hero	?exitDialog@THeroScreenWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xdd2a0	tokens1:3aa1b3805f57
@@ -2233,7 +2233,7 @@ hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$al
 hero	?getMagicResistanceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe46e0	tokens1:5770a5e68925
 hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	tokens1:635ed9a77c3d
 hero	?getManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	tokens1:462c7a0e1a4a
-hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:312bea91c517
+hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:af4e6b957f4d
 hero	?getMobility@hero@@QBEH_N@Z	100.0000	100.0000	100.0000	0xe4990	tokens1:50937f8f40cf
 hero	?getMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	tokens1:170e6f789ec6
 hero	?getMorale@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe39b0	tokens1:e2fec53ed216
@@ -2281,7 +2281,7 @@ hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0	
 hero	?markArtifactSpells@@YI?AV?$bitset@$0EG@@std@@H@Z	100.0000	100.0000	100.0000	0xd9350	tokens1:a0c2ad86896c
 hero	?modifySpellDamage@hero@@QBEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760	tokens1:3dab08405180
 hero	?obscureCell@type_obscuring_object@@IAEXW4TAdventureObjectType@@J@Z	100.0000	100.0000	100.0000	0xd75d0	tokens1:5dbb8ede82c2
-hero	?offerCombinationArtifactAssembly@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc100	tokens1:cf103049e740
+hero	?offerCombinationArtifactAssembly@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc100	tokens1:e393b0015ed1
 hero	?placeInMap@hero@@QAEXHUtype_point@@_N@Z	100.0000	100.0000	100.0000	0xd7900	tokens1:41b1ef403c14
 hero	?push_back@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXABQAVwidget@@@Z	100.0000	100.0000	100.0000	0xe6500	tokens1:2e4b4e3a244d
 hero	?removeArtifact@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xe2bd0	tokens1:65fcd013de89
@@ -4680,7 +4680,7 @@ victorylossconditions	?checkForTimeSurvival@VictoryConditionStruct@@QAEEXZ	100.0
 victorylossconditions	?checkForTotalCreatures@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1b10	tokens1:6fff91ba084f
 victorylossconditions	?checkForTotalResources@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1c80	tokens1:c7e7087a93af
 victorylossconditions	?checkForTownCaptureWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f22a0	tokens1:b2f6a19420a9
-victorylossconditions	?checkForUpgradedTown@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1d40	tokens1:1a6cd4122ce1
+victorylossconditions	?checkForUpgradedTown@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1d40	tokens1:a57e3e9943e5
 victorylossconditions	?heroKilled@LossConditionStruct@@QAEEPBVhero@@@Z	100.0000	100.0000	100.0000	0x1f2e10	tokens1:ce264651de8f
 victorylossconditions	?isGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2160	tokens1:aa075d91bc3d
 victorylossconditions	?isTownCaptureTarget@VictoryConditionStruct@@QAE_NPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2260	tokens1:523aa5c9aa16

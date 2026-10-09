@@ -2284,7 +2284,7 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 // Mac body likewise uses the selected count directly in combat valuation.
 VA(0x0043aca0, 0x2AE)
 DC_ADDRESS(0x04101c, 0x25c)
-MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee
+MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee; MAC_ABSTRACTION_FROM(tokens1:4d0275565ac1,28.9402): the only change since this checkpoint is the DC-proven akSpellTraits table and field spelling (2245b30a8, 72ee10712); CW addresses the restored table declaration differently.
 void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
 {
     const army* ourArmy = g_combatManager->m_armies[m_side];

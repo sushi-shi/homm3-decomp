@@ -1679,7 +1679,7 @@ long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
 
 VA(0x0042b670, 0x111)
 DC_ADDRESS(0x02f8a0, 0xf8)
-MAC_ADDRESS(0x02d478, 0x1bc)
+MAC_ADDRESS(0x02d478, 0x1bc)  // MAC_ABSTRACTION_FROM(tokens1:26385da3c159,42.5676): original g_dwellingType and akCreatureTypeTraits tables replace the flattened dwelling index; masked shape rises from 51 to 72 of 111 instructions.
 int valueOfCastleUpgrade(town* currentTown, int* extraCost)
 {
     long value = 0;

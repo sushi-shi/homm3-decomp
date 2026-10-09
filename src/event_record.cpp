@@ -444,7 +444,7 @@ type_event_record_type type_record_hide_boat::getType() const
 
 VA(0x0049ad00, 0xE7)
 DC_ADDRESS(0x08cedc, 0x4e)
-MAC_ADDRESS(0x0bfdb0, 0x1c0)
+MAC_ADDRESS(0x0bfdb0, 0x1c0)  // MAC_ABSTRACTION_FROM(tokens1:9dd849be89a9,45.0893): the only change since this checkpoint is the bool return that retail's _N mangling proves (b7ae6bcb4, was unsigned char); CW normalizes and spills the bool result differently.
 bool type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_event_record::load(infile, version))

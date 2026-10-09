@@ -4101,7 +4101,7 @@ DATA(0x00691648) message g_updateScreenMessage;
 
 VA(0x0040f270, 0x7D)
 DC_ADDRESS(0x010520, 0x120)
-MAC_ADDRESS(0x00f6f0, 0xb8)
+MAC_ADDRESS(0x00f6f0, 0xb8)  // MAC_ABSTRACTION_FROM(tokens1:e97a1d8db3b7,94.0217): GameTime::elapsed restores the signed predicate and delta Mac expands at 0xf72c/0xf758; the inline boundary grows the CW frame by 16 bytes.
 void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
 {
     g_windowManager->updateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
@@ -5076,7 +5076,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
 // 2..5. The native DrawTile callers extract those four one-bit fields.
 VA(0x00411b80, 0x1D7)
 DC_ADDRESS(0x013890, 0x1d4)
-MAC_ADDRESS(0x012620, 0x1cc)
+MAC_ADDRESS(0x012620, 0x1cc)  // MAC_ABSTRACTION_FROM(tokens1:aa6d92caff70,53.6957): named river-flip bitfields replace the shift/mask reads; masked shape rises from 84 to 112 of 115 retail instructions, leaving CW register numbering.
 void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -5119,7 +5119,7 @@ void advManager::drawRiver(int srcX, int srcY, int z, int destX, int destY)
 
 VA(0x00411d60, 0x1EC)
 DC_ADDRESS(0x013a64, 0x204)
-MAC_ADDRESS(0x0127ec, 0x1d8)
+MAC_ADDRESS(0x0127ec, 0x1d8)  // MAC_ABSTRACTION_FROM(tokens1:9e801879380c,50.2119): named road-flip bitfields replace the shift/mask reads; masked shape rises from 84 to 94 of 118 retail instructions, leaving CW register numbering.
 void advManager::drawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
@@ -8468,7 +8468,7 @@ void advManager::checkDimNextHeroBut()
 // Mac 19ad0..19adc expands getCurrHeroId before GetCurrHero.
 VA(0x004194a0, 0xC7)
 DC_ADDRESS(0x01c64c, 0x104)
-MAC_ADDRESS(0x019a98, 0x148)
+MAC_ADDRESS(0x019a98, 0x148)  // MAC_ABSTRACTION_FROM(tokens1:3f7c4740d528,52.3256): canonical game::getCurrHeroId replaces the direct current-player read; same loads, but the inline boundary grows the CW frame by 16 bytes.
 void advManager::seedTo(type_point target)
 {
     if (!g_currentPlayer->isLocalHuman())

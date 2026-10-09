@@ -1076,7 +1076,7 @@ int TCampaignStartCrossoverOption::getCount() const
 // This option-owned accessor's name and private boundary are inferred.
 // All three callers are in this TU, supporting an ordinary source body;
 // keep the existing virtual getCrossoverPoolIndex as the public option interface.
-int TCampaignStartCrossoverOption::getCrossoverSlot(
+inline int TCampaignStartCrossoverOption::getCrossoverSlot(
     const SCampaign& campaign, int which) const
 {
     return campaign.m_mapScores[m_choices[which].m_scenario].m_index;

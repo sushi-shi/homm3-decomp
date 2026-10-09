@@ -161,7 +161,8 @@ may lower Mac temporarily; document that one checkpoint on the function's
 `MAC_ADDRESS` line with
 `// MAC_ABSTRACTION_FROM(tokens1:<old-hash>,<old-cur>): <specific reason>`.
 The old hash and score must match the preceding ledger, so this cannot waive
-later regressions. Unit-selected Mac builds report scores without checkpointing.
+later regressions. A unit's reviewed CodeWarrior profile change lowers only
+unchanged-source rows (`config/mac/match_profiles.tsv` records the flags). Unit-selected Mac builds report scores without checkpointing.
 A pair is a source `MAC_ADDRESS` claim whose body the unit's full-TU
 CodeWarrior object (`ninja mac:<unit>`) emits; `homm3 mac build` scores it.
 Follow the [Mac tooling guide](docs/tooling/mac-matching-roadmap.md) to add

@@ -6,7 +6,8 @@ address with the claim/runtime/glue call targets and the reviewed TOC data; a
 reference that cannot be resolved leaves the pair unavailable rather than
 masked. The Mac CUR/MAX/HIST ledger is keyed by VA. Full checkpoints preserve
 the preceding comparison unless a higher-level source abstraction is recorded
-beside its owning MAC_ADDRESS claim.
+beside its owning MAC_ADDRESS claim, or the unit's reviewed CodeWarrior profile
+changed while the definition's token fingerprint did not.
 """
 from __future__ import annotations
 
@@ -19,7 +20,7 @@ import re
 import subprocess
 
 from homm3.core import common, inputs
-from homm3.mac import call_report, calls, pairs, reports, symbols, toc, toolchain
+from homm3.mac import call_report, calls, pairs, profiles, reports, symbols, toc, toolchain
 from homm3.mac.object import CodeHunk, DataHunk, parse_code_hunks, parse_data_hunks
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, LinkedCode, ResolvedCall, ResolvedData, ResolvedJumpTable, link_code
@@ -28,6 +29,9 @@ from homm3.mac.relocations import Address, LinkedCode, ResolvedCall, ResolvedDat
 ROOT = common.HOMM3_DIR
 REPORT = ROOT / "build/mac/report.json"
 BASELINE = ROOT / "config/mac/match_baseline.tsv"
+# Per-unit CodeWarrior flags of the last checkpoint, so a reviewed profile
+# change in config/mac/units.toml is told apart from a source regression.
+PROFILES = ROOT / "config/mac/match_profiles.tsv"
 
 
 class MacBuildError(ValueError):
@@ -173,14 +177,37 @@ _ABSTRACTION = re.compile(
 )
 
 
-def _abstraction_reason(pair: pairs.Pair | None, old: list[str]) -> str | None:
-    """A one-checkpoint source annotation for a reviewed higher-level helper."""
-    if pair is None or pair.line < 1 or not pair.source.is_file():
+def _previous_profiles() -> dict[str, str]:
+    rows = {}
+    if PROFILES.is_file():
+        for line in PROFILES.read_text().splitlines():
+            if line and not line.startswith("#"):
+                unit, flags = line.split("\t")
+                rows[unit] = flags
+    return rows
+
+
+def _profiles(units) -> dict[str, str]:
+    return {unit: " ".join(profiles.flags(ROOT, unit)) for unit in sorted(set(units))}
+
+
+def _abstraction_reason(pair: pairs.Pair | dict | None, old: list[str]) -> str | None:
+    """A one-checkpoint source annotation for a reviewed higher-level helper.
+
+    `pair` is a scored pair or an unscored claim row (repository file and line).
+    """
+    if isinstance(pair, dict):
+        source, number = ROOT / pair["file"], pair["line"]
+    elif pair is not None:
+        source, number = pair.source, pair.line
+    else:
         return None
-    lines = pair.source.read_text().splitlines()
-    if pair.line > len(lines):
+    if number < 1 or not source.is_file():
         return None
-    line = lines[pair.line - 1]
+    lines = source.read_text().splitlines()
+    if number > len(lines):
+        return None
+    line = lines[number - 1]
     if "//" not in line:
         return None
     marker = _ABSTRACTION.search(line.split("//", 1)[1])
@@ -192,27 +219,45 @@ def _abstraction_reason(pair: pairs.Pair | None, old: list[str]) -> str | None:
 
 
 def _preservation_problems(results: list[Result], inventory: pairs.Inventory,
-                           unavailable: list[dict], previous: dict[str, list[str]]) -> tuple[list[str], list[str]]:
+                           unavailable: list[dict], previous: dict[str, list[str]],
+                           old_profiles: dict[str, str] | None = None,
+                           new_profiles: dict[str, str] | None = None) -> tuple[list[str], list[str]]:
     """Protect the preceding Mac CUR and the pairs available at that checkpoint.
 
     The eight-column legacy ledger has no availability bit. Its historical
     unavailable rows are grandfathered once; the next checkpoint records which
     pairs actually scored, so a newly lost comparison cannot disappear silently.
+    A pair that stops being emitted can carry the same one-checkpoint source
+    note as a lowered score. A lower score whose definition fingerprint is
+    unchanged, in a unit whose recorded CodeWarrior flags changed, is a
+    profile exception: the profile is reviewed in config/mac/units.toml.
     """
+    old_profiles = old_profiles or {}
+    new_profiles = new_profiles or {}
     current = {row.retail_va: row for row in results}
     claims = {f"0x{pair.retail_va:08x}": pair for pair in inventory.pairs
               if pair.retail_va is not None}
     unavailable_by_va = {row["retail_va"]: row["reason"] for row in unavailable}
     unscored_by_va = {row["retail_va"]: row["reason"] for row in inventory.unscored}
+    unscored_claims = {row["retail_va"]: row for row in inventory.unscored if "file" in row}
     problems, exceptions = [], []
     for va, old in sorted(previous.items()):
         result = current.get(va)
         if result is None:
             if len(old) > 8 and old[8] == "1":
                 why = unavailable_by_va.get(va) or unscored_by_va.get(va) or "pair no longer admitted"
-                problems.append(f"{va} {old[1]}: previously scored Mac pair unavailable: {why}")
+                reason = _abstraction_reason(claims.get(va) or unscored_claims.get(va), old)
+                if reason is None:
+                    problems.append(f"{va} {old[1]}: previously scored Mac pair unavailable: {why}")
+                else:
+                    exceptions.append(f"{va} {old[1]}: {old[4]}% -> unavailable ({why}): {reason}")
             continue
         if Decimal(f"{result.score:.4f}") >= Decimal(old[4]):
+            continue
+        before, after = old_profiles.get(result.unit), new_profiles.get(result.unit)
+        if result.source_hash == old[7] and before is not None and after is not None and before != after:
+            exceptions.append(f"{va} {result.unit}: {old[4]}% -> {result.score:.4f}%: "
+                              f"unchanged source, CodeWarrior profile '{before}' -> '{after}'")
             continue
         reason = _abstraction_reason(claims.get(va), old)
         if reason is None:
@@ -241,6 +286,11 @@ def _checkpoint(results: list[Result]) -> None:
              "# retail_va\tunit\tmac_section\tmac_offset\tcur\tmax\thist\tsource_hash\tavailable"]
     lines += ["\t".join(fields) for _va, fields in sorted(rows.items())]
     BASELINE.write_text("\n".join(lines) + "\n")
+    recorded = _previous_profiles()
+    recorded.update(_profiles(row.unit for row in results))
+    PROFILES.write_text("# GENERATED by full `homm3 mac build`. Do not hand-edit.\n"
+                        "# unit\tCodeWarrior flags at the checkpoint\n" +
+                        "".join(f"{unit}\t{flags}\n" for unit, flags in sorted(recorded.items())))
 
 
 def write_readme(results: list[Result]) -> None:
@@ -306,9 +356,11 @@ def _run(units: set[str] | None, checkpoint: bool) -> list[Result]:
     if checkpoint:
         if units is not None:
             raise MacBuildError("cannot checkpoint a partial Mac unit selection")
-        problems, exceptions = _preservation_problems(results, inventory, unavailable, _previous())
+        problems, exceptions = _preservation_problems(
+            results, inventory, unavailable, _previous(), _previous_profiles(),
+            _profiles(row.unit for row in results))
         for exception in exceptions:
-            print(f"[mac] abstraction exception: {exception}", flush=True)
+            print(f"[mac] reviewed exception: {exception}", flush=True)
         if problems:
             raise MacBuildError("Mac preservation gate: " + str(len(problems)) +
                                 " regression(s); report " + str(REPORT.relative_to(ROOT)) + "\n" +
