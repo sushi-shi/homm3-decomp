@@ -6,6 +6,10 @@
 
 #include "armygrp.h"
 
+// Complete extends the Dreamcast creature-name domain through id 0x96.
+// GetArmyName's retail range guard proves the inclusive upper bound.
+const int g_creatureTypeLast = 0x96;
+
 int isBaseCreature(TCreatureType monType);
 unsigned char isSiegeWeapon(TCreatureType creature);
 TCreatureType upgradedCreatureType(TCreatureType type);

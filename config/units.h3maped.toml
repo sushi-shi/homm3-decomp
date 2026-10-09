@@ -490,3 +490,8 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "MapSpecsLossCondPage"
 source = "src/editor/MapSpecsLossCondPage.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapSpecsVictoryCondPage"
+source = "src/editor/MapSpecsVictoryCondPage.cpp"
+flags = "editor_o1_ob2_gr_windows"

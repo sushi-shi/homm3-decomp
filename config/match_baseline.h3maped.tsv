@@ -888,8 +888,8 @@ MapSpecsLossCondPage	?DoDataExchange@TTimeExpiresDlg@?%C:\Dev\Heroes 3 Exp 2\Edi
 MapSpecsLossCondPage	?GetMessageMap@TMapSpecsLossCondPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x72a2e	tokens1:7802fc732d1e
 MapSpecsLossCondPage	?OnCreate@TMapSpecsLossCondPage@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x72a34	tokens1:f845dbaa6c29
 MapSpecsLossCondPage	?OnDestroy@TMapSpecsLossCondPage@@IAEXXZ	100.0000	100.0000	100.0000	0x72ac3	tokens1:67d857d4e274
-MapSpecsLossCondPage	?OnInitDialog@TLoseHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@MAEHXZ	87.1592	87.1592	87.1592	0x71edc	tokens1:38c640686a85
-MapSpecsLossCondPage	?OnInitDialog@TLoseTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@MAEHXZ	83.3798	83.3798	83.3798	0x71c3e	tokens1:82bbc1d72874
+MapSpecsLossCondPage	?OnInitDialog@TLoseHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@MAEHXZ	87.1796	87.1796	87.1796	0x71edc	tokens1:38c640686a85
+MapSpecsLossCondPage	?OnInitDialog@TLoseTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@MAEHXZ	83.4186	83.4186	83.4186	0x71c3e	tokens1:82bbc1d72874
 MapSpecsLossCondPage	?OnInitDialog@TMapSpecsLossCondPage@@UAEHXZ	100.0000	100.0000	100.0000	0x72b13	tokens1:3071883661fb
 MapSpecsLossCondPage	?OnInitDialog@TTimeExpiresDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@MAEHXZ	100.0000	100.0000	100.0000	0x72324	tokens1:d040548d8fd9
 MapSpecsLossCondPage	?OnOK@TLoseHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@UAEXXZ	100.0000	100.0000	100.0000	0x721d3	tokens1:514f144024de
@@ -903,9 +903,9 @@ MapSpecsLossCondPage	?getLossCondition@TTimeExpiresDlg@?%C:\Dev\Heroes 3 Exp 2\E
 MapSpecsLossCondPage	?getTimeLimitEntryName@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@YAPBDI@Z	100.0000	100.0000	100.0000	0x7238b	tokens1:fcb7bb3246b0
 MapSpecsLossCondPage	?setLossCondition@TLoseTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@QAEXABVTLCLoseTown@@@Z	100.0000	100.0000	100.0000	0x71dce	tokens1:67d50f3c42c3
 MapSpecsLossCondPage	?setLossCondition@TTimeExpiresDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@QAEXABVTLCTimeExpires@@@Z	100.0000	100.0000	100.0000	0x7221f	tokens1:02181cb5ff1f
-MapSpecsLossCondPage	?visit@TMapSpecsLossCondPage@@EAEXABVTLCLoseHero@@@Z	99.5455	99.5455	99.5455	0x729e2	tokens1:7ee90db98d65
-MapSpecsLossCondPage	?visit@TMapSpecsLossCondPage@@EAEXABVTLCLoseTown@@@Z	99.5455	99.5455	99.5455	0x729bf	tokens1:56a34abee208
-MapSpecsLossCondPage	?visit@TMapSpecsLossCondPage@@EAEXABVTLCTimeExpires@@@Z	99.5455	99.5455	99.5455	0x72a08	tokens1:c5654e0e0eb7
+MapSpecsLossCondPage	?visit@TMapSpecsLossCondPage@@EAEXABVTLCLoseHero@@@Z	100.0000	100.0000	100.0000	0x729e2	tokens1:7ee90db98d65
+MapSpecsLossCondPage	?visit@TMapSpecsLossCondPage@@EAEXABVTLCLoseTown@@@Z	100.0000	100.0000	100.0000	0x729bf	tokens1:56a34abee208
+MapSpecsLossCondPage	?visit@TMapSpecsLossCondPage@@EAEXABVTLCTimeExpires@@@Z	100.0000	100.0000	100.0000	0x72a08	tokens1:c5654e0e0eb7
 MapSpecsPlayerSpecsPage	??0?$TArray@VTPlayerInfo@@$07@@QAE@XZ	100.0000	100.0000	100.0000	0x38f44	-
 MapSpecsPlayerSpecsPage	??0TMapSpecsPlayerSpecsPage@@QAE@PAVTParentSheet@0@ABVTGameMap@@AAV2@@Z	100.0000	100.0000	100.0000	0x72ffe	tokens1:0075dca6819b
 MapSpecsPlayerSpecsPage	??1?$TArray@VTPlayerInfo@@$07@@QAE@XZ	100.0000	100.0000	100.0000	0x744cb	-
@@ -936,7 +936,7 @@ MapSpecsPlayerSpecsPage	?OnTowerCheck@TMapSpecsPlayerSpecsPage@@IAEXXZ	100.0000	
 MapSpecsPlayerSpecsPage	?_enableCustomTownTypes@TMapSpecsPlayerSpecsPage@@AAEX_N@Z	100.0000	100.0000	100.0000	0x739a2	tokens1:09a0fd9c9682
 MapSpecsPlayerSpecsPage	?_onTownTypeCheck@TMapSpecsPlayerSpecsPage@@AAEXI@Z	100.0000	100.0000	100.0000	0x73905	tokens1:bc5451fcd2ee
 MapSpecsPlayerSpecsPage	?_retrievePlayerInfo@TMapSpecsPlayerSpecsPage@@AAEXXZ	99.7596	99.7596	99.7596	0x737d4	tokens1:155ba0406cbe
-MapSpecsPlayerSpecsPage	?_setPlayerInfo@TMapSpecsPlayerSpecsPage@@AAEXXZ	99.5770	99.5770	99.5770	0x732df	tokens1:fd612400e870
+MapSpecsPlayerSpecsPage	?_setPlayerInfo@TMapSpecsPlayerSpecsPage@@AAEXXZ	99.5910	99.5910	99.5910	0x732df	tokens1:fd612400e870
 MapSpecsPlayerSpecsPage	?copy@std@@YA?AV?$back_insert_iterator@V?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@@1@Vconst_iterator@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@1@0V21@@Z	100.0000	100.0000	100.0000	0x744d8	-
 MapSpecsPlayerSpecsPage	?equal@std@@YA_NPBVTPlayerInfo@@00@Z	100.0000	100.0000	100.0000	0x74739	-
 MapSpecsPlayerSpecsPage	?getBehaviorTypeName@@YAPBDW4TBehaviorType@TPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x72fb2	tokens1:251e1c6edeb6
@@ -1062,6 +1062,103 @@ MapSpecsTimedEventsPage	?getEvent@TEditTimedEventSheet@@QBE?AVTTimedEvent@@XZ	10
 MapSpecsTimedEventsPage	?getPlayerPresentMask@?A0xc20bcaa240b00cde@@YA?AV?$bitset@$07@std@@ABVTGameMap@@@Z	100.0000	100.0000	100.0000	0x78027	tokens1:60c88b6355f1
 MapSpecsTimedEventsPage	?push_back@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEXABVTTimedEvent@@@Z	100.0000	100.0000	100.0000	0x78c93	-
 MapSpecsTimedEventsPage	?swap@std@@YAXAAVTTimedEvent@@0@Z	100.0000	100.0000	100.0000	0x78cf8	-
+MapSpecsVictoryCondPage	??0TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x79703	tokens1:6bd37931eb91
+MapSpecsVictoryCondPage	??0TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@XZ	100.0000	100.0000	100.0000	0x7b9c4	-
+MapSpecsVictoryCondPage	??0TAquireArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x793f8	tokens1:75c35ccfd7d5
+MapSpecsVictoryCondPage	??0TBuildHolyGrailStructDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b6fc	-
+MapSpecsVictoryCondPage	??0TCaptureTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b85e	-
+MapSpecsVictoryCondPage	??0TDefeatHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b7ad	-
+MapSpecsVictoryCondPage	??0TDefeatMonsterDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b911	-
+MapSpecsVictoryCondPage	??0TMapSpecsVictoryCondPage@@QAE@ABVTGameMap@@AAV1@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@22@Z	100.0000	100.0000	100.0000	0x7b331	tokens1:1ba3d71fbae6
+MapSpecsVictoryCondPage	??0TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x7aee5	tokens1:58a113b8da6c
+MapSpecsVictoryCondPage	??0TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b649	-
+MapSpecsVictoryCondPage	??0TVictoryConditionDlg@@QAE@_N00@Z	100.0000	100.0000	100.0000	0x79231	tokens1:518110a1ed35
+MapSpecsVictoryCondPage	??0_TDialogs@TMapSpecsVictoryCondPage@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@11@Z	100.0000	100.0000	100.0000	0x7b50e	-
+MapSpecsVictoryCondPage	??1TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAE@XZ	100.0000	100.0000	100.0000	0x7979c	-
+MapSpecsVictoryCondPage	??1TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAE@XZ	100.0000	100.0000	100.0000	0x7ba39	-
+MapSpecsVictoryCondPage	??1TMapSpecsVictoryCondPage@@UAE@XZ	100.0000	100.0000	100.0000	0x7bae8	tokens1:414ee781fb00
+MapSpecsVictoryCondPage	??1TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAE@XZ	100.0000	100.0000	100.0000	0x7af7f	-
+MapSpecsVictoryCondPage	??1TVictoryConditionDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x79306	tokens1:59b7eaf07c25
+MapSpecsVictoryCondPage	??1_TDialogs@TMapSpecsVictoryCondPage@@QAE@XZ	100.0000	100.0000	100.0000	0x7bb54	-
+MapSpecsVictoryCondPage	??_ETMapSpecsVictoryCondPage@@WIM@AEPAXI@Z	97.5000	97.5000	97.5000	0x7c511	-
+MapSpecsVictoryCondPage	??_GTMapSpecsVictoryCondPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7bacc	-
+MapSpecsVictoryCondPage	??_GTVictoryConditionDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x792ea	-
+MapSpecsVictoryCondPage	?DoDataExchange@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x799dc	tokens1:eb96568cf309
+MapSpecsVictoryCondPage	?DoDataExchange@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x79dd4	tokens1:960b27ba777e
+MapSpecsVictoryCondPage	?DoDataExchange@TAquireArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x795a5	tokens1:de87ccca437e
+MapSpecsVictoryCondPage	?DoDataExchange@TCaptureTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7aa8b	tokens1:684edddf023b
+MapSpecsVictoryCondPage	?DoDataExchange@TDefeatHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7a6c4	tokens1:9a2d23ebf449
+MapSpecsVictoryCondPage	?DoDataExchange@TDefeatMonsterDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7abb5	tokens1:d7b7ffb4471e
+MapSpecsVictoryCondPage	?DoDataExchange@TMapSpecsVictoryCondPage@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7be7c	tokens1:d50e701c0402
+MapSpecsVictoryCondPage	?DoDataExchange@TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7b130	tokens1:9aafbfd301bf
+MapSpecsVictoryCondPage	?DoDataExchange@TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7a18c	tokens1:e28dcfac236d
+MapSpecsVictoryCondPage	?DoDataExchange@TVictoryConditionGeneralDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x790fa	tokens1:f34be1ec5e6c
+MapSpecsVictoryCondPage	?GetMessageMap@TMapSpecsVictoryCondPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x7be94	tokens1:365794788fd9
+MapSpecsVictoryCondPage	?GetMessageMap@TVictoryConditionDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x7922b	tokens1:e1d786a3d6f4
+MapSpecsVictoryCondPage	?OnCreate@TMapSpecsVictoryCondPage@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x7be9a	tokens1:0af7d368a0a2
+MapSpecsVictoryCondPage	?OnCreate@TVictoryConditionDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x79347	tokens1:8f288bed7c11
+MapSpecsVictoryCondPage	?OnDestroy@TMapSpecsVictoryCondPage@@IAEXXZ	100.0000	100.0000	100.0000	0x7c01e	tokens1:2de5d196137f
+MapSpecsVictoryCondPage	?OnDestroy@TVictoryConditionDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x79375	tokens1:58841be9d2bb
+MapSpecsVictoryCondPage	?OnInitDialog@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	99.9419	99.9419	99.9419	0x79a1c	tokens1:c01afbf8c507
+MapSpecsVictoryCondPage	?OnInitDialog@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x79e14	tokens1:91451a7166db
+MapSpecsVictoryCondPage	?OnInitDialog@TAquireArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x795ba	tokens1:eecd82b2fe21
+MapSpecsVictoryCondPage	?OnInitDialog@TBuildHolyGrailStructDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x7a4a2	tokens1:492ef7b26644
+MapSpecsVictoryCondPage	?OnInitDialog@TCaptureTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x7aaa0	tokens1:edcab5177272
+MapSpecsVictoryCondPage	?OnInitDialog@TDefeatHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	87.1796	87.1796	87.1796	0x7a6d9	tokens1:e218ce0ac9bb
+MapSpecsVictoryCondPage	?OnInitDialog@TDefeatMonsterDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x7abca	tokens1:20d7100e7f83
+MapSpecsVictoryCondPage	?OnInitDialog@TMapSpecsVictoryCondPage@@UAEHXZ	100.0000	100.0000	100.0000	0x7c116	tokens1:5d2fa6d777d1
+MapSpecsVictoryCondPage	?OnInitDialog@TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x7b15e	tokens1:2125ea1ef9c8
+MapSpecsVictoryCondPage	?OnInitDialog@TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x7a1cc	tokens1:4b73d37d73d9
+MapSpecsVictoryCondPage	?OnInitDialog@TVictoryConditionDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x79382	tokens1:b4a361016274
+MapSpecsVictoryCondPage	?OnInitDialog@TVictoryConditionGeneralDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEHXZ	100.0000	100.0000	100.0000	0x79131	tokens1:7f8b7a5b73af
+MapSpecsVictoryCondPage	?OnKillFocusQuantityEdit@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@IAEXXZ	100.0000	100.0000	100.0000	0x79bc5	tokens1:7a8753aa9e09
+MapSpecsVictoryCondPage	?OnKillFocusQuantityEdit@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@IAEXXZ	100.0000	100.0000	100.0000	0x79f9d	tokens1:b352b0ec11f4
+MapSpecsVictoryCondPage	?OnOK@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x79b0b	tokens1:7a593bd6d0f6
+MapSpecsVictoryCondPage	?OnOK@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x79ee9	tokens1:de93900c4cf0
+MapSpecsVictoryCondPage	?OnOK@TAquireArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x796c4	tokens1:49480f12588b
+MapSpecsVictoryCondPage	?OnOK@TBuildHolyGrailStructDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x7a546	tokens1:34b9849202ce
+MapSpecsVictoryCondPage	?OnOK@TMapSpecsVictoryCondPage@@UAEXXZ	99.8795	99.8795	99.8795	0x7c3b1	tokens1:dfed25f36029
+MapSpecsVictoryCondPage	?OnOK@TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x7b2c0	tokens1:8e83cdbff496
+MapSpecsVictoryCondPage	?OnOK@TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x7a30a	tokens1:fe6d88b33c39
+MapSpecsVictoryCondPage	?OnOK@TVictoryConditionDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x792cf	tokens1:3303b6f92403
+MapSpecsVictoryCondPage	?OnVictoryConditionRadio@TMapSpecsVictoryCondPage@@IAEXXZ	100.0000	100.0000	100.0000	0x7c4bb	tokens1:aa57a1fbf87e
+MapSpecsVictoryCondPage	?_setVictoryConditionType@TMapSpecsVictoryCondPage@@AAEXH@Z	100.0000	100.0000	100.0000	0x7bc8b	tokens1:143bfb7de5cd
+MapSpecsVictoryCondPage	?fillTownCombo@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@YAXABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@AAVCComboBox@@@Z	80.8020	80.8020	80.8020	0x78fac	tokens1:cbaf2a5f337e
+MapSpecsVictoryCondPage	?getDigits@?$TDigits@$0JIJGHP@@@SAIXZ	100.0000	100.0000	100.0000	0xbc34	-
+MapSpecsVictoryCondPage	?getVictoryCondition@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x79923	tokens1:2127f6931d43
+MapSpecsVictoryCondPage	?getVictoryCondition@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x79d1b	tokens1:f86d315ffa6d
+MapSpecsVictoryCondPage	?getVictoryCondition@TAquireArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x794fd	tokens1:b7c39e939032
+MapSpecsVictoryCondPage	?getVictoryCondition@TBuildHolyGrailStructDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7a3f7	tokens1:8f1a8d87104a
+MapSpecsVictoryCondPage	?getVictoryCondition@TCaptureTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7a9d0	tokens1:21ddf72e45a2
+MapSpecsVictoryCondPage	?getVictoryCondition@TDefeatHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7a618	tokens1:8ccdbfafd565
+MapSpecsVictoryCondPage	?getVictoryCondition@TDefeatMonsterDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7ab00	tokens1:b681f33ec6ce
+MapSpecsVictoryCondPage	?getVictoryCondition@TFlagAllCreatureGeneratorsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7ad9f	tokens1:283bccf55a4a
+MapSpecsVictoryCondPage	?getVictoryCondition@TFlagAllMinesDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7ae42	tokens1:b46492a283d3
+MapSpecsVictoryCondPage	?getVictoryCondition@TNullVictoryConditionDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7b634	-
+MapSpecsVictoryCondPage	?getVictoryCondition@TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7b070	tokens1:02981721ab1d
+MapSpecsVictoryCondPage	?getVictoryCondition@TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UBE?AV?$auto_ptr@VTVictoryCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x7a0c1	tokens1:40e7fad4c565
+MapSpecsVictoryCondPage	?isCreatureBefore@@YA_NW4TCreatureType@@0@Z	100.0000	100.0000	100.0000	0x797f2	tokens1:570760432b62
+MapSpecsVictoryCondPage	?setVictoryCondition@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVCAccumulateCreature@@@Z	100.0000	100.0000	100.0000	0x79872	tokens1:7e595dfbb06b
+MapSpecsVictoryCondPage	?setVictoryCondition@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVCAccumulateResource@@@Z	100.0000	100.0000	100.0000	0x79c73	tokens1:c06862b19df6
+MapSpecsVictoryCondPage	?setVictoryCondition@TAquireArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVCAquireArtifact@@@Z	100.0000	100.0000	100.0000	0x79498	tokens1:33c6c7ff04ed
+MapSpecsVictoryCondPage	?setVictoryCondition@TBuildHolyGrailStructDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVCBuildHolyGrailStruct@@@Z	100.0000	100.0000	100.0000	0x7a356	tokens1:a966805dfc3b
+MapSpecsVictoryCondPage	?setVictoryCondition@TDefeatHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVCDefeatHero@@@Z	100.0000	100.0000	100.0000	0x7a5b7	tokens1:36e4512e10a5
+MapSpecsVictoryCondPage	?setVictoryCondition@TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVCTransportArtifact@@@Z	100.0000	100.0000	100.0000	0x7afc6	tokens1:fee2a6077271
+MapSpecsVictoryCondPage	?setVictoryCondition@TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0x7a045	tokens1:b32b1d8f9e8a
+MapSpecsVictoryCondPage	?setVictoryCondition@TVictoryConditionGeneralDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@QAEXABVTVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x790de	tokens1:181258b3499c
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCAccumulateCreature@@@Z	100.0000	100.0000	100.0000	0x7bcf0	tokens1:f0c015e07fae
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCAccumulateResource@@@Z	100.0000	100.0000	100.0000	0x7bd16	tokens1:8f4ce8a2cfd8
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCAquireArtifact@@@Z	100.0000	100.0000	100.0000	0x7bccd	tokens1:8c709794dd6e
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCBuildHolyGrailStruct@@@Z	100.0000	100.0000	100.0000	0x7bd62	tokens1:01364b6bf04b
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCCaptureTown@@@Z	100.0000	100.0000	100.0000	0x7bdae	tokens1:a86e5e52c45c
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCDefeatHero@@@Z	100.0000	100.0000	100.0000	0x7bd88	tokens1:3e922e03a6b4
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCDefeatMonster@@@Z	100.0000	100.0000	100.0000	0x7bdd4	tokens1:cd7c7f25b15a
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCFlagAllCreatureGenerators@@@Z	100.0000	100.0000	100.0000	0x7bdfa	tokens1:c9637dde4e12
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCFlagAllMines@@@Z	100.0000	100.0000	100.0000	0x7be28	tokens1:2fb22547bea3
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCTransportArtifact@@@Z	100.0000	100.0000	100.0000	0x7be56	tokens1:8cac7e54dbb9
+MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0x7bd3c	tokens1:14b01746490c
+MapSpecsVictoryCondPage	BEGIN_MESSAGE_MAP_796fd	0.0000	0.0000	0.0000	0x796fd	tokens1:fe57a3908eb1
+MapSpecsVictoryCondPage	BEGIN_MESSAGE_MAP_79c6d	0.0000	0.0000	0.0000	0x79c6d	tokens1:8cef1e7104ba
 MemoryDC	??0?$TGDIObjectSelector@VCBitmap@@@@QAE@PAVCDC@@PAVCBitmap@@@Z	99.8148	99.8148	99.8148	0x51fdd	tokens1:1952c6fb6bad
 MemoryDC	??0TError@?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	99.2857	99.2857	99.2857	0x520ca	tokens1:760d3a8d42d7
 MemoryDC	??0TError@TMemoryDC@@QAE@XZ	99.2857	99.2857	99.2857	0x8701e	tokens1:1a9bc1fac8e7
