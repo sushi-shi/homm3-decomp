@@ -28,7 +28,7 @@
 #include "editor/Hero.h"
 #include "editor/MapObjectRef.h"
 #include "editor/Player.h"
-#include "editor/Point.h"
+#include "Point.h"
 #include "editor/RefCountingPtr.h"
 #include "editor/Uncopyable.h"
 

@@ -1,44 +1,58 @@
-// Point.h - two-dimensional points and extents (Loki h3maped).
-// Templates only; GameMap.cpp owns the TPoint<unsigned int>/<int> and
-// TExtent<unsigned int, unsigned int> instantiations. A TExtent is its
-// top-left point and its size: right() is left plus width, bottom() top
-// plus height, bottomRight() the sum of the two points. TTilePoint and
+// Point.h - two-dimensional points and extents, shared by the game's random
+// map generator and the editor (Loki h3maped's TPoint<T> and TExtent<,>).
+// Loki instantiates TPoint<int> (the neighbour offsets) and TPoint<unsigned
+// int> (map tiles); the game's retained bodies are the same instances:
+// TPoint<int>::operator+= at 0x4fa540, TPoint<unsigned int>'s converting
+// constructor from TPoint<int> at 0x4fa520, its coordinate constructor at
+// 0x5b76b0 and operator< <unsigned int, unsigned int> at 0x5b8ca0. A TExtent
+// is its top-left point and its size: right() is left plus width, bottom()
+// top plus height, bottomRight() the sum of the two points. TTilePoint and
 // TTileExtent are the map's names for the unsigned forms (__PRETTY_FUNCTION__
 // spells them "class TTilePoint"/"class TTileExtent"). The header's file
-// name and the members' names are not recorded.
-#ifndef HOMM3_EDITOR_POINT_H
-#define HOMM3_EDITOR_POINT_H
+// name and the members' names are not recorded; the game reads the
+// coordinates directly.
+#ifndef HOMM3_POINT_H
+#define HOMM3_POINT_H
+
+#include "va.h"
 
 template<class T>
 class TPoint {
 public:
     TPoint() {}
-    TPoint(const T& x, const T& y) : _m_x(x), _m_y(y) {}
+    // VA instance: TPoint<unsigned int>::TPoint(const unsigned int&, const unsigned int&)
+    VA(0x005B76B0, 0x18) // the terrain painter's retained body; ret 8
+    TPoint(const T& x, const T& y) : m_x(x), m_y(y) {}
+    // The terrain painter expands this conversion; the line walker's object
+    // keeps the retained instance.
     template<class U>
-    TPoint(const TPoint<U>& other) : _m_x(other.x()), _m_y(other.y()) {}
+    // VA instance: TPoint<unsigned int>::TPoint(const TPoint<int>&)
+    VA(0x004fa520, 0x16)
+    MAC_ADDRESS(0x2228a4, 0x14) // anchor-callee 0x4f9f77; thiscall, ret 4; MAC_ABSTRACTION_FROM(tokens1:0e00ed15f0a6,100.0000): aa93e92de's retail object split makes this conversion a header inline body that the terrain painter expands; CodeWarrior emits no out-of-line copy for the retained call.
+    TPoint(const TPoint<U>& other) : m_x(other.x()), m_y(other.y()) {}
 
-    T x() const { return _m_x; }
-    void x(const T& newX) { _m_x = newX; }
-    T y() const { return _m_y; }
-    void y(const T& newY) { _m_y = newY; }
+    T x() const { return m_x; }
+    void x(const T& newX) { m_x = newX; }
+    T y() const { return m_y; }
+    void y(const T& newY) { m_y = newY; }
 
+    // VA instance: TPoint<int>::operator+=
+    VA(0x004fa540, 0x21) // anchor-callers 0x4f9f00/0x4fa3c0; thiscall, ret 4
     TPoint& operator+=(const TPoint& other)
     {
-        _m_x += other._m_x;
-        _m_y += other._m_y;
+        m_x += other.m_x;
+        m_y += other.m_y;
         return *this;
     }
-
     TPoint& operator-=(const TPoint& other)
     {
-        _m_x -= other._m_x;
-        _m_y -= other._m_y;
+        m_x -= other.m_x;
+        m_y -= other.m_y;
         return *this;
     }
 
-private:
-    T _m_x;
-    T _m_y;
+    T m_x;
+    T m_y;
 };
 
 template<class T1, class T2>
@@ -57,7 +71,9 @@ inline const TPoint<T1> operator-(const TPoint<T1>& lhs, const TPoint<T2>& rhs)
 
 // Row-major order (y, then x): the order of TerrainPlacement.cpp's tile sets.
 template<class T1, class T2>
-inline bool operator<(const TPoint<T1>& lhs, const TPoint<T2>& rhs)
+// VA instance: bool operator< <unsigned int, unsigned int>(const TPoint<unsigned int>&, const TPoint<unsigned int>&)
+VA(0x005b8ca0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
+bool operator<(const TPoint<T1>& lhs, const TPoint<T2>& rhs)
 {
     return lhs.y() < rhs.y() || (lhs.y() == rhs.y() && lhs.x() < rhs.x());
 }
@@ -136,4 +152,4 @@ inline bool intersect(const TExtent<TCoord1, TDim1>& lhs, const TExtent<TCoord2,
 typedef TPoint<unsigned int> TTilePoint;
 typedef TExtent<unsigned int, unsigned int> TTileExtent;
 
-#endif  /* HOMM3_EDITOR_POINT_H */
+#endif  /* HOMM3_POINT_H */

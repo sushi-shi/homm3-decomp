@@ -35,7 +35,7 @@ enum ETileDirection {
     TILE_DIR_COUNT = 8
 };
 
-extern TPoint g_tileDirections[TILE_DIR_COUNT];
+extern TPoint<int> g_tileDirections[TILE_DIR_COUNT];
 
 void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
                                        unsigned char* neighbourExists);

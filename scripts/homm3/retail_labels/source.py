@@ -1819,19 +1819,23 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
     Clang hashes the namespace; VC6 embeds its first declaration's filename
     and a number. That declaration can be in the owning module's header.
     Keep the entire class/member/signature suffix and require one symbol in
-    the owning object's source module. A free less-than function template
-    over one primitive type has its own narrow VC6 spelling bridge below.
+    the owning object's source module. A member-template constructor or a
+    free less-than template over one or two primitive types has its own
+    narrow VC6 spelling bridge below.
     Other names remain exact matches.
     """
     if mangled in candidates:
         return mangled
-    # VC6 omits the function-template argument prefix on this free operator,
-    # while Clang keeps it. Confirm its primitive argument in the concrete
-    # class specialization and retain the complete calling/signature suffix.
-    comparison = re.fullmatch(r'\?\?\$\?M([CDEFGHIJK])@@(Y.+)', mangled)
-    if comparison and re.search(
-            r'\?\$[A-Za-z_]\w*@' + comparison.group(1) + r'@@', comparison.group(2)):
-        spelling = '??M@' + comparison.group(2)
+    # VC6 omits the function-template argument list from a member-template
+    # constructor or a free operator template (`??$?0H@` -> `??0`, `??$?MII@@`
+    # -> `??M@`), while Clang keeps it. Confirm each primitive argument in a
+    # concrete class specialization of the signature and retain the complete
+    # scope/calling/signature suffix.
+    template = re.fullmatch(r'\?\?\$\?([0-9M])([CDEFGHIJK]{1,2})@(.+)', mangled)
+    if template and all(re.search(
+            r'\?\$[A-Za-z_]\w*@' + argument + r'@@', template.group(3))
+            for argument in template.group(2)):
+        spelling = '??' + template.group(1) + template.group(3)
         if spelling in candidates:
             return spelling
     clang_anon = re.compile(r"@\?A0x[0-9A-Fa-f]+@")

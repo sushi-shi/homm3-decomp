@@ -14,6 +14,20 @@ class TemplatePointNamesTest(unittest.TestCase):
             self.assertIsNone(vc6_function_name(clang, [wrong], 'example'))
         self.assertIsNone(vc6_function_name(clang.replace('?MI@@', '?MH@@'), [vc6], 'example'))
 
+    def test_two_argument_less_template_bridge_checks_both_arguments(self):
+        clang = '??$?MII@@YI_NABV?$Point@I@@0@Z'
+        vc6 = '??M@YI_NABV?$Point@I@@0@Z'
+        self.assertEqual(vc6_function_name(clang, [vc6], 'example'), vc6)
+        self.assertIsNone(vc6_function_name(clang.replace('?MII@@', '?MIH@@'), [vc6], 'example'))
+        self.assertIsNone(vc6_function_name(clang.replace('?MII@@', '?MIII@@'), [vc6], 'example'))
+
+    def test_member_template_constructor_bridge_drops_argument_list(self):
+        clang = '??$?0H@?$Point@I@@QAE@ABV?$Point@H@@@Z'
+        vc6 = '??0?$Point@I@@QAE@ABV?$Point@H@@@Z'
+        self.assertEqual(vc6_function_name(clang, [vc6], 'example'), vc6)
+        self.assertIsNone(vc6_function_name(clang.replace('?0H@', '?0E@'), [vc6], 'example'))
+        self.assertIsNone(vc6_function_name(clang, [vc6.replace('QAE', 'QBE')], 'example'))
+
     def test_unsigned_and_signed_template_tree_owners_stay_distinct(self):
         for code, owner in [('I', 'point_unsigned_int'), ('H', 'point_int')]:
             tree = f'?$_Tree@U?$Point@{code}@@U1@U_Kfn@'

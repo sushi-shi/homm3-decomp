@@ -17,8 +17,8 @@
 
 #include <memory>
 
-template<class Coordinate> struct TRmgCoordinatePoint;
-typedef TRmgCoordinatePoint<unsigned int> TRmgGridPoint;
+#include "Point.h"
+
 struct TRmgTerrainTile;
 class TRmgTerrainPainter;
 
@@ -35,21 +35,21 @@ public:
     public:
         virtual ~TAbstractMap();
         virtual void setTile(
-            const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-        virtual void setFrame(const TRmgGridPoint& point, int value) = 0;
+            const TTilePoint& point, const TRmgTerrainTile& tile) = 0;
+        virtual void setFrame(const TTilePoint& point, int value) = 0;
         // Slot 3 returns its explicit output reference. The adapters consume
         // that returned reference, which distinguishes this from a hidden
         // value result: together the map and both adapter bodies reproduce
         // retail.
 #if defined(HOMM3_TARGET_MAC)
         // Mac slot 3 (0x22eb84) returns by value.
-        virtual TRmgGridPoint getSize() = 0;
+        virtual TTilePoint getSize() = 0;
 #else
-        virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
+        virtual TTilePoint& getSize(TTilePoint& output) = 0;
 #endif
-        virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-        virtual int getTerrain(const TRmgGridPoint& point) = 0;
-        virtual int getFrame(const TRmgGridPoint& point) = 0;
+        virtual TRmgTerrainTile getTile(const TTilePoint& point) = 0;
+        virtual int getTerrain(const TTilePoint& point) = 0;
+        virtual int getFrame(const TTilePoint& point) = 0;
     };
 
     std::auto_ptr<TRmgTerrainPainter> m_painter;

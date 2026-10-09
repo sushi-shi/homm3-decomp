@@ -19,7 +19,7 @@
 
 #include "gameversion.h"
 #include "objecttype.h"
-#include "editor/Point.h"
+#include "Point.h"
 
 class TRawIStream;
 class TRawOStream;

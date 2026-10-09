@@ -30,7 +30,7 @@ TRmgLinePatternTable* TRoadOp::getPatternTable(s32)
 }
 
 MAC_ADDRESS(0x253fc8, 0x54)
-void TRoadOp::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
+void TRoadOp::setTile(const TTilePoint& point, const TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot(tile.m_terrain, tile.m_frame);
     snapshot.m_flipX = tile.m_flipX;
@@ -39,7 +39,7 @@ void TRoadOp::setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile)
 }
 
 MAC_ADDRESS(0x25404c, 0x44)
-s32 TRoadOp::isBlocked(const TRmgGridPoint& point)
+s32 TRoadOp::isBlocked(const TTilePoint& point)
 {
     s32 terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
@@ -49,14 +49,14 @@ s32 TRoadOp::isBlocked(const TRmgGridPoint& point)
 
 VA(0x0055f330, 0x17)
 MAC_ADDRESS(0x25401c, 0x30)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-only
-void TRoadOp::setLineType(const TRmgGridPoint& point, s32 value)
+void TRoadOp::setLineType(const TTilePoint& point, s32 value)
 {
     m_adapter->setLineType(point, value);
 }
 
 VA(0x0055f350, 0x34)
 MAC_ADDRESS(0x254090, 0x88) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +0x10
-void TRoadOp::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
+void TRoadOp::getTile(const TTilePoint& point, TRmgTerrainTile& tile)
 {
     TRmgTerrainTile snapshot = m_adapter->getTile(point);
     tile = snapshot;
@@ -66,7 +66,7 @@ void TRoadOp::getTile(const TRmgGridPoint& point, TRmgTerrainTile& tile)
 // adapter getLineType forwarding shape in slot 5.
 VA(0x0055f390, 0x13)
 MAC_ADDRESS(0x254118, 0x30)  // Complete-only road painter
-s32 TRoadOp::getLineType(const TRmgGridPoint& point)
+s32 TRoadOp::getLineType(const TTilePoint& point)
 {
     return m_adapter->getLineType(point);
 }
@@ -79,7 +79,7 @@ MAC_ADDRESS(0x254148, 0x6c) // anchor-callee 0x548143; Complete-only, thiscall r
 TRoadPlacementOp::TRoadPlacementOp(
     TRoadOp::TAbstractMap* newAdapter,
     s32 newRoadType,
-    const TRmgGridPoint& newStart)
+    const TTilePoint& newStart)
     : TRoadOp(newAdapter),
       m_walker(this, newRoadType, newStart)
 {

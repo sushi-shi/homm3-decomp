@@ -168,7 +168,7 @@ void selectRmgLinePattern(
 // walker's first neighbour pass its retained compound add (78.03 against
 // 87.12%); the factory and rectangle clear are byte-identical either way.
 TRmgLinePainterTile::TRmgLinePainterTile(
-    TMapLineFilter* painter, const TRmgGridPoint& point)
+    TMapLineFilter* painter, const TTilePoint& point)
     : m_painter(painter), m_point(point)
 {
 }
@@ -205,7 +205,7 @@ void TRmgLinePainterTile::setLineType(s32 value)
 
 // The size is a grid point: the walker's one-cell rectangle then constructs
 // a unit size the way retail 0x4fa3c0 materializes it (see paintPoint).
-TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGridPoint& size)
+TRmgGridRectangle::TRmgGridRectangle(const TTilePoint& origin, const TTilePoint& size)
     : m_origin(origin), m_size(size)
 {
 }
@@ -243,7 +243,7 @@ s32 selectRmgLinePattern(
 
 VA(0x004f9f00, 0x146)
 MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
-void refreshRmgLinePoint(TMapLineFilter* painter, const TRmgGridPoint& point)
+void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
     s32 oldType = tile.getLineType();
@@ -273,7 +273,7 @@ void refreshRmgLinePoint(TMapLineFilter* painter, const TRmgGridPoint& point)
 }
 
 VA(0x004fa050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
-TRmgLinePainterTile TMapLineFilter::at(const TRmgGridPoint& point)
+TRmgLinePainterTile TMapLineFilter::at(const TTilePoint& point)
 {
     return TRmgLinePainterTile(this, point);
 }
@@ -294,9 +294,9 @@ TRmgLinePainterTile TMapLineFilter::at(const TRmgGridPoint& point)
 // by refresh and the walker. Restoring that outer boundary currently retains
 // extra grid conversion/addition calls in refresh and grid-constructor/proxy
 // calls in the walker (84.8077% / 78.8527%); its source calls need joint recovery.
-s32 TMapLineFilter::getNeighbourLineType(const TRmgGridPoint& point, u32 direction)
+s32 TMapLineFilter::getNeighbourLineType(const TTilePoint& point, u32 direction)
 {
-    TRmgGridPoint nearby = point + g_tileDirections[direction];
+    TTilePoint nearby = TPoint<int>(point) + g_tileDirections[direction];
     return at(nearby).getLineType();
 }
 
@@ -309,7 +309,7 @@ VA(0x004fa080, 0x1fb)
 MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
 void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle)
 {
-    TRmgGridPoint point;
+    TTilePoint point;
     for (point.m_y = rectangle.m_origin.m_y;
          point.m_y < rectangle.m_origin.m_y + rectangle.m_size.m_y; ++point.m_y) {
         for (point.m_x = rectangle.m_origin.m_x;
@@ -364,7 +364,7 @@ MAC_ADDRESS(0x222c40, 0x4c) // anchor-caller 0x55ee50/0x55f3b0; thiscall ret 0xc
 TRmgLineWalker::TRmgLineWalker(
     TMapLineFilter* newPainter,
     s32 newLineType,
-    const TRmgGridPoint& start)
+    const TTilePoint& start)
     : m_painter(newPainter), m_lineType(newLineType), m_position(start)
 {
     paintPoint(m_position);
@@ -372,7 +372,7 @@ TRmgLineWalker::TRmgLineWalker(
 
 VA(0x004fa2b0, 0x110)
 MAC_ADDRESS(0x222c8c, 0x190) // anchor-caller 0x548040 and createRiver; thiscall ret 4
-void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
+void TRmgLineWalker::drawTo(const TTilePoint& destination)
 {
     TRmgLineWalkAxis x(destination.m_x, m_position.m_x);
     TRmgLineWalkAxis y(destination.m_y, m_position.m_y);
@@ -388,30 +388,30 @@ void TRmgLineWalker::drawTo(const TRmgGridPoint& destination)
     u32 error = 0;
     u32 distance = major->m_distance;
     for (u32 index = 0; index < distance; ++index) {
-        paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+        paintPoint(TTilePoint(x.m_position, y.m_position));
         error += minor->m_distance;
         if (error >= major->m_distance) {
             error -= major->m_distance;
             minor->m_position += minor->m_step;
-            paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+            paintPoint(TTilePoint(x.m_position, y.m_position));
         }
         major->m_position += major->m_step;
     }
     if (error + minor->m_distance >= major->m_distance)
-        paintPoint(TRmgGridPoint(x.m_position, y.m_position));
+        paintPoint(TTilePoint(x.m_position, y.m_position));
     m_position = destination;
 }
 
 VA(0x004fa3c0, 0x156)
 MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
-void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
+void TRmgLineWalker::paintPoint(const TTilePoint& point)
 {
     TRmgLinePainterTile tile(m_painter, point);
     s32 oldType = tile.getLineType();
     if (oldType == m_lineType || tile.isBlocked())
         return;
     if (oldType)
-        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TRmgGridPoint(1, 1)));
+        clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TTilePoint(1, 1)));
     tile.setLineType(m_lineType);
     refreshRmgLinePoint(m_painter, point);
 
@@ -432,6 +432,6 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
     }
     for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
-            refreshRmgLinePoint(m_painter, point + g_tileDirections[direction]);
+            refreshRmgLinePoint(m_painter, TPoint<int>(point) + g_tileDirections[direction]);
     }
 }

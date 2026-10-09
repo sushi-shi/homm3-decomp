@@ -40,7 +40,7 @@ void TRmgHalfEdge::initialize()
 // Voronoi vertex calculations. Body assignments (cost 81) keep createEdge
 // exact; the initializer-list form costs 70 and loses it (90.96%).
 TRmgHalfEdge::TRmgHalfEdge(
-    TPoint sitePosition, TRmgZone* zone, TRmgHalfEdge* twin)
+    TRmgPoint sitePosition, TRmgZone* zone, TRmgHalfEdge* twin)
 {
     m_sitePosition = sitePosition;
     m_zone = zone;
@@ -51,7 +51,7 @@ TRmgHalfEdge::TRmgHalfEdge(
 VA(0x005fcef0, 0x6c)
 MAC_ADDRESS(0x25c07c, 0x98) // anchor-callee 0x5fd078; Complete-only, ret 0x18
 TRmgHalfEdge::TRmgHalfEdge(
-    TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
+    TRmgPoint sitePosition, TRmgZone* zone, TRmgPoint twinSitePosition, TRmgZone* twinZone)
     : m_zone(zone)
 {
     m_sitePosition = sitePosition;
@@ -92,10 +92,10 @@ VA(0x005fd010, 0x316)
 MAC_ADDRESS(0x25c4e4, 0x14c) // anchor-caller 0x53e050 and five createEdge expansions/calls
 TRmgVoronoi::TRmgVoronoi()
 {
-    TPoint first(-200, -200);
-    TPoint second(400, -200);
-    TPoint third(400, 400);
-    TPoint fourth(-200, 400);
+    TRmgPoint first(-200, -200);
+    TRmgPoint second(400, -200);
+    TRmgPoint third(400, 400);
+    TRmgPoint fourth(-200, 400);
     TRmgHalfEdge* firstEdge = createEdge(first, 0, second, 0);
     TRmgHalfEdge* secondEdge = createEdge(second, 0, third, 0);
     TRmgHalfEdge* thirdEdge = createEdge(third, 0, fourth, 0);
@@ -120,8 +120,8 @@ TRmgVoronoi::~TRmgVoronoi()
 
 VA(0x005fd390, 0x21c)
 MAC_ADDRESS(0x25c758, 0x170) // anchor-callers 0x5fd010/0x5fd790; Complete-only, ret 0x18
-TRmgHalfEdge* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
-    TPoint second, TRmgZone* secondZone)
+TRmgHalfEdge* TRmgVoronoi::createEdge(TRmgPoint first, TRmgZone* firstZone,
+    TRmgPoint second, TRmgZone* secondZone)
 {
     TRmgHalfEdge* edge = new TRmgHalfEdge(first, firstZone, second, secondZone);
     m_edges.push_back(edge);
@@ -170,7 +170,7 @@ void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
 // docs/reference/rmg-voronoi-provenance.md records the adaptation evidence and its
 // limits; this resemblance does not establish an original name/declaration.
 // Graphics Gems IV delaunay/quadedge.C's RightOf(x, e) is ccw(x, Dest, Org)
-// over TriArea; Complete uses integer by-value TPoint and the canonical
+// over TriArea; Complete uses integer by-value TRmgPoint and the canonical
 // orientation below in the same cyclic order. The ccw layer is ordinary:
 // addSite expands RightOf with a nested budget of 54, expands ccw (cost 31)
 // and refuses the orientation call as retail does at 0x5fdfa7; locate's
@@ -178,12 +178,12 @@ void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
 // no spilled endpoint; the named twin restores all 215 bytes. Flattening
 // the call boundary returns 91.0460%.
 MAC_ADDRESS(0x25c304, 0x68)
-static s32 isRmgCounterClockwise(TPoint first, TPoint second, TPoint third)
+static s32 isRmgCounterClockwise(TRmgPoint first, TRmgPoint second, TRmgPoint third)
 {
     return getRmgPointOrientation(first, second, third) > 0;
 }
 
-static s32 isRmgPointRightOfEdge(TPoint point, TRmgHalfEdge* edge)
+static s32 isRmgPointRightOfEdge(TRmgPoint point, TRmgHalfEdge* edge)
 {
     TRmgHalfEdge* twin = edge->m_twin;
     return isRmgCounterClockwise(edge->m_sitePosition, point, twin->m_sitePosition);
@@ -191,17 +191,17 @@ static s32 isRmgPointRightOfEdge(TPoint point, TRmgHalfEdge* edge)
 
 VA(0x005fd6b0, 0xd7)
 MAC_ADDRESS(0x25c9c8, 0x124) // anchor-callers 0x53dad0/0x53e050/0x5fd790; ret 8
-TRmgHalfEdge* TRmgVoronoi::locate(TPoint point)
+TRmgHalfEdge* TRmgVoronoi::locate(TRmgPoint point)
 {
     TRmgHalfEdge* edge = m_startingEdge;
     for (;;) {
         {
-            TPoint origin = edge->m_sitePosition;
+            TRmgPoint origin = edge->m_sitePosition;
             if (point == origin)
                 break;
         }
         {
-            TPoint destination = edge->m_twin->m_sitePosition;
+            TRmgPoint destination = edge->m_twin->m_sitePosition;
             if (point == destination) {
                 edge = edge->m_twin;
                 break;
@@ -255,17 +255,17 @@ static void flipRmgEdge(TRmgHalfEdge* edge)
 // 91.1250%. The line origin is bound by reference to the site field, the
 // way the flip helper reads it: retail loads org.x once into ecx and spills
 // dx/dy to [ebp-8]/[ebp-0xc] for the four products, which only this binding
-// reproduces; a by-value TPoint copy through the accessor re-reads the
+// reproduces; a by-value TRmgPoint copy through the accessor re-reads the
 // field and keeps dx in a register (addSite 90.3482% with the rest exact).
-static b8 isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
+static b8 isRmgPointOnSegment(TRmgPoint point, TRmgHalfEdge* edge)
 {
-    TPoint opposite = edge->getOppositeSitePosition();
+    TRmgPoint opposite = edge->getOppositeSitePosition();
     s32 firstDistance = getRmgSquaredDistance(point, edge->getSitePosition());
     s32 secondDistance = getRmgSquaredDistance(point, opposite);
     s32 edgeDistance = getRmgSquaredDistance(edge->getSitePosition(), opposite);
     if (firstDistance > edgeDistance || secondDistance > edgeDistance)
         return 0;
-    const TPoint& origin = edge->m_sitePosition;
+    const TRmgPoint& origin = edge->m_sitePosition;
     s32 dx = opposite.m_x - origin.m_x;
     s32 dy = opposite.m_y - origin.m_y;
     s32 c = -(dy * origin.m_x - dx * origin.m_y);
@@ -280,8 +280,8 @@ static b8 isRmgPointOnSegment(TPoint point, TRmgHalfEdge* edge)
 // unchanged 45.4167% caller score; none recovers the missing orientation
 // calls. Preserve the actual by-value point and signed-product boundaries.
 MAC_ADDRESS(0x25cb80, 0x1c4)
-static b8 isRmgPointInsideCircle(TPoint first, TPoint second,
-    TPoint third, TPoint point)
+static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
+    TRmgPoint third, TRmgPoint point)
 {
     s32 firstArea = getRmgPointOrientation(second, third, point);
     s32 secondArea = getRmgPointOrientation(first, third, point);
@@ -296,16 +296,16 @@ static b8 isRmgPointInsideCircle(TPoint first, TPoint second,
 
 VA(0x005fd790, 0x348)
 MAC_ADDRESS(0x25cd44, 0x218) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
-void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
+void TRmgVoronoi::addSite(TRmgPoint point, TRmgZone* zone)
 {
     TRmgHalfEdge* edge = locate(point);
     {
-        TPoint origin = edge->getSitePosition();
+        TRmgPoint origin = edge->getSitePosition();
         if (point == origin)
             return;
     }
     {
-        TPoint destination = edge->getOppositeSitePosition();
+        TRmgPoint destination = edge->getOppositeSitePosition();
         if (point == destination)
             return;
     }
@@ -339,7 +339,7 @@ void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
 
 VA(0x005fdae0, 0x2b)
 MAC_ADDRESS(0x25c2b4, 0x50) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
-s32 getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
+s32 getRmgPointOrientation(TRmgPoint first, TRmgPoint second, TRmgPoint third)
 {
     return (second.m_x - first.m_x) * (third.m_y - first.m_y)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
@@ -375,7 +375,7 @@ VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, TRmgHalfEdge)
 // bisector of the origin-to-second side, scaled by the projected sides.
 // Materialize the opposite site at the caller. This by-value parameter order
 // reproduces retail's 0x78 frame and its origin/third-site stack slots.
-static TPoint computeRmgCircumcenter(TPoint third, TPoint origin, TPoint second)
+static TRmgPoint computeRmgCircumcenter(TRmgPoint third, TRmgPoint origin, TRmgPoint second)
 {
     TRmgVector axis = second - origin;
     TRmgVector perpendicular(-axis.m_y, axis.m_x);
@@ -411,8 +411,8 @@ void TRmgVoronoi::buildVertices()
     for (unsigned int index = 0; index < m_edges.size(); ++index) {
         TRmgHalfEdge* edge = m_edges[index];
         if (edge->getZone() && !edge->isPositionComputed()) {
-            TPoint second = edge->getOppositeSitePosition();
-            TPoint position = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),
+            TRmgPoint second = edge->getOppositeSitePosition();
+            TRmgPoint position = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),
                 edge->getSitePosition(), second);
             edge->setPosition(position);
             edge = edge->getNext()->getTwin();
