@@ -1241,8 +1241,8 @@ customcampaign	?_Ufill@?$vector@UTCampaignHeroChoice@@V?$allocator@UTCampaignHer
 customcampaign	?_Ufill@?$vector@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@V?$allocator@V?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d910	-
 customcampaign	?_Ufill@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0x8d8a0	-
 customcampaign	?_Ufill@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEXPAVhero@@IABV3@@Z	100.0000	100.0000	100.0000	0x8d970	-
-customcampaign	?_Unguarded_insert@std@@YIXPAVhero@@V2@UCrossoverHeroStronger@@@Z	99.8851	99.8851	100.0000	0x8f940	-
-customcampaign	?_Unguarded_partition@std@@YIPAVhero@@PAV2@0V2@UCrossoverHeroStronger@@@Z	99.9275	99.9275	100.0000	0x8fc20	-
+customcampaign	?_Unguarded_insert@std@@YIXPAVhero@@V2@UCrossoverHeroStronger@@@Z	100.0000	100.0000	100.0000	0x8f940	-
+customcampaign	?_Unguarded_partition@std@@YIPAVhero@@PAV2@0V2@UCrossoverHeroStronger@@@Z	100.0000	100.0000	100.0000	0x8fc20	-
 customcampaign	?_Xran@?$bitset@$07@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8da70	-
 customcampaign	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8d9a0	-
 customcampaign	?apply@TCampaignArtifactBonus@@UBEXH@Z	100.0000	100.0000	100.0000	0x84860	tokens1:ca65bc35a00b
@@ -1280,7 +1280,7 @@ customcampaign	?fill@std@@YIXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@1@0AB
 customcampaign	?fill@std@@YIXPAVhero@@0ABV2@@Z	100.0000	100.0000	100.0000	0x8e850	-
 customcampaign	?freeData@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x887e0	tokens1:f88a470af5cf
 customcampaign	?getAvailableScenarios@CampaignHeaderStruct@TCampaignBrief@@QBEXPAE@Z	100.0000	100.0000	100.0000	0x88f00	tokens1:46236d797707
-customcampaign	?getCampaignBonusHero@@YIPAVhero@@HH@Z	98.3704	98.3704	100.0000	0x840d0	tokens1:c88378423d81
+customcampaign	?getCampaignBonusHero@@YIPAVhero@@HH@Z	100.0000	100.0000	100.0000	0x840d0	tokens1:c88378423d81
 customcampaign	?getCount@TCampaignStartBonusOption@@UBEHXZ	100.0000	100.0000	100.0000	0x85160	tokens1:63d20d8dbbcc
 customcampaign	?getCount@TCampaignStartCrossoverOption@@UBEHXZ	100.0000	100.0000	100.0000	0x854a0	tokens1:8e8609b42100
 customcampaign	?getCount@TCampaignStartHeroOption@@UBEHXZ	100.0000	100.0000	100.0000	0x85a40	tokens1:bf230e5a5aca
@@ -1322,7 +1322,7 @@ customcampaign	?getText@TCampaignStartHeroOption@@UBE?AV?$basic_string@DU?$char_
 customcampaign	?getTotalTime@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b280	tokens1:8630de09c95d
 customcampaign	?getloc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAE?AVlocale@2@XZ	100.0000	100.0000	100.0000	0x8d820	-
 customcampaign	?giveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x87900	tokens1:97fd08843736
-customcampaign	?heroPower@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x83f50	tokens1:5a07967a5987
+customcampaign	?heroPower@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x83f50	tokens1:0de3bfd6f080
 customcampaign	?initializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	100.0000	100.0000	100.0000	0x86590	tokens1:6effb2f65a5e
 customcampaign	?insert@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@QAEXPAUCampaignScenarioInfo@@IABU3@@Z	100.0000	100.0000	100.0000	0x8cae0	-
 customcampaign	?insert@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEXPAUtype_artifact@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d330	-
@@ -4391,7 +4391,7 @@ textwdgt	?zBufferDraw@textWidget@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x1bc7e0
 tiles	?buildTileNeighbourMask@@YIXHHHHPAE@Z	100.0000	100.0000	100.0000	0x1bc910	tokens1:ad8ac122ec1a
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80	tokens1:578399898ae6
 town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0	tokens1:86dcd3989769
-town	?buildBuilding@town@@QAE?AW4type_building_id@@H_N0@Z	99.5794	99.5794	99.5794	0x1bede0	tokens1:1797b2b021cc
+town	?buildBuilding@town@@QAE?AW4type_building_id@@H_N0@Z	99.5794	99.5794	99.5794	0x1bede0	tokens1:7533c718334f
 town	?buyBuilding@town@@QAE_NW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0	tokens1:e52770832994
 town	?calcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0	tokens1:78e51c358e7d
 town	?canBuild@town@@QBE_NF@Z	100.0000	100.0000	100.0000	0x1c0d20	tokens1:b03fad77485c
