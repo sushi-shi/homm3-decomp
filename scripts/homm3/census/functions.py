@@ -17,6 +17,9 @@ strength, each later seed admitted only outside the bodies already decoded:
   5. the first non-padding byte after a body's decoded extent (unreferenced
      neighbours), repeated to a fixpoint.
 
+A data or immediate seed that the final descent places inside another
+function's instruction is dropped again.
+
 Extents partition .text: a function runs to the next start minus trailing
 NOP/INT3 padding, and always covers its decoded instructions, jump tables
 and byte index tables.
@@ -431,6 +434,22 @@ def run(image, log=print):
         res = c.descend(s)
         if res is not None:
             c.reached[s] = res[0] | c.extra.get(s, set())
+    # a weak seed (a code-looking data or immediate value) that the final
+    # descent puts inside another function's instruction is no start: the
+    # owner's earlier, shorter descent had left those bytes uncovered
+    inner = {}
+    for s0, seen in c.reached.items():
+        for r in seen:
+            for b in range(r + 1, r + c.insn(r).size):
+                inner[b] = s0
+    for s in sorted(c.starts):
+        why = c.starts[s]
+        if inner.get(s, s) != s and (why == "imm" or why.startswith("data@")):
+            del c.starts[s]
+            c.reached.pop(s, None)
+            c.calls.pop(s, None)
+            for t in [t for t, (owner, _n, _k) in c.tables.items() if owner == s]:
+                del c.tables[t]
     log(f"[census] {len(c.starts)} starts, {rounds} gap rounds, {len(c.tables)} tables, "
         f"{len(c.continuations)} catch continuations")
     return c

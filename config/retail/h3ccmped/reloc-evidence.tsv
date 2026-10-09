@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-08
+# date: 2026-10-09
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 site_rva	value	channel	detail	target_class	ctx	disposition
 0x1023	0x4801c8	code	push	code-interior	-	kept
@@ -25291,7 +25291,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc4b38	0x491fc0	data	.data	literal-start	-	kept
 0xc4b3c	0x4c4542	data	.data	data	-	kept
 0xc4b5c	0x491fb8	data	.data	literal-interior	-	kept
-0xc4b60	0x414544	data	.data	code-start	-	kept
+0xc4b60	0x414544	data	.data	code-interior	-	dropped
 0xc4b64	0x491fb0	data	.data	literal-interior	-	kept
 0xc4b88	0x491fa8	data	.data	literal-start	-	kept
 0xc4b8c	0x414e45	data	.data	code-start	-	kept
@@ -25319,7 +25319,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc4c94	0x4c5246	data	.data	data	-	kept
 0xc4c98	0x491f4c	data	.data	literal-start	-	kept
 0xc4cbc	0x491fd0	data	.data	literal-start	-	kept
-0xc4cc0	0x415345	data	.data	code-start	-	kept
+0xc4cc0	0x415345	data	.data	code-interior	-	dropped
 0xc4cc4	0x491f44	data	.data	literal-start	-	kept
 0xc4cc8	0x4e4150	data	.data	data	-	kept
 0xc4ce8	0x491fa8	data	.data	literal-start	-	kept
@@ -25450,7 +25450,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc504c	0x4c5246	data	.data	data	-	kept
 0xc5050	0x492378	data	.data	literal-interior	-	kept
 0xc5058	0x492368	data	.data	literal-interior	-	kept
-0xc505c	0x414544	data	.data	code-start	-	kept
+0xc505c	0x414544	data	.data	code-interior	-	dropped
 0xc5060	0x492354	data	.data	literal-start	-	kept
 0xc5064	0x434544	data	.data	code-interior	-	dropped
 0xc5068	0x492340	data	.data	literal-start	-	kept
@@ -25493,7 +25493,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xc5108	0x4921cc	data	.data	literal-start	-	kept
 0xc510c	0x495345	data	.data	data	-	kept
 0xc5110	0x4921bc	data	.data	literal-start	-	kept
-0xc5114	0x415345	data	.data	code-start	-	kept
+0xc5114	0x415345	data	.data	code-interior	-	dropped
 0xc5118	0x4921a8	data	.data	literal-start	-	kept
 0xc5120	0x492198	data	.data	literal-interior	-	kept
 0xc5124	0x525345	data	.data	data	-	kept

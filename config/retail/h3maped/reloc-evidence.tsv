@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-08
+# date: 2026-10-09
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 site_rva	value	channel	detail	target_class	ctx	disposition
 0x1026	0x5982f4	code	mov	data	-	kept
@@ -22126,7 +22126,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x10c9c3	0x52f688	code	call	data	-	kept
 0x10ca03	0x52d1cf	code	mov	code-interior	-	kept
 0x10ca16	0x547ee4	code	mov	data	-	kept
-0x10ca7b	0x40ffff	code	and	code-start	-	kept
+0x10ca7b	0x40ffff	code	and	code-interior	-	kept
 0x10ca8f	0x52f688	code	call	data	-	kept
 0x10caa7	0x546270	code	push	literal-start	-	kept
 0x10cb3b	0x52f620	code	call	data	-	kept
@@ -23046,7 +23046,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x118976	0x547a1c	code	mov	data	-	kept
 0x1189d3	0x52d148	code	mov	code-interior	-	kept
 0x1189e5	0x547a1c	code	mov	data	-	kept
-0x118a86	0x40ffff	code	and	code-start	-	kept
+0x118a86	0x40ffff	code	and	code-interior	-	kept
 0x118ab5	0x52f688	code	call	data	-	kept
 0x118ad7	0x546948	code	push	literal-start	-	kept
 0x118b56	0x52f4f0	code	call	data	-	kept
@@ -23063,7 +23063,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x118ec5	0x5a88fc	code	cmp	data	-	kept
 0x118f07	0x52d15c	code	mov	code-interior	-	kept
 0x118f19	0x547c54	code	mov	data	-	kept
-0x118f6d	0x40ffff	code	and	code-start	-	kept
+0x118f6d	0x40ffff	code	and	code-interior	-	kept
 0x118f9d	0x52f688	code	call	data	-	kept
 0x118fb8	0x546a14	code	push	literal-start	-	kept
 0x118fc9	0x5a88fc	code	cmp	data	-	kept
@@ -58389,7 +58389,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x185738	0x54b964	data	.data	data	-	kept
 0x185760	0x54b964	data	.data	data	-	kept
 0x185780	0x54b964	data	.data	data	-	kept
-0x185788	0x4e5f2e	data	.data	code-start	-	kept
+0x185788	0x4e5f2e	data	.data	code-interior	-	dropped
 0x185790	0x54b964	data	.data	data	-	kept
 0x1857b8	0x54b964	data	.data	data	-	kept
 0x1857d4	0x59e6a0	data	.data	data	-	kept
@@ -59555,7 +59555,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x19750c	0x54c280	data	.data	literal-start	-	kept
 0x197510	0x4c5345	data	.data	code-interior	-	dropped
 0x197514	0x54c194	data	.data	literal-interior	-	kept
-0x197518	0x4c4843	data	.data	code-start	-	kept
+0x197518	0x4c4843	data	.data	code-interior	-	dropped
 0x197538	0x54c280	data	.data	literal-start	-	kept
 0x19753c	0x595345	data	.data	data	-	kept
 0x197540	0x54c18c	data	.data	literal-start	-	kept
@@ -59619,7 +59619,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x197668	0x54c7c0	data	.data	literal-interior	-	kept
 0x19766c	0x414e45	data	.data	code-interior	-	dropped
 0x197670	0x54c7b8	data	.data	literal-start	-	kept
-0x197674	0x424c4e	data	.data	code-start	-	kept
+0x197674	0x424c4e	data	.data	code-interior	-	dropped
 0x197678	0x54c7ac	data	.data	literal-start	-	kept
 0x19767c	0x434e45	data	.data	code-interior	-	dropped
 0x197680	0x54c7a8	data	.data	data	-	kept
@@ -59637,7 +59637,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x1976b0	0x54c74c	data	.data	literal-start	-	kept
 0x1976b4	0x544843	data	.data	data	-	kept
 0x1976b8	0x54c73c	data	.data	literal-start	-	kept
-0x1976bc	0x424c4e	data	.data	code-start	-	kept
+0x1976bc	0x424c4e	data	.data	code-interior	-	dropped
 0x1976c0	0x54c728	data	.data	literal-interior	-	kept
 0x1976c4	0x554e45	data	.data	data	-	kept
 0x1976c8	0x54c71c	data	.data	literal-start	-	kept

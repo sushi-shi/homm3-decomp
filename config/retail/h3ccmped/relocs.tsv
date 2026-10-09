@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-08
+# date: 2026-10-09
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 site_rva	kind
 0x1023	dir32
@@ -25269,7 +25269,6 @@ site_rva	kind
 0xc4b38	dir32
 0xc4b3c	dir32
 0xc4b5c	dir32
-0xc4b60	dir32
 0xc4b64	dir32
 0xc4b88	dir32
 0xc4b8c	dir32
@@ -25294,7 +25293,6 @@ site_rva	kind
 0xc4c94	dir32
 0xc4c98	dir32
 0xc4cbc	dir32
-0xc4cc0	dir32
 0xc4cc4	dir32
 0xc4cc8	dir32
 0xc4ce8	dir32
@@ -25408,7 +25406,6 @@ site_rva	kind
 0xc504c	dir32
 0xc5050	dir32
 0xc5058	dir32
-0xc505c	dir32
 0xc5060	dir32
 0xc5068	dir32
 0xc506c	dir32
@@ -25442,7 +25439,6 @@ site_rva	kind
 0xc5108	dir32
 0xc510c	dir32
 0xc5110	dir32
-0xc5114	dir32
 0xc5118	dir32
 0xc5120	dir32
 0xc5124	dir32
