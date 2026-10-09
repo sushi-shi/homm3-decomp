@@ -10,6 +10,8 @@
 
 #include <streambuf>
 
+class CFile;
+
 class TMFCFileBuf : public std::streambuf {
 public:
     explicit TMFCFileBuf(CFile* pFile);

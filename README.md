@@ -85,30 +85,30 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3ccmped-match-score:start -->
 
-**GOG Complete campaign editor `h3ccmped.exe`: 37.09% matched (MAX)** — 443 / 2,328 functions exact (19.0%), weighted by size over 297,270 bytes of code.
+**GOG Complete campaign editor `h3ccmped.exe`: 37.26% matched (MAX)** — 443 / 2,326 functions exact (19.0%), weighted by size over 297,555 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |             440 |   37.06% | last measured score                            |
-| MAX   |             443 |   37.09% | best result for each function's current source |
-| HIST  |             443 |   37.09% | all-time peak across source revisions          |
+| CUR   |             440 |   37.23% | last measured score                            |
+| MAX   |             443 |   37.26% | best result for each function's current source |
+| HIST  |             443 |   37.26% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `game`        |    23 |   369 / 496 (74.4%) |    92.27% |
+| `game`        |    23 |   369 / 496 (74.4%) |    92.67% |
 | `zlib-1.1.3`  |    12 |     43 / 56 (76.8%) |    99.97% |
 | `codec`       |     3 |     17 / 29 (58.6%) |    88.61% |
 | `victor`      |     6 |     14 / 17 (82.4%) |    99.98% |
-| `(unmatched)` |     — |    0 / 1,730 (0.0%) |      0.0% |
+| `(unmatched)` |     — |    0 / 1,728 (0.0%) |      0.0% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 
 | Category              | Functions | Verified | Code (B) | Status                                   | How verified                                                                                          |
 | :-------------------- | --------: | -------: | -------: | :--------------------------------------- | :---------------------------------------------------------------------------------------------------- |
 | `CRT/C++ runtime`     |     1,723 |        — |  203,926 | excluded                                 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv)                                    |
-| `EH unwind funclets`  |     1,638 |        0 |   17,856 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section) |
+| `EH unwind funclets`  |     1,636 |        0 |   17,571 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section) |
 | `init/cleanup thunks` |       354 |        4 |    3,977 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
 | `import thunks`       |        13 |        0 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
 

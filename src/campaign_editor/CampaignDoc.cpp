@@ -94,7 +94,7 @@ struct TScenarioRecord {
     void write(TRawOStream& oStream, int version) const;
 
     string m_mapFileName;
-    long m_mapSize;
+    unsigned int m_mapSize;
     vector<bool> m_prerequisites;
     int m_regionColor;
     int m_difficulty;
@@ -361,17 +361,18 @@ void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsStartingHero& o
 VA(0x00411ee0, 0x518)
 auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int version)
 {
-    auto_ptr<TScenarioStartingOptions> pOptions;
     signed char type;
     iStream >> type;
-    if (type == eOptionsNone)
-        return pOptions;
+    auto_ptr<TScenarioStartingOptions> pOptions;
     switch (type) {
+    case eOptionsNone:
+        return pOptions;
     case eOptionsBonus: {
         signed char player;
         iStream >> player;
-        signed char numBonuses;
-        iStream >> numBonuses;
+        signed char bonusCount;
+        iStream >> bonusCount;
+        unsigned int numBonuses = bonusCount;
         vector<auto_ptr<TScenarioStartingBonus> > bonuses;
         bonuses.reserve(numBonuses);
         for (unsigned int i = 0; i < numBonuses; i++)
@@ -380,8 +381,9 @@ auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int
         break;
     }
     case eOptionsCrossoverScenario: {
-        signed char numChoices;
-        iStream >> numChoices;
+        signed char choiceCount;
+        iStream >> choiceCount;
+        unsigned int numChoices = choiceCount;
         vector<TScenarioOptionsCrossoverScenario::TChoice> choices;
         choices.reserve(numChoices);
         for (unsigned int i = 0; i < numChoices; i++) {
@@ -398,8 +400,9 @@ auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int
         break;
     }
     default: {
-        signed char numChoices;
-        iStream >> numChoices;
+        signed char choiceCount;
+        iStream >> choiceCount;
+        unsigned int numChoices = choiceCount;
         vector<TScenarioOptionsStartingHero::TChoice> choices;
         choices.reserve(numChoices);
         for (unsigned int i = 0; i < numChoices; i++) {
@@ -425,7 +428,9 @@ VA(0x00412400, 0x5e3)
 void TScenarioRecord::read(TRawIStream& iStream, int version)
 {
     iStream >> m_mapFileName;
-    iStream >> m_mapSize;
+    long mapSize;
+    iStream >> mapSize;
+    m_mapSize = mapSize;
     vector<unsigned char> prerequisiteBytes((m_prerequisites.size() + 7) / 8, 0);
     for (vector<unsigned char>::iterator it = prerequisiteBytes.begin(); it != prerequisiteBytes.end(); ++it)
         iStream >> *it;
@@ -476,7 +481,7 @@ VA(0x004129f0, 0x2b0)
 void TScenarioRecord::write(TRawOStream& oStream, int version) const
 {
     oStream << m_mapFileName;
-    oStream << m_mapSize;
+    oStream << static_cast<long>(m_mapSize);
     vector<unsigned char> prerequisiteBytes((m_prerequisites.size() + 7) / 8, 0);
     if (m_mapFileName.length() != 0) {
         for (unsigned int i = 0; i < m_prerequisites.size(); i++) {
@@ -490,16 +495,16 @@ void TScenarioRecord::write(TRawOStream& oStream, int version) const
     oStream << static_cast<ubyte>(m_difficulty);
     oStream << m_regionDesc;
     if (m_pPrologue.get() != NULL) {
-        oStream << static_cast<ubyte>(true);
+        oStream << true;
         oStream << *m_pPrologue;
     } else {
-        oStream << static_cast<ubyte>(false);
+        oStream << false;
     }
     if (m_pEpilogue.get() != NULL) {
-        oStream << static_cast<ubyte>(true);
+        oStream << true;
         oStream << *m_pEpilogue;
     } else {
-        oStream << static_cast<ubyte>(false);
+        oStream << false;
     }
     m_crossover.write(oStream, version);
     optionsWriter.write(m_pStartingOptions.get(), oStream, version);
@@ -870,7 +875,7 @@ void TCampaignDoc::OnRefreshScenarioMaps()
     }
 }
 
-VA(0x00414d90, 0xb5)
+VA(0x00414d90, 0x1d9)
 void TCampaignDoc::OnExportScenarioMaps()
 {
     CWaitCursor wait;
