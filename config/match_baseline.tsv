@@ -3851,7 +3851,7 @@ seerhut	?setDefaultText@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	10
 seerhut	?setDefaultText@type_creature_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1713c0	tokens1:76f3c6a12511
 seerhut	?setDefaultText@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16e6f0	tokens1:69d071c5be8d
 seerhut	?setDefaultText@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d720	tokens1:6b422ef110ff
-seerhut	?setDefaultText@type_monster_quest@@UAEXXZ	95.5259	95.5259	98.3426	0x16ef20	tokens1:973c8a8c0f63
+seerhut	?setDefaultText@type_monster_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16ef20	tokens1:ca945e73a78b
 seerhut	?setDefaultText@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171cc0	tokens1:60fae930fd14
 seerhut	?setDefaultText@type_skill_quest@@UAEXXZ	49.3134	49.3134	100.0000	0x16e0d0	tokens1:40c42f7c29eb
 seerhut	?skillRequirementText@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0	tokens1:5b8af0039033
