@@ -45,7 +45,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- mac-match-score:start -->
 
-**Mac reference `Heroes_III_raw.pef`: 58.26% matched** — 607 / 1,534 paired functions exact, over 458,764 compared bytes (last `homm3 mac build` checkpoint).
+**Mac reference `Heroes_III_raw.pef`: 64.04% matched** — 705 / 1,534 paired functions exact, over 456,500 compared bytes (last `homm3 mac build` checkpoint).
 
 <!-- mac-match-score:end -->
 

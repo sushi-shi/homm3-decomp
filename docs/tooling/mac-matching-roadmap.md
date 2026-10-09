@@ -3,7 +3,9 @@
 The [full-TU build and executable inventory plan](mac-full-tu-build-and-inventory-plan.md)
 builds CodeWarrior objects from the canonical source TUs and scores Mac pairs
 from them. Ordinary-header compilation status is recorded in the
-[native-header status](mac-native-headers.md).
+[native-header status](mac-native-headers.md). Each unit's CodeWarrior
+optimization level is a retail-backed choice recorded in the
+[Mac optimization profile](mac-optimization-profile.md).
 
 ## What is scored
 

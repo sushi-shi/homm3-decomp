@@ -6126,7 +6126,7 @@ MAC_ADDRESS(0x105be0, 0x38)
 // predicate call where CodeWarrior would keep one for a hero.cpp helper.
 int hero::getMobility() const
 {
-    return getMobility(m_flags & 0x40000);
+    return getMobility((m_flags & 0x40000) != 0);
 }
 
 VA(0x004e4db0, 0x10D)

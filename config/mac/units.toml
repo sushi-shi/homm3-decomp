@@ -1,13 +1,42 @@
 # CodeWarrior settings for the full-TU Mac objects (`ninja mac:<unit>`),
 # keyed by config/units.toml unit names.
 
-# One profile for every unit; -proc 750 scheduling is calibrated on hero.
+# The retail PEF mixes optimization levels. Each unit uses the level whose
+# full-TU object reproduces the most exact Mac pairs; ties keep the shared
+# -O4, the best level over the whole executable (659 exact pairs against
+# 607 at -O3, 426 at -O2 and 329 at -O1). The per-unit sweep is in
+# docs/tooling/mac-optimization-profile.md.
+# -proc 750 scheduling is calibrated on hero.
 # -char unsigned scored lower: 3 hero/remote pairs, or 79 (3 exact) as a global flag.
 # -nomapcr preserves ASCII newline 10; font::fillLinesVector matches both targets.
-flags = ["-O3", "-proc", "750", "-nomapcr", "-nolink"]
+flags = ["-O4", "-proc", "750", "-nomapcr", "-nolink"]
 
 # A unit override replaces `flags`. A disposition accounts for a unit with no
 # Mac counterpart; it needs positive evidence from the Mac executable.
+
+[units.hero]
+flags = ["-O1", "-proc", "750", "-nomapcr", "-nolink"]
+evidence = "Exact pairs -O1/-O2/-O3/-O4: 39/18/9/8 of 71."
+
+[units.townmgr]
+flags = ["-O1", "-proc", "750", "-nomapcr", "-nolink"]
+evidence = "Exact pairs -O1/-O2/-O3/-O4: 8/5/4/4 of 24."
+
+[units.tradpost]
+flags = ["-O1", "-proc", "750", "-nomapcr", "-nolink"]
+evidence = "Exact pairs -O1/-O2/-O3/-O4: 2/1/1/1 of 8."
+
+[units.singleselectionwindow]
+flags = ["-O2", "-proc", "750", "-nomapcr", "-nolink"]
+evidence = "Exact pairs -O1/-O2/-O3/-O4: 2/14/8/8 of 41."
+
+[units.rmg]
+flags = ["-O2", "-proc", "750", "-nomapcr", "-nolink"]
+evidence = "Exact pairs -O1/-O2/-O3/-O4: 4/7/5/5 of 55."
+
+[units.combatresultswindow]
+flags = ["-O2", "-proc", "750", "-nomapcr", "-nolink"]
+evidence = "Exact pairs -O1/-O2/-O3/-O4: 1/2/1/1 of 2."
 
 [units.forcefeedback]
 disposition = "windows_only"

@@ -2233,7 +2233,7 @@ hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$al
 hero	?getMagicResistanceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe46e0	tokens1:5770a5e68925
 hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	tokens1:635ed9a77c3d
 hero	?getManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	tokens1:462c7a0e1a4a
-hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:af4e6b957f4d
+hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:312bea91c517
 hero	?getMobility@hero@@QBEH_N@Z	100.0000	100.0000	100.0000	0xe4990	tokens1:50937f8f40cf
 hero	?getMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	tokens1:170e6f789ec6
 hero	?getMorale@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe39b0	tokens1:e2fec53ed216
