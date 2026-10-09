@@ -2398,14 +2398,12 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // separately from default at 0:0x1c057c. The complete label group restores
 // Windows' biased dispatch. With Mac's strip-before-index assignments,
 // this raises 99.03% to 99.9775%; separating -1 alone was incomplete.
-// Residual: town-id array address reassociation; four sum orders and named
-// slot/top or pointer-index forms did not improve it. Naming the selected
-// town id before getTownName is also byte-flat. Helpers stay canonical.
+// DC 3599 reads the local player inside the getTownName statement; with no
+// separate player local the town-id address rows match too.
 // Original public ?SetCommandAndText@townManager@@QAAXAAUmessage@@@Z
 // proves message&. Both native and Complete pass one address; this ordinary
 // member is not a pointer-based callback or a virtual interface. Restoring
-// the reference leaves this full VC6 body and both caller bodies byte-flat;
-// the 99.9775% residual remains only the two town-ID address rows.
+// the reference leaves this full VC6 body and both caller bodies byte-flat.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)
 DC_ADDRESS(0x16c940, 0x572)
@@ -2577,9 +2575,8 @@ void townManager::setCommandAndText(message& msg)
     case TTownScreenWindow::TOWN_0_ID:
     case TTownScreenWindow::TOWN_1_ID:
     case TTownScreenWindow::TOWN_2_ID: {
-        playerData* player = g_game->getLocalPlayer();
         sprintf(m_statusText, g_townCommand[4],
-                g_game->getTownName(player->m_townIds[
+                g_game->getTownName(g_game->getLocalPlayer()->m_townIds[
                     static_cast<TTownScreenWindow*>(m_townWindow)->m_topTown
                     + code - TTownScreenWindow::TOWN_0_ID]));
         break;
