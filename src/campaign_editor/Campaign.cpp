@@ -450,7 +450,7 @@ void TScenarioOptionsStartingHero::removeChoice(int index)
     m_choices.erase(m_choices.begin() + index);
 }
 
-VA(0x00405ce0, 0x193)
+VA(0x00405ce0, 0x195)
 TCampaign::_TImpl::_TImpl(int type)
     : m_type(type), m_bDifficultyChoice(false), m_music(0x22)
 {
@@ -702,7 +702,7 @@ TScenarioPrologue::TScenarioPrologue()
 {
 }
 
-VA(0x00408460, 0x137)
+VA(0x00408460, 0x139)
 TScenarioPrologue::TScenarioPrologue(int movie, int music, const string& text)
     : m_movie(movie), m_music(music), m_text(text)
 {
@@ -744,31 +744,31 @@ void TScenario::_TImpl::setStartingOptions(auto_ptr<TScenarioStartingOptions> pO
     m_pStartingOptions = pOptions;
 }
 
-VA(0x00409580, 0x1b0)
+VA(0x00409580, 0x1af)
 TScenario::TScenario(int numScenarios)
     : _m_pImpl(_TImpl(numScenarios))
 {
 }
 
-VA(0x00409850, 0x29)
+VA(0x00409850, 0x2b)
 void TScenario::setRegionColor(int newRegionColor)
 {
     _m_pImpl->m_regionColor = newRegionColor;
 }
 
-VA(0x00409880, 0x29)
+VA(0x00409880, 0x2b)
 void TScenario::setDifficulty(int newDifficulty)
 {
     _m_pImpl->m_difficulty = newDifficulty;
 }
 
-VA(0x004098b0, 0x141)
+VA(0x004098b0, 0x143)
 void TScenario::setRegionDesc(const string& newRegionDesc)
 {
     _m_pImpl->m_regionDesc = newRegionDesc;
 }
 
-VA(0x00409a00, 0x59)
+VA(0x00409a00, 0x5b)
 void TScenario::setPrologue(auto_ptr<TScenarioPrologue> pPrologue)
 {
     _m_pImpl->setPrologue(pPrologue);
@@ -780,7 +780,7 @@ void TScenario::removePrologue()
     _m_pImpl->removePrologue();
 }
 
-VA(0x00409bc0, 0x59)
+VA(0x00409bc0, 0x5b)
 void TScenario::setEpilogue(auto_ptr<TScenarioPrologue> pEpilogue)
 {
     _m_pImpl->setEpilogue(pEpilogue);
@@ -846,19 +846,19 @@ const TScenarioStartingOptions* TScenario::getStartingOptions() const
     return _m_pImpl->m_pStartingOptions.get();
 }
 
-VA(0x0040a0a0, 0x23)
+VA(0x0040a0a0, 0x25)
 void TScenario::setBPrerequisite(int scenario, bool bPrerequisite)
 {
     _m_pImpl->m_prerequisites[scenario] = bPrerequisite;
 }
 
-VA(0x0040a0d0, 0x59)
+VA(0x0040a0d0, 0x5b)
 void TScenario::setStartingOptions(auto_ptr<TScenarioStartingOptions> pOptions)
 {
     _m_pImpl->setStartingOptions(pOptions);
 }
 
-VA(0x0040a160, 0xd)
+VA(0x0040a160, 0xf)
 bool TScenario::getBPrerequisite(int scenario) const
 {
     return _m_pImpl->m_prerequisites[scenario];
