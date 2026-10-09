@@ -14,6 +14,20 @@
 class TRawIStream;
 class TRawOStream;
 
+// The game a campaign is made for: its maps' format version and the campaign
+// maps it may use (the first 14 are Armageddon's Blade's, the rest The Shadow
+// of Death's).
+enum TCampaignVersion {
+    eCampaignVersionRestorationOfErathia,
+    eCampaignVersionArmageddonsBlade,
+    eCampaignVersionShadowOfDeath
+};
+
+enum {
+    kNumArmageddonsBladeCampaigns = 14,
+    kNumShadowOfDeathCampaigns = 21
+};
+
 class TScenarioBonusSpell;
 class TScenarioBonusCreature;
 class TScenarioBonusBuilding;
