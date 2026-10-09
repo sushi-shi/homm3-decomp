@@ -75,6 +75,58 @@ private:
     TPlayer _m_owner;
 };
 
+// Objects that only have a type (RTTI TGenericObject: the vbptr first).
+class TGenericObject : public virtual TGameObject {
+};
+
+// A mine; its kind is the object type's subtype (RTTI TMine <-
+// TFlaggableObject).
+class TMine : public TFlaggableObject {
+};
+
+// An abandoned mine and the resources it may hold (RTTI TAbandonedMine <-
+// TMine).
+class TAbandonedMine : public TMine {
+};
+
+// A creature generator; its kind is the object type's subtype (RTTI
+// TGenerator <- TFlaggableObject).
+class TGenerator : public TFlaggableObject {
+};
+
+// A garrison and its army (RTTI TGarrison <- TFlaggableObject).
+class TGarrison : public TFlaggableObject {
+};
+
+// A pickable object with an optional message and guardians (RTTI
+// TTreasure: the vbptr first).
+class TTreasure : public virtual TGameObject {
+};
+
+// An artifact on the map; its artifact is the object type's subtype.
+class TGameArtifact : public TTreasure {
+};
+
+// A spell scroll.
+class TSpellScroll : public TTreasure {
+};
+
+// A resource pile; its type is the object type's subtype.
+class TGameResource : public TTreasure {
+};
+
+// The scholar and what it teaches (RTTI TScholar: the vbptr first).
+class TScholar : public virtual TGameObject {
+};
+
+// A shrine and its spell (RTTI TShrine: the vbptr first).
+class TShrine : public virtual TGameObject {
+};
+
+// A witch hut and its skill (RTTI TWitchHut: the vbptr first).
+class TWitchHut : public virtual TGameObject {
+};
+
 // A random dwelling whose alignment follows a town or a set of town types
 // (RTTI TAbstractRandomlyAlignedGenerator: its vtable, vbptr, the town's
 // link id, then the alignments; 16 bytes before TRandomlyAlignedGenerator's
@@ -92,6 +144,15 @@ public:
 private:
     unsigned int _m_townLinkID;
     std::bitset<kNumTownTypes> _m_alignments;
+};
+
+// A random dwelling whose level is drawn from a range (RTTI
+// TAbstractRandomlyLeveledGenerator: its vtable and vbptr; 16 bytes in
+// TRandomGenerator, after the alignment part).
+class TAbstractRandomlyLeveledGenerator : public virtual TGameObject {
+public:
+    virtual TFlaggableObject* getPFlaggableObject() = 0;
+    virtual const TFlaggableObject* getPFlaggableObject() const = 0;
 };
 
 // The Grail's site: it may not lie within nine cells of the map's edge

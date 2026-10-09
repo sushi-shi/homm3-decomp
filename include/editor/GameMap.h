@@ -30,6 +30,7 @@
 #include "editor/Player.h"
 #include "editor/Point.h"
 #include "editor/RefCountingPtr.h"
+#include "editor/Uncopyable.h"
 
 class TGameObject;
 class TRawIStream;
@@ -41,6 +42,33 @@ class TLossCondition;
 class TLinkableObject;
 class THero;
 class TQuest;
+class TGenericObject;
+class THeroPlaceholder;
+class TNonRandomHero;
+class TRandomHero;
+class TPrison;
+class TTown;
+class TEvent;
+class TMonster;
+class TSign;
+class TFlaggableObject;
+class TMine;
+class TAbandonedMine;
+class TGarrison;
+class TGameArtifact;
+class TSpellScroll;
+class TGameResource;
+class TBlackBox;
+class TScholar;
+class TSeersHut;
+class THolyGrail;
+class TShrine;
+class TGenerator;
+class TRandomlyAlignedGenerator;
+class TRandomlyLeveledGenerator;
+class TRandomGenerator;
+class TQuestGuard;
+class TWitchHut;
 
 typedef unsigned int TMapLayerObjectID;
 
@@ -182,6 +210,14 @@ private:
 };
 
 class TCreateObjFailureNotSupportedByReleaseVersion : public TCreateObjectFailure {
+public:
+    explicit TCreateObjFailureNotSupportedByReleaseVersion(EGameVersion requiredVersion)
+        : _m_requiredVersion(requiredVersion) {}
+
+    EGameVersion getRequiredVersion() const { return _m_requiredVersion; }
+
+private:
+    EGameVersion _m_requiredVersion;
 };
 
 class TCreateObjFailureNoAvailableHeroesInClass : public TCreateObjectFailure {
@@ -288,6 +324,7 @@ public:
     };
 
     class TLayer;
+    class TObjectFactory;
 
     // Public here: the layer's implementation reads the map's dimension
     // table (TGameMap::_TImpl::_s_akDimension), which g++ 2.95 let Loki's
@@ -298,6 +335,13 @@ public:
     TGameMap(TClient* pClient, EGameVersion version, std::streambuf* pStreamBuf, int fileVersion);
     ~TGameMap();
     TGameMap& operator=(const TGameMap& other);
+
+    // The side in tiles of a map of the given size (0x4299dd).
+    static unsigned int getDimension(TSize size);
+    // The factory every map creates its objects with; the editor's
+    // factory installs itself on construction (0x45daef).
+    static void setObjectFactory(const TObjectFactory* pObjectFactory);
+    static void streamObject(std::streambuf* pStreamBuf, const TGameObject& obj);
 
     void importText(std::istream* pIStream);
     TLayer* getPLayer(unsigned int num);
@@ -357,6 +401,10 @@ public:
     TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
     TMapObjectRef getLinkableObjectRef(int linkID) const;
     const TLinkableObject* getPLinkableObject(int linkID) const;
+    std::auto_ptr<TGameObject> createObject(const TObjectType& objType, TPlayer owner) const;
+    std::auto_ptr<TGameObject> reconstructObject(std::streambuf* pStreamBuf, int version) const;
+    bool canCreate(const TObjectType& objType, TPlayer player) const;
+    std::set<THeroID> getAvailableHeroesInClass(THeroClass heroClass) const;
     const TLayer* getPLayer(unsigned int num) const;
     const std::string& getName() const;
     const std::string& getDesc() const;
@@ -376,6 +424,7 @@ public:
     bool isPlayerPresent(TPlayer player) const;
     unsigned int getNumPlayableSlots() const;
     std::bitset<kNumHeroes> getHeroesOnMap() const;
+    std::bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
     const std::set<TMapObjectRef>& getPlayerTownRefs(TPlayer player) const;
     unsigned int getNumTownsOnMap() const;
     bool isGrailOnMap() const;
@@ -387,6 +436,101 @@ private:
     friend class TLayer;
 
     TRefCountingPtr<_TImpl> _m_pImpl;
+};
+
+// Creates the map's objects (TGameMap::TObjectFactory, RTTI; vtable
+// 0x53934c, all pure but the destructor): for each kind a fresh object and
+// one read from a stream. VC6 lists each overload pair in reverse, so the
+// stream reader takes the first slot of the pair.
+class TGameMap::TObjectFactory : private TUncopyable {
+public:
+    virtual ~TObjectFactory() {}
+    virtual std::auto_ptr<TGenericObject> createGenericObject(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TGenericObject> createGenericObject(const TObjectType& objType, TRawIStream* pIStream,
+                                                              int version) const = 0;
+    virtual std::auto_ptr<THeroPlaceholder> createHeroPlaceholder(const TObjectType& objType,
+                                                                  TPlayer owner) const = 0;
+    virtual std::auto_ptr<THeroPlaceholder> createHeroPlaceholder(const TObjectType& objType,
+                                                                  TRawIStream* pIStream, int version) const = 0;
+    virtual std::auto_ptr<TNonRandomHero> createNonRandomHero(const TObjectType& objType, TPlayer owner,
+                                                              THeroID heroID) const = 0;
+    virtual std::auto_ptr<TNonRandomHero> createNonRandomHero(const TObjectType& objType, TRawIStream* pIStream,
+                                                              int version) const = 0;
+    virtual std::auto_ptr<TRandomHero> createRandomHero(const TObjectType& objType, TPlayer owner) const = 0;
+    virtual std::auto_ptr<TRandomHero> createRandomHero(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const = 0;
+    virtual std::auto_ptr<TPrison> createPrison(const TObjectType& objType, THeroID heroID) const = 0;
+    virtual std::auto_ptr<TPrison> createPrison(const TObjectType& objType, TRawIStream* pIStream,
+                                                int version) const = 0;
+    virtual std::auto_ptr<TTown> createTown(const TObjectType& objType, TPlayer owner) const = 0;
+    virtual std::auto_ptr<TTown> createTown(const TObjectType& objType, TRawIStream* pIStream,
+                                            int version) const = 0;
+    virtual std::auto_ptr<TEvent> createEvent(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TEvent> createEvent(const TObjectType& objType, TRawIStream* pIStream,
+                                              int version) const = 0;
+    virtual std::auto_ptr<TMonster> createMonster(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TMonster> createMonster(const TObjectType& objType, TRawIStream* pIStream,
+                                                  int version) const = 0;
+    virtual std::auto_ptr<TSign> createSign(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TSign> createSign(const TObjectType& objType, TRawIStream* pIStream,
+                                            int version) const = 0;
+    virtual std::auto_ptr<TFlaggableObject> createFlaggable(const TObjectType& objType, TPlayer owner) const = 0;
+    virtual std::auto_ptr<TFlaggableObject> createFlaggable(const TObjectType& objType, TRawIStream* pIStream,
+                                                            int version) const = 0;
+    virtual std::auto_ptr<TMine> createMine(const TObjectType& objType, TPlayer owner) const = 0;
+    virtual std::auto_ptr<TMine> createMine(const TObjectType& objType, TRawIStream* pIStream,
+                                            int version) const = 0;
+    virtual std::auto_ptr<TAbandonedMine> createAbandonedMine(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TAbandonedMine> createAbandonedMine(const TObjectType& objType, TRawIStream* pIStream,
+                                                              int version) const = 0;
+    virtual std::auto_ptr<TGarrison> createGarrison(const TObjectType& objType, TPlayer owner) const = 0;
+    virtual std::auto_ptr<TGarrison> createGarrison(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const = 0;
+    virtual std::auto_ptr<TGameArtifact> createArtifact(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TGameArtifact> createArtifact(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const = 0;
+    virtual std::auto_ptr<TSpellScroll> createSpellScroll(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TSpellScroll> createSpellScroll(const TObjectType& objType, TRawIStream* pIStream,
+                                                          int version) const = 0;
+    virtual std::auto_ptr<TGameResource> createResource(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TGameResource> createResource(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const = 0;
+    virtual std::auto_ptr<TBlackBox> createBlackBox(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TBlackBox> createBlackBox(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const = 0;
+    virtual std::auto_ptr<TScholar> createScholar(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TScholar> createScholar(const TObjectType& objType, TRawIStream* pIStream,
+                                                  int version) const = 0;
+    virtual std::auto_ptr<TSeersHut> createSeersHut(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TSeersHut> createSeersHut(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const = 0;
+    virtual std::auto_ptr<THolyGrail> createHolyGrail(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<THolyGrail> createHolyGrail(const TObjectType& objType, TRawIStream* pIStream,
+                                                      int version) const = 0;
+    virtual std::auto_ptr<TShrine> createShrine(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TShrine> createShrine(const TObjectType& objType, TRawIStream* pIStream,
+                                                int version) const = 0;
+    virtual std::auto_ptr<TGenerator> createGenerator(const TObjectType& objType, TPlayer owner) const = 0;
+    virtual std::auto_ptr<TGenerator> createGenerator(const TObjectType& objType, TRawIStream* pIStream,
+                                                      int version) const = 0;
+    virtual std::auto_ptr<TRandomlyAlignedGenerator> createRandomlyAlignedGenerator(const TObjectType& objType,
+                                                                                    TPlayer owner) const = 0;
+    virtual std::auto_ptr<TRandomlyAlignedGenerator> createRandomlyAlignedGenerator(const TObjectType& objType,
+        TRawIStream* pIStream, int version) const = 0;
+    virtual std::auto_ptr<TRandomlyLeveledGenerator> createRandomlyLeveledGenerator(const TObjectType& objType,
+                                                                                    TPlayer owner) const = 0;
+    virtual std::auto_ptr<TRandomlyLeveledGenerator> createRandomlyLeveledGenerator(const TObjectType& objType,
+        TRawIStream* pIStream, int version) const = 0;
+    virtual std::auto_ptr<TRandomGenerator> createRandomGenerator(const TObjectType& objType,
+                                                                  TPlayer owner) const = 0;
+    virtual std::auto_ptr<TRandomGenerator> createRandomGenerator(const TObjectType& objType,
+                                                                  TRawIStream* pIStream, int version) const = 0;
+    virtual std::auto_ptr<TQuestGuard> createQuestGuard(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TQuestGuard> createQuestGuard(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const = 0;
+    virtual std::auto_ptr<TWitchHut> createWitchHut(const TObjectType& objType) const = 0;
+    virtual std::auto_ptr<TWitchHut> createWitchHut(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const = 0;
 };
 
 // One level of the map: its cells and the objects placed on them. The

@@ -17,15 +17,20 @@
 #include "herotraits.h"
 #include "editor/Array.h"
 #include "editor/BitsetIterator.h"
+#include "editor/BlackBox.h"
+#include "editor/Event.h"
 #include "editor/GameMap.h"
 #include "editor/GameObject.h"
+#include "editor/Generator.h"
 #include "editor/GameMapHeader.h"
 #include "editor/Hero.h"
 #include "editor/Monster.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/Quest.h"
+#include "editor/QuestGuard.h"
 #include "editor/QuestLocation.h"
 #include "editor/RawStream.h"
+#include "editor/SeersHut.h"
 #include "editor/TilePoint.h"
 #include "editor/TimedEvent.h"
 #include "editor/UniqueSet.h"
@@ -320,6 +325,9 @@ public:
     enum { s_kMaxNameLen = 30, s_kMaxDescLen = 300, s_kMaxRumors = 30 };
 
     static const unsigned int _s_akDimension[TGameMap::s_kNumSizes];
+    // The factory every map creates its objects with (TGameMap::
+    // setObjectFactory).
+    static const TObjectFactory* _s_pObjectFactory;
 
     _TImpl(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer);
     _TImpl(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion);
@@ -410,6 +418,10 @@ public:
     void addSecondLayer();
     void setVersion(EGameVersion newVersion);
     const TLinkableObject* getPLinkableObject(int linkID) const;
+    auto_ptr<TGameObject> createObject(const TObjectType& objType, TPlayer owner) const;
+    bool canCreate(const TObjectType& objType, TPlayer player) const;
+    auto_ptr<TGameObject> reconstructObject(streambuf* pStreamBuf, int version) const;
+    set<THeroID> getAvailableHeroesInClass(THeroClass heroClass) const;
 
     bitset<kNumHeroes> getHeroesOnMap() const { return _m_pBookkeeping->m_heroesOnMap; }
     bitset<kNumPlayers> getAvailableHeroOwnersMask() const;
@@ -592,7 +604,7 @@ public:
     void _readHeroSettings(TRawIStream* pIStream, int version);
     const TNonRandomHero* _findPlayersNonRandomHero(TPlayer player) const;
     const TIdentifiedHero* _findHero(THeroID heroID) const;
-    auto_ptr<TGameObject> _createObject(const TObjectType& objType, TRawIStream* pIStream, int version);
+    auto_ptr<TGameObject> _createObject(const TObjectType& objType, TRawIStream* pIStream, int version) const;
     void _writeHeroSettings(TRawOStream* pOStream, int version) const;
     TMapObjectRef _findObject(const TMapLoc& loc, bool (*pfnPredicate)(const TGameObject&)) const;
     auto_ptr<TVictoryCondition> _reconstructVictoryCondition(const TVictoryConditionData& vcData) const;
@@ -673,6 +685,16 @@ TPlaceObjFailureTooManyHeroesOnMap::TPlaceObjFailureTooManyHeroesOnMap()
 VA(0x0041ecb8, 0x20)
 TPlaceObjFailureTooManyTownsOnMap::TPlaceObjFailureTooManyTownsOnMap()
     : TPlaceObjFailureTooManyInstancesOfTypeOnMap(TOWN, TGameMap::_TImpl::s_kMaxTownsOnMap)
+{
+}
+
+inline TCreateObjFailureTooManyHeroesOnMap::TCreateObjFailureTooManyHeroesOnMap()
+    : TCreateObjFailureTooManyInstancesOfTypeOnMap(HERO, TGameMap::_TImpl::s_kMaxHeroesOnMap)
+{
+}
+
+inline TCreateObjFailureTooManyTownsOnMap::TCreateObjFailureTooManyTownsOnMap()
+    : TCreateObjFailureTooManyInstancesOfTypeOnMap(TOWN, TGameMap::_TImpl::s_kMaxTownsOnMap)
 {
 }
 
@@ -1626,6 +1648,409 @@ const TLinkableObject* TGameMap::_TImpl::getPLinkableObject(int linkID) const
     while (pLinkable->getLinkID() != linkID)
         pLinkable = pLinkable->getPContainedObject();
     return pLinkable;
+}
+
+// A fresh object of the type for its owner, if the map's edition has the
+// type and its caps have room: a hero takes a free hero of its class, a
+// prisoner one of any class.
+VA(0x0042158c, 0x1118)
+auto_ptr<TGameObject> TGameMap::_TImpl::createObject(const TObjectType& objType, TPlayer owner) const
+{
+    EGameVersion requiredVersion = getRequiredVersion(objType);
+    if (_m_version < requiredVersion)
+        throw TCreateObjFailureNotSupportedByReleaseVersion(requiredVersion);
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = getCappedObjectTypeInfoMap().find(objType.getType());
+    if (pCappedObjTypeInfo != getCappedObjectTypeInfoMap().end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second->m_ordinal;
+        if (_m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal] >= pCappedObjTypeInfo->second->m_cap)
+            throw TCreateObjFailureTooManyInstancesOfTypeOnMap(pCappedObjTypeInfo->second->m_type,
+                                                               pCappedObjTypeInfo->second->m_cap);
+    }
+    auto_ptr<TGameObject> pObj;
+    switch (objType.getType()) {
+    case HERO_PLACEHOLDER:
+        {
+            if (_m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                throw TCreateObjFailureTooManyHeroesOnMap();
+            if (owner == ePlayerNone)
+                throw TCreateObjFailureNoOwnerForHero();
+            unsigned int numHeroes = _m_apPlayerBookkeeping[owner]->m_numHeroes;
+            if ((*_m_pProperties->m_paPlayer)[owner].getBGenerateHero())
+                numHeroes++;
+            if (numHeroes >= s_kMaxHeroesPerPlayer)
+                throw TCreateObjFailureTooManyHeroesForPlayer();
+            pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createHeroPlaceholder(objType, owner).release());
+        }
+        break;
+    case HERO:
+        {
+            if (_m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                throw TCreateObjFailureTooManyHeroesOnMap();
+            if (owner == ePlayerNone)
+                throw TCreateObjFailureNoOwnerForHero();
+            unsigned int numHeroes = _m_apPlayerBookkeeping[owner]->m_numHeroes;
+            if ((*_m_pProperties->m_paPlayer)[owner].getBGenerateHero())
+                numHeroes++;
+            if (numHeroes >= s_kMaxHeroesPerPlayer)
+                throw TCreateObjFailureTooManyHeroesForPlayer();
+            THeroID heroID = _pickRandomHero(THeroClass(objType.getExtra()));
+            if (heroID == -1)
+                throw TCreateObjFailureNoAvailableHeroesInClass();
+            auto_ptr<TNonRandomHero> pHero = _s_pObjectFactory->createNonRandomHero(objType, owner, heroID);
+            if (pHero.get() == NULL)
+                throw TAllocationFailure();
+            _makeLinkIDUnique(*pHero);
+            pObj = auto_ptr<TGameObject>(pHero.release());
+        }
+        break;
+    case RANDOM_HERO:
+        {
+            if (_m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                throw TCreateObjFailureTooManyHeroesOnMap();
+            if (owner == ePlayerNone)
+                throw TCreateObjFailureNoOwnerForHero();
+            unsigned int numHeroes = _m_apPlayerBookkeeping[owner]->m_numHeroes;
+            if ((*_m_pProperties->m_paPlayer)[owner].getBGenerateHero())
+                numHeroes++;
+            if (numHeroes >= s_kMaxHeroesPerPlayer)
+                throw TCreateObjFailureTooManyHeroesForPlayer();
+            auto_ptr<TRandomHero> pHero = _s_pObjectFactory->createRandomHero(objType, owner);
+            if (pHero.get() == NULL)
+                throw TAllocationFailure();
+            _makeLinkIDUnique(*pHero);
+            pObj = auto_ptr<TGameObject>(pHero.release());
+        }
+        break;
+    case PRISON:
+        {
+            if (_m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                throw TCreateObjFailureTooManyHeroesOnMap();
+            int heroClass = 0;
+            THeroID heroID;
+            while ((heroID = _pickRandomHero(THeroClass(heroClass))) == -1) {
+                if (++heroClass >= kNumHeroClasses)
+                    throw TCreateObjFailureTooManyHeroesOnMap();
+            }
+            pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createPrison(objType, heroID).release());
+        }
+        break;
+    case RANDOM_TOWN:
+    case TOWN:
+        if (_m_pBookkeeping->m_numTowns == s_kMaxTownsOnMap)
+            throw TCreateObjFailureTooManyTownsOnMap();
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createTown(objType, owner).release());
+        break;
+    case MONSTER:
+    case RANDOM_MONSTER:
+    case RANDOM_MONSTER_1:
+    case RANDOM_MONSTER_2:
+    case RANDOM_MONSTER_3:
+    case RANDOM_MONSTER_4:
+    case RANDOM_MONSTER_5:
+    case RANDOM_MONSTER_6:
+    case RANDOM_MONSTER_7:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createMonster(objType).release());
+        break;
+    case EVENT:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createEvent(objType).release());
+        break;
+    case OCEAN_BOTTLE:
+    case SIGN:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createSign(objType).release());
+        break;
+    case SHIPYARD:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createFlaggable(objType, owner).release());
+        break;
+    case LIGHTHOUSE:
+    case MINE:
+    case ABANDONED_MINE:
+        if ((objType.getType() != MINE && objType.getType() != ABANDONED_MINE)
+            || objType.getExtra() < kNumGameResourceTypes)
+            pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createMine(objType, owner).release());
+        else
+            pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createAbandonedMine(objType).release());
+        break;
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createGenerator(objType, owner).release());
+        break;
+    case RANDOM_DWELLING_LVL:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createRandomlyAlignedGenerator(objType, owner).release());
+        break;
+    case RANDOM_DWELLING_FACTION:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createRandomlyLeveledGenerator(objType, owner).release());
+        break;
+    case RANDOM_DWELLING:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createRandomGenerator(objType, owner).release());
+        break;
+    case GARRISON:
+    case GARRISON2:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createGarrison(objType, owner).release());
+        break;
+    case ARTIFACT:
+    case RANDOM_ARTIFACT:
+    case RANDOM_ARTIFACT_1:
+    case RANDOM_ARTIFACT_2:
+    case RANDOM_ARTIFACT_3:
+    case RANDOM_ARTIFACT_4:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createArtifact(objType).release());
+        break;
+    case SPELL_SCROLL:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createSpellScroll(objType).release());
+        break;
+    case RANDOM_RESOURCE:
+    case RESOURCE:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createResource(objType).release());
+        break;
+    case BLACK_BOX:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createBlackBox(objType).release());
+        break;
+    case SCHOLAR:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createScholar(objType).release());
+        break;
+    case SEER:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createSeersHut(objType).release());
+        break;
+    case QUEST_GUARD:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createQuestGuard(objType).release());
+        break;
+    case HOLY_GRAIL:
+        if (_m_pBookkeeping->m_bGrailPlaced)
+            throw TCreateObjFailureHolyGrailAlreadyPlaced();
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createHolyGrail(objType).release());
+        break;
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createShrine(objType).release());
+        break;
+    case WITCH_HUT:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createWitchHut(objType).release());
+        break;
+    default:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createGenericObject(objType).release());
+        break;
+    }
+    if (pObj.get() == NULL)
+        throw TAllocationFailure();
+    return pObj;
+}
+
+// An object read from a stream, made by the factory for its kind: the
+// mine types hold abandoned mines past the seven resources.
+VA(0x00422868, 0xd7a)
+auto_ptr<TGameObject> TGameMap::_TImpl::_createObject(const TObjectType& objType, TRawIStream* pIStream,
+                                                     int version) const
+{
+    auto_ptr<TGameObject> pObj;
+    switch (objType.getType()) {
+    case HERO_PLACEHOLDER:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createHeroPlaceholder(objType, pIStream, version).release());
+        break;
+    case HERO:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createNonRandomHero(objType, pIStream, version).release());
+        break;
+    case RANDOM_HERO:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createRandomHero(objType, pIStream, version).release());
+        break;
+    case PRISON:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createPrison(objType, pIStream, version).release());
+        break;
+    case RANDOM_TOWN:
+    case TOWN:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createTown(objType, pIStream, version).release());
+        break;
+    case MONSTER:
+    case RANDOM_MONSTER:
+    case RANDOM_MONSTER_1:
+    case RANDOM_MONSTER_2:
+    case RANDOM_MONSTER_3:
+    case RANDOM_MONSTER_4:
+    case RANDOM_MONSTER_5:
+    case RANDOM_MONSTER_6:
+    case RANDOM_MONSTER_7:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createMonster(objType, pIStream, version).release());
+        break;
+    case EVENT:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createEvent(objType, pIStream, version).release());
+        break;
+    case OCEAN_BOTTLE:
+    case SIGN:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createSign(objType, pIStream, version).release());
+        break;
+    case SHIPYARD:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createFlaggable(objType, pIStream, version).release());
+        break;
+    case LIGHTHOUSE:
+    case MINE:
+    case ABANDONED_MINE:
+        if ((objType.getType() != MINE && objType.getType() != ABANDONED_MINE)
+            || objType.getExtra() < kNumGameResourceTypes)
+            pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createMine(objType, pIStream, version).release());
+        else
+            pObj = auto_ptr<TGameObject>(
+                _s_pObjectFactory->createAbandonedMine(objType, pIStream, version).release());
+        break;
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createGenerator(objType, pIStream, version).release());
+        break;
+    case RANDOM_DWELLING_LVL:
+        pObj = auto_ptr<TGameObject>(
+            _s_pObjectFactory->createRandomlyAlignedGenerator(objType, pIStream, version).release());
+        break;
+    case RANDOM_DWELLING_FACTION:
+        pObj = auto_ptr<TGameObject>(
+            _s_pObjectFactory->createRandomlyLeveledGenerator(objType, pIStream, version).release());
+        break;
+    case RANDOM_DWELLING:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createRandomGenerator(objType, pIStream, version).release());
+        break;
+    case GARRISON:
+    case GARRISON2:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createGarrison(objType, pIStream, version).release());
+        break;
+    case ARTIFACT:
+    case RANDOM_ARTIFACT:
+    case RANDOM_ARTIFACT_1:
+    case RANDOM_ARTIFACT_2:
+    case RANDOM_ARTIFACT_3:
+    case RANDOM_ARTIFACT_4:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createArtifact(objType, pIStream, version).release());
+        break;
+    case SPELL_SCROLL:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createSpellScroll(objType, pIStream, version).release());
+        break;
+    case RANDOM_RESOURCE:
+    case RESOURCE:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createResource(objType, pIStream, version).release());
+        break;
+    case BLACK_BOX:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createBlackBox(objType, pIStream, version).release());
+        break;
+    case SCHOLAR:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createScholar(objType, pIStream, version).release());
+        break;
+    case SEER:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createSeersHut(objType, pIStream, version).release());
+        break;
+    case QUEST_GUARD:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createQuestGuard(objType, pIStream, version).release());
+        break;
+    case HOLY_GRAIL:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createHolyGrail(objType, pIStream, version).release());
+        break;
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createShrine(objType, pIStream, version).release());
+        break;
+    case WITCH_HUT:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createWitchHut(objType, pIStream, version).release());
+        break;
+    default:
+        pObj = auto_ptr<TGameObject>(_s_pObjectFactory->createGenericObject(objType, pIStream, version).release());
+        break;
+    }
+    if (pObj.get() == NULL)
+        throw TAllocationFailure();
+    return pObj;
+}
+
+// Whether a fresh object of the type could be created for the player: the
+// checks createObject makes, and for a hero a free one in its class.
+VA(0x004235e2, 0x216)
+bool TGameMap::_TImpl::canCreate(const TObjectType& objType, TPlayer player) const
+{
+    if (_m_version < getRequiredVersion(objType))
+        return false;
+    TCappedObjectTypeInfoMap::const_iterator pCappedObjTypeInfo = getCappedObjectTypeInfoMap().find(objType.getType());
+    if (pCappedObjTypeInfo != getCappedObjectTypeInfoMap().end()) {
+        unsigned int typeOrdinal = pCappedObjTypeInfo->second->m_ordinal;
+        if (_m_pBookkeeping->m_aNumObjsOfCappedType[typeOrdinal] >= pCappedObjTypeInfo->second->m_cap)
+            return false;
+    }
+    switch (objType.getType()) {
+    case TOWN:
+    case RANDOM_TOWN:
+        return _m_pBookkeeping->m_numTowns < s_kMaxTownsOnMap;
+    case RANDOM_HERO:
+    case HERO_PLACEHOLDER:
+        {
+            if (player == ePlayerNone || _m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                return false;
+            unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+            if ((*_m_pProperties->m_paPlayer)[player].getBGenerateHero())
+                numHeroes++;
+            return numHeroes < s_kMaxHeroesPerPlayer;
+        }
+    case PRISON:
+        return _m_pBookkeeping->m_numHeroes < s_kMaxHeroesOnMap;
+    case HOLY_GRAIL:
+        return !_m_pBookkeeping->m_bGrailPlaced;
+    case HERO:
+        {
+            if (player == ePlayerNone || _m_pBookkeeping->m_numHeroes >= s_kMaxHeroesOnMap)
+                return false;
+            unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+            if ((*_m_pProperties->m_paPlayer)[player].getBGenerateHero())
+                numHeroes++;
+            if (numHeroes >= s_kMaxHeroesPerPlayer)
+                return false;
+            const THero::TClassTraits& classTraits = THero::s_akClassTraits[objType.getExtra()];
+            for (set<int>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
+                 ++pHeroID)
+                if (_isHeroAvailable(*pHeroID))
+                    return true;
+            return false;
+        }
+    default:
+        return true;
+    }
+}
+
+// An object as streamObject wrote it: its type, then its own data.
+VA(0x004237f8, 0x47)
+auto_ptr<TGameObject> TGameMap::_TImpl::reconstructObject(streambuf* pStreamBuf, int version) const
+{
+    TRawIStream iStream(pStreamBuf);
+    TObjectType objType;
+    iStream >> objType;
+    return _createObject(objType, &iStream, version);
+}
+
+// The class's heroes a new hero could be.
+VA(0x0042383f, 0x154)
+set<THeroID> TGameMap::_TImpl::getAvailableHeroesInClass(THeroClass heroClass) const
+{
+    const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
+    set<THeroID> result;
+    for (set<int>::const_iterator pHeroID = classTraits.m_heroes.begin(); pHeroID != classTraits.m_heroes.end();
+         ++pHeroID)
+        if (_isHeroAvailable(*pHeroID))
+            result.insert(*pHeroID);
+    return result;
+}
+
+// The players that may take another hero.
+VA(0x00423998, 0x5f)
+bitset<kNumPlayers> TGameMap::_TImpl::getAvailableHeroOwnersMask() const
+{
+    bitset<kNumPlayers> result;
+    for (unsigned int player = 0; player < kNumPlayers; player++) {
+        unsigned int numHeroes = _m_apPlayerBookkeeping[player]->m_numHeroes;
+        if (getPlayers()[player].getBGenerateHero())
+            numHeroes++;
+        result.set(player, numHeroes < s_kMaxHeroesPerPlayer);
+    }
+    return result;
+}
+
+VA(0x004239f7, 0x37)
+unsigned int TGameMap::_TImpl::getNumObelisksOnMap() const
+{
+    TCappedObjectTypeInfoMap::const_iterator pObeliskInfo = getCappedObjectTypeInfoMap().find(OBELISK);
+    return _m_pBookkeeping->m_aNumObjsOfCappedType[pObeliskInfo->second->m_ordinal];
 }
 
 // A player's town types when the map does not choose them: those of its
@@ -2996,6 +3421,24 @@ const TIdentifiedHero* TGameMap::_TImpl::_findHero(THeroID heroID) const
     return pHero;
 }
 
+VA(0x004299dd, 0xc)
+unsigned int TGameMap::getDimension(TSize size)
+{
+    return _TImpl::_s_akDimension[size];
+}
+
+VA(0x004299e9, 0xa)
+void TGameMap::setObjectFactory(const TObjectFactory* pObjectFactory)
+{
+    _TImpl::_s_pObjectFactory = pObjectFactory;
+}
+
+VA(0x004299f3, 0x10)
+void TGameMap::streamObject(streambuf* pStreamBuf, const TGameObject& obj)
+{
+    _TImpl::streamObject(pStreamBuf, obj);
+}
+
 VA(0x00429a12, 0x4e)
 TGameMap::TGameMap(TClient* pClient, EGameVersion version, TSize size, bool bTwoLayer)
     : _m_pImpl(_TImpl(pClient, version, size, bTwoLayer))
@@ -3429,10 +3872,40 @@ unsigned int TGameMap::getNumPlayableSlots() const
     return _m_pImpl->getNumPlayableSlots();
 }
 
+VA(0x0042a35f, 0x22)
+auto_ptr<TGameObject> TGameMap::createObject(const TObjectType& objType, TPlayer owner) const
+{
+    return _m_pImpl->createObject(objType, owner);
+}
+
+VA(0x0042a381, 0x22)
+auto_ptr<TGameObject> TGameMap::reconstructObject(streambuf* pStreamBuf, int version) const
+{
+    return _m_pImpl->reconstructObject(pStreamBuf, version);
+}
+
+VA(0x0042a3a3, 0x15)
+bool TGameMap::canCreate(const TObjectType& objType, TPlayer player) const
+{
+    return _m_pImpl->canCreate(objType, player);
+}
+
+VA(0x0042a3b8, 0x1f)
+set<THeroID> TGameMap::getAvailableHeroesInClass(THeroClass heroClass) const
+{
+    return _m_pImpl->getAvailableHeroesInClass(heroClass);
+}
+
 VA(0x0042a3d7, 0x1a)
 bitset<kNumHeroes> TGameMap::getHeroesOnMap() const
 {
     return _m_pImpl->getHeroesOnMap();
+}
+
+VA(0x0042a3f1, 0x1d)
+bitset<kNumPlayers> TGameMap::getAvailableHeroOwnersMask() const
+{
+    return _m_pImpl->getAvailableHeroOwnersMask();
 }
 
 VA(0x0042a40e, 0x10)
@@ -3476,6 +3949,9 @@ const unsigned int TGameMap::_TImpl::_s_akDimension[TGameMap::s_kNumSizes] = { 3
 
 DATA(0x00535228)
 const TMapLayerObjectID TGameMap::TLayer::s_kInvalidObjID = 0;
+
+DATA(0x0059e390)
+const TGameMap::TObjectFactory* TGameMap::_TImpl::_s_pObjectFactory;
 
 // A layer's implementation: its size and its cells.
 class TGameMap::TLayer::_TImpl {
