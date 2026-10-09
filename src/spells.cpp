@@ -2039,24 +2039,19 @@ static long g_castWallIndexToCastOn = -1;
 // string teardown are its body.
 // Dreamcast attributes the failure-text lookup to TTextResource::operator[];
 // getText() is the readable wrapper and emits the same retail bytes.
-// Residual (99.97026%): all 37 CFG blocks and 21 branches agree. Eight
-// stack displacements swap the failure-text temporary and the refusal-arm
-// vector between EBP-0x2c and EBP-0x3c. The folded vector<int>/vector<long>
-// growth-call owner is ignored by the matching report; it is not this gap.
-// Keep the recorded vector<long> objects and the failure-message helper.
-// Naming the helper's string result (mutable or const) was reproduced and
-// rejected: its retained body falls from 100% to 94.53%, and this caller
-// moves from 99.9703% to 99.9294% without recovering the native slot pairing.
-// VC6 predict-inline's apparent self-call mismatch is a local jump pairing:
-// the 17 Mac calls retain the same game targets and order. Their two differing
-// vector destructor labels are MSL template ownership, not this helper body.
+// The folded vector<int>/vector<long> growth-call owner is ignored by the
+// matching report. Naming the failure helper's string result (mutable or
+// const) was reproduced and rejected: its retained body falls from 100% to
+// 94.53%. VC6 predict-inline's apparent self-call mismatch is a local jump
+// pairing: the 17 Mac calls retain the same game targets and order. Their two
+// differing vector destructor labels are MSL template ownership.
 // DC line 2328 attributes the refusal vector's construction, UpdateMouseGrid
-// and destruction to one row; the Mac object uses a distinct short lifetime
-// at frame+0x74 (valid-arm vector: +0x80). Passing vector<long>() directly
-// closes Windows to 100%, but relies on VC6's nonconst-reference extension
-// and fails CodeWarrior. Explicit reference casts also fail CodeWarrior and
-// are not supported original source. Named copy initialization stays flat
-// at 99.9703%; retain the valid named vector while recovering its lifetime.
+// and both destructors to one row (the valid arm's named vector spans
+// 2315..2318): the refusal arm passes a temporary, binding it to the mutable
+// reference as VC6 and the CE compiler allow. That closes Windows to 100%
+// (the named local swapped its EBP-0x3c home with the failure-text
+// temporary's, 99.97%). CodeWarrior rejects the binding; Mac builds and frees
+// the empty vector around the call in its own frame slot (+0x74).
 VA(0x005a3250, 0x31C)
 DC_ADDRESS(0x1527bc, 0x258)
 MAC_ADDRESS(0x193928, 0x2a8)  // retail order+handler call
@@ -2095,8 +2090,15 @@ int handleCastWallSpell(message& msg)
                 (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
             if (g_config.m_showCombatMouseHex
                 && spell != SPELL_FORCE_FIELD) {
+#if defined(HOMM3_TARGET_MAC)
+                // CodeWarrior binds no temporary to the mutable reference;
+                // Mac 0x193b20..0x193b54 builds and frees the same empty
+                // vector around the call in its own frame slot.
                 std::vector<long> hexes;
                 g_combatManager->updateMouseGrid(hex, hexes, 0);
+#else
+                g_combatManager->updateMouseGrid(hex, std::vector<long>(), 0);
+#endif
             }
         }
         break;
