@@ -11,6 +11,7 @@
 #ifndef HOMM3_EDITOR_TIMEDEVENT_H
 #define HOMM3_EDITOR_TIMEDEVENT_H
 
+#include <exception>
 #include <iosfwd>
 #include <string>
 
@@ -31,6 +32,10 @@ const unsigned int kNumDaysPerYear = kNumDaysPerMonth * kNumMonthsPerYear;
 
 class TTimedEvent {
 public:
+    // importText's failure (the map's importText catches it).
+    class TImportTextFailure : public std::exception {
+    };
+
     TTimedEvent();
 
     // The map file's record (TimedEvent.cpp, h3maped 0x4c025c).

@@ -43,6 +43,9 @@ enum { kNumHeroes = 156 };
 // settings writer (0x428892) and the available-heroes writer (0x423b20).
 class THeroPrototype {
 public:
+    // The longest name the map text's import keeps (h3maped 0x425267).
+    enum { s_kMaxNameLen = 12 };
+
     // The hero's secondary skills; it reads itself from a map (0x44a2a6).
     class TSecondarySkills : public std::map<TSecondarySkill, TSkillMastery> {
     public:

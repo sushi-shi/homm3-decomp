@@ -6,6 +6,7 @@
 #include "editor/stdafx.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <algorithm>
 #include <map>
@@ -2288,6 +2289,190 @@ struct TFirstOccurenceLess {
     }
 };
 
+// A character that is not white space.
+struct TIsNotSpace {
+    bool operator()(char c) const { return !isspace(c); }
+};
+
+}
+
+// Reads back the text exportText writes: every section header, field and
+// object heading must match the map as it is; the fields replace the
+// map's, tabs turning back into spaces or line breaks.
+VA(0x00424926, 0x124a)
+void TGameMap::_TImpl::importText(istream* pIStream)
+{
+    static const string kSectionStart("===== ");
+    static const string kSectionEnd(" =====");
+    string line;
+    getline(*pIStream, line);
+    if (line != kSectionStart + kMapNameStr + kSectionEnd)
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line.size() > s_kMaxNameLen)
+        line.erase(s_kMaxNameLen);
+    replace(line.begin(), line.end(), '\t', ' ');
+    setName(line);
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kMapDescriptionStr + kSectionEnd)
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line.size() > s_kMaxDescLen)
+        line.erase(s_kMaxDescLen);
+    replace(line.begin(), line.end(), '\t', '\n');
+    setDesc(line);
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kRumorsStr + kSectionEnd)
+        throw TImportTextFailure();
+    for (vector<TRumor>::iterator pRumor = _m_pProperties->m_paRumor->begin();
+         pRumor != _m_pProperties->m_paRumor->end(); pRumor++) {
+        getline(*pIStream, line);
+        if (!line.empty())
+            throw TImportTextFailure();
+        try {
+            pRumor->importText(pIStream, _m_version);
+        } catch (const TRumor::TImportTextFailure&) {
+            throw TImportTextFailure();
+        }
+    }
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kTimedEventsStr + kSectionEnd)
+        throw TImportTextFailure();
+    {
+        vector<TTimedEvent>& timedEvents = *_m_pProperties->m_paTimedEvent;
+        vector<TTimedEvent*> apTimedEvent;
+        apTimedEvent.reserve(timedEvents.size());
+        for (vector<TTimedEvent>::iterator pTimedEvent = timedEvents.begin(); pTimedEvent != timedEvents.end();
+             pTimedEvent++)
+            apTimedEvent.push_back(pTimedEvent);
+        stable_sort(apTimedEvent.begin(), apTimedEvent.end(), TFirstOccurenceLess());
+        for (vector<TTimedEvent*>::iterator ppTimedEvent = apTimedEvent.begin(); ppTimedEvent != apTimedEvent.end();
+             ppTimedEvent++) {
+            getline(*pIStream, line);
+            if (!line.empty())
+                throw TImportTextFailure();
+            try {
+                (*ppTimedEvent)->importText(pIStream, _m_version);
+            } catch (const TTimedEvent::TImportTextFailure&) {
+                throw TImportTextFailure();
+            }
+        }
+    }
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    if (_m_version >= GAME_VERSION_SOD) {
+        getline(*pIStream, line);
+        if (line != kSectionStart + kHeroesPageCaptionStr + kSectionEnd)
+            throw TImportTextFailure();
+        for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
+            const THeroPrototype& prototype = getHeroPrototype(heroID);
+            bool bCustomName = prototype.getName() != THero::s_akTraits[heroID].m_prototype.getName();
+            bool bCustomBiography = prototype.getBiography() != THero::s_akTraits[heroID].m_prototype.getBiography();
+            if (bCustomName || bCustomBiography) {
+                getline(*pIStream, line);
+                if (!line.empty())
+                    throw TImportTextFailure();
+                THeroPrototype& editedPrototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
+                if (bCustomName) {
+                    getline(*pIStream, line);
+                    if (line != string(kNameStr) + ':')
+                        throw TImportTextFailure();
+                    getline(*pIStream, line);
+                    if (line.size() > THeroPrototype::s_kMaxNameLen)
+                        line.erase(THeroPrototype::s_kMaxNameLen);
+                    replace(line.begin(), line.end(), '\t', ' ');
+                    if (find_if(line.begin(), line.end(), TIsNotSpace()) == line.end())
+                        throw TImportTextFailure();
+                    editedPrototype.setName(line);
+                }
+                if (bCustomBiography) {
+                    getline(*pIStream, line);
+                    if (line != string(kBiographyStr) + ':')
+                        throw TImportTextFailure();
+                    getline(*pIStream, line);
+                    replace(line.begin(), line.end(), '\t', '\n');
+                    editedPrototype.setBiography(line);
+                }
+            }
+        }
+        getline(*pIStream, line);
+        if (!line.empty())
+            throw TImportTextFailure();
+    }
+    getline(*pIStream, line);
+    if (line != kSectionStart + kObjectsStr + kSectionEnd)
+        throw TImportTextFailure();
+    unsigned int numLayers = isTwoLayer() ? 2 : 1;
+    for (unsigned int layerNum = 0; layerNum < numLayers; layerNum++) {
+        TLayer& layer = _m_aLayer[layerNum];
+        for (TLayer::TObjectIDIter iter = layer.objectIDBegin(); iter != layer.objectIDEnd(); iter++) {
+            const TGameObject& obj = layer.getObject(*iter);
+            if (obj.hasText()) {
+                getline(*pIStream, line);
+                if (!line.empty())
+                    throw TImportTextFailure();
+                TTilePoint loc = layer.getObjectLoc(*iter);
+                if (obj.hasTrigger())
+                    loc -= TTilePoint(obj.getTriggerLoc().m_x, obj.getTriggerLoc().m_y);
+                int c = pIStream->get();
+                if (c != '(')
+                    throw TImportTextFailure();
+                int n;
+                *pIStream >> n;
+                if (n != loc.x())
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ',')
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ' ')
+                    throw TImportTextFailure();
+                *pIStream >> n;
+                if (n != loc.y())
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ',')
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ' ')
+                    throw TImportTextFailure();
+                *pIStream >> n;
+                if (n != layerNum)
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ')')
+                    throw TImportTextFailure();
+                c = pIStream->get();
+                if (c != ' ')
+                    throw TImportTextFailure();
+                getline(*pIStream, line);
+                if (line != string("***") + obj.getTypeName() + string("***"))
+                    throw TImportTextFailure();
+                TGameObject* pObj = getPLayer(layerNum)->getPObject(*iter);
+                try {
+                    pObj->importText(pIStream, _m_version);
+                } catch (const TGameObject::TImportTextFailure&) {
+                    throw TImportTextFailure();
+                }
+            }
+        }
+    }
+    getline(*pIStream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(*pIStream, line);
+    if (line != kSectionStart + kEndOfFileStr + kSectionEnd)
+        throw TImportTextFailure();
 }
 
 // The map's text for translation: its name, description, rumors, timed

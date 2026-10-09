@@ -81,6 +81,10 @@ enum { kNumArtifacts = 144 };
 // editor's OnInitDialog limits its text edit to 300 characters.
 class TRumor {
 public:
+    // importText's failure (the map's importText catches it).
+    class TImportTextFailure : public std::exception {
+    };
+
     enum { s_kMaxTextLen = 300 };
 
     TRumor() {}

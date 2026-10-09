@@ -11,6 +11,7 @@
 #ifndef HOMM3_EDITOR_GAMEOBJECT_H
 #define HOMM3_EDITOR_GAMEOBJECT_H
 
+#include <exception>
 #include <iosfwd>
 #include <map>
 #include <memory>
@@ -25,6 +26,10 @@ class TRawOStream;
 
 class TGameObject {
 public:
+    // importText's failure (the map's importText catches it).
+    class TImportTextFailure : public std::exception {
+    };
+
     TGameObject(const TGameObject& other);
     TGameObject(const TObjectType& objType);
     virtual ~TGameObject() = 0;
