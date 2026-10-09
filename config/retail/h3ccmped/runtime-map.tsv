@@ -9,7 +9,6 @@ rva	name	library	member
 0xf1d0	??1locale@std@@QAE@XZ	LIBCPMT	ios.obj
 0x104e0	??0bad_alloc@std@@QAE@PBD@Z	LIBCPMT	nomemory.obj
 0x15bb0	??1CWaitCursor@@QAE@XZ	NAFXCW	daoview.obj
-0x21420	??0CSocketWnd@@QAE@XZ	NAFXCW	sockcore.obj
 0x36f20	?AfxGetMainWnd@@YGPAVCWnd@@XZ	NAFXCW	appcore.obj
 0x36f45	_InitMultipleMonitorStubs	NAFXCW	wincore.obj
 0x3701d	_xMonitorFromRect@8	NAFXCW	wincore.obj

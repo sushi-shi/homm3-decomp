@@ -42,6 +42,10 @@ from collections import defaultdict
 from pathlib import Path
 
 MIN_FIXED = 12
+#: The COMDAT selection of an inline or template body (IMAGE_COMDAT_SELECT_ANY).
+PICK_ANY = 2
+#: Consecutive census functions that open the library code.
+RUN = 3
 #: Initializer ordinals (`_$E365`) are volatile and never names.
 VOLATILE = re.compile(r"^_?\$E[0-9]+$")
 REL32 = 20
@@ -70,8 +74,9 @@ def _member_functions(obj):
                 off for off, name, scl in obj.section_members(number)
                 if scl == EXTERNAL and not name.startswith(("$", ".")))
     out = []
+    selection = {sec["index"]: sec["comdat"] for sec in obj.section_table}
     for name, number, off, body, relocs in _functions_of(obj):
-        out.append((name, body, relocs))
+        out.append((name, body, relocs, selection.get(number, 0)))
         starts = externals.get(number)
         if not body or not starts or off not in starts:
             continue
@@ -85,12 +90,22 @@ def _member_functions(obj):
         floor = off + max((site + 4 for site in own), default=0)
         while end > max(floor, off + 1) and payload[end - 1] in (0x90, 0xCC):
             end -= 1
-        out.append((name, payload[off:end], own))
+        out.append((name, payload[off:end], own, selection.get(number, 0)))
     return out
 
 
+def library_start(order, once, run=RUN):
+    """The first census start of `run` consecutive functions that are all
+    library members' own functions (`once`), or None."""
+    return next((rva for k, rva in enumerate(order)
+                 if len(order[k:k + run]) == run and all(r in once for r in order[k:k + run])),
+                None)
+
+
 def archive_functions(path: Path):
-    """(member, name, body, relocs) for every code function of an archive."""
+    """(member, name, body, relocs, selection) for every code function of an
+    archive; `selection` is its section's COMDAT selection (0: no COMDAT,
+    2: any, an inline or template body every user may emit)."""
     from homm3.delink.coffx import Obj
     from homm3.verify.library_code import archive_members
     for member, body in archive_members(path):
@@ -100,8 +115,8 @@ def archive_functions(path: Path):
             obj = Obj(body)
         except (ValueError, IndexError):
             continue
-        for name, code, relocs in _member_functions(obj):
-            yield member, name, code, relocs
+        for name, code, relocs, selection in _member_functions(obj):
+            yield member, name, code, relocs, selection
 
 
 def derive(image, functions: dict[int, int], archives: dict[str, Path], log=print,
@@ -131,6 +146,7 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
         return len(theirs) == len(code) and all(
             m or a == b for a, b, m in zip(theirs, code, mask))
 
+    defined_once = set()             # (name, library, member) no project object emits
     hits = defaultdict(set)          # rva -> {(name, library, member)}
     hit_relocs = {}                  # (rva, name) -> the step-1 member's relocs
     covering = []                    # step 2: (rva, name, library, member)
@@ -139,9 +155,11 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
         if not path.is_file():
             log(f"[libraries] {library}: {path} missing; skipped")
             continue
-        for member, name, code, relocs in archive_functions(path):
+        for member, name, code, relocs, selection in archive_functions(path):
             if VOLATILE.match(name) or not code:
                 continue
+            if selection != PICK_ANY:
+                defined_once.add((name, library, member))
             mask = bytearray(len(code))
             for site in relocs:
                 mask[site:site + 4] = b"\1\1\1\1"
@@ -230,6 +248,21 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
                 for n, _l, _m in names:
                     named_rvas[n].add(rva)
                 changed = True
+
+    # A member's own function (no pick-any COMDAT: an inline or template body
+    # a project object may also emit) is linked with its object, after every
+    # project object: one inside the project's code is a project function
+    # that happens to share its masked bytes (h3maped 0x4c241b is no
+    # COleControl::GetStockTextMetrics). The library code starts at the
+    # first run of RUN such functions.
+    order = sorted(functions)
+    once = {rva for rva, names in hits.items() if names and names <= defined_once}
+    start = library_start(order, once)
+    if start is not None:
+        for rva in sorted(r for r in once if r < start):
+            log(f"[libraries]   0x{rva:x} {sorted(hits[rva])[0][0]} dropped: "
+                f"its member's own function before the library code (0x{start:x})")
+            del hits[rva]
 
     rows, ambiguous, folded = [], 0, 0
     for rva, names in sorted(hits.items()):

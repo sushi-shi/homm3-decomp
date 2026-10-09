@@ -14,7 +14,6 @@ rva	name	library	member
 0x1bed	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	LIBCPMT	ios.obj
 0x41d6	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHABV12@@Z	LIBCPMT	locale0.obj
 0x41f8	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHIIPBDI@Z	LIBCPMT	locale.obj
-0x679e	??0COleDispatchDriver@@QAE@PAUIDispatch@@H@Z	NAFXCW	oledisp2.obj
 0x19372	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	LIBCPMT	iostream.obj
 0x2bb7e	??1locale@std@@QAE@XZ	LIBCPMT	ios.obj
 0x2bb96	?_Decref@facet@locale@std@@QAEPAV123@XZ	LIBCPMT	ios.obj
@@ -60,9 +59,6 @@ rva	name	library	member
 0x60a70	??1CFileException@@UAE@XZ	NAFXCW	doccore.obj
 0x61849	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	LIBCPMT	iostream.obj
 0x6e583	?GetMenuStringA@CMenu@@QBEHIAAVCString@@I@Z	NAFXCW	filelist.obj
-0xc099a	??0CDocObjectServerItem@@IAE@PAVCOleServerDoc@@H@Z	NAFXCW	oledocob.obj
-0xc241b	?GetStockTextMetrics@COleControl@@QAEXPAUtagTEXTMETRICA@@@Z	NAFXCW	ctlprop.obj
-0xc8b96	??0CFontHolder@@QAE@PAUIPropertyNotifySink@@@Z	NAFXCW	ctlfont.obj
 0xcd7da	_InitMultipleMonitorStubs	NAFXCW	wincore.obj
 0xcd8b2	_xMonitorFromRect@8	NAFXCW	wincore.obj
 0xcd908	_xMonitorFromWindow@8	NAFXCW	wincore.obj
