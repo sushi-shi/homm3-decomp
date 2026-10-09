@@ -47,21 +47,6 @@ static const int g_combatActionAttackWall = 9;
 static const int g_combatActionCastCreatureSpell = 10;
 static const int g_combatActionFirstAid = 11;
 
-// Project-inferred action operations shared by UI, automation and AI.
-// A targeted order retains the secondary spell target. Complete tuple writes
-// also occur when receiving an action or restoring a simulation snapshot.
-void combatManager::prepareAction(int action, int extra)
-{
-    m_nextAction = action;
-    m_nextActionExtra = extra;
-}
-
-void combatManager::setTargetAction(int action, int extra, int targetHex)
-{
-    prepareAction(action, extra);
-    m_nextActionGridIndex = targetHex;
-}
-
 // E:\gamedcs\command.cpp:63
 // Dreamcast CodeView names this private nullary member and its two static
 // TWallTargetId arrays. Retail fixes the Complete-build fourth tower target,
@@ -71,15 +56,6 @@ void combatManager::setTargetAction(int action, int extra, int targetHex)
 // keep when the action is automatic; otherwise a basic catapult chooses a
 // random weakest wall, while the remaining cases prefer surviving towers.
 // Every successful arm writes the catapult order and its target combat hex.
-// Residual (99.8804%): all 59 blocks, 42 branches, five returns and four
-// calls are exact. The only six unpaired masked slots are one EAX/ECX scratch
-// swap while loading the keep's wall section and strength. why-reg finds the
-// callee-saved bindings and IL order identical and classifies this as a C1
-// caller-saved choice. Naming the wall as int or TWallSection, using the
-// canonical getWallStrength helper, nesting the two tests, and swapping the
-// count/skill declaration order are byte-flat; moving the wall lifetime
-// earlier costs 36 rows, while naming `skill == 0` costs 37. Keep the direct
-// DC-shaped access rather than forcing a register with synthetic state.
 // Mac code0+0x81d04 retains validWallTarget(WALL_TARGET_3) at the keep check.
 // Keep that source call even though VC6 emits a longer boolean test here.
 // A chosen-target result guards the fallback wall/tower selection and
@@ -110,6 +86,9 @@ void combatManager::setTargetAction(int action, int extra, int targetHex)
 // the shared native index; no declaration remains in either outer scope.
 // Removing that scaffolding leaves Windows at 98.6842%, with 59 aligned
 // blocks, four calls and all 22 relocations unchanged.
+// DC 179..181 stores the order directly (action, grid index, then extra),
+// and Mac retail calls no order helper; those three stores close the last
+// Windows difference (98.76 -> 100%).
 VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
 MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
@@ -204,7 +183,9 @@ bool combatManager::automateCatapult()
 
 
 issueCatapultOrder:
-    setTargetAction(9, -1, s_wallTargets[target].m_targetHex);
+    m_nextAction = 9;
+    m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
+    m_nextActionExtra = -1;
     return 1;
 }
 
