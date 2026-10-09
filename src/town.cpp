@@ -1105,10 +1105,16 @@ type_building_id town::buildBuilding(int buildingId,
         }
     }
 
-    if (m_garrisonHeroId != -1 && applySpecialEffect)
-        applySpecialBuildingEffect(g_game->getHero(m_garrisonHeroId));
-    if (m_visitingHeroId != -1 && applySpecialEffect)
-        applySpecialBuildingEffect(g_game->getHero(m_visitingHeroId));
+    // DC 1398..1406 fetch each hero on its own line inside a braced body;
+    // Mac 0x1b4734.. likewise computes the hero before the receiver (exact).
+    if (m_garrisonHeroId != -1 && applySpecialEffect) {
+        hero* garrisonHero = g_game->getHero(m_garrisonHeroId);
+        applySpecialBuildingEffect(garrisonHero);
+    }
+    if (m_visitingHeroId != -1 && applySpecialEffect) {
+        hero* visitingHero = g_game->getHero(m_visitingHeroId);
+        applySpecialBuildingEffect(visitingHero);
+    }
     return built;
 }
 
