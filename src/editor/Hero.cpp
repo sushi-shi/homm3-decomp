@@ -746,7 +746,7 @@ TNonRandomHero::TNonRandomHero(const TObjectType& objType, TRawIStream* pIStream
         setPortrait(*s_akClassTraits[getHeroClass()].m_heroes.begin());
 }
 
-VA(0x0044c1db, 0xa)
+VA(0x0044c1db, 0xd)
 void TIdentifiedHero::setHeroID(THeroID newHeroID)
 {
     _m_heroID = newHeroID;
