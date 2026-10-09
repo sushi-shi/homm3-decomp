@@ -19,4 +19,6 @@ struct TGameResourceTypeTraits {
 // h3maped 0x584188: points at the rows (one per resource type).
 extern const TGameResourceTypeTraits* akGameResourceTypeTraits;
 
+void InitializeGameResourceTypeTraitsTable();
+
 #endif  /* HOMM3_EDITOR_GAMERESOURCE_H */
