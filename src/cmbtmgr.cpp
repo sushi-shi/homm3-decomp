@@ -1707,9 +1707,10 @@ unsigned char combatManager::actsBefore(
 // Original public ?NextArmy@combatManager@@QAA_N_N@Z proves a bool
 // result and checking-for-bad-morale flag. Retail and Mac return only
 // true/false; all callers supply that same boolean domain.
-// Residual (99.9020%): only the final SetNextArmy argument scratch registers
-// differ. Naming group/index before that call is byte-flat; why-reg --model
-// likewise finds no movement. Keep the proven bool interface and accessor.
+// The morale check passes the chosen army's side field, as placeArmyInGrid
+// reads it (DC 4071 has no GetOwningSide call): with the accessor there the
+// final SetNextArmy argument loads took other scratch registers (99.9020%).
+// The field in SetNextArmy too is Windows-flat and lowers Mac 27.10 -> 26.98%.
 VA(0x00465080, 0x2A2)
 DC_ADDRESS(0x05f518, 0x41c)
 MAC_ADDRESS(0x070b74, 0x328)
@@ -1764,7 +1765,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
                     continue;
                 if (checkingForBadMorale && !m_creaturePlacement
                     && !m_inSecondPhase) {
-                    if (checkApplyBadMorale(best->getOwningSide(), best->m_bitIndex))
+                    if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
                         continue;
                     if (applyAzureDragonFear(best))
                         continue;
