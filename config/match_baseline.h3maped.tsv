@@ -2051,7 +2051,7 @@ rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5710	89.5710	89.5710	0xa696b	-
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	87.7247	87.7247	87.7247	0xa6cf2	-
 rmg	?decorateMap@t_abstract_random_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x9eb8d	-
-rmg	?decorateMapCell@t_abstract_random_generator@@QAEXUTRmgMapPosition@@H@Z	79.0297	79.0297	79.0297	0x9e700	-
+rmg	?decorateMapCell@t_abstract_random_generator@@QAEXUTRmgMapPosition@@H@Z	79.0162	79.0297	79.0297	0x9e700	-
 rmg	?decorateUnderground@type_random_map_generator@@QAEXXZ	99.1055	99.1055	99.1055	0xa7ecc	-
 rmg	?discard@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x9cebd	-
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0xa2413	-
