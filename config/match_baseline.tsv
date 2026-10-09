@@ -1082,7 +1082,7 @@ command	?checkWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0
 command	?doAnimations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	tokens1:ee577d5576e2
 command	?doCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	tokens1:3f1e73b99f6c
 command	?doVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	tokens1:e83e78f62e8c
-command	?getCommand@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x76490	tokens1:8234f4a0d619
+command	?getCommand@combatManager@@QAEHH@Z	99.9464	100.0000	100.0000	0x76490	tokens1:8234f4a0d619
 command	?getControl@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x782d0	tokens1:839c88458f96
 command	?getSurrenderCost@combatManager@@AAEJXZ	100.0000	100.0000	100.0000	0x77a00	tokens1:8a43098dd394
 command	?getTowerString@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	tokens1:975d7d9b3e09
@@ -1657,7 +1657,7 @@ events	?combatMonsterEvent@advManager@@QAEHPAVhero@@W4TCreatureType@@PAHPAVNewma
 events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PADUtype_point@@E@Z	98.7114	98.7114	98.7114	0xabdc0	tokens1:4675fc85a1d0
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9970	99.9970	99.9970	0xa84f0	tokens1:1baf4185da03
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:d02ea83f02f7
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12H_N4@Z	97.8216	97.8216	99.1139	0xad470	tokens1:4c20f3fd6a68
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12H_N4@Z	96.9454	97.3101	99.1139	0xad470	tokens1:6ee39e07216e
 events	?doCustomArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9f070	tokens1:db423f48515e
 events	?doCustomResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	tokens1:f98c216d9d05
 events	?doCustomSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5a80	tokens1:39d7d582cb18
@@ -4051,9 +4051,9 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAE_NPAVC
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	tokens1:c58d1b550f99
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:263a3adaf3eb
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:3e0a02090019
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	91.1860	91.1860	93.0332	0x189710	tokens1:3ac119cf2ca1
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:9ab4056b5b4f
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:66f526e7e131

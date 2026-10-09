@@ -11,7 +11,11 @@
 #ifndef HOMM3_EDITOR_TIMEDEVENT_H
 #define HOMM3_EDITOR_TIMEDEVENT_H
 
+#include <exception>
+#include <iosfwd>
 #include <string>
+
+#include "gameversion.h"
 
 #include "editor/Player.h"
 #include "editor/ResourceQuantities.h"
@@ -28,11 +32,18 @@ const unsigned int kNumDaysPerYear = kNumDaysPerMonth * kNumMonthsPerYear;
 
 class TTimedEvent {
 public:
+    // importText's failure (the map's importText catches it).
+    class TImportTextFailure : public std::exception {
+    };
+
     TTimedEvent();
 
     // The map file's record (TimedEvent.cpp, h3maped 0x4c025c).
     void read(TRawIStream* pIStream, int version);
     void write(TRawOStream* pOStream, int version) const;
+    // The map text's event entry (h3maped 0x4c03ac reads, 0x4c07d1 writes).
+    void importText(std::istream* pIStream, EGameVersion version);
+    void exportText(std::ostream* pOStream, EGameVersion version) const;
 
     enum { s_kMaxMessageLen = 300 };
 

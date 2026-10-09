@@ -202,8 +202,6 @@ public:
 };
 SIZE(SCampaign, 0x7c);
 
-extern const SCampaignMusicCue* g_campaignMusicTraits;
-
 // The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the
 // bonus-list reader at 0x485190, which switches a type byte 0..7 and
 // `new`s an object of the matching vftable:

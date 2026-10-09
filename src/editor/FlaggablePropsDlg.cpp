@@ -25,12 +25,12 @@ VA_COMPGEN(0x0041e19c, 0x1c, SCALAR_DELETING_DTOR, TFlaggablePropsDlg)
 VA(0x0041e1b8, 0x15)
 void TFlaggablePropsDlg::DoDataExchange(CDataExchange* pDX)
 {
-    DDX_Radio(pDX, IDC_OWNER_NONE_RADIO, _m_owner);
+    DDX_Radio(pDX, IDC_NONE_RADIO, _m_owner);
 }
 
 VA(0x0041e1cd, 0x6)
 BEGIN_MESSAGE_MAP(TFlaggablePropsDlg, CDialog)
-    ON_BN_DOUBLECLICKED(IDC_OWNER_NONE_RADIO, OnDoubleClickedOwnerRadio)
+    ON_BN_DOUBLECLICKED(IDC_NONE_RADIO, OnDoubleClickedOwnerRadio)
     ON_BN_DOUBLECLICKED(IDC_OWNER_PLAYER1_RADIO, OnDoubleClickedOwnerRadio)
     ON_BN_DOUBLECLICKED(IDC_OWNER_PLAYER2_RADIO, OnDoubleClickedOwnerRadio)
     ON_BN_DOUBLECLICKED(IDC_OWNER_PLAYER3_RADIO, OnDoubleClickedOwnerRadio)
@@ -69,7 +69,7 @@ BOOL TFlaggablePropsDlg::OnInitDialog()
     GetDlgItem(IDCANCEL)->SetWindowText(kCancelStr);
     GetDlgItem(ID_HELP)->SetWindowText(kHelpStr);
     GetDlgItem(IDC_OWNER_STATIC)->SetWindowText(SFlaggablePropsDlgText::kOwnerStaticStr);
-    GetDlgItem(IDC_OWNER_NONE_RADIO)->SetWindowText(SFlaggablePropsDlgText::kNoneRadioStr);
+    GetDlgItem(IDC_NONE_RADIO)->SetWindowText(SFlaggablePropsDlgText::kNoneRadioStr);
     GetDlgItem(IDC_OWNER_PLAYER1_RADIO)->SetWindowText(
         TFormattedString(SFlaggablePropsDlgText::kPlayerRadioFmtStr, 1, akPlayerTraits[0].m_pColorName));
     GetDlgItem(IDC_OWNER_PLAYER2_RADIO)->SetWindowText(

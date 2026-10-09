@@ -265,3 +265,71 @@ the now-exact bytes.
 - **`TObjectTypeTable::load`.** Loki's `TRuntimeError` message and its
   `try { ... } catch (...) { Dispose; throw; }`.
 - **`less<TObjectType>`.** Loki's explicit specialization.
+
+## The Loki Linux game 1.3.1a (heroes3.dynamic)
+
+`work/loki-game` pins Loki's 1.3.1a `heroes3.dynamic` (RoE-era source with the
+Windows bugfixes; GCC 2.95.2 `-O2 -mcpu=pentium -funroll-loops
+-fno-exceptions`, libstdc++ 2.95 headers) and pairs it with HEROES3.EXE without
+names (`homm3 loki-game`, docs/loki/game.md on that branch;
+`config/retail/heroes3-loki/functions.tsv` gives the evidence of each pair).
+GCC at `-O2` keeps every non-inline helper as a call. Loki addresses below
+are image VAs; scores are CUR from full builds.
+
+### Tried and dropped
+
+- **`advManager::doCombat` (0x4ad470), 97.31.**
+  - *Loki and Dreamcast:* both build `CHeroLevelUpdateMsg` from the hero's
+    private stats array (Loki 0x080f9ca9, DC events.cpp:6569 dc 0x9bf56), the
+    way `textButton` reads `button::Text`: `hero` befriends `advManager`, and
+    the provisional `hero::copyPrimarySkills` goes.
+  - *Why not:* doCombat rises to 97.82, but on 5d2479d2d the removed
+    declaration moves `CEnterNameEdit::onKeyPress` 100 -> 99.89 and
+    `onKillFocus` 100 -> 99.87 (name-keyed; keeping the unused declaration
+    restores both). On 9d4709c63 the same change was neutral elsewhere.
+  - *Unblock:* the name-keyed mechanism. The change is on `work/loki-game`
+    (296af56fd).
+- **doCombat, Loki only:** a discarded `g_currentPlayer->isLocalHuman()` call
+  after the right hero's `checkLevel` (0x080f9c3a). DC has none; adding it
+  gives 92.59.
+- **`CAdventurMapChatEdit::sendChat` (0x4022e0), 77.17.** Loki's body
+  (0x082153c0) lies in the kept linkonce band, so RoE defined it inline.
+  Declaring the Windows definition `inline` is flat (77.17). Its string is
+  libstdc++'s bastring, so it says nothing about the Dinkumware `assign` site.
+
+### Era differences (RoE versus Complete)
+
+- **`hero::giveArtifact` (0x4e3070), 96.54.** Loki 0x081294c8 (99 bytes):
+  equip or backpack, then `checkForArtifactWin` and `checkEndGame(0)`. No
+  combination-artifact path.
+- **`advManager::quickInfo` (0x4137c0), 93.13.** Loki 0x08065d68 builds its
+  text through twelve rollover helpers it shares with `setRolloverText`
+  (0x0805c058..0x0805cde4); Complete's quick-view table has no RoE form.
+- **`type_quest::load`/`loadFromMap`, the `setDefaultText` overrides.** SoD's
+  quest classes: no type name, `__tf` or vtable in the image.
+- **RMG walls.** Armageddon's Blade's generator is absent.
+- **The doCombat network payload.** Loki keeps DC's `destroyMsg` and five
+  deletes; Complete's `CWaitForRemoteBattleDlg` owns the payload by value.
+
+### Shapes Loki confirms (no change)
+
+- **`displayLCWinLoss` (0x4f2960), 81.85:** Loki 0x081371d0 (callers
+  `checkEndGame`, `handlePlayerLost`) keeps `sendPlayerLost` out of line
+  (0x08136288) and expands `onSameTeam` and `getTown`, as the source does.
+  Its `checkEndGame` (0x0813745c) keeps `checkPlayerLoss` and `getEnemyCount`
+  as calls (0x08135c80, 0x08137090).
+- **`hero::initialize(short)` (0x4d8720):** probable Loki body 0x0811e464
+  calls `type_obscuring_object::initialize`, the fills, `strncpy`, `giveSS`
+  twice, `addSpell`, `random` twice and a mana helper; the source has each.
+- **`combatManager::processCombatMsg` (0x474d80), 94.97:** Loki 0x080c1a70
+  calls `resetMouse`, `turnOffHighlighter` and `setCombatGrid`, which the
+  source already calls.
+- **`TCastleWindow::TCastleWindow` (0x5d86f0), 99.64:** Loki 0x081d9d34 calls
+  `vector<int>::insert` where Windows expands it (different libraries).
+
+### Not paired yet
+
+`game::loadMap`, `hero::initialize(const HeroExtra*)`, `aiChooseDestination`
+and `giveBlackBoxReward` have no reliable pair (best call-sequence candidates:
+none for loadMap, 0x080e8964 for giveBlackBoxReward with 27 of 86 paired
+callees in order).

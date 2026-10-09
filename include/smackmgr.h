@@ -2,6 +2,7 @@
 #define HOMM3_SMACKMGR_H
 
 #include "va.h"
+#include "videogamestate.h"
 
 #if defined(HOMM3_TARGET_MAC)
 // Only opaque vendor handles are needed by the shared game declarations.
@@ -112,20 +113,6 @@ enum EVideoId {
     VIDEO_ID_FIRST_TABLED = 0x1c,
     VIDEO_ID_OVERLAY_BLIT = 0x1d,
     VIDEO_ID_STATE_GATED = 0x21
-};
-
-// The two *gpVideoGameState values that force VIDEO_ID_STATE_GATED
-// onto the bink arm (byte-derived; the pointee's real domain arrives
-// with its owning TU - names provisional).
-// Two disjoint pairs are attested on this global. {2, 3} force
-// VIDEO_ID_STATE_GATED onto the bink arm (VideoPlay / VideoOpen);
-// {1, 3} open the h3ab_ahd expansion archives (LoadAnimHeaders /
-// LoadSoundHeaders). Value 3 is a member of both sets, so it keeps the
-// name the bink gate gave it. Names are role names, provisional.
-enum EVideoGameState {
-    VIDEO_GAME_STATE_EXPANSION_ARCHIVES = 0x1,
-    VIDEO_GAME_STATE_FORCED_BINK_LOW = 0x2,
-    VIDEO_GAME_STATE_FORCED_BINK_HIGH = 0x3
 };
 
 // GreenBits' one attested value: the RGB565 screen mode that selects

@@ -23568,10 +23568,10 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x11ce22	0x51cd9a	switch	table@0x11cdfe	code-interior	-	kept
 0x11ce26	0x51cda4	switch	table@0x11cdfe	code-interior	-	kept
 0x11ce2a	0x51cd77	switch	table@0x11cdfe	code-interior	-	kept
-0x11ce2e	0x51cde8	switch	table@0x11cdfe	code-start	-	kept
-0x11ce32	0x51cde8	switch	table@0x11cdfe	code-start	-	kept
-0x11ce36	0x51cde8	switch	table@0x11cdfe	code-start	-	kept
-0x11ce3a	0x51cde8	switch	table@0x11cdfe	code-start	-	kept
+0x11ce2e	0x51cde8	switch	table@0x11cdfe	code-interior	-	kept
+0x11ce32	0x51cde8	switch	table@0x11cdfe	code-interior	-	kept
+0x11ce36	0x51cde8	switch	table@0x11cdfe	code-interior	-	kept
+0x11ce3a	0x51cde8	switch	table@0x11cdfe	code-interior	-	kept
 0x11ce3e	0x51cd49	switch	table@0x11cdfe	code-interior	-	kept
 0x11ce43	0x52e326	code	add	code-interior	-	kept
 0x11ce55	0x549f08	code	mov	data	-	kept

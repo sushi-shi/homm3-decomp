@@ -39,6 +39,7 @@ enum ECampaignMusicConstants {
 // without a definition (the bitNumber pattern) so the loader's relocations
 // have source authority without fabricating the initializer.
 extern SCampaignMusicCue g_campaignMusicCues[CAMPAIGN_MUSIC_CUE_COUNT];
+extern const SCampaignMusicCue* g_campaignMusicTraits;
 
 unsigned char initializeCampaignMusicTable();
 

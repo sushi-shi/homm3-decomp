@@ -11,24 +11,34 @@
 #ifndef HOMM3_EDITOR_GAMEOBJECT_H
 #define HOMM3_EDITOR_GAMEOBJECT_H
 
+#include <exception>
 #include <iosfwd>
 #include <map>
 #include <memory>
 #include <string>
 
+#include "gameversion.h"
 #include "objecttype.h"
+#include "editor/Point.h"
 
 class TRawIStream;
 class TRawOStream;
 
 class TGameObject {
 public:
+    // importText's failure (the map's importText catches it).
+    class TImportTextFailure : public std::exception {
+    };
+
     TGameObject(const TGameObject& other);
     TGameObject(const TObjectType& objType);
     virtual ~TGameObject() = 0;
     TGameObject& operator=(const TGameObject& other);
 
-    virtual void importText(std::istream* pIStream) {}
+    // The text import and export pass the map's edition (the map's
+    // importText and exportText hand over _m_version; the empty bodies
+    // share one `ret 8`, 0x4026bc).
+    virtual void importText(std::istream* pIStream, EGameVersion version) {}
     // Windows returns the clone in an auto_ptr (h3maped 0x42a75a calls
     // slot 2 with a result slot and no allocator); Loki passes one.
     virtual std::auto_ptr<TGameObject> clone() const = 0;
@@ -37,7 +47,7 @@ public:
     virtual std::string getTypeName() const;
     virtual bool isCustomized() const { return false; }
     virtual bool hasText() const { return false; }
-    virtual void exportText(std::ostream* pOStream) const {}
+    virtual void exportText(std::ostream* pOStream, EGameVersion version) const {}
 
     const TObjectType& getObjectType() const { return _m_objectTypeIter->first; }
     bool getBCellPlaced(unsigned int x, unsigned int y) const
@@ -56,9 +66,11 @@ public:
     {
         return _m_objectTypeIter->first.getBCellTrigger(x, y);
     }
+    bool hasTrigger() const { return _m_objectTypeIter->first.m_hasTrigger != 0; }
     const TObjectType::TPoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
     const std::bitset<kNumTerrainTypes>& getTerrainMask() const { return _m_objectTypeIter->first._m_terrainMask; }
     TAdventureObjectType getType() const { return _m_objectTypeIter->first.getType(); }
+    int getExtra() const { return _m_objectTypeIter->first.getExtra(); }
     bool getBUnderlay() const { return _m_objectTypeIter->first.getBUnderlay() != 0; }
     unsigned int getWidth() const { return _m_objectTypeIter->first.getWidth(); }
     unsigned int getHeight() const { return _m_objectTypeIter->first.getHeight(); }
@@ -75,5 +87,15 @@ TRawIStream& operator>>(TRawIStream& stream, TObjectType& objType);
 // The object types' order, member by member (the less instance h3maped
 // keeps, 0x490b77, compares the type, subtype and masks in turn).
 bool operator<(const TObjectType& lhs, const TObjectType& rhs);
+
+// A placed object's tile less its type's trigger cell: the location the
+// dialogs show (h3maped 0x47344d).
+inline const TTilePoint operator-(const TTilePoint& lhs, const TObjectType::TPoint& rhs)
+{
+    TTilePoint result = lhs;
+    result.x(result.x() - rhs.m_x);
+    result.y(result.y() - rhs.m_y);
+    return result;
+}
 
 #endif  /* HOMM3_EDITOR_GAMEOBJECT_H */

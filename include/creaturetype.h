@@ -7,10 +7,6 @@
 #include "creaturetype_fwd.h"
 #include "town.h"
 
-// Complete extends the Dreamcast creature-name domain through id 0x96.
-// GetArmyName's retail range guard proves the inclusive upper bound.
-const int g_creatureTypeLast = 0x96;
-
 // E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
 // events.cpp also expands this at monsters_flee/join/sell_out, passing a
 // literal count so each singular/plural selection folds at its call site.

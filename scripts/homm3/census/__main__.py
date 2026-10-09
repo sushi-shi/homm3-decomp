@@ -64,11 +64,22 @@ def folds_catch_handlers(image: str | None = None) -> bool:
                 .get("census_folds_catch_handlers", False))
 
 
+def joins_catch_bodies(image: str | None = None) -> bool:
+    """Whether the image's census keeps a function's code on both sides of
+    its catch blocks one function (config/project.toml
+    `census_joins_catch_bodies` on the image's pin; see
+    functions.Census.tail_limit)."""
+    from homm3.core import images
+    key = image or paths.image_key()
+    return bool(images.pins(paths.ROOT).get(images.input_key(key), {})
+                .get("census_joins_catch_bodies", False))
+
+
 def derive(log=print):
     from homm3.core.image import Image
     from homm3.census import find_relocs, functions, vtables
     image = Image(str(common.resolve_exe()))
-    census = functions.run(image, log=log)
+    census = functions.run(image, log=log, catch_bodies=joins_catch_bodies())
     from homm3.census import eh
     folded = {}
     if folds_catch_handlers():

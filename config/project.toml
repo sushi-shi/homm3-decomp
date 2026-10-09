@@ -40,6 +40,11 @@ image_base = 0x400000
 # the census folds such a handler into its parent's extent, as the game's
 # hand-owned census does (homm3.census, funclets.tsv).
 census_folds_catch_handlers = true
+# A catch block may also sit in the middle of its function, which jumps on
+# past it: the parent's jumps over its catch funclets (and over weak data or
+# immediate seeds) are no tail calls, nor is a catch block's jump back into
+# its parent (homm3.census.functions.Census.tail_limit).
+census_joins_catch_bodies = true
 # A placed body's call past the first byte where it leaves retail names a
 # callee only when four bytes before it agree, the callee's own body equals
 # retail there, or nothing else names that callee or address
@@ -65,6 +70,11 @@ image_base = 0x400000
 # the census folds such a handler into its parent's extent, as the game's
 # hand-owned census does (homm3.census, funclets.tsv).
 census_folds_catch_handlers = true
+# A placed body's call past the first byte where it leaves retail names a
+# callee only when four bytes before it agree, the callee's own body equals
+# retail there, or nothing else names that callee or address
+# (homm3.census.placements).
+placements_prove_late_calls = true
 # Its own sources and headers: src/campaign_editor/ and
 # include/campaign_editor/, the original's
 # `C:\Dev\Heroes 3 Exp 2\CampaignEditor\` (RTTI anonymous-namespace paths).

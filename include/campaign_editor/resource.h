@@ -1,0 +1,38 @@
+// resource.h - the campaign editor's dialog template and control
+// identifiers, as the image's .rsrc entries and their users' DDX and
+// GetDlgItem calls spell them. The original resource.h is not recorded: the
+// names follow the AppWizard IDD_/IDC_ style from each resource's role and
+// the texts CmpEditr.txt gives it.
+#ifndef HOMM3_CAMPAIGN_EDITOR_RESOURCE_H
+#define HOMM3_CAMPAIGN_EDITOR_RESOURCE_H
+
+enum {
+    IDD_CAMPAIGN_PROPS = 130,
+    IDD_NEW_CAMPAIGN = 131
+};
+
+enum {
+    IDC_CAMPAIGN_MAP_STATIC = 1000,
+    IDC_CAMPAIGN_NAME_EDIT = 1001,
+    IDC_CAMPAIGN_DESCRIPTION_EDIT = 1002,
+    IDC_MAP_LIST = 1008,
+    IDC_DIFFICULTY_CHOICE_CHECK = 1068,
+    IDC_CAMPAIGN_MAP_LABEL_STATIC = 1076,
+    IDC_CAMPAIGN_NAME_STATIC = 1077,
+    IDC_CAMPAIGN_DESCRIPTION_STATIC = 1078,
+    IDC_MUSIC_COMBO = 1103,
+    IDC_MUSIC_STATIC = 1104,
+    IDC_NEW_CAMPAIGN_MAP_STATIC = 1089,
+    IDC_VERSION_GROUP = 1105,
+    IDC_ARMAGEDDONS_BLADE_RADIO = 1849,
+    IDC_SHADOW_OF_DEATH_RADIO = 1922
+};
+
+enum {
+    ID_FILE_REFRESH_SCENARIO_MAPS = 0x8003,
+    ID_FILE_EXPORT_SCENARIO_MAPS = 0x8004,
+    ID_FILE_EXPORT_TEXT = 0x8008,
+    ID_FILE_IMPORT_TEXT = 0x8009
+};
+
+#endif  /* HOMM3_CAMPAIGN_EDITOR_RESOURCE_H */

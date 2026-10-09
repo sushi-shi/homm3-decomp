@@ -126,7 +126,6 @@ DATA(0x006755b8) const char* g_campaignBuildingIconNames[TOWN_TYPE_COUNT][MAX_BU
     "BoEup_3.pcx", "BoEup_4.pcx", "BoEup_5.pcx", "BoEup_6.pcx"
 }
 };
-DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusicCues;
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
