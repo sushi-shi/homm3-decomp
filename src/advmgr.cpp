@@ -17,12 +17,14 @@
 
 #include "adventureoptionswindow.h"
 #include "advmgr_objects.h"
+#include "ai.h"
 #include "ai_player.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "bottomviewsubwindow.h"
 #include "button.h"
 #include "creature_bank.h"
+#include "creaturegenerator4.h"
 #include "creaturetype.h"
 #include "csprite.h"
 #include "exec.h"
@@ -8063,13 +8065,13 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
         switch (thisCell->m_type) {
         case CREATURE_BANK:
             switch (thisCell->m_objectIndex) {
-            case GET_SOUND_BANK_0: return cyclops_bank_sound;
-            case GET_SOUND_BANK_1: return dwarf_bank_sound;
-            case GET_SOUND_BANK_2: return griffin_bank_sound;
-            case GET_SOUND_BANK_3: return imp_bank_sound;
-            case GET_SOUND_BANK_4: return medusa_bank_sound;
-            case GET_SOUND_BANK_5: return naga_bank_sound;
-            case GET_SOUND_BANK_6: return dragonfly_bank_sound;
+            case CREATURE_BANK_CYCLOPS: return cyclops_bank_sound;
+            case CREATURE_BANK_DWARF: return dwarf_bank_sound;
+            case CREATURE_BANK_GRIFFIN: return griffin_bank_sound;
+            case CREATURE_BANK_IMP: return imp_bank_sound;
+            case CREATURE_BANK_MEDUSA: return medusa_bank_sound;
+            case CREATURE_BANK_NAGA: return naga_bank_sound;
+            case CREATURE_BANK_DRAGONFLY: return dragonfly_bank_sound;
             default: return invalid_sound;
             }
         case MINE: {
@@ -8079,20 +8081,20 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             if (abandoned)
                 return abandoned_mine_sound;
             switch (type) {
-            case GET_SOUND_MINE_0: return wood_mine_sound;
-            case GET_SOUND_MINE_1: return mercury_mine_sound;
-            case GET_SOUND_MINE_2: return ore_mine_sound;
-            case GET_SOUND_MINE_3: return sulfur_mine_sound;
-            case GET_SOUND_MINE_4: return crystal_mine_sound;
-            case GET_SOUND_MINE_5: return gem_mine_sound;
-            case GET_SOUND_MINE_6: return gold_mine_sound;
+            case WOOD: return wood_mine_sound;
+            case MERCURY: return mercury_mine_sound;
+            case ORE: return ore_mine_sound;
+            case SULFUR: return sulfur_mine_sound;
+            case CRYSTAL: return crystal_mine_sound;
+            case GEMS: return gem_mine_sound;
+            case GOLD: return gold_mine_sound;
             default: return invalid_sound;
             }
         }
         case GARRISON:
-            if (thisCell->m_objectIndex == GET_SOUND_GARRISON_0)
+            if (thisCell->m_objectIndex == GARRISON_NORMAL)
                 return garrison_sound;
-            if (thisCell->m_objectIndex == GET_SOUND_GARRISON_1)
+            if (thisCell->m_objectIndex == GARRISON_ANTI_MAGIC)
                 return anti_magic_garrison_sound;
             break;
         case WINDMILL:
@@ -8176,71 +8178,71 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return hill_fort_sound;
         case CREATURE_GENERATOR_1:
             switch (g_creatureGenerator1Types[thisCell->m_objectIndex]) {
-            case GET_SOUND_CREATURE_106: return basilisk_generator_sound;
-            case GET_SOUND_CREATURE_096: return behemoth_generator_sound;
-            case GET_SOUND_CREATURE_074: return beholder_generator_sound;
-            case GET_SOUND_CREATURE_066: return black_knight_generator_sound;
-            case GET_SOUND_CREATURE_068: return bone_dragon_generator_sound;
-            case GET_SOUND_CREATURE_010: return cavalier_generator_sound;
-            case GET_SOUND_CREATURE_014: return centaur_generator_sound;
-            case GET_SOUND_CREATURE_112: return air_elemental_generator_sound;
-            case GET_SOUND_CREATURE_012: return angel_generator_sound;
-            case GET_SOUND_CREATURE_094: return cyclops_generator_sound;
-            case GET_SOUND_CREATURE_054: return devil_generator_sound;
-            case GET_SOUND_CREATURE_104: return dragonfly_generator_sound;
-            case GET_SOUND_CREATURE_016: return dwarf_generator_sound;
-            case GET_SOUND_CREATURE_113: return earth_elemental_generator_sound;
-            case GET_SOUND_CREATURE_052: return efreet_generator_sound;
-            case GET_SOUND_CREATURE_018: return elf_generator_sound;
-            case GET_SOUND_CREATURE_114: return fire_elemental_generator_sound;
-            case GET_SOUND_CREATURE_030: return gargoyle_generator_sound;
-            case GET_SOUND_CREATURE_036: return genie_generator_sound;
-            case GET_SOUND_CREATURE_086: return wolf_rider_generator_sound;
-            case GET_SOUND_CREATURE_098: return gnoll_generator_sound;
-            case GET_SOUND_CREATURE_084: return goblin_generator_sound;
-            case GET_SOUND_CREATURE_044: return gog_generator_sound;
-            case GET_SOUND_CREATURE_102: return gorgon_generator_sound;
-            case GET_SOUND_CREATURE_026: return green_dragon_generator_sound;
-            case GET_SOUND_CREATURE_004: return griffin_generator_sound;
-            case GET_SOUND_CREATURE_072: return harpy_generator_sound;
-            case GET_SOUND_CREATURE_046: return hell_hound_generator_sound;
-            case GET_SOUND_CREATURE_110: return hydra_generator_sound;
-            case GET_SOUND_CREATURE_042: return imp_generator_sound;
-            case GET_SOUND_CREATURE_100: return lizardman_generator_sound;
-            case GET_SOUND_CREATURE_034: return mage_generator_sound;
-            case GET_SOUND_CREATURE_080: return manticore_generator_sound;
-            case GET_SOUND_CREATURE_076: return medusa_generator_sound;
-            case GET_SOUND_CREATURE_078: return minotaur_generator_sound;
-            case GET_SOUND_CREATURE_008: return monk_generator_sound;
-            case GET_SOUND_CREATURE_038: return naga_generator_sound;
-            case GET_SOUND_CREATURE_048: return demon_generator_sound;
-            case GET_SOUND_CREATURE_090: return ogre_generator_sound;
-            case GET_SOUND_CREATURE_088: return orc_generator_sound;
-            case GET_SOUND_CREATURE_050: return pit_fiend_generator_sound;
-            case GET_SOUND_CREATURE_082: return red_dragon_generator_sound;
-            case GET_SOUND_CREATURE_092: return roc_generator_sound;
-            case GET_SOUND_CREATURE_028: return gremlin_generator_sound;
-            case GET_SOUND_CREATURE_040: return titan_generator_sound;
-            case GET_SOUND_CREATURE_022: return treefolk_generator_sound;
-            case GET_SOUND_CREATURE_070: return troglodyte_generator_sound;
-            case GET_SOUND_CREATURE_115: return water_elemental_generator_sound;
-            case GET_SOUND_CREATURE_060: return wight_generator_sound;
-            case GET_SOUND_CREATURE_108: return wyvern_generator_sound;
-            case GET_SOUND_CREATURE_020: return pegasus_generator_sound;
-            case GET_SOUND_CREATURE_024: return unicorn_generator_sound;
-            case GET_SOUND_CREATURE_064: return lich_generator_sound;
-            case GET_SOUND_CREATURE_062: return vampire_generator_sound;
-            case GET_SOUND_CREATURE_056: return skeleton_generator_sound;
-            case GET_SOUND_CREATURE_058: return zombie_generator_sound;
-            case GET_SOUND_CREATURE_000: return pikeman_generator_sound;
-            case GET_SOUND_CREATURE_002: return crossbowman_generator_sound;
-            case GET_SOUND_CREATURE_006: return swordsman_generator_sound;
+            case CREATURE_BASILISK: return basilisk_generator_sound;
+            case CREATURE_BEHEMOTH: return behemoth_generator_sound;
+            case CREATURE_BEHOLDER: return beholder_generator_sound;
+            case CREATURE_BLACK_KNIGHT: return black_knight_generator_sound;
+            case CREATURE_BONE_DRAGON: return bone_dragon_generator_sound;
+            case CREATURE_CAVALIER: return cavalier_generator_sound;
+            case CREATURE_CENTAUR: return centaur_generator_sound;
+            case CREATURE_AIR_ELEMENTAL: return air_elemental_generator_sound;
+            case CREATURE_ANGEL: return angel_generator_sound;
+            case CREATURE_CYCLOPS: return cyclops_generator_sound;
+            case CREATURE_DEVIL: return devil_generator_sound;
+            case CREATURE_SERPENT_FLY: return dragonfly_generator_sound;
+            case CREATURE_DWARF: return dwarf_generator_sound;
+            case CREATURE_EARTH_ELEMENTAL: return earth_elemental_generator_sound;
+            case CREATURE_EFREETI: return efreet_generator_sound;
+            case CREATURE_WOOD_ELF: return elf_generator_sound;
+            case CREATURE_FIRE_ELEMENTAL: return fire_elemental_generator_sound;
+            case CREATURE_STONE_GARGOYLE: return gargoyle_generator_sound;
+            case CREATURE_GENIE: return genie_generator_sound;
+            case CREATURE_WOLF_RIDER: return wolf_rider_generator_sound;
+            case CREATURE_GNOLL: return gnoll_generator_sound;
+            case CREATURE_GOBLIN: return goblin_generator_sound;
+            case CREATURE_GOG: return gog_generator_sound;
+            case CREATURE_GORGON: return gorgon_generator_sound;
+            case CREATURE_GREEN_DRAGON: return green_dragon_generator_sound;
+            case CREATURE_GRIFFIN: return griffin_generator_sound;
+            case CREATURE_HARPY: return harpy_generator_sound;
+            case CREATURE_HELL_HOUND: return hell_hound_generator_sound;
+            case CREATURE_HYDRA: return hydra_generator_sound;
+            case CREATURE_IMP: return imp_generator_sound;
+            case CREATURE_LIZARDMAN: return lizardman_generator_sound;
+            case CREATURE_MAGE: return mage_generator_sound;
+            case CREATURE_MANTICORE: return manticore_generator_sound;
+            case CREATURE_MEDUSA: return medusa_generator_sound;
+            case CREATURE_MINOTAUR: return minotaur_generator_sound;
+            case CREATURE_MONK: return monk_generator_sound;
+            case CREATURE_NAGA_SENTINEL: return naga_generator_sound;
+            case CREATURE_DEMON: return demon_generator_sound;
+            case CREATURE_OGRE: return ogre_generator_sound;
+            case CREATURE_ORC: return orc_generator_sound;
+            case CREATURE_PIT_FIEND: return pit_fiend_generator_sound;
+            case CREATURE_RED_DRAGON: return red_dragon_generator_sound;
+            case CREATURE_ROC: return roc_generator_sound;
+            case CREATURE_GREMLIN: return gremlin_generator_sound;
+            case CREATURE_GIANT: return titan_generator_sound;
+            case CREATURE_DENDROID_GUARD: return treefolk_generator_sound;
+            case CREATURE_TROGLODYTE: return troglodyte_generator_sound;
+            case CREATURE_WATER_ELEMENTAL: return water_elemental_generator_sound;
+            case CREATURE_WIGHT: return wight_generator_sound;
+            case CREATURE_WYVERN: return wyvern_generator_sound;
+            case CREATURE_PEGASUS: return pegasus_generator_sound;
+            case CREATURE_UNICORN: return unicorn_generator_sound;
+            case CREATURE_LICH: return lich_generator_sound;
+            case CREATURE_VAMPIRE: return vampire_generator_sound;
+            case CREATURE_SKELETON: return skeleton_generator_sound;
+            case CREATURE_WALKING_DEAD: return zombie_generator_sound;
+            case CREATURE_PIKEMAN: return pikeman_generator_sound;
+            case CREATURE_ARCHER: return crossbowman_generator_sound;
+            case CREATURE_SWORDSMAN: return swordsman_generator_sound;
             default: return swordsman_generator_sound;
             }
         case CREATURE_GENERATOR_4:
-            if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_0)
+            if (thisCell->m_objectIndex == CREATURE_GENERATOR_4_ELEMENTAL_CONFLUX)
                 return elemental_conflux_sound;
-            if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_1)
+            if (thisCell->m_objectIndex == CREATURE_GENERATOR_4_GOLEM_FACTORY)
                 return golem_factory_sound;
             break;
         default:

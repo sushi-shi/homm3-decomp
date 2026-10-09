@@ -122,7 +122,7 @@ advmgr	?getFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0
 advmgr	?getMineHelpText@@YIXPADPAVNewmapCell@@JPBDE@Z	100.0000	100.0000	100.0000	0xd670	tokens1:abfbd5584abf
 advmgr	?getNormalCursor@advManager@@AAE?AW4type_adventure_cursor@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe280	tokens1:cd631fe5b15a
 advmgr	?getRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010	tokens1:f6d2f7ddaa95
-advmgr	?getSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	100.0000	100.0000	100.0000	0x18620	tokens1:8b2981ad015f
+advmgr	?getSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	100.0000	100.0000	100.0000	0x18620	tokens1:e54f2f0bde74
 advmgr	?getTriggerCell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.0000	100.0000	100.0000	0xafb0	tokens1:9c7343c8f261
 advmgr	?getUniversity@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.0000	100.0000	0x5e10	tokens1:48d75bcdfe11
 advmgr	?get_mouse_map_point@advManager@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0x7b10	tokens1:167d654cf1e5
@@ -2259,7 +2259,7 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	tokens1:4b11cd54c3cc
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:a7b572659fd1
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:498f41cfaf60
-hero	?giveArtifact@hero@@QAEEABUtype_artifact@@EE@Z	96.5425	96.5425	96.5425	0xe3070	tokens1:db41ba816cc0
+hero	?giveArtifact@hero@@QAEEABUtype_artifact@@EE@Z	96.5425	96.6316	96.6316	0xe3070	tokens1:db41ba816cc0
 hero	?giveExperience@hero@@QAEHHH_N@Z	100.0000	100.0000	100.0000	0xe33b0	tokens1:199397655ba8
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cfba9aeace3
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:934c31f084a7
