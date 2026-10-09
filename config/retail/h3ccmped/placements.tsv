@@ -3,7 +3,7 @@
 # census, manifest or shared-source change.
 # generator: homm3.census.placements
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-08
+# date: 2026-10-09
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	kind	name	unit	evidence
 0x00001020	0x15d	func	??0runtime_error@std@@QAE@ABV01@@Z	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x9
@@ -94,6 +94,7 @@ rva	size	kind	name	unit	evidence
 0x00018da0	0x167	func	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xdd
 0x00019100	0x31d	func	?initializeCampaignMapTraitsTable@@YAEXZ	campaignmap	masked body (797 bytes, 28 relocations) unique at a census start
 0x00019420	0x16	func	__h3cg$campaignmap$static_dtor$campaignNames	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x24
+0x0001b6c0	0x16e	func	?initializeCampaignMovieTraitsTable@@YAEXZ	campaignmovie	masked body (366 bytes, 18 relocations) unique at a census start
 0x0001b880	0x16e	func	?initializeCampaignMusicTable@@YAEXZ	campaignmusic	masked body (366 bytes, 18 relocations) unique at a census start
 0x0001b9f0	0x16	func	__h3cg$campaignmusic$static_dtor$campaignMusicTracks	campaignmusic	referenced by ?initializeCampaignMusicTable@@YAEXZ at +0x9a
 0x0001ca80	0x1ad	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	masked body (429 bytes, 14 relocations) unique at a census start
@@ -360,7 +361,6 @@ rva	size	kind	name	unit	evidence
 0x00098660	0x10	data	__TI2?AVruntime_error@std@@	gzinflatebuf	referenced by ?_Doraise@runtime_error@std@@MBEXXZ at +0x12
 0x000986d8	0x10	data	__TI5?AVTWriteFailure@TRawOStream@@	CampaignDoc	referenced by ?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z at +0x30
 0x00098838	0x10	data	__TI3?AVout_of_range@std@@	resource	referenced by ?_Xran@?$bitset@$0BD@@std@@ABEXXZ at +0xc3
-0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xf9
 0x00098d08	0x10	data	__TI5?AVTAllocationFailure@@	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x2e
 0x0009a230	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x367
 0x0009c610	0x10	data	__TI3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	referenced by ?_mustGetC@TGzInflateBuf@@AAEHXZ at +0x1b
@@ -373,6 +373,8 @@ rva	size	kind	name	unit	evidence
 0x000a93e8	0x150	data	?g_campaignMapTraitsImp@@3PAUTCampaignMapTraits@@A	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x1fe
 0x000a9538	0x4	data	?g_campaignMapTraits@@3AAY0BF@$$CBUTCampaignMapTraits@@A	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x8c
 0x000b166c	0xd	data	??_C@_0N@BOLI@camptext?4txt?$AA@	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x4f
+0x000b16b8	0x328	data	?g_campaignMovieTraitsImp@@3PAUTCampaignMovieTraits@@A	campaignmovie	referenced by ?initializeCampaignMovieTraitsTable@@YAEXZ at +0xf0
+0x000b1f78	0xd	data	??_C@_0N@DHCD@CmpMovie?4txt?$AA@	campaignmovie	referenced by ?initializeCampaignMovieTraitsTable@@YAEXZ at +0x1d
 0x000b1f88	0x188	data	?g_campaignMusicCues@@3PAUSCampaignMusicCue@@A	campaignmusic	referenced by ?initializeCampaignMusicTable@@YAEXZ at +0xf0
 0x000b2388	0xd	data	??_C@_0N@DAPP@CmpMusic?4txt?$AA@	campaignmusic	referenced by ?initializeCampaignMusicTable@@YAEXZ at +0x1d
 0x000b2488	0x43f8	data	?g_creatureTypeTraitsStorage@?A0xf10867bd5b3ccba5@@3PAUTCreatureTypeTraits@@A	creaturetype	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x19

@@ -294,6 +294,11 @@ source = "src/campaignmap.cpp"
 flags = "ccmped_o2_gr_windows"
 
 [[unit]]
+unit = "campaignmovie"
+source = "src/campaignmovie.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
 unit = "campaignmusic"
 source = "src/campaignmusic.cpp"
 flags = "ccmped_o2_gr_windows"

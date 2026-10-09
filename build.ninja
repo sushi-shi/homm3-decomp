@@ -390,6 +390,13 @@ build build/objdiff/base/campaignmap.obj: cl src/campaignmap.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = campaignmap
 build campaignmap: phony build/objdiff/base/campaignmap.obj
+build build/objdiff/base/campaignmovie.obj: cl src/campaignmovie.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = campaignmovie
+build campaignmovie: phony build/objdiff/base/campaignmovie.obj
 build build/objdiff/base/campaignwindow.obj: cl src/campaignwindow.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     scripts/homm3/core/compile_receipt.py config/units.toml $
@@ -1546,6 +1553,14 @@ build build/mac/obj/campaignmap.o: mwcc src/campaignmap.cpp | $
     scripts/homm3/mac/object.py config/mac/units.toml
   unit = campaignmap
 build mac$:campaignmap: phony build/mac/obj/campaignmap.o
+build build/mac/obj/campaignmovie.o: mwcc src/campaignmovie.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = campaignmovie
+build mac$:campaignmovie: phony build/mac/obj/campaignmovie.o
 build build/mac/obj/campaignwindow.o: mwcc src/campaignwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
@@ -2405,9 +2420,9 @@ build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
     build/mac/obj/creaturetype.o build/mac/obj/creature_bank.o $
     build/mac/obj/u2dvers.o build/mac/obj/levelupwindow.o $
     build/mac/obj/gametypewindow.o build/mac/obj/quickinfowindow.o $
-    build/mac/obj/campaignmap.o build/mac/obj/campaignwindow.o $
-    build/mac/obj/adventureoptionswindow.o build/mac/obj/kbwin.o $
-    build/mac/obj/soundmgr.o build/mac/obj/mousemgr.o $
+    build/mac/obj/campaignmap.o build/mac/obj/campaignmovie.o $
+    build/mac/obj/campaignwindow.o build/mac/obj/adventureoptionswindow.o $
+    build/mac/obj/kbwin.o build/mac/obj/soundmgr.o build/mac/obj/mousemgr.o $
     build/mac/obj/castle.o build/mac/obj/combatcontrolsubwindow.o $
     build/mac/obj/binkmanager.o build/mac/obj/townmgr.o $
     build/mac/obj/bitmap16.o build/mac/obj/bitmap24.o $
@@ -2484,7 +2499,7 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/levelupwindow.obj $
     build/objdiff/base/gametypewindow.obj $
     build/objdiff/base/quickinfowindow.obj $
-    build/objdiff/base/campaignmap.obj $
+    build/objdiff/base/campaignmap.obj build/objdiff/base/campaignmovie.obj $
     build/objdiff/base/campaignwindow.obj $
     build/objdiff/base/adventureoptionswindow.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
@@ -2575,7 +2590,7 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/levelupwindow.obj $
     build/objdiff/base/gametypewindow.obj $
     build/objdiff/base/quickinfowindow.obj $
-    build/objdiff/base/campaignmap.obj $
+    build/objdiff/base/campaignmap.obj build/objdiff/base/campaignmovie.obj $
     build/objdiff/base/campaignwindow.obj $
     build/objdiff/base/adventureoptionswindow.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
@@ -2667,7 +2682,7 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/levelupwindow.obj $
     build/objdiff/base/gametypewindow.obj $
     build/objdiff/base/quickinfowindow.obj $
-    build/objdiff/base/campaignmap.obj $
+    build/objdiff/base/campaignmap.obj build/objdiff/base/campaignmovie.obj $
     build/objdiff/base/campaignwindow.obj $
     build/objdiff/base/adventureoptionswindow.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $

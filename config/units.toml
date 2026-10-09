@@ -362,6 +362,11 @@ source = "src/campaignmap.cpp"
 flags = "game_o2_mt_gr_windows"
 
 [[unit]]
+unit = "campaignmovie"
+source = "src/campaignmovie.cpp"
+flags = "game_o2_mt_gr_windows"
+
+[[unit]]
 unit = "campaignwindow"
 source = "src/campaignwindow.cpp"
 flags = "game_o2_mt_gr_windows"

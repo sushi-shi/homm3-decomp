@@ -8,3 +8,4 @@
 # textWidget::dim at 0x5bc690; Mac keeps it out of kb's code region.
 unit	after	evidence
 log	lodfile	initLogFile folds into textWidget::dim (0x5bc690); alphabetical position
+campaignmovie	campaignmap	its loader is stripped (/OPT:REF); its .CRT$XCU initializer 0x45e210 sits between campaignmap's (0x45dec0) and campaignmusic's (0x45e230), its table at .data 0x66b7d0 between theirs

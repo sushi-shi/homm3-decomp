@@ -25,13 +25,7 @@ struct SCampaignMusicCue {
 };
 SIZE(SCampaignMusicCue, 8);
 
-// One {image name, 0} row of the unreferenced campaign scenario image table
-// that precedes the cues (retail .data 0x66b7d0, 101 rows). Names INVENTED.
-struct SCampaignScenarioImage {
-    const char* m_name;
-    int m_image;
-};
-SIZE(SCampaignScenarioImage, 8);
+#include "campaignmovie.h"
 
 // Forty-nine cues, and the loader's own loop bound twice over: its first pass
 // walks the text resource to a byte offset of 0xc4 (49 * 4) and its second
