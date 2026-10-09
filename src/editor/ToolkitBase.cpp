@@ -34,31 +34,6 @@ public:
     virtual void SetText(LPCTSTR lpszText) {}
 };
 
-VA(0x004c0a43, 0x28)
-void TToolBarCmdUI::Enable(BOOL bOn)
-{
-    ((CToolBarCtrl*)m_pOther)->EnableButton(m_nID, bOn);
-    m_bEnableChanged = TRUE;
-}
-
-VA(0x004c0a6b, 0x4b)
-void TToolBarCmdUI::SetCheck(int nCheck)
-{
-    CToolBarCtrl* pToolBar = (CToolBarCtrl*)m_pOther;
-    UINT state = pToolBar->GetState(m_nID) & ~(TBSTATE_CHECKED | TBSTATE_INDETERMINATE);
-    if (nCheck == 2)
-        state |= TBSTATE_INDETERMINATE;
-    else if (nCheck == 1)
-        state |= TBSTATE_CHECKED;
-    pToolBar->SetState(m_nID, state);
-}
-
-VA(0x004c0ab6, 0x1d)
-void TToolBarCmdUI::SetRadio(BOOL bOn)
-{
-    ((CToolBarCtrl*)m_pOther)->CheckButton(m_nID, bOn);
-}
-
 }  // namespace
 
 VA(0x004c099a, 0x1c)
@@ -95,6 +70,35 @@ void TToolkitBase::OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
     else
         *pResult = 0;
 }
+
+namespace {
+
+VA(0x004c0a43, 0x28)
+void TToolBarCmdUI::Enable(BOOL bOn)
+{
+    ((CToolBarCtrl*)m_pOther)->EnableButton(m_nID, bOn);
+    m_bEnableChanged = TRUE;
+}
+
+VA(0x004c0a6b, 0x4b)
+void TToolBarCmdUI::SetCheck(int nCheck)
+{
+    CToolBarCtrl* pToolBar = (CToolBarCtrl*)m_pOther;
+    UINT state = pToolBar->GetState(m_nID) & ~(TBSTATE_CHECKED | TBSTATE_INDETERMINATE);
+    if (nCheck == 2)
+        state |= TBSTATE_INDETERMINATE;
+    else if (nCheck == 1)
+        state |= TBSTATE_CHECKED;
+    pToolBar->SetState(m_nID, state);
+}
+
+VA(0x004c0ab6, 0x1d)
+void TToolBarCmdUI::SetRadio(BOOL bOn)
+{
+    ((CToolBarCtrl*)m_pOther)->CheckButton(m_nID, bOn);
+}
+
+}  // namespace
 
 VA(0x004c0ad3, 0xca)
 TToolkitBaseToolBar::TToolkitBaseToolBar(CWnd* pParent, UINT id, int numRows)

@@ -9,7 +9,7 @@
 #include "editor/TerrainToolkit.h"
 #include "editor/resource.h"
 
-VA(0x004bdc0d, 0x31d)
+VA(0x004bdc0d, 0x301)
 TTerrainToolkit::TTerrainToolkit(CWnd* pParent)
     : TToolkitBase(IDD_TERRAIN_TOOLKIT, pParent),
       _m_pBrushToolBar(NULL),

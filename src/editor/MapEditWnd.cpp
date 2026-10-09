@@ -165,8 +165,7 @@ void setContextMenuText(CMenu* pMenu)
 class TViewportOrgOffsetter {
 public:
     TViewportOrgOffsetter(CDC* pDC, int dx, int dy) : _m_pDC(pDC), _m_oldOrg(pDC->OffsetViewportOrg(dx, dy)) {}
-    VA(0x0046b66b, 0x1b)
-    ~TViewportOrgOffsetter() { _m_pDC->SetViewportOrg(_m_oldOrg); }
+    ~TViewportOrgOffsetter();
 
 private:
     CDC* _m_pDC;
@@ -867,16 +866,7 @@ void TMapEditWnd::_drawBrush(CDC* pDC)
     }
 }
 
-// A cell's tile rectangle drawn with the pen and brush (the passability
-// overlay's frames; Loki's hatches the cell instead).
-VA(0x0046c309, 0x7d)
-inline void drawCellHatchedRect(CDC* pDC, CPen* pPen, CBrush* pBrush, const CPoint& pos, TZoom zoom)
-{
-    TGDIObjectSelector<CPen> penSelector(pDC, pPen);
-    TGDIObjectSelector<CBrush> brushSelector(pDC, pBrush);
-    unsigned int tileSize = akZoomTraits[zoom].m_tileSize;
-    pDC->Rectangle(CRect(pos, CSize(tileSize, tileSize)));
-}
+inline void drawCellHatchedRect(CDC* pDC, CPen* pPen, CBrush* pBrush, const CPoint& pos, TZoom zoom);
 
 // Draws the layer into the back buffer, the floating object and the panner
 // over it, and blits the rectangle to the DC; the back buffer then gets back
@@ -966,6 +956,16 @@ void TMapEditWnd::_paintRect(CDC* pDC, CRect& rect)
     if (bSelectionFrameDrawn)
         _drawSelectionFrame(&memDC);
 }
+
+namespace {
+
+VA(0x0046b66b, 0x1b)
+inline TViewportOrgOffsetter::~TViewportOrgOffsetter()
+{
+    _m_pDC->SetViewportOrg(_m_oldOrg);
+}
+
+}  // namespace
 
 VA(0x0046b686, 0xc4b)
 void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
@@ -1173,6 +1173,17 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
         outside.top = (height - _m_viewPos.y) * tileSize;
         pDC->PatBlt(outside.left, outside.top, outside.Width(), outside.Height(), PATCOPY);
     }
+}
+
+// A cell's tile rectangle drawn with the pen and brush (the passability
+// overlay's frames; Loki's hatches the cell instead).
+VA(0x0046c309, 0x7d)
+inline void drawCellHatchedRect(CDC* pDC, CPen* pPen, CBrush* pBrush, const CPoint& pos, TZoom zoom)
+{
+    TGDIObjectSelector<CPen> penSelector(pDC, pPen);
+    TGDIObjectSelector<CBrush> brushSelector(pDC, pBrush);
+    unsigned int tileSize = akZoomTraits[zoom].m_tileSize;
+    pDC->Rectangle(CRect(pos, CSize(tileSize, tileSize)));
 }
 
 VA(0x0046c386, 0xfe)
