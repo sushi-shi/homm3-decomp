@@ -66,7 +66,7 @@ VA(0x00416d96, 0x54)
 BOOL TEditTimedEventResourcesPage::OnInitDialog()
 {
     CPropertyPage::OnInitDialog();
-    CWnd* pFrame = GetDlgItem(IDC_RESOURCES_FRAME);
+    CWnd* pFrame = GetDlgItem(IDC_FRAME);
     CRect rect;
     pFrame->GetWindowRect(&rect);
     ScreenToClient(&rect);

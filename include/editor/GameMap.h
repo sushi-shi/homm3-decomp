@@ -419,6 +419,14 @@ public:
     bool isTwoLayer() const;
     const TGameObject* getPObject(bool bSecondLayer, unsigned int objID) const;
     TTilePoint getObjectLoc(bool bSecondLayer, unsigned int objID) const;
+    const TGameObject* getPObject(const TMapObjectRef& ref) const
+    {
+        return getPObject(ref.getBSecondLayer(), ref.getObjectID());
+    }
+    TTilePoint getObjectLoc(const TMapObjectRef& ref) const
+    {
+        return getObjectLoc(ref.getBSecondLayer(), ref.getObjectID());
+    }
     TMapObjectRef getLinkableObjectRef(int linkID) const;
     const TLinkableObject* getPLinkableObject(int linkID) const;
     std::auto_ptr<TGameObject> createObject(const TObjectType& objType, TPlayer owner) const;
