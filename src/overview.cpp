@@ -89,8 +89,9 @@ DATA(0x00640300) static const int g_overviewHelpIds[8] = {
 // Project-inferred replacement operation for the overview's typed slots.
 // Bind the table itself: removeWidget calls virtual close, so the subsequent
 // delete and clear must reread a dynamic table that callback may replace.
+// Loki (0x08153aa0) and Mac expand it at every slot.
 template <class Slots>
-static void clearOverviewWidget(Slots& slots, int index)
+inline void clearOverviewWidget(Slots& slots, int index)
 {
     if (slots[index]) {
         g_overWin->removeWidget(slots[index]);

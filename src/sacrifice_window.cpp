@@ -1839,7 +1839,8 @@ VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 // Project helper for the selection pair only. In creatureClick the old
 // indices remain live through both updates, after the border was hidden;
 // unselect() therefore cannot replace the entire intervening sequence.
-void type_skeleton_window::clearCreatureSelection()
+// Loki's constructor (0x0817eb20) and Mac's store both indices in place.
+inline void type_skeleton_window::clearCreatureSelection()
 {
     m_selectedGroup = -1;
     m_selectedIndex = -1;
