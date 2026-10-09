@@ -367,7 +367,7 @@ crc32	@crc32@12	100.0000	100.0000	100.0000	0x3fb80	-
 creaturetype	??0TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	100.0000	100.0000	100.0000	0x265c0	-
 creaturetype	??1TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	100.0000	100.0000	100.0000	0x265d0	-
 creaturetype	?InitializeCreatureTypeTraitsTable@@YAEXZ	100.0000	100.0000	100.0000	0x1ca80	-
-creaturetype	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.8289	99.8289	99.8289	0x1cc30	-
+creaturetype	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.9430	99.9430	99.9430	0x1cc30	-
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SAXIII@Z	100.0000	100.0000	100.0000	0x4b290	-
 deflate	@deflate@8	100.0000	100.0000	100.0000	0x3eb50	-
 deflate	@deflateEnd@4	100.0000	100.0000	100.0000	0x3eea0	-
@@ -563,7 +563,7 @@ resourcemanager	?write@t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\Reso
 resourcemanager	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	100.0000	100.0000	100.0000	0x159e0	-
 resourcemanager	?xsputn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPBDH@Z	100.0000	100.0000	100.0000	0x15a80	-
 spelldefs	?InitializeSpellTraitsTable@@YAEXZ	100.0000	100.0000	100.0000	0x326b0	-
-spelldefs	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.8936	99.8936	99.8936	0x32760	-
+spelldefs	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x32760	-
 spelldefs	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	100.0000	100.0000	100.0000	0x32ad0	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0000	0x32ab0	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x32af0	-

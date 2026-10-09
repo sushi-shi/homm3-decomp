@@ -558,7 +558,7 @@ rva	size	kind	name	unit	evidence
 0x000383cb	0xa8	func	?_Copy@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@IAEPAU_Node@12@PAU312@0@Z	GameMap	referenced by ?_Copy@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@IAEXABV12@@Z at +0x2c
 0x00038473	0xab	func	?_Copy@?$_Tree@HU?$pair@$$CBHVTMapObjectRef@@@std@@U_Kfn@?$map@HVTMapObjectRef@@U?$less@H@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@H@2@V?$allocator@VTMapObjectRef@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	GameMap	referenced by ?_Copy@?$_Tree@HU?$pair@$$CBHVTMapObjectRef@@@std@@U_Kfn@?$map@HVTMapObjectRef@@U?$less@H@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@H@2@V?$allocator@VTMapObjectRef@@@2@@std@@IAEXABV12@@Z at +0x2c
 0x0003851e	0xab	func	?_Copy@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	GameMap	referenced by ?_Copy@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@IAEXABV12@@Z at +0x2c
-0x000385c9	0x13	func	??YTPoint@@QAEAAU0@ABU0@@Z	rmg_terrain	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000385c9	0x13	func	??YTRmgMapPosition@@QAEAAU0@ABUTPoint@@@Z	rmg	masked body (19 bytes, 0 relocations) unique at a census start
 0x000385dc	0x46	func	?equal@std@@YA_NVconst_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@1@00@Z	GameMap	masked body (70 bytes, 2 relocations) unique at a census start
 0x00038622	0x74	func	??0?$TRefCountingPtr@U_TPlayerBookkeeping@_TImpl@TGameMap@@@@QAE@XZ	GameMap	masked body (116 bytes, 10 relocations) unique at a census start
 0x0003872f	0x58	func	??1?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@QAE@XZ	GameMap	referenced by ??1_TPlayerBookkeeping@_TImpl@TGameMap@@QAE@XZ at +0x41
@@ -786,9 +786,9 @@ rva	size	kind	name	unit	evidence
 0x00055acb	0x23	func	??8std@@YA_NPBDABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	MapSpecsAvailableHeroesPage	masked body (35 bytes, 2 relocations) unique at a census start
 0x0005726f	0x3	func	?setStoredHeroID@TRandomHero@@UAEXE@Z	Hero	vtable ??_7TRandomHero@@6BTLinkableObject@@@ stored by ??0TRandomHero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 2
 0x00058755	0x98	func	??0TRmgLinePatternTable@@QAE@IPBH@Z	rmg_support	masked body (152 bytes, 4 relocations) unique at a census start
-0x00058d37	0x2f	func	??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	masked body (47 bytes, 1 relocations) unique at a census start
-0x00058d66	0xfb	func	?drawTo@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	masked body (251 bytes, 3 relocations) unique at a census start
-0x00058e61	0xf1	func	?paintPoint@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	rmg_terrain	referenced by ??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABU?$TRmgCoordinatePoint@I@@@Z at +0x25
+0x00058d37	0x2f	func	??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (47 bytes, 1 relocations) unique at a census start
+0x00058d66	0xfb	func	?drawTo@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (251 bytes, 3 relocations) unique at a census start
+0x00058e61	0xf1	func	?paintPoint@TRmgLineWalker@@QAEXABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	referenced by ??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABU?$TRmgCoordinatePoint@I@@@Z at +0x25
 0x0005b3bc	0xf	func	??1?$TAutoArrayPtr@D@@QAE@XZ	resourcemanager	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x1b
 0x0005d4ca	0x65	func	??1TOptionsDlg@@UAE@XZ	OptionsDlg	masked body (101 bytes, 8 relocations) unique at a census start
 0x0005f6da	0x1	func	??1TAbandonedMine@@UAE@XZ	ObjectSpecializations	referenced by ??_GTAbandonedMine@@UAEPAXI@Z at +0xb; ICF-folded with 1 identical bodies
@@ -1129,11 +1129,11 @@ rva	size	kind	name	unit	evidence
 0x000af10b	0x57	func	??0TRmgObjectPlacementRule@@QAE@ABU0@@Z	rmg	masked body (87 bytes, 5 relocations) unique at a census start
 0x000af162	0x12d	func	??4?$vector@HV?$allocator@H@std@@@std@@QAEAAV01@ABV01@@Z	rmg	masked body (301 bytes, 2 relocations) unique at a census start
 0x000afaea	0x3d	func	?erase@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEPAUTPoint@@PAU3@@Z	rmg	masked body (61 bytes, 0 relocations) unique at a census start
-0x000b3bbd	0x33	func	?setTile@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@ABUTRmgTerrainTile@@@Z	rmg_support	masked body (51 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b3bf0	0x13	func	?setLineType@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@H@Z	rmg_support	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b3c03	0x3c	func	?getTile@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@AAUTRmgTerrainTile@@@Z	rmg_support	masked body (60 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b3c3f	0xf	func	?getLineType@TRiverOp@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x000b4223	0x20	func	?isBlocked@TRiverOp@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_support	masked body (32 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3bbd	0x33	func	?setTile@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@ABUTRmgTerrainTile@@@Z	rmg_river	masked body (51 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3bf0	0x13	func	?setLineType@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@H@Z	rmg_river	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3c03	0x3c	func	?getTile@TRiverOp@@UAEXABU?$TRmgCoordinatePoint@I@@AAUTRmgTerrainTile@@@Z	rmg_river	masked body (60 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b3c3f	0xf	func	?getLineType@TRiverOp@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_river	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000b4223	0x20	func	?isBlocked@TRiverOp@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	rmg_river	masked body (32 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000b5e95	0x5d	func	??0?$TArray@U_TSlotControls@TSecondarySkillsDlg@@$07@@QAE@XZ	SecondarySkillsDlg	masked body (93 bytes, 5 relocations) unique at a census start
 0x000b5ef2	0x6d	func	??1?$TArray@U_TSlotControls@TSecondarySkillsDlg@@$07@@QAE@XZ	SecondarySkillsDlg	masked body (109 bytes, 7 relocations) unique at a census start
 0x000b5f5f	0x24	func	??0?$TArray@U_TSlot@TSecondarySkillsDlg@@$07@@QAE@XZ	SecondarySkillsDlg	masked body (36 bytes, 0 relocations) unique at a census start
@@ -1222,20 +1222,20 @@ rva	size	kind	name	unit	evidence
 0x000c85ce	0x5f	func	?_Eq@?$vector@VTTimedEvent@TTown@@V?$allocator@VTTimedEvent@TTown@@@std@@@std@@QBE_NABV12@@Z	TownPropsTimedEventsPage	masked body (95 bytes, 1 relocations) unique at a census start
 0x000c862d	0x35	func	?equal@std@@YA_NPBVTTimedEvent@TTown@@00@Z	TownPropsTimedEventsPage	masked body (53 bytes, 1 relocations) unique at a census start
 0x000c8662	0x4c	func	??8TTimedEvent@TTown@@QBE_NABV01@@Z	TownPropsTimedEventsPage	masked body (76 bytes, 2 relocations) unique at a census start
-0x000cc5ad	0x2e	func	?length@TRmgVector@@QBEHXZ	rmg_support	referenced by ?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z at +0xd0
-0x000cc5db	0x68	func	??0TRmgHalfEdge@@QAE@UTPoint@@PAUTRmgZone@@01@Z	rmg_support	masked body (104 bytes, 1 relocations) unique at a census start
-0x000cc643	0x2d	func	?splice@TRmgHalfEdge@@QAEXPAU1@@Z	rmg_support	masked body (45 bytes, 0 relocations) unique at a census start
-0x000cc670	0x1e	func	?detach@TRmgHalfEdge@@QAEXXZ	rmg_support	masked body (30 bytes, 2 relocations) unique at a census start
-0x000cc68e	0x64	func	?flipRmgEdge@@YIXPAUTRmgHalfEdge@@@Z	rmg_support	masked body (100 bytes, 3 relocations) unique at a census start
-0x000cc6f2	0x96	func	?isRmgPointOnSegment@@YIEUTPoint@@PAUTRmgHalfEdge@@@Z	rmg_support	referenced by ?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z at +0x4a
-0x000cc788	0x196	func	??0TRmgVoronoi@@QAE@XZ	rmg_support	masked prefix (245 fixed bytes agree, 406 compiled, 406 retail)
-0x000cc91e	0x37	func	??1TRmgVoronoi@@QAE@XZ	rmg_support	masked body (55 bytes, 2 relocations) unique at a census start
-0x000cc955	0x77	func	?createEdge@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTPoint@@PAUTRmgZone@@01@Z	rmg_support	masked body (119 bytes, 7 relocations) unique at a census start
-0x000cc9cc	0x89	func	?removeEdge@TRmgVoronoi@@QAEXPAUTRmgHalfEdge@@@Z	rmg_support	masked body (137 bytes, 5 relocations) unique at a census start
-0x000cca55	0xca	func	?locate@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTPoint@@@Z	rmg_support	masked body (202 bytes, 0 relocations) unique at a census start
-0x000ccb1f	0x45	func	?connectEdges@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@PAU2@0@Z	rmg_support	masked body (69 bytes, 3 relocations) unique at a census start
-0x000ccb64	0x116	func	?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z	rmg_support	masked prefix (38 fixed bytes agree, 275 compiled, 278 retail)
-0x000ccc7a	0xef	func	?isRmgPointInsideCircle@@YIEUTPoint@@000@Z	rmg_support	referenced by ?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z at +0xe6
+0x000cc5ad	0x2e	func	?length@TRmgVector@@QBEHXZ	rmg_voronoi	referenced by ?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z at +0xd0
+0x000cc5db	0x68	func	??0TRmgHalfEdge@@QAE@UTPoint@@PAUTRmgZone@@01@Z	rmg_voronoi	masked body (104 bytes, 1 relocations) unique at a census start
+0x000cc643	0x2d	func	?splice@TRmgHalfEdge@@QAEXPAU1@@Z	rmg_voronoi	masked body (45 bytes, 0 relocations) unique at a census start
+0x000cc670	0x1e	func	?detach@TRmgHalfEdge@@QAEXXZ	rmg_voronoi	masked body (30 bytes, 2 relocations) unique at a census start
+0x000cc68e	0x64	func	?flipRmgEdge@@YIXPAUTRmgHalfEdge@@@Z	rmg_voronoi	masked body (100 bytes, 3 relocations) unique at a census start
+0x000cc6f2	0x96	func	?isRmgPointOnSegment@@YIEUTPoint@@PAUTRmgHalfEdge@@@Z	rmg_voronoi	referenced by ?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z at +0x4a
+0x000cc788	0x196	func	??0TRmgVoronoi@@QAE@XZ	rmg_voronoi	masked prefix (245 fixed bytes agree, 406 compiled, 406 retail)
+0x000cc91e	0x37	func	??1TRmgVoronoi@@QAE@XZ	rmg_voronoi	masked body (55 bytes, 2 relocations) unique at a census start
+0x000cc955	0x77	func	?createEdge@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTPoint@@PAUTRmgZone@@01@Z	rmg_voronoi	masked body (119 bytes, 7 relocations) unique at a census start
+0x000cc9cc	0x89	func	?removeEdge@TRmgVoronoi@@QAEXPAUTRmgHalfEdge@@@Z	rmg_voronoi	masked body (137 bytes, 5 relocations) unique at a census start
+0x000cca55	0xca	func	?locate@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTPoint@@@Z	rmg_voronoi	masked body (202 bytes, 0 relocations) unique at a census start
+0x000ccb1f	0x45	func	?connectEdges@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@PAU2@0@Z	rmg_voronoi	masked body (69 bytes, 3 relocations) unique at a census start
+0x000ccb64	0x116	func	?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z	rmg_voronoi	masked prefix (38 fixed bytes agree, 275 compiled, 278 retail)
+0x000ccc7a	0xef	func	?isRmgPointInsideCircle@@YIEUTPoint@@000@Z	rmg_voronoi	referenced by ?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z at +0xe6
 0x000cce95	0x36	func	?erase@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAH@Z	rmg	masked body (54 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
 0x000ccecb	0x1d0	func	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	rmg	referenced by ?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z at +0x14; ICF-folded with 10 identical bodies
 0x000d53d0	0x1f9	func	@deflateInit2_@32	deflate	masked body (505 bytes, 6 relocations) unique at a census start
@@ -1710,14 +1710,14 @@ rva	size	kind	name	unit	evidence
 0x0019e3e4	0x4	data	?_Facsav@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@0PAV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@A	objecttype	referenced by ?_Save@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAPAV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@PAV32@@Z at +0x1f
 0x0019e3ec	0x4	data	?_Nilrefs@?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@1IA	GameMap	referenced by ??1?$_Tree@VTMapObjectRef@@V1@U_Kfn@?$set@VTMapObjectRef@@U?$less@VTMapObjectRef@@@std@@V?$allocator@VTMapObjectRef@@@3@@std@@U?$less@VTMapObjectRef@@@4@V?$allocator@VTMapObjectRef@@@4@@std@@QAE@XZ at +0x34
 0x0019f2f0	0x150	data	_?secondarySkillLevelNames@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAY02VTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x95
-0x0019f440	0x1	data	_?$S29@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x16
+0x0019f440	0x4	data	_?$S29@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x16
 0x0019f444	0x70	data	_?secondarySkillNames@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x32
 0x0019f4b4	0x3	data	_?$S31@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x15
 0x0019f4b8	0x1c0	data	?g_sSkillTraitsStorage@@3PAUTSSkillTraits@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xf
 0x0019f678	0x270	data	_?heroStrings@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x34
 0x0019f8e8	0x48	data	_?heroClassStrings@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x33
 0x0019f930	0x1	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x14
-0x001a2294	0x6	data	_?$S41@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4EA	objecttype	referenced by ?getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ at +0x2
+0x001a2294	0x8	data	_?$S41@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4EA	objecttype	referenced by ?getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ at +0x2
 0x001a22a8	0x10	data	_?emptyImageName@?1??getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ@4V34@A	objecttype	referenced by ?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ at +0x1c
 0x001a22b8	0x20	data	_?imageNameSet@?1??getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ@4V3@A	objecttype	referenced by ?getImageNameSet@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@YAAAV?$TUniqueSet@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@@XZ at +0x11
 0x001a2368	0x1	data	_?$S119@?1??getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ@4EA	objecttype	referenced by ?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ at +0x3
@@ -1727,7 +1727,7 @@ rva	size	kind	name	unit	evidence
 0x001a2698	0x20	data	?g_rmgShipyardWaterOffsets@?A0x8197b2fbbced3331@@3PAUTPoint@@A	rmg	referenced by ?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z at +0x96
 0x001a26e4	0x3a0	data	?g_rmgMapObjectLimits@@3PAHA	rmg	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x203
 0x001a2a8c	0x3a0	data	?g_rmgZoneObjectLimits@@3PAHA	rmg	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x1f7
-0x001a2e34	0x8	data	_?$S48@?CB@??createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z@4EA	rmg	referenced by ?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z at +0x3e8 (retail +0x3e4, by operand order)
+0x001a2e34	0x8	data	_?$S38@?CB@??createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z@4EA	rmg	referenced by ?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z at +0x3e8 (retail +0x3e4, by operand order)
 0x001a310c	0x4	data	_?$S10@?1??initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x1a
 0x001a3110	0x144	data	_?spellNames@?1??initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xb0b78fb9ab01eae7@@A	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x37
 0x001a3254	0x510	data	_?spellDescriptions@?BC@??initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAY03VTAutoStrPtr@?A0xb0b78fb9ab01eae7@@A	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x222
