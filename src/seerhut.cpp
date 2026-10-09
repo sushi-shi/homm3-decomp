@@ -878,14 +878,13 @@ void type_monster_quest::save(TAbstractFile* file)
 // existing game::getCell and getArmyName helpers. Their declarations have
 // DC evidence; these Complete-only caller expansions are inferred from
 // retail. Keep the canonical calls and ordinary direction assignments.
-// Residual 96.7191%: the middle-north assignment retains string::assign
-// where retail expands it. Moving the name declaration to its use is flat;
-// explicit inner returns in getArmyName worsen this caller to 73.8785% and
-// lower four other consumers, including two exact drawing functions. Keeping
-// its invalid-range guard as an early return restores 96.7191%; the plural
-// selection remains the canonical shared helper's conditional expression.
-// Lead (2026-10-09): bracing every guarded statement reaches 100%, but this
-// Complete-only body has no Dreamcast scope record to support the braces.
+// The nine direction arms share one brace style: the middle-north arm was
+// already braced, and bracing every arm of the two-level if/else ladder lets
+// VC6 expand that arm's string assign as retail does (95.53 -> 100%). The
+// standalone guards stay unbraced; bracing only the three text guards is
+// flat. Explicit inner returns in getArmyName lower this caller and four
+// other consumers; the plural selection remains the shared helper's
+// conditional expression. No Dreamcast body exists for this Complete code.
 VA(0x0056ef20, 0x57C)
 MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
@@ -900,26 +899,29 @@ void type_monster_quest::setDefaultText()
 
     std::string direction;
     if (m_position.m_x < g_mapWidth / 3) {
-        if (m_position.m_y < g_mapHeight / 3)
+        if (m_position.m_y < g_mapHeight / 3) {
             direction = g_directions[7];
-        else if (m_position.m_y > (2 * g_mapHeight) / 3)
+        } else if (m_position.m_y > (2 * g_mapHeight) / 3) {
             direction = g_directions[5];
-        else
+        } else {
             direction = g_directions[6];
+        }
     } else if (m_position.m_x > (2 * g_mapWidth) / 3) {
-        if (m_position.m_y < g_mapHeight / 3)
+        if (m_position.m_y < g_mapHeight / 3) {
             direction = g_directions[1];
-        else if (m_position.m_y > (2 * g_mapHeight) / 3)
+        } else if (m_position.m_y > (2 * g_mapHeight) / 3) {
             direction = g_directions[3];
-        else
+        } else {
             direction = g_directions[2];
+        }
     } else {
         if (m_position.m_y < g_mapHeight / 3) {
             direction = g_directions[0];
-        } else if (m_position.m_y > (2 * g_mapHeight) / 3)
+        } else if (m_position.m_y > (2 * g_mapHeight) / 3) {
             direction = g_directions[4];
-        else
+        } else {
             direction = g_directions[8];
+        }
     }
 
     if (m_position.m_z)
