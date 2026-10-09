@@ -570,3 +570,18 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "SelectHeroClassDlg"
 source = "src/editor/SelectHeroClassDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "ArtifactPropsGeneralPage"
+source = "src/editor/ArtifactPropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TreasurePropsGuardiansPage"
+source = "src/editor/TreasurePropsGuardiansPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "ArtifactPropsSheet"
+source = "src/editor/ArtifactPropsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"
