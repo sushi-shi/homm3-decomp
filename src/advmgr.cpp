@@ -4431,12 +4431,11 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     return owner;
 }
 
-// Current 96.1357% residual is the final draw's nested Bitmap16Bit::getMap
-// call: all 34 CFG blocks and 16 branches agree, but retail expands it.
-// A reproduced three-state getMap cast family (void-chain, direct typed
-// reinterpret, ordinary cast) emitted two objects and left this caller flat.
-// DC Game.h:973/974/979 proves getHero's early null-return scope, so keep
-// that source boundary rather than flattening it to steer the inline budget.
+// The tile offsets keep the 3x2 hero footprint's (size - cell - 1) form, as
+// the object draws spell (width - cellX - 1): the extra front-end cost lets
+// retail's final nested Bitmap16Bit::getMap expand (96.1357% -> 100%), and
+// the same spelling makes both scaled view-world twins exact.
+// DC Game.h:973/974/979 proves getHero's early null-return scope.
 VA(0x0040fe30, 0x484)
 DC_ADDRESS(0x011424, 0x534)
 MAC_ADDRESS(0x01056c, 0x560)
@@ -4458,8 +4457,8 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
                 currHero->getStandSequence(),
                 m_animCtr
                     % m_boatFrothIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
-                tilex + (2 - heroCellY) * 32,
-                tiley - heroCellX * 32 + 32, tilew, tileh,
+                tilex + (3 - heroCellY - 1) * 32,
+                tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
                 g_windowManager->m_screenBitmap, baseX, baseY + 8,
                 currHero->getHflip());
         }
@@ -4468,8 +4467,8 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
             currHero->getStandSequence(),
             m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
                                 ->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
@@ -4477,16 +4476,16 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
             currHero->getStandSequence(),
             m_animCtr
                 % m_boatIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
     } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
         m_flagIcons[currHero->m_owner]->DrawHero(
             currHero->getStandSequence(),
             m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
@@ -4494,8 +4493,8 @@ void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
             currHero->getStandSequence(),
             m_animCtr
                 % m_cursorIcons[currHero->m_heroClass]->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
     }
@@ -4525,8 +4524,8 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
                 currHero->getStandSequence(),
                 m_animCtr
                     % m_boatFrothIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
-                tilex + (2 - heroCellY) * 32,
-                tiley - heroCellX * 32 + 32, tilew, tileh,
+                tilex + (3 - heroCellY - 1) * 32,
+                tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
                 g_windowManager->m_screenBitmap, baseX, baseY + 8,
                 currHero->getHflip());
         }
@@ -4535,8 +4534,8 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             currHero->getStandSequence(),
             m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
                                 ->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
@@ -4544,16 +4543,16 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             currHero->getStandSequence(),
             m_animCtr
                 % m_boatIcons[currBoat->m_type]->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
     } else if (currHero->m_owner >= 0 && currHero->m_owner < NUM_PLAYERS) {
         m_flagIcons[currHero->m_owner]->DrawHeroShadow(
             currHero->getStandSequence(),
             m_animCtr % m_flagIcons[currHero->m_owner]->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
 
@@ -4561,8 +4560,8 @@ void advManager::drawHeroPartShadow(int part, TDrawParts& heroParts,
             currHero->getStandSequence(),
             m_animCtr
                 % m_cursorIcons[currHero->m_heroClass]->GetNumFrames(hs_stand_n),
-            tilex + (2 - heroCellY) * 32,
-            tiley - heroCellX * 32 + 32, tilew, tileh,
+            tilex + (3 - heroCellY - 1) * 32,
+            tiley + (2 - heroCellX - 1) * 32, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             currHero->getHflip());
     }

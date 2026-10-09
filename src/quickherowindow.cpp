@@ -44,12 +44,13 @@ DATA(0x00682378) static int g_armyPos[armyGroup::ARMY_GROUP_SLOT_COUNT][2] = {
 // retained stream insertions at 0x52f1db/0x52f1ff/0x52f205/0x52f295
 // establish the different Windows implementation.
 
-// Residual (94.1662%): the first source difference is reserve's temporary
-// stack home (-0x18 versus -0x14); primary-stat addressing and register roles
-// also differ. The mana string's _Tidy expands where retail calls it,
-// contributing four extra CFG blocks and three branches. Keep its meaningful
-// temporary lifetime rather than adding an inliner gate. The init helper and
-// both window destructors are independently exact.
+// Residual (98.18%): the call set agrees. Reading the Complete version
+// through game::getGameVersion supplies the one cheap root inline site after
+// the mana string that retail's retained _Tidy needs (the inline replay
+// admits any such site from that string's destructor to the end). The
+// primary-stat loop counter and the expert scan's owner load still differ in
+// register and stack roles. The init helper and both window destructors are
+// independently exact.
 // Explicit 0/1 arms in getPrimarySkill reach 99.01% here, but lose the
 // exact campaign crossover initializer (100% -> 96.15%); keep its shared
 // spelling. Named primary values and split morale/luck limit assignments
@@ -129,7 +130,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                     disguiseCreature = creature;
             }
         } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
-            int creature = g_game->m_gameVersion ? kNumCreatureTypes : 118;
+            int creature = g_game->getGameVersion() ? kNumCreatureTypes : 118;
             int owner = thisHero->m_owner;
             while (creature--) {
                 int townType = g_game->getAlignment(creature);
