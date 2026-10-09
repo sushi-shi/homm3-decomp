@@ -7083,6 +7083,10 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // through heroWindow::addWidgetsToMessageStream. Restoring the in-place
 // loop expands begin/end where retail keeps calls (95.52%); the budget left
 // at this tail is the open question, so the helper call stays for now.
+// 2026-10-09 replay of the in-place loop: the size cap (35000) is reached
+// two insert-nested begin calls (sites 481/483) too early. A root cb of
+// 15961..16019 instead of 16062 expands exactly those two, as retail does;
+// loop spelling (iterator type, post-increment, unbraced body) is cb-flat.
 VA(0x005d86f0, 0x445A)
 DC_ADDRESS(0x17b48c, 0x3c68)
 MAC_ADDRESS(0x1d6668, 0xa4e0)

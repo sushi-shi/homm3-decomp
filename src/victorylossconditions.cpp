@@ -694,6 +694,11 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
 // exchanged; keep the canonical constructor, getLocation and operator==.
 // Original DC public CheckForDefeatedTownLoss@@QAA_NHPBVtown@@@Z proves
 // bool and const town*; a displayed primitive 0x20 does not prove byte source.
+// Dreamcast 510/511 store the loser and flag in place (no recordLoss).
+// The in-place stores exchange the stack homes of the target point and the
+// getLocation() temporary (99.84%); named locals, either compare order, a
+// returned true, const, an explicit cast or a braced guard keep it, and the
+// stores swapped cost more (97.97%).
 VA(0x005f2e40, 0xD9)
 DC_ADDRESS(0x19074c, 0x70)
 MAC_ADDRESS(0x1ff304, 0x140)

@@ -1164,6 +1164,10 @@ static void addReward(std::string& text, const std::string& alternate,
 // Removing throwaway enum-conversion aliases is byte-flat. Four expression
 // states reproduce four objects; the direct string assignment below restores
 // the native lifetime. Remaining vector/string inline decisions are unresolved.
+// 2026-10-09 replay: retail expands the showRewards nested in the sixth
+// addReward (trace site 104, budget 75 against cost 77). A root cb of
+// 2381..2440 (now 2350) flips exactly that site; more also expands earlier
+// showRewards and the erase at site 362.
 VA(0x0049fa90, 0x106B)
 DC_ADDRESS(0x09138c, 0x870)
 MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text
