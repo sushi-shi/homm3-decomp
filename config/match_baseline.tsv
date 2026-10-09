@@ -856,7 +856,7 @@ campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	tokens1:ddb69485cbe9
 campaignbrief	??0NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5a7a0	tokens1:6a1c8c81cc28
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	tokens1:6a3b33faf0c9
-campaignbrief	??0TCampaignBrief@@QAE@_N0@Z	93.5443	93.5443	93.5443	0x590c0	tokens1:c16bf248d8ab
+campaignbrief	??0TCampaignBrief@@QAE@_N0@Z	94.3129	94.3129	94.3129	0x590c0	tokens1:bee4c473fbcb
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5da70	-
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a950	tokens1:8ce46e47f4ce
 campaignbrief	??1?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5b140	-
@@ -4529,7 +4529,7 @@ townmgr	?resetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530	tok
 townmgr	?selectArmy@townManager@@AAEXPAVstrip@@JE@Z	100.0000	100.0000	100.0000	0x1c8080	tokens1:7d7d61b6f8f9
 townmgr	?setArmyCommand@townManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x1c7400	tokens1:fe8b9e18323c
 townmgr	?setBonusDisplay@TTownScreenWindow@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1c5b40	tokens1:31f966773845
-townmgr	?setCommandAndText@townManager@@QAEXAAVmessage@@@Z	99.9775	99.9775	99.9775	0x1c77a0	tokens1:14ec51c63c2a
+townmgr	?setCommandAndText@townManager@@QAEXAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c77a0	tokens1:4654597b280d
 townmgr	?setCommandAndText@type_garrison_base_window@@IAEXAAVmessage@@@Z	98.8428	98.8428	98.8428	0x1d05f0	tokens1:adae2cbae73e
 townmgr	?setHeroCommand@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c7250	tokens1:af36c26ea9d4
 townmgr	?setPrerequisiteText@TBuyBuildWindow@@QAEXPBVtown@@H@Z	100.0000	100.0000	100.0000	0x1d5be0	tokens1:619ebfac1647
@@ -4707,7 +4707,7 @@ viewarmywindow	?createUpgradeWidget@TViewArmyWindow@@AAEXXZ	100.0000	100.0000	10
 viewarmywindow	?doModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0	tokens1:5da35523ca72
 viewarmywindow	?max_size@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x4bc0	-
 viewarmywindow	?viewArmyCastSpellHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f5030	tokens1:bbf1c63547a4
-viewarmywindow	?windowHandler@TViewArmyWindow@@UAEHAAVmessage@@@Z	92.5392	92.5392	100.0000	0x1f4850	tokens1:5392879ffda6
+viewarmywindow	?windowHandler@TViewArmyWindow@@UAEHAAVmessage@@@Z	92.5392	92.5392	100.0000	0x1f4850	tokens1:340cee218c21
 viewwrld	??0TViewWorldWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1fa600	tokens1:ad27cda97d58
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	tokens1:2ce93f57d676
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
