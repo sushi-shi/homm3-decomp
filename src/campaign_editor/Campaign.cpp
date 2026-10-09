@@ -25,6 +25,8 @@ public:
     void setScenarioStartingOptions(int scenario, auto_ptr<TScenarioStartingOptions> pOptions);
     bool getBPrerequisite(int scenario, int prerequisite) const;
     bool getBDirectPrerequisite(int scenario, int prerequisite) const;
+    void importText(istream& stream, int version);
+    void exportText(ostream& stream, int version) const;
 
     int m_type;
     string m_name;
@@ -626,6 +628,12 @@ bool TCampaign::_TImpl::getBDirectPrerequisite(int scenario, int prerequisite) c
     return true;
 }
 
+VA(0x004077d0, 0xf)
+TCampaign::TCampaign(const TCampaign& other)
+    : _m_pImpl(other._m_pImpl)
+{
+}
+
 VA(0x004077e0, 0x18e)
 TCampaign::TCampaign(int type)
     : _m_pImpl(_TImpl(type))
@@ -642,6 +650,12 @@ TCampaign& TCampaign::operator=(const TCampaign& other)
 {
     _m_pImpl = other._m_pImpl;
     return *this;
+}
+
+VA(0x00407b90, 0x29)
+void TCampaign::importText(istream& stream, int version)
+{
+    _m_pImpl->importText(stream, version);
 }
 
 VA(0x00407bc0, 0x24)
@@ -696,6 +710,12 @@ VA(0x00407da0, 0x21)
 TScenario& TCampaign::getScenario(int scenario)
 {
     return _m_pImpl->m_scenarios[scenario];
+}
+
+VA(0x00407dd0, 0x17)
+void TCampaign::exportText(ostream& stream, int version) const
+{
+    _m_pImpl->exportText(stream, version);
 }
 
 VA(0x00407df0, 0x6)

@@ -116,6 +116,63 @@ enum {
 DATA(0x004c6f40) TScenarioStartingBonusWriter bonusWriter;
 DATA(0x004c6f30) TScenarioStartingOptionsWriter optionsWriter;
 
+// A CString's buffer for a callee to fill, released when it goes out of scope.
+class TStringBuffer {
+public:
+    TStringBuffer(CString& string, int minBufLength)
+        : m_pString(&string), m_pBuffer(string.GetBuffer(minBufLength)) {}
+
+    ~TStringBuffer();
+
+    operator LPTSTR() const { return m_pBuffer; }
+
+private:
+    CString* m_pString;
+    LPTSTR m_pBuffer;
+};
+
+// Asks for the text file a campaign is exported to or imported from, named
+// after the document. kTextFileFilterStr is the filter's description, a line
+// break and the extension (".txt").
+VA(0x00410890, 0x2de)
+bool promptTextFileName(LPCTSTR title, BOOL bOpenFileDialog, DWORD flags, CString& fileName)
+{
+    CString filter;
+    CString defaultExt;
+    CString filterText(kTextFileFilterStr);
+    int separator = filterText.ReverseFind('\n');
+    defaultExt = filterText.Right(filterText.GetLength() - separator - 2);
+    filter = filterText.Left(separator);
+    filter += "|*";
+    filter += filterText.Right(filterText.GetLength() - separator - 1);
+    filter += "|";
+    CString allFilter((LPCTSTR)AFX_IDS_ALLFILTER);
+    filter += allFilter;
+    filter += "|*.*||";
+    CFileDialog dlg(bOpenFileDialog, defaultExt, NULL, flags, filter, NULL);
+    CString name(title);
+    int dot = name.ReverseFind('.');
+    if (dot != -1 && name.GetLength() - dot <= 4)
+        name.Delete(dot + 1, name.GetLength() - dot - 1);
+    else
+        name += '.';
+    name += defaultExt;
+    fileName = name;
+    bool bResult;
+    {
+        TStringBuffer buffer(fileName, _MAX_PATH);
+        dlg.m_ofn.lpstrFile = buffer;
+        bResult = dlg.DoModal() == IDOK;
+    }
+    return bResult;
+}
+
+VA(0x00410b70, 0xa)
+inline TStringBuffer::~TStringBuffer()
+{
+    m_pString->ReleaseBuffer();
+}
+
 VA(0x00410bd0, 0x20)
 TFileContent::TFileContent(int size, auto_ptr<char> pData)
     : m_size(size), m_pData(pData)
@@ -919,4 +976,61 @@ BOOL TCampaignDoc::SaveModified()
         _m_newType = dlg.getType();
     }
     return TRUE;
+}
+
+VA(0x004150f0, 0x1eb)
+void TCampaignDoc::OnExportText()
+{
+    CString pathName;
+    if (!promptTextFileName(m_strTitle, FALSE,
+                            OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST, pathName))
+        return;
+    CFileException fe;
+    CStdioFile file;
+    if (!file.Open(pathName, CFile::modeCreate | CFile::modeWrite | CFile::typeText, &fe)) {
+        CDocument::ReportSaveLoadException(pathName, &fe, TRUE, AFX_IDP_INVALID_FILENAME);
+        return;
+    }
+    TMFCFileBuf fileBuf(&file);
+    ostream stream(&fileBuf);
+    try {
+        _m_pCampaign->exportText(stream, _m_version);
+    } catch (CException* e) {
+        CDocument::ReportSaveLoadException(pathName, e, TRUE, AFX_IDP_FAILED_TO_SAVE_DOC);
+        e->Delete();
+    }
+}
+
+VA(0x00415330, 0x36a)
+void TCampaignDoc::OnImportText()
+{
+    CString pathName;
+    if (!promptTextFileName(m_strTitle, TRUE, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST, pathName))
+        return;
+    CFileException fe;
+    CStdioFile file;
+    if (!file.Open(pathName, CFile::modeRead | CFile::typeText, &fe)) {
+        CDocument::ReportSaveLoadException(pathName, &fe, FALSE, AFX_IDP_FAILED_TO_OPEN_DOC);
+        return;
+    }
+    TMFCFileBuf fileBuf(&file);
+    istream stream(&fileBuf);
+    TCampaign campaign(*_m_pCampaign);
+    try {
+        campaign.importText(stream, _m_version);
+    } catch (const TCampaign::TImportTextFailure&) {
+        CString prompt;
+        prompt.Format(kImportFailedFmtStr, (LPCTSTR)pathName);
+        AfxMessageBox(prompt, MB_ICONSTOP);
+        return;
+    } catch (CException* e) {
+        CDocument::ReportSaveLoadException(pathName, e, FALSE, AFX_IDP_FAILED_TO_OPEN_DOC);
+        e->Delete();
+        return;
+    }
+    *_m_pCampaign = campaign;
+    SetModifiedFlag();
+    CString prompt;
+    prompt.Format(kImportSucceededFmtStr, (LPCTSTR)pathName);
+    AfxMessageBox(prompt);
 }

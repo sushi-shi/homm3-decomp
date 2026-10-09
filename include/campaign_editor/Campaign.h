@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <string>
@@ -462,6 +463,8 @@ public:
     const TScenario& getScenario(int scenario) const;
     bool getBPrerequisite(int scenario, int prerequisite) const;
     bool getBDirectPrerequisite(int scenario, int prerequisite) const;
+    void importText(std::istream& stream, int version);
+    void exportText(std::ostream& stream, int version) const;
 
 private:
     class _TImpl;

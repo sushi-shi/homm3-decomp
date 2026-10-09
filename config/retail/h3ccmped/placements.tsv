@@ -147,6 +147,7 @@ rva	size	kind	name	unit	evidence
 0x00010660	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BC@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
 0x000106a0	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BB@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
 0x000106e0	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BA@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
+0x00010b80	0x4f	func	??1CFileDialog@@UAE@XZ	CampaignDoc	masked body (79 bytes, 6 relocations) unique at a census start
 0x00010ed0	0x55	func	??1TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	masked body (85 bytes, 7 relocations) unique at a census start
 0x00011ae0	0x17	func	??0TAllocationFailure@@QAE@XZ	gzinflatebuf	referenced by ?allocate@?$TBitmap@GK@@UAEPAGII@Z at +0x25
 0x00011b00	0x12	func	??0TScenarioHeroBonus@@QAE@H@Z	CampaignDoc	masked body (18 bytes, 1 relocations) unique at a census start
@@ -155,6 +156,8 @@ rva	size	kind	name	unit	evidence
 0x00014850	0x3f	func	??1CFileException@@UAE@XZ	CampaignDoc	masked body (63 bytes, 6 relocations) unique at a census start
 0x000150a0	0x4c	func	??1TNewCampaignDlg@@UAE@XZ	CampaignDoc	masked body (76 bytes, 6 relocations) unique at a census start
 0x000152e0	0x10	func	??0ios_base@std@@IAE@XZ	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x2f
+0x00015310	0x15	func	??_D?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEXXZ	CampaignDoc	masked body (21 bytes, 2 relocations) unique at a census start
+0x000156a0	0x15	func	??_D?$basic_istream@DU?$char_traits@D@std@@@std@@QAEXXZ	CampaignDoc	masked body (21 bytes, 2 relocations) unique at a census start
 0x000156c0	0x18	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV?$allocator@D@1@@Z	Player	masked body (24 bytes, 0 relocations) unique at a census start
 0x000156e0	0xea	func	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEPADPAD0@Z	CampaignDoc	masked body (234 bytes, 6 relocations) unique at a census start
 0x000157d0	0x86	func	?end@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEPADXZ	CampaignDoc	masked body (134 bytes, 4 relocations) unique at a census start
@@ -177,6 +180,8 @@ rva	size	kind	name	unit	evidence
 0x00015c30	0x4f	func	??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_NABV?$allocator@_N@1@@Z	CampaignDoc	masked body (79 bytes, 1 relocations) unique at a census start
 0x00015c80	0x3b	func	??1?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAE@XZ	CampaignDoc	masked body (59 bytes, 2 relocations) unique at a census start
 0x00015cc0	0x2f	func	??_G?$basic_ostream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	resourcemanager	masked body (47 bytes, 3 relocations) unique at a census start
+0x00015d10	0x2f	func	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	CampaignDoc	masked body (47 bytes, 3 relocations) unique at a census start
+0x00015d80	0x45	func	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	CampaignDoc	masked body (69 bytes, 3 relocations) unique at a census start
 0x00015dd0	0x3b	func	??0?$fpos@H@std@@QAE@J@Z	resourcemanager	masked body (59 bytes, 5 relocations) unique at a census start
 0x00015e10	0x187	func	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	CampaignDoc	masked body (391 bytes, 13 relocations) unique at a census start
 0x00015fa0	0x2c	func	?_Destroy@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@IAEXPAV?$auto_ptr@VTScenarioStartingBonus@@@2@0@Z	CampaignDoc	masked body (44 bytes, 0 relocations) unique at a census start
@@ -510,6 +515,9 @@ rva	size	kind	name	unit	evidence
 0x000a56e4	0xd	data	??_C@_0N@GEJI@artraits?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x000a6794	0x15	data	??_C@_0BF@MMAA@missing?5locale?5facet?$AA@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x355
 0x000a680c	0x2	data	??_C@_01FKHJ@C?$AA@	resourcemanager	referenced by ??0?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@QAE@I@Z at +0x27
+0x000a6858	0x7	data	??_C@_06ELCD@?$HM?$CK?4?$CK?$HM?$HM?$AA@	CampaignDoc	referenced by ?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z at +0x150
+0x000a6860	0x2	data	??_C@_01KALE@?$HM?$AA@	CampaignDoc	referenced by ?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z at +0x11e
+0x000a6864	0x3	data	??_C@_02KJNG@?$HM?$CK?$AA@	CampaignDoc	referenced by ?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z at +0xd5
 0x000a93e8	0x150	data	?g_campaignMapTraitsImp@@3PAUTCampaignMapTraits@@A	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x1fe
 0x000a9538	0x4	data	?g_campaignMapTraits@@3AAY0BF@$$CBUTCampaignMapTraits@@A	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x8c
 0x000b166c	0xd	data	??_C@_0N@BOLI@camptext?4txt?$AA@	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x4f
