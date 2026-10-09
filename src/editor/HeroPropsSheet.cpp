@@ -107,15 +107,19 @@ bool THeroPropsSheet::wasModified() const
 VA(0x00453fc7, 0x1c)
 void THeroPropsSheet::onEnableOK()
 {
-    if (--_m_numOKDisablers == 0)
-        GetDlgItem(IDOK)->EnableWindow(TRUE);
+    if (--_m_numOKDisablers == 0) {
+        CWnd* pOKButton = GetDlgItem(IDOK);
+        pOKButton->EnableWindow(TRUE);
+    }
 }
 
 VA(0x00453fe3, 0x24)
 void THeroPropsSheet::onDisableOK()
 {
-    if (_m_numOKDisablers++ == 0)
-        GetDlgItem(IDOK)->EnableWindow(FALSE);
+    if (_m_numOKDisablers++ == 0) {
+        CWnd* pOKButton = GetDlgItem(IDOK);
+        pOKButton->EnableWindow(FALSE);
+    }
 }
 
 VA(0x00454007, 0x6)
@@ -199,11 +203,13 @@ TNonRandomHeroPropsSheet::TNonRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* p
     if (!_m_pNewMap.get())
         throw TAllocationFailure();
     const TGameMap& oldMap = *_m_pMap;
-    const TGameObject* pOldObject = oldMap.getLayer(_m_heroRef.getBSecondLayer()).getPObject(_m_heroRef.getObjectID());
+    const TGameMap::TLayer& oldLayer = oldMap.getLayer(_m_heroRef.getBSecondLayer());
+    const TGameObject* pOldObject = oldLayer.getPObject(_m_heroRef.getObjectID());
     _m_pOldHero = dynamic_cast<const TNonRandomHero*>(pOldObject);
     if (_m_pOldHero == NULL)
         _m_pOldHero = dynamic_cast<const TTown*>(pOldObject)->getPVisitingHero();
-    TGameObject* pNewObject = _m_pNewMap->getLayer(_m_heroRef.getBSecondLayer()).getPObject(_m_heroRef.getObjectID());
+    TGameMap::TLayer& newLayer = _m_pNewMap->getLayer(_m_heroRef.getBSecondLayer());
+    TGameObject* pNewObject = newLayer.getPObject(_m_heroRef.getObjectID());
     _m_pNewHero = dynamic_cast<TNonRandomHero*>(pNewObject);
     if (_m_pNewHero == NULL)
         _m_pNewHero = dynamic_cast<TTown*>(pNewObject)->getPVisitingHero();
@@ -270,10 +276,10 @@ TPrisonPropsSheet::TPrisonPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjec
     if (!_m_pNewMap.get())
         throw TAllocationFailure();
     const TGameMap& oldMap = *_m_pMap;
-    _m_pOldPrison =
-        dynamic_cast<const TPrison*>(oldMap.getLayer(_m_prisonRef.getBSecondLayer()).getPObject(_m_prisonRef.getObjectID()));
-    _m_pNewPrison = dynamic_cast<TPrison*>(
-        _m_pNewMap->getLayer(_m_prisonRef.getBSecondLayer()).getPObject(_m_prisonRef.getObjectID()));
+    const TGameMap::TLayer& oldLayer = oldMap.getLayer(_m_prisonRef.getBSecondLayer());
+    _m_pOldPrison = dynamic_cast<const TPrison*>(oldLayer.getPObject(_m_prisonRef.getObjectID()));
+    TGameMap::TLayer& newLayer = _m_pNewMap->getLayer(_m_prisonRef.getBSecondLayer());
+    _m_pNewPrison = dynamic_cast<TPrison*>(newLayer.getPObject(_m_prisonRef.getObjectID()));
     _setNewMap(_m_pNewMap.get());
     _m_pGeneralPage = std::auto_ptr<TPrisonPropsGeneralPage>(
         new TPrisonPropsGeneralPage(this, *_m_pMap, *_m_pNewMap, _m_prisonRef));
@@ -297,7 +303,23 @@ TPrisonPropsSheet::~TPrisonPropsSheet()
     RemovePage(_m_pGeneralPage.get());
 }
 
-inline void TNonRandomHeroPropsSheet::_setDefaults(THeroID heroID)
+VA(0x00454b61, 0xa5)
+BOOL TNonRandomHeroPropsSheet::OnInitDialog()
+{
+    BOOL bResult = THeroPropsSheet::OnInitDialog();
+    SetActivePage(_m_pBiographyPage.get());
+    SetActivePage(_m_pGeneralPage.get());
+    const THeroPrototype& prototype = _m_pNewMap->getHeroPrototype(_m_pNewHero->getHeroID());
+    _m_pBiographyPage->setDefaultBiography(prototype.getBiography());
+    _getPPriSkillsPage()->setDefaultPrimarySkills(prototype.getPrimarySkills());
+    _getPSecSkillsPage()->setDefaultSecondarySkills(prototype.getSecondarySkills());
+    _getPArtifactsPage()->setDefaultArtifacts(prototype.getArtifacts());
+    _getPSpellsPage()->setDefaultSpells(prototype.getSpells());
+    return bResult;
+}
+
+VA(0x00454c06, 0x63)
+void TNonRandomHeroPropsSheet::onSetHeroID(THeroID heroID)
 {
     const THeroPrototype& prototype = _m_pNewMap->getHeroPrototype(heroID);
     _m_pBiographyPage->setDefaultBiography(prototype.getBiography());
@@ -305,22 +327,6 @@ inline void TNonRandomHeroPropsSheet::_setDefaults(THeroID heroID)
     _getPSecSkillsPage()->setDefaultSecondarySkills(prototype.getSecondarySkills());
     _getPArtifactsPage()->setDefaultArtifacts(prototype.getArtifacts());
     _getPSpellsPage()->setDefaultSpells(prototype.getSpells());
-}
-
-VA(0x00454b61, 0xa5)
-BOOL TNonRandomHeroPropsSheet::OnInitDialog()
-{
-    BOOL bResult = THeroPropsSheet::OnInitDialog();
-    SetActivePage(_m_pBiographyPage.get());
-    SetActivePage(_m_pGeneralPage.get());
-    _setDefaults(_m_pNewHero->getHeroID());
-    return bResult;
-}
-
-VA(0x00454c06, 0x63)
-void TNonRandomHeroPropsSheet::onSetHeroID(THeroID heroID)
-{
-    _setDefaults(heroID);
 }
 
 void TPrisonPropsSheet::onEnableOK()
@@ -346,7 +352,21 @@ int TPrisonPropsSheet::DoModal()
     return result;
 }
 
-inline void TPrisonPropsSheet::_setDefaults(THeroID heroID)
+BOOL TPrisonPropsSheet::OnInitDialog()
+{
+    BOOL bResult = THeroPropsSheet::OnInitDialog();
+    SetActivePage(_m_pBiographyPage.get());
+    SetActivePage(_m_pGeneralPage.get());
+    const THeroPrototype& prototype = _m_pNewMap->getHeroPrototype(_m_pNewPrison->getHeroID());
+    _m_pBiographyPage->setDefaultBiography(prototype.getBiography());
+    _getPPriSkillsPage()->setDefaultPrimarySkills(prototype.getPrimarySkills());
+    _getPSecSkillsPage()->setDefaultSecondarySkills(prototype.getSecondarySkills());
+    _getPArtifactsPage()->setDefaultArtifacts(prototype.getArtifacts());
+    _getPSpellsPage()->setDefaultSpells(prototype.getSpells());
+    return bResult;
+}
+
+void TPrisonPropsSheet::onSetHeroID(THeroID heroID)
 {
     const THeroPrototype& prototype = _m_pNewMap->getHeroPrototype(heroID);
     _m_pBiographyPage->setDefaultBiography(prototype.getBiography());
@@ -354,18 +374,4 @@ inline void TPrisonPropsSheet::_setDefaults(THeroID heroID)
     _getPSecSkillsPage()->setDefaultSecondarySkills(prototype.getSecondarySkills());
     _getPArtifactsPage()->setDefaultArtifacts(prototype.getArtifacts());
     _getPSpellsPage()->setDefaultSpells(prototype.getSpells());
-}
-
-BOOL TPrisonPropsSheet::OnInitDialog()
-{
-    BOOL bResult = THeroPropsSheet::OnInitDialog();
-    SetActivePage(_m_pBiographyPage.get());
-    SetActivePage(_m_pGeneralPage.get());
-    _setDefaults(_m_pNewPrison->getHeroID());
-    return bResult;
-}
-
-void TPrisonPropsSheet::onSetHeroID(THeroID heroID)
-{
-    _setDefaults(heroID);
 }

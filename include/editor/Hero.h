@@ -159,6 +159,8 @@ public:
     TBasicHero(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     virtual THeroID getHeroID() const;
+    // Whether it stands for one of the game's heroes.
+    bool hasHeroID() const { return getHeroID() != -1; }
 };
 
 // A placeholder for a hero the campaign carries over: a hero id, or none

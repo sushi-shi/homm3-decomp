@@ -106,9 +106,6 @@ public:
     virtual BOOL OnInitDialog();
 
 private:
-    // Gives the pages the hero's defaults.
-    void _setDefaults(THeroID heroID);
-
     TGameMap* _m_pMap;
     TMapObjectRef _m_heroRef;
     std::auto_ptr<TGameMap> _m_pNewMap;
@@ -133,9 +130,6 @@ public:
     virtual BOOL OnInitDialog();
 
 private:
-    // Gives the pages the hero's defaults.
-    void _setDefaults(THeroID heroID);
-
     TGameMap* _m_pMap;
     TMapObjectRef _m_prisonRef;
     std::auto_ptr<TGameMap> _m_pNewMap;

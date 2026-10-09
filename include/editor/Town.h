@@ -182,7 +182,15 @@ public:
     // The faction: the object type's subtype for a town (0x4c2a24).
     TTownType getTownType() const;
     const TTypeTraits& getTownTypeTraits() const { return s_akTypeTraits[getTownType()]; }
+    bool getBCustomName() const { return _m_bCustomName; }
+    void setBCustomName(bool bCustomName) { _m_bCustomName = bCustomName; }
     const std::string& getName() const { return _m_name; }
+    // h3maped 0x4c238d.
+    void setName(const std::string& newName);
+    // A random town's alignment: the player whose town type it takes, or
+    // none for its owner's or a random one (set by 0x4c24e2).
+    TPlayer getAlignment() const { return _m_alignment; }
+    void setAlignment(TPlayer newAlignment);
     const TArmy& getGarrison() const { return _m_garrison; }
     bool getBCustomGarrison() const { return _m_bCustomGarrison; }
     bool getBCustomBuildings() const { return _m_bCustomBuildings; }
@@ -220,7 +228,7 @@ private:
     std::bitset<kNumSpells> _m_disabledSpellsMask;
     std::vector<TTimedEvent> _m_events;
     THero* _m_pVisitingHero;
-    unsigned char _m_alignment;
+    TPlayer _m_alignment;
 };
 
 #endif  /* HOMM3_EDITOR_TOWN_H */

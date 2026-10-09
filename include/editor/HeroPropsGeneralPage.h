@@ -35,7 +35,6 @@ class TGameMap;
 class THeroPropsGeneralPage : public CPropertyPage {
 public:
     THeroPropsGeneralPage(UINT nIDTemplate, const TGameMap& oldMap, TGameMap& newMap, TMapObjectRef heroRef);
-    virtual ~THeroPropsGeneralPage();
 
     bool wasModified() const { return _m_bModified; }
 
@@ -77,7 +76,6 @@ class TRandomHeroPropsGeneralPage : public THeroPropsGeneralPage {
 public:
     TRandomHeroPropsGeneralPage(const TGameMap& oldMap, TGameMap& newMap, TMapObjectRef heroRef,
                                 bool bAnyAvailableOwner);
-    virtual ~TRandomHeroPropsGeneralPage();
 
     bool wasModified() const { return _m_bModified; }
 
@@ -188,7 +186,6 @@ class TNonRandomHeroPropsGeneralPage : public TIdentifiedHeroPropsGeneralPage {
 public:
     TNonRandomHeroPropsGeneralPage(TIdentifiedHeroPropsGeneralPageParentSheet* pParentSheet, const TGameMap& oldMap,
                                    TGameMap& newMap, TMapObjectRef heroRef, bool bAnyAvailableOwner);
-    virtual ~TNonRandomHeroPropsGeneralPage();
 
     bool wasModified() const { return _m_bModified; }
 
@@ -221,7 +218,6 @@ class TPrisonPropsGeneralPage : public TIdentifiedHeroPropsGeneralPage {
 public:
     TPrisonPropsGeneralPage(TIdentifiedHeroPropsGeneralPageParentSheet* pParentSheet, const TGameMap& oldMap,
                             TGameMap& newMap, TMapObjectRef prisonRef);
-    virtual ~TPrisonPropsGeneralPage();
 
     bool wasModified() const { return _m_bModified; }
 

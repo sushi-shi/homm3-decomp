@@ -703,3 +703,13 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "HeroPropsSheet"
 source = "src/editor/HeroPropsSheet.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsGeneralPage"
+source = "src/editor/TownPropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "TownPropsSheet"
+source = "src/editor/TownPropsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"

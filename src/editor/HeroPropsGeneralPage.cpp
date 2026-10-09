@@ -61,10 +61,7 @@ THeroPropsGeneralPage::THeroPropsGeneralPage(UINT nIDTemplate, const TGameMap& o
 
 VA_COMPGEN(0x0044f7fd, 0x1c, SCALAR_DELETING_DTOR, THeroPropsGeneralPage)
 
-VA(0x0044f819, 0x59)
-THeroPropsGeneralPage::~THeroPropsGeneralPage()
-{
-}
+VA_COMPGEN(0x0044f819, 0x59, IMPLICIT_DTOR, THeroPropsGeneralPage)
 
 VA(0x0044f872, 0x66)
 void THeroPropsGeneralPage::_setDefaultExperience(THeroID heroID)
@@ -124,9 +121,8 @@ BOOL THeroPropsGeneralPage::OnInitDialog()
         _m_customizeExperienceCheck.SetCheck(1);
     } else {
         _m_experienceCombo.SetWindowText(TFormattedString(
-            "%d", _m_pNewHero->getHeroID() != -1
-                      ? _m_newMap.getHeroPrototype(_m_pNewHero->getHeroID()).getExperience()
-                      : 0));
+            "%d", _m_pNewHero->hasHeroID() ? _m_newMap.getHeroPrototype(_m_pNewHero->getHeroID()).getExperience()
+                                           : 0));
         _m_experienceCombo.EnableWindow(FALSE);
         _m_customizeExperienceCheck.SetCheck(0);
     }
@@ -185,9 +181,8 @@ void THeroPropsGeneralPage::OnCustomizeExperienceCheck()
         }
     } else if (_m_bCustomExperience) {
         _m_experienceCombo.SetWindowText(TFormattedString(
-            "%d", _m_pNewHero->getHeroID() != -1
-                      ? _m_newMap.getHeroPrototype(_m_pNewHero->getHeroID()).getExperience()
-                      : 0));
+            "%d", _m_pNewHero->hasHeroID() ? _m_newMap.getHeroPrototype(_m_pNewHero->getHeroID()).getExperience()
+                                           : 0));
         _m_experienceCombo.EnableWindow(FALSE);
         _m_experience = 0;
         _m_bCustomExperience = false;
@@ -211,10 +206,7 @@ TRandomHeroPropsGeneralPage::TRandomHeroPropsGeneralPage(const TGameMap& oldMap,
 
 VA_COMPGEN(0x0045002c, 0x1c, SCALAR_DELETING_DTOR, TRandomHeroPropsGeneralPage)
 
-VA(0x00450048, 0x38)
-TRandomHeroPropsGeneralPage::~TRandomHeroPropsGeneralPage()
-{
-}
+VA_COMPGEN(0x00450048, 0x38, IMPLICIT_DTOR, TRandomHeroPropsGeneralPage)
 
 VA(0x00450080, 0x75)
 const TRandomHero* TRandomHeroPropsGeneralPage::_getOldHero() const
@@ -281,7 +273,7 @@ VA(0x00450317, 0x6)
 BEGIN_MESSAGE_MAP(TIdentifiedHeroPropsGeneralPage, THeroPropsGeneralPage)
     ON_CBN_SELCHANGE(IDC_IDENTITY_COMBO, OnSelChangeIdentityCombo)
     ON_NOTIFY(UDN_DELTAPOS, IDC_PORTRAIT_SPIN, OnDeltaposPortraitSpin)
-    ON_EN_CHANGE(IDC_HERO_NAME_EDIT, OnChangeNameEdit)
+    ON_EN_CHANGE(IDC_NAME_EDIT, OnChangeNameEdit)
     ON_BN_CLICKED(IDC_CUSTOMIZE_NAME_CHECK, OnCustomizeNameCheck)
     ON_BN_CLICKED(IDC_CUSTOMIZE_PORTRAIT_CHECK, OnCustomizePortraitCheck)
 END_MESSAGE_MAP()
@@ -396,27 +388,29 @@ void TIdentifiedHeroPropsGeneralPage::_setPortrait(int portrait)
 {
     _adjustPortrait(portrait);
     _m_portraitStatic.SetBitmap(NULL);
-    CClientDC dc(this);
-    CDC memDC;
-    memDC.CreateCompatibleDC(&dc);
-    BITMAP bitmap;
-    _m_portraitBitmap.GetBitmap(&bitmap);
-    TGDIObjectSelector<CBitmap> bitmapSelector(&memDC, &_m_portraitBitmap);
-    if (portrait >= 0 && portrait < g_kNumPortraits) {
-        CDC portraitDC;
-        portraitDC.CreateCompatibleDC(&dc);
-        CBitmap* pPortrait = _m_apPortrait.get()[portrait].get();
-        BITMAP portraitBitmap;
-        pPortrait->GetBitmap(&portraitBitmap);
-        TGDIObjectSelector<CBitmap> portraitSelector(&portraitDC, pPortrait);
-        int oldMode = memDC.SetStretchBltMode(COLORONCOLOR);
-        memDC.StretchBlt(0, 0, bitmap.bmWidth, bitmap.bmHeight, &portraitDC, 0, 0, portraitBitmap.bmWidth,
-                         portraitBitmap.bmHeight, SRCCOPY);
-        memDC.SetStretchBltMode(oldMode);
-    } else {
-        CBrush brush(::GetSysColor(COLOR_3DFACE));
-        TGDIObjectSelector<CBrush> brushSelector(&memDC, &brush);
-        memDC.PatBlt(0, 0, bitmap.bmWidth, bitmap.bmHeight, PATCOPY);
+    {
+        CClientDC dc(this);
+        CDC memDC;
+        memDC.CreateCompatibleDC(&dc);
+        BITMAP bitmap;
+        _m_portraitBitmap.GetBitmap(&bitmap);
+        TGDIObjectSelector<CBitmap> bitmapSelector(&memDC, &_m_portraitBitmap);
+        if (portrait >= 0 && portrait < g_kNumPortraits) {
+            CDC portraitDC;
+            portraitDC.CreateCompatibleDC(&dc);
+            CBitmap* pPortrait = _m_apPortrait.get()[portrait].get();
+            BITMAP portraitBitmap;
+            pPortrait->GetBitmap(&portraitBitmap);
+            TGDIObjectSelector<CBitmap> portraitSelector(&portraitDC, pPortrait);
+            int oldMode = memDC.SetStretchBltMode(COLORONCOLOR);
+            memDC.StretchBlt(0, 0, bitmap.bmWidth, bitmap.bmHeight, &portraitDC, 0, 0, portraitBitmap.bmWidth,
+                             portraitBitmap.bmHeight, SRCCOPY);
+            memDC.SetStretchBltMode(oldMode);
+        } else {
+            CBrush brush(::GetSysColor(COLOR_3DFACE));
+            TGDIObjectSelector<CBrush> brushSelector(&memDC, &brush);
+            memDC.PatBlt(0, 0, bitmap.bmWidth, bitmap.bmHeight, PATCOPY);
+        }
     }
     _m_portraitStatic.SetBitmap(_m_portraitBitmap);
 }
@@ -426,7 +420,7 @@ void TIdentifiedHeroPropsGeneralPage::DoDataExchange(CDataExchange* pDX)
 {
     THeroPropsGeneralPage::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_IDENTITY_COMBO, _m_identityCombo);
-    DDX_Control(pDX, IDC_HERO_NAME_EDIT, _m_nameEdit);
+    DDX_Control(pDX, IDC_NAME_EDIT, _m_nameEdit);
     DDX_Control(pDX, IDC_CUSTOMIZE_NAME_CHECK, _m_customizeNameCheck);
     DDX_Control(pDX, IDC_PORTRAIT, _m_portraitStatic);
     DDX_Control(pDX, IDC_PORTRAIT_SPIN, _m_portraitSpin);
@@ -548,7 +542,8 @@ void TIdentifiedHeroPropsGeneralPage::OnDeltaposPortraitSpin(NMHDR* pNMHDR, LRES
 {
     NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
     int portrait = pNMUpDown->iPos + pNMUpDown->iDelta;
-    if (portrait >= 0 && portrait < _getNumPortraits(_m_newMap.getVersion())) {
+    int numPortraits = _getNumPortraits(_m_newMap.getVersion());
+    if (portrait >= 0 && portrait < numPortraits) {
         _setPortrait(portrait);
         _m_portrait = portrait;
         *pResult = 0;
@@ -561,14 +556,14 @@ void TIdentifiedHeroPropsGeneralPage::OnChangeNameEdit()
 {
     if (_m_nameEdit.IsWindowEnabled()) {
         _m_nameEdit.GetWindowText(_m_name);
-        if (_isspace(_m_name)) {
-            if (!_m_bBlankName) {
-                _m_pParentSheet->onDisableOK();
-                _m_bBlankName = true;
+        if (!_isspace(_m_name)) {
+            if (_m_bBlankName) {
+                _m_pParentSheet->onEnableOK();
+                _m_bBlankName = false;
             }
-        } else if (_m_bBlankName) {
-            _m_pParentSheet->onEnableOK();
-            _m_bBlankName = false;
+        } else if (!_m_bBlankName) {
+            _m_pParentSheet->onDisableOK();
+            _m_bBlankName = true;
         }
     }
 }
@@ -620,10 +615,7 @@ TNonRandomHeroPropsGeneralPage::TNonRandomHeroPropsGeneralPage(TIdentifiedHeroPr
 
 VA_COMPGEN(0x00451834, 0x1c, SCALAR_DELETING_DTOR, TNonRandomHeroPropsGeneralPage)
 
-VA(0x00451850, 0x4a)
-TNonRandomHeroPropsGeneralPage::~TNonRandomHeroPropsGeneralPage()
-{
-}
+VA_COMPGEN(0x00451850, 0x4a, IMPLICIT_DTOR, TNonRandomHeroPropsGeneralPage)
 
 VA(0x0045189a, 0x75)
 const TNonRandomHero* TNonRandomHeroPropsGeneralPage::_getOldHero() const
@@ -710,10 +702,7 @@ TPrisonPropsGeneralPage::TPrisonPropsGeneralPage(TIdentifiedHeroPropsGeneralPage
 
 VA_COMPGEN(0x00451c3a, 0x1c, SCALAR_DELETING_DTOR, TPrisonPropsGeneralPage)
 
-VA(0x00451c56, 0x38)
-TPrisonPropsGeneralPage::~TPrisonPropsGeneralPage()
-{
-}
+VA_COMPGEN(0x00451c56, 0x38, IMPLICIT_DTOR, TPrisonPropsGeneralPage)
 
 VA(0x00451c8e, 0x42)
 const TPrison* TPrisonPropsGeneralPage::_getOldPrison() const
