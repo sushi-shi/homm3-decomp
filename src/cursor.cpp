@@ -529,9 +529,11 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
                                      origX, origY, standEnd,
                                      foughtBattle);
             else {
-                boat* newBoat = g_game->getBoat(destCell->m_extraInfo);
                 g_game->recordHideHero(curr, curr->m_owner, 0);
-                g_game->recordHideBoat(newBoat, 1, curr->m_id);
+                // Mac 0x8fc38..0x8fc58 indexes the boat after recording the
+                // hero; DC records no boat local here.
+                g_game->recordHideBoat(g_game->getBoat(destCell->m_extraInfo),
+                                       1, curr->m_id);
                 g_game->recordShowHero(curr, curr->m_owner,
                                          triggerPoint, 1);
                 becameBoat = 1;

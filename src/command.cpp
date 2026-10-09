@@ -2661,9 +2661,9 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
     case g_combatActionDefend:
         if (!currentArmy->is(creatureDone | creatureDefending)) {
             currentArmy->m_monInfo.attributes |= creatureDone;
-            if (m_creaturePlacement || currentArmy->is(creatureSiegeWeapon)) {
+            if (m_creaturePlacement || currentArmy->is(creatureSiegeWeapon))
                 currentArmy->m_defendBonus = 0;
-            } else {
+            else {
                 std::string message;
                 currentArmy->m_monInfo.attributes |= creatureDefending;
                 currentArmy->m_defendBonus = max(
