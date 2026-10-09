@@ -56,3 +56,19 @@ sgi-profile = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions"]  # 1
 sgi-exceptions = ["-O2", "-mcpu=pentium", "-funroll-loops"]  # 178 of 634
 sgi-pentiumpro = ["-O2", "-mcpu=pentiumpro", "-funroll-loops", "-fno-exceptions"]  # 92 of 510
 sgi-reentrant = ["-O2", "-mcpu=pentium", "-funroll-loops", "-fno-exceptions", "-D_REENTRANT"]  # 206 of 510
+
+# Pairs reviewed with `homm3 loki-game diff` against the compiled unit: the
+# call-graph evidence had paired a neighbour (a wrapper or caller of the real
+# body). Scores are the normal-form similarity of the compiled body.
+[[pairs.reviewed]]
+win = 0x1a39c0  # combatManager::validSpellTarget: 90.5 here, 25.5 at 0x081a797c
+loki = 0x081a71c8
+[[pairs.reviewed]]
+win = 0x1a40d0  # combatManager::hasValidSpellTarget: the hex loop calling it
+loki = 0x081a797c
+[[pairs.reviewed]]
+win = 0x12c40  # advManager::updateRadar(type_point, ...): 56.9 here, 2.0 at the wrapper
+loki = 0x0806511c
+[[pairs.reviewed]]
+win = 0x13790  # advManager::updateRadar(bool, ...): the 97-byte forwarding wrapper
+loki = 0x08065d04

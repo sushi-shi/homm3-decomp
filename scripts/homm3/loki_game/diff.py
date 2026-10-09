@@ -238,9 +238,19 @@ def side_by_side(left: Body, right: Body, width: int = 64) -> list[str]:
     return out
 
 
+_BRANCH = re.compile(r"^(j[a-z]+|loop[a-z]*|jmp) (0x[0-9a-f]+|\d+)$")
+
+
+def _key(text: str) -> str:
+    """An instruction without its in-function branch target: a length change
+    upstream moves every later target, which says nothing about the branch."""
+    match = _BRANCH.match(text)
+    return match.group(1) + " L" if match else text
+
+
 def score(left: Body, right: Body) -> float:
-    ta = [t for _, t, _ in left.listing()]
-    tb = [t for _, t, _ in right.listing()]
+    ta = [_key(t) for _, t, _ in left.listing()]
+    tb = [_key(t) for _, t, _ in right.listing()]
     if not ta and not tb:
         return 100.0
     return 100.0 * difflib.SequenceMatcher(a=ta, b=tb, autojunk=False).ratio()

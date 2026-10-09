@@ -24,6 +24,7 @@ class Row:
     name: str
     windows: float
     symbol: str | None = None
+    mangled: str | None = None
     score: float | None = None
     exact: bool = False
     note: str = ""
@@ -55,9 +56,12 @@ class Scorer:
             if len(f.body.code) < 16:
                 continue
             mask = {o + k for o in f.body.refs for k in range(4)}
-            hits = self._scanner.search(f.body.code, mask)
-            if len(hits) == 1 and hits[0] not in self.loki_to_win:
-                self.learned.setdefault(hits[0], diff.qualified(demangled.get(f.symbol, f.symbol)))
+            name = diff.qualified(demangled.get(f.symbol, f.symbol))
+            hits = [h for h in self._scanner.search(f.body.code, mask) if h in self.sizes]
+            # identical template copies (vector<T*> for several T) share one name
+            for hit in hits[:4]:
+                if hit not in self.loki_to_win:
+                    self.learned.setdefault(hit, name)
 
     def extent(self, loki: int) -> int:
         """The census counts a body's addresses, which leaves out alignment
@@ -135,5 +139,6 @@ class Scorer:
             dem, f = candidates[0]
             target = self.body(row)
             row.symbol = dem
+            row.mangled = f.symbol
             row.exact = f.body.code == target.code
             row.score = 100.0 if row.exact else diff.score(f.body, target)

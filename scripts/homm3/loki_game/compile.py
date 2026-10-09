@@ -43,21 +43,56 @@ def without_disabled_text(text: str) -> str:
     return "\n".join(out)
 
 
-def compile_unit(unit: str, out: Path | None = None) -> tuple[Path, str]:
-    """(object, diagnostics) for src/<unit>.cpp; the object is missing on failure."""
+def place_functions(assembly: str, placements: dict[str, int]) -> str:
+    """Give each placed function its own section, starting at its image
+    address modulo 16. gas resolves `.p2align 4,,7` from the section start,
+    so a body assembled at another residue pads its jump targets
+    differently from the linked image."""
+    lines = assembly.split("\n")
+    for symbol, residue in placements.items():
+        try:
+            label = lines.index(f"{symbol}:")
+        except ValueError:
+            continue
+        start = next((i for i in range(label - 1, max(label - 6, -1), -1)
+                      if lines[i].strip().startswith(".align")), None)
+        end = next((i for i in range(label, len(lines))
+                    if lines[i].strip().startswith(f".size\t {symbol},")
+                    or lines[i].strip().startswith(f".size {symbol},")), None)
+        if start is None or end is None:
+            continue
+        section = f'.section .text.h3loki.{symbol},"ax",@progbits'
+        body = [section if line.strip() == ".text" else line for line in lines[start + 1:end + 1]]
+        lines[start:end + 1] = [section, "\t.p2align 4", f"\t.skip {residue % 16}", *body, ".text"]
+    return "\n".join(lines)
+
+
+def compile_unit(unit: str, out: Path | None = None,
+                 placements: dict[str, int] | None = None) -> tuple[Path, str]:
+    """(object, diagnostics) for src/<unit>.cpp; the object is missing on failure.
+    `placements` maps function symbols to their image addresses (see
+    place_functions)."""
     spec = profile_spec()["profile"]
     out = out or BUILD / "objects" / f"{unit}.o"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.unlink(missing_ok=True)
     includes = ["include/loki", "include", "vendor/zlib-1.1.3"]
     source = (ROOT / "src" / f"{unit}.cpp").read_text(errors="surrogateescape")
+    assembly = out.with_suffix(".s")
     command = driver_command(
         *spec["flags"], "-fpermissive", "-w", "-DHOMM3_TARGET_LOKI=1",
         "-include", str(ROOT / "include/gcc_prefix.h"),
         *(f"-I{ROOT / p}" for p in includes),
-        "-x", "c++", "-c", "-", "-o", str(out), stl=spec.get("stl", "libstdc++"))
+        "-x", "c++", "-S", "-", "-o", str(assembly), stl=spec.get("stl", "libstdc++"))
     from homm3.loki import toolchain
     done = subprocess.run(command, cwd=ROOT / "src", env=toolchain.environment(),
                           input=f'#line 1 "{unit}.cpp"\n' + without_disabled_text(source),
                           capture_output=True, text=True, errors="surrogateescape")
-    return out, done.stderr
+    if done.returncode or not assembly.is_file():
+        return out, done.stderr
+    if placements:
+        assembly.write_text(place_functions(assembly.read_text(errors="surrogateescape"), placements),
+                            errors="surrogateescape")
+    assembled = subprocess.run(driver_command("-c", str(assembly), "-o", str(out)),
+                               env=toolchain.environment(), capture_output=True, text=True)
+    return out, done.stderr + assembled.stderr

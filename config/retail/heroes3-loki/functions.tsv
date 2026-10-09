@@ -540,8 +540,8 @@ address	size	band	win_rva	evidence	win_name
 0x08064cb0	779	text			
 0x08064fcc	112	text			
 0x0806503c	218	text	0xb1330	call-graph	?isValid@type_point@@QBE_NXZ
-0x0806511c	2984	text			
-0x08065d04	97	text	0x12c40	call-graph	?updateRadar@advManager@@QAEXUtype_point@@_N1111@Z
+0x0806511c	2984	text	0x12c40	reviewed	?updateRadar@advManager@@QAEXUtype_point@@_N1111@Z
+0x08065d04	97	text	0x13790	reviewed	?updateRadar@advManager@@QAEX_N0000@Z
 0x08065d68	9390	text	0x137c0	string	?quickInfo@advManager@@QAEXHHH@Z
 0x080682e4	39	text	0x3ee0	call-graph-alignment	?clearBottomView@TAdventureMapWindow@@QAEXXZ
 0x0806830c	87	text	0x15d60	call-graph-alignment	?overrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z
@@ -2175,7 +2175,7 @@ address	size	band	win_rva	evidence	win_name
 0x08103414	109	text			
 0x08103484	202	text			
 0x08103550	389	text	0xbabd0	call-graph-alignment	?numOfGivenArtifact@playerData@@QBEHH@Z
-0x081036d8	45	text	0xbad80	call-graph-alignment	?isLocalHuman@playerData@@QBE_NXZ
+0x081036d8	45	text	0xbad80	call-graph	?isLocalHuman@playerData@@QBE_NXZ
 0x0810370c	25	text	0xbada0	call-graph	?isHuman@playerData@@QBE_NXZ
 0x08103728	176	text	0xbadb0	call-graph-alignment	?getName@playerData@@QAEPADXZ
 0x081037d8	46	text			
@@ -2359,7 +2359,7 @@ address	size	band	win_rva	evidence	win_name
 0x0811cb1c	49	text			
 0x0811cb50	213	text			
 0x0811cc2c	322	text			
-0x0811cd74	244	text	0xd76e0	call-graph	?restoreCell@type_obscuring_object@@QAEXXZ
+0x0811cd74	244	text	0xd76e0	call-graph-alignment	?restoreCell@type_obscuring_object@@QAEXXZ
 0x0811ce70	213	text			
 0x0811cf4c	192	text			
 0x0811d00c	325	text			
@@ -2699,9 +2699,9 @@ address	size	band	win_rva	evidence	win_name
 0x08140770	622	text			
 0x081409ec	107	text			
 0x08140a60	36	text			
-0x08140a84	295	text			
-0x08140bac	98	text			
-0x08140c14	90	text			
+0x08140a84	295	text	0xfcaa0	call-graph-alignment	?getTriggerCell@NewmapCell@@QAEPAV1@XZ
+0x08140bac	98	text	0xfcbd0	call-graph	?getMapObject@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ
+0x08140c14	90	text	0xfcc30	call-graph-alignment	?getMapExtraInfo@NewmapCell@@QBEKXZ
 0x08140c7c	110	text			
 0x08140cf0	159	text	0xfccf0	call-graph	?isDiggable@NewmapCell@@QBE_NXZ
 0x08140d90	144	text			
@@ -2718,7 +2718,7 @@ address	size	band	win_rva	evidence	win_name
 0x08143594	787	text			
 0x081438a8	103	text			
 0x08143910	37	text			
-0x08143938	106	text			
+0x08143938	106	text	0xfec30	call-graph	?findTrigger@CObject@@QBEXAAH0@Z
 0x081439a4	275	text			
 0x08143ab8	290	text			
 0x08143be4	128	text			
@@ -3733,13 +3733,13 @@ address	size	band	win_rva	evidence	win_name
 0x081a6d10	440	text			
 0x081a6ecc	198	text			
 0x081a6f94	384	text			
-0x081a711c	168	text			
-0x081a71c8	695	text			
+0x081a711c	168	text	0x1a3950	call-graph-intersection	?findSpellTarget@combatManager@@AAEPAVarmy@@W4ESpellId@@JJ_NJ@Z
+0x081a71c8	695	text	0x1a39c0	reviewed	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z
 0x081a7488	81	text			
 0x081a74dc	441	text			
 0x081a769c	292	text			
 0x081a77c0	440	text			
-0x081a797c	190	text	0x1a39c0	call-graph-alignment	?validSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@HH_NJ@Z
+0x081a797c	190	text	0x1a40d0	reviewed	?hasValidSpellTarget@combatManager@@QAE_NW4ESpellId@@W4TSkillMastery@@H_NJ@Z
 0x081a7a3c	104	text			
 0x081a7aa4	64	text			
 0x081a7aec	111	text			

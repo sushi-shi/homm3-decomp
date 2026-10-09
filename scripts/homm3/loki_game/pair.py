@@ -371,7 +371,16 @@ class Pairing:
             found[x] = (y, "call-graph-alignment")
         return self.add(found)
 
+    def reviewed(self) -> int:
+        """Pairs settled by comparing a compiled body with its candidates
+        (config/loki/game.toml [[pairs.reviewed]]); they precede every
+        inferred pair."""
+        from homm3.loki_game.scan import profile_spec
+        rows = profile_spec().get("pairs", {}).get("reviewed", [])
+        return self.add({row["win"]: (row["loki"], "reviewed") for row in rows})
+
     def run(self, fingerprint_objects: list[Path]) -> Counter:
+        print(f"[loki-game] reviewed: {self.reviewed()}")
         if fingerprint_objects:
             print(f"[loki-game] fingerprint: {self.fingerprints(fingerprint_objects)}")
         print(f"[loki-game] string: {self.strings()}")

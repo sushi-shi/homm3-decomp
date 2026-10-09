@@ -119,8 +119,10 @@ def _compile(units: list[str], scan: bool) -> int:
     return rc
 
 
-def _objects(units: list[str], build: bool) -> dict[str, list]:
-    """unit -> its object's functions; a unit that does not compile maps to None."""
+def _objects(units: list[str], build: bool, scorer=None, rows=None) -> dict[str, list]:
+    """unit -> its object's functions; a unit that does not compile maps to None.
+    With a scorer, each unit is compiled again with its scored functions
+    placed at their image residues (compile.place_functions) and rescored."""
     from homm3.loki_game import compile as cc, diff
     from homm3.loki_game.image import BUILD
     out = {}
@@ -131,6 +133,16 @@ def _objects(units: list[str], build: bool) -> dict[str, list]:
             if not obj.is_file():
                 (BUILD / "objects" / f"{unit}.log").write_text(diagnostics)
         out[unit] = diff.object_functions(obj) if obj.is_file() else None
+        if out[unit] is None or scorer is None:
+            continue
+        unit_rows = [r for r in rows if r.unit == unit]
+        scorer.score_unit(unit_rows, out[unit])
+        placements = {r.mangled: r.loki for r in unit_rows if r.mangled}
+        if build and placements:
+            obj, _ = cc.compile_unit(unit, placements=placements)
+            out[unit] = diff.object_functions(obj) if obj.is_file() else None
+            if out[unit] is not None:
+                scorer.score_unit(unit_rows, out[unit])
     return out
 
 
@@ -142,7 +154,7 @@ def _diff(win: int, build: bool) -> int:
         print(f"[loki-game] 0x{win:x} is not paired", file=sys.stderr)
         return 1
     row = rows[0]
-    functions = _objects([row.unit], build)[row.unit]
+    functions = _objects([row.unit], build, scorer, [row])[row.unit]
     if functions is None:
         print(f"[loki-game] {row.unit} does not compile (build/heroes3-loki/objects/{row.unit}.log)")
         return 1
@@ -169,7 +181,7 @@ def _score(units: list[str], below: bool, build: bool, every: bool) -> int:
     by_unit: dict[str, list] = {}
     for row in rows:
         by_unit.setdefault(row.unit, []).append(row)
-    objects = _objects(sorted(by_unit), build)
+    objects = _objects(sorted(by_unit), build, scorer, rows)
     compiled = 0
     for unit, unit_rows in sorted(by_unit.items()):
         if objects[unit] is None:
@@ -177,7 +189,8 @@ def _score(units: list[str], below: bool, build: bool, every: bool) -> int:
                 row.note = "unit does not compile"
             continue
         compiled += 1
-        scorer.score_unit(unit_rows, objects[unit])
+        if not build:
+            scorer.score_unit(unit_rows, objects[unit])
     for row in rows:
         if every or (row.score is not None and not row.exact) or below:
             score_text = "-" if row.score is None else f"{row.score:6.2f}"
