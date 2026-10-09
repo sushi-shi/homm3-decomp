@@ -5538,7 +5538,8 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     for (int m = 0; m <= 6; m++)
         who->giveResource(m, bank.m_resources[m]);
 
-    cell->setCreatureBankEmpty(true);
+    // Windows and Mac retail both store the bit in place; no setter call.
+    cell->m_creatureBankInfo.m_empty = 1;
     who->checkLevel();
     return 1;
 }

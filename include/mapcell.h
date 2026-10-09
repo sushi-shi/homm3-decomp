@@ -576,7 +576,6 @@ public:
     enum EGameResource getArtifactResourceCost() const;
     BlackBoxData* getBlackBox() const;
     type_creature_bank& getCreatureBank() const;
-    void setCreatureBankEmpty(bool empty);
     void clearVisitedBits();
     short getCustomIndex() const;
     short getItemId() const;
