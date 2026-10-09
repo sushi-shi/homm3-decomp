@@ -81,6 +81,10 @@ bool operator==(const TScenarioStartingBonus& lhs, const TScenarioStartingBonus&
 
 class TScenarioHeroBonus : public TScenarioStartingBonus {
 public:
+    // The heroes a bonus can name besides a hero id: the player's most
+    // powerful hero, or the hero generated at the player's main town.
+    enum { kMostPowerfulHero = -3, kGeneratedHero = -2 };
+
     explicit TScenarioHeroBonus(int hero) : m_hero(hero) {}
 
     int m_hero;
@@ -274,6 +278,8 @@ public:
 
 class TScenarioOptionsStartingHero : public TScenarioStartingOptions {
 public:
+    enum { kRandomHero = -1 };
+
     struct TChoice {
         bool operator==(const TChoice& other) const
         {
@@ -330,6 +336,9 @@ public:
         void setBPresent(bool bPresent);
         void setMainTown(int townType);
         void setHeroes(const std::map<int, std::string>& newHeroes);
+
+        bool isHumanPlayable() const { return m_bPresent && m_bHumanPlayable; }
+        int getMainTownType() const { return m_bHasMainTown ? m_mainTownType : -1; }
 
         bool m_bPresent : 1;
         bool m_bHumanPlayable : 1;
