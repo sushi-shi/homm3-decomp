@@ -327,6 +327,35 @@ def require_objects(units) -> None:
         raise MissingObjects(missing, directory)
 
 
+def fold_label(at, names, bodies, definers, owned):
+    """The one name of an address that several compiled bodies reach (`at`).
+
+    A name that also reaches another address is no witness either way. When
+    exactly one name reaches only this address, it labels it: the others are
+    a template that a library and an editor unit both emit under different
+    options, and the linker kept one body per name, so this address holds
+    the instance only one unit emits. Otherwise /OPT:ICF folded the bodies
+    that reach only this address when they agree byte for byte with the same
+    relocation sites. The first name labels the address, a shared unit's
+    before the image's own (whose MFC inline virtuals fold onto shared bodies
+    but are no placement); the comparison pairs the others' references with
+    it (normalize_objs ICF twins)."""
+    group = sorted((name for name in at if len(names[name]) == 1),
+                   key=lambda name: (definers[name][0] in owned, name))
+    if len(group) == 1 and len(at) > 1:
+        return group[0]
+    if len(group) < 2 or any(name not in bodies for name in group):
+        return None
+    shapes = set()
+    for name in group:
+        body, relocs = bodies[name]
+        masked = bytearray(body)
+        for site in relocs:
+            masked[site:site + 4] = b"\0\0\0\0"
+        shapes.add((bytes(masked), tuple(sorted(relocs))))
+    return group[0] if len(shapes) == 1 else None
+
+
 def derive(log=print, want_suggestions=False):
     from homm3 import manifest
     from homm3.core.image import Image
@@ -794,26 +823,7 @@ def derive(log=print, want_suggestions=False):
         if shared and shared != group:
             by_rva[rva] = shared
     def folded(rva):
-        """The one name of an address that several compiled bodies reach:
-        /OPT:ICF folded the bodies that reach only this address when they
-        agree byte for byte with the same relocation sites. The first name
-        labels the address, a shared unit's before the image's own (whose
-        MFC inline virtuals fold onto shared bodies but are no placement);
-        the comparison pairs the others' references with it
-        (normalize_objs ICF twins)."""
-        # a name that also reaches another address is no witness either way
-        group = sorted((name for name in by_rva[rva] if len(names[name]) == 1),
-                       key=lambda name: (definers[name][0] in owned, name))
-        if len(group) < 2 or any(name not in bodies for name in group):
-            return None
-        shapes = set()
-        for name in group:
-            body, relocs = bodies[name]
-            masked = bytearray(body)
-            for site in relocs:
-                masked[site:site + 4] = b"\0\0\0\0"
-            shapes.add((bytes(masked), tuple(sorted(relocs))))
-        return group[0] if len(shapes) == 1 else None
+        return fold_label(by_rva[rva], names, bodies, definers, owned)
 
     rows, conflicts = [], 0
     for name, rvas in sorted(names.items()):

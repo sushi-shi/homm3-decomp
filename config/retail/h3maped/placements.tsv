@@ -141,7 +141,6 @@ rva	size	kind	name	unit	evidence
 0x00012041	0x41	func	??4?$auto_ptr@VT16bppDIBSection@@@std@@QAEAAV01@ABV01@@Z	HeroPropsGeneralPage	masked body (65 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00012357	0x80	func	?_Inc@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ	GameMap	referenced by ?OnInitDialog@TMapSpecsAvailableHeroesPage@@UAEHXZ at +0x180
 0x00012919	0x5a	func	?_Xran@?$bitset@$02@std@@ABEXXZ	GameMap	referenced by ?_isHeroAvailable@_TImpl@TGameMap@@QBE_NH@Z at +0x27
-0x00012ce6	0xa	func	??1?$TArray@H$03@@QAE@XZ	GameMap	referenced by 0x0004a8b5 at +0x319
 0x00012cf0	0xa	func	??1?$TArray@I$06@@QAE@XZ	Town	referenced by ?OnAddEventButton@TTownPropsTimedEventsPage@@IAEXXZ at +0x58
 0x00013ff7	0x5	func	?OnOK@TLossConditionDlg@@UAEXXZ	MapSpecsLossCondPage	vtable ??_7TNullLossConditionDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@6B@ stored by ??0_TDialogs@TMapSpecsLossCondPage@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@1@Z slot 49; ICF-folded with 1 identical bodies
 0x00016b09	0x2c	func	??Breference@?$bitset@$07@std@@QBE_NXZ	GameMap	masked body (44 bytes, 1 relocations) unique at a census start
@@ -511,6 +510,10 @@ rva	size	kind	name	unit	evidence
 0x00035931	0x1aa	func	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAA_N@Z	objecttype	masked body (426 bytes, 27 relocations) unique at a census start
 0x00035adb	0xcc	func	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAG@Z	objecttype	masked body (204 bytes, 10 relocations) unique at a census start
 0x00035ba7	0xc8	func	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAI@Z	objecttype	masked body (200 bytes, 10 relocations) unique at a census start
+0x00035d1d	0xae	func	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAK@Z	objecttype	vtable ??_7?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ stored by ?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z slot 5; ICF-folded with 1 identical bodies
+0x00035dcb	0xaa	func	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAM@Z	objecttype	masked body (170 bytes, 10 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x00035e75	0xaa	func	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAN@Z	objecttype	vtable ??_7?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ stored by ?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z slot 3; ICF-folded with 1 identical bodies
+0x00035f1f	0xaa	func	?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAO@Z	objecttype	vtable ??_7?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ stored by ?use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@1@ABVlocale@1@PBV21@_N@Z slot 2; ICF-folded with 1 identical bodies
 0x000367ef	0xc4	func	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	objecttype	masked body (196 bytes, 19 relocations) unique at a census start
 0x00036a6c	0x2d	func	?_Construct@std@@YAXPAUTHeroIdentity@TGameMapHeader@@ABU23@@Z	GameMap	referenced by ?reserve@?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHeroIdentity@TGameMapHeader@@@std@@@std@@QAEXI@Z at +0x53
 0x00036a99	0x2d	func	?_Construct@std@@YAXPAVTRumor@@ABV2@@Z	GameMap	referenced by ??4?$vector@VTRumor@@V?$allocator@VTRumor@@@std@@@std@@QAEAAV01@ABV01@@Z at +0x11b
@@ -991,6 +994,7 @@ rva	size	kind	name	unit	evidence
 0x0007c511	0xb	func	??_ETMapSpecsVictoryCondPage@@WIM@AEPAXI@Z	MapSpecsVictoryCondPage	vtable ??_7TMapSpecsVictoryCondPage@@6BTVisitor@TVictoryCondition@@@ stored by ??0TMapSpecsVictoryCondPage@@QAE@ABVTGameMap@@AAV1@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@22@Z slot 0
 0x0007fed3	0x13	func	??ZTRmgMapPosition@@QAEAAU0@ABUTRmgPoint@@@Z	rmg	masked body (19 bytes, 0 relocations) unique at a census start
 0x00081a8d	0x47	func	??1TSignPropsDlg@@UAE@XZ	SignPropsDlg	referenced by ??_GTSignPropsDlg@@UAEPAXI@Z at +0x4
+0x00085521	0x68	func	??0?$vector@VTLayer@TGameMap@@V?$allocator@VTLayer@TGameMap@@@std@@@std@@QAE@ABV01@@Z	GameMap	masked body (104 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000876ce	0x17	func	?SelectObject@CDC@@QAEPAVCBitmap@@PAV2@@Z	MemoryDC	masked body (23 bytes, 1 relocations) unique at a census start
 0x000876e5	0x30	func	?BitBlt@CDC@@QAEHHHHHPAV1@HHK@Z	MemoryDC	masked body (48 bytes, 1 relocations) unique at a census start
 0x00087731	0x5	func	??_9@$BCM@AE	TileHRuler	referenced by ??1?$TDCAttributeSelector@K$1??_9@$BCM@AE@@QAE@XZ at +0x6
@@ -1574,7 +1578,9 @@ rva	size	kind	name	unit	evidence
 0x000e5470	0x2c2	func	??0TSpreadsheetResource@@QAE@PBDH0@Z	textresource	masked body (706 bytes, 12 relocations) unique at a census start
 0x000e5740	0x7	func	?getSize@TSpreadsheetResource@@UBEIXZ	textresource	vtable ??_7TSpreadsheetResource@@6B@ stored by ??0TSpreadsheetResource@@QAE@PBDH0@Z slot 2
 0x000e5750	0x7c	func	??1TSpreadsheetResource@@UAE@XZ	textresource	masked body (124 bytes, 6 relocations) unique at a census start
+0x000e57d0	0x22	func	??1?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAE@XZ	textresource	masked body (34 bytes, 1 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x000e5800	0x3	func	?_Destroy@?$vector@PADV?$allocator@PAD@std@@@std@@IAEXPAPAD0@Z	textresource	referenced by ??0TSpreadsheetResource@@QAE@PBDH0@Z at +0x1cd
+0x000e5810	0x209	func	?insert@?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAEXPAPAV?$vector@PADV?$allocator@PAD@std@@@2@IABQAV32@@Z	textresource	masked body (521 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000e5a20	0x32	func	?erase@?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAEPAPAV?$vector@PADV?$allocator@PAD@std@@@2@PAPAV32@0@Z	textresource	masked body (50 bytes, 0 relocations) unique at a census start
 0x000e5a90	0x4b	func	??0resource@@QAE@PBDW4EResourceType@@@Z	resource	masked body (75 bytes, 2 relocations) unique at a census start
 0x000e5b00	0x7	func	??1resource@@UAE@XZ	resource	referenced by ??1TTextResource@@UAE@XZ at +0x42
@@ -2132,7 +2138,7 @@ rva	size	kind	name	unit	evidence
 0x0018418c	0xd	data	??_C@_0N@KMPO@restypes?4txt?$AA@	GameResource	referenced by ?InitializeGameResourceTypeTraitsTable@@YAXXZ at +0x3a
 0x00185754	0x6	data	??_C@_05NLJN@1?41?43?$AA@	compress	referenced by @inflateInit2_@16 at +0x19
 0x001857e0	0xd	data	??_C@_0N@KPEA@HeroBios?4txt?$AA@	Hero	string literal referenced by 0x0004a8b5
-0x001857f0	0xb	data	??_C@_0L@OFGL@heroes?4txt?$AA@	Hero	string literal referenced by 0x0004a8b5
+0x001857f0	0xb	data	??_C@_0L@OFGL@heroes?4txt?$AA@	Hero	referenced by 0x0004a8b5 at +0x11
 0x00185800	0x3a98	data	?g_heroTraitsStorage@@3PAUTHeroTraits@@A	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xd
 0x00189298	0x480	data	?g_heroClassTraits@@3PAUTHeroClassTraits@@A	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x10
 0x00189718	0x4	data	?akHeroTraits@@3AAY0KD@$$CBUTHeroTraits@@A	herodefs	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x1bf
