@@ -282,11 +282,9 @@ void initializeTraitsTable()
         traits.m_bSpecial = heroTraits.m_availability.m_special;
         if (heroTraits.m_1stSkill != eSecSkillNone) {
             THeroPrototype::TSecondarySkills secondarySkills;
-            secondarySkills.insert(std::make_pair(TSecondarySkill(heroTraits.m_1stSkill),
-                                                  TSkillMastery(heroTraits.m_1stSkillLevel)));
+            secondarySkills.insert(std::make_pair(heroTraits.m_1stSkill, heroTraits.m_1stSkillLevel));
             if (heroTraits.m_2ndSkill != eSecSkillNone)
-                secondarySkills.insert(std::make_pair(TSecondarySkill(heroTraits.m_2ndSkill),
-                                                      TSkillMastery(heroTraits.m_2ndSkillLevel)));
+                secondarySkills.insert(std::make_pair(heroTraits.m_2ndSkill, heroTraits.m_2ndSkillLevel));
             traits.m_prototype.setSecondarySkills(secondarySkills);
         }
         if (heroTraits.m_startsWithSpellbook) {
@@ -299,11 +297,13 @@ void initializeTraitsTable()
             spells.set(heroTraits.m_startingSpell);
             traits.m_prototype.setSpells(spells);
         }
-        const THeroClassTraits& classTraits = akHeroClassTraits[heroTraits.m_class];
-        TArray<int, kNumPrimarySkills> aPrimarySkill(0);
-        std::copy(classTraits.m_initialPrimarySkill, classTraits.m_initialPrimarySkill + kNumPrimarySkills,
-                  aPrimarySkill.begin());
-        traits.m_prototype.setPrimarySkills(aPrimarySkill);
+        {
+            const THeroClassTraits& classTraits = akHeroClassTraits[heroTraits.m_class];
+            TArray<int, kNumPrimarySkills> aPrimarySkill(0);
+            std::copy(classTraits.m_initialPrimarySkill, classTraits.m_initialPrimarySkill + kNumPrimarySkills,
+                      aPrimarySkill.begin());
+            traits.m_prototype.setPrimarySkills(aPrimarySkill);
+        }
         std::bitset<3> gameVersions(0);
         gameVersions.set(GAME_VERSION_ROE, heroTraits.m_abAvailableIn[0] != 0);
         gameVersions.set(GAME_VERSION_AB, heroTraits.m_abAvailableIn[1] != 0);

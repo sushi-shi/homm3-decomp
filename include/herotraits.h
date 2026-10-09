@@ -9,6 +9,7 @@
 
 #include "armygrp.h"
 #include "heroclass.h"
+#include "herospec.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
 
@@ -24,10 +25,10 @@ public:
     int m_sex;  // +0x00 (DC m_sex)
     int m_race;  // +0x04 (DC m_race)
     THeroClass m_class;  // +0x08 (DC m_class)
-    int m_1stSkill;  // +0x0c (TSecondarySkill)
-    int m_1stSkillLevel;  // +0x10 (TSkillMastery)
-    int m_2ndSkill;  // +0x14 (TSecondarySkill)
-    int m_2ndSkillLevel;  // +0x18 (TSkillMastery)
+    TSecondarySkill m_1stSkill;  // +0x0c
+    TSkillMastery m_1stSkillLevel;  // +0x10
+    TSecondarySkill m_2ndSkill;  // +0x14
+    TSkillMastery m_2ndSkillLevel;  // +0x18
     unsigned char m_startsWithSpellbook;  // +0x1c
     // Dreamcast m_startsWithSpellbook is one byte at +0x1c, followed
     // by m_startingSpell at +0x20. Retail uses the byte flag; the intervening
