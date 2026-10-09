@@ -2751,8 +2751,9 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
 
     testRaiseDoor();
     if (returnValue) {
-        while (!nextArmy(true))
+        while (!nextArmy(true)) {
             resetRound();
+        }
     }
     checkChangeSelector();
     updateArmyLuckAndMorale();
