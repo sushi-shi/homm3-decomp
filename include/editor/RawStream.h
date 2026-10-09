@@ -8,6 +8,7 @@
 #ifndef HOMM3_EDITOR_RAWSTREAM_H
 #define HOMM3_EDITOR_RAWSTREAM_H
 
+#include <algorithm>
 #include <streambuf>
 #include <string>
 
@@ -33,12 +34,37 @@ public:
         return *this;
     }
 
+    TRawIStream& read(char* pData, unsigned int count)
+    {
+        int nRead = m_pStreamBuf->sgetn(pData, count);
+        if (nRead < count)
+            throw TReadFailure(nRead);
+        return *this;
+    }
+
 private:
     std::streambuf* m_pStreamBuf;
 };
 
-// A string: its length, then its characters (h3maped 0x4190cb, cdecl).
-TRawIStream& operator>>(TRawIStream& stream, std::string& value);
+// A string: its length, then its characters through a 512-byte buffer
+// (h3maped 0x4190cb, cdecl; h3ccmped expands it in the campaign readers).
+inline TRawIStream& operator>>(TRawIStream& stream, std::string& value)
+{
+    value.erase(value.begin(), value.end());
+    long size;
+    stream >> size;
+    value.resize(size);
+    std::string::size_type remaining = size;
+    for (std::string::iterator dest = value.begin(); remaining > 0;) {
+        char buffer[512];
+        std::string::size_type count = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
+        stream.read(buffer, count);
+        std::copy(buffer, buffer + count, dest);
+        dest += count;
+        remaining -= count;
+    }
+    return stream;
+}
 
 class TRawOStream {
 public:

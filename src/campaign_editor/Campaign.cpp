@@ -2,8 +2,12 @@
 // the bonuses those options offer.
 #include "campaign_editor/stdafx.h"
 
+#include <string.h>
+
 #include "va.h"
+#include "bitset_iterator.h"
 #include "campaignmap.h"
+#include "editor/RawStream.h"
 #include "campaign_editor/Campaign.h"
 
 class TCampaign::_TImpl {
@@ -160,6 +164,61 @@ private:
 
     auto_ptr<TScenarioStartingOptions> m_pClone;
 };
+
+
+// The crossover planes as earlier campaign formats stored them.
+enum {
+    kNumOldCreatures = 138,
+    kNumOldArtifacts = 129,
+    kNumOriginalArtifacts = 127
+};
+
+// Reads a run of a constant bitset as a range (the counterpart of
+// bitset_iterator, whose elements are references).
+template<size_t N>
+class const_bitset_iterator {
+public:
+    const_bitset_iterator(const bitset<N>& bits, size_t position = 0)
+        : m_bits(&bits), m_position(position) {}
+
+    bool operator*() const { return (*m_bits)[m_position]; }
+
+    const_bitset_iterator& operator++()
+    {
+        ++m_position;
+        return *this;
+    }
+
+    friend bool operator!=(const const_bitset_iterator& left, const const_bitset_iterator& right)
+    {
+        return left.m_bits != right.m_bits || left.m_position != right.m_position;
+    }
+
+private:
+    const bitset<N>* m_bits;
+    size_t m_position;
+};
+
+template<size_t N>
+inline void readBitset(TRawIStream& stream, bitset<N>& bits)
+{
+    unsigned char bytes[(N + 7) / 8];
+    stream >> bytes;
+    for (unsigned int i = 0; i < N; i++)
+        bits[i] = (bytes[i / 8] & (1 << (i % 8))) != 0;
+}
+
+template<size_t N>
+inline void writeBitset(TRawOStream& stream, const bitset<N>& bits)
+{
+    unsigned char bytes[(N + 7) / 8];
+    memset(bytes, 0, sizeof(bytes));
+    for (unsigned int i = 0; i < N; i++) {
+        if (bits[i])
+            bytes[i / 8] |= 1 << (i % 8);
+    }
+    stream << bytes;
+}
 
 }
 
@@ -696,6 +755,52 @@ TScenarioCrossover::TScenarioCrossover()
     m_retained.set(eRetainSpells);
 }
 
+VA(0x00407ee0, 0x36b)
+void TScenarioCrossover::read(TRawIStream& stream, int version)
+{
+    readBitset(stream, m_retained);
+    if (version >= 4) {
+        readBitset(stream, m_creatures);
+    } else {
+        bitset<kNumOldCreatures> oldCreatures;
+        readBitset(stream, oldCreatures);
+        copy(bitset_iterator<kNumOldCreatures>(oldCreatures),
+             bitset_iterator<kNumOldCreatures>(oldCreatures, kNumOldCreatures),
+             bitset_iterator<kNumCreatures>(m_creatures));
+    }
+    if (version >= 6) {
+        readBitset(stream, m_artifacts);
+    } else if (version >= 3) {
+        bitset<kNumOldArtifacts> oldArtifacts;
+        readBitset(stream, oldArtifacts);
+        copy(bitset_iterator<kNumOldArtifacts>(oldArtifacts),
+             bitset_iterator<kNumOldArtifacts>(oldArtifacts, kNumOldArtifacts),
+             bitset_iterator<kNumArtifacts>(m_artifacts));
+    } else {
+        bitset<kNumOriginalArtifacts> originalArtifacts;
+        readBitset(stream, originalArtifacts);
+        copy(bitset_iterator<kNumOriginalArtifacts>(originalArtifacts),
+             bitset_iterator<kNumOriginalArtifacts>(originalArtifacts, kNumOriginalArtifacts),
+             bitset_iterator<kNumArtifacts>(m_artifacts));
+    }
+}
+
+VA(0x00408250, 0x1f0)
+void TScenarioCrossover::write(TRawOStream& stream, int version) const
+{
+    writeBitset(stream, m_retained);
+    writeBitset(stream, m_creatures);
+    if (version >= 2) {
+        writeBitset(stream, m_artifacts);
+    } else {
+        bitset<kNumOldArtifacts> oldArtifacts;
+        copy(const_bitset_iterator<kNumArtifacts>(m_artifacts),
+             const_bitset_iterator<kNumArtifacts>(m_artifacts, kNumOldArtifacts),
+             bitset_iterator<kNumOldArtifacts>(oldArtifacts));
+        writeBitset(stream, oldArtifacts);
+    }
+}
+
 VA(0x00408440, 0x1c)
 TScenarioPrologue::TScenarioPrologue()
     : m_movie(0), m_music(0)
@@ -706,6 +811,28 @@ VA(0x00408460, 0x139)
 TScenarioPrologue::TScenarioPrologue(int movie, int music, const string& text)
     : m_movie(movie), m_music(music), m_text(text)
 {
+}
+
+VA(0x004085a0, 0x219)
+TRawIStream& operator>>(TRawIStream& stream, TScenarioPrologue& prologue)
+{
+    string text;
+    signed char movie;
+    stream >> movie;
+    signed char music;
+    stream >> music;
+    stream >> text;
+    prologue = TScenarioPrologue(movie, music, text);
+    return stream;
+}
+
+VA(0x004088d0, 0xe4)
+TRawOStream& operator<<(TRawOStream& stream, const TScenarioPrologue& prologue)
+{
+    stream << static_cast<ubyte>(prologue.m_movie);
+    stream << static_cast<ubyte>(prologue.m_music);
+    stream << prologue.m_text;
+    return stream;
 }
 
 VA(0x004089c0, 0x336)
