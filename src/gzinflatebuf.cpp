@@ -59,11 +59,10 @@ DATA(0x0063e6fc) static const int g_gzMagic[2] = {0x1f, 0x8b};
 #endif
 
 // The deflating half views its char windows as zlib's bytes through one
-// helper: a character buffer seen as unsigned characters, not an integer
-// carrier. (The inflating half below keeps its retail-exact spelling.)
+// helper, with Loki GzBuf.cpp's `reinterpret_cast< Bytef * >` spelling.
 static Bytef* zlibBytes(char* window)
 {
-    return static_cast<Bytef*>(static_cast<void*>(window));
+    return reinterpret_cast<Bytef*>(window);
 }
 
 // Loki GzBuf.cpp defines the deflating buffer first. Its asserts are
