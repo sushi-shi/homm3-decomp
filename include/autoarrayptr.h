@@ -23,7 +23,12 @@ public:
     // editors keep no unwind state for the assigned temporary), the
     // self-assignment test and release() (h3maped 0x4021d7).
     DC_ADDRESS(0x05b228, 0x58)
+#if defined(HOMM3_TARGET_LOKI)
+    // gcc_prefix.h spells the game's exception keywords away.
+    TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)
+#else
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs) throw()
+#endif
     {
         if (this != &rhs) {
             if (m_ptr != rhs.m_ptr) {
