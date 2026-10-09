@@ -4,9 +4,7 @@
 // Loki's four flags, the name, the garrison, the 41 building states, the
 // obligatory and disabled spell masks (Complete writes the first for
 // Armageddon's Blade maps and later, 0x4c2c10), the timed events, the
-// visiting hero (+0xb4) and Shadow of Death's alignment byte.
-//
-// Ported so far: the layout and the accessors the map needs.
+// visiting hero (+0xb4) and Shadow of Death's alignment (+0xb8).
 #ifndef HOMM3_EDITOR_TOWN_H
 #define HOMM3_EDITOR_TOWN_H
 
@@ -73,6 +71,7 @@ enum TBuilding {
 class TTown : public TLinkableObject, public TPlayableObject {
 public:
     enum { s_kNumBuildings = kNumBuildings, s_kNumGeneratorTypes = 7 };
+    enum { s_kMaxNameLen = 14 };
 
     // A town type's creature generator (its enumerators are not recovered).
     enum TGeneratorType {
@@ -127,12 +126,10 @@ public:
         bool hasMageGuildLevel(unsigned int level) const;
     };
 
-    // h3maped 0x5a50d0: points at the rows (one per town type).
+    // h3maped 0x5a50d0: points at the rows (one per town type), set from
+    // TownTypeTraits.cpp's table at start-up.
     static const TTypeTraits* s_akTypeTraits;
 
-    // A town's timed event: the map's, plus the buildings it builds and
-    // the creatures it adds to each generator (0x70 bytes; the town's
-    // writer steps by 0x70, 0x4c2cf5).
     // A bonus to each generator's weekly growth, up to s_kMax. /OPT:ICF
     // folds get and set onto TResourceQuantities' identical accessors.
     class TGeneratorBonuses {
@@ -151,11 +148,23 @@ public:
         TArray<unsigned int, s_kNumGeneratorTypes> _m_bonuses;
     };
 
+    // A town's timed event: the map's, plus the buildings it builds and
+    // the creatures it adds to each generator (0x70 bytes).
     class TTimedEvent : public ::TTimedEvent {
     public:
-        // h3maped 0x4c22c1 and 0x4c323f.
-        TTimedEvent();
-        TTimedEvent& operator=(const TTimedEvent& other);
+        TTimedEvent() {}
+
+        TTimedEvent& operator=(const TTimedEvent& other)
+        {
+            static_cast< ::TTimedEvent&>(*this) = other;
+            _m_buildMask = other._m_buildMask;
+            _m_generatorBonuses = other._m_generatorBonuses;
+            return *this;
+        }
+
+        // The map file's record (h3maped 0x4c1938 reads, 0x4c19e0 writes).
+        void read(TRawIStream* pIStream, int version);
+        void write(TRawOStream* pOStream, int version) const;
 
         void setBuildMask(const std::bitset<s_kNumBuildings>& newMask) { _m_buildMask = newMask; }
         void setGeneratorBonuses(const TGeneratorBonuses& newBonuses) { _m_generatorBonuses = newBonuses; }
@@ -174,14 +183,27 @@ public:
         TGeneratorBonuses _m_generatorBonuses;
     };
 
+    static void initialize();
+
+    TTown(const TTown& other);
+    TTown(const TObjectType& objType, TPlayer owner);
+    TTown(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TTown();
+
     virtual TLinkableObject* getPContainedObject();
     virtual const TLinkableObject* getPContainedObject() const;
 
+    virtual void importText(std::istream* pIStream, EGameVersion version);
     virtual void write(TRawOStream* pOStream, int version) const;
+    virtual std::string getTypeName() const;
+    virtual bool isCustomized() const;
+    virtual bool hasText() const;
+    virtual void exportText(std::ostream* pOStream, EGameVersion version) const;
 
     // The faction: the object type's subtype for a town (0x4c2a24).
     TTownType getTownType() const;
     const TTypeTraits& getTownTypeTraits() const { return s_akTypeTraits[getTownType()]; }
+    bool getBIsBuildingDisabled(TBuilding building) const;
     bool getBCustomName() const { return _m_bCustomName; }
     void setBCustomName(bool bCustomName) { _m_bCustomName = bCustomName; }
     const std::string& getName() const { return _m_name; }
@@ -196,20 +218,16 @@ public:
     bool getBCustomBuildings() const { return _m_bCustomBuildings; }
     void setBCustomBuildings(bool bCustomBuildings) { _m_bCustomBuildings = bCustomBuildings; }
     const TArray<TBuildingState, s_kNumBuildings>& getBuildingStates() const { return _m_aBuildingState; }
-    // h3maped 0x4c23d0.
     void setBuildingStates(const TArray<TBuildingState, s_kNumBuildings>& newBuildingStates);
     bool getBGroupedFormation() const { return _m_bGroupedFormation; }
     void setBCustomGarrison(bool bCustomGarrison) { _m_bCustomGarrison = bCustomGarrison; }
     void setBGroupedFormation(bool bGroupedFormation) { _m_bGroupedFormation = bGroupedFormation; }
-    // h3maped 0x4c23a4.
     void setGarrison(const TArmy& newGarrison);
     const std::bitset<kNumSpells>& getObligatorySpellsMask() const { return _m_obligatorySpellsMask; }
     const std::bitset<kNumSpells>& getDisabledSpellsMask() const { return _m_disabledSpellsMask; }
-    // h3maped 0x4c23f3 and 0x4c2407.
     void setObligatorySpellsMask(const std::bitset<kNumSpells>& newMask);
     void setDisabledSpellsMask(const std::bitset<kNumSpells>& newMask);
     const std::vector<TTimedEvent>& getTimedEvents() const { return _m_events; }
-    // h3maped 0x4c241b.
     void setTimedEvents(const std::vector<TTimedEvent>& newTimedEvents);
     THero* getPVisitingHero() { return _m_pVisitingHero; }
     // Keeps a clone of the hero, or none (0x4c242d).
@@ -230,5 +248,14 @@ private:
     THero* _m_pVisitingHero;
     TPlayer _m_alignment;
 };
+
+TRawIStream& operator>>(TRawIStream& stream, TTown::TGeneratorBonuses& bonuses);
+TRawOStream& operator<<(TRawOStream& stream, const TTown::TGeneratorBonuses& bonuses);
+
+// The town type traits (TownTypeTraits.cpp): h3maped 0x592e18 points at
+// the rows, and the loader names them (0x4cb3e7).
+extern const TTown::TTypeTraits* akTownTypeTraits;
+
+void InitializeTownTypeTraitsTable();
 
 #endif  /* HOMM3_EDITOR_TOWN_H */
