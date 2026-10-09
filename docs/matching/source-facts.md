@@ -151,13 +151,14 @@ The call supports this narrowly scoped reconstruction, but cannot distinguish
 friendship from an unrecorded inline wrapper; the owning comment keeps that
 limit explicit.
 
-Three additional hero boundaries have **provisional names**: `clearSpells`,
-`copyPrimarySkills`, and `setPrimarySkills`. The retail campaign reset and network
-skill copies establish their operations; no DC declaration proves these helper
-names or an `inline` keyword. Their ordinary definitions precede the relevant
-callers. Network copies preserve raw signed skill bytes; `getPrimarySkill` is
-reserved for gameplay values because it clamps to 0/1..99. These hypotheses
-remain explicit for source review.
+Two additional hero boundaries have **provisional names**: `clearSpells` and
+`setPrimarySkills`. The retail campaign reset and network skill copy establish
+their operations; no DC declaration proves these helper names or an `inline`
+keyword. Their ordinary definitions precede the relevant callers. Network
+copies preserve raw signed skill bytes; `getPrimarySkill` is reserved for
+gameplay values because it clamps to 0/1..99. These hypotheses remain explicit
+for source review. DoCombat's level update passes the private stats array
+directly (DC 0x9bf56, Loki 0x080f9ca9), so `hero` befriends `advManager`.
 
 Full-build matching differences are retained in MAX/HIST. Adherence to correlated
 access declarations does not certify complete DC source recovery: uncorrelated

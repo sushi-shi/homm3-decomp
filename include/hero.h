@@ -316,6 +316,10 @@ extern int g_stablesMovementBonus;
 // second claim on the same RVA is a fatal duplicate at delink time.
 
 class hero : public type_obscuring_object {
+    // DC DoCombat (events.cpp:6569, dc 0x9bf56) and Loki's (0x080f9ca9)
+    // pass the private stats array straight to CHeroLevelUpdateMsg.
+    friend class advManager;
+
 public:
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
@@ -699,8 +703,7 @@ private:
 public:
     // Retail level-update messages carry the raw four-byte skill band,
     // including values outside GetPrimarySkill's clamped gameplay range.
-    // Bulk-copy boundary names provisional; bodies precede their callers.
-    void copyPrimarySkills(signed char* stats) const;
+    // Bulk-copy boundary name provisional; its body precedes its caller.
     void setPrimarySkills(const signed char* stats);
     unsigned char hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);
