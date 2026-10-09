@@ -13,19 +13,19 @@ executables.
 
 <!-- match-score:start -->
 
-**Windows `HEROES3.EXE`: 98.80% matched (MAX)** — 4,507 / 4,785 functions exact (94.2%), weighted by size over 1,999,585 bytes of code.
+**Windows `HEROES3.EXE`: 98.81% matched (MAX)** — 4,508 / 4,785 functions exact (94.2%), weighted by size over 1,999,585 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,503 |   98.80% | last measured score                            |
-| MAX   |           4,507 |   98.80% | best result for each function's current source |
-| HIST  |           4,538 |   99.03% | all-time peak across source revisions          |
+| CUR   |           4,504 |   98.81% | last measured score                            |
+| MAX   |           4,508 |   98.81% | best result for each function's current source |
+| HIST  |           4,539 |   99.03% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
-| `game`       |   124 | 3785 / 3998 (94.7%) |    99.00% |
+| `game`       |   124 | 3786 / 3998 (94.7%) |    99.00% |
 | `rmg`        |     3 |   310 / 369 (84.0%) |    95.71% |
 | `network`    |     4 |   274 / 280 (97.9%) |    99.46% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |   100.00% |
@@ -51,35 +51,35 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 24.57% matched (MAX)** — 1,031 / 6,983 functions exact (14.8%), weighted by size over 850,520 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 26.03% matched (MAX)** — 1,102 / 6,965 functions exact (15.8%), weighted by size over 853,798 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           1,018 |   24.49% | last measured score                            |
-| MAX   |           1,031 |   24.57% | best result for each function's current source |
-| HIST  |           1,031 |   24.57% | all-time peak across source revisions          |
+| CUR   |           1,097 |   26.01% | last measured score                            |
+| MAX   |           1,102 |   26.03% | best result for each function's current source |
+| HIST  |           1,102 |   26.04% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `game`        |    26 |   722 / 931 (77.6%) |    91.66% |
-| `rmg`         |     3 |   230 / 312 (73.7%) |    92.52% |
+| `game`        |    32 |  791 / 1006 (78.6%) |    93.39% |
+| `rmg`         |     3 |   232 / 313 (74.1%) |    92.55% |
 | `zlib-1.1.3`  |    12 |     43 / 56 (76.8%) |    99.97% |
-| `codec`       |     3 |     21 / 36 (58.3%) |    93.20% |
+| `codec`       |     3 |     21 / 36 (58.3%) |    95.07% |
 | `victor`      |     6 |     15 / 17 (88.2%) |    99.98% |
-| `(unmatched)` |     — |    0 / 5,631 (0.0%) |      0.0% |
+| `(unmatched)` |     — |    0 / 5,537 (0.0%) |      0.0% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 
 | Category              | Functions | Verified | Code (B) | Status                                   | How verified                                                                                          |
 | :-------------------- | --------: | -------: | -------: | :--------------------------------------- | :---------------------------------------------------------------------------------------------------- |
-| `CRT/C++ runtime`     |     1,893 |        — |  224,006 | excluded                                 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv)                                    |
-| `EH unwind funclets`  |     4,533 |        0 |   55,766 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section) |
+| `CRT/C++ runtime`     |     1,905 |        — |  226,988 | excluded                                 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv)                                    |
+| `EH unwind funclets`  |     4,409 |        0 |   49,506 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section) |
 | `init/cleanup thunks` |     3,593 |        2 |   80,415 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
 | `import thunks`       |        13 |        0 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
 
-**Data:** 191 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
+**Data:** 194 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
 <!-- h3maped-match-score:end -->
 
