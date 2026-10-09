@@ -49,6 +49,9 @@ public:
     virtual BOOL SaveModified();
 
 protected:
+    std::auto_ptr<TCampaignScenarioMap> loadScenarioMap(const CString& pathName);
+    void exportScenarioMap(const TCampaignScenarioMap* pMap, const CString& pathName);
+
     afx_msg void OnRefreshScenarioMaps();
     afx_msg void OnExportScenarioMaps();
     afx_msg void OnExportText();

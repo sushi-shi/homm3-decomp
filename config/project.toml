@@ -65,6 +65,11 @@ image_base = 0x400000
 # the census folds such a handler into its parent's extent, as the game's
 # hand-owned census does (homm3.census, funclets.tsv).
 census_folds_catch_handlers = true
+# A placed body's call past the first byte where it leaves retail names a
+# callee only when four bytes before it agree, the callee's own body equals
+# retail there, or nothing else names that callee or address
+# (homm3.census.placements).
+placements_prove_late_calls = true
 # Its own sources and headers: src/campaign_editor/ and
 # include/campaign_editor/, the original's
 # `C:\Dev\Heroes 3 Exp 2\CampaignEditor\` (RTTI anonymous-namespace paths).

@@ -5,12 +5,14 @@
 
 #include <algorithm>
 #include <bitset>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "campaignmap.h"
 #include "editor/RefCountingPtr.h"
+#include "editor/Uncopyable.h"
 
 class TRawIStream;
 class TRawOStream;
@@ -295,11 +297,62 @@ public:
     std::vector<TChoice> m_choices;
 };
 
-// The map a scenario plays, as the campaign keeps it (RTTI
-// TCampaignScenarioMap; one virtual slot, the destructor).
-class TCampaignScenarioMap {
+// The map a scenario plays, as the campaign keeps it: its file name, its
+// name, each player's part and the heroes the map defines (RTTI
+// TCampaignScenarioMap and its nested failures; one virtual slot, the
+// destructor). Layout from the constructor 0x40a1f0: the file name at +4,
+// the map's name at +0x14, eight players of 0x1c bytes from +0x24, the
+// hero availability at +0x104 and the custom hero names at +0x118.
+class TCampaignScenarioMap : private TUncopyable {
 public:
+    class TCreateFailure : public exception {
+    };
+
+    class TMapFileIsInvalid : public TCreateFailure {
+    };
+
+    class TMapFileIsIncorrectVersion : public TCreateFailure {
+    public:
+        TMapFileIsIncorrectVersion(int maxVersion, int version) : m_maxVersion(maxVersion), m_version(version) {}
+
+        int m_maxVersion;
+        int m_version;
+    };
+
+    class TMapIsUnplayable : public TCreateFailure {
+    };
+
+    // A player of the map as a scenario offers it.
+    struct TPlayerInfo {
+        TPlayerInfo();
+
+        void setBPresent(bool bPresent);
+        void setMainTown(int townType);
+        void setHeroes(const std::map<int, std::string>& newHeroes);
+
+        bool m_bPresent : 1;
+        bool m_bHumanPlayable : 1;
+        bool m_bHasMainTown : 1;
+        bool m_bGenerateHeroAtMainTown : 1;
+        bool m_bHasRandomHero : 1;
+        int m_numPlaceholders;
+        int m_mainTownType;
+        std::map<int, std::string> m_heroes;
+    };
+
+    enum { kNumPlayers = 8, kNumHeroes = 156 };
+
+    TCampaignScenarioMap(const std::string& fileName, std::streambuf* pStreamBuf, int campaignVersion,
+                         bool bAnyVersion);
     virtual ~TCampaignScenarioMap();
+
+    std::string getHeroName(int hero) const;
+
+    std::string m_fileName;
+    std::string m_name;
+    TPlayerInfo m_aPlayer[kNumPlayers];
+    std::bitset<kNumHeroes> m_heroes;
+    std::map<int, std::string> m_heroNames;
 };
 
 // A scenario's prologue or epilogue: a movie (a row of the movie table), a
