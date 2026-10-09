@@ -36,7 +36,11 @@ public:
     // dead `end()` of its emptied loop. Loki's port assigns into a plain
     // array.
     TArray() { for (iterator p = begin() + 1; p != end(); ++p) new (p) T; }
-    explicit TArray(const T& value) : _m_first(value) { uninitialized_fill(begin() + 1, end(), value); }
+    explicit TArray(const T& value) : _m_first(value)
+    {
+        for (iterator p = begin() + 1; p != end(); ++p)
+            new (p) T(value);
+    }
     TArray(const TArray& other) : _m_first(other._m_first)
     {
         const_iterator pSource = other.begin() + 1;

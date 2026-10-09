@@ -482,6 +482,11 @@ source = "src/editor/TownTypeTraits.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "BlackBox"
+source = "src/editor/BlackBox.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "Monster"
 source = "src/editor/Monster.cpp"
 flags = "editor_o1_ob2_gr_windows"
