@@ -979,7 +979,7 @@ cmbtmgr	?lootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocat
 cmbtmgr	?lowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0	tokens1:515c30688955
 cmbtmgr	?makeCreaturesVanish@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66e00	tokens1:91472894e186
 cmbtmgr	?markTowerForEffect@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x6a460	tokens1:364f996cde06
-cmbtmgr	?nextArmy@combatManager@@QAE_N_N@Z	99.9020	99.9020	100.0000	0x65080	tokens1:6afc839b7e63
+cmbtmgr	?nextArmy@combatManager@@QAE_N_N@Z	100.0000	100.0000	100.0000	0x65080	tokens1:b76e6c283e7e
 cmbtmgr	?open@combatManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x62a20	tokens1:4b9268481c29
 cmbtmgr	?placeAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70	tokens1:68ef87a45bc4
 cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0	tokens1:e069d96dd3d0
