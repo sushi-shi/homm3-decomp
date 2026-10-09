@@ -986,7 +986,7 @@ MapSpecsSecSkillsPage	?OnCheckChangeSecSkillsList@TMapSpecsSecSkillsPage@@IAEXXZ
 MapSpecsSecSkillsPage	?OnInitDialog@TMapSpecsSecSkillsPage@@UAEHXZ	100.0000	100.0000	100.0000	0x755a5	tokens1:19a723f1cce3
 MapSpecsSecSkillsPage	?OnOK@TMapSpecsSecSkillsPage@@UAEXXZ	99.8000	99.8000	99.8000	0x756dc	tokens1:01860e9d49eb
 MapSpecsSecSkillsPage	?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x7583c	-
-MapSpecsSheet	??0TMapSpecsSheet@@QAE@PAVCWnd@@PAVTGameMap@@H@Z	99.0760	99.0760	99.0760	0x75a1d	tokens1:d32002291ef3
+MapSpecsSheet	??0TMapSpecsSheet@@QAE@PAVCWnd@@PAVTGameMap@@H@Z	99.9845	99.9845	99.9845	0x75a1d	tokens1:706083ab3bbe
 MapSpecsSheet	??1?$auto_ptr@VTGameMap@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x4e27c	-
 MapSpecsSheet	??1TMapSpecsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0x7633b	tokens1:19fbf284fa0e
 MapSpecsSheet	??4?$auto_ptr@VTGameMap@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x4e231	-

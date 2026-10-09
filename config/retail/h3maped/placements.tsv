@@ -631,7 +631,7 @@ rva	size	kind	name	unit	evidence
 0x0004ce90	0x14b	func	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (331 bytes, 19 relocations) unique at a census start
 0x0004cfef	0xf1	func	?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (241 bytes, 25 relocations) unique at a census start
 0x0004e231	0x4b	func	??4?$auto_ptr@VTGameMap@@@std@@QAEAAV01@ABV01@@Z	MapSpecsSheet	referenced by ??0TMapSpecsSheet@@QAE@PAVCWnd@@PAVTGameMap@@H@Z at +0x157
-0x0004e27c	0x1d	func	??1?$auto_ptr@VTGameMap@@@std@@QAE@XZ	MapSpecsSheet	referenced by ??1TMapSpecsSheet@@UAE@XZ at +0x192
+0x0004e27c	0x1d	func	??1?$auto_ptr@VTGameMap@@@std@@QAE@XZ	MapSpecsSheet	referenced by ??0TMapSpecsSheet@@QAE@PAVCWnd@@PAVTGameMap@@H@Z at +0x15f
 0x00052038	0x3a	func	??0?$TGDIObjectSelector@VCBrush@@@@QAE@PAVCDC@@PAVCBrush@@@Z	PannerCtrl	referenced by ?_draw@TPannerCtrl@@AAEXPAVCDC@@@Z at +0x41
 0x0005216f	0x12	func	??0TError@?$TGDIObjectSelector@VCBrush@@@@QAE@XZ	PannerCtrl	referenced by ??0?$TGDIObjectSelector@VCBrush@@@@QAE@PAVCDC@@PAVCBrush@@@Z at +0x21
 0x00055acb	0x23	func	??8std@@YA_NPBDABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	MapSpecsAvailableHeroesPage	masked body (35 bytes, 2 relocations) unique at a census start
@@ -678,7 +678,7 @@ rva	size	kind	name	unit	evidence
 0x0007527d	0x36	func	?equal@std@@YA_NPBVTRumor@@00@Z	MapSpecsRumorsPage	masked body (54 bytes, 1 relocations) unique at a census start
 0x000752b3	0x30	func	??8@YA_NABVTRumor@@0@Z	MapSpecsRumorsPage	masked body (48 bytes, 2 relocations) unique at a census start
 0x0007583c	0xd	func	?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ	MapSpecsSecSkillsPage	masked body (13 bytes, 0 relocations) unique at a census start
-0x000765c4	0x29	func	?insert@?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@QAEPAVTMapObjectRef@@PAV3@ABV3@@Z	MapSpecsSheet	masked prefix (37 fixed bytes agree, 41 compiled, 41 retail)
+0x000765c4	0x29	func	?insert@?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@QAEPAVTMapObjectRef@@PAV3@ABV3@@Z	MapSpecsSheet	referenced by ??0TMapSpecsSheet@@QAE@PAVCWnd@@PAVTGameMap@@H@Z at +0x21f
 0x000779b1	0x2d	func	??8@YA_NABVTTeamInfo@@0@Z	MapSpecsTeamsPage	masked body (45 bytes, 1 relocations) unique at a census start
 0x00077e28	0x2b	func	??8?$TArray@I$07@@QBE_NABV0@@Z	MapSpecsTeamsPage	masked body (43 bytes, 0 relocations) unique at a census start
 0x000786de	0x1e	func	?getEvent@TEditTimedEventSheet@@QBE?AVTTimedEvent@@XZ	MapSpecsTimedEventsPage	referenced by ?OnAddEventButton@TMapSpecsTimedEventsPage@@IAEXXZ at +0xa0
