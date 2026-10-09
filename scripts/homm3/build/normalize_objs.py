@@ -1614,6 +1614,40 @@ def _canonicalize_claimed_guards(base_payload: bytes, target_payload: bytes,
     return canon._rewrite_names(base, renames), len(renames)
 
 
+_MASKED_GUARD = re.compile(r"_\?\$S@.+@4EA")
+
+
+def _canonicalize_masked_guards(base_payload: bytes, target_payload: bytes) -> tuple[bytes, int]:
+    """Name the candidate's local-static guard by the target's masked spelling.
+
+    Another image's placements name a shared unit's guard by the model's
+    spelling, with cl's volatile `$S<n>` counter masked (`_?$S@?1??f@@...@4EA`,
+    homm3.core.msvc_names.mask). The candidate keeps `$S<n>`, so the two
+    references would compare by objdiff's fallback over the referenced bytes,
+    whose extent follows cl's run-to-run .bss order (a guard runs 1 byte
+    before another guard or the section end and 4 before an array). Where
+    exactly one candidate symbol masks to a guard the target defines, it
+    takes the target's name.
+    """
+    from homm3.core import msvc_names
+    target = canon.CoffObject(target_payload)
+    guards = {symbol.name for symbol in target.symbols.values()
+              if symbol.section > 0 and _MASKED_GUARD.fullmatch(symbol.name)}
+    if not guards:
+        return base_payload, 0
+    base = canon.CoffObject(base_payload)
+    names = {symbol.name for symbol in base.symbols.values()}
+    spellings: dict[str, list[int]] = {}
+    for symbol in base.symbols.values():
+        if symbol.name.startswith("_?$S") and symbol.name not in guards:
+            spellings.setdefault(msvc_names.mask(symbol.name), []).append(symbol.index)
+    renames = {indices[0]: guard for guard in sorted(guards)
+               if guard not in names and len(indices := spellings.get(guard, ())) == 1}
+    if not renames:
+        return base_payload, 0
+    return canon._rewrite_names(base, renames), len(renames)
+
+
 _WEAK_EXTERNAL = 105
 _OLDNAMES: dict[str, str] | None = None
 
@@ -1688,6 +1722,8 @@ def canonicalize_pair(base_payload: bytes, target_payload: bytes, unit: str,
     counts["oldnames"] += oldnames
     base_payload, guard_count = _canonicalize_claimed_guards(
         base_payload, target_payload, unit)
+    counts["guard"] += guard_count
+    base_payload, guard_count = _canonicalize_masked_guards(base_payload, target_payload)
     counts["guard"] += guard_count
     padded, count = _retain_matching_target_padding(
         base_payload, target_payload)
@@ -1909,7 +1945,7 @@ def normalize_all(units: set[str] | None = None) -> Counter:
           f"{counts['literal']} false-literal relocation(s) removed "
           f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
           f"{counts['icf']} ICF twin reference(s) named "
-          f"{counts['guard']} claimed static guard(s) named "
+          f"{counts['guard']} static guard(s) named "
           f"{counts['zero_literal']} zero literal(s) given retail sections "
           f"{counts['address']} equivalent data address(es) named "
           f"{counts['identity']} relocation(s) compared by proven address "

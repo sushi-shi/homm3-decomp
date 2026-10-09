@@ -67,6 +67,11 @@ LITERAL = re.compile(r"^\?\?_C@_")
 #: Compiler initializer ordinals (`_$E22`): volatile, never a placed name.
 VOLATILE = re.compile(r"^_?\$E[0-9]+$")
 DIR32, REL32 = 6, 20
+#: A decorated datum of a fundamental type (`?g@@3HA`, a guard `?$S27@...@4EA`):
+#: its storage class digit, its type code and its cv-qualifier.
+SCALAR = re.compile(r"@[0-6](?P<type>_[NJK]|[CDEFGHIJKMNO])[AB]$")
+SCALAR_SIZES = {"C": 1, "D": 1, "E": 1, "_N": 1, "F": 2, "G": 2, "H": 4, "I": 4,
+                "J": 4, "K": 4, "M": 4, "N": 8, "O": 8, "_J": 8, "_K": 8}
 HEADER = "rva\tsize\tkind\tname\tunit\tevidence"
 
 
@@ -97,12 +102,27 @@ def _functions_of(obj):
     return out
 
 
+def scalar_size(name: str) -> int | None:
+    """The size a decorated datum's fundamental type proves, or None.
+
+    A datum's compiled extent runs to the next symbol of its section, so it
+    holds the padding before that symbol. cl orders the statics of a section
+    that a name spelling an anonymous namespace reaches by a hash of that
+    name, which repeats the compiled file's path and a per-compile number:
+    a function-local static's one-byte guard (`?$S27@...@4EA`) then runs
+    for 1 byte before another guard or the section end and for 4 before a
+    word-aligned array, from one compile to the next."""
+    match = SCALAR.search(name)
+    return SCALAR_SIZES[match["type"]] if match else None
+
+
 def _data_of(obj):
     """{name: (size, bytes)} of the data an object defines: external and
     static symbols (file statics, function-local statics and their guards)
     and string-literal COMDATs in its non-code sections, each running to the
-    next symbol of its section (bytes None for uninitialized storage).
-    Vtables and RTTI records are the census's."""
+    next symbol of its section, or for its fundamental type's size
+    (`scalar_size`; bytes None for uninitialized storage). Vtables and RTTI
+    records are the census's."""
     out = {}
     for sec in obj.section_table:
         if sec["characteristics"] & 0x20 or sec["name"].startswith((".debug", ".drectve")):
@@ -118,6 +138,7 @@ def _data_of(obj):
         for off, name in members:
             later = bounds[bisect.bisect_right(bounds, off):]
             end = later[0] if later else sec["size"]
+            end = min(end, off + (scalar_size(name) or end - off))
             if end > off:
                 out.setdefault(name, (end - off, payload[off:end] if payload else None))
     return out
