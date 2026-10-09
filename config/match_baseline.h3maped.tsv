@@ -1126,6 +1126,14 @@ LinkableObject	??_GTLinkableObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x47778
 LinkableObject	?read@TLinkableObject@@IAEXPAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x59295	tokens1:7e6ea278effe
 LinkableObject	?write@TLinkableObject@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x47798	-
 LinkableObject	?write@TLinkableObject@@UBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x5927e	tokens1:f437c8ac25fc
+MFCFileBuf	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	100.0000	100.0000	100.0000	0x86b96	tokens1:b0cde342f557
+MFCFileBuf	??1TMFCFileBuf@@UAE@XZ	100.0000	100.0000	100.0000	0x86c6d	tokens1:04c1558fbb21
+MFCFileBuf	??_GTMFCFileBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x86c51	-
+MFCFileBuf	?overflow@TMFCFileBuf@@MAEHH@Z	100.0000	100.0000	100.0000	0x86f05	tokens1:b7d3c6833f0b
+MFCFileBuf	?seekoff@TMFCFileBuf@@MAE?AV?$fpos@H@std@@JW4seekdir@ios_base@3@H@Z	99.8969	99.8969	99.8969	0x86ccf	tokens1:e8a06789b542
+MFCFileBuf	?seekpos@TMFCFileBuf@@MAE?AV?$fpos@H@std@@V23@H@Z	100.0000	100.0000	100.0000	0x86de1	tokens1:495ef2592035
+MFCFileBuf	?sync@TMFCFileBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x86e0f	tokens1:69d3c2edf065
+MFCFileBuf	?underflow@TMFCFileBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x86e8c	tokens1:8f42a27c2e34
 MapSpecsArtifactsPage	??0TMapSpecsArtifactsPage@@QAE@ABVTGameMap@@AAV1@@Z	100.0000	100.0000	100.0000	0x6ff10	tokens1:2300fd6ec2ad
 MapSpecsArtifactsPage	??1TMapSpecsArtifactsPage@@UAE@XZ	100.0000	100.0000	100.0000	0x6ffc9	tokens1:77c64fb0fc3f
 MapSpecsArtifactsPage	??9?$bitset@$0JA@@std@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x702f5	-
@@ -2522,7 +2530,7 @@ rmg_voronoi	?locate@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTPoint@@@Z	100.0000	100.00
 rmg_voronoi	?removeEdge@TRmgVoronoi@@QAEXPAUTRmgHalfEdge@@@Z	100.0000	100.0000	100.0000	0xcc9cc	-
 rmg_voronoi	?splice@TRmgHalfEdge@@QAEXPAU1@@Z	100.0000	100.0000	100.0000	0xcc643	-
 spelldefs	?InitializeSpellTraitsTable@@YAEXZ	100.0000	100.0000	100.0000	0xb9221	-
-spelldefs	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0xb92ab	-
+spelldefs	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.8578	100.0000	100.0000	0xb92ab	-
 spelldefs	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	100.0000	100.0000	100.0000	0xb9558	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0000	0xb9541	-
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0xb956c	-

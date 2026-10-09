@@ -54,6 +54,7 @@ rva	size	kind	name	unit	evidence
 0x00009b50	0x64	func	?removePrologue@_TImpl@TScenario@@QAEXXZ	Campaign	masked body (100 bytes, 2 relocations) unique at a census start
 0x00009c20	0xcf	func	?setEpilogue@_TImpl@TScenario@@QAEXV?$auto_ptr@VTScenarioPrologue@@@std@@@Z	Campaign	masked body (207 bytes, 4 relocations) unique at a census start
 0x00009d10	0x64	func	?removeEpilogue@_TImpl@TScenario@@QAEXXZ	Campaign	masked body (100 bytes, 2 relocations) unique at a census start
+0x00009eb0	0x1e1	func	?removeMap@_TImpl@TScenario@@QAEXXZ	Campaign	referenced by ?removeMap@TScenario@@QAEXXZ at +0x17
 0x0000ae00	0x19a	func	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	Campaign	masked body (410 bytes, 13 relocations) unique at a census start
 0x0000afa0	0x13	func	??1?$auto_ptr@VBitmap16Bit@@@std@@QAE@XZ	resourcemanager	masked body (19 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
 0x0000afc0	0x18	func	??C?$TRefCountingPtr@V_TImpl@TCampaign@@@@QAEPAV_TImpl@TCampaign@@XZ	Campaign	referenced by ?setScenarioMap@TCampaign@@QAEXHV?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z at +0x42
@@ -67,6 +68,7 @@ rva	size	kind	name	unit	evidence
 0x0000b1e0	0x76	func	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	Campaign	masked body (118 bytes, 3 relocations) unique at a census start
 0x0000b2c0	0x31	func	?test@?$bitset@$04@std@@QBE_NI@Z	Campaign	masked body (49 bytes, 1 relocations) unique at a census start
 0x0000b300	0x30	func	?_Ucopy@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@IAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PBV32@0PAV32@@Z	Campaign	masked body (48 bytes, 0 relocations) unique at a census start
+0x0000b5e0	0x4b	func	?find@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	Campaign	masked body (75 bytes, 1 relocations) unique at a census start
 0x0000b850	0x2bb	func	?insert@?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAEXPAVTScenario@@IABV3@@Z	Campaign	masked body (699 bytes, 12 relocations) unique at a census start
 0x0000bb10	0x21	func	?_Destroy@?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@IAEXPAVTScenario@@0@Z	Campaign	masked body (33 bytes, 1 relocations) unique at a census start
 0x0000bb40	0x25	func	?_Tidy@?$bitset@$0IK@@std@@AAEXK@Z	Campaign	masked body (37 bytes, 0 relocations) unique at a census start
@@ -75,6 +77,7 @@ rva	size	kind	name	unit	evidence
 0x0000bbd0	0x23	func	?_Ucopy@?$vector@_NV?$allocator@_N@std@@@std@@IAEPA_NPB_N0PA_N@Z	Campaign	masked body (35 bytes, 0 relocations) unique at a census start
 0x0000bc20	0xe0	func	?_Xran@?$bitset@$04@std@@ABEXXZ	Campaign	referenced by ??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z at +0x12
 0x0000bd00	0x27a	func	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEXPAV?$auto_ptr@VTScenarioStartingBonus@@@2@IABV32@@Z	Campaign	masked body (634 bytes, 12 relocations) unique at a census start
+0x0000d260	0x47	func	?_Lbound@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IBEPAU_Node@12@ABH@Z	Campaign	masked body (71 bytes, 3 relocations) unique at a census start
 0x0000d450	0x151	func	?_split@?$TRefCountingPtr@V_TImpl@TCampaign@@@@AAEXXZ	Campaign	masked body (337 bytes, 18 relocations) unique at a census start
 0x0000d5b0	0x38	func	?_Ucopy@?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@IAEPAVTScenario@@PBV3@0PAV3@@Z	Campaign	masked body (56 bytes, 1 relocations) unique at a census start
 0x0000d5f0	0x25	func	??1?$TRefCountingPtr@V_TImpl@TScenario@@@@QAE@XZ	Campaign	referenced by ??0TCampaign@@QAE@H@Z at +0xfb
@@ -227,7 +230,7 @@ rva	size	kind	name	unit	evidence
 0x0001d630	0xd	func	?computePitch@?$TBitmap@GK@@UBEII@Z	DIBSection	masked body (13 bytes, 0 relocations) unique at a census start
 0x0001d670	0x8	func	??_ET16bppDIBSection@@WBE@AEPAXI@Z	DIBSection	vtable ??_7T16bppDIBSection@@6BCBitmap@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 1
 0x0001df70	0x164	func	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	artifact	masked body (356 bytes, 21 relocations) unique at a census start
-0x0001e150	0xbd	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	CampaignDoc	masked body (189 bytes, 5 relocations) unique at a census start
+0x0001e150	0xbd	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	Campaign	masked body (189 bytes, 5 relocations) unique at a census start
 0x00022520	0x3	func	??0TDebugBreak@@QAE@XZ	error	referenced by ??0TRuntimeError@@QAE@PBD@Z at +0x26
 0x00022530	0x110	func	??0TRuntimeError@@QAE@PBD@Z	error	masked body (272 bytes, 13 relocations) unique at a census start
 0x000249b0	0x10	func	??A?$bitset@$0BD@@std@@QAE?AVreference@01@I@Z	artifact	masked body (16 bytes, 0 relocations) unique at a census start
@@ -608,6 +611,7 @@ rva	size	kind	name	unit	evidence
 0x000c5a28	0x1	data	??_C@_00A@?$AA@	gzio	referenced by ??0TDataError@TGzInflateBuf@@QAE@XZ at +0x45
 0x000c5a6c	0x8	data	_?$S28@?7??InitializeArtifactTraitsTable@@YA_NXZ@4EA	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0xb6
 0x000c6e30	0x8	data	_?artifactStrings@?7??InitializeArtifactTraitsTable@@YA_NXZ@4V?$TAutoArrayPtr@D@@A	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0xd7
+0x000c6f14	0x4	data	?_Nil@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@1PAU_Node@12@A	Campaign	referenced by ?_Lbound@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IBEPAU_Node@12@ABH@Z at +0x17
 0x000c7478	0x8	data	_?campaignNames@?1??initializeCampaignMapTraitsTable@@YAEXZ@4V?$TAutoArrayPtr@D@@A	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x2d
 0x000c7480	0x1	data	_?$S10@?1??initializeCampaignMapTraitsTable@@YAEXZ@4EA	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0xf
 0x000c7560	0x8	data	_?campaignMovieNames@?4??initializeCampaignMovieTraitsTable@@YAEXZ@4V?$TAutoArrayPtr@D@@A	campaignmovie	referenced by ?initializeCampaignMovieTraitsTable@@YAEXZ at +0xa0
@@ -622,10 +626,10 @@ rva	size	kind	name	unit	evidence
 0x000c7d28	0x4	data	_?$S29@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x3
 0x000c7d2c	0x48	data	_?heroClassStrings@?1??InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x32
 0x000c7d74	0x270	data	_?heroStrings@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x39
-0x000c7fe4	0x4	data	_?$S31@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x2
+0x000c7fe4	0x3	data	_?$S31@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x2
 0x000c7fe8	0x1c0	data	?g_sSkillTraitsStorage@@3PAUTSSkillTraits@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x15
 0x000c81a8	0x150	data	_?secondarySkillLevelNames@?1??InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAY02VTAutoStrPtr@?A0x4cd5b899c34a865a@@A	herodefs	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xbe
-0x000c82f8	0x4	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x9
+0x000c82f8	0x1	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x9
 0x000c8310	0x40	data	_?aNames@?1??InitializePlayerTraitsTable@@YA_NXZ@4PAV?$TAutoArrayPtr@D@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x35
 0x000c8350	0x40	data	_?aColorNames@?1??InitializePlayerTraitsTable@@YA_NXZ@4PAV?$TAutoArrayPtr@D@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x6d
 0x000c8390	0x40	data	?aPlayerTraitsImp@?A0x0e809e6c890d5ee5@@3PAUTPlayerTraits@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x1d8
