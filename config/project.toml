@@ -61,6 +61,10 @@ sha256 = "93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1"
 env = "HOMM3_H3CCMPED_EXE"
 option = "--exe"
 image_base = 0x400000
+# VC6 emits a catch block inside its function's COMDAT, after the body:
+# the census folds such a handler into its parent's extent, as the game's
+# hand-owned census does (homm3.census, funclets.tsv).
+census_folds_catch_handlers = true
 # Its own sources and headers: src/campaign_editor/ and
 # include/campaign_editor/, the original's
 # `C:\Dev\Heroes 3 Exp 2\CampaignEditor\` (RTTI anonymous-namespace paths).

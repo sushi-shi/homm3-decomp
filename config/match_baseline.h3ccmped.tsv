@@ -311,7 +311,7 @@ error	??0TRuntimeError@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x22530	-
 font	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	99.8809	99.8809	99.8809	0x4a8f0	-
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0x11ae0	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0x25cb0	-
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	0.0000	0.0000	0.0000	0x25700	-
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	14.2576	14.2576	14.2576	0x25700	-
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	99.9259	99.9259	99.9259	0x1bb0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV01@@Z	99.9213	99.9213	99.9213	0x1020	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	97.4318	97.4318	97.4318	0x25f40	-
@@ -392,8 +392,8 @@ resourcemanager	??1?$numpunct@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x490f0	-
 resourcemanager	??1?$vector@HV?$allocator@H@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x36ea0	-
 resourcemanager	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	99.8781	99.8781	99.8781	0xe610	-
 resourcemanager	??4?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@QAEAAV01@D@Z	100.0000	100.0000	100.0000	0x48ca0	-
-resourcemanager	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	26.6810	26.6810	26.6810	0x45ed0	-
-resourcemanager	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	51.2658	51.2658	51.2658	0xe380	-
+resourcemanager	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	48.8346	48.8346	48.8346	0x45ed0	-
+resourcemanager	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	99.9787	99.9787	99.9787	0xe380	-
 resourcemanager	??Bid@locale@std@@QAEIXZ	99.4444	99.4444	99.4444	0x10500	-
 resourcemanager	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	99.9528	99.9528	99.9528	0xe250	-
 resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x449d0	-
@@ -406,12 +406,12 @@ resourcemanager	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	96.7285	96.
 resourcemanager	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	79.3415	79.3415	79.3415	0x445a0	-
 resourcemanager	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0x45d90	-
 resourcemanager	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x45b30	-
-resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	47.9200	47.9200	47.9200	0x44ea0	-
+resourcemanager	?Open@ResourceManager@@YA_N_N0PAH@Z	99.9474	99.9474	99.9474	0x44ea0	-
 resourcemanager	?SetPath@ResourceManager@@YAXPBD@Z	99.2208	99.2208	99.2208	0x450f0	-
 resourcemanager	?SetPixelFormat@ResourceManager@@YAXKKK@Z	100.0000	100.0000	100.0000	0x451e0	-
 resourcemanager	?_Construct@std@@YAXPAHABH@Z	100.0000	100.0000	100.0000	0x36ed0	-
 resourcemanager	?_Construct@std@@YAXPAU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x47ab0	-
-resourcemanager	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	0.0000	0.0000	0.0000	0x1800	-
+resourcemanager	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	99.9495	99.9495	99.9495	0x1800	-
 resourcemanager	?_Decref@facet@locale@std@@QAEPAV123@XZ	100.0000	100.0000	100.0000	0xf1f0	-
 resourcemanager	?_Doraise@bad_cast@std@@MBEXXZ	99.3750	99.3750	99.3750	0xf140	-
 resourcemanager	?_Eos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0x15e0	-
@@ -452,9 +452,9 @@ resourcemanager	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	100.0000	100.0000	100.00
 resourcemanager	?grouping@?$numpunct@D@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	100.0000	100.0000	100.0000	0x48d00	-
 resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	92.8750	92.8750	92.8750	0x46940	-
 resourcemanager	?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z	96.6745	96.6745	96.6745	0x45610	-
-resourcemanager	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	29.4000	29.4000	29.4000	0x45c00	-
+resourcemanager	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	86.2992	86.2992	86.2992	0x45c00	-
 resourcemanager	?loadSpreadsheetData@ResourceManager@@YAPAVTSpreadsheetResource@@PBDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x45b60	-
-resourcemanager	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	29.9000	29.9000	29.9000	0x459d0	-
+resourcemanager	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	87.0866	87.0866	87.0866	0x459d0	-
 resourcemanager	?loadTextData@ResourceManager@@YAPAVTTextResource@@PBDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x45930	-
 resourcemanager	?max_size@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x17f0	-
 resourcemanager	?openArchiveResource@@YA_NH@Z	99.9153	99.9153	99.9153	0x44670	-

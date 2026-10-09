@@ -18,7 +18,7 @@ rva	size	kind	name	unit	evidence
 0x00001600	0x11a	func	?_Grow@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAE_NI_N@Z	resourcemanager	masked body (282 bytes, 6 relocations) unique at a census start
 0x00001720	0xc9	func	?_Split@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	resourcemanager	masked body (201 bytes, 5 relocations) unique at a census start
 0x000017f0	0x6	func	?max_size@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIXZ	resourcemanager	referenced by ?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z at +0x160
-0x00001800	0x59	func	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	resourcemanager	referenced by ?SetPath@ResourceManager@@YAXPBD@Z at +0xac
+0x00001800	0x108	func	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	resourcemanager	masked body (264 bytes, 8 relocations) unique at a census start
 0x00001a90	0x117	func	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	gzinflatebuf	masked body (279 bytes, 7 relocations) unique at a census start
 0x00001bb0	0x16c	func	??0TRuntimeError@@QAE@ABV0@@Z	gzinflatebuf	masked body (364 bytes, 20 relocations) unique at a census start
 0x000021e0	0x20	func	?_Doraise@out_of_range@std@@MBEXXZ	resource	vtable ??_7out_of_range@std@@6B@ stored by ??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z slot 2
@@ -94,7 +94,7 @@ rva	size	kind	name	unit	evidence
 0x0000deb0	0x126	func	?setClone@TScenarioStartingOptionsCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioOptionsCrossoverScenario@@@Z	Campaign	referenced by ?visit@TScenarioStartingOptionsCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z at +0x6
 0x0000dfe0	0x126	func	?setClone@TScenarioStartingOptionsCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioOptionsStartingHero@@@Z	Campaign	referenced by ?visit@TScenarioStartingOptionsCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsStartingHero@@@Z at +0x6
 0x0000e250	0x125	func	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	resourcemanager	masked body (293 bytes, 12 relocations) unique at a census start
-0x0000e380	0x1ba	func	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0xeb
+0x0000e380	0x284	func	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	resourcemanager	masked body (644 bytes, 10 relocations) unique at a census start
 0x0000e610	0x63	func	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	resourcemanager	masked body (99 bytes, 2 relocations) unique at a census start
 0x0000e680	0x74	func	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	resourcemanager	masked body (116 bytes, 1 relocations) unique at a census start
 0x0000e990	0xc2	func	??0?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@V?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	Campaign	masked body (194 bytes, 11 relocations) unique at a census start
@@ -192,7 +192,7 @@ rva	size	kind	name	unit	evidence
 0x00025380	0x124	func	?_putLong@TGzDeflateBuf@@AAEXK@Z	gzinflatebuf	masked body (292 bytes, 0 relocations) unique at a census start
 0x00025670	0x6d	func	?_getC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	masked body (109 bytes, 0 relocations) unique at a census start
 0x000256e0	0x11	func	?_putBackC@TGzInflateBuf@@AAEXD@Z	gzinflatebuf	masked body (17 bytes, 0 relocations) unique at a census start
-0x00025700	0x1a4	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	referenced by ?createInflateBuf@TFileContent@?A0x14d14b60f51c421c@@QBE?AV?$auto_ptr@V?$basic_streambuf@DU?$char_traits@D@std@@@std@@@std@@XZ at +0x81
+0x00025700	0x1c9	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	referenced by ?createInflateBuf@TFileContent@?A0x14d14b60f51c421c@@QBE?AV?$auto_ptr@V?$basic_streambuf@DU?$char_traits@D@std@@@std@@@std@@XZ at +0x81
 0x00025cb0	0xba	func	??0TDataError@TGzInflateBuf@@QAE@XZ	gzinflatebuf	masked body (186 bytes, 11 relocations) unique at a census start
 0x00025f40	0xfb	func	??1TGzInflateBuf@@UAE@XZ	gzinflatebuf	referenced by ??1TStrGzInflateBuf@?A0x14d14b60f51c421c@@UAE@XZ at +0x2b
 0x00026040	0x25a	func	?underflow@TGzInflateBuf@@UAEHXZ	gzinflatebuf	vtable ??_7TGzInflateBuf@@6B@ stored by ??1TGzInflateBuf@@UAE@XZ slot 4
@@ -282,22 +282,22 @@ rva	size	kind	name	unit	evidence
 0x000447b0	0x21c	func	?reportMissingResource@@YAXPBD00@Z	resourcemanager	masked body (540 bytes, 38 relocations) unique at a census start
 0x000449d0	0x14	func	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	resourcemanager	masked body (20 bytes, 2 relocations) unique at a census start
 0x000449f0	0x4a9	func	?reportMissingTypedResource@@YIXPBDH0@Z	resourcemanager	string literal anchor (??_C@_04ENMD@midi?$AA@, ??_C@_04GOCP@null?$AA@, ??_C@_04IBNA@font?$AA@, ??_C@_04LHJL@text?$AA@, ??_C@_04OMKF@data?$AA@, ??_C@_07DOH@palette?$AA@, ??_C@_07KDH@bitmap8?$AA@, ??_C@_08LBMH@bitmap24?$AA@, ??_C@_08NPBG@bitmap16?$AA@, ??_C@_09ICNO@bitmap565?$AA@, ??_C@_09LJCB@bitmap555?$AA@, ??_C@_0L@MKKK@bitmap1555?$AA@)
-0x00044ea0	0x176	func	?Open@ResourceManager@@YA_N_N0PAH@Z	resourcemanager	masked prefix (298 fixed bytes agree, 542 compiled, 374 retail)
+0x00044ea0	0x21e	func	?Open@ResourceManager@@YA_N_N0PAH@Z	resourcemanager	masked body (542 bytes, 26 relocations) unique at a census start
 0x000450c0	0x22	func	?Close@ResourceManager@@YAXXZ	resourcemanager	masked body (34 bytes, 4 relocations) unique at a census start
 0x000450f0	0xe4	func	?SetPath@ResourceManager@@YAXPBD@Z	resourcemanager	masked body (228 bytes, 16 relocations) unique at a census start
 0x000451e0	0xf1	func	?SetPixelFormat@ResourceManager@@YAXKKK@Z	resourcemanager	masked body (241 bytes, 22 relocations) unique at a census start
 0x00045310	0x300	func	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	resourcemanager	string literal anchor (??_C@_0N@NNLG@GetBitmap816?$AA@)
 0x00045610	0x2e1	func	?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z	resourcemanager	string literal anchor (??_C@_0M@KCCH@GetBitmap16?$AA@)
 0x00045930	0x96	func	?loadTextData@ResourceManager@@YAPAVTTextResource@@PBDPAVTAbstractFile@@H@Z	resourcemanager	masked body (150 bytes, 8 relocations) unique at a census start
-0x000459d0	0xd8	func	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	resourcemanager	referenced by ?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x14
+0x000459d0	0x159	func	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	resourcemanager	referenced by ?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x14
 0x00045b30	0x2e	func	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	resourcemanager	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x54
 0x00045b60	0x96	func	?loadSpreadsheetData@ResourceManager@@YAPAVTSpreadsheetResource@@PBDPAVTAbstractFile@@H@Z	resourcemanager	masked body (150 bytes, 8 relocations) unique at a census start
-0x00045c00	0xd8	func	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	resourcemanager	referenced by ?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z at +0x14
+0x00045c00	0x159	func	?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	resourcemanager	referenced by ?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z at +0x14
 0x00045d60	0x25	func	?setf@ios_base@std@@QAEHHH@Z	resourcemanager	masked body (37 bytes, 0 relocations) unique at a census start
 0x00045d90	0x2e	func	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	resourcemanager	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0x7
 0x00045dc0	0x4c	func	?Expunge@ResourceManager@@YAXXZ	resourcemanager	masked body (76 bytes, 5 relocations) unique at a census start
 0x00045e10	0xab	func	?dispose@resource@@UAEXXZ	resourcemanager	vtable ??_7resource@@6B@ stored by ??0resource@@QAE@PBDW4EResourceType@@@Z slot 1
-0x00045ed0	0x14b	func	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	resourcemanager	masked prefix (263 fixed bytes agree, 568 compiled, 331 retail)
+0x00045ed0	0x177	func	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	resourcemanager	masked prefix (299 fixed bytes agree, 568 compiled, 375 retail)
 0x00046110	0xc2	func	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	resourcemanager	masked body (194 bytes, 14 relocations) unique at a census start
 0x000461e0	0xca	func	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	resourcemanager	masked body (202 bytes, 11 relocations) unique at a census start
 0x000462b0	0x1e	func	?str@?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	resourcemanager	masked body (30 bytes, 1 relocations) unique at a census start
@@ -511,6 +511,8 @@ rva	size	kind	name	unit	evidence
 0x000c35ac	0x3	data	??_C@_02JKAF@rb?$AA@	resourcemanager	referenced by ?open@LODFile@@QAEHPBDH@Z at +0x1e
 0x000c35b0	0xd	data	??_C@_0N@NNLG@GetBitmap816?$AA@	resourcemanager	string literal referenced by ?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z
 0x000c35c0	0xc	data	??_C@_0M@KCCH@GetBitmap16?$AA@	resourcemanager	string literal referenced by ?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z
+0x000c35cc	0x8	data	??_C@_07OBEK@GetText?$AA@	resourcemanager	string literal referenced by ?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z
+0x000c35d4	0xf	data	??_C@_0P@JGAD@GetSpreadsheet?$AA@	resourcemanager	string literal referenced by ?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z
 0x000c363c	0x3	data	??_C@_02MHAC@?$CFp?$AA@	resourcemanager	referenced by ?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBX@Z at +0x10
 0x000c3640	0x2	data	??_C@_01PHOL@e?$AA@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x322
 0x000c3644	0x2	data	??_C@_01KFAL@E?$AA@	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x318
@@ -532,7 +534,7 @@ rva	size	kind	name	unit	evidence
 0x000cc80c	0x4	data	?RedMask@ResourceManager@@3KA	resourcemanager	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x49
 0x000cc810	0x4	data	?GreenMask@ResourceManager@@3KA	resourcemanager	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x4e
 0x000cc814	0x4	data	?BlueBits@ResourceManager@@3HA	resourcemanager	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0xe0
-0x000cc818	0xc80	data	?g_resourceLodSlots@@3PAUTResourceLODSlot@@A	resourcemanager	referenced by ?openArchiveResource@@YA_NH@Z at +0x29
+0x000cc818	0xc80	data	?g_resourceLodSlots@@3PAUTResourceLODSlot@@A	resourcemanager	referenced by ?Open@ResourceManager@@YA_N_N0PAH@Z at +0x1c9
 0x000cd4d0	0x10	data	?g_resourceCache@@3V?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@A	resourcemanager	referenced by ?Expunge@ResourceManager@@YAXXZ at +0x4
 0x000cd54c	0x4	data	?SaturatedGraphicsEasterEgg@ResourceManager@@3EA	resourcemanager	referenced by ?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z at +0xa9
 0x000cd550	0x4	data	?_Nil@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@1PAU_Node@12@A	resourcemanager	referenced by ??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z at +0x3a
