@@ -36,8 +36,21 @@ struct TGroundTilesetTraits {
     const TTileTraits* m_pTileTraits;
 };
 
-// Indexed by TTerrainType.
+// A river tileset (8 bytes) and a road tileset (4 bytes); the map edit
+// window's animation reads the river bool at +4.
+struct TRiverTilesetTraits {
+    CSprite* m_pSprite;
+    bool m_bAnimated;
+};
+
+struct TRoadTilesetTraits {
+    CSprite* m_pSprite;
+};
+
+// Indexed by TTerrainType; the river and road traits by type - 1.
 extern const TGroundTilesetTraits* akGroundTilesetTraits;
+DATA(0x00592aec) extern const TRiverTilesetTraits* akRiverTilesetTraits;
+DATA(0x00592af0) extern const TRoadTilesetTraits* akRoadTilesetTraits;
 
 // The map views' zoom levels: full size, half and quarter. Only kNumZooms
 // is proven (Loki's ruler asserts); the saved zoom option is reset to the

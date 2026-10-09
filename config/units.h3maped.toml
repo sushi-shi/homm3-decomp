@@ -706,6 +706,21 @@ source = "src/editor/MapDoc.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "MapEditWnd"
+source = "src/editor/MapEditWnd.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MapFrameWnd"
+source = "src/editor/MapFrameWnd.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MiniMapWnd"
+source = "src/editor/MiniMapWnd.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "MapEditingWnd"
 source = "src/editor/MapEditingWnd.cpp"
 flags = "editor_o1_ob2_gr_windows"

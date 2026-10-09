@@ -85,6 +85,17 @@ enum {
     IDC_PAN_SOUTHWEST = 229
 };
 
+// The map edit window's context menu.
+enum {
+    IDR_CONTEXT_MENU = 214
+};
+
+// The map edit window's hand cursors over an object and while dragging one.
+enum {
+    IDC_CLOSED_HAND = 317,
+    IDC_POINTING_HAND = 318
+};
+
 enum {
     IDC_MAP_DESCRIPTION_EDIT = 1054,
     IDC_DIFFICULTY_EASY_RADIO = 1055,
@@ -495,8 +506,15 @@ enum {
 
 // Menu commands, as the image's menu resources and message maps spell them.
 enum {
+    ID_EDIT_DELETE = 32870,
+    ID_EDIT_PROPERTIES = 32871,
+    ID_LEFT = 32873,
+    ID_RIGHT = 32874,
+    ID_UP = 32875,
+    ID_DOWN = 32876,
     ID_FILE_EXPORT_TEXT = 32901,
     ID_FILE_IMPORT_TEXT = 32902,
+    ID_HELP_WHATS_THIS = 32903,
     ID_TOOLS_REPAINT_MAP = 32904,
     ID_FILE_BATCH_CONVERT = 32905
 };

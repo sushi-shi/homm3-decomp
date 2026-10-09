@@ -39,6 +39,9 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 private:
+    // The map edit window draws the panner into its own frame (0x46b461).
+    friend class TMapEditWnd;
+
     enum EMode {
         eNone,
         eHorizontal,

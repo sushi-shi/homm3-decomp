@@ -186,6 +186,103 @@ public:
     static unsigned short redMask() { return 0x7c00; }
     static unsigned short greenMask() { return 0x3e0; }
     static unsigned short blueMask() { return 0x1f; }
+
+    // Mixes a colour into a rectangle clipped to the bitmap: half and half,
+    // or one part in four (the map edit window's obstacle and passability
+    // tints). The mask drops the low bit of the red and green channels so
+    // that the sums cannot carry; the names are not proven.
+    // VA instance: T16bppBitmapBase<unsigned long>::blendRect
+    VA(0x0046f33b, 0xb5)
+    void blendRect(int x, int y, unsigned int width, unsigned int height, unsigned short color)
+    {
+        if (x >= this->_m_width || width == 0 || y >= this->_m_height || height == 0)
+            return;
+        if (x < 0) {
+            if (unsigned(-x) >= width)
+                return;
+            width += x;
+            x = 0;
+        }
+        if (x + width > this->_m_width)
+            width = this->_m_width - x;
+        if (y < 0) {
+            if (unsigned(-y) >= height)
+                return;
+            height += y;
+            y = 0;
+        }
+        if (y + height > this->_m_height)
+            height = this->_m_height - y;
+        color &= 0xfbdf;
+        for (unsigned int row = 0; row < height; row++) {
+            unsigned short* pPixel = (unsigned short*)((unsigned char*)this->_m_pPixels + (y + row) * this->_m_pitch) + x;
+            for (unsigned int i = 0; i < width; i++, pPixel++)
+                *pPixel = (unsigned short)((*pPixel & 0xfbdf) + color) >> 1;
+        }
+    }
+
+    // Fills a rectangle clipped to the bitmap (the mini map's cells).
+    // VA instance: T16bppBitmapBase<unsigned long>::fillRect
+    VA(0x00488486, 0xbf)
+    void fillRect(int x, int y, unsigned int width, unsigned int height, unsigned short color)
+    {
+        if (width == 0 || height == 0)
+            return;
+        if (int(x + width) < 0 || x >= int(this->_m_width))
+            return;
+        if (int(y + height) < 0 || y >= int(this->_m_height))
+            return;
+        if (x < 0) {
+            width += x;
+            x = 0;
+        }
+        if (x + width > this->_m_width)
+            width = this->_m_width - x;
+        if (y < 0) {
+            height += y;
+            y = 0;
+        }
+        if (y + height > this->_m_height)
+            height = this->_m_height - y;
+        unsigned short* pRow = (unsigned short*)((unsigned char*)this->_m_pPixels + y * this->_m_pitch) + x;
+        for (unsigned int row = 0; row < height; row++) {
+            for (unsigned int i = width; i > 0; i--)
+                pRow[i - 1] = color;
+            pRow = (unsigned short*)((unsigned char*)pRow + this->_m_pitch);
+        }
+    }
+
+    // VA instance: T16bppBitmapBase<unsigned long>::tintRect
+    VA(0x0046f3f0, 0xde)
+    void tintRect(int x, int y, unsigned int width, unsigned int height, unsigned short color)
+    {
+        if (x >= this->_m_width || width == 0 || y >= this->_m_height || height == 0)
+            return;
+        if (x < 0) {
+            if (unsigned(-x) >= width)
+                return;
+            width += x;
+            x = 0;
+        }
+        if (x + width > this->_m_width)
+            width = this->_m_width - x;
+        if (y < 0) {
+            if (unsigned(-y) >= height)
+                return;
+            height += y;
+            y = 0;
+        }
+        if (y + height > this->_m_height)
+            height = this->_m_height - y;
+        color &= 0xfbdf;
+        for (unsigned int row = 0; row < height; row++) {
+            unsigned short* pPixel = (unsigned short*)((unsigned char*)this->_m_pPixels + (y + row) * this->_m_pitch) + x;
+            for (unsigned int i = 0; i < width; i++, pPixel++) {
+                unsigned short pixel = *pPixel & 0xfbdf;
+                *pPixel = (unsigned short)((((pixel + color) >> 1) & 0xfbdf) + pixel) >> 1;
+            }
+        }
+    }
 };
 
 #endif  /* HOMM3_EDITOR_T16BPPBITMAP_H */
