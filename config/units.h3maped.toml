@@ -350,6 +350,11 @@ unit = "spelldefs"
 source = "src/spelldefs.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
+[[unit]]
+unit = "objnames"
+source = "src/objnames.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
 # The map editor's own objects (src/editor/, the original's Editor\)
 [[unit]]
 unit = "Army"

@@ -98,7 +98,8 @@ def _functions_of(obj):
 
 
 def _data_of(obj):
-    """{name: (size, bytes)} of the data an object defines: external symbols
+    """{name: (size, bytes)} of the data an object defines: external and
+    static symbols (file statics, function-local statics and their guards)
     and string-literal COMDATs in its non-code sections, each running to the
     next symbol of its section (bytes None for uninitialized storage).
     Vtables and RTTI records are the census's."""
@@ -109,7 +110,7 @@ def _data_of(obj):
         number = sec["index"]
         rows = obj.section_members(number)
         members = sorted((off, name) for off, name, scl in rows
-                         if scl == 2 and not name.startswith(("$", ".", "??_7", "??_R")))
+                         if scl in (2, 3) and not name.startswith(("$", ".", "??_7", "??_R")))
         # every symbol bounds the one before it: a function-local static or
         # guard after the last external is not part of it
         bounds = sorted({off for off, _name, _scl in rows})
@@ -357,7 +358,11 @@ def derive(log=print, want_suggestions=False):
     # the image's own VA() claims: a claimed body that equals retail at its
     # claimed address (relocation fields masked) names its referents (the
     # template instances and header inlines it calls) like a placed body
-    for claim in _own_function_claims(owned):
+    own_function_claims = _own_function_claims(owned)
+    own_named = defaultdict(set)          # rva -> {name} the image's own VA() claims
+    for claim in own_function_claims:
+        own_named[claim.rva].add(claim.name)
+    for claim in own_function_claims:
         if claim.name not in bodies or named_at[claim.rva] - {claim.name}:
             continue
         body, relocs = bodies[claim.name]
@@ -506,6 +511,11 @@ def derive(log=print, want_suggestions=False):
                         # the compiled field holds the reference's addend
                         target = value - base - struct.unpack_from("<i", body, site)[0]
                     else:
+                        continue
+                    if own_named[target] and ref not in own_named[target]:
+                        # the image's own source names that address; a body
+                        # that inlined the claimed callee reaches its callee
+                        # through the same field
                         continue
                     if ref in definers:
                         moved += propose(ref, target, f"referenced by {name} at {at}")

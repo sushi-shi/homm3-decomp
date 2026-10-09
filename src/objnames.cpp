@@ -136,16 +136,15 @@ void InitializeAdvObjectTypeTraitsTable()
         aAdvObjectTypeTraitsImp[g_adventureObjectEnterableFromNorthIds[i]].m_enterableFromNorth = 1;
     }
 
-    TTextResource* names = ResourceManager::GetText(
-        DATA_COMPGEN(0x006604b4, objectNamesFileName, "objnames.txt"));
-    TResourcePtr<TTextResource> guard(names);
-    if (names == 0)
+    TResourcePtr<TTextResource> pTextResource(ResourceManager::GetText(
+        DATA_COMPGEN(0x006604b4, objectNamesFileName, "objnames.txt")));
+    if (!pTextResource.get())
         throw TRuntimeError();
 
     unsigned int total = 0;
     unsigned int line;
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line)
-        total += strlen(names->GetText(line)) + 1;
+        total += strlen(pTextResource->GetText(line)) + 1;
 
     nameBuffer = TAutoArrayPtr<char>(new char[total]);
     if (nameBuffer.get() == 0)
@@ -153,7 +152,7 @@ void InitializeAdvObjectTypeTraitsTable()
 
     char* next = nameBuffer.get();
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line) {
-        const char* text = names->GetText(line);
+        const char* text = pTextResource->GetText(line);
         unsigned int size = strlen(text) + 1;
         memcpy(next, text, size);
         aAdvObjectTypeTraitsImp[line].m_name = next;

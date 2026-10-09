@@ -2842,7 +2842,7 @@ objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	1
 objecttype	__h3cg$objecttype$static_dtor$emptyImageName	100.0000	100.0000	100.0000	0x114a10	-
 objecttype	__h3cg$objecttype$static_dtor$imageNameSet	100.0000	100.0000	100.0000	0x114050	-
 objnames	??1?$TResourcePtr@VTTextResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	tokens1:6ab8aaba9a26
-objnames	?InitializeAdvObjectTypeTraitsTable@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	tokens1:ee33283f099b
+objnames	?InitializeAdvObjectTypeTraitsTable@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	tokens1:1be7031c24d7
 objnames	__h3cg$objnames$static_dtor$nameBuffer	100.0000	100.0000	100.0000	0x1b790	-
 overview	??0TOverviewWindow@@QAE@XZ	99.5408	99.5408	99.5408	0x11fa40	tokens1:48ed524c183f
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	tokens1:2510f0c1a9f1
