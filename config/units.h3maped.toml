@@ -487,6 +487,11 @@ source = "src/editor/BlackBox.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "Event"
+source = "src/editor/Event.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "Monster"
 source = "src/editor/Monster.cpp"
 flags = "editor_o1_ob2_gr_windows"

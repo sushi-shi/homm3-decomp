@@ -96,7 +96,7 @@ rva	size	kind	name	unit	evidence
 0x000074e1	0x2a	func	??0?$TArray@H$06@@QAE@ABH@Z	BlackBox	masked body (42 bytes, 0 relocations) unique at a census start
 0x0000750b	0x5b	func	??0?$TRefCountingPtr@VTContents@TBlackBox@@@@QAE@XZ	BlackBox	masked body (91 bytes, 7 relocations) unique at a census start
 0x00007566	0x20	func	??1?$TRefCountingPtr@VTContents@TBlackBox@@@@QAE@XZ	BlackBox	referenced by ??1TBlackBox@@UAE@XZ at +0x19
-0x00007586	0x7f	func	?_split@?$TRefCountingPtr@VTContents@TBlackBox@@@@AAEXXZ	BlackBox	masked prefix (87 fixed bytes agree, 127 compiled, 127 retail)
+0x00007586	0x7f	func	?_split@?$TRefCountingPtr@VTContents@TBlackBox@@@@AAEXXZ	BlackBox	referenced by ??0TEvent@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0xeb
 0x00007605	0x38	func	??6TRawOStream@@QAEAAV0@ABC@Z	GameMap	referenced by ?_writeLossCondition@TGameMapHeader@@CAXABUTLossConditionData@@AAVTRawOStream@@W4EGameVersion@@@Z at +0x17
 0x0000763d	0x38	func	??5TRawIStream@@QAEAAV0@AAC@Z	GameMap	referenced by 0x0002b8bd at +0x25
 0x00007675	0x38	func	??5TRawIStream@@QAEAAV0@AAJ@Z	GameMap	referenced by ??0TMonster@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x15d; ICF-folded with 1 identical bodies
@@ -128,7 +128,7 @@ rva	size	kind	name	unit	evidence
 0x0000bc34	0x8	func	?getDigits@?$TDigits@$0JIJGHP@@@SAIXZ	MapSpecsVictoryCondPage	referenced by 0x00079e14 at +0xa7
 0x0000bc3c	0x5a	func	?_Xran@?$bitset@$0BM@@std@@ABEXXZ	rmg	referenced by ?set@?$bitset@$0BM@@std@@QAEAAV12@I_N@Z at +0xe
 0x0000bc96	0x5a	func	?_Xran@?$bitset@$0EG@@std@@ABEXXZ	rmg	referenced by ?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z at +0xe
-0x0000c9b0	0x20	func	?copy@std@@YAPAHPBH0PAH@Z	EditTownEventSheet	masked body (32 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x0000c9b0	0x20	func	?copy@std@@YAPAHPBH0PAH@Z	Event	masked body (32 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x0000cc46	0x1b8	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	masked body (440 bytes, 15 relocations) unique at a census start
 0x0000cdfe	0x13	func	?GetNumberOfRows@TSpreadsheetResource@@QBEHXZ	creaturetype	masked body (19 bytes, 0 relocations) unique at a census start
 0x0000ce11	0x277	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	masked body (631 bytes, 58 relocations) unique at a census start
@@ -141,7 +141,7 @@ rva	size	kind	name	unit	evidence
 0x00012041	0x41	func	??4?$auto_ptr@VT16bppDIBSection@@@std@@QAEAAV01@ABV01@@Z	HeroPropsGeneralPage	masked body (65 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00012357	0x80	func	?_Inc@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ	GameMap	referenced by ?OnInitDialog@TMapSpecsAvailableHeroesPage@@UAEHXZ at +0x180
 0x00012919	0x5a	func	?_Xran@?$bitset@$02@std@@ABEXXZ	GameMap	referenced by ?_isHeroAvailable@_TImpl@TGameMap@@QBE_NH@Z at +0x27
-0x00012cf0	0xa	func	??1?$TArray@I$06@@QAE@XZ	Town	referenced by ?OnAddEventButton@TTownPropsTimedEventsPage@@IAEXXZ at +0x58
+0x00012cf0	0xa	func	??1?$TArray@H$06@@QAE@XZ	BlackBox	referenced by ??0TEvent@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x169; ICF-folded with 1 identical bodies
 0x00013ff7	0x5	func	?OnOK@TLossConditionDlg@@UAEXXZ	MapSpecsLossCondPage	vtable ??_7TNullLossConditionDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@6B@ stored by ??0_TDialogs@TMapSpecsLossCondPage@@QAE@ABVTGameMap@@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@1@Z slot 49; ICF-folded with 1 identical bodies
 0x00016b09	0x2c	func	??Breference@?$bitset@$07@std@@QBE_NXZ	GameMap	masked body (44 bytes, 1 relocations) unique at a census start
 0x00016b35	0x4a	func	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	GameMap	masked body (74 bytes, 1 relocations) unique at a census start
@@ -161,14 +161,22 @@ rva	size	kind	name	unit	evidence
 0x00018b8c	0x5	func	??1TFlaggablePropsDlg@@UAE@XZ	FlaggablePropsDlg	referenced by ??_GTFlaggablePropsDlg@@UAEPAXI@Z at +0x4
 0x00018c04	0x3	func	??0TDebugBreak@@QAE@XZ	error	referenced by ??0TRuntimeError@@QAE@XZ at +0x17
 0x00018c07	0x6c	func	??0TRuntimeError@@QAE@PBD@Z	error	masked body (108 bytes, 9 relocations) unique at a census start
-0x000190cb	0xb7	func	??5@YAAAVTRawIStream@@AAV0@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	GameMap	referenced by ??0TMonster@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x105
+0x000190cb	0xb7	func	??5@YAAAVTRawIStream@@AAV0@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	GameMap	referenced by ??0TEvent@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x93
 0x000192c0	0x42	func	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEPADPAD0@Z	GameMap	masked body (66 bytes, 2 relocations) unique at a census start
 0x00019302	0x26	func	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	GameMap	masked body (38 bytes, 3 relocations) unique at a census start
 0x00019328	0x33	func	??0?$bitset@$07@std@@QAE@K@Z	GameMap	masked body (51 bytes, 1 relocations) unique at a census start
+0x0001935b	0x17	func	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	Event	masked body (23 bytes, 1 relocations) unique at a census start
 0x000193cb	0x2c	func	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	objecttype	masked body (44 bytes, 1 relocations) unique at a census start
+0x000193f7	0xf	func	?flip@?$bitset@$07@std@@QAEAAV12@XZ	Event	masked body (15 bytes, 0 relocations) unique at a census start
 0x00019406	0x14	func	?_Tidy@?$bitset@$07@std@@AAEXK@Z	GameMap	masked body (20 bytes, 0 relocations) unique at a census start
 0x0001941a	0x39	func	?read@TRawIStream@@QAEAAV1@PADI@Z	GameMap	masked body (57 bytes, 3 relocations) unique at a census start
 0x00019453	0x38	func	??5TRawIStream@@QAEAAV0@AAY03C@Z	Town	referenced by ?read@TTimedEvent@TTown@@QAEXPAVTRawIStream@@H@Z at +0x94
+0x000194a7	0x8	func	??_ETEvent@@$4PPPPPPPM@A@AEPAXI@Z	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 0
+0x000194e2	0xb	func	?importText@TTreasure@@$4PPPPPPPM@M@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 1
+0x000194ed	0x8	func	?write@TEvent@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 3
+0x000194f5	0x8	func	?isCustomized@TEvent@@$4PPPPPPPM@A@BE_NXZ	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 5
+0x000194fd	0xb	func	?hasText@TBlackBox@@$4PPPPPPPM@7BE_NXZ	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 6
+0x00019508	0xb	func	?exportText@TTreasure@@$4PPPPPPPM@M@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 7
 0x0001e915	0x3c	func	?getBCellPlaced@TObjectType@@QBE_NII@Z	rmg	masked body (60 bytes, 1 relocations) unique at a census start
 0x0001e951	0x3c	func	?getBCellPassable@TObjectType@@QBE_NII@Z	rmg	masked body (60 bytes, 1 relocations) unique at a census start
 0x0001fdbe	0x59	func	?_placeObject@TLayer@TGameMap@@AAEIV?$auto_ptr@VTGameObject@@@std@@II@Z	GameMap	masked body (89 bytes, 6 relocations) unique at a census start
@@ -1619,6 +1627,7 @@ rva	size	kind	name	unit	evidence
 0x001309b0	0x8	data	??_8TBlackBox@@7B@	BlackBox	referenced by ??0TBlackBox@@QAE@ABUTObjectType@@@Z at +0x28
 0x00131cb8	0x9	data	??_C@_08OJCH@game?4pal?$AA@	resourcemanager	referenced by ?initColors@@YAXXZ at +0x3a
 0x00134a8c	0x14	data	?_s_kMessage@TAllocationFailure@@2QBDB	error	referenced by ??0TTerrainPlacementOp@@QAE@PAVTAbstractMap@0@HH@Z at +0x50
+0x00134ac4	0x8	data	??_8TEvent@@7B@	Event	referenced by ??0TEvent@@QAE@ABUTObjectType@@@Z at +0x25
 0x001359e0	0x8	data	??_8TGenericObject@@7B@	ObjectSpecializations	referenced by ??0TGenericObject@@QAE@ABUTObjectType@@@Z at +0x19
 0x00135b54	0x8	data	??_8THeroPlaceholder@@7B@	Hero	referenced by ??0THeroPlaceholder@@QAE@ABUTObjectType@@W4TPlayer@@@Z at +0x29
 0x00135b88	0x8	data	??_8TBasicHero@@7B@	Hero	referenced by ??0TBasicHero@@QAE@ABUTObjectType@@W4TPlayer@@@Z at +0x26

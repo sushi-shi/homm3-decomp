@@ -448,6 +448,13 @@ void TTreasure::read(TRawIStream* pIStream, int version)
     *pIStream >> aReserved;
 }
 
+// Folded by /OPT:ICF onto TSign::setText (0x48f0c7), which every other
+// unit's call reaches.
+void TTreasure::setMessage(const std::string& newMessage)
+{
+    _m_message = newMessage;
+}
+
 VA(0x0048e820, 0x2c)
 void TTreasure::setGuardians(const TArmy& newGuardians)
 {

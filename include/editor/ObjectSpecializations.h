@@ -250,7 +250,7 @@ public:
     TTreasure(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     const std::string& getMessage() const { return _m_message; }
-    void setMessage(const std::string& newMessage) { _m_message = newMessage; }
+    void setMessage(const std::string& newMessage);
     bool getBCustomGuardians() const { return _m_bCustomGuardians; }
     void setBCustomGuardians(bool bCustom) { _m_bCustomGuardians = bCustom; }
     const TArmy& getGuardians() const { return _m_guardians; }
