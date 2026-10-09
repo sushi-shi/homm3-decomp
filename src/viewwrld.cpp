@@ -644,26 +644,27 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 }
             }
 
+            // DC 723..746 and Mac 0x204974..0x204a4c test both cursor rows
+            // and each column independently, not as else-if chains.
             if (row == OBJECT_DRAW_LAYER_HERO_BACK
                 && destY == CURSOR_DEST_Y0
                 && this->m_drawCursor && !::g_drawingPuzzle) {
-                if (destX == CURSOR_DEST_X0) {
+                if (destX == CURSOR_DEST_X0)
                     this->drawCursor(0, 0);
-                } else if (destX == CURSOR_DEST_X1) {
+                if (destX == CURSOR_DEST_X1)
                     this->drawCursor(1, 0);
-                } else if (destX == CURSOR_DEST_X2) {
+                if (destX == CURSOR_DEST_X2)
                     this->drawCursor(2, 0);
-                }
-            } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
-                       && destY == CURSOR_DEST_Y1
-                       && this->m_drawCursor && !::g_drawingPuzzle) {
-                if (destX == CURSOR_DEST_X0) {
+            }
+            if (row == OBJECT_DRAW_LAYER_HERO_FRONT
+                && destY == CURSOR_DEST_Y1
+                && this->m_drawCursor && !::g_drawingPuzzle) {
+                if (destX == CURSOR_DEST_X0)
                     this->drawCursor(0, 1);
-                } else if (destX == CURSOR_DEST_X1) {
+                if (destX == CURSOR_DEST_X1)
                     this->drawCursor(1, 1);
-                } else if (destX == CURSOR_DEST_X2) {
+                if (destX == CURSOR_DEST_X2)
                     this->drawCursor(2, 1);
-                }
             }
         }
     } else {
@@ -694,21 +695,20 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
         }
 
         if (destY == CURSOR_DEST_Y0 && this->m_drawCursor && playerBit) {
-            if (destX == CURSOR_DEST_X0) {
+            if (destX == CURSOR_DEST_X0)
                 this->drawCursor(0, 0);
-            } else if (destX == CURSOR_DEST_X1) {
+            if (destX == CURSOR_DEST_X1)
                 this->drawCursor(1, 0);
-            } else if (destX == CURSOR_DEST_X2) {
+            if (destX == CURSOR_DEST_X2)
                 this->drawCursor(2, 0);
-            }
-        } else if (destY == CURSOR_DEST_Y1 && this->m_drawCursor && playerBit) {
-            if (destX == CURSOR_DEST_X0) {
+        }
+        if (destY == CURSOR_DEST_Y1 && this->m_drawCursor && playerBit) {
+            if (destX == CURSOR_DEST_X0)
                 this->drawCursor(0, 1);
-            } else if (destX == CURSOR_DEST_X1) {
+            if (destX == CURSOR_DEST_X1)
                 this->drawCursor(1, 1);
-            } else if (destX == CURSOR_DEST_X2) {
+            if (destX == CURSOR_DEST_X2)
                 this->drawCursor(2, 1);
-            }
         }
     }
 
@@ -817,24 +817,23 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
             32, 32, g_memoryBuffer, 0, 0, false);
     }
 
-    if (destY == CURSOR_DEST_Y0) {
-        if (m_drawCursor && playerBit) {
-            if (destX == CURSOR_DEST_X0)
-                drawCursorShadow(0, 0);
-            else if (destX == CURSOR_DEST_X1)
-                drawCursorShadow(1, 0);
-            else if (destX == CURSOR_DEST_X2)
-                drawCursorShadow(2, 0);
-        }
-    } else if (destY == CURSOR_DEST_Y1) {
-        if (m_drawCursor && playerBit) {
-            if (destX == CURSOR_DEST_X0)
-                drawCursorShadow(0, 1);
-            else if (destX == CURSOR_DEST_X1)
-                drawCursorShadow(1, 1);
-            else if (destX == CURSOR_DEST_X2)
-                drawCursorShadow(2, 1);
-        }
+    // DC 874..895 and Mac 0x2051d4..0x205298 test both cursor rows and each
+    // column independently, not as else-if chains.
+    if (destY == CURSOR_DEST_Y0 && m_drawCursor && playerBit) {
+        if (destX == CURSOR_DEST_X0)
+            drawCursorShadow(0, 0);
+        if (destX == CURSOR_DEST_X1)
+            drawCursorShadow(1, 0);
+        if (destX == CURSOR_DEST_X2)
+            drawCursorShadow(2, 0);
+    }
+    if (destY == CURSOR_DEST_Y1 && m_drawCursor && playerBit) {
+        if (destX == CURSOR_DEST_X0)
+            drawCursorShadow(0, 1);
+        if (destX == CURSOR_DEST_X1)
+            drawCursorShadow(1, 1);
+        if (destX == CURSOR_DEST_X2)
+            drawCursorShadow(2, 1);
     }
 
     if (foundHero && playerBit) {
