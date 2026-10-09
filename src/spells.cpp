@@ -1276,8 +1276,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                     for (int side = 0; side < 2; ++side) {
                         for (int index = 0; index < m_numArmies[side]; ++index) {
                             if (m_effected[side][index]) {
-                                army* effectedArmy = &m_armies[side][index];
-                                effectedArmy->m_monInfo.attributes |= creatureRedColoring;
+                                m_armies[side][index].m_monInfo.attributes |= creatureRedColoring;
                                 markCreatureEffect(side, index);
                             }
                         }
