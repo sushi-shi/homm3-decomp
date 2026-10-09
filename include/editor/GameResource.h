@@ -3,6 +3,8 @@
 #ifndef HOMM3_EDITOR_GAMERESOURCE_H
 #define HOMM3_EDITOR_GAMERESOURCE_H
 
+#include "va.h"
+
 enum TGameResourceType {
     eResourceWood = 0,
     eResourceGold = 6,
