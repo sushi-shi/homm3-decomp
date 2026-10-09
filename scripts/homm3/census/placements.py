@@ -42,7 +42,9 @@ fold: the names that reach only that address, when their compiled bodies
 agree byte for byte with the same relocation sites, place the first of them
 there, and the comparison pairs the others' references with it. The result is
 config/retail/<image>/placements.tsv; the label model reads it as the image's
-claims for shared units (channel `placement`).
+claims for shared units (channel `placement`). A derivation refuses to run
+while any of the image's unit objects is missing (a game-only `ninja objects`
+compiles none): it would silently drop every placement those units carry.
 """
 from __future__ import annotations
 
@@ -304,6 +306,27 @@ def clip_data_extents(rows):
     return [clipped.get(id(row), row) for row in rows]
 
 
+class MissingObjects(RuntimeError):
+    """The image's compile lacks unit objects: a derivation would drop every
+    placement those units carry (a game-only `ninja objects` compiles none)."""
+
+    def __init__(self, units, directory):
+        self.units = list(units)
+        shown = ", ".join(self.units[:5]) + (", ..." if len(self.units) > 5 else "")
+        super().__init__(f"{len(self.units)} unit object(s) missing from {directory} "
+                         f"({shown}); build the image first (`homm3 --image "
+                         f"{paths.image_key()} build`)")
+
+
+def require_objects(units) -> None:
+    """Every unit of the image has its compiled object, or MissingObjects."""
+    directory = paths.BUILD / "objdiff/base"
+    missing = [unit["unit"] for unit in units
+               if not (directory / f"{unit['unit']}.obj").is_file()]
+    if missing:
+        raise MissingObjects(missing, directory)
+
+
 def derive(log=print, want_suggestions=False):
     from homm3 import manifest
     from homm3.core.image import Image
@@ -311,6 +334,8 @@ def derive(log=print, want_suggestions=False):
     from homm3.retail_labels import censuses
     from homm3.core.tsv import read as read_tsv
 
+    units = manifest.units(paths.manifest())
+    require_objects(units)
     image = Image(str(common.resolve_exe()))
     base = image.image_base
     retail = paths.retail_dir()
@@ -338,7 +363,6 @@ def derive(log=print, want_suggestions=False):
         o = sec.raw_offset + rva - sec.rva
         return image.data[o:o + size]
 
-    units = manifest.units(paths.manifest())
     # the image's own units spell their addresses in VA()/DATA(); their
     # placements are suggestions for that source, never table rows. A unit
     # the game or another image owns is shared.
@@ -355,9 +379,6 @@ def derive(log=print, want_suggestions=False):
     data_relocs = {}                      # data name -> {offset: (referent, kind)}
     for unit in units:
         path = paths.BUILD / "objdiff/base" / f"{unit['unit']}.obj"
-        if not path.is_file():
-            log(f"[placements] {unit['unit']}: no object at {path}; build it first")
-            continue
         obj = Obj(path)
         semantic = (_compgen_names(path, unit["unit"], unit["source"])
                     if unit["source"] in shared_sources else {})
@@ -882,6 +903,14 @@ def main(argv=None) -> int:
         print("[placements] the game spells its addresses in source; select "
               "another image with `homm3 --image KEY placements`", file=sys.stderr)
         return 1
+    try:
+        return _run(args)
+    except MissingObjects as exc:
+        print(f"[placements] refusing to derive: {exc}", file=sys.stderr)
+        return 1
+
+
+def _run(args) -> int:
     if args.suggest:
         _rows, suggestions = derive(want_suggestions=True)
         for rva, size, kind, name, unit, why in suggestions:
