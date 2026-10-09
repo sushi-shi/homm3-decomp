@@ -5186,6 +5186,9 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // sibling Windows CUR and all available Mac scores are unchanged.
 // The older DC filename loader has no spell-plane counterpart; its rumour
 // string lifetime and later pool clear calls already agree with this source.
+// Lead (2026-10-09): the replay wants caller cb +52..+55. Bracing the eight
+// guarded statements gives 93.59%, but DC 5642/5650/5654/5672 record single
+// (unbraced) scopes, so those braces are not retained.
 VA(0x004c2450, 0x88E)
 DC_ADDRESS(0x0adb88, 0x3b0)
 MAC_ADDRESS(0x0d82cc, 0xbcc)  // sole NewMap caller + full stream/callee sequence

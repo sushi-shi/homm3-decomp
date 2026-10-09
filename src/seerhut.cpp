@@ -884,6 +884,8 @@ void type_monster_quest::save(TAbstractFile* file)
 // lower four other consumers, including two exact drawing functions. Keeping
 // its invalid-range guard as an early return restores 96.7191%; the plural
 // selection remains the canonical shared helper's conditional expression.
+// Lead (2026-10-09): bracing every guarded statement reaches 100%, but this
+// Complete-only body has no Dreamcast scope record to support the braces.
 VA(0x0056ef20, 0x57C)
 MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()

@@ -2776,6 +2776,10 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // Retail has 102 blocks/12 returns; this source has 103/13. Broad byte/range
 // wrappers reproduce 91.8122%, but native evidence does not identify those
 // extra boundaries. Named status assignments are byte-flat in that family.
+// Lead (2026-10-09): bracing all seventeen single-statement guards raises
+// this caller's cost until every traced call count agrees (98.47%), but DC
+// 2822..2944 records single scopes there (unbraced), so the missing inline
+// cost lies elsewhere in the body; the braces are not retained.
 // Mac 0x124674..0x124694 and 0x12470c..0x12472c use signed division/modulo
 // and construct proxies directly on the TownExtra members; no returned mask
 // temporary is present. The unsigned decodePackedBits spelling costs 79.6586%.

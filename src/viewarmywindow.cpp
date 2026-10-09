@@ -506,6 +506,9 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // (99.15% with GetText for the indexer) and restore retail's inline luck
 // append, but DC 0x19189e..0x191a1a calls ??4 for each store, so the
 // operator= spelling stays. The two-flag switch on the spell is 84.26%.
+// Lead (2026-10-09): bracing every guarded statement restores the inline
+// luck append (99.13%), but DC 409/441..443/463..465/470/474 record single
+// scopes there, so the cost the luck += needs must come from elsewhere.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)
 DC_ADDRESS(0x191804, 0x604)

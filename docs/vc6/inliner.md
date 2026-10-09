@@ -2773,3 +2773,32 @@ The historical 100% loader used a decoder loop pasted into `readPackedBits`
 decoder call in `ecaa9d412` left 94.9221% with the old peak retained. Keep the
 canonical chain: neither that old peak nor the trace justifies flattening a
 helper or adding an inline-depth pragma.
+
+## Single-edit replay scans and what they settle (2026-10-09)
+
+A whole-unit trace plus `inline_replay` can test every single source-shape
+edit of a divergent root in milliseconds: removing one candidate site with
+its subtree, inserting free sites after any site in a game-owned body, or
+moving the root's cb. Two filters keep the output honest. Count a retail
+call that reaches an untraced label with the same leading name as an ICF
+fold (processHover's `_Destroy`, checkTradeSupply's `insert`), not a
+decision difference. And mark any fix that newly expands a site the trace
+refused: its children are unknown, so the predicted call counts are
+incomplete.
+
+Across the 54 game units with non-exact rows, the scan settled two cases:
+
+- `game::perWeek` (0x4c8780) needed one fewer root candidate after
+  setRecruits so the nested clearRecruits gets 117 against its cost 116.
+  Dreamcast game.cpp:8563 takes `&heroes[i]` in the weekly-visit loop, and
+  retail walks the rows without getHero's guard; the direct row closes it.
+- `displayLCWinLoss` (0x4f2960) needed more caller cost; DC 3467/3472 and
+  3519/3524 record coincident scope pairs (braced bodies) on both remote
+  game-over arms, and restoring them raises 79.09 -> 81.85%.
+
+Most remaining divergences want a caller-cost increase of 10..80 units.
+Blanket bracing supplies that and lifts readTownData, loadMap,
+TViewArmyWindow::windowHandler and type_monster_quest::setDefaultText by
+5..9 points, but Dreamcast lists single scopes (unbraced bodies) at those
+statements, so the braces are not evidence (see dc-line-tables.md, "Braced
+bodies"); the leads are recorded beside each function.

@@ -968,6 +968,9 @@ hero::hero()
 // commuting the aggression product is flat (six states, three objects).
 // Spelling the existing string operation as assign("") is byte-flat;
 // retain the ordinary assignment and its canonical library helpers.
+// Replay (2026-10-09): retail expands one of _Grow's three nested _Tidy
+// calls; the custom-name assign needs about 146 more budget (caller cb
+// +73..+75), far beyond any natural spelling found.
 VA(0x004d8720, 0x410)
 DC_ADDRESS(0x0cbe80, 0x23a)
 MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout
@@ -5476,7 +5479,9 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // The remaining difference is the first bitset<12>::_Xran's out_of_range
 // constructor (cb 58), refused at 50 where retail expands it. The replay
 // needs a caller cb of 539..544 for that alone; a comboType local lowers
-// cb to 520.
+// cb to 520. Mac retail calls neither getPlayer nor isHuman here, matching
+// Windows' guard-free row and inline byte; that direct form (95.32%) needs
+// cb 515..517 instead (it measures 531), so the window is missed either way.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
 MAC_ADDRESS(0x103da8, 0x2f0)  // MAC_ABSTRACTION_FROM(tokens1:3d82fe0d0468,25.0000): Restore the canonical playerData::isHuman call for Mac's expanded human-query byte body at 0x103f74.
