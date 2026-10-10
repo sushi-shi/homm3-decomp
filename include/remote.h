@@ -596,7 +596,6 @@ void handleNormalWinMsg(CNetMsg* netMsg);
 
 unsigned char getQueueSize(int toWho, unsigned long& numMsgs, unsigned long& queueSize);
 void receiveChat(char* chat, int fromWho);
-void handlePlayerDrop(unsigned long dpid);
 
 int transmitRemoteData(CNetMsg* msg, int toWho,
                        bool compressMsg, bool guaranteed);
@@ -628,17 +627,5 @@ extern char g_mapName[256];
 // gates message transmission and prevents pausing for window deactivation.
 extern int g_remoteOn;
 extern int g_mpBaseType;
-
-void destroyMsg(CNetMsg* netMsg);
-void handlePlayerDrop(unsigned long dpid);
-void onPlayerDropUpdateMsg(unsigned long dpid);
-void handlePlayerDead(int deadGuy, unsigned char showMsg);
-void handlePlayerWon(CNetMsg* netMsg);
-void handlePlayerLost(CNetMsg* netMsg);
-void handleNormalWinMsg(CNetMsg* netMsg);
-
-void receiveChat(char* chat, int fromWho);
-
-int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guaranteed);
 
 #endif  /* HOMM3_REMOTE_H */

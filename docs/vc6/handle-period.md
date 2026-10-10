@@ -315,6 +315,12 @@ includes `rmg`.
   (MAX held). Measured after it: retail is k = 2..25 or 32..62, the
   current state k = 0 (the edit cost the two handles from k = 62).
   `onKillFocus` and initializeGameData stay exact.
+* 2026-10-10 (re-audit under the MAX rule): remote.h loses the nine
+  duplicate prototypes 6da218611 had kept only for their handles. CUR-only,
+  MAX held: `onKillFocus` 99.87, `onKeyPress` 99.89, heroWindowManager's
+  doDialog/doDialogDraw/doQuickView 99.96..99.97, string `_Copy` 99.95 in
+  adventuremapwindow, receiveHeroTownData 99.98, oldmain -0.002. Under the
+  rule these dips are noise; do not re-add declarations to steer them back.
 
 **For any function** whose CUR moves between commits that did not touch its
 TU, check with `homm3 vc6 compile-m` whether its assemblies are period-64
