@@ -327,6 +327,16 @@ def require_objects(units) -> None:
         raise MissingObjects(missing, directory)
 
 
+def sole_choice(choices):
+    """The one (name, evidence) a masked prefix proposes for an address, or
+    None when two different names anchor there. Several units compiling the
+    same template instance (Quest.cpp's and QuestLocation.cpp's map
+    erase) are one choice."""
+    if len({name for name, _why in choices}) != 1:
+        return None
+    return choices[0]
+
+
 def fold_label(at, names, bodies, definers, owned, rowable=lambda name: True):
     """The one name of an address that several compiled bodies reach (`at`).
 
@@ -813,8 +823,9 @@ def derive(log=print, want_suggestions=False):
         chosen[rva].append((name, f"masked prefix ({fixed} fixed bytes agree, "
                                   f"{len(body)} compiled, {functions[rva]} retail)"))
     for rva, choices in sorted(chosen.items()):
-        if len(choices) == 1:
-            prefixed += propose(choices[0][0], rva, choices[0][1])
+        choice = sole_choice(choices)
+        if choice is not None:
+            prefixed += propose(choice[0], rva, choice[1])
     propagate()
     log(f"[placements] {len(homes)} string literals at unique referenced addresses; "
         f"{anchored} functions anchored by them, {prefixed} by masked prefixes")

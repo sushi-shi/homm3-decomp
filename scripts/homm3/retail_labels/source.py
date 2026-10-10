@@ -1977,6 +1977,11 @@ def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:
     # type (`VTClass@1@`); Clang spells the hashed namespace out again.
     backref = re.compile(r"@\d@")
     anon_backref = re.compile(r"@\?anonymous@@(?=A$|B$)")
+    # A class of the anonymous namespace recurring in the type (a pointer to
+    # its member): VC6 back-references the class and its `?%` scope (`12@`),
+    # Clang back-references the class and spells the namespace (`1?A0x..@@`).
+    scope_backref = re.compile(r"(?<=\d)\d@")
+    anon_scope = re.compile(r"(?<=\d)\?anonymous@@")
     for candidate in candidates:
         origins = [re.fullmatch(r"(.+\.(?:cpp|cxx|cc|c|h|hpp|inl))\d+", m.group(1), re.I)
                    for m in vc6_anon.finditer(candidate)]
@@ -1987,6 +1992,8 @@ def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:
         if spelled == expected:
             matches.append(candidate)
         elif backref.sub("@#@", spelled) == anon_backref.sub("@#@", backref.sub("@#@", expected)):
+            masked.append(candidate)
+        elif scope_backref.sub("#@", spelled) == anon_scope.sub("#@", expected):
             masked.append(candidate)
     if matches:
         return matches[0] if len(matches) == 1 else None

@@ -294,6 +294,16 @@ class DataSpellingTest(unittest.TestCase):
         # Any other difference stays unbridged.
         self.assertIsNone(vc6_data_name(clang.replace("names", "other"), {vc6}, "herodefs"))
 
+    def test_an_anonymous_class_recurring_in_the_type_is_back_referenced(self):
+        from homm3.retail_labels.source import vc6_data_name
+        # QuestLocation.cpp's reader table: member function pointers of a
+        # class in the anonymous namespace
+        clang = "?_s_apfnRead@TQuestReader@?A0x26A7BBC3@@0QBQ81?A0x26A7BBC3@@AEPAVTQuest@@XZB"
+        vc6 = (r"?_s_apfnRead@TQuestReader@?%Z:\tmp\src\editor\QuestLocation.cpp472427463@@"
+               "0QBQ812@AEPAVTQuest@@XZB")
+        self.assertEqual(vc6_data_name(clang, {vc6}, "QuestLocation"), vc6)
+        self.assertIsNone(vc6_data_name(clang, {vc6.replace("XZB", "XZA")}, "QuestLocation"))
+
     def test_a_namespace_scope_const_object_takes_its_bare_c_name(self):
         from homm3.retail_labels.source import vc6_data_name
         clang = "?castleGenerator2@?A0xC560F696@@3VTAbsoluteGeneratorTraits@?A0xC560F696@@B"

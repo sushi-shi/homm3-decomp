@@ -1,7 +1,7 @@
 """placements.fold_label: which name labels an address several bodies reach."""
 import unittest
 
-from homm3.census.placements import fold_label
+from homm3.census.placements import fold_label, sole_choice
 
 
 class FoldLabelTests(unittest.TestCase):
@@ -38,6 +38,15 @@ class FoldLabelTests(unittest.TestCase):
         self.assertEqual(fold_label(set(names), names, bodies, definers, owned,
                                     lambda name: name == '?accept@TVCCaptureTown'),
                          '?accept@TVCCaptureTown')
+
+
+class SoleChoiceTests(unittest.TestCase):
+    def test_one_name_from_several_units_is_one_choice(self):
+        choices = [('?erase@x', 'masked prefix (Quest)'), ('?erase@x', 'masked prefix (QuestLocation)')]
+        self.assertEqual(sole_choice(choices), choices[0])
+
+    def test_two_names_at_one_address_are_no_choice(self):
+        self.assertIsNone(sole_choice([('?a@x', 'one'), ('?b@x', 'two')]))
 
 
 if __name__ == '__main__':
