@@ -208,10 +208,10 @@
       commonShellHook = ''
         HOMM3_DIR="$(${pkgs.runtimeShell} ${./scripts/project-root.sh} "$PWD")" || exit 1
         export HOMM3_DIR
+        . ${./scripts/project-env.sh}
         export HOMM3_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
         export LIBCLANG_PATH="${pkgs.llvmPackages.libclang.lib}/lib"
         export PYTHONDONTWRITEBYTECODE=1
-        export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
         ${ghidraEnvHook}
         ${objdiffShimHook}
         python3 -m homm3.build.compilation_database
@@ -235,8 +235,6 @@
           name = "homm3-build";
           packages = commonTools ++ [ pkgs.wineWow64Packages.staging pkgs.libfaketime ];
           shellHook = commonShellHook + ''
-            export HOMM3_TOOLCHAIN="''${HOMM3_TOOLCHAIN:-$HOMM3_DIR/build/homm3-toolchain-vc6-sp3}"
-            export MSVC_DIR="$HOMM3_TOOLCHAIN/msvc"
             export HOMM3_MSVC5_DIR="''${HOMM3_MSVC5_DIR:-${vc5-toolchain}/msvc}"
             export WINEPREFIX="$HOMM3_DIR/build/wineprefix"
             # The candidate link runs LINK.EXE at the retail link time.

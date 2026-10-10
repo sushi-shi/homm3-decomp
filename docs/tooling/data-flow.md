@@ -24,6 +24,12 @@ Concurrent Clang tools share the generated header trees (`build/gen/msvc-include
 missing header. A parse stopped by a fatal diagnostic (a missing header) is
 never written to `build/cache/data-declarations`, and an entry holding one is
 reparsed.
+The mirror's stamp records the toolchain header directory it was built from,
+so a different `MSVC_DIR` regenerates it. The devshells therefore source
+`scripts/project-env.sh` before any tool runs: it drops another project's
+`HOMM*_` variables, `MSVC_DIR` and `PYTHONPATH`, and exports this checkout's
+toolchain, so a shell entered from HoMM1 or HoMM2 never rebuilds the mirror
+from their headers under a concurrent build.
 
 `core.compiler_profile` translates the unit's MSVC profile for all Clang
 consumers: the compilation database, source-fact ASTs, ownership and label IR.

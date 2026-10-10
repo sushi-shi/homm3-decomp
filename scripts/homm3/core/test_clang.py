@@ -63,6 +63,25 @@ class PublishTests(unittest.TestCase):
             self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()),
                              ['.msvc-include.lock', 'msvc-include'])
 
+    def test_mirror_stamp_follows_the_header_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'project'
+            first, second = Path(tmp) / 'vc6', Path(tmp) / 'vc4'
+            for toolchain, text in ((first, 'vc6\n'), (second, 'vc4\n')):
+                (toolchain / 'include').mkdir(parents=True)
+                (toolchain / 'include/STDDEF.H').write_text(text)
+            header = root / 'build/gen/msvc-include/stddef.h'
+            stamp = root / 'build/gen/msvc-include/.mirror-stamp'
+            self.assertEqual(clang.mirror(root, first), root / 'build/gen/msvc-include')
+            self.assertEqual(header.read_text(), 'vc6\n')
+            self.assertEqual(stamp.read_text().splitlines()[0],
+                             str((first / 'include').resolve()))
+            clang.mirror(root, second)
+            self.assertEqual(header.read_text(), 'vc4\n')
+            inode = stamp.stat().st_ino
+            clang.mirror(root, second)
+            self.assertEqual(stamp.stat().st_ino, inode)
+
 
 class FstreamMirrorTests(unittest.TestCase):
     def test_flags_are_qualified_but_codecvt_calls_keep_their_identity(self):

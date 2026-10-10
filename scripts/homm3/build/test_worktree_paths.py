@@ -47,6 +47,23 @@ class WorktreePathsTest(unittest.TestCase):
             self.assertIn('no project root', result.stderr)
             self.assertEqual(list(Path(raw).iterdir()), [])
 
+    def test_shell_environment_drops_foreign_project_state(self):
+        script = Path(__file__).resolve().parents[2] / 'project-env.sh'
+        environ = {k: v for k, v in os.environ.items()
+                   if not k.startswith(('HOMM', 'MSVC_DIR', 'PYTHONPATH'))}
+        environ.update(HOMM3_DIR='/lane', HOMM3_MSVC5_DIR='/vc5', HOMM1_DIR='/homm1',
+                       HOMM2_DIR='/homm2', MSVC_DIR='/homm1/build/toolchains/vc40',
+                       PYTHONPATH='/homm1/scripts')
+        result = subprocess.run(['sh', '-c', f'. "{script}" && env'], env=environ,
+                                capture_output=True, text=True, check=True)
+        values = dict(line.split('=', 1) for line in result.stdout.splitlines() if '=' in line)
+        self.assertNotIn('HOMM1_DIR', values)
+        self.assertNotIn('HOMM2_DIR', values)
+        self.assertEqual(values['HOMM3_MSVC5_DIR'], '/vc5')
+        self.assertEqual(values['HOMM3_TOOLCHAIN'], '/lane/build/homm3-toolchain-vc6-sp3')
+        self.assertEqual(values['MSVC_DIR'], '/lane/build/homm3-toolchain-vc6-sp3/msvc')
+        self.assertEqual(values['PYTHONPATH'], '/lane/scripts')
+
     @staticmethod
     def _fake_checkout(root: Path) -> Path:
         (root / 'src').mkdir(parents=True)
