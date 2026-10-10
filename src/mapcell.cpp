@@ -2770,16 +2770,18 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // The returned identifier reader closes the former eight-byte frame growth
 // and infile ESI/EDI inversion: the current source matches B0..B18 and
 // B20..B44, including the complete first spell traversal.
-// Residual (89.8371%): the troop failure jumps to a later cleanup instead of
-// the first failure, a string::_Tidy child remains called in late cleanup,
-// and the second spell traversal's cold throw code is placed differently.
-// Retail has 102 blocks/12 returns; this source has 103/13. Broad byte/range
-// wrappers reproduce 91.8122%, but native evidence does not identify those
-// extra boundaries. Named status assignments are byte-flat in that family.
-// Lead (2026-10-09): bracing all seventeen single-statement guards raises
-// this caller's cost until every traced call count agrees (98.47%), but DC
-// 2822..2944 records single scopes there (unbraced), so the missing inline
-// cost lies elsewhere in the body; the braces are not retained.
+// Before the count restoration (89.8371%) the troop failure jumped to a
+// later cleanup, a string::_Tidy child stayed called and the second spell
+// traversal's cold throw code moved; all three were the low inline cost.
+// DC 2887/2888, 2894/2895, 2913/2914 and 2942/2943 read every checked
+// field through the shared count before testing it, and DC 2919's spell
+// loop body carries a coincident scope pair (braced). Restoring both
+// raises the C1XX cost 1243 -> 1265, inside the 1265..1325 window where
+// the late _Grow keeps retail's ten _Tidy calls (89.84 -> 98.47%).
+// Residual: retail reads the alignment byte into a scratch slot ([ebp+0x13])
+// and never stores the -1 default (Mac 0x124808 likewise reads into its own
+// 0x80 slot); a readValue<char> temporary reproduces that but adds a
+// candidate site that moves the window to 1341.. (90.10%).
 // Mac 0x124674..0x124694 and 0x12470c..0x12472c use signed division/modulo
 // and construct proxies directly on the TownExtra members; no returned mask
 // temporary is present. The unsigned decodePackedBits spelling costs 79.6586%.
@@ -2852,10 +2854,12 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     tempTown.m_customBuildings = charBuffer;
 
     if (tempTown.m_customBuildings) {
-        if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+        count = infile->read(inBuf, sizeof(inBuf));
+        if (count < sizeof(inBuf))
             return -1;
         memcpy(&tempTown.m_buildingBuiltMask, inBuf, sizeof(inBuf));
-        if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+        count = infile->read(inBuf, sizeof(inBuf));
+        if (count < sizeof(inBuf))
             return -1;
         memcpy(&tempTown.m_buildingDisabledMask, inBuf, sizeof(inBuf));
     } else {
@@ -2874,11 +2878,13 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                 (spellBuf[x / 8] & (1 << (x % 8))) != 0;
     }
 
-    if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+    count = infile->read(spellBuf, sizeof(spellBuf));
+    if (count < sizeof(spellBuf))
         return -1;
-    for (x = 0; x < hero::NUM_SPELLS; ++x)
+    for (x = 0; x < hero::NUM_SPELLS; ++x) {
         tempTown.m_spells[x] =
             (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+    }
 
     count = readLittleEndianValue(infile, numTownEvents);
     if (count < sizeof(numTownEvents))
@@ -2931,7 +2937,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 
     g_game->m_scenarioTowns.push_back(tempTown);
 
-    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding))
         return -1;
     return 0;
 }
