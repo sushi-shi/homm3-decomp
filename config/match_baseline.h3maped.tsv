@@ -1013,6 +1013,7 @@ GameMap	?visit@_TGetVictoryConditionDataFunc@_TImpl@TGameMap@@UAEXABVTVCTranspor
 GameMap	?visit@_TGetVictoryConditionDataFunc@_TImpl@TGameMap@@UAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0x1ed71	tokens1:4df98763971b
 GameMap	?visit@_TLossConditionValidater@_TImpl@TGameMap@@UAEXABVTLCLoseHero@@@Z	100.0000	100.0000	100.0000	0x1f16f	tokens1:1d6e9016b024
 GameMap	?visit@_TLossConditionValidater@_TImpl@TGameMap@@UAEXABVTLCLoseTown@@@Z	100.0000	100.0000	100.0000	0x1f123	tokens1:671843987614
+GameMap	?visit@_TLossConditionValidater@_TImpl@TGameMap@@UAEXABVTLCTimeExpires@@@Z	100.0000	100.0000	100.0000	0x1f0c1	-
 GameMap	?visit@_TVictoryConditionValidater@_TImpl@TGameMap@@UAEXABVTVCBuildHolyGrailStruct@@@Z	100.0000	100.0000	100.0000	0x1efb0	tokens1:83443524de14
 GameMap	?visit@_TVictoryConditionValidater@_TImpl@TGameMap@@UAEXABVTVCCaptureTown@@@Z	100.0000	100.0000	100.0000	0x1f05e	tokens1:fdacc3120008
 GameMap	?visit@_TVictoryConditionValidater@_TImpl@TGameMap@@UAEXABVTVCDefeatHero@@@Z	100.0000	100.0000	100.0000	0x1efdf	tokens1:6e96c2e810e4
@@ -1708,7 +1709,7 @@ MapSpecsLossCondPage	?OnInitDialog@TMapSpecsLossCondPage@@UAEHXZ	100.0000	100.00
 MapSpecsLossCondPage	?OnInitDialog@TTimeExpiresDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@MAEHXZ	100.0000	100.0000	100.0000	0x72324	tokens1:d040548d8fd9
 MapSpecsLossCondPage	?OnOK@TLoseHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@UAEXXZ	100.0000	100.0000	100.0000	0x721d3	tokens1:514f144024de
 MapSpecsLossCondPage	?OnOK@TLossConditionDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x13ff7	-
-MapSpecsLossCondPage	?OnOK@TMapSpecsLossCondPage@@UAEXXZ	99.8795	99.8795	99.8795	0x72c81	tokens1:c207a96b9b4c
+MapSpecsLossCondPage	?OnOK@TMapSpecsLossCondPage@@UAEXXZ	99.9398	99.9398	99.9398	0x72c81	tokens1:c207a96b9b4c
 MapSpecsLossCondPage	?OnOK@TTimeExpiresDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@UAEXXZ	100.0000	100.0000	100.0000	0x72480	tokens1:1fcabc7f1872
 MapSpecsLossCondPage	?getLossCondition@TLoseHeroDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@UBE?AV?$auto_ptr@VTLossCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x71e22	tokens1:6b9bf7b1eb04
 MapSpecsLossCondPage	?getLossCondition@TLoseTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417@@UBE?AV?$auto_ptr@VTLossCondition@@@std@@XZ	100.0000	100.0000	100.0000	0x71b84	tokens1:0781871cb87b
@@ -1936,7 +1937,7 @@ MapSpecsVictoryCondPage	?OnOK@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Edi
 MapSpecsVictoryCondPage	?OnOK@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x79ee9	tokens1:de93900c4cf0
 MapSpecsVictoryCondPage	?OnOK@TAquireArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x796c4	tokens1:49480f12588b
 MapSpecsVictoryCondPage	?OnOK@TBuildHolyGrailStructDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x7a546	tokens1:34b9849202ce
-MapSpecsVictoryCondPage	?OnOK@TMapSpecsVictoryCondPage@@UAEXXZ	99.8795	99.8795	99.8795	0x7c3b1	tokens1:dfed25f36029
+MapSpecsVictoryCondPage	?OnOK@TMapSpecsVictoryCondPage@@UAEXXZ	99.9398	99.9398	99.9398	0x7c3b1	tokens1:dfed25f36029
 MapSpecsVictoryCondPage	?OnOK@TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x7b2c0	tokens1:8e83cdbff496
 MapSpecsVictoryCondPage	?OnOK@TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAEXXZ	100.0000	100.0000	100.0000	0x7a30a	tokens1:fe6d88b33c39
 MapSpecsVictoryCondPage	?OnOK@TVictoryConditionDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x792cf	tokens1:3303b6f92403
@@ -2349,7 +2350,6 @@ Quest	?erase@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@
 Quest	?getLevel@TQuestAchievePrimarySkillLevel@@QBEHW4TPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x9517c	tokens1:6b7e537e5956
 Quest	?getLinkID@TQuestDefeatHero@@UBEIXZ	100.0000	100.0000	100.0000	0x951cb	tokens1:184b9c5d5e14
 Quest	?mismatch@std@@YA?AU?$pair@Vconst_iterator@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@V123@@1@Vconst_iterator@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@1@00@Z	100.0000	100.0000	100.0000	0x95b05	-
-Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestAchieveExperienceLevel@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchieveExperienceLevel@@@Z	100.0000	100.0000	100.0000	0xb72f1	-
 Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestAchievePrimarySkillLevel@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchievePrimarySkillLevel@@@Z	100.0000	100.0000	100.0000	0x959de	-
 Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestBringArtifacts@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringArtifacts@@@Z	100.0000	100.0000	100.0000	0x95a26	-
 Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestBringCreatures@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringCreatures@@@Z	100.0000	100.0000	100.0000	0x95a46	-
@@ -2882,7 +2882,9 @@ TownTypeTraits	??0TBuildingTraits@TTown@@QAE@W4TBuilding@@@Z	100.0000	100.0000	1
 TownTypeTraits	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0xbe6e6	-
 TownTypeTraits	?InitializeTownTypeTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0xcb3e7	tokens1:7720aff54df0
 TownTypeTraits	?getBaseCreatureName@TAbsoluteGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956@@UBEPBDXZ	100.0000	100.0000	100.0000	0xc8bc5	-
+TownTypeTraits	?getBaseCreatureName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956@@UBEPBDXZ	100.0000	100.0000	100.0000	0xcb22a	-
 TownTypeTraits	?getUpgradeCreatureName@TAbsoluteGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956@@UBEPBDXZ	100.0000	100.0000	100.0000	0xc8bd6	-
+TownTypeTraits	?getUpgradeCreatureName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956@@UBEPBDXZ	100.0000	100.0000	100.0000	0xcb235	-
 TownTypeTraits	?hasMageGuildLevel@TTypeTraits@TTown@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcb3c9	tokens1:f03dceb57300
 TownTypeTraits	?initialize@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\TownTypeTraits.cpp373414956@@SAXXZ	100.0000	100.0000	100.0000	0xc86ae	tokens1:da7f3fdf59d4
 TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aCastleBuildingTraits	100.0000	100.0000	100.0000	0xc882b	-
@@ -2980,6 +2982,49 @@ TreasurePropsGuardiansPage	?OnDestroy@TTreasurePropsGuardiansPage@@IAEXXZ	100.00
 TreasurePropsGuardiansPage	?OnInitDialog@TTreasurePropsGuardiansPage@@UAEHXZ	100.0000	100.0000	100.0000	0xcbc08	tokens1:a9de47cedb45
 TreasurePropsGuardiansPage	?OnOK@TTreasurePropsGuardiansPage@@UAEXXZ	99.8000	99.8000	99.8000	0xcbcb1	tokens1:f4e2d0b7ef42
 TreasurePropsGuardiansPage	?getGuardians@TTreasurePropsGuardiansPage@@QBEABVTArmy@@XZ	100.0000	100.0000	100.0000	0xcbbb2	tokens1:866657ce2fc2
+VictoryCondition	??8@YA_NABVTVCAccumulateCreature@@0@Z	100.0000	100.0000	100.0000	0xcc28b	-
+VictoryCondition	??8@YA_NABVTVCAquireArtifact@@0@Z	100.0000	100.0000	100.0000	0xcc24c	-
+VictoryCondition	??8@YA_NABVTVCBuildHolyGrailStruct@@0@Z	100.0000	100.0000	100.0000	0xcc329	-
+VictoryCondition	??8@YA_NABVTVCTransportArtifact@@0@Z	100.0000	100.0000	100.0000	0xcc396	-
+VictoryCondition	??8@YA_NABVTVCUpgradeTown@@0@Z	100.0000	100.0000	100.0000	0xcc2d2	-
+VictoryCondition	?_test@TLossConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTLCLoseHero@@@Z	100.0000	100.0000	100.0000	0xcc1a8	-
+VictoryCondition	?_test@TLossConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTLCLoseTown@@@Z	100.0000	100.0000	100.0000	0xcc162	-
+VictoryCondition	?_test@TLossConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTLCTimeExpires@@@Z	100.0000	100.0000	100.0000	0xcc1ee	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCAccumulateCreature@@@Z	100.0000	100.0000	100.0000	0xcbea6	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCAccumulateResource@@@Z	100.0000	100.0000	100.0000	0xcbeec	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCAquireArtifact@@@Z	100.0000	100.0000	100.0000	0xcbe60	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCBuildHolyGrailStruct@@@Z	100.0000	100.0000	100.0000	0xcbf78	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCCaptureTown@@@Z	100.0000	100.0000	100.0000	0xcc004	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCDefeatHero@@@Z	100.0000	100.0000	100.0000	0xcbfbe	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCDefeatMonster@@@Z	100.0000	100.0000	100.0000	0xcc04a	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCFlagAllCreatureGenerators@@@Z	100.0000	100.0000	100.0000	0xcc090	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCFlagAllMines@@@Z	100.0000	100.0000	100.0000	0xcc0d6	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCTransportArtifact@@@Z	100.0000	100.0000	100.0000	0xcc11c	-
+VictoryCondition	?_test@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@AAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0xcbf32	-
+VictoryCondition	?equivalent@TLossCondition@@SA_NABV1@0@Z	100.0000	100.0000	100.0000	0xcbdff	tokens1:7081a7b46a6b
+VictoryCondition	?equivalent@TVictoryCondition@@SA_NABV1@0@Z	100.0000	100.0000	100.0000	0xcbd3e	tokens1:b0b741239af8
+VictoryCondition	?visit@?$TLossConditionRHSEquivalencyTester@VTLCLoseHero@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTLCLoseHero@@@Z	100.0000	100.0000	100.0000	0xcc3cd	-
+VictoryCondition	?visit@?$TLossConditionRHSEquivalencyTester@VTLCTimeExpires@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTLCTimeExpires@@@Z	100.0000	100.0000	100.0000	0xb72f1	-
+VictoryCondition	?visit@?$TVictoryConditionRHSEquivalencyTester@VTVCAccumulateCreature@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCAccumulateCreature@@@Z	100.0000	100.0000	100.0000	0xcc273	-
+VictoryCondition	?visit@?$TVictoryConditionRHSEquivalencyTester@VTVCAquireArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCAquireArtifact@@@Z	100.0000	100.0000	100.0000	0xcc234	-
+VictoryCondition	?visit@?$TVictoryConditionRHSEquivalencyTester@VTVCBuildHolyGrailStruct@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCBuildHolyGrailStruct@@@Z	100.0000	100.0000	100.0000	0xcc311	-
+VictoryCondition	?visit@?$TVictoryConditionRHSEquivalencyTester@VTVCFlagAllCreatureGenerators@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCFlagAllCreatureGenerators@@@Z	100.0000	100.0000	100.0000	0xcc358	-
+VictoryCondition	?visit@?$TVictoryConditionRHSEquivalencyTester@VTVCTransportArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCTransportArtifact@@@Z	100.0000	100.0000	100.0000	0xcc37e	-
+VictoryCondition	?visit@?$TVictoryConditionRHSEquivalencyTester@VTVCUpgradeTown@@@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0xcc2ba	-
+VictoryCondition	?visit@TLossConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTLCLoseHero@@@Z	100.0000	100.0000	100.0000	0xcbe48	-
+VictoryCondition	?visit@TLossConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTLCLoseTown@@@Z	100.0000	100.0000	100.0000	0xcbe3c	-
+VictoryCondition	?visit@TLossConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTLCTimeExpires@@@Z	100.0000	100.0000	100.0000	0xcbe54	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCAccumulateCreature@@@Z	100.0000	100.0000	100.0000	0xcbd87	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCAccumulateResource@@@Z	100.0000	100.0000	100.0000	0xcbd93	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCAquireArtifact@@@Z	100.0000	100.0000	100.0000	0xcbd7b	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCBuildHolyGrailStruct@@@Z	100.0000	100.0000	100.0000	0xcbdab	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCCaptureTown@@@Z	100.0000	100.0000	100.0000	0xcbdc3	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCDefeatHero@@@Z	100.0000	100.0000	100.0000	0xcbdb7	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCDefeatMonster@@@Z	100.0000	100.0000	100.0000	0xcbdcf	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCFlagAllCreatureGenerators@@@Z	100.0000	100.0000	100.0000	0xcbddb	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCFlagAllMines@@@Z	100.0000	100.0000	100.0000	0xcbde7	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCTransportArtifact@@@Z	100.0000	100.0000	100.0000	0xcbdf3	-
+VictoryCondition	?visit@TVictoryConditionEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\VictoryCondition.cpp3269924907@@UAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0xcbd9f	-
 adler32	@adler32@12	100.0000	100.0000	100.0000	0xd6dd0	-
 artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x2215	-
 artifact	??8?$bitset@$0BD@@std@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x2d03d	-
@@ -3431,16 +3476,20 @@ rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTemplateZone@@H@Z	100.0000	100.0000	100.00
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	99.5041	99.5041	99.5041	0xa6601	-
 rmg	?floodShipyardWater@type_random_map_generator@@QAEXPAVtype_object@@@Z	100.0000	100.0000	100.0000	0xa68e0	-
 rmg	?floodWaterZoneDistances@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	90.7134	90.7134	90.7134	0xa4694	-
+rmg	?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c58a	-
 rmg	?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c69b	-
 rmg	?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c6e2	-
 rmg	?generate@type_black_box_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c723	-
 rmg	?generate@type_black_box_spells_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c764	-
+rmg	?generate@type_flaggable_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c806	-
 rmg	?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9cdb1	-
 rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c8f3	-
 rmg	?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9cac2	-
 rmg	?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9cb83	-
 rmg	?generate@type_quest_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9cc22	-
 rmg	?generate@type_random_map_generator@@QAEEXZ	82.4145	82.4145	82.4145	0xac552	-
+rmg	?generate@type_resource_lump_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c8b0	-
+rmg	?generate@type_scholar_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c97c	-
 rmg	?generate@type_shrine_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c9e3	-
 rmg	?generate@type_spell_scroll_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	99.4627	99.4627	99.4627	0x9ccec	-
 rmg	?generate@type_treasure_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x9c553	-
@@ -3530,6 +3579,8 @@ rmg	?setObstacleFill@TRmgMapItem@@QAEXE@Z	100.0000	100.0000	100.0000	0x9aa63	-
 rmg	?setPathClearance@TRmgMapItem@@QAEXE@Z	100.0000	100.0000	100.0000	0x9a932	-
 rmg	?setTerrain@TRmgMapItem@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0x9acf6	-
 rmg	?setTile@type_random_map@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x9acc5	-
+rmg	?setTile@type_river_map@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	75.4198	75.4198	75.4198	0x9afc4	-
+rmg	?setTile@type_road_map@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	0.0000	0.0000	0.0000	0x9ae47	-
 rmg	?setTotal@type_progress_bar@@UAEXH@Z	100.0000	100.0000	100.0000	0x99e5b	-
 rmg	?test@?$bitset@$09@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x2cc99	-
 rmg	?traceBranchEnd@type_random_map@@QAE?AUTRmgPoint@@U2@0H@Z	95.9355	95.9355	95.9355	0xa80dc	-

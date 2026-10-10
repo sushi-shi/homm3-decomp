@@ -350,6 +350,14 @@ def sole_choice(choices):
     return choices[0]
 
 
+def rtti_class(symbol: str) -> str | None:
+    """The class a primary vtable symbol (`??_7<class>@@6B@`) names, as the
+    image's vtables.tsv spells RTTI classes, or None for a secondary one."""
+    if symbol.startswith("??_7") and symbol.endswith("@@6B@"):
+        return symbol[4:-5]
+    return None
+
+
 def foreign_to_claim(name, claimed, bodies):
     """Whether the image's own VA() claims (`claimed`, the names one address
     holds) cover bodies whose relocation referents differ from `name`'s.
@@ -444,6 +452,7 @@ def derive(log=print, want_suggestions=False):
     inline_comdats = set()                # own units' pick-any COMDAT names
     definers = defaultdict(list)          # function name -> units, manifest order
     tables = {}                           # vtable symbol -> slots
+    table_units = {}                      # vtable symbol -> first defining unit
     data_definers = {}                    # data name -> (unit, size, bytes)
     data_relocs = {}                      # data name -> {offset: (referent, kind)}
     for unit in units:
@@ -462,6 +471,7 @@ def derive(log=print, want_suggestions=False):
                 definers[name].append(unit["unit"])
         for name, slots in _vtable_slots(obj).items():
             tables.setdefault(name, slots)
+            table_units.setdefault(name, unit["unit"])
         for name, (size, text) in _data_of(obj).items():
             data_definers.setdefault(name, (unit["unit"], size, text))
         for name, relocs in _data_relocations(obj).items():
@@ -560,7 +570,9 @@ def derive(log=print, want_suggestions=False):
         return moved
 
     for symbol in tables:
-        cls = symbol[4:-6] if symbol.endswith("@@6B@") else None
+        # an anonymous-namespace class's RTTI name spells its scope as the
+        # retail build did (C:\Dev\...), the compiled symbol as this checkout
+        cls = rtti_class(portable(symbol, table_units[symbol]))
         row = vt_by_class.get(cls) if cls else None
         if row is not None:
             place_table(symbol, row["rva"], f"vtable of {cls} (RTTI)")

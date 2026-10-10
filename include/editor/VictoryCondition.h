@@ -5,7 +5,9 @@
 // by it, at +4/+5 after the vtable pointer; the kinds' members follow at +8
 // (h3maped's victory-data visitors, 0x41ecd8..0x41ef33, read them there). A
 // loss condition's members follow its vtable pointer directly: the Windows
-// classes have no kind ordinal (Loki's port stores one at +4).
+// classes have no kind ordinal (Loki's port stores one at +4). The
+// visitors' visits do nothing by default: the equivalency testers' RHS
+// vtables hold the shared empty body in every other slot.
 #ifndef HOMM3_EDITOR_VICTORYCONDITION_H
 #define HOMM3_EDITOR_VICTORYCONDITION_H
 
@@ -31,17 +33,17 @@ public:
     class TVisitor {
     public:
         virtual ~TVisitor() {}
-        virtual void visit(const TVCAquireArtifact& vc) = 0;
-        virtual void visit(const TVCAccumulateCreature& vc) = 0;
-        virtual void visit(const TVCAccumulateResource& vc) = 0;
-        virtual void visit(const TVCUpgradeTown& vc) = 0;
-        virtual void visit(const TVCBuildHolyGrailStruct& vc) = 0;
-        virtual void visit(const TVCDefeatHero& vc) = 0;
-        virtual void visit(const TVCCaptureTown& vc) = 0;
-        virtual void visit(const TVCDefeatMonster& vc) = 0;
-        virtual void visit(const TVCFlagAllCreatureGenerators& vc) = 0;
-        virtual void visit(const TVCFlagAllMines& vc) = 0;
-        virtual void visit(const TVCTransportArtifact& vc) = 0;
+        virtual void visit(const TVCAquireArtifact& vc) {}
+        virtual void visit(const TVCAccumulateCreature& vc) {}
+        virtual void visit(const TVCAccumulateResource& vc) {}
+        virtual void visit(const TVCUpgradeTown& vc) {}
+        virtual void visit(const TVCBuildHolyGrailStruct& vc) {}
+        virtual void visit(const TVCDefeatHero& vc) {}
+        virtual void visit(const TVCCaptureTown& vc) {}
+        virtual void visit(const TVCDefeatMonster& vc) {}
+        virtual void visit(const TVCFlagAllCreatureGenerators& vc) {}
+        virtual void visit(const TVCFlagAllMines& vc) {}
+        virtual void visit(const TVCTransportArtifact& vc) {}
     };
 
     TVictoryCondition(bool bAllowNormalVictory, bool bAppliesToComputer)
@@ -322,9 +324,9 @@ public:
     class TVisitor {
     public:
         virtual ~TVisitor() {}
-        virtual void visit(const TLCLoseTown& lc) = 0;
-        virtual void visit(const TLCLoseHero& lc) = 0;
-        virtual void visit(const TLCTimeExpires& lc) = 0;
+        virtual void visit(const TLCLoseTown& lc) {}
+        virtual void visit(const TLCLoseHero& lc) {}
+        virtual void visit(const TLCTimeExpires& lc) {}
     };
 
     virtual ~TLossCondition() {}
