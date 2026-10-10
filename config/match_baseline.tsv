@@ -2415,7 +2415,7 @@ kb	?checkEndGame@@YIXH@Z	100.0000	100.0000	100.0000	0xf2ce0	tokens1:f4ec9a5a8c22
 kb	?cleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	tokens1:daef8b02d116
 kb	?congratsWait@@YIXHPADHHH@Z	100.0000	100.0000	100.0000	0xf3ab0	tokens1:81a5428820d9
 kb	?creditsWait@@YIXXZ	100.0000	100.0000	100.0000	0xedda0	tokens1:3db976015a92
-kb	?displayLCWinLoss@@YI_NAAULossConditionStruct@@AAH1_N@Z	81.8473	81.8473	81.8473	0xf2960	tokens1:dc18107a46ec
+kb	?displayLCWinLoss@@YI_NAAULossConditionStruct@@AAH1_N@Z	100.0000	100.0000	100.0000	0xf2960	tokens1:7494bc0e75dc
 kb	?displayVCWinLoss@@YI_NAAUVictoryConditionStruct@@AAH1_N@Z	97.3784	97.3784	97.3784	0xf15e0	tokens1:8ddb7157ed98
 kb	?doCampaignWindow@@YIEXZ	99.8872	99.8872	99.8872	0xf00a0	tokens1:b21888e2b44b
 kb	?doMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	tokens1:98f26a9e86bf
