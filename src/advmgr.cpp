@@ -1443,8 +1443,7 @@ int advManager::processKeyPress(const message& msg, bool& exitFlag, type_point& 
         if (standingOn->m_type == ANCHOR_POINT)
             break;
 
-        type_point eventPoint = currHero->getLocation();
-        doEvent(standingOn, eventPoint);
+        doEvent(standingOn, currHero->getLocation());
         break;
     }
 
@@ -3723,8 +3722,10 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // DC 4595/4601 read gpCurPlayer->currHeroId directly (no GetCurrHeroId),
 // 4696/4708 test the hero's boat flag in two separate guards (no inBoat
 // local), and 4771 tests !OnSameTeam first in the HERO cursor arm.
-// Together: 84.96 (helpers removed) -> 98.96%. Residual: operand order in one
-// onSameTeam teamInfo load and the getLocation/== packing in the hero branch.
+// Together: 84.96 (helpers removed) -> 98.96%. DC 4618 tests HERO and the
+// hero's owner in one condition (no mapHero local): 99.71%. Residual: operand
+// order in one onSameTeam teamInfo load and the getLocation/== packing in the
+// hero branch.
 VA(0x0040e360, 0x918)
 DC_ADDRESS(0x00f3a8, 0x9c4)
 MAC_ADDRESS(0x00e5e8, 0xa94)  // anchor-callee
@@ -3773,13 +3774,11 @@ int advManager::processHover(int mouseX, int mouseY)
                 }
             }
 
-            if (currCell->m_type == HERO) {
-                hero* mapHero = g_game->getHero(currCell->m_extraInfo);
-                if (mapHero->m_owner == g_netLocalGamePos) {
-                    g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
-                    m_advCommand = 2;
-                    return 1;
-                }
+            if (currCell->m_type == HERO
+                && g_game->getHero(currCell->m_extraInfo)->m_owner == g_netLocalGamePos) {
+                g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
+                m_advCommand = 2;
+                return 1;
             }
 
             if (currCell->m_type == SHIPYARD) {

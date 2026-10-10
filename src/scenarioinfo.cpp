@@ -118,66 +118,61 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     : CAdvPopup((WINDOW_SCREEN_WIDTH - 763) / 2,
                 (WINDOW_SCREEN_HEIGHT - 585) / 2, 763, 585, 2)
 {
-    // Residual: 98.7173%; the last two button appends retain one vector::size
+    // Residual: 99.4649%; the last two button appends retain one vector::size
     // call each that retail expands. Before recovering the setter, all 24
-    // buffer declaration orders were byte-flat. Direct member-vector
-    // receivers add 14 call sites;
-    // moving the setter before the constructor is byte-flat.
+    // buffer declaration orders were byte-flat; moving the setter before the
+    // constructor is byte-flat. DC records no widget-vector local.
     char tempText[256];
     char lossText[1024];
     char tempName[256];
     char victoryText[1024];
 
-    // The widget vector NAMED AS A REFERENCE across all 42 uses:
-    // 96.3650 -> 96.5654.  Retail reads _First/_Last through the vector's
-    // own address here, not folded off `this`.
-    std::vector<widget*>& widgets = m_widgets;
-    widgets.reserve(100);
+    m_widgets.reserve(100);
 
-    widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         393, 0, 370, 585, 100, "GSelPop1.pcx", 0x800));
-    widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0, 0, 557, 585, 102, "AdvOptBk.pcx", 0x800));
 
     // Dreamcast scenarioinfo.cpp:275 calls TTextResource::operator[].
     sprintf(g_text, "%s:", (*g_generalText)[GENERAL_TEXT_SCENARIO_PLAYER_DIFFICULTY]);
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         411, 429, 334, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 132,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(g_text, "%s:", g_generalText->GetText(GENERAL_TEXT_RATING));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         662, 429, 84, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 133,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         411, 429, 90, 19, g_generalText->GetText(GENERAL_TEXT_SCENARIO_MAP_DIFFICULTY_LABEL), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 134,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         419, 21, 278, 18, g_generalText->GetText(GENERAL_TEXT_SCENARIO_NAME_LABEL), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         419, 131, 278, 18, g_generalText->GetText(GENERAL_TEXT_SCENARIO_DESCRIPTION_LABEL), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         419, 282, 278, 18, g_generalText->GetText(GENERAL_TEXT_SCENARIO_VICTORY_CONDITION_LABEL), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         419, 338, 278, 18, g_generalText->GetText(GENERAL_TEXT_SCENARIO_LOSS_CONDITION_LABEL), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     iconWidget* mapSizeIcon = new iconWidget(
         711, 22, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
-    widgets.push_back(mapSizeIcon);
+    m_widgets.push_back(mapSizeIcon);
 
     sprintf(g_text, "%s:", g_generalText->GetText(GENERAL_TEXT_ALLIES));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         411, 397, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
     sprintf(g_text, "%s:", g_generalText->GetText(GENERAL_TEXT_ENEMIES));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         576, 397, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
 
@@ -190,47 +185,47 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     VictoryConditionStruct* vc = &g_game->m_mapHeader.m_victoryCondition;
     LossConditionStruct* lc = &g_game->m_mapHeader.m_lossCondition;
 
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         419, 39, 324, 30, mapHeader.m_mapName.c_str(),
         "bigfont.fnt", font::HEADING_HIGHLIGHT, 100, 0, 0, 8));
-    widgets.push_back(new CScrollTextWidget(
+    m_widgets.push_back(new CScrollTextWidget(
         mapHeader.m_mapDescription.c_str(), 419, 149, 319, 115,
         "smalfont.fnt", font::WHITE, slider::BLUE));
 
     // Retail +0x6c0/+0x743 passes justify=5 for the difficulty labels;
     // +0x7c3/+0x822 passes justify=4 for the victory/loss descriptions.
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         411, 448, 89, 48,
         g_difficulty[mapHeader.m_difficulty], "smalfont.fnt",
         font::WHITE, 100,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(tempText, "%d%%",
             g_difficultyRatingPercent[g_game->m_setup.m_difficulty]);
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         663, 448, 83, 48, tempText, "smalfont.fnt", font::WHITE, 100,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     g_game->getVictoryConditionText(victoryText);
     g_game->getLossConditionText(lossText);
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         453, 299, 288, 32, victoryText, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         453, 358, 288, 32, lossText, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     int i;
     for (i = 0; i < 8; ++i) {
-        widgets.push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             457 + i * 15, 399, 15, 20, 112 + i, "itgflags.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-        widgets.push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             637 + i * 15, 399, 15, 20, 120 + i, "itgflags.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
-    widgets.push_back(new CHotspotWidget(453, 396, 310, 25, 387));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new CHotspotWidget(453, 396, 310, 25, 387));
+    m_widgets.push_back(new textWidget(
         55, 84, 104, 36, g_generalText->GetText(GENERAL_TEXT_PLAYER_NAME_HANDICAP_HEADER), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 339,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -239,23 +234,23 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     if (g_videoGameState == SINGLE_SELECTION_CONTEXT_1
             || g_videoGameState == SINGLE_SELECTION_CONTEXT_3)
         gameTypeId = 342;
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         160, 84, 75, 36, g_generalText->GetText(GENERAL_TEXT_STARTING_TOWN_HEADER), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, gameTypeId,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         236, 84, 75, 36, g_generalText->GetText(GENERAL_TEXT_STARTING_HERO_HEADER), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 343,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         312, 84, 75, 36, g_generalText->GetText(GENERAL_TEXT_STARTING_BONUS_HEADER), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 344,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         55, 528, 334, 20, g_generalText->GetText(GENERAL_TEXT_PLAYER_TURN_DURATION_HEADER), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 340,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new button(
+    m_widgets.push_back(new button(
         581, 529, 166, 40, SCENARIO_INFO_ACCEPT_ID, "scnrback.def",
         0, 1, 0, 1, 2));
 
@@ -275,13 +270,13 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     slider* durationSlider = new slider(
         55, 551, 194, 16, 338, 11, 0, slider::BLUE, 0, 0);
     durationSlider->setState(g_game->m_setup.m_turnDuration);
-    widgets.push_back(durationSlider);
+    m_widgets.push_back(durationSlider);
 
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         55, 18, 334, 59, g_generalText->GetText(GENERAL_TEXT_SCENARIO_INFORMATION), "bigfont.fnt",
         font::HEADING_HIGHLIGHT, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         253, 550, 134, 18, g_turnDurationText[g_game->m_setup.m_turnDuration],
         "smalfont.fnt", font::WHITE, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -320,12 +315,12 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             g_handiText[g_game->m_setup.m_handicap[i]], g_humanCpu[playerType],
             m_panels[i], m_flags[i], g_game->m_setup.m_alignment[i],
             m_bonusSprite, g_game->m_setup.m_startingBonus[i], startingHero);
-        widgets.push_back(row);
+        m_widgets.push_back(row);
 
         int y = 124 + rowPosition * 50;
-        widgets.push_back(new CHotspotWidget(173, y, 48, 32, 370 + i));
-        widgets.push_back(new CHotspotWidget(249, y, 48, 32, 362 + i));
-        widgets.push_back(new CHotspotWidget(325, y, 48, 32, 378 + i));
+        m_widgets.push_back(new CHotspotWidget(173, y, 48, 32, 370 + i));
+        m_widgets.push_back(new CHotspotWidget(249, y, 48, 32, 362 + i));
+        m_widgets.push_back(new CHotspotWidget(325, y, 48, 32, 378 + i));
         ++rowPosition;
     }
 
@@ -336,7 +331,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         victory->setIconFrame(vc->m_type);
     else
         victory->setIconFrame(11);
-    widgets.push_back(victory);
+    m_widgets.push_back(victory);
 
     iconWidget* loss = new iconWidget(
         417, 359, 32, 24, -1, "scnrloss.def", 0, 0, 0, 0,
@@ -345,17 +340,17 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         loss->setIconFrame(lc->m_type);
     else
         loss->setIconFrame(3);
-    widgets.push_back(loss);
+    m_widgets.push_back(loss);
 
-    widgets.push_back(new button(
+    m_widgets.push_back(new button(
         503, 450, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    m_widgets.push_back(new button(
         535, 450, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    m_widgets.push_back(new button(
         567, 450, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    m_widgets.push_back(new button(
         599, 450, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
-    widgets.push_back(new button(
+    m_widgets.push_back(new button(
         631, 450, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
     addWidgetsToMessageStream();

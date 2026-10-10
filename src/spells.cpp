@@ -1602,14 +1602,14 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             target->m_monInfo.defenseSkill = 0;
         spellEffect(traits->m_effect, target, 100, 0);
         if (!isQuickCombat()) {
-            int reduction = previousSkill - target->m_monInfo.defenseSkill;
-            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_DISRUPTING_RAY_FORMAT), reduction);
+            sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_DISRUPTING_RAY_FORMAT),
+                    previousSkill - target->m_monInfo.defenseSkill);
             m_combatWindow->combatMessage(
                 formatString(DATA_COMPGEN(
                                   0x00688450, acidBreathDefenseFormat,
                                   "Acid breath reduces the defense of the %s by %i"),
                               target->getName(),
-                              reduction)
+                              previousSkill - target->m_monInfo.defenseSkill)
                     .c_str(),
                 1, 0);
         }
@@ -4667,51 +4667,8 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // call per segment. When there is nothing to draw, or the combat is
 // quick, the same eight DamageWall calls happen in one sweep instead.
 
-// NAMING THE FOUR EDGES AND A POINTER TO THE BOUNDS IS WORTH 2.5
-// (82.48 -> 84.96), the sixth instance of the array-pointer-above lever
-// in this TU: retail computes left/right/top/bottom into locals and
-// then stores all four THROUGH one materialised `&drawbridgeBounds`,
-// where storing each expression straight into `drawbridgeBounds.values[n]`
-// makes VC6 fold the member into `this + 0x13d38` addressing and reload
-// the sprite's Width and Height at every use.
-
-// Earlier residual (84.96%): the register-homing class.
-// Retail memory-homes `this` at [ebp-8] and reloads it, which frees all
-// three callee-saved registers for the animation body's own
-// call-crossing values - ESI takes `&drawbridgeBounds`, EDI the
-// segment's x and EBX its y. Our C2 keeps `this` in ESI for the whole
-// function, so those three fight over two registers and every store
-// through the bounds pointer becomes a `this`-relative one instead.
-// That is exactly the asymmetry AreaEffect's note four hundred lines up
-// records from the other side. why-reg's catalog was run: its own top
-// pick, `volatile int x`, closes 13 of its 283 slots and MEASURES
-// 84.96 -> 82.02 - the low-mass inversion for the third time in this
-// TU - and all twenty other mutations are worse still.
-// THE NUMERATOR IS ALSO RULED OUT (2026-08-20): the `if (0)` cb instrument
-// at 8, 32 and 128 inert statements is byte-flat at 84.9579, so no
-// caller-size dose re-prices this body's inline decisions.
-// Dreamcast line 5271 records SLimitData's four-argument constructor, line
-// 5277 its Clip call, and line 5288 its Width/Height calls. Restoring these
-// source boundaries lifts 84.9579% to 86.91573% in VC6. Mac keeps the
-// rectangle operations in its lightly optimized body, while Windows
-// expands the calls. The remaining mismatch is register homing; 45 of 46
-// CFG blocks now have exact shape, with all 25 branches and calls aligned.
-// DC lines 5189, 5202 and 5288 retain the bitmap Grab/Draw and sprite
-// bitmap-forwarding overloads. Restoring all three canonical calls is
-// Windows byte-flat at 86.9157%; their bitmap accessors remain nested.
-// DC 5270/5271 acquires long destX/destY before the six sprite dimension
-// calls in the SLimitData constructor. Restore those direct arguments,
-// rather than caching width/height before the coordinates: Windows rises
-// 83.7388 -> 87.0197%. DC also records both FRAME_PERIOD locals as const
-// int; those types and the subtract-half/add-size endpoint order are flat.
-// All 46 blocks agree in flow and all 25 branches agree. The remaining
-// 236 masked rows are mainly register homes/scheduling; the one reported
-// call mismatch is the already-correlated Random/SRandom retail fold.
-// DC 5215/5217/5221 loads the mastery count and initializes the drawn count
-// before clearing damage. Mac 0x199314..0x199334 retains that order, and
-// retail loads mastery before rep stosd. Restoring it raises 87.02 -> 89.14%.
-// The Windows const-reference updateCombatArea extent removes a by-value
-// rectangle copy: 89.14 -> 91.21%.
+// Each frame rectangle is built straight in m_extent; DC 5271..5293
+// records no bounds local either.
 VA(0x005a7c80, 0x408)
 DC_ADDRESS(0x156ec4, 0x490)
 MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity
@@ -4783,25 +4740,24 @@ void combatManager::earthquake(int level)
                     continue;
                 long x = s_wallTargets[i].m_hitX;
                 long y = s_wallTargets[i].m_hitY;
-                SLimitData* bounds = &m_extent;
-                *bounds = SLimitData(
+                m_extent = SLimitData(
                     x - blast->GetWidth() / 2,
                     y - blast->GetHeight() / 2,
                     x - blast->GetWidth() / 2 + blast->GetWidth() - 1,
                     y - blast->GetHeight() / 2 + blast->GetHeight() - 1);
-                bounds->clip(combatManager::s_combatAreaLimits);
+                m_extent.clip(combatManager::s_combatAreaLimits);
                 if (frame == g_earthquakeImpactFrame) {
                     damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
                 }
                 blast->Draw(0, frame, 0, 0,
-                            bounds->width(), bounds->height(),
+                            m_extent.width(), m_extent.height(),
                             g_windowManager->m_screenBitmap,
                             x - blast->GetWidth() / 2, y - blast->GetHeight() / 2,
                             0, 1);
-                // DC spells.cpp:5292/5293 passes *bounds by value through
+                // DC spells.cpp:5292/5293 passes the extent by value through
                 // the global combat manager, matching the Mac update body.
-                if (!g_combatManager->scrollTo(*bounds, true, true, true))
-                    g_combatManager->updateCombatArea(*bounds);
+                if (!g_combatManager->scrollTo(m_extent, true, true, true))
+                    g_combatManager->updateCombatArea(m_extent);
             }
             GameTime::delayTil(frameTil);
         }

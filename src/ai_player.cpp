@@ -2303,14 +2303,13 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 
     int slot;
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        TCreatureType type = m_army->m_armyTypes[slot];
-        if (type == CREATURE_NONE)
+        if (m_army->m_armyTypes[slot] == CREATURE_NONE)
             continue;
 
         int groupedAlignment;
-        const TCreatureTypeTraits& traits = akCreatureTypeTraits[type];
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[m_army->m_armyTypes[slot]];
         if (checkAlignments) {
-            int alignment = g_game->getAlignment(type);
+            int alignment = g_game->getAlignment(m_army->m_armyTypes[slot]);
             groupedAlignment = normalizeAlignment(alignment);
             if (m_alignments[groupedAlignment + 1] != 1)
                 continue;
