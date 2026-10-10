@@ -17,7 +17,7 @@ executables.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,533 |   98.92% | last measured score                            |
+| CUR   |           4,531 |   98.92% | last measured score                            |
 | MAX   |           4,534 |   98.92% | best result for each function's current source |
 | HIST  |           4,551 |   99.09% | all-time peak across source revisions          |
 

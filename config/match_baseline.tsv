@@ -2445,7 +2445,7 @@ kb	?memError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	tokens1:1ba3cc8bae3d
 kb	?normalDialog@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6570	tokens1:3256171b57ce
 kb	?normalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	tokens1:290ebd6d5d36
 kb	?normalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	tokens1:ae15beacb170
-kb	?oldmain@@YIHXZ	88.5904	88.5904	88.6306	0xee3e0	tokens1:40c300a1cb50
+kb	?oldmain@@YIHXZ	88.5882	88.5904	88.6306	0xee3e0	tokens1:40c300a1cb50
 kb	?pickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	tokens1:e6bf0ad066ce
 kb	?playFramedVideo@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	tokens1:9fc70bf01c6c
 kb	?playerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	tokens1:19e6e75948ac
@@ -2853,7 +2853,7 @@ overview	?getLastBackpackIndex@@YIJJ@Z	100.0000	100.0000	100.0000	0x1225d0	token
 overview	?overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	tokens1:10ccc272fd61
 overview	?overviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	tokens1:ff5957e0c8e9
 overview	?processIconSelect@game@@QAEHH_N@Z	94.8183	94.8183	94.8183	0x11ee50	tokens1:3a8d2e79aa03
-overview	?setupDynamicStuff@game@@QAEXHH@Z	93.4749	93.4749	93.4749	0x11bd50	tokens1:2dcf47263d84
+overview	?setupDynamicStuff@game@@QAEXHH@Z	93.5018	93.5018	93.5018	0x11bd50	tokens1:2dcf47263d84
 overview	?setupNewOverviewType@game@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x11e330	tokens1:f3f0eaf2240f
 overview	?updateBackpack@@YIXH@Z	100.0000	100.0000	100.0000	0x122470	tokens1:6dfc82a6a0f1
 overview	?updateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	tokens1:202b825929ea
@@ -4053,9 +4053,9 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAE_NPAVC
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	tokens1:c58d1b550f99
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:263a3adaf3eb
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:3e0a02090019
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	91.1860	91.1860	93.0332	0x189710	tokens1:3ac119cf2ca1
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:9ab4056b5b4f
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:66f526e7e131
