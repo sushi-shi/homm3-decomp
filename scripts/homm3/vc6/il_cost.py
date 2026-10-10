@@ -325,12 +325,18 @@ def gl_names(gl: bytes) -> dict[int, str]:
             elif i >= 3:
                 out.setdefault(struct.unpack_from("<H", gl, i - 3)[0], name)
         i = j + 1
-    for match in _FILE_RECORD.finditer(gl):            # 12 <u16 handle> <path>
-        out.setdefault(struct.unpack("<H", match[1])[0], match[2].decode("latin1"))
+    for match in _FILE_RECORD.finditer(gl):            # 12 <handle> <path>
+        handle = match[1]
+        if len(handle) == 4 and handle[1] & 0x80:
+            low, high = struct.unpack("<HH", handle)
+            out.setdefault((low & 0x7FFF) | high << 15, match[2].decode("latin1"))
+        elif len(handle) == 2 and not handle[1] & 0x80:
+            out.setdefault(struct.unpack("<H", handle)[0], match[2].decode("latin1"))
     return out
 
 
-_FILE_RECORD = re.compile(rb"\x12(..)([A-Za-z]:\\[ -~]*)\x00", re.DOTALL)
+_FILE_RECORD = re.compile(rb"\x12(.[\x80-\xff]..|.[\x00-\x7f])([A-Za-z]:\\[ -~]*)\x00",
+                          re.DOTALL)
 
 
 def gl_record(gl: bytes, start: int) -> dict | None:
@@ -508,7 +514,18 @@ def run(args) -> int:
         return 0
     print(f"{label}: {gate['agree']}/{gate['recorded']} recorded bodies agree with "
           f"their gl cost; {len(found)} bodies; auto-inline save limit cb < {limit}")
-    text = source.read_text(encoding="latin1").splitlines()
+    texts: dict[str, list[str]] = {}
+
+    def snippet(path: str | None, line: int | None) -> str:
+        short = _short(path)
+        if short not in texts:
+            local = _common.REPO / short
+            if not local.is_file() and path and path[1:3] == ":\\":   # Wine's Z: is /
+                local = Path(path[2:].replace("\\", "/"))
+            texts[short] = (local.read_text(encoding="latin1").splitlines()
+                            if local.is_file() else [])
+        rows = texts[short]
+        return rows[line - 1].strip() if line and 0 < line <= len(rows) else ""
     for body in chosen:
         record = body.record
         state = ("no gl record" if record is None else
@@ -518,11 +535,8 @@ def run(args) -> int:
         if not args.explain:
             continue
         for group in lines(body, files):
-            where = _short(group["file"])
-            line = group["line"]
-            here = (group["file"] and Path(group["file"].replace("\\", "/")).name == source.name
-                    and line and 0 < line <= len(text))
-            snippet = text[line - 1].strip() if here else ""
+            text = snippet(group["file"], group["line"])
             tuples = f"  {' '.join(group['tuples'])}" if args.tuples else ""
-            print(f"        {group['cost']:5d}  {where}:{line}  {snippet[:90]}{tuples}")
+            print(f"        {group['cost']:5d}  {_short(group['file'])}:{group['line']}  "
+                  f"{text[:90]}{tuples}")
     return 0

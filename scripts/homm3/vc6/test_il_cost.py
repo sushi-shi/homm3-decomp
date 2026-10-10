@@ -101,6 +101,13 @@ class RecordTests(unittest.TestCase):
         self.assertEqual(il_cost.stored_cost(40000), 40000 - 0x10000)
         self.assertEqual(il_cost.stored_cost(70000), -1)
 
+    def test_file_records_use_both_handle_forms(self):
+        gl = (b"\x00\x12\xd6\x00Z:\\src\\town.cpp\x00"
+              b"\x12\x27\x88\x02\x00Z:\\include\\game.h\x00")
+        names = il_cost.gl_names(gl)
+        self.assertEqual(names[0xD6], "Z:\\src\\town.cpp")
+        self.assertEqual(names[0x10827], "Z:\\include\\game.h")
+
     def test_check_records_reports_disagreement(self):
         body = il_cost.bodies(stream(S0)[0], FORMATS)[0]
         body.record = dict(cb=14, flags=0x68)
