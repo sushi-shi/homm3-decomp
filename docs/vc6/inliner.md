@@ -366,6 +366,15 @@ function, pick the statements whose evidenced spelling differs from ours,
 and recount: the tool is fast enough to test each candidate edit, and the
 table predicts most of them before compiling.
 
+`homm3 vc6 predict-inline --tu UNIT --cb-window` supplies the target: for
+each root whose retained calls differ from retail it prints the root-cost
+ranges whose replay changes exactly those call counts. TViewArmyWindow's
+group constructor (0x5f3b50) needed 1085..1142 against 1075. DC 229..232
+records its influence fill as a loop with a braced body (coincident scopes
+at 231), and `MEMSET_LOCAL`'s braced for-init loop costs exactly +10;
+removing a widget-vector alias DC does not record (+1) then restored
+retail's registers: 96.60 -> 100.
+
 ### 4.3 The historical titration (2026-08)
 
 Before the front end was read, `cb` was measured through the budget rule
