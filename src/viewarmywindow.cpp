@@ -217,17 +217,16 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 
-// Current group-constructor score: 88.5394 versus the preceding 91.1781;
-// HIST retains 97.4452. The background's recorded palette-call arms and the
-// morale/luck helpers' owning member stores are positive source facts. Keep
-// those boundaries while recovering this caller's remaining nested inlining.
+// The background's recorded palette-call arms and the morale/luck helpers'
+// owning member stores are positive source facts.
+// Retail keeps createLuckWidget's nested tLimit out of line, which needs this
+// caller's front-end cost (homm3 vc6 cb) in 1085..1142. The influence fill is
+// DC 229..232's counted loop with a braced body (coincident scopes at 231):
+// 1075 -> 1085. DC records no widget-vector alias, and retail addresses
+// m_widgets through `this`.
 // The garrison/hero-screen popup: one slot of an armyGroup, shown with
 // the owning hero's bonuses folded in and the upgrade/dismiss actions
 // live. Three things separate it from the one-army constructor:
-// A second-pass helper check finds the only unmatched retained call is the
-// nested tLimit at createLuckWidget; the canonical limit -> tLimit source
-// call already lives in that helper. Naming the getArmyLuck result in this
-// caller is byte-flat, so it does not recover the required inline decision.
 
 //  * the traits row is COPIED BY VALUE onto the frame (`mov ecx,0x1d /
 //    rep movsd`) so hero::applyCreatureStatBonuses can fold the hero's own
@@ -266,11 +265,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     const TCreatureTypeTraits* typeTraits = &akCreatureTypeTraits[m_armyType];
     TCreatureTypeTraits traits = *typeTraits;
 
-    // The widget vector NAMED AS A REFERENCE (three uses): 90.4657 ->
-    // 90.9521.  The sibling army-only constructor below LOSES 0.03 on the
-    // same change, so it is per-body.
-    std::vector<widget*>& widgets = m_widgets;
-    widgets.reserve(NWIDGETS);
+    m_widgets.reserve(NWIDGETS);
 
     createBackgroundWidget(thisHero);
 
@@ -313,18 +308,16 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
         createDismissWidget();
         m_showingDismissButton = 1;
     } else if (upgrade == -1 && traits.special_ability) {
-        widgets.push_back(new textWidget(
+        m_widgets.push_back(new textWidget(
             20, 232, 192, 41, traits.special_ability, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
 
     createRolloverWidget();
 
-    m_influence[0] = -1;
-    m_influence[1] = -1;
-    m_influence[2] = -1;
+    MEMSET_LOCAL(m_influence, -1, sizeof(m_influence), 3, i);
 
-    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             addWidget(*it, -1);
         else
