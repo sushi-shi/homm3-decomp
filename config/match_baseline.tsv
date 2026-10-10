@@ -3646,7 +3646,7 @@ rmg_voronoi	?locate@TRmgVoronoi@@QAEPAUTRmgHalfEdge@@UTRmgPoint@@@Z	100.0000	100
 rmg_voronoi	?removeEdge@TRmgVoronoi@@QAEXPAUTRmgHalfEdge@@@Z	100.0000	100.0000	100.0000	0x1fd5b0	tokens1:47d1cb90f713
 rmg_voronoi	?splice@TRmgHalfEdge@@QAEXPAU1@@Z	100.0000	100.0000	100.0000	0x1fcf60	tokens1:27243c3ee250
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	tokens1:7edde2cbdd5c
-sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3283	98.3283	100.0000	0x1654f0	tokens1:4be6d30016d2
+sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	tokens1:43d5a6751afc
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	tokens1:2485fecfa941
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60	tokens1:8d2f6ca75931
 sacrifice_window	??1type_transformer_slot@@UAE@XZ	100.0000	100.0000	100.0000	0x1654b0	-
@@ -4027,7 +4027,7 @@ singleselectionwindow	?go@CNewPlayerUpdateProc@@UAEXXZ	100.0000	100.0000	100.000
 singleselectionwindow	?go@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x177d70	tokens1:6cbcb9a94dda
 singleselectionwindow	?handleMessage@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0	tokens1:80e0d802f40a
 singleselectionwindow	?handleNetMsg@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x18e340	tokens1:ca69c695e80d
-singleselectionwindow	?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z	98.8295	98.8353	100.0000	0x1887a0	tokens1:338f6eaccb68
+singleselectionwindow	?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z	100.0000	100.0000	100.0000	0x1887a0	tokens1:338f6eaccb68
 singleselectionwindow	?handleRequests@CNewPlayerUpdateProc@@QAEXXZ	100.0000	100.0000	100.0000	0x178010	tokens1:3dc2f4f7df9e
 singleselectionwindow	?hasMultipleTowns@TSingleSelectionWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x18ce70	tokens1:a17bb6ea169f
 singleselectionwindow	?headerConfirmed@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x189270	tokens1:b95c9a8d49fd
@@ -4440,7 +4440,7 @@ town	?set@?$bitset@$0DA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x106780
 town	?setSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750	tokens1:291e81c425c7
 town	?showBuildingRewards@@YIXPBVtown@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1c0220	tokens1:5c1845c236c4
 town	?showCreatureRewards@@YIXPBVtown@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	99.0596	99.0596	99.0596	0x1c0400	tokens1:074d8a357852
-town	?swapHeroes@town@@QAEXXZ	97.7744	97.7744	100.0000	0x1be450	tokens1:b593d65678f2
+town	?swapHeroes@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be450	tokens1:4f1749cee6a4
 town	?updateShipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210	tokens1:fd809ce0da88
 town	?upgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0	tokens1:20e4bbe536ed
 town	?view@town@@QAEXH@Z	100.0000	100.0000	100.0000	0x1be210	tokens1:8ee03efa85e0
