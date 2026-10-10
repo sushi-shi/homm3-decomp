@@ -766,15 +766,12 @@ rva	size	kind	name	unit	evidence
 0x0003f043	0x8	func	?write@TAbstractRandomlyLeveledGenerator@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Generator	vtable ??_7TAbstractRandomlyLeveledGenerator@@6BTGameObject@@@ stored by ??0TAbstractRandomlyLeveledGenerator@@QAE@ABUTObjectType@@@Z slot 3
 0x0003f04b	0x8	func	?isCustomized@TAbstractRandomlyLeveledGenerator@@$4PPPPPPPM@A@BE_NXZ	Generator	vtable ??_7TAbstractRandomlyLeveledGenerator@@6BTGameObject@@@ stored by ??0TAbstractRandomlyLeveledGenerator@@QAE@ABUTObjectType@@@Z slot 5
 0x0003f28b	0x24	func	?LoadBitmapA@CBitmap@@QAEHI@Z	PannerCtrl	referenced by ?relayEvent@TPannerCtrl@@QAEXPBUtagMSG@@@Z at +0x9b
-0x0003f2cb	0x29	func	??1TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	GUIGameObject	referenced by 0x0003fb65 at +0x6
 0x0003f394	0x24	func	?GetNumFrames@CSprite@@QBEHH@Z	GUIGameObject	masked body (36 bytes, 0 relocations) unique at a census start
 0x0003f905	0xaa	func	??0TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	masked body (170 bytes, 10 relocations) unique at a census start
 0x0003f9af	0x4f	func	??0TGenericObject@@QAE@ABV0@@Z	GUIGameObject	masked body (79 bytes, 3 relocations) unique at a census start
 0x0003fa68	0x2b	func	??_GTGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	GUIGameObject	masked body (43 bytes, 3 relocations) unique at a census start; ICF-folded with 3 identical bodies
 0x0003fb01	0x2d	func	?getCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ	GUIGameObject	masked body (45 bytes, 7 relocations) unique at a census start
 0x0003fb2e	0x2d	func	?getSmallCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ	GUIGameObject	masked body (45 bytes, 7 relocations) unique at a census start
-0x0003fb5b	0xa	func	?checkMark@?1??getSmallCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ@$AV12@A	GUIGameObject	referenced by 0x0003fb2e at +0x1d
-0x0003fb65	0xa	func	?checkMark@?1??getCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ@$AV12@A	GUIGameObject	referenced by 0x0003fb01 at +0x1d
 0x00040175	0x4	func	?_getPHero@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@EAEPAVTBasicHero@@XZ	GUIGameObject	vtable ??_7TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@6BTGUIGameObject@@@ stored by 0x000400dd slot 13; ICF-folded with 1 identical bodies
 0x00040296	0xac	func	??0TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	masked body (172 bytes, 11 relocations) unique at a census start
 0x00040342	0x92	func	??0THeroPlaceholder@@QAE@ABV0@@Z	GUIGameObject	masked body (146 bytes, 8 relocations) unique at a census start

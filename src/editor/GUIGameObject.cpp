@@ -70,13 +70,17 @@ public:
 
     static TCheckMarkBmp& getCheckMark()
     {
-        static TCheckMarkBmp checkMark(false);
+        DATA_COMPGEN_GUARD(0x005aa690, checkMarkGuard, checkMark)
+        VA_COMPGEN(0x0043fb65, 0xa, STATIC_DTOR, checkMark)
+        DATA(0x005aa6a0) static TCheckMarkBmp checkMark(false);
         return checkMark;
     }
     static TCheckMarkBmp& getSmallCheckMark()
     {
-        static TCheckMarkBmp checkMark(true);
-        return checkMark;
+        DATA_COMPGEN_GUARD(0x005aa674, smallCheckMarkGuard, smallCheckMark)
+        VA_COMPGEN(0x0043fb5b, 0xa, STATIC_DTOR, smallCheckMark)
+        DATA(0x005aa680) static TCheckMarkBmp smallCheckMark(true);
+        return smallCheckMark;
     }
     static TCheckMarkBmp& get(TZoom zoom) { return zoom == eZoom25 ? getSmallCheckMark() : getCheckMark(); }
 
@@ -719,6 +723,8 @@ const CSprite* TGUITown::_getPSprite() const
         { "avchfor0.def", "avchforx.def", "avchforz.def" },
         { "avcrand0.def", "avcranx0.def", "avcranz0.def" }
     };
+    DATA_COMPGEN_GUARD(0x0059e638, townSpritesGuard, aSprites)
+    VA_COMPGEN(0x00441a55, 0x14, STATIC_DTOR, aSprites)
     DATA(0x0059e548) static TSprites aSprites[kNumTownTypes + 1];
 
     TTownType townType = getTownType();
@@ -1031,6 +1037,8 @@ bool TGUIGameObject::hitTest(unsigned int frameNum, int x, int y, TZoom zoom) co
 VA(0x0044261f, 0x77)
 TColor TGUIGameObject::miniMapColor(TTerrainType terrainType) const
 {
+    DATA_COMPGEN_GUARD(0x0059e540, miniMapTypeFlagsGuard, typeFlags)
+    VA_COMPGEN(0x00442696, 0x1, STATIC_DTOR, typeFlags)
     DATA(0x0059e520) static const TMiniMapTypeFlags typeFlags;
     if (typeFlags[getType()])
         return akTerrainColors[terrainType].m_obstacleColor;
