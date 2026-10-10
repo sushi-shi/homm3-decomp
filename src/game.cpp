@@ -6463,6 +6463,10 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // bitset::set spelling used by the scenario reader lowers this saved-header
 // reader from 90.8783% to 90.13% (84 to 83 exact CFG blocks); retail's
 // retained bitset<8>::_Xran call still does not appear. Keep the proxy form.
+// DC 6983/6984 .. 7147/7148 store every checked read (and both loadString
+// results) in the shared count before testing it. That restores C1XX cost
+// 1436 -> 1531, inside the 1508..1666 window for retail's call set
+// (94.62 -> 99.06%).
 VA(0x004c5630, 0x7CD)
 DC_ADDRESS(0x0b0754, 0x752)
 MAC_ADDRESS(0x0dbef4, 0x8b8)  // DC Load + saved-header callers + helper edges
@@ -6475,29 +6479,33 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     char boolBuffer;
     int x;
 
-    if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
+    count = infile->read(&m_version, sizeof(m_version));
+    if (count < sizeof(m_version))
         return -1;
 
-    if (infile->read(&boolBuffer, sizeof(boolBuffer))
-        < sizeof(boolBuffer))
+    count = infile->read(&boolBuffer, sizeof(boolBuffer));
+    if (count < sizeof(boolBuffer))
         return -1;
     m_isPlayable = boolBuffer != 0;
 
-    if (infile->read(&m_size, sizeof(m_size)) < sizeof(m_size))
+    count = infile->read(&m_size, sizeof(m_size));
+    if (count < sizeof(m_size))
         return -1;
 
-    if (infile->read(&boolBuffer, sizeof(boolBuffer))
-        < sizeof(boolBuffer))
+    count = infile->read(&boolBuffer, sizeof(boolBuffer));
+    if (count < sizeof(boolBuffer))
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (game::loadString(infile, m_mapName) < 0)
+    count = game::loadString(infile, m_mapName);
+    if (count < 0)
         return -1;
-    if (game::loadString(infile, m_mapDescription) < 0)
+    count = game::loadString(infile, m_mapDescription);
+    if (count < 0)
         return -1;
 
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
-        < sizeof(ucharBuffer))
+    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    if (count < sizeof(ucharBuffer))
         return -1;
     m_difficulty = ucharBuffer;
 
@@ -6513,18 +6521,18 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < NUM_PLAYERS; ++i, ++player) {
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = infile->read(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
         player->m_canBeHuman = boolBuffer != 0;
 
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = infile->read(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
         player->m_canBeComputer = boolBuffer != 0;
 
-        if (infile->read(&enumBuffer, sizeof(enumBuffer))
-            < sizeof(enumBuffer))
+        count = infile->read(&enumBuffer, sizeof(enumBuffer));
+        if (count < sizeof(enumBuffer))
             return -1;
         player->m_aiStrategy = enumBuffer;
 
@@ -6542,27 +6550,27 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             player->m_legalAlignments = readLittleEndianValue<unsigned short>(infile);
         }
 
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = infile->read(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
         player->m_hasRandomAlignment = boolBuffer != 0;
 
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        count = infile->read(&boolBuffer, sizeof(boolBuffer));
+        if (count < sizeof(boolBuffer))
             return -1;
         player->m_generateHero = boolBuffer != 0;
 
         if (player->m_generateHero) {
-            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
-                < sizeof(ucharBuffer))
+            count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+            if (count < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_x = ucharBuffer;
-            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
-                < sizeof(ucharBuffer))
+            count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+            if (count < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_y = ucharBuffer;
-            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
-                < sizeof(ucharBuffer))
+            count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+            if (count < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_z = ucharBuffer;
         }
@@ -6584,7 +6592,8 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (!m_minNumHumanPlayers)
         m_minNumHumanPlayers = 1;
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    count = infile->read(&x, sizeof(unsigned char));
+    if (count < sizeof(unsigned char))
         return -1;
     m_victoryCondition.m_type = x;
     m_victoryCondition.m_gameWon = 0;
@@ -6592,7 +6601,8 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadVictoryCondition(x, infile, saveVersion);
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    count = infile->read(&x, sizeof(unsigned char));
+    if (count < sizeof(unsigned char))
         return -1;
     m_lossCondition.m_type = x;
     m_lossCondition.m_gameLost = 0;
@@ -6600,11 +6610,13 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadLossCondition(x, infile, saveVersion);
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    count = infile->read(&x, sizeof(unsigned char));
+    if (count < sizeof(unsigned char))
         return -1;
     m_numTeams = x;
     if (m_numTeams) {
-        if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
+        count = infile->read(m_teamInfo, sizeof(m_teamInfo));
+        if (count < sizeof(m_teamInfo))
             return -1;
     } else {
         for (i = 0; i < NUM_PLAYERS; ++i)
