@@ -7,8 +7,8 @@ writes anything.
   hist-gap     rows whose HIST exceeds MAX by at least --min-gap, each with
                the last ledger commit that banked CUR at HIST (the peak) and
                the first later commit that banked it lower (the drop).
-  last-exact   for selected rows: the peak and drop commits, the commits in
-               between that touched the function's source file, and (--diff)
+  last-exact   for selected rows: the peak and drop commits, the commits since
+               the peak that touched the function's source file, and (--diff)
                the function's definition at the peak against the working tree.
 
 A ledger commit records the score of the source it was banked from, so the
@@ -294,9 +294,10 @@ def cmd_last_exact(args) -> int:
             path, definition = source_at(row.rva, key[1], None)
         record["path"] = path
         if event.peak is not None and path is not None:
-            stop = event.drop.sha if event.drop else "HEAD"
-            log = _git("log", "--format=%h %ad %s", "--date=short",
-                       f"{event.peak.sha}..{stop}", "--", path)
+            # Every later edit of the file, not only those up to the drop:
+            # the source that now holds the row down may have landed after.
+            log = _git("log", "--first-parent", "--format=%h %ad %s",
+                       "--date=short", f"{event.peak.sha}..HEAD", "--", path)
             record["file_commits"] = log.stdout.splitlines()
             if args.diff and row.rva is not None:
                 old_path, old = source_at(row.rva, key[1], event.peak.sha)
@@ -326,9 +327,12 @@ def cmd_last_exact(args) -> int:
             print(f"    dropped: {drop['commit']} {drop['date']} -> "
                   f"{record['drop_score']:.4f} {drop['subject']}")
         if record.get("file_commits"):
-            print(f"    commits touching {record['path']} in that range:")
+            drop = record["drop"]["commit"] if record["drop"] else None
+            print(f"    commits touching {record['path']} since the peak "
+                  "(newest first; > marks the drop):")
             for line in record["file_commits"]:
-                print(f"      {line}")
+                mark = ">" if drop and line.split(" ", 1)[0] == drop else " "
+                print(f"     {mark}{line}")
         if args.diff:
             if record.get("diff") is None:
                 print("    (no definition found at the peak commit)")
@@ -363,8 +367,8 @@ def add_parsers(sub, shared) -> None:
         description="For each ledger row matching every SELECTOR (substring of "
         "'unit function', or a retail VA/RVA), print the last ledger commit "
         "that banked CUR at the target (100%% when HIST is 100, else HIST), "
-        "the first commit that banked it lower, and the commits in between "
-        "that touched the function's source file. --diff prints the "
+        "the first commit that banked it lower, and the commits since the "
+        "peak that touched the function's source file. --diff prints the "
         "function's definition at that commit against the working tree.",
         epilog="examples:\n"
         "  homm3 status last-exact windowHandler@TViewArmyWindow --diff\n"
