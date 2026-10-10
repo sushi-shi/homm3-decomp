@@ -720,11 +720,8 @@ GameMap	?accept@TLCTimeExpires@@UBEXPAVTVisitor@TLossCondition@@@Z	100.0000	100.
 GameMap	?accept@TVCAccumulateCreature@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x29641	-
 GameMap	?accept@TVCAccumulateResource@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x29650	-
 GameMap	?accept@TVCAquireArtifact@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x2960e	-
-GameMap	?accept@TVCBuildHolyGrailStruct@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x95141	-
 GameMap	?accept@TVCCaptureTown@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x2967b	-
-GameMap	?accept@TVCDefeatHero@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x95199	-
 GameMap	?accept@TVCDefeatMonster@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x2968a	-
-GameMap	?accept@TVCUpgradeTown@@UBEXPAVTVisitor@TVictoryCondition@@@Z	100.0000	100.0000	100.0000	0x950d8	-
 GameMap	?add@?$TUniqueSet@UTObjectType@@@@QAEIABUTObjectType@@@Z	99.9057	99.9057	99.9057	0x3438c	-
 GameMap	?addSecondLayer@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x2a188	tokens1:949622b87aa1
 GameMap	?addSecondLayer@_TImpl@TGameMap@@QAEXXZ	100.0000	100.0000	100.0000	0x212d6	tokens1:1ba6016300a0
@@ -2176,6 +2173,81 @@ PrimarySkillsDlg	?OnKillFocusSpellPowerEdit@TPrimarySkillsDlg@@IAEXXZ	100.0000	1
 PrimarySkillsDlg	?_onKillFocusSkillEdit@TPrimarySkillsDlg@@AAEXI@Z	100.0000	100.0000	100.0000	0x949f9	tokens1:c5ecf5932507
 PrimarySkillsDlg	?getPrimarySkills@TPrimarySkillsDlg@@QBE?AV?$TArray@H$03@@XZ	100.0000	100.0000	100.0000	0x9491d	tokens1:fc7df4cc4bac
 PrimarySkillsDlg	?setPrimarySkills@TPrimarySkillsDlg@@QAEXABV?$TArray@H$03@@@Z	100.0000	100.0000	100.0000	0x948c1	tokens1:40295e0b42f5
+Quest	??0TQuestAchieveExperienceLevel@@QAE@H@Z	100.0000	100.0000	100.0000	0x950c6	tokens1:4f9303c7a193
+Quest	??0TQuestAchievePrimarySkillLevel@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x958a4	-
+Quest	??0TQuestAchievePrimarySkillLevel@@QAE@ABV?$TArray@H$03@@@Z	100.0000	100.0000	100.0000	0x95104	tokens1:3cf26d9619f6
+Quest	??0TQuestBeASpecificHero@@QAE@H@Z	100.0000	100.0000	100.0000	0x95398	tokens1:966208c03e43
+Quest	??0TQuestBelongToASpecificPlayer@@QAE@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x953aa	tokens1:69fdf0f5ec40
+Quest	??0TQuestBringArtifacts@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x958e2	-
+Quest	??0TQuestBringArtifacts@@QAE@ABV?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@@Z	100.0000	100.0000	100.0000	0x951e1	tokens1:83c3697fa09b
+Quest	??0TQuestBringCreatures@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x95941	-
+Quest	??0TQuestBringCreatures@@QAE@ABV?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@std@@@Z	100.0000	100.0000	100.0000	0x95288	tokens1:2f219516e397
+Quest	??0TQuestBringResources@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x959a0	-
+Quest	??0TQuestBringResources@@QAE@ABV?$TArray@H$06@@@Z	100.0000	100.0000	100.0000	0x9532f	tokens1:4d23a80d6140
+Quest	??0TQuestDefeatHero@@QAE@I@Z	100.0000	100.0000	100.0000	0x95187	tokens1:167605520c49
+Quest	??0TQuestDefeatMonster@@QAE@I@Z	100.0000	100.0000	100.0000	0x951cf	tokens1:8a6ce7a0e7f3
+Quest	??1TQuestAchievePrimarySkillLevel@@UAE@XZ	100.0000	100.0000	100.0000	0x9516c	-
+Quest	??1TQuestBringResources@@UAE@XZ	100.0000	100.0000	100.0000	0x95388	-
+Quest	??8std@@YA_NABV?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@0@0@Z	100.0000	100.0000	100.0000	0x95a66	-
+Quest	?_Copy@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@IAEPAU_Node@12@PAU312@0@Z	100.0000	100.0000	100.0000	0x12973	-
+Quest	?_Copy@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@IAEXABV12@@Z	100.0000	100.0000	100.0000	0x12789	-
+Quest	?_Inc@const_iterator@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x122d7	-
+Quest	?_Init@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x12890	-
+Quest	?_Lrotate@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x12b97	-
+Quest	?_Max@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@KAPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0x12bf1	-
+Quest	?_Rrotate@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x12c22	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestAchieveExperienceLevel@@@Z	100.0000	100.0000	100.0000	0x953ca	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestAchievePrimarySkillLevel@@@Z	100.0000	100.0000	100.0000	0x9541b	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBeASpecificHero@@@Z	100.0000	100.0000	100.0000	0x95649	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBelongToASpecificPlayer@@@Z	100.0000	100.0000	100.0000	0x9569a	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBringArtifacts@@@Z	100.0000	100.0000	100.0000	0x95520	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBringCreatures@@@Z	100.0000	100.0000	100.0000	0x95583	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBringResources@@@Z	100.0000	100.0000	100.0000	0x955e6	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestDefeatHero@@@Z	100.0000	100.0000	100.0000	0x9547e	-
+Quest	?_clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestDefeatMonster@@@Z	100.0000	100.0000	100.0000	0x954cf	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestAchieveExperienceLevel@@@Z	100.0000	100.0000	100.0000	0x956eb	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestAchievePrimarySkillLevel@@@Z	100.0000	100.0000	100.0000	0x9571c	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBeASpecificHero@@@Z	100.0000	100.0000	100.0000	0x95842	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBelongToASpecificPlayer@@@Z	100.0000	100.0000	100.0000	0x95873	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBringArtifacts@@@Z	100.0000	100.0000	100.0000	0x957af	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBringCreatures@@@Z	100.0000	100.0000	100.0000	0x957e0	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestBringResources@@@Z	100.0000	100.0000	100.0000	0x95811	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestDefeatHero@@@Z	100.0000	100.0000	100.0000	0x9574d	-
+Quest	?_test@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@AAEXABVTQuestDefeatMonster@@@Z	100.0000	100.0000	100.0000	0x9577e	-
+Quest	?accept@TQuestAchieveExperienceLevel@@UBEXAAVTVisitor@TQuest@@@Z	100.0000	100.0000	100.0000	0x950d8	tokens1:1770cfa1a28f
+Quest	?accept@TQuestAchievePrimarySkillLevel@@UBEXAAVTVisitor@TQuest@@@Z	100.0000	100.0000	100.0000	0x95141	tokens1:e91c97702a21
+Quest	?accept@TQuestBelongToASpecificPlayer@@UBEXAAVTVisitor@TQuest@@@Z	100.0000	100.0000	100.0000	0x953bc	tokens1:e2db9530f5cb
+Quest	?accept@TQuestDefeatHero@@UBEXAAVTVisitor@TQuest@@@Z	100.0000	100.0000	100.0000	0x95199	tokens1:4929243d53b6
+Quest	?clone@TQuest@@QBE?AV?$auto_ptr@VTQuest@@@std@@XZ	100.0000	100.0000	100.0000	0x94fdb	tokens1:1815c67d8b67
+Quest	?clone@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@QAE?AV?$auto_ptr@VTQuest@@@std@@ABVTQuest@@@Z	100.0000	100.0000	100.0000	0x9502f	-
+Quest	?equivalent@TQuest@@SA_NABV1@0@Z	100.0000	100.0000	100.0000	0x94f47	tokens1:fd8141a1c19a
+Quest	?erase@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x124c7	-
+Quest	?getLevel@TQuestAchievePrimarySkillLevel@@QBEHW4TPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x9517c	tokens1:6b7e537e5956
+Quest	?getLinkID@TQuestDefeatHero@@UBEIXZ	100.0000	100.0000	100.0000	0x951cb	tokens1:184b9c5d5e14
+Quest	?mismatch@std@@YA?AU?$pair@Vconst_iterator@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@std@@V123@@1@Vconst_iterator@?$_Tree@W4TCreatureType@@U?$pair@$$CBW4TCreatureType@@H@std@@U_Kfn@?$map@W4TCreatureType@@HU?$less@W4TCreatureType@@@std@@V?$allocator@H@3@@3@U?$less@W4TCreatureType@@@3@V?$allocator@H@3@@1@00@Z	100.0000	100.0000	100.0000	0x95b05	-
+Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestAchieveExperienceLevel@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchieveExperienceLevel@@@Z	100.0000	100.0000	100.0000	0xb72f1	-
+Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestAchievePrimarySkillLevel@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchievePrimarySkillLevel@@@Z	100.0000	100.0000	100.0000	0x959de	-
+Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestBringArtifacts@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringArtifacts@@@Z	100.0000	100.0000	100.0000	0x95a26	-
+Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestBringCreatures@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringCreatures@@@Z	100.0000	100.0000	100.0000	0x95a46	-
+Quest	?visit@?$TQuestRHSEquivalencyTester@VTQuestBringResources@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringResources@@@Z	100.0000	100.0000	100.0000	0x95aa1	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchieveExperienceLevel@@@Z	100.0000	100.0000	100.0000	0x9505a	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchievePrimarySkillLevel@@@Z	100.0000	100.0000	100.0000	0x95066	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBeASpecificHero@@@Z	100.0000	100.0000	100.0000	0x950ae	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBelongToASpecificPlayer@@@Z	100.0000	100.0000	100.0000	0x950ba	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringArtifacts@@@Z	100.0000	100.0000	100.0000	0x9508a	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringCreatures@@@Z	100.0000	100.0000	100.0000	0x95096	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringResources@@@Z	100.0000	100.0000	100.0000	0x950a2	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestDefeatHero@@@Z	100.0000	100.0000	100.0000	0x95072	-
+Quest	?visit@TQuestCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestDefeatMonster@@@Z	100.0000	100.0000	100.0000	0x9507e	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchieveExperienceLevel@@@Z	100.0000	100.0000	100.0000	0x94f6f	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchievePrimarySkillLevel@@@Z	100.0000	100.0000	100.0000	0x94f7b	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBeASpecificHero@@@Z	100.0000	100.0000	100.0000	0x94fc3	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBelongToASpecificPlayer@@@Z	100.0000	100.0000	100.0000	0x94fcf	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringArtifacts@@@Z	100.0000	100.0000	100.0000	0x94f9f	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringCreatures@@@Z	100.0000	100.0000	100.0000	0x94fab	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestBringResources@@@Z	100.0000	100.0000	100.0000	0x94fb7	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestDefeatHero@@@Z	100.0000	100.0000	100.0000	0x94f87	-
+Quest	?visit@TQuestEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestDefeatMonster@@@Z	100.0000	100.0000	100.0000	0x94f93	-
 ResourceQuantities	??5@YAAAVTRawIStream@@AAV0@AAVTResourceQuantities@@@Z	100.0000	100.0000	100.0000	0xb3419	tokens1:3396dbe843cc
 ResourceQuantities	??6@YAAAVTRawOStream@@AAV0@ABVTResourceQuantities@@@Z	100.0000	100.0000	100.0000	0xb33f0	tokens1:926d3e1125cb
 ResourceQuantities	?get@TResourceQuantities@@QBEHW4TGameResourceType@@@Z	100.0000	100.0000	100.0000	0xc1904	tokens1:ba65297173fe
@@ -3058,7 +3130,7 @@ rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZ
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	99.1751	99.1751	99.1751	0xa5c07	-
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	93.1254	93.1254	93.1254	0xa7605	-
 rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	96.9458	96.9458	96.9458	0xab6ac	-
-rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9771	83.9866	83.9866	0xabd5f	-
+rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9866	83.9866	83.9866	0xabd5f	-
 rmg	?createRivers@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac4ae	-
 rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5710	89.5710	89.5710	0xa696b	-
