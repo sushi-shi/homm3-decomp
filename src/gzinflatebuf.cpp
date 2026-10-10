@@ -140,18 +140,17 @@ int TGzDeflateBuf::sync()
     _m_zstream.avail_in = pptr() - _m_pInBuf;
     m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
 
-    for (;;) {
-        deflate(&_m_zstream, Z_SYNC_FLUSH);
-        if (_m_zstream.avail_in == 0)
-            break;
+    deflate(&_m_zstream, Z_SYNC_FLUSH);
+    while (_m_zstream.avail_in > 0) {
         if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
-                < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
+                < GZ_WINDOW_SIZE - _m_zstream.avail_out)
             return traits_type::eof();
         _m_zstream.next_out = zlibBytes(_m_pOutBuf);
         _m_zstream.avail_out = GZ_WINDOW_SIZE;
+        deflate(&_m_zstream, Z_SYNC_FLUSH);
     }
     if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
-            < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
+            < GZ_WINDOW_SIZE - _m_zstream.avail_out)
         return traits_type::eof();
     _m_zstream.next_out = zlibBytes(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
@@ -169,15 +168,14 @@ int TGzDeflateBuf::overflow(int c)
         _m_zstream.avail_in = pptr() - _m_pInBuf;
         m_crc = crc32(m_crc, _m_zstream.next_in, _m_zstream.avail_in);
 
-        for (;;) {
-            deflate(&_m_zstream, Z_NO_FLUSH);
-            if (_m_zstream.avail_in == 0)
-                break;
+        deflate(&_m_zstream, Z_NO_FLUSH);
+        while (_m_zstream.avail_in > 0) {
             if (_m_pDestBuf->sputn(_m_pOutBuf, GZ_WINDOW_SIZE - _m_zstream.avail_out)
-                    < static_cast<int>(GZ_WINDOW_SIZE - _m_zstream.avail_out))
+                    < GZ_WINDOW_SIZE - _m_zstream.avail_out)
                 return traits_type::eof();
             _m_zstream.next_out = zlibBytes(_m_pOutBuf);
             _m_zstream.avail_out = GZ_WINDOW_SIZE;
+            deflate(&_m_zstream, Z_NO_FLUSH);
         }
 
         setp(_m_pInBuf, _m_pInBuf + GZ_WINDOW_SIZE);

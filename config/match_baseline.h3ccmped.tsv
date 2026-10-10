@@ -581,8 +581,8 @@ gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	0.0000	100.0000	100.0000	0x262a0	-
 gzinflatebuf	?_putBackC@TGzInflateBuf@@AAEXD@Z	100.0000	100.0000	100.0000	0x256e0	-
 gzinflatebuf	?_putLong@TGzDeflateBuf@@AAEXK@Z	100.0000	100.0000	100.0000	0x25380	-
 gzinflatebuf	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	100.0000	100.0000	100.0000	0x1a90	-
-gzinflatebuf	?overflow@TGzDeflateBuf@@MAEHH@Z	91.5294	91.5294	91.5294	0x255a0	-
-gzinflatebuf	?sync@TGzDeflateBuf@@MAEHXZ	32.9222	32.9222	32.9222	0x254b0	-
+gzinflatebuf	?overflow@TGzDeflateBuf@@MAEHH@Z	100.0000	100.0000	100.0000	0x255a0	-
+gzinflatebuf	?sync@TGzDeflateBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x254b0	-
 gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	100.0000	100.0000	100.0000	0x26040	-
 herodefs	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.9597	99.9597	99.9597	0x26600	-
 herodefs	?InitializeHeroClassTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x263d0	-

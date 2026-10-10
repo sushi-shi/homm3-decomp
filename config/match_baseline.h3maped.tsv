@@ -4529,8 +4529,8 @@ gzinflatebuf	?_getC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0x4960f	-
 gzinflatebuf	?_mustGetC@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0x499bf	-
 gzinflatebuf	?_mustGetLong@TGzInflateBuf@@AAEKXZ	100.0000	100.0000	100.0000	0x49c1e	-
 gzinflatebuf	?_putLong@TGzDeflateBuf@@AAEXK@Z	100.0000	100.0000	100.0000	0x49461	-
-gzinflatebuf	?overflow@TGzDeflateBuf@@MAEHH@Z	97.3134	97.3134	97.3134	0x4955d	-
-gzinflatebuf	?sync@TGzDeflateBuf@@MAEHXZ	69.1139	69.1139	69.1139	0x4949f	-
+gzinflatebuf	?overflow@TGzDeflateBuf@@MAEHH@Z	100.0000	100.0000	100.0000	0x4955d	-
+gzinflatebuf	?sync@TGzDeflateBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x4949f	-
 gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	100.0000	100.0000	100.0000	0x49ab6	-
 herodefs	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.9533	99.9533	99.9533	0x4ce90	-
 herodefs	?InitializeHeroClassTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x4ccf9	-

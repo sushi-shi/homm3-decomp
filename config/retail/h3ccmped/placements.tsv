@@ -358,8 +358,8 @@ rva	size	kind	name	unit	evidence
 0x00025230	0x1e	func	??_GTGzDeflateBuf@@UAEPAXI@Z	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 0
 0x00025250	0x123	func	??1TGzDeflateBuf@@UAE@XZ	gzinflatebuf	referenced by ??_GTGzDeflateBuf@@UAEPAXI@Z at +0x4
 0x00025380	0x124	func	?_putLong@TGzDeflateBuf@@AAEXK@Z	gzinflatebuf	masked body (292 bytes, 0 relocations) unique at a census start
-0x000254b0	0xe8	func	?sync@TGzDeflateBuf@@MAEHXZ	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 11
-0x000255a0	0xce	func	?overflow@TGzDeflateBuf@@MAEHH@Z	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 1
+0x000254b0	0xe8	func	?sync@TGzDeflateBuf@@MAEHXZ	gzinflatebuf	masked body (232 bytes, 3 relocations) unique at a census start
+0x000255a0	0xce	func	?overflow@TGzDeflateBuf@@MAEHH@Z	gzinflatebuf	masked body (206 bytes, 3 relocations) unique at a census start
 0x00025670	0x6d	func	?_getC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	masked body (109 bytes, 0 relocations) unique at a census start
 0x000256e0	0x11	func	?_putBackC@TGzInflateBuf@@AAEXD@Z	gzinflatebuf	masked body (17 bytes, 0 relocations) unique at a census start
 0x00025700	0x5a7	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	referenced by 0x00010d70 at +0x81

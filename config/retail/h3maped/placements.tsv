@@ -1297,8 +1297,8 @@ rva	size	kind	name	unit	evidence
 0x00049386	0x1c	func	??_GTGzDeflateBuf@@UAEPAXI@Z	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 0
 0x000493a2	0xbf	func	??1TGzDeflateBuf@@UAE@XZ	gzinflatebuf	masked body (191 bytes, 12 relocations) unique at a census start
 0x00049461	0x3e	func	?_putLong@TGzDeflateBuf@@AAEXK@Z	gzinflatebuf	masked body (62 bytes, 4 relocations) unique at a census start
-0x0004949f	0xbe	func	?sync@TGzDeflateBuf@@MAEHXZ	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 11
-0x0004955d	0xb2	func	?overflow@TGzDeflateBuf@@MAEHH@Z	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 1
+0x0004949f	0xbe	func	?sync@TGzDeflateBuf@@MAEHXZ	gzinflatebuf	masked body (190 bytes, 3 relocations) unique at a census start
+0x0004955d	0xb2	func	?overflow@TGzDeflateBuf@@MAEHH@Z	gzinflatebuf	masked body (178 bytes, 3 relocations) unique at a census start
 0x0004960f	0x54	func	?_getC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	masked body (84 bytes, 0 relocations) unique at a census start
 0x00049663	0x2ae	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	masked prefix (167 fixed bytes agree, 686 compiled, 686 retail)
 0x00049911	0x55	func	??0TDataError@TGzInflateBuf@@QAE@XZ	gzinflatebuf	masked body (85 bytes, 7 relocations) unique at a census start
