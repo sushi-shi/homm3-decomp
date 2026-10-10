@@ -203,6 +203,8 @@ Keep justified platform differences in owning source comments. Coverage gaps
 are not zero differences: missing names, unsupported types and Clang errors
 remain explicit. See [docs/matching/source-facts.md](docs/matching/source-facts.md).
 
+**Target MAX, not CUR (standing rule).** The score goal is each function's MAX for its current source. A CUR dip on a function whose own source did not change (TU state, period-64 handle flips, register tie-breaks caused by edits elsewhere) is expected noise: do not chase it, do not block a push on it, and never add declarations or other source just to steer it back; name it in the commit message and move on. Only a source edit that lowers a function's own MAX needs a justification.
+
 Reject Dreamcast shape only when retail semantics, ABI, layout, or CFG contradict
 it. A lower similarity score is insufficient. Preserve proven classes, interfaces,
 helpers, and scopes through temporary score dips, including header/TU collateral;
