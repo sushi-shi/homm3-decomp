@@ -219,7 +219,11 @@ functions --unit TU --non-exact [--va ADDR] [--json]` and compare them with
 point) instead of parsing `report.json`. The invariant is CUR <= MAX <= HIST:
 MAX is monotone for an unchanged function hash, a proven edit resets MAX to
 CUR, and HIST retains the
-all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.
+all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks:
+`homm3 status hist-gap [--exact]` lists rows whose HIST exceeds MAX with the
+ledger commits that last banked the peak and first banked it lower, and
+`homm3 status last-exact SELECTOR --diff` diffs a function's definition at its
+last exact commit against the working tree.
 
 ## Experiment lifetime
 

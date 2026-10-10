@@ -21,6 +21,13 @@
                          observational
   homm3 status merge-baseline [BASE MAIN LANE]
                          merge concurrent checkpoint ledgers three ways
+  homm3 status hist-gap [--min-gap PCT] [--exact] [--json]
+                         rows whose HIST exceeds MAX, with the ledger commits
+                         that last banked the peak and first banked it lower
+  homm3 status last-exact SELECTOR... [--diff] [--at PCT] [--json]
+                         the last commit a function was exact (or at HIST),
+                         the commits since that touched its file, and its
+                         definition then against the working tree
 
 Read-only views (summary, functions, snapshot, diff) never refuse because a
 unit has unbuilt edits: they show the last measured report, mark that unit's
@@ -1492,6 +1499,9 @@ def build_parser():
                     help="only this unit (repeatable)")
     df.add_argument("--json", action="store_true", help="print JSON")
     df.add_argument("--all", action="store_true", help="also list unchanged functions")
+
+    from homm3.match import score_history
+    score_history.add_parsers(sub, shared)
     return ap
 
 
@@ -1514,6 +1524,14 @@ def main(argv=None) -> int:
     if command == "merge-baseline":
         from homm3.match import merge_baseline
         return merge_baseline.main(args.revisions)
+    if command in ("hist-gap", "last-exact"):
+        # Committed ledger history and the working tree only: no report.
+        from homm3.match import score_history
+        if readme:
+            print("[status] --write-readme is not applied by " + command,
+                  file=sys.stderr)
+        return (score_history.cmd_hist_gap(args) if command == "hist-gap"
+                else score_history.cmd_last_exact(args))
     allow_loss = getattr(args, "allow_ledger_loss", False)
 
     def render_readme() -> None:

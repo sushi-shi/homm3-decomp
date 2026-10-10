@@ -76,7 +76,7 @@ Subcommands
         labels -> model -> synth PDB -> data manifests -> vostok ->
         per-unit target objs -> normalize -> objdiff.json.
 
-  status [summary|functions|update|check|merge-baseline|snapshot|diff] ...
+  status [summary|functions|update|check|merge-baseline|snapshot|diff|hist-gap|last-exact] ...
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
         cur/max/hist (filters: --unit, --va, --below, --non-exact, --json);
         `update` regenerates config/match_baseline.tsv; `check`
@@ -85,7 +85,10 @@ Subcommands
         three ways. `snapshot FILE` / `diff --against REF|FILE` compare
         per-function CUR/MAX. Read-only views show the last measured report
         while units have unbuilt edits, naming them. Unrelated CUR dips are
-        silent; HIST preserves older peaks. `homm3 status <cmd> --help`.
+        silent; HIST preserves older peaks. `hist-gap` lists rows whose HIST
+        exceeds MAX with the commits that lost the peak; `last-exact SEL
+        --diff` diffs a function against its last exact commit.
+        `homm3 status <cmd> --help`.
 
   sema <xref|diff|disasm|switchmap|rva|strings|data|coverage|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller

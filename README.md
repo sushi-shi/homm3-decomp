@@ -117,7 +117,8 @@ Library and compiler-generated code (outside the scores; each function verified 
 <!-- h3ccmped-match-score:end -->
 
 Scores satisfy CUR ≤ MAX ≤ HIST. Editing a function resets its MAX to its new
-CUR; HIST above MAX marks a lost peak worth recovering.
+CUR; HIST above MAX marks a lost peak worth recovering (`homm3 status hist-gap`
+lists them; `homm3 status last-exact NAME --diff` shows what changed since).
 
 ## Branches
 
