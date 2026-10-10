@@ -255,8 +255,9 @@ def _info(reader: _Reader, formats: Formats, at: int) -> list:
             values.append(reader.handle())
         elif char == 0x0D:
             values.append(reader.byte())
-        elif char == 0x0C:
-            reader.pos += reader.signed16()
+        elif char == 0x0C:                   # length-prefixed blob (inline asm)
+            length = reader.signed16()
+            reader.pos += length
         else:
             raise Desync(f"info tuple {subtype:#04x} format {char:#04x} at {at:#x}")
     return values

@@ -20,7 +20,7 @@ under wine; commands are reproducible via the tools at the end.
 * **Framing**: `in` = 3-byte function records `09 <u16 handle>` (exact,
   round-trip-bounded, simple TUs); `gl`/`sy` = named symbol records around
   one global u16 handle counter (heuristic scan, three record forms); `ex` =
-  opaque tuple stream segmented per function by offsets recovered from `gl`.
+  postfix tuple stream with a known grammar (section 4.4).
 * **KILLER VERDICT: FRONT-END.** One unused `struct probe0_t { int a; };`
   appended to town.h (the byte-proven 100.0 -> 96.09 perturbation) changes
   all four IL streams: the front end's symbol-handle counter advances by
@@ -208,11 +208,31 @@ flags. Name framing, distant body handles, signed/extended offsets,
 overlapping marker bytes, ambiguity, and canonical capture have negative
 controls in `test_il.py`.
 
-### 4.4 `ex` - opaque, segmented from `gl`
+### 4.4 `ex` - the tuple grammar
 
-No tuple grammar is claimed. Per-function segmentation uses the ex-offsets
-recovered from gl (423 spans for initialize.cpp), which lets the diff name
-the first diverging function and count affected functions.
+The ex stream is a postfix tuple code, written by C1XX's `emitTuple`
+(`0x17042`) and info writer (`0x7bfc`). It opens with `5b 80 <u32 first
+body>` and zero padding. Each tuple is an opcode byte followed by the
+operands its format string names; the strings are C1XX's tables at
+`0xbeaac` (opcodes, 8-byte entries) and `0xbd9e8` (info subtypes). Operand
+encodings: symbol handles as u16, or a dword whose bit 15 marks it
+(handle = low 15 bits | high word << 15); offsets and counts as a signed
+byte, or `80` and a dword; small values as a signed byte, or `80` and a
+word; types as one byte, or two with the high bit set, plus a size for a
+large aggregate; integer constants as a signed byte, or `80` and the value.
+Opcode `4f` is an info tuple: line number (`4f 01`), source-file handle
+(`4f 02`), body start (`4f 1f`), warning state (`4f 23`, pairs ending in
+`80 ff ff`), inline-asm bytes (`4f 16`, length-prefixed) and other
+pragma state. A final `4d` ends the unit.
+
+`homm3.vc6.il_cost` implements this reader. Every non-info tuple
+increments C1XX's per-function counter, and that count is the cost C2
+compares (inliner.md section 4). The reader therefore has a strong check:
+over all 140 C++ game units, every one of 84,624 recorded bodies has a
+tuple count equal to its gl cost, and the whole stream parses without a
+desynchronization. Bodies split at the `4f 1f` tuple; a gl function
+record's EX field locates its body, and its cost, flags and formal count
+follow the SY field (C2 `0x1ce0b` reads them in that order).
 
 ## 5. The killer experiment - catalog C1 settled at the IL boundary
 
@@ -286,6 +306,7 @@ dispatch encodes.
 | command | role |
 |---|---|
 | `homm3 vc6 il-diff <srcA> <srcB> [--flags "..."] [--fn NAME] [--json]` | capture both TUs, byte-diff per stream with framing annotations; rc 0 identical / 1 differs / 2 error; verdict on stdout line 1 |
+| `homm3 vc6 cb UNIT\|SOURCE [--fn NAME] [--explain [--tuples]]` | per-function tuple count (the inline cost C2 reads), save bit, per-line breakdown; `--verify all` re-proves the grammar over every C++ game unit |
 | `python3 -m homm3.vc6.il killer [--structs N] [--json]` | the C1 experiment: shadow-town.h A/B capture + diff + C2 feed oracle + verdict |
 
 Controls (measured 2026-08-10): two identical sources ->

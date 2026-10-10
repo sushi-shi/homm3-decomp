@@ -62,6 +62,12 @@ class TupleCountTests(unittest.TestCase):
         self.assertEqual(rows, {7: 7, 8: 12, 9: 6})
         self.assertEqual(sum(rows.values()), 25)
 
+    def test_inline_asm_blob_is_skipped_with_its_length_byte(self):
+        formats = il_cost.Formats(dict(FORMATS.ops), {**FORMATS.infos, 0x16: b"\x0c"})
+        ex = bytes.fromhex("4f1f800000a400" "5353" "26d800" "4f160404a90001" "4b")
+        tuples = il_cost.parse(ex, formats, 0)
+        self.assertEqual([t.op for t in tuples if t.counted], [0x53, 0x53, 0x26, 0x4B])
+
     def test_truncated_operand_desynchronizes(self):
         ex, _ = stream(S1[:-1], tail=b"")
         with self.assertRaises(il_cost.Desync):

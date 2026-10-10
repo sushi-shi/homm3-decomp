@@ -237,58 +237,165 @@ size estimate (`cb`), `+0x6b` int16 formal count, `+0x73` flag dword
 (`0x40` body-saved/inline-eligible, `0x80` inline-declared, `0x200`
 never-inline, `0x2000` `__forceinline`, `0x10` on-expansion-stack guard).
 
-## 4. The cost input `cb` — front-end owned, measured empirically
+## 4. The cost input `cb` — the front end's IL tuple count
 
 `cb` is **computed by C1XX and shipped in the IL**; C2 only compares it.
-Its formula was not reverse-engineered (C1XX is a separate phase); it is
-*measured* through the budget rule itself: with a small caller the budget is
-exactly 1000, so `expanded = floor(1000 / cb)` and counting rejected sites
-brackets `cb`. `inline_model --measure-cb TU --fn CALLEE --caller CALLER
---sites N` automates one such titration (**count rejected = out-of-line
-`call`s PLUS the tail `jmp`** — VC6 tail-jump-optimizes a rejected final
-site; forgetting the jmp cost this investigation an off-by-one and is also
-why the a06 catalog entry reads "7 expansions + 2 calls" for what is really
-6 + 3).
+It is the number of IL tuples C1XX emitted for the function's body. Nothing
+else enters it: not the emitted machine code, not the optimizer, not the
+callees' bodies. Read out of the pinned C1XX.DLL 12.00.8472 (image base
+`0x10400000`, rvas below; headless Ghidra plus capstone, binary untouched):
 
-Calibration staircase (25-site harness, statements `gA[i] = gA[i+1] + row;`):
-
-| statements S | expanded | cb bracket |
+| claim | rva | instruction / data |
 |---|---|---|
-| 1–2 | 25 | ≤ 40 (free) |
-| 3 | 20 | [48, 50] |
-| 4 | 16 | [59, 62] |
-| 6 | 11 | [84, 90] |
-| 8 | 9 | [101, 111] |
-| 12 | 6 | [143, 166] |
-| 13 | 5 | [167, 200] |
-| 14+ | 0 | **not a candidate** |
+| `emitTuple(op, node)`: writes the opcode byte and the operands its format string names | `0x17042` | format table `[op*8 + 0x104beaac]` (`0x1708f`) |
+| per-function tuple counter += 1, once per `emitTuple` call; the only incrementer | `0x17082`–`0x17089` | `mov ecx,[0x104dde7c]; inc ecx; mov [0x104dde7c],ecx` |
+| body start zeroes the counter, then emits the leading info tuples (`0x1f`, `0x20`, `0x02`, `0x24`, `0x23`) | `0x17bc3` (in `0x17b66`) | `mov dword [0x104dde7c],0` |
+| a deferred body saves the counter with its other state; its gl record restores it | `0x1a237` (`0x1a0e1`), `0x3f436` (`0x3f365`) | table slot `+0x14` |
+| gl symbol record: cost field = counter, `0xffff` above that | `0x2d9b`–`0x2dac` (`0x2aef`) | `mov eax,[0x104dde7c]; ... cmp eax,0xffff; ja` |
+| save gate: set flag `0x40` for an auto-inline body iff counter `<` limit | `0x7cafe`–`0x7cb11` (cold half of `0x2aef`) | `cmp ecx,[0x104d2d24]; jae` / `or edi,0x40` |
+| save limit | `0xd2d24` (`.data`) | dword `0xaf` = **175** |
+| info tuples (opcode `0x4f`: line, file, pragma and warning state) use a separate writer and never count | `0x7bfc`, opcode via `0x7f27` | info format table `0xbd9e8` |
+| operand encodings | `0x7fa2` handle (u16, or a dword marked by bit 15), `0x175c8`/`0x2373d` signed byte or `80`+dword, `0x7de03`/`0x748e` signed byte or `80`+word, `0x1ac94` type (1–2 bytes, `+size` for large aggregates), `0x1b8a7` integer constant | |
 
-Roughly `cb ≈ 15 + 11.5 × S` for simple statements; heavier statements cost
-more (a06's subscript-XOR loop body: 5 source statements ≈ cb 143–166; a
-plain call statement ≲ 13). Measured game shapes: `get_total` (ternary form)
-cb ∈ [46, 47]; `kill` cb ∈ [77, 83].
+C2's side is §3's `0x1d23d`: the reader stores the record's cost into
+`+0x6d` as a signed 16-bit value, so a count above 32767 wraps negative
+(E3's pad=4500 collapse) and anything above 65535 reads as -1.
 
-**The save-gate cliff.** At S=14 the callee stops being expanded anywhere —
-a *binary* candidacy drop, not a cost jump: either C1XX stops saving the
-body (flags bit `0x40`) or ships a sentinel `cb ≥ 1000` (the collector's
-`DAT_10799280` filter); the two are indistinguishable without an IL tap.
-This cliff — not the budget — is a06/A6's "wildly disproportionate"
-`fill_storedec` collapse: one dead pre-loop store pushes the body over the
-save threshold and ALL nine sites become calls. The threshold is
-shape-dependent (13→14 simple statements; 5→6 statements for the a06 loop
-shape) and stays a front-end unknown; the model takes it as the boolean
-`candidate` input.
 
-**Brace and else-arm costs (2026-10-08 traces).** Braces around a
-single-statement `if` body add 2 to the enclosing function's `cb` (so 4 to a
-small caller's initial budget), with no instruction change. getHero's DC
-`else return &m_heroes[which];` arm raised its inline cost, and each
-expanded getHero site now spends that much more of its caller's budget.
-That moved checkForArtifactWin's final bitset::test site from 181 to 177 and
-completeCurrentMap's garrison push_back from 64 to 63. A DC-scoped braced
-guard restored the first; the second still lacks a source-backed change.
-Bisect such drops with a private `git archive` root per commit and compare
-only the function's compiled bytes before reading the trace.
+### 4.1 Measuring it: `homm3 vc6 cb`
+
+```sh
+homm3 vc6 cb viewarmywindow --fn 'armyGroup *'          # cost and save bit
+homm3 vc6 cb viewarmywindow --fn 'armyGroup *' --explain   # cost per source line
+homm3 vc6 cb src/kb.cpp --fn displayLCWinLoss --explain --tuples
+homm3 vc6 cb --verify all                                # re-prove the grammar
+```
+
+The tool runs only the front end (a few seconds per unit, the unit's
+exact `config/units.toml` profile, the source at its real path), parses
+the ex stream with the operand formats read from the gated C1XX tables,
+splits it at each body-start tuple and counts. Every body that has a gl
+record must have exactly its recorded cost, or the command fails: a parse
+that misreads one operand byte desynchronizes. `--explain` groups the
+counted tuples by the line-number info tuple preceding them, so a
+multi-line statement is charged to the line C1XX recorded for it (usually
+its last), and the constructor prologue (member initializers, base and
+member constructors, EH setup) is charged to the opening brace.
+
+Validation (2026-10-10): all 140 C++ game units parse without a
+desynchronization; 142,197 bodies, of which 84,624 carry gl records, and
+every recorded cost equals the tuple count. Unrecorded bodies are inline
+functions the unit never references (C2 never sees their cost). Every `cb`
+the budget-trace lane read out of C2 agrees: TViewArmyWindow's group
+constructor 1075, vwDrawShroud 497, vwDrawAdvObjShadow 946,
+displayLCWinLoss 523, calculateDemand 1132, aiAttemptMove 1097,
+hero::initialize 848, readTownData 1243, NewSMapHeader::load 1436,
+CScenarioInfoDlg 4346, getMoraleDescription 1281, getLuckDescription 650,
+isWieldingArtifact 149.
+
+### 4.2 What each construct costs
+
+The IL is a postfix stack code: a variable read is its address plus a
+load, an operator is one tuple after its operands, a statement ends in a
+discard, and every scope opens and closes. Measured with harness compiles
+under the game profile (exact for these shapes; `--explain --tuples`
+shows the tuples of any real body):
+
+| construct | tuples |
+|---|---|
+| function frame, `void` | 12 (`open open addr header end open` … `jump close label return close close`) |
+| function frame, value-returning | 11 (no fall-through jump; each `return` brings its own) |
+| each parameter | 1 |
+| member function (`this`) | 5 more |
+| expression statement | expression + 1 (`discard`) |
+| scalar variable or parameter read | 2 (`addr load`) |
+| assignment `x = e` | e + 2 (`addr`, `store`) |
+| integer or enumerator constant | 1 |
+| unary or binary operator | 1 |
+| comparison used as a value (`return a == b;`) | operands + 2 (`eq convert`); in a condition operands + 1 |
+| `!x` used as a value | x + 2 |
+| `static_cast<bool>(call)` | + 2 (`convert convert`) |
+| member read `m_x`, `this->m_x`, `p->m_x` | object pointer (2) + 3 (`const field load`) |
+| array element `a[2]` / `a[i]` | base + 2 / base + i + 3, + 1 to read it |
+| call `f(a, b)` | 3 + Σ(argument + 1) (`addr call` … `arg` … `end`) |
+| member call `p->f(a)`, `f(a)` on `this` | 3 + object pointer + 2 + Σ(argument + 1) |
+| `return;` | 1 |
+| `return e;` | e + 2 (`retval jump`) |
+| braces `{ … }` around any statement list | 2 |
+| `if (c) S` | c + S + 6 |
+| `else S2` | S2 + 4 |
+| `a && b` / `a \|\| b` in a condition | + 1 / + 2 per extra operand |
+| `c ? a : b` | c + a + b + 2 |
+| `while (c) S`, `do S while (c);` | c + S + 6 |
+| `for (init; c; step) S` | init + c + step + S + 8 |
+| `for (int i = 0; …)` against `int i; for (i = 0; …)` | + 3 |
+| `++x`, `x++`, `x += k` as a statement | x's address + 3 |
+| declaration without an initializer | 0; `int x = e;` costs as `x = e;` |
+| local object with constructor and destructor | constructor call + destructor registration + scope cleanup: 24 for `D d;` |
+| a call to an inline callee | the call only; the callee's body is never added to the caller |
+
+Consequences:
+
+* **The calibration staircase is exact.** `void f(int row)` with S
+  statements `gA[i] = gA[i+1] + row;` costs 13 + 12·S: 49, 61, 85, 109,
+  157, 169 for S = 3, 4, 6, 8, 12, 13 (each inside the bracket below),
+  and 181 for S = 14.
+* **The save-gate cliff is the limit 175.** An auto-inline body (not
+  declared `inline`, not defined in its class, not a template instance,
+  not file-`static`) gets flag `0x40` only while its count is below 175.
+  S = 14 costs 181 and is never saved, so it never reaches C2's budget
+  test. The a06 probe measures `fill_plain` 154 and `fill_storedec` 181:
+  one dead store moved the callee across the limit. In events.cpp, 174
+  was saved and 176 was not. Declared-inline bodies, template instances
+  and file-`static` functions are saved at any size (C2 still drops
+  candidates at `cb >= 1000`, §2). An anonymous-namespace function is not
+  `static` for this rule. A varargs function is never saved, even when
+  declared inline.
+* **Every measured increment is a tuple count.** A block scope is
+  `open close` (+2). An `else` block is `jump label` plus its own scope
+  (+4, +8 with both arms braced). `!= 0` on a call result is `convert
+  const ne` (+3). A loop counter declared in the for-init is evaluated
+  once more (`addr load discard`, +3).
+* **Calls are cheap and flat.** An accessor call costs its call tuples (a
+  member accessor with no arguments: 7, against 5 for reading the field
+  directly), whatever the callee's size. A caller's cost moves by tens
+  only through added statements, braces, arms or calls.
+
+To move a caller's `cb` by a known amount, read `--explain` for the
+function, pick the statements whose evidenced spelling differs from ours,
+and recount: the tool is fast enough to test each candidate edit, and the
+table predicts most of them before compiling.
+
+### 4.3 The historical titration (2026-08)
+
+Before the front end was read, `cb` was measured through the budget rule
+itself: with a small caller the budget is exactly 1000, so `expanded =
+floor(1000 / cb)` and counting rejected sites brackets `cb`. `inline_model
+--measure-cb TU --fn CALLEE --caller CALLER --sites N` automates one such
+titration (**count rejected = out-of-line `call`s PLUS the tail `jmp`** —
+VC6 tail-jump-optimizes a rejected final site). Its staircase (25-site
+harness, statements `gA[i] = gA[i+1] + row;`) agrees with §4.2:
+
+| statements S | expanded | cb bracket | tuple count |
+|---|---|---|---|
+| 1–2 | 25 | ≤ 40 (free) | 25, 37 |
+| 3 | 20 | [48, 50] | 49 |
+| 4 | 16 | [59, 62] | 61 |
+| 6 | 11 | [84, 90] | 85 |
+| 8 | 9 | [101, 111] | 109 |
+| 12 | 6 | [143, 166] | 157 |
+| 13 | 5 | [167, 200] | 169 |
+| 14+ | 0 | **not a candidate** | 181: not saved |
+
+The brace and else-arm observations of 2026-10-08 are the same rule:
+braces around a single-statement `if` body add 2 to the enclosing
+function's `cb` (so 4 to a small caller's initial budget), with no
+instruction change. getHero's DC `else return &m_heroes[which];` arm raised
+its inline cost, and each expanded getHero site now spends that much more
+of its caller's budget. That moved checkForArtifactWin's final
+bitset::test site from 181 to 177 and completeCurrentMap's garrison
+push_back from 64 to 63. A DC-scoped braced guard restored the first; the
+second still lacks a source-backed change.
 
 ## 5. Validation record (2026-08-10, pinned SP3 CL under Wine)
 
@@ -301,7 +408,8 @@ always counts `call` + tail `jmp`.
    rejected. Model: `floor(1000/cb) = 6` for the whole measured bracket
    cb ∈ [143,166].
 2. **a06 `fill_storedec`** — 0 expanded + 9 rejected: the candidacy cliff
-   (§4), reproduced by `candidate=False`.
+   (§4), reproduced by `candidate=False`. Its body counts 181 tuples, past
+   the save limit of 175 (`fill_plain`: 154).
 3. **E2 small-free** — `gAcc += a;` callee at 60 sites: 60/60 expanded.
 4. **E3 caller-size coupling** — padding the *caller* flips 6→8→9
    expansions (pad 40→45→50); the model's `budget = 2×cb` coupling. At
@@ -485,9 +593,9 @@ always counts `call` + tail `jmp`.
   no experiment required it (E7's straight-line rejections are explained by
   candidacy), so `predict()` omits it; if a divergence ever needs it, the
   charge-without-refund asymmetry is the fingerprint to look for.
-* **C1XX's cb formula and the save-gate measure** — front-end territory
-  (phase for the IL tap / C1XX RE); the model takes `cb` and `candidate`
-  as inputs, measured via `--measure-cb`.
+* `predict()` still takes `cb` and `candidate` as inputs. They are no
+  longer unknowns: §4 reads both from the front end (`homm3 vc6 cb`), and
+  `predict-inline --trace` reads them from C2.
 * `#pragma inline_depth` default byte is taken as 8 (documented VC6
   default; a05 proves the per-site mechanism, no experiment pinned the
   default since nothing in the corpus reaches depth 8).
@@ -1283,14 +1391,13 @@ All 41 retail blocks agree, with no remaining call-target differences.
 # the validated rule, replayed:
 python3 -m homm3.vc6.inline_model --predict --selftest
 
-# what does the model say for a caller? (cb values from --measure-cb)
+# what does the model say for a caller? (cb values from `homm3 vc6 cb`)
 python3 -m homm3.vc6.inline_model --predict --spec sites.json
 #   {"caller_cb": 235, "sites": [{"name": "kill", "cb": 80,
 #      "sites": [{"name": "get_total", "cb": 46}]}, ...]}
 
-# bracket a callee's front-end size estimate with the real compiler:
-python3 -m homm3.vc6.inline_model --measure-cb harness.cpp \
-    --fn callee --caller caller25 --sites 25
+# read any function's front-end cost, per source line (§4.1):
+homm3 vc6 cb UNIT --fn NAME --explain
 
 # diagnose calls and capture the actual C2 budget inputs:
 homm3 vc6 predict-inline 0x548df0 --trace
