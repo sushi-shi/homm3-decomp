@@ -132,18 +132,44 @@ private:
 };
 
 // A creature generator; its kind is the object type's subtype (RTTI
-// TGenerator <- TFlaggableObject).
+// TGenerator <- TFlaggableObject). Generator.cpp, apart from the other
+// objects since Complete.
 class TGenerator : public TFlaggableObject {
 public:
-    // 8-byte rows of the two generator tables; the name is the second
-    // word (Loki's TGeneratorTypeTraits; the palette's tooltip).
+    // 8-byte rows of the two generator tables ("const struct
+    // TGenerator::TGeneratorTypeTraits & TGenerator::getGeneratorTypeTraits()
+    // const"): whether a dwelling of the kind can be flagged (the
+    // constructors clear the owner when it cannot; every Complete kind can)
+    // and its name (the palette's tooltip).
     struct TGeneratorTypeTraits {
         bool m_bFlaggable;
         const char* m_name;
     };
 
-    DATA(0x00584450) static const TGeneratorTypeTraits* s_akGenerator1TypeTraits;
-    DATA(0x00584454) static const TGeneratorTypeTraits* s_akGenerator4TypeTraits;
+    enum TGenerator1Type {
+    };
+
+    enum TGenerator4Type {
+    };
+
+    enum {
+        s_kNumGenerator1Types = 80,
+        s_kNumGenerator4Types = 2
+    };
+
+    static const TGeneratorTypeTraits* s_akGenerator1TypeTraits;
+    static const TGeneratorTypeTraits* s_akGenerator4TypeTraits;
+
+    static void initializeTypeTraitsTables();
+
+    TGenerator(const TObjectType& objType, TPlayer owner = ePlayerNone);
+    TGenerator(const TObjectType& objType, TRawIStream* pIStream, int version);
+
+    virtual std::string getTypeName() const;
+
+    const TGeneratorTypeTraits& getGeneratorTypeTraits() const;
+    TGenerator1Type getGenerator1Type() const { return TGenerator1Type(getExtra()); }
+    TGenerator4Type getGenerator4Type() const { return TGenerator4Type(getExtra()); }
 };
 
 // A garrison, its army and whether a visiting hero may take the army
@@ -440,14 +466,24 @@ private:
 // link id, then the alignments; 16 bytes before TRandomlyAlignedGenerator's
 // TFlaggableObject). Its two pure virtuals yield the flaggable part (the
 // derived dwellings return their TFlaggableObject, 0x43e774). Removing a
-// random town unlinks the dwellings that named it (h3maped 0x427fbe).
+// random town unlinks the dwellings that named it (h3maped 0x427fbe). A
+// linked dwelling keeps every alignment; maps before version 16 store
+// eight town types.
 class TAbstractRandomlyAlignedGenerator : public virtual TGameObject {
 public:
+    TAbstractRandomlyAlignedGenerator(const TObjectType& objType);
+    TAbstractRandomlyAlignedGenerator(const TObjectType& objType, TRawIStream* pIStream, int version);
+
     virtual TFlaggableObject* getPFlaggableObject() = 0;
     virtual const TFlaggableObject* getPFlaggableObject() const = 0;
 
+    virtual void write(TRawOStream* pOStream, int version) const;
+    virtual bool isCustomized() const;
+
     unsigned int getTownLinkID() const { return _m_townLinkID; }
     void setTownLinkID(unsigned int townLinkID) { _m_townLinkID = townLinkID; }
+    const std::bitset<kNumTownTypes>& getAlignments() const { return _m_alignments; }
+    void setAlignments(const std::bitset<kNumTownTypes>& newAlignments);
 
 private:
     unsigned int _m_townLinkID;
@@ -455,12 +491,28 @@ private:
 };
 
 // A random dwelling whose level is drawn from a range (RTTI
-// TAbstractRandomlyLeveledGenerator: its vtable and vbptr; 16 bytes in
-// TRandomGenerator, after the alignment part).
+// TAbstractRandomlyLeveledGenerator: its vtable, vbptr, then the lowest
+// and highest level; 16 bytes in TRandomGenerator, after the alignment
+// part). The map format stores each level in a byte.
 class TAbstractRandomlyLeveledGenerator : public virtual TGameObject {
 public:
+    enum { s_kNumLevels = 7 };
+
+    TAbstractRandomlyLeveledGenerator(const TObjectType& objType);
+    TAbstractRandomlyLeveledGenerator(const TObjectType& objType, TRawIStream* pIStream, int version);
+
     virtual TFlaggableObject* getPFlaggableObject() = 0;
     virtual const TFlaggableObject* getPFlaggableObject() const = 0;
+
+    virtual void write(TRawOStream* pOStream, int version) const;
+    virtual bool isCustomized() const { return _m_minLevel != 0 || _m_maxLevel != s_kNumLevels - 1; }
+
+    int getMinLevel() const { return _m_minLevel; }
+    int getMaxLevel() const { return _m_maxLevel; }
+
+private:
+    int _m_minLevel;
+    int _m_maxLevel;
 };
 
 #endif  /* HOMM3_EDITOR_OBJECTSPECIALIZATIONS_H */
