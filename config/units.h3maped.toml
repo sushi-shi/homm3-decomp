@@ -782,6 +782,11 @@ source = "src/editor/SpellsDlg.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "TeamInfo"
+source = "src/editor/TeamInfo.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "HeroPropsSpellsPage"
 source = "src/editor/HeroPropsSpellsPage.cpp"
 flags = "editor_o1_ob2_gr_windows"

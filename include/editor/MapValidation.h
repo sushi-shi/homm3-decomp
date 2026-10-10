@@ -10,17 +10,22 @@
 // TMapValidationFunc). The map is at +8, the notes at +0xc and their count
 // at +0x10: Windows keeps the notes in a CString, each ending in "\r\n".
 // The accumulate-resource, defeat-monster and time-expires visits keep the
-// visitors' empty defaults (h3maped vtables 0x53d9fc, 0x53d9e8).
+// visitors' empty defaults (h3maped vtables 0x53d9fc, 0x53d9e8). The hero
+// text takes any basic hero, a placeholder too, and reads the map's hero
+// prototypes, so it is a member; the creature count has no body of its
+// own (every visit expands it).
 #ifndef HOMM3_EDITOR_MAPVALIDATION_H
 #define HOMM3_EDITOR_MAPVALIDATION_H
 
 #include "artifact_type.h"
+#include "creaturetype.h"
 #include "Point.h"
+#include "editor/Army.h"
 #include "editor/Player.h"
 #include "editor/VictoryCondition.h"
 
+class TBasicHero;
 class TGameMap;
-class THero;
 class TSeersHut;
 class TTown;
 
@@ -43,8 +48,16 @@ public:
     virtual void visit(const TLCLoseHero& lc);
 
 private:
+    static unsigned int _countCreatures(TCreatureType creatureType, const TArmy& army)
+    {
+        unsigned int count = 0;
+        for (unsigned int i = 0; i < army.size(); ++i)
+            if (army[i].getCreatureType() == creatureType)
+                count += army[i].getQuantity();
+        return count;
+    }
     static CString _createTownStr(const TTown& town, const TTilePoint& loc, bool bSecondLayer);
-    static CString _createHeroStr(const THero& hero, const TTilePoint& loc, bool bSecondLayer);
+    CString _createHeroStr(const TBasicHero& hero, const TTilePoint& loc, bool bSecondLayer) const;
     static CString _createTeamStr(unsigned int teamNum);
 
     void _addNote(const CString& note);

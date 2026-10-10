@@ -76,7 +76,7 @@ rva	size	kind	name	unit	evidence
 0x00005ada	0xf0	func	?insert@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@_N@2@ABW4TArtifact@@@Z	Hero	referenced by ??0TSeersHut@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0xc8
 0x00005bca	0x2c2	func	?erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AViterator@12@V312@@Z	GameMap	referenced by ?erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AViterator@12@V312@0@Z at +0x8a
 0x00005e8c	0xa8	func	?erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AViterator@12@V312@0@Z	GameMap	referenced by ??1?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE@XZ at +0x15
-0x00005f6e	0x80	func	?_Inc@const_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAEXXZ	GameMap	referenced by ?equal@std@@YA_NVconst_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@1@00@Z at +0x27
+0x00005f6e	0x80	func	?_Inc@const_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAEXXZ	GameMap	referenced by ?_isPlayable@_TImpl@TGameMap@@QBE_NXZ at +0x167
 0x00005fee	0xa4	func	?_Copy@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@IAEXABV12@@Z	Hero	referenced by ??0TArtifactContainer@THeroPrototype@@QAE@ABV01@@Z at +0x59
 0x00006092	0x63	func	?_Erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@IAEXPAU_Node@12@@Z	GameMap	referenced by ?erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AViterator@12@V312@0@Z at +0x3a
 0x000060f5	0x89	func	?_Init@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@IAEXXZ	GameMap	referenced by ??0TArtifactContainer@THeroPrototype@@QAE@PAVTRawIStream@@H@Z at +0x3e
@@ -159,6 +159,7 @@ rva	size	kind	name	unit	evidence
 0x00013ff7	0x5	func	?OnOK@TLossConditionDlg@@UAEXXZ	MapSpecsLossCondPage	vtable of TNullLossConditionDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsLossCondPage.cpp3258122417 (RTTI) slot 49; ICF-folded with 1 identical bodies
 0x00016b09	0x2c	func	??Breference@?$bitset@$07@std@@QBE_NXZ	GameMap	masked body (44 bytes, 1 relocations) unique at a census start
 0x00016b35	0x4a	func	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	GameMap	masked body (74 bytes, 1 relocations) unique at a census start
+0x00016b7f	0x2d	func	?test@?$bitset@$07@std@@QBE_NI@Z	MapValidation	masked body (45 bytes, 1 relocations) unique at a census start
 0x00016bac	0x76	func	?_Xran@?$bitset@$07@std@@ABEXXZ	GameMap	referenced by ?set@?$bitset@$07@std@@QAEAAV12@I_N@Z at +0xe
 0x00016fc8	0x40	func	??1TTimedEvent@@QAE@XZ	GameMap	masked body (64 bytes, 5 relocations) unique at a census start
 0x00017008	0xac	func	??0TTimedEvent@@QAE@ABV0@@Z	GameMap	masked body (172 bytes, 9 relocations) unique at a census start
@@ -1079,6 +1080,9 @@ rva	size	kind	name	unit	evidence
 0x0007c511	0xb	func	??_ETMapSpecsVictoryCondPage@@WIM@AEPAXI@Z	MapSpecsVictoryCondPage	vtable ??_7TMapSpecsVictoryCondPage@@6BTVisitor@TVictoryCondition@@@ stored by ??0TMapSpecsVictoryCondPage@@QAE@ABVTGameMap@@AAV1@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@22@Z slot 0
 0x0007c707	0x1c	func	??_GTMapValidationFunc@@UAEPAXI@Z	MapValidation	referenced by ??_ETMapValidationFunc@@W3AEPAXI@Z at +0x4
 0x0007c723	0x44	func	??1TMapValidationFunc@@UAE@XZ	MapValidation	masked body (68 bytes, 6 relocations) unique at a census start
+0x0007ebb0	0x1d	func	??8@YA_NABVTMapObjectRef@@0@Z	MapValidation	masked body (29 bytes, 0 relocations) unique at a census start
+0x0007fe94	0x2d	func	?test@?$bitset@$06@std@@QBE_NI@Z	MapValidation	masked body (45 bytes, 1 relocations) unique at a census start
+0x0007fec1	0x12	func	?_Tidy@?$bitset@$06@std@@AAEXK@Z	MapValidation	masked body (18 bytes, 0 relocations) unique at a census start
 0x0007fed3	0x13	func	??ZTRmgMapPosition@@QAEAAU0@ABUTRmgPoint@@@Z	rmg	masked body (19 bytes, 0 relocations) unique at a census start
 0x0007ff20	0x8	func	??_ETMapValidationFunc@@W3AEPAXI@Z	MapValidation	vtable ??_7TMapValidationFunc@@6BTVisitor@TLossCondition@@@ stored by ??0TMapValidationFunc@@QAE@ABVTGameMap@@@Z slot 0
 0x00081a8d	0x47	func	??1TSignPropsDlg@@UAE@XZ	SignPropsDlg	referenced by ?onEditProperties@TMapView@@EAE_NPAVTSign@@PAVTGameMap@@VTMapObjectRef@@@Z at +0x40
@@ -2125,7 +2129,7 @@ rva	size	kind	name	unit	evidence
 0x0017c6d4	0xd	data	??_C@_0N@CHOD@objnames?4txt?$AA@	objnames	referenced by ?InitializeAdvObjectTypeTraitsTable@@YAXXZ at +0xeb
 0x0017c7c0	0x3	data	??_C@_02MECO@?$CFd?$AA@	OptionsDlg	referenced by ?OnInitDialog@TOptionsDlg@@MAEHXZ at +0x1ad
 0x0017c7c4	0x2	data	??_C@_01FBAH@1?$AA@	MapSpecsGeneralPage	referenced by ?OnLimitHeroLevelCheck@TMapSpecsGeneralPage@@IAEXXZ at +0x3a
-0x0017c7cc	0x4	data	?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A	artifact	referenced by ?getTypeName@TGameArtifact@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ at +0x2c
+0x0017c7cc	0x4	data	?akArtifactTraits@@3AAY0JA@$$CBUTArtifactTraits@@A	artifact	referenced by ?_isPlayable@_TImpl@TGameMap@@QBE_NXZ at +0x7f
 0x0017c7d0	0x4	data	?g_combinationArtifacts@@3PBUTCombinationArtifact@@B	artifact	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0x1be (retail +0x273, by operand order)
 0x0017c7d4	0xd	data	??_C@_0N@GIEN@artslots?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ
 0x0017c7e4	0xd	data	??_C@_0N@GEJI@artraits?4txt?$AA@	artifact	string literal referenced by ?InitializeArtifactTraitsTable@@YA_NXZ

@@ -3392,8 +3392,8 @@ bool TGameMap::_TImpl::_isPlayable() const
 {
     if (_m_pBookkeeping->m_numPlayableSlots == 0)
         return false;
-    if ((~_m_pProperties->m_disabledHeroes).count()
-        < _m_pBookkeeping->m_numTowns + _m_pBookkeeping->m_numPlayableSlots * 10)
+    unsigned int numAvailableHeroes = (~_m_pProperties->m_disabledHeroes).count();
+    if (numAvailableHeroes < _m_pBookkeeping->m_numTowns + _m_pBookkeeping->m_numPlayableSlots * 10)
         return false;
     bitset<kNumArtifacts> availableArtifacts = ~_m_pProperties->m_disabledArtifacts;
     for (int artifact = 0; artifact < kNumArtifacts; artifact++)
@@ -3410,16 +3410,16 @@ bool TGameMap::_TImpl::_isPlayable() const
                     static_cast<const TQuestBringArtifacts*>(pQuestLocation->getPQuest())->getArtifacts();
                 for (multiset<TArtifact>::const_iterator pArtifact = artifacts.begin(); pArtifact != artifacts.end();
                      ++pArtifact)
-                    availableArtifacts.set(*pArtifact, false);
+                    availableArtifacts[*pArtifact] = false;
             }
         }
     }
     const TVictoryCondition* pVictoryCondition = _m_pProperties->m_pVictoryCondition.get();
     if (pVictoryCondition != NULL) {
         if (dynamic_cast<const TVCAquireArtifact*>(pVictoryCondition) != NULL)
-            availableArtifacts.set(static_cast<const TVCAquireArtifact*>(pVictoryCondition)->getArtifact(), false);
+            availableArtifacts[static_cast<const TVCAquireArtifact*>(pVictoryCondition)->getArtifact()] = false;
         else if (dynamic_cast<const TVCTransportArtifact*>(pVictoryCondition) != NULL)
-            availableArtifacts.set(static_cast<const TVCTransportArtifact*>(pVictoryCondition)->getArtifact(), false);
+            availableArtifacts[static_cast<const TVCTransportArtifact*>(pVictoryCondition)->getArtifact()] = false;
     }
     return availableArtifacts.any();
 }

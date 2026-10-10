@@ -581,14 +581,16 @@ void THero::importText(std::istream* pIStream, EGameVersion version)
     }
 }
 
+VA(0x0044b91e, 0x59)
 bool THero::hasArtifact(TArtifact artifact) const
 {
     if (!_m_bCustomArtifacts)
         return false;
+    const THeroPrototype::TArtifactContainer& artifacts = getArtifacts();
     for (unsigned int slot = 0; slot < kNumArtifactSlots + 1; slot++)
-        if (_m_artifacts.getSlot(TArtifactSlot(slot)) == artifact)
+        if (artifacts.getSlot(TArtifactSlot(slot)) == artifact)
             return true;
-    const std::multiset<TArtifact>& backpack = _m_artifacts.getBackpack();
+    const std::multiset<TArtifact>& backpack = artifacts.getBackpack();
     return find(backpack.begin(), backpack.end(), artifact) != backpack.end();
 }
 
