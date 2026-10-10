@@ -73,6 +73,26 @@ TMonster::TMonster(const TObjectType& objType, TRawIStream* pIStream, int versio
     *pIStream >> aReserved;
 }
 
+void TMonster::setQuantity(unsigned int newQuantity)
+{
+    _m_quantity = newQuantity;
+}
+
+void TMonster::setDisposition(TDisposition newDisposition)
+{
+    _m_disposition = newDisposition;
+}
+
+void TMonster::setMessage(const std::string& newMessage)
+{
+    _m_message = newMessage;
+}
+
+void TMonster::setArtifact(TArtifact newArtifact)
+{
+    _m_artifact = newArtifact;
+}
+
 VA(0x004889eb, 0xf)
 void TMonster::setResourceQuantity(TGameResourceType type, unsigned int newQuantity)
 {

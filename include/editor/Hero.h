@@ -170,8 +170,12 @@ public:
     THeroPlaceholder(const TObjectType& objType, TPlayer owner);
     THeroPlaceholder(const TObjectType& objType, TRawIStream* pIStream, int version);
 
+    enum { s_kMinPowerRank = 1, s_kMaxPowerRank = 8 };
+
     virtual THeroID getHeroID() const;
     void setHeroID(THeroID newHeroID);
+    unsigned int getPowerRank() const { return _m_powerRank; }
+    void setPowerRank(unsigned int newPowerRank);
 
     virtual void write(TRawOStream* pOStream, int version) const;
     virtual bool isCustomized() const;

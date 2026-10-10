@@ -359,6 +359,11 @@ THeroID THeroPlaceholder::getHeroID() const
     return _m_heroID;
 }
 
+void THeroPlaceholder::setPowerRank(unsigned int newPowerRank)
+{
+    _m_powerRank = newPowerRank;
+}
+
 VA(0x0044aea5, 0x1f)
 bool THeroPlaceholder::isCustomized() const
 {

@@ -63,6 +63,11 @@ public:
     TSkillMastery getMastery() const { return _m_mastery; }
     void setMastery(TSkillMastery newMastery);
 
+    friend bool operator==(const TSecondarySkillRecord& lhs, const TSecondarySkillRecord& rhs)
+    {
+        return lhs._m_type == rhs._m_type && lhs._m_mastery == rhs._m_mastery;
+    }
+
 private:
     TSecondarySkill _m_type;
     TSkillMastery _m_mastery;

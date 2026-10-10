@@ -43,13 +43,13 @@ public:
     virtual bool hasText() const { return !getMessage().empty(); }
     virtual void exportText(std::ostream* pOStream, EGameVersion version) const;
 
-    void setQuantity(unsigned int newQuantity) { _m_quantity = newQuantity; }
-    void setDisposition(TDisposition newDisposition) { _m_disposition = newDisposition; }
+    void setQuantity(unsigned int newQuantity);
+    void setDisposition(TDisposition newDisposition);
     void setBNeverFlees(bool bNeverFlees) { _m_bNeverFlees = bNeverFlees; }
     void setBNeverGrows(bool bNeverGrows) { _m_bNeverGrows = bNeverGrows; }
-    void setMessage(const std::string& newMessage) { _m_message = newMessage; }
+    void setMessage(const std::string& newMessage);
     void setResourceQuantity(TGameResourceType type, unsigned int newQuantity);
-    void setArtifact(TArtifact newArtifact) { _m_artifact = newArtifact; }
+    void setArtifact(TArtifact newArtifact);
 
     TCreatureType getCreatureType() const { return TCreatureType(getExtra()); }
     unsigned int getQuantity() const { return _m_quantity; }

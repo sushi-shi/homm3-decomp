@@ -22,6 +22,8 @@ public:
 
     // An empty stack (the army's constructor 0x40234e fills its slots).
     TCreatureStack() : _m_creatureType(CREATURE_NONE), _m_quantity(0) {}
+    TCreatureStack(TCreatureType creatureType, unsigned int quantity)
+        : _m_creatureType(creatureType), _m_quantity(quantity) {}
     // A stack as the map stores it (a seer's creature reward reads one
     // straight into its new reward, h3maped 0x4b66a7).
     TCreatureStack(TRawIStream* pIStream, int version) { read(pIStream, version); }

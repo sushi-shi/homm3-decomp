@@ -965,3 +965,53 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "ResourcePropsSheet"
 source = "src/editor/ResourcePropsSheet.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MonsterPropsGeneralPage"
+source = "src/editor/MonsterPropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MonsterPropsSheet"
+source = "src/editor/MonsterPropsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "MonsterPropsTreasurePage"
+source = "src/editor/MonsterPropsTreasurePage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "HeroPlaceholderPropsDlg"
+source = "src/editor/HeroPlaceholderPropsDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EditCreatureStackDlg"
+source = "src/editor/EditCreatureStackDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "BlackBoxPropsContentsPage"
+source = "src/editor/BlackBoxPropsContentsPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "BlackBoxPropsGeneralPage"
+source = "src/editor/BlackBoxPropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "BlackBoxPropsSheet"
+source = "src/editor/BlackBoxPropsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EventPropsGeneralPage"
+source = "src/editor/EventPropsGeneralPage.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "EventPropsSheet"
+source = "src/editor/EventPropsSheet.cpp"
+flags = "editor_o1_ob2_gr_windows"

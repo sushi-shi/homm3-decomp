@@ -24,11 +24,14 @@
 #include "retailobjecttype.h"
 #include "editor/AbandonedMinePropsDlg.h"
 #include "editor/ArtifactPropsSheet.h"
+#include "editor/BlackBoxPropsSheet.h"
+#include "editor/EventPropsSheet.h"
 #include "editor/FlaggablePropsDlg.h"
 #include "editor/FormattedString.h"
 #include "editor/GameMap.h"
 #include "editor/GarrisonPropsDlg.h"
 #include "editor/Hero.h"
+#include "editor/HeroPlaceholderPropsDlg.h"
 #include "editor/HeroPropsSheet.h"
 #include "editor/HolyGrailPropsDlg.h"
 #include "editor/MapDoc.h"
@@ -38,6 +41,7 @@
 #include "editor/MapValidation.h"
 #include "editor/MapView.h"
 #include "editor/MiniMapWnd.h"
+#include "editor/MonsterPropsSheet.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/random_object_placer.h"
 #include "editor/resource.h"
@@ -921,6 +925,14 @@ bool TMapView::onEditProperties(TGameObject* pObj, TGameMap* pMap, TMapObjectRef
     return false;
 }
 
+VA(0x004815ff, 0x5e)
+bool TMapView::onEditProperties(THeroPlaceholder* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    THeroPlaceholderPropsDlg dlg(this, pMap, ref);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
 VA(0x0048165d, 0x67)
 bool TMapView::onEditProperties(TNonRandomHero* pObj, TGameMap* pMap, TMapObjectRef ref)
 {
@@ -949,6 +961,25 @@ VA(0x00481790, 0x65)
 bool TMapView::onEditProperties(TTown* pObj, TGameMap* pMap, TMapObjectRef ref)
 {
     TTownPropsSheet sheet(this, pMap, ref);
+    sheet.DoModal();
+    return sheet.wasModified();
+}
+
+VA(0x004817f5, 0x96)
+bool TMapView::onEditProperties(TEvent* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TPlayerMask availablePlayers;
+    for (unsigned int player = 0; player < kNumPlayers; ++player)
+        availablePlayers[player] = pMap->isPlayerPresent(TPlayer(player));
+    TEventPropsSheet sheet(this, pObj, availablePlayers, pMap->getVersion());
+    sheet.DoModal();
+    return sheet.wasModified();
+}
+
+VA(0x0048188b, 0x6c)
+bool TMapView::onEditProperties(TMonster* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TMonsterPropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
     return sheet.wasModified();
 }
@@ -1007,6 +1038,14 @@ VA(0x00481bac, 0x6c)
 bool TMapView::onEditProperties(TGameResource* pObj, TGameMap* pMap, TMapObjectRef ref)
 {
     TResourcePropsSheet sheet(this, pObj, pMap->getVersion());
+    sheet.DoModal();
+    return sheet.wasModified();
+}
+
+VA(0x00481c18, 0x6c)
+bool TMapView::onEditProperties(TBlackBox* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TBlackBoxPropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
     return sheet.wasModified();
 }
