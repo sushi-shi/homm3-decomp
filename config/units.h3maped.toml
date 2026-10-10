@@ -497,6 +497,11 @@ source = "src/editor/Quest.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "QuestLocation"
+source = "src/editor/QuestLocation.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "Monster"
 source = "src/editor/Monster.cpp"
 flags = "editor_o1_ob2_gr_windows"
