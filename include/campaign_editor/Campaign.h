@@ -413,6 +413,9 @@ public:
 // A scenario of a campaign: a copy-on-write handle.
 class TScenario {
 public:
+    // The properties sheet's region text limit.
+    enum { s_kMaxRegionDescLen = 600 };
+
     explicit TScenario(int numScenarios);
 
     void setCrossover(const TScenarioCrossover& newCrossover);

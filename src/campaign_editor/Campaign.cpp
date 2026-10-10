@@ -4,6 +4,10 @@
 
 #include <string.h>
 
+#include <algorithm>
+#include <istream>
+#include <ostream>
+
 #include "va.h"
 #include "bitset_iterator.h"
 #include "campaignmap.h"
@@ -11,6 +15,7 @@
 #include "editor/GameMapHeader.h"
 #include "editor/RawStream.h"
 #include "campaign_editor/Campaign.h"
+#include "campaign_editor/CampaignEditorText.h"
 
 class TCampaign::_TImpl {
 public:
@@ -531,6 +536,132 @@ TCampaign::_TImpl::_TImpl(int type)
 {
     unsigned int numScenarios = getNumScenarios();
     m_scenarios.resize(numScenarios, TScenario(numScenarios));
+}
+
+// The campaign's texts as CampaignDoc's export writes them: each field's
+// label line, the text with its line breaks as tabs, an empty line; every
+// scenario with a map under its map and region name. A file that does not
+// follow it fails; texts longer than the editor's limits are cut.
+VA(0x00405fc0, 0xc10)
+void TCampaign::_TImpl::importText(istream& stream, int version)
+{
+    string line;
+    getline(stream, line);
+    if (line != string(kNameStr) + ':')
+        throw TImportTextFailure();
+    getline(stream, line);
+    if (line.size() > s_kMaxNameLen)
+        line.erase(s_kMaxNameLen);
+    setName(line);
+    getline(stream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    getline(stream, line);
+    if (line != string(kDescriptionStr) + ':')
+        throw TImportTextFailure();
+    getline(stream, line);
+    if (line.size() > s_kMaxDescriptionLen)
+        line.erase(s_kMaxDescriptionLen);
+    replace(line.begin(), line.end(), '\t', '\n');
+    setDescription(line);
+    getline(stream, line);
+    if (!line.empty())
+        throw TImportTextFailure();
+    for (int scenario = 0; scenario < getNumScenarios(); scenario++) {
+        TScenario& rScenario = m_scenarios[scenario];
+        if (rScenario.getMap() == NULL)
+            continue;
+        const TCampaignScenarioMap* pMap = rScenario.getMap();
+        getline(stream, line);
+        if (!line.empty())
+            throw TImportTextFailure();
+        getline(stream, line);
+        if (line != pMap->m_name + " - " + g_campaignMapTraits[m_type].m_regionTraits[scenario].m_name)
+            throw TImportTextFailure();
+        getline(stream, line);
+        if (!line.empty())
+            throw TImportTextFailure();
+        getline(stream, line);
+        if (line != string(kRightClickTextStr) + ':')
+            throw TImportTextFailure();
+        getline(stream, line);
+        if (line.size() > TScenario::s_kMaxRegionDescLen)
+            line.erase(TScenario::s_kMaxRegionDescLen);
+        replace(line.begin(), line.end(), '\t', '\n');
+        rScenario.setRegionDesc(line);
+        if (rScenario.getPrologue() != NULL) {
+            const TScenarioPrologue* pPrologue = rScenario.getPrologue();
+            getline(stream, line);
+            if (!line.empty())
+                throw TImportTextFailure();
+            getline(stream, line);
+            if (line != string(kPrologueTextStr) + ':')
+                throw TImportTextFailure();
+            getline(stream, line);
+            replace(line.begin(), line.end(), '\t', '\n');
+            auto_ptr<TScenarioPrologue> pNewPrologue(
+                new TScenarioPrologue(pPrologue->m_movie, pPrologue->m_music, line));
+            if (pNewPrologue.get() == NULL)
+                throw TAllocationFailure();
+            rScenario.setPrologue(pNewPrologue);
+        }
+        if (rScenario.getEpilogue() != NULL) {
+            const TScenarioPrologue* pEpilogue = rScenario.getEpilogue();
+            getline(stream, line);
+            if (!line.empty())
+                throw TImportTextFailure();
+            getline(stream, line);
+            if (line != string(kEpilogueTextStr) + ':')
+                throw TImportTextFailure();
+            getline(stream, line);
+            replace(line.begin(), line.end(), '\t', '\n');
+            auto_ptr<TScenarioPrologue> pNewEpilogue(
+                new TScenarioPrologue(pEpilogue->m_movie, pEpilogue->m_music, line));
+            if (pNewEpilogue.get() == NULL)
+                throw TAllocationFailure();
+            rScenario.setEpilogue(pNewEpilogue);
+        }
+        getline(stream, line);
+        if (!line.empty())
+            throw TImportTextFailure();
+    }
+}
+
+VA(0x00406c40, 0x540)
+void TCampaign::_TImpl::exportText(ostream& stream, int version) const
+{
+    stream << kNameStr << ':' << '\n' << m_name << '\n' << '\n';
+    {
+        string description = m_description;
+        replace(description.begin(), description.end(), '\n', '\t');
+        stream << kDescriptionStr << ':' << '\n' << description << '\n' << '\n';
+    }
+    for (unsigned int scenario = 0; scenario < getNumScenarios(); scenario++) {
+        const TScenario& rScenario = m_scenarios[scenario];
+        if (rScenario.getMap() == NULL)
+            continue;
+        const TCampaignScenarioMap* pMap = rScenario.getMap();
+        stream << '\n' << pMap->m_name << " - " << g_campaignMapTraits[m_type].m_regionTraits[scenario].m_name
+               << '\n' << '\n';
+        {
+            string regionDesc = rScenario.getRegionDesc();
+            replace(regionDesc.begin(), regionDesc.end(), '\n', '\t');
+            stream << kRightClickTextStr << ':' << '\n' << regionDesc << '\n';
+        }
+        if (rScenario.getPrologue() != NULL) {
+            const TScenarioPrologue* pPrologue = rScenario.getPrologue();
+            string text = pPrologue->m_text;
+            replace(text.begin(), text.end(), '\n', '\t');
+            stream << '\n' << kPrologueTextStr << ':' << '\n' << text << '\n';
+        }
+        if (rScenario.getEpilogue() != NULL) {
+            const TScenarioPrologue* pEpilogue = rScenario.getEpilogue();
+            string text = pEpilogue->m_text;
+            replace(text.begin(), text.end(), '\n', '\t');
+            stream << '\n' << kEpilogueTextStr << ':' << '\n' << text << '\n';
+        }
+        stream << '\n';
+    }
 }
 
 VA(0x00407180, 0x131)
