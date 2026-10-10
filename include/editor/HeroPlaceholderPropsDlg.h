@@ -22,7 +22,7 @@
 
 class THeroPlaceholderPropsDlg : public CDialog {
 public:
-    THeroPlaceholderPropsDlg(CWnd* pParent, TGameMap* pMap, TMapObjectRef placeholderRef);
+    THeroPlaceholderPropsDlg(CWnd* pParent, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
 
     virtual int DoModal();
 

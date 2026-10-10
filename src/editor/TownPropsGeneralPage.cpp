@@ -22,12 +22,12 @@
 
 VA(0x004c523c, 0x200)
 TTownPropsGeneralPage::TTownPropsGeneralPage(TTownPropsGeneralPageParentSheet* pParentSheet, const TGameMap& oldMap,
-                                             TGameMap& newMap, TMapObjectRef townRef)
+                                             TGameMap& newMap, bool bSecondLayer, unsigned int objID)
     : CPropertyPage(TTownPropsGeneralPage::IDD),
       _m_pParentSheet(pParentSheet),
       _m_oldMap(oldMap),
       _m_newMap(newMap),
-      _m_townRef(townRef),
+      _m_townRef(bSecondLayer, objID),
       _m_pOldTown(_getOldTown()),
       _m_bIsMainTown(false),
       _m_bModified(false),
@@ -243,7 +243,7 @@ void TTownPropsGeneralPage::OnEditHeroButton()
     const THero* pVisitingHero = _getNewTown()->getPVisitingHero();
     const THero* pHero = dynamic_cast<const TNonRandomHero*>(pVisitingHero);
     if (pHero) {
-        TNonRandomHeroPropsSheet sheet(this, &_m_newMap, _m_townRef, false);
+        TNonRandomHeroPropsSheet sheet(this, &_m_newMap, _m_townRef.getBSecondLayer(), _m_townRef.getObjectID(), false);
         sheet.DoModal();
         if (sheet.wasModified()) {
             _m_bVisitingHeroModified = true;
@@ -254,7 +254,7 @@ void TTownPropsGeneralPage::OnEditHeroButton()
                                   : _m_newMap.getHeroPrototype(pHero->getHeroID()).getName().c_str();
     } else {
         pHero = pVisitingHero;
-        TRandomHeroPropsSheet sheet(this, &_m_newMap, _m_townRef, false);
+        TRandomHeroPropsSheet sheet(this, &_m_newMap, _m_townRef.getBSecondLayer(), _m_townRef.getObjectID(), false);
         sheet.DoModal();
         if (sheet.wasModified()) {
             _m_bVisitingHeroModified = true;

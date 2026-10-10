@@ -18,10 +18,11 @@
 #include "editor/Town.h"
 
 VA(0x004539f3, 0xca)
-THeroPropsSheet::THeroPropsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, const TGameMap& oldMap, TMapObjectRef heroRef)
+THeroPropsSheet::THeroPropsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, const TGameMap& oldMap, bool bSecondLayer, unsigned int objID)
     : CPropertySheet(pszCaption, pParentWnd),
       _m_map(oldMap),
-      _m_heroRef(heroRef),
+      _m_bSecondLayer(bSecondLayer),
+      _m_objectID(objID),
       _m_pOldHero(_getOldHero()),
       _m_pNewMap(NULL),
       _m_pNewHero(NULL),
@@ -46,8 +47,8 @@ THeroPropsSheet::~THeroPropsSheet()
 VA(0x00453ba3, 0x62)
 const THero* THeroPropsSheet::_getOldHero() const
 {
-    const TGameMap::TLayer& layer = _m_map.getLayer(_m_heroRef.getBSecondLayer());
-    const TGameObject* pObject = layer.getPObject(_m_heroRef.getObjectID());
+    const TGameMap::TLayer& layer = _m_map.getLayer(_m_bSecondLayer);
+    const TGameObject* pObject = layer.getPObject(_m_objectID);
     const THero* pHero = dynamic_cast<const THero*>(pObject);
     if (pHero == NULL)
         pHero = dynamic_cast<const TTown*>(pObject)->getPVisitingHero();
@@ -58,8 +59,8 @@ VA(0x00453c05, 0x76)
 void THeroPropsSheet::_setNewMap(TGameMap* pNewMap)
 {
     _m_pNewMap = pNewMap;
-    TGameMap::TLayer& layer = pNewMap->getLayer(_m_heroRef.getBSecondLayer());
-    TGameObject* pObject = layer.getPObject(_m_heroRef.getObjectID());
+    TGameMap::TLayer& layer = pNewMap->getLayer(_m_bSecondLayer);
+    TGameObject* pObject = layer.getPObject(_m_objectID);
     _m_pNewHero = dynamic_cast<THero*>(pObject);
     if (_m_pNewHero == NULL)
         _m_pNewHero = dynamic_cast<TTown*>(pObject)->getPVisitingHero();
@@ -139,12 +140,12 @@ BOOL THeroPropsSheet::OnInitDialog()
 }
 
 VA(0x0045405e, 0x1cc)
-TRandomHeroPropsSheet::TRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef heroRef,
+TRandomHeroPropsSheet::TRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID,
                                              bool bAnyAvailableOwner)
     : THeroPropsSheet(TFormattedString(kObjectPropertiesCaptionFmtStr, akAdvObjectTypeTraits[RANDOM_HERO].m_name),
-                      pParentWnd, *pMap, heroRef),
+                      pParentWnd, *pMap, bSecondLayer, objID),
       _m_pMap(pMap),
-      _m_heroRef(heroRef)
+      _m_heroRef(bSecondLayer, objID)
 {
     _m_pNewMap = std::auto_ptr<TGameMap>(new TGameMap(*_m_pMap));
     if (!_m_pNewMap.get())
@@ -190,12 +191,12 @@ BOOL TRandomHeroPropsSheet::OnInitDialog()
 }
 
 VA(0x0045431e, 0x369)
-TNonRandomHeroPropsSheet::TNonRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef heroRef,
+TNonRandomHeroPropsSheet::TNonRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID,
                                                    bool bAnyAvailableOwner)
     : THeroPropsSheet(TFormattedString(kObjectPropertiesCaptionFmtStr, akAdvObjectTypeTraits[HERO].m_name),
-                      pParentWnd, *pMap, heroRef),
+                      pParentWnd, *pMap, bSecondLayer, objID),
       _m_pMap(pMap),
-      _m_heroRef(heroRef),
+      _m_heroRef(bSecondLayer, objID),
       _m_pOldHero(NULL),
       _m_pNewHero(NULL)
 {
@@ -264,11 +265,11 @@ int TNonRandomHeroPropsSheet::DoModal()
 }
 
 VA(0x0045479c, 0x31a)
-TPrisonPropsSheet::TPrisonPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef prisonRef)
+TPrisonPropsSheet::TPrisonPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
     : THeroPropsSheet(TFormattedString(kObjectPropertiesCaptionFmtStr, akAdvObjectTypeTraits[PRISON].m_name),
-                      pParentWnd, *pMap, prisonRef),
+                      pParentWnd, *pMap, bSecondLayer, objID),
       _m_pMap(pMap),
-      _m_prisonRef(prisonRef),
+      _m_prisonRef(bSecondLayer, objID),
       _m_pOldPrison(NULL),
       _m_pNewPrison(NULL)
 {

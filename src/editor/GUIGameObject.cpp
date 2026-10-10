@@ -470,7 +470,7 @@ TGUIHeroPlaceholder::TGUIHeroPlaceholder(const TObjectType& objType, TRawIStream
 VA(0x00440214, 0x1e)
 bool TGUIHeroPlaceholder::edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+    return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
 }
 
 VA(0x00440232, 0x64)
@@ -508,7 +508,7 @@ TGUINonRandomHero::TGUINonRandomHero(const TObjectType& objType, TRawIStream* pI
 VA(0x004407a1, 0x20)
 bool TGUINonRandomHero::edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+    return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
 }
 
 VA(0x004407c1, 0x6a)
@@ -546,7 +546,7 @@ TGUIRandomHero::TGUIRandomHero(const TObjectType& objType, TRawIStream* pIStream
 VA(0x00440ee3, 0x20)
 bool TGUIRandomHero::edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+    return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
 }
 
 VA(0x00440f03, 0x6a)
@@ -581,7 +581,7 @@ TGUIPrison::TGUIPrison(const TObjectType& objType, TRawIStream* pIStream, int ve
 VA(0x00441231, 0x20)
 bool TGUIPrison::edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+    return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
 }
 
 VA(0x00441251, 0x6a)
@@ -635,7 +635,7 @@ TGUITown::TGUITown(const TObjectType& objType, TRawIStream* pIStream, int versio
 VA(0x00441571, 0x20)
 bool TGUITown::edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+    return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
 }
 
 VA(0x00441591, 0x6a)
@@ -777,7 +777,7 @@ public:
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
     {
-        return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+        return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
     }
     virtual std::auto_ptr<TGameObject> clone() const
     {
@@ -802,7 +802,7 @@ public:
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
     {
-        return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+        return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
     }
     virtual std::auto_ptr<TGameObject> clone() const
     {
@@ -987,7 +987,7 @@ TGUIGameObject::TGUIGameObject(const TGUIGameObject& other) : TGameObject(other)
 VA(0x0044235a, 0x2b)
 bool TGUIGameObject::edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    return pEditContext->onEditProperties(this, pMap, TMapObjectRef(bSecondLayer, objID));
+    return pEditContext->onEditProperties(this, pMap, bSecondLayer, objID);
 }
 
 VA(0x00442385, 0x88)

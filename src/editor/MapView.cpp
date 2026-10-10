@@ -918,7 +918,7 @@ void TMapView::onEditFillRectEndDrag(TMapEditingWnd* pWnd, const CRect& rect)
 }
 
 VA(0x004815ac, 0x53)
-bool TMapView::onEditProperties(TGameObject* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TGameObject* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TObjectPropsDlg dlg(this, pObj);
     dlg.DoModal();
@@ -926,47 +926,47 @@ bool TMapView::onEditProperties(TGameObject* pObj, TGameMap* pMap, TMapObjectRef
 }
 
 VA(0x004815ff, 0x5e)
-bool TMapView::onEditProperties(THeroPlaceholder* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(THeroPlaceholder* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    THeroPlaceholderPropsDlg dlg(this, pMap, ref);
+    THeroPlaceholderPropsDlg dlg(this, pMap, bSecondLayer, objID);
     dlg.DoModal();
     return dlg.wasModified();
 }
 
 VA(0x0048165d, 0x67)
-bool TMapView::onEditProperties(TNonRandomHero* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TNonRandomHero* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    TNonRandomHeroPropsSheet sheet(this, pMap, ref, true);
+    TNonRandomHeroPropsSheet sheet(this, pMap, bSecondLayer, objID, true);
     sheet.DoModal();
     return sheet.wasModified();
 }
 
 VA(0x004816c4, 0x67)
-bool TMapView::onEditProperties(TRandomHero* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TRandomHero* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    TRandomHeroPropsSheet sheet(this, pMap, ref, true);
+    TRandomHeroPropsSheet sheet(this, pMap, bSecondLayer, objID, true);
     sheet.DoModal();
     return sheet.wasModified();
 }
 
 VA(0x0048172b, 0x65)
-bool TMapView::onEditProperties(TPrison* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TPrison* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    TPrisonPropsSheet sheet(this, pMap, ref);
+    TPrisonPropsSheet sheet(this, pMap, bSecondLayer, objID);
     sheet.DoModal();
     return sheet.wasModified();
 }
 
 VA(0x00481790, 0x65)
-bool TMapView::onEditProperties(TTown* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TTown* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
-    TTownPropsSheet sheet(this, pMap, ref);
+    TTownPropsSheet sheet(this, pMap, bSecondLayer, objID);
     sheet.DoModal();
     return sheet.wasModified();
 }
 
 VA(0x004817f5, 0x96)
-bool TMapView::onEditProperties(TEvent* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TEvent* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TPlayerMask availablePlayers;
     for (unsigned int player = 0; player < kNumPlayers; ++player)
@@ -977,7 +977,7 @@ bool TMapView::onEditProperties(TEvent* pObj, TGameMap* pMap, TMapObjectRef ref)
 }
 
 VA(0x0048188b, 0x6c)
-bool TMapView::onEditProperties(TMonster* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TMonster* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TMonsterPropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
@@ -985,17 +985,17 @@ bool TMapView::onEditProperties(TMonster* pObj, TGameMap* pMap, TMapObjectRef re
 }
 
 VA(0x004818f7, 0x87)
-bool TMapView::onEditProperties(TFlaggableObject* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TFlaggableObject* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     if ((pObj->getType() == MINE || pObj->getType() == ABANDONED_MINE) && pObj->getExtra() >= 7)
-        return onEditProperties(static_cast<TGameObject*>(pObj), pMap, ref);
+        return onEditProperties(static_cast<TGameObject*>(pObj), pMap, bSecondLayer, objID);
     TFlaggablePropsDlg dlg(this, pObj);
     dlg.DoModal();
     return dlg.wasModified();
 }
 
 VA(0x0048197e, 0x58)
-bool TMapView::onEditProperties(TAbandonedMine* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TAbandonedMine* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TAbandonedMinePropsDlg dlg(this, pObj);
     dlg.DoModal();
@@ -1003,7 +1003,7 @@ bool TMapView::onEditProperties(TAbandonedMine* pObj, TGameMap* pMap, TMapObject
 }
 
 VA(0x004819d6, 0x62)
-bool TMapView::onEditProperties(TGarrison* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TGarrison* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TGarrisonPropsDlg dlg(this, pObj, pMap->getVersion());
     dlg.DoModal();
@@ -1011,7 +1011,7 @@ bool TMapView::onEditProperties(TGarrison* pObj, TGameMap* pMap, TMapObjectRef r
 }
 
 VA(0x00481a38, 0x55)
-bool TMapView::onEditProperties(TSign* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TSign* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TSignPropsDlg dlg(this, pObj);
     dlg.DoModal();
@@ -1019,7 +1019,7 @@ bool TMapView::onEditProperties(TSign* pObj, TGameMap* pMap, TMapObjectRef ref)
 }
 
 VA(0x00481ad4, 0x6c)
-bool TMapView::onEditProperties(TGameArtifact* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TGameArtifact* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TArtifactPropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
@@ -1027,7 +1027,7 @@ bool TMapView::onEditProperties(TGameArtifact* pObj, TGameMap* pMap, TMapObjectR
 }
 
 VA(0x00481b40, 0x6c)
-bool TMapView::onEditProperties(TSpellScroll* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TSpellScroll* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TSpellScrollPropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
@@ -1035,7 +1035,7 @@ bool TMapView::onEditProperties(TSpellScroll* pObj, TGameMap* pMap, TMapObjectRe
 }
 
 VA(0x00481bac, 0x6c)
-bool TMapView::onEditProperties(TGameResource* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TGameResource* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TResourcePropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
@@ -1043,7 +1043,7 @@ bool TMapView::onEditProperties(TGameResource* pObj, TGameMap* pMap, TMapObjectR
 }
 
 VA(0x00481c18, 0x6c)
-bool TMapView::onEditProperties(TBlackBox* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TBlackBox* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TBlackBoxPropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
@@ -1051,7 +1051,7 @@ bool TMapView::onEditProperties(TBlackBox* pObj, TGameMap* pMap, TMapObjectRef r
 }
 
 VA(0x00481c84, 0x55)
-bool TMapView::onEditProperties(TScholar* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TScholar* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TScholarPropsDlg dlg(this, pObj);
     dlg.DoModal();
@@ -1059,7 +1059,7 @@ bool TMapView::onEditProperties(TScholar* pObj, TGameMap* pMap, TMapObjectRef re
 }
 
 VA(0x00481d8d, 0x55)
-bool TMapView::onEditProperties(THolyGrail* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(THolyGrail* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     THolyGrailPropsDlg dlg(this, pObj);
     dlg.DoModal();
@@ -1067,7 +1067,7 @@ bool TMapView::onEditProperties(THolyGrail* pObj, TGameMap* pMap, TMapObjectRef 
 }
 
 VA(0x00481de2, 0x55)
-bool TMapView::onEditProperties(TShrine* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TShrine* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TShrinePropsDlg dlg(this, pObj);
     dlg.DoModal();
@@ -1075,7 +1075,7 @@ bool TMapView::onEditProperties(TShrine* pObj, TGameMap* pMap, TMapObjectRef ref
 }
 
 VA(0x00481fd5, 0x71)
-bool TMapView::onEditProperties(TWitchHut* pObj, TGameMap* pMap, TMapObjectRef ref)
+bool TMapView::onEditProperties(TWitchHut* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TWitchHutPropsDlg dlg(this, pObj, pMap->getVersion());
     dlg.DoModal();

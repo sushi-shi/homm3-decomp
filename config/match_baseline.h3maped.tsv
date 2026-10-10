@@ -826,32 +826,32 @@ GUIGameObject	?drawSpriteImpl@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGa
 GUIGameObject	?drawSpriteImpl@TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3fc7a	tokens1:d542d372fe1d
 GUIGameObject	?drawSpriteImpl@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x41799	tokens1:0819b77c5c17
 GUIGameObject	?drawSpriteShadow@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YAXPBVCSprite@@IPAVT16bppDIBSection@@HHABVCRect@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f45f	tokens1:75c6885b4a48
-GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x4466b	-
-GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x448e4	-
-GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x45b07	-
-GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x455ea	-
-GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x45869	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x43eca	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44f47	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44018	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44b55	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44df9	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x45331	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x44184	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x45de9	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x45095	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x451ed	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x4547f	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x442d3	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44ca3	-
-GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x45f2d	-
-GUIGameObject	?edit@TGUIGameObject@@UAE_NPAVTEditContext@1@PAVTGameMap@@_NI@Z	1.9333	1.9333	1.9333	0x4235a	tokens1:ae9be0144046
-GUIGameObject	?edit@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	46.5897	46.5897	46.5897	0x41b79	tokens1:962a85217c63
-GUIGameObject	?edit@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x40214	tokens1:39e373e43508
-GUIGameObject	?edit@TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x407a1	tokens1:7d98f35781fc
-GUIGameObject	?edit@TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x41231	tokens1:3cd3cb42db88
-GUIGameObject	?edit@TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x40ee3	tokens1:be3d0dbbc54b
-GUIGameObject	?edit@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x41571	tokens1:e2e8fc4d6811
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x4466b	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x448e4	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x45b07	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x455ea	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x45869	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x43eca	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x44f47	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x44018	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x44b55	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x44df9	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x45331	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x44184	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x45de9	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x45095	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x451ed	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x4547f	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x442d3	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x44ca3	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x45f2d	-
+GUIGameObject	?edit@TGUIGameObject@@UAE_NPAVTEditContext@1@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x4235a	tokens1:39ce71f4c7da
+GUIGameObject	?edit@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x41b79	tokens1:962a85217c63
+GUIGameObject	?edit@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x40214	tokens1:cd0a160f6915
+GUIGameObject	?edit@TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x407a1	tokens1:558f47c626a9
+GUIGameObject	?edit@TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x41231	tokens1:52d7b1c52a13
+GUIGameObject	?edit@TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x40ee3	tokens1:abae001072ca
+GUIGameObject	?edit@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x41571	tokens1:07508aa5a627
 GUIGameObject	?exportText@THero@@$4PPPPPPPM@BA@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x470b5	-
 GUIGameObject	?exportText@THero@@$4PPPPPPPM@M@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x4619e	-
 GUIGameObject	?exportText@TMonster@@$4PPPPPPPM@M@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x46fee	-
@@ -1904,7 +1904,7 @@ Hero	?write@TPrimarySkills@THeroPrototype@@QBEXPAVTRawOStream@@H@Z	100.0000	100.
 Hero	?write@TSecondarySkills@THeroPrototype@@QBEXPAVTRawOStream@@H@Z	99.9474	99.9474	99.9474	0x4a301	tokens1:f7404e233f65
 Hero	?write@TSpells@THeroPrototype@@QBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x4a4e4	tokens1:e04f98b81e4c
 HeroPlaceholderPropsDlg	??0?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAE@ABU?$less@H@1@ABV?$allocator@H@1@@Z	100.0000	100.0000	100.0000	0x4e20e	-
-HeroPlaceholderPropsDlg	??0THeroPlaceholderPropsDlg@@QAE@PAVCWnd@@PAVTGameMap@@VTMapObjectRef@@@Z	99.7692	99.7692	99.7692	0x4d2dc	tokens1:d7a1a26d0f44
+HeroPlaceholderPropsDlg	??0THeroPlaceholderPropsDlg@@QAE@PAVCWnd@@PAVTGameMap@@_NI@Z	99.9650	99.9650	99.9650	0x4d2dc	tokens1:3422adf7b7e3
 HeroPlaceholderPropsDlg	??1THeroPlaceholderPropsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x4d523	-
 HeroPlaceholderPropsDlg	??4?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x4e299	-
 HeroPlaceholderPropsDlg	??_F?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x4d510	-
@@ -2020,10 +2020,10 @@ HeroPropsSecSkillsPage	?OnCustomizeCheck@THeroPropsSecSkillsPage@@IAEXXZ	100.000
 HeroPropsSecSkillsPage	?OnInitDialog@THeroPropsSecSkillsPage@@UAEHXZ	100.0000	100.0000	100.0000	0x535ef	tokens1:d35e3c3232a8
 HeroPropsSecSkillsPage	?OnOK@THeroPropsSecSkillsPage@@UAEXXZ	99.9138	99.9138	99.9138	0x5352a	tokens1:134682930d43
 HeroPropsSecSkillsPage	?setDefaultSecondarySkills@THeroPropsSecSkillsPage@@QAEXABVTSecondarySkills@THeroPrototype@@@Z	100.0000	100.0000	100.0000	0x534dd	tokens1:e05eba973d3c
-HeroPropsSheet	??0THeroPropsSheet@@QAE@PBDPAVCWnd@@ABVTGameMap@@VTMapObjectRef@@@Z	99.7115	99.7115	99.7115	0x539f3	tokens1:f6312a0d622e
-HeroPropsSheet	??0TNonRandomHeroPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@VTMapObjectRef@@_N@Z	93.9157	93.9157	93.9157	0x5431e	tokens1:5ce9cc65fce5
-HeroPropsSheet	??0TPrisonPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@VTMapObjectRef@@@Z	90.9375	90.9375	90.9375	0x5479c	tokens1:db29f08dd7c7
-HeroPropsSheet	??0TRandomHeroPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@VTMapObjectRef@@_N@Z	96.6418	96.6418	96.6418	0x5405e	tokens1:683db2a8e527
+HeroPropsSheet	??0THeroPropsSheet@@QAE@PBDPAVCWnd@@ABVTGameMap@@_NI@Z	99.9039	99.9039	99.9039	0x539f3	tokens1:fc7564c6dece
+HeroPropsSheet	??0TNonRandomHeroPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@_NI2@Z	95.5100	95.5100	95.5100	0x5431e	tokens1:9bf4f4a48951
+HeroPropsSheet	??0TPrisonPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@_NI@Z	92.7098	92.7098	92.7098	0x5479c	tokens1:0d914d84c4f5
+HeroPropsSheet	??0TRandomHeroPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@_NI2@Z	97.1045	97.1045	97.1045	0x5405e	tokens1:21851bad59e4
 HeroPropsSheet	??1THeroPropsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0x53ad9	tokens1:5de1ad31769d
 HeroPropsSheet	??1TNonRandomHeroPropsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0x546ad	tokens1:6a05ae160f9c
 HeroPropsSheet	??1TPrisonPropsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0x54ad2	tokens1:1106bcce4972
@@ -2039,8 +2039,8 @@ HeroPropsSheet	?OnInitDialog@THeroPropsSheet@@UAEHXZ	100.0000	100.0000	100.0000	
 HeroPropsSheet	?OnInitDialog@TNonRandomHeroPropsSheet@@UAEHXZ	99.9057	99.9057	99.9057	0x54b61	tokens1:48984a3ddbc1
 HeroPropsSheet	?OnInitDialog@TRandomHeroPropsSheet@@UAEHXZ	100.0000	100.0000	100.0000	0x54301	tokens1:bcccd85b3d68
 HeroPropsSheet	?_addPages@THeroPropsSheet@@IAEX_N@Z	99.9771	99.9771	99.9771	0x53c7b	tokens1:5e3f832bf0b4
-HeroPropsSheet	?_getOldHero@THeroPropsSheet@@ABEPBVTHero@@XZ	100.0000	100.0000	100.0000	0x53ba3	tokens1:053493d8fa01
-HeroPropsSheet	?_setNewMap@THeroPropsSheet@@IAEXPAVTGameMap@@@Z	100.0000	100.0000	100.0000	0x53c05	tokens1:5d738c53bf16
+HeroPropsSheet	?_getOldHero@THeroPropsSheet@@ABEPBVTHero@@XZ	100.0000	100.0000	100.0000	0x53ba3	tokens1:fe4c36b0edcf
+HeroPropsSheet	?_setNewMap@THeroPropsSheet@@IAEXPAVTGameMap@@@Z	100.0000	100.0000	100.0000	0x53c05	tokens1:1238e25dbdaf
 HeroPropsSheet	?onDisableOK@THeroPropsSheet@@UAEXXZ	100.0000	100.0000	100.0000	0x53fe3	tokens1:fc6daf8e9e2d
 HeroPropsSheet	?onDisableOK@TNonRandomHeroPropsSheet@@UAEXXZ	100.0000	100.0000	100.0000	0x5468c	tokens1:b5429dc6bdf0
 HeroPropsSheet	?onDisableOK@TNonRandomHeroPropsSheet@@WEM@AEXXZ	100.0000	100.0000	100.0000	0x54c8d	-
@@ -2994,26 +2994,26 @@ MapView	?onEditGrabObject@TMapView@@EAEXPAVTMapEditingWnd@@I@Z	100.0000	100.0000
 MapView	?onEditObjectSelected@TMapView@@EAEXPAVTMapEditingWnd@@I@Z	100.0000	100.0000	100.0000	0x80b62	tokens1:78010c0ba300
 MapView	?onEditPasteObject@TMapView@@EAEXPAVTMapEditingWnd@@ABVTGameObject@@ABVCRect@@@Z	100.0000	100.0000	100.0000	0x81032	tokens1:edb5b5bc41d0
 MapView	?onEditPlaceObject@TMapView@@EAEXPAVTMapEditingWnd@@ABVTGUIGameObject@@II@Z	100.0000	100.0000	100.0000	0x80df3	tokens1:e234183ff263
-MapView	?onEditProperties@TMapView@@EAE_NPAVTAbandonedMine@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x8197e	tokens1:219b37fdeaf4
-MapView	?onEditProperties@TMapView@@EAE_NPAVTBlackBox@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81c18	tokens1:253600e7527a
-MapView	?onEditProperties@TMapView@@EAE_NPAVTEvent@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x817f5	tokens1:358f9475063c
-MapView	?onEditProperties@TMapView@@EAE_NPAVTFlaggableObject@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x818f7	tokens1:13b44257d4ce
-MapView	?onEditProperties@TMapView@@EAE_NPAVTGameArtifact@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81ad4	tokens1:0d5deb34ea20
-MapView	?onEditProperties@TMapView@@EAE_NPAVTGameObject@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x815ac	tokens1:d0dddb3ac983
-MapView	?onEditProperties@TMapView@@EAE_NPAVTGameResource@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81bac	tokens1:9394684c93fb
-MapView	?onEditProperties@TMapView@@EAE_NPAVTGarrison@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x819d6	tokens1:9cf7d9ee9c71
-MapView	?onEditProperties@TMapView@@EAE_NPAVTHeroPlaceholder@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x815ff	tokens1:f3b58d5af2b1
-MapView	?onEditProperties@TMapView@@EAE_NPAVTHolyGrail@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81d8d	tokens1:16a77814f8fd
-MapView	?onEditProperties@TMapView@@EAE_NPAVTMonster@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x8188b	tokens1:08644ed08e4b
-MapView	?onEditProperties@TMapView@@EAE_NPAVTNonRandomHero@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x8165d	tokens1:06041a5768e4
-MapView	?onEditProperties@TMapView@@EAE_NPAVTPrison@@PAVTGameMap@@VTMapObjectRef@@@Z	99.8077	99.8077	99.8077	0x8172b	tokens1:f0a02831d7ba
-MapView	?onEditProperties@TMapView@@EAE_NPAVTRandomHero@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x816c4	tokens1:4ecb137b17ce
-MapView	?onEditProperties@TMapView@@EAE_NPAVTScholar@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81c84	tokens1:94e861f8c043
-MapView	?onEditProperties@TMapView@@EAE_NPAVTShrine@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81de2	tokens1:767e998fd3e7
-MapView	?onEditProperties@TMapView@@EAE_NPAVTSign@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81a38	tokens1:60b9cb58a00b
-MapView	?onEditProperties@TMapView@@EAE_NPAVTSpellScroll@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81b40	tokens1:b73c7cf56248
-MapView	?onEditProperties@TMapView@@EAE_NPAVTTown@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81790	tokens1:8c2b930ffdde
-MapView	?onEditProperties@TMapView@@EAE_NPAVTWitchHut@@PAVTGameMap@@VTMapObjectRef@@@Z	100.0000	100.0000	100.0000	0x81fd5	tokens1:814efc4d4f93
+MapView	?onEditProperties@TMapView@@EAE_NPAVTAbandonedMine@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x8197e	tokens1:647bfb41c5e5
+MapView	?onEditProperties@TMapView@@EAE_NPAVTBlackBox@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81c18	tokens1:43ab05f219e7
+MapView	?onEditProperties@TMapView@@EAE_NPAVTEvent@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x817f5	tokens1:ddb31b53b9ce
+MapView	?onEditProperties@TMapView@@EAE_NPAVTFlaggableObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x818f7	tokens1:456fb3e30fb3
+MapView	?onEditProperties@TMapView@@EAE_NPAVTGameArtifact@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81ad4	tokens1:704c3d303d54
+MapView	?onEditProperties@TMapView@@EAE_NPAVTGameObject@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x815ac	tokens1:d8c1d7a8de35
+MapView	?onEditProperties@TMapView@@EAE_NPAVTGameResource@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81bac	tokens1:adc83c9faaeb
+MapView	?onEditProperties@TMapView@@EAE_NPAVTGarrison@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x819d6	tokens1:e24e954ecf2a
+MapView	?onEditProperties@TMapView@@EAE_NPAVTHeroPlaceholder@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x815ff	tokens1:68d66ebedf5c
+MapView	?onEditProperties@TMapView@@EAE_NPAVTHolyGrail@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81d8d	tokens1:a3a1985cb534
+MapView	?onEditProperties@TMapView@@EAE_NPAVTMonster@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x8188b	tokens1:a670c5376b87
+MapView	?onEditProperties@TMapView@@EAE_NPAVTNonRandomHero@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x8165d	tokens1:d0d6b504687f
+MapView	?onEditProperties@TMapView@@EAE_NPAVTPrison@@PAVTGameMap@@_NI@Z	99.8077	99.8077	99.8077	0x8172b	tokens1:7557252142cc
+MapView	?onEditProperties@TMapView@@EAE_NPAVTRandomHero@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x816c4	tokens1:4fe5c6579c82
+MapView	?onEditProperties@TMapView@@EAE_NPAVTScholar@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81c84	tokens1:2a1a0033dc17
+MapView	?onEditProperties@TMapView@@EAE_NPAVTShrine@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81de2	tokens1:bcb93eb39c12
+MapView	?onEditProperties@TMapView@@EAE_NPAVTSign@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81a38	tokens1:36f40ce93753
+MapView	?onEditProperties@TMapView@@EAE_NPAVTSpellScroll@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81b40	tokens1:b7ed8fb56ef1
+MapView	?onEditProperties@TMapView@@EAE_NPAVTTown@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81790	tokens1:9796220e9c83
+MapView	?onEditProperties@TMapView@@EAE_NPAVTWitchHut@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81fd5	tokens1:d239ca81a35e
 MapView	?onMoveMapViewRect@TMapView@@EAEXPAVTMapViewingWnd@@ABVCPoint@@@Z	100.0000	100.0000	100.0000	0x80b1a	tokens1:a678e6629b90
 MapView	?onSizeMapViewRect@TMapView@@EAEXPAVTMapViewingWnd@@ABVCSize@@@Z	100.0000	100.0000	100.0000	0x80b4c	tokens1:b426cb2eaa27
 MapView	?onToolkitCanCreateObject@TMapView@@EAE_NPAVTToolkitWnd@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x8087c	tokens1:ab44c7dd1a28
@@ -3899,7 +3899,7 @@ Town	?setVisitingHero@TTown@@QAEXPBVTHero@@@Z	100.0000	100.0000	100.0000	0xc242d
 Town	?write@TTimedEvent@TTown@@QBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0xc19e0	tokens1:794b81abb171
 Town	?write@TTown@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0xc3703	-
 Town	?write@TTown@@UBEXPAVTRawOStream@@H@Z	98.8210	98.8210	98.8210	0xc2ad9	tokens1:09456a14cd0c
-TownPropsBuildingsPage	??0TTownPropsBuildingsPage@@QAE@ABVTGameMap@@AAV1@VTMapObjectRef@@@Z	99.8864	99.8864	99.8864	0xc3920	tokens1:14e28ce49bf9
+TownPropsBuildingsPage	??0TTownPropsBuildingsPage@@QAE@ABVTGameMap@@AAV1@_NI@Z	100.0000	100.0000	100.0000	0xc3920	tokens1:ddee3c8e32b2
 TownPropsBuildingsPage	??1TTownPropsBuildingsPage@@UAE@XZ	100.0000	100.0000	100.0000	0xc3a97	tokens1:5c3e1489c6da
 TownPropsBuildingsPage	??8TBuildingState@TTown@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0xc49da	-
 TownPropsBuildingsPage	??_GTTownPropsBuildingsPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xc3a7b	-
@@ -3921,8 +3921,8 @@ TownPropsBuildingsPage	?_demolishAll@TTownPropsBuildingsPage@@AAEXPAU_TREEITEM@@
 TownPropsBuildingsPage	?_demolishItem@TTownPropsBuildingsPage@@AAEXPAU_TREEITEM@@@Z	100.0000	100.0000	100.0000	0xc400e	tokens1:5b422c1d0004
 TownPropsBuildingsPage	?_disableTree@TTownPropsBuildingsPage@@AAEXPAU_TREEITEM@@@Z	100.0000	100.0000	100.0000	0xc3df9	tokens1:483cdf3625e2
 TownPropsBuildingsPage	?_enableTree@TTownPropsBuildingsPage@@AAEXPAU_TREEITEM@@@Z	100.0000	100.0000	100.0000	0xc3e73	tokens1:3502f303d070
-TownPropsBuildingsPage	?_getNewTown@TTownPropsBuildingsPage@@AAEPAVTTown@@XZ	92.3809	92.3809	92.3809	0xc41ad	tokens1:7de1e08bd104
-TownPropsBuildingsPage	?_getOldTown@TTownPropsBuildingsPage@@ABEPBVTTown@@XZ	92.3809	92.3809	92.3809	0xc416b	tokens1:2ed18790e880
+TownPropsBuildingsPage	?_getNewTown@TTownPropsBuildingsPage@@AAEPAVTTown@@XZ	100.0000	100.0000	100.0000	0xc41ad	tokens1:ebee6673bfc4
+TownPropsBuildingsPage	?_getOldTown@TTownPropsBuildingsPage@@ABEPBVTTown@@XZ	100.0000	100.0000	100.0000	0xc416b	tokens1:9879b6982010
 TownPropsBuildingsPage	?_resetTree@TTownPropsBuildingsPage@@AAEXPAU_TREEITEM@@@Z	100.0000	100.0000	100.0000	0xc3c2a	tokens1:9c0537d08430
 TownPropsBuildingsPage	?_resetTree@TTownPropsBuildingsPage@@AAEXXZ	99.9474	99.9474	99.9474	0xc3bf5	tokens1:f95be2f303cc
 TownPropsBuildingsPage	?_retrieveBuildingStates@TTownPropsBuildingsPage@@AAEXPAU_TREEITEM@@@Z	100.0000	100.0000	100.0000	0xc3d73	tokens1:5afd3fcf4f34
@@ -3930,7 +3930,7 @@ TownPropsBuildingsPage	?_setCheckStates@TTownPropsBuildingsPage@@AAEXE@Z	93.9535
 TownPropsBuildingsPage	?_showBuildingStates@TTownPropsBuildingsPage@@AAEXPAU_TREEITEM@@@Z	100.0000	100.0000	100.0000	0xc3cbc	tokens1:c67c71a16c50
 TownPropsBuildingsPage	?demolishDependentBuildings@?A0x86c830f0645cb487@@YAXAAY0CJ@$$CBUTBuildingTraits@TTown@@W4TBuilding@@PAV?$TArray@VTBuildingState@TTown@@$0CJ@@@@Z	100.0000	100.0000	100.0000	0xc38e3	tokens1:08e657eee3e4
 TownPropsBuildingsPage	?equal@std@@YA_NPBVTBuildingState@TTown@@00@Z	100.0000	100.0000	100.0000	0xc49a7	-
-TownPropsGarrisonPage	??0TTownPropsGarrisonPage@@QAE@ABVTGameMap@@AAV1@VTMapObjectRef@@@Z	99.7976	99.7976	99.7976	0xc4ba8	tokens1:0e5167bcb3c1
+TownPropsGarrisonPage	??0TTownPropsGarrisonPage@@QAE@ABVTGameMap@@AAV1@_NI@Z	100.0000	100.0000	100.0000	0xc4ba8	tokens1:054e452694cf
 TownPropsGarrisonPage	??1TTownPropsGarrisonPage@@UAE@XZ	100.0000	100.0000	100.0000	0xc4cf3	tokens1:5ebef02651bd
 TownPropsGarrisonPage	??_GTTownPropsGarrisonPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xc4cd7	-
 TownPropsGarrisonPage	?DoDataExchange@TTownPropsGarrisonPage@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xc4dcb	tokens1:7e937239c58f
@@ -3940,9 +3940,9 @@ TownPropsGarrisonPage	?OnCustomizeCheck@TTownPropsGarrisonPage@@IAEXXZ	100.0000	
 TownPropsGarrisonPage	?OnDestroy@TTownPropsGarrisonPage@@IAEXXZ	100.0000	100.0000	100.0000	0xc4e2f	tokens1:781fdb7fb7b2
 TownPropsGarrisonPage	?OnInitDialog@TTownPropsGarrisonPage@@UAEHXZ	100.0000	100.0000	100.0000	0xc4e46	tokens1:e61726df6b8a
 TownPropsGarrisonPage	?OnOK@TTownPropsGarrisonPage@@UAEXXZ	99.9123	99.9123	99.9123	0xc4f68	tokens1:32cbfc3bddfc
-TownPropsGarrisonPage	?_getNewTown@TTownPropsGarrisonPage@@AAEPAVTTown@@XZ	92.3809	92.3809	92.3809	0xc4d89	tokens1:26e15fd06141
-TownPropsGarrisonPage	?_getOldTown@TTownPropsGarrisonPage@@ABEPBVTTown@@XZ	92.3809	92.3809	92.3809	0xc4d47	tokens1:b540e2fb4546
-TownPropsGeneralPage	??0TTownPropsGeneralPage@@QAE@PAVTTownPropsGeneralPageParentSheet@@ABVTGameMap@@AAV2@VTMapObjectRef@@@Z	98.0698	98.0698	98.0698	0xc523c	tokens1:8686d96f1390
+TownPropsGarrisonPage	?_getNewTown@TTownPropsGarrisonPage@@AAEPAVTTown@@XZ	100.0000	100.0000	100.0000	0xc4d89	tokens1:4ba504a51aa2
+TownPropsGarrisonPage	?_getOldTown@TTownPropsGarrisonPage@@ABEPBVTTown@@XZ	100.0000	100.0000	100.0000	0xc4d47	tokens1:cb560b6d80aa
+TownPropsGeneralPage	??0TTownPropsGeneralPage@@QAE@PAVTTownPropsGeneralPageParentSheet@@ABVTGameMap@@AAV2@_NI@Z	98.1473	98.1473	98.1473	0xc523c	tokens1:b5bff2890208
 TownPropsGeneralPage	??1?$auto_ptr@VTHero@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xc6488	-
 TownPropsGeneralPage	??1TTownPropsGeneralPage@@UAE@XZ	100.0000	100.0000	100.0000	0xc5458	tokens1:67542aec4f2d
 TownPropsGeneralPage	??_GTTownPropsGeneralPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xc543c	-
@@ -3951,7 +3951,7 @@ TownPropsGeneralPage	?GetMessageMap@TTownPropsGeneralPage@@MBEPBUAFX_MSGMAP@@XZ	
 TownPropsGeneralPage	?OnAddHeroButton@TTownPropsGeneralPage@@IAEXXZ	83.1776	83.1776	83.1776	0xc5e7b	tokens1:d3d58859fa67
 TownPropsGeneralPage	?OnChangeNameEdit@TTownPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0xc61e5	tokens1:ee748b362ea0
 TownPropsGeneralPage	?OnCustomizeCheck@TTownPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0xc623f	tokens1:dc60c0278427
-TownPropsGeneralPage	?OnEditHeroButton@TTownPropsGeneralPage@@IAEXXZ	90.1636	90.1636	90.1636	0xc5fdf	tokens1:1feffaf4a9fc
+TownPropsGeneralPage	?OnEditHeroButton@TTownPropsGeneralPage@@IAEXXZ	90.5727	90.5727	90.5727	0xc5fdf	tokens1:aa261ee0bbb6
 TownPropsGeneralPage	?OnInitDialog@TTownPropsGeneralPage@@UAEHXZ	99.6225	99.6225	99.6225	0xc5812	tokens1:15a29b1ce84d
 TownPropsGeneralPage	?OnOK@TTownPropsGeneralPage@@UAEXXZ	99.9468	99.9468	99.9468	0xc5d59	tokens1:c281bfd7f3a4
 TownPropsGeneralPage	?OnRemoveHeroButton@TTownPropsGeneralPage@@IAEXXZ	93.7500	93.7500	93.7500	0xc6173	tokens1:9544ddeeab58
@@ -3959,7 +3959,7 @@ TownPropsGeneralPage	?OnSelChangePlayerCombo@TTownPropsGeneralPage@@IAEXXZ	100.0
 TownPropsGeneralPage	?_createHero@TTownPropsGeneralPage@@AAEPAVTHero@@XZ	100.0000	100.0000	100.0000	0xc553e	tokens1:919e1b8c6fa4
 TownPropsGeneralPage	?_getNewTown@TTownPropsGeneralPage@@AAEPAVTTown@@XZ	92.3809	92.3809	92.3809	0xc56e6	tokens1:ab59d5350016
 TownPropsGeneralPage	?_getOldTown@TTownPropsGeneralPage@@ABEPBVTTown@@XZ	92.3809	92.3809	92.3809	0xc56a4	tokens1:676ca1ca8189
-TownPropsSheet	??0TTownPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@VTMapObjectRef@@@Z	99.9668	99.9668	99.9668	0xc6679	tokens1:f5f0394e0d6d
+TownPropsSheet	??0TTownPropsSheet@@QAE@PAVCWnd@@PAVTGameMap@@_NI@Z	99.9668	99.9668	99.9668	0xc6679	tokens1:e1907dd3cb59
 TownPropsSheet	??1TTownPropsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0xc6ab2	tokens1:21fd87c4e053
 TownPropsSheet	??_GTTownPropsSheet@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xc6a96	-
 TownPropsSheet	?DoModal@TTownPropsSheet@@UAEHXZ	100.0000	100.0000	100.0000	0xc6c0b	tokens1:ec5473d14779
@@ -3967,7 +3967,7 @@ TownPropsSheet	?GetMessageMap@TTownPropsSheet@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100
 TownPropsSheet	?onDisableOK@TTownPropsSheet@@UAEXXZ	100.0000	100.0000	100.0000	0xc6bee	tokens1:6ef1f37d1687
 TownPropsSheet	?onEnableOK@TTownPropsSheet@@UAEXXZ	100.0000	100.0000	100.0000	0xc6bd7	tokens1:29e30561ad8a
 TownPropsSheet	?wasModified@TTownPropsSheet@@QBE_NXZ	100.0000	100.0000	100.0000	0xc6b8b	tokens1:9fec9ca4f9f2
-TownPropsSpellsPage	??0TTownPropsSpellsPage@@QAE@ABVTGameMap@@AAV1@VTMapObjectRef@@@Z	99.8000	99.8000	99.8000	0xc6e10	tokens1:d127ce06a975
+TownPropsSpellsPage	??0TTownPropsSpellsPage@@QAE@ABVTGameMap@@AAV1@_NI@Z	100.0000	100.0000	100.0000	0xc6e10	tokens1:449fcc4b089c
 TownPropsSpellsPage	??1TTownPropsSpellsPage@@UAE@XZ	100.0000	100.0000	100.0000	0xc6f2e	tokens1:cd983dcc6b5f
 TownPropsSpellsPage	??_GTTownPropsSpellsPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xc6f12	-
 TownPropsSpellsPage	?DoDataExchange@TTownPropsSpellsPage@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xc71b3	tokens1:5ab6776956a8
@@ -3978,9 +3978,9 @@ TownPropsSpellsPage	?OnInitDialog@TTownPropsSpellsPage@@UAEHXZ	99.0787	99.0787	9
 TownPropsSpellsPage	?OnOK@TTownPropsSpellsPage@@UAEXXZ	99.8809	99.8809	99.8809	0xc7381	tokens1:4ef2112684bb
 TownPropsSpellsPage	?OnSelChangeLevelCombo@TTownPropsSpellsPage@@IAEXXZ	100.0000	100.0000	100.0000	0xc7402	tokens1:3576e7468ebb
 TownPropsSpellsPage	?_fillSpellLists@TTownPropsSpellsPage@@AAEXI@Z	100.0000	100.0000	100.0000	0xc6f8d	tokens1:57ad916f3873
-TownPropsSpellsPage	?_getNewTown@TTownPropsSpellsPage@@AAEPAVTTown@@XZ	92.3809	92.3809	92.3809	0xc7171	tokens1:aa342a32c606
-TownPropsSpellsPage	?_getOldTown@TTownPropsSpellsPage@@ABEPBVTTown@@XZ	92.3809	92.3809	92.3809	0xc712f	tokens1:d8d617a1fa12
-TownPropsTimedEventsPage	??0TTownPropsTimedEventsPage@@QAE@ABVTGameMap@@AAV1@VTMapObjectRef@@@Z	99.8660	99.8660	99.8660	0xc7827	tokens1:87f0530d5709
+TownPropsSpellsPage	?_getNewTown@TTownPropsSpellsPage@@AAEPAVTTown@@XZ	100.0000	100.0000	100.0000	0xc7171	tokens1:ba12d66d397f
+TownPropsSpellsPage	?_getOldTown@TTownPropsSpellsPage@@ABEPBVTTown@@XZ	100.0000	100.0000	100.0000	0xc712f	tokens1:faffb14cca51
+TownPropsTimedEventsPage	??0TTownPropsTimedEventsPage@@QAE@ABVTGameMap@@AAV1@_NI@Z	100.0000	100.0000	100.0000	0xc7827	tokens1:6f2e081feabb
 TownPropsTimedEventsPage	??1TTownPropsTimedEventsPage@@UAE@XZ	100.0000	100.0000	100.0000	0xc79a2	tokens1:50c51aa62ec3
 TownPropsTimedEventsPage	??8TTimedEvent@TTown@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0xc8662	-
 TownPropsTimedEventsPage	??_GTTownPropsTimedEventsPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xc7986	-
@@ -3999,8 +3999,8 @@ TownPropsTimedEventsPage	?OnSelChangeEventsList@TTownPropsTimedEventsPage@@IAEXX
 TownPropsTimedEventsPage	?OnVKeyToItem@TTownPropsTimedEventsPage@@IAEHIPAVCListBox@@I@Z	100.0000	100.0000	100.0000	0xc833e	tokens1:6baed48e9a76
 TownPropsTimedEventsPage	?_Eq@?$vector@VTTimedEvent@TTown@@V?$allocator@VTTimedEvent@TTown@@@std@@@std@@QBE_NABV12@@Z	100.0000	100.0000	100.0000	0xc85ce	-
 TownPropsTimedEventsPage	?_addToEventList@TTownPropsTimedEventsPage@@AAEHI@Z	100.0000	100.0000	100.0000	0xc7a4c	tokens1:780b822a5a35
-TownPropsTimedEventsPage	?_getNewTown@TTownPropsTimedEventsPage@@AAEPAVTTown@@XZ	92.3809	92.3809	92.3809	0xc7b80	tokens1:746db7db03c6
-TownPropsTimedEventsPage	?_getOldTown@TTownPropsTimedEventsPage@@ABEPBVTTown@@XZ	92.3809	92.3809	92.3809	0xc7b3e	tokens1:8a1468b49b4a
+TownPropsTimedEventsPage	?_getNewTown@TTownPropsTimedEventsPage@@AAEPAVTTown@@XZ	100.0000	100.0000	100.0000	0xc7b80	tokens1:1024e654b80b
+TownPropsTimedEventsPage	?_getOldTown@TTownPropsTimedEventsPage@@ABEPBVTTown@@XZ	100.0000	100.0000	100.0000	0xc7b3e	tokens1:6eb5ac7a227a
 TownPropsTimedEventsPage	?equal@std@@YA_NPBVTTimedEvent@TTown@@00@Z	100.0000	100.0000	100.0000	0xc862d	-
 TownPropsTimedEventsPage	?erase@?$vector@VTTimedEvent@TTown@@V?$allocator@VTTimedEvent@TTown@@@std@@@std@@QAEPAVTTimedEvent@TTown@@PAV34@@Z	100.0000	100.0000	100.0000	0xc8513	-
 TownPropsTimedEventsPage	?getEvent@TEditTownEventSheet@@QBE?AVTTimedEvent@TTown@@XZ	100.0000	100.0000	100.0000	0xc7f7a	-

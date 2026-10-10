@@ -21,7 +21,7 @@ class TTownPropsTimedEventsPage;
 
 class TTownPropsSheet : public CPropertySheet, public TTownPropsGeneralPageParentSheet {
 public:
-    TTownPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef townRef);
+    TTownPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual ~TTownPropsSheet();
 
     // Stores the edited copy in the map when OK is pressed on a changed

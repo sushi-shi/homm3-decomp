@@ -16,11 +16,11 @@
 #include "editor/Player.h"
 
 VA(0x0044d2dc, 0x218)
-THeroPlaceholderPropsDlg::THeroPlaceholderPropsDlg(CWnd* pParent, TGameMap* pMap, TMapObjectRef placeholderRef)
+THeroPlaceholderPropsDlg::THeroPlaceholderPropsDlg(CWnd* pParent, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
     : CDialog(THeroPlaceholderPropsDlg::IDD, pParent),
       _m_pMap(pMap),
-      _m_bSecondLayer(placeholderRef.getBSecondLayer()),
-      _m_objectID(placeholderRef.getObjectID()),
+      _m_bSecondLayer(bSecondLayer),
+      _m_objectID(objID),
       _m_pOldPlaceholder(_getOldPlaceholder()),
       _m_pNewPlaceholder(NULL),
       _m_bModified(false)

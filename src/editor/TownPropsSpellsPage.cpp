@@ -18,11 +18,12 @@ DATA(0x0054404c)
 static const int g_akNumGuildLevelSpells[TTownPropsSpellsPage::s_kNumSpellLevels] = { 5, 4, 3, 2, 1 };
 
 VA(0x004c6e10, 0x102)
-TTownPropsSpellsPage::TTownPropsSpellsPage(const TGameMap& oldMap, TGameMap& newMap, TMapObjectRef townRef)
+TTownPropsSpellsPage::TTownPropsSpellsPage(const TGameMap& oldMap, TGameMap& newMap, bool bSecondLayer, unsigned int objID)
     : CPropertyPage(TTownPropsSpellsPage::IDD),
       _m_oldMap(oldMap),
       _m_newMap(newMap),
-      _m_townRef(townRef),
+      _m_bSecondLayer(bSecondLayer),
+      _m_objectID(objID),
       _m_pOldTown(_getOldTown()),
       _m_bModified(false)
 {
@@ -72,15 +73,15 @@ void TTownPropsSpellsPage::_fillSpellLists(unsigned int level)
 VA(0x004c712f, 0x42)
 const TTown* TTownPropsSpellsPage::_getOldTown() const
 {
-    const TGameMap::TLayer& layer = _m_oldMap.getLayer(_m_townRef.getBSecondLayer());
-    return dynamic_cast<const TTown*>(layer.getPObject(_m_townRef.getObjectID()));
+    const TGameMap::TLayer& layer = _m_oldMap.getLayer(_m_bSecondLayer);
+    return dynamic_cast<const TTown*>(layer.getPObject(_m_objectID));
 }
 
 VA(0x004c7171, 0x42)
 TTown* TTownPropsSpellsPage::_getNewTown()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_townRef.getBSecondLayer());
-    return dynamic_cast<TTown*>(layer.getPObject(_m_townRef.getObjectID()));
+    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
+    return dynamic_cast<TTown*>(layer.getPObject(_m_objectID));
 }
 
 VA(0x004c71b3, 0x43)

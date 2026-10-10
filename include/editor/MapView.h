@@ -319,31 +319,31 @@ private:
     virtual void onEditFillRectDrag(TMapEditingWnd* pWnd, const CRect& rect);
     virtual void onEditFillRectEndDrag(TMapEditingWnd* pWnd, const CRect& rect);
 
-    virtual bool onEditProperties(TGameObject* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(THeroPlaceholder* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TNonRandomHero* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TRandomHero* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TPrison* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TTown* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TEvent* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TMonster* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TFlaggableObject* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TAbandonedMine* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TGarrison* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TSign* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TGameArtifact* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TSpellScroll* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TGameResource* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TBlackBox* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TScholar* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TSeersHut* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(THolyGrail* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TShrine* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TRandomGenerator* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TRandomlyAlignedGenerator* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TRandomlyLeveledGenerator* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TQuestGuard* pObj, TGameMap* pMap, TMapObjectRef ref);
-    virtual bool onEditProperties(TWitchHut* pObj, TGameMap* pMap, TMapObjectRef ref);
+    virtual bool onEditProperties(TGameObject* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(THeroPlaceholder* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TNonRandomHero* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TRandomHero* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TPrison* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TTown* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TEvent* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TMonster* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TFlaggableObject* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TAbandonedMine* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TGarrison* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TSign* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TGameArtifact* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TSpellScroll* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TGameResource* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TBlackBox* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TScholar* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TSeersHut* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(THolyGrail* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TShrine* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TRandomGenerator* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TRandomlyAlignedGenerator* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TRandomlyLeveledGenerator* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TQuestGuard* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
+    virtual bool onEditProperties(TWitchHut* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
 
     void _setTerrainBrush(_TBrush brush)
     {

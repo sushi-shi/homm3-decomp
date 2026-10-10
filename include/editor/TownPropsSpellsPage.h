@@ -21,7 +21,7 @@ class TTownPropsSpellsPage : public CPropertyPage {
 public:
     enum { s_kNumSpellLevels = 5 };
 
-    TTownPropsSpellsPage(const TGameMap& oldMap, TGameMap& newMap, TMapObjectRef townRef);
+    TTownPropsSpellsPage(const TGameMap& oldMap, TGameMap& newMap, bool bSecondLayer, unsigned int objID);
     virtual ~TTownPropsSpellsPage();
 
     bool wasModified() const { return _m_bModified; }
@@ -46,7 +46,8 @@ private:
 
     const TGameMap& _m_oldMap;
     TGameMap& _m_newMap;
-    TMapObjectRef _m_townRef;
+    bool _m_bSecondLayer;
+    unsigned int _m_objectID;
     const TTown* _m_pOldTown;
     bool _m_bModified;
     std::bitset<kNumSpells> _m_obligatorySpells;

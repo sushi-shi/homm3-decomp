@@ -15,7 +15,7 @@
 #include "editor/TownPropsTimedEventsPage.h"
 
 VA(0x004c6679, 0x41d)
-TTownPropsSheet::TTownPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef townRef)
+TTownPropsSheet::TTownPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
     : CPropertySheet(TFormattedString(kObjectPropertiesCaptionFmtStr, akAdvObjectTypeTraits[TOWN].m_name),
                      pParentWnd),
       _m_pMap(pMap)
@@ -25,22 +25,22 @@ TTownPropsSheet::TTownPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef
     if (!_m_pNewMap.get())
         throw TAllocationFailure();
     _m_pGeneralPage = std::auto_ptr<TTownPropsGeneralPage>(
-        new TTownPropsGeneralPage(this, *_m_pMap, *_m_pNewMap, townRef));
+        new TTownPropsGeneralPage(this, *_m_pMap, *_m_pNewMap, bSecondLayer, objID));
     if (!_m_pGeneralPage.get())
         throw TAllocationFailure();
     _m_pGarrisonPage =
-        std::auto_ptr<TTownPropsGarrisonPage>(new TTownPropsGarrisonPage(*_m_pMap, *_m_pNewMap, townRef));
+        std::auto_ptr<TTownPropsGarrisonPage>(new TTownPropsGarrisonPage(*_m_pMap, *_m_pNewMap, bSecondLayer, objID));
     if (!_m_pGarrisonPage.get())
         throw TAllocationFailure();
     _m_pBuildingsPage =
-        std::auto_ptr<TTownPropsBuildingsPage>(new TTownPropsBuildingsPage(*_m_pMap, *_m_pNewMap, townRef));
+        std::auto_ptr<TTownPropsBuildingsPage>(new TTownPropsBuildingsPage(*_m_pMap, *_m_pNewMap, bSecondLayer, objID));
     if (!_m_pBuildingsPage.get())
         throw TAllocationFailure();
-    _m_pSpellsPage = std::auto_ptr<TTownPropsSpellsPage>(new TTownPropsSpellsPage(*_m_pMap, *_m_pNewMap, townRef));
+    _m_pSpellsPage = std::auto_ptr<TTownPropsSpellsPage>(new TTownPropsSpellsPage(*_m_pMap, *_m_pNewMap, bSecondLayer, objID));
     if (!_m_pSpellsPage.get())
         throw TAllocationFailure();
     _m_pTimedEventsPage =
-        std::auto_ptr<TTownPropsTimedEventsPage>(new TTownPropsTimedEventsPage(*_m_pMap, *_m_pNewMap, townRef));
+        std::auto_ptr<TTownPropsTimedEventsPage>(new TTownPropsTimedEventsPage(*_m_pMap, *_m_pNewMap, bSecondLayer, objID));
     if (!_m_pTimedEventsPage.get())
         throw TAllocationFailure();
     AddPage(_m_pGeneralPage.get());

@@ -21,7 +21,7 @@ class TTownPropsTimedEventsPage : public CPropertyPage {
 public:
     enum { s_kMaxNumEvents = 500 };
 
-    TTownPropsTimedEventsPage(const TGameMap& oldMap, TGameMap& newMap, TMapObjectRef townRef);
+    TTownPropsTimedEventsPage(const TGameMap& oldMap, TGameMap& newMap, bool bSecondLayer, unsigned int objID);
     virtual ~TTownPropsTimedEventsPage();
 
     bool wasModified() const { return _m_bModified; }
@@ -59,7 +59,8 @@ private:
 
     const TGameMap& _m_oldMap;
     TGameMap& _m_newMap;
-    TMapObjectRef _m_townRef;
+    bool _m_bSecondLayer;
+    unsigned int _m_objectID;
     const TTown* _m_pOldTown;
     bool _m_bModified;
     TPlayerMask _m_playersPresent;

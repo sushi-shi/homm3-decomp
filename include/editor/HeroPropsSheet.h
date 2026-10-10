@@ -34,7 +34,7 @@ class THeroPropsSpellsPage;
 
 class THeroPropsSheet : public CPropertySheet, public THeroPropsCreaturesPageParentSheet {
 public:
-    THeroPropsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, const TGameMap& oldMap, TMapObjectRef heroRef);
+    THeroPropsSheet(LPCTSTR pszCaption, CWnd* pParentWnd, const TGameMap& oldMap, bool bSecondLayer, unsigned int objID);
     virtual ~THeroPropsSheet();
 
     bool wasModified() const;
@@ -61,7 +61,8 @@ private:
     const THero* _getOldHero() const;
 
     const TGameMap& _m_map;
-    TMapObjectRef _m_heroRef;
+    bool _m_bSecondLayer;
+    TMapLayerObjectID _m_objectID;
     const THero* _m_pOldHero;
     TGameMap* _m_pNewMap;
     THero* _m_pNewHero;
@@ -76,7 +77,7 @@ private:
 
 class TRandomHeroPropsSheet : public THeroPropsSheet {
 public:
-    TRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef heroRef, bool bAnyAvailableOwner);
+    TRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID, bool bAnyAvailableOwner);
     virtual ~TRandomHeroPropsSheet();
 
     virtual int DoModal();
@@ -93,7 +94,7 @@ private:
 
 class TNonRandomHeroPropsSheet : public THeroPropsSheet, public TIdentifiedHeroPropsGeneralPageParentSheet {
 public:
-    TNonRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef heroRef, bool bAnyAvailableOwner);
+    TNonRandomHeroPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID, bool bAnyAvailableOwner);
     virtual ~TNonRandomHeroPropsSheet();
 
     virtual int DoModal();
@@ -117,7 +118,7 @@ private:
 
 class TPrisonPropsSheet : public THeroPropsSheet, public TIdentifiedHeroPropsGeneralPageParentSheet {
 public:
-    TPrisonPropsSheet(CWnd* pParentWnd, TGameMap* pMap, TMapObjectRef prisonRef);
+    TPrisonPropsSheet(CWnd* pParentWnd, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual ~TPrisonPropsSheet();
 
     virtual int DoModal();

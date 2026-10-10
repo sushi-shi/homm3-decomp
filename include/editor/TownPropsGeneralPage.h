@@ -27,7 +27,7 @@ public:
 class TTownPropsGeneralPage : public CPropertyPage {
 public:
     TTownPropsGeneralPage(TTownPropsGeneralPageParentSheet* pParentSheet, const TGameMap& oldMap, TGameMap& newMap,
-                          TMapObjectRef townRef);
+                          bool bSecondLayer, unsigned int objID);
     virtual ~TTownPropsGeneralPage();
 
     bool wasModified() const { return _m_bModified; }
