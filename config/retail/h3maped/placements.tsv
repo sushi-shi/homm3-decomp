@@ -945,7 +945,7 @@ rva	size	kind	name	unit	evidence
 0x00054c85	0x8	func	?onEnableOK@TNonRandomHeroPropsSheet@@WEM@AEXXZ	HeroPropsSheet	vtable of TNonRandomHeroPropsSheet (RTTI) slot 0; ICF-folded with 1 identical bodies
 0x00054c8d	0x8	func	?onDisableOK@TNonRandomHeroPropsSheet@@WEM@AEXXZ	HeroPropsSheet	vtable of TNonRandomHeroPropsSheet (RTTI) slot 1; ICF-folded with 1 identical bodies
 0x00055acb	0x23	func	??8std@@YA_NPBDABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@@Z	MapSpecsAvailableHeroesPage	masked body (35 bytes, 2 relocations) unique at a census start
-0x0005726f	0x3	func	?setStoredHeroID@TRandomHero@@UAEXE@Z	Hero	vtable ??_7TRandomHero@@6BTLinkableObject@@@ stored by ??0TRandomHero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 2
+0x0005726f	0x3	func	?setStoredHeroID@TRandomHero@@UAEXE@Z	Hero	vtable ??_7TRandomHero@@6BTLinkableObject@@@ stored by ??0TRandomHero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 2; ICF-folded with 3 identical bodies
 0x00058755	0x98	func	??0TRmgLinePatternTable@@QAE@IPBH@Z	rmg_support	masked body (152 bytes, 4 relocations) unique at a census start
 0x00058d37	0x2f	func	??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABV?$TPoint@I@@@Z	rmg_support	masked body (47 bytes, 1 relocations) unique at a census start
 0x00058d66	0xfb	func	?drawTo@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	rmg_support	masked body (251 bytes, 3 relocations) unique at a census start
@@ -1071,7 +1071,10 @@ rva	size	kind	name	unit	evidence
 0x0007ba39	0x56	func	??1TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@UAE@XZ	MapSpecsVictoryCondPage	referenced by ??1_TDialogs@TMapSpecsVictoryCondPage@@QAE@XZ at +0xee
 0x0007bb54	0x137	func	??1_TDialogs@TMapSpecsVictoryCondPage@@QAE@XZ	MapSpecsVictoryCondPage	masked body (311 bytes, 21 relocations) unique at a census start
 0x0007c511	0xb	func	??_ETMapSpecsVictoryCondPage@@WIM@AEPAXI@Z	MapSpecsVictoryCondPage	vtable ??_7TMapSpecsVictoryCondPage@@6BTVisitor@TVictoryCondition@@@ stored by ??0TMapSpecsVictoryCondPage@@QAE@ABVTGameMap@@AAV1@ABV?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@22@Z slot 0
+0x0007c707	0x1c	func	??_GTMapValidationFunc@@UAEPAXI@Z	MapValidation	referenced by ??_ETMapValidationFunc@@W3AEPAXI@Z at +0x4
+0x0007c723	0x44	func	??1TMapValidationFunc@@UAE@XZ	MapValidation	masked body (68 bytes, 6 relocations) unique at a census start
 0x0007fed3	0x13	func	??ZTRmgMapPosition@@QAEAAU0@ABUTRmgPoint@@@Z	rmg	masked body (19 bytes, 0 relocations) unique at a census start
+0x0007ff20	0x8	func	??_ETMapValidationFunc@@W3AEPAXI@Z	MapValidation	vtable ??_7TMapValidationFunc@@6BTVisitor@TLossCondition@@@ stored by ??0TMapValidationFunc@@QAE@ABVTGameMap@@@Z slot 0
 0x00081a8d	0x47	func	??1TSignPropsDlg@@UAE@XZ	SignPropsDlg	referenced by ??_GTSignPropsDlg@@UAEPAXI@Z at +0x4
 0x00085521	0x68	func	??0?$vector@VTLayer@TGameMap@@V?$allocator@VTLayer@TGameMap@@@std@@@std@@QAE@ABV01@@Z	GameMap	masked body (104 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000876ce	0x17	func	?SelectObject@CDC@@QAEPAVCBitmap@@PAV2@@Z	MemoryDC	masked body (23 bytes, 1 relocations) unique at a census start

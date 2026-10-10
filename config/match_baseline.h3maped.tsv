@@ -1979,6 +1979,14 @@ MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCTransportArti
 MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0x7bd3c	tokens1:14b01746490c
 MapSpecsVictoryCondPage	BEGIN_MESSAGE_MAP_796fd	0.0000	0.0000	0.0000	0x796fd	tokens1:fe57a3908eb1
 MapSpecsVictoryCondPage	BEGIN_MESSAGE_MAP_79c6d	0.0000	0.0000	0.0000	0x79c6d	tokens1:8cef1e7104ba
+MapValidation	??0TMapValidationFunc@@QAE@ABVTGameMap@@@Z	100.0000	100.0000	100.0000	0x7c6d4	tokens1:be3f71fd8394
+MapValidation	??1TMapValidationFunc@@UAE@XZ	100.0000	100.0000	100.0000	0x7c723	-
+MapValidation	??_ETMapValidationFunc@@W3AEPAXI@Z	100.0000	100.0000	100.0000	0x7ff20	-
+MapValidation	??_GTMapValidationFunc@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7c707	-
+MapValidation	?_addNote@TMapValidationFunc@@AAEXABVCString@@@Z	100.0000	100.0000	100.0000	0x7d849	tokens1:cd975da33b15
+MapValidation	?_createTeamStr@TMapValidationFunc@@CA?AVCString@@I@Z	100.0000	100.0000	100.0000	0x7d7e7	tokens1:12f1608d362a
+MapValidation	?_createTownStr@TMapValidationFunc@@CA?AVCString@@ABVTTown@@ABV?$TPoint@I@@_N@Z	100.0000	100.0000	100.0000	0x7d594	tokens1:c9b6c018fb8a
+MapValidation	?_playerMayBeHuman@TMapValidationFunc@@ABE_NW4TPlayer@@@Z	99.8039	99.8039	99.8039	0x7da3e	tokens1:835dcbb6d18a
 MapViewingWnd	?GetMessageMap@TMapViewingWnd@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x86b90	-
 MemoryDC	??0?$TGDIObjectSelector@VCBitmap@@@@QAE@PAVCDC@@PAVCBitmap@@@Z	100.0000	100.0000	100.0000	0x51fdd	tokens1:5873c016381c
 MemoryDC	??0CGdiObject@@QAE@XZ	100.0000	100.0000	100.0000	0x50673	-
