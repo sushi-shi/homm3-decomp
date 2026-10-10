@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-09
+# date: 2026-10-10
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 site_rva	value	channel	detail	target_class	ctx	disposition
 0x1023	0x4801c8	code	push	code-interior	-	kept
@@ -559,7 +559,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0xa1f6	0x480e37	code	push	code-interior	-	kept
 0xa22e	0x4876b4	code	mov	data	-	kept
 0xa256	0x40a960	code	push	code-start	-	kept
-0xa25b	0x40a6e0	code	push	code-interior	-	kept
+0xa25b	0x40a6e0	code	push	code-start	-	kept
 0xa29d	0x487e50	code	mov	data	-	kept
 0xa324	0x4999b8	code	push	data	-	kept
 0xa32c	0x487e44	code	mov	data	-	kept
@@ -2803,7 +2803,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x298f2	0x429c00	code	push	code-start	-	kept
 0x298fd	0x4c8350	code	push	data	-	kept
 0x29903	0x4c83d0	code	mov	data	-	kept
-0x2990d	0x429bc0	code	push	code-interior	-	kept
+0x2990d	0x429bc0	code	push	code-start	-	kept
 0x2991e	0x4bd244	code	push	literal-start	-	kept
 0x29989	0x498a98	code	push	data	-	kept
 0x29992	0x4876dc	code	mov	data	-	kept
@@ -5018,7 +5018,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x369cd	0x429c00	code	push	code-start	-	kept
 0x369d9	0x4c8f00	code	push	data	-	kept
 0x369df	0x4c8f28	code	mov	data	-	kept
-0x369e9	0x436e20	code	push	code-interior	-	kept
+0x369e9	0x436e20	code	push	code-start	-	kept
 0x369f6	0x436ea0	code	push	code-start	-	kept
 0x369fb	0x436e80	code	push	code-start	-	kept
 0x36a11	0x4c8f00	code	mov	data	-	kept

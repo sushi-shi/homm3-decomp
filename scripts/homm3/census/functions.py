@@ -340,6 +340,20 @@ def rethrow_seeds(c, lone_targets, covered, ends):
             and covered[t] == covered.get(ends[t])]
 
 
+def padded_call_ends(c, ends, limit=16):
+    """{rva: call} for each call fall-through (`ends`) that only padding
+    bytes separate from `rva`: the next function on an alignment boundary
+    when the call never returns."""
+    found = {}
+    for after, call in ends.items():
+        r = after
+        while r - after < limit and c.byte(r) in PAD:
+            r += 1
+        if r != after and r - after < limit:
+            found[r] = call
+    return found
+
+
 def table_seeds_after_calls(run_targets, covered, ends, sites, min_run=8):
     """The code pointers in vtable-sized runs of code pointers that point to
     the code right after a call inside the same decoded function: the call
@@ -469,6 +483,12 @@ def run(image, log=print, catch_bodies=False):
     for t in sorted(c.imms):
         if t in covered and t in ends and c.in_text(t):
             take(t, "imm-after-call", check=False)
+    # or the first byte after the alignment padding that follows such a call
+    # (/O2: the constructor an `eh vector constructor iterator` call names,
+    # after its caller's catch handler throws)
+    for t, _call in sorted(padded_call_ends(c, ends).items()):
+        if t in covered and t in c.imms and c.in_text(t):
+            take(t, "imm-after-padding", check=False)
     # a vtable or other table slot pointing past such a call is one too (a
     # deleting destructor after its constructor's throw)
     for t, s in table_seeds_after_calls(run_targets, covered, ends, sites):

@@ -49,5 +49,20 @@ class TableSeedsAfterCallsTest(unittest.TestCase):
         self.assertEqual(functions.table_seeds_after_calls([(0x100a, 0x3000)], covered, {}, {0x3000}), [])
 
 
+class PaddedCallEndsTest(unittest.TestCase):
+    def census(self, pad):
+        data = {0x1005 + i: 0x90 for i in range(pad)}
+        return SimpleNamespace(byte=lambda rva: data.get(rva, 0x6a))
+
+    def test_padding_after_a_call_ends_on_the_next_function(self):
+        self.assertEqual(functions.padded_call_ends(self.census(11), {0x1005: 0x1000}), {0x1010: 0x1000})
+
+    def test_no_padding_is_no_end(self):
+        self.assertEqual(functions.padded_call_ends(self.census(0), {0x1005: 0x1000}), {})
+
+    def test_padding_longer_than_an_alignment_is_no_end(self):
+        self.assertEqual(functions.padded_call_ends(self.census(20), {0x1005: 0x1000}), {})
+
+
 if __name__ == '__main__':
     unittest.main()
