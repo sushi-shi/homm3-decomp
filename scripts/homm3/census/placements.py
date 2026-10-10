@@ -327,7 +327,7 @@ def require_objects(units) -> None:
         raise MissingObjects(missing, directory)
 
 
-def fold_label(at, names, bodies, definers, owned):
+def fold_label(at, names, bodies, definers, owned, rowable=lambda name: True):
     """The one name of an address that several compiled bodies reach (`at`).
 
     A name that also reaches another address is no witness either way. When
@@ -338,10 +338,13 @@ def fold_label(at, names, bodies, definers, owned):
     that reach only this address when they agree byte for byte with the same
     relocation sites. The first name labels the address, a shared unit's
     before the image's own (whose MFC inline virtuals fold onto shared bodies
-    but are no placement); the comparison pairs the others' references with
-    it (normalize_objs ICF twins)."""
+    but are no placement), and among the image's own a name that can be a
+    table row (`rowable`: a pick-any COMDAT) before an ordinary function,
+    which is only a suggestion for its VA() claim; the comparison pairs the
+    others' references with it (normalize_objs ICF twins)."""
     group = sorted((name for name in at if len(names[name]) == 1),
-                   key=lambda name: (definers[name][0] in owned, name))
+                   key=lambda name: (definers[name][0] in owned,
+                                     definers[name][0] in owned and not rowable(name), name))
     if len(group) == 1 and len(at) > 1:
         return group[0]
     if len(group) < 2 or any(name not in bodies for name in group):
@@ -823,7 +826,8 @@ def derive(log=print, want_suggestions=False):
         if shared and shared != group:
             by_rva[rva] = shared
     def folded(rva):
-        return fold_label(by_rva[rva], names, bodies, definers, owned)
+        return fold_label(by_rva[rva], names, bodies, definers, owned,
+                          lambda name: portable(name, definers[name][0]) in inline_comdats)
 
     rows, conflicts = [], 0
     for name, rvas in sorted(names.items()):
