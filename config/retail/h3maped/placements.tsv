@@ -72,7 +72,7 @@ rva	size	kind	name	unit	evidence
 0x00005a69	0xe	func	?flip@?$bitset@$0BD@@std@@QAEAAV12@XZ	artifact	masked body (14 bytes, 0 relocations) unique at a census start
 0x00005a77	0x2d	func	??A?$bitset@$0BD@@std@@QBE_NI@Z	artifact	masked body (45 bytes, 1 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00005aa4	0x36	func	??4?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAEAAV01@ABV01@@Z	Hero	referenced by ??4TArtifactContainer@THeroPrototype@@QAEAAV01@ABV01@@Z at +0x2f
-0x00005ada	0xf0	func	?insert@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@_N@2@ABW4TArtifact@@@Z	Hero	referenced by ?read@TArtifactContainer@THeroPrototype@@QAEXPAVTRawIStream@@H@Z at +0xa4
+0x00005ada	0xf0	func	?insert@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@_N@2@ABW4TArtifact@@@Z	Hero	referenced by ??0TSeersHut@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0xc8
 0x00005bca	0x2c2	func	?erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AViterator@12@V312@@Z	GameMap	referenced by ?erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AViterator@12@V312@0@Z at +0x8a
 0x00005e8c	0xa8	func	?erase@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE?AViterator@12@V312@0@Z	GameMap	referenced by ??1?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAE@XZ at +0x15
 0x00005f6e	0x80	func	?_Inc@const_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@std@@QAEXXZ	GameMap	referenced by ?equal@std@@YA_NVconst_iterator@?$_Tree@W4TArtifact@@W41@U_Kfn@?$multiset@W4TArtifact@@U?$less@W4TArtifact@@@std@@V?$allocator@W4TArtifact@@@3@@std@@U?$less@W4TArtifact@@@4@V?$allocator@W4TArtifact@@@4@@1@00@Z at +0x27
@@ -246,14 +246,14 @@ rva	size	kind	name	unit	evidence
 0x00028afc	0x38	func	??6@YAAAVTRawOStream@@AAV0@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	GameMap	masked body (56 bytes, 3 relocations) unique at a census start
 0x0002960e	0xf	func	?accept@TVCAquireArtifact@@UBEXPAVTVisitor@TVictoryCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start
 0x00029641	0xf	func	?accept@TVCAccumulateCreature@@UBEXPAVTVisitor@TVictoryCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start
-0x00029650	0xf	func	?accept@TVCAccumulateResource@@UBEXPAVTVisitor@TVictoryCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start
-0x0002967b	0xf	func	?accept@TVCCaptureTown@@UBEXPAVTVisitor@TVictoryCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x0002968a	0xf	func	?accept@TVCDefeatMonster@@UBEXPAVTVisitor@TVictoryCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x00029699	0xf	func	?accept@TLCLoseTown@@UBEXPAVTVisitor@TLossCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
+0x00029650	0xf	func	?accept@TRewardExperience@TSeersHut@@UBEXPAVTVisitor@TReward@2@@Z	SeersHut	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x0002967b	0xf	func	?accept@TRewardResource@TSeersHut@@UBEXPAVTVisitor@TReward@2@@Z	SeersHut	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
+0x0002968a	0xf	func	?accept@TRewardPrimarySkill@TSeersHut@@UBEXPAVTVisitor@TReward@2@@Z	SeersHut	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
+0x00029699	0xf	func	?accept@TLCLoseTown@@UBEXPAVTVisitor@TLossCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
 0x000296a8	0x21	func	?isMonster@?A0xaab635a5f3ca1b91@@YA_NABVTGameObject@@@Z	GameMap	referenced by ?_reconstructVictoryCondition@_TImpl@TGameMap@@QBE?AV?$auto_ptr@VTVictoryCondition@@@std@@ABUTVictoryConditionData@@@Z at +0x1e3
 0x000296c9	0x3f	func	?isHeroOrTown@?A0xaab635a5f3ca1b91@@YA_NABVTGameObject@@@Z	GameMap	masked body (63 bytes, 5 relocations) unique at a census start
-0x0002981a	0xf	func	?accept@TLCLoseHero@@UBEXPAVTVisitor@TLossCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
-0x00029845	0xf	func	?accept@TLCTimeExpires@@UBEXPAVTVisitor@TLossCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
+0x0002981a	0xf	func	?accept@TLCLoseHero@@UBEXPAVTVisitor@TLossCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
+0x00029845	0xf	func	?accept@TLCTimeExpires@@UBEXPAVTVisitor@TLossCondition@@@Z	GameMap	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
 0x0002a600	0x26	func	??1_TObjectLink@_TImpl@TLayer@TGameMap@@QAE@XZ	GameMap	masked body (38 bytes, 2 relocations) unique at a census start
 0x0002a626	0x57	func	?resize@_TCellGrid@_TImpl@TLayer@TGameMap@@QAEXII@Z	GameMap	masked body (87 bytes, 6 relocations) unique at a census start
 0x0002a6b3	0x5c	func	?getPCell@_TCellGrid@_TImpl@TLayer@TGameMap@@QAEPAVTCell@34@II@Z	GameMap	masked body (92 bytes, 1 relocations) unique at a census start
@@ -719,7 +719,7 @@ rva	size	kind	name	unit	evidence
 0x0003beb9	0x2f	func	??Breference@?$bitset@$0IA@@std@@QBE_NXZ	GameMap	masked body (47 bytes, 1 relocations) unique at a census start
 0x0003bee8	0x4d	func	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	rmg	masked body (77 bytes, 1 relocations) unique at a census start
 0x0003bf35	0x5a	func	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	rmg	referenced by ?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z at +0x11
-0x0003bf8f	0x38	func	??5TRawIStream@@QAEAAV0@AAY01C@Z	Monster	referenced by ??0TMonster@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x209; ICF-folded with 1 identical bodies
+0x0003bf8f	0x38	func	??5TRawIStream@@QAEAAV0@AAY01C@Z	SeersHut	referenced by ??0TSeersHut@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z at +0x199; ICF-folded with 1 identical bodies
 0x0003bfc7	0x38	func	??5TRawIStream@@QAEAAV0@AAY00E@Z	GameMap	referenced by ?readBitset@@YAXAAVTRawIStream@@AAV?$bitset@$07@std@@@Z at +0xc
 0x0003bfff	0x38	func	??5TRawIStream@@QAEAAV0@AAY0BE@E@Z	GameMap	masked body (56 bytes, 3 relocations) unique at a census start
 0x0003c06f	0x38	func	??6TRawOStream@@QAEAAV0@AAY00$$CBE@Z	GameMap	referenced by ?writeBitset@@YAXAAVTRawOStream@@ABV?$bitset@$07@std@@@Z at +0x51
@@ -739,8 +739,8 @@ rva	size	kind	name	unit	evidence
 0x00043a4a	0xa8	func	?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEPAU_Node@12@PAU312@0@Z	Hero	referenced by ?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEXABV12@@Z at +0x2c
 0x000440db	0x14	func	??1TMonster@@UAE@XZ	Monster	masked body (20 bytes, 1 relocations) unique at a census start
 0x00045a56	0x3	func	?hasText@TBlackBox@@UBE_NXZ	BlackBox	referenced by ?hasText@TBlackBox@@$4PPPPPPPM@A@BE_NXZ at +0x4; ICF-folded with 1 identical bodies
-0x00045cf4	0x36	func	??1TQuestLocation@@UAE@XZ	QuestLocation	masked body (54 bytes, 5 relocations) unique at a census start
-0x00045d2a	0x2a	func	??1?$TArray@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@$02@@QAE@XZ	QuestLocation	referenced by ??1TQuestLocation@@UAE@XZ at +0x19
+0x00045cf4	0x36	func	??1TQuestLocation@@UAE@XZ	QuestGuard	masked body (54 bytes, 5 relocations) unique at a census start
+0x00045d2a	0x2a	func	??1?$TArray@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@$02@@QAE@XZ	QuestGuard	masked body (42 bytes, 2 relocations) unique at a census start
 0x00045f70	0x8	func	??_ETHero@@$4PPPPPPPM@A@AEPAXI@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 0
 0x00045fa9	0x8	func	?importText@THero@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 1
 0x00045fb1	0x8	func	?write@THero@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 3
@@ -812,11 +812,12 @@ rva	size	kind	name	unit	evidence
 0x00047d36	0x8	func	??_ETAbandonedMine@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TAbandonedMine@@6B@ stored by ??0TAbandonedMine@@QAE@ABUTObjectType@@@Z slot 0; ICF-folded with 1 identical bodies
 0x00047d3e	0x2b	func	??_GTAbandonedMine@@UAEPAXI@Z	ObjectSpecializations	masked body (43 bytes, 3 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00047d69	0x8	func	?write@TPlayableObject@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Hero	vtable ??_7TBasicHero@@6BTPlayableObject@@@ stored by ??0TBasicHero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 3
-0x00047fb1	0x8	func	?importText@TQuestLocation@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	QuestLocation	vtable ??_7TQuestLocation@@6BTGameObject@@@ stored by ??0TQuestLocation@@QAE@ABUTObjectType@@@Z slot 1
-0x00047fb9	0x8	func	?write@TQuestLocation@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	QuestLocation	vtable ??_7TQuestLocation@@6BTGameObject@@@ stored by ??0TQuestLocation@@QAE@ABUTObjectType@@@Z slot 3
-0x00047fc1	0x8	func	?isCustomized@TQuestLocation@@$4PPPPPPPM@A@BE_NXZ	QuestLocation	vtable ??_7TQuestLocation@@6BTGameObject@@@ stored by ??0TQuestLocation@@QAE@ABUTObjectType@@@Z slot 5
-0x00047fc9	0x8	func	?hasText@TQuestLocation@@$4PPPPPPPM@A@BE_NXZ	QuestLocation	vtable ??_7TQuestLocation@@6BTGameObject@@@ stored by ??0TQuestLocation@@QAE@ABUTObjectType@@@Z slot 6
-0x00047fd1	0x8	func	?exportText@TQuestLocation@@$4PPPPPPPM@A@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	QuestLocation	vtable ??_7TQuestLocation@@6BTGameObject@@@ stored by ??0TQuestLocation@@QAE@ABUTObjectType@@@Z slot 7
+0x00047f7e	0x8	func	??_ETQuestGuard@@$4PPPPPPPM@A@AEPAXI@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 0
+0x00047fb1	0x8	func	?importText@TQuestLocation@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 1
+0x00047fb9	0x8	func	?write@TQuestLocation@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 3
+0x00047fc1	0x8	func	?isCustomized@TQuestLocation@@$4PPPPPPPM@A@BE_NXZ	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 5
+0x00047fc9	0x8	func	?hasText@TQuestLocation@@$4PPPPPPPM@A@BE_NXZ	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 6
+0x00047fd1	0x8	func	?exportText@TQuestLocation@@$4PPPPPPPM@A@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 7
 0x000482c1	0x8	func	?getTypeName@TMine@@$4PPPPPPPM@A@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	ObjectSpecializations	vtable ??_7TMine@@6B@ stored by ??0TMine@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 4
 0x000482c9	0x8	func	??_ETSign@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TSign@@6B@ stored by ??0TSign@@QAE@ABUTObjectType@@@Z slot 0
 0x000482fc	0x8	func	??_ETScholar@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TScholar@@6B@ stored by ??0TScholar@@QAE@ABUTObjectType@@@Z slot 0
@@ -1029,6 +1030,7 @@ rva	size	kind	name	unit	evidence
 0x000876ce	0x17	func	?SelectObject@CDC@@QAEPAVCBitmap@@PAV2@@Z	MemoryDC	masked body (23 bytes, 1 relocations) unique at a census start
 0x000876e5	0x30	func	?BitBlt@CDC@@QAEHHHHHPAV1@HHK@Z	MemoryDC	masked body (48 bytes, 1 relocations) unique at a census start
 0x00087731	0x5	func	??_9@$BCM@AE	TileHRuler	referenced by ??1?$TDCAttributeSelector@K$1??_9@$BCM@AE@@QAE@XZ at +0x6
+0x00088ead	0x38	func	??6TRawOStream@@QAEAAV0@AAY01$$CBC@Z	SeersHut	referenced by ?write@TSeersHut@@UBEXPAVTRawOStream@@H@Z at +0x71
 0x00088ee5	0x29	func	?mismatch@std@@YA?AU?$pair@PBIPBI@1@PBI00@Z	Monster	masked body (41 bytes, 0 relocations) unique at a census start
 0x0008d21c	0x55	func	?resize@?$vector@EV?$allocator@E@std@@@std@@QAEXIABE@Z	rmg	masked body (85 bytes, 2 relocations) unique at a census start
 0x0008d27c	0x176	func	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	rmg	masked body (374 bytes, 2 relocations) unique at a census start
@@ -1366,7 +1368,58 @@ rva	size	kind	name	unit	evidence
 0x000b5e95	0x5d	func	??0?$TArray@U_TSlotControls@TSecondarySkillsDlg@@$07@@QAE@XZ	SecondarySkillsDlg	masked body (93 bytes, 5 relocations) unique at a census start
 0x000b5ef2	0x6d	func	??1?$TArray@U_TSlotControls@TSecondarySkillsDlg@@$07@@QAE@XZ	SecondarySkillsDlg	masked body (109 bytes, 7 relocations) unique at a census start
 0x000b5f5f	0x24	func	??0?$TArray@U_TSlot@TSecondarySkillsDlg@@$07@@QAE@XZ	SecondarySkillsDlg	masked body (36 bytes, 0 relocations) unique at a census start
-0x000b72f1	0x16	func	?visit@?$TQuestRHSEquivalencyTester@VTQuestAchieveExperienceLevel@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchieveExperienceLevel@@@Z	Quest	masked body (22 bytes, 0 relocations) unique at a census start; ICF-folded with 4 identical bodies
+0x000b672a	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardExperience@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 9
+0x000b6736	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardMana@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 8
+0x000b6742	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardMorale@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 7
+0x000b674e	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardLuck@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 6
+0x000b675a	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardResource@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 5
+0x000b6766	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardPrimarySkill@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 4
+0x000b6772	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardSecondarySkill@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 3
+0x000b677e	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardArtifact@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 2
+0x000b678a	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardSpell@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 1
+0x000b6796	0xc	func	?visit@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardCreature@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?equivalent@TReward@TSeersHut@@SA_NABV12@0@Z slot 0
+0x000b67f1	0x2a	func	?clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@QAE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@ABVTReward@TSeersHut@@@Z	SeersHut	masked body (42 bytes, 0 relocations) unique at a census start
+0x000b681b	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardExperience@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 9
+0x000b6827	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardMana@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 8
+0x000b6833	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardMorale@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 7
+0x000b683f	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardLuck@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 6
+0x000b684b	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardResource@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 5
+0x000b6857	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardPrimarySkill@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 4
+0x000b6863	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardSecondarySkill@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 3
+0x000b686f	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardArtifact@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 2
+0x000b687b	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardSpell@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 1
+0x000b6887	0xc	func	?visit@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardCreature@TSeersHut@@@Z	SeersHut	vtable ??_7TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@6B@ stored by ?clone@TReward@TSeersHut@@QBE?AV?$auto_ptr@VTReward@TSeersHut@@@std@@XZ slot 0
+0x000b6893	0x10	func	??1TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@QAE@XZ	SeersHut	masked body (16 bytes, 1 relocations) unique at a census start
+0x000b6d5d	0x58	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardExperience@TSeersHut@@@Z	SeersHut	referenced by 0x000b681b at +0x5
+0x000b6db5	0x58	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardMana@TSeersHut@@@Z	SeersHut	referenced by 0x000b6827 at +0x5
+0x000b6e0d	0x58	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardMorale@TSeersHut@@@Z	SeersHut	referenced by 0x000b6833 at +0x5
+0x000b6e65	0x58	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardLuck@TSeersHut@@@Z	SeersHut	referenced by 0x000b683f at +0x5
+0x000b6ebd	0x5e	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardResource@TSeersHut@@@Z	SeersHut	referenced by 0x000b684b at +0x5
+0x000b6f1b	0x64	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardPrimarySkill@TSeersHut@@@Z	SeersHut	masked body (100 bytes, 6 relocations) unique at a census start
+0x000b6f7f	0x5e	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardSecondarySkill@TSeersHut@@@Z	SeersHut	referenced by 0x000b6863 at +0x5
+0x000b6fdd	0x58	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardArtifact@TSeersHut@@@Z	SeersHut	referenced by 0x000b686f at +0x5
+0x000b7035	0x58	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardSpell@TSeersHut@@@Z	SeersHut	referenced by 0x000b687b at +0x5
+0x000b708d	0x5e	func	?_clone@TRewardCloner@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardCreature@TSeersHut@@@Z	SeersHut	referenced by 0x000b6887 at +0x5
+0x000b70eb	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardExperience@TSeersHut@@@Z	SeersHut	referenced by 0x000b672a at +0x5
+0x000b711b	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardMana@TSeersHut@@@Z	SeersHut	referenced by 0x000b6736 at +0x5
+0x000b714b	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardMorale@TSeersHut@@@Z	SeersHut	referenced by 0x000b6742 at +0x5
+0x000b717b	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardLuck@TSeersHut@@@Z	SeersHut	referenced by 0x000b674e at +0x5
+0x000b71ab	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardResource@TSeersHut@@@Z	SeersHut	referenced by 0x000b675a at +0x5
+0x000b71db	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardPrimarySkill@TSeersHut@@@Z	SeersHut	referenced by 0x000b6766 at +0x5
+0x000b720b	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardSecondarySkill@TSeersHut@@@Z	SeersHut	referenced by 0x000b6772 at +0x5
+0x000b723b	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardArtifact@TSeersHut@@@Z	SeersHut	referenced by 0x000b677e at +0x5
+0x000b726b	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardSpell@TSeersHut@@@Z	SeersHut	referenced by 0x000b678a at +0x5
+0x000b729b	0x30	func	?_test@TRewardEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@AAEXABVTRewardCreature@TSeersHut@@@Z	SeersHut	referenced by 0x000b6796 at +0x5
+0x000b72cb	0x26	func	?visit@?$TRewardRHSEquivalencyTester@VTRewardPrimarySkill@TSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardPrimarySkill@TSeersHut@@@Z	SeersHut	masked body (38 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
+0x000b72f1	0x16	func	?visit@?$TQuestRHSEquivalencyTester@VTQuestAchieveExperienceLevel@@@?%C:\Dev\Heroes 3 Exp 2\Editor\Quest.cpp225741631@@UAEXABVTQuestAchieveExperienceLevel@@@Z	Quest	masked body (22 bytes, 0 relocations) unique at a census start; ICF-folded with 10 identical bodies
+0x000b7307	0x28	func	?visit@?$TRewardRHSEquivalencyTester@VTRewardCreature@TSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\SeersHut.cpp1706729111@@UAEXABVTRewardCreature@TSeersHut@@@Z	SeersHut	masked body (40 bytes, 0 relocations) unique at a census start
+0x000b734b	0x8	func	??_ETSeersHut@@$4PPPPPPPM@A@AEPAXI@Z	SeersHut	vtable ??_7TSeersHut@@6BTGameObject@@@ stored by ??0TSeersHut@@QAE@ABV0@@Z slot 0
+0x000b7353	0x2b	func	??_GTSeersHut@@UAEPAXI@Z	SeersHut	masked body (43 bytes, 3 relocations) unique at a census start
+0x000b737e	0xb	func	?importText@TQuestLocation@@$4PPPPPPPM@7AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	SeersHut	vtable ??_7TSeersHut@@6BTGameObject@@@ stored by ??0TSeersHut@@QAE@ABV0@@Z slot 1
+0x000b7389	0x8	func	?write@TSeersHut@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	SeersHut	vtable ??_7TSeersHut@@6BTGameObject@@@ stored by ??0TSeersHut@@QAE@ABV0@@Z slot 3
+0x000b7391	0x8	func	?isCustomized@TSeersHut@@$4PPPPPPPM@A@BE_NXZ	SeersHut	vtable ??_7TSeersHut@@6BTGameObject@@@ stored by ??0TSeersHut@@QAE@ABV0@@Z slot 5
+0x000b7399	0xb	func	?hasText@TQuestLocation@@$4PPPPPPPM@7BE_NXZ	SeersHut	vtable ??_7TSeersHut@@6BTGameObject@@@ stored by ??0TSeersHut@@QAE@ABV0@@Z slot 6
+0x000b73a4	0xb	func	?exportText@TQuestLocation@@$4PPPPPPPM@7BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	SeersHut	vtable ??_7TSeersHut@@6BTGameObject@@@ stored by ??0TSeersHut@@QAE@ABV0@@Z slot 7
 0x000b9221	0x8a	func	?InitializeSpellTraitsTable@@YAEXZ	spelldefs	masked body (138 bytes, 6 relocations) unique at a census start
 0x000b92ab	0x290	func	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	spelldefs	masked body (656 bytes, 43 relocations) unique at a census start
 0x000b953b	0x6	func	??0?$bitset@$09@std@@QAE@XZ	objecttype	referenced by ??0TObjectType@@QAE@XZ at +0x41; ICF-folded with 3 identical bodies
@@ -1728,6 +1781,7 @@ rva	size	kind	name	unit	evidence
 0x00136b9c	0x8	data	??_8TScholar@@7B@	ObjectSpecializations	referenced by ??0TScholar@@QAE@ABUTObjectType@@@Z at +0x19
 0x00136bc8	0x8	data	??_8THolyGrail@@7B@	ObjectSpecializations	referenced by ??0THolyGrail@@QAE@ABUTObjectType@@@Z at +0x19
 0x00136bf4	0x8	data	??_8TShrine@@7B@	ObjectSpecializations	referenced by ??0TShrine@@QAE@ABUTObjectType@@@Z at +0x19
+0x00136c28	0x8	data	??_8TQuestGuard@@7B@	QuestGuard	referenced by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z at +0x25
 0x00136c54	0x8	data	??_8TWitchHut@@7B@	ObjectSpecializations	referenced by ??0TWitchHut@@QAE@ABUTObjectType@@@Z at +0x19
 0x00136c80	0x8	data	??_8TGarrison@@7B@	ObjectSpecializations	referenced by ??0TGarrison@@QAE@ABUTObjectType@@W4TPlayer@@@Z at +0x28
 0x00136c88	0x8	data	_g_gzMagic	gzinflatebuf	referenced by ??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z at +0x131
@@ -1748,6 +1802,7 @@ rva	size	kind	name	unit	evidence
 0x00140848	0xc0	data	_g_rmgZoneObjectLimitOverrides	rmg	referenced by ??0type_random_map_generator@@QAE@HHHHHHHHHPAVtype_progress_bar@@H@Z at +0x229
 0x00140908	0x24	data	_g_rmgTownNativeTerrains	rmg	referenced by ?chooseTerrain@TRmgZone@@QAEXXZ at +0x1a
 0x00141108	0x8	data	__real@8@3ffe8000000000000000	bitmap24	referenced by ?AdjustHSV@TPalette24@@QAEXMMMM@Z at +0xb4 (retail +0x9c, by operand order)
+0x00142070	0x8	data	??_8TSeersHut@@7B@	SeersHut	referenced by ??0TSeersHut@@QAE@ABV0@@Z at +0x2a
 0x00142f88	0x180	data	?g_rmgTerrainPatterns@@3QBUTRmgTerrainTransitionEntry@@B	rmg_terrain	referenced by ??0TRmgTerrainPatternTable@@QAE@XZ at +0x1b
 0x00143108	0x278	data	_g_rmgLandPatternEntries	rmg_terrain	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgGrassRule at +0x1
 0x00143380	0x170	data	_g_rmgDirtPatternEntries	rmg_terrain	referenced by __h3cg$rmg_terrain$static_ctor$g_rmgDirtRule at +0x1
