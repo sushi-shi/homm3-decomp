@@ -583,6 +583,11 @@ TGameResource::TGameResource(const TObjectType& objType, TRawIStream* pIStream, 
     }
 }
 
+void TGameResource::setQuantity(unsigned int newQuantity)
+{
+    _m_quantity = newQuantity;
+}
+
 VA(0x0048eeec, 0x1b)
 bool TGameResource::isCustomized() const
 {
@@ -738,6 +743,11 @@ THolyGrail::THolyGrail(const TObjectType& objType) : TGameObject(objType), _m_ra
 {
 }
 
+void THolyGrail::setRadius(unsigned int newRadius)
+{
+    _m_radius = newRadius;
+}
+
 VA(0x0048f509, 0x8c)
 THolyGrail::THolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version) : TGameObject(objType)
 {
@@ -764,6 +774,11 @@ void THolyGrail::write(TRawOStream* pOStream, int version) const
 VA(0x0048f5c5, 0x45)
 TShrine::TShrine(const TObjectType& objType) : TGameObject(objType), _m_spell(SPELL_NONE)
 {
+}
+
+void TShrine::setSpell(ESpellId newSpell)
+{
+    _m_spell = newSpell;
 }
 
 VA(0x0048f60a, 0xdc)

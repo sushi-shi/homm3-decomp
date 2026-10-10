@@ -634,9 +634,81 @@ enum {
     ID_TOOLS_ROADS_ERASE = 32935
 };
 
+// The grail's properties dialog (HolyGrailPropsDlg.cpp).
+enum {
+    IDD_HOLY_GRAIL_PROPS = 206,
+    IDC_RADIUS_EDIT = 1333,
+    IDC_RADIUS_SPIN = 1334,
+    IDC_RADIUS_STATIC = 1673
+};
+
+// The shrine's properties dialog (ShrinePropsDlg.cpp).
+enum {
+    IDD_SHRINE_PROPS = 305,
+    IDC_SPELL_LIST = 1262,
+    IDC_RANDOM_SPELL_RADIO = 1593,
+    IDC_CUSTOM_SPELL_RADIO = 1594,
+    IDC_SPELL_STATIC = 1596
+};
+
+// The scholar's properties dialog (ScholarPropsDlg.cpp).
+enum {
+    IDD_SCHOLAR_PROPS = 200,
+    IDC_PRI_SKILL_REWARD_RADIO = 1613,
+    IDC_PRI_SKILL_REWARD_COMBO = 1614,
+    IDC_SEC_SKILL_REWARD_COMBO = 1615,
+    IDC_RANDOM_REWARD_RADIO = 1616,
+    IDC_SEC_SKILL_REWARD_RADIO = 1617,
+    IDC_SPELL_REWARD_RADIO = 1618,
+    IDC_SPELL_REWARD_COMBO = 1619,
+    IDC_REWARD_GROUP = 1715
+};
+
+// The witch hut's properties dialog (WitchHutPropsDlg.cpp).
+enum {
+    IDD_WITCH_HUT_PROPS = 339,
+    IDC_POTENTIAL_SKILLS_LIST = 1842,
+    IDC_POTENTIAL_SKILLS_STATIC = 1919
+};
+
+// The abandoned mine's properties dialog (AbandonedMinePropsDlg.cpp).
+enum {
+    IDD_ABANDONED_MINE_PROPS = 307,
+    IDC_RES3_CHECK = 1606,
+    IDC_RES4_CHECK = 1607,
+    IDC_RES5_CHECK = 1608,
+    IDC_RES6_CHECK = 1609,
+    IDC_RES7_CHECK = 1610,
+    IDC_RES2_CHECK = 1611,
+    IDC_POTENTIAL_RESOURCES_GROUP = 1625
+};
+
+// The garrison's properties dialog (GarrisonPropsDlg.cpp); its owner
+// radios are the flaggable dialog's.
+enum {
+    IDD_GARRISON_PROPS = 208,
+    IDC_CREATURES_STATIC = 1640,
+    IDC_REMOVABLE_CHECK = 1847
+};
+
+// The spell scroll's general page (SpellScrollPropsGeneralPage.cpp).
+enum {
+    IDD_SPELL_SCROLL_PROPS_GENERAL = 239,
+    IDC_SCROLL_SPELL_COMBO = 1429
+};
+
+// The resource's general page (ResourcePropsGeneralPage.cpp).
+enum {
+    IDD_RESOURCE_PROPS_GENERAL = 240,
+    IDC_RANDOM_QTY_RADIO = 1423,
+    IDC_CUSTOM_QTY_RADIO = 1424,
+    IDC_QUANTITY_NOTE_STATIC = 1714
+};
+
 // The guardians page's help contexts, one per treasure sheet.
 enum {
-    IDH_ARTIFACT_GUARDIANS = 282
+    IDH_ARTIFACT_GUARDIANS = 282,
+    IDH_RESOURCE_GUARDIANS = 284
 };
 
 #endif  /* HOMM3_EDITOR_RESOURCE_H */

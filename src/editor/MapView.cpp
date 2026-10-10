@@ -22,12 +22,15 @@
 #include "objnames.h"
 #include "rmg_request.h"
 #include "retailobjecttype.h"
+#include "editor/AbandonedMinePropsDlg.h"
 #include "editor/ArtifactPropsSheet.h"
 #include "editor/FlaggablePropsDlg.h"
 #include "editor/FormattedString.h"
 #include "editor/GameMap.h"
+#include "editor/GarrisonPropsDlg.h"
 #include "editor/Hero.h"
 #include "editor/HeroPropsSheet.h"
+#include "editor/HolyGrailPropsDlg.h"
 #include "editor/MapDoc.h"
 #include "editor/MapEditorText.h"
 #include "editor/MapFrameWnd.h"
@@ -38,8 +41,13 @@
 #include "editor/ObjectSpecializations.h"
 #include "editor/random_object_placer.h"
 #include "editor/resource.h"
+#include "editor/ResourcePropsSheet.h"
+#include "editor/ScholarPropsDlg.h"
+#include "editor/ShrinePropsDlg.h"
 #include "editor/SignPropsDlg.h"
+#include "editor/SpellScrollPropsSheet.h"
 #include "editor/TownPropsSheet.h"
+#include "editor/WitchHutPropsDlg.h"
 
 namespace {
 
@@ -955,6 +963,22 @@ bool TMapView::onEditProperties(TFlaggableObject* pObj, TGameMap* pMap, TMapObje
     return dlg.wasModified();
 }
 
+VA(0x0048197e, 0x58)
+bool TMapView::onEditProperties(TAbandonedMine* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TAbandonedMinePropsDlg dlg(this, pObj);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
+VA(0x004819d6, 0x62)
+bool TMapView::onEditProperties(TGarrison* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TGarrisonPropsDlg dlg(this, pObj, pMap->getVersion());
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
 VA(0x00481a38, 0x55)
 bool TMapView::onEditProperties(TSign* pObj, TGameMap* pMap, TMapObjectRef ref)
 {
@@ -969,6 +993,54 @@ bool TMapView::onEditProperties(TGameArtifact* pObj, TGameMap* pMap, TMapObjectR
     TArtifactPropsSheet sheet(this, pObj, pMap->getVersion());
     sheet.DoModal();
     return sheet.wasModified();
+}
+
+VA(0x00481b40, 0x6c)
+bool TMapView::onEditProperties(TSpellScroll* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TSpellScrollPropsSheet sheet(this, pObj, pMap->getVersion());
+    sheet.DoModal();
+    return sheet.wasModified();
+}
+
+VA(0x00481bac, 0x6c)
+bool TMapView::onEditProperties(TGameResource* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TResourcePropsSheet sheet(this, pObj, pMap->getVersion());
+    sheet.DoModal();
+    return sheet.wasModified();
+}
+
+VA(0x00481c84, 0x55)
+bool TMapView::onEditProperties(TScholar* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TScholarPropsDlg dlg(this, pObj);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
+VA(0x00481d8d, 0x55)
+bool TMapView::onEditProperties(THolyGrail* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    THolyGrailPropsDlg dlg(this, pObj);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
+VA(0x00481de2, 0x55)
+bool TMapView::onEditProperties(TShrine* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TShrinePropsDlg dlg(this, pObj);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
+VA(0x00481fd5, 0x71)
+bool TMapView::onEditProperties(TWitchHut* pObj, TGameMap* pMap, TMapObjectRef ref)
+{
+    TWitchHutPropsDlg dlg(this, pObj, pMap->getVersion());
+    dlg.DoModal();
+    return dlg.wasModified();
 }
 
 VA(0x0048207b, 0x3b)

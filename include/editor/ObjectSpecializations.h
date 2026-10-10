@@ -339,7 +339,7 @@ public:
 
     TGameResourceType getResourceType() const { return TGameResourceType(getExtra()); }
     unsigned int getQuantity() const { return _m_quantity; }
-    void setQuantity(unsigned int newQuantity) { _m_quantity = newQuantity; }
+    void setQuantity(unsigned int newQuantity);
 
 private:
     unsigned int _m_quantity;
@@ -415,7 +415,7 @@ public:
     THolyGrail(const TObjectType& objType, TRawIStream* pIStream, int version);
 
     unsigned int getRadius() const { return _m_radius; }
-    void setRadius(unsigned int newRadius) { _m_radius = newRadius; }
+    void setRadius(unsigned int newRadius);
 
     virtual void write(TRawOStream* pOStream, int version) const;
     virtual bool isCustomized() const { return _m_radius != 0; }
@@ -436,7 +436,7 @@ public:
 
     int getSpellLevel() const;
     ESpellId getSpell() const { return _m_spell; }
-    void setSpell(ESpellId newSpell) { _m_spell = newSpell; }
+    void setSpell(ESpellId newSpell);
 
 private:
     ESpellId _m_spell;
