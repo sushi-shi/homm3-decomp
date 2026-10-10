@@ -576,9 +576,13 @@ std::string type_skill_quest::skillRequirementText(
 // Lane A r4 budget arithmetic: the floor budget 1000 less getTextColumn's 51
 // leaves 949 / 3 remaining candidates = 316 >= 307 at the second assignment,
 // so its assign(str, pos, n) expands. Retail needs <= 920 there: giving
-// questTexts a row local (cost > 40, subtracted) makes this body exact and
-// also reproduces retail's _Tidy call/expansion split, but drops six other
-// quest-text callers (monster 95.53 -> 72.12, doQuestLog 96.54 -> 86.43);
+// questTexts a reference or row local (cost > 40, subtracted) makes this
+// body exact and also reproduces retail's _Tidy call/expansion split. That
+// edit is shared: every caller inlines questTexts, and the 2026-10-10
+// re-audit measured the reference local at net -4 exact (monster
+// setDefaultText, artifact doProgressDialog and creature doProposalDialog
+// 100 -> 96.71/94.87/93.23, doQuestLog 96.54 -> 87.88, two TU-state dips),
+// the row local at -6. Open-coding either local here instead is flat;
 // calling questTexts() per use instead of the texts local gives 55.47%.
 // empty() guards in place of length() == 0 are byte-flat (49.31%).
 // 2026-10-07 trace: the depth-1 sites after the second op= are only the two
