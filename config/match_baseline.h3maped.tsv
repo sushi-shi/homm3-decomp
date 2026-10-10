@@ -1991,6 +1991,7 @@ MapValidation	?_createTeamStr@TMapValidationFunc@@CA?AVCString@@I@Z	100.0000	100
 MapValidation	?_createTownStr@TMapValidationFunc@@CA?AVCString@@ABVTTown@@ABV?$TPoint@I@@_N@Z	100.0000	100.0000	100.0000	0x7d594	tokens1:c9b6c018fb8a
 MapValidation	?_playerMayBeHuman@TMapValidationFunc@@ABE_NW4TPlayer@@@Z	99.8039	99.8039	99.8039	0x7da3e	tokens1:835dcbb6d18a
 MapView	??0?$vector@VTGameMapMask@@V?$allocator@VTGameMapMask@@@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x85521	-
+MapView	??0TMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@QAE@PAVCWnd@@ABVCString@@@Z	100.0000	100.0000	100.0000	0x8444f	-
 MapView	??0TMapView@@IAE@XZ	100.0000	100.0000	100.0000	0x804d0	tokens1:b1f821763689
 MapView	??0TObstaclePlacerMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@QAE@PAVTGameMap@@PBVTGameMapMask@@_N@Z	100.0000	100.0000	100.0000	0x802ac	tokens1:e88a1de2f042
 MapView	??1?$TRefCountingPtr@U_TImpl@TGameMapMask@@@@QAE@XZ	100.0000	100.0000	100.0000	0x3cc59	-
@@ -1999,6 +2000,7 @@ MapView	??1?$_Tree@IU?$pair@$$CBIV?$vector@VTGameMapMask@@V?$allocator@VTGameMap
 MapView	??1?$auto_ptr@VTGameMapMask@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x85175	-
 MapView	??1?$vector@VTGameMapMask@@V?$allocator@VTGameMapMask@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x85192	-
 MapView	??1TGameMapMask@@QAE@XZ	100.0000	100.0000	100.0000	0x8551c	-
+MapView	??1TMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@UAE@XZ	100.0000	100.0000	100.0000	0x844de	-
 MapView	??1TMapView@@UAE@XZ	100.0000	100.0000	100.0000	0x8061c	tokens1:554a81f44c23
 MapView	??4?$TRefCountingPtr@U_TImpl@TGameMapMask@@@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x86a37	-
 MapView	??4?$auto_ptr@VTGameMapMask@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x8512a	-
@@ -2097,6 +2099,7 @@ MapView	?OnToolsTerrainSnow@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x83ebf	
 MapView	?OnToolsTerrainSubterranean@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x83ef8	tokens1:a2ec58bef71c
 MapView	?OnToolsTerrainSwamp@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x83f31	tokens1:79a3bfd86696
 MapView	?OnToolsTerrainWater@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x83f6a	tokens1:60595251b7a7
+MapView	?OnToolsValidateMap@TMapView@@IAEXXZ	99.8781	99.8781	99.8781	0x843b9	tokens1:310d058652c0
 MapView	?OnUpdate@TMapView@@MAEXPAVCView@@JPAVCObject@@@Z	99.9132	99.9132	99.9132	0x82eba	tokens1:4becf10c0427
 MapView	?OnUpdateEditFind@TMapView@@IAEXPAVCCmdUI@@@Z	100.0000	100.0000	100.0000	0x845e2	tokens1:a82d7f995841
 MapView	?OnUpdateEditFindNext@TMapView@@IAEXPAVCCmdUI@@@Z	100.0000	100.0000	100.0000	0x847c3	tokens1:2f54f437915a

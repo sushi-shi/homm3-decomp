@@ -32,6 +32,7 @@
 #include "editor/MapEditorText.h"
 #include "editor/MapFrameWnd.h"
 #include "editor/MapSpecsSheet.h"
+#include "editor/MapValidation.h"
 #include "editor/MapView.h"
 #include "editor/MiniMapWnd.h"
 #include "editor/ObjectSpecializations.h"
@@ -2325,6 +2326,14 @@ void TMapView::OnUpdateEditRedo(CCmdUI* pCmdUI)
 {
     pCmdUI->Enable(_m_mode == _eModeObstacles && _m_obstacleMaskHistoryPos < _m_obstacleMaskHistory.size()
                    || getPDocument()->canRedo());
+}
+
+VA(0x004843b9, 0x96)
+void TMapView::OnToolsValidateMap()
+{
+    TMapValidationFunc validate(*getPDocument()->getPMap());
+    TMapValidationDlg dlg(this, validate());
+    dlg.DoModal();
 }
 
 VA(0x004845e2, 0x1c)
