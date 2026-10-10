@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "va.h"
 #include "campaignmap.h"
 #include "primaryskill.h"
 #include "editor/RefCountingPtr.h"
@@ -330,7 +331,12 @@ public:
 
     // A player of the map as a scenario offers it.
     struct TPlayerInfo {
-        TPlayerInfo();
+        VA(0x0040a6e0, 0xd1)
+        TPlayerInfo()
+            : m_bPresent(false), m_bHumanPlayable(false), m_bHasMainTown(false), m_bGenerateHeroAtMainTown(false),
+              m_bHasRandomHero(false), m_numPlaceholders(0), m_mainTownType(-1)
+        {
+        }
 
         void setBPresent(bool bPresent);
         void setMainTown(int townType);

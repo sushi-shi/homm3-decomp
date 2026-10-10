@@ -8,6 +8,7 @@
 #include "bitset_iterator.h"
 #include "campaignmap.h"
 #include "herotraits.h"
+#include "editor/GameMapHeader.h"
 #include "editor/RawStream.h"
 #include "campaign_editor/Campaign.h"
 
@@ -1172,6 +1173,60 @@ VA(0x0040a1b0, 0x33)
 void TCampaignScenarioMap::TPlayerInfo::setHeroes(const map<int, string>& newHeroes)
 {
     m_heroes = newHeroes;
+}
+
+// The map's header as a scenario offers it. A map of a later format than
+// the campaign's game, or of no released one unless any version is allowed,
+// fails, and so does one the stream cannot read.
+VA(0x0040a1f0, 0x4f0)
+TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pStreamBuf, int campaignVersion,
+                                           bool bAnyVersion)
+    : m_fileName(fileName)
+{
+    int maxVersion = campaignVersion == eCampaignVersionShadowOfDeath ? 28
+                     : campaignVersion == eCampaignVersionArmageddonsBlade ? 21 : 14;
+    try {
+        TRawIStream stream(pStreamBuf);
+        long version;
+        stream >> version;
+        if (version > maxVersion || !bAnyVersion && version != 28 && version != 21 && version != 14)
+            throw TMapFileIsIncorrectVersion(maxVersion, version);
+        TGameMapHeader header(stream, version);
+        if (!header.m_bPlayable)
+            throw TMapIsUnplayable();
+        m_name = header.m_name;
+        m_heroes = header.m_availableHeroes;
+        for (map<int, TGameMapHeader::TCustomHero>::const_iterator pHero = header.m_customHeroes.begin();
+             pHero != header.m_customHeroes.end(); ++pHero) {
+            if (!pHero->second.m_name.empty())
+                m_heroNames.insert(map<int, string>::value_type(pHero->first, pHero->second.m_name));
+        }
+        for (unsigned int player = 0; player < kNumPlayers; player++) {
+            const TGameMapHeader::TPlayerSlot& slot = header.m_aPlayer[player];
+            TPlayerInfo& info = m_aPlayer[player];
+            if (slot.m_bHumanPlayable || slot.m_bComputerPlayable) {
+                info.setBPresent(true);
+                info.m_bHumanPlayable = slot.m_bHumanPlayable;
+                info.m_numPlaceholders = slot.m_numPlaceholders;
+                if (slot.m_bHasMainTown) {
+                    info.setMainTown(slot.m_mainTownType);
+                    info.m_bGenerateHeroAtMainTown = slot.m_bGenerateHero;
+                }
+                map<int, string> heroes;
+                for (vector<TGameMapHeader::THeroIdentity>::const_iterator pHero = slot.m_heroes.begin();
+                     pHero != slot.m_heroes.end(); ++pHero) {
+                    string name = pHero->m_name;
+                    if (name.empty())
+                        name = getHeroName(pHero->m_heroID);
+                    heroes.insert(map<int, string>::value_type(pHero->m_heroID, name));
+                }
+                info.setHeroes(heroes);
+                info.m_bHasRandomHero = slot.m_bRandomHero;
+            }
+        }
+    } catch (const TRawIStream::TReadFailure&) {
+        throw TMapFileIsInvalid();
+    }
 }
 
 VA(0x0040abe0, 0x116)
