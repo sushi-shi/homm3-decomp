@@ -375,6 +375,80 @@ at 231), and `MEMSET_LOCAL`'s braced for-init loop costs exactly +10;
 removing a widget-vector alias DC does not record (+1) then restored
 retail's registers: 96.60 -> 100.
 
+#### Statements the release build compiles out
+
+A statement can cost tuples and emit no machine code. Measured with
+`homm3 vc6 cb` on a harness under the game profile and the pinned SP3
+headers (`ASSERT.H` with `NDEBUG`, `CRTDBG.H` without `_DEBUG`, the
+non-`_DEBUG` arm of MFC's `AFX.H`, `include/va.h`). Each row is the
+increase over the same body without the statement:
+
+| statement (release expansion) | tuples | expression-dependent |
+|---|---|---|
+| `;` | 0 | |
+| `assert(e)` under `NDEBUG` (`((void)0)`) | 2 | no |
+| MFC `ASSERT(e)`, `ASSERT_VALID(p)`, `DEBUG_ONLY(e)` (`((void)0)`) | 2 | no |
+| CRT `_ASSERT(e)`, `_ASSERTE(e)` (`((void)0)`) | 2 | no |
+| CRT `_RPT0`..`_RPT4`, `_RPTF0`..`_RPTF4` (empty) | 0 | no |
+| MFC `TRACE0`..`TRACE3` (empty in VC6's release `AFX.H`) | 0 | no |
+| MFC `TRACE("...")` (`1 ? (void)0 : ::AfxTrace("...")`) | 12 | each further argument adds itself + 1: `i` 3, `p->m` 6, `a[i]` 8 |
+| MFC `VERIFY(e)` (`((void)(e))`), `HOMM3_RELEASE_VERIFY(e)` (`static_cast<void>(e)`) | e + 3 | yes: `p` 5, `p != 0` 7, `i >= 0` 7, `i < g` 8, `i < sizeof a / sizeof a[0]` 8, `p->m >= 0` 10, a two-term range 12, three terms 17 |
+| `if (c) assert(e);` | c + 8 | |
+| an empty braced `else { }` | 6 | |
+| a never-read local: `unsigned char f = 0;`, each `f = 1;` | 4 each | |
+
+The VERIFY forms evaluate `e`, so they are free only while `e` has no
+side effects (VC6 deletes the dead loads). The game profile does not
+define `NDEBUG`, so a plain `assert` there would emit `_assert` calls;
+the project's carrier is `HOMM3_RELEASE_VERIFY`.
+
+Where the original may have had such statements:
+
+* Windows retail has no `_assert` and no assertion text; its only
+  source-path strings are `Remote.cpp` and `WINGRAPH.CPP`. The Dreamcast
+  build has no assertion runtime either (`docs/matching/dc-line-tables.md`).
+* The Loki game (1.3.1a) imports `__assert_fail` and keeps its asserts
+  live (`bastring.cc` checks instantiated in game objects), yet its 13
+  sites are `linux.cpp`, `loki_config.c`, `loki_paths.c`, libstdc++ and
+  two `screen_width % 2 == 0` checks Loki added to winmgr's
+  fadeToBlack/fadeFromBlack (Windows uses the fixed 800-pixel screen).
+  The game sources Loki compiled therefore had no `<assert.h>` asserts.
+* The Loki map editor keeps 1,938 assert sites with file, line, text
+  and function (GameMap.cpp 287, GUIGameObject.cpp 198, MapView.cpp 139,
+  CSpriteFrame.cpp 71, GzBuf.cpp 24, ...). They describe editor objects
+  and the editor's copies of shared files; the Loki game's copies of the
+  same engine files (CSpriteFrame, GzBuf) assert nothing. They are a
+  lever for h3maped (`/DNDEBUG`, 2 tuples each), not for the game.
+* A Dreamcast line gap alone is weak: most gaps are braces, blank lines
+  and comments. CodeView scope records are stronger. An empty
+  coincident scope pair is a braced block that emitted nothing, and a
+  local CodeView lists but no instruction touches was a dead store.
+
+`homm3 hypotheses` padding probes (`(void)0;` repeated, 2 tuples each)
+tell whether a root's cost is its only wall before any spelling is
+chosen. Results for the 2026-10-10 cb windows:
+
+| root | MAX | inside the window | residual |
+|---|---|---|---|
+| displayLCWinLoss (0x4f2960) | 81.85 | 100 | none: landed, see below |
+| hero::initialize(short) (0x4d8720) | 97.36 | 99.97 | one commuted `[base+index]` in the inlined `_Eos` |
+| CScenarioInfoDlg() (0x567290) | 99.46 | 99.92 | vptr store scheduling in an inlined widget constructor |
+| vwDrawShroud (0x5f9940) | 88.36 | 97.92 | lookup and hflip reuse parameter homes; retail gives them locals (frame 0x10) |
+| calculateDemand (0x428740) | 93.40 | 97.43 | 16-bit growth sum and register allocation |
+| readTownData (0x5019f0) | 98.47 | 98.47 | already in its window; the alignment-byte slot |
+| vwDrawAdvObjShadow (0x5f8be0) | 87.65 | 87.04 (lower) | the "incomplete" window does not reproduce |
+| aiAttemptMove (0x42fee0) | 87.70 | 77.01 (lower) | the "incomplete" window does not reproduce |
+
+displayLCWinLoss landed with evidenced zero-code statements only. DC
+3473..3486 and 3528..3538 each hold an empty braced else of the
+same-team test (zero-length scope pairs at dc 0xe3604 and 0xe36c4), and
+CodeView lists the local `bShowedEndMessage`, which no DC instruction
+touches. The local with its three stores (+16), both else blocks (+12)
+and one `HOMM3_RELEASE_VERIFY(localPos != lossCondition.m_playerLoser)`
+in each else (+12 each) take the cost from 523 to 575, inside retail's
+568..648: the loss-condition constructor expands at all three sites,
+81.85 -> 100. The check's text is not recovered.
+
 ### 4.3 The historical titration (2026-08)
 
 Before the front end was read, `cb` was measured through the budget rule

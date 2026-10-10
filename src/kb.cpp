@@ -2911,7 +2911,7 @@ int getEnemyCount()
 // and add their retail dialogs. The references and the two statement/return
 // corrections are byte-flat at the 79.1107% MAX (2026-09-07).
 
-// Residual: 880 padded candidate bytes, 46 CFG blocks and clean branches.
+// Former residual (closed below): 880 padded bytes, 46 CFG blocks.
 // Earlier passive C2 trace finds LossConditionStruct's default ctor costs 41. Its
 // town/time-limit sites receive budgets 26/25 and remain calls; retail
 // expands it at all three sites. The hero site receives 53 and expands.
@@ -2949,6 +2949,12 @@ int getEnemyCount()
 // DC 3467/3472 and 3519/3524 record coincident scope pairs: both remote
 // game-over arms are braced. Restoring them raises this caller's inline
 // cost toward retail's decisions (79.09 -> 81.85%).
+// DC 3473..3486 and 3528..3538 each hold an empty braced else of the
+// same-team test (zero-length scope pairs at dc 0xe3604 and 0xe36c4), and
+// CodeView keeps the never-emitted local bShowedEndMessage. Its stores and
+// a release-form check in each else emit nothing but raise the cost to
+// 575 (retail window 568..648): the loss constructor then expands at all
+// three sites, 81.85 -> 100%. The check's text is not recovered.
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
@@ -2956,6 +2962,7 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
                       int& gameWon, int& gameLost, bool remoteCheck)
 {
     int localPos = g_game->getLocalPlayerGamePos();
+    unsigned char showedEndMessage = 0;
 
     switch (lossCondition.m_type) {
     case LOSS_CONDITION_LOSE_TOWN:
@@ -2974,6 +2981,9 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
                 }
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
+                showedEndMessage = 1;
+            } else {
+                HOMM3_RELEASE_VERIFY(localPos != lossCondition.m_playerLoser);
             }
         }
         break;
@@ -2999,6 +3009,9 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
                 }
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
+                showedEndMessage = 1;
+            } else {
+                HOMM3_RELEASE_VERIFY(localPos != lossCondition.m_playerLoser);
             }
         }
         break;
@@ -3012,6 +3025,7 @@ bool displayLCWinLoss(LossConditionStruct& lossCondition,
             gameLost = 1;
             normalDialog(g_generalText->GetText(GENERAL_TEXT_TIME_LIMIT_DEFEAT), NORMAL_DIALOG_DEFAULT, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
+            showedEndMessage = 1;
         }
         break;
     }
