@@ -1807,7 +1807,7 @@ TRmgMapPosition type_object::getPosition() const
 #if defined(HOMM3_RMG_HOTFIX)
 TRmgMapPosition type_object::getEntrance() const
 {
-    const TObjectType::TPoint& trigger = m_properties->m_prototype->m_triggerCell;
+    const TTilePoint& trigger = m_properties->m_prototype->m_triggerCell;
     TRmgMapPosition position = getPosition();
     position -= TRmgPoint(trigger.m_x, trigger.m_y);
     return position;
@@ -3114,7 +3114,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
 {
     TObjectType* prototype = properties->m_prototype;
     int objectType = prototype->getType();
-    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    TTilePoint trigger = prototype->m_triggerCell;
     TRmgVector origin(position.m_x, position.m_y);
     origin.m_x -= trigger.m_x;
     origin.m_y -= trigger.m_y;
@@ -3182,7 +3182,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
     bounds.m_minimumY = prototype->getHeight() + 2;
     bounds.m_maximumX = m_map.getWidth() - 3;
     bounds.m_maximumY = m_map.getHeight() - 3;
-    TObjectType::TPoint triggerCell = prototype->m_triggerCell;
+    TTilePoint triggerCell = prototype->m_triggerCell;
     TRmgPoint trigger(triggerCell.m_x, triggerCell.m_y);
     std::vector<TRmgMapPosition> candidates;
     TRmgMapPosition position;
@@ -6449,7 +6449,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
     int objectType = prototype->getType();
     ++m_objectCountByType[objectType];
     if (prototype->m_hasTrigger) {
-        TObjectType::TPoint trigger = prototype->m_triggerCell;
+        TTilePoint trigger = prototype->m_triggerCell;
         std::vector<TRmgMapPosition> positions;
         std::vector<int> costs;
         TRmgMapPosition currentPosition;
@@ -8434,7 +8434,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     int zoneIndex = slot->m_zoneIndex;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
-    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    TTilePoint trigger = prototype->m_triggerCell;
     TRmgMapPosition position = zone->getLevelPosition();
     TRmgZoneBounds bounds = zone->m_bounds;
     bounds.m_minimumY += prototype->getHeight();
@@ -8719,7 +8719,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     }
     int guardValue = getZoneGuardValue(zone, value);
     TRmgMapPosition entrance = mine->getPosition();
-    TObjectType::TPoint trigger = prototype->m_triggerCell;
+    TTilePoint trigger = prototype->m_triggerCell;
     entrance.m_x -= trigger.m_x;
     entrance.m_y += 1 - trigger.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
@@ -10173,7 +10173,7 @@ void type_random_map_generator::markRiverJoinTargets()
 }
 
 VA(0x00549870, 0xB1)
-MAC_ADDRESS(0x24e17c, 0x118)
+MAC_ADDRESS(0x24e17c, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:f7c5a79a55c8,82.1429): the trigger cell is Loki's TPoint<unsigned int> (queue item 36); CodeWarrior keeps the class copy in registers where retail Mac stores it to the stack (accessor and constructor spellings give the same 43%); Windows stays exact
 void type_random_map_generator::createRivers()
 {
     markRiverJoinTargets();
@@ -10182,7 +10182,7 @@ void type_random_map_generator::createRivers()
         type_object* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getType() == WATER_WHEEL) {
-            TObjectType::TPoint trigger = prototype->m_triggerCell;
+            TTilePoint trigger = prototype->m_triggerCell;
             TRmgMapPosition position = object->m_position;
             position.m_x -= trigger.m_x;
             position.m_y -= trigger.m_y;
@@ -11205,7 +11205,7 @@ void type_random_map_generator::removeObject(type_object* object)
         m_objects.erase(found);
         --m_objectCountByType[prototype->getType()];
         TAdventureObjectType objectType = prototype->getType();
-        TObjectType::TPoint trigger = prototype->m_triggerCell;
+        TTilePoint trigger = prototype->m_triggerCell;
         int zone = m_map.getMapItem(position.m_x - trigger.m_x,
             position.m_y - trigger.m_y, position.m_z)->m_zoneState.m_zone;
         if (zone >= 0) {

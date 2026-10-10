@@ -37,10 +37,10 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
-// Provisional role name; retail stores the two grid dimensions here.
 // The only references are TObjectTypeTable::load's default object and
-// TObjectType::setTriggerMask's no-trigger path, both in this compiland.
-DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
+// TObjectType::_setTriggerMask's no-trigger path, both in this compiland.
+DATA(0x00640278) extern const unsigned int kMaxObjWidth = 8;
+DATA(0x0064027c) extern const unsigned int kMaxObjHeight = 6;
 
 // --- the object slot traits ----------------------------------------------
 //
@@ -380,7 +380,6 @@ TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& newImageName)
 {
-    TPoint emptySize = { 0, 0 };
     TUniqueSet<std::string>& imageNameSet = getImageNameSet();
 
     unsigned int setSize = imageNameSet.numItems();
@@ -389,7 +388,7 @@ TObjectType& TObjectType::setImageName(
     std::vector<_TImageInfo>& aImageInfo = getObjectImageCache();
 
     if (_m_imageNum == setSize) {
-        aImageInfo.push_back(_TImageInfo(emptySize));
+        aImageInfo.push_back(_TImageInfo());
         _TImageInfo& imageInfo = aImageInfo[setSize];
 
         // Retail keeps the suffix as .rdata array storage (0x640280), while
@@ -420,22 +419,22 @@ TObjectType& TObjectType::setImageName(
             ResourceManager::ReadFromBitmapResource(maskFile, &height, 1);
             ResourceManager::ReadFromBitmapResource(maskFile, placedBits, 6);
             ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
-            imageInfo.m_objectSize.m_x = width;
-            imageInfo.m_objectSize.m_y = height;
+            imageInfo._m_width = width;
+            imageInfo._m_height = height;
             for (; bit < OBJECT_MASK_CELLS; ++bit) {
                 unsigned int byteNum = bit >> 3;
                 unsigned char bitMask =
                     static_cast<unsigned char>(1 << (bit & 7));
-                imageInfo.m_drawMask[bit] = (placedBits[byteNum] & bitMask) != 0;
-                imageInfo.m_shadowMask[bit] = (shadowBits[byteNum] & bitMask) != 0;
+                imageInfo._m_placedMask[bit] = (placedBits[byteNum] & bitMask) != 0;
+                imageInfo._m_shadowMask[bit] = (shadowBits[byteNum] & bitMask) != 0;
             }
         }
     }
 
-    m_imageInfo.m_objectSize.m_x = aImageInfo[_m_imageNum].m_objectSize.m_x;
-    m_imageInfo.m_objectSize.m_y = aImageInfo[_m_imageNum].m_objectSize.m_y;
-    m_imageInfo.m_drawMask = aImageInfo[_m_imageNum].m_drawMask;
-    m_imageInfo.m_shadowMask = aImageInfo[_m_imageNum].m_shadowMask;
+    _m_width = aImageInfo[_m_imageNum]._m_width;
+    _m_height = aImageInfo[_m_imageNum]._m_height;
+    _m_placedMask = aImageInfo[_m_imageNum]._m_placedMask;
+    _m_shadowMask = aImageInfo[_m_imageNum]._m_shadowMask;
     return *this;
 }
 
@@ -466,17 +465,13 @@ TObjectType& TObjectType::_setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& 
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
                 if (getBCellTrigger(x, y)) {
-                    m_triggerCell.m_x = x;
-                    m_triggerCell.m_y = y;
+                    m_triggerCell = TTilePoint(x, y);
                     return *this;
                 }
             }
         }
     } else {
-        int noTriggerX = g_noTriggerCell.m_x;
-        int noTriggerY = g_noTriggerCell.m_y;
-        m_triggerCell.m_y = noTriggerY;
-        m_triggerCell.m_x = noTriggerX;
+        m_triggerCell = TTilePoint(kMaxObjWidth, kMaxObjHeight);
     }
     return *this;
 }
@@ -490,7 +485,7 @@ TObjectType& TObjectType::_setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& 
 MAC_ADDRESS(0x223ea8, 0x9c)
 TObjectType& TObjectType::_setPassableMask(const std::bitset<OBJECT_MASK_CELLS>& mask)
 {
-    m_passableMask = mask | ~m_imageInfo.m_drawMask;
+    m_passableMask = mask | ~_m_placedMask;
     return *this;
 }
 
@@ -767,9 +762,10 @@ VA_COMPGEN(0x00517af0, 0x1D, BASIC_IOS_CLEAR, char)
 
 VA_COMPGEN(0x00517b10, 0x32, STREAMBUF_SBUMPC, char)
 
-// COMDAT pairing: _Tree<string,...>::find, agreement 0.984 - the registry
-// lookup GetImageName runs.
-VA_COMPGEN(0x00517ba0, 0x86, TREE_FIND, string)
+// The image-name registry's map<string, size_t>::find, which TUniqueSet::add
+// calls from setImageName; _Tree::find expands inside it (the same bytes as a
+// retained _Tree::find).
+VA_COMPGEN(0x00517ba0, 0x86, MAP_FIND, string)
 
 VA_COMPGEN(0x00517dd0, 0x3AF, NUM_GET_DO_GET, char)
 

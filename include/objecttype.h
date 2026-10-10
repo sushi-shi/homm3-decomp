@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "Point.h"
 #include "adventureobjecttype.h"
 #include "objectmask.h"
 #include "terrain_type.h"
@@ -41,27 +42,22 @@ public:
         SLOT_CATEGORY_4 = 4,
         SLOT_CATEGORY_5 = 5
     };
-    struct TPoint {
-        int m_x;
-        int m_y;
-    };
+    // One image's mask file, cached by image number (Loki's
+    // TObjectType::_TImageInfo).
     struct _TImageInfo {
-        // Provisional overload: setImageName initializes the point before
-        // either bitset constructor. TObjectType's default construction
-        // leaves that point uninitialized, requiring a distinct size path.
-        _TImageInfo() {}
-        explicit _TImageInfo(const TPoint& size) : m_objectSize(size) {}
+        _TImageInfo() : _m_width(0), _m_height(0) {}
 
-        TPoint m_objectSize;
-        std::bitset<OBJECT_MASK_CELLS> m_drawMask;
-        std::bitset<OBJECT_MASK_CELLS> m_shadowMask;
+        unsigned int _m_width;
+        unsigned int _m_height;
+        std::bitset<OBJECT_MASK_CELLS> _m_placedMask;
+        std::bitset<OBJECT_MASK_CELLS> _m_shadowMask;
     };
     // The default constructor load()'s `objectTypes.resize(count)` builds
     // its `_Ty()` temporary from, published one store at a time at
     // 0x514e2a-0x514ea1: every member in declaration order, an ALL-SET
     // passable mask spelled as a flipped `bitset<48>(0)`, and the {8,6}
-    // no-trigger sentinel. imageInfo's TPoint stays uninitialized there,
-    // which is why it has no initializer here either.
+    // no-trigger cell. The image size stays uninitialized there, which is
+    // why it has no initializer here either.
     TObjectType();
 
 private:
@@ -83,10 +79,13 @@ public:
 
     unsigned char m_hasTrigger;
 
-    TPoint m_triggerCell;
+    TTilePoint m_triggerCell;
 private:
 
-    _TImageInfo m_imageInfo;
+    unsigned int _m_width;
+    unsigned int _m_height;
+    std::bitset<OBJECT_MASK_CELLS> _m_placedMask;
+    std::bitset<OBJECT_MASK_CELLS> _m_shadowMask;
 
 public:
     // Loki h3maped TObjectType::getImageNum; the object sprite table's
@@ -105,7 +104,7 @@ public:
     {
         return OBJECT_MASK_CELLS - 1 - y * OBJECT_MASK_WIDTH - x;
     }
-    int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
+    int getWidth() const { return _m_width; }
     // Mac CObjectType conversion 0x128c7c..0x128d24 expands these four
     // coordinate-to-mask queries before assigning the destination cells.
     // The names and member boundaries are inferred; _getBitPos is the
@@ -116,7 +115,7 @@ public:
     // their definitions visible here.
     bool getBCellPlaced(unsigned x, unsigned y) const
     {
-        return m_imageInfo.m_drawMask.test(_getBitPos(x, y));
+        return _m_placedMask.test(_getBitPos(x, y));
     }
     bool getBCellPassable(unsigned x, unsigned y) const
     {
@@ -124,7 +123,7 @@ public:
     }
     bool getBCellShadow(unsigned x, unsigned y) const
     {
-        return m_imageInfo.m_shadowMask.test(_getBitPos(x, y));
+        return _m_shadowMask.test(_getBitPos(x, y));
     }
     bool getBCellTrigger(unsigned x, unsigned y) const
     {
@@ -142,7 +141,7 @@ public:
     {
         return m_recommendedTerrainMask.test(terrain);
     }
-    int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
+    int getHeight() const { return _m_height; }
     // Mac conversion 0x128d7c..0x128d94 reads this metadata after the
     // masks. These read-only counterparts of the existing fluent setters
     // have inferred names and boundaries; preserve each stored type.
@@ -178,15 +177,16 @@ public:
         return m_recommendedTerrainMask;
     }
     int getSlotCategory() const { return m_slotCategory; }
-    const TPoint& getTriggerLoc() const { return m_triggerCell; }
+    const TTilePoint& getTriggerLoc() const { return m_triggerCell; }
 };
 SIZE(TObjectType, 0x4c);
 
-// The "no trigger cell" sentinel, {8, 6} - the object mask grid's own
-// dimensions - in .rdata at 0x640278. Both of its consumers, the default
-// constructor above and TObjectType::setTriggerMask's else arm, issue both
-// loads before either store. objecttype.cpp owns the definition.
-extern const TObjectType::TPoint g_noTriggerCell;
+// The object footprint bounds (Loki's "x < kMaxObjWidth", "y < kMaxObjHeight"),
+// in .rdata at 0x640278/0x64027c: the default constructor and
+// TObjectType::_setTriggerMask's else arm bind both by reference to the
+// trigger cell's "no trigger" value. objecttype.cpp owns the definitions.
+extern const unsigned int kMaxObjWidth;
+extern const unsigned int kMaxObjHeight;
 
 // Shared header definition for the resize default value. Retail expands
 // this constructor, which does not establish an explicit inline keyword:
@@ -205,7 +205,7 @@ inline TObjectType::TObjectType()
       m_slotCategory(0),
       m_isUnderlay(0),
       m_hasTrigger(0),
-      m_triggerCell(g_noTriggerCell)
+      m_triggerCell(kMaxObjWidth, kMaxObjHeight)
 {
 }
 

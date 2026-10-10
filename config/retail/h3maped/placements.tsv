@@ -344,7 +344,11 @@ rva	size	kind	name	unit	evidence
 0x0002aad8	0x90	func	?setObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QAEXV?$auto_ptr@VTGameObject@@@std@@@Z	GameMap	masked body (144 bytes, 11 relocations) unique at a census start
 0x0002abe8	0x2a	func	?clearObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QAEXXZ	GameMap	masked body (42 bytes, 2 relocations) unique at a census start
 0x0002af44	0x3c	func	?getBCellShadow@TObjectType@@QBE_NII@Z	GameMap	masked body (60 bytes, 1 relocations) unique at a census start
+0x0002af80	0x23	func	?get@?$_TPVector@U_TObjectCellInfo@TLayer@TGameMap@@@TCell@TLayer@TGameMap@@QAEPAV?$vector@U_TObjectCellInfo@TLayer@TGameMap@@V?$allocator@U_TObjectCellInfo@TLayer@TGameMap@@@std@@@std@@XZ	GameMap	referenced by ?_stampObject@_TImpl@TLayer@TGameMap@@AAEXPAVTGameObject@@ABV?$TPoint@I@@I@Z at +0xea
+0x0002afa3	0x7c	func	?_split@?$_TPVector@U_TObjectCellInfo@TLayer@TGameMap@@@TCell@TLayer@TGameMap@@AAEXXZ	GameMap	referenced by ?get@?$_TPVector@U_TObjectCellInfo@TLayer@TGameMap@@@TCell@TLayer@TGameMap@@QAEPAV?$vector@U_TObjectCellInfo@TLayer@TGameMap@@V?$allocator@U_TObjectCellInfo@TLayer@TGameMap@@@std@@@std@@XZ at +0x18
+0x0002b01f	0x23	func	?get@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEPAV?$vector@IV?$allocator@I@std@@@std@@XZ	GameMap	referenced by ?_stampObject@_TImpl@TLayer@TGameMap@@AAEXPAVTGameObject@@ABV?$TPoint@I@@I@Z at +0x2eb
 0x0002b042	0x5b	func	?construct@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEXXZ	GameMap	masked body (91 bytes, 6 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x0002b09d	0x7c	func	?_split@?$_TPVector@I@TCell@TLayer@TGameMap@@AAEXXZ	GameMap	referenced by ?get@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEPAV?$vector@IV?$allocator@I@std@@@std@@XZ at +0x18
 0x0002b119	0xe	func	?getPObject@_TObjectLink@_TImpl@TLayer@TGameMap@@QBEPBVTGameObject@@XZ	GameMap	masked body (14 bytes, 0 relocations) unique at a census start
 0x0002b2cc	0x27	func	?clear@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEXXZ	GameMap	masked body (39 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x0002b2f3	0x8	func	??1_TWrapper@?$_TPVector@I@TCell@TLayer@TGameMap@@QAE@XZ	GameMap	referenced by ?clear@?$_TPVector@I@TCell@TLayer@TGameMap@@QAEXXZ at +0x16; ICF-folded with 1 identical bodies
@@ -444,6 +448,7 @@ rva	size	kind	name	unit	evidence
 0x0002ece6	0x3a	func	?find@?$_Tree@IU?$pair@$$CBIVTMapObjectRef@@@std@@U_Kfn@?$map@IVTMapObjectRef@@U?$less@I@std@@V?$allocator@VTMapObjectRef@@@3@@2@U?$less@I@2@V?$allocator@VTMapObjectRef@@@2@@std@@QBE?AVconst_iterator@12@ABI@Z	GameMap	referenced by ?getPLinkableObject@_TImpl@TGameMap@@QBEPBVTLinkableObject@@H@Z at +0x1d
 0x0002ed20	0x227	func	?insert@?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAEXPAV?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@IABV3@@Z	GameMap	referenced by ?resize@?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAEXIABV?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@Z at +0x37
 0x0002ef47	0x56	func	?erase@?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAEPAV?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@PAV3@0@Z	GameMap	referenced by ?resize@?$vector@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@V?$allocator@V?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@std@@@std@@QAEXIABV?$TRefCountingPtr@V?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@@@@Z at +0x57
+0x0002ef9d	0x16	func	?get@?$TRefCountingPtr@V_TCellGrid@_TImpl@TLayer@TGameMap@@@@QAEPAV_TCellGrid@_TImpl@TLayer@TGameMap@@XZ	GameMap	referenced by ?_stampObject@_TImpl@TLayer@TGameMap@@AAEXPAVTGameObject@@ABV?$TPoint@I@@I@Z at +0xdb
 0x0002efb3	0x16	func	?get@?$TRefCountingPtr@V?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@@@QAEPAV?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@XZ	GameMap	referenced by ?_placeObject@_TImpl@TLayer@TGameMap@@QAEIV?$auto_ptr@VTGameObject@@@std@@ABV?$TPoint@I@@@Z at +0x20
 0x0002efc9	0x253	func	?insert@?$vector@V_TObjectLink@_TImpl@TLayer@TGameMap@@V?$allocator@V_TObjectLink@_TImpl@TLayer@TGameMap@@@std@@@std@@QAEXPAV_TObjectLink@_TImpl@TLayer@TGameMap@@IABV3456@@Z	GameMap	masked body (595 bytes, 12 relocations) unique at a census start
 0x0002f21c	0x4a	func	??4_TObjectLink@_TImpl@TLayer@TGameMap@@QAEAAV0123@ABV0123@@Z	GameMap	masked body (74 bytes, 2 relocations) unique at a census start
@@ -1417,8 +1422,8 @@ rva	size	kind	name	unit	evidence
 0x0005ec76	0x30	func	??1_TRoadEraseOp@TMapDoc@@UAE@XZ	MapDoc	referenced by ??_G_TRoadEraseOp@TMapDoc@@UAEPAXI@Z at +0x4
 0x0005ed35	0x26	func	??0TNewMapParams@TMapDoc@@QAE@W4EGameVersion@@W4TSize@TGameMap@@_NV?$auto_ptr@UTRandomMapParams@TMapDoc@@@std@@@Z	MapDoc	masked body (38 bytes, 0 relocations) unique at a census start
 0x0005ed76	0x10	func	??1TNewMapParams@TMapDoc@@QAE@XZ	MapDoc	masked body (16 bytes, 1 relocations) unique at a census start
-0x0005f07c	0x4	func	?IsModified@TMapDoc@@UAEHXZ	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??1TMapDoc@@UAE@XZ slot 22
-0x0005f080	0xa	func	?SetModifiedFlag@TMapDoc@@UAEXH@Z	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??1TMapDoc@@UAE@XZ slot 23
+0x0005f07c	0x4	func	?IsModified@TMapDoc@@UAEHXZ	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??0TMapDoc@@IAE@XZ slot 22
+0x0005f080	0xa	func	?SetModifiedFlag@TMapDoc@@UAEXH@Z	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??0TMapDoc@@IAE@XZ slot 23
 0x0005f6da	0x1	func	??1TAbandonedMine@@UAE@XZ	ObjectSpecializations	referenced by ??_GTAbandonedMine@@UAEPAXI@Z at +0xb; ICF-folded with 9 identical bodies
 0x0005fa68	0x8	func	??1?$pair@IVTGameMap@@@std@@QAE@XZ	MapDoc	referenced by ?pop_front@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAEXXZ at +0xd
 0x00060571	0x1c	func	??_GTStreamBufFile@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEPAXI@Z	MapDoc	vtable of TStreamBufFile@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000 (RTTI) slot 0
@@ -1653,6 +1658,7 @@ rva	size	kind	name	unit	evidence
 0x000902b8	0x1c	func	??_GTAllTerrainSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164@@UAEPAXI@Z	objecttype	vtable of TAllTerrainSlotTraits@?%C:\Dev\Heroes 3 Exp 2\Editor\ObjectType.cpp3104028164 (RTTI) slot 0; ICF-folded with 2 identical bodies
 0x00090366	0x82	func	??0TObjectType@@QAE@XZ	objecttype	masked body (130 bytes, 9 relocations) unique at a census start
 0x000903e8	0x227	func	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	objecttype	string literal anchor (??_C@_0M@DCAP@default?4msk?$AA@)
+0x0009060f	0x1e	func	??0_TImageInfo@TObjectType@@QAE@XZ	objecttype	masked body (30 bytes, 2 relocations) unique at a census start
 0x0009062d	0x3d	func	?getObjectImageCache@@YAAAV?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@XZ	objecttype	masked body (61 bytes, 9 relocations) unique at a census start
 0x0009066a	0xa	func	?imageCache@?1??getObjectImageCache@@YAAAV?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@XZ@$AV12@A	objecttype	referenced by ?getObjectImageCache@@YAAAV?$vector@U_TImageInfo@TObjectType@@V?$allocator@U_TImageInfo@TObjectType@@@std@@@std@@XZ at +0x1d
 0x00090674	0x5d	func	?getImageName@TObjectType@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	objecttype	masked body (93 bytes, 10 relocations) unique at a census start
@@ -2336,6 +2342,7 @@ rva	size	kind	name	unit	evidence
 0x000dccf0	0x10	func	??0ios_base@std@@IAE@XZ	resourcemanager	masked body (16 bytes, 1 relocations) unique at a census start
 0x000dcd00	0x1e	func	??_Gios_base@std@@UAEPAXI@Z	resourcemanager	vtable of ios_base@std (RTTI) slot 0
 0x000dcd20	0x5e6	func	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	resourcemanager	referenced by ?loadTilesets@@YAXXZ at +0x55
+0x000dd310	0xe	func	?PointToSpriteResource@ResourceManager@@YAPAVLODFile@@PBD@Z	resourcemanager	referenced by ?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z at +0x103
 0x000dd320	0x14	func	?ReadFromBitmapResource@ResourceManager@@YAHPAVLODFile@@PAXH@Z	resourcemanager	masked body (20 bytes, 1 relocations) unique at a census start
 0x000dd340	0x4c	func	?Expunge@ResourceManager@@YAXXZ	resourcemanager	masked body (76 bytes, 5 relocations) unique at a census start
 0x000dd390	0xab	func	?dispose@resource@@UAEXXZ	resourcemanager	vtable of resource (RTTI) slot 1
@@ -2598,7 +2605,9 @@ rva	size	kind	name	unit	evidence
 0x00136c80	0x8	data	??_8TGarrison@@7B@	ObjectSpecializations	referenced by ??0TGarrison@@QAE@ABUTObjectType@@W4TPlayer@@@Z at +0x28
 0x00136c88	0x8	data	_g_gzMagic	gzinflatebuf	referenced by ??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z at +0x131
 0x0013997c	0x8	data	??_8?$basic_istream@DU?$char_traits@D@std@@@std@@7B@	objecttype	referenced by ??0?$basic_istream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N@Z at +0x1e
-0x0013f974	0x8	data	?g_noTriggerCell@@3UTPoint@TObjectType@@B	objecttype	referenced by ??0TObjectType@@QAE@XZ at +0x5d
+0x0013f974	0x4	data	?kMaxObjWidth@@3IB	objecttype	referenced by ??0TObjectType@@QAE@XZ at +0x5d
+0x0013f978	0x4	data	?kMaxObjHeight@@3IB	objecttype	referenced by ??0TObjectType@@QAE@XZ at +0x65
+0x0013f97c	0x5	data	_?maskExtension@?4??setImageName@TObjectType@@QAEAAU2@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z@4QBDB	objecttype	referenced by ?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z at +0xb5
 0x0013f984	0x3c	data	?apObjectSlotTraits@@3QBQAVTObjectSlotTraits@@B	objecttype	referenced by ??R?$binder2nd@UTObjectTypeInSlotPred@@@std@@QBE_NABUTObjectType@@@Z at +0xa
 0x0013f9f8	0x8	data	??_8istrstream@std@@7B@	objecttype	referenced by ??0istrstream@std@@QAE@PBD@Z at +0x23
 0x0013fb3c	0x9	data	??_C@_08BIGC@Settings?$AA@	Options	referenced by ?load@SOptions@@YAXXZ at +0x11

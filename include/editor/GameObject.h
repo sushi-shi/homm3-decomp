@@ -67,7 +67,7 @@ public:
         return _m_objectTypeIter->first.getBCellTrigger(x, y);
     }
     bool hasTrigger() const { return _m_objectTypeIter->first.m_hasTrigger != 0; }
-    const TObjectType::TPoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
+    const TTilePoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
     const std::bitset<kNumTerrainTypes>& getTerrainMask() const { return _m_objectTypeIter->first._m_terrainMask; }
     TAdventureObjectType getType() const { return _m_objectTypeIter->first.getType(); }
     int getExtra() const { return _m_objectTypeIter->first.getExtra(); }
@@ -90,15 +90,5 @@ TRawIStream& operator>>(TRawIStream& stream, TObjectType& objType);
 // The object types' order, member by member (the less instance h3maped
 // keeps, 0x490b77, compares the type, subtype and masks in turn).
 bool operator<(const TObjectType& lhs, const TObjectType& rhs);
-
-// A placed object's tile less its type's trigger cell: the location the
-// dialogs show (h3maped 0x47344d).
-inline const TTilePoint operator-(const TTilePoint& lhs, const TObjectType::TPoint& rhs)
-{
-    TTilePoint result = lhs;
-    result.x(result.x() - rhs.m_x);
-    result.y(result.y() - rhs.m_y);
-    return result;
-}
 
 #endif  /* HOMM3_EDITOR_GAMEOBJECT_H */

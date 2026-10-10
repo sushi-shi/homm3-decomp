@@ -212,7 +212,7 @@ Campaign	?getType@TCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x7df0	tokens1:13
 Campaign	?getline@std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@1@AAV21@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0xe110	-
 Campaign	?getline@std@@YAAAV?$basic_istream@DU?$char_traits@D@std@@@1@AAV21@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@D@Z	99.9751	99.9751	99.9751	0x10010	-
 Campaign	?importText@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x7b90	tokens1:30d377b7eb7c
-Campaign	?importText@_TImpl@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z	99.8997	99.8997	99.8997	0x5fc0	tokens1:f2eaee50a65d
+Campaign	?importText@_TImpl@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z	99.8863	99.8997	99.8997	0x5fc0	tokens1:f2eaee50a65d
 Campaign	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	100.0000	100.0000	100.0000	0x23e60	-
 Campaign	?insert@?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHeroIdentity@TGameMapHeader@@@std@@@std@@QAEXPAUTHeroIdentity@TGameMapHeader@@IABU34@@Z	96.0000	96.0000	96.0000	0x23a50	-
 Campaign	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEXPAV?$auto_ptr@VTScenarioStartingBonus@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xbd00	-

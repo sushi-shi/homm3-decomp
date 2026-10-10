@@ -445,7 +445,7 @@ void TMapValidationFunc::_checkForUnreachableObjects()
             }
         reachable:
             if (!bReachable) {
-                objMapLoc = objMapLoc - obj.getTriggerLoc();
+                objMapLoc -= obj.getTriggerLoc();
                 CString locStr;
                 locStr.Format(kObjectAtLocationFmtStr, obj.getTypeName().c_str(), objMapLoc.x(), objMapLoc.y(), i);
                 CString note;

@@ -59,14 +59,11 @@ bool isBeachBorder(const TGameMap::TLayer& layer, const TTilePoint& loc)
     return false;
 }
 
-// The largest object footprint; h3maped's height map rows are six cells.
-enum { kMaxObjWidth = 8, kMaxObjHeight = 6 };
-
 // The height of each placed cell of an object: an underlay lies at 0,
 // anything else rises by one per row from its front, and a passable cell
 // that continues a blocked one to its left takes that cell's height.
 VA(0x0041e84b, 0xca)
-void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[kMaxObjWidth][kMaxObjHeight])
+void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT])
 {
     for (unsigned int x = 0; x < obj.getWidth(); x++) {
         unsigned int height = obj.getBUnderlay() ? 0 : 1;
@@ -2537,10 +2534,8 @@ void TGameMap::_TImpl::exportText(ostream* pOStream) const
             const TGameObject& obj = layer.getObject(*iter);
             if (obj.hasText()) {
                 TTilePoint loc = layer.getObjectLoc(*iter);
-                if (obj.hasTrigger()) {
-                    loc.x(loc.x() - obj.getTriggerLoc().m_x);
-                    loc.y(loc.y() - obj.getTriggerLoc().m_y);
-                }
+                if (obj.hasTrigger())
+                    loc -= obj.getTriggerLoc();
                 *pOStream << "\n(" << (int) loc.x() << ", " << (int) loc.y() << ", " << (int) layerNum << ") "
                           << string("***") + obj.getTypeName() + string("***") << '\n';
                 obj.exportText(pOStream, _m_version);
@@ -2562,7 +2557,7 @@ bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject&
     static vector<int> aHigherObjIDs;
     aLowerObjIDs.clear();
     aHigherObjIDs.clear();
-    unsigned int heightMap[kMaxObjWidth][kMaxObjHeight];
+    unsigned int heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
     constructObjectHeightMap(obj, heightMap);
     for (unsigned int i = 0; i < obj.getWidth(); i++) {
         unsigned int cellX = x - i;
@@ -3541,10 +3536,10 @@ void TGameMap::_TImpl::_getObjectLoc(const TMapObjectRef& objRef, TMapLoc* pLoc)
 {
     if (objRef.getObjectID() != TLayer::s_kInvalidObjID) {
         const TLayer& layer = getLayer(objRef.getBSecondLayer());
-        const TObjectType::TPoint& triggerLoc = layer.getObject(objRef.getObjectID()).getTriggerLoc();
-        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID());
-        pLoc->m_x = loc.x() - triggerLoc.m_x;
-        pLoc->m_y = loc.y() - triggerLoc.m_y;
+        TTilePoint loc = layer.getObjectLoc(objRef.getObjectID())
+                         - layer.getObject(objRef.getObjectID()).getTriggerLoc();
+        pLoc->m_x = loc.x();
+        pLoc->m_y = loc.y();
         pLoc->m_layer = objRef.getBSecondLayer() ? 1 : 0;
     } else {
         pLoc->m_x = -1;
@@ -4540,7 +4535,7 @@ VA(0x0042ac12, 0x332)
 void TGameMap::TLayer::_TImpl::_stampObject(TGameObject* pObj, const TTilePoint& loc, unsigned int objID)
 {
     const TTileExtent objExtent = _computeObjExtent(loc, TPoint<unsigned int>(pObj->getWidth(), pObj->getHeight()));
-    unsigned int heightMap[kMaxObjWidth][kMaxObjHeight];
+    unsigned int heightMap[OBJECT_MASK_WIDTH][OBJECT_MASK_HEIGHT];
     constructObjectHeightMap(*pObj, heightMap);
     for (unsigned int x = 0; x < pObj->getWidth(); x++) {
         unsigned int mapX = loc.x() - x;
