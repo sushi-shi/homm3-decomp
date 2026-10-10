@@ -79,7 +79,19 @@ HEADER = "rva\tsize\tkind\tname\tunit\tevidence"
 
 def _functions_of(obj):
     """[(name, section, offset, bytes, relocs)] for every function an object
-    defines: code-section symbols, each running to the next symbol."""
+    defines: code-section symbols, each running to the next symbol.
+
+    A reference to a weak external the object leaves undefined names its
+    default when the object defines that: VC6's vector deleting destructor
+    `??_E` defaults to the scalar `??_G`, and a vtordisp thunk's jump to
+    `??_E` reaches the `??_G` body in the linked image."""
+    defined = {name for sec in obj.section_table
+               for _off, name, scl in obj.section_members(sec["index"]) if scl == 2}
+
+    def bound(name):
+        default = obj.weak_default(name) if name not in defined else None
+        return default if default in defined else name
+
     out = []
     for sec in obj.section_table:
         if not sec["characteristics"] & 0x20:
@@ -93,7 +105,8 @@ def _functions_of(obj):
         relocs = obj.typed_relocations(number)
         for i, (off, name) in enumerate(members):
             end = members[i + 1][0] if i + 1 < len(members) else len(payload)
-            own = {site - off: ref for site, ref in relocs.items() if off <= site < end}
+            own = {site - off: (bound(ref), kind)
+                   for site, (ref, kind) in relocs.items() if off <= site < end}
             # /O2 objects align each function within one .text section; the
             # NOP/INT3 fill belongs to no function (the census strips it too)
             floor = off + max((site + 4 for site in own), default=0)

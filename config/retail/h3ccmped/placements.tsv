@@ -167,6 +167,9 @@ rva	size	kind	name	unit	evidence
 0x000106a0	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BB@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
 0x000106e0	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BA@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
 0x00010b80	0x4f	func	??1CFileDialog@@UAE@XZ	CampaignDoc	masked body (79 bytes, 6 relocations) unique at a census start
+0x00010cf0	0x1e	func	??_GTGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	referenced by 0x00016e90 at +0x4
+0x00010d10	0x5e	func	??1TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	referenced by 0x00010cf0 at +0x4
+0x00010eb0	0x1e	func	??_GTStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	referenced by 0x00016e80 at +0x4
 0x00010ed0	0x55	func	??1TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	masked body (85 bytes, 7 relocations) unique at a census start
 0x00011ae0	0x17	func	??0TAllocationFailure@@QAE@XZ	gzinflatebuf	referenced by ?underflow@TGzInflateBuf@@UAEHXZ at +0x23d
 0x00011b00	0x12	func	??0TScenarioHeroBonus@@QAE@H@Z	CampaignDoc	masked body (18 bytes, 1 relocations) unique at a census start
@@ -235,6 +238,7 @@ rva	size	kind	name	unit	evidence
 0x0001bb90	0x111	func	??1TCampaignPropsDlg@@UAE@XZ	CampaignPropsDlg	masked body (273 bytes, 13 relocations) unique at a census start
 0x0001ca80	0x1ad	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	masked body (429 bytes, 14 relocations) unique at a census start
 0x0001cc30	0x31a	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	masked body (794 bytes, 52 relocations) unique at a census start
+0x0001cfe0	0x1e	func	??_GT16bppDIBSection@@UAEPAXI@Z	DIBSection	referenced by ??_ET16bppDIBSection@@WBE@AEPAXI@Z at +0x4
 0x0001d060	0x28	func	??0T16bppDIBSection@@QAE@XZ	DIBSection	masked body (40 bytes, 3 relocations) unique at a census start
 0x0001d090	0xa5	func	??0T16bppDIBSection@@QAE@II@Z	DIBSection	masked body (165 bytes, 8 relocations) unique at a census start
 0x0001d140	0xb2	func	??1T16bppDIBSection@@UAE@XZ	DIBSection	masked body (178 bytes, 12 relocations) unique at a census start

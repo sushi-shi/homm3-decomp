@@ -110,6 +110,7 @@ rva	size	kind	name	unit	evidence
 0x00007894	0x5f	func	??0?$vector@U_TObjectCellInfo@TLayer@TGameMap@@V?$allocator@U_TObjectCellInfo@TLayer@TGameMap@@@std@@@std@@QAE@ABV01@@Z	GameMap	masked body (95 bytes, 1 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x000078f3	0x59	func	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV01@@Z	rmg	masked body (89 bytes, 1 relocations) unique at a census start
 0x00007968	0x8	func	??_ETBlackBox@@$4PPPPPPPM@A@AEPAXI@Z	BlackBox	vtable ??_7TBlackBox@@6B@ stored by ??0TBlackBox@@QAE@ABUTObjectType@@@Z slot 0
+0x00007970	0x2b	func	??_GTBlackBox@@UAEPAXI@Z	BlackBox	referenced by ??_ETBlackBox@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x0000799b	0x36	func	??1TBlackBox@@UAE@XZ	BlackBox	masked body (54 bytes, 5 relocations) unique at a census start
 0x000079d1	0xb	func	?importText@TTreasure@@$4PPPPPPPM@3AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	BlackBox	vtable ??_7TBlackBox@@6B@ stored by ??0TBlackBox@@QAE@ABUTObjectType@@@Z slot 1
 0x000079dc	0x8	func	?write@TBlackBox@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	BlackBox	vtable ??_7TBlackBox@@6B@ stored by ??0TBlackBox@@QAE@ABUTObjectType@@@Z slot 3
@@ -184,6 +185,8 @@ rva	size	kind	name	unit	evidence
 0x0001941a	0x39	func	?read@TRawIStream@@QAEAAV1@PADI@Z	GameMap	masked body (57 bytes, 3 relocations) unique at a census start
 0x00019453	0x38	func	??5TRawIStream@@QAEAAV0@AAY03C@Z	Town	referenced by ?read@TTimedEvent@TTown@@QAEXPAVTRawIStream@@H@Z at +0x94
 0x000194a7	0x8	func	??_ETEvent@@$4PPPPPPPM@A@AEPAXI@Z	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 0
+0x000194af	0x2b	func	??_GTEvent@@UAEPAXI@Z	Event	referenced by ??_ETEvent@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
+0x000194da	0x8	func	??1TEvent@@UAE@XZ	Event	referenced by ??_GTEvent@@UAEPAXI@Z at +0xb
 0x000194e2	0xb	func	?importText@TTreasure@@$4PPPPPPPM@M@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 1
 0x000194ed	0x8	func	?write@TEvent@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 3
 0x000194f5	0x8	func	?isCustomized@TEvent@@$4PPPPPPPM@A@BE_NXZ	Event	vtable ??_7TEvent@@6B@ stored by ??0TEvent@@QAE@ABUTObjectType@@@Z slot 5
@@ -730,18 +733,26 @@ rva	size	kind	name	unit	evidence
 0x0003f00b	0x8	func	??_ETMine@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TMine@@6B@ stored by ??0TMine@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 0
 0x0003f013	0x8	func	?write@TFlaggableObject@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	ObjectSpecializations	vtable ??_7TFlaggableObject@@6B@ stored by ??0TFlaggableObject@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z slot 3
 0x0003f28b	0x24	func	?LoadBitmapA@CBitmap@@QAEHI@Z	PannerCtrl	referenced by ?relayEvent@TPannerCtrl@@QAEXPBUtagMSG@@@Z at +0x9b
+0x0003fa68	0x2b	func	??_GTMine@@UAEPAXI@Z	ObjectSpecializations	masked body (43 bytes, 3 relocations) unique at a census start
 0x0004055f	0x57	func	??0TPlayableObject@@QAE@ABV0@@Z	Town	referenced by ??0TTown@@QAE@ABV0@@Z at +0x7e
 0x0004067e	0x6e	func	??1THero@@UAE@XZ	Hero	masked body (110 bytes, 7 relocations) unique at a census start
 0x00040c91	0x63	func	??0TLinkableObject@@QAE@ABV0@@Z	Town	masked body (99 bytes, 4 relocations) unique at a census start
 0x00040cf4	0x70	func	??0TArtifactContainer@THeroPrototype@@QAE@ABV01@@Z	Hero	masked body (112 bytes, 5 relocations) unique at a census start
+0x00040e29	0x5	func	??1TRandomHero@@UAE@XZ	Hero	referenced by ??_GTRandomHero@@UAEPAXI@Z at +0x11
 0x000422e5	0x20	func	??_GTFlaggableObject@@UAEPAXI@Z	ObjectSpecializations	masked body (32 bytes, 2 relocations) unique at a census start; ICF-folded with 4 identical bodies
 0x00043959	0xa4	func	?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEXABV12@@Z	Hero	referenced by ?getSecondarySkills@TSecondarySkillsDlg@@QBE?AVTSecondarySkills@THeroPrototype@@XZ at +0x8a
 0x00043a4a	0xa8	func	?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEPAU_Node@12@PAU312@0@Z	Hero	referenced by ?_Copy@?$_Tree@W4TSecondarySkill@@U?$pair@$$CBW4TSecondarySkill@@W4TSkillMastery@@@std@@U_Kfn@?$map@W4TSecondarySkill@@W4TSkillMastery@@U?$less@W4TSecondarySkill@@@std@@V?$allocator@W4TSkillMastery@@@4@@3@U?$less@W4TSecondarySkill@@@3@V?$allocator@W4TSkillMastery@@@3@@std@@IAEXABV12@@Z at +0x2c
 0x000440db	0x14	func	??1TMonster@@UAE@XZ	Monster	masked body (20 bytes, 1 relocations) unique at a census start
+0x00044238	0xb	func	??1TSign@@UAE@XZ	ObjectSpecializations	referenced by ??_GTSign@@UAEPAXI@Z at +0xb
+0x00044847	0xa	func	??1TGarrison@@UAE@XZ	ObjectSpecializations	referenced by ??_GTGarrison@@UAEPAXI@Z at +0xb
+0x00044ac0	0x5	func	??1TGameArtifact@@UAE@XZ	ObjectSpecializations	referenced by ??_GTGameArtifact@@UAEPAXI@Z at +0xb
+0x00044d61	0x8	func	??1TGameResource@@UAE@XZ	ObjectSpecializations	referenced by ??_GTGameResource@@UAEPAXI@Z at +0xb; ICF-folded with 1 identical bodies
 0x00045a56	0x3	func	?hasText@TBlackBox@@UBE_NXZ	BlackBox	referenced by ?hasText@TBlackBox@@$4PPPPPPPM@A@BE_NXZ at +0x4; ICF-folded with 1 identical bodies
+0x00045cef	0x5	func	??1TQuestGuard@@UAE@XZ	QuestGuard	referenced by ??_GTQuestGuard@@UAEPAXI@Z at +0xb
 0x00045cf4	0x36	func	??1TQuestLocation@@UAE@XZ	QuestGuard	masked body (54 bytes, 5 relocations) unique at a census start
 0x00045d2a	0x2a	func	??1?$TArray@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@$02@@QAE@XZ	QuestGuard	masked body (42 bytes, 2 relocations) unique at a census start
 0x00045f70	0x8	func	??_ETHero@@$4PPPPPPPM@A@AEPAXI@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 0
+0x00045f78	0x31	func	??_GTHero@@UAEPAXI@Z	Hero	referenced by ??_ETHero@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x00045fa9	0x8	func	?importText@THero@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 1
 0x00045fb1	0x8	func	?write@THero@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 3
 0x00045fb9	0x8	func	?isCustomized@THero@@$4PPPPPPPM@A@BE_NXZ	Hero	vtable ??_7THero@@6BTGameObject@@@ stored by ??0THero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 5
@@ -773,6 +784,7 @@ rva	size	kind	name	unit	evidence
 0x000463ae	0x8	func	?isCustomized@TSpellScroll@@$4PPPPPPPM@A@BE_NXZ	ObjectSpecializations	vtable ??_7TSpellScroll@@6B@ stored by ??0TSpellScroll@@QAE@ABUTObjectType@@@Z slot 5
 0x000463b6	0xb	func	?hasText@TTreasure@@$4PPPPPPPM@3BE_NXZ	ObjectSpecializations	vtable ??_7TSpellScroll@@6B@ stored by ??0TSpellScroll@@QAE@ABUTObjectType@@@Z slot 6
 0x00046717	0x8	func	??_ETTreasure@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TTreasure@@6B@ stored by ??0TTreasure@@QAE@ABUTObjectType@@@Z slot 0
+0x0004671f	0x2b	func	??_GTTreasure@@UAEPAXI@Z	ObjectSpecializations	referenced by ??_ETTreasure@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x000467b6	0x8	func	?importText@TSign@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	ObjectSpecializations	vtable ??_7TSign@@6B@ stored by ??0TSign@@QAE@ABUTObjectType@@@Z slot 1
 0x00046967	0x8	func	?write@TSign@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	ObjectSpecializations	vtable ??_7TSign@@6B@ stored by ??0TSign@@QAE@ABUTObjectType@@@Z slot 3
 0x0004696f	0x8	func	?isCustomized@TSign@@$4PPPPPPPM@A@BE_NXZ	ObjectSpecializations	vtable ??_7TSign@@6B@ stored by ??0TSign@@QAE@ABUTObjectType@@@Z slot 5
@@ -791,6 +803,8 @@ rva	size	kind	name	unit	evidence
 0x00046fb1	0x9	func	?hasText@TMonster@@UBE_NXZ	Monster	referenced by ?hasText@TMonster@@$4PPPPPPPM@A@BE_NXZ at +0x4
 0x00046fba	0x8	func	?exportText@TMonster@@$4PPPPPPPM@A@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	Monster	vtable ??_7TMonster@@6BTGameObject@@@ stored by ??0TMonster@@QAE@ABUTObjectType@@@Z slot 7
 0x000472ba	0x8	func	??_ETGameArtifact@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TGameArtifact@@6B@ stored by ??0TGameArtifact@@QAE@ABUTObjectType@@@Z slot 0
+0x000472c2	0x2b	func	??_GTGameArtifact@@UAEPAXI@Z	ObjectSpecializations	referenced by ??_ETGameArtifact@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
+0x000474ed	0x2b	func	??_GTGameResource@@UAEPAXI@Z	ObjectSpecializations	referenced by ??_ETGameResource@@$4PPPPPPPM@A@AEPAXI@Z at +0x4; ICF-folded with 1 identical bodies
 0x00047518	0x8	func	?write@TGameResource@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	ObjectSpecializations	vtable ??_7TGameResource@@6B@ stored by ??0TGameResource@@QAE@ABUTObjectType@@@Z slot 3
 0x00047520	0x8	func	?getTypeName@TGameResource@@$4PPPPPPPM@A@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	ObjectSpecializations	vtable ??_7TGameResource@@6B@ stored by ??0TGameResource@@QAE@ABUTObjectType@@@Z slot 4
 0x00047528	0x8	func	?isCustomized@TGameResource@@$4PPPPPPPM@A@BE_NXZ	ObjectSpecializations	vtable ??_7TGameResource@@6B@ stored by ??0TGameResource@@QAE@ABUTObjectType@@@Z slot 5
@@ -813,6 +827,7 @@ rva	size	kind	name	unit	evidence
 0x00047d3e	0x2b	func	??_GTAbandonedMine@@UAEPAXI@Z	ObjectSpecializations	masked body (43 bytes, 3 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00047d69	0x8	func	?write@TPlayableObject@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Hero	vtable ??_7TBasicHero@@6BTPlayableObject@@@ stored by ??0TBasicHero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 3
 0x00047f7e	0x8	func	??_ETQuestGuard@@$4PPPPPPPM@A@AEPAXI@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 0
+0x00047f86	0x2b	func	??_GTQuestGuard@@UAEPAXI@Z	QuestGuard	referenced by ??_ETQuestGuard@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x00047fb1	0x8	func	?importText@TQuestLocation@@$4PPPPPPPM@A@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 1
 0x00047fb9	0x8	func	?write@TQuestLocation@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 3
 0x00047fc1	0x8	func	?isCustomized@TQuestLocation@@$4PPPPPPPM@A@BE_NXZ	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 5
@@ -820,13 +835,17 @@ rva	size	kind	name	unit	evidence
 0x00047fd1	0x8	func	?exportText@TQuestLocation@@$4PPPPPPPM@A@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	QuestGuard	vtable ??_7TQuestGuard@@6BTGameObject@@@ stored by ??0TQuestGuard@@QAE@ABUTObjectType@@@Z slot 7
 0x000482c1	0x8	func	?getTypeName@TMine@@$4PPPPPPPM@A@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	ObjectSpecializations	vtable ??_7TMine@@6B@ stored by ??0TMine@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 4
 0x000482c9	0x8	func	??_ETSign@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TSign@@6B@ stored by ??0TSign@@QAE@ABUTObjectType@@@Z slot 0
+0x000482d1	0x2b	func	??_GTSign@@UAEPAXI@Z	ObjectSpecializations	referenced by ??_ETSign@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x000482fc	0x8	func	??_ETScholar@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TScholar@@6B@ stored by ??0TScholar@@QAE@ABUTObjectType@@@Z slot 0
 0x00048304	0x20	func	??_GTScholar@@UAEPAXI@Z	ObjectSpecializations	masked body (32 bytes, 2 relocations) unique at a census start
 0x00048324	0x8	func	??_ETRandomHero@@$4PPPPPPPM@A@AEPAXI@Z	Hero	vtable ??_7TRandomHero@@6BTGameObject@@@ stored by ??0TRandomHero@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 0
+0x0004832c	0x31	func	??_GTRandomHero@@UAEPAXI@Z	Hero	referenced by ??_ETRandomHero@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x0004835d	0x8	func	??_ETHeroPlaceholder@@$4PPPPPPPM@A@AEPAXI@Z	Hero	vtable ??_7THeroPlaceholder@@6BTPlayableObject@@@ stored by ??0THeroPlaceholder@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 0
+0x00048365	0x2b	func	??_GTHeroPlaceholder@@UAEPAXI@Z	Hero	referenced by ??_ETHeroPlaceholder@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x00048390	0x8	func	?write@THeroPlaceholder@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	Hero	vtable ??_7THeroPlaceholder@@6BTPlayableObject@@@ stored by ??0THeroPlaceholder@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 3
 0x00048398	0x8	func	?isCustomized@THeroPlaceholder@@$4PPPPPPPM@A@BE_NXZ	Hero	vtable ??_7THeroPlaceholder@@6BTPlayableObject@@@ stored by ??0THeroPlaceholder@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 5
 0x000488aa	0x8	func	??_ETGarrison@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TGarrison@@6B@ stored by ??0TGarrison@@QAE@ABUTObjectType@@W4TPlayer@@@Z slot 0
+0x000488b2	0x2b	func	??_GTGarrison@@UAEPAXI@Z	ObjectSpecializations	referenced by ??_ETGarrison@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x000488dd	0x31	func	??_GTIdentifiedHero@@UAEPAXI@Z	Hero	masked body (49 bytes, 3 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x0004890e	0x8	func	??1TIdentifiedHero@@UAE@XZ	Hero	referenced by ??_GTIdentifiedHero@@UAEPAXI@Z at +0x11; ICF-folded with 2 identical bodies
 0x00048bc4	0x8	func	??_ETFlaggableObject@@$4PPPPPPPM@A@AEPAXI@Z	ObjectSpecializations	vtable ??_7TFlaggableObject@@6B@ stored by ??0TFlaggableObject@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z slot 0; ICF-folded with 4 identical bodies
@@ -918,7 +937,7 @@ rva	size	kind	name	unit	evidence
 0x0005ed76	0x10	func	??1TNewMapParams@TMapDoc@@QAE@XZ	MapDoc	masked body (16 bytes, 1 relocations) unique at a census start
 0x0005f07c	0x4	func	?IsModified@TMapDoc@@UAEHXZ	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??0TMapDoc@@IAE@XZ slot 22
 0x0005f080	0xa	func	?SetModifiedFlag@TMapDoc@@UAEXH@Z	MapDoc	vtable ??_7TMapDoc@@6BCDocument@@@ stored by ??0TMapDoc@@IAE@XZ slot 23
-0x0005f6da	0x1	func	??1TAbandonedMine@@UAE@XZ	ObjectSpecializations	referenced by ??_GTAbandonedMine@@UAEPAXI@Z at +0xb; ICF-folded with 1 identical bodies
+0x0005f6da	0x1	func	??1TAbandonedMine@@UAE@XZ	ObjectSpecializations	referenced by ??_GTAbandonedMine@@UAEPAXI@Z at +0xb; ICF-folded with 3 identical bodies
 0x0005fa68	0x8	func	??1?$pair@IVTGameMap@@@std@@QAE@XZ	MapDoc	referenced by ?pop_front@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAEXXZ at +0xd
 0x00060a9c	0x15	func	??_D?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEXXZ	MapDoc	referenced by ?OnFileExportText@TMapDoc@@IAEXXZ at +0x136
 0x00060d6c	0x15	func	??_D?$basic_istream@DU?$char_traits@D@std@@@std@@QAEXXZ	objecttype	referenced by ?OnFileImportText@TMapDoc@@IAEXXZ at +0x186
@@ -1158,6 +1177,7 @@ rva	size	kind	name	unit	evidence
 0x000970a8	0x96	func	??0?$TArray@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@$02@@QAE@ABV0@@Z	QuestLocation	masked body (150 bytes, 9 relocations) unique at a census start
 0x0009713e	0x3d	func	??0?$TArray@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@$02@@QAE@XZ	QuestLocation	referenced by ??0TQuestLocation@@QAE@ABUTObjectType@@@Z at +0x48
 0x00097197	0x8	func	??_ETQuestLocation@@$4PPPPPPPM@A@AEPAXI@Z	QuestLocation	vtable ??_7TQuestLocation@@6BTGameObject@@@ stored by ??0TQuestLocation@@QAE@ABUTObjectType@@@Z slot 0
+0x0009719f	0x2b	func	??_GTQuestLocation@@UAEPAXI@Z	QuestLocation	referenced by ??_ETQuestLocation@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
 0x00099e21	0x16	func	??0type_progress_bar@@QAE@H@Z	rmg	masked body (22 bytes, 1 relocations) unique at a census start
 0x00099e54	0x7	func	??1type_progress_bar@@UAE@XZ	rmg	referenced by 0x0005e130 at +0x30
 0x00099e5b	0xa	func	?setTotal@type_progress_bar@@UAEXH@Z	rmg	vtable ??_7type_progress_bar@@6B@ stored by ??0type_progress_bar@@QAE@H@Z slot 1

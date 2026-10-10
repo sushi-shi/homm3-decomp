@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-09
+# date: 2026-10-10
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
 0x16fd	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z	LIBCPMT	ios.obj
@@ -43,8 +43,6 @@ rva	name	library	member
 0x36af3	?isdigit@std@@YA_NDABVlocale@1@@Z	LIBCPMT	locale.obj
 0x37b88	?_Init@?$numpunct@D@std@@IAEXABV_Locinfo@2@@Z	LIBCPMT	locale.obj
 0x390b1	?_Maklocstr@std@@YAPADPBDPAD@Z	LIBCPMT	locale.obj
-0x3fa68	??_G?$basic_iostream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	LIBCPMT	strstrea.obj
-0x46b28	??_Gstrstream@std@@UAEPAXI@Z	LIBCPMT	strstrea.obj
 0x49358	??0locale@std@@QAE@XZ	LIBCPMT	ios.obj
 0x49c6b	?uflow@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHXZ	LIBCPMT	iostream.obj
 0x49c88	?xsgetn@?$basic_streambuf@DU?$char_traits@D@std@@@std@@MAEHPADH@Z	LIBCPMT	iostream.obj

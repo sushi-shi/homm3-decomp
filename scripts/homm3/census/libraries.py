@@ -56,6 +56,8 @@ EXTERNAL = 2
 FOLDED_LIBRARY = "NAFXCW"
 #: A class's primary vtable symbol.
 VTABLE = re.compile(r"^\?\?_7(\w+)@@6B@$")
+#: A class's scalar or vector deleting destructor.
+DELETING = re.compile(r"^\?\?_[GE](.+)@@[QUI]AEPAXI@Z$")
 
 
 def _member_functions(obj):
@@ -92,6 +94,14 @@ def _member_functions(obj):
             end -= 1
         out.append((name, payload[off:end], own, selection.get(number, 0)))
     return out
+
+
+def unreached_destructor(name, vtables):
+    """Whether `name` is a deleting destructor of a class whose vtable the
+    image's RTTI does not name (`vtables`: class -> vtable rva): no vtable
+    reaches it, so the image holds no such body."""
+    match = DELETING.match(name)
+    return match is not None and match.group(1) not in vtables
 
 
 def library_start(order, once, run=RUN):
@@ -189,6 +199,15 @@ def derive(image, functions: dict[int, int], archives: dict[str, Path], log=prin
     for rva, name, library, member in covering:
         if rva >= band:
             hits[rva].add((name, library, member))
+
+    # Below the band a deleting destructor is reached only through its
+    # class's vtable: when the image's RTTI names no vtable of that class,
+    # the body is a project class's destructor with the same masked bytes
+    # (h3maped 0x43fa68, TMine's, is no std::basic_iostream's).
+    for rva in [rva for rva in hits if rva < band]:
+        hits[rva] = {(n, l, m) for n, l, m in hits[rva] if not unreached_destructor(n, vtables)}
+        if not hits[rva]:
+            del hits[rva]
 
     # 3. calls that land where the first passes put their callees
     named_rvas = defaultdict(set)
