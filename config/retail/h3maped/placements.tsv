@@ -1785,6 +1785,7 @@ rva	size	kind	name	unit	evidence
 0x00099e65	0x39	func	??0TRmgMapItem@@QAE@XZ	rmg	masked body (57 bytes, 4 relocations) unique at a census start
 0x00099e9e	0x5	func	??1TRmgMapItem@@QAE@XZ	rmg	referenced by ??0type_random_map@@QAE@HHH@Z at +0x58
 0x00099ea3	0x45	func	?clear@TRmgMapItem@@QAEXXZ	rmg	masked body (69 bytes, 1 relocations) unique at a census start
+0x00099ee8	0x5c	func	?removeObject@TRmgMapItem@@QAEXPAVtype_object@@@Z	rmg	masked body (92 bytes, 1 relocations) unique at a census start
 0x00099f44	0x1c	func	??_Gtype_random_map@@UAEPAXI@Z	rmg	vtable of type_random_map (RTTI) slot 0
 0x00099f60	0x85	func	??0type_random_map@@QAE@HHH@Z	rmg	masked body (133 bytes, 8 relocations) unique at a census start
 0x00099fe5	0x4b	func	??_ETRmgMapItem@@QAEPAXI@Z	rmg	masked body (75 bytes, 5 relocations) unique at a census start
@@ -1969,6 +1970,7 @@ rva	size	kind	name	unit	evidence
 0x000ad640	0x68	func	?selectPrisonHero@type_random_map_generator@@QAEHXZ	rmg	masked body (104 bytes, 1 relocations) unique at a census start
 0x000ad947	0x22b	func	?placeSeerHutForArtifact@type_random_map_generator@@QAEEPAVt_quest_artifact@@@Z	rmg	referenced by ?completePlacement@t_quest_artifact@@UAEEXZ at +0x8
 0x000adb72	0x204	func	?placeKeyTentGuard@type_random_map_generator@@QAEEPAVtype_object@@H@Z	rmg	referenced by ?completePlacement@type_key_tent@@UAEEXZ at +0x14
+0x000add76	0x181	func	?removeObject@type_random_map_generator@@QAEXPAVtype_object@@@Z	rmg	masked body (385 bytes, 4 relocations) unique at a census start
 0x000adfe1	0xe2	func	?generateToFile@TRandomMapRequest@@QAE?AW4ERandomMapResult@@PAVTAbstractFile@@PAVtype_progress_bar@@@Z	rmg	masked body (226 bytes, 8 relocations) unique at a census start
 0x000ae0c3	0x5f	func	?resize@?$vector@PBVCSprite@@V?$allocator@PBVCSprite@@@std@@@std@@QAEXIABQBVCSprite@@@Z	ObjectSprites	referenced by ?_lockSprite@TObjectSpritePtr@@CAPBVCSprite@@ABUTObjectType@@@Z at +0x37
 0x000ae122	0x33	func	??1?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAE@XZ	rmg	referenced by ??1t_abstract_random_generator@@UAE@XZ at +0xb3
@@ -1997,6 +1999,7 @@ rva	size	kind	name	unit	evidence
 0x000af0c9	0x42	func	??4TRmgObjectPlacementRule@@QAEAAU0@ABU0@@Z	rmg	masked body (66 bytes, 2 relocations) unique at a census start
 0x000af10b	0x57	func	??0TRmgObjectPlacementRule@@QAE@ABU0@@Z	rmg	masked body (87 bytes, 5 relocations) unique at a census start
 0x000af162	0x12d	func	??4?$vector@HV?$allocator@H@std@@@std@@QAEAAV01@ABV01@@Z	rmg	masked body (301 bytes, 2 relocations) unique at a census start
+0x000af642	0x1c	func	??_Gt_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@UAEPAXI@Z	random_object_placer	vtable of t_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752 (RTTI) slot 0
 0x000afaea	0x3d	func	?erase@?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAEPAUTRmgPoint@@PAU3@@Z	rmg	masked body (61 bytes, 0 relocations) unique at a census start
 0x000b1276	0x16	func	??0TSprites@?1??_getPSprite@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@ABEPBVCSprite@@XZ@QAE@XZ	GUIGameObject	masked body (22 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000b1d30	0x12	func	??0CComboBox@@QAE@XZ	RandomGeneratorPropsDlg	referenced by ??0TRandomlyLeveledGeneratorPropsDlg@@QAE@PAVCWnd@@PAVTRandomlyLeveledGenerator@@@Z at +0x187

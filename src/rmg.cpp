@@ -730,31 +730,6 @@ void TRmgMapItem::clear()
     m_tileData = tileData;
 }
 
-// Each path mark is stored as the given byte; setting one clears the other.
-// Mac commit 0x24abfc..0x24ac24 stores the obstacle fill before clearing the
-// path clearance, and its copy-back (0x24ac28) inserts the saved byte as the
-// bit. Retail group commit 0x5469b0 stores both saved bytes the same way.
-// Mac addGuard (0x2331d8, 0x233504, 0x233648) keeps the same per-setter
-// store order: the set mark first, then the cleared one.
-// createSubterraneanGate and carveBranchingPaths still spell these stores:
-// the setters lower them by 2.35 and 1.94 points under the current budgets.
-inline void TRmgMapItem::setObstacleFill(unsigned char obstacleFill)
-{
-    if (!m_connection.m_present) {
-        m_tileData.m_obstacleFill = obstacleFill;
-        if (obstacleFill)
-            m_tileData.m_pathClearance = 0;
-    }
-}
-
-inline void TRmgMapItem::setPathClearance(unsigned char pathClearance)
-{
-    if (!m_connection.m_present) {
-        m_tileData.m_pathClearance = pathClearance;
-        if (pathClearance)
-            m_tileData.m_obstacleFill = 0;
-    }
-}
 
 // The allocation uses the initialized dimensions. Both forms emit the exact
 // retained map constructor, but using its parameters instead over-inlines
@@ -11232,21 +11207,7 @@ void type_random_map_generator::removeObject(type_object* object)
                 continue;
             if (!prototype->getBCellPassable(cell.m_x, cell.m_y)
                 || prototype->getBCellTrigger(cell.m_x, cell.m_y)) {
-                TRmgMapItem* item = m_map.getMapItem(mapPosition);
-                std::vector<type_object*>::iterator entry = std::find(item->m_objects.begin(), item->m_objects.end(), object);
-#if defined(HOMM3_RMG_HOTFIX)
-                if (entry != item->m_objects.end())
-#else
-                if (entry)
-#endif
-                {
-                    item->m_objects.erase(entry);
-                    if (item->m_objects.empty()) {
-                        item->m_tileData.m_objectEntrance = 0;
-                        item->m_tileData.m_passable = 1;
-                    }
-                    item->m_zoneState.m_objectDistance = 32700;
-                }
+                m_map.getMapItem(mapPosition)->removeObject(object);
             }
         }
     }

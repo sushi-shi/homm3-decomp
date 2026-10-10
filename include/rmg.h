@@ -4,6 +4,7 @@
 
 #include "va.h"
 
+#include <algorithm>
 #include <bitset>
 #include <string>
 #include <vector>
@@ -1231,6 +1232,12 @@ struct TRmgMapItem {
     void setObstacleFill(unsigned char obstacleFill);
     void setPathClearance(unsigned char pathClearance);
 
+    // Drops a removed object from this cell and frees the cell once it is
+    // empty. The game's generator expands it in removeObject (0x54bc50);
+    // the map editor keeps it out of line (h3maped 0x499ee8), called by its
+    // generator's removeObject and by the random object placer.
+    void removeObject(type_object* object);
+
     // Group fit 0x546ed5 shifts bit 23 and tests the byte result.
     unsigned char isPlacementOutline() const
     {
@@ -1274,6 +1281,51 @@ struct TRmgMapItem {
         m_previousTile = previous;
     }
 };
+
+// Each path mark is stored as the given byte; setting one clears the other.
+// Mac commit 0x24abfc..0x24ac24 stores the obstacle fill before clearing the
+// path clearance, and its copy-back (0x24ac28) inserts the saved byte as the
+// bit. Retail group commit 0x5469b0 stores both saved bytes the same way.
+// Mac addGuard (0x2331d8, 0x233504, 0x233648) keeps the same per-setter
+// store order: the set mark first, then the cleared one.
+// createSubterraneanGate and carveBranchingPaths still spell these stores:
+// the setters lower them by 2.35 and 1.94 points under the current budgets.
+// The map editor's random object placer calls both (h3maped 0x4af463).
+inline void TRmgMapItem::setObstacleFill(unsigned char obstacleFill)
+{
+    if (!m_connection.m_present) {
+        m_tileData.m_obstacleFill = obstacleFill;
+        if (obstacleFill)
+            m_tileData.m_pathClearance = 0;
+    }
+}
+
+inline void TRmgMapItem::setPathClearance(unsigned char pathClearance)
+{
+    if (!m_connection.m_present) {
+        m_tileData.m_pathClearance = pathClearance;
+        if (pathClearance)
+            m_tileData.m_obstacleFill = 0;
+    }
+}
+
+inline void TRmgMapItem::removeObject(type_object* object)
+{
+    std::vector<type_object*>::iterator entry = std::find(m_objects.begin(), m_objects.end(), object);
+#if defined(HOMM3_RMG_HOTFIX)
+    if (entry != m_objects.end())
+#else
+    if (entry)
+#endif
+    {
+        m_objects.erase(entry);
+        if (m_objects.empty()) {
+            m_tileData.m_objectEntrance = 0;
+            m_tileData.m_passable = 1;
+        }
+        m_zoneState.m_objectDistance = 32700;
+    }
+}
 
 class type_random_map : public TTerrainPlacementOp::TAbstractMap {
 public:

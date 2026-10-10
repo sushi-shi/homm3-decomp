@@ -3467,7 +3467,7 @@ rmg	?readObjectPlacementRules@t_abstract_random_generator@@QAEXXZ	100.0000	100.0
 rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	tokens1:0f8016db487b
 rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	95.5000	95.5000	95.5000	0x13d0d0	tokens1:1cec318cb9a9
 rmg	?releaseReservation@type_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	tokens1:3abac3fc24db
-rmg	?removeObject@type_random_map_generator@@QAEXPAVtype_object@@@Z	100.0000	100.0000	100.0000	0x14bc50	tokens1:9380ed73bfb9
+rmg	?removeObject@type_random_map_generator@@QAEXPAVtype_object@@@Z	100.0000	100.0000	100.0000	0x14bc50	tokens1:d81074419d22
 rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	tokens1:81c4bef3a61a
 rmg	?reset@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135040	tokens1:fef4b9f19ebc
 rmg	?resize@?$vector@FV?$allocator@F@std@@@std@@QAEXIABF@Z	100.0000	100.0000	100.0000	0x14c1e0	-
@@ -3510,7 +3510,7 @@ rmg	?write@type_spell_scroll@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.00
 rmg	?write@type_town@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1332f0	tokens1:e6289e33c9b3
 rmg	?write@type_witch_hut@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:fbd718bf737d
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:13741c51120f
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	97.4413	97.4507	97.4507	0x149cb0	tokens1:b288b45815ab
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	97.4507	97.4507	97.4507	0x149cb0	tokens1:b288b45815ab
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:fb8b58047817
 rmg	__h3cg$rmg$static_dtor$riverDeltaOffsets	100.0000	100.0000	100.0000	0x149790	-
 rmg_river	??0TRiverPlacementOp@@QAE@PAVTAbstractMap@TRiverOp@@HABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x15ee50	tokens1:c2f191a4cf7f
@@ -4053,7 +4053,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAE_NPAVC
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	tokens1:c58d1b550f99
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:263a3adaf3eb
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:3e0a02090019
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@@Z	91.1860	91.1860	93.0332	0x189710	tokens1:3ac119cf2ca1

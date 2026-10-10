@@ -2957,7 +2957,7 @@ MapView	?OnToolsObstaclesErase1x1@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x
 MapView	?OnToolsObstaclesErase2x2@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x84a23	tokens1:b31f0c893dd7
 MapView	?OnToolsObstaclesErase4x4@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x84a74	tokens1:4a509271ec52
 MapView	?OnToolsObstaclesEraseFill@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x84ac5	tokens1:106585c18bbf
-MapView	?OnToolsObstaclesPlace@TMapView@@IAEXXZ	99.8855	99.8855	99.8855	0x84d9f	tokens1:4d7c8471897f
+MapView	?OnToolsObstaclesPlace@TMapView@@IAEXXZ	99.9618	99.9618	99.9618	0x84d9f	tokens1:4d7c8471897f
 MapView	?OnToolsRivers@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x83a5b	tokens1:9d4ca6502668
 MapView	?OnToolsRiversClear@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x83a80	tokens1:26ebd61e6891
 MapView	?OnToolsRiversErase@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x850be	tokens1:0c79f5304e28
@@ -4710,6 +4710,15 @@ palette	?Convert24to16@TPalette16@@AAEXPBEHHHHHH@Z	100.0000	100.0000	100.0000	0x
 palette	?Cycle@TPalette16@@QAEXHHH@Z	100.0000	100.0000	100.0000	0xe4960	-
 palette	?getSize@TPalette16@@UBEIXZ	100.0000	100.0000	100.0000	0xe4a20	-
 palette	?getSize@TPalette24@@UBEIXZ	100.0000	100.0000	100.0000	0xe4b40	-
+random_object_placer	??0t_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@QAE@PAVt_random_object_map@@PAVtype_progress_bar@@H@Z	91.3567	91.3567	91.3567	0xaf463	tokens1:acb9f5898690
+random_object_placer	??1t_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@UAE@XZ	100.0000	100.0000	100.0000	0xaf65e	tokens1:aac447f3aba7
+random_object_placer	??_Gt_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xaf642	-
+random_object_placer	?_getProperties@t_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@AAEPAUTRmgObjectPropertiesRef@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0xaf785	tokens1:05be6fc4dc0e
+random_object_placer	?_isInObstacleArea@t_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@AAE_NPAVtype_object@@@Z	100.0000	100.0000	100.0000	0xaf6db	tokens1:f51234fd07ff
+random_object_placer	?addObject@t_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@UAEXPAVtype_object@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0xaf8d5	tokens1:67a526eac86e
+random_object_placer	?getPreferredTerrain@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@YAHABUTObjectType@@@Z	100.0000	100.0000	100.0000	0xaf89f	tokens1:d57c9d6eb705
+random_object_placer	?placeObjects@t_random_object_placer@?%C:\Dev\Heroes 3 Exp 2\Editor\random_object_placer.cpp2512720752@@QAEX_N@Z	100.0000	100.0000	100.0000	0xaf910	tokens1:b727d794836a
+random_object_placer	?placeRandomObjects@@YAXPAVt_random_object_map@@_NPAVtype_progress_bar@@W4ERmgMapVersion@@@Z	100.0000	100.0000	100.0000	0xafa99	tokens1:821ced465574
 resource	??0logic_error@std@@QAE@ABV01@@Z	0.0000	0.0000	0.0000	0x1912	-
 resource	??0out_of_range@std@@QAE@ABV01@@Z	0.0000	0.0000	0.0000	0x198c	-
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0xe5a90	-
@@ -5035,6 +5044,8 @@ rmg	?push_back@?$vector@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAEXABU
 rmg	?readObjectPlacementRules@t_abstract_random_generator@@QAEXXZ	92.0769	92.0769	92.0769	0x9dc9e	-
 rmg	?releaseReservation@type_hero@@UAEXXZ	100.0000	100.0000	100.0000	0x9c264	-
 rmg	?releaseReservation@type_object@@UAEXXZ	100.0000	100.0000	100.0000	0xed06	-
+rmg	?removeObject@TRmgMapItem@@QAEXPAVtype_object@@@Z	100.0000	100.0000	100.0000	0x99ee8	-
+rmg	?removeObject@type_random_map_generator@@QAEXPAVtype_object@@@Z	100.0000	100.0000	100.0000	0xadd76	-
 rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	97.6642	97.6642	97.6642	0xa4fc5	-
 rmg	?requiresLinkedPlacement@type_treasure_def@@UAEEXZ	100.0000	100.0000	100.0000	0x9c54a	-
 rmg	?reset@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x9ce64	-
