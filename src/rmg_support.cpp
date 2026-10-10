@@ -84,7 +84,7 @@ static const s32 g_rmgLineReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
 };
 
 DATA(0x0063ff1c)
-static const b8 g_rmgLineReflections[4][2] = {
+static const bool g_rmgLineReflections[4][2] = {
     {0, 0}, {0, 1}, {1, 0}, {1, 1}
 };
 
@@ -92,8 +92,8 @@ VA(0x004f9cb0, 0x24e)
 MAC_ADDRESS(0x222498, 0x2a4)
 VA_AT(h3maped, 0x00458893, 0x19c)
 void selectRmgLinePattern(
-    const b8* neighbours, const TRmgLinePatternTable* table,
-    s32& pattern, b8& flipX, b8& flipY)
+    const bool* neighbours, const TRmgLinePatternTable* table,
+    s32& pattern, bool& flipX, bool& flipY)
 {
     if (neighbours[TILE_DIR_NORTH] && neighbours[TILE_DIR_EAST]
         && neighbours[TILE_DIR_SOUTH] && neighbours[TILE_DIR_WEST]) {
@@ -236,8 +236,8 @@ u32 TRmgLinePatternTable::selectFrame(s32 pattern)
 // shares the old-terrain slot; retail keeps both and has a 0x5c vs 0x58 frame.
 // Value/const-value/const-reference caller bindings do not separate the slots.
 s32 selectRmgLinePattern(
-    const b8* neighbours, const TRmgLinePatternTable* table,
-    b8& flipX, b8& flipY)
+    const bool* neighbours, const TRmgLinePatternTable* table,
+    bool& flipX, bool& flipY)
 {
     s32 pattern;
     selectRmgLinePattern(neighbours, table, pattern, flipX, flipY);
@@ -254,7 +254,7 @@ void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point)
     b8 available[TILE_DIR_COUNT];
     buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
                            point.m_x, point.m_y, available);
-    b8 matches[TILE_DIR_COUNT];
+    bool matches[TILE_DIR_COUNT];
     for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
             matches[direction] = painter->getNeighbourLineType(point, direction) == oldType;
@@ -262,7 +262,7 @@ void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point)
             matches[direction] = 0;
     }
     TRmgLinePatternTable* table = painter->getPatternTable(oldType);
-    b8 flipX, flipY;
+    bool flipX, flipY;
     s32 selected = selectRmgLinePattern(matches, table, flipX, flipY);
     TRmgTerrainTile current;
     tile.getTile(current);
@@ -421,7 +421,7 @@ void TRmgLineWalker::paintPoint(const TTilePoint& point)
     refreshRmgLinePoint(m_painter, point);
 
     s32 lineType = m_lineType;
-    b8 matches[TILE_DIR_COUNT];
+    bool matches[TILE_DIR_COUNT];
     u32 direction;
     {
         TMapLineFilter* painter = m_painter;

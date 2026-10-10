@@ -61,8 +61,8 @@ extern TRmgLinePatternTable g_rmgRiverPatternTable;
 extern TRmgLinePatternTable g_rmgRoadPatternTable;
 
 void selectRmgLinePattern(
-    const unsigned char* neighbours, const TRmgLinePatternTable* table,
-    int& pattern, unsigned char& flipX, unsigned char& flipY);
+    const bool* neighbours, const TRmgLinePatternTable* table,
+    int& pattern, bool& flipX, bool& flipY);
 
 struct TRmgLinePainterTile;
 

@@ -112,11 +112,11 @@ inline const T& clampToRange(const T& minimum, const T& value,
 #include "rmg_terrain_tile.h"
 
 struct TRmgTerrainFlip {
-    b8 m_flipX;
-    b8 m_flipY;
+    bool m_flipX;
+    bool m_flipY;
 
     TRmgTerrainFlip() {}
-    TRmgTerrainFlip(b8 x, b8 y) : m_flipX(x), m_flipY(y) {}
+    TRmgTerrainFlip(bool x, bool y) : m_flipX(x), m_flipY(y) {}
 };
 
 // The cache word is decoded identically throughout the 0x5b3dd0..0x5b76f0

@@ -13,8 +13,10 @@
 struct TRmgTerrainTile {
     s32 m_terrain;
     s32 m_frame;
-    b8 m_flipX;
-    b8 m_flipY;
+    // bool, as Loki's TMapLineFilter::TCellInfo flips: h3maped's map
+    // adapters store them into the cell bitfields unconverted (0x45dc23).
+    bool m_flipX;
+    bool m_flipY;
     // +0x0a..0x0b are natural alignment padding, not source members.
     // Painter copies at 0x55edc0 and 0x55f350 transfer the two dwords and
     // only these two flip bytes; an explicit padding array makes copies
@@ -27,8 +29,8 @@ struct TRmgTerrainTile {
     // through them so its neighbour helper keeps retail's three retained
     // calls (2026-09-12); the painters' own copies still use the fields.
     s32 getFrame() const { return m_frame; }
-    b8 getFlipX() const { return m_flipX; }
-    b8 getFlipY() const { return m_flipY; }
+    bool getFlipX() const { return m_flipX; }
+    bool getFlipY() const { return m_flipY; }
     // 0x55edc0 constructs its snapshot separately from adapter return values.
     // Those returns keep an implicit copy boundary: a custom copy constructor
     // changes the retained 0x5b3dd0 fill and its expanded terrain callers.

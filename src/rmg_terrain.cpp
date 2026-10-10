@@ -257,7 +257,7 @@ const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
 // them at ebp-8 and ebp-4 (99.93%); replacing the helper calls with direct
 // construction changes the fourth reflection loop's registers (99.7991%).
 // An explicit empty flip destructor prevents the helper from auto-inlining.
-static TRmgTerrainFlip makeTerrainFlip(b8 x, b8 y)
+static TRmgTerrainFlip makeTerrainFlip(bool x, bool y)
 {
     return TRmgTerrainFlip(x, y);
 }

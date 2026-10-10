@@ -3539,9 +3539,9 @@ rmg_support	??Y?$TPoint@H@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xfa540	to
 rmg_support	?at@TMapLineFilter@@QAE?AUTRmgLinePainterTile@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xfa050	tokens1:0a18c0c26566
 rmg_support	?clearRmgLineRectangle@@YIXPAVTMapLineFilter@@ABUTRmgGridRectangle@@@Z	100.0000	100.0000	100.0000	0xfa080	tokens1:102597830239
 rmg_support	?drawTo@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xfa2b0	tokens1:83c26cc62d64
-rmg_support	?paintPoint@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xfa3c0	tokens1:87eb7cfd9da5
-rmg_support	?refreshRmgLinePoint@@YIXPAVTMapLineFilter@@ABV?$TPoint@I@@@Z	99.7462	99.7462	99.7462	0xf9f00	tokens1:69b05589faba
-rmg_support	?selectRmgLinePattern@@YIXPBEPBUTRmgLinePatternTable@@AAHAAE3@Z	100.0000	100.0000	100.0000	0xf9cb0	tokens1:0ccd4a6a48a0
+rmg_support	?paintPoint@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xfa3c0	tokens1:e88c0eddd430
+rmg_support	?refreshRmgLinePoint@@YIXPAVTMapLineFilter@@ABV?$TPoint@I@@@Z	99.7462	99.7462	99.7462	0xf9f00	tokens1:8977f7573650
+rmg_support	?selectRmgLinePattern@@YIXPB_NPBUTRmgLinePatternTable@@AAHAA_N3@Z	100.0000	100.0000	100.0000	0xf9cb0	tokens1:f4e6a11ba989
 rmg_terrain	??0?$TPoint@I@@QAE@ABI0@Z	100.0000	100.0000	100.0000	0x1b76b0	tokens1:d809d2d33d08
 rmg_terrain	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	100.0000	100.0000	100.0000	0x1b3780	tokens1:4c607d2fc60e
 rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3a20	tokens1:66876f605246
