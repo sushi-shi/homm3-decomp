@@ -54,10 +54,13 @@ Campaign	??1?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$
 Campaign	??1?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb170	-
 Campaign	??1TCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x7a50	tokens1:f530e3807164
 Campaign	??1TCampaignScenarioMap@@UAE@XZ	100.0000	100.0000	100.0000	0xabe0	tokens1:29e81bcba549
+Campaign	??1TCreateFailure@TCampaignScenarioMap@@UAE@XZ	100.0000	100.0000	100.0000	0x6bf0	-
 Campaign	??1TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0xa9d0	-
 Campaign	??1TPlayerInfo@TCampaignScenarioMap@@QAE@XZ	100.0000	100.0000	100.0000	0xa960	-
 Campaign	??1TPlayerSlot@TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0xa850	-
 Campaign	??1TScenario@@QAE@XZ	100.0000	100.0000	100.0000	0x5e80	-
+Campaign	??1TScenarioBonusArtifact@@UAE@XZ	100.0000	100.0000	100.0000	0x5500	-
+Campaign	??1TScenarioBonusPrimarySkill@@UAE@XZ	33.3333	33.3333	33.3333	0x5470	-
 Campaign	??1TScenarioOptionsBonus@@UAE@XZ	100.0000	100.0000	100.0000	0x58a0	-
 Campaign	??1TScenarioOptionsCrossoverScenario@@UAE@XZ	100.0000	100.0000	100.0000	0x5cb0	-
 Campaign	??1TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE@XZ	100.0000	100.0000	100.0000	0x53b0	-
@@ -93,8 +96,16 @@ Campaign	??C?$TRefCountingPtr@V_TImpl@TScenario@@@@QAEPAV_TImpl@TScenario@@XZ	10
 Campaign	??D?$TBitsetIterator@$07@@QBE?AVreference@?$bitset@$07@std@@XZ	100.0000	100.0000	100.0000	0xf700	-
 Campaign	??_G?$TRefCountingWrapper@V_TImpl@TScenario@@@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xecc0	-
 Campaign	??_G?$auto_ptr@VTScenarioStartingBonus@@@std@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xed00	-
+Campaign	??_GTCampaignScenarioMap@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xa940	-
+Campaign	??_GTCreateFailure@TCampaignScenarioMap@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6c20	-
 Campaign	??_GTScenario@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xed30	-
+Campaign	??_GTScenarioBonusArtifact@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x54e0	-
+Campaign	??_GTScenarioBonusPrimarySkill@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5450	-
+Campaign	??_GTScenarioOptionsBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5880	-
+Campaign	??_GTScenarioOptionsCrossoverScenario@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ba0	-
 Campaign	??_GTScenarioPrologue@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xb1c0	-
+Campaign	??_GTScenarioStartingBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5420	-
+Campaign	??_GTScenarioStartingOptions@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5860	-
 Campaign	?_Construct@std@@YAXPAU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x247e0	-
 Campaign	?_Construct@std@@YAXPAU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xeb30	-
 Campaign	?_Construct@std@@YAXPAUTChoice@TScenarioOptionsCrossoverScenario@@ABU23@@Z	100.0000	100.0000	100.0000	0xeb10	-
@@ -290,12 +301,13 @@ CampaignDoc	??1?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\
 CampaignDoc	??1CFileDialog@@UAE@XZ	100.0000	100.0000	100.0000	0x10b80	-
 CampaignDoc	??1CFileException@@UAE@XZ	100.0000	100.0000	100.0000	0x14850	-
 CampaignDoc	??1TCampaignDoc@@UAE@XZ	100.0000	100.0000	100.0000	0x140f0	tokens1:b7eb3681ac79
+CampaignDoc	??1TCampaignDocInvalidFileVersion@@UAE@XZ	100.0000	100.0000	100.0000	0x1ed0	-
 CampaignDoc	??1TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	100.0000	100.0000	100.0000	0x10c10	tokens1:31e1b77d9a39
 CampaignDoc	??1TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	62.3793	62.3793	62.3793	0x10d10	-
 CampaignDoc	??1TNewCampaignDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x150a0	-
 CampaignDoc	??1TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAE@XZ	100.0000	100.0000	100.0000	0x134f0	-
 CampaignDoc	??1TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	100.0000	100.0000	100.0000	0x10ed0	tokens1:74757bf5e35b
-CampaignDoc	??1TStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	-	100.0000	100.0000	0x10e80	tokens1:f61c817bd697
+CampaignDoc	??1TStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	100.0000	100.0000	100.0000	0x10e80	tokens1:f61c817bd697
 CampaignDoc	??1TStringBuffer@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAE@XZ	100.0000	100.0000	100.0000	0x10b70	tokens1:f283efc8af20
 CampaignDoc	??4?$auto_ptr@VTScenarioPrologue@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x16580	-
 CampaignDoc	??4?$vector@_NV?$allocator@_N@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x16c90	-
@@ -307,8 +319,13 @@ CampaignDoc	??_D?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEXXZ	100.0000	100
 CampaignDoc	??_ETGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WBA@AEPAXI@Z	100.0000	100.0000	100.0000	0x16e90	-
 CampaignDoc	??_ETStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WFE@AEPAXI@Z	100.0000	100.0000	100.0000	0x16e80	-
 CampaignDoc	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15d10	-
+CampaignDoc	??_GTCampaignDoc@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x140d0	-
+CampaignDoc	??_GTCampaignDocInvalidFileVersion@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14000	-
+CampaignDoc	??_GTFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10bf0	-
 CampaignDoc	??_GTGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10cf0	-
 CampaignDoc	??_GTStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10eb0	-
+CampaignDoc	??_GTStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10e90	-
+CampaignDoc	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10e60	-
 CampaignDoc	?DeleteContents@TCampaignDoc@@UAEXXZ	99.8864	99.8864	99.8864	0x14a60	tokens1:0a2f69d78660
 CampaignDoc	?IsModified@CDocument@@UAEHXZ	100.0000	100.0000	100.0000	0x15b90	-
 CampaignDoc	?OnExportScenarioMaps@TCampaignDoc@@IAEXXZ	99.9535	99.9535	99.9535	0x14d90	tokens1:9856f9fabd02
@@ -345,7 +362,7 @@ CampaignDoc	?read@TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaig
 CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	29.2741	29.2864	29.2864	0x115a0	tokens1:deb7f43ae64a
 CampaignDoc	?readStartingOptions@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingOptions@@@std@@AAVTRawIStream@@H@Z	56.1034	56.1034	56.1034	0x11ee0	tokens1:dfb498fc3d9f
 CampaignDoc	?reportCreateFailure@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@ABVTCreateFailure@TCampaignScenarioMap@@PAVCWnd@@@Z	99.7327	99.7327	99.7327	0x12ca0	tokens1:0c93e1f1e0fb
-CampaignDoc	?saveCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABVTCampaign@@HPAVCFile@@@Z	77.5053	77.5053	77.5053	0x12e00	tokens1:327274e99f23
+CampaignDoc	?saveCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABVTCampaign@@HPAVCFile@@@Z	77.5159	77.5159	77.5159	0x12e00	tokens1:327274e99f23
 CampaignDoc	?setVersion@TCampaignDoc@@QAEXH@Z	100.0000	100.0000	100.0000	0x14a50	tokens1:0659db93c221
 CampaignDoc	?size@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x15bd0	-
 CampaignDoc	?size@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x16210	-
@@ -372,6 +389,11 @@ CampaignEditorText	?getTextLength@?A0x8599eb40b679b34c@@YAHPBD@Z	100.0000	100.00
 CampaignEditorText	?initialize@SText@@YAXXZ	98.9378	98.9378	98.9378	0x18190	tokens1:ad700fc3002f
 CampaignPropsDlg	??0TCampaignPropsDlg@@QAE@PAVCWnd@@PAVTCampaignDoc@@@Z	100.0000	100.0000	100.0000	0x1ba40	tokens1:f13c6e82a137
 CampaignPropsDlg	??1TCampaignPropsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1bb90	-
+CampaignPropsDlg	??_GCButton@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c390	-
+CampaignPropsDlg	??_GCComboBox@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c3b0	-
+CampaignPropsDlg	??_GCEdit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c3d0	-
+CampaignPropsDlg	??_GCStatic@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c370	-
+CampaignPropsDlg	??_GTCampaignPropsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bb70	-
 CampaignPropsDlg	?BeginModalState@CWnd@@UAEXXZ	100.0000	100.0000	100.0000	0x4cd0	-
 CampaignPropsDlg	?DoDataExchange@TCampaignPropsDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1bcb0	tokens1:524b74b2d531
 CampaignPropsDlg	?DoModal@TCampaignPropsDlg@@UAEHXZ	100.0000	100.0000	100.0000	0x1bd80	tokens1:ea6350e977f1
@@ -382,10 +404,18 @@ CampaignPropsDlg	?OnInitDialog@TCampaignPropsDlg@@MAEHXZ	100.0000	100.0000	100.0
 CampaignPropsDlg	?OnOK@TCampaignPropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x1c110	tokens1:4cd08d9c3910
 DIBSection	??0T16bppDIBSection@@QAE@II@Z	100.0000	100.0000	100.0000	0x1d090	-
 DIBSection	??0T16bppDIBSection@@QAE@XZ	100.0000	100.0000	100.0000	0x1d060	-
+DIBSection	??1?$T16bppBitmapBase@K@@UAE@XZ	100.0000	100.0000	100.0000	0x1d000	-
+DIBSection	??1?$TBitmap@GK@@UAE@XZ	100.0000	100.0000	100.0000	0x1d590	-
+DIBSection	??1CBitmap@@UAE@XZ	99.6429	99.6429	99.6429	0x36b0	-
+DIBSection	??1CGdiObject@@UAE@XZ	99.6429	99.6429	99.6429	0x3710	-
 DIBSection	??1T16bppDIBSection@@UAE@XZ	99.9057	99.9057	99.9057	0x1d140	-
 DIBSection	??4?$TBitmapBase@G@@UAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x1d4d0	-
 DIBSection	??4T16bppDIBSection@@UAEAAV0@ABV0@@Z	82.9487	82.9487	82.9487	0x1d200	-
 DIBSection	??_ET16bppDIBSection@@WBE@AEPAXI@Z	100.0000	100.0000	100.0000	0x1d670	-
+DIBSection	??_G?$TBitmap@GK@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d4b0	-
+DIBSection	??_G?$TBitmapBase@G@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d490	-
+DIBSection	??_GCBitmap@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x3690	-
+DIBSection	??_GCGdiObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x36f0	-
 DIBSection	??_GT16bppDIBSection@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1cfe0	-
 DIBSection	?Serialize@CObject@@UAEXAAVCArchive@@@Z	100.0000	100.0000	100.0000	0x3680	-
 DIBSection	?allocate@?$TBitmap@GK@@UAEPAGII@Z	100.0000	100.0000	100.0000	0x1d5f0	-
@@ -395,6 +425,7 @@ DIBSection	?free@?$TBitmap@GK@@UAEXPAG@Z	100.0000	100.0000	100.0000	0x4520	-
 DIBSection	?free@T16bppDIBSection@@UAEXPAG@Z	99.0000	99.0000	99.0000	0x1d460	-
 MFCFileBuf	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	74.5067	74.5067	74.5067	0x28ae0	-
 MFCFileBuf	??1TMFCFileBuf@@UAE@XZ	100.0000	100.0000	100.0000	0x28c10	-
+MFCFileBuf	??_GTMFCFileBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x28bf0	-
 MFCFileBuf	?overflow@TMFCFileBuf@@MAEHH@Z	99.9398	99.9398	99.9398	0x28fb0	-
 MFCFileBuf	?seekoff@TMFCFileBuf@@MAE?AV?$fpos@H@std@@JW4seekdir@ios_base@3@H@Z	99.6847	99.6847	99.6847	0x28cd0	-
 MFCFileBuf	?seekpos@TMFCFileBuf@@MAE?AV?$fpos@H@std@@V23@H@Z	100.0000	100.0000	100.0000	0x28e20	-
@@ -403,6 +434,8 @@ MFCFileBuf	?underflow@TMFCFileBuf@@MAEHXZ	99.9194	99.9194	99.9194	0x28f10	-
 MemoryDC	??0CGdiObject@@QAE@XZ	100.0000	100.0000	100.0000	0x293e0	-
 MemoryDC	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	100.0000	100.0000	100.0000	0x293f0	-
 NewCampaignDlg	??0TNewCampaignDlg@@QAE@PAVCWnd@@HH@Z	100.0000	100.0000	100.0000	0x29470	tokens1:e3315cf39918
+NewCampaignDlg	??_GCListBox@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x29870	-
+NewCampaignDlg	??_GTNewCampaignDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x294f0	-
 NewCampaignDlg	?DoDataExchange@TNewCampaignDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x29510	tokens1:ad2237fd12f2
 NewCampaignDlg	?GetMessageMap@TNewCampaignDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x29540	tokens1:7a91975693b8
 NewCampaignDlg	?OnCreate@TNewCampaignDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x29550	tokens1:0dcdc57fd61c
@@ -428,10 +461,14 @@ artifact	?set@?$bitset@$0BD@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x2f
 artifact	?test@?$bitset@$0JA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x3130	-
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x2ef0	-
 bitmap16	??0Bitmap16Bit@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x49ac0	-
+bitmap16	??1Bitmap16Bit@@UAE@XZ	52.8214	52.8214	52.8214	0x49b60	-
+bitmap16	??_GBitmap16Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x49aa0	-
 bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	100.0000	100.0000	100.0000	0x49be0	-
 bitmap16	?getSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x49bd0	-
 bitmap24	??0Bitmap24Bit@@QAE@PBD0@Z	100.0000	100.0000	100.0000	0x4b450	-
 bitmap24	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	100.0000	100.0000	100.0000	0x4b3a0	-
+bitmap24	??1Bitmap24Bit@@UAE@XZ	47.1600	47.1600	47.1600	0x4b520	-
+bitmap24	??_GBitmap24Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4b380	-
 bitmap24	?AdjustHSV@Bitmap24Bit@@QAEXHHHHMMMM@Z	85.8922	85.8922	85.8922	0x4b830	-
 bitmap24	?Draw@Bitmap24Bit@@QBEXHHHHPAGHHHHH@Z	100.0000	100.0000	100.0000	0x4b6b0	-
 bitmap24	?Draw@Bitmap24Bit@@QBEXHHHHPAVBitmap16Bit@@HH@Z	100.0000	100.0000	100.0000	0x4b670	-
@@ -439,6 +476,8 @@ bitmap24	?getSize@Bitmap24Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4b820	-
 bitmap24	?importPCXFile@Bitmap24Bit@@AAEHPBD@Z	100.0000	100.0000	100.0000	0x4b580	-
 bitmap816	??0Bitmap816@@QAE@PBD0HHHHHH@Z	100.0000	100.0000	100.0000	0x494e0	-
 bitmap816	??0Bitmap816@@QAE@PBDHHPAEPAVTPalette16@@H@Z	100.0000	100.0000	100.0000	0x49400	-
+bitmap816	??1Bitmap816@@UAE@XZ	96.5484	96.5484	96.5484	0x49610	-
+bitmap816	??_GBitmap816@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x493e0	-
 bitmap816	?Draw@Bitmap816@@QBEXHHHHPAGHHHHH_N@Z	100.0000	100.0000	100.0000	0x498e0	-
 bitmap816	?SetPalette@Bitmap816@@QAEXPAVTPalette24@@@Z	100.0000	100.0000	100.0000	0x49a80	-
 bitmap816	?getSize@Bitmap816@@UBEIXZ	100.0000	100.0000	100.0000	0x49a70	-
@@ -483,7 +522,11 @@ gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1bb0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1020	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	91.8750	99.9219	99.9219	0x18da0	-
 gzinflatebuf	??1TAllocationFailure@@UAE@XZ	100.0000	100.0000	100.0000	0x25d70	-
+gzinflatebuf	??1TGzDeflateBuf@@UAE@XZ	0.0000	0.0000	0.0000	0x25250	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0x25f40	-
+gzinflatebuf	??_GTAllocationFailure@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2d880	-
+gzinflatebuf	??_GTGzDeflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x25230	-
+gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x25f20	-
 gzinflatebuf	?_Doraise@runtime_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x1190	-
 gzinflatebuf	?_Incref@facet@locale@std@@QAEXXZ	100.0000	100.0000	100.0000	0xf1a0	-
 gzinflatebuf	?_Init@?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x262d0	-
@@ -535,7 +578,11 @@ palette	??0TPalette16@@QAE@ABVTPalette24@@HHHHHH@Z	100.0000	100.0000	100.0000	0x
 palette	??0TPalette16@@QAE@PBV0@@Z	100.0000	100.0000	100.0000	0x4aa80	-
 palette	??0TPalette16@@QAE@XZ	100.0000	100.0000	100.0000	0x4a9c0	-
 palette	??0TPalette24@@QAE@XZ	100.0000	100.0000	100.0000	0x4ab60	-
+palette	??1TPalette16@@UAE@XZ	100.0000	100.0000	100.0000	0x4aab0	-
+palette	??1TPalette24@@UAE@XZ	100.0000	100.0000	100.0000	0x4abc0	-
 palette	??4TPalette24@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x4aba0	-
+palette	??_GTPalette16@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4a9e0	-
+palette	??_GTPalette24@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4ab80	-
 palette	?Convert24to16@TPalette16@@AAEXPBEHHHHHH@Z	100.0000	100.0000	100.0000	0x4aac0	-
 palette	?getSize@TPalette16@@UBEIXZ	100.0000	100.0000	100.0000	0x4ab50	-
 palette	?getSize@TPalette24@@UBEIXZ	100.0000	100.0000	100.0000	0x4abd0	-
@@ -544,6 +591,8 @@ resource	??0out_of_range@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x2200	-
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x4c780	-
 resource	??1logic_error@std@@UAE@XZ	100.0000	100.0000	100.0000	0x2190	-
 resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0x4c7f0	-
+resource	??_Glogic_error@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2170	-
+resource	??_Gresource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4c7d0	-
 resource	?_Doraise@logic_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x2150	-
 resource	?_Doraise@out_of_range@std@@MBEXXZ	100.0000	100.0000	100.0000	0x21e0	-
 resource	?what@logic_error@std@@UBEPBDXZ	100.0000	100.0000	100.0000	0x1180	-
@@ -562,22 +611,34 @@ resourcemanager	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.
 resourcemanager	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x461e0	-
 resourcemanager	??1?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x1350	-
 resourcemanager	??1?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x462d0	-
+resourcemanager	??1?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0xf350	-
 resourcemanager	??1?$numpunct@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x490f0	-
 resourcemanager	??1?$vector@HV?$allocator@H@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x36ea0	-
 resourcemanager	??1bad_cast@std@@UAE@XZ	100.0000	100.0000	100.0000	0xf130	-
 resourcemanager	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	99.8781	99.8781	99.8781	0xe610	-
+resourcemanager	??1t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAE@XZ	100.0000	100.0000	100.0000	0x45300	-
 resourcemanager	??4?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@QAEAAV01@D@Z	100.0000	100.0000	100.0000	0x48ca0	-
 resourcemanager	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z	99.9502	99.9502	99.9502	0x45ed0	-
 resourcemanager	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	99.9787	99.9787	99.9787	0xe380	-
 resourcemanager	??Bid@locale@std@@QAEIXZ	99.4444	99.4444	99.4444	0x10500	-
 resourcemanager	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	100.0000	100.0000	100.0000	0xe250	-
 resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x449d0	-
+resourcemanager	??_G?$basic_ios@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15cf0	-
 resourcemanager	??_G?$basic_ostream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15cc0	-
 resourcemanager	??_G?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46830	-
+resourcemanager	??_G?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	99.5455	99.5455	99.5455	0x15d40	-
+resourcemanager	??_G?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46860	-
+resourcemanager	??_G?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x48360	-
+resourcemanager	??_G?$numpunct@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x490d0	-
+resourcemanager	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46810	-
+resourcemanager	??_Gbad_cast@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf160	-
+resourcemanager	??_Gfacet@locale@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf360	-
+resourcemanager	??_Gios_base@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x152f0	-
+resourcemanager	??_Gt_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x452e0	-
 resourcemanager	?AddToCache@ResourceManager@@YAXPAVresource@@@Z	81.5833	81.5833	81.5833	0x44620	-
 resourcemanager	?Close@ResourceManager@@YAXXZ	100.0000	100.0000	100.0000	0x450c0	-
 resourcemanager	?Expunge@ResourceManager@@YAXXZ	100.0000	100.0000	100.0000	0x45dc0	-
-resourcemanager	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	96.7964	96.7964	96.7964	0x45310	-
+resourcemanager	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	96.8416	96.8416	96.8416	0x45310	-
 resourcemanager	?GetFromCache@ResourceManager@@YAPAVresource@@PBD@Z	79.3415	79.3415	79.3415	0x445a0	-
 resourcemanager	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0x45d90	-
 resourcemanager	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x45b30	-
@@ -670,6 +731,8 @@ textresource	??0TSpreadsheetResource@@QAE@PBDH0@Z	100.0000	100.0000	100.0000	0x4
 textresource	??0TTextResource@@QAE@PBDH0@Z	100.0000	100.0000	100.0000	0x4bf10	-
 textresource	??1TSpreadsheetResource@@UAE@XZ	100.0000	100.0000	100.0000	0x4c480	-
 textresource	??1TTextResource@@UAE@XZ	100.0000	100.0000	100.0000	0x4c110	-
+textresource	??_GTSpreadsheetResource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4c180	-
+textresource	??_GTTextResource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4bef0	-
 textresource	?_Destroy@?$vector@PADV?$allocator@PAD@std@@@std@@IAEXPAPAD0@Z	100.0000	100.0000	100.0000	0x16c80	-
 textresource	?erase@?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAEPAPAV?$vector@PADV?$allocator@PAD@std@@@2@PAPAV32@0@Z	100.0000	100.0000	100.0000	0x4c710	-
 textresource	?getSize@TSpreadsheetResource@@UBEIXZ	100.0000	100.0000	100.0000	0x4c470	-

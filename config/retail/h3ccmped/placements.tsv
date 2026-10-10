@@ -23,10 +23,12 @@ rva	size	kind	name	unit	evidence
 0x00001a90	0x117	func	?erase@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@II@Z	gzinflatebuf	masked body (279 bytes, 7 relocations) unique at a census start
 0x00001bb0	0x16c	func	??0TRuntimeError@@QAE@ABV0@@Z	gzinflatebuf	masked body (364 bytes, 20 relocations) unique at a census start
 0x00001d20	0x17d	func	??0TWriteFailure@TRawOStream@@QAE@ABV01@@Z	Campaign	referenced by __CT??_R0?AVTWriteFailure@TRawOStream@@@8??0TWriteFailure@TRawOStream@@QAE@ABV01@@Z36 at +0x18
+0x00001ed0	0x1	func	??1TCampaignDocInvalidFileVersion@@UAE@XZ	CampaignDoc	referenced by ??_GTCampaignDocInvalidFileVersion@@UAEPAXI@Z at +0x4; ICF-folded with 1 identical bodies
 0x00001ee0	0x10b	func	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	artifact	masked body (267 bytes, 16 relocations) unique at a census start
 0x00001ff0	0x15d	func	??0logic_error@std@@QAE@ABV01@@Z	resource	referenced by ?_Doraise@logic_error@std@@MBEXXZ at +0x9
 0x00002150	0x20	func	?_Doraise@logic_error@std@@MBEXXZ	resource	vtable of logic_error@std (RTTI) slot 2
-0x00002190	0x4b	func	??1logic_error@std@@UAE@XZ	resource	referenced by __TI2?AVlogic_error@std@@ at +0x4; ICF-folded with 1 identical bodies
+0x00002170	0x1e	func	??_Glogic_error@std@@UAEPAXI@Z	resource	vtable of logic_error@std (RTTI) slot 0; ICF-folded with 1 identical bodies
+0x00002190	0x4b	func	??1logic_error@std@@UAE@XZ	resource	referenced by ??_Glogic_error@std@@UAEPAXI@Z at +0x4; ICF-folded with 1 identical bodies
 0x000021e0	0x20	func	?_Doraise@out_of_range@std@@MBEXXZ	resource	vtable of out_of_range@std (RTTI) slot 2
 0x00002200	0x15a	func	??0out_of_range@std@@QAE@ABV01@@Z	resource	referenced by ?_Doraise@out_of_range@std@@MBEXXZ at +0x9
 0x00002360	0x122	func	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	artifact	masked body (290 bytes, 16 relocations) unique at a census start
@@ -40,18 +42,32 @@ rva	size	kind	name	unit	evidence
 0x00003130	0x34	func	?test@?$bitset@$0JA@@std@@QBE_NI@Z	artifact	masked body (52 bytes, 1 relocations) unique at a census start
 0x00003170	0xe0	func	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	artifact	referenced by ?test@?$bitset@$0JA@@std@@QBE_NI@Z at +0x11
 0x00003680	0x3	func	?Serialize@CObject@@UAEXAAVCArchive@@@Z	DIBSection	vtable of CBitmap (RTTI) slot 2; ICF-folded with 1 identical bodies
+0x00003690	0x1e	func	??_GCBitmap@@UAEPAXI@Z	DIBSection	vtable of CBitmap (RTTI) slot 1
+0x000036b0	0x3c	func	??1CBitmap@@UAE@XZ	DIBSection	referenced by ??_GCBitmap@@UAEPAXI@Z at +0x4
+0x000036f0	0x1e	func	??_GCGdiObject@@UAEPAXI@Z	DIBSection	vtable of CGdiObject (RTTI) slot 1
+0x00003710	0x3c	func	??1CGdiObject@@UAE@XZ	DIBSection	referenced by ??_GCGdiObject@@UAEPAXI@Z at +0x4
 0x00004520	0xe	func	?free@?$TBitmap@GK@@UAEXPAG@Z	DIBSection	vtable of ?$TBitmap@GK (RTTI) slot 3
 0x00004540	0x173	func	??0TAllocationFailure@@QAE@ABV0@@Z	gzinflatebuf	referenced by __CT??_R0?AVTAllocationFailure@@@8??0TAllocationFailure@@QAE@ABV0@@Z32 at +0x18
 0x00004bb0	0x11a	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	Campaign	masked body (282 bytes, 12 relocations) unique at a census start
 0x00004cd0	0xd	func	?BeginModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable of TCampaignPropsDlg (RTTI) slot 34
 0x00004ce0	0xd	func	?EndModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable of TCampaignPropsDlg (RTTI) slot 35
 0x000053b0	0x15	func	??1TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE@XZ	Campaign	masked body (21 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
+0x00005420	0x20	func	??_GTScenarioStartingBonus@@UAEPAXI@Z	Campaign	vtable of TScenarioStartingBonus (RTTI) slot 0
 0x00005440	0xf	func	?accept@TScenarioBonusPrimarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x00005450	0x1e	func	??_GTScenarioBonusPrimarySkill@@UAEPAXI@Z	Campaign	vtable of TScenarioBonusPrimarySkill (RTTI) slot 0
+0x00005470	0x10	func	??1TScenarioBonusPrimarySkill@@UAE@XZ	Campaign	referenced by ??_GTScenarioBonusPrimarySkill@@UAEPAXI@Z at +0x4
 0x000054a0	0xf	func	?accept@TScenarioBonusSecondarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x000054d0	0xe	func	?accept@TScenarioBonusResource@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (14 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
+0x000054e0	0x1e	func	??_GTScenarioBonusArtifact@@UAEPAXI@Z	Campaign	vtable of TScenarioBonusArtifact (RTTI) slot 0; ICF-folded with 7 identical bodies
+0x00005500	0x7	func	??1TScenarioBonusArtifact@@UAE@XZ	Campaign	referenced by ??_GTScenarioBonusArtifact@@UAEPAXI@Z at +0x4; ICF-folded with 7 identical bodies
+0x00005860	0x20	func	??_GTScenarioStartingOptions@@UAEPAXI@Z	Campaign	vtable of TScenarioStartingOptions (RTTI) slot 0
+0x00005880	0x1e	func	??_GTScenarioOptionsBonus@@UAEPAXI@Z	Campaign	vtable of TScenarioOptionsBonus (RTTI) slot 0
 0x000058a0	0x76	func	??1TScenarioOptionsBonus@@UAE@XZ	Campaign	masked body (118 bytes, 6 relocations) unique at a census start
+0x00005ba0	0x1e	func	??_GTScenarioOptionsCrossoverScenario@@UAEPAXI@Z	Campaign	vtable of TScenarioOptionsCrossoverScenario (RTTI) slot 0; ICF-folded with 1 identical bodies
 0x00005cb0	0x28	func	??1TScenarioOptionsCrossoverScenario@@UAE@XZ	Campaign	masked body (40 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00005e80	0x13b	func	??1TScenario@@QAE@XZ	Campaign	masked body (315 bytes, 12 relocations) unique at a census start
+0x00006bf0	0x5	func	??1TCreateFailure@TCampaignScenarioMap@@UAE@XZ	Campaign	referenced by ??_GTCreateFailure@TCampaignScenarioMap@@UAEPAXI@Z at +0x4; ICF-folded with 3 identical bodies
+0x00006c20	0x1e	func	??_GTCreateFailure@TCampaignScenarioMap@@UAEPAXI@Z	Campaign	vtable of TCreateFailure@TCampaignScenarioMap (RTTI) slot 0; ICF-folded with 3 identical bodies
 0x00007970	0xd5	func	??1_TImpl@TCampaign@@QAE@XZ	Campaign	masked body (213 bytes, 8 relocations) unique at a census start
 0x000087c0	0xc2	func	??0TRuntimeError@@QAE@XZ	Campaign	referenced by ??5@YAAAVTRawIStream@@AAV0@AAVTScenarioPrologue@@@Z at +0x5d
 0x00008890	0x3e	func	??1?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@QAE@XZ	Campaign	masked body (62 bytes, 1 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -62,6 +78,7 @@ rva	size	kind	name	unit	evidence
 0x00009d10	0x64	func	?removeEpilogue@_TImpl@TScenario@@QAEXXZ	Campaign	masked body (100 bytes, 2 relocations) unique at a census start
 0x00009eb0	0x1e1	func	?removeMap@_TImpl@TScenario@@QAEXXZ	Campaign	referenced by ?removeMap@TScenario@@QAEXXZ at +0x17
 0x0000a850	0xeb	func	??1TPlayerSlot@TGameMapHeader@@QAE@XZ	Campaign	masked body (235 bytes, 10 relocations) unique at a census start
+0x0000a940	0x1e	func	??_GTCampaignScenarioMap@@UAEPAXI@Z	Campaign	vtable of TCampaignScenarioMap (RTTI) slot 0
 0x0000a960	0x6d	func	??1TPlayerInfo@TCampaignScenarioMap@@QAE@XZ	Campaign	masked body (109 bytes, 9 relocations) unique at a census start
 0x0000a9d0	0x135	func	??1TGameMapHeader@@QAE@XZ	Campaign	masked body (309 bytes, 18 relocations) unique at a census start
 0x0000ab10	0x3e	func	??1?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@QAE@XZ	Campaign	masked body (62 bytes, 1 relocations) unique at a census start; ICF-folded with 2 identical bodies
@@ -144,11 +161,14 @@ rva	size	kind	name	unit	evidence
 0x0000ed30	0x1e	func	??_GTScenario@@QAEPAXI@Z	Campaign	referenced by ??1TCampaign@@QAE@XZ at +0x58
 0x0000ed50	0xd6	func	??1?$TRefCountingWrapper@V_TImpl@TCampaign@@@@QAE@XZ	Campaign	masked body (214 bytes, 8 relocations) unique at a census start
 0x0000ee30	0x10a	func	??1?$TRefCountingWrapper@V_TImpl@TScenario@@@@QAE@XZ	Campaign	referenced by ?copy@std@@YAPAVTScenario@@PAV2@00@Z at +0x30
-0x0000f130	0xb	func	??1bad_cast@std@@UAE@XZ	resourcemanager	referenced by __TI2?AVbad_cast@std@@ at +0x4
+0x0000f130	0xb	func	??1bad_cast@std@@UAE@XZ	resourcemanager	referenced by ??_Gbad_cast@std@@UAEPAXI@Z at +0x4
 0x0000f140	0x20	func	?_Doraise@bad_cast@std@@MBEXXZ	resourcemanager	vtable of bad_cast@std (RTTI) slot 2
+0x0000f160	0x1e	func	??_Gbad_cast@std@@UAEPAXI@Z	resourcemanager	vtable of bad_cast@std (RTTI) slot 0
 0x0000f180	0x19	func	??0bad_cast@std@@QAE@ABV01@@Z	resourcemanager	referenced by ?_Doraise@bad_cast@std@@MBEXXZ at +0x9
 0x0000f1a0	0x25	func	?_Incref@facet@locale@std@@QAEXXZ	gzinflatebuf	masked body (37 bytes, 2 relocations) unique at a census start
 0x0000f1f0	0x38	func	?_Decref@facet@locale@std@@QAEPAV123@XZ	resourcemanager	masked body (56 bytes, 2 relocations) unique at a census start
+0x0000f350	0x7	func	??1?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@UAE@XZ	resourcemanager	referenced by ??_G?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@UAEPAXI@Z at +0x4
+0x0000f360	0x20	func	??_Gfacet@locale@std@@UAEPAXI@Z	resourcemanager	vtable of facet@locale@std (RTTI) slot 0
 0x0000f4a0	0x3a	func	?getloc@ios_base@std@@QBE?AVlocale@2@XZ	resourcemanager	masked body (58 bytes, 2 relocations) unique at a census start
 0x0000f4e0	0x66	func	??4reference@?$bitset@$0JA@@std@@QAEAAV012@_N@Z	Campaign	masked body (102 bytes, 1 relocations) unique at a census start
 0x0000f550	0x66	func	??4reference@?$bitset@$0JB@@std@@QAEAAV012@_N@Z	Campaign	masked body (102 bytes, 1 relocations) unique at a census start
@@ -182,17 +202,24 @@ rva	size	kind	name	unit	evidence
 0x000106a0	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BB@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
 0x000106e0	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BA@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
 0x00010b80	0x4f	func	??1CFileDialog@@UAE@XZ	CampaignDoc	masked body (79 bytes, 6 relocations) unique at a census start
-0x00010cf0	0x1e	func	??_GTGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	referenced by 0x00016e90 at +0x4
+0x00010bf0	0x1e	func	??_GTFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	vtable of TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197 (RTTI) slot 0
+0x00010cf0	0x1e	func	??_GTGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	vtable ??_7TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTFileContent@1@@ stored by 0x00010c30 slot 0
 0x00010d10	0x5e	func	??1TGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	referenced by 0x00010cf0 at +0x4
-0x00010eb0	0x1e	func	??_GTStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	referenced by 0x00016e80 at +0x4
+0x00010e60	0x1e	func	??_Gstrstreambuf@std@@UAEPAXI@Z	CampaignDoc	vtable of strstreambuf@std (RTTI) slot 0
+0x00010e80	0xe	func	??1TStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	referenced by 0x00010e90 at +0x4
+0x00010e90	0x1e	func	??_GTStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	vtable of TStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197 (RTTI) slot 0
+0x00010eb0	0x1e	func	??_GTStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	CampaignDoc	vtable ??_7TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@6BTStrGzInflateBufBase@1@@ stored by 0x00010d70 slot 0
 0x00010ed0	0x55	func	??1TStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAE@XZ	CampaignDoc	masked body (85 bytes, 7 relocations) unique at a census start
 0x00011ae0	0x17	func	??0TAllocationFailure@@QAE@XZ	gzinflatebuf	referenced by ?underflow@TGzInflateBuf@@UAEHXZ at +0x23d
 0x00011b00	0x12	func	??0TScenarioHeroBonus@@QAE@H@Z	CampaignDoc	masked body (18 bytes, 1 relocations) unique at a census start
 0x000134f0	0x10e	func	??1TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAE@XZ	CampaignDoc	masked body (270 bytes, 11 relocations) unique at a census start
 0x00013fe0	0x19	func	??0TCampaignDocLoadFailure@@QAE@H@Z	CampaignDoc	referenced by 0x00013600 at +0xe3
+0x00014000	0x1e	func	??_GTCampaignDocInvalidFileVersion@@UAEPAXI@Z	CampaignDoc	vtable of TCampaignDocInvalidFileVersion (RTTI) slot 1; ICF-folded with 1 identical bodies
+0x000140d0	0x1e	func	??_GTCampaignDoc@@UAEPAXI@Z	CampaignDoc	vtable of TCampaignDoc (RTTI) slot 1
 0x00014850	0x3f	func	??1CFileException@@UAE@XZ	CampaignDoc	masked body (63 bytes, 6 relocations) unique at a census start
 0x000150a0	0x4c	func	??1TNewCampaignDlg@@UAE@XZ	CampaignDoc	masked body (76 bytes, 6 relocations) unique at a census start
 0x000152e0	0x10	func	??0ios_base@std@@IAE@XZ	resourcemanager	referenced by ?reportMissingResource@@YAXPBD00@Z at +0x2f
+0x000152f0	0x1e	func	??_Gios_base@std@@UAEPAXI@Z	resourcemanager	vtable of ios_base@std (RTTI) slot 0
 0x00015310	0x15	func	??_D?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEXXZ	CampaignDoc	masked body (21 bytes, 2 relocations) unique at a census start
 0x000156a0	0x15	func	??_D?$basic_istream@DU?$char_traits@D@std@@@std@@QAEXXZ	CampaignDoc	masked body (21 bytes, 2 relocations) unique at a census start
 0x000156c0	0x18	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV?$allocator@D@1@@Z	gzinflatebuf	masked body (24 bytes, 0 relocations) unique at a census start
@@ -217,7 +244,9 @@ rva	size	kind	name	unit	evidence
 0x00015c30	0x4f	func	??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_NABV?$allocator@_N@1@@Z	CampaignDoc	masked body (79 bytes, 1 relocations) unique at a census start
 0x00015c80	0x3b	func	??1?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAE@XZ	CampaignDoc	masked body (59 bytes, 2 relocations) unique at a census start
 0x00015cc0	0x2f	func	??_G?$basic_ostream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	resourcemanager	masked body (47 bytes, 3 relocations) unique at a census start
+0x00015cf0	0x1e	func	??_G?$basic_ios@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	resourcemanager	vtable of ?$basic_ios@DU?$char_traits@D@std@@@std (RTTI) slot 0
 0x00015d10	0x2f	func	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	CampaignDoc	masked body (47 bytes, 3 relocations) unique at a census start
+0x00015d40	0x1e	func	??_G?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	resourcemanager	vtable of ?$basic_streambuf@DU?$char_traits@D@std@@@std (RTTI) slot 0
 0x00015d80	0x45	func	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	CampaignDoc	masked body (69 bytes, 3 relocations) unique at a census start
 0x00015dd0	0x3b	func	??0?$fpos@H@std@@QAE@J@Z	resourcemanager	masked body (59 bytes, 5 relocations) unique at a census start
 0x00015e10	0x187	func	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	CampaignDoc	masked body (391 bytes, 13 relocations) unique at a census start
@@ -250,17 +279,26 @@ rva	size	kind	name	unit	evidence
 0x0001b6c0	0x16e	func	?initializeCampaignMovieTraitsTable@@YAEXZ	campaignmovie	masked body (366 bytes, 18 relocations) unique at a census start
 0x0001b880	0x16e	func	?initializeCampaignMusicTable@@YAEXZ	campaignmusic	masked body (366 bytes, 18 relocations) unique at a census start
 0x0001b9f0	0x16	func	__h3cg$campaignmusic$static_dtor$campaignMusicTracks	campaignmusic	referenced by ?initializeCampaignMusicTable@@YAEXZ at +0x9a
+0x0001bb70	0x1e	func	??_GTCampaignPropsDlg@@UAEPAXI@Z	CampaignPropsDlg	vtable of TCampaignPropsDlg (RTTI) slot 1
 0x0001bb90	0x111	func	??1TCampaignPropsDlg@@UAE@XZ	CampaignPropsDlg	masked body (273 bytes, 13 relocations) unique at a census start
+0x0001c370	0x1e	func	??_GCStatic@@UAEPAXI@Z	CampaignPropsDlg	vtable of CStatic (RTTI) slot 1
+0x0001c390	0x1e	func	??_GCButton@@UAEPAXI@Z	CampaignPropsDlg	vtable of CButton (RTTI) slot 1
+0x0001c3b0	0x1e	func	??_GCComboBox@@UAEPAXI@Z	CampaignPropsDlg	vtable of CComboBox (RTTI) slot 1
+0x0001c3d0	0x1e	func	??_GCEdit@@UAEPAXI@Z	CampaignPropsDlg	vtable of CEdit (RTTI) slot 1
 0x0001ca80	0x1ad	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	masked body (429 bytes, 14 relocations) unique at a census start
 0x0001cc30	0x31a	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	masked body (794 bytes, 52 relocations) unique at a census start
-0x0001cfe0	0x1e	func	??_GT16bppDIBSection@@UAEPAXI@Z	DIBSection	referenced by ??_ET16bppDIBSection@@WBE@AEPAXI@Z at +0x4
+0x0001cfe0	0x1e	func	??_GT16bppDIBSection@@UAEPAXI@Z	DIBSection	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 0
+0x0001d000	0x5b	func	??1?$T16bppBitmapBase@K@@UAE@XZ	DIBSection	masked prefix (63 fixed bytes agree, 91 compiled, 91 retail)
 0x0001d060	0x28	func	??0T16bppDIBSection@@QAE@XZ	DIBSection	masked body (40 bytes, 3 relocations) unique at a census start
 0x0001d090	0xa5	func	??0T16bppDIBSection@@QAE@II@Z	DIBSection	masked body (165 bytes, 8 relocations) unique at a census start
 0x0001d140	0xb2	func	??1T16bppDIBSection@@UAE@XZ	DIBSection	masked body (178 bytes, 12 relocations) unique at a census start
 0x0001d200	0xb8	func	??4T16bppDIBSection@@UAEAAV0@ABV0@@Z	DIBSection	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 5
 0x0001d2c0	0x196	func	?allocate@T16bppDIBSection@@UAEPAGII@Z	DIBSection	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 2
 0x0001d460	0x12	func	?free@T16bppDIBSection@@UAEXPAG@Z	DIBSection	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 3
+0x0001d490	0x20	func	??_G?$TBitmapBase@G@@UAEPAXI@Z	DIBSection	vtable of ?$TBitmapBase@G (RTTI) slot 0
+0x0001d4b0	0x1e	func	??_G?$TBitmap@GK@@UAEPAXI@Z	DIBSection	vtable of ?$TBitmap@GK (RTTI) slot 0
 0x0001d4d0	0xb8	func	??4?$TBitmapBase@G@@UAEAAV0@ABV0@@Z	DIBSection	vtable of ?$TBitmapBase@G (RTTI) slot 1
+0x0001d590	0x5b	func	??1?$TBitmap@GK@@UAE@XZ	DIBSection	referenced by ??_G?$TBitmap@GK@@UAEPAXI@Z at +0x4
 0x0001d5f0	0x3e	func	?allocate@?$TBitmap@GK@@UAEPAGII@Z	DIBSection	masked body (62 bytes, 4 relocations) unique at a census start
 0x0001d630	0xd	func	?computePitch@?$TBitmap@GK@@UBEII@Z	DIBSection	masked body (13 bytes, 0 relocations) unique at a census start
 0x0001d670	0x8	func	??_ET16bppDIBSection@@WBE@AEPAXI@Z	DIBSection	vtable ??_7T16bppDIBSection@@6BCBitmap@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 1
@@ -292,6 +330,8 @@ rva	size	kind	name	unit	evidence
 0x00024db0	0x3b	func	??5TRawIStream@@QAEAAV0@AAF@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00024df0	0x3b	func	??5TRawIStream@@QAEAAV0@AAY0BE@E@Z	Campaign	masked body (59 bytes, 3 relocations) unique at a census start
 0x00025080	0x1ab	func	??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z	gzinflatebuf	masked body (427 bytes, 28 relocations) unique at a census start
+0x00025230	0x1e	func	??_GTGzDeflateBuf@@UAEPAXI@Z	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 0
+0x00025250	0x123	func	??1TGzDeflateBuf@@UAE@XZ	gzinflatebuf	referenced by ??_GTGzDeflateBuf@@UAEPAXI@Z at +0x4
 0x00025380	0x124	func	?_putLong@TGzDeflateBuf@@AAEXK@Z	gzinflatebuf	masked body (292 bytes, 0 relocations) unique at a census start
 0x000254b0	0xe8	func	?sync@TGzDeflateBuf@@MAEHXZ	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 11
 0x000255a0	0xce	func	?overflow@TGzDeflateBuf@@MAEHH@Z	gzinflatebuf	vtable of TGzDeflateBuf (RTTI) slot 1
@@ -299,8 +339,9 @@ rva	size	kind	name	unit	evidence
 0x000256e0	0x11	func	?_putBackC@TGzInflateBuf@@AAEXD@Z	gzinflatebuf	masked body (17 bytes, 0 relocations) unique at a census start
 0x00025700	0x5a7	func	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	gzinflatebuf	referenced by 0x00010d70 at +0x81
 0x00025cb0	0xba	func	??0TDataError@TGzInflateBuf@@QAE@XZ	gzinflatebuf	masked body (186 bytes, 11 relocations) unique at a census start
-0x00025d70	0x4b	func	??1TAllocationFailure@@UAE@XZ	gzinflatebuf	referenced by __TI5?AVTAllocationFailure@@ at +0x4; ICF-folded with 2 identical bodies
+0x00025d70	0x4b	func	??1TAllocationFailure@@UAE@XZ	gzinflatebuf	referenced by ??_GTAllocationFailure@@UAEPAXI@Z at +0x4; ICF-folded with 6 identical bodies
 0x00025dc0	0x15a	func	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	gzinflatebuf	referenced by __CT??_R0?AVTDataError@TGzInflateBuf@@@8??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z28 at +0x18
+0x00025f20	0x1e	func	??_GTGzInflateBuf@@UAEPAXI@Z	gzinflatebuf	vtable of TGzInflateBuf (RTTI) slot 0
 0x00025f40	0xfb	func	??1TGzInflateBuf@@UAE@XZ	gzinflatebuf	masked body (251 bytes, 10 relocations) unique at a census start
 0x00026040	0x25a	func	?underflow@TGzInflateBuf@@UAEHXZ	gzinflatebuf	masked body (602 bytes, 29 relocations) unique at a census start
 0x000262a0	0x29	func	?_mustGetC@TGzInflateBuf@@AAEHXZ	gzinflatebuf	referenced by ?underflow@TGzInflateBuf@@UAEHXZ at +0x1ba
@@ -314,6 +355,7 @@ rva	size	kind	name	unit	evidence
 0x00026600	0x166	func	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (358 bytes, 18 relocations) unique at a census start
 0x00026790	0x149	func	?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	masked body (329 bytes, 22 relocations) unique at a census start
 0x00028ae0	0x10a	func	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	MFCFileBuf	referenced by 0x00012e00 at +0x2f
+0x00028bf0	0x1e	func	??_GTMFCFileBuf@@UAEPAXI@Z	MFCFileBuf	vtable of TMFCFileBuf (RTTI) slot 0
 0x00028c10	0xc0	func	??1TMFCFileBuf@@UAE@XZ	MFCFileBuf	masked body (192 bytes, 10 relocations) unique at a census start
 0x00028cd0	0x14d	func	?seekoff@TMFCFileBuf@@MAE?AV?$fpos@H@std@@JW4seekdir@ios_base@3@H@Z	MFCFileBuf	masked body (333 bytes, 17 relocations) unique at a census start
 0x00028e20	0x32	func	?seekpos@TMFCFileBuf@@MAE?AV?$fpos@H@std@@V23@H@Z	MFCFileBuf	masked body (50 bytes, 0 relocations) unique at a census start
@@ -322,10 +364,13 @@ rva	size	kind	name	unit	evidence
 0x00028fb0	0xd4	func	?overflow@TMFCFileBuf@@MAEHH@Z	MFCFileBuf	masked body (212 bytes, 8 relocations) unique at a census start
 0x000293e0	0x10	func	??0CGdiObject@@QAE@XZ	MemoryDC	masked body (16 bytes, 1 relocations) unique at a census start
 0x000293f0	0x22	func	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	MemoryDC	masked body (34 bytes, 2 relocations) unique at a census start
+0x000294f0	0x1e	func	??_GTNewCampaignDlg@@UAEPAXI@Z	NewCampaignDlg	vtable of TNewCampaignDlg (RTTI) slot 1
+0x00029870	0x1e	func	??_GCListBox@@UAEPAXI@Z	NewCampaignDlg	vtable of CListBox (RTTI) slot 1
 0x00029890	0x330	func	?InitializePlayerTraitsTable@@YA_NXZ	Player	string literal anchor (??_C@_0N@EJOF@plcolors?4txt?$AA@)
 0x00029bc0	0x14	func	__h3cg$Player$static_dtor$aColorNames	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x7d
 0x00029be0	0x14	func	__h3cg$Player$static_dtor$aNames	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x44
 0x00029c00	0xb	func	??_F?$TAutoArrayPtr@D@@QAEXXZ	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x2a
+0x0002d880	0x1e	func	??_GTAllocationFailure@@UAEPAXI@Z	gzinflatebuf	vtable of TAllocationFailure (RTTI) slot 0; ICF-folded with 6 identical bodies
 0x000326b0	0xa8	func	?InitializeSpellTraitsTable@@YAEXZ	spelldefs	masked body (168 bytes, 5 relocations) unique at a census start
 0x00032760	0x343	func	?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	spelldefs	masked body (835 bytes, 37 relocations) unique at a census start
 0x00032ab0	0x17	func	__h3cg$spelldefs$static_dtor$spellDescriptions	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x29a
@@ -402,6 +447,8 @@ rva	size	kind	name	unit	evidence
 0x000450c0	0x22	func	?Close@ResourceManager@@YAXXZ	resourcemanager	masked body (34 bytes, 4 relocations) unique at a census start
 0x000450f0	0xe4	func	?SetPath@ResourceManager@@YAXPBD@Z	resourcemanager	masked body (228 bytes, 16 relocations) unique at a census start
 0x000451e0	0xf1	func	?SetPixelFormat@ResourceManager@@YAXKKK@Z	resourcemanager	masked body (241 bytes, 22 relocations) unique at a census start
+0x000452e0	0x1e	func	??_Gt_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEPAXI@Z	resourcemanager	vtable of t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager (RTTI) slot 0; ICF-folded with 1 identical bodies
+0x00045300	0x7	func	??1t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAE@XZ	resourcemanager	referenced by 0x000452e0 at +0x4; ICF-folded with 1 identical bodies
 0x00045310	0x300	func	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	resourcemanager	string literal anchor (??_C@_0N@NNLG@GetBitmap816?$AA@)
 0x00045610	0x2e1	func	?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z	resourcemanager	string literal anchor (??_C@_0M@KCCH@GetBitmap16?$AA@)
 0x00045930	0x96	func	?loadTextData@ResourceManager@@YAPAVTTextResource@@PBDPAVTAbstractFile@@H@Z	resourcemanager	masked body (150 bytes, 8 relocations) unique at a census start
@@ -423,7 +470,9 @@ rva	size	kind	name	unit	evidence
 0x00046560	0x5a	func	?underflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHXZ	resourcemanager	masked body (90 bytes, 0 relocations) unique at a census start
 0x000465c0	0x163	func	?seekoff@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	resourcemanager	masked body (355 bytes, 1 relocations) unique at a census start
 0x00046730	0xd9	func	?seekpos@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@V32@H@Z	resourcemanager	masked body (217 bytes, 1 relocations) unique at a census start
+0x00046810	0x20	func	??_GTAbstractFile@@UAEPAXI@Z	resourcemanager	vtable of TAbstractFile (RTTI) slot 0
 0x00046830	0x2d	func	??_G?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	resourcemanager	masked body (45 bytes, 3 relocations) unique at a census start
+0x00046860	0x1e	func	??_G?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	resourcemanager	vtable of ?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std (RTTI) slot 0
 0x00046880	0xb4	func	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	resourcemanager	masked body (180 bytes, 10 relocations) unique at a census start
 0x00046940	0x138	func	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	resourcemanager	masked prefix (33 fixed bytes agree, 306 compiled, 312 retail)
 0x00046a80	0x51d	func	?erase@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AViterator@12@V312@@Z	resourcemanager	masked body (1309 bytes, 37 relocations) unique at a census start
@@ -447,6 +496,7 @@ rva	size	kind	name	unit	evidence
 0x00047fc0	0xe5	func	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DN@Z	resourcemanager	masked body (229 bytes, 2 relocations) unique at a census start
 0x000480b0	0xe9	func	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DO@Z	resourcemanager	masked body (233 bytes, 2 relocations) unique at a census start
 0x000481a0	0x1b8	func	?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBX@Z	resourcemanager	masked body (440 bytes, 2 relocations) unique at a census start
+0x00048360	0x1e	func	??_G?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@UAEPAXI@Z	resourcemanager	vtable of ?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std (RTTI) slot 0
 0x00048380	0x40b	func	?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z	resourcemanager	masked body (1035 bytes, 37 relocations) unique at a census start
 0x00048790	0x450	func	?_Iput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPADI@Z	resourcemanager	referenced by ?do_put@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DJ@Z at +0x8c
 0x00048be0	0x76	func	?_Rep@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@DI@Z	resourcemanager	masked body (118 bytes, 0 relocations) unique at a census start
@@ -460,20 +510,25 @@ rva	size	kind	name	unit	evidence
 0x00048e60	0xca	func	?do_grouping@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	resourcemanager	masked body (202 bytes, 5 relocations) unique at a census start
 0x00048f30	0xca	func	?do_falsename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	resourcemanager	masked body (202 bytes, 5 relocations) unique at a census start
 0x00049000	0xca	func	?do_truename@?$numpunct@D@std@@MBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@XZ	resourcemanager	masked body (202 bytes, 5 relocations) unique at a census start
+0x000490d0	0x1e	func	??_G?$numpunct@D@std@@UAEPAXI@Z	resourcemanager	vtable of ?$numpunct@D@std (RTTI) slot 0
 0x000490f0	0x2f	func	??1?$numpunct@D@std@@UAE@XZ	resourcemanager	masked body (47 bytes, 5 relocations) unique at a census start
 0x00049120	0x80	func	?_Save@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAPAV?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@PAV32@@Z	resourcemanager	referenced by ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z at +0xbd
 0x000491a0	0x80	func	?_Save@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAPAV?$numpunct@D@2@PAV32@@Z	resourcemanager	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x1e0
 0x00049220	0x96	func	?_Tidy@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	resourcemanager	referenced by ?_Save@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAPAV?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@PAV32@@Z at +0x51
 0x000492c0	0x96	func	?_Tidy@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAXXZ	resourcemanager	referenced by ?_Save@?$_Tidyfac@V?$numpunct@D@std@@@std@@SAPAV?$numpunct@D@2@PAV32@@Z at +0x51
+0x000493e0	0x1e	func	??_GBitmap816@@UAEPAXI@Z	bitmap816	vtable of Bitmap816 (RTTI) slot 0
 0x00049400	0xd3	func	??0Bitmap816@@QAE@PBDHHPAEPAVTPalette16@@H@Z	bitmap816	masked body (211 bytes, 10 relocations) unique at a census start
 0x000494e0	0x124	func	??0Bitmap816@@QAE@PBD0HHHHHH@Z	bitmap816	masked body (292 bytes, 9 relocations) unique at a census start
+0x00049610	0x77	func	??1Bitmap816@@UAE@XZ	bitmap816	referenced by ??_GBitmap816@@UAEPAXI@Z at +0x4
 0x00049690	0x166	func	?importPCXFile@Bitmap816@@AAEHPBDHHHHHH@Z	bitmap816	masked body (358 bytes, 6 relocations) unique at a census start
 0x00049800	0xdd	func	?zBufferDraw@Bitmap816@@QBEXHHHHPAGHHHHHH@Z	bitmap816	masked body (221 bytes, 0 relocations) unique at a census start
 0x000498e0	0x142	func	?Draw@Bitmap816@@QBEXHHHHPAGHHHHH_N@Z	bitmap816	masked body (322 bytes, 0 relocations) unique at a census start
 0x00049a30	0x3f	func	?zBufferDraw@Bitmap816@@UBEXHHHHPAGHHH@Z	bitmap816	masked body (63 bytes, 1 relocations) unique at a census start
 0x00049a70	0x9	func	?getSize@Bitmap816@@UBEIXZ	bitmap816	vtable of Bitmap816 (RTTI) slot 2
 0x00049a80	0x13	func	?SetPalette@Bitmap816@@QAEXPAVTPalette24@@@Z	bitmap816	masked body (19 bytes, 1 relocations) unique at a census start
+0x00049aa0	0x1e	func	??_GBitmap16Bit@@UAEPAXI@Z	bitmap16	vtable of Bitmap16Bit (RTTI) slot 0
 0x00049ac0	0x96	func	??0Bitmap16Bit@@QAE@PBDHH@Z	bitmap16	masked body (150 bytes, 7 relocations) unique at a census start
+0x00049b60	0x61	func	??1Bitmap16Bit@@UAE@XZ	bitmap16	referenced by ??_GBitmap16Bit@@UAEPAXI@Z at +0x4
 0x00049bd0	0x7	func	?getSize@Bitmap16Bit@@UBEIXZ	bitmap16	vtable of Bitmap16Bit (RTTI) slot 2
 0x00049be0	0x13a	func	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	bitmap16	masked body (314 bytes, 0 relocations) unique at a census start
 0x00049d20	0x70	func	?clear@LODFile@@QAEXXZ	lodfile	masked body (112 bytes, 2 relocations) unique at a census start
@@ -490,30 +545,39 @@ rva	size	kind	name	unit	evidence
 0x0004a390	0x28b	func	?insert@?$vector@ULODEntry@@V?$allocator@ULODEntry@@@std@@@std@@QAEXPAULODEntry@@IABU3@@Z	lodfile	masked body (651 bytes, 2 relocations) unique at a census start
 0x0004a8f0	0xc5	func	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	font	masked body (197 bytes, 5 relocations) unique at a census start
 0x0004a9c0	0x16	func	??0TPalette16@@QAE@XZ	palette	referenced by ??0Bitmap816@@QAE@PBD0HHHHHH@Z at +0x53
+0x0004a9e0	0x1e	func	??_GTPalette16@@UAEPAXI@Z	palette	vtable of TPalette16 (RTTI) slot 0
 0x0004aa00	0x75	func	??0TPalette16@@QAE@ABVTPalette24@@HHHHHH@Z	palette	masked body (117 bytes, 7 relocations) unique at a census start
 0x0004aa80	0x2d	func	??0TPalette16@@QAE@PBV0@@Z	palette	masked body (45 bytes, 2 relocations) unique at a census start
+0x0004aab0	0xb	func	??1TPalette16@@UAE@XZ	palette	referenced by ??_GTPalette16@@UAEPAXI@Z at +0x4
 0x0004aac0	0x84	func	?Convert24to16@TPalette16@@AAEXPBEHHHHHH@Z	palette	masked body (132 bytes, 0 relocations) unique at a census start
 0x0004ab50	0x6	func	?getSize@TPalette16@@UBEIXZ	palette	vtable of TPalette16 (RTTI) slot 2
 0x0004ab60	0x16	func	??0TPalette24@@QAE@XZ	palette	referenced by ??0Bitmap816@@QAE@PBDHHPAEPAVTPalette16@@H@Z at +0x63
+0x0004ab80	0x1e	func	??_GTPalette24@@UAEPAXI@Z	palette	vtable of TPalette24 (RTTI) slot 0
 0x0004aba0	0x1e	func	??4TPalette24@@QAEAAV0@ABV0@@Z	palette	masked body (30 bytes, 0 relocations) unique at a census start
+0x0004abc0	0xb	func	??1TPalette24@@UAE@XZ	palette	referenced by ??_GTPalette24@@UAEPAXI@Z at +0x4
 0x0004abd0	0x6	func	?getSize@TPalette24@@UBEIXZ	palette	vtable of TPalette24 (RTTI) slot 2
 0x0004b290	0xf0	func	?SetPixelFormat@CSpriteFrame@@SAXIII@Z	cspriteframe	masked body (240 bytes, 2 relocations) unique at a census start
+0x0004b380	0x1e	func	??_GBitmap24Bit@@UAEPAXI@Z	bitmap24	vtable of Bitmap24Bit (RTTI) slot 0
 0x0004b3a0	0xb0	func	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	bitmap24	masked body (176 bytes, 8 relocations) unique at a census start
 0x0004b450	0xcc	func	??0Bitmap24Bit@@QAE@PBD0@Z	bitmap24	masked body (204 bytes, 7 relocations) unique at a census start
+0x0004b520	0x5a	func	??1Bitmap24Bit@@UAE@XZ	bitmap24	referenced by ??_GBitmap24Bit@@UAEPAXI@Z at +0x4
 0x0004b580	0xe7	func	?importPCXFile@Bitmap24Bit@@AAEHPBD@Z	bitmap24	masked body (231 bytes, 6 relocations) unique at a census start
 0x0004b670	0x3a	func	?Draw@Bitmap24Bit@@QBEXHHHHPAVBitmap16Bit@@HH@Z	bitmap24	masked body (58 bytes, 1 relocations) unique at a census start
 0x0004b6b0	0x16c	func	?Draw@Bitmap24Bit@@QBEXHHHHPAGHHHHH@Z	bitmap24	masked body (364 bytes, 6 relocations) unique at a census start
 0x0004b820	0x7	func	?getSize@Bitmap24Bit@@UBEIXZ	bitmap24	vtable of Bitmap24Bit (RTTI) slot 2
 0x0004b830	0x284	func	?AdjustHSV@Bitmap24Bit@@QAEXHHHHMMMM@Z	bitmap24	referenced by ?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z at +0xda
+0x0004bef0	0x1e	func	??_GTTextResource@@UAEPAXI@Z	textresource	vtable of TTextResource (RTTI) slot 0
 0x0004bf10	0x1fb	func	??0TTextResource@@QAE@PBDH0@Z	textresource	masked body (507 bytes, 8 relocations) unique at a census start
 0x0004c110	0x49	func	??1TTextResource@@UAE@XZ	textresource	masked body (73 bytes, 4 relocations) unique at a census start
 0x0004c160	0x1b	func	?getSize@TTextResource@@UBEIXZ	textresource	masked body (27 bytes, 0 relocations) unique at a census start
+0x0004c180	0x1e	func	??_GTSpreadsheetResource@@UAEPAXI@Z	textresource	vtable of TSpreadsheetResource (RTTI) slot 0
 0x0004c1a0	0x2c2	func	??0TSpreadsheetResource@@QAE@PBDH0@Z	textresource	masked body (706 bytes, 12 relocations) unique at a census start
 0x0004c470	0x7	func	?getSize@TSpreadsheetResource@@UBEIXZ	textresource	vtable of TSpreadsheetResource (RTTI) slot 2
 0x0004c480	0x7c	func	??1TSpreadsheetResource@@UAE@XZ	textresource	masked body (124 bytes, 6 relocations) unique at a census start
 0x0004c500	0x209	func	?insert@?$vector@PADV?$allocator@PAD@std@@@std@@QAEXPAPADIABQAD@Z	textresource	masked body (521 bytes, 2 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x0004c710	0x32	func	?erase@?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAEPAPAV?$vector@PADV?$allocator@PAD@std@@@2@PAPAV32@0@Z	textresource	masked body (50 bytes, 0 relocations) unique at a census start
 0x0004c780	0x4b	func	??0resource@@QAE@PBDW4EResourceType@@@Z	resource	masked body (75 bytes, 2 relocations) unique at a census start
+0x0004c7d0	0x1e	func	??_Gresource@@UAEPAXI@Z	resource	vtable of resource (RTTI) slot 0
 0x0004c7f0	0x7	func	??1resource@@UAE@XZ	resource	referenced by ??1TTextResource@@UAE@XZ at +0x42
 0x0004c800	0x8d	func	@uncompress@16	uncompr	masked body (141 bytes, 5 relocations) unique at a census start
 0x00062b30	0x25	func	?allocimage@@YGHPAUimgdes@@HHH@Z	victor	masked body (37 bytes, 2 relocations) unique at a census start

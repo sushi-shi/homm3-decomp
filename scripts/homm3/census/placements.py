@@ -186,7 +186,16 @@ def _data_relocations(obj):
 
 def _vtable_slots(obj):
     """{`??_7...` vtable symbol: [slot symbol, ...]} from the object's
-    compiled tables."""
+    compiled tables. A slot naming a weak external the object leaves
+    undefined names its default when the object defines that, as a code
+    reference does (`_functions_of`): slot 0's `??_E` is the `??_G` body."""
+    defined = {name for sec in obj.section_table
+               for _off, name, scl in obj.section_members(sec["index"]) if scl == 2}
+
+    def bound(name):
+        default = obj.weak_default(name) if name not in defined else None
+        return default if default in defined else name
+
     out = {}
     for sec in obj.section_table:
         number = sec["index"]
@@ -197,7 +206,7 @@ def _vtable_slots(obj):
             slots = []
             k = off
             while (k in relocs) and relocs[k][1] == DIR32:
-                slots.append(relocs[k][0])
+                slots.append(bound(relocs[k][0]))
                 k += 4
             out[name] = slots
     return out
