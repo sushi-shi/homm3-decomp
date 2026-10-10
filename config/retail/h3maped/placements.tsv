@@ -42,6 +42,7 @@ rva	size	kind	name	unit	evidence
 0x000023eb	0x3d	func	??1TReadFailure@TRawIStream@@UAE@XZ	Army	referenced by __TI5?AVTReadFailure@TRawIStream@@ at +0x4
 0x00002428	0x39	func	??0TReadFailure@TRawIStream@@QAE@ABV01@@Z	Army	referenced by __CT??_R0?AVTReadFailure@TRawIStream@@@8??0TReadFailure@TRawIStream@@QAE@ABV01@@Z36 at +0x18
 0x00002461	0x38	func	??5TRawIStream@@QAEAAV0@AAE@Z	Army	referenced by ??5@YAAAVTRawIStream@@AAV0@AAUTMapLoc@@@Z at +0xf
+0x00002499	0x38	func	??6TRawOStream@@QAEAAV0@ABF@Z	Army	referenced by ?write@TCreatureStack@@QBEXPAVTRawOStream@@H@Z at +0x1a
 0x000024d1	0x1b	func	??0TWriteFailure@TRawOStream@@QAE@H@Z	Army	referenced by ?write@TRawOStream@@QAEAAV1@PBDI@Z at +0x20
 0x00002508	0x1c	func	??1TWriteFailure@TRawOStream@@UAE@XZ	Army	referenced by __TI5?AVTWriteFailure@TRawOStream@@ at +0x4
 0x00002524	0x39	func	??0TWriteFailure@TRawOStream@@QAE@ABV01@@Z	Army	referenced by __CT??_R0?AVTWriteFailure@TRawOStream@@@8??0TWriteFailure@TRawOStream@@QAE@ABV01@@Z36 at +0x18
@@ -102,7 +103,7 @@ rva	size	kind	name	unit	evidence
 0x00007675	0x38	func	??5TRawIStream@@QAEAAV0@AAJ@Z	GameMap	referenced by ?read@TQuestLocation@@IAEXPAVTRawIStream@@H@Z at +0x4f; ICF-folded with 1 identical bodies
 0x000076ad	0x38	func	??5TRawIStream@@QAEAAV0@AAY07C@Z	BlackBox	masked body (56 bytes, 3 relocations) unique at a census start
 0x000076e5	0x38	func	??5TRawIStream@@QAEAAV0@AAY02C@Z	Town	masked body (56 bytes, 3 relocations) unique at a census start
-0x0000771d	0x38	func	??6TRawOStream@@QAEAAV0@AAY03$$CBC@Z	Town	referenced by ?write@TTimedEvent@TTown@@QBEXPAVTRawOStream@@H@Z at +0x95; ICF-folded with 3 identical bodies
+0x0000771d	0x38	func	??6TRawOStream@@QAEAAV0@AAY03$$CBC@Z	Town	referenced by ?write@TTimedEvent@TTown@@QBEXPAVTRawOStream@@H@Z at +0x95; ICF-folded with 2 identical bodies
 0x00007755	0x38	func	??6TRawOStream@@QAEAAV0@AAY07$$CBC@Z	BlackBox	masked body (56 bytes, 3 relocations) unique at a census start
 0x0000778d	0x8	func	??1?$TRefCountingWrapper@VTContents@TBlackBox@@@@QAE@XZ	BlackBox	referenced by ??1?$TRefCountingPtr@VTContents@TBlackBox@@@@QAE@XZ at +0x13
 0x00007795	0x36	func	??1TContents@TBlackBox@@QAE@XZ	BlackBox	masked body (54 bytes, 4 relocations) unique at a census start

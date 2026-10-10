@@ -350,6 +350,20 @@ def sole_choice(choices):
     return choices[0]
 
 
+def foreign_to_claim(name, claimed, bodies):
+    """Whether the image's own VA() claims (`claimed`, the names one address
+    holds) cover bodies whose relocation referents differ from `name`'s.
+    /OPT:ICF folds only bodies that reach the same referents, so equal
+    masked bytes do not make `name` an identical-code twin of the claimed
+    function: Town.cpp's generator-bonus writer, whose retail copy is
+    inlined, is no fold of the resource-quantity writer h3maped 0x4b33f0
+    (one writes shorts, the other dwords). `bodies`: name -> (body, relocs)."""
+    claimed = [other for other in claimed if other in bodies]
+    return bool(claimed) and name not in claimed and all(
+        sorted(bodies[other][1].items()) != sorted(bodies[name][1].items())
+        for other in claimed)
+
+
 def fold_label(at, names, bodies, definers, owned, rowable=lambda name: True):
     """The one name of an address that several compiled bodies reach (`at`).
 
@@ -496,17 +510,6 @@ def derive(log=print, want_suggestions=False):
     for unit, name, body, relocs in compiled:
         bodies.setdefault(name, (body, relocs))
         relocs_of[id(body)] = tuple(relocs)
-        mask = bytearray(len(body))
-        for site in relocs:
-            mask[site:site + 4] = b"\1\1\1\1"
-        fixed = len(body) - sum(mask)
-        if fixed < MIN_FIXED:
-            continue
-        hits = [rva for rva in by_size.get(len(body), ())
-                if all(m or a == b for a, b, m in zip(blob(rva, len(body)), body, mask))]
-        if len(hits) == 1:
-            propose(name, hits[0], f"masked body ({len(body)} bytes, "
-                                   f"{len(relocs)} relocations) unique at a census start")
 
     # the image's own VA() claims: a claimed body that equals retail at its
     # claimed address (relocation fields masked) names its referents (the
@@ -521,6 +524,20 @@ def derive(log=print, want_suggestions=False):
     own_named = defaultdict(set)          # rva -> {name} the image's own VA() claims
     for claim in own_function_claims:
         own_named[claim.rva].add(claim.name)
+
+    for unit, name, body, relocs in compiled:
+        mask = bytearray(len(body))
+        for site in relocs:
+            mask[site:site + 4] = b"\1\1\1\1"
+        fixed = len(body) - sum(mask)
+        if fixed < MIN_FIXED:
+            continue
+        hits = [rva for rva in by_size.get(len(body), ())
+                if all(m or a == b for a, b, m in zip(blob(rva, len(body)), body, mask))]
+        if len(hits) == 1 and not foreign_to_claim(name, own_named[hits[0]], bodies):
+            propose(name, hits[0], f"masked body ({len(body)} bytes, "
+                                   f"{len(relocs)} relocations) unique at a census start")
+
     for claim in own_function_claims:
         if claim.name not in bodies or named_at[claim.rva] - {claim.name}:
             continue
