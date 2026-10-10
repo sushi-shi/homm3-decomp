@@ -223,8 +223,8 @@ void TScenarioStartingBonusWriter::visit(const TScenarioBonusCreature& bonus)
 {
     *m_pOStream << static_cast<ubyte>(eBonusCreature);
     *m_pOStream << static_cast<short>(bonus.m_hero);
-    *m_pOStream << static_cast<short>(bonus.m_creature);
-    *m_pOStream << static_cast<short>(bonus.m_count);
+    *m_pOStream << static_cast<short>(bonus.m_stack.getCreatureType());
+    *m_pOStream << static_cast<short>(bonus.m_stack.getQuantity());
 }
 
 VA(0x00411100, 0x7b)
@@ -298,7 +298,7 @@ auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int ver
         iStream >> creature;
         short count;
         iStream >> count;
-        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusCreature(hero, creature, count));
+        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusCreature(hero, TCreatureStack(TCreatureType(creature), count)));
         break;
     }
     case eBonusBuilding: {
@@ -334,13 +334,13 @@ auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int ver
     case eBonusPrimarySkill: {
         short hero;
         iStream >> hero;
-        int aSkills[kNumPrimarySkills];
+        TArray<unsigned int, kNumPrimarySkills> skills;
         for (int i = 0; i < kNumPrimarySkills; i++) {
             signed char skill;
             iStream >> skill;
-            aSkills[i] = skill;
+            skills[i] = skill;
         }
-        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusPrimarySkill(hero, aSkills));
+        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusPrimarySkill(hero, skills));
         break;
     }
     case eBonusSecondarySkill: {
@@ -727,14 +727,14 @@ pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
         }
         for (scenario = 0; scenario < pCampaign->getMapTraits().m_numRegions; scenario++) {
             TScenarioRecord& record = records[scenario];
-            pCampaign->getScenario(scenario).setRegionColor(record.m_regionColor);
+            pCampaign->modifyScenario(scenario).setRegionColor(record.m_regionColor);
             if (record.m_mapFileName.length() == 0)
                 continue;
             for (unsigned int other = 0; other < pCampaign->getMapTraits().m_numRegions; other++) {
                 if (other != scenario && records[other].m_mapFileName.length() != 0 && record.m_prerequisites[other])
                     pCampaign->setBPrerequisite(scenario, other, true);
             }
-            TScenario& rScenario = pCampaign->getScenario(scenario);
+            TScenario& rScenario = pCampaign->modifyScenario(scenario);
             rScenario.setDifficulty(record.m_difficulty);
             rScenario.setRegionDesc(record.m_regionDesc);
             if (record.m_pPrologue.get() != NULL)

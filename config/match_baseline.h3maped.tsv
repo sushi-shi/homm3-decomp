@@ -68,7 +68,7 @@ ArmyDlg	?OnKillFocusQtyEdit4@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3150	
 ArmyDlg	?OnKillFocusQtyEdit5@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3158	tokens1:5069ba4e5409
 ArmyDlg	?OnKillFocusQtyEdit6@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3160	tokens1:190d62048f3f
 ArmyDlg	?OnKillFocusQtyEdit7@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3168	tokens1:54c864de5c22
-ArmyDlg	?OnOK@TArmyDlg@@UAEXXZ	99.7826	99.7826	99.7826	0x2f1d	tokens1:1dbed0cd9f45
+ArmyDlg	?OnOK@TArmyDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x2f1d	tokens1:1dbed0cd9f45
 ArmyDlg	?OnSelChangeTypeCombo1@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3100	tokens1:f794c6ffc49a
 ArmyDlg	?OnSelChangeTypeCombo2@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3108	tokens1:187a1308ffec
 ArmyDlg	?OnSelChangeTypeCombo3@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3110	tokens1:cd8e49378583
@@ -4932,7 +4932,7 @@ rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZ
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	99.1751	99.1751	99.1751	0xa5c07	-
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	93.1254	93.1254	93.1254	0xa7605	-
 rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	96.9819	96.9819	96.9819	0xab6ac	-
-rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	84.0057	84.0057	84.0057	0xabd5f	-
+rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9962	84.0057	84.0057	0xabd5f	-
 rmg	?createRivers@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac4ae	-
 rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5710	89.5710	89.5710	0xa696b	-

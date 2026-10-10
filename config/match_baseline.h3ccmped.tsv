@@ -15,6 +15,12 @@
 # movement caused by another function, a header, or the delink generation.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
+Army	??0TReadFailure@TRawIStream@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1910	-
+Army	??0TReadFailure@TRawIStream@@QAE@H@Z	100.0000	100.0000	100.0000	0x11b0	-
+Army	??0TWriteFailure@TRawOStream@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1d20	-
+Army	??0TWriteFailure@TRawOStream@@QAE@H@Z	100.0000	100.0000	100.0000	0x1280	-
+Army	?setCreatureType@TCreatureStack@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1000	-
+Army	?setQuantity@TCreatureStack@@QAEXI@Z	100.0000	100.0000	100.0000	0x1010	-
 Campaign	??0?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@V?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	100.0000	100.0000	100.0000	0xe990	-
 Campaign	??0?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@UTCustomHero@TGameMapHeader@@@1@@Z	100.0000	100.0000	100.0000	0x24030	-
 Campaign	??0?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@@Z	100.0000	100.0000	100.0000	0xb330	-
@@ -30,11 +36,9 @@ Campaign	??0TImportTextFailure@TCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x6b
 Campaign	??0TMapFileIsIncorrectVersion@TCampaignScenarioMap@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xab50	-
 Campaign	??0TPlayerInfo@TCampaignScenarioMap@@QAE@XZ	100.0000	100.0000	100.0000	0xa6e0	tokens1:d186d186921d
 Campaign	??0TPlayerSlot@TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x238c0	-
-Campaign	??0TReadFailure@TRawIStream@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1910	-
-Campaign	??0TReadFailure@TRawIStream@@QAE@H@Z	100.0000	100.0000	100.0000	0x11b0	-
 Campaign	??0TRuntimeError@@QAE@XZ	100.0000	100.0000	100.0000	0x87c0	-
 Campaign	??0TScenario@@QAE@H@Z	100.0000	100.0000	100.0000	0x9580	tokens1:f70ecd96f77c
-Campaign	??0TScenarioBonusPrimarySkill@@QAE@HQBH@Z	55.6207	55.6207	55.6207	0x53d0	tokens1:08d89e99638e
+Campaign	??0TScenarioBonusPrimarySkill@@QAE@HABV?$TArray@I$03@@@Z	100.0000	100.0000	100.0000	0x53d0	tokens1:d36e45762f90
 Campaign	??0TScenarioBonusResource@@QAE@HH@Z	100.0000	100.0000	100.0000	0x54b0	tokens1:99b60332f497
 Campaign	??0TScenarioBonusSecondarySkill@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x5480	tokens1:1bea812b3ca7
 Campaign	??0TScenarioCrossover@@QAE@XZ	53.2143	53.2143	53.2143	0x7e90	tokens1:210b3e5fcc96
@@ -42,11 +46,9 @@ Campaign	??0TScenarioOptionsBonus@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x56b0
 Campaign	??0TScenarioOptionsBonus@@QAE@HABV?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@@Z	100.0000	100.0000	100.0000	0x5920	tokens1:8090f35bf9c0
 Campaign	??0TScenarioPrologue@@QAE@HHABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x8460	tokens1:14c33b214c49
 Campaign	??0TScenarioPrologue@@QAE@XZ	100.0000	100.0000	100.0000	0x8440	tokens1:556d4ec15121
-Campaign	??0TWriteFailure@TRawOStream@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1d20	-
-Campaign	??0TWriteFailure@TRawOStream@@QAE@H@Z	100.0000	100.0000	100.0000	0x1280	-
 Campaign	??0_TImpl@TCampaign@@QAE@H@Z	98.5180	98.5180	98.5180	0x5ce0	tokens1:e6674c173dbc
 Campaign	??0_TImpl@TScenario@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x89c0	tokens1:469fa70bd9b9
-Campaign	??0_TImpl@TScenario@@QAE@H@Z	100.0000	100.0000	100.0000	0x8d00	tokens1:4a99f3a10b74
+Campaign	??0_TImpl@TScenario@@QAE@H@Z	100.0000	100.0000	100.0000	0x8d00	tokens1:9fa2aafc652c
 Campaign	??0_TWrapper@?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@V?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	100.0000	100.0000	100.0000	0xf790	-
 Campaign	??1?$TRefCountingPtr@V_TImpl@TScenario@@@@QAE@XZ	100.0000	100.0000	100.0000	0xd5f0	-
 Campaign	??1?$TRefCountingWrapper@V_TImpl@TCampaign@@@@QAE@XZ	100.0000	100.0000	100.0000	0xed50	-
@@ -65,7 +67,7 @@ Campaign	??1TPlayerInfo@TCampaignScenarioMap@@QAE@XZ	100.0000	100.0000	100.0000	
 Campaign	??1TPlayerSlot@TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0xa850	-
 Campaign	??1TScenario@@QAE@XZ	100.0000	100.0000	100.0000	0x5e80	-
 Campaign	??1TScenarioBonusArtifact@@UAE@XZ	100.0000	100.0000	100.0000	0x5500	-
-Campaign	??1TScenarioBonusPrimarySkill@@UAE@XZ	33.3333	33.3333	33.3333	0x5470	-
+Campaign	??1TScenarioBonusPrimarySkill@@UAE@XZ	100.0000	100.0000	100.0000	0x5470	-
 Campaign	??1TScenarioOptionsBonus@@UAE@XZ	100.0000	100.0000	100.0000	0x58a0	-
 Campaign	??1TScenarioOptionsCrossoverScenario@@UAE@XZ	100.0000	100.0000	100.0000	0x5cb0	-
 Campaign	??1TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE@XZ	100.0000	100.0000	100.0000	0x53b0	-
@@ -205,7 +207,6 @@ Campaign	?getName@TCampaign@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allo
 Campaign	?getPrologue@TScenario@@QBEPBVTScenarioPrologue@@XZ	100.0000	100.0000	100.0000	0x9df0	tokens1:701d5bedfec8
 Campaign	?getRegionColor@TScenario@@QBEHXZ	100.0000	100.0000	100.0000	0x9dc0	tokens1:1ac144c27e19
 Campaign	?getRegionDesc@TScenario@@QBEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x9de0	tokens1:e0aa06f883ec
-Campaign	?getScenario@TCampaign@@QAEAAVTScenario@@H@Z	100.0000	100.0000	100.0000	0x7da0	tokens1:2b1ad170cb6d
 Campaign	?getScenario@TCampaign@@QBEABVTScenario@@H@Z	100.0000	100.0000	100.0000	0x7e40	tokens1:25bcbb3685e5
 Campaign	?getStartingOptions@TScenario@@QBEPBVTScenarioStartingOptions@@XZ	100.0000	100.0000	100.0000	0x9e20	tokens1:188e553d2d0c
 Campaign	?getType@TCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x7df0	tokens1:137ed77c0ef9
@@ -218,6 +219,7 @@ Campaign	?insert@?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHeroIden
 Campaign	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEXPAV?$auto_ptr@VTScenarioStartingBonus@@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xbd00	-
 Campaign	?insert@?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAEXPAVTScenario@@IABV3@@Z	100.0000	100.0000	100.0000	0xb850	-
 Campaign	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	99.9554	99.9554	99.9554	0x10260	-
+Campaign	?modifyScenario@TCampaign@@QAEAAVTScenario@@H@Z	100.0000	100.0000	100.0000	0x7da0	tokens1:c04395bd2e73
 Campaign	?read@TRawIStream@@QAEAAV1@PADI@Z	100.0000	100.0000	100.0000	0xd6c0	-
 Campaign	?read@TScenarioCrossover@@QAEXAAVTRawIStream@@H@Z	91.2594	91.2594	91.2594	0x7ee0	tokens1:80becba7ad57
 Campaign	?removeBonus@TScenarioOptionsBonus@@QAEXH@Z	100.0000	100.0000	100.0000	0x59e0	tokens1:910f1646561b
@@ -244,7 +246,7 @@ Campaign	?setBPresent@TPlayerInfo@TCampaignScenarioMap@@QAEX_N@Z	100.0000	100.00
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0xd9b0	-
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0xd8e0	-
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0xd800	-
-Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusPrimarySkill@@@Z	68.5185	68.5185	68.5185	0xdb70	-
+Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0xdb70	-
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0xdd30	-
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0xdc60	-
 Campaign	?setClone@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@AAEXABVTScenarioBonusSpell@@@Z	100.0000	100.0000	100.0000	0xd720	-
@@ -289,7 +291,7 @@ Campaign	?test@TScenarioStartingBonusEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\C
 Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusArtifact@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0xf7b0	-
 Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusBuilding@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0xf830	-
 Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusCreature@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0xf7f0	-
-Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusPrimarySkill@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	82.3235	82.3235	82.3235	0xf850	-
+Campaign	?visit@?$TScenarioStartingBonusRHSEquivalencyTester@VTScenarioBonusPrimarySkill@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0xf850	-
 Campaign	?visit@?$TScenarioStartingOptionsRHSEquivalencyTester@VTScenarioOptionsBonus@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsBonus@@@Z	100.0000	100.0000	100.0000	0xf8a0	-
 Campaign	?visit@?$TScenarioStartingOptionsRHSEquivalencyTester@VTScenarioOptionsCrossoverScenario@@@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0xf8c0	-
 Campaign	?visit@TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x5330	tokens1:6e4a0bb36243
@@ -322,6 +324,7 @@ CampaignDoc	??0TCampaignDoc@@IAE@XZ	100.0000	100.0000	100.0000	0x140a0	tokens1:5
 CampaignDoc	??0TCampaignDocLoadFailure@@QAE@H@Z	100.0000	100.0000	100.0000	0x13fe0	-
 CampaignDoc	??0TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAE@HV?$auto_ptr@D@std@@@Z	100.0000	100.0000	100.0000	0x10bd0	tokens1:27e28741d777
 CampaignDoc	??0TScenarioHeroBonus@@QAE@H@Z	100.0000	100.0000	100.0000	0x11b00	-
+CampaignDoc	??1?$TArray@I$03@@QAE@XZ	100.0000	100.0000	100.0000	0x167a0	-
 CampaignDoc	??1?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x15c80	-
 CampaignDoc	??1CFileDialog@@UAE@XZ	100.0000	100.0000	100.0000	0x10b80	-
 CampaignDoc	??1CFileException@@UAE@XZ	100.0000	100.0000	100.0000	0x14850	-
@@ -354,12 +357,12 @@ CampaignDoc	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10e60	-
 CampaignDoc	?DeleteContents@TCampaignDoc@@UAEXXZ	99.8864	99.8864	99.8864	0x14a60	tokens1:0a2f69d78660
 CampaignDoc	?GetMessageMap@TCampaignDoc@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x14090	tokens1:ff599d9991e0
 CampaignDoc	?IsModified@CDocument@@UAEHXZ	100.0000	100.0000	100.0000	0x15b90	-
-CampaignDoc	?OnExportScenarioMaps@TCampaignDoc@@IAEXXZ	99.9535	99.9535	99.9535	0x14d90	tokens1:9856f9fabd02
+CampaignDoc	?OnExportScenarioMaps@TCampaignDoc@@IAEXXZ	99.9922	99.9922	99.9922	0x14d90	tokens1:9856f9fabd02
 CampaignDoc	?OnExportText@TCampaignDoc@@IAEXXZ	92.6929	92.6929	92.6929	0x150f0	tokens1:033c01bf1a41
 CampaignDoc	?OnImportText@TCampaignDoc@@IAEXXZ	96.4701	96.4701	96.4701	0x15330	tokens1:573bcf397b3e
 CampaignDoc	?OnNewDocument@TCampaignDoc@@UAEHXZ	87.2449	87.2449	87.2449	0x14160	tokens1:a78ddf216fa2
 CampaignDoc	?OnOpenDocument@TCampaignDoc@@UAEHPBD@Z	100.0000	100.0000	100.0000	0x14ae0	tokens1:bd83f349d792
-CampaignDoc	?OnRefreshScenarioMaps@TCampaignDoc@@IAEXXZ	99.9571	99.9571	99.9571	0x14be0	tokens1:50d69bdfa810
+CampaignDoc	?OnRefreshScenarioMaps@TCampaignDoc@@IAEXXZ	99.9929	99.9929	99.9929	0x14be0	tokens1:50d69bdfa810
 CampaignDoc	?ReportSaveLoadException@TCampaignDoc@@UAEXPBDPAVCException@@HI@Z	97.6522	97.6522	97.6522	0x14b00	tokens1:d7939f582cf2
 CampaignDoc	?SaveModified@TCampaignDoc@@UAEHXZ	100.0000	100.0000	100.0000	0x14f70	tokens1:aac487523ccf
 CampaignDoc	?Serialize@TCampaignDoc@@UAEXAAVCArchive@@@Z	100.0000	100.0000	100.0000	0x14290	tokens1:90958040185e
@@ -374,18 +377,18 @@ CampaignDoc	?capacity@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$al
 CampaignDoc	?copy_backward@std@@YAPAV?$auto_ptr@VTScenarioStartingBonus@@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0x16880	-
 CampaignDoc	?createInflateBuf@TFileContent@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QBE?AV?$auto_ptr@V?$basic_streambuf@DU?$char_traits@D@std@@@std@@@std@@XZ	99.7536	99.7536	99.7536	0x10d70	tokens1:7cfc63a0572c
 CampaignDoc	?erase@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAEPAUTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@PAU34@0@Z	100.0000	100.0000	100.0000	0x165f0	-
-CampaignDoc	?exportScenarioMap@TCampaignDoc@@IAEXPBVTCampaignScenarioMap@@ABVCString@@@Z	89.2759	89.2759	89.2759	0x14890	tokens1:dd3b2080e51a
+CampaignDoc	?exportScenarioMap@TCampaignDoc@@QAEXPBVTCampaignScenarioMap@@ABVCString@@@Z	89.2759	89.2759	89.2759	0x14890	tokens1:dd3b2080e51a
 CampaignDoc	?fill@std@@YAXPAV?$auto_ptr@VTScenarioStartingBonus@@@1@0ABV21@@Z	100.0000	100.0000	100.0000	0x16820	-
 CampaignDoc	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	100.0000	100.0000	100.0000	0x15d80	-
 CampaignDoc	?insert@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QAEPAUTChoice@TScenarioOptionsCrossoverScenario@@PAU34@ABU34@@Z	100.0000	100.0000	100.0000	0x15ff0	-
 CampaignDoc	?insert@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAEXPAUTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@IABU34@@Z	100.0000	100.0000	100.0000	0x16230	-
 CampaignDoc	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x15e10	-
-CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	90.4258	90.4258	90.4258	0x13600	tokens1:24a1fbd4beb2
-CampaignDoc	?loadScenarioMap@TCampaignDoc@@IAE?AV?$auto_ptr@VTCampaignScenarioMap@@@std@@ABVCString@@@Z	77.5614	77.5614	77.5614	0x14390	tokens1:66d6f778b00b
+CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	90.4258	90.4258	90.4258	0x13600	tokens1:420faf18c6ab
+CampaignDoc	?loadScenarioMap@TCampaignDoc@@QAE?AV?$auto_ptr@VTCampaignScenarioMap@@@std@@ABVCString@@@Z	77.5614	77.5614	77.5614	0x14390	tokens1:66d6f778b00b
 CampaignDoc	?make_pair@std@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@1@ABV?$auto_ptr@VTCampaign@@@1@ABH@Z	100.0000	100.0000	100.0000	0x167f0	-
 CampaignDoc	?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z	99.6328	99.6328	99.6328	0x10890	tokens1:8c2799e8098c
 CampaignDoc	?read@TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXAAVTRawIStream@@H@Z	68.9000	68.9213	68.9213	0x12400	tokens1:9d8b3b062912
-CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	29.2741	29.2864	29.2864	0x115a0	tokens1:deb7f43ae64a
+CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	34.3185	34.3185	34.3185	0x115a0	tokens1:16be4d74f34f
 CampaignDoc	?readStartingOptions@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingOptions@@@std@@AAVTRawIStream@@H@Z	56.1034	56.1034	56.1034	0x11ee0	tokens1:dfb498fc3d9f
 CampaignDoc	?reportCreateFailure@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@ABVTCreateFailure@TCampaignScenarioMap@@PAVCWnd@@@Z	99.7327	99.7327	99.7327	0x12ca0	tokens1:0c93e1f1e0fb
 CampaignDoc	?saveCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABVTCampaign@@HPAVCFile@@@Z	77.5372	77.5372	77.5372	0x12e00	tokens1:327274e99f23
@@ -394,7 +397,7 @@ CampaignDoc	?size@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$alloca
 CampaignDoc	?size@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x16210	-
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	94.4032	94.4032	94.4032	0x11180	tokens1:d033e38cd802
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	97.1429	97.1429	97.1429	0x11100	tokens1:b123a7f0689a
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	95.3875	95.3875	95.3875	0x11010	tokens1:668eb293f27b
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	95.3875	95.3875	95.3875	0x11010	tokens1:9c543ebe1ab9
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusPrimarySkill@@@Z	96.5000	96.5000	96.5000	0x11300	tokens1:373f8774e56c
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusResource@@@Z	94.4839	94.4839	94.4839	0x114c0	tokens1:69e42bb39d7f
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSecondarySkill@@@Z	95.3875	95.3875	95.3875	0x113d0	tokens1:d340e36fbb56
@@ -459,6 +462,130 @@ EditCrossoverScenarioOptionDlg	?GetMessageMap@TEditCrossoverScenarioOptionDlg@@M
 EditCrossoverScenarioOptionDlg	?OnCreate@TEditCrossoverScenarioOptionDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x1dc80	tokens1:8c8f5b24b2b6
 EditCrossoverScenarioOptionDlg	?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ	98.7798	98.7798	98.7798	0x1dcb0	tokens1:a8b955ad71e4
 EditCrossoverScenarioOptionDlg	?OnOK@TEditCrossoverScenarioOptionDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x1e0e0	tokens1:047d66975082
+EditStartingBonusDlg	??0CButton@@QAE@XZ	100.0000	100.0000	100.0000	0x21420	-
+EditStartingBonusDlg	??0TEditStartingBonusDlg@@QAE@PAVCWnd@@PBVTCampaignScenarioMap@@HHPBVTScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x20cf0	tokens1:b7dcc27132ab
+EditStartingBonusDlg	??0TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@HH@Z	100.0000	100.0000	100.0000	0x1f190	tokens1:00c4d71af686
+EditStartingBonusDlg	??0TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1ee40	tokens1:f56f73244bcd
+EditStartingBonusDlg	??0TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1e6e0	tokens1:c85fcc7c9ea7
+EditStartingBonusDlg	??0TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1f900	tokens1:ea3aef236ada
+EditStartingBonusDlg	??0TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@@Z	100.0000	100.0000	100.0000	0x204d0	tokens1:81ab4f9728ac
+EditStartingBonusDlg	??0TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x20060	tokens1:da995f7d94fd
+EditStartingBonusDlg	??0TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1e4f0	tokens1:d3298067aa8c
+EditStartingBonusDlg	??0TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1f530	tokens1:1067bce7f8a9
+EditStartingBonusDlg	??0TStartingBonusTypeDlg@@QAE@PAVTClient@0@_N@Z	100.0000	100.0000	100.0000	0x1e240	tokens1:dbe1c025bbc7
+EditStartingBonusDlg	??0TStartingHeroBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@_NPBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1e2a0	tokens1:192bc3620ec0
+EditStartingBonusDlg	??0_TSkillControls@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@XZ	100.0000	100.0000	100.0000	0x1f9f0	-
+EditStartingBonusDlg	??0_TTypeDlgs@TEditStartingBonusDlg@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@HH@Z	100.0000	100.0000	100.0000	0x20bc0	tokens1:17a82c1a9e09
+EditStartingBonusDlg	??1TEditStartingBonusDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x21000	tokens1:d21ee23f9786
+EditStartingBonusDlg	??1TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x1f250	-
+EditStartingBonusDlg	??1TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x1eef0	-
+EditStartingBonusDlg	??1TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x1e7d0	-
+EditStartingBonusDlg	??1TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x1faa0	-
+EditStartingBonusDlg	??1TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x205b0	-
+EditStartingBonusDlg	??1TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x20130	-
+EditStartingBonusDlg	??1TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x1e580	-
+EditStartingBonusDlg	??1TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x1f5e0	-
+EditStartingBonusDlg	??1TStartingBonusTypeDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x15bc0	-
+EditStartingBonusDlg	??1TStartingHeroBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAE@XZ	100.0000	100.0000	100.0000	0x1e330	-
+EditStartingBonusDlg	??1_TSkillControls@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@XZ	100.0000	100.0000	100.0000	0x1fa50	-
+EditStartingBonusDlg	??1_TTypeDlgs@TEditStartingBonusDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x219a0	-
+EditStartingBonusDlg	??_GCSpinButtonCtrl@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x21bf0	-
+EditStartingBonusDlg	??_GTEditStartingBonusDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x20fe0	-
+EditStartingBonusDlg	??_GTStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f230	-
+EditStartingBonusDlg	??_GTStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1eed0	-
+EditStartingBonusDlg	??_GTStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7b0	-
+EditStartingBonusDlg	??_GTStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f9d0	-
+EditStartingBonusDlg	??_GTStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x20590	-
+EditStartingBonusDlg	??_GTStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x20110	-
+EditStartingBonusDlg	??_GTStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e560	-
+EditStartingBonusDlg	??_GTStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f5c0	-
+EditStartingBonusDlg	??_GTStartingBonusTypeDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ebc0	-
+EditStartingBonusDlg	??_GTStartingHeroBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e310	-
+EditStartingBonusDlg	?DoDataExchange@TEditStartingBonusDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x21500	tokens1:aa95784f4980
+EditStartingBonusDlg	?DoDataExchange@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1f3d0	tokens1:bb454db43137
+EditStartingBonusDlg	?DoDataExchange@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1f070	tokens1:49cf39adf9d8
+EditStartingBonusDlg	?DoDataExchange@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1eb40	tokens1:53789e359793
+EditStartingBonusDlg	?DoDataExchange@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1fec0	tokens1:12a80a40edec
+EditStartingBonusDlg	?DoDataExchange@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x20790	tokens1:8680d7ad0699
+EditStartingBonusDlg	?DoDataExchange@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x20320	tokens1:e9a90a413ba3
+EditStartingBonusDlg	?DoDataExchange@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1f760	tokens1:75d4f4f04c15
+EditStartingBonusDlg	?DoDataExchange@TStartingHeroBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1e380	tokens1:3f086deddb37
+EditStartingBonusDlg	?GetMessageMap@TEditStartingBonusDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x21550	tokens1:cd577576d914
+EditStartingBonusDlg	?GetMessageMap@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x1e6d0	tokens1:74ca96542515
+EditStartingBonusDlg	?GetMessageMap@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x1f8f0	tokens1:32e2defaf72a
+EditStartingBonusDlg	?GetMessageMap@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x204c0	tokens1:77062e0d112d
+EditStartingBonusDlg	?OnChangeAttackEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f870	tokens1:ad44664cf1ba
+EditStartingBonusDlg	?OnChangeDefenseEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f880	tokens1:10ec52b56c62
+EditStartingBonusDlg	?OnChangeKnowledgeEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f8a0	tokens1:12ed9afc8b76
+EditStartingBonusDlg	?OnChangeSpellPowerEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f890	tokens1:7865fa78a29d
+EditStartingBonusDlg	?OnCreate@TEditStartingBonusDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x21560	tokens1:b55cb237259b
+EditStartingBonusDlg	?OnDestroy@TEditStartingBonusDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x215c0	tokens1:3e0c815012e4
+EditStartingBonusDlg	?OnDestroy@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1feb0	tokens1:c697d33be8be
+EditStartingBonusDlg	?OnDestroy@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x20ad0	tokens1:a4e4dfda3313
+EditStartingBonusDlg	?OnInitDialog@TEditStartingBonusDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x21600	tokens1:172662359465
+EditStartingBonusDlg	?OnInitDialog@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x1f400	tokens1:0bba15cedb64
+EditStartingBonusDlg	?OnInitDialog@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x1f090	tokens1:e971d9d65e0c
+EditStartingBonusDlg	?OnInitDialog@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x1eb90	tokens1:45c98be1530f
+EditStartingBonusDlg	?OnInitDialog@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x1ff20	tokens1:1d52c1a7da69
+EditStartingBonusDlg	?OnInitDialog@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x207d0	tokens1:6b97c0f93e85
+EditStartingBonusDlg	?OnInitDialog@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x20360	tokens1:9ff0ffab9cf2
+EditStartingBonusDlg	?OnInitDialog@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x1f790	tokens1:94edc14e05cd
+EditStartingBonusDlg	?OnInitDialog@TStartingHeroBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@MAEHXZ	100.0000	100.0000	100.0000	0x1e3a0	tokens1:b092120b3cb7
+EditStartingBonusDlg	?OnKillFocusAmountEdit@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x20ae0	tokens1:3129749afc4e
+EditStartingBonusDlg	?OnKillFocusAttackEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f8b0	tokens1:e0b1c3bf51ae
+EditStartingBonusDlg	?OnKillFocusDefenseEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f8c0	tokens1:6424399e233e
+EditStartingBonusDlg	?OnKillFocusKnowledgeEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f8e0	tokens1:3dce2e1b7b0b
+EditStartingBonusDlg	?OnKillFocusQuantityEdit@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1ed60	tokens1:13d463b79500
+EditStartingBonusDlg	?OnKillFocusSpellPowerEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@IAEXXZ	100.0000	100.0000	100.0000	0x1f8d0	tokens1:54f33d9c6a54
+EditStartingBonusDlg	?OnOK@TEditStartingBonusDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x21840	tokens1:bbcd2f42ec2c
+EditStartingBonusDlg	?OnOK@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEXXZ	100.0000	100.0000	100.0000	0x1f4f0	tokens1:f540023ed899
+EditStartingBonusDlg	?OnOK@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEXXZ	100.0000	100.0000	100.0000	0x1f150	tokens1:ec28b43fdb8d
+EditStartingBonusDlg	?OnOK@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEXXZ	100.0000	100.0000	100.0000	0x1ec60	tokens1:c617d6bed5da
+EditStartingBonusDlg	?OnOK@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEXXZ	100.0000	100.0000	100.0000	0x209e0	tokens1:17c5ddb86012
+EditStartingBonusDlg	?OnOK@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEXXZ	100.0000	100.0000	100.0000	0x20450	tokens1:ae692d0c3ca3
+EditStartingBonusDlg	?OnOK@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEXXZ	100.0000	100.0000	100.0000	0x1e690	tokens1:44f24fa4cce4
+EditStartingBonusDlg	?OnOK@TStartingBonusTypeDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x1e270	-
+EditStartingBonusDlg	?OnTypeRadio@TEditStartingBonusDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x21900	tokens1:8f320db11e24
+EditStartingBonusDlg	?_onChangeSkillEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@AAEXI@Z	100.0000	100.0000	100.0000	0x1fca0	tokens1:f696ce2a41eb
+EditStartingBonusDlg	?_onKillFocusSkillEdit@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@AAEXI@Z	100.0000	100.0000	100.0000	0x1fdc0	tokens1:be68053e38db
+EditStartingBonusDlg	?_setType@TEditStartingBonusDlg@@AAEXH@Z	100.0000	100.0000	100.0000	0x21310	tokens1:2254bda1f0b3
+EditStartingBonusDlg	?addCreature@@YAXAAVCComboBox@@W4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1e910	tokens1:26b0b414f9f3
+EditStartingBonusDlg	?create@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x1f210	-
+EditStartingBonusDlg	?create@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x1eeb0	-
+EditStartingBonusDlg	?create@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x1e790	-
+EditStartingBonusDlg	?create@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x1f9b0	-
+EditStartingBonusDlg	?create@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x20570	-
+EditStartingBonusDlg	?create@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x200f0	-
+EditStartingBonusDlg	?create@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x1f5a0	-
+EditStartingBonusDlg	?getBonus@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	99.7333	0x1f320	tokens1:2c4a76077b28
+EditStartingBonusDlg	?getBonus@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1efd0	tokens1:4acdf62ad387
+EditStartingBonusDlg	?getBonus@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1ea80	tokens1:56ba1f01edd1
+EditStartingBonusDlg	?getBonus@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	98.4375	98.4375	98.4375	0x1fbf0	tokens1:a40b8e73c07d
+EditStartingBonusDlg	?getBonus@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x206e0	tokens1:a55bda43174a
+EditStartingBonusDlg	?getBonus@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.3600	99.3600	99.3600	0x20260	tokens1:1b6dd20cf38e
+EditStartingBonusDlg	?getBonus@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	99.7333	0x1e5e0	tokens1:1daffb76499f
+EditStartingBonusDlg	?getBonus@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	99.7333	0x1f6b0	tokens1:001bcb962d9f
+EditStartingBonusDlg	?isAvailable@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE_NXZ	100.0000	100.0000	100.0000	0x1efa0	tokens1:27835f489360
+EditStartingBonusDlg	?isAvailable@TStartingBonusTypeDlg@@UBE_NXZ	100.0000	100.0000	100.0000	0x2eaa0	-
+EditStartingBonusDlg	?isCreatureBefore@@YA_NW4TCreatureType@@0@Z	100.0000	100.0000	100.0000	0x1e850	tokens1:570760432b62
+EditStartingBonusDlg	?onBValidChange@TEditStartingBonusDlg@@EAEXPAVTStartingBonusTypeDlg@@_N@Z	100.0000	100.0000	100.0000	0x21960	tokens1:8f3fb33e46ca
+EditStartingBonusDlg	?releaseBonus@TEditStartingBonusDlg@@QAE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x211f0	tokens1:654c8adb5f44
+EditStartingBonusDlg	?setBValid@TStartingBonusTypeDlg@@IAEX_N@Z	100.0000	100.0000	100.0000	0x1e280	tokens1:c81212345a1e
+EditStartingBonusDlg	?setBonus@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x1f2b0	tokens1:e9c555d9747d
+EditStartingBonusDlg	?setBonus@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x1ef40	tokens1:01f717c2fb86
+EditStartingBonusDlg	?setBonus@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x1e990	tokens1:23fe8cb1d55a
+EditStartingBonusDlg	?setBonus@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x1fb20	tokens1:a404432353af
+EditStartingBonusDlg	?setBonus@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusResource@@@Z	99.8361	99.8361	99.8361	0x20620	tokens1:903889eb2c0f
+EditStartingBonusDlg	?setBonus@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x201a0	tokens1:26d6f7c711e6
+EditStartingBonusDlg	?setBonus@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusSpellScroll@@@Z	100.0000	100.0000	100.0000	0x1f640	tokens1:dbac37ca9a88
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x213f0	tokens1:3e5951575e2d
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x213c0	tokens1:2045f1c8e91c
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x21390	tokens1:599f0c35ec15
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x21470	tokens1:4303def9ff25
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0x214d0	tokens1:243436249d9d
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x214a0	tokens1:8f3781aa988c
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusSpell@@@Z	100.0000	100.0000	100.0000	0x21370	tokens1:7d7f50bd786e
+EditStartingBonusDlg	?visit@TEditStartingBonusDlg@@EAEXABVTScenarioBonusSpellScroll@@@Z	100.0000	100.0000	100.0000	0x21440	tokens1:12844da0b636
 EditStartingHeroOptionDlg	??0TEditStartingHeroOptionDlg@@QAE@PAVCWnd@@PBVTScenario@@ABV?$bitset@$0JM@@std@@_N@Z	83.1095	83.1095	83.1095	0x21c10	tokens1:acc6b25ae08e
 EditStartingHeroOptionDlg	??0TEditStartingHeroOptionDlg@@QAE@PAVCWnd@@PBVTScenario@@ABV?$bitset@$0JM@@std@@_NABUTChoice@TScenarioOptionsStartingHero@@@Z	100.0000	100.0000	100.0000	0x21e70	tokens1:dc8a91ac9895
 EditStartingHeroOptionDlg	??1TEditStartingHeroOptionDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x21e10	-
@@ -497,7 +624,7 @@ adler32	@adler32@12	100.0000	100.0000	100.0000	0x402e0	-
 artifact	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1df70	-
 artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x2f10	-
 artifact	??A?$bitset@$0BD@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0x249b0	-
-artifact	?InitializeArtifactTraitsTable@@YA_NXZ	78.0310	78.0310	78.0310	0x28d0	-
+artifact	?InitializeArtifactTraitsTable@@YA_NXZ	78.0723	78.0723	78.0723	0x28d0	-
 artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x2f90	-
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x3050	-
 artifact	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x3170	-

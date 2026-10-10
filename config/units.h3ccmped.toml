@@ -385,6 +385,11 @@ source = "src/editor/MemoryDC.cpp"
 flags = "ccmped_o2_gr_windows"
 
 [[unit]]
+unit = "Army"
+source = "src/editor/Army.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
 unit = "Player"
 source = "src/editor/Player.cpp"
 flags = "ccmped_o2_gr_windows"
@@ -424,4 +429,9 @@ flags = "ccmped_o2_gr_windows"
 [[unit]]
 unit = "EditStartingHeroOptionDlg"
 source = "src/campaign_editor/EditStartingHeroOptionDlg.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
+unit = "EditStartingBonusDlg"
+source = "src/campaign_editor/EditStartingBonusDlg.cpp"
 flags = "ccmped_o2_gr_windows"

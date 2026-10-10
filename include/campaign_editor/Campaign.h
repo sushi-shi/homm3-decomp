@@ -14,6 +14,8 @@
 #include "va.h"
 #include "campaignmap.h"
 #include "primaryskill.h"
+#include "editor/Army.h"
+#include "editor/Array.h"
 #include "editor/RefCountingPtr.h"
 #include "editor/Uncopyable.h"
 
@@ -52,7 +54,8 @@ enum TScenarioBonusType {
     eBonusSpellScroll,
     eBonusPrimarySkill,
     eBonusSecondarySkill,
-    eBonusResource
+    eBonusResource,
+    kNumBonusTypes
 };
 
 class TScenarioStartingBonus {
@@ -106,18 +109,16 @@ public:
 
 class TScenarioBonusCreature : public TScenarioHeroBonus {
 public:
-    TScenarioBonusCreature(int hero, int creature, int count)
-        : TScenarioHeroBonus(hero), m_creature(creature), m_count(count) {}
+    TScenarioBonusCreature(int hero, const TCreatureStack& stack) : TScenarioHeroBonus(hero), m_stack(stack) {}
 
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
     bool operator==(const TScenarioBonusCreature& other) const
     {
-        return m_hero == other.m_hero && m_creature == other.m_creature && m_count == other.m_count;
+        return m_hero == other.m_hero && m_stack == other.m_stack;
     }
 
-    int m_creature;
-    int m_count;
+    TCreatureStack m_stack;
 };
 
 class TScenarioBonusBuilding : public TScenarioStartingBonus {
@@ -164,16 +165,16 @@ public:
 
 class TScenarioBonusPrimarySkill : public TScenarioHeroBonus {
 public:
-    TScenarioBonusPrimarySkill(int hero, const int aSkills[kNumPrimarySkills]);
+    TScenarioBonusPrimarySkill(int hero, const TArray<unsigned int, kNumPrimarySkills>& skills);
 
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
     bool operator==(const TScenarioBonusPrimarySkill& other) const
     {
-        return m_hero == other.m_hero && std::equal(m_skills, m_skills + kNumPrimarySkills, other.m_skills);
+        return m_hero == other.m_hero && m_skills == other.m_skills;
     }
 
-    int m_skills[kNumPrimarySkills];
+    TArray<unsigned int, kNumPrimarySkills> m_skills;
 };
 
 class TScenarioBonusSecondarySkill : public TScenarioHeroBonus {
@@ -193,6 +194,10 @@ public:
 
 class TScenarioBonusResource : public TScenarioStartingBonus {
 public:
+    // The resources a bonus can name besides a resource type: wood and
+    // ore, or the four rare resources.
+    enum { kWoodAndOre = -3, kRareResources = -2 };
+
     TScenarioBonusResource(int resource, int amount);
 
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
@@ -405,6 +410,12 @@ public:
     void read(TRawIStream& stream, int version);
     void write(TRawOStream& stream, int version) const;
 
+    bool operator==(const TScenarioCrossover& other) const
+    {
+        return m_retained == other.m_retained && m_creatures == other.m_creatures
+               && m_artifacts == other.m_artifacts;
+    }
+
     std::bitset<kNumRetained> m_retained;
     std::bitset<kNumCreatures> m_creatures;
     std::bitset<kNumArtifacts> m_artifacts;
@@ -415,6 +426,15 @@ class TScenario {
 public:
     // The properties sheet's region text limit.
     enum { s_kMaxRegionDescLen = 600 };
+
+    enum TDifficulty {
+        eDifficultyEasy,
+        eDifficultyNormal,
+        eDifficultyHard,
+        eDifficultyExpert,
+        eDifficultyImpossible,
+        kNumDifficulties
+    };
 
     explicit TScenario(int numScenarios);
 
@@ -470,7 +490,9 @@ public:
     void removeScenarioMap(int scenario);
     void setBPrerequisite(int scenario, int prerequisite, bool bPrerequisite);
     void setScenarioStartingOptions(int scenario, std::auto_ptr<TScenarioStartingOptions> pOptions);
-    TScenario& getScenario(int scenario);
+    // The scenario to change: its copy of the campaign's data becomes this
+    // handle's own.
+    TScenario& modifyScenario(int scenario);
     int getType() const;
     const TCampaignMapTraits& getMapTraits() const { return g_campaignMapTraits[getType()]; }
     const std::string& getName() const;

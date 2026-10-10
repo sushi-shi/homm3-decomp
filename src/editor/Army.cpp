@@ -7,6 +7,19 @@
 #include "editor/Army.h"
 #include "editor/RawStream.h"
 
+// The map editor's calls reach other classes' identical stores (/OPT:ICF).
+VA_AT(h3ccmped, 0x00401000, 0x9)
+void TCreatureStack::setCreatureType(TCreatureType newCreatureType)
+{
+    _m_creatureType = newCreatureType;
+}
+
+VA_AT(h3ccmped, 0x00401010, 0xa)
+void TCreatureStack::setQuantity(unsigned int newQuantity)
+{
+    _m_quantity = newQuantity;
+}
+
 VA(0x00402243, 0x52)
 void TCreatureStack::read(TRawIStream* pIStream, int version)
 {

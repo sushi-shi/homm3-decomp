@@ -7,6 +7,11 @@
 
 enum TGameResourceType {
     eResourceWood = 0,
+    eResourceMercury = 1,
+    eResourceOre = 2,
+    eResourceSulfur = 3,
+    eResourceCrystal = 4,
+    eResourceGems = 5,
     eResourceGold = 6,
     kNumGameResourceTypes = 7
 };

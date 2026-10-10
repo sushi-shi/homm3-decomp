@@ -48,9 +48,10 @@ public:
     virtual void ReportSaveLoadException(LPCTSTR lpszPathName, CException* e, BOOL bSaving, UINT nIDPDefault);
     virtual BOOL SaveModified();
 
-protected:
     std::auto_ptr<TCampaignScenarioMap> loadScenarioMap(const CString& pathName);
     void exportScenarioMap(const TCampaignScenarioMap* pMap, const CString& pathName);
+
+protected:
 
     afx_msg void OnRefreshScenarioMaps();
     afx_msg void OnExportScenarioMaps();

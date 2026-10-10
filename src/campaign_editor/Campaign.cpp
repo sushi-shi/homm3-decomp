@@ -52,7 +52,7 @@ public:
     void removeMap()
     {
         m_pMap = TRefCountingAutoPtr<TCampaignScenarioMap>(auto_ptr<TCampaignScenarioMap>());
-        m_difficulty = 1;
+        m_difficulty = TScenario::eDifficultyNormal;
         m_regionDesc = string();
         m_pPrologue = auto_ptr<TScenarioPrologue>();
         m_pEpilogue = auto_ptr<TScenarioPrologue>();
@@ -389,10 +389,10 @@ auto_ptr<TScenarioStartingBonus> TScenarioStartingBonusCloner::clone(const TScen
 }
 
 VA(0x004053d0, 0x4e)
-TScenarioBonusPrimarySkill::TScenarioBonusPrimarySkill(int hero, const int aSkills[kNumPrimarySkills])
-    : TScenarioHeroBonus(hero)
+TScenarioBonusPrimarySkill::TScenarioBonusPrimarySkill(int hero,
+                                                       const TArray<unsigned int, kNumPrimarySkills>& skills)
+    : TScenarioHeroBonus(hero), m_skills(skills)
 {
-    uninitialized_copy(aSkills, aSkills + kNumPrimarySkills, m_skills);
 }
 
 VA(0x00405480, 0x20)
@@ -852,7 +852,7 @@ void TCampaign::setScenarioStartingOptions(int scenario, auto_ptr<TScenarioStart
 }
 
 VA(0x00407da0, 0x21)
-TScenario& TCampaign::getScenario(int scenario)
+TScenario& TCampaign::modifyScenario(int scenario)
 {
     return _m_pImpl->m_scenarios[scenario];
 }
@@ -1026,7 +1026,7 @@ TScenario::_TImpl::_TImpl(const _TImpl& other)
 VA(0x00408d00, 0xc4)
 TScenario::_TImpl::_TImpl(int numScenarios)
     : m_pMap(auto_ptr<TCampaignScenarioMap>()), m_prerequisites(numScenarios),
-      m_regionColor(0), m_difficulty(1)
+      m_regionColor(0), m_difficulty(TScenario::eDifficultyNormal)
 {
 }
 
