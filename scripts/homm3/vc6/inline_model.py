@@ -531,6 +531,16 @@ def run_predict_tu(args) -> int:
                 print(f"{name} calls base {b} retail {r}{mark}")
                 for site in hits:
                     print(_site_line(site))
+    if getattr(args, "cb_window", False):
+        roots = {r["symbol"]: r for r in report["roots"]}
+        for row in rows:
+            root = roots[row["root"]]
+            wanted = {c["callee"]: c["retail_calls"] - c["base_calls"] for c in row["callees"]}
+            windows = inline_replay.cb_windows(root, wanted, root["cb"] // 2, root["cb"] * 2 + 200)
+            text = ", ".join(f"{w['low']}..{w['high']}" + (" (incomplete)" if w["incomplete"] else "")
+                             for w in windows) or "none"
+            print(f"{row['root']} cb={root['cb']} window: {text}")
+        return 1 if rows else 0
     if not args.root and not args.callee:
         for row in rows:
             print(f"{row['root']} cb={row['cb']}")

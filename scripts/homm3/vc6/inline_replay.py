@@ -89,3 +89,43 @@ def reproduces(root: dict) -> bool:
                and row["budget_allows"] == row["site"]["budget_allows"]
                and row["size"] == row["site"]["running"]
                for row in replay(root))
+
+
+def retained_calls(root: dict, *, cb: int | None = None) -> tuple[dict, bool]:
+    """Per-callee count of reached sites the replay refuses, plus whether a
+    site the trace refused now expands (its unknown children are missing)."""
+    counts: dict[str, int] = {}
+    incomplete = False
+    stack: list[tuple[int, bool]] = []
+    for row in replay(root, cb=cb):
+        site = row["site"]
+        while stack and stack[-1][0] >= site["depth"]:
+            stack.pop()
+        if all(expands for _, expands in stack):
+            if not row["expands"]:
+                counts[site["symbol"]] = counts.get(site["symbol"], 0) + 1
+            elif not (site["budget_allows"] and site["running"] < SIZE_CAP):
+                incomplete = True
+        stack.append((site["depth"], row["expands"]))
+    return counts, incomplete
+
+
+def cb_windows(root: dict, wanted: dict[str, int], low: int, high: int) -> list[dict]:
+    """Ranges of root cb in [low, high] whose replay changes each wanted
+    callee's retained-call count by exactly its delta and leaves every
+    other traced callee's count unchanged.
+
+    `wanted` maps callee -> (retail calls - our calls). Windows marked
+    incomplete expand a site the trace refused; confirm them by compiling."""
+    base, _ = retained_calls(root)
+    out: list[dict] = []
+    for cb in range(max(1, low), high + 1):
+        got, incomplete = retained_calls(root, cb=cb)
+        names = set(base) | set(got)
+        if any(got.get(k, 0) - base.get(k, 0) != wanted.get(k, 0) for k in names | set(wanted)):
+            continue
+        if out and out[-1]["high"] == cb - 1 and out[-1]["incomplete"] == incomplete:
+            out[-1]["high"] = cb
+        else:
+            out.append(dict(low=cb, high=cb, incomplete=incomplete))
+    return out

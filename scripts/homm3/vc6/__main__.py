@@ -125,6 +125,9 @@ def _build_parser() -> argparse.ArgumentParser:
                          "site INDEX and print the decisions that change")
     pp.add_argument("--cb", type=int, metavar="N",
                     help="--tu --root: replay with the root's cb (budget 2 x cb) set to N")
+    pp.add_argument("--cb-window", action="store_true",
+                    help="--tu: for each diverging root, the root cb ranges whose replay "
+                         "gives exactly retail's call-count differences")
 
     pw = ss.add_parser("why-reg", help="which knob fixes a register binding")
     _solver_arguments(pw)

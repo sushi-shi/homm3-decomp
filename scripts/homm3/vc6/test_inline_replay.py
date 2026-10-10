@@ -45,5 +45,22 @@ class InlineReplayTests(unittest.TestCase):
         self.assertTrue(rows[1]["budget_allows"])
 
 
+class CbWindowTests(unittest.TestCase):
+    ROOT = dict(symbol="root", cb=500, initial_budget=1000, sites=[
+        site(1, 1000, 2, 1100, 500, "big"),
+        site(1, 1000, 1, 30, 500, "free"),
+    ])
+
+    def test_window_starts_where_twice_cb_covers_the_cost(self):
+        self.assertEqual(inline_replay.retained_calls(self.ROOT), ({"big": 1}, False))
+        windows = inline_replay.cb_windows(self.ROOT, {"big": -1}, 400, 700)
+        self.assertEqual(windows, [dict(low=550, high=700, incomplete=True)])
+
+    def test_unchanged_counts_have_no_window_when_a_change_is_wanted(self):
+        self.assertEqual(inline_replay.cb_windows(self.ROOT, {"free": 1}, 400, 700), [])
+        self.assertEqual(inline_replay.cb_windows(self.ROOT, {}, 498, 552),
+                         [dict(low=498, high=549, incomplete=False)])
+
+
 if __name__ == "__main__":
     unittest.main()
