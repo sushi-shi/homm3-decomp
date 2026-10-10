@@ -141,6 +141,7 @@ public:
     bool checkForDefeatedTownLoss(int oldOwner,
                                            const town* lostTown);
     bool checkForTimeLimitExpired();
+    void recordLoss(signed char player);
 };
 SIZE(LossConditionStruct, 0x24);
 

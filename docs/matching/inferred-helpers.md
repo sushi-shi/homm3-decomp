@@ -94,6 +94,8 @@ Folding `recordLoss` moves `checkForDefeatedTownLoss` 100 -> 99.84: the
 target point and the `getLocation()` temporary exchange stack homes. Named
 locals, a returned `true`, the store order, `const`, a braced guard and an
 explicit cast all keep 99.84; the store order costs more (97.97).
+`recordLoss` was restored on 2026-10-10 (checkForDefeatedTownLoss 100 again):
+an exact Windows shape is kept even where the Dreamcast build disagrees.
 
 ## Dead
 

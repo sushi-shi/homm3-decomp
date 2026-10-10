@@ -6,6 +6,12 @@
 
 #include "game.h"
 
+inline void LossConditionStruct::recordLoss(signed char player)
+{
+    m_playerLoser = player;
+    m_gameLost = 1;
+}
+
 // The canonical team helper replaces the pasted scan. Both compilers expand
 // it and retain its nested isHuman call; the caller keeps explicit integer
 // success/failure returns, as Mac 0x1fd394 and 0x1fd3a8 do.
@@ -710,8 +716,7 @@ bool LossConditionStruct::checkForDefeatedTownLoss(
 
     type_point target(m_townX, m_townY, m_townZ);
     if (target == lostTown->getLocation()) {
-        m_playerLoser = oldOwner;
-        m_gameLost = 1;
+        recordLoss(static_cast<signed char>(oldOwner));
         return m_gameLost;
     }
     return 0;
@@ -731,8 +736,7 @@ bool LossConditionStruct::checkForTimeLimitExpired()
             + static_cast<unsigned short>(g_game->m_week) - 5) * 7
           + g_game->m_day;
         if (days > m_numDays) {
-            m_playerLoser = static_cast<signed char>(g_netLocalGamePos);
-            m_gameLost = 1;
+            recordLoss(static_cast<signed char>(g_netLocalGamePos));
             return 1;
         }
     }

@@ -491,28 +491,13 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
 // the strip gets a fixed descriptor instead of Duration.
 //
-// DC lines 412/511-583 prove the shared exit flag, and 420-475 prove one
-// help-text string with seven operator= stores followed by the dialog.
-// DC text subscripts at 510/517/555-561 prove the canonical operator[]
-// calls restored here. This spelling changes the current VC6 score from
-// 92.5744% to 92.55%; preserve the source fact through the inliner dip.
-// The selected spell value survives those lookups in DC.
-// Keeping that value snapshot previously gave 92.5744%. The former
-// assign/const-reference spellings reached 100% through different nested
-// append decisions. The luck += still retains append where retail expands
-// it. Exit-flag declaration and upgrade-input lifetime controls are flat;
-// the source operators and their shared text lifetime stay canonical.
-// Probe (2026-10-08): the seven stores as text.assign(...) reach 99.13%
-// (99.15% with GetText for the indexer) and restore retail's inline luck
-// append, but DC 0x19189e..0x191a1a calls ??4 for each store, so the
-// operator= spelling stays. The two-flag switch on the spell is 84.26%.
-// Lead (2026-10-09): bracing every guarded statement restores the inline
-// luck append (99.13%), but DC 409/441..443/463..465/470/474 record single
-// scopes there, so the cost the luck += needs must come from elsewhere.
-// DC 598/602 brace both siege-frame arms (byte-flat; root cb 1586 -> 1590
-// of the >= 1600 the luck += needs). Reading m_influence at every spell use
-// also reaches 99.13%, but retail copies the selected value (mov eax, ecx)
-// and DC 551 assigns it, so the spell local stays.
+// DC lines 412/511-583 prove the shared exit flag. The help-text stores
+// use assign, the rollover spell is a const reference to its m_influence
+// slot, and the dialog/rollover texts call GetText directly: that shape is
+// exact on Windows (as it was until 462e36412). The Dreamcast build writes
+// operator= stores (??4 at 0x19189e..0x191a1a), TTextResource::operator[]
+// at 510/517/555-561 and a copied spell value (551); each of those
+// spellings leaves the luck += append retained (92.54..99.97%).
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)
 DC_ADDRESS(0x191804, 0x604)
@@ -536,13 +521,13 @@ int TViewArmyWindow::windowHandler(message& msg)
             switch (helpID) {
             case g_moraleHelpIndex:
                 if (m_morale > 0) {
-                    text = formatString(g_moraleInfo[3], g_moraleInfo[0]);
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[0]));
                     resType = 14;
                 } else if (m_morale == 0) {
-                    text = formatString(g_moraleInfo[3], g_moraleInfo[1]);
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[1]));
                     resType = 15;
                 } else {
-                    text = formatString(g_moraleInfo[3], g_moraleInfo[2]);
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[2]));
                     resType = 16;
                 }
                 if (m_moraleHelp.length() == 0)
@@ -552,13 +537,13 @@ int TViewArmyWindow::windowHandler(message& msg)
                 break;
             case g_luckHelpIndex:
                 if (m_luck > 0) {
-                    text = formatString(g_luckInfo[3], g_luckInfo[0]);
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[0]));
                     resType = 11;
                 } else if (m_luck == 0) {
-                    text = formatString(g_luckInfo[3], g_luckInfo[1]);
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[1]));
                     resType = 12;
                 } else {
-                    text = formatString(g_luckInfo[3], g_luckInfo[2]);
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[2]));
                     resType = 13;
                 }
                 if (m_luckHelp.length() == 0)
@@ -568,7 +553,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 break;
             default:
                 if (helpID >= 0)
-                    text = g_viewArmyHelp[helpID].m_rclick;
+                    text.assign(g_viewArmyHelp[helpID].m_rclick);
                 break;
             }
             if (text.length() > 0)
@@ -593,7 +578,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 }
                 if (resource >= 0)
                     amount = cost[resource];
-                normalDialog((*g_generalText)[GENERAL_TEXT_UPGRADE_ARMY_PROMPT],
+                normalDialog(g_generalText->GetText(GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
                              2, -1, -1, 6, cost[6], resource, amount,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -601,7 +586,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 break;
             }
             case DISMISS_ID:
-                normalDialog((*g_generalText)[GENERAL_TEXT_DISMISS_ARMY_PROMPT],
+                normalDialog(g_generalText->GetText(GENERAL_TEXT_DISMISS_ARMY_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                     exitFlag = 1;
@@ -623,26 +608,26 @@ int TViewArmyWindow::windowHandler(message& msg)
                     if (hoverID >= AFFECTING_SPELLS_0_ID
                         && hoverID <= AFFECTING_SPELLS_2_ID
                         && m_influence[hoverID - AFFECTING_SPELLS_0_ID] != -1) {
-                        int spell =
+                        const int& spell =
                             m_influence[hoverID - AFFECTING_SPELLS_0_ID];
                         if (spell == SPELL_BIND)
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
+                                    g_generalText->GetText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
                                     akSpellTraits[spell].m_name,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BIND]);
+                                    g_generalText->GetText(GENERAL_TEXT_ARMY_SPELL_BIND));
                         else if (spell == SPELL_BERSERK)
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
+                                    g_generalText->GetText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
                                     akSpellTraits[spell].m_name,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BERSERK]);
+                                    g_generalText->GetText(GENERAL_TEXT_ARMY_SPELL_BERSERK));
                         else if (spell == SPELL_DISRUPTING_RAY)
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
+                                    g_generalText->GetText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
                                     akSpellTraits[spell].m_name,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY]);
+                                    g_generalText->GetText(GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY));
                         else
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT],
+                                    g_generalText->GetText(GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT),
                                     akSpellTraits[spell].m_name,
                                     m_duration[hoverID - AFFECTING_SPELLS_0_ID]);
                         rollover = g_text;
