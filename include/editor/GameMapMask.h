@@ -46,10 +46,20 @@ private:
         _TQuad() : m_bits(0) {}
         ~_TQuad() {}
 
+        int getState(unsigned int i) const { return m_bits >> i * 2 & 3; }
+        void setState(unsigned int i, int state)
+        {
+            unsigned int shift = i * 2;
+            m_bits = m_bits & ~(3 << shift) | state << shift;
+        }
+
         unsigned char m_bits;
     };
 
     struct _TBlock {
+        // The state of the block's tile (x, y).
+        int getState(unsigned int x, unsigned int y) const { return m_aaQuads[y][x / 4].getState(x % 4); }
+
         _TQuad m_aaQuads[12][3];
     };
 
