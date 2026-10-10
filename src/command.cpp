@@ -18,6 +18,7 @@
 #include "game.h"
 #include "hero.h"
 #include "herospec.h"
+#include "homm3_minmax.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -2499,13 +2500,10 @@ void combatManager::processFirstAid(army* currentArmy)
 // pending-action arms and shows that VC6 expanded ResetMouse,
 // ResetCycleTimers and CheckChangeSelector into this body.
 // Keep GetName -> GetArmyName, timer/selector calls, DC3653's max and the
-// text-resource getters. Residual 99.7272%: the wait-arm string constructor
-// retains _Tidy where retail expands it. Naming the defend-bonus result is
-// flat; naming its percentage input is worse. Neither justifies flattening
-// max or changing the DC string lifetimes. Mac default construction at
-// 0x87888 (defend) and 0x87a90 (wait) fixes both lifetimes independently;
-// pristine VC6 XSTRING calls _Tidy from that same default constructor.
-// The residual is its nested expansion decision, not a different string.
+// text-resource getters. DC3653's max is the library's reference selector
+// (std::max); the by-value game max leaves the wait-arm string constructor's
+// _Tidy call (99.7272%). Mac default construction at 0x87888 (defend) and
+// 0x87a90 (wait) fixes both string lifetimes independently.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 // Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
 // Original DC public ?ProcessNextAction@combatManager@@QAAHAAUmessage@@_N@Z
@@ -2666,7 +2664,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
             else {
                 std::string message;
                 currentArmy->m_monInfo.attributes |= creatureDefending;
-                currentArmy->m_defendBonus = max(
+                currentArmy->m_defendBonus = std::max(
                     currentArmy->m_monInfo.defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)
