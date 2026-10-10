@@ -1308,19 +1308,33 @@ MFCFileBuf	?sync@TMFCFileBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x86e0f	tokens1:
 MFCFileBuf	?underflow@TMFCFileBuf@@MAEHXZ	100.0000	100.0000	100.0000	0x86e8c	tokens1:8f42a27c2e34
 MapDoc	??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@H@Z	100.0000	100.0000	100.0000	0x61202	-
 MapDoc	??0?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAE@ABV?$allocator@U?$pair@IVTGameMap@@@std@@@1@@Z	100.0000	100.0000	100.0000	0x60fb5	-
-MapDoc	??0TMapDoc@@IAE@XZ	96.2889	100.0000	100.0000	0x5efe4	tokens1:71a4ddb3191f
+MapDoc	??0TMapDoc@@IAE@XZ	100.0000	100.0000	100.0000	0x5efe4	tokens1:71a4ddb3191f
 MapDoc	??0TMapDoc@@QAE@PAVCDocTemplate@@@Z	94.1176	94.1176	94.1176	0x5f0a6	tokens1:b36269ca2421
 MapDoc	??0TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@QAE@PAVCWnd@@@Z	95.6047	95.6047	95.6047	0x5dfa8	tokens1:c90da78cad14
 MapDoc	??0TNewMapParams@TMapDoc@@QAE@ABU01@@Z	100.0000	100.0000	100.0000	0x5e266	tokens1:c45500e099f3
 MapDoc	??0TNewMapParams@TMapDoc@@QAE@W4EGameVersion@@W4TSize@TGameMap@@_NV?$auto_ptr@UTRandomMapParams@TMapDoc@@@std@@@Z	100.0000	100.0000	100.0000	0x5ed35	-
+MapDoc	??0_TRiverEraseOp@TMapDoc@@QAE@PAV1@_N@Z	100.0000	100.0000	100.0000	0x5e8d8	tokens1:c66e35f3049f
+MapDoc	??0_TRiverPlacementOp@TMapDoc@@QAE@PAV1@_NHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5e752	tokens1:9b31a8fe3f32
+MapDoc	??0_TRoadEraseOp@TMapDoc@@QAE@PAV1@_N@Z	100.0000	100.0000	100.0000	0x5ebb0	tokens1:9d198c295f66
+MapDoc	??0_TRoadPlacementOp@TMapDoc@@QAE@PAV1@_NHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5ea2a	tokens1:8b7487282e40
+MapDoc	??0_TTerrainPlacementOp@TMapDoc@@QAE@PAV1@_NW4TTerrainType@@I@Z	100.0000	100.0000	100.0000	0x5e326	tokens1:707c0cda88db
+MapDoc	??1?$auto_ptr@VTRiverEraseOp@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x61188	-
+MapDoc	??1?$auto_ptr@VTTerrainPlacementOp@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x6116b	-
 MapDoc	??1?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x60fe5	-
 MapDoc	??1?$pair@IVTGameMap@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5fa68	-
 MapDoc	??1TMapDoc@@UAE@XZ	99.8591	99.8591	99.8591	0x5f21c	tokens1:4c09d1d90967
 MapDoc	??1TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAE@XZ	100.0000	100.0000	100.0000	0x5e130	-
 MapDoc	??1TNewMapParams@TMapDoc@@QAE@XZ	100.0000	100.0000	100.0000	0x5ed76	-
+MapDoc	??1_TTerrainPlacementOp@TMapDoc@@UAE@XZ	77.2941	77.2941	77.2941	0x5e45b	tokens1:46c6668bc6fb
+MapDoc	??4?$auto_ptr@VTTerrainPlacementOp@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x61120	-
 MapDoc	??Eiterator@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x62834	-
 MapDoc	??Fiterator@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x6285c	-
 MapDoc	??Giterator@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QBEHABV012@@Z	100.0000	100.0000	100.0000	0x61ee6	-
+MapDoc	??R_TRiverEraseOp@TMapDoc@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x5e9ce	tokens1:64cc2f5bf526
+MapDoc	??R_TRiverPlacementOp@TMapDoc@@QAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5e885	tokens1:7071bcd13951
+MapDoc	??R_TRoadEraseOp@TMapDoc@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x5eca6	tokens1:9609ed59fb36
+MapDoc	??R_TRoadPlacementOp@TMapDoc@@QAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5eb5d	tokens1:ff8579c0da82
+MapDoc	??R_TTerrainPlacementOp@TMapDoc@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x5e4eb	tokens1:c076f27c8008
 MapDoc	??_D?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x60a9c	-
 MapDoc	??_ETMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@WFM@AEPAXI@Z	97.5000	97.5000	97.5000	0x6289d	-
 MapDoc	??_GTMapDoc@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f08a	-
@@ -1358,25 +1372,50 @@ MapDoc	?_Ubound@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMap
 MapDoc	?_autosave@TMapDoc@@AAEHXZ	82.4048	82.4048	82.4048	0x60712	tokens1:bfbfbbd84d58
 MapDoc	?_autosaveThreadProc@TMapDoc@@CAIPAX@Z	75.7273	75.7273	75.7273	0x5ef69	tokens1:2bbd0ceffea4
 MapDoc	?_generateRandomMap@TMapDoc@@AAE_NXZ	93.8182	93.8182	93.8182	0x602c1	tokens1:04147da432ec
+MapDoc	?_onTerrainTypeChanged@TMapDoc@@AAEX_NIIW4TTerrainType@@@Z	91.5155	91.5155	91.5155	0x60594	tokens1:5b747f3e2b47
 MapDoc	?_readMap@TMapDoc@@AAE?AV?$auto_ptr@VTGameMap@@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@3@@Z	95.4950	95.4950	95.4950	0x6019a	tokens1:6f5450a8d479
+MapDoc	?_reset@_TTerrainPlacementOp@TMapDoc@@AAEXXZ	100.0000	100.0000	100.0000	0x5e416	tokens1:d0bf032eeada
 MapDoc	?_sendUpdate@TMapDoc@@AAEX_NIIII@Z	100.0000	100.0000	100.0000	0x606b5	tokens1:1a0906125206
+MapDoc	?_touch@TRoadMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@IAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5df49	tokens1:05ea1bce9b4e
+MapDoc	?_touch@_TTerrainPlacementOp@TMapDoc@@AAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5e5e3	tokens1:23e662f6017e
 MapDoc	?advance@TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEXH@Z	100.0000	100.0000	100.0000	0x5e1a6	tokens1:b2ea88feae7b
 MapDoc	?autosaveAll@TMapDoc@@SAXXZ	100.0000	100.0000	100.0000	0x5edc7	tokens1:cafbbf40e7c8
 MapDoc	?backupMap@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5f91d	tokens1:63c832c1252a
 MapDoc	?copy@std@@YA?AViterator@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@1@V231@00@Z	100.0000	100.0000	100.0000	0x627ba	-
 MapDoc	?copy_backward@std@@YA?AViterator@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@1@V231@00@Z	100.0000	100.0000	100.0000	0x62775	-
+MapDoc	?endEraseOp@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5ff28	tokens1:65fc2a9f2892
+MapDoc	?endRiverEraseOp@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x60085	tokens1:f6c87d88e841
+MapDoc	?endRiverPlacementOp@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5fd1c	tokens1:7cd34041f924
+MapDoc	?endRoadEraseOp@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x60131	tokens1:066777009492
+MapDoc	?endRoadPlacementOp@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5fde5	tokens1:eb02a5772446
+MapDoc	?endTerrainPlacementOp@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5fc59	tokens1:122a1356c8b0
 MapDoc	?erase@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMapDoc@@@std@@V?$allocator@PAVTMapDoc@@@3@@std@@U?$less@PAVTMapDoc@@@4@V?$allocator@PAVTMapDoc@@@4@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x61c95	-
 MapDoc	?erase@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMapDoc@@@std@@V?$allocator@PAVTMapDoc@@@3@@std@@U?$less@PAVTMapDoc@@@4@V?$allocator@PAVTMapDoc@@@4@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x61f29	-
 MapDoc	?erase@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMapDoc@@@std@@V?$allocator@PAVTMapDoc@@@3@@std@@U?$less@PAVTMapDoc@@@4@V?$allocator@PAVTMapDoc@@@4@@std@@QAEIABQAVTMapDoc@@@Z	100.0000	100.0000	100.0000	0x61d3d	-
 MapDoc	?erase@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x61889	-
+MapDoc	?erase@TMapDoc@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x5ff61	tokens1:27beb14e14ea
+MapDoc	?eraseRiver@TMapDoc@@QAEXII@Z	100.0000	100.0000	100.0000	0x600a1	tokens1:14a978efef5a
+MapDoc	?eraseRoad@TMapDoc@@QAEXII@Z	100.0000	100.0000	100.0000	0x6014d	tokens1:c96155dd38ef
 MapDoc	?floatObject@TMapDoc@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x5fb1b	tokens1:fb7343979b86
 MapDoc	?getAutosaveMutexName@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@YA?AVCString@@ABV2@@Z	100.0000	100.0000	100.0000	0x5ef03	tokens1:14a1e6a6b555
 MapDoc	?getAutosavePathName@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@YA?AVCString@@PAVCDocTemplate@@@Z	100.0000	100.0000	100.0000	0x5ee0a	tokens1:837149be79cb
+MapDoc	?getFrame@_TTerrainPlacementOp@TMapDoc@@UAEHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5e71e	tokens1:080a35e9b909
+MapDoc	?getLineType@TRiverMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5dd5e	tokens1:ba4e6056bcb1
+MapDoc	?getLineType@TRoadMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5df15	tokens1:084420a71c69
+MapDoc	?getSize@TRiverMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAE?AV?$TPoint@I@@XZ	100.0000	100.0000	100.0000	0x5db38	tokens1:8d6648034e54
+MapDoc	?getSize@_TTerrainPlacementOp@TMapDoc@@UAEAAV?$TPoint@I@@AAV3@@Z	100.0000	100.0000	100.0000	0x5e660	tokens1:71c8c073c4fe
+MapDoc	?getTerrain@_TTerrainPlacementOp@TMapDoc@@UAEHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5e6ed	tokens1:419d8db0da73
+MapDoc	?getTile@TRiverMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAE?AUTRmgTerrainTile@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5dcf4	tokens1:e23ff2e9636d
+MapDoc	?getTile@TRoadMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAE?AUTRmgTerrainTile@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5deab	tokens1:8c36bad16c6a
+MapDoc	?getTile@_TTerrainPlacementOp@TMapDoc@@UAE?AUTRmgTerrainTile@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5e686	tokens1:0b8b41cacf9d
+MapDoc	?getUpdateExtent@TRiverMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@QBE_NPAV?$TExtent@II@@@Z	100.0000	100.0000	100.0000	0x5dbe2	tokens1:4b8902f635fe
 MapDoc	?insert@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMapDoc@@@std@@V?$allocator@PAVTMapDoc@@@3@@std@@U?$less@PAVTMapDoc@@@4@V?$allocator@PAVTMapDoc@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@PAVTMapDoc@@PAV1@U_Kfn@?$set@PAVTMapDoc@@U?$less@PAVTMapDoc@@@std@@V?$allocator@PAVTMapDoc@@@3@@std@@U?$less@PAVTMapDoc@@@4@V?$allocator@PAVTMapDoc@@@4@@std@@_N@2@ABQAVTMapDoc@@@Z	100.0000	100.0000	100.0000	0x61ba5	-
 MapDoc	?make_pair@std@@YA?AU?$pair@IVTGameMap@@@1@ABIABVTGameMap@@@Z	99.6875	99.6875	99.6875	0x62752	-
 MapDoc	?onMapObjectRemoved@TMapDoc@@EAEX_NI@Z	100.0000	100.0000	100.0000	0x60167	tokens1:87ca6f015f2e
 MapDoc	?onObjectPropertiesChanged@TMapDoc@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x5fb8a	tokens1:903ca9803c77
 MapDoc	?placeObject@TMapDoc@@QAEI_NV?$auto_ptr@VTGameObject@@@std@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x5fa70	tokens1:078b267df3df
+MapDoc	?placeRiver@TMapDoc@@QAEXII@Z	100.0000	100.0000	100.0000	0x5fd38	tokens1:347365f819a3
+MapDoc	?placeRoad@TMapDoc@@QAEXII@Z	100.0000	100.0000	100.0000	0x5fe01	tokens1:1f95ab2b6810
 MapDoc	?pop_back@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x61075	-
 MapDoc	?pop_front@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGameMap@@@std@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x60ff9	-
 MapDoc	?promptForFileName@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@YA_NPBDHKAAVCString@@@Z	93.2952	93.2952	93.2952	0x5d82d	tokens1:9d533f68fdce
@@ -1384,10 +1423,24 @@ MapDoc	?push_back@?$deque@U?$pair@IVTGameMap@@@std@@V?$allocator@U?$pair@IVTGame
 MapDoc	?read@TStreamBufFile@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x5df7c	tokens1:eb9e1a1f09d7
 MapDoc	?redo@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5f85e	tokens1:9ed905df2958
 MapDoc	?removeObject@TMapDoc@@QAEX_NI@Z	100.0000	100.0000	100.0000	0x5fae5	tokens1:6e747dc6f1f6
+MapDoc	?reset@TRoadMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@QAEXXZ	100.0000	100.0000	100.0000	0x5ddaf	tokens1:31ce1921623c
 MapDoc	?setAutosaveInterval@TMapDoc@@SAXI@Z	100.0000	100.0000	100.0000	0x5edf6	tokens1:e5e44ecf9bbc
+MapDoc	?setFrame@_TTerrainPlacementOp@TMapDoc@@UAEXABV?$TPoint@I@@H@Z	100.0000	100.0000	100.0000	0x5e616	tokens1:4d12b700ec78
+MapDoc	?setLineType@TRiverMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEXABV?$TPoint@I@@H@Z	100.0000	100.0000	100.0000	0x5dca9	tokens1:af1fd6918302
+MapDoc	?setLineType@TRoadMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEXABV?$TPoint@I@@H@Z	100.0000	100.0000	100.0000	0x5de5e	tokens1:5c837a23df80
 MapDoc	?setSpecialTileFrequency@TMapDoc@@SAXI@Z	100.0000	100.0000	100.0000	0x5ee00	tokens1:0c872d90b054
+MapDoc	?setTile@TRiverMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	89.7059	89.7059	89.7059	0x5dc23	tokens1:930eec8f4440
+MapDoc	?setTile@TRoadMap@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	90.4000	90.4000	90.4000	0x5ddd8	tokens1:a06c9d35f94d
+MapDoc	?setTile@_TTerrainPlacementOp@TMapDoc@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	91.6129	91.6129	91.6129	0x5e542	tokens1:0dfa6f006dc5
 MapDoc	?setTotal@TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEXH@Z	100.0000	100.0000	100.0000	0x5e17c	tokens1:a736cc670db0
+MapDoc	?startEraseOp@TMapDoc@@QAEX_N@Z	100.0000	100.0000	100.0000	0x5fe25	tokens1:edaaf97ed9a8
+MapDoc	?startRiverEraseOp@TMapDoc@@QAEX_N@Z	100.0000	100.0000	100.0000	0x6000f	tokens1:e520eef51fc1
+MapDoc	?startRiverPlacementOp@TMapDoc@@QAEX_NHII@Z	100.0000	100.0000	100.0000	0x5fc93	tokens1:17da46b3a411
+MapDoc	?startRoadEraseOp@TMapDoc@@QAEX_N@Z	100.0000	100.0000	100.0000	0x600bb	tokens1:e9643a162057
+MapDoc	?startRoadPlacementOp@TMapDoc@@QAEX_NHII@Z	100.0000	100.0000	100.0000	0x5fd5c	tokens1:9e7754a09270
+MapDoc	?startTerrainPlacementOp@TMapDoc@@QAEX_NW4TTerrainType@@@Z	100.0000	100.0000	100.0000	0x5fbda	tokens1:a97663055b32
 MapDoc	?swap@std@@YAXAAVTGameMap@@0@Z	99.7619	99.7619	99.7619	0x62709	-
+MapDoc	?terrainFill@TMapDoc@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x5fc75	tokens1:7ee4409d76b3
 MapDoc	?undo@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5f79e	tokens1:6af57b470882
 MapDoc	?unfloatObject@TMapDoc@@QAEX_NII@Z	100.0000	100.0000	100.0000	0x5fb51	tokens1:af77bdf67f8a
 MapDoc	?write@TStreamBufFile@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x5df8f	tokens1:d5350a7c29f4
@@ -3129,8 +3182,8 @@ rmg	?countPlacedZoneConnections@type_random_map_generator@@QBEHPAUTRmgZone@@@Z	8
 rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	97.5945	97.5945	97.5945	0xa61bc	-
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	99.1751	99.1751	99.1751	0xa5c07	-
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	93.1254	93.1254	93.1254	0xa7605	-
-rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	96.9458	96.9458	96.9458	0xab6ac	-
-rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9866	83.9866	83.9866	0xabd5f	-
+rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	96.9819	96.9819	96.9819	0xab6ac	-
+rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9962	83.9962	83.9962	0xabd5f	-
 rmg	?createRivers@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac4ae	-
 rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5710	89.5710	89.5710	0xa696b	-
@@ -3221,7 +3274,7 @@ rmg	?markRiverCoastTarget@type_random_map_generator@@QAEXUTRmgMapPosition@@H@Z	8
 rmg	?markRiverJoinTargets@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac3df	-
 rmg	?markRiverOutletTargets@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xabc20	-
 rmg	?objectsAllowEntrances@TRmgTreasureGroup@@QBEEXZ	100.0000	100.0000	100.0000	0x9d65c	-
-rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	76.6549	76.6549	76.6549	0xab37f	-
+rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	76.7606	76.7606	76.7606	0xab37f	-
 rmg	?placeBorderGuard@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0xa5e73	-
 rmg	?placeExtraMines@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	97.0645	97.0645	97.0645	0xa9c7c	-
 rmg	?placeGuard@type_random_map_generator@@QAEXHUTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0xa5e03	-
@@ -3284,23 +3337,39 @@ rmg	?write@type_town@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9bc
 rmg	?write@type_witch_hut@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9c4f4	-
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.7565	95.7565	95.7565	0xad1e3	-
 rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	79.5578	79.5578	79.5578	0xac857	-
+rmg_river	??0TRiverEraseOp@@QAE@PAVTAbstractMap@TRiverOp@@@Z	100.0000	100.0000	100.0000	0xb3d3c	-
+rmg_river	??0TRiverPlacementOp@@QAE@PAVTAbstractMap@TRiverOp@@HABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xb3c4e	-
+rmg_river	??1TRiverPlacementOp@@UAE@XZ	100.0000	100.0000	100.0000	0xb3ccb	-
 rmg_river	?getLineType@TRiverOp@@UAEHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xb3c3f	-
+rmg_river	?getPatternTable@TRiverOp@@UAEPAUTRmgLinePatternTable@@H@Z	100.0000	100.0000	100.0000	0xb3bb5	-
 rmg_river	?getTile@TRiverOp@@UAEXABV?$TPoint@I@@AAUTRmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0xb3c03	-
 rmg_river	?isBlocked@TRiverOp@@UAEHABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xb4223	-
+rmg_river	?onTerrainTypeChanged@TRiverEraseOp@@SIXPAVTAbstractMap@TRiverOp@@ABV?$TPoint@I@@@Z	94.3500	94.3500	94.3500	0xb3cd2	-
 rmg_river	?setLineType@TRiverOp@@UAEXABV?$TPoint@I@@H@Z	100.0000	100.0000	100.0000	0xb3bf0	-
 rmg_river	?setTile@TRiverOp@@UAEXABV?$TPoint@I@@ABUTRmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0xb3bbd	-
+rmg_road	??0TRoadEraseOp@@QAE@PAVTAbstractMap@TRoadOp@@@Z	100.0000	100.0000	100.0000	0xb4331	-
+rmg_road	??0TRoadPlacementOp@@QAE@PAVTAbstractMap@TRoadOp@@HABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0xb4243	-
+rmg_road	??1TRoadPlacementOp@@UAE@XZ	100.0000	100.0000	100.0000	0xb42c0	-
+rmg_road	?getPatternTable@TRoadOp@@UAEPAUTRmgLinePatternTable@@H@Z	100.0000	100.0000	100.0000	0xb421b	-
+rmg_road	?onTerrainTypeChanged@TRoadEraseOp@@SIXPAVTAbstractMap@TRoadOp@@ABV?$TPoint@I@@@Z	94.3500	94.3500	94.3500	0xb42c7	-
 rmg_support	??0TAllocationFailure@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x21ac	-
 rmg_support	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd513	-
+rmg_support	??0TLineEraseOp@@QAE@PAVTMapLineFilter@@@Z	100.0000	100.0000	100.0000	0x58f52	-
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0x58755	-
 rmg_support	??0TRmgLineWalker@@QAE@PAVTMapLineFilter@@HABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x58d37	-
 rmg_support	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x2181	-
 rmg_support	??0runtime_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1f9b	-
 rmg_support	??1TAllocationFailure@@UAE@XZ	100.0000	100.0000	100.0000	0x212e	-
+rmg_support	??1TRmgLinePatternTable@@QAE@XZ	100.0000	100.0000	100.0000	0x587ed	-
 rmg_support	??1TRuntimeError@@UAE@XZ	100.0000	100.0000	100.0000	0x20d5	-
 rmg_support	??1runtime_error@std@@UAE@XZ	100.0000	100.0000	100.0000	0x1f42	-
+rmg_support	??RTLineEraseOp@@QAEXIIII@Z	56.8261	56.8261	56.8261	0x58f5d	-
 rmg_support	?_Doraise@runtime_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x1f25	-
+rmg_support	?clearRmgLineRectangle@@YIXPAVTMapLineFilter@@ABUTRmgGridRectangle@@@Z	78.0328	78.0328	78.0328	0x58af6	-
 rmg_support	?drawTo@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x58d66	-
-rmg_support	?paintPoint@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	23.5155	23.5155	23.5155	0x58e61	-
+rmg_support	?paintPoint@TRmgLineWalker@@QAEXABV?$TPoint@I@@@Z	23.5670	23.5670	23.5670	0x58e61	-
+rmg_support	?refreshRmgLinePoint@@YIXPAVTMapLineFilter@@ABV?$TPoint@I@@@Z	62.6512	62.6512	62.6512	0x58a2f	-
+rmg_support	?selectRmgLinePattern@@YIXPBEPBUTRmgLinePatternTable@@AAHAAE3@Z	84.7917	84.7917	84.7917	0x58893	-
 rmg_terrain	??0?$pair@Viterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@_N@std@@QAE@ABViterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@1@AB_N@Z	100.0000	100.0000	100.0000	0xbd408	-
 rmg_terrain	??0?$vector@EV?$allocator@E@std@@@std@@QAE@IABEABV?$allocator@E@1@@Z	100.0000	100.0000	100.0000	0xbd177	-
 rmg_terrain	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	99.8214	99.8214	99.8214	0xba868	-

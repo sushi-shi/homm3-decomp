@@ -1,4 +1,6 @@
-// rmg_river.cpp - the random-map generator's river placement operation.
+// rmg_river.cpp - the random-map generator's river placement operation,
+// and the map editor's river erase operation (h3maped RiverPlacement.cpp,
+// 0x4b3b8e..0x4b3dcf), which the game links unreferenced.
 //
 // Retail keeps the river pattern table's initializer and cleanup and the
 // river operation together at 0x55ed70..0x55eef1, after resourcemanager's
@@ -9,6 +11,7 @@
 
 #include "rmg.h"
 #include "rmg_terrain.h"
+#include "lineerase.h"
 #include "tiles.h"
 
 // Complete-only pattern globals: retail cinit 0x55ed70/0x55f2f0 passes the
@@ -29,6 +32,7 @@ VA_COMPGEN(0x0055ED90, 0x0A, STATIC_DTOR, g_rmgRiverPatternTable)
 
 VA(0x0055eda0, 0x07)
 MAC_ADDRESS(0x253ccc, 0x60)
+VA_AT(h3maped, 0x004b3ccb, 0x07)
 TRiverPlacementOp::~TRiverPlacementOp()
 {
 }
@@ -36,6 +40,7 @@ TRiverPlacementOp::~TRiverPlacementOp()
 // All river types use the same pattern table, so the argument is ignored.
 VA(0x0055edb0, 0x08)
 MAC_ADDRESS(0x253ad8, 0x8)  // vtables 0x641174/0x641190; Complete-only
+VA_AT(h3maped, 0x004b3bb5, 0x08)
 TRmgLinePatternTable* TRiverOp::getPatternTable(s32)
 {
     return &g_rmgRiverPatternTable;
@@ -84,6 +89,7 @@ s32 TRiverOp::getLineType(const TTilePoint& point)
 
 VA(0x0055ee50, 0x76)
 MAC_ADDRESS(0x253c60, 0x6c)
+VA_AT(h3maped, 0x004b3c4e, 0x61)
 TRiverPlacementOp::TRiverPlacementOp(
     TRiverOp::TAbstractMap* newAdapter,
     s32 newRiverType,
@@ -94,3 +100,21 @@ TRiverPlacementOp::TRiverPlacementOp(
 }
 
 VA_COMPGEN(0x0055eed0, 0x21, SCALAR_DELETING_DTOR, TRiverPlacementOp)
+
+VA_AT(h3maped, 0x004b3cd2, 0x63)
+void TRiverEraseOp::onTerrainTypeChanged(TRiverOp::TAbstractMap* map, const TTilePoint& point)
+{
+    s32 riverType = map->getLineType(point);
+    s32 terrain = map->getTerrain(point);
+    if (riverType != 0 && (terrain == eTerrainWater || terrain == eTerrainRock)) {
+        TRiverEraseOp eraseOp(map);
+        eraseOp(point.x(), point.y(), 1, 1);
+    }
+}
+
+VA_AT(h3maped, 0x004b3d3c, 0x5b)
+TRiverEraseOp::TRiverEraseOp(TRiverOp::TAbstractMap* newAdapter)
+    : TRiverOp(newAdapter),
+      m_eraser(this)
+{
+}

@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include "homm3_int.h"
 #include "Point.h"
 
 struct TRmgTerrainTile;

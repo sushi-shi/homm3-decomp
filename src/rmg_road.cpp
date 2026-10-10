@@ -1,4 +1,6 @@
-// rmg_road.cpp - the random-map generator's road placement operation.
+// rmg_road.cpp - the random-map generator's road placement operation,
+// and the map editor's road erase operation (h3maped RoadPlacement.cpp,
+// 0x4b4020..0x4b43c4), which the game links unreferenced.
 //
 // Retail keeps the road pattern table's initializer and cleanup and the road
 // operation together at 0x55f2f0..0x55f467, the object after the river
@@ -7,6 +9,7 @@
 
 #include "rmg.h"
 #include "rmg_terrain.h"
+#include "lineerase.h"
 #include "tiles.h"
 
 DATA(0x006411AC)
@@ -24,6 +27,7 @@ VA_COMPGEN(0x0055F310, 0x0A, STATIC_DTOR, g_rmgRoadPatternTable)
 // at 0x6411ac. The road painter's first virtual slot returns that table.
 VA(0x0055f320, 0x08)
 MAC_ADDRESS(0x253fc0, 0x8)  // vtables 0x6411f0/0x64120c; Complete-only
+VA_AT(h3maped, 0x004b421b, 0x08)
 TRmgLinePatternTable* TRoadOp::getPatternTable(s32)
 {
     return &g_rmgRoadPatternTable;
@@ -76,6 +80,7 @@ s32 TRoadOp::getLineType(const TTilePoint& point)
 // is passed unchanged to walker 0x4fa280, whose subobject begins at +0x10.
 VA(0x0055f3b0, 0x76)
 MAC_ADDRESS(0x254148, 0x6c) // anchor-callee 0x548143; Complete-only, thiscall ret 0xc
+VA_AT(h3maped, 0x004b4243, 0x61)
 TRoadPlacementOp::TRoadPlacementOp(
     TRoadOp::TAbstractMap* newAdapter,
     s32 newRoadType,
@@ -95,6 +100,25 @@ VA_COMPGEN(0x0055f430, 0x21, SCALAR_DELETING_DTOR, TRoadPlacementOp)
 // hierarchy; its scalar deleting destructor is retained at 0x55f430.
 VA(0x0055f460, 0x07)
 MAC_ADDRESS(0x2541b4, 0x60)  // road painter cleanup; Complete-only RMG helper
+VA_AT(h3maped, 0x004b42c0, 0x07)
 TRoadPlacementOp::~TRoadPlacementOp()
+{
+}
+
+VA_AT(h3maped, 0x004b42c7, 0x63)
+void TRoadEraseOp::onTerrainTypeChanged(TRoadOp::TAbstractMap* map, const TTilePoint& point)
+{
+    s32 roadType = map->getLineType(point);
+    s32 terrain = map->getTerrain(point);
+    if (roadType != 0 && (terrain == eTerrainWater || terrain == eTerrainRock)) {
+        TRoadEraseOp eraseOp(map);
+        eraseOp(point.x(), point.y(), 1, 1);
+    }
+}
+
+VA_AT(h3maped, 0x004b4331, 0x5b)
+TRoadEraseOp::TRoadEraseOp(TRoadOp::TAbstractMap* newAdapter)
+    : TRoadOp(newAdapter),
+      m_eraser(this)
 {
 }

@@ -16,6 +16,7 @@
 #include "exceptions.h"
 #include "rmg.h"
 #include "rmg_terrain.h"
+#include "lineerase.h"
 #include "tiles.h"
 
 
@@ -50,6 +51,7 @@ TRmgLinePatternTable::TRmgLinePatternTable(u32 frameCount, const s32* framePatte
 // integers and need no cleanup.
 VA(0x004f9ca0, 0x0b)
 MAC_ADDRESS(0x2222f8, 0x54)  // cinit cleanups 0x55ed90/0x55f310; Complete-only
+VA_AT(h3maped, 0x004587ed, 0x0a)
 TRmgLinePatternTable::~TRmgLinePatternTable()
 {
     delete[] m_framePatterns;
@@ -88,6 +90,7 @@ static const b8 g_rmgLineReflections[4][2] = {
 
 VA(0x004f9cb0, 0x24e)
 MAC_ADDRESS(0x222498, 0x2a4)
+VA_AT(h3maped, 0x00458893, 0x19c)
 void selectRmgLinePattern(
     const b8* neighbours, const TRmgLinePatternTable* table,
     s32& pattern, b8& flipX, b8& flipY)
@@ -243,6 +246,7 @@ s32 selectRmgLinePattern(
 
 VA(0x004f9f00, 0x146)
 MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
+VA_AT(h3maped, 0x00458a2f, 0xc7)
 void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
@@ -307,6 +311,7 @@ s32 TMapLineFilter::getNeighbourLineType(const TTilePoint& point, u32 direction)
 //   1 4 4 4 2
 VA(0x004fa080, 0x1fb)
 MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
+VA_AT(h3maped, 0x00458af6, 0x241)
 void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle)
 {
     TTilePoint point;
@@ -434,4 +439,18 @@ void TRmgLineWalker::paintPoint(const TTilePoint& point)
         if (matches[direction])
             refreshRmgLinePoint(m_painter, TPoint<int>(point) + g_tileDirections[direction]);
     }
+}
+
+VA_AT(h3maped, 0x00458f52, 0x0b)
+TLineEraseOp::TLineEraseOp(TMapLineFilter* newPainter)
+    : m_painter(newPainter)
+{
+}
+
+VA_AT(h3maped, 0x00458f5d, 0x33)
+void TLineEraseOp::operator()(unsigned int left, unsigned int top, unsigned int width,
+                              unsigned int height)
+{
+    clearRmgLineRectangle(m_painter, TRmgGridRectangle(TTilePoint(left, top),
+                                                       TTilePoint(width, height)));
 }
