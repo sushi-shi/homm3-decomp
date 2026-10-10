@@ -788,21 +788,12 @@ void town::removeGarrisonHero()
 // precise source spelling is unknown because no temporary survives CodeView.
 // std::swap's reference boundary reproduces retail's reloads: a temporary plus
 // two assignments makes VC6 retain the already-loaded ids and falls to
-// 88.92481%. The coherent base-first CMCHideHero constructor leaves only its
-// caller-specific zero/id store schedule unmatched (97.77444%). The old exact
-// form flattened CMapChange construction into the derived constructor;
-// retain the native base-constructor boundary instead.
+// 88.92481%. DC 1124 constructs the hide message and sends it on one line
+// with no recorded local; scoping the message to that statement pair gives
+// retail's id/zero store schedule (97.7744% unscoped).
 VA(0x005be450, 0x1AC)
 DC_ADDRESS(0x166864, 0xea)
 MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
-// Naming the hide-message hero id and reusing or predeclaring the roster
-// counter leave the constructor register residual unresolved (nine VC6
-// combinations, four objects). Keep CMCHideHero's attested assignment order.
-// Removing the receiver alias (implicit/explicit this) or copy-initializing
-// the message adds no gain: four states, three reproduced objects, best
-// 97.7744%. The CFG matches; the constructor scratch-register schedule differs.
-// Base-first member initialization and body assignment also emit one object
-// across town/game; neither the line table nor codegen distinguishes them.
 void town::swapHeroes()
 {
     town* currentTown = this;
@@ -815,8 +806,10 @@ void town::swapHeroes()
     g_game->recordHideHero(visitingHero, visitingHero->m_owner, 0);
     visitingHero->restoreCell();
 
-    CMCHideHero hideHero(visitingHero->m_id);
-    sendMapChange(&hideHero);
+    {
+        CMCHideHero hideHero(visitingHero->m_id);
+        sendMapChange(&hideHero);
+    }
 
     for (int i = rosterIndex; i < g_currentPlayer->m_numHeroes - 1; ++i)
         g_currentPlayer->m_heroes[i] = g_currentPlayer->m_heroes[i + 1];
