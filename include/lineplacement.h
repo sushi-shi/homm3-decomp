@@ -169,6 +169,11 @@ public:
     virtual int getLineType(const TTilePoint& point);
 };
 
+// Inline, like the terrain map's: h3maped's map document expands it, and
+// the game's river and road maps keep their implicit destructors (rmg.cpp).
+MAC_ADDRESS(0x22eeec, 0x48)
+inline TRiverOp::TAbstractMap::~TAbstractMap() {}
+
 inline TRiverOp::~TRiverOp() {}
 
 // The retained walk at 0x4fa2b0 builds two three-dword records, selects them
@@ -261,6 +266,9 @@ public:
     virtual void getTile(const TTilePoint& point, TRmgTerrainTile& tile);
     virtual int getLineType(const TTilePoint& point);
 };
+
+MAC_ADDRESS(0x22ec98, 0x48)
+inline TRoadOp::TAbstractMap::~TAbstractMap() {}
 
 inline TRoadOp::~TRoadOp() {}
 

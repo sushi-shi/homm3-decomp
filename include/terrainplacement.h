@@ -34,7 +34,12 @@ public:
     // identity. The painting coordinates are the unsigned grid type.
     class TAbstractMap {
     public:
-        virtual ~TAbstractMap();
+        // Inline: h3maped's map document expands it in its adapters'
+        // destructors (0x45e3f2, 0x45e855). The game keeps one copy for
+        // its unwind actions.
+        VA(0x005361A0, 0x07)
+        MAC_ADDRESS(0x22d34c, 0x48)
+        virtual ~TAbstractMap() {}
         virtual void setTile(
             const TTilePoint& point, const TRmgTerrainTile& tile) = 0;
         virtual void setFrame(const TTilePoint& point, int value) = 0;

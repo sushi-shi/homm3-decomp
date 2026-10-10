@@ -1279,11 +1279,9 @@ int type_random_map::getFrame(const TTilePoint& point)
     return getMapItem(point.m_x, point.m_y)->m_tile.m_terrainFrame;
 }
 
-VA(0x00532350, 0x07)
-MAC_ADDRESS(0x22ec98, 0x48)
-TRoadOp::TAbstractMap::~TAbstractMap()
-{
-}
+// The road map's implicit destructor: its body is the inline base
+// destructor (lineplacement.h), and the deleting wrapper calls it.
+VA_COMPGEN(0x00532350, 0x07, IMPLICIT_DTOR, type_road_map)
 
 VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRoadOp__TAbstractMap)
 
@@ -1355,11 +1353,7 @@ TTilePoint type_road_map::getSize()
 // concrete adapter vtable and this ordinary deleting wrapper naturally.
 VA_COMPGEN(0x00532320, 0x21, SCALAR_DELETING_DTOR, type_road_map)
 
-VA(0x00532510, 0x07)
-MAC_ADDRESS(0x22eeec, 0x48)
-TRiverOp::TAbstractMap::~TAbstractMap()
-{
-}
+VA_COMPGEN(0x00532510, 0x07, IMPLICIT_DTOR, type_river_map)
 
 VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRiverOp__TAbstractMap)
 
@@ -3321,12 +3315,6 @@ t_abstract_random_generator::t_abstract_random_generator(int width, int height, 
 }
 
 VA_COMPGEN(0x00536170, 0x21, SCALAR_DELETING_DTOR, t_abstract_random_generator)
-
-VA(0x005361A0, 0x07)
-MAC_ADDRESS(0x22d34c, 0x48)
-TTerrainPlacementOp::TAbstractMap::~TAbstractMap()
-{
-}
 
 VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TTerrainPlacementOp__TAbstractMap)
 

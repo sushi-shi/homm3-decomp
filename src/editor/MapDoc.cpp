@@ -497,12 +497,10 @@ VA(0x0045e45b, 0x90)
 TMapDoc::_TTerrainPlacementOp::~_TTerrainPlacementOp()
 {
     delete _m_pOp.release();
-    if (_m_bottomRight.x() > _m_topLeft.x()) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, _m_topLeft.x(), _m_topLeft.y(),
-                                 _m_bottomRight.x() - _m_topLeft.x(),
-                                 _m_bottomRight.y() - _m_topLeft.y());
-    }
+    if (_m_bottomRight.x() > _m_topLeft.x())
+        _m_pDoc->_onTerrainUpdated(_m_bSecondLayer, _m_topLeft.x(), _m_topLeft.y(),
+                                   _m_bottomRight.x() - _m_topLeft.x(),
+                                   _m_bottomRight.y() - _m_topLeft.y());
 }
 
 VA(0x0045e4eb, 0x57)
@@ -511,10 +509,9 @@ void TMapDoc::_TTerrainPlacementOp::operator()(unsigned int left, unsigned int t
 {
     _m_pOp->paintRectangle(left, top, width, height);
     if (_m_bottomRight.x() > _m_topLeft.x()) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, _m_topLeft.x(), _m_topLeft.y(),
-                                 _m_bottomRight.x() - _m_topLeft.x(),
-                                 _m_bottomRight.y() - _m_topLeft.y());
+        _m_pDoc->_onTerrainUpdated(_m_bSecondLayer, _m_topLeft.x(), _m_topLeft.y(),
+                                   _m_bottomRight.x() - _m_topLeft.x(),
+                                   _m_bottomRight.y() - _m_topLeft.y());
         _reset();
     }
 }
@@ -615,9 +612,8 @@ TMapDoc::_TRiverPlacementOp::_TRiverPlacementOp(TMapDoc* pDoc, bool bSecondLayer
         throw TAllocationFailure();
     TTileExtent extent;
     if (getUpdateExtent(&extent)) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
-                                 extent.height());
+        _m_pDoc->_onRiversUpdated(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
+                                  extent.height());
         reset();
     }
 }
@@ -628,9 +624,8 @@ void TMapDoc::_TRiverPlacementOp::operator()(const TTilePoint& loc)
     _m_pOp->m_walker.drawTo(loc);
     TTileExtent extent;
     if (getUpdateExtent(&extent)) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
-                                 extent.height());
+        _m_pDoc->_onRiversUpdated(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
+                                  extent.height());
         reset();
     }
 }
@@ -664,9 +659,8 @@ void TMapDoc::_TRiverEraseOp::operator()(unsigned int left, unsigned int top, un
     (*_m_pOp)(left, top, width, height);
     TTileExtent extent;
     if (getUpdateExtent(&extent)) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
-                                 extent.height());
+        _m_pDoc->_onRiversUpdated(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
+                                  extent.height());
         reset();
     }
 }
@@ -694,8 +688,7 @@ TMapDoc::_TRoadPlacementOp::_TRoadPlacementOp(TMapDoc* pDoc, bool bSecondLayer, 
         throw TAllocationFailure();
     TTileExtent extent;
     if (getUpdateExtent(&extent)) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
+        _m_pDoc->_onRoadsUpdated(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
                                  extent.height());
         reset();
     }
@@ -707,8 +700,7 @@ void TMapDoc::_TRoadPlacementOp::operator()(const TTilePoint& loc)
     _m_pOp->m_walker.drawTo(loc);
     TTileExtent extent;
     if (getUpdateExtent(&extent)) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
+        _m_pDoc->_onRoadsUpdated(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
                                  extent.height());
         reset();
     }
@@ -743,8 +735,7 @@ void TMapDoc::_TRoadEraseOp::operator()(unsigned int left, unsigned int top, uns
     (*_m_pOp)(left, top, width, height);
     TTileExtent extent;
     if (getUpdateExtent(&extent)) {
-        if (!_m_pDoc->_m_bCreatingMap)
-            _m_pDoc->_sendUpdate(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
+        _m_pDoc->_onRoadsUpdated(_m_bSecondLayer, extent.left(), extent.top(), extent.width(),
                                  extent.height());
         reset();
     }

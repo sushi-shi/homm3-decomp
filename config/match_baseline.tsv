@@ -3267,9 +3267,7 @@ rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	tokens1
 rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	tokens1:920ee58f2bc0
 rmg	??1?$queue@UTRmgPoint@@V?$list@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x14c6a0	-
 rmg	??1?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x14c170	-
-rmg	??1TAbstractMap@TRiverOp@@UAE@XZ	100.0000	100.0000	100.0000	0x132510	tokens1:56298e1f6fe1
-rmg	??1TAbstractMap@TRoadOp@@UAE@XZ	100.0000	100.0000	100.0000	0x132350	tokens1:affd560ae69e
-rmg	??1TAbstractMap@TTerrainPlacementOp@@UAE@XZ	100.0000	100.0000	100.0000	0x1361a0	tokens1:5505bf81568b
+rmg	??1TAbstractMap@TTerrainPlacementOp@@UAE@XZ	100.0000	100.0000	100.0000	0x1361a0	tokens1:9c5709090e76
 rmg	??1TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130ee0	-
 rmg	??1TRmgObjectPlacementRule@@QAE@XZ	100.0000	100.0000	100.0000	0x136b60	-
 rmg	??1TRmgTemplate@@QAE@XZ	100.0000	100.0000	100.0000	0x132fe0	tokens1:f1afd07cc9a0
@@ -3283,6 +3281,8 @@ rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	tokens1:12341612f
 rmg	??1type_progress_bar@@UAE@XZ	100.0000	100.0000	100.0000	0x130e70	tokens1:67225dfdc0cc
 rmg	??1type_random_map@@UAE@XZ	100.0000	100.0000	100.0000	0x1310b0	tokens1:409c8a49d4c4
 rmg	??1type_random_map_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x137df0	tokens1:7b4f74b499ac
+rmg	??1type_river_map@@UAE@XZ	100.0000	100.0000	100.0000	0x132510	tokens1:56298e1f6fe1
+rmg	??1type_road_map@@UAE@XZ	100.0000	100.0000	100.0000	0x132350	tokens1:affd560ae69e
 rmg	??_ETRmgMapItem@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x131050	-
 rmg	??_F?$vector@HV?$allocator@H@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x136ba0	-
 rmg	??_F?$vector@PAUTRmgObjectPropertiesRef@@V?$allocator@PAUTRmgObjectPropertiesRef@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1361e0	-

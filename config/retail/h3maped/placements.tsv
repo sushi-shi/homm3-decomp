@@ -2119,7 +2119,7 @@ rva	size	kind	name	unit	evidence
 0x000bcd43	0x129	func	?hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z	rmg_terrain	masked body (297 bytes, 16 relocations) unique at a census start
 0x000bce6c	0x1	func	__h3cg$rmg_terrain$static_dtor$secondDiagonalOffsets	rmg_terrain	referenced by ?hasDifferentOuterAxisNeighbour@TRmgTerrainPainter@@QAEEABV?$TPoint@I@@ABUTRmgTerrainFlip@@@Z at +0x3d
 0x000bcff5	0x82	func	??0TTerrainPlacementOp@@QAE@PAVTAbstractMap@0@HH@Z	rmg_terrain	masked body (130 bytes, 10 relocations) unique at a census start
-0x000bd077	0x5	func	??1TTerrainPlacementOp@@QAE@XZ	rmg_terrain	referenced by ??4?$auto_ptr@VTTerrainPlacementOp@@@std@@QAEAAV01@ABV01@@Z at +0x21
+0x000bd077	0x5	func	??1TTerrainPlacementOp@@QAE@XZ	rmg_terrain	referenced by ??1_TTerrainPlacementOp@TMapDoc@@UAE@XZ at +0x32
 0x000bd07c	0x1d	func	?changeTerrain@TTerrainPlacementOp@@QAEXHH@Z	rmg_terrain	masked body (29 bytes, 1 relocations) unique at a census start
 0x000bd099	0x1b	func	?paintRectangle@TTerrainPlacementOp@@QAEXIIII@Z	rmg_terrain	masked body (27 bytes, 1 relocations) unique at a census start
 0x000bd0b4	0x1d	func	??1?$auto_ptr@VTRmgTerrainPainter@@@std@@QAE@XZ	rmg_terrain	referenced by ??1TTerrainPlacementOp@@QAE@XZ at +0x1

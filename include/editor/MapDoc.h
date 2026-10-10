@@ -217,6 +217,27 @@ private:
     std::auto_ptr<TGameMap> _readMap(std::streambuf* pStreamBuf);
     bool _generateRandomMap();
     void _onTerrainTypeChanged(bool bSecondLayer, unsigned int x, unsigned int y, TTerrainType oldType);
+    // The operations' updates reach the views unless the map is being
+    // created (Loki's TTerrainPlacementOpClient and line-operation client
+    // callbacks).
+    void _onTerrainUpdated(bool bSecondLayer, unsigned int left, unsigned int top, unsigned int width,
+                           unsigned int height)
+    {
+        if (!_m_bCreatingMap)
+            _sendUpdate(bSecondLayer, left, top, width, height);
+    }
+    void _onRiversUpdated(bool bSecondLayer, unsigned int left, unsigned int top, unsigned int width,
+                          unsigned int height)
+    {
+        if (!_m_bCreatingMap)
+            _sendUpdate(bSecondLayer, left, top, width, height);
+    }
+    void _onRoadsUpdated(bool bSecondLayer, unsigned int left, unsigned int top, unsigned int width,
+                         unsigned int height)
+    {
+        if (!_m_bCreatingMap)
+            _sendUpdate(bSecondLayer, left, top, width, height);
+    }
     void _sendUpdate(bool bSecondLayer, unsigned int left, unsigned int top, unsigned int width,
                      unsigned int height);
     int _autosave();
