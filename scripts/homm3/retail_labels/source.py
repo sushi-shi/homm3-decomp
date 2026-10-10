@@ -133,7 +133,13 @@ ADDR_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$")
 SIZE_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
 IDENT_ARG_RE = re.compile(r"[A-Za-z_]\w*$")
 ANNOTATION_RE = re.compile(
-    r"^\s*(?:VA|VA_COMPGEN|DATA|DC_ADDRESS|MAC_ADDRESS|MAC_COMPGEN_ADDRESS)\s*\(")
+    r"^\s*(?:VA|VA_AT|VA_COMPGEN|DATA|DC_ADDRESS|MAC_ADDRESS|MAC_COMPGEN_ADDRESS)\s*\(")
+#: `VA_AT(image, addr, size)`: where a shared source's definition sits in
+#: another image. The game never reads it; that image reads it as its VA.
+VA_AT_HEAD_RE = re.compile(r"(?m)^[ \t]*VA_AT\s*\(")
+#: The claims a shared source spells in the game's address space.
+GAME_CLAIM_HEADS = (VA_HEAD_RE, VA_COMPGEN_HEAD_RE, DATA_COMPGEN_GUARD_HEAD_RE,
+                    DATA_COMPGEN_HEAD_RE, DATA_HEAD_RE)
 DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
 # Deliberately bounded comparison-operator spellings. Generic C++ declarator
 # parsing is still outside this scanner's contract, but operator==/operator!=
@@ -694,6 +700,57 @@ def rva_of(addr_text: str, where: str) -> int:
     return value - common.IMAGE_BASE
 
 
+def _blank(text: str, start: int, end: int) -> str:
+    """Overwrite text[start:end] with spaces, keeping its line breaks."""
+    return text[:start] + re.sub(r"[^\n]", " ", text[start:end]) + text[end:]
+
+
+def image_view(raw: str, image: str) -> str:
+    """A shared source as another image reads it, offsets unchanged: each
+    `VA_AT(image, addr, size)` becomes that image's `VA(addr, size)`, and
+    every claim spelling the game's (or a third image's) addresses is
+    blanked. The game reads the file as written and never sees VA_AT."""
+    masked = mask_lexical_noise(raw)
+    spans = []
+    for head in GAME_CLAIM_HEADS:
+        spans += [(start, end) for start, end, _a, _r in macro_invocations(masked, head)
+                  if end is not None]
+    for start, end, args, _raw in macro_invocations(masked, VA_AT_HEAD_RE):
+        if end is None:
+            continue
+        if args and args[0].strip() == image:
+            # `VA_AT(image,` -> `VA(` padded: the address keeps its offset.
+            head = masked.index("(", start)
+            comma = masked.index(",", head)
+            raw = raw[:start] + "VA(" + " " * (comma + 1 - start - 3) + raw[comma + 1:]
+            masked = masked[:start] + "VA(" + " " * (comma + 1 - start - 3) + masked[comma + 1:]
+        else:
+            spans.append((start, end))
+    for start, end in spans:
+        raw = _blank(raw, start, end + 1)
+    return raw
+
+
+def shared_image_source(path) -> bool:
+    """Whether another image is extracting a shared source (one the game
+    also compiles) for its VA_AT claims."""
+    from homm3.core import paths as image_paths
+    if image_paths.is_game():
+        return False
+    try:
+        relative = Path(path).resolve().relative_to(common.HOMM3_DIR.resolve()).as_posix()
+    except ValueError:
+        return False
+    return relative in _game_sources()
+
+
+@lru_cache(maxsize=1)
+def _game_sources() -> frozenset:
+    from homm3 import manifest
+    from homm3.core import paths as image_paths
+    return frozenset(u["source"] for u in manifest.units(image_paths.manifest("game")))
+
+
 def scan_file(path, functions: set[int],
               problems: list[str] | None = None) -> list[dict]:
     """All annotation rows of one src file, in scan (TEXT) order. Names
@@ -718,6 +775,9 @@ def scan_file(path, functions: set[int],
     if problems is None:
         problems = []
     raw = path.read_text(errors="replace")
+    if shared_image_source(path):
+        from homm3.core import paths as image_paths
+        raw = image_view(raw, image_paths.image_key())
     text = mask_lexical_noise(raw)
     lines = text.splitlines()
     line_starts = _line_starts(text)
@@ -908,6 +968,7 @@ IR_STR_DEF_RE = re.compile(r'^(@[\w.$"]+)\s*=.*?\bc"((?:[^"\\]|\\.)*)"', re.M)
 IR_ANN_TUPLE_RE = re.compile(
     r'\{\s*ptr\s+(@(?:"[^"]+"|[\w.$]+))\s*,\s*ptr\s+(@(?:"[^"]+"|[\w.$]+))\s*,')
 IR_VA_ANN_RE = re.compile(r"^va:(0x[0-9a-fA-F]+) size:(?:0x[0-9a-fA-F]+|\d+)$")
+IR_VA_AT_ANN_RE = re.compile(r"^va_at:(\w+) (0x[0-9a-fA-F]+) size:(?:0x[0-9a-fA-F]+|\d+)$")
 
 
 def _unescape_ir_cstr(text: str) -> str:
@@ -936,9 +997,10 @@ def _ir_symbol_name(ref: str) -> str:
     return ref[3:] if ref.startswith("\\01") else ref
 
 
-def ir_va_names(ir: str) -> dict:
+def ir_va_names(ir: str, image: str | None = None) -> dict:
     """{rva: mangled name} from the TU's IR - each pair produced by the
-    compiler itself, never by a scan of the text around the macro."""
+    compiler itself, never by a scan of the text around the macro. With
+    `image`, a shared source's VA_AT claims for that image instead."""
     strings = {m.group(1): _unescape_ir_cstr(m.group(2))
                for m in IR_STR_DEF_RE.finditer(ir)}
     out = {}
@@ -949,9 +1011,14 @@ def ir_va_names(ir: str) -> dict:
             annotation = strings.get(str_ref)
             if annotation is None:
                 continue
-            m = IR_VA_ANN_RE.match(annotation)
-            if m:
-                rva = int(m.group(1), 16) - common.IMAGE_BASE
+            if image is None:
+                m = IR_VA_ANN_RE.match(annotation)
+                address = m.group(1) if m else None
+            else:
+                m = IR_VA_AT_ANN_RE.match(annotation)
+                address = m.group(2) if m and m.group(1) == image else None
+            if address:
+                rva = int(address, 16) - common.IMAGE_BASE
                 out[rva] = _ir_symbol_name(sym_ref)
     return out
 
@@ -962,7 +1029,12 @@ def unit_ir_names(path, profiles=None) -> dict | None:
     None is always reported by the caller - a silent empty map would look
     exactly like a TU with no claims."""
     ir = clang.emit_ir(path, profiles=profiles)
-    return None if ir is None else ir_va_names(ir)
+    if ir is None:
+        return None
+    if shared_image_source(path):
+        from homm3.core import paths as image_paths
+        return ir_va_names(ir, image_paths.image_key())
+    return ir_va_names(ir)
 
 
 def _template_width(mangled: str, template_name: str) -> int | None:
@@ -2862,6 +2934,25 @@ def image_owned_sources() -> list:
                   and not images.foreign(common.HOMM3_DIR / u["source"], common.HOMM3_DIR))
 
 
+def image_shared_sources() -> list:
+    """The shared sources (the game compiles them too) that carry
+    `VA_AT(image, ...)` claims for the selected image: bodies it compiles
+    differently, or keeps where the game's link drops them."""
+    from homm3 import manifest
+    from homm3.core import paths as image_paths
+    image = image_paths.image_key()
+    out = []
+    for u in manifest.units(image_paths.manifest()):
+        path = common.HOMM3_DIR / u["source"]
+        if (u["source"] in _game_sources() and u["source"].startswith("src/")
+                and path.is_file()):
+            masked = mask_lexical_noise(path.read_text(errors="replace"))
+            if any(args and args[0].strip() == image for _s, _e, args, _r
+                   in macro_invocations(masked, VA_AT_HEAD_RE)):
+                out.append(path)
+    return sorted(out)
+
+
 def src_files() -> list:
     """The extraction universe: regular C/C++ files, one unit per stem.
     A stem collision would silently merge two files' claims into one
@@ -2873,7 +2964,7 @@ def src_files() -> list:
         paths = sorted(p for p in SRC_DIR.iterdir()
                        if p.is_file() and p.suffix.lower() in SOURCE_SUFFIXES)
     else:
-        paths = image_owned_sources()
+        paths = image_owned_sources() + image_shared_sources()
     stems = [p.stem for p in paths]
     for stem in stems:
         if stems.count(stem) > 1:
@@ -2900,12 +2991,25 @@ def ast_names(path: Path, definitions, ir_names: dict | None,
     from homm3.match.source_ownership import claim_definitions
     names = dict(ir_names or {})
     relative = path.relative_to(common.HOMM3_DIR).as_posix()
+    shared = shared_image_source(path)
+    if shared:
+        from homm3.core import paths as image_paths
+        image = image_paths.image_key()
     for definition in claim_definitions(definitions):
-        if definition.file != relative or definition.va is None or not definition.mangled:
+        if definition.file != relative or not definition.mangled:
             continue
-        rva = definition.va - common.IMAGE_BASE
+        if shared:
+            # a shared source's VA spells the game's address; this image
+            # reads only its own VA_AT claims
+            here = [va for key, va, _size in definition.va_at if key == image]
+            va = here[0] if len(here) == 1 else None
+        else:
+            va = definition.va
+        if va is None:
+            continue
+        rva = va - common.IMAGE_BASE
         if rva in names and names[rva] != definition.mangled:
-            problems.append(f'{relative}: AST/IR identity conflict at {hex(definition.va)} '
+            problems.append(f'{relative}: AST/IR identity conflict at {hex(va)} '
                             f'({definition.mangled!r} vs {names[rva]!r}) (FATAL)')
         else:
             names[rva] = definition.mangled
@@ -2920,6 +3024,8 @@ def banked_unemitted_names(path: Path, definitions, banked: set) -> dict:
     therefore do not receive this fallback.
     """
     from homm3.match.source_ownership import claim_definitions
+    if shared_image_source(path):
+        return {}       # a shared source's banked identities are the game's
     relative = path.relative_to(common.HOMM3_DIR).as_posix()
     return {d.va - common.IMAGE_BASE: d.mangled
             for d in claim_definitions(definitions)
@@ -3058,11 +3164,17 @@ def sweep_sites() -> dict:
             image_paths.image_key(), common.HOMM3_DIR)
         if owned.is_dir():
             files += sorted(owned.rglob("*"))
+    shared = set() if image_paths.is_game() else set(image_shared_sources())
+    files += sorted(shared)
     for path in files:
         if path.suffix not in (".c", ".cpp", ".cxx", ".h") \
                 or path.name == "va.h":
             continue
-        text = mask_lexical_noise(path.read_text(errors="replace"))
+        raw = path.read_text(errors="replace")
+        if path in shared:
+            # its VA_AT(image, ...) sites, read as this image's VA()
+            raw = image_view(raw, image_paths.image_key())
+        text = mask_lexical_noise(raw)
         for m in MACRO_SITE_RE.finditer(text):
             lineno = text.count("\n", 0, m.start()) + 1
             rva = int(m.group(2), 16) - common.IMAGE_BASE

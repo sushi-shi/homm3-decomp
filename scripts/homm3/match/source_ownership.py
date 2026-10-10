@@ -66,6 +66,16 @@ class Definition:
     # authored spellings above for source facts and Dreamcast comparison.
     canonical_argument_types: tuple[str, ...] = ()
     dc_addresses: tuple[tuple[int, int], ...] = ()
+    # VA_AT(image, addr, size): where another pinned image keeps this body.
+    va_at: tuple[tuple[str, int, int], ...] = ()
+
+
+def claimed_only_elsewhere(definition: Definition) -> bool:
+    """A body only another image keeps (VA_AT without VA): the game links
+    it unreferenced and /OPT:REF drops it, so it is not an unclaimed game
+    function."""
+    return definition.va is None and not definition.additional_instances \
+        and bool(definition.va_at)
 
 
 def definition_owner(definition: Definition) -> str:
@@ -808,6 +818,16 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                    if (m := re.fullmatch(r'va:(0[xX][0-9a-fA-F]+) size:.*', a))]
             macs = [(int(m.group(1), 16), int(m.group(2), 0)) for a in attrs
                     if (m := re.fullmatch(r'mac:(0[xX][0-9a-fA-F]+) size:(0[xX][0-9a-fA-F]+|\d+)', a))]
+            va_at = []
+            for attr in attrs:
+                if not attr.startswith('va_at:'):
+                    continue
+                match = re.fullmatch(
+                    r'va_at:(\w+) (0[xX][0-9a-fA-F]+) size:(0[xX][0-9a-fA-F]+|\d+)', attr)
+                if not match or match[1] == 'game':
+                    errors.append(f'VA_AT {relative}:{loc.line}: malformed annotation {attr!r}')
+                else:
+                    va_at.append((match[1], int(match[2], 16), int(match[3], 0)))
             dcs = []
             for attr in attrs:
                 if not attr.startswith('dc:'):
@@ -875,6 +895,7 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                 mac_offset=macs[0][0] if len(macs) == 1 else None,
                 mac_size=macs[0][1] if len(macs) == 1 else None,
                 dc_addresses=tuple(dcs),
+                va_at=tuple(va_at),
                 canonical_argument_types=tuple(
                     c.type.get_canonical().spelling
                     for c in cursor.get_children() if c.kind == k.PARM_DECL)))
@@ -1346,6 +1367,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
                               'is compiler-generated; restore the implicit member or '
                               'review the Windows-specific definition')
                 counts['generated'] += 1
+            elif claimed_only_elsewhere(d):
+                counts['other_image'] += 1
             else:
                 errors.append(f'WIN_ONLY {where} [{d.signature}]: no CodeView counterpart or reviewed exemption')
                 counts['unknown'] += 1

@@ -488,7 +488,13 @@ def derive(log=print, want_suggestions=False):
     # the image's own VA() claims: a claimed body that equals retail at its
     # claimed address (relocation fields masked) names its referents (the
     # template instances and header inlines it calls) like a placed body
-    own_function_claims = _own_function_claims(owned)
+    # A shared unit's VA_AT(image, ...) claims are the image's own claims
+    # too: the bodies it compiles differently, or keeps where the game's
+    # link drops them (homm3.retail_labels.source.image_shared_sources).
+    from homm3.retail_labels.source import image_shared_sources
+    va_at_units = {path.stem for path in image_shared_sources()} & {u["unit"] for u in units}
+    own_function_claims = _own_function_claims(owned | va_at_units)
+    va_at_claims = [claim for claim in own_function_claims if claim.unit in va_at_units]
     own_named = defaultdict(set)          # rva -> {name} the image's own VA() claims
     for claim in own_function_claims:
         own_named[claim.rva].add(claim.name)
@@ -880,6 +886,13 @@ def derive(log=print, want_suggestions=False):
 
     suggestions = [row for row in rows if row[4] in owned and not promoted(row)]
     rows = [row for row in rows if row[4] not in owned or promoted(row)]
+    # A VA_AT claim names its address and its body itself (the image's
+    # claim fragments); no placement row repeats or contradicts it.
+    va_at_rvas = {claim.rva for claim in va_at_claims}
+    va_at_names = {portable(claim.name, claim.unit) for claim in va_at_claims}
+    dropped = [row for row in rows if row[0] in va_at_rvas or row[3] in va_at_names]
+    rows = [row for row in rows if row not in dropped]
+    placed_functions -= sum(row[2] == "func" for row in dropped)
     placed_functions -= sum(row[2] == "func" for row in suggestions)
     log(f"[placements] {placed_functions} functions and {len(rows) - placed_functions} "
         f"data objects placed from {len(compiled)} compiled bodies of {len(units)} "

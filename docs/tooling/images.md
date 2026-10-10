@@ -114,6 +114,20 @@ for every pointer `T`). Names keep
 their checkout-independent anonymous-namespace spelling. The label model
 reads the table as the image's claims (channel `placement`).
 
+A shared source may also name the image's address of a definition with
+`VA_AT(image, addr, size)` (HoMM2's marker): a body the image compiles
+differently from the game (the map editor's `/O1` forms of the line
+walker's helpers), or one only the image keeps, which the game links
+unreferenced and `/OPT:REF` drops (the map editor's river and road erase
+operations in `src/rmg_river.cpp` and `src/rmg_road.cpp`). The game reads
+the file as written and never sees the marker. The image extracts the
+shared source like its own (`homm3.retail_labels.source.image_view`): its
+`VA_AT(image, ...)` markers are its `VA()` claims and every game claim is
+blanked; placement never repeats or contradicts such a claim. A definition
+with a `VA_AT` and no `VA()` is not an unclaimed game function: the game's
+source-ownership and source-inventory gates account for it as
+`other_image` instead of requiring a Windows-only row.
+
 Sources only the image compiles spell the image's own addresses in
 `VA()`/`DATA()` and are extracted like game sources. They live in the
 image's source directory, the pin's `sources` key (`editor` for h3maped, the

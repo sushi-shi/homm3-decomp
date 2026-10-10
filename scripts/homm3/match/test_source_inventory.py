@@ -156,6 +156,16 @@ class SourceInventoryTest(unittest.TestCase):
         _, errors = reconcile([], [], {}, {key: 'Stale'})
         self.assertTrue(any('stale win_only.tsv' in e for e in errors))
 
+    def test_body_kept_only_by_another_image_is_accounted(self):
+        d = replace(definition('TEraseOp::onTerrainTypeChanged'), va=None,
+                    va_at=(('h3maped', 0x4b3cd2, 0x63),))
+        rows, errors = reconcile([d], [], {}, {})
+        self.assertEqual(errors, [])
+        self.assertEqual(rows[0]['status'], 'other_image')
+        self.assertIn('h3maped', rows[0]['reason'])
+        rows, _ = reconcile([replace(d, va=0x401000)], [], {}, {})
+        self.assertEqual(rows[0]['status'], 'missing_dc')
+
     def test_inferred_scalar_writer_uses_windows_disposition_and_exact_live_key(self):
         d = definition('writeValue')
         key = d.file, d.name, d.signature

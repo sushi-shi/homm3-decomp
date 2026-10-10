@@ -628,6 +628,47 @@ class OwnershipTest(unittest.TestCase):
         errors, _ = compare([definition()], [], {}, {})
         self.assertTrue(any(e.startswith('WIN_ONLY ') for e in errors))
 
+    def test_body_claimed_only_for_another_image_is_not_an_unclaimed_game_function(self):
+        from dataclasses import replace
+        d = replace(definition(name='TEraseOp::TEraseOp', file='src/widget.cpp', inline=False),
+                    va_at=(('h3maped', 0x4b3d3c, 0x5b),))
+        errors, counts = compare([d], [], {}, {})
+        self.assertEqual(errors, [])
+        self.assertEqual(counts['other_image'], 1)
+        # A game claim keeps the ordinary disposition requirement.
+        errors, _ = compare([replace(d, va=0x401000)], [], {}, {})
+        self.assertTrue(any(e.startswith('WIN_ONLY ') for e in errors))
+        # Another image's address cannot hide a live CodeView counterpart.
+        errors, _ = compare([replace(d, name='Widget::draw')], [origin(file='widget.cpp')], {}, {})
+        self.assertFalse(any(e.startswith('WIN_ONLY ') for e in errors))
+        self.assertEqual(compare([replace(d, name='Widget::draw')],
+                                 [origin(file='widget.cpp')], {}, {})[1].get('other_image', 0), 0)
+
+    def test_va_at_annotation_is_scanned_and_survives_roundtrip(self):
+        from dataclasses import asdict
+        import json
+        from homm3.match.source_ownership import scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            parsing_project(root)
+            (root / 'include').mkdir()
+            (root / 'src').mkdir()
+            (root / 'include/va.h').write_text(
+                '#define VA_AT(image, addr, size) '
+                '__attribute__((annotate("va_at:" #image " " #addr " size:" #size)))\n')
+            (root / 'src/test.cpp').write_text(
+                '#include <va.h>\n'
+                'VA_AT(h3maped, 0x004b3d3c, 0x5b)\n'
+                'void erase() {}\n'
+                'VA_AT(game, 0x00401000, 0x10)\n'
+                'void wrong() {}\n')
+            definitions, errors, _ = scan_unit({'source': 'src/test.cpp'}, root)
+            by_name = {d.name: d for d in definitions}
+            restored = Definition(**json.loads(json.dumps(asdict(by_name['erase']))))
+            self.assertEqual([tuple(t) for t in restored.va_at], [('h3maped', 0x4b3d3c, 0x5b)])
+            self.assertIsNone(restored.va)
+            self.assertTrue(any(e.startswith('VA_AT src/test.cpp:5') for e in errors))
+
     def test_filter_is_exact_and_stale_entries_fail(self):
         d = definition()
         key = (d.file, d.name, d.signature)

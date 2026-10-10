@@ -15,6 +15,15 @@
  *
  *   VA(addr, size)                 function definition matched to the
  *                                  pinned retail image at addr/size
+ *   VA_AT(image, addr, size)       where a shared source's definition
+ *                                  sits in another pinned image (`image`
+ *                                  is its config/project.toml key, e.g.
+ *                                  h3maped): a body that image compiles
+ *                                  differently, or one only it keeps (the
+ *                                  game's /OPT:REF drops it). Each image
+ *                                  reads only its own claims; a definition
+ *                                  claimed only for another image is not
+ *                                  an unclaimed game function
  *   VA_COMPGEN(addr, size, kind, owner)
  *                                  compiler-generated function with no
  *                                  source definition to sit on; kind is
@@ -51,7 +60,8 @@
  *   MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
  *                                  compiler-generated Mac body; below the
  *                                  VA_COMPGEN it pairs with, same kind/owner
- * Address blocks use VA, DC_ADDRESS, MAC_ADDRESS order, one macro per line.
+ * Address blocks use VA, DC_ADDRESS, MAC_ADDRESS, VA_AT order, one macro per
+ * line.
  * Leave a blank line before the block's evidence comments (or its first
  * macro when there are no comments), keeping comments attached to the block.
  *
@@ -87,6 +97,8 @@
 #if defined(__clang__) || defined(HOMM3_SOURCE_OWNERSHIP)
 
 #define VA(addr, size) __attribute__((annotate("va:" #addr " size:" #size)))
+#define VA_AT(image, addr, size) \
+    __attribute__((annotate("va_at:" #image " " #addr " size:" #size)))
 #define VA_COMPGEN(addr, size, kind, owner)
 #define DC_ADDRESS(offset, size) \
     __attribute__((annotate("dc:" #offset " size:" #size)))
@@ -104,6 +116,7 @@
 #else
 
 #define VA(addr, size)
+#define VA_AT(image, addr, size)
 #define VA_COMPGEN(addr, size, kind, owner)
 #define DC_ADDRESS(offset, size)
 #define MAC_ADDRESS(offset, size)

@@ -134,6 +134,10 @@ def reconcile(definitions, origins, dc_only, win_only, *, owner_placements=None,
                    signature=definition.signature)
         if key in win_only:
             row.update(status='documented_win_only', reason=win_only[key])
+        elif ownership.claimed_only_elsewhere(definition):
+            images = ', '.join(sorted({image for image, _, _ in definition.va_at}))
+            row.update(status='other_image',
+                       reason=f'Kept only by {images} (VA_AT); the game drops it unreferenced')
         else:
             has_identity = (ownership.procedure_name(definition.original_name or definition.name)
                             in origin_names or definition.dc_offset in origin_offsets)
@@ -260,7 +264,9 @@ def main(argv=None):
             print(f'{module}: {counts["matched"]} matched, '
                   f'{counts["documented_dc_only"]} documented DC-only, '
                   f'{counts["documented_win_only"]} documented Windows-only, '
-                  f'{missing} unresolved')
+                  + (f'{counts["other_image"]} only in another image, '
+                     if counts["other_image"] else '')
+                  + f'{missing} unresolved')
         for error in result['violations']:
             print(error)
         print(f'Source inventory: {"COMPLETE" if result["complete"] else "INCOMPLETE"}; '
