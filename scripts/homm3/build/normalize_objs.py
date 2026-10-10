@@ -1713,6 +1713,42 @@ def _resolve_oldnames(payload: bytes, aliases: dict[str, str] | None = None) -> 
     return canon._rewrite_names(coff, renames), len(renames)
 
 
+def _resolve_weak_defaults(base_payload: bytes, target_payload: bytes) -> tuple[bytes, int]:
+    """Bind references to a weak external to its default, as LINK does when
+    nothing defines the weak name strongly.
+
+    VC6 spells a class's vector deleting destructor `??_E` as a weak external
+    whose default is the scalar `??_G` it defines; a vtordisp thunk jumps to
+    `??_E`, and the linked image reaches the `??_G` body. Only a reference
+    whose default this object defines, and whose default the retail object
+    names, is retargeted. Returns (base, retargeted references)."""
+    base = canon.CoffObject(base_payload)
+    target_names = {symbol.name for symbol in canon.CoffObject(target_payload).symbols.values()}
+    defined: dict[str, int] = {}
+    for symbol in sorted(base.symbols.values(), key=lambda row: row.index):
+        if symbol.section > 0 and symbol.storage_class == EXTERNAL_STORAGE:
+            defined.setdefault(symbol.name, symbol.index)
+    defaults: dict[int, int] = {}
+    for symbol in base.symbols.values():
+        if symbol.storage_class != _WEAK_EXTERNAL or symbol.aux_count == 0:
+            continue
+        # The tag may be an undefined record of the name; the definition
+        # comes further down the symbol table.
+        tag = struct.unpack_from("<I", base_payload, symbol.offset + 18)[0]
+        default = base.symbols.get(tag)
+        if (default is not None and default.name in defined
+                and default.name in target_names and symbol.name not in target_names):
+            defaults[symbol.index] = defined[default.name]
+    retargets = [relocation for relocation in base.relocations
+                 if relocation.symbol_index in defaults]
+    if not retargets:
+        return base_payload, 0
+    data = bytearray(base_payload)
+    for relocation in retargets:
+        struct.pack_into("<I", data, relocation.offset + 4, defaults[relocation.symbol_index])
+    return bytes(data), len(retargets)
+
+
 def canonicalize_pair(base_payload: bytes, target_payload: bytes, unit: str,
                       symbol_rvas, *, image_base=None, identities=None
                       ) -> tuple[bytes, bytes, Counter]:
@@ -1720,6 +1756,8 @@ def canonicalize_pair(base_payload: bytes, target_payload: bytes, unit: str,
     counts: Counter = Counter()
     base_payload, oldnames = _resolve_oldnames(base_payload)
     counts["oldnames"] += oldnames
+    base_payload, weak = _resolve_weak_defaults(base_payload, target_payload)
+    counts["weak"] += weak
     base_payload, guard_count = _canonicalize_claimed_guards(
         base_payload, target_payload, unit)
     counts["guard"] += guard_count
@@ -1950,6 +1988,7 @@ def normalize_all(units: set[str] | None = None) -> Counter:
           f"{counts['address']} equivalent data address(es) named "
           f"{counts['identity']} relocation(s) compared by proven address "
           f"{counts['fold']} proven-fold call(s) named "
+          f"{counts['weak']} weak-external reference(s) bound to their default "
           f"-> {OBJDIFF / 'normalized'}")
     counts.update(wrote=wrote, skipped=skipped)
     return counts
