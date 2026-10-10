@@ -382,6 +382,11 @@ public:
     TScenarioPrologue();
     TScenarioPrologue(int movie, int music, const std::string& text);
 
+    bool operator==(const TScenarioPrologue& other) const
+    {
+        return m_movie == other.m_movie && m_music == other.m_music && m_text == other.m_text;
+    }
+
     int m_movie;
     int m_music;
     std::string m_text;

@@ -54,6 +54,8 @@ rva	size	kind	name	unit	evidence
 0x00004bb0	0x11a	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	Campaign	masked body (282 bytes, 12 relocations) unique at a census start
 0x00004cd0	0xd	func	?BeginModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable of TCampaignPropsDlg (RTTI) slot 34
 0x00004ce0	0xd	func	?EndModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable of TCampaignPropsDlg (RTTI) slot 35
+0x00004cf0	0x173	func	??0TError@?$TGDIObjectSelector@VCBitmap@@@@QAE@ABV01@@Z	MemoryDC	referenced by __CT??_R0?AVTError@?$TGDIObjectSelector@VCBitmap@@@@@8??0TError@?$TGDIObjectSelector@VCBitmap@@@@QAE@ABV01@@Z32 at +0x18
+0x00004e70	0x173	func	??0TGDIObjectSelectorError@@QAE@ABV0@@Z	MemoryDC	referenced by __CT??_R0?AVTGDIObjectSelectorError@@@8??0TGDIObjectSelectorError@@QAE@ABV0@@Z32 at +0x18
 0x000053b0	0x15	func	??1TScenarioStartingBonusCloner@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@QAE@XZ	Campaign	masked body (21 bytes, 0 relocations) unique at a census start; ICF-folded with 2 identical bodies
 0x00005420	0x20	func	??_GTScenarioStartingBonus@@UAEPAXI@Z	Campaign	vtable of TScenarioStartingBonus (RTTI) slot 0
 0x00005440	0xf	func	?accept@TScenarioBonusPrimarySkill@@UBEXAAVTVisitor@TScenarioStartingBonus@@@Z	Campaign	masked body (15 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -100,6 +102,7 @@ rva	size	kind	name	unit	evidence
 0x0000b1b0	0xd	func	??A?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAEAAVTScenario@@I@Z	Campaign	masked body (13 bytes, 0 relocations) unique at a census start
 0x0000b1c0	0x1e	func	??_GTScenarioPrologue@@QAEPAXI@Z	Campaign	referenced by ??0_TImpl@TScenario@@QAE@ABV01@@Z at +0x155
 0x0000b1e0	0x76	func	?_Freeze@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	Campaign	masked body (118 bytes, 3 relocations) unique at a census start
+0x0000b260	0x5d	func	?set@?$bitset@$04@std@@QAEAAV12@I_N@Z	ScenarioPropsCrossoverPage	masked body (93 bytes, 1 relocations) unique at a census start
 0x0000b2c0	0x31	func	?test@?$bitset@$04@std@@QBE_NI@Z	Campaign	masked body (49 bytes, 1 relocations) unique at a census start
 0x0000b300	0x30	func	?_Ucopy@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@IAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PBV32@0PAV32@@Z	Campaign	masked body (48 bytes, 0 relocations) unique at a census start
 0x0000b330	0x28	func	??0?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@@Z	Campaign	referenced by ??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z at +0xa4
@@ -401,6 +404,7 @@ rva	size	kind	name	unit	evidence
 0x00028e60	0xa2	func	?sync@TMFCFileBuf@@MAEHXZ	MFCFileBuf	masked body (162 bytes, 7 relocations) unique at a census start
 0x00028f10	0x9f	func	?underflow@TMFCFileBuf@@MAEHXZ	MFCFileBuf	masked body (159 bytes, 7 relocations) unique at a census start
 0x00028fb0	0xd4	func	?overflow@TMFCFileBuf@@MAEHH@Z	MFCFileBuf	masked body (212 bytes, 8 relocations) unique at a census start
+0x00029190	0xc2	func	??0TGDIObjectSelectorError@@QAE@XZ	MemoryDC	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x225
 0x000293e0	0x10	func	??0CGdiObject@@QAE@XZ	MemoryDC	masked body (16 bytes, 1 relocations) unique at a census start
 0x000293f0	0x22	func	??1?$TGDIObjectSelector@VCBitmap@@@@QAE@XZ	MemoryDC	masked body (34 bytes, 2 relocations) unique at a census start
 0x000294f0	0x1e	func	??_GTNewCampaignDlg@@UAEPAXI@Z	NewCampaignDlg	vtable of TNewCampaignDlg (RTTI) slot 1
@@ -408,7 +412,14 @@ rva	size	kind	name	unit	evidence
 0x00029890	0x330	func	?InitializePlayerTraitsTable@@YA_NXZ	Player	string literal anchor (??_C@_0N@EJOF@plcolors?4txt?$AA@)
 0x00029bc0	0x14	func	__h3cg$Player$static_dtor$aColorNames	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x7d
 0x00029be0	0x14	func	__h3cg$Player$static_dtor$aNames	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x44
-0x00029c00	0xb	func	??_F?$TAutoArrayPtr@D@@QAEXXZ	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x2a
+0x00029c00	0xb	func	??_F?$auto_ptr@VT16bppDIBSection@@@std@@QAEXXZ	ScenarioPropsProloguePage	referenced by ?OnSelChangeMovieCombo@TScenarioPropsProloguePageBase@@IAEXXZ at +0x36
+0x0002a9d0	0x25	func	?_Tidy@?$bitset@$0JB@@std@@AAEXK@Z	ScenarioPropsCrossoverPage	masked body (37 bytes, 0 relocations) unique at a census start
+0x0002aa00	0x1e	func	??_GCCheckListBox@@UAEPAXI@Z	ScenarioPropsCrossoverPage	vtable of CCheckListBox (RTTI) slot 1
+0x0002aa20	0x5	func	??1CCheckListBox@@UAE@XZ	ScenarioPropsCrossoverPage	referenced by ??_GCCheckListBox@@UAEPAXI@Z at +0x4
+0x0002c200	0x1e	func	??_GTScenarioPropsProloguePageBase@@UAEPAXI@Z	ScenarioPropsProloguePage	vtable of TScenarioPropsProloguePageBase (RTTI) slot 1
+0x0002d510	0x1e	func	??_GTScenarioPropsEpiloguePage@@UAEPAXI@Z	ScenarioPropsProloguePage	vtable of TScenarioPropsEpiloguePage (RTTI) slot 1; ICF-folded with 1 identical bodies
+0x0002d650	0x5	func	??1TScenarioPropsEpiloguePage@@UAE@XZ	ScenarioPropsProloguePage	referenced by ??_GTScenarioPropsEpiloguePage@@UAEPAXI@Z at +0x4; ICF-folded with 1 identical bodies
+0x0002d700	0x173	func	??0TError@?$TGDIObjectSelector@VCBrush@@@@QAE@ABV01@@Z	ScenarioPropsProloguePage	referenced by __CT??_R0?AVTError@?$TGDIObjectSelector@VCBrush@@@@@8??0TError@?$TGDIObjectSelector@VCBrush@@@@QAE@ABV01@@Z32 at +0x18
 0x0002d880	0x1e	func	??_GTAllocationFailure@@UAEPAXI@Z	gzinflatebuf	vtable of TAllocationFailure (RTTI) slot 0; ICF-folded with 8 identical bodies
 0x0002eaa0	0x3	func	?isAvailable@TStartingBonusTypeDlg@@UBE_NXZ	EditStartingBonusDlg	vtable of TStartingBonusTypeDlg (RTTI) slot 53
 0x0002ebc0	0x1e	func	??_GTStartingBonusTypeDlg@@UAEPAXI@Z	EditStartingBonusDlg	vtable of TStartingBonusTypeDlg (RTTI) slot 1
@@ -491,7 +502,8 @@ rva	size	kind	name	unit	evidence
 0x000452e0	0x1e	func	??_Gt_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAEPAXI@Z	resourcemanager	vtable of t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager (RTTI) slot 0; ICF-folded with 1 identical bodies
 0x00045300	0x7	func	??1t_lod_file_adapter@?%C:\Dev\Heroes 3 Exp 2\Libraries\ResourceManager\ResourceManager.cpp207539485@ResourceManager@@UAE@XZ	resourcemanager	referenced by 0x000452e0 at +0x4; ICF-folded with 1 identical bodies
 0x00045310	0x300	func	?GetBitmap816@ResourceManager@@YAPAVBitmap816@@PBD@Z	resourcemanager	string literal anchor (??_C@_0N@NNLG@GetBitmap816?$AA@)
-0x00045610	0x2e1	func	?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z	resourcemanager	string literal anchor (??_C@_0M@KCCH@GetBitmap16?$AA@)
+0x00045610	0x2e1	func	?loadBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z	resourcemanager	referenced by ?GetBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z at +0x14
+0x00045900	0x2e	func	?GetBitmap16@ResourceManager@@YAPAVBitmap16Bit@@PBD@Z	resourcemanager	referenced by ?OnSelChangeMovieCombo@TScenarioPropsProloguePageBase@@IAEXXZ at +0xa8
 0x00045930	0x96	func	?loadTextData@ResourceManager@@YAPAVTTextResource@@PBDPAVTAbstractFile@@H@Z	resourcemanager	masked body (150 bytes, 8 relocations) unique at a census start
 0x000459d0	0x159	func	?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z	resourcemanager	referenced by ?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x14
 0x00045b30	0x2e	func	?GetText@ResourceManager@@YAPAVTTextResource@@PBD@Z	resourcemanager	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x54
@@ -692,6 +704,10 @@ rva	size	kind	name	unit	evidence
 0x000988e8	0x10	data	__TI2?AVlogic_error@std@@	resource	referenced by ?_Doraise@logic_error@std@@MBEXXZ at +0x12
 0x00098a80	0x14	data	__CTA4?AVTRuntimeError@@	DIBSection	referenced by __TI4?AVTRuntimeError@@ at +0xc
 0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	referenced by ?initialize@SText@@YAXXZ at +0x85
+0x00098b68	0x1c	data	__CT??_R0?AVTGDIObjectSelectorError@@@8??0TGDIObjectSelectorError@@QAE@ABV0@@Z32	MemoryDC	referenced by __CTA6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@ at +0x8
+0x00098b88	0x1c	data	__CT??_R0?AVTError@?$TGDIObjectSelector@VCBitmap@@@@@8??0TError@?$TGDIObjectSelector@VCBitmap@@@@QAE@ABV01@@Z32	MemoryDC	referenced by __CTA6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@ at +0x4
+0x00098ba8	0x1c	data	__CTA6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@	MemoryDC	referenced by __TI6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@ at +0xc
+0x00098c00	0x10	data	__TI6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@	MemoryDC	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x22e
 0x00098ca8	0x1c	data	__CT??_R0?AVTAllocationFailure@@@8??0TAllocationFailure@@QAE@ABV0@@Z32	gzinflatebuf	referenced by __CTA5?AVTAllocationFailure@@ at +0x4
 0x00098cc8	0x18	data	__CTA5?AVTAllocationFailure@@	gzinflatebuf	referenced by __TI5?AVTAllocationFailure@@ at +0xc
 0x00098d08	0x10	data	__TI5?AVTAllocationFailure@@	gzinflatebuf	referenced by ??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z at +0xa7
@@ -711,6 +727,9 @@ rva	size	kind	name	unit	evidence
 0x0009c5e0	0x1c	data	__CT??_R0?AVTDataError@TGzInflateBuf@@@8??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z28	gzinflatebuf	referenced by __CTA3?AVTDataError@TGzInflateBuf@@ at +0x4
 0x0009c600	0x10	data	__CTA3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	referenced by __TI3?AVTDataError@TGzInflateBuf@@ at +0xc
 0x0009c610	0x10	data	__TI3?AVTDataError@TGzInflateBuf@@	gzinflatebuf	referenced by ?underflow@TGzInflateBuf@@UAEHXZ at +0x189
+0x0009d2f8	0x1c	data	__CT??_R0?AVTError@?$TGDIObjectSelector@VCBrush@@@@@8??0TError@?$TGDIObjectSelector@VCBrush@@@@QAE@ABV01@@Z32	ScenarioPropsProloguePage	referenced by __CTA6?AVTError@?$TGDIObjectSelector@VCBrush@@@@ at +0x4
+0x0009d318	0x1c	data	__CTA6?AVTError@?$TGDIObjectSelector@VCBrush@@@@	ScenarioPropsProloguePage	referenced by __TI6?AVTError@?$TGDIObjectSelector@VCBrush@@@@ at +0xc
+0x0009d338	0x10	data	__TI6?AVTError@?$TGDIObjectSelector@VCBrush@@@@	ScenarioPropsProloguePage	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x280
 0x000a11c8	0x1c	data	__CT??_R0?AW4t_open_errors@ResourceManager@@@84	resourcemanager	referenced by __CTA1?AW4t_open_errors@ResourceManager@@ at +0x4
 0x000a11e8	0x8	data	__CTA1?AW4t_open_errors@ResourceManager@@	resourcemanager	referenced by __TI1?AW4t_open_errors@ResourceManager@@ at +0xc
 0x000a11f0	0x10	data	__TI1?AW4t_open_errors@ResourceManager@@	resourcemanager	referenced by ?Open@ResourceManager@@YA_N_N0PAH@Z at +0xda
@@ -724,9 +743,9 @@ rva	size	kind	name	unit	evidence
 0x000a6810	0xd	data	??_C@_0N@DDKE@TCampaignDoc?$AA@	CampaignDoc	referenced by ?classTCampaignDoc@TCampaignDoc@@2UCRuntimeClass@@B at +0x0
 0x000a6820	0x1f	data	??_C@_0BP@IFCN@TCampaignDocInvalidFileVersion?$AA@	CampaignDoc	referenced by ?classTCampaignDocInvalidFileVersion@TCampaignDocInvalidFileVersion@@2UCRuntimeClass@@B at +0x0
 0x000a6840	0x18	data	??_C@_0BI@HPHD@TCampaignDocLoadFailure?$AA@	CampaignDoc	referenced by ?classTCampaignDocLoadFailure@TCampaignDocLoadFailure@@2UCRuntimeClass@@B at +0x0
-0x000a6858	0x7	data	??_C@_06ELCD@?$HM?$CK?4?$CK?$HM?$HM?$AA@	CampaignDoc	referenced by 0x00010890 at +0x150
-0x000a6860	0x2	data	??_C@_01KALE@?$HM?$AA@	CampaignDoc	referenced by 0x00010890 at +0x11e
-0x000a6864	0x3	data	??_C@_02KJNG@?$HM?$CK?$AA@	CampaignDoc	referenced by 0x00010890 at +0xd5
+0x000a6858	0x7	data	??_C@_06ELCD@?$HM?$CK?4?$CK?$HM?$HM?$AA@	CampaignDoc	referenced by ?promptMapFileName@@YA_NPBDHKAAVCString@@@Z at +0x151
+0x000a6860	0x2	data	??_C@_01KALE@?$HM?$AA@	CampaignDoc	referenced by ?promptMapFileName@@YA_NPBDHKAAVCString@@@Z at +0x11f
+0x000a6864	0x3	data	??_C@_02KJNG@?$HM?$CK?$AA@	CampaignDoc	referenced by ?promptMapFileName@@YA_NPBDHKAAVCString@@@Z at +0xd6
 0x000a6d58	0xd	data	??_C@_0N@LOPG@CmpEditr?4txt?$AA@	CampaignEditorText	string literal referenced by ?initialize@SText@@YAXXZ
 0x000a6d68	0x148	data	_g_good1RegionTraits	campaignmap	referenced by ?g_campaignMapTraitsImp@@3PAUTCampaignMapTraits@@A at +0x1c
 0x000a6eb0	0x1b0	data	_g_good2RegionTraits	campaignmap	referenced by ?g_campaignMapTraitsImp@@3PAUTCampaignMapTraits@@A at +0x2c
@@ -2956,6 +2975,7 @@ rva	size	kind	name	unit	evidence
 0x000b1660	0xc	data	??_C@_0M@IOBB@G1A_enR?4pcx?$AA@	campaignmap	referenced by _g_good1RegionTraits at +0xc
 0x000b166c	0xd	data	??_C@_0N@BOLI@camptext?4txt?$AA@	campaignmap	referenced by ?initializeCampaignMapTraitsTable@@YAEXZ at +0x4f
 0x000b16b8	0x328	data	?g_campaignMovieTraitsImp@@3PAUTCampaignMovieTraits@@A	campaignmovie	referenced by ?initializeCampaignMovieTraitsTable@@YAEXZ at +0xf0
+0x000b19e0	0x4	data	?g_campaignMovieTraits@@3AAY0GF@$$CBUTCampaignMovieTraits@@A	campaignmovie	referenced by ?OnInitDialog@TScenarioPropsProloguePageBase@@UAEHXZ at +0x156
 0x000b19e4	0xc	data	??_C@_0M@NBCH@Csl2UAm?4pcx?$AA@	campaignmovie	referenced by ?g_campaignMovieTraitsImp@@3PAUTCampaignMovieTraits@@A at +0x320
 0x000b19f0	0xc	data	??_C@_0M@HBAC@Csl2UAl?4pcx?$AA@	campaignmovie	referenced by ?g_campaignMovieTraitsImp@@3PAUTCampaignMovieTraits@@A at +0x318
 0x000b19fc	0xc	data	??_C@_0M@BBPI@Csl2UAk?4pcx?$AA@	campaignmovie	referenced by ?g_campaignMovieTraitsImp@@3PAUTCampaignMovieTraits@@A at +0x310
@@ -3745,6 +3765,8 @@ rva	size	kind	name	unit	evidence
 0x000bcfdc	0xd	data	??_C@_0N@ILGK@sstraits?4txt?$AA@	herodefs	referenced by ?InitializeSSkillTraitsTable@@YA_NXZ at +0x2
 0x000bd240	0x4	data	?akPlayerTraits@@3PBUTPlayerTraits@@B	Player	referenced by ?OnInitDialog@TEditStartingHeroOptionDlg@@MAEHXZ at +0x1df
 0x000bd244	0xd	data	??_C@_0N@EJOF@plcolors?4txt?$AA@	Player	string literal referenced by ?InitializePlayerTraitsTable@@YA_NXZ
+0x000bd300	0x2	data	??_C@_01BJG@?6?$AA@	ScenarioPropsGeneralPage	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x120
+0x000bd304	0x3	data	??_C@_02PIMC@?$AN?6?$AA@	ScenarioPropsGeneralPage	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x11b
 0x000bdfc8	0x2b08	data	?g_spellTraitsImp@@3PAUTSpellTraits@@A	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x13
 0x000c0ad0	0x4	data	?akSpellTraits@@3AAY0FB@$$CBUTSpellTraits@@A	spelldefs	referenced by 0x0001f790 at +0x39
 0x000c0ad4	0x9	data	??_C@_08OBBL@Acid?4wav?$AA@	spelldefs	referenced by ?g_spellTraitsImp@@3PAUTSpellTraits@@A at +0x2a84

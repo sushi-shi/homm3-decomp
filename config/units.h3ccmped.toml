@@ -435,3 +435,18 @@ flags = "ccmped_o2_gr_windows"
 unit = "EditStartingBonusDlg"
 source = "src/campaign_editor/EditStartingBonusDlg.cpp"
 flags = "ccmped_o2_gr_windows"
+
+[[unit]]
+unit = "ScenarioPropsCrossoverPage"
+source = "src/campaign_editor/ScenarioPropsCrossoverPage.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
+unit = "ScenarioPropsGeneralPage"
+source = "src/campaign_editor/ScenarioPropsGeneralPage.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
+unit = "ScenarioPropsProloguePage"
+source = "src/campaign_editor/ScenarioPropsProloguePage.cpp"
+flags = "ccmped_o2_gr_windows"
