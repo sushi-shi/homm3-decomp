@@ -1755,12 +1755,12 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
-    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
+    DECODE_LITTLE_ENDIAN_LONG(intBuffer);
     thisBox.m_experienceBonus = intBuffer;
     count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
-    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
+    DECODE_LITTLE_ENDIAN_LONG(intBuffer);
     thisBox.m_manaBonus = intBuffer;
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
@@ -1776,7 +1776,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
             return -1;
-        intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
+        DECODE_LITTLE_ENDIAN_LONG(intBuffer);
         thisBox.m_resQty[x] = intBuffer;
     }
     for (x = 0; x < kNumPrimarySkills; ++x) {
@@ -1865,7 +1865,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         count = infile->read(&shortBuffer, sizeof(shortBuffer));
         if (count < sizeof(shortBuffer))
             return -1;
-        shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
+        DECODE_LITTLE_ENDIAN_SHORT(shortBuffer);
         thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
 
@@ -2836,7 +2836,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             count = infile->read(&shortBuffer, sizeof(shortBuffer));
             if (count < sizeof(shortBuffer))
                 return -1;
-            shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
+            DECODE_LITTLE_ENDIAN_SHORT(shortBuffer);
             tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
@@ -4237,9 +4237,10 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     g_invalidPlacementList.clear();
     count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer))
+    if (count < sizeof(intBuffer)) {
         return -1;
-    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
+    }
+    DECODE_LITTLE_ENDIAN_LONG(intBuffer);
 
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
@@ -4271,19 +4272,17 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
             incProgressBar(1);
     }
 
-    // DC NewfullMap::Read/Load (mapcell.cpp:640/704) release the sprite list
-    // through ResourceManager::Dispose. Mac 0x1274f8..0x12752c retains the
-    // nested virtual sprite-disposal call; keep the canonical wrapper here.
     for (x = 0; x < oldSprites.size(); ++x)
-        ResourceManager::Dispose(oldSprites[x]);
+        oldSprites[x]->dispose();
     oldSprites.clear();
 
     incProgressBar(1);
 
     count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (count < sizeof(intBuffer))
+    if (count < sizeof(intBuffer)) {
         return -1;
-    intBuffer = LITTLE_ENDIAN_LONG(intBuffer);
+    }
+    DECODE_LITTLE_ENDIAN_LONG(intBuffer);
 
     numObjects = intBuffer;
     m_objects.resize(numObjects);

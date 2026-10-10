@@ -2101,7 +2101,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
 
     int prerequisiteBits = 0;
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
-    prerequisiteBits = LITTLE_ENDIAN_LONG(prerequisiteBits);
+    DECODE_LITTLE_ENDIAN_LONG(prerequisiteBits);
     for (int prereq = 0; prereq < numScenarios; ++prereq) {
         m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
     }

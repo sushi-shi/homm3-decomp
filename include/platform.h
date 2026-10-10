@@ -83,12 +83,17 @@ extern "C" void showMacPlatformMessage(const char* message, const char* title);
 #endif
 
 // Game data files are little endian; PowerPC loads them byte-reversed.
+// The in-place forms decode a just-read buffer; on x86 they are no statement.
 #if defined(__POWERPC__)
 #define LITTLE_ENDIAN_LONG(value) __lwbrx(&(value), 0)
 #define LITTLE_ENDIAN_SHORT(value) __lhbrx(&(value), 0)
+#define DECODE_LITTLE_ENDIAN_LONG(value) ((value) = __lwbrx(&(value), 0))
+#define DECODE_LITTLE_ENDIAN_SHORT(value) ((value) = __lhbrx(&(value), 0))
 #else
 #define LITTLE_ENDIAN_LONG(value) (value)
 #define LITTLE_ENDIAN_SHORT(value) (value)
+#define DECODE_LITTLE_ENDIAN_LONG(value)
+#define DECODE_LITTLE_ENDIAN_SHORT(value)
 #endif
 
 #endif
