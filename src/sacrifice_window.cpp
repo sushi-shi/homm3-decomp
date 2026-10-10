@@ -1845,7 +1845,9 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    m_widgets.push_back(new textWidget(
+    // Retail-exact only as an end insert through a reference; DC shows push_back.
+    std::vector<widget*>& widgets = m_widgets;
+    widgets.insert(widgets.end(), new textWidget(
         25, 21, 257, 18,
         (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));

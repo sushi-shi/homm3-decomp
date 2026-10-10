@@ -5,7 +5,7 @@ reinterpret_casts	21
 volatile qualifiers	0
 inline-gate artifacts	0
 inline-depth pins	0
-end-position inserts	0
+end-position inserts	1
 std internal references	1
 cpp extern decls	0
 .cpp-local views	1
