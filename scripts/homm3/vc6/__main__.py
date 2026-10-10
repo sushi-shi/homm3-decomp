@@ -12,6 +12,9 @@ Subcommands
         receive for a command line. --verify checks against the shim log.
   il-diff <srcA> <srcB> [--flags ...] [--fn NAME]      (phase 1)
         Compile both, diff the C1XX->C2 IL at record granularity.
+  cb UNIT|SOURCE [--fn TEXT] [--explain [--tuples]] | cb --verify all
+        The front end's inline cost per function (the IL tuple count C2
+        reads as cb) and its save bit, with a per-source-line breakdown.
   predict-inline SELECTOR [--against SELECTOR]        (phase 3)
         Per-call-site expand/call decisions with the budget trajectory.
   force SELECTOR [--rule OWNER,CALLEE,N,E|K ...]
@@ -87,6 +90,18 @@ def _build_parser() -> argparse.ArgumentParser:
     pl = ss.add_parser("il-locals", help="candidate local symbols from recorded function-body offsets")
     pl.add_argument("unit", help="unit in config/units.toml")
     pl.add_argument("--fn", required=True, help="exact mangled name or unique function-name substring")
+
+    pcb = ss.add_parser("cb", help="C1XX inline cost (IL tuple count) per function, "
+                        "with a per-line breakdown")
+    pcb.add_argument("target", nargs="+", help="unit in config/units.toml, or a source file "
+                     "(compiled with its unit's profile, else the game profile); "
+                     "with --verify several units, or `all`")
+    pcb.add_argument("--verify", action="store_true",
+                     help="only check every recorded body's tuple count against its gl cost")
+    pcb.add_argument("--fn", help="mangled or demangled name substring")
+    pcb.add_argument("--explain", action="store_true", help="cost per source line")
+    pcb.add_argument("--tuples", action="store_true", help="with --explain: list each line's tuples")
+    pcb.add_argument("--json", action="store_true")
 
     pp = ss.add_parser("predict-inline", help="inline-structure divergence "
                        "(which callees retail inlines vs we do)")
@@ -333,6 +348,7 @@ _TOOLS = {
     "argv": ("argv", "run"),
     "il-diff": ("il", "run_diff"),
     "il-locals": ("il", "run_locals"),
+    "cb": ("il_cost", "run"),
     "predict-inline": ("inline_model", "run_predict"),
     "why-reg": ("reg_model", "run_why"),
     "trace-registers": ("register_trace", "run"),
