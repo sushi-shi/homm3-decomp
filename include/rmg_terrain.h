@@ -331,6 +331,10 @@ public:
     b8 hasDifferentOuterAxisNeighbour(
         const TTilePoint& point, const TRmgTerrainFlip& flip);
     s32 getTransitionStrength(const TTilePoint& point, s32 terrain);
+
+    static void repaintMap(TTerrainPlacementOp::TAbstractMap* map, u32 specialTileFrequency);
+    static u32 computeEffectiveFrequency(u32 specialTileFrequency,
+        TTerrainPlacementOp::TAbstractMap* map, const TTilePoint& point, s32 terrain);
 };
 
 SIZE(TRmgTerrainTile, 0x0c);

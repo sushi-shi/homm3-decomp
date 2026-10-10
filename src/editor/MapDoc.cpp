@@ -6,11 +6,8 @@
 //
 // The terrain, river and road operations are the random map generator's
 // (terrainplacement.h, lineplacement.h, lineerase.h); the document adapts
-// its map to their map interfaces and reports what they change. Not
-// restored yet: TRepaintMapOp and the Tools menu repaint (the terrain
-// repaint is editor-only code of the game's terrain source),
-// TTheObjectFactory (waits for the GUI objects) and SaveModified (the new
-// map dialog).
+// its map to their map interfaces and reports what they change; the Tools
+// menu repaint is editor-only code of the game's terrain source.
 #include "editor/stdafx.h"
 
 #include <algorithm>
@@ -29,9 +26,11 @@
 #include "rmg_terrain_tile.h"
 #include "terrainplacement.h"
 #include "editor/Clamp.h"
+#include "editor/GUIGameObject.h"
 #include "editor/MapDoc.h"
 #include "editor/MapEditorText.h"
 #include "editor/MFCFileBuf.h"
+#include "editor/NewMapDlg.h"
 #include "editor/RawStream.h"
 #include "editor/StringUtil.h"
 #include "editor/resource.h"
@@ -74,6 +73,94 @@ bool promptForFileName(LPCTSTR pszName, BOOL bOpenFileDialog, DWORD flags, CStri
         bResult = dlg.DoModal() == IDOK;
     }
     return bResult;
+}
+
+// The maps' object factory: the editor's GUI objects. Its one instance
+// installs itself as the factory every map creates its objects with.
+class TTheObjectFactory : public TGUIGameObjectFactory {
+public:
+    TTheObjectFactory();
+};
+
+VA(0x0045dae4, 0x31)
+TTheObjectFactory::TTheObjectFactory()
+{
+    TGameMap::setObjectFactory(this);
+}
+
+DATA(0x0059fe68) TTheObjectFactory theObjectFactory;
+
+// The terrain of a map layer as the terrain operations' map, for the
+// repaint: it is pointed at a layer for each repaint and changes only the
+// tiles' frames.
+class TRepaintMapOp : public TTerrainPlacementOp::TAbstractMap {
+public:
+    void operator()(TGameMap* pMap, bool bSecondLayer, unsigned int specialTileFrequency)
+    {
+        _m_pMap = pMap;
+        _m_bSecondLayer = bSecondLayer;
+        TTerrainPlacementOp::repaintMap(this, specialTileFrequency);
+        _m_pMap = NULL;
+    }
+
+    virtual void setTile(const TTilePoint& loc, const TRmgTerrainTile& tile);
+    virtual void setFrame(const TTilePoint& loc, int frame);
+    virtual TTilePoint& getSize(TTilePoint& size);
+    virtual TRmgTerrainTile getTile(const TTilePoint& loc);
+    virtual int getTerrain(const TTilePoint& loc);
+    virtual int getFrame(const TTilePoint& loc);
+
+private:
+    TGameMap* _m_pMap;
+    bool _m_bSecondLayer;
+};
+
+// /OPT:ICF folds this empty body onto the map view's.
+void TRepaintMapOp::setTile(const TTilePoint& loc, const TRmgTerrainTile& tile)
+{
+}
+
+// This body and getTerrain and getFrame fold onto the map specifications'
+// page's adapter (/OPT:ICF).
+void TRepaintMapOp::setFrame(const TTilePoint& loc, int frame)
+{
+    TGameMap::TLayer& layer = _m_pMap->getLayer(_m_bSecondLayer);
+    layer.getPCell(loc.x(), loc.y())->setTileNum(frame);
+}
+
+// The river and road maps' identical bodies fold onto this one (/OPT:ICF).
+VA(0x0045db38, 0x26)
+TTilePoint& TRepaintMapOp::getSize(TTilePoint& size)
+{
+    return size = TTilePoint(_m_pMap->getWidth(), _m_pMap->getHeight());
+}
+
+VA(0x0045db5e, 0x67)
+TRmgTerrainTile TRepaintMapOp::getTile(const TTilePoint& loc)
+{
+    const TGameMap* pMap = _m_pMap;
+    const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
+    const TGameMap::TLayer::TCell& cell = layer.getCell(loc.x(), loc.y());
+    TRmgTerrainTile tile;
+    tile.m_terrain = cell.getTerrainType();
+    tile.m_frame = cell.getTileNum();
+    tile.m_flipX = cell.getBHFlipped();
+    tile.m_flipY = cell.getBVFlipped();
+    return tile;
+}
+
+int TRepaintMapOp::getTerrain(const TTilePoint& loc)
+{
+    const TGameMap* pMap = _m_pMap;
+    const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
+    return layer.getCell(loc.x(), loc.y()).getTerrainType();
+}
+
+int TRepaintMapOp::getFrame(const TTilePoint& loc)
+{
+    const TGameMap* pMap = _m_pMap;
+    const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
+    return layer.getCell(loc.x(), loc.y()).getTileNum();
 }
 
 // The rivers of a map layer as the river operations' map. It keeps the
@@ -131,8 +218,7 @@ protected:
     TTilePoint _m_bottomRight;
 };
 
-// The road map's identical body folds onto this one (/OPT:ICF).
-VA(0x0045db38, 0x26)
+// Folds onto the repaint operation's body (/OPT:ICF).
 TTilePoint TRiverMap::getSize()
 {
     return TTilePoint(_m_pMap->getWidth(), _m_pMap->getHeight());
@@ -873,6 +959,9 @@ TMapDoc::~TMapDoc()
     WaitForSingleObject(_m_autosaveThread.m_hThread, INFINITE);
 }
 
+// The new-map parameters' implicit assignment (setNewMapParams).
+VA_COMPGEN(0x0045f52d, 0x29, IMPLICIT_COPY_ASSIGN, TNewMapParams)
+
 VA(0x0045f556, 0x184)
 void TMapDoc::Serialize(CArchive& ar)
 {
@@ -1432,6 +1521,39 @@ void TMapDoc::OnFileImportText()
     CString message;
     message.Format(kTextImportedSuccessfullyFmtStr, (LPCTSTR)pathName);
     AfxMessageBox(message);
+}
+
+VA(0x00460d81, 0x8a)
+void TMapDoc::OnToolsRepaintMap()
+{
+    backupMap();
+    TRepaintMapOp repaintOp;
+    repaintOp(_m_pMap, false, _s_specialTileFrequency);
+    if (_m_pMap->isTwoLayer())
+        repaintOp(_m_pMap, true, _s_specialTileFrequency);
+    SetModifiedFlag();
+    UpdateAllViews(NULL);
+}
+
+// A new document asks for the new map's version, size and levels when
+// the application wants it to (File New).
+VA(0x00460e0b, 0xb1)
+BOOL TMapDoc::SaveModified()
+{
+    bool bPrompt = _m_bPromptForNewMapParams;
+    _m_bPromptForNewMapParams = false;
+    if (!CDocument::SaveModified())
+        return FALSE;
+    if (bPrompt) {
+        CWnd* pMainWnd = AfxGetMainWnd();
+        TNewMapDlg dlg(pMainWnd, s_kDefaultNewMapParams);
+        if (dlg.DoModal() != IDOK)
+            return FALSE;
+        setNewMapParams(dlg.getParams());
+        if (pMainWnd != NULL)
+            pMainWnd->UpdateWindow();
+    }
+    return TRUE;
 }
 
 void TMapDoc::OnFileBatchConvert()

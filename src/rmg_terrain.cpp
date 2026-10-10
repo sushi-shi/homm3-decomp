@@ -223,7 +223,7 @@ s32 TRmgTableTerrainRule::selectTransitionFrame(
 }
 
 // paintTransitions calls this fastcall selector at 0x5b5f5b.
-s32 __fastcall selectTerrainTransition(
+s32 selectTerrainTransition(
     const s32* neighbours, TRmgTerrainFlip* flip);
 
 // Four reflections of the eight neighbour slots. Read from the pinned
@@ -276,9 +276,69 @@ void TRmgTerrainPainter::initializePackedCell(
     packed.m_initialized = 1;
 }
 
+// The map editor's repaint: every full tile of a terrain with special
+// frames gets a newly chosen base frame (Loki's
+// TTerrainPlacementOp::_repaintMapLayer). Only h3maped calls it.
+VA_AT(h3maped, 0x004bae0d, 0xe4)
+void TRmgTerrainPainter::repaintMap(TTerrainPlacementOp::TAbstractMap* map, u32 specialTileFrequency)
+{
+#if defined(HOMM3_TARGET_MAC)
+    TTilePoint size = map->getSize();
+#else
+    TTilePoint size = map->getSize(TTilePoint());
+#endif
+    for (u32 y = 0; y < size.y(); ++y)
+        for (u32 x = 0; x < size.x(); ++x) {
+            s32 terrain = map->getTerrain(TTilePoint(x, y));
+            TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
+            if (rule->hasSpecialBaseFrames() && rule->getTransition(map->getFrame(TTilePoint(x, y))) == 0) {
+                u32 frequency = computeEffectiveFrequency(specialTileFrequency, map, TTilePoint(x, y), terrain);
+                s32 frame = rule->selectBaseFrame(frequency, RMG_NO_TERRAIN_FRAME);
+                map->setFrame(TTilePoint(x, y), frame);
+            }
+        }
+}
+
+// Halves the special tile frequency for each neighbour of the same terrain
+// that already shows a special frame (Loki's
+// TTerrainPlacementOp::_computeEffectiveFrequency).
+VA_AT(h3maped, 0x004baef1, 0x148)
+u32 TRmgTerrainPainter::computeEffectiveFrequency(u32 specialTileFrequency,
+    TTerrainPlacementOp::TAbstractMap* map, const TTilePoint& point, s32 terrain)
+{
+#if defined(HOMM3_TARGET_MAC)
+    TTilePoint size = map->getSize();
+#else
+    TTilePoint size = map->getSize(TTilePoint());
+#endif
+    TRmgTerrainRule* rule = g_rmgTerrainRules[terrain];
+    if (point.x() > 0) {
+        TRmgTerrainTile tile = map->getTile(TTilePoint(point.x() - 1, point.y()));
+        if (tile.m_terrain == terrain && rule->isSpecialFrame(tile.m_frame))
+            specialTileFrequency >>= 1;
+    }
+    if (point.y() > 0) {
+        TRmgTerrainTile tile = map->getTile(TTilePoint(point.x(), point.y() - 1));
+        if (tile.m_terrain == terrain && rule->isSpecialFrame(tile.m_frame))
+            specialTileFrequency >>= 1;
+    }
+    // Retail reads the east neighbour's row from the point's x (0x4bafbd).
+    if (point.x() < size.x() - 1) {
+        TRmgTerrainTile tile = map->getTile(TTilePoint(point.x() + 1, point.x()));
+        if (tile.m_terrain == terrain && rule->isSpecialFrame(tile.m_frame))
+            specialTileFrequency >>= 1;
+    }
+    if (point.y() < size.y() - 1) {
+        TRmgTerrainTile tile = map->getTile(TTilePoint(point.x(), point.y() + 1));
+        if (tile.m_terrain == terrain && rule->isSpecialFrame(tile.m_frame))
+            specialTileFrequency >>= 1;
+    }
+    return specialTileFrequency;
+}
+
 VA(0x005b3e40, 0x38)
 MAC_ADDRESS(0x255284, 0x64)
-s32 __fastcall getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
+s32 getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
 {
     if (terrain == neighbourTerrain || terrain == eTerrainSand)
         return RMG_NEIGHBOUR_NO_EDGE;
@@ -293,7 +353,7 @@ s32 __fastcall getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
 
 VA(0x005b3e80, 0x75f)
 MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b; retail-only
-s32 __fastcall selectTerrainTransition(
+s32 selectTerrainTransition(
     const s32* neighbours, TRmgTerrainFlip* flip)
 {
     // Retail construction guard byte 0x6a52a1 (tested and set in this body).
@@ -1389,6 +1449,12 @@ s32 TRmgTerrainPainter::changeTerrain(s32 terrain, s32 strength)
     m_paintTerrain = terrain;
     m_transitionStrength = strength;
     return previous;
+}
+
+VA_AT(h3maped, 0x004bcfe5, 0x10)
+void TTerrainPlacementOp::repaintMap(TAbstractMap* map, u32 specialTileFrequency)
+{
+    TRmgTerrainPainter::repaintMap(map, specialTileFrequency);
 }
 
 VA(0x005b7250, 0x9a)

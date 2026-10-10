@@ -373,11 +373,16 @@ module = "rmg"
 source = "src/rmg_support.cpp"
 flags = "h3maped_o1_ob2_gr_windows"
 
+# The terrain painter is a map editor object here (Loki's
+# TerrainPlacement.cpp is one): its free and static functions take stack
+# arguments (getRmgTerrainNeighbourKind 0x4bb039, selectTerrainTransition
+# 0x4bb075, TTerrainPlacementOp::repaintMap 0x4bcfe5), where the game's
+# /Gr build passes them in registers.
 [[unit]]
 unit = "rmg_terrain"
 module = "rmg"
 source = "src/rmg_terrain.cpp"
-flags = "h3maped_o1_ob2_gr_windows"
+flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
 unit = "objecttype"

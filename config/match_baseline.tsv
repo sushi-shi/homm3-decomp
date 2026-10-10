@@ -3575,7 +3575,7 @@ rmg_terrain	?erase@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$T
 rmg_terrain	?erase@?$vector@UTRmgPackedTerrainCell@@V?$allocator@UTRmgPackedTerrainCell@@@std@@@std@@QAEPAUTRmgPackedTerrainCell@@PAU3@0@Z	100.0000	100.0000	100.0000	0x1b8020	-
 rmg_terrain	?find@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAE?AViterator@12@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1b7fc0	-
 rmg_terrain	?getPackedCell@TRmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1b48d0	tokens1:451d491b9958
-rmg_terrain	?getRmgTerrainNeighbourKind@@YIHHH@Z	100.0000	100.0000	100.0000	0x1b3e40	tokens1:8083f59dcea8
+rmg_terrain	?getRmgTerrainNeighbourKind@@YIHHH@Z	100.0000	100.0000	100.0000	0x1b3e40	tokens1:b522957052a2
 rmg_terrain	?getTransition@TRmgPatternTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3880	tokens1:4fc9d8cc2f5b
 rmg_terrain	?getTransition@TRmgTableTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3a80	tokens1:398885298cb5
 rmg_terrain	?getTransitionStrength@TRmgTerrainPainter@@QAEHABV?$TPoint@I@@H@Z	100.0000	100.0000	100.0000	0x1b6fd0	tokens1:3c30af6177bc
@@ -3598,7 +3598,7 @@ rmg_terrain	?queueOtherTerrainNeighbours@TRmgTerrainPainter@@QAEXABV?$TPoint@I@@
 rmg_terrain	?repairTerrainPoint@TRmgTerrainPainter@@QAEXABV?$TPoint@I@@@Z	99.1821	99.1821	99.1821	0x1b5440	tokens1:cfd1803550ef
 rmg_terrain	?selectBaseFrame@TRmgPatternTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3890	tokens1:322bce4a68b0
 rmg_terrain	?selectBaseFrame@TRmgTableTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3aa0	tokens1:ae67a4a64806
-rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	tokens1:9c65c6b787a4
+rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	tokens1:4f5b7a567a48
 rmg_terrain	?selectTransitionFrame@TRmgPatternTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	100.0000	100.0000	100.0000	0x1b38f0	tokens1:e07d6017f13f
 rmg_terrain	?selectTransitionFrame@TRmgTableTerrainRule@@UAEHHUTRmgTerrainFlip@@AAU2@H@Z	100.0000	100.0000	100.0000	0x1b3ae0	tokens1:e17131118c33
 rmg_terrain	?upper_bound@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAE?AViterator@12@ABV?$TPoint@I@@@Z	100.0000	100.0000	100.0000	0x1b8a20	-

@@ -66,6 +66,10 @@ public:
     void paintRectangle(
         u32 x, u32 y,
         u32 rectangleWidth, u32 rectangleHeight);
+
+    // The map editor's Tools menu repaint (Loki's
+    // TTerrainPlacementOp::repaintMap, one map layer here).
+    static void repaintMap(TAbstractMap* map, u32 specialTileFrequency);
 };
 
 #endif  // HOMM3_TERRAINPLACEMENT_H
