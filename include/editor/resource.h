@@ -68,7 +68,11 @@ enum {
 enum {
     IDB_PANNER_BOTH = 216,
     IDB_PANNER_HORZ = 217,
-    IDB_PANNER_VERT = 218
+    IDB_PANNER_VERT = 218,
+    // A customized object's check mark, and its smallest-zoom version
+    // (GUIGameObject.cpp's TCheckMarkBmp, h3maped 0x43f20b).
+    IDB_CHECK_MARK = 242,
+    IDB_CHECK_MARK_SMALL = 309
 };
 
 enum {

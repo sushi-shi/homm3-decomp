@@ -38,6 +38,7 @@ Army	??0TReadFailure@TRawIStream@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x2428
 Army	??0TReadFailure@TRawIStream@@QAE@H@Z	100.0000	100.0000	100.0000	0x23b4	-
 Army	??0TWriteFailure@TRawOStream@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x2524	-
 Army	??0TWriteFailure@TRawOStream@@QAE@H@Z	100.0000	100.0000	100.0000	0x24d1	-
+Army	??1?$TArray@VTCreatureStack@@$06@@QAE@XZ	100.0000	100.0000	100.0000	0x2372	-
 Army	??1TReadFailure@TRawIStream@@UAE@XZ	35.5263	35.5263	35.5263	0x23eb	-
 Army	??1TWriteFailure@TRawOStream@@UAE@XZ	100.0000	100.0000	100.0000	0x2508	-
 Army	??5TRawIStream@@QAEAAV0@AAE@Z	100.0000	100.0000	100.0000	0x2461	-
@@ -262,6 +263,472 @@ FlaggablePropsDlg	?OnCreate@TFlaggablePropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.
 FlaggablePropsDlg	?OnDoubleClickedOwnerRadio@TFlaggablePropsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x1e573	tokens1:0182e1dee4b9
 FlaggablePropsDlg	?OnInitDialog@TFlaggablePropsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x1e282	tokens1:005a3ae26373
 FlaggablePropsDlg	?OnOK@TFlaggablePropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x1e550	tokens1:f410315f0d49
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x442fb	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x44391	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x48462	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x447b1	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x44851	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4874f	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x43b4c	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x43be2	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x41cc4	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x44542	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x445d8	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x485ce	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x459a5	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x45a59	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x48f4a	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x454a7	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x4554a	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x489df	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x45726	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x457c9	-
+GUIGameObject	??0?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x48c95	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x43e3a	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x43da4	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x420c6	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x44eb7	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x44e21	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x46a5e	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x43f88	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x43ef2	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x46497	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x44ac5	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x44a2a	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x47196	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x44d69	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x44ccb	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4763e	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x452a1	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4520b	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x47a51	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x440ef	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x44040	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x46dae	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x45d54	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x45c54	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x47e4c	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x45005	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x44f6f	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x47862	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x45158	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x450bd	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x46bfb	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x453ef	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x45359	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x47c2d	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x44243	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x441a2	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4682a	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x44c13	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x44b7d	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x473c3	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x45e9d	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x45e07	-
+GUIGameObject	??0?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x480c7	-
+GUIGameObject	??0?$bitset@$0OI@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x43947	-
+GUIGameObject	??0TAbandonedMine@@QAE@ABV0@@Z	99.8936	99.8936	99.8936	0x42170	-
+GUIGameObject	??0TAbstractRandomlyAlignedGenerator@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x48b3d	-
+GUIGameObject	??0TAbstractRandomlyLeveledGenerator@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x48df3	-
+GUIGameObject	??0TBasicHero@@QAE@ABV0@@Z	99.9000	99.9000	99.9000	0x40451	-
+GUIGameObject	??0TBlackBox@@QAE@ABV0@@Z	99.8958	99.8958	99.8958	0x465cd	-
+GUIGameObject	??0TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@_N@Z	99.1951	99.1951	99.1951	0x3f20b	tokens1:470e1d73ea9f
+GUIGameObject	??0TEvent@@QAE@ABV0@@Z	99.9020	99.9020	99.9020	0x46541	-
+GUIGameObject	??0TFlaggableObject@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x41de8	-
+GUIGameObject	??0TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x41ed2	tokens1:9bf198f91584
+GUIGameObject	??0TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x41f50	tokens1:89eca08ee787
+GUIGameObject	??0TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	99.8936	99.8936	99.8936	0x42038	-
+GUIGameObject	??0TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x3fcd4	tokens1:8a36ab6d635e
+GUIGameObject	??0TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	99.8750	99.8750	99.8750	0x403d4	-
+GUIGameObject	??0TGUIGameObject@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x4229f	tokens1:b80ef65644ef
+GUIGameObject	??0TGUIGameObject@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x42305	tokens1:1072cc344947
+GUIGameObject	??0TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x41af5	tokens1:c0bb709bdbca
+GUIGameObject	??0TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x41a69	tokens1:808f6e17647f
+GUIGameObject	??0TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	99.8936	99.8936	99.8936	0x41c36	-
+GUIGameObject	??0TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x3f77b	tokens1:b64fbca23aff
+GUIGameObject	??0TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x3f80b	tokens1:8a62a0a78981
+GUIGameObject	??0TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x3f905	-
+GUIGameObject	??0TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x40179	tokens1:3ce7d7938ee7
+GUIGameObject	??0TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x400dd	tokens1:2dd11cced770
+GUIGameObject	??0TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x40296	-
+GUIGameObject	??0TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x406ec	tokens1:738ec7e3df5e
+GUIGameObject	??0TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@H@Z	100.0000	100.0000	100.0000	0x405b6	tokens1:f2e90e855d17
+GUIGameObject	??0TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4082b	-
+GUIGameObject	??0TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@H@Z	100.0000	100.0000	100.0000	0x410ca	tokens1:f9646f27e2b6
+GUIGameObject	??0TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4117c	tokens1:73617613eea1
+GUIGameObject	??0TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x412bb	-
+GUIGameObject	??0TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x40e2e	tokens1:2c3f932c05db
+GUIGameObject	??0TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x40d64	tokens1:cb36cec245ce
+GUIGameObject	??0TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x40f6d	-
+GUIGameObject	??0TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x3f9fe	tokens1:48b9f4326e81
+GUIGameObject	??0TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	99.8750	99.8750	99.8750	0x404e2	-
+GUIGameObject	??0TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x414c3	tokens1:7eef6aeee7c0
+GUIGameObject	??0TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x41418	tokens1:3229402b8851
+GUIGameObject	??0TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x415fb	-
+GUIGameObject	??0TGameArtifact@@QAE@ABV0@@Z	99.8889	99.8889	99.8889	0x47240	-
+GUIGameObject	??0TGameResource@@QAE@ABV0@@Z	99.8936	99.8936	99.8936	0x476e8	-
+GUIGameObject	??0TGarrison@@QAE@ABV0@@Z	99.9242	99.9242	99.9242	0x487f9	-
+GUIGameObject	??0TGenerator@@QAE@ABV0@@Z	99.8889	99.8889	99.8889	0x41d6e	-
+GUIGameObject	??0TGenericObject@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x3f9af	-
+GUIGameObject	??0THero@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x40a2b	-
+GUIGameObject	??0THeroPlaceholder@@QAE@ABV0@@Z	99.9000	99.9000	99.9000	0x40342	-
+GUIGameObject	??0THolyGrail@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x47afb	-
+GUIGameObject	??0TIdentifiedHero@@QAE@ABV0@@Z	99.9000	99.9000	99.9000	0x40988	-
+GUIGameObject	??0TMine@@QAE@ABV0@@Z	99.8889	99.8889	99.8889	0x421f0	-
+GUIGameObject	??0TMiniMapTypeFlags@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@XZ	100.0000	100.0000	100.0000	0x42275	tokens1:01bfbe8b18b5
+GUIGameObject	??0TMonster@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x46e5a	-
+GUIGameObject	??0TNonRandomHero@@QAE@ABV0@@Z	99.8958	99.8958	99.8958	0x408f1	-
+GUIGameObject	??0TPrison@@QAE@ABV0@@Z	99.8958	99.8958	99.8958	0x41381	-
+GUIGameObject	??0TQuestGuard@@QAE@ABV0@@Z	99.8913	99.8913	99.8913	0x47ef8	-
+GUIGameObject	??0TRandomGenerator@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x4900c	-
+GUIGameObject	??0TRandomHero@@QAE@ABV0@@Z	99.8958	99.8958	99.8958	0x41033	-
+GUIGameObject	??0TRandomlyAlignedGenerator@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x48a93	-
+GUIGameObject	??0TRandomlyLeveledGenerator@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x48d49	-
+GUIGameObject	??0TScholar@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x4790c	-
+GUIGameObject	??0TShrine@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x47cd7	-
+GUIGameObject	??0TSign@@QAE@ABV0@@Z	99.9020	99.9020	99.9020	0x468d4	-
+GUIGameObject	??0TSpellScroll@@QAE@ABV0@@Z	99.8936	99.8936	99.8936	0x4746d	-
+GUIGameObject	??0TSprites@?1??_getPSprite@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@ABEPBVCSprite@@XZ@QAE@XZ	100.0000	100.0000	100.0000	0xb1276	-
+GUIGameObject	??0TTreasure@@QAE@ABV0@@Z	99.9296	99.9296	99.9296	0x4664f	-
+GUIGameObject	??0TWitchHut@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x48171	-
+GUIGameObject	??1?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x483d3	-
+GUIGameObject	??1?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	46.4500	46.4500	46.4500	0x486ab	-
+GUIGameObject	??1?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x4912c	-
+GUIGameObject	??1?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x4853f	-
+GUIGameObject	??1?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	9.0909	9.0909	9.0909	0x48ead	-
+GUIGameObject	??1?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	10.0000	10.0000	10.0000	0x48949	-
+GUIGameObject	??1?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	10.0000	10.0000	10.0000	0x48bff	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x46220	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	34.1111	34.1111	34.1111	0x469bb	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	34.1111	34.1111	34.1111	0x463f4	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	34.1111	34.1111	34.1111	0x470f3	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	34.1111	34.1111	34.1111	0x4759b	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x479c2	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	18.1818	18.1818	18.1818	0x46d06	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	18.1818	18.1818	18.1818	0x47da4	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x477d3	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	18.1818	18.1818	18.1818	0x46b53	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x47b9e	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	38.3684	38.3684	38.3684	0x4677d	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	34.1111	34.1111	34.1111	0x47320	-
+GUIGameObject	??1?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x48038	-
+GUIGameObject	??1TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	100.0000	100.0000	100.0000	0x3f2cb	-
+GUIGameObject	??1TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	40.0000	40.0000	40.0000	0x4621b	-
+GUIGameObject	??1TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	40.0000	40.0000	40.0000	0x49127	-
+GUIGameObject	??1TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	11.1111	11.1111	11.1111	0x481fb	-
+GUIGameObject	??1TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	10.0000	10.0000	10.0000	0x4635e	-
+GUIGameObject	??1TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	4.7059	4.7059	4.7059	0x4825f	-
+GUIGameObject	??1TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	4.7059	4.7059	4.7059	0x47032	-
+GUIGameObject	??1TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	15.3846	15.3846	15.3846	0x4611f	-
+GUIGameObject	??1TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE@XZ	16.6667	16.6667	16.6667	0x4605b	-
+GUIGameObject	??1TSprites@?1??_getPSprite@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@ABEPBVCSprite@@XZ@QAE@XZ	100.0000	100.0000	100.0000	0x41a11	-
+GUIGameObject	??4?$TResourcePtr@VCSprite@@@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x99b7e	-
+GUIGameObject	??_E?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x483a0	-
+GUIGameObject	??_E?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x48678	-
+GUIGameObject	??_E?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x49157	-
+GUIGameObject	??_E?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x4850c	-
+GUIGameObject	??_E?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x48e7a	-
+GUIGameObject	??_E?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x48916	-
+GUIGameObject	??_E?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x48bcc	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x46284	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x46988	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x463c1	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x470c0	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x47568	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x4798f	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x46cd3	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x47d71	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x477a0	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x46b20	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x47b6b	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x4674a	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x472ed	-
+GUIGameObject	??_E?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x48005	-
+GUIGameObject	??_ETGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x461e8	-
+GUIGameObject	??_ETGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x490f4	-
+GUIGameObject	??_ETGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x481c8	-
+GUIGameObject	??_ETGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x4632b	-
+GUIGameObject	??_ETGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x48226	-
+GUIGameObject	??_ETGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x46ff9	-
+GUIGameObject	??_ETGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x460e6	-
+GUIGameObject	??_ETGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x46022	-
+GUIGameObject	??_G?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x483a8	-
+GUIGameObject	??_G?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x48680	-
+GUIGameObject	??_G?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4915f	-
+GUIGameObject	??_G?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x48514	-
+GUIGameObject	??_G?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x48e82	-
+GUIGameObject	??_G?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4891e	-
+GUIGameObject	??_G?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x48bd4	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4628c	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46990	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x463c9	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x470c8	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x47570	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x47997	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46cdb	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x47d79	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x477a8	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46b28	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x47b73	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46752	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x472f5	-
+GUIGameObject	??_G?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4800d	-
+GUIGameObject	??_GTGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x461f0	-
+GUIGameObject	??_GTGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	99.7059	99.7059	99.7059	0x3fa68	-
+GUIGameObject	??_GTGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x490fc	-
+GUIGameObject	??_GTGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x481d0	-
+GUIGameObject	??_GTGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x46333	-
+GUIGameObject	??_GTGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4822e	-
+GUIGameObject	??_GTGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x47001	-
+GUIGameObject	??_GTGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x460ee	-
+GUIGameObject	??_GTGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4602a	-
+GUIGameObject	?GetNumFrames@CSprite@@QBEHH@Z	100.0000	100.0000	100.0000	0x3f394	-
+GUIGameObject	?_Xran@?$bitset@$0OI@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x43af2	-
+GUIGameObject	?_getPHero@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@EAEPAVTBasicHero@@XZ	100.0000	100.0000	100.0000	0x40175	-
+GUIGameObject	?_getPHero@TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@EAEPAVTBasicHero@@XZ	100.0000	100.0000	100.0000	0x4066b	-
+GUIGameObject	?_getPHero@TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@EAEPAVTBasicHero@@XZ	100.0000	100.0000	100.0000	0x40e16	-
+GUIGameObject	?_getPSprite@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@ABEPBVCSprite@@XZ	99.5299	99.5299	99.5299	0x41878	tokens1:1963d18cf084
+GUIGameObject	?checkMark@?1??getCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ@$AV12@A	97.5000	97.5000	97.5000	0x3fb65	-
+GUIGameObject	?checkMark@?1??getSmallCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ@$AV12@A	97.5000	97.5000	97.5000	0x3fb5b	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x483f6	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x483fe	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x486e3	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x486eb	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4918a	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x49192	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x48562	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4856a	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x48ede	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x48ee6	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x48973	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4897b	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x48c29	-
+GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x48c31	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x462b7	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x462bf	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x469f2	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x469fa	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4642b	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46433	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4712a	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x47132	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x475d2	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x475da	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x479e5	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x479ed	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46d42	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46d4a	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x47de0	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x47de8	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x477f6	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x477fe	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46b8f	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46b97	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x47bc1	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x47bc9	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x467be	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x467c6	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x47357	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4735f	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4805b	-
+GUIGameObject	?clone@?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x48063	-
+GUIGameObject	?clone@TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46243	-
+GUIGameObject	?clone@TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x41fd4	tokens1:a5d9dc48bb68
+GUIGameObject	?clone@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4914f	-
+GUIGameObject	?clone@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x41bd2	tokens1:c081dce06f77
+GUIGameObject	?clone@TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4821e	-
+GUIGameObject	?clone@TGUIGenericObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x3f8a1	tokens1:2fb27848dedb
+GUIGameObject	?clone@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46388	-
+GUIGameObject	?clone@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x40232	tokens1:c556e531e538
+GUIGameObject	?clone@TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x482ae	-
+GUIGameObject	?clone@TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x407c1	tokens1:fc60b7b06c5a
+GUIGameObject	?clone@TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x4708c	-
+GUIGameObject	?clone@TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x41251	tokens1:536812333db1
+GUIGameObject	?clone@TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x46175	-
+GUIGameObject	?clone@TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x40f03	tokens1:4365939f9983
+GUIGameObject	?clone@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x460a7	-
+GUIGameObject	?clone@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x41591	tokens1:ab377a588bab
+GUIGameObject	?createAbandonedMine@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTAbandonedMine@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x42e5e	tokens1:0f2d8c4af5d1
+GUIGameObject	?createAbandonedMine@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTAbandonedMine@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42eb4	tokens1:15bb099aa776
+GUIGameObject	?createArtifact@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGameArtifact@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x42fc5	tokens1:a2c7936fa3b8
+GUIGameObject	?createArtifact@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGameArtifact@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4301b	tokens1:3e7f4f7a9f32
+GUIGameObject	?createBlackBox@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTBlackBox@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x431db	tokens1:68945ec1c290
+GUIGameObject	?createBlackBox@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTBlackBox@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x43231	tokens1:43f73b67bd2a
+GUIGameObject	?createEvent@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTEvent@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x42aec	tokens1:c01e1b24a9d0
+GUIGameObject	?createEvent@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTEvent@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42b42	tokens1:d8363bc6990f
+GUIGameObject	?createFlaggable@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTFlaggableObject@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42d4d	tokens1:48fd4f2db50a
+GUIGameObject	?createFlaggable@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTFlaggableObject@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x42cf4	tokens1:b089bd434368
+GUIGameObject	?createGarrison@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGarrison@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42f69	tokens1:bdea2edcc61d
+GUIGameObject	?createGarrison@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGarrison@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x42f10	tokens1:65d79d2ed6fe
+GUIGameObject	?createGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGenerator@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x435a0	tokens1:b681d432b1c2
+GUIGameObject	?createGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGenerator@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x43547	tokens1:c56ac521eac3
+GUIGameObject	?createGenericObject@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGenericObject@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x426dc	tokens1:2461912ed7e2
+GUIGameObject	?createGenericObject@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGenericObject@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42732	tokens1:ad065349db96
+GUIGameObject	?createHeroPlaceholder@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTHeroPlaceholder@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x427e0	tokens1:cd4a40216890
+GUIGameObject	?createHeroPlaceholder@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTHeroPlaceholder@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x4278e	tokens1:7a5b799e71b3
+GUIGameObject	?createHolyGrail@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTHolyGrail@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x433e3	tokens1:c82085789117
+GUIGameObject	?createHolyGrail@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTHolyGrail@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x43439	tokens1:0ab474f86bf0
+GUIGameObject	?createMine@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTMine@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42e02	tokens1:2c2f211be546
+GUIGameObject	?createMine@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTMine@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x42da9	tokens1:55d9a1d6fa48
+GUIGameObject	?createMonster@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTMonster@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x42b9e	tokens1:b283c8d6b46b
+GUIGameObject	?createMonster@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTMonster@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42bed	tokens1:3177bbc5f921
+GUIGameObject	?createNonRandomHero@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTNonRandomHero@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4288d	tokens1:b549b33707e5
+GUIGameObject	?createNonRandomHero@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTNonRandomHero@@@std@@ABUTObjectType@@W4TPlayer@@H@Z	100.0000	100.0000	100.0000	0x42835	tokens1:c8913ef86bd6
+GUIGameObject	?createPrison@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTPrison@@@std@@ABUTObjectType@@H@Z	100.0000	100.0000	100.0000	0x42992	tokens1:56417472dd3f
+GUIGameObject	?createPrison@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTPrison@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x429e7	tokens1:5b1f50cdfedf
+GUIGameObject	?createQuestGuard@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTQuestGuard@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x437f1	tokens1:c53411d10b1f
+GUIGameObject	?createQuestGuard@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTQuestGuard@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x43840	tokens1:1b5c5ea0c955
+GUIGameObject	?createRandomGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomGenerator@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4379c	tokens1:98189a7a25c3
+GUIGameObject	?createRandomGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomGenerator@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x4374a	tokens1:313424c15765
+GUIGameObject	?createRandomHero@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomHero@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4293a	tokens1:946e1ce6d2e1
+GUIGameObject	?createRandomHero@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomHero@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x428e5	tokens1:291725382076
+GUIGameObject	?createRandomlyAlignedGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomlyAlignedGenerator@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4364e	tokens1:8687c82738c0
+GUIGameObject	?createRandomlyAlignedGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomlyAlignedGenerator@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x435fc	tokens1:ec9e8c251786
+GUIGameObject	?createRandomlyLeveledGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomlyLeveledGenerator@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x436f5	tokens1:964cbffcce90
+GUIGameObject	?createRandomlyLeveledGenerator@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTRandomlyLeveledGenerator@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x436a3	tokens1:5c700f2b8e5b
+GUIGameObject	?createResource@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGameResource@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x43129	tokens1:a088786fca75
+GUIGameObject	?createResource@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTGameResource@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4317f	tokens1:02cc45ef4235
+GUIGameObject	?createScholar@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTScholar@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x4328d	tokens1:571867c6fe6a
+GUIGameObject	?createScholar@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTScholar@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x432e3	tokens1:a63e76a2373f
+GUIGameObject	?createSeersHut@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTSeersHut@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x4333f	tokens1:6ca6ebadeb4a
+GUIGameObject	?createSeersHut@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTSeersHut@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4338e	tokens1:7772a633aa3a
+GUIGameObject	?createShrine@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTShrine@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x43495	tokens1:24758448d4d0
+GUIGameObject	?createShrine@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTShrine@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x434eb	tokens1:f1c7e20ead90
+GUIGameObject	?createSign@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTSign@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x42c42	tokens1:9bea8b4efcec
+GUIGameObject	?createSign@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTSign@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42c98	tokens1:155775119e83
+GUIGameObject	?createSpellScroll@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTSpellScroll@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x43077	tokens1:3c4db7f25a39
+GUIGameObject	?createSpellScroll@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTSpellScroll@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x430cd	tokens1:603b967eb451
+GUIGameObject	?createTown@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTTown@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x42a94	tokens1:40a54fdbfd51
+GUIGameObject	?createTown@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTTown@@@std@@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x42a3f	tokens1:58601ade8fda
+GUIGameObject	?createWitchHut@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTWitchHut@@@std@@ABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x43895	tokens1:b8d4e72f0f71
+GUIGameObject	?createWitchHut@TGUIGameObjectFactory@@UBE?AV?$auto_ptr@VTWitchHut@@@std@@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x438eb	tokens1:1d976879c4cb
+GUIGameObject	?draw@TGUIGameObject@@UBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.8980	99.8980	99.8980	0x42385	tokens1:2b1948fac276
+GUIGameObject	?draw@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x41e3f	tokens1:e3abac742c88
+GUIGameObject	?draw@TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3fa93	tokens1:5147bbc9875f
+GUIGameObject	?drawCell@TGUIGameObject@@UBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x42495	tokens1:5621b79c1eea
+GUIGameObject	?drawCell@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x41e6e	tokens1:10447507651f
+GUIGameObject	?drawCell@TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3fb6f	tokens1:e054c03ea821
+GUIGameObject	?drawCellShadow@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9219	99.9219	99.9219	0x3fdee	tokens1:3eb5d627b591
+GUIGameObject	?drawCellShadow@TGUIGameObject@@UBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x42523	tokens1:a509c179d2e6
+GUIGameObject	?drawCellShadow@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x4170d	tokens1:595fd1258b00
+GUIGameObject	?drawShadow@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9167	99.9167	99.9167	0x3fd3e	tokens1:ae653c038717
+GUIGameObject	?drawShadow@TGUIGameObject@@UBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.8980	99.8980	99.8980	0x4240d	tokens1:972b6f64a009
+GUIGameObject	?drawShadow@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x416ba	tokens1:4f010be0378e
+GUIGameObject	?drawSprite@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YAXPBVCSprite@@IPAVT16bppDIBSection@@HHABVCRect@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f2f4	tokens1:cd82b5d24883
+GUIGameObject	?drawSprite@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YAXPBVCSprite@@IW4TPlayer@@PAVT16bppDIBSection@@HHABVCRect@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f3b8	tokens1:308d73c417c2
+GUIGameObject	?drawSpriteCell@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YAXPBVCSprite@@IIIPAVT16bppDIBSection@@HHABVCRect@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f4fb	tokens1:b8826026a76e
+GUIGameObject	?drawSpriteCell@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YAXPBVCSprite@@IIIW4TPlayer@@PAVT16bppDIBSection@@HHABVCRect@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f65d	tokens1:fb9bb9dbc4ab
+GUIGameObject	?drawSpriteCellImpl@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9057	99.9057	99.9057	0x444b0	-
+GUIGameObject	?drawSpriteCellImpl@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9057	99.9057	99.9057	0x44998	-
+GUIGameObject	?drawSpriteCellImpl@?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9057	99.9057	99.9057	0x43d12	-
+GUIGameObject	?drawSpriteCellImpl@?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9057	99.9057	99.9057	0x4471f	-
+GUIGameObject	?drawSpriteCellImpl@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9057	99.9057	99.9057	0x45bc2	-
+GUIGameObject	?drawSpriteCellImpl@?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9057	99.9057	99.9057	0x45694	-
+GUIGameObject	?drawSpriteCellImpl@?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9057	99.9057	99.9057	0x45913	-
+GUIGameObject	?drawSpriteCellImpl@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9219	99.9219	99.9219	0x3ff3c	tokens1:69c9626b2353
+GUIGameObject	?drawSpriteCellImpl@TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3fc98	tokens1:9022d6eb38ab
+GUIGameObject	?drawSpriteCellImpl@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIIIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x417f2	tokens1:72a609b21e61
+GUIGameObject	?drawSpriteCellShadow@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YAXPBVCSprite@@IIIPAVT16bppDIBSection@@HHABVCRect@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f5af	tokens1:1de6869063de
+GUIGameObject	?drawSpriteImpl@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x44424	-
+GUIGameObject	?drawSpriteImpl@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x4490c	-
+GUIGameObject	?drawSpriteImpl@?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x43c86	-
+GUIGameObject	?drawSpriteImpl@?$TGUIOwnableSpecializedObject@VTMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x44693	-
+GUIGameObject	?drawSpriteImpl@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x45b36	-
+GUIGameObject	?drawSpriteImpl@?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x45608	-
+GUIGameObject	?drawSpriteImpl@?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x45887	-
+GUIGameObject	?drawSpriteImpl@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	99.9167	99.9167	99.9167	0x3fe9b	tokens1:b4d559f0fd21
+GUIGameObject	?drawSpriteImpl@TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3fc7a	tokens1:d542d372fe1d
+GUIGameObject	?drawSpriteImpl@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBEXIPAVCDC@@PAVT16bppDIBSection@@HHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x41799	tokens1:0819b77c5c17
+GUIGameObject	?drawSpriteShadow@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YAXPBVCSprite@@IPAVT16bppDIBSection@@HHABVCRect@@W4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f45f	tokens1:75c6885b4a48
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x4466b	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x448e4	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x45b07	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomlyAlignedGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x455ea	-
+GUIGameObject	?edit@?$TGUIOwnableSpecializedObject@VTRandomlyLeveledGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x45869	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x43eca	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTBlackBox@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44f47	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTEvent@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44018	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTGameArtifact@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44b55	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTGameResource@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44df9	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTHolyGrail@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x45331	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTMonster@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x44184	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTQuestGuard@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x45de9	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTScholar@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x45095	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSeersHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x451ed	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTShrine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x4547f	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSign@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x442d3	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTSpellScroll@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x44ca3	-
+GUIGameObject	?edit@?$TGUIStandardSpecializedObject@VTWitchHut@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	22.7500	22.7500	22.7500	0x45f2d	-
+GUIGameObject	?edit@TGUIGameObject@@UAE_NPAVTEditContext@1@PAVTGameMap@@_NI@Z	1.9333	1.9333	1.9333	0x4235a	tokens1:ae9be0144046
+GUIGameObject	?edit@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	46.5897	46.5897	46.5897	0x41b79	tokens1:962a85217c63
+GUIGameObject	?edit@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x40214	tokens1:39e373e43508
+GUIGameObject	?edit@TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x407a1	tokens1:7d98f35781fc
+GUIGameObject	?edit@TGUIPrison@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x41231	tokens1:3cd3cb42db88
+GUIGameObject	?edit@TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x40ee3	tokens1:be3d0dbbc54b
+GUIGameObject	?edit@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UAE_NPAVTEditContext@TGUIGameObject@@PAVTGameMap@@_NI@Z	0.0000	0.0000	0.0000	0x41571	tokens1:e2e8fc4d6811
+GUIGameObject	?exportText@THero@@$4PPPPPPPM@BA@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x470b5	-
+GUIGameObject	?exportText@THero@@$4PPPPPPPM@M@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x4619e	-
+GUIGameObject	?exportText@TMonster@@$4PPPPPPPM@M@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x46fee	-
+GUIGameObject	?exportText@TQuestLocation@@$4PPPPPPPM@BE@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x46cc8	-
+GUIGameObject	?exportText@TQuestLocation@@$4PPPPPPPM@M@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x47ffa	-
+GUIGameObject	?exportText@TTown@@$4PPPPPPPM@M@BEXPAV?$basic_ostream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x460db	-
+GUIGameObject	?getCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ	98.1818	98.1818	98.1818	0x3fb01	-
+GUIGameObject	?getSmallCheckMark@TCheckMarkBmp@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@SAAAV12@XZ	98.1818	98.1818	98.1818	0x3fb2e	-
+GUIGameObject	?getTypeName@TMonster@@$4PPPPPPPM@M@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x46fcd	-
+GUIGameObject	?getTypeName@TNonRandomHero@@$4PPPPPPPM@M@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x482b6	-
+GUIGameObject	?getTypeName@TRandomlyAlignedGenerator@@$4PPPPPPPM@M@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x48bb1	-
+GUIGameObject	?getTypeName@TRandomlyLeveledGenerator@@$4PPPPPPPM@M@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x48e67	-
+GUIGameObject	?getTypeName@TTown@@$4PPPPPPPM@M@BE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x460ba	-
+GUIGameObject	?hasText@THero@@$4PPPPPPPM@BA@BE_NXZ	100.0000	100.0000	100.0000	0x470aa	-
+GUIGameObject	?hasText@THero@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x46193	-
+GUIGameObject	?hasText@TMonster@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x46fe3	-
+GUIGameObject	?hasText@TQuestLocation@@$4PPPPPPPM@BE@BE_NXZ	100.0000	100.0000	100.0000	0x46cbd	-
+GUIGameObject	?hasText@TQuestLocation@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x47fef	-
+GUIGameObject	?hasText@TTown@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x460d0	-
+GUIGameObject	?hitTest@TGUIGameObject@@UBE_NIHHW4TZoom@@@Z	99.8781	99.8781	99.8781	0x425b1	tokens1:463af7314049
+GUIGameObject	?hitTest@TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE_NIHHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3fbef	tokens1:1ea61ec815a8
+GUIGameObject	?hitTestSprite@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@YA_NPBVCSprite@@IHHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3f717	tokens1:8c266e653586
+GUIGameObject	?hitTestSpriteImpl@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBE_NIHHW4TZoom@@@Z	99.9020	99.9020	99.9020	0x3ffe9	tokens1:f5e25d1dfee9
+GUIGameObject	?hitTestSpriteImpl@TGUISpecializedObject@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBE_NIHHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x3fcbc	tokens1:9c814d800ee8
+GUIGameObject	?hitTestSpriteImpl@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@MBE_NIHHW4TZoom@@@Z	100.0000	100.0000	100.0000	0x41851	tokens1:83448a53dd42
+GUIGameObject	?importText@THero@@$4PPPPPPPM@BA@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x47081	-
+GUIGameObject	?importText@THero@@$4PPPPPPPM@M@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x4616a	-
+GUIGameObject	?importText@TMonster@@$4PPPPPPPM@M@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x46d37	-
+GUIGameObject	?importText@TQuestLocation@@$4PPPPPPPM@BE@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x46b84	-
+GUIGameObject	?importText@TQuestLocation@@$4PPPPPPPM@M@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x47dd5	-
+GUIGameObject	?importText@TTown@@$4PPPPPPPM@M@AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0x4609c	-
+GUIGameObject	?isAnimated@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE_NXZ	99.8684	99.8684	99.8684	0x40089	tokens1:3db98e6601d7
+GUIGameObject	?isAnimated@TGUIGameObject@@UBE_NXZ	99.8333	99.8333	99.8333	0x42697	tokens1:449274af4f44
+GUIGameObject	?isAnimated@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE_NXZ	100.0000	100.0000	100.0000	0x4177a	tokens1:e8a68a670bc6
+GUIGameObject	?isCustomized@TAbstractRandomlyAlignedGenerator@@WBE@BE_NXZ	100.0000	100.0000	100.0000	0x48bbc	-
+GUIGameObject	?isCustomized@TAbstractRandomlyLeveledGenerator@@WBE@BE_NXZ	100.0000	100.0000	100.0000	0x48e72	-
+GUIGameObject	?isCustomized@THero@@$4PPPPPPPM@BA@BE_NXZ	100.0000	100.0000	100.0000	0x4709f	-
+GUIGameObject	?isCustomized@THero@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x46188	-
+GUIGameObject	?isCustomized@THeroPlaceholder@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x4639b	-
+GUIGameObject	?isCustomized@TMonster@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x46fd8	-
+GUIGameObject	?isCustomized@TQuestLocation@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x47fe4	-
+GUIGameObject	?isCustomized@TRandomGenerator@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x490e9	-
+GUIGameObject	?isCustomized@TSeersHut@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x46cb2	-
+GUIGameObject	?isCustomized@TTown@@$4PPPPPPPM@M@BE_NXZ	100.0000	100.0000	100.0000	0x460c5	-
+GUIGameObject	?isOwnable@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE_NXZ	100.0000	100.0000	100.0000	0x41aea	-
+GUIGameObject	?miniMapColor@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEGW4TTerrainType@@@Z	100.0000	100.0000	100.0000	0x43c75	-
+GUIGameObject	?miniMapColor@?$TGUIOwnableSpecializedObject@VTRandomGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEGW4TTerrainType@@@Z	100.0000	100.0000	100.0000	0x45b25	-
+GUIGameObject	?miniMapColor@TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEGW4TTerrainType@@@Z	100.0000	100.0000	100.0000	0x4226a	tokens1:0db79487b65c
+GUIGameObject	?miniMapColor@TGUIBasicHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEGW4TTerrainType@@@Z	100.0000	100.0000	100.0000	0x40070	tokens1:6c5f991d35c2
+GUIGameObject	?miniMapColor@TGUIGameObject@@UBEGW4TTerrainType@@@Z	99.8611	99.8611	99.8611	0x4261f	tokens1:f6f095246f11
+GUIGameObject	?miniMapColor@TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEGW4TTerrainType@@@Z	100.0000	100.0000	100.0000	0x41ea3	tokens1:96dac0426d94
+GUIGameObject	?miniMapColor@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBEGW4TTerrainType@@@Z	100.0000	100.0000	100.0000	0x41766	tokens1:75b0ec1bdacb
+GUIGameObject	?set@?$bitset@$0OI@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x439fd	-
+GUIGameObject	?write@THero@@$4PPPPPPPM@BA@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x47094	-
+GUIGameObject	?write@THero@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x4617d	-
+GUIGameObject	?write@THeroPlaceholder@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x46390	-
+GUIGameObject	?write@TMonster@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x46fc2	-
+GUIGameObject	?write@TQuestLocation@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x47fd9	-
+GUIGameObject	?write@TRandomGenerator@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x490de	-
+GUIGameObject	?write@TRandomlyAlignedGenerator@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x48ba6	-
+GUIGameObject	?write@TRandomlyLeveledGenerator@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x48e5c	-
+GUIGameObject	?write@TSeersHut@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x46ca7	-
+GUIGameObject	?write@TTown@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x460af	-
 GameMap	??0?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x38f99	-
 GameMap	??0?$TArray@V?$TArray@VTCell@TLayer@TGameMap@@$05@@$05@@QAE@XZ	100.0000	100.0000	100.0000	0x3900a	-
 GameMap	??0?$TArray@V?$TRefCountingPtr@U_TPlayerBookkeeping@_TImpl@TGameMap@@@@$07@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x3885c	-
@@ -1075,11 +1542,10 @@ Generator	??0TRandomlyAlignedGenerator@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.00
 Generator	??0TRandomlyLeveledGenerator@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x3eb38	tokens1:bb48bc282549
 Generator	??0TRandomlyLeveledGenerator@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0x3eaa5	tokens1:7aa12923281f
 Generator	??_ETAbstractRandomlyAlignedGenerator@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x3eff3	-
-Generator	??_ETGenerator@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x3f00b	-
+Generator	??_ETGenerator@@$4PPPPPPPM@A@AEPAXI@Z	97.5000	100.0000	100.0000	0x3f00b	-
 Generator	??_ETRandomGenerator@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x3ef24	-
 Generator	??_ETRandomlyAlignedGenerator@@$4PPPPPPPM@A@AEPAXI@Z	100.0000	100.0000	100.0000	0x3ee9a	-
 Generator	??_GTAbstractRandomlyAlignedGenerator@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x3f023	-
-Generator	??_GTGenerator@@UAEPAXI@Z	99.7059	99.7059	99.7059	0x3fa68	-
 Generator	??_GTRandomGenerator@@UAEPAXI@Z	99.7059	99.7059	99.7059	0x3ef2c	-
 Generator	??_GTRandomlyAlignedGenerator@@UAEPAXI@Z	99.7059	99.7059	99.7059	0x3ef67	-
 Generator	?getGeneratorTypeTraits@TGenerator@@QBEABUTGeneratorTypeTraits@1@XZ	100.0000	100.0000	100.0000	0x3e35c	tokens1:2735d41a0542
@@ -1209,7 +1675,7 @@ Hero	?isCustomized@THeroPlaceholder@@$4PPPPPPPM@A@BE_NXZ	100.0000	100.0000	100.0
 Hero	?isCustomized@THeroPlaceholder@@UBE_NXZ	100.0000	100.0000	100.0000	0x4aea5	tokens1:ef37c4e58b54
 Hero	?none@?$bitset@$0EG@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0x4c40f	-
 Hero	?read@TArtifactContainer@THeroPrototype@@QAEXPAVTRawIStream@@H@Z	99.9143	99.9143	99.9143	0x4a375	tokens1:86fa1b8f9877
-Hero	?read@THero@@IAEXPAVTRawIStream@@H@Z	91.8756	91.8756	91.8756	0x4b09a	tokens1:08d0ec54b512
+Hero	?read@THero@@IAEXPAVTRawIStream@@H@Z	91.8886	91.8886	91.8886	0x4b09a	tokens1:08d0ec54b512
 Hero	?read@TPrimarySkills@THeroPrototype@@QAEXPAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4a4f3	tokens1:1bc459cf1282
 Hero	?read@TSecondarySkills@THeroPrototype@@QAEXPAVTRawIStream@@H@Z	99.8649	99.8649	99.8649	0x4a2a6	tokens1:0b95632ff422
 Hero	?read@TSpells@THeroPrototype@@QAEXPAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x4a4d5	tokens1:5860759d12bb
@@ -3144,7 +3610,7 @@ Town	??0TLinkableObject@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x40c91	-
 Town	??0TPlayableObject@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x4055f	-
 Town	??0TTimedEvent@TTown@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xc3623	-
 Town	??0TTimedEvent@TTown@@QAE@XZ	100.0000	100.0000	100.0000	0xc22c1	-
-Town	??0TTown@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	94.9246	94.9246	94.9246	0xc1dc5	tokens1:6361f89b0600
+Town	??0TTown@@QAE@ABUTObjectType@@PAVTRawIStream@@H@Z	94.9367	94.9367	94.9367	0xc1dc5	tokens1:6361f89b0600
 Town	??0TTown@@QAE@ABUTObjectType@@W4TPlayer@@@Z	100.0000	100.0000	100.0000	0xc1cbb	tokens1:a32a63dc047e
 Town	??0TTown@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0xc1a90	tokens1:24ba0181256b
 Town	??1?$vector@VTTimedEvent@TTown@@V?$allocator@VTTimedEvent@TTown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xc3032	-
@@ -3510,6 +3976,7 @@ cspriteframe	?DrawAdvObjWithFlagScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalet
 cspriteframe	?DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z	99.9676	99.9676	99.9676	0xdf580	-
 cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	99.9248	99.9248	99.9248	0xe0a00	-
 cspriteframe	?DrawTileScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	76.9911	76.9911	76.9911	0xe2c40	-
+cspriteframe	?GetPixel@CSpriteFrame@@QBEEHH@Z	48.0124	48.0124	48.0124	0xdef60	-
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SAXIII@Z	100.0000	100.0000	100.0000	0xdee60	-
 cspriteframe	?getSize@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0xdef50	-
 deflate	@deflate@8	100.0000	100.0000	100.0000	0xd5640	-

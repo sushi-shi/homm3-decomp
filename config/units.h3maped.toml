@@ -812,6 +812,11 @@ source = "src/editor/MiniMapWnd.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "GUIGameObject"
+source = "src/editor/GUIGameObject.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "MapValidation"
 source = "src/editor/MapValidation.cpp"
 flags = "editor_o1_ob2_gr_windows"

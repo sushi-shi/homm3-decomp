@@ -20,6 +20,9 @@
 #define HOMM3_EDITOR_GUIGAMEOBJECT_H
 
 #include "editor/stdafx.h"
+#include <memory>
+
+#include "editor/GameMap.h"
 #include "editor/GameObject.h"
 #include "editor/MapObjectRef.h"
 #include "editor/Tile.h"
@@ -83,6 +86,8 @@ public:
     };
 
     TGUIGameObject(const TObjectType& objType);
+    // A copy draws its own animation phase (h3maped 0x442305).
+    TGUIGameObject(const TGUIGameObject& other);
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual void draw(unsigned int frameNum, CDC* pDC, T16bppDIBSection* pDestBmp, int x, int y,
@@ -97,6 +102,99 @@ public:
     virtual TColor miniMapColor(TTerrainType terrainType) const;
     virtual bool isAnimated() const;
     virtual bool isOwnable() const;
+
+    unsigned int getAnimOffset() const { return _m_animOffset; }
+
+private:
+    ubyte _m_animOffset;
+};
+
+// The map's object factory: each create function makes the matching GUI
+// object (GUIGameObject.cpp's anonymous classes). The document's own
+// factory derives from it (MapDoc.cpp's TTheObjectFactory, whose vtable
+// 0x53942c holds these bodies).
+class TGUIGameObjectFactory : public TGameMap::TObjectFactory {
+public:
+    virtual std::auto_ptr<TGenericObject> createGenericObject(const TObjectType& objType) const;
+    virtual std::auto_ptr<TGenericObject> createGenericObject(const TObjectType& objType, TRawIStream* pIStream,
+                                                              int version) const;
+    virtual std::auto_ptr<THeroPlaceholder> createHeroPlaceholder(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<THeroPlaceholder> createHeroPlaceholder(const TObjectType& objType, TRawIStream* pIStream,
+                                                                  int version) const;
+    virtual std::auto_ptr<TNonRandomHero> createNonRandomHero(const TObjectType& objType, TPlayer owner,
+                                                              THeroID heroID) const;
+    virtual std::auto_ptr<TNonRandomHero> createNonRandomHero(const TObjectType& objType, TRawIStream* pIStream,
+                                                              int version) const;
+    virtual std::auto_ptr<TRandomHero> createRandomHero(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<TRandomHero> createRandomHero(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const;
+    virtual std::auto_ptr<TPrison> createPrison(const TObjectType& objType, THeroID heroID) const;
+    virtual std::auto_ptr<TPrison> createPrison(const TObjectType& objType, TRawIStream* pIStream,
+                                                int version) const;
+    virtual std::auto_ptr<TTown> createTown(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<TTown> createTown(const TObjectType& objType, TRawIStream* pIStream, int version) const;
+    virtual std::auto_ptr<TEvent> createEvent(const TObjectType& objType) const;
+    virtual std::auto_ptr<TEvent> createEvent(const TObjectType& objType, TRawIStream* pIStream, int version) const;
+    virtual std::auto_ptr<TMonster> createMonster(const TObjectType& objType) const;
+    virtual std::auto_ptr<TMonster> createMonster(const TObjectType& objType, TRawIStream* pIStream,
+                                                  int version) const;
+    virtual std::auto_ptr<TSign> createSign(const TObjectType& objType) const;
+    virtual std::auto_ptr<TSign> createSign(const TObjectType& objType, TRawIStream* pIStream, int version) const;
+    virtual std::auto_ptr<TFlaggableObject> createFlaggable(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<TFlaggableObject> createFlaggable(const TObjectType& objType, TRawIStream* pIStream,
+                                                            int version) const;
+    virtual std::auto_ptr<TMine> createMine(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<TMine> createMine(const TObjectType& objType, TRawIStream* pIStream, int version) const;
+    virtual std::auto_ptr<TAbandonedMine> createAbandonedMine(const TObjectType& objType) const;
+    virtual std::auto_ptr<TAbandonedMine> createAbandonedMine(const TObjectType& objType, TRawIStream* pIStream,
+                                                              int version) const;
+    virtual std::auto_ptr<TGarrison> createGarrison(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<TGarrison> createGarrison(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const;
+    virtual std::auto_ptr<TGameArtifact> createArtifact(const TObjectType& objType) const;
+    virtual std::auto_ptr<TGameArtifact> createArtifact(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const;
+    virtual std::auto_ptr<TSpellScroll> createSpellScroll(const TObjectType& objType) const;
+    virtual std::auto_ptr<TSpellScroll> createSpellScroll(const TObjectType& objType, TRawIStream* pIStream,
+                                                          int version) const;
+    virtual std::auto_ptr<TGameResource> createResource(const TObjectType& objType) const;
+    virtual std::auto_ptr<TGameResource> createResource(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const;
+    virtual std::auto_ptr<TBlackBox> createBlackBox(const TObjectType& objType) const;
+    virtual std::auto_ptr<TBlackBox> createBlackBox(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const;
+    virtual std::auto_ptr<TScholar> createScholar(const TObjectType& objType) const;
+    virtual std::auto_ptr<TScholar> createScholar(const TObjectType& objType, TRawIStream* pIStream,
+                                                  int version) const;
+    virtual std::auto_ptr<TSeersHut> createSeersHut(const TObjectType& objType) const;
+    virtual std::auto_ptr<TSeersHut> createSeersHut(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const;
+    virtual std::auto_ptr<THolyGrail> createHolyGrail(const TObjectType& objType) const;
+    virtual std::auto_ptr<THolyGrail> createHolyGrail(const TObjectType& objType, TRawIStream* pIStream,
+                                                      int version) const;
+    virtual std::auto_ptr<TShrine> createShrine(const TObjectType& objType) const;
+    virtual std::auto_ptr<TShrine> createShrine(const TObjectType& objType, TRawIStream* pIStream,
+                                                int version) const;
+    virtual std::auto_ptr<TGenerator> createGenerator(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<TGenerator> createGenerator(const TObjectType& objType, TRawIStream* pIStream,
+                                                      int version) const;
+    virtual std::auto_ptr<TRandomlyAlignedGenerator> createRandomlyAlignedGenerator(const TObjectType& objType,
+                                                                                    TPlayer owner) const;
+    virtual std::auto_ptr<TRandomlyAlignedGenerator> createRandomlyAlignedGenerator(const TObjectType& objType,
+        TRawIStream* pIStream, int version) const;
+    virtual std::auto_ptr<TRandomlyLeveledGenerator> createRandomlyLeveledGenerator(const TObjectType& objType,
+                                                                                    TPlayer owner) const;
+    virtual std::auto_ptr<TRandomlyLeveledGenerator> createRandomlyLeveledGenerator(const TObjectType& objType,
+        TRawIStream* pIStream, int version) const;
+    virtual std::auto_ptr<TRandomGenerator> createRandomGenerator(const TObjectType& objType, TPlayer owner) const;
+    virtual std::auto_ptr<TRandomGenerator> createRandomGenerator(const TObjectType& objType, TRawIStream* pIStream,
+                                                                  int version) const;
+    virtual std::auto_ptr<TQuestGuard> createQuestGuard(const TObjectType& objType) const;
+    virtual std::auto_ptr<TQuestGuard> createQuestGuard(const TObjectType& objType, TRawIStream* pIStream,
+                                                        int version) const;
+    virtual std::auto_ptr<TWitchHut> createWitchHut(const TObjectType& objType) const;
+    virtual std::auto_ptr<TWitchHut> createWitchHut(const TObjectType& objType, TRawIStream* pIStream,
+                                                    int version) const;
 };
 
 #endif  /* HOMM3_EDITOR_GUIGAMEOBJECT_H */

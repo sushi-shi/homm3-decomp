@@ -31,6 +31,11 @@ public:
             ResourceManager::Dispose(m_ptr);
     }
 
+    // CodeView 0x57b0 declares the assignment with no procedure location:
+    // auto_ptr's transfer. The map editor's town sprite cache defines it
+    // (GUIGameObject.cpp; h3maped 0x499b7e).
+    TResourcePtr& operator=(const TResourcePtr& rhs);
+
     DC_ADDRESS(0x05b2b8, 0x4)
     T* get() const { return m_ptr; }
 
