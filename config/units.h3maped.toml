@@ -862,6 +862,11 @@ source = "src/editor/ToolkitWnd.cpp"
 flags = "editor_o1_ob2_gr_windows"
 
 [[unit]]
+unit = "MapView"
+source = "src/editor/MapView.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
 unit = "MapEditingWnd"
 source = "src/editor/MapEditingWnd.cpp"
 flags = "editor_o1_ob2_gr_windows"

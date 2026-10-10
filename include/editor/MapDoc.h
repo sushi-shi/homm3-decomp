@@ -131,6 +131,7 @@ public:
     static void autosaveAll();
     static void setAutosaveInterval(unsigned int interval);
     static void setSpecialTileFrequency(unsigned int newFrequency);
+    static unsigned int getSpecialTileFrequency() { return _s_specialTileFrequency; }
 
     TMapDoc(CDocTemplate* pTemplate);
     virtual ~TMapDoc();
@@ -178,7 +179,7 @@ public:
     void setNewMapParams(const TNewMapParams& params) { _m_newMapParams = params; }
     TGameMap* getPMap() { return _m_pMap; }
     unsigned int getRevision() const { return _m_revision; }
-    bool canUndo() const { return _m_currentIndex != 0; }
+    bool canUndo() const { return _m_currentIndex > 0; }
     bool canRedo() const { return _m_currentIndex < _m_undoQueue.size(); }
 
 protected:

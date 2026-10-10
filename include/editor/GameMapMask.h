@@ -6,32 +6,64 @@
 // data; the class and file names are not recorded. Each map level keeps two
 // bits per tile in blocks of 12 x 12 tiles, shared copy on write between the
 // mask's copies; the map edit window tints the tiles of state 1 and 2 blue.
-// Declared so far only as far as the map windows need it: the layout below is
-// the one the edit window's inline emptiness test reads (the data's layer
-// pointers at +0xc, each layer's tile count at +4).
+//
+// Three copy-on-write levels, each held by a TRefCountingPtr (the map
+// view's inline assignment 0x486a37 and the releases 0x43cc59, 0x43cd5a and
+// 0x43ce72): the levels and the width in blocks, each level's tile count
+// and blocks, and each block's twelve rows of three bytes, built zeroed
+// element by element (0x43d06f). The obstacle tool paints state 2 where
+// obstacles go and keeps state 1 clear around them; the member and state
+// names are not recorded.
 #ifndef HOMM3_EDITOR_GAMEMAPMASK_H
 #define HOMM3_EDITOR_GAMEMAPMASK_H
 
 #include <vector>
 
+#include "editor/RefCountingPtr.h"
+
 class TGameMapMask {
 public:
-    bool hasTiles(bool bSecondLayer) const { return _m_pData->m_layers[bSecondLayer]->m_numTiles > 0; }
+    enum TTileState {
+        eTileNone,
+        eTileClear,
+        eTileObstacle
+    };
+
+    TGameMapMask(unsigned int width, unsigned int height, bool bTwoLayer);
+
+    bool isTwoLayer() const { return _m_pImpl->m_layers.size() > 1; }
+    bool hasTiles(bool bSecondLayer) const { return _m_pImpl->m_layers[bSecondLayer]->m_numTiles > 0; }
+    void setTileState(unsigned int x, unsigned int y, bool bSecondLayer, int state);
+    void clear();
+    void addSecondLayer();
+    void removeSecondLayer();
     int getTileState(unsigned int x, unsigned int y, bool bSecondLayer) const;
 
 private:
+    // Four tiles' states.
+    class _TQuad {
+    public:
+        _TQuad() : m_bits(0) {}
+        ~_TQuad() {}
+
+        unsigned char m_bits;
+    };
+
+    struct _TBlock {
+        _TQuad m_aaQuads[12][3];
+    };
+
     struct _TLayer {
-        int m_refCount;
         unsigned int m_numTiles;
+        std::vector<TRefCountingPtr<_TBlock> > m_blocks;
     };
 
-    struct _TData {
-        int m_refCount;
+    struct _TImpl {
         unsigned int m_numBlockColumns;
-        std::vector<_TLayer*> m_layers;
+        std::vector<TRefCountingPtr<_TLayer> > m_layers;
     };
 
-    _TData* _m_pData;
+    TRefCountingPtr<_TImpl> _m_pImpl;
 };
 
 #endif  /* HOMM3_EDITOR_GAMEMAPMASK_H */
