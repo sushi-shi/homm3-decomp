@@ -258,6 +258,16 @@ void TAbstractRandomlyLeveledGenerator::write(TRawOStream* pOStream, int version
     *pOStream << static_cast<signed char>(_m_minLevel) << static_cast<signed char>(_m_maxLevel);
 }
 
+void TAbstractRandomlyLeveledGenerator::setMinLevel(int newMinLevel)
+{
+    _m_minLevel = newMinLevel;
+}
+
+void TAbstractRandomlyLeveledGenerator::setMaxLevel(int newMaxLevel)
+{
+    _m_maxLevel = newMaxLevel;
+}
+
 namespace {
 DATA(0x0059e4f8) TRandomlyLeveledGenerator::TTypeTraits aRandomlyLeveledTypeTraitsImp[kNumTownTypes];
 }

@@ -509,6 +509,10 @@ public:
 
     int getMinLevel() const { return _m_minLevel; }
     int getMaxLevel() const { return _m_maxLevel; }
+    // Out of line: the random dwelling's level dialog calls them (h3maped
+    // /OPT:ICF folds both onto other one-store setters).
+    void setMinLevel(int newMinLevel);
+    void setMaxLevel(int newMaxLevel);
 
 private:
     int _m_minLevel;

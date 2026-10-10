@@ -51,7 +51,7 @@ void THeroPlaceholderPropsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_POWER_RATING_STATIC, _m_powerRatingStatic);
     DDX_Control(pDX, IDC_HERO_IDENTITY_STATIC, _m_heroStatic);
     DDX_Control(pDX, IDC_PLACEHOLDER_CLASS_STATIC, _m_classStatic);
-    DDX_Control(pDX, IDC_PLACEHOLDER_OWNER_COMBO, _m_ownerCombo);
+    DDX_Control(pDX, IDC_OWNER_COMBO, _m_ownerCombo);
     DDX_Control(pDX, IDC_POWER_RATING_SPIN, _m_powerRatingSpin);
     DDX_Control(pDX, IDC_POWER_RATING_EDIT, _m_powerRatingEdit);
     DDX_Control(pDX, IDC_IDENTITY_COMBO, _m_heroCombo);
@@ -95,7 +95,7 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
     GetDlgItem(IDOK)->SetWindowText(kOKStr);
     GetDlgItem(IDCANCEL)->SetWindowText(kCancelStr);
     GetDlgItem(ID_HELP)->SetWindowText(kHelpStr);
-    GetDlgItem(IDC_PLACEHOLDER_OWNER_STATIC)->SetWindowText(SHeroPlaceholderPropsDlgText::kOwnerStaticStr);
+    GetDlgItem(IDC_OWNER_COMBO_STATIC)->SetWindowText(SHeroPlaceholderPropsDlgText::kOwnerStaticStr);
     GetDlgItem(IDC_PLACEHOLDER_IDENTITY_STATIC)->SetWindowText(SHeroPlaceholderPropsDlgText::kIdentityStaticStr);
     GetDlgItem(IDC_ANY_HERO_RADIO)->SetWindowText(SHeroPlaceholderPropsDlgText::kAnyHeroRadioStr);
     GetDlgItem(IDC_SPECIFIC_HERO_RADIO)->SetWindowText(SHeroPlaceholderPropsDlgText::kSpecificHeroRadioStr);

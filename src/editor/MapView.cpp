@@ -26,6 +26,7 @@
 #include "editor/ArtifactPropsSheet.h"
 #include "editor/BlackBoxPropsSheet.h"
 #include "editor/EventPropsSheet.h"
+#include "editor/FindDlg.h"
 #include "editor/FlaggablePropsDlg.h"
 #include "editor/FormattedString.h"
 #include "editor/GameMap.h"
@@ -44,6 +45,7 @@
 #include "editor/MonsterPropsSheet.h"
 #include "editor/ObjectSpecializations.h"
 #include "editor/random_object_placer.h"
+#include "editor/RandomGeneratorPropsDlg.h"
 #include "editor/resource.h"
 #include "editor/ResourcePropsSheet.h"
 #include "editor/ScholarPropsDlg.h"
@@ -1070,6 +1072,30 @@ VA(0x00481de2, 0x55)
 bool TMapView::onEditProperties(TShrine* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
 {
     TShrinePropsDlg dlg(this, pObj);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
+VA(0x00481e7e, 0x58)
+bool TMapView::onEditProperties(TRandomGenerator* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
+{
+    TRandomGeneratorPropsDlg dlg(this, pMap, bSecondLayer, objID);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
+VA(0x00481ed6, 0x58)
+bool TMapView::onEditProperties(TRandomlyAlignedGenerator* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
+{
+    TRandomlyAlignedGeneratorPropsDlg dlg(this, pMap, bSecondLayer, objID);
+    dlg.DoModal();
+    return dlg.wasModified();
+}
+
+VA(0x00481f2e, 0x49)
+bool TMapView::onEditProperties(TRandomlyLeveledGenerator* pObj, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
+{
+    TRandomlyLeveledGeneratorPropsDlg dlg(this, pObj);
     dlg.DoModal();
     return dlg.wasModified();
 }
@@ -2447,16 +2473,133 @@ void TMapView::OnToolsValidateMap()
     dlg.DoModal();
 }
 
+VA(0x00484522, 0xc0)
+void TMapView::OnEditFind()
+{
+    if (_m_mode != _eModeObjects)
+        return;
+    int findType;
+    TMapLayerObjectID objID = _m_pMapFrameWnd->getSelectedObjectID();
+    if (objID == TGameMap::TLayer::s_kInvalidObjID)
+        findType = _m_lastFindType;
+    else {
+        const TGameMap* pMap = getPDocument()->getPMap();
+        findType = TFindDlg::findType(pMap->getLayer(_m_bViewUnderground).getObject(objID));
+    }
+    TFindDlg dlg(this, findType);
+    if (dlg.DoModal() == IDOK) {
+        _m_lastFindType = dlg.getFindType();
+        if (dlg.getBSearchBackwards())
+            OnEditFindPrev();
+        else
+            OnEditFindNext();
+    }
+}
+
 VA(0x004845e2, 0x1c)
 void TMapView::OnUpdateEditFind(CCmdUI* pCmdUI)
 {
     pCmdUI->Enable(_m_mode == _eModeObjects);
 }
 
+VA(0x004845fe, 0x1c5)
+void TMapView::OnEditFindNext()
+{
+    if (_m_mode != _eModeObjects || _m_lastFindType == -1)
+        return;
+    try {
+        const TGameMap* pMap = getPDocument()->getPMap();
+        bool abLayerHasObjects[2];
+        abLayerHasObjects[0] = pMap->getLayer(0U).getFirstObjectID() != TGameMap::TLayer::s_kInvalidObjID;
+        abLayerHasObjects[1] = pMap->isTwoLayer()
+                               && pMap->getLayer(1U).getFirstObjectID() != TGameMap::TLayer::s_kInvalidObjID;
+        if (!abLayerHasObjects[0] && !abLayerHasObjects[1])
+            throw false;
+        unsigned int startLayer;
+        TMapLayerObjectID startObjID;
+        TMapLayerObjectID selectedObjID = _m_pMapFrameWnd->getSelectedObjectID();
+        if (selectedObjID == TGameMap::TLayer::s_kInvalidObjID) {
+            startLayer = abLayerHasObjects[1] ? 1 : 0;
+            startObjID = pMap->getLayer(startLayer).getLastObjectID();
+        } else {
+            startLayer = _m_bViewUnderground ? 1 : 0;
+            startObjID = selectedObjID;
+        }
+        unsigned int layer = startLayer;
+        TMapLayerObjectID objID = startObjID;
+        for (;;) {
+            objID = pMap->getLayer(layer).getNextObjectID(objID);
+            if (objID == TGameMap::TLayer::s_kInvalidObjID) {
+                do
+                    layer = !layer;
+                while (!abLayerHasObjects[layer]);
+                objID = pMap->getLayer(layer).getFirstObjectID();
+            }
+            if (TFindDlg::matches(pMap->getLayer(layer).getObject(objID), _m_lastFindType))
+                break;
+            if (objID == startObjID && layer == startLayer)
+                throw false;
+        }
+        if ((layer != 0) != _m_bViewUnderground)
+            _setViewUnderground(!_m_bViewUnderground);
+        _m_pMapFrameWnd->selectObject(objID);
+        _m_pMapFrameWnd->makeVisible(objID);
+    } catch (bool) {
+        MessageBox(kObjectNotFoundStr);
+    }
+}
+
 VA(0x004847c3, 0x25)
 void TMapView::OnUpdateEditFindNext(CCmdUI* pCmdUI)
 {
     pCmdUI->Enable(_m_mode == _eModeObjects && _m_lastFindType != -1);
+}
+
+VA(0x004847e8, 0x1c5)
+void TMapView::OnEditFindPrev()
+{
+    if (_m_mode != _eModeObjects || _m_lastFindType == -1)
+        return;
+    try {
+        const TGameMap* pMap = getPDocument()->getPMap();
+        bool abLayerHasObjects[2];
+        abLayerHasObjects[0] = pMap->getLayer(0U).getFirstObjectID() != TGameMap::TLayer::s_kInvalidObjID;
+        abLayerHasObjects[1] = pMap->isTwoLayer()
+                               && pMap->getLayer(1U).getFirstObjectID() != TGameMap::TLayer::s_kInvalidObjID;
+        if (!abLayerHasObjects[0] && !abLayerHasObjects[1])
+            throw false;
+        unsigned int startLayer;
+        TMapLayerObjectID startObjID;
+        TMapLayerObjectID selectedObjID = _m_pMapFrameWnd->getSelectedObjectID();
+        if (selectedObjID == TGameMap::TLayer::s_kInvalidObjID) {
+            startLayer = abLayerHasObjects[0] ? 0 : 1;
+            startObjID = pMap->getLayer(startLayer).getFirstObjectID();
+        } else {
+            startLayer = _m_bViewUnderground ? 1 : 0;
+            startObjID = selectedObjID;
+        }
+        unsigned int layer = startLayer;
+        TMapLayerObjectID objID = startObjID;
+        for (;;) {
+            objID = pMap->getLayer(layer).getPrevObjectID(objID);
+            if (objID == TGameMap::TLayer::s_kInvalidObjID) {
+                do
+                    layer = !layer;
+                while (!abLayerHasObjects[layer]);
+                objID = pMap->getLayer(layer).getLastObjectID();
+            }
+            if (TFindDlg::matches(pMap->getLayer(layer).getObject(objID), _m_lastFindType))
+                break;
+            if (objID == startObjID && layer == startLayer)
+                throw false;
+        }
+        if ((layer != 0) != _m_bViewUnderground)
+            _setViewUnderground(!_m_bViewUnderground);
+        _m_pMapFrameWnd->selectObject(objID);
+        _m_pMapFrameWnd->makeVisible(objID);
+    } catch (bool) {
+        MessageBox(kObjectNotFoundStr);
+    }
 }
 
 VA(0x004849ad, 0x8)

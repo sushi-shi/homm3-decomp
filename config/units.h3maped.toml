@@ -1020,3 +1020,13 @@ flags = "editor_o1_ob2_gr_windows"
 unit = "EventPropsSheet"
 source = "src/editor/EventPropsSheet.cpp"
 flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "RandomGeneratorPropsDlg"
+source = "src/editor/RandomGeneratorPropsDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"
+
+[[unit]]
+unit = "FindDlg"
+source = "src/editor/FindDlg.cpp"
+flags = "editor_o1_ob2_gr_windows"

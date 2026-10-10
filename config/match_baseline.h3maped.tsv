@@ -60,7 +60,7 @@ ArmyDlg	??_GTArmyDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x26bf	-
 ArmyDlg	?DoDataExchange@TArmyDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x2857	tokens1:60bb839e7e1c
 ArmyDlg	?GetMessageMap@TArmyDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x2b0c	tokens1:de5c93d1b3a1
 ArmyDlg	?OnEnable@TArmyDlg@@IAEXH@Z	81.1140	81.1140	81.1140	0x2f93	tokens1:db6af6792782
-ArmyDlg	?OnInitDialog@TArmyDlg@@UAEHXZ	99.0228	99.0228	99.0228	0x2b12	tokens1:4d81e6fa5b39
+ArmyDlg	?OnInitDialog@TArmyDlg@@UAEHXZ	99.0391	99.0391	99.0391	0x2b12	tokens1:4d81e6fa5b39
 ArmyDlg	?OnKillFocusQtyEdit1@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3138	tokens1:d5e130eb5aaf
 ArmyDlg	?OnKillFocusQtyEdit2@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3140	tokens1:e0ce6a51f4a0
 ArmyDlg	?OnKillFocusQtyEdit3@TArmyDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x3148	tokens1:44714f06a2aa
@@ -454,6 +454,73 @@ EventPropsSheet	?DoModal@TEventPropsSheet@@UAEHXZ	100.0000	100.0000	100.0000	0x1
 EventPropsSheet	?GetMessageMap@TEventPropsSheet@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x1a29f	tokens1:e7a9c3f0a2bb
 EventPropsSheet	?getMessage@TEventPropsGeneralPage@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1a5ab	tokens1:af73da873441
 EventPropsSheet	?wasModified@TEventPropsSheet@@QBE_NXZ	100.0000	100.0000	100.0000	0x1a26b	tokens1:8cdfb9e1d0b6
+FindDlg	??0TArtifactPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d525	tokens1:bc3aa6fcd5cf
+FindDlg	??0TCreatureBankPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d551	tokens1:77928cd44182
+FindDlg	??0TCreaturePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d674	tokens1:858414158c13
+FindDlg	??0TDoubleTypePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x1d505	tokens1:554c5fb533e7
+FindDlg	??0TFindDlg@@QAE@PAVCWnd@@H@Z	100.0000	100.0000	100.0000	0x1d8ab	tokens1:d4dd4371b785
+FindDlg	??0TGarrisonPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d5ef	tokens1:b98e6623c796
+FindDlg	??0TGenerator1DoublePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d59c	tokens1:066ce5ec4839
+FindDlg	??0TGenerator1Pattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d576	tokens1:fc4024f3b599
+FindDlg	??0TGenerator4Pattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d5c9	tokens1:f37b27e3084c
+FindDlg	??0THeroClassPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d61b	tokens1:7507fe9e21cc
+FindDlg	??0TMinePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d648	tokens1:ebdcd11523f9
+FindDlg	??0TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@XZ	99.4132	99.4132	99.4132	0x1a858	tokens1:07d2907d1294
+FindDlg	??0TResourcePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d6a1	tokens1:5613808e14c6
+FindDlg	??0TSingleTypePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@PBDH@Z	100.0000	100.0000	100.0000	0x1d4af	tokens1:d26ba9ef2b5a
+FindDlg	??0TSingleTypeSingleExtraPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@PBDHH@Z	100.0000	100.0000	100.0000	0x1d4e5	tokens1:73f89eb73f75
+FindDlg	??0TTownTypePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d6e2	tokens1:cfcbfb073a05
+FindDlg	??1TFindDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1d94f	-
+FindDlg	??1TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@QAE@XZ	100.0000	100.0000	100.0000	0x1d88d	-
+FindDlg	??1TTownTypePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UAE@XZ	100.0000	100.0000	100.0000	0x1d70c	-
+FindDlg	??_GTArtifactPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d6c6	-
+FindDlg	??_GTFindDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d933	-
+FindDlg	??_GTObjectPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d4c8	-
+FindDlg	?DoDataExchange@TFindDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1d9a5	tokens1:3c1d4f59ce28
+FindDlg	?GetMessageMap@TFindDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x1d9e5	tokens1:791dee24a4e5
+FindDlg	?OnCreate@TFindDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x1d9eb	tokens1:e1b66ea3691c
+FindDlg	?OnFindNextButton@TFindDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x1db75	tokens1:812f4e772333
+FindDlg	?OnFindPrevButton@TFindDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x1db84	tokens1:09baf8e3664d
+FindDlg	?OnInitDialog@TFindDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x1da10	tokens1:ac32c451f481
+FindDlg	?OnOK@TFindDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x1db3c	tokens1:949981877f5b
+FindDlg	?OnSelCancelFindWhatList@TFindDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x1dbaf	tokens1:8d830838db84
+FindDlg	?OnSelChangeFindWhatList@TFindDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x1db93	tokens1:abad50afbab6
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY01$$CBVTGarrisonPattern@2@@Z	100.0000	100.0000	100.0000	0x1dcec	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY01$$CBVTGenerator4Pattern@2@@Z	100.0000	100.0000	100.0000	0x1dcc3	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY04$$CBVTGenerator1DoublePattern@2@@Z	100.0000	100.0000	100.0000	0x1dc9a	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY06$$CBVTCreatureBankPattern@2@@Z	100.0000	100.0000	100.0000	0x1dc48	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY07$$CBVTMinePattern@2@@Z	100.0000	100.0000	100.0000	0x1dd3e	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY08$$CBVTTownTypePattern@2@@Z	100.0000	100.0000	100.0000	0x1dd92	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY0BA@$$CBVTHeroClassPattern@2@@Z	100.0000	100.0000	100.0000	0x1dd15	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY0CN@$$CBVTGeneralDoubleTypePattern@2@@Z	100.0000	100.0000	100.0000	0x1dbf4	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY0EG@$$CBVTGenerator1Pattern@2@@Z	100.0000	100.0000	100.0000	0x1dc71	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY0HJ@$$CBVTGeneralSingleTypePattern@2@@Z	100.0000	100.0000	100.0000	0x1dbcb	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY0IG@$$CBVTArtifactPattern@2@@Z	100.0000	100.0000	100.0000	0x1dc1d	-
+FindDlg	?_add@TPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@AAEXAAY0IN@$$CBVTCreaturePattern@2@@Z	100.0000	100.0000	100.0000	0x1dd67	-
+FindDlg	?findType@TFindDlg@@SAHABVTGameObject@@@Z	100.0000	100.0000	100.0000	0x1d81d	tokens1:9a2e995711a2
+FindDlg	?getPatterns@@YAABVTPatterns@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@XZ	100.0000	100.0000	100.0000	0x1d858	tokens1:68adfafd0baf
+FindDlg	?insert@?$vector@PBVTObjectPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@V?$allocator@PBVTObjectPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@@std@@@std@@QAEXPAPBVTObjectPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@IABQBV34@@Z	100.0000	100.0000	100.0000	0x1ddcc	-
+FindDlg	?matches@TDoubleTypePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UBE_NABVTGameObject@@@Z	100.0000	100.0000	100.0000	0x1a814	tokens1:d6fa4585497d
+FindDlg	?matches@TDoubleTypeSingleExtraPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UBE_NABVTGameObject@@@Z	100.0000	100.0000	100.0000	0x1a832	tokens1:8571c600e4a0
+FindDlg	?matches@TFindDlg@@SA_NABVTGameObject@@H@Z	100.0000	100.0000	100.0000	0x1d892	tokens1:c0df5cde7914
+FindDlg	?matches@TSingleTypeDoubleExtraPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UBE_NABVTGameObject@@@Z	100.0000	100.0000	100.0000	0x1a7ee	tokens1:c375ace8ba37
+FindDlg	?matches@TSingleTypePattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UBE_NABVTGameObject@@@Z	100.0000	100.0000	100.0000	0x1a7b8	tokens1:b65f585d3bf3
+FindDlg	?matches@TSingleTypeSingleExtraPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@UBE_NABVTGameObject@@@Z	100.0000	100.0000	100.0000	0x1a7cd	tokens1:3109376d362b
+FindDlg	?push_back@?$vector@PBVTObjectPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@V?$allocator@PBVTObjectPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@@std@@@std@@QAEXABQBVTObjectPattern@?%C:\Dev\Heroes 3 Exp 2\Editor\FindDlg.cpp315515326@@@Z	100.0000	100.0000	100.0000	0x1ddbb	-
+FindDlg	__h3cg$FindDlg$static_dtor$akArtifactPatterns	100.0000	100.0000	100.0000	0x1d7de	-
+FindDlg	__h3cg$FindDlg$static_dtor$akCreatureBankPatterns	100.0000	100.0000	100.0000	0x1d7ca	-
+FindDlg	__h3cg$FindDlg$static_dtor$akCreaturePatterns	100.0000	100.0000	100.0000	0x1d73b	-
+FindDlg	__h3cg$FindDlg$static_dtor$akGarrisonPatterns	100.0000	100.0000	100.0000	0x1d77a	-
+FindDlg	__h3cg$FindDlg$static_dtor$akGeneralDoubleTypePatterns	100.0000	100.0000	100.0000	0x1d7f5	-
+FindDlg	__h3cg$FindDlg$static_dtor$akGeneralSingleTypePatterns	100.0000	100.0000	100.0000	0x1d809	-
+FindDlg	__h3cg$FindDlg$static_dtor$akGenerator1DoublePatterns	100.0000	100.0000	100.0000	0x1d7a2	-
+FindDlg	__h3cg$FindDlg$static_dtor$akGenerator1Patterns	100.0000	100.0000	100.0000	0x1d7b6	-
+FindDlg	__h3cg$FindDlg$static_dtor$akGenerator4Patterns	100.0000	100.0000	100.0000	0x1d78e	-
+FindDlg	__h3cg$FindDlg$static_dtor$akHeroClassPatterns	100.0000	100.0000	100.0000	0x1d766	-
+FindDlg	__h3cg$FindDlg$static_dtor$akMinePatterns	100.0000	100.0000	100.0000	0x1d752	-
+FindDlg	__h3cg$FindDlg$static_dtor$akResourcePatterns	100.0000	100.0000	100.0000	0x1d727	-
+FindDlg	__h3cg$FindDlg$static_dtor$akTownTypePatterns	100.0000	100.0000	100.0000	0x1d713	-
+FindDlg	__h3cg$FindDlg$static_dtor$patterns	100.0000	100.0000	100.0000	0x1d883	-
 FlaggablePropsDlg	??0TFlaggablePropsDlg@@QAE@PAVCWnd@@PAVTFlaggableObject@@@Z	100.0000	100.0000	100.0000	0x1e170	tokens1:e2c2102cc89b
 FlaggablePropsDlg	??0TFormattedString@@QAA@PBDZZ	100.0000	100.0000	100.0000	0x2ee7	tokens1:6417fd5cdf45
 FlaggablePropsDlg	??1TFlaggablePropsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x18b8c	-
@@ -1933,12 +2000,12 @@ HeroPlaceholderPropsDlg	??1THeroPlaceholderPropsDlg@@UAE@XZ	100.0000	100.0000	10
 HeroPlaceholderPropsDlg	??4?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x4e299	-
 HeroPlaceholderPropsDlg	??_F?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x4d510	-
 HeroPlaceholderPropsDlg	??_GTHeroPlaceholderPropsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4d4f4	-
-HeroPlaceholderPropsDlg	?DoDataExchange@THeroPlaceholderPropsDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x4d63d	tokens1:5b25cc4b2f1b
+HeroPlaceholderPropsDlg	?DoDataExchange@THeroPlaceholderPropsDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x4d63d	tokens1:14537288c777
 HeroPlaceholderPropsDlg	?DoModal@THeroPlaceholderPropsDlg@@UAEHXZ	100.0000	100.0000	100.0000	0x4d701	tokens1:38d478da93c5
 HeroPlaceholderPropsDlg	?GetMessageMap@THeroPlaceholderPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x4d6fb	tokens1:34af6af5940d
 HeroPlaceholderPropsDlg	?OnCreate@THeroPlaceholderPropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x4d730	tokens1:4e8b6605e5cb
 HeroPlaceholderPropsDlg	?OnHeroRadio@THeroPlaceholderPropsDlg@@IAEXXZ	98.6689	98.6689	98.6689	0x4dea4	tokens1:8794eb218236
-HeroPlaceholderPropsDlg	?OnInitDialog@THeroPlaceholderPropsDlg@@MAEHXZ	98.1445	98.1445	98.1445	0x4d7cc	tokens1:624f7350b692
+HeroPlaceholderPropsDlg	?OnInitDialog@THeroPlaceholderPropsDlg@@MAEHXZ	98.1445	98.1445	98.1445	0x4d7cc	tokens1:e2716ab1fe93
 HeroPlaceholderPropsDlg	?OnKillFocusPowerRatingEdit@THeroPlaceholderPropsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x4e0a9	tokens1:af6a9e179a3c
 HeroPlaceholderPropsDlg	?OnOK@THeroPlaceholderPropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x4dc72	tokens1:190c9e3113ac
 HeroPlaceholderPropsDlg	?OnSelChangeClassCombo@THeroPlaceholderPropsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x4e14f	tokens1:4f123213973f
@@ -1995,7 +2062,7 @@ HeroPropsGeneralPage	?OnCustomizeExperienceCheck@THeroPropsGeneralPage@@IAEXXZ	1
 HeroPropsGeneralPage	?OnCustomizeNameCheck@TIdentifiedHeroPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x51666	tokens1:e7a661f4b7cb
 HeroPropsGeneralPage	?OnCustomizePortraitCheck@TIdentifiedHeroPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x51704	tokens1:9f0d7f8e041e
 HeroPropsGeneralPage	?OnDeltaposPortraitSpin@TIdentifiedHeroPropsGeneralPage@@IAEXPAUtagNMHDR@@PAJ@Z	100.0000	100.0000	100.0000	0x515a1	tokens1:b2f3e0083376
-HeroPropsGeneralPage	?OnInitDialog@THeroPropsGeneralPage@@UAEHXZ	99.0948	99.0948	99.0948	0x4f9df	tokens1:7185484d994a
+HeroPropsGeneralPage	?OnInitDialog@THeroPropsGeneralPage@@UAEHXZ	99.1164	99.1164	99.1164	0x4f9df	tokens1:7185484d994a
 HeroPropsGeneralPage	?OnInitDialog@TIdentifiedHeroPropsGeneralPage@@UAEHXZ	97.2992	97.2992	97.2992	0x50e4e	tokens1:69671878fd62
 HeroPropsGeneralPage	?OnInitDialog@TNonRandomHeroPropsGeneralPage@@UAEHXZ	98.2524	98.2524	98.2524	0x519bb	tokens1:f27937b511d2
 HeroPropsGeneralPage	?OnInitDialog@TPrisonPropsGeneralPage@@UAEHXZ	95.0957	95.0957	95.0957	0x51d37	tokens1:2b298cea1298
@@ -2815,6 +2882,9 @@ MapView	?OnCmdMsg@TMapView@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z	100.0000	100.0000
 MapView	?OnCreate@TMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x80205	tokens1:4df23a81f97a
 MapView	?OnCreate@TObjectPropsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x80170	tokens1:6080f42822e6
 MapView	?OnDestroy@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x831f7	tokens1:86895c141dce
+MapView	?OnEditFind@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x84522	tokens1:a61178c8eea1
+MapView	?OnEditFindNext@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x845fe	tokens1:e12f9a21c12f
+MapView	?OnEditFindPrev@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x847e8	tokens1:e67a89835fa2
 MapView	?OnEditRedo@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x84286	tokens1:ca272cc13a73
 MapView	?OnEditUndo@TMapView@@IAEXXZ	100.0000	100.0000	100.0000	0x8418c	tokens1:c0e913c34174
 MapView	?OnInitDialog@TMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@MAEHXZ	100.0000	100.0000	100.0000	0x8023f	tokens1:d1b6ef216120
@@ -3074,7 +3144,10 @@ MapView	?onEditProperties@TMapView@@EAE_NPAVTHolyGrail@@PAVTGameMap@@_NI@Z	100.0
 MapView	?onEditProperties@TMapView@@EAE_NPAVTMonster@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x8188b	tokens1:a670c5376b87
 MapView	?onEditProperties@TMapView@@EAE_NPAVTNonRandomHero@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x8165d	tokens1:d0d6b504687f
 MapView	?onEditProperties@TMapView@@EAE_NPAVTPrison@@PAVTGameMap@@_NI@Z	99.8077	99.8077	99.8077	0x8172b	tokens1:7557252142cc
+MapView	?onEditProperties@TMapView@@EAE_NPAVTRandomGenerator@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81e7e	tokens1:122b424cb544
 MapView	?onEditProperties@TMapView@@EAE_NPAVTRandomHero@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x816c4	tokens1:4fe5c6579c82
+MapView	?onEditProperties@TMapView@@EAE_NPAVTRandomlyAlignedGenerator@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81ed6	tokens1:6d39d0de67ea
+MapView	?onEditProperties@TMapView@@EAE_NPAVTRandomlyLeveledGenerator@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81f2e	tokens1:31d29185e251
 MapView	?onEditProperties@TMapView@@EAE_NPAVTScholar@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81c84	tokens1:2a1a0033dc17
 MapView	?onEditProperties@TMapView@@EAE_NPAVTShrine@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81de2	tokens1:bcb93eb39c12
 MapView	?onEditProperties@TMapView@@EAE_NPAVTSign@@PAVTGameMap@@_NI@Z	100.0000	100.0000	100.0000	0x81a38	tokens1:36f40ce93753
@@ -3186,7 +3259,7 @@ MonsterPropsTreasurePage	??1_TResourceControls@TMonsterPropsTreasurePage@@QAE@XZ
 MonsterPropsTreasurePage	??_GTMonsterPropsTreasurePage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8a0d4	-
 MonsterPropsTreasurePage	?DoDataExchange@TMonsterPropsTreasurePage@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x8a1c6	tokens1:4804eb370837
 MonsterPropsTreasurePage	?GetMessageMap@TMonsterPropsTreasurePage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x8a246	tokens1:0ed77c4604cb
-MonsterPropsTreasurePage	?OnInitDialog@TMonsterPropsTreasurePage@@UAEHXZ	97.7590	97.7590	97.7590	0x8a24c	tokens1:f1c76712db9b
+MonsterPropsTreasurePage	?OnInitDialog@TMonsterPropsTreasurePage@@UAEHXZ	97.7846	97.7846	97.7846	0x8a24c	tokens1:f1c76712db9b
 MonsterPropsTreasurePage	?OnOK@TMonsterPropsTreasurePage@@UAEXXZ	99.9231	99.9231	99.9231	0x8a4d9	tokens1:d7d6de7df09b
 MonsterPropsTreasurePage	?_areResourceQuantitiesModified@TMonsterPropsTreasurePage@@ABE_NXZ	100.0000	100.0000	100.0000	0x8a216	tokens1:b4c653fd9abe
 ObjectHelp	?displayObjectHelp@@YAXABUTObjectType@@@Z	100.0000	100.0000	100.0000	0x8bac3	tokens1:a6489d7588be
@@ -3593,6 +3666,87 @@ QuestLocation	?visit@TQuestWriter@?%C:\Dev\Heroes 3 Exp 2\Editor\QuestLocation.c
 QuestLocation	?visit@TQuestWriter@?%C:\Dev\Heroes 3 Exp 2\Editor\QuestLocation.cpp472427463@@UAEXABVTQuestDefeatMonster@@@Z	100.0000	100.0000	100.0000	0x963c0	tokens1:546855f05e5c
 QuestLocation	?write@TQuestLocation@@UBEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x96ed6	tokens1:842712f1f2ad
 QuestLocation	?write@TQuestWriter@?%C:\Dev\Heroes 3 Exp 2\Editor\QuestLocation.cpp472427463@@QAEXPBVTQuest@@@Z	100.0000	100.0000	100.0000	0x962f8	tokens1:2c89a689fd1a
+RandomGeneratorPropsDlg	??0CComboBox@@QAE@XZ	100.0000	100.0000	100.0000	0xb1d30	-
+RandomGeneratorPropsDlg	??0TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@QAE@PBVTGameMap@@PAV2@_NI@Z	100.0000	100.0000	100.0000	0xb05dc	tokens1:010cc9bf16ed
+RandomGeneratorPropsDlg	??0TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@QAE@PBVTAbstractRandomlyLeveledGenerator@@PAV2@@Z	100.0000	100.0000	100.0000	0xafed5	tokens1:b54e88cd2b73
+RandomGeneratorPropsDlg	??0TRandomGeneratorOwnerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@QAE@PBVTFlaggableObject@@PAV2@@Z	100.0000	100.0000	100.0000	0xafcfb	tokens1:a7a5455a7301
+RandomGeneratorPropsDlg	??0TRandomGeneratorPropsDlg@@QAE@PAVCWnd@@PAVTGameMap@@_NI@Z	99.9810	99.9810	99.9810	0xb0f36	tokens1:adcc39ecb63e
+RandomGeneratorPropsDlg	??0TRandomlyAlignedGeneratorPropsDlg@@QAE@PAVCWnd@@PAVTGameMap@@_NI@Z	99.9765	99.9765	99.9765	0xb1581	tokens1:d1dcf85aae46
+RandomGeneratorPropsDlg	??0TRandomlyLeveledGeneratorPropsDlg@@QAE@PAVCWnd@@PAVTRandomlyLeveledGenerator@@@Z	100.0000	100.0000	100.0000	0xb1ac4	tokens1:a6744464e71f
+RandomGeneratorPropsDlg	??1?$auto_ptr@U_TDialogs@TRandomGeneratorPropsDlg@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb2111	-
+RandomGeneratorPropsDlg	??1?$auto_ptr@U_TDialogs@TRandomlyAlignedGeneratorPropsDlg@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb2179	-
+RandomGeneratorPropsDlg	??1?$auto_ptr@U_TDialogs@TRandomlyLeveledGeneratorPropsDlg@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb222c	-
+RandomGeneratorPropsDlg	??1TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAE@XZ	100.0000	100.0000	100.0000	0xb07e5	-
+RandomGeneratorPropsDlg	??1TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAE@XZ	100.0000	100.0000	100.0000	0xaff85	-
+RandomGeneratorPropsDlg	??1TRandomGeneratorOwnerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAE@XZ	100.0000	100.0000	100.0000	0xafd6a	-
+RandomGeneratorPropsDlg	??1TRandomGeneratorPropsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xb128c	tokens1:9ff006002a39
+RandomGeneratorPropsDlg	??1TRandomlyAlignedGeneratorPropsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xb182b	tokens1:f5b31c6c1f66
+RandomGeneratorPropsDlg	??1TRandomlyLeveledGeneratorPropsDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xb1d5e	tokens1:4c6ad794dd3e
+RandomGeneratorPropsDlg	??1_TDialogs@TRandomGeneratorPropsDlg@@QAE@XZ	100.0000	100.0000	100.0000	0xb2249	-
+RandomGeneratorPropsDlg	??1_TDialogs@TRandomlyAlignedGeneratorPropsDlg@@QAE@XZ	100.0000	100.0000	100.0000	0xb228d	-
+RandomGeneratorPropsDlg	??1_TDialogs@TRandomlyLeveledGeneratorPropsDlg@@QAE@XZ	100.0000	100.0000	100.0000	0xb22c2	-
+RandomGeneratorPropsDlg	??4?$auto_ptr@U_TDialogs@TRandomGeneratorPropsDlg@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0xb20c6	-
+RandomGeneratorPropsDlg	??4?$auto_ptr@U_TDialogs@TRandomlyAlignedGeneratorPropsDlg@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0xb212e	-
+RandomGeneratorPropsDlg	??4?$auto_ptr@U_TDialogs@TRandomlyLeveledGeneratorPropsDlg@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0xb21e1	-
+RandomGeneratorPropsDlg	??4?$auto_ptr@VTRandomlyLeveledGenerator@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0xb2196	-
+RandomGeneratorPropsDlg	??4TAbstractRandomlyLeveledGenerator@@QAEAAV0@ABV0@@Z	99.8077	99.8077	99.8077	0xb1f4c	-
+RandomGeneratorPropsDlg	??4TFlaggableObject@@QAEAAV0@ABV0@@Z	99.7917	99.7917	99.7917	0xb1f13	-
+RandomGeneratorPropsDlg	??4TRandomlyLeveledGenerator@@QAEAAV0@ABV0@@Z	99.8611	99.8611	99.8611	0xb1ebb	-
+RandomGeneratorPropsDlg	??RTTownDistanceLess@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@QBE_NABVTMapObjectRef@@0@Z	67.3750	67.3750	67.3750	0xb0483	tokens1:f37a39754ac8
+RandomGeneratorPropsDlg	??_GTRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb07c9	-
+RandomGeneratorPropsDlg	??_GTRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xaff69	-
+RandomGeneratorPropsDlg	??_GTRandomGeneratorOwnerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xafd4e	-
+RandomGeneratorPropsDlg	??_GTRandomGeneratorPropsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb125a	-
+RandomGeneratorPropsDlg	??_GTRandomlyAlignedGeneratorPropsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb180f	-
+RandomGeneratorPropsDlg	??_GTRandomlyLeveledGeneratorPropsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb1d42	-
+RandomGeneratorPropsDlg	?DoDataExchange@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MAEXPAVCDataExchange@@@Z	98.3333	98.3333	98.3333	0xb0940	tokens1:42e260e33f63
+RandomGeneratorPropsDlg	?DoDataExchange@TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xaffea	tokens1:5b6b2b50402a
+RandomGeneratorPropsDlg	?DoDataExchange@TRandomGeneratorOwnerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xafd9f	tokens1:03dc78881464
+RandomGeneratorPropsDlg	?DoModal@TRandomlyAlignedGeneratorPropsDlg@@UAEHXZ	100.0000	100.0000	100.0000	0xb1967	tokens1:1177367f5a9b
+RandomGeneratorPropsDlg	?DoModal@TRandomlyLeveledGeneratorPropsDlg@@UAEHXZ	100.0000	100.0000	100.0000	0xb1e9a	tokens1:8216bf526fb0
+RandomGeneratorPropsDlg	?GetMessageMap@TRandomGeneratorPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb0f30	tokens1:f9f835dbae45
+RandomGeneratorPropsDlg	?GetMessageMap@TRandomlyAlignedGeneratorPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb157b	tokens1:95f8499bdcdb
+RandomGeneratorPropsDlg	?GetMessageMap@TRandomlyLeveledGeneratorPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb1abe	tokens1:7e07e9ab1b7b
+RandomGeneratorPropsDlg	?OnAlignmentRadio@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb0e4a	tokens1:2285f374b46f
+RandomGeneratorPropsDlg	?OnCastleCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb058e	tokens1:9b634ea62c9c
+RandomGeneratorPropsDlg	?OnConfluxCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb05ce	tokens1:22e07d12ac33
+RandomGeneratorPropsDlg	?OnCreate@TRandomGeneratorPropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0xb12d6	tokens1:571faf36d948
+RandomGeneratorPropsDlg	?OnCreate@TRandomlyAlignedGeneratorPropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0xb1875	tokens1:9e7ce7205aa6
+RandomGeneratorPropsDlg	?OnCreate@TRandomlyLeveledGeneratorPropsDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0xb1da8	tokens1:952fadb477e9
+RandomGeneratorPropsDlg	?OnDestroy@TRandomGeneratorPropsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb13c1	tokens1:1486f15d5535
+RandomGeneratorPropsDlg	?OnDestroy@TRandomlyAlignedGeneratorPropsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb1945	tokens1:41f484aa5865
+RandomGeneratorPropsDlg	?OnDestroy@TRandomlyLeveledGeneratorPropsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb1e78	tokens1:95eb2e5c2c99
+RandomGeneratorPropsDlg	?OnDungeonCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb05b6	tokens1:ad1b20324efe
+RandomGeneratorPropsDlg	?OnFortressCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb05c6	tokens1:aa05d59194b6
+RandomGeneratorPropsDlg	?OnInfernoCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb05a6	tokens1:81ea44a27d2e
+RandomGeneratorPropsDlg	?OnInitDialog@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MAEHXZ	80.4559	80.4559	80.4559	0xb09a9	tokens1:b9639ce92541
+RandomGeneratorPropsDlg	?OnInitDialog@TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MAEHXZ	100.0000	100.0000	100.0000	0xb003c	tokens1:853f0b6ad399
+RandomGeneratorPropsDlg	?OnInitDialog@TRandomGeneratorOwnerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MAEHXZ	100.0000	100.0000	100.0000	0xafdb4	tokens1:6dac14261a9b
+RandomGeneratorPropsDlg	?OnInitDialog@TRandomGeneratorPropsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0xb13ee	tokens1:93e9b3872a0b
+RandomGeneratorPropsDlg	?OnInitDialog@TRandomlyAlignedGeneratorPropsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0xb1988	tokens1:eda1e53e06f8
+RandomGeneratorPropsDlg	?OnInitDialog@TRandomlyLeveledGeneratorPropsDlg@@MAEHXZ	100.0000	100.0000	100.0000	0xb1f90	tokens1:3d013e8c33e7
+RandomGeneratorPropsDlg	?OnKillFocusMaxLevelEdit@TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb0393	tokens1:54c7e722436d
+RandomGeneratorPropsDlg	?OnKillFocusMinLevelEdit@TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb02a9	tokens1:c24240f9b6a0
+RandomGeneratorPropsDlg	?OnNecropolisCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb05ae	tokens1:3b3b559ac6ee
+RandomGeneratorPropsDlg	?OnOK@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAEXXZ	100.0000	100.0000	100.0000	0xb0d2c	tokens1:58e0f44dd5de
+RandomGeneratorPropsDlg	?OnOK@TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAEXXZ	100.0000	100.0000	100.0000	0xb018b	tokens1:38157e535ef8
+RandomGeneratorPropsDlg	?OnOK@TRandomGeneratorOwnerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@UAEXXZ	100.0000	100.0000	100.0000	0xafe7c	tokens1:c5dbd1e01d27
+RandomGeneratorPropsDlg	?OnOK@TRandomGeneratorPropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0xb151b	tokens1:1c615bc212ab
+RandomGeneratorPropsDlg	?OnOK@TRandomlyAlignedGeneratorPropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0xb1a74	tokens1:226725a96628
+RandomGeneratorPropsDlg	?OnOK@TRandomlyLeveledGeneratorPropsDlg@@MAEXXZ	100.0000	100.0000	100.0000	0xb207c	tokens1:ae9e2f1e530a
+RandomGeneratorPropsDlg	?OnRampartCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb0596	tokens1:6c5ad2e7c1dd
+RandomGeneratorPropsDlg	?OnStrongholdCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb05be	tokens1:d6aded72fdef
+RandomGeneratorPropsDlg	?OnTowerCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@IAEXXZ	100.0000	100.0000	100.0000	0xb059e	tokens1:7286f50a1811
+RandomGeneratorPropsDlg	?_Insertion_sort_1@std@@YAXPAVTMapObjectRef@@0VTTownDistanceLess@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@0@Z	100.0000	100.0000	100.0000	0xb24ce	-
+RandomGeneratorPropsDlg	?_Median@std@@YA?AVTMapObjectRef@@V2@00VTTownDistanceLess@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@@Z	100.0000	100.0000	100.0000	0xb2597	-
+RandomGeneratorPropsDlg	?_Sort@std@@YAXPAVTMapObjectRef@@0VTTownDistanceLess@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@0@Z	100.0000	100.0000	100.0000	0xb23eb	-
+RandomGeneratorPropsDlg	?_Sort_0@std@@YAXPAVTMapObjectRef@@0VTTownDistanceLess@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@0@Z	100.0000	100.0000	100.0000	0xb22f7	-
+RandomGeneratorPropsDlg	?_Unguarded_partition@std@@YAPAVTMapObjectRef@@PAV2@0V2@VTTownDistanceLess@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@@Z	100.0000	100.0000	100.0000	0xb2617	-
+RandomGeneratorPropsDlg	?_getNewGenerator@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@AAEPAVTAbstractRandomlyAlignedGenerator@@XZ	100.0000	100.0000	100.0000	0xb0907	tokens1:c70fd88308cf
+RandomGeneratorPropsDlg	?_getOldGenerator@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@ABEPBVTAbstractRandomlyAlignedGenerator@@XZ	100.0000	100.0000	100.0000	0xb08ce	tokens1:9ca5b9806208
+RandomGeneratorPropsDlg	?_onAlignmentCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@AAEXH@Z	59.0000	59.0000	59.0000	0xb0854	tokens1:31a63e8be5c3
+RandomGeneratorPropsDlg	BEGIN_MESSAGE_MAP_afecf	0.0000	0.0000	0.0000	0xafecf	tokens1:f576b2d0fb59
+RandomGeneratorPropsDlg	BEGIN_MESSAGE_MAP_b05d6	0.0000	0.0000	0.0000	0xb05d6	tokens1:f1ebb93591a4
 ResourcePropsGeneralPage	??0TResourcePropsGeneralPage@@QAE@PAVTGameResource@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0xb2822	tokens1:6e71c0ca811e
 ResourcePropsGeneralPage	??1TResourcePropsGeneralPage@@UAE@XZ	100.0000	100.0000	100.0000	0xb2924	tokens1:bcec43cf7cd4
 ResourcePropsGeneralPage	??_GTResourcePropsGeneralPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb2908	-
@@ -3661,7 +3815,7 @@ SecondarySkillsDlg	??_GTSecondarySkillsDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000
 SecondarySkillsDlg	?DoDataExchange@TSecondarySkillsDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xb5aa2	tokens1:10720ac9ca44
 SecondarySkillsDlg	?GetMessageMap@TSecondarySkillsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb5ade	tokens1:69ffc6be3fc9
 SecondarySkillsDlg	?OnEnable@TSecondarySkillsDlg@@IAEXH@Z	100.0000	100.0000	100.0000	0xb5e2b	tokens1:2dfb03bede69
-SecondarySkillsDlg	?OnInitDialog@TSecondarySkillsDlg@@MAEHXZ	98.6453	98.6453	98.6453	0xb5ae4	tokens1:ceedee03b395
+SecondarySkillsDlg	?OnInitDialog@TSecondarySkillsDlg@@MAEHXZ	98.6642	98.6642	98.6642	0xb5ae4	tokens1:ceedee03b395
 SecondarySkillsDlg	?OnSelChangeMasteryCombo1@TSecondarySkillsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb5575	tokens1:ec19e8dd9411
 SecondarySkillsDlg	?OnSelChangeMasteryCombo2@TSecondarySkillsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb557d	tokens1:e8dadfabeb09
 SecondarySkillsDlg	?OnSelChangeMasteryCombo3@TSecondarySkillsDlg@@IAEXXZ	100.0000	100.0000	100.0000	0xb5585	tokens1:91d171225be9
@@ -4062,7 +4216,7 @@ TownPropsGeneralPage	?OnAddHeroButton@TTownPropsGeneralPage@@IAEXXZ	83.1776	83.1
 TownPropsGeneralPage	?OnChangeNameEdit@TTownPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0xc61e5	tokens1:ee748b362ea0
 TownPropsGeneralPage	?OnCustomizeCheck@TTownPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0xc623f	tokens1:dc60c0278427
 TownPropsGeneralPage	?OnEditHeroButton@TTownPropsGeneralPage@@IAEXXZ	90.5727	90.5727	90.5727	0xc5fdf	tokens1:aa261ee0bbb6
-TownPropsGeneralPage	?OnInitDialog@TTownPropsGeneralPage@@UAEHXZ	99.6225	99.6225	99.6225	0xc5812	tokens1:15a29b1ce84d
+TownPropsGeneralPage	?OnInitDialog@TTownPropsGeneralPage@@UAEHXZ	99.6352	99.6352	99.6352	0xc5812	tokens1:15a29b1ce84d
 TownPropsGeneralPage	?OnOK@TTownPropsGeneralPage@@UAEXXZ	99.9468	99.9468	99.9468	0xc5d59	tokens1:c281bfd7f3a4
 TownPropsGeneralPage	?OnRemoveHeroButton@TTownPropsGeneralPage@@IAEXXZ	93.7500	93.7500	93.7500	0xc6173	tokens1:9544ddeeab58
 TownPropsGeneralPage	?OnSelChangePlayerCombo@TTownPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0xc62d6	tokens1:e7498ee7634a
