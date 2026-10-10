@@ -8,7 +8,6 @@
 
 #include "events.h"
 
-#include "terrain.h"
 #include "advmgr.h"
 #include "advmgr_objects.h"
 #include "cmbtmgr.h"
@@ -31,6 +30,7 @@
 #include "sacrifice_window.h"
 #include "soundmgr.h"
 #include "swapmgr.h"
+#include "terrain.h"
 #include "textresource.h"
 #include "townmgr.h"
 #include "tradpost.h"

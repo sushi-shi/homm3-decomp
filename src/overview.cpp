@@ -28,6 +28,7 @@
 #include "slider.h"
 #include "spellbookwindow.h"
 #include "sskilltraits.h"
+#include "terrain.h"
 #include "text.h"
 #include "textresource.h"
 #include "textwdgt.h"

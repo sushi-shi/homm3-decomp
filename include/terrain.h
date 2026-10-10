@@ -89,9 +89,8 @@
 // first function of an including TU is no longer the first one C2
 // compiles, so it receives the phase flag as 1 (docs/vc6/phase-flag.md):
 // showCreatureSpellError 99.4556 -> 100. Every other function of the
-// widened units is unchanged. overview.cpp is the one unit held back:
-// retail's run precedes it too, but the include lowers setupDynamicStuff
-// 92.4357 -> 92.2165 (its residue is elsewhere).
+// widened units is unchanged. overview.cpp, whose retail range opens with
+// the run as well, includes it too (setupDynamicStuff 93.47 -> 93.50).
 
 #ifndef HOMM3_TERRAIN_H
 #define HOMM3_TERRAIN_H
