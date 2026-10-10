@@ -171,6 +171,10 @@ VALUE_OPERATOR_CODES = {
 # MSVC special members render with backticks: Cls::`scalar deleting
 # destructor'(...), `default constructor closure'(...)
 SPECIAL_RE = re.compile(r"([\w:]+)::`([^'`]+)'\s*\(")
+# A VA on MFC's BEGIN_MESSAGE_MAP claims the GetMessageMap the macro
+# defines first; its working label names that member (the IR channel
+# binds the exact symbol, see ir_message_map_names).
+MESSAGE_MAP_RE = re.compile(r"^\s*BEGIN_MESSAGE_MAP\s*\(\s*([A-Za-z_]\w*)\s*,")
 # Template argument list in a source declarator: `vector<int>::begin` ->
 # `vector::begin`. Applied to a fixed point so nested lists collapse.
 # Template arguments never take part in the join key (the mangled side
@@ -854,12 +858,15 @@ def scan_file(path, functions: set[int],
                 common.die(f"{where}: orphan VA annotation - no "
                            "declaration follows")
             sm = SPECIAL_RE.search(follower)
+            mm = MESSAGE_MAP_RE.match(follower)
             om = OPERATOR_EQUAL_RE.search(follower)
             nom = OPERATOR_NOT_EQUAL_RE.search(follower)
             call_operator = CALL_OPERATOR_RE.search(follower)
             value_operator = VALUE_OPERATOR_RE.search(follower)
             if sm:
                 raw = f"{sm.group(1)}__{sm.group(2)}"
+            elif mm:
+                raw = f"{mm.group(1)}::GetMessageMap"
             elif om:
                 raw = f"{om.group(1)}::operator_equal"
             elif nom:
@@ -1023,6 +1030,35 @@ def ir_va_names(ir: str, image: str | None = None) -> dict:
     return out
 
 
+#: A VA directly above an MFC message map, and the IR's defined functions.
+MESSAGE_MAP_CLAIM_RE = re.compile(
+    r"^VA\((0x[0-9a-fA-F]+),[^)\n]*\)[^\n]*\n\s*BEGIN_MESSAGE_MAP\s*\(\s*([A-Za-z_]\w*)\s*,",
+    re.M)
+IR_DEFINE_RE = re.compile(r'^define [^@\n]*(@(?:"[^"]+"|[\w.$]+))\(', re.M)
+
+
+def ir_message_map_names(ir: str, text: str) -> dict:
+    """{rva: mangled} for the message maps the annotations miss.
+
+    BEGIN_MESSAGE_MAP's first definition is the class's GetMessageMap.
+    Clang emits it for an anonymous-namespace class only from the vtable,
+    deferred, and then without the definition's annotate attribute, so
+    the claim's identity is read from the class's one defined
+    GetMessageMap instead."""
+    defined = {}
+    for match in IR_DEFINE_RE.finditer(ir):
+        name = _ir_symbol_name(match.group(1))
+        owner = re.match(r"\?GetMessageMap@([A-Za-z_]\w*)@", name)
+        if owner:
+            defined.setdefault(owner.group(1), []).append(name)
+    out = {}
+    for match in MESSAGE_MAP_CLAIM_RE.finditer(text):
+        names = defined.get(match.group(2), [])
+        if len(names) == 1:
+            out[int(match.group(1), 16) - common.IMAGE_BASE] = names[0]
+    return out
+
+
 def unit_ir_names(path, profiles=None) -> dict | None:
     """The unit's IR name map, or None when clang could not read the TU
     (no toolchain, or a source construct cl accepts and clang does not).
@@ -1034,7 +1070,10 @@ def unit_ir_names(path, profiles=None) -> dict | None:
     if shared_image_source(path):
         from homm3.core import paths as image_paths
         return ir_va_names(ir, image_paths.image_key())
-    return ir_va_names(ir)
+    names = ir_va_names(ir)
+    for rva, name in ir_message_map_names(ir, Path(path).read_text()).items():
+        names.setdefault(rva, name)
+    return names
 
 
 def _template_width(mangled: str, template_name: str) -> int | None:

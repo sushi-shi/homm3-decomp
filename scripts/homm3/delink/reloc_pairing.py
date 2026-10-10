@@ -168,6 +168,16 @@ def comparison_spelling(name: str, unit: str) -> str:
         msvc_names.CANONICAL_SCOPE, normalize_anon_ns_name(name, unit))
 
 
+def reviewed_anon_name(name: str, raw: str, unit: str) -> bool:
+    """A member of a reviewed anonymous namespace: its retail scope spelling
+    (anon-ns-paths.tsv) replaced the compiland's, and nothing else in the
+    name is private (a class's static data such as an MFC message map)."""
+    from homm3.compare.canonicalize import ANON_NS_SCOPE_RE, reviewed_anon_ns_name
+    if "?%" not in raw or reviewed_anon_ns_name(raw, unit) == raw:
+        return False
+    return stable_name(ANON_NS_SCOPE_RE.sub("?anonymous@", name))
+
+
 def content_named(name: str) -> bool:
     return name.startswith(CONTENT_NAMED)
 
@@ -360,7 +370,7 @@ def _operand_votes(voter: Voter, candidate: CandidateObject, body: bytes, relocs
             name, private = comparison_spelling(name, voter.unit), True
         elif compiland_private(name, candidate):
             name, private = comparison_spelling(name, voter.unit), True
-            if not stable_name(name):
+            if not stable_name(name) and not reviewed_anon_name(name, raw, voter.unit):
                 continue
         elif not stable_name(name):
             continue

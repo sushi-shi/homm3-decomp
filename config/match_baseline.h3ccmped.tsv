@@ -352,6 +352,7 @@ CampaignDoc	??_GTStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign
 CampaignDoc	??_GTStrGzInflateBufBase@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10e90	-
 CampaignDoc	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10e60	-
 CampaignDoc	?DeleteContents@TCampaignDoc@@UAEXXZ	99.8864	99.8864	99.8864	0x14a60	tokens1:0a2f69d78660
+CampaignDoc	?GetMessageMap@TCampaignDoc@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x14090	tokens1:ff599d9991e0
 CampaignDoc	?IsModified@CDocument@@UAEHXZ	100.0000	100.0000	100.0000	0x15b90	-
 CampaignDoc	?OnExportScenarioMaps@TCampaignDoc@@IAEXXZ	99.9535	99.9535	99.9535	0x14d90	tokens1:9856f9fabd02
 CampaignDoc	?OnExportText@TCampaignDoc@@IAEXXZ	92.6929	92.6929	92.6929	0x150f0	tokens1:033c01bf1a41
@@ -406,7 +407,6 @@ CampaignDoc	?write@TRawOStream@@QAEAAV1@PBDI@Z	100.0000	100.0000	100.0000	0x167b
 CampaignDoc	?write@TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QBEXAAVTRawOStream@@H@Z	68.6266	68.6266	68.6266	0x129f0	tokens1:6e1e6f55cc2e
 CampaignDoc	?write@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXABVTScenarioStartingBonus@@AAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x10f30	tokens1:6ffee2429f90
 CampaignDoc	?write@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXPBVTScenarioStartingOptions@@AAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x11b20	tokens1:6cca98f267f0
-CampaignDoc	BEGIN_MESSAGE_MAP	0.0000	100.0000	100.0000	0x14090	tokens1:ff599d9991e0
 CampaignDoc	IMPLEMENT_DYNCREATE	0.0000	100.0000	100.0000	0x14020	tokens1:99cecd69f848
 CampaignDoc	TGzDeflatedScenarioMap_TGzDeflatedScenarioMap	0.0000	0.0000	0.0000	0x10c30	tokens1:3bef13993999
 CampaignEditorText	?copyText@?A0x8599eb40b679b34c@@YAXPADPBD@Z	100.0000	100.0000	100.0000	0x16ee0	tokens1:534632ea2766

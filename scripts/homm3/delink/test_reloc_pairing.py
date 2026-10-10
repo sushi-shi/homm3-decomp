@@ -366,6 +366,22 @@ class CompilandPrivateTests(unittest.TestCase):
         self.assertTrue(rp.compiland_private("?g@?%C:\\src\\a.cpp12@@3HA", obj))
         self.assertFalse(rp.compiland_private("_g_x", obj))
 
+    def test_reviewed_anonymous_static_data_votes(self):
+        # An anonymous-namespace class's message map: the reviewed retail
+        # scope replaces the compiland's, so the datum can pair.
+        from unittest import mock
+        from homm3.compare import canonicalize
+        raw = ("?messageMap@TDlg@?%Z:\\home\\src\\editor\\MapDoc.cpp551@@"
+               "1UAFX_MSGMAP@@B")
+        reviewed = {("mapdoc", "mapdoc.cpp"): "C:\\Dev\\Editor\\MapDoc.cpp166"}
+        with mock.patch.object(canonicalize, "_load_anon_ns_canonical",
+                               return_value=reviewed):
+            name = rp.comparison_spelling(raw, "MapDoc")
+            self.assertEqual(name, "?messageMap@TDlg@?%C:\\Dev\\Editor\\MapDoc.cpp166@@"
+                                   "1UAFX_MSGMAP@@B")
+            self.assertTrue(rp.reviewed_anon_name(name, raw, "MapDoc"))
+            self.assertFalse(rp.reviewed_anon_name(raw, raw, "Other"))
+
 
 class ProofTargetTests(unittest.TestCase):
     def test_admitted_anchor_resolves_in_body_proofs(self):

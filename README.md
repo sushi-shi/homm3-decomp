@@ -51,19 +51,19 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 77.77% matched (MAX)** — 4,650 / 6,850 functions exact (67.9%), weighted by size over 851,461 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 77.78% matched (MAX)** — 4,662 / 6,850 functions exact (68.1%), weighted by size over 851,461 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,622 |   77.71% | last measured score                            |
-| MAX   |           4,650 |   77.77% | best result for each function's current source |
-| HIST  |           4,650 |   77.78% | all-time peak across source revisions          |
+| CUR   |           4,633 |   77.72% | last measured score                            |
+| MAX   |           4,662 |   77.78% | best result for each function's current source |
+| HIST  |           4,662 |   77.79% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `game`        |   137 | 4234 / 4673 (90.6%) |    97.74% |
+| `game`        |   137 | 4246 / 4673 (90.9%) |    97.75% |
 | `rmg`         |     6 |   307 / 384 (79.9%) |    92.85% |
 | `zlib-1.1.3`  |    12 |    56 / 56 (100.0%) |   100.00% |
 | `codec`       |     3 |     37 / 50 (74.0%) |    90.87% |
@@ -89,7 +89,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |             697 |   52.49% | last measured score                            |
+| CUR   |             698 |   52.49% | last measured score                            |
 | MAX   |             700 |   52.54% | best result for each function's current source |
 | HIST  |             700 |   52.54% | all-time peak across source revisions          |
 

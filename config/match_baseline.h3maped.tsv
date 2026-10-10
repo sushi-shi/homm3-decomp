@@ -189,7 +189,12 @@ BlackBoxPropsContentsPage	?DoDataExchange@TPrimarySkillBonusesDlg@?%C:\Dev\Heroe
 BlackBoxPropsContentsPage	?DoDataExchange@TSecondarySkillsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x8e39	tokens1:dcbf01bfb6de
 BlackBoxPropsContentsPage	?DoDataExchange@TSelectSpellDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x9db6	tokens1:b3e740acab21
 BlackBoxPropsContentsPage	?DoDataExchange@TSpellsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xa112	tokens1:4e6c47209970
+BlackBoxPropsContentsPage	?GetMessageMap@TArtifactsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x94ec	tokens1:39967ca7eda6
 BlackBoxPropsContentsPage	?GetMessageMap@TBlackBoxPropsContentsPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb587	tokens1:38ae4f3e8e56
+BlackBoxPropsContentsPage	?GetMessageMap@TCreaturesDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xa7f7	tokens1:35ad7969e230
+BlackBoxPropsContentsPage	?GetMessageMap@TResourcesDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x834f	tokens1:0dfecae91fb1
+BlackBoxPropsContentsPage	?GetMessageMap@TSecondarySkillsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x8bf5	tokens1:5827cce7dfea
+BlackBoxPropsContentsPage	?GetMessageMap@TSpellsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x9fa3	tokens1:633c41826802
 BlackBoxPropsContentsPage	?OnAddButton@TArtifactsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@IAEXXZ	96.5200	96.5200	96.5200	0x98dd	tokens1:4185b76aef52
 BlackBoxPropsContentsPage	?OnAddButton@TCreaturesDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@IAEXXZ	94.1942	94.1942	94.1942	0xacbd	tokens1:f9f107a0ce39
 BlackBoxPropsContentsPage	?OnAddButton@TSecondarySkillsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\BlackBoxPropsContentsPage.cpp544924908@@IAEXXZ	96.5765	96.5765	96.5765	0x90f5	tokens1:d2eca169a2ce
@@ -278,13 +283,8 @@ BlackBoxPropsContentsPage	?getSecondarySkills@TBlackBoxPropsContentsPage@@QBEABV
 BlackBoxPropsContentsPage	?getSpells@TBlackBoxPropsContentsPage@@QBEABV?$vector@HV?$allocator@H@std@@@std@@XZ	100.0000	100.0000	100.0000	0xb4f5	tokens1:2bec582f5d98
 BlackBoxPropsContentsPage	?set@?$bitset@$0BM@@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0xbab4	-
 BlackBoxPropsContentsPage	?wasModified@TBlackBoxPropsContentsPage@@QBE_NXZ	100.0000	100.0000	100.0000	0xb50d	tokens1:d8240be35f2e
-BlackBoxPropsContentsPage	BEGIN_MESSAGE_MAP_834f	0.0000	0.0000	0.0000	0x834f	tokens1:0dfecae91fb1
-BlackBoxPropsContentsPage	BEGIN_MESSAGE_MAP_8867	0.0000	0.0000	0.0000	0x8867	-
-BlackBoxPropsContentsPage	BEGIN_MESSAGE_MAP_8bf5	0.0000	0.0000	0.0000	0x8bf5	tokens1:5827cce7dfea
-BlackBoxPropsContentsPage	BEGIN_MESSAGE_MAP_94ec	0.0000	0.0000	0.0000	0x94ec	tokens1:39967ca7eda6
-BlackBoxPropsContentsPage	BEGIN_MESSAGE_MAP_9cc3	0.0000	0.0000	0.0000	0x9cc3	tokens1:01944dc937c1
-BlackBoxPropsContentsPage	BEGIN_MESSAGE_MAP_9fa3	0.0000	0.0000	0.0000	0x9fa3	tokens1:633c41826802
-BlackBoxPropsContentsPage	BEGIN_MESSAGE_MAP_a7f7	0.0000	0.0000	0.0000	0xa7f7	tokens1:35ad7969e230
+BlackBoxPropsContentsPage	TEditSecondarySkillDlg_GetMessageMap	0.0000	0.0000	0.0000	0x8867	-
+BlackBoxPropsContentsPage	TSelectSpellDlg_GetMessageMap	0.0000	0.0000	0.0000	0x9cc3	tokens1:01944dc937c1
 BlackBoxPropsGeneralPage	??0TBlackBoxPropsGeneralPage@@QAE@PAVTBlackBox@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0xbf73	tokens1:c771d14f908d
 BlackBoxPropsGeneralPage	??1TBlackBoxPropsGeneralPage@@UAE@XZ	100.0000	100.0000	100.0000	0xc02b	tokens1:be98b1181092
 BlackBoxPropsGeneralPage	??_GTBlackBoxPropsGeneralPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xc00f	-
@@ -757,7 +757,7 @@ GUIGameObject	?_Xran@?$bitset@$0OI@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x43a
 GUIGameObject	?_getPHero@TGUIHeroPlaceholder@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@EAEPAVTBasicHero@@XZ	100.0000	100.0000	100.0000	0x40175	-
 GUIGameObject	?_getPHero@TGUINonRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@EAEPAVTBasicHero@@XZ	100.0000	100.0000	100.0000	0x4066b	-
 GUIGameObject	?_getPHero@TGUIRandomHero@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@EAEPAVTBasicHero@@XZ	100.0000	100.0000	100.0000	0x40e16	-
-GUIGameObject	?_getPSprite@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@ABEPBVCSprite@@XZ	100.0000	100.0000	100.0000	0x41878	tokens1:03a9dd4522f9
+GUIGameObject	?_getPSprite@TGUITown@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@ABEPBVCSprite@@XZ	99.5726	100.0000	100.0000	0x41878	tokens1:03a9dd4522f9
 GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x483f6	-
 GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTFlaggableObject@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@UBE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x483fe	-
 GUIGameObject	?clone@?$TGUIOwnableSpecializedObject@VTGarrison@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@$4PPPPPPPM@A@BE?AV?$auto_ptr@VTGameObject@@@std@@XZ	100.0000	100.0000	100.0000	0x486e3	-
@@ -997,7 +997,7 @@ GUIGameObject	?write@TRandomlyAlignedGenerator@@$4PPPPPPPM@M@BEXPAVTRawOStream@@
 GUIGameObject	?write@TRandomlyLeveledGenerator@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x48e5c	-
 GUIGameObject	?write@TSeersHut@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x46ca7	-
 GUIGameObject	?write@TTown@@$4PPPPPPPM@M@BEXPAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x460af	-
-GUIGameObject	__h3cg$GUIGameObject$static_dtor$aSprites	100.0000	100.0000	100.0000	0x41a55	-
+GUIGameObject	__h3cg$GUIGameObject$static_dtor$aSprites	99.1667	100.0000	100.0000	0x41a55	-
 GUIGameObject	__h3cg$GUIGameObject$static_dtor$checkMark	0.0000	97.5000	97.5000	0x3fb65	-
 GUIGameObject	__h3cg$GUIGameObject$static_dtor$smallCheckMark	0.0000	97.5000	97.5000	0x3fb5b	-
 GUIGameObject	__h3cg$GUIGameObject$static_dtor$typeFlags	100.0000	100.0000	100.0000	0x42696	-
@@ -2239,6 +2239,7 @@ MapDoc	?CreateObject@TMapDoc@@SGPAVCObject@@XZ	100.0000	100.0000	100.0000	0x5ed8
 MapDoc	?DeleteContents@TMapDoc@@UAEXXZ	99.9039	99.9039	99.9039	0x5f6db	tokens1:85d1d0dff297
 MapDoc	?DoDataExchange@TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x5e1f2	tokens1:53474d40dbf3
 MapDoc	?GetMessageMap@TMapDoc@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x5edc1	-
+MapDoc	?GetMessageMap@TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x5dfa2	tokens1:53804c18b1e6
 MapDoc	?IsModified@TMapDoc@@UAEHXZ	100.0000	100.0000	100.0000	0x5f07c	-
 MapDoc	?OnDestroy@TMapGenerationProgressDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@IAEXXZ	100.0000	100.0000	100.0000	0x5e25d	tokens1:3b5b42ebb49a
 MapDoc	?OnFileExportText@TMapDoc@@IAEXXZ	99.9469	99.9469	99.9469	0x608d5	tokens1:588895976df5
@@ -2343,7 +2344,6 @@ MapDoc	?terrainFill@TMapDoc@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x5fc75	token
 MapDoc	?undo@TMapDoc@@QAEXXZ	100.0000	100.0000	100.0000	0x5f79e	tokens1:6af57b470882
 MapDoc	?unfloatObject@TMapDoc@@QAEX_NII@Z	100.0000	100.0000	100.0000	0x5fb51	tokens1:af77bdf67f8a
 MapDoc	?write@TStreamBufFile@?%C:\Dev\Heroes 3 Exp 2\Editor\MapDoc.cpp166062000@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x5df8f	tokens1:d5350a7c29f4
-MapDoc	BEGIN_MESSAGE_MAP_5dfa2	0.0000	0.0000	0.0000	0x5dfa2	tokens1:53804c18b1e6
 MapEditWnd	??0TError@TMemoryDC@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5c5ff	-
 MapEditWnd	??0TMapEditWnd@@QAE@PAVCWnd@@PAVTController@TMapEditingWnd@@HPBVTGameMap@@PBVTGameMapMask@@_NW4TZoom@@44@Z	100.0000	100.0000	100.0000	0x695f2	tokens1:f6af46039054
 MapEditWnd	??1CMenu@@UAE@XZ	100.0000	100.0000	100.0000	0x6e55a	-
@@ -2634,9 +2634,9 @@ MapSpecsSheet	??1TMapSpecsSheet@@UAE@XZ	100.0000	100.0000	100.0000	0x7633b	token
 MapSpecsSheet	??4?$auto_ptr@VTGameMap@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x4e231	-
 MapSpecsSheet	??_GTMapSpecsSheet@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7631f	-
 MapSpecsSheet	?DoModal@TMapSpecsSheet@@UAEHXZ	100.0000	100.0000	100.0000	0x76593	tokens1:e5156ac69795
+MapSpecsSheet	?GetMessageMap@TMapSpecsSheet@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x7658d	tokens1:2589c46e01ea
 MapSpecsSheet	?insert@?$vector@VTMapObjectRef@@V?$allocator@VTMapObjectRef@@@std@@@std@@QAEPAVTMapObjectRef@@PAV3@ABV3@@Z	100.0000	100.0000	100.0000	0x765c4	-
 MapSpecsSheet	?wasModified@TMapSpecsSheet@@QBE_NXZ	100.0000	100.0000	100.0000	0x764e9	tokens1:0723d3b54bd6
-MapSpecsSheet	BEGIN_MESSAGE_MAP_7658d	0.0000	100.0000	100.0000	0x7658d	tokens1:2589c46e01ea
 MapSpecsSpellsPage	??0TMapSpecsSpellsPage@@QAE@ABVTGameMap@@AAV1@@Z	100.0000	100.0000	100.0000	0x767c1	tokens1:0424d021e415
 MapSpecsSpellsPage	??1CCheckListBox@@UAE@XZ	100.0000	100.0000	100.0000	0x7019a	-
 MapSpecsSpellsPage	??1TMapSpecsSpellsPage@@UAE@XZ	100.0000	100.0000	100.0000	0x7687a	tokens1:dea516ca8b4c
@@ -2775,6 +2775,8 @@ MapSpecsVictoryCondPage	?DoDataExchange@TMapSpecsVictoryCondPage@@MAEXPAVCDataEx
 MapSpecsVictoryCondPage	?DoDataExchange@TTransportArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7b130	tokens1:9aafbfd301bf
 MapSpecsVictoryCondPage	?DoDataExchange@TUpgradeTownDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x7a18c	tokens1:e28dcfac236d
 MapSpecsVictoryCondPage	?DoDataExchange@TVictoryConditionGeneralDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x790fa	tokens1:f34be1ec5e6c
+MapSpecsVictoryCondPage	?GetMessageMap@TAccumulateCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x796fd	tokens1:fe57a3908eb1
+MapSpecsVictoryCondPage	?GetMessageMap@TAccumulateResourceDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapSpecsVictoryCondPage.cpp2126225498@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x79c6d	tokens1:8cef1e7104ba
 MapSpecsVictoryCondPage	?GetMessageMap@TMapSpecsVictoryCondPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x7be94	tokens1:365794788fd9
 MapSpecsVictoryCondPage	?GetMessageMap@TVictoryConditionDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x7922b	tokens1:e1d786a3d6f4
 MapSpecsVictoryCondPage	?OnCreate@TMapSpecsVictoryCondPage@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x7be9a	tokens1:0af7d368a0a2
@@ -2839,8 +2841,6 @@ MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCFlagAllCreatu
 MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCFlagAllMines@@@Z	100.0000	100.0000	100.0000	0x7be28	tokens1:2fb22547bea3
 MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCTransportArtifact@@@Z	100.0000	100.0000	100.0000	0x7be56	tokens1:8cac7e54dbb9
 MapSpecsVictoryCondPage	?visit@TMapSpecsVictoryCondPage@@EAEXABVTVCUpgradeTown@@@Z	100.0000	100.0000	100.0000	0x7bd3c	tokens1:14b01746490c
-MapSpecsVictoryCondPage	BEGIN_MESSAGE_MAP_796fd	0.0000	0.0000	0.0000	0x796fd	tokens1:fe57a3908eb1
-MapSpecsVictoryCondPage	BEGIN_MESSAGE_MAP_79c6d	0.0000	0.0000	0.0000	0x79c6d	tokens1:8cef1e7104ba
 MapValidation	??0TMapValidationFunc@@QAE@ABVTGameMap@@@Z	100.0000	100.0000	100.0000	0x7c6d4	tokens1:be3f71fd8394
 MapValidation	??1TMapValidationFunc@@UAE@XZ	100.0000	100.0000	100.0000	0x7c723	-
 MapValidation	??8@YA_NABVTMapObjectRef@@0@Z	100.0000	100.0000	100.0000	0x7ebb0	-
@@ -2891,7 +2891,9 @@ MapView	??_GTMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp22837175
 MapView	??_GTMapView@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x805fb	-
 MapView	?CreateObject@TMapView@@SGPAVCObject@@XZ	100.0000	100.0000	100.0000	0x8048f	tokens1:057b17baa802
 MapView	?DoDataExchange@TMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x8022a	tokens1:b497ea3107c1
+MapView	?GetMessageMap@TMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x801ff	tokens1:8f0b8e17e793
 MapView	?GetMessageMap@TMapView@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x804ca	tokens1:b865d4ed5644
+MapView	?GetMessageMap@TObjectPropsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x80112	tokens1:e163ae3feed3
 MapView	?OnCmdMsg@TMapView@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z	100.0000	100.0000	100.0000	0x82b96	tokens1:4ffc57f43c34
 MapView	?OnCreate@TMapValidationDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x80205	tokens1:4df23a81f97a
 MapView	?OnCreate@TObjectPropsDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\MapView.cpp2283717553@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x80170	tokens1:6080f42822e6
@@ -3180,8 +3182,6 @@ MapView	?setViewGrid@TMapView@@SAX_N@Z	100.0000	100.0000	100.0000	0x807de	tokens
 MapView	?setViewPassability@TMapView@@SAX_N@Z	100.0000	100.0000	100.0000	0x80826	tokens1:394938d25e19
 MapView	?setZoom@TMapView@@SAXW4TZoom@@@Z	100.0000	100.0000	100.0000	0x80796	tokens1:6ba97c55411e
 MapView	?swap@std@@YAXAAVTGameMapMask@@0@Z	100.0000	100.0000	100.0000	0x86ae7	-
-MapView	BEGIN_MESSAGE_MAP_80112	0.0000	0.0000	0.0000	0x80112	tokens1:e163ae3feed3
-MapView	BEGIN_MESSAGE_MAP_801ff	0.0000	0.0000	0.0000	0x801ff	tokens1:8f0b8e17e793
 MapView	__h3cg$MapView$static_dtor$className	100.0000	100.0000	100.0000	0x80723	-
 MapViewingWnd	?GetMessageMap@TMapViewingWnd@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x86b90	-
 MemoryDC	??0?$TGDIObjectSelector@VCBitmap@@@@QAE@PAVCDC@@PAVCBitmap@@@Z	100.0000	100.0000	100.0000	0x51fdd	tokens1:5873c016381c
@@ -3718,6 +3718,8 @@ RandomGeneratorPropsDlg	?DoDataExchange@TRandomGeneratorLevelDlg@?%C:\Dev\Heroes
 RandomGeneratorPropsDlg	?DoDataExchange@TRandomGeneratorOwnerDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0xafd9f	tokens1:03dc78881464
 RandomGeneratorPropsDlg	?DoModal@TRandomlyAlignedGeneratorPropsDlg@@UAEHXZ	100.0000	100.0000	100.0000	0xb1967	tokens1:1177367f5a9b
 RandomGeneratorPropsDlg	?DoModal@TRandomlyLeveledGeneratorPropsDlg@@UAEHXZ	100.0000	100.0000	100.0000	0xb1e9a	tokens1:8216bf526fb0
+RandomGeneratorPropsDlg	?GetMessageMap@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb05d6	tokens1:f1ebb93591a4
+RandomGeneratorPropsDlg	?GetMessageMap@TRandomGeneratorLevelDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xafecf	tokens1:f576b2d0fb59
 RandomGeneratorPropsDlg	?GetMessageMap@TRandomGeneratorPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb0f30	tokens1:f9f835dbae45
 RandomGeneratorPropsDlg	?GetMessageMap@TRandomlyAlignedGeneratorPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb157b	tokens1:95f8499bdcdb
 RandomGeneratorPropsDlg	?GetMessageMap@TRandomlyLeveledGeneratorPropsDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0xb1abe	tokens1:7e07e9ab1b7b
@@ -3759,8 +3761,6 @@ RandomGeneratorPropsDlg	?_Unguarded_partition@std@@YAPAVTMapObjectRef@@PAV2@0V2@
 RandomGeneratorPropsDlg	?_getNewGenerator@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@AAEPAVTAbstractRandomlyAlignedGenerator@@XZ	100.0000	100.0000	100.0000	0xb0907	tokens1:c70fd88308cf
 RandomGeneratorPropsDlg	?_getOldGenerator@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@ABEPBVTAbstractRandomlyAlignedGenerator@@XZ	100.0000	100.0000	100.0000	0xb08ce	tokens1:9ca5b9806208
 RandomGeneratorPropsDlg	?_onAlignmentCheck@TRandomGeneratorAlignmentDlg@?%C:\Dev\Heroes 3 Exp 2\Editor\RandomGeneratorPropsDlg.cpp677222979@@AAEXH@Z	59.0000	59.0000	59.0000	0xb0854	tokens1:31a63e8be5c3
-RandomGeneratorPropsDlg	BEGIN_MESSAGE_MAP_afecf	0.0000	0.0000	0.0000	0xafecf	tokens1:f576b2d0fb59
-RandomGeneratorPropsDlg	BEGIN_MESSAGE_MAP_b05d6	0.0000	0.0000	0.0000	0xb05d6	tokens1:f1ebb93591a4
 ResourcePropsGeneralPage	??0TResourcePropsGeneralPage@@QAE@PAVTGameResource@@W4EGameVersion@@@Z	100.0000	100.0000	100.0000	0xb2822	tokens1:6e71c0ca811e
 ResourcePropsGeneralPage	??1TResourcePropsGeneralPage@@UAE@XZ	100.0000	100.0000	100.0000	0xb2924	tokens1:bcec43cf7cd4
 ResourcePropsGeneralPage	??_GTResourcePropsGeneralPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb2908	-
@@ -4932,7 +4932,7 @@ rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZ
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	99.1751	99.1751	99.1751	0xa5c07	-
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	93.1254	93.1254	93.1254	0xa7605	-
 rmg	?createRiverToJoin@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	96.9819	96.9819	96.9819	0xab6ac	-
-rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9962	84.0057	84.0057	0xabd5f	-
+rmg	?createRiverToOutlet@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	84.0057	84.0057	84.0057	0xabd5f	-
 rmg	?createRivers@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xac4ae	-
 rmg	?createRoads@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0xab52a	-
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	89.5710	89.5710	89.5710	0xa696b	-
