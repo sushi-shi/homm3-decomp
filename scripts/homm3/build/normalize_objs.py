@@ -86,6 +86,7 @@ class EhHandlerOwnerRewrite:
     funclet_size: int
     canonical_name: str = ""
     prologue: int = 6
+    earlier: tuple[tuple[int, int], ...] = ()   # (label symbol, offset) of the prior funclets
 
 
 def _retail_symbol_rvas(path: Path = SYMBOL_NAMES) -> dict[str, tuple[int, str]]:
@@ -649,13 +650,33 @@ def _canonicalize_equivalent_relocations(
 
 @dataclass(frozen=True)
 class FunctionBody:
-    """One external function's bytes and function-relative relocation sites."""
+    """One external function's bytes and function-relative relocation sites.
+
+    `fold` is set for a function that is a whole COMDAT section of its own
+    and references only external symbols: (COMDAT selection, ((site, type,
+    referent), ...)), what /OPT:ICF compares besides the bytes."""
 
     payload: bytes
     sites: tuple[int, ...]
+    fold: tuple | None = None
 
 
 _ICF_PADDING = frozenset(b"\xcc\x90")
+COMDAT_SECTION = 0x1000
+
+
+def _comdat_selections(coff: canon.CoffObject) -> dict[int, int]:
+    """Section index -> COMDAT selection, from each section symbol's aux record."""
+    selections = {}
+    for symbol in coff.symbols.values():
+        if (symbol.storage_class != STATIC_STORAGE or symbol.aux_count < 1 or
+                symbol.section <= 0 or symbol.value != 0):
+            continue
+        section = coff.sections[symbol.section - 1]
+        if symbol.name != section.name or not section.characteristics & COMDAT_SECTION:
+            continue
+        selections.setdefault(symbol.section, coff.data[symbol.offset + 18 + 14])
+    return selections
 
 
 def _function_bodies(coff: canon.CoffObject) -> dict[str, FunctionBody]:
@@ -663,6 +684,7 @@ def _function_bodies(coff: canon.CoffObject) -> dict[str, FunctionBody]:
     by_section: dict[int, list[canon.Relocation]] = {}
     for relocation in coff.relocations:
         by_section.setdefault(relocation.section, []).append(relocation)
+    selections = _comdat_selections(coff)
     bodies: dict[str, FunctionBody | None] = {}
     for section_index, ranges in canon._function_ranges(coff).items():
         section = coff.sections[section_index - 1]
@@ -671,8 +693,15 @@ def _function_bodies(coff: canon.CoffObject) -> dict[str, FunctionBody]:
         for start, end, symbol in ranges:
             if symbol.storage_class != EXTERNAL_STORAGE:
                 continue
-            body = FunctionBody(data[start:end], tuple(sorted(
-                r.site - start for r in relocations if start <= r.site < end)))
+            own = sorted((r for r in relocations if start <= r.site < end),
+                         key=lambda r: r.site)
+            referents = [coff.symbols[r.symbol_index] for r in own]
+            fold = None
+            if (section_index in selections and len(ranges) == 1 and start == 0 and
+                    all(row.storage_class == EXTERNAL_STORAGE for row in referents)):
+                fold = (selections[section_index],
+                        tuple((r.site, r.typ, row.name) for r, row in zip(own, referents)))
+            body = FunctionBody(data[start:end], tuple(r.site - start for r in own), fold)
             if symbol.name in bodies and bodies[symbol.name] != body:
                 bodies[symbol.name] = None
             else:
@@ -770,7 +799,7 @@ def _icf_index() -> tuple[dict[str, FunctionBody], dict[str, FunctionBody]]:
                     rows = hit[1]
                 else:
                     try:
-                        rows = {name: (body.payload, body.sites) for name, body in
+                        rows = {name: (body.payload, body.sites, body.fold) for name, body in
                                 _function_bodies(canon.CoffObject(data)).items()}
                     except ValueError:
                         rows = None
@@ -822,6 +851,43 @@ def _retail_twins():
     return _RETAIL_TWINS
 
 
+def _fold_key(body: FunctionBody):
+    """What /OPT:ICF compares for a foldable COMDAT function: its bytes (the
+    trailing fill normalization retained stripped), the COMDAT selection and
+    every relocation's site, type and referent. None when not foldable."""
+    if body.fold is None:
+        return None
+    payload = body.payload
+    floor = max((site + 4 for site in body.sites), default=0)
+    end = len(payload)
+    while end > max(floor, 1) and payload[end - 1] in _ICF_PADDING:
+        end -= 1
+    return payload[:end], body.fold
+
+
+_FOLD_GROUPS: tuple[dict, dict] | None = None
+
+
+def _linker_fold_mates(candidates: dict[str, FunctionBody], name: str) -> set[str]:
+    """The candidate functions /OPT:ICF folds with `name` (itself included).
+
+    VC6's linker folds COMDAT functions whose bytes, relocations and COMDAT
+    selection agree; the game's candidate link map shows every folded group
+    keeping one selection (inline pick-any bodies and out-of-line bodies of
+    the same bytes stay two copies, as in retail)."""
+    global _FOLD_GROUPS
+    if _FOLD_GROUPS is None or _FOLD_GROUPS[0] is not candidates:
+        groups: dict = {}
+        for other, body in candidates.items():
+            key = _fold_key(body)
+            if key is not None:
+                groups.setdefault(key, set()).add(other)
+        _FOLD_GROUPS = (candidates, groups)
+    body = candidates.get(name)
+    key = None if body is None else _fold_key(body)
+    return set(_FOLD_GROUPS[1].get(key, {name})) if key is not None else {name}
+
+
 def _canonicalize_icf_aliases(
         base_payload: bytes, target_payload: bytes,
         symbol_rvas: dict[str, tuple[int, str]],
@@ -840,7 +906,11 @@ def _canonicalize_icf_aliases(
     no retail address of its own, and retail keeps no identical copy of the
     surviving body elsewhere (`twins_of`) unless reloc_pairing's twin rule
     admitted the fold of that candidate twin at that address (`folded_at`:
-    each identical retail twin is independently another function). Each
+    each identical retail twin is independently another function) or the
+    candidate's own /OPT:ICF group places it there: link-diff's rule, a
+    folded copy takes the retail identity of its fold-mates, applied to the
+    group the linker forms from the candidate objects (`_linker_fold_mates`)
+    when its mates name exactly that one retail function. Each
     candidate twin paired with a label is judged alone, so a differing
     overload at one site leaves the verified twins' sites canonical. When
     the label's only twin verifies, its undefined target reference is
@@ -872,6 +942,12 @@ def _canonicalize_icf_aliases(
         if symbol.storage_class == EXTERNAL_STORAGE:
             base_by_name.setdefault(symbol.name, symbol.index)
     candidates, retail = index
+
+    def mates_place(twin):
+        rvas = {symbol_rvas[mate][0] for mate in _linker_fold_mates(candidates, twin)
+                if mate in symbol_rvas and symbol_rvas[mate][1] == "func"}
+        return next(iter(rvas)) if len(rvas) == 1 else None
+
     sites: dict[tuple[str, str], list[canon.Relocation]] = {}
     aliases: dict[str, set[str]] = {}
     for key, target_relocation in target_rows.items():
@@ -895,10 +971,12 @@ def _canonicalize_icf_aliases(
         retail_copies = bool(twins_of(authority[0]))
         verified = set()
         for twin in twins:
-            if retail_copies and not folded_at(twin, authority[0]):
+            if (retail_copies and not folded_at(twin, authority[0])
+                    and mates_place(twin) != authority[0]):
                 # Retail keeps an identical copy elsewhere: unless the pairing
-                # rule identified this twin as another function, it could
-                # equally be folded onto either, so its sites stay visible.
+                # rule identified this twin as another function, or its own
+                # ICF group's mates name the label, it could equally be
+                # folded onto either, so its sites stay visible.
                 continue
             candidate = candidates.get(twin)
             if candidate is None or twin in symbol_rvas:
@@ -1272,6 +1350,7 @@ def _eh_handler_candidates(coff: canon.CoffObject) -> tuple[EhHandlerOwnerRewrit
             relocation.offset, relocation.site, handler.index, funclet.index,
             handler.value, funclet.value, handler.value - funclet.value,
             prologue=prologue,
+            earlier=tuple((row.index, row.value) for row in prior[:-1]),
         ))
     return tuple(candidates)
 
@@ -1284,7 +1363,10 @@ def _canonicalize_matching_eh_handler_owners(
 
     This is deliberately paired. A structurally valid VC6 handler is changed
     only when the unique retail counterpart has the same EH prologue and its
-    relocation addend equals the candidate's measured final-funclet size.
+    relocation addend equals the candidate's measured final-funclet size, or
+    the distance from an earlier funclet to the handler when the retail
+    inventories prove that funclet's parent and full extent (the census
+    function absorbs a later cleanup that has no start of its own).
     Different cleanup topology therefore remains visible to objdiff.
     """
     base = canon.CoffObject(base_payload)
@@ -1322,7 +1404,17 @@ def _canonicalize_matching_eh_handler_owners(
             continue
         target_addend, = struct.unpack_from("<I", target_bytes, target_site)
         if target_addend != rewrite.funclet_size:
-            continue
+            # The census may hold several cleanups as one function: a final
+            # cleanup reached only by an earlier one's branch (a bare `ret`)
+            # has no start of its own, so retail's owner is the earlier
+            # funclet and the addend spans the rest. Only the retail
+            # inventories' parent and full extent admit that owner below.
+            earlier = next(((index, offset) for index, offset in rewrite.earlier
+                            if rewrite.handler_offset - offset == target_addend), None)
+            if earlier is None or UNWIND_OWNER.search(target_owner.name):
+                continue
+            rewrite = replace(rewrite, funclet_symbol=earlier[0], funclet_offset=earlier[1],
+                              funclet_size=target_addend)
         if not UNWIND_OWNER.search(target_owner.name):
             # Generic names carry no ownership evidence. Require the existing
             # retail inventories to identify both functions and the cleanup's

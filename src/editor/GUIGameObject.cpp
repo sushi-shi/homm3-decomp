@@ -232,6 +232,7 @@ class TGUIGenericObject : public TGenericObject, public TGUIGameObject {
 public:
     TGUIGenericObject(const TObjectType& objType);
     TGUIGenericObject(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUIGenericObject() {}
 
     virtual std::auto_ptr<TGameObject> clone() const;
 };
@@ -444,6 +445,7 @@ class TGUIHeroPlaceholder : public THeroPlaceholder, public TGUIBasicHero {
 public:
     TGUIHeroPlaceholder(const TObjectType& objType, TPlayer owner);
     TGUIHeroPlaceholder(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUIHeroPlaceholder() {}
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual std::auto_ptr<TGameObject> clone() const;
@@ -481,6 +483,7 @@ class TGUINonRandomHero : public TNonRandomHero, public TGUIBasicHero {
 public:
     TGUINonRandomHero(const TObjectType& objType, TPlayer owner, THeroID heroID);
     TGUINonRandomHero(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUINonRandomHero() {}
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual std::auto_ptr<TGameObject> clone() const;
@@ -518,6 +521,7 @@ class TGUIRandomHero : public TRandomHero, public TGUIBasicHero {
 public:
     TGUIRandomHero(const TObjectType& objType, TPlayer owner);
     TGUIRandomHero(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUIRandomHero() {}
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual std::auto_ptr<TGameObject> clone() const;
@@ -556,6 +560,7 @@ class TGUIPrison : public TPrison, public TGUISpecializedObject {
 public:
     TGUIPrison(const TObjectType& objType, THeroID heroID);
     TGUIPrison(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUIPrison() {}
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual std::auto_ptr<TGameObject> clone() const;
@@ -590,6 +595,7 @@ class TGUITown : public TTown, public TGUISpecializedObject {
 public:
     TGUITown(const TObjectType& objType, TPlayer owner);
     TGUITown(const TObjectType& objType, TRawIStream* pIStream, int version);
+    virtual ~TGUITown() {}
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID);
     virtual std::auto_ptr<TGameObject> clone() const;
@@ -767,6 +773,7 @@ public:
         : TGameObject(objType), T(objType, pIStream, version), TGUISpecializedObject(objType)
     {
     }
+    virtual ~TGUIStandardSpecializedObject() {}
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
     {
@@ -791,6 +798,7 @@ public:
         : TGameObject(objType), T(objType, pIStream, version), TGUISpecializedObject(objType)
     {
     }
+    virtual ~TGUIOwnableSpecializedObject() {}
 
     virtual bool edit(TEditContext* pEditContext, TGameMap* pMap, bool bSecondLayer, unsigned int objID)
     {

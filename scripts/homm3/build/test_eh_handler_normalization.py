@@ -4,8 +4,8 @@
 Run with ``python3 -m homm3.build.test_eh_handler_normalization``.  The
 positive fixture proves that ``handler`` and ``last funclet + size`` resolve
 to the same byte before the disposable comparison copy is rewritten.  The
-negative fixtures prove that a different retail cleanup size, malformed
-handler thunk, or missing final funclet is left visible.
+negative fixtures prove that a different retail cleanup size or a malformed
+handler thunk is left visible.
 """
 from __future__ import annotations
 
@@ -93,10 +93,12 @@ def _body(prologue: bytes) -> bytearray:
 
 
 def _base(*, handler_opcode: int = 0xB8,
-          cleanup_storage: int = 6, prologue: bytes = STANDARD) -> bytes:
+          cleanup_storage: int = 6, prologue: bytes = STANDARD,
+          tail: bool = False) -> bytes:
     parent = _body(prologue)
     child = bytearray(21)
     child[0] = 0xC3
+    child[10] = 0xC3
     child[11] = handler_opcode
     child[16] = 0xE9
     sections = (
@@ -118,7 +120,7 @@ def _base(*, handler_opcode: int = 0xB8,
         _symbol("handler", 11, 2, 0, 6),                        # 6
         _symbol("xdata", 0, 0, 0, 2),                           # 7
         _symbol("frame", 0, 0, FUNCTION_TYPE, 2),               # 8
-    )
+    ) + ((_symbol("tail", 10, 2, 0, 6),) if tail else ())       # 9: a `ret` cleanup
     return _coff(sections, symbols)
 
 
@@ -199,6 +201,32 @@ class EhHandlerNormalizationTest(unittest.TestCase):
                 funclet_owners={0x1234: (0x1000, 11)})
             self.assertEqual((after, rewrites), (before, ()))
 
+    def test_census_owner_spanning_a_later_cleanup_is_canonicalized(self):
+        # the last cleanup (a bare `ret` reached by the first one's branch)
+        # has no census start: retail's owner is the first cleanup and its
+        # addend spans both, as the funclet inventory's extent proves
+        before = _base(tail=True)
+        names = {"ctor": (0x1000, "func"), "fn_1234": (0x1234, "func")}
+        after, rewrites = _canonicalize_matching_eh_handler_owners(
+            before, _target(owner="fn_1234"), symbol_rvas=names,
+            funclet_owners={0x1234: (0x1000, 11)})
+        self.assertEqual(len(rewrites), 1)
+        self.assertEqual((rewrites[0].funclet_symbol, rewrites[0].funclet_size), (5, 11))
+        normalized = CoffObject(after)
+        row = next(r for r in normalized.relocations if r.site == 6)
+        self.assertEqual(normalized.symbols[row.symbol_index].name, "fn_1234")
+        self.assertEqual(normalized.symbols[9].name, "tail")
+        for owners in ({}, {0x1234: (0x1000, 1)}):
+            with self.subTest(owners=owners):
+                self.assertEqual(_canonicalize_matching_eh_handler_owners(
+                    before, _target(owner="fn_1234"), symbol_rvas=names,
+                    funclet_owners=owners), (before, ()))
+        # a named unwind owner proves no extent: only the last cleanup
+        self.assertEqual(_canonicalize_matching_eh_handler_owners(
+            before, _target()), (before, ()))
+        self.assertEqual(len(_canonicalize_matching_eh_handler_owners(
+            before, _target(1))[1]), 1)
+
     def test_fs_first_prologue_is_canonicalized(self):
         # `mov eax, fs:[0]` scheduled before `push -1` moves the handler
         # operand to +0xc; the same proof applies there.
@@ -241,12 +269,15 @@ class EhHandlerNormalizationTest(unittest.TestCase):
         self.assertEqual(rewrites, ())
         self.assertEqual(after, before)
 
-    def test_missing_final_funclet_stays_visible(self):
+    def test_unlabelled_lone_cleanup_is_named_by_its_section(self):
+        # cdbb3f009: a lone cleanup at the section start has no label; the
+        # section symbol names it and the same size proof applies
         before = _base(cleanup_storage=3)
         after, rewrites = _canonicalize_matching_eh_handler_owners(
             before, _target())
-        self.assertEqual(rewrites, ())
-        self.assertEqual(after, before)
+        self.assertEqual([(row.funclet_symbol, row.funclet_size) for row in rewrites], [(3, 11)])
+        self.assertEqual(_canonicalize_matching_eh_handler_owners(before, _target(8)),
+                         (before, ()))
 
 
 if __name__ == "__main__":

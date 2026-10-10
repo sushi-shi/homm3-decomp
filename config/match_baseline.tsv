@@ -354,7 +354,7 @@ ai_player	?dumpExtraCreature@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	
 ai_player	?endTurn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x28dd0	tokens1:8564e6f270a5
 ai_player	?erase@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@QAEPAUtype_creature_source@@PAU3@0@Z	100.0000	100.0000	100.0000	0x34680	-
 ai_player	?fillProhibitedArray@@YIXPAVplayerData@@PA_N@Z	100.0000	100.0000	100.0000	0x29d50	tokens1:adc0929c3656
-ai_player	?findAllDestinations@@YIJPAVhero@@PAVsearchArray@@AAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	96.9048	96.9048	96.9365	0x2edd0	tokens1:f51a0d0f717e
+ai_player	?findAllDestinations@@YIJPAVhero@@PAVsearchArray@@AAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	96.9127	96.9127	96.9365	0x2edd0	tokens1:f51a0d0f717e
 ai_player	?findMagusHutValue@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910	tokens1:353bdeeff7ff
 ai_player	?getAlignments@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c060	tokens1:4bcf0454c54c
 ai_player	?getAttackBonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710	tokens1:ce604d679e55

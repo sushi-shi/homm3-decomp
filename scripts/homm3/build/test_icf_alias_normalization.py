@@ -5,7 +5,7 @@ import unittest
 from homm3.build import canonicalize_data_symbols as canon
 from homm3.build.normalize_objs import (FunctionBody, _canonicalize_icf_aliases,
                                         _canonicalize_proven_fold_calls,
-                                        _icf_identical)
+                                        _icf_identical, _linker_fold_mates)
 
 TEXT = 0x60500020
 REL32 = 0x14
@@ -151,6 +151,48 @@ class IcfAliasRewriteTest(unittest.TestCase):
         self.assertEqual(_canonicalize_icf_aliases(
             base, target, self.rvas, index, lambda rva: twins.get(rva, ())),
             (base, target, 0))
+
+    def test_the_candidate_icf_group_places_a_twin_beside_retail_copies(self):
+        # _unlockSprite and the RMG's empty releaseReservation are both
+        # out-of-line `ret` COMDATs: the linker folds them, and the group's
+        # one claimed mate names the address retail keeps among other `ret`s.
+        base = coff(CALL, [("??_GA", 0)], [(1, "?unlock")], ["?unlock"])
+        target = coff(CALL, [("??_GA", 0)], [(1, "??1Folded")], ["??1Folded"])
+        ret, nodup, pick_any = b"\xc3", (1, ()), (2, ())
+        candidates = {"?unlock": FunctionBody(ret, (), nodup),
+                      "??1Folded": FunctionBody(ret + b"\x90\x90\x90", (), nodup),
+                      "??1Inline": FunctionBody(ret, (), pick_any)}
+        index = (candidates, {"??1Folded": FunctionBody(ret + b"\x90", ())})
+        twins = {0x30: (0x50,)}
+        rvas = dict(self.rvas, **{"??1Inline": (0x50, "func")})
+        _new_base, new_target, count = _canonicalize_icf_aliases(
+            base, target, rvas, index, lambda rva: twins.get(rva, ()))
+        parsed = canon.CoffObject(new_target)
+        self.assertEqual((count, parsed.symbols[parsed.relocations[0].symbol_index].name),
+                         (1, "?unlock"))
+
+    def test_an_icf_group_naming_two_retail_bodies_stays_visible(self):
+        base = coff(CALL, [("??_GA", 0)], [(1, "?unlock")], ["?unlock"])
+        target = coff(CALL, [("??_GA", 0)], [(1, "??1Folded")], ["??1Folded"])
+        nodup = (1, ())
+        candidates = {"?unlock": FunctionBody(b"\xc3", (), nodup),
+                      "??1Folded": FunctionBody(b"\xc3", (), nodup),
+                      "?other": FunctionBody(b"\xc3", (), nodup)}
+        index = (candidates, {"??1Folded": FunctionBody(b"\xc3", ())})
+        rvas = dict(self.rvas, **{"?other": (0x50, "func")})
+        self.assertEqual(_canonicalize_icf_aliases(
+            base, target, rvas, index, lambda rva: (0x50,) if rva == 0x30 else ()),
+            (base, target, 0))
+
+    def test_other_selections_or_referents_are_other_groups(self):
+        nodup = FunctionBody(b"\xe9\0\0\0\0", (1,), (1, ((1, REL32, "?f"),)))
+        candidates = {"?a": nodup,
+                      "?b": FunctionBody(b"\xe9\0\0\0\0", (1,), (2, ((1, REL32, "?f"),))),
+                      "?c": FunctionBody(b"\xe9\0\0\0\0", (1,), (1, ((1, REL32, "?g"),))),
+                      "?d": FunctionBody(b"\xe9\0\0\0\0\xcc", (1,), (1, ((1, REL32, "?f"),))),
+                      "?e": FunctionBody(b"\xe9\0\0\0\0", (1,))}
+        self.assertEqual(_linker_fold_mates(candidates, "?a"), {"?a", "?d"})
+        self.assertEqual(_linker_fold_mates(candidates, "?e"), {"?e"})
 
 
 class ProvenFoldCallTest(unittest.TestCase):
