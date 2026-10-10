@@ -51,24 +51,24 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 <!-- h3maped-match-score:start -->
 
-**GOG Complete map editor `h3maped.exe`: 73.56% matched (MAX)** — 4,432 / 6,850 functions exact (64.7%), weighted by size over 851,461 bytes of code.
+**GOG Complete map editor `h3maped.exe`: 73.98% matched (MAX)** — 4,453 / 6,850 functions exact (65.0%), weighted by size over 851,461 bytes of code.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |           4,404 |   73.50% | last measured score                            |
-| MAX   |           4,432 |   73.56% | best result for each function's current source |
-| HIST  |           4,432 |   73.57% | all-time peak across source revisions          |
+| CUR   |           4,425 |   73.92% | last measured score                            |
+| MAX   |           4,453 |   73.98% | best result for each function's current source |
+| HIST  |           4,453 |   73.99% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module        | Units | Functions exact MAX | Fuzzy MAX |
 | :------------ | ----: | ------------------: | --------: |
-| `game`        |   133 | 4033 / 4473 (90.2%) |    97.50% |
+| `game`        |   134 | 4054 / 4494 (90.2%) |    97.51% |
 | `rmg`         |     6 |   292 / 372 (78.5%) |    92.39% |
 | `zlib-1.1.3`  |    12 |    56 / 56 (100.0%) |   100.00% |
-| `codec`       |     3 |     35 / 48 (72.9%) |    94.09% |
+| `codec`       |     3 |     35 / 50 (70.0%) |    90.60% |
 | `victor`      |     6 |     16 / 17 (94.1%) |    99.99% |
-| `(unmatched)` |     — |    0 / 1,884 (0.0%) |      0.0% |
+| `(unmatched)` |     — |    0 / 1,861 (0.0%) |      0.0% |
 
 Library and compiler-generated code (outside the scores; each function verified against what produced it):
 
@@ -79,7 +79,7 @@ Library and compiler-generated code (outside the scores; each function verified 
 | `init/cleanup thunks` |     3,593 |        2 |   80,415 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
 | `import thunks`       |        13 |        0 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
 
-**Data:** 1,296 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
+**Data:** 1,313 / 16,670 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
 <!-- h3maped-match-score:end -->
 

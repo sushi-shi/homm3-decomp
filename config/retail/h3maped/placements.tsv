@@ -850,7 +850,7 @@ rva	size	kind	name	unit	evidence
 0x00041c36	0x8e	func	??0TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	masked body (142 bytes, 9 relocations) unique at a census start
 0x00041cc4	0xaa	func	??0?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	referenced by 0x00041c36 at +0x59
 0x00041d6e	0x7a	func	??0TGenerator@@QAE@ABV0@@Z	GUIGameObject	referenced by 0x00041cc4 at +0x65
-0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	referenced by ??0TGarrison@@QAE@ABV0@@Z at +0x4e
+0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	referenced by ??0TRandomGenerator@@QAE@ABV0@@Z at +0x6c
 0x00042038	0x8e	func	??0TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	masked body (142 bytes, 9 relocations) unique at a census start
 0x000420c6	0xaa	func	??0?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	masked body (170 bytes, 10 relocations) unique at a census start
 0x00042170	0x80	func	??0TAbandonedMine@@QAE@ABV0@@Z	GUIGameObject	masked body (128 bytes, 7 relocations) unique at a census start
@@ -2091,7 +2091,7 @@ rva	size	kind	name	unit	evidence
 0x000bda8e	0x68	func	?_Dec@const_iterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAEXXZ	rmg_terrain	referenced by ?insert@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@_N@2@ABV?$TPoint@I@@@Z at +0xbb
 0x000bdaf6	0x57	func	?_Ubound@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@IBEPAU_Node@12@ABV?$TPoint@I@@@Z	rmg_terrain	masked body (87 bytes, 3 relocations) unique at a census start
 0x000bdb4d	0x80	func	?_Inc@const_iterator@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAEXXZ	rmg_terrain	referenced by ?erase@?$_Tree@V?$TPoint@I@@V1@U_Kfn@?$set@V?$TPoint@I@@U?$less@V?$TPoint@I@@@std@@V?$allocator@V?$TPoint@I@@@3@@std@@U?$less@V?$TPoint@I@@@4@V?$allocator@V?$TPoint@I@@@4@@std@@QAEIABV?$TPoint@I@@@Z at +0x31
-0x000be6e6	0x8	func	??_F?$TAutoArrayPtr@D@@QAEXXZ	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1f9
+0x000be6e6	0x8	func	??_F?$TAutoArrayPtr@D@@QAEXXZ	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1f9; ICF-folded with 1 identical bodies
 0x000bf30a	0x1c	func	??_GCFont@@UAEPAXI@Z	TileHRuler	vtable of CFont (RTTI) slot 1
 0x000bf326	0x29	func	??1CFont@@UAE@XZ	TileHRuler	referenced by ??_GCFont@@UAEPAXI@Z at +0x4
 0x000bf381	0x5	func	??_9@$BDA@AE	TileHRuler	referenced by ??1?$TDCAttributeSelector@K$1??_9@$BDA@AE@@QAE@XZ at +0x6
@@ -2275,7 +2275,7 @@ rva	size	kind	name	unit	evidence
 0x000dccc0	0x2e	func	?GetSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z	resourcemanager	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0xb
 0x000dccf0	0x10	func	??0ios_base@std@@IAE@XZ	resourcemanager	masked body (16 bytes, 1 relocations) unique at a census start
 0x000dcd00	0x1e	func	??_Gios_base@std@@UAEPAXI@Z	resourcemanager	vtable of ios_base@std (RTTI) slot 0
-0x000dcd20	0x5e6	func	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	resourcemanager	referenced by 0x00041878 at +0x6c
+0x000dcd20	0x5e6	func	?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z	resourcemanager	referenced by ?loadTilesets@@YAXXZ at +0x55
 0x000dd320	0x14	func	?ReadFromBitmapResource@ResourceManager@@YAHPAVLODFile@@PAXH@Z	resourcemanager	masked body (20 bytes, 1 relocations) unique at a census start
 0x000dd340	0x4c	func	?Expunge@ResourceManager@@YAXXZ	resourcemanager	masked body (76 bytes, 5 relocations) unique at a census start
 0x000dd390	0xab	func	?dispose@resource@@UAEXXZ	resourcemanager	vtable of resource (RTTI) slot 1
@@ -2306,7 +2306,14 @@ rva	size	kind	name	unit	evidence
 0x000de7f0	0x6	func	?getSize@CSprite@@UBEIXZ	csprite	vtable of CSprite (RTTI) slot 2
 0x000de800	0x57	func	?DrawAdvObjWithFlag@CSprite@@QBEXHHHHHPAGHHHHHG_N@Z	csprite	masked body (87 bytes, 1 relocations) unique at a census start
 0x000de860	0x57	func	?DrawAdvObjWithFlagAlpha@CSprite@@QBEXHHHHHPAGHHHHHG_N@Z	csprite	referenced by ?OnPaint@TObjectPaletteWnd@@IAEXXZ at +0x29d
-0x000de8c0	0x52	func	?DrawAdvObjShadow@CSprite@@QBEXHHHHHPAGHHHHH_N@Z	csprite	referenced by ?OnPaint@TObjectPaletteWnd@@IAEXXZ at +0x380
+0x000de8c0	0x52	func	?DrawAdvObjShadow@CSprite@@QBEXHHHHHPAGHHHHH_N@Z	csprite	referenced by 0x000be21e at +0x2a
+0x000de920	0x57	func	?DrawTile@CSprite@@QBEXHHHHHPAGHHHHH_N1@Z	csprite	referenced by 0x000be1b8 at +0x2d
+0x000de980	0x52	func	?DrawAdvObjWithFlagScaled50@CSprite@@QBEXHHHHHPAGHHHHHG@Z	csprite	referenced by 0x000be281 at +0x2b
+0x000de9e0	0x4d	func	?DrawAdvObjShadowScaled50@CSprite@@QBEXHHHHHPAGHHHHH@Z	csprite	referenced by 0x000be2b2 at +0x28
+0x000dea30	0x57	func	?DrawTileScaled50@CSprite@@QBEXHHHHHPAGHHHHH_N1@Z	csprite	referenced by 0x000be24e at +0x2d
+0x000dea90	0x52	func	?DrawAdvObjWithFlagScaled25@CSprite@@QBEXHHHHHPAGHHHHHG@Z	csprite	referenced by 0x000be313 at +0x2b
+0x000deaf0	0x4d	func	?DrawAdvObjShadowScaled25@CSprite@@QBEXHHHHHPAGHHHHH@Z	csprite	referenced by 0x000be344 at +0x28
+0x000deb40	0x57	func	?DrawTileScaled25@CSprite@@QBEXHHHHHPAGHHHHH_N1@Z	csprite	referenced by 0x000be2e0 at +0x2d
 0x000deba0	0x70	func	?GetNumSeqs@CSprite@@SAHH@Z	csprite	masked body (112 bytes, 17 relocations) unique at a census start
 0x000dec50	0x1e	func	??_GCSpriteFrame@@UAEPAXI@Z	cspriteframe	vtable of CSpriteFrame (RTTI) slot 0
 0x000dec70	0xad	func	??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@@Z	cspriteframe	masked body (173 bytes, 7 relocations) unique at a census start
@@ -2322,11 +2329,13 @@ rva	size	kind	name	unit	evidence
 0x000e05b0	0x44b	func	?DrawAdvObjShadowImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_N@Z	cspriteframe	referenced by ?DrawAdvObjShadow@CSprite@@QBEXHHHHHPAGHHHHH_N@Z at +0x4b
 0x000e0a00	0xb58	func	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	cspriteframe	referenced by ?DrawAdvObjImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG@Z at +0x497
 0x000e1560	0x21e	func	?ClipScaled50@CSpriteFrame@@ABEXAAH00000HH_N1@Z	cspriteframe	masked body (542 bytes, 0 relocations) unique at a census start
-0x000e1a00	0x295	func	?DrawAdvObjShadowScaled50@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@@Z	cspriteframe	masked prefix (66 fixed bytes agree, 646 compiled, 661 retail)
+0x000e1780	0x27e	func	?DrawAdvObjWithFlagScaled50@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G@Z	cspriteframe	referenced by ?DrawAdvObjWithFlagScaled50@CSprite@@QBEXHHHHHPAGHHHHHG@Z at +0x4b
+0x000e1a00	0x295	func	?DrawAdvObjShadowScaled50@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@@Z	cspriteframe	referenced by ?DrawAdvObjShadowScaled50@CSprite@@QBEXHHHHHPAGHHHHH@Z at +0x46
+0x000e1ca0	0x818	func	?DrawTileScaled50@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	cspriteframe	referenced by ?DrawTileScaled50@CSprite@@QBEXHHHHHPAGHHHHH_N1@Z at +0x50
 0x000e24c0	0x22c	func	?ClipScaled25@CSpriteFrame@@ABEXAAH00000HH_N1@Z	cspriteframe	masked body (556 bytes, 0 relocations) unique at a census start
-0x000e26f0	0x297	func	?DrawAdvObjWithFlagScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G@Z	cspriteframe	masked prefix (66 fixed bytes agree, 640 compiled, 663 retail)
-0x000e2990	0x2af	func	?DrawAdvObjShadowScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@@Z	cspriteframe	masked prefix (66 fixed bytes agree, 662 compiled, 687 retail)
-0x000e2c40	0x866	func	?DrawTileScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	cspriteframe	masked prefix (72 fixed bytes agree, 1999 compiled, 2150 retail)
+0x000e26f0	0x297	func	?DrawAdvObjWithFlagScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@G@Z	cspriteframe	referenced by ?DrawAdvObjWithFlagScaled25@CSprite@@QBEXHHHHHPAGHHHHHG@Z at +0x4b
+0x000e2990	0x2af	func	?DrawAdvObjShadowScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@@Z	cspriteframe	referenced by ?DrawAdvObjShadowScaled25@CSprite@@QBEXHHHHHPAGHHHHH@Z at +0x46
+0x000e2c40	0x866	func	?DrawTileScaled25@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@_N2@Z	cspriteframe	referenced by ?DrawTileScaled25@CSprite@@QBEXHHHHHPAGHHHHH_N1@Z at +0x50
 0x000e34b0	0x1e	func	??_GBitmap816@@UAEPAXI@Z	bitmap816	vtable of Bitmap816 (RTTI) slot 0
 0x000e34d0	0xd3	func	??0Bitmap816@@QAE@PBDHHPAEPAVTPalette16@@H@Z	bitmap816	masked body (211 bytes, 10 relocations) unique at a census start
 0x000e35b0	0x124	func	??0Bitmap816@@QAE@PBD0HHHHHH@Z	bitmap816	masked body (292 bytes, 9 relocations) unique at a census start
@@ -3505,6 +3514,23 @@ rva	size	kind	name	unit	evidence
 0x001928e0	0xd	data	??_C@_0N@DFPD@ScutBoat?4wav?$AA@	spelldefs	referenced by ?g_spellTraitsImp@@3PAUTSpellTraits@@A at +0x8c
 0x001928f0	0xd	data	??_C@_0N@JEJC@SummBoat?4wav?$AA@	spelldefs	referenced by ?g_spellTraitsImp@@3PAUTSpellTraits@@A at +0x4
 0x00192900	0xd	data	??_C@_0N@LEPK@sptraits?4txt?$AA@	spelldefs	referenced by ?InitializeSpellTraitsTable@@YAEXZ at +0x2
+0x00192af4	0xb	data	??_C@_0L@GBGN@cobbrd?4def?$AA@	Tile	referenced by _akRoadTilesetName at +0x8
+0x00192b00	0xb	data	??_C@_0L@CILA@gravrd?4def?$AA@	Tile	referenced by _akRoadTilesetName at +0x4
+0x00192b0c	0xb	data	??_C@_0L@MPFM@dirtrd?4def?$AA@	Tile	referenced by _akRoadTilesetName at +0x0
+0x00192b18	0xb	data	??_C@_0L@PAMC@lavrvr?4def?$AA@	Tile	referenced by _akRiverTilesetName at +0xc
+0x00192b24	0xb	data	??_C@_0L@EABG@mudrvr?4def?$AA@	Tile	referenced by _akRiverTilesetName at +0x8
+0x00192b30	0xb	data	??_C@_0L@HNCE@icyrvr?4def?$AA@	Tile	referenced by _akRiverTilesetName at +0x4
+0x00192b3c	0xb	data	??_C@_0L@NIAM@clrrvr?4def?$AA@	Tile	referenced by _akRiverTilesetName at +0x0
+0x00192b48	0xb	data	??_C@_0L@HMHH@rocktl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x24
+0x00192b54	0xb	data	??_C@_0L@JKAP@watrtl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x20
+0x00192b60	0xb	data	??_C@_0L@ICMG@lavatl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x1c
+0x00192b6c	0xb	data	??_C@_0L@FDPA@subbtl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x18
+0x00192b78	0xb	data	??_C@_0L@IAIC@rougtl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x14
+0x00192b84	0xb	data	??_C@_0L@NKKM@swmptl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x10
+0x00192b90	0xb	data	??_C@_0L@HHJC@snowtl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0xc
+0x00192b9c	0xb	data	??_C@_0L@MAJJ@grastl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x8
+0x00192ba8	0xb	data	??_C@_0L@PIOB@sandtl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x4
+0x00192bb4	0xb	data	??_C@_0L@LDLG@dirttl?4def?$AA@	Tile	referenced by _akGroundTilesetName at +0x0
 0x00192f18	0xd	data	??_C@_0N@EBJO@dwelling?4txt?$AA@	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1e6
 0x00192f28	0xd	data	??_C@_0N@COOK@bldgspec?4txt?$AA@	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1df
 0x00192f38	0xd	data	??_C@_0N@MANH@bldgneut?4txt?$AA@	TownTypeTraits	referenced by ?InitializeTownTypeTraitsTable@@YAXXZ at +0x1d8

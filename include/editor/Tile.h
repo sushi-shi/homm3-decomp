@@ -48,7 +48,7 @@ struct TRoadTilesetTraits {
 };
 
 // Indexed by TTerrainType; the river and road traits by type - 1.
-extern const TGroundTilesetTraits* akGroundTilesetTraits;
+DATA(0x00592ae8) extern const TGroundTilesetTraits* akGroundTilesetTraits;
 DATA(0x00592aec) extern const TRiverTilesetTraits* akRiverTilesetTraits;
 DATA(0x00592af0) extern const TRoadTilesetTraits* akRoadTilesetTraits;
 
@@ -88,5 +88,10 @@ struct TZoomTraits {
 };
 
 DATA(0x00543a30) extern const TZoomTraits akZoomTraits[kNumZooms];
+
+// Loads the tileset sprites into the traits tables; cycles the animated
+// tilesets' palettes for an animation frame.
+void loadTilesets();
+void animateTilesets(unsigned int frameNum);
 
 #endif  /* HOMM3_EDITOR_TILE_H */
