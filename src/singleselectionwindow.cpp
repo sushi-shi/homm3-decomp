@@ -695,15 +695,18 @@ public:
     // therefore widens this shared member with a caller-evaluated text
     // argument; a fixed DC 534 body would show the wrong launch text.
     // Setup and DoModal remain virtual through this canonical body.
+    // DC 442/445 and Mac call SRandom before and inside a while loop; VC6
+    // folds both forms to one call, but only this do-while's smaller inline
+    // cost (cb 107 against 118) leaves handleNetMsg retail's budget.
     void wait(unsigned long forWho, const char* text)
     {
         m_forWho = forWho;
         sRand(GameTime::get());
-        int creature = sRandom(0, 111);
-        while (creature == WAIT_CREATURE_ARCH_DEVIL
-               || creature == WAIT_CREATURE_DEVIL) {
+        int creature;
+        do {
             creature = sRandom(0, 111);
-        }
+        } while (creature == WAIT_CREATURE_ARCH_DEVIL
+                 || creature == WAIT_CREATURE_DEVIL);
         setup(text, g_mediumFont,
               akCreatureTypeTraits[creature].m_sprite_name, 0);
         doModal(0);
@@ -6426,11 +6429,10 @@ void TSingleSelectionWindow::updatePlayerPositions(bool updateCurPlayer)
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
 }
 
-// 2026-10-07 trace: retail expands CRequestHeroFaceReplyMsg's constructor
-// inside onRequestHeroFaceMsg (our nested budget 51, cost 53). The simulator
-// shows that expanding it alone starves the second CHostWaitDlg::wait, so
-// retail's caller budget is 31..118 larger (cb +16..59). HIST 100 predates
-// the 2bb943d19 isHost() helper recovery.
+// Retail expands CRequestHeroFaceReplyMsg's constructor inside
+// onRequestHeroFaceMsg and both CHostWaitDlg::wait bodies, then refuses the
+// three trailing ping/version handlers. That budget holds only with
+// onPlayerDroppedMsg's in-place removal and wait's do-while (see both).
 VA(0x005887a0, 0x9ED)
 DC_ADDRESS(0x13fd74, 0x6a0)
 MAC_ADDRESS(0x17fff0, 0x7e0)
@@ -6860,13 +6862,18 @@ static inline void updateTurnDuration()
 // CNetPlayerInfo*, not the derived handler record. Complete's expansion at
 // HandleNetMsg +0x21e recomputes the version after DeletePlayer and calls
 // no-argument Update: the older DC message junk local does not survive.
+// Mac 0x181944 calls removePlayer here. Windows deletes the player and
+// recomputes the version in place: removePlayer's charged inline cost
+// (cb 44) leaves CRequestHeroFaceReplyMsg's constructor called in
+// handleNetMsg, where retail expands it.
 // E:\gamedcs\singleselectionwindow.cpp:6937
 DC_ADDRESS(0x140c88, 0xc6)
 MAC_ADDRESS(0x181910, 0x12c)
 bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 {
     CNetPlayerInfo* player = m_players.getPlayer(netMsg->m_dpidFrom);
-    removePlayer(netMsg->m_dpidFrom);
+    m_players.deletePlayer(netMsg->m_dpidFrom);
+    m_commonGameVersion = getCommonGameVersion();
     m_newPlayerUpdateMan->playerDropped(netMsg->m_dpidFrom);
     if (player)
         g_chatMan.playerDropMsg(g_generalText->GetText(GENERAL_TEXT_PLAYER_LEFT_GAME_FORMAT), player->m_name);
@@ -8881,7 +8888,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
 }
 
 // Mac 0x18640c retains this helper between setNewPlayerSlot and
-// getCommonGameVersion; onPlayerDroppedMsg calls it at 0x181944.
+// getCommonGameVersion; Mac onPlayerDroppedMsg calls it at 0x181944.
 MAC_ADDRESS(0x18640c, 0x3c)
 void TSingleSelectionWindow::removePlayer(unsigned long dpid)
 {
