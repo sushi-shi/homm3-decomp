@@ -1690,12 +1690,12 @@ SIZE(t_abstract_random_generator, 0xed8);
 
 class type_random_map_generator : public t_abstract_random_generator {
 public:
-    unsigned char m_fixedHumanPlayers[8];              // +0x0ed8
+    unsigned char m_fixedHumanPlayers[RMG_PLAYER_COUNT]; // +0x0ed8
     // Retail 0x5499fb clears nine integers at +0xee0; slot +1 is used
     // at 0x549a75/0x549ab8. Entry zero preserves the unmapped sentinel.
-    int m_playerIndexMap[9];                          // +0x0ee0
+    int m_playerIndexMap[RMG_PLAYER_COUNT + 1];       // +0x0ee0
     char m_opaque0f04[0x20];                          // +0x0f04
-    int m_townChoices[8];                              // +0x0f24
+    int m_townChoices[RMG_PLAYER_COUNT];              // +0x0f24
     // The constructor seeds this object-ID counter to 1. Creation paths
     // 0x534902, 0x540cfa, 0x545104 and
     // 0x54543d take then increment the counter, storing the taken ID in

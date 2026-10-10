@@ -965,7 +965,7 @@ public:
     bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_flightLevel != eMasteryInvalid || isWieldingArtifact(0x48))
+            && (m_flightLevel != eMasteryInvalid || isWieldingArtifact(ARTIFACT_ANGEL_WINGS))
             && (!checkTerrain || !canLand());
     }
 
@@ -974,7 +974,7 @@ public:
     bool canWalkOnWater(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
-            && (m_waterWalkLevel != eMasteryInvalid || isWieldingArtifact(0x5a))
+            && (m_waterWalkLevel != eMasteryInvalid || isWieldingArtifact(ARTIFACT_BOOTS_OF_LEVITATION))
             && (!checkTerrain || !canLand());
     }
 
