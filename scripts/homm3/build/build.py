@@ -69,7 +69,7 @@ def _link_diff() -> list[str]:
     ceiling = link_diff.read_ceiling()
     for line in link_diff.tracked_rises(report, ceiling):
         print(f"[link-diff] tracked region rose (not gated): {line}")
-    findings = link_diff.gate_findings(report, ceiling)
+    findings = link_diff.gate_findings(report, ceiling, link_diff.read_unplaced())
     for line in findings:
         print(f"[build] link-diff: {line}", file=sys.stderr)
     return [f"link-diff ({len(findings)} finding(s))"] if findings else []

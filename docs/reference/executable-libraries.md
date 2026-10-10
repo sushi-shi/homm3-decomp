@@ -181,6 +181,15 @@ regions that measure the link's own inputs fail the build (`headers`, `rich`,
 each becomes a gate when it reaches 0. The plain file comparison is printed
 as information.
 
+`code-unplaced` is gated row by row: `config/link_unplaced.tsv` lists every
+contribution without a retail identity (a unit's `_$E<n>` initializers share
+one row) with its bytes and a reason, and a new, grown or unexplained row
+fails the build. An ICF-folded copy takes the identity of its fold-mates:
+which identical copy LINK keeps moves with unrelated inputs (the
+`vector<HeroPlaceholderData>::insert` group was kept in game.obj, mapcell.obj
+or sacrifice_window.obj at commits sampled on 2026-10-08..10), so the region rose
+by 2,768 bytes at c64017ba7 without any placement changing.
+
 Open items, in the order they block a byte-identical link:
 
 - **Code sizes.** 125 functions still compile to a different size, so every

@@ -26,7 +26,8 @@ contribution by contribution:
               retail address of the candidate's target contribution
   code-order  places where the candidate's code order steps backwards in
               retail order (each is one run break)
-  code-unplaced  candidate code bytes with no retail identity
+  code-unplaced  candidate code bytes with no retail identity (an ICF
+                 fold is placed through any folded name)
   code-absent    retail game/library code bytes no candidate contribution
                  covers
   data        the same contribution compare over initialized data
@@ -38,6 +39,13 @@ comparison, which becomes meaningful once the layout agrees).
 
 config/link_diff.tsv holds the highest count each gated region may have;
 a rise, or a gated region without a banked ceiling, fails.
+
+code-unplaced is also gated row by row: config/link_unplaced.tsv names
+every unplaced contribution (initializers per unit, ICF groups by their
+lowest name) with its bytes and the reason it has no retail identity, so
+the region cannot grow without an explained ledger entry. An ICF-folded
+copy takes the retail identity of its fold-mates, since which copy LINK
+keeps moves with unrelated inputs.
 """
 from __future__ import annotations
 
@@ -56,6 +64,7 @@ from homm3.core.images import path as _image_path
 ROOT = common.HOMM3_DIR
 EDITS = ROOT / "config/retail/post-link-edits.tsv"
 CEILING = ROOT / "config/link_diff.tsv"
+UNPLACED = ROOT / "config/link_unplaced.tsv"
 CANDIDATE = ROOT / _image_path("build/exe/HEROES3.candidate.EXE")
 #: Regions that fail `homm3 build` when they rise: they measure the link's
 #: own inputs (flags, libraries, objects read, resources) and do not move
@@ -408,6 +417,7 @@ class Contribution:
     candidate: int | None = None     # VA in the candidate
     retail: int | None = None        # RVA in retail
     name: str = ""
+    mates: tuple[str, ...] = ()      # other names ICF folded onto this copy
 
     @property
     def size(self) -> int:
@@ -458,8 +468,10 @@ def contributions(symbols: list[MapSymbol], identities: Identities, objs_dir: Pa
     placed in the candidate by a map symbol it defines and in retail by that
     symbol's retail identity. `propagate` places the rest."""
     by_tag: dict[str, dict[str, int]] = defaultdict(dict)
+    at: dict[tuple[str, int], list[MapSymbol]] = defaultdict(list)
     for sym in symbols:
         by_tag[sym.tag].setdefault(sym.name, sym.va)
+        at[(sym.tag, sym.va)].append(sym)
     objects = _objects(set(by_tag), objs_dir, lib_dirs)
     out = {}
     for tag, obj in objects.items():
@@ -483,10 +495,33 @@ def contributions(symbols: list[MapSymbol], identities: Identities, objs_dir: Pa
                     if len(rvas) == 1:
                         c.retail = next(iter(rvas)) - symbol.value
                         c.name = symbol.name
+            if c.retail is None and c.candidate is not None:
+                c.retail = _folded_identity(c, named[section.index], at, identities)
             if not c.name and named[section.index]:
                 c.name = min(named[section.index], key=lambda s: s.value).name
             out[(tag, section.index)] = c
     return out
+
+
+def _folded_identity(c: Contribution, own: list, at: dict, identities: Identities) -> int | None:
+    """The retail RVA of an ICF-folded contribution through its fold-mates.
+
+    /OPT:ICF keeps one copy of identical COMDATs and the map lists every
+    folded name at that copy's address under the kept copy's object. Which
+    copy LINK keeps moves with unrelated inputs, so a group whose kept copy
+    has no retail name of its own is still the retail body its mates name.
+    When the mates name several retail bodies the lowest stands for the
+    group, so the choice does not follow the kept copy either."""
+    unit = unit_of(c.tag)
+    rvas, mates = set(), set()
+    for symbol in own:
+        for mate in at.get((c.tag, c.candidate + symbol.value), ()):
+            if mate.name != symbol.name:
+                mates.add(mate.name)
+                rvas |= {rva - symbol.value
+                         for rva in identities.lookup(unit, mate.name, mate.static)}
+    c.mates = tuple(sorted(mates - {symbol.name for symbol in own}))
+    return min(rvas, default=None)
 
 
 def _fields(c: Contribution):
@@ -672,6 +707,25 @@ def retail_code(path: Path = ROOT / "config/retail/functions.tsv") -> list[tuple
 class Report:
     counts: dict[str, int]
     details: dict[str, list[str]]
+    #: code-unplaced bytes by `unplaced_key`, gated against config/link_unplaced.tsv
+    unplaced: dict[tuple[str, str], int] = field(default_factory=dict)
+
+
+_INITIALIZER = re.compile(r"_\$E\d+")
+_ANONYMOUS = re.compile(r"\?%[^@]*")
+
+
+def unplaced_key(c: Contribution) -> tuple[str, str]:
+    """A stable ledger key for an unplaced code contribution: VC6 numbers a
+    unit's dynamic initializers (`_$E<n>`) in source order, so they share one
+    row per unit; an anonymous namespace spells the build path, which is
+    dropped; an ICF-folded group is named by its lowest name, whichever copy
+    LINK kept, and only unit-local names keep their unit."""
+    unit = unit_of(c.tag)
+    if _INITIALIZER.fullmatch(c.name):
+        return unit, "_$E*"
+    name = _ANONYMOUS.sub("?%anon", min((c.name, *c.mates)))
+    return (unit if "?%anon" in name or name.startswith("_$") else "*"), name
 
 
 def measure(candidate_path: Path = CANDIDATE) -> Report:
@@ -699,6 +753,7 @@ def measure(candidate_path: Path = CANDIDATE) -> Report:
                    "data-unplaced", "untranslated", "target-elsewhere"):
         counts[region] = 0
     seen: set[tuple[int, int | None]] = set()
+    unplaced: dict[tuple[str, str], int] = {}
     covered: list[tuple[int, int]] = []
     order = []
     for c in sorted(linked, key=lambda c: (c.candidate, c.tag, c.section.index)):
@@ -710,6 +765,9 @@ def measure(candidate_path: Path = CANDIDATE) -> Report:
             counts[region] += c.size
             details[region].append(f"{c.candidate:#x} {c.tag} {c.section.name} "
                                    f"{c.name} ({c.size} B)")
+            if c.code:
+                key = unplaced_key(c)
+                unplaced[key] = unplaced.get(key, 0) + c.size
             continue
         if c.code:
             order.append((c.candidate, c.retail, c))
@@ -760,7 +818,7 @@ def measure(candidate_path: Path = CANDIDATE) -> Report:
         a = expected.data[rsrc_want[3]:rsrc_want[3] + rsrc_want[2]]
         b = candidate.data[rsrc_got[3]:rsrc_got[3] + rsrc_got[2]]
         counts["rsrc"] = _rsrc_difference(a, rsrc_want[1], b, rsrc_got[1])
-    return Report(counts, details)
+    return Report(counts, details, unplaced)
 
 
 def _rsrc_difference(want: bytes, want_rva: int, got: bytes, got_rva: int) -> int:
@@ -811,7 +869,8 @@ def tracked_rises(report: Report, ceiling: dict[str, int]) -> list[str]:
             for name in TRACKED if name in ceiling and report.counts[name] > ceiling[name]]
 
 
-def gate_findings(report: Report, ceiling: dict[str, int]) -> list[str]:
+def gate_findings(report: Report, ceiling: dict[str, int],
+                  unplaced: dict[tuple[str, str], tuple[int, str]] | None = None) -> list[str]:
     out = list(report.details.get("edits", []))
     for name in GATED:
         count = report.counts[name]
@@ -820,7 +879,59 @@ def gate_findings(report: Report, ceiling: dict[str, int]) -> list[str]:
             out.append(f"{name}: {count}, no banked ceiling")
         elif count > limit:
             out.append(f"{name}: {count} > ceiling {limit}")
+    if unplaced is not None:
+        out += unplaced_findings(report, unplaced)
     return out
+
+
+# -------------------------------------------------------- unplaced ledger ---
+
+UNPLACED_HEADER = (
+    "# Every code-unplaced contribution of `homm3 verify link-diff` (candidate\n"
+    "# code with no retail identity), keyed by `unplaced_key`, with the most\n"
+    "# bytes it may take and why it has no retail identity. `homm3 build` fails\n"
+    "# on a key without a row, above its bytes or without a reason.\n"
+    "# `homm3 verify link-diff --update` rewrites the bytes; a new or grown row\n"
+    "# gets an empty reason that must be written by hand before the gate passes.\n"
+    "unit\tname\tbytes\treason\n")
+
+
+def read_unplaced(path: Path = UNPLACED) -> dict[tuple[str, str], tuple[int, str]]:
+    if not path.is_file():
+        return {}
+    from homm3.core.tsv import read as read_tsv
+    return {(row["unit"], row["name"]): (int(row["bytes"]), row["reason"])
+            for row in read_tsv(path)[2]}
+
+
+def unplaced_findings(report: Report,
+                      ledger: dict[tuple[str, str], tuple[int, str]]) -> list[str]:
+    out = []
+    for key, size in sorted(report.unplaced.items()):
+        row = ledger.get(key)
+        where = f"code-unplaced {key[0]} {key[1]} ({size} B)"
+        if row is None:
+            out.append(f"{where}: no row in {UNPLACED.relative_to(ROOT)}")
+        elif size > row[0]:
+            out.append(f"{where}: above its ledger bytes {row[0]}")
+        elif not row[1].strip():
+            out.append(f"{where}: ledger row has no reason")
+    return out
+
+
+def write_unplaced(report: Report, ledger: dict[tuple[str, str], tuple[int, str]],
+                   path: Path = UNPLACED) -> list[tuple[str, str]]:
+    """Rewrite the ledger from the report; returns the keys left unexplained
+    (new, grown, or never given a reason)."""
+    rows, unexplained = [], []
+    for key, size in sorted(report.unplaced.items()):
+        old = ledger.get(key)
+        reason = old[1] if old is not None and size <= old[0] else ""
+        if not reason.strip():
+            unexplained.append(key)
+        rows.append(f"{key[0]}\t{key[1]}\t{size}\t{reason}\n")
+    path.write_text(UNPLACED_HEADER + "".join(rows))
+    return unexplained
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -859,8 +970,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         write_ceiling(report.counts)
         print(f"[link-diff] ceiling written to {CEILING.relative_to(ROOT)}")
-        return 0
-    findings = gate_findings(report, ceiling)
+        unexplained = write_unplaced(report, read_unplaced())
+        print(f"[link-diff] unplaced ledger written to {UNPLACED.relative_to(ROOT)}")
+        for unit, name in unexplained:
+            print(f"[link-diff] explain code-unplaced {unit} {name} "
+                  f"({report.unplaced[(unit, name)]} B) in its ledger row", file=sys.stderr)
+        return 1 if unexplained else 0
+    findings = gate_findings(report, ceiling, read_unplaced())
     for line in findings:
         print(f"[link-diff] REGRESSION {line}", file=sys.stderr)
     return 1 if findings else 0

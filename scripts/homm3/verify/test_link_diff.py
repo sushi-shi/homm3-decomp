@@ -62,6 +62,48 @@ class LinkDiffTest(unittest.TestCase):
         self.assertEqual(link_diff.gate_findings(report, missing),
                          ["rsrc: 1, no banked ceiling"])
 
+    def test_unplaced_ledger(self):
+        report = link_diff.Report({}, {}, {("game", "_$E*"): 64, ("*", "?f@@YAXXZ"): 16})
+        ledger = {("game", "_$E*"): (64, "initializers"), ("*", "?f@@YAXXZ"): (16, "inlined")}
+        self.assertEqual(link_diff.unplaced_findings(report, ledger), [])
+        grown = dict(ledger)
+        grown[("game", "_$E*")] = (48, "initializers")
+        self.assertEqual(len(link_diff.unplaced_findings(report, grown)), 1)
+        unexplained = dict(ledger)
+        unexplained[("*", "?f@@YAXXZ")] = (16, "")
+        self.assertIn("no reason", link_diff.unplaced_findings(report, unexplained)[0])
+        missing = {("game", "_$E*"): (64, "initializers")}
+        self.assertIn("no row", link_diff.unplaced_findings(report, missing)[0])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "unplaced.tsv"
+            self.assertEqual(link_diff.write_unplaced(report, grown, path), [("game", "_$E*")])
+            self.assertEqual(link_diff.read_unplaced(path)[("*", "?f@@YAXXZ")], (16, "inlined"))
+
+    def test_unplaced_key(self):
+        section = type("Section", (), {"raw_size": 16, "characteristics": 0x20})()
+        c = link_diff.Contribution("rmg.obj", None, section, name="_$E31")
+        self.assertEqual(link_diff.unplaced_key(c), ("rmg", "_$E*"))
+        c = link_diff.Contribution("mapcell.obj", None, section, name="?b@@YAXXZ",
+                                   mates=("?a@@YAXXZ",))
+        self.assertEqual(link_diff.unplaced_key(c), ("*", "?a@@YAXXZ"))
+        c = link_diff.Contribution("objecttype.obj", None, section,
+                                   name="??1T@?%Z:\\src\\objecttype.cpp1637@@UAE@XZ")
+        self.assertEqual(link_diff.unplaced_key(c), ("objecttype", "??1T@?%anon@@UAE@XZ"))
+
+    def test_folded_identity_follows_the_mates(self):
+        class Ids:
+            def lookup(self, unit, name, static=False):
+                return {"?a@@YAXXZ": {0x1000}, "?c@@YAXXZ": {0x3000}}.get(name, set())
+        section = type("Section", (), {"raw_size": 16, "characteristics": 0x20})()
+        own = [type("Symbol", (), {"name": "?b@@YAXXZ", "value": 0})()]
+        c = link_diff.Contribution("mapcell.obj", None, section, candidate=0x500000)
+        at = {("mapcell.obj", 0x500000): [
+            link_diff.MapSymbol(0x500000, n, "mapcell.obj", False)
+            for n in ("?a@@YAXXZ", "?b@@YAXXZ", "?c@@YAXXZ")]}
+        self.assertEqual(link_diff._folded_identity(c, own, at, Ids()), 0x1000)
+        self.assertEqual(c.mates, ("?a@@YAXXZ", "?c@@YAXXZ"))
+        self.assertIsNone(link_diff._folded_identity(c, own, {}, Ids()))
+
     def test_rich_difference(self):
         def rich(entries):
             key = 0x1234
