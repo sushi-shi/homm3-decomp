@@ -48,6 +48,7 @@ rva	size	kind	name	unit	evidence
 0x00003710	0x3c	func	??1CGdiObject@@UAE@XZ	DIBSection	referenced by ??_GCGdiObject@@UAEPAXI@Z at +0x4
 0x00004520	0xe	func	?free@?$TBitmap@GK@@UAEXPAG@Z	DIBSection	vtable of ?$TBitmap@GK (RTTI) slot 3
 0x00004540	0x173	func	??0TAllocationFailure@@QAE@ABV0@@Z	gzinflatebuf	referenced by __CT??_R0?AVTAllocationFailure@@@8??0TAllocationFailure@@QAE@ABV0@@Z32 at +0x18
+0x00004860	0x4c	func	??0TFormattedString@@QAA@PBDZZ	EditCrossoverScenarioOptionDlg	masked body (76 bytes, 6 relocations) unique at a census start
 0x00004bb0	0x11a	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	Campaign	masked body (282 bytes, 12 relocations) unique at a census start
 0x00004cd0	0xd	func	?BeginModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable of TCampaignPropsDlg (RTTI) slot 34
 0x00004ce0	0xd	func	?EndModalState@CWnd@@UAEXXZ	CampaignPropsDlg	vtable of TCampaignPropsDlg (RTTI) slot 35
@@ -325,6 +326,7 @@ rva	size	kind	name	unit	evidence
 0x0001d5f0	0x3e	func	?allocate@?$TBitmap@GK@@UAEPAGII@Z	DIBSection	masked body (62 bytes, 4 relocations) unique at a census start
 0x0001d630	0xd	func	?computePitch@?$TBitmap@GK@@UBEII@Z	DIBSection	masked body (13 bytes, 0 relocations) unique at a census start
 0x0001d670	0x8	func	??_ET16bppDIBSection@@WBE@AEPAXI@Z	DIBSection	vtable ??_7T16bppDIBSection@@6BCBitmap@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 1
+0x0001d830	0x167	func	??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	EditCrossoverScenarioOptionDlg	masked prefix (279 fixed bytes agree, 359 compiled, 359 retail)
 0x0001df70	0x164	func	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	artifact	masked body (356 bytes, 21 relocations) unique at a census start
 0x0001e150	0xbd	func	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	Campaign	masked body (189 bytes, 5 relocations) unique at a census start
 0x00022410	0xe0	func	?_Xran@?$bitset@$07@std@@ABEXXZ	Campaign	referenced by ?test@?$bitset@$07@std@@QBE_NI@Z at +0xe
@@ -3384,6 +3386,7 @@ rva	size	kind	name	unit	evidence
 0x000b75d0	0xb	data	??_C@_0L@JML@cpkman?4def?$AA@	creaturetype	referenced by 0x000b2488 at +0xc
 0x000b75dc	0x5	data	??_C@_04KIIN@pike?$AA@	creaturetype	referenced by 0x000b2488 at +0x8
 0x000b75e4	0xd	data	??_C@_0N@LPEN@crtraits?4txt?$AA@	creaturetype	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0x2
+0x000b76b0	0x8	data	??_C@_07DAJE@?$CFs?5?9?5?$CFs?$AA@	EditCrossoverScenarioOptionDlg	string literal referenced by ?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ
 0x000b7c04	0x6	data	??_C@_05NLJN@1?41?43?$AA@	compress	referenced by @inflateInit2_@16 at +0x19
 0x000b7c38	0x3a98	data	?g_heroTraitsStorage@@3PAUTHeroTraits@@A	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x19
 0x000bb6d0	0x480	data	?g_heroClassTraits@@3PAUTHeroClassTraits@@A	herodefs	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x17
@@ -3717,6 +3720,7 @@ rva	size	kind	name	unit	evidence
 0x000bcfbc	0xd	data	??_C@_0N@NKBE@hotraits?4txt?$AA@	herodefs	referenced by ?InitializeHeroTraitsTable@@YAEXZ at +0x2
 0x000bcfcc	0xd	data	??_C@_0N@CEFF@hctraits?4txt?$AA@	herodefs	referenced by ?InitializeHeroClassTraitsTable@@YA_NXZ at +0x2
 0x000bcfdc	0xd	data	??_C@_0N@ILGK@sstraits?4txt?$AA@	herodefs	referenced by ?InitializeSSkillTraitsTable@@YA_NXZ at +0x2
+0x000bd240	0x4	data	?akPlayerTraits@@3PBUTPlayerTraits@@B	Player	referenced by ?OnInitDialog@TEditStartingHeroOptionDlg@@MAEHXZ at +0x1df
 0x000bd244	0xd	data	??_C@_0N@EJOF@plcolors?4txt?$AA@	Player	string literal referenced by ?InitializePlayerTraitsTable@@YA_NXZ
 0x000bdfc8	0x2b08	data	?g_spellTraitsImp@@3PAUTSpellTraits@@A	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x13
 0x000c0ad4	0x9	data	??_C@_08OBBL@Acid?4wav?$AA@	spelldefs	referenced by ?g_spellTraitsImp@@3PAUTSpellTraits@@A at +0x2a84
@@ -3893,7 +3897,7 @@ rva	size	kind	name	unit	evidence
 0x000c82f8	0x1	data	_?$S27@?1??InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	herodefs	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x9
 0x000c8310	0x40	data	_?aNames@?1??InitializePlayerTraitsTable@@YA_NXZ@4PAV?$TAutoArrayPtr@D@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x35
 0x000c8350	0x40	data	_?aColorNames@?1??InitializePlayerTraitsTable@@YA_NXZ@4PAV?$TAutoArrayPtr@D@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x6d
-0x000c8390	0x40	data	?aPlayerTraitsImp@?A0x0e809e6c890d5ee5@@3PAUTPlayerTraits@@A	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x1d8
+0x000c8390	0x40	data	?aPlayerTraitsImp@?A0x0e809e6c890d5ee5@@3PAUTPlayerTraits@@A	Player	referenced by ?akPlayerTraits@@3PBUTPlayerTraits@@B at +0x0
 0x000c83d0	0x1	data	_?$S251@?1??InitializePlayerTraitsTable@@YA_NXZ@4EA	Player	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0xf
 0x000c875c	0x1	data	_?$S10@?1??initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4EA	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x18
 0x000c8760	0x144	data	_?abbreviatedSpellNames@?1??initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z@4PAVTAutoStrPtr@?A0xb0b78fb9ab01eae7@@A	spelldefs	referenced by ?initializeSpellTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xc6

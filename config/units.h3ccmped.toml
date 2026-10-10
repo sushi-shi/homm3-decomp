@@ -415,3 +415,13 @@ flags = "ccmped_o2_gr_windows"
 unit = "NewCampaignDlg"
 source = "src/campaign_editor/NewCampaignDlg.cpp"
 flags = "ccmped_o2_gr_windows"
+
+[[unit]]
+unit = "EditCrossoverScenarioOptionDlg"
+source = "src/campaign_editor/EditCrossoverScenarioOptionDlg.cpp"
+flags = "ccmped_o2_gr_windows"
+
+[[unit]]
+unit = "EditStartingHeroOptionDlg"
+source = "src/campaign_editor/EditStartingHeroOptionDlg.cpp"
+flags = "ccmped_o2_gr_windows"
