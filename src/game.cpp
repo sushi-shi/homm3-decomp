@@ -6101,9 +6101,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         m_maxHeroLevel = 0;
     }
 
-    m_numPlayers = 0;
-    m_minNumHumanPlayers = 0;
-    m_maxNumHumanPlayers = 0;
+    m_numPlayers = m_minNumHumanPlayers = m_maxNumHumanPlayers = 0;
 
     // This source local exists in the retail lifetime graph even though the
     // Complete-only tail uses a separate returned string for each hero name.
@@ -6201,39 +6199,36 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 
     m_placeholders.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        // Mac 0xdb36c decodes this saved dword with lwbrx. Windows tests
-        // it for zero and decrements after the append, not signed positivity.
+        // Mac 0xdb36c decodes this saved dword with lwbrx; Mac 0xdb3a4 tests
+        // and decrements it before each append, as Windows does.
         unsigned int count = readLittleEndianValue<unsigned int>(infile);
-        if (count > 0) {
-            do {
-                x = readValue<unsigned char>(infile);
-                m_placeholders.push_back(H3_ENUM_DECODE(HeroId, x));
-            } while (--count != 0);
-        }
+        while (count--)
+            m_placeholders.push_back(
+                H3_ENUM_DECODE(HeroId, readValue<unsigned char>(infile)));
     }
 
     m_heroPlayerSetups.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        x = readValue<unsigned char>(infile);
-        if (static_cast<unsigned int>(x) > 0) {
-            int count = x;
-            do {
-                int heroKey = readValue<unsigned char>(infile);
+        unsigned int count = readValue<unsigned char>(infile);
+        while (count > 0) {
+            int heroKey = readValue<unsigned char>(infile);
 
-                // The admitted format is now SoD. Mac db424..db44c
-                // expands readHeroId's modern byte/sentinel operation;
-                // the constant argument is inferred from this admission.
-                int portrait = readHeroId(infile, MAP_FORMAT_SHADOW_OF_DEATH);
+            // Mac db43c..db44c and Windows both test the portrait's byte
+            // against the sentinel in place (cmplwi 0xff / cmp bl,-1) with
+            // no pre-25 remap, so the decode is spelled here, not readHeroId.
+            int portrait = readValue<unsigned char>(infile);
+            if (static_cast<unsigned char>(portrait) == g_savedHeroNone)
+                portrait = -1;
 
-                std::string heroName = readLengthPrefixedString(infile);
-                std::bitset<NUM_PLAYERS> availability = readPackedBits<NUM_PLAYERS>(infile);
+            std::string heroName = readLengthPrefixedString(infile);
+            std::bitset<NUM_PLAYERS> availability = readPackedBits<NUM_PLAYERS>(infile);
 
-                m_heroPlayerSetups.insert(
-                    std::pair<const int, type_map_hero_info>(
-                        heroKey,
-                        type_map_hero_info(portrait, heroName, availability)));
-            } while (--count != 0);
+            m_heroPlayerSetups.insert(
+                std::pair<const int, type_map_hero_info>(
+                    heroKey,
+                    type_map_hero_info(portrait, heroName, availability)));
+            --count;
         }
     }
 
@@ -6504,10 +6499,10 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (count < 0)
         return -1;
 
-    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    if (count < sizeof(ucharBuffer))
+    count = infile->read(&enumBuffer, sizeof(enumBuffer));
+    if (count < sizeof(enumBuffer))
         return -1;
-    m_difficulty = ucharBuffer;
+    m_difficulty = enumBuffer;
 
     if (saveVersion >= g_saveVersionMaxHeroLevel) {
         m_maxHeroLevel = readValue<char>(infile);
@@ -6515,9 +6510,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         m_maxHeroLevel = 0;
     }
 
-    m_numPlayers = 0;
-    m_minNumHumanPlayers = 0;
-    m_maxNumHumanPlayers = 0;
+    m_numPlayers = m_minNumHumanPlayers = m_maxNumHumanPlayers = 0;
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < NUM_PLAYERS; ++i, ++player) {
@@ -6544,8 +6537,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             ++m_numPlayers;
 
         if (saveVersion < g_saveVersionWideAlignments) {
-            infile->read(&ucharBuffer, sizeof(ucharBuffer));
-            player->m_legalAlignments = ucharBuffer;
+            player->m_legalAlignments = readValue<unsigned char>(infile);
         } else {
             player->m_legalAlignments = readLittleEndianValue<unsigned short>(infile);
         }
@@ -6627,21 +6619,15 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion < g_saveVersionCustomHeroSetups)
         return 0;
 
-    x = readValue<unsigned char>(infile);
-    if (static_cast<unsigned int>(x) <= 0)
-        return 0;
-    count = x;
-
-    do {
+    unsigned int setupCount = readValue<unsigned char>(infile);
+    while (setupCount > 0) {
         int heroKey = readValue<unsigned char>(infile);
 
-        // The >=30 admission makes Mac dc5f0..dc61c the modern roster's
-        // byte/sentinel decoder. This loadHeroId call is inferred from that
-        // operation; the original constant argument spelling is unproven.
-        // Four HeroId reader-result/local models keep both reader bodies
-        // exact but lower this caller to 91.6362%; their result domain has
-        // no surviving native signature, so the numeric interface remains.
-        int portrait = loadHeroId(infile, g_saveVersionCustomHeroSetups);
+        // Mac dc60c..dc61c and Windows test the portrait byte against the
+        // sentinel in place, as in read(); the >=30 admission has no remap.
+        int portrait = readValue<unsigned char>(infile);
+        if (static_cast<unsigned char>(portrait) == g_savedHeroNone)
+            portrait = -1;
 
         std::string strTemp = readLengthPrefixedString(infile);
         std::bitset<NUM_PLAYERS> availability =
@@ -6651,7 +6637,8 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
                 heroKey, type_map_hero_info(portrait, strTemp, availability)));
-    } while (--count != 0);
+        --setupCount;
+    }
 
     return 0;
 }
