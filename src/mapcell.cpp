@@ -2778,10 +2778,12 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // loop body carries a coincident scope pair (braced). Restoring both
 // raises the C1XX cost 1243 -> 1265, inside the 1265..1325 window where
 // the late _Grow keeps retail's ten _Tidy calls (89.84 -> 98.47%).
-// Residual: retail reads the alignment byte into a scratch slot ([ebp+0x13])
-// and never stores the -1 default (Mac 0x124808 likewise reads into its own
-// 0x80 slot); a readValue<char> temporary reproduces that but adds a
-// candidate site that moves the window to 1341.. (90.10%).
+// The alignment byte is read into its own block-scoped scratch byte and
+// copied to a register local: retail never stores the -1 default and reads
+// into [ebp+0x13]; Mac 0x124808 keeps -1 in r5 and reads into its own 0x80
+// slot (a readValue<char> temporary does the same but adds a candidate site
+// that moves the window to 1341.., 90.10%). Mac 0x12488c also tests the
+// owner's -1 first and branches to the owner-alignment arm.
 // Mac 0x124674..0x124694 and 0x12470c..0x12472c use signed division/modulo
 // and construct proxies directly on the TownExtra members; no returned mask
 // temporary is present. The unsigned decodePackedBits spelling costs 79.6586%.
@@ -2900,19 +2902,20 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         m_townEventList.push_back(thisEvent);
     }
 
-    charBuffer = -1;
-    if (mapVersion >= 28)
-        infile->read(&charBuffer, sizeof(charBuffer));
+    char alignmentPlayer = -1;
+    if (mapVersion >= 28) {
+        char value;
+        infile->read(&value, sizeof(value));
+        alignmentPlayer = value;
+    }
 
     if (m_objectTypes[townObject->m_typeIndex].m_objectType == RANDOM_TOWN) {
-        if (charBuffer != -1
-            && (g_game->m_mapHeader.m_playerSlotAttributes[charBuffer].m_canBeHuman
-                || g_game->m_mapHeader.m_playerSlotAttributes[charBuffer]
+        if (alignmentPlayer != -1
+            && (g_game->m_mapHeader.m_playerSlotAttributes[alignmentPlayer].m_canBeHuman
+                || g_game->m_mapHeader.m_playerSlotAttributes[alignmentPlayer]
                        .m_canBeComputer)) {
-            tempTown.m_townType = g_game->m_setup.m_alignment[charBuffer];
-        } else if (tempTown.m_playerOwner != -1) {
-            tempTown.m_townType = g_game->m_setup.m_alignment[tempTown.m_playerOwner];
-        } else {
+            tempTown.m_townType = g_game->m_setup.m_alignment[alignmentPlayer];
+        } else if (tempTown.m_playerOwner == -1) {
             // Eight town bits, widened to the ninth only for an
             // expansion-era scenario in the two game states that allow it.
 
@@ -2932,6 +2935,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                 && g_game->m_gameVersion >= 1)
                 legalAlignments = 0x1ff;
             tempTown.m_townType = pickAlignment(legalAlignments, 0);
+        } else {
+            tempTown.m_townType = g_game->m_setup.m_alignment[tempTown.m_playerOwner];
         }
     }
 
