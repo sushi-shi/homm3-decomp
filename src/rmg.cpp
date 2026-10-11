@@ -8765,6 +8765,9 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     return 1;
 }
 
+// The final threshold is an early return: Mac 0x22ced8 returns twice, and the
+// game's expansion in assembleTreasureGroup branches (cmp/jl, then the caller's
+// test) where a conditional expression would select with setl/dec/and.
 VA(0x00545E00, 0x5B)
 MAC_ADDRESS(0x22ce7c, 0x74)
 int getRmgGuardValue(int value, int strength)
@@ -8778,7 +8781,9 @@ int getRmgGuardValue(int value, int strength)
         guardValue += (value - g_rmgGuardThresholdHigh[strength])
             * g_rmgGuardScaleHigh[strength] / 4;
     }
-    return guardValue < 2000 ? 0 : guardValue;
+    if (guardValue < 2000)
+        return 0;
+    return guardValue;
 }
 
 VA(0x00545E60, 0xFA)
