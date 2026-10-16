@@ -91,6 +91,46 @@ def initializer_rows(c):
 JMP0 = b"\xe9\x00\x00\x00\x00"
 
 
+def registration_rows(c, initializers, atexit):
+    """The separate atexit registration tails of CRT initializer wrappers.
+
+    A wrapper's first callee is not classified here: a call alone does not
+    prove that it is compiler-generated. Only the minimal registration body
+    reached by the wrapper's direct tail jump inherits its initializer slot.
+    """
+    from homm3.census.functions import call_then_tail_thunk
+    base = c.image.image_base
+    known = {rva for rva, _slot in initializers}
+    rows = []
+    for start, slot in initializers:
+        seen = c.reached.get(start, set())
+        if not call_then_tail_thunk(c, start, seen):
+            continue
+        jump = c.insn(start + c.insn(start).size)
+        target = (jump.operands[0].imm & 0xFFFFFFFF) - base
+        if target not in c.starts or target in known:
+            continue
+        order = sorted(c.reached.get(target, ()))
+        if len(order) != 4:
+            continue
+        push, call, pop, ret = [c.insn(r) for r in order]
+        if not (push.mnemonic == "push" and push.operands[0].type == x86.X86_OP_IMM
+                and call.mnemonic == "call" and call.operands[0].type == x86.X86_OP_IMM
+                and pop.mnemonic == "pop" and pop.operands[0].type == x86.X86_OP_REG
+                and pop.operands[0].reg == x86.X86_REG_ECX
+                and ret.mnemonic == "ret" and not ret.operands):
+            continue
+        if any(a.address + a.size != b.address
+               for a, b in zip((push, call, pop), (call, pop, ret))):
+            continue
+        cleanup = (push.operands[0].imm & 0xFFFFFFFF) - base
+        callee = (call.operands[0].imm & 0xFFFFFFFF) - base
+        if callee == atexit and cleanup in c.starts:
+            rows.append((target, slot))
+            known.add(target)
+    return rows
+
+
 def cleanup_rows(c, initializers, atexit):
     """[(cleanup rva, "-")]: the functions the initializers register with
     `_atexit` (`push offset cleanup` with `call _atexit` the next call), the

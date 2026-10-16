@@ -392,6 +392,25 @@ def adjusting_thunk(c, start, seen):
             and first.operands[0].reg == x86.X86_REG_ECX)
 
 
+def call_then_tail_thunk(c, start, seen):
+    """A direct call followed only by a direct jump to a separate function.
+
+    VC6's CRT initializer wrappers call the initialization body and tail-call
+    a separate atexit registration body. The intervening constructor can be
+    discovered after the wrapper's first descent, hiding that tail at first.
+    """
+    if len(seen) != 2:
+        return False
+    first = c.insn(start)
+    if first is None or first.mnemonic != "call" \
+            or first.operands[0].type != x86.X86_OP_IMM:
+        return False
+    after = start + first.size
+    last = c.insn(after)
+    return (after in seen and last is not None and last.mnemonic == "jmp"
+            and last.operands[0].type == x86.X86_OP_IMM)
+
+
 def padded_call_ends(c, ends, limit=16):
     """{rva: call} for each call fall-through (`ends`) that only padding
     bytes separate from `rva`: the next function on an alignment boundary
@@ -608,17 +627,16 @@ def run(image, log=print, catch_bodies=False):
         index()
         if not added:
             break
-    # final pass: re-descend with the final start set. A this-adjusting
-    # thunk (`add/sub ecx, n; jmp`) descended before the start after it was
-    # known took its jump target as its own code; with the final starts the
-    # jump leaves it, so the target starts a function (a tail call)
+    # Final pass: a forwarding thunk descended before an intervening start
+    # was known took its jump target as its own code. With the final starts
+    # the jump leaves it, so the target starts a function (a tail call).
     while True:
         late = set()
         for s in sorted(c.starts):
             res = c.descend(s)
             if res is not None:
                 c.reached[s] = res[0] | c.extra.get(s, set())
-                if adjusting_thunk(c, s, res[0]):
+                if adjusting_thunk(c, s, res[0]) or call_then_tail_thunk(c, s, res[0]):
                     late |= {t for t in res[3] if t not in c.starts and c.in_text(t)
                              and t not in c.continuations}
         if not late:

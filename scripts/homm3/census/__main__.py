@@ -198,6 +198,7 @@ def derive(log=print):
         aliases.sort()
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
+        thunks += eh.registration_rows(census, thunks, atexit)
         thunks += eh.cleanup_rows(census, {r for r, _k in thunks}, atexit)
     log(f"[census] {len(funclets)} funclets with parents ({orphans} without), "
         f"{len(thunks)} .CRT$XCU initializers")

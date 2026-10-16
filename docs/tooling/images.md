@@ -63,7 +63,11 @@ its census from its pinned executable (`homm3.census`):
   `_initterm`). An `/O1` slot holds a `jmp $+5`, so the initializer body
   after it joins the table, and so do the cleanups the initializers
   register with `_atexit` (slot `-`): like the game's, they are
-  compiler-generated and outside the scores.
+  compiler-generated and outside the scores. A slot wrapper consisting of
+  a direct call and a tail jump also names a separate registration body
+  when that body is exactly `push cleanup; call _atexit; pop ecx; ret`.
+  That body inherits the slot; the wrapper's first callee is not classified
+  merely because the wrapper calls it.
 - `runtime-map.tsv`: statically linked library functions, each the unique
   masked match of a LIBCMT, LIBCPMT or SP3 NAFXCW member function. They are
   named, not matched, and excluded from the scores.
