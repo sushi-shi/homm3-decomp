@@ -24,7 +24,7 @@ Army	?setQuantity@TCreatureStack@@QAEXI@Z	100.0000	100.0000	100.0000	0x1010	-
 Campaign	??0?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@V?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	100.0000	100.0000	100.0000	0xe990	-
 Campaign	??0?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@@Z	100.0000	100.0000	100.0000	0xb330	-
 Campaign	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4bb0	-
-Campaign	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x1e150	-
+Campaign	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	0.0000	100.0000	100.0000	0x1e150	-
 Campaign	??0?$ctype@D@std@@QAE@PBF_NI@Z	99.8077	99.8077	99.8077	0xf230	-
 Campaign	??0?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xfa40	-
 Campaign	??0TCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x77d0	tokens1:f4403dd673f5
@@ -255,7 +255,7 @@ Campaign	?setEpilogue@_TImpl@TScenario@@QAEXV?$auto_ptr@VTScenarioPrologue@@@std
 Campaign	?setHeroes@TPlayerInfo@TCampaignScenarioMap@@QAEXABV?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@@Z	100.0000	100.0000	100.0000	0xa1b0	tokens1:82c70426416d
 Campaign	?setMainTown@TPlayerInfo@TCampaignScenarioMap@@QAEXH@Z	100.0000	100.0000	100.0000	0xa1a0	tokens1:8cba5ec14154
 Campaign	?setMap@TScenario@@QAEXV?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	100.0000	100.0000	100.0000	0x9e30	tokens1:9f81fc3521e2
-Campaign	?setMap@_TImpl@TScenario@@QAEXV?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	56.5096	56.5096	56.5096	0x8dd0	tokens1:6c6a982c9021
+Campaign	?setMap@_TImpl@TScenario@@QAEXV?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	91.2388	91.2388	91.2388	0x8dd0	tokens1:1f8040d5d767
 Campaign	?setMusic@TCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x7c50	tokens1:7b9faa19b19d
 Campaign	?setMusic@_TImpl@TCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x7400	tokens1:2566ef40937a
 Campaign	?setName@TCampaign@@QAEXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x7bc0	tokens1:e01bb10f49aa

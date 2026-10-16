@@ -1026,6 +1026,12 @@ TScenario::_TImpl::_TImpl(int numScenarios)
 // and the heroes the player no longer has; crossover choices move to a
 // playable player; starting hero choices drop heroes the map does not offer.
 // Options left without a choice become an empty bonus list.
+// Retail tests each option type before reloading the stored pointer. Its player
+// search uses an unsigned bound, then a signed result check; the choice repair
+// stores both fields of TChoice. Nonconst bitset subscript retains _Xran here.
+// Remaining VC6 differences include the first bonus-vector size call and the
+// empty-vector element cleanup. Reverse-loop spellings, named old-player views,
+// and calls to the existing setStartingOptions body did not improve the match.
 VA(0x00408dd0, 0x573)
 void TScenario::_TImpl::setMap(auto_ptr<TCampaignScenarioMap> pMap)
 {
@@ -1035,8 +1041,8 @@ void TScenario::_TImpl::setMap(auto_ptr<TCampaignScenarioMap> pMap)
     while (!m_pMap.get()->m_aPlayer[firstPlayer].isHumanPlayable())
         firstPlayer++;
     if (m_pStartingOptions.get() != NULL) {
-        TScenarioOptionsBonus* pBonusOptions = dynamic_cast<TScenarioOptionsBonus*>(m_pStartingOptions.get());
-        if (pBonusOptions != NULL) {
+        if (dynamic_cast<TScenarioOptionsBonus*>(m_pStartingOptions.get()) != NULL) {
+            TScenarioOptionsBonus* pBonusOptions = static_cast<TScenarioOptionsBonus*>(m_pStartingOptions.get());
             int oldTownType = pOldMap.get()->m_aPlayer[pBonusOptions->m_player].getMainTownType();
             const TCampaignScenarioMap::TPlayerInfo* pPlayer = &m_pMap.get()->m_aPlayer[pBonusOptions->m_player];
             if (!pPlayer->isHumanPlayable()) {
@@ -1056,43 +1062,45 @@ void TScenario::_TImpl::setMap(auto_ptr<TCampaignScenarioMap> pMap)
             while (i > 0) {
                 i--;
                 TScenarioHeroBonus* pHeroBonus = dynamic_cast<TScenarioHeroBonus*>(pBonusOptions->m_bonuses[i].get());
-                if (pHeroBonus != NULL && pHeroBonus->m_hero != TScenarioHeroBonus::kMostPowerfulHero
-                    && ((pHeroBonus->m_hero == TScenarioHeroBonus::kGeneratedHero && !pPlayer->m_bGenerateHeroAtMainTown)
-                        || pPlayer->m_heroes.find(pHeroBonus->m_hero) == pPlayer->m_heroes.end()))
-                    pBonusOptions->removeBonus(i);
+                if (pHeroBonus != NULL && pHeroBonus->m_hero != TScenarioHeroBonus::kMostPowerfulHero) {
+                    int hero = pHeroBonus->m_hero;
+                    if ((hero == TScenarioHeroBonus::kGeneratedHero && !pPlayer->m_bGenerateHeroAtMainTown)
+                            || pPlayer->m_heroes.find(hero) == pPlayer->m_heroes.end())
+                        pBonusOptions->removeBonus(i);
+                }
             }
         } else {
-            TScenarioOptionsCrossoverScenario* pCrossoverOptions
-                = dynamic_cast<TScenarioOptionsCrossoverScenario*>(m_pStartingOptions.get());
-            if (pCrossoverOptions != NULL) {
+            if (dynamic_cast<TScenarioOptionsCrossoverScenario*>(m_pStartingOptions.get()) != NULL) {
+                TScenarioOptionsCrossoverScenario* pCrossoverOptions
+                    = static_cast<TScenarioOptionsCrossoverScenario*>(m_pStartingOptions.get());
                 for (unsigned int i = 0; i < pCrossoverOptions->m_choices.size(); i++) {
                     if (!m_pMap.get()->m_aPlayer[pCrossoverOptions->m_choices[i].m_player].isHumanPlayable())
                         pCrossoverOptions->m_choices[i].m_player = firstPlayer;
                 }
             } else {
-                int heroPlayer;
-                for (heroPlayer = 0; heroPlayer < TCampaignScenarioMap::kNumPlayers; heroPlayer++) {
-                    const TCampaignScenarioMap::TPlayerInfo& player = m_pMap.get()->m_aPlayer[heroPlayer];
+                unsigned int playerIndex;
+                for (playerIndex = 0; playerIndex < TCampaignScenarioMap::kNumPlayers; playerIndex++) {
+                    const TCampaignScenarioMap::TPlayerInfo& player = m_pMap.get()->m_aPlayer[playerIndex];
                     if (player.isHumanPlayable() && (player.m_bGenerateHeroAtMainTown || player.m_bHasRandomHero))
                         break;
                 }
+                int heroPlayer = playerIndex;
                 if (heroPlayer < TCampaignScenarioMap::kNumPlayers) {
                     TScenarioOptionsStartingHero* pHeroOptions
                         = static_cast<TScenarioOptionsStartingHero*>(m_pStartingOptions.get());
                     unsigned int i = pHeroOptions->m_choices.size();
                     while (i > 0) {
                         i--;
-                        int hero = pHeroOptions->m_choices[i].m_hero;
-                        if (hero != TScenarioOptionsStartingHero::kRandomHero && !m_pMap.get()->m_heroes.test(hero)) {
+                        TScenarioOptionsStartingHero::TChoice& choice = pHeroOptions->m_choices[i];
+                        int hero = choice.m_hero;
+                        if (hero != TScenarioOptionsStartingHero::kRandomHero && !m_pMap.get()->m_heroes[hero]) {
                             pHeroOptions->removeChoice(i);
                             continue;
                         }
                         const TCampaignScenarioMap::TPlayerInfo& player
-                            = m_pMap.get()->m_aPlayer[pHeroOptions->m_choices[i].m_player];
+                            = m_pMap.get()->m_aPlayer[choice.m_player];
                         if (!player.isHumanPlayable() || !(player.m_bGenerateHeroAtMainTown || player.m_bHasRandomHero)) {
-                            TScenarioOptionsStartingHero::TChoice choice = pHeroOptions->m_choices[i];
-                            choice.m_player = heroPlayer;
-                            pHeroOptions->m_choices[i] = choice;
+                            choice = TScenarioOptionsStartingHero::TChoice(choice.m_hero, heroPlayer);
                         }
                     }
                     if (pHeroOptions->m_choices.empty())
