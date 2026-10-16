@@ -862,7 +862,7 @@ EditStartingHeroOptionDlg	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	100.0000	100.0000	10
 EditStartingHeroOptionDlg	?_initPlayers@TEditStartingHeroOptionDlg@@AAEXXZ	100.0000	100.0000	100.0000	0x21ff0	tokens1:4fdce4bbbc53
 GameMapHeader	??0?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@UTCustomHero@TGameMapHeader@@@1@@Z	100.0000	100.0000	100.0000	0x24030	-
 GameMapHeader	??0TCustomHero@TGameMapHeader@@QAE@ABU01@@Z	100.0000	100.0000	100.0000	0x23920	-
-GameMapHeader	??0TGameMapHeader@@QAE@AAVTRawIStream@@H@Z	70.0121	70.0121	70.0121	0x22b70	tokens1:961a3e162418
+GameMapHeader	??0TGameMapHeader@@QAE@AAVTRawIStream@@H@Z	70.9598	70.9598	70.9598	0x22b70	tokens1:65bee67e7548
 GameMapHeader	??0TPlayerSlot@TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x238c0	-
 GameMapHeader	??1?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x8890	-
 GameMapHeader	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x249c0	-

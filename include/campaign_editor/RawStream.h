@@ -153,6 +153,8 @@ inline void readBitset(TRawIStream& stream, std::bitset<N>* bits)
         (*bits)[i] = (bytes[i / 8] & (1 << (i % 8))) != 0;
 }
 
+// Loki uses a const subscript here. That probe removes the retained array
+// _write bodies in Campaign and leaves the Complete call structure unresolved.
 template <size_t N>
 inline void writeBitset(TRawOStream& stream, const std::bitset<N>& bits)
 {

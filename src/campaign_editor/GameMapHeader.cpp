@@ -141,6 +141,9 @@ void TGameMapHeader::_readLossCondition(TLossConditionData& data, TRawIStream& s
     }
 }
 
+// int/long count probes changed only folded _read call identities; the
+// container counts retain their unsigned size domain. Hero IDs bind as int
+// to the fields and container keys, without unsigned-to-int reference temporaries.
 VA(0x00422b70, 0xd4a)
 TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
 {
@@ -195,7 +198,7 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         }
         if (version >= 13) {
             slot.m_bRandomHero = readValue<signed char>(stream) != 0;
-            unsigned int heroID = readValue<unsigned char>(stream);
+            int heroID = readValue<unsigned char>(stream);
             slot.m_heroID = heroID;
             if (heroID != 0xff) {
                 slot.m_heroPortrait = readValue<unsigned char>(stream);
@@ -211,7 +214,7 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
             unsigned int numHeroes = readValue<unsigned int>(stream);
             slot.m_heroes.resize(numHeroes, THeroIdentity());
             for (unsigned int i = 0; i < numHeroes; i++) {
-                unsigned int heroID = readValue<unsigned char>(stream);
+                int heroID = readValue<unsigned char>(stream);
                 slot.m_heroes[i].m_heroID = heroID;
                 stream >> slot.m_heroes[i].m_name;
             }
@@ -243,7 +246,7 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         unsigned int numPlaceholderHeroes = readValue<unsigned int>(stream);
         m_placeholderHeroIDs.reserve(numPlaceholderHeroes);
         for (unsigned int i = 0; i < numPlaceholderHeroes; i++) {
-            unsigned int heroID = readValue<unsigned char>(stream);
+            int heroID = readValue<unsigned char>(stream);
             m_placeholderHeroIDs.push_back(heroID);
         }
     }
@@ -252,9 +255,8 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         for (unsigned int i = 0; i < numCustomHeroes; i++) {
             std::string name;
             TPlayerMask availability;
-            unsigned int heroID = readValue<unsigned char>(stream);
-            unsigned int portrait = readValue<unsigned char>(stream);
-            int portraitID = portrait;
+            int heroID = readValue<unsigned char>(stream);
+            int portraitID = readValue<unsigned char>(stream);
             if (portraitID == 0xff)
                 portraitID = -1;
             stream >> name;
