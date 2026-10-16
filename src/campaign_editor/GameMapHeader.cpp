@@ -118,12 +118,12 @@ void TGameMapHeader::_readVictoryCondition(TVictoryConditionData& data, TRawIStr
     }
 }
 
+// The type read's temporary ends before the switch; retail reuses its slot
+// for the signed-short day count.
 VA(0x00422ad0, 0x98)
 void TGameMapHeader::_readLossCondition(TLossConditionData& data, TRawIStream& stream, int version)
 {
-    signed char type;
-    stream >> type;
-    data.m_type = type;
+    data.m_type = readValue<signed char>(stream);
     switch (data.m_type) {
     case eLCLoseTown:
         stream >> data.m_loseTown.m_townLoc;
