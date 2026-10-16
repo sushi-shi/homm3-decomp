@@ -11,9 +11,9 @@ This generator derives those identities at build time from the compiled
 candidate objects, the retail image and the reviewed inventories. Nothing is
 hand-admitted; deleting its outputs and rebuilding reproduces them.
 
-VOTES. A voter is a source-claimed function whose candidate body equals the
-retail body apart from relocated operands: the same length (the candidate
-may carry trailing NOP/INT3 fill), identical bytes once every relocation
+VOTES. A voter is a source-claimed or placed shared-unit function whose
+candidate body equals retail apart from relocated operands: the same length
+(the candidate may carry trailing NOP/INT3 fill), identical bytes once every relocation
 field is masked, exactly the retail absolute-relocation sites, and only
 DIR32/REL32 relocations. Any other difference withdraws all of its votes.
 Each relocation of a voter pairs candidate `S + a` with the retail operand
@@ -869,6 +869,18 @@ def _region_of(pe):
     return region_of
 
 
+def voters_from_claims(claims, sizes: dict[int, int]) -> list[Voter]:
+    """Source-owned function anchors, using the current census extent.
+
+    Shared-unit placements already identify an authored body at a retail
+    start. Like direct source claims, they must still pass collect()'s
+    complete body and relocation-site comparison before casting full votes.
+    """
+    channels = {"src-VA+ir", "src-VA+base", "placement"}
+    return [Voter(c.unit, c.name, c.rva, sizes[c.rva]) for c in claims
+            if c.kind == "func" and c.channel in channels and c.rva in sizes]
+
+
 def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
                   base_dir: Path | None = None) -> State:
     """Phase 1 (model inventory): votes and data-pairing verdicts.
@@ -880,9 +892,7 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
     from homm3.delink.image import retail
     base_dir = Path(base_dir or common.HOMM3_DIR / _image_path("build/objdiff/base"))
     img = retail()
-    voters = [Voter(c.unit, c.name, c.rva, sizes[c.rva]) for c in claims
-              if c.kind == "func" and c.channel in ("src-VA+ir", "src-VA+base")
-              and c.rva in sizes]
+    voters = voters_from_claims(claims, sizes)
     library = _library()
     objects = Objects(base_dir, dict(library.absolute))
     votes, withdrawn, admitted = collect(

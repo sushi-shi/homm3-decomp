@@ -503,7 +503,8 @@ def _collect_inventory():
 
     # 1b. another image's placed shared-unit functions (its src claims, when
     # any, spell its own addresses and come first)
-    for c in providers.placements():
+    placed_claims = providers.placements()
+    for c in placed_claims:
         put(c.rva, c.name, c.unit, c.size, c.kind, c.channel)
 
     # 2. zlib map - the admitted table carries the owning TU (unit column),
@@ -564,7 +565,8 @@ def _collect_inventory():
     # (homm3.delink.reloc_pairing). They name addresses only: an admitted
     # owner is a zero-sized anchor, or the identity of a census vtable.
     from homm3.delink import reloc_pairing
-    pairing_state = reloc_pairing.data_pairings(src_claims, functions, rows)
+    pairing_state = reloc_pairing.data_pairings(
+        src_claims + placed_claims, functions, rows)
     for pairing in pairing_state.pairings:
         if pairing.kind != "data" or pairing.verdict != "admitted":
             continue

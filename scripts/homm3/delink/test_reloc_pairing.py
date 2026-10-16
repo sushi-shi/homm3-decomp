@@ -110,6 +110,54 @@ def mov_eax(value):
     return b"\xa1" + struct.pack("<I", value)
 
 
+class PlacementVoterTests(unittest.TestCase):
+    def claim(self, **overrides):
+        from types import SimpleNamespace
+        fields = dict(unit="u", name="_f", rva=0x1000, size=999,
+                      kind="func", channel="placement")
+        fields.update(overrides)
+        return SimpleNamespace(**fields)
+
+    def test_placement_uses_the_census_extent_and_reproves_the_body(self):
+        body = mov_eax(0) + b"\xc3"
+        retail = mov_eax(BASE + 0x5000) + b"\xc3"
+        candidate = rp.CandidateObject(coff([("_f", body, [(1, "_g", DIR32)])]))
+        voters = rp.voters_from_claims([self.claim()], {0x1000: len(retail)})
+        self.assertEqual(voters, [rp.Voter("u", "_f", 0x1000, len(retail))])
+        votes, withdrawn, admitted = rp.collect(
+            voters, lambda unit: candidate, lambda rva, size: retail,
+            [0x1001], BASE)
+        self.assertEqual((withdrawn, admitted), ({}, 1))
+        self.assertEqual([(v.symbol, v.owner) for v in votes], [("_g", 0x5000)])
+        changed = retail[:-1] + b"\x90"
+        votes, withdrawn, admitted = rp.collect(
+            voters, lambda unit: candidate, lambda rva, size: changed,
+            [0x1001], BASE)
+        self.assertEqual(admitted, 0)
+        self.assertTrue(all(v.site_only for v in votes))
+        self.assertIn("instruction: bytes", withdrawn)
+        pairings, aliases = rp.decide(
+            votes, region_of=lambda rva: "data", claimed_name_at=lambda rva: None,
+            claimed_rva_of=lambda name: None)
+        self.assertEqual((pairings, aliases), ([], []))
+        votes, withdrawn, admitted = rp.collect(
+            voters, lambda unit: candidate, lambda rva, size: retail, [], BASE)
+        self.assertEqual((votes, admitted), ([], 0))
+        self.assertIn("instruction: absolute relocation sites", withdrawn)
+
+    def test_non_source_channels_data_and_missing_census_rows_do_not_vote(self):
+        claims = [self.claim(channel="runtime-map"), self.claim(kind="data"),
+                  self.claim(rva=0x2000)]
+        self.assertEqual(rp.voters_from_claims(claims, {0x1000: 6}), [])
+
+    def test_direct_source_claims_remain_voters(self):
+        for channel in ("src-VA+ir", "src-VA+base"):
+            with self.subTest(channel=channel):
+                self.assertEqual(rp.voters_from_claims(
+                    [self.claim(channel=channel)], {0x1000: 6}),
+                    [rp.Voter("u", "_f", 0x1000, 6)])
+
+
 class VoteTests(unittest.TestCase):
     def voter(self, body, relocs, retail, sites, rva=0x1000):
         candidate = rp.CandidateObject(coff([("_f", body, relocs)]))
