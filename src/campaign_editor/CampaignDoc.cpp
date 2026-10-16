@@ -17,7 +17,10 @@ namespace {
 class TFileContent {
 public:
     TFileContent(int size, auto_ptr<char> pData);
-    virtual ~TFileContent();
+    // Retail keeps this body and expands it in TGzDeflatedScenarioMap's
+    // destructor. Defining it earlier out of class still retains that call.
+    VA(0x00410c10, 0x18)
+    virtual ~TFileContent() {}
 
     auto_ptr<streambuf> createInflateBuf() const;
 
@@ -176,11 +179,6 @@ inline TStringBuffer::~TStringBuffer()
 VA(0x00410bd0, 0x20)
 TFileContent::TFileContent(int size, auto_ptr<char> pData)
     : m_size(size), m_pData(pData)
-{
-}
-
-VA(0x00410c10, 0x18)
-TFileContent::~TFileContent()
 {
 }
 
