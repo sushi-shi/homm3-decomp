@@ -206,6 +206,16 @@ auto_ptr<streambuf> TFileContent::createInflateBuf() const
     return pBuf;
 }
 
+// Retail copies scalar writes into a temporary even for int fields. This
+// value boundary also gives the bonus visitors their reused argument homes.
+// Short loads remain WORD-wide where retail loads DWORD: unsigned short
+// and native-input conversion variants did not close that residual.
+template <class T>
+inline void writeValue(TRawOStream& stream, T value)
+{
+    stream << value;
+}
+
 VA(0x00410f30, 0x1d)
 void TScenarioStartingBonusWriter::write(const TScenarioStartingBonus& bonus,
                                          TRawOStream& oStream, int version)
@@ -218,67 +228,67 @@ void TScenarioStartingBonusWriter::write(const TScenarioStartingBonus& bonus,
 VA(0x00410f50, 0xb3)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusSpell& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusSpell);
-    *m_pOStream << static_cast<short>(bonus.m_hero);
-    *m_pOStream << static_cast<ubyte>(bonus.m_spell);
+    writeValue<ubyte>(*m_pOStream, eBonusSpell);
+    writeValue<short>(*m_pOStream, bonus.m_hero);
+    writeValue<ubyte>(*m_pOStream, bonus.m_spell);
 }
 
 VA(0x00411010, 0xe9)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusCreature& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusCreature);
-    *m_pOStream << static_cast<short>(bonus.m_hero);
-    *m_pOStream << static_cast<short>(bonus.m_stack.getCreatureType());
-    *m_pOStream << static_cast<short>(bonus.m_stack.getQuantity());
+    writeValue<ubyte>(*m_pOStream, eBonusCreature);
+    writeValue<short>(*m_pOStream, bonus.m_hero);
+    writeValue<short>(*m_pOStream, bonus.m_stack.getCreatureType());
+    writeValue<short>(*m_pOStream, bonus.m_stack.getQuantity());
 }
 
 VA(0x00411100, 0x7b)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusBuilding& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusBuilding);
-    *m_pOStream << static_cast<ubyte>(bonus.m_building);
+    writeValue<ubyte>(*m_pOStream, eBonusBuilding);
+    writeValue<ubyte>(*m_pOStream, bonus.m_building);
 }
 
 VA(0x00411180, 0xb3)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusArtifact& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusArtifact);
-    *m_pOStream << static_cast<short>(bonus.m_hero);
-    *m_pOStream << static_cast<short>(bonus.m_artifact);
+    writeValue<ubyte>(*m_pOStream, eBonusArtifact);
+    writeValue<short>(*m_pOStream, bonus.m_hero);
+    writeValue<short>(*m_pOStream, bonus.m_artifact);
 }
 
 VA(0x00411240, 0xb3)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusSpellScroll& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusSpellScroll);
-    *m_pOStream << static_cast<short>(bonus.m_hero);
-    *m_pOStream << static_cast<ubyte>(bonus.m_spell);
+    writeValue<ubyte>(*m_pOStream, eBonusSpellScroll);
+    writeValue<short>(*m_pOStream, bonus.m_hero);
+    writeValue<ubyte>(*m_pOStream, bonus.m_spell);
 }
 
 VA(0x00411300, 0xd0)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusPrimarySkill& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusPrimarySkill);
-    *m_pOStream << static_cast<short>(bonus.m_hero);
+    writeValue<ubyte>(*m_pOStream, eBonusPrimarySkill);
+    writeValue<short>(*m_pOStream, bonus.m_hero);
     for (unsigned int i = 0; i < kNumPrimarySkills; i++)
-        *m_pOStream << static_cast<ubyte>(bonus.m_skills[i]);
+        writeValue<ubyte>(*m_pOStream, bonus.m_skills[i]);
 }
 
 VA(0x004113d0, 0xe9)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusSecondarySkill& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusSecondarySkill);
-    *m_pOStream << static_cast<short>(bonus.m_hero);
-    *m_pOStream << static_cast<ubyte>(bonus.m_skill);
-    *m_pOStream << static_cast<ubyte>(bonus.m_level);
+    writeValue<ubyte>(*m_pOStream, eBonusSecondarySkill);
+    writeValue<short>(*m_pOStream, bonus.m_hero);
+    writeValue<ubyte>(*m_pOStream, bonus.m_skill);
+    writeValue<ubyte>(*m_pOStream, bonus.m_level);
 }
 
 VA(0x004114c0, 0xb3)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusResource& bonus)
 {
-    *m_pOStream << static_cast<ubyte>(eBonusResource);
-    *m_pOStream << static_cast<ubyte>(bonus.m_resource);
-    *m_pOStream << static_cast<long>(bonus.m_amount);
+    writeValue<ubyte>(*m_pOStream, eBonusResource);
+    writeValue<ubyte>(*m_pOStream, bonus.m_resource);
+    writeValue<long>(*m_pOStream, bonus.m_amount);
 }
 
 // A value of the file's width, widened as the bonus constructors take it.
@@ -366,16 +376,17 @@ void TScenarioStartingOptionsWriter::write(const TScenarioStartingOptions* pOpti
         m_version = version;
         pOptions->accept(*this);
     } else {
-        oStream << static_cast<ubyte>(eOptionsNone);
+        writeValue<ubyte>(oStream, eOptionsNone);
     }
 }
 
 VA(0x00411b80, 0xf7)
 void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsBonus& options)
 {
-    *m_pOStream << static_cast<ubyte>(eOptionsBonus);
-    *m_pOStream << static_cast<ubyte>(options.m_player);
-    *m_pOStream << static_cast<ubyte>(options.m_bonuses.size());
+    writeValue<ubyte>(*m_pOStream, eOptionsBonus);
+    writeValue<ubyte>(*m_pOStream, options.m_player);
+    unsigned int numBonuses = options.m_bonuses.size();
+    writeValue<ubyte>(*m_pOStream, numBonuses);
     for (unsigned int i = 0; i < options.m_bonuses.size(); i++)
         bonusWriter.write(*options.m_bonuses[i], *m_pOStream, m_version);
 }
@@ -383,24 +394,26 @@ void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsBonus& options)
 VA(0x00411c80, 0x11e)
 void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsCrossoverScenario& options)
 {
-    *m_pOStream << static_cast<ubyte>(eOptionsCrossoverScenario);
-    *m_pOStream << static_cast<ubyte>(options.m_choices.size());
+    writeValue<ubyte>(*m_pOStream, eOptionsCrossoverScenario);
+    unsigned int numChoices = options.m_choices.size();
+    writeValue<ubyte>(*m_pOStream, numChoices);
     for (unsigned int i = 0; i < options.m_choices.size(); i++) {
         const TScenarioOptionsCrossoverScenario::TChoice& choice = options.m_choices[i];
-        *m_pOStream << static_cast<ubyte>(choice.m_player);
-        *m_pOStream << static_cast<ubyte>(choice.m_scenario);
+        writeValue<ubyte>(*m_pOStream, choice.m_player);
+        writeValue<ubyte>(*m_pOStream, choice.m_scenario);
     }
 }
 
 VA(0x00411da0, 0x11e)
 void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsStartingHero& options)
 {
-    *m_pOStream << static_cast<ubyte>(eOptionsStartingHero);
-    *m_pOStream << static_cast<ubyte>(options.m_choices.size());
+    writeValue<ubyte>(*m_pOStream, eOptionsStartingHero);
+    unsigned int numChoices = options.m_choices.size();
+    writeValue<ubyte>(*m_pOStream, numChoices);
     for (unsigned int i = 0; i < options.m_choices.size(); i++) {
         const TScenarioOptionsStartingHero::TChoice& choice = options.m_choices[i];
-        *m_pOStream << static_cast<ubyte>(choice.m_player);
-        *m_pOStream << static_cast<short>(choice.m_hero);
+        writeValue<ubyte>(*m_pOStream, choice.m_player);
+        writeValue<short>(*m_pOStream, choice.m_hero);
     }
 }
 
@@ -506,7 +519,7 @@ VA(0x004129f0, 0x2b0)
 void TScenarioRecord::write(TRawOStream& oStream, int version) const
 {
     oStream << m_mapFileName;
-    oStream << static_cast<long>(m_mapSize);
+    writeValue<long>(oStream, m_mapSize);
     vector<unsigned char> prerequisiteBytes((m_prerequisites.size() + 7) / 8, 0);
     if (m_mapFileName.length() != 0) {
         for (unsigned int i = 0; i < m_prerequisites.size(); i++) {
@@ -516,8 +529,8 @@ void TScenarioRecord::write(TRawOStream& oStream, int version) const
     }
     for (vector<unsigned char>::const_iterator it = prerequisiteBytes.begin(); it != prerequisiteBytes.end(); ++it)
         oStream << *it;
-    oStream << static_cast<ubyte>(m_regionColor);
-    oStream << static_cast<ubyte>(m_difficulty);
+    writeValue<ubyte>(oStream, m_regionColor);
+    writeValue<ubyte>(oStream, m_difficulty);
     oStream << m_regionDesc;
     if (m_pPrologue.get() != NULL) {
         oStream << true;
@@ -576,6 +589,8 @@ VA_COMPGEN(0x00412df0, 0x6, RUNTIME_CLASS_GETTER, TCampaignDocInvalidFileVersion
 
 namespace {
 
+// Remaining retail difference: the description length and prologue/epilogue
+// auto_ptr temporaries occupy different stack homes; calls and CFG agree.
 VA(0x00412e00, 0x6f0)
 void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
 {
@@ -584,12 +599,12 @@ void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
         TMFCFileBuf fileBuf(pFile);
         TGzDeflateBuf deflateBuf(&fileBuf);
         TRawOStream oStream(&deflateBuf);
-        oStream << kFileVersions[version];
-        oStream << static_cast<ubyte>(campaign.getType());
+        writeValue<int>(oStream, kFileVersions[version]);
+        writeValue<ubyte>(oStream, campaign.getType());
         oStream << campaign.getName();
         oStream << campaign.getDescription();
-        oStream << static_cast<ubyte>(campaign.getBDifficultyChoice());
-        oStream << static_cast<ubyte>(campaign.getMusic());
+        writeValue<ubyte>(oStream, campaign.getBDifficultyChoice());
+        writeValue<ubyte>(oStream, campaign.getMusic());
         for (scenario = 0; scenario < campaign.getMapTraits().m_numRegions; scenario++) {
             TScenarioRecord record(campaign.getMapTraits().m_numRegions);
             const TScenario& rScenario = campaign.getScenario(scenario);
