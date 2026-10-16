@@ -136,6 +136,8 @@ void TCommandTexts::_add(UINT id, const TSpreadsheetResource* pSpreadsheet, int 
 static inline const TCommandTexts& getCommandTexts()
 {
     DATA_COMPGEN_GUARD(0x004ce284, commandTextsGuard, commandTexts)
+    // Retail loads this static object's address, then tail-calls its destructor.
+    VA_COMPGEN(0x004270e0, 0xa, STATIC_DTOR, commandTexts)
     DATA(0x004ce290) static TCommandTexts commandTexts;
     return commandTexts;
 }
@@ -165,6 +167,10 @@ TMainFrame::TMainFrame()
 {
     getCommandTexts();
 }
+
+// The static cleanup and constructor unwind share this 108-byte body with
+// the base map destructor; all fixed bytes and nine relocation targets agree.
+VA_COMPGEN(0x004270f0, 0x6c, IMPLICIT_DTOR, TCommandTexts)
 
 VA_COMPGEN(0x00427160, 0x1e, SCALAR_DELETING_DTOR, TMainFrame)
 
