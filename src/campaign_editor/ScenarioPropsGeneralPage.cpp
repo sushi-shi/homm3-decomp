@@ -227,6 +227,9 @@ void TScenarioPropsGeneralPage::OnOK()
     }
 }
 
+// Native calls, control flow and cleanup agree. The remaining scratch-register
+// rotation is front-end handle state in the register model, not a loop-shape
+// or local-lifetime discrepancy.
 VA(0x0042bb10, 0x1d5)
 void TScenarioPropsGeneralPage::OnImportButton()
 {

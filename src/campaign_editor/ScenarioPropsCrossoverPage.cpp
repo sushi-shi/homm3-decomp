@@ -148,6 +148,9 @@ BOOL TScenarioPropsCrossoverPage::OnInitDialog()
     return TRUE;
 }
 
+// Both native equality sites expand all three canonical bitset comparisons.
+// The register model identifies a this/expression processing-order difference,
+// with no source-nameable binding move; retain the existing equality path.
 VA(0x0042a810, 0x140)
 void TScenarioPropsCrossoverPage::OnOK()
 {

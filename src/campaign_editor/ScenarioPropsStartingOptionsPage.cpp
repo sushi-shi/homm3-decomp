@@ -291,6 +291,10 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusSpellScroll& b
                    _getHeroName(bonus));
 }
 
+// Retail passes the first positive skill value directly to the formatter.
+// Condition, break and format-before-break scans emit the same body; naming
+// the selected quantity removes the reload but leaves loop rotation and the
+// second loop's countdown. No additional temporary lifetime is evidenced.
 VA(0x0042e6d0, 0x127)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& bonus)
 {
