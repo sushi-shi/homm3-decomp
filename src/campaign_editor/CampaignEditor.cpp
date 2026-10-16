@@ -211,6 +211,7 @@ TCampaignEditorApp::TCampaignEditorApp()
 
 DATA(0x004c6e48) TCampaignEditorApp theApp;
 
+// Named handler resources preserve retail's address reloads and shared slots.
 VA(0x00403e70, 0x6a2)
 BOOL TCampaignEditorApp::InitInstance()
 {
@@ -299,12 +300,14 @@ BOOL TCampaignEditorApp::InitInstance()
         m_pMainWnd->DragAcceptFiles();
         return TRUE;
     } catch (const exception& e) {
-        AfxMessageBox(CString((LPCTSTR)IDS_FATAL_ERROR) + "\n\n" + e.what(), MB_ICONSTOP);
+        CString fatalError((LPCTSTR)IDS_FATAL_ERROR);
+        AfxMessageBox(fatalError + "\n\n" + e.what(), MB_ICONSTOP);
     } catch (CException* e) {
         TCHAR message[256];
         if (!e->GetErrorMessage(message, sizeof(message)))
             throw;
-        AfxMessageBox(CString((LPCTSTR)IDS_FATAL_ERROR) + "\n\n" + message, MB_ICONSTOP);
+        CString fatalError((LPCTSTR)IDS_FATAL_ERROR);
+        AfxMessageBox(fatalError + "\n\n" + message, MB_ICONSTOP);
     }
     return FALSE;
 }

@@ -433,7 +433,7 @@ CampaignEditor	?GetDocString@TCampaignDocTemplate@?%C:\Dev\Heroes 3 Exp 2\Campai
 CampaignEditor	?GetMessageMap@CAboutDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x46f0	tokens1:15aa23389de5
 CampaignEditor	?GetMessageMap@TCampaignEditorApp@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x3d90	tokens1:406ab16ec53d
 CampaignEditor	?GetMessageMap@TSplashWnd@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign Editor.cpp2351922671@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x3490	tokens1:7c6cf659a975
-CampaignEditor	?InitInstance@TCampaignEditorApp@@UAEHXZ	97.8847	97.8847	97.8847	0x3e70	tokens1:1ae9ce073c25
+CampaignEditor	?InitInstance@TCampaignEditorApp@@UAEHXZ	100.0000	100.0000	100.0000	0x3e70	tokens1:b4962a873732
 CampaignEditor	?OnAppAbout@TCampaignEditorApp@@IAEXXZ	100.0000	100.0000	100.0000	0x48d0	tokens1:f48456a36fad
 CampaignEditor	?OnCreate@CAboutDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x4700	tokens1:9feb26f7235d
 CampaignEditor	?OnFileNew@TCampaignEditorApp@@IAEXXZ	100.0000	100.0000	100.0000	0x4ad0	tokens1:876ad2018671
@@ -920,7 +920,7 @@ MainFrame	?GetMessageMap@TMainFrame@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.
 MainFrame	?GetMessageString@TMainFrame@@UBEXIAAVCString@@@Z	100.0000	100.0000	100.0000	0x27890	tokens1:580211871270
 MainFrame	?GetRuntimeClass@TMainFrame@@UBEPAUCRuntimeClass@@XZ	100.0000	100.0000	100.0000	0x27010	-
 MainFrame	?OnCommandHelp@TMainFrame@@IAEJIJ@Z	100.0000	100.0000	100.0000	0x27700	tokens1:bb9d927081c0
-MainFrame	?OnCreate@TMainFrame@@IAEHPAUtagCREATESTRUCTA@@@Z	97.5369	97.5369	97.5369	0x27290	tokens1:bd9ba23a21f3
+MainFrame	?OnCreate@TMainFrame@@IAEHPAUtagCREATESTRUCTA@@@Z	99.1803	99.1803	99.1803	0x27290	tokens1:558d185b18e1
 MainFrame	?OnCreateClient@TMainFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z	100.0000	100.0000	100.0000	0x275e0	tokens1:ddf6e38d8f71
 MainFrame	?OnDisplayChange@TMainFrame@@IAEJIJ@Z	100.0000	100.0000	100.0000	0x27720	tokens1:151ff4a3db3f
 MainFrame	?OnGetMinMaxInfo@TMainFrame@@IAEXPAUtagMINMAXINFO@@@Z	100.0000	100.0000	100.0000	0x27630	tokens1:5878798a1a0d

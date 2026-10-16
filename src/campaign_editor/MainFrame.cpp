@@ -193,6 +193,9 @@ CSize TMainFrame::_getMaxSize()
     return size;
 }
 
+// Retail retains the metric for both pane updates. A LONG snapshot before the
+// pane query recovers its register and stack layout; after-query snapshots and
+// a split declaration/assignment do not. Retail's later metric load remains.
 VA(0x00427290, 0x30d)
 int TMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -229,12 +232,13 @@ int TMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     TGDIObjectSelector<CFont> selector(&dc, _m_statusBar.GetFont());
     TEXTMETRIC textMetric;
     dc.GetTextMetrics(&textMetric);
+    const LONG averageCharWidth = textMetric.tmAveCharWidth;
     UINT id;
     UINT style;
     int width;
     _m_statusBar.GetPaneInfo(0, id, style, width);
-    _m_statusBar.SetPaneInfo(0, id, style, min(width, 35 * textMetric.tmAveCharWidth));
-    _m_statusBar.SetPaneInfo(1, 0, 0, 30 * textMetric.tmAveCharWidth);
+    _m_statusBar.SetPaneInfo(0, id, style, min(width, 35 * averageCharWidth));
+    _m_statusBar.SetPaneInfo(1, 0, 0, 30 * averageCharWidth);
     return 0;
 }
 
