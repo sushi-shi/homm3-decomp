@@ -291,6 +291,9 @@ void TScenarioStartingBonusWriter::visit(const TScenarioBonusResource& bonus)
     writeValue<long>(*m_pOStream, bonus.m_amount);
 }
 
+// Retail keeps per-case ownership transfers separate and retains the final
+// auto_ptr cleanup. Named owning values, in the resource arm or the other
+// arms, do not recover that cleanup sharing; keep the canonical temporaries.
 VA(0x004115a0, 0x540)
 auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int version)
 {
@@ -409,6 +412,8 @@ void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsStartingHero& o
 }
 
 
+// Named and temporary TChoice value constructors do not recover retail
+// starting-options assignment/cleanup boundaries; keep the measured form.
 VA(0x00411ee0, 0x518)
 auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int version)
 {

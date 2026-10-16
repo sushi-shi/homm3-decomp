@@ -51,7 +51,7 @@ public:
     void setMap(auto_ptr<TCampaignScenarioMap> pMap);
     void removeMap()
     {
-        m_pMap = TRefCountingAutoPtr<TCampaignScenarioMap>(auto_ptr<TCampaignScenarioMap>());
+        m_pMap = auto_ptr<TCampaignScenarioMap>();
         m_difficulty = TScenario::eDifficultyNormal;
         m_regionDesc = string();
         m_pPrologue = auto_ptr<TScenarioPrologue>();
