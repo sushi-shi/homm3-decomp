@@ -1311,6 +1311,10 @@ void TCampaignScenarioMap::TPlayerInfo::setHeroes(const map<int, string>& newHer
 // The map's header as a scenario offers it. A map of a later format than
 // the campaign's game, or of no released one unless any version is allowed,
 // fails, and so does one the stream cannot read.
+// The retained custom-hero map receiver is const; version is a scalar value
+// read before constructing the header. Native/candidate unwind maps agree on
+// all 16 states and the const TReadFailure catch. Named map-entry locals did
+// not resolve the remaining string construction/cleanup inlining differences.
 VA(0x0040a1f0, 0x4f0)
 TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pStreamBuf, int campaignVersion,
                                            bool bAnyVersion)
@@ -1320,8 +1324,7 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
                      : campaignVersion == eCampaignVersionArmageddonsBlade ? 21 : 14;
     try {
         TRawIStream stream(pStreamBuf);
-        long version;
-        stream >> version;
+        long version = readValue<long>(stream);
         if (version > maxVersion || !bAnyVersion && version != 28 && version != 21 && version != 14)
             throw TMapFileIsIncorrectVersion(maxVersion, version);
         TGameMapHeader header(stream, version);
@@ -1329,8 +1332,9 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
             throw TMapIsUnplayable();
         m_name = header.m_name;
         m_heroes = header.m_availableHeroes;
-        for (map<int, TGameMapHeader::TCustomHero>::const_iterator pHero = header.m_customHeroes.begin();
-             pHero != header.m_customHeroes.end(); ++pHero) {
+        const map<int, TGameMapHeader::TCustomHero>& customHeroes = header.m_customHeroes;
+        for (map<int, TGameMapHeader::TCustomHero>::const_iterator pHero = customHeroes.begin();
+             pHero != customHeroes.end(); ++pHero) {
             if (!pHero->second.m_name.empty())
                 m_heroNames.insert(map<int, string>::value_type(pHero->first, pHero->second.m_name));
         }
@@ -1381,3 +1385,8 @@ string TCampaignScenarioMap::getHeroName(int hero) const
         return it->second;
     return akHeroTraits[hero].m_defaultName;
 }
+
+// The header's custom-hero map teardown. This TU emits only this _Tree
+// destructor: all 108 fixed bytes agree, and erase, _Lockit, operator delete,
+// _Nil (0x4c6f1c) and _Nilrefs (0x4c6f20) pair to the same native targets.
+VA_COMPGEN(0x0040b100, 0x6c, IMPLICIT_DTOR, _Tree)

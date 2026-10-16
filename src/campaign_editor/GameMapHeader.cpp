@@ -271,6 +271,10 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
     }
 }
 
+// reserve checks this four-byte-element capacity: all 19 retail bytes agree,
+// with no relocation operands. The rest of the emitted COMDAT is NOP padding.
+VA_COMPGEN(0x00423e40, 0x13, VECTOR_CAPACITY, int)
+
 // The placeholder-hero push_back retains the single-element insert. Retail
 // returns its int iterator, takes two arguments and calls _Construct<int>.
 VA_COMPGEN(0x00423e60, 0x19c, VECTOR_INSERT_SINGLE, int)
