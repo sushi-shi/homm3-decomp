@@ -307,7 +307,7 @@ Campaign	?visit@TScenarioStartingOptionsEquivalencyTester@?%C:\Dev\Heroes 3 Exp 
 Campaign	?visit@TScenarioStartingOptionsEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x5580	tokens1:7e4de247869a
 Campaign	?visit@TScenarioStartingOptionsEquivalencyTester@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign.cpp2305427830@@UAEXABVTScenarioOptionsStartingHero@@@Z	100.0000	100.0000	100.0000	0x55c0	tokens1:0d6c2ec780f0
 Campaign	?widen@?$basic_ios@DU?$char_traits@D@std@@@std@@QBEDD@Z	99.8276	99.8276	99.8276	0xef90	-
-Campaign	?write@TScenarioCrossover@@QBEXAAVTRawOStream@@H@Z	61.9302	61.9302	61.9302	0x8250	tokens1:63c1308cf497
+Campaign	?write@TScenarioCrossover@@QBEXAAVTRawOStream@@H@Z	95.3314	95.3314	95.3314	0x8250	tokens1:63c1308cf497
 CampaignDoc	??0?$auto_ptr@D@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb050	-
 CampaignDoc	??0?$basic_ios@DU?$char_traits@D@std@@@std@@IAE@XZ	100.0000	100.0000	100.0000	0x15870	-
 CampaignDoc	??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_NABV?$allocator@_N@1@@Z	100.0000	100.0000	100.0000	0x15c30	-

@@ -941,9 +941,10 @@ void TScenarioCrossover::read(TRawIStream& stream, int version)
     }
 }
 
-// Retail retains checked bit access in the packing loops and expands the last
-// array write. Const-subscript packing and editor iterator substitutions did
-// not recover both decisions; ordinary-template writeBitset is byte-neutral.
+// Whole-buffer fill with const-subscript packing recovers retail's checked
+// bit reads and expanded final array write. Aggregate initialization obscured
+// those decisions in the earlier subscript and iterator probes. The old-mask
+// copy still expands proxy assignment where retail retains its call.
 VA(0x00408250, 0x1f0)
 void TScenarioCrossover::write(TRawOStream& stream, int version) const
 {
