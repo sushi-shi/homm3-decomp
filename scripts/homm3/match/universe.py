@@ -8,7 +8,7 @@ in precedence order:
 
   eh-funclet    config/retail/funclets.tsv (admitted from the retail EH
                 metadata walk, with parentage). Matches with its parent.
-  runtime       config/retail/runtime-map.tsv (LIBCMT + LIBCPMT): named,
+  runtime       config/retail/runtime-map.tsv (CRT/C++, MFC and SDK): named,
                 not matched from source.
   zlib          config/retail/zlib-map.tsv: a matching TARGET (vendored
                 sources compile), counted inside the main table.
@@ -40,7 +40,7 @@ INIT_THUNKS = common.HOMM3_DIR / _image_path("config/retail/init-thunks.tsv")
 EXCLUDED_NOTES = {
     "eh-funclet": "compiler EH unwind funclets; match with their parent "
                   "function",
-    "runtime": "CRT/C++ runtime, named not matched "
+    "runtime": "platform library code, named not matched "
                "(config/retail/runtime-map.tsv)",
     "init-thunk": "compiler-generated CRT initializer/cleanup bodies",
     "import-thunk": "FF 25 jumps through the IAT",
@@ -48,7 +48,7 @@ EXCLUDED_NOTES = {
 
 #: How `homm3 verify generated-code` verifies each category, for the README.
 VERIFIED_NOTES = {
-    "runtime": "bytes and relocations equal pinned VC6 SP3 LIBCMT/LIBCPMT "
+    "runtime": "bytes and relocations equal pinned library "
                "members (config/retail/runtime-functions.tsv)",
     "eh-funclet": "parent's `.text$x` COMDAT: bytes and every relocation "
                   "target (library parents: their library section)",

@@ -28,7 +28,7 @@ Reads the selected image's pinned executable and derives:
                   those initializers register with `_atexit` (slot -);
   runtime-map.tsv rva, name, library, member: statically linked library
                   functions named by unique masked identity with a member
-                  of LIBCMT, LIBCPMT or the staged SP3 MFC NAFXCW
+                  of LIBCMT, LIBCPMT, CTL3D32S or the staged SP3 MFC NAFXCW
                   (homm3.census.libraries); named, not matched;
   runtime-aliases.tsv rva, name, library, member: the other members of an
                   identical-code fold the runtime map names once.
@@ -153,6 +153,7 @@ def derive(log=print):
     thunks = eh.initializer_rows(census)
     toolchain = paths.msvc_dir() / "lib"
     archives = {"LIBCMT": toolchain / "LIBCMT.LIB", "LIBCPMT": toolchain / "LIBCPMT.LIB",
+                "CTL3D32S": toolchain / "CTL3D32S.LIB",
                 "NAFXCW": paths.SHARED_BUILD / "mfc-sp3/lib/nafxcw.lib"}
     from homm3.retail_labels.iat import iat_slots
     imports = {name: slot for slot, (name, _channel)

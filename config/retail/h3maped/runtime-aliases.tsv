@@ -3,9 +3,10 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-11
+# date: 2026-10-16
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
+0xe7e20	__alloca_probe	LIBCMT	chkstk.obj
 0xe9fe0	__strcmpi	LIBCMT	stricmp.obj
 0xf666e	__Stold	LIBCPMT	xstod.obj
 0xfe5ce	?Create@CStatusBarCtrl@@QAEHKABUtagRECT@@PAVCWnd@@I@Z	NAFXCW	winctrl2.obj

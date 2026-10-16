@@ -95,7 +95,7 @@ class ReadmeScoreTest(ReadmeCase):
         self.assertRegex(text, r"\|\s*1 / 2 \(50\.0%\) \|\s*75\.00% \|")
         # Banked verdicts count only census rows of their own category; a
         # category without a banked table stays excluded.
-        self.assertRegex(text, r"\| `CRT/C\+\+ runtime`\s*\|\s*1 \|\s*1 \|\s*10 \| library, verified")
+        self.assertRegex(text, r"\| `Platform libraries`\s*\|\s*1 \|\s*1 \|\s*10 \| library, verified")
         self.assertRegex(text, r"\| `EH unwind funclets`\s*\|\s*1 \|\s*0 \|")
         self.assertRegex(text, r"\| `init/cleanup thunks`\s*\|\s*1 \|\s*1 \|")
         self.assertRegex(text, r"\| `import thunks`\s*\|\s*1 \|\s*— \|\s*10 \| excluded")

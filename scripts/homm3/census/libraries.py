@@ -1,6 +1,6 @@
 """homm3.census.libraries - name an image's statically linked library code.
 
-Each function of a pinned archive member (VC6 LIBCMT/LIBCPMT, the SP3 MFC
+Each function of a pinned archive member (VC6 LIBCMT/LIBCPMT/CTL3D32S, the SP3 MFC
 NAFXCW overlay) is a /Gy COMDAT, or a label of an assembler member. An
 assembler label's body runs to the next label, and an external one's also
 to the next external label (`_memcpy` past its interior `TrailUpVec`,

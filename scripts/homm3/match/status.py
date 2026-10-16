@@ -1239,7 +1239,7 @@ def generated_code_table(category: dict, tally: dict) -> list[list[str]]:
     from homm3.match import universe
     from homm3.verify import generated_code
     banked = generated_code.committed()
-    labels = {"runtime": ("`CRT/C++ runtime`", "library, verified"),
+    labels = {"runtime": ("`Platform libraries`", "library, verified"),
               "eh-funclet": ("`EH unwind funclets`", "compiler-generated, verified with parent"),
               "init-thunk": ("`init/cleanup thunks`", "compiler-generated, verified"),
               "import-thunk": ("`import thunks`", "linker-generated, verified")}

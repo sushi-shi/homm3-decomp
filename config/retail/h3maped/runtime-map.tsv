@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3maped.exe sha256=4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37 size=2134016
-# date: 2026-10-11
+# date: 2026-10-16
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	name	library	member
 0x16fd	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z	LIBCPMT	ios.obj
@@ -783,6 +783,62 @@ rva	name	library	member
 0xf8464	__Mbrtowc	LIBCPMT	xmbtowc.obj
 0xf84c7	__Mbrtowc_lk	LIBCPMT	xmbtowc.obj
 0xf85da	_btowc	LIBCPMT	xmbtowc.obj
+0xf8620	_LpfnGetDefWndProcNull	CTL3D32S	CTL3D.OBJ
+0xf8640	_LpfnGetDefWndProc	CTL3D32S	CTL3D.OBJ
+0xf8690	_SubclassWindow	CTL3D32S	CTL3D.OBJ
+0xf8780	_CallWndProcFilterProc@12	CTL3D32S	CTL3D.OBJ
+0xf8830	_HookSubclassWindow	CTL3D32S	CTL3D.OBJ
+0xf8870	_CleanupSubclass	CTL3D32S	CTL3D.OBJ
+0xf88d0	_DeleteObjectNull	CTL3D32S	CTL3D.OBJ
+0xf88f0	_DeleteObjects	CTL3D32S	CTL3D.OBJ
+0xf8920	_PatFill	CTL3D32S	CTL3D.OBJ
+0xf8950	_DrawRec3d	CTL3D32S	CTL3D.OBJ
+0xf8a90	_DrawInsetRect3d	CTL3D32S	CTL3D.OBJ
+0xf8b00	_ClipCtlDc	CTL3D32S	CTL3D.OBJ
+0xf8b40	_MyGetTextExtent	CTL3D32S	CTL3D.OBJ
+0xf8bf0	_Ctl3dRegister@4	CTL3D32S	CTL3D.OBJ
+0xf8c60	_Ctl3dUnregister@4	CTL3D32S	CTL3D.OBJ
+0xf8d20	_Ctl3dAutoSubclass@4	CTL3D32S	CTL3D.OBJ
+0xf8d30	_Ctl3dAutoSubclassEx@8	CTL3D32S	CTL3D.OBJ
+0xf8e70	_Ctl3dIsAutoSubclass@0	CTL3D32S	CTL3D.OBJ
+0xf8ea0	_Ctl3dUnAutoSubclass@0	CTL3D32S	CTL3D.OBJ
+0xf8f40	_Ctl3dSubclassCtl@4	CTL3D32S	CTL3D.OBJ
+0xf8f70	_Ctl3dUnsubclassCtl@4	CTL3D32S	CTL3D.OBJ
+0xf9080	_Ctl3dSubclassCtlEx@8	CTL3D32S	CTL3D.OBJ
+0xf9110	_CheckChildSubclass	CTL3D32S	CTL3D.OBJ
+0xf91c0	_Ctl3dCheckSubclassDlg@8	CTL3D32S	CTL3D.OBJ
+0xf9240	_Ctl3dSubclassDlgEx@8	CTL3D32S	CTL3D.OBJ
+0xf92b0	_Ctl3dCtlColorEx@12	CTL3D32S	CTL3D.OBJ
+0xf9340	_Ctl3dColorChange@0	CTL3D32S	CTL3D.OBJ
+0xf9370	_Ctl3dDlgFramePaintI@20	CTL3D32S	CTL3D.OBJ
+0xf9620	_Ctl3dWinIniChange@0	CTL3D32S	CTL3D.OBJ
+0xf96c0	_FInit3dDialogs	CTL3D32S	CTL3D.OBJ
+0xf98b0	_End3dDialogs	CTL3D32S	CTL3D.OBJ
+0xf9990	_InternalCtl3dColorChange	CTL3D32S	CTL3D.OBJ
+0xf9b20	_Ctl3dDlgProc@16	CTL3D32S	CTL3D.OBJ
+0xf9e50	_DoesChildNeedSubclass	CTL3D32S	CTL3D.OBJ
+0xf9e90	_Ctl3dHook@12	CTL3D32S	CTL3D.OBJ
+0xfa040	_FBtn	CTL3D32S	CTL3D.OBJ
+0xfa0c0	_FComboList	CTL3D32S	CTL3D.OBJ
+0xfa100	_FCombo	CTL3D32S	CTL3D.OBJ
+0xfa1d0	_FStatic	CTL3D32S	CTL3D.OBJ
+0xfa220	_DoSubclassCtl	CTL3D32S	CTL3D.OBJ
+0xfa310	_Inval3dCtl	CTL3D32S	CTL3D.OBJ
+0xfa3d0	_Val3dCtl	CTL3D32S	CTL3D.OBJ
+0xfa440	_DrawPushButton	CTL3D32S	CTL3D.OBJ
+0xfa780	_BtnPaint	CTL3D32S	CTL3D.OBJ
+0xfacd0	_BtnWndProc3d@16	CTL3D32S	CTL3D.OBJ
+0xfafb0	_ListEditPaint3d	CTL3D32S	CTL3D.OBJ
+0xfb2f0	_ShareEditComboWndProc3d	CTL3D32S	CTL3D.OBJ
+0xfb440	_EditWndProc3d@16	CTL3D32S	CTL3D.OBJ
+0xfb470	_SharedListWndProc	CTL3D32S	CTL3D.OBJ
+0xfb6a0	_ListWndProc3d@16	CTL3D32S	CTL3D.OBJ
+0xfb6d0	_ComboWndProc3d@16	CTL3D32S	CTL3D.OBJ
+0xfb720	_StaticPrint	CTL3D32S	CTL3D.OBJ
+0xfb800	_StaticPaint	CTL3D32S	CTL3D.OBJ
+0xfb9a0	_StaticWndProc3d@16	CTL3D32S	CTL3D.OBJ
+0xfbaf0	_LibMain	CTL3D32S	CTL3D.OBJ
+0xfbbc0	_LoadUIBitmap@32	CTL3D32S	CTL3D.OBJ
 0xfbd57	_WinMain@16	NAFXCW	appmodul.obj
 0xfbd6f	?AfxInitialize@@YGHHK@Z	NAFXCW	appmodul.obj
 0xfbd8d	?AfxTermDllState@@YAXXZ	NAFXCW	dllmodul.obj

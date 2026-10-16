@@ -1,7 +1,7 @@
 """Verify statically linked library code against its pinned object bytes.
 
 `config/retail/runtime-contributions.tsv` places individual COFF sections of
-the pinned VC6 SP3 `LIBCMT.LIB`/`LIBCPMT.LIB` members (plus import-library
+the pinned VC6 SP3 `LIBCMT.LIB`/`LIBCPMT.LIB`/`CTL3D32S.LIB` members (plus import-library
 thunks, and the SDK GUID data of `UUID.LIB`/`DXGUID.LIB`) at retail RVAs. The reviewed zlib map places compiled pristine
 vendor sections the same way. Each placement is checked here:
 
@@ -35,7 +35,7 @@ from homm3.core.tsv import read as read_tsv
 
 INVENTORY = RETAIL / 'runtime-contributions.tsv'
 ZLIB_MAP = RETAIL / 'zlib-map.tsv'
-RUNTIME_LIBRARIES = ('LIBCMT.LIB', 'LIBCPMT.LIB')
+RUNTIME_LIBRARIES = ('LIBCMT.LIB', 'LIBCPMT.LIB', 'CTL3D32S.LIB')
 MFC_LIBRARY = 'NAFXCW.LIB'
 
 #: Platform SDK libraries of pure data: GUID definitions pulled in by the
