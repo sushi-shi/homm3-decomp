@@ -2617,6 +2617,9 @@ rva	size	kind	name	unit	linkage	evidence
 0x000e3b00	0x3f	func	?zBufferDraw@Bitmap816@@UBEXHHHHPAGHHH@Z	bitmap816	external	masked body (63 bytes, 1 relocations) unique at a census start
 0x000e3b40	0x9	func	?getSize@Bitmap816@@UBEIXZ	bitmap816	external	vtable of Bitmap816 (RTTI) slot 2
 0x000e3b50	0x13	func	?SetPalette@Bitmap816@@QAEXPAVTPalette24@@@Z	bitmap816	external	masked body (19 bytes, 1 relocations) unique at a census start
+0x000e3ba0	0xf8	func	__h3cg$gamecontext$static_ctor$g_gameContextFeatures	gamecontext	external	masked body (248 bytes, 8 relocations) unique at a census start
+0x000e3cb0	0x5d	func	?set@?$bitset@$03@std@@QAEAAV12@I_N@Z	gamecontext	external	masked body (93 bytes, 1 relocations) unique at a census start
+0x000e3d10	0xe0	func	?_Xran@?$bitset@$03@std@@ABEXXZ	gamecontext	external	referenced by __h3cg$gamecontext$static_ctor$g_gameContextFeatures at +0xc5
 0x000e3e20	0x70	func	?clear@LODFile@@QAEXXZ	lodfile	external	masked body (112 bytes, 2 relocations) unique at a census start
 0x000e3e90	0x5f	func	?getDataPtr@LODFile@@AAEPAXPBD@Z	lodfile	external	masked body (95 bytes, 2 relocations) unique at a census start
 0x000e3ef0	0x41	func	?getItemIndex@LODFile@@QAEPAULODEntry@@PBD@Z	lodfile	external	masked body (65 bytes, 1 relocations) unique at a census start
@@ -3026,7 +3029,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00176860	0x10	data	__CTA3?AVoverflow_error@std@@	artifact	external	referenced by __TI3?AVoverflow_error@std@@ at +0xc
 0x00176870	0x10	data	__TI3?AVoverflow_error@std@@	artifact	external	referenced by ?_Doraise@overflow_error@std@@MBEXXZ at +0x13
 0x0017c5a0	0x11	data	??_C@_0BB@NCJF@?$AA?$AB?$AB?$AC?$AB?$AC?$AC?$AD?$AB?$AC?$AC?$AD?$AC?$AD?$AD?$AE?$AA@	objecttype	external	referenced by ?count@?$bitset@$09@std@@QBEIXZ at +0x10
-0x0017c610	0x1b	data	??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@	resource	external	referenced by ?_Xran@?$bitset@$0DA@@std@@ABEXXZ at +0x1f
+0x0017c610	0x1b	data	??_C@_0BL@HMNC@invalid?5bitset?$DMN?$DO?5position?$AA@	resource	external	referenced by ?_Xran@?$bitset@$03@std@@ABEXXZ at +0x24
 0x0017c648	0x4	data	?akAdvObjectTypeTraits@@3PBUTAdvObjectTraits@@B	objnames	external	referenced by ?objectsAllowEntrances@TRmgTreasureGroup@@QBEEXZ at +0x1c
 0x0017c6d4	0xd	data	??_C@_0N@CHOD@objnames?4txt?$AA@	objnames	external	referenced by ?InitializeAdvObjectTypeTraitsTable@@YAXXZ at +0xeb
 0x0017c7c0	0x3	data	??_C@_02MECO@?$CFd?$AA@	HeroPrototypePropsGeneralPage	external	referenced by ?OnOK@THeroPrototypePropsGeneralPage@@UAEXXZ at +0xc9
@@ -4085,6 +4088,8 @@ rva	size	kind	name	unit	linkage	evidence
 0x001a991c	0x2	data	?div4mask@CSpriteFrame@@2GA	cspriteframe	external	referenced by ?SetPixelFormat@CSpriteFrame@@SAXIII@Z at +0xe7
 0x001a9924	0x1	data	_?$S14@?L@??DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z@4EA	cspriteframe	internal	referenced by ?DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z at +0xcb
 0x001a9926	0x1	data	_?kOpaqueRunCode@?L@??DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z@4EB	cspriteframe	internal	referenced by ?DrawCreatureImpl@CSpriteFrame@@ABEXHHHHPAGHHHHHAAVTPalette16@@_NG2@Z at +0xe5
+0x001a9928	0x4	data	?g_videoGameState@@3AAHA	gamecontext	external	referenced by ?Open@ResourceManager@@YA_N_N0PAH@Z at +0x96
+0x001a992c	0x10	data	?g_gameContextFeatures@@3PAUTGameContextFeatures@@A	gamecontext	external	referenced by __h3cg$gamecontext$static_ctor$g_gameContextFeatures at +0x39
 0x001a993c	0x4	data	?green_mask@Bitmap16Bit@@2IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x2c
 0x001a9940	0x4	data	?blue_mask@Bitmap16Bit@@2IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x32
 0x001a9944	0x4	data	?red_mask@Bitmap16Bit@@2IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x27

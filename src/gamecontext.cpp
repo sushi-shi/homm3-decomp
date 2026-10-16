@@ -17,6 +17,7 @@
 DATA(0x0067f554)
 static int g_defaultGameContext = 3;
 
+VA_COMPGEN(0x004eccf0, 0xb, STATIC_CTOR, g_videoGameState)
 DATA(0x0069923c)
 int& g_videoGameState = g_defaultGameContext;
 
@@ -46,6 +47,7 @@ int& g_videoGameState = g_defaultGameContext;
 // (0x221ee4, which also runs <iostream> and terrain.h initialization) from
 // plain bitset temporaries four bytes apart; this type would reserve a
 // second temporary per entry there, so that Mac spelling is not this unit's.
+VA_COMPGEN(0x004ecd00, 0xd4, STATIC_CTOR, g_gameContextFeatures)
 DATA(0x00699240)
 TGameContextFeatures g_gameContextFeatures[4] = {
     TGameContextFeatures(std::bitset<4>(1ul)),

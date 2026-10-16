@@ -238,7 +238,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000fb70	0x96	func	?_Tidy@?$_Tidyfac@V?$ctype@D@std@@@std@@SAXXZ	Campaign	external	referenced by ?widen@?$basic_ios@DU?$char_traits@D@std@@@std@@QBEDD@Z at +0xde
 0x0000fc10	0xe0	func	?_Xran@?$bitset@$0JB@@std@@ABEXXZ	Campaign	external	referenced by ??4reference@?$bitset@$0JB@@std@@QAEAAV012@_N@Z at +0x15
 0x0000fcf0	0xe0	func	?_Xran@?$bitset@$0IK@@std@@ABEXXZ	Campaign	external	referenced by ??4reference@?$bitset@$0IK@@std@@QAEAAV012@_N@Z at +0x15
-0x0000fdd0	0xe0	func	?_Xran@?$bitset@$0IB@@std@@ABEXXZ	Campaign	external	referenced by ?test@?$bitset@$0IB@@std@@QBE_NI@Z at +0x11
+0x0000fdd0	0xe0	func	?_Xran@?$bitset@$0IB@@std@@ABEXXZ	Campaign	external	referenced by ??4reference@?$bitset@$0IB@@std@@QAEAAV012@_N@Z at +0x15
 0x0000feb0	0xe0	func	?_Xran@?$bitset@$0HP@@std@@ABEXXZ	Campaign	external	referenced by ??4reference@?$bitset@$0HP@@std@@QAEAAV012@_N@Z at +0x12
 0x0000ff90	0x3e	func	??4?$TRefCountingPtr@V_TImpl@TScenario@@@@QAEAAV0@ABV0@@Z	Campaign	external	referenced by ?insert@?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAEXPAVTScenario@@IABV3@@Z at +0x29f
 0x0000ffd0	0x3b	func	?_read@TRawIStream@@AAEAAV1@AAH@Z	CampaignDoc	external	masked body (59 bytes, 3 relocations) unique at a census start; ICF-folded with 2 identical bodies
@@ -762,6 +762,9 @@ rva	size	kind	name	unit	linkage	evidence
 0x0004a200	0x65	func	?pointAt@LODFile@@QAE_NPBD@Z	lodfile	external	masked body (101 bytes, 2 relocations) unique at a census start
 0x0004a270	0x11a	func	?read@LODFile@@QAEHPAXH@Z	lodfile	external	masked body (282 bytes, 6 relocations) unique at a census start
 0x0004a390	0x28b	func	?insert@?$vector@ULODEntry@@V?$allocator@ULODEntry@@@std@@@std@@QAEXPAULODEntry@@IABU3@@Z	lodfile	external	masked body (651 bytes, 2 relocations) unique at a census start
+0x0004a680	0xf8	func	__h3cg$gamecontext$static_ctor$g_gameContextFeatures	gamecontext	external	masked body (248 bytes, 8 relocations) unique at a census start
+0x0004a780	0x5d	func	?set@?$bitset@$03@std@@QAEAAV12@I_N@Z	gamecontext	external	masked body (93 bytes, 1 relocations) unique at a census start
+0x0004a7e0	0xe0	func	?_Xran@?$bitset@$03@std@@ABEXXZ	gamecontext	external	referenced by __h3cg$gamecontext$static_ctor$g_gameContextFeatures at +0xc5
 0x0004a8f0	0xc5	func	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	font	external	masked body (197 bytes, 5 relocations) unique at a census start
 0x0004a9c0	0x16	func	??0TPalette16@@QAE@XZ	palette	external	referenced by ??0Bitmap816@@QAE@PBD0HHHHHH@Z at +0x53
 0x0004a9e0	0x1e	func	??_GTPalette16@@UAEPAXI@Z	palette	external	vtable of TPalette16 (RTTI) slot 0
@@ -4315,6 +4318,8 @@ rva	size	kind	name	unit	linkage	evidence
 0x000cd568	0x4	data	?green_mask@Bitmap16Bit@@2IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x2c
 0x000cd56c	0x4	data	?blue_mask@Bitmap16Bit@@2IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x32
 0x000cd570	0x4	data	?red_mask@Bitmap16Bit@@2IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x27
+0x000cd574	0x4	data	?g_videoGameState@@3AAHA	gamecontext	external	referenced by ?Open@ResourceManager@@YA_N_N0PAH@Z at +0x96
+0x000cd578	0x10	data	?g_gameContextFeatures@@3PAUTGameContextFeatures@@A	gamecontext	external	referenced by __h3cg$gamecontext$static_ctor$g_gameContextFeatures at +0x39
 0x000cd588	0x4	data	?green_mask@TPalette16@@0IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x3d
 0x000cd58c	0x4	data	?red_mask@TPalette16@@0IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x38
 0x000cd590	0x4	data	?blue_mask@TPalette16@@0IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x43

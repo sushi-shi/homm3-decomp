@@ -961,6 +961,11 @@ void TScenarioCrossover::write(TRawOStream& stream, int version) const
     }
 }
 
+// writeBitset retains these checked reads, with bounds 5 and 145.
+// Their _Xran calls reach the already paired 0x40bc20 and 0x40fc10 bodies.
+VA_COMPGEN(0x0040b2c0, 0x31, BITSET_TEST, bitset5)
+VA_COMPGEN(0x0040fa00, 0x34, BITSET_TEST, bitset145)
+
 VA(0x00408440, 0x1c)
 TScenarioPrologue::TScenarioPrologue()
     : m_movie(0), m_music(0)
