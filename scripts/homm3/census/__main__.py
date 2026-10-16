@@ -8,6 +8,8 @@ Reads the selected image's pinned executable and derives:
   vtables.tsv     rva, function_count, class (homm3.census.vtables);
   reloc-evidence.tsv  every candidate site with its value, channel, target
                   class and disposition (the model names data targets);
+                  library-code sites come from reviewed pinned sections whose
+                  fixed bytes and same-section absolute addresses agree;
   relocs.tsv      site_rva, kind: absolute-relocation sites for vostok's
                   --reloc-manifest, from the vendored find_relocs channels
                   (code operands, switch tables, data dwords outside
@@ -128,6 +130,14 @@ def derive(log=print):
     starts = {rva for rva, _size, _reached in rows} | set(folded)
     vt = vtables.census(census, starts)
 
+    from homm3.census import libraries
+    from homm3.core.tsv import read as read_tsv
+    toolchain = paths.msvc_dir() / "lib"
+    archives = {"LIBCMT": toolchain / "LIBCMT.LIB", "LIBCPMT": toolchain / "LIBCPMT.LIB",
+                "CTL3D32S": toolchain / "CTL3D32S.LIB",
+                "NAFXCW": paths.SHARED_BUILD / "mfc-sp3/lib/nafxcw.lib"}
+    reviewed = paths.retail_dir() / "runtime-contributions.tsv"
+    reviewed_rows = read_tsv(reviewed)[2] if reviewed.is_file() else []
     sites, masks = {}, {}
     for section in image.sections:
         if section.name in (".rsrc", ".reloc"):
@@ -137,6 +147,16 @@ def derive(log=print):
         else:
             masks[section.name] = find_relocs.literal_mask(image.blob(section))
             sites.update(find_relocs.data_sites(image, section))
+    extra = 0
+    for rva, site in libraries.reviewed_code_sites(image, reviewed_rows, archives).items():
+        if rva in sites:
+            if sites[rva].target != site.target:
+                raise ValueError(f"library relocation evidence disagrees at 0x{rva:x}")
+            continue
+        sites[rva] = site
+        extra += 1
+    if extra:
+        log(f"[census] {extra} internal code relocation(s) proven by reviewed library sections")
     neighbours = frozenset(rva for rva, site in sites.items() if site.channel == "data")
     kept, dropped, evidence = [], 0, []
     for rva, site in sorted(sites.items()):
@@ -148,13 +168,8 @@ def derive(log=print):
             dropped += 1
             continue
         kept.append(rva)
-    from homm3.census import libraries
     funclets, orphans = eh.funclet_rows(census, folded)
     thunks = eh.initializer_rows(census)
-    toolchain = paths.msvc_dir() / "lib"
-    archives = {"LIBCMT": toolchain / "LIBCMT.LIB", "LIBCPMT": toolchain / "LIBCPMT.LIB",
-                "CTL3D32S": toolchain / "CTL3D32S.LIB",
-                "NAFXCW": paths.SHARED_BUILD / "mfc-sp3/lib/nafxcw.lib"}
     from homm3.retail_labels.iat import iat_slots
     imports = {name: slot for slot, (name, _channel)
                in iat_slots(common.resolve_exe(), toolchain).items()}
@@ -163,13 +178,11 @@ def derive(log=print):
     runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log,
                                imports=imports, vtables=classes, aliases=aliases)
     # reviewed names for identical library members the bytes cannot tell apart
-    from homm3.core.tsv import read as read_tsv
     named = {r for r, _n, _l, _m in runtime}
-    reviewed = paths.retail_dir() / "runtime-contributions.tsv"
-    if reviewed.is_file():
+    if reviewed_rows:
         starts = {r for r, _s, _d in rows}
         names_at = {r: n for r, n, _l, _m in runtime}
-        for row in read_tsv(reviewed)[2]:
+        for row in reviewed_rows:
             rva = int(row["rva"], 16)
             if row["kind"] != "code" or rva not in starts:
                 continue

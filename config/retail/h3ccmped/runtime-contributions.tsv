@@ -78,3 +78,5 @@ rva	size	kind	library	member	section	symbol	evidence
 0x62700	332	code	CTL3D32S.LIB	CTL3D.OBJ	141	_StaticWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
 0x62850	203	code	CTL3D32S.LIB	CTL3D.OBJ	143	_LibMain	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
 0x62920	407	code	CTL3D32S.LIB	CTL3D.OBJ	147	_LoadUIBitmap@32	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
+0x50ca0	821	code	LIBCMT.LIB	memcpy.obj	1	_memcpy	pinned CString::AllocCopy at 0x469d40 calls _memcpy at +0x36; caller and callee bytes and relocations verify exactly
+0x69d40	68	code	NAFXCW.LIB	strcore.obj	86	?AllocCopy@CString@@IBEXAAV1@HHH@Z	pinned MFC strcore.obj#86: its REL32 _memcpy at +0x36 resolves to 0x450ca0; complete body verified

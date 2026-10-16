@@ -129,6 +129,71 @@ def archive_functions(path: Path):
             yield member, name, code, relocs, selection
 
 
+def internal_code_relocations(section, retail: bytes, address: int):
+    """Absolute fields proven by a reviewed section's own code labels.
+
+    This recovers embedded assembler jump tables that linear disassembly can
+    miss. Every fixed byte and every same-section DIR32 target must agree.
+    Other sections and relative branches supply no absolute sites;
+    the library verifier still checks those references independently.
+    """
+    from homm3.verify.library_code import DIR32NB, differences
+    if (not section.code or section.size != len(retail)
+            or section.size != len(section.data)):
+        return {}
+    if any(typ not in (DIR32, DIR32NB, REL32) or offset < 0
+           or offset + 4 > section.size
+           for offset, typ, _index in section.relocations):
+        return {}
+    if differences(section, retail):
+        return {}
+    sites = {}
+    for offset, typ, index in section.relocations:
+        symbol = section.obj.symbols.get(index)
+        if symbol is None:
+            return {}
+        if typ != DIR32 or symbol.section != section.number:
+            continue
+        addend = struct.unpack_from('<i', section.data, offset)[0]
+        target = (address + symbol.value + addend) & 0xffffffff
+        if (not address <= target < address + section.size
+                or struct.unpack_from('<I', retail, offset)[0] != target):
+            return {}
+        sites[offset] = (target, symbol.name)
+    return sites
+
+
+def reviewed_code_sites(image, rows, archives):
+    """Site evidence from reviewed pinned-library code contributions only."""
+    from homm3.census.find_relocs import Site
+    from homm3.verify.library_code import archive, section as object_section
+    sites = {}
+    for row in rows:
+        if row['kind'] not in ('code', 'alias'):
+            continue
+        library = row['library'].rsplit('.', 1)[0]
+        path = archives.get(library)
+        if path is None or not path.is_file():
+            continue
+        obj = archive(path)[0].get(row['member'])
+        number = int(row['section'])
+        if obj is None or not 1 <= number <= len(obj.sections):
+            continue
+        section = object_section(row['library'], row['member'], obj, number)
+        rva = int(row['rva'], 16)
+        mapped = image.section_of(rva)
+        if (int(row['size'], 0) != section.size or mapped is None
+                or not mapped.executable or rva + section.size > mapped.rva + mapped.size):
+            continue
+        offset = mapped.raw_offset + rva - mapped.rva
+        retail = image.data[offset:offset + section.size]
+        for site, (target, symbol) in internal_code_relocations(
+                section, retail, image.image_base + rva).items():
+            detail = f"{library}:{row['member']}#{number}:{symbol}"
+            sites[rva + site] = Site(rva + site, target, 'library-code', detail)
+    return sites
+
+
 def derive(image, functions: dict[int, int], archives: dict[str, Path], log=print,
            imports: dict[str, int] | None = None,
            vtables: dict[str, int] | None = None,

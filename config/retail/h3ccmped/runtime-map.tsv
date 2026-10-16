@@ -378,6 +378,7 @@ rva	name	library	member
 0x50b70	_memset	LIBCMT	memset.obj
 0x50bc8	__EH_prolog	LIBCMT	ehprolog.obj
 0x50be7	__mbscmp	LIBCMT	mbscmp.obj
+0x50ca0	_memcpy	LIBCMT	memcpy.obj
 0x50fd5	_wcslen	LIBCMT	wcslen.obj
 0x50ff2	__mbschr	LIBCMT	mbschr.obj
 0x51089	__mbspbrk	LIBCMT	mbspbrk.obj
