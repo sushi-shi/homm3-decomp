@@ -120,6 +120,14 @@ for every pointer `T`). Names keep
 their checkout-independent anonymous-namespace spelling. The label model
 reads the table as the image's claims (channel `placement`).
 
+A compiler-generated reference initializer can have only three fixed bytes:
+`mov [destination], backing-address; ret`. The general byte threshold stays
+unchanged. This form is admitted only for a source-owned `STATIC_CTOR`, with
+an independently placed destination, a unique census body reached directly
+or through one jump from a CRT slot, exactly the two reviewed relocations,
+and a matching, unrelocated four-byte backing object. Conflicting identities
+and multiple matching bodies remain unplaced.
+
 A shared source may also name the image's address of a definition with
 `VA_AT(image, addr, size)` (HoMM2's marker): a body the image compiles
 differently from the game (the map editor's `/O1` forms of the line

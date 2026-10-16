@@ -23,7 +23,10 @@ source (build/<image>/objdiff/base/<unit>.obj, the image's profile):
      every slot symbol of the compiled table at the retail slot's target;
   4. data: a DIR32 reference of a placed function to data an image unit
      defines (globals, string-literal COMDATs) places that datum at the
-     retail address less the compiled addend, with the compiled extent;
+     retail address less the compiled addend, with the compiled extent.
+     A short compiler-generated reference initializer can then be placed
+     through its CRT entry, named destination and matching backing word;
+     it does not qualify by masked instruction bytes alone;
   5. string literals: a string-literal COMDAT (`??_C@`) whose bytes occur
      at exactly one retail address that retail code references anchors
      every compiled function that references it. A function still unplaced
@@ -884,6 +887,50 @@ def derive(log=print, want_suggestions=False):
             if not moved and not follow_data():
                 break
 
+    propagate()
+
+    # A global reference initializer has only three fixed instruction bytes.
+    # Its source-owned compiler name, CRT entry, independently placed
+    # destination and matching backing word provide the missing evidence.
+    # Keep the general masked-body threshold unchanged.
+    from homm3.census.reference_initializers import reference_initializer, startup_bodies
+    initializers = [(int(row["rva"], 0), row["slot"])
+                    for row in _read_tsv(retail / "init-thunks.tsv")[2]]
+
+    def reference_read(rva, size):
+        sec = image.section_of(rva)
+        if sec is None or rva + size > sec.rva + sec.size:
+            return None
+        return blob(rva, size)
+
+    def reference_data(rva, size):
+        sec = image.section_of(rva)
+        return (sec is not None and not sec.executable
+                and rva + size <= sec.rva + sec.mapped)
+
+    starts = startup_bodies(functions, initializers, reference_read)
+    reference_choices = defaultdict(set)
+    absolute_sites = set(absolute)
+    for _unit, name, body, relocs in compiled:
+        if names.get(name):
+            continue
+        match = reference_initializer(
+            name, body, relocs, starts=starts, read=reference_read, image_base=base,
+            data_names=data_names, data_definers=data_definers, data_relocs=data_relocs,
+            absolute_sites=absolute_sites, is_data=reference_data)
+        if match is None:
+            continue
+        rva, backing, backing_rva = match
+        if named_at[rva] or foreign_to_claim(name, own_named[rva], bodies):
+            continue
+        reference_choices[rva].add((name, backing, backing_rva))
+    for rva, choices in reference_choices.items():
+        if len(choices) != 1:
+            continue
+        name, backing, backing_rva = next(iter(choices))
+        why = "CRT reference initializer; placed destination and backing word agree"
+        propose(name, rva, why)
+        propose_data(backing, backing_rva, f"backing word of {referrer(name, rva)}")
     propagate()
 
     def referents_agree(body, relocs, rva):

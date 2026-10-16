@@ -131,7 +131,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000078f3	0x59	func	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV01@@Z	rmg	external	masked body (89 bytes, 1 relocations) unique at a census start
 0x00007968	0x8	func	??_ETBlackBox@@$4PPPPPPPM@A@AEPAXI@Z	BlackBox	external	vtable of TBlackBox (RTTI) slot 0
 0x00007970	0x2b	func	??_GTBlackBox@@UAEPAXI@Z	BlackBox	external	referenced by ??_ETBlackBox@@$4PPPPPPPM@A@AEPAXI@Z at +0x4
-0x0000799b	0x36	func	??1TBlackBox@@UAE@XZ	BlackBox	external	referenced by 0x000469bb at +0x31
+0x0000799b	0x36	func	??1TBlackBox@@UAE@XZ	BlackBox	external	referenced by 0x000463f4 at +0x31
 0x000079d1	0xb	func	?importText@TTreasure@@$4PPPPPPPM@3AEXPAV?$basic_istream@DU?$char_traits@D@std@@@std@@W4EGameVersion@@@Z	BlackBox	external	vtable of TBlackBox (RTTI) slot 1
 0x000079dc	0x8	func	?write@TBlackBox@@$4PPPPPPPM@A@BEXPAVTRawOStream@@H@Z	BlackBox	external	vtable of TBlackBox (RTTI) slot 3
 0x000079e4	0x8	func	?isCustomized@TBlackBox@@$4PPPPPPPM@A@BE_NXZ	BlackBox	external	vtable of TBlackBox (RTTI) slot 5
@@ -1004,7 +1004,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00041c36	0x8e	func	??0TGUIGenerator@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (142 bytes, 9 relocations) unique at a census start
 0x00041cc4	0xaa	func	??0?$TGUIOwnableSpecializedObject@VTGenerator@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	referenced by 0x00041c36 at +0x59
 0x00041d6e	0x7a	func	??0TGenerator@@QAE@ABV0@@Z	GUIGameObject	external	referenced by 0x00041cc4 at +0x65
-0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	external	referenced by ??0TGarrison@@QAE@ABV0@@Z at +0x4e
+0x00041de8	0x57	func	??0TFlaggableObject@@QAE@ABV0@@Z	GUIGameObject	external	referenced by ??0TRandomGenerator@@QAE@ABV0@@Z at +0x6c
 0x00042038	0x8e	func	??0TGUIAbandonedMine@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (142 bytes, 9 relocations) unique at a census start
 0x000420c6	0xaa	func	??0?$TGUIStandardSpecializedObject@VTAbandonedMine@@@?%C:\Dev\Heroes 3 Exp 2\Editor\GUIGameObject.cpp1359517662@@QAE@ABV01@@Z	GUIGameObject	external	masked body (170 bytes, 10 relocations) unique at a census start
 0x00042170	0x80	func	??0TAbandonedMine@@QAE@ABV0@@Z	GUIGameObject	external	masked body (128 bytes, 7 relocations) unique at a census start
@@ -2617,6 +2617,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000e3b00	0x3f	func	?zBufferDraw@Bitmap816@@UBEXHHHHPAGHHH@Z	bitmap816	external	masked body (63 bytes, 1 relocations) unique at a census start
 0x000e3b40	0x9	func	?getSize@Bitmap816@@UBEIXZ	bitmap816	external	vtable of Bitmap816 (RTTI) slot 2
 0x000e3b50	0x13	func	?SetPalette@Bitmap816@@QAEXPAVTPalette24@@@Z	bitmap816	external	masked body (19 bytes, 1 relocations) unique at a census start
+0x000e3b80	0xb	func	__h3cg$gamecontext$static_ctor$g_videoGameState	gamecontext	external	CRT reference initializer; placed destination and backing word agree
 0x000e3ba0	0xf8	func	__h3cg$gamecontext$static_ctor$g_gameContextFeatures	gamecontext	external	masked body (248 bytes, 8 relocations) unique at a census start
 0x000e3cb0	0x5d	func	?set@?$bitset@$03@std@@QAEAAV12@I_N@Z	gamecontext	external	masked body (93 bytes, 1 relocations) unique at a census start
 0x000e3d10	0xe0	func	?_Xran@?$bitset@$03@std@@ABEXXZ	gamecontext	external	referenced by __h3cg$gamecontext$static_ctor$g_gameContextFeatures at +0xc5
@@ -3961,6 +3962,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x00195eec	0x8	data	??_C@_07OBEK@GetText?$AA@	resourcemanager	external	referenced by ?loadText@ResourceManager@@YAPAVTTextResource@@PBD@Z at +0x100
 0x00195ef4	0xf	data	??_C@_0P@JGAD@GetSpreadsheet?$AA@	resourcemanager	external	referenced by ?loadSpreadsheet@ResourceManager@@YAPAVTSpreadsheetResource@@PBD@Z at +0x100
 0x00195f04	0xa	data	??_C@_09EAAB@GetSprite?$AA@	resourcemanager	external	referenced by ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z at +0x4a
+0x00195f78	0x4	data	_g_defaultGameContext	gamecontext	internal	backing word of __h3cg$gamecontext$static_ctor$g_videoGameState
 0x00195f7c	0x4	data	??_C@_03CMHN@LOD?$AA@	lodfile	external	referenced by ??0LODHeader@@QAE@XZ at +0x5
 0x00195f80	0x4	data	??_C@_03OJHL@rb?$CL?$AA@	lodfile	external	referenced by ?open@LODFile@@QAEHPBDH@Z at +0x25
 0x00197de8	0x30	data	?g_victorPcxDefaultPalette@@3PAEA	victor_loadpcx	external	referenced by ?loadpcx@@YGHPBDPAUimgdes@@@Z at +0x42e
