@@ -40,6 +40,7 @@ public:
     TProductVersion();
 };
 
+// Retail obtains the destination buffer before loading the queried string.
 VA(0x004032b0, 0x13b)
 TProductVersion::TProductVersion()
 {
@@ -56,7 +57,8 @@ TProductVersion::TProductVersion()
                                     &length)
                     || ::VerQueryValue(pVersionInfo.get(), "\\StringFileInfo\\040904e4\\ProductVersion",
                                        (void**)&pValue, &length)) {
-                    strcpy(GetBuffer(length), pValue);
+                    char* buffer = GetBuffer(length);
+                    strcpy(buffer, pValue);
                     ReleaseBuffer();
                 }
             }
