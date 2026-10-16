@@ -273,9 +273,12 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion >= g_saveVersionTownNameString) {
         // Keep the address-taken file buffer separate from the decoded
         // length retained across the next virtual read (Mac 0x1b1f90..1b1fc0).
-        unsigned short storedNameLength;
-        infile->read(&storedNameLength, sizeof(storedNameLength));
-        unsigned short nameLength = LITTLE_ENDIAN_SHORT(storedNameLength);
+        unsigned short nameLength;
+        {
+            unsigned short storedNameLength;
+            infile->read(&storedNameLength, sizeof(storedNameLength));
+            nameLength = LITTLE_ENDIAN_SHORT(storedNameLength);
+        }
         infile->read(g_text, nameLength & 0xffff);
         g_text[nameLength & 0xffff] = 0;
         m_name = g_text;
