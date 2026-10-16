@@ -14,6 +14,9 @@ class TCampaignDocLoadFailure : public CException {
     DECLARE_DYNAMIC(TCampaignDocLoadFailure)
 
 public:
+    // loadCampaign calls this retained body: CException(autoDelete), then
+    // the TCampaignDocLoadFailure vtable at 0x488078; returns with ret 4.
+    VA(0x00413fe0, 0x19)
     explicit TCampaignDocLoadFailure(BOOL bAutoDelete = TRUE) : CException(bAutoDelete) {}
 };
 

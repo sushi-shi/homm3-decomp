@@ -648,16 +648,23 @@ void saveCampaign(const TCampaign& campaign, int version, CFile* pFile)
 }
 
 VA(0x00413600, 0x9e0)
+// Retail FuncInfo 0x49a978 has three try ranges (inclusive states):
+// 5..21: header reads, const exception&, after both buffers are constructed;
+// 27..29: map construction, const TCreateFailure&, after allocating/reading pData;
+// 24..31: map-loading and metadata-application loops, const exception&.
+// Chained name/description reads retain the two retail 512-byte buffers.
+// Direct long/readValue file-version and early-bool probes did not close the
+// initial-read inlining and remaining temporary-lifetime differences.
 pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
 {
     auto_ptr<TCampaign> pCampaign;
     int campaignVersion;
     vector<TScenarioRecord> records;
     unsigned int scenario;
-    try {
-        {
-            TMFCFileBuf fileBuf(pFile);
-            TGzInflateBuf inflateBuf(&fileBuf);
+    {
+        TMFCFileBuf fileBuf(pFile);
+        TGzInflateBuf inflateBuf(&fileBuf);
+        try {
             TRawIStream iStream(&inflateBuf);
             int fileVersion;
             iStream >> fileVersion;
@@ -673,39 +680,41 @@ pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
                 throw TAllocationFailure();
             string name;
             string description;
-            iStream >> name;
-            iStream >> description;
+            iStream >> name >> description;
             signed char bDifficultyChoice;
             iStream >> bDifficultyChoice;
             pCampaign->setName(name);
             pCampaign->setDescription(description);
             pCampaign->setBDifficultyChoice(bDifficultyChoice != 0);
             if (fileVersion >= 5) {
-                signed char music;
-                iStream >> music;
+                int music = readValue<signed char>(iStream);
                 pCampaign->setMusic(music);
             }
             records.resize(pCampaign->getMapTraits().m_numRegions,
                            TScenarioRecord(pCampaign->getMapTraits().m_numRegions));
             for (scenario = 0; scenario < pCampaign->getMapTraits().m_numRegions; scenario++)
                 records[scenario].read(iStream, fileVersion);
+        } catch (const exception&) {
+            throw new TCampaignDocLoadFailure;
         }
+    }
+    try {
         for (scenario = 0; scenario < pCampaign->getMapTraits().m_numRegions; scenario++) {
             TScenarioRecord& record = records[scenario];
             if (record.m_mapFileName.length() == 0)
                 continue;
+            auto_ptr<char> pData(new char[record.m_mapSize]);
+            if (pData.get() == NULL)
+                throw TAllocationFailure();
+            if (pFile->Read(pData.get(), record.m_mapSize) < record.m_mapSize)
+                throw new TCampaignDocLoadFailure;
             try {
-                auto_ptr<char> pData(new char[record.m_mapSize]);
-                if (pData.get() == NULL)
-                    throw TAllocationFailure();
-                if (pFile->Read(pData.get(), record.m_mapSize) < record.m_mapSize)
-                    throw new TCampaignDocLoadFailure;
                 auto_ptr<TCampaignScenarioMap> pMap(
                     new TGzDeflatedScenarioMap(record.m_mapFileName, record.m_mapSize, pData, campaignVersion, true));
                 if (pMap.get() == NULL)
                     throw TAllocationFailure();
                 pCampaign->setScenarioMap(scenario, pMap);
-            } catch (TCampaignScenarioMap::TCreateFailure& failure) {
+            } catch (const TCampaignScenarioMap::TCreateFailure& failure) {
                 reportCreateFailure(record.m_mapFileName, failure, NULL);
                 throw new TCampaignDocLoadFailure;
             }
@@ -730,9 +739,7 @@ pair<auto_ptr<TCampaign>, int> loadCampaign(CFile* pFile)
             if (record.m_pStartingOptions.get() != NULL)
                 pCampaign->setScenarioStartingOptions(scenario, record.m_pStartingOptions);
         }
-    } catch (TRawIStream::TReadFailure&) {
-        throw new TCampaignDocLoadFailure;
-    } catch (TGzInflateBuf::TDataError&) {
+    } catch (const exception&) {
         throw new TCampaignDocLoadFailure;
     }
     return make_pair(pCampaign, campaignVersion);
