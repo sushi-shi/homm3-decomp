@@ -822,24 +822,26 @@ void TCampaignDoc::exportScenarioMap(const TCampaignScenarioMap* pMap, const CSt
     const TGzDeflatedScenarioMap* pDeflatedMap = static_cast<const TGzDeflatedScenarioMap*>(pMap);
     int size = pDeflatedMap->getSize();
     const char* pData = pDeflatedMap->getData();
-    CString fileName = pathName.Right(pathName.GetLength() - pathName.ReverseFind('\\') - 1);
+    int separator = pathName.ReverseFind('\\');
+    CString fileName = pathName.Right(pathName.GetLength() - separator - 1);
     CFileException fe;
-    CFile* pFile = GetFile(pathName, CFile::modeCreate | CFile::modeWrite | CFile::shareExclusive, &fe);
+    CFile* pFile = GetFile(pathName, CFile::modeCreate | CFile::modeReadWrite | CFile::shareExclusive, &fe);
     if (pFile == NULL) {
         ReportSaveLoadException(pathName, &fe, TRUE, AFX_IDP_INVALID_FILENAME);
         return;
     }
     try {
         pFile->Write(pData, size);
-        ReleaseFile(pFile, FALSE);
     } catch (CException* e) {
         ReleaseFile(pFile, TRUE);
         ReportSaveLoadException(pathName, e, TRUE, AFX_IDP_FAILED_TO_SAVE_DOC);
         e->Delete();
+        return;
     } catch (...) {
         ReleaseFile(pFile, TRUE);
         throw;
     }
+    ReleaseFile(pFile, FALSE);
 }
 
 VA(0x00414a50, 0xa)
@@ -884,7 +886,7 @@ void TCampaignDoc::OnRefreshScenarioMaps()
 {
     CWaitCursor wait;
     CString directory;
-    GetCurrentDirectory(MAX_PATH, directory.GetBuffer(MAX_PATH));
+    GetCurrentDirectory(MAX_PATH + 1, directory.GetBuffer(MAX_PATH));
     directory.ReleaseBuffer();
     if (directory[directory.GetLength() - 1] != '\\')
         directory += '\\';
@@ -909,7 +911,7 @@ void TCampaignDoc::OnExportScenarioMaps()
 {
     CWaitCursor wait;
     CString directory;
-    GetCurrentDirectory(MAX_PATH, directory.GetBuffer(MAX_PATH));
+    GetCurrentDirectory(MAX_PATH + 1, directory.GetBuffer(MAX_PATH));
     directory.ReleaseBuffer();
     if (directory[directory.GetLength() - 1] != '\\')
         directory += '\\';
