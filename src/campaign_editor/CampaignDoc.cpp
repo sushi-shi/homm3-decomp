@@ -463,14 +463,15 @@ auto_ptr<TScenarioStartingOptions> readStartingOptions(TRawIStream& iStream, int
     return pOptions;
 }
 
+// Retail normalizes each decoded presence byte before its branch. The scalar
+// string-length reader and iterator-pair helper preserve its value lifetimes.
 VA(0x00412400, 0x5e3)
 void TScenarioRecord::read(TRawIStream& iStream, int version)
 {
     iStream >> m_mapFileName;
     m_mapSize = readValue<long>(iStream);
     vector<unsigned char> prerequisiteBytes((m_prerequisites.size() + 7) / 8, 0);
-    for (vector<unsigned char>::iterator it = prerequisiteBytes.begin(); it != prerequisiteBytes.end(); ++it)
-        iStream >> *it;
+    readToIter(iStream, prerequisiteBytes.begin(), prerequisiteBytes.end());
     if (m_mapFileName.length() != 0) {
         for (unsigned int i = 0; i < m_prerequisites.size(); i++)
             m_prerequisites[i] = (prerequisiteBytes[i / 8] & (1 << (i % 8))) != 0;
@@ -481,13 +482,15 @@ void TScenarioRecord::read(TRawIStream& iStream, int version)
         m_regionColor = readValue<signed char>(iStream);
         m_difficulty = readValue<signed char>(iStream);
         iStream >> m_regionDesc;
-        if (readValue<signed char>(iStream) != 0) {
+        bool hasPrologue = readValue<signed char>(iStream) != 0;
+        if (hasPrologue) {
             m_pPrologue = auto_ptr<TScenarioPrologue>(new TScenarioPrologue);
             if (m_pPrologue.get() == NULL)
                 throw TAllocationFailure();
             iStream >> *m_pPrologue;
         }
-        if (readValue<signed char>(iStream) != 0) {
+        bool hasEpilogue = readValue<signed char>(iStream) != 0;
+        if (hasEpilogue) {
             m_pEpilogue = auto_ptr<TScenarioPrologue>(new TScenarioPrologue);
             if (m_pEpilogue.get() == NULL)
                 throw TAllocationFailure();
@@ -518,8 +521,7 @@ void TScenarioRecord::write(TRawOStream& oStream, int version) const
                 prerequisiteBytes[i / 8] |= 1 << (i % 8);
         }
     }
-    for (vector<unsigned char>::const_iterator it = prerequisiteBytes.begin(); it != prerequisiteBytes.end(); ++it)
-        oStream << *it;
+    writeFromIter(oStream, prerequisiteBytes.begin(), prerequisiteBytes.end());
     writeValue<ubyte>(oStream, m_regionColor);
     writeValue<ubyte>(oStream, m_difficulty);
     oStream << m_regionDesc;

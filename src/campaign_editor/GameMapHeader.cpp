@@ -142,8 +142,9 @@ void TGameMapHeader::_readLossCondition(TLossConditionData& data, TRawIStream& s
 }
 
 // int/long count probes changed only folded _read call identities; the
-// container counts retain their unsigned size domain. Hero IDs bind as int
-// to the fields and container keys, without unsigned-to-int reference temporaries.
+// container counts retain their unsigned size domain. The first hero ID is
+// compared as a byte and widened for its field; container keys bind as
+// int without unsigned-to-int reference temporaries.
 VA(0x00422b70, 0xd4a)
 TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
 {
@@ -198,7 +199,7 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         }
         if (version >= 13) {
             slot.m_bRandomHero = readValue<signed char>(stream) != 0;
-            int heroID = readValue<unsigned char>(stream);
+            unsigned char heroID = readValue<unsigned char>(stream);
             slot.m_heroID = heroID;
             if (heroID != 0xff) {
                 slot.m_heroPortrait = readValue<unsigned char>(stream);
