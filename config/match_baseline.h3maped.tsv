@@ -5505,7 +5505,7 @@ resource	??_Gresource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe5ae0	-
 resource	?what@logic_error@std@@UBEPBDXZ	100.0000	100.0000	100.0000	0x1f18	-
 resourcemanager	??0?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAE@XZ	99.8980	99.8980	99.8980	0xddf40	-
 resourcemanager	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	100.0000	100.0000	100.0000	0xdd4d0	-
-resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	40.9091	40.9091	40.9091	0xdad40	-
+resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	100.0000	100.0000	100.0000	0xdad40	-
 resourcemanager	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0xdccf0	-
 resourcemanager	??1?$auto_ptr@VBitmap16Bit@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x2bfe6	-
 resourcemanager	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x60f42	-
