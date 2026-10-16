@@ -27,11 +27,14 @@ T16bppDIBSection::~T16bppDIBSection()
     destroy();
 }
 
+// Campaign 0x41d200 returns on self-assignment before the expanded base
+// assignment saves its copy-loop registers; retain the early return here.
 VA(0x0040d2b3, 0x18)
 T16bppDIBSection& T16bppDIBSection::operator=(const T16bppDIBSection& other)
 {
-    if (&other != this)
-        TBitmapBase<unsigned short>::operator=(other);
+    if (&other == this)
+        return *this;
+    TBitmapBase<unsigned short>::operator=(other);
     return *this;
 }
 

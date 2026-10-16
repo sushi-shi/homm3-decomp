@@ -7,6 +7,8 @@
 #include "va.h"
 #include "editor/MFCFileBuf.h"
 
+// Explicit basic_streambuf<char>() base initialization leaves campaign codegen
+// unchanged: retail retains _Init while this constructor expands it.
 VA(0x00486b96, 0xbb)
 TMFCFileBuf::TMFCFileBuf(CFile* pFile) : _m_pFile(pFile), _m_pBuf(NULL)
 {

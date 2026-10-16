@@ -945,6 +945,9 @@ void TScenarioCrossover::read(TRawIStream& stream, int version)
 // bit reads and expanded final array write. Aggregate initialization obscured
 // those decisions in the earlier subscript and iterator probes. The old-mask
 // copy still expands proxy assignment where retail retains its call.
+// Editor target iterators and member inequality on the boolean source iterator
+// do not improve this boundary. Proxy-returning source iterators add calls
+// absent from retail; preserve the checked boolean read.
 VA(0x00408250, 0x1f0)
 void TScenarioCrossover::write(TRawOStream& stream, int version) const
 {
