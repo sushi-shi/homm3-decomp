@@ -849,6 +849,8 @@ rva	name	library	member
 0x65630	?AddTail@CObList@@QAEPAU__POSITION@@PAVCObject@@@Z	NAFXCW	list_o.obj
 0x656b4	?Find@CObList@@QBEPAU__POSITION@@PAVCObject@@PAU2@@Z	NAFXCW	list_o.obj
 0x656d7	??0CByteArray@@QAE@XZ	NAFXCW	array_b.obj
+0x65737	?SetSize@CPtrArray@@QAEXHH@Z	NAFXCW	array_p.obj
+0x65877	?InsertAt@CPtrArray@@QAEXHPAXH@Z	NAFXCW	array_p.obj
 0x65940	?Create@CPlex@@SGPAU1@AAPAU1@II@Z	NAFXCW	plex.obj
 0x65960	?FreeDataChain@CPlex@@QAEXXZ	NAFXCW	plex.obj
 0x65a0d	?NewAssoc@CMapPtrToPtr@@IAEPAUCAssoc@1@XZ	NAFXCW	map_pp.obj
