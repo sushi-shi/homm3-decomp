@@ -863,6 +863,7 @@ rva	name	library	member
 0x65e80	??3@YAXPAX@Z	LIBCMT	delete.obj
 0x65e8b	?AfxDlgProc@@YGHPAUHWND__@@IIJ@Z	NAFXCW	dlgcore.obj
 0x65ecb	?PreTranslateMessage@CDialog@@UAEHPAUtagMSG@@@Z	NAFXCW	dlgcore.obj
+0x65f64	?OnCmdMsg@CDialog@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z	NAFXCW	dlgcore.obj
 0x65fe9	??0CDialog@@QAE@XZ	NAFXCW	dlgcore.obj
 0x66027	??1CDialog@@UAE@XZ	NAFXCW	dlgcore.obj
 0x66065	?Create@CDialog@@QAEHPBDPAVCWnd@@@Z	NAFXCW	dlgcore.obj
@@ -1568,6 +1569,7 @@ rva	name	library	member
 0x786a2	?CommonConstruct@CPropertySheet@@QAEXPAVCWnd@@I@Z	NAFXCW	dlgprop.obj
 0x786fa	??1CPropertySheet@@UAE@XZ	NAFXCW	dlgprop.obj
 0x78751	?PreTranslateMessage@CPropertySheet@@UAEHPAUtagMSG@@@Z	NAFXCW	dlgprop.obj
+0x787b2	?OnCmdMsg@CPropertySheet@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z	NAFXCW	dlgprop.obj
 0x78837	?GetActivePage@CPropertySheet@@QBEPAVCPropertyPage@@XZ	NAFXCW	dlgprop.obj
 0x78868	?ContinueModal@CPropertySheet@@UAEHXZ	NAFXCW	dlgprop.obj
 0x7888a	?DoModal@CPropertySheet@@UAEHXZ	NAFXCW	dlgprop.obj
