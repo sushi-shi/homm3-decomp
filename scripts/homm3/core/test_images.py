@@ -83,7 +83,8 @@ class ImagesTest(unittest.TestCase):
 
     def test_game_paths_are_unchanged(self):
         for rel in ("build/gen/claims", "build/objdiff/base/x.obj", "config/retail/relocs.tsv",
-                    "config/units.toml", "config/match_baseline.tsv", "build.ninja",
+                    "config/units.toml", "config/match_baseline.tsv",
+                    "config/generated_code_baseline.tsv", "build.ninja",
                     "build/wineprefix"):
             self.assertEqual(images.path(rel, "game"), rel)
 
@@ -96,6 +97,7 @@ class ImagesTest(unittest.TestCase):
             "config/retail/relocs.tsv": "config/retail/h3maped/relocs.tsv",
             "config/units.toml": "config/units.h3maped.toml",
             "config/match_baseline.tsv": "config/match_baseline.h3maped.tsv",
+            "config/generated_code_baseline.tsv": "config/generated_code_baseline.h3maped.tsv",
             "build.ninja": "build/h3maped/build.ninja",
             # shared state keeps its spelling
             "build/wineprefix": "build/wineprefix",

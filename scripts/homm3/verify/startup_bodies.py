@@ -178,6 +178,31 @@ def source_anchors(body, owners):
     return [found[rva] for rva in sorted(found)]
 
 
+def helper_source_anchors(candidate, body, owners, targets):
+    """Find owners in local bodies that ``match`` must recursively compare.
+
+    A known callee's identity alone does not prove its accesses, so do not
+    borrow anchors from it. Cycles and excessive depth leave the root open,
+    just as in the strict matcher. This selects candidates; it credits no bytes.
+    """
+    found = {}
+
+    def visit(body, trail):
+        if body.name in trail or len(trail) >= 32:
+            return False
+        for owner in source_anchors(body, owners):
+            found[owner.rva] = owner
+        for _, name, _ in body.relocations:
+            if targets.get(msvc_names.mask(name)):
+                continue
+            child = candidate.body(name)
+            if child and not visit(child, trail + (body.name,)):
+                return False
+        return True
+
+    return [found[rva] for rva in sorted(found)] if visit(body, ()) else []
+
+
 def paired_roots(owners, roots, references):
     # At least one reference into every declared owner must be present. This
     # only selects candidates: all addends/targets/bytes still have to match.
@@ -202,16 +227,29 @@ def compare(project, pe, model, enrolled):
                       if p.is_file() and p.suffix.lower() in ('.exe', '.dll')]
     for unit in project.manifest['unit']:
         stem, source = unit['unit'], project.root / unit['source']
-        path = project.root / f'build/objdiff/base/{stem}.obj'
+        path = project.root / _image_path(f'build/objdiff/base/{stem}.obj')
         if not path.is_file():
             continue
         obj = Obj(path)
         candidate = Candidate(obj)
         emitted = list(candidate.symbols)
         targets, owners = bindings(model, enrolled, stem, emitted)
-        selected = [(name, source_anchors(candidate.body(name), owners))
-                    for name in candidate.roots()]
-        selected = [(name, anchors) for name, anchors in selected if anchors]
+        if not owners:
+            continue
+        selected = []
+        for name in candidate.roots():
+            body = candidate.body(name)
+            anchors = source_anchors(body, owners)
+            if anchors:
+                options = paired_roots(anchors, roots, references)
+            else:
+                anchors = helper_source_anchors(candidate, body, owners, targets)
+                # A wrapper need not reference its owner's data directly.
+                # Its complete helper graph must establish those identities
+                # in match(); size only narrows the reviewed CRT roots to try.
+                options = [rva for rva in roots if sizes.get(rva) == len(body.payload)]
+            if anchors:
+                selected.append((name, anchors, options))
         if not selected:
             continue
         required = [source, project.root / _image_path('config/units.toml'),
@@ -222,8 +260,7 @@ def compare(project, pe, model, enrolled):
         if inputs is None or compile_receipt.digest(path) != sha256(obj.buf).hexdigest():
             result['gaps'].append(f'{stem}: source object missing or stale'); continue
         inputs_by_unit[stem] = (path, unit['flags'], inputs, sha256(obj.buf).hexdigest())
-        for name, anchors in selected:
-            options = paired_roots(anchors, roots, references)
+        for name, anchors, options in selected:
             hits, attempts = [], []
             for rva in options:
                 verdict, children, reason = match(candidate, name, rva, image, sizes, targets)

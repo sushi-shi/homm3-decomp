@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from homm3.verify.startup_bodies import Body, Candidate, match, compare
+from homm3.verify.startup_bodies import Body, Candidate, match, compare, helper_source_anchors
 
 
 class StartupBodyTests(unittest.TestCase):
@@ -76,7 +76,33 @@ class StartupBodyTests(unittest.TestCase):
         self.assertEqual(match(candidate,'root',0x100,image,sizes,{'object':{0x300}},
                                trail=('root',))[0], 'unresolved')
 
-    def integrated(self, *, stale=False, edited_during=False, wrong_scalar=False):
+    def test_helper_anchors_do_not_borrow_known_callee_implementation(self):
+        owner = SimpleNamespace(rva=0x300)
+        root = Body('root', b'\xe8'+bytes(4)+b'\xc3', ((1,'helper',20),), b'', 1)
+        helper = Body('helper', b'\xa1'+bytes(4)+b'\xc3', ((1,'object',6),), b'', 1)
+        candidate = SimpleNamespace(body={'root':root, 'helper':helper}.get)
+        self.assertEqual(helper_source_anchors(candidate,root,{'object':owner},{}),[owner])
+        self.assertFalse(helper_source_anchors(candidate,root,{},{}))
+        self.assertFalse(helper_source_anchors(candidate,root,{'object':owner},
+                                              {'helper':{0x200}}))
+
+    def test_helper_anchor_cycles_and_depth_limit_are_not_partial_proof(self):
+        owner = SimpleNamespace(rva=0x300)
+        def chain(count, cycle=False):
+            bodies = {str(i):Body(str(i), b'\xe8'+bytes(4)+b'\xc3',
+                                 ((1,str(i+1),20),), b'',1) for i in range(count-1)}
+            last = str(count-1)
+            refs = ((1,'object',6),) + (((6,'0',20),) if cycle else ())
+            payload = b'\xa1'+bytes(4)+(b'\xe8'+bytes(4) if cycle else b'')+b'\xc3'
+            bodies[last] = Body(last,payload,refs,b'',1)
+            return helper_source_anchors(SimpleNamespace(body=bodies.get),
+                                         bodies['0'],{'object':owner},{})
+        self.assertEqual(chain(32),[owner])
+        self.assertFalse(chain(33))
+        self.assertFalse(chain(2,cycle=True))
+
+    def integrated(self, *, stale=False, edited_during=False, wrong_scalar=False,
+                   wrapped=False, extra_root=False, no_owner=False, known_child=False):
         from homm3.build.test_eh_handler_normalization import FixtureSection, _coff, _symbol
         from homm3.model import Model, Binding
         body=b'\xc7\x05'+bytes(4)+struct.pack('<I',7)+b'\xc3'
@@ -86,9 +112,29 @@ class StartupBodyTests(unittest.TestCase):
                   (_symbol('init',0,1,0x20,2),_symbol('object',0,2,0,2)))
         actual=bytearray(body);struct.pack_into('<I',actual,2,0x400300)
         if wrong_scalar:actual[6]=8
-        pe=SimpleNamespace(image_base=0x400000,read=lambda a,n:bytes(actual)[:n])
+        payloads = {0x100: bytes(actual)}
+        sizes = {0x100: len(body)}
+        sites = [0x102]
+        roots = [0x100]
+        if wrapped:
+            wrapper = b'\xe8' + bytes(4) + b'\xc3'
+            raw = _coff((
+                FixtureSection('.text', wrapper + b'\x90'*10, ((1, 1, 20),)),
+                FixtureSection('.text', body + b'\x90'*5, ((2, 2, 6),)),
+                FixtureSection('.data', bytes(4), ()),
+                FixtureSection('.CRT$XCU', bytes(4), ((0, 0, 6),))),
+                (_symbol('init', 0, 1, 0x20, 2),
+                 _symbol('helper', 0, 2, 0x20, 2), _symbol('object', 0, 3, 0, 2)))
+            if extra_root:
+                roots.append(0x110)
+            payloads = {r: b'\xe8' + struct.pack('<i', 0x200-r-5) + b'\xc3'
+                        for r in roots}
+            payloads[0x200] = bytes(actual)
+            sizes = {r: len(b) for r, b in payloads.items()}
+            sites = [0x202]
+        pe=SimpleNamespace(image_base=0x400000,read=lambda a,n:payloads.get(a,b'')[:n])
         image=SimpleNamespace(pe=pe,image_base=pe.image_base,u32=lambda site:0x400300,
-                              relocs_in=lambda a,b:[0x102] if a<=0x102<b else [])
+                              relocs_in=lambda a,b:[s for s in sites if a<=s<b])
         with TemporaryDirectory() as tmp:
             root=Path(tmp);(root/'build/objdiff/base').mkdir(parents=True)
             (root/'tools/bin').mkdir(parents=True)
@@ -96,16 +142,37 @@ class StartupBodyTests(unittest.TestCase):
             project=SimpleNamespace(root=root,toolchain=root/'tools',includes=[],
                 manifest={'unit':[dict(unit='example',source='source.cpp',flags='f')],
                           'flags':{'f':['/O2']}})
-            model=Model([],[Binding(0x300,4,'','data','object','example','src',())],[])
+            model=Model([Binding(0x210,11,'','func','helper','example','src',())]
+                        if known_child else [],
+                        [] if no_owner else
+                        [Binding(0x300,4,'','data','object','example','src',())],[])
             answers=[None] if stale else [{str(root/'source.cpp'):'hash'},
                                           None if edited_during else {str(root/'source.cpp'):'hash'}]
             with patch('homm3.verify.startup_bodies.read',return_value=([],[],[])), \
-                 patch('homm3.verify.startup_bodies.verified_roots',return_value=[0x100]), \
+                 patch('homm3.verify.startup_bodies.verified_roots',return_value=roots), \
                  patch('homm3.delink.image.Image',return_value=image), \
-                 patch('homm3.retail_labels.censuses.functions',return_value=[dict(rva=0x100,size=11)]), \
+                 patch('homm3.retail_labels.censuses.functions',return_value=[
+                     dict(rva=r,size=n) for r,n in sizes.items()]), \
                  patch('homm3.core.cc_wrap.scan_header_deps',return_value=[]), \
                  patch('homm3.core.compile_receipt.current',side_effect=answers):
                 return compare(project,pe,model,[])
+
+    def test_crt_wrapper_is_anchored_by_recursively_compared_owner(self):
+        result = self.integrated(wrapped=True)
+        self.assertEqual([r['rva'] for r in result['matches']], [0x100])
+        self.assertEqual([(r['symbol'], r['rva']) for r in result['dependencies']],
+                         [('helper', 0x200)])
+        self.assertEqual(result['matches'][0]['owners'],
+                         [dict(name='object', rva=0x300, size=4)])
+
+    def test_wrapped_roots_still_require_complete_unique_fresh_proof(self):
+        for kwargs in (dict(wrong_scalar=True), dict(extra_root=True),
+                       dict(no_owner=True), dict(known_child=True),
+                       dict(stale=True), dict(edited_during=True)):
+            with self.subTest(kwargs=kwargs):
+                result = self.integrated(wrapped=True, **kwargs)
+                self.assertFalse(result['matches'])
+                self.assertFalse(result['dependencies'])
 
     def test_source_anchored_crt_comparison_and_mismatch_report(self):
         result=self.integrated()

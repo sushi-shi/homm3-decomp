@@ -120,7 +120,7 @@ def compare(project, pe, model, excluded=(), library_names=None):
     hashes, receipts, witnesses = {}, {}, []
     for unit in project.manifest['unit']:
         stem, source = unit['unit'], project.root / unit['source']
-        path = project.root / f'build/objdiff/base/{stem}.obj'
+        path = project.root / _image_path(f'build/objdiff/base/{stem}.obj')
         if not path.is_file():
             continue
         obj = Obj(path)

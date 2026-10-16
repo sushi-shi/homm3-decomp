@@ -120,6 +120,8 @@ def path(rel: str, image: str | None = None) -> str:
                 else f"build/{key}/{tail}{rel[len(prefix):]}"
     if rel == "config/match_baseline.tsv":
         return f"config/match_baseline.{key}.tsv"
+    if rel == "config/generated_code_baseline.tsv":
+        return f"config/generated_code_baseline.{key}.tsv"
     if rel == "config/units.toml":
         return f"config/units.{key}.toml"
     if rel == "build.ninja":

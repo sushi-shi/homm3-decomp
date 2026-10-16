@@ -200,6 +200,15 @@ raw zero-initialized object comparison does not check its later constructor:
 for example, a default-constructed artifact table can have correct BSS bytes
 while its startup values are wrong.
 
+CRT discovery reads the selected image's raw objects and verifies one unique
+native slot sequence. Helper rows may retain their root's slot number; actual
+table words select the roots, and omitted slots must be null in the image.
+A root with no direct `DATA` reference can be anchored by an unpaired local
+helper that references the declared object. Such a root is credited only after
+the complete helper graph passes the same byte, relocation, named-target and
+freshness checks. Known callees cannot supply unverified data anchors, and
+ambiguous roots, cycles and excessive recursion remain unverified.
+
 Unpaired local cleanup functions reached by a candidate initializer must also
 compare completely against reviewed retail extents. Their verified bytes are
 `source-cleanup-exact`, counted once even when several initializers reference
@@ -415,7 +424,8 @@ verified code rather than an exclusion:
   comparisons above, with the census extent.
 - **`import-thunk`**: `homm3.verify.import_thunks`.
 
-`homm3 build --data` banks the last three in `config/generated_code_baseline.tsv`,
+`homm3 build --data` banks the last three in `config/generated_code_baseline.tsv`
+(or `config/generated_code_baseline.<image>.tsv` for an editor),
 the same way it banks the score ledger. The README's
 "Library and compiler-generated code" table counts `exact` rows per census
 category. These verdicts never change a game function's CUR, MAX or HIST.

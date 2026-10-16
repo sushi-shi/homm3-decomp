@@ -1224,7 +1224,7 @@ def generated_code_table(category: dict, tally: dict) -> list[list[str]]:
 
     Verified counts come from the banked tables of `homm3 verify
     generated-code` (`config/retail/runtime-functions.tsv` and
-    `config/generated_code_baseline.tsv`), counted over the census rows of
+    `config/generated_code_baseline[.<image>].tsv`), counted over the census rows of
     each category; a category without a banked table is shown as excluded.
     """
     from homm3.match import universe

@@ -169,20 +169,40 @@ def matched_padding(pattern, rva, image, starts):
 
 
 def verified_roots(pe, rows):
-    """Check the entire admitted slot sequence against one actual CRT table."""
-    ordered = sorted((int(r['slot'], 0), int(r['rva'], 0))
-                     for r in rows if r['slot'] != '-')
-    if len(ordered) < 4 or [s for s, _ in ordered] != list(range(len(ordered))):
+    """Recover unique native CRT entries from admitted slot/root provenance.
+
+    Census helper rows retain their root's slot number. They are alternatives
+    for discovery, not additional table entries: the actual pointer sequence
+    must choose one address per recorded slot in one unique data table.
+    The census omits null slots; every such hole must contain an actual zero.
+    """
+    slots = defaultdict(set)
+    for row in rows:
+        if row['slot'] != '-':
+            slots[int(row['slot'], 0)].add(int(row['rva'], 0))
+    if len(slots) < 4 or min(slots) < 0:
         return []
-    table = b''.join(struct.pack('<I', pe.image_base+r) for _, r in ordered)
-    start = pe.data.find(table)
-    if start < 0 or pe.data.find(table, start+1) >= 0:
+    count = max(slots) + 1
+    size, matches = count * 4, {}
+    if size > len(pe.data):
         return []
-    if not any(s['name'] in ('.data', '.rdata')
-               and s['rptr'] <= start < start+len(table) <= s['rptr']+s['rsize']
-               for s in pe.sections):
-        return []
-    return [r for _, r in ordered]
+    first_slot = min(slots)
+    for first in sorted(slots[first_slot]):
+        needle = struct.pack('<I', pe.image_base + first)
+        at = pe.data.find(needle)
+        while at >= 0:
+            start = at - first_slot * 4
+            if start >= 0 and any(s['name'] in ('.data', '.rdata')
+                   and s['rptr'] <= start < start+size <= s['rptr']+s['rsize']
+                   for s in pe.sections) and start+size <= len(pe.data):
+                actual = struct.unpack_from(f'<{count}I', pe.data, start)
+                if all(value-pe.image_base in slots[index] if index in slots else value == 0
+                       for index, value in enumerate(actual)):
+                    matches[start] = [value-pe.image_base for value in actual if value]
+                    if len(matches) > 1:
+                        return []
+            at = pe.data.find(needle, at+1)
+    return next(iter(matches.values()), [])
 
 
 def compare(project, pe, model, *, header='include/terrain.h', witness='iconwdgt'):
@@ -200,7 +220,7 @@ def compare(project, pe, model, *, header='include/terrain.h', witness='iconwdgt
     if not unit:
         result['gaps'].append('witness unit not admitted'); return result
     source, header = root / unit['source'], (root / header).resolve()
-    objpath = root / f'build/objdiff/base/{witness}.obj'
+    objpath = root / _image_path(f'build/objdiff/base/{witness}.obj')
     required = [source, header, root / _image_path('config/units.toml'), root / 'config/project.toml',
                 *scan_header_deps(source, project.toolchain / 'include', *project.includes),
                 *[p for p in (project.toolchain / 'bin').iterdir()

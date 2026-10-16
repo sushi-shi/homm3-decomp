@@ -46,6 +46,39 @@ class SourceInitializerTests(unittest.TestCase):
         self.assertFalse(roots(table+table))
         self.assertFalse(roots(table[:-1]+b'\x01'))
 
+    def test_helper_rows_share_slot_provenance_but_actual_table_selects_root(self):
+        rows = [dict(slot=str(i), rva=hex(0x100+i*16)) for i in range(4)]
+        rows += [dict(slot='1', rva='0x105'), dict(slot='3', rva='0x300'),
+                 dict(slot='-', rva='0x400')]
+        table = b''.join(struct.pack('<I', 0x400100+i*16) for i in range(4))
+        def roots(data, admitted=rows, section='.rdata'):
+            return verified_roots(SimpleNamespace(data=data, image_base=0x400000,
+                sections=[dict(name=section, rptr=0, rsize=len(data))]), admitted)
+        self.assertEqual(roots(table), [0x100, 0x110, 0x120, 0x130])
+        self.assertEqual(roots(table, list(reversed(rows))), [0x100, 0x110, 0x120, 0x130])
+        alternative = table[:4] + struct.pack('<I', 0x400105) + table[8:]
+        # Two different admitted sequences are still ambiguous.
+        self.assertFalse(roots(table + alternative))
+        self.assertFalse(roots(table, section='.text'))
+        self.assertFalse(roots(table, [r for r in rows if r['slot'] != '2']))
+        self.assertFalse(roots(table[:-4]))
+
+    def test_omitted_slots_must_be_actual_null_sentinels(self):
+        rows = [dict(slot=str(s), rva=hex(r)) for s,r in
+                ((1,0x100),(2,0x110),(4,0x120),(5,0x130))]
+        rows += [dict(slot='2',rva='0x105'),dict(slot='-',rva='0x400')]
+        values = [0,0x400100,0x400110,0,0x400120,0x400130]
+        def roots(words, admitted=rows):
+            data = struct.pack(f'<{len(words)}I',*words)
+            return verified_roots(SimpleNamespace(data=data,image_base=0x400000,
+                sections=[dict(name='.data',rptr=0,rsize=len(data))]),admitted)
+        self.assertEqual(roots(values),[0x100,0x110,0x120,0x130])
+        for at in (0,3):
+            changed = list(values);changed[at]=0x400400
+            self.assertFalse(roots(changed))
+        self.assertFalse(roots(values,rows+[dict(slot='-1',rva='0x100')]))
+        self.assertFalse(roots(values,rows+[dict(slot='999999',rva='0x100')]))
+
     def test_verified_store_exposes_conflicting_source_extent(self):
         from dataclasses import asdict
         from homm3.verify.byte_accounting import Range, initializer_ranges, partition

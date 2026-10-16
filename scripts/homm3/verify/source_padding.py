@@ -45,7 +45,7 @@ class Objects:
         self.hashes, self.loaded, self.receipts, self.aliases = {}, {}, {}, {}
 
     def path(self, unit):
-        return self.project.root / f'build/objdiff/base/{unit}.obj'
+        return self.project.root / _image_path(f'build/objdiff/base/{unit}.obj')
 
     def get(self, unit):
         if unit in self.loaded:

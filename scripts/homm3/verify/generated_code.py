@@ -30,7 +30,7 @@ tables that the README reads:
 * `config/retail/runtime-functions.tsv` - each runtime function, its library
   object(s) and verdict. Pinned libraries and retail bytes decide it, so it
   is a retail fact; `--check` re-proves it.
-* `config/generated_code_baseline.tsv` - the funclet, initializer and import
+* `config/generated_code_baseline[.<image>].tsv` - the funclet, initializer and import
   thunk verdicts, which depend on the current game objects; `homm3 build`
   banks them like the score ledger.
 
@@ -49,11 +49,12 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from homm3.core import msvc_names
+from homm3.core.images import path as _image_path
 from homm3.core.paths import RETAIL, ROOT
 from homm3.core.tsv import read, write
 
 RUNTIME_TABLE = RETAIL / 'runtime-functions.tsv'
-BASELINE = ROOT / 'config/generated_code_baseline.tsv'
+BASELINE = ROOT / _image_path('config/generated_code_baseline.tsv')
 CATEGORIES = ('runtime', 'eh-funclet', 'init-thunk', 'import-thunk')
 DIR32, REL32 = 6, 20
 FILL = 0xCC
