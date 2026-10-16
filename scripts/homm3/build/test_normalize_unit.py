@@ -13,6 +13,9 @@ from pathlib import Path
 
 from homm3.build import normalize_objs
 from homm3.build.test_equivalent_relocation_normalization import _base, _target
+from homm3.build.test_eh_handler_normalization import (
+    FixtureSection, _coff, _section_aux, _symbol,
+)
 from homm3.build.normalized_freshness import stamp_path, write_stamp
 from homm3.core import inputs
 
@@ -120,6 +123,50 @@ class NormalizeUnitTest(unittest.TestCase):
         with patch.object(normalize_objs.canon, "CoffObject", wraps=parse) as parsed:
             normalize_objs._icf_index()
             parsed.assert_called_once()
+
+    def _write_icf_body(self, unit, payload, *, side="base", callee=None, selection=2):
+        relocations = ((1, 3, 0x14),) if callee else ()
+        symbols = (_symbol("fold", 0, 1, 0x20, 2),
+                   _symbol(".text", 0, 1, 0, 3,
+                           _section_aux(len(payload), len(relocations), selection=selection)))
+        if callee:
+            symbols += (_symbol(callee, 0, 0, 0x20, 2),)
+        root = self.objdiff / "normalized" / side
+        root.mkdir(parents=True, exist_ok=True)
+        suffix = ".c.obj" if side == "target" else ".obj"
+        (root / (unit + suffix)).write_bytes(
+            _coff((FixtureSection(".text", payload, relocations),), symbols))
+
+    def test_icf_index_padding_does_not_make_one_definition_ambiguous(self):
+        # Campaign's vector<int>::_Destroy folds with vector<char*>::_Destroy.
+        # The latter is three bytes in TownTypeTraits and has one retained
+        # target-alignment NOP in textresource after paired normalization.
+        for side in ("base", "target"):
+            self._write_icf_body("short", b"\xc2\x08\x00", side=side)
+            self._write_icf_body("padded", b"\xc2\x08\x00\x90", side=side)
+        cold = normalize_objs._icf_index()
+        expected = normalize_objs.FunctionBody(b"\xc2\x08\x00", (), (2, ()))
+        for bodies in cold:
+            self.assertEqual(bodies.get("fold"), expected)
+        normalize_objs._ICF_INDEX = None
+        self.assertEqual(normalize_objs._icf_index(), cold)
+
+    def test_icf_index_keeps_real_definition_conflicts_ambiguous(self):
+        cases = (
+            (b"\xc2\x08\x00", {}, b"\xc2\x04\x00", {}),
+            (b"\xc3", {}, b"\xc3\xc3", {}),
+            (b"\xe9\0\0\0\0", {"callee": "left"},
+             b"\xe9\0\0\0\0", {"callee": "right"}),
+            (b"\xe9\0\0\0\0", {"callee": "callee"},
+             b"\xe9\0\0\0\x90", {"callee": "callee"}),
+            (b"\xc3", {"selection": 2}, b"\xc3\x90", {"selection": 1}),
+        )
+        for left, left_options, right, right_options in cases:
+            with self.subTest(left=left, right=right, options=right_options):
+                normalize_objs._ICF_INDEX = None
+                self._write_icf_body("left", left, **left_options)
+                self._write_icf_body("right", right, **right_options)
+                self.assertNotIn("fold", normalize_objs._icf_index()[0])
 
     def test_archived_unit_bodies_are_not_foldable(self):
         # victor.lib's `ret` keeps its own address beside the game's group,

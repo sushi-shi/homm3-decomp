@@ -715,6 +715,16 @@ _ICF_PADDING = frozenset(b"\xcc\x90")
 COMDAT_SECTION = 0x1000
 
 
+def _unpadded_icf_payload(body: FunctionBody) -> bytes:
+    """Canonical linker-fill spelling, without trimming relocation operands."""
+    payload = body.payload
+    floor = max((site + 4 for site in body.sites), default=0)
+    end = len(payload)
+    while end > max(floor, 1) and payload[end - 1] in _ICF_PADDING:
+        end -= 1
+    return payload[:end]
+
+
 def _comdat_selections(coff: canon.CoffObject) -> dict[int, int]:
     """Section index -> COMDAT selection, from each section symbol's aux record."""
     selections = {}
@@ -870,6 +880,12 @@ def _icf_index() -> tuple[dict[str, FunctionBody], dict[str, FunctionBody]]:
                 if rows is None:
                     continue
                 bodies = {name: FunctionBody(*row) for name, row in rows.items()}
+                # A paired pass can retain target alignment fill in only one
+                # copy of a shared function. That must not turn a previously
+                # unique definition into an ambiguity when a later process
+                # rebuilds this index from the paired objects.
+                bodies = {name: replace(body, payload=_unpadded_icf_payload(body))
+                          for name, body in bodies.items()}
                 if side == "base" and obj.name[:-len(".obj")] in archived:
                     bodies = {name: replace(body, fold=None) for name, body in bodies.items()}
                 for name, body in bodies.items():
@@ -922,12 +938,7 @@ def _fold_key(body: FunctionBody):
     every relocation's site, type and referent. None when not foldable."""
     if body.fold is None:
         return None
-    payload = body.payload
-    floor = max((site + 4 for site in body.sites), default=0)
-    end = len(payload)
-    while end > max(floor, 1) and payload[end - 1] in _ICF_PADDING:
-        end -= 1
-    return payload[:end], body.fold
+    return _unpadded_icf_payload(body), body.fold
 
 
 _FOLD_GROUPS: tuple[dict, dict] | None = None
