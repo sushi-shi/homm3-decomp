@@ -311,6 +311,7 @@ Campaign	?visit@TScenarioStartingOptionsEquivalencyTester@?%C:\Dev\Heroes 3 Exp 
 Campaign	?widen@?$basic_ios@DU?$char_traits@D@std@@@std@@QBEDD@Z	99.8276	99.8276	99.8276	0xef90	-
 Campaign	?write@TScenarioCrossover@@QBEXAAVTRawOStream@@H@Z	61.9302	61.9302	61.9302	0x8250	tokens1:63c1308cf497
 CampaignDoc	??0?$auto_ptr@D@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb050	-
+CampaignDoc	??0?$basic_ios@DU?$char_traits@D@std@@@std@@IAE@XZ	100.0000	100.0000	100.0000	0x15870	-
 CampaignDoc	??0?$vector@_NV?$allocator@_N@std@@@std@@QAE@IAB_NABV?$allocator@_N@1@@Z	100.0000	100.0000	100.0000	0x15c30	-
 CampaignDoc	??0TCampaignDoc@@IAE@XZ	100.0000	100.0000	100.0000	0x140a0	tokens1:52a498024735
 CampaignDoc	??0TCampaignDocLoadFailure@@QAE@H@Z	-	100.0000	100.0000	0x13fe0	-
@@ -356,9 +357,9 @@ CampaignDoc	?GetRuntimeClass@TCampaignDocInvalidFileVersion@@UBEPAUCRuntimeClass
 CampaignDoc	?GetRuntimeClass@TCampaignDocLoadFailure@@UBEPAUCRuntimeClass@@XZ	100.0000	100.0000	100.0000	0x12de0	-
 CampaignDoc	?IsModified@CDocument@@UAEHXZ	100.0000	100.0000	100.0000	0x15b90	-
 CampaignDoc	?OnExportScenarioMaps@TCampaignDoc@@IAEXXZ	100.0000	100.0000	100.0000	0x14d90	tokens1:996afa1e8252
-CampaignDoc	?OnExportText@TCampaignDoc@@IAEXXZ	92.7286	92.7286	92.7286	0x150f0	tokens1:033c01bf1a41
-CampaignDoc	?OnImportText@TCampaignDoc@@IAEXXZ	96.4915	96.4915	96.4915	0x15330	tokens1:573bcf397b3e
-CampaignDoc	?OnNewDocument@TCampaignDoc@@UAEHXZ	87.2449	87.2449	87.2449	0x14160	tokens1:a78ddf216fa2
+CampaignDoc	?OnExportText@TCampaignDoc@@IAEXXZ	100.0000	100.0000	100.0000	0x150f0	tokens1:af7ec45bffba
+CampaignDoc	?OnImportText@TCampaignDoc@@IAEXXZ	100.0000	100.0000	100.0000	0x15330	tokens1:0814fefda7ff
+CampaignDoc	?OnNewDocument@TCampaignDoc@@UAEHXZ	95.9490	95.9490	95.9490	0x14160	tokens1:cc68d04a9f5e
 CampaignDoc	?OnOpenDocument@TCampaignDoc@@UAEHPBD@Z	100.0000	100.0000	100.0000	0x14ae0	tokens1:bd83f349d792
 CampaignDoc	?OnRefreshScenarioMaps@TCampaignDoc@@IAEXXZ	100.0000	100.0000	100.0000	0x14be0	tokens1:806942f07b37
 CampaignDoc	?ReportSaveLoadException@TCampaignDoc@@UAEXPBDPAVCException@@HI@Z	97.6522	97.6522	97.6522	0x14b00	tokens1:d7939f582cf2

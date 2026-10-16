@@ -756,9 +756,12 @@ BOOL TCampaignDoc::OnNewDocument()
     _m_pCampaign = auto_ptr<TCampaign>(new TCampaign(_m_newType));
     if (_m_pCampaign.get() == NULL)
         throw TAllocationFailure();
-    _m_version = _m_newVersion;
+    // Retail snapshots the requested version, resets the defaults, then stores it.
+    // A const snapshot and bool return spelling emit the same remaining tail.
+    int version = _m_newVersion;
     _m_newVersion = eCampaignVersionShadowOfDeath;
     _m_newType = kDefaultNewCampaignType;
+    _m_version = version;
     return TRUE;
 }
 
@@ -964,22 +967,22 @@ VA(0x004150f0, 0x1eb)
 void TCampaignDoc::OnExportText()
 {
     CString pathName;
-    if (!promptTextFileName(m_strTitle, FALSE,
-                            OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST, pathName))
-        return;
-    CFileException fe;
-    CStdioFile file;
-    if (!file.Open(pathName, CFile::modeCreate | CFile::modeWrite | CFile::typeText, &fe)) {
-        CDocument::ReportSaveLoadException(pathName, &fe, TRUE, AFX_IDP_INVALID_FILENAME);
-        return;
-    }
-    TMFCFileBuf fileBuf(&file);
-    ostream stream(&fileBuf);
-    try {
-        _m_pCampaign->exportText(stream, _m_version);
-    } catch (CException* e) {
-        CDocument::ReportSaveLoadException(pathName, e, TRUE, AFX_IDP_FAILED_TO_SAVE_DOC);
-        e->Delete();
+    if (promptTextFileName(m_strTitle, FALSE,
+                            OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST, pathName)) {
+        CFileException fe;
+        CStdioFile file;
+        if (!file.Open(pathName, CFile::modeCreate | CFile::modeWrite | CFile::typeText, &fe)) {
+            CDocument::ReportSaveLoadException(pathName, &fe, TRUE, AFX_IDP_INVALID_FILENAME);
+            return;
+        }
+        TMFCFileBuf fileBuf(&file);
+        ostream stream(&fileBuf);
+        try {
+            _m_pCampaign->exportText(stream, _m_version);
+        } catch (CException* e) {
+            CDocument::ReportSaveLoadException(pathName, e, TRUE, AFX_IDP_FAILED_TO_SAVE_DOC);
+            e->Delete();
+        }
     }
 }
 
@@ -987,32 +990,36 @@ VA(0x00415330, 0x36a)
 void TCampaignDoc::OnImportText()
 {
     CString pathName;
-    if (!promptTextFileName(m_strTitle, TRUE, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST, pathName))
-        return;
-    CFileException fe;
-    CStdioFile file;
-    if (!file.Open(pathName, CFile::modeRead | CFile::typeText, &fe)) {
-        CDocument::ReportSaveLoadException(pathName, &fe, FALSE, AFX_IDP_FAILED_TO_OPEN_DOC);
-        return;
-    }
-    TMFCFileBuf fileBuf(&file);
-    istream stream(&fileBuf);
-    TCampaign campaign(*_m_pCampaign);
-    try {
-        campaign.importText(stream, _m_version);
-    } catch (const TCampaign::TImportTextFailure&) {
+    if (promptTextFileName(m_strTitle, TRUE, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST, pathName)) {
+        CFileException fe;
+        CStdioFile file;
+        if (!file.Open(pathName, CFile::modeRead | CFile::typeText, &fe)) {
+            CDocument::ReportSaveLoadException(pathName, &fe, FALSE, AFX_IDP_FAILED_TO_OPEN_DOC);
+            return;
+        }
+        TMFCFileBuf fileBuf(&file);
+        istream stream(&fileBuf);
+        TCampaign campaign(*_m_pCampaign);
+        try {
+            campaign.importText(stream, _m_version);
+        } catch (const TCampaign::TImportTextFailure&) {
+            CString prompt;
+            prompt.Format(kImportFailedFmtStr, (LPCTSTR)pathName);
+            AfxMessageBox(prompt, MB_ICONSTOP);
+            return;
+        } catch (CException* e) {
+            CDocument::ReportSaveLoadException(pathName, e, FALSE, AFX_IDP_FAILED_TO_OPEN_DOC);
+            e->Delete();
+            return;
+        }
+        *_m_pCampaign = campaign;
+        SetModifiedFlag();
         CString prompt;
-        prompt.Format(kImportFailedFmtStr, (LPCTSTR)pathName);
-        AfxMessageBox(prompt, MB_ICONSTOP);
-        return;
-    } catch (CException* e) {
-        CDocument::ReportSaveLoadException(pathName, e, FALSE, AFX_IDP_FAILED_TO_OPEN_DOC);
-        e->Delete();
-        return;
+        prompt.Format(kImportSucceededFmtStr, (LPCTSTR)pathName);
+        AfxMessageBox(prompt);
     }
-    *_m_pCampaign = campaign;
-    SetModifiedFlag();
-    CString prompt;
-    prompt.Format(kImportSucceededFmtStr, (LPCTSTR)pathName);
-    AfxMessageBox(prompt);
 }
+
+// OnImportText calls this retained default constructor. Retail clears the
+// ios_base::_Stdstr at +0x24, then installs basic_ios<char>'s vtable.
+VA_COMPGEN(0x00415870, 0x10, CLASS_CTOR, basic_ios)
