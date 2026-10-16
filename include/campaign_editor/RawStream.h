@@ -62,7 +62,19 @@ private:
     std::streambuf* m_pStreamBuf;
 };
 
+// Return one scalar in the file's width; callers then widen or convert it.
+template <class T>
+inline T readValue(TRawIStream& stream)
+{
+    T value;
+    stream >> value;
+    return value;
+}
+
 // A string: its length, then its characters through a 512-byte buffer.
+// Loki delegates to readToIter (0x08346820). Counted-template and byte-overload
+// probes retain five calls in GameMapHeader where Complete expands these loops;
+// the corresponding Complete helper boundary remains unproven.
 inline TRawIStream& operator>>(TRawIStream& stream, std::string& value)
 {
     value.erase(value.begin(), value.end());
@@ -119,23 +131,26 @@ private:
     std::streambuf* m_pStreamBuf;
 };
 
-// A string: its length, then its characters.
+// Loki writeContainer (0x0835c728) materializes a long length. Complete
+// retains bulk character output rather than the older per-character loop.
 inline TRawOStream& operator<<(TRawOStream& stream, const std::string& value)
 {
-    stream << static_cast<int>(value.length());
+    long size = value.size();
+    stream << size;
     stream.write(value.c_str(), value.length());
     return stream;
 }
 
 // A bit set as the map format packs it: (N + 7) / 8 bytes, bit 0 of byte 0
 // first.
+// Loki 0x0837b920 retains readBitset<9> with a bitset output pointer.
 template <size_t N>
-inline void readBitset(TRawIStream& stream, std::bitset<N>& bits)
+inline void readBitset(TRawIStream& stream, std::bitset<N>* bits)
 {
     unsigned char bytes[(N + 7) / 8];
     stream >> bytes;
     for (unsigned int i = 0; i < N; i++)
-        bits[i] = (bytes[i / 8] & (1 << (i % 8))) != 0;
+        (*bits)[i] = (bytes[i / 8] & (1 << (i % 8))) != 0;
 }
 
 template <size_t N>

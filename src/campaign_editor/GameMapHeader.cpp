@@ -145,70 +145,44 @@ VA(0x00422b70, 0xd4a)
 TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
 {
     if (version >= 10) {
-        signed char bPlayable;
-        stream >> bPlayable;
-        m_bPlayable = bPlayable != 0;
+        m_bPlayable = readValue<signed char>(stream) != 0;
     } else {
         m_bPlayable = true;
     }
-    long dimension;
-    stream >> dimension;
-    m_dimension = dimension;
-    signed char bTwoLayer;
-    stream >> bTwoLayer;
-    m_bTwoLayer = bTwoLayer != 0;
+    m_dimension = readValue<long>(stream);
+    m_bTwoLayer = readValue<signed char>(stream) != 0;
     stream >> m_name >> m_desc;
-    signed char difficulty;
-    stream >> difficulty;
-    m_difficulty = difficulty;
+    m_difficulty = readValue<signed char>(stream);
     if (version >= 20) {
-        unsigned char maxHeroLevel;
-        stream >> maxHeroLevel;
-        m_maxHeroLevel = maxHeroLevel;
+        m_maxHeroLevel = readValue<unsigned char>(stream);
     } else {
         m_maxHeroLevel = 0;
     }
     for (unsigned int player = 0; player < kNumPlayers; player++) {
         TPlayerSlot& slot = m_aPlayer[player];
-        signed char bHumanPlayable;
-        stream >> bHumanPlayable;
-        slot.m_bHumanPlayable = bHumanPlayable != 0;
-        signed char bComputerPlayable;
-        stream >> bComputerPlayable;
-        slot.m_bComputerPlayable = bComputerPlayable != 0;
-        signed char behaviorType;
-        stream >> behaviorType;
-        slot.m_behaviorType = TPlayerInfo::TBehaviorType(behaviorType);
+        slot.m_bHumanPlayable = readValue<signed char>(stream) != 0;
+        slot.m_bComputerPlayable = readValue<signed char>(stream) != 0;
+        slot.m_behaviorType = TPlayerInfo::TBehaviorType(readValue<signed char>(stream));
         if (version >= 8) {
             if (version >= 26) {
-                signed char bCustomTownTypes;
-                stream >> bCustomTownTypes;
-                slot.m_bCustomTownTypes = bCustomTownTypes != 0;
+                slot.m_bCustomTownTypes = readValue<signed char>(stream) != 0;
             }
             if (version >= 16) {
-                readBitset(stream, slot.m_townTypes);
+                readBitset(stream, &slot.m_townTypes);
             } else {
                 std::bitset<8> townTypes;
-                readBitset(stream, townTypes);
+                readBitset(stream, &townTypes);
                 std::copy(TBitsetIterator<8>(townTypes, 0), TBitsetIterator<8>(townTypes, 8),
                           TBitsetIterator<kNumTownTypes>(slot.m_townTypes, 0));
             }
-            signed char bRandomTown;
-            stream >> bRandomTown;
-            slot.m_bRandomTown = bRandomTown != 0;
+            slot.m_bRandomTown = readValue<signed char>(stream) != 0;
         }
         if (version >= 9) {
-            signed char bHasMainTown;
-            stream >> bHasMainTown;
-            slot.m_bHasMainTown = bHasMainTown != 0;
+            slot.m_bHasMainTown = readValue<signed char>(stream) != 0;
             if (slot.m_bHasMainTown) {
                 if (version >= 17) {
-                    signed char bGenerateHero;
-                    stream >> bGenerateHero;
-                    slot.m_bGenerateHero = bGenerateHero != 0;
-                    signed char mainTownType;
-                    stream >> mainTownType;
-                    slot.m_mainTownType = mainTownType;
+                    slot.m_bGenerateHero = readValue<signed char>(stream) != 0;
+                    slot.m_mainTownType = readValue<signed char>(stream);
                     stream >> slot.m_mainTownLoc;
                 } else {
                     slot.m_bGenerateHero = true;
@@ -220,33 +194,24 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
             }
         }
         if (version >= 13) {
-            signed char bRandomHero;
-            stream >> bRandomHero;
-            slot.m_bRandomHero = bRandomHero != 0;
-            unsigned char heroID;
-            stream >> heroID;
+            slot.m_bRandomHero = readValue<signed char>(stream) != 0;
+            unsigned int heroID = readValue<unsigned char>(stream);
             slot.m_heroID = heroID;
             if (heroID != 0xff) {
-                unsigned char heroPortrait;
-                stream >> heroPortrait;
-                slot.m_heroPortrait = heroPortrait;
+                slot.m_heroPortrait = readValue<unsigned char>(stream);
                 stream >> slot.m_heroName;
             }
         }
         if (version >= 17) {
-            signed char numPlaceholders;
-            stream >> numPlaceholders;
-            slot.m_numPlaceholders = numPlaceholders;
+            slot.m_numPlaceholders = readValue<signed char>(stream);
         } else {
             slot.m_numPlaceholders = 0;
         }
         if (version >= 18) {
-            unsigned int numHeroes;
-            stream >> numHeroes;
+            unsigned int numHeroes = readValue<unsigned int>(stream);
             slot.m_heroes.resize(numHeroes, THeroIdentity());
             for (unsigned int i = 0; i < numHeroes; i++) {
-                unsigned char heroID;
-                stream >> heroID;
+                unsigned int heroID = readValue<unsigned char>(stream);
                 slot.m_heroes[i].m_heroID = heroID;
                 stream >> slot.m_heroes[i].m_name;
             }
@@ -258,52 +223,43 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
     }
     _readVictoryCondition(m_vcData, stream, version);
     _readLossCondition(m_lcData, stream, version);
-    signed char numTeams;
-    stream >> numTeams;
-    m_numTeams = numTeams;
+    m_numTeams = readValue<signed char>(stream);
     if (m_numTeams > 0) {
         for (unsigned int player = 0; player < kNumPlayers; player++) {
-            signed char team;
-            stream >> team;
-            m_aTeam[player] = team;
+            m_aTeam[player] = readValue<signed char>(stream);
         }
     } else {
         std::fill_n(m_aTeam, static_cast<unsigned int>(kNumPlayers), 0);
     }
     if (version >= 16) {
-        readBitset(stream, m_availableHeroes);
+        readBitset(stream, &m_availableHeroes);
     } else if (version >= 8) {
         std::bitset<128> availableHeroes;
-        readBitset(stream, availableHeroes);
+        readBitset(stream, &availableHeroes);
         std::copy(TBitsetIterator<128>(availableHeroes, 0), TBitsetIterator<128>(availableHeroes, 128),
                   TBitsetIterator<kNumHeroes>(m_availableHeroes, 0));
     }
     if (version >= 17) {
-        unsigned int numPlaceholderHeroes;
-        stream >> numPlaceholderHeroes;
+        unsigned int numPlaceholderHeroes = readValue<unsigned int>(stream);
         m_placeholderHeroIDs.reserve(numPlaceholderHeroes);
         for (unsigned int i = 0; i < numPlaceholderHeroes; i++) {
-            unsigned char heroID;
-            stream >> heroID;
+            unsigned int heroID = readValue<unsigned char>(stream);
             m_placeholderHeroIDs.push_back(heroID);
         }
     }
     if (version >= 25) {
-        unsigned char numCustomHeroes;
-        stream >> numCustomHeroes;
+        unsigned int numCustomHeroes = readValue<unsigned char>(stream);
         for (unsigned int i = 0; i < numCustomHeroes; i++) {
             std::string name;
             TPlayerMask availability;
-            unsigned char heroID;
-            stream >> heroID;
-            unsigned char portrait;
-            stream >> portrait;
+            unsigned int heroID = readValue<unsigned char>(stream);
+            unsigned int portrait = readValue<unsigned char>(stream);
             int portraitID = portrait;
             if (portraitID == 0xff)
                 portraitID = -1;
             stream >> name;
             if (version >= 26)
-                readBitset(stream, availability);
+                readBitset(stream, &availability);
             else
                 availability = ~TPlayerMask();
             m_customHeroes.insert(std::map<int, TCustomHero>::value_type(
@@ -311,3 +267,11 @@ TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
         }
     }
 }
+
+// The placeholder-hero push_back retains the single-element insert. Retail
+// returns its int iterator, takes two arguments and calls _Construct<int>.
+VA_COMPGEN(0x00423e60, 0x19c, VECTOR_INSERT_SINGLE, int)
+
+// Its fill branch calls this int construction loop: four-byte stride,
+// a placement-new null guard and three stack arguments (ret 12).
+VA_COMPGEN(0x00424580, 0x25, VECTOR_UFILL, int)

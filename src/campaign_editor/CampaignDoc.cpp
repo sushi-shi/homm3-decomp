@@ -291,15 +291,6 @@ void TScenarioStartingBonusWriter::visit(const TScenarioBonusResource& bonus)
     writeValue<long>(*m_pOStream, bonus.m_amount);
 }
 
-// A value of the file's width, widened as the bonus constructors take it.
-template <class T>
-inline T readValue(TRawIStream& stream)
-{
-    T value;
-    stream >> value;
-    return value;
-}
-
 VA(0x004115a0, 0x540)
 auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int version)
 {
