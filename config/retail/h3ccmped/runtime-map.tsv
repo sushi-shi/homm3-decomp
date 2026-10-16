@@ -485,6 +485,8 @@ rva	name	library	member
 0x5429a	__getwc_lk	LIBCMT	fgetwc.obj
 0x5438b	___crtCompareStringA	LIBCMT	a_cmp.obj
 0x54608	_strncnt	LIBCMT	a_cmp.obj
+0x54640	_strcpy	LIBCMT	strcat.obj
+0x54650	_strcat	LIBCMT	strcat.obj
 0x54730	_strcmp	LIBCMT	strcmp.obj
 0x547b4	?__CxxUnhandledExceptionFilter@@YGJPAU_EXCEPTION_POINTERS@@@Z	LIBCMT	unhandld.obj
 0x547fa	?__CxxSetUnhandledExceptionFilter@@YAXXZ	LIBCMT	unhandld.obj

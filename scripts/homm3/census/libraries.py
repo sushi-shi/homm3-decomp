@@ -194,7 +194,53 @@ def reviewed_code_sites(image, rows, archives):
     return sites
 
 
-def reviewed_runtime_names(starts, runtime, reviewed, aliases=()):
+def reviewed_runtime_exports(image, rows, archives, functions):
+    """Public entries of explicitly reviewed whole runtime code sections.
+
+    Full contribution verification is the admission requirement. Recheck
+    complete fixed bytes and the section anchor here, and name only public
+    COFF entries whose complete native census body lies in that section.
+    No inferred internal labels, alias ownership, partial bodies or new starts.
+    """
+    from homm3.verify.library_code import archive, section as object_section, differences
+    from homm3.compare.canonicalize import FUNCTION_TYPE
+    exports = set()
+    for row in rows:
+        if row['kind'] != 'code' or row.get('ownership') != 'whole-section':
+            continue
+        library = row['library'].rsplit('.', 1)[0]
+        path = archives.get(library)
+        if path is None or not path.is_file():
+            continue
+        obj = archive(path)[0].get(row['member'])
+        number = int(row['section'])
+        if obj is None or not 1 <= number <= len(obj.sections):
+            continue
+        section = object_section(row['library'], row['member'], obj, number)
+        rva = int(row['rva'], 16)
+        mapped = image.section_of(rva)
+        if (not section.code or section.size <= 0 or int(row['size'], 0) != section.size
+                or mapped is None or not mapped.executable
+                or rva + section.size > mapped.rva + mapped.size):
+            continue
+        public = [symbol for symbol in obj.symbols.values()
+                  if symbol.section == number and symbol.storage_class == EXTERNAL
+                  and (symbol.typ & 0x30) == FUNCTION_TYPE
+                  and symbol.name and not symbol.name.startswith(('$', '.'))]
+        if not any(symbol.name == row['symbol'] and symbol.value == 0 for symbol in public):
+            continue
+        offset = mapped.raw_offset + rva - mapped.rva
+        if differences(section, image.data[offset:offset + section.size]):
+            continue
+        for symbol in public:
+            entry = rva + symbol.value
+            size = functions.get(entry, 0)
+            if 0 <= symbol.value < section.size and 0 < size <= section.size - symbol.value:
+                exports.add((entry, symbol.name, library, row['member']))
+    return sorted(exports)
+
+
+def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=()):
     """Merge reviewed owners and aliases without making aliases owners.
 
     A native vtable can prove two template identities at one folded body.
@@ -208,7 +254,19 @@ def reviewed_runtime_names(starts, runtime, reviewed, aliases=()):
     result = list(runtime)
     names_at = {rva: name for rva, name, _library, _member in result}
     alternate = set(aliases)
+    def add(label):
+        rva, name, _library, _member = label
+        if rva not in names_at:
+            result.append(label)
+            names_at[rva] = name
+        elif names_at[rva] != name:
+            alternate.add(label)
+
     for kind in ('code', 'alias'):
+        if kind == 'alias':
+            for label in exports:
+                if label[0] in starts:
+                    add(label)
         for row in reviewed:
             rva = int(row['rva'], 16)
             if row['kind'] != kind or rva not in starts:
@@ -217,12 +275,7 @@ def reviewed_runtime_names(starts, runtime, reviewed, aliases=()):
                                     or int(row['section']) <= 0):
                 continue
             library = row['library'].rsplit('.', 1)[0]
-            label = (rva, row['symbol'], library, row['member'])
-            if rva not in names_at:
-                result.append(label)
-                names_at[rva] = row['symbol']
-            elif names_at[rva] != row['symbol']:
-                alternate.add(label)
+            add((rva, row['symbol'], library, row['member']))
     return sorted(result), sorted(alternate)
 
 

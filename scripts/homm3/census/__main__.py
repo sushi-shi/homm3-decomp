@@ -179,8 +179,11 @@ def derive(log=print):
                                imports=imports, vtables=classes, aliases=aliases)
     # Reviewed native identities disambiguate equal bytes; an alias alone
     # never establishes runtime ownership (it may fold into game code).
+    starts = {r for r, _s, _d in rows}
+    exports = libraries.reviewed_runtime_exports(
+        image, reviewed_rows, archives, {r: size for r, size, _d in rows})
     runtime, aliases = libraries.reviewed_runtime_names(
-        {r for r, _s, _d in rows}, runtime, reviewed_rows, aliases)
+        starts, runtime, reviewed_rows, aliases, exports=exports)
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
         thunks += eh.registration_rows(census, thunks, atexit)
