@@ -32,6 +32,8 @@ TRawIStream& operator>>(TRawIStream& stream, TMapLoc& loc)
     return stream;
 }
 
+// Retail reuses each branch's scalar-read slot for its quantity or next town
+// level; value reads preserve those short lifetimes through the common helper.
 VA(0x00422750, 0x378)
 void TGameMapHeader::_readVictoryCondition(TVictoryConditionData& data, TRawIStream& stream, int version)
 {
@@ -69,30 +71,20 @@ void TGameMapHeader::_readVictoryCondition(TVictoryConditionData& data, TRawIStr
                 if (creatureType == 0xff)
                     data.m_accumulateCreature.m_creatureType = TCreatureType(-1);
             }
-            long quantity;
-            stream >> quantity;
-            data.m_accumulateCreature.m_quantity = quantity;
+            data.m_accumulateCreature.m_quantity = readValue<long>(stream);
         }
         break;
     case eVCAccumulateResource:
         {
-            signed char resourceType;
-            stream >> resourceType;
-            data.m_accumulateResource.m_resourceType = TGameResourceType(resourceType);
-            long quantity;
-            stream >> quantity;
-            data.m_accumulateResource.m_quantity = quantity;
+            data.m_accumulateResource.m_resourceType = TGameResourceType(readValue<signed char>(stream));
+            data.m_accumulateResource.m_quantity = readValue<long>(stream);
         }
         break;
     case eVCUpgradeTown:
         {
             stream >> data.m_upgradeTown.m_townLoc;
-            signed char hallLevel;
-            stream >> hallLevel;
-            data.m_upgradeTown.m_hallLevel = hallLevel;
-            signed char castleLevel;
-            stream >> castleLevel;
-            data.m_upgradeTown.m_castleLevel = castleLevel;
+            data.m_upgradeTown.m_hallLevel = readValue<signed char>(stream);
+            data.m_upgradeTown.m_castleLevel = readValue<signed char>(stream);
         }
         break;
     case eVCBuildHolyGrailStruct:

@@ -885,7 +885,7 @@ GameMapHeader	?_Xran@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x24bf0
 GameMapHeader	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x24cd0	-
 GameMapHeader	?_read@TRawIStream@@AAEAAV1@AAY0BE@E@Z	100.0000	100.0000	100.0000	0x24df0	-
 GameMapHeader	?_readLossCondition@TGameMapHeader@@CAXAAUTLossConditionData@@AAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x22ad0	tokens1:390184451f7f
-GameMapHeader	?_readVictoryCondition@TGameMapHeader@@CAXAAUTVictoryConditionData@@AAVTRawIStream@@H@Z	98.4404	98.4404	98.4404	0x22750	tokens1:291eeed16934
+GameMapHeader	?_readVictoryCondition@TGameMapHeader@@CAXAAUTVictoryConditionData@@AAVTRawIStream@@H@Z	98.4603	98.4603	98.4603	0x22750	tokens1:4688fc4734e4
 GameMapHeader	?capacity@?$vector@HV?$allocator@H@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x23e40	-
 GameMapHeader	?erase@?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHeroIdentity@TGameMapHeader@@@std@@@std@@QAEPAUTHeroIdentity@TGameMapHeader@@PAU34@0@Z	100.0000	100.0000	100.0000	0x23d70	-
 GameMapHeader	?flip@?$bitset@$07@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x23e00	-
