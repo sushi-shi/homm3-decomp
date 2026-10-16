@@ -715,6 +715,8 @@ void TScenarioOptionsCrossoverScenarioDlg::_removeChoice(int index)
     _m_choiceList.DeleteString(index);
 }
 
+// Proxy assignment preserves the nested bitset::set path but does not improve
+// the remaining expanded word-index/mask register scheduling.
 VA(0x004301a0, 0x67)
 TPlayerMask TScenarioOptionsCrossoverScenarioDlg::_getPlayers() const
 {

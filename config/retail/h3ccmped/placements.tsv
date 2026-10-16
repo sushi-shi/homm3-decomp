@@ -955,6 +955,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000a56f4	0x28	data	??_C@_0CI@LLPP@?2StringFileInfo?2040904B0?2Product@	CampaignEditor	external	string literal referenced by ??0TProductVersion@@QAE@XZ
 0x000a571c	0x28	data	??_C@_0CI@HECI@?2StringFileInfo?2040904e4?2Product@	CampaignEditor	external	string literal referenced by ??0TProductVersion@@QAE@XZ
 0x000a5744	0x6	data	??_C@_05GHBC@Data?2?$AA@	CampaignEditor	external	referenced by ??0TResourceManagerSession@@QAE@ABVCString@@@Z at +0x1d
+0x000a5a4c	0x3	data	??_C@_02JJJH@?6?6?$AA@	CampaignEditor	external	referenced by ?Run@TCampaignEditorApp@@UAEHXZ at +0x5c
 0x000a5a50	0x2f	data	??_C@_0CP@JHAB@Heroes?5of?5Might?5and?5Magic?$KO?5III?5C@	CampaignEditor	external	referenced by ?InitInstance@TCampaignEditorApp@@UAEHXZ at +0x495
 0x000a5a80	0x14	data	??_C@_0BE@HMDM@New?5World?5Computing?$AA@	CampaignEditor	external	referenced by ?InitInstance@TCampaignEditorApp@@UAEHXZ at +0x472
 0x000a5a94	0x3	data	??_C@_02OFKN@?4?2?$AA@	CampaignEditor	external	referenced by ?InitInstance@TCampaignEditorApp@@UAEHXZ at +0x110

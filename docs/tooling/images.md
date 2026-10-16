@@ -69,8 +69,10 @@ its census from its pinned executable (`homm3.census`):
   That body inherits the slot; the wrapper's first callee is not classified
   merely because the wrapper calls it.
 - `runtime-map.tsv`: statically linked library functions, each the unique
-  masked match of a LIBCMT, LIBCPMT or SP3 NAFXCW member function. They are
-  named, not matched, and excluded from the scores.
+  masked match of a LIBCMT, LIBCPMT or SP3 NAFXCW member function. Compiler
+  NOP/INT3 tails are removed only at decoded instruction boundaries: a final
+  `90` or `CC` inside an immediate or short-jump displacement remains code.
+  They are named, not matched, and excluded from the scores.
 
 `homm3 --image KEY census --check` fails when the committed tables no longer
 match the derivation.

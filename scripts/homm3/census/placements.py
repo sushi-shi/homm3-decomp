@@ -155,8 +155,8 @@ def _functions_of(obj):
             # /O2 objects align each function within one .text section; the
             # NOP/INT3 fill belongs to no function (the census strips it too)
             floor = off + max((site + 4 for site in own), default=0)
-            while end > max(floor, off + 1) and payload[end - 1] in (0x90, 0xCC):
-                end -= 1
+            from homm3.census.code_padding import trimmed_end
+            end = trimmed_end(payload, off, end, floor)
             body = payload[off:end]
             out.append((name, number, off, body, own))
     return out

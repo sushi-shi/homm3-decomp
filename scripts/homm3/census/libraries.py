@@ -90,8 +90,8 @@ def _member_functions(obj):
         own = {site - off: ref for site, ref in obj.typed_relocations(number).items()
                if off <= site < end}
         floor = off + max((site + 4 for site in own), default=0)
-        while end > max(floor, off + 1) and payload[end - 1] in (0x90, 0xCC):
-            end -= 1
+        from homm3.census.code_padding import trimmed_end
+        end = trimmed_end(payload, off, end, floor)
         out.append((name, payload[off:end], own, selection.get(number, 0)))
     return out
 

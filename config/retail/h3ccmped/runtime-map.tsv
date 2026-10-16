@@ -222,6 +222,7 @@ rva	name	library	member
 0x3dbff	?_AfxGetChildControl@@YGPAVCWnd@@PAV1@0@Z	NAFXCW	occdlg.obj
 0x3dc58	?_AfxNextControl@@YGPAVCWnd@@PAV1@0I@Z	NAFXCW	occdlg.obj
 0x3dd34	?IsMatchingMnemonic@COccManager@@SAHPAVCWnd@@PAUtagMSG@@@Z	NAFXCW	occdlg.obj
+0x3dd53	?_AfxFindNextMnem@@YGPAVCWnd@@PAV1@0PAUtagMSG@@@Z	NAFXCW	occdlg.obj
 0x3ddd8	?IsLabelControl@COccManager@@SAHPAVCWnd@@@Z	NAFXCW	occdlg.obj
 0x3ddfe	?_AfxGetNextMnem@@YGPAVCWnd@@PAV1@0PAUtagMSG@@@Z	NAFXCW	occdlg.obj
 0x3de73	?UIActivateControl@COccManager@@KAXPAVCWnd@@@Z	NAFXCW	occdlg.obj
@@ -1453,6 +1454,7 @@ rva	name	library	member
 0x7574e	?RemoveControlBar@CDockBar@@QAEHPAVCControlBar@@HH@Z	NAFXCW	bardock.obj
 0x7585c	?FindBar@CDockBar@@QAEHPAVCControlBar@@H@Z	NAFXCW	bardock.obj
 0x7588a	?GetDockedControlBar@CDockBar@@IBEPAVCControlBar@@H@Z	NAFXCW	bardock.obj
+0x758a6	?Insert@CDockBar@@IAEHPAVCControlBar@@VCRect@@VCPoint@@@Z	NAFXCW	bardock.obj
 0x759e2	??1CStatic@@UAE@XZ	NAFXCW	winctrl1.obj
 0x75a1a	??1CButton@@UAE@XZ	NAFXCW	winctrl1.obj
 0x75a52	?OnChildNotify@CButton@@MAEHIIJPAJ@Z	NAFXCW	winctrl1.obj
