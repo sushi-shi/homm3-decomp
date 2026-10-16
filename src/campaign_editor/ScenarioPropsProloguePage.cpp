@@ -17,6 +17,11 @@
 #include "campaign_editor/CampaignEditorText.h"
 #include "campaign_editor/ScenarioPropsProloguePage.h"
 
+// The included bitmap-selector error constructor is retained at 0x429420.
+// Its 18-byte body calls TGDIObjectSelectorError (0x429190) and installs
+// the CBitmap specialization vtable (0x487940); both relocations agree.
+VA_COMPGEN(0x00429420, 0x12, CLASS_NONCOPY_CTOR, TError)
+
 VA(0x0042c090, 0x16a)
 TScenarioPropsProloguePageBase::TScenarioPropsProloguePageBase(const TScenario& oldScenario, TScenario& newScenario,
                                                                int campaignVersion, const CString& caption,
@@ -184,6 +189,9 @@ BOOL TScenarioPropsProloguePageBase::OnInitDialog()
     return TRUE;
 }
 
+// The first value comparison retains string::compare in retail; the last
+// expands it. Standard rel_ops and member inequality wrappers did not recover
+// that distinction, so retain the existing canonical equality helper.
 VA(0x0042cd00, 0x24f)
 void TScenarioPropsProloguePageBase::OnOK()
 {
@@ -215,6 +223,8 @@ void TScenarioPropsProloguePageBase::OnHasPrologueCheck()
     }
 }
 
+// Retail recomputes the owning cache slot for assignment and keeps the
+// pointer-member address for later reads; direct cache indexing preserves it.
 VA(0x0042d000, 0x465)
 void TScenarioPropsProloguePageBase::OnSelChangeMovieCombo()
 {
@@ -222,16 +232,15 @@ void TScenarioPropsProloguePageBase::OnSelChangeMovieCombo()
     VA_COMPGEN(0x0042d470, 0x14, STATIC_DTOR, apPreviews)
     DATA(0x004c8410) static std::auto_ptr<T16bppDIBSection> apPreviews[CAMPAIGN_MOVIE_COUNT];
     int movie = _m_movieCombo.GetItemData(_m_movieCombo.GetCurSel());
-    std::auto_ptr<T16bppDIBSection>& pPreview = apPreviews[movie];
-    if (pPreview.get() == NULL) {
+    if (apPreviews[movie].get() == NULL) {
         TResourcePtr<Bitmap16Bit> pImage(ResourceManager::GetBitmap16(g_campaignMovieTraits[movie].m_imageName));
         if (pImage.get() == NULL)
             throw TRuntimeError();
-        pPreview = std::auto_ptr<T16bppDIBSection>(new T16bppDIBSection(pImage->GetWidth(), pImage->GetHeight()));
-        if (pPreview.get() == NULL)
+        apPreviews[movie] = std::auto_ptr<T16bppDIBSection>(new T16bppDIBSection(pImage->GetWidth(), pImage->GetHeight()));
+        if (apPreviews[movie].get() == NULL)
             throw TAllocationFailure();
-        pImage->Draw(0, 0, pImage->GetWidth(), pImage->GetHeight(), pPreview->getPixels(), 0, 0,
-                     pPreview->getWidth(), pPreview->getHeight(), pPreview->getPitch(), false);
+        pImage->Draw(0, 0, pImage->GetWidth(), pImage->GetHeight(), apPreviews[movie]->getPixels(), 0, 0,
+                     apPreviews[movie]->getWidth(), apPreviews[movie]->getHeight(), apPreviews[movie]->getPitch(), false);
     }
     _m_previewStatic.SetBitmap(NULL);
     BITMAP bm;
@@ -244,11 +253,11 @@ void TScenarioPropsProloguePageBase::OnSelChangeMovieCombo()
             sourceDC.CreateCompatibleDC(&clientDC);
             destDC.CreateCompatibleDC(&clientDC);
         }
-        TGDIObjectSelector<CBitmap> sourceSelector(&sourceDC, pPreview.get());
+        TGDIObjectSelector<CBitmap> sourceSelector(&sourceDC, apPreviews[movie].get());
         TGDIObjectSelector<CBitmap> destSelector(&destDC, &_m_previewBitmap);
         int oldMode = destDC.SetStretchBltMode(HALFTONE);
-        destDC.StretchBlt(0, 0, bm.bmWidth, bm.bmHeight, &sourceDC, 0, 0, pPreview->getWidth(),
-                          pPreview->getHeight(), SRCCOPY);
+        destDC.StretchBlt(0, 0, bm.bmWidth, bm.bmHeight, &sourceDC, 0, 0, apPreviews[movie]->getWidth(),
+                          apPreviews[movie]->getHeight(), SRCCOPY);
         destDC.SetStretchBltMode(oldMode);
     }
     _m_previewStatic.SetBitmap(_m_previewBitmap);

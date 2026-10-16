@@ -43,6 +43,9 @@ VA_COMPGEN(0x00419790, 0x1e, SCALAR_DELETING_DTOR, TCampaignMapWnd)
 VA_COMPGEN(0x004197b0, 0x10b, IMPLICIT_DTOR, TCampaignMapWnd)
 VA_COMPGEN(0x00419ea0, 0x78, IMPLICIT_DTOR, TRegionImages)
 
+// Range-erase and implicit resource-conversion probes do not improve this
+// body. The VC6 allocator model classifies the remaining receiver/value
+// permutation as translation-unit handle state, not a local declaration knob.
 VA(0x004198c0, 0x5e0)
 void TCampaignMapWnd::initialUpdate()
 {
