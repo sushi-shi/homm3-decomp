@@ -194,17 +194,10 @@ def reviewed_code_sites(image, rows, archives):
     return sites
 
 
-def reviewed_runtime_exports(image, rows, archives, functions):
-    """Public entries of explicitly reviewed whole runtime code sections.
-
-    Full contribution verification is the admission requirement. Recheck
-    complete fixed bytes and the section anchor here, and name only public
-    COFF entries whose complete native census body lies in that section.
-    No inferred internal labels, alias ownership, partial bodies or new starts.
-    """
+def _reviewed_runtime_sections(image, rows, archives):
+    """Complete native-checked, explicitly reviewed code-owner sections."""
     from homm3.verify.library_code import archive, section as object_section, differences
     from homm3.compare.canonicalize import FUNCTION_TYPE
-    exports = set()
     for row in rows:
         if row['kind'] != 'code' or row.get('ownership') != 'whole-section':
             continue
@@ -232,13 +225,35 @@ def reviewed_runtime_exports(image, rows, archives, functions):
         offset = mapped.raw_offset + rva - mapped.rva
         if differences(section, image.data[offset:offset + section.size]):
             continue
+        yield rva, section, public, library, row
+
+
+def reviewed_runtime_anchors(image, rows, archives):
+    """Explicit original function anchors, never guessed gap starts.
+
+    The reviewed row must name a public function at section offset zero;
+    the common reader verifies function typing, full extent and fixed bytes.
+    Complete relocation verification remains the admission requirement.
+    """
+    anchors = {}
+    for rva, section, _public, library, row in _reviewed_runtime_sections(image, rows, archives):
+        anchors.setdefault(rva, f"{library}:{row['member']}#{section.number}:{row['symbol']}")
+    return anchors
+
+
+def reviewed_runtime_exports(image, rows, archives, functions):
+    """Original public functions whose full native census body fits its owner.
+
+    No inferred internal labels, alias ownership, partial bodies or new starts.
+    """
+    exports = set()
+    for rva, section, public, library, row in _reviewed_runtime_sections(image, rows, archives):
         for symbol in public:
             entry = rva + symbol.value
             size = functions.get(entry, 0)
             if 0 <= symbol.value < section.size and 0 < size <= section.size - symbol.value:
                 exports.add((entry, symbol.name, library, row['member']))
     return sorted(exports)
-
 
 def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=()):
     """Merge reviewed owners and aliases without making aliases owners.

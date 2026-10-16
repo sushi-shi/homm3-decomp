@@ -452,7 +452,7 @@ def table_seeds_after_calls(run_targets, covered, ends, sites, min_run=8):
             and run_length(s) >= min_run]
 
 
-def run(image, log=print, catch_bodies=False):
+def run(image, log=print, catch_bodies=False, reviewed_starts=None):
     c = Census(image, catch_bodies=catch_bodies)
     pe = struct.unpack_from("<I", image.data, 0x3C)[0]
     entry = struct.unpack_from("<I", image.data, pe + 24 + 16)[0]
@@ -680,6 +680,41 @@ def run(image, log=print, catch_bodies=False):
             del c.tables[t]
         for t, n, kind in res[1]:
             c.tables[t] = (p, n, kind)
+    # Complete reviewed library sections can prove an otherwise unreachable
+    # entry after the ordinary descent has settled. Add only those explicit
+    # anchors, then refresh instruction ownership against the new boundaries.
+    # This does not run another speculative gap sweep.
+    added_reviewed = 0
+    for start, evidence in sorted((reviewed_starts or {}).items()):
+        if c.in_text(start) and take(start, f"reviewed-library:{evidence}", check=False):
+            added_reviewed += 1
+    if added_reviewed:
+        drain(False)
+        index()
+        while True:
+            late_calls, late_tails = set(), set()
+            for start in sorted(c.starts):
+                res = c.descend(start)
+                if res is None:
+                    continue
+                c.reached[start] = res[0] | c.extra.get(start, set())
+                late_calls |= {t for t in res[2] if t not in c.starts and c.in_text(t)}
+                if adjusting_thunk(c, start, res[0]) or call_then_tail_thunk(c, start, res[0]):
+                    late_tails |= {t for t in res[3] if t not in c.starts and c.in_text(t)
+                                   and t not in c.continuations}
+            if not late_calls and not late_tails:
+                break
+            before = len(c.starts)
+            for target in sorted(late_calls):
+                take(target, "call", check=False)
+            for target in sorted(late_tails):
+                take(target, "tail", check=False)
+            drain(False)
+            index()
+            if len(c.starts) == before:
+                break
+        log(f"[census] {added_reviewed} reviewed library function anchor(s) recovered")
+
     log(f"[census] {len(c.starts)} starts, {rounds} gap rounds, {len(c.tables)} tables, "
         f"{len(c.continuations)} catch continuations")
     return c

@@ -1749,6 +1749,8 @@ rva	name	library	member
 0x7d4d2	?AfxGetCtl3dState@@YGPAV_AFX_CTL3D_STATE@@XZ	NAFXCW	app3d.obj
 0x7d503	??1?$CThreadLocal@V_AFXCTL_AMBIENT_CACHE@@@@QAE@XZ	NAFXCW	ctlquick.obj
 0x7d558	?AfxEnableWin40Compatibility@@YGXXZ	NAFXCW	auxdata.obj
+0x7d588	?AfxEnableWin31Compatibility@@YGXXZ	NAFXCW	auxdata.obj
+0x7d5aa	??0AUX_DATA@@QAE@XZ	NAFXCW	auxdata.obj
 0x7d645	?_AfxInitDBCS@@YGHXZ	NAFXCW	afxdbcs.obj
 0x7d678	?AfxCriticalInit@@YGHXZ	NAFXCW	afxcrit.obj
 0x7d6bd	?AfxCriticalTerm@@YGXXZ	NAFXCW	afxcrit.obj

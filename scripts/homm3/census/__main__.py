@@ -103,7 +103,17 @@ def derive(log=print):
     from homm3.core.image import Image
     from homm3.census import find_relocs, functions, vtables
     image = Image(str(common.resolve_exe()))
-    census = functions.run(image, log=log, catch_bodies=joins_catch_bodies())
+    from homm3.census import libraries
+    from homm3.core.tsv import read as read_tsv
+    toolchain = paths.msvc_dir() / "lib"
+    archives = {"LIBCMT": toolchain / "LIBCMT.LIB", "LIBCPMT": toolchain / "LIBCPMT.LIB",
+                "CTL3D32S": toolchain / "CTL3D32S.LIB",
+                "NAFXCW": paths.SHARED_BUILD / "mfc-sp3/lib/nafxcw.lib"}
+    reviewed = paths.retail_dir() / "runtime-contributions.tsv"
+    reviewed_rows = read_tsv(reviewed)[2] if reviewed.is_file() else []
+    anchors = libraries.reviewed_runtime_anchors(image, reviewed_rows, archives)
+    census = functions.run(image, log=log, catch_bodies=joins_catch_bodies(),
+                           reviewed_starts=anchors)
     from homm3.census import eh
     folded = {}
     catches, tails = folds_catch_handlers(), joins_tails()
@@ -130,14 +140,6 @@ def derive(log=print):
     starts = {rva for rva, _size, _reached in rows} | set(folded)
     vt = vtables.census(census, starts)
 
-    from homm3.census import libraries
-    from homm3.core.tsv import read as read_tsv
-    toolchain = paths.msvc_dir() / "lib"
-    archives = {"LIBCMT": toolchain / "LIBCMT.LIB", "LIBCPMT": toolchain / "LIBCPMT.LIB",
-                "CTL3D32S": toolchain / "CTL3D32S.LIB",
-                "NAFXCW": paths.SHARED_BUILD / "mfc-sp3/lib/nafxcw.lib"}
-    reviewed = paths.retail_dir() / "runtime-contributions.tsv"
-    reviewed_rows = read_tsv(reviewed)[2] if reviewed.is_file() else []
     sites, masks = {}, {}
     for section in image.sections:
         if section.name in (".rsrc", ".reloc"):

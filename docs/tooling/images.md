@@ -53,6 +53,9 @@ its census from its pinned executable (`homm3.census`):
   `.text$x` group, so the parent's `offset stub` reads as the last funclet
   plus its size, the form the comparison canonicalizes (also for the
   editor's `/O1` prologue `mov eax, offset stub; call __EH_prolog`).
+  An explicitly reviewed whole-library section also supplies its original
+  zero-offset public function anchor. After ordinary descent, such verified
+  anchors recover otherwise missed entries without another heuristic gap sweep.
 - `vtables.tsv`: RTTI vtables (the dword before each is its Complete Object
   Locator, which names the class) and tables that code stores as a vptr.
 - `relocs.tsv` and `reloc-evidence.tsv`: the vendored `find_relocs` channels.
