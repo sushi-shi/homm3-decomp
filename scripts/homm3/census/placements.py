@@ -424,6 +424,29 @@ def foreign_to_claim(name, claimed, bodies):
         for other in claimed)
 
 
+def remove_redundant_function_placements(rows, claims):
+    """Keep source ownership when a shared TU emits the same external body.
+
+    A placement cannot repeat an identical source function claim merely
+    because home_unit selected another emitter of a header definition.
+    Different identities/extents and other units' internal definitions
+    remain visible to the model's conflict checks.
+    """
+    claimed = defaultdict(set)
+    for claim in claims:
+        if claim.kind == "func":
+            key = (claim.rva, claim.size, claim.kind, portable(claim.name, claim.unit))
+            claimed[key].add(claim.unit)
+    kept, redundant = [], []
+    for row in rows:
+        owners = claimed.get(row[:4], ())
+        if owners and (row[5] == "external" or row[4] in owners):
+            redundant.append(row)
+        else:
+            kept.append(row)
+    return kept, redundant
+
+
 def fold_label(at, names, bodies, definers, owned, rowable=lambda name: True):
     """The one name of an address that several compiled bodies reach (`at`).
 
@@ -1143,6 +1166,8 @@ def derive(log=print, want_suggestions=False):
 
     suggestions = [row for row in rows if row[4] in owned and not promoted(row)]
     rows = [row for row in rows if row[4] not in owned or promoted(row)]
+    rows, redundant = remove_redundant_function_placements(rows, own_function_claims)
+    placed_functions -= len(redundant)
     # A VA_AT claim names its address and its body itself (the image's
     # claim fragments); no placement row repeats or contradicts it.
     va_at_rvas = {claim.rva for claim in va_at_claims}
