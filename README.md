@@ -109,10 +109,10 @@ Library and compiler-generated code (outside the scores; each function verified 
 
 | Category              | Functions | Verified | Code (B) | Status                                   | How verified                                                                                          |
 | :-------------------- | --------: | -------: | -------: | :--------------------------------------- | :---------------------------------------------------------------------------------------------------- |
-| `Platform libraries`  |     1,837 |        — |  224,394 | excluded                                 | platform library code, named not matched (config/retail/runtime-map.tsv)                              |
-| `EH unwind funclets`  |     1,624 |        0 |   16,589 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section) |
-| `init/cleanup thunks` |       454 |        4 |    5,416 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
-| `import thunks`       |        13 |        0 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
+| `Platform libraries`  |     1,837 |       71 |  224,394 | library, verified                        | bytes and relocations equal pinned library members (config/retail/runtime-functions.tsv)              |
+| `EH unwind funclets`  |     1,624 |      974 |   16,589 | compiler-generated, verified with parent | parent's `.text$x` COMDAT: bytes and every relocation target (library parents: their library section) |
+| `init/cleanup thunks` |       454 |      164 |    5,416 | compiler-generated, verified             | source-emitted CRT bodies, bytes and named relocations                                                |
+| `import thunks`       |        13 |       13 |       78 | linker-generated, verified               | `FF 25` through a named IAT slot (and the pinned import library where one exists)                     |
 
 **Data:** 3,711 / 9,383 referenced data objects claimed (placements and the image's own `DATA()` claims).
 
