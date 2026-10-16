@@ -1,82 +1,84 @@
 # REVIEWED rows for the h3ccmped image.
-rva	size	kind	library	member	section	symbol	evidence
-0x53270	208	code	LIBCMT.LIB	stricmp.obj	1	__strcmpi	stricmp.obj's __stricmp under its OLDNAMES spelling: the Libraries' LODFile::Find (0x449e40) calls strcmpi, which LINK binds to this body
-0x5316a	19	code	LIBCMT.LIB	fopen.obj	3	_fopen	fopen.obj and wfopen.obj assemble to the same 19 bytes and differ only in the opener they call; LODFile::open (0x44a080) calls _fopen here
-0x51b4f	47	code	LIBCMT.LIB	fread.obj	1	_fread	fread.obj and fwrite.obj assemble to the same 47 bytes; this one calls __fread_lk (0x451b7e), and LODFile::open and read (0x44a080, 0x44a270) call _fread here
-0x4f690	821	code	LIBCMT.LIB	memmove.obj	1	_memmove	memcpy.obj and memmove.obj assemble to the same 821 bytes; placed callers of _memmove reach this copy (runtime_error's copy constructor 0x401020, basic_string::erase 0x401a90)
-0x4c890	90	code	LIBCPMT.LIB	string.obj	3	?_Xlen@std@@YAXXZ	_Xlen and _Xran are the same 90 bytes but for their message; this one throws length_error with "string too long" (0x491590)
-0x4c978	90	code	LIBCPMT.LIB	string.obj	53	?_Xran@std@@YAXXZ	_Xran's copy: it throws out_of_range with "invalid string position" (0x4915a0)
-0x78276	1	code	NAFXCW.LIB	dlgprop.obj	97	?OnOK@CPropertyPage@@UAEXXZ	CPropertyPage::OnOK is an empty release body (a lone ret); the placed property pages' OnOK overrides call it site for site
-0x78646	92	code	NAFXCW.LIB	dlgprop.obj	163	??0CPropertySheet@@QAE@PBDPAVCWnd@@I@Z	92-byte body equal to dlgprop.obj's; the placed property-sheet constructor calls it
-0x6faf6	1	code	NAFXCW.LIB	doccore.obj	27	?DeleteContents@CDocument@@UAEXXZ	an empty release body (a lone ret); the placed document's DeleteContents calls it
-0x6b08e	10	code	NAFXCW.LIB	except.obj	11	??0CException@@QAE@XZ	10-byte body equal to except.obj's; its placed caller pairs with it
-0x5000f	43	code	LIBCMT.LIB	strdup.obj	1	__strdup	43-byte body equal to strdup.obj's; 3 placed call sites pair with it
-0x4cac5	3	code	LIBCPMT.LIB	uncaught.obj	2	?uncaught_exception@std@@YA_NXZ	3-byte body equal to uncaught.obj's; 4 placed call sites pair with it
-0x53225	6	code	LIBCMT.LIB	lconv.obj	3	_localeconv	6-byte body equal to lconv.obj's; 2 placed call sites pair with it
-0x6e2ec	42	code	NAFXCW.LIB	wingdi.obj	298	?Detach@CGdiObject@@QAEPAXXZ	CGdiObject::Detach; its placed caller pairs with it
-0x6e316	22	code	NAFXCW.LIB	wingdi.obj	301	?DeleteObject@CGdiObject@@QAEHXZ	CGdiObject::DeleteObject; the GDI object destructors and 7 placed call sites reach it
-0x6e017	86	code	NAFXCW.LIB	wingdi.obj	231	??0CClientDC@@QAE@PAVCWnd@@@Z	86-byte body equal to wingdi.obj's; 8 placed call sites pair with it
-0x6e2bf	45	code	NAFXCW.LIB	wingdi.obj	295	?Attach@CGdiObject@@QAEHPAX@Z	CGdiObject::Attach; 3 placed call sites pair with it
-0x6da9d	70	code	NAFXCW.LIB	wingdi.obj	99	?SelectObject@CDC@@QAEPAVCBrush@@PAV2@@Z	CDC::SelectObject(CBrush*); 2 placed call sites pair with it
-0x6dd7d	16	code	NAFXCW.LIB	wingdi.obj	148	?GetClipBox@CDC@@UBEHPAUtagRECT@@@Z	16-byte body equal to wingdi.obj's; its placed caller pairs with it
-0x6ba22	45	code	NAFXCW.LIB	winmenu.obj	19	?Attach@CMenu@@QAEHPAUHMENU__@@@Z	CMenu::Attach; 2 placed call sites pair with it
-0x6ba79	22	code	NAFXCW.LIB	winmenu.obj	25	?DestroyMenu@CMenu@@QAEHXZ	CMenu::DestroyMenu; 4 placed call sites pair with it
-0x51550	47	code	LIBCMT.LIB	chkstk.obj	1	__alloca_probe	pinned chkstk.obj defines __alloca_probe and __chkstk at the same section offset; CTL3D _StaticPrint calls this exact body
-0x5f380	29	code	CTL3D32S.LIB	CTL3D.OBJ	2	_LpfnGetDefWndProcNull	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f3a0	70	code	CTL3D32S.LIB	CTL3D.OBJ	4	_LpfnGetDefWndProc	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f3f0	229	code	CTL3D32S.LIB	CTL3D.OBJ	6	_SubclassWindow	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f4e0	175	code	CTL3D32S.LIB	CTL3D.OBJ	9	_CallWndProcFilterProc@12	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f590	52	code	CTL3D32S.LIB	CTL3D.OBJ	12	_HookSubclassWindow	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f5d0	82	code	CTL3D32S.LIB	CTL3D.OBJ	14	_CleanupSubclass	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f630	26	code	CTL3D32S.LIB	CTL3D.OBJ	16	_DeleteObjectNull	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f650	41	code	CTL3D32S.LIB	CTL3D.OBJ	18	_DeleteObjects	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f680	42	code	CTL3D32S.LIB	CTL3D.OBJ	20	_PatFill	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f6b0	306	code	CTL3D32S.LIB	CTL3D.OBJ	22	_DrawRec3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f7f0	111	code	CTL3D32S.LIB	CTL3D.OBJ	24	_DrawInsetRect3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f860	54	code	CTL3D32S.LIB	CTL3D.OBJ	26	_ClipCtlDc	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f8a0	172	code	CTL3D32S.LIB	CTL3D.OBJ	28	_MyGetTextExtent	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f950	101	code	CTL3D32S.LIB	CTL3D.OBJ	30	_Ctl3dRegister@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5f9c0	187	code	CTL3D32S.LIB	CTL3D.OBJ	32	_Ctl3dUnregister@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fa80	15	code	CTL3D32S.LIB	CTL3D.OBJ	34	_Ctl3dAutoSubclass@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fa90	313	code	CTL3D32S.LIB	CTL3D.OBJ	36	_Ctl3dAutoSubclassEx@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fbd0	46	code	CTL3D32S.LIB	CTL3D.OBJ	38	_Ctl3dIsAutoSubclass@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fc00	153	code	CTL3D32S.LIB	CTL3D.OBJ	40	_Ctl3dUnAutoSubclass@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fca0	39	code	CTL3D32S.LIB	CTL3D.OBJ	48	_Ctl3dSubclassCtl@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fcd0	263	code	CTL3D32S.LIB	CTL3D.OBJ	50	_Ctl3dUnsubclassCtl@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fde0	144	code	CTL3D32S.LIB	CTL3D.OBJ	52	_Ctl3dSubclassCtlEx@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5fe70	176	code	CTL3D32S.LIB	CTL3D.OBJ	56	_CheckChildSubclass	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5ff20	116	code	CTL3D32S.LIB	CTL3D.OBJ	58	_Ctl3dCheckSubclassDlg@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x5ffa0	99	code	CTL3D32S.LIB	CTL3D.OBJ	60	_Ctl3dSubclassDlgEx@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60010	130	code	CTL3D32S.LIB	CTL3D.OBJ	64	_Ctl3dCtlColorEx@12	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x600a0	39	code	CTL3D32S.LIB	CTL3D.OBJ	66	_Ctl3dColorChange@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x600d0	678	code	CTL3D32S.LIB	CTL3D.OBJ	70	_Ctl3dDlgFramePaintI@20	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60380	159	code	CTL3D32S.LIB	CTL3D.OBJ	72	_Ctl3dWinIniChange@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60420	487	code	CTL3D32S.LIB	CTL3D.OBJ	81	_FInit3dDialogs	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60610	213	code	CTL3D32S.LIB	CTL3D.OBJ	90	_End3dDialogs	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x606f0	393	code	CTL3D32S.LIB	CTL3D.OBJ	92	_InternalCtl3dColorChange	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60880	816	code	CTL3D32S.LIB	CTL3D.OBJ	94	_Ctl3dDlgProc@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60bb0	57	code	CTL3D32S.LIB	CTL3D.OBJ	97	_DoesChildNeedSubclass	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60bf0	430	code	CTL3D32S.LIB	CTL3D.OBJ	99	_Ctl3dHook@12	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60da0	36	code	CTL3D32S.LIB	CTL3D.OBJ	101	_FBtn	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60e20	63	code	CTL3D32S.LIB	CTL3D.OBJ	107	_FComboList	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60e60	201	code	CTL3D32S.LIB	CTL3D.OBJ	109	_FCombo	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60f30	79	code	CTL3D32S.LIB	CTL3D.OBJ	111	_FStatic	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x60f80	236	code	CTL3D32S.LIB	CTL3D.OBJ	113	_DoSubclassCtl	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x61070	190	code	CTL3D32S.LIB	CTL3D.OBJ	115	_Inval3dCtl	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x61130	110	code	CTL3D32S.LIB	CTL3D.OBJ	117	_Val3dCtl	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x611a0	831	code	CTL3D32S.LIB	CTL3D.OBJ	119	_DrawPushButton	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x614e0	1356	code	CTL3D32S.LIB	CTL3D.OBJ	121	_BtnPaint	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x61a30	724	code	CTL3D32S.LIB	CTL3D.OBJ	124	_BtnWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x61d10	822	code	CTL3D32S.LIB	CTL3D.OBJ	126	_ListEditPaint3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62050	335	code	CTL3D32S.LIB	CTL3D.OBJ	128	_ShareEditComboWndProc3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x621a0	33	code	CTL3D32S.LIB	CTL3D.OBJ	130	_EditWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x621d0	558	code	CTL3D32S.LIB	CTL3D.OBJ	132	_SharedListWndProc	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62400	33	code	CTL3D32S.LIB	CTL3D.OBJ	134	_ListWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62430	67	code	CTL3D32S.LIB	CTL3D.OBJ	136	_ComboWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62480	213	code	CTL3D32S.LIB	CTL3D.OBJ	138	_StaticPrint	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62560	415	code	CTL3D32S.LIB	CTL3D.OBJ	139	_StaticPaint	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62700	332	code	CTL3D32S.LIB	CTL3D.OBJ	141	_StaticWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62850	203	code	CTL3D32S.LIB	CTL3D.OBJ	143	_LibMain	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x62920	407	code	CTL3D32S.LIB	CTL3D.OBJ	147	_LoadUIBitmap@32	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified
-0x50ca0	821	code	LIBCMT.LIB	memcpy.obj	1	_memcpy	pinned CString::AllocCopy at 0x469d40 calls _memcpy at +0x36; caller and callee bytes and relocations verify exactly
-0x69d40	68	code	NAFXCW.LIB	strcore.obj	86	?AllocCopy@CString@@IBEXAAV1@HHH@Z	pinned MFC strcore.obj#86: its REL32 _memcpy at +0x36 resolves to 0x450ca0; complete body verified
+# ownership=whole-section requires complete native byte/relocation verification; - makes no claim about unnamed interior entries.
+rva	size	kind	library	member	section	symbol	evidence	ownership
+0x53270	208	code	LIBCMT.LIB	stricmp.obj	1	__strcmpi	stricmp.obj's __stricmp under its OLDNAMES spelling: the Libraries' LODFile::Find (0x449e40) calls strcmpi, which LINK binds to this body	-
+0x5316a	19	code	LIBCMT.LIB	fopen.obj	3	_fopen	fopen.obj and wfopen.obj assemble to the same 19 bytes and differ only in the opener they call; LODFile::open (0x44a080) calls _fopen here	-
+0x51b4f	47	code	LIBCMT.LIB	fread.obj	1	_fread	fread.obj and fwrite.obj assemble to the same 47 bytes; this one calls __fread_lk (0x451b7e), and LODFile::open and read (0x44a080, 0x44a270) call _fread here	-
+0x4f690	821	code	LIBCMT.LIB	memmove.obj	1	_memmove	memcpy.obj and memmove.obj assemble to the same 821 bytes; placed callers of _memmove reach this copy (runtime_error's copy constructor 0x401020, basic_string::erase 0x401a90)	-
+0x4c890	90	code	LIBCPMT.LIB	string.obj	3	?_Xlen@std@@YAXXZ	_Xlen and _Xran are the same 90 bytes but for their message; this one throws length_error with "string too long" (0x491590)	-
+0x4c978	90	code	LIBCPMT.LIB	string.obj	53	?_Xran@std@@YAXXZ	_Xran's copy: it throws out_of_range with "invalid string position" (0x4915a0)	-
+0x78276	1	code	NAFXCW.LIB	dlgprop.obj	97	?OnOK@CPropertyPage@@UAEXXZ	CPropertyPage::OnOK is an empty release body (a lone ret); the placed property pages' OnOK overrides call it site for site	-
+0x78646	92	code	NAFXCW.LIB	dlgprop.obj	163	??0CPropertySheet@@QAE@PBDPAVCWnd@@I@Z	92-byte body equal to dlgprop.obj's; the placed property-sheet constructor calls it	-
+0x6faf6	1	code	NAFXCW.LIB	doccore.obj	27	?DeleteContents@CDocument@@UAEXXZ	an empty release body (a lone ret); the placed document's DeleteContents calls it	-
+0x6b08e	10	code	NAFXCW.LIB	except.obj	11	??0CException@@QAE@XZ	10-byte body equal to except.obj's; its placed caller pairs with it	-
+0x5000f	43	code	LIBCMT.LIB	strdup.obj	1	__strdup	43-byte body equal to strdup.obj's; 3 placed call sites pair with it	-
+0x4cac5	3	code	LIBCPMT.LIB	uncaught.obj	2	?uncaught_exception@std@@YA_NXZ	3-byte body equal to uncaught.obj's; 4 placed call sites pair with it	-
+0x53225	6	code	LIBCMT.LIB	lconv.obj	3	_localeconv	6-byte body equal to lconv.obj's; 2 placed call sites pair with it	-
+0x6e2ec	42	code	NAFXCW.LIB	wingdi.obj	298	?Detach@CGdiObject@@QAEPAXXZ	CGdiObject::Detach; its placed caller pairs with it	-
+0x6e316	22	code	NAFXCW.LIB	wingdi.obj	301	?DeleteObject@CGdiObject@@QAEHXZ	CGdiObject::DeleteObject; the GDI object destructors and 7 placed call sites reach it	-
+0x6e017	86	code	NAFXCW.LIB	wingdi.obj	231	??0CClientDC@@QAE@PAVCWnd@@@Z	86-byte body equal to wingdi.obj's; 8 placed call sites pair with it	-
+0x6e2bf	45	code	NAFXCW.LIB	wingdi.obj	295	?Attach@CGdiObject@@QAEHPAX@Z	CGdiObject::Attach; 3 placed call sites pair with it	-
+0x6da9d	70	code	NAFXCW.LIB	wingdi.obj	99	?SelectObject@CDC@@QAEPAVCBrush@@PAV2@@Z	CDC::SelectObject(CBrush*); 2 placed call sites pair with it	-
+0x6dd7d	16	code	NAFXCW.LIB	wingdi.obj	148	?GetClipBox@CDC@@UBEHPAUtagRECT@@@Z	16-byte body equal to wingdi.obj's; its placed caller pairs with it	-
+0x6ba22	45	code	NAFXCW.LIB	winmenu.obj	19	?Attach@CMenu@@QAEHPAUHMENU__@@@Z	CMenu::Attach; 2 placed call sites pair with it	-
+0x6ba79	22	code	NAFXCW.LIB	winmenu.obj	25	?DestroyMenu@CMenu@@QAEHXZ	CMenu::DestroyMenu; 4 placed call sites pair with it	-
+0x51550	47	code	LIBCMT.LIB	chkstk.obj	1	__alloca_probe	pinned chkstk.obj defines __alloca_probe and __chkstk at the same section offset; CTL3D _StaticPrint calls this exact body	-
+0x5f380	29	code	CTL3D32S.LIB	CTL3D.OBJ	2	_LpfnGetDefWndProcNull	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f3a0	70	code	CTL3D32S.LIB	CTL3D.OBJ	4	_LpfnGetDefWndProc	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f3f0	229	code	CTL3D32S.LIB	CTL3D.OBJ	6	_SubclassWindow	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f4e0	175	code	CTL3D32S.LIB	CTL3D.OBJ	9	_CallWndProcFilterProc@12	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f590	52	code	CTL3D32S.LIB	CTL3D.OBJ	12	_HookSubclassWindow	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f5d0	82	code	CTL3D32S.LIB	CTL3D.OBJ	14	_CleanupSubclass	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f630	26	code	CTL3D32S.LIB	CTL3D.OBJ	16	_DeleteObjectNull	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f650	41	code	CTL3D32S.LIB	CTL3D.OBJ	18	_DeleteObjects	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f680	42	code	CTL3D32S.LIB	CTL3D.OBJ	20	_PatFill	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f6b0	306	code	CTL3D32S.LIB	CTL3D.OBJ	22	_DrawRec3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f7f0	111	code	CTL3D32S.LIB	CTL3D.OBJ	24	_DrawInsetRect3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f860	54	code	CTL3D32S.LIB	CTL3D.OBJ	26	_ClipCtlDc	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f8a0	172	code	CTL3D32S.LIB	CTL3D.OBJ	28	_MyGetTextExtent	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f950	101	code	CTL3D32S.LIB	CTL3D.OBJ	30	_Ctl3dRegister@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5f9c0	187	code	CTL3D32S.LIB	CTL3D.OBJ	32	_Ctl3dUnregister@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fa80	15	code	CTL3D32S.LIB	CTL3D.OBJ	34	_Ctl3dAutoSubclass@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fa90	313	code	CTL3D32S.LIB	CTL3D.OBJ	36	_Ctl3dAutoSubclassEx@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fbd0	46	code	CTL3D32S.LIB	CTL3D.OBJ	38	_Ctl3dIsAutoSubclass@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fc00	153	code	CTL3D32S.LIB	CTL3D.OBJ	40	_Ctl3dUnAutoSubclass@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fca0	39	code	CTL3D32S.LIB	CTL3D.OBJ	48	_Ctl3dSubclassCtl@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fcd0	263	code	CTL3D32S.LIB	CTL3D.OBJ	50	_Ctl3dUnsubclassCtl@4	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fde0	144	code	CTL3D32S.LIB	CTL3D.OBJ	52	_Ctl3dSubclassCtlEx@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5fe70	176	code	CTL3D32S.LIB	CTL3D.OBJ	56	_CheckChildSubclass	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5ff20	116	code	CTL3D32S.LIB	CTL3D.OBJ	58	_Ctl3dCheckSubclassDlg@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x5ffa0	99	code	CTL3D32S.LIB	CTL3D.OBJ	60	_Ctl3dSubclassDlgEx@8	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60010	130	code	CTL3D32S.LIB	CTL3D.OBJ	64	_Ctl3dCtlColorEx@12	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x600a0	39	code	CTL3D32S.LIB	CTL3D.OBJ	66	_Ctl3dColorChange@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x600d0	678	code	CTL3D32S.LIB	CTL3D.OBJ	70	_Ctl3dDlgFramePaintI@20	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60380	159	code	CTL3D32S.LIB	CTL3D.OBJ	72	_Ctl3dWinIniChange@0	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60420	487	code	CTL3D32S.LIB	CTL3D.OBJ	81	_FInit3dDialogs	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60610	213	code	CTL3D32S.LIB	CTL3D.OBJ	90	_End3dDialogs	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x606f0	393	code	CTL3D32S.LIB	CTL3D.OBJ	92	_InternalCtl3dColorChange	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60880	816	code	CTL3D32S.LIB	CTL3D.OBJ	94	_Ctl3dDlgProc@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60bb0	57	code	CTL3D32S.LIB	CTL3D.OBJ	97	_DoesChildNeedSubclass	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60bf0	430	code	CTL3D32S.LIB	CTL3D.OBJ	99	_Ctl3dHook@12	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60da0	36	code	CTL3D32S.LIB	CTL3D.OBJ	101	_FBtn	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60e20	63	code	CTL3D32S.LIB	CTL3D.OBJ	107	_FComboList	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60e60	201	code	CTL3D32S.LIB	CTL3D.OBJ	109	_FCombo	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60f30	79	code	CTL3D32S.LIB	CTL3D.OBJ	111	_FStatic	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x60f80	236	code	CTL3D32S.LIB	CTL3D.OBJ	113	_DoSubclassCtl	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x61070	190	code	CTL3D32S.LIB	CTL3D.OBJ	115	_Inval3dCtl	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x61130	110	code	CTL3D32S.LIB	CTL3D.OBJ	117	_Val3dCtl	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x611a0	831	code	CTL3D32S.LIB	CTL3D.OBJ	119	_DrawPushButton	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x614e0	1356	code	CTL3D32S.LIB	CTL3D.OBJ	121	_BtnPaint	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x61a30	724	code	CTL3D32S.LIB	CTL3D.OBJ	124	_BtnWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x61d10	822	code	CTL3D32S.LIB	CTL3D.OBJ	126	_ListEditPaint3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62050	335	code	CTL3D32S.LIB	CTL3D.OBJ	128	_ShareEditComboWndProc3d	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x621a0	33	code	CTL3D32S.LIB	CTL3D.OBJ	130	_EditWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x621d0	558	code	CTL3D32S.LIB	CTL3D.OBJ	132	_SharedListWndProc	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62400	33	code	CTL3D32S.LIB	CTL3D.OBJ	134	_ListWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62430	67	code	CTL3D32S.LIB	CTL3D.OBJ	136	_ComboWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62480	213	code	CTL3D32S.LIB	CTL3D.OBJ	138	_StaticPrint	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62560	415	code	CTL3D32S.LIB	CTL3D.OBJ	139	_StaticPaint	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62700	332	code	CTL3D32S.LIB	CTL3D.OBJ	141	_StaticWndProc3d@16	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62850	203	code	CTL3D32S.LIB	CTL3D.OBJ	143	_LibMain	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x62920	407	code	CTL3D32S.LIB	CTL3D.OBJ	147	_LoadUIBitmap@32	pinned CTL3D32S member: unique code identity; bytes, every code relocation and consistent initialized-data references verified	-
+0x50ca0	821	code	LIBCMT.LIB	memcpy.obj	1	_memcpy	pinned CString::AllocCopy at 0x469d40 calls _memcpy at +0x36; caller and callee bytes and relocations verify exactly	-
+0x69d40	68	code	NAFXCW.LIB	strcore.obj	86	?AllocCopy@CString@@IBEXAAV1@HHH@Z	pinned MFC strcore.obj#86: its REL32 _memcpy at +0x36 resolves to 0x450ca0; complete body verified	-
+0x59eb0	618	code	LIBCMT.LIB	87cdisp.obj	1	__cintrindisp2	pinned 87cdisp.obj section: all bytes, relocations, reviewed DIR32 sites and data references verify exactly; includes unnamed internal census entries 0x59f73 and 0x59f7a inside __ctrandisp2	whole-section

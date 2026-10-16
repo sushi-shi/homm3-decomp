@@ -8,8 +8,9 @@ in precedence order:
 
   eh-funclet    config/retail/funclets.tsv (admitted from the retail EH
                 metadata walk, with parentage). Matches with its parent.
-  runtime       config/retail/runtime-map.tsv (CRT/C++, MFC and SDK): named,
-                not matched from source.
+  runtime       config/retail/runtime-map.tsv (CRT/C++, MFC and SDK), plus
+                whole census bodies inside one reviewed pinned-library code
+                contribution: library-owned, not matched from game source.
   zlib          config/retail/zlib-map.tsv: a matching TARGET (vendored
                 sources compile), counted inside the main table.
   init-thunk    config/retail/init-thunks.tsv: `.CRT$XCU` dynamic-
@@ -36,6 +37,7 @@ RUNTIME_MAP = common.HOMM3_DIR / _image_path("config/retail/runtime-map.tsv")
 ZLIB_MAP = common.HOMM3_DIR / _image_path("config/retail/zlib-map.tsv")
 FUNCLETS = common.HOMM3_DIR / _image_path("config/retail/funclets.tsv")
 INIT_THUNKS = common.HOMM3_DIR / _image_path("config/retail/init-thunks.tsv")
+RUNTIME_CONTRIBUTIONS = common.HOMM3_DIR / _image_path("config/retail/runtime-contributions.tsv")
 
 EXCLUDED_NOTES = {
     "eh-funclet": "compiler EH unwind funclets; match with their parent "
@@ -63,6 +65,47 @@ def _rows(path):
             if line[0] not in "#" and not line.startswith("rva\t")]
 
 
+def _runtime_contributions():
+    from homm3.core.tsv import read
+    return read(RUNTIME_CONTRIBUTIONS)[2] if RUNTIME_CONTRIBUTIONS.is_file() else []
+
+
+def contribution_runtime_bodies(functions, contributions):
+    """Whole bodies owned by a reviewed pinned-library code contribution.
+
+    Only an explicit ``ownership=whole-section`` declaration admits internal
+    entries, after complete native byte/relocation verification. Older rows
+    may describe just a symbol prefix and supply no interior ownership.
+    Internal assembler entries need not have their own symbols. Do not invent labels, stitch partial coverage, accept
+    aliases/data as ownership, or choose between overlapping section owners.
+    Like runtime-map, this is an inventory classification; library-code and
+    generated-code verification remain the byte/relocation verdicts.
+    """
+    from homm3.verify.library_code import RUNTIME_LIBRARIES, MFC_LIBRARY
+    libraries = set(RUNTIME_LIBRARIES) | {MFC_LIBRARY}
+    spans = set()
+    for row in contributions:
+        if (row.get('ownership') != 'whole-section' or row['kind'] != 'code'
+                or row['library'] not in libraries):
+            continue
+        lo, size, section = int(row['rva'], 16), int(row['size']), int(row['section'])
+        if (lo < 0 or size <= 0 or section <= 0
+                or row['member'] in ('', '-') or row['symbol'] in ('', '-')):
+            continue
+        spans.add((lo, lo + size, row['library'], row['member'], section))
+    out = set()
+    for rva, size in functions.items():
+        if size <= 0:
+            continue
+        end = rva + size
+        overlapping = [span for span in spans if span[0] < end and rva < span[1]]
+        if len(overlapping) == 1:
+            lo, hi, *_owner = overlapping[0]
+            if lo <= rva and end <= hi:
+                out.add(rva)
+    return out
+
+
 def classify(image=None):
     """{rva: category}, sizes {rva: size} - see the module docstring.
 
@@ -85,6 +128,11 @@ def classify(image=None):
         rva = int(r[0], 16)
         if rva in functions:
             category.setdefault(rva, "init-thunk")
+
+    # A reviewed assembly section can contain local entry points with no COFF
+    # symbol. Keep more specific EH/zlib/initializer categories above intact.
+    for rva in contribution_runtime_bodies(functions, _runtime_contributions()):
+        category.setdefault(rva, "runtime")
 
     text = next(s for s in image.sections if s.name == ".text")
     blob = image.blob(text)

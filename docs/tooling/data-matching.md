@@ -327,6 +327,15 @@ lies in the game part of its output section, a library copy among its
 member's neighbours. Library code COMDATs that the linker folded into a game
 function (`alias` rows) are verified but do not claim the game's bytes.
 
+A reviewed code row can additionally declare `ownership=whole-section` after
+its complete COFF section passes the byte and relocation verifier. A census
+body wholly inside that one section is runtime code even when an assembler
+internal entry has no symbol. Partial spans, overlapping owners, alias/data
+rows and legacy rows without this declaration do not establish interior
+ownership. EH, zlib and initializer classifications retain precedence; no
+internal symbol is invented. The declaration does not waive library-code or
+generated-code verification.
+
 Runtime-map and zlib labels, and model data claims of the same name, yield to
 verified sections that define them; a differently named claim inside a
 verified section remains and shows as an overlap. Credited code fill is the

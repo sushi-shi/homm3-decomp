@@ -674,21 +674,12 @@ def function_rvas() -> dict[tuple[str, str], int]:
 
 
 def census_targets() -> set | None:
-    """The census's function starts less the runtime map's library code, or
-    None when the image has no census."""
+    """Census starts less platform library code, or None without a census."""
     if not CENSUS_FUNCTIONS.is_file():
         return None
-
-    def rvas(path):
-        out = set()
-        for line in path.read_text().splitlines():
-            field = line.split("\t", 1)[0]
-            if field.startswith("0x"):
-                out.add(int(field, 16))
-        return out
-
-    library = rvas(RUNTIME_MAP) if RUNTIME_MAP.is_file() else set()
-    return rvas(CENSUS_FUNCTIONS) - library
+    from homm3.match import universe
+    category, _sizes = universe.classify()
+    return {rva for rva, kind in category.items() if kind != "runtime"}
 
 
 def load_baseline_comments() -> tuple:
