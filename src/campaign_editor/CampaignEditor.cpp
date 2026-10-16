@@ -211,6 +211,9 @@ TCampaignEditorApp::TCampaignEditorApp()
 
 DATA(0x004c6e48) TCampaignEditorApp theApp;
 
+// Native passes theApp at 0x4c6e48 to the constructor at 0x403da0.
+VA_COMPGEN(0x00403e40, 0xa, STATIC_CTOR, theApp)
+
 // Named handler resources preserve retail's address reloads and shared slots.
 VA(0x00403e70, 0x6a2)
 BOOL TCampaignEditorApp::InitInstance()
@@ -318,6 +321,9 @@ CAboutDlg::CAboutDlg()
 {
 }
 
+// Native CAboutDlg vtable 0x487b18 selects this override at slot 33;
+// the pinned MFC CDialog vtable names that slot as DoDataExchange.
+VA(0x004046e0, 0x3)
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialog::DoDataExchange(pDX);

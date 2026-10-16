@@ -429,6 +429,7 @@ CampaignEditor	??_GCAboutDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ebc0	-
 CampaignEditor	??_GTCampaignDocTemplate@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign Editor.cpp2351922671@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x3cb0	-
 CampaignEditor	??_GTCampaignEditorApp@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x3dc0	-
 CampaignEditor	??_GTSplashWnd@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign Editor.cpp2351922671@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x3760	-
+CampaignEditor	?DoDataExchange@CAboutDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x46e0	tokens1:0935ac100568
 CampaignEditor	?GetDocString@TCampaignDocTemplate@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign Editor.cpp2351922671@@UBEHAAVCString@@W4DocStringIndex@CDocTemplate@@@Z	100.0000	100.0000	100.0000	0x3ce0	tokens1:726468451f31
 CampaignEditor	?GetMessageMap@CAboutDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x46f0	tokens1:15aa23389de5
 CampaignEditor	?GetMessageMap@TCampaignEditorApp@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x3d90	tokens1:406ab16ec53d
@@ -443,6 +444,7 @@ CampaignEditor	?OpenDocumentFile@TCampaignDocTemplate@?%C:\Dev\Heroes 3 Exp 2\Ca
 CampaignEditor	?OpenDocumentFile@TCampaignEditorApp@@UAEPAVCDocument@@PBD@Z	100.0000	100.0000	100.0000	0x4b10	tokens1:08bdf6da1d36
 CampaignEditor	?ProcessWndProcException@TCampaignEditorApp@@UAEJPAVCException@@PBUtagMSG@@@Z	100.0000	100.0000	100.0000	0x4ab0	tokens1:ebd70a5d4883
 CampaignEditor	?Run@TCampaignEditorApp@@UAEHXZ	100.0000	100.0000	100.0000	0x4930	tokens1:b09f4996ef7b
+CampaignEditor	__h3cg$CampaignEditor$static_ctor$theApp	100.0000	100.0000	100.0000	0x3e40	-
 CampaignEditor	__h3cg$CampaignEditor$static_dtor$className	100.0000	100.0000	100.0000	0x3750	-
 CampaignEditor	__h3cg$CampaignEditor$static_dtor$resourceManager	100.0000	100.0000	100.0000	0x4530	-
 CampaignEditor	__h3cg$CampaignEditor$static_dtor$version	100.0000	100.0000	100.0000	0x48b0	-
