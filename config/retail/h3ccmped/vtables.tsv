@@ -3,7 +3,7 @@
 # belong in the image's reviewed tables, never in these rows.
 # generator: homm3.census
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-11
+# date: 2026-10-16
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	function_count	class
 0x876a8	3	runtime_error@std
@@ -73,7 +73,7 @@ rva	function_count	class
 0x88078	5	TCampaignDocLoadFailure
 0x88090	5	TCampaignDocInvalidFileVersion
 0x880a8	44	TCampaignDoc
-0x8815c	1	CFileException
+0x8815c	5	CFileException
 0x88174	1	?$basic_ostream@DU?$char_traits@D@std@@@std
 0x8817c	1	?$basic_ios@DU?$char_traits@D@std@@@std
 0x8818c	1	ios_base@std

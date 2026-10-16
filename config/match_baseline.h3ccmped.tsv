@@ -339,6 +339,7 @@ CampaignDoc	??_D?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEXXZ	100.0000	100
 CampaignDoc	??_ETGzDeflatedScenarioMap@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WBA@AEPAXI@Z	100.0000	100.0000	100.0000	0x16e90	-
 CampaignDoc	??_ETStrGzInflateBuf@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@WFE@AEPAXI@Z	100.0000	100.0000	100.0000	0x16e80	-
 CampaignDoc	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15d10	-
+CampaignDoc	??_GCFileException@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14830	-
 CampaignDoc	??_GTCampaign@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x15d60	-
 CampaignDoc	??_GTCampaignDoc@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x140d0	-
 CampaignDoc	??_GTCampaignDocInvalidFileVersion@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14000	-
@@ -387,7 +388,7 @@ CampaignDoc	?insert@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allo
 CampaignDoc	?insert@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAEXPAUTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@IABU34@@Z	100.0000	100.0000	100.0000	0x16230	-
 CampaignDoc	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x15e10	-
 CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	93.5332	93.5332	93.5332	0x13600	tokens1:4f27f7113327
-CampaignDoc	?loadScenarioMap@TCampaignDoc@@QAE?AV?$auto_ptr@VTCampaignScenarioMap@@@std@@ABVCString@@@Z	77.5739	77.5739	77.5739	0x14390	tokens1:66d6f778b00b
+CampaignDoc	?loadScenarioMap@TCampaignDoc@@QAE?AV?$auto_ptr@VTCampaignScenarioMap@@@std@@ABVCString@@@Z	100.0000	100.0000	100.0000	0x14390	tokens1:745cd3389969
 CampaignDoc	?make_pair@std@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@1@ABV?$auto_ptr@VTCampaign@@@1@ABH@Z	100.0000	100.0000	100.0000	0x167f0	-
 CampaignDoc	?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z	99.6328	99.6328	99.6328	0x10890	tokens1:8c2799e8098c
 CampaignDoc	?read@TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXAAVTRawIStream@@H@Z	85.9638	85.9638	85.9638	0x12400	tokens1:618eaa7003d2
@@ -891,8 +892,8 @@ GameMapHeader	?insert@?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHer
 GameMapHeader	?size@?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHeroIdentity@TGameMapHeader@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x238f0	-
 GameMapHeader	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x24b10	-
 GameMapHeader	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x24bb0	-
-GameResource	?InitializeGameResourceTypeTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0x24e60	-
-GameResource	__h3cg$GameResource$static_dtor$pNames	100.0000	100.0000	100.0000	0x25030	-
+GameResource	?InitializeGameResourceTypeTraitsTable@@YAXXZ	99.9645	100.0000	100.0000	0x24e60	-
+GameResource	__h3cg$GameResource$static_dtor$pNames	0.0000	100.0000	100.0000	0x25030	-
 MFCFileBuf	??0TMFCFileBuf@@QAE@PAVCFile@@@Z	74.5067	74.5067	74.5067	0x28ae0	-
 MFCFileBuf	??1TMFCFileBuf@@UAE@XZ	100.0000	100.0000	100.0000	0x28c10	-
 MFCFileBuf	??_GTMFCFileBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x28bf0	-
@@ -963,11 +964,11 @@ NewCampaignDlg	?OnOK@TNewCampaignDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x29710	
 NewCampaignDlg	?OnVersionRadio@TNewCampaignDlg@@IAEXXZ	100.0000	100.0000	100.0000	0x29770	tokens1:aefc99075986
 Player	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x18da0	-
 Player	??_F?$TAutoArrayPtr@D@@QAEXXZ	100.0000	100.0000	100.0000	0x29c00	-
-Player	?InitializePlayerTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x29890	-
-Player	__h3cg$Player$static_dtor$aColorNames	100.0000	100.0000	100.0000	0x29bc0	-
-Player	__h3cg$Player$static_dtor$aNames	100.0000	100.0000	100.0000	0x29be0	-
-PrimarySkillTraits	?InitializePrimarySkillTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0x29c40	-
-PrimarySkillTraits	__h3cg$PrimarySkillTraits$static_dtor$pNames	100.0000	100.0000	100.0000	0x29e10	-
+Player	?InitializePlayerTraitsTable@@YA_NXZ	99.9580	100.0000	100.0000	0x29890	-
+Player	__h3cg$Player$static_dtor$aColorNames	0.0000	100.0000	100.0000	0x29bc0	-
+Player	__h3cg$Player$static_dtor$aNames	0.0000	100.0000	100.0000	0x29be0	-
+PrimarySkillTraits	?InitializePrimarySkillTraitsTable@@YAXXZ	99.9645	100.0000	100.0000	0x29c40	-
+PrimarySkillTraits	__h3cg$PrimarySkillTraits$static_dtor$pNames	0.0000	100.0000	100.0000	0x29e10	-
 ScenarioPropsCrossoverPage	??0TScenarioPropsCrossoverPage@@QAE@ABVTScenario@@AAV1@H@Z	100.0000	100.0000	100.0000	0x29e60	tokens1:3a9124c240ca
 ScenarioPropsCrossoverPage	??1CCheckListBox@@UAE@XZ	100.0000	100.0000	100.0000	0x2aa20	-
 ScenarioPropsCrossoverPage	??1TScenarioPropsCrossoverPage@@UAE@XZ	100.0000	100.0000	100.0000	0x29fd0	tokens1:fa8a60165987
@@ -1047,8 +1048,8 @@ ScenarioPropsStartingOptionsPage	??1TGetScenarioStartingBonusNameFunc@?%C:\Dev\H
 ScenarioPropsStartingOptionsPage	??1TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAE@XZ	100.0000	100.0000	100.0000	0x2eaf0	-
 ScenarioPropsStartingOptionsPage	??1TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAE@XZ	100.0000	100.0000	100.0000	0x2faa0	-
 ScenarioPropsStartingOptionsPage	??1TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAE@XZ	100.0000	100.0000	100.0000	0x30840	-
-ScenarioPropsStartingOptionsPage	??1TScenarioPropsStartingOptionsPage@@UAE@XZ	99.9329	100.0000	100.0000	0x31740	tokens1:9543c0e3780e
-ScenarioPropsStartingOptionsPage	??1_TTypeDlgs@TScenarioPropsStartingOptionsPage@@QAE@XZ	99.9594	100.0000	100.0000	0x32030	-
+ScenarioPropsStartingOptionsPage	??1TScenarioPropsStartingOptionsPage@@UAE@XZ	100.0000	100.0000	100.0000	0x31740	tokens1:9543c0e3780e
+ScenarioPropsStartingOptionsPage	??1_TTypeDlgs@TScenarioPropsStartingOptionsPage@@QAE@XZ	100.0000	100.0000	100.0000	0x32030	-
 ScenarioPropsStartingOptionsPage	??RTGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@QAE?AVCString@@ABVTScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x2e2e0	tokens1:4973992842f9
 ScenarioPropsStartingOptionsPage	??_GTScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ead0	-
 ScenarioPropsStartingOptionsPage	??_GTScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2fa80	-
@@ -1139,94 +1140,94 @@ ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\D
 ScenarioPropsStartingOptionsPage	?visit@TScenarioPropsStartingOptionsPage@@EAEXABVTScenarioOptionsBonus@@@Z	100.0000	100.0000	100.0000	0x31a80	tokens1:0fa260170849
 ScenarioPropsStartingOptionsPage	?visit@TScenarioPropsStartingOptionsPage@@EAEXABVTScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x31ab0	tokens1:e6c212b9a474
 ScenarioPropsStartingOptionsPage	?visit@TScenarioPropsStartingOptionsPage@@EAEXABVTScenarioOptionsStartingHero@@@Z	100.0000	100.0000	100.0000	0x31ae0	tokens1:3b0b1dedbaa2
-SkillMasteryTraits	?InitializeSkillMasteryTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0x32490	-
-SkillMasteryTraits	__h3cg$SkillMasteryTraits$static_dtor$pNames	100.0000	100.0000	100.0000	0x32660	-
+SkillMasteryTraits	?InitializeSkillMasteryTraitsTable@@YAXXZ	99.9645	100.0000	100.0000	0x32490	-
+SkillMasteryTraits	__h3cg$SkillMasteryTraits$static_dtor$pNames	0.0000	100.0000	100.0000	0x32660	-
 TownTypeTraits	??0TBuildingTraits@TTown@@QAE@W4TBuilding@@@Z	100.0000	100.0000	100.0000	0x331c0	-
 TownTypeTraits	??_F?$vector@PADV?$allocator@PAD@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x36e80	-
-TownTypeTraits	?InitializeTownTypeTraitsTable@@YAXXZ	100.0000	100.0000	100.0000	0x36710	-
+TownTypeTraits	?InitializeTownTypeTraitsTable@@YAXXZ	99.9725	100.0000	100.0000	0x36710	-
 TownTypeTraits	?getBaseCreatureName@TAbsoluteGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@UBEPBDXZ	100.0000	100.0000	100.0000	0x33210	-
 TownTypeTraits	?getBaseCreatureName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@UBEPBDXZ	100.0000	100.0000	100.0000	0x36480	-
 TownTypeTraits	?getUpgradeCreatureName@TAbsoluteGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@UBEPBDXZ	100.0000	100.0000	100.0000	0x33230	-
 TownTypeTraits	?getUpgradeCreatureName@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@UBEPBDXZ	100.0000	100.0000	100.0000	0x36490	-
-TownTypeTraits	?initialize@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@SAXXZ	100.0000	100.0000	100.0000	0x32b40	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aCastleBuildingTraits	100.0000	100.0000	100.0000	0x32d80	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aConfluxBuildingTraits	100.0000	100.0000	100.0000	0x35a90	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aDungeonBuildingTraits	100.0000	100.0000	100.0000	0x349e0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aFortressBuildingTraits	100.0000	100.0000	100.0000	0x35500	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aInfernoBuildingTraits	100.0000	100.0000	100.0000	0x33eb0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aNecropolisBuildingTraits	100.0000	100.0000	100.0000	0x34440	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aRampartBuildingTraits	100.0000	100.0000	100.0000	0x33380	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aRandomBuildingTraits	100.0000	100.0000	100.0000	0x36020	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aStrongholdBuildingTraits	100.0000	100.0000	100.0000	0x34f70	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aTowerBuildingTraits	100.0000	100.0000	100.0000	0x33920	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aTownTypeTraitsImp	100.0000	100.0000	100.0000	0x365d0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator1	100.0000	100.0000	100.0000	0x331f0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator2	100.0000	100.0000	100.0000	0x33260	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator3	100.0000	100.0000	100.0000	0x33290	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator4	100.0000	100.0000	100.0000	0x332c0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator5	100.0000	100.0000	100.0000	0x332f0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator6	100.0000	100.0000	100.0000	0x33320	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator7	100.0000	100.0000	100.0000	0x33350	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator1	100.0000	100.0000	100.0000	0x35ed0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator2	100.0000	100.0000	100.0000	0x35f00	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator3	100.0000	100.0000	100.0000	0x35f30	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator4	100.0000	100.0000	100.0000	0x35f60	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator5	100.0000	100.0000	100.0000	0x35f90	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator6	100.0000	100.0000	100.0000	0x35fc0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator7	100.0000	100.0000	100.0000	0x35ff0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator1	100.0000	100.0000	100.0000	0x34e20	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator2	100.0000	100.0000	100.0000	0x34e50	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator3	100.0000	100.0000	100.0000	0x34e80	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator4	100.0000	100.0000	100.0000	0x34eb0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator5	100.0000	100.0000	100.0000	0x34ee0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator6	100.0000	100.0000	100.0000	0x34f10	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator7	100.0000	100.0000	100.0000	0x34f40	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator1	100.0000	100.0000	100.0000	0x35940	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator2	100.0000	100.0000	100.0000	0x35970	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator3	100.0000	100.0000	100.0000	0x359a0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator4	100.0000	100.0000	100.0000	0x359d0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator5	100.0000	100.0000	100.0000	0x35a00	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator6	100.0000	100.0000	100.0000	0x35a30	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator7	100.0000	100.0000	100.0000	0x35a60	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator1	100.0000	100.0000	100.0000	0x342f0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator2	100.0000	100.0000	100.0000	0x34320	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator3	100.0000	100.0000	100.0000	0x34350	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator4	100.0000	100.0000	100.0000	0x34380	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator5	100.0000	100.0000	100.0000	0x343b0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator6	100.0000	100.0000	100.0000	0x343e0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator7	100.0000	100.0000	100.0000	0x34410	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator1	100.0000	100.0000	100.0000	0x34890	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator2	100.0000	100.0000	100.0000	0x348c0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator3	100.0000	100.0000	100.0000	0x348f0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator4	100.0000	100.0000	100.0000	0x34920	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator5	100.0000	100.0000	100.0000	0x34950	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator6	100.0000	100.0000	100.0000	0x34980	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator7	100.0000	100.0000	100.0000	0x349b0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator1	100.0000	100.0000	100.0000	0x337d0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator2	100.0000	100.0000	100.0000	0x33800	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator3	100.0000	100.0000	100.0000	0x33830	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator4	100.0000	100.0000	100.0000	0x33860	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator5	100.0000	100.0000	100.0000	0x33890	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator6	100.0000	100.0000	100.0000	0x338c0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator7	100.0000	100.0000	100.0000	0x338f0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator1	100.0000	100.0000	100.0000	0x353b0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator2	100.0000	100.0000	100.0000	0x353e0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator3	100.0000	100.0000	100.0000	0x35410	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator4	100.0000	100.0000	100.0000	0x35440	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator5	100.0000	100.0000	100.0000	0x35470	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator6	100.0000	100.0000	100.0000	0x354a0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator7	100.0000	100.0000	100.0000	0x354d0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator1	100.0000	100.0000	100.0000	0x33d60	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator2	100.0000	100.0000	100.0000	0x33d90	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator3	100.0000	100.0000	100.0000	0x33dc0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator4	100.0000	100.0000	100.0000	0x33df0	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator5	100.0000	100.0000	100.0000	0x33e20	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator6	100.0000	100.0000	100.0000	0x33e50	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator7	100.0000	100.0000	100.0000	0x33e80	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$apTextTable	100.0000	100.0000	100.0000	0x36e20	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$pNames	100.0000	100.0000	100.0000	0x32d50	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$pRandomName	100.0000	100.0000	100.0000	0x36e40	-
-TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$pTypeNames	100.0000	100.0000	100.0000	0x36e60	-
+TownTypeTraits	?initialize@TIndeterminateGeneratorTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@SAXXZ	99.9688	100.0000	100.0000	0x32b40	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aCastleBuildingTraits	0.0000	100.0000	100.0000	0x32d80	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aConfluxBuildingTraits	0.0000	100.0000	100.0000	0x35a90	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aDungeonBuildingTraits	0.0000	100.0000	100.0000	0x349e0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aFortressBuildingTraits	0.0000	100.0000	100.0000	0x35500	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aInfernoBuildingTraits	0.0000	100.0000	100.0000	0x33eb0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aNecropolisBuildingTraits	0.0000	100.0000	100.0000	0x34440	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aRampartBuildingTraits	0.0000	100.0000	100.0000	0x33380	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aRandomBuildingTraits	0.0000	100.0000	100.0000	0x36020	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aStrongholdBuildingTraits	0.0000	100.0000	100.0000	0x34f70	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aTowerBuildingTraits	0.0000	100.0000	100.0000	0x33920	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$aTownTypeTraitsImp	0.0000	100.0000	100.0000	0x365d0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator1	0.0000	100.0000	100.0000	0x331f0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator2	0.0000	100.0000	100.0000	0x33260	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator3	0.0000	100.0000	100.0000	0x33290	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator4	0.0000	100.0000	100.0000	0x332c0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator5	0.0000	100.0000	100.0000	0x332f0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator6	0.0000	100.0000	100.0000	0x33320	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$castleGenerator7	0.0000	100.0000	100.0000	0x33350	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator1	0.0000	100.0000	100.0000	0x35ed0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator2	0.0000	100.0000	100.0000	0x35f00	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator3	0.0000	100.0000	100.0000	0x35f30	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator4	0.0000	100.0000	100.0000	0x35f60	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator5	0.0000	100.0000	100.0000	0x35f90	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator6	0.0000	100.0000	100.0000	0x35fc0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$confluxGenerator7	0.0000	100.0000	100.0000	0x35ff0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator1	0.0000	100.0000	100.0000	0x34e20	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator2	0.0000	100.0000	100.0000	0x34e50	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator3	0.0000	100.0000	100.0000	0x34e80	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator4	0.0000	100.0000	100.0000	0x34eb0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator5	0.0000	100.0000	100.0000	0x34ee0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator6	0.0000	100.0000	100.0000	0x34f10	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$dungeonGenerator7	0.0000	100.0000	100.0000	0x34f40	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator1	0.0000	100.0000	100.0000	0x35940	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator2	0.0000	100.0000	100.0000	0x35970	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator3	0.0000	100.0000	100.0000	0x359a0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator4	0.0000	100.0000	100.0000	0x359d0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator5	0.0000	100.0000	100.0000	0x35a00	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator6	0.0000	100.0000	100.0000	0x35a30	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$fortressGenerator7	0.0000	100.0000	100.0000	0x35a60	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator1	0.0000	100.0000	100.0000	0x342f0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator2	0.0000	100.0000	100.0000	0x34320	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator3	0.0000	100.0000	100.0000	0x34350	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator4	0.0000	100.0000	100.0000	0x34380	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator5	0.0000	100.0000	100.0000	0x343b0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator6	0.0000	100.0000	100.0000	0x343e0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$infernoGenerator7	0.0000	100.0000	100.0000	0x34410	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator1	0.0000	100.0000	100.0000	0x34890	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator2	0.0000	100.0000	100.0000	0x348c0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator3	0.0000	100.0000	100.0000	0x348f0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator4	0.0000	100.0000	100.0000	0x34920	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator5	0.0000	100.0000	100.0000	0x34950	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator6	0.0000	100.0000	100.0000	0x34980	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$necropolisGenerator7	0.0000	100.0000	100.0000	0x349b0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator1	0.0000	100.0000	100.0000	0x337d0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator2	0.0000	100.0000	100.0000	0x33800	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator3	0.0000	100.0000	100.0000	0x33830	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator4	0.0000	100.0000	100.0000	0x33860	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator5	0.0000	100.0000	100.0000	0x33890	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator6	0.0000	100.0000	100.0000	0x338c0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$rampartGenerator7	0.0000	100.0000	100.0000	0x338f0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator1	0.0000	100.0000	100.0000	0x353b0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator2	0.0000	100.0000	100.0000	0x353e0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator3	0.0000	100.0000	100.0000	0x35410	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator4	0.0000	100.0000	100.0000	0x35440	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator5	0.0000	100.0000	100.0000	0x35470	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator6	0.0000	100.0000	100.0000	0x354a0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$strongholdGenerator7	0.0000	100.0000	100.0000	0x354d0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator1	0.0000	100.0000	100.0000	0x33d60	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator2	0.0000	100.0000	100.0000	0x33d90	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator3	0.0000	100.0000	100.0000	0x33dc0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator4	0.0000	100.0000	100.0000	0x33df0	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator5	0.0000	100.0000	100.0000	0x33e20	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator6	0.0000	100.0000	100.0000	0x33e50	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_ctor$towerGenerator7	0.0000	100.0000	100.0000	0x33e80	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$apTextTable	0.0000	100.0000	100.0000	0x36e20	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$pNames	0.0000	100.0000	100.0000	0x32d50	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$pRandomName	0.0000	100.0000	100.0000	0x36e40	-
+TownTypeTraits	__h3cg$TownTypeTraits$static_dtor$pTypeNames	0.0000	100.0000	100.0000	0x36e60	-
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x402e0	-
 artifact	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1df70	-
 artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x2f10	-

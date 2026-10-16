@@ -766,11 +766,12 @@ void TCampaignDoc::Serialize(CArchive& ar)
     }
 }
 
-VA(0x00414390, 0x4be)
+VA(0x00414390, 0x4a0)
 auto_ptr<TCampaignScenarioMap> TCampaignDoc::loadScenarioMap(const CString& pathName)
 {
     CWaitCursor wait;
-    CString fileName = pathName.Right(pathName.GetLength() - pathName.ReverseFind('\\') - 1);
+    int separator = pathName.ReverseFind('\\');
+    CString fileName = pathName.Right(pathName.GetLength() - separator - 1);
     CFileException fe;
     CFile* pFile = GetFile(pathName, CFile::modeRead | CFile::shareDenyWrite, &fe);
     if (pFile == NULL) {
@@ -778,23 +779,15 @@ auto_ptr<TCampaignScenarioMap> TCampaignDoc::loadScenarioMap(const CString& path
         return auto_ptr<TCampaignScenarioMap>();
     }
     auto_ptr<char> pData;
+    UINT size;
     try {
-        UINT size = pFile->GetLength();
+        size = pFile->GetLength();
         if (size > 0) {
             pData = auto_ptr<char>(new char[size]);
             if (pData.get() == NULL)
                 throw TAllocationFailure();
             pFile->Read(pData.get(), size);
         }
-        ReleaseFile(pFile, FALSE);
-        auto_ptr<TCampaignScenarioMap> pMap(
-            new TGzDeflatedScenarioMap(string(fileName), size, pData, _m_version, false));
-        if (pMap.get() == NULL)
-            throw TAllocationFailure();
-        return pMap;
-    } catch (TCampaignScenarioMap::TCreateFailure& failure) {
-        reportCreateFailure(string(fileName), failure, NULL);
-        return auto_ptr<TCampaignScenarioMap>();
     } catch (CException* e) {
         ReleaseFile(pFile, TRUE);
         ReportSaveLoadException(pathName, e, FALSE, AFX_IDP_FAILED_TO_OPEN_DOC);
@@ -804,7 +797,23 @@ auto_ptr<TCampaignScenarioMap> TCampaignDoc::loadScenarioMap(const CString& path
         ReleaseFile(pFile, TRUE);
         throw;
     }
+    ReleaseFile(pFile, FALSE);
+    auto_ptr<TCampaignScenarioMap> pMap;
+    try {
+        pMap = auto_ptr<TCampaignScenarioMap>(
+            new TGzDeflatedScenarioMap(static_cast<LPCTSTR>(fileName), size, pData, _m_version, false));
+        if (pMap.get() == NULL)
+            throw TAllocationFailure();
+    } catch (TCampaignScenarioMap::TCreateFailure& failure) {
+        reportCreateFailure(string(fileName), failure, NULL);
+        return auto_ptr<TCampaignScenarioMap>();
+    }
+    return pMap;
 }
+
+// The vtable slot at 0x488160 names this separate body after loadScenarioMap's
+// final rethrow and alignment padding.
+VA_COMPGEN(0x00414830, 0x1e, SCALAR_DELETING_DTOR, CFileException)
 
 VA(0x00414890, 0x1c0)
 void TCampaignDoc::exportScenarioMap(const TCampaignScenarioMap* pMap, const CString& pathName)

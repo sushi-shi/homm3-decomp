@@ -33,10 +33,12 @@ class RethrowSeedsTest(unittest.TestCase):
 class ThrowSeedsTest(unittest.TestCase):
     """A data pointer to the code after a call of the throw helper (the
     callee a catch funclet's rethrow names) starts a function."""
-    def census(self, target):
+    def census(self, target, padding=()):
         call = SimpleNamespace(mnemonic="call", operands=[
             SimpleNamespace(type=functions.x86.X86_OP_IMM, imm=0x400000 + target)])
-        return SimpleNamespace(insn=lambda rva: call, image=SimpleNamespace(image_base=0x400000))
+        return SimpleNamespace(insn=lambda rva: call,
+                               byte=lambda rva: 0x90 if rva in padding else 0x6a,
+                               image=SimpleNamespace(image_base=0x400000))
 
     def test_pointer_after_a_throw_call_is_a_seed(self):
         c = self.census(0x5000)
@@ -50,6 +52,25 @@ class ThrowSeedsTest(unittest.TestCase):
         covered = {0x1005: 0x1000, 0x100a: 0x1000}
         ends = {0x100a: 0x1005}
         self.assertEqual(functions.throw_seeds(c, [(0x100a, 0x2000)], covered, ends, {0x5000}), [])
+
+    def test_vtable_pointer_after_padded_throw_starts_a_function(self):
+        c = self.census(0x5000, range(0x1005, 0x1010))
+        covered = {0x1000: 0x1000, 0x1010: 0x1000}
+        ends = {0x1005: 0x1000}
+        self.assertEqual(functions.throw_seeds(c, [(0x1010, 0x2000)], covered, ends, {0x5000}),
+                         [(0x1010, 0x2000)])
+
+    def test_padded_ordinary_call_does_not_prove_a_boundary(self):
+        c = self.census(0x6000, range(0x1005, 0x1010))
+        covered = {0x1000: 0x1000, 0x1010: 0x1000}
+        self.assertEqual(functions.throw_seeds(c, [(0x1010, 0x2000)], covered,
+                                             {0x1005: 0x1000}, {0x5000}), [])
+
+    def test_padded_throw_does_not_claim_another_functions_bytes(self):
+        c = self.census(0x5000, range(0x1005, 0x1010))
+        covered = {0x1000: 0x1000, 0x1010: 0x1008}
+        self.assertEqual(functions.throw_seeds(c, [(0x1010, 0x2000)], covered,
+                                             {0x1005: 0x1000}, {0x5000}), [])
 
     def test_the_helper_is_a_catch_funclet_s_last_call(self):
         call = SimpleNamespace(mnemonic="call", operands=[

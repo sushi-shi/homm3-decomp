@@ -363,7 +363,11 @@ def throw_seeds(c, lone_targets, covered, ends, helpers):
     throw never returns, so the pointer starts a function the descent ran
     into past the throw (a message map's handler after a function that
     ends in a throw, a deleting destructor's vtable slot after a catch
-    block that throws)."""
+    block that throws). Alignment padding may separate the call and the
+    pointed-to function, including pointers in short vtables that cannot
+    be distinguished from EH tables by their run length alone."""
+    ends = dict(ends)
+    ends.update(padded_call_ends(c, ends))
     out = []
     for t, s in lone_targets:
         if t not in covered or t not in ends:
@@ -569,7 +573,8 @@ def run(image, log=print, catch_bodies=False):
     for t, s in padded_data_seeds(c, lone_targets, covered, ends):
         if c.in_text(t):
             take(t, f"data-after-padding@0x{s:x}", check=False)
-    # or right after a call of the throw helper, with no padding between
+    # or after a known throw helper, with or without alignment padding;
+    # this also covers short vtables, independently of the run-length test
     for t, s in throw_seeds(c, lone_targets + run_targets, covered, ends, throw_helpers(c)):
         take(t, f"data-after-throw@0x{s:x}", check=False)
     drain(True)
