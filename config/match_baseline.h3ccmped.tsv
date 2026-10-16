@@ -442,7 +442,7 @@ CampaignEditor	?OnPaint@TSplashWnd@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campai
 CampaignEditor	?OpenDocumentFile@TCampaignDocTemplate@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\Campaign Editor.cpp2351922671@@UAEPAVCDocument@@PBDH@Z	100.0000	100.0000	100.0000	0x3d50	tokens1:50d9f7f686a3
 CampaignEditor	?OpenDocumentFile@TCampaignEditorApp@@UAEPAVCDocument@@PBD@Z	100.0000	100.0000	100.0000	0x4b10	tokens1:08bdf6da1d36
 CampaignEditor	?ProcessWndProcException@TCampaignEditorApp@@UAEJPAVCException@@PBUtagMSG@@@Z	100.0000	100.0000	100.0000	0x4ab0	tokens1:ebd70a5d4883
-CampaignEditor	?Run@TCampaignEditorApp@@UAEHXZ	87.0984	87.0984	87.0984	0x4930	tokens1:b229be7e3c00
+CampaignEditor	?Run@TCampaignEditorApp@@UAEHXZ	100.0000	100.0000	100.0000	0x4930	tokens1:b09f4996ef7b
 CampaignEditor	__h3cg$CampaignEditor$static_dtor$className	100.0000	100.0000	100.0000	0x3750	-
 CampaignEditor	__h3cg$CampaignEditor$static_dtor$resourceManager	100.0000	100.0000	100.0000	0x4530	-
 CampaignEditor	__h3cg$CampaignEditor$static_dtor$version	100.0000	100.0000	100.0000	0x48b0	-

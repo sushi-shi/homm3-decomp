@@ -356,6 +356,8 @@ void TCampaignEditorApp::OnAppAbout()
     aboutDlg.DoModal();
 }
 
+// Both catch handlers reload the resource CString address after construction;
+// named resources preserve that access and the three-string cleanup order.
 VA(0x00404930, 0x174)
 int TCampaignEditorApp::Run()
 {
@@ -363,12 +365,14 @@ int TCampaignEditorApp::Run()
     try {
         exitCode = CWinApp::Run();
     } catch (const exception& e) {
-        m_pMainWnd->MessageBox(CString((LPCTSTR)IDS_FATAL_ERROR) + "\n\n" + e.what(), NULL, MB_ICONSTOP);
+        CString fatalError((LPCTSTR)IDS_FATAL_ERROR);
+        m_pMainWnd->MessageBox(fatalError + "\n\n" + e.what(), NULL, MB_ICONSTOP);
     } catch (CException* e) {
         TCHAR message[256];
         if (!e->GetErrorMessage(message, sizeof(message)))
             throw;
-        m_pMainWnd->MessageBox(CString((LPCTSTR)IDS_FATAL_ERROR) + "\n\n" + message, NULL, MB_ICONSTOP);
+        CString fatalError((LPCTSTR)IDS_FATAL_ERROR);
+        m_pMainWnd->MessageBox(fatalError + "\n\n" + message, NULL, MB_ICONSTOP);
     }
     return exitCode;
 }

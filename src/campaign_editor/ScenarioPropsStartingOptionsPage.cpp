@@ -933,6 +933,8 @@ bool TScenarioOptionsStartingHeroDlg::isAvailable() const
     return false;
 }
 
+// Naming the vector insertion iterator leaves this caller's MAX unchanged.
+// Preserve the formatted CString then conditional hero-name string cleanup.
 VA(0x00430cc0, 0x22b)
 void TScenarioOptionsStartingHeroDlg::_insertChoice(int index, const TScenarioOptionsStartingHero::TChoice& choice)
 {
