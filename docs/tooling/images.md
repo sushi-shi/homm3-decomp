@@ -73,6 +73,9 @@ its census from its pinned executable (`homm3.census`):
   NOP/INT3 tails are removed only at decoded instruction boundaries: a final
   `90` or `CC` inside an immediate or short-jump displacement remains code.
   They are named, not matched, and excluded from the scores.
+  Reviewed `alias` contributions can preserve a second native-proven name at
+  an already named runtime entry. They never create a runtime owner: a
+  library alias folded into game code remains game-owned.
 
 `homm3 --image KEY census --check` fails when the committed tables no longer
 match the derivation.

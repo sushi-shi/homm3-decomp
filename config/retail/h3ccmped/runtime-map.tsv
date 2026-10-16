@@ -278,6 +278,7 @@ rva	name	library	member
 0x4dba8	?pbackfail@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHH@Z	LIBCPMT	iostream.obj
 0x4dc55	?underflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	LIBCPMT	iostream.obj
 0x4dc82	?uflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	LIBCPMT	iostream.obj
+0x4dd97	?seekpos@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@V32@H@Z	LIBCPMT	iostream.obj
 0x4de46	?setbuf@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@PADH@Z	LIBCPMT	iostream.obj
 0x4de8d	?_Gndec@?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAEPADXZ	LIBCPMT	iostream.obj
 0x4de9d	?close@?$basic_filebuf@DU?$char_traits@D@std@@@std@@QAEPAV12@XZ	LIBCPMT	iostream.obj

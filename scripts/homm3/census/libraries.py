@@ -194,6 +194,38 @@ def reviewed_code_sites(image, rows, archives):
     return sites
 
 
+def reviewed_runtime_names(starts, runtime, reviewed, aliases=()):
+    """Merge reviewed owners and aliases without making aliases owners.
+
+    A native vtable can prove two template identities at one folded body.
+    Admit an explicit alias only after a primary runtime name exists at a
+    census start. In particular, a library alias folded into game code must
+    not turn that game body into runtime code. Process owners first so the
+    inventory's row order carries no meaning.
+    """
+    starts = set(starts)
+    reviewed = tuple(reviewed)
+    result = list(runtime)
+    names_at = {rva: name for rva, name, _library, _member in result}
+    alternate = set(aliases)
+    for kind in ('code', 'alias'):
+        for row in reviewed:
+            rva = int(row['rva'], 16)
+            if row['kind'] != kind or rva not in starts:
+                continue
+            if kind == 'alias' and (rva not in names_at or int(row['size']) <= 0
+                                    or int(row['section']) <= 0):
+                continue
+            library = row['library'].rsplit('.', 1)[0]
+            label = (rva, row['symbol'], library, row['member'])
+            if rva not in names_at:
+                result.append(label)
+                names_at[rva] = row['symbol']
+            elif names_at[rva] != row['symbol']:
+                alternate.add(label)
+    return sorted(result), sorted(alternate)
+
+
 def derive(image, functions: dict[int, int], archives: dict[str, Path], log=print,
            imports: dict[str, int] | None = None,
            vtables: dict[str, int] | None = None,

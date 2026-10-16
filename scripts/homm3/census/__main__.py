@@ -177,25 +177,10 @@ def derive(log=print):
     aliases = []
     runtime = libraries.derive(image, {r: s for r, s, _ in rows}, archives, log=log,
                                imports=imports, vtables=classes, aliases=aliases)
-    # reviewed names for identical library members the bytes cannot tell apart
-    named = {r for r, _n, _l, _m in runtime}
-    if reviewed_rows:
-        starts = {r for r, _s, _d in rows}
-        names_at = {r: n for r, n, _l, _m in runtime}
-        for row in reviewed_rows:
-            rva = int(row["rva"], 16)
-            if row["kind"] != "code" or rva not in starts:
-                continue
-            library = row["library"].rsplit(".", 1)[0]
-            if rva not in names_at:
-                runtime.append((rva, row["symbol"], library, row["member"]))
-                names_at[rva] = row["symbol"]
-            elif names_at[rva] != row["symbol"]:
-                # another member of an identical-code fold the row's
-                # evidence reviews
-                aliases.append((rva, row["symbol"], library, row["member"]))
-        runtime.sort()
-        aliases.sort()
+    # Reviewed native identities disambiguate equal bytes; an alias alone
+    # never establishes runtime ownership (it may fold into game code).
+    runtime, aliases = libraries.reviewed_runtime_names(
+        {r for r, _s, _d in rows}, runtime, reviewed_rows, aliases)
     atexit = next((r for r, n, _l, _m in runtime if n == "_atexit"), None)
     if atexit is not None:
         thunks += eh.registration_rows(census, thunks, atexit)
