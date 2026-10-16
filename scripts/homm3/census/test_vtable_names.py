@@ -4,7 +4,7 @@ and empty for a table alone at every level (VC6's own names for the
 editor's hero property sheets)."""
 import unittest
 
-from homm3.census.vtables import vfptr_names
+from homm3.census.vtables import _mangled_vftable, vfptr_names
 
 
 def node(name, offset, *children):
@@ -19,6 +19,25 @@ def sheet(offset=0):
 
 
 class VfptrNames(unittest.TestCase):
+    def test_named_namespace_is_shared_with_the_base_path(self):
+        self.assertEqual(_mangled_vftable("Derived@Scope", ["Base@Scope"]),
+                         "??_7Derived@Scope@@6BBase@1@@")
+
+    def test_vc6_anonymous_namespace_is_one_backreference_component(self):
+        scope = r"?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197"
+        self.assertEqual(_mangled_vftable("TGzDeflatedScenarioMap@" + scope,
+                                         ["TFileContent@" + scope]),
+                         "??_7TGzDeflatedScenarioMap@" + scope + "@@6BTFileContent@1@@")
+
+    def test_distinct_anonymous_namespaces_are_not_conflated(self):
+        first, second = r"?%C:\Dev\A.cpp123", r"?%C:\Dev\B.cpp456"
+        self.assertEqual(_mangled_vftable("Derived@" + first, ["Base@" + second]),
+                         "??_7Derived@" + first + "@@6BBase@" + second + "@@@")
+
+    def test_template_paths_keep_the_existing_uncompressed_spelling(self):
+        self.assertEqual(_mangled_vftable("Derived", ["?$Base@H"]),
+                         "??_7Derived@@6B?$Base@H@@@")
+
     def test_multiple_inheritance_names_each_base(self):
         self.assertEqual(vfptr_names(sheet(), {0, 0x88}),
                          {0: ["CPropertySheet"], 0x88: ["TCreaturesParentSheet"]})

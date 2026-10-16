@@ -94,11 +94,17 @@ _SIMPLE = re.compile(r"^[A-Za-z_][A-Za-z_0-9]*$")
 
 def _mangled_vftable(name, path):
     """`??_7` + the class + `6B` + its vfptr's mangled path + `@`, with
-    MSVC's back references to the simple name components already spelled
+    MSVC's back references to the name components already spelled
     (`??_7TLinkableObject@@6B0@@`)."""
+    def atomic(part):
+        # VC6's file-qualified anonymous namespace is one name component,
+        # just like a named namespace. Template fragments still need their
+        # own mangler and retain the conservative uncompressed spelling.
+        return bool(_SIMPLE.match(part)) or (part.startswith("?%") and len(part) > 2)
+
     parts = name.split("@")
-    if not all(_SIMPLE.match(part) for frag in path for part in frag.split("@")) \
-            or not all(_SIMPLE.match(part) for part in parts):
+    if not all(atomic(part) for frag in path for part in frag.split("@")) \
+            or not all(atomic(part) for part in parts):
         return f"??_7{name}@@6B" + "".join(f"{frag}@@" for frag in path) + "@"
     memo = list(parts)
     out = f"??_7{name}@@6B"
