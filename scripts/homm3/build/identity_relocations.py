@@ -17,10 +17,12 @@ when:
 * that address plus the candidate addend equals the target symbol's retail
   address plus the target addend (REL32: the same address and inline value).
 
-A same-named datum that a byte-verified library section owns is compared by
-its external name when the delinker conjured a local definition for it in a
-different section than the candidate's own COMDAT copy (for example
-`locale::id` statics): both sides name the library's one address.
+A same-named global datum with one model-bound address is compared by its
+external name when the delinker defines local copies. Both symbols must have
+external linkage, and defined symbols must occupy data storage. Unit-specific
+evidence must agree with the global binding. Content-named literals keep their proof
+rules. Byte-verified library owners also support this comparison (for example
+`locale::id` statics). Data definitions and their bytes remain intact.
 
 Unproven names, ambiguous identities and different resolved addresses stay
 visible. The candidate symbol is appended to the target's symbol table when
@@ -37,6 +39,7 @@ from pathlib import Path
 
 from homm3.compare import canonicalize as canon
 
+CNT_CODE = 0x00000020
 DIR32 = 0x0006
 REL32 = 0x0014
 PLACEHOLDER = re.compile(r"(?:data|bss|const|vtbl|fn)_([0-9a-fA-F]+)|\$gap_([0-9a-fA-F]+)")
@@ -152,14 +155,26 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
         bsym = base.symbols[brel.symbol_index]
         tsym = target.symbols[trel.symbol_index]
         if bsym.name == tsym.name:
-            # The delinker conjures a local definition for a datum a verified
-            # library section owns; the candidate emits its own COMDAT copy.
-            # Both name the library's one address, so compare the reference
-            # to the external name rather than to either local placement.
-            if (bsym.name in library_names and tsym.section > 0
+            # The delinker may copy one global datum into several local
+            # definitions. A unique model data binding (compatible with this
+            # unit's identities), or a verified library owner, proves which
+            # global address the equal names and addends reference. Keep the
+            # data definitions intact and compare the reference by that name.
+            binding = symbol_rvas.get(bsym.name)
+            proven_global = (
+                bsym.section >= 0 and bsym.storage_class == canon.EXTERNAL_STORAGE
+                and (bsym.section == 0 or not
+                     base.sections[bsym.section - 1].characteristics & CNT_CODE)
+                and not bsym.name.startswith(("??_C@", "__real@"))
+                and tsym.section > 0 and tsym.storage_class == canon.EXTERNAL_STORAGE
+                and not target.sections[tsym.section - 1].characteristics & CNT_CODE
+                and binding is not None and binding[1] == "data"
+                and resolve_name(bsym.name, symbol_rvas, identities, unit) == binding[0])
+            if ((bsym.name in library_names or proven_global) and tsym.section > 0
                     and trel.typ == DIR32
                     and resolve_name(bsym.name, symbol_rvas, identities) is not None
-                    and (bsym.section <= 0 or base.sections[bsym.section - 1].name
+                    and (proven_global or bsym.section <= 0
+                         or base.sections[bsym.section - 1].name
                          != target.sections[tsym.section - 1].name)):
                 bdata = base.section_bytes(base.sections[brel.section - 1])
                 tdata = target.section_bytes(target.sections[trel.section - 1])
