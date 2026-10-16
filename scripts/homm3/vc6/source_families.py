@@ -37,7 +37,7 @@ from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 13
+VERSION = 15
 
 
 @dataclass(frozen=True)
@@ -79,10 +79,14 @@ def code_identity(payload):
         CoffObject, MEM_EXECUTE, FUNCTION_TYPE, _definitions,
     )
     coff = CoffObject(payload)
-    # VC6's anonymous-scope nonce can reorder named BSS allocations. A
-    # relocation still refers to the same object, not its section offset.
-    # Keep its allocation extent; code/label/section offsets remain exact.
-    bss = {row.symbol.index: ("bss", row.end - row.start)
+    # VC6's anonymous-scope nonce can reorder named BSS allocations. A code
+    # relocation still refers to the same named object, not its section offset.
+    # The next-symbol span includes alignment padding: even an empty class
+    # can acquire a 1- or 3-byte span, and a byte guard 4 or 8. This code-only
+    # identity must not mistake those intervals for declared object sizes.
+    # Source fingerprints are checked separately; instructions, addends and
+    # relocation identities remain exact below. Labels keep their offsets.
+    bss = {row.symbol.index: ("bss",)
            for row in _definitions(coff)
            if row.storage == "bss" and not row.symbol.name.startswith(".")}
     sections = []

@@ -28,22 +28,59 @@ def identity_coff(*, value=0, other=8, size=16, name='object', section=2,
     bss = struct.pack('<8sIIIIIIHHI', b'.bss', 0, 0, size, 0,
                       0, 0, 0, 0, 0xc0500080)
     symbols = b''
+    strings = bytearray(b'\0\0\0\0')
     for symbol_name, offset, owner, kind, scope in (
             ('fn', 0, 1, 0x20, 2), (name, value, section, typ, storage),
             ('other', other, 2, 0, 3)):
-        symbols += symbol_name.encode().ljust(8, b'\0')
+        encoded = symbol_name.encode()
+        if len(encoded) > 8:
+            symbols += struct.pack('<II', 0, len(strings))
+            strings.extend(encoded + b'\0')
+        else:
+            symbols += encoded.ljust(8, b'\0')
         symbols += struct.pack('<IhHBB', offset, owner, kind, scope, 0)
+    struct.pack_into('<I', strings, 0, len(strings))
     return (header + code + bss + text + struct.pack('<IIH', site, 1, relocation)
-            + symbols + struct.pack('<I', 4))
+            + symbols + strings)
 
 
 class SourceFamiliesTests(unittest.TestCase):
-    def test_code_identity_ignores_named_bss_placement_but_keeps_extent(self):
+    def test_code_identity_ignores_named_bss_placement_and_alignment_padding(self):
         original = code_identity(identity_coff())
         moved = identity_coff(value=8, other=0)
         self.assertEqual(original, code_identity(moved))
-        self.assertNotEqual(original, code_identity(identity_coff(value=8, other=0, size=20)))
+        self.assertEqual(original, code_identity(identity_coff(value=8, other=0, size=20)))
         self.assertNotEqual(original, code_identity(identity_coff(name='changed')))
+
+    def test_code_identity_ignores_empty_local_static_next_symbol_padding(self):
+        name = '_?resourceManager@?1??InitInstance@App@@UAEHXZ@4VSession@@A'
+        self.assertEqual(code_identity(identity_coff(name=name, other=1, size=5)),
+                         code_identity(identity_coff(name=name, other=3, size=7)))
+        self.assertNotEqual(code_identity(identity_coff(name=name)),
+                            code_identity(identity_coff(name=name + 'different')))
+
+    def test_code_identity_ignores_claimed_guard_alignment_padding(self):
+        name = '__h3cg$unit$static_init_guard$classNameGuard'
+        original = code_identity(identity_coff(name=name, other=4, size=12))
+        self.assertEqual(original, code_identity(identity_coff(
+            name=name, value=8, other=0, size=16)))
+        for change in ({'name': name + 'Other'},
+                       {'name': name.replace('static_init_guard', 'static_ctor')},
+                       {'text': b'\xa0\0\0\0\0\xc3'},
+                       {'text': b'\xa1\x01\0\0\0\xc3'},
+                       {'site': 2}, {'relocation': 0x14}):
+            with self.subTest(change=change):
+                options = dict(name=name, other=4, size=12)
+                options.update(change)
+                self.assertNotEqual(original, code_identity(identity_coff(**options)))
+
+    def test_code_identity_keeps_guard_offsets_outside_bss(self):
+        name = '__h3cg$unit$static_init_guard$classNameGuard'
+        for section in (0, 1, -1):
+            with self.subTest(section=section):
+                self.assertNotEqual(
+                    code_identity(identity_coff(name=name, section=section)),
+                    code_identity(identity_coff(name=name, section=section, value=4)))
 
     def test_code_identity_retains_bytes_addends_and_relocation_sites_and_types(self):
         original = code_identity(identity_coff())
