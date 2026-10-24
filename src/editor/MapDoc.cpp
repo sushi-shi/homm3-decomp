@@ -840,6 +840,12 @@ void TMapDoc::_TRoadEraseOp::operator()(unsigned int left, unsigned int top, uns
 DATA(0x0059fe50) const TMapDoc::TNewMapParams TMapDoc::s_kDefaultNewMapParams(
     GAME_VERSION_SOD, TGameMap::TSize(1), true, std::auto_ptr<TMapDoc::TRandomMapParams>());
 
+VA_COMPGEN(0x0045ed13, 0x22, STATIC_CTOR, TMapDoc::s_kDefaultNewMapParams)
+
+// VC6 guards the const static's destructor registration.
+DATA_COMPGEN_GUARD(0x0059fe48, defaultNewMapParamsGuard, TMapDoc::s_kDefaultNewMapParams)
+VA_COMPGEN(0x0045ed5b, 0x1b, STATIC_DTOR, TMapDoc::s_kDefaultNewMapParams)
+
 VA(0x0045ed86, 0x35)
 IMPLEMENT_DYNCREATE(TMapDoc, CDocument)
 VA_COMPGEN(0x0045edbb, 0x6, RUNTIME_CLASS_GETTER, TMapDoc)
