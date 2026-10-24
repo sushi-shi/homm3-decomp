@@ -356,6 +356,12 @@ public:
         void setBPresent(bool bPresent);
         void setMainTown(int townType);
         void setHeroes(const std::map<int, std::string>& newHeroes);
+        // Inline, unlike the three above: the scenario map's constructor
+        // (0x40a1f0) needs their call sites. Names not proven.
+        void setBHumanPlayable(bool bHumanPlayable) { m_bHumanPlayable = bHumanPlayable; }
+        void setNumPlaceholders(int numPlaceholders) { m_numPlaceholders = numPlaceholders; }
+        void setBGenerateHeroAtMainTown(bool bGenerate) { m_bGenerateHeroAtMainTown = bGenerate; }
+        void setBHasRandomHero(bool bHasRandomHero) { m_bHasRandomHero = bHasRandomHero; }
 
         bool isHumanPlayable() const { return m_bPresent && m_bHumanPlayable; }
         int getMainTownType() const { return m_bHasMainTown ? m_mainTownType : -1; }

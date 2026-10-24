@@ -1334,8 +1334,14 @@ void TCampaignScenarioMap::TPlayerInfo::setHeroes(const map<int, string>& newHer
 // fails, and so does one the stream cannot read.
 // The retained custom-hero map receiver is const; version is a scalar value
 // read before constructing the header. Native/candidate unwind maps agree on
-// all 16 states and the const TReadFailure catch. Named map-entry locals did
-// not resolve the remaining string construction/cleanup inlining differences.
+// all 16 states and the const TReadFailure catch. The player info's inline
+// setters supply the free call sites retail's inline budgets need (the
+// incorrect-version TCreateFailure and the custom-hero name copy called, the
+// heroes map's begin expanded): 88.63 -> 99.91. What remains is a stack-home
+// swap: retail keeps the custom-hero iterator in pStreamBuf's dead argument
+// slot and the version in a local. `stream >> version` (99.10), a version
+// declared before the try (99.91) and iterating header.m_customHeroes
+// directly (99.61) do not swap them.
 VA(0x0040a1f0, 0x4f0)
 TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pStreamBuf, int campaignVersion,
                                            bool bAnyVersion)
@@ -1364,11 +1370,11 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
             TPlayerInfo& info = m_aPlayer[player];
             if (slot.m_bHumanPlayable || slot.m_bComputerPlayable) {
                 info.setBPresent(true);
-                info.m_bHumanPlayable = slot.m_bHumanPlayable;
-                info.m_numPlaceholders = slot.m_numPlaceholders;
+                info.setBHumanPlayable(slot.m_bHumanPlayable);
+                info.setNumPlaceholders(slot.m_numPlaceholders);
                 if (slot.m_bHasMainTown) {
                     info.setMainTown(slot.m_mainTownType);
-                    info.m_bGenerateHeroAtMainTown = slot.m_bGenerateHero;
+                    info.setBGenerateHeroAtMainTown(slot.m_bGenerateHero);
                 }
                 map<int, string> heroes;
                 for (vector<TGameMapHeader::THeroIdentity>::const_iterator pHero = slot.m_heroes.begin();
@@ -1379,7 +1385,7 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
                     heroes.insert(map<int, string>::value_type(pHero->m_heroID, name));
                 }
                 info.setHeroes(heroes);
-                info.m_bHasRandomHero = slot.m_bRandomHero;
+                info.setBHasRandomHero(slot.m_bRandomHero);
             }
         }
     } catch (const TRawIStream::TReadFailure&) {
