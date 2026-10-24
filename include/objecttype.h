@@ -67,6 +67,7 @@ public:
 
     // Loki h3maped ObjectType.h befriends its text and map-format streams
     // and its map key order.
+    friend std::ostream& operator<<(std::ostream& os, const TObjectType& objectType);
     friend std::istream& operator>>(std::istream& is, TObjectType& objectType);
     friend TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType);
     friend TRawIStream& operator>>(TRawIStream& stream, TObjectType& objectType);

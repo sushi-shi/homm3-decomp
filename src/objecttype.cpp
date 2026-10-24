@@ -9,18 +9,15 @@
 // header statics, _Ios_init at 0x69cb59 and _Wios_init at 0x69cb58, and
 // register their destructors; this compiland included the header.
 // Its facet-id initializer 0x51b830 also guards num_put (0x6aba98) before
-// num_get (0x6aba7c); no recovered code here instantiates num_put, so that
-// 121-byte body stays unmatched. VC6 orders those guards by instantiation:
-// any arithmetic insertion into an ostream parsed before the first
-// arithmetic extraction - even inside an unreferenced inline function that
-// emits no code - reproduces retail's ctype<unsigned short>, num_put,
-// num_get, numpunct body exactly. Retail keeps no ostream code in this
-// compiland, so that insertion was dead code the linker removed; its
-// content is unknown and is not invented here.
-// Open question (for the user): whether a hypothesised dead writer, such as
-// an unreferenced operator<< for TObjectType placed before operator>>, may
-// be admitted on this evidence alone. Until then 0x51b830 and its CRT slot
-// stay unverified.
+// num_get (0x6aba7c). VC6 orders those guards by instantiation: an
+// arithmetic insertion into an ostream parsed before the first arithmetic
+// extraction reproduces retail's ctype<unsigned short>, num_put, num_get,
+// numpunct body. Loki h3maped's ObjectType.cpp supplies that insertion: its
+// objects.txt writer, operator<<(ostream&, const TObjectType&) (line 270,
+// befriended in ObjectType.h), sits just before the reader. Retail keeps no
+// ostream code here, so /OPT:REF dropped the unreferenced writer; with it
+// restored the compiled initializer is byte-identical to 0x51b830 (the claim
+// tooling cannot yet bind a facet-id initializer to its CRT slot).
 #include <assert.h>
 #include <iostream>
 #include <map>
@@ -402,6 +399,24 @@ TObjectType& TObjectType::setBUnderlay(bool underlay)
 {
     m_isUnderlay = underlay;
     return *this;
+}
+
+// The objects.txt form of an object type (Loki h3maped ObjectType.cpp:270,
+// befriended in its ObjectType.h, defined just before the reader below).
+// Nothing calls it, so /OPT:REF drops the body from both images; its
+// arithmetic insertions are what order this compiland's facet ids.
+std::ostream& operator<<(std::ostream& os, const TObjectType& objectType)
+{
+    os << objectType.getImageName()
+       << ' ' << objectType.m_passableMask
+       << ' ' << objectType.m_triggerMask
+       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType._m_terrainMask.to_ulong())
+       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType.m_recommendedTerrainMask.to_ulong())
+       << ' ' << objectType.m_objectType
+       << ' ' << objectType.m_subtype
+       << ' ' << objectType.m_slotCategory
+       << ' ' << int(objectType.m_isUnderlay);
+    return os;
 }
 
 // The per-row parser TObjectTypeTable::load runs over each objects.txt
