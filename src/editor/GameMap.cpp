@@ -2819,25 +2819,23 @@ bool TGameMap::_TImpl::_isValidShipyardPlacement(const TLayer& layer, const TGam
 // then each customized part behind its own flag. Retail normalizes the
 // optional byte flags and sign-extends sex before testing -1. The secondary-
 // skills stream temporary preserves its construction/assignment EH states.
-// Residuals include copy-on-write access expansion and the retained artifact
-// destructor; explicit container-base initialization did not close them.
+// The custom flag, the experience flag and value and the spells flag come
+// through readValue, and the prototype is indexed in one expression: the
+// free inline sites leave retail's budget for the prototype handles' inline
+// get() splits and the skills map constructor (84.63% -> 89.61%); the
+// setne-tested flags keep their bool locals. Remaining: retail keeps
+// ~TArtifactContainer out of line (here its nested ~TArray budget is 61
+// against cb 64) and the stream in EBX; reading the biography through
+// readValue<string> lowers the match.
 VA(0x00426a65, 0x215)
 void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
 {
     for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
-        signed char bCustomized;
-        *pIStream >> bCustomized;
-        if (!bCustomized)
+        if (!readValue<signed char>(*pIStream))
             continue;
-        TArray<THeroPrototype, kNumHeroes>& prototypes = *_m_pProperties->m_aHeroPrototype;
-        THeroPrototype& prototype = prototypes[heroID];
-        signed char bHasExperience;
-        *pIStream >> bHasExperience;
-        if (bHasExperience) {
-            long experience;
-            *pIStream >> experience;
-            prototype.setExperience(experience);
-        }
+        THeroPrototype& prototype = (*_m_pProperties->m_aHeroPrototype)[heroID];
+        if (readValue<signed char>(*pIStream))
+            prototype.setExperience(readValue<long>(*pIStream));
         bool bHasSecondarySkills = readValue<signed char>(*pIStream) != 0;
         if (bHasSecondarySkills)
             prototype.setSecondarySkills(THeroPrototype::TSecondarySkills(pIStream, version));
@@ -2853,9 +2851,7 @@ void TGameMap::_TImpl::_readHeroSettings(TRawIStream* pIStream, int version)
         int sex = readValue<signed char>(*pIStream);
         if (sex != -1)
             prototype.setSex(sex);
-        signed char bHasSpells;
-        *pIStream >> bHasSpells;
-        if (bHasSpells)
+        if (readValue<signed char>(*pIStream))
             prototype.setSpells(THeroPrototype::TSpells(pIStream, version));
         bool bHasPrimarySkills = readValue<signed char>(*pIStream) != 0;
         if (bHasPrimarySkills)
