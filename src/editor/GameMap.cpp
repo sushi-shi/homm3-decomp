@@ -1531,9 +1531,9 @@ void TGameMap::_TImpl::setPlaceholderOwner(bool bSecondLayer, unsigned int objID
 }
 
 // The hero may stand on the map or visit a town there. The player-bookkeeping
-// pointer recovers retail's first COW expansion. The general bookkeeping erase
-// still expands two get() calls retained by retail; named owner/map-entry
-// values and bookkeeping/map references do not recover those boundaries.
+// pointer recovers retail's first COW expansion. The on-map flags go through
+// bitset subscript proxies: with direct set calls the general bookkeeping
+// erase expanded two get() calls that retail retains (89.92% -> 99.97%).
 VA(0x00420bce, 0x1fc)
 void TGameMap::_TImpl::setHeroID(bool bSecondLayer, unsigned int objID, THeroID newHeroID)
 {
@@ -1548,9 +1548,9 @@ void TGameMap::_TImpl::setHeroID(bool bSecondLayer, unsigned int objID, THeroID 
         playerBookkeeping->m_paHeroID->erase(oldHeroID);
     }
     _m_pBookkeeping->m_paHeroRef->erase(oldHeroID);
-    _m_pBookkeeping->m_heroesOnMap.set(oldHeroID, false);
+    _m_pBookkeeping->m_heroesOnMap[oldHeroID] = false;
     pHero->setHeroID(newHeroID);
-    _m_pBookkeeping->m_heroesOnMap.set(newHeroID, true);
+    _m_pBookkeeping->m_heroesOnMap[newHeroID] = true;
     _m_pBookkeeping->m_paHeroRef->insert(map<THeroID, TMapObjectRef>::value_type(newHeroID,
                                                                                  TMapObjectRef(bSecondLayer, objID)));
     if (pHero->getOwner() != ePlayerNone) {
