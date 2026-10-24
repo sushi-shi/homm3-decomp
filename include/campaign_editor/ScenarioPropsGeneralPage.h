@@ -55,6 +55,9 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 private:
+    // The edited scenario (OnOK 0x42b7c0 needs these inline call sites).
+    const TScenario& _getScenario() const { return _m_pCampaign->getScenario(_m_scenario); }
+    TScenario& _modifyScenario() { return _m_pCampaign->modifyScenario(_m_scenario); }
     void _fillPrerequisiteList();
     void _checkPrerequisites();
 

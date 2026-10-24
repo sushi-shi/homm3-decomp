@@ -163,8 +163,8 @@ BOOL TScenarioPropsGeneralPage::OnInitDialog()
     _m_regionTextEdit.LimitText(TScenario::s_kMaxRegionDescLen);
     int regionIndex = _m_scenario;
     _m_regionNameStatic.SetWindowText(_m_pCampaign->getMapTraits().m_regionTraits[regionIndex].m_name);
-    if (_m_pCampaign->getScenario(_m_scenario).getMap() != NULL) {
-        const TCampaignScenarioMap* pMap = _m_pCampaign->getScenario(_m_scenario).getMap();
+    if (_getScenario().getMap() != NULL) {
+        const TCampaignScenarioMap* pMap = _getScenario().getMap();
         _m_scenarioNameStatic.SetWindowText(pMap->m_name.c_str());
         const char* fileName = pMap->m_fileName.c_str();
         _m_mapFileStatic.SetWindowText(fileName);
@@ -177,7 +177,7 @@ BOOL TScenarioPropsGeneralPage::OnInitDialog()
         while (_m_difficultyCombo.GetItemData(index) != difficulty)
             index++;
         _m_difficultyCombo.SetCurSel(index);
-        CString regionDesc(_m_pCampaign->getScenario(_m_scenario).getRegionDesc().c_str());
+        CString regionDesc(_getScenario().getRegionDesc().c_str());
         regionDesc.Replace("\n", "\r\n");
         _m_regionTextEdit.SetWindowText(regionDesc);
     } else {
@@ -195,26 +195,29 @@ BOOL TScenarioPropsGeneralPage::OnInitDialog()
 
 VA(0x0042b7c0, 0x34a)
 // Retail retains basic_string::_Tidy(false) and expands assign through _Grow
-// for the region-description temporary; VC6 currently does the reverse.
-// Explicit LPCTSTR conversion and named direct/copy string construction do
-// not resolve that nested expansion. Keep the natural conversion here.
+// for the region-description temporary. The inline trace needs two more free
+// call sites after that construction; the page's scenario helpers supply them
+// and every retail call now agrees (84.95 -> 88.67). Each helper alone does
+// not (get 84.95, modify 81.95), nor does reading the old campaign through
+// getCampaign() twice (82.93). Retail pushes each setter's argument before
+// the modifyScenario call; the inline helper still computes it first.
 void TScenarioPropsGeneralPage::OnOK()
 {
     CPropertyPage::OnOK();
-    const TScenario& scenario = _m_pCampaign->getScenario(_m_scenario);
-    _m_pCampaign->modifyScenario(_m_scenario)
+    const TScenario& scenario = _getScenario();
+    _modifyScenario()
         .setRegionColor(_m_regionColorCombo.GetItemData(_m_regionColorCombo.GetCurSel()));
     if (scenario.getMap() != NULL) {
-        _m_pCampaign->modifyScenario(_m_scenario)
+        _modifyScenario()
             .setDifficulty(_m_difficultyCombo.GetItemData(_m_difficultyCombo.GetCurSel()));
         CString regionDesc;
         _m_regionTextEdit.GetWindowText(regionDesc);
         regionDesc.Replace("\r\n", "\n");
-        _m_pCampaign->modifyScenario(_m_scenario).setRegionDesc(std::string(regionDesc));
+        _modifyScenario().setRegionDesc(std::string(regionDesc));
     }
     const TCampaign* pOldCampaign = _m_pDoc->getCampaign();
     const TScenario& oldScenario = pOldCampaign->getScenario(_m_scenario);
-    const TScenario& newScenario = _m_pCampaign->getScenario(_m_scenario);
+    const TScenario& newScenario = _getScenario();
     _m_bModified = _m_bModified || _m_bMapChanged || newScenario.getRegionColor() != oldScenario.getRegionColor();
     if (!_m_bModified && scenario.getMap() != NULL) {
         if (newScenario.getDifficulty() != oldScenario.getDifficulty()
@@ -246,7 +249,7 @@ void TScenarioPropsGeneralPage::OnImportButton()
         if (pMap.get() != NULL) {
             _m_bMapChanged = true;
             _m_pSheet->setMap(pMap);
-            const TCampaignScenarioMap* pNewMap = _m_pCampaign->getScenario(_m_scenario).getMap();
+            const TCampaignScenarioMap* pNewMap = _getScenario().getMap();
             _m_scenarioNameStatic.SetWindowText(pNewMap->m_name.c_str());
             _m_mapFileStatic.SetWindowText(pNewMap->m_fileName.c_str());
             _m_importButton.ShowWindow(SW_HIDE);
@@ -269,7 +272,7 @@ void TScenarioPropsGeneralPage::OnImportButton()
 VA(0x0042bcf0, 0x146)
 void TScenarioPropsGeneralPage::OnRefreshButton()
 {
-    const TCampaignScenarioMap* pMap = _m_pCampaign->getScenario(_m_scenario).getMap();
+    const TCampaignScenarioMap* pMap = _getScenario().getMap();
     CString pathName;
     if (promptMapFileName(pMap->m_fileName.c_str(), TRUE, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST,
                           pathName)) {
@@ -277,7 +280,7 @@ void TScenarioPropsGeneralPage::OnRefreshButton()
         if (pNewMap.get() != NULL) {
             _m_bMapChanged = true;
             _m_pSheet->setMap(pNewMap);
-            pMap = _m_pCampaign->getScenario(_m_scenario).getMap();
+            pMap = _getScenario().getMap();
             _m_scenarioNameStatic.SetWindowText(pMap->m_name.c_str());
             _m_mapFileStatic.SetWindowText(pMap->m_fileName.c_str());
         }
@@ -287,7 +290,7 @@ void TScenarioPropsGeneralPage::OnRefreshButton()
 VA(0x0042be40, 0xc1)
 void TScenarioPropsGeneralPage::OnExportButton()
 {
-    const TCampaignScenarioMap* pMap = _m_pCampaign->getScenario(_m_scenario).getMap();
+    const TCampaignScenarioMap* pMap = _getScenario().getMap();
     CString name(pMap->m_fileName.c_str());
     CString pathName;
     if (promptMapFileName(name, FALSE, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST,
