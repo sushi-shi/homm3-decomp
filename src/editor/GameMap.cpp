@@ -227,62 +227,53 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 // the types from 165 and some subtypes (artifacts from 127, the eighth
 // town, the Conflux dwellings, hero classes and monsters); Shadow of Death
 // the types from 222, the combination artifacts from 129 and the new
-// monoliths. Retail shares the AB/SoD return epilogue; VC6 still chooses
-// separate returns and a setcc tail. Flat guards, grouped monolith cases,
-// ternary returns and a named result did not recover that layout.
+// monoliths. Retail has no setcc: each case returns only its newer edition
+// and breaks to one shared ROE return, and the artifact case owns the shared
+// AB tail, which VC6 gives the last AB-returning case. The other cases' order
+// does not change the object. Still open: retail keeps the AB return at the
+// top guard and the SoD one in the monolith case; nested guards, a block
+// around the switch and one grouped monolith case all lose ground.
 VA(0x0041ec1f, 0x79)
 EGameVersion getRequiredVersion(const TObjectType& objType)
 {
-    if (objType.getType() < CLOVER_FIELD_2) {
-        if (objType.getType() < MAX_EVENT_TYPE) {
-            switch (objType.getType()) {
-            case ARTIFACT:
-                if (objType.getExtra() >= 129)
-                    return GAME_VERSION_SOD;
-                else if (objType.getExtra() >= 127)
-                    return GAME_VERSION_AB;
-                else
-                    return GAME_VERSION_ROE;
-            case CREATURE_GENERATOR_1:
-                if (objType.getExtra() >= 59)
-                    return GAME_VERSION_AB;
-                else
-                    return GAME_VERSION_ROE;
-            case HERO:
-                if (objType.getExtra() >= 16)
-                    return GAME_VERSION_AB;
-                else
-                    return GAME_VERSION_ROE;
-            case LITH_ONEWAY_ENTRANCE:
-            case LITH_ONEWAY_EXIT:
-                if (objType.getExtra() >= 3)
-                    return GAME_VERSION_SOD;
-                else
-                    return GAME_VERSION_ROE;
-            case LITH_TWOWAY:
-                if (objType.getExtra() >= 3)
-                    return GAME_VERSION_SOD;
-                else
-                    return GAME_VERSION_ROE;
-            case MONSTER:
-                if (objType.getExtra() >= 118)
-                    return GAME_VERSION_AB;
-                else
-                    return GAME_VERSION_ROE;
-            case TOWN:
-                if (objType.getExtra() >= 8)
-                    return GAME_VERSION_AB;
-                else
-                    return GAME_VERSION_ROE;
-            default:
-                return GAME_VERSION_ROE;
-            }
-        } else {
-            return GAME_VERSION_AB;
-        }
-    } else {
+    if (objType.getType() >= CLOVER_FIELD_2)
         return GAME_VERSION_SOD;
+    if (objType.getType() >= MAX_EVENT_TYPE)
+        return GAME_VERSION_AB;
+    switch (objType.getType()) {
+    case CREATURE_GENERATOR_1:
+        if (objType.getExtra() >= 59)
+            return GAME_VERSION_AB;
+        break;
+    case HERO:
+        if (objType.getExtra() >= 16)
+            return GAME_VERSION_AB;
+        break;
+    case LITH_ONEWAY_ENTRANCE:
+    case LITH_ONEWAY_EXIT:
+        if (objType.getExtra() >= 3)
+            return GAME_VERSION_SOD;
+        break;
+    case LITH_TWOWAY:
+        if (objType.getExtra() >= 3)
+            return GAME_VERSION_SOD;
+        break;
+    case MONSTER:
+        if (objType.getExtra() >= 118)
+            return GAME_VERSION_AB;
+        break;
+    case TOWN:
+        if (objType.getExtra() >= 8)
+            return GAME_VERSION_AB;
+        break;
+    case ARTIFACT:
+        if (objType.getExtra() >= 129)
+            return GAME_VERSION_SOD;
+        if (objType.getExtra() >= 127)
+            return GAME_VERSION_AB;
+        break;
     }
+    return GAME_VERSION_ROE;
 }
 
 // The kinds of object the map's conditions name; the reconstructions pass
