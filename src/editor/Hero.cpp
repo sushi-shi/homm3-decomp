@@ -271,9 +271,14 @@ namespace {
 // Each hero's prototype from the game's hero table, its biography from
 // HeroBios.txt, and the class tables' names and heroes.
 // TPrimarySkills preserves the retained base-array construction and cleanup
-// around std::copy. Retail still retains the first skill-pair constructor and
-// insertion-result construction that VC6 expands here; explicit non-const
-// pairs do not recover them, including with the primary wrapper and bool flags.
+// around std::copy. The starting spell and the edition flags go through
+// bitset subscript proxies: retail stages each edition flag in its own bool
+// argument home before the out-of-line set. The extra proxy sites lower the
+// earlier nested budgets so the first skill-pair and insertion-result
+// constructors stay out of line as in retail, and the spell no longer pays a
+// vetoed set (89.21% -> 98.78%). Remaining: the class roster's set::insert
+// stays out of line (budget 22 against cb 64); a default bitset<3> frees
+// enough to expand it but then keeps its result pair (94.84%).
 VA(0x0044a8b5, 0x3b0)
 void initializeTraitsTable()
 {
@@ -307,7 +312,7 @@ void initializeTraitsTable()
         }
         if (heroTraits.m_startingSpell != SPELL_NONE) {
             THeroPrototype::TSpells spells;
-            spells.set(heroTraits.m_startingSpell);
+            spells[heroTraits.m_startingSpell] = true;
             traits.m_prototype.setSpells(spells);
         }
         {
@@ -318,9 +323,9 @@ void initializeTraitsTable()
             traits.m_prototype.setPrimarySkills(aPrimarySkill);
         }
         std::bitset<3> gameVersions(0);
-        gameVersions.set(GAME_VERSION_ROE, heroTraits.m_availableInOriginal);
-        gameVersions.set(GAME_VERSION_AB, heroTraits.m_availableInExpansion);
-        gameVersions.set(GAME_VERSION_SOD, heroTraits.m_availableInExpansion);
+        gameVersions[GAME_VERSION_ROE] = heroTraits.m_availableInOriginal;
+        gameVersions[GAME_VERSION_AB] = heroTraits.m_availableInExpansion;
+        gameVersions[GAME_VERSION_SOD] = heroTraits.m_availableInExpansion;
         traits.m_gameVersions = gameVersions;
         aHeroClassTraitsImp[heroTraits.m_class].m_heroes.insert(heroID);
     }
