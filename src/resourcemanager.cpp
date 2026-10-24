@@ -1493,51 +1493,27 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
     sprite->p24 = new TPalette24(pal);
 }
 
-// Dreamcast GetSprite proves GetFromCache, SpriteDefHeader
-// Sdef, the archive load and AddToCache. Complete adds DEF sequence/frame
-// parsing and a cache lookup for each frame name. Mac 0:0x153fcc..0x1545e4
-// calls findSpriteResource twice and expands addPal16/24 in place. The
-// ordinary Mac -O3 probe emitted two separate 136-byte helpers; explicit
-// inline expands them and admits the paired byte diff. Windows has all 46
-// calls in retail order, but the DEF loop has a different register and
-// local-slot allocation. The Mac target also uses an eight-byte handle
-// adapter for DEF buffers (TempNewHandle/NewHandle via 0:0x26ab14); the
-// Win32 source uses raw new[]/delete[]. A canonical Mac adapter remains to
-// be recovered.
-// A guarded post-test frame loop reaches 88.7694% with the current canonical
-// helpers, compared with 88.7468% for an entry-tested for loop and 88.69% for
-// a while spelling. All retain an extra entry jump and 73 versus 72 CFG blocks.
-// Moving memcpy before definitionPosition
-// or changing definitionPosition to an advancing cursor gives 86.39%; Mac
-// instruction scheduling alone does not establish that C++ statement order.
-// Splitting the pointer
-// assignment/increment across memcpy gives 86.88% and 74/72 CFG blocks;
-// retail x86 itself advances before the copy. The first sequence-header walk
-// now names the +0x10 pointer cursor visible in both x86 and Mac; VC6 lowers
-// it byte-identically to the indexed reference at 88.74677%.
-// The retail second loop advances a sequence-record cursor by 0x10, but
-// spelling it as a separate C++ pointer regresses Windows 88.7694% to
-// 87.6710% and Mac 10.3846% to 10.3205%; the indexed reference is retained.
-// Mac 0x154230..0x15423c initializes both frame counters before the entry
-// jump. The ordinary for-loop restores that topology and removes eight CW
-// bytes versus the guarded do-loop; its retained helper sequence is unchanged.
-// In the integrated Windows context this probe is 88.2161% versus 88.2323%;
-// both still have 73/72 CFG blocks. Prior peaks remain historical controls.
-// Mac's DEF header/sequence/frame scalars and frame-offset array are decoded
-// after each copy (154068..98, 154118..12c, 154198..1b8, 154278..2bc,
-// 1542f8..320). The canonical endian conversions preserve Windows 88.2129%.
-// Its offset traversal is PowerPC-only: retaining an identity-conversion loop
-// on Windows adds unsupported CFG branches and scores 85.56%.
-// The earlier flattened-cache model reached 88.8564% in HIST, but lost the
-// proven shared cache-helper structure and remains only a diagnostic lead.
+// Dreamcast proves the cache calls, archive load and local name Sdef; its
+// frame decoder is platform-specific. The completed Linux loader supplies
+// typed 13-byte frame names, indexed sequence/frame traversal and the advancing
+// DEF cursor. Together these reproduce all map-editor retail bytes; the game
+// retains its canonical cache/resource helpers and currently reaches 97.9790%.
+// Its residual is frame-name load scheduling in the expanded cache lookup and
+// compact-frame constructor. Separate frame initialization and AddFrame status
+// assignment are byte-flat; caching the name across allocation worsens both
+// images. Mac reloads that table after allocation, supporting repeated indexing.
+// Mac 0x153fcc..0x1545e4 independently supports the same DEF decoding and
+// palette helpers. Its TempNewHandle/NewHandle buffer adapter remains an
+// unresolved platform difference; Windows uses ordinary new[]/delete[].
 VA(0x0055c7b0, 0x743)
+VA_AT(h3maped, 0x004dcd20, 0x5e6)
 DC_ADDRESS(0x122320, 0x112)
 MAC_ADDRESS(0x153fcc, 0x618)  // anchor-caller/body records; wall
 CSprite* ResourceManager::GetSprite(const char* name)
 {
-    CSprite* cached = static_cast<CSprite*>(GetFromCache(name));
-    if (cached)
-        return cached;
+    CSprite* sprite = static_cast<CSprite*>(GetFromCache(name));
+    if (sprite)
+        return sprite;
 
     LODFile* lodFile = findSpriteResource(name);
 
@@ -1565,79 +1541,75 @@ CSprite* ResourceManager::GetSprite(const char* name)
     unsigned char* fileData = new unsigned char[entry->size];
     lodFile->read(fileData, entry->size);
 
-    SpriteDefHeader sdef;
-    unsigned char* definitionPosition = fileData + sizeof(sdef);
-    memcpy(&sdef, fileData, sizeof(sdef));
+    SpriteDefHeader Sdef;
+    unsigned char* definitionPosition = fileData;
+    memcpy(&Sdef, definitionPosition, sizeof(Sdef));
+    definitionPosition += sizeof(Sdef);
     // Mac 154068..154098 decodes the copied DEF scalar header in place.
-    sdef.m_type = EResourceType(LITTLE_ENDIAN_LONG(sdef.m_type));
-    sdef.m_width = LITTLE_ENDIAN_LONG(sdef.m_width);
-    sdef.m_height = LITTLE_ENDIAN_LONG(sdef.m_height);
-    sdef.m_numSequences = LITTLE_ENDIAN_LONG(sdef.m_numSequences);
+    Sdef.m_type = EResourceType(LITTLE_ENDIAN_LONG(Sdef.m_type));
+    Sdef.m_width = LITTLE_ENDIAN_LONG(Sdef.m_width);
+    Sdef.m_height = LITTLE_ENDIAN_LONG(Sdef.m_height);
+    Sdef.m_numSequences = LITTLE_ENDIAN_LONG(Sdef.m_numSequences);
 
-    CSprite* sprite = new CSprite(
-        name, sdef.m_type, sdef.m_width, sdef.m_height);
+    sprite = new CSprite(
+        name, Sdef.m_type, Sdef.m_width, Sdef.m_height);
     if (!sprite)
         return 0;
 
     TSpriteDataHeader* sequences =
-        new TSpriteDataHeader[sdef.m_numSequences];
+        new TSpriteDataHeader[Sdef.m_numSequences];
 
     int sequenceIndex;
-    TSpriteDataHeader* sequence = sequences;
     for (sequenceIndex = 0;
-         sequenceIndex < sdef.m_numSequences;
-         ++sequenceIndex, ++sequence) {
-        memcpy(sequence, definitionPosition, sizeof(*sequence));
-        sequence->m_sequenceNumber = LITTLE_ENDIAN_LONG(sequence->m_sequenceNumber);
-        sequence->m_numFrames = LITTLE_ENDIAN_LONG(sequence->m_numFrames);
-        definitionPosition += sizeof(*sequence);
+         sequenceIndex < Sdef.m_numSequences;
+         ++sequenceIndex) {
+        memcpy(&sequences[sequenceIndex], definitionPosition, sizeof(TSpriteDataHeader));
+        sequences[sequenceIndex].m_sequenceNumber = LITTLE_ENDIAN_LONG(sequences[sequenceIndex].m_sequenceNumber);
+        sequences[sequenceIndex].m_numFrames = LITTLE_ENDIAN_LONG(sequences[sequenceIndex].m_numFrames);
+        definitionPosition += sizeof(TSpriteDataHeader);
 
-        sequence->m_frameNames = new char[sequence->m_numFrames * 13];
-        memcpy(sequence->m_frameNames, definitionPosition,
-               sequence->m_numFrames * 13);
-        definitionPosition += sequence->m_numFrames * 13;
+        sequences[sequenceIndex].m_frameNames = new char[sequences[sequenceIndex].m_numFrames][13];
+        memcpy(sequences[sequenceIndex].m_frameNames, definitionPosition,
+               sequences[sequenceIndex].m_numFrames * 13);
+        definitionPosition += sequences[sequenceIndex].m_numFrames * 13;
 
-        sequence->m_frameOffsets = new int[sequence->m_numFrames];
-        memcpy(sequence->m_frameOffsets, definitionPosition,
-               sequence->m_numFrames * sizeof(int));
-        definitionPosition += sequence->m_numFrames * sizeof(int);
+        sequences[sequenceIndex].m_frameOffsets = new int[sequences[sequenceIndex].m_numFrames];
+        memcpy(sequences[sequenceIndex].m_frameOffsets, definitionPosition,
+               sequences[sequenceIndex].m_numFrames * sizeof(int));
+        definitionPosition += sequences[sequenceIndex].m_numFrames * sizeof(int);
 #if defined(__POWERPC__)
         // Mac 154198..1541b8 decodes each acquired frame offset; retail
         // Windows has no corresponding offset traversal after its copy.
-        for (int offsetIndex = 0; offsetIndex < sequence->m_numFrames; ++offsetIndex)
-            sequence->m_frameOffsets[offsetIndex] =
-                LITTLE_ENDIAN_LONG(sequence->m_frameOffsets[offsetIndex]);
+        for (int offsetIndex = 0; offsetIndex < sequences[sequenceIndex].m_numFrames; ++offsetIndex)
+            sequences[sequenceIndex].m_frameOffsets[offsetIndex] =
+                LITTLE_ENDIAN_LONG(sequences[sequenceIndex].m_frameOffsets[offsetIndex]);
 #endif
     }
 
     for (sequenceIndex = 0;
-         sequenceIndex < sdef.m_numSequences;
+         sequenceIndex < Sdef.m_numSequences;
          ++sequenceIndex) {
-        TSpriteDataHeader& sequence = sequences[sequenceIndex];
         // Retail saves this value before allocateSeq and retains it through
         // frame acquisition; Mac 15421c/154410 likewise owns it in r22.
-        int sequenceNumber = sequence.m_sequenceNumber;
-        sprite->AllocateSeq(sequenceNumber, sequence.m_numFrames);
+        int sequenceNumber = sequences[sequenceIndex].m_sequenceNumber;
+        sprite->AllocateSeq(sequenceNumber, sequences[sequenceIndex].m_numFrames);
 
-        int frameIndex;
-        int frameNameOffset = 0;
-        for (frameIndex = 0; frameIndex < sequence.m_numFrames;
-             ++frameIndex, frameNameOffset += 13) {
+        for (int frameIndex = 0; frameIndex < sequences[sequenceIndex].m_numFrames;
+             ++frameIndex) {
             TCompactSpriteFrameHeader compactHeader;
             TCroppedSpriteFrameHeader croppedHeader;
             unsigned char* frameData;
 
-            if (sdef.m_type == RESOURCE_TYPE_SPRITE ||
-                sdef.m_type == RESOURCE_TYPE_CREATURE ||
-                sdef.m_type == RESOURCE_TYPE_ADVENTURE_OBJECT ||
-                sdef.m_type == RESOURCE_TYPE_HERO ||
-                sdef.m_type == RESOURCE_TYPE_INTERFACE ||
-                sdef.m_type == RESOURCE_TYPE_TILESET ||
-                sdef.m_type == RESOURCE_TYPE_POINTER ||
-                sdef.m_type == RESOURCE_TYPE_COMBAT_HERO) {
-                unsigned char* source =
-                    fileData + sequence.m_frameOffsets[frameIndex];
-                memcpy(&croppedHeader, source, sizeof(croppedHeader));
+            if (Sdef.m_type == RESOURCE_TYPE_SPRITE ||
+                Sdef.m_type == RESOURCE_TYPE_CREATURE ||
+                Sdef.m_type == RESOURCE_TYPE_ADVENTURE_OBJECT ||
+                Sdef.m_type == RESOURCE_TYPE_HERO ||
+                Sdef.m_type == RESOURCE_TYPE_INTERFACE ||
+                Sdef.m_type == RESOURCE_TYPE_TILESET ||
+                Sdef.m_type == RESOURCE_TYPE_POINTER ||
+                Sdef.m_type == RESOURCE_TYPE_COMBAT_HERO) {
+                memcpy(&croppedHeader,
+                       fileData + sequences[sequenceIndex].m_frameOffsets[frameIndex], sizeof(croppedHeader));
                 croppedHeader.m_dataSize = LITTLE_ENDIAN_LONG(croppedHeader.m_dataSize);
                 croppedHeader.m_encoding = TEncodingMethod(LITTLE_ENDIAN_LONG(croppedHeader.m_encoding));
                 croppedHeader.m_width = LITTLE_ENDIAN_LONG(croppedHeader.m_width);
@@ -1647,7 +1619,7 @@ CSprite* ResourceManager::GetSprite(const char* name)
                 croppedHeader.m_croppedX = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedX);
                 croppedHeader.m_croppedY = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedY);
                 frameData = new unsigned char[croppedHeader.m_dataSize];
-                memcpy(frameData, source + sizeof(croppedHeader),
+                memcpy(frameData, fileData + (sequences[sequenceIndex].m_frameOffsets[frameIndex] + sizeof(croppedHeader)),
                        croppedHeader.m_dataSize);
             } else {
                 memcpy(&compactHeader, definitionPosition,
@@ -1659,24 +1631,24 @@ CSprite* ResourceManager::GetSprite(const char* name)
                 definitionPosition += sizeof(compactHeader);
                 frameData = new unsigned char[compactHeader.m_dataSize];
                 memcpy(frameData,
-                       fileData + sequence.m_frameOffsets[frameIndex],
+                       fileData + sequences[sequenceIndex].m_frameOffsets[frameIndex],
                        compactHeader.m_dataSize);
             }
 
             CSpriteFrame* frame = static_cast<CSpriteFrame*>(GetFromCache(
-                sequence.m_frameNames + frameNameOffset));
+                sequences[sequenceIndex].m_frameNames[frameIndex]));
 
             if (!frame) {
-                if (sdef.m_type == RESOURCE_TYPE_SPRITE ||
-                    sdef.m_type == RESOURCE_TYPE_CREATURE ||
-                    sdef.m_type == RESOURCE_TYPE_ADVENTURE_OBJECT ||
-                    sdef.m_type == RESOURCE_TYPE_HERO ||
-                    sdef.m_type == RESOURCE_TYPE_INTERFACE ||
-                    sdef.m_type == RESOURCE_TYPE_TILESET ||
-                    sdef.m_type == RESOURCE_TYPE_POINTER ||
-                    sdef.m_type == RESOURCE_TYPE_COMBAT_HERO) {
+                if (Sdef.m_type == RESOURCE_TYPE_SPRITE ||
+                    Sdef.m_type == RESOURCE_TYPE_CREATURE ||
+                    Sdef.m_type == RESOURCE_TYPE_ADVENTURE_OBJECT ||
+                    Sdef.m_type == RESOURCE_TYPE_HERO ||
+                    Sdef.m_type == RESOURCE_TYPE_INTERFACE ||
+                    Sdef.m_type == RESOURCE_TYPE_TILESET ||
+                    Sdef.m_type == RESOURCE_TYPE_POINTER ||
+                    Sdef.m_type == RESOURCE_TYPE_COMBAT_HERO) {
                     frame = new CSpriteFrame(
-                        sequence.m_frameNames + frameNameOffset,
+                        sequences[sequenceIndex].m_frameNames[frameIndex],
                         croppedHeader.m_width, croppedHeader.m_height,
                         frameData, croppedHeader.m_dataSize,
                         croppedHeader.m_encoding,
@@ -1685,7 +1657,7 @@ CSprite* ResourceManager::GetSprite(const char* name)
                         croppedHeader.m_croppedX, croppedHeader.m_croppedY);
                 } else {
                     frame = new CSpriteFrame(
-                        sequence.m_frameNames + frameNameOffset,
+                        sequences[sequenceIndex].m_frameNames[frameIndex],
                         compactHeader.m_width, compactHeader.m_height,
                         frameData, compactHeader.m_dataSize,
                         croppedHeader.m_encoding);
@@ -1700,14 +1672,14 @@ CSprite* ResourceManager::GetSprite(const char* name)
     }
 
     for (sequenceIndex = 0;
-         sequenceIndex < sdef.m_numSequences;
+         sequenceIndex < Sdef.m_numSequences;
          ++sequenceIndex) {
         delete[] sequences[sequenceIndex].m_frameNames;
         delete[] sequences[sequenceIndex].m_frameOffsets;
     }
     delete[] sequences;
 
-    TPalette24 palette24(sdef.m_palette);
+    TPalette24 palette24(Sdef.m_palette);
     if (ResourceManager::SaturatedGraphicsEasterEgg)
         palette24.AdjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
 
@@ -1819,7 +1791,11 @@ LODFile* ResourceManager::PointToBitmapResource(const char* name)
 // list reference adds an address instruction; a named context, named game
 // state, array-of-three view, for-initializer lifetime, and -O2/-O3 are
 // byte-flat in the Mac probe. A break/shared return moves the size load
-// behind the loop.
+// behind the loop. Flattening the context to six direct fields (with either
+// a const context reference or direct access), or making the three lists an
+// actual array, also leaves the missing row-address LEA and MAX unchanged.
+// The exact PointToBitmapResource expansion retains this LEA after loading
+// both count and indices; no extra count use is evidenced for this method.
 // The direct list expression and simple loop are retained.
 VA(0x0055d070, 0x5C)
 DC_ADDRESS(0x1224e4, 0x4c)

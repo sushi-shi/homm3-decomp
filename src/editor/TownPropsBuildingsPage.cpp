@@ -82,7 +82,7 @@ VA(0x004c3bf5, 0x35)
 void TTownPropsBuildingsPage::_resetTree()
 {
     _resetTree(NULL);
-    _m_buildingTree.EnsureVisible(_m_buildingTree.GetRootItem());
+    _m_buildingTree.EnsureVisible(_m_buildingTree.GetChildItem(NULL));
 }
 
 VA(0x004c3c2a, 0x92)
@@ -210,8 +210,10 @@ void TTownPropsBuildingsPage::_demolishAll(HTREEITEM hParent)
     }
 }
 
+// Loki exports _setCheckStates(unsigned short); the flags occupy the high
+// word of the tree item data passed by OnSelChangedBuildingTree.
 VA(0x004c4102, 0x69)
-void TTownPropsBuildingsPage::_setCheckStates(BYTE stateFlags)
+void TTownPropsBuildingsPage::_setCheckStates(WORD stateFlags)
 {
     bool bBuilt = (stateFlags & kBuiltFlag) != 0;
     bool bDisabled = (stateFlags & kDisabledFlag) != 0;
@@ -281,7 +283,7 @@ BOOL TTownPropsBuildingsPage::OnInitDialog()
         _m_customizeCheck.SetCheck(1);
         _m_hasFortCheck.EnableWindow(FALSE);
         _showBuildingStates(NULL);
-        _m_buildingTree.SelectItem(_m_buildingTree.GetRootItem());
+        _m_buildingTree.SelectItem(_m_buildingTree.GetChildItem(NULL));
     } else {
         _m_customizeCheck.SetCheck(0);
         _m_hasFortCheck.SetCheck(_m_buildingStates[eBuildingFort].getBBuilt());
@@ -378,7 +380,7 @@ void TTownPropsBuildingsPage::OnCustomizeCheck()
         _m_buildAllButton.EnableWindow(TRUE);
         _m_demolishAllButton.EnableWindow(TRUE);
         _showBuildingStates(NULL);
-        _m_buildingTree.SelectItem(_m_buildingTree.GetRootItem());
+        _m_buildingTree.SelectItem(_m_buildingTree.GetChildItem(NULL));
     } else {
         _m_buildingStates = TArray<TTown::TBuildingState, kNumBuildings>();
         _retrieveBuildingStates(NULL);

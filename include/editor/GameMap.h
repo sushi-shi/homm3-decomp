@@ -666,7 +666,15 @@ public:
     TObjectIDIter objectIDBegin() const { return TObjectIDIter(this, getFirstObjectID()); }
     TObjectIDIter objectIDEnd() const { return TObjectIDIter(this, s_kInvalidObjID); }
     unsigned int getNumObjectIDsAtCell(unsigned int x, unsigned int y) const;
+    unsigned int getNumObjectIDsAtCell(const TTilePoint& loc) const
+    {
+        return getNumObjectIDsAtCell(loc.x(), loc.y());
+    }
     TMapLayerObjectID getObjectIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
+    TMapLayerObjectID getObjectIDAtCell(const TTilePoint& loc, unsigned int which) const
+    {
+        return getObjectIDAtCell(loc.x(), loc.y(), which);
+    }
     unsigned int getNumShadowIDsAtCell(unsigned int x, unsigned int y) const;
     TMapLayerObjectID getShadowIDAtCell(unsigned int x, unsigned int y, unsigned int which) const;
 

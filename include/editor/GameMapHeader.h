@@ -130,7 +130,8 @@ public:
     // -1), its name and who may hire it.
     struct TCustomHero {
         TCustomHero() : m_portrait(-1) {}
-        TCustomHero(int portrait, const std::string& name, TPlayerMask availability)
+        // Both editors read availability after the name copy; preserve the reference.
+        TCustomHero(int portrait, const std::string& name, const TPlayerMask& availability)
             : m_portrait(portrait), m_name(name), m_availability(availability) {}
 
         int m_portrait;

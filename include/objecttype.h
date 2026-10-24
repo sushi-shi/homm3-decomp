@@ -67,12 +67,15 @@ public:
 
     // Loki h3maped ObjectType.h befriends its text and map-format streams
     // and its map key order.
+    friend std::ostream& operator<<(std::ostream& os, const TObjectType& objectType);
     friend std::istream& operator>>(std::istream& is, TObjectType& objectType);
     friend TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType);
     friend TRawIStream& operator>>(TRawIStream& stream, TObjectType& objectType);
     friend struct std::less<TObjectType>;
 
 private:
+    static std::vector<_TImageInfo>& _getAImageInfo();
+
     // The image and mask setters own these values and their invariants.
     unsigned int _m_imageNum;
     std::bitset<OBJECT_MASK_CELLS> m_passableMask;

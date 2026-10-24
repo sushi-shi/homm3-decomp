@@ -207,6 +207,8 @@ BEGIN_MESSAGE_MAP(THeroPrototypePropsGeneralPage, CPropertyPage)
     ON_BN_CLICKED(IDC_EVENT_PLAYER8_CHECK, OnPlayer8Check)
 END_MESSAGE_MAP()
 
+// Keep the portrait geometry inside bitmap creation, as in the sibling
+// identified-hero page; retail reuses these homes for the later player scan.
 VA(0x004563c4, 0x591)
 BOOL THeroPrototypePropsGeneralPage::OnInitDialog()
 {
@@ -242,17 +244,17 @@ BOOL THeroPrototypePropsGeneralPage::OnInitDialog()
     _m_experienceCombo.GetWindow(GW_CHILD)->ModifyStyle(0, ES_NUMBER);
     _m_experienceCombo.LimitText(TDigits<s_kMaxExperience>::getDigits());
     _m_experienceCombo.SetWindowText(TFormattedString("%d", _m_pNewPrototype->getExperience()));
-    CRect rect;
-    _m_portraitStatic.GetWindowRect(&rect);
-    ScreenToClient(&rect);
-    CRect spinRect;
-    _m_portraitSpin.GetWindowRect(&spinRect);
-    ScreenToClient(&spinRect);
-    rect.right = spinRect.left;
-    rect.bottom = spinRect.bottom;
-    _m_portraitStatic.MoveWindow(&rect, FALSE);
-    _m_portraitStatic.GetClientRect(&rect);
     {
+        CRect rect;
+        _m_portraitStatic.GetWindowRect(&rect);
+        ScreenToClient(&rect);
+        CRect spinRect;
+        _m_portraitSpin.GetWindowRect(&spinRect);
+        ScreenToClient(&spinRect);
+        rect.right = spinRect.left;
+        rect.bottom = spinRect.bottom;
+        _m_portraitStatic.MoveWindow(&rect, FALSE);
+        _m_portraitStatic.GetClientRect(&rect);
         CClientDC dc(this);
         _m_portraitBitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
     }

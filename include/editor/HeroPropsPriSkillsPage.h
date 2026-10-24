@@ -13,7 +13,7 @@
 
 #include "gameversion.h"
 #include "primaryskill.h"
-#include "editor/Array.h"
+#include "editor/Hero.h"
 #include "editor/PrimarySkillsDlg.h"
 #include "editor/resource.h"
 
@@ -45,8 +45,8 @@ private:
     EGameVersion _m_mapVersion;
     bool _m_bModified;
     bool _m_bCustomSkills;
-    TArray<int, kNumPrimarySkills> _m_defaultSkills;
-    TArray<int, kNumPrimarySkills> _m_customSkills;
+    THeroPrototype::TPrimarySkills _m_defaultSkills;
+    THeroPrototype::TPrimarySkills _m_customSkills;
     std::auto_ptr<TPrimarySkillsDlg> _m_pSkillsDlg;
 };
 

@@ -306,9 +306,9 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
             if (resource < NUM_RESOURCES)
                 continue;
 
-            for (resource = 0; resource < NUM_RESOURCES; ++resource)
-                g_currentPlayer->m_resources[resource] -=
-                    difference[resource];
+            for (int debitResource = 0; debitResource < NUM_RESOURCES; ++debitResource)
+                g_currentPlayer->m_resources[debitResource] -=
+                    difference[debitResource];
             currentHero->m_army.m_armyTypes[slot] = upgrade;
         }
     }
@@ -339,26 +339,14 @@ static long getArtifactPurchaseValue(
     return value;
 }
 
-// CHECKPOINT (93.7290 -> 98.1308): Dreamcast line 355 prices the tray entry,
-// then line 358 constructs the artifact from the tray again.  Removing the
-// source-false artifact-id cache restores retail's reload and, with it, every
-// register allocation and all 15 CFG blocks.  The sole residual is the
-// scheduler's placement of the constructor's independent `extra = -1` store:
-// retail hoists it across the resource debit while this build emits it after
-// the artifact-id store. why-reg classifies the two-slot distance as a pure
-// B16/C3/C4 schedule transpose; all nine catalog probes are flat or worse,
-// and copy-initializing an equivalent constructor temporary falls to 92.48%.
-// DC line 334 checks backpack capacity at the top of each iteration. Writing
-// that top check as an explicit exit guard also keeps CodeWarrior's backpack
-// call before the tray scan, agreeing with all five Mac retail call targets;
-// VC6 still reproduces all 15 retail CFG blocks at 98.13%.
-// DC line 361 tests the selected artifact again at the loop tail, then line
-// 362 equips on exit. The do/while spelling restores that Mac branch and
-// exact 264-byte span and five calls, while Windows stays 98.13%.
-// Declaring the seven-slot index before bestValue, then initializing it in
-// the for header, preserves Windows' 98.13% and matches Mac's GPR ownership
-// and initialization order (Mac 98.1061%). Its remaining five rows differ
-// only in the stack slots for the price output and local type_artifact.
+// DC line 355 prices the tray entry; line 358 reloads it and attributes the
+// converting type_artifact constructor and GiveArtifact to the same line.
+// Keep the conversion at the call site: a named artifact local delays the
+// independent extra=-1 store and gives 98.1308%; the temporary matches all
+// 329 retail bytes. Explicit and implicit conversion emit the same object.
+// DC 334 checks capacity at each iteration's entry; 361 repeats the selected
+// artifact test at the tail, then 362 equips on exit. Mac preserves that loop
+// and all five calls. The resource output belongs to function scope in DC.
 VA(0x00524400, 0x149)
 DC_ADDRESS(0x10da30, 0xb8)
 MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global
@@ -393,8 +381,7 @@ void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                 artifactList[bestArtifact], marketCount, &resource);
             g_currentPlayer->m_resources[resource] -= price;
 
-            type_artifact artifact(artifactList[bestArtifact]);
-            currentHero->giveArtifact(artifact, 1, 1);
+            currentHero->giveArtifact(artifactList[bestArtifact], 1, 1);
             artifactList[bestArtifact] = ARTIFACT_NONE;
         }
     } while (bestArtifact >= 0);
@@ -2079,10 +2066,10 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // value/experience acquisition, resource valuation and optional purchase in
 // that order; its aiEnterTown comparison is 95.5275%. A typed spellbook-ID
 // local in the DC line 768 gap is byte-flat in both compilers.
-// Current retail comparison is 99.9565%: all 73 CFG blocks, 44 calls and 72
-// relocations agree. The only residual is two SIB base/index encodings in the
-// expanded upgradeCreatures debit loop: [edx+eax] versus retail [eax+edx],
-// including the following store at displacement -4. No semantic divergence.
+// A separate debit-loop index in upgradeCreatures closes the final two SIB
+// encodings: all 1548 retail bytes now match. DC lines 240/241 and 250 keep
+// affordability and debit as separate loops; their register-only indices have
+// no recorded names. Reusing the affordability index reproduces 99.9565%.
 VA(0x005253d0, 0x60c)
 DC_ADDRESS(0x10e3f8, 0x280)
 MAC_ADDRESS(0x13f8dc, 0x368)  // MAC_ABSTRACTION_FROM(tokens1:46b741d4bc9b,95.5275): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.

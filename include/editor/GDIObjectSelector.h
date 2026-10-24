@@ -43,6 +43,8 @@ public:
     VA(0x00452022, 0x16)
     // VA instance: TGDIObjectSelector<CFont>::~TGDIObjectSelector
     VA(0x0045b3af, 0xd)
+    // VA instance: TGDIObjectSelector<CPen>::~TGDIObjectSelector
+    VA(0x0046f284, 0xb)
     ~TGDIObjectSelector() { _m_pDC->SelectObject(_m_pOldObject); }
 
 private:

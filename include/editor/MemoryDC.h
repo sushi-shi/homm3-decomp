@@ -23,7 +23,7 @@ public:
     VA(0x0045c540, 0x66)
     TMemoryDC(CDC* pDC)
     {
-        if (!Attach(::CreateCompatibleDC(pDC->GetSafeHdc())))
+        if (!CreateCompatibleDC(pDC))
             throw TError();
     }
 };

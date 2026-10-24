@@ -13,6 +13,11 @@
 #include "editor/MemoryDC.h"
 #include "editor/TileHRuler.h"
 
+// Residual: the native font-selector slots overlap the creation rectangle.
+// Naming that rectangle and reversing the metric sum did not close the gap.
+// A bare block around the selector and metrics reproduces retail's 0x70
+// frame (99.49 -> 99.63%) but is no recovered source; the vertical ruler's
+// identical block lowers it (99.85 -> 99.63%) through the sum's register.
 VA(0x004be9b4, 0x17b)
 TTileHRuler::TTileHRuler(CWnd* pParent, unsigned int range, TZoom zoom)
     : _m_startTile(0),
@@ -28,8 +33,7 @@ TTileHRuler::TTileHRuler(CWnd* pParent, unsigned int range, TZoom zoom)
     if (!Create(className, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, CRect(0, 0, 0, 0), pParent, 0))
         throw TRuntimeError();
     CClientDC dc(this);
-    if ((_m_font.m_hObject = ::GetStockObject(DEFAULT_GUI_FONT)) == NULL
-        && (_m_font.m_hObject = ::GetStockObject(SYSTEM_FONT)) == NULL)
+    if (!_m_font.CreateStockObject(DEFAULT_GUI_FONT) && !_m_font.CreateStockObject(SYSTEM_FONT))
         throw TRuntimeError();
     TGDIObjectSelector<CFont> fontSelector(&dc, &_m_font);
     TEXTMETRIC tm;
@@ -130,6 +134,10 @@ void TTileHRuler::OnWindowPosChanging(WINDOWPOS* lpwndpos)
     lpwndpos->cy = _m_height;
 }
 
+// Loki retains the tile origin, rectangle extent and centered label offset
+// as CPoint/CSize values. Keeping that complete expression also reproduces
+// retail VC6's label-coordinate scheduling; scalar and final-point-only forms
+// leave the x coordinate in a different register.
 VA(0x004bedc5, 0x4ce)
 void TTileHRuler::OnPaint()
 {
@@ -162,13 +170,15 @@ void TTileHRuler::OnPaint()
         TBkColorSelector bkColorSelector(&dc, GetSysColor(COLOR_WINDOW));
         dc.SelectClipRgn(NULL);
         for (x = fromX; x < (int)toX; x++) {
-            int left = (x - _m_startTile) * tileWidth;
-            CRect tileRect(left, 0, left + tileWidth - 1, _m_height);
+            CPoint pos((x - _m_startTile) * tileWidth, 0);
+            CRect tileRect(pos, CSize(tileWidth - 1, _m_height));
             dc.IntersectClipRect(&tileRect);
             CString text;
             text.Format("%d", x);
             CSize textSize = dc.GetTextExtent(text);
-            dc.TextOut(left + (tileWidth - textSize.cx) / 2, (_m_height - textSize.cy) / 2, text);
+            CPoint textPos = pos + CPoint((tileWidth - textSize.cx) / 2,
+                                        (_m_height - textSize.cy) / 2);
+            dc.TextOut(textPos.x, textPos.y, text);
             dc.SelectClipRgn(NULL);
         }
         dc.IntersectClipRect(&clipRect);

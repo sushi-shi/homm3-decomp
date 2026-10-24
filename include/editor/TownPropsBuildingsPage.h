@@ -61,7 +61,7 @@ private:
     void _buildAll(HTREEITEM hParent);
     void _demolishItem(HTREEITEM hItem);
     void _demolishAll(HTREEITEM hParent);
-    void _setCheckStates(BYTE stateFlags);
+    void _setCheckStates(WORD stateFlags);
     const TTown* _getOldTown() const;
     TTown* _getNewTown();
 

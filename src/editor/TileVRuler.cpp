@@ -13,6 +13,10 @@
 #include "editor/MemoryDC.h"
 #include "editor/TileVRuler.h"
 
+// Residual: the retail font-selector slots overlap the creation rectangle;
+// our frame remains eight bytes larger. Naming that rectangle did not help;
+// a bare block around the selector and metrics fixes the frame but scores
+// 99.63% (see the horizontal ruler).
 VA(0x004bf61b, 0x17d)
 TTileVRuler::TTileVRuler(CWnd* pParent, unsigned int range, TZoom zoom)
     : _m_startTile(0),
@@ -28,8 +32,7 @@ TTileVRuler::TTileVRuler(CWnd* pParent, unsigned int range, TZoom zoom)
     if (!Create(className, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, CRect(0, 0, 0, 0), pParent, 0))
         throw TRuntimeError();
     CClientDC dc(this);
-    if ((_m_font.m_hObject = ::GetStockObject(DEFAULT_GUI_FONT)) == NULL
-        && (_m_font.m_hObject = ::GetStockObject(SYSTEM_FONT)) == NULL)
+    if (!_m_font.CreateStockObject(DEFAULT_GUI_FONT) && !_m_font.CreateStockObject(SYSTEM_FONT))
         throw TRuntimeError();
     TGDIObjectSelector<CFont> fontSelector(&dc, &_m_font);
     TEXTMETRIC tm;
@@ -129,6 +132,19 @@ void TTileVRuler::OnWindowPosChanging(WINDOWPOS* lpwndpos)
 
 // Each number is drawn left to right into a bitmap of its own; its pixels
 // go into the back buffer column by column from the bottom up.
+// Retail clamps the rotated copy's destination as well as its source start.
+// A point-valued highlight destination recovers its native coordinate lifetime
+// and removes an extra size copy. Addressing both bitmaps' rows through
+// getLine restores retail's pixel-pointer order (93.41 -> 96.14%). Retail
+// guards only the column range before the row loop, sets the source start
+// beside the left clamp and opens the highlight's column range before its
+// destination (97.96%). Residual: register choice in both row loops. A
+// ternary left clamp, declaring the destination pointer first, a for-loop
+// pixel advance and a separate inline copy helper (VC6 keeps it out of line
+// even when forced) score lower.
+// SIZE instead of CSize, max for the left clamp, advancing the destination
+// column, a source-point cursor and byte-offset pixel addressing do not close
+// the residual. Complete source-rectangle models also scored lower.
 VA(0x004bfa12, 0x730)
 void TTileVRuler::OnPaint()
 {
@@ -170,20 +186,22 @@ void TTileVRuler::OnPaint()
             unsigned int textY = (_m_width - textSize.cy) / 2;
             labelDC.TextOut(textX, textY, text);
             int top = (int)textY > 0 ? textY : 0;
-            int left = textX > 1 ? textX : 1;
+            int left = textX;
+            if (left <= 1)
+                left = 1;
+            int first = left;
             unsigned int bottom = min(textY + textSize.cy, _m_width);
             int right = min(textX + textSize.cx, tileHeight);
             int destY = (y - _m_startTile + 1) * tileHeight - left;
-            int first = left;
-            if (destY > clipRect.bottom)
+            if (destY > clipRect.bottom) {
                 first = destY - clipRect.bottom + left;
-            if (first < right && top < (int)bottom) {
+                destY = clipRect.bottom;
+            }
+            if (first < right) {
                 for (int row = top; row < (int)bottom; row++) {
-                    const uword* pSrc = (const uword*)((const ubyte*)labelBitmap.getPixels()
-                                                       + labelBitmap.getPitch() * row) + first;
+                    const uword* pSrc = labelBitmap.getLine(row) + first;
                     const uword* pSrcEnd = pSrc + (right - first);
-                    uword* pDest = (uword*)((ubyte*)_m_backBuffer.getPixels()
-                                            + _m_backBuffer.getPitch() * (destY - 1)) + row;
+                    uword* pDest = _m_backBuffer.getLine(destY - 1) + row;
                     while (pSrc < pSrcEnd) {
                         *pDest = *pSrc++;
                         pDest = (uword*)((ubyte*)pDest - _m_backBuffer.getPitch());
@@ -216,23 +234,21 @@ void TTileVRuler::OnPaint()
                 TBkColorSelector bkColorSelector(&labelDC, GetSysColor(COLOR_WINDOWTEXT));
                 labelDC.TextOut(0, 0, _m_highlightText);
             }
-            unsigned int column = (_m_width - textSize.cy) / 2;
-            int destY = pos + height - (height - textSize.cx) / 2;
             int skip = 0;
-            if (destY > clipRect.bottom) {
-                skip = destY - clipRect.bottom;
-                destY = clipRect.bottom;
-            }
             int end = textSize.cx;
-            if (destY - textSize.cx + skip < clipRect.top)
-                end = destY - clipRect.top + skip;
+            CPoint destPos((_m_width - textSize.cy) / 2,
+                           pos + height - (height - textSize.cx) / 2);
+            if (destPos.y > clipRect.bottom) {
+                skip = destPos.y - clipRect.bottom;
+                destPos.y = clipRect.bottom;
+            }
+            if (destPos.y - textSize.cx + skip < clipRect.top)
+                end = destPos.y - clipRect.top + skip;
             if (skip < end) {
                 for (int row = 0; row < textSize.cy; row++) {
-                    const uword* pSrc = (const uword*)((const ubyte*)labelBitmap.getPixels()
-                                                       + labelBitmap.getPitch() * row) + skip;
+                    const uword* pSrc = labelBitmap.getLine(row) + skip;
                     const uword* pSrcEnd = pSrc + (end - skip);
-                    uword* pDest = (uword*)((ubyte*)_m_backBuffer.getPixels()
-                                            + _m_backBuffer.getPitch() * (destY - 1)) + column + row;
+                    uword* pDest = _m_backBuffer.getLine(destPos.y - 1) + destPos.x + row;
                     while (pSrc < pSrcEnd) {
                         *pDest = *pSrc++;
                         pDest = (uword*)((ubyte*)pDest - _m_backBuffer.getPitch());

@@ -2069,3 +2069,21 @@ all 30 playback blocks and 15 calls agree after fresh delinking. This is a
 measured combined source model, not an isolated claim about which type or
 alias-analysis rule decides register allocation. Preserve the same aggregate
 in consumers and saved state instead of introducing aliases to its fields.
+
+## Linkage and inline accessors change argument load order
+
+`TPannerCtrl::relayEvent` (h3maped `0x493a8d`) loads the timer ID and
+interval into EAX/ECX before its try block's `SetTimer` pushes, with the null
+callback in EDX. While both settings were file-static globals, VC6 pushed them
+straight from memory and kept the zero in EAX (94.89%). Giving the same two
+definitions external linkage reproduces the register loads and the late EH
+state store (100%). Check a TU-local global's linkage before treating such a
+load schedule as register noise.
+
+`TMapEditWnd::_drawMap` (h3maped `0x46b686`) shows the same effect for an
+inline accessor. Retail loads `rect.top` before the pixel base for each tile
+layer's destination row. The pasted expression
+`(uword*)((ubyte*)getPixels() + top * getPitch()) + left` loads the base
+first, and regrouping it is byte-identical. The row accessor
+`TBitmapBase::getLine(y)` binds the argument before its body and raises the
+function from 89.87% to 97.58% (100% with its remaining source facts).

@@ -14,6 +14,7 @@
 #include "va.h"
 #include "editor/Army.h"
 #include "editor/Clamp.h"
+#include "editor/CreatureCombo.h"
 #include "editor/DialogTemplate.h"
 #include "editor/Digits.h"
 #include "editor/EditRewardDlg.h"
@@ -823,25 +824,9 @@ BEGIN_MESSAGE_MAP(TRewardCreatureDlg, TRewardTypeDlg)
     ON_EN_KILLFOCUS(IDC_STACK_QUANTITY_EDIT, OnKillFocusQuantityEdit)
 END_MESSAGE_MAP()
 
-// The creature lists' order: by town (the neutrals last), then level, then
-// id.
-// Folded by /OPT:ICF onto MapSpecsVictoryCondPage's isCreatureBefore.
-static bool isCreatureBefore(TCreatureType lhs, TCreatureType rhs)
-{
-    TCreatureTypeTraits lhsTraits = akCreatureTypeTraits[lhs];
-    TCreatureTypeTraits rhsTraits = akCreatureTypeTraits[rhs];
-    int lhsTown = lhsTraits.townType == eTownNeutral ? kNumTownTypes : lhsTraits.townType;
-    int rhsTown = rhsTraits.townType == eTownNeutral ? kNumTownTypes : rhsTraits.townType;
-    if (lhsTown != rhsTown)
-        return lhsTown < rhsTown;
-    if (lhsTraits.level != rhsTraits.level)
-        return lhsTraits.level < rhsTraits.level;
-    return lhs < rhs;
-}
-
 // Inserts a creature in the list's order, its item data the creature.
 VA(0x004143f0, 0x73)
-static void insertCreature(CComboBox& combo, TCreatureType creature)
+void insertCreature(CComboBox& combo, TCreatureType creature)
 {
     int index;
     for (index = combo.GetCount(); index > 0 && isCreatureBefore(creature, TCreatureType(combo.GetItemData(index - 1)));

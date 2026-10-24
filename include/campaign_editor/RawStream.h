@@ -79,12 +79,12 @@ TRawIStream& readToIter(TRawIStream& stream, Iter first, Iter last)
 // Loki delegates to readToIter (0x08346820). Counted-template and byte-overload
 // probes retain five calls in GameMapHeader where Complete expands these loops;
 // the corresponding Complete buffered helper boundary remains unproven.
-// Complete materializes begin before end and saves the serialized count before
-// resizing in the map-header reader; keep these iterator/count lifetimes.
+// Complete evaluates the erase range in different orders in the map-header
+// and prologue readers; leave both iterator calls in the expression. The
+// serialized count is saved before resizing in the map-header reader.
 inline TRawIStream& operator>>(TRawIStream& stream, std::string& value)
 {
-    std::string::iterator first = value.begin();
-    value.erase(first, value.end());
+    value.erase(value.begin(), value.end());
     long size = readValue<long>(stream);
     std::string::size_type remaining = size;
     value.resize(size);

@@ -117,6 +117,9 @@ struct TRmgTerrainFlip {
 
     TRmgTerrainFlip() {}
     TRmgTerrainFlip(bool x, bool y) : m_flipX(x), m_flipY(y) {}
+    // Loki's TFlippedState::operator!; Mac and Windows retain the indexed
+    // object's address across both inverted member reads in the selector.
+    TRmgTerrainFlip operator!() const { return TRmgTerrainFlip(!m_flipX, !m_flipY); }
 };
 
 // The cache word is decoded identically throughout the 0x5b3dd0..0x5b76f0
@@ -146,8 +149,10 @@ struct TRmgPackedTerrainCell {
         return tile;
     }
     inline void setInitialized() { m_initialized = 1; }
-    inline void setTerrain(s32 value) { m_terrain = value; }
-    inline void setFrame(s32 value) { m_frame = value; }
+    // Reference inputs preserve the editor's byte-wide reads from the
+    // integer tile fields before assigning their four- and seven-bit slices.
+    inline void setTerrain(const s32& value) { m_terrain = value; }
+    inline void setFrame(const s32& value) { m_frame = value; }
     inline void setFlipX(b8 value) { m_flipX = value; }
     inline void setFlipY(b8 value) { m_flipY = value; }
 };

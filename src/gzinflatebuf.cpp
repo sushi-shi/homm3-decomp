@@ -277,6 +277,8 @@ void TGzInflateBuf::_putBackC(char c)
 // Loki's three asserts (pSrcBuf, _m_pSrcBuf, inflateInit2's Z_OK) take the
 // campaign editor's copy 93.45 -> 99.95 but the game's 100 -> 94.98; not
 // ported (docs/vc6/inliner.md).
+// Loki initializes next_in/avail_in before next_out/avail_out. This order
+// also matches the map editor's constructor exactly; the game stays exact.
 VA(0x004d6050, 0x58A)
 MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
@@ -297,9 +299,9 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* pSrcBuf)
          _m_pOutBuf,
          _m_pOutBuf);
     setp(0, 0);
-    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
     _m_zstream.next_in = reinterpret_cast<Bytef*>(_m_pInBuf);
     _m_zstream.avail_in = 0;
+    _m_zstream.next_out = reinterpret_cast<Bytef*>(_m_pOutBuf);
     _m_zstream.avail_out = GZ_WINDOW_SIZE;
     _m_zstream.zalloc = 0;
     _m_zstream.zfree = 0;

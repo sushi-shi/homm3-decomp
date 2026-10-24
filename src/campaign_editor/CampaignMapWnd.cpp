@@ -306,6 +306,10 @@ void TCampaignMapWnd::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
     Invalidate();
 }
 
+// TMemoryDC's CDC::CreateCompatibleDC call reproduces retail's zero-register
+// comparison (99.7845 -> 99.9965%). All 23 blocks and 27 calls agree. The
+// remaining difference is the entry's handler pointer: retail push 0x4821be
+// has no relocation paired to the compiler's local EH label at +3.
 VA(0x0041a630, 0x399)
 void TCampaignMapWnd::OnPaint()
 {

@@ -15,6 +15,7 @@
 #include "retailobjecttype.h"
 #include "va.h"
 #include "editor/Clamp.h"
+#include "editor/CreatureCombo.h"
 #include "editor/DialogTemplate.h"
 #include "editor/Digits.h"
 #include "editor/GameObject.h"
@@ -545,7 +546,7 @@ TAccumulateCreatureDlg::TAccumulateCreatureDlg(EGameVersion mapVersion)
 // The creature lists' order: by town (the neutrals last), then level, then
 // id.
 VA(0x004797f2, 0x80)
-static bool isCreatureBefore(TCreatureType lhs, TCreatureType rhs)
+bool isCreatureBefore(TCreatureType lhs, TCreatureType rhs)
 {
     TCreatureTypeTraits lhsTraits = akCreatureTypeTraits[lhs];
     TCreatureTypeTraits rhsTraits = akCreatureTypeTraits[rhs];
@@ -556,17 +557,6 @@ static bool isCreatureBefore(TCreatureType lhs, TCreatureType rhs)
     if (lhsTraits.level != rhsTraits.level)
         return lhsTraits.level < rhsTraits.level;
     return lhs < rhs;
-}
-
-// Inserts a creature in the list's order, its item data the creature.
-static void addCreature(CComboBox& combo, TCreatureType creature)
-{
-    int index;
-    for (index = combo.GetCount(); index > 0 && isCreatureBefore(creature, TCreatureType(combo.GetItemData(index - 1)));
-         index--)
-        ;
-    combo.InsertString(index, akCreatureTypeTraits[creature].m_name);
-    combo.SetItemData(index, creature);
 }
 
 VA(0x00479872, 0xb1)
@@ -610,7 +600,7 @@ BOOL TAccumulateCreatureDlg::OnInitDialog()
     unsigned int numCreatures = _m_mapVersion >= GAME_VERSION_AB ? kNumCreatures : kNumRoECreatures;
     for (unsigned int creature = 0; creature < numCreatures; creature++) {
         if (akCreatureTypeTraits[creature].level >= 0)
-            addCreature(_m_creatureCombo, TCreatureType(creature));
+            insertCreature(_m_creatureCombo, TCreatureType(creature));
     }
     int index;
     for (index = 0; _m_creatureCombo.GetItemData(index) != 0; index++)
@@ -873,8 +863,10 @@ BOOL TDefeatHeroDlg::OnInitDialog()
             const TGameObject* pObject = _m_map.getPObject(_m_aHeroesOnMap[i]);
             TTilePoint loc = _m_map.getObjectLoc(_m_aHeroesOnMap[i]) - pObject->getTriggerLoc();
             const TBasicHero* pHero = dynamic_cast<const TBasicHero*>(pObject);
-            if (pHero == NULL)
-                pHero = dynamic_cast<const TTown*>(pObject)->getPVisitingHero();
+            if (pHero == NULL) {
+                const TTown* pTown = dynamic_cast<const TTown*>(pObject);
+                pHero = pTown->getPVisitingHero();
+            }
             CString heroName;
             const TIdentifiedHero* pIdentifiedHero = dynamic_cast<const TIdentifiedHero*>(pHero);
             if (pIdentifiedHero != NULL) {
@@ -889,7 +881,9 @@ BOOL TDefeatHeroDlg::OnInitDialog()
                     bool bHasHero = pPlaceholder->getHeroID() != -1;
                     if (bHasHero) {
                         THeroID heroID = pPlaceholder->getHeroID();
-                        const THero::TClassTraits& classTraits = THero::s_akClassTraits[THero::s_akTraits[heroID].m_class];
+                        const THero::TTraits& heroTraits = THero::s_akTraits[heroID];
+                        THeroClass heroClass = heroTraits.m_class;
+                        const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
                         heroName.Format(kSpecificHeroAndClassFmtStr, _m_map.getHeroPrototype(heroID).getName().c_str(),
                                         classTraits.m_name);
                     } else

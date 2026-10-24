@@ -9,6 +9,40 @@
 #include "creaturetype_fwd.h"
 #include "town.h"
 
+// Complete Mac expands this four-valued town classifier in armyGroup's
+// morale/luck getters and descriptions and army::setMorale/setLuck. Examples:
+// 0x58c24..58c68, 0x59fa0..59fe4, 0x49c60..49ca4. Cross-TU Windows
+// expansions support a shared header body. The inline qualifier is inferred:
+// CodeWarrior retains the ordinary definition but expands the inline spelling
+// at the native sites; VC6 emits the same callers for both. Name is inferred.
+// Creature callers preserve the canonical game::getAlignment lookup before it.
+enum {
+    moralAlignmentNone = 0,
+    moralAlignmentGood = 1,
+    moralAlignmentNeutral = 2,
+    moralAlignmentEvil = 3
+};
+
+inline int classifyTownAlignment(int townType)
+{
+    switch (townType) {
+    case TOWN_CASTLE:
+    case TOWN_RAMPART:
+    case TOWN_TOWER:
+        return moralAlignmentGood;
+    case TOWN_INFERNO:
+    case TOWN_NECROPOLIS:
+    case TOWN_DUNGEON:
+        return moralAlignmentEvil;
+    case TOWN_STRONGHOLD:
+    case TOWN_FORTRESS:
+    case TOWN_CONFLUX:
+        return moralAlignmentNeutral;
+    default:
+        return moralAlignmentNone;
+    }
+}
+
 // E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
 // events.cpp also expands this at monsters_flee/join/sell_out, passing a
 // literal count so each singular/plural selection folds at its call site.

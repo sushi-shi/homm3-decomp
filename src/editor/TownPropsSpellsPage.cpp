@@ -114,8 +114,10 @@ BOOL TTownPropsSpellsPage::OnInitDialog()
     for (level = 0; level < s_kNumSpellLevels; level++)
         _m_aNumObligatorySpells[level] = 0;
     for (unsigned int spell = 0; spell < kNumSpells; spell++) {
-        if (_m_obligatorySpells[spell])
-            ++_m_aNumObligatorySpells[akSpellTraits[spell].m_level - 1];
+        if (_m_obligatorySpells[spell]) {
+            int spellLevel = akSpellTraits[spell].m_level - 1;
+            ++_m_aNumObligatorySpells[spellLevel];
+        }
     }
     CPropertyPage::OnInitDialog();
     for (level = 0; level < s_kNumSpellLevels; level++) {
@@ -151,7 +153,7 @@ void TTownPropsSpellsPage::OnSelChangeLevelCombo()
 VA(0x004c7454, 0x19d)
 void TTownPropsSpellsPage::OnCheckChangeObligatorySpellsList()
 {
-    int curSel = _m_obligatorySpellsList.GetCurSel();
+    int curSel = _m_obligatorySpellsList.GetCaretIndex();
     unsigned int spell = _m_obligatorySpellsList.GetItemData(curSel);
     int level = akSpellTraits[spell].m_level - 1;
     bool bWasObligatory = _m_obligatorySpells[spell];
@@ -177,7 +179,7 @@ void TTownPropsSpellsPage::OnCheckChangeObligatorySpellsList()
 VA(0x004c75f1, 0x62)
 void TTownPropsSpellsPage::OnCheckChangeDisabledSpellsList()
 {
-    int curSel = _m_disabledSpellsList.GetCurSel();
+    int curSel = _m_disabledSpellsList.GetCaretIndex();
     unsigned int spell = _m_disabledSpellsList.GetItemData(curSel);
     _m_disabledSpells[spell] = !_m_disabledSpellsList.GetCheck(curSel);
 }

@@ -10,6 +10,8 @@
 #include "editor/GameObject.h"
 
 DATA(0x0059e410) TGameObject::_TObjectTypeMap TGameObject::_s_objectTypeMap;
+// The map's constructor, which its static initializer calls.
+VA_COMPGEN(0x0043d3fd, 0x23, CLASS_CTOR, map)
 
 VA(0x0043d2f1, 0x18)
 TGameObject::TGameObject(const TGameObject& other)

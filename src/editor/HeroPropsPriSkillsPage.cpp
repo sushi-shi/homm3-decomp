@@ -17,9 +17,7 @@ THeroPropsPriSkillsPage::THeroPropsPriSkillsPage(const THero* pOldHero, THero* p
       _m_pOldHero(pOldHero),
       _m_pNewHero(pNewHero),
       _m_mapVersion(mapVersion),
-      _m_bModified(false),
-      _m_defaultSkills(0),
-      _m_customSkills(0)
+      _m_bModified(false)
 {
     m_psp.pszTitle = m_strCaption = SHeroPropsPriSkillsPageText::kCaptionStr;
     m_psp.dwFlags |= PSP_USETITLE;
@@ -50,6 +48,11 @@ BEGIN_MESSAGE_MAP(THeroPropsPriSkillsPage, CPropertyPage)
     ON_BN_CLICKED(IDC_CUSTOMIZE_CHECK, OnCustomizeCheck)
 END_MESSAGE_MAP()
 
+// Both stored skill sets use the canonical primary-skill value type, like
+// the secondary page's secondary-skill values. Its forwarding assignment
+// expands here while the underlying TArray assignment remains a call.
+// A wrapper only for custom skills, alternate reset loops and named frame
+// geometry do not recover that native boundary.
 VA(0x00452ea1, 0x1a3)
 BOOL THeroPropsPriSkillsPage::OnInitDialog()
 {

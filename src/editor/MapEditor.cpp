@@ -619,6 +619,10 @@ void TMapEditorApp::OnViewZoomIn()
     }
 }
 
+// MFC's inline CWaitCursor destructor, kept out of line for the unwind
+// funclets that call it; this file is the first to instantiate it.
+VA_COMPGEN(0x0045d589, 0xd, IMPLICIT_DTOR, CWaitCursor)
+
 VA(0x0045d596, 0x1b)
 void TMapEditorApp::OnUpdateViewZoomIn(CCmdUI* pCmdUI)
 {

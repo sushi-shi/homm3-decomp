@@ -109,7 +109,8 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
         _m_aHeroesInClass[heroClass] = _m_pNewMap->getAvailableHeroesInClass(THeroClass(heroClass));
     if (_m_pNewPlaceholder->hasHeroID()) {
         THeroID heroID = _m_pNewPlaceholder->getHeroID();
-        _m_aHeroesInClass[THero::s_akTraits[heroID].m_class].insert(heroID);
+        THeroClass heroClass = THero::s_akTraits[heroID].m_class;
+        _m_aHeroesInClass[heroClass].insert(heroID);
     }
     CDialog::OnInitDialog();
     TPlayerMask owners = _m_pNewMap->getAvailableHeroOwnersMask();
@@ -118,7 +119,7 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
     unsigned int player;
     for (player = 0; player < kNumPlayers; player++) {
         if (owners[player])
-            _m_ownerCombo.SetItemData(_m_ownerCombo.AddString(akPlayerTraits[player].m_pColorName), player);
+            _m_ownerCombo.SetItemData(_m_ownerCombo.AddString(akPlayerTraits[player].m_pName), player);
     }
     index = 0;
     while (_m_ownerCombo.GetItemData(index) != _m_pNewPlaceholder->getOwner())
@@ -127,7 +128,7 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
     _m_powerRatingEdit.LimitText(TDigits<THeroPlaceholder::s_kMaxPowerRank>::getDigits());
     _m_powerRatingSpin.SetRange(THeroPlaceholder::s_kMinPowerRank, THeroPlaceholder::s_kMaxPowerRank);
     for (heroClass = 0; heroClass < kNumHeroClasses; heroClass++) {
-        if (!_m_aHeroesInClass[heroClass].empty())
+        if (_m_aHeroesInClass[heroClass].size() > 0)
             _m_classCombo.SetItemData(_m_classCombo.AddString(THero::s_akClassTraits[heroClass].m_name), heroClass);
     }
     if (_m_heroChoice) {
@@ -154,7 +155,8 @@ BOOL THeroPlaceholderPropsDlg::OnInitDialog()
         _m_heroCombo.EnableWindow(FALSE);
         if (_m_classCombo.GetCount() == 0)
             _m_specificHeroRadio.EnableWindow(FALSE);
-        _m_powerRatingEdit.SetWindowText(TFormattedString("%d", _m_pNewPlaceholder->getPowerRank()));
+        TFormattedString text("%d", _m_pNewPlaceholder->getPowerRank());
+        _m_powerRatingEdit.SetWindowText(text);
     }
     return TRUE;
 }

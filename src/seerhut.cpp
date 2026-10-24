@@ -588,6 +588,11 @@ std::string type_skill_quest::skillRequirementText(
 // 2026-10-07 trace: the depth-1 sites after the second op= are only the two
 // string destructors (remaining 3); a fourth would give 949/4 = 237 < 307.
 // Mac 0x165390 retains the same 11 calls as this source, naming no helper.
+// A qualified call through getRequirementText gives Windows 96.8060% and
+// both retained string assigns, but leaves the wrapper out of line where
+// retail directly calls skillRequirementText. Its paired Mac score falls
+// from 100% to 48.4568%. Symmetric direct assign(...) calls are byte-flat
+// at this function with either requirement spelling. Keep the native helper.
 VA(0x0056e0d0, 0x169)
 MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()

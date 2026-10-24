@@ -58,12 +58,26 @@ class ReviewedRuntimeExportsTest(unittest.TestCase):
             with self.subTest(change=change):
                 self.assertEqual(self.run_exports(changes=change), [])
 
-    def test_section_and_zero_offset_anchor_are_checked(self):
-        for change in ({'section': '99'}, {'member': 'missing.obj'}, {'symbol': '_second'},
+    def test_section_and_native_symbol_are_checked(self):
+        for change in ({'section': '99'}, {'member': 'missing.obj'},
                        {'symbol': 'missing'}, {'section': '2', 'symbol': 'datum'},
                        {'library': 'UNKNOWN.LIB'}):
             with self.subTest(change=change):
                 self.assertEqual(self.run_exports(changes=change), [])
+
+    def test_nonzero_public_offset_does_not_relabel_the_section_base(self):
+        exports = self.run_exports(changes={'symbol': '_second'})
+        _obj, _image, _mapped, row = fixture()
+        row['symbol'] = '_second'
+        runtime, alternate = reviewed_runtime_names({0x1000, 0x1002}, [], [row],
+                                                    exports=exports)
+        self.assertEqual(runtime, [(0x1000, '_first', 'LIBCMT', 'asm.obj'),
+                                   (0x1002, '_second', 'LIBCMT', 'asm.obj')])
+        self.assertEqual(alternate, [])
+
+    def test_whole_section_without_a_proven_export_supplies_no_name(self):
+        _obj, _image, _mapped, row = fixture()
+        self.assertEqual(reviewed_runtime_names({0x1000}, [], [row]), ([], []))
 
     def test_changed_native_fixed_bytes_or_short_reads_are_rejected(self):
         for payload in (b'\x90\x90\xc3\xc3', b'\xc3\x90\xc3'):

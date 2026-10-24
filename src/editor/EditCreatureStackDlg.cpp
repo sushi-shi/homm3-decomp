@@ -10,12 +10,13 @@
 #include "town_type.h"
 #include "va.h"
 #include "editor/Clamp.h"
+#include "editor/CreatureCombo.h"
 #include "editor/Digits.h"
 #include "editor/EditCreatureStackDlg.h"
 #include "editor/MapEditorText.h"
 
 VA(0x0040ddf5, 0x80)
-static bool isCreatureTypeBefore(TCreatureType lhs, TCreatureType rhs)
+bool isCreatureTypeBefore(TCreatureType lhs, TCreatureType rhs)
 {
     TCreatureTypeTraits lhsTraits = akCreatureTypeTraits[lhs];
     TCreatureTypeTraits rhsTraits = akCreatureTypeTraits[rhs];

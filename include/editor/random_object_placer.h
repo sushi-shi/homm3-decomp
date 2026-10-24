@@ -20,6 +20,9 @@ class t_random_object_map {
 public:
     t_random_object_map(int width, int height) : m_width(width), m_height(height) {}
 
+    int getWidth() const;
+    int getHeight() const;
+
     virtual bool getFirstObject(unsigned int* pObjID) = 0;
     virtual bool getNextObject(unsigned int* pObjID) = 0;
     virtual const TObjectType& getObjectType(unsigned int objID) = 0;

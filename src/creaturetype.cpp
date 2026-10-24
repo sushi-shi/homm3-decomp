@@ -347,6 +347,7 @@ void initializeCreatureTypeTraits(int id,
 
     DATA_COMPGEN_GUARD(0x00696640, creatureTypeStringsGuard,
                        creatureTypeNames)
+    VA_COMPGEN(0x0047b800, 0x17, STATIC_DTOR, creatureTypeNames)
     DATA(0x006963e8)
     static TAutoStrPtr creatureTypeNames[150];
 
@@ -354,6 +355,7 @@ void initializeCreatureTypeTraits(int id,
     strcpy(creatureTypeNames[id].get(), values[0]);
     traits.m_name = creatureTypeNames[id].get();
 
+    VA_COMPGEN(0x0047b7e0, 0x17, STATIC_DTOR, creatureTypePluralNames)
     DATA(0x00696644)
     static TAutoStrPtr creatureTypePluralNames[150];
 
@@ -383,6 +385,7 @@ void initializeCreatureTypeTraits(int id,
     traits.wanderingLow = atoi(values[21]);
     traits.wanderingHigh = atoi(values[22]);
 
+    VA_COMPGEN(0x0047b7c0, 0x17, STATIC_DTOR, creatureTypeAbilities)
     DATA(0x00696190)
     static TAutoStrPtr creatureTypeAbilities[150];
 

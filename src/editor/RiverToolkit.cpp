@@ -17,7 +17,9 @@ TRiverToolkit::TRiverToolkit(CWnd* pParent) : TToolkitBase(IDD_RIVER_TOOLKIT, pP
     _m_pToolBar = new TToolkitBaseToolBar(this, IDR_RIVER_TOOLBAR, 1);
     if (_m_pToolBar == NULL)
         throw TAllocationFailure();
-    CRect rect(0, 0, 0, 3);
+    CRect rect;
+    rect.left = rect.right = rect.top = 0;
+    rect.bottom = 3;
     MapDialogRect(&rect);
     int margin = rect.Height();
     _m_riverTypeStatic.GetWindowRect(&rect);

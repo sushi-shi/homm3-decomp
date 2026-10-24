@@ -7,6 +7,7 @@
 #include "gzinflatebuf.h"
 #include "editor/MFCFileBuf.h"
 #include "campaign_editor/RawStream.h"
+#include "editor/RawStreamWriteValue.h"
 #include "campaign_editor/Campaign.h"
 #include "campaign_editor/CampaignDoc.h"
 #include "campaign_editor/CampaignEditorText.h"
@@ -158,13 +159,9 @@ bool promptTextFileName(LPCTSTR title, BOOL bOpenFileDialog, DWORD flags, CStrin
         name += '.';
     name += defaultExt;
     fileName = name;
-    bool bResult;
-    {
-        TStringBuffer buffer(fileName, _MAX_PATH);
-        dlg.m_ofn.lpstrFile = buffer;
-        bResult = dlg.DoModal() == IDOK;
-    }
-    return bResult;
+    TStringBuffer buffer(fileName, _MAX_PATH);
+    dlg.m_ofn.lpstrFile = buffer;
+    return dlg.DoModal() == IDOK;
 }
 
 VA(0x00410b70, 0xa)
@@ -206,16 +203,6 @@ auto_ptr<streambuf> TFileContent::createInflateBuf() const
     return pBuf;
 }
 
-// Retail copies scalar writes into a temporary even for int fields. This
-// value boundary also gives the bonus visitors their reused argument homes.
-// Short loads remain WORD-wide where retail loads DWORD: unsigned short
-// and native-input conversion variants did not close that residual.
-template <class T>
-inline void writeValue(TRawOStream& stream, T value)
-{
-    stream << value;
-}
-
 VA(0x00410f30, 0x1d)
 void TScenarioStartingBonusWriter::write(const TScenarioStartingBonus& bonus,
                                          TRawOStream& oStream, int version)
@@ -225,11 +212,16 @@ void TScenarioStartingBonusWriter::write(const TScenarioStartingBonus& bonus,
     bonus.accept(*this);
 }
 
+// Keep native-width input values before the short wire conversions. Retail
+// copies each hero/artifact DWORD into the reused argument home; direct field
+// arguments narrow the load to WORD. The creature accessors already retain
+// their native-width values through the same shared writeValue helper.
 VA(0x00410f50, 0xb3)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusSpell& bonus)
 {
     writeValue<ubyte>(*m_pOStream, eBonusSpell);
-    writeValue<short>(*m_pOStream, bonus.m_hero);
+    int hero = bonus.m_hero;
+    writeValue<short>(*m_pOStream, hero);
     writeValue<ubyte>(*m_pOStream, bonus.m_spell);
 }
 
@@ -237,7 +229,8 @@ VA(0x00411010, 0xe9)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusCreature& bonus)
 {
     writeValue<ubyte>(*m_pOStream, eBonusCreature);
-    writeValue<short>(*m_pOStream, bonus.m_hero);
+    int hero = bonus.m_hero;
+    writeValue<short>(*m_pOStream, hero);
     writeValue<short>(*m_pOStream, bonus.m_stack.getCreatureType());
     writeValue<short>(*m_pOStream, bonus.m_stack.getQuantity());
 }
@@ -253,15 +246,18 @@ VA(0x00411180, 0xb3)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusArtifact& bonus)
 {
     writeValue<ubyte>(*m_pOStream, eBonusArtifact);
-    writeValue<short>(*m_pOStream, bonus.m_hero);
-    writeValue<short>(*m_pOStream, bonus.m_artifact);
+    int hero = bonus.m_hero;
+    writeValue<short>(*m_pOStream, hero);
+    int artifact = bonus.m_artifact;
+    writeValue<short>(*m_pOStream, artifact);
 }
 
 VA(0x00411240, 0xb3)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusSpellScroll& bonus)
 {
     writeValue<ubyte>(*m_pOStream, eBonusSpellScroll);
-    writeValue<short>(*m_pOStream, bonus.m_hero);
+    int hero = bonus.m_hero;
+    writeValue<short>(*m_pOStream, hero);
     writeValue<ubyte>(*m_pOStream, bonus.m_spell);
 }
 
@@ -269,7 +265,8 @@ VA(0x00411300, 0xd0)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusPrimarySkill& bonus)
 {
     writeValue<ubyte>(*m_pOStream, eBonusPrimarySkill);
-    writeValue<short>(*m_pOStream, bonus.m_hero);
+    int hero = bonus.m_hero;
+    writeValue<short>(*m_pOStream, hero);
     for (unsigned int i = 0; i < kNumPrimarySkills; i++)
         writeValue<ubyte>(*m_pOStream, bonus.m_skills[i]);
 }
@@ -278,7 +275,8 @@ VA(0x004113d0, 0xe9)
 void TScenarioStartingBonusWriter::visit(const TScenarioBonusSecondarySkill& bonus)
 {
     writeValue<ubyte>(*m_pOStream, eBonusSecondarySkill);
-    writeValue<short>(*m_pOStream, bonus.m_hero);
+    int hero = bonus.m_hero;
+    writeValue<short>(*m_pOStream, hero);
     writeValue<ubyte>(*m_pOStream, bonus.m_skill);
     writeValue<ubyte>(*m_pOStream, bonus.m_level);
 }
@@ -303,7 +301,7 @@ auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int ver
     case eBonusSpell: {
         int hero = readValue<short>(iStream);
         int spell = readValue<signed char>(iStream);
-        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusSpell(hero, spell));
+        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusSpell(spell, hero));
         break;
     }
     case eBonusCreature: {
@@ -325,13 +323,13 @@ auto_ptr<TScenarioStartingBonus> readStartingBonus(TRawIStream& iStream, int ver
             artifact = readValue<short>(iStream);
         else
             artifact = readValue<signed char>(iStream);
-        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusArtifact(hero, artifact));
+        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusArtifact(artifact, hero));
         break;
     }
     case eBonusSpellScroll: {
         int hero = readValue<short>(iStream);
         int spell = readValue<signed char>(iStream);
-        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusSpellScroll(hero, spell));
+        pBonus = auto_ptr<TScenarioStartingBonus>(new TScenarioBonusSpellScroll(spell, hero));
         break;
     }
     case eBonusPrimarySkill: {
@@ -407,7 +405,8 @@ void TScenarioStartingOptionsWriter::visit(const TScenarioOptionsStartingHero& o
     for (unsigned int i = 0; i < options.m_choices.size(); i++) {
         const TScenarioOptionsStartingHero::TChoice& choice = options.m_choices[i];
         writeValue<ubyte>(*m_pOStream, choice.m_player);
-        writeValue<short>(*m_pOStream, choice.m_hero);
+        int hero = choice.m_hero;
+        writeValue<short>(*m_pOStream, hero);
     }
 }
 
@@ -896,13 +895,16 @@ BOOL TCampaignDoc::OnOpenDocument(LPCTSTR lpszPathName)
     return TRUE;
 }
 
+// Retail formats the file version before the supported version. The remaining
+// difference is argument registers: named version/format values and exception
+// references do not close it.
 VA(0x00414b00, 0xda)
 void TCampaignDoc::ReportSaveLoadException(LPCTSTR lpszPathName, CException* e, BOOL bSaving, UINT nIDPDefault)
 {
     CString prompt;
     if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocInvalidFileVersion))) {
         TCampaignDocInvalidFileVersion* pVersionFailure = static_cast<TCampaignDocInvalidFileVersion*>(e);
-        prompt.Format(kInvalidCampaignVersionFmtStr, pVersionFailure->m_currentVersion, pVersionFailure->m_fileVersion);
+        prompt.Format(kInvalidCampaignVersionFmtStr, pVersionFailure->m_fileVersion, pVersionFailure->m_currentVersion);
         AfxMessageBox(prompt, MB_ICONEXCLAMATION);
     } else if (e->IsKindOf(RUNTIME_CLASS(TCampaignDocLoadFailure))) {
         prompt = kInvalidCampaignFileStr;

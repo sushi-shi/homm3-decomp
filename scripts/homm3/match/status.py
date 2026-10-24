@@ -494,6 +494,9 @@ def _source_definitions(*, source_root: Path | None = None,
             continue
         path = root / unit["source"]
         raw = path.read_text(errors="replace")
+        if source.shared_image_source(common.HOMM3_DIR / unit["source"]):
+            from homm3.core import paths as image_paths
+            raw = source.image_view(raw, image_paths.image_key())
         masked = source.mask_lexical_noise(raw)
         for _start, end, args, _raw_args in source.macro_invocations(
                 masked, va_head, raw):

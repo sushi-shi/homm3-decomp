@@ -1467,18 +1467,10 @@ void showBuildingRewards(const town* thisTown,
 }
 
 // E:\gamedcs\town.cpp:1760
-// Residual (99.0596%): the same DC-attested clear() repair restores the
-// inlined format_string destructor and recovers the honest pre-carrier peak.
-// The 218-instruction streams and all 20 branch targets agree; only the
-// adjacent hidden-return-slot `lea` and count `push` around format_string
-// remain transposed. The DC-attested GetArmyName call is byte-flat and kept;
-// swapping count/creature declarations was flat, while a scoped named
-// temporary fell to 97.3624%, so this is the closest source-compatible form.
-// The creature twin emits "<count> <name>" per reward with the same separators,
-// selects singular/plural by count, and drives the outer format by the first
-// reward's count.
-// Feeding formatString a second direct reward-count expression scores 91.42%
-// instead of 99.0596%; the shared count local preserves its retail lifetime.
+// The first count belongs to the outer sentence. Only subsequent rewards
+// append a count after their separator: retail 0x5c046d branches over that
+// entire temporary to 0x5c04e6, as do DC 0x167ae2 and Mac 0x1b59c4.
+// Keep the shared count local and canonical getArmyName/clear calls.
 VA(0x005c0400, 0x26F)
 DC_ADDRESS(0x167a8c, 0x1b0)
 MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward)
@@ -1494,8 +1486,8 @@ void showCreatureRewards(const town* thisTown,
                 msg += g_generalText->GetText(GENERAL_TEXT_LIST_AND);
             else
                 msg += ", ";
+            msg += formatString("%d ", count);
         }
-        msg += formatString("%d ", count);
         msg += getArmyName(creature, count);
     }
     long firstCount = rewards[0].m_qualifier >> 16;

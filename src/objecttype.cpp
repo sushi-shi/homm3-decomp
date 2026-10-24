@@ -9,18 +9,15 @@
 // header statics, _Ios_init at 0x69cb59 and _Wios_init at 0x69cb58, and
 // register their destructors; this compiland included the header.
 // Its facet-id initializer 0x51b830 also guards num_put (0x6aba98) before
-// num_get (0x6aba7c); no recovered code here instantiates num_put, so that
-// 121-byte body stays unmatched. VC6 orders those guards by instantiation:
-// any arithmetic insertion into an ostream parsed before the first
-// arithmetic extraction - even inside an unreferenced inline function that
-// emits no code - reproduces retail's ctype<unsigned short>, num_put,
-// num_get, numpunct body exactly. Retail keeps no ostream code in this
-// compiland, so that insertion was dead code the linker removed; its
-// content is unknown and is not invented here.
-// Open question (for the user): whether a hypothesised dead writer, such as
-// an unreferenced operator<< for TObjectType placed before operator>>, may
-// be admitted on this evidence alone. Until then 0x51b830 and its CRT slot
-// stay unverified.
+// num_get (0x6aba7c). VC6 orders those guards by instantiation: an
+// arithmetic insertion into an ostream parsed before the first arithmetic
+// extraction reproduces retail's ctype<unsigned short>, num_put, num_get,
+// numpunct body. Loki h3maped's ObjectType.cpp supplies that insertion: its
+// objects.txt writer, operator<<(ostream&, const TObjectType&) (line 270,
+// befriended in ObjectType.h), sits just before the reader. Retail keeps no
+// ostream code here, so /OPT:REF dropped the unreferenced writer; with it
+// restored the compiled initializer is byte-identical to 0x51b830 (the claim
+// tooling cannot yet bind a facet-id initializer to its CRT slot).
 #include <assert.h>
 #include <iostream>
 #include <map>
@@ -149,6 +146,7 @@ bool TCategorySlotTraits::contains(const TObjectType& objectType) const
 }
 
 VA(0x005142A0, 0x15)
+VA_AT(h3maped, 0x00490115, 0x12)
 TTerrainSlotTraits::TTerrainSlotTraits(TTerrainType terrainType)
     : m_terrainType(terrainType)
 {
@@ -158,6 +156,7 @@ TTerrainSlotTraits::TTerrainSlotTraits(TTerrainType terrainType)
 VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TTerrainSlotTraits)
 
 VA(0x005144B0, 0x9)
+VA_AT(h3maped, 0x00490285, 0x9)
 TAllTerrainSlotTraits::TAllTerrainSlotTraits()
 {
 }
@@ -165,6 +164,7 @@ TAllTerrainSlotTraits::TAllTerrainSlotTraits()
 VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAllTerrainSlotTraits)
 
 VA(0x00514510, 0x15)
+VA_AT(h3maped, 0x004902a6, 0x12)
 TCategorySlotTraits::TCategorySlotTraits(int category)
     : m_category(category)
 {
@@ -214,21 +214,15 @@ TObjectSlotTraits* const apObjectSlotTraits[OBJECT_SLOT_TRAITS_COUNT] = {
     &g_category5SlotTraits
 };
 
-// Provisional cache accessor: retail's independent guard at 0x6aba7d
-// initializes the vector at 0x6aba80 through its retained constructor.
-// At both the 90.64 and 96.08 checkpoints VC6 expands this accessor but
-// gives the nested constructor budget 43 against cost 51. At the earlier
-// checkpoint a caller-local static expands that constructor and scores
-// 87.9486 instead of 90.6364 in setImageName.
-// A caller-local class owning or deriving from the vector also preserves
-// the constructor call and is byte-identical at 96.5929. The retained
-// constructor therefore establishes a boundary, not this accessor uniquely.
-// External inline storage makes the cache fields kind 7 in VC6. Together
-// with the ordinary registry accessor and value-returning lookup, it
-// reproduces the retail cache/string operands. A static inline definition
-// keeps kind 8 storage and does not recover those operands.
-inline std::vector<TObjectType::_TImageInfo>& getObjectImageCache()
+// Loki's retained _getAImageInfo symbol and class declaration identify this
+// static member. Its sole caller is setImageName, so the inline body stays
+// in this source file. Mac 0x223adc expands the same guard, vector constructor
+// and cleanup registration; the editor retains the accessor at 0x49062d.
+VA_AT(h3maped, 0x0049062d, 0x3d)
+inline std::vector<TObjectType::_TImageInfo>& TObjectType::_getAImageInfo()
 {
+    DATA_COMPGEN_GUARD(0x006aba7d, imageCacheGuard, imageCache)
+    DATA(0x006aba80)
     static std::vector<TObjectType::_TImageInfo> imageCache;
     return imageCache;
 }
@@ -244,143 +238,12 @@ VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
 // are neutral when the empty point is initialized before the row count.
 VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, _TImageInfo)
 
-// Further boundary controls do not close the residual: an ordinary free
-// GetIndex is neutral; a separate registry-append helper changes nested
-// decisions. Separate whole-mask, raw-data and decode helpers reach only
-// 88.7945, 88.1739 and 84.2727. A TImageInfo::readMask member remains called.
-// Naming the loop's two bitset references, narrowing dimension lifetimes,
-// and reusing oldCount for cell also fail. Moving only the byte-index/bit
-// declarations outside the loop is neutral. bitset::at retains two bounds
-// branches absent from retail; it is not an elided-check explanation.
-// Include-order controls are neutral. The configured CPU scheduling agrees
-// with /G5; /G6 lowers the score to 84.1067. why-reg's first named-flag probe
-// worsens its register distance from 48 to 53. Its retained-value mapping
-// already agrees: ESI=this, EBX=oldCount, EDI=name. With a loop-local index,
-// file and cell share ESI and this/name swap; early cell separates them.
-// The full inline trace is unchanged from 90.6364 to 96.0790: caller cost
-// 577, 22 root candidates, and identical budgets at every nested site.
-// Resource-fallback expressions, named proxies and iterator initialization
-// versus assignment are neutral. A separate appended iterator restores
-// retail's EAX return path but removes its initial found store (88.0316).
-// Putting imageNumber's assignment inside the lookup scores 95.2767.
-// Unsigned mapped indices and signed loop indices with unsigned byte-offset
-// arithmetic are neutral; SHR alone does not prove the counter's type.
-// A separate result iterator, initialized from found and refreshed after
-// the row append, preserves the initial found store AND restores retail's
-// EAX lookup exit. It scores 88.4269 because later temporary allocation
-// changes. Branch-specific result assignments add control flow instead.
-// Entry reference/pointer returns score 95.3676. A generic registry template
-// and find_last_of('.') are neutral; the pinned character overload of
-// find_last_of calls the same rfind overload, so that call does not prove
-// which public spelling retail used.
-// Selecting record after maskName's copy raises MAX to 96.5929 with the
-// same 791-byte extent and 22 branch connections. This still selects the
-// record later than retail's emitted load; it is not an exact schedule.
-// Moving selection past extension replacement scores 90.6759, and moving
-// cell's initialization to the loop with this order scores 92.0079.
-// The normalized names and headers at master 7ea23f51 reproduce both
-// record-order checkpoints byte for byte; spelling += as append is also
-// byte-neutral at both checkpoints.
-// The substring constructor with name.get_allocator() captures npos in
-// ESI before _Tidy and scores at most 93.1146; retail loads npos afterward.
-// Its default-allocator form also loses the byte copied from name. These
-// controls support the copy constructor rather than a substring operation.
-// Naming the end iterator, widening the insertion pair's scope, taking
-// the containers directly in the lookup helper, and copy-initializing the
-// empty point are byte-neutral. A string-pointer parameter is also neutral
-// after changing only the comparison symbol's spelling. Calling an append
-// helper directly from this caller adds eight CFG blocks; a const-iterator
-// result adds three. Neither recovers the lookup's retained call decisions.
-// Returning a stable index reference through a separate result iterator
-// raises MAX to 96.6403: all 22 instruction-pattern blocks now agree, with
-// the same 27 named calls and EH states 0,-1,1,-1. The existing-entry path
-// keeps EAX and only the insertion path reloads found. Returning the whole
-// map entry by const reference is byte-identical. Moving record before the
-// string copy scores 96.1265; a loop-local counter gives 92.0079 and merges
-// a block. A named scalar index in the caller gives 87.8696. The size-query
-// wrappers remain neutral together; typed resource reads give 87.8696, and
-// returning an insertion pair changes the CFG and gives 73.5652.
-// PCH creation/reuse and iterator/reference constness are byte-neutral.
-// A name-copy helper stays called (95.6127), replacing retail's separate
-// _Tidy and assign calls; a complete filename factory also remains called.
-// A by-value temporary point changes the lookup's nested expansion decisions.
-// Byte-verified C2 tracing confirms the rotating volatile-register path is
-// active here (36 requests); see docs/vc6/regalloc.md section 3a. A preferred
-// register does not advance its cursor, so simple first-fit cannot explain
-// the remaining scratch-register choices.
-// Returning GetIndex by value removes its mapped-load allocation request
-// (35 instead of 36), leaving the following cursor at EDX rather than EAX.
-// Both traces reproduce their respective complete objects byte for byte
-// outside timestamps; this explains the 87.8696 control's allocation shift.
-// Operand tracing separates the registry end's preassigned EAX temporary
-// from the cache end's rotating EDX request. Naming the append position,
-// push_back, an iterator assignment argument, and a named index reference
-// are byte-identical here. Branch-specific mapped-value pointers score
-// 88.9526 and change the CFG; they do not recover retail's lookup exit.
-// Global-allocation tracing (docs/vc6/regalloc.md section 3b) assigns cell
-// ESI first with either initializer position. Early initialization excludes
-// ESI from maskFile's candidates; the loop-local control allows ESI reuse
-// and moves this to EDI. This is an interference difference, not merely
-// creation order. The registry end has equal costs for EAX/ECX/EDX/ESI and
-// takes EAX by tie-break. A shared iterator return changes nested expansion
-// and scores 73.5455; explicit cache insert also changes the CFG (87.0316).
-// Moving cell's initialization before the third or fourth read keeps 96.6403
-// and the file/index registers, but moves XOR ESI to +0x233 or +0x23f:
-// equal scores are not byte identity. Retail initializes it at +0x251.
-// Separate field-read and file-acquisition helpers reproduce the rejected
-// loop-local-counter function byte for byte. Moving the nullable-file guard
-// or filename lookup into the mask reader instead scores 80.4466/84.7470.
-// The reference-returning lookup as an ordinary free function is byte-neutral
-// with either parameter order. rows.begin()+rows.size() retains an extra
-// size call and scores 90.4743; its EDX append position is not retail's load.
-// A reference-returning lookup with an early existing-entry return scores
-// 88.7352: it adds separate +0x1c address calculations and a forward jump.
-// C2 storage-class tracing resolves the accessor mismatch: the ordinary
-// registry accessor gives kind-8 storage, allowing rows.end() to propagate;
-// the external inline cache accessor gives kind 7 and retains its result.
-// With GetIndex returning by value and record selected before the string
-// copy, MAX rises to 99.2095. All 27 calls and EH states still agree; the
-// only instruction difference is XOR ESI,ESI at +0x21b instead of +0x251.
-// The old guard-byte evidence proved a shared registry accessor, not inline.
-// Negative controls at this checkpoint: an ordinary cache gives 96.2055;
-// static inline does not change its storage kind; a reference-returning
-// lookup with inline cache gives 94.6443. Selecting record after the string
-// copy gives 95.9486. Moving the counter initializer after the reads or the
-// width store changes register ownership (91.7312); a loop-local counter
-// gives 92.5020. Preincrement from unsigned -1 reproduces that latter body.
-// An early do/while is byte-identical to 99.2095. Moving initialization before
-// the file guard or lookup changes the CFG and gives 93.6482/93.6680.
-// With the loop-local counter, a named or reused whole point gives 88.8103;
-// an early reference to imageInfo gives 81.9447; bitset::size gives 88.8300.
-// Unsigned long, /8 and %8 arithmetic, reusing oldCount or dot, and explicit
-// success/failure joins all reproduce the 92.5020 late-counter body exactly.
-// A full-width bit mask instead gives 92.4625. None preserves retail's file
-// register: the byte-verified current trace still assigns maskFile ESI first,
-// then moves oldCount to EDI and this to EBX (docs/vc6/regalloc.md section 3b).
-// Pointer and reference return signatures produce identical function bytes
-// with either counter placement. A separate selected resource is also neutral;
-// a ternary fallback gives 92.1265 and changes the branch connections. Using
-// imageNumber for the record index reloads the member after insert (83.7273),
-// absent from retail; capturing that member before insert gives 92.0909.
-// The current output-reference lookup controls give 96.5415/96.0395 and
-// preserve the wrong registry operands. A flattened lookup with a separate
-// entry factory or typed make_pair gives 78.1067/75.8103 and different calls.
-// With the merged normalized headers, declaring cell or maskFile at function
-// entry but assigning at the original use reproduces the 92.5020 late-counter
-// body byte for byte. Hoisting all raw-read locals changes stack allocation
-// and scores 89.9842. Declaration order alone does not recover the file/counter
-// interference; homm3 vc6 why-reg --model also finds no binding permutation
-// in the 99.2095 body (the residual is instruction placement).
-// Remaining: counter initialization placement. No inline-depth controls or
-// release-elided operations are used.
-// The controls above predate TUniqueSet<std::string>: "GetIndex" and the
-// registry helper were the provisional TObjectImageNameTable::getOrAddIndex.
-// Loki's add (find; insResult; pItem = insResult.first; push_back(pItem);
-// return pItem->second) makes h3maped's retained add 0x491eed exact and
-// scores 94.36 here; the old separate result iterator, which Loki's
-// unoptimized add does not have, scores 99.15.
-// Loki's three asserts (not ported): any two are neutral, all three give
-// 87.98 (docs/vc6/inliner.md).
+// Loki and Mac 0x223c44 initialize the mask counter after the four resource
+// reads. Keeping it local to the loop matches all 551 editor bytes and the
+// game's 791-byte instruction stream. The game comparison remains 99.9605%
+// because its two class-local imageCacheGuard references are not yet paired.
+// Earlier counter/register probes used provisional registry helpers and no
+// longer describe the canonical source.
 VA(0x00514610, 0x317)
 MAC_ADDRESS(0x223aa4, 0x2b8)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
@@ -392,7 +255,7 @@ TObjectType& TObjectType::setImageName(
     unsigned int setSize = imageNameSet.numItems();
     _m_imageNum = imageNameSet.add(newImageName);
 
-    std::vector<_TImageInfo>& aImageInfo = getObjectImageCache();
+    std::vector<_TImageInfo>& aImageInfo = _getAImageInfo();
 
     if (_m_imageNum == setSize) {
         aImageInfo.push_back(_TImageInfo());
@@ -416,7 +279,6 @@ TObjectType& TObjectType::setImageName(
             maskFile = ResourceManager::PointToSpriteResource("default.msk");
         }
         if (maskFile != 0) {
-            unsigned int bit = 0;
             char width;
             char height;
             unsigned char placedBits[6];
@@ -428,7 +290,7 @@ TObjectType& TObjectType::setImageName(
             ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
             imageInfo._m_width = width;
             imageInfo._m_height = height;
-            for (; bit < OBJECT_MASK_CELLS; ++bit) {
+            for (unsigned int bit = 0; bit < OBJECT_MASK_CELLS; ++bit) {
                 unsigned int byteNum = bit >> 3;
                 unsigned char bitMask =
                     static_cast<unsigned char>(1 << (bit & 7));
@@ -540,6 +402,24 @@ TObjectType& TObjectType::setBUnderlay(bool underlay)
 {
     m_isUnderlay = underlay;
     return *this;
+}
+
+// The objects.txt form of an object type (Loki h3maped ObjectType.cpp:270,
+// befriended in its ObjectType.h, defined just before the reader below).
+// Nothing calls it, so /OPT:REF drops the body from both images; its
+// arithmetic insertions are what order this compiland's facet ids.
+std::ostream& operator<<(std::ostream& os, const TObjectType& objectType)
+{
+    os << objectType.getImageName()
+       << ' ' << objectType.m_passableMask
+       << ' ' << objectType.m_triggerMask
+       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType._m_terrainMask.to_ulong())
+       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType.m_recommendedTerrainMask.to_ulong())
+       << ' ' << objectType.m_objectType
+       << ' ' << objectType.m_subtype
+       << ' ' << objectType.m_slotCategory
+       << ' ' << int(objectType.m_isUnderlay);
+    return os;
 }
 
 // The per-row parser TObjectTypeTable::load runs over each objects.txt

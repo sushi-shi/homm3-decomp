@@ -21,7 +21,9 @@ TObstacleToolkit::TObstacleToolkit(CWnd* pParent) : TToolkitBase(IDD_OBSTACLE_TO
         new TToolkitBaseToolBar(this, IDR_OBSTACLE_BRUSH_TOOLBAR, 6));
     if (_m_pBrushToolBar.get() == NULL)
         throw TAllocationFailure();
-    CRect rect(0, 0, 0, 3);
+    CRect rect;
+    rect.left = rect.right = rect.top = 0;
+    rect.bottom = 3;
     MapDialogRect(&rect);
     int margin = rect.Height();
     _m_brushStatic.GetWindowRect(&rect);

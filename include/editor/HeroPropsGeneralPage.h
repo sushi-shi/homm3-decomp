@@ -15,7 +15,8 @@
 // heroes, the modified flag, the 163 portraits, the portrait bitmap and
 // the controls from 0x198, of which a combo box and a check at 0x3b4 and
 // 0x3f0 are constructed but never exchanged, then the identity, name,
-// portrait, blank-name flag and gender radio index (0x440 bytes); the
+// portrait, blank-name flag, gender radio index and four unknown bytes
+// (0x444 bytes); the
 // specific hero and prison pages from 0x444 (0x4a4 bytes each).
 #ifndef HOMM3_EDITOR_HEROPROPSGENERALPAGE_H
 #define HOMM3_EDITOR_HEROPROPSGENERALPAGE_H
@@ -42,7 +43,8 @@ public:
 
 protected:
     // The longest experience the combo's edit takes.
-    enum { s_kMaxExperience = 99999 };
+    // Retail OnInitDialog calls the eight-digit helper at 0x40bb37.
+    enum { s_kMaxExperience = 99999999 };
 
     // Shows the hero's default experience unless the page customizes it.
     void _setDefaultExperience(THeroID heroID);
@@ -182,6 +184,10 @@ private:
     int _m_portrait;
     bool _m_bBlankName;
     int _m_gender;
+    // Retail constructors 0x451783 and 0x451b94 begin derived members at
+    // 0x444; DDX_Radio at 0x450d88 fixes _m_gender at 0x43c. The final
+    // four bytes have no recovered member identity or type yet.
+    unsigned char m_unknown440[4];
 };
 
 class TNonRandomHeroPropsGeneralPage : public TIdentifiedHeroPropsGeneralPage {

@@ -124,6 +124,9 @@ TTown::TTown(const TObjectType& objType, TPlayer owner)
     _m_aBuildingState[eBuildingFort].setBBuilt(true);
 }
 
+// Read the event count by value so its address does not escape into the loop.
+// Preserve the custom-state getter calls: with these caller boundaries, VC6
+// retains resize's default event destructor as in retail.
 VA(0x004c1dc5, 0x4fc)
 TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
     : TGameObject(objType), TLinkableObject(objType), TPlayableObject(objType), _m_pVisitingHero(NULL)
@@ -136,7 +139,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
     signed char bCustom;
     *pIStream >> bCustom;
     setBCustomName(bCustom != 0);
-    if (_m_bCustomName) {
+    if (getBCustomName()) {
         std::string name;
         *pIStream >> name;
         if (name.size() > s_kMaxNameLen)
@@ -148,7 +151,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
     else
         bCustom = 1;
     setBCustomGarrison(bCustom != 0);
-    if (_m_bCustomGarrison)
+    if (getBCustomGarrison())
         setGarrison(TArmy(pIStream, version));
     signed char bGroupedFormation;
     *pIStream >> bGroupedFormation;
@@ -158,7 +161,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
     else
         bCustom = 1;
     setBCustomBuildings(bCustom != 0);
-    if (_m_bCustomBuildings) {
+    if (getBCustomBuildings()) {
         unsigned char aBuilt[(s_kNumBuildings + 7) / 8];
         unsigned char aDisabled[(s_kNumBuildings + 7) / 8];
         *pIStream >> aBuilt >> aDisabled;
@@ -199,8 +202,7 @@ TTown::TTown(const TObjectType& objType, TRawIStream* pIStream, int version)
             spellsMask[spell] = false;
     }
     setDisabledSpellsMask(spellsMask);
-    long numEvents;
-    *pIStream >> numEvents;
+    long numEvents = readValue<long>(*pIStream);
     _m_events.resize(numEvents);
     for (unsigned int event = 0; event < numEvents; event++)
         _m_events[event].read(pIStream, version);
@@ -256,8 +258,8 @@ void TTown::setDisabledSpellsMask(const std::bitset<kNumSpells>& newMask)
     _m_disabledSpellsMask = newMask;
 }
 
-// h3maped 0x4c241b, which the runtime map names COleControl::
-// GetStockTextMetrics (the same bytes).
+// Retail adjusts this by 0xa4 and calls vector<TTimedEvent>::operator=.
+VA(0x004c241b, 0x12)
 void TTown::setTimedEvents(const std::vector<TTimedEvent>& newTimedEvents)
 {
     assert(newTimedEvents.size() <= s_kMaxTimedEvents);
@@ -413,7 +415,8 @@ void TTown::write(TRawOStream* pOStream, int version) const
         if (_m_disabledSpellsMask[spell])
             aSpells[spell / 8] |= 1 << spell % 8;
     *pOStream << aSpells;
-    *pOStream << static_cast<long>(_m_events.size());
+    std::vector<TTimedEvent>::size_type numEvents = _m_events.size();
+    *pOStream << static_cast<long>(numEvents);
     for (std::vector<TTimedEvent>::const_iterator iter = _m_events.begin(); iter != _m_events.end(); ++iter)
         iter->write(pOStream, version);
     if (version >= GAME_VERSION_SOD)

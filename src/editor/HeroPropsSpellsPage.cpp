@@ -79,7 +79,12 @@ void THeroPropsSpellsPage::OnOK()
     if (_m_bCustomSpells)
         _m_customSpells = _m_pSpellsDlg->getSpells();
     _m_pNewHero->setBCustomSpells(_m_bCustomSpells);
-    _m_pNewHero->setSpells(_m_bCustomSpells ? _m_customSpells : std::bitset<kNumSpells>());
+    if (_m_bCustomSpells)
+        _m_pNewHero->setSpells(_m_customSpells);
+    else {
+        std::bitset<kNumSpells> spells;
+        _m_pNewHero->setSpells(spells);
+    }
     _m_bModified = _m_bModified || _m_pOldHero->getBCustomSpells() != _m_pNewHero->getBCustomSpells()
                    || _m_pNewHero->getSpells() != _m_pOldHero->getSpells();
 }

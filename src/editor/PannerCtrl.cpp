@@ -11,8 +11,11 @@
 #include "editor/PannerCtrl.h"
 #include "editor/resource.h"
 
-DATA(0x0058d2f0) static UINT g_timerID = 1;
-DATA(0x0058d2f4) static UINT g_timerElapse = 50;
+// External linkage: retail loads both timer settings into registers ahead
+// of the panner's SetTimer call, which VC6 does only for globals it cannot
+// prove unchanged by its file-static analysis (94.89 -> 100% relayEvent).
+DATA(0x0058d2f0) UINT g_timerID = 1;
+DATA(0x0058d2f4) UINT g_timerElapse = 50;
 
 DATA(0x005a2439) static bool g_bCursorsLoaded;
 DATA(0x005a243c) static HCURSOR g_hPanBothCursor;

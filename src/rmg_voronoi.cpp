@@ -276,14 +276,13 @@ static b8 __fastcall isRmgPointOnSegment(TRmgPoint point, TRmgHalfEdge* edge)
     return dy * point.m_x - dx * point.m_y + c == 0;
 }
 
-// Provisional geometric predicate: retail snapshots three points before
-// four orientation calls and a signed 64-bit circumcircle determinant.
-// Sixty determinant-expression forms tested named versus embedded area
-// calls, equivalent sum groupings, x/y square order, which product operand
-// widens, and result lifetime. Twenty distinct objects span 33.2202% to the
-// unchanged 45.4167% caller score; none recovers the missing orientation
-// calls. Preserve the actual by-value point and signed-product boundaries.
+// Mac 0x25cb80 retains four orientation calls, then combines the signed
+// products as first - second + third - point. The map editor expands those
+// calls; this order recovers its 0x18 frame and shared return (86.4167%).
+// Paired differences and staged sums emit the same bytes; remaining input
+// loads and common-product register lifetimes differ. Game addSite stays exact.
 MAC_ADDRESS(0x25cb80, 0x1c4)
+VA_AT(h3maped, 0x004ccc7a, 0xef)
 static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
     TRmgPoint third, TRmgPoint point)
 {
@@ -291,9 +290,9 @@ static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
     s32 secondArea = getRmgPointOrientation(first, third, point);
     s32 thirdArea = getRmgPointOrientation(first, second, point);
     s32 pointArea = getRmgPointOrientation(first, second, third);
-    s64 determinant = static_cast<s64>(third.m_x * third.m_x + third.m_y * third.m_y) * thirdArea
+    s64 determinant = static_cast<s64>(first.m_x * first.m_x + first.m_y * first.m_y) * firstArea
         - static_cast<s64>(second.m_x * second.m_x + second.m_y * second.m_y) * secondArea
-        + static_cast<s64>(first.m_x * first.m_x + first.m_y * first.m_y) * firstArea
+        + static_cast<s64>(third.m_x * third.m_x + third.m_y * third.m_y) * thirdArea
         - static_cast<s64>(point.m_x * point.m_x + point.m_y * point.m_y) * pointArea;
     return determinant > 0;
 }
@@ -375,11 +374,15 @@ VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, TRmgHalfEdge)
 // ownership is what restores retail's arithmetic allocation. Preserve its
 // y-before-x products and the left-operand receivers below.
 
-// Circumcenter of the triangle with these three sites: the perpendicular
-// bisector of the origin-to-second side, scaled by the projected sides.
-// Materialize the opposite site at the caller. This by-value parameter order
-// reproduces retail's 0x78 frame and its origin/third-site stack slots.
-static TRmgPoint computeRmgCircumcenter(TRmgPoint third, TRmgPoint origin, TRmgPoint second)
+// Circumcenter of the triangle with these three sites. The retained map
+// helper at 0x4ccd69 and Mac call at 0x25d1e8 independently establish the
+// by-value order origin, second, third. Mac's helper also preserves the
+// secondSide/perpendicular dot receivers and thirdSide argument copies.
+// Map residual 90.2923%: VC6 adds the denominator early and spills the
+// numerator, while retail keeps it in EAX through both scaled components.
+MAC_ADDRESS(0x25cf5c, 0x1e8)
+VA_AT(h3maped, 0x004ccd69, 0x93)
+static TRmgPoint computeRmgCircumcenter(TRmgPoint origin, TRmgPoint second, TRmgPoint third)
 {
     TRmgVector axis = second - origin;
     TRmgVector perpendicular(-axis.m_y, axis.m_x);
@@ -389,26 +392,15 @@ static TRmgPoint computeRmgCircumcenter(TRmgPoint third, TRmgPoint origin, TRmgP
         / perpendicular.dot(thirdSide)) / 2;
 }
 
-// Residual 98.2254%: retail and candidate have the same 0x78 frame, eight CFG
-// blocks, seven named calls/relocations, function length and return. Bytes are
-// exact through +0x5a and from +0x6e through the complete three-edge setter
-// tail. In the remaining twelve rows, candidate loads second.y into EDX before
-// the third site; retail uses EDX for third.x/y first, reloads origin.x, then
-// loads second.y. The by-value member dot plus the setter's named snapshot
-// raised the prior 97.5070% peak and recovered the entire tail.
-//
-// New-parent controls exhaust caller site snapshots (8 states), canonical
-// point-subtraction construction (6), axis binding (5), three-parameter value/
-// reference ownership (8), setter ownership/construction (4), and ordinary
-// versus in-class dot placement/ownership (4). All valid subtraction bodies
-// retain the independently exact 0x20 operator at 0x5fdd40. None improves the
-// short input-load schedule. Earlier free-dot families cover argument order,
-// parent/result lifetimes and canonical arithmetic bodies. Native triangle/
-// ring checks preserve integer division, all three position/flag writes,
-// inactive edges and graph links.
-// All six parameter orders under the current member-dot model also retain
-// this peak; the helper's argument order does not explain the remaining loads.
+// The independently recovered helper interface makes the map editor's
+// 153-byte caller exact. The game expands that same ordinary helper and
+// currently reaches 95.5282%, below its historical 98.2254% from the inferred
+// third/origin/second interface; preserve the proven order and historical peak.
+// Explicit caller snapshots, scalar-product/projection locals, embedding
+// secondSide, and reversing dot-product terms do not recover the game's input
+// load/register schedule. Keep the canonical vector operations and setters.
 VA(0x005FDB40, 0x16E)
+VA_AT(h3maped, 0x004ccdfc, 0x99)
 MAC_ADDRESS(0x25d144, 0x12c) // anchor-caller 0x53e050; Complete-only, thiscall ret 0
 void TRmgVoronoi::buildVertices()
 {
@@ -416,8 +408,8 @@ void TRmgVoronoi::buildVertices()
         TRmgHalfEdge* edge = m_edges[index];
         if (edge->getZone() && !edge->isPositionComputed()) {
             TRmgPoint second = edge->getOppositeSitePosition();
-            TRmgPoint position = computeRmgCircumcenter(edge->getNext()->getOppositeSitePosition(),
-                edge->getSitePosition(), second);
+            TRmgPoint position = computeRmgCircumcenter(edge->getSitePosition(), second,
+                edge->getNext()->getOppositeSitePosition());
             edge->setPosition(position);
             edge = edge->getNext()->getTwin();
             edge->setPosition(position);

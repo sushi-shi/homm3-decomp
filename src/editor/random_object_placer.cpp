@@ -19,6 +19,18 @@
 #include "terrain.h"
 #include "editor/random_object_placer.h"
 
+// Retail evaluates the map dimensions before setting up the base-constructor
+// arguments. Ordinary accessors recover those loads; their names are provisional.
+int t_random_object_map::getWidth() const
+{
+    return m_width;
+}
+
+int t_random_object_map::getHeight() const
+{
+    return m_height;
+}
+
 namespace {
 
 int getPreferredTerrain(const TObjectType& objType);
@@ -41,20 +53,24 @@ private:
     std::vector<std::pair<unsigned int, type_object*> > m_aObject;
 };
 
+// The dimension and TPoint accessor calls recover the native instruction sequence.
+// Four remaining displacement bytes exchange the point-return and pair temporary
+// homes (-0x20/-0x18). Reusing loc, binding the point by const reference, and
+// make_pair leave that residual. Keep the canonical coordinate helper calls.
 VA(0x004af463, 0x1df)
 t_random_object_placer::t_random_object_placer(t_random_object_map* pMap, type_progress_bar* pProgress,
                                                int version)
-    : t_abstract_random_generator(pMap->m_width, pMap->m_height, 1, pProgress, 261000, version),
+    : t_abstract_random_generator(pMap->getWidth(), pMap->getHeight(), 1, pProgress, 261000, version),
       m_pMap(pMap)
 {
     TTilePoint loc;
-    for (loc.m_y = 0; loc.m_y < pMap->m_height; loc.m_y++) {
-        for (loc.m_x = 0; loc.m_x < pMap->m_width; loc.m_x++) {
-            TRmgMapItem* pItem = m_map.getMapItem(loc.m_x, loc.m_y, 0);
-            pItem->setTerrain(pMap->getTerrain(loc.m_x, loc.m_y), 0, 0, 0);
-            if (pMap->isClear(loc.m_x, loc.m_y))
+    for (loc.y(0); loc.y() < pMap->getHeight(); loc.y(loc.y() + 1)) {
+        for (loc.x(0); loc.x() < pMap->getWidth(); loc.x(loc.x() + 1)) {
+            TRmgMapItem* pItem = m_map.getMapItem(loc.x(), loc.y(), 0);
+            pItem->setTerrain(pMap->getTerrain(loc.x(), loc.y()), 0, 0, 0);
+            if (pMap->isClear(loc.x(), loc.y()))
                 pItem->setPathClearance(0);
-            if (pMap->isObstacleArea(loc.m_x, loc.m_y))
+            if (pMap->isObstacleArea(loc.x(), loc.y()))
                 pItem->setObstacleFill(1);
         }
     }

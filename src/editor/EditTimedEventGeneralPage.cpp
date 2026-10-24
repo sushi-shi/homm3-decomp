@@ -171,8 +171,8 @@ void TEditTimedEventGeneralPage::OnOK()
     _m_message.Replace("\r\n", "\n");
     unsigned int player;
     for (player = 0; player < kNumPlayers; player++) {
-        if (_m_playersPresent.test(player))
-            _m_bApplyToPlayer.set(player, _m_aPlayerChecks[player].GetCheck() != 0);
+        if (_m_playersPresent[player])
+            _m_bApplyToPlayer[player] = _m_aPlayerChecks[player].GetCheck() != 0;
     }
     int day = 0;
     CString text;

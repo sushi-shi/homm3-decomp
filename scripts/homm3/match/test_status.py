@@ -487,6 +487,38 @@ class UpdateRowsTest(unittest.TestCase):
                 self.assertEqual(old[function], new[function])
                 self.assertNotEqual(old[helper], new[helper])
 
+    def test_shared_image_claim_owns_candidate_source_hash(self):
+        import tempfile
+        from pathlib import Path
+        from homm3.match import status
+
+        key = ("unit", "?function@@YAHXZ")
+        units = [{"unit": "unit", "source": "src/unit.cpp"}]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src").mkdir()
+            (root / "include").mkdir()
+            source_file = root / "src/unit.cpp"
+            source_file.write_text(
+                "VA(0x00401000, 4)\nVA_AT(h3maped, 0x00402000, 4)\n"
+                "VA_AT(h3ccmped, 0x00403000, 4)\nint function() { return 1; }\n")
+            with mock.patch.object(status, "function_rvas", return_value={key: 0x2000}), \
+                    mock.patch("homm3.build.configure.load_manifest", return_value=({}, {}, units)), \
+                    mock.patch("homm3.retail_labels.source.shared_image_source", return_value=True), \
+                    mock.patch("homm3.core.paths.image_key", return_value="h3maped"):
+                before = status.source_hashes(source_root=root)
+                self.assertEqual(set(before), {key})
+                source_file.write_text(source_file.read_text().replace("return 1", "return 2"))
+                after = status.source_hashes(source_root=root)
+                self.assertNotEqual(before[key], after[key])
+                rows, stats = update_rows(
+                    {key: 85}, {key: MatchRow(98, 98, 100, 0x2000, before[key])},
+                    {key: 0x2000}, after)
+                self.assertEqual((rows[key].max, rows[key].hist), (85, 100))
+                self.assertEqual(stats["reset"], 1)
+                with mock.patch("homm3.core.paths.image_key", return_value="h3ccmped"):
+                    self.assertEqual(status.source_hashes(source_root=root), {})
+
     def test_missing_positive_history_is_retained(self):
         key = ("unit", "lost")
         rows, _stats = update_rows(

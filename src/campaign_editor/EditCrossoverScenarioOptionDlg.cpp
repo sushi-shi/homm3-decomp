@@ -36,7 +36,8 @@ TEditCrossoverScenarioOptionDlg::TEditCrossoverScenarioOptionDlg(
     : CDialog(TEditCrossoverScenarioOptionDlg::IDD, pParent), _m_pCampaign(pCampaign),
       _m_abScenarioAllowed(abScenarioAllowed), _m_players(players), _m_choice(choice)
 {
-    _m_abScenarioAllowed[_m_choice.m_scenario] = true;
+    int scenario = _m_choice.m_scenario;
+    _m_abScenarioAllowed[scenario] = true;
     _m_players[_m_choice.m_player] = true;
 }
 
@@ -70,7 +71,10 @@ BOOL TEditCrossoverScenarioOptionDlg::OnInitDialog()
     GetDlgItem(IDC_SCENARIO_STATIC)->SetWindowText(SEditCrossoverScenarioOptionDlgText::kScenarioStaticStr);
     GetDlgItem(IDC_PLAYER_STATIC)->SetWindowText(SEditCrossoverScenarioOptionDlgText::kPlayerStaticStr);
     CDialog::OnInitDialog();
-    for (unsigned int scenario = 0; scenario < _m_pCampaign->getMapTraits().m_numRegions; scenario++) {
+    for (unsigned int scenario = 0; ; scenario++) {
+        unsigned int numRegions = _m_pCampaign->getMapTraits().m_numRegions;
+        if (scenario >= numRegions)
+            break;
         if (_m_abScenarioAllowed[scenario]) {
             const TCampaignScenarioMap* pMap = _m_pCampaign->getScenario(scenario).getMap();
             int item = _m_scenarioCombo.AddString(

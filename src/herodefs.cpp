@@ -329,6 +329,7 @@ static void InitializeHeroTraits(int id, const TSpreadsheetResource::TStringVect
     THeroTraits& traits = g_heroTraitsStorage[id];
 
     DATA_COMPGEN_GUARD(0x00698b99, heroStringsGuard, heroStrings)
+    VA_COMPGEN(0x004e6ce0, 0x17, STATIC_DTOR, heroStrings)
     DATA(0x00698eb0)
     static TAutoStrPtr heroStrings[156];
 
@@ -355,6 +356,7 @@ static void InitializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
 
     DATA_COMPGEN_GUARD(0x00698b9a, heroClassStringsGuard,
                       heroClassStrings)
+    VA_COMPGEN(0x004e6d00, 0x14, STATIC_DTOR, heroClassStrings)
     DATA(0x00699120)
     static TAutoStrPtr heroClassStrings[kNumHeroClasses];
 
@@ -392,6 +394,7 @@ static void InitializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
 
     DATA_COMPGEN_GUARD(0x00698b98, secondarySkillStringsGuard,
                       secondarySkillNames)
+    VA_COMPGEN(0x004e6d40, 0x14, STATIC_DTOR, secondarySkillNames)
     DATA(0x00698b28)
     static TAutoStrPtr secondarySkillNames[kNumSecSkills];
 
@@ -399,6 +402,7 @@ static void InitializeSSkillTraits(int id, const TSpreadsheetResource::TStringVe
     strcpy(secondarySkillNames[id].get(), values[0]);
     traits.m_name = secondarySkillNames[id].get();
 
+    VA_COMPGEN(0x004e6d20, 0x14, STATIC_DTOR, secondarySkillLevelNames)
     DATA(0x00698b9c)
     static TAutoStrPtr secondarySkillLevelNames[kNumSecSkills][3];
 

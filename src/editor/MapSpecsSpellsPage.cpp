@@ -52,7 +52,7 @@ BOOL TMapSpecsSpellsPage::OnInitDialog()
     _m_spellsList.GetClientRect(&rect);
     _m_spellsList.SetColumnWidth(rect.Width() / 2);
     int index;
-    for (int spell = 0; spell < kNumSpells; spell++) {
+    for (unsigned int spell = 0; spell < kNumSpells; spell++) {
         if (!(akSpellTraits[spell].m_flags & 0x2000) && akSpellTraits[spell].m_schoolBits != 0) {
             index = _m_spellsList.AddString(akSpellTraits[spell].m_name);
             _m_spellsList.SetItemData(index, spell);

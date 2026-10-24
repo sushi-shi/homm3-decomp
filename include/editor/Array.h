@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <new>
 
+#include "va.h"
+
 template<class T, unsigned int N>
 class TArray {
 public:
@@ -47,6 +49,17 @@ public:
         for (iterator p = begin() + 1; p != end(); ++p)
             new (p) T(*pSource++);
     }
+    // The POD arrays' destructors run only from unwind funclets.
+    // VA instance: TArray<int, 15>::~TArray
+    VA(0x00406558, 0xa)
+    // VA instance: TArray<unsigned int, 9>::~TArray
+    VA(0x00438787, 0xa)
+    // VA instance: TArray<unsigned int, 8>::~TArray
+    VA(0x0047fee6, 0xa)
+    // VA instance: TArray<unsigned int, 2>::~TArray
+    VA(0x0047fef0, 0xa)
+    // VA instance: TArray<bool, 7>::~TArray
+    VA(0x0047fefa, 0xa)
     ~TArray()
     {
         for (iterator p = end(); p != begin() + 1; ) {

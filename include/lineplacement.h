@@ -10,6 +10,7 @@
 
 #include "Point.h"
 #include "terrainplacement.h"
+#include "editor/Uncopyable.h"
 
 // Unreflected line shapes chosen by selectRmgLinePattern; reflections supply
 // the other orientations. North is up; # is a line tile.
@@ -72,11 +73,10 @@ struct TRmgLinePainterTile;
 // This common abstract prefix is a retail-derived source model; the original
 // Complete-only interface spelling is unknown. It has no virtual destructor
 // slot: the two painters below append slot 6 as a pure destructor.
-// The map editor's RTTI lists TUncopyable below this class in both line
-// operations' hierarchies, as Loki's LinePlacement.h derives it privately.
-// The empty base is left out here: declaring it moves VC6's choices in
-// type_random_map_generator::loadTemplates (83.21 -> 83.19).
-class TMapLineFilter {
+// The map editor's RTTI (river hierarchy 0x5582a0, road 0x558400) lists
+// TUncopyable at +4 below this class in both line operations' hierarchies,
+// as Loki's LinePlacement.h derives it privately.
+class TMapLineFilter : private TUncopyable {
 public:
     TTilePoint m_size;
 
@@ -86,6 +86,9 @@ public:
         : m_size(size)
     {
     }
+    unsigned int getWidth() const { return m_size.x(); }
+    unsigned int getHeight() const { return m_size.y(); }
+
     virtual TRmgLinePatternTable* getPatternTable(int value) = 0;
     virtual void setTile(const TTilePoint& point, const TRmgTerrainTile& tile) = 0;
     virtual void setLineType(const TTilePoint& point, int value) = 0;
@@ -94,7 +97,6 @@ public:
     virtual int getLineType(const TTilePoint& point) = 0;
 
     TRmgLinePainterTile at(const TTilePoint& point);
-    int getNeighbourLineType(const TTilePoint& point, unsigned int direction);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.

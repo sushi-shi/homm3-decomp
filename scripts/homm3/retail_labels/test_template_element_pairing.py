@@ -213,3 +213,30 @@ class TemplateDtorOwnerTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SetElementPairingTest(unittest.TestCase):
+    """HeroPropsGeneralPage.obj's two `~set` jumps are the same five bytes."""
+
+    CLASSES = ("??1?$set@W4THeroClass@@U?$less@W4THeroClass@@@std@@"
+               "V?$allocator@W4THeroClass@@@3@@std@@QAE@XZ")
+    INTS = "??1?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAE@XZ"
+    VIEWS = ("??1?$set@PAVTMapView@@U?$less@PAVTMapView@@@std@@"
+             "V?$allocator@PAVTMapView@@@3@@std@@QAE@XZ")
+
+    def test_the_named_element_binds_and_the_other_set_is_left(self):
+        rows = [claim(0x51e9e, "THeroClass_set", 5, "HeroPropsGeneralPage")]
+        self.assertEqual(
+            source._template_element_pairing(
+                rows, [(self.INTS, 5), (self.CLASSES, 5)]),
+            {0x51e9e: self.CLASSES})
+
+    def test_a_pointer_element_reads_its_class(self):
+        rows = [claim(0x8010d, "TMapView_set", 5, "MapView")]
+        self.assertEqual(
+            source._template_element_pairing(
+                rows, [(self.VIEWS, 5), (self.INTS, 5)]),
+            {0x8010d: self.VIEWS})
+
+    def test_a_plain_set_owner_keeps_the_old_key(self):
+        self.assertIsNone(source._template_dtor_owner("set"))

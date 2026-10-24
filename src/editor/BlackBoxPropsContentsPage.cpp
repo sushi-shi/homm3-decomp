@@ -711,7 +711,7 @@ TEditSecondarySkillDlg::TEditSecondarySkillDlg(CWnd* pParent, const std::bitset<
       _m_record(record),
       _m_abAvailableSkill(abAvailableSkill)
 {
-    _m_abAvailableSkill.set(_m_record.getType(), true);
+    _m_abAvailableSkill[record.getType()] = true;
 }
 
 VA(0x0040899e, 0x4d)
@@ -834,7 +834,8 @@ BOOL TSecondarySkillsDlg::OnInitDialog()
     _m_bModified = false;
     _m_aSecondarySkill = _m_pBlackBox->getContents().getSecondarySkills();
     CDialog::OnInitDialog();
-    _m_list.SetTabStops(171);
+    int tabStop = 171;
+    _m_list.SetTabStops(1, &tabStop);
     for (std::vector<TSecondarySkillRecord>::const_iterator it = _m_aSecondarySkill.begin();
          it != _m_aSecondarySkill.end(); ++it) {
         int index = _m_list.AddString(getSecondarySkillText(it->getType(), it->getMastery()));
@@ -852,7 +853,7 @@ VA(0x0040904f, 0xa6)
 void TSecondarySkillsDlg::OnOK()
 {
     CDialog::OnOK();
-    _m_aSecondarySkill.erase(_m_aSecondarySkill.begin(), _m_aSecondarySkill.end());
+    _m_aSecondarySkill.clear();
     int count = _m_list.GetCount();
     _m_aSecondarySkill.reserve(count);
     for (int index = 0; index < count; index++) {
@@ -869,11 +870,14 @@ void TSecondarySkillsDlg::OnAddButton()
     if (dlg.DoModal() == IDOK) {
         CString text = getSecondarySkillText(dlg.getRecord().getType(), dlg.getRecord().getMastery());
         int index = _m_list.GetCurSel();
+        int newIndex;
         if (index == LB_ERR)
-            index = _m_list.AddString(text);
-        else
+            newIndex = _m_list.AddString(text);
+        else {
             _m_list.InsertString(index, text);
-        _m_list.SetItemData(index, MAKELONG(dlg.getRecord().getType(), dlg.getRecord().getMastery()));
+            newIndex = index;
+        }
+        _m_list.SetItemData(newIndex, MAKELONG(dlg.getRecord().getType(), dlg.getRecord().getMastery()));
         if (_m_list.GetCount() >= TBlackBox::TContents::s_kMaxSecSkills)
             _m_addButton.EnableWindow(FALSE);
         _m_removeAllButton.EnableWindow(TRUE);
@@ -1018,7 +1022,7 @@ VA(0x0040983c, 0xa1)
 void TArtifactsDlg::OnOK()
 {
     CDialog::OnOK();
-    _m_aArtifact.erase(_m_aArtifact.begin(), _m_aArtifact.end());
+    _m_aArtifact.clear();
     int count = _m_list.GetCount();
     _m_aArtifact.reserve(count);
     for (int index = 0; index < count; index++) {
@@ -1035,11 +1039,14 @@ void TArtifactsDlg::OnAddButton()
     if (dlg.DoModal() == IDOK) {
         TArtifact artifact = TArtifact(dlg.getArtifact());
         int index = _m_list.GetCurSel();
+        int newIndex;
         if (index == LB_ERR)
-            index = _m_list.AddString(akArtifactTraits[artifact].m_name);
-        else
+            newIndex = _m_list.AddString(akArtifactTraits[artifact].m_name);
+        else {
             _m_list.InsertString(index, akArtifactTraits[artifact].m_name);
-        _m_list.SetItemData(index, artifact);
+            newIndex = index;
+        }
+        _m_list.SetItemData(newIndex, artifact);
         if (_m_list.GetCount() >= TBlackBox::TContents::s_kMaxArtifacts)
             _m_addButton.EnableWindow(FALSE);
         _m_removeAllButton.EnableWindow(TRUE);
@@ -1260,7 +1267,7 @@ BOOL TSpellsDlg::OnInitDialog()
     _m_list.GetClientRect(&rect);
     _m_list.SetColumnWidth(rect.Width() / 2);
     for (std::vector<SpellID>::const_iterator it = _m_aSpell.begin(); it != _m_aSpell.end(); ++it) {
-        _m_abAvailableSpell.set(*it, false);
+        _m_abAvailableSpell[*it] = false;
         _m_list.SetItemData(_m_list.AddString(akSpellTraits[*it].m_name), *it);
     }
     _m_list.SetCurSel(-1);
@@ -1275,7 +1282,7 @@ VA(0x0040a353, 0xa1)
 void TSpellsDlg::OnOK()
 {
     CDialog::OnOK();
-    _m_aSpell.erase(_m_aSpell.begin(), _m_aSpell.end());
+    _m_aSpell.clear();
     int count = _m_list.GetCount();
     _m_aSpell.reserve(count);
     for (int index = 0; index < count; index++) {
@@ -1293,11 +1300,14 @@ void TSpellsDlg::OnAddButton()
         SpellID spell = dlg.getSpell();
         _m_abAvailableSpell.set(spell, false);
         int index = _m_list.GetCurSel();
+        int newIndex;
         if (index == LB_ERR)
-            index = _m_list.AddString(akSpellTraits[spell].m_name);
-        else
+            newIndex = _m_list.AddString(akSpellTraits[spell].m_name);
+        else {
             _m_list.InsertString(index, akSpellTraits[spell].m_name);
-        _m_list.SetItemData(index, spell);
+            newIndex = index;
+        }
+        _m_list.SetItemData(newIndex, spell);
         if (!_m_abAvailableSpell.any())
             _m_addButton.EnableWindow(FALSE);
         _m_removeAllButton.EnableWindow(TRUE);
@@ -1437,7 +1447,8 @@ BOOL TCreaturesDlg::OnInitDialog()
     _m_bModified = false;
     _m_aCreatureStack = _m_pBlackBox->getContents().getCreatureStacks();
     CDialog::OnInitDialog();
-    _m_list.SetTabStops(171);
+    int tabStop = 171;
+    _m_list.SetTabStops(1, &tabStop);
     for (std::vector<TCreatureStack>::const_iterator it = _m_aCreatureStack.begin(); it != _m_aCreatureStack.end();
          ++it) {
         int index = _m_list.AddString(getCreatureStackText(it->getCreatureType(), it->getQuantity()));
@@ -1455,7 +1466,7 @@ VA(0x0040ac13, 0xaa)
 void TCreaturesDlg::OnOK()
 {
     CDialog::OnOK();
-    _m_aCreatureStack.erase(_m_aCreatureStack.begin(), _m_aCreatureStack.end());
+    _m_aCreatureStack.clear();
     int count = _m_list.GetCount();
     _m_aCreatureStack.reserve(count);
     for (int index = 0; index < count; index++) {
@@ -1471,13 +1482,16 @@ void TCreaturesDlg::OnAddButton()
     TEditCreatureStackDlg dlg(this, _m_mapVersion, ~std::bitset<kNumCreatureTypes>(0));
     if (dlg.DoModal() == IDOK) {
         int index = _m_list.GetCurSel();
+        int newIndex;
         if (index == LB_ERR)
-            index = _m_list.AddString(
+            newIndex = _m_list.AddString(
                 getCreatureStackText(dlg.getStack().getCreatureType(), dlg.getStack().getQuantity()));
-        else
+        else {
             _m_list.InsertString(index,
                                  getCreatureStackText(dlg.getStack().getCreatureType(), dlg.getStack().getQuantity()));
-        _m_list.SetItemData(index, MAKELONG(dlg.getStack().getCreatureType(), dlg.getStack().getQuantity()));
+            newIndex = index;
+        }
+        _m_list.SetItemData(newIndex, MAKELONG(dlg.getStack().getCreatureType(), dlg.getStack().getQuantity()));
         if (_m_list.GetCount() >= TBlackBox::TContents::s_kMaxCreatureStacks)
             _m_addButton.EnableWindow(FALSE);
         _m_removeAllButton.EnableWindow(TRUE);
@@ -1741,14 +1755,15 @@ BOOL TBlackBoxPropsContentsPage::OnInitDialog()
     pFrame->GetWindowRect(&rect);
     ScreenToClient(&rect);
     CWnd* pInsertAfter = pFrame;
+    int index;
     for (unsigned int category = 0; category < s_kNumCategories; category++) {
-        int index = _m_categoryCombo.AddString(getCategoryName(category));
+        index = _m_categoryCombo.AddString(getCategoryName(category));
         _m_categoryCombo.SetItemData(index, category);
         _m_apCategoryDlg[category]->SetWindowPos(pInsertAfter, rect.left, rect.top, 0, 0, SWP_NOSIZE);
         pInsertAfter = _m_apCategoryDlg[category];
     }
     pFrame->DestroyWindow();
-    int index = 0;
+    index = 0;
     while (_m_categoryCombo.GetItemData(index) != _m_category)
         index++;
     _m_categoryCombo.SetCurSel(index);

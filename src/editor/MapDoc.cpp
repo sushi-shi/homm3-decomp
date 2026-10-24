@@ -41,6 +41,8 @@ namespace {
 DATA(0x0059fe70) std::set<TMapDoc*> allMapDocs;
 VA_COMPGEN(0x0045d7fb, 0x23, STATIC_CTOR, allMapDocs)
 VA_COMPGEN(0x0045d81e, 0xa, STATIC_DTOR, allMapDocs)
+VA_COMPGEN(0x004610a5, 0x23, CLASS_CTOR, set)
+VA_COMPGEN(0x0045d828, 0x5, IMPLICIT_DTOR, TMapDoc_set)
 
 // Asks for a file name with the common file dialog, filtering by the
 // file type the filter text names ("description\n.ext") and by all files.
@@ -69,13 +71,10 @@ bool promptForFileName(LPCTSTR pszName, BOOL bOpenFileDialog, DWORD flags, CStri
         name += '.';
     name += defExt;
     fileName = name;
-    bool bResult;
-    {
-        TStringBuffer buffer(fileName, _MAX_PATH);
-        dlg.m_ofn.lpstrFile = buffer;
-        bResult = dlg.DoModal() == IDOK;
-    }
-    return bResult;
+    TStringBuffer buffer(fileName, _MAX_PATH);
+    dlg.m_ofn.lpstrFile = buffer;
+    int response = dlg.DoModal();
+    return response == IDOK;
 }
 
 // The maps' object factory: the editor's GUI objects. Its one instance
@@ -459,7 +458,8 @@ TMapGenerationProgressDlg::TMapGenerationProgressDlg(CWnd* pParent)
         pParent->GetClientRect(&rect);
         pParent->ClientToScreen(&rect);
     } else {
-        rect = CRect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        CSize screenSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        rect = CRect(CPoint(0, 0), screenSize);
     }
     CSize size = rect.Size();
     CRect dlgRect;
@@ -1446,6 +1446,9 @@ void TMapDoc::onMapObjectRemoved(bool bSecondLayer, TMapLayerObjectID objID)
     UpdateAllViews(NULL, (LPARAM)&notification);
 }
 
+// A separate search result preserves retail's distinct match/exhaustion
+// edges. Inferring success from the final version index adds an extra test;
+// checked advances and returns inside the scan do not recover this shape.
 VA(0x0046019a, 0x127)
 std::auto_ptr<TGameMap> TMapDoc::_readMap(std::streambuf* pStreamBuf)
 {
@@ -1454,10 +1457,14 @@ std::auto_ptr<TGameMap> TMapDoc::_readMap(std::streambuf* pStreamBuf)
     stream >> fileVersion;
     const unsigned int kNumVersions = sizeof(akMapFileVersion) / sizeof(akMapFileVersion[0]);
     unsigned int version;
-    for (version = 0; version < kNumVersions; version++)
-        if (fileVersion == akMapFileVersion[version])
+    bool found = false;
+    for (version = 0; version < kNumVersions; version++) {
+        if (fileVersion == akMapFileVersion[version]) {
+            found = true;
             break;
-    if (version == kNumVersions)
+        }
+    }
+    if (!found)
         throw new TMapDocInvalidFileVersion(fileVersion, kMapFileVersion);
     std::auto_ptr<TGameMap> pMap(new TGameMap(this, EGameVersion(version), pStreamBuf, fileVersion));
     if (pMap.get() == NULL)
@@ -1466,11 +1473,19 @@ std::auto_ptr<TGameMap> TMapDoc::_readMap(std::streambuf* pStreamBuf)
 }
 
 // Generates the new map's random map into memory and reads it back.
+// Retail stores each team count before its player count, and captures the
+// parameters after the map-data string's construction (94.46 -> 94.56%).
+// Residual: retail's 0x1e8 frame (ours 0x2b8) reuses the dialog's storage for
+// the read-back's string buffer and inflater, a clue to a nested scope or an
+// inlined read-back helper; a bare block reproduces the frame (94.61%) but no
+// helper is evidenced. Retail also swaps the this/parameter registers and
+// overlaps the field loads; reference borrowing, direct auto_ptr access, a
+// late capture and player-first stores score lower.
 VA(0x004602c1, 0x29c)
 bool TMapDoc::_generateRandomMap()
 {
-    const TRandomMapParams* pParams = _m_newMapParams.m_pRandomMapParams.get();
     std::string mapData;
+    const TRandomMapParams* pParams = _m_newMapParams.m_pRandomMapParams.get();
     TRandomMapRequest request(TGameMap::getDimension(_m_newMapParams.m_size),
                               TGameMap::getDimension(_m_newMapParams.m_size),
                               _m_newMapParams.m_bTwoLayer ? 2 : 1);
@@ -1485,10 +1500,10 @@ bool TMapDoc::_generateRandomMap()
         request.m_mapVersion = RMG_MAP_SHADOW_OF_DEATH;
         break;
     }
-    request.m_humanPlayerCount = pParams->m_humanPlayerCount;
     request.m_humanTeamCount = pParams->m_humanTeamCount;
-    request.m_computerPlayerCount = pParams->m_computerPlayerCount;
+    request.m_humanPlayerCount = pParams->m_humanPlayerCount;
     request.m_computerTeamCount = pParams->m_computerTeamCount;
+    request.m_computerPlayerCount = pParams->m_computerPlayerCount;
     request.m_waterContent = pParams->m_waterContent;
     request.m_monsterStrength = pParams->m_monsterStrength;
     {
@@ -1612,7 +1627,7 @@ VA(0x004608d5, 0x17f)
 void TMapDoc::OnFileExportText()
 {
     CString pathName;
-    if (!promptForFileName(m_strTitle, FALSE, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST,
+    if (!promptForFileName(m_strTitle, FALSE, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST,
                            pathName))
         return;
     CFileException fe;
@@ -1635,7 +1650,7 @@ VA(0x00460ab1, 0x2bb)
 void TMapDoc::OnFileImportText()
 {
     CString pathName;
-    if (!promptForFileName(m_strTitle, TRUE, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST, pathName))
+    if (!promptForFileName(m_strTitle, TRUE, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST, pathName))
         return;
     CFileException fe;
     CStdioFile file;

@@ -1002,6 +1002,12 @@ inline TViewportOrgOffsetter::~TViewportOrgOffsetter()
 
 }  // namespace
 
+// Each tile layer draws into the back buffer's first dirty row through the
+// bitmap's row accessor (Loki's getImgLine); its inline argument binding
+// fixes retail's rect.top load ahead of the pixel base (89.87 -> 97.58%).
+// Retail keeps the passability cell position in one point whose y is set
+// per row and x per cell, and tests the road clamp's positive side; with
+// both the function is exact (Loki's negative clamp scores 99.94%).
 VA(0x0046b686, 0xc4b)
 void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
 {
@@ -1023,9 +1029,7 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
             const TGameMap::TLayer::TCell& mapCell = layer.getCell(cell.x, cell.y);
             (*akZoomTraits[_m_zoom].m_pDrawTile)(akGroundTilesetTraits[mapCell.getTerrainType()].m_pSprite,
                                               mapCell.getTileNum(), pos.x, pos.y,
-                                              (uword*)((ubyte*)_m_backBuffer.getPixels()
-                                                       + rect.top * _m_backBuffer.getPitch())
-                                                  + rect.left,
+                                              _m_backBuffer.getLine(rect.top) + rect.left,
                                               rect.Width(), rect.Height(), _m_backBuffer.getPitch(),
                                               mapCell.getBHFlipped(), mapCell.getBVFlipped());
         }
@@ -1036,15 +1040,13 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
             if (mapCell.getRiverType() != 0)
                 (*akZoomTraits[_m_zoom].m_pDrawTile)(akRiverTilesetTraits[mapCell.getRiverType() - 1].m_pSprite,
                                                   mapCell.getRiverTileNum(), pos.x, pos.y,
-                                                  (uword*)((ubyte*)_m_backBuffer.getPixels()
-                                                           + rect.top * _m_backBuffer.getPitch())
-                                                      + rect.left,
+                                                  _m_backBuffer.getLine(rect.top) + rect.left,
                                                   rect.Width(), rect.Height(), _m_backBuffer.getPitch(),
                                                   mapCell.getBRiverHFlipped(), mapCell.getBRiverVFlipped());
         }
     CRect roadCells = cells;
     roadCells.top--;
-    roadCells.top = roadCells.top < 0 ? 0 : roadCells.top;
+    roadCells.top = roadCells.top > 0 ? roadCells.top : 0;
     for (cell.y = roadCells.top; cell.y < roadCells.bottom; cell.y++)
         for (cell.x = roadCells.left; cell.x < roadCells.right; cell.x++) {
             CPoint pos((cell.x - _m_viewPos.x) * tileSize - rect.left,
@@ -1053,9 +1055,7 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
             if (mapCell.getRoadType() != 0)
                 (*akZoomTraits[_m_zoom].m_pDrawTile)(akRoadTilesetTraits[mapCell.getRoadType() - 1].m_pSprite,
                                                   mapCell.getRoadTileNum(), pos.x, pos.y,
-                                                  (uword*)((ubyte*)_m_backBuffer.getPixels()
-                                                           + rect.top * _m_backBuffer.getPitch())
-                                                      + rect.left,
+                                                  _m_backBuffer.getLine(rect.top) + rect.left,
                                                   rect.Width(), rect.Height(), _m_backBuffer.getPitch(),
                                                   mapCell.getBRoadHFlipped(), mapCell.getBRoadVFlipped());
         }
@@ -1154,9 +1154,10 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
         CBrush brush;
         brush.CreateStockObject(NULL_BRUSH);
         TBkModeSelector bkModeSelector(pDC, TRANSPARENT);
+        CPoint pos;
         for (cell.y = cells.top; cell.y < cells.bottom; cell.y++) {
-            int posY = (cell.y - _m_viewPos.y) * tileSize;
-            int top = posY;
+            pos.y = (cell.y - _m_viewPos.y) * tileSize;
+            int top = pos.y;
             unsigned int cellHeight = tileSize;
             if (top < rect.top) {
                 cellHeight = top - rect.top + tileSize;
@@ -1165,7 +1166,7 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
             if (top + cellHeight > rect.bottom)
                 cellHeight = rect.bottom - top;
             for (cell.x = cells.left; cell.x < cells.right; cell.x++) {
-                CPoint pos((cell.x - _m_viewPos.x) * tileSize, posY);
+                pos.x = (cell.x - _m_viewPos.x) * tileSize;
                 int left = pos.x;
                 unsigned int cellWidth = tileSize;
                 if (left < rect.left) {
@@ -1242,6 +1243,7 @@ void TMapEditWnd::_generateMouseMove()
 }
 
 // Streams the selected object to the clipboard in the editor's format.
+// Retail EH table 0x569b78 catches const runtime_error& before CException*.
 VA(0x0046c484, 0x16c)
 bool TMapEditWnd::_copySelectedObject()
 {
@@ -1264,6 +1266,8 @@ bool TMapEditWnd::_copySelectedObject()
             ::CloseClipboard();
             throw;
         }
+    } catch (const std::runtime_error&) {
+        return false;
     } catch (CException* e) {
         e->Delete();
         return false;
@@ -1641,6 +1645,7 @@ void TMapEditWnd::OnMouseMove(UINT nFlags, CPoint point)
                                ? khNoCursor
                                : hClosedHandCursor);
                 unsigned int tileSize = akZoomTraits[_m_zoom].m_tileSize;
+                CRect paintRect;
                 CRect updateRect;
                 if (updateRect.IntersectRect(&oldRect, &newRect)) {
                     updateRect.UnionRect(&oldRect, &newRect);
@@ -1648,7 +1653,6 @@ void TMapEditWnd::OnMouseMove(UINT nFlags, CPoint point)
                     updateRect.top = (updateRect.top - _m_viewPos.y) * tileSize;
                     updateRect.right = (updateRect.right - _m_viewPos.x) * tileSize;
                     updateRect.bottom = (updateRect.bottom - _m_viewPos.y) * tileSize;
-                    CRect paintRect;
                     if (paintRect.IntersectRect(&updateRect, &clientRect)) {
                         CClientDC dc(this);
                         TMemoryDC memDC(&dc);
@@ -1698,7 +1702,6 @@ void TMapEditWnd::OnMouseMove(UINT nFlags, CPoint point)
                     oldRect.top = (oldRect.top - _m_viewPos.y) * tileSize;
                     oldRect.right = (oldRect.right - _m_viewPos.x) * tileSize;
                     oldRect.bottom = (oldRect.bottom - _m_viewPos.y) * tileSize;
-                    CRect paintRect;
                     if (paintRect.IntersectRect(&oldRect, &clientRect)) {
                         dc.SelectClipRgn(NULL);
                         dc.IntersectClipRect(&paintRect);
@@ -1747,12 +1750,13 @@ void TMapEditWnd::OnMouseMove(UINT nFlags, CPoint point)
             }
         } else if (_m_potentialGrabID != TGameMap::TLayer::s_kInvalidObjID) {
             bool bGrab = false;
-            int dragWidth = ::GetSystemMetrics(SM_CXDRAG);
+            // Retail queries 0x24/0x25: the double-click rectangle.
+            int dragWidth = ::GetSystemMetrics(SM_CXDOUBLECLK);
             int left = _m_potentialGrabPoint.x - dragWidth / 2;
             if (point.x < left || point.x >= left + dragWidth)
                 bGrab = true;
             else {
-                int dragHeight = ::GetSystemMetrics(SM_CYDRAG);
+                int dragHeight = ::GetSystemMetrics(SM_CYDOUBLECLK);
                 int top = _m_potentialGrabPoint.y - dragHeight / 2;
                 if (point.y < top || point.y >= top + dragHeight)
                     bGrab = true;
@@ -2374,9 +2378,8 @@ LRESULT TMapEditWnd::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         msg.wParam = wParam;
         msg.lParam = lParam;
         msg.time = ::GetMessageTime();
-        DWORD pos = ::GetMessagePos();
-        msg.pt.x = (short)LOWORD(pos);
-        msg.pt.y = (short)HIWORD(pos);
+        CPoint pos(::GetMessagePos());
+        msg.pt = pos;
         _m_pToolTip->RelayEvent(&msg);
         break;
     }

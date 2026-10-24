@@ -15,6 +15,12 @@ using namespace std;
 #include "va.h"
 #include "editor/GameMap.h"
 
+// Retail folds this offset-four scalar store onto type_progress_bar::setTotal.
+void TTeamInfo::setNumTeams(unsigned int newNumTeams)
+{
+    _m_numTeams = newNumTeams;
+}
+
 VA(0x004ba67a, 0xf)
 void TTeamInfo::setPlayerTeam(TPlayer player, unsigned int newTeam)
 {

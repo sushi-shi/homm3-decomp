@@ -234,6 +234,8 @@ CString TGetScenarioStartingBonusNameFunc::operator()(const TScenarioStartingBon
     return name;
 }
 
+// Retail snapshots the player index before the map lookup. Preserve that
+// value lifetime and the direct sentinel tests; switch dispatch differs.
 VA(0x0042e390, 0x92)
 const char* TGetScenarioStartingBonusNameFunc::_getHeroName(const TScenarioHeroBonus& bonus) const
 {
@@ -242,7 +244,8 @@ const char* TGetScenarioStartingBonusNameFunc::_getHeroName(const TScenarioHeroB
         return kMostPowerfulHeroStr;
     if (hero == TScenarioHeroBonus::kGeneratedHero)
         return kGeneratedHeroStr;
-    return _m_scenario.getPlayer(_m_player).m_heroes.find(hero)->second.c_str();
+    int player = _m_player;
+    return _m_scenario.getPlayer(player).m_heroes.find(hero)->second.c_str();
 }
 
 VA(0x0042e430, 0x97)
@@ -285,27 +288,33 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusArtifact& bonu
 VA(0x0042e630, 0x9d)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusSpellScroll& bonus)
 {
+    int spell = bonus.m_spell;
     _m_name.Format(kGiveBonusFmtStr,
-                   (const char*)TFormattedString("%s %s", akSpellTraits[bonus.m_spell].m_name,
+                   (const char*)TFormattedString("%s %s", akSpellTraits[spell].m_name,
                                                  akArtifactTraits[ARTIFACT_SPELL_SCROLL].m_name),
                    _getHeroName(bonus));
 }
 
-// Retail passes the first positive skill value directly to the formatter.
-// Condition, break and format-before-break scans emit the same body; naming
-// the selected quantity removes the reload but leaves loop rotation and the
-// second loop's countdown. No additional temporary lifetime is evidenced.
+// Retail loads each quantity once and passes that value to the formatter.
+// Name it in both scans to preserve temporary reuse and the second loop's
+// induction. Keep while (true): for (;;) rotates the first scan under VC6.
 VA(0x0042e6d0, 0x127)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& bonus)
 {
     CString skills;
-    unsigned int skill;
-    for (skill = 0; bonus.m_skills[skill] <= 0; skill++)
-        ;
-    skills = TFormattedString("+%d %s", bonus.m_skills[skill], akHeroPrimarySkillTraits[skill].m_name);
-    for (skill++; skill < kNumPrimarySkills; skill++) {
-        if (bonus.m_skills[skill] > 0)
-            skills += TFormattedString(", +%d %s", bonus.m_skills[skill], akHeroPrimarySkillTraits[skill].m_name);
+    unsigned int skill = 0;
+    unsigned int quantity;
+    while (true) {
+        quantity = bonus.m_skills[skill];
+        if (quantity > 0)
+            break;
+        ++skill;
+    }
+    skills = TFormattedString("+%d %s", quantity, akHeroPrimarySkillTraits[skill].m_name);
+    for (++skill; skill < kNumPrimarySkills; ++skill) {
+        quantity = bonus.m_skills[skill];
+        if (quantity > 0)
+            skills += TFormattedString(", +%d %s", quantity, akHeroPrimarySkillTraits[skill].m_name);
     }
     _m_name.Format(kGiveBonusFmtStr, (const char*)skills, _getHeroName(bonus));
 }
@@ -313,9 +322,11 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusPrimarySkill& 
 VA(0x0042e800, 0x9c)
 void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusSecondarySkill& bonus)
 {
+    int skill = bonus.m_skill;
+    int level = bonus.m_level;
     _m_name.Format(kGiveBonusFmtStr,
-                   (const char*)TFormattedString("%s %s", akHeroSkillMasteryTraits[bonus.m_level - eMasteryBasic].m_name,
-                                                 akSSkillTraits[bonus.m_skill].m_name),
+                   (const char*)TFormattedString("%s %s", akHeroSkillMasteryTraits[level - eMasteryBasic].m_name,
+                                                 akSSkillTraits[skill].m_name),
                    _getHeroName(bonus));
 }
 
@@ -333,7 +344,8 @@ void TGetScenarioStartingBonusNameFunc::visit(const TScenarioBonusResource& bonu
                         akGameResourceTypeTraits[eResourceGems].m_name);
     else
         resource = akGameResourceTypeTraits[bonus.m_resource].m_name;
-    _m_name.Format(kReceiveBonusFmtStr, bonus.m_amount, resource);
+    int amount = bonus.m_amount;
+    _m_name.Format(kReceiveBonusFmtStr, amount, (const char*)resource);
 }
 
 VA(0x0042e990, 0x8)
@@ -369,6 +381,9 @@ TScenarioOptionsBonusDlg::TScenarioOptionsBonusDlg(const TScenario& scenario, in
 VA_COMPGEN(0x0042ead0, 0x1e, SCALAR_DELETING_DTOR, TScenarioOptionsBonusDlg)
 VA_COMPGEN(0x0042eaf0, 0xcf, IMPLICIT_DTOR, TScenarioOptionsBonusDlg)
 
+// The borrowed bonus vector recovers retail's receiver/argument allocation.
+// Remaining differences are three combo-window temporary registers; while
+// loops, direct auto_ptr construction and a named combo reference are flat.
 VA(0x0042ebe0, 0x14b)
 void TScenarioOptionsBonusDlg::setOptions(const TScenarioOptionsBonus& options)
 {
@@ -377,8 +392,9 @@ void TScenarioOptionsBonusDlg::setOptions(const TScenarioOptionsBonus& options)
     for (index = 0; (int)_m_playerCombo.GetItemData(index) != options.m_player; index++)
         ;
     _m_playerCombo.SetCurSel(index);
-    for (unsigned int i = 0; i < options.m_bonuses.size(); i++) {
-        std::auto_ptr<TScenarioStartingBonus> pBonus = options.m_bonuses[i]->clone();
+    const std::vector<std::auto_ptr<TScenarioStartingBonus> >& bonuses = options.m_bonuses;
+    for (unsigned int i = 0; i < bonuses.size(); i++) {
+        std::auto_ptr<TScenarioStartingBonus> pBonus = bonuses[i]->clone();
         if (pBonus.get() == NULL)
             throw TAllocationFailure();
         _addBonus(pBonus);
@@ -623,15 +639,19 @@ void TScenarioOptionsCrossoverScenarioDlg::setOptions(const TScenarioOptionsCros
         _m_addButton.EnableWindow(FALSE);
 }
 
+// Retail loads the current scenario before the prerequisite receiver; a named
+// index preserves that ordering without moving either map-availability check.
 VA(0x0042fbd0, 0xcb)
 void TScenarioOptionsCrossoverScenarioDlg::prepare()
 {
     if (_m_campaign.getScenario(_m_scenario).getMap() != NULL) {
         for (unsigned int scenario = 0; scenario < _m_campaign.getMapTraits().m_numRegions; scenario++) {
-            if (scenario != _m_scenario && _m_campaign.getScenario(scenario).getMap() != NULL
-                && _m_campaign.getBPrerequisite(_m_scenario, scenario)) {
-                _m_abScenarioAvailable[scenario] = true;
-                _m_numScenariosAvailable++;
+            if (scenario != _m_scenario && _m_campaign.getScenario(scenario).getMap() != NULL) {
+                int currentScenario = _m_scenario;
+                if (_m_campaign.getBPrerequisite(currentScenario, scenario)) {
+                    _m_abScenarioAvailable[scenario] = true;
+                    _m_numScenariosAvailable++;
+                }
             }
         }
         _m_addButton.EnableWindow(_m_numScenariosAvailable > 0);
@@ -699,10 +719,12 @@ void TScenarioOptionsCrossoverScenarioDlg::_insertChoice(int index,
                                                          const TScenarioOptionsCrossoverScenario::TChoice& choice)
 {
     const TCampaignScenarioMap* pMap = _m_campaign.getScenario(choice.m_scenario).getMap();
+    const TCampaignMapTraits::TRegionTraits& region = _m_campaign.getMapTraits().m_regionTraits[choice.m_scenario];
+    int player = choice.m_player;
     index = _m_choiceList.InsertString(
         index, TFormattedString("%s - %s\t%s", pMap->m_name.c_str(),
-                                _m_campaign.getMapTraits().m_regionTraits[choice.m_scenario].m_name,
-                                akPlayerTraits[choice.m_player].m_pName));
+                                region.m_name,
+                                akPlayerTraits[player].m_pName));
     if (index == LB_ERR)
         throw TRuntimeError();
     _m_choices.insert(_m_choices.begin() + index, choice);
@@ -719,8 +741,9 @@ void TScenarioOptionsCrossoverScenarioDlg::_removeChoice(int index)
     _m_choiceList.DeleteString(index);
 }
 
-// Proxy assignment preserves the nested bitset::set path but does not improve
-// the remaining expanded word-index/mask register scheduling.
+// Proxy assignment and named player-info/map references leave the expanded
+// bitset word-index/mask scheduling unchanged. Initializing the mask before
+// retrieving the map lowers the match; keep its lifetime after the lookup.
 VA(0x004301a0, 0x67)
 TPlayerMask TScenarioOptionsCrossoverScenarioDlg::_getPlayers() const
 {
@@ -871,7 +894,8 @@ VA(0x00430960, 0x66)
 void TScenarioOptionsStartingHeroDlg::prepare()
 {
     if (_m_scenario.getMap() != NULL) {
-        _m_heroesAvailable = _m_scenario.getMap()->m_heroes;
+        const TCampaignScenarioMap* pMap = _m_scenario.getMap();
+        _m_heroesAvailable = pMap->m_heroes;
         _m_bRandomHeroAvailable = true;
         _m_addButton.EnableWindow(TRUE);
         _m_editButton.EnableWindow(FALSE);
@@ -940,7 +964,13 @@ bool TScenarioOptionsStartingHeroDlg::isAvailable() const
 }
 
 // Naming the vector insertion iterator leaves this caller's MAX unchanged.
+// Proxy assignment and set(pos, false) preserve the same inlining differences.
 // Preserve the formatted CString then conditional hero-name string cleanup.
+// Inline trace: retail's decisions (hero-name _Tidy and runtime_error called,
+// _Xran's assign(const char*, size_t) called, logic_error expanded) replay
+// exactly with three more free (cb <= 40) sites between the throw and the
+// bitset reset; proxy assignment's operator[] and operator= cost 41 and 43
+// and do not, and a TChoice::isRandomHero() test adds only one.
 VA(0x00430cc0, 0x22b)
 void TScenarioOptionsStartingHeroDlg::_insertChoice(int index, const TScenarioOptionsStartingHero::TChoice& choice)
 {
@@ -1228,7 +1258,8 @@ void TScenarioPropsStartingOptionsPage::OnOK()
 {
     CPropertyPage::OnOK();
     const TScenario& oldScenario = _m_oldCampaign.getScenario(_m_scenario);
-    const TScenario& newScenario = _m_newCampaign.getScenario(_m_scenario);
+    int scenarioIndex = _m_scenario;
+    const TScenario& newScenario = _m_newCampaign.getScenario(scenarioIndex);
     _m_bModified = _m_bModified || (newScenario.getMap() != NULL) != (oldScenario.getMap() != NULL)
                    || (newScenario.getMap() != NULL
                        && !(*newScenario.getStartingOptions() == *oldScenario.getStartingOptions()));
@@ -1245,7 +1276,8 @@ BOOL TScenarioPropsStartingOptionsPage::OnSetActive()
         _m_type = 0;
         UpdateData(FALSE);
         _m_pTypeDlgs->m_bonusDlg.show();
-        const TScenario& scenario = _m_newCampaign.getScenario(_m_scenario);
+        int scenarioIndex = _m_scenario;
+        const TScenario& scenario = _m_newCampaign.getScenario(scenarioIndex);
         if (scenario.getMap() != NULL) {
             for (type = 0; type < kNumTypes; type++)
                 _m_aTypeRadios[type].EnableWindow(_m_pTypeDlgs->m_apDlg[type]->isAvailable());

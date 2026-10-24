@@ -11,6 +11,7 @@
 #include <stddef.h>
 
 #include "editor/Player.h"
+#include "va.h"
 
 class CSprite;
 struct TObjectType;
@@ -46,6 +47,8 @@ public:
     {
         _m_pSprite = _lockSprite(_m_player);
     }
+    // ~TObjectSpritePtr's body is the same and folds into this one.
+    VA(0x0043fddf, 0xf)
     ~THeroFlagSpritePtr()
     {
         if (_m_pSprite != NULL)

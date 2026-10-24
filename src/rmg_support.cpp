@@ -223,27 +223,28 @@ u32 TRmgLinePatternTable::selectFrame(s32 pattern)
         + rand() % m_ranges[pattern].m_frameCount;
 }
 
-// Retail 0x4f9f00 keeps one tile proxy across neighbour queries and selects
-// a pattern/flip pair before reading the current tile. A new random frame is
-// drawn only when the pattern or flips differ. Its ordinary neighbour helper
-// supplies nested TPoint-add, grid-conversion and proxy-factory call sites.
-// Returning the selected integer through this ordinary overload preserves the
-// canonical output-reference selector and the two independent byte outputs.
-// It recovers retail's register roles and selected-pattern comparison; a
-// returned aggregate packs the flips together and changes their lifetimes.
-// No DC counterpart: these helper boundaries are retail-derived hypotheses.
-// Residual 99.7462%: all instructions/calls align, but the selector output
-// shares the old-terrain slot; retail keeps both and has a 0x5c vs 0x58 frame.
-// Value/const-value/const-reference caller bindings do not separate the slots.
-s32 selectRmgLinePattern(
-    const bool* neighbours, const TRmgLinePatternTable* table,
-    bool& flipX, bool& flipY)
+// Complete retains this four-argument neighbour query in the editor and expands
+// it in the game. Mac 0x2223a0 and Loki computeAdjacentLines identify the whole
+// loop boundary; the former per-neighbour wrapper was only a budget hypothesis.
+VA_AT(h3maped, 0x004587f7, 0x9c)
+MAC_ADDRESS(0x2223a0, 0xf8)
+void computeAdjacentLines(TMapLineFilter* pMapFilter, const TTilePoint& point,
+                          s32 lineType, bool* abAdjLine)
 {
-    s32 pattern;
-    selectRmgLinePattern(neighbours, table, pattern, flipX, flipY);
-    return pattern;
+    bool abAdjDir[TILE_DIR_COUNT];
+    computeAdjacentDirs(pMapFilter->getWidth(), pMapFilter->getHeight(),
+                        point.x(), point.y(), abAdjDir);
+    for (u32 dir = 0; dir < TILE_DIR_COUNT; ++dir) {
+        if (abAdjDir[dir]) {
+            TTilePoint adjLoc = TPoint<int>(point) + akAdjOffset[dir];
+            abAdjLine[dir] = pMapFilter->at(adjLoc).getLineType() == lineType;
+        } else
+            abAdjLine[dir] = false;
+    }
 }
 
+// Windows and Mac keep the selected pattern separate from the old tile type.
+// Loki also calls the canonical output-reference selector directly.
 VA(0x004f9f00, 0x146)
 MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 VA_AT(h3maped, 0x00458a2f, 0xc7)
@@ -251,19 +252,12 @@ void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
     s32 oldType = tile.getLineType();
-    b8 available[TILE_DIR_COUNT];
-    buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
-                           point.m_x, point.m_y, available);
     bool matches[TILE_DIR_COUNT];
-    for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
-        if (available[direction])
-            matches[direction] = painter->getNeighbourLineType(point, direction) == oldType;
-        else
-            matches[direction] = 0;
-    }
+    computeAdjacentLines(painter, point, oldType, matches);
     TRmgLinePatternTable* table = painter->getPatternTable(oldType);
+    s32 selected;
     bool flipX, flipY;
-    s32 selected = selectRmgLinePattern(matches, table, flipX, flipY);
+    selectRmgLinePattern(matches, table, selected, flipX, flipY);
     TRmgTerrainTile current;
     tile.getTile(current);
     if (table->m_framePatterns[current.getFrame()] != selected
@@ -282,28 +276,9 @@ TRmgLinePainterTile TMapLineFilter::at(const TTilePoint& point)
     return TRmgLinePainterTile(this, point);
 }
 
-// Neighbour query used by refresh 0x4f9f00 and the walker's first pass
-// 0x4fa3c0: an ordinary helper whose expansion carries the signed sum,
-// the grid conversion and the proxy factory as nested sites. Retail
-// retains all three in refresh and only the compound add in the walker,
-// which is what this helper's divided budget gives them; queried inline
-// they are expanded at both callers' own budgets. The converted sum is
-// named: the walker's expansion then stores the proxy's painter before
-// the converted coordinates as retail does (95.85 -> 100%; a named proxy
-// costs refresh its factory call, 89.41%; a named signed sum is the same
-// object; the proxy constructor copying the point through its fields,
-// accessors, setters or a by-value parameter never helps and the first
-// three cost the rectangle clear, 94.51%).
-// Mac 0x2223a0 also wraps the complete matching-neighbour-mask loops used
-// by refresh and the walker. Restoring that outer boundary currently retains
-// extra grid conversion/addition calls in refresh and grid-constructor/proxy
-// calls in the walker (84.8077% / 78.8527%); its source calls need joint recovery.
-s32 TMapLineFilter::getNeighbourLineType(const TTilePoint& point, u32 direction)
-{
-    TTilePoint nearby = TPoint<int>(point) + g_tileDirections[direction];
-    return at(nearby).getLineType();
-}
-
+// The first pass uses the filter factory, as Loki eraseLines does. Complete
+// retains the resulting proxy copy in the editor and expands it in the game;
+// both Windows bodies are exact with the ordinary factory call.
 // Clears the rectangle, then refreshes the line tiles around it. North is up;
 // # is the rectangle, digits the order in which its sides are refreshed.
 //   1 3 3 3 2
@@ -319,7 +294,7 @@ void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rec
          point.m_y < rectangle.m_origin.m_y + rectangle.m_size.m_y; ++point.m_y) {
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            TRmgLinePainterTile tile(painter, point);
+            TRmgLinePainterTile tile = painter->at(point);
             if (tile.getLineType())
                 tile.setTile(TRmgTerrainTile(0, 0));
         }
@@ -411,7 +386,7 @@ VA(0x004fa3c0, 0x156)
 MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TTilePoint& point)
 {
-    TRmgLinePainterTile tile(m_painter, point);
+    TRmgLinePainterTile tile = m_painter->at(point);
     s32 oldType = tile.getLineType();
     if (oldType == m_lineType || tile.isBlocked())
         return;
@@ -420,24 +395,12 @@ void TRmgLineWalker::paintPoint(const TTilePoint& point)
     tile.setLineType(m_lineType);
     refreshRmgLinePoint(m_painter, point);
 
-    s32 lineType = m_lineType;
     bool matches[TILE_DIR_COUNT];
+    computeAdjacentLines(m_painter, point, m_lineType, matches);
     u32 direction;
-    {
-        TMapLineFilter* painter = m_painter;
-        b8 available[TILE_DIR_COUNT];
-        buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
-                               point.m_x, point.m_y, available);
-        for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
-            if (available[direction])
-                matches[direction] = painter->getNeighbourLineType(point, direction) == lineType;
-            else
-                matches[direction] = 0;
-        }
-    }
     for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
-            refreshRmgLinePoint(m_painter, TPoint<int>(point) + g_tileDirections[direction]);
+            refreshRmgLinePoint(m_painter, TPoint<int>(point) + akAdjOffset[direction]);
     }
 }
 

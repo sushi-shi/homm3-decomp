@@ -41,10 +41,21 @@ T16bppDIBSection& T16bppDIBSection::operator=(const T16bppDIBSection& other)
 VA(0x0040d2cb, 0xb2)
 unsigned short* T16bppDIBSection::allocate(unsigned int width, unsigned int height)
 {
-    BITMAPINFOHEADER header = { sizeof(BITMAPINFOHEADER), width, -(int)height, 1, 16, BI_RGB, 0, 0, 0, 0, 0 };
+    BITMAPINFO info;
+    info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    info.bmiHeader.biWidth = width;
+    info.bmiHeader.biHeight = -(int)height;
+    info.bmiHeader.biPlanes = 1;
+    info.bmiHeader.biBitCount = 16;
+    info.bmiHeader.biCompression = BI_RGB;
+    info.bmiHeader.biSizeImage = 0;
+    info.bmiHeader.biXPelsPerMeter = 0;
+    info.bmiHeader.biYPelsPerMeter = 0;
+    info.bmiHeader.biClrUsed = 0;
+    info.bmiHeader.biClrImportant = 0;
     CClientDC dc(NULL);
     void* pBits;
-    HBITMAP hBitmap = ::CreateDIBSection(dc.GetSafeHdc(), (BITMAPINFO*)&header, DIB_RGB_COLORS,
+    HBITMAP hBitmap = ::CreateDIBSection(dc.GetSafeHdc(), &info, DIB_RGB_COLORS,
                                          &pBits, NULL, 0);
     if (hBitmap == NULL)
         throw TRuntimeError();

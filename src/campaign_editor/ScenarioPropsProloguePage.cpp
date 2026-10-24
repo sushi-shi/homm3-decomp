@@ -243,9 +243,9 @@ void TScenarioPropsProloguePageBase::OnSelChangeMovieCombo()
                      apPreviews[movie]->getWidth(), apPreviews[movie]->getHeight(), apPreviews[movie]->getPitch(), false);
     }
     _m_previewStatic.SetBitmap(NULL);
-    BITMAP bm;
-    _m_previewBitmap.GetBitmap(&bm);
     {
+        BITMAP bm;
+        _m_previewBitmap.GetBitmap(&bm);
         CDC sourceDC;
         CDC destDC;
         {
@@ -255,7 +255,7 @@ void TScenarioPropsProloguePageBase::OnSelChangeMovieCombo()
         }
         TGDIObjectSelector<CBitmap> sourceSelector(&sourceDC, apPreviews[movie].get());
         TGDIObjectSelector<CBitmap> destSelector(&destDC, &_m_previewBitmap);
-        int oldMode = destDC.SetStretchBltMode(HALFTONE);
+        int oldMode = destDC.SetStretchBltMode(COLORONCOLOR);
         destDC.StretchBlt(0, 0, bm.bmWidth, bm.bmHeight, &sourceDC, 0, 0, apPreviews[movie]->getWidth(),
                           apPreviews[movie]->getHeight(), SRCCOPY);
         destDC.SetStretchBltMode(oldMode);

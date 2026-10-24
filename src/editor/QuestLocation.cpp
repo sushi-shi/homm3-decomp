@@ -11,6 +11,7 @@
 #include "editor/MapEditorText.h"
 #include "editor/QuestLocation.h"
 #include "editor/RawStream.h"
+#include "editor/RawStreamWriteValue.h"
 
 namespace {
 
@@ -132,24 +133,27 @@ VA(0x004963f1, 0x7d)
 void TQuestWriter::visit(const TQuestBringArtifacts& quest)
 {
     writeType(eQuestBringArtifacts);
-    *_m_pOStream << static_cast<unsigned char>(quest.getArtifacts().size());
+    writeValue<unsigned char>(*_m_pOStream, quest.getArtifacts().size());
     for (std::multiset<TArtifact>::const_iterator pArtifact = quest.getArtifacts().begin();
          pArtifact != quest.getArtifacts().end(); ++pArtifact)
         if (_m_version >= 1)
-            *_m_pOStream << static_cast<short>(*pArtifact);
+            writeValue<short>(*_m_pOStream, *pArtifact);
         else
-            *_m_pOStream << static_cast<unsigned char>(*pArtifact);
+            writeValue<unsigned char>(*_m_pOStream, *pArtifact);
 }
 
+// Instructions agree; the two unsigned-short stream calls have the same
+// native body as 0x43c037, named unsigned char[2] by another caller. That
+// generated array name is not evidence for changing these scalar values.
 VA(0x0049646e, 0x7c)
 void TQuestWriter::visit(const TQuestBringCreatures& quest)
 {
     writeType(eQuestBringCreatures);
-    *_m_pOStream << static_cast<unsigned char>(quest.getCreatures().size());
+    writeValue<unsigned char>(*_m_pOStream, quest.getCreatures().size());
     for (TQuestBringCreatures::TCreatures::const_iterator pCreature = quest.getCreatures().begin();
          pCreature != quest.getCreatures().end(); ++pCreature) {
-        *_m_pOStream << static_cast<unsigned short>(pCreature->first);
-        *_m_pOStream << static_cast<unsigned short>(pCreature->second);
+        writeValue<unsigned short>(*_m_pOStream, pCreature->first);
+        writeValue<unsigned short>(*_m_pOStream, pCreature->second);
     }
 }
 
@@ -228,40 +232,30 @@ TQuest* TQuestReader::readDefeatMonster()
 VA(0x00496750, 0xba)
 TQuest* TQuestReader::readBringArtifacts()
 {
-    unsigned char value;
-    *_m_pIStream >> value;
-    unsigned int numArtifacts = value;
+    unsigned int numArtifacts = readValue<unsigned char>(*_m_pIStream);
     std::multiset<TArtifact> artifacts;
     for (; numArtifacts > 0; --numArtifacts) {
         int artifact;
-        if (_m_version >= 21) {
-            short value;
-            *_m_pIStream >> value;
-            artifact = value;
-        } else {
-            unsigned char value;
-            *_m_pIStream >> value;
-            artifact = value;
-        }
+        if (_m_version >= 21)
+            artifact = readValue<short>(*_m_pIStream);
+        else
+            artifact = readValue<unsigned char>(*_m_pIStream);
         artifacts.insert(TArtifact(artifact));
     }
     return new TQuestBringArtifacts(artifacts);
 }
 
+// These unsigned-short reads share retail 0x43bf8f with the identical
+// unsigned char[2] stream body emitted for another caller.
 VA(0x0049680a, 0xb8)
 TQuest* TQuestReader::readBringCreatures()
 {
-    unsigned char value;
-    *_m_pIStream >> value;
-    unsigned int numCreatures = value;
+    unsigned int numCreatures = readValue<unsigned char>(*_m_pIStream);
     TQuestBringCreatures::TCreatures creatures;
     for (unsigned int i = 0; i < numCreatures; ++i) {
-        unsigned short type;
-        *_m_pIStream >> type;
-        int& quantity = creatures[TCreatureType(type)];
-        unsigned short value;
-        *_m_pIStream >> value;
-        quantity = value;
+        TCreatureType type = TCreatureType(readValue<unsigned short>(*_m_pIStream));
+        int& quantity = creatures[type];
+        quantity = readValue<unsigned short>(*_m_pIStream);
     }
     return new TQuestBringCreatures(creatures);
 }

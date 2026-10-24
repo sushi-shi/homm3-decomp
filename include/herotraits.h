@@ -49,17 +49,15 @@ public:
     // Preserve the proven word and expose the retail byte layout alongside
     // it; the fourth byte's role remains unknown. These role-derived byte
     // names and the union model are retail-supported, not recovered DC text.
+    // Map-editor 0x44a8b5 copies these flags directly to bool fields and
+    // bitset::set arguments; no unsigned-byte normalization is present.
     union {
         unsigned int attributes;
         struct {
-            unsigned char m_availableInOriginal;
-            unsigned char m_availableInExpansion;
-            unsigned char m_special;
-        } m_availability;
-        // The map editor indexes the first two by edition (h3maped
-        // 0x41f2e0: `setge` + 0x38 into the record), Restoration of Erathia
-        // first.
-        unsigned char m_abAvailableIn[2];
+            bool m_availableInOriginal;
+            bool m_availableInExpansion;
+            bool m_special;
+        };
     };                                              // +0x38
     char m_pad3c[4];  // +0x3c retail-only field
     // hero::getBiography strcmp's the live hero name against this pointer.

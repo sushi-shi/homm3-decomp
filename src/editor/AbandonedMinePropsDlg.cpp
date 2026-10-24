@@ -32,20 +32,25 @@ TAbandonedMinePropsDlg::TAbandonedMinePropsDlg(CWnd* pParent, TAbandonedMine* pM
 VA_COMPGEN(0x00401215, 0x1c, SCALAR_DELETING_DTOR, TAbandonedMinePropsDlg)
 VA_COMPGEN(0x00401231, 0x3f, IMPLICIT_DTOR, TAbandonedMinePropsDlg)
 
+// A replacement selection re-enters this handler with its own next index.
+// VC6 lowers the final self-call to the native loop and parameter transfer.
 VA(0x00401270, 0xc1)
 void TAbandonedMinePropsDlg::_onResourceCheck(unsigned int type)
 {
-    while (!_m_aResourceCheck[type].GetCheck()) {
+    if (!_m_aResourceCheck[type].GetCheck()) {
         if (!_m_abPotentialResource[type])
             return;
         _m_abPotentialResource.set(type, false);
         if (--_m_numPotentialResources != 0)
             return;
+        unsigned int nextType = type;
         do {
-            if (++type >= kNumGameResourceTypes)
-                type = 0;
-        } while (type == eResourceWood);
-        _m_aResourceCheck[type].SetCheck(1);
+            if (++nextType >= kNumGameResourceTypes)
+                nextType = 0;
+        } while (nextType == eResourceWood);
+        _m_aResourceCheck[nextType].SetCheck(1);
+        _onResourceCheck(nextType);
+        return;
     }
     if (!_m_abPotentialResource[type]) {
         _m_abPotentialResource.set(type, true);
@@ -175,3 +180,10 @@ void TAbandonedMinePropsDlg::OnRes7Check()
 {
     _onResourceCheck(6);
 }
+
+// The first object to instantiate them owns the string's destructor, which
+// only unwind funclets call, and the exception destructor that
+// out_of_range's and invalid_argument's fold into.
+VA_COMPGEN(0x0040167a, 0x8, IMPLICIT_DTOR, basic_string)
+
+VA_COMPGEN(0x004018f6, 0x1c, IMPLICIT_DTOR, logic_error)

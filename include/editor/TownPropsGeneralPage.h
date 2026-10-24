@@ -4,7 +4,7 @@
 // The sheet implements its parent interface, which the page tells when the
 // custom name turns blank or not. Layout from the image: the controls from
 // 0x8c, the DDX type, hero class and name, custom-name flag and name at
-// 0x230, then the parent sheet, the maps, the town's reference, the
+// 0x230, then the parent sheet, the maps, the town's layer flag and ID, the
 // original town, the main-town and blank-name flags, the custom name and
 // the modified flags (0x268 bytes, the sheet's new).
 #ifndef HOMM3_EDITOR_TOWNPROPSGENERALPAGE_H
@@ -68,7 +68,8 @@ private:
     TTownPropsGeneralPageParentSheet* _m_pParentSheet;
     const TGameMap& _m_oldMap;
     TGameMap& _m_newMap;
-    TMapObjectRef _m_townRef;
+    bool _m_bSecondLayer;
+    unsigned int _m_objectID;
     const TTown* _m_pOldTown;
     bool _m_bIsMainTown;
     bool _m_bBlankName;

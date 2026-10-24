@@ -231,6 +231,13 @@ bool TDoubleTypeSingleExtraPattern::matches(const TGameObject& object) const
     return (object.getType() == _m_type1 || object.getType() == _m_type2) && object.getExtra() == _m_extra;
 }
 
+// Residual (99.41%): C2's root budget runs out three TArtifactPattern sites
+// later than retail. Our trace (cb 7371, budget 14742) expands 40 artifact
+// constructors, the last at budget 83; retail's 37 need 156..227 less budget
+// before them, for example one more tuple in each of the 166 general-pattern
+// constructors, or a root about 80..110 tuples smaller. Enum-typed general
+// constructor parameters do not compile: the tables mix the retail and
+// Dreamcast object-type enums.
 VA(0x0041a858, 0x2c57)
 TPatterns::TPatterns()
 {

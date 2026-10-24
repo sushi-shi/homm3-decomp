@@ -131,12 +131,14 @@ s32 TRmgPatternTerrainRule::selectTransitionFrame(
     TRmgTerrainFlip& selectedFlip,
     s32 oldFrame)
 {
+    s32 frame;
     if (oldFrame == -1 || m_entries[oldFrame].m_transition != transition) {
         TRmgTerrainPatternRange& range = m_ranges[transition * 2];
-        oldFrame = rand() % range.m_frameCount + range.m_firstFrame;
-    }
+        frame = rand() % range.m_frameCount + range.m_firstFrame;
+    } else
+        frame = oldFrame;
     selectedFlip = requestedFlip;
-    return oldFrame;
+    return frame;
 }
 
 DATA(0x006a4158)
@@ -351,6 +353,10 @@ s32 getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
 
+// Loki's flip-negation operator recovers the editor's indexed object lifetime.
+// Making flips const instead lowers the game to 99.5904%; sharing one order
+// pointer across the loops does not change either image's selector score.
+VA_AT(h3maped, 0x004bb075, 0x558)
 VA(0x005b3e80, 0x75f)
 MAC_ADDRESS(0x2552e8, 0x980)  // fastcall call at 0x5b5f5b; retail-only
 s32 selectTerrainTransition(
@@ -406,7 +412,7 @@ s32 selectTerrainTransition(
                 *flip = flips[i];
                 return SHAPE_E_HARD_SW_BLEND;
             } else {
-                *flip = makeTerrainFlip(!flips[i].m_flipX, !flips[i].m_flipY);
+                *flip = !flips[i];
                 return SHAPE_N_W_HARD;
             }
         }
@@ -416,7 +422,7 @@ s32 selectTerrainTransition(
                 *flip = flips[i];
                 return SHAPE_S_HARD_NE_BLEND;
             } else {
-                *flip = makeTerrainFlip(!flips[i].m_flipX, !flips[i].m_flipY);
+                *flip = !flips[i];
                 return SHAPE_N_W_HARD;
             }
         }
@@ -680,6 +686,24 @@ void TRmgTerrainPainter::paintRectangle(
     }
 }
 
+// Mac retains this adapter in both point painting and terrain repair. Loki's
+// layer overload of computeAdjacentDirs performs the same dimension lookup.
+// Only this TU expands it on Windows, so keep one ordinary source body.
+MAC_ADDRESS(0x258a64, 0x3c)
+void computeAdjacentDirs(
+    const TRmgTerrainPainter* painter, const TTilePoint& point, bool (&available)[8])
+{
+    ::computeAdjacentDirs(painter->getWidth(), painter->getHeight(),
+                          point.x(), point.y(), available);
+}
+
+// Coordinate accessors preserve the cardinal probes' value temporaries when
+// the native neighbour-mask adapter is present. The editor is exact; the game
+// now reaches 99.6184% with the combined repair guard. The loop erase expands
+// the three-argument std::_Distance into its category overload; retail keeps
+// the wrapper call. Value accessors for the signed loop-point origin lower
+// the game to 90.4250%, and its converting constructor gives 87.0199%.
+VA_AT(h3maped, 0x004bb74b, 0x2c8)
 VA(0x005b4b20, 0x5cb)
 MAC_ADDRESS(0x256014, 0x580) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
@@ -693,32 +717,32 @@ void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
         m_otherTerrainPoints.erase(point);
 
     if (g_rmgTerrainRules[m_paintTerrain]->m_allowsSeparatedNeighbours) {
-        if (point.m_y > 0) {
-            TTilePoint nearby(point.m_x, point.m_y - 1);
+        if (point.y() > 0) {
+            TTilePoint nearby(point.x(), point.y() - 1);
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
                 && !isHorizontalGap(nearby)) {
                 m_repairPoints.erase(nearby);
                 queueOtherTerrainNeighbours(nearby);
             }
         }
-        if (point.m_y < m_size.m_y - 1) {
-            TTilePoint nearby(point.m_x, point.m_y + 1);
+        if (point.y() < getHeight() - 1) {
+            TTilePoint nearby(point.x(), point.y() + 1);
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
                 && !isHorizontalGap(nearby)) {
                 m_repairPoints.erase(nearby);
                 queueOtherTerrainNeighbours(nearby);
             }
         }
-        if (point.m_x > 0) {
-            TTilePoint nearby(point.m_x - 1, point.m_y);
+        if (point.x() > 0) {
+            TTilePoint nearby(point.x() - 1, point.y());
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
                 && !isVerticalGap(nearby)) {
                 m_repairPoints.erase(nearby);
                 queueOtherTerrainNeighbours(nearby);
             }
         }
-        if (point.m_x < m_size.m_x - 1) {
-            TTilePoint nearby(point.m_x + 1, point.m_y);
+        if (point.x() < getWidth() - 1) {
+            TTilePoint nearby(point.x() + 1, point.y());
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
                 && !isVerticalGap(nearby)) {
                 m_repairPoints.erase(nearby);
@@ -726,13 +750,12 @@ void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
             }
         }
     } else {
-        b8 neighbourExists[TILE_DIR_COUNT];
-        buildTileNeighbourMask(
-            m_size.m_x, m_size.m_y, point.m_x, point.m_y, neighbourExists);
+        bool neighbourExists[TILE_DIR_COUNT];
+        computeAdjacentDirs(this, point, neighbourExists);
         for (u32 direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (!neighbourExists[direction])
                 continue;
-            TTilePoint nearby = TPoint<int>(static_cast<int>(point.m_x), static_cast<int>(point.m_y)) + g_tileDirections[direction];
+            TTilePoint nearby = TPoint<int>(static_cast<int>(point.m_x), static_cast<int>(point.m_y)) + akAdjOffset[direction];
             if (isPaintTerrain(nearby))
                 if (m_repairPoints.find(nearby) != m_repairPoints.end()) {
                     if (!needsTerrainRepair(nearby)) {
@@ -810,28 +833,21 @@ b8 TRmgTerrainPainter::isVerticalGap(const TTilePoint& point)
     return isVerticalGap(point, getTerrain(point));
 }
 
-// The repeated four-check expansion in RepairTerrainPoint and the painter
-// worklist decides whether a neighbour itself needs repair. The boundary
-// and role are inferred from retail; there is no Dreamcast counterpart.
-// Return the separation helper's existing 0/1 result directly after the
-// guards. Booleanizing it through &&, != 0, or a final conditional 1/0
-// instead changes the two destructors' cmp al,bl into test al,al. This one
-// comparison was their final raw-byte difference (549 and 521 bytes).
-// An else-if chain preserves those direct byte returns and raises the
-// repairTerrainPoint caller from 89.9680% to 90.0961% with no collateral.
-// Six predicate forms over ten worklist parents, followed by six helper
-// orders over ten joint parents, isolate this gain; keep the original order.
+// The repeated repair predicate has no Dreamcast counterpart. Loki's
+// isInvalid combines the two gap checks; the editor likewise sends both
+// successes to one byte-return block. This matches all 79 editor bytes and
+// improves the game's paintPoint expansion to 99.6184%. Separate guards or
+// an else-if chain leave the editor at 85.4688% in the current source.
+// Keep the separation helper's byte result as the direct final return:
+// booleanizing it changed the exact destructor comparisons in prior probes.
 MAC_ADDRESS(0x2588c4, 0x1a0)
 b8 TRmgTerrainPainter::needsTerrainRepair(const TTilePoint& point)
 {
-    if (isHorizontalGap(point))
+    if (isHorizontalGap(point) || isVerticalGap(point))
         return 1;
-    else if (isVerticalGap(point))
-        return 1;
-    else if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
+    if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
         return 0;
-    else
-        return hasSeparatedNeighbours(point);
+    return hasSeparatedNeighbours(point);
 }
 
 // Repair a one-cell terrain gap, then merge all but the largest remaining
@@ -886,6 +902,12 @@ b8 TRmgTerrainPainter::needsTerrainRepair(const TTilePoint& point)
 // coordinate accessors in both gap predicates, reaches 99.1821%. All 1576
 // bytes align except an ESI/EDI permutation; frame, scalar copies and all
 // 46 calls agree. The accessor refers to the painter member, not a temporary.
+// The repaint loop tests the selected gap's end in its condition, as Loki
+// does and Mac 0x2570d0 reloads it. A separately named end extends its lifetime
+// and changes the editor's loop allocation (92.5641%); the condition recovers
+// all 715 editor bytes while preserving the game's 99.1821%. Shared gap indices
+// and named coordinate-value origins do not improve the game residual.
+VA_AT(h3maped, 0x004bbd01, 0x2cb)
 VA(0x005b5440, 0x628)
 MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void TRmgTerrainPainter::repairTerrainPoint(const TTilePoint& point)
@@ -945,9 +967,8 @@ void TRmgTerrainPainter::repairTerrainPoint(const TTilePoint& point)
         }
 
     gapsBuilt:
-        b8 neighbourExists[TILE_DIR_COUNT];
-        buildTileNeighbourMask(getWidth(), getHeight(), point.m_x, point.m_y,
-                               neighbourExists);
+        bool neighbourExists[TILE_DIR_COUNT];
+        computeAdjacentDirs(this, point, neighbourExists);
         do {
             u32 smallest = 0;
             u32 smallestWeight = gaps[0].m_weight;
@@ -959,12 +980,12 @@ void TRmgTerrainPainter::repairTerrainPoint(const TTilePoint& point)
                     }
                 }
             }
-            u32 end =
-                (gaps[smallest].m_start + gaps[smallest].m_length) % TILE_DIR_COUNT;
-            for (direction = gaps[smallest].m_start; direction != end;
+            for (direction = gaps[smallest].m_start;
+                 direction != (gaps[smallest].m_start + gaps[smallest].m_length)
+                     % TILE_DIR_COUNT;
                  direction = (direction + 1) % TILE_DIR_COUNT) {
                 if (neighbourExists[direction])
-                    paintPoint(TPoint<int>(point) + g_tileDirections[direction]);
+                    paintPoint(TPoint<int>(point) + akAdjOffset[direction]);
             }
             --gapCount;
             for (u32 gap = smallest; gap < gapCount; ++gap)
@@ -979,6 +1000,9 @@ void TRmgTerrainPainter::repairTerrainPoint(const TTilePoint& point)
 //   . . .
 //   . C o
 //   o o o
+// Point value accessors and the final buffer index directly in the condition
+// recover the editor's row arithmetic. Loki likewise has no separate index
+// local there; the shared source matches all 1495 editor and 2215 game bytes.
 VA(0x005b5a70, 0x8a7)
 MAC_ADDRESS(0x257214, 0xd54)
 void TRmgTerrainPainter::paintTransitions()
@@ -986,23 +1010,23 @@ void TRmgTerrainPainter::paintTransitions()
     std::vector<b8> edgeCounts(getWidth() * getHeight());
     TTilePoint point;
 
-    for (point.y(0); point.m_y < getHeight() - 1; point.y(point.y() + 1)) {
-        s32 terrain = getTerrain(TTilePoint(0, point.m_y));
+    for (point.y(0); point.y() < getHeight() - 1; point.y(point.y() + 1)) {
+        s32 terrain = getTerrain(TTilePoint(0, point.y()));
 
-        if (getTerrain(TTilePoint(1, point.m_y)) != terrain) {
+        if (getTerrain(TTilePoint(1, point.y())) != terrain) {
             ++edgeCounts[point.y() * getWidth()];
             ++edgeCounts[point.y() * getWidth() + 1];
         }
-        if (getTerrain(TTilePoint(1, point.m_y + 1)) != terrain) {
+        if (getTerrain(TTilePoint(1, point.y() + 1)) != terrain) {
             ++edgeCounts[point.y() * getWidth()];
             ++edgeCounts[(point.y() + 1) * getWidth() + 1];
         }
-        if (getTerrain(TTilePoint(0, point.m_y + 1)) != terrain) {
+        if (getTerrain(TTilePoint(0, point.y() + 1)) != terrain) {
             ++edgeCounts[point.y() * getWidth()];
             ++edgeCounts[(point.y() + 1) * getWidth()];
         }
 
-        for (point.x(1); point.m_x < getWidth() - 1; point.x(point.x() + 1)) {
+        for (point.x(1); point.x() < getWidth() - 1; point.x(point.x() + 1)) {
             terrain = getTerrain(point);
 
             TTilePoint east(point.x() + 1, point.y());
@@ -1040,7 +1064,7 @@ void TRmgTerrainPainter::paintTransitions()
         }
     }
 
-    for (point.x(0); point.m_x < getWidth() - 1; point.x(point.x() + 1)) {
+    for (point.x(0); point.x() < getWidth() - 1; point.x(point.x() + 1)) {
         s32 terrain = getTerrain(point);
         TTilePoint east(point.x() + 1, point.y());
         if (getTerrain(east) != terrain) {
@@ -1049,11 +1073,9 @@ void TRmgTerrainPainter::paintTransitions()
         }
     }
 
-    for (point.y(0); point.m_y < getHeight(); point.y(point.y() + 1)) {
-        for (point.x(0); point.m_x < getWidth(); point.x(point.x() + 1)) {
-            u32 index = point.y() * getWidth() + point.x();
-
-            if (edgeCounts[index] > 0) {
+    for (point.y(0); point.y() < getHeight(); point.y(point.y() + 1)) {
+        for (point.x(0); point.x() < getWidth(); point.x(point.x() + 1)) {
+            if (edgeCounts[point.y() * getWidth() + point.x()] > 0) {
                 s32 neighbours[8];
                 buildNeighbourKinds(point, neighbours);
 
@@ -1206,6 +1228,10 @@ void TRmgTerrainPainter::buildMatchingNeighbourMask(
 //   . # .
 //   . C .
 //   . # .
+// Loki and Mac 0x25888c test the final run before advancing, then return
+// false after wrapping. This restores the editor's return-block order and
+// keeps the game exact. Removing the shared exit alone leaves editor 90.87%
+// and game 99.75%; the complete final scan makes the direct returns exact.
 VA(0x005b6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
 b8 TRmgTerrainPainter::hasSeparatedNeighbours(const TTilePoint& point)
@@ -1215,29 +1241,23 @@ b8 TRmgTerrainPainter::hasSeparatedNeighbours(const TTilePoint& point)
     u32 first = 0;
     u32 direction;
     while (matches[first]) {
-        first = (first + 1) % TILE_DIR_COUNT;
-        if (first == 0)
+        if ((first = (first + 1) % TILE_DIR_COUNT) == 0)
             return 0;
     }
     direction = first;
     do {
-        direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first) {
-noSeparation:
+        if ((direction = (direction + 1) % TILE_DIR_COUNT) == first)
             return 0;
-        }
     } while (!matches[direction]);
     do {
-        direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first)
-            goto noSeparation;
+        if ((direction = (direction + 1) % TILE_DIR_COUNT) == first)
+            return 0;
     } while (matches[direction]);
-    while (!matches[direction]) {
-        direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first)
-            goto noSeparation;
-    }
-    return 1;
+    do {
+        if (matches[direction])
+            return 1;
+    } while ((direction = (direction + 1) % TILE_DIR_COUNT) != first);
+    return 0;
 }
 
 VA(0x005b68a0, 0x2ff)

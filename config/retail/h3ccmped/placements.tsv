@@ -3,7 +3,7 @@
 # census, manifest or shared-source change.
 # generator: homm3.census.placements
 # exe: h3ccmped.exe sha256=93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1 size=1212416
-# date: 2026-10-23
+# date: 2026-10-24
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	kind	name	unit	linkage	evidence
 0x00001000	0x9	func	?setCreatureType@TCreatureStack@@QAEXW4TCreatureType@@@Z	Army	external	referenced by 0x0001ec60 at +0x54
@@ -36,7 +36,6 @@ rva	size	kind	name	unit	linkage	evidence
 0x00002360	0x122	func	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	artifact	internal	masked body (290 bytes, 16 relocations) unique at a census start
 0x000024a0	0x2c5	func	__h3cg$artifact$static_ctor$g_combinationArtifactTable	artifact	external	masked body (709 bytes, 24 relocations) unique at a census start
 0x00002780	0x14f	func	__h3cg$artifact$static_ctor$g_artifactSlotMasks	artifact	external	masked body (335 bytes, 30 relocations) unique at a census start
-0x000028d0	0x5f7	func	?InitializeArtifactTraitsTable@@YA_NXZ	artifact	external	referenced by ?InitInstance@TCampaignEditorApp@@UAEHXZ at +0x41f
 0x00002ef0	0x16	func	__h3cg$artifact$static_dtor$artifactStrings	artifact	external	referenced by ?InitializeArtifactTraitsTable@@YA_NXZ at +0xd1
 0x00002f10	0x12	func	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	artifact	external	masked body (18 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
 0x00002f30	0x5d	func	?set@?$bitset@$0BD@@std@@QAEAAV12@I_N@Z	artifact	external	masked body (93 bytes, 1 relocations) unique at a census start
@@ -115,7 +114,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000afc0	0x18	func	??C?$TRefCountingPtr@V_TImpl@TCampaign@@@@QAEPAV_TImpl@TCampaign@@XZ	Campaign	external	referenced by ?setScenarioMap@TCampaign@@QAEXHV?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z at +0x42
 0x0000afe0	0x63	func	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	Campaign	external	masked body (99 bytes, 1 relocations) unique at a census start
 0x0000b050	0x16	func	??0?$auto_ptr@D@std@@QAE@ABV01@@Z	CampaignDoc	external	masked body (22 bytes, 0 relocations) unique at a census start; ICF-folded with 3 identical bodies
-0x0000b070	0x20	func	??1?$auto_ptr@VTScenarioPrologue@@@std@@QAE@XZ	Campaign	external	referenced by ?importText@_TImpl@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z at +0xa19
+0x0000b070	0x20	func	??1?$auto_ptr@VTScenarioPrologue@@@std@@QAE@XZ	Campaign	external	referenced by ??0_TImpl@TCampaign@@QAE@H@Z at +0x13c
 0x0000b090	0x18	func	??C?$TRefCountingPtr@V_TImpl@TScenario@@@@QAEPAV_TImpl@TScenario@@XZ	Campaign	external	referenced by ?setPrologue@TScenario@@QAEXV?$auto_ptr@VTScenarioPrologue@@@std@@@Z at +0x3d
 0x0000b0b0	0x4d	func	??1?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAE@XZ	Campaign	external	masked body (77 bytes, 1 relocations) unique at a census start
 0x0000b170	0x38	func	??1?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAE@XZ	Campaign	external	masked body (56 bytes, 2 relocations) unique at a census start
@@ -126,7 +125,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000b300	0x30	func	?_Ucopy@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@IAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PBV32@0PAV32@@Z	Campaign	external	masked body (48 bytes, 0 relocations) unique at a census start
 0x0000b330	0x28	func	??0?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@@Z	Campaign	external	referenced by ??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z at +0xa4
 0x0000b360	0xc	func	?end@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QBE?AVconst_iterator@12@XZ	Campaign	external	masked body (12 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
-0x0000b370	0x127	func	?insert@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@_N@2@ABU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@Z	Campaign	external	masked body (295 bytes, 7 relocations) at 2 census starts; its referents agree with retail's at this one only
+0x0000b370	0x127	func	?insert@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@_N@2@ABU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@Z	Campaign	external	referenced by ??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z at +0x1ab
 0x0000b4a0	0x139	func	?erase@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AViterator@12@V312@0@Z	Campaign	external	masked body (313 bytes, 17 relocations) unique at a census start
 0x0000b5e0	0x4b	func	?find@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	Campaign	external	masked body (75 bytes, 1 relocations) unique at a census start
 0x0000b630	0x25	func	?_Tidy@?$bitset@$0JM@@std@@AAEXK@Z	Campaign	external	masked body (37 bytes, 0 relocations) unique at a census start
@@ -152,7 +151,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000d0a0	0xae	func	?_Erase@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@IAEXPAU_Node@12@@Z	Campaign	external	referenced by ?erase@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@QAE?AViterator@12@V312@0@Z at +0x7a
 0x0000d150	0x108	func	?_Copy@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEPAU_Node@12@PAU312@0@Z	Campaign	external	masked body (264 bytes, 13 relocations) unique at a census start
 0x0000d260	0x47	func	?_Lbound@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IBEPAU_Node@12@ABH@Z	Campaign	external	masked body (71 bytes, 3 relocations) unique at a census start
-0x0000d2b0	0xb7	func	?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	Campaign	external	masked body (183 bytes, 10 relocations) at 2 census starts; its referents agree with retail's at this one only
+0x0000d2b0	0xb7	func	?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	Campaign	external	referenced by ?insert@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@_N@2@ABU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@Z at +0xcb
 0x0000d370	0xa7	func	?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXXZ	Campaign	external	referenced by ?erase@?$_Tree@HU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@U_Kfn@?$map@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@2@U?$less@H@2@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AViterator@12@V312@0@Z at +0x106
 0x0000d420	0x25	func	??1?$TRefCountingPtr@V_TImpl@TCampaign@@@@QAE@XZ	Campaign	external	masked body (37 bytes, 2 relocations) at 3 census starts; its referents agree with retail's at this one only
 0x0000d450	0x151	func	?_split@?$TRefCountingPtr@V_TImpl@TCampaign@@@@AAEXXZ	Campaign	external	masked body (337 bytes, 18 relocations) unique at a census start
@@ -185,7 +184,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x0000e680	0x74	func	?opfx@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE_NXZ	resourcemanager	external	masked body (116 bytes, 1 relocations) unique at a census start
 0x0000e700	0x28a	func	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z	Campaign	external	masked body (650 bytes, 10 relocations) unique at a census start
 0x0000e990	0xc2	func	??0?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@V?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	Campaign	external	masked body (194 bytes, 11 relocations) unique at a census start
-0x0000ea60	0x25	func	??1?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@XZ	Campaign	external	masked body (37 bytes, 2 relocations) at 3 census starts; its referents agree with retail's at this one only
+0x0000ea60	0x25	func	??1?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@XZ	Campaign	external	referenced by ??0_TImpl@TCampaign@@QAE@H@Z at +0x171
 0x0000ea90	0x59	func	?copy@std@@YAPAVTScenario@@PAV2@00@Z	Campaign	external	masked body (89 bytes, 2 relocations) unique at a census start
 0x0000eaf0	0x1a	func	?_Construct@std@@YAXPAV?$auto_ptr@VTScenarioStartingBonus@@@1@ABV21@@Z	Campaign	external	masked body (26 bytes, 0 relocations) unique at a census start
 0x0000eb10	0x17	func	?_Construct@std@@YAXPAUTChoice@TScenarioOptionsCrossoverScenario@@ABU23@@Z	Campaign	external	masked body (23 bytes, 0 relocations) unique at a census start; ICF-folded with 1 identical bodies
@@ -352,13 +351,16 @@ rva	size	kind	name	unit	linkage	evidence
 0x0001c3d0	0x1e	func	??_GCEdit@@UAEPAXI@Z	CampaignPropsDlg	external	vtable of CEdit (RTTI) slot 1
 0x0001ca80	0x1ad	func	?InitializeCreatureTypeTraitsTable@@YAEXZ	creaturetype	external	masked body (429 bytes, 14 relocations) unique at a census start
 0x0001cc30	0x31a	func	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	external	masked body (794 bytes, 52 relocations) unique at a census start
+0x0001cf50	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypeAbilities	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x2b2
+0x0001cf70	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypePluralNames	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xe0
+0x0001cf90	0x17	func	__h3cg$creaturetype$static_dtor$creatureTypeNames	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x4d
 0x0001cfe0	0x1e	func	??_GT16bppDIBSection@@UAEPAXI@Z	DIBSection	external	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 0
 0x0001d000	0x5b	func	??1?$T16bppBitmapBase@K@@UAE@XZ	DIBSection	external	masked prefix (63 fixed bytes agree, 91 compiled, 91 retail)
 0x0001d060	0x28	func	??0T16bppDIBSection@@QAE@XZ	DIBSection	external	masked body (40 bytes, 3 relocations) unique at a census start
 0x0001d090	0xa5	func	??0T16bppDIBSection@@QAE@II@Z	DIBSection	external	masked body (165 bytes, 8 relocations) unique at a census start
 0x0001d140	0xb2	func	??1T16bppDIBSection@@UAE@XZ	DIBSection	external	masked body (178 bytes, 12 relocations) unique at a census start
 0x0001d200	0xb8	func	??4T16bppDIBSection@@UAEAAV0@ABV0@@Z	DIBSection	external	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 5
-0x0001d2c0	0x196	func	?allocate@T16bppDIBSection@@UAEPAGII@Z	DIBSection	external	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 2
+0x0001d2c0	0x196	func	?allocate@T16bppDIBSection@@UAEPAGII@Z	DIBSection	external	masked body (406 bytes, 18 relocations) unique at a census start
 0x0001d460	0x12	func	?free@T16bppDIBSection@@UAEXPAG@Z	DIBSection	external	vtable ??_7T16bppDIBSection@@6B?$T16bppBitmapBase@K@@@ stored by ??0T16bppDIBSection@@QAE@XZ slot 3
 0x0001d490	0x20	func	??_G?$TBitmapBase@G@@UAEPAXI@Z	DIBSection	external	vtable of ?$TBitmapBase@G (RTTI) slot 0
 0x0001d4b0	0x1e	func	??_G?$TBitmap@GK@@UAEPAXI@Z	DIBSection	external	vtable of ?$TBitmap@GK (RTTI) slot 0
@@ -437,8 +439,12 @@ rva	size	kind	name	unit	linkage	evidence
 0x000264b0	0x108	func	?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	internal	masked body (264 bytes, 18 relocations) unique at a census start
 0x000265c0	0x9	func	??0TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x2f; ICF-folded with 2 identical bodies
 0x000265d0	0xa	func	??1TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	creaturetype	external	referenced by ?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x28; ICF-folded with 2 identical bodies
+0x000265e0	0x17	func	__h3cg$herodefs$static_dtor$heroStrings	herodefs	external	referenced by ?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x49
 0x00026600	0x166	func	?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	internal	masked body (358 bytes, 18 relocations) unique at a census start
+0x00026770	0x14	func	__h3cg$herodefs$static_dtor$heroClassStrings	herodefs	external	referenced by ?InitializeHeroClassTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x42
 0x00026790	0x149	func	?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	herodefs	internal	masked body (329 bytes, 22 relocations) unique at a census start
+0x000268e0	0x14	func	__h3cg$herodefs$static_dtor$secondarySkillLevelNames	herodefs	external	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0xce
+0x00026900	0x14	func	__h3cg$herodefs$static_dtor$secondarySkillNames	herodefs	external	referenced by ?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z at +0x46
 0x00026ec0	0x4c	func	??1?$pair@VCString@@V1@@std@@QAE@XZ	MainFrame	external	masked prefix (52 fixed bytes agree, 76 compiled, 76 retail)
 0x00026f10	0x4c	func	??1?$pair@$$CBVCString@@$$CBV1@@std@@QAE@XZ	MainFrame	external	referenced by ?erase@?$_Tree@IU?$pair@$$CBIU?$pair@$$CBVCString@@$$CBV1@@std@@@std@@U_Kfn@?$map@IU?$pair@$$CBVCString@@$$CBV1@@std@@U?$less@I@2@V?$allocator@U?$pair@$$CBVCString@@$$CBV1@@std@@@2@@2@U?$less@I@2@V?$allocator@U?$pair@$$CBVCString@@$$CBV1@@std@@@2@@std@@QAE?AViterator@12@V312@0@Z at +0x84
 0x00026f60	0x4d	func	??1?$pair@$$CBIU?$pair@$$CBVCString@@$$CBV1@@std@@@std@@QAE@XZ	MainFrame	external	masked body (77 bytes, 6 relocations) unique at a census start
@@ -911,7 +917,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000988d8	0xc	data	__CTA2?AVlogic_error@std@@	resource	external	referenced by __TI2?AVlogic_error@std@@ at +0xc
 0x000988e8	0x10	data	__TI2?AVlogic_error@std@@	resource	external	referenced by ?_Doraise@logic_error@std@@MBEXXZ at +0x12
 0x00098a80	0x14	data	__CTA4?AVTRuntimeError@@	DIBSection	external	referenced by __TI4?AVTRuntimeError@@ at +0xc
-0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	external	referenced by ?InitializeGameResourceTypeTraitsTable@@YAXXZ at +0xb9
+0x00098a98	0x10	data	__TI4?AVTRuntimeError@@	DIBSection	external	referenced by ?allocate@T16bppDIBSection@@UAEPAGII@Z at +0x148
 0x00098b68	0x1c	data	__CT??_R0?AVTGDIObjectSelectorError@@@8??0TGDIObjectSelectorError@@QAE@ABV0@@Z32	MemoryDC	external	referenced by __CTA6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@ at +0x8
 0x00098b88	0x1c	data	__CT??_R0?AVTError@?$TGDIObjectSelector@VCBitmap@@@@@8??0TError@?$TGDIObjectSelector@VCBitmap@@@@QAE@ABV01@@Z32	MemoryDC	external	referenced by __CTA6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@ at +0x4
 0x00098ba8	0x1c	data	__CTA6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@	MemoryDC	external	referenced by __TI6?AVTError@?$TGDIObjectSelector@VCBitmap@@@@ at +0xc
@@ -933,6 +939,16 @@ rva	size	kind	name	unit	linkage	evidence
 0x00099298	0x1c	data	__CT??_R0?AVTImportTextFailure@TCampaign@@@8??0TImportTextFailure@TCampaign@@QAE@ABV01@@Z12	Campaign	external	referenced by __CTA2?AVTImportTextFailure@TCampaign@@ at +0x4
 0x000992b8	0xc	data	__CTA2?AVTImportTextFailure@TCampaign@@	Campaign	external	referenced by __TI2?AVTImportTextFailure@TCampaign@@ at +0xc
 0x000992c8	0x10	data	__TI2?AVTImportTextFailure@TCampaign@@	Campaign	external	referenced by ?importText@_TImpl@TCampaign@@QAEXAAV?$basic_istream@DU?$char_traits@D@std@@@std@@H@Z at +0x103
+0x000998e8	0x1c	data	__CT??_R0?AVTMapFileIsInvalid@TCampaignScenarioMap@@@8??0TMapFileIsInvalid@TCampaignScenarioMap@@QAE@ABV01@@Z12	Campaign	external	referenced by __CTA3?AVTMapFileIsInvalid@TCampaignScenarioMap@@ at +0x4
+0x00099908	0x10	data	__CTA3?AVTMapFileIsInvalid@TCampaignScenarioMap@@	Campaign	external	referenced by __TI3?AVTMapFileIsInvalid@TCampaignScenarioMap@@ at +0xc
+0x00099918	0x1c	data	__CT??_R0?AVTMapIsUnplayable@TCampaignScenarioMap@@@8??0TMapIsUnplayable@TCampaignScenarioMap@@QAE@ABV01@@Z12	Campaign	external	referenced by __CTA3?AVTMapIsUnplayable@TCampaignScenarioMap@@ at +0x4
+0x00099938	0x10	data	__CTA3?AVTMapIsUnplayable@TCampaignScenarioMap@@	Campaign	external	referenced by __TI3?AVTMapIsUnplayable@TCampaignScenarioMap@@ at +0xc
+0x00099948	0x1c	data	__CT??_R0?AVTCreateFailure@TCampaignScenarioMap@@@8??0TCreateFailure@TCampaignScenarioMap@@QAE@ABV01@@Z12	Campaign	external	referenced by __CTA3?AVTMapIsUnplayable@TCampaignScenarioMap@@ at +0x8
+0x00099968	0x1c	data	__CT??_R0?AVTMapFileIsIncorrectVersion@TCampaignScenarioMap@@@8??0TMapFileIsIncorrectVersion@TCampaignScenarioMap@@QAE@ABV01@@Z20	Campaign	external	referenced by __CTA3?AVTMapFileIsIncorrectVersion@TCampaignScenarioMap@@ at +0x4
+0x00099988	0x10	data	__CTA3?AVTMapFileIsIncorrectVersion@TCampaignScenarioMap@@	Campaign	external	referenced by __TI3?AVTMapFileIsIncorrectVersion@TCampaignScenarioMap@@ at +0xc
+0x00099998	0x10	data	__TI3?AVTMapFileIsInvalid@TCampaignScenarioMap@@	Campaign	external	referenced by ??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z at +0x4ce
+0x000999a8	0x10	data	__TI3?AVTMapFileIsIncorrectVersion@TCampaignScenarioMap@@	Campaign	external	referenced by ??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z at +0x4a5
+0x000999b8	0x10	data	__TI3?AVTMapIsUnplayable@TCampaignScenarioMap@@	Campaign	external	referenced by ??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z at +0x134
 0x0009a200	0x1c	data	__CT??_R0?AVbad_cast@std@@@8??0bad_cast@std@@QAE@ABV01@@Z12	resourcemanager	external	referenced by __CTA2?AVbad_cast@std@@ at +0x4
 0x0009a220	0xc	data	__CTA2?AVbad_cast@std@@	resourcemanager	external	referenced by __TI2?AVbad_cast@std@@ at +0xc
 0x0009a230	0x10	data	__TI2?AVbad_cast@std@@	resourcemanager	external	referenced by ?_Fput@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@KA?AV?$ostreambuf_iterator@DU?$char_traits@D@std@@@2@V32@AAVios_base@2@DPBDII@Z at +0x367
@@ -967,9 +983,9 @@ rva	size	kind	name	unit	linkage	evidence
 0x000a6810	0xd	data	??_C@_0N@DDKE@TCampaignDoc?$AA@	CampaignDoc	external	referenced by ?classTCampaignDoc@TCampaignDoc@@2UCRuntimeClass@@B at +0x0
 0x000a6820	0x1f	data	??_C@_0BP@IFCN@TCampaignDocInvalidFileVersion?$AA@	CampaignDoc	external	referenced by ?classTCampaignDocInvalidFileVersion@TCampaignDocInvalidFileVersion@@2UCRuntimeClass@@B at +0x0
 0x000a6840	0x18	data	??_C@_0BI@HPHD@TCampaignDocLoadFailure?$AA@	CampaignDoc	external	referenced by ?classTCampaignDocLoadFailure@TCampaignDocLoadFailure@@2UCRuntimeClass@@B at +0x0
-0x000a6858	0x7	data	??_C@_06ELCD@?$HM?$CK?4?$CK?$HM?$HM?$AA@	CampaignDoc	external	referenced by ?promptMapFileName@@YA_NPBDHKAAVCString@@@Z at +0x151
-0x000a6860	0x2	data	??_C@_01KALE@?$HM?$AA@	CampaignDoc	external	referenced by ?promptMapFileName@@YA_NPBDHKAAVCString@@@Z at +0x11f
-0x000a6864	0x3	data	??_C@_02KJNG@?$HM?$CK?$AA@	CampaignDoc	external	referenced by ?promptMapFileName@@YA_NPBDHKAAVCString@@@Z at +0xd6
+0x000a6858	0x7	data	??_C@_06ELCD@?$HM?$CK?4?$CK?$HM?$HM?$AA@	CampaignDoc	external	referenced by 0x00010890 at +0x150
+0x000a6860	0x2	data	??_C@_01KALE@?$HM?$AA@	CampaignDoc	external	referenced by 0x00010890 at +0x11e
+0x000a6864	0x3	data	??_C@_02KJNG@?$HM?$CK?$AA@	CampaignDoc	external	referenced by 0x00010890 at +0xd5
 0x000a6d54	0x2	data	??_C@_01ELEL@?$IF?$AA@	CampaignEditorText	external	referenced by 0x00016ea0 at +0x7
 0x000a6d58	0xd	data	??_C@_0N@LOPG@CmpEditr?4txt?$AA@	CampaignEditorText	external	referenced by ?initialize@SText@@YAXXZ at +0x1d
 0x000a6d68	0x148	data	_g_good1RegionTraits	campaignmap	internal	referenced by ?g_campaignMapTraitsImp@@3PAUTCampaignMapTraits@@A at +0x1c
@@ -3650,7 +3666,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000b75d0	0xb	data	??_C@_0L@JML@cpkman?4def?$AA@	creaturetype	external	referenced by 0x000b2488 at +0xc
 0x000b75dc	0x5	data	??_C@_04KIIN@pike?$AA@	creaturetype	external	referenced by 0x000b2488 at +0x8
 0x000b75e4	0xd	data	??_C@_0N@LPEN@crtraits?4txt?$AA@	creaturetype	external	referenced by ?InitializeCreatureTypeTraitsTable@@YAEXZ at +0x2
-0x000b76b0	0x8	data	??_C@_07DAJE@?$CFs?5?9?5?$CFs?$AA@	EditCrossoverScenarioOptionDlg	external	string literal referenced by ?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ
+0x000b76b0	0x8	data	??_C@_07DAJE@?$CFs?5?9?5?$CFs?$AA@	EditCrossoverScenarioOptionDlg	external	referenced by ?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ at +0x12e
 0x000b7858	0x3	data	??_C@_02MECO@?$CFd?$AA@	EditStartingBonusDlg	external	referenced by 0x0001e990 at +0x9f
 0x000b785c	0x2	data	??_C@_01FBAH@1?$AA@	EditStartingBonusDlg	external	referenced by 0x0001eb90 at +0x8a
 0x000b7b2c	0x11	data	??_C@_0BB@PHAF@?$CFs?0?5?$CFs?0?5?$CFs?5?$CFs?5?$CFs?$AA@	EditStartingBonusDlg	external	referenced by 0x000207d0 at +0x10c
@@ -3995,13 +4011,14 @@ rva	size	kind	name	unit	linkage	evidence
 0x000bd120	0xd	data	??_C@_0N@OFON@CmpEdCmd?4txt?$AA@	MainFrame	external	referenced by ??0TCommandTexts@@QAE@XZ at +0x39
 0x000bd240	0x4	data	?akPlayerTraits@@3PBUTPlayerTraits@@B	Player	external	referenced by 0x0002ed80 at +0x2d
 0x000bd244	0xd	data	??_C@_0N@EJOF@plcolors?4txt?$AA@	Player	external	referenced by ?InitializePlayerTraitsTable@@YA_NXZ at +0x8e
+0x000bd254	0x4	data	?akHeroPrimarySkillTraits@@3PAUTPrimarySkillTraits@THero@@A	PrimarySkillTraits	external	referenced by 0x0002e6d0 at +0x48
 0x000bd258	0xd	data	??_C@_0N@GCMA@priskill?4txt?$AA@	PrimarySkillTraits	external	referenced by ?InitializePrimarySkillTraitsTable@@YAXXZ at +0x4f
 0x000bd300	0x2	data	??_C@_01BJG@?6?$AA@	ScenarioPropsGeneralPage	external	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x120
 0x000bd304	0x3	data	??_C@_02PIMC@?$AN?6?$AA@	ScenarioPropsGeneralPage	external	referenced by ?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z at +0x11b
 0x000bd4d8	0x6	data	??_C@_05DFPL@?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e4d0 at +0x69
-0x000bd4e0	0x6	data	??_C@_05JKGE@?$CFs?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	string literal referenced by 0x0002e630
-0x000bd4e8	0x9	data	??_C@_08CELG@?0?5?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	string literal referenced by 0x0002e6d0
-0x000bd4f4	0x7	data	??_C@_06JCBO@?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	string literal referenced by 0x0002e6d0
+0x000bd4e0	0x6	data	??_C@_05JKGE@?$CFs?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e630 at +0x42
+0x000bd4e8	0x9	data	??_C@_08CELG@?0?5?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e6d0 at +0xa6
+0x000bd4f4	0x7	data	??_C@_06JCBO@?$CL?$CFd?5?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002e6d0 at +0x56
 0x000bd694	0xb	data	??_C@_0L@GIMI@?$CFs?5?9?5?$CFs?7?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	referenced by 0x0002ffb0 at +0x78
 0x000bd724	0x6	data	??_C@_05BKBC@?$CFs?7?$CFs?$AA@	ScenarioPropsStartingOptionsPage	external	string literal referenced by 0x00030cc0
 0x000bd760	0x4	data	?akHeroSkillMasteryTraits@@3PAUTSkillMasteryTraits@THero@@A	SkillMasteryTraits	external	referenced by 0x00020360 at +0x9d
@@ -4230,13 +4247,13 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c9758	0x10	data	_infernoGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$infernoGenerator5 at +0x2
 0x000c9768	0x10	data	_infernoGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$infernoGenerator4 at +0x2
 0x000c9778	0x10	data	_confluxGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$confluxGenerator7 at +0x2
-0x000c9788	0x10	data	_castleGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator1 at +0x2
+0x000c9788	0xc	data	_castleGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator1 at +0x2
 0x000c9798	0x10	data	_confluxGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$confluxGenerator5 at +0x2
 0x000c97a8	0x10	data	_infernoGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$infernoGenerator3 at +0x2
 0x000c97b8	0x10	data	_confluxGenerator6	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$confluxGenerator6 at +0x2
 0x000c97c8	0x10	data	_strongholdGenerator2	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$strongholdGenerator2 at +0x2
 0x000c97d8	0x10	data	_fortressGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$fortressGenerator7 at +0x2
-0x000c97e8	0x1f0	data	?aStrongholdBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aStrongholdBuildingTraits at +0x8
+0x000c97e8	0x1ec	data	?aStrongholdBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aStrongholdBuildingTraits at +0x8
 0x000c99d8	0x10	data	_infernoGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$infernoGenerator7 at +0x2
 0x000c99e8	0x10	data	_strongholdGenerator1	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$strongholdGenerator1 at +0x2
 0x000c99f8	0x8	data	_randomGenerator6	TownTypeTraits	internal	referenced by _apRandomGeneratorTraits at +0x14
@@ -4258,7 +4275,7 @@ rva	size	kind	name	unit	linkage	evidence
 0x000c9ea8	0x10	data	_castleGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator3 at +0x2
 0x000c9eb8	0x10	data	_confluxGenerator4	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$confluxGenerator4 at +0x2
 0x000c9ec8	0x10	data	_rampartGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$rampartGenerator7 at +0x2
-0x000c9ed8	0x1ec	data	?aDungeonBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aDungeonBuildingTraits at +0xa
+0x000c9ed8	0x1f0	data	?aDungeonBuildingTraits@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\TownTypeTraits.cpp496021698@@3PAUTBuildingTraits@TTown@@A	TownTypeTraits	external	referenced by __h3cg$TownTypeTraits$static_ctor$aDungeonBuildingTraits at +0xa
 0x000ca0c8	0x10	data	_castleGenerator5	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$castleGenerator5 at +0x2
 0x000ca0d8	0x10	data	_confluxGenerator3	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$confluxGenerator3 at +0x2
 0x000ca0e8	0x10	data	_dungeonGenerator7	TownTypeTraits	internal	referenced by __h3cg$TownTypeTraits$static_ctor$dungeonGenerator7 at +0x2
@@ -4328,6 +4345,14 @@ rva	size	kind	name	unit	linkage	evidence
 0x000cd590	0x4	data	?blue_mask@TPalette16@@0IA	resourcemanager	external	referenced by ?SetPixelFormat@ResourceManager@@YAXKKK@Z at +0x43
 0x000cd59c	0x2	data	?div2mask@CSpriteFrame@@2GA	cspriteframe	external	referenced by ?SetPixelFormat@CSpriteFrame@@SAXIII@Z at +0xb4
 0x000cd5a0	0x2	data	?div4mask@CSpriteFrame@@2GA	cspriteframe	external	referenced by ?SetPixelFormat@CSpriteFrame@@SAXIII@Z at +0xe7
+0x000cde60	0x1c	data	?g_victorLock0@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock0@@YAXXZ at +0x1
+0x000cde88	0x20	data	?g_victorLock1@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock1@@YAXXZ at +0x1
+0x000cdec0	0x20	data	?g_victorLock2@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock2@@YAXXZ at +0x1
+0x000cdf08	0x20	data	?g_victorLock3@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock3@@YAXXZ at +0x1
+0x000ce110	0x20	data	?g_victorLock4@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock4@@YAXXZ at +0x1
+0x000ce1e8	0x20	data	?g_victorLock5@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock5@@YAXXZ at +0x1
+0x000ce228	0x20	data	?g_victorLock6@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock6@@YAXXZ at +0x1
+0x000ce268	0x1c	data	?g_victorLock7@@3UVictorLock@@A	victor	external	referenced by ?victorDestroyLock7@@YAXXZ at +0x1
 0x000ce2a8	0x4	data	?g_victorUseDibSection@@3IA	victor	external	referenced by ?allocimage@@YGHPAUimgdes@@HHH@Z at +0x1
 0x000ce2ac	0x4	data	?g_victorCreateDibSection@@3P6GPAXPAXPBUtagBITMAPINFO@@IPAPAX0K@ZA	victor	external	referenced by ?victorAllocateImage@@YAHPAUimgdes@@HHHI@Z at +0x162
 0x000ce2b0	0x4	data	?g_victorSetDibColorTable@@3P6GIPAXIIPBUtagRGBQUAD@@@ZA	victor	external	referenced by ?victorUploadPalette@@YGHPAUimgdes@@@Z at +0x63

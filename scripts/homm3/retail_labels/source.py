@@ -223,8 +223,13 @@ DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
 #: `CAutoArray` needs both halves - `??1` AND the `??_G` scalar deleting
 #: destructor - because its two instantiations are NOT ICF-folded (each
 #: stores its own vftable) yet still share one join key.
+#: `set` is keyed by its element, its first argument (the comparison and
+#: allocator are the defaults): the map editor's MapView.obj and
+#: HeroPropsGeneralPage.obj each emit two five-byte `~set` jumps to their
+#: trees' destructors.
 SINGLE_ARG_TEMPLATE_DTORS = {"auto_ptr": "auto_ptr",
-                             "cautoarray": "CAutoArray"}
+                             "cautoarray": "CAutoArray",
+                             "set": "set"}
 #: The claim markers a `<Element>_<template>` owner is honoured on, and the
 #: mangled prefix each one's symbols carry.
 TEMPLATE_DTOR_MARKERS = {"$implicit_dtor$": "??1",
@@ -974,7 +979,30 @@ def scan_file(path, functions: set[int],
             rows.append({"rva": rva, "unit": unit, "size": "",
                          "kind": "data", "name": f"data_{rva:x}",
                          "channel": "src-DATA"})
+    _number_repeated_static_dtors(rows)
     return rows
+
+
+def _number_repeated_static_dtors(rows: list[dict]) -> None:
+    """Give same-owner STATIC_DTOR claims their source ordinals.
+
+    A macro that defines one function-local static per expansion gives
+    every datum the same name (MapEditorText's INITIALIZE_TEXT `apBuffer`,
+    one per editor.txt group). Their claims follow the definitions' source
+    order, and the k-th takes the name suffix `$k`: the canonicalizer binds
+    it to the teardown its function registers k-th
+    (`homm3.compare.canonicalize.REPEATED_OWNER_ORDINAL_RE`). A unique
+    owner keeps its plain name.
+    """
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        if row.get("ckind") == "STATIC_DTOR":
+            groups.setdefault(row["owner"], []).append(row)
+    for group in groups.values():
+        if len(group) < 2:
+            continue
+        for ordinal, row in enumerate(group, 1):
+            row["name"] = f"{row['name']}${ordinal}"
 
 
 # --- the IR channel ---------------------------------------------------
@@ -1081,8 +1109,21 @@ def unit_ir_names(path, profiles=None) -> dict | None:
         from homm3.core import paths as image_paths
         return ir_va_names(ir, image_paths.image_key())
     names = ir_va_names(ir)
-    for rva, name in ir_message_map_names(ir, Path(path).read_text()).items():
+    text = Path(path).read_text()
+    for rva, name in ir_message_map_names(ir, text).items():
         names.setdefault(rva, name)
+    # The staged afxmsg_.h reads message-map handlers as null, so a dialog
+    # reached only from another class's handler (TSelectSpellDlg from
+    # TSpellsDlg::OnAddButton) is never used and Clang emits none of its
+    # members. Ask Clang for every declaration only when such a map is left.
+    claimed = {int(match.group(1), 16) - common.IMAGE_BASE
+               for match in MESSAGE_MAP_CLAIM_RE.finditer(text)}
+    if claimed - names.keys():
+        every = clang.emit_ir(path, ["-Xclang", "-femit-all-decls"],
+                              profiles=profiles)
+        if every is not None:
+            for rva, name in ir_message_map_names(every, text).items():
+                names.setdefault(rva, name)
     return names
 
 

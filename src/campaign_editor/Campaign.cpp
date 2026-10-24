@@ -525,7 +525,8 @@ VA(0x00405ce0, 0x195)
 TCampaign::_TImpl::_TImpl(int type)
     : m_type(type), m_bDifficultyChoice(false), m_music(0x22)
 {
-    unsigned int numScenarios = getNumScenarios();
+    // Retail keeps the incoming type through the member initializers.
+    unsigned int numScenarios = g_campaignMapTraits[type].m_numRegions;
     m_scenarios.resize(numScenarios, TScenario(numScenarios));
 }
 
@@ -902,6 +903,10 @@ bool TCampaign::getBDirectPrerequisite(int scenario, int prerequisite) const
     return _m_pImpl->getBDirectPrerequisite(scenario, prerequisite);
 }
 
+// Retail retains only the primary-skills bitset::set call; the current
+// proxy path also retains the spells call (nested budget 82, callee cost 91).
+// Direct bitset::set and a set/reset branch both expand too far (53.2143%
+// versus 84.0714%); preserve the common retained-property helper.
 VA(0x00407e90, 0x4c)
 TScenarioCrossover::TScenarioCrossover()
 {
@@ -981,6 +986,10 @@ TScenarioPrologue::TScenarioPrologue(int movie, int music, const string& text)
 {
 }
 
+// Keeping the erase iterator calls together recovers the native string clear.
+// Remaining: byte arguments are widened into separate scratch registers here;
+// retail reuses EAX. Grouped declarations, chained reads and explicit widening
+// do not close it; the register model finds no source-nameable binding swap.
 VA(0x004085a0, 0x219)
 TRawIStream& operator>>(TRawIStream& stream, TScenarioPrologue& prologue)
 {
@@ -1325,8 +1334,16 @@ void TCampaignScenarioMap::TPlayerInfo::setHeroes(const map<int, string>& newHer
 // fails, and so does one the stream cannot read.
 // The retained custom-hero map receiver is const; version is a scalar value
 // read before constructing the header. Native/candidate unwind maps agree on
-// all 16 states and the const TReadFailure catch. Named map-entry locals did
-// not resolve the remaining string construction/cleanup inlining differences.
+// all 16 states and the const TReadFailure catch. The player-info setters
+// reproduce the retained incorrect-version TCreateFailure and custom-hero
+// name copy, with the heroes map's begin expanded (88.63 -> 99.91).
+// Constructing the stream wrapper after maxVersion but before the try closes
+// the final stack-home swap (100%): retail keeps this wrapper at EBP-0x1c
+// and the custom-hero iterator in pStreamBuf's dead EBP+0xc argument slot.
+// The version scalar is at EBP-0x14 in both. The wrapper only stores its
+// buffer pointer; all reads remain protected by the catch. Constructing it
+// before maxVersion instead gives 98.73%. Earlier version-declaration and
+// direct custom-hero-map traversal probes did not recover these homes.
 VA(0x0040a1f0, 0x4f0)
 TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pStreamBuf, int campaignVersion,
                                            bool bAnyVersion)
@@ -1334,8 +1351,8 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
 {
     int maxVersion = campaignVersion == eCampaignVersionShadowOfDeath ? 28
                      : campaignVersion == eCampaignVersionArmageddonsBlade ? 21 : 14;
+    TRawIStream stream(pStreamBuf);
     try {
-        TRawIStream stream(pStreamBuf);
         long version = readValue<long>(stream);
         if (version > maxVersion || !bAnyVersion && version != 28 && version != 21 && version != 14)
             throw TMapFileIsIncorrectVersion(maxVersion, version);
@@ -1355,11 +1372,11 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
             TPlayerInfo& info = m_aPlayer[player];
             if (slot.m_bHumanPlayable || slot.m_bComputerPlayable) {
                 info.setBPresent(true);
-                info.m_bHumanPlayable = slot.m_bHumanPlayable;
-                info.m_numPlaceholders = slot.m_numPlaceholders;
+                info.setBHumanPlayable(slot.m_bHumanPlayable);
+                info.setNumPlaceholders(slot.m_numPlaceholders);
                 if (slot.m_bHasMainTown) {
                     info.setMainTown(slot.m_mainTownType);
-                    info.m_bGenerateHeroAtMainTown = slot.m_bGenerateHero;
+                    info.setBGenerateHeroAtMainTown(slot.m_bGenerateHero);
                 }
                 map<int, string> heroes;
                 for (vector<TGameMapHeader::THeroIdentity>::const_iterator pHero = slot.m_heroes.begin();
@@ -1370,7 +1387,7 @@ TCampaignScenarioMap::TCampaignScenarioMap(const string& fileName, streambuf* pS
                     heroes.insert(map<int, string>::value_type(pHero->m_heroID, name));
                 }
                 info.setHeroes(heroes);
-                info.m_bHasRandomHero = slot.m_bRandomHero;
+                info.setBHasRandomHero(slot.m_bRandomHero);
             }
         }
     } catch (const TRawIStream::TReadFailure&) {

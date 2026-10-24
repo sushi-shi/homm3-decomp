@@ -161,6 +161,11 @@ TBlackBox::TBlackBox(const TObjectType& objType) : TGameObject(objType), TTreasu
     assert(objType.getType() == EVENT || objType.getType() == BLACK_BOX);
 }
 
+// Complete constructs creature stacks from the stream without default stores.
+// Use the canonical contents accessor, as in Loki Event loading: together
+// these recover the retained reader and final copy-on-write expansion.
+// Normalize each version-specific wire value into a named TArtifact before
+// vector insertion; a cast temporary at push_back changes the stack homes.
 VA(0x00406a80, 0x410)
 TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int version)
     : TGameObject(objType), TTreasure(objType)
@@ -177,12 +182,12 @@ TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int vers
         TPrimarySkillBonuses primarySkillBonuses;
         *pIStream >> experienceBonus >> manaBonus >> moraleBonus >> luckBonus >> resourceQuantities
                   >> primarySkillBonuses;
-        _m_pContents->setExperienceBonus(experienceBonus);
-        _m_pContents->setManaBonus(manaBonus);
-        _m_pContents->setMoraleBonus(moraleBonus);
-        _m_pContents->setLuckBonus(luckBonus);
-        _m_pContents->setResourceQuantities(resourceQuantities);
-        _m_pContents->setPrimarySkillBonuses(primarySkillBonuses);
+        getPContents()->setExperienceBonus(experienceBonus);
+        getPContents()->setManaBonus(manaBonus);
+        getPContents()->setMoraleBonus(moraleBonus);
+        getPContents()->setLuckBonus(luckBonus);
+        getPContents()->setResourceQuantities(resourceQuantities);
+        getPContents()->setPrimarySkillBonuses(primarySkillBonuses);
 
         std::vector<TSecondarySkillRecord> aSecondarySkill;
         signed char numSecondarySkills;
@@ -194,7 +199,7 @@ TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int vers
             *pIStream >> record;
             aSecondarySkill.push_back(record);
         }
-        _m_pContents->setSecondarySkills(aSecondarySkill);
+        getPContents()->setSecondarySkills(aSecondarySkill);
 
         std::vector<TArtifact> aArtifact;
         signed char numArtifacts;
@@ -202,19 +207,19 @@ TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int vers
         aArtifact.reserve(numArtifacts);
         while (numArtifacts > 0) {
             --numArtifacts;
-            int artifact;
+            TArtifact artifact;
             if (version >= 21) {
                 short value;
                 *pIStream >> value;
-                artifact = value;
+                artifact = TArtifact(value);
             } else {
                 signed char value;
                 *pIStream >> value;
-                artifact = value;
+                artifact = TArtifact(value);
             }
-            aArtifact.push_back(TArtifact(artifact));
+            aArtifact.push_back(artifact);
         }
-        _m_pContents->setArtifacts(aArtifact);
+        getPContents()->setArtifacts(aArtifact);
 
         std::vector<SpellID> aSpell;
         signed char numSpells;
@@ -226,7 +231,7 @@ TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int vers
             *pIStream >> spell;
             aSpell.push_back(SpellID(spell));
         }
-        _m_pContents->setSpells(aSpell);
+        getPContents()->setSpells(aSpell);
 
         std::vector<TCreatureStack> aCreatureStack;
         signed char numCreatureStacks;
@@ -234,11 +239,10 @@ TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int vers
         aCreatureStack.reserve(numCreatureStacks);
         while (numCreatureStacks > 0) {
             --numCreatureStacks;
-            TCreatureStack stack;
-            stack.read(pIStream, version);
+            TCreatureStack stack(pIStream, version);
             aCreatureStack.push_back(stack);
         }
-        _m_pContents->setCreatureStacks(aCreatureStack);
+        getPContents()->setCreatureStacks(aCreatureStack);
 
         signed char aReserved[kNumBlackBoxReserved];
         *pIStream >> aReserved;
@@ -249,7 +253,7 @@ TBlackBox::TBlackBox(const TObjectType& objType, TRawIStream* pIStream, int vers
             signed char aReserved[kNumOldBlackBoxReserved];
             *pIStream >> aReserved;
             if (artifact >= 0)
-                _m_pContents->setArtifacts(std::vector<TArtifact>(1, TArtifact(artifact)));
+                getPContents()->setArtifacts(std::vector<TArtifact>(1, TArtifact(artifact)));
         }
     }
 }

@@ -29,6 +29,9 @@ TEditTownEventBuildingsPage::~TEditTownEventBuildingsPage()
 {
 }
 
+// Preserve MFC's text/state/data wrappers. SetItemData, matching Loki's
+// per-node packed row-data operation, recovers all 236 retail bytes; its
+// ordinary expansion gives the native receiver and mask registers.
 VA(0x0041764a, 0xec)
 void TEditTownEventBuildingsPage::_createTree(TBuilding parentBuilding, HTREEITEM hParent)
 {
@@ -38,13 +41,12 @@ void TEditTownEventBuildingsPage::_createTree(TBuilding parentBuilding, HTREEITE
     for (unsigned int building = 0; building < kNumBuildings; building++) {
         if (!akBuildingTraits[building].isDisallowed() && akBuildingTraits[building].m_building == parentBuilding) {
             assert(parentBuilding != building);
-            HTREEITEM hItem = _m_buildingTree.InsertItem(TVIF_TEXT, akBuildingTraits[building].m_pName, 0, 0, 0, 0, 0,
-                                                         hParent, TVI_LAST);
+            HTREEITEM hItem = _m_buildingTree.InsertItem(akBuildingTraits[building].m_pName, hParent, TVI_LAST);
             if (hItem != NULL) {
                 _createTree(TBuilding(building), hItem);
                 if (_m_buildMask[building])
-                    _m_buildingTree.SetItem(hItem, TVIF_STATE, NULL, 0, 0, TVIS_BOLD, TVIS_BOLD, 0);
-                _m_buildingTree.SetItem(hItem, TVIF_PARAM, NULL, 0, 0, 0, 0, MAKELONG(building, _m_buildMask[building]));
+                    _m_buildingTree.SetItemState(hItem, TVIS_BOLD, TVIS_BOLD);
+                _m_buildingTree.SetItemData(hItem, MAKELONG(building, _m_buildMask[building]));
             }
         }
     }
@@ -108,7 +110,8 @@ BOOL TEditTownEventBuildingsPage::OnInitDialog()
     _m_buildMask = _m_event.getBuildMask();
     CPropertyPage::OnInitDialog();
     _createTree();
-    HTREEITEM hItem = _m_buildingTree.GetRootItem();
+    // Retail sends TVM_GETNEXTITEM with TVGN_CHILD and a null parent.
+    HTREEITEM hItem = _m_buildingTree.GetChildItem(NULL);
     _m_buildingTree.SelectItem(hItem);
     return TRUE;
 }

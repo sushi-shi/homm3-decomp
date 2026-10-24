@@ -28,7 +28,8 @@ TTownPropsGeneralPage::TTownPropsGeneralPage(TTownPropsGeneralPageParentSheet* p
       _m_pParentSheet(pParentSheet),
       _m_oldMap(oldMap),
       _m_newMap(newMap),
-      _m_townRef(bSecondLayer, objID),
+      _m_bSecondLayer(bSecondLayer),
+      _m_objectID(objID),
       _m_pOldTown(_getOldTown()),
       _m_bIsMainTown(false),
       _m_bModified(false),
@@ -41,8 +42,12 @@ TTownPropsGeneralPage::TTownPropsGeneralPage(TTownPropsGeneralPageParentSheet* p
     _m_bCustomName = FALSE;
     _m_name = _T("");
     const TPlayerInfo& ownerInfo = _m_oldMap.getPlayers()[_m_pOldTown->getOwner()];
-    _m_bIsMainTown = _m_pOldTown->getOwner() != ePlayerNone && ownerInfo.getMainTownRef() == _m_townRef
-                     && ownerInfo.getBHasMainTown();
+    // Loki TownPropsSheet constructs the comparison reference from layer/ID.
+    // Complete retains separate fields like the sibling town pages and also
+    // tests the generated-hero flag (0x04).
+    _m_bIsMainTown = _m_pOldTown->getOwner() != ePlayerNone
+                     && ownerInfo.getMainTownRef() == TMapObjectRef(_m_bSecondLayer, _m_objectID)
+                     && ownerInfo.getBGenerateHero();
     m_psp.pszTitle = m_strCaption = kGeneralPageCaptionStr;
     m_psp.dwFlags |= PSP_USETITLE;
 }
@@ -80,15 +85,15 @@ THero* TTownPropsGeneralPage::_createHero()
 VA(0x004c56a4, 0x42)
 const TTown* TTownPropsGeneralPage::_getOldTown() const
 {
-    const TGameMap::TLayer& layer = _m_oldMap.getLayer(_m_townRef.getBSecondLayer());
-    return dynamic_cast<const TTown*>(layer.getPObject(_m_townRef.getObjectID()));
+    const TGameMap::TLayer& layer = _m_oldMap.getLayer(_m_bSecondLayer);
+    return dynamic_cast<const TTown*>(layer.getPObject(_m_objectID));
 }
 
 VA(0x004c56e6, 0x42)
 TTown* TTownPropsGeneralPage::_getNewTown()
 {
-    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_townRef.getBSecondLayer());
-    return dynamic_cast<TTown*>(layer.getPObject(_m_townRef.getObjectID()));
+    TGameMap::TLayer& layer = _m_newMap.getLayer(_m_bSecondLayer);
+    return dynamic_cast<TTown*>(layer.getPObject(_m_objectID));
 }
 
 VA(0x004c5728, 0xe4)
@@ -144,9 +149,10 @@ BOOL TTownPropsGeneralPage::OnInitDialog()
         const TNonRandomHero* pHero = dynamic_cast<const TNonRandomHero*>(pVisitingHero);
         if (pHero) {
             _m_visitingHeroClass = THero::s_akClassTraits[pHero->getHeroClass()].m_name;
-            _m_visitingHeroName = pHero->getBCustomName()
-                                      ? pHero->getName().c_str()
-                                      : _m_newMap.getHeroPrototype(pHero->getHeroID()).getName().c_str();
+            if (pHero->getBCustomName())
+                _m_visitingHeroName = pHero->getName().c_str();
+            else
+                _m_visitingHeroName = _m_newMap.getHeroPrototype(pHero->getHeroID()).getName().c_str();
         } else {
             _m_visitingHeroClass = kRandomStr;
             _m_visitingHeroName = pVisitingHero->getBCustomName() ? pVisitingHero->getName().c_str() : kUnknownStr;
@@ -177,16 +183,14 @@ BOOL TTownPropsGeneralPage::OnInitDialog()
         _m_alignmentCombo.SetItemData(_m_alignmentCombo.AddString(STownPropsGeneralPageText::kSameAsOwnerOrRandomStr),
                                       DWORD(ePlayerNone));
         for (int player = 0; player < kNumPlayers; player++) {
-            int index = _m_alignmentCombo.AddString(
+            index = _m_alignmentCombo.AddString(
                 TFormattedString(STownPropsGeneralPageText::kSameAsTownFmtStr, akPlayerTraits[player].m_pName));
             _m_alignmentCombo.SetItemData(index, player);
         }
         TPlayer alignment = pNewTown->getAlignment();
-        int alignmentIndex;
-        for (alignmentIndex = 0; TPlayer(_m_alignmentCombo.GetItemData(alignmentIndex)) != alignment;
-             alignmentIndex++)
+        for (index = 0; TPlayer(_m_alignmentCombo.GetItemData(index)) != alignment; index++)
             ;
-        _m_alignmentCombo.SetCurSel(alignmentIndex);
+        _m_alignmentCombo.SetCurSel(index);
         if (_m_newMap.getVersion() < GAME_VERSION_SOD) {
             _m_alignmentStatic.EnableWindow(FALSE);
             _m_alignmentCombo.EnableWindow(FALSE);
@@ -221,14 +225,15 @@ void TTownPropsGeneralPage::OnAddHeroButton()
     std::auto_ptr<THero> pHero(_createHero());
     if (pHero.get()) {
         _m_bVisitingHeroModified = true;
-        _m_newMap.setVisitingHero(pHero.get(), _m_townRef.getBSecondLayer(), _m_townRef.getObjectID());
+        _m_newMap.setVisitingHero(pHero.get(), _m_bSecondLayer, _m_objectID);
         const THero* pVisitingHero = pNewTown->getPVisitingHero();
         const TNonRandomHero* pNonRandomHero = dynamic_cast<const TNonRandomHero*>(pVisitingHero);
         if (pNonRandomHero) {
             _m_visitingHeroClass = THero::s_akClassTraits[pNonRandomHero->getHeroClass()].m_name;
-            _m_visitingHeroName = pNonRandomHero->getBCustomName()
-                                      ? pNonRandomHero->getName().c_str()
-                                      : _m_newMap.getHeroPrototype(pNonRandomHero->getHeroID()).getName().c_str();
+            if (pNonRandomHero->getBCustomName())
+                _m_visitingHeroName = pNonRandomHero->getName().c_str();
+            else
+                _m_visitingHeroName = _m_newMap.getHeroPrototype(pNonRandomHero->getHeroID()).getName().c_str();
         } else {
             _m_visitingHeroClass = kRandomStr;
             _m_visitingHeroName = pVisitingHero->getBCustomName() ? pVisitingHero->getName().c_str() : kUnknownStr;
@@ -246,18 +251,19 @@ void TTownPropsGeneralPage::OnEditHeroButton()
     const THero* pVisitingHero = _getNewTown()->getPVisitingHero();
     const THero* pHero = dynamic_cast<const TNonRandomHero*>(pVisitingHero);
     if (pHero) {
-        TNonRandomHeroPropsSheet sheet(this, &_m_newMap, _m_townRef.getBSecondLayer(), _m_townRef.getObjectID(), false);
+        TNonRandomHeroPropsSheet sheet(this, &_m_newMap, _m_bSecondLayer, _m_objectID, false);
         sheet.DoModal();
         if (sheet.wasModified()) {
             _m_bVisitingHeroModified = true;
             pHero = _getNewTown()->getPVisitingHero();
         }
-        _m_visitingHeroName = pHero->getBCustomName()
-                                  ? pHero->getName().c_str()
-                                  : _m_newMap.getHeroPrototype(pHero->getHeroID()).getName().c_str();
+        if (pHero->getBCustomName())
+            _m_visitingHeroName = pHero->getName().c_str();
+        else
+            _m_visitingHeroName = _m_newMap.getHeroPrototype(pHero->getHeroID()).getName().c_str();
     } else {
         pHero = pVisitingHero;
-        TRandomHeroPropsSheet sheet(this, &_m_newMap, _m_townRef.getBSecondLayer(), _m_townRef.getObjectID(), false);
+        TRandomHeroPropsSheet sheet(this, &_m_newMap, _m_bSecondLayer, _m_objectID, false);
         sheet.DoModal();
         if (sheet.wasModified()) {
             _m_bVisitingHeroModified = true;
@@ -271,8 +277,8 @@ void TTownPropsGeneralPage::OnEditHeroButton()
 VA(0x004c6173, 0x72)
 void TTownPropsGeneralPage::OnRemoveHeroButton()
 {
-    _m_newMap.removeVisitingHero(_m_townRef.getBSecondLayer(), _m_townRef.getObjectID());
     _m_bVisitingHeroModified = true;
+    _m_newMap.removeVisitingHero(_m_bSecondLayer, _m_objectID);
     _m_visitingHeroClass = _T("");
     _m_visitingHeroName = _T("");
     UpdateData(FALSE);
@@ -339,7 +345,7 @@ void TTownPropsGeneralPage::OnSelChangePlayerCombo()
         }
         OnRemoveHeroButton();
     }
-    _m_newMap.setTownOwner(newOwner, _m_townRef.getBSecondLayer(), _m_townRef.getObjectID());
+    _m_newMap.setTownOwner(newOwner, _m_bSecondLayer, _m_objectID);
     if (newOwner != ePlayerNone && _m_newMap.getAvailableHeroOwnersMask()[newOwner]) {
         if (pNewTown->getPVisitingHero())
             _m_bVisitingHeroModified = true;

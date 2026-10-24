@@ -806,10 +806,10 @@ int advManager::open(int newPriority)
     if (g_mpNetProtocol == MP_HOTSEAT) {
         g_blackoutPlayer = 1;
         g_completeDrawEnabled = g_currentPlayer->isLocalHuman();
-        char text[256];
-        sprintf(text, (*g_generalText)[GENERAL_TEXT_PLAYER_TURN_FORMAT], g_currentPlayer->getName());
+        char sText[256];
+        sprintf(sText, (*g_generalText)[GENERAL_TEXT_PLAYER_TURN_FORMAT], g_currentPlayer->getName());
         g_windowManager->m_isWaitingForFadeIn = 0;
-        g_game->waitForPlayer(text, g_netLocalGamePos);
+        g_game->waitForPlayer(sText, g_netLocalGamePos);
         redrawAdvScreen(1, 0);
         overrideBottomView(BOTTOM_VIEW_1, -1);
     }
@@ -5573,27 +5573,27 @@ VA(0x00412c40, 0xB41)
 DC_ADDRESS(0x014bec, 0x1390)
 MAC_ADDRESS(0x01382c, 0xd74)  // linkorder
 void advManager::updateRadar(type_point origin, bool updateFlag,
-                             bool partialUpdate, bool viewMines,
-                             bool viewHeroes, bool viewTowns)
+                             bool bPartialUpdate, bool view_mines,
+                             bool view_heros, bool view_towns)
 {
-    unsigned short colour = 0;
-    int rectX = m_advWindow->m_radarWidget->m_x;
-    int rectY = m_advWindow->m_radarWidget->m_y;
-    int rectWidth = m_advWindow->m_radarWidget->m_width;
-    int rectHeight = m_advWindow->m_radarWidget->m_height;
+    unsigned short color = 0;
+    int radar_x = m_advWindow->m_radarWidget->m_x;
+    int radar_y = m_advWindow->m_radarWidget->m_y;
+    int radar_w = m_advWindow->m_radarWidget->m_width;
+    int radar_h = m_advWindow->m_radarWidget->m_height;
 
     if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
-        CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
-        if (handler && handler->isInPopup() && !g_completeDrawMessageBypass
+        CNetMsgHandler* pNetMsgHandler = g_dPlay->getNetMsgHandler();
+        if (pNetMsgHandler && pNetMsgHandler->isInPopup() && !g_completeDrawMessageBypass
             && !g_inViewWorld)
             return;
     }
 
-    int firstColumn = 0;
-    int firstRow = 0;
-    int lastColumn = g_mapWidth - 1;
-    int lastRow = g_mapHeight - 1;
-    playerData* localPlayer = g_game->getLocalPlayer();
+    int ulX = 0;
+    int ulY = 0;
+    int brX = g_mapWidth - 1;
+    int brY = g_mapHeight - 1;
+    playerData* player = g_game->getLocalPlayer();
 
     if (!g_currentPlayer->isHuman() && m_heroLogoShowing == 0
         && (!g_remoteOn || g_goSolo))
@@ -5610,104 +5610,104 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
     // GetHero lookup; the helper owns the -1 sentinel check. DC's int
     // playerBit matches the full-width retail mask test; cell_union survives in
     // Mac's shipyard store/owner-byte load at 0x13fc0..0x13fcc. Recovering
-    // both locals together improves the match. DC7041 keeps colour at
+    // both locals together improves the match. DC7041 keeps color at
     // function scope; 7046..7049 read the four widget fields separately.
-    int heroX = -1;
-    int heroY = -1;
-    const hero* currentHero = g_game->getHero(localPlayer->m_currHeroId);
-    if (currentHero && currentHero->m_z == origin.m_z) {
-        heroX = currentHero->m_x;
-        heroY = currentHero->m_y;
+    int current_hero_x = -1;
+    int current_hero_y = -1;
+    const hero* current_hero = g_game->getHero(player->m_currHeroId);
+    if (current_hero && current_hero->m_z == origin.m_z) {
+        current_hero_x = current_hero->m_x;
+        current_hero_y = current_hero->m_y;
     }
 
-    int blockPhase = 0;
-    int rowPhase = 0;
-    Bitmap16MapPointer destRow;
-    unsigned short* dest;
+    int xTwoThirds = 0;
+    int yTwoThirds = 0;
+    unsigned short* radarRowStart;
+    unsigned short* curRadar;
     // DC7059..7062 bounds the full map; 7097..7117 derives the pixel
     // origin, horizontal offset and large-map phases from those bounds.
     // Mac 13a5c..13b20 folds the zero upper-left bounds but retains the
     // offset into each row. DC keeps both drawing pointers and the cell at
     // function scope, with z and visibility local to each row.
     int xOffset;
-    NewmapCell* cell;
+    NewmapCell* currCell;
     int x;
     switch (g_mapHeight) {
     case MAP_DIMENSION_SMALL:
-        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
-            rectX, rectY + firstRow / 4);
-        xOffset = firstColumn / 4;
+        radarRowStart = g_windowManager->m_screenBitmap->GetMap(
+            radar_x, radar_y + ulY / 4);
+        xOffset = ulX / 4;
         break;
     case MAP_DIMENSION_MEDIUM:
-        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
-            rectX, rectY + firstRow / 2);
-        xOffset = firstColumn / 2;
+        radarRowStart = g_windowManager->m_screenBitmap->GetMap(
+            radar_x, radar_y + ulY / 2);
+        xOffset = ulX / 2;
         break;
     case MAP_DIMENSION_LARGE:
-        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
-            rectX, rectY + (firstRow * 4 + 2) / 3);
-        xOffset = (firstColumn * 4 + 2) / 3;
-        blockPhase = firstColumn % 3;
-        rowPhase = firstRow % 3;
+        radarRowStart = g_windowManager->m_screenBitmap->GetMap(
+            radar_x, radar_y + (ulY * 4 + 2) / 3);
+        xOffset = (ulX * 4 + 2) / 3;
+        xTwoThirds = ulX % 3;
+        yTwoThirds = ulY % 3;
         break;
     default:
-        destRow.m_pixels = g_windowManager->m_screenBitmap->GetMap(
-            rectX, rectY + firstRow);
-        xOffset = firstColumn;
+        radarRowStart = g_windowManager->m_screenBitmap->GetMap(
+            radar_x, radar_y + ulY);
+        xOffset = ulX;
         break;
     }
 
-    int visibilityBit = g_mapVisibilityBit;
-    for (int y = firstRow; y <= lastRow; y++) {
-        dest = destRow.m_pixels + xOffset;
+    int playerBit = g_mapVisibilityBit;
+    for (int y = ulY; y <= brY; y++) {
+        curRadar = radarRowStart + xOffset;
         // DC's row pointer is unsigned short*, advanced by the byte pitch
-        // (Bitmap16.h:151); Bitmap16MapPointer names both views.
+        // (Bitmap16.h:151); convert to bytes for that stride.
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            destRow.m_bytes += 4 * g_windowManager->m_screenBitmap->GetPitch();
+            radarRowStart = (unsigned short*)((unsigned char*)radarRowStart + 4 * g_windowManager->m_screenBitmap->GetPitch());
             break;
         case MAP_DIMENSION_MEDIUM:
-            destRow.m_bytes += 2 * g_windowManager->m_screenBitmap->GetPitch();
+            radarRowStart = (unsigned short*)((unsigned char*)radarRowStart + 2 * g_windowManager->m_screenBitmap->GetPitch());
             break;
         case MAP_DIMENSION_LARGE:
-            destRow.m_bytes += g_windowManager->m_screenBitmap->GetPitch();
-            if (++rowPhase > 2)
-                rowPhase = 0;
-            if (rowPhase == 0) {
-                destRow.m_bytes += g_windowManager->m_screenBitmap->GetPitch();
+            radarRowStart = (unsigned short*)((unsigned char*)radarRowStart + g_windowManager->m_screenBitmap->GetPitch());
+            if (++yTwoThirds > 2)
+                yTwoThirds = 0;
+            if (yTwoThirds == 0) {
+                radarRowStart = (unsigned short*)((unsigned char*)radarRowStart + g_windowManager->m_screenBitmap->GetPitch());
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            destRow.m_bytes += g_windowManager->m_screenBitmap->GetPitch();
+            radarRowStart = (unsigned short*)((unsigned char*)radarRowStart + g_windowManager->m_screenBitmap->GetPitch());
             break;
         }
         int z = origin.m_z;
-        bool revealed;
+        bool visible;
 
-        for (x = firstColumn; x <= lastColumn; x++) {
-            cell = m_fullMap->cell(x, y, z);
+        for (x = ulX; x <= brX; x++) {
+            currCell = m_fullMap->cell(x, y, z);
 
-            revealed =
+            visible =
                 !g_completeDrawAllCells
-                && (visibilityBit & getMapExtra(x, y, z)) && x >= 0
+                && (playerBit & getMapExtra(x, y, z)) && x >= 0
                 && y >= 0 && x < g_mapWidth && y < g_mapHeight;
-            if (viewMines && cell->m_type == MINE)
-                revealed = 1;
-            if (viewHeroes && cell->m_type == HERO)
-                revealed = 1;
+            if (view_mines && currCell->m_type == MINE)
+                visible = 1;
+            if (view_heros && currCell->m_type == HERO)
+                visible = 1;
 
-            if (!(viewTowns && cell->m_type == TOWN) && !revealed) {
-                colour = 0;
+            if (!(view_towns && currCell->m_type == TOWN) && !visible) {
+                color = 0;
             } else {
-                colour = m_groundTileset[cell->m_groundSet]->GetPaletteColor(8);
-                if (x == heroX && y == heroY) {
-                    colour = g_systemPalette->Palette[64 + currentHero->m_owner];
-                } else if (cell->m_type == HERO
-                           && cell->m_isTrigger) {
-                    colour = g_systemPalette->Palette[64 +
-                        g_game->m_heroAvailability[cell->m_extraInfo]];
+                color = m_groundTileset[currCell->m_groundSet]->GetPaletteColor(8);
+                if (x == current_hero_x && y == current_hero_y) {
+                    color = g_systemPalette->Palette[64 + current_hero->m_owner];
+                } else if (currCell->m_type == HERO
+                           && currCell->m_isTrigger) {
+                    color = g_systemPalette->Palette[64 +
+                        g_game->m_heroAvailability[currCell->m_extraInfo]];
                 } else {
-                    switch (cell->getMapObject()) {
+                    switch (currCell->getMapObject()) {
                     case TERRAIN_CACTUS:
                     case TERRAIN_CRATER:
                     case TERRAIN_DEAD_VEGETATION:
@@ -5729,63 +5729,63 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                     case TERRAIN_VOLCANO:
                     case TERRAIN_WILLOW_TREE:
                     case TERRAIN_YUCCA_TREE:
-                        if (!cell->m_passable)
-                            colour = m_groundTileset[cell->m_groundSet]
+                        if (!currCell->m_passable)
+                            color = m_groundTileset[currCell->m_groundSet]
                                          ->GetPaletteColor(9);
                         break;
                     case TOWN:
-                        if (!cell->m_passable || cell->m_isTrigger) {
-                            NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger) {
+                        if (!currCell->m_passable || currCell->m_isTrigger) {
+                            NewmapCell* trigger_cell = currCell->getTriggerCell();
+                            if (trigger_cell) {
                                 int owner = g_game->m_towns[
-                                    trigger->getMapExtraInfo()].m_owner;
-                                colour = g_systemPalette->Palette[64 + owner];
+                                    trigger_cell->getMapExtraInfo()].m_owner;
+                                color = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
                     case LIGHTHOUSE:
                     case MINE:
-                        if (!cell->m_passable || cell->m_isTrigger) {
-                            NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger) {
+                        if (!currCell->m_passable || currCell->m_isTrigger) {
+                            NewmapCell* trigger_cell = currCell->getTriggerCell();
+                            if (trigger_cell) {
                                 int owner = g_game->getMine(
-                                    trigger->getMapExtraInfo())->m_playerOwner;
-                                colour = g_systemPalette->Palette[64 + owner];
+                                    trigger_cell->getMapExtraInfo())->m_playerOwner;
+                                color = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
                     case CREATURE_GENERATOR_1:
                     case CREATURE_GENERATOR_4:
-                        if (!cell->m_passable || cell->m_isTrigger) {
-                            NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger) {
+                        if (!currCell->m_passable || currCell->m_isTrigger) {
+                            NewmapCell* trigger_cell = currCell->getTriggerCell();
+                            if (trigger_cell) {
                                 int owner = g_game->m_generators[
-                                    trigger->getMapExtraInfo()].getOwner();
-                                colour = g_systemPalette->Palette[64 + owner];
+                                    trigger_cell->getMapExtraInfo()].getOwner();
+                                color = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
                     case GARRISON:
-                        if (!cell->m_passable || cell->m_isTrigger) {
-                            NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger) {
+                        if (!currCell->m_passable || currCell->m_isTrigger) {
+                            NewmapCell* trigger_cell = currCell->getTriggerCell();
+                            if (trigger_cell) {
                                 // DC 7301 indexes the garrison vector here
                                 // rather than calling its GetGarrison inline.
                                 int owner = g_game->m_garrisons[
-                                    trigger->getMapExtraInfo()].m_playerOwner;
-                                colour = g_systemPalette->Palette[64 + owner];
+                                    trigger_cell->getMapExtraInfo()].m_playerOwner;
+                                color = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
                     case SHIPYARD:
-                        if (!cell->m_passable || cell->m_isTrigger) {
-                            NewmapCell* trigger = cell->getTriggerCell();
-                            if (trigger) {
-                                unsigned long extraInfo = trigger->getMapExtraInfo();
-                                ExtraInfoUnion cellExtra;
-                                cellExtra.m_extraInfo = extraInfo;
-                                int owner = cellExtra.m_shipyardInfo.m_owner;
-                                colour = g_systemPalette->Palette[64 + owner];
+                        if (!currCell->m_passable || currCell->m_isTrigger) {
+                            NewmapCell* trigger_cell = currCell->getTriggerCell();
+                            if (trigger_cell) {
+                                unsigned long temp = trigger_cell->getMapExtraInfo();
+                                ExtraInfoUnion cell_union;
+                                cell_union.m_extraInfo = temp;
+                                int owner = cell_union.m_shipyardInfo.m_owner;
+                                color = g_systemPalette->Palette[64 + owner];
                             }
                         }
                         break;
@@ -5799,155 +5799,155 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             // all four large-map write/advance arms.
             switch (g_mapHeight) {
             case MAP_DIMENSION_SMALL:
-                dest[0] = colour;
-                dest[1] = colour;
-                dest[2] = colour;
-                dest[3] = colour;
-                dest[0x320] = colour;
-                dest[0x321] = colour;
-                dest[0x322] = colour;
-                dest[0x323] = colour;
-                dest[0x640] = colour;
-                dest[0x641] = colour;
-                dest[0x642] = colour;
-                dest[0x643] = colour;
-                dest[0x960] = colour;
-                dest[0x961] = colour;
-                dest[0x962] = colour;
-                dest[0x963] = colour;
-                dest += 4;
+                curRadar[0] = color;
+                curRadar[1] = color;
+                curRadar[2] = color;
+                curRadar[3] = color;
+                curRadar[0x320] = color;
+                curRadar[0x321] = color;
+                curRadar[0x322] = color;
+                curRadar[0x323] = color;
+                curRadar[0x640] = color;
+                curRadar[0x641] = color;
+                curRadar[0x642] = color;
+                curRadar[0x643] = color;
+                curRadar[0x960] = color;
+                curRadar[0x961] = color;
+                curRadar[0x962] = color;
+                curRadar[0x963] = color;
+                curRadar += 4;
                 break;
             case MAP_DIMENSION_MEDIUM:
-                dest[0] = colour;
-                dest[1] = colour;
-                dest[0x320] = colour;
-                dest[0x321] = colour;
-                dest += 2;
+                curRadar[0] = color;
+                curRadar[1] = color;
+                curRadar[0x320] = color;
+                curRadar[0x321] = color;
+                curRadar += 2;
                 break;
             case MAP_DIMENSION_LARGE:
-                if (blockPhase) {
-                    if (rowPhase) {
-                        dest[0] = colour;
-                        dest += 1;
+                if (xTwoThirds) {
+                    if (yTwoThirds) {
+                        curRadar[0] = color;
+                        curRadar += 1;
                     } else {
-                        dest[0] = colour;
-                        dest[0x320] = colour;
-                        dest += 1;
+                        curRadar[0] = color;
+                        curRadar[0x320] = color;
+                        curRadar += 1;
                     }
                 } else {
-                    if (rowPhase) {
-                        dest[0] = colour;
-                        dest[1] = colour;
-                        dest += 2;
+                    if (yTwoThirds) {
+                        curRadar[0] = color;
+                        curRadar[1] = color;
+                        curRadar += 2;
                     } else {
-                        dest[0] = colour;
-                        dest[1] = colour;
-                        dest[0x320] = colour;
-                        dest[0x321] = colour;
-                        dest += 2;
+                        curRadar[0] = color;
+                        curRadar[1] = color;
+                        curRadar[0x320] = color;
+                        curRadar[0x321] = color;
+                        curRadar += 2;
                     }
                 }
-                if (++blockPhase > 2)
-                    blockPhase = 0;
+                if (++xTwoThirds > 2)
+                    xTwoThirds = 0;
                 break;
             case MAP_DIMENSION_EXTRA_LARGE:
-                dest[0] = colour;
-                dest += 1;
+                curRadar[0] = color;
+                curRadar += 1;
                 break;
             }
         }
     }
 
-    // Radar-icon frame and the origin-to-screen scale.
-    int radarFrame = -1;
-    int suppressIcon = 0;
-    float scale;
+    // Radar-icon frame and the origin-to-screen fMultiplier.
+    int frame = -1;
+    int bSkipMarkerDraw = 0;
+    float fMultiplier;
     if (g_inViewWorld) {
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            scale = 4.0f;
+            fMultiplier = 4.0f;
             if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_FULL)
-                radarFrame = 13;
+                frame = 13;
             else
-                suppressIcon = 1;
+                bSkipMarkerDraw = 1;
             break;
         case MAP_DIMENSION_MEDIUM:
-            scale = 2.0f;
+            fMultiplier = 2.0f;
             if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_FULL)
-                radarFrame = 11;
+                frame = 11;
             else if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_MID)
-                radarFrame = 12;
+                frame = 12;
             else if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_FAR)
-                suppressIcon = 1;
+                bSkipMarkerDraw = 1;
             break;
         case MAP_DIMENSION_LARGE:
-            scale = 1.33f;
+            fMultiplier = 1.33f;
             if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_FULL)
-                radarFrame = 10;
+                frame = 10;
             else if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_MID)
-                radarFrame = 9;
+                frame = 9;
             else if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_FAR)
-                radarFrame = 10;
+                frame = 10;
             break;
         default:
-            scale = 1.0f;
+            fMultiplier = 1.0f;
             if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_FULL)
-                radarFrame = 5;
+                frame = 5;
             else if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_MID)
-                radarFrame = 6;
+                frame = 6;
             else if (g_viewWorldScaleFloat == VIEW_WORLD_TILE_SCALE_FAR)
-                radarFrame = 7;
+                frame = 7;
             break;
         }
     } else {
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            radarFrame = 4;
-            scale = 4.0f;
+            frame = 4;
+            fMultiplier = 4.0f;
             break;
         case MAP_DIMENSION_MEDIUM:
-            radarFrame = 3;
-            scale = 2.0f;
+            frame = 3;
+            fMultiplier = 2.0f;
             break;
         case MAP_DIMENSION_LARGE:
-            radarFrame = 2;
-            scale = 1.33f;
+            frame = 2;
+            fMultiplier = 1.33f;
             break;
         default:
-            radarFrame = 1;
-            scale = 1.0f;
+            frame = 1;
+            fMultiplier = 1.0f;
             break;
         }
     }
 
     // Retail and Mac 0x142e8..0x144cc convert the floating conditional
     // result after its arms join, including the zero source-offset arm.
-    int srcX = origin.m_x < 0 ? -scale * origin.m_x : 0;
-    int srcY = origin.m_y < 0 ? -scale * origin.m_y : 0;
+    int spr_x = origin.m_x < 0 ? -fMultiplier * origin.m_x : 0;
+    int spr_y = origin.m_y < 0 ? -fMultiplier * origin.m_y : 0;
 
     CSprite* icons = m_radarIcons;
-    int drawWidth = icons->GetWidth() - srcX;
-    int drawHeight = icons->GetHeight() - srcY;
+    int spr_w = icons->GetWidth() - spr_x;
+    int spr_h = icons->GetHeight() - spr_y;
 
-    int destX = origin.m_x < 0 ? rectX : rectX + origin.m_x * scale;
-    int destY = origin.m_y < 0 ? rectY : rectY + origin.m_y * scale;
+    int scr_x = origin.m_x < 0 ? radar_x : radar_x + origin.m_x * fMultiplier;
+    int scr_y = origin.m_y < 0 ? radar_y : radar_y + origin.m_y * fMultiplier;
 
-    if (icons->GetWidth() + destX > rectX + rectWidth)
-        drawWidth += rectWidth - icons->GetWidth() - destX + rectX;
-    if (icons->GetHeight() + destY > rectY + rectHeight)
-        drawHeight += rectHeight - icons->GetHeight() - destY + rectY;
-    if (drawWidth < 0)
-        drawWidth = 0;
-    if (drawHeight < 0)
-        drawHeight = 0;
+    if (icons->GetWidth() + scr_x > radar_x + radar_w)
+        spr_w += radar_w - icons->GetWidth() - scr_x + radar_x;
+    if (icons->GetHeight() + scr_y > radar_y + radar_h)
+        spr_h += radar_h - icons->GetHeight() - scr_y + radar_y;
+    if (spr_w < 0)
+        spr_w = 0;
+    if (spr_h < 0)
+        spr_h = 0;
 
-    if (!suppressIcon)
-        icons->DrawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
-                             g_windowManager->m_screenBitmap, destX, destY,
+    if (!bSkipMarkerDraw)
+        icons->DrawInterface(frame, spr_x, spr_y, spr_w, spr_h,
+                             g_windowManager->m_screenBitmap, scr_x, scr_y,
                              false);
 
     if (updateFlag)
-        g_windowManager->updateScreen(rectX, rectY, rectWidth, rectHeight);
+        g_windowManager->updateScreen(radar_x, radar_y, radar_w, radar_h);
 }
 
 VA(0x00413790, 0x27)

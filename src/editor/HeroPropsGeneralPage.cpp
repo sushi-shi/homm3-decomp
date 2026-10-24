@@ -144,9 +144,9 @@ BOOL THeroPropsGeneralPage::OnInitDialog()
         { kRadiusNineSquaresStr, 9 },
         { kRadiusTenSquaresStr, 10 }
     };
-    for (const TPatrolRadiusTraits* pTraits = akPatrolRadii;
-         pTraits < akPatrolRadii + sizeof(akPatrolRadii) / sizeof(akPatrolRadii[0]); pTraits++)
-        _m_patrolCombo.SetItemData(_m_patrolCombo.AddString(pTraits->m_name), pTraits->m_radius);
+    for (unsigned int radiusIndex = 0; radiusIndex < sizeof(akPatrolRadii) / sizeof(akPatrolRadii[0]); radiusIndex++)
+        _m_patrolCombo.SetItemData(_m_patrolCombo.AddString(akPatrolRadii[radiusIndex].m_name),
+                                   akPatrolRadii[radiusIndex].m_radius);
     int index;
     for (index = 0; int(_m_patrolCombo.GetItemData(index)) != _m_pNewHero->getPatrolRadius(); index++)
         ;
@@ -251,7 +251,7 @@ BOOL TRandomHeroPropsGeneralPage::OnInitDialog()
     TPlayerMask availableOwners;
     if (_m_bAnyAvailableOwner)
         availableOwners = _m_newMap.getAvailableHeroOwnersMask();
-    availableOwners.set(_m_pNewHero->getOwner());
+    availableOwners[_m_pNewHero->getOwner()] = true;
     for (unsigned int player = 0; player < kNumPlayers; player++) {
         if (availableOwners[player])
             _m_ownerCombo.SetItemData(_m_ownerCombo.AddString(akPlayerTraits[player].m_pName), player);
@@ -375,7 +375,7 @@ void TIdentifiedHeroPropsGeneralPage::_onSetHeroID()
     if (!_m_customizePortraitCheck.GetCheck())
         _setPortrait(prototype.getPortrait());
     _m_defaultGenderRadio.SetWindowText(
-        TFormattedString(SHeroPropsGeneralPageText::kDefaultGenderRadioFmtStr, prototype.getSex() ? SHeroPropsGeneralPageText::kFemaleStr : SHeroPropsGeneralPageText::kMaleStr));
+        TFormattedString(SHeroPropsGeneralPageText::kDefaultGenderRadioFmtStr, prototype.getSex() == 0 ? SHeroPropsGeneralPageText::kMaleStr : SHeroPropsGeneralPageText::kFemaleStr));
     _m_pParentSheet->onSetHeroID(_m_heroID);
 }
 
@@ -437,6 +437,8 @@ void TIdentifiedHeroPropsGeneralPage::DoDataExchange(CDataExchange* pDX)
     DDX_Radio(pDX, IDC_DEFAULT_GENDER_RADIO, _m_gender);
 }
 
+// The rectangles belong to the bitmap-creation phase with its client DC.
+// Their lifetime ends before the later portrait and gender updates.
 VA(0x00450e4e, 0x4c7)
 BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
 {
@@ -455,8 +457,9 @@ BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
     _m_gender = _m_pNewHero->getSex() + 1;
     EGameVersion version = _m_newMap.getVersion();
     THeroPropsGeneralPage::OnInitDialog();
+    const THero::TTraits& traits = THero::s_akTraits[_m_heroID];
     const THeroPrototype& prototype = _m_newMap.getHeroPrototype(_m_heroID);
-    std::set<THeroID> heroes = _m_newMap.getAvailableHeroesInClass(THero::s_akTraits[_m_heroID].m_class);
+    std::set<THeroID> heroes = _m_newMap.getAvailableHeroesInClass(traits.m_class);
     heroes.insert(_m_heroID);
     for (std::set<THeroID>::const_iterator it = heroes.begin(); it != heroes.end(); ++it)
         _m_identityCombo.SetItemData(_m_identityCombo.AddString(_m_newMap.getHeroPrototype(*it).getName().c_str()),
@@ -471,17 +474,17 @@ BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
     _m_nameEdit.LimitText(THeroPrototype::s_kMaxNameLen);
     _m_nameEdit.EnableWindow(bCustomName);
     _m_nameEdit.SetWindowText(bCustomName ? _m_name : CString(prototype.getName().c_str()));
-    CRect portraitRect;
-    _m_portraitStatic.GetWindowRect(&portraitRect);
-    ScreenToClient(&portraitRect);
-    CRect spinRect;
-    _m_portraitSpin.GetWindowRect(&spinRect);
-    ScreenToClient(&spinRect);
-    portraitRect.right = spinRect.left;
-    portraitRect.bottom = spinRect.bottom;
-    _m_portraitStatic.MoveWindow(&portraitRect, FALSE);
-    _m_portraitStatic.GetClientRect(&portraitRect);
     {
+        CRect portraitRect;
+        _m_portraitStatic.GetWindowRect(&portraitRect);
+        ScreenToClient(&portraitRect);
+        CRect spinRect;
+        _m_portraitSpin.GetWindowRect(&spinRect);
+        ScreenToClient(&spinRect);
+        portraitRect.right = spinRect.left;
+        portraitRect.bottom = spinRect.bottom;
+        _m_portraitStatic.MoveWindow(&portraitRect, FALSE);
+        _m_portraitStatic.GetClientRect(&portraitRect);
         CClientDC dc(this);
         _m_portraitBitmap.CreateCompatibleBitmap(&dc, portraitRect.Width(), portraitRect.Height());
     }
@@ -496,7 +499,7 @@ BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
     if (_m_pNewHero->getBCustomPortrait())
         _m_portraitSpin.SetPos(_m_portrait);
     _m_defaultGenderRadio.SetWindowText(
-        TFormattedString(SHeroPropsGeneralPageText::kDefaultGenderRadioFmtStr, prototype.getSex() ? SHeroPropsGeneralPageText::kFemaleStr : SHeroPropsGeneralPageText::kMaleStr));
+        TFormattedString(SHeroPropsGeneralPageText::kDefaultGenderRadioFmtStr, prototype.getSex() == 0 ? SHeroPropsGeneralPageText::kMaleStr : SHeroPropsGeneralPageText::kFemaleStr));
     if (version < GAME_VERSION_AB) {
         _m_maleRadio.EnableWindow(FALSE);
         _m_femaleRadio.EnableWindow(FALSE);
@@ -504,6 +507,9 @@ BOOL TIdentifiedHeroPropsGeneralPage::OnInitDialog()
     return TRUE;
 }
 
+// Retail retains a member pointer through the portrait adjustment.
+// Changing _adjustPortrait's reference formal to a pointer is byte-flat.
+// Passing _m_portrait directly instead of the named reference gives 98.13%.
 VA(0x00451315, 0x247)
 void TIdentifiedHeroPropsGeneralPage::OnOK()
 {
@@ -520,12 +526,13 @@ void TIdentifiedHeroPropsGeneralPage::OnOK()
     bool bCustomPortrait = _m_customizePortraitCheck.GetCheck() != 0;
     _m_pNewHero->setBCustomPortrait(bCustomPortrait);
     if (bCustomPortrait) {
-        _adjustPortrait(_m_portrait);
-        _m_pNewHero->setPortrait(_m_portrait);
+        int& portrait = _m_portrait;
+        _adjustPortrait(portrait);
+        _m_pNewHero->setPortrait(portrait);
     }
     _m_pNewHero->setSex(_m_gender - 1);
     _m_bModified = THeroPropsGeneralPage::wasModified() || _m_bModified
-                   || _m_pOldHero->getHeroID() != _m_pNewHero->getHeroID()
+                   || _m_pNewHero->getHeroID() != _m_pOldHero->getHeroID()
                    || _m_pOldHero->getBCustomName() != _m_pNewHero->getBCustomName()
                    || _m_pNewHero->getName() != _m_pOldHero->getName()
                    || _m_pOldHero->getBCustomPortrait() != _m_pNewHero->getBCustomPortrait()
@@ -667,7 +674,7 @@ BOOL TNonRandomHeroPropsGeneralPage::OnInitDialog()
     TPlayerMask availableOwners;
     if (_m_bAnyAvailableOwner)
         availableOwners = _m_newMap.getAvailableHeroOwnersMask();
-    availableOwners.set(_m_pNewHero->getOwner());
+    availableOwners[_m_pNewHero->getOwner()] = true;
     for (unsigned int player = 0; player < kNumPlayers; player++) {
         if (availableOwners[player])
             _m_ownerCombo.SetItemData(_m_ownerCombo.AddString(akPlayerTraits[player].m_pName), player);
@@ -742,7 +749,8 @@ BOOL TPrisonPropsGeneralPage::OnInitDialog()
 {
     GetDlgItem(IDC_CLASS_STATIC)->SetWindowText(SHeroPropsGeneralPageText::kClassStaticStr);
     _m_bModified = false;
-    _m_heroClass = THero::s_akTraits[_m_pNewPrison->getHeroID()].m_class;
+    const THero::TTraits& traits = THero::s_akTraits[_m_pNewPrison->getHeroID()];
+    _m_heroClass = traits.m_class;
     TIdentifiedHeroPropsGeneralPage::OnInitDialog();
     std::set<THeroClass> heroClasses;
     for (THeroClass heroClass = THeroClass(0); heroClass < kNumHeroClasses; heroClass = THeroClass(heroClass + 1)) {
@@ -758,6 +766,9 @@ BOOL TPrisonPropsGeneralPage::OnInitDialog()
     _m_classCombo.SetCurSel(index);
     return TRUE;
 }
+
+// The hero class set's destructor, called by OnInitDialog's unwind funclet.
+VA_COMPGEN(0x00451e9e, 0x5, IMPLICIT_DTOR, THeroClass_set)
 
 VA(0x00451ea3, 0x25)
 void TPrisonPropsGeneralPage::OnOK()

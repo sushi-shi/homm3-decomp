@@ -80,9 +80,10 @@ void TWitchHutPropsDlg::OnCheckChangeSkillsList()
     unsigned int skill = _m_skillsList.GetItemData(index);
     _m_abPotentialSkill[skill] = _m_skillsList.GetCheck(index) != 0;
     if (_m_abPotentialSkill.none()) {
-        if (++index >= _m_skillsList.GetCount())
-            index = 0;
-        _m_abPotentialSkill.set(_m_skillsList.GetItemData(index), true);
-        _m_skillsList.SetCheck(index, 1);
+        int nextIndex = index + 1;
+        if (nextIndex >= _m_skillsList.GetCount())
+            nextIndex = 0;
+        _m_abPotentialSkill.set(_m_skillsList.GetItemData(nextIndex), true);
+        _m_skillsList.SetCheck(nextIndex, 1);
     }
 }

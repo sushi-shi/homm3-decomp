@@ -47,6 +47,11 @@ void TTimedEvent::setSubsequentInterval(unsigned int newInterval)
     _m_subsequentInterval = newInterval;
 }
 
+// Retail reuses the byte/short extraction slots, as readValue does. Keep the
+// player mask as an addressable byte: retail tests its stack slot each iteration.
+// Remaining: VC6 retains zero in EBX rather than hoisting the player-mask address.
+// Naming the loop bool is flat; reading players with readValue changes the frame
+// and holds the mask in a register instead of reproducing the native loop.
 VA(0x004c025c, 0x150)
 void TTimedEvent::read(TRawIStream* pIStream, int version)
 {
@@ -63,21 +68,13 @@ void TTimedEvent::read(TRawIStream* pIStream, int version)
     for (unsigned int player = 0; player < kNumPlayers; player++)
         setBApplyToPlayer(TPlayer(player), (players & 1 << player) != 0);
     if (version >= 28) {
-        signed char bApplyToHuman;
-        *pIStream >> bApplyToHuman;
-        setBApplyToHuman(bApplyToHuman != 0);
+        setBApplyToHuman(readValue<signed char>(*pIStream) != 0);
     } else {
         setBApplyToHuman(true);
     }
-    signed char bApplyToComputer;
-    *pIStream >> bApplyToComputer;
-    setBApplyToComputer(bApplyToComputer != 0);
-    short firstOccurence;
-    *pIStream >> firstOccurence;
-    setFirstOccurence(firstOccurence);
-    short subsequentInterval;
-    *pIStream >> subsequentInterval;
-    setSubsequentInterval(subsequentInterval);
+    setBApplyToComputer(readValue<signed char>(*pIStream) != 0);
+    setFirstOccurence(readValue<short>(*pIStream));
+    setSubsequentInterval(readValue<short>(*pIStream));
     signed char aReserved[kNumTimedEventReserved];
     *pIStream >> aReserved;
 }

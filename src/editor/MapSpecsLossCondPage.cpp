@@ -174,8 +174,10 @@ BOOL TLoseHeroDlg::OnInitDialog()
             const TGameObject* pObject = _m_map.getPObject(_m_aHeroesOnMap[i]);
             TTilePoint loc = _m_map.getObjectLoc(_m_aHeroesOnMap[i]) - pObject->getTriggerLoc();
             const TBasicHero* pHero = dynamic_cast<const TBasicHero*>(pObject);
-            if (pHero == NULL)
-                pHero = dynamic_cast<const TTown*>(pObject)->getPVisitingHero();
+            if (pHero == NULL) {
+                const TTown* pTown = dynamic_cast<const TTown*>(pObject);
+                pHero = pTown->getPVisitingHero();
+            }
             CString heroName;
             const TIdentifiedHero* pIdentifiedHero = dynamic_cast<const TIdentifiedHero*>(pHero);
             if (pIdentifiedHero != NULL) {
@@ -190,7 +192,9 @@ BOOL TLoseHeroDlg::OnInitDialog()
                     bool bHasHero = pPlaceholder->getHeroID() != -1;
                     if (bHasHero) {
                         THeroID heroID = pPlaceholder->getHeroID();
-                        const THero::TClassTraits& classTraits = THero::s_akClassTraits[THero::s_akTraits[heroID].m_class];
+                        const THero::TTraits& heroTraits = THero::s_akTraits[heroID];
+                        THeroClass heroClass = heroTraits.m_class;
+                        const THero::TClassTraits& classTraits = THero::s_akClassTraits[heroClass];
                         heroName.Format(kSpecificHeroAndClassFmtStr, _m_map.getHeroPrototype(heroID).getName().c_str(),
                                         classTraits.m_name);
                     } else

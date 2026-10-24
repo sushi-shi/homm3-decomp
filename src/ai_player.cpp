@@ -425,31 +425,32 @@ float type_AI_player::getAttackBonus(short player)
 // seven doubles are mirrored into playerData before the six-resource
 // running total is divided by five.
 
-// Residual (97.4340%): the algorithm, calls, loops, floating-point flow,
-// and persistent fields agree. Two levers closed the old 86.38 plateau
-// (2026-08-20): the top-three cost loop copies its creature record BY VALUE
-// (retail's three-dword copy with spilled value/amount reads `type` once,
-// precomputes the traits row, strength-reduces both walks and counts DOWN
-// `mov edx,7 / dec/jne`; the const-reference re-read `type` per iteration
-// and pinned an indexed up-count, +7.03), and the /Ob2 numerator device
-// below the average loop (+4.03, see its comment). Remaining delta:
-// ECX/EDX and EBX/EDI transpositions in the trading-value loop and the
-// amount-word read (`movsx esi, cx` from the register copy vs our
-// `movsx esi, word ptr [ecx+8]` from the source) - register-homing family;
-// the creation-order probes measured against it are in the device note.
-// Direct average-loop reads: DC calculate_demand has no get_resource_value
-// call (DC GetTotalValue path keeps one); the getter dropped this to 73.94%.
+// DC's named doubles have distinct uses: total_value (sp+0x3c) is the
+// sufficient-supply numerator at lines 381/384; average_value (sp+0x24)
+// receives its quotient at 386 and the other branches at 374/390/394.
+// Lines 397/398 multiply average_value into this object's resource value,
+// then copy that field to playerData (also Mac 0x2ba40..0x2ba50).
+// The population loop uses the procedure-scope creature record: DC stores
+// its type/amount at sp+0x6c/0x74; Mac uses the same C0/C8 homes before the
+// later whole-record copy. This recovers retail's word growth addition and
+// the top-three loop's three-dword copy, including its amount-word reload.
+// Residual (95.8698%): retail expands std::_Unguarded_insert within sort;
+// VC6 retains it here (79 vs 81 blocks). Other masked instruction differences
+// are the adjacent vector begin/end reload order. Independent population
+// locals or one collapsed value double lose native stores; using the record
+// type as the initialization/valuation counter does not improve the match.
+// Direct final-loop reads are supported by DC; an accessor call lost score.
 VA(0x00428740, 0x68E)
 DC_ADDRESS(0x02e188, 0x64e)
 MAC_ADDRESS(0x02b43c, 0x704)  // linkorder
 void type_AI_player::calculateDemand()
 {
-    // DC records these temporaries at procedure scope. Their restored
-    // lifetimes preserve the Windows 93.40% body and its by-value copy.
-    __int64 buildMask;
-    double totalValue;
-    type_creature_value creatureInfo;
-    int* buildCost;
+    // Preserve the named DC procedure locals and their separate lifetimes.
+    __int64 build_mask;
+    double total_value;
+    double average_value;
+    type_creature_value creature;
+    int* build_cost;
     playerData* player = &g_game->m_players[m_team];
     memset(m_resourceSupply, 0, sizeof(m_resourceSupply));
     memset(m_resourceDemand, 0, sizeof(m_resourceDemand));
@@ -464,17 +465,17 @@ void type_AI_player::calculateDemand()
          buildingTownIndex++) {
         town* currentTown = g_game->getTown(
             player->m_townIds[buildingTownIndex]);
-        buildMask = currentTown->getBuildableMask();
+        build_mask = currentTown->getBuildableMask();
         int building;
         for (building = 0; building < MAX_BUILDING_TYPE; building++) {
-            if (g_bitNumber[building] & buildMask) {
-                buildCost = currentTown->getBuildCostArray(
+            if (g_bitNumber[building] & build_mask) {
+                build_cost = currentTown->getBuildCostArray(
                     type_building_id(building));
                 int buildResource;
                 for (buildResource = 0; buildResource < NUM_RESOURCES; buildResource++)
                     m_resourceDemand[buildResource] = max(
                         m_resourceDemand[buildResource],
-                        static_cast<long>(buildCost[buildResource]));
+                        static_cast<long>(build_cost[buildResource]));
             }
         }
     }
@@ -491,16 +492,14 @@ void type_AI_player::calculateDemand()
          dwellingTownIndex++) {
         town* currentTown = g_game->getTown(
             player->m_townIds[dwellingTownIndex]);
-        short* population = currentTown->m_population;
-        for (int dwelling = 0; dwelling < 14; dwelling++, population++) {
-            short amount = *population;
+        for (int dwelling = 0; dwelling < 14; dwelling++) {
+            creature.m_amount = currentTown->m_population[dwelling];
             if (g_game->m_day >= 5) {
-                short growth = currentTown->getGrowthRate(dwelling);
-                amount += growth;
+                creature.m_amount += currentTown->getGrowthRate(dwelling);
             }
-            if (amount > 0) {
-                int creatureType = g_dwellingType[currentTown->m_type][dwelling];
-                creatures[creatureType].m_amount += amount;
+            if (creature.m_amount > 0) {
+                creature.m_type = g_dwellingType[currentTown->m_type][dwelling];
+                creatures[creature.m_type].m_amount += creature.m_amount;
             }
         }
     }
@@ -516,12 +515,12 @@ void type_AI_player::calculateDemand()
     for (valuableCreature = 0;
          valuableCreature < 3 && valuableCreature < creatures.size();
          valuableCreature++) {
-        creatureInfo = creatures[valuableCreature];
+        creature = creatures[valuableCreature];
         int costResource;
         for (costResource = 0; costResource < NUM_RESOURCES; costResource++)
             m_resourceDemand[costResource] +=
-                akCreatureTypeTraits[creatureInfo.m_type].cost[costResource]
-                * creatureInfo.m_amount;
+                akCreatureTypeTraits[creature.m_type].cost[costResource]
+                * creature.m_amount;
     }
 
     int markets = 0;
@@ -540,34 +539,35 @@ void type_AI_player::calculateDemand()
     for (valueResource = 0; valueResource < NUM_RESOURCES;
          valueResource++) {
         if (m_resourceDemand[valueResource] == 0) {
-            totalValue = efficiency;
+            average_value = efficiency;
         } else {
-            totalValue = m_resourceDemand[valueResource];
             if (m_resourceDemand[valueResource]
                 <= m_resourceSupply[valueResource]) {
-                totalValue += (m_resourceSupply[valueResource]
+                total_value = m_resourceDemand[valueResource];
+                total_value += (m_resourceSupply[valueResource]
                     - m_resourceDemand[valueResource]) * efficiency;
-                totalValue /= m_resourceSupply[valueResource];
+                average_value = total_value / m_resourceSupply[valueResource];
             } else {
+                average_value = m_resourceDemand[valueResource];
                 if (m_resourceSupply[valueResource] > 1)
-                    totalValue /= m_resourceSupply[valueResource];
-                if (totalValue > 1.0 / efficiency)
-                    totalValue = 1.0 / efficiency;
+                    average_value /= m_resourceSupply[valueResource];
+                if (average_value > 1.0 / efficiency)
+                    average_value = 1.0 / efficiency;
             }
         }
-        totalValue *= getMarketValue(EGameResource(valueResource));
-        m_resourceValue[valueResource] = totalValue;
-        player->m_ai.m_resourceValue[valueResource] = totalValue;
+        m_resourceValue[valueResource] = average_value
+            * getMarketValue(EGameResource(valueResource));
+        player->m_ai.m_resourceValue[valueResource] = m_resourceValue[valueResource];
     }
 
-    // Retail converts each accumulated sum back to integer before the next
-    // resource (Windows final loop; Mac 0x2ba68..0x2baf4), then divides
-    // that integer by five. The older DC double local is not this build.
-    int averageValue = 0;
+    // The final accumulator is separate from the double average_value above.
+    // DC 0x2e73c..0x2e7b4, Mac 0x2ba68..0x2baf4 and Windows all convert each
+    // sum back to integer before the next resource, then divide by five.
+    int resourceTotal = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
-        averageValue += m_resourceValue[averageResource];
-    player->m_ai.m_averageResourceValue = averageValue / 5;
+        resourceTotal += m_resourceValue[averageResource];
+    player->m_ai.m_averageResourceValue = resourceTotal / 5;
 }
 
 VA(0x00428dd0, 0x33E)
@@ -859,24 +859,15 @@ void type_AI_player::resetMagusHutValue()
     m_magusHutValue = findMagusHutValue(m_team, 0);
 }
 
-// DC ai_player.cpp:752..813 and Mac 0:0x2c9d8..0x2cc84 preserve the
-// two nested loops and direct type/amount/value writes in the creature record.
-// DC function-scope locals give Windows 93.01% (29/31 exact blocks). Indexed
-// town population access originally kept the town base in Mac and scored
-// Windows 92.72%. A separate population cursor improves Windows to 93.01%
-// with the same 31-block CFG and Mac shape alignment from 97 to 99
-// instructions; both retain the same eight Mac calls. Retail Windows spills
-// the town pointer and advances population in EDI. Three retained vector
-// template target aliases are still unresolved.
-// DC records creature_info, total_cost[7] and cost[7] in function scope;
-// the long total_cost type is distinct from int cost. Mac's final resource
-// index sign-extends each iteration: short restores its counted loop and
-// leaves Windows bytes unchanged. Mac's two zeroing calls target the verified
-// .bzero port mapping at 0:0x26ad3c; reversing function-scope POD/vector
-// declarations matches the Mac local slots and is Windows byte-flat. A
-// dwelling-first index operand order is byte-flat, so it is not retained.
-// Sixteen town/dwelling scopes, population-pointer qualifiers and product
-// operand controls also produce one identical Windows object at 93.01%.
+// DC ai_player.cpp:784..788 separates the population load, record amount
+// store, short multiplication and record value store. A short value local
+// preserves that narrowing before assignment to the long m_value field;
+// collapsing it into a cast changes retail's town/population register homes.
+// Mac 0x2cab4..0x2cad8 independently retains the amount store, multiplication,
+// extsh and value store. This ordinary spelling matches all 640 Windows bytes.
+// DC function-scope total_cost is long[7], distinct from int cost[7], and
+// creature_info is copied into the vector. Mac's final resource index
+// sign-extends each iteration. Keep the native locals and short indices.
 VA(0x00429ad0, 0x280)
 DC_ADDRESS(0x02f280, 0x22e)
 MAC_ADDRESS(0x02c9d8, 0x2ac)  // anchor-callee
@@ -884,8 +875,8 @@ void type_AI_player::calculateReserve()
 {
     playerData* player = &g_game->m_players[m_team];
     int cost[NUM_RESOURCES];
-    long totalCost[NUM_RESOURCES];
-    type_creature_value creatureInfo;
+    long total_cost[NUM_RESOURCES];
+    type_creature_value creature_info;
     std::vector<type_creature_value> creatures;
     memset(m_reservedFunds, 0, sizeof(m_reservedFunds));
     short dwelling;
@@ -896,31 +887,31 @@ void type_AI_player::calculateReserve()
         creatures.clear();
 
         dwelling = 0;
-        short* population = currentTown->m_population;
-        for (; dwelling < 14; dwelling++, population++) {
-            if (*population > 0) {
-                creatureInfo.m_type = g_dwellingType[currentTown->m_type][dwelling];
-                creatureInfo.m_amount = *population;
-                creatureInfo.m_value = static_cast<short>(creatureInfo.m_amount
-                    * akCreatureTypeTraits[creatureInfo.m_type].AI_value);
-                creatures.push_back(creatureInfo);
+        for (; dwelling < 14; dwelling++) {
+            if (currentTown->m_population[dwelling] > 0) {
+                creature_info.m_type = g_dwellingType[currentTown->m_type][dwelling];
+                short value = currentTown->m_population[dwelling];
+                creature_info.m_amount = value;
+                value *= akCreatureTypeTraits[creature_info.m_type].AI_value;
+                creature_info.m_value = value;
+                creatures.push_back(creature_info);
             }
         }
 
         std::sort(creatures.begin(), creatures.end());
-        memset(totalCost, 0, sizeof(totalCost));
+        memset(total_cost, 0, sizeof(total_cost));
         for (short creature = static_cast<short>(creatures.size() - 1);
              creature >= 0 && creature >= creatures.size() - 2;
              creature--) {
             getMonsterCost(creatures[creature].m_type, cost);
             for (short resource = 0; resource < NUM_RESOURCES; resource++)
-                totalCost[resource] += cost[resource]
+                total_cost[resource] += cost[resource]
                     * creatures[creature].m_amount;
         }
 
         for (short reserveResource = 0; reserveResource < NUM_RESOURCES; reserveResource++) {
-            if (totalCost[reserveResource] > m_reservedFunds[reserveResource])
-                m_reservedFunds[reserveResource] = totalCost[reserveResource];
+            if (total_cost[reserveResource] > m_reservedFunds[reserveResource])
+                m_reservedFunds[reserveResource] = total_cost[reserveResource];
         }
     }
 }
@@ -3904,105 +3895,103 @@ DATA(0x00660500) static long g_constThresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
 
-// Windows 99.9755%: all 63 CFG blocks and seven calls agree. After
-// teleportTo, retail loads manaCost from [ebp-0x44] through EDX before
-// useSpell; VC6 chooses EAX for the same slot. The why-reg model's named
-// step-test probe and moving manaCost's declaration to its initializer are
-// byte-flat. Mac 0:0x340a4 agrees on all nine calls but retains a 0x190
-// frame against this view's 0x180; neither result proves an extra local.
+// DC4145 copies the packed destination point into the TeleportTo argument.
+// A named point value preserves that lifetime and reproduces all 1217 retail
+// bytes, including the EDX mana-cost argument after teleportTo. A point or
+// path-cell reference leaves that argument in EAX. The single mana-source
+// Boolean expression also recovers the Mac flag lifetime and retains the
+// Windows exact match. Keep the recorded DC local spellings; the naming-only
+// control is byte-flat.
 DC_ADDRESS(0x034630, 0x44a)
-static unsigned char attemptTeleport(hero* currentHero,
+static unsigned char attemptTeleport(hero* current_hero,
                                       std::vector<pathCell>& path,
                                       long step)
 {
     unsigned char atManaSource;
-    unsigned char willTeleport;
-    type_point startPoint;
-    long startCost;
-    unsigned char inBoat;
-    long bestSavings;
-    long manaCost;
+    unsigned char will_teleport;
+    type_point start_point;
+    long start_cost;
+    unsigned char in_boat;
+    long best_savings;
+    long mana_cost;
     long savings;
-    long destinationIndex;
+    long destination_index;
     long threshold;
 
     if (!path[step].m_lastCanStop)
         return 0;
-    if (!currentHero->spellIsAvailable(SPELL_DIMENSION_DOOR))
+    if (!current_hero->spellIsAvailable(SPELL_DIMENSION_DOOR))
         return 0;
-    if (currentHero->getSpecialTerrainObjectType() == CURSED_GROUND)
-        return 0;
-
-    manaCost = currentHero->getManaCost(SPELL_DIMENSION_DOOR);
-    if (manaCost + 20 > currentHero->m_mana)
+    if (current_hero->getSpecialTerrainObjectType() == CURSED_GROUND)
         return 0;
 
-    long mastery = currentHero->getSpellLevel(SPELL_DIMENSION_DOOR);
-    if (currentHero->m_dWalkSpellsCast
+    mana_cost = current_hero->getManaCost(SPELL_DIMENSION_DOOR);
+    if (mana_cost + 20 > current_hero->m_mana)
+        return 0;
+
+    long mastery = current_hero->getSpellLevel(SPELL_DIMENSION_DOOR);
+    if (current_hero->m_dWalkSpellsCast
         >= akSpellTraits[SPELL_DIMENSION_DOOR].m_mastery_bonus[mastery]) {
         if (path[step].m_dimensionDoor) {
             if (step == 0)
-                currentHero->m_movePoints = 0;
+                current_hero->m_movePoints = 0;
             return 1;
         }
         return 0;
     }
 
-    long castsRemaining = (currentHero->m_mana - 20) / manaCost;
+    long castsRemaining = (current_hero->m_mana - 20) / mana_cost;
     // Retail keeps this source object live in EBX across get_target/get_cell.
     // Dreamcast's local inventory is a lower bound and cannot expose an
     // optimizer-only pointer alias.
     game* currentGame = g_game;
     TAdventureObjectType targetType =
-        currentGame->getCell(currentHero->getTarget())->m_type;
-    if (targetType == MAGIC_WELL || targetType == MAGIC_SPRING)
-        atManaSource = 1;
-    else
-        atManaSource = 0;
+        currentGame->getCell(current_hero->getTarget())->m_type;
+    atManaSource = targetType == MAGIC_WELL || targetType == MAGIC_SPRING;
     if (castsRemaining > 6)
         castsRemaining = 6;
     threshold = g_constThresholds[castsRemaining - 1]
-                * currentHero->m_maxMovePoints / 100;
+                * current_hero->m_maxMovePoints / 100;
     if (atManaSource && castsRemaining > 1)
         threshold = 200;
 
-    inBoat = (currentHero->m_flags & 0x40000) != 0;
+    in_boat = (current_hero->m_flags & 0x40000) != 0;
     // Dreamcast decrements this index in get_location's call delay slot. Its
     // placement immediately before that call also reproduces retail VC6's
     // interleaved lifetime; moving it after the call falls to 96.3350%.
     long pathIndex = step - 1;
-    destinationIndex = -1;
-    startPoint = currentHero->getLocation();
-    bestSavings = 0;
+    destination_index = -1;
+    start_point = current_hero->getLocation();
+    best_savings = 0;
 
     do {
-        willTeleport = 0;
+        will_teleport = 0;
         if (pathIndex < 0)
-            startCost = 200;
+            start_cost = 200;
         else
-            startCost = path[pathIndex].m_cost + 200;
+            start_cost = path[pathIndex].m_cost + 200;
 
         savings = 0;
         long candidateDestination = -1;
         long i;
         for (i = pathIndex + 1; i < path.size(); ++i) {
             if (path[i].m_dimensionDoor)
-                willTeleport = 1;
+                will_teleport = 1;
             if (!path[i].m_canStop)
                 continue;
-            if (abs(path[i].m_point.m_x - startPoint.m_x) > 9
-                || abs(path[i].m_point.m_y - startPoint.m_y) > 8
-                || path[i].m_point.m_z != startPoint.m_z)
+            if (abs(path[i].m_point.m_x - start_point.m_x) > 9
+                || abs(path[i].m_point.m_y - start_point.m_y) > 8
+                || path[i].m_point.m_z != start_point.m_z)
                 continue;
             if (g_game->getCell(path[i].m_point)->m_isTrigger)
                 continue;
-            if (path[i].m_inBoat != inBoat)
+            if (path[i].m_inBoat != in_boat)
                 continue;
 
-            savings = path[i].m_cost - startCost;
+            savings = path[i].m_cost - start_cost;
             if (atManaSource && savings > 0 && i + 2 == path.size())
-                willTeleport = 1;
-            if (!willTeleport && savings < threshold)
+                will_teleport = 1;
+            if (!will_teleport && savings < threshold)
                 continue;
             candidateDestination = i;
         }
@@ -4010,31 +3999,32 @@ static unsigned char attemptTeleport(hero* currentHero,
         if (pathIndex < step && candidateDestination < 0)
             return 0;
 
-        if (destinationIndex < 0 || savings > bestSavings) {
+        if (destination_index < 0 || savings > best_savings) {
             if (pathIndex >= step)
                 return 0;
-            bestSavings = savings;
-            destinationIndex = candidateDestination;
+            best_savings = savings;
+            destination_index = candidateDestination;
         }
 
-        for (++pathIndex; pathIndex < destinationIndex; ++pathIndex) {
+        for (++pathIndex; pathIndex < destination_index; ++pathIndex) {
             if (!path[pathIndex].m_canStop
                 || path[pathIndex].m_dimensionDoor) {
-                pathIndex = destinationIndex;
+                pathIndex = destination_index;
                 break;
             }
-            if (path[pathIndex].m_point.m_z == startPoint.m_z
-                && path[pathIndex].m_inBoat == inBoat) {
-                startPoint = path[pathIndex].m_point;
+            if (path[pathIndex].m_point.m_z == start_point.m_z
+                && path[pathIndex].m_inBoat == in_boat) {
+                start_point = path[pathIndex].m_point;
                 break;
             }
         }
-    } while (pathIndex < destinationIndex);
+    } while (pathIndex < destination_index);
 
-    g_advManager->teleportTo(currentHero, path[destinationIndex].m_point, 0,
+    type_point destination = path[destination_index].m_point;
+    g_advManager->teleportTo(current_hero, destination, 0,
                              0, 1, 0);
-    currentHero->useSpell(manaCost);
-    ++currentHero->m_dWalkSpellsCast;
+    current_hero->useSpell(mana_cost);
+    ++current_hero->m_dWalkSpellsCast;
     return 1;
 }
 

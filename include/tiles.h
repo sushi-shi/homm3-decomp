@@ -35,9 +35,13 @@ enum ETileDirection {
     TILE_DIR_COUNT = 8
 };
 
-extern TPoint<int> g_tileDirections[TILE_DIR_COUNT];
+// Loki preserves these original names and types: a const offset table and
+// an eight-element bool mask shared by the game and editor line painters.
+extern const TPoint<int> akAdjOffset[TILE_DIR_COUNT];
 
-void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
-                                       unsigned char* neighbourExists);
+// Use the owning image's ordinary calling convention: the game builds with
+// /Gr, while the editor's corresponding five-argument call is cdecl.
+void computeAdjacentDirs(unsigned int width, unsigned int height,
+                         unsigned int x, unsigned int y, bool (&abDir)[8]);
 
 #endif

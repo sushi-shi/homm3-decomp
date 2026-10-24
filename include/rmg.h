@@ -731,7 +731,7 @@ struct TRmgZoneBounds {
 };
 
 TRmgPoint clipRmgBoundaryPoint(
-    const TRmgZoneBounds& bounds, TRmgPoint point, TRmgPoint toward);
+    TRmgPoint point, TRmgPoint toward, const TRmgZoneBounds& bounds);
 
 // The terrain noise generator 0x53ed00 keeps a vector of nine-dword regions.
 // Its subdivision helper 0x53e9e0 copies each complete region, halves both
@@ -1178,6 +1178,10 @@ struct TRmgMapItem {
     // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
     void setTerrain(int terrain, int frame,
         unsigned char flipX, unsigned char flipY);
+    void setRoad(int roadType, int frame,
+        unsigned char flipX, unsigned char flipY);
+    void setRiver(int riverType, int frame,
+        unsigned char flipX, unsigned char flipY);
 
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
@@ -1345,7 +1349,7 @@ public:
     // The buffer-first view signature preserves the dimension values before
     // GetMapItem computes the plane pointer. In RepairWaterZoneBorders the
     // constructor/painting range 0x540124..0x54020c matches all 232 bytes after
-    // relocation resolution and segment placement. The role is retail-only.
+    // relocation resolution and segment placement.
     // Controls: dimensions-first scalar arguments reload fields; a map/level
     // pair stores width early; a separate plane local keeps the wrong multiply
     // operand. Field assignments stay in the body: an all-member initializer
@@ -1360,12 +1364,14 @@ public:
     // three dimensions as a position changes retry bodies but closes no further
     // function. Neither interface/layout change is adopted.
 
-    inline type_random_map(TRmgMapItem* items, int width, int height)
+    // Mac 0x22d320 stores its fourth argument (r7) as numberLevels; all eight
+    // view callers pass 1. Windows folds that argument into the expanded body.
+    inline type_random_map(TRmgMapItem* items, int width, int height, int levels)
     {
         m_mapItems = items;
         m_mapWidth = width;
         m_mapHeight = height;
-        m_numberLevels = 1;
+        m_numberLevels = levels;
         m_ownsMapItems = 0;
     }
 
@@ -1395,6 +1401,7 @@ public:
     int getNumberLevels() const { return m_numberLevels; }
 
     TRmgMapItem* getMapItem(int x, int y);
+    TRmgMapItem* getMapItem(TRmgPoint point);
     inline TRmgMapItem* getMapItem(int x, int y, int z)
     {
         return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;

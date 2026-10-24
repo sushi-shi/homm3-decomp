@@ -107,22 +107,24 @@ void TMapSpecsTeamsPage::_onPlayerTeamRadio(unsigned int player)
     if (this->*_s_apPlayerTeam[player] == oldTeam)
         return;
     const TArray<TPlayerInfo, kNumPlayers>& players = _m_newMap.getPlayers();
+    bool found = false;
     unsigned int other;
     for (other = 0; other < kNumPlayers; other++) {
-        if (players[other].getBPresent() && this->*_s_apPlayerTeam[other] == oldTeam)
-            return;
+        if (players[other].getBPresent() && this->*_s_apPlayerTeam[other] == oldTeam) {
+            found = true;
+            break;
+        }
     }
-    int numTeams = _m_numTeams + TTeamInfo::s_kMinTeams;
+    if (found)
+        return;
     unsigned int aTeamSize[TTeamInfo::s_kMaxTeams];
-    int team;
-    for (team = 0; team < numTeams; team++)
-        aTeamSize[team] = 0;
+    std::fill_n(aTeamSize, _m_numTeams + TTeamInfo::s_kMinTeams, 0U);
     for (other = 0; other < kNumPlayers; other++) {
         if (players[other].getBPresent())
             ++aTeamSize[this->*_s_apPlayerTeam[other]];
     }
     unsigned int maxTeamSize = aTeamSize[0];
-    for (unsigned int i = 1; i < unsigned(numTeams); i++) {
+    for (unsigned int i = 1; i < unsigned(_m_numTeams + TTeamInfo::s_kMinTeams); i++) {
         if (aTeamSize[i] > maxTeamSize)
             maxTeamSize = aTeamSize[i];
     }
@@ -367,6 +369,8 @@ BEGIN_MESSAGE_MAP(TMapSpecsTeamsPage, CPropertyPage)
     ON_BN_CLICKED(IDC_PLAYER8_STATIC, OnPlayer8Static)
 END_MESSAGE_MAP()
 
+// Loki MapSpecsTeamsPage.cpp keeps each player traversal index local to its
+// loop. Those lifetimes also recover Complete's member-pointer store order.
 VA(0x00477459, 0x469)
 BOOL TMapSpecsTeamsPage::OnInitDialog()
 {
@@ -392,32 +396,34 @@ BOOL TMapSpecsTeamsPage::OnInitDialog()
         TFormattedString(SMapSpecsTeamsPageText::kPlayerStaticFmtStr, 8, akPlayerTraits[7].m_pColorName));
     _m_bModified = false;
     const TTeamInfo& teamInfo = _m_newMap.getTeamInfo();
-    unsigned int player;
     if (teamInfo.getBHasTeams()) {
         _m_numTeams = teamInfo.getNumTeams() - TTeamInfo::s_kMinTeams;
-        for (player = 0; player < kNumPlayers; player++) {
-            if (_m_newMap.getPlayers()[player].getBPresent())
+        for (unsigned int player = 0; player < kNumPlayers; player++) {
+            const TArray<TPlayerInfo, kNumPlayers>& players = _m_newMap.getPlayers();
+            if (players[player].getBPresent()) {
                 this->*_s_apPlayerTeam[player] = teamInfo.getPlayerTeam(TPlayer(player));
-            else
+            } else {
                 this->*_s_apPlayerTeam[player] = -1;
+            }
         }
     } else {
         _m_numTeams = -1;
-        for (player = 0; player < kNumPlayers; player++)
+        for (unsigned int player = 0; player < kNumPlayers; player++)
             this->*_s_apPlayerTeam[player] = -1;
     }
     CPropertyPage::OnInitDialog();
     _m_enableTeamsCheck.SetCheck(teamInfo.getBHasTeams());
     if (!teamInfo.getBHasTeams()) {
-        for (CWnd* pWnd = _m_enableTeamsCheck.GetWindow(GW_HWNDNEXT); pWnd != NULL; pWnd = pWnd->GetWindow(GW_HWNDNEXT))
+        for (CWnd* pWnd = _m_enableTeamsCheck.GetNextWindow(); pWnd != NULL; pWnd = pWnd->GetNextWindow())
             pWnd->EnableWindow(FALSE);
         if (_m_newMap.getNumPlayableSlots() <= TTeamInfo::s_kMinTeams)
             _m_enableTeamsCheck.EnableWindow(FALSE);
     } else {
         for (unsigned int i = _m_newMap.getNumPlayableSlots() - TTeamInfo::s_kMinTeams; i < s_kNumNumTeamsRadios; i++)
             _m_aNumTeamsRadios[i].EnableWindow(FALSE);
-        for (player = 0; player < kNumPlayers; player++) {
-            if (_m_newMap.getPlayers()[player].getBPresent()) {
+        for (unsigned int player = 0; player < kNumPlayers; player++) {
+            const TArray<TPlayerInfo, kNumPlayers>& players = _m_newMap.getPlayers();
+            if (players[player].getBPresent()) {
                 for (unsigned int team = _m_numTeams + TTeamInfo::s_kMinTeams; team < TTeamInfo::s_kMaxTeams; team++)
                     _m_aPlayerControls[player].m_aTeamRadios[team].EnableWindow(FALSE);
             } else {
@@ -452,6 +458,9 @@ void TMapSpecsTeamsPage::OnOK()
 
 VA_COMPGEN(0x004779de, 0xa, IMPLICIT_DTOR, TTeamInfo)
 
+// Loki separates playerNum/teamSize used for distribution from the later UI
+// traversal indices, and declares playerNum before team. Together these recover
+// Complete's saved zero register and member-pointer store order.
 VA(0x004779e8, 0x1f3)
 void TMapSpecsTeamsPage::OnEnableTeamsCheck()
 {
@@ -461,35 +470,35 @@ void TMapSpecsTeamsPage::OnEnableTeamsCheck()
         _m_teamNumberStatic.EnableWindow(TRUE);
         _m_numTeams = 0;
         const TArray<TPlayerInfo, kNumPlayers>& players = _m_newMap.getPlayers();
+        unsigned int playerNum = 0;
         unsigned int team = 0;
         unsigned int numTeamsLeft = TTeamInfo::s_kMinTeams;
-        unsigned int player = 0;
         unsigned int numPlayersLeft = _m_newMap.getNumPlayableSlots();
         while (numTeamsLeft > 0) {
-            unsigned int numInTeam = (numPlayersLeft + numTeamsLeft - 1) / numTeamsLeft;
-            numPlayersLeft -= numInTeam;
+            unsigned int teamSize = (numPlayersLeft + numTeamsLeft - 1) / numTeamsLeft;
+            numPlayersLeft -= teamSize;
             numTeamsLeft--;
-            while (numInTeam > 0) {
-                if (players[player].getBPresent()) {
-                    assert(this->*_s_apPlayerTeam[player] < TTeamInfo::s_kMinTeams);
-                    this->*_s_apPlayerTeam[player] = team;
-                    numInTeam--;
+            while (teamSize > 0) {
+                if (players[playerNum].getBPresent()) {
+                    assert(this->*_s_apPlayerTeam[playerNum] < TTeamInfo::s_kMinTeams);
+                    this->*_s_apPlayerTeam[playerNum] = team;
+                    teamSize--;
                 }
-                player++;
+                playerNum++;
             }
             team++;
         }
         CWnd* pWnd;
-        for (pWnd = _m_enableTeamsCheck.GetWindow(GW_HWNDNEXT); pWnd != NULL; pWnd = pWnd->GetWindow(GW_HWNDNEXT)) {
+        for (pWnd = _m_enableTeamsCheck.GetNextWindow(); pWnd != NULL; pWnd = pWnd->GetNextWindow()) {
             if ((pWnd->GetDlgCtrlID() & 0xffff) == 0xffff)
                 pWnd->EnableWindow(TRUE);
         }
         for (unsigned int i = 0; i < _m_newMap.getNumPlayableSlots() - TTeamInfo::s_kMinTeams; i++)
             _m_aNumTeamsRadios[i].EnableWindow(TRUE);
-        for (player = 0; player < kNumPlayers; player++) {
+        for (unsigned int player = 0; player < kNumPlayers; player++) {
             if (_m_newMap.getPlayers()[player].getBPresent()) {
                 _m_aPlayerControls[player].m_playerStatic.EnableWindow(TRUE);
-                for (team = 0; team < TTeamInfo::s_kMinTeams; team++)
+                for (unsigned int team = 0; team < TTeamInfo::s_kMinTeams; team++)
                     _m_aPlayerControls[player].m_aTeamRadios[team].EnableWindow(TRUE);
             }
         }
@@ -499,7 +508,7 @@ void TMapSpecsTeamsPage::OnEnableTeamsCheck()
         for (unsigned int player = 0; player < kNumPlayers; player++)
             this->*_s_apPlayerTeam[player] = -1;
         UpdateData(FALSE);
-        for (CWnd* pWnd = _m_enableTeamsCheck.GetWindow(GW_HWNDNEXT); pWnd != NULL; pWnd = pWnd->GetWindow(GW_HWNDNEXT))
+        for (CWnd* pWnd = _m_enableTeamsCheck.GetNextWindow(); pWnd != NULL; pWnd = pWnd->GetNextWindow())
             pWnd->EnableWindow(FALSE);
     }
 }

@@ -265,7 +265,8 @@ VA(0x00497b27, 0x91)
 void TGetQuestDescFunc::visit(const TQuestBeASpecificHero& quest)
 {
     THeroID heroID = quest.getHeroID();
-    const char* className = THero::s_akClassTraits[THero::s_akTraits[heroID].m_class].m_name;
+    THeroClass heroClass = THero::s_akTraits[heroID].m_class;
+    const char* className = THero::s_akClassTraits[heroClass].m_name;
     _m_desc.Format(SSeersHutPropsDlgText::kBeHeroFmtStr,
                    (LPCTSTR)TFormattedString(kSpecificHeroAndClassFmtStr,
                                              _m_pMap->getHeroPrototype(heroID).getName().c_str(), className));

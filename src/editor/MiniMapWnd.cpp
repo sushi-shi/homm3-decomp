@@ -235,7 +235,8 @@ void TMiniMapWnd::OnPaint()
             }
         }
     }
-    CRect viewRect(_m_viewPos.x * s_kClientSize.cx / width, _m_viewPos.y * s_kClientSize.cy / height,
+    // Retail also uses cx for the top edge; the fixed client is 144 by 144.
+    CRect viewRect(_m_viewPos.x * s_kClientSize.cx / width, _m_viewPos.y * s_kClientSize.cx / height,
                    (_m_viewPos.x + _m_viewSize.cx) * s_kClientSize.cx / width - 1,
                    (_m_viewPos.y + _m_viewSize.cy) * s_kClientSize.cy / height - 1);
     POINT points[5] = {

@@ -89,5 +89,7 @@ int TGameMapMask::getTileState(unsigned int x, unsigned int y, bool bSecondLayer
 {
     const _TBlock& block =
         *_m_pImpl->m_layers[bSecondLayer]->m_blocks[y / kBlockSize * _m_pImpl->m_numBlockColumns + x / kBlockSize];
-    return block.getState(x % kBlockSize, y % kBlockSize);
+    x %= kBlockSize;
+    y %= kBlockSize;
+    return block.getState(x, y);
 }

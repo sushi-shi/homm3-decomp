@@ -28,7 +28,7 @@ Campaign	??0?$ctype@D@std@@QAE@PBF_NI@Z	100.0000	100.0000	100.0000	0xf230	-
 Campaign	??0?$vector@VTScenario@@V?$allocator@VTScenario@@@std@@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xfa40	-
 Campaign	??0TCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x77d0	tokens1:f4403dd673f5
 Campaign	??0TCampaign@@QAE@H@Z	100.0000	100.0000	100.0000	0x77e0	tokens1:da0347407b03
-Campaign	??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z	88.6276	88.6276	88.6276	0xa1f0	tokens1:f167d3a54309
+Campaign	??0TCampaignScenarioMap@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAV?$basic_streambuf@DU?$char_traits@D@std@@@2@H_N@Z	100.0000	100.0000	100.0000	0xa1f0	tokens1:ea1177736903
 Campaign	??0TCreateFailure@TCampaignScenarioMap@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xab80	-
 Campaign	??0TCreateFailure@TCampaignScenarioMap@@QAE@XZ	100.0000	100.0000	100.0000	0xa7c0	-
 Campaign	??0TImportTextFailure@TCampaign@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x6c00	-
@@ -49,7 +49,7 @@ Campaign	??0TScenarioOptionsCrossoverScenario@@QAE@ABV?$vector@UTChoice@TScenari
 Campaign	??0TScenarioOptionsStartingHero@@QAE@ABV?$vector@UTChoice@TScenarioOptionsStartingHero@@V?$allocator@UTChoice@TScenarioOptionsStartingHero@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x5c00	tokens1:ec9497f23197
 Campaign	??0TScenarioPrologue@@QAE@HHABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x8460	tokens1:14c33b214c49
 Campaign	??0TScenarioPrologue@@QAE@XZ	100.0000	100.0000	100.0000	0x8440	tokens1:556d4ec15121
-Campaign	??0_TImpl@TCampaign@@QAE@H@Z	98.6259	98.6259	98.6259	0x5ce0	tokens1:e6674c173dbc
+Campaign	??0_TImpl@TCampaign@@QAE@H@Z	100.0000	100.0000	100.0000	0x5ce0	tokens1:21bf067134cb
 Campaign	??0_TImpl@TScenario@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x89c0	tokens1:469fa70bd9b9
 Campaign	??0_TImpl@TScenario@@QAE@H@Z	100.0000	100.0000	100.0000	0x8d00	tokens1:9fa2aafc652c
 Campaign	??0_TWrapper@?$TRefCountingAutoPtr@VTCampaignScenarioMap@@@@QAE@V?$auto_ptr@VTCampaignScenarioMap@@@std@@@Z	100.0000	100.0000	100.0000	0xf790	-
@@ -89,7 +89,7 @@ Campaign	??4reference@?$bitset@$0IB@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0
 Campaign	??4reference@?$bitset@$0IK@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xf620	-
 Campaign	??4reference@?$bitset@$0JA@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xf4e0	-
 Campaign	??4reference@?$bitset@$0JB@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xf550	-
-Campaign	??5@YAAAVTRawIStream@@AAV0@AAVTScenarioPrologue@@@Z	92.9477	96.6163	96.6163	0x85a0	tokens1:e97c3f477d64
+Campaign	??5@YAAAVTRawIStream@@AAV0@AAVTScenarioPrologue@@@Z	98.7791	98.7791	98.7791	0x85a0	tokens1:e97c3f477d64
 Campaign	??6@YAAAVTRawOStream@@AAV0@ABVTScenarioPrologue@@@Z	100.0000	100.0000	100.0000	0x88d0	tokens1:ec3e6cb4769c
 Campaign	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z	100.0000	100.0000	100.0000	0xe700	-
 Campaign	??8@YA_NABVTScenarioOptionsBonus@@0@Z	100.0000	100.0000	100.0000	0x5a70	tokens1:178683892822
@@ -360,7 +360,7 @@ CampaignDoc	?OnImportText@TCampaignDoc@@IAEXXZ	100.0000	100.0000	100.0000	0x1533
 CampaignDoc	?OnNewDocument@TCampaignDoc@@UAEHXZ	95.9490	95.9490	95.9490	0x14160	tokens1:cc68d04a9f5e
 CampaignDoc	?OnOpenDocument@TCampaignDoc@@UAEHPBD@Z	100.0000	100.0000	100.0000	0x14ae0	tokens1:bd83f349d792
 CampaignDoc	?OnRefreshScenarioMaps@TCampaignDoc@@IAEXXZ	100.0000	100.0000	100.0000	0x14be0	tokens1:806942f07b37
-CampaignDoc	?ReportSaveLoadException@TCampaignDoc@@UAEXPBDPAVCException@@HI@Z	97.6522	97.6522	97.6522	0x14b00	tokens1:d7939f582cf2
+CampaignDoc	?ReportSaveLoadException@TCampaignDoc@@UAEXPBDPAVCException@@HI@Z	97.6667	97.6667	97.6667	0x14b00	tokens1:54469cc5bba5
 CampaignDoc	?SaveModified@TCampaignDoc@@UAEHXZ	100.0000	100.0000	100.0000	0x14f70	tokens1:aac487523ccf
 CampaignDoc	?Serialize@TCampaignDoc@@UAEXAAVCArchive@@@Z	100.0000	100.0000	100.0000	0x14290	tokens1:90958040185e
 CampaignDoc	?SetModifiedFlag@CDocument@@UAEXH@Z	100.0000	100.0000	100.0000	0x15ba0	-
@@ -386,29 +386,29 @@ CampaignDoc	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_stream
 CampaignDoc	?insert@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QAEPAUTChoice@TScenarioOptionsCrossoverScenario@@PAU34@ABU34@@Z	-	100.0000	100.0000	0x15ff0	-
 CampaignDoc	?insert@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QAEXPAUTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@IABU34@@Z	100.0000	100.0000	100.0000	0x16230	-
 CampaignDoc	?insert@?$vector@V?$auto_ptr@VTScenarioStartingBonus@@@std@@V?$allocator@V?$auto_ptr@VTScenarioStartingBonus@@@std@@@2@@std@@QAEPAV?$auto_ptr@VTScenarioStartingBonus@@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0x15e10	-
-CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	93.9220	94.5946	94.5946	0x13600	tokens1:dd2baee351b6
+CampaignDoc	?loadCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@std@@PAVCFile@@@Z	93.6407	94.5946	94.5946	0x13600	tokens1:dd2baee351b6
 CampaignDoc	?loadScenarioMap@TCampaignDoc@@QAE?AV?$auto_ptr@VTCampaignScenarioMap@@@std@@ABVCString@@@Z	100.0000	100.0000	100.0000	0x14390	tokens1:745cd3389969
 CampaignDoc	?make_pair@std@@YA?AU?$pair@V?$auto_ptr@VTCampaign@@@std@@H@1@ABV?$auto_ptr@VTCampaign@@@1@ABH@Z	100.0000	100.0000	100.0000	0x167f0	-
-CampaignDoc	?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z	99.6328	99.6328	99.6328	0x10890	tokens1:8c2799e8098c
+CampaignDoc	?promptTextFileName@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA_NPBDHKAAVCString@@@Z	100.0000	100.0000	100.0000	0x10890	tokens1:613ff81ae8df
 CampaignDoc	?read@TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXAAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x12400	tokens1:a9725dc1b8a5
-CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	93.7333	93.7333	93.7333	0x115a0	tokens1:49b2e876a8fc
+CampaignDoc	?readStartingBonus@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@AAVTRawIStream@@H@Z	93.7333	93.7333	93.7333	0x115a0	tokens1:315ae3bdf363
 CampaignDoc	?readStartingOptions@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YA?AV?$auto_ptr@VTScenarioStartingOptions@@@std@@AAVTRawIStream@@H@Z	94.8769	94.9015	94.9015	0x11ee0	tokens1:e6cf4947256f
 CampaignDoc	?reportCreateFailure@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@ABVTCreateFailure@TCampaignScenarioMap@@PAVCWnd@@@Z	100.0000	100.0000	100.0000	0x12ca0	tokens1:7385cc3289da
 CampaignDoc	?saveCampaign@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@YAXABVTCampaign@@HPAVCFile@@@Z	99.9745	99.9745	99.9745	0x12e00	tokens1:30e2f35c1db4
 CampaignDoc	?setVersion@TCampaignDoc@@QAEXH@Z	100.0000	100.0000	100.0000	0x14a50	tokens1:0659db93c221
 CampaignDoc	?size@?$vector@UTChoice@TScenarioOptionsCrossoverScenario@@V?$allocator@UTChoice@TScenarioOptionsCrossoverScenario@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x15bd0	-
 CampaignDoc	?size@?$vector@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@V?$allocator@UTScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x16210	-
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	99.8387	99.8387	99.8387	0x11180	tokens1:29718184d72b
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x11180	tokens1:f821897dcde9
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x11100	tokens1:93dd627fbd76
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	99.9375	99.9375	99.9375	0x11010	tokens1:fc08efdc8420
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusPrimarySkill@@@Z	99.9286	99.9286	99.9286	0x11300	tokens1:845a37fca096
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x11010	tokens1:f23a6d889120
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x11300	tokens1:21b2d569fa3f
 CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0x114c0	tokens1:44ec417c6925
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSecondarySkill@@@Z	99.9375	99.9375	99.9375	0x113d0	tokens1:8ed1f5b06336
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpell@@@Z	99.9194	99.9194	99.9194	0x10f50	tokens1:1b543d852dff
-CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpellScroll@@@Z	99.9194	99.9194	99.9194	0x11240	tokens1:c0eb1a9677b4
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x113d0	tokens1:6339b3aabd0e
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpell@@@Z	100.0000	100.0000	100.0000	0x10f50	tokens1:c7898d098b2f
+CampaignDoc	?visit@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioBonusSpellScroll@@@Z	100.0000	100.0000	100.0000	0x11240	tokens1:9780afcaace8
 CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsBonus@@@Z	100.0000	100.0000	100.0000	0x11b80	tokens1:998337ad11aa
 CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x11c80	tokens1:22b1d8f019b0
-CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsStartingHero@@@Z	99.9519	99.9519	99.9519	0x11da0	tokens1:4e2cab9d5e92
+CampaignDoc	?visit@TScenarioStartingOptionsWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@UAEXABVTScenarioOptionsStartingHero@@@Z	100.0000	100.0000	100.0000	0x11da0	tokens1:f4ff2ab98ae1
 CampaignDoc	?write@TRawOStream@@QAEAAV1@PBDI@Z	100.0000	100.0000	100.0000	0x167b0	-
 CampaignDoc	?write@TScenarioRecord@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QBEXAAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x129f0	tokens1:c22aa90a92d9
 CampaignDoc	?write@TScenarioStartingBonusWriter@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\CampaignDoc.cpp1959726197@@QAEXABVTScenarioStartingBonus@@AAVTRawOStream@@H@Z	100.0000	100.0000	100.0000	0x10f30	tokens1:6ffee2429f90
@@ -450,7 +450,7 @@ CampaignEditor	__h3cg$CampaignEditor$static_dtor$resourceManager	100.0000	100.00
 CampaignEditor	__h3cg$CampaignEditor$static_dtor$version	100.0000	100.0000	100.0000	0x48b0	-
 CampaignEditorText	?copyText@?A0x8599eb40b679b34c@@YAXPADPBD@Z	100.0000	100.0000	100.0000	0x16ee0	tokens1:534632ea2766
 CampaignEditorText	?getTextLength@?A0x8599eb40b679b34c@@YAHPBD@Z	100.0000	100.0000	100.0000	0x16ea0	tokens1:a0fbea15685b
-CampaignEditorText	?initialize@SText@@YAXXZ	99.2542	99.2542	99.2542	0x18190	tokens1:18154d63575d
+CampaignEditorText	?initialize@SText@@YAXXZ	100.0000	100.0000	100.0000	0x18190	tokens1:23f61b1d5be2
 CampaignEditorText	__h3cg$CampaignEditorText$static_ctor$SCampaignPropsDlgText__kArmageddonsBladeRadioStr	100.0000	100.0000	100.0000	0x17640	-
 CampaignEditorText	__h3cg$CampaignEditorText$static_ctor$SCampaignPropsDlgText__kCaptionStr	100.0000	100.0000	100.0000	0x17560	-
 CampaignEditorText	__h3cg$CampaignEditorText$static_ctor$SCampaignPropsDlgText__kDescriptionStaticStr	100.0000	100.0000	100.0000	0x175c0	-
@@ -635,7 +635,7 @@ CampaignMapWnd	?OnContextMenu@TCampaignMapWnd@@IAEXPAVCWnd@@VCPoint@@@Z	100.0000
 CampaignMapWnd	?OnHScroll@TCampaignMapWnd@@IAEXIIPAVCScrollBar@@@Z	100.0000	100.0000	100.0000	0x1a3f0	tokens1:e613e4eafd0a
 CampaignMapWnd	?OnLButtonDblClk@TCampaignMapWnd@@IAEXIVCPoint@@@Z	100.0000	100.0000	100.0000	0x1aa30	tokens1:e3e9cc6dbfff
 CampaignMapWnd	?OnLButtonDown@TCampaignMapWnd@@IAEXIVCPoint@@@Z	100.0000	100.0000	100.0000	0x1a9d0	tokens1:b8d4729ded1d
-CampaignMapWnd	?OnPaint@TCampaignMapWnd@@IAEXXZ	99.7845	99.7845	99.7845	0x1a630	tokens1:6b7abbd5857b
+CampaignMapWnd	?OnPaint@TCampaignMapWnd@@IAEXXZ	99.9965	99.9965	99.9965	0x1a630	tokens1:6b7abbd5857b
 CampaignMapWnd	?OnRButtonDown@TCampaignMapWnd@@IAEXIVCPoint@@@Z	100.0000	100.0000	100.0000	0x1af70	tokens1:ad8b0e4530f9
 CampaignMapWnd	?OnScenarioProperties@TCampaignMapWnd@@IAEXXZ	100.0000	100.0000	100.0000	0x1ad00	tokens1:590434603cb4
 CampaignMapWnd	?OnSize@TCampaignMapWnd@@IAEXIHH@Z	100.0000	100.0000	100.0000	0x1a380	tokens1:0d17e3e3f40b
@@ -713,13 +713,13 @@ DIBSection	??_GCGdiObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x36f0	-
 DIBSection	??_GT16bppDIBSection@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1cfe0	-
 DIBSection	?Serialize@CObject@@UAEXAAVCArchive@@@Z	100.0000	100.0000	100.0000	0x3680	-
 DIBSection	?allocate@?$TBitmap@GK@@UAEPAGII@Z	100.0000	100.0000	100.0000	0x1d5f0	-
-DIBSection	?allocate@T16bppDIBSection@@UAEPAGII@Z	99.5377	99.5377	99.5377	0x1d2c0	-
+DIBSection	?allocate@T16bppDIBSection@@UAEPAGII@Z	100.0000	100.0000	100.0000	0x1d2c0	-
 DIBSection	?computePitch@?$TBitmap@GK@@UBEII@Z	100.0000	100.0000	100.0000	0x1d630	-
 DIBSection	?free@?$TBitmap@GK@@UAEXPAG@Z	100.0000	100.0000	100.0000	0x4520	-
 DIBSection	?free@T16bppDIBSection@@UAEXPAG@Z	100.0000	100.0000	100.0000	0x1d460	-
 EditCrossoverScenarioOptionDlg	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@PBDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x1e150	-
 EditCrossoverScenarioOptionDlg	??0TEditCrossoverScenarioOptionDlg@@QAE@PAVCWnd@@PBVTCampaign@@ABV?$vector@_NV?$allocator@_N@std@@@std@@ABV?$bitset@$07@4@@Z	100.0000	100.0000	100.0000	0x1d680	tokens1:98320cb1d079
-EditCrossoverScenarioOptionDlg	??0TEditCrossoverScenarioOptionDlg@@QAE@PAVCWnd@@PBVTCampaign@@ABV?$vector@_NV?$allocator@_N@std@@@std@@ABV?$bitset@$07@4@ABUTChoice@TScenarioOptionsCrossoverScenario@@@Z	98.1206	98.1206	98.1206	0x1da50	tokens1:7f55421942db
+EditCrossoverScenarioOptionDlg	??0TEditCrossoverScenarioOptionDlg@@QAE@PAVCWnd@@PBVTCampaign@@ABV?$vector@_NV?$allocator@_N@std@@@std@@ABV?$bitset@$07@4@ABUTChoice@TScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x1da50	tokens1:e6850c17c597
 EditCrossoverScenarioOptionDlg	??0TFormattedString@@QAA@PBDZZ	100.0000	100.0000	100.0000	0x4860	-
 EditCrossoverScenarioOptionDlg	??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1d830	-
 EditCrossoverScenarioOptionDlg	??1TEditCrossoverScenarioOptionDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1d9c0	-
@@ -727,10 +727,10 @@ EditCrossoverScenarioOptionDlg	??_GTEditCrossoverScenarioOptionDlg@@UAEPAXI@Z	10
 EditCrossoverScenarioOptionDlg	?DoDataExchange@TEditCrossoverScenarioOptionDlg@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x1dc40	tokens1:eb544cd3fccf
 EditCrossoverScenarioOptionDlg	?GetMessageMap@TEditCrossoverScenarioOptionDlg@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x1dc70	tokens1:de1f3df89a61
 EditCrossoverScenarioOptionDlg	?OnCreate@TEditCrossoverScenarioOptionDlg@@IAEHPAUtagCREATESTRUCTA@@@Z	100.0000	100.0000	100.0000	0x1dc80	tokens1:8c8f5b24b2b6
-EditCrossoverScenarioOptionDlg	?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ	99.2615	99.2615	99.2615	0x1dcb0	tokens1:4a72b24bfce3
+EditCrossoverScenarioOptionDlg	?OnInitDialog@TEditCrossoverScenarioOptionDlg@@MAEHXZ	100.0000	100.0000	100.0000	0x1dcb0	tokens1:745791acb399
 EditCrossoverScenarioOptionDlg	?OnOK@TEditCrossoverScenarioOptionDlg@@MAEXXZ	100.0000	100.0000	100.0000	0x1e0e0	tokens1:802304327dd1
 EditStartingBonusDlg	??0CButton@@QAE@XZ	100.0000	100.0000	100.0000	0x21420	-
-EditStartingBonusDlg	??0TEditStartingBonusDlg@@QAE@PAVCWnd@@PBVTCampaignScenarioMap@@HHPBVTScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x20cf0	tokens1:b7dcc27132ab
+EditStartingBonusDlg	??0TEditStartingBonusDlg@@QAE@PAVCWnd@@PBVTCampaignScenarioMap@@HHPBVTScenarioStartingBonus@@@Z	100.0000	100.0000	100.0000	0x20cf0	tokens1:cf1837fc8148
 EditStartingBonusDlg	??0TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@HH@Z	100.0000	100.0000	100.0000	0x1f190	tokens1:00c4d71af686
 EditStartingBonusDlg	??0TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1ee40	tokens1:f56f73244bcd
 EditStartingBonusDlg	??0TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAE@PAVTClient@TStartingBonusTypeDlg@@PBVTCampaignScenarioMap@@H@Z	100.0000	100.0000	100.0000	0x1e6e0	tokens1:c85fcc7c9ea7
@@ -823,18 +823,18 @@ EditStartingBonusDlg	?create@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp
 EditStartingBonusDlg	?create@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x20570	-
 EditStartingBonusDlg	?create@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x200f0	-
 EditStartingBonusDlg	?create@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UAEHPAVCWnd@@@Z	100.0000	100.0000	100.0000	0x1f5a0	-
-EditStartingBonusDlg	?getBonus@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	99.7333	0x1f320	tokens1:2c4a76077b28
+EditStartingBonusDlg	?getBonus@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1f320	tokens1:a6683b87c221
 EditStartingBonusDlg	?getBonus@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1efd0	tokens1:4acdf62ad387
 EditStartingBonusDlg	?getBonus@TStartingBonusCreatureDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1ea80	tokens1:56ba1f01edd1
 EditStartingBonusDlg	?getBonus@TStartingBonusPrimarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	98.4375	98.4375	98.4375	0x1fbf0	tokens1:a40b8e73c07d
 EditStartingBonusDlg	?getBonus@TStartingBonusResourceDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x206e0	tokens1:a55bda43174a
 EditStartingBonusDlg	?getBonus@TStartingBonusSecondarySkillDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.3600	99.3600	99.3600	0x20260	tokens1:1b6dd20cf38e
-EditStartingBonusDlg	?getBonus@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	99.7333	0x1e5e0	tokens1:1daffb76499f
-EditStartingBonusDlg	?getBonus@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	99.7333	99.7333	99.7333	0x1f6b0	tokens1:001bcb962d9f
+EditStartingBonusDlg	?getBonus@TStartingBonusSpellDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1e5e0	tokens1:9dbeefc46c8f
+EditStartingBonusDlg	?getBonus@TStartingBonusSpellScrollDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x1f6b0	tokens1:800e00b6aee6
 EditStartingBonusDlg	?isAvailable@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@UBE_NXZ	100.0000	100.0000	100.0000	0x1efa0	tokens1:27835f489360
 EditStartingBonusDlg	?isCreatureBefore@@YA_NW4TCreatureType@@0@Z	100.0000	100.0000	100.0000	0x1e850	tokens1:570760432b62
 EditStartingBonusDlg	?onBValidChange@TEditStartingBonusDlg@@EAEXPAVTStartingBonusTypeDlg@@_N@Z	100.0000	100.0000	100.0000	0x21960	tokens1:8f3fb33e46ca
-EditStartingBonusDlg	?releaseBonus@TEditStartingBonusDlg@@QAE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x211f0	tokens1:654c8adb5f44
+EditStartingBonusDlg	?releaseBonus@TEditStartingBonusDlg@@QAE?AV?$auto_ptr@VTScenarioStartingBonus@@@std@@XZ	100.0000	100.0000	100.0000	0x211f0	tokens1:0d89e2c8ecd2
 EditStartingBonusDlg	?setBValid@TStartingBonusTypeDlg@@IAEX_N@Z	100.0000	100.0000	100.0000	0x1e280	tokens1:c81212345a1e
 EditStartingBonusDlg	?setBonus@TStartingBonusArtifactDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x1f2b0	tokens1:e9c555d9747d
 EditStartingBonusDlg	?setBonus@TStartingBonusBuildingDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\EditStartingBonusDlg.cpp1740010184@@QAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x1ef40	tokens1:01f717c2fb86
@@ -865,7 +865,7 @@ EditStartingHeroOptionDlg	?_initPlayers@TEditStartingHeroOptionDlg@@AAEXXZ	100.0
 GameMapHeader	??0?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@QAE@ABU?$less@H@1@_NABV?$allocator@UTCustomHero@TGameMapHeader@@@1@@Z	100.0000	100.0000	100.0000	0x24030	-
 GameMapHeader	??0?$pair@Viterator@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@std@@_N@std@@QAE@ABViterator@?$_Tree@HU?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@U_Kfn@?$map@HUTCustomHero@TGameMapHeader@@U?$less@H@std@@V?$allocator@UTCustomHero@TGameMapHeader@@@4@@2@U?$less@H@2@V?$allocator@UTCustomHero@TGameMapHeader@@@2@@1@AB_N@Z	100.0000	100.0000	100.0000	0x241b0	-
 GameMapHeader	??0TCustomHero@TGameMapHeader@@QAE@ABU01@@Z	100.0000	100.0000	100.0000	0x23920	-
-GameMapHeader	??0TGameMapHeader@@QAE@AAVTRawIStream@@H@Z	80.4217	86.1777	86.1777	0x22b70	tokens1:628c62a34d0b
+GameMapHeader	??0TGameMapHeader@@QAE@AAVTRawIStream@@H@Z	88.5382	88.5382	88.5382	0x22b70	tokens1:4b73aba6dbbe
 GameMapHeader	??0TPlayerSlot@TGameMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x238c0	-
 GameMapHeader	??1?$pair@$$CBHUTCustomHero@TGameMapHeader@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x8890	-
 GameMapHeader	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x249c0	-
@@ -887,7 +887,7 @@ GameMapHeader	?_Xran@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x24bf0
 GameMapHeader	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x24cd0	-
 GameMapHeader	?_read@TRawIStream@@AAEAAV1@AAY0BE@E@Z	100.0000	100.0000	100.0000	0x24df0	-
 GameMapHeader	?_readLossCondition@TGameMapHeader@@CAXAAUTLossConditionData@@AAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x22ad0	tokens1:390184451f7f
-GameMapHeader	?_readVictoryCondition@TGameMapHeader@@CAXAAUTVictoryConditionData@@AAVTRawIStream@@H@Z	98.4603	98.4603	98.4603	0x22750	tokens1:4688fc4734e4
+GameMapHeader	?_readVictoryCondition@TGameMapHeader@@CAXAAUTVictoryConditionData@@AAVTRawIStream@@H@Z	100.0000	100.0000	100.0000	0x22750	tokens1:183a7059bf39
 GameMapHeader	?capacity@?$vector@HV?$allocator@H@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x23e40	-
 GameMapHeader	?erase@?$vector@UTHeroIdentity@TGameMapHeader@@V?$allocator@UTHeroIdentity@TGameMapHeader@@@std@@@std@@QAEPAUTHeroIdentity@TGameMapHeader@@PAU34@0@Z	100.0000	100.0000	100.0000	0x23d70	-
 GameMapHeader	?flip@?$bitset@$07@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x23e00	-
@@ -989,20 +989,20 @@ ScenarioPropsCrossoverPage	?OnInitDialog@TScenarioPropsCrossoverPage@@UAEHXZ	100
 ScenarioPropsCrossoverPage	?OnNoneButton@TScenarioPropsCrossoverPage@@IAEXXZ	100.0000	100.0000	100.0000	0x2a990	tokens1:6c26a88df675
 ScenarioPropsCrossoverPage	?OnOK@TScenarioPropsCrossoverPage@@UAEXXZ	84.1453	84.1453	84.1453	0x2a810	tokens1:7b2c5c614709
 ScenarioPropsCrossoverPage	?_Tidy@?$bitset@$0JB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x2a9d0	-
-ScenarioPropsCrossoverPage	?_getCrossover@TScenarioPropsCrossoverPage@@AAEXAAVTScenarioCrossover@@@Z	100.0000	100.0000	100.0000	0x2a280	tokens1:db431b1ec044
-ScenarioPropsCrossoverPage	?_setCrossover@TScenarioPropsCrossoverPage@@AAEXABVTScenarioCrossover@@@Z	74.5804	74.5804	74.5804	0x2a0d0	tokens1:ab36d632bd72
+ScenarioPropsCrossoverPage	?_getCrossover@TScenarioPropsCrossoverPage@@AAEXAAVTScenarioCrossover@@@Z	100.0000	100.0000	100.0000	0x2a280	tokens1:0aa01da48c4f
+ScenarioPropsCrossoverPage	?_setCrossover@TScenarioPropsCrossoverPage@@AAEXABVTScenarioCrossover@@@Z	100.0000	100.0000	100.0000	0x2a0d0	tokens1:6f63345bded2
 ScenarioPropsCrossoverPage	?update@TScenarioPropsCrossoverPage@@QAEXXZ	100.0000	100.0000	100.0000	0x2a090	tokens1:990e0f9931d1
 ScenarioPropsGeneralPage	??0TScenarioPropsGeneralPage@@QAE@PAVTParentSheet@0@PAVTCampaignDoc@@PAVTCampaign@@H@Z	100.0000	100.0000	100.0000	0x2acd0	tokens1:bacd2a35c13a
 ScenarioPropsGeneralPage	??1TScenarioPropsGeneralPage@@UAE@XZ	100.0000	100.0000	100.0000	0x2aea0	tokens1:063cabdb3c94
 ScenarioPropsGeneralPage	??_GTScenarioPropsGeneralPage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae80	-
 ScenarioPropsGeneralPage	?DoDataExchange@TScenarioPropsGeneralPage@@MAEXPAVCDataExchange@@@Z	100.0000	100.0000	100.0000	0x2b230	tokens1:8d63e4bdae43
-ScenarioPropsGeneralPage	?GetMessageMap@TScenarioPropsGeneralPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x2b310	tokens1:8f921e251a5f
+ScenarioPropsGeneralPage	?GetMessageMap@TScenarioPropsGeneralPage@@MBEPBUAFX_MSGMAP@@XZ	100.0000	100.0000	100.0000	0x2b310	tokens1:b5ce4e0ad06f
 ScenarioPropsGeneralPage	?OnCheckChangePrerequisiteList@TScenarioPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x2bff0	tokens1:5f0d875f1239
-ScenarioPropsGeneralPage	?OnExportButton@TScenarioPropsGeneralPage@@IAEXXZ	95.5370	95.5370	95.5370	0x2be40	tokens1:b7fc2cd00551
-ScenarioPropsGeneralPage	?OnImportButton@TScenarioPropsGeneralPage@@IAEXXZ	98.2593	98.2593	98.2593	0x2bb10	tokens1:8d2c1fa481d1
-ScenarioPropsGeneralPage	?OnInitDialog@TScenarioPropsGeneralPage@@UAEHXZ	94.2551	94.2551	94.2551	0x2b320	tokens1:27dad2b44ffe
-ScenarioPropsGeneralPage	?OnOK@TScenarioPropsGeneralPage@@UAEXXZ	84.9496	84.9496	84.9496	0x2b7c0	tokens1:dad68cf8c36e
-ScenarioPropsGeneralPage	?OnRefreshButton@TScenarioPropsGeneralPage@@IAEXXZ	99.8925	99.8925	99.8925	0x2bcf0	tokens1:6430e8fc40cc
+ScenarioPropsGeneralPage	?OnExportButton@TScenarioPropsGeneralPage@@IAEXXZ	95.5370	95.5370	95.5370	0x2be40	tokens1:afb2e22deec8
+ScenarioPropsGeneralPage	?OnImportButton@TScenarioPropsGeneralPage@@IAEXXZ	98.2593	98.2593	98.2593	0x2bb10	tokens1:71c71c378900
+ScenarioPropsGeneralPage	?OnInitDialog@TScenarioPropsGeneralPage@@UAEHXZ	97.9326	97.9326	97.9326	0x2b320	tokens1:55d2af218c2c
+ScenarioPropsGeneralPage	?OnOK@TScenarioPropsGeneralPage@@UAEXXZ	88.6744	88.6744	88.6744	0x2b7c0	tokens1:7fbe4c4dd7f7
+ScenarioPropsGeneralPage	?OnRefreshButton@TScenarioPropsGeneralPage@@IAEXXZ	99.8925	99.8925	99.8925	0x2bcf0	tokens1:31b2311487ca
 ScenarioPropsGeneralPage	?OnRemoveButton@TScenarioPropsGeneralPage@@IAEXXZ	100.0000	100.0000	100.0000	0x2bf10	tokens1:5dfed47692df
 ScenarioPropsGeneralPage	?_checkPrerequisites@TScenarioPropsGeneralPage@@AAEXXZ	100.0000	100.0000	100.0000	0x2b170	tokens1:df1718b13c22
 ScenarioPropsGeneralPage	?_fillPrerequisiteList@TScenarioPropsGeneralPage@@AAEXXZ	100.0000	100.0000	100.0000	0x2afa0	tokens1:f2c34692968f
@@ -1024,7 +1024,7 @@ ScenarioPropsProloguePage	?OnEnable@TScenarioPropsProloguePageBase@@IAEXH@Z	100.
 ScenarioPropsProloguePage	?OnHasPrologueCheck@TScenarioPropsProloguePageBase@@IAEXXZ	100.0000	100.0000	100.0000	0x2cf50	tokens1:d542edf15f64
 ScenarioPropsProloguePage	?OnInitDialog@TScenarioPropsProloguePageBase@@UAEHXZ	100.0000	100.0000	100.0000	0x2cae0	tokens1:34b21c7319f3
 ScenarioPropsProloguePage	?OnOK@TScenarioPropsProloguePageBase@@UAEXXZ	84.9400	84.9400	84.9400	0x2cd00	tokens1:f9b5d3bd30b9
-ScenarioPropsProloguePage	?OnSelChangeMovieCombo@TScenarioPropsProloguePageBase@@IAEXXZ	99.8303	99.8303	99.8303	0x2d000	tokens1:3e30c5533819
+ScenarioPropsProloguePage	?OnSelChangeMovieCombo@TScenarioPropsProloguePageBase@@IAEXXZ	100.0000	100.0000	100.0000	0x2d000	tokens1:8e6b5fbb505f
 ScenarioPropsProloguePage	?_getPrologue@TScenarioPropsProloguePageBase@@AAEXAAV?$auto_ptr@VTScenarioPrologue@@@std@@@Z	100.0000	100.0000	100.0000	0x2c720	tokens1:8c60216a6fa4
 ScenarioPropsProloguePage	?_showPrologue@TScenarioPropsProloguePageBase@@AAEXPBVTScenarioPrologue@@@Z	100.0000	100.0000	100.0000	0x2c340	tokens1:338496bafa65
 ScenarioPropsProloguePage	?getCheckText@TScenarioPropsEpiloguePage@@MBE?AVCString@@XZ	100.0000	100.0000	100.0000	0x2d660	tokens1:0e308c24cd4a
@@ -1089,24 +1089,24 @@ ScenarioPropsStartingOptionsPage	?OnInitDialog@TScenarioOptionsCrossoverScenario
 ScenarioPropsStartingOptionsPage	?OnInitDialog@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@MAEHXZ	100.0000	100.0000	100.0000	0x31000	tokens1:25199cd29130
 ScenarioPropsStartingOptionsPage	?OnInitDialog@TScenarioPropsStartingOptionsPage@@UAEHXZ	100.0000	100.0000	100.0000	0x31c10	tokens1:fddd24a99357
 ScenarioPropsStartingOptionsPage	?OnKillActive@TScenarioPropsStartingOptionsPage@@UAEHXZ	100.0000	100.0000	100.0000	0x31ea0	tokens1:be426473134d
-ScenarioPropsStartingOptionsPage	?OnOK@TScenarioPropsStartingOptionsPage@@UAEXXZ	96.4915	96.4915	96.4915	0x31d10	tokens1:ae9cefa6186f
+ScenarioPropsStartingOptionsPage	?OnOK@TScenarioPropsStartingOptionsPage@@UAEXXZ	100.0000	100.0000	100.0000	0x31d10	tokens1:c05d13acdb07
 ScenarioPropsStartingOptionsPage	?OnRemoveButton@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEXXZ	100.0000	100.0000	100.0000	0x2f6f0	tokens1:bc15a5714dce
 ScenarioPropsStartingOptionsPage	?OnRemoveButton@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEXXZ	100.0000	100.0000	100.0000	0x305d0	tokens1:3d085f9a0439
 ScenarioPropsStartingOptionsPage	?OnRemoveButton@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEXXZ	100.0000	100.0000	100.0000	0x31360	tokens1:50f9ff1b046a
 ScenarioPropsStartingOptionsPage	?OnSelChangeBonusList@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEXXZ	100.0000	100.0000	100.0000	0x2f890	tokens1:e9ccae6a7131
 ScenarioPropsStartingOptionsPage	?OnSelChangeChoiceList@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEXXZ	100.0000	100.0000	100.0000	0x30670	tokens1:99db40e51fc6
 ScenarioPropsStartingOptionsPage	?OnSelChangePlayerCombo@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEXXZ	97.1429	97.1429	97.1429	0x2f780	tokens1:d86e5b01ec06
-ScenarioPropsStartingOptionsPage	?OnSetActive@TScenarioPropsStartingOptionsPage@@UAEHXZ	97.0779	97.0779	97.0779	0x31db0	tokens1:2a57bdb73841
+ScenarioPropsStartingOptionsPage	?OnSetActive@TScenarioPropsStartingOptionsPage@@UAEHXZ	100.0000	100.0000	100.0000	0x31db0	tokens1:8f376d2e8190
 ScenarioPropsStartingOptionsPage	?OnTypeRadio@TScenarioPropsStartingOptionsPage@@IAEXXZ	100.0000	100.0000	100.0000	0x31fc0	tokens1:9814dc2f4163
 ScenarioPropsStartingOptionsPage	?OnVKeyToItem@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEHIPAVCListBox@@I@Z	100.0000	100.0000	100.0000	0x2f8e0	tokens1:c38e643fb801
 ScenarioPropsStartingOptionsPage	?OnVKeyToItem@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEHIPAVCListBox@@I@Z	100.0000	100.0000	100.0000	0x306c0	tokens1:1d49e90a8281
 ScenarioPropsStartingOptionsPage	?OnVKeyToItem@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@IAEHIPAVCListBox@@I@Z	100.0000	100.0000	100.0000	0x31420	tokens1:7d12ac08b96f
 ScenarioPropsStartingOptionsPage	?_addBonus@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@AAEXV?$auto_ptr@VTScenarioStartingBonus@@@std@@@Z	100.0000	100.0000	100.0000	0x2ed30	tokens1:86b04fef1cf4
 ScenarioPropsStartingOptionsPage	?_enableControls@TScenarioPropsStartingOptionsPage@@AAEX_N@Z	100.0000	100.0000	100.0000	0x319a0	tokens1:1757336e7529
-ScenarioPropsStartingOptionsPage	?_getHeroName@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@ABEPBDABVTScenarioHeroBonus@@@Z	90.7872	90.7872	90.7872	0x2e390	tokens1:e09a45f78e80
+ScenarioPropsStartingOptionsPage	?_getHeroName@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@ABEPBDABVTScenarioHeroBonus@@@Z	100.0000	100.0000	100.0000	0x2e390	tokens1:7d6f419a384c
 ScenarioPropsStartingOptionsPage	?_getPlayers@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@ABE?AV?$bitset@$07@std@@XZ	89.5000	89.5000	89.5000	0x301a0	tokens1:b5119403ecb8
 ScenarioPropsStartingOptionsPage	?_insertBonus@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@AAEXHV?$auto_ptr@VTScenarioStartingBonus@@@std@@@Z	100.0000	100.0000	100.0000	0x2f190	tokens1:87602d85310a
-ScenarioPropsStartingOptionsPage	?_insertChoice@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@AAEXHABUTChoice@TScenarioOptionsCrossoverScenario@@@Z	87.4528	87.4528	87.4528	0x2ffb0	tokens1:c1faa0eaaf3a
+ScenarioPropsStartingOptionsPage	?_insertChoice@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@AAEXHABUTChoice@TScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x2ffb0	tokens1:b46be902aba6
 ScenarioPropsStartingOptionsPage	?_insertChoice@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@AAEXHABUTChoice@TScenarioOptionsStartingHero@@@Z	68.3046	68.3046	68.3046	0x30cc0	tokens1:6527e1669907
 ScenarioPropsStartingOptionsPage	?_removeBonus@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@AAEXH@Z	100.0000	100.0000	100.0000	0x2f2f0	tokens1:7d3f6003b448
 ScenarioPropsStartingOptionsPage	?_removeChoice@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@AAEXH@Z	100.0000	100.0000	100.0000	0x30120	tokens1:bd3a10365077
@@ -1130,9 +1130,9 @@ ScenarioPropsStartingOptionsPage	?isAvailable@TScenarioOptionsCrossoverScenarioD
 ScenarioPropsStartingOptionsPage	?isAvailable@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UBE_NXZ	100.0000	100.0000	100.0000	0x30c60	tokens1:852c2ad42d05
 ScenarioPropsStartingOptionsPage	?isAvailable@TScenarioStartingOptionsTypeDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UBE_NXZ	100.0000	100.0000	100.0000	0x2eaa0	-
 ScenarioPropsStartingOptionsPage	?prepare@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEXXZ	100.0000	100.0000	100.0000	0x2ed80	tokens1:6c023aac3909
-ScenarioPropsStartingOptionsPage	?prepare@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEXXZ	93.4507	93.4507	93.4507	0x2fbd0	tokens1:5d99c2ab4307
-ScenarioPropsStartingOptionsPage	?prepare@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEXXZ	88.7576	88.7576	88.7576	0x30960	tokens1:d790a8ea7b77
-ScenarioPropsStartingOptionsPage	?setOptions@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@QAEXABVTScenarioOptionsBonus@@@Z	93.2358	93.2358	93.2358	0x2ebe0	tokens1:2213734f0ab7
+ScenarioPropsStartingOptionsPage	?prepare@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEXXZ	100.0000	100.0000	100.0000	0x2fbd0	tokens1:e768bb9e360a
+ScenarioPropsStartingOptionsPage	?prepare@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEXXZ	100.0000	100.0000	100.0000	0x30960	tokens1:5d096ca5bf05
+ScenarioPropsStartingOptionsPage	?setOptions@TScenarioOptionsBonusDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@QAEXABVTScenarioOptionsBonus@@@Z	99.7170	99.7170	99.7170	0x2ebe0	tokens1:5ce44d53d16b
 ScenarioPropsStartingOptionsPage	?setOptions@TScenarioOptionsCrossoverScenarioDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@QAEXABVTScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x2fb60	tokens1:128f500c8b09
 ScenarioPropsStartingOptionsPage	?setOptions@TScenarioOptionsStartingHeroDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@QAEXABVTScenarioOptionsStartingHero@@@Z	100.0000	100.0000	100.0000	0x308e0	tokens1:d2ca63e481a3
 ScenarioPropsStartingOptionsPage	?show@TScenarioStartingOptionsTypeDlg@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@UAEXXZ	100.0000	100.0000	100.0000	0x2e9a0	tokens1:6a6be526972b
@@ -1140,11 +1140,11 @@ ScenarioPropsStartingOptionsPage	?update@TScenarioPropsStartingOptionsPage@@QAEX
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusArtifact@@@Z	100.0000	100.0000	100.0000	0x2e5f0	tokens1:45a3ef999a1d
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusBuilding@@@Z	100.0000	100.0000	100.0000	0x2e5a0	tokens1:664484a28231
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusCreature@@@Z	100.0000	100.0000	100.0000	0x2e4d0	tokens1:50554e8dd77e
-ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusPrimarySkill@@@Z	75.6064	75.6064	75.6064	0x2e6d0	tokens1:4565d69e26a5
-ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusResource@@@Z	95.5333	95.5333	95.5333	0x2e8a0	tokens1:157c535bca3d
-ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusSecondarySkill@@@Z	91.8542	91.8542	91.8542	0x2e800	tokens1:e265d6337512
+ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusPrimarySkill@@@Z	100.0000	100.0000	100.0000	0x2e6d0	tokens1:cdf897e7397b
+ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusResource@@@Z	100.0000	100.0000	100.0000	0x2e8a0	tokens1:fb8e45e39c58
+ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x2e800	tokens1:2b9288edd36f
 ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusSpell@@@Z	100.0000	100.0000	100.0000	0x2e430	tokens1:65c69fb95db5
-ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusSpellScroll@@@Z	78.3061	78.3061	78.3061	0x2e630	tokens1:6506d9281a48
+ScenarioPropsStartingOptionsPage	?visit@TGetScenarioStartingBonusNameFunc@?%C:\Dev\Heroes 3 Exp 2\CampaignEditor\ScenarioPropsStartingOptionsPage.cpp1754421400@@EAEXABVTScenarioBonusSpellScroll@@@Z	100.0000	100.0000	100.0000	0x2e630	tokens1:60f8c2f28bb7
 ScenarioPropsStartingOptionsPage	?visit@TScenarioPropsStartingOptionsPage@@EAEXABVTScenarioOptionsBonus@@@Z	100.0000	100.0000	100.0000	0x31a80	tokens1:0fa260170849
 ScenarioPropsStartingOptionsPage	?visit@TScenarioPropsStartingOptionsPage@@EAEXABVTScenarioOptionsCrossoverScenario@@@Z	100.0000	100.0000	100.0000	0x31ab0	tokens1:e6c212b9a474
 ScenarioPropsStartingOptionsPage	?visit@TScenarioPropsStartingOptionsPage@@EAEXABVTScenarioOptionsStartingHero@@@Z	100.0000	100.0000	100.0000	0x31ae0	tokens1:3b0b1dedbaa2
@@ -1240,7 +1240,7 @@ adler32	@adler32@12	100.0000	100.0000	100.0000	0x402e0	-
 artifact	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1df70	-
 artifact	??1?$TResourcePtr@VTSpreadsheetResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x2f10	-
 artifact	??A?$bitset@$0BD@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0x249b0	-
-artifact	?InitializeArtifactTraitsTable@@YA_NXZ	78.0826	78.0826	78.0826	0x28d0	-
+artifact	?InitializeArtifactTraitsTable@@YA_NXZ	77.4132	77.4132	89.7707	0x28d0	tokens1:ae16182e008f
 artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x2f90	-
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x3050	-
 artifact	?_Xran@?$bitset@$0JA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x3170	-
@@ -1287,6 +1287,9 @@ creaturetype	??0TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	100.0000	100.0000	100.0
 creaturetype	??1TAutoStrPtr@?A0xf10867bd5b3ccba5@@QAE@XZ	100.0000	100.0000	100.0000	0x265d0	-
 creaturetype	?InitializeCreatureTypeTraitsTable@@YAEXZ	100.0000	100.0000	100.0000	0x1ca80	-
 creaturetype	?initializeCreatureTypeTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1cc30	-
+creaturetype	__h3cg$creaturetype$static_dtor$creatureTypeAbilities	100.0000	100.0000	100.0000	0x1cf50	-
+creaturetype	__h3cg$creaturetype$static_dtor$creatureTypeNames	100.0000	100.0000	100.0000	0x1cf90	-
+creaturetype	__h3cg$creaturetype$static_dtor$creatureTypePluralNames	100.0000	100.0000	100.0000	0x1cf70	-
 cspriteframe	?SetPixelFormat@CSpriteFrame@@SAXIII@Z	100.0000	100.0000	100.0000	0x4b290	-
 deflate	@deflate@8	100.0000	100.0000	100.0000	0x3eb50	-
 deflate	@deflateEnd@4	100.0000	100.0000	100.0000	0x3eea0	-
@@ -1314,7 +1317,7 @@ gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0x11ae0	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x25dc0	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0x25cb0	-
 gzinflatebuf	??0TGzDeflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@HH@Z	100.0000	100.0000	100.0000	0x25080	-
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	93.4615	93.4615	93.4615	0x25700	-
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	93.4988	93.4988	93.4988	0x25700	-
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1bb0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x1020	-
 gzinflatebuf	??1TAllocationFailure@@UAE@XZ	100.0000	100.0000	100.0000	0x25d70	-
@@ -1340,6 +1343,10 @@ herodefs	?InitializeHeroTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@
 herodefs	?InitializeHeroTraitsTable@@YAEXZ	100.0000	100.0000	100.0000	0x26360	-
 herodefs	?InitializeSSkillTraits@@YAXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x26790	-
 herodefs	?InitializeSSkillTraitsTable@@YA_NXZ	100.0000	100.0000	100.0000	0x26440	-
+herodefs	__h3cg$herodefs$static_dtor$heroClassStrings	100.0000	100.0000	100.0000	0x26770	-
+herodefs	__h3cg$herodefs$static_dtor$heroStrings	100.0000	100.0000	100.0000	0x265e0	-
+herodefs	__h3cg$herodefs$static_dtor$secondarySkillLevelNames	100.0000	100.0000	100.0000	0x268e0	-
+herodefs	__h3cg$herodefs$static_dtor$secondarySkillNames	100.0000	100.0000	100.0000	0x26900	-
 infblock	@inflate_blocks@12	100.0000	100.0000	100.0000	0x42060	-
 infblock	@inflate_blocks_free@8	100.0000	100.0000	100.0000	0x42d20	-
 infblock	@inflate_blocks_new@12	100.0000	100.0000	100.0000	0x41fc0	-
@@ -1577,6 +1584,14 @@ victor_bits	?victorExtractBits@@YGXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x63d50
 victor_bits	?victorInsertBits@@YGXPAEPBEHH@Z	99.5370	99.5370	99.5370	0x63cc0	-
 victor_flip	?flipimage@@YGHPAUimgdes@@0@Z	100.0000	100.0000	100.0000	0x630c0	-
 victor_loadpcx	?loadpcx@@YGHPBDPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x633a0	-
+victor_locks	?victorDestroyLock0@@YAXXZ	100.0000	100.0000	100.0000	0x63bc0	tokens1:5cad0ff401fa
+victor_locks	?victorDestroyLock1@@YAXXZ	100.0000	100.0000	100.0000	0x63be0	tokens1:9e1bd69edabc
+victor_locks	?victorDestroyLock2@@YAXXZ	100.0000	100.0000	100.0000	0x63c00	tokens1:f768c255d726
+victor_locks	?victorDestroyLock3@@YAXXZ	100.0000	100.0000	100.0000	0x63c20	tokens1:249364aa9528
+victor_locks	?victorDestroyLock4@@YAXXZ	100.0000	100.0000	100.0000	0x63c40	tokens1:89a29bd5571b
+victor_locks	?victorDestroyLock5@@YAXXZ	100.0000	100.0000	100.0000	0x63c60	tokens1:f5d100be5db4
+victor_locks	?victorDestroyLock6@@YAXXZ	100.0000	100.0000	100.0000	0x63c80	tokens1:3b8bf54aa6d0
+victor_locks	?victorDestroyLock7@@YAXXZ	100.0000	100.0000	100.0000	0x63ca0	tokens1:e5164cecc31c
 victor_pcx_kernels	?victorConvertRgbPlanesToBgr@@YAXPAEPBEH@Z	100.0000	100.0000	100.0000	0x63b80	-
 victor_pcx_kernels	?victorDecodeRleBytes@@YAHPAE0H@Z	100.0000	100.0000	100.0000	0x63ab0	-
 victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x63b10	-

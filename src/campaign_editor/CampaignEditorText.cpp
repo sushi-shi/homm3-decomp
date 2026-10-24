@@ -427,77 +427,68 @@ VA_COMPGEN(0x00418180, 0xb, STATIC_CTOR, SHelpMenuText::kAboutStr)
 DATA(0x004c6f58) const char* const& kAboutStr = akStringImp[1];
 }
 
-// The first line of each group in CmpEditr.txt: each group follows its heading line.
-enum {
-    kGeneralLine = 2,
-    kCampaignPropsDlgLine = kGeneralLine + kNumGeneralStrings + 1,
-    kEditCrossoverScenarioOptionDlgLine = kCampaignPropsDlgLine + SCampaignPropsDlgText::kNumStrings + 1,
-    kEditStartingBonusDlgLine = kEditCrossoverScenarioOptionDlgLine + SEditCrossoverScenarioOptionDlgText::kNumStrings + 1,
-    kEditStartingHeroOptionDlgLine = kEditStartingBonusDlgLine + SEditStartingBonusDlgText::kNumStrings + 1,
-    kNewCampaignDlgLine = kEditStartingHeroOptionDlgLine + SEditStartingHeroOptionDlgText::kNumStrings + 1,
-    kScenarioPropsCrossoverPageLine = kNewCampaignDlgLine + SNewCampaignDlgText::kNumStrings + 1,
-    kScenarioPropsGeneralPageLine = kScenarioPropsCrossoverPageLine + SScenarioPropsCrossoverPageText::kNumStrings + 1,
-    kScenarioPropsProloguePageLine = kScenarioPropsGeneralPageLine + SScenarioPropsGeneralPageText::kNumStrings + 1,
-    kScenarioPropsStartingOptionsPageLine = kScenarioPropsProloguePageLine + SScenarioPropsProloguePageText::kNumStrings + 1,
-    kMainMenuLine = kScenarioPropsStartingOptionsPageLine + SScenarioPropsStartingOptionsPageText::kNumStrings + 1,
-    kFileMenuLine = kMainMenuLine + SMainMenuText::kNumStrings + 1,
-    kEditMenuLine = kFileMenuLine + SFileMenuText::kNumStrings + 1,
-    kHelpMenuLine = kEditMenuLine + SEditMenuText::kNumStrings + 1
-};
-
-// Copies the texts of a group, from its first line on, into a buffer of
-// the group's own and points the group's strings at the copies.
-#define LOAD_TEXT_GROUP(apStrings, numStrings, firstLine, pBuffer, bufferDeclaration)       \
-    {                                                                                       \
-        unsigned int size = 0;                                                              \
-        for (unsigned int line = firstLine; line < firstLine + numStrings; line++)          \
-            size += getTextLength(pText->GetText(line)) + 1;                                \
-        bufferDeclaration                                                                   \
-        char* p = pBuffer.get();                                                            \
-        if (p == NULL)                                                                      \
-            throw TAllocationFailure();                                                     \
-        for (unsigned int i = 0; i < numStrings; i++) {                                     \
-            const char* pString = pText->GetText(firstLine + i);                            \
-            unsigned int length = getTextLength(pString) + 1;                               \
-            copyText(p, pString);                                                           \
-            apStrings[i] = p;                                                               \
-            p += length;                                                                    \
-        }                                                                                   \
+// Loki MapEditorText.cpp uses a running baseID and one index for both passes.
+// The campaign retail body follows the same group-copy algorithm; advancing
+// past each following heading here recovers its address-calculation order.
+#define LOAD_TEXT_GROUP(apStrings, numStrings, pBuffer, bufferDeclaration)               \
+    {                                                                                    \
+        size_t size = 0;                                                                 \
+        unsigned int i;                                                                  \
+        for (i = 0; i < numStrings; i++)                                                 \
+            size += getTextLength(pText->GetText(baseID + i)) + 1;                       \
+        bufferDeclaration                                                                \
+        char* p = pBuffer.get();                                                         \
+        if (p == NULL)                                                                   \
+            throw TAllocationFailure();                                                  \
+        for (i = 0; i < numStrings; i++) {                                               \
+            const char* pString = pText->GetText(baseID + i);                            \
+            size_t length = getTextLength(pString) + 1;                                  \
+            copyText(p, pString);                                                        \
+            apStrings[i] = p;                                                            \
+            p += length;                                                                 \
+        }                                                                                \
+        baseID += numStrings + 1;                                                        \
     }
 
+// Retail packs the first eight buffer-initialization flags at 0x004c719c
+// and the remaining six at 0x004c71d4 (loads/stores at +0xc1/+0xcd and
+// +0x731/+0x73d). Each claim names the shared byte through its first owner.
 VA(0x00418190, 0xc04)
 void SText::initialize()
 {
     TResourcePtr<TTextResource> pText(ResourceManager::GetText("CmpEditr.txt"));
     if (pText.get() == NULL)
         throw TRuntimeError();
-    LOAD_TEXT_GROUP(akGeneralStringImp, kNumGeneralStrings, kGeneralLine, pGeneralTexts,
+    unsigned int baseID = 2;
+    LOAD_TEXT_GROUP(akGeneralStringImp, kNumGeneralStrings, pGeneralTexts,
+        DATA_COMPGEN_GUARD(0x004c719c, firstTextBuffersGuard, pGeneralTexts)
         DATA(0x004c7100) static TAutoArrayPtr<char> pGeneralTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SCampaignPropsDlgText::akStringImp, SCampaignPropsDlgText::kNumStrings, kCampaignPropsDlgLine, pCampaignPropsDlgTexts,
+    LOAD_TEXT_GROUP(SCampaignPropsDlgText::akStringImp, SCampaignPropsDlgText::kNumStrings, pCampaignPropsDlgTexts,
         DATA(0x004c7148) static TAutoArrayPtr<char> pCampaignPropsDlgTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SEditCrossoverScenarioOptionDlgText::akStringImp, SEditCrossoverScenarioOptionDlgText::kNumStrings, kEditCrossoverScenarioOptionDlgLine, pEditCrossoverScenarioOptionDlgTexts,
+    LOAD_TEXT_GROUP(SEditCrossoverScenarioOptionDlgText::akStringImp, SEditCrossoverScenarioOptionDlgText::kNumStrings, pEditCrossoverScenarioOptionDlgTexts,
         DATA(0x004c72b8) static TAutoArrayPtr<char> pEditCrossoverScenarioOptionDlgTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SEditStartingBonusDlgText::akStringImp, SEditStartingBonusDlgText::kNumStrings, kEditStartingBonusDlgLine, pEditStartingBonusDlgTexts,
+    LOAD_TEXT_GROUP(SEditStartingBonusDlgText::akStringImp, SEditStartingBonusDlgText::kNumStrings, pEditStartingBonusDlgTexts,
         DATA(0x004c7078) static TAutoArrayPtr<char> pEditStartingBonusDlgTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SEditStartingHeroOptionDlgText::akStringImp, SEditStartingHeroOptionDlgText::kNumStrings, kEditStartingHeroOptionDlgLine, pEditStartingHeroOptionDlgTexts,
+    LOAD_TEXT_GROUP(SEditStartingHeroOptionDlgText::akStringImp, SEditStartingHeroOptionDlgText::kNumStrings, pEditStartingHeroOptionDlgTexts,
         DATA(0x004c7188) static TAutoArrayPtr<char> pEditStartingHeroOptionDlgTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SNewCampaignDlgText::akStringImp, SNewCampaignDlgText::kNumStrings, kNewCampaignDlgLine, pNewCampaignDlgTexts,
+    LOAD_TEXT_GROUP(SNewCampaignDlgText::akStringImp, SNewCampaignDlgText::kNumStrings, pNewCampaignDlgTexts,
         DATA(0x004c7070) static TAutoArrayPtr<char> pNewCampaignDlgTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SScenarioPropsCrossoverPageText::akStringImp, SScenarioPropsCrossoverPageText::kNumStrings, kScenarioPropsCrossoverPageLine, pScenarioPropsCrossoverPageTexts,
+    LOAD_TEXT_GROUP(SScenarioPropsCrossoverPageText::akStringImp, SScenarioPropsCrossoverPageText::kNumStrings, pScenarioPropsCrossoverPageTexts,
         DATA(0x004c7180) static TAutoArrayPtr<char> pScenarioPropsCrossoverPageTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SScenarioPropsGeneralPageText::akStringImp, SScenarioPropsGeneralPageText::kNumStrings, kScenarioPropsGeneralPageLine, pScenarioPropsGeneralPageTexts,
+    LOAD_TEXT_GROUP(SScenarioPropsGeneralPageText::akStringImp, SScenarioPropsGeneralPageText::kNumStrings, pScenarioPropsGeneralPageTexts,
         DATA(0x004c7068) static TAutoArrayPtr<char> pScenarioPropsGeneralPageTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SScenarioPropsProloguePageText::akStringImp, SScenarioPropsProloguePageText::kNumStrings, kScenarioPropsProloguePageLine, pScenarioPropsProloguePageTexts,
+    LOAD_TEXT_GROUP(SScenarioPropsProloguePageText::akStringImp, SScenarioPropsProloguePageText::kNumStrings, pScenarioPropsProloguePageTexts,
+        DATA_COMPGEN_GUARD(0x004c71d4, remainingTextBuffersGuard, pScenarioPropsProloguePageTexts)
         DATA(0x004c7178) static TAutoArrayPtr<char> pScenarioPropsProloguePageTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SScenarioPropsStartingOptionsPageText::akStringImp, SScenarioPropsStartingOptionsPageText::kNumStrings, kScenarioPropsStartingOptionsPageLine, pScenarioPropsStartingOptionsPageTexts,
+    LOAD_TEXT_GROUP(SScenarioPropsStartingOptionsPageText::akStringImp, SScenarioPropsStartingOptionsPageText::kNumStrings, pScenarioPropsStartingOptionsPageTexts,
         DATA(0x004c71b0) static TAutoArrayPtr<char> pScenarioPropsStartingOptionsPageTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SMainMenuText::akStringImp, SMainMenuText::kNumStrings, kMainMenuLine, pMainMenuTexts,
+    LOAD_TEXT_GROUP(SMainMenuText::akStringImp, SMainMenuText::kNumStrings, pMainMenuTexts,
         DATA(0x004c7170) static TAutoArrayPtr<char> pMainMenuTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SFileMenuText::akStringImp, SFileMenuText::kNumStrings, kFileMenuLine, pFileMenuTexts,
+    LOAD_TEXT_GROUP(SFileMenuText::akStringImp, SFileMenuText::kNumStrings, pFileMenuTexts,
         DATA(0x004c71a8) static TAutoArrayPtr<char> pFileMenuTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SEditMenuText::akStringImp, SEditMenuText::kNumStrings, kEditMenuLine, pEditMenuTexts,
+    LOAD_TEXT_GROUP(SEditMenuText::akStringImp, SEditMenuText::kNumStrings, pEditMenuTexts,
         DATA(0x004c7090) static TAutoArrayPtr<char> pEditMenuTexts(new char[size]);)
-    LOAD_TEXT_GROUP(SHelpMenuText::akStringImp, SHelpMenuText::kNumStrings, kHelpMenuLine, pHelpMenuTexts,
+    LOAD_TEXT_GROUP(SHelpMenuText::akStringImp, SHelpMenuText::kNumStrings, pHelpMenuTexts,
         DATA(0x004c71a0) static TAutoArrayPtr<char> pHelpMenuTexts(new char[size]);)
 }
 

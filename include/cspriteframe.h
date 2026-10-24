@@ -174,8 +174,8 @@ public:
     }
     void DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                   int dx, int dy, int dw, int dh, int dpitch,
-                  TPalette16& pal, bool hflip,
-                  bool vflip) const;
+                  TPalette16& pal, bool hFlipped,
+                  bool vFlipped) const;
     void DrawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
                         TPalette16& pal, bool hflip,

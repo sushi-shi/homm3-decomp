@@ -220,7 +220,8 @@ def _reviewed_runtime_sections(image, rows, archives):
                   if symbol.section == number and symbol.storage_class == EXTERNAL
                   and (symbol.typ & 0x30) == FUNCTION_TYPE
                   and symbol.name and not symbol.name.startswith(('$', '.'))]
-        if not any(symbol.name == row['symbol'] and symbol.value == 0 for symbol in public):
+        if not any(symbol.name == row['symbol'] and 0 <= symbol.value < section.size
+                   for symbol in public):
             continue
         offset = mapped.raw_offset + rva - mapped.rva
         if differences(section, image.data[offset:offset + section.size]):
@@ -236,8 +237,9 @@ def reviewed_runtime_anchors(image, rows, archives):
     Complete relocation verification remains the admission requirement.
     """
     anchors = {}
-    for rva, section, _public, library, row in _reviewed_runtime_sections(image, rows, archives):
-        anchors.setdefault(rva, f"{library}:{row['member']}#{section.number}:{row['symbol']}")
+    for rva, section, public, library, row in _reviewed_runtime_sections(image, rows, archives):
+        if any(symbol.name == row['symbol'] and symbol.value == 0 for symbol in public):
+            anchors.setdefault(rva, f"{library}:{row['member']}#{section.number}:{row['symbol']}")
     return anchors
 
 
@@ -285,6 +287,12 @@ def reviewed_runtime_names(starts, runtime, reviewed, aliases=(), *, exports=())
         for row in reviewed:
             rva = int(row['rva'], 16)
             if row['kind'] != kind or rva not in starts:
+                continue
+            # A complete COFF section can start before its representative
+            # public function (exsup3.obj has an eight-byte prefix). Its
+            # exports carry the native symbol offsets; the section base is
+            # not independently a function address.
+            if kind == 'code' and row.get('ownership') == 'whole-section':
                 continue
             if kind == 'alias' and (rva not in names_at or int(row['size']) <= 0
                                     or int(row['section']) <= 0):

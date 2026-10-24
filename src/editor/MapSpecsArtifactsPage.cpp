@@ -54,7 +54,7 @@ BOOL TMapSpecsArtifactsPage::OnInitDialog()
     if (version >= GAME_VERSION_SOD)
         numArtifacts = kNumArtifacts;
     else
-        numArtifacts = version < GAME_VERSION_AB ? s_kNumRoEArtifacts : s_kNumABArtifacts;
+        numArtifacts = version >= GAME_VERSION_AB ? s_kNumABArtifacts : s_kNumRoEArtifacts;
     for (int artifact = 0; artifact < numArtifacts; artifact++) {
         if (!akArtifactTraits[artifact].m_disabled && !(akArtifactTraits[artifact].m_class & s_kSpecialClass)) {
             int index = _m_artifactsList.AddString(akArtifactTraits[artifact].m_name);
@@ -88,7 +88,8 @@ void TMapSpecsArtifactsPage::OnCheckChangeArtifactsList()
             && !_m_disabledArtifacts[artifact])
             return;
     }
-    int next = ++index < _m_artifactsList.GetCount() ? index : 0;
+    // Retail evaluates index + 1 into a temporary before GetCount.
+    int next = index + 1 < _m_artifactsList.GetCount() ? index + 1 : 0;
     _m_disabledArtifacts.set(_m_artifactsList.GetItemData(next), false);
     _m_artifactsList.SetCheck(next, 1);
 }

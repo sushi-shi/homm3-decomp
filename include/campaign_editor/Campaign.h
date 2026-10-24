@@ -93,9 +93,12 @@ public:
     int m_hero;
 };
 
+// The scalar spell/artifact/scroll bonus factories load hero before value.
+// Value-first constructor parameters recover that retail order in all three
+// factories; the retained multi-value bonus constructors keep their own order.
 class TScenarioBonusSpell : public TScenarioHeroBonus {
 public:
-    TScenarioBonusSpell(int hero, int spell) : TScenarioHeroBonus(hero), m_spell(spell) {}
+    TScenarioBonusSpell(int spell, int hero) : TScenarioHeroBonus(hero), m_spell(spell) {}
 
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
@@ -137,7 +140,7 @@ public:
 
 class TScenarioBonusArtifact : public TScenarioHeroBonus {
 public:
-    TScenarioBonusArtifact(int hero, int artifact) : TScenarioHeroBonus(hero), m_artifact(artifact) {}
+    TScenarioBonusArtifact(int artifact, int hero) : TScenarioHeroBonus(hero), m_artifact(artifact) {}
 
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
@@ -151,7 +154,7 @@ public:
 
 class TScenarioBonusSpellScroll : public TScenarioHeroBonus {
 public:
-    TScenarioBonusSpellScroll(int hero, int spell) : TScenarioHeroBonus(hero), m_spell(spell) {}
+    TScenarioBonusSpellScroll(int spell, int hero) : TScenarioHeroBonus(hero), m_spell(spell) {}
 
     virtual void accept(TVisitor& visitor) const { visitor.visit(*this); }
 
@@ -353,6 +356,12 @@ public:
         void setBPresent(bool bPresent);
         void setMainTown(int townType);
         void setHeroes(const std::map<int, std::string>& newHeroes);
+        // Inline, unlike the three above: the scenario map's constructor
+        // (0x40a1f0) needs their call sites. Names not proven.
+        void setBHumanPlayable(bool bHumanPlayable) { m_bHumanPlayable = bHumanPlayable; }
+        void setNumPlaceholders(int numPlaceholders) { m_numPlaceholders = numPlaceholders; }
+        void setBGenerateHeroAtMainTown(bool bGenerate) { m_bGenerateHeroAtMainTown = bGenerate; }
+        void setBHasRandomHero(bool bHasRandomHero) { m_bHasRandomHero = bHasRandomHero; }
 
         bool isHumanPlayable() const { return m_bPresent && m_bHumanPlayable; }
         int getMainTownType() const { return m_bHasMainTown ? m_mainTownType : -1; }
@@ -424,6 +433,12 @@ public:
 
     bool getBRetained(TRetained retained) const { return m_retained[retained]; }
     void setBRetained(TRetained retained, bool bRetained) { m_retained[retained] = bRetained; }
+    // The crossover page reads and writes the sets through these (its
+    // _setCrossover 0x42a0d0 needs their call sites); names not proven.
+    const std::bitset<kNumCreatures>& getCreatures() const { return m_creatures; }
+    const std::bitset<kNumArtifacts>& getArtifacts() const { return m_artifacts; }
+    void setCreatures(const std::bitset<kNumCreatures>& creatures) { m_creatures = creatures; }
+    void setArtifacts(const std::bitset<kNumArtifacts>& artifacts) { m_artifacts = artifacts; }
 
     bool operator==(const TScenarioCrossover& other) const
     {

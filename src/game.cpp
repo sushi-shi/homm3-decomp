@@ -6462,6 +6462,9 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // results) in the shared count before testing it. That restores C1XX cost
 // 1436 -> 1531, inside the 1508..1666 window for retail's call set
 // (94.62 -> 99.06%).
+// Initialize the shared player counter before its pointer, as DC 7026 does.
+// Remaining: the AI-strategy store and human-flag load exchange order; naming
+// the flag as a byte or bool does not recover the retail schedule.
 VA(0x004c5630, 0x7CD)
 DC_ADDRESS(0x0b0754, 0x752)
 MAC_ADDRESS(0x0dbef4, 0x8b8)  // DC Load + saved-header callers + helper edges
@@ -6512,8 +6515,9 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
     m_numPlayers = m_minNumHumanPlayers = m_maxNumHumanPlayers = 0;
 
+    i = 0;
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
-    for (i = 0; i < NUM_PLAYERS; ++i, ++player) {
+    for (; i < NUM_PLAYERS; ++i, ++player) {
         count = infile->read(&boolBuffer, sizeof(boolBuffer));
         if (count < sizeof(boolBuffer))
             return -1;

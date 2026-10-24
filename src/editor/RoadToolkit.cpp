@@ -17,7 +17,9 @@ TRoadToolkit::TRoadToolkit(CWnd* pParent) : TToolkitBase(IDD_ROAD_TOOLKIT, pPare
     _m_pToolBar = new TToolkitBaseToolBar(this, IDR_ROAD_TOOLBAR, 1);
     if (_m_pToolBar == NULL)
         throw TAllocationFailure();
-    CRect rect(0, 0, 0, 3);
+    CRect rect;
+    rect.left = rect.right = rect.top = 0;
+    rect.bottom = 3;
     MapDialogRect(&rect);
     int margin = rect.Height();
     _m_roadTypeStatic.GetWindowRect(&rect);

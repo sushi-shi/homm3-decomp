@@ -121,6 +121,8 @@ private:
 DATA(0x005a1e80) std::set<TMapView*> allMapViews;
 VA_COMPGEN(0x004800e0, 0x23, STATIC_CTOR, allMapViews)
 VA_COMPGEN(0x00480103, 0xa, STATIC_DTOR, allMapViews)
+VA_COMPGEN(0x00485485, 0x23, CLASS_CTOR, set)
+VA_COMPGEN(0x0048010d, 0x5, IMPLICIT_DTOR, TMapView_set)
 
 VA(0x00480112, 0x6)
 BEGIN_MESSAGE_MAP(TObjectPropsDlg, CDialog)
@@ -467,6 +469,10 @@ TMapView::TMapView()
 
 VA_COMPGEN(0x004805fb, 0x1c, SCALAR_DELETING_DTOR, TMapView)
 
+// The obstacle mask histories' map destructor, which the view's destructor
+// unwind funclet calls.
+VA_COMPGEN(0x00480617, 0x5, IMPLICIT_DTOR, map)
+
 VA(0x0048061c, 0x90)
 TMapView::~TMapView()
 {
@@ -483,9 +489,9 @@ BOOL TMapView::PreCreateWindow(CREATESTRUCT& cs)
     VA_COMPGEN(0x00480723, 0xa, STATIC_DTOR, className)
     DATA(0x005a1e78) static CString className;
     if (className.IsEmpty())
-        className = AfxRegisterWndClass(CS_DBLCLKS, ::LoadCursor(NULL, IDC_ARROW));
+        className = AfxRegisterWndClass(CS_DBLCLKS, ::LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_BTNFACE + 1));
     cs.lpszClass = className;
-    cs.style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN;
+    cs.style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     return CView::PreCreateWindow(cs);
 }
 
@@ -1189,6 +1195,8 @@ void TMapView::_placeObjectWithExceptionHandlingImpl(std::auto_ptr<TGameObject> 
     }
 }
 
+// Retail uses a 0x18-byte frame; this source uses 0x20. Naming only the
+// toolkit width or changing CSize construction does not recover the slot reuse.
 VA(0x00482287, 0x8a)
 void TMapView::_layout(int cx, int cy)
 {
@@ -1401,8 +1409,10 @@ void TMapView::_paintBorderedObstacleArea(const CRect& rect)
     CPoint point;
     int xEnd;
     if (rect.top >= 1) {
-        for (point.x = max(rect.left - 1, 0), xEnd = min(rect.right + 1, width), point.y = rect.top - 1;
-             point.x < xEnd; ++point.x) {
+        int xStart = max(rect.left - 1, 0);
+        xEnd = min(rect.right + 1, width);
+        point.y = rect.top - 1;
+        for (point.x = xStart; point.x < xEnd; ++point.x) {
             if (_m_pObstacleMask->getTileState(point.x, point.y, _m_bViewUnderground) == TGameMapMask::eTileNone)
                 _m_pObstacleMask->setTileState(point.x, point.y, _m_bViewUnderground, TGameMapMask::eTileClear);
         }
@@ -1464,8 +1474,10 @@ void TMapView::_eraseBorderedObstacleArea(const CRect& rect)
     CPoint point;
     int xEnd;
     if (rect.top >= 1) {
-        for (point.x = max(rect.left - 1, 0), xEnd = min(rect.right + 1, width), point.y = rect.top - 1;
-             point.x < xEnd; ++point.x) {
+        int xStart = max(rect.left - 1, 0);
+        xEnd = min(rect.right + 1, width);
+        point.y = rect.top - 1;
+        for (point.x = xStart; point.x < xEnd; ++point.x) {
             if (_m_pObstacleMask->getTileState(point.x, point.y, _m_bViewUnderground) == TGameMapMask::eTileObstacle)
                 _m_pObstacleMask->setTileState(point.x, point.y, _m_bViewUnderground, TGameMapMask::eTileClear);
         }
@@ -1561,6 +1573,8 @@ void TMapView::OnInitialUpdate()
     CView::OnInitialUpdate();
 }
 
+// Linux OnUpdate names the replacement rectangle before the mini-map update.
+// Retaining that local here recovers retail's 0x40-byte frame and history-pair homes.
 VA(0x00482eba, 0x335)
 void TMapView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 {
@@ -1611,7 +1625,8 @@ void TMapView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
             _setViewUnderground(false);
         _m_pMapFrameWnd->onUndo();
         const TGameMap* pMap = getPDocument()->getPMap();
-        _m_pMiniMapWnd->update(CRect(0, 0, pMap->getWidth(), pMap->getHeight()));
+        CRect rect(0, 0, pMap->getWidth(), pMap->getHeight());
+        _m_pMiniMapWnd->update(rect);
     } else if (pNotification->m_type == TMapDoc::TNotification::eBackup) {
         if (_m_mode == _eModeObstacles) {
             _m_obstacleMaskHistory.insert(_m_obstacleMaskHistory.begin() + _m_obstacleMaskHistoryPos,
@@ -1642,6 +1657,10 @@ void TMapView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
         _m_obstacleMaskHistories.clear();
     }
 }
+
+// The history map's value_type temporary, destroyed by OnUpdate's unwind
+// funclets.
+VA_COMPGEN(0x004831ef, 0x8, IMPLICIT_DTOR, pair)
 
 void TMapView::OnDraw(CDC* pDC)
 {

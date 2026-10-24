@@ -63,12 +63,13 @@ VA(0x004ba48a, 0xc3)
 BOOL TSpellsDlg::OnInitDialog()
 {
     GetDlgItem(IDC_SPELLS_STATIC)->SetWindowText(SSpellsDlgText::kSpellsStaticStr);
-    _m_spells = std::bitset<kNumSpells>();
+    std::bitset<kNumSpells> spells;
+    _m_spells = spells;
     CDialog::OnInitDialog();
     CRect rect;
     _m_spellsList.GetClientRect(&rect);
     _m_spellsList.SetColumnWidth(rect.Width() / 2);
-    for (int spell = 0; spell < kNumSpells; spell++) {
+    for (unsigned int spell = 0; spell < kNumSpells; spell++) {
         if (!(akSpellTraits[spell].m_flags & 0x2000) && akSpellTraits[spell].m_schoolBits != 0)
             _m_spellsList.SetItemData(_m_spellsList.AddString(akSpellTraits[spell].m_name), spell);
     }
@@ -84,9 +85,8 @@ void TSpellsDlg::OnCheckChangeSpellsList()
     if (_m_mapVersion >= GAME_VERSION_SOD)
         _m_spells[spell] = _m_spellsList.GetCheck(curSel) != 0;
     else if (_m_spellsList.GetCheck(curSel)) {
-        std::bitset<kNumSpells>::reference bSpell = _m_spells[spell];
-        if (!bSpell) {
-            bSpell = true;
+        if (!_m_spells[spell]) {
+            _m_spells[spell] = true;
             int count = _m_spellsList.GetCount();
             for (int index = 0; index < count; index++) {
                 if (index != curSel && _m_spellsList.GetCheck(index)) {

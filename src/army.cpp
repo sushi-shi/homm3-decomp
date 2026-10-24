@@ -539,22 +539,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
             value -= m_luckPenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
-            do {
-                switch (m_monInfo.townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    continue;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    value += 2;
-                    break;
-                }
-            } while (0);
+            if (classifyTownAlignment(m_monInfo.townType)
+                == moralAlignmentNeutral)
+                value += 2;
         }
 
         if (m_creatureType == CREATURE_HALFLING && value < 1)
@@ -587,45 +574,18 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
             value -= m_moralePenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-            do {
-                switch (m_monInfo.townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    ++value;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    --value;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
-            } while (0);
+            int alignment = classifyTownAlignment(m_monInfo.townType);
+            if (alignment == moralAlignmentGood)
+                ++value;
+            else if (alignment == moralAlignmentEvil)
+                --value;
+        } else if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
+            int alignment = classifyTownAlignment(m_monInfo.townType);
+            if (alignment == moralAlignmentGood)
+                --value;
+            else if (alignment == moralAlignmentEvil)
+                ++value;
         }
-        do {
-            if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-                switch (m_monInfo.townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    --value;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    ++value;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
-            }
-        } while (0);
 
         if ((m_creatureType == CREATURE_MINOTAUR
              || m_creatureType == CREATURE_MINOTAUR_KING)
@@ -1910,13 +1870,11 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // private and returns bool. The direction overload is the public entry;
 // all calls to the single-swing helper remain inside army. Mac forwards
 // CheckSpecialAttack's byte result, replacing it with true for fresh blind.
-// The owning-side accessor restores the first retail address calculation
-// (Windows 99.9040 -> 99.9232). The integrated declaration context also
-// restores the reload order after DoMultiHeadAttack (99.9616%). Remaining
-// differences are address-register choices in two MarkCreatureEffect expansions.
-// With the guarded controlling-side return and DC's direct spell-row reads
-// this caller is 99.9232%: the same two address decompositions remain, plus
-// the ordering of independent EDI/EBX loads after the hydra call.
+// Mac 0x4d3e8, 0x4d488 and 0x4d4e4 load the same full-width side
+// returned by getOwningSide at each marking site. Missing retained DC calls
+// do not disprove those expansions. Restoring the three canonical calls is
+// byte-flat at 99.9232%; the residual is two effect-address decompositions
+// and the independent EDI/EBX reload order after the hydra call.
 VA(0x00441610, 0x6A0)
 DC_ADDRESS(0x046bec, 0x3c2)
 MAC_ADDRESS(0x04d288, 0x638)  // corroborates
@@ -1954,7 +1912,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     checkLuck();
     int damage = 0;
     int killed = 0;
@@ -1966,10 +1924,10 @@ bool army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->m_combatSide,
+        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
                                             armyToAttack->m_bitIndex);
         if (behind)
-            g_combatManager->markCreatureEffect(behind->m_combatSide,
+            g_combatManager->markCreatureEffect(behind->getOwningSide(),
                                                 behind->m_bitIndex);
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);

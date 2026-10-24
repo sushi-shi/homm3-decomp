@@ -944,46 +944,19 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
-        do {
-            switch (g_game->getAlignment(type)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                morale++;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                morale--;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                continue;
-            }
-        } while (0);
+        int alignment = classifyTownAlignment(g_game->getAlignment(type));
+        if (alignment == moralAlignmentGood)
+            morale++;
+        else if (alignment == moralAlignmentEvil)
+            morale--;
+    } else if (mode == MAGIC_TERRAIN_EVIL_FOG) {
+        int type = m_armies[index];
+        int alignment = classifyTownAlignment(g_game->getAlignment(type));
+        if (alignment == moralAlignmentGood)
+            morale--;
+        else if (alignment == moralAlignmentEvil)
+            morale++;
     }
-    do {
-        if (mode == MAGIC_TERRAIN_EVIL_FOG) {
-            int type = m_armies[index];
-            switch (g_game->getAlignment(type)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                morale--;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                morale++;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                continue;
-            }
-        }
-    } while (0);
 
     int type = m_armies[index];
     if ((type == CREATURE_MINOTAUR || type == CREATURE_MINOTAUR_KING)
@@ -1033,24 +1006,9 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
-        do {
-            switch (g_game->getAlignment(creature)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                continue;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                luck += 2;
-                break;
-            default:
-                break;
-            }
-        } while (0);
+        if (classifyTownAlignment(g_game->getAlignment(creature))
+            == moralAlignmentNeutral)
+            luck += 2;
     }
     if (m_armies[index] == CREATURE_HALFLING && luck < 1)
         luck = 1;
@@ -1230,15 +1188,20 @@ void armyGroup::mergeArmies(armyGroup& source)
 // result and eight explicit parameters. DC lines 1347..1451 retain result,
 // alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
 // Complete's neutral alignment requires the ten-byte array below.
-// Replacing the terrain labels with ordinary switch-arm breaks gives 93.8743%
-// versus 97.3066%, with either explicit neutral arms or an else-if chain.
+// Mac materializes the shared four-valued town classification at 0x59868
+// and 0x5993c. Restoring its two calls removes the old switch-exit scaffolding
+// and raises Windows 97.27% to 99.21%; the source helper remains canonical.
+// DC lines 1375..1378 retain explicit penalty assignments in if/else arms;
+// this shape also recovers the final string append and return code in VC6.
+// Windows and Mac use text indices 38/39 for holy good/evil and 41/40 for
+// evil-fog good/evil (Mac loads at 0x598b4, 0x598e0, 0x59988, 0x599b4).
 VA(0x0044b960, 0x859)
 DC_ADDRESS(0x04f708, 0x3aa)
 MAC_ADDRESS(0x059734, 0x714)  // retail-body signature
 std::string armyGroup::getMoraleDescription(
     TCreatureType creature, int morale, const hero* ownerHero,
-    const town* ownerTown, const hero* otherHero,
-    const armyGroup* otherGroup, int magicTerrain,
+    const town* ownerTown, const hero* other_hero,
+    const armyGroup* other_group, int magicTerrain,
     unsigned char groupAlignments) const
 {
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
@@ -1255,74 +1218,32 @@ std::string armyGroup::getMoraleDescription(
         return g_moraleInfo[28];
 
     int currentMorale = getMorale(
-        ownerHero, ownerTown, otherHero, otherGroup, 0,
+        ownerHero, ownerTown, other_hero, other_group, 0,
         groupAlignments, 0);
     std::string result;
 
     if (ownerHero)
         result = ownerHero->getMoraleDescription();
 
-    // Complete terrain arms: mutate the incoming morale home, then subtract
-    // currentMorale at the tail, as proved by retail 0x44b960.
-    // Mac 0x5983c and 0x59910 expand getCreatureAlignment separately in each arm.
-    {
-        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-            switch (g_game->getAlignment(creature)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                goto holyGroundGood;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                goto holyGroundEvil;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto moraleTerrainDone;
-            }
-            goto moraleTerrainDone;
-
-        holyGroundGood:
+    // Complete terrain adjustments use the original incoming morale value.
+    if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
+        int alignment = classifyTownAlignment(g_game->getAlignment(creature));
+        if (alignment == moralAlignmentGood) {
             --morale;
-            result += g_moraleInfo[39];
-            goto moraleTerrainDone;
-
-        holyGroundEvil:
-            ++morale;
             result += g_moraleInfo[38];
-            goto moraleTerrainDone;
-        }
-        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-            switch (g_game->getAlignment(creature)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                goto evilFogGood;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                goto evilFogEvil;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto moraleTerrainDone;
-            }
-            goto moraleTerrainDone;
-
-        evilFogGood:
+        } else if (alignment == moralAlignmentEvil) {
             ++morale;
-            result += g_moraleInfo[40];
-            goto moraleTerrainDone;
-
-        evilFogEvil:
-            --morale;
-            result += g_moraleInfo[41];
-            goto moraleTerrainDone;
+            result += g_moraleInfo[39];
         }
-
-    moraleTerrainDone:
-        ;
+    } else if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
+        int alignment = classifyTownAlignment(g_game->getAlignment(creature));
+        if (alignment == moralAlignmentGood) {
+            ++morale;
+            result += g_moraleInfo[41];
+        } else if (alignment == moralAlignmentEvil) {
+            --morale;
+            result += g_moraleInfo[40];
+        }
     }
 
     unsigned char alignments[TOWN_TYPE_COUNT + 1];
@@ -1340,7 +1261,11 @@ std::string armyGroup::getMoraleDescription(
     }
 
     if (numAlignments >= 3) {
-        int penalty = numAlignments >= 5 ? -3 : 2 - numAlignments;
+        int penalty;
+        if (numAlignments >= 5)
+            penalty = -3;
+        else
+            penalty = 2 - numAlignments;
         result += formatString(g_moraleInfo[29],
                                 numAlignments, penalty);
     } else if (numAlignments == 1) {
@@ -1350,20 +1275,20 @@ std::string armyGroup::getMoraleDescription(
     if (hasSomeUndead())
         result += g_moraleInfo[31];
 
-    TCreatureType angelType;
+    TCreatureType angel_type;
     if (isMember(CREATURE_ANGEL) || isMember(CREATURE_ARCHANGEL)) {
-        angelType = CREATURE_ANGEL;
+        angel_type = CREATURE_ANGEL;
         if (isMember(CREATURE_ARCHANGEL))
-            angelType = CREATURE_ARCHANGEL;
+            angel_type = CREATURE_ARCHANGEL;
         result += formatString(g_moraleInfo[32],
-                                getArmyName(angelType, 2));
+                                getArmyName(angel_type, 2));
     }
 
-    if (otherGroup) {
+    if (other_group) {
         TCreatureType dragonType = CREATURE_NONE;
-        if (otherGroup->isMember(CREATURE_BONE_DRAGON))
+        if (other_group->isMember(CREATURE_BONE_DRAGON))
             dragonType = CREATURE_BONE_DRAGON;
-        if (otherGroup->isMember(CREATURE_GHOST_DRAGON))
+        if (other_group->isMember(CREATURE_GHOST_DRAGON))
             dragonType = CREATURE_GHOST_DRAGON;
         if (dragonType != CREATURE_NONE)
             result += formatString(
@@ -1392,7 +1317,7 @@ std::string armyGroup::getMoraleDescription(
 
     if ((ownerHero && ownerHero->isWieldingArtifact(
                          ARTIFACT_SPIRIT_OF_OPPRESSION))
-        || (otherHero && otherHero->isWieldingArtifact(
+        || (other_hero && other_hero->isWieldingArtifact(
                             ARTIFACT_SPIRIT_OF_OPPRESSION))) {
         if (currentMorale > 0) {
             result = formatString(
@@ -1409,51 +1334,16 @@ std::string armyGroup::getMoraleDescription(
     return result;
 }
 
-// E:\gamedcs\armygrp.cpp:1464. Retail Complete's body proves the added
-// creature argument and full-width magic-terrain mode; the older Dreamcast
-// prototype omits the creature argument and calls the terrain mode a boolean.
-// Semantic transcription complete; residual 82.5689%. The bounded
-// variable-creature name lookup raised the body to 74.7874%; a function-wide
-// shared result regresses.
-
-// What is left is a pure inline-depth divergence, 41 conditional branches
-// against retail's 33: retail CALLS basic_string::assign(const char*,
-// size_t) where we expand it into _Grow + rep movs + _Eos, and the same one
-// level too deep repeats at the other string sites.
-
-// THE HERO ARM ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-08-14). The
-// Dreamcast line table says so directly - dc line 1482 reaches
-// `basic_string::operator=` and no operator+= - and retail's own call at
-// that slot is `assign(const basic_string&, uint, uint)` (0x404860) where
-// ours was `append(...)` (0x41b250); every other call in the body already
-// lined up 1:1. `result` is empty there, so the two are behaviourally the
-// same and the argument sequence is identical - only the relocation target
-// differs, which objdiff does not score. Recorded because it is what retail
-// wrote and because the call multiset is what `predict-inline` reads.
-
-// Complete adds the clover-field and halfling arms to the older DC body.
-// Their missing DC lines do not recover absent statements. Keep the shared
-// isBaseElemental, GetArmyName and HasBuilding helpers already used below.
-// DC line 1499 positively calls HasBuilding(EXTRA_0_ID, true).
-// Earlier flattened lookup controls and artificial inline-budget probes
-// changed string expansion decisions, but do not establish alternate helper
-// declarations or justify adding candidate sites to this source.
-
-// Windows reads luck as a full DWORD, and Mac 0x5a18c subtracts from the
-// full-width saved argument. The allocator scratch byte in its high byte
-// does not establish a narrow parameter. Keep the recorded int interface.
-// The Halfling arm retains a string destruction call in Windows while the
-// final adjustment expands it. Naming only the creature name is byte-flat;
-// naming the formatted string extends its lifetime and drops 95.1677% to
-// 91.8743% (four reproduced states, three objects). Keep the temporary and
-// its existing formatString / append / destruction boundaries.
-// [2026-08-26] Scoping a signed-byte snapshot of `ourTown->type` under the
-// nonnull gate raises 90.1916 -> 92.3623. The cache preserves retail's 33
-// conditional branches and symbolic branch targets. A generated one-line
-// town-type accessor reaches the same bytes, but no such accessor is attested
-// in the Dreamcast class record; the ordinary local is retained instead.
-// Dreamcast line 1499 calls town::HasBuilding for the Rampart
-// Fountain of Fortune check (building 21, built-only flag 1).
+// E:\gamedcs\armygrp.cpp:1464. Complete adds the creature argument and
+// full-width magic-terrain mode. DC line 1482 assigns the hero description;
+// line 1499 calls HasBuilding(EXTRA_0_ID, true). Preserve those source calls.
+// Mac 0x59fa0..0x59fe4 materializes the four-valued town classification.
+// Restoring its helper call recovers Windows100%, including the retained
+// Halfling string destructor and expanded final-adjustment cleanup.
+// The town-type snapshot stays within its nonnull guard. Naming the formatted
+// string extends its lifetime and loses the native temporary cleanup boundary.
+// Luck remains int: Windows and Mac 0x5a18c use its full-width argument;
+// an allocator scratch byte in that home does not prove a narrow parameter.
 VA(0x0044c1c0, 0x3C5)
 DC_ADDRESS(0x04fab4, 0x1e2)
 MAC_ADDRESS(0x059e48, 0x3a8)  // retail-body signature
@@ -1482,37 +1372,13 @@ std::string armyGroup::getLuckDescription(
 
     // Complete adds the clover-field luck bonus before applying enemy-group
     // modifiers. Dreamcast has only the cursed-ground terrain parameter.
-    // Mac 0x59f68 expands getCreatureAlignment before the town switch.
+    // Mac 0x59f68 expands the town lookup before the shared classification.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
-        // Nine town values routed to NAMED exits, the recipe GetArmyMorale
-        // (0x44b100) already carries: retail lowers this arm through a
-        // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
-        // / mov cl,[bytetable] / jmp [4*ecx + jumptable]` - and that only
-        // survives with the neutral cases naming their exit. The bonus can
-        // live in its own arm and default can break, removing two gotos
-        // without changing any score in the 36-state family. Spelled with `return`
-        // in the no-op arms VC6 sees two outcomes, collapses the whole
-        // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
-        // instead of the tables.
-        switch (g_game->getAlignment(creature)) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto clover_done;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
+        if (classifyTownAlignment(g_game->getAlignment(creature))
+            == moralAlignmentNeutral) {
             luck -= 2;
             result += g_luckInfo[24];
-            break;
-        default:
-            break;
         }
-    clover_done:
-        ;
     }
 
     if (enemyGroup) {

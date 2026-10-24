@@ -97,8 +97,9 @@ BOOL TMonsterPropsTreasurePage::OnInitDialog()
     for (type = 0; type < kNumGameResourceTypes; type++) {
         _TResourceControls& controls = _m_aResourceControls[type];
         controls.m_quantityEdit.LimitText(TDigits<TMonster::s_kMaxResourceQuantity>::getDigits());
+        int quantity = controls.m_quantity;
         CString text;
-        text.Format("%d", controls.m_quantity);
+        text.Format("%d", quantity);
         controls.m_quantityEdit.SetWindowText(text);
         controls.m_quantitySpin.SetRange(0, UD_MAXVAL);
     }

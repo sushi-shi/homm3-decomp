@@ -28,34 +28,33 @@
 // compiland's own dynamic initializer rather than from .data - which is why
 // the array is in .bss at all.
 DATA(0x006a80a8)
-TPoint<int> g_tileDirections[TILE_DIR_COUNT] = {
+const TPoint<int> akAdjOffset[TILE_DIR_COUNT] = {
     TPoint<int>(0, -1),  TPoint<int>(1, -1),  TPoint<int>(1, 0),   TPoint<int>(1, 1),
     TPoint<int>(0, 1),   TPoint<int>(-1, 1),  TPoint<int>(-1, 0),  TPoint<int>(-1, -1)
 };
 
 VA(0x005BC910, 0x7D)
 MAC_ADDRESS(0x25bcd4, 0xf8)
-void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
-                                       unsigned char* neighbourExists)
+void computeAdjacentDirs(unsigned int width, unsigned int height,
+                         unsigned int x, unsigned int y, bool (&abDir)[8])
 {
-    std::fill(neighbourExists, neighbourExists + TILE_DIR_COUNT,
-              static_cast<unsigned char>(1));
+    std::fill(abDir, abDir + TILE_DIR_COUNT, true);
     if (y == 0) {
-        neighbourExists[TILE_DIR_NORTHEAST] = 0;
-        neighbourExists[TILE_DIR_NORTHWEST] = 0;
-        neighbourExists[TILE_DIR_NORTH] = 0;
+        abDir[TILE_DIR_NORTHEAST] = false;
+        abDir[TILE_DIR_NORTHWEST] = false;
+        abDir[TILE_DIR_NORTH] = false;
     } else if (y == height - 1) {
-        neighbourExists[TILE_DIR_SOUTHEAST] = 0;
-        neighbourExists[TILE_DIR_SOUTHWEST] = 0;
-        neighbourExists[TILE_DIR_SOUTH] = 0;
+        abDir[TILE_DIR_SOUTHEAST] = false;
+        abDir[TILE_DIR_SOUTHWEST] = false;
+        abDir[TILE_DIR_SOUTH] = false;
     }
     if (x == 0) {
-        neighbourExists[TILE_DIR_SOUTHWEST] = 0;
-        neighbourExists[TILE_DIR_NORTHWEST] = 0;
-        neighbourExists[TILE_DIR_WEST] = 0;
+        abDir[TILE_DIR_SOUTHWEST] = false;
+        abDir[TILE_DIR_NORTHWEST] = false;
+        abDir[TILE_DIR_WEST] = false;
     } else if (x == width - 1) {
-        neighbourExists[TILE_DIR_SOUTHEAST] = 0;
-        neighbourExists[TILE_DIR_NORTHEAST] = 0;
-        neighbourExists[TILE_DIR_EAST] = 0;
+        abDir[TILE_DIR_SOUTHEAST] = false;
+        abDir[TILE_DIR_NORTHEAST] = false;
+        abDir[TILE_DIR_EAST] = false;
     }
 }

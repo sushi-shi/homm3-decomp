@@ -149,6 +149,8 @@ int TNewMapDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
     return 0;
 }
 
+// Separate population-loop counters with a shared insertion index reproduce
+// retail's local homes. These random-map controls are absent from the Linux editor.
 VA(0x0048acee, 0x684)
 BOOL TNewMapDlg::OnInitDialog()
 {
@@ -207,33 +209,32 @@ BOOL TNewMapDlg::OnInitDialog()
     int index = _m_humanPlayersCombo.AddString(kRandomStr);
     _m_humanPlayersCombo.SetItemData(index, DWORD(-1));
     _m_humanPlayersCombo.SetCurSel(index);
-    int count;
-    for (count = 1; count <= kNumPlayers; count++) {
-        index = _m_humanPlayersCombo.AddString(TFormattedString("%d", count));
-        _m_humanPlayersCombo.SetItemData(index, count);
+    for (int humanPlayerCount = 1; humanPlayerCount <= kNumPlayers; humanPlayerCount++) {
+        index = _m_humanPlayersCombo.AddString(TFormattedString("%d", humanPlayerCount));
+        _m_humanPlayersCombo.SetItemData(index, humanPlayerCount);
     }
     index = _m_computerPlayersCombo.AddString(kRandomStr);
     _m_computerPlayersCombo.SetItemData(index, DWORD(-1));
     _m_computerPlayersCombo.SetCurSel(index);
-    for (count = 0; count <= kNumPlayers - 1; count++) {
-        index = _m_computerPlayersCombo.AddString(TFormattedString("%d", count));
-        _m_computerPlayersCombo.SetItemData(index, count);
+    for (int computerPlayerCount = 0; computerPlayerCount <= kNumPlayers - 1; computerPlayerCount++) {
+        index = _m_computerPlayersCombo.AddString(TFormattedString("%d", computerPlayerCount));
+        _m_computerPlayersCombo.SetItemData(index, computerPlayerCount);
     }
     _m_humanTeamsCombo.SetItemData(_m_humanTeamsCombo.AddString(kRandomStr), DWORD(-1));
     index = _m_humanTeamsCombo.AddString(kSelNoneStr);
     _m_humanTeamsCombo.SetItemData(index, 0);
     _m_humanTeamsCombo.SetCurSel(index);
-    for (count = 1; count <= kNumPlayers - 1; count++) {
-        index = _m_humanTeamsCombo.AddString(TFormattedString("%d", count));
-        _m_humanTeamsCombo.SetItemData(index, count);
+    for (int humanTeamCount = 1; humanTeamCount <= kNumPlayers - 1; humanTeamCount++) {
+        index = _m_humanTeamsCombo.AddString(TFormattedString("%d", humanTeamCount));
+        _m_humanTeamsCombo.SetItemData(index, humanTeamCount);
     }
     _m_computerTeamsCombo.SetItemData(_m_computerTeamsCombo.AddString(kRandomStr), DWORD(-1));
     index = _m_computerTeamsCombo.AddString(kSelNoneStr);
     _m_computerTeamsCombo.SetItemData(index, 0);
     _m_computerTeamsCombo.SetCurSel(index);
-    for (count = 1; count <= kNumPlayers - 2; count++) {
-        index = _m_computerTeamsCombo.AddString(TFormattedString("%d", count));
-        _m_computerTeamsCombo.SetItemData(index, count);
+    for (int computerTeamCount = 1; computerTeamCount <= kNumPlayers - 2; computerTeamCount++) {
+        index = _m_computerTeamsCombo.AddString(TFormattedString("%d", computerTeamCount));
+        _m_computerTeamsCombo.SetItemData(index, computerTeamCount);
     }
     return TRUE;
 }

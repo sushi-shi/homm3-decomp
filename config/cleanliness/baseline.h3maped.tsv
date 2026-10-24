@@ -1,6 +1,6 @@
 # MANUALLY RATCHETED - homm3.cleanliness.board floors; build
 # rolls them DOWN-only, `board --update` is the only bless.
-C-style casts	109
+C-style casts	83
 reinterpret_casts	7
 volatile qualifiers	0
 inline-gate artifacts	0

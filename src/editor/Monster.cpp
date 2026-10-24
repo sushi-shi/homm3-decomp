@@ -136,6 +136,8 @@ unsigned int TMonster::getResourceQuantity(TGameResourceType type) const
     return _m_resourceQuantities[type];
 }
 
+// Retail clears the reserved array with one word store. The indexed loop
+// preserves that whole-array operation; fill_n remains out of line under VC6.
 VA(0x00488be8, 0x18d)
 void TMonster::write(TRawOStream* pOStream, int version) const
 {
@@ -156,7 +158,8 @@ void TMonster::write(TRawOStream* pOStream, int version) const
     }
     *pOStream << static_cast<signed char>(_m_bNeverFlees) << static_cast<signed char>(_m_bNeverGrows);
     signed char aReserved[kNumMonsterReserved];
-    fill_n(aReserved, sizeof(aReserved), 0);
+    for (unsigned int i = 0; i < kNumMonsterReserved; ++i)
+        aReserved[i] = 0;
     *pOStream << aReserved;
 }
 
