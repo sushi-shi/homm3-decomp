@@ -394,6 +394,13 @@ TCommandTextMap::TCommandTextMap()
     }
 }
 
+// The texts' pair temporaries: make_pair's pair<TFormattedString, CString>,
+// its conversion to the mapped pair<const CString, const CString>, and the
+// value_type; _add's make_pair builds a pair<CString, CString>.
+VA_COMPGEN(0x0045a5d0, 0x35, IMPLICIT_DTOR, pair)
+VA_COMPGEN(0x0045a605, 0x35, IMPLICIT_DTOR, pair)
+VA_COMPGEN(0x0045a63a, 0x36, IMPLICIT_DTOR, pair)
+
 VA(0x0045a670, 0x141)
 void TCommandTextMap::_add(UINT id, const TSpreadsheetResource& spreadsheet, int row)
 {
@@ -402,6 +409,8 @@ void TCommandTextMap::_add(UINT id, const TSpreadsheetResource& spreadsheet, int
     CString toolTip(cells.size() > 1 ? cells[1] : "");
     insert(value_type(id, make_pair(prompt, toolTip)));
 }
+
+VA_COMPGEN(0x0045a7b1, 0x35, IMPLICIT_DTOR, pair)
 
 inline const TCommandTextMap& getCommandTexts();
 

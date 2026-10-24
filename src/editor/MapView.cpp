@@ -121,6 +121,7 @@ private:
 DATA(0x005a1e80) std::set<TMapView*> allMapViews;
 VA_COMPGEN(0x004800e0, 0x23, STATIC_CTOR, allMapViews)
 VA_COMPGEN(0x00480103, 0xa, STATIC_DTOR, allMapViews)
+VA_COMPGEN(0x0048010d, 0x5, IMPLICIT_DTOR, TMapView_set)
 
 VA(0x00480112, 0x6)
 BEGIN_MESSAGE_MAP(TObjectPropsDlg, CDialog)
@@ -466,6 +467,10 @@ TMapView::TMapView()
 }
 
 VA_COMPGEN(0x004805fb, 0x1c, SCALAR_DELETING_DTOR, TMapView)
+
+// The obstacle mask histories' map destructor, which the view's destructor
+// unwind funclet calls.
+VA_COMPGEN(0x00480617, 0x5, IMPLICIT_DTOR, map)
 
 VA(0x0048061c, 0x90)
 TMapView::~TMapView()
@@ -1651,6 +1656,10 @@ void TMapView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
         _m_obstacleMaskHistories.clear();
     }
 }
+
+// The history map's value_type temporary, destroyed by OnUpdate's unwind
+// funclets.
+VA_COMPGEN(0x004831ef, 0x8, IMPLICIT_DTOR, pair)
 
 void TMapView::OnDraw(CDC* pDC)
 {

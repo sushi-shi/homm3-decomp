@@ -766,6 +766,9 @@ BOOL TPrisonPropsGeneralPage::OnInitDialog()
     return TRUE;
 }
 
+// The hero class set's destructor, called by OnInitDialog's unwind funclet.
+VA_COMPGEN(0x00451e9e, 0x5, IMPLICIT_DTOR, THeroClass_set)
+
 VA(0x00451ea3, 0x25)
 void TPrisonPropsGeneralPage::OnOK()
 {

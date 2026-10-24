@@ -223,8 +223,13 @@ DEQUE_PRIMITIVE_ELEMENT = {"C": "signed_char", "D": "char",
 #: `CAutoArray` needs both halves - `??1` AND the `??_G` scalar deleting
 #: destructor - because its two instantiations are NOT ICF-folded (each
 #: stores its own vftable) yet still share one join key.
+#: `set` is keyed by its element, its first argument (the comparison and
+#: allocator are the defaults): the map editor's MapView.obj and
+#: HeroPropsGeneralPage.obj each emit two five-byte `~set` jumps to their
+#: trees' destructors.
 SINGLE_ARG_TEMPLATE_DTORS = {"auto_ptr": "auto_ptr",
-                             "cautoarray": "CAutoArray"}
+                             "cautoarray": "CAutoArray",
+                             "set": "set"}
 #: The claim markers a `<Element>_<template>` owner is honoured on, and the
 #: mangled prefix each one's symbols carry.
 TEMPLATE_DTOR_MARKERS = {"$implicit_dtor$": "??1",

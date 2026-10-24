@@ -901,6 +901,7 @@ TQuestBringCreaturesDlg::TQuestBringCreaturesDlg(TClient* pClient, EGameVersion 
 }
 
 VA_COMPGEN(0x0040fbda, 0x1c, SCALAR_DELETING_DTOR, TQuestBringCreaturesDlg)
+VA_COMPGEN(0x0040fbf6, 0x5, IMPLICIT_DTOR, map)
 VA_COMPGEN(0x0040fbfb, 0x83, IMPLICIT_DTOR, TQuestBringCreaturesDlg)
 
 VA(0x0040fc7e, 0x100)
@@ -1374,6 +1375,7 @@ VA_COMPGEN(0x004111da, 0x1c, SCALAR_DELETING_DTOR, TQuestDefeatHeroDlg)
 VA_COMPGEN(0x004111f6, 0x35, IMPLICIT_DTOR, TQuestDefeatHeroDlg)
 VA_COMPGEN(0x00411295, 0x1c, SCALAR_DELETING_DTOR, TQuestDefeatMonsterDlg)
 VA_COMPGEN(0x004112b1, 0x35, IMPLICIT_DTOR, TQuestDefeatMonsterDlg)
+VA_COMPGEN(0x004113ad, 0x5, IMPLICIT_DTOR, multiset)
 VA_COMPGEN(0x004113c3, 0x1c, SCALAR_DELETING_DTOR, TQuestBringArtifactsDlg)
 VA_COMPGEN(0x004113df, 0x80, IMPLICIT_DTOR, TQuestBringArtifactsDlg)
 VA_COMPGEN(0x004114ec, 0x1c, SCALAR_DELETING_DTOR, TQuestBringResourcesDlg)
