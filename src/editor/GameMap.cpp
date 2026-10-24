@@ -100,9 +100,6 @@ void constructObjectHeightMap(const TGameObject& obj, unsigned int (&heightMap)[
 // bookkeeping's counts and its cap. Complete lets up to four types share
 // one cap (one info), so the map keys every type to its shared info.
 struct TCappedObjectTypeInfo {
-    TCappedObjectTypeInfo(int type, unsigned int ordinal, unsigned int cap)
-        : m_type(type), m_ordinal(ordinal), m_cap(cap) {}
-
     int m_type;
     unsigned int m_ordinal;
     unsigned int m_cap;
@@ -182,9 +179,11 @@ static const TCappedObjectTypeGroup<5> kCappedGeneratorTypes = {
 // Retail resets the ordinal before keying the shared infos and discards every
 // insertion result. Reusing that counter and explicit discarded results recover
 // its single-table traversal and remove one extra return-pair constructor.
-// One pair-constructor expansion, this/vector register allocation and the mine
-// info temporary schedule still differ. Pointer traversal, named final infos,
-// vector aliases and make_pair did not recover the remaining native shape.
+// The infos are aggregates like the type tables: retail reads each row's type
+// before its cap (left-to-right initializers, not right-to-left constructor
+// arguments), and without the four constructor charges the last insertion's
+// result pair expands as in retail (91.55% -> 93.06%). The mine info
+// temporary schedule and the tables' end-address names still differ.
 VA(0x0041e98d, 0x28d)
 TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
 {
@@ -195,16 +194,18 @@ TCappedObjectTypeInfoMap::TCappedObjectTypeInfoMap()
     unsigned int i;
     for (i = 0; i < kNumSingles; i++) {
         const TCappedObjectType& type = akCappedObjectTypes[i];
-        _m_aInfo.push_back(TCappedObjectTypeInfo(type.m_type, ordinal++, type.m_cap));
+        TCappedObjectTypeInfo info = { type.m_type, ordinal++, type.m_cap };
+        _m_aInfo.push_back(info);
     }
     for (i = 0; i < kNumPairs; i++) {
         const TCappedObjectTypeGroup<2>& type = akCappedObjectTypePairs[i];
-        _m_aInfo.push_back(TCappedObjectTypeInfo(type.m_aType[0], ordinal++, type.m_cap));
+        TCappedObjectTypeInfo info = { type.m_aType[0], ordinal++, type.m_cap };
+        _m_aInfo.push_back(info);
     }
-    _m_aInfo.push_back(TCappedObjectTypeInfo(kCappedMineTypes.m_aType[0], ordinal++,
-                                             kCappedMineTypes.m_cap));
-    _m_aInfo.push_back(TCappedObjectTypeInfo(kCappedGeneratorTypes.m_aType[0], ordinal++,
-                                             kCappedGeneratorTypes.m_cap));
+    TCappedObjectTypeInfo mineInfo = { kCappedMineTypes.m_aType[0], ordinal++, kCappedMineTypes.m_cap };
+    _m_aInfo.push_back(mineInfo);
+    TCappedObjectTypeInfo generatorInfo = { kCappedGeneratorTypes.m_aType[0], ordinal++, kCappedGeneratorTypes.m_cap };
+    _m_aInfo.push_back(generatorInfo);
 
     ordinal = 0;
     for (i = 0; i < kNumSingles; i++)
