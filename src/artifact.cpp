@@ -342,6 +342,10 @@ static void InitializeArtifactTraits(int id,
 // helper scores game 90.20%, h3maped 68.35%, h3ccmped 77.41%; flattening its
 // body into this caller scores 91.88%, 95.37%, 89.77% respectively, but loses
 // the evidenced source boundary. Those flattened peaks remain HIST only.
+// Under /O1 the collector skips callees at cb >= 128; neither the slot-mask
+// part (~145) nor the class part (~140) of the 318-cb row parser fits alone.
+// An /O2 /Ob2 h3maped profile for this unit is no way out: it drops every
+// other artifact row (most to 0% CUR), so the editor profile stands.
 //
 // The spreadsheet is held only through its TResourcePtr: retail and Mac
 // keep the pointer in the guard slot and reload it for every query
