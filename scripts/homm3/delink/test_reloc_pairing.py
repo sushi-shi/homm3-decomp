@@ -414,6 +414,27 @@ class CompilandPrivateTests(unittest.TestCase):
         self.assertTrue(rp.compiland_private("?g@?%C:\\src\\a.cpp12@@3HA", obj))
         self.assertFalse(rp.compiland_private("_g_x", obj))
 
+    def test_scope_distinct_local_statics_vote_with_their_own_spellings(self):
+        # One macro's statics differ only by cl's scope number: the canonical
+        # scope would merge them, so each votes as spelled (MapEditorText's
+        # apBuffer); a unique local static still votes canonically.
+        first, second = "_?b@?5??f@@YAXXZ@4HA", "_?b@?6??f@@YAXXZ@4HA"
+        unique = "_?c@?3??f@@YAXXZ@4HA"
+        body = mov_eax(0) + mov_eax(0) + mov_eax(0) + b"\xc3"
+        retail = (mov_eax(BASE + 0x5000) + mov_eax(BASE + 0x5008)
+                  + mov_eax(BASE + 0x5010) + b"\xc3")
+        candidate = rp.CandidateObject(coff(
+            [("_f", body, [(1, first, DIR32), (6, second, DIR32), (11, unique, DIR32)])]
+            + [(name, b"", []) for name in (first, second, unique)],
+            statics=(first, second, unique)))
+        self.assertEqual(candidate.scope_distinct, {first, second})
+        votes, reason = rp.function_votes(rp.Voter("u", "_f", 0x1000, len(retail)),
+                                          candidate, retail, [0x1001, 0x1006, 0x100b], BASE)
+        self.assertEqual(reason, "")
+        self.assertEqual([(v.symbol, v.owner, v.private) for v in votes],
+                         [(first, 0x5000, True), (second, 0x5008, True),
+                          ("_?c@?1??f@@YAXXZ@4HA", 0x5010, True)])
+
     def test_reviewed_anonymous_static_data_votes(self):
         # An anonymous-namespace class's message map: the reviewed retail
         # scope replaces the compiland's, so the datum can pair.

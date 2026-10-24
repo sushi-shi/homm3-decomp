@@ -974,7 +974,30 @@ def scan_file(path, functions: set[int],
             rows.append({"rva": rva, "unit": unit, "size": "",
                          "kind": "data", "name": f"data_{rva:x}",
                          "channel": "src-DATA"})
+    _number_repeated_static_dtors(rows)
     return rows
+
+
+def _number_repeated_static_dtors(rows: list[dict]) -> None:
+    """Give same-owner STATIC_DTOR claims their source ordinals.
+
+    A macro that defines one function-local static per expansion gives
+    every datum the same name (MapEditorText's INITIALIZE_TEXT `apBuffer`,
+    one per editor.txt group). Their claims follow the definitions' source
+    order, and the k-th takes the name suffix `$k`: the canonicalizer binds
+    it to the teardown its function registers k-th
+    (`homm3.compare.canonicalize.REPEATED_OWNER_ORDINAL_RE`). A unique
+    owner keeps its plain name.
+    """
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        if row.get("ckind") == "STATIC_DTOR":
+            groups.setdefault(row["owner"], []).append(row)
+    for group in groups.values():
+        if len(group) < 2:
+            continue
+        for ordinal, row in enumerate(group, 1):
+            row["name"] = f"{row['name']}${ordinal}"
 
 
 # --- the IR channel ---------------------------------------------------

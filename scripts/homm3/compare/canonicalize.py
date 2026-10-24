@@ -51,6 +51,9 @@ VOLATILE_T = re.compile(r"^\$T[0-9]+$")
 NAMED_STATIC = re.compile(r"^(?P<prefix>.+\$S)[0-9]*$")
 VOLATILE_E_FUNCTION = re.compile(r"^_?\$E[0-9]+$")
 COMPGEN_PREFIX = "__h3cg$"
+#: A same-owner STATIC_DTOR claim's source ordinal, the `$k` suffix
+#: `homm3.retail_labels.source._number_repeated_static_dtors` appends.
+REPEATED_OWNER_ORDINAL_RE = re.compile(r"\$static_dtor\$\w+\$([0-9]+)$")
 
 # VC6 anonymous namespace scope: ?%<path><crc32>@ in mangled names.
 ANON_NS_SCOPE_RE = re.compile(r"\?%([^@]+)@")
@@ -1096,12 +1099,52 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
                         for target in targets))
         return False
 
+    def registration_site(index):
+        """The one code reference to this function whose next call is
+        `_atexit` - `push OFFSET callback`, or `mov [esp], OFFSET callback`
+        into an argument slot the scheduler kept from an earlier call - as
+        (section, site), or None."""
+        sites = []
+        for ref in coff.relocations:
+            if ref.symbol_index != index or ref.typ != DIR32 or ref.site < 1:
+                continue
+            section = coff.sections[ref.section - 1]
+            body = coff.section_bytes(section)
+            if not section.characteristics & MEM_EXECUTE:
+                continue
+            calls = sorted((other.site, other.symbol_index)
+                           for other in coff.relocations
+                           if other.section == ref.section and other.typ == 0x14
+                           and other.site > ref.site and body[other.site - 1] == 0xe8)
+            if calls and coff.symbols[calls[0][1]].name == "_atexit":
+                sites.append((ref.section, ref.site))
+        return sites[0] if len(sites) == 1 else None
+
     assigned = {}
+    # A macro that defines one function-local static per expansion repeats
+    # the owner's name, so every such claim sees every teardown. The claims
+    # carry their definitions' source ordinals; bind the k-th to the
+    # teardown registered k-th, but only when the group and its candidates
+    # pair one to one and every candidate has a single registration.
+    repeated = defaultdict(list)
+    for claim in pending:
+        ordinal = REPEATED_OWNER_ORDINAL_RE.search(claim.name)
+        if claim.kind == "STATIC_DTOR" and ordinal:
+            repeated[claim.owner].append((int(ordinal.group(1)), claim))
+    for owner, group in repeated.items():
+        candidates = [index for index in volatile if is_static_dtor(index, owner)]
+        sites = {index: registration_site(index) for index in candidates}
+        if len(candidates) != len(group) or None in sites.values():
+            continue
+        for (_ordinal, claim), index in zip(sorted(group, key=lambda g: g[0]),
+                                            sorted(candidates, key=sites.get)):
+            assigned[index] = claim
     # Bind every claim with a single candidate, then retry the others
     # without the bound functions: a table initializer that takes the
     # address of several initialized arrays (TownTypeTraits.obj's type
     # table) is itself claimed, and must not compete for theirs.
-    deferred = [(claim, 0) for claim in pending]
+    bound = set(id(claim) for claim in assigned.values())
+    deferred = [(claim, 0) for claim in pending if id(claim) not in bound]
     progress = True
     while progress:
         progress = False

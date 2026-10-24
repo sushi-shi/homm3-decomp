@@ -219,6 +219,17 @@ class CandidateObject:
         self.private = {s.name for s in coff.symbols.values()
                         if s.section > 0 and s.storage_class == STATIC
                         and not s.name.startswith((".", "$"))}
+        # Local statics of one function that differ only by cl's scope
+        # number (a macro defining one per expansion): the canonical scope
+        # would merge them, so normalization keeps their own spellings
+        # (`compare.canonicalize._local_scope_renames`) and so do votes.
+        spellings: dict[str, set[str]] = defaultdict(set)
+        for name in self.private:
+            if msvc_names.LOCAL_STATIC_SCOPE.search(name):
+                spellings[msvc_names.LOCAL_STATIC_SCOPE.sub(
+                    msvc_names.CANONICAL_SCOPE, name)].add(name)
+        self.scope_distinct = {name for names in spellings.values()
+                               if len(names) > 1 for name in names}
         # VC6's frame-handler thunk (`mov eax, OFFSET FuncInfo; jmp
         # ___CxxFrameHandler`): the local label ending a function's
         # associative `.text$x` section, which its EH prologue pushes.
@@ -368,6 +379,9 @@ def _operand_votes(voter: Voter, candidate: CandidateObject, body: bytes, relocs
             private = True
         elif unit_local(name):
             name, private = comparison_spelling(name, voter.unit), True
+        elif name in candidate.scope_distinct:
+            from homm3.compare.canonicalize import normalize_anon_ns_name
+            name, private = normalize_anon_ns_name(name, voter.unit), True
         elif compiland_private(name, candidate):
             name, private = comparison_spelling(name, voter.unit), True
             if not stable_name(name) and not reviewed_anon_name(name, raw, voter.unit):
