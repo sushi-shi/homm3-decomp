@@ -20,6 +20,10 @@ public:
     VA(0x004bf35a, 0xb)
     // VA instance: TDCAttributeSelector<int, &CDC::SetStretchBltMode>::~TDCAttributeSelector
     VA(0x0048d271, 0xb)
+    // VA instance: TDCAttributeSelector<int, &CDC::SetROP2>::~TDCAttributeSelector
+    VA(0x0046f28f, 0xb)
+    // VA instance: TDCAttributeSelector<int, &CDC::SetBkMode>::~TDCAttributeSelector
+    VA(0x0046f29a, 0xb)
     ~TDCAttributeSelector() { (_m_pDC->*pfnSet)(_m_oldValue); }
 
 private:

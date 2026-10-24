@@ -180,3 +180,10 @@ void TAbandonedMinePropsDlg::OnRes7Check()
 {
     _onResourceCheck(6);
 }
+
+// The first object to instantiate them owns the string's destructor, which
+// only unwind funclets call, and the exception destructor that
+// out_of_range's and invalid_argument's fold into.
+VA_COMPGEN(0x0040167a, 0x8, IMPLICIT_DTOR, basic_string)
+
+VA_COMPGEN(0x004018f6, 0x1c, IMPLICIT_DTOR, logic_error)
