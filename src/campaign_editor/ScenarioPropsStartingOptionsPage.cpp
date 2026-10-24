@@ -966,6 +966,11 @@ bool TScenarioOptionsStartingHeroDlg::isAvailable() const
 // Naming the vector insertion iterator leaves this caller's MAX unchanged.
 // Proxy assignment and set(pos, false) preserve the same inlining differences.
 // Preserve the formatted CString then conditional hero-name string cleanup.
+// Inline trace: retail's decisions (hero-name _Tidy and runtime_error called,
+// _Xran's assign(const char*, size_t) called, logic_error expanded) replay
+// exactly with three more free (cb <= 40) sites between the throw and the
+// bitset reset; proxy assignment's operator[] and operator= cost 41 and 43
+// and do not, and a TChoice::isRandomHero() test adds only one.
 VA(0x00430cc0, 0x22b)
 void TScenarioOptionsStartingHeroDlg::_insertChoice(int index, const TScenarioOptionsStartingHero::TChoice& choice)
 {

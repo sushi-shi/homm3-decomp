@@ -8,7 +8,11 @@
 #include "editor/MFCFileBuf.h"
 
 // Explicit basic_streambuf<char>() base initialization leaves campaign codegen
-// unchanged: retail retains _Init while this constructor expands it.
+// unchanged: retail retains _Init while this constructor expands it. The
+// /O2 inline trace gives the base constructor 934/4 of the 1000 budget, which
+// leaves _Init 109 against its cb 103; a fifth inline call site anywhere in
+// this body (diagnostic `(void)eback();`) rejects it and matches retail
+// exactly, so the original body likely held one more inline call.
 VA(0x00486b96, 0xbb)
 TMFCFileBuf::TMFCFileBuf(CFile* pFile) : _m_pFile(pFile), _m_pBuf(NULL)
 {

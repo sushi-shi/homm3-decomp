@@ -3097,3 +3097,27 @@ TViewArmyWindow::windowHandler and type_monster_quest::setDefaultText by
 5..9 points, but Dreamcast lists single scopes (unbraced bodies) at those
 statements, so the braces are not evidence (see dc-line-tables.md, "Braced
 bodies"); the leads are recorded beside each function.
+
+## Campaign editor: missing free sites are accessor and helper calls (2026-10-24)
+
+Several h3ccmped residues replay to retail's exact decisions only when the
+root has more free (cb <= 40) candidate sites after a given point: earlier
+nested shares (budget / sites remaining) shrink until retail's first
+refusal appears, and the budget those refusals save lets a later site
+expand. `predict-inline --tu UNIT --root NAME --add INDEX:COUNT` locates
+where the sites must fall. Where the reconstruction reads a field directly,
+an inline accessor or helper is the natural carrier and costs no code:
+
+- TScenarioPropsCrossoverPage::_setCrossover (0x42a0d0) needs two after its
+  first getBRetained: TScenarioCrossover's set accessors, 74.58 -> 100.
+- TCampaignScenarioMap's constructor (0x40a1f0) needs three after the heroes
+  map's pair destructor (or two before the map plus one after the loop):
+  TPlayerInfo's inline setters, 88.63 -> 99.91.
+- TScenarioPropsGeneralPage::OnOK (0x42b7c0) needs two after the region
+  string construction: the page's scenario helpers, 84.95 -> 88.67.
+
+Still open with the same shape: TMFCFileBuf's constructor (one site), the
+starting-hero _insertChoice (three between the throw and the bitset reset),
+the prologue page's OnOK (two after the first prologue comparison) and the
+map header reader's string reads. TScenarioCrossover's constructor, read and
+write have no free-site solution: they need cost changes instead.
