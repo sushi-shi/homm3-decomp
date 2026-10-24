@@ -1086,6 +1086,13 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, boo
 // the native member selection while resolving the remaining inline/lifetime
 // differences, rather than restoring the unsupported aggregate nesting.
 // Const-qualifying the selected bool member emits the same object.
+// Both hero-mask loops read the masks through bitset subscripts: retail's
+// first loop keeps the proxies' test calls, its second the proxy's bool
+// conversion (93.27% -> 95.59%). The team loop counter is signed (retail
+// jl; 95.43%). Still open: retail expands the team-info get() pair and the
+// condition holders' get() calls; here their nested budget is 935/23 = 40
+// against get's cb 49. Calling setVictoryCondition/setLossCondition scores
+// 91.93%; proxies for the disabled-hero sets lower the match.
 VA(0x0041f350, 0xa6e)
 TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion)
     : _m_pClient(pClient), _m_version(version)
@@ -1233,7 +1240,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
         TTeamInfo& teamInfo = *_m_pProperties->m_pTeamInfo;
         teamInfo.setBHasTeams(true);
         teamInfo.setNumTeams(header.m_numTeams);
-        for (unsigned int player = 0; player < kNumPlayers; player++)
+        for (int player = 0; player < kNumPlayers; player++)
             teamInfo.setPlayerTeam(TPlayer(player), header.m_aTeam[player]);
     }
     _m_pProperties->m_pVictoryCondition =
@@ -1244,8 +1251,8 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
     if (fileVersion >= 18) {
         bitset<kNumHeroes> heroesOnMap = getHeroesOnMap();
         for (THeroID heroID = 0; heroID < kNumHeroes; heroID++) {
-            if (!heroesOnMap.test(heroID)
-                && (!header.m_availableHeroes.test(heroID) || !(akHeroTraits[heroID].*availableMember)
+            if (!heroesOnMap[heroID]
+                && (!header.m_availableHeroes[heroID] || !(akHeroTraits[heroID].*availableMember)
                     || (fileVersion < 20 && akHeroTraits[heroID].m_special)))
                 _m_pProperties->m_disabledHeroes.set(heroID, true);
         }
