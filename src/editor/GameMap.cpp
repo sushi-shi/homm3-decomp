@@ -1089,10 +1089,13 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, TSize size, boo
 // Both hero-mask loops read the masks through bitset subscripts: retail's
 // first loop keeps the proxies' test calls, its second the proxy's bool
 // conversion (93.27% -> 95.59%). The team loop counter is signed (retail
-// jl; 95.43%). Still open: retail expands the team-info get() pair and the
-// condition holders' get() calls; here their nested budget is 935/23 = 40
-// against get's cb 49. Calling setVictoryCondition/setLossCondition scores
-// 91.93%; proxies for the disabled-hero sets lower the match.
+// jl; 95.43%). The object-type, object and timed-event counts come through
+// readValue (retail reads the event count as a long): its free inline sites,
+// unlike the vetoed direct reads, leave retail's budget for the team-info
+// and condition holders' inline get() splits (96.95%). Still open: the
+// rumors' default TRumor keeps its string constructor call. Calling
+// setVictoryCondition/setLossCondition scores 91.93%; proxies for the
+// disabled-hero sets lower the match.
 VA(0x0041f350, 0xa6e)
 TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStreamBuf, int fileVersion)
     : _m_pClient(pClient), _m_version(version)
@@ -1149,15 +1152,13 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
     readCellData(stream, &_m_aLayer[0]);
     if (_m_bTwoLayer)
         readCellData(stream, &_m_aLayer[1]);
-    long numObjTypes;
-    stream >> numObjTypes;
+    long numObjTypes = readValue<long>(stream);
     vector<TObjectType> tempObjTypeTable;
     tempObjTypeTable.resize(numObjTypes, TObjectType());
     vector<TObjectType>::iterator iter = tempObjTypeTable.begin();
     while (numObjTypes-- > 0)
         stream >> *iter++;
-    long numObjs;
-    stream >> numObjs;
+    long numObjs = readValue<long>(stream);
     if (numObjs > 0) {
         unsigned char x;
         unsigned char y;
@@ -1210,8 +1211,7 @@ TGameMap::_TImpl::_TImpl(TClient* pClient, EGameVersion version, streambuf* pStr
         }
     }
     {
-        unsigned int numTimedEvents;
-        stream >> numTimedEvents;
+        long numTimedEvents = readValue<long>(stream);
         _m_pProperties->m_paTimedEvent->resize(numTimedEvents, TTimedEvent());
         for (unsigned int event = 0; event < numTimedEvents; event++)
             (*_m_pProperties->m_paTimedEvent)[event].read(&stream, fileVersion);
