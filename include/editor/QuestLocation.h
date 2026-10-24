@@ -49,6 +49,14 @@ protected:
 private:
     std::auto_ptr<TQuest> _m_pQuest;
     int _m_deadline;
+    // The messages' default constructor (h3maped 0x49713e, 48.77) has no EH
+    // frame in retail although it calls basic_string::_Tidy out of line, and
+    // retail emits it after the copy constructor (0x4970a8). VC6 drops the
+    // unwind for a call to a body it has already compiled and found nothrow
+    // (an empty callee defined before a caller removes the caller's frame);
+    // here _Tidy is compiled after both constructors. throw() on TArray()
+    // reproduces the bytes but would strip the frames retail keeps in the
+    // cell and bookkeeping arrays' constructors (0x43900a, 0x433b2f).
     TArray<std::string, s_kNumMessages> _m_aMessage;
 };
 
