@@ -431,10 +431,9 @@ THero::THero(const TObjectType& objType, TPlayer owner)
 
 // Loki 0x815f53c retains the field setters. Complete's secondary-skills
 // temporary has an EH state during construction and another before assignment.
-// Residual: VC6 retains the empty primary-array constructor and places the
-// early locals four bytes lower. Separate flag setters/getters and a scalar
-// spell read did not close those differences. Explicit array/map base
-// initializers and direct experience reads did not improve this source.
+// The sex comes through readValue, as the map's hero settings read it; the
+// direct read's vetoed charge had left no budget for the empty primary-array
+// constructor that retail expands (99.39% -> 100%).
 VA(0x0044b09a, 0x470)
 void THero::read(TRawIStream* pIStream, int version)
 {
@@ -498,9 +497,7 @@ void THero::read(TRawIStream* pIStream, int version)
             *pIStream >> biography;
             setBiography(biography);
         }
-        signed char sex;
-        *pIStream >> sex;
-        setSex(sex);
+        setSex(readValue<signed char>(*pIStream));
         if (version >= 22) {
             *pIStream >> flag;
             if (_m_bCustomSpells = flag != 0) {
