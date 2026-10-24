@@ -33,6 +33,7 @@
 #include "editor/QuestGuard.h"
 #include "editor/QuestLocation.h"
 #include "editor/RawStream.h"
+#include "editor/RawStreamWriteValue.h"
 #include "editor/SeersHut.h"
 #include "editor/TilePoint.h"
 #include "editor/TimedEvent.h"
@@ -5606,26 +5607,29 @@ inline TGameMapHeader::TGameMapHeader(TRawIStream& stream, int version)
     }
 }
 
-// Keep container sizes separate from their wire conversions. Remaining
-// differences are the narrowing-copy iterator homes and retained map
-// begin/end calls; naming the copy iterators does not recover them.
+// Keep container sizes separate from their wire conversions. The scalar
+// fields go out through writeValue: unlike the vetoed direct stream writes
+// its inline sites charge nothing, which leaves retail's budget for the
+// custom-hero map's inline begin/end (92.49% -> 98.42%). Remaining
+// differences are the narrowing-copy iterator homes; naming the copy
+// iterators does not recover them.
 VA(0x0043b6c8, 0x3ee)
 inline void TGameMapHeader::write(TRawOStream& stream, EGameVersion version) const
 {
-    stream << static_cast<signed char>(m_bPlayable);
-    stream << static_cast<long>(m_dimension);
-    stream << static_cast<signed char>(m_bTwoLayer);
+    writeValue<signed char>(stream, m_bPlayable);
+    writeValue<long>(stream, m_dimension);
+    writeValue<signed char>(stream, m_bTwoLayer);
     stream << m_name << m_desc;
-    stream << static_cast<signed char>(m_difficulty);
+    writeValue<signed char>(stream, m_difficulty);
     if (version >= GAME_VERSION_AB)
-        stream << static_cast<unsigned char>(m_maxHeroLevel);
+        writeValue<unsigned char>(stream, m_maxHeroLevel);
     for (unsigned int player = 0; player < kNumPlayers; player++) {
         const TPlayerSlot& slot = m_aPlayer[player];
-        stream << static_cast<signed char>(slot.m_bHumanPlayable);
-        stream << static_cast<signed char>(slot.m_bComputerPlayable);
-        stream << static_cast<signed char>(slot.m_behaviorType);
+        writeValue<signed char>(stream, slot.m_bHumanPlayable);
+        writeValue<signed char>(stream, slot.m_bComputerPlayable);
+        writeValue<signed char>(stream, slot.m_behaviorType);
         if (version >= GAME_VERSION_SOD)
-            stream << static_cast<signed char>(slot.m_bCustomTownTypes);
+            writeValue<signed char>(stream, slot.m_bCustomTownTypes);
         if (version >= GAME_VERSION_AB) {
             writeBitset(stream, slot.m_townTypes);
         } else {
@@ -5634,42 +5638,42 @@ inline void TGameMapHeader::write(TRawOStream& stream, EGameVersion version) con
                       TConstBitsetIterator<kNumTownTypes>(slot.m_townTypes, 8), TBitsetIterator<8>(townTypes, 0));
             writeBitset(stream, townTypes);
         }
-        stream << static_cast<signed char>(slot.m_bRandomTown);
+        writeValue<signed char>(stream, slot.m_bRandomTown);
         if (version >= GAME_VERSION_AB) {
-            stream << static_cast<signed char>(slot.m_bHasMainTown);
+            writeValue<signed char>(stream, slot.m_bHasMainTown);
             if (slot.m_bHasMainTown) {
-                stream << static_cast<signed char>(slot.m_bGenerateHero);
-                stream << static_cast<signed char>(slot.m_mainTownType);
+                writeValue<signed char>(stream, slot.m_bGenerateHero);
+                writeValue<signed char>(stream, slot.m_mainTownType);
                 stream << slot.m_mainTownLoc;
             }
         } else {
-            stream << static_cast<signed char>(slot.m_bHasMainTown);
+            writeValue<signed char>(stream, slot.m_bHasMainTown);
             if (slot.m_bHasMainTown)
                 stream << slot.m_mainTownLoc;
         }
-        stream << static_cast<signed char>(slot.m_bRandomHero);
-        stream << static_cast<unsigned char>(slot.m_heroID);
+        writeValue<signed char>(stream, slot.m_bRandomHero);
+        writeValue<unsigned char>(stream, slot.m_heroID);
         if (static_cast<unsigned char>(slot.m_heroID) != 0xff) {
-            stream << static_cast<signed char>(slot.m_heroPortrait);
+            writeValue<signed char>(stream, slot.m_heroPortrait);
             stream << slot.m_heroName;
         }
         if (version >= GAME_VERSION_AB) {
-            stream << static_cast<signed char>(slot.m_numPlaceholders);
+            writeValue<signed char>(stream, slot.m_numPlaceholders);
             std::vector<THeroIdentity>::size_type numHeroes = slot.m_heroes.size();
-            stream << static_cast<long>(numHeroes);
+            writeValue<long>(stream, numHeroes);
             for (std::vector<THeroIdentity>::const_iterator pHero = slot.m_heroes.begin();
                  pHero != slot.m_heroes.end(); ++pHero) {
-                stream << static_cast<unsigned char>(pHero->m_heroID);
+                writeValue<unsigned char>(stream, pHero->m_heroID);
                 stream << pHero->m_name;
             }
         }
     }
     _writeVictoryCondition(m_vcData, stream, version);
     _writeLossCondition(m_lcData, stream, version);
-    stream << static_cast<signed char>(m_numTeams);
+    writeValue<signed char>(stream, m_numTeams);
     if (m_numTeams > 0) {
         for (unsigned int player = 0; player < kNumPlayers; player++)
-            stream << static_cast<signed char>(m_aTeam[player]);
+            writeValue<signed char>(stream, m_aTeam[player]);
     }
     if (version >= GAME_VERSION_AB) {
         writeBitset(stream, m_availableHeroes);
@@ -5681,17 +5685,17 @@ inline void TGameMapHeader::write(TRawOStream& stream, EGameVersion version) con
     }
     if (version >= GAME_VERSION_AB) {
         std::vector<int>::size_type numPlaceholders = m_placeholderHeroIDs.size();
-        stream << static_cast<long>(numPlaceholders);
+        writeValue<long>(stream, numPlaceholders);
         for (std::vector<int>::const_iterator pHeroID = m_placeholderHeroIDs.begin();
              pHeroID != m_placeholderHeroIDs.end(); ++pHeroID)
-            stream << static_cast<unsigned char>(*pHeroID);
+            writeValue<unsigned char>(stream, *pHeroID);
     }
     if (version >= GAME_VERSION_SOD) {
-        stream << static_cast<unsigned char>(m_customHeroes.size());
+        writeValue<unsigned char>(stream, m_customHeroes.size());
         for (std::map<int, TCustomHero>::const_iterator pHero = m_customHeroes.begin(); pHero != m_customHeroes.end();
              ++pHero) {
-            stream << static_cast<unsigned char>(pHero->first);
-            stream << static_cast<unsigned char>(pHero->second.m_portrait);
+            writeValue<unsigned char>(stream, pHero->first);
+            writeValue<unsigned char>(stream, pHero->second.m_portrait);
             stream << pHero->second.m_name;
             writeBitset(stream, pHero->second.m_availability);
         }
