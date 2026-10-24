@@ -9,6 +9,14 @@
 // at that handle's wrapper + 4, and the cell lookup (0x42a4d0) reaches each
 // segment at its wrapper + 4. Loki's port holds a pointer there instead.
 // The release throws the bare TAllocationFailure.
+//
+// The copy constructor carries an empty exception specification on
+// Windows (Loki's has none): the vectors' fill inserts (h3maped 0x42ed20,
+// 0x43c702, 0x43c97f) expand std::_Construct in line without an EH frame
+// and call the shared out-of-line copy (0x438eff), and the vectors' copy
+// constructor (0x437abd) and _split expand it outright. Without throw() the
+// placement new keeps an EH state, the frameless insert may not take it
+// and every _Construct stays a call.
 #ifndef HOMM3_EDITOR_REFCOUNTINGPTR_H
 #define HOMM3_EDITOR_REFCOUNTINGPTR_H
 
@@ -46,7 +54,7 @@ public:
             _fail();
     }
 
-    TRefCountingPtr(const TRefCountingPtr& other) : _m_pWrapper(other._m_pWrapper)
+    TRefCountingPtr(const TRefCountingPtr& other) throw() : _m_pWrapper(other._m_pWrapper)
     {
         ++_m_pWrapper->m_refCnt;
     }
