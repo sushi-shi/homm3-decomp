@@ -152,9 +152,6 @@ void readContainer(TRawIStream& stream, std::vector<T>& aItem)
 
 // Each item of a range (Loki writeFromIter). The rumors' writer, h3maped
 // 0x434342, caches the range end and advances before each item's write.
-// It stays unplaced: retail computes the count into eax and stores it
-// after loading the stream, where VC6 stores it from each size() branch
-// (a long or unsigned count, a named local or Loki's cast all compile so).
 template <class InputIterator>
 inline TRawOStream& writeFromIter(TRawOStream& stream, InputIterator first, InputIterator last)
 {
@@ -163,10 +160,14 @@ inline TRawOStream& writeFromIter(TRawOStream& stream, InputIterator first, Inpu
     return stream;
 }
 
+// Retail computes the count into eax and stores it after loading the
+// stream, as the header writer's size_type counts do; Loki's direct cast of
+// size() makes VC6 store the count from each of size()'s branches.
 template <class T>
 void writeContainer(TRawOStream& stream, const std::vector<T>& aItem)
 {
-    stream << static_cast<long>(aItem.size());
+    typename std::vector<T>::size_type numItems = aItem.size();
+    stream << static_cast<long>(numItems);
     writeFromIter(stream, aItem.begin(), aItem.end());
 }
 
