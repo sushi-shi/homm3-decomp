@@ -146,6 +146,7 @@ bool TCategorySlotTraits::contains(const TObjectType& objectType) const
 }
 
 VA(0x005142A0, 0x15)
+VA_AT(h3maped, 0x00490115, 0x12)
 TTerrainSlotTraits::TTerrainSlotTraits(TTerrainType terrainType)
     : m_terrainType(terrainType)
 {
@@ -155,6 +156,7 @@ TTerrainSlotTraits::TTerrainSlotTraits(TTerrainType terrainType)
 VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TTerrainSlotTraits)
 
 VA(0x005144B0, 0x9)
+VA_AT(h3maped, 0x00490285, 0x9)
 TAllTerrainSlotTraits::TAllTerrainSlotTraits()
 {
 }
@@ -162,6 +164,7 @@ TAllTerrainSlotTraits::TAllTerrainSlotTraits()
 VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAllTerrainSlotTraits)
 
 VA(0x00514510, 0x15)
+VA_AT(h3maped, 0x004902a6, 0x12)
 TCategorySlotTraits::TCategorySlotTraits(int category)
     : m_category(category)
 {

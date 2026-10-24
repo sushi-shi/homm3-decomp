@@ -42,6 +42,7 @@ DATA(0x0059fe70) std::set<TMapDoc*> allMapDocs;
 VA_COMPGEN(0x0045d7fb, 0x23, STATIC_CTOR, allMapDocs)
 VA_COMPGEN(0x0045d81e, 0xa, STATIC_DTOR, allMapDocs)
 VA_COMPGEN(0x0045d828, 0x5, IMPLICIT_DTOR, TMapDoc_set)
+VA_COMPGEN(0x004610a5, 0x23, CLASS_CTOR, set)
 
 // Asks for a file name with the common file dialog, filtering by the
 // file type the filter text names ("description\n.ext") and by all files.

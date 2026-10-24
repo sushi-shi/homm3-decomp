@@ -16,6 +16,7 @@
 #include "editor/ArtifactsDlg.h"
 #include "editor/EditArtifactDlg.h"
 #include "editor/MapEditorText.h"
+#include "editor/StringUtil.h"
 
 namespace {
 
@@ -42,17 +43,6 @@ TListedSlots::TListedSlots()
     for (const TArtifactSlot* pSlot = akListedSlots; pSlot < akListedSlots + sizeof(akListedSlots) / sizeof(akListedSlots[0]); ++pSlot)
         set(*pSlot);
 }
-
-// Releases a string's buffer, which a list item's text holds, on leaving
-// the scope.
-class TBufferRelease {
-public:
-    explicit TBufferRelease(CString& string) : _m_string(string) {}
-    ~TBufferRelease() { _m_string.ReleaseBuffer(); }
-
-private:
-    CString& _m_string;
-};
 
 const char* getLocationName(TArtifactSlot slot)
 {
@@ -182,9 +172,9 @@ int TArtifactsDlg::_insertItem(int index, TArtifact artifact, TArtifactSlot slot
     item.iSubItem = 0;
     item.lParam = MAKELONG(artifact, slot);
     text = akArtifactTraits[artifact].m_name;
-    item.pszText = text.GetBuffer(0);
     {
-        TBufferRelease release(text);
+        TStringBuffer buffer(text, 0);
+        item.pszText = buffer;
         index = _m_list.InsertItem(&item);
         if (index == -1)
             return -1;
@@ -194,9 +184,9 @@ int TArtifactsDlg::_insertItem(int index, TArtifact artifact, TArtifactSlot slot
         item.iItem = index;
         item.iSubItem = 1;
         text = getLocationName(slot);
-        item.pszText = text.GetBuffer(0);
         {
-            TBufferRelease release(text);
+            TStringBuffer buffer(text, 0);
+            item.pszText = buffer;
             if (!_m_list.SetItem(&item)) {
                 _m_list.DeleteItem(index);
                 return -1;

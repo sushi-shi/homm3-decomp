@@ -6,14 +6,19 @@
 #ifndef HOMM3_EDITOR_STRINGUTIL_H
 #define HOMM3_EDITOR_STRINGUTIL_H
 
+#include "va.h"
+
 // True when text is empty or holds only white space.
 bool _isspace(const CString& text);
 
 // A string's buffer, released when it goes out of scope (MapDoc.cpp's
-// file name prompt hands it to the common file dialog).
+// file name prompt hands it to the common file dialog; the artifacts
+// dialog's list items hold it as their text). The destructor is out of
+// line for the unwind funclets, in ArtifactsDlg.cpp's span.
 class TStringBuffer {
 public:
     TStringBuffer(CString& string, int minLength) : _m_string(string), _m_pBuffer(string.GetBuffer(minLength)) {}
+    VA(0x00405101, 0xa)
     ~TStringBuffer() { _m_string.ReleaseBuffer(); }
 
     operator LPTSTR() const { return _m_pBuffer; }
