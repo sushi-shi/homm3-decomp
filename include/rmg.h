@@ -1746,6 +1746,18 @@ public:
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     void decorateMap();
     void decorateMapCell(TRmgMapPosition position, int progressSteps);
+    // Generator-level cell lookup (project name). Both images retain the map's
+    // by-value lookup 0x5378e0 in decorateMapCell's first query and inside
+    // every placeGuard expansion, yet a depth-1 site always has the budget
+    // for its cb of 53; only a nested site's divided budget refuses it. This
+    // forwarding level reproduces those calls (decorateMapCell 90.80/79.61%
+    // -> 92.91/88.63%, tryPlaceMine 95.10 -> 99.43%, ground and monolith
+    // connections 92.31/87.10 -> 95.57/95.11% in the game). Calls elsewhere
+    // stay direct: a TU-wide replacement loses up to 25 points per caller.
+    TRmgMapItem* getMapItem(TRmgMapPosition position)
+    {
+        return m_map.getMapItem(position);
+    }
 };
 SIZE(t_abstract_random_generator, 0xed8);
 

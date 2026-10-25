@@ -3810,7 +3810,7 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         pending.pop_back();
         if (m_progress)
             m_progress->advance(progressSteps);
-        TRmgMapItem* item = m_map.getMapItem(position);
+        TRmgMapItem* item = getMapItem(position);
         if (!item->isPassable())
             continue;
         int terrain = item->getLandType();
@@ -3880,7 +3880,7 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
                 candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
                 for (candidatePosition.m_x = bounds.m_minimumX;
                     candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
-                    TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
+                    TRmgMapItem* nearby = getMapItem(candidatePosition);
                     if (nearby->hasObstacleFill() && nearby->isPassable()) {
                         nearby->setObstacleFill(0);
                         pending.push_back(candidatePosition);
@@ -6902,7 +6902,7 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
         || position.m_y < 0 || position.m_y >= m_map.m_mapHeight)
         return;
 #endif
-    TRmgMapItem* item = m_map.getMapItem(position);
+    TRmgMapItem* item = getMapItem(position);
 #if defined(HOMM3_RMG_HOTFIX)
     if (item->m_zoneState.m_zone == RMG_NO_ZONE)
         return;
@@ -8763,20 +8763,9 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // That complete source model retains retail's first single-element vector
 // insertion; duplicating the path stores instead expands count-insertion.
 // Mac's retained vector::reserve call proves push_back in both scans.
-// Wall (inliner, 2026-10-08): retail keeps getMapItem(TRmgMapPosition) out of
-// line inside the placeGuard expansion and expands the guard-cell size();
-// this body expands the lookup (nested budget 63 > cost 53) and keeps size.
-// Every retail placeGuard expansion (ground x2, monolith x2, gate x2, here)
-// retains that lookup; decorateMapCell, openConnectionPath and the seer-hut
-// placement also retain one. The /Ob2 trace allows all of them here, so the
-// retail callers' budgets differ; no local spelling found.
-// 2026-10-09 replay: refusing placeGuard's lookup needs 4..6 more root sites
-// after placeGuard, and those also refuse the second scan's push_back insert
-// (budget 69, cost 64); raising the root cb restores the insert but lifts
-// placeGuard's budget with it. Retail's retained by-value lookups
-// (placeGuard's, openConnectionPath's first) pass a by-value position
-// parameter, the expanded ones locals; this compiler expands both forms, so
-// that is a lead for a source difference, not a gate.
+// Retail keeps getMapItem(TRmgMapPosition) out of line inside the placeGuard
+// expansion: placeGuard queries through the generator-level lookup, whose
+// nested site gets a divided budget below the map lookup's cb (95.10 -> 99.43%).
 VA(0x00545990, 0x466)
 MAC_ADDRESS(0x249680, 0x5ac)
 unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
