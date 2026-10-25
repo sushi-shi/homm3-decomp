@@ -5067,6 +5067,9 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
 // The long reference selectors reproduce both irregular boundary drawers.
 // By-value wrappers add argument homes; int references omit conversion
 // temporaries. The RMG spelling remains a retail-supported source model.
+// Mac 0x23d778..0x23d7bc (and drawIslandBoundary 0x23e424..0x23e468)
+// tests midpoint == from, then == to, and lays the clamp arm out first,
+// as in connectJunctionEntrance; Windows-flat.
 VA(0x0053BFF0, 0x22B)
 MAC_ADDRESS(0x23d684, 0x408)
 void type_random_map_generator::drawIrregularZoneBoundary(
@@ -5079,7 +5082,17 @@ void type_random_map_generator::drawIrregularZoneBoundary(
         to = pending.back();
         pending.pop_back();
         TRmgPoint midpoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
-        if (midpoint != from && midpoint != to) {
+        if (midpoint == from || midpoint == to) {
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, level);
+            item->m_zoneState.m_zone = zoneIndex;
+            if (markBoundary)
+                item->m_tileData.m_paintZoneTerrain = 1;
+            from = to;
+        } else {
             TRmgVector perpendicular;
             {
                 TRmgVector delta = to - from;
@@ -5100,16 +5113,6 @@ void type_random_map_generator::drawIrregularZoneBoundary(
             }
             pending.push_back(to);
             pending.push_back(midpoint);
-        } else {
-            long x = cppMax<long>(from.m_x, 0);
-            x = cppMin<long>(x, m_map.m_mapWidth - 1);
-            long y = cppMax<long>(from.m_y, 0);
-            y = cppMin<long>(y, m_map.m_mapHeight - 1);
-            TRmgMapItem* item = m_map.getMapItem(x, y, level);
-            item->m_zoneState.m_zone = zoneIndex;
-            if (markBoundary)
-                item->m_tileData.m_paintZoneTerrain = 1;
-            from = to;
         }
     }
 }
@@ -5357,7 +5360,16 @@ void type_random_map_generator::drawIslandBoundary(TRmgPoint from, TRmgPoint to,
         TRmgPoint midpoint;
         midpoint.m_x = (from.m_x + to.m_x + 1) / 2;
         midpoint.m_y = (from.m_y + to.m_y + 1) / 2;
-        if (midpoint != from && midpoint != to) {
+        if (midpoint == from || midpoint == to) {
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, level);
+            if (item->m_zoneState.m_zone == zoneIndex)
+                item->m_tileData.m_paintZoneTerrain = 1;
+            from = to;
+        } else {
             TRmgVector perpendicular;
             {
                 TRmgVector delta = to - from;
@@ -5378,15 +5390,6 @@ void type_random_map_generator::drawIslandBoundary(TRmgPoint from, TRmgPoint to,
             }
             pending.push_back(to);
             pending.push_back(midpoint);
-        } else {
-            long x = cppMax<long>(from.m_x, 0);
-            x = cppMin<long>(x, m_map.m_mapWidth - 1);
-            long y = cppMax<long>(from.m_y, 0);
-            y = cppMin<long>(y, m_map.m_mapHeight - 1);
-            TRmgMapItem* item = m_map.getMapItem(x, y, level);
-            if (item->m_zoneState.m_zone == zoneIndex)
-                item->m_tileData.m_paintZoneTerrain = 1;
-            from = to;
         }
     }
 }
