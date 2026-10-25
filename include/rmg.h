@@ -1299,8 +1299,7 @@ struct TRmgMapItem {
 // bit. Retail group commit 0x5469b0 stores both saved bytes the same way.
 // Mac addGuard (0x2331d8, 0x233504, 0x233648) keeps the same per-setter
 // store order: the set mark first, then the cleared one.
-// carveBranchingPaths still spells these stores: the setters lower it by
-// 1.94 points under the current budgets.
+// carveBranchingPaths (Mac 0x247098, 0x247708) keeps the same order.
 // The map editor's random object placer calls both (h3maped 0x4af463).
 inline void TRmgMapItem::setObstacleFill(unsigned char obstacleFill)
 {

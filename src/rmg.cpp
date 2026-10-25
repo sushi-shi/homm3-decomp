@@ -925,7 +925,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
         int direction = 8;
         if (current->isObjectEntrance()) {
-            int objectType = current->m_objects[0]->m_properties->m_prototype->getType();
+            int objectType = current->getObjectType();
             if (!akAdvObjectTypeTraits[objectType].m_enterableFromNorth)
                 direction = 5;
         }
@@ -939,7 +939,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
             if (next->m_zoneState.m_zone < 0 || !next->isPassable())
                 continue;
             if (next->isObjectEntrance()) {
-                int objectType = next->m_objects[0]->m_properties->m_prototype->getType();
+                int objectType = next->getObjectType();
                 const TAdvObjectTraits& traits = akAdvObjectTypeTraits[objectType];
                 if (traits.m_blocksLanding && !traits.m_clearedOnVisit)
                     continue;
@@ -1128,7 +1128,7 @@ unsigned char type_random_map::canPlaceObject(
     if (item->m_zoneState.m_zone != zoneIndex)
         return 0;
     if (item->isObjectEntrance()) {
-        int entranceType = item->m_objects[0]->m_properties->m_prototype->getType();
+        int entranceType = item->getObjectType();
         if (!akAdvObjectTypeTraits[entranceType].m_clearedOnVisit)
             return 0;
     }
@@ -3134,7 +3134,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
             TRmgPoint nearby = g_rmgDirections[direction] + origin;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (item->isObjectEntrance()) {
-                int neighborType = item->m_objects[0]->m_properties->m_prototype->getType();
+                int neighborType = item->getObjectType();
                 if (!akAdvObjectTypeTraits[neighborType].m_clearedOnVisit
                     || !akAdvObjectTypeTraits[neighborType].m_enterableFromNorth)
                     return 0;
@@ -7067,7 +7067,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
             TRmgMapItem* item = m_map.getMapItem(nearby);
             if (item->getLandType() == eTerrainWater)
                 return 0;
-            unsigned char entrance = item->m_tileData.m_objectEntrance;
+            unsigned char entrance = item->isObjectEntrance();
             if (entrance || !item->isPassable())
                 return 0;
         }
@@ -7213,7 +7213,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
                 TRmgMapItem* item = m_map.getMapItem(position);
                 if (item->m_zoneState.m_zone == sourceZone
                     && item->m_zoneState.m_connectionZone == destinationZone) {
-                    unsigned char visited = item->m_tileData.m_connectionVisited;
+                    unsigned char visited = item->isConnectionVisited();
                     if (visited)
                         return 1;
                     if (item->getLandType() != eTerrainWater) {
@@ -8035,17 +8035,17 @@ bool type_random_map_generator::contains(const TRmgPoint& point) const
 // single-inserts, both vector erases, the queue cleanup and the 0x6c frame.
 // Dimension accessors in the entry product and seed switch restore retail
 // load order and shared joins. The item pointer precedes the height/width/level
-// product. With the generator-owned bounds query and field-built canonical
-// point difference, MAX is 96.5709%: all 67 branch destinations agree and 66
-// block instruction counts match. Coordinate register roles and return-copy/
-// distance allocation remain. Naming an extra endpoint copy adds a reload
-// absent from retail; keep the direct call. A byte-identical passive C2 trace
-// gives last.x, first.x and last.y equal priority 544, assigned ESI/EDI/EBX;
-// retail uses ESI/EBX/EDI. Declaration-order probes leave this tie unchanged.
-// Pair-operation helpers lose the container boundaries; shared midpoint and
-// perpendicular helpers disturb the three exact path callers. Point getters
-// alone over-expand cleanup. The cell-setter model remains a lead requiring
-// recovery of commitTreasureGroup's retained constructor and live snapshots.
+// product. Mac 0x247098..0x2470f0 and 0x247708..0x247718 store each path mark
+// in the setters' order (the set mark, then the cleared one), so both mark
+// passes call setObstacleFill/setPathClearance.
+// Residual: with the setters in its budget VC6 keeps the queue's list
+// constructor out of line where retail expands it and calls _Buynode; the
+// coordinate registers (ESI/EDI/EBX for last.x, first.x, last.y; retail
+// ESI/EBX/EDI) and return-copy/distance allocation also differ. Naming an
+// extra endpoint copy adds a reload absent from retail. Pair-operation
+// helpers lose the container boundaries; shared midpoint and perpendicular
+// helpers disturb the three exact path callers; point getters alone
+// over-expand cleanup.
 VA(0x00543E20, 0x574)
 MAC_ADDRESS(0x24705c, 0x750) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
 VA_AT(h3maped, 0x004a8260, 0x4c2)
@@ -8054,15 +8054,10 @@ void type_random_map_generator::carveBranchingPaths()
     TRmgMapItem* item = m_map.m_mapItems;
     int remaining = m_map.getHeight() * m_map.getWidth() * m_map.m_numberLevels;
     for (; remaining--; ++item) {
-        if (!item->m_objects.size()) {
-            if (!item->m_connection.m_present) {
-                item->m_tileData.m_pathClearance = 0;
-                item->m_tileData.m_obstacleFill = 1;
-            }
-        } else if (!item->m_connection.m_present) {
-            item->m_tileData.m_obstacleFill = 0;
-            item->m_tileData.m_pathClearance = 1;
-        }
+        if (!item->m_objects.size())
+            item->setObstacleFill(1);
+        else
+            item->setPathClearance(1);
     }
     for (int level = 0; level < m_map.m_numberLevels; ++level) {
         TRmgPoint first;
@@ -8147,12 +8142,8 @@ void type_random_map_generator::carveBranchingPaths()
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
-                if (item->getLandType() == eTerrainWater || item->getLandType() == eTerrainRock) {
-                    if (!item->m_connection.m_present) {
-                        item->m_tileData.m_obstacleFill = 0;
-                        item->m_tileData.m_pathClearance = 1;
-                    }
-                }
+                if (item->getLandType() == eTerrainWater || item->getLandType() == eTerrainRock)
+                    item->setPathClearance(1);
                 if (item->hasObstacleFill())
                     m_map.markObstacleFillPatch(position);
             }
@@ -9409,7 +9400,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             for (scanPosition.m_y = workingPosition.getY() - 1; scanPosition.m_y <= workingPosition.getY() + 1; ++scanPosition.m_y) {
                 TRmgMapItem* item = m_map.getMapItem(scanPosition);
                 if (item->isObjectEntrance()
-                    && item->m_objects[0]->m_properties->m_prototype->getType() == MONSTER)
+                    && item->getObjectType() == MONSTER)
                     return 0;
             }
         }
@@ -9675,7 +9666,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         int positionCost = mapItem->m_movement.m_cost;
         unsigned char currentHasRoad = mapItem->m_tile.m_roadType != 0;
         int direction = 8;
-        unsigned char objectEntrance = mapItem->m_tileData.m_objectEntrance;
+        unsigned char objectEntrance = mapItem->isObjectEntrance();
 
         if (objectEntrance) {
             int objectType = mapItem->getObjectType();
@@ -9757,7 +9748,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
                 continue;
 
             unsigned char nextObjectEntrance =
-                nextMapItem->m_tileData.m_objectEntrance;
+                nextMapItem->isObjectEntrance();
             if (nextObjectEntrance) {
                 int objectType = nextMapItem->getObjectType();
                 const TAdvObjectTraits& traits = akAdvObjectTypeTraits[objectType];
