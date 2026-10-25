@@ -467,9 +467,12 @@ struct TRmgPoint {
     {
         return m_x == other.m_x && m_y == other.m_y;
     }
+    // Retail Mac sets the result on the first unequal component
+    // (traceZoneBoundary 0x23de2c, 0x23e0e4): an || of two inequalities,
+    // not a negated operator==.
     bool operator!=(const TRmgPoint& other) const
     {
-        return !(*this == other);
+        return m_x != other.m_x || m_y != other.m_y;
     }
 
     bool operator<(const TRmgPoint& other) const
@@ -1572,7 +1575,22 @@ struct TRmgZone {
     {
         return m_bounds;
     }
-    TRmgMapPosition getLevelPosition() const;
+    // Both the level-occupancy pass and the bounds pass in
+    // FilterZonePositions copy the whole coordinate before selecting a
+    // component; no DC name is known. Retail Mac expands it in
+    // joinExtraZones (0x23f578, 0x23f5b0) where an ordinary member would
+    // stay a call, so it is an in-class inline. Keep an owned result before
+    // returning it: with assigned caller snapshots this retains both
+    // single-position insert calls in positionZone (0x53b970) and both
+    // vector destructor expansions in buildZoneBoundaries (0x53e050); a
+    // direct member return (Mac's single copy) also lowers fillIslandInterior,
+    // appendZonePositions and joinExtraZones in the game.
+    TRmgMapPosition getLevelPosition() const
+    {
+        TRmgMapPosition result;
+        result = m_levelPosition;
+        return result;
+    }
     void setLevelPosition(TRmgMapPosition position);
     TRmgMapPosition getPrimaryTownEntrance() const;
     int getBoundaryCount() const;

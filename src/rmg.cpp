@@ -1600,21 +1600,6 @@ void TRmgZone::decrementObjectCount(TAdventureObjectType objectType)
     --m_objectCountByType[objectType];
 }
 
-// Both the level-occupancy pass and the bounds pass in FilterZonePositions
-// copy the whole coordinate before selecting a component. That retained
-// value-copy shape motivates this ordinary accessor; no DC name is known.
-// Keep an owned result before returning it. Together with assigned caller
-// snapshots this retains both single-position insert calls in positionZone
-// (0x53b970) and both vector destructor expansions in buildZoneBoundaries
-// (0x53e050). Direct member return loses the former; changing only this
-// getter loses the latter. The source boundary remains a retail inference.
-TRmgMapPosition TRmgZone::getLevelPosition() const
-{
-    TRmgMapPosition result;
-    result = m_levelPosition;
-    return result;
-}
-
 // Mac WriteMapHeader copies the primary-town coordinate through a separate
 // value at 0x24ebbc and 0x24ec20 before assigning each player entrance.
 // This is a value query; mine placement instead consumes the entrance XY
