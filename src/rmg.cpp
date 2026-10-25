@@ -3954,6 +3954,11 @@ static const int g_rmgDecorationTypes[45] = {
 // once. VC6 then keeps the map lookup out of line at depth 2 in both images,
 // as retail does. Retail's frame is also 0x1c bytes larger, with the four
 // vectors at -0x38/-0x58/-0x48/-0x84.
+// Mac 0x235b9c..0x235de0 walks the decoration table by an unsigned index
+// (cmplwi 0x2d), loads each type once and re-indexes m_objectPrototypes for
+// every size and element read; this spelling reproduces that loop
+// instruction for instruction (Mac shape 207 -> 230 aligned). The pointer
+// walk with a prototype-vector reference reads 0.87 higher in the game.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3985,11 +3990,11 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         // decoration table holds object types. The name is provisional.
         std::vector<TAdventureObjectType> objectTypes;
         int totalWeight = 0;
-        for (const int* type = g_rmgDecorationTypes;
-            type < g_rmgDecorationTypes + sizeof(g_rmgDecorationTypes) / sizeof(g_rmgDecorationTypes[0]); ++type) {
-            std::vector<TRmgObjectPropertiesRef*>& prototypes = m_objectPrototypes[*type];
-            for (unsigned int index = 0; index < prototypes.size(); ++index) {
-                TRmgObjectPropertiesRef* properties = prototypes[index];
+        for (unsigned int typeIndex = 0;
+            typeIndex < sizeof(g_rmgDecorationTypes) / sizeof(g_rmgDecorationTypes[0]); ++typeIndex) {
+            int type = g_rmgDecorationTypes[typeIndex];
+            for (unsigned int index = 0; index < m_objectPrototypes[type].size(); ++index) {
+                TRmgObjectPropertiesRef* properties = m_objectPrototypes[type][index];
                 TObjectType* prototype = properties->m_prototype;
                 if (!properties->m_placementRule
                     || properties->m_placementRule->m_terrainScores[terrain] <= RMG_PLACEMENT_INVALID)
