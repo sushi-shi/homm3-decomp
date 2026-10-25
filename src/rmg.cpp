@@ -1030,12 +1030,13 @@ unsigned char type_random_map::isPlacementBlocked(
     return 0;
 }
 
-// Mac advances a three-coordinate loop position, as in the obstacle patch.
-// Keep the coordinate lookup overload: the by-value alternative adds a Mac
-// call absent from retail, even with its body earlier in this TU. The position
-// restores the editor's 0x1c-byte frame and preserves the exact game body.
+// Mac 0x22e284 advances a three-coordinate loop position at -0x24..-0x1c,
+// storing the level once, and copies all three coordinates into each
+// lookup: the by-value getMapItem(position), as in the obstacle patch. The
+// position restores the editor's 0x1c-byte frame; both Windows bodies are
+// exact.
 VA(0x00531AD0, 0x100)
-MAC_ADDRESS(0x22e284, 0x1d0) // MAC_ABSTRACTION_FROM(tokens1:f097baecde5e,50.0000): recover canonical TRmgMapPosition traversal, supported by native coordinate copies and the exact Windows frame; Mac comparison scores 46.9828.
+MAC_ADDRESS(0x22e284, 0x1d0)
 VA_AT(h3maped, 0x0049a85d, 0xd5)
 void type_random_map::openPathPatch(int x, int y, int level)
 {
@@ -1050,7 +1051,7 @@ void type_random_map::openPathPatch(int x, int y, int level)
     nearbyPosition.m_z = level;
     for (nearbyPosition.m_y = bounds.m_minimumY; nearbyPosition.m_y < bounds.m_maximumY; ++nearbyPosition.m_y) {
         for (nearbyPosition.m_x = bounds.m_minimumX; nearbyPosition.m_x < bounds.m_maximumX; ++nearbyPosition.m_x) {
-            TRmgMapItem* nearby = getMapItem(nearbyPosition.m_x, nearbyPosition.m_y, nearbyPosition.m_z);
+            TRmgMapItem* nearby = getMapItem(nearbyPosition);
             nearby->setPathClearance(1);
         }
     }
