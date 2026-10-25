@@ -6861,9 +6861,12 @@ int type_random_map_generator::placeBorderGuard(
 }
 
 // Mac 0x2438f0..0x243928 scans one position (level from the argument) and
-// passes it by value to getMapItem; the game body is exact.
+// passes it by value to getMapItem; the game body is exact. Mac
+// 0x243a2c..0x243a40 then stores the predecessor tile into that same scan
+// position (-0x2c/-0x28/-0x24) and the editor copies it into the scan slot
+// at ebp-0x14, so the scan position is reused for the predecessor.
 VA(0x00540FC0, 0x172)
-MAC_ADDRESS(0x243824, 0x2d4) // anchor-callee createGroundConnection; thiscall, ret 0x10
+MAC_ADDRESS(0x243824, 0x2d4) // MAC_ABSTRACTION_FROM(tokens1:0a8165f2912d,36.6022): retail Mac 0x243a2c..0x243a40 stores the predecessor tile into the scan position's own slots, which the candidate now does too; the token aligner scores the shifted tail lower (33.8398). Anchor-callee createGroundConnection; thiscall, ret 0x10.
 VA_AT(h3maped, 0x004a606b, 0x151)
 void type_random_map_generator::markBorderObjectArea(
     TRmgMapPosition position, int color)
@@ -6885,10 +6888,10 @@ void type_random_map_generator::markBorderObjectArea(
             }
         }
     }
-    TRmgMapPosition previous = m_map.getMapItem(position)->m_previousTile;
-    if (previous.m_x >= 0 && previous.m_x < m_map.m_mapWidth
-        && previous.m_y >= 0 && previous.m_y < m_map.m_mapHeight) {
-        TRmgMapItem* item = m_map.getMapItem(previous);
+    cell = m_map.getMapItem(position)->m_previousTile;
+    if (cell.m_x >= 0 && cell.m_x < m_map.m_mapWidth
+        && cell.m_y >= 0 && cell.m_y < m_map.m_mapHeight) {
+        TRmgMapItem* item = m_map.getMapItem(cell);
         item->m_connection.m_present = 0;
         item->m_connection.m_guardColor = 0;
         item->setPathClearance(1);
