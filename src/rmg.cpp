@@ -2665,9 +2665,13 @@ type_object* type_black_box_creature_def::generate(TRmgObjectPropertiesRef* prop
     return object;
 }
 
+// Mac 0x231fdc and its four callers prove a one-argument constructor: the
+// value is experience * 12 / 10 (mulli 12, then /10). The gold box, prison,
+// and seer-hut experience/gold constructors below follow their Mac bodies and
+// argument registers the same way.
 MAC_ADDRESS(0x231fdc, 0x70)
-type_black_box_experience_def::type_black_box_experience_def(int value, int experience)
-    : type_treasure_def(6, 0, value, 20)
+type_black_box_experience_def::type_black_box_experience_def(int experience)
+    : type_treasure_def(6, 0, experience * 12 / 10, 20)
 {
     this->m_experience = experience;
 }
@@ -2683,8 +2687,8 @@ type_object* type_black_box_experience_def::generate(TRmgObjectPropertiesRef* pr
 }
 
 MAC_ADDRESS(0x2320b0, 0x58)
-type_black_box_gold_def::type_black_box_gold_def(int value, int gold)
-    : type_treasure_def(6, 0, value, 5)
+type_black_box_gold_def::type_black_box_gold_def(int gold)
+    : type_treasure_def(6, 0, gold, 5)
 {
     this->m_gold = gold;
 }
@@ -2782,7 +2786,7 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
 }
 
 MAC_ADDRESS(0x23248c, 0x58)
-type_prison_def::type_prison_def(int value, int experience)
+type_prison_def::type_prison_def(int experience, int value)
     : type_treasure_def(62, 0, value, 30)
 {
     this->m_experience = experience;
@@ -2890,8 +2894,8 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
 }
 
 MAC_ADDRESS(0x232890, 0x70)
-type_quest_experience_def::type_quest_experience_def(int questIndex, int value, int experience)
-    : type_treasure_def(83, questIndex, value, 10)
+type_quest_experience_def::type_quest_experience_def(int experience, int questIndex)
+    : type_treasure_def(83, questIndex, (2 * experience - 4000) / 3, 10)
 {
     this->m_experience = experience;
 }
@@ -2932,8 +2936,8 @@ type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* proper
 }
 
 MAC_ADDRESS(0x2329d8, 0x70)
-type_quest_gold_def::type_quest_gold_def(int questIndex, int value, int gold)
-    : type_treasure_def(83, questIndex, value, 10)
+type_quest_gold_def::type_quest_gold_def(int gold, int questIndex)
+    : type_treasure_def(83, questIndex, (2 * gold - 4000) / 3, 10)
 {
     this->m_gold = gold;
 }
@@ -4525,6 +4529,10 @@ void readRmgTemplateZones(
 // stands (h3maped accepts the same). Mac shows only MSL vector<bool>
 // resize/set there; VC6's std::vector<bool> is the byte vector with the
 // same inline costs (compiled), so no evidenced source change is known.
+// With the Mac-proven one-argument box and seer-hut constructors, both
+// images still expand the base constructor of the last spell box and keep
+// the treasure_def(7) insert as a call; the solver's only fit common to both
+// is ~14..21 more root tuples, which no native evidence locates.
 VA(0x00538B10, 0x2241)
 MAC_ADDRESS(0x2375f0, 0x4880)
 void type_random_map_generator::initializeObjectGenerators()
@@ -4542,18 +4550,18 @@ void type_random_map_generator::initializeObjectGenerators()
     }
 
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(6000, 5000));
+        new type_black_box_experience_def(5000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(12000, 10000));
+        new type_black_box_experience_def(10000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(18000, 15000));
+        new type_black_box_experience_def(15000));
     m_objectGenerators.push_back(
-        new type_black_box_experience_def(24000, 20000));
+        new type_black_box_experience_def(20000));
 
-    m_objectGenerators.push_back(new type_black_box_gold_def(5000, 5000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(10000, 10000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(15000, 15000));
-    m_objectGenerators.push_back(new type_black_box_gold_def(20000, 20000));
+    m_objectGenerators.push_back(new type_black_box_gold_def(5000));
+    m_objectGenerators.push_back(new type_black_box_gold_def(10000));
+    m_objectGenerators.push_back(new type_black_box_gold_def(15000));
+    m_objectGenerators.push_back(new type_black_box_gold_def(20000));
 
     m_objectGenerators.push_back(new type_black_box_spells_def(5000, 1, 1, 15));
     m_objectGenerators.push_back(new type_black_box_spells_def(7500, 2, 2, 15));
@@ -4625,11 +4633,11 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(60, 0, 750, 100));
     m_objectGenerators.push_back(new type_treasure_def(61, 0, 1500, 100));
 
-    m_objectGenerators.push_back(new type_prison_def(2500, 0));
+    m_objectGenerators.push_back(new type_prison_def(0, 2500));
     m_objectGenerators.push_back(new type_prison_def(5000, 5000));
-    m_objectGenerators.push_back(new type_prison_def(10000, 15000));
-    m_objectGenerators.push_back(new type_prison_def(20000, 90000));
-    m_objectGenerators.push_back(new type_prison_def(30000, 500000));
+    m_objectGenerators.push_back(new type_prison_def(15000, 10000));
+    m_objectGenerators.push_back(new type_prison_def(90000, 20000));
+    m_objectGenerators.push_back(new type_prison_def(500000, 30000));
     m_objectGenerators.push_back(new type_treasure_def(63, 0, 5000, 20));
     m_objectGenerators.push_back(new type_treasure_def(64, 0, 100, 100));
 
@@ -4660,17 +4668,17 @@ void type_random_map_generator::initializeObjectGenerators()
         }
 
         m_objectGenerators.push_back(
-            new type_quest_experience_def(seerSubtype, 2000, 5000));
+            new type_quest_experience_def(5000, seerSubtype));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(seerSubtype, 5333, 10000));
+            new type_quest_experience_def(10000, seerSubtype));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(seerSubtype, 8666, 15000));
+            new type_quest_experience_def(15000, seerSubtype));
         m_objectGenerators.push_back(
-            new type_quest_experience_def(seerSubtype, 12000, 20000));
-        m_objectGenerators.push_back(new type_quest_gold_def(seerSubtype, 2000, 5000));
-        m_objectGenerators.push_back(new type_quest_gold_def(seerSubtype, 5333, 10000));
-        m_objectGenerators.push_back(new type_quest_gold_def(seerSubtype, 8666, 15000));
-        m_objectGenerators.push_back(new type_quest_gold_def(seerSubtype, 12000, 20000));
+            new type_quest_experience_def(20000, seerSubtype));
+        m_objectGenerators.push_back(new type_quest_gold_def(5000, seerSubtype));
+        m_objectGenerators.push_back(new type_quest_gold_def(10000, seerSubtype));
+        m_objectGenerators.push_back(new type_quest_gold_def(15000, seerSubtype));
+        m_objectGenerators.push_back(new type_quest_gold_def(20000, seerSubtype));
     }
 
     m_objectGenerators.push_back(new type_treasure_def(84, 0, 1000, 100));

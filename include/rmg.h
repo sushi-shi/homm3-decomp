@@ -285,7 +285,7 @@ class type_black_box_experience_def : public type_treasure_def {
 public:
     int m_experience;
 
-    type_black_box_experience_def(int value, int experience);
+    type_black_box_experience_def(int experience);
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -295,7 +295,7 @@ class type_black_box_gold_def : public type_treasure_def {
 public:
     int m_gold;
 
-    type_black_box_gold_def(int value, int gold);
+    type_black_box_gold_def(int gold);
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -356,7 +356,7 @@ class type_prison_def : public type_treasure_def {
 public:
     int m_experience;
 
-    type_prison_def(int value, int experience);
+    type_prison_def(int experience, int value);
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -384,8 +384,7 @@ class type_quest_experience_def : public type_treasure_def {
 public:
     int m_experience;
 
-    type_quest_experience_def(
-        int questIndex, int value, int experience);
+    type_quest_experience_def(int experience, int questIndex);
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
@@ -397,7 +396,7 @@ class type_quest_gold_def : public type_treasure_def {
 public:
     int m_gold;
 
-    type_quest_gold_def(int questIndex, int value, int gold);
+    type_quest_gold_def(int gold, int questIndex);
 
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
