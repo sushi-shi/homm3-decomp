@@ -457,7 +457,10 @@ struct TRmgPoint {
     TRmgPoint() {}
     TRmgPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
 
-    TRmgPoint& operator+=(const TRmgVector& offset)
+    // Retail Mac copies the offset before adding it (connectJunctionEntrance
+    // 0x247d28..0x247d54, drawStraightZoneBoundary 0x23dc50): a by-value
+    // operand. Windows-flat.
+    TRmgPoint& operator+=(TRmgVector offset)
     {
         m_x += offset.m_x;
         m_y += offset.m_y;

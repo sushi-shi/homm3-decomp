@@ -5119,6 +5119,11 @@ void type_random_map_generator::drawIrregularZoneBoundary(
 
 // The map editor calls abs at all three uses of the vertical distance; the
 // game's intrinsic folds them. Both bodies are exact.
+// Mac 0x23dafc..0x23db30 copies both endpoints into the point difference,
+// each step setup stores its own diagonal X (0x23db60, 0x23dbc4), the loop
+// test is the materialized operator!= (0x23dcb8..0x23dce4) and each step
+// passes a copied vector to operator+= (0x23dc50..0x23dc7c); all
+// Windows-flat.
 VA(0x0053C220, 0x16A)
 MAC_ADDRESS(0x23da90, 0x2a4)
 void type_random_map_generator::drawStraightZoneBoundary(
@@ -5126,40 +5131,38 @@ void type_random_map_generator::drawStraightZoneBoundary(
 {
     if (from.m_x > to.m_x)
         std::swap(from, to);
-    int dx = to.m_x - from.m_x;
-    int dy = to.m_y - from.m_y;
+    TRmgVector delta = to - from;
     int major;
     int minor;
-    TRmgPoint straight;
-    TRmgPoint diagonal;
-    if (dx > abs(dy)) {
-        major = dx;
-        minor = abs(dy);
+    TRmgVector straight;
+    TRmgVector diagonal;
+    if (delta.m_x > abs(delta.m_y)) {
+        major = delta.m_x;
+        minor = abs(delta.m_y);
         straight.m_x = 1;
         straight.m_y = 0;
-        diagonal.m_y = dy > 0 ? 1 : -1;
+        diagonal.m_x = 1;
+        diagonal.m_y = delta.m_y > 0 ? 1 : -1;
     } else {
-        major = abs(dy);
-        minor = dx;
-        straight = TRmgPoint(0, dy > 0 ? 1 : -1);
+        major = abs(delta.m_y);
+        minor = delta.m_x;
+        straight = TRmgVector(0, delta.m_y > 0 ? 1 : -1);
         diagonal = straight;
+        diagonal.m_x = 1;
     }
-    diagonal.m_x = 1;
     unsigned char markBoundary = level == 1 || m_waterContent != RMG_WATER_ISLANDS;
     int error = major / 2;
-    while (from.m_x != to.m_x || from.m_y != to.m_y) {
+    while (from != to) {
         TRmgMapItem* item = m_map.getMapItem(from.m_x, from.m_y, level);
         item->m_zoneState.m_zone = zoneIndex;
         if (markBoundary)
             item->m_tileData.m_paintZoneTerrain = 1;
         error += minor;
-        if (error < major) {
-            from.m_x += straight.m_x;
-            from.m_y += straight.m_y;
-        } else {
+        if (error < major)
+            from += straight;
+        else {
             error -= major;
-            from.m_x += diagonal.m_x;
-            from.m_y += diagonal.m_y;
+            from += diagonal;
         }
     }
     TRmgMapItem* lastItem = m_map.getMapItem(from.m_x, from.m_y, level);
