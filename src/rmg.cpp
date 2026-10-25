@@ -9512,8 +9512,10 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
 
 // Candidate placement consumes the group and zone plus its spacing limit.
 // Retail returns AL, retaining a candidate-position vector and random choice.
-// Initialize scan Y before the bound adjustments and assign center X before
-// Y; retain the vector, position copies, and separate fit/commit helpers.
+// Mac 0x24b488..0x24b500 adjusts the maximum X/Y bounds by (extent - 1),
+// then the minimum X/Y, forms the centre as maximum + minimum halves, and
+// only then starts the scan at the minimum Y; retain the vector, position
+// copies, and separate fit/commit helpers.
 // The retained std::copy/_Destroy clear expansion and all nine call sites
 // are recovered with public single-element insert. Native
 // 0x24b514..0x24b590 copies a 3D position and the center point, then
@@ -9544,16 +9546,15 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     std::vector<TRmgMapPosition> candidates;
     TRmgZoneBounds bounds = zone->m_bounds;
     TRmgZoneBounds groupBounds = group->m_bounds;
-    bounds.m_minimumY -= groupBounds.m_minimumY;
     TRmgMapPosition position = zone->getLevelPosition();
-    position.m_y = bounds.m_minimumY;
-    bounds.m_maximumX += 1 - groupBounds.m_maximumX;
-    bounds.m_maximumY += 1 - groupBounds.m_maximumY;
+    bounds.m_maximumX -= groupBounds.m_maximumX - 1;
+    bounds.m_maximumY -= groupBounds.m_maximumY - 1;
     bounds.m_minimumX -= groupBounds.m_minimumX;
+    bounds.m_minimumY -= groupBounds.m_minimumY;
     TRmgPoint center;
-    center.m_x = (groupBounds.m_minimumX + groupBounds.m_maximumX) / 2;
-    center.m_y = (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2;
-    for (; position.m_y < bounds.m_maximumY; ++position.m_y) {
+    center.m_x = (groupBounds.m_maximumX + groupBounds.m_minimumX) / 2;
+    center.m_y = (groupBounds.m_maximumY + groupBounds.m_minimumY) / 2;
+    for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* item = m_map.getMapItem(position + center);
             if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_objectDistance >= spacing
