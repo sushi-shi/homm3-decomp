@@ -1380,9 +1380,11 @@ public:
     // three dimensions as a position changes retry bodies but closes no further
     // function. Neither interface/layout change is adopted.
 
-    // Mac 0x22d320 stores its fourth argument (r7) as numberLevels; all eight
-    // view callers pass 1. Windows folds that argument into the expanded body.
-    inline type_random_map(TRmgMapItem* items, int width, int height, int levels)
+    // A one-level view of an existing plane. Mac 0x22d320 stores its fourth
+    // argument (r7) as numberLevels and all eight view callers pass 1, so
+    // the level count defaults to a single plane; Windows folds it into
+    // the expanded body.
+    inline type_random_map(TRmgMapItem* items, int width, int height, int levels = 1)
     {
         m_mapItems = items;
         m_mapWidth = width;
