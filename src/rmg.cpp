@@ -8621,6 +8621,9 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
 // Canonical trigger subtraction restores the retained
 // type_object constructor; a named unsigned selection restores the chosen
 // coordinate copy, and Y-before-X locals recover the distance calculation.
+// Mac 0x248e34..0x248e88 loads the template zone and copies the level
+// position before constructing the candidate vector, then reads the zone
+// index through that template pointer.
 // Residual: clear() still expands erase into copy/_Destroy; retail retains the folded
 // range-erase body. Direct erase loses the constructor boundary; resize(0)
 // retains erase but adds a size call and conditional absent from retail.
@@ -8633,9 +8636,10 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
 {
     if (alignment == -1)
         return 0;
-    std::vector<TRmgMapPosition> candidates;
-    int zoneIndex = zone->m_templateZone->m_zoneIndex;
+    TRmgTemplateZone* slot = zone->m_templateZone;
     TRmgMapPosition position = zone->m_levelPosition;
+    std::vector<TRmgMapPosition> candidates;
+    int zoneIndex = slot->m_zoneIndex;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
     int bestDistance = 32000;
