@@ -6725,15 +6725,6 @@ void type_random_map_generator::buildZoneConnectionPaths()
     }
 }
 
-// Mac 0x242a70..0x242a8c expands the same three stores in this order.
-VA_AT(h3maped, 0x004a59e2, 0x41)
-void TRmgMapItem::setZonePath(int cost, int direction, int connectionZone)
-{
-    m_movement.m_zonePathCost = cost;
-    m_tileData.m_connectionDirection = direction;
-    m_zoneState.m_connectionZone = connectionZone;
-}
-
 // Complete's ground connection follows predecessor cells with positive
 // movement cost, stopping at the zero-cost seed. It does not change costs:
 // it clears border obstacles and marks the route traversable. Decoration

@@ -1238,8 +1238,17 @@ struct TRmgMapItem {
     // Connection-path state: zone path cost, direction and connection zone.
     // The map editor keeps it out of line in buildZoneConnectionPaths
     // (h3maped 0x4a59e2, thiscall, ret 0xc) and expands it in both floods
-    // and the island reset; the game expands it everywhere.
-    void setZonePath(int cost, int direction, int connectionZone);
+    // and the island reset; the game expands it everywhere. Retail Mac
+    // expands the same three stores in this order wherever it is used
+    // (0x242a70..0x242a8c, floodWaterZoneDistances 0x241014..0x241024),
+    // so it is an in-class inline.
+    VA_AT(h3maped, 0x004a59e2, 0x41)
+    void setZonePath(int cost, int direction, int connectionZone)
+    {
+        m_movement.m_zonePathCost = cost;
+        m_tileData.m_connectionDirection = direction;
+        m_zoneState.m_connectionZone = connectionZone;
+    }
 
     // CreateRiver's reset pass copies a by-value predecessor before a
     // constant 32000 cost write, motivating this ordinary reset helper.
