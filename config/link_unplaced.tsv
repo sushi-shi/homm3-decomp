@@ -5,6 +5,7 @@
 # `homm3 verify link-diff --update` rewrites the bytes; a new or grown row
 # gets an empty reason that must be written by hand before the gate passes.
 unit	name	bytes	reason
+*	??0?$list@UTRmgPoint@@V?$allocator@UTRmgPoint@@@std@@@std@@QAE@ABV?$allocator@UTRmgPoint@@@1@@Z	48	carveBranchingPaths calls the path-mark setters as Mac 0x247098/0x247708 do; under that budget VC6 keeps the queue's list<TRmgPoint> constructor out of line, where retail expands it and calls _Buynode (residual noted beside carveBranchingPaths)
 *	??4?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@QAEAAV01@ABV01@@Z	400	present at the 4650cdf19 baseline; not traced yet
 *	??4reference@?$bitset@$0BD@@std@@QAEAAV012@_N@Z	112	emitted by artifact.cpp's explicit `template class std::bitset<19>` (kept for set's exact body); retail retains no such member
 *	??8?$bitset@$0BD@@std@@QBE_NABV01@@Z	48	emitted by artifact.cpp's explicit `template class std::bitset<19>` (kept for set's exact body); retail retains no such member
