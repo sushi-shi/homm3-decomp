@@ -78,29 +78,25 @@ private:
 
     // The image and mask setters own these values and their invariants.
     // Member spellings are Loki ObjectType.h's, proved by the restored text
-    // writer in objecttype.cpp. Loki also names the public recommended mask,
-    // slot category, trigger flag and trigger cell _m_recommendedTerrainMask,
-    // _m_slotCategory, _m_bHasTrigger and _m_triggerLoc; those keep project
-    // spellings until the random-map generator's direct reads move with them.
+    // writer in objecttype.cpp. Loki keeps every member private behind its
+    // getters; the random-map generator reads them through those getters.
+    // The allowed-terrain mask stays public for now: the footprint scorer
+    // (0x536bc0) and one generator terrain scan still index it directly,
+    // through the non-const bitset subscript; Loki's const getTerrainMask
+    // would select the const one there.
     unsigned int _m_imageNum;
     std::bitset<OBJECT_MASK_CELLS> _m_passableMask;
     std::bitset<OBJECT_MASK_CELLS> _m_triggerMask;
 public:
     std::bitset<kNumTerrainTypes> _m_terrainMask;
-    std::bitset<kNumTerrainTypes> m_recommendedTerrainMask;
 private:
+    std::bitset<kNumTerrainTypes> _m_recommendedTerrainMask;
     TAdventureObjectType _m_type;
     int _m_extra;
-public:
-    int m_slotCategory;
-private:
+    int _m_slotCategory;
     unsigned char _m_bUnderlay;
-public:
-
-    unsigned char m_hasTrigger;
-
-    TTilePoint m_triggerCell;
-private:
+    unsigned char _m_bHasTrigger;
+    TTilePoint _m_triggerLoc;
 
     unsigned int _m_width;
     unsigned int _m_height;
@@ -155,11 +151,11 @@ public:
     // retains only _Xran.
     bool isRecommendedTerrain(int terrain)
     {
-        return m_recommendedTerrainMask[terrain];
+        return _m_recommendedTerrainMask[terrain];
     }
     bool isRecommendedTerrain(int terrain) const
     {
-        return m_recommendedTerrainMask.test(terrain);
+        return _m_recommendedTerrainMask.test(terrain);
     }
     int getHeight() const { return _m_height; }
     // Mac conversion 0x128d7c..0x128d94 reads this metadata after the
@@ -194,10 +190,13 @@ public:
     // getTriggerLoc (0x8363ac0, 0x8363ad4, 0x8363b48).
     const std::bitset<kNumTerrainTypes>& getRecommendedTerrainMask() const
     {
-        return m_recommendedTerrainMask;
+        return _m_recommendedTerrainMask;
     }
-    int getSlotCategory() const { return m_slotCategory; }
-    const TTilePoint& getTriggerLoc() const { return m_triggerCell; }
+    int getSlotCategory() const { return _m_slotCategory; }
+    // Loki h3maped TObjectType::hasTrigger; the stored byte type matches
+    // getBUnderlay's.
+    unsigned char hasTrigger() const { return _m_bHasTrigger; }
+    const TTilePoint& getTriggerLoc() const { return _m_triggerLoc; }
 };
 SIZE(TObjectType, 0x4c);
 
@@ -219,13 +218,13 @@ inline TObjectType::TObjectType()
       _m_passableMask(~std::bitset<OBJECT_MASK_CELLS>(0)),
       _m_triggerMask(),
       _m_terrainMask(),
-      m_recommendedTerrainMask(),
+      _m_recommendedTerrainMask(),
       _m_type(NOTHING),
       _m_extra(0),
-      m_slotCategory(0),
+      _m_slotCategory(0),
       _m_bUnderlay(0),
-      m_hasTrigger(0),
-      m_triggerCell(kMaxObjWidth, kMaxObjHeight)
+      _m_bHasTrigger(0),
+      _m_triggerLoc(kMaxObjWidth, kMaxObjHeight)
 {
 }
 

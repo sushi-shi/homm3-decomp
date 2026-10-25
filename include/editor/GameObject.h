@@ -66,7 +66,7 @@ public:
     {
         return _m_objectTypeIter->first.getBCellTrigger(x, y);
     }
-    bool hasTrigger() const { return _m_objectTypeIter->first.m_hasTrigger != 0; }
+    bool hasTrigger() const { return _m_objectTypeIter->first.hasTrigger() != 0; }
     const TTilePoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
     const std::bitset<kNumTerrainTypes>& getTerrainMask() const { return _m_objectTypeIter->first._m_terrainMask; }
     TAdventureObjectType getType() const { return _m_objectTypeIter->first.getType(); }

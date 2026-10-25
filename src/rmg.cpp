@@ -1017,11 +1017,11 @@ unsigned char type_random_map::isPlacementBlocked(
                     || item->isObjectEntrance() || item->m_zoneState.m_zone != zoneIndex)
                     return 1;
                 if (item->getLandType() == eTerrainWater) {
-                    if (prototype.m_slotCategory != TObjectType::SLOT_CATEGORY_0
-                        || !prototype.m_recommendedTerrainMask.test(eTerrainWater))
+                    if (prototype.getSlotCategory() != TObjectType::SLOT_CATEGORY_0
+                        || !prototype.getRecommendedTerrainMask().test(eTerrainWater))
                         return 1;
-                } else if (prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_0
-                           && prototype.m_recommendedTerrainMask.test(eTerrainWater)) {
+                } else if (prototype.getSlotCategory() == TObjectType::SLOT_CATEGORY_0
+                           && prototype.getRecommendedTerrainMask().test(eTerrainWater)) {
                     return 1;
                 }
             }
@@ -1113,7 +1113,7 @@ unsigned char type_random_map::canPlaceObject(
             akAdvObjectTypeTraits[objectType].m_clearedOnVisit && akAdvObjectTypeTraits[objectType].m_enterableFromNorth,
             zone, 0))
         return 0;
-    if (!prototype.m_hasTrigger)
+    if (!prototype.hasTrigger())
         return 1;
     TTilePoint trigger = prototype.getTriggerLoc();
     TRmgMapPosition entrance(position.m_x - trigger.m_x,
@@ -1825,7 +1825,7 @@ TRmgMapPosition type_object::getPosition() const
 #if defined(HOMM3_RMG_HOTFIX)
 TRmgMapPosition type_object::getEntrance() const
 {
-    const TTilePoint& trigger = m_properties->m_prototype->m_triggerCell;
+    const TTilePoint& trigger = m_properties->m_prototype->getTriggerLoc();
     TRmgMapPosition position = getPosition();
     position -= TRmgPoint(trigger.m_x, trigger.m_y);
     return position;
@@ -3119,7 +3119,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
 {
     TObjectType* prototype = properties->m_prototype;
     int objectType = prototype->getType();
-    TTilePoint trigger = prototype->m_triggerCell;
+    TTilePoint trigger = prototype->getTriggerLoc();
     TRmgVector origin(position.m_x, position.m_y);
     origin.m_x -= trigger.m_x;
     origin.m_y -= trigger.m_y;
@@ -6497,8 +6497,8 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
     TObjectType* prototype = object->m_properties->m_prototype;
     int objectType = prototype->getType();
     ++m_objectCountByType[objectType];
-    if (prototype->m_hasTrigger) {
-        TTilePoint trigger = prototype->m_triggerCell;
+    if (prototype->hasTrigger()) {
+        TTilePoint trigger = prototype->getTriggerLoc();
         std::vector<TRmgMapPosition> positions;
         std::vector<int> costs;
         TRmgMapPosition currentPosition;
@@ -7243,7 +7243,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
     addObject(shipyard, position);
 
     {
-        TRmgPoint triggerOffset(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+        TRmgPoint triggerOffset(prototype->getTriggerLoc().m_x, prototype->getTriggerLoc().m_y);
         nearby = position;
         nearby -= triggerOffset;
     }
@@ -7404,8 +7404,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     otherPosition.m_z = destination->getLevelPosition().m_z;
     addObject(new type_object(gateProperties), otherPosition);
 
-    position -= TRmgPoint(gatePrototype->m_triggerCell.m_x,
-                       gatePrototype->m_triggerCell.m_y);
+    position -= TRmgPoint(gatePrototype->getTriggerLoc().m_x,
+                       gatePrototype->getTriggerLoc().m_y);
     otherPosition = position;
     otherPosition.m_z = destination->getLevelPosition().m_z;
     source->m_entrances.push_back(TRmgPoint(position.m_x, position.m_y));
@@ -8481,7 +8481,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     int zoneIndex = slot->m_zoneIndex;
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[TOWN][alignment];
     TObjectType* prototype = properties->m_prototype;
-    TTilePoint trigger = prototype->m_triggerCell;
+    TTilePoint trigger = prototype->getTriggerLoc();
     TRmgMapPosition position = zone->getLevelPosition();
     TRmgZoneBounds bounds = zone->m_bounds;
     bounds.m_minimumY += prototype->getHeight();
@@ -8583,8 +8583,8 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     unsigned int selected = rand() % candidates.size();
     position = candidates[selected];
     addObject(town, position);
-    position -= TRmgPoint(prototype->m_triggerCell.m_x,
-        prototype->m_triggerCell.m_y);
+    position -= TRmgPoint(prototype->getTriggerLoc().m_x,
+        prototype->getTriggerLoc().m_y);
     zone->m_primaryTownEntrance = position;
     zone->m_hasPrimaryTown = 1;
     m_roadTargets.push_back(position);
@@ -8647,7 +8647,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
     TRmgMapPosition targetAnchor;
     if (startingMine) {
         targetAnchor = zone->m_primaryTownEntrance;
-        targetAnchor += TRmgPoint(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+        targetAnchor += TRmgPoint(prototype->getTriggerLoc().m_x, prototype->getTriggerLoc().m_y);
     }
     bounds.m_minimumY += prototype->getHeight() - 1;
     bounds.m_minimumX += prototype->getWidth() - 1;
@@ -8773,7 +8773,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     }
     int guardValue = getZoneGuardValue(zone, value);
     TRmgMapPosition entrance = mine->getPosition();
-    TTilePoint trigger = prototype->m_triggerCell;
+    TTilePoint trigger = prototype->getTriggerLoc();
     entrance.m_x -= trigger.m_x;
     entrance.m_y += 1 - trigger.m_y;
     TRmgMapItem* item = m_map.getMapItem(entrance);
@@ -8933,8 +8933,8 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
         const TObjectType* prototype = properties->m_prototype;
         if (prototype->getExtra() != subtype)
             continue;
-        if (prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_4
-            || prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_5) {
+        if (prototype->getSlotCategory() == TObjectType::SLOT_CATEGORY_4
+            || prototype->getSlotCategory() == TObjectType::SLOT_CATEGORY_5) {
             if (terrain == eTerrainWater)
                 continue;
         } else if (!prototype->getRecommendedTerrainMask().test(terrain)) {
@@ -10238,7 +10238,7 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
              ++prototypeIndex) {
             TRmgObjectPropertiesRef* properties =
                 m_objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex];
-            if (properties->m_prototype->m_recommendedTerrainMask.test(landType)
+            if (properties->m_prototype->getRecommendedTerrainMask().test(landType)
                 && deltaIndex-- == 0)
                 break;
         }
@@ -10285,9 +10285,9 @@ void type_random_map_generator::markRiverJoinTargets()
             TRmgMapPosition position = object->m_position;
             int offsetX;
             int offsetY;
-            if (prototype->m_hasTrigger) {
-                offsetX = prototype->m_triggerCell.m_x;
-                offsetY = prototype->m_triggerCell.m_y;
+            if (prototype->hasTrigger()) {
+                offsetX = prototype->getTriggerLoc().m_x;
+                offsetY = prototype->getTriggerLoc().m_y;
             } else {
                 offsetX = static_cast<unsigned int>(prototype->getWidth()) / 2;
                 offsetY = static_cast<unsigned int>(prototype->getHeight()) / 2;
@@ -10316,7 +10316,7 @@ void type_random_map_generator::createRivers()
         type_object* object = m_objects[index];
         TObjectType* prototype = object->m_properties->m_prototype;
         if (prototype->getType() == WATER_WHEEL) {
-            TTilePoint trigger = prototype->m_triggerCell;
+            TTilePoint trigger = prototype->getTriggerLoc();
             TRmgMapPosition position = object->m_position;
             position.m_x -= trigger.m_x;
             position.m_y -= trigger.m_y;
@@ -11022,7 +11022,7 @@ void writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
         terrainMask[0] = 0;
         terrainMask[1] = 0;
         for (int terrain = 0; terrain < 10; ++terrain)
-            if (prototype->m_recommendedTerrainMask.test(terrain))
+            if (prototype->getRecommendedTerrainMask().test(terrain))
                 terrainMask[terrain / 8] |= 1 << (terrain % 8);
         outfile->write(terrainMask, sizeof(terrainMask));
     }
@@ -11035,7 +11035,7 @@ void writeRmgObjectPrototype(TAbstractFile* outfile, TObjectType* prototype)
         outfile->write(&value, sizeof(value));
     }
     {
-        char value = prototype->m_slotCategory;
+        char value = prototype->getSlotCategory();
         outfile->write(&value, sizeof(value));
     }
     {
@@ -11342,7 +11342,7 @@ void type_random_map_generator::removeObject(type_object* object)
         m_objects.erase(found);
         --m_objectCountByType[prototype->getType()];
         TAdventureObjectType objectType = prototype->getType();
-        TTilePoint trigger = prototype->m_triggerCell;
+        TTilePoint trigger = prototype->getTriggerLoc();
         int zone = m_map.getMapItem(position.m_x - trigger.m_x,
             position.m_y - trigger.m_y, position.m_z)->m_zoneState.m_zone;
         if (zone >= 0) {
@@ -11422,8 +11422,8 @@ static bool isRmgSelectablePrototype(const TObjectType& prototype,
 {
     if (prototype.getSubtype() != subtype)
         return false;
-    if (prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_4
-        || prototype.m_slotCategory == TObjectType::SLOT_CATEGORY_5)
+    if (prototype.getSlotCategory() == TObjectType::SLOT_CATEGORY_4
+        || prototype.getSlotCategory() == TObjectType::SLOT_CATEGORY_5)
         return terrain != eTerrainWater;
     return prototype.isRecommendedTerrain(terrain) != 0;
 }
@@ -11522,7 +11522,7 @@ bool type_random_map_generator::hasRequiredPrototypes() const
         return false;
     for (s32 town = 0; town < getRmgTownTypeCount(m_mapVersion); ++town) {
         const TObjectType* prototype = prototypes[TOWN][town]->m_prototype;
-        if (prototype->getSubtype() != town || !prototype->m_hasTrigger)
+        if (prototype->getSubtype() != town || !prototype->hasTrigger())
             return false;
     }
     // Portals cycle through two-way monoliths, then entrance/exit pairs.

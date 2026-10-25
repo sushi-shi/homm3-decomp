@@ -330,13 +330,13 @@ MAC_ADDRESS(0x223f44, 0x134)
 TObjectType& TObjectType::_setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& mask)
 {
     _m_triggerMask = mask & ~_m_passableMask;
-    m_hasTrigger = _m_triggerMask.any();
-    if (m_hasTrigger) {
+    _m_bHasTrigger = _m_triggerMask.any();
+    if (_m_bHasTrigger) {
         for (int y = 0;; ++y) {
             assert(y < kMaxObjHeight);
             for (unsigned x = 0; x < 8; ++x) {
                 if (_m_triggerMask[_getBitPos(x, y)]) {
-                    m_triggerCell = TTilePoint(x, y);
+                    _m_triggerLoc = TTilePoint(x, y);
                     goto found;
                 }
             }
@@ -344,7 +344,7 @@ TObjectType& TObjectType::_setTriggerMask(const std::bitset<OBJECT_MASK_CELLS>& 
     found:
         ;
     } else {
-        m_triggerCell = TTilePoint(kMaxObjWidth, kMaxObjHeight);
+        _m_triggerLoc = TTilePoint(kMaxObjWidth, kMaxObjHeight);
     }
     return *this;
 }
@@ -366,7 +366,7 @@ MAC_ADDRESS(0x223e4c, 0x48)
 TObjectType& TObjectType::setTerrainMask(const std::bitset<kNumTerrainTypes>& mask)
 {
     assert(!mask[eTerrainRock]);
-    m_recommendedTerrainMask &= mask;
+    _m_recommendedTerrainMask &= mask;
     _m_terrainMask = mask;
     return *this;
 }
@@ -376,7 +376,7 @@ TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<kNumTerrai
 {
     assert((mask & ~_m_terrainMask).none());
     assert(!mask[eTerrainRock]);
-    m_recommendedTerrainMask = mask;
+    _m_recommendedTerrainMask = mask;
     return *this;
 }
 TObjectType& TObjectType::setType(TAdventureObjectType type)
@@ -395,7 +395,7 @@ TObjectType& TObjectType::setSlotCategory(int category)
 {
     assert(category >= TObjectType::SLOT_CATEGORY_0
            && category <= TObjectType::SLOT_CATEGORY_5);
-    m_slotCategory = category;
+    _m_slotCategory = category;
     return *this;
 }
 TObjectType& TObjectType::setBUnderlay(bool underlay)
@@ -414,10 +414,10 @@ std::ostream& operator<<(std::ostream& os, const TObjectType& objectType)
        << ' ' << objectType._m_passableMask
        << ' ' << objectType._m_triggerMask
        << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType._m_terrainMask.to_ulong())
-       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType.m_recommendedTerrainMask.to_ulong())
+       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType._m_recommendedTerrainMask.to_ulong())
        << ' ' << objectType._m_type
        << ' ' << objectType._m_extra
-       << ' ' << objectType.m_slotCategory
+       << ' ' << objectType._m_slotCategory
        << ' ' << int(objectType._m_bUnderlay);
     return os;
 }
@@ -480,10 +480,10 @@ TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType)
     writeBitset(stream, objectType._m_passableMask);
     writeBitset(stream, objectType._m_triggerMask);
     writeBitset<kNumTerrainTypes - 1>(stream, objectType._m_terrainMask.to_ulong());
-    writeBitset<kNumTerrainTypes - 1>(stream, objectType.m_recommendedTerrainMask.to_ulong());
+    writeBitset<kNumTerrainTypes - 1>(stream, objectType._m_recommendedTerrainMask.to_ulong());
     stream << static_cast<long>(objectType._m_type)
            << static_cast<long>(objectType._m_extra)
-           << static_cast<signed char>(objectType.m_slotCategory)
+           << static_cast<signed char>(objectType._m_slotCategory)
            << static_cast<signed char>(objectType._m_bUnderlay);
     signed char reserved[kNumObjectTypeReserved];
     std::fill_n(reserved, sizeof(reserved), 0);
@@ -558,9 +558,9 @@ bool std::less<TObjectType>::operator()(const TObjectType& lhs, const TObjectTyp
         return true;
     else if (lhs._m_extra != rhs._m_extra)
         return false;
-    if (lhs.m_slotCategory < rhs.m_slotCategory)
+    if (lhs._m_slotCategory < rhs._m_slotCategory)
         return true;
-    else if (lhs.m_slotCategory != rhs.m_slotCategory)
+    else if (lhs._m_slotCategory != rhs._m_slotCategory)
         return false;
     if (lhs._m_bUnderlay < rhs._m_bUnderlay)
         return true;
@@ -578,7 +578,7 @@ bool std::less<TObjectType>::operator()(const TObjectType& lhs, const TObjectTyp
         return true;
     else if (lhs._m_terrainMask != rhs._m_terrainMask)
         return false;
-    if (isLessThan(lhs.m_recommendedTerrainMask, rhs.m_recommendedTerrainMask))
+    if (isLessThan(lhs._m_recommendedTerrainMask, rhs._m_recommendedTerrainMask))
         return true;
     return false;
 }

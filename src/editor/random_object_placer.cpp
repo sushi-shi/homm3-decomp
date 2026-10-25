@@ -177,7 +177,7 @@ void t_random_object_placer::placeObjects(bool bReplaceObjects)
         while (i--) {
             type_object* object = m_aObject[i].second;
             const TObjectType* prototype = object->m_properties->m_prototype;
-            if (prototype->m_hasTrigger || !_isInObstacleArea(object))
+            if (prototype->hasTrigger() || !_isInObstacleArea(object))
                 continue;
             std::vector<type_object*>::iterator found = std::find(m_objects.begin(), m_objects.end(), object);
             if (found != m_objects.end())
