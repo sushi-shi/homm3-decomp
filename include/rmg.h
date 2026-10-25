@@ -680,13 +680,18 @@ struct TRmgZoneBounds {
     int m_minimumY;
     int m_maximumX;
     int m_maximumY;
-
-    bool contains(const TRmgPoint& point) const
-    {
-        return point.m_x >= m_minimumX && point.m_x < m_maximumX &&
-            point.m_y >= m_minimumY && point.m_y < m_maximumY;
-    }
 };
+
+// Retail Mac tests a point against the bounds with four direct compare
+// branches at every use (traceZoneBoundary 0x23ddfc/0x23e16c, clipping
+// 0x23d1f4), never materializing a result byte as CodeWarrior does for an
+// inline function's bool return (operator!= beside it keeps one), so the
+// test is a macro, not a member. In the game this moves the test's cost
+// into traceZoneBoundary itself and lets its corner-loop insert keep the
+// _Construct calls retail keeps (84.83% -> 97.10%).
+#define RMG_BOUNDS_CONTAIN(bounds, point) \
+    ((point).m_x >= (bounds).m_minimumX && (point).m_x < (bounds).m_maximumX && \
+        (point).m_y >= (bounds).m_minimumY && (point).m_y < (bounds).m_maximumY)
 
 TRmgPoint clipRmgBoundaryPoint(
     TRmgPoint point, TRmgPoint toward, const TRmgZoneBounds& bounds);

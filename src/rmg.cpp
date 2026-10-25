@@ -5183,11 +5183,11 @@ void type_random_map_generator::drawStraightZoneBoundary(
 // clipping. Retain that complete search phase: the editor is exact, and
 // omitting the inner snapshots/flag would raise the game only by dropping
 // that evidence. Shared/local flags and pre/post-tested loops are flat.
-// Game residual: 90 vs 93 blocks, 37 calls on both sides. The search
-// topology agrees; two vector allocation paths still choose different
-// _Ucopy/_Ufill/_Destroy expansions, followed by local-slot and register
-// differences. Account for cross-type ICF before treating a template name as
-// a new call.
+// Game residual: the corner-loop push_back's insert still expands _Ufill
+// and calls _Destroy where retail keeps _Construct and expands _Destroy.
+// The solver fits it with root cb +5..+34 or a 5-tuple lighter operator!=;
+// Mac shows both != tests as inline calls, so neither site is removable.
+// Account for cross-type ICF before treating a template name as a new call.
 // Follow the map border clockwise, one corner at a time.
 // North is up:  upperLeft -> upperRight
 //                   ^             v
@@ -5218,7 +5218,7 @@ void type_random_map_generator::traceZoneBoundary(
         originalTo = next->m_vertex;
         from = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
         to = clipRmgBoundaryPoint(originalTo, originalFrom, bounds);
-        if (bounds.contains(from) && from != to) {
+        if (RMG_BOUNDS_CONTAIN(bounds, from) && from != to) {
             found = true;
             break;
         }
@@ -5272,7 +5272,7 @@ void type_random_map_generator::traceZoneBoundary(
                 originalFrom = vertex->m_vertex;
                 originalTo = next->m_vertex;
                 to = clipRmgBoundaryPoint(originalFrom, originalTo, bounds);
-                if (bounds.contains(to))
+                if (RMG_BOUNDS_CONTAIN(bounds, to))
                     found = true;
                 else
                     vertex = next;
@@ -5300,15 +5300,15 @@ void type_random_map_generator::traceZoneBoundary(
 // The bounds follow both by-value points: editor EBP+0x1c, and retail Mac
 // 0x23d1dc receives point in r4/r5, toward in r6/r7 and bounds in r8.
 // The game's fastcall passes the bounds in EDX with either source order.
-// Mac residual: CodeWarrior gives this leaf a frame and materializes the
-// inlined contains() result as a byte where retail branches directly.
+// Mac residual: CodeWarrior gives this leaf a frame; the entry bounds test
+// now branches directly as retail does.
 VA(0x0053CAC0, 0x266)
-MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:5f4b0d9c9ca8,21.4765): retail Mac's own argument registers (point r4/r5, toward r6/r7, bounds r8) and the editor's stack slots fix this parameter order; the earlier bounds-first order scored higher only by token alignment. Mac comparison scores 19.3792.
+MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:3cd178d8ffc7,19.3792): the bounds test is the RMG_BOUNDS_CONTAIN macro (retail's four direct compare branches at 0x23d1f4..0x23d220, no result byte); masked shape rises from 14 to 21 aligned identical instructions while the frame-offset tokens score 12.8356.
 VA_AT(h3maped, 0x004a2b33, 0x1a9)
 TRmgPoint clipRmgBoundaryPoint(
     TRmgPoint point, TRmgPoint toward, const TRmgZoneBounds& bounds)
 {
-    if (bounds.contains(point))
+    if (RMG_BOUNDS_CONTAIN(bounds, point))
         return point;
 
     TRmgVector delta = toward - point;
@@ -5731,8 +5731,13 @@ VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
 // border policy, then unguarded. Native height-before-width bounds
 // initialization and two-exit ring traversal are recovered; const bounds are
 // byte-flat.
-// Residual: the remaining game call difference is inside the fourth
-// connection insertion, and both frames remain four bytes short. Preserve
+// The map test after clipping is written out against zero in both retail
+// images; the former inline bounds member consumed inline budget in front
+// of the connection inserts, and without it the game expands the third
+// connection insert and every helper in the fourth (85.40% -> 45.78%; the
+// editor rises to 95.61%). Solver (two edits): no fit; the nearest needs
+// free candidate sites after the last push_back, and a trivial
+// TRmgZoneConnection constructor is elided by C1XX (no change). Preserve
 // the canonical helpers.
 VA(0x0053DAD0, 0x57F)
 MAC_ADDRESS(0x23f518, 0x40c) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
@@ -5765,7 +5770,11 @@ void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* d
             if (!found)
                 continue;
             TRmgPoint clipped = clipRmgBoundaryPoint(edge->m_vertex, edge->m_previous->m_vertex, bounds);
-            if (bounds.contains(clipped)) {
+            // Both retail images test the minimums against literal zero
+            // (game 0x53dbce `test eax, eax`, Mac 0x23f674 `cmpwi r3, 0`)
+            // and the maximums against the bounds slots.
+            if (clipped.m_x >= 0 && clipped.m_x < bounds.m_maximumX &&
+                clipped.m_y >= 0 && clipped.m_y < bounds.m_maximumY) {
                 TRmgZoneConnection connection;
                 connection.m_destination = destination->m_templateZone;
                 connection.m_connected = 1;
