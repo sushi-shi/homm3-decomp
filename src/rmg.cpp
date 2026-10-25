@@ -11244,10 +11244,11 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
         }
     }
     seerHut->m_artifact = artifact;
-    unsigned int prototypeIndex = 0;
-    while (prototypeIndex < m_objectPrototypes[ARTIFACT].size()
-        && m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->getExtra() != artifact)
-        ++prototypeIndex;
+    unsigned int prototypeIndex;
+    for (prototypeIndex = 0; prototypeIndex < m_objectPrototypes[ARTIFACT].size(); ++prototypeIndex) {
+        if (m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->getExtra() == artifact)
+            break;
+    }
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
     --object->m_properties->m_refCount;
     object->m_properties = properties;
@@ -11283,7 +11284,9 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
 // the map editor's copy keeps it in a byte home tested after the guard
 // delete. Preserve the ordinary reset call and automatic group ownership;
 // the standalone color loops remain canonical (a shared color setter, an
-// inference from four repeated retail scans, is not adopted).
+// inference from four repeated retail scans, is not adopted). Mac
+// 0x250910..0x250944 and 0x250a3c..0x250a7c test the loop bound at the
+// bottom and leave on a match: for loops with break, not while (a && b).
 // Residual: retail retains the outline's two-coordinate lookup and failure
 // reset; VC6 expands both. Both map-destructor calls agree, as do the
 // constructor/fill/addGuard/outline/placeQuestGroup calls. Failure vector
@@ -11296,10 +11299,11 @@ MAC_ADDRESS(0x2508e8, 0x334) // anchor-callee 0x5338e0; retail-only
 unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
 {
     int color = object->m_properties->m_prototype->getExtra();
-    unsigned int index = 0;
-    while (index < m_objectPrototypes[BORDER_GUARD].size()
-        && m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getExtra() != color)
-        ++index;
+    unsigned int index;
+    for (index = 0; index < m_objectPrototypes[BORDER_GUARD].size(); ++index) {
+        if (m_objectPrototypes[BORDER_GUARD][index]->m_prototype->getExtra() == color)
+            break;
+    }
     if (index == m_objectPrototypes[BORDER_GUARD].size())
         return 0;
     TRmgZone* origin = m_zones[getMapItem(object->m_position)->m_zoneState.m_zone];
@@ -11307,10 +11311,11 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     TRmgTreasureGroup group;
     type_object* guard = new type_object(properties);
     m_disabledKeyTents[color] = 1;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-        && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    for (m_nextKeyTentColor = 0; m_nextKeyTentColor < m_disabledKeyTents.size();
+        ++m_nextKeyTentColor) {
+        if (!m_disabledKeyTents[m_nextKeyTentColor])
+            break;
+    }
     unsigned char placed = 0;
     if (fillTreasureGroup(origin, &group, 0, maxValue) && group.addGuard(guard)) {
         group.updateBounds();
@@ -11324,10 +11329,11 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
         return 1;
     group.discard();
     m_disabledKeyTents[color] = 0;
-    m_nextKeyTentColor = 0;
-    while (m_nextKeyTentColor < m_disabledKeyTents.size()
-        && m_disabledKeyTents[m_nextKeyTentColor])
-        ++m_nextKeyTentColor;
+    for (m_nextKeyTentColor = 0; m_nextKeyTentColor < m_disabledKeyTents.size();
+        ++m_nextKeyTentColor) {
+        if (!m_disabledKeyTents[m_nextKeyTentColor])
+            break;
+    }
     return 0;
 }
 
@@ -11365,10 +11371,11 @@ void type_random_map_generator::removeObject(type_object* object)
     }
     if (prototype->getType() == BORDER_GUARD) {
         m_disabledKeyTents[prototype->getExtra()] = 0;
-        m_nextKeyTentColor = 0;
-        while (m_nextKeyTentColor < m_disabledKeyTents.size()
-            && m_disabledKeyTents[m_nextKeyTentColor])
-            ++m_nextKeyTentColor;
+        for (m_nextKeyTentColor = 0; m_nextKeyTentColor < m_disabledKeyTents.size();
+            ++m_nextKeyTentColor) {
+            if (!m_disabledKeyTents[m_nextKeyTentColor])
+                break;
+        }
     }
     TTilePoint cell;
     TRmgMapPosition mapPosition;
