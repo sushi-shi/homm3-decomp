@@ -4906,7 +4906,9 @@ struct TRmgZonePlacementFailure {};
 // or naming only the getter result without that snapshot, falls short. All eight call
 // relocations, the unwind reference and every non-relocation byte agree.
 // Related assigned snapshots keep the boundary builder exact and preserve
-// the fill caller's established insertion/erasure boundaries.
+// the fill caller's established insertion/erasure boundaries. The level
+// count goes through the map accessor: the editor loads it before comparing
+// it with the constant level number it then stores.
 
 VA(0x0053B970, 0x232)
 MAC_ADDRESS(0x23ca80, 0x20c) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
@@ -4918,7 +4920,7 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
         zone->m_levelPosition.m_z = 0;
         zone->m_levelPosition.m_x = 0;
         candidates.push_back(zone->getLevelPosition());
-        if (m_map.m_numberLevels > 1) {
+        if (m_map.getNumberLevels() > 1) {
             zone->m_levelPosition.m_x = 0;
             zone->m_levelPosition.m_y = 0;
             zone->m_levelPosition.m_z = 1;
