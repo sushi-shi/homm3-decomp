@@ -5624,8 +5624,12 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 // in both images, matching Mac's two word fill inserts. Count inserts in the
 // caller instead expand the cost insertion in the game.
 // Residual: both images retain the distance-count vector<short>::size() call
-// at entry, which no budget, site or accessor edit reproduces; the editor
-// also reloads the pending end between the size test and back().
+// at entry. A d1 size site cannot be refused at budget 898; the replay of
+// both images reproduces the call (and nothing else) only with a count
+// accessor around it plus one more top-level candidate site anywhere in the
+// seed/pop/relaxation statements (898 / 22 < 42). No such site is evidenced
+// yet, so the direct size() stays. The editor also reloads the pending end
+// between the size test and back().
 VA(0x0053D8E0, 0x1EC)
 MAC_ADDRESS(0x23f218, 0x2f0) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
 VA_AT(h3maped, 0x004a3554, 0x1bc)
