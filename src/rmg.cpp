@@ -8001,7 +8001,8 @@ void type_random_map_generator::decorateUnderground()
 // gate-marked tile in the 3x3 neighbourhood; the first two steps ignore
 // those neighbours. Return the last point before the obstruction.
 // Copy the axial step before changing its diagonal component and use one
-// mutable map-position value for the scan; the previous point snapshot
+// mutable map-position value for the scan; the horizontal axial step stores
+// X before Y (Mac 0x246df4/0x246e0c; the editor's /O1 schedule follows it); the previous point snapshot
 // precedes the error/count updates. A closed-form lattice-ray oracle covers
 // zero/axis/diagonal directions, map edges and several obstacle patterns.
 // Residual: all 23 CFG blocks and their operations agree, but at +0x161 the
@@ -8022,8 +8023,8 @@ TRmgPoint type_random_map::traceBranchEnd(TRmgPoint from, TRmgPoint toward, int 
     if (abs(dx) > abs(dy)) {
         major = abs(dx);
         minor = abs(dy);
-        axial.m_y = 0;
         axial.m_x = dx > 0 ? 1 : -1;
+        axial.m_y = 0;
         diagonal.m_x = axial.m_x;
         diagonal.m_y = dy > 0 ? 1 : -1;
     } else {
