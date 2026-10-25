@@ -6733,6 +6733,9 @@ void type_random_map_generator::buildZoneConnectionPaths()
 // expands later map accesses. After virtual addObject it rechecks present.
 // The non-narrow path clears only the obstacle-fill flag in the clipped same-zone 3x3
 // neighbourhood; it must not mark all of those neighbours as route cells.
+// Mac 0x2430cc..0x243130 scans that neighbourhood with one map position
+// (level stored first, then rows and columns) passed whole to getMapItem;
+// Windows-flat in both images.
 // Residual: the first map lookup over-expands, the frame is 0x28
 // instead of 0x2c, and the common post-placement query adds a CFG block.
 // A generated family of scalar/corner/rectangle bounds, independent bound
@@ -6767,11 +6770,13 @@ void type_random_map_generator::openConnectionPath(
             bounds.m_minimumY = max(position.m_y - 1, 0);
             bounds.m_maximumX = min(position.m_x + 2, m_map.m_mapWidth);
             bounds.m_maximumY = min(position.m_y + 2, m_map.m_mapHeight);
-            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
-                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
-                    TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                    if (nearby->m_zoneState.m_zone == zone)
-                        nearby->setObstacleFill(0);
+            TRmgMapPosition nearby;
+            nearby.m_z = position.m_z;
+            for (nearby.m_y = bounds.m_minimumY; nearby.m_y < bounds.m_maximumY; ++nearby.m_y) {
+                for (nearby.m_x = bounds.m_minimumX; nearby.m_x < bounds.m_maximumX; ++nearby.m_x) {
+                    TRmgMapItem* cell = m_map.getMapItem(nearby);
+                    if (cell->m_zoneState.m_zone == zone)
+                        cell->setObstacleFill(0);
                 }
             }
         }
