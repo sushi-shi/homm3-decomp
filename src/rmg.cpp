@@ -5818,6 +5818,13 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 // assign each radial center to its own value before scaling. Copy-initialized
 // centers leave two vector destructors out of line; assignment
 // preserves all 1613 retail bytes, including the original cleanup sequence.
+// Editor probe: passing the copied level position itself (its TRmgPoint
+// base) to the first addSite and both locate calls, with no query point,
+// gives the editor's direct pushes (96.13 -> 99.98) and matches Mac
+// 0x23ff9c/0x240058 loading locate's XY from the position copy, but drops
+// the game to 97.29: root cb 1443 -> 1399 leaves the added slot's point
+// vector destructor out of line (the replay needs about 1450). Not adopted
+// while the game's extra tuples are unexplained.
 VA(0x0053E050, 0x64D)
 MAC_ADDRESS(0x23f924, 0x798) // anchor-callee 0x549af9; thiscall, ret 8
 VA_AT(h3maped, 0x004a3a03, 0x524)
