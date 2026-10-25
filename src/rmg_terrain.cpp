@@ -691,10 +691,10 @@ void TRmgTerrainPainter::paintRectangle(
 }
 
 // Mac retains this adapter in both point painting and terrain repair. Loki's
-// layer overload of computeAdjacentDirs performs the same dimension lookup.
-// Only this TU expands it on Windows, so keep one ordinary source body.
+// inline layer overload of computeAdjacentDirs performs the same dimension
+// lookup; only this TU expands it on Windows.
 MAC_ADDRESS(0x258a64, 0x3c)
-void computeAdjacentDirs(
+inline void computeAdjacentDirs(
     const TRmgTerrainPainter* painter, const TTilePoint& point, bool (&available)[8])
 {
     ::computeAdjacentDirs(painter->getWidth(), painter->getHeight(),
@@ -827,12 +827,12 @@ void TRmgTerrainPainter::queueOtherTerrainNeighbours(const TTilePoint& point)
 // Own-terrain checks share the predicates used with the selected paint
 // terrain. Retail retains the nested predicate in the horizontal check and expands
 // the vertical check at the four adjacent-row/column probes.
-b8 TRmgTerrainPainter::isInvalidHoriz(const TTilePoint& point)
+inline b8 TRmgTerrainPainter::isInvalidHoriz(const TTilePoint& point)
 {
     return wouldBeInvalidHoriz(point, getTerrain(point));
 }
 
-b8 TRmgTerrainPainter::isInvalidVert(const TTilePoint& point)
+inline b8 TRmgTerrainPainter::isInvalidVert(const TTilePoint& point)
 {
     return wouldBeInvalidVert(point, getTerrain(point));
 }
@@ -845,7 +845,7 @@ b8 TRmgTerrainPainter::isInvalidVert(const TTilePoint& point)
 // Keep the separation helper's byte result as the direct final return:
 // booleanizing it changed the exact destructor comparisons in prior probes.
 MAC_ADDRESS(0x2588c4, 0x1a0)
-b8 TRmgTerrainPainter::isInvalid(const TTilePoint& point)
+inline b8 TRmgTerrainPainter::isInvalid(const TTilePoint& point)
 {
     if (isInvalidHoriz(point) || isInvalidVert(point))
         return 1;
