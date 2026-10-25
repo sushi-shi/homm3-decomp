@@ -614,6 +614,10 @@ u32 TRmgTerrainPainter::getHeight() const
 // Preserve the shared operation, including validity before the four values;
 // cache initialization from an adapter read has a different store order.
 // This ordinary helper is inferred from retail expansions, with no DC name.
+// Residual (editor): the terrain and frame slices are inserted from dword
+// rather than byte reads of the tile fields. Const-reference setter inputs
+// reproduce those reads but have no native support (Loki's TCellInfo and
+// Mac 0x2550f0 read full words), so the value setters stay.
 MAC_ADDRESS(0x2550f0, 0xc4)
 void TRmgTerrainPainter::setTile(
     const TTilePoint& point, const TRmgTerrainTile& tile)
