@@ -11068,7 +11068,8 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 // call; direct count insertion expands further.
 // Guard scopes and all four signed/unsigned loop-index combinations are
 // flat. Sharing one zone pointer across the three phases and naming the
-// non-unit-distance priority recovers all 395 bytes. A 155,520-case oracle
+// non-unit-distance priority recovers all 395 bytes. The score accessors
+// shared with the distance relaxation also make the editor copy exact. A 155,520-case oracle
 // preserves stable ties, exclusions, random calls, live bounds and early exit;
 // five corrupted controls fail.
 VA(0x0054B300, 0x18B)
@@ -11082,22 +11083,22 @@ unsigned char type_random_map_generator::placeQuestGroup(
     calculateQuestZoneDistances(origin);
     for (unsigned int index = 0; index < m_zones.size(); ++index) {
         sharedZone = m_zones[index];
-        int distance = sharedZone->m_questPlacementScore;
+        int distance = sharedZone->getQuestPlacementScore();
         if (distance == 1)
-            sharedZone->m_questPlacementScore = 1000 + rand() % 10;
+            sharedZone->setQuestPlacementScore(1000 + rand() % 10);
         else {
             int priority = distance * 10 + rand() % 10;
-            sharedZone->m_questPlacementScore = priority;
+            sharedZone->setQuestPlacementScore(priority);
         }
     }
     for (index = 0; index < m_zones.size(); ++index) {
         sharedZone = m_zones[index];
         if (sharedZone == origin || sharedZone->m_templateZone->m_kind == RMG_TEMPLATE_JUNCTION
-            || sharedZone->m_questPlacementScore > 2000 || sharedZone->m_terrain == eTerrainWater)
+            || sharedZone->getQuestPlacementScore() > 2000 || sharedZone->m_terrain == eTerrainWater)
             continue;
         unsigned int insertion = 0;
         while (insertion < candidates.size()
-            && sharedZone->m_questPlacementScore >= candidates[insertion]->m_questPlacementScore)
+            && sharedZone->getQuestPlacementScore() >= candidates[insertion]->getQuestPlacementScore())
             ++insertion;
         candidates.insert(candidates.begin() + insertion, sharedZone);
     }
