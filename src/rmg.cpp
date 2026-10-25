@@ -7676,6 +7676,10 @@ unsigned char type_random_map_generator::placeMonolithBorderGuard(
 // map-position overload; a size call and the second registry insertion
 // boundary also differ, with a 0x30 frame versus retail's 0x1c. Copying the
 // guard coordinate then incrementing y, or compound +=, does not help.
+// Mac 0x245cf4..0x245dcc expands two registry push_backs in the first
+// placement (an if/else on the exit prototype), while the editor keeps one
+// selected-vector call (0x4a770d..0x4a7727); the if/else spelling is
+// game-flat (89.25 -> 89.28) and lowers the editor 96.34 -> 95.07.
 VA(0x00542CE0, 0x554)
 MAC_ADDRESS(0x245bd4, 0x6e8) // anchor-caller 0x543240; Complete-only, thiscall ret 0xc
 void type_random_map_generator::createMonolithConnection(
@@ -8101,6 +8105,9 @@ bool type_random_map_generator::contains(const TRmgPoint& point) const
 // product. Mac 0x247098..0x2470f0 and 0x247708..0x247718 store each path mark
 // in the setters' order (the set mark, then the cleared one), so both mark
 // passes call setObstacleFill/setPathClearance.
+// Mac expands both bounds queries with direct compares (0x247338..0x247364,
+// 0x2474a8..0x2474d4); writing them out in place lowers the game 96.10 ->
+// 89.10, so the ordinary generator query stays.
 // Residual: the coordinate registers (ESI/EDI/EBX for last.x, first.x, last.y; retail
 // ESI/EBX/EDI) and return-copy/distance allocation also differ. Naming an
 // extra endpoint copy adds a reload absent from retail. Pair-operation
