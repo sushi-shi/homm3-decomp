@@ -4701,16 +4701,18 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 // with constructed candidates, the named Y temporary and middle zone setter,
 // this restores all retail insertion call boundaries; with the constructor
 // hidden in support they are lost.
-// Residual: all 31 CFG blocks align; the middle opposite-level copy still has
-// two extra moves and a changed schedule. The temporary reference spelling is provisional
+// The opposite-level probe stores the center's x/y and the new level
+// straight into the zone, as Mac 0x23c0f0..0x23c104 and the editor
+// (0x4a18f7..0x4a1913) do, with no candidate temporary or setter copy.
+// The temporary reference spelling is provisional
 // source ownership, not recovered DC text. Three post-predicate getter reads
 // preserve accepted-position snapshots even if a predicate changes the zone.
 // Construction/update/lifetime forms with canonical getSize/max calls
 // expanded vector helpers too far before that ownership recovery. Retain
-// real helpers and ordinary calls. Shared setter ownership/store forms do
-// not justify changing its
-// interface: reference+XYZ removes the extra moves but schedules Z too early,
-// changes the exact boundary-builder copy and worsens the filtering caller.
+// real helpers and ordinary calls.
+// Residual: the editor differs only in the unclaimed direction-table data
+// labels; the game schedules the middle stores differently and calls one
+// push_back's size() where retail expands it.
 VA(0x0053AE80, 0x36A)
 MAC_ADDRESS(0x23bfbc, 0x28c) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
 VA_AT(h3maped, 0x004a17f5, 0x172)
@@ -4734,8 +4736,9 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
     if (m_map.m_numberLevels == 1)
         return;
     int level = 1 - position.m_z;
-    candidate = TRmgMapPosition(position.m_x, position.m_y, level);
-    zone->setLevelPosition(candidate);
+    zone->m_levelPosition.m_x = position.m_x;
+    zone->m_levelPosition.m_y = position.m_y;
+    zone->m_levelPosition.m_z = level;
     if (canPlaceZone(zone))
         candidates.push_back(zone->getLevelPosition());
     radius = center->m_templateZone->m_size;
