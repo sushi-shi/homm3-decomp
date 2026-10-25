@@ -1384,15 +1384,15 @@ public:
     // caller, as a class-body inline; Windows emits its only copy right after
     // decorateMapCell, the first caller that retains a call. Byte-neutral on
     // Windows; eight more Mac pairs resolve.
-    // The game row reads 0% only because this compile expands all ten of
-    // retail's retained calls, in seven callers (decorateMapCell,
+    // Retail keeps ten calls in seven callers (decorateMapCell,
     // openConnectionPath, the ground, gate and monolith connections,
-    // tryPlaceMine and the seer hut),
-    // so no COMDAT copy is emitted; the claim binds as soon as one caller
-    // keeps a call. Five of them sit in expanded placeGuard copies, where
-    // retail refuses this lookup but expands the cell's objects.size():
-    // their nested budgets are 42..52 in retail, 54..107 here.
+    // tryPlaceMine and the seer hut). decorateMapCell's two now come from the
+    // generator wrapper below, which emits this copy. Five others sit in
+    // expanded placeGuard copies, where retail refuses this lookup but
+    // expands the cell's objects.size(): their nested budgets are 42..52 in
+    // retail, 54..107 here.
     VA(0x005378E0, 0x27)
+    VA_AT(h3maped, 0x0049eb6d, 0x20)
     TRmgMapItem* getMapItem(TRmgMapPosition point)
     {
         return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
@@ -1758,6 +1758,15 @@ public:
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     void decorateMap();
     void decorateMapCell(TRmgMapPosition position, int progressSteps);
+    // Generator-level by-value lookup. Mac generator callers (decorateMapCell,
+    // scoreObjectPlacement, placeObjectInZone and others) copy the position
+    // twice before the map formula, one copy dead: CodeWarrior's expansion of
+    // this nested by-value forwarder; type_random_map's own callers copy it
+    // once. Role-derived name; the original spelling is unknown.
+    TRmgMapItem* getMapItem(TRmgMapPosition position)
+    {
+        return m_map.getMapItem(position);
+    }
 };
 SIZE(t_abstract_random_generator, 0xed8);
 

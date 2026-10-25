@@ -3762,6 +3762,11 @@ void t_abstract_random_generator::readObjectPlacementRules()
 // overload (byte-flat) and aggregate zero initialization of both scratch
 // arrays. None emits bitset<10>::test. Keep the original accesses and memset
 // calls while resolving the real caller's nested inliner state.
+// Mac 0x2351c8..0x235208 keeps one cell position in memory for both scans
+// (level stored once, row and column rewritten per iteration) and looks it up
+// through the generator's by-value getMapItem (the dead second copy at
+// 0x235294/0x235598). That model raises the Mac shape from 190 to 247 aligned
+// instructions and is byte-neutral on Windows; the three tests stay expanded.
 // Replay: both images refuse test (cost 58; isPlacementBlocked expands it
 // at 61) only if this root's budget per remaining site falls about a third,
 // i.e. a root cost near 754..825 or 19+ more free sites after the terrain
@@ -3788,20 +3793,22 @@ int t_abstract_random_generator::scoreObjectPlacement(
     memset(terrainSeen, 0, sizeof(terrainSeen));
     unsigned int marks[10][8];
     memset(marks, 0, sizeof(marks));
+    TRmgMapPosition cell;
+    cell.m_z = position.m_z;
     for (unsigned int row = 0; row < prototype->getHeight(); ++row) {
-        int y = position.m_y - row;
-        if (y < 0 || y >= m_map.m_mapHeight)
+        cell.m_y = position.m_y - row;
+        if (cell.m_y < 0 || cell.m_y >= m_map.m_mapHeight)
             continue;
         for (unsigned int column = 0; column < prototype->getWidth(); ++column) {
-            int x = position.m_x - column;
-            if (x < 0 || x >= m_map.m_mapWidth)
+            cell.m_x = position.m_x - column;
+            if (cell.m_x < 0 || cell.m_x >= m_map.m_mapWidth)
                 continue;
             if (!prototype->getBCellPlaced(column, row))
                 continue;
             marks[column + 1][row + 1] |= RMG_PLACEMENT_OVERLAP;
             if (!prototype->getBCellPassable(column, row)) {
                 marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
-                TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+                TRmgMapItem* item = getMapItem(cell);
                 if (!prototype->_m_terrainMask[item->getLandType()])
                     return RMG_PLACEMENT_INVALID;
                 if (item->hasPathClearance())
@@ -3811,10 +3818,10 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 // before marking the surrounding area; retain that store.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
                 terrainSeen[item->getLandType()] = 1;
-                int firstRow = position.m_y - min(y + 1, m_map.m_mapHeight) + 1;
-                int lastRow = position.m_y - max(y - 2, 0) + 1;
-                int firstColumn = position.m_x - min(x + 1, m_map.m_mapWidth) + 1;
-                int lastColumn = position.m_x - max(x - 2, 0) + 1;
+                int firstRow = position.m_y - min(cell.m_y + 1, m_map.m_mapHeight) + 1;
+                int lastRow = position.m_y - max(cell.m_y - 2, 0) + 1;
+                int firstColumn = position.m_x - min(cell.m_x + 1, m_map.m_mapWidth) + 1;
+                int lastColumn = position.m_x - max(cell.m_x - 2, 0) + 1;
                 for (int nearColumn = firstColumn; nearColumn < lastColumn;
                      ++nearColumn) {
                     for (int nearRow = firstRow; nearRow < lastRow; ++nearRow)
@@ -3841,18 +3848,18 @@ int t_abstract_random_generator::scoreObjectPlacement(
 
     properties->buildOverlapPriorities();
     for (row = 0; row < prototype->getHeight() + 2; ++row) {
-        int y = position.m_y + 1 - row;
-        if (y < 0 || y >= m_map.m_mapHeight)
+        cell.m_y = position.m_y + 1 - row;
+        if (cell.m_y < 0 || cell.m_y >= m_map.m_mapHeight)
             continue;
         for (unsigned int column = 0; column < prototype->getWidth() + 2;
              ++column) {
-            int x = position.m_x + 1 - column;
-            if (x < 0 || x >= m_map.m_mapWidth)
+            cell.m_x = position.m_x + 1 - column;
+            if (cell.m_x < 0 || cell.m_x >= m_map.m_mapWidth)
                 continue;
             unsigned int mark = marks[column][row];
             if (!mark)
                 continue;
-            TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+            TRmgMapItem* item = getMapItem(cell);
             if (item->isPassable())
                 continue;
             int priority;
@@ -3865,7 +3872,7 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 if (mark & RMG_PLACEMENT_OVERLAP) {
                     object->m_properties->buildOverlapPriorities();
                     if (object->m_properties->m_overlapPriorities
-                            [object->m_position.m_x - x][object->m_position.m_y - y]
+                            [object->m_position.m_x - cell.m_x][object->m_position.m_y - cell.m_y]
                         <= priority)
                         object->m_candidateCovers = 1;
                     else
@@ -3940,12 +3947,13 @@ static const int g_rmgDecorationTypes[45] = {
 // both Windows images reread the prototype type for each version test, so
 // the tests are spelled in place; a single-use static type/version
 // predicate given the prototype lowers the game.
-// Both images call getMapItem(position) for the first lookup although its
-// budget (2101 here, cost 53) is ample, so a gate, not the budget, keeps it:
-// retail's other retained by-value lookups (0x5378e0 callers) pass a
-// position parameter (openConnectionPath, placeGuard) or object->m_position
-// (placeSeerHutForArtifact). Retail's frame is also 0x1c bytes larger, with
-// the four vectors at -0x38/-0x58/-0x48/-0x84.
+// Both lookups go through the generator's by-value getMapItem: Mac
+// 0x235a78..0x235ab4 and 0x235fc0..0x235ff8 copy the position twice more
+// (one copy dead) before the map formula, the pattern CodeWarrior gives that
+// nested by-value wrapper; map-level callers such as canPlaceObject copy it
+// once. VC6 then keeps the map lookup out of line at depth 2 in both images,
+// as retail does. Retail's frame is also 0x1c bytes larger, with the four
+// vectors at -0x38/-0x58/-0x48/-0x84.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3962,7 +3970,7 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         pending.pop_back();
         if (m_progress)
             m_progress->advance(progressSteps);
-        TRmgMapItem* item = m_map.getMapItem(position);
+        TRmgMapItem* item = getMapItem(position);
         if (!item->isPassable())
             continue;
         int terrain = item->getLandType();
@@ -4038,7 +4046,7 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
             candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
             for (candidatePosition.m_x = bounds.m_minimumX;
                 candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
-                TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
+                TRmgMapItem* nearby = getMapItem(candidatePosition);
                 if (nearby->hasObstacleFill() && nearby->isPassable()) {
                     nearby->setObstacleFill(0);
                     pending.push_back(candidatePosition);
@@ -8528,6 +8536,10 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 // Preserve the alignment fallback, full neighbourhood scan and tied-site list.
 // Both Windows images form the fallback's town count before calling rand()
 // and keep it in alignment's home; Mac 0x248888 branches to 9 or 8 first.
+// Mac 0x2489e4..0x248a1c and 0x248b6c..0x248b8c look the entrance and a
+// cell position (level stored once) up through the generator's by-value
+// getMapItem (dead second copy); the final entrance lookup at 0x248d64 copies
+// once, a direct map call. Mac shape 86 -> 129 aligned; Windows byte-flat.
 VA(0x00544D90, 0x4B7)
 MAC_ADDRESS(0x24882c, 0x5d4)
 unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
@@ -8558,7 +8570,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             TRmgMapPosition entrance = position;
             entrance.m_x -= trigger.m_x;
             entrance.m_y -= trigger.m_y;
-            TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+            TRmgMapItem* item = getMapItem(entrance);
             if (item->m_zoneState.m_zone != zoneIndex)
                 continue;
             int score = item->m_zoneState.m_objectDistance;
@@ -8570,9 +8582,11 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
             nearby.m_maximumY = min(entrance.m_y + 2, m_map.m_mapHeight);
             nearby.m_maximumX = min(entrance.m_x + 2, m_map.m_mapWidth);
             unsigned char valid = 1;
-            for (int y = nearby.m_minimumY; y < nearby.m_maximumY; ++y) {
-                for (int x = nearby.m_minimumX; x < nearby.m_maximumX; ++x) {
-                    int otherZone = m_map.getMapItem(x, y, entrance.m_z)->m_zoneState.m_zone;
+            TRmgMapPosition cell;
+            cell.m_z = entrance.m_z;
+            for (cell.m_y = nearby.m_minimumY; cell.m_y < nearby.m_maximumY; ++cell.m_y) {
+                for (cell.m_x = nearby.m_minimumX; cell.m_x < nearby.m_maximumX; ++cell.m_x) {
+                    int otherZone = getMapItem(cell)->m_zoneState.m_zone;
                     if (otherZone < 0 || otherZone != zoneIndex)
                         valid = 0;
                 }
@@ -8596,7 +8610,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     entrance.m_y -= trigger.m_y;
     m_roadTargets.push_back(entrance);
     ++entrance.m_y;
-    TRmgMapItem* item = m_map.getMapItem(entrance.m_x, entrance.m_y, entrance.m_z);
+    TRmgMapItem* item = m_map.getMapItem(entrance);
     item->setPathClearance(1);
     return 1;
 }
