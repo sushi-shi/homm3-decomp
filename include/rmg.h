@@ -1225,6 +1225,15 @@ struct TRmgMapItem {
     // (h3maped 0x4a59e2, thiscall, ret 0xc) and expands it in both floods
     // and the island reset; the game expands it everywhere.
     void setZonePath(int cost, int direction, int connectionZone);
+    // The water-zone flood and ground-connection ranking read the zone path
+    // cost through this getter, the counterpart of setZonePath. Its candidate
+    // sites leave the game's pop erase and both guard-cell lookups as retail
+    // calls (0x53f1a0, 0x541140); island seeding and the connection-cost
+    // flood read the field directly (the getter lowers both). Role-derived.
+    int getZonePathCost() const
+    {
+        return m_movement.m_zonePathCost;
+    }
 
     // CreateRiver's reset pass copies a by-value predecessor before a
     // constant 32000 cost write, motivating this ordinary reset helper.

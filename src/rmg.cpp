@@ -848,7 +848,8 @@ void type_random_map::markCoastalTiles()
 // original spelling and linkage remain provisional.
 // The search uses one top test with two unconditional back edges in retail.
 // VC6 rotates for (;;) and while (first < last) spellings; while (1) keeps
-// this top test and restores that flow in CreateRiver.
+// this top test and restores that flow in CreateRiver. Mac keeps this body
+// out of line at 0x240e18, just before the water-zone flood.
 static void insertRmgWorkItem(
     std::vector<TRmgMapPosition>& positions,
     std::vector<int>& costs,
@@ -6204,8 +6205,12 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
 // appends use push_back directly. Mac 0x2410ec..0x241124 copies the full
 // position and planar offset before forming a distinct result, matching the
 // canonical by-value operator+.
-// Residual: seed insertion, popped erasure and shared insertion-helper
-// expansions differ from retail; all 27 blocks keep their flow kinds.
+// The cell cost reads go through getZonePathCost(): with those two sites
+// the game refuses the popped position erase and expands the helper's
+// single insert, as retail does (its replay needs one to three more sites
+// between the pop and the helper); the editor copy is unaffected. Mac
+// 0x240e18 keeps the position insertRmgWorkItem helper out of line.
+// Residual: retail's folded vector destructor label only.
 VA(0x0053F1A0, 0x2C6)
 MAC_ADDRESS(0x240ee4, 0x358)
 void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex)
@@ -6220,7 +6225,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
         position = positions.back();
         costs.pop_back();
         positions.pop_back();
-        unsigned currentCost = m_map.getMapItem(position)->m_movement.m_zonePathCost;
+        unsigned currentCost = m_map.getMapItem(position)->getZonePathCost();
         for (int direction = 0; direction < 8; ++direction) {
             TRmgPoint offset = g_rmgDirections[direction];
             TRmgMapPosition next = position + offset;
@@ -6235,7 +6240,7 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
                 nextCost = currentCost + 3;
             else
                 nextCost = currentCost + 2;
-            if (nextCost >= item->m_movement.m_zonePathCost)
+            if (nextCost >= item->getZonePathCost())
                 continue;
             item->setZonePath(nextCost, direction, 0);
             insertRmgWorkItem(positions, costs, next, nextCost);
@@ -6999,7 +7004,7 @@ unsigned char type_random_map_generator::createGroundConnection(
                 + g_rmgDirections[item->m_tileData.m_connectionDirection];
             if (static_cast<int>(m_map.getMapItem(other)->m_objects.size()) <= 0) {
                 ++eligibleCount;
-                int cost = item->m_movement.m_zonePathCost;
+                int cost = item->getZonePathCost();
                 if (cost <= bestCost) {
                     if (cost < bestCost) {
                         candidates.clear();
