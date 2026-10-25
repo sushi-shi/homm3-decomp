@@ -5153,10 +5153,13 @@ void type_random_map_generator::traceZoneBoundary(
     } while (vertex != first);
 }
 
-// The bounds follow both by-value points: editor EBP+0x1c and Mac r8.
+// The bounds follow both by-value points: editor EBP+0x1c, and retail Mac
+// 0x23d1dc receives point in r4/r5, toward in r6/r7 and bounds in r8.
 // The game's fastcall passes the bounds in EDX with either source order.
+// Mac residual: CodeWarrior gives this leaf a frame and materializes the
+// inlined contains() result as a byte where retail branches directly.
 VA(0x0053CAC0, 0x266)
-MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:5f4b0d9c9ca8,21.4765): recover the canonical clipping helper's point/toward/bounds interface, proven by editor stack slots and Mac r4..r8; Mac comparison scores 19.3792.
+MAC_ADDRESS(0x23d1dc, 0x4a8) // MAC_ABSTRACTION_FROM(tokens1:5f4b0d9c9ca8,21.4765): retail Mac's own argument registers (point r4/r5, toward r6/r7, bounds r8) and the editor's stack slots fix this parameter order; the earlier bounds-first order scored higher only by token alignment. Mac comparison scores 19.3792.
 VA_AT(h3maped, 0x004a2b33, 0x1a9)
 TRmgPoint clipRmgBoundaryPoint(
     TRmgPoint point, TRmgPoint toward, const TRmgZoneBounds& bounds)
