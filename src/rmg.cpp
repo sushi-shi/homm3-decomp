@@ -3889,20 +3889,6 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
     }
 }
 
-// Flatten the level, row and column into one cell index. A direct index
-// return preserves all 39 retained bytes and restores repairWaterZoneBorders
-// to 100%; a named index blocks that expansion. The inline three-coordinate
-// overload computes the same index itself: delegating it through a position
-// temporary (2026-09-20) nests a constructor and this body under each caller,
-// and the deeper /Ob2 budget then keeps this call out of line where retail
-// expands it (decorateUnderground 86.48%, removeObject 91.21%,
-// canPlaceTreasureGroup 81.10%). Direct indexing gives 99.01/100/96.95%.
-VA(0x005378E0, 0x27)
-TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
-{
-    return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
-}
-
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
 // Keep the canonical tile-field names: bits 26/27 and 25 are observed here,
 // regardless of their additional roles in zone connection and road routing.

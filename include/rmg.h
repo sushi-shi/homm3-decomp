@@ -1406,7 +1406,21 @@ public:
     {
         return m_mapItems + (z * m_mapHeight + y) * m_mapWidth + x;
     }
-    TRmgMapItem* getMapItem(TRmgMapPosition point);
+    // Flatten the level, row and column into one cell index. A direct index
+    // return preserves all 39 retained bytes and restores
+    // repairWaterZoneBorders to 100%; a named index blocks that expansion.
+    // Delegating the three-coordinate overload through a position temporary
+    // nests this body under each caller and keeps calls out of line where
+    // retail expands them (decorateUnderground 86.48%, removeObject 91.21%,
+    // canPlaceTreasureGroup 81.10%). Mac expands this lookup in every RMG
+    // caller, as a class-body inline; Windows emits its only copy right after
+    // decorateMapCell, the first caller that retains a call. Byte-neutral on
+    // Windows; eight more Mac pairs resolve.
+    VA(0x005378E0, 0x27)
+    TRmgMapItem* getMapItem(TRmgMapPosition point)
+    {
+        return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
+    }
 
     // Complete-only path carving at 0x543e20 calls these retained map
     // helpers. Names describe the observed cell flags and ray traversal.
