@@ -1447,8 +1447,10 @@ struct TRmgTreasureGroup {
     unsigned char m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
 
-    TRmgTreasureGroup(int width, int height)
-        : m_map(width, height, 1), m_hasGuard(0), m_ready(0)
+    // Mac 0x232d6c and editor 0x49ce04 take only `this` and construct the
+    // 16x16 single-level map themselves; the game expands the same body.
+    TRmgTreasureGroup()
+        : m_map(16, 16, 1), m_hasGuard(0), m_ready(0)
     {
         reset();
     }

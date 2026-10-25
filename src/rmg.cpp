@@ -9580,7 +9580,7 @@ VA_AT(h3maped, 0x004aab7e, 0x210)
 void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
 {
     TRmgTemplateZone* slot = zone->m_templateZone;
-    TRmgTreasureGroup group(16, 16);
+    TRmgTreasureGroup group;
     unsigned char finished[3];
     int density = 0;
     int product = 1;
@@ -11242,7 +11242,7 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
     object->m_properties = properties;
     ++properties->m_refCount;
     TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
-    TRmgTreasureGroup group(16, 16);
+    TRmgTreasureGroup group;
     TObjectType* prototype = seerHut->m_properties->m_prototype;
     TRmgMapPosition position;
     position.m_x = (group.m_map.getWidth() + static_cast<unsigned>(prototype->getWidth())) / 2;
@@ -11302,7 +11302,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
         return 0;
     TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
     TRmgObjectPropertiesRef* properties = m_objectPrototypes[BORDER_GUARD][index];
-    TRmgTreasureGroup group(16, 16);
+    TRmgTreasureGroup group;
     type_object* guard = new type_object(properties);
     m_disabledKeyTents[color] = 1;
     m_nextKeyTentColor = 0;
