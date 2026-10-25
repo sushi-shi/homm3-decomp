@@ -8205,9 +8205,15 @@ void type_random_map_generator::carveBranchingPaths()
     }
 }
 
-// Residual: the inner neighbor lookup commutes level * mapHeight.
+// Mac 0x2478f8..0x247940 tests midpoint == from, then == to, each as a
+// materialized operator== result, and lays the clamp arm out first, so the
+// equality test selects the clamp; Windows-flat in both images.
+// Residual (editor): the inner neighbor lookup commutes level * mapHeight.
 // All 40 blocks and call expansions agree. A directly constructed position
 // or using the existing position as the loop cursor leaves that pair flat.
+// Mac 0x247954..0x247b78 clamps a separate cell position in place (x, y and
+// the level stored first) and scans with it; that spelling costs the game
+// two register choices in the clamps (100 -> 98.84) and the editor 1.2%.
 VA(0x005443A0, 0x2F5)
 MAC_ADDRESS(0x247800, 0x59c)
 VA_AT(h3maped, 0x004a8722, 0x2b8)
@@ -8223,28 +8229,7 @@ void type_random_map_generator::connectJunctionEntrance(TRmgPoint from, TRmgPoin
         to = pending.back();
         pending.pop_back();
         TRmgPoint midpoint((from.m_x + to.m_x + 1) / 2, (from.m_y + to.m_y + 1) / 2);
-        if (midpoint != from && midpoint != to) {
-            TRmgVector perpendicular;
-            {
-                TRmgVector delta = to - from;
-                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
-            }
-            int length = perpendicular.length();
-            if (length > 1) {
-                int limit = cppMin<long>(length, roughness);
-#if defined(HOMM3_RMG_HOTFIX)
-                // A zone scaled below one cell (two on island coasts) still draws,
-                // but leaves the midpoint in place.
-                if (limit < 1)
-                    limit = 1;
-#endif
-                int displacement = rand() % limit - limit / 2;
-                perpendicular = perpendicular * displacement / length;
-                midpoint += perpendicular;
-            }
-            pending.push_back(to);
-            pending.push_back(midpoint);
-        } else {
+        if (midpoint == from || midpoint == to) {
             long x = cppMax<long>(from.m_x, 0);
             x = cppMin<long>(x, m_map.m_mapWidth - 1);
             long y = cppMax<long>(from.m_y, 0);
@@ -8266,6 +8251,27 @@ void type_random_map_generator::connectJunctionEntrance(TRmgPoint from, TRmgPoin
                 }
             }
             from = to;
+        } else {
+            TRmgVector perpendicular;
+            {
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
+            }
+            int length = perpendicular.length();
+            if (length > 1) {
+                int limit = cppMin<long>(length, roughness);
+#if defined(HOMM3_RMG_HOTFIX)
+                // A zone scaled below one cell (two on island coasts) still draws,
+                // but leaves the midpoint in place.
+                if (limit < 1)
+                    limit = 1;
+#endif
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
         }
     }
 }
