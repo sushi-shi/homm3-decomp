@@ -3761,16 +3761,6 @@ void t_abstract_random_generator::addObject(type_object* object, TRmgMapPosition
     m_objects.push_back(object);
 }
 
-// Complete-only object types are unavailable in earlier map formats.
-static bool isRmgObjectAvailableInVersion(int objectType, int version)
-{
-    if (version < RMG_MAP_SHADOW_OF_DEATH && objectType >= CLOVER_FIELD_2)
-        return false;
-    if (version < RMG_MAP_ARMAGEDDONS_BLADE && objectType >= MAX_EVENT_TYPE)
-        return false;
-    return true;
-}
-
 // Map-decoration caller 0x537a59 passes a position value and progress share.
 // The body uses base fields and virtual object insertion; ownership/name provisional.
 // Pinned retail 0x6408ec..0x64099f: decoration type ordinals, excluding
@@ -3794,6 +3784,12 @@ static const int g_rmgDecorationTypes[45] = {
 // Weighted decoration placement maintains a neighboring-cell worklist.
 // Mac 0x23603c..0x236084 expands the byte-valued land predicate before
 // clearing the obstacle-fill mark. Keep those shared cell operations.
+// Both images destroy the four candidate vectors separately on the
+// no-candidate path, so it is an early continue (game 92.91 -> 94.34%,
+// editor 88.63 -> 95.28%). Mac 0x235bf0..0x235c18 and both Windows images
+// reread the prototype type for each version test: the tests are spelled in
+// place (game 95.76%, editor 98.31%). The former single-use static
+// type/version predicate cost the game 14 points when given the prototype.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3831,7 +3827,9 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
                 if (!properties->m_placementRule
                     || properties->m_placementRule->m_terrainScores[terrain] <= RMG_PLACEMENT_INVALID)
                     continue;
-                if (!isRmgObjectAvailableInVersion(prototype->getType(), m_mapVersion))
+                if (m_mapVersion < RMG_MAP_SHADOW_OF_DEATH && prototype->getType() >= CLOVER_FIELD_2)
+                    continue;
+                if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE && prototype->getType() >= MAX_EVENT_TYPE)
                     continue;
                 TRmgZoneBounds bounds;
                 bounds.m_minimumX = position.m_x;
@@ -3858,33 +3856,33 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
                 }
             }
         }
-        if (candidates.size()) {
-            int selected = rand() % totalWeight;
-            unsigned int index;
-            for (index = 0; index < candidates.size(); ++index) {
-                selected -= weights[index];
-                if (selected < 0)
-                    break;
-            }
-            TRmgObjectPropertiesRef* properties = candidates[index];
-            TRmgMapPosition candidatePosition = positions[index];
-            TObjectType* prototype = properties->m_prototype;
-            addObject(new type_object(properties), candidatePosition);
-            TRmgZoneBounds bounds;
-            bounds.m_minimumX = max(candidatePosition.m_x - prototype->getWidth(), 0);
-            bounds.m_minimumY = max(candidatePosition.m_y - prototype->getHeight(), 0);
-            bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.m_mapWidth);
-            bounds.m_maximumY = min(candidatePosition.m_y + 2, m_map.m_mapHeight);
-            candidatePosition.m_z = position.m_z;
-            for (candidatePosition.m_y = bounds.m_minimumY;
-                candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
-                for (candidatePosition.m_x = bounds.m_minimumX;
-                    candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
-                    TRmgMapItem* nearby = getMapItem(candidatePosition);
-                    if (nearby->hasObstacleFill() && nearby->isPassable()) {
-                        nearby->setObstacleFill(0);
-                        pending.push_back(candidatePosition);
-                    }
+        if (!candidates.size())
+            continue;
+        int selected = rand() % totalWeight;
+        unsigned int index;
+        for (index = 0; index < candidates.size(); ++index) {
+            selected -= weights[index];
+            if (selected < 0)
+                break;
+        }
+        TRmgObjectPropertiesRef* properties = candidates[index];
+        TRmgMapPosition candidatePosition = positions[index];
+        TObjectType* prototype = properties->m_prototype;
+        addObject(new type_object(properties), candidatePosition);
+        TRmgZoneBounds bounds;
+        bounds.m_minimumX = max(candidatePosition.m_x - prototype->getWidth(), 0);
+        bounds.m_minimumY = max(candidatePosition.m_y - prototype->getHeight(), 0);
+        bounds.m_maximumX = min(candidatePosition.m_x + 2, m_map.m_mapWidth);
+        bounds.m_maximumY = min(candidatePosition.m_y + 2, m_map.m_mapHeight);
+        candidatePosition.m_z = position.m_z;
+        for (candidatePosition.m_y = bounds.m_minimumY;
+            candidatePosition.m_y < bounds.m_maximumY; ++candidatePosition.m_y) {
+            for (candidatePosition.m_x = bounds.m_minimumX;
+                candidatePosition.m_x < bounds.m_maximumX; ++candidatePosition.m_x) {
+                TRmgMapItem* nearby = getMapItem(candidatePosition);
+                if (nearby->hasObstacleFill() && nearby->isPassable()) {
+                    nearby->setObstacleFill(0);
+                    pending.push_back(candidatePosition);
                 }
             }
         }
