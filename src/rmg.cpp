@@ -11012,39 +11012,17 @@ int type_random_map_generator::selectPrisonHero()
     return hero;
 }
 
-// This one-vector worklist reads priorities from the zones themselves;
-// the other zone overload carries a parallel cost vector. Retail 0x54b294
-// expands the same descending binary-search boundary before count insert.
-// Complete-only overload/name provisional; preserve the ordinary helper.
-static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
-{
-    int first = 0;
-    int last = zones.size();
-    int middle;
-    int priority = zone->m_questPlacementScore;
-    while (1) {
-        middle = (first + last) >> 1;
-        if (first >= last)
-            break;
-        if (priority < zones[middle]->m_questPlacementScore)
-            first = middle + 1;
-        else
-            last = middle;
-    }
-    zones.insert(zones.begin() + middle, 1, zone);
-}
-
 // Quest-group placement calls this one-zone member at 0x54b33a. The
 // template connection vector has 0x1c-byte records; each destination's
 // leading index selects the generated zone. +0x40 is the relaxed distance.
-// A named queued priority preserves retail's live distance during the
-// binary search. Seed push_back versus insert and single/count insertion in
-// the shared helper are flat; pop_back is lower.
-// Residual: retail retains the seed-insert and erase wrappers that this
-// compile expands (live C2 tracing: seed insert budget 907 against cost 64,
-// erase budget 801 against cost 70). Public seed/pop/emptiness forms, the
-// sorted insertion helper at the seed and separate initialization/extraction
-// helpers do not retain them; no speculative worklist wrapper is kept.
+// The search compares the live relaxed distance and is spelled here, as in
+// propagateZoneDistances: both images expand it before one single-element
+// insert. The score goes through TRmgZone's accessors: their four candidate
+// sites after the pop leave the seed insert and pop erase as retail's calls
+// in the game (nested budget 907/16 and 801/13 against costs 64 and 70) and
+// let the editor's seed push_back escape its veto. Mac 0x250284..0x250298
+// keeps the queued zone's score address for its test and store, and its
+// shape now has retail's 132 instructions and ten calls.
 VA(0x0054B180, 0x174)
 MAC_ADDRESS(0x25013c, 0x210) // anchor-callee + zone/template layouts; retail-only
 VA_AT(h3maped, 0x004ad6a8, 0x14f)
@@ -11052,19 +11030,31 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 {
     std::vector<TRmgZone*> pending;
     for (unsigned int index = 0; index < m_zones.size(); ++index)
-        m_zones[index]->m_questPlacementScore = 20000;
-    origin->m_questPlacementScore = 0;
+        m_zones[index]->setQuestPlacementScore(20000);
+    origin->setQuestPlacementScore(0);
     pending.push_back(origin);
-    while (pending.size()) {
+    while (pending.size() > 0) {
         TRmgZone* current = pending.back();
         pending.pop_back();
         TRmgTemplateZone* slot = current->m_templateZone;
-        int distance = current->m_questPlacementScore + 1;
+        int distance = current->getQuestPlacementScore() + 1;
         for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
             TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
-            if (next->m_questPlacementScore > distance) {
-                next->m_questPlacementScore = distance;
-                insertRmgWorkItem(pending, next);
+            if (next->getQuestPlacementScore() > distance) {
+                next->setQuestPlacementScore(distance);
+                int last = pending.size();
+                int first = 0;
+                int middle;
+                while (1) {
+                    middle = (first + last) >> 1;
+                    if (last <= first)
+                        break;
+                    if (distance < pending[middle]->getQuestPlacementScore())
+                        first = middle + 1;
+                    else
+                        last = middle;
+                }
+                pending.insert(pending.begin() + middle, next);
             }
         }
     }

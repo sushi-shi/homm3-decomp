@@ -1535,6 +1535,16 @@ struct TRmgZone {
     {
         return m_terrain;
     }
+    // Quest distance relaxation and placement read and store +0x40 through
+    // these; see calculateQuestZoneDistances. Role-derived names.
+    int getQuestPlacementScore() const
+    {
+        return m_questPlacementScore;
+    }
+    void setQuestPlacementScore(int score)
+    {
+        m_questPlacementScore = score;
+    }
     // Mac propagateZoneDistances reads both distances through 0x23f510 and
     // stores through 0x23f508, the const and non-const vector<short> data()
     // calls CodeWarrior keeps one inline level below an accessor; the
