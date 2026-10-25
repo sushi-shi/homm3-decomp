@@ -5310,34 +5310,6 @@ TRmgPoint clipRmgBoundaryPoint(
     return clipped;
 }
 
-// Binary search in a cost-descending worklist. Equal costs go before older
-// entries, so popping from the back processes ties oldest first.
-static int findRmgWorkItemInsertionIndex(
-    const std::vector<int>& costs, int count, int cost)
-{
-    int first = 0;
-    int last = count;
-    while (first < last) {
-        int middle = (first + last) >> 1;
-        if (cost < costs[middle])
-            first = middle + 1;
-        else
-            last = middle;
-    }
-    return first;
-}
-
-// The zone worklist inserts cost before the pointer. Retail 0x53da1b..0x53da6f
-// expands this operation, including a separate pointer argument snapshot.
-static void insertRmgWorkItem(
-    std::vector<TRmgZone*>& zones, std::vector<int>& costs,
-    TRmgZone* zone, int cost)
-{
-    int insertionIndex = findRmgWorkItemInsertionIndex(costs, zones.size(), cost);
-    costs.insert(costs.begin() + insertionIndex, cost);
-    zones.insert(zones.begin() + insertionIndex, 1, zone);
-}
-
 VA(0x0053CD30, 0x212)
 MAC_ADDRESS(0x23e348, 0x3f0) // anchor-callee 0x53d34e; thiscall, ret 0x1c
 void type_random_map_generator::drawIslandBoundary(TRmgPoint from, TRmgPoint to,
@@ -5641,13 +5613,19 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 // graph edges. Parallel vectors keep pending zones sorted by distance;
 // popping from the back takes the smallest distance. The per-zone short
 // table, not the queued priority, supplies the next relaxed distance.
-// Direct public seed insertion and count insertion of the queued zone retain
-// both vector erasures. Residual: the initial short-vector size still
-// expands, and the seeds call count insert where retail retains
-// single-element insert. Every variant passes 16,585 directed
-// graph/root-count cases against an independent Floyd-Warshall distance table.
-// The game also retains the distance-count size() call at entry; a
-// count accessor around it expands with it, so it is not adopted.
+// The sorted insertion is spelled here, not in a helper: both images expand
+// its midpoint search (formed before the last <= first test, as Mac
+// 0x23f41c..0x23f428 also orders it) and then call the count insert from
+// expanded single-element inserts. Under /O1 a helper with this body is
+// never expanded (it exceeds the 128-tuple candidate limit, and a split
+// search helper is vetoed 44 against 24), so the editor would call it; at
+// the root the two
+// vector::insert(it, x) sites expand and leave their insert(it, 1, x) calls
+// in both images, matching Mac's two word fill inserts. Count inserts in the
+// caller instead expand the cost insertion in the game.
+// Residual: both images retain the distance-count vector<short>::size() call
+// at entry, which no budget, site or accessor edit reproduces; the editor
+// also reloads the pending end between the size test and back().
 VA(0x0053D8E0, 0x1EC)
 MAC_ADDRESS(0x23f218, 0x2f0) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
 VA_AT(h3maped, 0x004a3554, 0x1bc)
@@ -5659,7 +5637,7 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
     for (int column = 0; column < distanceCount; ++column) {
         pending.push_back(zone);
         costs.push_back(0);
-        while (pending.size()) {
+        while (pending.size() > 0) {
             TRmgZone* current = pending.back();
             pending.pop_back();
             TRmgTemplateZone* slot = current->m_templateZone;
@@ -5669,7 +5647,20 @@ void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
                 TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
                 if (next->getZoneDistance(column) > distance) {
                     next->setZoneDistance(column, distance);
-                    insertRmgWorkItem(pending, costs, next, distance);
+                    int last = pending.size();
+                    int first = 0;
+                    int middle;
+                    while (1) {
+                        middle = (first + last) >> 1;
+                        if (last <= first)
+                            break;
+                        if (distance < costs[middle])
+                            first = middle + 1;
+                        else
+                            last = middle;
+                    }
+                    costs.insert(costs.begin() + middle, distance);
+                    pending.insert(pending.begin() + middle, next);
                 }
             }
         }
