@@ -24,7 +24,7 @@ s32 TRmgVector::length() const
 // which is what leaves the second insert's count-insert body a budget of
 // 34 and keeps its first size() call as retail does. The same stores
 // written inline in each constructor (costs 157 and 87..135) never spend
-// enough: createEdge stayed at 90.96% through 14 constructor spellings.
+// enough, through 14 constructor spellings.
 MAC_ADDRESS(0x25c164, 0x20)
 void TRmgHalfEdge::initialize()
 {
@@ -38,7 +38,7 @@ void TRmgHalfEdge::initialize()
 // The retained paired constructor expands this ordinary twin constructor
 // into the successful allocation arm. The same site/zone fields feed the
 // Voronoi vertex calculations. Body assignments (cost 81) keep createEdge
-// exact; the initializer-list form costs 70 and loses it (90.96%).
+// exact; the initializer-list form costs 70 and loses it.
 TRmgHalfEdge::TRmgHalfEdge(
     TRmgPoint sitePosition, TRmgZone* zone, TRmgHalfEdge* twin)
 {
@@ -60,7 +60,7 @@ TRmgHalfEdge::TRmgHalfEdge(
 }
 
 // Replacing the second pointer exchange with std::swap leaves this body exact
-// but lowers the Voronoi constructor from 100% to 83.35% through expansion.
+// but lowers the Voronoi constructor through expansion.
 VA(0x005fcf60, 0x31)
 MAC_ADDRESS(0x25c184, 0x34) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
 void TRmgHalfEdge::splice(TRmgHalfEdge* other)
@@ -175,8 +175,8 @@ void TRmgVoronoi::removeEdge(TRmgHalfEdge* edge)
 // addSite expands RightOf with a nested budget of 54, expands ccw (cost 31)
 // and refuses the orientation call as retail does at 0x5fdfa7; locate's
 // budgets expand all three. Retail locate's first expanded orientation has
-// no spilled endpoint; the named twin restores all 215 bytes. Flattening
-// the call boundary returns 91.0460%.
+// no spilled endpoint; the named twin restores all 215 bytes, which
+// flattening the call boundary loses.
 MAC_ADDRESS(0x25c304, 0x68)
 static s32 isRmgCounterClockwise(TRmgPoint first, TRmgPoint second, TRmgPoint third)
 {
@@ -227,12 +227,12 @@ TRmgHalfEdge* TRmgVoronoi::locate(TRmgPoint point)
 // Provisional edge flip: retail saves both predecessors before detach,
 // transfers their opposite sites/zones, and splices into the new rings.
 // Using the opposite-site/zone and left-face accessors throughout this flip,
-// detach and addSite's closing test lowers addSite from 100% to 93.74%; the
-// other support functions remain exact. Preserve the matched helper boundaries.
+// detach and addSite's closing test lowers addSite; the other support
+// functions remain exact. Preserve the matched helper boundaries.
 // Explicitly __fastcall: the map editor's __cdecl build still passes the edge
 // in ecx here (0x4cc68e) and in the segment test (0x4cc6f2, ret 8), while its
 // circumcircle test leaves its 32 argument bytes to the caller. As members
-// the game refuses to expand them in addSite (100 -> 54.82%).
+// the game refuses to expand them in addSite.
 MAC_ADDRESS(0x25c204, 0xb0)
 static void __fastcall flipRmgEdge(TRmgHalfEdge* edge)
 {
@@ -254,13 +254,12 @@ static void __fastcall flipRmgEdge(TRmgHalfEdge* edge)
 // test as a byte. Inside addSite this expansion gets a nested budget of 33
 // (908 - 174 over 22 remaining sites), which refuses all three distance
 // calls like retail; a TRmgLine constructor/evaluate pair is refused at
-// that budget too (72.5%-77.6%), so the equation stays inline. An
-// orientation call here scores 89.4762% against the accessor form's
-// 91.1250%. The line origin is bound by reference to the site field, the
+// that budget too, so the equation stays inline; an orientation call here
+// is lower than the accessor form. The line origin is bound by reference to the site field, the
 // way the flip helper reads it: retail loads org.x once into ecx and spills
 // dx/dy to [ebp-8]/[ebp-0xc] for the four products, which only this binding
 // reproduces; a by-value TRmgPoint copy through the accessor re-reads the
-// field and keeps dx in a register (addSite 90.3482% with the rest exact).
+// field and keeps dx in a register.
 static b8 __fastcall isRmgPointOnSegment(TRmgPoint point, TRmgHalfEdge* edge)
 {
     TRmgPoint opposite = edge->getOppositeSitePosition();
@@ -278,9 +277,9 @@ static b8 __fastcall isRmgPointOnSegment(TRmgPoint point, TRmgHalfEdge* edge)
 
 // Mac 0x25cb80 retains four orientation calls, then combines the signed
 // products as first - second + third - point. The map editor expands those
-// calls; this order recovers its 0x18 frame and shared return (86.4167%).
-// Paired differences and staged sums emit the same bytes; remaining input
-// loads and common-product register lifetimes differ. Game addSite stays exact.
+// calls; this order recovers its 0x18 frame and shared return. Paired
+// differences and staged sums emit the same bytes. Game addSite stays exact.
+// Editor residual: input loads and common-product register lifetimes.
 MAC_ADDRESS(0x25cb80, 0x1c4)
 VA_AT(h3maped, 0x004ccc7a, 0xef)
 static b8 isRmgPointInsideCircle(TRmgPoint first, TRmgPoint second,
@@ -378,7 +377,7 @@ VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, TRmgHalfEdge)
 // helper at 0x4ccd69 and Mac call at 0x25d1e8 independently establish the
 // by-value order origin, second, third. Mac's helper also preserves the
 // secondSide/perpendicular dot receivers and thirdSide argument copies.
-// Map residual 90.2923%: VC6 adds the denominator early and spills the
+// Map residual: VC6 adds the denominator early and spills the
 // numerator, while retail keeps it in EAX through both scaled components.
 MAC_ADDRESS(0x25cf5c, 0x1e8)
 VA_AT(h3maped, 0x004ccd69, 0x93)
@@ -393,9 +392,9 @@ static TRmgPoint computeRmgCircumcenter(TRmgPoint origin, TRmgPoint second, TRmg
 }
 
 // The independently recovered helper interface makes the map editor's
-// 153-byte caller exact. The game expands that same ordinary helper and
-// currently reaches 95.5282%, below its historical 98.2254% from the inferred
-// third/origin/second interface; preserve the proven order and historical peak.
+// 153-byte caller exact. The game expands that same ordinary helper; its
+// residual is the input load/register schedule, which an inferred
+// third/origin/second interface matched better. Preserve the proven order.
 // Explicit caller snapshots, scalar-product/projection locals, embedding
 // secondSide, and reversing dot-product terms do not recover the game's input
 // load/register schedule. Keep the canonical vector operations and setters.

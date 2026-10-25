@@ -168,17 +168,17 @@ void computeLineShape(
 }
 
 // Initializer-list copy of the point: the body assignment costs the
-// walker's first neighbour pass its retained compound add (78.03 against
-// 87.12%); the factory and rectangle clear are byte-identical either way.
+// walker's first neighbour pass its retained compound add; the factory and
+// rectangle clear are byte-identical either way.
 TRmgLinePainterTile::TRmgLinePainterTile(
     TMapLineFilter* painter, const TTilePoint& point)
     : m_painter(painter), m_point(point)
 {
 }
 
-// The 168-case query family tested receiver/coordinate reference bindings,
-// their order, named results and real proxy construction (80 code results).
-// No gain over the direct query: clear 94.5070%, point 79.9380%, refresh 63.9923%.
+// Receiver/coordinate reference bindings, their order, named results and
+// real proxy construction give no gain over the direct query in the clear,
+// point and refresh callers.
 s32 TRmgLinePainterTile::getType()
 {
     return m_painter->getLineType(m_point);

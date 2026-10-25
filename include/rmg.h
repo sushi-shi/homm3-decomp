@@ -1126,8 +1126,6 @@ SIZE(type_shrine, 0x1c);
 // Complete-only spell-scroll object. Factory 0x534ed0 allocates 0x20
 // bytes, stores its selected spell at +0x1c and installs vtable 0x640b44.
 // Writer 0x533ff0 emits that spell as one byte. Original class name unknown.
-// Full-build collateral on admission: unchanged CEnterNameEdit::onKillFocus
-// CUR 100 -> 99.8710 (two loads exchange order); MAX/HIST retain 100.
 class type_spell_scroll : public type_object {
 public:
     int m_spell; // +0x1c, role-derived name
@@ -1268,7 +1266,7 @@ struct TRmgMapItem {
     // boundary is inferred from those repeated x86 copies; the name is
     // provisional because Dreamcast contains no RMG compiland. Keeping
     // the scalar cost write and struct assignment directly in each caller
-    // loses that snapshot (BuildRoadCostMap 73.7139% versus 75.6686%).
+    // loses that snapshot in BuildRoadCostMap.
     void setMovementCost(int cost, TRmgMapPosition previous)
     {
         m_movement.m_cost = cost;
@@ -1370,10 +1368,10 @@ public:
     // operand. Field assignments stay in the body: an all-member initializer
     // list moves the vptr store past them. Other view callers remain partial.
     // Store-order control: items before width/height makes createWaterZoneIsland
-    // (0x53efa0) exact and preserves repairWaterZoneBorders at 100%. The six
+    // (0x53efa0) exact and keeps repairWaterZoneBorders exact. The six
     // orders were scored across all seven header consumers. Restoring the old
-    // width/height/items order loses the island's constructor scheduling
-    // (95.8947%); the separate caller-only control does not recover it.
+    // width/height/items order loses the island's constructor scheduling;
+    // the separate caller-only control does not recover it.
     // Paired TRmgPoint/grid-point size arguments, by value/reference and in both
     // orders, leave the underground entry unchanged. Grouping the map's own
     // three dimensions as a position changes retry bodies but closes no further
@@ -1425,11 +1423,11 @@ public:
     }
     // Flatten the level, row and column into one cell index. A direct index
     // return preserves all 39 retained bytes and restores
-    // repairWaterZoneBorders to 100%; a named index blocks that expansion.
+    // repairWaterZoneBorders' expansion; a named index blocks it.
     // Delegating the three-coordinate overload through a position temporary
     // nests this body under each caller and keeps calls out of line where
-    // retail expands them (decorateUnderground 86.48%, removeObject 91.21%,
-    // canPlaceTreasureGroup 81.10%). Mac expands this lookup in every RMG
+    // retail expands them (decorateUnderground, removeObject,
+    // canPlaceTreasureGroup). Mac expands this lookup in every RMG
     // caller, as a class-body inline; Windows emits its only copy right after
     // decorateMapCell, the first caller that retains a call. Byte-neutral on
     // Windows; eight more Mac pairs resolve.

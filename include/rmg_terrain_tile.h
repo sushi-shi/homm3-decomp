@@ -27,7 +27,7 @@ struct TRmgTerrainTile {
         : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
     // Frame and flip accessors: the line refresh compares the current tile
     // through them so its neighbour helper keeps retail's three retained
-    // calls (2026-09-12); the painters' own copies still use the fields.
+    // calls; the painters' own copies still use the fields.
     s32 getFrame() const { return m_frame; }
     bool getFlipX() const { return m_flipX; }
     bool getFlipY() const { return m_flipY; }

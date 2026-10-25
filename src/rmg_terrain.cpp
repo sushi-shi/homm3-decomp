@@ -256,8 +256,8 @@ const s32 g_rmgReflectedNeighbours[2][2][TILE_DIR_COUNT] = {
 // Provisional value-return helper, auto-inlined at every selector site.
 // Returning the constructed value reproduces retail's temporary at ebp-2
 // and the saved output pointer at ebp-8. A named local return instead puts
-// them at ebp-8 and ebp-4 (99.93%); replacing the helper calls with direct
-// construction changes the fourth reflection loop's registers (99.7991%).
+// them at ebp-8 and ebp-4; replacing the helper calls with direct
+// construction changes the fourth reflection loop's registers.
 // An explicit empty flip destructor prevents the helper from auto-inlining.
 static TRmgTerrainFlip makeTerrainFlip(bool x, bool y)
 {
@@ -354,7 +354,7 @@ s32 getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
 }
 
 // Loki's flip-negation operator recovers the editor's indexed object lifetime.
-// Making flips const instead lowers the game to 99.5904%; sharing one order
+// Making flips const instead lowers the game; sharing one order
 // pointer across the loops does not change either image's selector score.
 VA_AT(h3maped, 0x004bb075, 0x558)
 VA(0x005b3e80, 0x75f)
@@ -559,7 +559,7 @@ s32 selectTerrainTransition(
 // This preserves virtual slot 3's proven ABI and both exact adapter bodies.
 // All 621 bytes, 16 direct calls and virtual slot 3 reproduce; a default
 // output argument gives the same result. A separate value-query helper uses
-// inline budget and leaves the shrinking size() call retained (93.0418%).
+// inline budget and leaves the shrinking size() call retained.
 // No separate
 // convenience helper or artificial caller scope is needed.
 VA(0x005b45f0, 0x26d)
@@ -588,8 +588,8 @@ TRmgPackedTerrainCell* TRmgTerrainPainter::getPackedCell(
 }
 
 // Retail proves the shared accessor and its expanded uses, but supplies no
-// source inline qualifier. Its ordinary TU definition preserves paintPoint's
-// 99.5570% checkpoint and both exact painter/brush destructors.
+// source inline qualifier. Its ordinary TU definition preserves paintPoint
+// and both exact painter/brush destructors.
 s32 TRmgTerrainPainter::getTerrain(const TTilePoint& point)
 {
     return getPackedCell(point)->getTerrain();
@@ -635,11 +635,11 @@ void TRmgTerrainPainter::setTile(
 // site is what paintRectangle's terrain test needs (see there), while
 // paintPoint expands the same three operations from its own block.
 // Loki's TTerrainPlacementOp::operator() spells the block inline, and
-// h3maped's paintRectangle (0x4bb681) carries it expanded; there this helper
-// is vetoed 21/12 (one-expression and two-statement bodies too), leaving
-// that body at 52.08. Spelled inline here, the editor body is exact but the
-// game's getTerrain site loses the nested budget for initializePackedCell
-// (paintRectangle 100 -> 74.24): four later sites instead of one.
+// h3maped's paintRectangle (0x4bb681) carries it expanded.
+// Editor residual: there this helper is vetoed 21/12 (one-expression and
+// two-statement bodies too). Spelled inline in paintRectangle instead, the
+// editor body is exact but the game's getTerrain site loses the nested
+// budget for initializePackedCell: four later sites instead of one.
 void TRmgTerrainPainter::paintBaseTile(const TTilePoint& point)
 {
     s32 frame = selectBaseFrame(point, m_paintTerrain);
@@ -654,10 +654,10 @@ void TRmgTerrainPainter::paintBaseTile(const TTilePoint& point)
 // their combined expansions recover the first and final cache boundaries.
 // The guard return costs 47 against the comparison return's 38 (free).
 // Under the trivial grid copy and a direct-initialized neighbour the free
-// form expanded the loop erase's distance wrapper (98.68%); the 47-unit
-// form refuses it while the final insert's pair constructor still expands,
-// closing paintPoint (2026-09-12). Reading the configured terrain as the
-// field, or swapping the operands, drops the caller below 90%.
+// form expands the loop erase's distance wrapper; the 47-unit form refuses
+// it while the final insert's pair constructor still expands, as in retail.
+// Reading the configured terrain as the field, or swapping the operands,
+// lowers the caller.
 const s32& TRmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
@@ -702,11 +702,11 @@ inline void computeAdjacentDirs(
 }
 
 // Coordinate accessors preserve the cardinal probes' value temporaries when
-// the native neighbour-mask adapter is present. The editor is exact; the game
-// now reaches 99.6184% with the combined repair guard. The loop erase expands
-// the three-argument std::_Distance into its category overload; retail keeps
-// the wrapper call. Value accessors for the signed loop-point origin lower
-// the game to 90.4250%, and its converting constructor gives 87.0199%.
+// the native neighbour-mask adapter is present. The editor is exact.
+// Game residual: the loop erase expands the three-argument std::_Distance
+// into its category overload, where retail keeps the wrapper call. Value
+// accessors for the signed loop-point origin, or its converting
+// constructor, are lower.
 VA_AT(h3maped, 0x004bb74b, 0x2c8)
 VA(0x005b4b20, 0x5cb)
 MAC_ADDRESS(0x256014, 0x580) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
@@ -840,8 +840,8 @@ inline b8 TRmgTerrainPainter::isInvalidVert(const TTilePoint& point)
 // The repeated repair predicate has no Dreamcast counterpart. Loki's
 // isInvalid combines the two gap checks; the editor likewise sends both
 // successes to one byte-return block. This matches all 79 editor bytes and
-// improves the game's paintPoint expansion to 99.6184%. Separate guards or
-// an else-if chain leave the editor at 85.4688% in the current source.
+// the game's paintPoint expansion; separate guards or an else-if chain do
+// not.
 // Keep the separation helper's byte result as the direct final return:
 // booleanizing it changed the exact destructor comparisons in prior probes.
 MAC_ADDRESS(0x2588c4, 0x1a0)
@@ -859,58 +859,27 @@ inline b8 TRmgTerrainPainter::isInvalid(const TTilePoint& point)
 // diagonals weight one. The worklist at 0x5b72f0 passes its first primary
 // point to this method; PaintPoint consumes the resulting repairs.
 // Separate paint statements let the preceding predicate temporaries expire:
-// retail reuses EBP-0x10 at +0x32 and +0xbd. Together with canonical dimension
-// and paint-terrain accessors, this raises MAX 82.8347 -> 89.7150%. At that
-// checkpoint all cache reads retained getPackedCell, but two vertical-gap
-// second-coordinate constructors over-inlined. Retail retains copied x at +0x5bb.
-// Controls: separate statements alone 80.9056%; dimensions alone 84.5649%;
-// together 89.5970%. A positive-guard rewrite is byte-identical; a byte choice
-// local introduces extra result/branch code (87.1956%). Explicit helper edge
-// returns do not restore the missing constructors (89.3019%). Returning a
-// named point after += is byte-flat; copy-constructing it changes the load
-// order (89.8583% scratch) but still omits retail's copied-x store. Retain the
-// coordinate construction supported by paintPoint's separate retail evidence.
+// retail reuses EBP-0x10 at +0x32 and +0xbd. Canonical dimension and
+// paint-terrain accessors keep every cache read through getPackedCell;
+// returning the configured terrain by const reference refers to the painter
+// member, not a temporary. Retain the coordinate construction supported by
+// paintPoint's separate retail evidence (retail retains copied x at +0x5bb).
 // The neighbour-ring scan uses an explicit while(1) header and a word-sized
 // diagonal local: retail +0x4de has a single advance/test header and +0x511
-// copies the full direction before masking its low bit. This raises 90.0961%
-// to 91.3390% and restores the complete retail CFG, without TU collateral.
-// Sixty outer-loop/receiver/width controls and six inner-loop forms over the
-// ten best parents retain the original inner do loop. A top-tested for(;;),
-// explicit header label, do(1), or assignment-condition while still rotates
-// the outer test; reference/pointer gap receivers also lose code agreement.
-// Retail +0x52d leaves both loops directly. A compound inner do condition
-// followed by another test duplicates this comparison and rotates the exit.
-// At 91.3390%, the only remaining call-sequence difference is the coordinate
-// constructor in the final vertical-gap expansion (retail +0x449); the other
-// 45 calls agree. The paired gap-point lifetime controls below do not fix it.
-// Coordinate-assigned operator+ temporaries reach 92.3508% with all exact
-// siblings intact, but keep that same missing constructor and lower both
-// terrain paintPoint and line refresh. This is not a resolved call boundary.
-// Goto audit: the outer cycle exit is a byte-neutral break. Replacing the
-// inner exit with break plus an outer equality test loses 5.9713 points;
-// a bottom-tested outer cycle loses 6.6914. The multi-level exit remains.
-// Inner break followed by the outer cycle-completion test scores 85.3676%
-// versus 91.3389%; it preserves gap construction but changes the loop CFG.
-// A cycle-complete result with either a loop-head test or bottom break
-// scores 86.0995% or 86.1619% for bool/byte/s32, below 91.3389%.
-// At the current 93.6307%, all 46 calls and the complete CFG agree. The
-// 16 coordinate-accessor forms preserve those calls and all sibling scores.
-// Value accessors for the unchanged coordinate restore retail's fresh scalar
-// copy and terrain reload, but retain the reversed ESI/EDI roles and change
-// scheduling (85.9764..93.6307%). The lifetime mechanism is insufficient alone.
-// Query-result widths, owned scalar results, shared gap counters, workspace
-// lifetimes and gap-record construction/compaction leave 93.6307% unchanged.
-// Passive C2 tracing reproduces the whole object and observes 227 temporary
-// bindings; it does not identify the cause of the painter/point allocation.
-// Returning configured terrain by const reference, together with value
-// coordinate accessors in both gap predicates, reaches 99.1821%. All 1576
-// bytes align except an ESI/EDI permutation; frame, scalar copies and all
-// 46 calls agree. The accessor refers to the painter member, not a temporary.
+// copies the full direction before masking its low bit. Retail +0x52d leaves
+// both loops directly, so the multi-level exit remains; a top-tested
+// for(;;), header label, do(1), assignment-condition while, compound inner
+// condition, break plus an outer equality test, a bottom-tested outer cycle
+// or a cycle-complete result all rotate the exit or change the loop CFG.
 // The repaint loop tests the selected gap's end in its condition, as Loki
-// does and Mac 0x2570d0 reloads it. A separately named end extends its lifetime
-// and changes the editor's loop allocation (92.5641%); the condition recovers
-// all 715 editor bytes while preserving the game's 99.1821%. Shared gap indices
-// and named coordinate-value origins do not improve the game residual.
+// does and Mac 0x2570d0 reloads it; a separately named end extends its
+// lifetime and changes the editor's loop allocation. The editor body is
+// exact.
+// Game residual: an ESI/EDI permutation of the painter/point roles; frame,
+// scalar copies and all 46 calls agree. Query-result widths, owned scalar
+// results, shared gap counters or indices, workspace lifetimes, gap-record
+// construction/compaction, positive guards, byte choice locals, explicit
+// helper edge returns and named coordinate-value origins do not resolve it.
 VA_AT(h3maped, 0x004bbd01, 0x2cb)
 VA(0x005b5440, 0x628)
 MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
@@ -1136,9 +1105,9 @@ void TRmgTerrainPainter::paintTransitions()
 // The cell's tile as the packed cache holds it. h3maped keeps it out of line
 // right after paintTransitions (0x4bc5a3, the tile returned through a hidden
 // pointer), its only caller; the game expands it. Role-derived name.
-// Retail expands the cell's field reads here; this compile vetoes the
-// cell's getTile 18/12 (50.12). The four reads written here are exact in
-// the editor but cost the game's paintTransitions 100 -> 95.76.
+// Editor residual: retail expands the cell's field reads here; this compile
+// vetoes the cell's getTile 18/12. Writing the four reads out is exact in
+// the editor but lowers the game's paintTransitions.
 VA_AT(h3maped, 0x004bc5a3, 0x4d)
 TRmgTerrainTile TRmgTerrainPainter::getTile(const TTilePoint& point)
 {
@@ -1169,21 +1138,17 @@ b8 TRmgTerrainPainter::wouldBeInvalidVert(
 // contributes only when at least one adjoining cardinal cell also matches.
 // Retail retains the center and four cardinal cache reads, expands the
 // diagonals' reads with their fills refused, and expands the south-east
-// fill. Residual 99.2138% (77.26% with eight constructed temporaries and
-// no corner points). The east read must be refused at the budget its
-// remaining sites leave, and the north-west read expanded right after,
-// which needs the diagonal region to hold three candidate sites per arm
-// and the caller to sit near 1150 units: the clamped coordinates kept as
-// two corner points whose accessors feed the diagonal temporaries, and
-// one reused point moved through its setters for the cardinal reads, do
-// both (constructed cardinal temporaries 92.92%; diagonals through the
-// signed-point conversion are one object with this; the reused point for
-// the diagonals is unconditional, so it changes the flow, 74.36%; the
-// corners constructed straight from the clamps reverse the clamp order,
-// 78.32%). Limiting the reused cardinal point to its own scope and copy-
-// initializing the two corner values recovers the remaining register homes
-// and retail's 0x30 frame: all 714 bytes match. The mask oracle preserves
-// ordered, short-circuited queries in 185,856 states; five controls fail.
+// fill: the east read is refused at the budget its remaining sites leave
+// and the north-west read expanded right after. Loki's computeAdjacentSimilar
+// spells each neighbour as its own getCell(x, y) query; here the clamped
+// coordinates are kept as two corner points whose accessors feed the
+// diagonal temporaries, and one reused cardinal point (in its own scope)
+// moves through its setters. That shape, and copy-initializing the two
+// corner values, reproduces all 714 bytes and retail's 0x30 frame, but it
+// is chosen for its inline-budget and stack-home effects rather than from
+// native evidence; constructed per-read temporaries (the Loki form) lose
+// the read/fill split. The mask oracle preserves ordered, short-circuited
+// queries in 185,856 states; five controls fail.
 VA(0x005b6540, 0x2ca)
 MAC_ADDRESS(0x2582fc, 0x4f8) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void TRmgTerrainPainter::computeAdjacentSimilar(
@@ -1234,8 +1199,7 @@ void TRmgTerrainPainter::computeAdjacentSimilar(
 //   . # .
 // Loki and Mac 0x25888c test the final run before advancing, then return
 // false after wrapping. This restores the editor's return-block order and
-// keeps the game exact. Removing the shared exit alone leaves editor 90.87%
-// and game 99.75%; the complete final scan makes the direct returns exact.
+// keeps the game exact; removing the shared exit alone falls short in both.
 VA(0x005b6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
 b8 TRmgTerrainPainter::hasMultipleAdjSimilarSpans(const TTilePoint& point)
@@ -1485,15 +1449,14 @@ void TRmgTerrainPainter::finish()
 // provisional; what it does prove is this body's inline cost. At cost 43
 // (finish plus two stores) the wrapper gives finish 957 units and the
 // erase(key) body 234, so the tagged four-argument _Distance expands where
-// retail calls it (81.33%). Any byte-neutral cost from 53 up (this form is
+// retail calls it. Any byte-neutral cost from 53 up (this form is
 // 54; copying both parameters into locals is 53; const-reference
 // parameters reach only 47) puts the erase body at 230 and the wrapper's
 // tagged callee at 44 < 45, which restores retail's call. finish itself
 // is rigid: size()/empty()/!= 0/> 0/this-> spellings all cost 169 and one
 // object, set aliases cost 171 and change bytes, direct-initialized or
 // iterator-local copies drop its body-saved flag, and moving
-// paintTransitions() into both callers leaves the brush destructor at
-// 92.14%.
+// paintTransitions() into both callers lowers the brush destructor.
 MAC_ADDRESS(0x255ea4, 0x4c)
 s32 TRmgTerrainPainter::changeTerrain(s32 terrain, s32 strength)
 {
@@ -1561,7 +1524,7 @@ TRmgTerrainPainter::~TRmgTerrainPainter()
 // Initialization and node insertion match all 168/766 bytes.
 // Node insertion's _Construct call at 0x5b877c shares the 15-byte two-dword
 // copy at 0x5b8cc0 with type_dialog_resource; both emitted bodies agree.
-// The concrete-point control reaches 79.83%: VC6 compiles its comparator
+// With a concrete point VC6 compiles its comparator
 // before insertion, elides the lock's EH frame and changes the return tails.
 // The generic coordinate owner defers its ordinary template comparator and
 // reproduces all 342 bytes, including the lock unwind, without altering STL.
@@ -1600,7 +1563,7 @@ VA_COMPGEN(0x005b8bc0, 0xa3, TREE_CONST_ITERATOR_INC, TPoint_unsigned_int)
 
 // The canonical coordinate comparator uses its getX/getY interface. Its
 // retained 32-byte body stays exact, and the expanded comparison here now
-// loads node-y before key-y as retail does. Direct fields leave 99.4634%.
+// loads node-y before key-y as retail does; direct fields do not.
 VA_COMPGEN(0x005b7fc0, 0x57, TREE_FIND, TPoint_unsigned_int)
 
 VA_COMPGEN(0x005b8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)

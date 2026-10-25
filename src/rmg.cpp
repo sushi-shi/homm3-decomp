@@ -683,8 +683,8 @@ MAC_COMPGEN_ADDRESS(0x22d02c, 0x84, IMPLICIT_DTOR, TRmgMapItem)
 // `clear` describes the retail operation while preserving its real boundary.
 // Exact: erase the pointer vector before taking connection and tileData
 // snapshots, and write terrain directly. This recovers retail's EDI lifetime
-// and all 111 bytes. Three snapshots leave 76.95%; carrying connection across
-// erase reaches 91.03%; writing every packed field directly gives 73.68%.
+// and all 111 bytes. Three snapshots, carrying the connection across the
+// erase, or writing every packed field directly all fall short.
 // The independent reset oracle checks 16,384 states and rejects six controls
 // that corrupt masks, preserved coordinates, or pointer-vector clearing.
 VA(0x00530F10, 0x6F)
@@ -733,9 +733,9 @@ void TRmgMapItem::clear()
 
 // The allocation uses the initialized dimensions. Both forms emit the exact
 // retained map constructor, but using its parameters instead over-inlines
-// this body into t_abstract_random_generator::t_abstract_random_generator (0x536070, 48.0526%).
-// Member dimensions preserve that caller's retail constructor call and 100%
-// match without changing any other RMG function; no DC counterpart exists.
+// this body into t_abstract_random_generator::t_abstract_random_generator (0x536070).
+// Member dimensions preserve that caller's retail constructor call and its
+// exact match; no DC counterpart exists.
 VA(0x00530FB0, 0xA0)
 MAC_ADDRESS(0x22d394, 0xbc)
 type_random_map::type_random_map(int width, int height, int levels)
@@ -848,7 +848,7 @@ void type_random_map::markCoastalTiles()
 // original spelling and linkage remain provisional.
 // The search uses one top test with two unconditional back edges in retail.
 // VC6 rotates for (;;) and while (first < last) spellings; while (1) keeps
-// this top test and restores that flow in CreateRiver (76.51% -> 79.82%).
+// this top test and restores that flow in CreateRiver.
 static void insertRmgWorkItem(
     std::vector<TRmgMapPosition>& positions,
     std::vector<int>& costs,
@@ -874,13 +874,10 @@ static void insertRmgWorkItem(
 
 // Retail 0x5407dd/0x5408a2 pass the map, a by-value position and a water byte.
 // Complete-only cost flood; its original source name is unavailable.
-// Residual (83.6813%): the 0x58 frame and cost-first sorted insertion now
-// agree. Seed insertion and popped-element erase wrappers still over-expand;
-// retail also retains the queued-cost read which this form eliminates.
+// The 0x58 frame and cost-first sorted insertion agree with retail.
 // Each neighbour is the shared by-value translation of the popped position;
-// Mac 0x22dc38..0x22dc8c copies both operands. Game 91.05 ->
-// 96.99%, editor 85.36 -> 96.26%, where copy plus operator+= kept the
-// neighbour in memory.
+// Mac 0x22dc38..0x22dc8c copies both operands (copy plus operator+= kept the
+// neighbour in memory).
 // Call-argument audit: +0x3c6 uses costs at [ebp-0x64], stride 4;
 // +0x3de uses positions at [ebp-0x54], stride 12. Both retain count-insert.
 // This is not ICF name confusion. All eight sorted insertions in the other
@@ -893,15 +890,16 @@ static void insertRmgWorkItem(
 // its local cost-first routine consumes the neighbor itself, whereas the
 // supported road/river expansions consume another by-value coordinate copy.
 // The canonical position-first helper and all its real callers stay intact.
-// A proposed common index-search helper reaches 86.5439% here, but retains
-// new calls in the other floods which retail expands. Vector/array/range and
-// result-reference variants do not resolve that contradiction; none is used.
-// Forty-nine local coordinate/API/cost-lifetime forms and eighty-one lookup
-// states plateau at 83.6813%. Reusing queuedCost reaches 82.2308%; scalar
-// lookup overloads add no peak. Keep the existing position-lookup interface.
-// The neighbour bounds read through getWidth()/getHeight(): one more free
-// /Ob2 site after the cost pop_back lowers its body budget from 70 under
-// erase's cost, which retail calls (91.05%; every call matches).
+// A proposed common index-search helper retains new calls in the other
+// floods, which retail expands. Vector/array/range and result-reference
+// variants do not resolve that contradiction; none is used. Reusing
+// queuedCost and scalar lookup overloads do not help; keep the existing
+// position-lookup interface. The neighbour bounds read through
+// getWidth()/getHeight(), whose /Ob2 site after the cost pop_back leaves
+// erase out of line as retail calls it.
+// Residual: the seed insertion and popped-element erase wrappers still
+// over-expand, and retail retains the queued-cost read this form
+// eliminates.
 VA(0x00531460, 0x441)
 MAC_ADDRESS(0x22d9ac, 0x5cc)
 VA_AT(h3maped, 0x0049a318, 0x3e1)
@@ -1091,13 +1089,13 @@ void type_random_map::markObstacleFillPatch(TRmgMapPosition position)
 // native failure/return paths. Mac 0x22e788..0x22e7b4 captures both trigger
 // coordinates before subtraction, constructs entrance X/Y/Z, then advances Y.
 // Copying the existing getTriggerLoc result and using the three-coordinate
-// constructor together recover all 421 game bytes (98.8207% to 100%). Either
-// change alone stays below 100%; scalar assignments and whole-position copies
-// do not recover the combined lifetime. Mac can keep the trivial trigger copy
-// in registers rather than a separate stack slot.
-// The same source improves the editor from 91.2097% to 93.79%. Its remaining
-// difference is the shared false-return block: retail puts it after the first
-// placement query, this build near the end. Keep the native direct returns.
+// constructor together recover all 421 game bytes; either change alone falls
+// short, and scalar assignments and whole-position copies do not recover the
+// combined lifetime. Mac can keep the trivial trigger copy in registers
+// rather than a separate stack slot.
+// Editor residual: the shared false-return block, which retail puts after
+// the first placement query and this build near the end. Keep the native
+// direct returns.
 VA(0x00531CF0, 0x1A5)
 MAC_ADDRESS(0x22e6a8, 0x270) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 unsigned char type_random_map::canPlaceObject(
@@ -1487,8 +1485,8 @@ MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTemplateZone)
 // Native 0x22f6c8 counts enabled town types and uniformly selects one.
 // It returns -1 for an empty set. Both the zone constructor (0x22f834)
 // and additional-town placement (0x248878) retain this shared selection.
-// Windows keeps the constructor exact and improves additional-town placement
-// from 76.6561% to 79.53% with the same helper and random-number consumption.
+// Windows keeps the constructor exact; additional-town placement shares the
+// helper and its random-number consumption.
 MAC_ADDRESS(0x22f6c8, 0xb4)
 int TRmgTemplateZone::selectAllowedTown()
 {
@@ -1584,7 +1582,7 @@ void TRmgZone::chooseTerrain()
 // present. Keep the ordinary empty definition here: VC6 must see its cleanup
 // before the derived generator destructor at 0x537df0. Implicit ownership
 // emits the same retained bytes later but leaves five extra unwind actions
-// and a state store in that caller (99.3442%). Both ownership forms preserve
+// and a state store in that caller. Both ownership forms preserve
 // buildZoneBoundaries' exact expansion; the declaration-only control emits
 // no body. Ordinary ownership restores all three exact bodies and matches
 // the earlier recovered definition; original explicitness remains a retail
@@ -1621,8 +1619,8 @@ TRmgMapPosition TRmgZone::getLevelPosition() const
 // value at 0x24ebbc and 0x24ec20 before assigning each player entrance.
 // This is a value query; mine placement instead consumes the entrance XY
 // components directly (Mac 0x2492a4/0x2492b0). An assigned local result
-// shifts the writer's stack homes and lowers its match to 94.9640%; keep
-// the direct member result for these whole-value reads.
+// shifts the writer's stack homes; keep the direct member result for these
+// whole-value reads.
 TRmgMapPosition TRmgZone::getPrimaryTownEntrance() const
 {
     return m_primaryTownEntrance;
@@ -1641,8 +1639,8 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // Mac 0x22fdec calls the shared two-point distance helper. The point base,
 // this-size-before-other-size declarations and direct clearance difference
 // reproduce all 50 native instructions apart from that named call relocation.
-// Windows rises from 96.4286% to 99.5455%; the remaining size-register exchange
-// affects five instructions. Declaration-lifetime, canonical minimum/accessor
+// Windows residual: a size-register exchange in five instructions.
+// Declaration-lifetime, canonical minimum/accessor
 // and reference-binding controls do not improve it. Keep the shared helper
 // and the native source order through that compiler-allocation residual.
 // One zone's row of the distance table: every original zone at the 32000
@@ -2698,7 +2696,7 @@ type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* propertie
 // Passing the post-incremented object id by const reference keeps its
 // temporary alive through construction and reproduces all 147 retail bytes.
 // The eight value/reference combinations confirm that experience remains a
-// value; the hero index is neutral. A value id leaves 95.1754%.
+// value; the hero index is neutral, and a value id falls short.
 VA(0x005348D0, 0x93)
 MAC_ADDRESS(0x2324e4, 0x84) // anchor-definition/object vtables + selectPrisonHero
 type_object* type_prison_def::generate(TRmgObjectPropertiesRef* properties,
@@ -2964,12 +2962,11 @@ void TRmgTreasureGroup::addObject(type_object* object, TRmgPoint point)
 // The two-coordinate scan at sp+0xa4 also serves the later outward fan.
 // Retain the surface-point lookups whose copied arguments are visible at
 // 0x233228, 0x233490 and 0x2335cc, and the shared point additions.
-// These lifetimes recover the 0x3c game frame and all 73 branch-flow blocks:
-// game 92.0983% -> 98.3621%, editor 85.6273% -> 98.7576%.
-// The editor residual is the expanded addition's Y-result register; the
-// game also differs in the selected guard copy/scheduling. A named direction
-// offset worsens the game to 97.2014%; default construction then assignment
-// of the selected guard point gives 97.6019%. Keep the canonical operator+.
+// These lifetimes recover the 0x3c game frame and all 73 branch-flow blocks.
+// Residual: the expanded addition's Y-result register (editor) and the
+// selected guard copy/scheduling (game). A named direction offset, or default
+// construction then assignment of the selected guard point, lowers the game;
+// keep the canonical operator+.
 // The game's final direction comparison names the adjacent shipyard table
 // at the same physical address as g_rmgDirections+0x40; retain direction<8.
 // Open the next cell outward too; diagonals fan out to three cells.
@@ -3102,11 +3099,11 @@ TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
 //
 // Mac 0x233700..0x233734 copies the trigger before translating the shared
 // origin. Its three point sums and surface queries retain the canonical
-// point/map/accessor path. Scalar origins peaked at 98.8042% in the game;
+// point/map/accessor path. Scalar origins fall short in the game; the
 // shared translated origin plus the surface overload recovers all 505 bytes.
 // Mac 0x2338d0..0x233a28 handles MONSTER/BORDER_GUARD before other types and
 // uses direct failure returns. That order also recovers all 401 editor bytes
-// (96.5517% to 100%) while keeping the game exact. The generic-first model
+// while keeping the game exact. The generic-first model
 // needed a source goto to match the game and still misplaced the editor's
 // merged failure block; no goto is needed with the native arm order.
 // Both Windows builds reproduce the direct-return model. Keep direction<8
@@ -3173,10 +3170,10 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
 // coordinate conversion/subtraction; use the canonical getTriggerLoc/x/y
 // helpers and retain both ordinary additions at 0x233b70..0x233c18.
 // The direction initialized at 0x233b58/0x233b64 is itself post-decremented
-// at 0x233c6c. Removing the separate end local recovers the editor's full
-// body (94.2216% -> 100%). Mac also keeps a pointer to the same trigger
-// snapshot Y at 0x233a70/0x233b34 across both phases. Reusing triggerCell
-// recovers the game's remaining loads/registers (89.3286% -> 100%).
+// at 0x233c6c, so there is no separate end local; that matches the editor's
+// full body. Mac also keeps a pointer to the same trigger snapshot Y at
+// 0x233a70/0x233b34 across both phases; reusing triggerCell matches the
+// game's loads and registers.
 VA(0x00535970, 0x240)
 MAC_ADDRESS(0x233a44, 0x2d4) // anchor-callee 0x546680; thiscall, ret 4
 unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
@@ -3262,8 +3259,8 @@ void TRmgTreasureGroup::updateBounds()
 // The retained vector<TRmgPoint>::insert matches all 582 bytes of the folded
 // vector<type_artifact> body at 0x54d330, with identical new/delete calls.
 // Direction-table references resolve to g_rmgDirections (0x69cdc0) and +4.
-// The native perimeter uses the surface lookup overload. Restoring that
-// call also recovers this context from 78.5616% to the existing 100% peak.
+// The native perimeter uses the surface lookup overload; that call keeps
+// this context exact.
 VA(0x00535EE0, 0x18F)
 MAC_ADDRESS(0x233fb8, 0x274) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
 void TRmgTreasureGroup::traceOutline()
@@ -3443,7 +3440,7 @@ static s32 countRmgPlacementRuleRows(const TSpreadsheetResource* sheet)
 // RHS: an empty group never forms a pointer offset. This natural iterator
 // form also restores the reader's retained single-insert call and all six
 // vector helper bodies while preserving the earlier constructor expansions.
-// The indexed-lookup control over-inlines single-insert (99.7862%); persistent
+// The indexed-lookup control over-inlines single-insert; persistent
 // subtype cursors load end() eagerly, and an outer nonempty guard changes
 // retail's CFG. Before enum recovery, combined lifetime/range families matched;
 // these bytes do not prove unique original syntax. See docs/vc6/source-families.md.
@@ -3452,8 +3449,8 @@ static s32 countRmgPlacementRuleRows(const TSpreadsheetResource* sheet)
 // indexes the adventure-object traits/prototypes, establishing its domain.
 // Loki's const getRecommendedTerrainMask accessor preserves the read-only
 // bitset query retained by Mac 0x234db4 and expanded by editor 0x49dc9e.
-// The game remains exact; the editor reaches 99.86% with all 49 blocks,
-// calls and relocations aligned, leaving stack-home differences. A const
+// The game is exact. Editor residual: stack homes, with all 49 blocks,
+// calls and relocations aligned. A const
 // prototype pointer and direct mask.test spelling do not improve the editor;
 // isRecommendedTerrain retains an extra editor call and changes game inlining.
 
@@ -3597,14 +3594,13 @@ void t_abstract_random_generator::readObjectPlacementRules()
 // at 0x5375ff keeps only positive scores in its weighted candidate pool.
 // This method temporarily marks affected objects and clears all five marks
 // before returning. Names describe retail roles; there is no DC counterpart.
-// Residual (84.68%): retail retains bitset<48>::test at 0x536ca3/0x536cc1
-// and bitset<10>::test at 0x536d06; these subscript/conversion expansions
+// Residual: retail retains bitset<48>::test at 0x536ca3/0x536cc1 and
+// bitset<10>::test at 0x536d06; these subscript/conversion expansions
 // still inline test and retain _Xran. Direct .test calls also expand the
-// exception construction (70.55%). Provisional footprint wrappers reached
-// 83.96% but did not recover those calls, so they were removed.
+// exception construction. Provisional footprint wrappers did not recover
+// those calls, so they were removed.
 // A temporary inline_depth(0) diagnostic on just those three .test calls
-// reached 91.29% before the clamp/accessor corrections; all pins are removed.
-// That probe matched the opening draw/passability call sequence and left
+// (since removed) matched the opening draw/passability call sequence and left
 // the gate extraction, clamp operands, neighbor-loop lowering and local
 // homes divergent. Canonical min/max with (coordinate, bound) gives retail's
 // compare polarity; the byte gate accessor gives its shr/test-byte form.
@@ -3612,11 +3608,10 @@ void t_abstract_random_generator::readObjectPlacementRules()
 // retail recomputes its array address. Do not infer source assertions from
 // its redundant lea. The insert callee's widget* name is an ICF alias of
 // this pointer-vector instantiation, not another inlining difference.
-// Further public-API/lifetime controls leave all three tests expanded:
-// a const prototype selects const operator[] but scores 82.3996%; the
-// existing position-value getMapItem overload is byte-flat at 84.6788%;
-// aggregate zero initialization of both scratch arrays gives 82.5392%.
-// None emits bitset<10>::test. Keep the original accesses and memset
+// Further public-API/lifetime controls leave all three tests expanded: a
+// const prototype (selecting const operator[]), the position-value getMapItem
+// overload (byte-flat) and aggregate zero initialization of both scratch
+// arrays. None emits bitset<10>::test. Keep the original accesses and memset
 // calls while resolving the real caller's nested inliner state.
 // The 8x6 footprint plus a one-cell border; footprint cell (column, row)
 // is marks[column + 1][row + 1].
@@ -3785,11 +3780,10 @@ static const int g_rmgDecorationTypes[45] = {
 // Mac 0x23603c..0x236084 expands the byte-valued land predicate before
 // clearing the obstacle-fill mark. Keep those shared cell operations.
 // Both images destroy the four candidate vectors separately on the
-// no-candidate path, so it is an early continue (game 92.91 -> 94.34%,
-// editor 88.63 -> 95.28%). Mac 0x235bf0..0x235c18 and both Windows images
-// reread the prototype type for each version test: the tests are spelled in
-// place (game 95.76%, editor 98.31%). The former single-use static
-// type/version predicate cost the game 14 points when given the prototype.
+// no-candidate path, so it is an early continue. Mac 0x235bf0..0x235c18 and
+// both Windows images reread the prototype type for each version test, so
+// the tests are spelled in place; a single-use static type/version
+// predicate given the prototype lowers the game.
 // Candidate anchors put the start cell S under each blocked
 // footprint cell in turn. For a fully blocked 3x2 object they
 // are S and each o; North is up:
@@ -3896,10 +3890,8 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
 // position constructor. The ordinary isPassable predicate recovers the
 // progress/placement branch layout and all 409 retail bytes. Member/free and
 // positive/negative predicate controls all reproduce the same exact caller.
-// In-caller field tests stay at 91.1321%; flattened dispatch and a named
-// eligibility value reach only 98.0818%. A shared progress notifier is flat.
-// All seven header consumers were measured. decorateMapCell's expansion
-// shifts from 82.4467% to 82.1950%; all other scores remain unchanged.
+// In-caller field tests, flattened dispatch and a named eligibility value
+// fall short; a shared progress notifier is flat.
 VA(0x00537970, 0x199)
 MAC_ADDRESS(0x236120, 0x2c4)
 void t_abstract_random_generator::decorateMap()
@@ -4169,30 +4161,24 @@ bool TRmgTemplate::isUsable(s32 humanPlayers, s32 computerPlayers) const
 // Retail-only rmg.txt coordinator. The normalized map volume uses 36*36
 // cells per size unit; islands halve it with a minimum of one. Rows 76..84
 // describe bidirectional connections after the canonical zone reader.
-// Residual (80.8462%): the shared rejection arm restores retail's single
-// destructor/delete pair. Keeping rejection before acceptance matters:
-// acceptance first gives 76.5897%, acceptance plus continue 77.6795%, and
-// two independent delete sites 78.6256%. String assign still expands into
-// _Grow/_Eos instead of retail's retained assign; frame/register homes and
-// field-pointer reloads also differ. Assignment operator/named name pointer
-// are byte-flat; explicit strlen reaches 78.6872% on the old cleanup form
-// but retains the same wrong string boundary. Volume-product order and
-// separate island division are byte-flat. Flattened parsing/validation
-// passes score 22.20%, expanding findZone and vector calls retail retains.
-// Preserve the ordinary helpers and the single cleanup; no inline controls.
-// 2026-10-09: Mac keeps the player-slot check as a TRmgTemplate method after
-// findZone (byte-flat here). The four size() and the template push_back's
-// insert are retained in retail under ICF-folded labels; the only real
-// decision left is the name's assign(const char*, size_t), which retail
-// keeps. The replay refuses it with a root cb of at most 515 (now 556, the
-// 1000 floor included) or two more free sites after it, which then expands
-// the push_back insert unless the cb also falls. Separate size-reject and
-// slot-reject deletes (Mac's order) keep two destructor calls (81.00); a
-// nested accept with one fall-through delete gives 79.81.
-// The map editor's /O1 copy (0x49f0cd) scans the block with the row cursor
-// itself, after saving its first row (mov edi,[row]; inc [row]): game
-// 83.21% -> 87.14%, editor 93.01 -> 99.96 (only the connection reader's
-// unplaced label differs there).
+// The shared rejection arm restores retail's single destructor/delete pair;
+// acceptance first, acceptance plus continue, and two independent delete
+// sites all fall short. Mac keeps the player-slot check as a TRmgTemplate
+// method after findZone. The map editor's /O1 copy (0x49f0cd) scans the
+// block with the row cursor itself, after saving its first row
+// (mov edi,[row]; inc [row]); in the editor only the connection reader's
+// unplaced label differs.
+// Residual (game): the name's assign(const char*, size_t), which retail
+// keeps, expands into _Grow/_Eos; the inline replay refuses it with a root
+// cb of at most 515 (this TU has 556) or two more free sites after it, which
+// then expands the push_back insert. Frame/register homes and field-pointer
+// reloads also differ. The four size() calls and the template push_back's
+// insert are retained in retail under ICF-folded labels. Assignment
+// operator, a named name pointer, explicit strlen, volume-product order and
+// separate island division are flat; separate size-reject and slot-reject
+// deletes (Mac's order) keep two destructor calls; flattened
+// parsing/validation passes expand findZone and vector calls retail
+// retains. Preserve the ordinary helpers and the single cleanup.
 VA(0x00537FF0, 0x482)
 MAC_ADDRESS(0x2372ec, 0x304)
 void type_random_map_generator::loadTemplates()
@@ -4356,10 +4342,10 @@ void readRmgTemplateZones(
 // three manually selected overloads.  The four loops below are likewise the
 // only repeated structures present in retail; every other registration is an
 // unrolled source statement.
-// Sixty loop/construction forms and 52 pointer/container lifetime forms keep
-// a scoped-base-pointer candidate at 98.6796%, but it trades the two tail
-// calls for two early spell-box base-constructor calls. Keep that lead in the
-// reproduced families. The original final quest append crosses C2's separate
+// Loop/construction and pointer/container lifetime searches found a
+// scoped-base-pointer candidate that trades the two tail calls for two early
+// spell-box base-constructor calls; it is not adopted. The original final
+// quest append crosses C2's separate
 // 35000 running cap, blocking begin() and the next treasure constructor.
 // Eight base/derived initializer-list controls do not change these call
 // streams; base member initialization also contradicts its exact vptr order.
@@ -4582,16 +4568,16 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 // role name; Complete-only, no Dreamcast counterpart.
 // Exposing the ordinary position-constructor body in this TU, together
 // with constructed candidates, the named Y temporary and middle zone setter,
-// this restores all retail insertion call boundaries (83.4857 -> 98.1270%).
-// The same caller with the constructor hidden in support is only 69.0444%.
-// All 31 CFG blocks align; the middle opposite-level copy still has two extra
-// moves and a changed schedule. The temporary reference spelling is provisional
+// this restores all retail insertion call boundaries; with the constructor
+// hidden in support they are lost.
+// Residual: all 31 CFG blocks align; the middle opposite-level copy still has
+// two extra moves and a changed schedule. The temporary reference spelling is provisional
 // source ownership, not recovered DC text. Three post-predicate getter reads
 // preserve accepted-position snapshots even if a predicate changes the zone.
-// Before ownership recovery, 60 construction/update/lifetime forms and 60
-// combinations with canonical getSize/max calls plateaued at 85.4444%, still
-// expanding vector helpers too far. Retain real helpers and ordinary calls.
-// Twenty-one shared setter ownership/store forms do not justify changing its
+// Construction/update/lifetime forms with canonical getSize/max calls
+// expanded vector helpers too far before that ownership recovery. Retain
+// real helpers and ordinary calls. Shared setter ownership/store forms do
+// not justify changing its
 // interface: reference+XYZ removes the extra moves but schedules Z too early,
 // changes the exact boundary-builder copy and worsens the filtering caller.
 VA(0x0053AE80, 0x36A)
@@ -4641,7 +4627,7 @@ void type_random_map_generator::appendZonePositions(TRmgZone* center,
 // helper. The map editor retains it at 0x4a1967; the game expands both calls.
 // Keep the destination zone pointer through the vector-size comparison:
 // retail loads its index afterward. Snapshotting the index first lets VC6
-// fold away the empty-vector path (85% versus all 134 retail bytes exact).
+// fold away the empty-vector path; this order matches all 134 retail bytes.
 // Mac 0x23c274..0x23c28c likewise reads the vector count before the index.
 MAC_ADDRESS(0x23c248, 0x9c)
 int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
@@ -4683,21 +4669,18 @@ void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimum
 // enclosing the existing zones plus this candidate. Complete-only code;
 // the role and call ABI are retail-proven; source names remain provisional.
 // The ordinary by-value position setter preserves three loads before the
-// stores (91.50 -> 94.35%); direct field assignment interleaves them. The
-// bounds comparison and initialization order reach 94.45%. Retail retains
-// all four connection-vector size calls: the first expanded counting pass
-// had a nested budget of exactly the size call's cost (42) until the two
-// later zone sizes were read through getSize, whose two extra candidate
-// sites lower that budget to 40 (94.45 -> 98.85%, 2026-09-11).
-// Default construction followed by assignment of the bounds-pass position,
-// as in getInitialZoneBounds, fixes the LEA operand order at +0x3e5 (98.8666%).
-// Copy initialization and a lifetime-extended const reference emit the former
-// order. Twelve phase/snapshot forms preserve the 110-block shape; localizing
-// bestConnections or grouping the connection/bounds phases in scopes does not
-// recover the destination chain or retail spill-slot reuse.
-// Keeping the connection helper's destination pointer recovers both receiver
-// chains (99.7061%). All 110 blocks and 12 calls agree; the residual commutes
-// two indexed-load operands and schedules a stack store/load differently.
+// stores; direct field assignment interleaves them. Retail retains all four
+// connection-vector size calls: the first expanded counting pass has a
+// nested budget of exactly the size call's cost (42) unless the two later
+// zone sizes are read through getSize, whose two extra candidate sites lower
+// that budget to 40. Default construction followed by assignment of the
+// bounds-pass position, as in getInitialZoneBounds, fixes the LEA operand
+// order at +0x3e5; copy initialization and a lifetime-extended const
+// reference emit the other order. Keeping the connection helper's
+// destination pointer recovers both receiver chains; localizing
+// bestConnections or grouping the connection/bounds phases in scopes does
+// not. Residual: all 110 blocks and 12 calls agree; two indexed-load
+// operands commute and a stack store/load is scheduled differently.
 VA(0x0053B2F0, 0x678)
 MAC_ADDRESS(0x23c454, 0x62c) // anchor-callee 0x53bb38; thiscall, ret 0xc
 void type_random_map_generator::filterZonePositions(
@@ -4789,9 +4772,8 @@ struct TRmgZonePlacementFailure {};
 // Exact 562-byte body: preserve the destination slot, separate unsigned
 // count/index locals, and an owned snapshot of the selected coordinate.
 // The shared getter's owned return result restores the two retained
-// single-position vector insert calls at 0x54c3f0. The direct-member-return
-// control is 97.4061% with the same selection snapshot; naming only the
-// getter result without that snapshot is also incomplete. All eight call
+// single-position vector insert calls at 0x54c3f0; a direct member return,
+// or naming only the getter result without that snapshot, falls short. All eight call
 // relocations, the unwind reference and every non-relocation byte agree.
 // Related assigned snapshots keep the boundary builder exact and preserve
 // the fill caller's established insertion/erasure boundaries.
@@ -4857,13 +4839,11 @@ void type_random_map_generator::calculateZoneBounds()
 // Complete-only initialization, called by generation coordinator 0x549930.
 // The two placement passes precede normalization to a centered square.
 // Names are role-derived; the Dreamcast build has no RMG counterpart.
-// Residual (90.6395%): direct table expressions preserve retail's unusual
-// sentinel/version loop; caching one town entry lets VC6 fold it away
-// (77.40%). Named scaled-width/height locals leave the score flat. Remaining
-// deltas: vector erase expands here but is retained in retail, and the
+// Direct table expressions preserve retail's unusual sentinel/version loop;
+// caching one town entry lets VC6 fold it away. Named scaled-width/height
+// locals are flat. The retained chooseCreatureTownType call is restored.
+// Residual: vector erase expands here but is retained in retail, and the
 // dimension products / bounds normalization exchange operand scheduling.
-// Restoring the retained chooseCreatureTownType call raises this to 96.6803%;
-// the remaining vector/dimension differences preserve both zone helpers.
 VA(0x0053BCB0, 0x33B)
 MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
@@ -4969,7 +4949,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
 }
 
 // The map editor calls abs at all three uses of the vertical distance; the
-// game's intrinsic folds them (editor 89.87% -> 100%, game stays exact).
+// game's intrinsic folds them. Both bodies are exact.
 VA(0x0053C220, 0x16A)
 MAC_ADDRESS(0x23da90, 0x2a4)
 void type_random_map_generator::drawStraightZoneBoundary(
@@ -5023,27 +5003,25 @@ void type_random_map_generator::drawStraightZoneBoundary(
 // zone+0x3f4. All names are provisional; Dreamcast has no RMG compiland.
 // The found flag folds away, but its do/while plus post-search fallback
 // recovers retail's backward jne, rectangle fall-through, and later success
-// block. Returning from inside the search sinks the rectangle to the end:
-// with the same copied points that control is 60.27%, versus 86.10% here.
-// All seven appends copy a point. Reconstructing the main-loop copies from
-// x/y instead costs 56.56% in the old search; a named copy is byte-identical
-// to TRmgPoint(from). Direct single/count insert calls bypass the push_back
-// chain and measured 43.07%/8.56%; nesting the success body measured 29.83%.
-// Retail stores height, zero y/x, then width. Its min also spills separate
-// inputs only when the neighbour exists, keeping the result unaliased.
-// These two corrections reach 86.68%. Moving the owning-zone read inside
-// the neighbour arm loses that lifetime (79.98%); a bounds ctor is 80.77%.
-// Residual: 90 vs 93 blocks, 37 calls on both sides. The search topology now
-// agrees; two vector allocation paths still choose different _Ucopy/_Ufill/
-// _Destroy expansions, followed by local-slot and register differences.
-// Account for cross-type ICF before treating a template name as a new call.
+// block; returning from inside the search sinks the rectangle to the end.
+// All seven appends copy a point; a named copy is byte-identical to
+// TRmgPoint(from), while reconstructing the main-loop copies from x/y, direct
+// single/count insert calls (bypassing the push_back chain) and a nested
+// success body all lower the game. Retail stores height, zero y/x, then
+// width. Its min also spills separate inputs only when the neighbour exists,
+// keeping the result unaliased; moving the owning-zone read inside the
+// neighbour arm loses that lifetime, and a bounds constructor is lower.
 // Mac 0x23de80..0x23deec builds the two left corners, then assigns the
 // existing from/to endpoints to the right corners. Mac 0x23e11c..0x23e1b4
 // also resets the search flag and refreshes both endpoint snapshots before
-// clipping. Retain that complete search phase: the editor is exact, while
-// the game scores 84.8345% (90.3437% before these source recoveries).
-// Omitting the inner snapshots/flag reaches 93.3239% but loses that evidence.
-// Shared/local flags and pre/post-tested loops all retain 84.8345%.
+// clipping. Retain that complete search phase: the editor is exact, and
+// omitting the inner snapshots/flag would raise the game only by dropping
+// that evidence. Shared/local flags and pre/post-tested loops are flat.
+// Game residual: 90 vs 93 blocks, 37 calls on both sides. The search
+// topology agrees; two vector allocation paths still choose different
+// _Ucopy/_Ufill/_Destroy expansions, followed by local-slot and register
+// differences. Account for cross-type ICF before treating a template name as
+// a new call.
 // Follow the map border clockwise, one corner at a time.
 // North is up:  upperLeft -> upperRight
 //                   ^             v
@@ -5278,9 +5256,9 @@ void type_random_map_generator::drawIslandBoundary(TRmgPoint from, TRmgPoint to,
 // Mac 0x23e7ec..0x23e844 copies the offset and position as by-value
 // operands of the shared position translation, then 0x23e878 passes a copy
 // of the result to getMapItem. The map editor copies that returned value
-// into the neighbour (86.65% -> 100%) and tests size() > 0 unsigned (jbe).
+// into the neighbour and tests size() > 0 unsigned (jbe).
 // Declaring the neighbour before assigning keeps the game's erase/copy
-// inline split exact; direct initialization over-expands copy (77.19%).
+// inline split exact; direct initialization over-expands copy.
 VA(0x0053CF50, 0x177)
 MAC_ADDRESS(0x23e738, 0x1f0)
 VA_AT(h3maped, 0x004a2ec3, 0x137)
@@ -5310,21 +5288,19 @@ void type_random_map_generator::fillIslandInterior(TRmgZone* zone)
 
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
-// Residual 95.5000%: the three-coordinate total preserves retail's 0x34 frame
-// and scan/output homes. The entry still needs its index lookup interleaved
-// with the position copy, and separate zero registers for count and totals.
-// Scalar/TRmgPoint totals lose four frame bytes; coordinate arrays including Z
-// preserve the peak. Copy, declaration, zero/store order and counter lifetime
-// families do not close the entry. The bounds accessor is neutral. An ordinary
-// zone-index accessor before the position copy recovers its pointer chain but
-// moves the copy to ECX and saves row Y too early (89.1196%). TRmgPoint/three-axis
-// scans and reuse of the position do not repair that combined model. Keep the
-// existing accessor contracts and the three-coordinate total; no index helper
-// or accumulator/scan rewrite is supported by these measurements.
+// The three-coordinate total preserves retail's 0x34 frame and scan/output
+// homes; scalar/TRmgPoint totals lose four frame bytes.
 // Mac 0x23e97c..0x23e9c0 gives the total and a scan position the zone's
 // level, zeroes the sums and passes the scan position by value to
-// getMapItem; the map editor stores that level before the zeros (86.94 ->
-// 91.47%, game flat).
+// getMapItem; the map editor stores that level before the zeros.
+// Residual: the entry still needs its index lookup interleaved with the
+// position copy, and separate zero registers for count and totals. Copy,
+// declaration, zero/store order and counter lifetime families do not close
+// it; the bounds accessor is neutral. An ordinary zone-index accessor before
+// the position copy recovers its pointer chain but moves the copy to ECX and
+// saves row Y too early; TRmgPoint/three-axis scans and reuse of the position
+// do not repair that. Keep the existing accessor contracts and the
+// three-coordinate total.
 VA(0x0053D0D0, 0xE3)
 MAC_ADDRESS(0x23e928, 0x184) // anchor-callee 0x53e6e8; thiscall, ret 4
 VA_AT(h3maped, 0x004a2ffa, 0xc8)
@@ -5359,16 +5335,15 @@ void type_random_map_generator::recenterZone(TRmgZone* zone)
 
 // Island mode redraws an inset polygon toward the zone's center, with
 // displacement clamped from one quarter to one half of each radius.
-// Residual (78.77%): the recovered interior-fill call restores the complete
-// retail call sequence (previously 75.3450%). Clamp argument order improves 63.63 -> 66.42%;
-// direct displacement-vector construction avoids the temporary point
-// subtraction (73.46%); retaining the long clamp result reaches 75.35%.
-// Length and edge calls remain intact. Clamp temporary homes, vector
-// multiply/divide scheduling and the reverse-loop register roles differ.
-// The map editor keeps the inset point in ESI/EDI and adds the offset in
-// registers, so the point is translated by value (point = point + offset)
-// rather than through operator+=; each boundary vertex constructs its own
-// offset. Editor 72.32 -> 92.74%, game 78.77 -> 78.87%.
+// The recovered interior-fill call restores the complete retail call
+// sequence; the clamp argument order, direct displacement-vector
+// construction (no temporary point subtraction) and the retained long clamp
+// result are native. The map editor keeps the inset point in ESI/EDI and
+// adds the offset in registers, so the point is translated by value
+// (point = point + offset) rather than through operator+=; each boundary
+// vertex constructs its own offset.
+// Residual: clamp temporary homes, vector multiply/divide scheduling and the
+// reverse-loop register roles.
 VA(0x0053D1C0, 0x1B9)
 MAC_ADDRESS(0x23eaac, 0x2b0) // anchor-callee 0x53e70f; thiscall, ret 4
 VA_AT(h3maped, 0x004a30c2, 0x182)
@@ -5382,7 +5357,7 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     int length = delta.length();
     if (length > 0) {
         // Both clamps bind long references (retail's two-temporary
-        // selector shape); the by-value int helpers score 75.89%.
+        // selector shape); by-value int helpers lose it.
         long displacement = std::max<long>(4, length / 4);
         displacement = std::min<long>(displacement, length / 2);
         delta = delta * displacement / length;
@@ -5420,35 +5395,27 @@ int TRmgZone::getBoundaryCount() const
 // Mac 0x23ef84..0x23efb8 copies back() and decrements the vector size with
 // no erase call, the inline MSL pop_back; keep that call. Map extents come
 // from type_random_map's inline getWidth()/getHeight() accessors. Under /Ob2
-// they raise the caller cb (907 -> 931, budget 1814 -> 1862) while each
-// inlined accessor (cb 24) stays below the budget-subtraction threshold. With
-// direct m_mapWidth/m_mapHeight fields the final lower-span push_back's
-// insert(n) is rejected at 464 < 469 and every insertion stays a call
-// (53.60%); with the accessors it expands with retail's nested
-// _Ucopy/_Ufill/size calls (89.59%, retail's 20-call stream). Still open:
-// erase's copy is expanded (budget 67 >= 46, 1514/11 candidates); retail
-// calls it, which needs about three more cheap candidates after pop_back.
-// Probes (lane A r4): accessors in only the scanline tail score the same;
-// !pending.empty() is flat.
-// Controls: the single-position erase(end() - 1) that pop_back wraps gives
-// 89.43% with the direct fields (its one fewer inline level); back(), [size() - 1] and
-// *(end() - 1) tops and size()/empty()/size() > 0 loop tests are flat.
-// Earlier matching found 18 seed/pop/insertion forms favoring erasing the
-// consumed one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
-// and lower span seeds at function scope reaches 90.0984%; nine bounds/span
-// lifetime forms find no further gain, with no other RMG score changes.
-// Assign the initial position from the shared owned-result getter; direct
-// copy-initialization changes the insertion/erasure expansion (52.8361%).
-// Retail retains copy and _Destroy inside seed erasure; VC6 expands them
-// and retains an extra size call in the final lower-span insertion.
-// Isolated erase inline_depth(1) is flat; depth zero retains the wrong outer
-// boundary and scores 88.1434%. Neither diagnostic pragma is retained.
+// they raise the caller cb while each inlined accessor (cb 24) stays below
+// the budget-subtraction threshold; with direct m_mapWidth/m_mapHeight
+// fields the final lower-span push_back's insert(n) is rejected and every
+// insertion stays a call, while with the accessors it expands with retail's
+// nested _Ucopy/_Ufill/size calls (retail's 20-call stream). Assign the
+// initial position from the shared owned-result getter; direct
+// copy-initialization changes the insertion/erasure expansion.
+// Controls: the single-position erase(end() - 1) that pop_back wraps, back(),
+// [size() - 1] and *(end() - 1) tops, size()/empty()/size() > 0 loop tests,
+// accessors only in the scanline tail and seed lifetimes are flat or lower.
+// An isolated erase inline_depth(1) diagnostic is flat and depth zero
+// retains the wrong outer boundary; neither pragma is retained.
 // The compiled scanline body agrees with an independent BFS on all 13,824
 // in-bounds seed/3x3 grid/level/water-mode cases, with address and undefined-
 // behavior sanitizers. That oracle covers filling and flags, not seed clipping.
 // The scan reads the cursor through the point accessors: three free /Ob2
 // sites after the pop_back take erase's body budget under std::copy's cost,
-// which retail calls (97.10%; every call matches).
+// which retail calls; every call matches.
+// Residual: retail retains copy and _Destroy inside seed erasure, where VC6
+// expands them and retains an extra size call in the final lower-span
+// insertion.
 VA(0x0053D380, 0x551)
 MAC_ADDRESS(0x23ed74, 0x4a4) // anchor-caller 0x53e050; Complete-only, thiscall ret 8
 VA_AT(h3maped, 0x004a325d, 0x2f7)
@@ -5542,11 +5509,10 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgHalfEdge* first
 // graph edges. Parallel vectors keep pending zones sorted by distance;
 // popping from the back takes the smallest distance. The per-zone short
 // table, not the queued priority, supplies the next relaxed distance.
-// Residual 77.1353%: 32 seed/pop/insertion/slot-lifetime hypotheses raise
-// 61.3176% without other RMG score changes. Direct public seed insertion and
-// count insertion of the queued zone retain both vector erasures. The initial
-// short-vector size still expands, and the seeds call count insert where
-// retail retains single-element insert. Every variant passes 16,585 directed
+// Direct public seed insertion and count insertion of the queued zone retain
+// both vector erasures. Residual: the initial short-vector size still
+// expands, and the seeds call count insert where retail retains
+// single-element insert. Every variant passes 16,585 directed
 // graph/root-count cases against an independent Floyd-Warshall distance table.
 VA(0x0053D8E0, 0x1EC)
 MAC_ADDRESS(0x23f218, 0x2f0) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
@@ -5587,36 +5553,24 @@ VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
 // original-zone distance, then the changed graph is propagated again.
 // The connection's four input-filter limits are not initialized here in
 // retail; only destination/value and its three policy bytes are assigned.
-// Residual 68.8871%: 48 record-lifetime/bounds/public-insertion forms raise
-// the initial 30.0554%. The final direct single-element insert restores the
-// retained _Construct<TRmgZoneConnection> body; all four push_back calls
-// instead inline two count-insert bodies and omit that construction symbol.
-// Reusing one connection per function or outer loop remains lower. The third
-// connection insertion still expands differently from retail; preserve the
-// real operation and its canonical helpers.
-// A sixteen-state connection push_back/insert batch emits no short-vector
-// resize specialization in any object. Its caller peak of 72.7823% does
-// not recover the missing 0x54c1e0 boundary, so no connection edit is retained.
-// Residual 79.6078%: a generator-level distance initializer recovered that
-// exact boundary (TRmgZone::initializeDistances keeps it) and cut the
-// candidate CFG from 86 to 73 blocks (retail 79). Moving only the post-resize
-// fill loses at 66.1663%. The two large connection loops, their ring-search
-// exits and final insertion expansion remain to reconcile.
+// The final direct single-element insert restores the retained
+// _Construct<TRmgZoneConnection> body; push_back calls instead inline two
+// count-insert bodies and omit that construction symbol. Reusing one
+// connection per function or outer loop is lower.
 // Mac 0x23f714 and h3maped 0x4a389b call TRmgZone::initializeDistances from
-// a zone loop in this body (Mac reuses the index register), so the earlier
-// generator-level initializeRmgZoneDistances wrapper is gone: the map editor
-// rises 82.60 -> 88.18, the game falls 76.31 -> 42.52. The direct loop raises
-// this root's cb from 877 to 918 (budget 1754 -> 1836) and the game then
-// expands the later connection inserts that retail calls. Passing the returned
-// level position directly to locate restores the base-point conversion and
-// short temporary lifetime, recovering much of that expansion decision.
-// Mac 23f5fc..23f62c and 23f810..23f840 explicitly track search success. Both
-// native records assign destination, connected, value, border policy, then
-// unguarded. Together these recover game 82.5318% and editor 93.4648%; making
-// bounds const is byte-flat. Native height-before-width bounds initialization
-// and two-exit ring traversal further recover game 85.3963% / editor 95.1367%.
-// The remaining game call difference is inside the fourth connection insertion;
-// both frames remain four bytes short. Preserve the canonical helpers.
+// a zone loop in this body (Mac reuses the index register), with no
+// generator-level wrapper. The direct loop raises this root's cb, and the
+// game then expands later connection inserts that retail calls; passing the
+// returned level position directly to locate restores the base-point
+// conversion and short temporary lifetime, recovering much of that
+// expansion decision. Mac 23f5fc..23f62c and 23f810..23f840 explicitly track
+// search success. Both native records assign destination, connected, value,
+// border policy, then unguarded. Native height-before-width bounds
+// initialization and two-exit ring traversal are recovered; const bounds are
+// byte-flat.
+// Residual: the remaining game call difference is inside the fourth
+// connection insertion, and both frames remain four bytes short. Preserve
+// the canonical helpers.
 VA(0x0053DAD0, 0x57F)
 MAC_ADDRESS(0x23f518, 0x40c) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
 VA_AT(h3maped, 0x004a3710, 0x2f3)
@@ -5716,9 +5670,9 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 // proves one subdivision lifetime and a nested temporary slot/zone pair.
 // Retail-only source reconstruction: the original class/method names are
 // unavailable in Dreamcast. The retained callees establish their interfaces.
-// The selected zone stays live across radial inserts (83.26 -> 92.89%);
-// repeatedly indexing zones loses that evidence. Explicit coordinate copies
-// before the radial multiplications reproduce retail scheduling (96.32%).
+// The selected zone stays live across radial inserts; repeatedly indexing
+// zones loses that evidence. Explicit coordinate copies before the radial
+// multiplications reproduce retail scheduling.
 // A single boolean TraceZoneBoundary argument preserves its ECX-valued
 // true/false arms; separate literal calls use push-immediate instead.
 // One shared locate-query value restores both expanded point-vector member
@@ -5726,10 +5680,10 @@ VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
 // destructor. Separate query constructors keep the second member out of line.
 // Bound temporaries live inside their guards, matching retail's x87 stores.
 // Retail reuses one counter home across the initial, radial and final loops;
-// shadowing it in the radial loop adds a stack home (99.8364%). Reusing it
+// shadowing it in the radial loop adds a stack home. Reusing it
 // completes the exact body. With the getter owning its returned coordinate,
 // assign each radial center to its own value before scaling. Copy-initialized
-// centers leave two vector destructors out of line (97.3085%); assignment
+// centers leave two vector destructors out of line; assignment
 // preserves all 1613 retail bytes, including the original cleanup sequence.
 VA(0x0053E050, 0x64D)
 MAC_ADDRESS(0x23f924, 0x798) // anchor-callee 0x549af9; thiscall, ret 8
@@ -5869,7 +5823,7 @@ void type_random_map_generator::buildZoneBoundaries(
 // Reject water before constructing the level-map and brush. That loop scope
 // recovers retail's terrain reload and coordinate register lifetimes, closing
 // all 823 game bytes and 653 editor bytes. A nested painting scope preserves
-// the frame but caches terrain across construction (96.27% / 97.41%).
+// the frame but caches terrain across construction.
 VA(0x0053E6A0, 0x337)
 MAC_ADDRESS(0x2400bc, 0x354)
 VA_AT(h3maped, 0x004a3f27, 0x28d)
@@ -5925,8 +5879,8 @@ void type_random_map_generator::paintZoneTerrain()
 // Retail 0x53ed00 consumes these records as a stack and clamps final samples
 // to bytes; the terrain painter at 0x53efa0 consumes the resulting noise.
 // Exact 798-byte body: a Y/X midpoint array restores all three scalar stack
-// homes and preserves the Y-before-X evaluation. Separate coordinates leave
-// 99.9545%; TRmgPoint and quadrant-lifetime alternatives do not close that gap.
+// homes and preserves the Y-before-X evaluation; separate coordinates,
+// TRmgPoint and quadrant-lifetime alternatives fall short.
 // All 32 blocks reproduce. The vector's empty _Destroy is folded with the
 // artifact-vector representative at 0x404140; both retained bodies are ret 8.
 VA(0x0053E9E0, 0x31E)
@@ -6010,7 +5964,7 @@ void generateRmgIslandMask(unsigned char* mask, int width, int height);
 // Exact 667-byte body. The subdivision's center is the last source argument:
 // fastcall still passes it in EDX, but VC6 prepares it before copying the two
 // records and shares the complete argument-pack tail between both calls.
-// Center-before-records leaves 88.4813%; center-last reaches 99.9585%.
+// Center-before-records loses that shared tail.
 // Initializing the Y edge pair before X restores the last two zero-register
 // choices. Both separate stores and the equivalent assignment chain match.
 // Keep each random displacement's range / 2 expression: naming a shared half
@@ -6071,7 +6025,7 @@ void generateRmgIslandMask(unsigned char* mask, int width, int height)
 // Mac 0x240c54 initializes the shared point level before painting;
 // 0x240d18..0x240d2c copies that complete point into the map query.
 // Keep its lifetime and canonical by-value lookup instead of reconstructing
-// another position through the scalar overload (99.3392 -> 99.9298%).
+// another position through the scalar overload.
 // The terrain value belongs to the painting scope. Keeping it there prevents
 // the editor from reusing its stack slot for the brush and restores the native
 // 0x34-byte frame; the shared game body remains exact.
@@ -6113,23 +6067,16 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
 // Complete's island-spacing flood uses eight neighbours with costs 2/3,
 // propagating only into the supplied zone. It resets connection metadata
 // as each shorter distance is accepted, without testing terrain or objects.
-// Residual (88.7238%): explicit 2/3 cost branches and public pop_back
-// restore the 0x50 frame and cost-addition order, from 65.6485%. Branches
-// alone reach 74.8201%; pop_back alone reaches 76.3849%. All 48 cost-type,
-// coordinate and API forms were tested; changing both costs to int is
-// byte-identical, so retain the original unsigned declarations.
-// Their 83.8661% combination improves further with a copied TRmgPoint direction:
-// retail reads both components before the current-position values. Sixty
-// capture/seed/pop forms reproduce 85.7699%, preserving all sibling scores.
-// References, pointers and reversed scalar additions do not recover this pair.
-// The seed appends now use push_back directly. Naming an end iterator had
-// suppressed an extra cost-vector _Destroy but supplied no source boundary.
-// Seed insertion, popped erasure and shared insertion-helper expansions still
-// differ from retail; their natural inline decisions remain unresolved.
-// Mac 0x2410ec..0x241124 copies the full position and planar offset
-// before forming a distinct result, matching the canonical by-value operator+.
-// Restoring that call improves fresh Windows 85.1841% -> 89.0335%; all 27
-// blocks retain their flow kinds. Seed/pop/sorted-vector expansions remain.
+// Explicit 2/3 cost branches and public pop_back restore the 0x50 frame and
+// cost-addition order. Changing both costs to int is byte-identical, so
+// retain the original unsigned declarations. A copied TRmgPoint direction
+// matches retail reading both components before the current-position values;
+// references, pointers and reversed scalar additions do not. The seed
+// appends use push_back directly. Mac 0x2410ec..0x241124 copies the full
+// position and planar offset before forming a distinct result, matching the
+// canonical by-value operator+.
+// Residual: seed insertion, popped erasure and shared insertion-helper
+// expansions differ from retail; all 27 blocks keep their flow kinds.
 VA(0x0053F1A0, 0x2C6)
 MAC_ADDRESS(0x240ee4, 0x358)
 void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex)
@@ -6169,23 +6116,18 @@ void type_random_map_generator::floodWaterZoneDistances(TRmgMapPosition position
 
 // Retail-only: repeatedly seed islands in water areas at least 20 distance
 // units from the current coast. Rebuild the candidate list after each island.
-// Residual (95.3102%): preserve the reset, perimeter flood and repeated island
-// loop. Source-linked comparison: B4's complete reset body now agrees, but
-// its entry guard has a surplus register move. Candidate B16/B22 split the
-// minimum-X reload before the guard / outer advance; retail B16 includes
-// that reload in the outer back-edge target. These extra blocks are not
-// missing candidate-vector cleanup; all eight ordered calls agree.
-// A real perimeter cell pointer plus default-then-assigned position restores
-// the reset body's register sequence and the perimeter's row-held zone index.
-// Negative controls: flattening the cell lookup is 93.4652%; restoring copy
-// initialization is 94.0401%. Three 60-state construction/loop/getter batches
-// do not resolve the entry-copy scheduling or outer-back-edge reload placement.
-// Keep the canonical coordinate/map helpers; no inline directive is involved.
-// Naming the selected cell below restores all 36 instructions in retail's
-// selection/radius blocks; flattening that binding returns 94.0882%. The other
-// 55 candidate blocks are unchanged. Three further 60-state selection/scan/
-// upper-limit batches preserve this peak; named scan cells/insert iterators
-// and ADD-negative limit expressions do not recover the remaining differences.
+// Preserve the reset, perimeter flood and repeated island loop. A real
+// perimeter cell pointer plus default-then-assigned position restores the
+// reset body's register sequence and the perimeter's row-held zone index;
+// naming the selected cell restores retail's selection/radius blocks.
+// Flattening the cell lookup or that binding, or copy initialization, lowers
+// it. Keep the canonical coordinate/map helpers.
+// Residual: the reset's entry guard has a surplus register move, and the
+// candidate splits the minimum-X reload before the guard / outer advance
+// (blocks B16/B22) where retail's B16 includes it in the outer back-edge
+// target; all eight ordered calls agree. Construction/loop/getter,
+// selection/scan/upper-limit, named scan cells/insert iterators and
+// ADD-negative limit forms do not recover it.
 VA(0x0053F470, 0x409)
 MAC_ADDRESS(0x24123c, 0x638)
 VA_AT(h3maped, 0x004a4913, 0x37b)
@@ -6249,11 +6191,11 @@ void type_random_map_generator::populateWaterZoneIslands(TRmgZone* zone)
 // Connection presence, level and guard policy decide whether to separate it.
 // The three clipped rectangles follow the source pattern independently
 // recovered in repairWaterZoneBorders; Complete has no Dreamcast RMG TU.
-// Residual: 91.7350%. The last scan's named upper corner recovers retail's
-// x+2 outer induction (0x53f8c1), including ADD -3 at its first lower clamp.
-// Flattening that corner restores x-1 and 86.9809%. Two 64-state corner
-// families and a 60-state reproduced-parent frontier did not resolve the
-// remaining rectangle/zone register homes and extra reload blocks. Native
+// The last scan's named upper corner recovers retail's x+2 outer induction
+// (0x53f8c1), including ADD -3 at its first lower clamp; flattening it
+// restores x-1. Residual: rectangle/zone register homes and extra reload
+// blocks, which corner families and parent-frontier searches did not
+// resolve. Native
 // flat-cell tests cover the three scan phases and connection policies.
 // Preserve the two separate connection-policy tests at 0x53fa3f..0x53fa58;
 // the ordinary findConnection helper and progress call remain canonical.
@@ -6466,29 +6408,19 @@ void type_random_map_generator::repairWaterZoneBorders()
 // trigger-bearing prototype, floods the low-word score from its entrance.
 // The two vectors and descending binary search use the canonical worklist
 // helper also expanded in the road/river floods. Complete-only ownership.
-// Residual (69.5855%): seed insert/erase and worklist insert wrappers have
-// different expansion decisions; the frame is 12 bytes larger. push_back
-// seeds improve 68.0545%; constructor/operator+ neighbour values lower it.
-// Shared currentPosition beats separate seed/loop scopes (68.4291%) and
-// reusing the incoming position (59.4109%). Pop/bounds/score scopes are flat.
-// Keep the ordinary base and worklist helper calls; no other RMG scores
-// changed in the six value-form and eight lifetime/guard controls.
-// Further JSON controls: three 60-state queue/coordinate/seed-lifetime
-// populations reach 75.7527% with position pop_back and byte parity, but
-// retain a 0x54 frame versus retail's 0x48. The reproduced minimal leader
-// expands position erase into copy/Destroy where retail calls erase, calls
-// count-insert for seeds where retail calls single-insert, and reverses that
-// expansion decision at the sorted inserts. Its final position-vector dtor
-// also remains called instead of retail's direct delete. No form adopted;
-// all siblings hold. Trigger scopes and canonical compound translation do
-// not raise the peak. See generate-rmg-add-object-family.py; the independent
-// 159-body distance oracle passes with ten wrong controls rejected.
-// A joint zone-count reference-accessor control changes registration, removal
-// and treasure-limit reads together. Both reproduced states give identical
-// caller bytes and equivalent EH/relocations; that lvalue boundary is neutral.
-// The neighbor step keeps the canonical position-plus-direction operator
-// recovered with the Mac-supported helpers (#111): 67.86%, against 71.57%
-// for the field-wise step.
+// Residual: seed insert/erase and worklist insert wrappers make different
+// expansion decisions, and the frame is 12 bytes larger. Shared
+// currentPosition beats separate seed/loop scopes and reusing the incoming
+// position; pop/bounds/score scopes are flat. Queue/coordinate/seed-lifetime
+// searches with a position pop_back and byte parity keep a 0x54 frame
+// against retail's 0x48, expand position erase into copy/_Destroy where
+// retail calls erase, call count-insert for seeds where retail calls
+// single-insert, and keep the final position-vector destructor call instead
+// of retail's direct delete; none is adopted. A zone-count reference
+// accessor is neutral. Keep the ordinary base and worklist helper calls and
+// the canonical position-plus-direction operator recovered with the
+// Mac-supported helpers (#111); a field-wise step scores higher but drops
+// that helper.
 VA(0x005402A0, 0x32A)
 MAC_ADDRESS(0x24260c, 0x434) // anchor-vtable + generator/map layouts; retail-only
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
@@ -6545,7 +6477,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
 // expands isPassable; the map editor calls isPassable (0x49a1d8) there.
 // Comparing the field directly with Water (no sign-extended local) gives
 // retail's six-bit mask. Together with the editor's out-of-line zone-path
-// setter this matches both images (game 99.36%, editor 74.72% before).
+// setter this matches both images.
 VA(0x005405D0, 0x304)
 MAC_ADDRESS(0x242a40, 0x448)
 void type_random_map_generator::buildZoneConnectionPaths()
@@ -6632,7 +6564,7 @@ void TRmgMapItem::setZonePath(int cost, int direction, int connectionZone)
 // expands later map accesses. After virtual addObject it rechecks present.
 // The non-narrow path clears only the obstacle-fill flag in the clipped same-zone 3x3
 // neighbourhood; it must not mark all of those neighbours as route cells.
-// Residual (79.9698%): the first map lookup over-expands, the frame is 0x28
+// Residual: the first map lookup over-expands, the frame is 0x28
 // instead of 0x2c, and the common post-placement query adds a CFG block.
 // A generated family of scalar/corner/rectangle bounds, independent bound
 // orders, predecessor copy forms and nested present/absent scopes did not
@@ -6690,8 +6622,8 @@ void type_random_map_generator::openConnectionPath(
 // The RoE exclusion ends at 117; the next predecrement begins eligibility at
 // 116 without clearing slot 117. A separate limit leaves setup moves reordered.
 // The compound random-difference expression reproduces the count spill and
-// first-draw-minus-second-draw sequence. Named delta statements leave 96.5155%;
-// a separate reverse pointer/count exclusion reaches 99.9381%. Constructor
+// first-draw-minus-second-draw sequence; named delta statements and a
+// separate reverse pointer/count exclusion fall short. Constructor
 // value/reference combinations are neutral; keep its value arguments.
 VA(0x00540B20, 0x240)
 MAC_ADDRESS(0x243208, 0x290) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
@@ -6798,7 +6730,7 @@ int type_random_map_generator::placeBorderGuard(
 }
 
 // Mac 0x2438f0..0x243928 scans one position (level from the argument) and
-// passes it by value to getMapItem (editor 93.64 -> 93.73%, game exact).
+// passes it by value to getMapItem; the game body is exact.
 VA(0x00540FC0, 0x172)
 MAC_ADDRESS(0x243824, 0x2d4) // anchor-callee createGroundConnection; thiscall, ret 0x10
 VA_AT(h3maped, 0x004a606b, 0x151)
@@ -6837,10 +6769,9 @@ void type_random_map_generator::markBorderObjectArea(
 // before forming the returned coordinate. A free by-value addition preserves
 // those operands; the former member did not copy its position receiver.
 // Keep the ordinary three-coordinate constructor in the canonical body.
-// Windows ground improves 81.8175% -> 90.8247%, shipyard 88.7664% -> 89.1042%,
-// and the road caller's restored addition reaches 83.9095% from 81.8701%.
-// The same call in object-score propagation still needs its surrounding
-// lowering recovered (71.7054% -> 68.0291%); do not flatten the addition.
+// The ground, shipyard and road callers improve with it; object-score
+// propagation still needs its surrounding lowering recovered, so it is
+// lower there; do not flatten the addition.
 TRmgMapPosition operator+(TRmgMapPosition position, TRmgPoint offset)
 {
     return TRmgMapPosition(position.m_x + offset.m_x, position.m_y + offset.m_y, position.m_z);
@@ -6892,27 +6823,19 @@ void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 // crossings, opens their predecessor paths, and records both zone entrances
 // before choosing border objects or a guard.  There is no Dreamcast RMG
 // counterpart; the helper names describe their retained retail bodies.
-// Residual (81.81753%): retail preserves coordinate copies before translation;
-// construct the ordinary addition helper's result before applying its offset.
-// The candidate still retains two coordinate constructors that retail expands;
-// its frame is 0x50 versus retail 0x5c.
-// The final guard accessors call the scalar overload instead of the value
-// overload, and the second guard's occupancy size remains out of line.
-// Source-slot locals reproduce source-index-before-destination lookup; alone
-// they score 78.071556%, combined with the value construction 81.81753%.
-// Controls on the prior helper: a separate scan position copy is 78.48837%;
-// replacing the first/both additions with caller-side copy/+= is
-// 78.701256%/78.31127%; entrance locals are 76.9034%, guard-input locals
-// 77.27907%. Keep the canonical helper calls. Inside the helper, returning
-// the += reference is 81.15385% versus a separate return's 81.63685% before
-// slot locals; copy-initializing from a constructed temporary is 75.432915%.
-// Older controls: direct range erase expands further (71.29874%); naming
-// candidateCount before the empty test is 75.386406%. The two size calls
-// preserve retail's count reuse through min. No inline pin is retained.
-// With the copied-position addition, binding both input slots before their
-// zone indices follows the native 0x243b24..0x243b38 prefix and raises
-// Windows 90.8247% -> 91.9803%. The 0x5c frame now agrees; the remaining
-// difference includes the map query expanded inside both guard placements.
+// Retail preserves coordinate copies before translation; construct the
+// ordinary addition helper's result before applying its offset. Source-slot
+// locals reproduce source-index-before-destination lookup, and binding both
+// input slots before their zone indices follows the native
+// 0x243b24..0x243b38 prefix. The two size calls preserve retail's count
+// reuse through min. Lower controls: a separate scan position copy,
+// caller-side copy/+= for either addition, entrance or guard-input locals,
+// returning the += reference, copy-initializing from a constructed
+// temporary, direct range erase, and naming candidateCount before the empty
+// test. Keep the canonical helper calls.
+// Residual: the map query expands inside both guard placements, the final
+// guard accessors call the scalar overload instead of the value overload,
+// and the second guard's occupancy size remains out of line.
 VA(0x00541140, 0x63A)
 MAC_ADDRESS(0x243af8, 0x53c) // anchor-callee ConnectZones 0x543550; retail-only
 unsigned char type_random_map_generator::createGroundConnection(
@@ -7013,7 +6936,7 @@ unsigned char type_random_map_generator::createGroundConnection(
 // water cells are traversable. RMG has no Dreamcast counterpart.
 // Exact with push_back, returned-position addition and integer land-kind
 // accessors. Pass the seed position to getMapItem directly: the scalar
-// wrapper retains an extra nested lookup call and scores 82.0071%.
+// wrapper retains an extra nested lookup call.
 // Copy then += changes coordinate homes; byte terrain adds sign extensions.
 // The empty _Destroy body is folded with vector<type_artifact> (ret 8).
 VA(0x00541780, 0x18D)
@@ -7055,7 +6978,7 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 // Preserve its ordered water/entrance/passability/rock tests and byte queries.
 // The native 0x2443cc coordinate copy uses the same returned-offset operation
 // as both shipyard water scans. Calling that helper restores all retail bytes;
-// splitting the coordinate into assignment and += retained only 90.7594%.
+// splitting the coordinate into assignment and += does not.
 static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
     int waterOffset);
 
@@ -7113,7 +7036,7 @@ static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosit
 // position addition two levels below connectZones and createShipyardConnection
 // (retaining only the three-coordinate constructor). A separate find helper,
 // or the getRmgShipyardWaterPosition forwarder, pushes that addition a level
-// deeper and keeps it out of line (connectZones 95.22%, createShipyard 89.03%).
+// deeper and keeps it out of line in connectZones and createShipyardConnection.
 MAC_ADDRESS(0x24457c, 0x130)
 void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 {
@@ -7135,9 +7058,9 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 // prototype 87 (SHIPYARD), scans the source zone's eligible coastal cells,
 // places an ownable object, then opens its water route and entrance guard.
 // Names are inferred roles; there is no Dreamcast RMG compiland.
-// Residual (94.8591%): branch destinations and polarities agree, and the
-// retained constructor/call sequence matches. Destination-lookup registers,
-// the two trigger-x stores and the final guard registers/temporary still differ.
+// Residual: branch destinations and polarities agree, and the retained
+// constructor/call sequence matches. Destination-lookup registers, the two
+// trigger-x stores and the final guard registers/temporary still differ.
 // Keep one nearby coordinate across scanning and placement: retail reuses
 // EBP-0x30. The scan initializes only z; copying a whole position extends the
 // wrong coordinate lifetimes. Capture visited as a byte for the dword load,
@@ -7153,41 +7076,22 @@ void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 // The late value addition preserves the retained base constructor naturally.
 // Frozen-front-end C2 tracing measures nested budget 95 against base cost 96;
 // no pragma, alternate declaration or release-elided carrier is retained.
-// Controls: plain final ++y expands the base constructor and retains reset
-// (91.93% before opening fixes); compound += reuses an earlier y+1 unlike
-// retail. A default result with direct field calculations removes the extra
-// x store (95.50%) but changes frame homes and also reuses that earlier y+1.
-// Copy-initialize versus assign the addition's local, and a free by-value
-// left operand, are byte-neutral. A full saved entrance coordinate grows the
-// frame; a position setter changes the retained constructor/reset boundary.
-// Separate nearby locals, value-returning trigger subtraction, a full scan
-// position copy and reversed water addends all lose matching instructions.
-// Initializing guardValue to zero before its test changes the branch shape;
-// normalizing the requested input in guardValue is neutral. Rewriting the
-// cutoff as assignment breaks the independently exact retained value helper.
 // Naming the source slot/value before the destination slot improves the
-// opening; adding a separate destination index reverses that improvement.
-// Further controls: a saved TRmgPoint entrance adds a four-byte stack home;
-// initializing guardValue from the requested value before the policy test
-// hoists its load into the unguarded path. A const conditional result changes
-// table registers but still spills guardValue. Reusing the prototype index
-// in the water loop is neutral. Value-returning trigger subtraction with a
-// plain final increment grows the frame and expands the base constructor.
-// A by-value addition offset is neutral here but moves the ground caller
-// from 80.43471% to 76.63149%, without resolving this final coordinate copy.
-// An entry-wide zero initialization grows the frame from 0x68 to 0x6c
-// (93.24324%) and still homes guardValue. Consuming operator-='s returned
-// reference for entranceX, and returning the named operator+ result after
-// a separate += statement, are both byte-neutral at 94.85907%.
-// A long guardValue is also neutral. A separate boolean guard decision
-// emits an absent setg/byte home and changes table registers (93.57529%).
-// A reference to the chosen candidate shrinks the frame to 0x5c and removes
-// retail's coordinate value homes (89.96718%); retain the value copy.
-// Moving only guardValue's declaration before the candidate vector is
-// neutral. Returning immediately on border success adds a cleanup branch
-// and reverses the border-result branch (94.02123%); keep the shared exit.
-// A short-lived entrance value copied into nearby still grows the frame to
-// 0x74 and changes the trigger-load/subtraction sequence (92.79536%).
+// opening. Keep the value copy of the chosen candidate (a reference removes
+// retail's coordinate value homes) and the shared exit on border success.
+// Failed probes: a plain final ++y (expands the base constructor and retains
+// reset), compound += (reuses an earlier y+1), a default result with direct
+// field calculations, a saved entrance coordinate or TRmgPoint, a position
+// setter, separate nearby locals, value-returning trigger subtraction, a
+// full scan position copy, reversed water addends, initializing guardValue
+// early or entry-wide, a separate boolean guard decision, a separate
+// destination index and a short-lived entrance value copied into nearby.
+// Neutral: copy-initialize versus assign of the addition's local, a free
+// by-value left operand or offset, normalizing the requested input, a
+// const conditional result, reusing the prototype index in the water loop,
+// operator-='s returned reference for entranceX, a long guardValue and
+// moving only its declaration. Rewriting the cutoff as assignment breaks the
+// independently exact retained value helper.
 VA(0x00541AD0, 0x5B0)
 MAC_ADDRESS(0x2446ac, 0x55c) // anchor-callee connectZones; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::createShipyardConnection(
@@ -7291,42 +7195,33 @@ unsigned char type_random_map_generator::createShipyardConnection(
 // entrance/guard updates.  Dreamcast has no RMG compiland, so the method name
 // is role-based while every field and branch below is Windows-retail evidence.
 // Retail reloads the source level-position after rand(), so keep the
-// returned accessor value at that point rather than reusing the early
-// level comparison. This raises 79.4987% to 79.8603%. Applying the existing
-// coordinate subtraction helper gives 80.8917%; separate entrance-point
-// temporaries for each zone give 81.9530%; updating the intersection in
-// sourceBounds gives 82.1005% (2026-09-07). The resulting candidate has
-// 2192 padded bytes. Position accessors versus direct reloaded members,
-// size() versus empty(), placing score after the zone check, and using
+// returned accessor value at that point rather than reusing the early level
+// comparison. The coordinate subtraction helper, separate entrance-point
+// temporaries for each zone, updating the intersection in sourceBounds, a
+// short intersection snapshot and coordinates constructed from their used
+// components are recovered. Position accessors versus direct reloaded
+// members, size() versus empty(), placing score after the zone check and
 // returned temporaries for the first level comparison are byte-flat.
-// Remaining differences include bound-temporary/frame allocation and
-// over-expansion of the two final placeGuard -> getMapItem calls. Keep
-// those ordinary helper boundaries; source fact recovery, not forced
-// calls or extracted arbitrary blocks, must recover their inline split.
-// Shortening the intersection snapshot lifetime and constructing each
-// coordinate from its used components raises the current match to 85.8212%.
 // The independent scan oracle checks ordered queries, live level reads and
 // both later coordinate projections; the ordinary placement helpers remain.
 // The map editor's /O1 copy (0x4a6cf2) clears the guard value in the second
 // border arm too (and [ebp+0xc],0 before the column step) and falls into
 // the shared guard test; only its non-empty cell path, where the cleared
-// value is still known, jumps straight to the return. h3maped
-// 88.33% -> 90.28%; the game body moves 85.81 -> 85.68 (scheduling).
+// value is still known, jumps straight to the return.
 // Mac 244e08..244e24 initializes only the scan level from the returned value.
 // At 244eb8..244ee0 and 245128..24515c, copy the whole position before
 // replacing the destination level; Windows likewise preserves the old Z
 // store before that getter. Keep both separate entrance-point temporaries.
-// This native ownership model raises the editor 90.2895 -> 96.2398, while
-// game MAX falls 85.6788 -> 84.3838 (HIST retained): frame/register scheduling
-// and final guard-helper expansion still differ. Base-point copy spelling
-// is byte-flat; sharing one destination local across phases does not close it.
 // Mac 0x245190..0x2452b8 stores both entrances through setPathClearance(1)
 // (path mark, then obstacle clear) and 0x245354..0x245398 marks each guard
-// cell with setObstacleFill(1), then present, then colour. The entrance
-// setters are byte-flat; the guard-cell setters cost the game 84.38 ->
-// 83.78% (editor flat) but restore the canonical helper and native order.
+// cell with setObstacleFill(1), then present, then colour: the canonical
+// helpers in native order, though the guard-cell setters lower the game.
 // The editor loads the source zone index before indexing the destination
-// zone (h3maped 96.24 -> 98.76%; game 83.78 -> 83.65%, register schedule).
+// zone.
+// Game residual: bound-temporary/frame allocation and register scheduling,
+// and over-expansion of the two final placeGuard -> getMapItem calls. Keep
+// those ordinary helper boundaries; base-point copy spelling is byte-flat
+// and sharing one destination local across phases does not close it.
 VA(0x00542080, 0x8AA)
 MAC_ADDRESS(0x244c08, 0xa1c)
 unsigned char type_random_map_generator::createSubterraneanGate(
@@ -7484,13 +7379,11 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // The chosen candidate is assigned back to that coordinate before the
 // virtual call; keep both the real coordinate copy and the placement helper.
 // A named unsigned random index restores the selected coordinate's duplicate
-// homes and the final success block (99.9286%). All six calls agree. Only
-// the independent minimum-X/maximum-Y loads at +0x10c/+0x10f are reversed.
-// Loop forms, snapshot/declaration lifetimes, public vector insertion and
-// allocator ownership do not resolve that scheduling difference. Named cell
-// and predicate values, nested conditions and continue guards also stay flat.
-// A further 50-state outer/inner-loop and insertion family emitted 29
-// distinct objects without improving MAX; a named maximum-X was byte-flat.
+// homes and the final success block. All six calls agree.
+// Residual: the independent minimum-X/maximum-Y loads at +0x10c/+0x10f are
+// reversed. Loop forms, snapshot/declaration lifetimes, public vector
+// insertion, allocator ownership, named cell/predicate values or maximum-X,
+// nested conditions and continue guards do not resolve it.
 // Mac's 0x22dfd8 vector initializer is a two-instruction zero store, not a
 // missing game helper. Its canPlaceObject call is already in this source.
 // Mac 0x245670..0x24568c snapshots the bounds, and 0x2456c0..0x2456d4
@@ -7531,9 +7424,8 @@ unsigned char type_random_map_generator::placeObjectInZone(type_object* object, 
 // Exact with canonical position addition at the search, fallback and marking
 // sites, a copied marking offset, and the byte-valued gate query. The initial
 // scalar lookup and named unsigned movement cost recover the level/zone homes.
-// Copy then += peaks at 68.4070%; returned additions reach 92.1453%, the query
-// boundaries 96.7907%, and the translated fallback 99.8953%. Declaring the
-// result coordinate beside the offsets restores the final three-load order.
+// Copy then += falls well short. Declaring the result coordinate beside the
+// offsets restores the final three-load order.
 // Both retained calls, all 466 bytes, and the five local offsets reproduce.
 // North is up; digits are offset indices (probe order) around the
 // portal position P.
@@ -7588,21 +7480,19 @@ unsigned char type_random_map_generator::placeMonolithBorderGuard(
 // Two-way prototypes need one object in each zone. One-way prototypes use
 // the matched exit prototype as well, producing entrance/exit pairs in both
 // zones. Placement failures delete only the failed object and continue.
-// Earlier 86.7357% form: the retained border calls, four base-object allocations,
-// property choices and placement sequence agree. VC6 retains two translated-
-// position constructors and calls the scalar map accessor inside placeGuard;
-// retail retains its map-position overload. A size call and second registry
-// insertion boundary also differ, with a 0x30 frame versus retail's 0x1c.
-// Copying the guard coordinate then incrementing y, or using compound +=,
-// gives 86.6448%. Preserve the ordinary position, guard and value helpers;
-// their bodies are shared with the ground, shipyard and gate connections.
-// Named entrance points and end insertion in the second two-way registry
-// preserve the placement order and raise matching to 91.9028%. The other
-// registry paths retain push_back; all position and guard helpers stay shared.
-// The map editor's copy 0x4a7605 clears the guard value after either border
-// guard succeeds and then tests it separately (je over the clear, no else
-// jump). Game bytes are unchanged by that spelling. Its second two-way
-// push_back stays a call there, so end insertion (game 91.33%) is not used.
+// The retained border calls, four base-object allocations, property choices
+// and placement sequence agree. Named entrance points preserve the placement
+// order. Preserve the ordinary position, guard and value helpers; their
+// bodies are shared with the ground, shipyard and gate connections. The map
+// editor's copy 0x4a7605 clears the guard value after either border guard
+// succeeds and then tests it separately (je over the clear, no else jump);
+// game bytes are unchanged by that spelling. Its second two-way push_back
+// stays a call there, so end insertion in that registry is not used.
+// Residual: VC6 retains two translated-position constructors and calls the
+// scalar map accessor inside placeGuard where retail retains its
+// map-position overload; a size call and the second registry insertion
+// boundary also differ, with a 0x30 frame versus retail's 0x1c. Copying the
+// guard coordinate then incrementing y, or compound +=, does not help.
 VA(0x00542CE0, 0x554)
 MAC_ADDRESS(0x245bd4, 0x6e8) // anchor-caller 0x543240; Complete-only, thiscall ret 0xc
 void type_random_map_generator::createMonolithConnection(
@@ -7704,10 +7594,10 @@ void TRmgZoneConnection::setConnected()
 // reachability and monolith placement.  Helper spellings are role-based until
 // their own bodies are admitted, but the calls and signatures are fixed by
 // this function's ABI and retail CFG. Shared zone/counterpart locals,
-// connected-state queries and the returned water coordinate reach 100%.
+// connected-state queries and the returned water coordinate match it.
 // Both zone passes reuse connectionIndex, including the second pass's
-// first-unconnected scan. Separate indices left 99.9779%: mapItem and the
-// allocator byte exchanged stack homes despite identical control flow.
+// first-unconnected scan; with separate indices mapItem and the allocator
+// byte exchange stack homes despite identical control flow.
 // See docs/vc6/regalloc.md for the compiler's equal-priority stack-bin sort.
 // The pointer-vector insert keeps retail's int-vector label in strict
 // relocation comparisons; its 436-byte retail span, relocation sites and
@@ -7876,27 +7766,16 @@ void type_random_map_generator::connectZones()
 }
 
 // Underground-only terrain pass retained by generation at 0x549c82.
-// The floor test spells its three cell predicates; routing them through one
-// combined helper measured 99.0138% against this body's 99.7982%.
-// One borrowed level-one map and one brush span both scans. The first scan
-// closes unused floor with rock; the second restores each zone's terrain at
-// its occupied or path-reserved rock cells. Both progress updates precede cleanup.
-// Residual 99.7982%: all 36 block sizes and ten calls agree. Bounds-before-
-// terrain fixes the second scan's registers (alone: 99.7294%). Reusing a full
-// coordinate for the plane/first scan/zone position restores the first row's
-// -0x28 home; its level is consumed by the original scalar plane lookup.
-// The dimension point and canonical constructor's items-first stores leave
-// only B0 scheduling different. Flattening to the original caller gives
-// 96.1514% with that same constructor; all four causal controls reproduce.
-// Sixty caller and sixty origin forms plus 61 shared-constructor combinations
-// preserve the real brush/map scopes and predicates. No inline pin is used.
-// Borrowed-constructor value/reference arguments and plain dimension arrays
-// do not close the entry schedule; retain the existing value contract.
-// With direct three-coordinate indexing in type_random_map::getMapItem this body
-// measures 99.0138%: the borrowed-map dimension loads and the inner lookup's
-// height+y operand order differ. Passing an explicit TRmgMapPosition to that
-// inner lookup is byte-identical. The first scan's bounds read through the
-// map's dimension accessors: both images exact (game 99.80, editor 99.11).
+// The floor test spells its three cell predicates; one combined helper is
+// lower. One borrowed level-one map and one brush span both scans. The first
+// scan closes unused floor with rock; the second restores each zone's
+// terrain at its occupied or path-reserved rock cells. Both progress updates
+// precede cleanup. Bounds-before-terrain fixes the second scan's registers.
+// Reusing a full coordinate for the plane/first scan/zone position restores
+// the first row's -0x28 home; its level is consumed by the original scalar
+// plane lookup. Passing an explicit TRmgMapPosition to the inner lookup is
+// byte-identical. The first scan's bounds read through the map's dimension
+// accessors; with them both images are exact.
 VA(0x005439E0, 0x283)
 MAC_ADDRESS(0x246a34, 0x31c)
 void type_random_map_generator::decorateUnderground()
@@ -7949,22 +7828,15 @@ void type_random_map_generator::decorateUnderground()
 // integer ray continues beyond 'toward' until the map edge or an existing
 // gate-marked tile in the 3x3 neighbourhood; the first two steps ignore
 // those neighbours. Return the last point before the obstruction.
-// Residual 99.8683%: all 23 CFG blocks and their operations agree; independent
-// reloads retain a different schedule. The 48 direction/query/lifetime forms
-// lift 67.5569% to 95.9761% by copying the axial step before changing its
-// diagonal component and using one mutable map-position value for the scan.
-// Another 48 step-setup/update-order forms reach 99.8563%; nine x-store and
-// neighbour-lifetime controls leave the present 99.8683% peak. The previous
-// point snapshot precedes the error/count updates. All 105 candidates pass
-// 36,504 native scenarios against a closed-form lattice-ray oracle, covering
+// Copy the axial step before changing its diagonal component and use one
+// mutable map-position value for the scan; the previous point snapshot
+// precedes the error/count updates. A closed-form lattice-ray oracle covers
 // zero/axis/diagonal directions, map edges and several obstacle patterns.
-// Two further 60-state families test neighbour-loop/query receiver scopes
-// and error/counter/previous-point lifetimes (9 and 24 distinct objects).
-// Neither improves 99.8683%. At +0x161 the independent error/from.x reloads
-// remain reversed. All 120 forms pass 17,150 closed-form lattice cases each,
-// with four negative controls; no speculative source change is retained.
-// Scalar map queries, two-coordinate owners and XY/YX arrays (16 states,
-// eight objects) also leave the two independent reloads reversed.
+// Residual: all 23 CFG blocks and their operations agree, but at +0x161 the
+// independent error/from.x reloads are reversed. Step-setup/update-order,
+// x-store, neighbour-loop/query receiver scope, error/counter/previous-point
+// lifetime, scalar-query, two-coordinate-owner and XY/YX array forms do not
+// change that.
 VA(0x00543C70, 0x1A2)
 MAC_ADDRESS(0x246d50, 0x30c) // anchor-callee 0x544226; Complete-only, hidden result, ret 0x18
 TRmgPoint type_random_map::traceBranchEnd(TRmgPoint from, TRmgPoint toward, int level)
@@ -8155,7 +8027,7 @@ void type_random_map_generator::carveBranchingPaths()
     }
 }
 
-// Residual 99.5699%: the inner neighbor lookup commutes level * mapHeight.
+// Residual: the inner neighbor lookup commutes level * mapHeight.
 // All 40 blocks and call expansions agree. A directly constructed position
 // or using the existing position as the loop cursor leaves that pair flat.
 VA(0x005443A0, 0x2F5)
@@ -8350,8 +8222,8 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 // Exact 688-byte body: explicit primary-skip initialization restores all
 // four fixed-count loops. Starting the density sum/product before the two
 // input arrays restores the scheduler's stack homes and register allocation.
-// Delaying those accumulators leaves 95.8441%; conditional-expression starts
-// leave 93.0076%. Reusing sum as spacing and shared density helpers are neutral.
+// Delaying those accumulators or conditional-expression starts fall short;
+// reusing sum as spacing and shared density helpers are neutral.
 // All 49 blocks and the complete instruction/relocation stream reproduce.
 VA(0x00544AE0, 0x2B0)
 MAC_ADDRESS(0x248418, 0x414)
@@ -8456,8 +8328,8 @@ void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone)
 // ranks valid sites by spacing score. The trigger's clipped 3x3 neighbourhood
 // must remain inside the zone. Retail delegates inactive zones to primary
 // placement and retains the normal town constructor and virtual addObject.
-// First reconstruction: 76.6787%. Both CFGs have 61 blocks; remaining
-// differences include candidate-loop layout and compiler-generated cleanup.
+// Residual: both CFGs have 61 blocks; the candidate-loop layout and
+// compiler-generated cleanup differ.
 // Preserve the alignment fallback, full neighbourhood scan and tied-site list.
 // Both Windows images form the fallback's town count before calling rand()
 // and keep it in alignment's home; Mac 0x248888 branches to 9 or 8 first.
@@ -8537,10 +8409,10 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
 // constructs a 0x28-byte object and sets the zone's primary town position.
-// Partial 92.0724%: canonical trigger subtraction restores the retained
+// Canonical trigger subtraction restores the retained
 // type_object constructor; a named unsigned selection restores the chosen
 // coordinate copy, and Y-before-X locals recover the distance calculation.
-// clear() still expands erase into copy/_Destroy; retail retains the folded
+// Residual: clear() still expands erase into copy/_Destroy; retail retains the folded
 // range-erase body. Direct erase loses the constructor boundary; resize(0)
 // retains erase but adds a size call and conditional absent from retail.
 // Initial zone/prototype snapshots remain differently scheduled. Value,
@@ -8605,8 +8477,8 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
 // The map editor (/O1, whose inliner applies the post-substitution size
 // veto) keeps both calls to its copy 0x4a960a; with the result named the
 // substituted body weighs 16 against the 15 a three-argument call allows,
-// so both sites stay calls as in retail (assembleTreasureGroup 69.05% ->
-// 99.76%, tryPlaceMine 94.04 -> 98.67). The game inlines it either way.
+// so both sites stay calls as in retail (assembleTreasureGroup and
+// tryPlaceMine). The game inlines it either way.
 MAC_ADDRESS(0x2491b4, 0x60)
 int type_random_map_generator::getZoneGuardValue(const TRmgZone* zone, int value) const
 {
@@ -8621,13 +8493,13 @@ int type_random_map_generator::getZoneGuardValue(const TRmgZone* zone, int value
 }
 
 // Site selector called at 0x545aee. Complete-only names are provisional.
-// Partial 99.5863%: clear() restores all three candidate-reset boundaries;
+// clear() restores all three candidate-reset boundaries;
 // canonical town translation, an outline-point snapshot and a named unsigned
 // selection recover their value lifetimes. Y-before-X distance locals and
 // bounds-before-ranking initialization restore the arithmetic and zero store.
-// Preserve the ordered distance, obstacle-fill count and score filters. Only the
-// position-copy/buildOutline receiver and first map receiver are scheduled
-// differently. Position lifetimes, coordinate helpers, footprint arithmetic,
+// Preserve the ordered distance, obstacle-fill count and score filters.
+// Residual: only the position-copy/buildOutline receiver and first map
+// receiver are scheduled differently. Position lifetimes, coordinate helpers, footprint arithmetic,
 // branch forms and allocator controls leave those two groups unresolved.
 // The three _Destroy calls fold to the retail artifact-vector ret-8 body.
 VA(0x00545580, 0x401)
@@ -8719,14 +8591,14 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
 // That complete source model retains retail's first single-element vector
 // insertion; duplicating the path stores instead expands count-insertion.
 // Mac's retained vector::reserve call proves push_back in both scans.
-// Wall (inliner, 2026-10-08): retail keeps getMapItem(TRmgMapPosition) out of
+// Residual (inliner): retail keeps getMapItem(TRmgMapPosition) out of
 // line inside the placeGuard expansion and expands the guard-cell size();
 // this body expands the lookup (nested budget 63 > cost 53) and keeps size.
 // Every retail placeGuard expansion (ground x2, monolith x2, gate x2, here)
 // retains that lookup; decorateMapCell, openConnectionPath and the seer-hut
 // placement also retain one. The /Ob2 trace allows all of them here, so the
 // retail callers' budgets differ; no local spelling found.
-// 2026-10-09 replay: refusing placeGuard's lookup needs 4..6 more root sites
+// An inline replay shows that refusing placeGuard's lookup needs 4..6 more root sites
 // after placeGuard, and those also refuse the second scan's push_back insert
 // (budget 69, cost 64); raising the root cb restores the insert but lifts
 // placeGuard's budget with it. Retail's retained by-value lookups
@@ -8900,28 +8772,20 @@ void type_random_map_generator::placeMines()
 // is unavailable: selectObjectPrototype is a Complete-only role name.
 // Keep this ordinary boundary: openConnectionPath calls it with terrain 0,
 // object type 9 and its stored border direction at retail 0x540954.
-// Residual (99.6581%): all 17 block sizes and ten branches agree; the
-// terrain/range roles occupy ESI/EDI in the opposite order. Named mutable
-// or const range references, nested subtype admission and the public value
-// or count insert overloads did not recover that allocation in the family.
-// Naming the selected pointer is neutral. Named random indices/counts change
-// the result register lifetime (94.13% or lower), without settling the range
-// and terrain allocation; preserve the direct result expression.
 // The const terrain query expands to native bitset::test (0x24a004).
-// Loki's const getRecommendedTerrainMask accessor with a direct test is
-// exact in both images; the editor's /O1 budget keeps the project-named
-// isRecommendedTerrain wrapper out of line (73.82%), which retail expands.
-// A focused 60-case lifetime matrix (counter initialization, prototype-range
-// binding order and enum/mask-index captures) also remains at 99.6581%.
-// Sixty filter/receiver/insertion variants do not improve it either. Conditional
-// admission, split insertion arms and a boolean admission result fail to retain
-// the leading source's register/CFG combination; the existing source stays put.
-// Direct property/prototype reads, category captures and counter signedness
-// (60 states, 16 code identities) also leave this peak. Their ten reproduced
-// parents crossed with selected-pointer/reference/index/random/count lifetimes
-// give 60 states and 47 identities, again no gain and no sibling movement.
-// The loader's direct-read solution therefore does not explain this selector's
-// ESI/EDI exchange. Checked-mask throws and ordered random selection remain.
+// Loki's const getRecommendedTerrainMask accessor with a direct test keeps
+// that expansion in both images; the editor's /O1 budget keeps the
+// project-named isRecommendedTerrain wrapper out of line, which retail
+// expands. Checked-mask throws and ordered random selection remain.
+// Residual: all 17 block sizes and ten branches agree; the terrain/range
+// roles occupy ESI/EDI in the opposite order. Named mutable or const range
+// references, nested subtype admission, the public value or count insert
+// overloads, counter initialization, prototype-range binding order,
+// enum/mask-index or category captures, direct property/prototype reads,
+// counter signedness, conditional admission, split insertion arms and a
+// boolean admission result do not recover it; naming the selected pointer
+// is neutral and named random indices/counts are lower. Preserve the direct
+// result expression.
 VA(0x00546040, 0x141)
 MAC_ADDRESS(0x249f60, 0x194) // anchor-callee openConnectionPath; thiscall, ret 0x0c
 TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
@@ -9036,9 +8900,9 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
 // map; later objects use the fit helper. Generation and fit have independent
 // three-attempt limits. Failed fits release the object before retrying;
 // accepted values accumulate until the target or a small remainder stops us.
-// Exact with the native group->addObject boundary (Mac call 0x24a670).
-// Flattening that helper left centering loads and insertion scheduling at
-// 97.8371%. Keep distinct first/later object lifetimes; duplicate bounds
+// Exact with the native group->addObject boundary (Mac call 0x24a670);
+// flattening that helper leaves centering loads and insertion scheduling
+// different. Keep distinct first/later object lifetimes; duplicate bounds
 // updates change CFG. Both images are exact with a counted fit loop that
 // clears the deleted selection (the editor's /O1 then threads the exhausted
 // loop straight to updateBounds) and with each creation loop's unspecified
@@ -9315,67 +9179,37 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 
 // Complete-only fit test: group, three-coordinate offset, owning zone.
 // Returns AL; its cell and object filters are retained independently.
-// Starting body reconstructed on decomp-complete-4.0 in 44315390; checked
-// against retail's 1106 bytes before the local source-family population.
-// Prior context (90.81%): all 45 branches, three returns and three calls
-// remain; direction-range selection has one fewer block and register homes
-// differ. Initial post-loop size recheck and explicit row pointer: 74.86%;
-// short-circuit trait policy/per-cell lookup: 87.02%; guard constructor-result
-// copy: 88.41%; shared policy rejection: 90.50%; position-before-properties:
-// 90.81%. Explicit if/else assigning a separate direction removes a branch
-// (83.17% with the copy probes). Preserve real bounds, snapshots and calls.
-// Residual (99.9850%): five 60-state populations (244 distinct sources,
-// 158 code/relocation identities) restore retail's 65 blocks, all branch
-// destinations, three calls and 0x48 frame. Point-plus-vector recovers the
-// direction join (97.1072%); the post-call guard-point copy restores constructor
-// argument loading (98.7506%); the explicit allow arm restores policy flow
-// (99.9102%); a three-coordinate guard scan recovers the frame (99.9825%).
-// Sharing the real object/guard working position also restores its initial
-// Z home. The /Z7-verified first mismatch is the later entrance value: six
-// displacement bytes in B19/B24/B25 put entrance at -0x38..-0x30 instead of
-// -0x2c..-0x24, and neighbor X at -0x28 instead of -0x38. Sharing all three
-// positions or guard/entrance scores 99.9676%; neither closes these homes.
-// Every batch reproduced ten elites; the adopted body preserves all other
-// 339 RMG scores. Native controls check live vector bounds, cached bounds/zone,
-// ordered helper arguments and every placement veto; no helper body is pasted.
-// Later coordinate-home/phase frontiers score 60 and 57 states without a
-// higher peak (99.9152..99.9850%). Entrance/neighbor/guard declaration moves,
-// a shared-coordinate reference, a named returned-value reference and shorter
-// object/guard or entrance-check scopes do not close the six displacements.
-// The second frontier can also move the unchanged header writer by -0.0078;
-// no body is adopted. Both canonical helper calls and snapshot order remain
-// intact across the 170-body native oracle, including live object-list growth.
-// Native retains objectsAllowEntrances before the caller's guard check.
-// Recovering that boundary removes the synthetic search-exit goto. Keeping
-// the conjunction as one result expression preserves 96.8953%; initializing
-// the result to zero then conditionally assigning one lowers it to 94.6633%.
-// These peaks precede the constructor visibility recovery. Current 96.8953%
-// expands the constructor retained at retail +0xbd (live C2 cost 47 versus
-// direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
-// still expands it; restoring the call must precede the old stack-home work.
-// Mac 0x24b0c8/0x24b1cc likewise preserves two land-predicate results.
-// Restore the same shared calls and surface-map queries here. They first
-// fell 96.8953% to 81.0773% while the three-coordinate lookup delegated
-// through a position temporary; direct indexing restores 96.9476%.
-// Byte/bool result types and seven ordinary predicate return forms do not
-// recover the caller lowering.
-// Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
-// preserve that canonical addition as well (byte-flat with these predicates).
-// Retail keeps operator+'s three-int position constructor as a call at the
-// guard translation; with direct fields its nested budget was 71 against
-// cost 48. Reading the guard bounds, the 3x3 scan limits, the entrance and
-// the outline bounds through the point and map accessors adds the free /Ob2
-// sites that refuse it (99.94%). Native 0x24afc8..0x24b018 snapshots the
-// trigger offset before copying the object position and replacing its Z.
-// The guard, entrance and outline queries copy all three coordinates;
-// preserve the position overload and canonical additions throughout.
-// Mac uses A4/A8/AC for both guard and direction scans. Sharing that position
-// restores the editor's scan-Y stores and direction-result copy homes:
-// editor 91.415% -> 99.84%, game held at 99.9352%. Editor residuals are the
+// Point-plus-vector forms the direction join; the post-call guard-point copy
+// restores constructor argument loading; the explicit allow arm restores
+// policy flow; a three-coordinate guard scan recovers the 0x48 frame, and
+// sharing the real object/guard working position restores its initial Z
+// home. Native retains objectsAllowEntrances before the caller's guard
+// check, which removes any search-exit goto; keep the conjunction as one
+// result expression. Mac 0x24b0c8/0x24b1cc preserves two land-predicate
+// results; restore the same shared calls and surface-map queries here.
+// Native 0x24ae00..0x24ae58 translates the copied position by the guard
+// point; preserve that canonical addition. Retail keeps operator+'s
+// three-int position constructor as a call at the guard translation; reading
+// the guard bounds, the 3x3 scan limits, the entrance and the outline bounds
+// through the point and map accessors adds the free /Ob2 sites that refuse
+// it. Native 0x24afc8..0x24b018 snapshots the trigger offset before copying
+// the object position and replacing its Z. The guard, entrance and outline
+// queries copy all three coordinates; preserve the position overload and
+// canonical additions throughout. Mac uses A4/A8/AC for both guard and
+// direction scans; sharing that position restores the editor's scan-Y
+// stores and direction-result copy homes. Native controls check live vector
+// bounds, cached bounds/zone, ordered helper arguments and every placement
+// veto.
+// Residual: the game's later entrance value takes six displacement bytes in
+// B19/B24/B25 (entrance at -0x38..-0x30 instead of -0x2c..-0x24, neighbor X
+// at -0x28 instead of -0x38), and the trigger snapshot's scheduling;
+// declaration moves, shared-coordinate or returned-value references, shorter
+// scopes and sharing all three positions do not close them. Editor: the
 // first placement's temporary, guard-bound register allocation and one LEA
-// operand order. Separate scans reach game 99.9875% but editor only 99.25%.
-// Copy-initializing the guard scan gives game 84.8778%; moving the shared
-// declaration to entry or splitting the X/Y bounds checks is editor-flat.
+// operand order. Separate scans, copy-initializing the guard scan, a zeroed
+// result assigned conditionally, and byte/bool predicate result forms are
+// lower; moving the shared declaration to entry or splitting the X/Y bounds
+// checks is editor-flat.
 VA(0x00546C70, 0x452)
 MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
 VA_AT(h3maped, 0x004aa603, 0x3b4)
@@ -9463,26 +9297,20 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
 
 // Candidate placement consumes the group and zone plus its spacing limit.
 // Retail returns AL, retaining a candidate-position vector and random choice.
-// Prior baseline (77.1261%): initializing scan Y before the bound adjustments
-// and assigning center X before Y improves 72.9790%. A separate candidate
-// count before random selection is flat. Remaining differences are local
-// homes and candidate-clear copy/destruction expansion; retain the vector,
-// position copies, and separate fit/commit helpers.
-// Residual (87.0168%): four 60-state populations (198 distinct sources,
-// 144 code/relocation identities) recover the retained std::copy/_Destroy
-// clear expansion without an inline control. Center-point compound translation
-// together with public single-element insert restores all nine call sites.
-// The 0x48 frame agrees, but the vector/coordinate stack homes and entry-load
-// order differ; X, not Y, occupies EBX across the scan, removing the retail
-// outer-loop bound-reload block (17 versus 18 blocks). Resize(0) reaches
-// 86.8529% but calls size/erase instead of copy/_Destroy; named erase ranges,
-// bounds binding, equivalent filter guards and hoisted value declarations do
-// not improve this peak. Every batch reproduced ten finalists; this body
-// preserves all other 339 RMG scores. Native controls cover ordered lookups,
-// live post-fit score reads, cached bounds/zone identity and random tie order.
-// Native 0x24b514..0x24b590 copies a 3D position and the center point, then
-// queries the translated position. Calling that canonical addition directly
-// improves Windows 87.0168% to 90.2731%; a named result reaches 90.1891%.
+// Initialize scan Y before the bound adjustments and assign center X before
+// Y; retain the vector, position copies, and separate fit/commit helpers.
+// The retained std::copy/_Destroy clear expansion and all nine call sites
+// are recovered with public single-element insert. Native
+// 0x24b514..0x24b590 copies a 3D position and the center point, then
+// queries the translated position: the canonical addition, called directly.
+// Native controls cover ordered lookups, live post-fit score reads, cached
+// bounds/zone identity and random tie order.
+// Residual: the 0x48 frame agrees, but the vector/coordinate stack homes and
+// entry-load order differ; X, not Y, occupies EBX across the scan, removing
+// the retail outer-loop bound-reload block (17 versus 18 blocks). Resize(0)
+// calls size/erase instead of copy/_Destroy; a separate candidate count,
+// named erase ranges or addition result, bounds binding, equivalent filter
+// guards and hoisted value declarations do not help.
 // A candidate position is where the group map's origin O lands, so group cell
 // g goes to position + g. Its occupied bounds (#) must fit the zone bounds,
 // and the object distance under their centre c must reach the spacing.
@@ -9533,7 +9361,7 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
 // The step loop's active-band test is a free inline site after the early
 // return: it divides that path's destructor budget so both vector _Destroy
 // calls stay out of line, leaving each discard enough to expand reset. The
-// same call in the first loop shrinks this body's budget (73.06%), as does a
+// same call in the first loop shrinks this body's budget, as does a
 // reference to the selected range (retail re-indexes it for both assembly
 // calls). Mac 0x24b844 clears the counts by memset. The residual is the
 // retail ICF copies' labels on the clear/erase/destructor twins.
@@ -9634,12 +9462,11 @@ void type_random_map_generator::countPrimaryTownZones()
 // one-way/two-way monoliths and underground gates, then eight-neighbour road
 // relaxation.  The Dreamcast build has no RMG compiland, so the original
 // method spelling is unavailable and the role name remains provisional.
-// Worklist push_back/pop_back restore the outer container boundaries and
-// raise 67.8599% to 73.7139%; flattening them into insert/erase was the
-// negative control. The shared by-value predecessor setter raises that to
-// 75.6686% and restores the separate coordinate snapshot before the cost
-// store. Its spelling remains provisional without Dreamcast source.
-// The shared top-tested search also raises this to 81.8701%.
+// Worklist push_back/pop_back restore the outer container boundaries;
+// flattening them into insert/erase is lower. The shared by-value
+// predecessor setter restores the separate coordinate snapshot before the
+// cost store (its spelling remains provisional), and the shared top-tested
+// search follows retail's loop.
 // Residual: the seed inserts and popped-element erases still expand deeper
 // than retail. Both monolith position inserts now retain the two-argument
 // boundary; the underground-gate site still expands it. The final neighbour
@@ -9658,7 +9485,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
     TRmgMapItem* mapItem = m_map.getMapItem(position);
     // Mac 0x24bcf8..0x24bd50 constructs the invalid predecessor, copies it
     // to a separate parameter home, then stores cost and coordinates. Keep
-    // the same by-value setter used by the relaxation arms (89.7416 -> 90.91971%).
+    // the same by-value setter used by the relaxation arms.
     mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
 
     while (openPositions.size() > 0) {
@@ -9722,8 +9549,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 
             case UNDERGROUND_GATE: {
                 // Mac 0x24c0b0 copies the position, then stores the other
-                // level's z into the copy (game 91.11 -> 91.69%, editor
-                // 89.41 -> 91.30% against three field stores).
+                // level's z into the copy, rather than three field stores.
                 TRmgMapPosition nextPosition = position;
                 nextPosition.m_z = 1 - position.m_z;
                 TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
@@ -9790,9 +9616,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 // The map editor's /O1 copy (exact) shows the source shape: the existing-road
 // walk tests its looked-up cell at the top of a while (1) loop, which VC6
 // does not rotate, and the run test compares previous against position.
-// Game 65.35% -> 93.56%. The painter points read through the point
-// accessors and the view through the map's, as in both river searches
-// (93.56 -> 99.33%; the editor stays exact).
+// The painter points read through the point accessors and the view through
+// the map's, as in both river searches.
 VA(0x00548040, 0x244)
 MAC_ADDRESS(0x24c3c4, 0x2bc) // anchor-callee 0x548408 + adapter/painter vtables; retail-only
 unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int roadType)
@@ -9840,8 +9665,8 @@ unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int
 // createRiverToJoin +0x2f/+0x3d. RMG has no Dreamcast counterpart, so the
 // role name and linkage remain inferred from retail callers.
 // A separate signed row count recovers the levels-before-height products in
-// both road resets. All six unbroken product permutations emit height first
-// (99.9816%); a signed width*levels intermediate also reproduces the exact
+// both road resets. All six unbroken product permutations emit height
+// first; a signed width*levels intermediate also reproduces the exact
 // result. The older unsigned grid-size temporary matched one river prefix,
 // but the scalar model matches the entire road caller and improves both
 // current river callers. Their constructor/cleanup inlining remains open.
@@ -9861,7 +9686,7 @@ void type_random_map_generator::resetMovementCosts()
 // Retail 0x549c98 connects every ordered target pair using one random road
 // style. A successful draw changes traversal costs for subsequent targets.
 // Exact with a copied destination and the shared scalar-volume reset.
-// A destination reference leaves different register homes (99.8341%).
+// A destination reference leaves different register homes.
 VA(0x00548290, 0x26E)
 MAC_ADDRESS(0x24c6d4, 0x1d8)
 void type_random_map_generator::createRoads()
@@ -9900,17 +9725,13 @@ void type_random_map_generator::createRoads()
 // into the by-value map query, as do the two intermediate flood queries.
 // At 0x24c9cc..0x24ca28, an invalid position is constructed and then copied
 // to a separate formal before the cost/predecessor writes: setMovementCost.
-// Recovering all four queries and that seed setter raises fresh Windows
-// 57.5459% -> 79.4612%. Earlier isolated invalid-position controls favored
-// flattened fields, but omitted this complete native helper model. Current
-// frame 0xa8 differs from retail 0xb4; reset/cleanup expansions and the
-// duplicate exit remain unresolved. Keep the canonical helper calls.
+// Keep all four queries, that seed setter and the canonical helper calls.
 // The open-list test is size() > 0: the map editor's /O1 copies of both
 // river searches branch on it with an unsigned jbe, where empty() emits je
-// (game 77.98% -> 85.45%; the /O2 game folds both spellings to je).
-// The neighbour bounds and painter points read through the point
-// accessors, as in markRiverCoastTarget: game 85.46 -> 96.80%, editor
-// 98.38 -> 100%.
+// (the /O2 game folds both spellings to je). The neighbour bounds and
+// painter points read through the point accessors, as in
+// markRiverCoastTarget; the editor body is exact.
+// Game residual: reset/cleanup expansions and the duplicate exit.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToJoin(TRmgMapPosition source)
@@ -9987,22 +9808,17 @@ void type_random_map_generator::createRiverToJoin(TRmgMapPosition source)
 // three dry entrance-free cells beside them, then four cells inland.
 // Preserve retail's asymmetric x > width versus y >= height bounds check.
 // The last inland cell gains a river target and an approach-direction bit.
-// Partial 79.7557%: separate water/dry/inland counter lifetimes recover
-// the dry loop's memory counter and instruction order. Two 60-state families
-// tested counter scopes, coordinate/step lifetimes, item bindings and receiver
-// locals; all 339 other RMG scores stay unchanged for the retained version.
-// The direction still spills instead of staying in retail's EBX, the water
-// counter stays in EDI, and the frame is 0x24 versus retail's 0x20. All 25
-// CFG blocks align and both retained position constructors still agree.
-// A separate inland coordinate or earlier step snapshot does not improve
-// the peak; a water-item binding/direction local reaches only 79.6875%.
-// A copy-based operator+ removes the retail constructor calls (65.57%).
-// Retail refuses operator+'s position constructor at both translations:
-// reading the bounds through the map and point accessors adds the free /Ob2
-// sites that bring their nested budgets (72 and 81 with direct fields) under
-// its cost of 48, and every call now matches (78.69%). The inland start is
-// the same free translation, whose constructor both images then expand
-// (copy and += before: game 78.69 -> 95.67%, editor 84.34 -> 91.99%).
+// Separate water/dry/inland counter lifetimes recover the dry loop's memory
+// counter and instruction order. Retail refuses operator+'s position
+// constructor at both translations: reading the bounds through the map and
+// point accessors adds the free /Ob2 sites that bring their nested budgets
+// (72 and 81 with direct fields) under its cost of 48, and every call
+// matches; a copy-based operator+ removes those calls. The inland start is
+// the same free translation, whose constructor both images expand.
+// Residual: the direction spills instead of staying in retail's EBX and the
+// frame differs. Counter scopes, coordinate/step lifetimes, item bindings,
+// receiver locals, a separate inland coordinate, an earlier step snapshot
+// and a water-item binding/direction local do not help.
 VA(0x00548A40, 0x222)
 MAC_ADDRESS(0x24ce88, 0x404)
 void type_random_map_generator::markRiverCoastTarget(TRmgMapPosition position, int direction)
@@ -10089,19 +9905,18 @@ void type_random_map_generator::markRiverOutletTargets()
 }
 
 // The view-map constructor takes the fourth level-count argument retained by
-// Mac 0x24db6c/0x24dba8. Recovering that interface changes this Windows body
-// from MAX 77.0257% to 75.4337%; a default argument emits identical bytes.
+// Mac 0x24db6c/0x24dba8 (its single-plane default emits identical bytes).
 // The bounds test and map view read the dimensions through the map's
 // accessors, as createRiverToJoin does: their sites restore the retained
-// getMapItem(0, 0) call of the expanded reset (game 75.43 -> 76.80%).
+// getMapItem(0, 0) call of the expanded reset.
 // The delta prototype filter calls bitset::test, as Mac 0x24dcac does; the
-// editor then keeps retail's direct _Xran call (84.39 -> 87.55%), where
-// operator[] leaves reference::operator bool vetoed. Reading the neighbour,
-// delta and painter coordinates through the point accessors (as
-// markRiverCoastTarget does) restores the bounds-loop position constructor:
-// game 84.08%, editor 92.96%. The delta block's drawTo back to the outlet
-// keeps fields (accessors there: 84.05/92.64). Retail still retains the
-// delta and step position constructors and one early _Destroy.
+// editor then keeps retail's direct _Xran call, where operator[] leaves
+// reference::operator bool vetoed. Reading the neighbour, delta and painter
+// coordinates through the point accessors (as markRiverCoastTarget does)
+// restores the bounds-loop position constructor; the delta block's drawTo
+// back to the outlet keeps fields.
+// Residual: retail retains the delta and step position constructors and
+// one early _Destroy.
 VA(0x00548DF0, 0x99F)
 MAC_ADDRESS(0x24d4f0, 0xb00)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
@@ -10307,7 +10122,7 @@ void type_random_map_generator::markRiverJoinTargets()
 }
 
 VA(0x00549870, 0xB1)
-MAC_ADDRESS(0x24e17c, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:f7c5a79a55c8,82.1429): the trigger cell is Loki's TPoint<unsigned int> (queue item 36); CodeWarrior keeps the class copy in registers where retail Mac stores it to the stack (accessor and constructor spellings give the same 43%); Windows stays exact
+MAC_ADDRESS(0x24e17c, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:f7c5a79a55c8,82.1429): the trigger cell is Loki's TPoint<unsigned int> (queue item 36); CodeWarrior keeps the class copy in registers where retail Mac stores it to the stack (accessor and constructor spellings score the same); Windows stays exact
 void type_random_map_generator::createRivers()
 {
     markRiverJoinTargets();
@@ -10513,16 +10328,16 @@ static const int g_rmgArtifactVialOfDragonBlood = 127;
 // restore the pre-c_str width/level loads. The hero-flag inversion is an
 // std::transform in this body, as Mac 0x24f2c8 expands it here; a separate
 // wrapper and the open-coded final zero writes starve the artifact copy's
-// retained test/set boundary (93.48%). With them inline 97.44%: the 156-bit
-// hero writer still expands test where retail calls _Xran; stack homes remain.
+// retained test/set boundary.
 // The retained editor writers now match all six mask sizes independently.
 // The name and description are written as a length prefix and payload in
 // line: h3maped's /O1 veto (limit 12 for two arguments) refuses a
 // two-statement string writer, yet retail expands both, as Mac does with
 // its repeated strlen. Mac 0x24eafc and h3maped 0x4acabf clear five arrays
 // in this order; the fourth is never read (Mac r1+0x2e4, editor ebp-0x70),
-// and the game's /O2 drops its intrinsic fill. Game 95.52 -> 97.08% CUR
-// (old MAX 97.45% from earlier TU state), h3maped 86.25 -> 93.29%.
+// and the game's /O2 drops its intrinsic fill.
+// Residual: the 156-bit hero writer still expands test where retail calls
+// _Xran, and stack homes differ.
 VA(0x00549CB0, 0xE90)
 MAC_ADDRESS(0x24e7d4, 0x11ac)  // GenerateRandomMap caller chain; retail-only RMG
 void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
@@ -10886,18 +10701,15 @@ void writeRmgObjectPrototype(TAbstractFile*, TObjectType*);
 // All names below are provisional Complete-only roles, proved by offsets.
 // Coordinate ownership and the scoped byte result recover retail's 0x14
 // frame, all local homes and direct SETE AL. These are retail-supported
-// source hypotheses, not recovered DC names. Negative controls: scalar
-// counters and an unbound comparison return give the old 95.5071% form.
-// Residual (99.4123%): both prototype scans retain the vector owner (+0x34)
-// rather than retail's first-pointer address (+0x38); the member accesses
-// compensate. All call decisions and branch directions agree. Two 60-state
-// families tested scalar/coordinate scopes, vector reference/pointer bindings,
-// result forms and shared/function-scoped wire buffers. The buffer frontier
-// does not improve this parent; no raw vector layout or inline pin is used.
-// Two further 60-state scan/owner families test shared counter scopes,
-// signedness, public begin/subscript access, const vector receivers and
-// property references. The first is score-flat; the second spans
-// 95.5687..99.4123%, with every sibling unchanged. Neither closes the bias.
+// source hypotheses, not recovered DC names; scalar counters and an unbound
+// comparison return lose them.
+// Residual: both prototype scans retain the vector owner (+0x34) rather than
+// retail's first-pointer address (+0x38); the member accesses compensate.
+// All call decisions and branch directions agree. Scalar/coordinate scopes,
+// vector reference/pointer bindings, result forms, shared/function-scoped
+// wire buffers, shared counter scopes, signedness, public begin/subscript
+// access, const vector receivers and property references do not close it;
+// no raw vector layout is used.
 // The native oracle also appends prototypes during serialization and rejects
 // cached loop sizes, so those per-iteration size queries must remain live.
 // Explicit bucket cursors with indexed, countdown or end-pointer bounds
@@ -10969,8 +10781,8 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
 //   ..
 //   40 41 .. 46  P   (bit 47)
 // Both footprint passes restart the bit counter. Sharing its lifetime keeps
-// the game exact and gives 99.6471% in the editor; the remaining differences
-// permute the bit/x/y stack homes without changing the calls or control flow.
+// the game exact. Editor residual: the bit/x/y stack homes are permuted,
+// with the same calls and control flow.
 VA(0x0054AE30, 0x2C5)
 MAC_ADDRESS(0x24f980, 0x398)
 VA_AT(h3maped, 0x004ad3eb, 0x255)
@@ -11097,17 +10909,14 @@ static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
 // Quest-group placement calls this one-zone member at 0x54b33a. The
 // template connection vector has 0x1c-byte records; each destination's
 // leading index selects the generated zone. +0x40 is the relaxed distance.
-// Residual (77.7594%): a named queued priority preserves retail's live
-// distance during the binary search (72.6616% without it). Seed push_back
-// versus insert is flat; pop_back lowers to 69.3008% before that refinement.
-// Single/count insertion in the shared helper is flat. Retail retains
-// the seed-insert and erase wrappers that this compile expands.
-// A joint public seed/pop/emptiness family, including the existing sorted
-// insertion helper at the seed, does not improve those retained boundaries.
-// Live C2 tracing gives seed insert budget 907 against cost 64 and erase
-// budget 801 against cost 70. Separate initialization and extraction helpers,
-// including extraction with its empty test, peak at 84.9925% but still expand
-// both retail-retained wrappers. No speculative worklist wrapper is retained.
+// A named queued priority preserves retail's live distance during the
+// binary search. Seed push_back versus insert and single/count insertion in
+// the shared helper are flat; pop_back is lower.
+// Residual: retail retains the seed-insert and erase wrappers that this
+// compile expands (live C2 tracing: seed insert budget 907 against cost 64,
+// erase budget 801 against cost 70). Public seed/pop/emptiness forms, the
+// sorted insertion helper at the seed and separate initialization/extraction
+// helpers do not retain them; no speculative worklist wrapper is kept.
 VA(0x0054B180, 0x174)
 MAC_ADDRESS(0x25013c, 0x210) // anchor-callee + zone/template layouts; retail-only
 VA_AT(h3maped, 0x004ad6a8, 0x14f)
@@ -11137,9 +10946,8 @@ void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
 // original zone (ret 8). Distances become randomized ascending priorities;
 // junction/water/origin zones and unreachable scores are excluded. The
 // final loop calls the canonical treasure-group placement with spacing 1.
-// The earlier 93.5302% form had all 27 blocks, 15 branches and both return paths
-// align. Single-element source insertion expands to retail's retained
-// count-insert call; direct count insertion expands further and gives 0%.
+// Single-element source insertion expands to retail's retained count-insert
+// call; direct count insertion expands further.
 // Guard scopes and all four signed/unsigned loop-index combinations are
 // flat. Sharing one zone pointer across the three phases and naming the
 // non-unit-distance priority recovers all 395 bytes. A 155,520-case oracle
@@ -11255,28 +11063,19 @@ unsigned char type_random_map_generator::placeSeerHutForArtifact(t_quest_artifac
 // Complete-only helper called by type_key_tent::completePlacement at 0x5338e0.
 // Retail reserves the color before filling the group and releases it on failure.
 // Failed placement rolls back each group object's reservation before deletion.
-// Residual (67.7917%): retail retains the outline's two-coordinate lookup
-// and failure reset; VC6 expands both. Both map-destructor calls now agree,
-// as do constructor/fill/addGuard/outline/placeQuestGroup calls. Failure
-// vector cleanup still expands past retail's two retained empty Destroy calls.
-// A narrower guard lifetime is byte-neutral; an explicit copied position
-// with the scalar accessor scores 65.3438%, with or without that scope.
-// Preserve the ordinary reset call and automatic group ownership.
-// Four 60-state JSON populations test origin/outline/result lifetimes,
-// receivers/counters, result branches and a provisional shared color setter.
-// The 73.9722% result-local leader restores frame 0x78 and guard EDI, but
-// wrongly expands the success map destructor; a 73.7014% coordinate/item
-// binding does too. Neither resolves failure reset or the outline lookup.
-// The best shared-color form is only 73.3681% and still expands reset;
-// its called two-coordinate lookup belongs inside reset, not the outline.
-// No form adopted. The standalone original color loops remain canonical;
-// the helper is an experimental inference from four repeated retail scans.
-// See generate-rmg-key-tent-family.py / generate-rmg-key-color-helper-family.py.
-// 207 native caller/helper combinations pass with thirteen wrong controls.
 // The placement result is a local cleared before the fill: Mac 0x250a90
 // zeroes r27 and stores placeQuestGroup's result into it at 0x250b04, and
 // the map editor's copy keeps it in a byte home tested after the guard
-// delete (h3maped 92.30% -> 97.11%; the game body moves 89.48 -> 88.48).
+// delete. Preserve the ordinary reset call and automatic group ownership;
+// the standalone color loops remain canonical (a shared color setter, an
+// inference from four repeated retail scans, is not adopted).
+// Residual: retail retains the outline's two-coordinate lookup and failure
+// reset; VC6 expands both. Both map-destructor calls agree, as do the
+// constructor/fill/addGuard/outline/placeQuestGroup calls. Failure vector
+// cleanup still expands past retail's two retained empty _Destroy calls.
+// A narrower guard lifetime is byte-neutral; an explicit copied position
+// with the scalar accessor, origin/outline/result lifetimes, receivers,
+// counters and result branches do not resolve it.
 VA(0x0054B8C0, 0x385)
 MAC_ADDRESS(0x2508e8, 0x334) // anchor-callee 0x5338e0; retail-only
 unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, int maxValue)
@@ -11322,9 +11121,9 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
 // the end-iterator path (0x54bc95 and 0x54be6d). Preserve that observed test.
 // Grid coordinates and the prototype snapshots preserve the footprint walk.
 // The ordinary zone bookkeeping helper expands to retail's indexed
-// memory DEC; flattening it splits the update and leaves 95.7733%.
-// Current VC6 reproduces all 686 bytes with enum/int value or enum-reference
-// parameters; int-reference leaves 97.3733%. Keep the existing enum domain.
+// memory DEC; flattening it splits the update.
+// VC6 reproduces all 686 bytes with enum/int value or enum-reference
+// parameters, but not int-reference. Keep the existing enum domain.
 VA(0x0054BC50, 0x2AE)
 MAC_ADDRESS(0x250c1c, 0x2ac) // anchor-callee 0x5338e0/0x54b490; retail-only
 void type_random_map_generator::removeObject(type_object* object)
@@ -11398,8 +11197,8 @@ TRandomMapRequest::TRandomMapRequest(int width, int height, int levels)
 
 // Provisional ordinary seat setters: Complete-only worker 0x54bf60 expands
 // both calls. These names/boundaries are retail codegen hypotheses, not DC
-// recoveries. Flattening both leaves 85.5534%; keeping only setHumanPlayer
-// reaches 99.6116% with a town-loop register rotation. Both recover the
+// recoveries. Flattening both, or keeping only setHumanPlayer (a town-loop
+// register rotation), falls short. Both recover the
 // complete worker instruction stream without inline keywords or pins.
 void type_random_map_generator::setHumanPlayer(int seat)
 {
