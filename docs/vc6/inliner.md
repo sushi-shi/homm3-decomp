@@ -2515,7 +2515,7 @@ point became trivially copyable. What they settle and what they leave:
   spellings are one object. The six callers where retail calls
   `getPackedCell` but expands `initializePackedCell` elsewhere
   (`paintTransitions`, both diagonal checks, `getSpecialFrameStrength`,
-  `paintRectangle`, `buildMatchingNeighbourMask`) therefore need their own
+  `paintRectangle`, `computeAdjacentSimilar`) therefore need their own
   site structure, not a cheaper cache pair.
 - `queueOtherTerrainNeighbours` (63.63%): retail refuses three cardinal
   inserts' pair constructor (cost 41) and the cache reads (90) through the
@@ -2523,7 +2523,7 @@ point became trivially copyable. What they settle and what they leave:
   model that needs more than 41 remaining candidate sites at the first
   insert and about 695 units at the last read; the traced body has 25
   sites and 351 units. Closed in the second round below.
-- `refreshRmgLinePoint` (71.92%): retail calls `TPoint::operator+=`, the
+- `recalcLineShape` (71.92%): retail calls `TPoint::operator+=`, the
   grid conversion and `at()` from a loop body whose own budget is above
   700, so those three sit in a nested context under 42 units in retail; the
   signed-point arithmetic reproduces the operand shapes but not the nesting.
@@ -2592,7 +2592,7 @@ point became trivially copyable. What they settle and what they leave:
 - `TRmgLineWalker::paintPoint` (80.6): retail calls `TPoint::operator+=`
   once inside the first neighbour loop where our nested budget is 110
   against 43; that needs about twelve more remaining sites, the same
-  shape of gap as `refreshRmgLinePoint`. Closed further below.
+  shape of gap as `recalcLineShape`. Closed further below.
 
 ### Third terrain round, 2026-09-12: the budget model as a simulator
 
@@ -2607,7 +2607,7 @@ replay of a `predict-inline --trace` tree under that rule (scratch
 of any site insertion before compiling, so a family only needs to spell
 the structures the replay admits. What it found:
 
-- `queueOtherTerrainNeighbours` and `buildMatchingNeighbourMask` need the
+- `queueOtherTerrainNeighbours` and `computeAdjacentSimilar` need the
   remaining-site count to fall steeply through their arms. Point accessors
   in every guard and construction do it for the first; for the second the
   clamped coordinates held as two corner points whose accessors feed the
@@ -2631,7 +2631,7 @@ the structures the replay admits. What it found:
 - The pattern-table constructor: indexing the fixed table at every use
   anchors the strength-reduced scan at the X-flip byte as retail; a named
   entry pointer anchors it at the Y-flip byte. 100%.
-- The line painter (`refreshRmgLinePoint`, `TRmgLineWalker::paintPoint`):
+- The line painter (`recalcLineShape`, `TRmgLineWalker::paintPoint`):
   the sum, conversion and factory sites of a neighbour query can only be
   refused from a nested context, so an ordinary `getNeighbourLineType` helper
   on the painter interface held them (that provisional wrapper was later

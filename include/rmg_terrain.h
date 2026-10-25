@@ -161,7 +161,7 @@ struct TRmgPackedTerrainCell {
 class TRmgTerrainRule {
 public:
     b8 m_blendsWithOtherTerrain; // +0x04
-    // needsTerrainRepair and repairTerrainPoint
+    // isInvalid and repairTerrainPoint
     // consult this byte before joining separated neighbour regions.
     b8 m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
@@ -321,13 +321,17 @@ public:
     //                   x
     //     x C x         C
     //                   x
-    b8 isHorizontalGap(const TTilePoint& point, s32 terrain);
-    b8 isVerticalGap(const TTilePoint& point, s32 terrain);
-    b8 isHorizontalGap(const TTilePoint& point);
-    b8 isVerticalGap(const TTilePoint& point);
-    b8 needsTerrainRepair(const TTilePoint& point);
-    b8 hasSeparatedNeighbours(const TTilePoint& point);
-    void buildMatchingNeighbourMask(
+    // Spellings of Loki TerrainPlacement.cpp's layer predicates, which have
+    // the same bodies: wouldBeInvalidHoriz/Vert (given terrain), the
+    // inline isInvalidHoriz/Vert and isInvalid (own terrain),
+    // computeAdjacentSimilar and hasMultipleAdjSimilarSpans.
+    b8 wouldBeInvalidHoriz(const TTilePoint& point, s32 terrain);
+    b8 wouldBeInvalidVert(const TTilePoint& point, s32 terrain);
+    b8 isInvalidHoriz(const TTilePoint& point);
+    b8 isInvalidVert(const TTilePoint& point);
+    b8 isInvalid(const TTilePoint& point);
+    b8 hasMultipleAdjSimilarSpans(const TTilePoint& point);
+    void computeAdjacentSimilar(
         const TTilePoint& point, b8* matches);
 
     void buildNeighbourKinds(const TTilePoint& point, s32* neighbours);

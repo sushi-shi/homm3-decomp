@@ -1944,7 +1944,7 @@ size and interference before combining values into shared storage. This is a
 separate operation from choosing EAX/ECX/EDX/ESI/EDI for register live ranges;
 register-assignment traces alone cannot explain a frame-size difference.
 
-A passive trace of `refreshRmgLinePoint` (0x4f9f00) observes 13 stack values
+A passive trace of `recalcLineShape` (0x4f9f00) observes 13 stack values
 placed in 12 bins. Caller `oldType` and the inlined selector's `pattern` are
 both four-byte values; the compiler puts them in one bin and assigns each
 owner offset -0xc. Every other bin has one member. Retail keeps the terrain

@@ -201,7 +201,7 @@ cell is classified as above. A frame or flip is written only when it changes.
 
 ## Line shapes (rivers and roads)
 
-`selectRmgLinePattern` uses one bit per neighbour: whether it carries the same
+`computeLineShape` uses one bit per neighbour: whether it carries the same
 line type. Diagrams use `#` for connected, `.` for not connected and `?` for
 not tested. Shapes are again canonical, and the returned flips supply the
 other orientations.

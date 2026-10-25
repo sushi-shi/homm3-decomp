@@ -724,7 +724,7 @@ void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
         if (point.y() > 0) {
             TTilePoint nearby(point.x(), point.y() - 1);
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
-                && !isHorizontalGap(nearby)) {
+                && !isInvalidHoriz(nearby)) {
                 m_repairPoints.erase(nearby);
                 queueOtherTerrainNeighbours(nearby);
             }
@@ -732,7 +732,7 @@ void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
         if (point.y() < getHeight() - 1) {
             TTilePoint nearby(point.x(), point.y() + 1);
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
-                && !isHorizontalGap(nearby)) {
+                && !isInvalidHoriz(nearby)) {
                 m_repairPoints.erase(nearby);
                 queueOtherTerrainNeighbours(nearby);
             }
@@ -740,7 +740,7 @@ void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
         if (point.x() > 0) {
             TTilePoint nearby(point.x() - 1, point.y());
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
-                && !isVerticalGap(nearby)) {
+                && !isInvalidVert(nearby)) {
                 m_repairPoints.erase(nearby);
                 queueOtherTerrainNeighbours(nearby);
             }
@@ -748,7 +748,7 @@ void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
         if (point.x() < getWidth() - 1) {
             TTilePoint nearby(point.x() + 1, point.y());
             if (m_repairPoints.find(nearby) != m_repairPoints.end()
-                && !isVerticalGap(nearby)) {
+                && !isInvalidVert(nearby)) {
                 m_repairPoints.erase(nearby);
                 queueOtherTerrainNeighbours(nearby);
             }
@@ -762,15 +762,15 @@ void TRmgTerrainPainter::paintPoint(const TTilePoint& point)
             TTilePoint nearby = TPoint<int>(static_cast<int>(point.m_x), static_cast<int>(point.m_y)) + akAdjOffset[direction];
             if (isPaintTerrain(nearby))
                 if (m_repairPoints.find(nearby) != m_repairPoints.end()) {
-                    if (!needsTerrainRepair(nearby)) {
+                    if (!isInvalid(nearby)) {
                         m_repairPoints.erase(nearby);
                         queueOtherTerrainNeighbours(nearby);
                     }
-                } else if (needsTerrainRepair(nearby))
+                } else if (isInvalid(nearby))
                     m_repairPoints.insert(nearby);
         }
     }
-    if (needsTerrainRepair(point))
+    if (isInvalid(point))
         m_repairPoints.insert(point);
     else
         queueOtherTerrainNeighbours(point);
@@ -827,14 +827,14 @@ void TRmgTerrainPainter::queueOtherTerrainNeighbours(const TTilePoint& point)
 // Own-terrain checks share the predicates used with the selected paint
 // terrain. Retail retains the nested predicate in the horizontal check and expands
 // the vertical check at the four adjacent-row/column probes.
-b8 TRmgTerrainPainter::isHorizontalGap(const TTilePoint& point)
+b8 TRmgTerrainPainter::isInvalidHoriz(const TTilePoint& point)
 {
-    return isHorizontalGap(point, getTerrain(point));
+    return wouldBeInvalidHoriz(point, getTerrain(point));
 }
 
-b8 TRmgTerrainPainter::isVerticalGap(const TTilePoint& point)
+b8 TRmgTerrainPainter::isInvalidVert(const TTilePoint& point)
 {
-    return isVerticalGap(point, getTerrain(point));
+    return wouldBeInvalidVert(point, getTerrain(point));
 }
 
 // The repeated repair predicate has no Dreamcast counterpart. Loki's
@@ -845,13 +845,13 @@ b8 TRmgTerrainPainter::isVerticalGap(const TTilePoint& point)
 // Keep the separation helper's byte result as the direct final return:
 // booleanizing it changed the exact destructor comparisons in prior probes.
 MAC_ADDRESS(0x2588c4, 0x1a0)
-b8 TRmgTerrainPainter::needsTerrainRepair(const TTilePoint& point)
+b8 TRmgTerrainPainter::isInvalid(const TTilePoint& point)
 {
-    if (isHorizontalGap(point) || isVerticalGap(point))
+    if (isInvalidHoriz(point) || isInvalidVert(point))
         return 1;
     if (g_rmgTerrainRules[getTerrain(point)]->m_allowsSeparatedNeighbours)
         return 0;
-    return hasSeparatedNeighbours(point);
+    return hasMultipleAdjSimilarSpans(point);
 }
 
 // Repair a one-cell terrain gap, then merge all but the largest remaining
@@ -916,23 +916,23 @@ VA(0x005b5440, 0x628)
 MAC_ADDRESS(0x256be4, 0x630) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void TRmgTerrainPainter::repairTerrainPoint(const TTilePoint& point)
 {
-    if (isVerticalGap(point)) {
-        if (!needsTerrainRepair(TTilePoint(point.m_x, point.m_y - 1)) &&
-            (needsTerrainRepair(TTilePoint(point.m_x, point.m_y + 1)) ||
-             (isHorizontalGap(TTilePoint(point.m_x, point.m_y - 1),
+    if (isInvalidVert(point)) {
+        if (!isInvalid(TTilePoint(point.m_x, point.m_y - 1)) &&
+            (isInvalid(TTilePoint(point.m_x, point.m_y + 1)) ||
+             (wouldBeInvalidHoriz(TTilePoint(point.m_x, point.m_y - 1),
                               getPaintTerrain()) &&
-              !isHorizontalGap(TTilePoint(point.m_x, point.m_y + 1),
+              !wouldBeInvalidHoriz(TTilePoint(point.m_x, point.m_y + 1),
                                getPaintTerrain()))))
             paintPoint(TTilePoint(point.m_x, point.m_y + 1));
         else
             paintPoint(TTilePoint(point.m_x, point.m_y - 1));
     }
-    if (isHorizontalGap(point)) {
-        if (!needsTerrainRepair(TTilePoint(point.m_x - 1, point.m_y)) &&
-            (needsTerrainRepair(TTilePoint(point.m_x + 1, point.m_y)) ||
-             (isVerticalGap(TTilePoint(point.m_x - 1, point.m_y),
+    if (isInvalidHoriz(point)) {
+        if (!isInvalid(TTilePoint(point.m_x - 1, point.m_y)) &&
+            (isInvalid(TTilePoint(point.m_x + 1, point.m_y)) ||
+             (wouldBeInvalidVert(TTilePoint(point.m_x - 1, point.m_y),
                             getPaintTerrain()) &&
-              !isVerticalGap(TTilePoint(point.m_x + 1, point.m_y),
+              !wouldBeInvalidVert(TTilePoint(point.m_x + 1, point.m_y),
                              getPaintTerrain()))))
             paintPoint(TTilePoint(point.m_x + 1, point.m_y));
         else
@@ -940,9 +940,9 @@ void TRmgTerrainPainter::repairTerrainPoint(const TTilePoint& point)
     }
 
     if (!g_rmgTerrainRules[getPaintTerrain()]->m_allowsSeparatedNeighbours &&
-        hasSeparatedNeighbours(point)) {
+        hasMultipleAdjSimilarSpans(point)) {
         b8 matches[TILE_DIR_COUNT];
-        buildMatchingNeighbourMask(point, matches);
+        computeAdjacentSimilar(point, matches);
         TRmgTerrainGap gaps[TILE_DIR_COUNT / 2];
         u32 gapCount = 0;
         u32 first = 0;
@@ -1147,7 +1147,7 @@ TRmgTerrainTile TRmgTerrainPainter::getTile(const TTilePoint& point)
 
 VA(0x005b6320, 0x107)
 MAC_ADDRESS(0x25803c, 0x160)
-b8 TRmgTerrainPainter::isHorizontalGap(
+b8 TRmgTerrainPainter::wouldBeInvalidHoriz(
     const TTilePoint& point, s32 terrain)
 {
     return point.m_x > 0 && point.m_x < getWidth() - 1
@@ -1157,7 +1157,7 @@ b8 TRmgTerrainPainter::isHorizontalGap(
 
 VA(0x005b6430, 0x106)
 MAC_ADDRESS(0x25819c, 0x160)
-b8 TRmgTerrainPainter::isVerticalGap(
+b8 TRmgTerrainPainter::wouldBeInvalidVert(
     const TTilePoint& point, s32 terrain)
 {
     return point.m_y > 0 && point.m_y < getHeight() - 1
@@ -1186,7 +1186,7 @@ b8 TRmgTerrainPainter::isVerticalGap(
 // ordered, short-circuited queries in 185,856 states; five controls fail.
 VA(0x005b6540, 0x2ca)
 MAC_ADDRESS(0x2582fc, 0x4f8) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
-void TRmgTerrainPainter::buildMatchingNeighbourMask(
+void TRmgTerrainPainter::computeAdjacentSimilar(
     const TTilePoint& point, b8* matches)
 {
     s32 terrain = getTerrain(point);
@@ -1238,10 +1238,10 @@ void TRmgTerrainPainter::buildMatchingNeighbourMask(
 // and game 99.75%; the complete final scan makes the direct returns exact.
 VA(0x005b6810, 0x84)
 MAC_ADDRESS(0x2587f4, 0xd0)
-b8 TRmgTerrainPainter::hasSeparatedNeighbours(const TTilePoint& point)
+b8 TRmgTerrainPainter::hasMultipleAdjSimilarSpans(const TTilePoint& point)
 {
     b8 matches[TILE_DIR_COUNT];
-    buildMatchingNeighbourMask(point, matches);
+    computeAdjacentSimilar(point, matches);
     u32 first = 0;
     u32 direction;
     while (matches[first]) {
@@ -1473,7 +1473,7 @@ void TRmgTerrainPainter::finish()
         while (m_otherTerrainPoints.size()) {
             TTilePoint point = *m_otherTerrainPoints.begin();
             m_otherTerrainPoints.erase(point);
-            if (needsTerrainRepair(point))
+            if (isInvalid(point))
                 paintPoint(point);
         }
     } while (m_repairPoints.size());

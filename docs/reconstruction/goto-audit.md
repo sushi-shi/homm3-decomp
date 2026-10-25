@@ -10,7 +10,7 @@ from `3423ece1`; the isolated goto pass also preserves `22f8b0fd`.
 
 That inventory included six RMG statements in four functions
 (`canFitObject` twice, `canPlaceTreasureGroup`, `repairTerrainPoint` and
-`hasSeparatedNeighbours` twice). The later RMG readability cleanup replaced
+`hasMultipleAdjSimilarSpans` twice). The later RMG readability cleanup replaced
 them with direct returns and structured loops, accepting the score cost;
 the RMG sources now contain no gotos. Counts below predate that cleanup.
 
@@ -252,7 +252,7 @@ evidence against replacing every goto mechanically.
 | `iconWidget::main` | Direct zero returns | 95.7040% | 89.5668% |
 | `NewfullMap::load` | Direct failure returns | 56.7217% | 53.5994% |
 | `ResourceManager::GetBitmap816` | Direct cached-result return | 94.5542% | 91.6626% |
-| `hasSeparatedNeighbours` | Direct false returns | 100% | 99.7458% |
+| `hasMultipleAdjSimilarSpans` | Direct false returns | 100% | 99.7458% |
 | `slider::main` | Direct base calls/returns | 100% | 89.6667% |
 | System options handler | Direct consume returns | 94.3957% | 92.3189% |
 | `CSaveGameEdit::ignoreKey` | Direct return, retaining `GetKeyState` | 100% | 97.5397% |
@@ -701,7 +701,7 @@ their retail code remains authoritative.
 | `drawShroud` | 2 | One breakable cloud scope followed by the star fallback | 100% |
 | `powEffect` | 1 | Positive attack-threshold arm with `else continue` | 96.2927% |
 | `hillFortWindowHandler` | 1 | OK arm owns the existing message stores and forward return | 91.9430% |
-| `hasSeparatedNeighbours` | 1 | Initial all-matching scan returns false directly | 100% |
+| `hasMultipleAdjSimilarSpans` | 1 | Initial all-matching scan returns false directly | 100% |
 | `slider::main` | 1 | Widget-state handled result after the inner switch | 100% |
 | System-options handler | 1 | Default widget command returns consumed directly | 94.3957% |
 | **Total** | **9** | **Eight functions; six functions and three files cleared** | |

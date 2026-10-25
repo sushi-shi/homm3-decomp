@@ -12,7 +12,7 @@
 #include "terrainplacement.h"
 #include "Uncopyable.h"
 
-// Unreflected line shapes chosen by selectRmgLinePattern; reflections supply
+// Unreflected line shapes chosen by computeLineShape; reflections supply
 // the other orientations. North is up; # is a line tile.
 //   END_S  END_E  NS     EW     SE     NES    ESW    CROSS
 //   . . .  . . .  . # .  . . .  . . .  . # .  . . .  . # .
@@ -61,7 +61,9 @@ SIZE(TRmgLinePatternTable, 0x50);
 extern TRmgLinePatternTable g_rmgRiverPatternTable;
 extern TRmgLinePatternTable g_rmgRoadPatternTable;
 
-void selectRmgLinePattern(
+// Loki LinePlacement.cpp computeLineShape; the RoE form writes through
+// pointers and reads a tileset-traits table.
+void computeLineShape(
     const bool* neighbours, const TRmgLinePatternTable* table,
     int& pattern, bool& flipX, bool& flipY);
 
@@ -96,19 +98,22 @@ public:
     virtual void getTile(const TTilePoint& point, TRmgTerrainTile& tile) = 0;
     virtual int getLineType(const TTilePoint& point) = 0;
 
-    TRmgLinePainterTile at(const TTilePoint& point);
+    TRmgLinePainterTile getCell(const TTilePoint& point);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.
 // Caller 0x4f9f00 then dispatches through those stored members; the same
 // twelve-byte record is expanded at its entry and in 0x4fa080/0x4fa3c0.
-// These Complete-only names describe roles, not recovered original spellings.
+// It is the Complete form of Loki's TMapLineFilter::TCellRef, which
+// TMapLineFilter::getCell returns and whose getType reads the line type;
+// the struct and tile accessor names remain role names (Loki's TCellRef
+// exchanges a TCellInfo through getInfo/setInfo instead).
 struct TRmgLinePainterTile {
     TMapLineFilter* m_painter;
     TTilePoint m_point;
 
     TRmgLinePainterTile(TMapLineFilter* painter, const TTilePoint& point);
-    int getLineType();
+    int getType();
     void getTile(TRmgTerrainTile& tile);
     void setTile(const TRmgTerrainTile& tile);
     unsigned char isBlocked();
@@ -127,8 +132,10 @@ struct TRmgGridRectangle {
 };
 SIZE(TRmgGridRectangle, 0x10);
 
-// Shared fastcall refresh reached by the rectangle clear and point walker.
-void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point);
+// Shared fastcall refresh reached by the rectangle clear and point walker
+// (Loki LinePlacement.cpp recalcLineShape, which also returns whether the
+// cell changed).
+void recalcLineShape(TMapLineFilter* painter, const TTilePoint& point);
 void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rectangle);
 
 class TRiverOp : public TMapLineFilter {

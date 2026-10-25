@@ -356,7 +356,7 @@ flags = "libraries_o2_gr_windows"
 # rmg and rmg_support take stack arguments in their free functions here:
 # insertRmgWorkItem 0x4a489d and std::_Construct<TRmgObjectPlacementRule>
 # 0x4af09c read [ebp+8] and their callers pop (`add esp`), as do
-# selectRmgLinePattern 0x458893, refreshRmgLinePoint 0x458a2f and
+# computeLineShape 0x458893, recalcLineShape 0x458a2f and
 # clearRmgLineRectangle 0x458af6. The game's /Gr build passes them in
 # registers.
 [[unit]]

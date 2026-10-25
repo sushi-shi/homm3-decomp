@@ -91,7 +91,7 @@ static const bool g_rmgLineReflections[4][2] = {
 VA(0x004f9cb0, 0x24e)
 MAC_ADDRESS(0x222498, 0x2a4)
 VA_AT(h3maped, 0x00458893, 0x19c)
-void selectRmgLinePattern(
+void computeLineShape(
     const bool* neighbours, const TRmgLinePatternTable* table,
     s32& pattern, bool& flipX, bool& flipY)
 {
@@ -179,7 +179,7 @@ TRmgLinePainterTile::TRmgLinePainterTile(
 // The 168-case query family tested receiver/coordinate reference bindings,
 // their order, named results and real proxy construction (80 code results).
 // No gain over the direct query: clear 94.5070%, point 79.9380%, refresh 63.9923%.
-s32 TRmgLinePainterTile::getLineType()
+s32 TRmgLinePainterTile::getType()
 {
     return m_painter->getLineType(m_point);
 }
@@ -214,7 +214,7 @@ TRmgGridRectangle::TRmgGridRectangle(const TTilePoint& origin, const TTilePoint&
 }
 
 // Mac retains this between the line-pattern table destructor and neighbour
-// mask helper; refreshRmgLinePoint calls it at 0x222850. Its Windows expansion
+// mask helper; recalcLineShape calls it at 0x222850. Its Windows expansion
 // is local to this TU, so keep an ordinary source body visible to that caller.
 MAC_ADDRESS(0x22234c, 0x54)
 u32 TRmgLinePatternTable::selectFrame(s32 pattern)
@@ -237,7 +237,7 @@ void computeAdjacentLines(TMapLineFilter* pMapFilter, const TTilePoint& point,
     for (u32 dir = 0; dir < TILE_DIR_COUNT; ++dir) {
         if (abAdjDir[dir]) {
             TTilePoint adjLoc = TPoint<int>(point) + akAdjOffset[dir];
-            abAdjLine[dir] = pMapFilter->at(adjLoc).getLineType() == lineType;
+            abAdjLine[dir] = pMapFilter->getCell(adjLoc).getType() == lineType;
         } else
             abAdjLine[dir] = false;
     }
@@ -248,16 +248,16 @@ void computeAdjacentLines(TMapLineFilter* pMapFilter, const TTilePoint& point,
 VA(0x004f9f00, 0x146)
 MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 VA_AT(h3maped, 0x00458a2f, 0xc7)
-void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point)
+void recalcLineShape(TMapLineFilter* painter, const TTilePoint& point)
 {
-    TRmgLinePainterTile tile = painter->at(point);
-    s32 oldType = tile.getLineType();
+    TRmgLinePainterTile tile = painter->getCell(point);
+    s32 oldType = tile.getType();
     bool matches[TILE_DIR_COUNT];
     computeAdjacentLines(painter, point, oldType, matches);
     TRmgLinePatternTable* table = painter->getPatternTable(oldType);
     s32 selected;
     bool flipX, flipY;
-    selectRmgLinePattern(matches, table, selected, flipX, flipY);
+    computeLineShape(matches, table, selected, flipX, flipY);
     TRmgTerrainTile current;
     tile.getTile(current);
     if (table->m_framePatterns[current.getFrame()] != selected
@@ -271,7 +271,7 @@ void refreshRmgLinePoint(TMapLineFilter* painter, const TTilePoint& point)
 }
 
 VA(0x004fa050, 0x22) // anchor-callee 0x4f9f86; thiscall hidden value return
-TRmgLinePainterTile TMapLineFilter::at(const TTilePoint& point)
+TRmgLinePainterTile TMapLineFilter::getCell(const TTilePoint& point)
 {
     return TRmgLinePainterTile(this, point);
 }
@@ -294,8 +294,8 @@ void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rec
          point.m_y < rectangle.m_origin.m_y + rectangle.m_size.m_y; ++point.m_y) {
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            TRmgLinePainterTile tile = painter->at(point);
-            if (tile.getLineType())
+            TRmgLinePainterTile tile = painter->getCell(point);
+            if (tile.getType())
                 tile.setTile(TRmgTerrainTile(0, 0));
         }
     }
@@ -306,8 +306,8 @@ void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rec
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            if (painter->getCell(point).getType())
+                recalcLineShape(painter, point);
         }
     }
     if (rectangle.m_origin.m_x + rectangle.m_size.m_x < painter->m_size.m_x) {
@@ -317,24 +317,24 @@ void clearRmgLineRectangle(TMapLineFilter* painter, const TRmgGridRectangle& rec
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            if (painter->getCell(point).getType())
+                recalcLineShape(painter, point);
         }
     }
     if (rectangle.m_origin.m_y > 0) {
         point.m_y = rectangle.m_origin.m_y - 1;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            if (painter->getCell(point).getType())
+                recalcLineShape(painter, point);
         }
     }
     if (rectangle.m_origin.m_y + rectangle.m_size.m_y < painter->m_size.m_y) {
         point.m_y = rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLineType())
-                refreshRmgLinePoint(painter, point);
+            if (painter->getCell(point).getType())
+                recalcLineShape(painter, point);
         }
     }
 }
@@ -386,21 +386,21 @@ VA(0x004fa3c0, 0x156)
 MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4fa2b0; thiscall, ret 4
 void TRmgLineWalker::paintPoint(const TTilePoint& point)
 {
-    TRmgLinePainterTile tile = m_painter->at(point);
-    s32 oldType = tile.getLineType();
+    TRmgLinePainterTile tile = m_painter->getCell(point);
+    s32 oldType = tile.getType();
     if (oldType == m_lineType || tile.isBlocked())
         return;
     if (oldType)
         clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TTilePoint(1, 1)));
     tile.setLineType(m_lineType);
-    refreshRmgLinePoint(m_painter, point);
+    recalcLineShape(m_painter, point);
 
     bool matches[TILE_DIR_COUNT];
     computeAdjacentLines(m_painter, point, m_lineType, matches);
     u32 direction;
     for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (matches[direction])
-            refreshRmgLinePoint(m_painter, TPoint<int>(point) + akAdjOffset[direction]);
+            recalcLineShape(m_painter, TPoint<int>(point) + akAdjOffset[direction]);
     }
 }
 
