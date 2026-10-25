@@ -8086,7 +8086,10 @@ bool type_random_map_generator::contains(const TRmgPoint& point) const
 
 // The eight-byte values are coordinate pairs: midpoint and perpendicular
 // arithmetic prove TRmgPoint, independently of the ICF-shared vector labels.
-// Pending segments use a vector as a LIFO; deferred branches use queue/list.
+// Pending segments use a vector as a LIFO; deferred branches use a plain
+// list as a FIFO: Mac constructs it with no queue copy of a default list
+// and calls its push_back/pop_front bodies directly (0x252608, 0x252590),
+// and both Windows images then expand its constructor around _Buynode.
 // Both containers live within one level, after the seed switch and before
 // the level back edge. Hoisting them contradicts retail's cleanup lifetime.
 // The point difference supplies SUB/SUB/NEG, and canonical terrain/border
@@ -8098,9 +8101,7 @@ bool type_random_map_generator::contains(const TRmgPoint& point) const
 // product. Mac 0x247098..0x2470f0 and 0x247708..0x247718 store each path mark
 // in the setters' order (the set mark, then the cleared one), so both mark
 // passes call setObstacleFill/setPathClearance.
-// Residual: with the setters in its budget VC6 keeps the queue's list
-// constructor out of line where retail expands it and calls _Buynode; the
-// coordinate registers (ESI/EDI/EBX for last.x, first.x, last.y; retail
+// Residual: the coordinate registers (ESI/EDI/EBX for last.x, first.x, last.y; retail
 // ESI/EBX/EDI) and return-copy/distance allocation also differ. Naming an
 // extra endpoint copy adds a reload absent from retail. Pair-operation
 // helpers lose the container boundaries; shared midpoint and perpendicular
@@ -8149,7 +8150,7 @@ void type_random_map_generator::carveBranchingPaths()
             break;
         }
         std::vector<TRmgPoint> pending;
-        std::queue<TRmgPoint, std::list<TRmgPoint> > branches;
+        std::list<TRmgPoint> branches;
         pending.push_back(first);
         pending.push_back(last);
         while (pending.size()) {
@@ -8174,11 +8175,11 @@ void type_random_map_generator::carveBranchingPaths()
                     pending.push_back(first);
                     if (length >= 8 && contains(middle)) {
                         first = middle + perpendicular;
-                        branches.push(middle);
-                        branches.push(first);
+                        branches.push_back(middle);
+                        branches.push_back(first);
                         first = TRmgPoint(middle.m_x - perpendicular.m_x, middle.m_y - perpendicular.m_y);
-                        branches.push(middle);
-                        branches.push(first);
+                        branches.push_back(middle);
+                        branches.push_back(first);
                     }
                 } else if (contains(first)) {
                     m_map.openPathPatch(first.m_x, first.m_y, level);
@@ -8186,9 +8187,9 @@ void type_random_map_generator::carveBranchingPaths()
             }
             while (branches.size() > 0 && pending.empty()) {
                 first = branches.front();
-                branches.pop();
+                branches.pop_front();
                 last = branches.front();
-                branches.pop();
+                branches.pop_front();
                 last = m_map.traceBranchEnd(first, last, level);
                 if (getRmgSquaredDistance(last, first) >= 25) {
                     pending.push_back(last);
