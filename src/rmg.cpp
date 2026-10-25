@@ -3207,7 +3207,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
             direction = 4;
             first = 1;
         }
-        for (; direction-- > first; ) {
+        while (direction-- > first) {
             position = entrance + g_rmgDirections[direction] + trigger;
             if (position.m_x >= bounds.m_minimumX && position.m_x < bounds.m_maximumX
                 && position.m_y >= bounds.m_minimumY && position.m_y < bounds.m_maximumY
@@ -8233,9 +8233,10 @@ void type_random_map_generator::connectJunctionEntrance(TRmgPoint from, TRmgPoin
 // 0x247fb0..0x248014 copies that value before storing the zero movement cost.
 // Mac 0x247de0..0x247e30 separates the returned level position from the
 // working position, reused for both the cell scan and entrance floods. Its
-// lookup copies retain getMapItem(position). Copy each later entrance before
-// updating that position; keeping a reference changes its live range. This
-// model matches all 638 game bytes and 546 map-editor bytes under VC6.
+// lookup copies retain getMapItem(position). Copy each entrance before
+// updating that position; keeping a reference changes its live range. Mac
+// 0x247f5c..0x247f7c reads the first entrance once and stores X, Y and the
+// level again, so the repeated Z store is native.
 VA(0x005446A0, 0x27E)
 MAC_ADDRESS(0x247d9c, 0x3e0)
 VA_AT(h3maped, 0x004a89da, 0x222)
@@ -8263,7 +8264,9 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
     }
     if (!zone->getEntranceCount())
         return;
-    static_cast<TRmgPoint&>(position) = zone->m_entrances[0];
+    TRmgPoint first = zone->m_entrances[0];
+    position.m_x = first.m_x;
+    position.m_y = first.m_y;
     position.m_z = level;
     TRmgMapItem* item = m_map.getMapItem(position);
     item->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
@@ -9416,7 +9419,8 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     unsigned char waterZone = zone->m_terrain == eTerrainWater;
     type_object* lastObject = group->m_objects.back();
     TObjectType* prototype = lastObject->m_properties->m_prototype;
-    TRmgPoint offset(prototype->getTriggerLoc().x(), prototype->getTriggerLoc().y());
+    TTilePoint triggerCell = prototype->getTriggerLoc();
+    TRmgPoint offset(triggerCell.x(), triggerCell.y());
     workingPosition = lastObject->getPosition();
     workingPosition -= offset;
     workingPosition.m_z = position.m_z;
