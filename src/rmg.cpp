@@ -8951,8 +8951,10 @@ void type_random_map_generator::placeMines()
 // Naming the selected pointer is neutral. Named random indices/counts change
 // the result register lifetime (94.13% or lower), without settling the range
 // and terrain allocation; preserve the direct result expression.
-// The const terrain query expands to native bitset::test (0x24a004);
-// reusing the shared isRecommendedTerrain helper is byte-neutral.
+// The const terrain query expands to native bitset::test (0x24a004).
+// Loki's const getRecommendedTerrainMask accessor with a direct test is
+// exact in both images; the editor's /O1 budget keeps the project-named
+// isRecommendedTerrain wrapper out of line (73.82%), which retail expands.
 // A focused 60-case lifetime matrix (counter initialization, prototype-range
 // binding order and enum/mask-index captures) also remains at 99.6581%.
 // Sixty filter/receiver/insertion variants do not improve it either. Conditional
@@ -8979,7 +8981,7 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
             || prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_5) {
             if (terrain == eTerrainWater)
                 continue;
-        } else if (!prototype->isRecommendedTerrain(terrain)) {
+        } else if (!prototype->getRecommendedTerrainMask().test(terrain)) {
             continue;
         }
         candidates.push_back(properties);
