@@ -1,8 +1,6 @@
 // 11 functions in the Dreamcast roster; 20 compiler-generated $-thunks
-// omitted. Retail's currently proven 0x8b200..0x8b2d7 unit span contains the
-// two exact methods below. The flanking cursor/customcampaign and
-// customcampaign/dialogbox gaps remain ambiguous, so the older-revision
-// carcass is not force-claimed merely from roster order.
+// omitted. The older-revision carcass is not claimed from roster order
+// alone.
 #include "text.h"
 #include "va.h"
 #include "homm3_minmax.h"
@@ -260,9 +258,8 @@ int heroPower(hero* candidate)
     int primary = candidate->getPrimarySkillTotal();
     int skills = 0;
     // DC game.cpp:3281 reads the array in place, while every other DC
-    // caller retains hero::get_secondary_skill as a call. The accessor form
-    // differed only in the expanded additions' operand order (getCampaign-
-    // BonusHero 98.37%, both sort helpers 99.9%); the direct read is exact.
+    // caller retains hero::get_secondary_skill as a call; the direct read
+    // gives the expanded additions' retail operand order.
     for (int skill = 0; skill < g_crossoverSecondarySkills; ++skill)
         skills += candidate->m_skillLevel[skill];
     // DC line 3284 adds sec_skill to pri_skill; Mac 0x91d28 likewise
@@ -340,13 +337,9 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 // prologue; numHeroes is re-read from the record on every pass. Mac calls
 // heroPower for candidate and then best at 0:0x91ecc/0:0x91ed8;
 // Complete expands both copies of this ordinary helper.
-// Reversing the equivalent comparison to heroPower(candidate) >
-// heroPower(best) preserves those source calls but moves VC6 from 98.3704%
-// to 96.19%; keep the natural best-first expression and both helper sites.
-// The pre-helper 100% body summed `skills + total` per hero; with heroPower
-// expanded, `best && heroPower(best) >= heroPower(candidate)` plus continue,
-// and heroPower returning skills + primary or accumulating either side, are
-// all byte-flat. Retail adds the candidate's sum into its skills register.
+// Keep the natural best-first expression and both helper sites: the
+// reversed comparison heroPower(candidate) > heroPower(best) reorders VC6's
+// evaluation. Retail adds the candidate's sum into its skills register.
 VA(0x004840d0, 0x155)
 MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
@@ -1246,15 +1239,11 @@ int TCampaignStartHeroOption::getPlayer(int which) const
     return m_choices[which].m_player;
 }
 
-// 2026-09-06, polish lane 38: the read loop is `while (count--)`, not
-// `for (i = 0; i != count; ++i)` - retail's `mov X,count / dec count /
-// test X,X / je` tests the PRE-decrement value, and the index is never used
-// in the body, which is the source-side tell for the whole family. That took
-// the two sibling readers below to EXACT and this one 92.6089 -> 93.9951.
-// Spelling the reset as the canonical vector::clear operation then restores
-// retail's EBX file and ESI receiver bindings and matches all 26 blocks
-// exactly. The erase(begin, end) spelling had the same behavior, branches and
-// call multiset but assigned the callee-saved roles differently (93.9951%).
+// The read loop is `while (count--)`, not `for (i = 0; i != count; ++i)`:
+// retail's `mov X,count / dec count / test X,X / je` tests the PRE-decrement
+// value, and the index is never used in the body, which is the source-side
+// tell for the whole family. The reset is the canonical vector::clear
+// operation (erase(begin, end) assigns the callee-saved roles differently).
 VA(0x00485b60, 0x1FB)
 MAC_ADDRESS(0x093da4, 0xe0)  // anchor-vtable (0x63db0c+0x24), retail-only
 void TCampaignStartHeroOption::read(TAbstractFile* file)
@@ -1446,13 +1435,10 @@ void SCampaign::doPreLoadCustomization()
 // constructs an artifact from ARTIFACT_NONE inside each fill iteration;
 // a preconstructed artifact extends the wrong temporary lifetime. Mac
 // 0x94e98 fetches the custom name before storing its flag at 0x94ea4.
-// These lifetimes and ordering reproduce every other Windows instruction.
 // The final append converts the HeroId member to the int element type of
 // m_assignedCarryover: Windows stores m_id into the dead placeholder home
 // [ebp+8] and Mac 0x95114 into 0xdc(r1), beside getCell's by-value argument
-// copy. With HeroId on both sides each compiler passes &m_id directly
-// (91.76%); static_cast/functional casts are byte-flat, a named HeroId local
-// 99.92% and a by-value id accessor 92.77%.
+// copy (with HeroId on both sides each compiler passes &m_id directly).
 // CodeWarrior emits default-argument constructor glue for savedArtifacts[].
 MAC_COMPGEN_ADDRESS(0x09513c, 0x10, CLASS_CTOR, type_artifact)
 VA(0x00486590, 0xA84)
@@ -1681,9 +1667,8 @@ static void offerArtifactToPlayerHeroes(const type_artifact& artifact,
 // the rest is the shared tail: the hero lands on the object's trigger cell,
 // steps one west off a town entrance, and is registered with its player,
 // the availability table, the hero pool map and the fog.
-// Mac stores the packed point's x/y/z fields in order. Expanding the point
-// constructor into three field assignments drops Windows from 93.5215% to
-// 88.94%; preserve the canonical constructor call.
+// Mac stores the packed point's x/y/z fields in order; preserve the
+// canonical point constructor call rather than three field assignments.
 VA(0x00487020, 0x263)
 MAC_ADDRESS(0x095254, 0x300)  // anchor-caller(0x487290's two placeholder loops), retail-only
 void TCampaignBrief::ScenarioStruct::placeStartingHero(
@@ -1777,18 +1762,13 @@ hero* SCampaign::findCrossoverHero(int heroId)
 // player's first hero if it still has none, falls back to the placeholder
 // path in PlaceStartingHero above.
 
-// 2026-09-06: reverse searches use `for (i = size(); i--;)`, as retail's
-// tests consume the old count (67.93 -> 74.5681). FindCrossoverHero restores
-// the lookup boundary (+0x332..+0x3ad), and cell(lossHero) restores the
-// existing packed-point wrapper: +0x528 calls cell(int,int,int). Flattening
-// that wrapper to the three fields scores 87.2742; the canonical call
-// reaches 98.0287 with all 71 blocks and 40 branches aligned. No DC body
-// survives for this Complete-only caller; the cell wrapper is DC-proven.
-// Mac 0x958a0..0x95904 keeps the packed loss point separate from the two
-// trigger outputs. Declaring those outputs with the function's container
-// locals preserves their lifetime across the pass and restores Windows's
-// separate slots and 0x4c frame. All instructions and CFG blocks now match;
-// the inner-loop declarations had reused point storage (99.8262%).
+// Reverse searches use `for (i = size(); i--;)`, as retail's tests consume
+// the old count. FindCrossoverHero keeps the lookup boundary
+// (+0x332..+0x3ad), and cell(lossHero) the existing packed-point wrapper:
+// +0x528 calls cell(int,int,int). No DC body survives for this Complete-only
+// caller; the cell wrapper is DC-proven. Mac 0x958a0..0x95904 keeps the
+// packed loss point separate from the two trigger outputs, declared with the
+// function's container locals (retail's separate slots and 0x4c frame).
 VA(0x00487290, 0x664)
 MAC_ADDRESS(0x095554, 0x450)  // anchor-caller(game::NewMap +0x7ce), retail-only
 void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
@@ -1905,12 +1885,11 @@ static void collectCrossoverArtifacts(std::vector<type_artifact>& artifacts,
 // Retail snapshots the selected hero pool before allocating the artifact
 // vector, and snapshots the recipient player across giveArtifact calls.
 // The canonical collector shared with pruneCrossoverHeroes owns one artifact
-// temporary across both inner loops. Its expansion restores retail's 0x64
+// temporary across both inner loops; its expansion gives retail's 0x64
 // frame, shared stack home, and the first push_back's retained single-element
-// insert wrapper. The two outer loops also reuse one index, restoring the
-// retail -0x14 home. Mac code+0x95bc4..0x95bd4 initializes the local artifact's
-// ID word before its payload word, supporting the TArtifact constructor here;
-// this also makes the Windows body exact. Retail's
+// insert wrapper. The two outer loops also reuse one index (retail's -0x14
+// home). Mac code+0x95bc4..0x95bd4 initializes the local artifact's ID word
+// before its payload word, supporting the TArtifact constructor here. Retail's
 // ICF label names vector<type_dialog_resource>::insert at the wrapper address;
 // the source-correct vector<type_artifact> specialization resolves there too.
 VA(0x00487900, 0x2CD)
@@ -2232,8 +2211,8 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // Retail 0x4886a0 sits between the constructor above and freeData in this
 // TU's .text contribution, and every campaignbrief caller (TCampaignBrief's
 // constructor 0x459362 and destructor 0x45b05b) retains the call. With the
-// body defined in campaignbrief.cpp VC6 expands it into ~TCampaignBrief
-// (62.61%); owning it here restores that destructor and selectCampaign.
+// body defined in campaignbrief.cpp VC6 expands it into ~TCampaignBrief;
+// owning it here keeps those calls.
 VA(0x004886a0, 0x132)
 DC_ADDRESS(0x05ade8, 0x28)
 MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
@@ -2448,8 +2427,8 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
 // compiler-generated deleting wrapper. Retail CampaignHeaderStruct::load,
 // the destructor above and selectCampaign call this shared 0x488eb0 copy,
 // which lies in this TU's contribution: campaignbrief no longer expands the
-// destructor, so it emits no copy. All 33 bytes agree: the ordinary
-// destructor stays at 0x485fe0, then flags&1 gates operator delete.
+// destructor, so it emits no copy. The ordinary destructor stays at
+// 0x485fe0, then flags&1 gates operator delete.
 VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
 
 VA(0x00488ee0, 0x1D)
@@ -2505,14 +2484,11 @@ VA(0x00488fb0, 0x528)
 MAC_ADDRESS(0x097700, 0x6bc)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
-    // The direct speech->dispose() below is Windows byte-exact. Replacing it
-    // with ResourceManager::dispose(speech) keeps behavior but drops this
-    // body to 99.57%; this site retains the direct source call.
+    // The direct speech->dispose() below is retail's; ResourceManager::
+    // dispose(speech) keeps behavior but changes this body.
     // The subtitle completion flag can also end playback after input.
-    // Retaining the event switch and testing finished removes three jumps
-    // at unchanged 83.8848%; an if-chain for the same events gives 80.7396%.
-    // Retail assigns each playback endpoint only on the path that consumes it;
-    // dropping three eager zero stores raises MAX 85.4677 -> 86.1889.
+    // Retail assigns each playback endpoint only on the path that consumes
+    // it (no eager zero stores).
     if (m_video < 0)
         return;
 
@@ -3300,20 +3276,9 @@ MAC_COMPGEN_ADDRESS(0x09959c, 0x70, CLASS_CTOR, LegacyCampaignHero)
 // uses [ebp-1] while outfile is live there. Both artifact fields share one
 // short buffer; retail's word loads prove narrowing before the writes.
 
-// Historical measurements before the broader scalar-writer reuse below.
-// 2026-09-07: score reference alone 88.0368%, pool references alone 85.4136%,
-// both 99.6062% (from 78.8074% MAX). Per-write scalar scopes with short word
-// buffers reach 99.9518%; sharing the artifact word reaches 99.9632%; one
-// outer counter across all three runs reaches 99.9858%. The canonical
-// by-value writeValue<short> boundary for the two artifact fields restores
-// retail's shared [ebp-0x10] parameter home and 0x10-byte frame. All 880 bytes,
-// 38 CFG blocks, 16 branches, and 24 calls now agree.
-// Controls: narrowing into int gives 97.1048% (movsx); also sharing the inner
-// counters, scoping the hero loop or entire hero phase, hoisting the word
-// to pool/function scope, and unsigned-short buffers are byte-flat at
-// 99.9858%. Extra braces around the three runs were also byte-flat. The
-// earlier shared-counter probe without the recovered references was
-// 78.7965%; that result did not exclude the source reconstruction above.
+// The canonical by-value writeValue<short> boundary for the two artifact
+// fields gives retail's shared [ebp-0x10] parameter home and 0x10-byte frame;
+// narrowing into int gives movsx instead.
 VA(0x0048ae90, 0x370)
 MAC_ADDRESS(0x09960c, 0x3b4)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
 void SCampaign::save(TAbstractFile* outfile)
@@ -3473,17 +3438,15 @@ void SCampaign::applyBriefingChoice(int option)
 
 VA_COMPGEN(0x0048C500, 0xA3, VECTOR_ERASE, hero_vector)
 
-// COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
-// The map hero placeholders' own sort, instantiated by
-// ScenarioStruct::PlaceCrossoverHeroes. Both bodies are byte-identical to
-// this compile's instruction stream.
+// COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>. The map hero
+// placeholders' own sort, instantiated by ScenarioStruct::PlaceCrossoverHeroes.
 VA_COMPGEN(0x0048eec0, 0x3ED, STD_SORT_0, HeroPlaceholderData_HeroPlaceholderStronger)
 
 VA_COMPGEN(0x0048f630, 0x1AE, STD_SORT, HeroPlaceholderData_HeroPlaceholderStronger)
 
 VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 
-// COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>, agreement 0.985.
+// COMDAT pairing: std::_Sort_0<hero, CrossoverHeroStronger>.
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 
 VA_COMPGEN(0x0048fa40, 0x1D7, STD_MEDIAN, hero_crossoverherostronger)
@@ -3498,9 +3461,9 @@ VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronge
 // 0x91` (145) - among them game's claimed bitset<145>::set (0x4cfa60) and
 // ::test (0x4cfad0) - and 0x8da70's eight with `cmp <reg>, 0x8`, among them
 // game's claimed bitset<8>::set (0x4d4cc0) and ::test (0x4cfef0).
-// 0x48edf0, which lane 16 claimed here as bitset145 on similarity alone,
-// compares against 0x81 (129) at all three of its callers and is claimed in
-// game.cpp. Recovered campaign readers now emit 129-bit members here too.
+// 0x48edf0 compares against 0x81 (129) at all three of its callers and is
+// claimed in game.cpp. Recovered campaign readers emit 129-bit members here
+// too.
 VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
 
 VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
@@ -3509,7 +3472,7 @@ VA_COMPGEN(0x0048d440, 0x3E, VECTOR_UCOPY, hero)
 
 VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, type_artifact_vector)
 
-// COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
+// COMDAT pairing: hero::copy_backward.
 VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
 
 // The adjacent hero fill walks the same 0x492-byte records forward and
@@ -3517,7 +3480,7 @@ VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
 // and all 42 bytes identify the specialization independently of link order.
 VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
 
-// COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
+// COMDAT pairing: hero::_Ufill.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 
 // CatchableType's copyFunction selects this overload, not the string ctor.
@@ -3530,9 +3493,8 @@ VA_COMPGEN(0x0048c5b0, 0x53, VECTOR_DESTROY, hero_vector)
 // COMDAT pairing: vector<hero>::operator=. The caller set is the whole
 // argument and it is unambiguous - SCampaign::PruneCrossoverHeroes, the
 // already-claimed vector<vector<hero>>::insert and ::erase (which assign
-// elements of exactly this type), and game's SCampaign::operator=. Mnemonic
-// agreement is 1.000 against a 704 B object and `ret 4` matches the one
-// reference argument.
+// elements of exactly this type), and game's SCampaign::operator=. `ret 4`
+// matches the one reference argument.
 VA_COMPGEN(0x0045ff30, 0x2C0, VECTOR_COPY_ASSIGN, hero)
 
 VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero)
@@ -3561,28 +3523,27 @@ VA_COMPGEN(0x0048bd00, 0x1B, FILEBUF_SYNC, char)
 // indistinguishable 33-byte ??_G bodies in the span that CAN be named.
 VA_COMPGEN(0x0048bd20, 0x21, SCALAR_DELETING_DTOR, basic_filebuf)
 
-// COMDAT pairing: basic_streambuf<char>::_Init(), agreement 1.000 - the
-// nullary base initializer, distinct from basic_stringbuf's three-argument
+// COMDAT pairing: basic_streambuf<char>::_Init(), the nullary base
+// initializer, distinct from basic_stringbuf's three-argument
 // _Init already claimed in resourcemanager.
 VA_COMPGEN(0x0048bea0, 0x58, STREAMBUF_INIT, char)
 
-// COMDAT pairing: vector<hero>::capacity and vector<hero>::_Destroy,
-// agreements 0.933 and 1.000. Both are reached from the campaign's
-// carry-over hero vector.
+// COMDAT pairing: vector<hero>::capacity and vector<hero>::_Destroy, both
+// reached from the campaign's carry-over hero vector.
 VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, hero)
 
 VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
 
 VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, hero)
 
-// COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl), agreement
-// 0.973 - the census had already named it `exe_filebuf_open` off the same
-// vtable's construction path.
+// COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl) - the census
+// had already named it `exe_filebuf_open` off the same vtable's construction
+// path.
 VA_COMPGEN(0x0048d4b0, 0xE2, FILEBUF_INIT, char)
 
 VA_COMPGEN(0x0048dc10, 0x35, VECTOR_UCOPY, type_artifact)
 
-// COMDAT pairing: locale::locale(const locale&), agreement 1.000.
+// COMDAT pairing: locale::locale(const locale&).
 // COMDAT pairing: locale's DEFAULT constructor, the other half of the ctor
 // overload group whose second member is claimed below. Its body is
 // locale::_Init() into `_Ptr` followed by the two nested _Lockit scopes that
@@ -3653,9 +3614,8 @@ VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------
 
-// The destructor and the conversion setup, both named by their mnemonic
-// agreement against the object's own free COMDATs (0.885 and 0.887, and no
-// second candidate above 0.45 in either case):
+// The destructor and the conversion setup, matched against the object's own
+// free COMDATs:
 VA_COMPGEN(0x0048bd50, 0x14F, IMPLICIT_DTOR, basic_filebuf)
 
 VA_COMPGEN(0x0048d5a0, 0x22E, FILEBUF_INITCVT, char)
@@ -3676,9 +3636,7 @@ VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
 
 // std::copy over vector<hero> values: retail's only callers of the 710-byte
 // body at 0x48e220 are SCampaign::selectCampaign (0x489655) and
-// SCampaign::operator= (0x4bddc1). The carcass label formerly in
-// singleselectionwindow joined this row to copy<const HeroId*>, whose
-// 48-byte body belongs with the folded int copies instead.
+// SCampaign::operator= (0x4bddc1).
 VA_COMPGEN(0x0048e220, 0x2C6, STD_COPY, hero_vector)
 
 VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)

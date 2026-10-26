@@ -693,17 +693,11 @@ void hero::placeInMap(int playerId, type_point point, bool resetFlags)
 // is unchecked. EH-bearing: the name assignment owns a string temporary
 // and the bitset's inlined set() carries its range throw.
 
-// Mac 0xf3400 constructs a packed-bit result, decodes six bytes, then copies
-// through a second temporary at 0xf3478 before assigning the hero mask. The
-// ordinary readPackedBits return matches that lifetime and restores Windows
-// 79.07 -> 94.44%; using only decodePackedBits reached 81.32%. Both preserve
-// the bitset proxy operations and the stream read. Remaining nested string
-// expansions need separate inliner evidence; they are not register-only.
-// Typed scalar readers preserve every on-disk width while shortening the
-// staging lifetimes, bringing the same body to 94.93%.
-// Mac 0xf3468's leftover bitset::set call shows the decode loop directly in
-// the inline reader (see packed_bits.h); that flatter chain lets VC6 expand
-// the name assignment's nested string calls and makes this body exact.
+// Mac 0xf3400 decodes six bytes into a packed-bit result and copies it
+// through a second temporary (0xf3478) before assigning the hero mask: the
+// ordinary readPackedBits return keeps that lifetime. Mac 0xf3468's leftover
+// bitset::set call places the decode loop in the inline reader (see
+// packed_bits.h). Typed scalar readers preserve every on-disk width.
 VA(0x004d7a20, 0x69F)
 DC_ADDRESS(0x0caf98, 0x700)
 MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder
@@ -921,9 +915,7 @@ int hero::save(TAbstractFile* outfile)
 // Mac 0xf3f08/0xf3f70 constructs an artifact inside each counted fill from
 // an enum loaded through the TOC. Passing ARTIFACT_NONE to std::fill_n
 // preserves that per-element conversion; passing a prebuilt type_artifact
-// changes its lifetime. Together with Mac's identity-before-coordinate
-// assignments these fills reproduce Windows exactly. The former provisional
-// bitset-size VERIFY is unnecessary.
+// changes its lifetime. Identity fields are assigned before coordinates.
 VA(0x004d85f0, 0x12E)
 DC_ADDRESS(0x0cbdb8, 0xc8)
 MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket
@@ -1093,10 +1085,8 @@ void hero::initialize(short index)
 // loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
 // reads the field directly, without an additional getArtifact helper call.
 // The start-level campaign test is SCampaign::isCurrentScenario, the
-// campaign/map pair compare repeated across the campaign code. Its call is
-// the sixth depth-1 candidate after the custom-name operator= that retail's
-// budget needs: the nested string::assign gets 1730/6 = 288 against its 307
-// and stays a call as retail (75.29 -> 100%).
+// campaign/map pair compare repeated across the campaign code; as the sixth
+// depth-1 call it keeps the nested string::assign out of line, as retail.
 VA(0x004d8b30, 0x434)
 DC_ADDRESS(0x0b6c84, 0x57e)
 MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
@@ -1190,8 +1180,7 @@ void hero::initialize(const HeroExtra* setup)
         int amount = setup->m_experience;
         // The one campaign that starts its hero at a level derived from
         // another scenario's hero. Mac retains the getExperience call here;
-        // VC6 expands the same canonical helper even though its emitted body
-        // follows initialize. Both compilers preserve their retail call shape.
+        // VC6 expands it.
         if (g_inCampaign
             && g_game->m_campaign.isCurrentScenario(g_startLevelCampaign,
                                                     g_startLevelScenario)) {
@@ -1353,9 +1342,9 @@ unsigned char hero::hasArtifact(int whichArtifact) const
 }
 
 // DC 0xcc272/0xcc292 indexes the equipped array directly, as hasArtifact's
-// DC body does, but here direct reads lower this body's /Ob2 cost and make
-// getLuck (100 -> 94.23) and getMoraleDescription (100 -> 92.02) expand it
-// where retail calls it. The getter path is kept until that cost is found.
+// DC body does. Keep the getter path here: direct reads lower this body's
+// /Ob2 cost, so getLuck and getMoraleDescription expand it where retail
+// calls it.
 VA(0x004d91f0, 0x70)
 DC_ADDRESS(0x0cc26c, 0x3c)
 MAC_ADDRESS(0x0f4dfc, 0xc4)
@@ -1380,11 +1369,7 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 
 // E:\gamedcs\hero.cpp:1466
 // DC's switch and the Mac body leave artifact unset in the default arm.
-// Keeping that source shape makes the VC6 body byte-exact; the earlier
-// `artifact = creatureType` fallback gave 96.5278% and changed the Mac loop
-// register assignment. Prior switch-head, case-order, loop-form and local-type
-// variants were byte-flat with that fallback; initializing artifact before
-// the switch and reversing the equipped compare measured worse.
+// A fallback assignment there changes the retail bytes.
 VA(0x004d9260, 0x68)
 DC_ADDRESS(0x0cc2a8, 0x56)
 MAC_ADDRESS(0x0f4ec0, 0x8c)  // dc-bracket forced
@@ -1470,16 +1455,12 @@ std::bitset<hero::NUM_SPELLS> markSpells(TSpellSchool school)
 // line: that is purely the /Ob2 budget running out mid-switch, so all
 // four arms are written identically here.
 
-// The canonical markSpells helper explicitly compares its school-mask result
-// with zero. Its operations and all four Tome calls are unchanged; VC6 now
-// retains the final bitset<70>::operator[] call that retail has: 97.56 ->
-// 100%. The implicit nonzero guard and a continue-filter guard emit the
-// same previous object; the explicit comparison reproduces exactly.
+// markSpells' explicit `!= 0` comparison keeps the final
+// bitset<70>::operator[] a call, as retail; an implicit test expands it.
 
 // Mac f5034/f50e8 initializes each result through the no-argument
-// three-word zeroing body e7378, with no unsigned-long value argument.
-// Mac retains all 11 expected helpers, but direct Tome returns lower VC6
-// from 97.56% to 77.57%; keep the shared result assignment and clear tail.
+// three-word zeroing body e7378. Mac returns each Tome's set directly; VC6
+// needs the shared result assignment and clear tail.
 VA(0x004d9350, 0x272)
 MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
 std::bitset<hero::NUM_SPELLS> markArtifactSpells(int artifactId)
@@ -1617,12 +1598,8 @@ void hero::heroScreenUpdate()
 // duty as WIDGET_SET_ICON_FRAME and as WIDGET_DRAWN - retail CSEs it
 // into EBX and uses the one register for both fields.
 
-// A named selected-widget ID and DC's codeX/codeY/extra assignment order
-// make this body byte-exact under VC6. The prior inline `slot + 0x44`
-// spelling had a two-instruction loop-tail schedule difference; an explicit
-// army cursor improved score but contradicted the DC loop source shape.
-// Mac retains the same body/call shape but binds its three global pointers
-// to r28/r29/r30 in a different order (97.7431%).
+// The named selected-widget ID and DC's codeX/codeY/extra assignment order
+// are required; an inline `slot + 0x44` reschedules the loop tail.
 VA(0x004d97f0, 0x1A0)
 DC_ADDRESS(0x0cc540, 0x1c8)
 MAC_ADDRESS(0x0f56b8, 0x240)  // source-shape + retail body
@@ -1748,14 +1725,12 @@ int hero::showDisassembleArtifactDialog(int artifact)
 // The record describes the COMPONENT, not the assembled artifact -
 // retail's `mov [ebp-0x14], ecx` takes the incoming parameter straight
 // into the stack type_artifact - and `assembled` is computed FIRST even
-// though the record is used first (94.17 against 85.75 for the other
-// order, and 93.66 for the semantically wrong `record(assembled, -1)`).
+// though the record is used first.
 // Mac 0xf5c38..0xf5c40 constructs the component record solely for the
-// description query; no later operation uses it. Keeping that record as the
-// temporary receiver instead of a named local recovers the retail prologue
-// schedule and all 27 blocks, ten calls and relocations: 94.17 -> 100%.
+// description query; no later operation uses it. It stays a temporary
+// receiver rather than a named local, as retail's prologue schedule needs.
 VA(0x004d9cc0, 0x200)
-MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity; old DC bracket retired
+MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity
 int hero::showAssembleArtifactDialog(int artifact)
 {
     int assembled =
@@ -2041,12 +2016,9 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // and signed levelSeed multiplication (imul), with the constant 154079.
 // Preserve all three window lifetimes and the canonical helper calls.
 // Mac 0xf709c tests for a second skill, performs the AI choice first, and
-// falls back to the sole skill at 0xf70ec. That source branch order also
-// recovers Windows' separate chooser call sites (86.26 -> 98.04%).
-// Mac 0xf6c18 assigns the chance sum to roll before passing it to sRandom;
-// preserving that assignment closes Windows to 100% with the same helpers.
-// Implicit boolean and explicit integer-conditional chooser arguments emit
-// identical Windows bytes; they do not control the call-site duplication.
+// falls back to the sole skill at 0xf70ec; that branch order gives Windows'
+// separate chooser call sites. Mac 0xf6c18 assigns the chance sum to roll
+// before passing it to sRandom; retail needs that assignment too.
 // Mac retains this ordinary member at 0:f66a0..f66f0 and calls it from
 // both level-up selection paths. Its original source spelling is unknown.
 MAC_ADDRESS(0x0f66a0, 0x50)
@@ -2221,15 +2193,10 @@ void hero::checkLevel()
 // Mac retains the ordinary hero::isLevelUpCampaignOverride member at
 // 0:f66a0..f66f0 and calls it here and in checkLevel. VC6 auto-inlines that
 // same body, producing the retail `sete cl; test cl,cl; je` campaign gate.
-// The earlier direct condition plateaued at 98.8073%; named-byte, inline
-// predicate and comparison-spelling probes were byte-flat there. DC attests
-// get_skill_award but does not name this campaign predicate; the retained Mac
-// body and its two callers establish the ordinary member boundary here.
-// HERO's CodeWarrior -char unsigned mode matches the disabled-skill zero
-// tests without changing the source char arrays and preserves four exact Mac
-// controls. The remaining Mac school-loop accumulator/index register choice
-// begins at +0x184; changing the enum local to int or widening the
-// accumulator declaration scope was byte-flat at 74.1803%.
+// DC attests get_skill_award but does not name this campaign predicate; the
+// retained Mac body and its two callers establish the ordinary member
+// boundary here. HERO's CodeWarrior -char unsigned mode reproduces Mac's
+// disabled-skill zero tests with the source char arrays.
 VA(0x004dad00, 0x283)
 DC_ADDRESS(0x0ccf78, 0x204)
 MAC_ADDRESS(0x0f66f0, 0x3d0)  // anchor-caller + arity
@@ -2506,9 +2473,7 @@ void type_artifact::getRolloverText(char* buffer) const
 // follows. The 136-byte spell stride and the +0x10 name are the ones
 // armygrp.h already models, indexed by the record's second dword.
 // DC hero.cpp:2458 reads and advances the same cursor in the prefix loop;
-// :2467 appends the suffix after the optional bracket arm. Restoring both
-// statement positions closes retail VC6 from 88.4025% to 100%: 33/33 CFG
-// blocks, 21 branches, and all 13 named calls agree.
+// :2467 appends the suffix after the optional bracket arm.
 VA(0x004db3e0, 0x277)
 DC_ADDRESS(0x0cd8b8, 0x10a)
 MAC_ADDRESS(0x0f7550, 0x15c)  // anchor-bracket
@@ -2532,54 +2497,6 @@ std::string type_artifact::getDescription() const
     return result;
 }
 
-// HeroScrn.txt's runtime-loaded rows. The loader at 0x5b97c0 fetches the
-// resource and copies Text[0..32] into one contiguous .bss run starting
-// at 0x6a8014, which fixes both the extent and each cell's row index -
-// gEmptyArtifactRolloverText (row 11), gSpellbookRolloverText (row 14)
-// and gArtifactRolloverFormat (row 15) declared near the top of this file
-// are part of the same run. Only the rows this compiland reads are
-// declared. Names are role-derived from the retail consumer and
-// PROVISIONAL; rows no consumer pins keep an ORDINAL PLACEHOLDER
-// spelling keyed to the row index. Declared HERE rather than beside the
-// other three so the ~23 new symbols do not shift C1 handle numbers for
-// every already-matched body above.
-                 // row 0
-            // row 1
-        // row 3
-     // row 4
-         // row 5
-          // row 6
-       // row 7
-           // row 8
-                 // row 9
-        // row 10
-    // row 12
-        // row 13
-        // row 16
-                // row 17
-       // row 19
-        // row 20
-  // row 21
-                // row 22
-                // row 23
-                // row 24
-  // row 25
-   // row 26
-// Rows 28..32 continue the same stride-4 run. WindowHandler's six
-// right-click help arms are what pin them: each hands one of these
-// straight to NormalDialog with dialog type 4, so the role is "help text
-// for widget N" and the names follow the widget they answer for.
-                // row 27
-          // row 28
-          // row 29
-          // row 30
-         // row 31
-// The quest-log button's help text, and the ONE oddity in the set: it is
-// NOT in the 0x6a8014 run and has exactly one reference image-wide, this
-// call site. Provenance genuinely undetermined - 0x6a5704 is 0x6a56e0 +
-// 0x24, which would make it a cell of townmgr's stride-8 table, but
-// nothing in the bytes decides that. ORDINAL PLACEHOLDER spelling.
-         // row 32
 VA(0x004db660, 0x728)
 DC_ADDRESS(0x0cd9c4, 0x56c)
 MAC_ADDRESS(0x0f76ac, 0x7b8)
@@ -3007,21 +2924,9 @@ void hero::disassembleCombinationArtifact(long slot)
 // 2 - past what /Ob2 expands here. All three sites are written that way
 // and all three throws collapse into retail's calls.
 
-// Complete-only combination prompt. Calling the canonical predicate with its
-// proxy-assignment body removes both pins and restores all nine retail calls,
-// including the third bitset<12>::_Xran: 87.2712 -> 96.1808%. The predicate's
-// retained body stays exact. Its reset/none spelling gives 83.5593% here;
-// direct set(false) gives 76.1977%. Earlier caller diagnostics:
-// Naming the equipped artifact ID and indexing traits directly gave 97.4237%,
-// preserving all 25 retail blocks and nine calls. An artifact reference or
-// getArtifact() leaves the prior 96.1808%; copying the traits gives 92.7175%,
-// and reading the artifact before the player gives 87.7345%.
-// Player-pointer ownership (with either equipped-field or getArtifact lookup)
-// is flat at 97.4237%. Binding the combination bitset instead gives 83.2994%;
-// repeating the global player lookup gives 72.5198%. Neither recovers the
-// entry register choices or first bitset-write scheduling.
-// Native comboType ownership and the second canonical artifact lookup
-// recover all 25 retail blocks and nine calls: 97.4068 -> 100%.
+// Complete-only combination prompt. It calls the canonical predicate (its
+// proxy-assignment body), owns the native comboType and repeats the
+// canonical artifact lookup.
 VA(0x004dc100, 0x217)
 MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::offerCombinationArtifactAssembly(long slot)
@@ -3074,9 +2979,7 @@ void hero::offerCombinationArtifactAssembly(long slot)
 // The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
 // size_type)`), it does not append.
 // DC hero.cpp:2989 names town::HasBuilding at the Grail guard.
-// All leadership arms use operator+=. The explicit strlen/append Basic
-// spelling scored 90.55%; restoring this higher-level operation matches
-// Windows exactly while preserving HasBuilding and the other helpers.
+// All leadership arms use operator+=, not an explicit strlen/append.
 VA(0x004dc320, 0x793)
 DC_ADDRESS(0x0ce260, 0x3e8)
 MAC_ADDRESS(0x0f88cc, 0x5dc)  // anchor-caller (armyGroup::get_morale_description)
@@ -3158,41 +3061,14 @@ std::string hero::getMoraleDescription() const
         morale++;
     }
     if (m_flags & 0x200000) {
-        // Residual (91.65%) - MEASURED, BLOCKED BY THE PIN FLOOR
-        // (polish 26).  Retail CALLS append(const char*,size_type) at THIS
-        // rung too (0x4dc71b `repne scasb` + call, a 0x20-byte arm against
-        // our 0x73-byte expansion); the fn-level census is retail 18
-        // PBDI-append calls + 3 _Grow/_Xlen/_Eos expansions against our 17
-        // + 4, and this is the surplus expansion.  Spelling it
-        // `const char* t = gMoraleTexts[19]; result.append(t, strlen(t));`
-        // under a statement `inline_depth(0)` moves the first divergence
-        // from +0x408 to +0x551 and aligns two of the three _Grow sites
-        // exactly - but the freed budget then over-inlines the Grail and
-        // negative-modifier `+=` sites below, so the pin only pays PAIRED
-        // with pins on those two spelled as
-        // `result.append(format_string(...), 0, std::string::npos)`:
-        // 91.65 -> 89.97 (this rung alone) -> 93.21 (+ both `+=` pins)
-        // -> 93.91 (+ the two tail sites respelled as append).  All three
-        // pins are needed together; the same three call-site spellings
-        // WITHOUT the pins score 76.26.  Not shippable while the
-        // cleanliness ratchet holds inline-depth pins at 355 falling-only.
-        // Also rejected: a named `std::string grailText` local for the
-        // Grail temp gives a PERFECT skeleton (109/110 blocks, 0 missing,
-        // 88 exact) and only 92.16 - the extra frame slot costs the tail's
-        // register allocation.
         result += g_moraleInfo[19];
         morale -= 3;
     }
 
-    // Mac expands the same signed packed mastery accessor at each rung.
-    // Keep the typed helper path through the description's string inlining.
     // DC hero.cpp:2962/2968/2974 reload the leadership byte directly
-    // (mov.b, no Hero.h GetSecondarySkill row). With the accessor, the
-    // Advanced arm's nested append budget is 1320/13 = 101 < 111; direct
-    // reads leave retail's 12 sites. getMoraleDescription 87.08 -> 97.95.
-    // Residue: retail keeps g_game in ebx across the Grail town loop. A
-    // pointer player local is byte-identical; reading g_game->m_players in
-    // the loop (DC's 2982 for-row has no separate local) gave 90.88%.
+    // (mov.b, no Hero.h GetSecondarySkill row); the direct reads keep
+    // retail's twelve nested append sites within the /Ob2 budget. Mac
+    // expands the signed packed mastery accessor at each rung.
     if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
         result += g_moraleInfo[20];
         morale++;
@@ -3227,8 +3103,7 @@ std::string hero::getMoraleDescription() const
         }
     }
 
-    // Mac repeats the subtraction before abs in each arm. A named modifier
-    // lowered its agreement in the earlier Mac profile; preserve this shape.
+    // Mac repeats the subtraction before abs in each arm; preserve this shape.
     int effectiveMorale = this->getMorale(0, 0, 0);
     if (effectiveMorale - morale < 0)
         result += formatString(g_moraleInfo[24], abs(effectiveMorale - morale));
@@ -3251,8 +3126,7 @@ std::string hero::getMoraleDescription() const
 // hero::GetLuck's own arm, which calls it.
 
 // DC hero.cpp:3028 and :3149 name the text and town helpers. Preserve both.
-// The mist rung uses append(const char*); its explicit strlen/append expansion
-// scored 79.96%. The ordinary overload restores Windows exact bytes.
+// The mist rung uses append(const char*), not an explicit strlen/append.
 VA(0x004dcac0, 0x7E0)
 DC_ADDRESS(0x0ce648, 0x3f2)
 MAC_ADDRESS(0x0f8ea8, 0x5d4)  // anchor-caller (armyGroup::get_luck_description)
@@ -3333,8 +3207,7 @@ std::string hero::getLuckDescription() const
 
     // Mac likewise expands the canonical mastery read for these luck rungs.
     // DC reads the luck byte directly (+9, three mov.b reloads; no Hero.h
-    // row), as in getMoraleDescription: 91.26 -> 95.45 with the Mac-shaped
-    // isWieldingArtifact. Same g_game-in-ebx Grail-loop residue.
+    // row), as in getMoraleDescription.
     if (m_skillLevel[eSecSkillLuck] == eMasteryBasic) {
         result += g_luckInfo[15];
         luck++;
@@ -3368,10 +3241,8 @@ std::string hero::getLuckDescription() const
         }
     }
 
-    // Repeating the difference in the two abs arms matches all 1492 Mac
-    // bytes, but lowers this Windows-exact function to 91.88% and adds two
-    // calls. Keep the single difference local while recovering a shared
-    // compiler context for the Mac tail.
+    // Mac repeats the difference in the two abs arms; Windows needs the
+    // single difference local.
     int otherModifier = this->getLuck(0, 0, 0) - luck;
     if (otherModifier < 0)
         result += formatString(g_luckInfo[19], abs(otherModifier));
@@ -5116,58 +4987,16 @@ unsigned char hero::canEquipArtifactInEmptySlot(long artifact, long slot)
 
 // That try is ALSO what makes `.test(slot)` behave: VC6 will not expand
 // a callee that introduces EH state into a caller with no EH frame, so
-// with no catch scope here bitset<19>::_Xran stayed a CALL where retail
+// with no catch scope here bitset<19>::_Xran stays a CALL where retail
 // expands its whole `_THROW(out_of_range, "invalid bitset<N> position")`
-// body inline. That under-inline is what pinned this row at 44.93 for a
-// week and what a hand-spelled range guard plus an explicit throw bought
-// back structurally at 78.86 (2026-08-21). With the real try/catch in
-// place the natural `allowable.test(slot)` scores IDENTICALLY to that
-// hand-spelled guard - 85.7554 either way, same call multiset, same
-// blocks - so the invented union-of-pointers bitset view is retired and
-// the plain accessor stands. 78.8633 -> 85.7554 on the try/catch alone.
-
-// The remaining 25 bytes were a CARVE boundary: 0x4e29dc's funclet was
-// its own carve row, so our emitted body carried it and retail's target
-// symbol stopped short. Absorbing it (412 -> 437, the LoadFontData
-// precedent) took the row to 94.5203.
-
-// Residual (94.5%): one block, and one call. Retail leaves
-// basic_string::_Eos a CALL inside the inlined _Xran throw path where we
-// expand it (+0x98 target-only); everything else - prologue, 0x3c frame,
-// both EH homes, four branches, three rets, the bit test and all three
-// tails - is byte-identical. That is an OVER-inline of a five-line
-// private member at the same depth as the `_Grow` both sides call, so it
-// is a budget quotient, not a spelling.
-// Tried and rejected before the try/catch landed, one compile each:
-// routing the gate through DC's artifact.h inline `artifactAllowedInSlot`
-// (44.93, byte-flat); eight byte-inert dead assignments to grow the
-// caller (44.93, byte-flat); `#pragma inline_depth(0)` on the four call
-// sites after the .test() (44.93, byte-flat - the /Ob2 divisor counts
-// call SITES whether or not they are pinned, so site pins cannot buy an
-// under-inline back); a shallower bitset accessor (none exists - `at`
-// checks twice); explicit guard plus the original `test` (57.60); a
-// one-use inline range helper (44.38); a one-use string-return helper
-// (56.58); local unused type-count probes at 1, 2 and 8 (44.93,
-// byte-flat); an empty-destructor carrier (55.53); a contradictory-throw
-// carrier (58.29) and the same with a string local (53.21). Those all
-// measured a caller with no catch scope and none of them is evidence
-// about this body now.
-// Re-measured WITH the catch scope, since a rejected knob is only
-// rejected for the inline structure it was measured in: the depth ladder
-// (`allowable[slot]`, which reaches test through operator[]) is now
-// BYTE-FLAT at 94.5203 - with an EH frame present it keeps
-// _Xran inline, so the ladder has nothing left to trade here. The
-// _Eos direction is a confirmed OVER-inline (base 0 calls vs retail 1),
-// whose doctrinal lever is caller-shrink, and a 437-byte body with no
-// liftable block and no DC-named helper has no dose to give.
+// body inline. The VA extent includes the 25-byte catch funclet 0x4e29dc.
 VA(0x004e2840, 0x1B5)
-MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8; size absorbs the
+MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8
 // Mac 0x1034d8..0x103da8 expands the canonical reference readers before
 // copying/testing records. Keep that read boundary; mutations stay owned here.
 // The slot's record is bound once, at entry, ahead of the placement gate:
-// two getArtifact sites after the gate divide /Ob2's nested budget so the
-// bitset _Xran expansion starves (72.45%), one after it still does
-// (82.33%); the entry binding leaves the gate the whole budget (100%).
+// later getArtifact sites divide /Ob2's nested budget and starve the bitset
+// _Xran expansion.
 unsigned char hero::canReplaceArtifactInSlot(long artifact, long slot)
 {
     const type_artifact& current = getArtifact(TArtifactSlot(slot));
@@ -5268,19 +5097,9 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
 // artifact's own bonuses. The spell list is rebuilt if either the assembled
 // artifact or any component affects it.
 
-// Windows retail is exact with the DC-named adjustPrimarySkill call and the
-// whole-record reset through type_artifact(ARTIFACT_NONE). The earlier direct
-// byte subtraction and per-field reset left a 90.1966% register-homing
-// residual. The default constructor formerly gave 98.8462% in the current
-// TU, swapping the two equal -1 sentinel stores between EAX and ECX. Mac's compiler
-// had kept the copy constructor and both skill helper calls out of line
-// because it accepted VC6's inline_depth(0) but rejected its empty restore
-// in initialize above. Guarding those pragmas restores the retail two-call
-// sequence; Mac currently compares at 71.7308% with first shifted branch at
-// +0x4b. A named empty temporary and an explicit ARTIFACT_NONE argument were
-// previously byte-flat under a different TU context; the latter now closes
-// the Windows register order. A local equipped-slot reference shortened only
-// one index.
+// Retail uses the DC-named adjustPrimarySkill call and resets the whole
+// record through type_artifact(ARTIFACT_NONE); the explicit argument also
+// fixes the EAX/ECX order of the two equal -1 sentinel stores.
 VA(0x004e2bd0, 0x174)
 DC_ADDRESS(0x0d3ad0, 0xa2)
 MAC_ADDRESS(0x103854, 0x200)  // anchor-bracket
@@ -5555,8 +5374,8 @@ int hero::giveRandomArtifact()
 // Original DC public ?GiveExperience@hero@@QAAHHH_N@Z proves the final
 // parameter is bool; CodeView's lowered unsigned-byte record alone does not.
 // Both experience helpers expand here. Initializing getExperience's total
-// before its increment fixes the cap-result lifetime; getLevel's single
-// level counter (Mac 0xf6394..0xf63c0) closes the Windows caller to 100%.
+// before its increment fixes the cap-result lifetime; getLevel keeps a
+// single level counter (Mac 0xf6394..0xf63c0).
 VA(0x004e33b0, 0x24A)
 DC_ADDRESS(0x0d3e88, 0x130)
 MAC_ADDRESS(0x104098, 0x18c)
@@ -5612,9 +5431,6 @@ void hero::giveResource(int whichRes, int howMuch)
 
 // Original DC GetLuck/GetMorale publics end QBAHPBV1@_N1@Z: both flags
 // are bool; the debug byte primitives are their lowered representation.
-// Function-scope luck and direct ability-row expressions (four source models,
-// two objects) all reproduce 94.2276%. The remaining call difference is the
-// expanded hasBuilding below versus retail's retained call; keep the helper.
 VA(0x004e36c0, 0x2E8)
 DC_ADDRESS(0x0d4070, 0x18c)
 MAC_ADDRESS(0x10434c, 0x300)
@@ -6187,8 +6003,7 @@ TSkillMastery hero::getSpellLevel(SpellID spell, int magicTerrain) const
 VA(0x004e5100, 0xBC)
 DC_ADDRESS(0x0d4e68, 0x68)
 MAC_ADDRESS(0x106090, 0xf8)
-// Mac PEF code 0+0x106090: the shared return closes its 248-byte CodeWarrior
-// body exactly; the same spelling remains byte-exact in retail VC6.
+// Mac PEF code 0+0x106090 has one shared return.
 TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
                                         int magicTerrain) const
 {
@@ -6412,8 +6227,7 @@ playerData* hero::getPlayer() const
 VA(0x004e56e0, 0x7C)
 DC_ADDRESS(0x0d52d0, 0xd0)
 MAC_ADDRESS(0x10671c, 0xd0)
-// Mac code 0+0x10671c retains both abs calls; -O1 -proc 750 plus linked
-// reload-slot collapse matches the complete 208-byte body. DC names distance.
+// Mac code 0+0x10671c retains both abs calls. DC names distance.
 unsigned char hero::isInPatrolRadius(type_point point) const
 {
     if (m_patrolRadius < 0 || m_patrolX == kPatrolNone)
@@ -6557,7 +6371,7 @@ bool hero::isInIdentifyRange(const type_point& location) const
 
     if (m_z == location.m_z) {
         // Constructor form, not default-then-assign: it merges the y|z
-        // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
+        // bitfield unit into one clear-then-or.
         type_point heroLocation(m_x, m_y, m_z);
 
         // Dreamcast hero.cpp:6395 passes location as the DistanceSquared
@@ -6721,8 +6535,7 @@ bool std::bitset<144>::any() const
 
 // THeroScreenWindow's constructor calls the widget vector's begin/end;
 // retail relocation sites are 0x4e1317/0x4e1321. The native COMDATs and bodies are
-// respectively 8b4104c3 / 8b4108c3 (mov eax,[ecx+4/8]; ret). The former
-// vector<int> placeholders had no emitted owner in this TU.
+// respectively 8b4104c3 / 8b4108c3 (mov eax,[ecx+4/8]; ret).
 VA_COMPGEN(0x004e64e0, 0x4, VECTOR_BEGIN, widget)
 
 VA_COMPGEN(0x004e64f0, 0x4, VECTOR_END, widget)
@@ -6763,14 +6576,12 @@ inline const int& tLimit(const int& minimum, const int& value, const int& maximu
 // it costs exactly one extra symbol in hero.obj.
 VA_COMPGEN(0x0048d940, 0x26, VECTOR_UFILL, int)
 
-// COMDAT pairing: bitset<144>::test, agreement 1.000 at an exactly equal
-// 55-byte extent.
+// COMDAT pairing: bitset<144>::test (55 bytes).
 VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)
 
 // Retail loadMap, markArtifactSpells (0x4d9350) and readTownData share this
 // bitset<70> cleanup. It expands in game but remains naturally emitted here
-// and in mapcell. All 37 bytes agree, including the three-word fill and
-// six-bit high-word mask; there are no relocations or added source calls.
+// and in mapcell.
 VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
 
 // bitset<70>::reference::operator= - called by markArtifactSpells here

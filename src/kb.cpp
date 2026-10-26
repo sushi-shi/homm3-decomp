@@ -2279,11 +2279,8 @@ void playerDead(int whichPlayer)
 // heroes/towns predicate, and retains that record through the 2776
 // countdown store. Retail likewise retains the countdown address across
 // the warning dialog. Keep the actual player reference through the loop.
-// The 24-state record/predicate/guard/counter family produced four objects
-// and four reproduced elites; this reference raises checkEndGame to
-// 93.4214% while preserving all 44 exact kb siblings. Direct repeated
-// g_game indexing was 88.5571%; pointer/reference forms agree. The joined
-// predicate follows the DC scopes even where its score is byte-flat.
+// Direct repeated g_game indexing differs; pointer/reference forms agree. The
+// joined predicate follows the DC scopes.
 DC_ADDRESS(0x0e24a0, 0x366)
 MAC_ADDRESS(0x1129ec, 0x3e8)
 static void checkPlayerLoss()
@@ -2911,56 +2908,31 @@ int getEnemyCount()
 // E:\gamedcs\kb.cpp:3440. Dreamcast proves the reference parameters,
 // entry-time GetLocalPlayerGamePos (3442), separate town lookup (3460)
 // before formatting (3461), and explicit return branch (3559/3560).
-// The missing localPos debug record does not contradict the cached lookup;
-// the prior repeated-accessor probe (72.6985%) did not recover that source.
+// The missing localPos debug record does not contradict the cached lookup.
 // Complete's three condition arms preserve the network helper boundaries
-// and add their retail dialogs. The references and the two statement/return
-// corrections are byte-flat at the 79.1107% MAX (2026-09-07).
+// and add their retail dialogs.
 
-// Former residual (closed below): 880 padded bytes, 46 CFG blocks.
-// Earlier passive C2 trace finds LossConditionStruct's default ctor costs 41. Its
-// town/time-limit sites receive budgets 26/25 and remain calls; retail
-// expands it at all three sites. The hero site receives 53 and expands.
-// CNetMsg already has retail's one call/two expansions. The differing loss
-// ctor decisions prevent retail's shared -1 register and final epilogue.
-// Rewriting its initializer list as the same ordered body assignments is
-// byte-flat, as are naming the town result and spelling the final if/return.
 // Keep the member's default construction before the subsequent assignment:
 // CPlayerLostMsg's DC netmsg.h:519 calls both base/member ctors, then 520
-// stores loser and 521 copies the condition. Moving loser into the initializer
-// list or flattening the default constructor would discard that evidence.
-// Mac identity is verified at code0:0x114924..0x114cdc (952 B), now an
-// admitted pair. Removing the unsupported inline qualifier on sendPlayerLost
-// preserves Windows 79.1107% and restores all three Mac retained calls;
-// Mac scores 43.2773% with 16/16 calls. Its two remaining call-target
-// differences are text-vector begin versus operator[] in the hero arm.
-// An MSL-style begin route in a scratch Mac view inlined all four text lookups,
-// so retain the canonical getText source. The earlier -O1 inline profile
-// also expanded the sender.
+// stores loser and 521 copies the condition.
+// Mac identity is verified at code0:0x114924..0x114cdc (952 B); sendPlayerLost
+// carries no inline qualifier, so Mac retains all three calls. Retain the
+// canonical getText source (an MSL-style begin route inlines all four text
+// lookups on Mac).
 // Original DC ?DisplayLCWinLoss@@YA_NAAULossConditionStruct@@AAH1_N@Z
 // proves bool return and remoteCheck, while gameWon/gameLost remain int&.
 // Both Complete callers pass a logical flag; Mac 0x114ca4..0x114cc4
 // returns the truth of the two integer outputs, preserving this interface.
-// Accessor-budget probe: replacing onSameTeam's two lookups with getTeam
-// lowers that helper's cost 66 -> 60, but getTeam costs 46 (not free).
-// Its second nested call receives only 26/36 units and remains a call,
-// unlike retail; all three loss constructors then remain calls (76.9046%).
-// DC GetTeam lines 866/868/872 retain the guard and separate return arms;
-// a one-expression getter has no source support here. Keep that boundary.
-// Using false for the proven bool loss-flag initializer is byte-flat and
-// leaves the constructor cost at 41, with budgets 26/54/26 (79.0916%).
-// DC 3448/3452 and 3491/3493 record separate nested admission tests,
-// not one combined condition. Restoring those source boundaries is
-// Windows byte-flat at 79.0916% in the current TU context.
-// DC 3467/3472 and 3519/3524 record coincident scope pairs: both remote
-// game-over arms are braced. Restoring them raises this caller's inline
-// cost toward retail's decisions (79.09 -> 81.85%).
-// DC 3473..3486 and 3528..3538 each hold an empty braced else of the
-// same-team test (zero-length scope pairs at dc 0xe3604 and 0xe36c4), and
-// CodeView keeps the never-emitted local bShowedEndMessage. Its stores and
-// a release-form check in each else emit nothing but raise the cost to
-// 575 (retail window 568..648): the loss constructor then expands at all
-// three sites, 81.85 -> 100%. The check's text is not recovered.
+// DC GetTeam lines 866/868/872 retain the guard and separate return arms.
+// DC 3448/3452 and 3491/3493 record separate nested admission tests, not one
+// combined condition. DC 3467/3472 and 3519/3524 record coincident scope
+// pairs: both remote game-over arms are braced. DC 3473..3486 and
+// 3528..3538 each hold an empty braced else of the same-team test
+// (zero-length scope pairs at dc 0xe3604 and 0xe36c4), and CodeView keeps
+// the never-emitted local bShowedEndMessage; its stores and a release-form
+// check in each else emit nothing but give this caller the inline cost
+// (retail window 568..648) at which the loss constructor expands at all three
+// sites. The check's text is not recovered.
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
@@ -3982,12 +3954,8 @@ DC_ADDRESS(0x0e519c, 0x76)
 MAC_ADDRESS(0x1163f0, 0xcc)  // anchor-caller (remote 0x556780)
 int getNextHumanPlayer(int start)
 {
-    // DC r8 and Mac r28 mutate the incoming seat while r9/r29 preserve it.
-    // This spelling matches Windows, its inlined remote caller, and Mac at
-    // the KB -O3 profile exactly. The prior separate player local scored
-    // 95.1191% Windows and 25.9804% Mac at -O1.
-    // Earlier loop/initialization and counter-width controls did not improve
-    // the separate-local spelling; an early initialized player regressed it.
+    // DC r8 and Mac r28 mutate the incoming seat while r9/r29 preserve it;
+    // there is no separate player local.
     int checked = 0;
     int originalStart = start;
     start = (start + 1) % 8;
@@ -5000,10 +4968,8 @@ static int waitHandler(message& msg)
 // are never written here and are read straight out of the block when the
 // by-value argument is built.
 // DC records the page index as long i; Mac 0x1194d8 advances it separately
-// from the eight-icon slot index. This restores the named local without a
-// VC6 byte change. Complete publishes timeout before the geometry:
-// native0x119574 stores timeout, then0x119584/0x119594 stores x/y.
-// The same shared order is exact in both VC6 and CodeWarrior (596 Mac bytes).
+// from the eight-icon slot index. Complete publishes timeout before the
+// geometry: native0x119574 stores timeout, then0x119584/0x119594 stores x/y.
 // The implicit icon and string copy identities remain ordinary generated
 // members; no authored constructor or helper call is substituted.
 VA(0x004f7690, 0x312)

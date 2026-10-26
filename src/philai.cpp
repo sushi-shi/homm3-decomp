@@ -342,8 +342,7 @@ static long getArtifactPurchaseValue(
 // DC line 355 prices the tray entry; line 358 reloads it and attributes the
 // converting type_artifact constructor and GiveArtifact to the same line.
 // Keep the conversion at the call site: a named artifact local delays the
-// independent extra=-1 store and gives 98.1308%; the temporary matches all
-// 329 retail bytes. Explicit and implicit conversion emit the same object.
+// independent extra=-1 store.
 // DC 334 checks capacity at each iteration's entry; 361 repeats the selected
 // artifact test at the tail, then 362 equips on exit. Mac preserves that loop
 // and all five calls. The resource output belongs to function scope in DC.
@@ -353,7 +352,7 @@ MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global
 void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                    long marketCount)
 {
-    // DC records the resource output at function scope; VC6 stays 98.13%.
+    // DC records the resource output at function scope.
     EGameResource resource;
     long bestArtifact;
     do {
@@ -551,17 +550,10 @@ static unsigned char shouldGarrisonTown(const hero* currentHero,
 // DC: the resource return (839/840), absent dock (851/852), and
 // absent boat (882/883) all end before the following work. Keep those scopes
 // and the ordinary static declaration, not the old forced-inline substitute.
-// With all four MoveHero helpers ordinary, seven deleted shipyard fences
-// restore 86.6362% (from 86.3549%) without changing any other tracked TU row.
-// Controls: the 256-state fence/boundary family, 97-state scope/value family,
-// and 33-state four-helper family. Retaining a forced checkForTown peaks at
-// 89.6719%; the old forced shipyard enclosure reaches 93.3304%. Neither is
-// source evidence for a forced declaration. Direct/reference point arguments
-// in the fully ordinary family score 86.2031%; keep the real copied value.
-// DC 887/888 separate the boat-cell call and flag write. Naming that cell
-// makes the expanded Windows mark loop match retail directly: MoveHero has
-// 78/79 exact CFG blocks and all calls aligned, though byte score is 95.88%.
-// Naming the analogous clear-loop cell too instead creates an extra tail exit.
+// Direct/reference point arguments differ; keep the real copied value. DC
+// 887/888 separate the boat-cell call and flag write: naming that cell gives
+// the expanded Windows mark loop retail's shape (naming the analogous
+// clear-loop cell too creates an extra tail exit).
 DC_ADDRESS(0x10e6e8, 0x1aa)
 MAC_ADDRESS(0x13fd54, 0x2ec)
 static void markShipyards(playerData* player)
@@ -621,7 +613,7 @@ static void markShipyards(playerData* player)
 // cell update. Its size/getCell/cell calls need no inline-depth overrides.
 // Keeping the returned boat cell in a local separates DC's call and store.
 // Passing the indexed shipyard point directly to getCell preserves DC's
-// operator[] source call and makes MoveHero's retail expansion byte-exact.
+// operator[] source call, as MoveHero's retail expansion needs.
 DC_ADDRESS(0x10e894, 0x114)
 MAC_ADDRESS(0x140040, 0x198)
 static void clearShipyards(playerData* player)
@@ -761,10 +753,8 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 // Mac0x1409c4 adds the accessor's int result directly; an extra short
 // temporary inserts a narrowing instruction absent from that native loop.
 // The movable-hero scan indexes m_heroes directly; only the garrison scan
-// goes through getHero. Routing the first lookup through the accessor made
-// VC6 fold its expanded sentinel check away (Windows 88.04%, doAI 82.80%,
-// Mac 23.30%); the direct subscript closes both Windows bodies and lifts
-// Mac to 53.96%. A short skillValue temporary is Windows-flat and costs Mac.
+// goes through getHero (the accessor lets VC6 fold its expanded sentinel
+// check away).
 DC_ADDRESS(0x10eeb0, 0x220)
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
@@ -793,10 +783,9 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
                     && skillSum >= lowestSum)
                     continue;
             }
-            // DC assigns lowest_sum at1190 before selected_hero at1193.
+            // DC assigns lowest_sum at1190 before selected_hero at1193;
             // Complete's retained selector and its DoAI expansion both
-            // store selectedHero first; reversing these two stores is the
-            // sole remaining difference in the otherwise exact candidate.
+            // store selectedHero first.
             selectedHero = currentHero;
             lowestSum = skillSum;
         }
@@ -850,8 +839,8 @@ static void moveAllHeroes(long playerId, long* dangerZones)
 }
 
 // Native Mac retains a seven-resource counted loop; this O3 body unrolls it.
-// A != bound is byte-flat; pointer traversal and a short counter do not
-// recover that native loop. Keep the indexed helper and its exact VC6 callers.
+// Keep the indexed helper (pointer traversal and a short counter do not
+// give the native Mac loop).
 VA(0x00526c70, 0x48)
 DC_ADDRESS(0x10f22c, 0xca)
 MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
@@ -1608,8 +1597,7 @@ static double g_aiWaterMapFraction = 1.0;
 // DC philai.cpp:3444 precedes get_skill_value at 3469; Mac retains the same
 // getSchoolValue/getSkillValue order. Keep the ordinary helper body visible
 // to its caller in that source order.
-// This visibility recovery is Windows byte-flat at 86.5040%; VC6 retains
-// all four getSkillValue calls to this canonical helper.
+// VC6 retains all four getSkillValue calls to this canonical helper.
 VA(0x00524d20, 0xa3)
 DC_ADDRESS(0x11350c, 0xa0)
 MAC_ADDRESS(0x13e09c, 0xbc)
@@ -2039,37 +2027,21 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // DC philai.cpp:803 records game::GetHero followed by
 // town::ApplySpecialBuildingEffect inside a nested scope. Keeping that
 // result in a local before the call makes VC6 expand the canonical getHero
-// body here, as retail does: the prior artifact-conversion source rose from
-// 96.44 to 99.15%, with 73/73 CFG blocks and all 44 calls agreeing.
-// DC line 767 puts the spellbook resource check at function scope; removing
-// the standalone block around its player pointer is VC6 byte-flat at 99.15%.
+// body here, as retail does. DC line 767 puts the spellbook resource check
+// at function scope.
 // Mac section 0+0x13f8dc..0x13fc44 is the counterpart: hasArtifact(2) leads
 // its town-entry calls, two applySpecialBuildingEffect calls end it, and its
 // caller at +0x13d7e8 passes a hero and a 0x15c-stride town record.
 // Direct typed artifact construction and blacksmith-table access reproduce
 // both local Windows retail instruction spans and remove two extra Mac memcpy
-// calls: Mac now has the exact 872-byte size and all 24 calls at 94.0367%.
-// Under VC6 those direct expressions alter later inline decisions. Nesting
-// the Conflux building check restores getHero expansion, giving 73/73 CFG
-// blocks and 97.77%; its remaining extra hasBuilding call should be inlined.
-// Moving the POD university local before that inner check is byte-flat on
-// both compilers, so its smaller natural lifetime remains here. Gated VC6 C2
-// trace: caller C1 cost 623, last hasBuilding cost 68, available budget 51;
-// final getHero cost 41 expands under that same budget. Both expansions need
-// at least 109, a 58-unit increase at that point. Removing three owner aliases
-// from buySpecialBuilding lowers its C1 cost 610->595 (budget 66); removing
-// Dungeon's resourceCost alias lowers it to 590 (budget 71), which expands
-// hasBuilding but then leaves only 3 for getHero. Those partial variants are
-// Mac byte-flat and regress Windows. The combined buySpecialBuilding rejection
-// guard and direct value/cost expressions recover both expansions: 99.930435%,
-// 73 exact CFG blocks and all 44 calls agree. Mac retains cost acquisition,
-// value/experience acquisition, resource valuation and optional purchase in
-// that order; its aiEnterTown comparison is 95.5275%. A typed spellbook-ID
-// local in the DC line 768 gap is byte-flat in both compilers.
-// A separate debit-loop index in upgradeCreatures closes the final two SIB
-// encodings: all 1548 retail bytes now match. DC lines 240/241 and 250 keep
-// affordability and debit as separate loops; their register-only indices have
-// no recorded names. Reusing the affordability index reproduces 99.9565%.
+// calls. The Conflux building check is nested, and buySpecialBuilding's
+// combined rejection guard and direct value/cost expressions leave the C1
+// budget that lets both the last hasBuilding and the final getHero expand.
+// Mac retains cost acquisition, value/experience acquisition, resource
+// valuation and optional purchase in that order. upgradeCreatures uses a
+// separate debit-loop index: DC lines 240/241 and 250 keep affordability and
+// debit as separate loops, and reusing the affordability index changes two
+// SIB encodings.
 VA(0x005253d0, 0x60c)
 DC_ADDRESS(0x10e3f8, 0x280)
 MAC_ADDRESS(0x13f8dc, 0x368)  // MAC_ABSTRACTION_FROM(tokens1:46b741d4bc9b,95.5275): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
@@ -3568,7 +3540,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     // both arguments into their own homes ([ebp+0x10] restored, [ebp+0xc] set
     // from the immediate) before the address select and the dereference, which
     // is what that wrapper's extra layer emits. cppMin alone binds `value` in
-    // place and CSEs the cap into a register (99.8200).
+    // place and CSEs the cap into a register.
     return min(value, 5000000L);
 }
 
@@ -3807,9 +3779,9 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    // DC records one value-type target local, not a path-to-target copy.
-    // Separate declaration/assignment keeps this exact retained body and
-    // restores its retained call in aiValueOfEvent without an inline pin.
+    // DC records one value-type target local, not a path-to-target copy;
+    // separate declaration/assignment keeps the retained call in
+    // aiValueOfEvent.
     type_point target;
     target = currentHero->getTarget();
     if (target.isValid() && moveCost > 300) {

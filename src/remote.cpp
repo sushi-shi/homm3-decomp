@@ -124,8 +124,8 @@ CDPlayHeroes::CDPlayHeroes()
 // emits the member deque destructor, CDPlayMsg cleanup, and the lobby-base
 // destructor in declaration order. Declaring CDPlayLobby's real virtual
 // destructor is the decisive inline-budget input: with that complete base
-// contract, the original named helper call expands to the exact 0x205-byte
-// retail body (both deque walks included).
+// contract, the original named helper call expands to retail's 0x205-byte
+// body (both deque walks included).
 // Mac 0x210868 retains destroyMsg for each packet drained from the queue.
 DC_ADDRESS(0x11ba80, 0x58)
 MAC_ADDRESS(0x210814, 0x80)
@@ -271,9 +271,6 @@ DATA(0x0069d818) static unsigned long g_lastActiveUpdate;
 
 static const long g_playerActiveUpdateInterval = 600000;
 
-// Unimplemented carcass rows remain available to the claim/label scanners but
-// stay outside compilation as this large TU is admitted incrementally.
-
 // Mac 0x2109e4 handles the same ping, ping reply and player-drop subtypes;
 // its native transport supplies the incoming message. DC remote.cpp:318/331
 // names text lookups at the ping reply and destroyed-session messages.
@@ -343,12 +340,10 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 }
 
 // Original: CDPlayHeroes::GetRemoteData; remote.cpp:350
-// Retail expands IsCompressed and ordinary UncompressMsg. Restoring these
-// boundaries and DestroyMsg calls recovers the retained deque helper and
-// register homes: 86.26 -> 98.62%, with all nine named calls in order.
-// Assigning the result before setting wasCompressed recovers the remaining
-// four instruction differences and reaches 100%; the reversed ordering is
-// the 98.62% negative control. Both helper and caller boundaries stay natural.
+// Retail expands IsCompressed and ordinary UncompressMsg; these boundaries
+// and DestroyMsg calls keep the retained deque helper and register homes.
+// The result is assigned before setting wasCompressed (the reverse order
+// differs).
 VA(0x00553040, 0x1D1)
 DC_ADDRESS(0x11bd5c, 0xf4)
 MAC_ADDRESS(0x210b84, 0x14c)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map
@@ -458,7 +453,7 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
 // DC 509..514 scope the packet choice inside the compression guard, and
 // 569/571 brace the destroyMsg release. Windows retains one sendIt join; Mac
 // 0x210f50/0x210f78 threads the two guards into separate sends. The nested
-// guard also restores handleLowLevelMsg's expansion (98.32 -> 100).
+// guard also gives handleLowLevelMsg's retail expansion.
 VA(0x00553370, 0x5C)
 DC_ADDRESS(0x11bfec, 0x60)
 MAC_ADDRESS(0x210ee4, 0xb4)
@@ -487,7 +482,7 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
 // are block-scoped per error arm. DC then tests the result three times:
 // the logging arm, an early success return (615/616) and the retry-limit
 // dialog (`retries >= 5 && !sent`). That compound header keeps retail's
-// unrotated loop (head `cmp retries,5`, `inc; jmp` tail): 88.86 -> 96.95.
+// unrotated loop (head `cmp retries,5`, `inc; jmp` tail).
 // Send returns unsigned char; a bool receiver adds a setne normalization.
 // Mac 0x210f98 sends through its native transport once; Windows retains the
 // DirectPlay retry and error-dialog flow around the corresponding send.
@@ -595,9 +590,9 @@ void CDPlayHeroes::queueMsg(CNetMsg* netMsg)
 }
 
 // DC788 records both guard tests together, followed by Copy at 789. The
-// combined condition keeps this body exact but costs 62 VC6 inline units;
-// nested ifs cost 71. WaitForReadyToPlayMsg's ready-path cleanup has budget 64:
-// this source form expands SetNetMsgHandler and retains Copy exactly as retail.
+// combined condition costs 62 VC6 inline units (nested ifs cost 71);
+// WaitForReadyToPlayMsg's ready-path cleanup has budget 64, so this form
+// expands SetNetMsgHandler and retains Copy as retail does.
 VA(0x00553770, 0x30)
 DC_ADDRESS(0x11c268, 0x28)
 MAC_ADDRESS(0x2110ec, 0x60)
@@ -722,9 +717,9 @@ void CChatManager::addChat(const char* format, ...)
 // Variadic member ownership follows DC; the stack receiver is VC6 ABI.
 // The display guard is IsClose(59000) with the
 // adventure-suspended and popup checks; the sound tail prefers timeover.wav
-// and falls back to chat.wav. A positive display scope removes the
-// skip-chat goto with identical VC6 scores throughout this TU, retaining
-// the common sound tail and the order of the short-circuit time checks.
+// and falls back to chat.wav. A positive display scope (no skip-chat goto)
+// retains the common sound tail and the order of the short-circuit time
+// checks.
 VA(0x00553960, 0x136)
 DC_ADDRESS(0x11c4ac, 0xaa)
 MAC_ADDRESS(0x2116cc, 0x120)  // anchor-callees + arity/order-map
@@ -1587,16 +1582,9 @@ int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 // modal at all. Constructor, AllPlayersReady, Wait and the complete
 // destructor chain are all expanded into this retail body by /Ob2.
 
-// Residual 92.5776%: SetNetMsgHandler's DC-shaped combined guard restores all
-// sixteen retail call sites and Copy's exact retained body without an inline
-// fence. The implicit derived destructor is also exact (keep it implicit:
-// DC compgenx). Remaining differences concern the shared zero and EH-state
-// registers: candidate uses EBX for zero, retail EDI and EBX for EH states.
-// Eight palette/ready/return boolean-literal combinations emit one identical
-// object; why-reg finds no named caller-local value to reorder. DC's palette
-// flag is T_UCHAR, so changing its type to bool would discard source evidence.
-// Earlier controls: inverted Wait/return contradicts DC's condition/return
-// scope; a depth-zero return calls the entire derived destructor (70.4658%).
+// SetNetMsgHandler's DC-shaped combined guard keeps all sixteen retail call
+// sites and Copy's retained body without an inline fence. The derived
+// destructor stays implicit (DC compgenx). DC's palette flag is T_UCHAR.
 VA(0x00554f10, 0x23A)
 DC_ADDRESS(0x11d6c8, 0x40)
 MAC_ADDRESS(0x213594, 0x1ec)  // anchor-vtable + dc-order-map
@@ -1670,9 +1658,7 @@ VA_COMPGEN(0x005554b0, 0x21, SCALAR_DELETING_DTOR,
            CWaitForReadyPlayersDlg)
 
 // E:\gamedcs\remote.cpp:1820 - implicit destructor called by ??_G above.
-// The full nested teardown is expanded in retail. Removing CAnimatedDlg's
-// auto-inline fence restores this generated body to 100%; the readiness
-// caller's distinct expansion decisions remain debt beside that caller.
+// The full nested teardown is expanded in retail.
 VA_COMPGEN(0x005554e0, 0xC9, IMPLICIT_DTOR, CWaitForReadyPlayersDlg)
 
 VA(0x005555b0, 0x126)
@@ -1825,8 +1811,8 @@ bool testIfLobbyLaunched()
 // remains visible on the two failure exits.
 
 // VC6 also eliminates the redundant success-edge destructor stores with the
-// canonical value-temporary initialization in initRemote; all retail bytes
-// match without changing the session-array lifetime or its cleanup calls.
+// canonical value-temporary initialization in initRemote, without changing
+// the session-array lifetime or its cleanup calls.
 VA(0x00555aa0, 0x443)  // anchor-IAT/vtable/data + dc-xref/order-map
 DC_ADDRESS(0x11d9ac, 0x210)
 unsigned char handleMPlayerLaunch()
@@ -2749,8 +2735,8 @@ MAC_ADDRESS(0x2156e4, 0x28)
 bool CTurnDuration::isOn()
 {
     // DC remote.cpp:2921/2922 and 2925 retain two separate early-outs.
-    // This canonical body matches both the retained function and its
-    // expansion in isClose; a compound boolean return changes VC6 lowering.
+    // A compound boolean return changes VC6 lowering here and in isClose's
+    // expansion.
     if (m_currDuration == 0)
         return 0;
     if (g_inCampaign)
@@ -2775,26 +2761,24 @@ bool CTurnDuration::isExpired()
 }
 
 // E:\gamedcs\remote.cpp:2950
-// DC lines 2951 and 2964 call IsOn and GameTime::ElapsedSince. Restoring
-// both canonical calls closes the former 97.09% register-order residual:
-// VC6 inlines them and all 30 retail CFG blocks and seven calls agree.
+// DC lines 2951 and 2964 call IsOn and GameTime::ElapsedSince; VC6 inlines
+// both canonical calls.
 
-// Three spellings ARE byte-load-bearing and were found the hard way:
+// Three spellings ARE byte-load-bearing:
 //   * `((m_currDuration >> 1) << 1) > 120000` and NOT the semantically
 //     identical `(m_currDuration / 2) * 2`. C1XX folds a shift pair into
 //     `and x,-2` in the front end, before C2 ever sees it; the divide form
 //     stays a DIVIDE/MULTIPLY pair that C2 lowers only AFTER CSE-ing the
 //     `/2` it shares with the two neighbouring uses, so it comes out as
-//     `lea [ecx+ecx]` off the shared half (96.16 against 97.09).
+//     `lea [ecx+ecx]` off the shared half.
 //   * `m_lastWarned` must be READ INTO A LOCAL between the two
 //     GameTime::Get() calls. Retail's `mov edi,[esi]` sits between them,
 //     and no compiler may hoist a member load across an opaque call - so
-//     the load is in source order there, not in the subtraction (95.26
-//     against 93.95).
+//     the load is in source order there, not in the subtraction.
 //   * the last arm assigns 1000 in the THEN arm and 0 in the ELSE. VC6
 //     lowers `c ? K : 0` as `setcc(!c); dec; and K`, which is retail's
 //     three instructions; written the other way round it takes the general
-//     two-constant form `setcc; dec; and -K; add K` (96.16 against 95.26).
+//     two-constant form `setcc; dec; and -K; add K`.
 // The two Get() calls really are two calls - retail saves the first in EBX
 // for the m_lastWarned store and prices the gap with the second.
 // E:\gamedcs\remote.cpp:2950
@@ -2875,8 +2859,8 @@ bool CTurnDuration::isClose(unsigned long howClose)
         return 0;
     if (m_pauseTime != 0)
         return 0;
-    // Guard returns keep the retained Windows body exact and let its chat
-    // caller branch directly; a byte comparison local leaves seta/test there.
+    // Guard returns let the chat caller branch directly; a byte comparison
+    // local leaves seta/test there.
     if (GameTime::get() + howClose <= m_turnStartTime + m_currDuration)
         return 0;
     return 1;
@@ -2984,8 +2968,7 @@ VA_COMPGEN(0x005583b0, 0x54, IMPLICIT_DTOR, CDPlayPlayer_CAutoArray)
 VA_COMPGEN(0x00558490, 0x6C, SCALAR_DELETING_DTOR, CDPlayPlayer_CAutoArray)
 
 // deque<CNetMsg*>'s back-block allocator, the half of the pair army.obj's
-// int deque needed the freeing side of. Byte-verified against the emitted
-// COMDAT at 0.967 over 322 bytes.
+// int deque needed the freeing side of.
 VA_COMPGEN(0x00558500, 0x142, DEQUE_BUYBACK, CNetMsg)
 
 VA(0x00557ee0, 0x91)
@@ -3089,8 +3072,7 @@ unsigned char CAutoArray<CDPlayPlayer>::add(CDPlayPlayer* element)
 
 // E:\gamedcs\remote.cpp:3125
 // COMDAT pairing: deque<CNetMsg*>::push_back and its map-growth helper
-// _Growmap, agreements 1.000 and 1.000 at exactly equal extents. This object
-// is the only one that instantiates the message queue.
+// _Growmap. This object is the only one that instantiates the message queue.
 VA_COMPGEN(0x00558080, 0x2CF, DEQUE_PUSH_BACK, CNetMsg_ptr)
 
 VA_COMPGEN(0x00558650, 0x10, DEQUE_CONST_ITERATOR_CTOR, CNetMsg_ptr)

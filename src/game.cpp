@@ -490,8 +490,8 @@ void generator::removeBonus()
 VA(0x004b87a0, 0xB8)
 DC_ADDRESS(0x0a3178, 0xd8)
 MAC_ADDRESS(0x0ca624, 0xf8)
-// VC6 control: without inline here, initialize retains an updateBonus call
-// and has 26 blocks instead of the retail 38-block expansion.
+// inline is required: an ordinary body stays a call in initialize, where
+// retail expands it.
 inline void generator::updateBonus()
 {
     if (m_playerOwner < 0)
@@ -737,8 +737,7 @@ void game::calculateProduction()
 
 // DC game.cpp:838..864 records int count, int x and char char_buffer.
 // Complete reads through TAbstractFile in place of the older gzread stream.
-// Retail's reads are the direct virtual calls: the inline readValue
-// template spelling costs VC6 86.44%, the direct reads are exact.
+// Retail's reads are the direct virtual calls, not the readValue template.
 VA(0x004b9070, 0x1B3)
 DC_ADDRESS(0x0a3c68, 0xe8)
 MAC_ADDRESS(0x0cb1f0, 0x118)
@@ -800,11 +799,9 @@ int game::saveSignPool(TAbstractFile* outfile)
     return 0;
 }
 
-// Legacy guard reads use the shared scalar reader. VC6 inlines both calls
-// and reproduces the retail body exactly; shared direct reads scored 97.44%.
-// Mac retains the first signed result across the second read. This does not
-// justify platform-specific statement ordering. DC predates this branch.
-// Full native-header Mac comparison awaits the reviewed MSL resize binding.
+// Legacy guard reads use the shared scalar reader; VC6 inlines both calls.
+// Mac retains the first signed result across the second read. DC predates
+// this branch.
 VA(0x004b9340, 0x240)
 DC_ADDRESS(0x0a3e5c, 0x2b0)
 MAC_ADDRESS(0x0cb404, 0x2a4)  // anchor-global (ClaimMine vector) + read-slot
@@ -908,8 +905,8 @@ int game::saveMinePool(TAbstractFile* outfile)
 // byte staging locals for the five shared gzread calls, which stay direct.
 // Complete adds saveVersion's removable-troops branch; Mac 0xcba68..0xcba80
 // sign-extends its independent by-value read, so that arm keeps readValue.
-// The residual includes the ICF-folded vector<garrison>::insert that retail
-// names as vector<mine>::insert.
+// Retail labels the ICF-folded vector<garrison>::insert as
+// vector<mine>::insert.
 VA(0x004b96f0, 0x1CB)
 DC_ADDRESS(0x0a438c, 0x1bc)
 MAC_ADDRESS(0x0cb8bc, 0x1f8)
@@ -1002,8 +999,7 @@ int game::saveGarrisonPool(TAbstractFile* outfile)
 // DC game.cpp:1114..1174 records all five typed locals and the repeated
 // vector indexing/read order below. Retail retains every abstract-file read
 // and the boat loader, but expands one vector::size call that this TU keeps.
-// Direct virtual reads are exact; the readValue template staging costs
-// VC6 86.75% here.
+// Reads are direct virtual calls, not readValue template staging.
 VA(0x004b9a00, 0x239)
 DC_ADDRESS(0x0a46e8, 0x296)
 MAC_ADDRESS(0x0cbc7c, 0x28c)
@@ -1346,7 +1342,7 @@ static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
 // Mac 0xccce0..0xccd60 constructs a local mask, reads two packed bytes,
 // expands the decoder and copies the mask through a second temporary into
 // the member. The inline readPackedBits return and its own decode loop
-// preserve those boundaries; its source name is inferred. Windows stays exact.
+// preserve those boundaries; its source name is inferred.
 VA(0x004ba260, 0x401)
 DC_ADDRESS(0x0a51b0, 0x3f6)
 MAC_ADDRESS(0x0cc8ec, 0x490)
@@ -1861,11 +1857,8 @@ bool playerData::isHuman() const
 
 // DC game.cpp:1959 tests IsHuman() twice and Mac 0xcdc1c/0xcdc58 retains
 // both isHuman calls.
-// The human-name logical zero test keeps this retained body exact and
-// restores its first nested expansion in setSpecialRumour. Four natural
-// ==0/!strcmp states yield two reproduced objects: with both ==0 tests the
-// caller is 85.6147%; with the human !strcmp test it is 100%, with no game
-// sibling score changes. Keep this ordinary helper and both isHuman calls.
+// The human branch spells its name test `!strcmp`, not `== 0`: that is what
+// setSpecialRumour's retail expansion of this body needs.
 VA(0x004badb0, 0x9C)
 DC_ADDRESS(0x0a6180, 0xb0)
 MAC_ADDRESS(0x0cdc08, 0xd0)
@@ -2412,9 +2405,6 @@ void generateStandardFileName(char* longName, char* retName)
     strcpy(retName + charCount, period);
 }
 
-// Function-entry versus block-owned buffer declarations produce identical
-// game-unit VC6 objects with the canonical endian writer; this lifetime
-// spelling does not explain the retained saveString calls in retail callers.
 VA(0x004bbb60, 0xBB)
 DC_ADDRESS(0x0a750c, 0xc2)
 MAC_ADDRESS(0x0ced3c, 0xf0)
@@ -2424,9 +2414,8 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
     short length = s.size();
     // Platform difference: Mac byte-swaps the length (0xced70..0xced8c).
     // Windows writes the local directly; routing it through the endian
-    // writer's template chain lowers this body's /Ob2 cost until every
-    // retail caller (saveSignPool 6.50%, saveRumours 27.56%, game::save)
-    // expands it instead of retaining the call.
+    // writer's template chain lowers this body's /Ob2 cost until retail
+    // callers expand it instead of retaining the call.
 #if defined(__POWERPC__)
     int count = writeLittleEndianValue(outfile, length);
 #else
@@ -2449,11 +2438,7 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 }
 
 // Native Mac retains saveString at 0xcee68 and 0xcef18; Windows also
-// retains both calls. Current C2 admits cb174 at budgets939/723 (flags106),
-// then expands the canonical endian/scalar writer chain. Its constructor
-// chain instead rejects string::assign(pointer,length), cb69 at budget67.
-// Direct versus copy string initialization and function-owned buffer locals
-// are object-identical controls; neither explains these compiler decisions.
+// retains both calls.
 VA(0x004bbc20, 0x21E)
 DC_ADDRESS(0x0a75d0, 0x1f8)
 MAC_ADDRESS(0x0cee2c, 0x194)
@@ -2523,8 +2508,8 @@ int game::loadRumours(TAbstractFile* infile)
 // E:\gamedcs\game.cpp:2975
 // Rebuilds the per-player shipyard indices after loading a map. Dreamcast's
 // line table constructs location before the two obscurer pointers and names
-// vector::push_back directly. With that source order, VC6 expands clear and
-// push_back exactly while preserving the hero/boat obscureCell wrappers.
+// vector::push_back directly; that order gives retail's clear/push_back
+// expansions with the hero/boat obscureCell wrappers.
 VA(0x004bcb30, 0x26C)
 DC_ADDRESS(0x0a8144, 0x28a)
 MAC_ADDRESS(0x0d02a8, 0x274)  // sole caller game::Load
@@ -2621,9 +2606,8 @@ int game::loadBlackMarkets(TAbstractFile* infile)
 // Retail Load's gate-pair arm zeroes its fill before resize:
 // that is the native long default, not the old point-vector pointer union.
 // Complete's native count reader preserves the short output and byte count.
-// The point and long calls expand in game::load; the university call remains
-// the caller's 98.1693% residual. Direct payload-result returns alter the
-// retained creature-bank reader's comparison, so keep the two DC guards.
+// The point and long calls expand in game::load. Direct payload-result
+// returns change the retained creature-bank reader, so keep the two DC guards.
 // The generic university fill stays an aggregate; its elemental-school
 // initializer belongs only to the Conflux consumers (see type_university).
 template <class T>
@@ -2643,15 +2627,10 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 }
 
 // E:\gamedcs\game.cpp:2716; original save_vector / src_vector.
-// DC's count local and Mac's staged value are signed short. With direct
-// stream writes, that type preserves all retained Windows instances and
-// game::save. The earlier short+writeValue probe changed both the local and
-// the call boundary; its loss did not establish an int local in retail.
-// The guarded return reproduces both retained 96-byte writers exactly,
-// including SETAE. Direct boolean/byte-local returns instead use SBB/INC;
-// that spelling difference does not refute the DC bool/reference signature.
-// The point/long writer, resize, size, _Ucopy and _Ufill instances emit
-// identical raw code; retail's folded calls do not require a type adapter.
+// DC's count local and Mac's staged value are signed short. The guarded
+// return gives retail's SETAE; direct boolean returns use SBB/INC. The
+// point/long writer, resize, size, _Ucopy and _Ufill instances emit identical
+// raw code, so retail's folded calls need no type adapter.
 template <class T>
 DC_ADDRESS(0x0c18cc, 0x84)
 DC_ADDRESS(0x0c1dd4, 0x84)
@@ -2750,7 +2729,6 @@ bool type_creature_bank::save(void* output)
 // Retail 4bc0e0..4bc750 and Mac cf490..cfc34 order the snapshot
 // constructor, reset, save and load before game::load. Keep the ordinary
 // definitions in that cluster; selection retains the constructor call.
-// Moving the cluster does not change any current Windows function score.
 // E:\gamedcs\Game.h:1301
 VA(0x004bc0e0, 0x251)
 DC_ADDRESS(0x0bceb4, 0x4c)
@@ -2871,14 +2849,10 @@ void applySavedGameHeader(const SavedGameHeader& saved)
 // before the map pools. DC's gzread interface became TAbstractFile::read.
 // Its scalar reads and final map-extra read stage their results through count.
 // Keep the pool loaders canonical and the packed-byte scratch buffer inside
-// its hero loop. Default bitset construction reproduces more of the retained
-// calls than the unsigned-long constructor; neither requires inline controls.
-// The native range reader deduces the serialized count type. Its char instance
-// preserves loadBlackMarkets, while its short instances reproduce the register
-// allocation of every expanded loadVector call. Together with the counted
-// disabled-skill clear and native packed-byte read, game::load matches all
-// 139 retail blocks exactly. No inline-control pragma or release assertion is
-// needed by this model.
+// its hero loop; bitsets use default construction, not the unsigned-long
+// constructor. The native range reader deduces the serialized count type:
+// its char instance serves loadBlackMarkets, its short instances the
+// expanded loadVector calls.
 VA(0x004bcda0, 0xEC2)
 DC_ADDRESS(0x0a83d0, 0x778)
 MAC_ADDRESS(0x0d051c, 0x1eac)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG'
@@ -2999,11 +2973,10 @@ int game::load(TAbstractFile* infile)
     // These scalar fields mirror game::save, with each read checked before
     // assigning the decoded value. Retail carries four temporaries: a char
     // reused across reads 1-2 and 7-9, a second char for 5-6, a short for
-    // 3-4 and a second short for 10-12. Direct virtual reads are an IL-cost
-    // fact: staging them through readValue shrinks this caller's /Ob2 budget
-    // until ~SavedGameHeader's final expansion and loadVector<type_university>
-    // stay out of line (retail FuncInfo 0x64d1a8 has 78 states: the last
-    // SCampaign/NewSMapHeader pair is that final inline teardown; 92.81%).
+    // 3-4 and a second short for 10-12. Reads stay direct virtual calls:
+    // staging them through readValue shrinks this caller's /Ob2 budget until
+    // ~SavedGameHeader's final expansion and loadVector<type_university> stay
+    // out of line (retail FuncInfo 0x64d1a8 has 78 states).
     count = infile->read(&byteValue, sizeof(byteValue));
     if (count < sizeof(byteValue))
         return -1;
@@ -3602,7 +3575,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 // DC records townArmy as armyGroup&; Mac 0xd4e30 retains the mutable
 // getArmy call. Keep that reference and all army helper calls. Both builds
 // subscript m_towns directly: getTown's sentinel guard is absent from
-// retail (96.75% -> 99.91%, Mac 23.78% -> 50.00%).
+// retail.
 VA(0x004bf570, 0x203)
 DC_ADDRESS(0x0aa3f0, 0x308)
 MAC_ADDRESS(0x0d4d2c, 0x2d4)
@@ -3849,8 +3822,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
 // E:\gamedcs\game.cpp:4236
 // Original NewMap takes a THeroID pointer for playerHeroFaces.
 // DC hasHero is an unsigned byte. Mac retains separate resource-bonus
-// arms in town enumeration order; restoring that order gives VC6 EXACT.
-// The Mac comparison remains nonexact, with all helper paths retained.
+// arms in town enumeration order, as retail needs.
 VA(0x004bfe70, 0x6A8)
 DC_ADDRESS(0x0aada4, 0xb2a)
 MAC_ADDRESS(0x0d5a9c, 0x8b4)
@@ -4305,28 +4277,8 @@ static void randomizePyramid(NewmapCell* cell)
 // disabled-skill row, draws four distinct set bits, and appends those four
 // skills as one native university record. DC's local and aggregate type agree
 // with retail when Conflux's initializer uses its dedicated type.
-// WALL 99.7464%: all 24 blocks, every branch target and every instruction
-// count agree.  The explicit-code residual is one whole-loop register tie:
-// retail keeps the cached availability bound in EBX and each Random ordinal
-// in EDI; this compile assigns those two non-overlapping values the other way
-// round.  Dreamcast CodeView attests university/used/choice/i and the
-// TSecondarySkill type of skill.  Restoring its indexed i loop raised 93.08
-// -> 99.75; restoring the shared local order and enum type is byte-flat and
-// source-shape-ratcheted. The 36-state insertion family isolates the old
-// ownership error: a native record with automatic elemental initialization
-// falls to 97.8623%. The 13-state initializer family restores the native local
-// at 99.7464%, removes the pointer union, and preserves all Conflux call sites.
-// Remaining insert boundary: DC's push_back can expose the count-insert child
-// through the vendor wrapper; retail calls that child. Public single-insert
-// and push_back controls score 99.0145/97.5362; removing the existing fence
-// expands the child for all three APIs (0% large-body comparisons). Retain
-// this boundary debt, not a claim that the DC wrapper itself was absent.
-// why-reg confirms equal pseudo-definition slots but a different C1 processing
-// order.  Exhausted byte-inert levers: reset vs set(false), int/unsigned/
-// register bounds, cached-count vs explicit-highest formulations, split
-// declaration/initialization orders, and pre/post-reset induction ordering.
-// The direct count-in-loop spelling duplicates the popcount loop and falls to
-// 87.05.
+// Dreamcast CodeView attests university/used/choice/i and the
+// TSecondarySkill type of skill.
 VA(0x004c06f0, 0x179)
 DC_ADDRESS(0x0ac048, 0x11e)
 MAC_ADDRESS(0x0d6b44, 0x13c)  // dc-order + member receiver
@@ -4504,11 +4456,8 @@ void game::initRandomArtifacts()
 // packed z coordinates, squares x/y differences, calls MathLib sqrt once,
 // then stores both partner indices. Its sole caller at 0xd5ce4 sits between
 // randomizeEvents and randomizeHolyGrail in newMap's call sequence. The
-// preceding/following BLR/prologue bound the admitted Mac target. The shared
-// O3 candidate retains the MathLib sqrt call, but its ordinary type_point copy
-// uses two halfword stores where Mac retail uses one word store; Mac remains
-// non-exact (23.28%). Windows VC6 matches all 0x160 retail bytes when the z
-// equality names exitPoint first and the squared y term precedes squared x.
+// preceding/following BLR/prologue bound the admitted Mac target. Retail's
+// z equality names exitPoint first and the squared y term precedes squared x.
 // E:\\gamedcs\\game.cpp:4950
 VA(0x004c0b60, 0x160)
 DC_ADDRESS(0x0ac63c, 0x2d4)
@@ -5321,7 +5270,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 // assigns the complete returned string. No Dreamcast counterpart is known
 // for this Complete-only reader. Mac uses lwbrx for experience/skill count
 // and lhbrx plus extsh for artifact IDs/backpack count; retain those scalar
-// reader semantics through the shared little-endian helper. Windows is exact.
+// reader semantics through the shared little-endian helper.
 VA(0x004c2ce0, 0x3A8)
 MAC_ADDRESS(0x0d8ec0, 0x460)  // sole caller LoadMap + HeroExtra field-offset walk
 void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
@@ -5565,7 +5514,7 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 // DC records int_buffer/count/char_buffer at procedure scope. Mac checked
 // writes reuse char storage at sp+0x53 and integer storage at sp+0x54;
 // unchecked writes have separate temporaries. Preserve those two lifetimes
-// through the canonical scalar helpers; Windows reproduces exactly.
+// through the canonical scalar helpers.
 VA(0x004c35a0, 0x2E8)
 DC_ADDRESS(0x0ae5b4, 0x5ae)
 MAC_ADDRESS(0x0d98a8, 0x4cc)
@@ -5696,7 +5645,7 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 // Mac uses separate value-read temporaries for the unchecked leading flags,
 // shared char storage at sp+0x81 for checked bytes, and int storage at sp+0x84
 // for checked little-endian amounts. Keep these lifetimes through the scalar
-// helpers; the combined source model reproduces Windows exactly.
+// helpers.
 VA(0x004c3890, 0x3E4)
 DC_ADDRESS(0x0aeb64, 0x5b4)
 MAC_ADDRESS(0x0d9d74, 0x500)  // sole Load caller + retail body;
@@ -6018,44 +5967,11 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 // extends the original hero mask with 28 heroes plus optional per-player hero
 // setup records. Dreamcast CodeView proves the method/local identities; the
 // retail stream reads, helper edges and version branches prove the PC schema.
-// Current VC6 closure is 91.5614% (130 candidate blocks vs 127 retail): the
-// first 70 blocks are exact. The remaining tail is dominated by Dinkumware
-// nested-inliner boundaries around bitset::_Tidy and iterator copy/destruction;
-// forcing those sites synthetically reached a higher calibration score but was
-// rejected because it did not describe retail source. A header access shim was
-// also rejected after it perturbed already-exact functions in this TU.
-// 2026-09-06, polish lane 36: the mapcell reader family's `int count` local
-// - which took readResourceData and readScholarData to EXACT - DOES NOT
-// generalise here.  Landing all ten `infile->Read` results in one function-
-// scope `count` and comparing that against the sizeof measures 91.5614 ->
-// 74.2348.  The DC block does name `count`, so retail's source very likely
-// has it; what this body cannot absorb is the change in the two placeholder
-// blocks' own block-scoped `count`, which the shared local subsumes.
-// Complete adds the campaign-map ordinal to the stream reader (ret 8).
-// Complete's returned packed-bitset reader accounts for the legacy temporary
-// copied before iterator traversal and the modern/player mask reads. Sharing
-// readPackedBits at all three sites removes four pins: 91.5614 -> 92.9547%.
-// Eight reproduced combinations establish the coupled choice; using only
-// legacy+player reads gives 90.8737%, modern+player 89.5495%.
-// Natural placeholder-vector clear() instead of erase(begin(), end()) raises
-// this to 95.0513% and retains _Destroy. The preceding retail std::copy still
-// expands here; the call sequence is not yet exact.
-// Returned-mask lifetime controls: modern const-reference and player
-// const-reference forms are flat at 95.0513%. Direct modern assignment alone
-// gives 93.1657%; pairing it with a player const-reference returns 95.0513%.
-// Keep the named values until stronger evidence distinguishes their lifetime.
-// Complete setup records compare the saved hero ID as a byte before mapping
-// 0xff to -1. A byte buffer with a widened int preserves that source operation
-// and gives 95.2598%; a fused conditional gives 93.2122%. Separating the setup
-// count from the reused x buffer gives 93.2408% (93.4827% with the byte ID).
-// Current diagnostic routes to the over-expanded std::copy inside clear(),
-// ahead of register/CFG differences. A separate DC int count for all ten
-// guarded reads, preserving both nested record-count scopes, gives 79.0894%
-// against 95.2598%. That does not refute the proven DC result local; its
-// Complete source mapping remains a coupled recovery problem, not a pin lever.
-// Restoring count at the two readString calls is byte-score flat (95.2598%);
-// combining it with all ten stream reads remains 79.0894%. The string-result
-// source facts are retained independently of that unresolved stream mapping.
+// Complete adds the campaign-map ordinal to the stream reader (ret 8). Its
+// returned packed-bitset reader serves the legacy temporary copied before
+// iterator traversal and the modern/player mask reads. Placeholder vectors
+// use clear(). Complete setup records compare the saved hero ID as a byte
+// before mapping 0xff to -1.
 VA(0x004c4390, 0x92E)
 DC_ADDRESS(0x0af64c, 0xb3a)
 MAC_ADDRESS(0x0dab84, 0xa60)  // DC Read + LoadMap/Get callers + stream order
@@ -6689,9 +6605,7 @@ int NewSMapHeader::get(const char* path, const char* filename,
 
 // DC NewSMapHeader::readString, static with a string reference.
 // Mac 0xdc8b0 checks the read count before decoding length at 0xdc8c4.
-// DC names size/count/instr. Declaration-order and entry-vs-arm pointer
-// lifetime controls keep this body exact and read() at 59.53%; those scopes
-// do not explain VC6 expanding the two readString calls in that caller.
+// DC names size/count/instr.
 VA(0x004c6010, 0x1CE)
 DC_ADDRESS(0x0b1110, 0x11e)
 MAC_ADDRESS(0x0dc878, 0x114)
@@ -6720,8 +6634,7 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 }
 
 // DC game.cpp:7290 subscripts m_towns and 7317 names IsComputerTeam followed
-// by IsHumanTeam on GetTeam results; that spelling is exact (the getTown and
-// isHumanAlly wrappers score 76.05%).
+// by IsHumanTeam on GetTeam results, not the getTown/isHumanAlly wrappers.
 VA(0x004c61e0, 0x4A8)
 DC_ADDRESS(0x0b1230, 0x518)
 MAC_ADDRESS(0x0dc98c, 0x3dc)
@@ -6854,8 +6767,8 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 // comparison also expanded at Mac 0xdd1bc..0xdd224. Line 7499 constructs
 // and sends the message in one statement, with no named message local.
 // Its argument temporary and the native constructor's default-point/body-
-// assignment sequence together reproduce retail; either change alone leaves
-// the old frame/inlining mismatch. Keep both canonical helper boundaries.
+// assignment sequence are both required; keep both canonical helper
+// boundaries.
 // DC 7473/7475/7481/7498 accesses the inherited shipyard-owner member directly.
 VA(0x004c6a30, 0x21F)
 DC_ADDRESS(0x0b1a50, 0x23c)
@@ -7026,26 +6939,19 @@ void game::turnOffAIMusic()
 
 // Mac 0xdd9fc..0xddab8 retains an inner player scan and an outer -1
 // sentinel loop. It flips lastWasHuman before perDay, as DC game.cpp:7674
-// also does. Restoring those loops and the byte assignment raises Windows
-// 82.4458% -> 89.4563%; the receiver allocation now agrees with retail.
-// DC game.cpp:7638 and Mac 0xdd92c retain game::isHuman in the human census.
-// Remaining differences include byte-flag stack homes and later expansions.
-// Grouping the byte declarations and moving makeOrig initialization are flat.
-// DC 7741 and Mac ddca0..ddcc0 acquire the owned hero directly; retail also
-// has no getHero -1 guard here. The later recruit/garrison refreshes retain
-// getHero. All three rosters come from this->m_players, not g_currentPlayer;
-// Mac ddd90 and retail load town+0xc (garrison), not +0x10 (visiting).
-// DC temp locals and single-line movement assignments (7742/7750/7762)
-// agree with native move-before-max stores. DC 7747/7749 retains continue
-// and a fresh recruit field expression; naming an intermediate ID wrongly
-// lets VC6 discard the getter guard. DC 7798/7805 and Mac ddea8/dded4 use
-// g_game for the last-human query and save transfer. DC 7783/7785/7787
-// initializes makeOrig/control before toWho; Mac ddf98 updates visibility
-// before the watch player. Together these recover Windows 89.3660 -> 99.9789
-// with all 114 CFG blocks and 167 relocations agreeing; byte scratch homes
-// remain different. All game sibling CUR and available Mac scores are flat.
-// TransmitSaveGame takes bool. Keeping makeOrig Boolean preserves retail
-// caller promotion; a byte local inserts a normalization (96.9940 vs99.9563).
+// also does. DC game.cpp:7638 and Mac 0xdd92c retain game::isHuman in the
+// human census. DC 7741 and Mac ddca0..ddcc0 acquire the owned hero directly;
+// retail also has no getHero -1 guard here. The later recruit/garrison
+// refreshes retain getHero. All three rosters come from this->m_players, not
+// g_currentPlayer; Mac ddd90 and retail load town+0xc (garrison), not +0x10
+// (visiting). DC temp locals and single-line movement assignments
+// (7742/7750/7762) agree with native move-before-max stores. DC 7747/7749
+// retains continue and a fresh recruit field expression; naming an
+// intermediate ID lets VC6 discard the getter guard. DC 7798/7805 and Mac
+// ddea8/dded4 use g_game for the last-human query and save transfer. DC
+// 7783/7785/7787 initializes makeOrig/control before toWho; Mac ddf98 updates
+// visibility before the watch player. TransmitSaveGame takes bool; a byte
+// makeOrig local inserts a normalization.
 VA(0x004c6fe0, 0x947)
 DC_ADDRESS(0x0b1fd0, 0xb04)
 MAC_ADDRESS(0x0dd7dc, 0x89c)  // dc-name/order + retail caller/callee/body
@@ -7290,7 +7196,7 @@ int game::computeDailyGold(int whichPlayer, bool includeSilo)
 }
 
 // DC game.cpp:7964/7970 uses town-vector accesses directly, not a cached
-// pointer. Restoring those accesses preserves the retained retail body at 100%.
+// pointer.
 // The public's _N return and retail's direct AL load also require a bool
 // result local: unsigned char adds a normalization at the return. DC lowers
 // both source bool and unsigned char to T_UCHAR, so that record cannot decide.
@@ -7390,21 +7296,13 @@ void game::resetAllPlayerVisibility()
 // Its canonical GetTeam wrapper performs the one team lookup visible in
 // Windows retail at +0xa5; pre-mapping here made the candidate look it up twice.
 // Dreamcast lines 8124 and 8126 place the zero store before the decrement.
-// Mac retail retains that arm order; the zero-first condition also preserves
-// the exact Windows body.
-// Mac perDay is 1746/1764 bytes with 15/15 calls. Its remaining 18 bytes
-// encode only a 0xe0 target versus 0xd0 candidate frame and the consequent
-// scratch-slot displacements; DC's typed array/reference locals and town_id
-// have been restored without changing that frame.
+// Mac retail retains that arm order.
 VA(0x004c7fe0, 0x462)
 DC_ADDRESS(0x0b3858, 0x532)
 MAC_ADDRESS(0x0de818, 0x6e4)
 // DC game.cpp:8094..8254 records hero/array references and a long town_id.
 // is_human_ally takes the owner/player, then expands GetTeam and calls
-// IsHumanTeam. The previous team-taking duplicate lost that source boundary.
-// Restoring the canonical pair and GrowCoverOfDarkness's unsigned-byte result
-// recovers 100% without the inline-depth pin. Bool grow returned 63.0871%
-// unpinned; the byte result alone preserved the earlier 75.1291% caller.
+// IsHumanTeam.
 void game::perDay()
 {
     ++m_day;
@@ -7665,9 +7563,8 @@ void game::setRecruits()
 // DC 8462/8464/8466 records the ordinary z/y/x loops. Do not reproduce
 // optimizer induction or cast m_extraInfo through void* to call base helpers.
 // DC 8563 and retail's guard-free pointer walk take the weekly-visit hero
-// row directly, not through getHero. Without that getHero site, setRecruits'
-// nested clearRecruits gets (1874 - 112) / 15 = 117 against its cb 116 and
-// expands as retail, retaining its own getHero call.
+// row directly, not through getHero; that keeps setRecruits' nested
+// clearRecruits within budget, retaining its own getHero call.
 VA(0x004c8780, 0x7B7)
 DC_ADDRESS(0x0b41e0, 0x5d8)
 MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees; MAC_ABSTRACTION_FROM(tokens1:1041d282a786,21.8677): DC-evidenced recoveries since this checkpoint (57336c584 weekly-visit hero row, e01fd6b03 calendar domain, cell helpers in place of the ExtraInfoUnion casts, DC traits spellings); CW reallocates the loop.
@@ -7958,15 +7855,12 @@ void game::perMonth()
 // Keep the canonical iterator addition and fill helpers. By-value addition
 // and the symmetric const-reference comparison reproduce the native fill
 // loop, including its retained dereference and proxy assignment calls.
-// Six comparison interfaces produced six reproduced objects; the free
-// logical-OR comparison reaches 99.0237%, versus 85.9586% for the member.
-// No native declaration distinguishes free/member placement, and
-// Complete's range has no counterpart in the older DC body.
-// The older DC body counted its TotalInClass local in the level loop;
-// Complete asks the bitset instead and passes count() - 1 straight to
-// Random, as Mac 0xe0204..0xe0214 does (count result moved, then -1).
-// Retail copies the count to edx and decrements (100%); a named
-// totalInClass gives lea (99.02%), --totalInClass dec-then-copy (97.60%).
+// No native declaration distinguishes free/member placement of the
+// logical-OR comparison; retail takes the free form. The older DC body
+// counted its TotalInClass local in the level loop; Complete asks the bitset
+// instead and passes count() - 1 straight to Random, as Mac 0xe0204..0xe0214
+// does (count result moved, then -1). Retail copies the count to edx and
+// decrements; a named totalInClass gives lea.
 VA(0x004c92c0, 0x202)
 DC_ADDRESS(0x0b4b58, 0x12a)
 MAC_ADDRESS(0x0dfed4, 0x398)  // MAC_ABSTRACTION_FROM(tokens1:38ec85859b6c,28.1385): native iterator addition replaces the provisional fromOffset factory; by-value temporary copies shift CW stack and register allocation.
@@ -8137,11 +8031,8 @@ ESpellId game::getRandomSpell(int level)
 // NewMap expands this loop in retail, including Complete's enlarged roster
 // and separate last-Wisdom/last-magic-school tracking bytes.
 // Mac newMap calls the retained body at code0+0xe085c. Its four ordered calls
-// and indexed loop follow DC's ten source rows. CodeWarrior emits the same
-// 45-instruction shape from the function-scope index after call-stub collapse;
-// the current Mac declaration places the hero fields 0x20 bytes later.
-// Keeping the index at function scope also makes VC6 expand this ordinary
-// helper in newMap while retaining its nested calls, matching Windows retail.
+// and indexed loop follow DC's ten source rows. The function-scope index lets
+// VC6 expand this ordinary helper in newMap while retaining its nested calls.
 DC_ADDRESS(0x0b4fa0, 0xf4)
 MAC_ADDRESS(0x0e085c, 0xb4)
 void game::randomizeHeroPool()
@@ -8470,23 +8361,10 @@ void game::processRandomObjects()
 // falls into the caller's own `== -1` test with the index still live in
 // esi, and on loop exhaustion VC6 constant-folds that test against the
 // -1 return and jumps straight to the null pointer.
-// Residual (98.6076%, register scheduling): flow-distance is zero and only
-// eight register-visible slots differ inside the inlined coordinate compare.
-// Retail creates the CastleLoc scratch in EAX one instruction earlier; this
-// compiler rotates EAX/EDX around two independent loads.  why-reg's proposed
-// named startingHeroIds element is not a legal writable local transform, and
-// binding CastleLoc to a const reference regresses to 98.15% by perturbing the
-// following y compare.  The direct argument spelling is the measured wall.
-// The 2026-09-01 model pass likewise rejects both proposed names
-// (startingHeroIds[i] and setup.alignment[i]) at compile time, while the retail
-// structure remains 29/29 exact blocks; no legal B14 mutation remains.
 // DC line 9464 passes GetTownId directly to GetTown and records thisTown.
 // HeroID has the native THeroID domain; thisTown belongs to the town arm.
-// Mac 0xe1578..0xe1580 computes the bonus hero address in two stages:
-// the canonical getHero
-// expansion reproduces that boundary and closes Windows at 100%, with the
-// original less-than loop and all helpers preserved. Mac reaches 99.37%;
-// only its larger stack frame remains different. Do not invent frame padding.
+// Mac 0xe1578..0xe1580 computes the bonus hero address in two stages: the
+// canonical getHero expansion reproduces that boundary.
 // Mac 0xe1490 retains playerData::isHuman; Windows expands that source call.
 VA(0x004ca040, 0x1F1)
 DC_ADDRESS(0x0b5cdc, 0x2a2)
@@ -8801,9 +8679,8 @@ void game::checkHeroConsistency()
 
 // E:\gamedcs\game.cpp:9833
 // Complete's town-name lookup has a 16-pointer faction stride, matching
-// initializeTownNameText. The direct m_towns subscript and string assignment
-// give 99.98% (getTown plus assign(): 95.79%); the residual is the unclaimed
-// g_randomTownNames end-bound data label.
+// initializeTownNameText. Retail subscripts m_towns directly and assigns the
+// string (not getTown plus assign()).
 VA(0x004caa70, 0x39C)
 DC_ADDRESS(0x0b69f4, 0x290)
 MAC_ADDRESS(0x0e2024, 0x1bc)  // DC name/order + retail map/vector/string shape
@@ -9760,7 +9637,7 @@ int game::getBoatsBuilt()
 
 // Both retail bodies index the town list without the mutable getTown's -1
 // sentinel arm. A read-only game view selects the existing const overload;
-// Mac matches all 196 bytes, with both hasBuilding expansions preserved.
+// both hasBuilding calls expand.
 VA(0x004cce30, 0xB8)
 DC_ADDRESS(0x0b9a34, 0xf0)
 MAC_ADDRESS(0x0e42ec, 0xc4)
@@ -9927,14 +9804,9 @@ void game::setMapRumour()
 }
 
 // DC 11388 returns after the category chain; Mac 0xe4920/0xe4964/
-// 0xe49a8/0xe49e4 routes all four arms to one exit. Removing the prior
-// second-arm-only return recovers Windows 81.5183% -> 85.6147%, with no
-// sibling score changes. Eight roll-lifetime states give three reproduced
-// objects; three exit states give three. Canonical getPlayerName/getName
-// and getText paths stay intact (DC uses the older text operator[]).
-// The human-name logical zero test in getName above completes the first
-// nested name expansion and brings this body to 100%; other game scores
-// and all available Mac comparisons are unchanged.
+// 0xe49a8/0xe49e4 routes all four arms to one exit. Canonical
+// getPlayerName/getName and getText paths stay intact (DC uses the older text
+// operator[]).
 VA(0x004cd170, 0x59B)
 DC_ADDRESS(0x0ba040, 0xbc4)
 MAC_ADDRESS(0x0e483c, 0x4fc)
@@ -10276,13 +10148,10 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 // E:\gamedcs\game.cpp:11684
 // Member construction follows the shared class declaration order; SCampaign's
 // ordinary constructor remains out of line. Mac 0xe5c2c..0xe60d4 repeatedly
-// loads the scalar fill arguments from constant storage. std::fill_n recovers
-// those reference-based fills, including their byte/int argument types, and
-// raises Windows 91.3953% -> 99.2861% without flattening member constructors.
-// Both retail builds clear cartographerFlags before assigning cartographerMask
-// (Mac 0xe605c..0xe607c); that final ordering makes Windows byte-exact.
-// The former counted-loop markers over-inlined bitset<8>'s default construction.
-// No inline-depth control is needed with the recovered library operations.
+// loads the scalar fill arguments from constant storage: std::fill_n
+// reference-based fills, including their byte/int argument types. Both retail
+// builds clear cartographerFlags before assigning cartographerMask (Mac
+// 0xe605c..0xe607c).
 VA(0x004cdf20, 0x585)
 DC_ADDRESS(0x0bb62c, 0x6fc)
 MAC_ADDRESS(0x0e5784, 0x97c)  // anchor-global
@@ -10643,7 +10512,7 @@ VA_COMPGEN(0x004d2090, 0xCB, BITSET_XRAN, Bitset156)
 VA_COMPGEN(0x004d2160, 0x31, VECTOR_UFILL, TBlackMarket)
 
 // The black-market vector's retained uninitialized copy advances by its
-// proven 28-byte stride.  The emitted specialization matches all 59 bytes.
+// proven 28-byte stride.
 VA_COMPGEN(0x0054d920, 0x3B, VECTOR_UCOPY, TBlackMarket)
 
 VA_COMPGEN(0x004d21a0, 0x3E, VECTOR_UCOPY, town)
@@ -10848,14 +10717,13 @@ VA_COMPGEN(0x004d1d50, 0x2F9, TREE_NODE_INSERT, type_map_hero_info)
 
 VA_COMPGEN(0x004d27b0, 0xB3, TREE_CONST_ITERATOR_DEC, type_map_hero_info)
 
-// COMDAT pairing: std::copy<type_map_hero_identity>, agreement 0.987
-// (156 base vs 152 retail instructions).
+// COMDAT pairing: std::copy<type_map_hero_identity>.
 VA_COMPGEN(0x004d2e50, 0x18C, STD_COPY, type_map_hero_identity)
 
-// COMDAT pairing: std::copy_backward<town>, agreement 0.984.
+// COMDAT pairing: std::copy_backward<town>.
 VA_COMPGEN(0x004d32e0, 0x344, STD_COPY_BACKWARD, town)
 
-// COMDAT pairing: std::fill<town>, agreement 0.992.
+// COMDAT pairing: std::fill<town>.
 VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)
 
 // The former 0x4b61f0 mnemonic-only pairing was a different specialization:
@@ -10863,8 +10731,7 @@ VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)
 // the CImmEnclosure*/RECT tree at 0x4b7200, not this hero-info tree.
 VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
 
-// COMDAT pairing: bitset<129>::_Xran. This address arrived on lane 16 as
-// `bitset145` from a 0.978 similarity score; the bound compare refutes that.
+// COMDAT pairing: bitset<129>::_Xran, decided by the bound compare.
 // All three callers of 0x48edf0 guard with `cmp <reg>, 0x81` (129) - the two
 // customcampaign-segment callers 0x8ead0/0x8ece0 and rmg's claimed
 // bitset<129>::set at 0x14ded0 - while the four callers of 0x8d9a0 all guard
@@ -10899,8 +10766,8 @@ VA_COMPGEN(0x0045fce0, 0xD1, STD_CONSTRUCT, hero_vector)
 VA_COMPGEN(0x0045fdc0, 0x9C, STD_CONSTRUCT, type_artifact_vector)
 
 // COMDAT pairing: vector<vector<type_artifact>>::~vector and its ::_Destroy -
-// the artifact half of the campaign carry-over pools whose hero half this
-// lane claimed at 0x5f560/0x8c5b0. Arity matches both (`ret` for the nullary
+// the artifact half of the campaign carry-over pools whose hero half is
+// claimed at 0x5f560/0x8c5b0. Arity matches both (`ret` for the nullary
 // destructor, `ret 8` for _Destroy's two pointers) and 0x5f7b0 is reached
 // from campaignwindow, singleselectionwindow and three further segments.
 VA_COMPGEN(0x0045f7b0, 0x59, VECTOR_DTOR, type_artifact_vector)
@@ -10912,12 +10779,11 @@ VA_COMPGEN(0x0048caa0, 0x38, VECTOR_DESTROY, type_artifact_vector)
 // same 461 bytes because the outer assignment differs only in which inner
 // operator= it calls per element - which is also why /OPT:ICF could not fold
 // them - and 0x45f810 is the copy whose per-element callee is the
-// vector<type_artifact> assignment, mnemonic agreement 0.992.
+// vector<type_artifact> assignment.
 VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
 
-// COMDAT pairing: vector<type_university>::_Ucopy. Five instantiations of
-// _Ucopy resemble this address; type_university wins on agreement (0.907
-// against 0.810 for the next) and `ret 0xc` matches its three pointers.
+// COMDAT pairing: vector<type_university>::_Ucopy. Five _Ucopy
+// instantiations resemble this address; `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
 
 // Slot 5 of that zip: vector<hero>::~vector, the row ~SCampaign,
@@ -10939,8 +10805,7 @@ VA_COMPGEN(0x0045fec0, 0x3A, SCALAR_DELETING_DTOR, vector)
 VA_COMPGEN(0x0045ff00, 0x21, SCALAR_DELETING_DTOR, hero)
 
 // COMDAT pairing: _Tree<int, pair<const int, type_map_hero_info>>::_Erase,
-// agreement 0.952 at an exactly equal 173-byte extent; this object is the
-// only one that instantiates the tree.
+// this object is the only one that instantiates the tree.
 VA_COMPGEN(0x0045c8b0, 0xAD, TREE_ERASE, type_map_hero_info)
 
 VA_COMPGEN(0x0048d480, 0x28, BITSET_TIDY, Bitset145)
