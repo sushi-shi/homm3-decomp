@@ -549,7 +549,7 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
             break;
     }
     giNextAction = 9;
-    giNextActionGridIndex = wallTargets[walls[target]].m_targetHex;
+    giNextActionGridIndex = wallTargets[walls[target]].target_hex;
     giNextActionExtra = -1;
     return 1;
 }
@@ -1685,7 +1685,7 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
            target < (g_castleWallGateTargets + 5); target++) {
         if (wallLevel[*target])
             continue;
-        if (!hexIsBlocked(wallTargets[*target].getBlockedHex()))
+        if (!hexIsBlocked(wallTargets[*target].get_blocked_hex()))
             return 0;
     } }
     if (!hasRangedAdvantage(*estimate))
@@ -1709,9 +1709,9 @@ void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, t
         if ((cell[i].m_attributes & hexcell::fireWall) == 0)
             continue;
         TObstacle* obstacle = &getObstacle(cell[i].m_obstacleIndex);
-        long base = obstacle->m_damage;
+        long base = obstacle->damage;
         long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
-                                        Heroes[obstacle->m_owner],
+                                        Heroes[obstacle->owner],
                                         Heroes[estimate->getGroup()],
                                         currentArmy, 0);
         enemyAttacks[i] -= currentArmy->getLossCombatValue(

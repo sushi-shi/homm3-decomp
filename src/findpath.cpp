@@ -1045,7 +1045,7 @@ void searchArray::setMoat(const army* currentArmy)
         if (g_combatManager->cell[cell].m_attributes & hexcell::quicksand) {
             const combatManager::TObstacle* obstacle =
                 &g_combatManager->getObstacle(g_combatManager->cell[cell].m_obstacleIndex);
-            if (obstacle->isVisible(currentArmy->getOwningSide()))
+            if (obstacle->IsVisible(currentArmy->getOwningSide()))
                 m_isMoatSlowed[cell] = 1;
         }
     } }

@@ -437,10 +437,10 @@ void combatManager::combatMessage(int command)
     case COMBAT_COMMAND_BOMBARD_WALL: {
         int wall;
         for (wall = 0; wall < WALL_TARGET_COUNT; wall++) {
-            if (currentArmy->indexToAttack == wallTargets[wall].m_targetHex) {
+            if (currentArmy->indexToAttack == wallTargets[wall].target_hex) {
                 sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_ATTACK_FORMAT),
                         akWallTraits[combatTown->m_type]
-                                    [wallTargets[wall].m_wall].m_name);
+                                    [wallTargets[wall].wall].name);
                 break;
             }
         }
@@ -801,9 +801,9 @@ void combatManager::drawBackground()
     if (index >= 0) {
         const SElevationOverlay* overlay = &sElevationOverlay[index];
         Bitmap816* bitmap = ResourceManager::GetBitmap816(
-            overlay->m_fileName);
+            overlay->FileName);
         bitmap->Draw(0, 0, bitmap->GetWidth(), bitmap->GetHeight(), SaveScreenPostGrid,
-                     overlay->m_x, overlay->m_y, true);
+                     overlay->x, overlay->y, true);
         ResourceManager::Dispose(bitmap);
     }
 
@@ -814,7 +814,7 @@ void combatManager::drawBackground()
         if (bitmap) {
             bitmap->Draw(
                 0, 0, bitmap->GetWidth(), bitmap->GetHeight(), SaveScreenPostGrid,
-                traits->m_x, traits->m_y, true);
+                traits->x, traits->y, true);
         }
 
         traits = &akWallTraits[combatTown->m_type]
@@ -823,7 +823,7 @@ void combatManager::drawBackground()
         if (bitmap) {
             bitmap->Draw(
                 0, 0, bitmap->GetWidth(), bitmap->GetHeight(), SaveScreenPostGrid,
-                traits->m_x, traits->m_y, true);
+                traits->x, traits->y, true);
         }
     }
 
@@ -1065,11 +1065,11 @@ void combatManager::drawFrame(bool update,
             hexcell& tcell = cell[getHexIndex(column, row)];
             if (tcell.m_attributes & hexcell::obstacleOrigin) {
                 TObstacle& obstacle = getObstacle(tcell.m_obstacleIndex);
-                if (obstacle.m_shape->m_underlay) {
-                    if (obstacle.m_isVisible
-                            || (obstacle.m_owner == currControl
+                if (obstacle.info->underlay) {
+                    if (obstacle.is_visible
+                            || (obstacle.owner == currControl
                                 && IsLocalHuman[currControl])
-                            || (obstacle.m_owner != currControl
+                            || (obstacle.owner != currControl
                                 && !IsLocalHuman[currControl])
                             || DebugShowHiddenObjects) {
                         drawObstacle(tcell);
@@ -1083,7 +1083,7 @@ void combatManager::drawFrame(bool update,
         const TWallTraits& traits =
             akWallTraits[combatTown->m_type][eWallSectionBackWall];
         drawObject(wallImages[eWallSectionBackWall][0],
-                   traits.m_x, traits.m_y);
+                   traits.x, traits.y);
     }
 
     if (Heroes[0]) {
@@ -1113,7 +1113,7 @@ void combatManager::drawFrame(bool update,
             const TWallTraits& traits =
                 akWallTraits[combatTown->m_type][eWallSectionDoor];
             drawObject(wallImages[eWallSectionDoor][iDoorStatus],
-                       traits.m_x, traits.m_y);
+                       traits.x, traits.y);
         }
 
         int xStart;
@@ -1156,7 +1156,7 @@ void combatManager::drawFrame(bool update,
             const TWallTraits& traits =
                 akWallTraits[combatTown->m_type][eWallSectionDoorRope];
             drawObject(wallImages[eWallSectionDoorRope][1],
-                       traits.m_x, traits.m_y);
+                       traits.x, traits.y);
         }
         pollSound();
     }
@@ -1204,11 +1204,11 @@ void combatManager::drawObstacleAt(int hexIndex)
     hexcell& tcell = cell[hexIndex];
     if (tcell.m_attributes & hexcell::obstacleOrigin) {
         TObstacle& obstacle = getObstacle(tcell.m_obstacleIndex);
-        if (!obstacle.m_shape->m_underlay) {
-            if (obstacle.m_isVisible
-                    || (obstacle.m_owner == currControl
+        if (!obstacle.info->underlay) {
+            if (obstacle.is_visible
+                    || (obstacle.owner == currControl
                         && IsLocalHuman[currControl])
-                    || (obstacle.m_owner != currControl
+                    || (obstacle.owner != currControl
                         && !IsLocalHuman[currControl])
                     || DebugShowHiddenObjects)
                 drawObstacle(tcell);
@@ -1225,7 +1225,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
 
     for (int wall = eWallSectionDoor; wall < kNumWallSections; wall++) {
         const TWallTraits& traits = wtTable[wall];
-        int wallHex = traits.m_hex;
+        int wallHex = traits.hex;
         Bitmap816* image = wallImages[wall][wall_frame[wall]];
         if (wallHex == -1 || !image)
             continue;
@@ -1241,39 +1241,39 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     == wallHex + dx * COMBAT_GRID_ROW_STRIDE
                         - rowIsOdd(gridY(wallHex))
                     || (hexIndex == wallHex && !gridY(wallHex))) {
-                const int sw = cell[wallHex].m_hexUlx - traits.m_x;
+                const int sw = cell[wallHex].m_hexUlx - traits.x;
                 if (sw > 0)
                     drawWall(image, 0, 0, sw, image->GetHeight(),
-                             traits.m_x, traits.m_y);
+                             traits.x, traits.y);
             } else if (hexIndex
                     == wallHex - dx * COMBAT_GRID_ROW_STRIDE
                         - rowIsOdd(gridY(wallHex)) + 1) {
                 const hexcell& tcell = cell[wallHex];
-                const int sw = image->GetWidth() - tcell.m_hexUlx + traits.m_x
+                const int sw = image->GetWidth() - tcell.m_hexUlx + traits.x
                                - COMBAT_WALL_HEX_WIDTH;
                 if (sw > 0) {
-                    const int sx = tcell.m_hexUlx - traits.m_x
+                    const int sx = tcell.m_hexUlx - traits.x
                                    + COMBAT_WALL_HEX_WIDTH;
                     drawWall(image, sx, 0, sw, image->GetHeight(),
-                             tcell.m_hexUlx + COMBAT_WALL_HEX_WIDTH, traits.m_y);
+                             tcell.m_hexUlx + COMBAT_WALL_HEX_WIDTH, traits.y);
                 }
             }
 
             if (hexIndex == wallHex) {
                 int width = COMBAT_WALL_HEX_WIDTH;
                 const hexcell& tcell = cell[wallHex];
-                int sourceX = tcell.m_hexUlx - traits.m_x;
+                int sourceX = tcell.m_hexUlx - traits.x;
                 int destX = tcell.m_hexUlx;
                 if (sourceX < 0) {
                     width += sourceX;
-                    destX = traits.m_x;
+                    destX = traits.x;
                     sourceX = 0;
                 }
                 int remainingWidth = image->GetWidth() - sourceX;
                 if (width > remainingWidth)
                     width = remainingWidth;
                 drawWall(image, sourceX, 0, width, image->GetHeight(),
-                         destX, traits.m_y);
+                         destX, traits.y);
             }
         }
         else {
@@ -1291,38 +1291,38 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                 else
                     archer = &Archers[eArcherUpperTower];
 
-                if (archer->m_sprite) {
+                if (archer->Sprite) {
                     int drawX;
-                    if (!archer->m_facing) {
-                        drawX = archer->m_x - archer->m_sprite->GetWidth();
+                    if (!archer->Facing) {
+                        drawX = archer->X - archer->Sprite->GetWidth();
                         drawX += COMBAT_ARCHER_X_BIAS;
-                        if (akCreatureTypeTraits[archer->m_type].attributes
+                        if (akCreatureTypeTraits[archer->type].attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX += COMBAT_WALL_HEX_WIDTH;
-                        if (archer->m_type == CREATURE_MEDUSA)
+                        if (archer->type == CREATURE_MEDUSA)
                             drawX -= 5;
                     } else {
-                        drawX = archer->m_x - COMBAT_ARCHER_X_BIAS;
-                        if (akCreatureTypeTraits[archer->m_type].attributes
+                        drawX = archer->X - COMBAT_ARCHER_X_BIAS;
+                        if (akCreatureTypeTraits[archer->type].attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX -= COMBAT_WALL_HEX_WIDTH;
-                        if (archer->m_type == CREATURE_MEDUSA)
+                        if (archer->type == CREATURE_MEDUSA)
                             drawX += 5;
                     }
-                    int drawY = archer->m_y - COMBAT_ARCHER_Y_BIAS;
+                    int drawY = archer->Y - COMBAT_ARCHER_Y_BIAS;
 
                     drawArcher(
-                        archer->m_sprite, archer->m_sequence, archer->m_frame,
+                        archer->Sprite, archer->Sequence, archer->Frame,
                         drawX, drawY, 0,
-                        !archer->m_facing,
-                        archer->m_sequence == COMBAT_ARCHER_ACTIVE_SEQUENCE
+                        !archer->Facing,
+                        archer->Sequence == COMBAT_ARCHER_ACTIVE_SEQUENCE
                             && currArmyGroup == COMBAT_ARCHER_DEFENDING_SIDE
                             && currArmyIndex == archer->m_armySlot);
                 }
             }
 
             drawWall(image, 0, 0, image->GetWidth(), image->GetHeight(),
-                     traits.m_x, traits.m_y);
+                     traits.x, traits.y);
         }
     }
 }
@@ -1605,10 +1605,10 @@ MAC_ADDRESS(0x0a7724, 0x9c)
 int combatManager::drawObstacle(const hexcell& cell)
 {
     TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
-    int yOffset = 42 * (obstacle.m_shape->m_minRow - 1);
+    int yOffset = 42 * (obstacle.info->height - 1);
     return drawSpriteObject(
-        obstacle.m_sprite,
-        ObstacleAnimationFrame % obstacle.m_sprite->GetNumFrames(0),
+        obstacle.sprite,
+        ObstacleAnimationFrame % obstacle.sprite->GetNumFrames(0),
         cell.m_hexUlx, cell.m_hexUly - yOffset, 0);
 }
 
@@ -1684,9 +1684,9 @@ int combatManager::drawMoatOverlay(int index)
         return 0;
 
     SLimitData imageExtent(
-        traits.m_x, traits.m_y,
-        traits.m_x + image->GetWidth() - 1,
-        traits.m_y + image->GetHeight() - 1);
+        traits.x, traits.y,
+        traits.x + image->GetWidth() - 1,
+        traits.y + image->GetHeight() - 1);
     moatExtent.clip(imageExtent);
     if (moatExtent.isEmpty())
         return 0;
@@ -1699,18 +1699,18 @@ int combatManager::drawMoatOverlay(int index)
         return 0;
 
     int sourceX;
-    if (traits.m_x < moatExtent.m_minX)
-        sourceX = moatExtent.m_minX - traits.m_x;
+    if (traits.x < moatExtent.m_minX)
+        sourceX = moatExtent.m_minX - traits.x;
     else {
         sourceX = 0;
-        moatExtent.m_minX = traits.m_x;
+        moatExtent.m_minX = traits.x;
     }
     int sourceY;
-    if (traits.m_y < moatExtent.m_minY)
-        sourceY = moatExtent.m_minY - traits.m_y;
+    if (traits.y < moatExtent.m_minY)
+        sourceY = moatExtent.m_minY - traits.y;
     else {
         sourceY = 0;
-        moatExtent.m_minY = traits.m_y;
+        moatExtent.m_minY = traits.y;
     }
 
     image->Draw(sourceX, sourceY,
@@ -1755,43 +1755,43 @@ void combatManager::computeMaxExtent()
     if (Obstacles.size()) {
         for (TObstacle* obstacle = Obstacles.begin();
              obstacle != Obstacles.end(); obstacle++) {
-            CSprite* sprite = obstacle->m_sprite;
+            CSprite* sprite = obstacle->sprite;
             if (sprite && sprite->GetNumFrames(0) > 1) {
-                int yOffset = 42 * (obstacle->m_shape->m_minRow - 1);
+                int yOffset = 42 * (obstacle->info->height - 1);
                 computeExtent(
                     sprite, 0, ObstacleAnimationFrame % sprite->GetNumFrames(0),
-                    cell[obstacle->m_hex].m_hexUlx,
-                    cell[obstacle->m_hex].m_hexUly - yOffset,
+                    cell[obstacle->grid_index].m_hexUlx,
+                    cell[obstacle->grid_index].m_hexUly - yOffset,
                     0, 0, 1);
             }
         }
     }
 
     for (int archerIndex = 0; archerIndex < kNumArchers; archerIndex++) {
-        if (bArcherEffect[archerIndex] && Archers[archerIndex].m_sprite) {
+        if (bArcherEffect[archerIndex] && Archers[archerIndex].Sprite) {
             SaveBiggestExtent = 1;
             ComputeExtentOnly = 1;
             TArcher& archer = Archers[archerIndex];
             int drawX;
-            if (!archer.m_facing) {
-                drawX = archer.m_x - archer.m_sprite->GetWidth()
+            if (!archer.Facing) {
+                drawX = archer.X - archer.Sprite->GetWidth()
                          + COMBAT_ARCHER_X_BIAS;
-                if (akCreatureTypeTraits[archer.m_type].attributes
+                if (akCreatureTypeTraits[archer.type].attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX += COMBAT_WALL_HEX_WIDTH;
-                if (archer.m_type == CREATURE_MEDUSA)
+                if (archer.type == CREATURE_MEDUSA)
                     drawX -= 5;
             } else {
-                drawX = archer.m_x - COMBAT_ARCHER_X_BIAS;
-                if (akCreatureTypeTraits[archer.m_type].attributes
+                drawX = archer.X - COMBAT_ARCHER_X_BIAS;
+                if (akCreatureTypeTraits[archer.type].attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX -= COMBAT_WALL_HEX_WIDTH;
-                if (archer.m_type == CREATURE_MEDUSA)
+                if (archer.type == CREATURE_MEDUSA)
                     drawX += 5;
             }
-            drawArcher(archer.m_sprite, archer.m_sequence, archer.m_frame,
-                       drawX, archer.m_y - COMBAT_ARCHER_Y_BIAS, 0,
-                       !archer.m_facing, 0);
+            drawArcher(archer.Sprite, archer.Sequence, archer.Frame,
+                       drawX, archer.Y - COMBAT_ARCHER_Y_BIAS, 0,
+                       !archer.Facing, 0);
             ComputeExtentOnly = 0;
             SaveBiggestExtent = 0;
         }

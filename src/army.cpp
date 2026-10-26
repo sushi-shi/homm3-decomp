@@ -2139,7 +2139,7 @@ bool army::walkTo(int destIndex, bool restoreFacing)
             succeeded = 0;
             g_combatManager->getObstacle(
                 g_combatManager->cell[nextCell].m_obstacleIndex)
-                .m_isVisible = 1;
+                .is_visible = 1;
         }
         if (is(creatureDoubleWide)) {
             const int nextCell = getAdjacentCellIndex(m_gridIndex, direction)
@@ -2153,7 +2153,7 @@ bool army::walkTo(int destIndex, bool restoreFacing)
                 succeeded = 0;
                 g_combatManager->getObstacle(
                     g_combatManager->cell[nextCell].m_obstacleIndex)
-                    .m_isVisible = 1;
+                    .is_visible = 1;
             }
         }
         walk(g_searchArray->getStep(i), i == stop, initialWalk);
@@ -3999,8 +3999,8 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         return;
     }
 
-    const int destX = combatManager::wallTargets[wall].m_hitX;
-    const int destY = combatManager::wallTargets[wall].m_hitY;
+    const int destX = combatManager::wallTargets[wall].hit_x;
+    const int destY = combatManager::wallTargets[wall].hit_y;
 
     long startX;
     if (m_facing == 1)

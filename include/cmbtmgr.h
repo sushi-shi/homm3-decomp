@@ -257,22 +257,6 @@ enum ECombatMineType {
     COMBAT_MINE_TYPE_6 = 6
 };
 
-// The eighteen combat hero animations, indexed [townType][sex]: DC's
-// ?sCmbtHero@combatManager@@0QAY01$$CBUSCmbtHero@1@A is a [][2] table, and
-// the two-dimensional subscript is byte-identical in LoadIcons/CastSpell.
-// Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
-// stride. CastSpell reads all three trailing dwords as the cast origin
-// and animation length. DC independently types the row combatManager::SCmbtHero
-// {SpriteName, castX, castY, castFrame}; the retail table is 18 rows
-// where the Dreamcast's is 16.
-struct TCombatHeroSprite {
-public:
-    const char* m_defName;
-    int m_castX;
-    int m_castY;
-    int m_castFrame;
-};
-extern const TCombatHeroSprite g_combatHeroSprites[9][2];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -388,15 +372,18 @@ public:
     // PlaceObstacle, RemoveObstacle and DrawFrame: the catalogue masks are
     // at +0/+2, placement bounds at +4/+5, signed occupied-hex offsets at
     // +8, and the sprite name at +0x10.
+    // Dreamcast's record has one dword backgroundMask at +0;
+    // Complete reads two separate masks there, so those two keep project
+    // names.
     struct TObstacleInfo {
         unsigned short m_terrainMask;
         unsigned short m_specialTerrainMask;
-        unsigned char m_minRow;
-        unsigned char m_width;
-        unsigned char m_extraHexCount;
-        unsigned char m_underlay;
-        signed char m_extraHexOffsets[8];
-        const char* m_spriteName;
+        unsigned char height;
+        unsigned char width;
+        unsigned char numSquares;
+        unsigned char underlay;
+        signed char sOffsets[8];
+        const char* FileName;
     };
 
 private:
@@ -416,16 +403,16 @@ private:
     // declaration duplicated this type: opaque_04 was x/y; opaque_3e was
     // two alignment bytes followed by FileName. Keep one owning record.
     struct SElevationOverlay {
-        unsigned short m_terrainMask;
+        unsigned short terrainMask;
         // PC adds a second terrain mask in Dreamcast's alignment slot.
         // Retail PlaceLargeObstacle reads 0x0063bec2 + row*68.
         unsigned short m_specialTerrainMask;
-        int m_x;
-        int m_y;
+        int x;
+        int y;
         // Dreamcast type 0x4328 gives 25 entries (50 bytes); retail's
         // loop also stops at 25. +0x3e..+0x3f align the filename pointer.
-        short m_blockedSquares[25];
-        const char* m_fileName;
+        short blockedSquares[25];
+        const char* FileName;
     };
     static const SElevationOverlay sElevationOverlay[34];
 
@@ -433,15 +420,15 @@ public:
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
     // the intervening field identities and confirms the 36-byte extent.
     struct TWallTraits {
-        short m_x;
-        short m_y;
-        short m_hex;
+        short x;
+        short y;
+        short hex;
         // Dreamcast x/y/hex are shorts at 0/2/4, followed by filenames
         // at +8. These two bytes align the retail pointer array.
         short m_paddingBeforeFilenames;
-        const char* m_filenames[5];
-        const char* m_name;
-        short m_hitpoints;
+        const char* filenames[5];
+        const char* name;
+        short hitpoints;
         // Dreamcast hitpoints is a short at +0x20; the retail table
         // uses a 0x24-byte record stride. These two bytes align its extent.
         short m_tailPadding;
@@ -470,32 +457,32 @@ public:
     struct TObstacle {
         // RemoveObstacle calls vtable slot 1 on it with no arguments
         // and then clears the slot - CSprite's slot 1 is Dispose().
-        CSprite* m_sprite;                    // +0x0
-        const TObstacleInfo* m_shape;         // +0x4
-        unsigned char m_hex;                  // +0x8
+        CSprite* sprite;                      // +0x0
+        const TObstacleInfo* info;            // +0x4
+        unsigned char grid_index;             // +0x8
         // DC CodeView names these owner/is_visible. Retail independently
         // fixes both offsets: searchArray::set_moat (0x4b3290) marks an
         // obstacle's cell as moat-slowed when either the acting stack's
         // combatSide equals the signed byte at +9 or the byte at +0xa is
         // set; DrawFrame expands the same IsVisible predicate.
-        signed char m_owner;                  // +0x9
-        unsigned char m_isVisible;           // +0xa
+        signed char owner;                    // +0x9
+        unsigned char is_visible;             // +0xa
         // Byte +0xb is implicit padding before the int-wide damage field.
         // Original DC TObstacle record 0x1f16 names these damage,
         // duration and dispel_effect; the last is TSpellEffectID.
         // Retail mark_firewalls reads damage at +12, and spell/command
         // readers preserve the same three int-wide slots.
-        int m_damage;                        // +0xc
-        int m_duration;                      // +0x10
-        TSpellEffectID m_dispelEffect;        // +0x14
+        int damage;                          // +0xc
+        int duration;                        // +0x10
+        TSpellEffectID dispel_effect;         // +0x14
 
         // Dreamcast CodeView names this one-argument const member and fixes
         // its bool result; the retail DrawFrame expansion proves the two
         // participating bytes at +0x9/+0xa.
         DC_ADDRESS(0x0a1144, 0x16)
-        bool isVisible(int side) const
+        bool IsVisible(int side) const
         {
-            return side == m_owner || m_isVisible;
+            return side == owner || is_visible;
         }
     };
     // Dreamcast CodeView records this exact nested type and the public static
@@ -504,17 +491,17 @@ public:
     // table on the class also lets get_wall_strength retain its original
     // source-visible inline boundary instead of flattening it into callers.
     struct TWallTarget {
-        short m_targetHex;             // +0x0
-        short m_blockedRow;            // +0x2
-        short m_hitX;                  // +0x4
-        short m_hitY;                  // +0x6
-        TWallSection m_wall;            // +0x8
+        short target_hex;              // +0x0
+        short blocked_row;             // +0x2
+        short hit_x;                   // +0x4
+        short hit_y;                   // +0x6
+        TWallSection wall;             // +0x8
 
         DC_ADDRESS(0x027eac, 0x1c)
-        int getBlockedHex() const
+        int get_blocked_hex() const
         {
-            if (m_blockedRow != -1)
-                return g_castleWallColumns[m_blockedRow];
+            if (blocked_row != -1)
+                return g_castleWallColumns[blocked_row];
             return -1;
         }
     };
@@ -527,14 +514,14 @@ public:
     // both through four-byte resource handles, as in army: 0x462920 clears
     // +4/+8 and 0x462930 releases them in reverse order with EH cleanup.
     struct TArcher {
-        TCreatureType m_type;           // +0x0; original TArcher::type
-        TResourceHandle<CSprite> m_sprite;          // +0x4
-        TResourceHandle<CSprite> m_missile;    // +0x8
-        int m_x;                        // +0xc
-        int m_y;                        // +0x10
-        int m_facing;                 // +0x14
-        int m_sequence;                 // +0x18
-        int m_frame;                 // +0x1c
+        TCreatureType type;             // +0x0
+        TResourceHandle<CSprite> Sprite;  // +0x4
+        TResourceHandle<CSprite> Missile; // +0x8
+        int X;                          // +0xc
+        int Y;                          // +0x10
+        int Facing;                     // +0x14
+        int Sequence;                   // +0x18
+        int Frame;                      // +0x1c
         int m_armySlot;                 // +0x20
     };
     // Original nested TArcherID (DC 0x431f), in the same order used by
@@ -549,14 +536,21 @@ public:
     // LowerTowerX/Y, UpperTowerX/Y and MissileName. Complete retains its
     // flat 0x20-byte row and adds the ninth faction at 0x63cf88.
     struct TArcherTraits {
-        TCreatureType m_creatureType;
-        int m_mainBuildingX;
-        int m_mainBuildingY;
-        int m_lowerTowerX;
-        int m_lowerTowerY;
-        int m_upperTowerX;
-        int m_upperTowerY;
-        const char* m_missileName;
+        TCreatureType CreatureType;
+        int MainBuildingX;
+        int MainBuildingY;
+        int LowerTowerX;
+        int LowerTowerY;
+        int UpperTowerX;
+        int UpperTowerY;
+        const char* MissileName;
+    };
+    // The combat-hero sprite row; see g_combatHeroSprites.
+    struct SCmbtHero {
+        const char* SpriteName;
+        int castX;
+        int castY;
+        int castFrame;
     };
     // InitializeArchers' two simultaneously live resource locals. Keeping
     // them as one record preserves retail VC6's [-8]/[-4] stack ordering.
@@ -979,7 +973,7 @@ public:
     char m_paddingBeforeArchers[0x1];
 
 private:
-    // Original ArcherTraits public ?ArcherTraits@combatManager@@0QBUTArcherTraits@1@B
+    // Original ?ArcherTraits@combatManager@@0QBUTArcherTraits@1@B
     // independently proves this private static const table owner.
     static const TArcherTraits ArcherTraits[9];
     TArcher Archers[kNumArchers];  // +0x13d78; armySlot at +0x20
@@ -1715,7 +1709,7 @@ public:
     DC_ADDRESS(0x027edc, 0x20)
     long getWallStrength(TWallTargetId target) const
     {
-        return wallLevel[wallTargets[target].m_wall];
+        return wallLevel[wallTargets[target].wall];
     }
 
     // DC header inline (cmbtmgr.h:1478); the DC xref graph
@@ -1875,6 +1869,17 @@ private:
     unsigned char processMoveThenAttack(message& msg);
 };
 SIZE(combatManager::TWallTraits, 0x24);
+
+// The eighteen combat hero animations, indexed [townType][sex]: DC's
+// ?sCmbtHero@combatManager@@0QAY01$$CBUSCmbtHero@1@A is a [][2] table, and
+// the two-dimensional subscript is byte-identical in LoadIcons/CastSpell.
+// Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
+// stride. CastSpell reads all three trailing dwords as the cast origin
+// and animation length. The retail table is 18 rows where the Dreamcast's
+// is 16. It stays a file-scope table: one more combatManager member
+// declarator shifts the $E/$S numbering of every TU that includes this
+// header.
+extern const combatManager::SCmbtHero g_combatHeroSprites[9][2];
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
 extern combatManager* g_combatManager;

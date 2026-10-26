@@ -90,7 +90,7 @@ DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[TOWN_TYPE_COUNT][2] = {
+DATA(0x0063bd40) const combatManager::SCmbtHero g_combatHeroSprites[TOWN_TYPE_COUNT][2] = {
     { { "CH00.DEF", 92, 67, 5 }, { "CH01.DEF", 94, 54, 5 } },
     { { "CH02.DEF", 102, 62, 5 }, { "CH03.DEF", 102, 62, 5 } },
     { { "CH05.DEF", 100, 59, 5 }, { "CH04.DEF", 98, 52, 5 } },
@@ -636,8 +636,8 @@ unsigned char combatManager::loadWallTraitsTable()
         for (int wall = 0; wall < kNumWallSections; wall++) {
             const TSpreadsheetResource::TStringVector& values =
                 sheet->GetRow(row);
-            akWallTraits[townType][wall].m_name = values[0];
-            akWallTraits[townType][wall].m_hitpoints =
+            akWallTraits[townType][wall].name = values[0];
+            akWallTraits[townType][wall].hitpoints =
                 static_cast<short>(atoi(values[1]));
             row++;
         }
@@ -837,9 +837,9 @@ void combatManager::loadIcons()
                 if ((g_game->m_gameVersion >= 2
                         || combatTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
-                        && traits[wall].m_filenames[icon] != 0)
+                        && traits[wall].filenames[icon] != 0)
                     wallImages[wall][icon] = ResourceManager::GetBitmap816(
-                        traits[wall].m_filenames[icon]);
+                        traits[wall].filenames[icon]);
                 else
                     wallImages[wall][icon] = 0;
             }
@@ -855,7 +855,7 @@ void combatManager::loadIcons()
             cmbtHero[side] = ResourceManager::GetSprite(
                 g_combatHeroSprites[
                     akHeroClassTraits[Heroes[side]->m_heroClass].m_townType][
-                    akHeroTraits[Heroes[side]->m_id].m_sex].m_defName);
+                    akHeroTraits[Heroes[side]->m_id].m_sex].SpriteName);
             cmbtHeroFlag[side] = ResourceManager::GetSprite(side == 0
                 ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
                 : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));
@@ -882,8 +882,8 @@ void combatManager::freeIcons()
 
     for (TObstacle* obstacle = Obstacles.begin();
             obstacle != Obstacles.end(); ++obstacle) {
-        if (obstacle->m_sprite)
-            ResourceManager::Dispose(obstacle->m_sprite);
+        if (obstacle->sprite)
+            ResourceManager::Dispose(obstacle->sprite);
     }
     Obstacles.clear();
 
@@ -1986,7 +1986,7 @@ MAC_ADDRESS(0x071778, 0xac)
 TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
 {
     for (int i = 0; i < WALL_TARGET_COUNT; i++) {
-        if (combatManager::wallTargets[i].m_targetHex == gridIndex)
+        if (combatManager::wallTargets[i].target_hex == gridIndex)
             return TWallTargetId(i);
     }
     return TWallTargetId(-1);
@@ -2011,7 +2011,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
         case WALL_TARGET_2:
         case WALL_TARGET_4:
         case WALL_TARGET_5: {
-            int blockedHex = wallTargets[targetWall].getBlockedHex();
+            int blockedHex = wallTargets[targetWall].get_blocked_hex();
             cell[blockedHex].m_attributes &= ~hexcell::blocked;
             break;
         }
@@ -2042,7 +2042,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
         }
     }
 
-    int wallId = wallTargets[targetWall].m_wall;
+    int wallId = wallTargets[targetWall].wall;
     wallLevel[wallId] = strength;
     if (strength == 0)
         wall_frame[wallId] = 0;
@@ -2104,7 +2104,7 @@ void combatManager::keepAttack(int towerPos)
         break;
     }
     TArcher* archer = &Archers[archerIndex];
-    const SMonFrameInfo* info = &g_monFrameInfo[archer->m_type];
+    const SMonFrameInfo* info = &g_monFrameInfo[archer->type];
     army* target = &Armies[0][towerPos];
 
     SAMPLE2 sample;
@@ -2117,39 +2117,39 @@ void combatManager::keepAttack(int towerPos)
         int destX = target->midX();
         const int destY = target->midY();
         int facing;
-        if (destX < archer->m_x)
+        if (destX < archer->X)
             facing = 0;
         else
             facing = 1;
-        archer->m_facing = facing;
+        archer->Facing = facing;
         int missileFrame;
-        getMissileStartingPosition(archer->m_type, archer->m_x,
-                                   archer->m_y, archer->m_facing, destX,
-                                   destY, archer->m_missile,
+        getMissileStartingPosition(archer->type, archer->X,
+                                   archer->Y, archer->Facing, destX,
+                                   destY, archer->Missile,
                                    &startX, &startY, &armyDir,
                                    &missileFrame);
         sprintf(g_text,
                 DATA_COMPGEN(0x0066ffa4, towerShotSampleFormat,
                              "%sshot.82m"),
-                akCreatureTypeTraits[archer->m_type].cSamplePrefix);
+                akCreatureTypeTraits[archer->type].cSamplePrefix);
         sample = loadPlaySample(g_text);
 
         const int frames = info->m_attackFrames > 0
             ? info->m_attackFrames
-            : archer->m_sprite->GetNumFrames(armyDir);
-        archer->m_sequence = armyDir;
+            : archer->Sprite->GetNumFrames(armyDir);
+        archer->Sequence = armyDir;
         delay = info->m_attackStartCycleTime / frames;
 
         resetLimitCreature();
         bArcherEffect[archerIndex] = 1;
-        for (archer->m_frame = 0; archer->m_frame < frames;
-                archer->m_frame++)
+        for (archer->Frame = 0; archer->Frame < frames;
+                archer->Frame++)
             drawFrame(1, 1, 0, delay, 1, 1);
-        if (archer->m_frame > 0)
-            archer->m_frame--;
+        if (archer->Frame > 0)
+            archer->Frame--;
 
         shootMissile(startX, startY, destX, destY, info->m_arrowAngle,
-                     archer->m_missile);
+                     archer->Missile);
     }
 
     // The accumulator is a DOWN-counted loop over a copy of numTroops:
@@ -2179,15 +2179,15 @@ void combatManager::keepAttack(int towerPos)
     powEffect(eSpellEffectNone, 1);
 
     if (!isQuickCombat()) {
-        while (archer->m_frame
-                < archer->m_sprite->GetNumFrames(armyDir) - 1) {
-            archer->m_frame++;
+        while (archer->Frame
+                < archer->Sprite->GetNumFrames(armyDir) - 1) {
+            archer->Frame++;
             drawFrame(1, 1, 0, delay, 1, 1);
         }
     }
-    archer->m_facing = 0;
-    archer->m_sequence = cs_wait;
-    archer->m_frame = 0;
+    archer->Facing = 0;
+    archer->Sequence = cs_wait;
+    archer->Frame = 0;
     drawFrame(1, 0, 0, 0, 1, 0);
 
     if (!isQuickCombat())
@@ -2272,16 +2272,16 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             return 0;
         {
             int row = gridY(hex);
-            if (shape->m_minRow > row)
+            if (shape->height > row)
                 continue;
-            if (gridX(hex) == 0 || shape->m_width + gridX(hex) > 15)
+            if (gridX(hex) == 0 || shape->width + gridX(hex) > 15)
                 continue;
             if (cell[hex].m_attributes & hexcell::obstacleMask)
                 continue;
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
-            for (int i = 0; i < shape->m_extraHexCount; i++) {
-                int cellIndex = shape->m_extraHexOffsets[i] + hex;
+            for (int i = 0; i < shape->numSquares; i++) {
+                int cellIndex = shape->sOffsets[i] + hex;
                 if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
                     cellIndex--;
                 int cellColumn = gridX(cellIndex);
@@ -2299,19 +2299,19 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 int wallColumn = g_castleWallColumns[row];
                 if (wallColumn == COMBAT_HEX_GATE)
                     wallColumn = 0x5d;
-                if (shape->m_width + hex >= wallColumn - 2)
+                if (shape->width + hex >= wallColumn - 2)
                     continue;
             }
 
             TObstacle obstacle;
-            obstacle.m_sprite = ResourceManager::GetSprite(shape->m_spriteName);
-            obstacle.m_shape = shape;
-            obstacle.m_hex = static_cast<unsigned char>(hex);
-            obstacle.m_owner = -1;
-            obstacle.m_isVisible = 1;
-            obstacle.m_damage = 0;
-            obstacle.m_duration = 0;
-            obstacle.m_dispelEffect = eSpellEffectNone;
+            obstacle.sprite = ResourceManager::GetSprite(shape->FileName);
+            obstacle.info = shape;
+            obstacle.grid_index = static_cast<unsigned char>(hex);
+            obstacle.owner = -1;
+            obstacle.is_visible = 1;
+            obstacle.damage = 0;
+            obstacle.duration = 0;
+            obstacle.dispel_effect = eSpellEffectNone;
             Obstacles.push_back(obstacle);
             int obstacleSlot = Obstacles.size() - 1;
             placeObstacle(obstacle, obstacleSlot, hex, hexcell::blocked);
@@ -2358,7 +2358,7 @@ void combatManager::setupAndLoadObstacles()
     if (fortificationLevel > eFortificationNone) {
         for (int wall = 0; wall < kNumWallSections; wall++)
             wallLevel[wall] =
-                akWallTraits[combatTown->m_type][wall].m_hitpoints;
+                akWallTraits[combatTown->m_type][wall].hitpoints;
         wallLevel[17] = 1;
         wallLevel[16] = 1;
         wallLevel[15] = 1;
@@ -2410,15 +2410,15 @@ void combatManager::setupAndLoadObstacles()
                 }
 
                 TObstacle newLandmine;
-                newLandmine.m_sprite =
-                    ResourceManager::GetSprite(LandMineInfo[0].m_spriteName);
-                newLandmine.m_shape = &LandMineInfo[0];
-                newLandmine.m_hex = static_cast<unsigned char>(hex);
-                newLandmine.m_owner = 1;
-                newLandmine.m_isVisible = 0;
-                newLandmine.m_damage = damage;
-                newLandmine.m_duration = 0;
-                newLandmine.m_dispelEffect = eSpellEffectDispelLandMine;
+                newLandmine.sprite =
+                    ResourceManager::GetSprite(LandMineInfo[0].FileName);
+                newLandmine.info = &LandMineInfo[0];
+                newLandmine.grid_index = static_cast<unsigned char>(hex);
+                newLandmine.owner = 1;
+                newLandmine.is_visible = 0;
+                newLandmine.damage = damage;
+                newLandmine.duration = 0;
+                newLandmine.dispel_effect = eSpellEffectDispelLandMine;
                 Obstacles.push_back(newLandmine);
                 placeObstacle(newLandmine, Obstacles.size() - 1, hex,
                               hexcell::landMine);
@@ -2479,7 +2479,7 @@ void combatManager::setupAndLoadObstacles()
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
-            placed += ObstacleInfo[obstacleId].m_extraHexCount;
+            placed += ObstacleInfo[obstacleId].numSquares;
     }
 }
 
@@ -2495,12 +2495,12 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
         int obstacleId = picker.pick();
         if (obstacleId < 0)
             return 0;
-        if ((terrainMask & sElevationOverlay[obstacleId].m_terrainMask)
+        if ((terrainMask & sElevationOverlay[obstacleId].terrainMask)
                 || (magicTerrainMask
                     & sElevationOverlay[obstacleId].m_specialTerrainMask)) {
             int count = 0;
             int i = 0;
-            const short* hex = sElevationOverlay[obstacleId].m_blockedSquares;
+            const short* hex = sElevationOverlay[obstacleId].blockedSquares;
             for (; i < 25 && *hex != -1; ++i, ++hex) {
                 cell[*hex].m_attributes |= hexcell::blocked;
                 ++count;
@@ -2516,10 +2516,10 @@ DC_ADDRESS(0x0609d0, 0xa0)
 MAC_ADDRESS(0x072ca0, 0xb8)
 void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int id, int hex, unsigned attributes)
 {
-    const TObstacleInfo* const info = obstacle.m_shape;
+    const TObstacleInfo* const info = obstacle.info;
     bool oddRow = rowIsOdd(gridY(hex));
-    for (int i = 0; i < info->m_extraHexCount; i++) {
-        int cellIndex = info->m_extraHexOffsets[i] + hex;
+    for (int i = 0; i < info->numSquares; i++) {
+        int cellIndex = info->sOffsets[i] + hex;
         if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& tcell = cell[cellIndex];
@@ -2568,22 +2568,22 @@ void combatManager::removeObstacle(int index)
                >= static_cast<unsigned>(Obstacles.size()))
         return;
     TObstacle* obstacle = &getObstacle(index);
-    const TObstacleInfo* shape = obstacle->m_shape;
+    const TObstacleInfo* shape = obstacle->info;
     // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
-    unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
-    for (int i = 0; i < shape->m_extraHexCount; i++) {
-        int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
+    unsigned char oddRow = rowIsOdd(gridY(obstacle->grid_index));
+    for (int i = 0; i < shape->numSquares; i++) {
+        int cellIndex = shape->sOffsets[i] + obstacle->grid_index;
         if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& tcell = cell[cellIndex];
         tcell.m_attributes &= ~hexcell::obstacleMask;
         tcell.m_obstacleIndex = -1;
     }
-    hexcell& anchor = cell[obstacle->m_hex];
+    hexcell& anchor = cell[obstacle->grid_index];
     anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
-    ResourceManager::Dispose(obstacle->m_sprite);
-    obstacle->m_sprite = 0;
+    ResourceManager::Dispose(obstacle->sprite);
+    obstacle->sprite = 0;
 }
 
 VA(0x00466c50, 0x1A1)
@@ -2599,43 +2599,43 @@ void combatManager::initializeArchers()
     const TArcherTraits& info = ArcherTraits[combatTown->m_type];
     TArcherLoadState locals;
     locals.m_spriteName =
-        akCreatureTypeTraits[info.m_creatureType].m_sprite_name;
+        akCreatureTypeTraits[info.CreatureType].m_sprite_name;
 
-    archer->m_type = info.m_creatureType;
+    archer->type = info.CreatureType;
     locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
-    archer->m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::GetSprite(info.m_missileName);
-    archer->m_missile = locals.m_sprite;
-    archer->m_x = info.m_mainBuildingX;
-    archer->m_y = info.m_mainBuildingY;
-    archer->m_facing = 0;
-    archer->m_sequence = 2;
-    archer->m_frame = 0;
+    archer->Sprite = locals.m_sprite;
+    locals.m_sprite = ResourceManager::GetSprite(info.MissileName);
+    archer->Missile = locals.m_sprite;
+    archer->X = info.MainBuildingX;
+    archer->Y = info.MainBuildingY;
+    archer->Facing = 0;
+    archer->Sequence = 2;
+    archer->Frame = 0;
 
     if (fortificationLevel != eFortificationCastle)
         return;
 
-    Archers[eArcherLowerTower].m_type = info.m_creatureType;
+    Archers[eArcherLowerTower].type = info.CreatureType;
     locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
-    Archers[eArcherLowerTower].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::GetSprite(info.m_missileName);
-    Archers[eArcherLowerTower].m_missile = locals.m_sprite;
-    Archers[eArcherLowerTower].m_x = info.m_lowerTowerX;
-    Archers[eArcherLowerTower].m_y = info.m_lowerTowerY;
-    Archers[eArcherLowerTower].m_facing = 0;
-    Archers[eArcherLowerTower].m_sequence = 2;
-    Archers[eArcherLowerTower].m_frame = 0;
+    Archers[eArcherLowerTower].Sprite = locals.m_sprite;
+    locals.m_sprite = ResourceManager::GetSprite(info.MissileName);
+    Archers[eArcherLowerTower].Missile = locals.m_sprite;
+    Archers[eArcherLowerTower].X = info.LowerTowerX;
+    Archers[eArcherLowerTower].Y = info.LowerTowerY;
+    Archers[eArcherLowerTower].Facing = 0;
+    Archers[eArcherLowerTower].Sequence = 2;
+    Archers[eArcherLowerTower].Frame = 0;
 
-    Archers[eArcherUpperTower].m_type = info.m_creatureType;
+    Archers[eArcherUpperTower].type = info.CreatureType;
     locals.m_sprite = ResourceManager::GetSprite(locals.m_spriteName);
-    Archers[eArcherUpperTower].m_sprite = locals.m_sprite;
-    locals.m_sprite = ResourceManager::GetSprite(info.m_missileName);
-    Archers[eArcherUpperTower].m_missile = locals.m_sprite;
-    Archers[eArcherUpperTower].m_x = info.m_upperTowerX;
-    Archers[eArcherUpperTower].m_y = info.m_upperTowerY;
-    Archers[eArcherUpperTower].m_facing = 0;
-    Archers[eArcherUpperTower].m_sequence = 2;
-    Archers[eArcherUpperTower].m_frame = 0;
+    Archers[eArcherUpperTower].Sprite = locals.m_sprite;
+    locals.m_sprite = ResourceManager::GetSprite(info.MissileName);
+    Archers[eArcherUpperTower].Missile = locals.m_sprite;
+    Archers[eArcherUpperTower].X = info.UpperTowerX;
+    Archers[eArcherUpperTower].Y = info.UpperTowerY;
+    Archers[eArcherUpperTower].Facing = 0;
+    Archers[eArcherUpperTower].Sequence = 2;
+    Archers[eArcherUpperTower].Frame = 0;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3299

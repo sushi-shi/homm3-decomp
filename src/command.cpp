@@ -185,7 +185,7 @@ bool combatManager::automateCatapult()
 
 issueCatapultOrder:
     giNextAction = 9;
-    giNextActionGridIndex = wallTargets[target].m_targetHex;
+    giNextActionGridIndex = wallTargets[target].target_hex;
     giNextActionExtra = -1;
     return 1;
 }
@@ -1066,8 +1066,8 @@ int combatManager::processCombatMsg(message& msg)
                             getObstacle(cell[gridIndex].m_obstacleIndex);
                         sprintf(g_text,
                                 "Obstacle name: %s, owner: %d, visible:%s",
-                                obstacle.m_shape->m_spriteName, obstacle.m_owner,
-                                obstacle.m_isVisible ? "true" : "false");
+                                obstacle.info->FileName, obstacle.owner,
+                                obstacle.is_visible ? "true" : "false");
                         mainWindow->combatMessage(g_text, 0, 0);
                         lastCellIndex = gridIndex;
                         return MESSAGE_DISPATCH_CONSUME;
@@ -1243,12 +1243,12 @@ void combatManager::resetRound()
 
     for (TObstacle* obstacle = Obstacles.begin();
             obstacle != Obstacles.end(); ++obstacle) {
-        if (obstacle->m_duration > 0) {
-            obstacle->m_duration--;
-            if (obstacle->m_duration == 0) {
+        if (obstacle->duration > 0) {
+            obstacle->duration--;
+            if (obstacle->duration == 0) {
                 removeObstacle(obstacle - Obstacles.begin());
-                if (obstacle->m_dispelEffect != -1)
-                    spellEffect(obstacle->m_dispelEffect, obstacle->m_hex, 100, 0);
+                if (obstacle->dispel_effect != -1)
+                    spellEffect(obstacle->dispel_effect, obstacle->grid_index, 100, 0);
             }
         }
     }
@@ -1542,7 +1542,7 @@ int combatManager::getCommand(int newIndex)
         // own counter is a plain dword in ecx.
         for (TWallTargetId wall = WALL_TARGET_0; wall < WALL_TARGET_COUNT;
                 wall = TWallTargetId(wall + 1)) {
-            if (newIndex == wallTargets[wall].m_targetHex) {
+            if (newIndex == wallTargets[wall].target_hex) {
                 if (validWallTarget(wall)) {
                     currentArmy->indexToAttack = newIndex;
                     currentArmy->groupToAttack = -1;
@@ -1567,7 +1567,7 @@ int combatManager::getCommand(int newIndex)
                                             : COMBAT_COMMAND_WALK;
     }
 
-    if (newIndex == wallTargets[WALL_TARGET_6].m_targetHex
+    if (newIndex == wallTargets[WALL_TARGET_6].target_hex
             && fortificationLevel == eFortificationCastle)
         return COMBAT_COMMAND_VIEW_TOWERS;
     return COMBAT_COMMAND_NONE;
@@ -1606,7 +1606,7 @@ int combatManager::rightClick(int newIndex)
         return 0;
     }
 
-    if (newIndex == wallTargets[7].m_targetHex) {
+    if (newIndex == wallTargets[7].target_hex) {
         viewCastleBallista(1);
         return 0;
     }
@@ -1619,8 +1619,8 @@ int combatManager::rightClick(int newIndex)
         return 0;
     }
     if (fortificationLevel == eFortificationCastle
-        && (newIndex == wallTargets[0].m_targetHex
-            || newIndex == wallTargets[6].m_targetHex))
+        && (newIndex == wallTargets[0].target_hex
+            || newIndex == wallTargets[6].target_hex))
         viewCastleBallista(1);
     return 0;
 }
@@ -2901,12 +2901,12 @@ std::string combatManager::getTowerString(TWallSection wall, long archers,
     if (wallLevel[wall] <= 0) {
         return formatString(
             g_generalText->GetText(GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT),
-            akWallTraits[combatTown->m_type][wall].m_name);
+            akWallTraits[combatTown->m_type][wall].name);
     }
 
     return formatString(
         g_generalText->GetText(GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT),
-        akWallTraits[combatTown->m_type][wall].m_name,
+        akWallTraits[combatTown->m_type][wall].name,
         skill, archers * 2, archers * 3);
 }
 

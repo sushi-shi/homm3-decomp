@@ -581,19 +581,19 @@ bool combatManager::checkLandmine(long hex, army* currentArmy,
 
     TObstacle* obstacle = &getObstacle(cell[hex].m_obstacleIndex);
 
-    if (obstacle->isVisible(currentArmy->getOwningSide()))
+    if (obstacle->IsVisible(currentArmy->getOwningSide()))
         return 0;
 
-    if (spellCastWorkChance(SPELL_LAND_MINE, obstacle->m_owner, currentArmy,
+    if (spellCastWorkChance(SPELL_LAND_MINE, obstacle->owner, currentArmy,
                             0, 1, 0) <= 0.0f)
         return 0;
 
     if (isWalking)
         currentArmy->stopSample(army::TSampleID(0));
 
-    long base = obstacle->m_damage;
+    long base = obstacle->damage;
     long damage = modifySpellDamage(base, SPELL_LAND_MINE,
-                                    Heroes[obstacle->m_owner],
+                                    Heroes[obstacle->owner],
                                     currentArmy->getController(),
                                     currentArmy, 1);
     int deaths = currentArmy->damage(damage);
@@ -634,16 +634,16 @@ bool combatManager::checkFireWall(long hex, army* currentArmy,
 
     TObstacle* obstacle = &getObstacle(cell[hex].m_obstacleIndex);
 
-    if (spellCastWorkChance(SPELL_FIRE_WALL, obstacle->m_owner, currentArmy,
+    if (spellCastWorkChance(SPELL_FIRE_WALL, obstacle->owner, currentArmy,
                             0, 1, 0) <= 0.0f)
         return 0;
 
     if (isWalking)
         currentArmy->stopSample(army::TSampleID(0));
 
-    long base = obstacle->m_damage;
+    long base = obstacle->damage;
     long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
-                                    Heroes[obstacle->m_owner],
+                                    Heroes[obstacle->owner],
                                     currentArmy->getController(),
                                     currentArmy, 1);
     int deaths = currentArmy->damage(damage);
@@ -762,18 +762,18 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         if (currControl == 0)
             castX = g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
-                akHeroTraits[castingHero->m_id].m_sex].m_castX - 43;
+                akHeroTraits[castingHero->m_id].m_sex].castX - 43;
         else
             castX = cmbtHero[1]->GetWidth()
                 - g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
-                akHeroTraits[castingHero->m_id].m_sex].m_castX + 693;
+                akHeroTraits[castingHero->m_id].m_sex].castX + 693;
         castY = g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
-                akHeroTraits[castingHero->m_id].m_sex].m_castY - 19;
+                akHeroTraits[castingHero->m_id].m_sex].castY - 19;
 
         cmbtHeroFrameType[currControl] = 4;
         for (int frame = 0;
              frame < g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
-                akHeroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
+                akHeroTraits[castingHero->m_id].m_sex].castFrame; frame++) {
             cmbtHeroFrameIndex[currControl] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
         }
@@ -850,7 +850,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             spellEffect(traits->m_effect, hex, 100, 1);
 
             TObstacle newQuicksand = {
-                ResourceManager::GetSprite(QuicksandInfo[0].m_spriteName),
+                ResourceManager::GetSprite(QuicksandInfo[0].FileName),
                 &QuicksandInfo[0],
                 static_cast<unsigned char>(hex),
                 static_cast<signed char>(currControl),
@@ -905,7 +905,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             spellEffect(traits->m_effect, hex, 100, 1);
 
             TObstacle newLandmine = {
-                ResourceManager::GetSprite(LandMineInfo[0].m_spriteName),
+                ResourceManager::GetSprite(LandMineInfo[0].FileName),
                 &LandMineInfo[0],
                 static_cast<unsigned char>(hex),
                 static_cast<signed char>(currControl),
@@ -939,7 +939,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             shape = &WallObstacleInfo[1];
 
         TObstacle newWall = {
-            ResourceManager::GetSprite(shape->m_spriteName),
+            ResourceManager::GetSprite(shape->FileName),
             shape,
             static_cast<unsigned char>(targetIndex),
             static_cast<signed char>(currControl),
@@ -964,7 +964,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             spellEffect(traits->m_effect, targetIndex, 100, 1);
 
             TObstacle newWall = {
-                ResourceManager::GetSprite(WallObstacleInfo[4].m_spriteName),
+                ResourceManager::GetSprite(WallObstacleInfo[4].FileName),
                 &WallObstacleInfo[4],
                 static_cast<unsigned char>(
                     getSpellWallHex(targetIndex, i, currControl)),
@@ -978,7 +978,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             int obstacleSlot = Obstacles.size() - 1;
             // Placement rereads the stored byte after push_back:
             // retail +0xb0a, Mac 0x191228, DC 0x1502e0.
-            placeObstacle(newWall, obstacleSlot, newWall.m_hex, hexcell::fireWall);
+            placeObstacle(newWall, obstacleSlot, newWall.grid_index, hexcell::fireWall);
             drawFrame(1, 0, 0, 0, 1, 0);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
@@ -1371,11 +1371,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 
             for (TObstacle* obstacle = Obstacles.begin();
                  obstacle != Obstacles.end(); ++obstacle) {
-                if (obstacle->m_sprite
-                    && (cell[obstacle->m_hex].m_attributes & hexcell::magicObstacleMask)) {
+                if (obstacle->sprite
+                    && (cell[obstacle->grid_index].m_attributes & hexcell::magicObstacleMask)) {
                     removeObstacle(obstacle - Obstacles.begin());
-                    if (obstacle->m_dispelEffect != -1)
-                        spellEffect(obstacle->m_dispelEffect, obstacle->m_hex,
+                    if (obstacle->dispel_effect != -1)
+                        spellEffect(obstacle->dispel_effect, obstacle->grid_index,
                                     100, 0);
                 }
             }
@@ -1517,7 +1517,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // index and the obstacle's optional replacement effect.
     case SPELL_REMOVE_OBSTACLE: {
         int obstacleIndex = cell[targetIndex].m_obstacleIndex;
-        int replacementEffect = getObstacle(obstacleIndex).m_dispelEffect;
+        int replacementEffect = getObstacle(obstacleIndex).dispel_effect;
         spellEffect(traits->m_effect, targetIndex, 100, 0);
         if (replacementEffect == -1) {
             SaveBiggestExtent = 1;
@@ -1645,7 +1645,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     if (!isMonsterSpell || isMonsterSpell == SPELL_CASTER_ARTIFACT) {
         int nframes = cmbtHero[currControl]->GetNumFrames(4);
         for (int frame = g_combatHeroSprites[akHeroClassTraits[castingHero->m_heroClass].m_townType][
-                akHeroTraits[castingHero->m_id].m_sex].m_castFrame;
+                akHeroTraits[castingHero->m_id].m_sex].castFrame;
              frame < nframes; ++frame) {
             cmbtHeroFrameIndex[currControl] = frame;
             drawFrame(1, 0, 0, 100, 1, 1);
@@ -2472,9 +2472,9 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
         const TObstacleInfo* shape = mastery >= eMasteryAdvanced
             ? &WallObstacleInfo[1] : &WallObstacleInfo[0];
         const unsigned char baseRowIsOdd = rowIsOdd(gridY(targetIndex));
-        long wallCells = shape->m_extraHexCount;
+        long wallCells = shape->numSquares;
         for (long i = 0; i < wallCells; i++) {
-            long hex = targetIndex + shape->m_extraHexOffsets[i];
+            long hex = targetIndex + shape->sOffsets[i];
             if (baseRowIsOdd && !rowIsOdd(gridY(hex)))
                 hex--;
             const hexcell* tcell = &cell[hex];
@@ -4738,8 +4738,8 @@ void combatManager::earthquake(int level)
             for (int i = 0; i < WALL_TARGET_COUNT; i++) {
                 if (counts[i] == 0)
                     continue;
-                long x = wallTargets[i].m_hitX;
-                long y = wallTargets[i].m_hitY;
+                long x = wallTargets[i].hit_x;
+                long y = wallTargets[i].hit_y;
                 Extent = SLimitData(
                     x - blast->GetWidth() / 2,
                     y - blast->GetHeight() / 2,
