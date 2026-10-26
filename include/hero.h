@@ -148,8 +148,8 @@ public:
     bool load(void* infile);
 
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
-    // folds it to the same three field tests; keep the call in source so
-    // an exact lowering cannot erase the attested source shape again.
+    // folds it to the same three field tests; keep the attested call in
+    // source.
     DC_ADDRESS(0x0d58cc, 0x2a)
     // Original public: obscures_town@type_obscuring_object@@QBA_NXZ.
     bool obscuresTown() const
@@ -186,8 +186,8 @@ SIZE(type_obscuring_object, 0x18);
 // one-byte fields there is no packing ambiguity to resolve; the four
 // neighbours it names (allocated 24, id 25, type 26, playerOwner 28)
 // are therefore very likely at +0x18/+0x19/+0x1a/+0x1c.
-// SLICED AND CLOSED 2026-08-08 by game::GetHeroBoat (0x4ce900), which
-// walks the pool with a 0x28 stride and reads exactly three of those
+// Closed by game::GetHeroBoat (0x4ce900), which walks the pool with a 0x28
+// stride and reads exactly three of those
 // DC slots at their unshifted DC offsets - `allocated` +0x18,
 // `occupying_hero` +0x20 (a dword compare) and `occupied` +0x24 (a byte
 // compare). With facing already proven at +0x1b that is four hits and
@@ -337,8 +337,8 @@ public:
     // hero::canEquipArtifactInEmptySlot (0x4e2550) refuses it outright while the
     // engine gate reports a pre-SoD game. GATED to hero.obj's own view:
     // an ungated enumerator is a measured include-set cost in this tree
-    // (netmsg.h's RS_ERASE_OBJECT note records 90.84 -> 88.24 on an
-    // unrelated TU), and no other compiland needs the name.
+    // (see netmsg.h's RS_ERASE_OBJECT note), and no other compiland needs the
+    // name.
     enum { EQUIPPED_SLOT_SOD_MISC = 18 };
     // Two more equipped positions WindowHandler special-cases by INDEX
     // (`if (slot == 0x11)` opens the spellbook, `if (slot == 0x10)`
@@ -774,9 +774,9 @@ public:
     // its luck and morale icon frames. Same gate, same reason.
     void updateStats();
     // Gated to hero.obj's own view: these five are used only inside
-    // hero.cpp, and declaring them unconditionally moved an UNRELATED
-    // compiland's score (recruitUnit::Update 90.84 -> 88.24) through the
-    // include-set sensitivity class with no semantic change anywhere.
+    // hero.cpp, and declaring them unconditionally changes an UNRELATED
+    // compiland (recruitUnit::Update) through the include-set sensitivity
+    // class with no semantic change anywhere.
 
     // 0x4e2550, RETAIL-ONLY (no DC row), `ret 8`: the actual equip
     // attempt hero::canReplaceArtifactInSlot wraps. ORDINAL PLACEHOLDER.

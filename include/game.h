@@ -353,19 +353,11 @@ SIZE(type_map_hero_identity, 0x14);
 // compares that mask with bitset<8>(0xff) and copies its single backing
 // dword straight into game::heroPoolMap, which is what types the +0x14 word
 // as a bitset rather than a plain int; the 0x18 size and every offset are
-// the same either way. It was modelled BOTH ways in this tree - this record
-// for the four TUs that read the mask, an inherited `int field_14` twin for
-// everyone else - and the two spellings never met.
-// The members are DIRECT rather than inherited, and retail settles it with
-// three rows: the inherited spelling (which needs the three-argument
-// constructor to assign the base members in its body instead of
-// initialising them) costs ??0type_map_hero_info 100.0000 -> 84.0169,
-// campaignbrief's _Tree::_Copy 100.0000 -> 84.1429 and game's _Tree::erase
-// 100.0000 -> 92.1530. Its one point in favour - it retains newgame's
-// type_map_hero_identity copy ctor through the base copy - is bought back
-// by the plain field_34 vector below - an argument that does not
-// stands either way: that "retained copy ctor" was 0x517c30, and
-// 0x517c30 is objecttype's `pair<const string, int>` constructor.
+// the same either way. The members are DIRECT rather than inherited: the
+// inherited spelling makes the three-argument constructor assign the base
+// members in its body instead of initialising them, which changes
+// ??0type_map_hero_info, campaignbrief's _Tree::_Copy and game's
+// _Tree::erase.
 // The map keyed by hero ID has a different first-word role from the player
 // roster above: game::loadMap copies it into HeroExtra::portraitNumber after
 // comparing the complete -1 dword. NH3API HeroIdentity::portrait/name and
@@ -433,7 +425,7 @@ public:
 
         VA(0x0045a950, 0x3F)
         DC_ADDRESS(0x05ac3c, 0x44)
-        MAC_ADDRESS(0x067194, 0x80)  // retained retail body; formerly enrolled by CLASS_CTOR
+        MAC_ADDRESS(0x067194, 0x80)  // retained retail body
         TPlayerSlotAttributes()
         {
             m_canBeHuman = 0;
@@ -530,7 +522,7 @@ public:
 
     VA(0x0045a7a0, 0x1A3)
     DC_ADDRESS(0x05ac80, 0x70)
-    MAC_ADDRESS(0x067648, 0x104)  // retained retail body; formerly enrolled by CLASS_CTOR
+    MAC_ADDRESS(0x067648, 0x104)  // retained retail body
     NewSMapHeader()
     {
         m_version = 0;
@@ -709,7 +701,7 @@ public:
 
     VA(0x0045ac20, 0xD2)
     DC_ADDRESS(0x05ad18, 0xb8)
-    MAC_ADDRESS(0x067430, 0x168)  // retained retail body; formerly enrolled by CLASS_CTOR
+    MAC_ADDRESS(0x067430, 0x168)  // retained retail body
     SGameSetupOptions()
     {
         for (int i = 0; i < NUM_PLAYERS; ++i) {
@@ -973,8 +965,7 @@ public:
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
     int save(TAbstractFile* outfile);
-    // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
-    // townManager::SwapHeroes 0x5d5150 calls it on
+    // 0x4b9fc0 (src/game.cpp). townManager::SwapHeroes 0x5d5150 calls it on
     // gpGame->players[townToView->owner] with the town it is showing,
     // and branches on the byte result - the arity and the return type
     // both. Nested under this gate, not added to the class outright: a
@@ -1064,8 +1055,8 @@ public:
     char m_paddingBeforeCampaign[2];
     SCampaign m_campaign;  // +0x1f458
     unsigned char m_newCampaignStarted;
-    // +0x1f4d5. RETYPED IN PLACE 2026-08-20 (no declarator added, so the
-    // include-set population is unchanged): game::SaveGame (0x4beea0)
+    // +0x1f4d5. Retyped in place (no declarator added, so the include-set
+    // population is unchanged): game::SaveGame (0x4beea0)
     // strcpy's its `filename` argument here through gpGame whenever the
     // composed name is neither of the two general-text rows it screens
     // against, i.e. this is the remembered save name. The 0x15f extent
@@ -1073,7 +1064,7 @@ public:
     // width of SaveGame's own two stack buffers and of misc.h's
     // gcRegAppPath, so the whole pad reading as one name buffer is the
     // economical hypothesis rather than a stretch. CORROBORATED FROM THE
-    // OTHER SIDE: game::Load's already-matched header copy-out strcpy's
+    // OTHER SIDE: game::Load's header copy-out strcpy's
     // SavedGameHeader::fileName into this exact offset, so the writer
     // and the reader agree on what the field is.
     char m_saveFileName[0x15f];
@@ -1983,8 +1974,7 @@ void computeUALoc(int whichPlayer);                   // 0x4baed0
 // Complete reads versioned nested records through the abstract stream;
 // Dreamcast uses gzread directly and records the checked ID-read count.
 // The six unchecked scalar reads use returned values rather than artificial
-// caller scopes. VC6 then matches all 62 retail blocks and 26 named calls,
-// including the shared failure cleanup; flattening those reads loses it.
+// caller scopes, which keeps retail's shared failure cleanup.
 // E:\gamedcs\Game.h:1344
 VA(0x004bc750, 0x3D5)
 DC_ADDRESS(0x0bcfe4, 0x78)
@@ -2072,9 +2062,9 @@ inline bool game::isHumanAlly(int playerNum) const
 }
 
 // Complete's retained body and ClaimTown expansion prove the creature-domain
-// semantics. The nested zero check leaves the body byte-exact while making its
-// VC6 source cost 75, so the 72-budget nested call remains out of line without
-// a pragma. The creature-domain name is inferred; DC get_alignment is the
+// semantics. The nested zero check gives the body a VC6 source cost of 75,
+// so the 72-budget nested call stays out of line without a pragma. The
+// creature-domain name is inferred; DC get_alignment is the
 // separate player accessor below.
 VA(0x004c6690, 0x43)
 inline int game::getAlignment(int creature) const
@@ -2193,8 +2183,8 @@ private:
 SIZE(TCheatCode, 200);
 
 // Mac 0x9dc..0xa10 selects one of two operand addresses for the minimum
-// of strlen and the buffer bound. Use the shared reference selector rather
-// than spelling its expansion here; the Windows encoder remains exact.
+// of strlen and the buffer bound; use the shared reference selector rather
+// than spelling its expansion here.
 // E:\gamedcs\Game.h:1439
 VA(0x00402a30, 0xA1)
 DC_ADDRESS(0x002fa0, 0x88)

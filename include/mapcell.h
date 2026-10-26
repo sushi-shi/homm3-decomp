@@ -878,8 +878,7 @@ public:
     // shipyard readers use this same base address (0x4e53c0 / 0x4e53e0
     // and PlayerDead); the typed arms belong to ExtraInfoUnion above.
     // +0x04 and +0x08: two int allocation units of SIGNED 8-BIT
-    // BITFIELDS, sliced 2026-08-08 out of the old `unsigned char
-    // terrain; char pad_05[7]` pair. findpath's CalcTerrainCost
+    // BITFIELDS. findpath's CalcTerrainCost
     // (0x4b1740) reads BOTH units as `mov eax, dword; shl eax, 0x18;
     // sar eax, 0x18` - a 32-bit load whose low byte is sign-extended,
     // which is what VC6 emits for a signed 8-bit bitfield at bit 0 of
@@ -899,7 +898,7 @@ public:
     // CalcTerrainCost's matching parameter `long` for the same reason
     // its three mastery parameters are `long` (see the note there).
     // The equality compare in check_shipyard_square stays a BYTE
-    // compare through the bitfield (measured, still exact): VC6 folds
+    // compare through the bitfield: VC6 folds
     // `field == small_constant` on a byte-aligned 8-bit field into
     // `cmp byte ptr`, so the slice costs nothing there.
     int m_groundSet : 8;
@@ -921,22 +920,16 @@ public:
     // independently: it only lets a flier take min(ground cost, flight
     // cost) on a tile whose bit 6 is set (`test byte [cell+0xc],
     // 0x40`) and charges the flat flight cost everywhere else.
-    // NOT SLICED OUT, and the reason is the include-set sensitivity
-    // class again, MEASURED 2026-08-08: splitting this one bitfield
-    // into `flags_00_05:6 / Passable:1 / flags_07_11:5` - three named
-    // members within one existing record, with no new type or semantic change -
-    // takes initialize_game_data 96.0880 -> 26.1806, one of the values
-    // that class's own struct sweep produced. So the sensitivity is to
-    // the MEMBER population of this header's types, not only to the
-    // count of type definitions in the TU; the note below was written
-    // when only the latter had been measured. findpath spells the test
-    // `cell->flags_00_11 & 0x40` instead, which compiles to retail's
-    // `test byte ptr [cell+0xc], 0x40` unchanged.
+    // NOT SLICED OUT: splitting this one bitfield into three named members
+    // (`flags_00_05:6 / Passable:1 / flags_07_11:5`) changes initialize.obj's
+    // initialize_game_data - the include-set sensitivity reaches the MEMBER
+    // population of this header's types, not only the count of type
+    // definitions. findpath spells the test `cell->flags_00_11 & 0x40`
+    // instead, which compiles to retail's `test byte ptr [cell+0xc], 0x40`.
     // Retail check_shipyard_square reads this field as a whole word
     // (`mov si, word ptr [cell+0xc]`), and get_special_terrain tests it
     // with `test word ptr [cell+0xc], 0x1000`. Both use the canonical
-    // cellFlags overlay below. Earlier include-set experiments predated
-    // this shared representation and do not justify a local offset view.
+    // cellFlags overlay below.
     union {
         struct {
             unsigned short m_flags0011 : 12;
@@ -1341,12 +1334,11 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-// MapCell.h:850. This worker reproduces all 49 retail bytes
-// at 0x408770, including the boat callers' retained zero-coordinate lookup.
-// The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
-// 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
-// Identical folded bodies cannot prove a unique original retail symbol;
-// this annotation owns the emitted canonical worker, not a renamed wrapper.
+// MapCell.h:850. This worker is the retail body at 0x408770, including the
+// boat callers' retained zero-coordinate lookup; there is no zCell bounds
+// test on either platform. Identical folded bodies cannot prove a unique
+// original retail symbol; this annotation owns the emitted canonical worker,
+// not a renamed wrapper.
 VA(0x00408770, 0x31)  // exact body + anchor-callees
 DC_ADDRESS(0x01f974, 0x52)
 inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
@@ -1598,10 +1590,8 @@ inline void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primar
 // / or edx,0xffc0`, i.e. the id is merged into the masked dword FIRST
 // and the artifact constant last. A `short` parameter makes VC6
 // reassociate the same value as `(id | 0xffc0) | masked` and emit the
-// two ops the other way round. All four width combinations were
-// measured against the retail bytes and exactly one is exact - short
-// getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
-// so the width is byte-determined, not a guess.
+// two ops the other way round. The width pair is byte-determined: short
+// getter, int setter parameter.
 DC_ADDRESS(0x09c8c8, 0xe)
 inline bool ExtraInfoUnion::skeletonHasTreasure() const { return m_skeletonInfo.m_hasTreasure; }
 
@@ -1707,8 +1697,8 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 
 // DC MapCell.h:1186..1189 assigns artifact, full, has_artifact, visited_bits.
 // Mac randomizeWagon 0xd67f4..0xd6820 expands the same four field stores.
-// These named stores retain the exact 0x4c2390 body; the packed-mask
-// spelling made VC6 expand every use and omit the standalone helper.
+// These named stores keep the retained 0x4c2390 body; the packed-mask
+// spelling makes VC6 expand every use and omit the standalone helper.
 // Original public ?SetWagon@ExtraInfoUnion@@QAAXW4TArtifact@@@Z fixes the domain.
 // E:\gamedcs\MapCell.h:1185
 VA(0x004c2390, 0x21)

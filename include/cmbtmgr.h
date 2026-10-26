@@ -142,8 +142,8 @@ enum EBoltColor {
 // attests the domain or the spelling, and the other nine codes stay
 // unnamed until one of the 0x4643b0 branches is decoded.
 
-// FIVE MORE CODES DECODED 2026-08-20 from the other side, by
-// ai_tactical's creature-spell pricers get_ogre_mage_value (0x43c330)
+// FIVE MORE CODES are decoded from the other side, by ai_tactical's
+// creature-spell pricers get_ogre_mage_value (0x43c330)
 // and get_caliph_value (0x43c4a0). Both open with the same
 // jump-table switch over this word, and each arm's only effect is to
 // raise the mastery the spell is priced at from ADVANCED to EXPERT:
@@ -279,10 +279,6 @@ extern const TCombatHeroSprite g_combatHeroSprites[9][2];
 // 20 per side - plus one spare making the 0x6ee8 side stride); the
 // army array base 0x54cc and the 0x548 record stride are byte-proven
 // by hexcell::get_army/get_dead_army, which index side*21 + slot.
-// (Rebased 2026-08-06: the earlier TCombatSide/TStack view sat 0x34
-// past the real army boundary and its field offsets were 0x50 short -
-// objdiff's immediate masking hid the error as the old 99.9 residual
-// on ResetHitByCreature.)
 // The pending-order CODES combatManager::field_3c carries. All three
 // rungs below are byte-witnessed, and the two writers corroborate each
 // other:
@@ -460,9 +456,8 @@ public:
         // The moat row of a town's eighteen wall records: LoadIcons
         // (0x463370) suppresses exactly this row's five icons for
         // Stronghold under the pre-expansion ruleset, and the static
-        // table's row 2 is the SgCsMoat.pcx group. An include-set
-        // trigger: this enumerator moved command.obj's GetCommand when
-        // visible to that TU (measured; max/hist hold the peak).
+        // table's row 2 is the SgCsMoat.pcx group. An include-set trigger:
+        // this enumerator changes command.obj's GetCommand when visible there.
         WALL_TRAITS_ROW_MOAT = 2
     };
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
@@ -720,8 +715,7 @@ public:
     std::set<SpellID> m_eagleEyeData[2];  // +0x545c; set roots at +0x5460
     // Per-stack "this stack has already been affected" marks, indexed
     // [combatSide][army slot]. THREE independent readings agree on the
-    // shape, which is why it is sliced in place from the old pad_547c[0x28]
-    // with no byte moves and no change in declarator count:
+    // shape:
     //   * ClearEffects (0x5a66b0) wipes it as ten dwords - a `rep stosd`
     //     with ecx=10 over [this+0x547c] - which bounds the extent.
     //   * SetMassSpellInfluence (0x5a66d0) writes a 1 per stack that took
@@ -743,10 +737,9 @@ public:
     // WRITER FOUND 2026-08-20 (SetupCombat 0x4639f0): the pair is stamped
     // with `gpGame->IsHuman(playerIds[side])`, and with 0 when the side
     // has no player id at all - so the latch reads "this side is HUMAN"
-    // and the provisional name above is inverted. Recorded rather than
-    // renamed: seventeen readers across ai.cpp, ai_tactical.cpp,
-    // combatcontrolsubwindow.cpp and this TU would move with it, and this
-    // lane touches none of them (the field_54b4 precedent).
+    // and the provisional name above is inverted (a rename moves seventeen
+    // readers in ai.cpp, ai_tactical.cpp, combatcontrolsubwindow.cpp and this
+    // TU).
     unsigned char m_sideIsAi[2];  // +0x54a4
     unsigned char m_sideIsLocalHuman[2];  // +0x54a6
     // The adventure-map player ids behind the two combat sides. LowerDoor's
@@ -782,18 +775,9 @@ public:
     // it as `[&playerIds[side] + 0xddf8]`, which is what proves the stride
     // and the pair. The magnitude reads like a millisecond budget but no
     // reader is decoded, so the name stays an address ordinal.
-    // GATED, AND THAT IS A MEASUREMENT - the fourth firing of the
-    // include-set class from this header, and the first one that says
-    // WHICH edit shape fires it. Bisected 2026-08-20 against command.obj's
-    // GetCommand (92.5714 is that canary's ceiling), one edit at a time:
-    //   * slicing one pad declarator into three (this row), or adding any
-    //     further member declarator to the class          -> 92.5357;
-    //   * RETYPING a pad in place at the SAME declarator count,
-    //     `char pad_54a6[2]` -> `unsigned char sideIsLocalHuman[2]`,
-    //                                                     -> 92.5714,
-    //     unmoved. Three such renames landed un-gated and cost nothing.
-    // So the trigger is the DECLARATOR COUNT C1XX numbers member handles
-    // from - not the member's name, its type, or the bytes it covers.
+    // GATED: C1XX numbers member handles from the declarator count, so
+    // slicing a pad declarator into several, or adding a member declarator,
+    // changes command.obj's GetCommand; retyping a pad in place does not.
     // The per-side pair InitNonVisualVars' closing walk raises when a
     // side owns at least one stack with army::field_4d8 set. Byte-wide
     // and indexed by side.
@@ -807,8 +791,8 @@ public:
     int m_turnSinceLastEnchanter[2];  // +0x132a0
     // Two dwords InitNonVisualVars sets to -1.
 
-    // RETYPED AS A PER-SIDE PAIR 2026-08-20 by combatManager::
-    // SummonElemental (0x5a7080), which stamps the summoned creature's
+    // A PER-SIDE PAIR, by combatManager:: SummonElemental (0x5a7080), which
+    // stamps the summoned creature's
     // type through `[this + 4*currentSide + 0x132a8]` - so the two
     // dwords are one row indexed by SIDE, exactly like the six other
     // per-side pairs this class already carries, and not two unrelated
@@ -1293,18 +1277,6 @@ public:
     // Native ?SetCombatGrid@combatManager@@QAAXHHH_N@Z: draw flag is bool.
     void setCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
                        bool drawNow);  // 0x479fc0
-    // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
-    // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
-    // dwords plus a word plus a byte - the cell count exactly - and
-    // then raises the hex, or the two hexes, the passed stack stands
-    // on. It sits in cmbtmgr.obj's own bracket (immediately after
-    // IsQuickCombat 0x46a4a0) but the DC roster has no row for it
-    // there, so both the NAME and the parameter's constness are
-    // PROVISIONAL and its claim waits for the lane that reconstructs
-    // the body. The row it clears is deliberately NOT modelled here:
-    // this declaration alone already costs GetCommand 92.5714 ->
-    // 92.5357 unconditionally (include-set class, bisected), so it is
-    // scoped to army.cpp and the field waits for the same lane.
     // Complete adds the arrow-tower early return in army::rangeAttack
     // (0x440160), directly calling KeepAttack (0x465ad0). DC lacks that
     // arm but records KeepAttack private. This narrow friendship is a
@@ -1408,16 +1380,13 @@ public:
     long chooseMeleeAction(const army* currentArmy, bool teleport,
                              bool simulated, long side);  // 0x421f80
     unsigned char failedSiege();  // 0x41e440
-    // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
-    // here - `homm3 sema rva` files it under seg_0002. The DC roster
-    // puts combatManager::find_AI_targets in ai.obj (ai.cpp:2608, dc
-    // 0x27888) with exactly these five parameters, and the DC xref
-    // graph lists it as a callee of choose_shooter_action, which is
-    // where 0x422b20 is called from on the retail side too - along
-    // with choose_cyclops_action, choose_melee_action and two
-    // ai_tactical bodies, every one of which the DC graph also records
-    // as a find_AI_targets caller. Its own VA claim wants the ai.obj
-    // span recomputed past 0x4224d9 and is left to that lane.
+    // 0x422b20 (632 B). The DC roster puts combatManager::find_AI_targets in
+    // ai.obj (ai.cpp:2608, dc 0x27888) with exactly these five parameters,
+    // and the DC xref graph lists it as a callee of choose_shooter_action,
+    // which is where 0x422b20 is called from on the retail side too - along
+    // with choose_cyclops_action, choose_melee_action and two ai_tactical
+    // bodies, every one of which the DC graph also records as a
+    // find_AI_targets caller.
     // CodeView ai.cpp:2608 (dc 0x27888) declares a const parameters
     // receiver. Its calculations are const too; the old non-const claim
     // came from our reconstructed declaration, not the retail bytes.
@@ -1486,8 +1455,8 @@ public:
     int getCommand(int newIndex);
     void doCommand(int command);
     int rightClick(int newIndex);  // 0x4769c0
-    // 0x59e900, spells.obj. LOCATED 2026-08-13 from DoCommand's
-    // spell-book case, which calls it with `this` only, compares the
+    // 0x59e900, spells.obj, located from DoCommand's spell-book case, which
+    // calls it with `this` only, compares the
     // result against -1 and forwards it straight into InitiateSpell.
     // The DC spells.obj roster puts combatManager::ViewSpells
     // (spells.cpp:97, 680 SH4 B, ONE parameter) immediately before
@@ -1617,8 +1586,7 @@ public:
     // 0x59fde0 (68 B), the Enchanter's shot resolution army::
     // animate_missile hands its volley to instead of a missile flight
     // (three stack arguments: the launch point and the target stack).
-    // ORDINAL PLACEHOLDER name - no roster row reaches it; the body
-    // stays spells.obj's to reconstruct.
+    // ORDINAL PLACEHOLDER name - no roster row reaches it.
     void animateMagicArrow(int x, int y, army* target);
     void spellTargetMessage(SpellID spellId, int targetIndex,
                             bool firstTarget);  // 0x5a8690
@@ -1874,7 +1842,7 @@ public:
     // The named command rearm helper. 0x4782d0 (1461 B, command.obj) is
     // Dreamcast's named GetControl method; SetNextArmy calls it immediately
     // after clearing lastMovedArmy, re-arming the command bar for the new
-    // stack. Declared, not claimed: its body is outside this lane.
+    // stack.
 
     void getControl();
     // DC command.cpp:907. Complete has no standalone copy: ProcessCombatMsg
@@ -1912,9 +1880,8 @@ extern combatManager* g_combatManager;
 // Two GameTime stamps Open takes on its way in, both shared with other
 // compilands - 0x698998 with advmgr.obj's own Open/Main/ProcessKeyPress
 // and command.obj's animation frame pacer, 0x6989b8 with Main and
-// CycleCombatScreen. Behind views because a single file-scope extern added
-// to this header is its own measured include-set trigger (the field_132a0
-// bisection).
+// CycleCombatScreen. Behind views: a single file-scope extern added to this
+// header is an include-set trigger.
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
@@ -1930,17 +1897,10 @@ DATA(0x006989ec) extern int g_processingCombatAction;
 // sweep over the whole image finds exactly one reference to the address,
 // that store. Declared extern rather than defined: an unclaimed data
 // extern still pairs (the DoDialog precedent) and a definition would add
-// a word to a .data section that already reads 100%. The name states what
-// its only writer calls the value.
+// a word to .data. The name states what its only writer calls the value.
 
-// GATED, AND THAT IS A MEASUREMENT that CORRECTS THE DOCTRINE. The match
-// skill's include-set note records "`extern int` ... do NOT move it",
-// from the 200-extern probe that cleared the wrong hypothesis. On THIS
-// header that is false: adding this one file-scope `extern int`, with
-// every other edit of the lane held gated, costs command.obj's GetCommand
-// 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
-// bulk probe of externs added together evidently does not reproduce what
-// a single extern added to a header this widely included does.
+// GATED: adding this one file-scope `extern int` to a header this widely
+// included changes command.obj's GetCommand by itself.
 extern int g_combatSeed;
 
 // THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
@@ -2087,12 +2047,10 @@ extern const long g_castleWallGateTargets[5];   // 0x63abe0
 // than through the four-int overload, and the coordinate scrollTo facade
 // is a fixed-viewport stub like the extent one instead of building and
 // forwarding a rectangle. Each extra expansion level costs the missile
-// animators the budget for their final bitmap Draw's getMap; together
-// they reproduce shootBallisticMissile, shootAnimatedMissile, shootMissile,
-// army::animateMissile and attackWall, powEffect, drawFrame and
-// updateMouseGrid exactly (91-98.5% under the CE chain). Fly reproduces
-// under both. Defining the stub in the class body instead perturbs
-// events.cpp's unrelated doCombat (95.53 -> 95.36%).
+// animators (shootBallisticMissile, shootAnimatedMissile, shootMissile,
+// army::animateMissile and attackWall, powEffect, drawFrame,
+// updateMouseGrid) the budget for their final bitmap Draw's getMap. Defining
+// the stub in the class body instead perturbs events.cpp's doCombat.
 inline void combatManager::updateCombatArea(int x, int y, int width, int height)
 {
     g_windowManager->updateScreen(x, y, width, height);
