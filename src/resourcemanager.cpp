@@ -1862,37 +1862,37 @@ VA_COMPGEN(0x0055e740, 0x17, TREE_LOWER_BOUND, TCacheMapKey)
 
 VA_COMPGEN(0x0055ebd0, 0x5A, TREE_LBOUND, TCacheMapKey)
 
-// COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream, mnemonic agreement 1.000.
+// COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream.
 VA_COMPGEN(0x0055dae0, 0x30, SCALAR_DELETING_DTOR, basic_ostringstream)
 
 VA_COMPGEN(0x0055db10, 0x21, SCALAR_DELETING_DTOR, basic_stringbuf)
 
-// COMDAT pairing: basic_stringbuf::0?$basic_stringbuf, mnemonic agreement 0.994.
+// COMDAT pairing: basic_stringbuf::0?$basic_stringbuf.
 VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
 
-// COMDAT pairing: basic_ostringstream::1?$basic_ostringstream, mnemonic agreement 0.944.
+// COMDAT pairing: basic_ostringstream::1?$basic_ostringstream.
 VA_COMPGEN(0x0055d530, 0xC2, IMPLICIT_DTOR, basic_ostringstream)
 // The Libraries archive keeps basic_ostream<char>'s vbase vtable fixup apart.
 VA_COMPGEN_AT(h3maped, 0x004dd4c0, 0xf, IMPLICIT_DTOR, basic_ostream)
 
 VA_COMPGEN(0x0055dcf0, 0x50F, TREE_ERASE_ITERATOR, TCacheMapKey)
 
-// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last), 0.960.
+// COMDAT pairing: _Tree<TCacheMapKey, resource*>::erase(first, last).
 VA_COMPGEN(0x0055e200, 0x121, TREE_ERASE_RANGE, TCacheMapKey)
 
-// COMDAT pairing: str on the char instantiation, mnemonic agreement 0.976.
+// COMDAT pairing: str on the char instantiation.
 VA_COMPGEN(0x0055e570, 0x1C5, STRINGBUF_STR, char)
 
-// COMDAT pairing: seekoff on the char instantiation, mnemonic agreement 0.945.
+// COMDAT pairing: seekoff on the char instantiation.
 VA_COMPGEN(0x0055d8a0, 0x15B, STRINGBUF_SEEKOFF, char)
 
-// COMDAT pairing: seekpos on the char instantiation, mnemonic agreement 0.919.
+// COMDAT pairing: seekpos on the char instantiation.
 VA_COMPGEN(0x0055da00, 0xD8, STRINGBUF_SEEKPOS, char)
 
-// COMDAT pairing: pbackfail on the char instantiation, mnemonic agreement 0.968.
+// COMDAT pairing: pbackfail on the char instantiation.
 VA_COMPGEN(0x0055d7e0, 0x5D, STRINGBUF_PBACKFAIL, char)
 
-// COMDAT pairing: underflow on the char instantiation, mnemonic agreement 0.938.
+// COMDAT pairing: underflow on the char instantiation.
 VA_COMPGEN(0x0055d840, 0x5A, STRINGBUF_UNDERFLOW, char)
 
 VA_COMPGEN(0x0055ecf0, 0x18, PAIR_CTOR, cstr_resource_pair)

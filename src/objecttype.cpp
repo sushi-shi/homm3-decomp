@@ -609,7 +609,7 @@ VA_COMPGEN(0x005151b0, 0xAA, CLASS_CTOR, basic_istream)
 
 VA_COMPGEN(0x00515a40, 0x32, SCALAR_DELETING_DTOR, basic_istream)
 
-// COMDAT pairing: ctype<char>'s three-argument constructor, agreement 0.914.
+// COMDAT pairing: ctype<char>'s three-argument constructor.
 VA_COMPGEN(0x00515f50, 0x106, CLASS_CTOR, ctype)
 
 // COMDAT pairing: ctype<char>'s destructor and its scalar deleting wrapper
@@ -620,7 +620,7 @@ VA_COMPGEN(0x00516160, 0x24, IMPLICIT_DTOR, ctype)
 
 VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, TObjectSlotTraits)
 
-// COMDAT pairing: strstreambuf(const char*, int), agreement 0.957.
+// COMDAT pairing: strstreambuf(const char*, int).
 VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
 
 // COMDAT pairing: istrstream's scalar deleting destructor (it calls the
@@ -697,7 +697,7 @@ VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
 
 // --- Dinkumware COMDAT pairings, part 2: the input-stream family ----------
 
-// COMDAT pairing: basic_streambuf<char>::sgetc, agreement 1.000.
+// COMDAT pairing: basic_streambuf<char>::sgetc.
 VA_COMPGEN(0x005157b0, 0x20, STREAMBUF_SGETC, char)
 
 // COMDAT pairing: basic_string<char>::replace(pos, n, const char*, n),
@@ -713,7 +713,7 @@ VA_COMPGEN(0x00515c20, 0x74, BASIC_STRING_RFIND, char)
 // through, and the reason use_facet<ctype<char>> is instantiated here.
 VA_COMPGEN(0x00515ca0, 0x27A, ISTREAM_IPFX, char)
 
-// COMDAT pairing: basic_ios<char>::setstate, agreement 1.000.
+// COMDAT pairing: basic_ios<char>::setstate.
 VA_COMPGEN(0x00515f20, 0x26, BASIC_IOS_SETSTATE, char)
 
 // ctype<char>'s SDK cleanup, registered with atexit by its constructor and
@@ -781,7 +781,7 @@ VA_COMPGEN(0x0051a990, 0x1FE, USE_FACET_CTYPE, char)
 
 VA_COMPGEN(0x0051ab90, 0x1FB, USE_FACET_NUMPUNCT, char)
 
-// COMDAT pairing: istreambuf_iterator<char>::equal, agreement 1.000.
+// COMDAT pairing: istreambuf_iterator<char>::equal.
 VA_COMPGEN(0x0051ad90, 0xB1, ISTREAMBUF_ITERATOR_EQUAL, char)
 
 // COMDAT pairing: _Tidyfac's two remaining instantiations (ctype and

@@ -994,43 +994,43 @@ void TBottomViewEnemyTurn::animate()
     m_crest->forceUpdate();
 }
 
-// COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.
+// COMDAT pairing: basic_streambuf::1?$basic_streambuf.
 VA_COMPGEN(0x00454000, 0x50, IMPLICIT_DTOR, basic_streambuf)
 
-// COMDAT pairing: numpunct::1?$numpunct, mnemonic agreement 0.970.
+// COMDAT pairing: numpunct::1?$numpunct.
 VA_COMPGEN(0x00455bf0, 0x2F, IMPLICIT_DTOR, numpunct)
 
-// COMDAT pairing: basic_streambuf::0?$basic_streambuf, mnemonic agreement 0.937.
+// COMDAT pairing: basic_streambuf::0?$basic_streambuf.
 VA_COMPGEN(0x00453f50, 0xA9, CLASS_CTOR, basic_streambuf)
 
-// COMDAT pairing: num_put::0?$num_put, mnemonic agreement 0.931.
+// COMDAT pairing: num_put::0?$num_put.
 VA_COMPGEN(0x004546e0, 0x5C, CLASS_CTOR, num_put)
 
 // COMDAT pairing: sentry::1sentry, mnemonic agreement 0.911.
 VA_COMPGEN(0x00454320, 0x63, IMPLICIT_DTOR, sentry)
 
-// COMDAT pairing: fpos::0?$fpos, mnemonic agreement 0.909.
+// COMDAT pairing: fpos::0?$fpos.
 VA_COMPGEN(0x00454390, 0x3C, CLASS_CTOR, fpos)
 
-// COMDAT pairing: _Iput on the char instantiation, mnemonic agreement 1.000.
+// COMDAT pairing: _Iput on the char instantiation.
 VA_COMPGEN(0x004552d0, 0x3FE, NUM_PUT_IPUT, char)
 
-// COMDAT pairing: _Fput on the char instantiation, mnemonic agreement 1.000.
+// COMDAT pairing: _Fput on the char instantiation.
 VA_COMPGEN(0x00454f20, 0x3A1, NUM_PUT_FPUT, char)
 
-// COMDAT pairing: xsgetn on the char instantiation, mnemonic agreement 0.946.
+// COMDAT pairing: xsgetn on the char instantiation.
 VA_COMPGEN(0x004540b0, 0x98, STREAMBUF_XSGETN, char)
 
-// COMDAT pairing: _Rep on the char instantiation, mnemonic agreement 0.935.
+// COMDAT pairing: _Rep on the char instantiation.
 VA_COMPGEN(0x004556d0, 0x82, NUM_PUT_REP, char)
 
-// COMDAT pairing: opfx on the char instantiation, mnemonic agreement 0.926.
+// COMDAT pairing: opfx on the char instantiation.
 VA_COMPGEN(0x004543d0, 0x74, OSTREAM_OPFX, char)
 
-// COMDAT pairing: sputc on the char instantiation, mnemonic agreement 0.932.
+// COMDAT pairing: sputc on the char instantiation.
 VA_COMPGEN(0x00454a30, 0x4B, STREAMBUF_SPUTC, char)
 
-// COMDAT pairing: _Decref on the char instantiation, mnemonic agreement 0.918.
+// COMDAT pairing: _Decref on the char instantiation.
 VA_COMPGEN(0x00453d30, 0x3B, LOCALE_FACET_DECREF, char)
 
 // COMDAT pairing: num_put::do_put(bool); six do_put overloads share one key.
@@ -1048,10 +1048,10 @@ VA_COMPGEN(0x00454bc0, 0xCA, NUM_PUT_DO_PUT, char)
 // COMDAT pairing: num_put::do_put(long double).
 VA_COMPGEN(0x00454c90, 0xCE, NUM_PUT_DO_PUT, char)
 
-// COMDAT pairing: num_put::do_put(const void*), agreement 0.977.
+// COMDAT pairing: num_put::do_put(const void*).
 VA_COMPGEN(0x00454d60, 0x1B2, NUM_PUT_DO_PUT, char)
 
-// COMDAT pairing: bad_cast::_Doraise, agreement 1.000.
+// COMDAT pairing: bad_cast::_Doraise.
 VA_COMPGEN(0x00453c80, 0x1D, EXCEPTION_DORAISE, bad_cast)
 
 // The three destructor pairs this compiland's <iostream> surface leaves,
