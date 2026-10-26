@@ -75,16 +75,6 @@ enum ELastAliveSide {
     LAST_ALIVE_NEITHER = 2
 };
 
-// 0x697788. DECLARATION ONLY - src/advmgr.cpp:88 owns the DATA claim,
-// and a second claim on one RVA is a fatal duplicate at delink. It lives
-// here rather than in the .cpp because a line-initial `extern` in a .cpp
-// is a cleanliness-floor violation, and here rather than by including
-// advmgr.h, whose closure command.obj does not otherwise need - the
-// pattern hero.h already documents for bVideoPaused. DoVictory
-// (0x477470) reads it once, crossed with the network latch, to decide
-// whether the results dialog gets a deadline.
-extern int g_thisNetGotAdventureControl;
-
 // The two remote combat-control player positions. Dreamcast publishes the
 // array name; retail ResetRound indexes [1-currentSide], producing relocs to
 // both the base and its second element.

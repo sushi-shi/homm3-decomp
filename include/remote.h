@@ -158,8 +158,6 @@ extern char g_tcpAddress[21];
 
 extern "C" const GUID guidHeroes3;
 
-extern bool g_inCampaign;
-
 // Retail's chat methods independently prove every offset used here; the
 // Dreamcast CodeView field list supplies the source names and the 0x88-byte
 // nested record extent.
@@ -432,7 +430,7 @@ extern CTurnDuration g_turnDuration;
 // position and an armed byte) and read back by CAdvMgrNetMsgHandler::
 // HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
 // unclaimed, so the names stay ordinal and the DATA claims wait for it.
-extern int g_playerTurn;
+// game.h declares the turn's game position, g_playerTurn.
 extern unsigned char g_weMoved;
 
 // Retail's constructor/destructor pair stores and tests only this byte;

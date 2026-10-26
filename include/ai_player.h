@@ -272,7 +272,6 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
 long findMagusHutValue(long playerId, unsigned char exploreMode);
 void fillProhibitedArray(playerData* player, bool* prohibited);
 
-extern const char* g_resourceNames[8];
 extern char g_aiResourceWarningFormat[];
 
 // Retail .bss 0x693718, one byte per TAdventureObjectType.

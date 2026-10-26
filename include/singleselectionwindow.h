@@ -867,7 +867,6 @@ SIZE(TSingleSelectionWindow, 0x1970);
 //   0x697774  set to 1 the moment a save filename is committed
 extern char g_saveGameName[];
 extern char g_saveGameSuffix[];
-extern bool g_inCampaign;
 extern int g_saveGameRequested;
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_H */

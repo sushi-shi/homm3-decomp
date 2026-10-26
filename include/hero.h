@@ -304,10 +304,11 @@ extern int g_remoteOn;
 // reads it at 0x4db7d3, 0x4dd9f1, 0x4dda8d, 0x4e1bad and 0x4e1c13;
 // SetupHeroView treats it as the "hero list is suppressed" latch.
 extern int g_castleOpen;
-// movement.txt row 6 column 5, DECLARATION ONLY - include/events.h:439
-// owns the DATA claim on 0x698a94, and a second claim on one RVA is a
-// fatal duplicate at delink. hero::GetMobility adds it on the flag-bit-1
-// arm, the third reader that fixes its role.
+// The Stables movement bonus (retail .bss 0x698a94, loaded from row 6
+// column 5 of its table). DoEventStables and town's 0x5bd8e0 add it to
+// the hero's maximum and current movement under the flag-bit-1 guard,
+// hero::GetMobility adds it on the same arm, and philai's ValueOfStables
+// (0x52aac0) appraises a visit as `(8 - dayOfWeek) * this / 2`.
 extern int g_stablesMovementBonus;
 
 // The two ARRAYTXT.TXT runs text.obj's loader (0x5b9cc0) fills, read by

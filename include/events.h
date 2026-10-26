@@ -552,20 +552,6 @@ enum EStablesResult {
     STABLES_MOVEMENT_AND_UPGRADE = 3
 };
 
-// Retail .bss 0x698a94, one int, loaded by the ballist.txt parser
-// (0x4d7240) out of row 6 column 5 alongside five siblings at
-// 0x698afc..0x698b0c. The DEFINITION belongs to that parser's compiland,
-// which this tree does not own yet; it is declared here because
-// DoEventStables is the modeled consumer that needs it.
-
-// The role is fixed by all three readers agreeing, not by the table:
-// DoEventStables adds it to hero::maxMovePoints and hero::movePoints
-// under the flag-bit-1 guard; town.obj's 0x5bd8e0 makes the SAME pair of
-// adds under the SAME guard, i.e. the Stables building; and philai's
-// ValueOfStables (0x52aac0) appraises a visit as
-// `(8 - dayOfWeek) * this / 2`, the movement still to be had this week.
-extern int g_stablesMovementBonus;
-
 // Retail .bss 0x699540. DoCombat raises it across the whole interactive
 // battle (set to 1 right after the mouse pointer swap, cleared just
 // before the final ShowPointer) - an "a combat is on screen" latch by

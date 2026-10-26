@@ -182,10 +182,6 @@ extern int g_noSound;
 
 extern short g_ailDriverState[14];
 
-// Retail .data 0x691209; original DC public ?gbGoSolo@@3_NA. Sound paths
-// use this solo-mode flag as the second half of their sound-is-on guard.
-extern bool g_goSolo;
-
 // Retail-only gate around Open's digital-driver initialization; descriptive
 // name from its only read. Original name and producer are not recovered.
 extern int g_skipDigitalDriverOpen;

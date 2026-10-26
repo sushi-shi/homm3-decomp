@@ -339,17 +339,6 @@ inline long searchArray::getDangerValue(type_point point) const
     return getDangerCell(m_dangerZones, point);
 }
 
-// Retail .rdata 0x63bd18, nine dwords indexed by town::type:
-// { 70, 70, 150, 90, 70, 90, 70, 90, 70 }. FindCombatPath (0x4b3400)
-// is the only located reader and it uses the row twice - once at x4 as
-// the "this stack is weak enough to be pushed into the moat" floor and
-// once at x40 as the ceiling above which the pressure is dropped again.
-// Left as an UNCLAIMED extern: the row sits between findpath's own moat
-// tables (0x63bce8) and combatManager::wallTargets (0x63be60), so the owning
-// TU is not settled, and the tenth dword reads 0 - it may or may not be
-// part of the array. Name is an address ordinal.
-extern const int g_moatDamage[];
-
 // Retail .bss 0x699284. The Mac AI view binds its zero-filled pointer
 // storage through the loader pointer at TOC 1+0x720.
 DATA(0x00699284) extern searchArray* g_searchArray;

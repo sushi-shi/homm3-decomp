@@ -1904,9 +1904,6 @@ extern int g_newMapStartingBonus[NUM_PLAYERS];
 // latch while retrying a failed turn-state transfer.
 extern int g_playerTurn;
 extern unsigned char g_playerDrop;
-// advmgr.cpp owns the retail datum; ResetGame only clears the turn-control
-// latch after rebuilding the session.
-extern int g_thisNetGotAdventureControl;
 extern int g_heroGoldCost;
 // One-byte session latch reset by game::SetupOrigData. No surviving symbol
 // names its wider role, so retain the address-ordinal spelling.
@@ -1958,7 +1955,6 @@ extern int g_inSetup;
 // against [0,8) before use. Ordinal placeholder.
 DATA(0x0069cca8)
 extern int g_netLocalGamePos;                // .bss 0x69cca8
-extern unsigned char g_curPlayerBit;
 
 void startAITheme();
 // 0x699554: the same answer for every other protocol, handed back

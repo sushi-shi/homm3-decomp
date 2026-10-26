@@ -120,7 +120,6 @@ enum ECartographerType {
 // around this one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
 extern const char* g_terrainNames[];
-extern int g_curWatchPlayer;
 // Paired with g_debugLevel by every non-local adventure command gate.
 // The role is byte-proven; no surviving symbol attests a semantic name.
 extern int g_debugLevel;
@@ -145,7 +144,6 @@ extern const char* g_creatureGenerator4RolloverNames[];
 // around the one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
 extern const char* g_mineDescriptions[8];
-extern const char* g_resourceNames[8];
 // The two mine tables advManager::DoEventMine (0x4a39a0) reads, both
 // text.obj/game-side globals declared here because this is where the
 // adventure-object tables of the events TU already live.
@@ -210,7 +208,6 @@ DATA(0x006985c0) extern int g_overviewReturnAction;
 DATA(0x0069873c) extern int g_overviewReturnActionExtra;
 
 DATA(0x00682a38) extern unsigned char g_followPlayerMode;
-extern int g_drawingPuzzle;
 extern int g_blackoutPlayer;
 extern bool g_goSolo;
 
@@ -237,12 +234,6 @@ extern philAI* g_philAI;
 // makes widening a compiland's closure a measured cost, not a free one.
 void videoPause();
 void videoResume();
-
-// Retail .bss 0x6972b8, kb.cpp's game-over latch, also published by
-// kb.h as gbGameOver; advManager::Main tests it twice - once on entry
-// and once after the dispatch - and turns a set latch into the
-// executive's terminate-loop message.
-DATA(0x006972b8) extern int g_gameOver;
 
 // giOverviewReturnAction's domain. ONE value is byte-proven - the kingdom-
 // overview arm answers 2 by viewing giOverviewReturnActionExtra's town and suppressing the

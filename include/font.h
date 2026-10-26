@@ -159,15 +159,4 @@ private:
     int GetColor(font::TColor colorScheme, bool highlighted);
 };
 
-// Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1
-// and 0x4514bf in bottomviewsubwindow, plus 0x473064 / 0x4ee120 /
-// 0x4ee47c). TBottomViewResourceMessage measures its quantity string
-// through this pointer's LineWidth and sizes the widget with its
-// `height` byte, then renders that same string with 'smalfont.fnt' - so
-// the object is the small font, but NO roster attests a name for it
-// (the Dreamcast dump carries only `medFont`), which is why this keeps
-// the house ordinal placeholder. Owner TU unlocated - extern only, no
-// DATA claim (the gpWindowManager / gTownSizeNames pattern).
-extern font* g_smallFont;
-
 #endif  /* HOMM3_FONT_H */

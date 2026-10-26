@@ -153,7 +153,6 @@ SIZE(VideoHeaderStruct, 0x2c);
 // is the third of them plus the shared entry count EarlySetup and the
 // loader both read.
 DATA(0x0069fe2c) extern VideoHeaderStruct* g_videoHeader3;
-extern int g_videoCount3;
 
 // ...and the other two thirds of the same trio, plus the three archive
 // handles they index. binkmanager.obj's GetBinkFilePtr (0x44d5a0) is the

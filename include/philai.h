@@ -119,13 +119,4 @@ void aiVisitHillFort(hero* currentHero);
 void aiVisitUniversity(hero* currentHero, type_university* university);
 void aiVisitWarFactory(hero* currentHero);
 
-// Retail .data 0x678370, the row immediately after tradpost.h's
-// fTradingPostEfficency (0x678344): three consecutive eleven-float rows
-// fill 0x678344..0x6783c8, and get_artifact_purchase_price divides an
-// artifact's gold cost by THIS row indexed by the marketplace count.
-// The definition belongs to tradpost.cpp beside its sibling and moves
-// there with the rest of that .data band; declared here meanwhile so the
-// division has a typed name rather than a raw address.
-extern float g_artifactPurchaseEfficency[];
-
 #endif  /* HOMM3_PHILAI_H */

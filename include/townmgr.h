@@ -754,8 +754,6 @@ class CTownNetMsgHandler;
 // modelled only as far as retail proves it, so no size is asserted; the
 // unattested run at +0x144 stays an opaque pad. The three virtuals are
 // the three slots of vtable 0x643720.
-// Shared table owned by text.cpp; also exposed to town value accessors.
-extern const char* g_townTypeNames[10];
 
 class townManager : public baseManager {
 public:

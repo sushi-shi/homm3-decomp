@@ -29,13 +29,4 @@
 // description; nothing attests a spelling.
 extern SLimitData g_advMapViewLimits;
 
-// The world extents advManager::SummonBoat's eight-neighbour scan clamps
-// against before asking for a cell. DECLARATIONS ONLY - game.h owns the
-// DATA claims on 0x6783c8 / 0x6783cc, and a second claim on one RVA is a
-// fatal duplicate at delink time. Declared here rather than by including
-// game.h, whose closure advspells.obj does not otherwise need; this is
-// exactly what event_record.h does with the same pair.
-extern int g_mapWidth;
-extern int g_mapHeight;
-
 #endif  /* HOMM3_ADVSPELLS_H */
