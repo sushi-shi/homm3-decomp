@@ -176,10 +176,10 @@ int army::fly(int destIndex)
     if (turn)
         this->turn(1);
 
-    int startX = g_combatManager->cell[m_gridIndex].m_refX;
-    long startY = g_combatManager->cell[m_gridIndex].m_refY;
-    long spanX = g_combatManager->cell[destIndex].m_refX - startX;
-    long spanY = g_combatManager->cell[destIndex].m_refY - startY;
+    int startX = g_combatManager->cell[m_gridIndex].refX;
+    long startY = g_combatManager->cell[m_gridIndex].refY;
+    long spanX = g_combatManager->cell[destIndex].refX - startX;
+    long spanY = g_combatManager->cell[destIndex].refY - startY;
     int ttlLoops = static_cast<int>(
         sqrt(static_cast<double>(spanX * spanX + spanY * spanY)));
     if (m_monFrameInfo.m_flightPixelSpan > 0)

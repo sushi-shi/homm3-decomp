@@ -535,8 +535,8 @@ static int updateSpellTarget(long hex)
                 static_cast<ESpellId>(spell), mastery, hex, g_combatManager->currControl, 1,
                 creatureSpell)
             && (spell != SPELL_CHAIN_LIGHTNING
-                || !g_combatManager->cell[hex].hasArmy()
-                || g_combatManager->cell[hex].getArmy()->getOwningSide()
+                || !g_combatManager->cell[hex].HasArmy()
+                || g_combatManager->cell[hex].get_army()->getOwningSide()
                     != g_combatManager->currControl)) {
         result = hex;
         g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
@@ -576,10 +576,10 @@ bool combatManager::checkLandmine(long hex, army* currentArmy,
 {
     if (!currentArmy->m_numTroops)
         return 0;
-    if ((cell[hex].m_attributes & hexcell::landMine) == 0)
+    if ((cell[hex].attributes & hexcell::landMine) == 0)
         return 0;
 
-    TObstacle* obstacle = &getObstacle(cell[hex].m_obstacleIndex);
+    TObstacle* obstacle = &getObstacle(cell[hex].obstacleIndex);
 
     if (obstacle->IsVisible(currentArmy->getOwningSide()))
         return 0;
@@ -600,7 +600,7 @@ bool combatManager::checkLandmine(long hex, army* currentArmy,
 
     damageMessage(akSpellTraits[SPELL_LAND_MINE].m_name, 1, damage,
                    currentArmy, deaths);
-    removeObstacle(cell[hex].m_obstacleIndex);
+    removeObstacle(cell[hex].obstacleIndex);
 
     SAMPLE2 sample;
 
@@ -629,10 +629,10 @@ bool combatManager::checkFireWall(long hex, army* currentArmy,
 {
     if (!currentArmy->m_numTroops)
         return 0;
-    if ((cell[hex].m_attributes & hexcell::fireWall) == 0)
+    if ((cell[hex].attributes & hexcell::fireWall) == 0)
         return 0;
 
-    TObstacle* obstacle = &getObstacle(cell[hex].m_obstacleIndex);
+    TObstacle* obstacle = &getObstacle(cell[hex].obstacleIndex);
 
     if (spellCastWorkChance(SPELL_FIRE_WALL, obstacle->owner, currentArmy,
                             0, 1, 0) <= 0.0f)
@@ -837,9 +837,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 hex = picker.pick();
             } while (hex >= 0
                      && (inInvisibleColumn(hex)
-                         || (cell[hex].m_attributes & hexcell::obstacleMask)
-                         || cell[hex].hasArmy()
-                         || cell[hex].m_bodiesInHex > 0));
+                         || (cell[hex].attributes & hexcell::obstacleMask)
+                         || cell[hex].HasArmy()
+                         || cell[hex].iBodiesInHex > 0));
             if (hex < 0)
                 break;
 
@@ -892,9 +892,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 hex = picker.pick();
             } while (hex >= 0
                      && (inInvisibleColumn(hex)
-                         || (cell[hex].m_attributes & hexcell::obstacleMask)
-                         || cell[hex].hasArmy()
-                         || cell[hex].m_bodiesInHex > 0));
+                         || (cell[hex].attributes & hexcell::obstacleMask)
+                         || cell[hex].HasArmy()
+                         || cell[hex].iBodiesInHex > 0));
             if (hex < 0)
                 break;
 
@@ -1372,7 +1372,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             for (TObstacle* obstacle = Obstacles.begin();
                  obstacle != Obstacles.end(); ++obstacle) {
                 if (obstacle->sprite
-                    && (cell[obstacle->grid_index].m_attributes & hexcell::magicObstacleMask)) {
+                    && (cell[obstacle->grid_index].attributes & hexcell::magicObstacleMask)) {
                     removeObstacle(obstacle - Obstacles.begin());
                     if (obstacle->dispel_effect != -1)
                         spellEffect(obstacle->dispel_effect, obstacle->grid_index,
@@ -1443,7 +1443,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // the two stack-state writes independently.
     case SPELL_SACRIFICE:
         if (validHex(secondaryIndex)) {
-            army* sacrificeArmy = cell[secondaryIndex].getArmy();
+            army* sacrificeArmy = cell[secondaryIndex].get_army();
             long hitPointsResurrected =
                 (akCreatureTypeTraits[sacrificeArmy->m_creatureType].hitPoints
                  + traits->m_mastery_bonus[mastery] + monsterPower)
@@ -1516,7 +1516,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // helper boundaries. Retail fixes field_14 as both the cell's obstacle
     // index and the obstacle's optional replacement effect.
     case SPELL_REMOVE_OBSTACLE: {
-        int obstacleIndex = cell[targetIndex].m_obstacleIndex;
+        int obstacleIndex = cell[targetIndex].obstacleIndex;
         int replacementEffect = getObstacle(obstacleIndex).dispel_effect;
         spellEffect(traits->m_effect, targetIndex, 100, 0);
         if (replacementEffect == -1) {
@@ -1724,7 +1724,7 @@ std::string combatManager::getFailureReason(ESpellId spell, const char* msg,
     if (spellTraits->m_flags & 0x70) {
         if (!validHex(hex))
             return msg;
-        army* target = cell[hex].getArmy();
+        army* target = cell[hex].get_army();
         if (!target)
             return msg;
         if (target->getSpellTime(SPELL_ANTI_MAGIC)
@@ -1861,9 +1861,9 @@ int handleCastSacrifice(message& msg)
         if (g_combatManager->validSpellTarget(SPELL_SACRIFICE, mastery, hex,
                                               g_combatManager->currControl,
                                               0, 0)
-            && g_combatManager->cell[hex].getArmy()
+            && g_combatManager->cell[hex].get_army()
                 != g_combatManager->cell[g_combatManager->giNextActionGridIndex]
-                       .getArmy()) {
+                       .get_army()) {
             g_sacrificeIndexIsValid = 1;
             g_mouseManager->setPointer(0x12, mouseManager::COMBAT_SET);
             g_combatManager->spellTargetMessage(SPELL_SACRIFICE, hex, 0);
@@ -1954,7 +1954,7 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
         while (i--) {
             if (!combatManager::validHex(hexes[i]))
                 continue;
-            army* target = g_combatManager->cell[hexes[i]].getArmy();
+            army* target = g_combatManager->cell[hexes[i]].get_army();
             if (target && !target->isInAreaHighlight())
                 hexes.erase(hexes.begin() + i);
         }
@@ -2226,7 +2226,7 @@ static int handleGetTeleportDestination(message& msg)
         const hexcell* sourceCell = &g_combatManager->cell[sourceHex];
         if (!g_combatManager->validHex(sourceHex))
             break;
-        army* sourceArmy = sourceCell->getArmy();
+        army* sourceArmy = sourceCell->get_army();
         if (g_combatManager->isValidTeleport(sourceArmy, hex)) {
             g_teleportDestinationHex = hex;
             g_mouseManager->setPointer(0x13, mouseManager::COMBAT_SET);
@@ -2298,7 +2298,7 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
         if (firstTarget)
             target = findResurrectionTarget(side, hex, creatureSpell);
         else
-            target = cell[hex].getArmy();
+            target = cell[hex].get_army();
         break;
     case SPELL_RESURRECTION:
         target = findResurrectionTarget(side, hex, creatureSpell);
@@ -2307,7 +2307,7 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
         target = findAnimateDeadTarget(side, hex);
         break;
     default:
-        target = cell[hex].getArmy();
+        target = cell[hex].get_army();
         break;
     }
     return target;
@@ -2435,15 +2435,15 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
                                               firstTarget, creatureSpell);
     }
     if (akSpellTraits[spellId].m_flags & 0x100) {
-        if (cell[targetIndex].m_obstacleIndex >= 0) {
+        if (cell[targetIndex].obstacleIndex >= 0) {
             switch (mastery) {
             case eMasteryNone:
             case eMasteryBasic:
-                if (!(cell[targetIndex].m_attributes & hexcell::magicObstacleMask))
+                if (!(cell[targetIndex].attributes & hexcell::magicObstacleMask))
                     return 1;
                 break;
             case eMasteryAdvanced: {
-                const unsigned int attributes = cell[targetIndex].m_attributes;
+                const unsigned int attributes = cell[targetIndex].attributes;
                 if (!(attributes & hexcell::magicObstacleMask) || (attributes & hexcell::fireWall))
                     return 1;
                 break;
@@ -2465,7 +2465,7 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
             long hex = getSpellWallHex(targetIndex, i, currControl);
             const hexcell* tcell = &cell[hex];
             if (!validHex(hex) || inInvisibleColumn(hex)
-                || (tcell->m_attributes & hexcell::obstacleMask) || tcell->hasArmy())
+                || (tcell->attributes & hexcell::obstacleMask) || tcell->HasArmy())
                 return 0;
         }
     } else if (spellId == SPELL_FORCE_FIELD) {
@@ -2479,7 +2479,7 @@ bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
                 hex--;
             const hexcell* tcell = &cell[hex];
             if (!validHex(hex) || inInvisibleColumn(hex)
-                || (tcell->m_attributes & hexcell::obstacleMask) || tcell->hasArmy())
+                || (tcell->attributes & hexcell::obstacleMask) || tcell->HasArmy())
                 return 0;
         }
     }
@@ -2510,8 +2510,8 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     if (!validHex(hex))
         return 0;
     const hexcell& tcell = cell[hex];
-    if (tcell.hasArmy()) {
-        army* target = tcell.getArmy();
+    if (tcell.HasArmy()) {
+        army* target = tcell.get_army();
         if (target->getOwningSide() != side)
             return 0;
         if (!target->is(creatureAlive))
@@ -2523,28 +2523,28 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             return target;
         return 0;
     }
-    if (tcell.m_attributes & hexcell::blocked)
+    if (tcell.attributes & hexcell::blocked)
         return 0;
-    int i = tcell.m_bodiesInHex - 1;
+    int i = tcell.iBodiesInHex - 1;
     if (i < 0)
         return 0;
     do {
-        army* corpse = &Armies[tcell.m_deadArmySide[i]]
-                              [tcell.m_deadArmySlot[i]];
-        if (tcell.m_deadArmySide[i] != side)
+        army* corpse = &Armies[tcell.deadArmyGroup[i]]
+                              [tcell.deadArmyIndex[i]];
+        if (tcell.deadArmyGroup[i] != side)
             continue;
         if (!corpse->is(creatureAlive))
             continue;
-        if (tcell.m_deadPartOfDouble[i] == 0) {
-            if (cell[hex + 1].hasArmy())
+        if (tcell.deadPartOfDouble[i] == 0) {
+            if (cell[hex + 1].HasArmy())
                 continue;
-            if (cell[hex + 1].m_attributes & hexcell::blocked)
+            if (cell[hex + 1].attributes & hexcell::blocked)
                 continue;
         }
-        if (tcell.m_deadPartOfDouble[i] == 1) {
-            if (cell[hex - 1].hasArmy())
+        if (tcell.deadPartOfDouble[i] == 1) {
+            if (cell[hex - 1].HasArmy())
                 continue;
-            if (cell[hex - 1].m_attributes & hexcell::blocked)
+            if (cell[hex - 1].attributes & hexcell::blocked)
                 continue;
         }
         if (validSpellTargetArmy(SPELL_RESURRECTION, side, corpse, 1,
@@ -2566,27 +2566,27 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
     if (!validHex(hex))
         return 0;
     hexcell* tcell = &cell[hex];
-    if (tcell->m_attributes & hexcell::blocked)
+    if (tcell->attributes & hexcell::blocked)
         return 0;
-    if (tcell->hasArmy())
+    if (tcell->HasArmy())
         return 0;
-    for (int i = tcell->m_bodiesInHex - 1; i >= 0; i--) {
-        int deadSide = tcell->m_deadArmySide[i];
-        int deadSlot = tcell->m_deadArmySlot[i];
+    for (int i = tcell->iBodiesInHex - 1; i >= 0; i--) {
+        int deadSide = tcell->deadArmyGroup[i];
+        int deadSlot = tcell->deadArmyIndex[i];
         if (deadSide != side)
             continue;
         if (!(Armies[deadSide][deadSlot].is(creatureAlive)))
             continue;
-        if (tcell->m_deadPartOfDouble[i] == 0) {
-            if (cell[hex + 1].hasArmy())
+        if (tcell->deadPartOfDouble[i] == 0) {
+            if (cell[hex + 1].HasArmy())
                 continue;
-            if (cell[hex + 1].m_attributes & hexcell::blocked)
+            if (cell[hex + 1].attributes & hexcell::blocked)
                 continue;
         }
-        if (tcell->m_deadPartOfDouble[i] == 1) {
-            if (cell[hex - 1].hasArmy())
+        if (tcell->deadPartOfDouble[i] == 1) {
+            if (cell[hex - 1].HasArmy())
                 continue;
-            if (cell[hex - 1].m_attributes & hexcell::blocked)
+            if (cell[hex - 1].attributes & hexcell::blocked)
                 continue;
         }
         return &Armies[deadSide][deadSlot];
@@ -2602,8 +2602,8 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     if (!validHex(hex))
         return 0;
     hexcell* tcell = &cell[hex];
-    if (tcell->hasArmy()) {
-        army* target = tcell->getArmy();
+    if (tcell->HasArmy()) {
+        army* target = tcell->get_army();
         if (target->getOwningSide() != side)
             return 0;
         if (!target->is(creatureUndead))
@@ -2614,28 +2614,28 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             return target;
         return 0;
     }
-    if (tcell->m_attributes & hexcell::blocked)
+    if (tcell->attributes & hexcell::blocked)
         return 0;
-    int i = tcell->m_bodiesInHex - 1;
+    int i = tcell->iBodiesInHex - 1;
     if (i < 0)
         return 0;
     do {
-        army* corpse = &Armies[tcell->m_deadArmySide[i]]
-                              [tcell->m_deadArmySlot[i]];
-        if (tcell->m_deadArmySide[i] != side)
+        army* corpse = &Armies[tcell->deadArmyGroup[i]]
+                              [tcell->deadArmyIndex[i]];
+        if (tcell->deadArmyGroup[i] != side)
             continue;
         if (!corpse->is(creatureUndead))
             continue;
-        if (tcell->m_deadPartOfDouble[i] == 0) {
-            if (cell[hex + 1].hasArmy())
+        if (tcell->deadPartOfDouble[i] == 0) {
+            if (cell[hex + 1].HasArmy())
                 continue;
-            if (cell[hex + 1].m_attributes & hexcell::blocked)
+            if (cell[hex + 1].attributes & hexcell::blocked)
                 continue;
         }
-        if (tcell->m_deadPartOfDouble[i] == 1) {
-            if (cell[hex - 1].hasArmy())
+        if (tcell->deadPartOfDouble[i] == 1) {
+            if (cell[hex - 1].HasArmy())
                 continue;
-            if (cell[hex - 1].m_attributes & hexcell::blocked)
+            if (cell[hex - 1].attributes & hexcell::blocked)
                 continue;
         }
         if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, corpse, 1, 0))
@@ -2658,8 +2658,8 @@ bool combatManager::hasValidSpellTarget(ESpellId spellId, TSkillMastery mastery,
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (inInvisibleColumn(hex))
             continue;
-        if (spellId == SPELL_CHAIN_LIGHTNING && cell[hex].hasArmy()
-            && cell[hex].getArmy()->getOwningSide() == castingSide)
+        if (spellId == SPELL_CHAIN_LIGHTNING && cell[hex].HasArmy()
+            && cell[hex].get_army()->getOwningSide() == castingSide)
             continue;
         if (validSpellTarget(spellId, mastery, hex, castingSide, firstTarget,
                              creatureSpell))
@@ -2807,7 +2807,7 @@ void combatManager::markAreaEffect(long hex, long radius,
     while (i-- > 0) {
         if (!validHex(hexes[i]))
             continue;
-        army* target = cell[hexes[i]].getArmy();
+        army* target = cell[hexes[i]].get_army();
         if (target == 0)
             continue;
         if (target->is(creatureImmobilized))
@@ -2832,7 +2832,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
     while (i-- > 0) {
         if (!validHex(hexes[i]))
             continue;
-        army* target = cell[hexes[i]].getArmy();
+        army* target = cell[hexes[i]].get_army();
         if (target == 0)
             continue;
         if (target->is(creatureImmobilized))
@@ -3837,7 +3837,7 @@ void combatManager::chainLightning(int index, int level, int power)
 
     { for (int i = 0; i < g_chainLightningTargets[level]; i++) {
         if (validHex(index)) {
-            army* target = cell[index].getArmy();
+            army* target = cell[index].get_army();
             if (!isQuickCombat()) {
                 if (i == 0) {
                     spellEffect(37, target, 0, 0);
@@ -4108,7 +4108,7 @@ void combatManager::mirrorImage(int targetIndex, int level)
 {
     if (!validHex(targetIndex))
         return;
-    army* source = cell[targetIndex].getArmy();
+    army* source = cell[targetIndex].get_army();
     long hex;
     {
         for (int distance = 1; distance < 11; distance++) {
@@ -4158,22 +4158,22 @@ void combatManager::mirrorImage(int targetIndex, int level)
                                         source->canFit(hex, 0, 0)) {
                                         addArmy(currControl, source->m_creatureType,
                                                 source->m_numTroops, hex, 0x800000, 0);
-                                        army* mirror = cell[hex].getArmy();
+                                        army* mirror = cell[hex].get_army();
                                         mirror->m_monInfo.attributes |= creatureSummoned;
                                         mirror->m_roundsLeftBeforeVanish =
                                             Heroes[currControl]->getSpellDurationBonus()
                                             + iSideSpellPower[currControl];
                                         source->m_mirrorDestIndex = mirror->index;
                                         mirror->m_mirrorSourceIndex = source->index;
-                                        long dx = cell[source->m_gridIndex].m_refX
-                                            - cell[mirror->m_gridIndex].m_refX;
-                                        long dy = cell[source->m_gridIndex].m_refY
-                                            - cell[mirror->m_gridIndex].m_refY;
+                                        long dx = cell[source->m_gridIndex].refX
+                                            - cell[mirror->m_gridIndex].refX;
+                                        long dy = cell[source->m_gridIndex].refY
+                                            - cell[mirror->m_gridIndex].refY;
                                         resetLimitCreature();
-                                        markCreatureEffect(cell[hex].m_armySide,
-                                                           cell[hex].m_armySlot);
-                                        markCreatureEffect(cell[targetIndex].m_armySide,
-                                                           cell[targetIndex].m_armySlot);
+                                        markCreatureEffect(cell[hex].armyGroup,
+                                                           cell[hex].armyIndex);
+                                        markCreatureEffect(cell[targetIndex].armyGroup,
+                                                           cell[targetIndex].armyIndex);
                                         computeMaxExtent();
                                         {
                                             for (int frame = 0; frame < 16; frame++) {
@@ -4294,18 +4294,18 @@ MAC_ADDRESS(0x1983dc, 0x90)
 void combatManager::removeCorpse(hexcell& hex, long side, long slot)
 {
     int i;
-    for (i = 0; i < hex.m_bodiesInHex; i++) {
-        if (hex.m_deadArmySide[i] == side && hex.m_deadArmySlot[i] == slot)
+    for (i = 0; i < hex.iBodiesInHex; i++) {
+        if (hex.deadArmyGroup[i] == side && hex.deadArmyIndex[i] == slot)
             break;
     }
-    for (; i < hex.m_bodiesInHex; i++) {
-        hex.m_deadArmySide[i] = hex.m_deadArmySide[i + 1];
-        hex.m_deadArmySlot[i] = hex.m_deadArmySlot[i + 1];
-        hex.m_deadPartOfDouble[i] = hex.m_deadPartOfDouble[i + 1];
+    for (; i < hex.iBodiesInHex; i++) {
+        hex.deadArmyGroup[i] = hex.deadArmyGroup[i + 1];
+        hex.deadArmyIndex[i] = hex.deadArmyIndex[i + 1];
+        hex.deadPartOfDouble[i] = hex.deadPartOfDouble[i + 1];
     }
-    hex.m_deadArmySide[i] = -1;
-    hex.m_deadArmySlot[i] = -1;
-    hex.m_bodiesInHex--;
+    hex.deadArmyGroup[i] = -1;
+    hex.deadArmyIndex[i] = -1;
+    hex.iBodiesInHex--;
 }
 
 // Original: combatManager::remove_corpse; spells.cpp:4838
@@ -4958,7 +4958,7 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_RESURRECT_TARGET_FORMAT],
                     target->getName());
         } else {
-            target = tcell->getArmy();
+            target = tcell->get_army();
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_SACRIFICE_TARGET_FORMAT],
                     target->getName());
         }
@@ -4972,7 +4972,7 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
             mainWindow->combatMessage((*g_generalText)[GENERAL_TEXT_TELEPORT_HERE], 0, 0);
             return;
         }
-        target = tcell->getArmy();
+        target = tcell->get_army();
         break;
     case SPELL_REMOVE_OBSTACLE:
         strcpy(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_REMOVE_OBSTACLE_TARGET]);
@@ -4993,7 +4993,7 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
         target = 0;
         break;
     default:
-        target = tcell->getArmy();
+        target = tcell->get_army();
         break;
     }
 

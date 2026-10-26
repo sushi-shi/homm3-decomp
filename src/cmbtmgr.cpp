@@ -1370,23 +1370,23 @@ void combatManager::generateMap()
     for (y = 0; y < 11; y++) {
         for (int x = 0; x < 17; x++) {
             hexcell* cell = &getCell(x, y);
-            cell->m_refX = static_cast<short>(
+            cell->refX = static_cast<short>(
                 x * 44 + (rowIsOdd(y) ? 22 : 44) + 14);
-            cell->m_refY = static_cast<short>(y * 42 + 128);
-            cell->m_hexUlx = static_cast<short>(
+            cell->refY = static_cast<short>(y * 42 + 128);
+            cell->hexULX = static_cast<short>(
                 x * 44 + (rowIsOdd(y) ? 0 : 22) + 14);
-            cell->m_hexUly = static_cast<short>(y * 42 + 86);
-            cell->m_hexBrx = static_cast<short>(cell->m_hexUlx + 44);
-            cell->m_hexBry = static_cast<short>(cell->m_hexUly + 42);
-            cell->m_fullHexBry = static_cast<short>(cell->m_hexUly + 52);
-            cell->m_armySide = -1;
-            cell->m_armySlot = -1;
-            cell->m_partOfDouble = -1;
-            cell->m_obstacleIndex = -1;
-            cell->m_attributes = 0;
-            cell->m_bodiesInHex = 0;
-            cell->m_backgroundOffset = -1;
-            cell->m_mouseShaded = 0;
+            cell->hexULY = static_cast<short>(y * 42 + 86);
+            cell->hexBRX = static_cast<short>(cell->hexULX + 44);
+            cell->hexBRY = static_cast<short>(cell->hexULY + 42);
+            cell->fullHexBRY = static_cast<short>(cell->hexULY + 52);
+            cell->armyGroup = -1;
+            cell->armyIndex = -1;
+            cell->partOfDouble = -1;
+            cell->obstacleIndex = -1;
+            cell->attributes = 0;
+            cell->iBodiesInHex = 0;
+            cell->background_offset = -1;
+            cell->mouse_shaded = 0;
         }
     }
 }
@@ -2012,7 +2012,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
         case WALL_TARGET_4:
         case WALL_TARGET_5: {
             int blockedHex = wallTargets[targetWall].get_blocked_hex();
-            cell[blockedHex].m_attributes &= ~hexcell::blocked;
+            cell[blockedHex].attributes &= ~hexcell::blocked;
             break;
         }
         case WALL_TARGET_3:
@@ -2276,7 +2276,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 continue;
             if (gridX(hex) == 0 || shape->width + gridX(hex) > 15)
                 continue;
-            if (cell[hex].m_attributes & hexcell::obstacleMask)
+            if (cell[hex].attributes & hexcell::obstacleMask)
                 continue;
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
@@ -2286,7 +2286,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                     cellIndex--;
                 int cellColumn = gridX(cellIndex);
                 if (cellColumn <= 2 || cellColumn >= 14
-                        || (cell[cellIndex].m_attributes & hexcell::obstacleMask)) {
+                        || (cell[cellIndex].attributes & hexcell::obstacleMask)) {
                     overlap = 1;
                     break;
                 }
@@ -2373,7 +2373,7 @@ void combatManager::setupAndLoadObstacles()
         }
 
         for (int row = 0; row < 11; row++)
-            cell[g_castleWallColumns[row]].m_attributes |= hexcell::blocked;
+            cell[g_castleWallColumns[row]].attributes |= hexcell::blocked;
 
         // A Tower's moat is a minefield. Row 5 is the gate hex and is
         // skipped; every other row gets one obstacle whose damage is the
@@ -2440,7 +2440,7 @@ void combatManager::setupAndLoadObstacles()
             && Heroes[1] && (Heroes[1]->m_flags & 0x40000)) {
         for (const int* hex = g_boatBlockedHexes;
                 hex < g_boatBlockedHexes + 32; hex++)
-            cell[*hex].m_attributes |= hexcell::blocked;
+            cell[*hex].attributes |= hexcell::blocked;
         return;
     }
 
@@ -2502,7 +2502,7 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
             int i = 0;
             const short* hex = sElevationOverlay[obstacleId].blockedSquares;
             for (; i < 25 && *hex != -1; ++i, ++hex) {
-                cell[*hex].m_attributes |= hexcell::blocked;
+                cell[*hex].attributes |= hexcell::blocked;
                 ++count;
             }
             iElevationOverlay = obstacleId;
@@ -2523,12 +2523,12 @@ void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int 
         if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& tcell = cell[cellIndex];
-        tcell.m_attributes |= attributes;
-        tcell.m_obstacleIndex = id;
+        tcell.attributes |= attributes;
+        tcell.obstacleIndex = id;
     }
     hexcell& anchor = cell[hex];
-    anchor.m_attributes |= hexcell::obstacleOrigin;
-    anchor.m_obstacleIndex = id;
+    anchor.attributes |= hexcell::obstacleOrigin;
+    anchor.obstacleIndex = id;
 }
 
 VA(0x00466a70, 0xBD)
@@ -2576,12 +2576,12 @@ void combatManager::removeObstacle(int index)
         if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& tcell = cell[cellIndex];
-        tcell.m_attributes &= ~hexcell::obstacleMask;
-        tcell.m_obstacleIndex = -1;
+        tcell.attributes &= ~hexcell::obstacleMask;
+        tcell.obstacleIndex = -1;
     }
     hexcell& anchor = cell[obstacle->grid_index];
-    anchor.m_attributes &= ~hexcell::obstacleOrigin;
-    anchor.m_obstacleIndex = -1;
+    anchor.attributes &= ~hexcell::obstacleOrigin;
+    anchor.obstacleIndex = -1;
     ResourceManager::Dispose(obstacle->sprite);
     obstacle->sprite = 0;
 }
@@ -2691,11 +2691,11 @@ void combatManager::makeCreaturesVanish()
             if (!bCreatureVanish[side][index])
                 continue;
             const army& stack = Armies[side][index];
-            cell[stack.m_gridIndex].m_armySide = -1;
-            cell[stack.m_gridIndex].m_armySlot = -1;
+            cell[stack.m_gridIndex].armyGroup = -1;
+            cell[stack.m_gridIndex].armyIndex = -1;
             if (stack.m_monInfo.attributes & creatureDoubleWide) {
-                cell[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
-                cell[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
+                cell[stack.m_gridIndex + stack.offsetToFront(-1)].armyGroup = -1;
+                cell[stack.m_gridIndex + stack.offsetToFront(-1)].armyIndex = -1;
             }
         }
     }
@@ -2783,15 +2783,15 @@ void combatManager::testRaiseDoor()
 {
     if (!combatTown || iDoorStatus != DRAWBRIDGE_DOWN)
         return;
-    if (cell[COMBAT_HEX_GATE].hasArmy()
-            || cell[COMBAT_HEX_GATE].m_bodiesInHex)
+    if (cell[COMBAT_HEX_GATE].HasArmy()
+            || cell[COMBAT_HEX_GATE].iBodiesInHex)
         return;
-    if (cell[COMBAT_HEX_GATE_MOAT].hasArmy()
-            || cell[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
+    if (cell[COMBAT_HEX_GATE_MOAT].HasArmy()
+            || cell[COMBAT_HEX_GATE_MOAT].iBodiesInHex)
         return;
     if (combatTown->m_type == TOWN_FORTRESS
-            && (cell[COMBAT_HEX_OUTER_MOAT].hasArmy()
-                || cell[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
+            && (cell[COMBAT_HEX_OUTER_MOAT].HasArmy()
+                || cell[COMBAT_HEX_OUTER_MOAT].iBodiesInHex))
         return;
 
     raiseDoor();
@@ -2926,7 +2926,7 @@ bool combatManager::inLineOfSight(int sourceIndex, int destIndex) const
         } else {
             for (int wall = 0; wall < 11; wall++) {
                 if (hex == g_castleWallColumns[wall]) {
-                    if (cell[g_castleWallColumns[wall]].m_attributes & hexcell::blocked)
+                    if (cell[g_castleWallColumns[wall]].attributes & hexcell::blocked)
                         return 0;
                 }
             }
@@ -3312,14 +3312,14 @@ DC_ADDRESS(0x062358, 0x74)
 MAC_ADDRESS(0x074c94, 0x7c)
 void combatManager::removeArmyFromGrid(const army& a)
 {
-    cell[a.m_gridIndex].m_armySlot = -1;
-    cell[a.m_gridIndex].m_armySide = -1;
-    cell[a.m_gridIndex].m_partOfDouble = -1;
+    cell[a.m_gridIndex].armyIndex = -1;
+    cell[a.m_gridIndex].armyGroup = -1;
+    cell[a.m_gridIndex].partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
         int hex = a.m_gridIndex + a.offsetToFront(-1);
-        cell[hex].m_armySlot = -1;
-        cell[hex].m_armySide = -1;
-        cell[hex].m_partOfDouble = -1;
+        cell[hex].armyIndex = -1;
+        cell[hex].armyGroup = -1;
+        cell[hex].partOfDouble = -1;
     }
 }
 
@@ -3337,16 +3337,16 @@ DC_ADDRESS(0x0623cc, 0xac)
 MAC_ADDRESS(0x074d10, 0xbc)
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    cell[hex].m_armySide = static_cast<signed char>(a.group);
-    cell[hex].m_armySlot = static_cast<signed char>(a.index);
-    cell[hex].m_partOfDouble = -1;
+    cell[hex].armyGroup = static_cast<signed char>(a.group);
+    cell[hex].armyIndex = static_cast<signed char>(a.index);
+    cell[hex].partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
-        cell[hex].m_partOfDouble = a.m_facing == 0 ? 1 : 0;
+        cell[hex].partOfDouble = a.m_facing == 0 ? 1 : 0;
         signed char owningSide = static_cast<signed char>(a.group);
         int second = hex + a.offsetToFront(-1);
-        cell[second].m_armySide = owningSide;
-        cell[second].m_armySlot = static_cast<signed char>(a.index);
-        cell[second].m_partOfDouble = a.m_facing != 0 ? 1 : 0;
+        cell[second].armyGroup = owningSide;
+        cell[second].armyIndex = static_cast<signed char>(a.index);
+        cell[second].partOfDouble = a.m_facing != 0 ? 1 : 0;
     }
 }
 
@@ -3360,8 +3360,8 @@ MAC_ADDRESS(0x074dcc, 0x120)
 void combatManager::viewArmy(army* thisArmy, int isQuickView)
 {
     if (thisArmy) {
-        int x = cell[thisArmy->m_gridIndex].m_refX - 149;
-        int y = cell[thisArmy->m_gridIndex].m_refY - 140;
+        int x = cell[thisArmy->m_gridIndex].refX - 149;
+        int y = cell[thisArmy->m_gridIndex].refY - 140;
         if (x < 0)
             x = 0;
         else if (x > 502)
@@ -3696,7 +3696,7 @@ bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
     for (int i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
         int hex = gAdjacentIndex[gridIndex][i];
         if (hex >= 0) {
-            army* a = cell[hex].getArmy();
+            army* a = cell[hex].get_army();
             if (currentArmy->isEnemy(a) && a != excluded)
                 return 1;
         }
@@ -3818,11 +3818,11 @@ unsigned char combatManager::doorCanBeLowered() const
 {
     if (currControl != 1)
         return 0;
-    if (cell[COMBAT_HEX_GATE_MOAT].hasArmy()
-        || cell[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
+    if (cell[COMBAT_HEX_GATE_MOAT].HasArmy()
+        || cell[COMBAT_HEX_GATE_MOAT].iBodiesInHex)
         return 0;
-    if (cell[COMBAT_HEX_OUTER_MOAT].hasArmy()
-        || cell[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex)
+    if (cell[COMBAT_HEX_OUTER_MOAT].HasArmy()
+        || cell[COMBAT_HEX_OUTER_MOAT].iBodiesInHex)
         return 0;
     return 1;
 }
@@ -3837,7 +3837,7 @@ bool combatManager::hexIsBlocked(int index) const
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
         if (iDoorStatus == DRAWBRIDGE_UP && !doorCanBeLowered())
             return 1;
-    } else if (cell[index].m_attributes & hexcell::blocked)
+    } else if (cell[index].attributes & hexcell::blocked)
         return 1;
     return 0;
 }

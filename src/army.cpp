@@ -302,16 +302,16 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->cell[m_gridIndex];
-        cell->m_armySide = static_cast<signed char>(group);
-        cell->m_armySlot = static_cast<signed char>(index);
-        cell->m_partOfDouble = -1;
+        cell->armyGroup = static_cast<signed char>(group);
+        cell->armyIndex = static_cast<signed char>(index);
+        cell->partOfDouble = -1;
         if (is(creatureDoubleWide)) {
             hexcell& backCell =
                 g_combatManager->cell[m_gridIndex + offsetToFront(-1)];
-            backCell.m_armySide = static_cast<signed char>(group);
-            backCell.m_armySlot = static_cast<signed char>(index);
-            backCell.m_partOfDouble = m_facing != 0;
-            cell->m_partOfDouble = m_facing == 0;
+            backCell.armyGroup = static_cast<signed char>(group);
+            backCell.armyIndex = static_cast<signed char>(index);
+            backCell.partOfDouble = m_facing != 0;
+            cell->partOfDouble = m_facing == 0;
         }
         addAura();
     }
@@ -768,9 +768,9 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         }
         // DC808 retains HasArmy; share its neighbor with the blocked-cell check.
         long neighborIndex = m_gridIndex + (m_facing == 0 ? -step : step);
-        if ((g_combatManager->cell[neighborIndex].hasArmy()
-             && !g_combatManager->cell[neighborIndex].getArmy()->m_isMoving)
-            || (g_combatManager->cell[neighborIndex].m_attributes & hexcell::blocked)) {
+        if ((g_combatManager->cell[neighborIndex].HasArmy()
+             && !g_combatManager->cell[neighborIndex].get_army()->m_isMoving)
+            || (g_combatManager->cell[neighborIndex].attributes & hexcell::blocked)) {
             xoff -= 0x25;
             yoff = -0xf;
         } else {
@@ -927,7 +927,7 @@ void army::addAura()
         long hex = getAdjacentHex(count);
         if (!g_combatManager->validHex(hex))
             continue;
-        army* other = g_combatManager->cell[hex].getArmy();
+        army* other = g_combatManager->cell[hex].get_army();
         if (!other)
             continue;
         if ((other->m_creatureType == ARMY_CREATURE_UNICORN
@@ -1120,8 +1120,8 @@ void army::animateMissile(army* armyToAttack)
     int startY;
     int missileFrame;
     combatManager::getMissileStartingPosition(m_creatureType,
-                               g_combatManager->cell[m_gridIndex].m_refX,
-                               g_combatManager->cell[m_gridIndex].m_refY,
+                               g_combatManager->cell[m_gridIndex].refX,
+                               g_combatManager->cell[m_gridIndex].refY,
                                m_facing, targetX, targetY, m_missileIcon,
                                &startX, &startY, &m_currFrameType,
                                &missileFrame);
@@ -1290,16 +1290,16 @@ void army::rangeAttack(army* armyToAttack)
             else
                 hex = getAdjacentCellIndexNoArmy(targetCellIndex, i);
             hexcell* cell = &g_combatManager->cell[hex];
-            if (!g_combatManager->validHex(hex) || !cell->hasArmy())
+            if (!g_combatManager->validHex(hex) || !cell->HasArmy())
                 continue;
             // SLOT IS DECLARED FIRST, in both of this body's two scan
             // loops: retail's `movsx edx,byte [ecx+0x1b]` for the slot lands
             // AHEAD of the `movsx ebx,al` that reuses the already-tested
             // armySide byte.  Worth +2.08 here and +2.32 in the Lich loop
             // below.
-            const int slot = cell->m_armySlot;
-            long side = cell->m_armySide;
-            army* a = cell->getArmy();
+            const int slot = cell->armyIndex;
+            long side = cell->armyGroup;
+            army* a = cell->get_army();
             if (g_combatManager->ArmyEffected[side][slot] != 0)
                 continue;
             g_combatManager->ArmyEffected[side][slot] = 1;
@@ -1353,11 +1353,11 @@ void army::rangeAttack(army* armyToAttack)
             else
                 hex = getAdjacentCellIndexNoArmy(targetCellIndex, i);
             hexcell* cell = &g_combatManager->cell[hex];
-            if (!g_combatManager->validHex(hex) || !cell->hasArmy())
+            if (!g_combatManager->validHex(hex) || !cell->HasArmy())
                 continue;
-            const int slot = cell->m_armySlot;
-            const int side = cell->m_armySide;
-            army* a = cell->getArmy();
+            const int slot = cell->armyIndex;
+            const int side = cell->armyGroup;
+            army* a = cell->get_army();
             if (i != COMBAT_DIRECTION_COUNT && !a->is(creatureAlive))
                 continue;
             if (g_combatManager->ArmyEffected[side][slot] != 0)
@@ -1410,8 +1410,8 @@ void army::rangeAttack()
         g_combatManager->keepAttack(indexToAttack);
         return;
     }
-    long targetX = g_combatManager->cell[target->m_gridIndex].m_refX;
-    long ourX = g_combatManager->cell[getSecondGridIndex()].m_refX;
+    long targetX = g_combatManager->cell[target->m_gridIndex].refX;
+    long ourX = g_combatManager->cell[getSecondGridIndex()].refX;
     long oldFacing = m_facing;
     if (targetX > ourX && m_facing != FACING_DEFENDER) {
         setupAnimation();
@@ -1484,7 +1484,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
         long hex = getAdjacentHex(i);
         if (!g_combatManager->validHex(hex))
             continue;
-        army* target = g_combatManager->cell[hex].getArmy();
+        army* target = g_combatManager->cell[hex].get_army();
         if (!target || target->m_hitByCreature)
             continue;
         long tempFire = damageEnemy(target, &tempDamage, &tempKilled, 0);
@@ -1901,7 +1901,7 @@ bool army::doAttack(army* armyToAttack, int direction)
             int adjacentHex = getAdjacentHex(direction);
             long behindHex = getAdjacentCellIndex(adjacentHex, direction);
             if (g_combatManager->validHex(behindHex)) {
-                behind = g_combatManager->cell[behindHex].getArmy();
+                behind = g_combatManager->cell[behindHex].get_army();
                 if (behind) {
                     if (behind->m_hitByCreature)
                         behind = 0;
@@ -2001,7 +2001,7 @@ void army::doAttack(int direction)
     int hex = getAdjacentHex(direction);
     if (!g_combatManager->validHex(hex))
         return;
-    army* armyToAttack = g_combatManager->cell[hex].getArmy();
+    army* armyToAttack = g_combatManager->cell[hex].get_army();
     if (!armyToAttack)
         return;
     int savedArmyToAttackFacing = armyToAttack->m_facing;
@@ -2134,11 +2134,11 @@ bool army::walkTo(int destIndex, bool restoreFacing)
         if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
             stop = i;
             succeeded = 0;
-        } else if (g_combatManager->cell[nextCell].m_attributes & hexcell::quicksand) {
+        } else if (g_combatManager->cell[nextCell].attributes & hexcell::quicksand) {
             stop = i;
             succeeded = 0;
             g_combatManager->getObstacle(
-                g_combatManager->cell[nextCell].m_obstacleIndex)
+                g_combatManager->cell[nextCell].obstacleIndex)
                 .is_visible = 1;
         }
         if (is(creatureDoubleWide)) {
@@ -2148,11 +2148,11 @@ bool army::walkTo(int destIndex, bool restoreFacing)
                     ->isMoat(static_cast<short>(nextCell))) {
                 stop = i;
                 succeeded = 0;
-            } else if (g_combatManager->cell[nextCell].m_attributes & hexcell::quicksand) {
+            } else if (g_combatManager->cell[nextCell].attributes & hexcell::quicksand) {
                 stop = i;
                 succeeded = 0;
                 g_combatManager->getObstacle(
-                    g_combatManager->cell[nextCell].m_obstacleIndex)
+                    g_combatManager->cell[nextCell].obstacleIndex)
                     .is_visible = 1;
             }
         }
@@ -3083,14 +3083,13 @@ unsigned long army::strength()
 //   3543      gpCombatManager->bCreatureVanish[combatSide][bitIndex] = 1;
 //   3544      gpCombatManager->bSomeCreaturesVanish = 1;
 //   3558    } else {
-//   3562      if (pCell->field_1c < 14
-//                  && (!(Is(1u << 0)) || pCell2->field_1c < 14)) {
-//   3566        if (pCell->HasArmy()) {        (armySide >= 0, inlined)
-//   3568..3571   the three dead-list rows plus the count bump - and the
-//                THIRD array is retail-only surface: hexcell's
-//                pad_3c[0xe] is deadArmySide/deadArmySlot's parallel
-//                fourteen-entry row for field_1a (`[count + cell +
-//                0x3c]`).
+//   3562      if (pCell->iBodiesInHex < 14
+//                  && (!(Is(1u << 0)) || pCell2->iBodiesInHex < 14)) {
+//   3566        if (pCell->HasArmy()) {        (armyGroup >= 0, inlined)
+//   3568..3571   the three dead-list rows plus the count bump: hexcell's
+//                deadPartOfDouble is deadArmyGroup/deadArmyIndex's
+//                parallel fourteen-entry row for partOfDouble (`[count +
+//                cell + 0x3c]`).
 //   3574..3582   the identical block for pCell2.
 //   3592..3603   gpCombatManager->highlighterOn = 0, the two cell
 //                identities set back to -1, and the same pair on the
@@ -3147,35 +3146,35 @@ void army::processDeath(int fadeElementals)
             g_combatManager->bCreatureVanish[getOwningSide()][index] = 1;
             g_combatManager->bSomeCreaturesVanish = 1;
         } else {
-            if (cell->m_bodiesInHex < 14
-                && (!twoHex || cell2->m_bodiesInHex < 14)) {
-                if (g_combatManager->cell[m_gridIndex].hasArmy()) {
-                    cell->m_deadArmySide[cell->m_bodiesInHex] =
-                        g_combatManager->cell[m_gridIndex].m_armySide;
-                    cell->m_deadArmySlot[cell->m_bodiesInHex] =
-                        g_combatManager->cell[m_gridIndex].m_armySlot;
-                    cell->m_deadPartOfDouble[cell->m_bodiesInHex] =
-                        g_combatManager->cell[m_gridIndex].m_partOfDouble;
-                    cell->m_bodiesInHex++;
+            if (cell->iBodiesInHex < 14
+                && (!twoHex || cell2->iBodiesInHex < 14)) {
+                if (g_combatManager->cell[m_gridIndex].HasArmy()) {
+                    cell->deadArmyGroup[cell->iBodiesInHex] =
+                        g_combatManager->cell[m_gridIndex].armyGroup;
+                    cell->deadArmyIndex[cell->iBodiesInHex] =
+                        g_combatManager->cell[m_gridIndex].armyIndex;
+                    cell->deadPartOfDouble[cell->iBodiesInHex] =
+                        g_combatManager->cell[m_gridIndex].partOfDouble;
+                    cell->iBodiesInHex++;
                 }
                 if (is(creatureDoubleWide)) {
-                    if (g_combatManager->cell[gi2].hasArmy()) {
-                        cell2->m_deadArmySide[cell2->m_bodiesInHex] =
-                            g_combatManager->cell[gi2].m_armySide;
-                        cell2->m_deadArmySlot[cell2->m_bodiesInHex] =
-                            g_combatManager->cell[gi2].m_armySlot;
-                        cell2->m_deadPartOfDouble[cell2->m_bodiesInHex] =
-                            g_combatManager->cell[gi2].m_partOfDouble;
-                        cell2->m_bodiesInHex++;
+                    if (g_combatManager->cell[gi2].HasArmy()) {
+                        cell2->deadArmyGroup[cell2->iBodiesInHex] =
+                            g_combatManager->cell[gi2].armyGroup;
+                        cell2->deadArmyIndex[cell2->iBodiesInHex] =
+                            g_combatManager->cell[gi2].armyIndex;
+                        cell2->deadPartOfDouble[cell2->iBodiesInHex] =
+                            g_combatManager->cell[gi2].partOfDouble;
+                        cell2->iBodiesInHex++;
                     }
                 }
             }
             g_combatManager->highlighterOn = 0;
-            cell->m_armySide = -1;
-            cell->m_armySlot = -1;
+            cell->armyGroup = -1;
+            cell->armyIndex = -1;
             if (is(creatureDoubleWide)) {
-                cell2->m_armySide = -1;
-                cell2->m_armySlot = -1;
+                cell2->armyGroup = -1;
+                cell2->armyIndex = -1;
             }
         }
         if (m_mirrorSourceIndex != -1) {
@@ -3612,7 +3611,7 @@ void army::getBerserkTargets(std::vector<army*>& armies) const
             if (canShootTarget) {
                 value = combatManager::getDistance(m_gridIndex, target->m_gridIndex);
             } else {
-                if (!g_combatManager->cell[target->m_gridIndex].m_validMove)
+                if (!g_combatManager->cell[target->m_gridIndex].bValidMove)
                     continue;
                 value = g_searchArray->getHex(target->m_gridIndex)->m_cost;
             }
@@ -3682,7 +3681,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
         if (direction < COMBAT_DIRECTION_COUNT || is(creatureDoubleWide)) {
             long hex = getAdjacentHex(ourHex, direction);
             if (combatManager::validHex(hex)
-                && enemy == g_combatManager->cell[hex].getArmy()) {
+                && enemy == g_combatManager->cell[hex].get_army()) {
                 // Mac 0x518e8..0x51930 expands needToTurn, including its
                 // direction < 6 guard.
                 if (!needToTurn(direction))
@@ -3756,13 +3755,13 @@ bool army::attackHex(int hex, bool restoreFacing)
     if (!g_combatManager->validHex(hex))
         return 0;
     hexcell* cell = &g_combatManager->cell[hex];
-    army* target = cell->getArmy();
+    army* target = cell->get_army();
     if (!target || target == this)
         return 0;
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
-    groupToAttack = cell->m_armySide;
-    indexToAttack = cell->m_armySlot;
+    groupToAttack = cell->armyGroup;
+    indexToAttack = cell->armyIndex;
     targetCellIndex = hex;
     if (canShoot(0)) {
         rangeAttack();
@@ -4004,12 +4003,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 
     long startX;
     if (m_facing == 1)
-        startX = g_combatManager->cell[m_gridIndex].m_refX
+        startX = g_combatManager->cell[m_gridIndex].refX
                  + m_monFrameInfo.m_missileOffset[2];
     else
-        startX = g_combatManager->cell[m_gridIndex].m_refX
+        startX = g_combatManager->cell[m_gridIndex].refX
                  - m_monFrameInfo.m_missileOffset[2];
-    int startY = g_combatManager->cell[m_gridIndex].m_refY
+    int startY = g_combatManager->cell[m_gridIndex].refY
                  + m_monFrameInfo.m_missileOffset[3];
 
     // dy is declared AFTER the abs: startY has to stay live across the
@@ -4040,12 +4039,12 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         pose = 2;
     }
     if (m_facing == 1)
-        startX = g_combatManager->cell[m_gridIndex].m_refX
+        startX = g_combatManager->cell[m_gridIndex].refX
                  + m_monFrameInfo.m_missileOffset[2 * pose];
     else
-        startX = g_combatManager->cell[m_gridIndex].m_refX
+        startX = g_combatManager->cell[m_gridIndex].refX
                  - m_monFrameInfo.m_missileOffset[2 * pose];
-    startY = g_combatManager->cell[m_gridIndex].m_refY
+    startY = g_combatManager->cell[m_gridIndex].refY
              + m_monFrameInfo.m_missileOffset[2 * pose + 1];
 
     sample* sample2b = ResourceManager::GetSample(
@@ -4149,7 +4148,7 @@ DC_ADDRESS(0x04b14c, 0x24)
 MAC_ADDRESS(0x052754, 0x2c)
 int army::midY() const
 {
-    return g_combatManager->cell[m_gridIndex].m_refY - m_imageHeight / 2;
+    return g_combatManager->cell[m_gridIndex].refY - m_imageHeight / 2;
 }
 
 // Original: army::TopY; army.cpp:4779
@@ -4157,7 +4156,7 @@ DC_ADDRESS(0x04b170, 0x20)
 MAC_ADDRESS(0x052780, 0x24)
 int army::topY() const
 {
-    return g_combatManager->cell[m_gridIndex].m_refY - m_imageHeight;
+    return g_combatManager->cell[m_gridIndex].refY - m_imageHeight;
 }
 
 // Original: army::BottomY; army.cpp:4784
@@ -4165,7 +4164,7 @@ DC_ADDRESS(0x04b190, 0x16)
 MAC_ADDRESS(0x0527a4, 0x1c)
 int army::bottomY() const
 {
-    return g_combatManager->cell[m_gridIndex].m_refY;
+    return g_combatManager->cell[m_gridIndex].refY;
 }
 
 VA(0x00446660, 0x35)
@@ -4173,7 +4172,7 @@ DC_ADDRESS(0x04b1a8, 0x64)
 MAC_ADDRESS(0x0527c0, 0x48)
 int army::midX() const
 {
-    int x = g_combatManager->cell[m_gridIndex].m_refX;
+    int x = g_combatManager->cell[m_gridIndex].refX;
     if (is(creatureDoubleWide))
         x += m_facing ? 22 : -22;
     return x;
@@ -4189,7 +4188,7 @@ int army::rightX() const
     else
         offset = m_stdIcon->GetCroppedX(cs_wait, 0)
                  + m_stdIcon->GetCroppedWidth(cs_wait, 0) - 196;
-    return g_combatManager->cell[m_gridIndex].m_refX + offset;
+    return g_combatManager->cell[m_gridIndex].refX + offset;
 }
 
 // Original: army::LeftX; army.cpp:4812
@@ -4202,7 +4201,7 @@ int army::leftX() const
                  - m_stdIcon->GetCroppedWidth(cs_wait, 0);
     else
         offset = m_stdIcon->GetCroppedX(cs_wait, 0) - 196;
-    return g_combatManager->cell[m_gridIndex].m_refX + offset;
+    return g_combatManager->cell[m_gridIndex].refX + offset;
 }
 
 // Original: army::FrontX; army.cpp:4825
@@ -4214,9 +4213,9 @@ int army::frontX() const
     int offset = m_stdIcon->GetCroppedX(cs_wait, 0)
                  + m_stdIcon->GetCroppedWidth(cs_wait, 0) - 196;
     if (m_facing == 0)
-        return g_combatManager->cell[m_gridIndex].m_refX - offset;
+        return g_combatManager->cell[m_gridIndex].refX - offset;
     else
-        return g_combatManager->cell[m_gridIndex].m_refX + offset;
+        return g_combatManager->cell[m_gridIndex].refX + offset;
 }
 
 VA(0x004466a0, 0x1E)
@@ -4276,8 +4275,8 @@ void army::turn(bool animateTurn)
         m_facing = FACING_DEFENDER;
         if (is(creatureDoubleWide)) {
             m_gridIndex--;
-            g_combatManager->cell[m_gridIndex].m_partOfDouble = 0;
-            g_combatManager->cell[m_gridIndex + 1].m_partOfDouble = 1;
+            g_combatManager->cell[m_gridIndex].partOfDouble = 0;
+            g_combatManager->cell[m_gridIndex + 1].partOfDouble = 1;
         }
         if (animateTurn)
             playAnimation(8, -1, 0);
@@ -4287,8 +4286,8 @@ void army::turn(bool animateTurn)
         m_facing = FACING_ATTACKER;
         if (is(creatureDoubleWide)) {
             m_gridIndex++;
-            g_combatManager->cell[m_gridIndex].m_partOfDouble = 1;
-            g_combatManager->cell[m_gridIndex - 1].m_partOfDouble = 0;
+            g_combatManager->cell[m_gridIndex].partOfDouble = 1;
+            g_combatManager->cell[m_gridIndex - 1].partOfDouble = 0;
         }
         if (animateTurn)
             playAnimation(10, -1, 0);
@@ -4316,7 +4315,7 @@ void army::setupAnimation()
     g_combatManager->Extent = heroWindowManager::s_nullLimits;
     g_combatManager->SaveBiggestExtent = 1;
     g_combatManager->ComputeExtentOnly = 1;
-    drawToBuffer(cell->m_refX, cell->m_refY, 0);
+    drawToBuffer(cell->refX, cell->refY, 0);
     g_combatManager->ComputeExtentOnly = 0;
     g_combatManager->SaveBiggestExtent = 0;
     m_letsPretendImNotHere = 1;
@@ -4367,8 +4366,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         g_combatManager->Extent = heroWindowManager::s_nullLimits;
         g_combatManager->SaveBiggestExtent = 1;
         g_combatManager->ComputeExtentOnly = 1;
-        drawToBuffer(g_combatManager->cell[m_gridIndex].m_refX,
-                     g_combatManager->cell[m_gridIndex].m_refY, 0);
+        drawToBuffer(g_combatManager->cell[m_gridIndex].refX,
+                     g_combatManager->cell[m_gridIndex].refY, 0);
         g_combatManager->ComputeExtentOnly = 0;
         g_combatManager->SaveBiggestExtent = 0;
 
@@ -4419,10 +4418,10 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     const hexcell* cell = &g_combatManager->cell[destIndex];
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
-    if (cell->hasArmy()) {
-        if (cell->m_armySide != group)
+    if (cell->HasArmy()) {
+        if (cell->armyGroup != group)
             return 0;
-        if (cell->m_armySlot != index)
+        if (cell->armyIndex != index)
             return 0;
     }
 
@@ -4436,9 +4435,9 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
         return 0;
     hexcell* otherCell = &g_combatManager->cell[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
-        if (!otherCell->hasArmy()
-                || (otherCell->m_armySide == group
-                    && otherCell->m_armySlot == index))
+        if (!otherCell->HasArmy()
+                || (otherCell->armyGroup == group
+                    && otherCell->armyIndex == index))
             return 1;
     }
 
@@ -4451,10 +4450,10 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
         hexcell* shiftedCell = &g_combatManager->cell[shiftedIndex];
         if (g_combatManager->hexIsBlocked(shiftedIndex))
             return 0;
-        if (shiftedCell->hasArmy()) {
-            if (shiftedCell->m_armySide != g_combatManager->currArmyGroup)
+        if (shiftedCell->HasArmy()) {
+            if (shiftedCell->armyGroup != g_combatManager->currArmyGroup)
                 return 0;
-            if (shiftedCell->m_armySlot != g_combatManager->currArmyIndex)
+            if (shiftedCell->armyIndex != g_combatManager->currArmyIndex)
                 return 0;
         }
         if (newDestIndex)
@@ -4690,7 +4689,7 @@ bool army::canCastSpell(long hex) const
         return 0;
     if (!combatManager::validHex(hex))
         return 0;
-    army* target = g_combatManager->cell[hex].getArmy();
+    army* target = g_combatManager->cell[hex].get_army();
     switch (m_creatureType) {
     case CREATURE_ARCHANGEL:
     case ARMY_CREATURE_PIT_LORD:
@@ -4901,7 +4900,7 @@ void army::castCaliphSpell(long hex)
 {
     if (!combatManager::validHex(hex))
         return;
-    army* target = g_combatManager->cell[hex].getArmy();
+    army* target = g_combatManager->cell[hex].get_army();
     if (!target)
         return;
     SpellID spell;
@@ -5006,8 +5005,8 @@ void army::castSpell(long hex)
 {
     long originalFacing = m_facing;
     if (!g_combatManager->isQuickCombat()) {
-        long targetX = g_combatManager->cell[hex].m_refX;
-        long targetY = g_combatManager->cell[hex].m_refY;
+        long targetX = g_combatManager->cell[hex].refX;
+        long targetY = g_combatManager->cell[hex].refY;
         long myX = midX();
         long myY = midY();
         unsigned char shouldTurn = 0;

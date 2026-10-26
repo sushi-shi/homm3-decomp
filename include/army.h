@@ -237,7 +237,7 @@ public:
     unsigned char m_showTroopCount;              // +0x0c
     // The stack this one is moving to attack, as a (side, slot) pair, -1
     // for none: ValidAttack (0x523bb0) compares the target hexcell's
-    // armySide/armySlot against it and ValidFlight looks the enemy up
+    // armyGroup/armyIndex against it and ValidFlight looks the enemy up
     // through it. Original Dreamcast groupToAttack/indexToAttack.
     int groupToAttack;              // +0x10
     int indexToAttack;              // +0x14
@@ -423,7 +423,7 @@ public:
     // the other stack's raw one and why get_owner (0x4426d0) reads this
     // field directly while get_controller (0x442690) flips it. index is
     // the slot: PlaceArmyInGrid (0x4687c0) narrows it to a byte and
-    // stores the pair as the occupied hexcell's armySide/armySlot, and
+    // stores the pair as the occupied hexcell's armyGroup/armyIndex, and
     // the combat AI also uses it as the stack's bit in its 20-bit
     // per-side masks (get_hex_attack_value 0x436180 builds 1 << index).
     int group;                      // +0xf4

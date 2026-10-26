@@ -847,13 +847,13 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
     for (long i = 0; i < COMBAT_DIRECTION_COUNT; i++) {
         int adjacent = g_combatManager->gAdjacentIndex[hex][i];
         if (combatManager::validHex(adjacent)
-            && g_combatManager->cell[adjacent].m_validMove
+            && g_combatManager->cell[adjacent].bValidMove
             && !isMoat(adjacent))
             return 1;
         if (currentArmy->is(creatureDoubleWide)) {
             adjacent -= currentArmy->offsetToFront(-1);
             if (combatManager::validHex(adjacent)
-                && g_combatManager->cell[adjacent].m_validMove
+                && g_combatManager->cell[adjacent].bValidMove
                 && !isMoat(adjacent))
                 return 1;
         }
@@ -909,16 +909,16 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
                 && (!inPlacementPhase
                     || !g_combatManager->isOutsidePlacementBoundry(
                             currentGroup, i))) {
-            g_combatManager->cell[i].m_validMove = 1;
+            g_combatManager->cell[i].bValidMove = 1;
             if (thisArmy->is(creatureDoubleWide) && !thisArmy->is(creatureSiegeWeapon)) {
                 long second = i + thisArmy->offsetToFront(-1);
                 if (!g_combatManager->inInvisibleColumn(second)) {
                     if (inPlacementPhase
                             && g_combatManager->isOutsidePlacementBoundry(
                                     currentGroup, second))
-                        g_combatManager->cell[i].m_validMove = 0;
+                        g_combatManager->cell[i].bValidMove = 0;
                     else
-                        g_combatManager->cell[second].m_frontMove = 1;
+                        g_combatManager->cell[second].front_move = 1;
                 }
             }
         }
@@ -931,10 +931,10 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
         for (long j = 0; j < g_combatManager->numArmies[other]; j++, enemy++) {
             if (!enemy->is(creatureImmobilized)
                     && enemy->m_creatureType != CREATURE_ARROW_TOWER) {
-                g_combatManager->cell[enemy->m_gridIndex].m_validMove = 1;
+                g_combatManager->cell[enemy->m_gridIndex].bValidMove = 1;
                 if (enemy->is(creatureDoubleWide))
                     g_combatManager->cell[enemy->getSecondGridIndex()]
-                            .m_validMove = 1;
+                            .bValidMove = 1;
             }
         }
     }
@@ -956,12 +956,12 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
         if (!g_combatManager->inInvisibleColumn(hex)
                 && currentArmy->canFit(hex, 0, 0)
                 && g_combatManager->isValidTeleport(currentArmy, hex)) {
-            g_combatManager->cell[hex].m_validMove = 1;
+            g_combatManager->cell[hex].bValidMove = 1;
             cell->m_flightCost = 0;
             cell->m_cost = 1;
             cell->m_visited = 1;
         } else {
-            g_combatManager->cell[hex].m_validMove = 0;
+            g_combatManager->cell[hex].bValidMove = 0;
             cell->m_visited = 0;
         }
     }
@@ -1042,9 +1042,9 @@ void searchArray::setMoat(const army* currentArmy)
         }
     }
     { for (int cell = 0; cell < COMBAT_GRID_CELLS; ++cell) {
-        if (g_combatManager->cell[cell].m_attributes & hexcell::quicksand) {
+        if (g_combatManager->cell[cell].attributes & hexcell::quicksand) {
             const combatManager::TObstacle* obstacle =
-                &g_combatManager->getObstacle(g_combatManager->cell[cell].m_obstacleIndex);
+                &g_combatManager->getObstacle(g_combatManager->cell[cell].obstacleIndex);
             if (obstacle->IsVisible(currentArmy->getOwningSide()))
                 m_isMoatSlowed[cell] = 1;
         }
@@ -1088,9 +1088,9 @@ void searchArray::markEnemy(long hex, long cost)
 {
     hexcell* combatCell = &g_combatManager->cell[hex];
     pathCell* cell = getHex(hex);
-    if (combatCell->m_validMove && cell->m_cost <= cost)
+    if (combatCell->bValidMove && cell->m_cost <= cost)
         return;
-    combatCell->m_validMove = 1;
+    combatCell->bValidMove = 1;
     cell->m_cost = static_cast<unsigned short>(cost);
 }
 
@@ -1108,7 +1108,7 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 {
     if (!combatManager::validHex(hex))
         return 0;
-    const army* enemy = g_combatManager->cell[hex].getArmy();
+    const army* enemy = g_combatManager->cell[hex].get_army();
     if (enemy == 0)
         return 0;
     if (enemy->getOwningSide() == currentGroup)
@@ -1175,8 +1175,8 @@ bool searchArray::findCombatPath(const army* currentArmy,
     }
 
     for (long clearHex = 0; clearHex < COMBAT_GRID_CELLS; clearHex++) {
-        g_combatManager->cell[clearHex].m_validMove = 0;
-        g_combatManager->cell[clearHex].m_frontMove = 0;
+        g_combatManager->cell[clearHex].bValidMove = 0;
+        g_combatManager->cell[clearHex].front_move = 0;
     }
 
     if (inPlacementPhase) {

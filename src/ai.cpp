@@ -1060,7 +1060,7 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
             continue;
         if (estimate.m_simulated && other->getTotalHitPoints(1) == 0)
             continue;
-        if (!cell[other->m_gridIndex].m_validMove)
+        if (!cell[other->m_gridIndex].bValidMove)
             continue;
         const pathCell* tcell = currentSearchArray->getHex(other->m_gridIndex);
         if (tcell->m_cost > enemy->getSpeed())
@@ -1140,7 +1140,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
             if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
             const pathCell* tcell = g_searchArray->getHex(friendly->m_gridIndex);
-            if (cell[friendly->m_gridIndex].m_validMove
+            if (cell[friendly->m_gridIndex].bValidMove
                     && tcell->m_cost <= enemy->getSpeed())
                 break;
         }
@@ -1216,7 +1216,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         if (!combatManager::validHex(hex))
             continue;
         hexcell* tcell = &cell[hex];
-        army* occupant = tcell->getArmy();
+        army* occupant = tcell->get_army();
         if (occupant != 0 && occupant != currentArmy)
             continue;
         (*openHexes)++;
@@ -1241,9 +1241,9 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
                     continue;
                 if (hexesCovered == bestHexesCovered) {
                     if (client->m_facing == 1) {
-                        if (tcell->m_refX < cell[*bestHex].m_refX)
+                        if (tcell->refX < cell[*bestHex].refX)
                             continue;
-                    } else if (tcell->m_refX > cell[*bestHex].m_refX) {
+                    } else if (tcell->refX > cell[*bestHex].refX) {
                         continue;
                     }
                 }
@@ -1706,9 +1706,9 @@ MAC_ADDRESS(0x023520, 0xdc)
 void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, type_AI_combat_parameters* estimate)
 {
     for (long i = 0; i < COMBAT_GRID_CELLS; i++) {
-        if ((cell[i].m_attributes & hexcell::fireWall) == 0)
+        if ((cell[i].attributes & hexcell::fireWall) == 0)
             continue;
-        TObstacle* obstacle = &getObstacle(cell[i].m_obstacleIndex);
+        TObstacle* obstacle = &getObstacle(cell[i].obstacleIndex);
         long base = obstacle->damage;
         long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
                                         Heroes[obstacle->owner],
@@ -1865,7 +1865,7 @@ bool combatManager::chooseMeleeTarget(const army* currentArmy, bool teleport, lo
 
         long change = 0;
         unsigned char isBlockingAction = 0;
-        if (cell[enemy->m_gridIndex].m_validMove
+        if (cell[enemy->m_gridIndex].bValidMove
                 && (g_game->m_setup.m_difficulty >= 2 || IsHuman[ourGroup])
                 && !currentArmy->cannotAttack()
                 && !enemy->is(creatureMultiHeaded)) {
@@ -2079,7 +2079,7 @@ void combatManager::placeShooter(const army* currentArmy)
             long adjacent = currentArmy->getAdjacentHex(newHex, dir);
             if (!validHex(adjacent))
                 continue;
-            army* other = cell[adjacent].getArmy();
+            army* other = cell[adjacent].get_army();
             if (other != 0 && other != currentArmy) {
                 if (other->is(creatureShootingArmy))
                     value = 1000;
@@ -2159,8 +2159,8 @@ void combatManager::doCompAI(int whichGroup)
 // TARGET, not the stack's own identity: its first two statements copy
 // the TARGET's group (+0xf4) and index (+0xf8) into them, and
 // it clears both back to -1 the moment it decides to walk instead of
-// strike. army.h still calls them `side` and `slot` on ValidAttack's
-// reading (the target hexcell's armySide/armySlot compare against
+// strike. army.h names them groupToAttack/indexToAttack on ValidAttack's
+// reading (the target hexcell's armyGroup/armyIndex compare against
 // them) - which is the same fact seen from the other end, since what
 // ValidAttack checks is that the hex still holds the chosen target.
 // The rename belongs to a lane that owns army.h's other consumers.
@@ -2275,7 +2275,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
             long adjacent = currentArmy->getAdjacentHex(hex, direction);
             if (!validHex(adjacent))
                 continue;
-            army* victim = cell[adjacent].getArmy();
+            army* victim = cell[adjacent].get_army();
             if (!victim)
                 continue;
             long bit = 1 << victim->index;
@@ -2299,7 +2299,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
         behindHex = currentArmy->getAdjacentCellIndex(behindHex, direction);
         if (!validHex(behindHex))
             return;
-        army* behind = cell[behindHex].getArmy();
+        army* behind = cell[behindHex].get_army();
         if (!behind || behind == target)
             return;
         simulateSimpleAttack(currentArmy, behind, 0, 0, 1);
@@ -2362,7 +2362,7 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
         long hex = giNextActionGridIndex;
         if (!validHex(hex))
             continue;
-        army* target = cell[hex].getArmy();
+        army* target = cell[hex].get_army();
         if (!target)
             continue;
         if (shooting) {
@@ -2463,7 +2463,7 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
                 continue;
             if (meleeOnly && theirs->m_expectedMoveOrder >= ours->m_expectedMoveOrder)
                 continue;
-            if (!shooter && !cell[theirs->m_gridIndex].m_validMove)
+            if (!shooter && !cell[theirs->m_gridIndex].bValidMove)
                 continue;
             if (data->m_simulated && theirs->getTotalHitPoints(1) == 0)
                 continue;

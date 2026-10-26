@@ -465,7 +465,7 @@ void combatManager::setCombatDirections(int hex)
         if (!validHex(firstHex))
             continue;
         firstIsValid = 0;
-        if (cell[firstHex].m_validMove
+        if (cell[firstHex].bValidMove
                 && currentArmy->canFit(firstHex, 0, 0)
                 && !g_searchArray->isMoat(firstHex))
             firstIsValid = 1;
@@ -485,7 +485,7 @@ void combatManager::setCombatDirections(int hex)
 
         secondHex = firstHex - currentArmy->offsetToFront(-1);
         secondIsValid = 0;
-        if (cell[secondHex].m_validMove
+        if (cell[secondHex].bValidMove
                 && currentArmy->canFit(secondHex, 0, 0)
                 && !g_searchArray->isMoat(secondHex))
             secondIsValid = 1;
@@ -1030,8 +1030,8 @@ int combatManager::processCombatMsg(message& msg)
                         mainWindow->m_heroSubWindows[0]->show();
                     }
                 } else if (validHex(gridIndex)) {
-                    if (cell[gridIndex].hasArmy()) {
-                        army* stack = cell[gridIndex].getArmy();
+                    if (cell[gridIndex].HasArmy()) {
+                        army* stack = cell[gridIndex].get_army();
                         hero* owner = stack->getOwner();
                         switch (g_config.m_combatArmyInfoLevel) {
                         case TCombatOptionsWindow::CREATURE_INFO_LEVEL_NONE:
@@ -1060,10 +1060,10 @@ int combatManager::processCombatMsg(message& msg)
                             break;
                         }
                     } else if (DebugShowBlockedHexes
-                               && (cell[gridIndex].m_attributes & hexcell::blocked)
-                               && cell[gridIndex].m_obstacleIndex != -1) {
+                               && (cell[gridIndex].attributes & hexcell::blocked)
+                               && cell[gridIndex].obstacleIndex != -1) {
                         TObstacle& obstacle =
-                            getObstacle(cell[gridIndex].m_obstacleIndex);
+                            getObstacle(cell[gridIndex].obstacleIndex);
                         sprintf(g_text,
                                 "Obstacle name: %s, owner: %d, visible:%s",
                                 obstacle.info->FileName, obstacle.owner,
@@ -1191,8 +1191,8 @@ int combatManager::processCombatMsg(message& msg)
 DC_ADDRESS(0x06ce2c, 0x32)
 void combatManager::getHexXY(int hex, int& x, int& y)
 {
-    x = (cell[hex].m_hexUlx + cell[hex].m_hexBrx) / 2;
-    y = (cell[hex].m_hexUly + cell[hex].m_hexBry) / 2;
+    x = (cell[hex].hexULX + cell[hex].hexBRX) / 2;
+    y = (cell[hex].hexULY + cell[hex].hexBRY) / 2;
 }
 
 VA(0x00475ed0, 0x32F)
@@ -1437,7 +1437,7 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_NONE;
 
     if (g_remoteOn && gbThisNetHasControl == 0)
-        return cell[newIndex].hasArmy() ? COMBAT_COMMAND_VIEW_ARMY
+        return cell[newIndex].HasArmy() ? COMBAT_COMMAND_VIEW_ARMY
                                            : COMBAT_COMMAND_HOVER;
 
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
@@ -1487,10 +1487,10 @@ int combatManager::getCommand(int newIndex)
     currentArmy->indexToAttack = -1;
     hexcell* tcell = &cell[newIndex];
 
-    if (tcell->hasArmy()
+    if (tcell->HasArmy()
             && currentArmy->m_creatureType != CREATURE_CATAPULT) {
         long targetSide;
-        army* target = tcell->getArmy();
+        army* target = tcell->get_army();
         targetSide = target->getOwningSide();
 
         if (InPlacementPhase)
@@ -1510,8 +1510,8 @@ int combatManager::getCommand(int newIndex)
         if (targetSide == currControl)
             return COMBAT_COMMAND_VIEW_ARMY;
 
-        currentArmy->groupToAttack = tcell->m_armySide;
-        currentArmy->indexToAttack = tcell->m_armySlot;
+        currentArmy->groupToAttack = tcell->armyGroup;
+        currentArmy->indexToAttack = tcell->armyIndex;
 
         if (currentArmy->canShoot(0)) {
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1562,7 +1562,7 @@ int combatManager::getCommand(int newIndex)
         g_searchArray->seedCombatPosition(currentArmy, currControl,
                                           currentArmy->m_monInfo.speed,
                                           InPlacementPhase, -1);
-        if (cell[newIndex].m_validMove || cell[newIndex].m_frontMove)
+        if (cell[newIndex].bValidMove || cell[newIndex].front_move)
             return (currentArmy->is(creatureFlyingArmy)) ? COMBAT_COMMAND_FLY
                                             : COMBAT_COMMAND_WALK;
     }
@@ -1612,9 +1612,9 @@ int combatManager::rightClick(int newIndex)
     }
 
     if (validHex(newIndex)
-            && cell[newIndex].hasArmy()) {
+            && cell[newIndex].HasArmy()) {
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-        viewArmy(cell[newIndex].getArmy(), 1);
+        viewArmy(cell[newIndex].get_army(), 1);
         resetMouse();
         return 0;
     }
@@ -1629,7 +1629,7 @@ int combatManager::rightClick(int newIndex)
 // giNextAction the order code, giNextActionGridIndex the target hex and
 // giNextActionExtra the companion hex - and only the melee case has a
 // real second hex (lastMoveToIndex); the rest park -1 there. Case 1/2's extra arm is the
-// wide-stack shift: when the destination cell's field_4b marks it as a
+// wide-stack shift: when the destination cell's front_move marks it as a
 // tail hex, the anchor moves one column against the stack's facing.
 VA(0x00476bd0, 0x402)
 DC_ADDRESS(0x06db78, 0x2aa)
@@ -1643,7 +1643,7 @@ void combatManager::doCommand(int command)
     case COMBAT_COMMAND_FLY:
         giNextAction = 2;
         giNextActionGridIndex = lastCellIndex;
-        if (currentArmy->is(creatureDoubleWide) && cell[lastCellIndex].m_frontMove)
+        if (currentArmy->is(creatureDoubleWide) && cell[lastCellIndex].front_move)
             giNextActionGridIndex = lastCellIndex - currentArmy->offsetToFront(-1);
         giNextActionExtra = -1;
         break;
@@ -1702,7 +1702,7 @@ void combatManager::doCommand(int command)
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         if (!validHex(lastCellIndex))
             break;
-        viewArmy(cell[lastCellIndex].getArmy(), 0);
+        viewArmy(cell[lastCellIndex].get_army(), 0);
         resetMouse();
         break;
 
@@ -2069,8 +2069,8 @@ void combatManager::checkChangeHighlighter(int currentIndex)
         return;
 
     army* currentArmy;
-    if (validHex(currentIndex) && cell[currentIndex].hasArmy())
-        currentArmy = cell[currentIndex].getArmy();
+    if (validHex(currentIndex) && cell[currentIndex].HasArmy())
+        currentArmy = cell[currentIndex].get_army();
     else
         currentArmy = 0;
 
@@ -2079,9 +2079,9 @@ void combatManager::checkChangeHighlighter(int currentIndex)
 
     resetLimitCreature();
     if (highlighterOn) {
-        if (cell[highlighterIndex].hasArmy())
-            markCreatureEffect(cell[highlighterIndex].m_armySide,
-                               cell[highlighterIndex].m_armySlot);
+        if (cell[highlighterIndex].HasArmy())
+            markCreatureEffect(cell[highlighterIndex].armyGroup,
+                               cell[highlighterIndex].armyIndex);
         highlighterOn = 0;
         highlighterIndex = -1;
     }
@@ -2116,8 +2116,8 @@ void combatManager::turnOffHighlighter(bool drawIt)
 
     if (drawIt) {
         resetLimitCreature();
-        markCreatureEffect(cell[highlighterIndex].m_armySide,
-                           cell[highlighterIndex].m_armySlot);
+        markCreatureEffect(cell[highlighterIndex].armyGroup,
+                           cell[highlighterIndex].armyIndex);
     }
 
     highlighterOn = 0;
@@ -2471,7 +2471,7 @@ MAC_ADDRESS(0x086fa4, 0x22c)
 void combatManager::processFirstAid(army* currentArmy)
 {
     if (validHex(giNextActionGridIndex)) {
-        army* targetArmy = cell[giNextActionGridIndex].getArmy();
+        army* targetArmy = cell[giNextActionGridIndex].get_army();
         int maximum = sRandom(
             1, static_cast<int>(
                    currentArmy->getController()->getFirstAidFactor()
@@ -2869,7 +2869,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
             break;
         }
     } }
-    if (slot == -1 || cell[gridIndex].hasArmy())
+    if (slot == -1 || cell[gridIndex].HasArmy())
         return 0;
 
     army* newArmy = &Armies[side][slot];

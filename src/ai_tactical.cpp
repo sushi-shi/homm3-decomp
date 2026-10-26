@@ -399,7 +399,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
         long index = g_combatManager->gAdjacentIndex[hex][direction];
         if (!g_combatManager->validHex(index))
             continue;
-        army* neighbor = g_combatManager->cell[index].getArmy();
+        army* neighbor = g_combatManager->cell[index].get_army();
         if (!neighbor)
             continue;
         if (neighbor->getOwningSide() == g_combatManager->currControl)
@@ -568,7 +568,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
         long hex = ourArmy->getAdjacentHex(ourHex, i);
         if (!g_combatManager->validHex(hex))
             continue;
-        army* target = g_combatManager->cell[hex].getArmy();
+        army* target = g_combatManager->cell[hex].get_army();
         if (target == 0)
             continue;
         if (target->getOwningSide() == ourGroup)
@@ -597,7 +597,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
     long hex = ourArmy->getAdjacentCellIndex(breathHex, direction);
     if (!g_combatManager->validHex(hex))
         return 0;
-    army* target = g_combatManager->cell[hex].getArmy();
+    army* target = g_combatManager->cell[hex].get_army();
     if (target == 0 || target == enemy)
         return 0;
     long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
@@ -996,7 +996,7 @@ long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery maste
         long hex = g_combatManager->getNextChainLightningTarget(target, 0);
         if (!g_combatManager->validHex(hex))
             break;
-        target = g_combatManager->cell[hex].getArmy();
+        target = g_combatManager->cell[hex].get_army();
         damage = damage / 2;
     }
     return getMassDamageEffect(enemyDamage, friendlyDamage);
@@ -2115,7 +2115,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
             continue;
         if (enemyRow->is(creatureImmobilized))
             continue;
-        if (!g_combatManager->cell[enemyRow->m_gridIndex].m_validMove)
+        if (!g_combatManager->cell[enemyRow->m_gridIndex].bValidMove)
             continue;
         total = max(getTraitorValue(enemy, enemyRow), total);
     }
@@ -2944,7 +2944,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
 
     type_spell_choice choice(static_cast<ESpellId>(spell), /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
                               mastery, power, power);
-    army* target = g_combatManager->cell[hex].getArmy();
+    army* target = g_combatManager->cell[hex].get_army();
     long baseDamage;
     switch (spell) {
     case SPELL_MAGIC_ARROW:

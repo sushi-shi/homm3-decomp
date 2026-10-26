@@ -94,7 +94,7 @@ static void getCreatureSpellMessage(char* buffer,
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_COMBAT_RESURRECT_CURSOR_FORMAT), targetArmy->getName());
         break;
     case CREATURE_MASTER_GENIE:
-        targetArmy = g_combatManager->cell[currentHex].getArmy();
+        targetArmy = g_combatManager->cell[currentHex].get_army();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_COMBAT_CAST_SPELL_CURSOR_FORMAT), targetArmy->getName());
         break;
     case army::ARMY_CREATURE_PIT_LORD:
@@ -106,7 +106,7 @@ static void getCreatureSpellMessage(char* buffer,
     // retail expansion places format 27 before the named format 28; both
     // a negative if/else and an early switch break reproduce that ordering.
     case CREATURE_FAERIE_DRAGON:
-        targetArmy = g_combatManager->cell[currentHex].getArmy();
+        targetArmy = g_combatManager->cell[currentHex].get_army();
         if (!targetArmy) {
             sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_FORMAT),
                     akSpellTraits[currentArmy->m_faerieDragonSpell].m_name);
@@ -117,31 +117,31 @@ static void getCreatureSpellMessage(char* buffer,
         }
         break;
     case CREATURE_STORM_ELEMENTAL:
-        targetArmy = g_combatManager->cell[currentHex].getArmy();
+        targetArmy = g_combatManager->cell[currentHex].get_army();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
                 akSpellTraits[SPELL_PROTECTION_FROM_AIR].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_ICE_ELEMENTAL:
-        targetArmy = g_combatManager->cell[currentHex].getArmy();
+        targetArmy = g_combatManager->cell[currentHex].get_army();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
                 akSpellTraits[SPELL_PROTECTION_FROM_WATER].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_ENERGY_ELEMENTAL:
-        targetArmy = g_combatManager->cell[currentHex].getArmy();
+        targetArmy = g_combatManager->cell[currentHex].get_army();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
                 akSpellTraits[SPELL_PROTECTION_FROM_FIRE].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_MAGMA_ELEMENTAL:
-        targetArmy = g_combatManager->cell[currentHex].getArmy();
+        targetArmy = g_combatManager->cell[currentHex].get_army();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
                 akSpellTraits[SPELL_PROTECTION_FROM_EARTH].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_OGRE_MAGE:
-        targetArmy = g_combatManager->cell[currentHex].getArmy();
+        targetArmy = g_combatManager->cell[currentHex].get_army();
         sprintf(buffer, g_generalText->GetText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT),
                 akSpellTraits[SPELL_BLOODLUST].m_name,
                 targetArmy->getName());
@@ -226,14 +226,14 @@ bool combatManager::showCreatureSpellError(
         int i;
 
         tcell = &cell[lastCellIndex];
-        targetArmy = tcell->getArmy();
+        targetArmy = tcell->get_army();
         if (!targetArmy) {
-            if (tcell->m_attributes & hexcell::blocked) {
+            if (tcell->attributes & hexcell::blocked) {
                 return false;
             }
-            for (i = tcell->m_bodiesInHex - 1; i >= 0; i--) {
-                int deadSide = tcell->m_deadArmySide[i];
-                int deadSlot = tcell->m_deadArmySlot[i];
+            for (i = tcell->iBodiesInHex - 1; i >= 0; i--) {
+                int deadSide = tcell->deadArmyGroup[i];
+                int deadSlot = tcell->deadArmyIndex[i];
                 if (deadSide == currControl) {
                     targetArmy = &Armies[deadSide][deadSlot];
                     break;
@@ -425,7 +425,7 @@ void combatManager::combatMessage(int command)
 
     case COMBAT_COMMAND_VIEW_ARMY:
         if (validHex(lastCellIndex)) {
-            army* viewedArmy = cell[lastCellIndex].getArmy();
+            army* viewedArmy = cell[lastCellIndex].get_army();
             if (viewedArmy)
                 sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_COMBAT_VIEW_INFO_FORMAT),
                         viewedArmy->getName(1));
@@ -457,7 +457,7 @@ void combatManager::combatMessage(int command)
         // earlier lookup; reading currentArmy->m_side adds another product.
         sprintf(g_text, g_generalText->GetText(GENERAL_TEXT_APPLY_FIRST_AID_TO_FORMAT),
                 Armies[currArmyGroup]
-                    [cell[lastCellIndex].m_armySlot].getName());
+                    [cell[lastCellIndex].armyIndex].getName());
         break;
 
     default:
@@ -655,9 +655,9 @@ void combatManager::setupGridForArmy(const army* thisArmy)
                    && i == thisArmy->m_gridIndex
                        + thisArmy->offsetToFront(-1)) {
             iCurDrawGridShade[i] = 1;
-        } else if (cell[i].m_validMove || cell[i].m_frontMove) {
-            if (cell[i].hasArmy()) {
-                if (cell[i].getArmy()->getOwningSide()
+        } else if (cell[i].bValidMove || cell[i].front_move) {
+            if (cell[i].HasArmy()) {
+                if (cell[i].get_army()->getOwningSide()
                         != thisArmy->getControllingSide())
                     iCurDrawGridShade[i] = 1;
             } else
@@ -694,10 +694,10 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 
     if (DebugShowBlockedHexes) {
         for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
-            if (cell[i].m_attributes & hexcell::blocked) {
+            if (cell[i].attributes & hexcell::blocked) {
                 CombatCellShaded->Draw(
                     0, 0, 45, 52, SaveScreenPostGrid,
-                    cell[i].m_hexUlx, cell[i].m_hexUly, true);
+                    cell[i].hexULX, cell[i].hexULY, true);
                 update = 1;
             }
         }
@@ -759,7 +759,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
             for (i = 0; i < COMBAT_GRID_CELLS; i++) {
                 if (iCurDrawGridShade[i]) {
                     SaveScreenPostGrid->Darken(
-                        cell[i].m_hexUlx, cell[i].m_hexUly, 45, 52,
+                        cell[i].hexULX, cell[i].hexULY, 45, 52,
                         CombatCellShaded, 0, 0);
                     update = 1;
                 }
@@ -774,7 +774,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
                 CombatCellGrid->Draw(
                     0, 0, CombatCellGrid->GetWidth(),
                     CombatCellGrid->GetHeight(), SaveScreenPostGrid,
-                    cell[i].m_hexUlx, cell[i].m_hexUly, true);
+                    cell[i].hexULX, cell[i].hexULY, true);
             }
         }
         update = 1;
@@ -870,13 +870,13 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     for (i = 0; i < oldHexes.size(); ++i) {
         hexcell& tcell = cell[oldHexes[i]];
         copyHeight = 52;
-        if (tcell.m_hexUly > 504)
-            copyHeight = 556 - tcell.m_hexUly;
+        if (tcell.hexULY > 504)
+            copyHeight = 556 - tcell.hexULY;
 
         combatMouseBackground->Draw(
-            tcell.m_backgroundOffset * 45, 0, 45, copyHeight,
-            SaveScreenPostGrid, tcell.m_hexUlx, tcell.m_hexUly, false);
-        tcell.m_backgroundOffset = -1;
+            tcell.background_offset * 45, 0, 45, copyHeight,
+            SaveScreenPostGrid, tcell.hexULX, tcell.hexULY, false);
+        tcell.background_offset = -1;
     }
 
     unsigned char offsetUsed[19];
@@ -887,20 +887,20 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         while (offsetUsed[offset] && offset < 19)
             ++offset;
 
-        tcell.m_backgroundOffset = offset;
+        tcell.background_offset = offset;
         offsetUsed[offset] = 1;
         copyHeight = 52;
-        if (tcell.m_hexUly > 504)
-            copyHeight = 556 - tcell.m_hexUly;
+        if (tcell.hexULY > 504)
+            copyHeight = 556 - tcell.hexULY;
 
         SaveScreenPostGrid->Draw(
-            tcell.m_hexUlx, tcell.m_hexUly, 45, copyHeight,
+            tcell.hexULX, tcell.hexULY, 45, copyHeight,
             combatMouseBackground, offset * 45, 0, false);
     }
 
     for (i = 0; i < hexes.size(); ++i) {
         hexcell& tcell = cell[hexes[i]];
-        SaveScreenPostGrid->Darken(tcell.m_hexUlx, tcell.m_hexUly, 45, 52,
+        SaveScreenPostGrid->Darken(tcell.hexULX, tcell.hexULY, 45, 52,
                            CombatCellShaded, 0, 0);
     }
 
@@ -911,15 +911,15 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 
     for (i = 0; i < oldHexes.size(); ++i) {
         const hexcell& tcell = cell[oldHexes[i]];
-        Extent.include(SLimitData(tcell.m_hexUlx, tcell.m_hexUly,
-                                  tcell.m_hexUlx + 44,
-                                  tcell.m_hexUly + 51));
+        Extent.include(SLimitData(tcell.hexULX, tcell.hexULY,
+                                  tcell.hexULX + 44,
+                                  tcell.hexULY + 51));
     }
     for (i = 0; i < hexes.size(); ++i) {
         const hexcell& tcell = cell[hexes[i]];
-        Extent.include(SLimitData(tcell.m_hexUlx, tcell.m_hexUly,
-                                  tcell.m_hexUlx + 44,
-                                  tcell.m_hexUly + 51));
+        Extent.include(SLimitData(tcell.hexULX, tcell.hexULY,
+                                  tcell.hexULX + 44,
+                                  tcell.hexULY + 51));
     }
 
     Extent.clip(combatManager::CombatAreaLimits);
@@ -1063,8 +1063,8 @@ void combatManager::drawFrame(bool update,
     for (row = 0; row < 11; row++) {
         for (column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
             hexcell& tcell = cell[getHexIndex(column, row)];
-            if (tcell.m_attributes & hexcell::obstacleOrigin) {
-                TObstacle& obstacle = getObstacle(tcell.m_obstacleIndex);
+            if (tcell.attributes & hexcell::obstacleOrigin) {
+                TObstacle& obstacle = getObstacle(tcell.obstacleIndex);
                 if (obstacle.info->underlay) {
                     if (obstacle.is_visible
                             || (obstacle.owner == currControl
@@ -1144,7 +1144,7 @@ void combatManager::drawFrame(bool update,
                     drawObstacleAt(hexIndex);
                 }
 
-                if (cell[hexIndex].hasArmy())
+                if (cell[hexIndex].HasArmy())
                     drawOccupant(hexIndex, priority, 0);
             }
         }
@@ -1202,8 +1202,8 @@ MAC_ADDRESS(0x0a66c4, 0xb4)
 void combatManager::drawObstacleAt(int hexIndex)
 {
     hexcell& tcell = cell[hexIndex];
-    if (tcell.m_attributes & hexcell::obstacleOrigin) {
-        TObstacle& obstacle = getObstacle(tcell.m_obstacleIndex);
+    if (tcell.attributes & hexcell::obstacleOrigin) {
+        TObstacle& obstacle = getObstacle(tcell.obstacleIndex);
         if (!obstacle.info->underlay) {
             if (obstacle.is_visible
                     || (obstacle.owner == currControl
@@ -1241,7 +1241,7 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     == wallHex + dx * COMBAT_GRID_ROW_STRIDE
                         - rowIsOdd(gridY(wallHex))
                     || (hexIndex == wallHex && !gridY(wallHex))) {
-                const int sw = cell[wallHex].m_hexUlx - traits.x;
+                const int sw = cell[wallHex].hexULX - traits.x;
                 if (sw > 0)
                     drawWall(image, 0, 0, sw, image->GetHeight(),
                              traits.x, traits.y);
@@ -1249,21 +1249,21 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     == wallHex - dx * COMBAT_GRID_ROW_STRIDE
                         - rowIsOdd(gridY(wallHex)) + 1) {
                 const hexcell& tcell = cell[wallHex];
-                const int sw = image->GetWidth() - tcell.m_hexUlx + traits.x
+                const int sw = image->GetWidth() - tcell.hexULX + traits.x
                                - COMBAT_WALL_HEX_WIDTH;
                 if (sw > 0) {
-                    const int sx = tcell.m_hexUlx - traits.x
+                    const int sx = tcell.hexULX - traits.x
                                    + COMBAT_WALL_HEX_WIDTH;
                     drawWall(image, sx, 0, sw, image->GetHeight(),
-                             tcell.m_hexUlx + COMBAT_WALL_HEX_WIDTH, traits.y);
+                             tcell.hexULX + COMBAT_WALL_HEX_WIDTH, traits.y);
                 }
             }
 
             if (hexIndex == wallHex) {
                 int width = COMBAT_WALL_HEX_WIDTH;
                 const hexcell& tcell = cell[wallHex];
-                int sourceX = tcell.m_hexUlx - traits.x;
-                int destX = tcell.m_hexUlx;
+                int sourceX = tcell.hexULX - traits.x;
+                int destX = tcell.hexULX;
                 if (sourceX < 0) {
                     width += sourceX;
                     destX = traits.x;
@@ -1336,10 +1336,10 @@ MAC_ADDRESS(0x0a6ae4, 0x84)
 void combatManager::drawDeadOccupants(int index)
 {
     hexcell& tcell = cell[index];
-    for (int body = 0; body < tcell.m_bodiesInHex; body++) {
-        army* dead = tcell.getDeadArmy(body);
-        if (tcell.m_deadPartOfDouble[body] != dead->m_facing)
-            dead->drawToBuffer(tcell.m_refX, tcell.m_refY, 0);
+    for (int body = 0; body < tcell.iBodiesInHex; body++) {
+        army* dead = tcell.get_dead_army(body);
+        if (tcell.deadPartOfDouble[body] != dead->m_facing)
+            dead->drawToBuffer(tcell.refX, tcell.refY, 0);
     }
 }
 
@@ -1354,16 +1354,16 @@ void combatManager::drawOccupant(int index, int drawPriority,
 
     const hexcell& hex = cell[index];
     int row = gridY(index);
-    army* occupant = hex.getArmy();
+    army* occupant = hex.get_army();
     if (drawPriority != COMBAT_DRAW_PRIORITY_ANY
             && drawPriority != occupant->m_drawPriority)
         return;
     if (occupant->m_letsPretendImNotHere)
         return;
-    if (hex.m_partOfDouble == occupant->m_facing)
+    if (hex.partOfDouble == occupant->m_facing)
         return;
 
-    occupant->drawToBuffer(hex.m_refX, hex.m_refY, numBoxOnly);
+    occupant->drawToBuffer(hex.refX, hex.refY, numBoxOnly);
     if (!bMoatOn)
         return;
     if (row == COMBAT_GATE_ROW && iDoorStatus != DRAWBRIDGE_UP)
@@ -1382,7 +1382,7 @@ void combatManager::drawOccupant(int index, int drawPriority,
             drawMoatOverlay(front);
     }
 
-    occupant->drawToBuffer(hex.m_refX, hex.m_refY, 1);
+    occupant->drawToBuffer(hex.refX, hex.refY, 1);
 }
 
 VA(0x00495090, 0x114)
@@ -1604,12 +1604,12 @@ DC_ADDRESS(0x085f70, 0x64)
 MAC_ADDRESS(0x0a7724, 0x9c)
 int combatManager::drawObstacle(const hexcell& cell)
 {
-    TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
+    TObstacle& obstacle = getObstacle(cell.obstacleIndex);
     int yOffset = 42 * (obstacle.info->height - 1);
     return drawSpriteObject(
         obstacle.sprite,
         ObstacleAnimationFrame % obstacle.sprite->GetNumFrames(0),
-        cell.m_hexUlx, cell.m_hexUly - yOffset, 0);
+        cell.hexULX, cell.hexULY - yOffset, 0);
 }
 
 VA(0x004957b0, 0x125)
@@ -1675,8 +1675,8 @@ int combatManager::drawMoatOverlay(int index)
     const hexcell& tcell = cell[index];
     const TWallTraits& traits =
         akWallTraits[combatTown->m_type][WALL_TRAITS_ROW_MOAT];
-    SLimitData moatExtent(tcell.m_hexUlx, tcell.m_hexUly + 36,
-                           tcell.m_hexUlx + 43, tcell.m_hexUly + 41);
+    SLimitData moatExtent(tcell.hexULX, tcell.hexULY + 36,
+                           tcell.hexULX + 43, tcell.hexULY + 41);
     moatExtent.clip(combatManager::CombatAreaLimits);
 
     Bitmap816* image = wallImages[WALL_TRAITS_ROW_MOAT][0];
@@ -1732,8 +1732,8 @@ void combatManager::computeMaxExtent()
                 SaveBiggestExtent = 1;
                 ComputeExtentOnly = 1;
                 Armies[side][slot].drawToBuffer(
-                    cell[Armies[side][slot].m_gridIndex].m_refX,
-                    cell[Armies[side][slot].m_gridIndex].m_refY, 0);
+                    cell[Armies[side][slot].m_gridIndex].refX,
+                    cell[Armies[side][slot].m_gridIndex].refY, 0);
                 ComputeExtentOnly = 0;
                 SaveBiggestExtent = 0;
             }
@@ -1760,8 +1760,8 @@ void combatManager::computeMaxExtent()
                 int yOffset = 42 * (obstacle->info->height - 1);
                 computeExtent(
                     sprite, 0, ObstacleAnimationFrame % sprite->GetNumFrames(0),
-                    cell[obstacle->grid_index].m_hexUlx,
-                    cell[obstacle->grid_index].m_hexUly - yOffset,
+                    cell[obstacle->grid_index].hexULX,
+                    cell[obstacle->grid_index].hexULY - yOffset,
                     0, 0, 1);
             }
         }
@@ -1862,8 +1862,8 @@ void combatManager::cycleCombatScreen()
     int highlighter_group;
     int highlighter_index;
     if (highlighterOn) {
-        highlighter_group = cell[highlighterIndex].m_armySide;
-        highlighter_index = cell[highlighterIndex].m_armySlot;
+        highlighter_group = cell[highlighterIndex].armyGroup;
+        highlighter_index = cell[highlighterIndex].armyIndex;
     } else {
         highlighter_group = -1;
         highlighter_index = -1;
@@ -2087,16 +2087,16 @@ void combatManager::spellEffect(int effect, int hex, int delay,
     int y;
     switch (traits.m_flags & 0xf) {
     case SPELL_EFFECT_PLACE_OVERHEAD:
-        x = cell[hex].m_refX - gCurLoadedSpellIcon->GetWidth() / 2;
-        y = cell[hex].m_hexUly - gCurLoadedSpellIcon->GetHeight() + 52;
+        x = cell[hex].refX - gCurLoadedSpellIcon->GetWidth() / 2;
+        y = cell[hex].hexULY - gCurLoadedSpellIcon->GetHeight() + 52;
         break;
     case SPELL_EFFECT_PLACE_CENTERED:
-        x = cell[hex].m_refX - gCurLoadedSpellIcon->GetWidth() / 2;
-        y = cell[hex].m_refY - gCurLoadedSpellIcon->GetHeight() / 2 - 37;
+        x = cell[hex].refX - gCurLoadedSpellIcon->GetWidth() / 2;
+        y = cell[hex].refY - gCurLoadedSpellIcon->GetHeight() / 2 - 37;
         break;
     case SPELL_EFFECT_PLACE_HEX:
-        x = cell[hex].m_hexUlx;
-        y = cell[hex].m_hexUly - gCurLoadedSpellIcon->GetHeight() + 52;
+        x = cell[hex].hexULX;
+        y = cell[hex].hexULY - gCurLoadedSpellIcon->GetHeight() + 52;
         break;
     }
 

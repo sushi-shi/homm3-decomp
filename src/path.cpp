@@ -95,15 +95,15 @@ int army::validAttack(int currIndex, int direction, int criteria, int literalInd
     hexcell* hc = &g_combatManager->cell[*testCellIndex];
     switch (criteria) {
         case ATTACK_CRITERIA_SELF:
-            if (hc->m_armySide == groupToAttack && hc->m_armySlot == indexToAttack)
+            if (hc->armyGroup == groupToAttack && hc->armyIndex == indexToAttack)
                 return 1;
             break;
         case ATTACK_CRITERIA_ENEMY:
-            if (hc->hasArmy() && isEnemy(hc->getArmy()))
+            if (hc->HasArmy() && isEnemy(hc->get_army()))
                 return 1;
             break;
         case ATTACK_CRITERIA_OCCUPIED:
-            if (hc->hasArmy())
+            if (hc->HasArmy())
                 return 1;
             break;
     }
