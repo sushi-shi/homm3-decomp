@@ -37,7 +37,7 @@ class armyGroup;
 class town;
 class NewmapCell;
 
-// The domain of combatManager::field_13d48 (+0x13d48), the post-combat
+// The domain of combatManager::winner (+0x13d48), the post-combat
 // verdict DoCombat returns and switches its finish-heroes teardown on:
 // 0 = the left (attacking) side won, 1 = the right (defending) side won,
 // -1 = nobody did (retreat / surrender / mutual destruction). Declared

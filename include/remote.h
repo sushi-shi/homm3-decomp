@@ -533,7 +533,7 @@ SIZE(CNetMsgHandler, 0x0c);
 // CNetMsgHandlerPause - the scoped handler that parks whatever handler the
 // network singleton is carrying, installs itself for the life of a modal
 // dialog (remotedlg.h's three dialogs embed one) or a combat
-// (combatManager::field_38 owns one), and puts the old one back. Sixteen
+// (combatManager::netMsgHandlerPause owns one), and puts the old one back. Sixteen
 // bytes: CNetMsgHandler's twelve plus one pointer, and 0x557e30's
 // `mov [esi+0xc], eax` is that pointer.
 

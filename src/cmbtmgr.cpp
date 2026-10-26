@@ -1789,7 +1789,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
 
 // E:\gamedcs\cmbtmgr.cpp:2364
 // The body is a start-of-turn hook in two halves. The first is the
-// combination-artifact auto-cast: while the acting side's field_54b0
+// combination-artifact auto-cast: while the acting side's m_artifactCast
 // latch is up and that side HAS a hero, five spells are offered, each
 // gated on the spells.obj leaf at 0x5a40d0 and cast through CastSpell
 // with a delay. Artifact 0x81 offers one spell and 0x84 offers four,
@@ -2060,11 +2060,11 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // always the defender and only ever shoots side 0. The single caller
 // (army::range_attack, 0x4401c3) pushes `this->slot`, so the domain is
 // 0..20 and the value names the VICTIM, not the tower. The acting tower
-// is read separately, from the (actingSide, actingSlot) pair.
+// is read separately, from the (currArmyGroup, currArmyIndex) pair.
 
 // The three-way gridIndex switch has NO default arm - retail leaves the
 // archer index uninitialised for any other hex - and its 0xfe -> 0 /
-// 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
+// 0xfb -> 1 / 0xff -> 2 mapping is what proves bArcherEffect is an array.
 
 // DC records const numFrames; a conditional initializer preserves that lifetime.
 // The missile-frame output lives in its animation branch, reproducing

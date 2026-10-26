@@ -231,7 +231,7 @@ int combatManager::viewSpells() const
 // two parameter homes the other way round, so the frame is 0x24 - one dword
 // too many.  Block-scoping the whole switch around `mastery`, and swapping
 // the `int x; int y;` declaration order, are both BYTE-FLAT.  Second, retail
-// places the shared `field_3c = 1; field_40 = spellToCast` tail AT THE
+// places the shared `giNextAction = 1; giNextActionExtra = spellToCast` tail AT THE
 // QUICKSAND ARM (fn+0x8f) and threads LAND_MINE's and EARTHQUAKE's `je` back
 // into it, while our C2 sinks the same join to the end of the body - the D7
 // join-placement class, not a statement shape.
@@ -2030,7 +2030,7 @@ static long g_castWallIndexToCastOn = -1;
 
 // E:\gamedcs\spells.cpp:2266
 // THE WALL CASTS (Force Field / Fire Wall). The spell comes from the
-// pending order's field_40; a valid hex draws the wall's own hexes on
+// pending order's giNextActionExtra; a valid hex draws the wall's own hexes on
 // the mouse grid (mark_wall_area_effect, expanded here) behind the
 // "Show Combat Mouse Hex" preference, and Force Field is exempt from
 // that. display_failure_reason is expanded into the refusal arm - the
@@ -2209,7 +2209,7 @@ unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
     return 1;
 }
 
-// combatManager::field_44 already holds the hex the first click picked,
+// combatManager::giNextActionGridIndex already holds the hex the first click picked,
 // so the cell pointer here is the SOURCE stack; `hex` is the candidate
 // landing under the cursor.
 VA(0x005a37d0, 0x17C)

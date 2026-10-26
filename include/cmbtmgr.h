@@ -279,27 +279,22 @@ extern const TCombatHeroSprite g_combatHeroSprites[9][2];
 // 20 per side - plus one spare making the 0x6ee8 side stride); the
 // army array base 0x54cc and the 0x548 record stride are byte-proven
 // by hexcell::get_army/get_dead_army, which index side*21 + slot.
-// (Rebased 2026-08-06: the earlier TCombatSide/TStack view sat 0x34
-// past the real army boundary and its field offsets were 0x50 short -
-// objdiff's immediate masking hid the error as the old 99.9 residual
-// on ResetHitByCreature.)
-// The pending-order CODES combatManager::field_3c carries. All three
+// The pending-order CODES combatManager::giNextAction carries. All three
 // rungs below are byte-witnessed, and the two writers corroborate each
 // other:
 //   - army::berserk_attack (0x4222c0) stores 6 on BOTH of its melee
 //     paths and 12 on the path where it gives up, and it is also the
-//     writer that fills the (field_40, field_44) pair the field_40
-//     comment describes as "(where I go, what I hit)" - so 6 is the
-//     move-and-strike order;
+//     writer that fills the (giNextActionExtra, giNextActionGridIndex)
+//     pair the giNextActionExtra comment describes as "(where I go, what
+//     I hit)" - so 6 is the move-and-strike order;
 //   - army::GoBerserk (0x4456d0) stores 7 on the branch it takes for a
 //     ballista, an arrow tower or a stack with shots left, writing only
-//     field_44, and 12 when the target list comes back empty.
+//     giNextActionGridIndex, and 12 when the target list comes back empty.
 // ai_tactical's consider_teleport (0x43aa60) reads the pair back and
 // accepts a teleport only while the code is 6, which is the third
 // witness for that rung.
-// The SPELLINGS are behaviour-derived and provisional - no roster or
-// string reaches this domain, exactly as the three field names it
-// describes are address ordinals.
+// The enumerator spellings are behaviour-derived: no roster or string
+// reaches this domain.
 enum EAIOrder {
     AI_ORDER_CAST_SPELL = 1,
     AI_ORDER_MOVE_AND_ATTACK = 6,
@@ -875,8 +870,7 @@ public:
     int bBattleOver;  // +0x132f8
     TCombatWindow* mainWindow;  // +0x132fc
     int bCombatShowIt;  // +0x13300
-    // Replaces synthetic pad_13304. Dreamcast combatManager type 0x66c7
-    // names iconWidgetWL/textWidgetWL, each an array of 25 widget pointers.
+    // Dreamcast combatManager type 0x66c7 names iconWidgetWL/textWidgetWL, each an array of 25 widget pointers.
     // NH3API confirms PC offsets +0x13304/+0x13368; retail mainWindow /
     // combatDirections accesses bound the same 200-byte interval.
     iconWidget* iconWidgetWL[25];  // +0x13304
@@ -891,7 +885,7 @@ public:
     // only calls mouseManager::SetPointer when the selected direction maps
     // to a different frame. Original Dreamcast last_attack_cursor.
     int last_attack_cursor;  // +0x1342c
-    // Replaces synthetic pad_13430. Dreamcast originals iTtlCombatDirections
+    // Dreamcast originals iTtlCombatDirections
     // and iBackgroundFrame are int; NH3API confirms +0x13430/+0x13434.
     // Retail lastAttackCursor and bCreatureVanish bound this eight-byte span.
     int iTtlCombatDirections;  // +0x13430
@@ -1677,9 +1671,9 @@ public:
     // roster calls the parameter `bIsMonsterSpell`, but retail's body
     // (0x5a8950) is a three-way `dec eax / je` chain, not a bool test,
     // and each value picks a different NOUN for the message's subject:
-    //   1 names the acting stack, out of armies[actingSide][actingSlot];
+    //   1 names the acting stack, out of Armies[currArmyGroup][currArmyIndex];
     //   2 names an ARTIFACT, out of akArtifactTraits;
-    //   everything else names the casting hero, heroes[currentSide].
+    //   everything else names the casting hero, Heroes[currControl].
     // 1 is corroborated from outside this body - retail's ResetRound
     // calls 0x5a8950 with exactly (1, SPELL_POISON, this) - and 2 by
     // combatManager::SetNextArmy (0x465330), whose two auto-cast
@@ -1896,8 +1890,7 @@ extern combatManager* g_combatManager;
 // compilands - 0x698998 with advmgr.obj's own Open/Main/ProcessKeyPress
 // and command.obj's animation frame pacer, 0x6989b8 with Main and
 // CycleCombatScreen. Behind views because a single file-scope extern added
-// to this header is its own measured include-set trigger (the field_132a0
-// bisection).
+// to this header is its own measured include-set trigger.
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.

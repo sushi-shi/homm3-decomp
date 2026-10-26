@@ -3046,11 +3046,6 @@ unsigned long army::strength()
 // The carve size 0x3A6 against the DC row's 0x2F4 is 1.24x, inside the
 // SH4 -> x86 band.
 
-// STRUCTURE FULLY DERIVED 2026-08-15; RECONSTRUCTED 2026-08-20 once all
-// five header prerequisites had landed from other lanes' work (the
-// mirror pair, hexcell's third dead row, cmbtmgr's field_53de/13438
-// band, Random). No new header surface was needed by this promotion.
-
 // THE DC LINE MAP (forward read), retail agreeing at every
 // point checked:
 //   3493  if (Is(1u << 21)) return;          retail's entry test, and the
@@ -3061,11 +3056,10 @@ unsigned long army::strength()
 //   3497  remove_binding();  a real call to 0x43ee10.
 //   3501  if (!hypnotizeFlag) {
 //   3503    if (Random(1, 100) < 60)
-//   3504      gpCombatManager->field_53dc[get_owning_side()] = 1;
+//   3504      gpCombatManager->PlayDoh[get_owning_side()] = 1;
 //   3505    else if (Random(1, 100) < 80)
-//   3506      gpCombatManager->field_53de[1 - get_owning_side()] = 1;
-//         (+0x53de is inside cmbtmgr.h's pad_53de today; retail's
-//         `sub ecx,side / [ecx+0x53df]` is the 1-side index.)
+//   3506      gpCombatManager->PlayYeah[1 - get_owning_side()] = 1;
+//         (retail's `sub ecx,side / [ecx+0x53df]` is the 1-side index.)
 //   3512  CancelAllSpells();  INLINED - the 0x51-iteration walk of
 //         spellInfluence with CancelIndividualSpell(i) on each positive
 //         row. Dreamcast 0x499ac has NO retail slot (the carve leaves no
@@ -3086,8 +3080,8 @@ unsigned long army::strength()
 //   3535    if (LeavesNoBody()) {     -- an Army.h inline with no
 //           retail copy, and it is a MASK not two Is() calls: retail
 //           emits one `test dword, 0x10400000`.
-//   3543      gpCombatManager->field_13438[combatSide][bitIndex] = 1;
-//   3544      gpCombatManager->field_13460 = 1;
+//   3543      gpCombatManager->bCreatureVanish[combatSide][bitIndex] = 1;
+//   3544      gpCombatManager->bSomeCreaturesVanish = 1;
 //   3558    } else {
 //   3562      if (pCell->field_1c < 14
 //                  && (!(Is(1u << 0)) || pCell2->field_1c < 14)) {
@@ -3098,7 +3092,7 @@ unsigned long army::strength()
 //                fourteen-entry row for field_1a (`[count + cell +
 //                0x3c]`).
 //   3574..3582   the identical block for pCell2.
-//   3592..3603   gpCombatManager->field_132cc = 0, the two cell
+//   3592..3603   gpCombatManager->highlighterOn = 0, the two cell
 //                identities set back to -1, and the same pair on the
 //                second hex behind another Is(1u << 0).
 //   3607..3619   the CLONE LINK, and the DC member table names both

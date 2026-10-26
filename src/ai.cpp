@@ -1772,9 +1772,10 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // cmbtmgr.h's InCastle / combatManager::IsInMoat.
 
 // Things worth knowing about the transcription:
-//   * the two `field_3c = 6` exits store in DIFFERENT orders - the
-//     teleport one writes 3c/40/44, the commit one 40/3c/44. Both are
-//     transcribed as retail has them.
+//   * the two `giNextAction = 6` exits store in DIFFERENT orders - the
+//     teleport one writes giNextAction/giNextActionExtra/
+//     giNextActionGridIndex, the commit one giNextActionExtra/giNextAction/
+//     giNextActionGridIndex. Both are transcribed as retail has them.
 //   * DC 2119..2138 puts the defensive action in its own positive scope
 //     after the fortification arm. That ordinary if also reproduces the
 //     current retail comparison; a labelled commit is unnecessary.

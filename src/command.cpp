@@ -194,7 +194,7 @@ issueCatapultOrder:
 // E:\gamedcs\command.cpp:193. The DC signature and sole local identify
 // the current-stack scan; retail fixes the target filters and command tuple.
 // The final two stores follow DC's separate statement groups: select and store
-// the target grid first, then clear field_40. Retail's Complete-only pointer
+// the target grid first, then clear giNextActionExtra. Retail's Complete-only pointer
 // overload of is_computer_action is kept because its call relocation proves it.
 // Mac keeps a -1 creature-type register and regenerative-target checks at
 // 0x82194/0x821d8..0x8220c. A plain bestCreatureType = -1 local with those
@@ -627,7 +627,7 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // numerator between the two integer-to-float conversions, while VC6 loads it
 // after both. Keep the Mac-exact named components until that lifetime is found.
 VA(0x00474a00, 0x198)
-MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
+MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields m_combatDirections/lastMoveToIndex + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
     int yDifference;
@@ -727,7 +727,7 @@ bool combatManager::isComputerAction()
 // contradicts that TU's reading: the address is a one-byte
 // flag with two independent readers, and both do nothing but test it
 // non-zero (`mov al, byte [0x691209]; test al, al`). The sound guard's
-// `field_84 || g_goSolo` and this body's `g_goSolo && field_132b4`
+// `field_84 || g_goSolo` and this body's `g_goSolo && gbThisNetHasControl`
 // are both consistent with a single global "an automated/attract mode is
 // running" latch; neither reader constrains the other, so the name
 // stays soundmgr's.
@@ -1366,7 +1366,7 @@ bool combatManager::validWallTarget(TWallTargetId wall)
 // E:\gamedcs\command.cpp:1964
 // THE LADDER, in retail's own test order. -1 (no hex) answers 0. A
 // network game in which this side is not under interactive control
-// (field_132b4 clear) short-circuits the whole thing and answers the
+// (gbThisNetHasControl clear) short-circuits the whole thing and answers the
 // bare hover pair 5/6. The two hero panels answer 4 for the panel that
 // belongs to the side on turn and 21 for the other, and 0 when that
 // side has no hero at all. Then the two castle structures GetGridIndex
@@ -1380,7 +1380,7 @@ bool combatManager::validWallTarget(TWallTargetId wall)
 // 0x4764f6 and compares it against 3 and then 2), and inside each arm
 // the redundant `< CASTLE` / `< CITADEL` half of the inlined predicate
 // is folded away by the dominating test. (2) In the wall LOOP the
-// expansion keeps both halves, reading field_132f4 out of the ebx it
+// expansion keeps both halves, reading fortificationLevel out of the ebx it
 // parked the value in, which is why the loop body carries the
 // `i == 0 || i == 6` / `i == 7` tier tests verbatim.
 
@@ -1626,9 +1626,9 @@ int combatManager::rightClick(int newIndex)
 }
 
 // THE FIVE ORDER CASES all write the same (what, where, how) triple -
-// field_3c the order code, field_44 the target hex and field_40 the
-// companion hex - and only the melee case has a real second hex
-// (field_132d8); the rest park -1 there. Case 1/2's extra arm is the
+// giNextAction the order code, giNextActionGridIndex the target hex and
+// giNextActionExtra the companion hex - and only the melee case has a
+// real second hex (lastMoveToIndex); the rest park -1 there. Case 1/2's extra arm is the
 // wide-stack shift: when the destination cell's field_4b marks it as a
 // tail hex, the anchor moves one column against the stack's facing.
 VA(0x00476bd0, 0x402)

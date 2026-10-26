@@ -19,7 +19,7 @@
 // SHOOT order and are split by ShotIsThroughWall / ShotIsNotOptimal; 4
 // is the hero panel of the side on turn (spell book) against 21 for the
 // other side's; 5 opens a stack's info panel; 7 carries the second hex
-// in field_132d8, i.e. the melee attack; 16 bombards a wall target; 17
+// in lastMoveToIndex, i.e. the melee attack; 16 bombards a wall target; 17
 // is the first-aid tent's heal; 20 is a creature-cast spell; 22 opens
 // the castle tower info. 6 is only ever ANSWERED (the plain hover over
 // a hex that is not actionable) and falls into DoCommand's empty

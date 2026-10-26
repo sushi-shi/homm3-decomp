@@ -2204,10 +2204,11 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice& choice, long gr
 // choose_melee_action what the stack is worth staying put (melee_only
 // 0) and what it would be worth allowed to relocate (melee_only 1), and
 // take the difference. The two calls leave combatManager's scratch
-// answer behind, which is why the body then reads field_3c / field_40 /
-// field_44 rather than anything it computed itself: 6 is the action
-// code that means "move there", field_44 is the hex chosen, and
-// field_40 is what lands in choice->field_18.
+// answer behind, which is why the body then reads giNextAction /
+// giNextActionExtra / giNextActionGridIndex rather than anything it
+// computed itself: 6 is the action code that means "move there",
+// giNextActionGridIndex is the hex chosen, and giNextActionExtra is what
+// lands in choice->m_secondTargetHex.
 
 // Those calls also PERTURB the AI target state for both sides, so the
 // body latches a flag the first time it commits to one and re-runs
@@ -3027,7 +3028,7 @@ unsigned char type_AI_spellcaster::spellsNotRequired() const
 }
 
 // Four refusals before the pricing, and two of them corroborate
-// domains this tree already carries. `field_53c0 == 2` refuses every
+// domains this tree already carries. `m_magicTerrain == 2` refuses every
 // spell above traits level 1 - which is Cursed Ground's published
 // rule and the same code cmbtmgr.h already records as refusing
 // creature casts. Either hero wearing artifact 83 refuses every spell
