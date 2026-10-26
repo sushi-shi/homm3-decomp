@@ -26,7 +26,8 @@ enum ERmgBrushStrength {
 //   ? e ?  ? . .  ? e ?  . . ?
 //   e C ?  e C ?  . C .  . C .
 //   ? ? .  ? . .  . ? .  ? . e
-enum ERmgTerrainShape {
+// Loki h3maped names this type {anonymous}::TGroundShape (TerrainPlacement.cpp).
+enum TGroundShape {
     SHAPE_FILL = 0,
     SHAPE_N_W_BLEND = 2,
     SHAPE_W_BLEND = 3,
@@ -77,16 +78,16 @@ enum ERmgTerrainGapAxis {
 };
 
 struct TRmgTerrainPatternEntry {
-    ERmgTerrainShape m_transition;
+    TGroundShape m_transition;
     b8 m_special;
 };
 
 struct TRmgTerrainTransitionEntry {
-    ERmgTerrainShape m_transition;
+    TGroundShape m_transition;
     b8 m_flipX;
     b8 m_flipY;
 
-    bool matches(ERmgTerrainShape transition, b8 flipX, b8 flipY) const;
+    bool matches(TGroundShape transition, b8 flipX, b8 flipY) const;
 };
 
 

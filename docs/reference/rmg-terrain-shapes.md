@@ -1,7 +1,7 @@
 # RMG terrain and line shapes
 
 The random-map terrain painter (`src/rmg_terrain.cpp`) gives each cell a
-**shape** (`ERmgTerrainShape`) from the terrain of its eight neighbours, then
+**shape** (`TGroundShape`) from the terrain of its eight neighbours, then
 draws a frame of that shape from the cell's tileset. Each neighbour gets one
 of three **edge kinds**, seen from the centre cell. A shape is described in one
 canonical, unreflected orientation; the painter tries four reflections
