@@ -270,15 +270,12 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
 // point copied to its grid cell. DC line 396 calls pop_back for the
 // 500-entry cap; keep that source operation instead of a library expansion.
 
-// Removed the old terrainForbidsMagic, findQueueSlot and fillPathCell
-// compiler-budget probes and the tail-insert inline_depth(0) pin. Their
-// prior 87.5488% peak is superseded; none had source-boundary evidence.
 // The real game::get_cell accessor remains a canonical game.h inline.
 
 // Retail reuses one comparison-key stack home in the visited-cell check and
-// queue search. One local for that shared role, together with pop_back,
-// reproduces the retained body. Separate cell/entry locals leave six stack
-// homes permuted (99.9640%); the original local name is not recorded.
+// queue search; one local for that shared role, together with pop_back,
+// gives the retained body (separate cell/entry locals permute six stack
+// homes). The original local name is not recorded.
 VA(0x004b1a70, 0x88D)
 DC_ADDRESS(0x09f2a4, 0x472)
 MAC_ADDRESS(0x0c4ecc, 0x65c)  // anchor-bracket
@@ -1196,8 +1193,8 @@ bool searchArray::findCombatPath(const army* currentArmy,
     int bestDistance = 800;
     int bestHex = -1;
     // Dreamcast CodeView names function-scope `pathCell pc` and emits its
-    // empty constructor before both vector clears. Restoring that lifetime
-    // is byte-flat at 87.9780 but preserves the positive source evidence.
+    // empty constructor before both vector clears; that function-scope
+    // lifetime is kept.
     pathCell pc;
     m_result.clear();
     m_queue.clear();

@@ -30,21 +30,12 @@ DATA(0x0063b7c8) const long g_chainLightningTargets[kNumMasteries] = { 4, 4, 5, 
 // slots even when both are lvalues:
 //   - get_fastest_speed 0x4249a1 (ai_combat) homes the enregistered
 //     accumulator AND `monsters[i].speed`, whose address is already in
-//     eax, before the compare. Under `const _Ty&` our CL passes eax
-//     straight through and homes the accumulator once (100.00 ->
-//     78.06).
+//     eax, before the compare;
 //   - get_breath_bonus 0x436760 stores `damage` into a dead parameter
 //     slot INSIDE the `simulated` branch, at the call - a temporary,
-//     not a home; under `const _Ty&` the store sinks to the variable's
-//     definition (100.00 -> 97.19).
-// Switching the whole pair to `const _Ty&` was measured 2026-08-08 and
-// cost eight exact functions (ai_combat get_resurrection_value,
-// get_spell_damage, get_fastest_speed,
-// get_next_chain_lightning_target, get_damage_spell_value,
-// get_mass_damage_value; ai_tactical get_multi_head_bonus,
-// get_breath_bonus) while raising nothing. Declared file-locally so
-// the TU does not pull the STL surface in; ai_combat.cpp carries the
-// same pair.
+//     not a home.
+// Declared file-locally so the TU does not pull the STL surface in;
+// ai_combat.cpp carries the same pair.
 // Artifact 83, the id cast_spell (0x43c800) asks
 // hero::IsWieldingArtifact for on BOTH heroes before refusing every
 // spell above traits level 2 - Recanter's Cloak's rule and no other
@@ -268,9 +259,7 @@ VA(0x00435dc0, 0xF3)
 DC_ADDRESS(0x03cba0, 0xea)
 MAC_ADDRESS(0x03d5d8, 0x144)
 // Keep the complete bool chain through simulation, loss valuation and its
-// logical fields. Restoring only the simulation signatures while retaining
-// uchar loss flags/casts adds normalization: Mac falls 100 -> 85.49 here
-// (simple attack 100 -> 95.08); the coherent native chain retains both exact.
+// logical fields: uchar loss flags/casts add normalization.
 long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const army& enemy, long distance) const
 {
     bool ranged = currentArmy.canShoot(0);
@@ -328,7 +317,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     }
     // Direct group fields: DC's four get_total_combat_value calls have no
     // get_group/get_enemy_group calls (DC keeps 23 such calls elsewhere);
-    // the getters reorder each call's argument loads (97.57%).
+    // the getters reorder each call's argument loads.
     m_friendlyCombatValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
                                                m_lowestDefense, 1);
     m_awakeFriendlyValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
@@ -466,9 +455,8 @@ MAC_ADDRESS(0x03dcec, 0x384)
 void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDirection, long stopDirection)
 {
     // DC records enemy_value, direction, checked and attack_time at
-    // procedure scope. Restoring those lifetimes is byte-flat in VC6.
-    // Both bonus helpers take the enemy's stored combat side; the
-    // getOwningSide accessor call costs Windows 97.86% and Mac 85.00%.
+    // procedure scope. Both bonus helpers take the enemy's stored combat
+    // side, not the getOwningSide accessor.
     long threat;
     long direction;
     long checked;
@@ -744,8 +732,7 @@ type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
 // the store and the use and none of them lets VC6 assume `this` is
 // unaliased.
 // Mac 0+0x3e330 stores the creature byte immediately after constructing
-// m_estimate. Putting that assignment before the enemy local makes retail
-// VC6 exact (95.77% -> 100%): 22 blocks, 12 branches and 12 calls agree.
+// m_estimate; that assignment precedes the enemy local, as retail needs.
 VA(0x004369c0, 0x22B)
 DC_ADDRESS(0x03d604, 0xec)
 MAC_ADDRESS(0x03e330, 0xec)  // anchor-callee
@@ -880,15 +867,11 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // two PARAMETERS are what let VC6 hoist the group index and the hero
 // out of the loop: consider_spell's mass arm homes them at [ebp+8] and
 // [ebp-0x10] before the walk and strength-reduces the army address
-// into a single decrementing byte offset. Spelling the same two loops
-// out in the caller instead re-reads `this->enemy_side` every
-// iteration and re-derives the whole 1352-byte stride each time, which
-// is what capped consider_spell at 79.84.
-// DC row 973 forms the army address before row 975's damage call. Giving
-// that address its own target lifetime closes considerSpell 98.1927 -> 100;
-// the 16-state follow-up finds pointer/reference bindings exact, while the
-// inline address and a named damage result remain 98.1927. Mass-result
-// declaration/argument lifetimes do not change either outcome.
+// into a single decrementing byte offset; spelling the same two loops out
+// in the caller re-reads `this->enemy_side` every iteration and re-derives
+// the whole 1352-byte stride each time. DC row 973 forms the army address
+// before row 975's damage call: the address has its own target lifetime
+// (pointer or reference).
 DC_ADDRESS(0x03dabc, 0x6e)
 MAC_ADDRESS(0x03ea8c, 0x98)
 long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
@@ -1028,12 +1011,9 @@ void type_AI_spellcaster::considerChainLightning(type_spell_choice& choice) cons
 
 // E:\gamedcs\ai_tactical.cpp:1126
 // DC proves this const/reference helper and both ordered group calls.
-// Retail 0x43bb20 expands it but calls get_mass_damage_effect. Restoring
-// consider_summon's get_mastery_value call (DC 3098/3167) recovers that split
-// without a force-inline declaration or depth pin. The exhaustive 24-state
-// boundary family preserves all five TUs' scores; flattening only that mastery
-// call while leaving the effect unpinned lowers considerSpell 98.1927 ->
-// 80.5073. Ordinary group/mass/summon helpers preserve every old code section.
+// Retail 0x43bb20 expands it but calls get_mass_damage_effect; the
+// get_mastery_value call in consider_summon (DC 3098/3167) gives that split
+// without a force-inline declaration or depth pin.
 DC_ADDRESS(0x03de90, 0x98)
 MAC_ADDRESS(0x03f018, 0xc0)
 void type_AI_spellcaster::considerMassDamage(
@@ -1342,8 +1322,8 @@ long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duratio
 }
 
 // The shared SpellCastWorkChance call-site spelling is settled here
-// (2026-08-08), and it is ONE naming: the normalised creature-spell
-// flag is a NAMED LOCAL, not an inline `creature_spell != 0` argument.
+// here, and it is ONE naming: the normalised creature-spell flag is a NAMED
+// LOCAL, not an inline `creature_spell != 0` argument.
 
 //     long creature_cast = creature_spell != 0;
 //     ... SpellCastWorkChance(spell, side, enemy, 0, 1, creature_cast)
@@ -1603,17 +1583,15 @@ long type_AI_spellcaster::getMoveOrderChangeValue(const army* ourArmy) const
 // The work chance is the FLOAT round-trip (`fild dword / fstp DWORD /
 // fmul dword`), not the double one, as in get_damage_value.
 
-// Three edits took this from 74.62: inverting the null-target test so
-// the zero arm is the FALL-THROUGH (`if (target == 0) { effect = 0; }
-// else { ... }`, +13.7 - arm layout follows the source's test
-// polarity), and hoisting the army pointer out of the loop with
-// `j++, our_army++` in the increment instead of re-subscripting
-// `&armies[side][j]` inside the body (+8.6 - the subscript form folds
-// j into the pre-header base address, where retail computes
-// `&armies[side][0]` with no j at all; set_melee_enemies below already
-// carries the hoisted form). Restoring the Dreamcast-authored Is and
-// cannot_attack calls preserves those inlined retail tests and restores VC6's
-// retail stack allocation and final combat-value expression order.
+// The null-target test is inverted so the zero arm is the FALL-THROUGH
+// (`if (target == 0) { effect = 0; } else { ... }` - arm layout follows the
+// source's test polarity), and the army pointer is hoisted out of the loop
+// with `j++, our_army++` in the increment instead of re-subscripting
+// `&armies[side][j]` inside the body (the subscript form folds j into the
+// pre-header base address, where retail computes `&armies[side][0]` with no
+// j at all; set_melee_enemies below carries the same hoisted form). The
+// Dreamcast-authored Is and cannot_attack calls keep those inlined retail
+// tests, retail's stack allocation and final combat-value expression order.
 VA(0x00439270, 0x28B)
 DC_ADDRESS(0x03fa24, 0x1fa)
 MAC_ADDRESS(0x04164c, 0x330)  // anchor-vtable
@@ -1743,7 +1721,6 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
 // DC's ranged byte record is compatible with lowered bool. Keep the
 // canShoot bool result in its native domain through getLossCombatValue's
 // bool parameter: retail forwards the saved byte without test/setne.
-// This restores all 31 blocks, 11 calls and 25 relocations at 100%.
 VA(0x004396e0, 0x2BC)
 DC_ADDRESS(0x03fde4, 0x27c)
 MAC_ADDRESS(0x041bd8, 0x2d8)
@@ -2092,7 +2069,7 @@ long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data c
 // min/max wrappers. The wrappers' parameter copies are visible in retail as
 // the two stack temporaries around each reference-returning selector. Clang
 // cannot choose between this project's int and double overloads for Win32
-// long, but VC6 selects the int wrapper and reproduces retail exactly.
+// long, but VC6 selects the int wrapper.
 VA(0x0043a500, 0x16E)
 DC_ADDRESS(0x040ac0, 0xf6)
 MAC_ADDRESS(0x043d40, 0x228)
@@ -2216,9 +2193,8 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice& choice, long gr
 // choice is taken - the damage is done by asking, not by accepting.
 
 // DC line 2593 calls get_current_army, IsIncapacitated and is_last_action.
-// The shared short-circuit expression lets VC6 expand the ordinary helper:
-// all 32 retail blocks, 23 branches and five calls now agree. Restoring the
-// direct loop bound in isLastAction closes the remaining stack-slot difference.
+// The shared short-circuit expression lets VC6 expand the ordinary helper;
+// isLastAction keeps the direct loop bound.
 VA(0x0043aa60, 0x235)
 DC_ADDRESS(0x040ec0, 0x15c)
 MAC_ADDRESS(0x044410, 0x218)  // anchor-callee // MAC_ABSTRACTION_FROM(tokens1:d3c7e499796f,32.4627): isIncapacitated now reads durations through getSpellTime; native Mac 0x44568 expands spell slots 62/70/74.
@@ -2281,12 +2257,10 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 // is_last_action once more, here with `field_1c` standing in for the
 // disabled triple.
 
-// DC lines 2674-2675 call get_current_army and is_last_action. Restoring
-// their short-circuit expression raises VC6 from 97.10% to 99.96%: all 44
-// blocks, 29 branches and nine calls agree. Clamping the existing healable
-// count through min, rather than introducing a second healed variable,
-// recovers the retail stack lifetimes and reaches Windows 100%. The native
-// Mac body likewise uses the selected count directly in combat valuation.
+// DC lines 2674-2675 call get_current_army and is_last_action in one
+// short-circuit expression. The existing healable count is clamped through
+// min rather than a second healed variable; the native Mac body likewise
+// uses the selected count directly in combat valuation.
 VA(0x0043aca0, 0x2AE)
 DC_ADDRESS(0x04101c, 0x25c)
 MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee; MAC_ABSTRACTION_FROM(tokens1:4d0275565ac1,28.9402): the only change since this checkpoint is the DC-proven akSpellTraits table and field spelling (2245b30a8, 72ee10712); CW addresses the restored table declaration differently.
@@ -2358,8 +2332,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
 // divided by the healed stack's own hit points.
 
 // DC lines 2742-2743 call get_current_army and is_last_action. VC6 expands
-// the ordinary helper here: all 35 retail blocks, 24 branches and five calls
-// match exactly.
+// the ordinary helper here.
 VA(0x0043af50, 0x284)
 DC_ADDRESS(0x041278, 0x228)
 MAC_ADDRESS(0x044908, 0x274)  // anchor-callee

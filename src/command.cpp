@@ -57,39 +57,18 @@ static const int g_combatActionFirstAid = 11;
 // keep when the action is automatic; otherwise a basic catapult chooses a
 // random weakest wall, while the remaining cases prefer surviving towers.
 // Every successful arm writes the catapult order and its target combat hex.
-// Mac code0+0x81d04 retains validWallTarget(WALL_TARGET_3) at the keep check.
-// Keep that source call even though VC6 emits a longer boolean test here.
-// A chosen-target result guards the fallback wall/tower selection and
-// removes the shared-order goto at 99.8804%. Bool, unsigned-char and int
-// forms are neutral, as are two single-pass selection scopes. Copying the
-// final order stores and return into the keep arm scores 95.9569%. Preserve
-// the named calls and their conditional random draw.
-// DC100/102 keeps the manual-control and mastery guards nested.
-// Mac 0x81dc4..0x81df8 rejects manual positive-skill control first, then
-// tests the keep independently. Restoring that early guard raises Windows
-// 92.18% to 98.68% while preserving validWallTarget and every other helper.
-// A common-order jump is Windows byte-flat and matches Mac's direct keep
-// edge with target in r27 and saves starting at r26. The chosen-result flag
-// adds three CW instructions and an r25 save absent from native; remove that
-// provisional state while retaining the shared order stores.
-// Full native comparison now matches all 1016 Mac bytes: name the controller,
-// keep the typed mastery and signed four-wall count, and reuse one index
-// across the wall-array scans. Windows remains 98.6842%; every helper stays.
-// Restoring validWallTarget bool is byte-flat in this caller and Mac.
+// Mac code0+0x81d04 retains validWallTarget(WALL_TARGET_3) at the keep
+// check; keep that source call even though VC6 emits a longer boolean test.
+// DC100/102 keeps the manual-control and mastery guards nested; Mac
+// 0x81dc4..0x81df8 rejects manual positive-skill control first, then tests
+// the keep independently, and retail follows that early guard. Name the
+// controller, keep the typed mastery and signed four-wall count, and reuse
+// one index across the wall-array scans (the native Mac shape).
 // Original valid_wall_target@@QAA_NW4TWallTargetId@@@Z proves bool;
 // lowered CodeView byte primitives are not independent uchar evidence.
-// The coherent bool automation chain leaves the emitted catapult (688B),
-// first-aid (416B), wall predicate (80B), and main (1456B) bytes unchanged.
-// Catapult therefore retains its 98.6842% residual; renamed call/data symbols
-// require target rebinding before scoring these source interfaces.
-// The wall scans use ordinary loop bodies. Their extra enclosing scopes
-// survived 2bb943d19f's replacement of provisional loop-local indices with
-// the shared native index; no declaration remains in either outer scope.
-// Removing that scaffolding leaves Windows at 98.6842%, with 59 aligned
-// blocks, four calls and all 22 relocations unchanged.
-// DC 179..181 stores the order directly (action, grid index, then extra),
-// and Mac retail calls no order helper; those three stores close the last
-// Windows difference (98.76 -> 100%).
+// The wall scans use ordinary loop bodies. DC 179..181 stores the order
+// directly (action, grid index, then extra), and Mac retail calls no order
+// helper.
 VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
 MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
@@ -197,9 +176,8 @@ issueCatapultOrder:
 // the target grid first, then clear field_40. Retail's Complete-only pointer
 // overload of is_computer_action is kept because its call relocation proves it.
 // Mac keeps a -1 creature-type register and regenerative-target checks at
-// 0x82194/0x821d8..0x8220c. A plain bestCreatureType = -1 local with those
-// checks folds away in both current compilers (Windows remains exact, Mac
-// remains 396 vs 440 bytes); its initialization boundary is still unresolved.
+// 0x82194/0x821d8..0x8220c; a plain bestCreatureType = -1 local with those
+// checks folds away in both current compilers.
 VA(0x00473ea0, 0x196)
 DC_ADDRESS(0x06b12c, 0x13c)
 MAC_ADDRESS(0x0820fc, 0x1b8)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map
@@ -692,10 +670,9 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 
 // E:\gamedcs\command.cpp:928
 // Mac 0x82ebc retains this wrapper at all thirteen command/drawing call sites.
-// Naming the current-army argument preserves the exact retained wrapper in
-// both builds and restores the retail register setup in its expanded callers:
-// getControl, resetRound and automateFirstAidTent become exact together.
-// The nested expression is the measured control; it loses those three matches.
+// Naming the current-army argument keeps the retained wrapper in both builds
+// and gives retail's register setup in its expanded callers (getControl,
+// resetRound and automateFirstAidTent); the nested expression does not.
 VA(0x00474ba0, 0x4A)
 DC_ADDRESS(0x06bebc, 0x1b4)
 MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding
@@ -1180,13 +1157,8 @@ int combatManager::processCombatMsg(message& msg)
 // placement-phase handoff in front and widens the stack rows to the retail
 // 0x548-byte army layout. The identity and extent are independently fixed by
 // the unique whole-body retail map and the exhaustive command order-map.
-// RESIDUAL (97.48472%): all 21 branches and both returns are exact. The 24
-// register-visible differences are confined to the placement message and the
-// inlined TurnOffHighlighter path; why-reg v2 classifies them as C1 front-end
-// scratch-pseudo ordering with the same callee-saved bindings. Named/value/
-// pointer remote-position locals, reversed endpoint spelling, and an explicit
-// highlighter expansion were measured and were byte-identical or worse. The
-// DC statement row independently requires the TurnOffHighlighter call here.
+// The DC statement row requires the TurnOffHighlighter call in the
+// placement path.
 // Original: combatManager::GetHexXY; command.cpp:1638
 DC_ADDRESS(0x06ce2c, 0x32)
 void combatManager::getHexXY(int hex, int& x, int& y)
@@ -1343,11 +1315,9 @@ bool combatManager::isOutsidePlacementBoundry(int group, int index)
 }
 
 // DC command.cpp:1941 selects the two castle-only targets; 1943/1944
-// checks their fortification level inside that guard. This nested source
-// form preserves the exact retained helper and all Windows caller scores.
-// Keep the final comparison return (DC cmp/pl/movt; Mac 0x8451c..0x8452c):
-// a positive/zero return ladder lowers this helper to 88.97% and its
-// catapult expansion to 91.17%.
+// checks their fortification level inside that guard. Keep the final
+// comparison return (DC cmp/pl/movt; Mac 0x8451c..0x8452c); a positive/zero
+// return ladder changes this helper and its catapult expansion.
 VA(0x00476440, 0x50)
 DC_ADDRESS(0x06d548, 0x42)
 MAC_ADDRESS(0x0844b0, 0x84)
@@ -1403,28 +1373,15 @@ bool combatManager::validWallTarget(TWallTargetId wall)
 // unsigned char argument form.
 // Dreamcast line rows 1972/2077 retain hexcell::HasArmy, 2033 retains
 // ValidHex/InInvisibleColumn, and 2080/2181 retain army::get_owning_side.
-// Using those existing helpers moves current VC6 similarity 92.57143%
-// to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
 // Mac 0x84798..0x847c0 keeps one cell receiver in r28 and index in r27;
 // the same receiver feeds HasArmy, GetArmy, side/slot and move flags.
 // Keep that receiver local to the army branch; native 0x84a64..0x84a74
-// recomputes the later move flags from the index. Combined with the
-// positive shot-penalty guard and side-first declaration, this improves
-// Windows 92.5357 -> 100% and Mac 31.6621 -> 98.4765%. Declaring the cell
-// after clearing the target fields closes Windows' final scheduling gap.
-// Mac retains a 0x70 frame versus 0x80, indexed early HasArmy access and
-// a pointer-strength-reduced wall walk; explicit pointer walks do not
-// improve Windows. The wall arm writes
-// slot before side, as native 0x849cc/0x849d8 does.
-// Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
-// non-null hero returns. These four guard controls are VC6 byte-flat;
-// retaining the native forms improves the paired Mac body 31.66 -> 34.96%.
-// Native 0x84684/0x846ec writes newIndex into both tower slots. Those
-// source assignments are VC6 byte-flat and improve Mac to 61.67%.
-// At the current Windows 99.9464% plateau the first reported difference,
-// +0x124, loads the same wall-target datum under the source s_wallTargets
-// and retail wallTargets labels; four masked instruction rows still differ.
-// All nine Windows calls and thirteen Mac calls retain their named order.
+// recomputes the later move flags from the index. The shot-penalty guard is
+// positive, side is declared first, and the cell is declared after clearing
+// the target fields. The wall arm writes slot before side, as native
+// 0x849cc/0x849d8 does. Mac 0x84584..0x84618 fixes the positive HasArmy
+// ternary and guarded non-null hero returns, and native 0x84684/0x846ec
+// writes newIndex into both tower slots.
 // DC command.cpp:2129 passes army::get_controlling_side into the older
 // ShotIsThroughWall signature. Complete's canonical helper takes the army
 // instead and reads its controlling side inside that retained body.
@@ -1802,9 +1759,9 @@ void combatManager::showLootedArtifacts(
     }
 }
 
-// DC command.cpp:2624 assigns min directly to the defender's mana. Keeping
-// that expression recovers the retail operand homes; separate mana/cap
-// snapshots leave 99.8293% despite an otherwise identical call sequence.
+// DC command.cpp:2624 assigns min directly to the defender's mana; that
+// expression gives the retail operand homes (separate mana/cap snapshots do
+// not).
 // Complete darkens the screen after freeArmies; the older port's earlier
 // text drawing and extra results-dialog fade/surface setup are absent.
 VA(0x00477470, 0x58C)
@@ -1968,15 +1925,10 @@ void combatManager::doVictory(int winningGroup)
     g_dialogDeadline = 0;
 }
 
-// A named army-row base shared with checkGetAIMove is not the missing CSE:
-// it lowers this retained body from 100% to 86.44% and the caller from
-// 94.4335% to 93.50%. Mac reloads the side at 0x85b44 inside the walk.
-// Native 0x85b44 reloads m_currentSide inside each scan iteration. Restoring
-// that field access keeps the retained Windows body exact and raises its
-// CheckGetAIMove expansion 94.4335 -> 99.3038%. Dividing and multiplying
-// the accumulator before returning preserves the native r31 lifetime and
-// matches all 388 Mac bytes; a single return expression is only 83.2474%.
-// Both retained bodies are exact, with the factor helper still called.
+// Native 0x85b44 reloads m_currentSide inside each scan iteration, and the
+// accumulator is divided and multiplied before returning (the native r31
+// lifetime; a single return expression differs). A named army-row base
+// shared with checkGetAIMove changes both bodies.
 VA(0x00477a00, 0xB2)
 DC_ADDRESS(0x06e898, 0xf8)
 MAC_ADDRESS(0x085b14, 0x184)
@@ -2132,11 +2084,10 @@ void combatManager::turnOffHighlighter(bool drawIt)
 // caller is main, where Windows expands the decision between first aid and
 // catapult automation. An ordinary definition leaves an extra VC6 call;
 // this inline definition restores its retail expansion boundary.
-// Mac exits on a false computer-action policy before the AI/resetMouse tail.
-// That early guard restores main from 97.17% to an exact Windows body; the
-// positive-action if followed by return0 merges three retail false exits.
-// Mac places this body between turnOffHighlighter and checkGetAIMove;
-// restoring that source order is byte-flat in both compiler controls.
+// Mac exits on a false computer-action policy before the AI/resetMouse tail;
+// that early guard is retail's (a positive-action if followed by return 0
+// merges three retail false exits). Mac places this body between
+// turnOffHighlighter and checkGetAIMove.
 MAC_ADDRESS(0x08627c, 0x10c)
 inline bool combatManager::automateTower()
 {
@@ -2178,11 +2129,9 @@ inline bool combatManager::automateTower()
 // in the Dreamcast AICheckRetreat statement slot. Complete inlines the
 // already exact get_surrender_cost body here, while retaining its standalone
 // copy at 0x477a00.
-// Mac reloads currentSide within getSurrenderCost's retained body. Restoring
-// those loads and the accumulator's divide/multiply assignments closes that
-// helper on both compilers; direct army-row indexing here then closes Windows
-// too. Earlier row-index probes against the incomplete helper model lowered
-// the score, so their results did not refute this complete source model.
+// Mac reloads currentSide within getSurrenderCost's retained body; with
+// those loads and the accumulator's divide/multiply assignments, direct
+// army-row indexing here gives retail.
 // IsActive and the canonical surrender helper remain source calls. Mac keeps
 // the surrender call; Windows expands it. FullUpdate after each dialog is
 // DC-only: Windows retail continues directly to the response checks.
@@ -2502,7 +2451,7 @@ void combatManager::processFirstAid(army* currentArmy)
 // Keep GetName -> GetArmyName, timer/selector calls, DC3653's max and the
 // text-resource getters. DC3653's max is the library's reference selector
 // (std::max); the by-value game max leaves the wait-arm string constructor's
-// _Tidy call (99.7272%). Mac default construction at 0x87888 (defend) and
+// _Tidy call. Mac default construction at 0x87888 (defend) and
 // 0x87a90 (wait) fixes both string lifetimes independently.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 // Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
@@ -2843,10 +2792,9 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
 // left/top/right/bottom rectangle. The save/redraw/fizzle triple around
 // DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
 // DC command.cpp:3906/3910 calls WinMgr.h's const-SLimitData-reference
-// overloads (dc 0x70b40/0x70af0), which contain Width/Height. Restoring
-// those existing higher-level calls makes Windows 94.1419% -> 100%.
-// CodeWarrior still expands both wrappers into the native scalar fizzle
-// call sequence; its scored body remains 21.4474%. No helper is flattened.
+// overloads (dc 0x70b40/0x70af0), which contain Width/Height; keep those
+// higher-level calls. CodeWarrior expands both wrappers into the native
+// scalar fizzle call sequence.
 VA(0x0047a100, 0x1CD)
 DC_ADDRESS(0x070474, 0x1dc)
 MAC_ADDRESS(0x088044, 0x2f0)
