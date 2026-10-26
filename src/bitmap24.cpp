@@ -12,14 +12,11 @@
 #include "pcx.h"
 
 // Dreamcast exposes these three source helpers as standalone bitmap24.cpp
-// functions. Complete retains each call boundary in source but VC6 expands all
-// of them into AdjustHSV, leaving no separate x86 bodies in this TU. The ftol
-// dossier proves its double parameter and sole named local, const unsigned long
-// magic; reusing d's representation is what gives retail its shared qword home.
-// DC bitmap24.cpp:40 initializes magic, line 42 updates d, and line 43 reads
-// its low word. The editors' /Ob1 Libraries build still expands it in
-// HSVToRGB (h3maped 0x4e4f89 `mov eax, 0x59c00000; ... fadd`), so it is
-// declared inline; the game's /Ob2 expands it either way.
+// functions; all are inlined into AdjustHSV. The ftol dossier proves its
+// double parameter and sole named local, const unsigned long magic. DC
+// bitmap24.cpp:40 initializes magic, line 42 updates d, and line 43 reads
+// its low word. Declared inline because the editors' /Ob1 Libraries build
+// still expands it in HSVToRGB.
 // Original: ftol; bitmap24.cpp:39
 DC_ADDRESS(0x0525b4, 0x62)
 static inline long ftol(double d)
@@ -152,11 +149,8 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 
 // E:\gamedcs\bitmap24.cpp:280. Dreamcast proves the clipped rectangle,
 // source pointer, three channel-scale locals, nested row/pixel scopes and the
-// two GetPitch boundaries. Retail independently fixes the 24-bit-to-16-bit
-// channel conversion and brackets this 353-byte body immediately after the
-// Bitmap16Bit wrapper above.
-// Dreamcast line 342 advances both row pointers after the inner pixel loop;
-// Complete retains the same post-row induction.
+// two GetPitch boundaries; Complete converts 24-bit to 16-bit channels.
+// Dreamcast line 342 advances both row pointers after the inner pixel loop.
 VA(0x0044f010, 0x161)
 DC_ADDRESS(0x052968, 0x13e)
 MAC_ADDRESS(0x05d00c, 0x210)  // source-order bracket + RGB mask/data flow
@@ -183,9 +177,8 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
-        // Complete's x86 relocation and byte schedule require this later-
-        // revision declaration order. It retains all three DC-named scale
-        // locals while assigning bm1/rm1/gm1 to retail's ESI/stack/EBX roles.
+        // The later-revision declaration order, with all three DC-named
+        // scale locals.
         const unsigned int rm1 = (Bitmap16Bit::red_mask << 1) & ~Bitmap16Bit::red_mask;
         const unsigned int gm1 = (Bitmap16Bit::green_mask << 1) & ~Bitmap16Bit::green_mask;
         const unsigned int bm1 = (Bitmap16Bit::blue_mask << 1) & ~Bitmap16Bit::blue_mask;
@@ -200,8 +193,6 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                     ((in[1] * gm1) >> 8) & Bitmap16Bit::green_mask;
                 unsigned int red =
                     ((in[2] * rm1) >> 8) & Bitmap16Bit::red_mask;
-                // The operands are commutative; this grouping is retail's
-                // exact blue/red/green source-load schedule under VC6 C1.
                 *out++ = static_cast<unsigned short>(blue | red | green);
                 in += 3;
             }

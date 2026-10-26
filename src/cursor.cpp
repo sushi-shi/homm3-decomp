@@ -321,11 +321,8 @@ NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, bo
 
 // E:\gamedcs\cursor.cpp:490. Separate preference index and pixel step: DC
 // 520 loads the pixel table, DC 521 the delay table, and DC 522 divides 32
-// by the pixel step. The pinned DC tables at 0x1b045c/0x1b0470 contain
-// {2,8,10,16,32}/{100,50,50,50,100}; both use the original index. A
-// separate speedIndex preserves that value while walk_speed becomes the
-// pixel step, loaded before the delay. Retain next_frame_time in the loop
-// and all canonical calls.
+// by the pixel step. The DC tables contain {2,8,10,16,32}/{100,50,50,50,100};
+// both use the original index, while walk_speed becomes the pixel step.
 VA(0x00480380, 0x25C)
 DC_ADDRESS(0x07a7f4, 0x25e)
 MAC_ADDRESS(0x08f3b8, 0x1e8)  // exhaustive order + timeGetTime call
@@ -728,17 +725,14 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
 // cursor and run the encounter.
 
 // The (0xff, 0xff, 0xff) point is the same invalid-point sentinel
-// game::SetupAdjacentMons already uses: retail's packed stores clear bits 8..9
-// and set only bits 0..7, which is three widened 0xff values and not the
-// Dreamcast's (-1, -1, -1). The one point serves as BOTH the result buffer and
-// the `excluded` by-value argument.
-
-// The whole StopCursor(1) body is expanded here rather than called, and the
-// second GetCell is a discarded call retail keeps - transcribed as written.
-
-// `location` has to be a NAMED local even though it feeds one call: retail
-// builds the hero's packed point BEFORE the sentinel, and writing
-// `curr->get_location()` in the argument list builds it after.
+// game::SetupAdjacentMons already uses (not the Dreamcast's (-1, -1, -1)).
+// The one point serves as BOTH the result buffer and the `excluded`
+// by-value argument.
+//
+// The StopCursor(1) body is written out here, and the second GetCell's
+// result is discarded in the original.
+//
+// `location` is a named local built before the sentinel.
 VA(0x00481900, 0x1C1)
 DC_ADDRESS(0x07bbbc, 0x210)
 MAC_ADDRESS(0x090b18, 0x1a4)  // exhaustive cursor-tail order/call set
@@ -789,8 +783,7 @@ int advManager::validMoveWithEvent(hero* who, int direction)
 
 // DC cursor.cpp:1027 proves const hero* currHero; bWithEvent and
 // normal_move_only supply the two remaining semantic parameter names.
-// All hero accessors used here have recovered const contracts; the retail
-// address ABI does not require a mutable hero facade.
+// All hero accessors used here have recovered const contracts.
 // Original ValidMove@advManager@@QAAHPBVhero@@HH_N@Z: the final flag is bool.
 VA(0x00481be0, 0x2ED)
 DC_ADDRESS(0x07bee4, 0x2f4)

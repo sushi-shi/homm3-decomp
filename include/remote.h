@@ -44,7 +44,7 @@ public:
     }
 
     // E:\gamedcs\remote.h:207. The DC build retains this tiny accessor call;
-    // VC6 expands its bounds guard and 21-byte name stride in the hot-seat loop.
+    // inlined in the hot-seat loop.
     DC_ADDRESS(0x147478, 0x28)
     char* getName(int player)
     {
@@ -71,8 +71,8 @@ public:
     }
 
     // Original: CLogFile::InitLogFile; remote.h:235
-    // Both release builds keep the logging hooks empty. Complete's calls
-    // share the no-argument ret representative at 0x5bc690.
+    // Both release builds keep the logging hooks empty; they share the
+    // no-argument return body.
     DC_ADDRESS(0x0e709c, 0x4)
     void initLogFile() {}
 
@@ -107,18 +107,15 @@ public:
     virtual unsigned char sysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     bool pollRemote();
-    // Out of line at 0x553040 (`ret 8`), and reached from two directions in
-    // remote.obj alone: the free GetRemoteData wrapper at 0x554400 passes
-    // ecx through and a literal 0, and CNetMsgHandler::CheckHandleNet
-    // (0x557860) calls it with the literal pair (1, 0). Declaration only,
-    // for the same reason as the pair above.
+    // Reached from the free GetRemoteData wrapper (with a literal 0) and
+    // from CNetMsgHandler::CheckHandleNet (with the literal pair (1, 0)).
     CNetMsg* getRemoteData(unsigned char removeFromQueue,
                            unsigned char* wasCompressed);
     bool transmitRemoteData(CNetMsg* msg, int toWho,
                             bool compressMsg, bool guaranteed);
     bool transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
                                 bool compressMsg, bool guaranteed);
-    // Retail 0x5533d0, DC remote.cpp:578. The free transmit wrappers stamp
+    // DC remote.cpp:578. The free transmit wrappers stamp
     // their sender fields and optional compression, then call this retrying
     // DirectPlay sender with the final message buffer.
     bool sendIt(CNetMsg* msg, unsigned long dpidTo, bool guaranteed);
@@ -239,8 +236,7 @@ public:
     void resumeTimeOuts();
     void clearChat();
 
-    // DC remote.h:320-321. The lobby slider
-    // expands these count and position reads at +0x08/+0x20 in retail.
+    // DC remote.h:320-321; inlined in the lobby slider.
     DC_ADDRESS(0x1474a0, 0xc)
     int getCount() { return m_msgCount; }
 
@@ -427,11 +423,9 @@ SIZE(CTurnDuration, 0x14);
 
 extern CTurnDuration g_turnDuration;
 
-// Retail .bss pair right behind g_dPlay's pointer cell, written
-// together by advManager::StartLocalPlayerTurn (the acting player's game
-// position and an armed byte) and read back by CAdvMgrNetMsgHandler::
-// HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
-// unclaimed, so the names stay ordinal and the DATA claims wait for it.
+// Written together by advManager::StartLocalPlayerTurn (the acting
+// player's game position and an armed byte) and read back by
+// CAdvMgrNetMsgHandler::HandleNetMsg.
 extern int g_playerTurn;
 extern unsigned char g_weMoved;
 
@@ -514,15 +508,13 @@ public:
     void setInPopup(unsigned char b) { m_inPopup = b; }
 
 protected:
-    // A pure virtual may still have an out-of-line definition. Retail's
-    // vtable keeps _purecall in slot 3, while two direct base-qualified
-    // dispatcher calls land on that definition at 0x557920.
+    // A pure virtual may still have an out-of-line definition: the vtable
+    // keeps _purecall in slot 3, while two direct base-qualified dispatcher
+    // calls land on that definition.
 
-    // PROTECTED, not private, 2026-08-20: CAdvMgrNetMsgHandler::
-    // HandleNetMsg's defer arms store the abort message DIRECTLY
-    // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
-    // is an out-of-line body - the derived dispatcher touches the raw
-    // members, so retail's access let it.
+    // PROTECTED, not private: CAdvMgrNetMsgHandler::HandleNetMsg's defer
+    // arms store the abort message directly at nine sites rather than
+    // through SetAbortPopupMsg.
     unsigned char m_inPopup;  // +0x04
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg) = 0;  // slot 3
     char m_paddingBeforeAbortPopupMsg[3];
@@ -534,26 +526,19 @@ SIZE(CNetMsgHandler, 0x0c);
 // network singleton is carrying, installs itself for the life of a modal
 // dialog (remotedlg.h's three dialogs embed one) or a combat
 // (combatManager::field_38 owns one), and puts the old one back. Sixteen
-// bytes: CNetMsgHandler's twelve plus one pointer, and 0x557e30's
-// `mov [esi+0xc], eax` is that pointer.
+// bytes: CNetMsgHandler's twelve plus the saved handler pointer.
 
-// Vtable 0x640f04 is four slots wide, CNetMsgHandler's own, so the class
-// introduces nothing: slot 0 is the ??_G at 0x557eb0, slot 1 the
-// CheckHandleNet override at 0x555170, slot 2 the INHERITED
-// CNetMsgHandler::GetAbortPopupMsg at 0x557900 (already claimed), and slot 3
-// the HandleNetMsg override at 0x555180. Both overrides are five bytes of
-// `xor eax,eax` and a sized return - the pause semantics are to swallow
-// everything - and both are header-origin COMDATs in retail too, which is
-// why they sit at 0x555170/0x555180 beside CNetMsgHandler::Copy rather than
-// in the 0x557exx run with the rest of the class.
+// The vtable is CNetMsgHandler's four slots, so the class introduces
+// nothing: the scalar deleting destructor, the CheckHandleNet override, the
+// inherited GetAbortPopupMsg, and the HandleNetMsg override. Both overrides
+// return zero - the pause semantics are to swallow everything - and both are
+// header-origin COMDATs, emitted beside CNetMsgHandler::Copy.
 class CNetMsgHandlerPause : public CNetMsgHandler {
 public:
     CNetMsgHandler* m_netMsgHandlerSave;  // +0x0c
     CNetMsgHandlerPause();
     virtual ~CNetMsgHandlerPause();
 
-    // at all. Retail retains their header COMDATs beside Copy, separately
-    // from the class's ordinary remote.cpp definitions.
     // E:\gamedcs\remote.h:658
     VA(0x00555170, 0x5)
     DC_ADDRESS(0x11f80c, 0x4)

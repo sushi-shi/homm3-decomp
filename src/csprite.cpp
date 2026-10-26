@@ -8,17 +8,14 @@
 #include "hero.h"
 #include "palette.h"
 
-// DC's const draw/accessor bodies first test *Sp_loaded (object +0x20)
-// and call SpriteDataReload at 0x73bf4 when zero. That routine reads DEF
-// data, rebuilds sequences/frames and palettes, then sets the loaded flag.
-// Complete instead loads them in ResourceManager::getSprite; its +0x20
-// field is the owned palette. Mac 0x8a72c/0x8a76c/0x8a818 and retail
-// 0x47bcc0/0x47bcf0/0x47bd60 have no reload guard. The DC-only alpha and
-// scaled wrappers below preserve their frame calls with this Complete
-// ownership model, without inventing a reload operation on the palette.
+// DC's const draw/accessor bodies first test *Sp_loaded (object +0x20) and
+// call SpriteDataReload when zero, which reads DEF data, rebuilds
+// sequences/frames and palettes, then sets the loaded flag. Complete
+// instead loads them in ResourceManager::getSprite; its +0x20 field is the
+// owned palette and there is no reload guard. The DC-only alpha and scaled
+// wrappers below keep their frame calls with this ownership model.
 
-// CSprite vtable 0x63d6b0 slot 0. Defining the virtual destructor below
-// naturally emits this wrapper before the importing constructor.
+// CSprite vtable slot 0.
 VA_COMPGEN(0x0047b8f0, 0x21, SCALAR_DELETING_DTOR, CSprite)
 
 // Original: CSprite::CSprite; csprite.cpp:82
@@ -162,9 +159,8 @@ void CSprite::ResetPalette()
 
 // E:\gamedcs\csprite.cpp:226
 // DC 228 returns the unsigned-short table, not the bootstrap palette view.
-// Complete's 14-byte body retains the null/array-address conditional; the
-// older SpriteDataReload guard depends on cache fields absent from this
-// retail class (as in its GetNumFrames and IsValidSeq accessors).
+// The older SpriteDataReload guard depends on cache fields absent from this
+// class (as in its GetNumFrames and IsValidSeq accessors).
 VA(0x0047bcc0, 0x0e)
 DC_ADDRESS(0x07258c, 0x2c)
 MAC_ADDRESS(0x08a72c, 0x1c)  // vtable-era TU order + p/data layout

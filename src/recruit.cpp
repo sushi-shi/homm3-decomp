@@ -298,11 +298,11 @@ TRecruitWindow::~TRecruitWindow()
 }
 
 // E:\gamedcs\recruit.cpp:302
-// Retail's Complete-only elemental-card rule is the four-compare chain at
-// 0x54fbd5: when the campaign/version flag is zero, the four base elementals
-// have alignment -1 and select the neutral background at table index zero.
-// `name_y` is genuinely unused here; the constructor uses it for the
-// adjacent name widgets after calling this helper.
+// Complete-only elemental-card rule: when the campaign/version flag is
+// zero, the four base elementals have alignment -1 and select the neutral
+// background at table index zero. `name_y` is genuinely unused here; the
+// constructor uses it for the adjacent name widgets after calling this
+// helper.
 VA(0x0054fb90, 0x30D)
 DC_ADDRESS(0x119820, 0x12c)
 MAC_ADDRESS(0x14ec28, 0x2a0)  // anchor-callee + anchor-global
@@ -445,9 +445,8 @@ int recruitUnit::open(int newPriority)
     return 0;
 }
 
-// This body is what TYPES townManager's +0x13c: it calls
-// TResourceDisplay::update through the member, so townmgr.h's
-// old heroWindow* declaration is retyped here rather than cast around.
+// This body is what types townManager's +0x13c: it calls
+// TResourceDisplay::update through the member.
 VA(0x005502d0, 0x8C)
 DC_ADDRESS(0x119ce4, 0x80)
 MAC_ADDRESS(0x14f300, 0xcc)
@@ -1040,13 +1039,9 @@ void recruitUnit::updateCost()
 }
 
 // E:\gamedcs\recruit.cpp:1120
-// `ret 0x28` = 40 argument bytes = the ten Dreamcast parameters, and
-// each one lands on the field the DC roster names: [ebp+8] -> +0x98,
-// the byte at [ebp+0xc] -> +0x9c, then the four (type, count-pointer)
-// pairs into +0x5c/+0x6c .. +0x68/+0x78, with the first pair also
-// seeding monsterType/numAvail.
-// DC lines 1121..1141 and Mac 0:0x150804..0x150848 preserve the full
-// field-store order below.
+// The ten Dreamcast parameters each land on the field the DC roster names,
+// the first (type, count-pointer) pair also seeding monsterType/numAvail.
+// DC lines 1121..1141 preserve the full field-store order below.
 VA(0x00551350, 0x101)
 DC_ADDRESS(0x11ad04, 0xae)
 MAC_ADDRESS(0x1507b8, 0xc4)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70
@@ -1078,9 +1073,8 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
 }
 
 // E:\gamedcs\recruit.cpp:1158
-// `ret 0x24` = the nine hero-flavoured parameters; identical body with
-// thisHero taking the armyGroup pair's place.
-// DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c establish the complete
+// The nine hero-flavoured parameters; identical body with thisHero taking
+// the armyGroup pair's place. DC lines 1159..1179 establish the complete
 // field-store order below.
 VA(0x00551460, 0xFE)
 DC_ADDRESS(0x11adb4, 0xa4)
@@ -1091,8 +1085,8 @@ recruitUnit::recruitUnit(hero* thisHero,
     TCreatureType monType3, short* numMon3,
     TCreatureType monType4, short* numMon4)
 {
-    // DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c put the source
-    // fields in this order after baseManager construction.
+    // DC lines 1159..1179 put the source fields in this order after
+    // baseManager construction.
     m_type = RECRUIT_SOURCE_NONE;
     m_viewOnly = 0;
     m_inTownMainScreen = 0;
@@ -1145,8 +1139,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
 }
 
 // E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;
-// Mac quickViewRecruit calls it at 0:0x150cc8. VC6 expands this ordinary
-// definition into the sole Windows caller at 0x551780.
+// inlined into the sole Windows caller, quickViewRecruit.
 DC_ADDRESS(0x11af24, 0x74)
 MAC_ADDRESS(0x150a6c, 0x58)
 TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
@@ -1178,8 +1171,7 @@ void quickViewRecruit(town* newTown, int newDwellingIndex)
         &newTown->m_population[newDwellingIndex]);
 }
 
-// DC recruit.cpp:1295 names GetArmyName; Mac 0x150d5c..0x150d80 expands
-// its guarded plural lookup. Keep the canonical call.
+// DC recruit.cpp:1295 names GetArmyName.
 VA(0x00551780, 0x641)
 DC_ADDRESS(0x11b028, 0x514)
 MAC_ADDRESS(0x150bb8, 0x688)
@@ -1312,11 +1304,6 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     g_windowManager->doQuickView(recruitWindow);
 }
 
-// COMDAT pairing: vector<widget*>::insert. The CALLER SET settles it:
-// 0x14d120 is reached from TAdventureMapWindow's and TAdventureOptionsWindow's
-// constructors among others - window ctors pushing widgets in units all over
-// the tree, as a single shared COMDAT is. combatwindow 0x73600 has exactly
-// ONE caller, TCombatWindow::combat_message, so it is that unit's own
-// vector; towngatewindow 0x5c2400 is AddTown with the insert expanded into
-// it.
+// COMDAT pairing: vector<widget*>::insert, the single shared COMDAT window
+// constructors all over the tree reach.
 VA_COMPGEN(0x0054d120, 0x209, VECTOR_INSERT, widget)

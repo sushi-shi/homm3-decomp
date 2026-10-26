@@ -181,8 +181,6 @@ class CAllReadyToPlayMsg : public CNetMsg {
 public:
 
     // DC netmsg.h:199 (0x11f638) calls the canonical CNetMsg ctor.
-    // Retail's WaitForReadyToPlayMsg expansion stores that same 20-byte
-    // header at 0x5550c2..0x5550d8; no default-base workaround is needed.
     DC_ADDRESS(0x11f62c, 0x20)
     CAllReadyToPlayMsg()
         : CNetMsg(RS_ALL_READY_TO_PLAY, sizeof(CAllReadyToPlayMsg)) {}
@@ -260,7 +258,7 @@ SIZE(t_complex_net_message, 0x18);
 class CCombatInitMsg : public t_complex_net_message {
 public:
 
-    // Retail expands this member sequence in DoNetCombat and the wait dialog.
+    // Inlined in DoNetCombat and the wait dialog.
     // E:\gamedcs\netmsg.h:264
     DC_ADDRESS(0x09caa0, 0xd8)
     CCombatInitMsg()
@@ -506,9 +504,8 @@ class CPlayerDropUpdateMsg : public CNetMsg {
 public:
     unsigned long m_dpidDropped;
 
-    // DC netmsg.h:461 supplies the constructor and payload name. Retail's
-    // two inlined HandleNewHost copies independently prove the 0x18-byte
-    // extent, RS_PLAYER_DROP_UPDATE subtype, and final payload store.
+    // DC netmsg.h:461 supplies the constructor and payload name; inlined
+    // in both HandleNewHost copies (RS_PLAYER_DROP_UPDATE, 0x18 bytes).
     DC_ADDRESS(0x11f6f4, 0x28)
     CPlayerDropUpdateMsg(unsigned long dpidDropped)
         : CNetMsg(RS_PLAYER_DROP_UPDATE, sizeof(CPlayerDropUpdateMsg)),
@@ -520,10 +517,9 @@ class CPlayerDeadMsg : public CNetMsg {
 public:
     int m_gamePos;
 
-    // kb.obj's HandleRemoteDeadPlayerExit (0x4f4c00) builds this message at
-    // both of its transmit sites and proves the whole record: the base
-    // constructor's five stores in their declared order, the RS_PLAYER_DEAD
-    // subtype, a 0x18 extent, and the seat number landing at +0x14.
+    // kb.obj's HandleRemoteDeadPlayerExit builds this message at both of
+    // its transmit sites: RS_PLAYER_DEAD, 0x18 bytes, the seat number at
+    // +0x14.
     DC_ADDRESS(0x0e6f34, 0x28)
     CPlayerDeadMsg(int gamePos)
         : CNetMsg(RS_PLAYER_DEAD, sizeof(CPlayerDeadMsg)),
@@ -566,8 +562,7 @@ public:
     VictoryConditionStruct m_victoryCondition;
 
     // Dreamcast netmsg.h:505 fixes the reference parameter and statement
-    // order. Complete expands this constructor into DisplayVCWinLoss while
-    // retaining or expanding the CNetMsg base constructor per call site.
+    // order; inlined in DisplayVCWinLoss.
     DC_ADDRESS(0x0e6f5c, 0x60)
     CPlayerWonMsg(int gamePos,
                   VictoryConditionStruct& victoryConditionStruct)
@@ -586,10 +581,7 @@ public:
 
     // kb.obj's SendPlayerLost builds this at all three DisplayLCWinLoss
     // arms. The member's own default constructor runs before the body's
-    // assignment - retail stores Type/-1, GameLost/0 and playerLoser/-1
-    // into the frame copy and then overwrites all 36 bytes with the
-    // rep movsd, which is what proves the two-statement body rather than
-    // a member-initialiser.
+    // assignment: a two-statement body, not a member initialiser.
     DC_ADDRESS(0x0e6fbc, 0x68)
     CPlayerLostMsg(int loser, LossConditionStruct& lossConditionStruct)
       : CNetMsg(RS_PLAYER_LOST, sizeof(CPlayerLostMsg))
@@ -647,11 +639,9 @@ public:
     int m_heroId;
     type_point m_point;
 
-    // Retail has NO out-of-line body: advManager::TeleportTo (0x41d930) is
-    // the only constructor site in the image and expands it, sharing the
-    // CNetMsg base's zero register with the `gCompleteDrawEnabled = 0` store
-    // above it. DC 0x2318a calls type_point's default constructor before
-    // the id/point assignments; keep that lifetime even though it is empty.
+    // Inlined in advManager::TeleportTo, the only constructor site. DC
+    // 0x2318a calls type_point's default constructor before the id/point
+    // assignments; keep that lifetime even though it is empty.
     DC_ADDRESS(0x023170, 0x54)
     CMCTeleportHero(int id, type_point location)
         : CMapChange(RS_TELEPORT_HERO, 0x1c)
@@ -713,8 +703,8 @@ public:
     int m_garrisonId;
     int m_playerPos;
 
-    // Dreamcast netmsg.h:619 owns the two-argument constructor. Complete
-    // retains its out-of-line copy in game.obj after RandomizeEvents.
+    // Dreamcast netmsg.h:619 owns the two-argument constructor; Complete's
+    // out-of-line copy is in game.obj.
     VA(0x004c23e0, 0x31)  // retained game.obj copy
     DC_ADDRESS(0x0bd290, 0x38)
     CMCClaimGarrison(int id, int player)
@@ -765,7 +755,7 @@ public:
     type_point m_point;
 
     // DC 0x9cbe6 calls the empty default point constructor, then copies
-    // the location in the body. Copy initialization lost that source call.
+    // the location in the body.
     DC_ADDRESS(0x09cbd0, 0x4c)
     CMCEraseObject(type_point location)
         : CMapChange(RS_ERASE_OBJECT, sizeof(CMCEraseObject))
@@ -835,9 +825,7 @@ public:
     int m_heroId;
 
     // DC netmsg.h:717-718 calls CMapChange before storing the hero ID;
-    // CodeView records the int parameter heroId. The line attribution does
-    // not distinguish a member initializer from a body assignment. Both
-    // base-first forms emit identical Windows code in game and town.
+    // CodeView records the int parameter heroId.
     DC_ADDRESS(0x0bd3a0, 0x30)
     CMCHideHero(int heroId)
         : CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero))
@@ -917,9 +905,8 @@ class CCombatTypeMsg : public CNetMsg {
 public:
     int m_quick;
 
-    // DC netmsg.h:770/771 calls CNetMsg at 0xe705c before assigning
-    // quick at 0xe7060. Retail oldmain expands the same header/payload
-    // at 0x4efe09 onward; its scheduling does not create a second ctor.
+    // DC netmsg.h:770/771 calls CNetMsg before assigning quick; inlined in
+    // oldmain.
     DC_ADDRESS(0x0e704c, 0x28)
     CCombatTypeMsg(int quick)
         : CNetMsg(RS_COMBAT_TYPE, sizeof(CCombatTypeMsg))
@@ -1031,10 +1018,8 @@ class CNormalWinMsg : public CNetMsg {
 public:
     int m_gamePos;
 
-    // kb.obj's CheckEndGame (0x4f2ce0) builds this message on the
-    // last-team-standing path and proves the whole record: the base
-    // constructor's five stores in their declared order, RS_NORMAL_WIN as
-    // the subtype, a 0x18 extent, and the winning seat landing at +0x14.
+    // kb.obj's CheckEndGame builds this message on the last-team-standing
+    // path: RS_NORMAL_WIN, 0x18 bytes, the winning seat at +0x14.
     DC_ADDRESS(0x0e7074, 0x28)
     CNormalWinMsg(int gamePos) : CNetMsg(RS_NORMAL_WIN, sizeof(CNormalWinMsg))
     {

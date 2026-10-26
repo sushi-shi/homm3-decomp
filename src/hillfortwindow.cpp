@@ -233,16 +233,11 @@ inline bool canAfford(const long* cost, const long* playerRes)
 // E:\gamedcs\hillfortwindow.cpp:203
 // Dreamcast's loop block names six ID locals, in emission order: res_cost_id,
 // res_icon_id, button_id, gold_icon_id, num_id, gold_cost_id; it names no i.
-// The i/id/reference loop form is retail's. The clear order at entry is
-// byte-proven: szGoldCost, szResourceCost, resourceIndex, szCount. The
-// resourceIndex == -1 arm comes first, and the CodeView-named CanAfford
-// helper below is a real call boundary.
-// The affordability verdict is NOT a ternary: retail stores
-// UPGRADE_STATE_TOO_EXPENSIVE and UPGRADE_STATE_AFFORDABLE as two constant
-// stores on the loop's two exits (`jg -> mov [edi+0x4c],2` and loop
-// completion -> `mov [edi+0x4c],1`), with no post-loop compare; assigning
-// inside the loop and `goto`-ing past the fall-through assignment gives that
-// threading.
+// The clear order at entry is szGoldCost, szResourceCost, resourceIndex,
+// szCount. The resourceIndex == -1 arm comes first, and the CodeView-named
+// CanAfford helper below is a real call boundary. The affordability verdict
+// is two constant stores on the loop's two exits (hence the goto), not a
+// ternary.
 VA(0x004e7eb0, 0x64D)
 DC_ADDRESS(0x0d6bf8, 0x52a)
 MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites
@@ -262,15 +257,10 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 
     unsigned char upgradeAllValid = 0;
     unsigned char allUpgraded = 1;
-    // Mac 0x10948c/0x109504 clear the two seven-resource arrays through
-    // bzero. Use the platform clear operation for both retained calls.
+    // Mac clears the two seven-resource arrays through bzero.
     ZeroMemory(m_totalCost, sizeof m_totalCost);
 
-    // Retail carries `id` itself as the loop's induction variable and
-    // recovers `i` for the test (`inc edi / mov [ebp-8],edi /
-    // add edi,-0xd4 / cmp edi,7 / jl`); computing `id` from `i` inside the
-    // body instead leaves `i` memory-homed and every widget id rebuilt with
-    // its own `lea`.
+    // `id` is the loop variable, with `i` recovered from it.
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         TUpgradeSlot& s = m_slot[i];
         s.m_countText[0] = 0;
@@ -283,8 +273,6 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         sprintf(s.m_countText, "%d", s.m_count);
         ZeroMemory(s.m_cost, sizeof s.m_cost);
 
-        // Mac expands game::isBaseCreature here (0:0x109528), in the
-        // state check (0x10989c), and in upgradeSlot (0x109c70).
         TCreatureType type = s.m_type;
         if (g_game->isBaseCreature(type)) {
             upgradeAllValid = 1;
@@ -495,8 +483,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 
 // E:\gamedcs\hillfortwindow.cpp:500..519. Original: UpgradeAll.
 // DC504/508 owns the two dialogs; 514..515 loops over seven UpgradeSlot
-// calls. Retail expands this ordinary helper in the handler at 0x4e8944.
-// No retained retail row is required for the source boundary to exist.
+// calls. Inlined in the handler.
 DC_ADDRESS(0x0d7258, 0x9c)
 MAC_ADDRESS(0x109d9c, 0x11c)
 void THillFortWindow::upgradeAll()
@@ -689,8 +676,7 @@ int hillFortWindowHandler(message& msg)
 // E:\gamedcs\hillfortwindow.cpp:763..780. Original: UpdateHillFort.
 // DC764 branches on firstUpdate: 766..773 builds the initial palette message;
 // 777..778 recalculates and redraws. These are the constructor's final block
-// and the handler's post-upgrade block in retail. It has no retail row:
-// 0x4e8fb0 belongs to hiscore, beyond this TU's end at 0x4e8bb9.
+// and the handler's post-upgrade block; it has no retail body.
 DC_ADDRESS(0x0d76ec, 0x78)
 MAC_ADDRESS(0x10a3f4, 0xb4)
 static void updateHillFort(unsigned char firstUpdate)

@@ -22,8 +22,8 @@
 // active dialog here and its destructor clears it before widget teardown.
 DATA(0x00694f90) static TCombatOptionsWindow* g_combatOptionsWindow;
 
-// The shared Help.txt table is owned and filled by text.cpp.
-// Retail reads column 1 (right-click), four bytes after each row base.
+// The shared Help.txt table is owned and filled by text.cpp; column 1
+// (right-click) is read.
 VA(0x0046e3b0, 0x1320)
 DC_ADDRESS(0x066c48, 0xd64)
 MAC_ADDRESS(0x07b3b0, 0x2068)
@@ -163,8 +163,7 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     }
 
     // As in systemoptionswindow.cpp, DC calls send_message directly for the
-    // slider highlight (set_visible is always an out-of-line call there),
-    // and retail pushes the constants before getWidget.
+    // slider highlight (set_visible is always an out-of-line call there).
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
         getWidget(music)->sendMessage(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
@@ -223,8 +222,7 @@ TCombatOptionsWindow::~TCombatOptionsWindow()
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:194
-// Retail inlines this mapping into CombatOptionsWindowHandler; no separate
-// entry exists between the destructor and DoModal.
+// Inlined into CombatOptionsWindowHandler.
 DC_ADDRESS(0x067a14, 0x2c)
 MAC_ADDRESS(0x07d4cc, 0x40)
 int TCombatOptionsWindow::convertID2HelpID(int id) const
@@ -250,15 +248,9 @@ void TCombatOptionsWindow::doModal()
         writePrefs();
 }
 
-// The four highlight helpers are present out of line on Dreamcast,
-// but every retail use is expanded by /Ob2;
-// no retail entry occurs between DoModal and the handler. They are real
-// source, not open-coded loops: HighlightCombatSpeed's expansion holds its
-// inlined `this` in EDI across the whole three-widget sweep, which is what
-// retail's Default and speed cases do and what a direct
-// `gpCombatOptionsWindow->GetWidget(...)` per iteration cannot produce.
-// Keep ordinary definitions in their recorded source order; retail makes
-// the automatic expansion decision without an authored inline qualifier.
+// The four highlight helpers are present out of line on Dreamcast and
+// inlined at every Complete use; they are real source, not open-coded
+// loops.
 // E:\gamedcs\combatoptionswindow.cpp:230
 DC_ADDRESS(0x067a78, 0x52)
 MAC_ADDRESS(0x07d56c, 0x78)
@@ -306,8 +298,7 @@ void TCombatOptionsWindow::highlightMouseShadow()
 
 // DC initializes an exit flag, records preference changes within the
 // selected case, and tests both before the redraw/message tails (lines
-// 627-639); with those scopes and each audio-error dialog the dispatcher
-// needs no gotos, and the per-arm error exits are retained.
+// 627-639); the per-arm audio-error exits are retained.
 VA(0x0046f7b0, 0x72A)
 DC_ADDRESS(0x067b7c, 0x51c)
 MAC_ADDRESS(0x07d680, 0x6f4)  // DoModal address-take + complete message CFG

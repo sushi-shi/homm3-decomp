@@ -76,14 +76,14 @@ public:
     CSprite(const char* name, int sprtype, int w, int h);
     virtual ~CSprite();  // slot 0
 
-    // CSprite.h:145. DrawWallAt expands this DC header accessor at its
-    // archer site; the retail load is the Width dword above.
+    // CSprite.h:145. DrawWallAt inlines this DC header accessor at its
+    // archer site.
     DC_ADDRESS(0x01f148, 0x2c)
     int GetWidth() const { return Width; }
 
-    // The adjacent size accessor is expanded throughout drawing's hex-
-    // targeted spell animation; Dreamcast retains out-of-line copies of
-    // both accessors while retail VC6 folds them to the two dword loads.
+    // The adjacent size accessor is inlined throughout drawing's
+    // hex-targeted spell animation; Dreamcast retains out-of-line copies of
+    // both accessors.
     DC_ADDRESS(0x01f174, 0x2c)
     int GetHeight() const { return Height; }
     void clear();
@@ -113,10 +113,10 @@ private:
 
 public:
     virtual void dispose();
-    virtual unsigned int getSize() const;  // slot 2, retail 0x47bd50
+    virtual unsigned int getSize() const;  // slot 2
 
-    // CSprite.h:148-151.  The Dreamcast image carries out-of-line copies;
-    // the retail remote caller expands these in place.
+    // CSprite.h:148-151. The Dreamcast image carries out-of-line copies;
+    // inlined in the remote caller.
     DC_ADDRESS(0x04cb9c, 0x44)
     int GetCroppedX(int seq, int frame) const
     {
@@ -142,7 +142,7 @@ public:
     }
 
     // DC CSprite.h:154 proves this non-const header accessor.
-    // Complete's dispose frame loop expands the same sequence/frame loads.
+    // Inlined in Complete's dispose frame loop.
     DC_ADDRESS(0x122ba8, 0xe)
     CSpriteFrame* GetFrame(int sequence, int frame)
     {
@@ -218,7 +218,7 @@ public:
                          bool alpha) const;
     void SetPalette(const unsigned short* pal);
 
-    // Complete expands this wrapper in ResetPalette.
+    // Inlined in ResetPalette.
     // E:\gamedcs\CSprite.h:259
     DC_ADDRESS(0x0744e4, 0x64)
     void SetPalette(TPalette16& pal)
@@ -258,25 +258,19 @@ public:
     TPalette24& GetPalette24() { return *p24; }
 
     // Original: CSprite::GetPaletteColor; CSprite.h:287
-    // Complete keeps the sprite resident. UpdateRadar's two expansions
-    // read the palette directly; DC's removed reload/cache guard is absent.
+    // Complete keeps the sprite resident; inlined twice in UpdateRadar.
+    // DC's removed reload/cache guard is absent.
     DC_ADDRESS(0x01f1a0, 0x3c)
     unsigned short GetPaletteColor(unsigned char index) const
     {
         return p->Palette[index];
     }
 
-    // Header inline, DC CSprite.h:293 (emitted into
-    // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
-    // USE re-expands the guard (the else arm constant-folds to a
-    // literal 0 divisor, `xor ecx,ecx; idiv ecx`), which a cached
-    // frame-count local cannot reproduce.
-    // DC 0x1f1fc calls IsValidSeq; its true/false values join at 0x1f220
-    // before a single return. Keep that helper and conditional expression.
-    // An if/return spelling spills the third boat-row divisor into a
-    // parameter home; this expression closes both VWDrawHeroPart twins.
-    // The preceding DC SpriteDataReload guard belongs to its removed cache
-    // fields; Complete's frame walkers have no corresponding reload arm.
+    // Header inline, DC CSprite.h:293 (emitted into advmgr.obj there).
+    // Each use re-tests the sequence. DC 0x1f1fc calls IsValidSeq; its
+    // true/false values join before a single return, a conditional
+    // expression. The preceding DC SpriteDataReload guard belongs to its
+    // removed cache fields.
     DC_ADDRESS(0x01f1dc, 0x58)
     int GetNumFrames(int seq) const
     {
@@ -285,8 +279,7 @@ public:
 
     // E:\gamedcs\CSprite.h:294
     // The attack-frame chooser uses this header boundary rather than reading
-    // numSequences/validSeqMask directly. Retail VC6 folds it back to the
-    // same two loads and tests at each constant-sequence call site.
+    // numSequences/validSeqMask directly.
     DC_ADDRESS(0x01f234, 0x32)
     int IsValidSeq(int seqnum) const
     {
@@ -304,7 +297,7 @@ public:
              tblit);
     }
 
-    // CSprite.h:342 header wrapper (DC retains its own copy); retail expands the Bitmap16Bit forwarding in remote.
+    // CSprite.h:342 header wrapper (DC retains its own copy); inlined in remote.
     DC_ADDRESS(0x087394, 0xa4)
     void DrawCreature(int seqnum, int framenum, int sx, int sy, int sw,
                       int sh, Bitmap16Bit* dst, int dx, int dy,
@@ -326,7 +319,7 @@ public:
     }
 
     // DC CSprite.h:355 calls all four Bitmap16Bit accessors before the
-    // raw-map overload. Preserve those nested boundaries in retail callers.
+    // raw-map overload.
     DC_ADDRESS(0x01f324, 0xa4)
     void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     Bitmap16Bit* dst, int dx, int dy, bool hflip) const
@@ -363,8 +356,8 @@ public:
                     dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
 
-    // Header wrapper (DC CSprite.h:385). KeyAccel's four expanded call sites
-    // byte-prove the Bitmap16Bit member forwarding in retail.
+    // Header wrapper (DC CSprite.h:385); inlined at KeyAccel's four call
+    // sites.
     DC_ADDRESS(0x01f524, 0xa4)
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh,
                        Bitmap16Bit* dst, int dx, int dy,
@@ -403,8 +396,8 @@ public:
                        dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip, vflip);
     }
 
-    // Header wrapper (DC CSprite.h:426): retail advmgr inlines this view,
-    // then calls the raw-map overload above.
+    // Header wrapper (DC CSprite.h:426), inlined in advmgr before the
+    // raw-map overload above.
     DC_ADDRESS(0x01f7f0, 0xb4)
     void DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                   Bitmap16Bit* dst, int dx, int dy, bool hflip) const
@@ -441,9 +434,9 @@ public:
     }
 
     // DC CSprite.h:444/445: const bitmap facade.
-    // Complete's combatManager::DrawCombatHero (0x4952b0) calls the general
-    // CSprite::DrawCreature (0x47bd60) with color zero. This version bypasses
-    // the older raw-map DrawCombatHero overload.
+    // Complete's combatManager::DrawCombatHero calls the general
+    // CSprite::DrawCreature with color zero, bypassing the older raw-map
+    // DrawCombatHero overload.
     DC_ADDRESS(0x0874dc, 0xa0)
     void DrawCombatHero(int seqnum, int framenum, int sx, int sy, int sw,
                         int sh, Bitmap16Bit* dst, int dx, int dy,
