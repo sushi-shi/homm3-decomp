@@ -297,8 +297,8 @@ public:
 };
 
 // Complete's derived map-list implementation for the added 1083
-// TransferHeaders protocol. Its separate vtable and constructor are retail-
-// only; Go is exact, while Tick/Finish retain their documented residuals.
+// TransferHeaders protocol. Its separate vtable and constructor are
+// retail-only.
 class t_map_list_update : public CNewPlayerUpdateProc {
 public:
     t_map_list_update(unsigned long dpid);
@@ -922,7 +922,7 @@ public:
     int m_pos;   // +0x14
     int m_face;  // +0x18
 
-    VA(0x0058e6c0, 0x31)  // retained retail body; formerly enrolled by CLASS_CTOR
+    VA(0x0058e6c0, 0x31)  // retained retail body
     DC_ADDRESS(0x147e04, 0x38)
     CRequestHeroFaceReplyMsg(int pos, int face)
         : CNetMsg(RS_REQUEST_HERO_FACE_REPLY,
@@ -1478,16 +1478,10 @@ inline void CNewPlayerUpdateProc::requestConfirmation()
 // +0x1c6 skips BOTH HandleRequests and RequestConfirmation when empty.
 
 // Binding the transfer row once gives retail's 0xa4 frame: the row pointer
-// stays live across strncpy and the FILETIME high word is spilled (90.58 ->
-// 100). Native Mac tests the unsigned request count; using
-// size() > 0 also restores retail's SAR 3 count lowering. The flattened
-// elapsed expression and wrong per-iteration
-// count guard banked 71.8957%; restoring only ElapsedSince gives 73.25%.
-// The coherent base-like if/for/else shape, including conditional final
-// confirmation, reaches this peak. Extending the message scope through the
-// loop, moving the counter outside the if, and restoring the DC constructor's
-// mutable char* parameter are all byte-flat. Earlier loop-layout failures
-// were measured before these helper and exhausted-list corrections.
+// stays live across strncpy and the FILETIME high word is spilled. Native Mac
+// tests the unsigned request count; size() > 0 gives retail's SAR 3 count
+// lowering. The shape is the coherent base-like if/for/else, including the
+// conditional final confirmation.
 VA(0x00577DE0, 0x228)
 MAC_ADDRESS(0x16f368, 0x49c)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
 void t_map_list_update::tick()
@@ -1592,8 +1586,7 @@ void CNewPlayerUpdateProc::go()
 // CMapFileNameMsg argument (DC lists only i/msg/msg; no stack row local).
 // Complete binds the row once, as its copied t_map_list_update override
 // does: retail keeps that row pointer live across strncpy and spills the
-// FILETIME high word. The row reference closes both ticks (87.13 -> 100);
-// the older triple-index spelling scheduled the arguments differently.
+// FILETIME high word.
 // E:\gamedcs\singleselectionwindow.cpp:1282
 VA(0x00578A90, 0x370)
 DC_ADDRESS(0x148130, 0x208)
@@ -2755,9 +2748,7 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // is that setter, and the later highlight frame takes the same form
 // (setHighlightFrame). The one-statement m_widgets.push_back(new ...) form is
 // the Dreamcast constructor's own (lines 2087-2105). Retail calls insert out of
-// line in loops A-C and expands it from loop D on; with both forms only the
-// ICF-folded _Ufill name differs. Probes: direct push_back without the setter
-// 84.85%; the setter with scoped `created` locals 99.81%.
+// line in loops A-C and expands it from loop D on.
 VA(0x0057D170, 0x1DF7)
 MAC_ADDRESS(0x1756bc, 0x1c50)
 void TSingleSelectionWindow::createRandomMapOptionWidgets()
@@ -2933,7 +2924,7 @@ void TSingleSelectionWindow::createRandomMapOptionWidgets()
 
 // Complete-only model: the AI bound selects an operand reference; the
 // player/human bounds use value wrappers. Binding the selected player id
-// before widgetSetStatus preserves the retail argument homes (100%).
+// before widgetSetStatus preserves the retail argument homes.
 VA(0x0057ef70, 0x3B9)
 MAC_ADDRESS(0x17730c, 0x480)
 void TSingleSelectionWindow::updateRandomMapOptionWidgets()
@@ -3353,8 +3344,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 {
     // DC 2839 constructs msg at procedure scope (DC local sp+0x4c) for
     // Update(msg); Complete's Update takes none, but the unused local stays
-    // in the source. Dropping it had lowered Windows to 90.15%; with it the
-    // body is exact again (the randomMaps reuse below is Windows byte-flat).
+    // in the source (dropping it changes the retail bytes).
     message msg;
 
     if (m_inScenarioOptions) {
@@ -4553,8 +4543,8 @@ void TSingleSelectionWindow::drawBasicMapInfo()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4239
-// Mac 0x17c1dc..0x17c1ec derives each row coordinate from its index;
-// this source shape also restores the Windows retail body.
+// Mac 0x17c1dc..0x17c1ec derives each row coordinate from its index, as
+// Windows retail does.
 VA(0x00584550, 0x698)
 DC_ADDRESS(0x13a380, 0xd84)
 MAC_ADDRESS(0x17c0ac, 0x7b4)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x
@@ -5487,12 +5477,11 @@ void TSingleSelectionWindow::toggleGeneratedMapList()
 // prove the shared arm order below.  It is source order, not numeric selector
 // order; keep msg->codeY direct because Dreamcast has no cached-id local.
 
-// Complete keeps both alignment helpers in this TU. Their ordinary expansion,
-// the >= nine-town bound and the save arm's stored-index reread recover every
-// executable block. The first switch also broadcasts the teams label (306):
-// retail's byte at function+0x1217 is zero, selecting its broadcast arm, and
-// Mac 0x17e6ec..0x17e700 routes 306 there too. Including that case closes the
-// final table byte; all 276 blocks and 94 calls agree at 100%.
+// Complete keeps both alignment helpers in this TU (ordinary expansion), with
+// the >= nine-town bound and the save arm's stored-index reread. The first
+// switch also broadcasts the teams label (306): retail's byte at
+// function+0x1217 is zero, selecting its broadcast arm, and Mac
+// 0x17e6ec..0x17e700 routes 306 there too.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)
 DC_ADDRESS(0x13c79c, 0x22d4)
@@ -5596,7 +5585,6 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     // townType to pThisPlayer->townIndex and then re-loads +0x24
     // (`mov esi,[esi+0x24]`) for the call, where passing the local kept it
     // live in a register and duplicated the legalAlignments `test`.
-    // 97.3769 -> 97.5628.
     case SSW_TOWN_PREV_FIRST:
     case SSW_TOWN_PREV_FIRST + 1:
     case SSW_TOWN_PREV_FIRST + 2:
@@ -5739,16 +5727,6 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         break;
 
     case SSW_GENERATE_RANDOM_MAP: {
-        // Measured negative (2026-09-01): statement-scoped inline_depth(1)
-        // is byte-flat and does not preserve retail's nested _Tidy call.
-        // Do not retain an inert inline-control artifact here.
-        // Confirmed 2026-09-05 as one of the row's two remaining OVER-inlines
-        // (the other is `SendSetupInfo`'s CNetMsg base ctor at 0x5865b0+0x6ab,
-        // which retail CALLS - `push 0x204 / push 0x402 / lea ecx,[ebp-0x25c]
-        // / call ??0CNetMsg` - against our five inline field stores). The
-        // statement order here is already retail's: the temporary is torn
-        // down BEFORE the `test bl,bl`, so only the expansion differs. Both
-        // want a caller-shrink or a site pin and neither is available.
         if (generateRandomMap(getRandomMapName().c_str()))
             normalDialog((*g_generalText)[GENERAL_TEXT_RANDOM_MAP_CREATED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -5960,9 +5938,8 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILE_ROW_FIRST + 15:
     case SSW_FILE_ROW_FIRST + 16:
     case SSW_FILE_ROW_LAST: {
-        // Measured negative (2026-09-01): repeating this expression because
-        // DC does not expose the local drops 91.15 -> 89.04; CodeView locals
-        // are a lower bound and retail carries one computed map index.
+        // Retail carries one computed map index; DC's CodeView locals are a
+        // lower bound.
         unsigned int map = msg->m_codeY - SSW_FILE_ROW_FIRST + m_currentIndex;
         if (m_saveMode) {
             m_textIndex = msg->m_codeY - SSW_FILE_ROW_FIRST;
@@ -6178,15 +6155,6 @@ int TSingleSelectionWindow::exitDialog(message& msg)
 // network queue, then dispatch the local message - the key arms page the
 // file list, the 0x200 arm forwards widget deselects, and the mouse arm
 // tracks the hero-face hover highlight through lastIMHoverID.
-//
-// Residual (90.0): (a) flat delink names for the carcass-claimed callees
-// (Update/SetCurrentMap/OnWidgetDeselect/HandleNetMsg/OnDeleteFile,
-// kb's PollSound/NormalDialog, CAdvPopup::WindowHandler) - closes as
-// those bodies land; (b) the KP_2/KP_9/KP_3 arms CSE the header vector's
-// _First across the currentIndex store where retail reloads it per
-// size() expansion, and the arm-entry register homes (eax vs edi for
-// currentMap) drift with it - the register-homing family. Named-local
-// vs inline respelling of the KP_8 arm measured byte-flat (90.02 both).
 // E:\gamedcs\singleselectionwindow.cpp:5976
 VA(0x00587d00, 0x624)
 DC_ADDRESS(0x13ebc0, 0xb86)
@@ -6902,9 +6870,8 @@ bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 // DC keeps these helpers out of line; retail VC6 expands them at the advanced-
 // options call sites. Keep the original cpp boundaries visible while allowing
 // the retail TU to reproduce that lowering.
-// Ordinary definition retains every Windows caller byte under /Ob2 and
-// restores Mac onPlayerPosClick's complete 336-byte match. The prior explicit
-// inline expanded this CPP-owned helper into that native-retained call site.
+// The definition is ordinary, not inline: an explicit inline would expand it
+// into Mac onPlayerPosClick, which retains the call.
 // E:\gamedcs\singleselectionwindow.cpp:6980
 DC_ADDRESS(0x140d74, 0x48)
 MAC_ADDRESS(0x181bac, 0xc4)
@@ -6984,8 +6951,8 @@ void TSingleSelectionWindow::onNameSlider(int newIndex)
 
 // Retail restores monthTypeExtra before monthType (+0xea/+0xf0) and
 // allocates their saved copies in that order; DC 6807-6810/6818-6821 keeps
-// the older monthType-first order. Saving and restoring the extra first
-// closes the body (99.78 -> 100); swapping either side alone is flat.
+// the older monthType-first order; both the save and the restore put the
+// extra first.
 VA(0x00589b20, 0x13C)
 DC_ADDRESS(0x1406ec, 0x1ac)
 MAC_ADDRESS(0x1812dc, 0x168)
@@ -7121,11 +7088,6 @@ bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
 // them on the advanced pane (first free human-legal seat) or re-seat
 // the main pane, then broadcast the full roster and announce them in
 // chat.
-// Residual (97.06278): the Dreamcast-proven SendPlayerPositions boundary is
-// restored and expands to both roster copies. Retail constructs its second
-// seat array through the ??_L vector-constructor iterator at 0x4013d0; this
-// compile emits the equivalent call-per-element loop. The other tail delta is
-// register naming around PlayerEnterMsg's gpGeneralText reload.
 // E:\gamedcs\singleselectionwindow.cpp:6884
 VA(0x00589FA0, 0x2D9)
 DC_ADDRESS(0x140a74, 0x214)
@@ -7444,9 +7406,8 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
 // branches to the epilogue (0x141a4c), never storing pPlayer and never
 // executing the 7333 row; only the GetPlayer path (7329) stores pPlayer
 // and falls into 7333. An if/else-assign spelling with a shared return
-// let VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit
-// (UpdateAllyEnemyFlags 100 -> 32.65, ExitDialog 100 -> 68.05); the
-// early-return form keeps retail's `xor eax,eax / test eax,eax` join.
+// lets VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit;
+// the early-return form keeps retail's `xor eax,eax / test eax,eax` join.
 DC_ADDRESS(0x141a14, 0x60)
 MAC_ADDRESS(0x182c14, 0x44)
 CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
@@ -7518,8 +7479,7 @@ bool TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
             m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
     }
     // DC line 7408 names this helper. Complete expands it here while retaining
-    // the exact body at 0x57fb90; the nested showWidget/size calls then select
-    // their retail boundaries without either former inline-depth pin.
+    // the body at 0x57fb90.
     updateMainWindow();
     drawWindow(1, 0xffff0001, 0xffff);
     update();
@@ -7722,15 +7682,13 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // preamble hands off to BeginSavedGame or BeginNewGame.
 
 // Native Mac 0x183764/0x183794 passes m_localHeader directly to both
-// canonical helpers. Removing the inferred cached header pointer restores
-// Windows' shared failure cleanup. Naming each version-message template
-// after its edition-name selection preserves Mac 0x183870's lookup phase
-// and closes the remaining Windows text loads at 100%. The generation/read
-// failure guards and all canonical lookup/formatting helpers remain intact.
+// canonical helpers, with no cached header pointer. Each version-message
+// template is named after its edition-name selection, preserving Mac
+// 0x183870's lookup phase.
 // E:\gamedcs\singleselectionwindow.cpp:7698
-// Mac retains ordinary text indexing at 0x183850..0x183b08. Direct
-// branch-local lookups preserve those calls and recover Windows 92.87%
-// without caching the table across the two compatibility-message arms.
+// Mac retains ordinary text indexing at 0x183850..0x183b08: direct
+// branch-local lookups, with no table cached across the two
+// compatibility-message arms.
 VA(0x0058BCE0, 0x5AF)
 DC_ADDRESS(0x142674, 0x1fc)
 MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape
@@ -8180,9 +8138,8 @@ int TSingleSelectionWindow::getDisplayFace(int gamePos)
 // the portrait remapping performed by DC getHeroName's GetDisplayFace call.
 // Keep DC's early-return order: generated/random hero first, then the fixed
 // hero and finally the selected available hero (lines 8151..8162).
-// In getHeroName, the old assignment/else chain gave nested getPlayerInPos
-// budget 73 against cost 75 and left a call. Restoring these returns expands
-// that scan naturally (64.6117% -> 88.12766% before fixing name accesses).
+// In getHeroName these early returns let the nested getPlayerInPos scan
+// expand (an assignment/else chain leaves it a call).
 // E:\gamedcs\singleselectionwindow.cpp:8143
 DC_ADDRESS(0x143548, 0xb0)
 MAC_ADDRESS(0x184a1c, 0xc8)
@@ -8208,9 +8165,8 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 // directly proves that its shared helper returns the -1 instead. The named
 // boundary and its HasMultipleTowns call remain common source facts.
 // E:\gamedcs\singleselectionwindow.cpp:8166
-// This ordinary TU helper auto-expands under VC6 /Ob2. Removing the
-// unproven inline keyword leaves Windows unchanged and restores the
-// retained Mac call at setNewPlayerSlot 0:0x1863b8.
+// This ordinary TU helper auto-expands under VC6 /Ob2; it is not inline
+// (Mac retains the call at setNewPlayerSlot 0:0x1863b8).
 DC_ADDRESS(0x1435f8, 0xbc)
 MAC_ADDRESS(0x184ae4, 0xb0)
 TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
@@ -8337,23 +8293,16 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 // DC 8299/8434 recover CalcPosition/GetDisplayTown rather than pasted
 // caller bodies; 8504/8511 name HasRandomHero/HasNonRandomHero, and
 // 8603/8631 name IsHost/IsHuman/IsMultiPlayer. Keep these canonical calls
-// and the proven text operator[] calls. The combined unpinned source gives
-// 91.4419% versus the old pinned 91.4350%; restoring only town/position/text
-// gives 89.9471%, so the helper model must be tested together. Retail's
-// Complete GetDisplayTown keeps -1 for an uncommitted multi-town seat.
-// Keep DC's separate townType/sprite and position-based coordinates; the
-// resource-bonus arm selects by townType, never the row position. The first
-// 98.2244% coordinate probe had a bad row-index substitution and is invalid
-// source evidence. Correcting it gives 99.3418%; removing the unsupported
-// pre-switch sprite initializer gives 99.6582% (explicit if/else is flat).
-// Reusing DC's left/rite pair across all three control groups gives 99.7699%.
-// GetTownTypeName and widget::show/hide are canonical proven header helpers.
-// Exact without the pin: DC 8560/8561 update both the player's bonus and
-// local agr (bonus here). Retail +0x8a9 jumps straight to random-bonus text.
-// The resource arm must finish its frame assignment and break, rather than
-// fall through into the random case. Updating only the local gives 99.7181%;
-// an explicit exit without that update gives 99.6789%; together they give
-// 100%. Nested if/else and early-break forms both reproduce the exact body.
+// and the proven text operator[] calls. Retail's Complete GetDisplayTown
+// keeps -1 for an uncommitted multi-town seat. Keep DC's separate
+// townType/sprite and position-based coordinates; the resource-bonus arm
+// selects by townType, never the row position, with no pre-switch sprite
+// initializer, and DC's left/rite pair is reused across all three control
+// groups. GetTownTypeName and widget::show/hide are canonical proven header
+// helpers. DC 8560/8561 update both the player's bonus and local agr (bonus
+// here); retail +0x8a9 jumps straight to random-bonus text, so the resource
+// arm finishes its frame assignment and breaks rather than falling through
+// into the random case.
 VA(0x0058d510, 0xA40)
 DC_ADDRESS(0x143a7c, 0x158a)
 MAC_ADDRESS(0x184ff0, 0xccc)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x
@@ -8546,7 +8495,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         // CanChooseTown/townChosen group, and the dpid test sits beside
         // the host test rather than inside it: retail's `!IsHost` and
         // `dpid != 0` arms both jump to the g_mpNetProtocol compare, not
-        // past it (branch topology clean at 49/49 once written this way).
+        // past it.
         if (getThisPlayerGamePos() == playerPos
                 || (isHost()
                     && !p->isHuman()
@@ -8932,14 +8881,10 @@ int TSingleSelectionWindow::getCommonGameVersion()
 // [ebp-0x104] (the first-declared array) and the b-side [ebp-0x204].
 
 // `inline` is LOAD-BEARING and asymmetric with its BY_VERSION twin: /Ob2
-// will not take a 317 B body from a plain out-of-class definition, so
-// _Median/_Unguarded_partition/_Unguarded_insert BY_NAME all CALLED what
-// retail expands (32.24 / 14.65 / 46.40). Marking it inline moves those to
-// EXACT with _Sort_0 and _Sort holding at 100.0000 and the out-of-line
-// COMDAT still emitted for _Sort_0's own call. The identical keyword on
-// BY_VERSION is a LOSS - it expands there at every site, its two COMDATs
-// stop being emitted and both rows fall to 0.0000 - so only this one
-// carries it.
+// will not take a 317 B body from a plain out-of-class definition, so without
+// it _Median/_Unguarded_partition/_Unguarded_insert BY_NAME stay calls where
+// retail expands them. On BY_VERSION the same keyword expands it at every
+// site and its two COMDATs stop being emitted, so only this one carries it.
 
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
@@ -9113,8 +9058,7 @@ VA_COMPGEN(0x00591650, 0x318, STD_COPY_BACKWARD, gameselectionheadersstruct)
 // The comparator bodies beside them are the functors' operator()s and the
 // shared 0x591650 is `std::copy_backward<GameSelectionHeadersStruct*>` (it
 // walks `sub esi,0xca4` backwards through the element stride and is reached
-// only from the three families whose _Insertion_sort_1 did not inline it);
-// neither is claimable yet - see the residual note at the foot of this block.
+// only from the three families whose _Insertion_sort_1 did not inline it).
 
 VA_COMPGEN(0x00590070, 0x331, STD_SORT_0,
            gameselectionheadersstruct_tsortmapsbyname)  // SortMaps arm 0
@@ -9234,10 +9178,8 @@ VA_COMPGEN(0x0045c1a0, 0x28, BITSET_TIDY, Bitset156)
 // four-bit feature test at 0x4cf960. The game TU expands it; this consumer
 // retains the native 52-byte body and its call to _Xran at 0x4d1850.
 // The same throw helper is called by setupAdvancedOptions, onBeginGame
-// and getCommonGameVersion. Its 203 instruction bytes agree outside named
-// relocations: five calls, the invalid-bitset-position string, out_of_range
-// RTTI/vtable, npos, and the standard exception-chain/cleanup metadata.
-// Keep the unreachable post-throw epilogue within the admitted extent.
+// and getCommonGameVersion. Keep the unreachable post-throw epilogue within
+// the admitted extent.
 // These are the canonical <bitset> bodies, with no forced instantiation.
 VA_COMPGEN(0x004cf960, 0x34, BITSET_TEST, Bitset4)
 
