@@ -521,7 +521,7 @@ void TMapEditWnd::animate(unsigned int frameNum, bool bForce)
             for (cell.x = cells.left; cell.x < cells.right; cell.x++) {
                 const TGameMap::TLayer::TCell& mapCell = layer.getCell(cell.x, cell.y);
                 bool bAnimated = true;
-                const TGroundTilesetTraits& groundTraits = akGroundTilesetTraits[mapCell.getTerrainType()];
+                const TGroundTilesetTraits& groundTraits = H3_AT(akGroundTilesetTraits, mapCell.getTerrainType());
                 if (!(groundTraits.m_bAnimated && groundTraits.m_pTileTraits[mapCell.getTileNum()].m_bAnimated)) {
                     unsigned int riverType = mapCell.getRiverType();
                     if (!(riverType != 0 && akRiverTilesetTraits[riverType - 1].m_bAnimated))
@@ -1027,7 +1027,7 @@ void TMapEditWnd::_drawMap(CDC* pDC, CRect& rect)
         for (cell.x = cells.left; cell.x < cells.right; cell.x++) {
             CPoint pos((cell.x - _m_viewPos.x) * tileSize - rect.left, (cell.y - _m_viewPos.y) * tileSize - rect.top);
             const TGameMap::TLayer::TCell& mapCell = layer.getCell(cell.x, cell.y);
-            (*akZoomTraits[_m_zoom].m_pDrawTile)(akGroundTilesetTraits[mapCell.getTerrainType()].m_pSprite,
+            (*akZoomTraits[_m_zoom].m_pDrawTile)(H3_AT(akGroundTilesetTraits, mapCell.getTerrainType()).m_pSprite,
                                               mapCell.getTileNum(), pos.x, pos.y,
                                               _m_backBuffer.getLine(rect.top) + rect.left,
                                               rect.Width(), rect.Height(), _m_backBuffer.getPitch(),

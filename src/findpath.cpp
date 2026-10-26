@@ -173,10 +173,10 @@ DC_ADDRESS(0x09f034, 0x11e)
 MAC_ADDRESS(0x0c4a78, 0x204)
 int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
                     long pathfinding, long endRoad, long flying,
-                    long waterWalking, long nativeTerrain,
+                    long waterWalking, H3_ENUM_PARAM(TTerrainType, long) nativeTerrain,
                     unsigned char hasNomad)
 {
-    long terrain = cell->m_groundSet;
+    H3_ENUM_STORAGE(TTerrainType, long) terrain = cell->m_groundSet;
     long road = cell->m_roadSet;
     if (hasNomad && terrain == eTerrainSand)
         terrain = eTerrainDirt;
@@ -187,7 +187,7 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     else if (terrain == nativeTerrain && special != CURSED_GROUND)
         cost = 100;
     else
-        cost = g_terrainCost[terrain][pathfinding];
+        cost = H3_AT(g_terrainCost, terrain)[pathfinding];
     // A third off every sea step. 0xe1 is one of the ten object ids
     // get_special_terrain can answer with and the only one this body
     // reacts to on water; mapcell.h carries the whole answer set.
@@ -205,7 +205,7 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
             cost = g_masteryTerrainCost[flying];
     }
     if (dir & 1) {
-        long full = g_terrainCost[terrain][pathfinding];
+        long full = H3_AT(g_terrainCost, terrain)[pathfinding];
         if (pointsLeft < full
                 || static_cast<float>(pointsLeft)
                         >= static_cast<float>(full) * g_diagonalCost)
@@ -545,7 +545,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
         }
 
         NewmapCell* destCell = g_advManager->getCell(dest.m_point);
-        const int terrain = destCell->m_groundSet;
+        const H3_ENUM_STORAGE(TTerrainType, int) terrain = destCell->m_groundSet;
         unsigned char teleportRequired = 0;
         unsigned char flyingRequired = 0;
         unsigned char waterWalkingRequired = 0;
@@ -564,7 +564,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
             dest.m_adjustedCost += 100;
         } else if (source.m_inBoat) {
             cost = calcTerrainCost(srcCell, direction, turnMobility,
-                                   pathfinding, 0, -1, -1, -1, hasNomad);
+                                   pathfinding, 0, -1, -1, eTerrainNone, hasNomad);
         } else {
             cost = calcTerrainCost(srcCell, direction, turnMobility,
                                    pathfinding, destCell->m_roadSet,
@@ -757,7 +757,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
                 boatCell.m_canStop = 1;
                 long boatCost = calcTerrainCost(srcCell, direction,
                                                  turnMobility, pathfinding,
-                                                 0, -1, -1, -1, hasNomad);
+                                                 0, -1, -1, eTerrainNone, hasNomad);
                 boatCell.m_adjustedCost += 500;
                 if (!(m_canSummonBoat && !source.m_magicForbidden))
                     boatCell.m_barrierValue +=

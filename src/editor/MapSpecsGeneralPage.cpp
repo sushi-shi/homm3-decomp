@@ -31,7 +31,7 @@ public:
     virtual void setFrame(const TTilePoint& loc, int frame);
     virtual TTilePoint& getSize(TTilePoint& size);
     virtual TRmgTerrainTile getTile(const TTilePoint& loc);
-    virtual int getTerrain(const TTilePoint& loc);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& loc);
     virtual int getFrame(const TTilePoint& loc);
 
 private:
@@ -70,7 +70,7 @@ TRmgTerrainTile TTerrainPlacementMapAdapter::getTile(const TTilePoint& loc)
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
     const TGameMap::TLayer::TCell& cell = layer.getCell(loc.x(), loc.y());
     TRmgTerrainTile tile;
-    tile.m_terrain = cell.getTerrainType();
+    tile.m_terrain = H3_IDX(cell.getTerrainType());
     tile.m_frame = cell.getTileNum();
     tile.m_flipX = cell.getBHFlipped();
     tile.m_flipY = cell.getBVFlipped();
@@ -78,7 +78,7 @@ TRmgTerrainTile TTerrainPlacementMapAdapter::getTile(const TTilePoint& loc)
 }
 
 VA(0x00470e47, 0x31)
-int TTerrainPlacementMapAdapter::getTerrain(const TTilePoint& loc)
+H3_ENUM_RETURN(TTerrainType, int) TTerrainPlacementMapAdapter::getTerrain(const TTilePoint& loc)
 {
     const TGameMap* pMap = _m_pMap;
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);

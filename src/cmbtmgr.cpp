@@ -556,7 +556,7 @@ DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
 // getBackgroundName indexes the rows with the hero's terrain type, so there
 // is one row per terrain (eTerrainDirt..eTerrainRock, ten): retail's twelve
 // zero bytes after the water row are the rock row.
-DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][3] = {
+DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[H3_IDX(kNumTerrainTypes)][3] = {
     { "CmBkDrDd.pcx", "CmBkDrMt.pcx", "CmBkDrTr.pcx" },
     { "CmBkDes.pcx", "CmBkDes.pcx", "CmBkDes.pcx" },
     { "CmBkGrTr.pcx", "CmBkGrMt.pcx", "CmBkGrTr.pcx" },
@@ -1367,7 +1367,7 @@ void combatManager::determineCombatTerrain()
     m_onBoats = 0;
     m_onAntiMagicGarrison = 0;
 
-    int terrain;
+    H3_ENUM_STORAGE(TTerrainType, int) terrain;
     if (m_defendingTown) {
         terrain = m_defendingTown->getNativeTerrain();
     } else if ((m_heroes[0] && (m_heroes[0]->m_flags & 0x40000))
@@ -1379,7 +1379,7 @@ void combatManager::determineCombatTerrain()
         terrain = eTerrainWater;
         m_onBoats = 1;
     } else if (m_mapPoint.m_z > 0) {
-        terrain = COMBAT_TERRAIN_SUBTERRANEAN;
+        terrain = eTerrainSubterranean;
     } else if (m_combatCell->getMapObject() == MINE
             && m_combatCell->m_isTrigger
             && (g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
@@ -1387,14 +1387,14 @@ void combatManager::determineCombatTerrain()
                 || g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
                     == COMBAT_MINE_TYPE_4
                 || g_game->getMine(m_combatCell->getMapExtraInfo())->m_isAbandoned)) {
-        terrain = COMBAT_TERRAIN_SUBTERRANEAN;
+        terrain = eTerrainSubterranean;
     } else if (m_combatCell->m_flags0011 & 0x200) {
         m_magicTerrain = 0;
-        terrain = COMBAT_TERRAIN_SAND;
+        terrain = eTerrainSand;
     } else {
         terrain = m_combatCell->m_groundSet;
     }
-    m_terrainType = terrain;
+    m_terrainType = H3_IDX(terrain);
 
     switch (m_combatCell->getSpecialTerrain()) {
     case MAGIC_PLAINS:
@@ -2341,7 +2341,7 @@ void combatManager::setupAndLoadObstacles()
 
     // Two boats meeting at sea: the hulls block thirty-two hexes and
     // nothing else is placed at all.
-    if (m_terrainType == eTerrainWater
+    if (m_terrainType == H3_IDX(eTerrainWater)
             && m_heroes[0] && (m_heroes[0]->m_flags & 0x40000)
             && m_heroes[1] && (m_heroes[1]->m_flags & 0x40000)) {
         for (const int* hex = g_boatBlockedHexes;

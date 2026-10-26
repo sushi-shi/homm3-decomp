@@ -704,7 +704,7 @@ private:
 class TGameMap::TLayer::TCell {
 public:
     // A new cell is plain water (h3maped 0x4395c8 stores the word 8).
-    TCell() : _m_terrainType(eTerrainWater), _m_riverType(0), _m_roadType(0), _m_tileNum(0),
+    TCell() : _m_terrainType(H3_IDX(eTerrainWater)), _m_riverType(0), _m_roadType(0), _m_tileNum(0),
               _m_riverTileNum(0), _m_roadTileNum(0), _m_bHFlipped(false), _m_bVFlipped(false),
               _m_bRiverHFlipped(false), _m_bRiverVFlipped(false), _m_bRoadHFlipped(false),
               _m_bRoadVFlipped(false) {}
@@ -722,7 +722,7 @@ public:
     bool getBRoadHFlipped() const { return _m_bRoadHFlipped; }
     bool getBRoadVFlipped() const { return _m_bRoadVFlipped; }
 
-    void setTerrainType(TTerrainType newTerrainType) { _m_terrainType = newTerrainType; }
+    void setTerrainType(TTerrainType newTerrainType) { _m_terrainType = H3_IDX(newTerrainType); }
     void setTileNum(unsigned int newTileNum) { _m_tileNum = newTileNum; }
     void setRiverType(unsigned int newRiverType) { _m_riverType = newRiverType; }
     void setRiverTileNum(unsigned int newTileNum) { _m_riverTileNum = newTileNum; }

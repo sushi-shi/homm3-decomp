@@ -151,7 +151,7 @@ public:
         virtual TTilePoint getSize() = 0;
         virtual TRmgTerrainTile getTile(const TTilePoint& point) = 0;
         virtual int getLineType(const TTilePoint& point) = 0;
-        virtual int getTerrain(const TTilePoint& point) = 0;
+        virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& point) = 0;
     };
 
     TAbstractMap* m_adapter;
@@ -283,7 +283,7 @@ public:
         virtual TTilePoint getSize() = 0;
         virtual TRmgTerrainTile getTile(const TTilePoint& point) = 0;
         virtual int getLineType(const TTilePoint& point) = 0;
-        virtual int getTerrain(const TTilePoint& point) = 0;
+        virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& point) = 0;
     };
 
     TAbstractMap* m_adapter;

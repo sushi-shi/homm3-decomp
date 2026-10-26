@@ -200,7 +200,7 @@ void TMiniMapWnd::OnPaint()
             CRect cellRect(tile.x * s_kClientSize.cx / width, tile.y * s_kClientSize.cy / height,
                            (tile.x + 1) * s_kClientSize.cx / width, (tile.y + 1) * s_kClientSize.cy / height);
             TTerrainType terrainType = layer.getCell(tile.x, tile.y).getTerrainType();
-            TColor color = akTerrainColors[terrainType].m_color;
+            TColor color = H3_AT(akTerrainColors, terrainType).m_color;
             const TGUIGameObject* pTopObj = NULL;
             bool bTopOwnable = false;
             unsigned int numObjects = layer.getNumObjectIDsAtCell(tile.x, tile.y);

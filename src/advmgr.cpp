@@ -595,7 +595,7 @@ advManager::advManager()
 // abm01_..abm03_, abf01l..abf03k, and the 38-entry cached-graphics list
 // diboxbck.pcx..HALLFORT.def whose entry 26 re-points at pskill.def).
 DATA(0x0065f4c4) const char* g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
-DATA(0x0065f55c) const char* g_groundTilesetNames[kNumTerrainTypes] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
+DATA(0x0065f55c) const char* g_groundTilesetNames[H3_IDX(kNumTerrainTypes)] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
 // River and road tilesets are indexed by type; type 0 (none) names "".
 // Retail stores the empty-string pointer at 0x65f584 and 0x65f598 and the
 // loaders walk from entry 1 (0x65f588..0x65f598, 0x65f59c..0x65f5a8).
@@ -693,7 +693,7 @@ int advManager::open(int newPriority)
     monAttackSprites =
         ResourceManager::GetSprite(DATA_COMPGEN(0x00660318, monAttackSpriteName,
                                "avwattak.def"));
-    for (i = 0; i < kNumTerrainTypes; i++)
+    for (i = 0; i < H3_IDX(kNumTerrainTypes); i++)
         m_groundTileset[i] = ResourceManager::GetSprite(g_groundTilesetNames[i]);
     incProgressBar(1);
     for (i = 1; i < 5; i++)
@@ -902,7 +902,7 @@ void advManager::close()
     m_gemIcons[1] = 0;
     m_gemIcons[2] = 0;
     m_gemIcons[3] = 0;
-    for (i = 0; i < kNumTerrainTypes; i++) {
+    for (i = 0; i < H3_IDX(kNumTerrainTypes); i++) {
         ResourceManager::Dispose(m_groundTileset[i]);
         m_groundTileset[i] = 0;
         cursorSamples[i]->dispose();
@@ -1024,7 +1024,7 @@ NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
 
         // DC 1286 nests getLocation and GetCell in the terrain sample lookup.
         sample* sampleToPlay =
-            cursorSamples[getCell(currHero->getLocation())->m_groundSet];
+            H3_AT(cursorSamples, getCell(currHero->getLocation())->m_groundSet);
         if (currHero->isFlying(0))
             sampleToPlay = cursorSamples[10];
         sampleToPlay->memSample.memLooping = 0;
@@ -5325,7 +5325,7 @@ void advManager::drawGround(int srcX, int srcY, int z, int destX, int destY)
 
     if (srcX >= 0 && srcY >= 0 && srcX < g_mapWidth
         && srcY < g_mapHeight) {
-        m_groundTileset[thisCell->m_groundSet]->DrawTile(
+        H3_AT(m_groundTileset, thisCell->m_groundSet)->DrawTile(
             thisCell->m_groundIndex, tilex, tiley, tilew, tileh,
             g_windowManager->m_screenBitmap, baseX, baseY + 8,
             thisCell->m_flags0011 & 1,
@@ -5551,7 +5551,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
             if (!(view_towns && currCell->m_type == TOWN) && !visible) {
                 color = 0;
             } else {
-                color = m_groundTileset[currCell->m_groundSet]->GetPaletteColor(8);
+                color = H3_AT(m_groundTileset, currCell->m_groundSet)->GetPaletteColor(8);
                 if (x == current_hero_x && y == current_hero_y) {
                     color = g_systemPalette->Palette[64 + current_hero->m_owner];
                 } else if (currCell->m_type == HERO
@@ -5582,7 +5582,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag,
                     case TERRAIN_WILLOW_TREE:
                     case TERRAIN_YUCCA_TREE:
                         if (!currCell->m_passable)
-                            color = m_groundTileset[currCell->m_groundSet]
+                            color = H3_AT(m_groundTileset, currCell->m_groundSet)
                                          ->GetPaletteColor(9);
                         break;
                     case TOWN:
@@ -5951,7 +5951,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 TAdventureObjectType special =
                     testCell->getSpecialTerrain();
                 if (special == NOTHING) {
-                    result = g_terrainNames[testCell->m_groundSet];
+                    result = H3_AT(g_terrainNames, testCell->m_groundSet);
                 } else {
                     result =
                         g_quickViewText[special];
@@ -7501,7 +7501,7 @@ void advManager::setTownContext(int townId, bool waitingPlayer, bool update)
 
     point = currTown->getLocation();
 
-    int ground = getCell(point)->m_groundSet;
+    int ground = H3_IDX(getCell(point)->m_groundSet);
     if (ground != m_lastTerrain) {
         m_lastTerrain = ground;
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[ground]);
@@ -7626,8 +7626,8 @@ void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool
     type_point viewCentre = getMapCenter();
     setEnvironmentOrigin(viewCentre, 1);
 
-    if (cell->m_groundSet != m_lastTerrain && drawChanges) {
-        m_lastTerrain = cell->m_groundSet;
+    if (H3_IDX(cell->m_groundSet) != m_lastTerrain && drawChanges) {
+        m_lastTerrain = H3_IDX(cell->m_groundSet);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
     }
 
@@ -8450,7 +8450,7 @@ void advManager::setInitialMapOrigin()
 
     type_point center = getMapCenter();
 
-    m_lastTerrain = getCell(center)->m_groundSet;
+    m_lastTerrain = H3_IDX(getCell(center)->m_groundSet);
     g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
     setEnvironmentOrigin(center, 1);
     reseed(0, 0);

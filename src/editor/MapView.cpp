@@ -226,7 +226,7 @@ TTilePoint TObstaclePlacerMap::getObjectLoc(unsigned int objID)
 VA(0x004803b6, 0x2c)
 int TObstaclePlacerMap::getTerrain(unsigned int x, unsigned int y)
 {
-    return static_cast<const TGameMap*>(_m_pMap)->getLayer(_m_bSecondLayer).getCell(x, y).getTerrainType();
+    return H3_IDX(static_cast<const TGameMap*>(_m_pMap)->getLayer(_m_bSecondLayer).getCell(x, y).getTerrainType());
 }
 
 VA(0x004803e2, 0x1d)

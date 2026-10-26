@@ -579,7 +579,7 @@ int g_rmgTerrainTownChoices[9][4] = {
 // RMG table, not armygrp's native-terrain table at 0x643698. Role-derived
 // name: no Dreamcast RMG compiland or original global spelling exists.
 DATA(0x006408C8)
-static const int g_rmgTownNativeTerrains[9] = {
+static const H3_ENUM_STORAGE(TTerrainType, int) g_rmgTownNativeTerrains[9] = {
     eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava, eTerrainDirt,
     eTerrainDirt, eTerrainRough, eTerrainSwamp, eTerrainGrass
 };
@@ -1019,10 +1019,10 @@ unsigned char type_random_map::isPlacementBlocked(
                     return 1;
                 if (item->getLandType() == eTerrainWater) {
                     if (prototype.getSlotCategory() != TObjectType::SLOT_CATEGORY_0
-                        || !prototype.getRecommendedTerrainMask().test(eTerrainWater))
+                        || !prototype.getRecommendedTerrainMask().test(H3_IDX(eTerrainWater)))
                         return 1;
                 } else if (prototype.getSlotCategory() == TObjectType::SLOT_CATEGORY_0
-                           && prototype.getRecommendedTerrainMask().test(eTerrainWater)) {
+                           && prototype.getRecommendedTerrainMask().test(H3_IDX(eTerrainWater))) {
                     return 1;
                 }
             }
@@ -1227,7 +1227,7 @@ TRmgTerrainTile type_random_map::getTile(const TTilePoint& point)
 {
     TRmgMapItem& item = *getMapItem(point.m_x, point.m_y);
     TRmgTerrainTile tile;
-    tile.m_terrain = item.getLandType();
+    tile.m_terrain = H3_IDX(item.getLandType());
     tile.m_frame = item.m_tile.m_terrainFrame;
     tile.m_flipX = item.m_tileData.m_terrainFlipX;
     tile.m_flipY = item.m_tileData.m_terrainFlipY;
@@ -1239,7 +1239,7 @@ TRmgTerrainTile type_random_map::getTile(const TTilePoint& point)
 // and its adjacent eight-bit terrain frame from TRmgGroundTile.
 VA(0x005322C0, 0x2A)
 MAC_ADDRESS(0x22ec18, 0x34)
-int type_random_map::getTerrain(const TTilePoint& point)
+H3_ENUM_RETURN(TTerrainType, int) type_random_map::getTerrain(const TTilePoint& point)
 {
     return getMapItem(point.m_x, point.m_y)->getLandType();
 }
@@ -1311,7 +1311,7 @@ int type_road_map::getLineType(const TTilePoint& point)
 
 VA(0x005324B0, 0x2D)
 MAC_ADDRESS(0x22ee9c, 0x38)
-int type_road_map::getTerrain(const TTilePoint& point)
+H3_ENUM_RETURN(TTerrainType, int) type_road_map::getTerrain(const TTilePoint& point)
 {
     return m_map->getMapItem(point.m_x, point.m_y)->getLandType();
 }
@@ -1449,7 +1449,7 @@ int type_river_map::getLineType(const TTilePoint& point)
 
 VA(0x00532860, 0x2D)
 MAC_ADDRESS(0x22f3fc, 0x38)
-int type_river_map::getTerrain(const TTilePoint& point)
+H3_ENUM_RETURN(TTerrainType, int) type_river_map::getTerrain(const TTilePoint& point)
 {
     return m_map->getMapItem(point.m_x, point.m_y)->getLandType();
 }
@@ -1458,7 +1458,7 @@ VA(0x00532890, 0x104)
 MAC_ADDRESS(0x22f434, 0x1d4)
 void TRmgMapItem::write(TAbstractFile* outfile)
 {
-    char land = m_tile.m_landType;
+    char land = H3_IDX(m_tile.m_landType);
     outfile->write(&land, sizeof(land));
     char value = m_tile.m_terrainFrame;
     outfile->write(&value, sizeof(value));
@@ -1536,13 +1536,13 @@ void TRmgZone::chooseCreatureTownType(unsigned char expanded)
         // expanded, then on != 8. Preserve this observed condition,
         // even though no table entry can satisfy both equalities.
         while (count < 4 &&
-            (g_rmgTerrainTownChoices[m_terrain][count] != -1 || expanded ||
-             g_rmgTerrainTownChoices[m_terrain][count] != H3_IDX(eTownConflux)))
+            (H3_AT(g_rmgTerrainTownChoices, m_terrain)[count] != -1 || expanded ||
+             H3_AT(g_rmgTerrainTownChoices, m_terrain)[count] != H3_IDX(eTownConflux)))
             ++count;
         if (count == 0)
             m_creatureTownType = -1;
         else
-            m_creatureTownType = g_rmgTerrainTownChoices[m_terrain][rand() % count];
+            m_creatureTownType = H3_AT(g_rmgTerrainTownChoices, m_terrain)[rand() % count];
     }
 }
 
@@ -1554,8 +1554,8 @@ void TRmgZone::chooseTerrain()
         m_terrain = g_rmgTownNativeTerrains[m_alignment];
     } else {
         int count = 0;
-        for (int terrain = 0; terrain < eTerrainWater; ++terrain) {
-            if (m_templateZone->m_allowedTerrain[terrain]
+        for (H3_ENUM_STORAGE_STEPPED(TTerrainType, int) terrain = eTerrainDirt; terrain < eTerrainWater; ++terrain) {
+            if (H3_AT(m_templateZone->m_allowedTerrain, terrain)
                 && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1))
                 ++count;
         }
@@ -1563,9 +1563,9 @@ void TRmgZone::chooseTerrain()
             m_terrain = eTerrainDirt;
         } else {
             int selected = rand() % count;
-            int terrain;
-            for (terrain = 0; terrain < eTerrainWater; ++terrain) {
-                if (m_templateZone->m_allowedTerrain[terrain]
+            H3_ENUM_STORAGE_STEPPED(TTerrainType, int) terrain;
+            for (terrain = eTerrainDirt; terrain < eTerrainWater; ++terrain) {
+                if (H3_AT(m_templateZone->m_allowedTerrain, terrain)
                     && (terrain != eTerrainSubterranean || m_levelPosition.m_z == 1)) {
                     if (selected-- <= 0)
                         break;
@@ -2873,7 +2873,7 @@ type_object* type_quest_creature_def::generate(TRmgObjectPropertiesRef* properti
     type_random_map_generator* generator, TRmgZone*)
 {
     type_seer_hut* seerHut = new type_seer_hut(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(H3_IDX(eTerrainDirt), 0x41, 0);
     t_quest_artifact* object = new t_quest_artifact(artifact, generator, seerHut, this);
     int count = m_creatureCount;
     seerHut->m_creatureType = m_creatureType;
@@ -2917,7 +2917,7 @@ type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* proper
     type_random_map_generator* generator, TRmgZone*)
 {
     type_seer_hut* seerHut = new type_seer_hut(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(H3_IDX(eTerrainDirt), 0x41, 0);
     t_quest_artifact* object = new t_quest_artifact(artifact, generator, seerHut, this);
     seerHut->m_experience = m_experience;
     return object;
@@ -2936,7 +2936,7 @@ type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
     type_random_map_generator* generator, TRmgZone*)
 {
     type_seer_hut* seerHut = new type_seer_hut(properties);
-    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(H3_IDX(eTerrainDirt), 0x41, 0);
     t_quest_artifact* object = new t_quest_artifact(artifact, generator, seerHut, this);
     int amount = m_gold;
     seerHut->m_resourceType = 6;
@@ -3037,7 +3037,7 @@ void TRmgTreasureGroup::reset()
     TRmgMapItem* item = m_map.getMapItem(0, 0);
     int count = m_map.getWidth() * m_map.getHeight();
     while (count--) {
-        item->setTerrain(eTerrainDirt, 0, 0, 0);
+        item->setTerrain(H3_IDX(eTerrainDirt), 0, 0, 0);
         ++item;
     }
 }
@@ -3632,7 +3632,7 @@ void t_abstract_random_generator::readObjectPlacementRules()
         terrain = H3_ENUM_DECODE(TTerrainType, atoi(values[6]));
 #if defined(HOMM3_RMG_HOTFIX)
         if (objectType < NOTHING || objectType >= ADVENTURE_OBJECT_TRAIT_COUNT
-            || terrain < eTerrainDirt || terrain >= RMG_TERRAIN_COUNT) {
+            || terrain < eTerrainDirt || terrain >= kNumTerrainTypes) {
             ++row;
             continue;
         }
@@ -3642,9 +3642,9 @@ void t_abstract_random_generator::readObjectPlacementRules()
         subtypes.push_back(subtype);
         for (terrain = eTerrainDirt; terrain <= eTerrainWater;
              terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
-            rule.m_terrainScores[terrain] = atoi(values[terrain + 7]);
-        for (; terrain < 10; terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
-            rule.m_terrainScores[terrain] = RMG_PLACEMENT_INVALID;
+            H3_AT(rule.m_terrainScores, terrain) = atoi(values[H3_IDX(terrain) + 7]);
+        for (; terrain < kNumTerrainTypes; terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1))
+            H3_AT(rule.m_terrainScores, terrain) = RMG_PLACEMENT_INVALID;
         m_placementRules.push_back(rule);
         ++row;
     }
@@ -3693,8 +3693,8 @@ void t_abstract_random_generator::readObjectPlacementRules()
 #endif
     for (int index = 0; index < ruleCount; ++index) {
         TRmgObjectPlacementRule* rule = &m_placementRules[index];
-        rulesByType[objectTypes[index]][terrains[index]].push_back(rule);
-        subtypesByType[objectTypes[index]][terrains[index]].push_back(subtypes[index]);
+        H3_AT(rulesByType[objectTypes[index]], terrains[index]).push_back(rule);
+        H3_AT(subtypesByType[objectTypes[index]], terrains[index]).push_back(subtypes[index]);
     }
     for (objectType = NOTHING; objectType < ADVENTURE_OBJECT_TRAIT_COUNT;
          objectType = H3_ENUM_DECODE(TAdventureObjectType, objectType + 1)) {
@@ -3705,20 +3705,20 @@ void t_abstract_random_generator::readObjectPlacementRules()
             properties->m_placementRule = 0;
             for (terrain = eTerrainDirt; terrain < eTerrainRock;
                  terrain = H3_ENUM_DECODE(TTerrainType, terrain + 1)) {
-                if (prototype->getRecommendedTerrainMask()[terrain])
+                if (H3_AT(prototype->getRecommendedTerrainMask(), terrain))
                     break;
             }
-            properties->m_preferredTerrain = terrain;
+            properties->m_preferredTerrain = H3_IDX(terrain);
             if (terrain != eTerrainRock) {
                 subtype = prototype->getExtra();
                 // The traits row remaps aliases to their objnames.txt row.
                 int mappedType = akAdvObjectTypeTraits[objectType].m_nameRow;
-                int match = rulesByType[mappedType][terrain].size();
+                int match = H3_AT(rulesByType[mappedType], terrain).size();
                 while (match-- && *std::vector<int>::reverse_iterator(
-                    subtypesByType[mappedType][terrain].begin() + match + 1) != subtype)
+                    H3_AT(subtypesByType[mappedType], terrain).begin() + match + 1) != subtype)
                     ;
                 if (match >= 0)
-                    properties->m_placementRule = rulesByType[mappedType][terrain][match];
+                    properties->m_placementRule = H3_AT(rulesByType[mappedType], terrain)[match];
             }
         }
     }
@@ -3796,7 +3796,7 @@ int t_abstract_random_generator::scoreObjectPlacement(
             if (!prototype->getBCellPassable(column, row)) {
                 marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
                 TRmgMapItem* item = getMapItem(cell);
-                if (!prototype->_m_terrainMask[item->getLandType()])
+                if (!H3_AT(prototype->_m_terrainMask, item->getLandType()))
                     return RMG_PLACEMENT_INVALID;
                 if (item->hasPathClearance())
                     return RMG_PLACEMENT_INVALID;
@@ -3804,7 +3804,7 @@ int t_abstract_random_generator::scoreObjectPlacement(
                 // Retail 0x536d34 overwrites the complete mark with one
                 // before marking the surrounding area; retain that store.
                 marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
-                terrainSeen[item->getLandType()] = 1;
+                H3_AT(terrainSeen, item->getLandType()) = 1;
                 int firstRow = position.m_y - min(cell.m_y + 1, m_map.m_mapHeight) + 1;
                 int lastRow = position.m_y - max(cell.m_y - 2, 0) + 1;
                 int firstColumn = position.m_x - min(cell.m_x + 1, m_map.m_mapWidth) + 1;
@@ -3959,7 +3959,7 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
         TRmgMapItem* item = getMapItem(position);
         if (!item->isPassable())
             continue;
-        int terrain = item->getLandType();
+        H3_ENUM_STORAGE(TTerrainType, int) terrain = item->getLandType();
         std::vector<TRmgObjectPropertiesRef*> candidates;
         std::vector<TRmgMapPosition> positions;
         std::vector<int> weights;
@@ -3978,7 +3978,7 @@ void t_abstract_random_generator::decorateMapCell(TRmgMapPosition position, int 
                 TRmgObjectPropertiesRef* properties = prototypes[index];
                 TObjectType* prototype = properties->m_prototype;
                 if (!properties->m_placementRule
-                    || properties->m_placementRule->m_terrainScores[terrain] <= RMG_PLACEMENT_INVALID)
+                    || H3_AT(properties->m_placementRule->m_terrainScores, terrain) <= RMG_PLACEMENT_INVALID)
                     continue;
                 if (m_mapVersion < RMG_MAP_SHADOW_OF_DEATH && prototype->getType() >= CLOVER_FIELD_2)
                     continue;
@@ -6233,7 +6233,7 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
     unsigned char* mask = new unsigned char[width * height];
     TRmgMapPosition point;
     {
-        int terrain = rand() % 6;
+        H3_ENUM_STORAGE(TTerrainType, int) terrain = H3_ENUM_DECODE(TTerrainType, rand() % 6);
         type_random_map map(m_map.getMapItem(0, 0, level),
             m_map.m_mapWidth, m_map.m_mapHeight);
         TTerrainPlacementOp brush(&map, terrain, 4);
@@ -6786,7 +6786,7 @@ void type_random_map_generator::openConnectionPath(
     while (item->m_movement.m_cost > 0) {
         if (item->m_connection.m_present) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
-                eTerrainDirt, BORDER_GUARD, item->m_connection.m_guardColor);
+                H3_IDX(eTerrainDirt), BORDER_GUARD, item->m_connection.m_guardColor);
             type_object* object = new type_object(properties);
             item->m_connection.m_present = 0;
             item->m_connection.m_guardColor = 0;
@@ -7167,12 +7167,12 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
             if (visited)
                 continue;
             if (!item->hasPathClearance()) {
-                int terrain = item->getLandType();
+                H3_ENUM_STORAGE(TTerrainType, int) terrain = item->getLandType();
                 if (terrain == eTerrainWater)
                     continue;
             }
             item->setConnectionVisited();
-            int terrain = item->getLandType();
+            H3_ENUM_STORAGE(TTerrainType, int) terrain = item->getLandType();
             if (terrain == eTerrainWater)
                 openPositions.push_back(nearby);
         }
@@ -7213,7 +7213,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
         if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
             continue;
         TRmgMapItem* item = m_map.getMapItem(nearby);
-        int terrain = item->getLandType();
+        H3_ENUM_STORAGE(TTerrainType, int) terrain = item->getLandType();
         if (terrain == eTerrainWater && item->hasPathClearance())
             break;
     }
@@ -7226,7 +7226,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
         nearby.m_x -= 3;
     if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
         return 0;
-    int terrain = m_map.getMapItem(nearby)->getLandType();
+    H3_ENUM_STORAGE(TTerrainType, int) terrain = m_map.getMapItem(nearby)->getLandType();
     return terrain != eTerrainWater;
 }
 
@@ -7988,13 +7988,13 @@ void type_random_map_generator::decorateUnderground()
     }
     if (m_progress)
         m_progress->advance(1200);
-    int currentTerrain = eTerrainRock;
+    H3_ENUM_STORAGE(TTerrainType, int) currentTerrain = eTerrainRock;
     for (unsigned int zone = 0; zone < m_zones.size(); ++zone) {
         scan = m_zones[zone]->getLevelPosition();
         if (scan.m_z != 1)
             continue;
         TRmgZoneBounds bounds = m_zones[zone]->m_bounds;
-        int terrain = m_zones[zone]->m_terrain;
+        H3_ENUM_STORAGE(TTerrainType, int) terrain = m_zones[zone]->m_terrain;
         if (currentTerrain == eTerrainRock) {
             brush.changeTerrain(terrain, 4);
             currentTerrain = terrain;
@@ -8832,7 +8832,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     int resource, unsigned char startingMine, int spacing)
 {
     std::vector<TRmgObjectPropertiesRef*> candidates;
-    int terrain = zone->m_terrain;
+    H3_ENUM_STORAGE(TTerrainType, int) terrain = zone->m_terrain;
     TRmgObjectPropertiesRef* properties;
     TObjectType* prototype;
     for (unsigned i = 0; i < m_objectPrototypes[MINE].size(); ++i) {
@@ -8874,7 +8874,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     if (guardValue > 0)
         placeGuard(guardValue, entrance);
     int placed = 0;
-    TRmgObjectPropertiesRef* resourceProperties = selectObjectPrototype(terrain, RESOURCE, resource);
+    TRmgObjectPropertiesRef* resourceProperties = selectObjectPrototype(H3_IDX(terrain), RESOURCE, resource);
     if (!resourceProperties)
         return 1;
     entrance = mine->getPosition();
@@ -9022,7 +9022,7 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
             continue;
         if (prototype->getSlotCategory() == TObjectType::SLOT_CATEGORY_4
             || prototype->getSlotCategory() == TObjectType::SLOT_CATEGORY_5) {
-            if (terrain == eTerrainWater)
+            if (terrain == H3_IDX(eTerrainWater))
                 continue;
         } else if (!prototype->getRecommendedTerrainMask().test(terrain)) {
             continue;
@@ -9094,7 +9094,7 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
         if (objectValue < 0 || objectValue < minimum || objectValue > maximum)
             continue;
         TRmgObjectPropertiesRef* candidate = selectObjectPrototype(
-            zone->m_terrain, definition->m_objectType, definition->m_subtype);
+            H3_IDX(zone->m_terrain), definition->m_objectType, definition->m_subtype);
         if (!candidate)
             continue;
         if (position.m_x >= 0 && m_map.isPlacementBlocked(candidate, position, zoneIndex, 1))
@@ -9242,7 +9242,7 @@ VA(0x00546940, 0x49) // anchor-callers + packed cell fields; thiscall ret 0x10
 void TRmgMapItem::setTerrain(int terrain, int frame,
     unsigned char flipX, unsigned char flipY)
 {
-    m_tile.m_landType = terrain;
+    m_tile.m_landType = H3_ENUM_DECODE(TTerrainType, terrain);
     m_tile.m_terrainFrame = frame;
     m_tileData.m_terrainFlipX = flipX;
     m_tileData.m_terrainFlipY = flipY;
@@ -10304,13 +10304,13 @@ void type_random_map_generator::createRiverToOutlet(TRmgMapPosition source)
         int deltaIndex = sourceIsSnow
             ? g_rmgSnowRiverDeltaIndex[direction]
             : g_rmgLandRiverDeltaIndex[direction];
-        int landType = mapItem->getLandType();
+        H3_ENUM_STORAGE(TTerrainType, int) landType = mapItem->getLandType();
         int prototypeIndex = 0;
         for (; prototypeIndex < m_objectPrototypes[TERRAIN_RIVER_DELTA].size();
              ++prototypeIndex) {
             TRmgObjectPropertiesRef* properties =
                 m_objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex];
-            if (properties->m_prototype->getRecommendedTerrainMask().test(landType)
+            if (properties->m_prototype->getRecommendedTerrainMask().test(H3_IDX(landType))
                 && deltaIndex-- == 0)
                 break;
         }

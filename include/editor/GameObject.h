@@ -68,7 +68,7 @@ public:
     }
     bool hasTrigger() const { return _m_objectTypeIter->first.hasTrigger() != 0; }
     const TTilePoint& getTriggerLoc() const { return _m_objectTypeIter->first.getTriggerLoc(); }
-    const std::bitset<kNumTerrainTypes>& getTerrainMask() const { return _m_objectTypeIter->first._m_terrainMask; }
+    const std::bitset<H3_IDX(kNumTerrainTypes)>& getTerrainMask() const { return _m_objectTypeIter->first._m_terrainMask; }
     TAdventureObjectType getType() const { return _m_objectTypeIter->first.getType(); }
     int getExtra() const { return _m_objectTypeIter->first.getExtra(); }
     bool getBUnderlay() const { return _m_objectTypeIter->first.getBUnderlay() != 0; }

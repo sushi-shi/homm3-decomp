@@ -1388,15 +1388,15 @@ DC_ADDRESS(0x04fc98, 0x9c)
 MAC_ADDRESS(0x05a1f0, 0x90)
 TTerrainType armyGroup::getNativeTerrain() const
 {
-    TTerrainType native = TERRAIN_NONE;
+    TTerrainType native = eTerrainNone;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
         int alignment = H3_IDX(g_game->getAlignment(m_armies[i]));
         TTerrainType terrain = townManager::getNativeTerrain(alignment);
-        if (native != TERRAIN_NONE) {
+        if (native != eTerrainNone) {
             if (terrain != native)
-                return TERRAIN_NONE;
+                return eTerrainNone;
         } else
             native = terrain;
     }

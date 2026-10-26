@@ -664,8 +664,8 @@ void advManager::teleportTo(hero* who, type_point destination,
         setEnvironmentOrigin(getMapCenter(), 1);
     }
 
-    if (newCell->m_groundSet != m_lastTerrain && g_completeDrawEnabled) {
-        m_lastTerrain = newCell->m_groundSet;
+    if (H3_IDX(newCell->m_groundSet) != m_lastTerrain && g_completeDrawEnabled) {
+        m_lastTerrain = H3_IDX(newCell->m_groundSet);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
     }
 

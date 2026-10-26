@@ -192,7 +192,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     if (g_combatManager->m_magicTerrain
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
         && townManager::getNativeTerrain(H3_IDX(m_monInfo.townType))
-               == g_combatManager->m_terrainType)
+               == H3_ENUM_DECODE(TTerrainType, g_combatManager->m_terrainType))
         m_onNativeTerrain = 1;
     else
         m_onNativeTerrain = 0;

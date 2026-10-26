@@ -88,9 +88,9 @@ private:
     std::bitset<OBJECT_MASK_CELLS> _m_passableMask;
     std::bitset<OBJECT_MASK_CELLS> _m_triggerMask;
 public:
-    std::bitset<kNumTerrainTypes> _m_terrainMask;
+    std::bitset<H3_IDX(kNumTerrainTypes)> _m_terrainMask;
 private:
-    std::bitset<kNumTerrainTypes> _m_recommendedTerrainMask;
+    std::bitset<H3_IDX(kNumTerrainTypes)> _m_recommendedTerrainMask;
     TAdventureObjectType _m_type;
     int _m_extra;
     int _m_slotCategory;
@@ -150,13 +150,13 @@ public:
     // subscript uses VC6's reference proxy, preserving the checked bitset
     // call in mine placement at 0x545a01. A const query expands test and
     // retains only _Xran.
-    bool isRecommendedTerrain(int terrain)
+    bool isRecommendedTerrain(H3_ENUM_PARAM(TTerrainType, int) terrain)
     {
-        return _m_recommendedTerrainMask[terrain];
+        return H3_AT(_m_recommendedTerrainMask, terrain);
     }
-    bool isRecommendedTerrain(int terrain) const
+    bool isRecommendedTerrain(H3_ENUM_PARAM(TTerrainType, int) terrain) const
     {
-        return _m_recommendedTerrainMask.test(terrain);
+        return _m_recommendedTerrainMask.test(H3_IDX(terrain));
     }
     int getHeight() const { return _m_height; }
     // Mac conversion 0x128d7c..0x128d94 reads this metadata after the
@@ -180,8 +180,8 @@ public:
     // the two setters above and expands this ordered field/invariant chain.
     // The corresponding ordinary definitions live in objecttype.cpp.
     TObjectType& _setPassableMask(const std::bitset<OBJECT_MASK_CELLS>& mask);
-    TObjectType& setTerrainMask(const std::bitset<kNumTerrainTypes>& mask);
-    TObjectType& setRecommendedTerrainMask(const std::bitset<kNumTerrainTypes>& mask);
+    TObjectType& setTerrainMask(const std::bitset<H3_IDX(kNumTerrainTypes)>& mask);
+    TObjectType& setRecommendedTerrainMask(const std::bitset<H3_IDX(kNumTerrainTypes)>& mask);
     TObjectType& setType(TAdventureObjectType type);
     TObjectType& setExtra(int subtype);
     TObjectType& setSlotCategory(int category);
@@ -189,7 +189,7 @@ public:
 
     // Loki h3maped TObjectType::getRecommendedTerrainMask/getSlotCategory/
     // getTriggerLoc (0x8363ac0, 0x8363ad4, 0x8363b48).
-    const std::bitset<kNumTerrainTypes>& getRecommendedTerrainMask() const
+    const std::bitset<H3_IDX(kNumTerrainTypes)>& getRecommendedTerrainMask() const
     {
         return _m_recommendedTerrainMask;
     }

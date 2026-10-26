@@ -2,11 +2,13 @@
 #ifndef HOMM3_TERRAIN_TYPE_H
 #define HOMM3_TERRAIN_TYPE_H
 
+#include "domains.h"
+
 // The ten-mask analysis recovers the complete ordering
 // {Dirt=0, Sand=1, Grass=2, Snow=3, Swamp=4, Rough=5,
 // Subterranean=6, Lava=7, Water=8, Rock=9}.
-enum TTerrainType {
-    TERRAIN_NONE = -1,
+H3_ENUM_BEGIN(TTerrainType)
+    eTerrainNone = -1,
     eTerrainDirt = 0,
     eTerrainSand = 1,
     eTerrainGrass = 2,
@@ -24,6 +26,7 @@ enum TTerrainType {
     eTerrainBeach = 12,
     eTerrainMagicPlains = 13,
     eTerrainCursedGround = 14
-};
+H3_ENUM_END(TTerrainType)
+H3_ENUM_STEPPED(TTerrainType)
 
 #endif  // HOMM3_TERRAIN_TYPE_H

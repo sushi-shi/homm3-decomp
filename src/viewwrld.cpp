@@ -1119,7 +1119,7 @@ void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
         memset(g_memoryBuffer->GetMap(0, 0), 0,
                g_memoryBuffer->GetHeight() * g_memoryBuffer->GetPitch());
 
-        m_groundTileset[thisCell->m_groundSet]->DrawTile(
+        H3_AT(m_groundTileset, thisCell->m_groundSet)->DrawTile(
             thisCell->m_groundIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
             thisCell->m_flags0011 & 1,
             (thisCell->m_flags0011 >> 1) & 1);

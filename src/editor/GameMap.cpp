@@ -1426,7 +1426,7 @@ bool TGameMap::_TImpl::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, u
     assert(!bSecondLayer || _m_bTwoLayer);
     assert(x < getWidth());
     assert(y < getHeight());
-    assert(oldTerrainType >= 0 && oldTerrainType < kNumTerrainTypes);
+    assert(oldTerrainType >= 0 && oldTerrainType < H3_IDX(kNumTerrainTypes));
     assert(pUpdatedExtent != NULL);
     bool bObjectsRemoved = false;
     const TLayer& layer = getLayer(bSecondLayer);
@@ -1442,7 +1442,7 @@ bool TGameMap::_TImpl::onTerrainTypeChanged(bool bSecondLayer, unsigned int x, u
         aObjID.push_back(layer.getObjectIDAtCell(x, y, i));
     for (vector<int>::const_iterator pObjID = aObjID.begin(); pObjID != aObjID.end(); ++pObjID) {
         const TGameObject& obj = layer.getObject(*pObjID);
-        if (!obj.getTerrainMask()[newTerrainType]) {
+        if (!H3_AT(obj.getTerrainMask(), newTerrainType)) {
             TTilePoint objLoc = layer.getObjectLoc(*pObjID);
             unsigned int i = objLoc.x() - x;
             unsigned int j = objLoc.y() - y;
@@ -2766,7 +2766,7 @@ bool TGameMap::_TImpl::_isValidPlacement(const TLayer& layer, const TGameObject&
                 }
             }
             bool bPassable = obj.getBCellPassable(i, j);
-            if ((!bPassable || obj.getBUnderlay()) && !obj.getTerrainMask()[cell.getTerrainType()])
+            if ((!bPassable || obj.getBUnderlay()) && !H3_AT(obj.getTerrainMask(), cell.getTerrainType()))
                 return false;
             if (!bPassable && paObjInfo != NULL) {
                 const vector<TLayer::_TObjectCellInfo>& aObjInfo = *paObjInfo;

@@ -638,13 +638,13 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
     }
 
     type_point point = getMapCenter();
-    int ground = getCell(point)->m_groundSet;
+    int ground = H3_IDX(getCell(point)->m_groundSet);
     if (ground != m_lastTerrain) {
         m_lastTerrain = ground;
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
 
-        sample* walkSample = cursorSamples[
-            getCell(curr->getLocation())->m_groundSet];
+        sample* walkSample = H3_AT(cursorSamples,
+            getCell(curr->getLocation())->m_groundSet);
         if (curr->isFlying(0))
             walkSample = cursorSamples[10];
         walkSample->memSample.memLooping = 0;

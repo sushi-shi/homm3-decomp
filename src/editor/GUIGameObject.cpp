@@ -671,7 +671,7 @@ void TGUITown::drawCellShadow(unsigned int frameNum, unsigned int cellX, unsigne
 VA(0x00441766, 0x14)
 TColor TGUITown::miniMapColor(TTerrainType terrainType) const
 {
-    assert(terrainType >= 0 && terrainType < kNumTerrainTypes);
+    assert(terrainType >= 0 && terrainType < H3_IDX(kNumTerrainTypes));
     return akPlayerColor[getOwner() + 1];
 }
 
@@ -949,7 +949,7 @@ std::auto_ptr<TGameObject> TGUIAbandonedMine::clone() const
 VA(0x0044226a, 0xb)
 TColor TGUIAbandonedMine::miniMapColor(TTerrainType terrainType) const
 {
-    assert(terrainType >= 0 && terrainType < kNumTerrainTypes);
+    assert(terrainType >= 0 && terrainType < H3_IDX(kNumTerrainTypes));
     return akPlayerColor[0];
 }
 
@@ -1071,13 +1071,13 @@ bool TGUIGameObject::hitTest(unsigned int frameNum, int x, int y, TZoom zoom) co
 VA(0x0044261f, 0x77)
 TColor TGUIGameObject::miniMapColor(TTerrainType terrainType) const
 {
-    assert(terrainType >= 0 && terrainType < kNumTerrainTypes);
+    assert(terrainType >= 0 && terrainType < H3_IDX(kNumTerrainTypes));
     DATA_COMPGEN_GUARD(0x0059e540, miniMapTypeFlagsGuard, typeFlags)
     VA_COMPGEN(0x00442696, 0x1, STATIC_DTOR, typeFlags)
     DATA(0x0059e520) static const TMiniMapTypeFlags typeFlags;
     if (typeFlags[getType()])
-        return akTerrainColors[terrainType].m_obstacleColor;
-    return akTerrainColors[terrainType].m_color;
+        return H3_AT(akTerrainColors, terrainType).m_obstacleColor;
+    return H3_AT(akTerrainColors, terrainType).m_color;
 }
 
 VA(0x00442697, 0x45)

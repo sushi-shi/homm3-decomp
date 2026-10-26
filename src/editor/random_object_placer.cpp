@@ -154,12 +154,12 @@ TRmgObjectPropertiesRef* t_random_object_placer::_getProperties(const TObjectTyp
 VA(0x004af89f, 0x36)
 int getPreferredTerrain(const TObjectType& objType)
 {
-    int terrain;
+    H3_ENUM_STORAGE_STEPPED(TTerrainType, int) terrain;
     for (terrain = eTerrainDirt; terrain < eTerrainRock; terrain++) {
-        if (objType.getRecommendedTerrainMask()[terrain])
+        if (H3_AT(objType.getRecommendedTerrainMask(), terrain))
             break;
     }
-    return terrain;
+    return H3_IDX(terrain);
 }
 
 VA(0x004af8d5, 0x3b)

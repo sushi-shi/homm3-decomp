@@ -74,7 +74,7 @@ VA(0x0055ee00, 0x28)
 MAC_ADDRESS(0x253b64, 0x44)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
 s32 TRiverOp::isBlocked(const TTilePoint& point)
 {
-    s32 terrain = m_adapter->getTerrain(point);
+    H3_ENUM_STORAGE(TTerrainType, s32) terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
@@ -105,7 +105,7 @@ VA_AT(h3maped, 0x004b3cd2, 0x63)
 void TRiverEraseOp::onTerrainTypeChanged(TRiverOp::TAbstractMap* map, const TTilePoint& point)
 {
     s32 riverType = map->getLineType(point);
-    s32 terrain = map->getTerrain(point);
+    H3_ENUM_STORAGE(TTerrainType, s32) terrain = map->getTerrain(point);
     if (riverType != 0 && (terrain == eTerrainWater || terrain == eTerrainRock)) {
         TRiverEraseOp eraseOp(map);
         eraseOp(point.x(), point.y(), 1, 1);

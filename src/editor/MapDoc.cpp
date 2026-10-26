@@ -109,7 +109,7 @@ public:
     virtual void setFrame(const TTilePoint& loc, int frame);
     virtual TTilePoint& getSize(TTilePoint& size);
     virtual TRmgTerrainTile getTile(const TTilePoint& loc);
-    virtual int getTerrain(const TTilePoint& loc);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& loc);
     virtual int getFrame(const TTilePoint& loc);
 
 private:
@@ -145,14 +145,14 @@ TRmgTerrainTile TRepaintMapOp::getTile(const TTilePoint& loc)
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
     const TGameMap::TLayer::TCell& cell = layer.getCell(loc.x(), loc.y());
     TRmgTerrainTile tile;
-    tile.m_terrain = cell.getTerrainType();
+    tile.m_terrain = H3_IDX(cell.getTerrainType());
     tile.m_frame = cell.getTileNum();
     tile.m_flipX = cell.getBHFlipped();
     tile.m_flipY = cell.getBVFlipped();
     return tile;
 }
 
-int TRepaintMapOp::getTerrain(const TTilePoint& loc)
+H3_ENUM_RETURN(TTerrainType, int) TRepaintMapOp::getTerrain(const TTilePoint& loc)
 {
     const TGameMap* pMap = _m_pMap;
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
@@ -180,7 +180,7 @@ public:
     virtual TTilePoint getSize();
     virtual TRmgTerrainTile getTile(const TTilePoint& loc);
     virtual int getLineType(const TTilePoint& loc);
-    virtual int getTerrain(const TTilePoint& loc);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& loc);
 
     bool getUpdateExtent(TTileExtent* pExtent) const;
     void reset();
@@ -207,7 +207,7 @@ public:
     virtual TTilePoint getSize();
     virtual TRmgTerrainTile getTile(const TTilePoint& loc);
     virtual int getLineType(const TTilePoint& loc);
-    virtual int getTerrain(const TTilePoint& loc);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& loc);
 
     bool getUpdateExtent(TTileExtent* pExtent) const;
     void reset();
@@ -280,7 +280,7 @@ int TRiverMap::getLineType(const TTilePoint& loc)
     return layer.getCell(loc.x(), loc.y()).getRiverType();
 }
 
-int TRiverMap::getTerrain(const TTilePoint& loc)
+H3_ENUM_RETURN(TTerrainType, int) TRiverMap::getTerrain(const TTilePoint& loc)
 {
     const TGameMap* pMap = _m_pMap;
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
@@ -369,7 +369,7 @@ int TRoadMap::getLineType(const TTilePoint& loc)
     return layer.getCell(loc.x(), loc.y()).getRoadType();
 }
 
-int TRoadMap::getTerrain(const TTilePoint& loc)
+H3_ENUM_RETURN(TTerrainType, int) TRoadMap::getTerrain(const TTilePoint& loc)
 {
     const TGameMap* pMap = _m_pMap;
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
@@ -551,7 +551,7 @@ public:
     virtual void setFrame(const TTilePoint& loc, int frame);
     virtual TTilePoint& getSize(TTilePoint& size);
     virtual TRmgTerrainTile getTile(const TTilePoint& loc);
-    virtual int getTerrain(const TTilePoint& loc);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& loc);
     virtual int getFrame(const TTilePoint& loc);
 
 private:
@@ -623,7 +623,7 @@ void TMapDoc::_TTerrainPlacementOp::setTile(const TTilePoint& loc, const TRmgTer
     pCell->setTileNum(tile.m_frame);
     pCell->setBHFlipped(tile.m_flipX);
     pCell->setBVFlipped(tile.m_flipY);
-    if (tile.m_terrain != oldType)
+    if (tile.m_terrain != H3_IDX(oldType))
         _m_pDoc->_onTerrainTypeChanged(_m_bSecondLayer, loc.x(), loc.y(), oldType);
 }
 
@@ -661,7 +661,7 @@ TRmgTerrainTile TMapDoc::_TTerrainPlacementOp::getTile(const TTilePoint& loc)
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);
     const TGameMap::TLayer::TCell& cell = layer.getCell(loc.x(), loc.y());
     TRmgTerrainTile tile;
-    tile.m_terrain = cell.getTerrainType();
+    tile.m_terrain = H3_IDX(cell.getTerrainType());
     tile.m_frame = cell.getTileNum();
     tile.m_flipX = cell.getBHFlipped();
     tile.m_flipY = cell.getBVFlipped();
@@ -669,7 +669,7 @@ TRmgTerrainTile TMapDoc::_TTerrainPlacementOp::getTile(const TTilePoint& loc)
 }
 
 VA(0x0045e6ed, 0x31)
-int TMapDoc::_TTerrainPlacementOp::getTerrain(const TTilePoint& loc)
+H3_ENUM_RETURN(TTerrainType, int) TMapDoc::_TTerrainPlacementOp::getTerrain(const TTilePoint& loc)
 {
     const TGameMap* pMap = _m_pMap;
     const TGameMap::TLayer& layer = pMap->getLayer(_m_bSecondLayer);

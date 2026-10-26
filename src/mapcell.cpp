@@ -878,7 +878,7 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
             char charBuffer;
             if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_groundSet = charBuffer;
+            thisCell->m_groundSet = H3_ENUM_DECODE(TTerrainType, charBuffer);
             if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
             thisCell->m_groundIndex = charBuffer;
@@ -951,7 +951,7 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 
     for (y = 0; y < size; ++y) {
         for (x = 0; x < size; ++x) {
-            charBuffer = thisCell->m_groundSet;
+            charBuffer = H3_IDX(thisCell->m_groundSet);
             count = writeScalar(outfile, charBuffer);
             if (count < sizeof(charBuffer))
                 return -1;
@@ -1151,7 +1151,7 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
             signed char value;
             if (readValue(infile, value) < sizeof(value))
                 return -1;
-            thisCell->m_groundSet = value;
+            thisCell->m_groundSet = H3_ENUM_DECODE(TTerrainType, value);
             if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_groundIndex = value;
@@ -4668,8 +4668,8 @@ CObjectType::CObjectType(const TObjectType& source)
 
     // Mac 0x128d4c..0x128d6c tests and sets each terrain bit. The const
     // source selects the read-only terrain query, without a mutable proxy.
-    for (int terrain = 0; terrain < kNumTerrainTypes; terrain++)
-        m_recommendedTerrainMask[terrain] = source.isRecommendedTerrain(terrain);
+    for (H3_ENUM_STORAGE_STEPPED(TTerrainType, int) terrain = eTerrainDirt; terrain < kNumTerrainTypes; terrain++)
+        H3_AT(m_recommendedTerrainMask, terrain) = source.isRecommendedTerrain(terrain);
 
     m_objectType = source.getType();
     m_extra = source.getExtra();

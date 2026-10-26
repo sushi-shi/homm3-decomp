@@ -120,9 +120,9 @@ bool TTerrainSlotTraits::contains(const TObjectType& objectType) const
 {
     if (objectType.getSlotCategory() != 0)
         return false;
-    const std::bitset<kNumTerrainTypes>& terrainMask =
+    const std::bitset<H3_IDX(kNumTerrainTypes)>& terrainMask =
         objectType.getRecommendedTerrainMask();
-    return terrainMask[m_terrainType] && terrainMask.count() <= 3;
+    return H3_AT(terrainMask, m_terrainType) && terrainMask.count() <= 3;
 }
 
 VA(0x00514220, 0x3D)
@@ -342,7 +342,7 @@ TObjectType& TObjectType::_setPassableMask(const std::bitset<OBJECT_MASK_CELLS>&
 }
 
 MAC_ADDRESS(0x223e4c, 0x48)
-TObjectType& TObjectType::setTerrainMask(const std::bitset<kNumTerrainTypes>& mask)
+TObjectType& TObjectType::setTerrainMask(const std::bitset<H3_IDX(kNumTerrainTypes)>& mask)
 {
     assert(!mask[eTerrainRock]);
     _m_recommendedTerrainMask &= mask;
@@ -351,7 +351,7 @@ TObjectType& TObjectType::setTerrainMask(const std::bitset<kNumTerrainTypes>& ma
 }
 
 MAC_ADDRESS(0x223e94, 0xc)
-TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<kNumTerrainTypes>& mask)
+TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<H3_IDX(kNumTerrainTypes)>& mask)
 {
     assert((mask & ~_m_terrainMask).none());
     assert(!mask[eTerrainRock]);
@@ -392,8 +392,8 @@ std::ostream& operator<<(std::ostream& os, const TObjectType& objectType)
     os << objectType.getImageName()
        << ' ' << objectType._m_passableMask
        << ' ' << objectType._m_triggerMask
-       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType._m_terrainMask.to_ulong())
-       << ' ' << std::bitset<kNumTerrainTypes - 1>(objectType._m_recommendedTerrainMask.to_ulong())
+       << ' ' << std::bitset<H3_IDX(kNumTerrainTypes) - 1>(objectType._m_terrainMask.to_ulong())
+       << ' ' << std::bitset<H3_IDX(kNumTerrainTypes) - 1>(objectType._m_recommendedTerrainMask.to_ulong())
        << ' ' << objectType._m_type
        << ' ' << objectType._m_extra
        << ' ' << objectType._m_slotCategory
@@ -451,8 +451,8 @@ TRawOStream& operator<<(TRawOStream& stream, const TObjectType& objectType)
     stream << objectType.getImageName();
     writeBitset(stream, objectType._m_passableMask);
     writeBitset(stream, objectType._m_triggerMask);
-    writeBitset<kNumTerrainTypes - 1>(stream, objectType._m_terrainMask.to_ulong());
-    writeBitset<kNumTerrainTypes - 1>(stream, objectType._m_recommendedTerrainMask.to_ulong());
+    writeBitset<H3_IDX(kNumTerrainTypes) - 1>(stream, objectType._m_terrainMask.to_ulong());
+    writeBitset<H3_IDX(kNumTerrainTypes) - 1>(stream, objectType._m_recommendedTerrainMask.to_ulong());
     stream << static_cast<long>(objectType._m_type)
            << static_cast<long>(objectType._m_extra)
            << static_cast<signed char>(objectType._m_slotCategory)
@@ -469,8 +469,8 @@ TRawIStream& operator>>(TRawIStream& stream, TObjectType& objectType)
     std::string imageName;
     std::bitset<OBJECT_MASK_CELLS> passableMask;
     std::bitset<OBJECT_MASK_CELLS> triggerMask;
-    std::bitset<kNumTerrainTypes - 1> terrainMask;
-    std::bitset<kNumTerrainTypes - 1> recommendedTerrainMask;
+    std::bitset<H3_IDX(kNumTerrainTypes) - 1> terrainMask;
+    std::bitset<H3_IDX(kNumTerrainTypes) - 1> recommendedTerrainMask;
     stream >> imageName;
     readBitset(stream, passableMask);
     readBitset(stream, triggerMask);

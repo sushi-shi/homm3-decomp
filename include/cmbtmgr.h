@@ -242,14 +242,6 @@ enum ECombatGateHex {
     COMBAT_HEX_GATE = 0x60
 };
 
-// Two additional TTerrainType values needed only by combat terrain
-// selection. Kept out of armygrp.h's include-sensitive enum: adding
-// enumerators there perturbs VC6 code generation in initialize.obj.
-enum ECombatTerrainValue {
-    COMBAT_TERRAIN_SAND = 1,
-    COMBAT_TERRAIN_SUBTERRANEAN = 6
-};
-
 // Mine type sentinels that force an underground combat background.
 // Their values are retail-proven; their semantic names are not.
 enum ECombatMineType {
@@ -1911,7 +1903,7 @@ extern const int g_combatDeployGroupedSlots[armyGroup::ARMY_GROUP_SLOT_COUNT][ar
 // are all direct retail data.
 extern const char* const g_townCombatBackgrounds[9];          // 0x63d2a0
 extern const char* const g_magicTerrainCombatBackgrounds[10]; // 0x63d2c8
-extern const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][3];    // 0x63d2f0
+extern const char* const g_terrainCombatBackgrounds[H3_IDX(kNumTerrainTypes)][3];    // 0x63d2f0
 
 // The leading two words of each 20-byte obstacle-catalogue row. They
 // are separate declarations because the delinked target relocates each

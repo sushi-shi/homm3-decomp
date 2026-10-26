@@ -45,7 +45,7 @@ void TRoadOp::setTile(const TTilePoint& point, const TRmgTerrainTile& tile)
 MAC_ADDRESS(0x25404c, 0x44)
 s32 TRoadOp::isBlocked(const TTilePoint& point)
 {
-    s32 terrain = m_adapter->getTerrain(point);
+    H3_ENUM_STORAGE(TTerrainType, s32) terrain = m_adapter->getTerrain(point);
     if (terrain == eTerrainWater || terrain == eTerrainRock)
         return 1;
     return 0;
@@ -109,7 +109,7 @@ VA_AT(h3maped, 0x004b42c7, 0x63)
 void TRoadEraseOp::onTerrainTypeChanged(TRoadOp::TAbstractMap* map, const TTilePoint& point)
 {
     s32 roadType = map->getLineType(point);
-    s32 terrain = map->getTerrain(point);
+    H3_ENUM_STORAGE(TTerrainType, s32) terrain = map->getTerrain(point);
     if (roadType != 0 && (terrain == eTerrainWater || terrain == eTerrainRock)) {
         TRoadEraseOp eraseOp(map);
         eraseOp(point.x(), point.y(), 1, 1);

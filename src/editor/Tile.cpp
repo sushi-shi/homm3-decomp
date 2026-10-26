@@ -281,14 +281,14 @@ void animateTilesets(unsigned int frameNum)
     register const int kWaterCycle2End = 254;
     int waterCycle1Step = -(frameNum % (kWaterCycle1End - kWaterCycle1Begin));
     int waterCycle2Step = -(frameNum % (kWaterCycle2End - kWaterCycle2Begin));
-    CSprite* pWaterSprite = aGroundTilesetTraitsImp[eTerrainWater].m_pSprite;
+    CSprite* pWaterSprite = H3_AT(aGroundTilesetTraitsImp, eTerrainWater).m_pSprite;
     pWaterSprite->ColorCycle(kWaterCycle1Begin, kWaterCycle1End - 1, waterCycle1Step);
     pWaterSprite->ColorCycle(kWaterCycle2Begin, kWaterCycle2End - 1, waterCycle2Step);
 
     register const int kLavaCycleBegin = 246;
     register const int kLavaCycleEnd = 255;
     int lavaCycleStep = -(frameNum % (kLavaCycleEnd - kLavaCycleBegin));
-    CSprite* pLavaSprite = aGroundTilesetTraitsImp[eTerrainLava].m_pSprite;
+    CSprite* pLavaSprite = H3_AT(aGroundTilesetTraitsImp, eTerrainLava).m_pSprite;
     pLavaSprite->ColorCycle(kLavaCycleBegin, kLavaCycleEnd - 1, lavaCycleStep);
 
     register const int kClearRiverCycle1Begin = 183;

@@ -105,7 +105,7 @@ DATA(0x00691680) int g_sandAnim;
 DATA(0x00677958) const char* g_resourceObjectDefs[NUM_RESOURCES] = { "avtwood0.def", "avtmerc0.def", "avtore0.def", "avtsulf0.def", "avtcrys0.def", "avtgems0.def", "avtgold0.def" };
 // Original DC name: HoleSpriteFilenames. Terrain order is dirt through rock;
 // water and rock have no digging sprite. The retained retail table is unused.
-DATA(0x006779e4) const char* g_holeSpriteFilenames[kNumTerrainTypes] = {
+DATA(0x006779e4) const char* g_holeSpriteFilenames[H3_IDX(kNumTerrainTypes)] = {
     "avlhold0.def", "avlhlds0.def", "avlholg0.def", "avlhlsn0.def",
     "avlhols0.def", "avlholr0.def", "avlholx0.def", "avlholl0.def", "", ""
 };
@@ -7885,7 +7885,7 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int e
 
     if (objType == TERRAIN_HOLE) {
         m_worldMap.setObjectType(
-            &object, TERRAIN_HOLE, 0, m_worldMap.cell(x, y, z)->m_groundSet);
+            &object, TERRAIN_HOLE, 0, H3_IDX(m_worldMap.cell(x, y, z)->m_groundSet));
     } else {
         m_worldMap.setObjectType(
             &object, objType, objectIndex, -1);
@@ -8175,7 +8175,7 @@ void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
             for (int y = 0; y < g_mapHeight; ++y) {
                 unsigned int mask = visMask;
                 NewmapCell* cell = m_worldMap.cell(x, y, z);
-                if (mask & (1 << cell->m_groundSet))
+                if (mask & (1 << H3_IDX(cell->m_groundSet)))
                     *getMapExtraPtr(x, y, z) |= playerMask;
             }
         }
@@ -9659,7 +9659,7 @@ void game::setSpecialRumour()
         const NewmapCell* cell = g_advManager->getCell(point);
         sprintf(m_currentRumour,
                 g_generalText->GetText(g_specialRumourGrailObjectText),
-                g_rumourTerrainDescriptions[cell->m_groundSet]);
+                H3_AT(g_rumourTerrainDescriptions, cell->m_groundSet));
     }
 }
 

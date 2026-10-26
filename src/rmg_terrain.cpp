@@ -291,10 +291,10 @@ void TRmgTerrainPainter::repaintMap(TTerrainPlacementOp::TAbstractMap* map, u32 
 #endif
     for (u32 y = 0; y < size.y(); ++y)
         for (u32 x = 0; x < size.x(); ++x) {
-            s32 terrain = map->getTerrain(TTilePoint(x, y));
-            TTerrainTypeTraits* rule = g_rmgTerrainRules[terrain];
+            H3_ENUM_STORAGE(TTerrainType, s32) terrain = map->getTerrain(TTilePoint(x, y));
+            TTerrainTypeTraits* rule = H3_AT(g_rmgTerrainRules, terrain);
             if (rule->hasSpecialTiles() && rule->getTileGroundShape(map->getFrame(TTilePoint(x, y))) == 0) {
-                u32 frequency = computeEffectiveFrequency(specialTileFrequency, map, TTilePoint(x, y), terrain);
+                u32 frequency = computeEffectiveFrequency(specialTileFrequency, map, TTilePoint(x, y), H3_IDX(terrain));
                 s32 frame = rule->pickFullTile(frequency, RMG_NO_TERRAIN_FRAME);
                 map->setFrame(TTilePoint(x, y), frame);
             }
@@ -342,13 +342,13 @@ VA(0x005b3e40, 0x38)
 MAC_ADDRESS(0x255284, 0x64)
 s32 getRmgTerrainNeighbourKind(s32 terrain, s32 neighbourTerrain)
 {
-    if (terrain == neighbourTerrain || terrain == eTerrainSand)
+    if (terrain == neighbourTerrain || terrain == H3_IDX(eTerrainSand))
         return RMG_NEIGHBOUR_NO_EDGE;
     const TTerrainTypeTraits* rule = g_rmgTerrainRules[terrain];
     const TTerrainTypeTraits* neighbourRule = g_rmgTerrainRules[neighbourTerrain];
     if (rule->m_blendsWithOtherTerrain) {
         if (neighbourRule->m_blendsWithOtherTerrain)
-            return terrain != eTerrainDirt;
+            return terrain != H3_IDX(eTerrainDirt);
     }
     return RMG_NEIGHBOUR_HARD_EDGE;
 }
@@ -1476,8 +1476,8 @@ void TTerrainPlacementOp::repaintMap(TAbstractMap* map, u32 specialTileFrequency
 VA(0x005b7250, 0x9a)
 MAC_ADDRESS(0x2599f8, 0xac) // anchor-callee 0x54017e; allocation and throw RTTI
 TTerrainPlacementOp::TTerrainPlacementOp(
-    TTerrainPlacementOp::TAbstractMap* map, s32 terrain, s32 strength)
-    : m_painter(new TRmgTerrainPainter(map, terrain, strength))
+    TTerrainPlacementOp::TAbstractMap* map, H3_ENUM_PARAM(TTerrainType, s32) terrain, s32 strength)
+    : m_painter(new TRmgTerrainPainter(map, H3_IDX(terrain), strength))
 {
     if (!m_painter.get())
         throw TAllocationFailure();
@@ -1491,9 +1491,9 @@ TTerrainPlacementOp::~TTerrainPlacementOp()
 
 VA(0x005b7520, 0x16a)
 MAC_ADDRESS(0x259c9c, 0x24)
-void TTerrainPlacementOp::changeTerrain(s32 terrain, s32 strength)
+void TTerrainPlacementOp::changeTerrain(H3_ENUM_PARAM(TTerrainType, s32) terrain, s32 strength)
 {
-    m_painter->changeTerrain(terrain, strength);
+    m_painter->changeTerrain(H3_IDX(terrain), strength);
 }
 
 VA(0x005b7690, 0x1f)

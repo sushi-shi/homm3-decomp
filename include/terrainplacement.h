@@ -17,9 +17,12 @@
 
 #include <memory>
 
+#include "domains.h"
 #include "homm3_int.h"
 #include "Point.h"
 
+// terrain_type.h owns the terrain domain; this interface only names it.
+H3_ENUM_FORWARD(TTerrainType);
 struct TRmgTerrainTile;
 class TRmgTerrainPainter;
 
@@ -53,15 +56,15 @@ public:
         virtual TTilePoint& getSize(TTilePoint& output) = 0;
 #endif
         virtual TRmgTerrainTile getTile(const TTilePoint& point) = 0;
-        virtual int getTerrain(const TTilePoint& point) = 0;
+        virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& point) = 0;
         virtual int getFrame(const TTilePoint& point) = 0;
     };
 
     std::auto_ptr<TRmgTerrainPainter> m_painter;
 
-    TTerrainPlacementOp(TAbstractMap* map, s32 terrain, s32 strength);
+    TTerrainPlacementOp(TAbstractMap* map, H3_ENUM_PARAM(TTerrainType, s32) terrain, s32 strength);
     ~TTerrainPlacementOp();
-    void changeTerrain(s32 terrain, s32 strength);
+    void changeTerrain(H3_ENUM_PARAM(TTerrainType, s32) terrain, s32 strength);
     void paintRectangle(
         u32 x, u32 y,
         u32 rectangleWidth, u32 rectangleHeight);

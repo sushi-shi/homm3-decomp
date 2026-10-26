@@ -17,11 +17,6 @@
 #include "terrainplacement.h"
 
 
-// Terrain types, dirt through rock.
-enum ERmgTerrainLimits {
-    RMG_TERRAIN_COUNT = eTerrainRock + 1
-};
-
 // Hero ids a map format knows: RoE maps stop before the expansion heroes.
 // Prisons in later formats hold only the first RMG_PRISON_HERO_COUNT.
 enum ERmgHeroCount {
@@ -765,7 +760,7 @@ struct TRmgGroundTile {
     // plus casts in both integer setters emits identical setter/getter and
     // connection-pass bytes in eight field/local models. Integer setter
     // parameters alone do not distinguish those source declarations.
-    signed m_landType : 6;
+    H3_ENUM_BITFIELD(TTerrainType, signed) m_landType : 6;
     // Retail terrain adapter 0x532190 stores an eight-bit frame at bit 6;
     // getter 0x532288 sign-extends it. River adapter 0x532520 writes the
     // four-bit type at 14 and eight-bit frame at 18; 0x5327c0 sign-extends
@@ -1202,7 +1197,7 @@ struct TRmgMapItem {
     {
         m_tileData.m_connectionVisited = 1;
     }
-    int getLandType() const
+    H3_ENUM_RETURN(TTerrainType, int) getLandType() const
     {
         return m_tile.m_landType;
     }
@@ -1356,7 +1351,7 @@ public:
     virtual TTilePoint& getSize(TTilePoint& output);
 #endif
     virtual TRmgTerrainTile getTile(const TTilePoint& point);
-    virtual int getTerrain(const TTilePoint& point);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& point);
     virtual int getFrame(const TTilePoint& point);
 
     void clear();
@@ -1470,7 +1465,7 @@ public:
     virtual TTilePoint getSize();
     virtual TRmgTerrainTile getTile(const TTilePoint& point);
     virtual int getLineType(const TTilePoint& point);
-    virtual int getTerrain(const TTilePoint& point);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& point);
 };
 
 // Retail retains these support bodies outside CreateRiver while the adapter
@@ -1489,7 +1484,7 @@ public:
     virtual TTilePoint getSize();
     virtual TRmgTerrainTile getTile(const TTilePoint& point);
     virtual int getLineType(const TTilePoint& point);
-    virtual int getTerrain(const TTilePoint& point);
+    virtual H3_ENUM_RETURN(TTerrainType, int) getTerrain(const TTilePoint& point);
 };
 
 // A generated zone owns both its template metadata and the Complete-only
@@ -1513,7 +1508,7 @@ struct TRmgZone {
     // There is no DC enum ABI for this Complete-only field. Keep the field
     // and its local consumer consistent instead of casting into an inferred
     // enum after every selection. Named terrain constants share the encoding.
-    int m_terrain;                      // +0x0c
+    H3_ENUM_STORAGE(TTerrainType, int) m_terrain;                      // +0x0c
     TRmgMapPosition m_levelPosition;   // +0x10
     int m_scaledSize;            // +0x1c: layout-scaled size
     TRmgZoneBounds m_bounds;           // +0x20
@@ -1542,7 +1537,7 @@ struct TRmgZone {
     void chooseCreatureTownType(unsigned char expanded);
     void chooseTerrain();
     ~TRmgZone();
-    int getTerrain() const
+    H3_ENUM_RETURN(TTerrainType, int) getTerrain() const
     {
         return m_terrain;
     }

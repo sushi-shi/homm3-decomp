@@ -806,7 +806,7 @@ public:
     // here (Mac 0x128d44..0x128d6c). setObjectType uses it to choose a
     // terrain-appropriate template. Map serialization omits this cache.
     // Original member spelling is unknown.
-    std::bitset<kNumTerrainTypes> m_recommendedTerrainMask;
+    std::bitset<H3_IDX(kNumTerrainTypes)> m_recommendedTerrainMask;
     // loadObjectType stores one full dword at +0x38. A scalar preserves
     // that field and its single generated copy; no alternative view exists.
     TAdventureObjectType m_objectType;
@@ -902,7 +902,7 @@ public:
     // compare through the bitfield: VC6 folds
     // `field == small_constant` on a byte-aligned 8-bit field into
     // `cmp byte ptr`, so the slice costs nothing there.
-    int m_groundSet : 8;
+    H3_ENUM_BITFIELD(TTerrainType, int) m_groundSet : 8;
     int m_groundIndex : 8;
     int m_riverSet : 8;
     int m_riverIndex : 8;
@@ -1015,7 +1015,7 @@ public:
     MAC_ADDRESS(0x11f354, 0x80)
     NewmapCell()
     {
-        m_groundSet = 0;
+        m_groundSet = eTerrainDirt;
         m_groundIndex = 0;
         m_riverSet = 0;
         m_riverIndex = 0;

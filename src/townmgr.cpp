@@ -621,7 +621,7 @@ void sortStats(long* value, signed char* index);
 // Original: townManager::TownNativeTerrains. Complete's full table is
 // {-1,2,2,3,7,0,6,5,4,2}; GetNativeTerrain biases town type -1 by one.
 DATA(0x00643694) const TTerrainType townManager::s_townNativeTerrains[10] = {
-    TERRAIN_NONE, eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava,
+    eTerrainNone, eTerrainGrass, eTerrainGrass, eTerrainSnow, eTerrainLava,
     eTerrainDirt, eTerrainSubterranean, eTerrainRough, eTerrainSwamp,
     eTerrainGrass
 };
